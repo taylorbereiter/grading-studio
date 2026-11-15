@@ -7,6 +7,7 @@ const SET_GROUPS = [['saving', 'Saving and carrying', 'Folder, take-home file, e
   ['classes', 'Classes and timetable', 'Rosters, class times, days off, links', ['classes', 'timetable']],
   ['terms', 'Grades', 'Terms, weights, scales and rubrics', ['terms', 'grading']],
   ['marking', 'Marking', 'Mark key, mark colors, Word papers, tablet and pencil', ['marking']],
+  ['focus', 'Focus and goals', 'Work timer, breaks, a daily grading goal', ['focus']],
   ['setup', 'Working with AI', 'Optional. Your setup, and what an AI assistant can and can’t see', ['setup', 'claude']],
   ['display', 'Display and keys', 'Text size, zoom, dark mode, every shortcut', ['display', 'keys']],
   ['about', 'About and updates', 'Version, what’s new, install as an app', ['about']]];
@@ -22,7 +23,7 @@ function setRender() {
   const box = $('#setNav'); if (box.dataset.h !== nav) { box.dataset.h = nav; box.innerHTML = nav; }
   for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = !on(el.dataset.sec);
   const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
-  for (const k of grp[3]) { meSetRender(k); attSetRender(k); stpSetRender(k); }
+  for (const k of grp[3]) { meSetRender(k); attSetRender(k); stpSetRender(k); fcSetRender(k); }
   if (on('marking')) setInksSay();
   if (on('history')) gbRender();
   if (on('about')) updRender();

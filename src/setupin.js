@@ -86,7 +86,7 @@ const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', point
 // The Planner's slide layouts by name, for "newSlide" (the same names as LAYOUTS in src/planner/lessons.js; the title slide is never added this way).
 const STP_LAYOUTS = { agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Title and text', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', fullpic: 'Full picture', textpic: 'Text + picture', picprompt: 'Picture + questions', video: 'Video' };
 function stpRead(j) {
-  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking']);
+  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking', 'focus']);
   for (const k of Object.keys(j)) {
     if (STP_STUDENT.test(k)) { if (stpCount(j[k])) S.left.push('Something about students (“' + stpStr(k, 30) + '”).'); }
     else if (!known.has(k)) S.unknown.push(stpStr(k, 30));
@@ -190,6 +190,18 @@ function stpRead(j) {
     const pc = stpKey(mk.pointsColor); if (pc === 'pen') m.ptsInk = ''; else if (pc === 'credit' || COLORS[pc]) m.ptsInk = pc;
     const fs = stpKey(mk.fullScreenSide); if (FS_SIDES.includes(fs)) m.fside = fs;
     if (Object.keys(m).length) S.mark = m;
+  }
+  // the focus timer and the daily goal (src/focus.js): lengths from the lists the app offers, a goal in papers or in minutes
+  const fo = stpObj(j.focus);
+  if (fo) {
+    const f = {}, n = v => Math.round(+v);
+    if (FC_LENS.includes(n(fo.sessionMinutes))) f.len = n(fo.sessionMinutes);
+    if (FC_BRKS.includes(n(fo.breakMinutes))) f.brk = n(fo.breakMinutes);
+    if (fo.dailyGoal === null || fo.dailyGoal === false) f.goal = null;
+    else { const g = stpObj(fo.dailyGoal); if (g && n(g.papers) > 0) f.goal = { k: 'papers', n: Math.min(500, n(g.papers)) }; else if (g && n(g.minutes) > 0) f.goal = { k: 'min', n: Math.min(600, n(g.minutes)) }; }
+    if (typeof fo.chime === 'boolean') f.sound = fo.chime;
+    if (typeof fo.timeInTab === 'boolean') f.title = fo.timeInTab;
+    if (Object.keys(f).length) S.focus = f;
   }
   if (typeof j.attendance === 'boolean') S.att = j.attendance; else if (j.attendance != null && stpCount(j.attendance)) S.left.push('Attendance records.');
   // the class pages kept in the tab row, by name: ["Attendance", "Charts"]. The others stay under More.
@@ -340,6 +352,15 @@ function stpDiff(S, planNow) {
     if (m.fside != null && m.fside !== now.fside) L.push(m.fside === 'show' ? 'In full screen the student list and the tools stay beside the paper' : m.fside === 'all' ? 'In full screen the student list and the tools hide until you point at them' : 'In full screen the student list hides until you point at the left edge');
     add('mark', 'Marking and handing back', L, 'No paper, mark or score changes.');
   }
+  if (S.focus) {
+    const c = fcConf(), f = S.focus, L = [];
+    if (f.len != null && f.len !== c.len) L.push('A focus session lasts ' + f.len + ' minutes');
+    if (f.brk != null && f.brk !== c.brk) L.push('A break lasts ' + f.brk + ' minutes');
+    if ('goal' in f && JSON.stringify(f.goal) !== JSON.stringify(c.goal)) L.push(f.goal ? 'Daily goal: ' + people(f.goal.n, f.goal.k === 'min' ? 'minute' : 'paper') : 'No daily goal');
+    if (f.sound != null && f.sound !== c.sound) L.push(f.sound ? 'A soft chime when a session or a break ends' : 'No chime when a session ends');
+    if (f.title != null && f.title !== c.title) L.push(f.title ? 'The time left shows in the browser tab’s name' : 'The time left stays out of the browser tab’s name');
+    if (L.length) add('focus', 'Focus timer and daily goal', L, '');
+  }
   if (S.att != null && S.att !== attOn()) add('att', 'Attendance', [S.att ? 'Take attendance in Grading Studio' : 'Don’t take attendance in Grading Studio'], S.att ? '' : 'Days already saved are kept.');
   if (S.tabs && S.tabs.join() !== tabsKept().join()) add('tabs', 'Class tabs', [S.tabs.length ? 'Kept in the tab row: ' + S.tabs.map(k => CLASS_TABS.find(t => t[0] === k)[1]).join(', ') : 'Only Assignments, Gradebook and Students in the tab row'], 'The other pages stay under More.');
   return parts;
@@ -369,7 +390,7 @@ const stpOwnTypes = () => typeof bkCats === 'function';
 const stpClone = v => v == null ? v : JSON.parse(JSON.stringify(v));
 async function stpApply(S, pick) {
   const U = { t: Date.now(), parts: Object.keys(pick).filter(k => pick[k]) }, now = Date.now();
-  if (pick.school || pick.grading || pick.att || pick.tabs) { U.hadMe = !!lib.me; U.me = stpClone(lib.me || null); }
+  if (pick.school || pick.grading || pick.att || pick.tabs || pick.focus) { U.hadMe = !!lib.me; U.me = stpClone(lib.me || null); }
   if (pick.school) {
     const sc = { ...(S.school || {}) };
     if (sc.ai != null && sc.ai !== (me().ai || '') && sc.aiUrl == null) sc.aiUrl = '';   // another assistant: the last one's own link doesn't go with it
@@ -386,6 +407,7 @@ async function stpApply(S, pick) {
     if (!batch) setup = { ...DEFAULT_SETUP };
   }
   if (pick.att) meSet({ att: S.att });
+  if (pick.focus) fcConfSet(S.focus);
   if (pick.tabs) meSet({ tabs: S.tabs });
   if (pick.classes) {
     U.classes = []; U.links = []; U.units = []; U.ib = []; U.mbWas = localStorage.getItem(MB_KEY);
@@ -506,6 +528,7 @@ async function stpExport() {
   if (bank.length) out.comments = bank.slice(0, 200);
   if (goalList().length) out.goals = goalList().map(x => x.name);
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
+  if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n } : null, chime: c.sound, timeInTab: c.title }; }
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
   { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
@@ -582,6 +605,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "comments": ["Explain how your evidence supports your claim."],
   "goals": ["Uses evidence", "Designs a fair test"],
   "attendance": true,
+  "focus": { "sessionMinutes": 10, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "chime": true, "timeInTab": true },
   "classTabs": ["Missing work"],
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
   "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide" }
@@ -597,6 +621,7 @@ FIELD NOTES
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
+- "focus" is the work timer for grading: "sessionMinutes" is one of 5, 10, 15, 20, 25, 30, 45, 60 and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. Leave it out if I have not said.
 - "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;

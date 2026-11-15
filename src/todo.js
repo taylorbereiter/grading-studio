@@ -294,6 +294,7 @@ function tdSideHtml(rows, today) {
   const x = '<button class="icon tdclose" data-tdclose aria-label="Close" title="Close">✕</button>';
   if (r.auto) return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<h2 class="tdtitle" data-raw>' + esc(r.x) + '</h2><p class="tdm"><span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '') + '</p>' + when +
     '<p class="muted tdsay">The app noticed this from your saved work. It goes by itself when the work is done.</p><div class="tdacts">' + (r.btn.open ? '<button class="btn primary" data-tdopen="' + esc(r.btn.open) + '">' + r.btn.label + '</button>' : '<a class="btn primary" href="' + esc(r.btn.href) + '">' + r.btn.label + '</a>') +
+    (r.kind === 'mark' ? '<button class="btn" data-tdfocus="' + esc('mark:' + r.key.slice(5)) + '" title="Start a focus session on these papers">Focus on this</button>' : '') +
     '<span class="sp"></span><button class="btn" data-tdhide>Hide this</button></div></div>';
   const it = r.it, c = r.c, pc = tdPlanClass(c);
   const cls = '<div class="tdf"><label class="tdl" for="tdCls">Class</label><div class="tdv"><select id="tdCls" class="btn sm"><option value="">No class</option>' + lib.classes.map(k => '<option value="' + esc(k.id) + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></div></div>';
@@ -308,7 +309,7 @@ function tdSideHtml(rows, today) {
   const rep = '<div class="tdf"><span class="tdl">Repeats</span><div class="tdv">' + chip('data-tdrep=""', !it.rep, 'No') + chip('data-tdrep="day"', it.rep === 'day', 'Every school day') + chip('data-tdrep="week"', it.rep === 'week', 'Every week') + (pc || it.rep === 'meet' ? chip('data-tdrep="meet"', it.rep === 'meet', 'Each time this class meets') : '') + '</div></div>';
   return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<textarea class="tdtitle" id="tdX" rows="2" maxlength="300" aria-label="What to do">' + esc(it.x) + '</textarea>' + when + cls + goes + rep +
     '<div class="tdf top"><label class="tdl" for="tdNote">Note</label><div class="tdv"><textarea id="tdNote" rows="3" maxlength="2000" placeholder="Anything to remember about it">' + esc(it.note || '') + '</textarea></div></div>' +
-    '<div class="tdacts"><button class="btn primary" data-tdfin>' + (it.done ? 'Not done after all' : 'Done') + '</button>' + (it.done ? '' : '<button class="btn" data-tdwhen="tomorrow">Move to tomorrow</button>') + '<span class="sp"></span><button class="btn ghost" data-tddel>Delete</button></div></div>';
+    '<div class="tdacts"><button class="btn primary" data-tdfin>' + (it.done ? 'Not done after all' : 'Done') + '</button>' + (it.done ? '' : '<button class="btn" data-tdwhen="tomorrow">Move to tomorrow</button><button class="btn" data-tdfocus="' + esc('td:' + it.id) + '" title="Start a focus session on this to-do">Focus on this</button>') + '<span class="sp"></span><button class="btn ghost" data-tddel>Delete</button></div></div>';
 }
 function tdPageRender() {
   const r = routeNow(); if (r.v !== 'todo' || batch) return;
@@ -388,6 +389,7 @@ function tdClick(e) {
     if (onCard) { tdS.filter = 'all'; go('#/todo'); } else tdPageRender();
     return;
   }
+  if ((b = hit('data-tdfocus'))) { focusOn(b.dataset.tdfocus); return; }
   if ((b = hit('data-tdview'))) { go('#/todo' + (b.dataset.tdview ? '/' + b.dataset.tdview : '')); return; }
   if ((b = hit('data-tdwk'))) { tdS.week = +b.dataset.tdwk ? tdS.week + +b.dataset.tdwk : 0; tdPageRender(); return; }
   if ((b = hit('data-tdf'))) { tdS.filter = b.dataset.tdf; tdPageRender(); return; }

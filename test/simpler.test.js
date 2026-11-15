@@ -112,14 +112,14 @@ test('the gradebook has one blue button and one More menu', async () => {
   await close();
 });
 
-test('Settings has seven pages, and every older address opens the page its cards moved to', async () => {
+test('Settings has eight pages, and every older address opens the page its cards moved to', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
   await goTo(page, '#/settings');
-  assert.deepEqual(await page.$$eval('#setNav .setlink b', b => b.map(x => x.textContent)), ['Saving and carrying', 'Classes and timetable', 'Grades', 'Marking', 'Working with AI', 'Display and keys', 'About and updates']);
+  assert.deepEqual(await page.$$eval('#setNav .setlink b', b => b.map(x => x.textContent)), ['Saving and carrying', 'Classes and timetable', 'Grades', 'Marking', 'Focus and goals', 'Working with AI', 'Display and keys', 'About and updates']);
   const cards = () => page.$$eval('#setPane [data-sec]', xs => [...new Set(xs.filter(x => !x.hidden).map(x => x.dataset.sec))]);
   assert.deepEqual(await cards(), ['saving', 'history']);
   for (const [k, on, secs] of [['history', 'Saving and carrying', ['saving', 'history']], ['classes', 'Classes and timetable', ['classes', 'timetable']], ['timetable', 'Classes and timetable', ['classes', 'timetable']],
-    ['terms', 'Grades', ['terms', 'grading']], ['grading', 'Grades', ['terms', 'grading']], ['marking', 'Marking', ['marking']], ['setup', 'Working with AI', ['setup', 'claude']], ['claude', 'Working with AI', ['setup', 'claude']],
+    ['terms', 'Grades', ['terms', 'grading']], ['grading', 'Grades', ['terms', 'grading']], ['marking', 'Marking', ['marking']], ['focus', 'Focus and goals', ['focus']], ['setup', 'Working with AI', ['setup', 'claude']], ['claude', 'Working with AI', ['setup', 'claude']],
     ['display', 'Display and keys', ['display', 'keys']], ['keys', 'Display and keys', ['display', 'keys']], ['about', 'About and updates', ['about']]]) {
     await goTo(page, '#/settings/' + k);
     await page.waitForFunction(on => (document.querySelector('#setNav .setlink.on b') || {}).textContent === on, {}, on);

@@ -1,0 +1,115 @@
+/* ---------- Focus: the work timer, the daily goal and the card on Today (src/focus.js). Every value is a token. ---------- */
+/* the card on Today and the start view of the panel share one body */
+.fcbody{display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-4)}
+.fcgoal{display:flex;flex-direction:column;gap:var(--space-2);font-size:var(--text-control);color:var(--fg-2)}
+.fcgh{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3)}
+.fcgh b{font-weight:600;color:var(--fg)}
+.fcnum{display:inline-flex;gap:var(--space-2);font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--muted)}
+.fcdots{display:flex;flex-wrap:wrap;gap:5px}
+.fcdots i{flex:none;width:14px;height:14px;border-radius:var(--corner-round);background:var(--track);transition:background .3s}
+.fcdots.blk i{width:12px;border-radius:var(--corner-1)}
+.fcdots i.fhalf{margin-left:var(--space-2)}
+.fcdots i.fon{background:var(--accent)}
+.fcdots i.fnow{background:var(--bk-sum)}
+.fcgoal.met .fcdots i{background:var(--ok)}
+.fcdots i.fpop{animation:fcpop .6s ease-out}
+@keyframes fcpop{0%{transform:scale(.4)}55%{transform:scale(1.35)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.fcdots i.fpop{animation:none}}
+.fcbar{position:relative;display:block;height:8px;border-radius:var(--corner-pill);background:var(--track);overflow:hidden}
+.fcbar i{display:block;height:100%;border-radius:var(--corner-pill);background:var(--accent);transition:width .4s}
+.fcbar b{position:absolute;top:0;bottom:0;width:2px;background:var(--surface)}
+.fcgoal.met .fcbar i{background:var(--ok)}
+.fcmet{display:inline-flex;align-items:center;gap:var(--space-1);color:var(--ok);font-weight:600}
+.fcmet svg,.fcok svg,.fcwc svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+/* this week */
+.fcweek .fcl{margin-bottom:var(--space-2)}
+.fcwk{display:flex;gap:var(--space-2);height:76px}
+.fcwd{flex:1;display:grid;grid-template-rows:14px minmax(0,1fr) 16px;justify-items:center;min-width:0}
+.fcwc{display:grid;place-items:center;color:var(--ok)}
+.fcwb{position:relative;width:100%;max-width:26px;display:flex;align-items:flex-end;border-radius:var(--corner-1);background:var(--surface-2);overflow:hidden}
+.fcwb i{display:block;width:100%;background:var(--ch2);border-radius:var(--corner-1) var(--corner-1) 0 0}
+.fcwk.hasg .fcwb::after{content:"";position:absolute;left:0;right:0;bottom:var(--g);border-top:1.5px dashed var(--line-strong)}
+.fcwd.now .fcwb i{background:var(--accent)}
+.fcwd.met .fcwb i{background:var(--ok)}
+.fcwd.later .fcwb{background:none;box-shadow:inset 0 0 0 1px var(--line)}
+.fcwl{align-self:end;font-size:var(--text-caption);line-height:1;color:var(--faint)}
+.fcwd.now .fcwl{color:var(--accent);font-weight:600}
+.fcnogoal{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);font-size:var(--text-control);color:var(--muted)}
+.fcnogoal .link{font-weight:500;text-decoration:none;white-space:nowrap}
+.fcline{height:1px;margin:0 calc(-1 * var(--space-4));background:var(--line)}
+.fcl{display:block;margin:0 0 var(--space-1);font-size:var(--text-small);font-weight:600;color:var(--fg-2)}
+.fcwork{width:100%;min-width:0;height:34px;padding:0 var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
+.fcwork:focus{outline:2px solid var(--accent);outline-offset:1px}
+.fcsay{margin:var(--space-1) 0 0;font-size:var(--text-small);color:var(--muted)}
+.fcgo{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2)}
+.fcgo [data-fcstart]{display:inline-flex;align-items:center;gap:var(--space-2)}
+.fcgo .btn svg{width:14px;height:14px;fill:currentColor}
+.fclens{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-1);font-size:var(--text-small);color:var(--muted)}
+.fclens button{min-width:30px;height:24px;padding:0 var(--space-2);border:0;border-radius:var(--corner-pill);background:var(--surface-2);color:var(--fg-2);font:inherit;font-size:var(--text-small);font-weight:500;cursor:pointer}
+.fclens button:hover{background:var(--hover)}
+.fclens button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
+
+/* the sidebar: Focus, with the time left while a session runs */
+.rnav .rcnt.fcrun{color:var(--accent);font-weight:600}
+.rnav.fcbrk .rcnt.fcrun{color:var(--muted)}
+.fcico{position:relative;display:grid;place-items:center;flex:none;width:18px;height:18px}
+.fcico>svg:first-child{width:18px;height:18px}
+#railFocus .fcring{position:absolute;inset:-6px;width:30px;height:30px;transform:rotate(-90deg);pointer-events:none}
+:is(.shell.grading,.pfold,.gsfull) #railFocus .fcring{inset:-8px;width:34px;height:34px}
+.fcring circle{fill:none;stroke-width:2.4}
+.fcring .tr{stroke:var(--track)}
+.fcring .on{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .9s linear}
+#railFocus.fcbrk .fcring .on{stroke:var(--faint)}
+#railFocus.fcmet .fcring .on{stroke:var(--ok)}
+.rnav .rcnt.fcmetc{color:var(--ok);font-weight:600}
+#railFocus.fcgoalon .rcnt{font-variant-numeric:tabular-nums}
+
+/* the panel: bottom left, beside the sidebar, over every screen; a small pill when it is folded */
+.fcpanel{position:fixed;left:calc(var(--fc-left, 248px));bottom:var(--space-4);z-index:60;width:328px;max-width:calc(100vw - 2 * var(--space-4));background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);box-shadow:var(--shadow),0 10px 30px rgba(20,25,40,.12);color:var(--fg)}
+.fcpanel[hidden]{display:none}
+.fcpanel.fold{width:auto;border-radius:var(--corner-pill)}
+.fchead{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-3) 0 var(--space-4)}
+.fchead .tcap{margin:0}
+.fchead .sp{flex:1}
+.fchead .icon{width:28px;height:28px}
+.fcrunv{display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-3) var(--space-4) var(--space-4)}
+.fctop{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:var(--space-4)}
+.fcclock{position:relative;width:92px;height:92px}
+.fcclock svg{width:100%;height:100%;transform:rotate(-90deg)}
+.fcclock circle{fill:none;stroke-width:6}
+.fcclock .tr{stroke:var(--track)}
+.fcclock .on{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .9s linear}
+.fcclock.brk .on{stroke:var(--faint)}
+.fcclock.paused .on{stroke:var(--line-strong)}
+.fctime{position:absolute;inset:0;display:grid;place-items:center;font-size:var(--text-title);font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.fcwhat{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
+.fcwhat b{max-width:100%;font-size:var(--text-body);font-weight:600;overflow-wrap:anywhere}
+.fcwhat span{font-size:var(--text-small);color:var(--muted)}
+.fcwhat .btn{margin-top:var(--space-2)}
+.fcstats{display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-3) 0 0;border-top:1px solid var(--line)}
+.fcstat{display:flex;justify-content:space-between;gap:var(--space-3);font-size:var(--text-control);color:var(--muted)}
+.fcstat b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums}
+.fcacts{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.fcacts .sp{flex:1}
+.fcbig{margin:0;font-size:var(--text-lead);font-weight:600;line-height:1.3}
+.fcbig.ok{display:flex;align-items:center;gap:var(--space-2)}
+.fcok{display:inline-grid;place-items:center;flex:none;width:22px;height:22px;border-radius:var(--corner-round);background:var(--ok);color:var(--accent-fg)}
+.fcp{margin:0;font-size:var(--text-control);line-height:1.45;color:var(--fg-2)}
+.fcp.muted{color:var(--muted)}
+.fcbrkbox{padding:var(--space-3);border-radius:var(--corner-3);background:var(--accent-soft);font-size:var(--text-control);line-height:1.45;color:var(--fg-2)}
+/* folded: the pill */
+.fcpill{display:flex;align-items:center;gap:var(--space-2);height:40px;padding:0 var(--space-4) 0 var(--space-2);border:0;border-radius:var(--corner-pill);background:none;color:var(--fg);font:inherit;font-size:var(--text-control);cursor:pointer;max-width:320px}
+.fcpill svg{flex:none;width:26px;height:26px;transform:rotate(-90deg)}
+.fcpill circle{fill:none;stroke-width:3.4}
+.fcpill .tr{stroke:var(--track)}
+.fcpill .on{stroke:var(--accent);stroke-linecap:round}
+.fcpill.brk .on{stroke:var(--faint)}
+.fcpill b{font-weight:600;font-variant-numeric:tabular-nums}
+.fcpill span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.fcpill .fcpg{flex:none;padding:1px var(--space-2);border-radius:var(--corner-pill);background:var(--accent-soft);color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
+.fcpill .fcpg.met{background:var(--ok-soft);color:var(--ok)}
+
+/* Settings, Focus */
+.fcset{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3)}
+.fcset input[type=number]{width:76px;height:32px;padding:0 var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
+.fcset .seg{display:inline-flex}

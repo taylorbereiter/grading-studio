@@ -1,22 +1,22 @@
 {
  "version": "1.28.19",
- "build": "9a6e31121c7d",
+ "build": "180add8e430d",
  "notes": [
   "A Timer tab in the side pane for presentations given live: a stopwatch beside the notes page, with the asked-for length and + Time to comment. It is offered to a student who has a notes page and no video.",
   "A YouTube or Vimeo video played in the app has buttons to skip 10 seconds and change speed, and Space, J and L work on it. Video files have a Float button that keeps the video in a small window on top. Google Drive’s player can’t be driven from here."
  ],
  "files": {
-  "index.html": "7ac129217f7c891f651e58530f9b20f6a2f4021217024b9eb7657a4dd855a71b",
-  "planner.html": "6dc0cbfe085de5671e18801e8e4bac05bca28a4b29134d6c65fa81fb64f828cc"
+  "index.html": "ecb48b7f88cca98724d85450d3c1942fefa8337e4413abef5f160d0490a00fd5",
+  "planner.html": "3a440d6bf62a134d6d91ed2f37e74db4f4835771f18444388b4e2eb28f6f7a7c"
  },
  "langs": {
-  "lang/zh-Hant.js": "dbcecc9957e30432923061c023a25dea49498478ab5715ece946d22794316350",
-  "lang/zh-Hans.js": "e9528f5261351549006ee1ccebe1926fc72181d56ca4b0617bfc09c2f000201c",
-  "lang/es.js": "cb2c02a354f1f275cd20744d27212de45df3ce16650a987f99bf01ab8a835830",
-  "lang/fr.js": "ed9a985eb28b373d840f85fb39ff17ce94be217a99708c0df5ce3ec5ebad5dd5",
-  "lang/de.js": "2adde21b72f1585a01114ac10a10283bc3718056ac91c82c7ed08b8f687d7fc6",
-  "lang/pt-BR.js": "646c7753ebcd9215a5f21dab84aafdeb8efb714bac936ef4124e855fd7f1660e",
-  "lang/ja.js": "e12b505e638b91f45d354110274fcdf399736429325f9edc6733c6d7ef647469",
-  "lang/ko.js": "b2a66913e4425a870c1a2caafd567570ee444b695c0f18769c3b47614f9b16e7"
+  "lang/zh-Hant.js": "4626236ce80cc43776ce9b962974b3341c2b20e899c3dc88c217982c8bf33d72",
+  "lang/zh-Hans.js": "cfb79ac04297b57854e0e9dc8d87637c978091a2d0a44e8134351458a1371302",
+  "lang/es.js": "4c85c752c2983b8e5d957d5f6e1890140cbf5f14588e32bfb4b205908eac4714",
+  "lang/fr.js": "f86fdc385071d03404d62f013cde51141bbf9f0e3d9d05f8685857b1ea5295f1",
+  "lang/de.js": "55f14f15179960d6586deb554534eec8104c18fc3773f398dc515ec58e6e8c99",
+  "lang/pt-BR.js": "b53ee0a79a5e731f65f3534908fb88c9ed056a447783f23e0b8f39639cba77e7",
+  "lang/ja.js": "5adbbf0cd2451b0c8e057b42866e8d3f7403aa1a2b1810167ab4e476916a62fd",
+  "lang/ko.js": "c437a117a7a60f5423749450b9ef9e6817d007c3c0d93e914b5a322a77e9116d"
  }
 }
