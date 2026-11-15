@@ -1,22 +1,22 @@
 {
- "version": "1.28.20",
- "build": "3a8f5c267db7",
+ "version": "1.28.26",
+ "build": "2077786b1961",
  "notes": [
-  "Focus: a timer for grading in short sessions. Start it from the card on Today or from Focus in the sidebar, on a set of papers or one of your to-dos, and the next paper with nothing finished opens. A small panel keeps the time, folds to a pill, and offers a break when the time is up. To do has Focus on this.",
-  "A daily goal in papers or minutes, set in Settings, Focus and goals. Dots, a ring in the sidebar and this week’s bars fill in as you go, and turn green when you get there. A paper counts when its score is finished or its feedback is complete."
+  "The School page has a People card: optional spots for your principal, vice principal, department head or subject group coordinator, curriculum coordinator and dean of academic affairs, each with a name and email. Change the spots to your school’s own roles.",
+  "A to-do can name people from the School page. Type “ask the principal” or a last name and they are picked out; open the to-do to add someone or write to them by email, and filter your list by person."
  ],
  "files": {
-  "index.html": "c1a1934803c5fdbaba3be353f59325946454cb1fbe68128d2452b7040ccdaf76",
-  "planner.html": "b01c8663b70c0e6760335f45385f057e27fd55b4f55cc4b325c6bb4e8a006bc2"
+  "index.html": "b8ca7cac2d26882a620277f16dbfe8e686fbd8c7ae6d2cc582a286b0be792cbb",
+  "planner.html": "f333d6e28f6ba72bfdfad085dc485c6cdc14e9b2ab1fe49360dd90794c5739a6"
  },
  "langs": {
-  "lang/zh-Hant.js": "4735c6ce2b572689d084893998b82ffd412c64d349673615e4a9cc1f31523b70",
-  "lang/zh-Hans.js": "f7239ced77c3527a6a4a0775ff78d0df5b5c2e7aa2b05df646f19d7347cc8a61",
-  "lang/es.js": "d132d2c4897617f6bc771ee31d27d588492e8cd398b08e27bc82a2271ef0aeb3",
-  "lang/fr.js": "371ba91536cc9620f47460808566fcdebc1a2e43d6e6e395a4b5231018d26189",
-  "lang/de.js": "46c06aa1e10be042dc7d7689d8c97511b47b00bf63172b9f3d276254e625c5ab",
-  "lang/pt-BR.js": "fa67b04d80f54b30554ca1cd61f03418151f6d4f708afbc3efe89ae7520e12ae",
-  "lang/ja.js": "29c88a48c040e256befa23ec4425ae9b9168f5831f5bdbbac75ca00dad19ba7a",
-  "lang/ko.js": "372f1fe92d3638548093d1b30549b6644b9f0672072fd25d4178e00e716e342c"
+  "lang/zh-Hant.js": "1f22c535de5db63c845d7582e0fd4df81e9ca6ef86bff89a2f720a44ba8784cb",
+  "lang/zh-Hans.js": "edbac187617f22c7be8a18fe3aab3cce9341af88c507561c2c5e9c06eda38fae",
+  "lang/es.js": "9a8d6166c1f8d446e8cf32950a3779a901e3411232ced921dd042a976bf8d451",
+  "lang/fr.js": "ce34ffc3a87728626ce72b16add845e5f59c90176489cadb8bc9bff960769773",
+  "lang/de.js": "30ef04463244a900de7469953040633220cd7c344527b70991384270dc16a3d1",
+  "lang/pt-BR.js": "e39fc5f80b9b17236906daab90e1f1bfad7278c4cf53a242f1c43faa2284763f",
+  "lang/ja.js": "1d39ce5cc31d3ba67bd03937412edaf281a47a84d7feeaae40ce40a38ff5703d",
+  "lang/ko.js": "9fcd368ec33e8089594937defddb2e1c5f7d693c958495b3d82ff90dec8ba4fa"
  }
 }

@@ -2,7 +2,28 @@
 // Each step remembers one page's marks as they were (and its turn, for a rotation), so undo and redo swap them back.
 let redoStack = [];
 const stepOf = (file, idx, withRot) => ({ file, idx, before: JSON.stringify(file.marks[idx] || []), rot: withRot ? rotOf(file, idx) : undefined, skew: withRot ? skewOf(file, idx) : 0, cov: withRot ? coverCopy(file, idx) : undefined });
-function pushUndo(u) { undoStack.push(u); if (undoStack.length > 200) undoStack.shift(); redoStack = []; renderTools(); }
+function pushUndo(u) { if (stepping) return; undoStack.push(u); if (undoStack.length > 200) undoStack.shift(); redoStack = []; renderTools(); }
+let stepping = false;   // while a step is being undone or redone, what it calls doesn't add steps of its own
+// A setting kept on the download, a student or a file (lighting, a video's turn, pages taken out): the named fields as they were.
+// redraw shows the change; what names it in the toast that says what Ctrl Z did. A step with the same join made within
+// a moment is the same step, so a slider dragged across its range is one Ctrl Z, not one a value.
+const fieldStep = (obj, keys, redraw, what) => ({ obj, keys, redraw, what, before: JSON.stringify(Object.fromEntries(keys.map(k => [k, obj[k]]))), t: Date.now() });
+function fieldSnap(obj, keys, redraw, what, join) {
+  const top = undoStack[undoStack.length - 1];
+  if (join && !redoStack.length && top && top.join === join && top.obj === obj && Date.now() - top.t < 1500) { top.t = Date.now(); return; }
+  const u = fieldStep(obj, keys, redraw, what); u.join = join; pushUndo(u);
+}
+function fieldBack(u, to) {
+  to.push(fieldStep(u.obj, u.keys, u.redraw, u.what));
+  const was = JSON.parse(u.before);
+  for (const k of u.keys) if (k in was) u.obj[k] = was[k]; else delete u.obj[k];
+  if (u.redraw) u.redraw();
+  saveSoon(); renderList();
+}
+// A change made by code that knows how to take it back and do it again (removing a file, say): { act: { back, again }, what }.
+const actStep = (back, again, what) => ({ act: { back, again }, what });
+// Several steps that undo together, last one first: tagging one anchor paper takes the tag off another.
+const groupStep = (steps, what) => ({ group: steps, what });
 function snap(pg) { pushUndo(stepOf(pg.file, pg.idx)); }
 // A score is a step too: the student's whole score as it was (rows, points, status), so Ctrl Z takes back a slip of the
 // hand on a slider or a number key the same way it takes back a mark. Called just before the score changes.
@@ -23,11 +44,20 @@ function gradeBack(u, to) {
   saveSoon(); renderList(); renderTools();
 }
 function changed(pg) { scanned = false; draw(pg); gradeMarksChanged(pg.file); saveSoon(); renderList(); }
-function undo() { swapStep(undoStack, redoStack); }
-function redo() { swapStep(redoStack, undoStack); }
-function swapStep(from, to) {
+function undo() { swapStep(undoStack, redoStack, 'Undone'); }
+function redo() { swapStep(redoStack, undoStack, 'Redone'); }
+function swapStep(from, to, said) {
   commitEditors();
   const u = from.pop(); if (!u) return;
+  stepping = true;
+  try { stepBack(u, to); } finally { stepping = false; }
+  renderTools();
+  if (u.what) toast(said + ': ' + u.what);   // marks and scores show where they are; a setting may not, so the toast says what came back
+}
+function stepBack(u, to) {
+  if (u.group) { const back = []; for (const x of u.group.slice().reverse()) stepBack(x, back); to.push(groupStep(back, u.what)); return; }
+  if (u.act) { to.push(actStep(u.act.again, u.act.back, u.what)); u.act.back(); return; }
+  if (u.keys) return fieldBack(u, to);
   if (u.grade) return gradeBack(u, to);
   scanned = false;
   to.push(stepOf(u.file, u.idx, u.rot !== undefined));
@@ -162,6 +192,8 @@ function bindPage(pg) {
     // A comment box in the margin always opens for editing, whatever the tool.
     const box = (pg.boxes || []).find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
     if (box && !box.n.ro && tool !== 'erase') { e.preventDefault(); openNote(pg, box.n); return; }
+    const pill = tool !== 'erase' && !once ? ansPillAt(pg, x, y) : null;   // an answer note's pill: drag it to point the note elsewhere
+    if (pill) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = { move: pill, x, y, moved: false }; return; }
     // A comment's line can be dragged up or down so it runs between lines of writing, not through them.
     const ln = tool !== 'erase' && !once ? noteLineAt(pg, x, y) : null;
     if (ln) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = { line: ln, y0: y, ly0: noteRunY(ln, pg.H), moved: false }; return; }
@@ -274,7 +306,7 @@ function bindPage(pg) {
     g = null;
     if (once && once.k !== 'pen') endOnce();   // a circle or highlight from the right-click: one, then back to her tool
   };
-  c.addEventListener('pointerleave', () => { if (!g && pg.lineOn) { pg.lineOn = null; draw(pg); } });
+  c.addEventListener('pointerleave', () => { if (!g && (pg.lineOn || pg.noteOn)) { pg.lineOn = null; pg.noteOn = null; draw(pg); } });
   c.addEventListener('pointerup', end);
   c.addEventListener('pointercancel', end);
   // A second finger came down (touch.js): a line, a circle or a box only just begun is taken back; anything else ends where it is.

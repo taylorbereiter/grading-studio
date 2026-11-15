@@ -31,6 +31,8 @@ function anchorHtml(st) {
 // One level, one paper: tagging this paper takes the level off whichever paper had it.
 function setAnchor(st, lv) {
   const was = st.grade.anchor || '';
+  // One Ctrl Z puts back both papers: this one, and the one whose tag moved here.
+  pushUndo(groupStep([gradeStep(st), ...batch.students.filter(s => s !== st && s.grade.anchor === lv).map(gradeStep)], 'anchor paper'));
   if (was === lv) delete st.grade.anchor;
   else {
     for (const s of batch.students) if (s !== st && s.grade.anchor === lv) { delete s.grade.anchor; touchGrade(s); }

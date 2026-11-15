@@ -1,4 +1,6 @@
-# The focus timer and daily goal. On opening, the app writes gs.focus: the day, and for each kept download how many papers
-# were finished when the day began, so papers finished later that day can be counted toward the goal. It holds download ids
-# and counts only, no names and no work, and older pages ignore it.
+# The time tracker. gs.focus (the focus timer's log, listed before) may now hold an empty list of time added by hand when it is
+# next written, and days are kept for 400 days in place of 60. Ids and numbers only, no names; older pages ignore the new fields.
 localStorage:gs.focus
+# gsp.timeCount is new: the two time-tracker settings ({ on, idle }) copied from lib.me.focus for the Planner, which reads only
+# its own keys. Older pages never read it, and it is written again from lib.me.focus on every load.
+localStorage:gsp.timeCount

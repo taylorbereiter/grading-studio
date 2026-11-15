@@ -404,13 +404,14 @@ function renderWeek() {
 /* ---------- editor ---------- */
 function renderEditor() {
   const l = L.open; if (!l) return renderWeek();
+  luSee();
   if (boxNotesToSlides(l)) lessonChanged(false);
   L.cur = Math.max(0, Math.min(L.cur, l.slides.length - 1));
   const s = l.slides[L.cur];
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities', library: 'Past lessons' }[L.backTo] || 'Week') + '</button>' +
     '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + mbBtn(classById(t.classId)) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
-    '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
+    '<span class="sp"></span>' + ptBadge(l) + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
     // Above the slide: the lesson's name, where it is taught, its status, the download and Present. The rest is one click away, in More.
     (lessonTalk(l) ? commentsBtn(l) : '') + panelBtn() + moreHtml(l) +
     '<button class="btn sm" data-a="pptx">Download .pptx</button><button class="btn sm primary" data-pr="present" title="Show this lesson full screen, from this slide">' + prIcon('play') + 'Present</button></div>' + pendingBar(l) + variantBar(l);
@@ -496,6 +497,7 @@ function refreshThumb(i) {
 }
 let lSaveT;
 function lessonChanged(rethumb) {
+  luTrack();
   const el = $('#lsSaved'); if (el) el.textContent = 'Saving…';
   if (rethumb !== false) refreshThumb(L.cur);
   // The lesson is the one being edited now: if the editor is closed or another lesson opened in the 400 ms, this one is still saved, never a null one.
@@ -663,6 +665,44 @@ function onLessonsChange(e) {
   if (f === 'layout') { s.layout = e.target.value; lessonChanged(); renderEditor(); }
   if (f === 'size') setBoxSize(e.target.dataset.k || 'body', e.target.value);
 }
+/* ---------- undo in the slide editor ---------- */
+// Ctrl Z (Cmd Z on a Mac) takes back the last change to the open lesson, whatever it was: words on a slide, a layout, a slide
+// added, moved or deleted, a picture. Each change keeps the lesson as it was just before; changes a moment apart are one step.
+// Shift Ctrl Z or Ctrl Y does it again. While a text box on the slide is open, its own undo goes first.
+const LU = { obj: null, base: null, undo: [], redo: [], t: 0, quiet: false };
+const luSig = l => JSON.stringify(l, (k, v) => k === 'updated' ? undefined : v);
+function luSee() { if (LU.obj !== L.open) { LU.obj = L.open; LU.base = L.open ? luSig(L.open) : null; LU.undo = []; LU.redo = []; } }
+function luTrack() {
+  if (LU.obj !== L.open || LU.base == null) return luSee();
+  const now = luSig(L.open); if (now === LU.base) return;
+  if (!LU.quiet) {
+    const t = Date.now();
+    if (!(LU.undo.length && !LU.redo.length && t - LU.t < 1000)) { LU.undo.push(LU.base); if (LU.undo.length > 100) LU.undo.shift(); }
+    LU.t = t; LU.redo = [];
+  }
+  LU.base = now;
+}
+function luStep(from, to, said) {
+  editorCommit();   // words still being typed count as the last change
+  const u = from.pop(), l = L.open;
+  if (!u || !l || LU.obj !== l) { toast(said === 'Undone' ? 'Nothing to undo' : 'Nothing to redo'); return; }
+  to.push(LU.base);
+  const o = JSON.parse(u), kept = l.updated;
+  for (const k of Object.keys(l)) delete l[k];
+  Object.assign(l, o); if (kept) l.updated = kept;
+  LU.base = u; LU.t = 0;
+  LU.quiet = true; try { lessonChanged(false); } finally { LU.quiet = false; }
+  renderEditor(); toast(said);
+}
+document.addEventListener('keydown', e => {
+  if (L.view !== 'edit' || !L.open || !(e.metaKey || e.ctrlKey) || e.altKey || e.defaultPrevented) return;
+  const k = e.key.toLowerCase(); if (k !== 'z' && k !== 'y') return;
+  if (!$('#dlg').hidden || $('#present')) return;
+  const a = document.activeElement;
+  if (a && (a.isContentEditable || a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !/^(checkbox|radio|range|button|submit|color|file)$/.test(a.type)))) return;
+  e.preventDefault();
+  if (k === 'y' || e.shiftKey) luStep(LU.redo, LU.undo, 'Redone'); else luStep(LU.undo, LU.redo, 'Undone');
+});
 function undoToast(msg, fn) {
   toast(msg, 6000);
   const t = $('.toast'); if (!t) return;
@@ -918,7 +958,9 @@ document.addEventListener('keydown', e => {
 async function moreDo(a, t, l) {
   if (a === 'mdelete') {
     if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Click again to delete it for good'; return; }
-    await lDelete(l); L.open = null; L.view = L.backTo || 'week'; renderLessons(); return toast('Lesson deleted');
+    const copy = JSON.parse(JSON.stringify(l));
+    await lDelete(l); L.open = null; L.view = L.backTo || 'week'; renderLessons();
+    return undoToast('Lesson deleted', async () => { if (L.lessons.some(x => x.id === copy.id)) return; await lPut(copy); renderLessons(); toast('Lesson back'); });
   }
   moreClose();
   if (a === 'mshare') return shareSave(l);

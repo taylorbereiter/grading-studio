@@ -1,5 +1,21 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"4735c6ce","zh-Hans":"f7239ced","es":"d132d2c4","fr":"371ba915","de":"46c06aa1","pt-BR":"fa67b04d","ja":"29c88a48","ko":"372f1fe9"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"1f22c535","zh-Hans":"edbac187","es":"9a8d6166","fr":"ce34ffc3","de":"30ef0446","pt-BR":"e39fc5f8","ja":"1d39ce5c","ko":"9fcd368e"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+  try {
+    var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
+    if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
+    var L = window.localStorage;
+    if (L.getItem('gs.sampleOn') === '1') return;
+    var day = new Date().toISOString().slice(0, 10), last = L.getItem('gsc.counted');
+    if (last === day || !window.fetch) return;
+    var hit = function (k) { return fetch(AT + k, { credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store' }).then(function (r) { if (!r.ok) throw r.status; }); };
+    setTimeout(function () {
+      hit('day-' + day).then(function () {
+        try { L.setItem('gsc.counted', day); } catch (e) {}
+        if (last == null) return hit('new-' + day);
+      }).catch(function () {});
+    }, 5000);
+  } catch (e) {}
+})();</script></head><body>
 <title>Planner · Grading Studio</title>
 <script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
    Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
@@ -2236,13 +2252,14 @@ function renderWeek() {
 /* ---------- editor ---------- */
 function renderEditor() {
   const l = L.open; if (!l) return renderWeek();
+  luSee();
   if (boxNotesToSlides(l)) lessonChanged(false);
   L.cur = Math.max(0, Math.min(L.cur, l.slides.length - 1));
   const s = l.slides[L.cur];
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities', library: 'Past lessons' }[L.backTo] || 'Week') + '</button>' +
     '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + mbBtn(classById(t.classId)) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
-    '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
+    '<span class="sp"></span>' + ptBadge(l) + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
     (lessonTalk(l) ? commentsBtn(l) : '') + panelBtn() + moreHtml(l) +
     '<button class="btn sm" data-a="pptx">Download .pptx</button><button class="btn sm primary" data-pr="present" title="Show this lesson full screen, from this slide">' + prIcon('play') + 'Present</button></div>' + pendingBar(l) + variantBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
@@ -2321,6 +2338,7 @@ function refreshThumb(i) {
 }
 let lSaveT;
 function lessonChanged(rethumb) {
+  luTrack();
   const el = $('#lsSaved'); if (el) el.textContent = 'Saving…';
   if (rethumb !== false) refreshThumb(L.cur);
   const l = L.open; if (!l) return;
@@ -2485,6 +2503,41 @@ function onLessonsChange(e) {
   if (f === 'layout') { s.layout = e.target.value; lessonChanged(); renderEditor(); }
   if (f === 'size') setBoxSize(e.target.dataset.k || 'body', e.target.value);
 }
+/* ---------- undo in the slide editor ---------- */
+const LU = { obj: null, base: null, undo: [], redo: [], t: 0, quiet: false };
+const luSig = l => JSON.stringify(l, (k, v) => k === 'updated' ? undefined : v);
+function luSee() { if (LU.obj !== L.open) { LU.obj = L.open; LU.base = L.open ? luSig(L.open) : null; LU.undo = []; LU.redo = []; } }
+function luTrack() {
+  if (LU.obj !== L.open || LU.base == null) return luSee();
+  const now = luSig(L.open); if (now === LU.base) return;
+  if (!LU.quiet) {
+    const t = Date.now();
+    if (!(LU.undo.length && !LU.redo.length && t - LU.t < 1000)) { LU.undo.push(LU.base); if (LU.undo.length > 100) LU.undo.shift(); }
+    LU.t = t; LU.redo = [];
+  }
+  LU.base = now;
+}
+function luStep(from, to, said) {
+  editorCommit();   // words still being typed count as the last change
+  const u = from.pop(), l = L.open;
+  if (!u || !l || LU.obj !== l) { toast(said === 'Undone' ? 'Nothing to undo' : 'Nothing to redo'); return; }
+  to.push(LU.base);
+  const o = JSON.parse(u), kept = l.updated;
+  for (const k of Object.keys(l)) delete l[k];
+  Object.assign(l, o); if (kept) l.updated = kept;
+  LU.base = u; LU.t = 0;
+  LU.quiet = true; try { lessonChanged(false); } finally { LU.quiet = false; }
+  renderEditor(); toast(said);
+}
+document.addEventListener('keydown', e => {
+  if (L.view !== 'edit' || !L.open || !(e.metaKey || e.ctrlKey) || e.altKey || e.defaultPrevented) return;
+  const k = e.key.toLowerCase(); if (k !== 'z' && k !== 'y') return;
+  if (!$('#dlg').hidden || $('#present')) return;
+  const a = document.activeElement;
+  if (a && (a.isContentEditable || a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !/^(checkbox|radio|range|button|submit|color|file)$/.test(a.type)))) return;
+  e.preventDefault();
+  if (k === 'y' || e.shiftKey) luStep(LU.redo, LU.undo, 'Redone'); else luStep(LU.undo, LU.redo, 'Undone');
+});
 function undoToast(msg, fn) {
   toast(msg, 6000);
   const t = $('.toast'); if (!t) return;
@@ -2724,7 +2777,9 @@ document.addEventListener('keydown', e => {
 async function moreDo(a, t, l) {
   if (a === 'mdelete') {
     if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Click again to delete it for good'; return; }
-    await lDelete(l); L.open = null; L.view = L.backTo || 'week'; renderLessons(); return toast('Lesson deleted');
+    const copy = JSON.parse(JSON.stringify(l));
+    await lDelete(l); L.open = null; L.view = L.backTo || 'week'; renderLessons();
+    return undoToast('Lesson deleted', async () => { if (L.lessons.some(x => x.id === copy.id)) return; await lPut(copy); renderLessons(); toast('Lesson back'); });
   }
   moreClose();
   if (a === 'mshare') return shareSave(l);
@@ -6712,6 +6767,8 @@ const LANG_FILLS = [
   ['fcaway', /^You were away for (\d+) minutes?, and the clock kept going\.$/], ['fcdone', /^(\d+) minutes? done$/], ['fcbrk', /^Take a (\d+)-minute break$/], ['fcmore', /^(\d+) more minutes$/],
   ['fckeep', /^Keep going for (\d+) minutes$/], ['fcfin', /^You finished (\d+) papers?\.$/], ['fcsum', /^Today: (\d+) papers? in (\d+) minutes? of focus\.$/], ['fcsum0', /^Today: (\d+) papers?\.$/],
   ['fcweek', /^This week: (\d+) papers?\.$/], ['fctoday', /^Today: (\d+) papers?$/], ['fcdn', /^(\d+) done$/],
+  ['tkpace', /^about (\d+) minutes? a paper$/], ['tkso', /^(\S.*) so far$/], ['tklessons', /^(\d+) lessons?$/], ['tkdays', /^(\d+) days? reached the goal$/],
+  ['tkcount', /^Time counts while the marking screen or the Planner is in front and you have done something there in the last (\d+) minutes?\.$/],
   ['besideopen', /^Open (.+) beside Grading Studio$/],
   ['sdet', /^Student details for (.+)$/], ['cnt', /^Count (.+) in the class average$/], ['wout', /^without (\d+) students? ·$/],
   ['nograde', /^Nothing graded for (.+) in this term yet\. Grade a download for it, or use \+ Add scores for work you did before\.$/],
@@ -6826,7 +6883,7 @@ function trWith(s, P, ctx) {
   return hit == null ? s : s.replace(k, () => hit);
 }
 const tr = (s, ctx) => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK, ctx) : s;
-const LANG_ROOTS = '#rail, #fcPanel, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
+const LANG_ROOTS = '#rail, #fcPanel, #vTime, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
   '#app .top, #side, #tools, #paper .who, #pane2 .sph, #spGrip, #pane2 .sptool, #bsMenu, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
 const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""]), #railClasses .rnav, #classSel option:not([value=""]), #crumbClass, #stuList .nm, #paper .who h2, #paper .fhead > span:first-child, #grade .cn > span';
 const LANG_ATTRS = ['title', 'aria-label', 'placeholder'];
@@ -6914,6 +6971,10 @@ const HELP = [
     a: ['Yes. **Focus** in the sidebar, or the Focus card on Today, starts a session in one press. Pick what to work on: a set of papers waiting to be marked, or one of your to-dos. A set of papers opens at the next paper with no score. When the time is up, a soft chime plays and you can take a break, keep going, or stop.',
       'Set a daily goal in papers or minutes in **Settings, Focus and goals**. A paper counts when its score is finished, wherever you do it. Today, the timer and the sidebar show how far along you are, and turn green when you get there. The length of a session and a break, and the chime, are set there too.'],
     go: ['Open Settings, Focus and goals', '#/settings/focus'], words: 'focus timer pomodoro session break goal daily papers minutes concentrate procrastinate start motivation adhd' },
+  { id: 'time-tracker', sec: 'start', q: 'Can I see how much time I spend grading and planning?',
+    a: ['Yes, in the **Time tracker**: open it from the Focus card on Today, or find it with Find anything. Grading time counts while the marking screen is open and in front; planning time counts while the Planner is, except while you present a lesson. Time stops counting after a few minutes with nothing pressed, typed or scrolled.',
+      'The tracker shows a week, a month or three months: the totals, a bar for each day, grading by assignment and planning by lesson. Use **Add time** for work done away from the app. **Download as a spreadsheet** saves every day as a CSV file. In **Settings, Focus and goals** you can switch counting off or change how soon it stops.'],
+    go: ['Open the time tracker', '#/time'], words: 'time tracker hours minutes how long spent log track record grading planning workload csv spreadsheet' },
   { id: 'school-resources', sec: 'start', q: 'Where can I keep my school’s links and files?',
     a: ['On **School** in the sidebar. Keep the handbook, the calendar, the bell schedule, the portals you sign in to, forms, and notes like who to call. Put them in groups you name, and press the star on the ones you open most to keep them at the top.',
       '**Add a link** when the school keeps it online, since a link stays up to date by itself. **Add files…** keeps a copy of a file with your work, up to 50 MB each. You can also drop files on the page or paste a web address.',
@@ -7175,7 +7236,8 @@ const HELP = [
 
   { id: 'privacy', sec: 'private', q: 'Does student work leave my computer?',
     a: ['No. Papers, names, scores and comments stay in this browser and in the folder you choose. The app has no server and no accounts, and it works with the internet off.',
-      'The only things that leave are the files you export yourself.'],
+      'The only things that leave are the files you export yourself.',
+      'Once a day, the app at its web address adds one to a public count of how many browsers opened it, so its maker can see whether anyone uses it. Nothing about you, your students or your work goes with it.'],
     words: 'private data protection gdpr ferpa cloud server secure safe' },
   { id: 'ai', sec: 'private', q: 'Does the app use AI on student work?',
     a: ['No. Nothing in the app sends student work to an AI, and scores are only ever given by you.', 'Sharing with an AI assistant, on the Return tab, is optional and off until you use it. It makes a copy with no names in it: each student gets a random code, typed names are covered, and the key stays in your browser.'],
@@ -7804,6 +7866,69 @@ document.addEventListener('keydown', e => {
 });
 gsFull.paint();
 window.__gsFull = gsFull;
+
+/* ---------- Planning time, for the grading app's time tracker (src/tracker.js) ----------
+   While the Planner is the tab in front and something was pressed, typed or scrolled in the last few minutes, the time counts as
+   planning: to the lesson that is open, or to '' (the week, the units, the bank). Presenting a lesson is teaching, so it doesn't count.
+   Kept in gsp.planTime: { days: { 'YYYY-MM-DD': { l: seconds, a: { <lesson id> | '': seconds } } }, names: { <lesson id>: title } },
+   for 400 days. The grading app's Settings, Focus and goals can switch it off and say how soon it stops: the grading app copies those two
+   into gsp.timeCount { on, idle }, so the Planner reads only its own keys. */
+var ptReady = false;
+const PT_STEP = 15, PT_FLUSH = 60e3;
+let ptLast = 0, ptMoved = 0, ptPend = { l: 0, a: {}, n: {} }, ptFlushed = Date.now();
+for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart', 'input']) document.addEventListener(ev, () => { ptLast = Date.now(); }, { capture: true, passive: true });
+document.addEventListener('pointermove', () => { const t = Date.now(); if (t - ptMoved > 5000) { ptMoved = t; ptLast = t; } }, { capture: true, passive: true });
+function ptConf() {
+  let f = {}; try { f = JSON.parse(localStorage.getItem('gsp.timeCount') || 'null') || {}; } catch { }
+  return { on: f.on !== false, idle: [2, 5, 10, 15].includes(+f.idle) ? +f.idle : 5 };
+}
+const ptDay = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+function ptTick() {
+  const c = ptConf();
+  if (c.on && !PR.on && document.visibilityState === 'visible' && document.hasFocus() && Date.now() - ptLast < c.idle * 60e3) {
+    const l = L.view === 'edit' && L.open ? L.open : null, k = l ? l.id : '';
+    ptPend.l += PT_STEP; ptPend.a[k] = (ptPend.a[k] || 0) + PT_STEP;
+    if (l) ptPend.n[k] = String(l.title || '').slice(0, 120);
+  }
+  if (Date.now() - ptFlushed >= PT_FLUSH) ptFlush();
+  ptBadgeDraw();
+}
+function ptFlush() {
+  ptFlushed = Date.now();
+  if (!ptPend.l) return;
+  let P = null; try { P = JSON.parse(localStorage.getItem('gsp.planTime') || 'null'); } catch { }
+  P = P && typeof P === 'object' ? P : {};
+  const days = P.days && typeof P.days === 'object' ? P.days : {}, names = P.names && typeof P.names === 'object' ? P.names : {}, k = ptDay();
+  const d = { ...(days[k] || {}) }, a = { ...(d.a || {}) };
+  d.l = (d.l || 0) + ptPend.l;
+  for (const [id, v] of Object.entries(ptPend.a)) a[id] = (a[id] || 0) + v;
+  d.a = a; days[k] = d;
+  for (const [id, t] of Object.entries(ptPend.n)) if (t) names[id] = t;
+  for (const day of Object.keys(days)) if (Date.now() - new Date(day + 'T12:00:00') > 400 * 864e5) delete days[day];
+  const used = new Set(Object.values(days).flatMap(x => Object.keys((x && x.a) || {})));
+  for (const id of Object.keys(names)) if (!used.has(id)) delete names[id];
+  try { localStorage.setItem('gsp.planTime', JSON.stringify({ days, names })); } catch { }
+  ptPend = { l: 0, a: {}, n: {} };
+}
+function ptLessonSecs(id) {
+  if (!ptReady) return 0;
+  let P = null; try { P = JSON.parse(localStorage.getItem('gsp.planTime') || 'null'); } catch { }
+  let s = ptPend.a[id] || 0;
+  for (const d of Object.values((P && P.days) || {})) if (d && d.a && d.a[id]) s += d.a[id];
+  return s;
+}
+function ptSay(secs) { const m = Math.round(secs / 60), h = Math.floor(m / 60); return h ? h + ' hr' + (m % 60 ? ' ' + (m % 60) + ' min' : '') : m + ' min'; }
+function ptBadge(l) {
+  const s = l && l.id ? ptLessonSecs(l.id) : 0;
+  return '<span class="savest ls-ptime" id="lsTime" title="Time spent planning this lesson, counted while it is open"' + (s < 60 ? ' hidden' : '') + '>' + (s >= 60 ? ptSay(s) + ' planning' : '') + '</span>';
+}
+function ptBadgeDraw() { const el = document.getElementById('lsTime'); if (!el || !L.open) return; const s = ptLessonSecs(L.open.id); el.hidden = s < 60; el.textContent = s >= 60 ? ptSay(s) + ' planning' : ''; }
+setInterval(ptTick, PT_STEP * 1000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') ptFlush(); });
+window.addEventListener('pagehide', ptFlush);
+window.addEventListener('blur', ptFlush);
+window.__plantime = { tick: ptTick, flush: ptFlush, lessonSecs: ptLessonSecs, active: () => { ptLast = Date.now(); }, pend: () => ptPend };
+ptReady = true;
 
 })();
 </script>

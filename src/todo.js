@@ -509,4 +509,6 @@ function todoForPerson(pid) {
   tdS.filter = 'p:' + pid; tdS.sel = it.id; go('#/todo'); tdPageRender();
   const x = $('#tdX'); if (x) { x.focus(); x.select(); }
 }
-Object.assign(window.__gs, { todoShowPerson, todoForPerson, todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove });
+// For the screens tool: true while the timetable or who owes work is still being read, either of which can change the To do count.
+const bgBusy = () => !!planBusy || !!tdMiss.busy;
+Object.assign(window.__gs, { todoShowPerson, todoForPerson, todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove, bgBusy });

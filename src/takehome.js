@@ -463,7 +463,7 @@ async function bringApply(B0, src, shown, answers) {
     await schBring(src, B);
     await planTake(B0, src);
     // Rosters next, with no marks or scores changed yet. A score with no paper hangs on its roster, so if that doesn't fit she's told, and nothing goes on without it.
-    if (libm.toA) { lib = migrateLib(libm.lib); if (!setLibFrom(lib)) throw browserFull(); }
+    if (libm.toA) { lib = migrateLib(libm.lib); libUndoForget(); if (!setLibFrom(lib)) throw browserFull(); }
     for (const [k, v] of Object.entries(lsSet)) if (!lsPut(k, v)) throw browserFull();
   } catch (e) {
     for (const id of added) await paperDrop(id).catch(() => {});
