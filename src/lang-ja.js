@@ -27,6 +27,8 @@ function jaHomeSay(k) {
 const LANG_JA = {
   name: '日本語', locale: 'ja',
   words: {
+    // a goal for each session, and goals a week or on some days (src/focus.js)
+    "minutes of focus": "分（集中）", "papers": "枚", "No goal today": "今日は目標なし", "Goal days": "目標の曜日", "Goal for this session": "このセッションの目標", "Finish the set": "このセットを終える", "Finish this to-do": "このやることを終える", "What do you want to get done?": "何を終わらせたいですか？", "Carried over from your last session": "前のセッションから引き継ぎ", "Fewer papers": "枚数を減らす", "More papers": "枚数を増やす", "Session goal": "セッションの目標", "Reached": "達成", "Session goal reached": "セッションの目標を達成", "The rest goes into your next session.": "残りは次のセッションに引き継ぎます。", "It goes into your next session.": "次のセッションに引き継ぎます。", "Don’t carry it over": "引き継がない", "I got it done": "終わりました", "Finish by": "期限", "(carried over)": "（引き継ぎ）", "Something else": "ほかのこと", "This week’s goal reached": "今週の目標を達成", "Suggest a goal for each session, from your pace": "セッションごとに、自分のペースから目標を提案する", "Grading goal": "採点の目標", "How much you want to grade in a day or a week. Today and the timer show how far along you are. Nothing happens on a day you don’t get there.": "1日または1週間にどれだけ採点したいか。今日の画面とタイマーで進み具合がわかります。届かない日があっても何も起きません。", "a day": "1日", "a week": "1週間", "How often": "頻度", "On these days": "この曜日", "A week starts on Monday.": "1週間は月曜日から始まります。", "Weekly goal": "1週間の目標",
     // planning your grading (src/gradeplan.js)
     "about": "約", "Also due that week": "同じ週に締め切り", "Nothing else to grade is due that week.": "その週に採点するものはほかにありません。", "Free period": "空き時間", "Free period now": "いまは空き時間", "Pick up where you left off": "前回の続きから", "Opens the paper you were on and starts the timer": "前回の答案を開いてタイマーを始めます", "Pick up": "続きから", "Just 3 papers": "3枚だけ", "3 papers done": "3枚終わりました", "3 more papers": "あと3枚", "Shortest papers first": "短い答案から", "Your week": "今週", "A look back at the week": "今週のふりかえり", "Papers marked": "採点した答案", "Handed back": "返却済み", "Still waiting": "まだ待っているもの", "Due next week": "来週締め切り", "Put it away for this week": "今週はしまう", "Change the day": "曜日を変える", "Planning your grading": "採点の計画", "How long the papers will take at your pace, and a few ways to start. Each can be switched off.": "あなたのペースで答案にかかる時間と、始めるためのいくつかの方法。どれもオフにできます。", "Offer free periods for grading": "空き時間を採点に使うよう提案する", "When a gap of 20 minutes or more between two of your classes starts, the Focus card on Today offers it, with the next papers ready.": "授業と授業のあいだに20分以上の空きが始まると、今日の集中カードが次の答案を用意して提案します。", "A look back at the week, from": "今週のふりかえりを表示する曜日", "The day of the look back": "ふりかえりの曜日", "Monday": "月曜日", "Tuesday": "火曜日", "Wednesday": "水曜日", "Thursday": "木曜日", "Friday": "金曜日", "Saturday": "土曜日", "Sunday": "日曜日", "Quiet while focusing: hide the counts in the sidebar and in To do during a session": "集中中は静かに：セッション中はサイドバーとやることの数を隠す", "Shortest papers first in a focus session": "集中セッションでは短い答案から",
     // the time tracker (src/tracker.js)
@@ -464,6 +466,7 @@ const LANG_JA = {
   // The lines with a number or a name in them that src/lang.js matches for every language (LANG_FILLS): {1} {2} are the parts found
   // in the English, {t1} is that part in this language when it is known, and a pair is one / many.
   fill: {
+    fcwkof: "今週：{1}", fcrailw: "集中：今週 {1}", gpsessn: "セッション {1}", gpsess: ["今日 {1} セッション。", "今日 {1} セッション。"], gpaday: ["1日 {1} 枚", "1日 {1} 枚"], tkweeks: ["{1} 週が目標を達成", "{1} 週が目標を達成"],
     fct3: "3枚だけ：{1}", gpfor: "{1}分採点する", gpleft: "残り約{1}", gpsets: "{1}セット", gpdays: "{1}日",
     tkso: "これまで{1}",
     tkpace: "1枚あたり約{1}分", tklessons: "{1}件の授業", tkdays: "{1}日が目標に届きました", tkcount: "採点画面か授業計画のページが前面にあり、直近{1}分以内に操作があるあいだ時間を数えます。",
@@ -506,6 +509,10 @@ const LANG_JA = {
   },
   helpSecs: { start: 'はじめに', mark: '提出物の採点', score: '点数とルーブリック', back: '提出物の返却', class: 'クラスと成績簿', safe: '保存と安全', plan: '計画と授業', private: 'プライバシー' },
   help: {
+    'session-goals': { q: "集中セッションごとに目標を立てられますか？", go: ["設定の「集中と目標」を開く", "#/settings/focus"], words: "セッション 目標 引き継ぎ 次のセッション 休憩 週の目標 曜日 期限 締め切り 1日 枚数",
+      a: ["はい。始める前に **このセッションの目標** で選びます。数枚、セット全体、やること、または自分の言葉で書いた目標です。アプリが自分のペースから提案し、タイマーに進み具合が表示されます。",
+        "セッションが終わると、達成できたかがわかります。届かなかった目標は同じ作業の次のセッションに引き継がれるので、休憩をはさみながら何回かに分けてセットを終えられます。**引き継がない** を押すと取り消せます。",
+        "目標は1日または1週間、枚数または分で決められ、1日の目標は一部の曜日だけにもできます。ある日までにセットを終えたいときは **期限** で日を選ぶと、1日に何枚必要かが表示されます。どれも **設定の「集中と目標」** にあります。"] },
     'plan-grading': { q: "採点にどれくらいかかるか教えてもらえますか？", go: ["設定の「集中と目標」を開く", "#/settings/focus"], words: "見積もり どれくらい ペース 負担 締め切り 空き時間 続き 短い 少しずつ ふりかえり 金曜 静か",
       a: ["はい。時間の記録をオンにして答案を何枚か終えると、各セットにあなたのペースで約何分かかるかが表示されます。集中カード、課題のカード、やることの週表示、締め切りを決めるときの日付の下に出ます。",
         "集中カードは、授業のあいだの空き時間を提案し、前回のセットを置いた答案から再開し、**3枚だけ**で小さく始めることもできます。選んだ曜日には、今日にその週のふりかえりが出ます。どれも**設定の「集中と目標」**でオフにできます。"] },

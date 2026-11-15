@@ -27,6 +27,8 @@ function zhsHomeSay(k) {
 const LANG_ZHS = {
   name: '简体中文', locale: 'zh-Hans',
   words: {
+    // a goal for each session, and goals a week or on some days (src/focus.js)
+    "minutes of focus": "分钟专注", "papers": "份", "No goal today": "今天没有目标", "Goal days": "目标日", "Goal for this session": "这一段的目标", "Finish the set": "改完这一批", "Finish this to-do": "完成这项待办", "What do you want to get done?": "你想完成什么？", "Carried over from your last session": "沿用上一段", "Fewer papers": "少一份", "More papers": "多一份", "Session goal": "这一段的目标", "Reached": "已达成", "Session goal reached": "已达成这一段的目标", "The rest goes into your next session.": "剩下的会移到下一段。", "It goes into your next session.": "会移到下一段。", "Don’t carry it over": "不要移过去", "I got it done": "我完成了", "Finish by": "完成期限", "(carried over)": "（沿用）", "Something else": "做别的事", "This week’s goal reached": "已达成本周目标", "Suggest a goal for each session, from your pace": "按你的速度，为每一段建议一个目标", "Grading goal": "批改目标", "How much you want to grade in a day or a week. Today and the timer show how far along you are. Nothing happens on a day you don’t get there.": "你想一天或一周批改多少。今天和计时器会显示你的进度。没达到的日子什么也不会发生。", "a day": "每天", "a week": "每周", "How often": "多久一次", "On these days": "在这些日子", "A week starts on Monday.": "一周从星期一开始。", "Weekly goal": "每周目标",
     // planning your grading (src/gradeplan.js)
     "about": "约", "Also due that week": "同一周到期", "Nothing else to grade is due that week.": "那一周没有其他要批改的。", "Free period": "空堂", "Free period now": "现在是空堂", "Pick up where you left off": "从上次停下的地方继续", "Opens the paper you were on and starts the timer": "打开你上次看到的作业并开始计时", "Pick up": "继续", "Just 3 papers": "只改 3 份", "3 papers done": "完成 3 份", "3 more papers": "再改 3 份", "Shortest papers first": "先改最短的", "Your week": "本周", "A look back at the week": "回顾这一周", "Papers marked": "已批改的作业", "Handed back": "已发还", "Still waiting": "还在等待", "Due next week": "下周到期", "Put it away for this week": "本周先收起来", "Change the day": "更改日子", "Planning your grading": "规划批改", "How long the papers will take at your pace, and a few ways to start. Each can be switched off.": "按你的速度作业要花多久，以及几种开始的方法。每一项都可以关闭。", "Offer free periods for grading": "提议用空堂批改", "When a gap of 20 minutes or more between two of your classes starts, the Focus card on Today offers it, with the next papers ready.": "当你两节课之间开始 20 分钟以上的空档时，今天的专注卡片会提议使用，并备好下一批作业。", "A look back at the week, from": "回顾这一周，从", "The day of the look back": "回顾的日子", "Monday": "星期一", "Tuesday": "星期二", "Wednesday": "星期三", "Thursday": "星期四", "Friday": "星期五", "Saturday": "星期六", "Sunday": "星期日", "Quiet while focusing: hide the counts in the sidebar and in To do during a session": "专注时保持安静：专注期间隐藏侧边栏和待办事项中的数字", "Shortest papers first in a focus session": "专注时先改最短的作业",
     // the time tracker (src/tracker.js)
@@ -455,6 +457,7 @@ const LANG_ZHS = {
   // The lines with a number or a name in them that src/lang.js matches for every language (LANG_FILLS): {1} {2} are the parts found
   // in the English, {t1} is that part in this language when it is known, and a pair is one / many.
   fill: {
+    fcwkof: "本周：{1}", fcrailw: "专注：本周 {1}", gpsessn: "第 {1} 段", gpsess: ["今天 {1} 段。", "今天 {1} 段。"], gpaday: ["每天 {1} 份", "每天 {1} 份"], tkweeks: ["{1} 周达成目标", "{1} 周达成目标"],
     fct3: "只改 3 份：{1}", gpfor: "批改 {1} 分钟", gpleft: "约剩 {1}", gpsets: "{1} 批", gpdays: "{1} 天",
     tkso: "目前 {1}",
     tkpace: "每份约 {1} 分钟", tklessons: "{1} 堂课", tkdays: "{1} 天达成目标", tkcount: "批改页面或备课页面在前台，且最近 {1} 分钟内有操作时才计时。",
@@ -496,6 +499,10 @@ const LANG_ZHS = {
   },
   helpSecs: { start: '开始使用', mark: '批改作业', score: '分数与评分标准', back: '发回作业', class: '班级与成绩册', safe: '保存与安全', plan: '备课与上课', private: '隐私' },
   help: {
+    'session-goals': { q: "我可以为每一段专注设定目标吗？", go: ["打开设置的专注与目标", "#/settings/focus"], words: "段 目标 每一段 沿用 下一段 休息 每周目标 目标日 完成期限 截止 每天 份数",
+      a: ["可以。开始前，在 **这一段的目标** 选一个：几份、整批、这项待办，或你自己写的几个字。应用会按你的速度建议一个，计时器会显示你的进度。",
+        "这一段结束时，你会看到是否达成。没达成的目标会移到同一份工作的下一段，所以一批可以分几次、中间休息着改完。按 **不要移过去** 就不再沿用。",
+        "目标可以是一天或一周，以份数或分钟计，每日目标也可以只设在某几天。想在某天前改完一批，在 **完成期限** 选那天，就会看到每天要改几份。这些都在 **设置的专注与目标**。"] },
     'plan-grading': { q: "应用能告诉我批改要花多久吗？", go: ["打开设置的专注与目标", "#/settings/focus"], words: "估计 多久 速度 负担 截止 空堂 继续 最短 小步 每周回顾 星期五 安静",
       a: ["可以。开着时间记录完成几份作业后，每一批都会显示按你的速度大约要多久：在专注卡片、作业卡片、待办事项的一周视图，以及设定截止日期时日期下方。",
         "专注卡片也会提议两节课之间的空堂，从你上次那批作业停下的那一份继续，并可以用**只改 3 份**小小开始。在你选的日子，今天会显示这一周的回顾。每一项都能在**设置的专注与目标**中关闭。"] },

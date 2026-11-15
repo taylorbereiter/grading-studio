@@ -27,6 +27,8 @@ function koHomeSay(k) {
 const LANG_KO = {
   name: '한국어', locale: 'ko',
   words: {
+    // a goal for each session, and goals a week or on some days (src/focus.js)
+    "minutes of focus": "분 집중", "papers": "장", "No goal today": "오늘은 목표 없음", "Goal days": "목표 요일", "Goal for this session": "이번 세션 목표", "Finish the set": "이 묶음 끝내기", "Finish this to-do": "이 할 일 끝내기", "What do you want to get done?": "무엇을 끝내고 싶나요?", "Carried over from your last session": "지난 세션에서 이어짐", "Fewer papers": "장수 줄이기", "More papers": "장수 늘리기", "Session goal": "세션 목표", "Reached": "달성", "Session goal reached": "세션 목표 달성", "The rest goes into your next session.": "나머지는 다음 세션으로 넘어갑니다.", "It goes into your next session.": "다음 세션으로 넘어갑니다.", "Don’t carry it over": "넘기지 않기", "I got it done": "끝냈어요", "Finish by": "마감일", "(carried over)": "(이어짐)", "Something else": "다른 일", "This week’s goal reached": "이번 주 목표 달성", "Suggest a goal for each session, from your pace": "세션마다 내 속도에 맞춰 목표 제안하기", "Grading goal": "채점 목표", "How much you want to grade in a day or a week. Today and the timer show how far along you are. Nothing happens on a day you don’t get there.": "하루나 한 주에 얼마나 채점하고 싶은지 정합니다. 오늘 화면과 타이머에 진행 상황이 보입니다. 목표에 못 미친 날에도 아무 일도 없습니다.", "a day": "하루에", "a week": "한 주에", "How often": "얼마나 자주", "On these days": "이 요일에", "A week starts on Monday.": "한 주는 월요일에 시작합니다.", "Weekly goal": "주간 목표",
     // planning your grading (src/gradeplan.js)
     "about": "약", "Also due that week": "같은 주에 마감", "Nothing else to grade is due that week.": "그 주에는 채점할 다른 것이 없습니다.", "Free period": "빈 시간", "Free period now": "지금은 빈 시간", "Pick up where you left off": "하던 곳에서 이어서", "Opens the paper you were on and starts the timer": "하던 답안을 열고 타이머를 시작합니다", "Pick up": "이어서", "Just 3 papers": "3장만", "3 papers done": "3장 끝", "3 more papers": "3장 더", "Shortest papers first": "짧은 답안부터", "Your week": "이번 주", "A look back at the week": "이번 주 돌아보기", "Papers marked": "채점한 답안", "Handed back": "돌려줌", "Still waiting": "아직 기다리는 것", "Due next week": "다음 주 마감", "Put it away for this week": "이번 주는 접어 두기", "Change the day": "요일 바꾸기", "Planning your grading": "채점 계획", "How long the papers will take at your pace, and a few ways to start. Each can be switched off.": "내 속도로 답안에 걸릴 시간과 시작하는 몇 가지 방법. 모두 끌 수 있습니다.", "Offer free periods for grading": "빈 시간을 채점에 쓰도록 제안", "When a gap of 20 minutes or more between two of your classes starts, the Focus card on Today offers it, with the next papers ready.": "수업 사이에 20분 이상의 빈 시간이 시작되면 오늘의 집중 카드가 다음 답안을 준비해 제안합니다.", "A look back at the week, from": "이번 주 돌아보기를 보여 줄 요일", "The day of the look back": "돌아보기 요일", "Monday": "월요일", "Tuesday": "화요일", "Wednesday": "수요일", "Thursday": "목요일", "Friday": "금요일", "Saturday": "토요일", "Sunday": "일요일", "Quiet while focusing: hide the counts in the sidebar and in To do during a session": "집중하는 동안 조용히: 세션 중에는 사이드바와 할 일의 숫자를 숨기기", "Shortest papers first in a focus session": "집중 세션에서는 짧은 답안부터",
     // the time tracker (src/tracker.js)
@@ -472,6 +474,7 @@ const LANG_KO = {
   // The lines with a number or a name in them that src/lang.js matches for every language (LANG_FILLS): {1} {2} are the parts found
   // in the English, {t1} is that part in this language when it is known, and a pair is one / many.
   fill: {
+    fcwkof: "이번 주: {1}", fcrailw: "집중: 이번 주 {1}", gpsessn: "세션 {1}", gpsess: ["오늘 세션 {1}번.", "오늘 세션 {1}번."], gpaday: ["하루 {1}장", "하루 {1}장"], tkweeks: ["{1}주가 목표 달성", "{1}주가 목표 달성"],
     fct3: "3장만: {1}", gpfor: "{1}분 채점하기", gpleft: "약 {1} 남음", gpsets: "{1}묶음", gpdays: "{1}일",
     tkso: "지금까지 {1}",
     tkpace: "답안 하나에 약 {1}분", tklessons: "수업 {1}개", tkdays: "{1}일이 목표에 닿았습니다", tkcount: "채점 화면이나 수업 계획이 앞에 있고 최근 {1}분 안에 무언가를 했을 때 시간을 셉니다.",
@@ -515,6 +518,10 @@ const LANG_KO = {
   },
   helpSecs: { start: '시작하기', mark: '제출물 채점', score: '점수와 루브릭', back: '제출물 돌려주기', class: '학급과 성적부', safe: '저장과 안전', plan: '계획과 수업', private: '개인정보 보호' },
   help: {
+    'session-goals': { q: "집중 세션마다 목표를 정할 수 있나요?", go: ["설정의 집중과 목표 열기", "#/settings/focus"], words: "세션 목표 이어짐 다음 세션 휴식 주간 목표 요일 마감일 기한 하루 장수",
+      a: ["네. 시작하기 전에 **이번 세션 목표**에서 고릅니다. 몇 장, 묶음 전체, 할 일, 또는 직접 쓴 몇 마디입니다. 앱이 내 속도에 맞춰 하나를 제안하고, 타이머에 진행 상황이 보입니다.",
+        "세션이 끝나면 목표를 달성했는지 보입니다. 달성하지 못한 목표는 같은 작업의 다음 세션으로 넘어가므로, 쉬는 시간을 두고 몇 번에 나눠 묶음을 끝낼 수 있습니다. **넘기지 않기**를 누르면 넘어가지 않습니다.",
+        "목표는 하루나 한 주 단위로, 장수나 분으로 정할 수 있고, 하루 목표는 일부 요일에만 둘 수도 있습니다. 어느 날까지 묶음을 끝내려면 **마감일**에서 날짜를 고르면 하루에 몇 장이 필요한지 보입니다. 모두 **설정의 집중과 목표**에 있습니다."] },
     'plan-grading': { q: "채점에 시간이 얼마나 걸릴지 알 수 있나요?", go: ["설정의 집중과 목표 열기", "#/settings/focus"], words: "예상 얼마나 속도 부담 마감 빈 시간 이어서 짧은 작은 걸음 주간 돌아보기 금요일 조용히",
       a: ["네. 시간 기록을 켜고 답안을 몇 장 끝내면, 각 묶음마다 내 속도로 약 얼마나 걸릴지 보여 줍니다. 집중 카드, 과제 카드, 할 일의 주간 보기, 마감을 정할 때 날짜 아래에 나옵니다.",
         "집중 카드는 수업 사이의 빈 시간을 제안하고, 마지막으로 하던 묶음을 두고 온 답안에서 이어 가며, **3장만**으로 작게 시작할 수도 있습니다. 고른 요일에는 오늘에 이번 주 돌아보기가 나옵니다. 모두 **설정의 집중과 목표**에서 끌 수 있습니다."] },
