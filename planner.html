@@ -1,5 +1,21 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"4626236c","zh-Hans":"cfb79ac0","es":"4c85c752","fr":"f86fdc38","de":"55f14f15","pt-BR":"b53ee0a7","ja":"5adbbf0c","ko":"c437a117"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"6284fe8f","zh-Hans":"d66426a5","es":"4a4a8bdf","fr":"9e1a7d91","de":"72195239","pt-BR":"0ec58f51","ja":"096c0c48","ko":"8b345149"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+  try {
+    var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
+    if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
+    var L = window.localStorage;
+    if (L.getItem('gs.sampleOn') === '1') return;
+    var day = new Date().toISOString().slice(0, 10), last = L.getItem('gsc.counted');
+    if (last === day || !window.fetch) return;
+    var hit = function (k) { return fetch(AT + k, { credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store' }).then(function (r) { if (!r.ok) throw r.status; }); };
+    setTimeout(function () {
+      hit('day-' + day).then(function () {
+        try { L.setItem('gsc.counted', day); } catch (e) {}
+        if (last == null) return hit('new-' + day);
+      }).catch(function () {});
+    }, 5000);
+  } catch (e) {}
+})();</script></head><body>
 <title>Planner · Grading Studio</title>
 <script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
    Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
@@ -7175,7 +7191,8 @@ const HELP = [
 
   { id: 'privacy', sec: 'private', q: 'Does student work leave my computer?',
     a: ['No. Papers, names, scores and comments stay in this browser and in the folder you choose. The app has no server and no accounts, and it works with the internet off.',
-      'The only things that leave are the files you export yourself.'],
+      'The only things that leave are the files you export yourself.',
+      'Once a day, the app at its web address adds one to a public count of how many browsers opened it, so its maker can see whether anyone uses it. Nothing about you, your students or your work goes with it.'],
     words: 'private data protection gdpr ferpa cloud server secure safe' },
   { id: 'ai', sec: 'private', q: 'Does the app use AI on student work?',
     a: ['No. Nothing in the app sends student work to an AI, and scores are only ever given by you.', 'Sharing with an AI assistant, on the Return tab, is optional and off until you use it. It makes a copy with no names in it: each student gets a random code, typed names are covered, and the key stays in your browser.'],

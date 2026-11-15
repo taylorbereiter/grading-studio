@@ -36,7 +36,7 @@ With a class roster pasted in, students are listed in your roster's order and ma
 ## Your students' privacy
 
 - Papers, names, marks, scores and comments are kept in your browser and, if you choose one, a folder on your own computer. Nothing is uploaded.
-- Opening the app contacts only the address it is served from, to ask which version is newest. Nothing about you or your work is sent.
+- Opening the app contacts the address it is served from, to ask which version is newest. Once a day, the pages at the web address also add one to a public count of browsers that opened them (`abacus.jasoncameron.dev`, a free counter with no account), so the maker can see whether anyone uses the app. Only the visit itself is counted: no name, no setting and nothing about your work goes with it, and the first visit from a browser is also counted as new. The counter sees what any web request shows (the internet address and the browser's name). It never runs in the sample, in tests or in the double-click copies, and with no internet it simply doesn't count (src/visits.js).
 - Working with Claude is optional and manual. **Share with Claude** makes a file with student names covered and a random code for each student; the key to the codes stays in your browser.
 
 ## Keeping your work safe

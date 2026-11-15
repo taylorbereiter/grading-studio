@@ -1,22 +1,21 @@
 {
- "version": "1.28.20",
- "build": "b80f3d2c1151",
+ "version": "1.28.21",
+ "build": "0975e2aa3da6",
  "notes": [
-  "Focus: a timer for grading in short sessions. Start it from the card on Today or from Focus in the sidebar, on a set of papers or one of your to-dos, and the next paper with nothing finished opens. A small panel keeps the time, folds to a pill, and offers a break when the time is up. To do has Focus on this.",
-  "A daily goal in papers or minutes, set in Settings, Focus and goals. Dots, a ring in the sidebar and this week’s bars fill in as you go, and turn green when you get there. A paper counts when its score is finished or its feedback is complete."
+  "Once a day, the app at its web address adds one to a public count of how many browsers opened it, so its maker can see whether anyone uses it. Nothing about you, your students or your work goes with it. Help, Privacy says the same."
  ],
  "files": {
-  "index.html": "225276ee368473063b7d8851ae6d46206d4ff637b9ffd3f3109f0a582053ec25",
-  "planner.html": "682360eb7275f7476586b14795bdf2498147f998aebc2a035a5c00fd278c2453"
+  "index.html": "8aa8fccc76ffa691562088d87ed798a6cb2c566a6891fbf3f30507feecdeb4ae",
+  "planner.html": "75d092b8a28b170995c81464c574bba378847bd3f1eb81f4b273a555020a1995"
  },
  "langs": {
-  "lang/zh-Hant.js": "4626236ce80cc43776ce9b962974b3341c2b20e899c3dc88c217982c8bf33d72",
-  "lang/zh-Hans.js": "cfb79ac04297b57854e0e9dc8d87637c978091a2d0a44e8134351458a1371302",
-  "lang/es.js": "4c85c752c2983b8e5d957d5f6e1890140cbf5f14588e32bfb4b205908eac4714",
-  "lang/fr.js": "f86fdc385071d03404d62f013cde51141bbf9f0e3d9d05f8685857b1ea5295f1",
-  "lang/de.js": "55f14f15179960d6586deb554534eec8104c18fc3773f398dc515ec58e6e8c99",
-  "lang/pt-BR.js": "b53ee0a79a5e731f65f3534908fb88c9ed056a447783f23e0b8f39639cba77e7",
-  "lang/ja.js": "5adbbf0cd2451b0c8e057b42866e8d3f7403aa1a2b1810167ab4e476916a62fd",
-  "lang/ko.js": "c437a117a7a60f5423749450b9ef9e6817d007c3c0d93e914b5a322a77e9116d"
+  "lang/zh-Hant.js": "6284fe8f86a87a6f474979372744af559f3abd36a54e63f25f2d6aa4883c2c60",
+  "lang/zh-Hans.js": "d66426a524da633e26c7e7e68262092378459e1dd5b9956daecf02b8c909337b",
+  "lang/es.js": "4a4a8bdfcad8c54643fa1ff90a1f79f7d1ef191c45fe25362a88f78f3b0c4127",
+  "lang/fr.js": "9e1a7d91e3e485d197ac52813deb0a6a52f7502afc03a85db75729e98a81daf5",
+  "lang/de.js": "72195239e7dd2cbee04fff4023523f9d591d88968f2df3da13fe1acbbfcd6853",
+  "lang/pt-BR.js": "0ec58f51f4d3c8281551fffb86d9899508acfb144f8dab0b338eac74497c3a26",
+  "lang/ja.js": "096c0c4848a39a2507c7a645b0faddaa80e4b2a2535c84686fec09eb15d3c77a",
+  "lang/ko.js": "8b34514909e36dfbd031d22cb30d67c63e5f63b1ef0472c31054ffabea28c6bf"
  }
 }
