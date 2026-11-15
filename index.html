@@ -6128,7 +6128,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   if (assignment && assignment.quiz && !batch.quiz && !assignment.batchId) { batch.quiz = JSON.parse(JSON.stringify(assignment.quiz)); setTimeout(saveSoon, 0); }   // a card from last year starts with its Quick mark boxes
   if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; shareRubric(assignment); saveLib(); }
   keepWait = keepPapers(batch, label, fromKeep ? null : keepList, sameSize.length > 0);
-  cur = 0; undoStack = []; selected = null;
+  cur = 0; undoStack = []; redoStack = []; selected = null;
   routeTok++; routeOpening = ''; go(batchHash(id), routeNow().v === 'a');   // from another open assignment (or this one's own address after a refresh): no extra step for Back
   setBatchName(); qzForget(); quizBtn();
   $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !students.some(st => st.files.some(trMakeable));
@@ -7065,6 +7065,8 @@ function openArrange() {
     if (e.target.closest('[data-newfile]')) { L.push({ name: 'New file ' + (L.length + 1) + '.pdf', pages: [], out: false }); return render(); }
     if (e.target.closest('[data-reset]')) { L = defaultLayout(st).map(d => ({ ...d, pages: d.pages.map(x => x.slice()), out: null })); tray = []; sel = new Set(); strip = seqDefault(); return render(); }
     if (e.target.closest('[data-save]')) {
+      const redraw = () => { renderList(); openStudent(cur); };
+      pushUndo(groupStep([fieldStep(batch, ['lightPg'], redraw), ...batch.students.map(o => fieldStep(o, ['layout', 'forder'], o === st ? redraw : null))], 'arranged pages'));
       drawStrip();
       const inStrip = strip.filter(x => typeof x !== 'string' && x.pages.length);
       L = inStrip.concat(L.filter(d => !inStrip.includes(d) && d.pages.length));
@@ -7154,7 +7156,23 @@ window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTi
 /* ---------------- undo and redo ---------------- */
 let redoStack = [];
 const stepOf = (file, idx, withRot) => ({ file, idx, before: JSON.stringify(file.marks[idx] || []), rot: withRot ? rotOf(file, idx) : undefined, skew: withRot ? skewOf(file, idx) : 0, cov: withRot ? coverCopy(file, idx) : undefined });
-function pushUndo(u) { undoStack.push(u); if (undoStack.length > 200) undoStack.shift(); redoStack = []; renderTools(); }
+function pushUndo(u) { if (stepping) return; undoStack.push(u); if (undoStack.length > 200) undoStack.shift(); redoStack = []; renderTools(); }
+let stepping = false;   // while a step is being undone or redone, what it calls doesn't add steps of its own
+const fieldStep = (obj, keys, redraw, what) => ({ obj, keys, redraw, what, before: JSON.stringify(Object.fromEntries(keys.map(k => [k, obj[k]]))), t: Date.now() });
+function fieldSnap(obj, keys, redraw, what, join) {
+  const top = undoStack[undoStack.length - 1];
+  if (join && !redoStack.length && top && top.join === join && top.obj === obj && Date.now() - top.t < 1500) { top.t = Date.now(); return; }
+  const u = fieldStep(obj, keys, redraw, what); u.join = join; pushUndo(u);
+}
+function fieldBack(u, to) {
+  to.push(fieldStep(u.obj, u.keys, u.redraw, u.what));
+  const was = JSON.parse(u.before);
+  for (const k of u.keys) if (k in was) u.obj[k] = was[k]; else delete u.obj[k];
+  if (u.redraw) u.redraw();
+  saveSoon(); renderList();
+}
+const actStep = (back, again, what) => ({ act: { back, again }, what });
+const groupStep = (steps, what) => ({ group: steps, what });
 function snap(pg) { pushUndo(stepOf(pg.file, pg.idx)); }
 const gradeStep = st => ({ grade: st, before: JSON.stringify(st.grade) });
 function gradeSnap(st) { pushUndo(gradeStep(st)); }
@@ -7172,11 +7190,20 @@ function gradeBack(u, to) {
   saveSoon(); renderList(); renderTools();
 }
 function changed(pg) { scanned = false; draw(pg); gradeMarksChanged(pg.file); saveSoon(); renderList(); }
-function undo() { swapStep(undoStack, redoStack); }
-function redo() { swapStep(redoStack, undoStack); }
-function swapStep(from, to) {
+function undo() { swapStep(undoStack, redoStack, 'Undone'); }
+function redo() { swapStep(redoStack, undoStack, 'Redone'); }
+function swapStep(from, to, said) {
   commitEditors();
   const u = from.pop(); if (!u) return;
+  stepping = true;
+  try { stepBack(u, to); } finally { stepping = false; }
+  renderTools();
+  if (u.what) toast(said + ': ' + u.what);   // marks and scores show where they are; a setting may not, so the toast says what came back
+}
+function stepBack(u, to) {
+  if (u.group) { const back = []; for (const x of u.group.slice().reverse()) stepBack(x, back); to.push(groupStep(back, u.what)); return; }
+  if (u.act) { to.push(actStep(u.act.again, u.act.back, u.what)); u.act.back(); return; }
+  if (u.keys) return fieldBack(u, to);
   if (u.grade) return gradeBack(u, to);
   scanned = false;
   to.push(stepOf(u.file, u.idx, u.rot !== undefined));
@@ -9882,7 +9909,7 @@ async function syncPull() {
     }
     try { localStorage.setItem('gs.syncT', JSON.stringify(local)); } catch {}
     if (changed) {
-      const l = store.get('gs.lib', null); if (l) lib = migrateLib(l);
+      const l = store.get('gs.lib', null); if (l) { lib = migrateLib(l); libUndoForget(); }
       bank = store.get('gs.bank', bank);
       if (!batch) { const s = store.get('gs.setup', null); if (s) setup = setupOver(s); }
       renderLib(); if (batch) renderClassSel();
@@ -10450,6 +10477,74 @@ function openTranscripts() {
   };
 }
 
+/* ---------------- undo outside the marking screen ---------------- */
+const LIBU = { undo: [], redo: [], last: null, t: 0, quiet: false };
+const LIBU_MAX = 60, LIBU_ROOM = 40e6;   // steps, and characters kept in all, so a big library can't eat the computer's memory
+const LIBU_SKIP = new Set(['v', 'at', 'fv', 'gone', 'opened']);
+function libSnap() { try { return { s: JSON.stringify(lib), sig: JSON.stringify(lib, (k, v) => LIBU_SKIP.has(k) ? undefined : v) }; } catch { return null; } }
+function libTrack() {
+  const was = LIBU.last, now = libSnap(); if (!now) return;
+  LIBU.last = now;
+  if (!was || was.sig === now.sig || LIBU.quiet) return;
+  if (batch) { LIBU.undo = []; LIBU.redo = []; return; }
+  const t = Date.now();
+  if (!(LIBU.undo.length && !LIBU.redo.length && t - LIBU.t < 1000)) {
+    LIBU.undo.push(was);
+    let room = LIBU.undo.reduce((n, u) => n + u.s.length, 0);
+    while (LIBU.undo.length > LIBU_MAX || (room > LIBU_ROOM && LIBU.undo.length > 1)) room -= LIBU.undo.shift().s.length;
+  }
+  LIBU.t = t; LIBU.redo = [];
+}
+function libUndoForget() { LIBU.undo = []; LIBU.redo = []; LIBU.last = libSnap(); }
+function libWhat(a, b) {
+  try {
+    const wa = libWalk(a), wb = libWalk(b), hit = new Map();
+    for (const [id, e] of wb) { const x = wa.get(id); if (!x || nodeHash(x) !== nodeHash(e)) hit.set(id, e); }
+    for (const [id, e] of wa) if (!wb.has(id)) hit.set(id, e);
+    const named = [...new Set([...hit.values()].filter(e => !hit.has(e.parent)).map(e => e.fields.name).filter(Boolean))];
+    if (named.length === 1) return '“' + named[0] + '”';
+    if (named.length > 1) return named.length + ' classes, units or assignments';
+    if (JSON.stringify(a.todo) !== JSON.stringify(b.todo)) return 'To do';
+    if (JSON.stringify(a.me) !== JSON.stringify(b.me)) return 'Settings';
+  } catch {}
+  return '';
+}
+function libStep(from, to, said) {
+  const u = from.pop();
+  if (!u) { toast(said === 'Undone' ? 'Nothing to undo' : 'Nothing to redo'); return; }
+  const cur = LIBU.last || libSnap(); if (!cur) return;
+  to.push(cur);
+  const next = JSON.parse(u.s), was = JSON.parse(cur.s), what = libWhat(was, next);
+  if (was.gone) next.gone = was.gone; else delete next.gone;
+  LIBU.quiet = true;
+  try {
+    lib = migrateLib(next);
+    if (batch && batch.assignment) { const f = findItem(batch.assignment.id); if (f) batch.assignment = f.it; }
+    saveLib();
+  } finally { LIBU.quiet = false; }
+  LIBU.last = libSnap(); LIBU.t = 0;
+  libRedraw();
+  toast(said + (what ? ': ' + what : ''));
+}
+function libRedraw() {
+  const r = routeNow();
+  renderLib();
+  try { if (typeof homeRender === 'function' && r.v === 'home') homeRender(); } catch {}
+  try { if (typeof todoRender === 'function' && r.v === 'todo') todoRender(); } catch {}
+  try { if (typeof setRender === 'function' && r.v === 'settings') setRender(); } catch {}
+  try { if (window.railRender) railRender(); } catch {}
+}
+const libUndo = () => libStep(LIBU.undo, LIBU.redo, 'Undone');
+const libRedo = () => libStep(LIBU.redo, LIBU.undo, 'Redone');
+document.addEventListener('keydown', e => {
+  if (batch || !(e.metaKey || e.ctrlKey) || e.altKey || e.defaultPrevented) return;
+  const k = e.key.toLowerCase(); if (k !== 'z' && k !== 'y') return;
+  if (!$('#dlg').hidden || $('#askDlg') || $('#findDlg') || $('#pcard') || $('#welcome:not([hidden])')) return;
+  const a = document.activeElement;
+  if (a && (a.isContentEditable || a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !/^(checkbox|radio|range|button|submit|color|file)$/.test(a.type)))) return;
+  e.preventDefault();
+  if (k === 'y' || e.shiftKey) libRedo(); else libUndo();
+});
 /* ---------------- units, assignments and rosters (kept in this browser only) ---------------- */
 const uid = () => Math.random().toString(36).slice(2, 10);
 let fresh = store.get('gs.lib', null) == null;   // a browser nobody has used yet: it gets the welcome, and nothing of anyone's
@@ -10465,6 +10560,7 @@ function migrateLib(l) {
   return l;
 }
 let lib = migrateLib(store.get('gs.lib', null) || { classes: [] });
+LIBU.last = libSnap();   // what the first Ctrl Z away from the marking screen goes back to (libundo.js)
 /* ---------------- how this teacher works: lib.me ---------------- */
 const ME_OLD = { sys: 'ManageBac', unit: 'Atlas', scale12: true, ai: 'Claude' };   // scale12: Rubric setup offers the 12-point scale (12 = 100, 11 = 95…) as a preset
 const ME_NEW = { sys: '', unit: '', ai: '', grade: { way: 'rubric' } };
@@ -10515,7 +10611,7 @@ function bandOf(pct) {
   const b = g.bands.find(b => pct >= b[0]); return b ? b[1] : g.bands[g.bands.length - 1][1];
 }
 const bandSay = pct => { const b = bandOf(pct); return b ? ' · ' + b : ''; };
-function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); wordsShare(); rollsShare(); }
+function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); libTrack(); wordsShare(); rollsShare(); }
 function wordsShare() {
   if (!lib.me) return;
   try { const v = JSON.stringify({ sys: sysName(), unit: unitLinkName(), ai: aiName(), ...(me().scale12 ? { scale12: true } : {}), ...(aiName() && aiUrlClean(me().aiUrl) ? { link: aiUrlClean(me().aiUrl) } : {}), ...(me().aiOpen === 'tab' ? { tab: true } : {}), ...(me().aiUrls && Object.keys(me().aiUrls).length ? { urls: me().aiUrls } : {}), ...(Array.isArray(me().aiOff) && me().aiOff.length ? { off: me().aiOff } : {}) }); if (localStorage.getItem('gs.words') !== v) localStorage.setItem('gs.words', v); } catch {}
@@ -11282,10 +11378,13 @@ async function removeFile(st, path, quiet) {
   goneNow(st, f);
   (batch.removed ||= {})[path] = { t: Date.now() };
   refound(st); wordScoresAll(); saveNow(); renderList(); openStudent(cur);
+  if (!quiet) pushUndo(actStep(() => bringBack(st, path, { L: L0, o: o0 }), () => removeFile(st, path, true), 'removed ' + nm));
   if (!quiet) toastDo('Removed ' + nm, 'Undo', () => bringBack(st, path, { L: L0, o: o0 }));
 }
+function toStudent(st, path) { const i = batch.students.indexOf(st); renderList(); if (i >= 0) openStudent(i, path); }
 async function bringBack(st, path, was) {
   const f = (st.gone || []).find(g => g.path === path); if (!f) return;
+  if (!stepping) pushUndo(actStep(() => removeFile(st, path, true), () => bringBack(st, path), 'brought back ' + fileShown(st, f.name)));
   st.gone.splice(st.gone.indexOf(f), 1); st.files.push(f);
   if (was && was.L !== undefined) { st.layout = was.L; st.forder = was.o; }
   else if (st.layout && viewable(f) && f.numPages) st.layout.push({ name: f.name, file: f.path, pages: [...Array(f.numPages).keys()].map(p => [f.path, p]) });
@@ -11344,6 +11443,7 @@ function outPages(st) {
 function takePageOut(st, path, p) {
   commitEditors();
   const L0 = JSON.parse(JSON.stringify(layoutOf(st))), was = st.layout && JSON.parse(JSON.stringify(st.layout));
+  fieldSnap(st, ['layout'], () => { saveNow(); toStudent(st, path); }, 'page taken out');
   st.layout = L0.map(d => ({ ...d, pages: d.pages.filter(([q, n]) => !(q === path && n === p)) })).filter(d => d.pages.length);
   const f = fileByPath(st, path);
   saveNow(); renderList(); openStudent(cur);
@@ -11351,6 +11451,7 @@ function takePageOut(st, path, p) {
 }
 function bringPageBack(st, path, p) {
   const f = fileByPath(st, path); if (!f || !st.layout) return;
+  fieldSnap(st, ['layout'], () => { saveNow(); toStudent(st, path); }, 'page brought back');
   let d = st.layout.find(x => x.file === path) || st.layout.find(x => x.pages.some(([q]) => q === path));
   if (!d && f.virtual && st.layout.length) d = st.layout[setup.rubricPos === 'start' ? 0 : st.layout.length - 1];
   if (!d) { st.layout.push({ name: f.name, file: path, pages: [[path, p]] }); }
@@ -11764,6 +11865,9 @@ function lightAuto(pg) {
   return { b: Math.round(Math.max(-60, Math.min(60, bb))), c: Math.round((k - 1) * 100), d: 20 };
 }
 let lightRaf = 0;
+const LIGHT_KEYS = ['light', 'lightOpt', 'lightPg', 'lightPgL'];
+function lightSnap(join) { if (batch) fieldSnap(batch, LIGHT_KEYS, lightUndone, 'lighting', join); }
+function lightUndone() { const m = $('#lmenu'); if (m) m.remove(); lightPagesChanged(); }
 function lightApply() { cancelAnimationFrame(lightRaf); lightRaf = requestAnimationFrame(() => { redrawAll(); lightChips(); for (const q of pages) scanNote(q); saveSoon(); }); }
 function lightPagesChanged() { lightApply(); const lp = $('#lightPanel'); if (lp) lp.refresh(); }
 function lightChip(pg) {
@@ -11795,6 +11899,7 @@ function lightChipClick(e, pg) {
   const st = batch.students[cur], want = !pageLit(st, pg.file, pg.idx);
   let run = [pg];
   if (e.shiftKey && lightLast && lightLast !== pg && pages.includes(lightLast)) { const a = pages.indexOf(lightLast), b = pages.indexOf(pg); run = pages.slice(Math.min(a, b), Math.max(a, b) + 1); }
+  lightSnap();
   for (const q of run) setPageLit(st, q.file, q.idx, want);
   lightLast = pg;
   lightPagesChanged();
@@ -11825,8 +11930,9 @@ function lightOwnRender(m) {
     '<div class="lmacts"><button class="btn sm primary" data-lpauto>Auto fix this page</button><span style="flex:1"></span>' + (pageOwnL(st, pg.file, pg.idx) ? '<button class="link" data-lpsame>Same as the rest</button>' : '') + '</div>' +
     (d && pageOwnL(st, pg.file, pg.idx) ? '<div class="dl">Use this page’s lighting on</div>' + (pos < d.pages.length - 1 ? '<button data-lpcopy="rest">The rest of this file</button>' : '') + '<button data-lpcopy="from">Page ' + (pos + 1) + ' on every paper</button>' : '');
 }
-function lightOwnSet(m, L) {
+function lightOwnSet(m, L, join) {
   const pg = m._pg, st = batch.students[cur];
+  lightSnap(join);
   setPageOwnL(st, pg.file, pg.idx, L);
   if (L && !pageLit(st, pg.file, pg.idx)) setPageLit(st, pg.file, pg.idx, true);
   lightPagesChanged();
@@ -11835,7 +11941,7 @@ function lightOwnInput(e) {
   const m = $('#lmenu'); if (!m) return;
   const pg = m._pg, st = batch.students[cur], cur0 = pageOwnL(st, pg.file, pg.idx) || lightFor(st);
   const k = e.target.dataset.lpl;
-  if (k) { e.target.nextElementSibling.textContent = e.target.value; lightOwnSet(m, { ...cur0, [k]: +e.target.value }); return; }
+  if (k) { e.target.nextElementSibling.textContent = e.target.value; lightOwnSet(m, { ...cur0, [k]: +e.target.value }, 'own' + k + lightPgKey(st, pg.file, pg.idx)); return; }
   if (e.target.dataset.lplg != null) { lightOwnSet(m, { ...cur0, g: e.target.checked ? 1 : 0 }); lightOwnRender(m); }
 }
 async function lightOwnClick(e) {
@@ -11849,6 +11955,7 @@ async function lightOwnClick(e) {
   if (e.target.closest('[data-lpsame]')) { lightOwnSet(m, null); lightOwnRender(m); return true; }
   const cp = e.target.closest('[data-lpcopy]'); if (!cp) return false;
   const L = pageOwnL(st, pg.file, pg.idx), { di, pos } = m._at; m.remove();
+  lightSnap();
   const put = (s, [path, p]) => { const f = fileByPath(s, path); if (!f) return 0; setPageOwnL(s, f, p, L); setPageLit(s, f, p, true); return 1; };
   let n = 0;
   if (cp.dataset.lpcopy === 'rest') { for (const it of layoutOf(st)[di].pages.slice(pos + 1)) n += put(st, it); toast('This page’s lighting on ' + n + ' more ' + (n === 1 ? 'page' : 'pages')); }
@@ -11870,6 +11977,7 @@ async function ensureCounts() {
 async function lightMenuDo(how) {
   const m = $('#lmenu'); if (!m) return;
   const pg = m._pg, { di, pos, back, want } = m._at, st = batch.students[cur]; m.remove();
+  lightSnap();
   const L = layoutOf(st), d = L[di];
   const setList = (s, list) => { let n = 0; for (const [path, p] of list) { const f = fileByPath(s, path); if (f) { setPageLit(s, f, p, want); n++; } } return n; };
   if (how === 'page' || !d) setPageLit(st, pg.file, pg.idx, want);
@@ -11893,8 +12001,8 @@ function openLight() {
   const old = $('#lightPanel'); if (old) { old.remove(); return; }
   const p = document.createElement('div'); p.id = 'lightPanel'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Lighting'); document.body.appendChild(p);
   let only = lightKey(batch.students[cur]) !== '*';
-  const set = L => { batch.light = batch.light || {}; if (only) batch.light[batch.students[cur].key] = L; else { batch.light['*'] = L; } lightApply(); };
-  const opt = (k, v) => { batch.lightOpt = { ...lightOpts(), [k]: v }; lightApply(); render(); };
+  const set = (L, join) => { lightSnap(join); batch.light = batch.light || {}; if (only) batch.light[batch.students[cur].key] = L; else { batch.light['*'] = L; } lightApply(); };
+  const opt = (k, v) => { lightSnap(); batch.lightOpt = { ...lightOpts(), [k]: v }; lightApply(); render(); };
   const render = () => {
     const L = lightFor(batch.students[cur]), o = lightOpts();
     const offs = Object.entries(batch.lightPg || {}).filter(([, v]) => v === false).map(([k]) => k);
@@ -11918,17 +12026,17 @@ function openLight() {
   };
   render();
   p.onchange = e => { if (e.target.dataset.lexp != null) opt('exp', e.target.checked); if (e.target.dataset.lg != null) set({ ...lightFor(batch.students[cur]), g: e.target.checked ? 1 : 0 }); };
-  p.oninput = e => { const k = e.target.dataset.l; if (!k) return; const L = { ...lightFor(batch.students[cur]), [k]: +e.target.value }; e.target.nextElementSibling.textContent = e.target.value; set(L); };
+  p.oninput = e => { const k = e.target.dataset.l; if (!k) return; const L = { ...lightFor(batch.students[cur]), [k]: +e.target.value }; e.target.nextElementSibling.textContent = e.target.value; set(L, 'panel' + k); };
   p.onclick = e => {
     if (e.target.closest('[data-lx]')) return p.remove();
     if (e.target.closest('[data-lon]')) return opt('on', !lightOpts().on);
     const rb = e.target.closest('[data-lrub]'); if (rb) return opt('rub', rb.dataset.lrub === '1');
-    if (e.target.closest('[data-lpgown]')) { batch.lightPgL = {}; lightApply(); return render(); }
-    if (e.target.closest('[data-lpgreset]')) { for (const [k, v] of Object.entries(batch.lightPg || {})) if (v === false) delete batch.lightPg[k]; lightApply(); return render(); }
+    if (e.target.closest('[data-lpgown]')) { lightSnap(); batch.lightPgL = {}; lightApply(); return render(); }
+    if (e.target.closest('[data-lpgreset]')) { lightSnap(); for (const [k, v] of Object.entries(batch.lightPg || {})) if (v === false) delete batch.lightPg[k]; lightApply(); return render(); }
     if (e.target.closest('[data-lauto]')) { const pg = pages.find(q => q.bmp && q.file.kind !== 'docx'); if (!pg) return toast('No scanned page to fix here'); set({ ...lightAuto(pg), s: lightFor(batch.students[cur]).s || 0, g: lightFor(batch.students[cur]).g || 0 }); return render(); }
     if (e.target.closest('[data-lreset]')) { set({ ...LIGHT0 }); if (only) { delete batch.light[batch.students[cur].key]; only = false; lightApply(); } return render(); }
     const o = e.target.closest('[data-lo]');
-    if (o) { const want = o.dataset.lo === '1', stc = batch.students[cur]; if (want && !only) { batch.light = batch.light || {}; batch.light[stc.key] = { ...lightFor(stc) }; } if (!want && only) { delete batch.light[stc.key]; lightApply(); } only = want; return render(); }
+    if (o) { const want = o.dataset.lo === '1', stc = batch.students[cur]; lightSnap(); if (want && !only) { batch.light = batch.light || {}; batch.light[stc.key] = { ...lightFor(stc) }; } if (!want && only) { delete batch.light[stc.key]; lightApply(); } only = want; return render(); }
   };
   p.refresh = () => { only = lightKey(batch.students[cur]) !== '*'; render(); };
   p.tabIndex = -1; p.focus({ preventScroll: true });   // so Escape closes it
@@ -13215,7 +13323,7 @@ document.addEventListener('keydown', e => {
   if (!batch || !$('#dlg').hidden) { if (e.key === 'Escape' && !$('#dlg').hidden) { if (SP) splitLeave(); else leaveDlg(); } return; }
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName) || (document.activeElement && document.activeElement.isContentEditable);
   const cmd = e.metaKey || e.ctrlKey, key = e.key.toLowerCase();
-  if (cmd && !e.altKey && typing && document.activeElement.type === 'range' && (key === 'z' || key === 'y')) { e.preventDefault(); key === 'z' && !e.shiftKey ? undo() : redo(); return; }
+  if (cmd && !e.altKey && typing && /^(range|checkbox|radio)$/.test(document.activeElement.type) && (key === 'z' || key === 'y')) { e.preventDefault(); key === 'z' && !e.shiftKey ? undo() : redo(); return; }
   if (cmd && !typing && !e.altKey) {
     if (key === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
     if (key === 'y') { e.preventDefault(); redo(); return; }
@@ -18639,6 +18747,7 @@ function scanNoteOut(pg, lines, re) {
 }
 function scanFlag(pg) {
   const f = pg.file; if (f.virtual) return;
+  fieldSnap(f, ['sc'], () => { for (const q of pages) if (q.file === f) scanNote(q); }, 'rescan flag');
   const r = (f.sc ||= {})[pg.idx] ||= { later: 1 };
   if (r.re) delete r.re; else r.re = 1;
   toast(r.re ? 'Flagged for a rescan. The Return tab lists everyone waiting.' : 'Rescan flag taken off');
@@ -19579,7 +19688,7 @@ let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge hav
         let other = null; try { other = JSON.parse(now); } catch {}
         if (other) {
           const m = mergeLib(v, other, { dev: devId(), now: Date.now() });
-          v = lib = migrateLib(m.lib); prev = libPrev(v); refs(); rollsShare();
+          v = lib = migrateLib(m.lib); prev = libPrev(v); refs(); rollsShare(); libUndoForget();
           if (batch && m.mapA[batch.classId]) batch.classId = m.mapA[batch.classId];
         }
       }
@@ -19595,7 +19704,7 @@ let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge hav
     if (!now || now === libSeen || !$('#dlg').hidden || (shellReady && classPanelBusy())) return;
     let other = null; try { other = JSON.parse(now); } catch {}
     if (!other) return;
-    lib = migrateLib(other); prev = libPrev(lib); libSeen = now; refs();
+    lib = migrateLib(other); prev = libPrev(lib); libSeen = now; refs(); libUndoForget();
     if (batch) renderTopAtlas(); else renderLib();
   };
 }
@@ -19974,7 +20083,7 @@ async function reconcileNow() {
     students += (row.rows || []).filter(x => x.pick === 'b').length;
   }
   fld.prog = '';
-  if (libm.toA) { lib = migrateLib(libm.lib); if (!setLibFrom(lib)) throw browserFull(); if (batch && batch.assignment) { const f = findItem(batch.assignment.id); if (f) batch.assignment = f.it; } }
+  if (libm.toA) { lib = migrateLib(libm.lib); libUndoForget(); if (!setLibFrom(lib)) throw browserFull(); if (batch && batch.assignment) { const f = findItem(batch.assignment.id); if (f) batch.assignment = f.it; } }
   const tomb = { ...plan.tomb }; store.set('gs.tomb', tomb);
   const set = prefer ? {} : mergeLs(carryLs(), B.ls || {}, k => Object.keys(tomb).some(id => k.includes(id)));   // going back: the folder takes what's here, and nothing newer comes back
   for (const [k, v] of Object.entries(set)) lsPut(k, v);
@@ -20539,7 +20648,7 @@ async function bringApply(B0, src, shown, answers) {
     }
     await schBring(src, B);
     await planTake(B0, src);
-    if (libm.toA) { lib = migrateLib(libm.lib); if (!setLibFrom(lib)) throw browserFull(); }
+    if (libm.toA) { lib = migrateLib(libm.lib); libUndoForget(); if (!setLibFrom(lib)) throw browserFull(); }
     for (const [k, v] of Object.entries(lsSet)) if (!lsPut(k, v)) throw browserFull();
   } catch (e) {
     for (const id of added) await paperDrop(id).catch(() => {});
@@ -22432,6 +22541,7 @@ function vidRot(player, f) {
 }
 function vidTurn(st, f, card) {
   const k = vrotKey(f), d = (vrotOf(f) + 90) % 360;
+  fieldSnap(batch, ['vrot'], () => { for (const b of document.querySelectorAll('#paper .vrotbox')) if (b.vfit) b.vfit(); }, 'video turn');
   batch.vrot ||= {}; if (d) batch.vrot[k] = d; else delete batch.vrot[k];
   if (!Object.keys(batch.vrot).length) delete batch.vrot;
   for (const b of document.querySelectorAll('#paper .vrotbox')) if (b.vfit) b.vfit();
@@ -23360,6 +23470,7 @@ function anchorHtml(st) {
 }
 function setAnchor(st, lv) {
   const was = st.grade.anchor || '';
+  pushUndo(groupStep([gradeStep(st), ...batch.students.filter(s => s !== st && s.grade.anchor === lv).map(gradeStep)], 'anchor paper'));
   if (was === lv) delete st.grade.anchor;
   else {
     for (const s of batch.students) if (s !== st && s.grade.anchor === lv) { delete s.grade.anchor; touchGrade(s); }
@@ -28839,7 +28950,7 @@ async function nyStart(o) {
     let x; try { x = JSON.parse(v); } catch { continue; }
     if (nyAbout(x, names)) localStorage.removeItem(k);
   }
-  lib = migrateLib(next); saveLib();
+  lib = migrateLib(next); libUndoForget(); saveLib();
   if (o.planner) try { localStorage.setItem('gsp.newYear', JSON.stringify({ id: Date.now().toString(36), from: o.from, dates: !!o.dates })); } catch {}
   renderLib(); railRender(); renderNeeds();
 }

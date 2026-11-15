@@ -84,6 +84,10 @@ function lightAuto(pg) {
   return { b: Math.round(Math.max(-60, Math.min(60, bb))), c: Math.round((k - 1) * 100), d: 20 };
 }
 let lightRaf = 0;
+// Every lighting choice is one Ctrl Z: the download's lighting as it was. A slider drag is one step (join).
+const LIGHT_KEYS = ['light', 'lightOpt', 'lightPg', 'lightPgL'];
+function lightSnap(join) { if (batch) fieldSnap(batch, LIGHT_KEYS, lightUndone, 'lighting', join); }
+function lightUndone() { const m = $('#lmenu'); if (m) m.remove(); lightPagesChanged(); }
 function lightApply() { cancelAnimationFrame(lightRaf); lightRaf = requestAnimationFrame(() => { redrawAll(); lightChips(); for (const q of pages) scanNote(q); saveSoon(); }); }
 function lightPagesChanged() { lightApply(); const lp = $('#lightPanel'); if (lp) lp.refresh(); }
 // A ☀ tag in the corner of each page while lighting is on: click it to switch lighting off or on for that page.
@@ -117,6 +121,7 @@ function lightChipClick(e, pg) {
   const st = batch.students[cur], want = !pageLit(st, pg.file, pg.idx);
   let run = [pg];
   if (e.shiftKey && lightLast && lightLast !== pg && pages.includes(lightLast)) { const a = pages.indexOf(lightLast), b = pages.indexOf(pg); run = pages.slice(Math.min(a, b), Math.max(a, b) + 1); }
+  lightSnap();
   for (const q of run) setPageLit(st, q.file, q.idx, want);
   lightLast = pg;
   lightPagesChanged();
@@ -149,8 +154,9 @@ function lightOwnRender(m) {
     (d && pageOwnL(st, pg.file, pg.idx) ? '<div class="dl">Use this page’s lighting on</div>' + (pos < d.pages.length - 1 ? '<button data-lpcopy="rest">The rest of this file</button>' : '') + '<button data-lpcopy="from">Page ' + (pos + 1) + ' on every paper</button>' : '');
 }
 // Its own lighting for this page: the page is switched on too, so she sees what she's setting.
-function lightOwnSet(m, L) {
+function lightOwnSet(m, L, join) {
   const pg = m._pg, st = batch.students[cur];
+  lightSnap(join);
   setPageOwnL(st, pg.file, pg.idx, L);
   if (L && !pageLit(st, pg.file, pg.idx)) setPageLit(st, pg.file, pg.idx, true);
   lightPagesChanged();
@@ -159,7 +165,7 @@ function lightOwnInput(e) {
   const m = $('#lmenu'); if (!m) return;
   const pg = m._pg, st = batch.students[cur], cur0 = pageOwnL(st, pg.file, pg.idx) || lightFor(st);
   const k = e.target.dataset.lpl;
-  if (k) { e.target.nextElementSibling.textContent = e.target.value; lightOwnSet(m, { ...cur0, [k]: +e.target.value }); return; }
+  if (k) { e.target.nextElementSibling.textContent = e.target.value; lightOwnSet(m, { ...cur0, [k]: +e.target.value }, 'own' + k + lightPgKey(st, pg.file, pg.idx)); return; }
   if (e.target.dataset.lplg != null) { lightOwnSet(m, { ...cur0, g: e.target.checked ? 1 : 0 }); lightOwnRender(m); }
 }
 async function lightOwnClick(e) {
@@ -173,6 +179,7 @@ async function lightOwnClick(e) {
   if (e.target.closest('[data-lpsame]')) { lightOwnSet(m, null); lightOwnRender(m); return true; }
   const cp = e.target.closest('[data-lpcopy]'); if (!cp) return false;
   const L = pageOwnL(st, pg.file, pg.idx), { di, pos } = m._at; m.remove();
+  lightSnap();
   const put = (s, [path, p]) => { const f = fileByPath(s, path); if (!f) return 0; setPageOwnL(s, f, p, L); setPageLit(s, f, p, true); return 1; };
   let n = 0;
   if (cp.dataset.lpcopy === 'rest') { for (const it of layoutOf(st)[di].pages.slice(pos + 1)) n += put(st, it); toast('This page’s lighting on ' + n + ' more ' + (n === 1 ? 'page' : 'pages')); }
@@ -195,6 +202,7 @@ async function ensureCounts() {
 async function lightMenuDo(how) {
   const m = $('#lmenu'); if (!m) return;
   const pg = m._pg, { di, pos, back, want } = m._at, st = batch.students[cur]; m.remove();
+  lightSnap();
   const L = layoutOf(st), d = L[di];
   const setList = (s, list) => { let n = 0; for (const [path, p] of list) { const f = fileByPath(s, path); if (f) { setPageLit(s, f, p, want); n++; } } return n; };
   if (how === 'page' || !d) setPageLit(st, pg.file, pg.idx, want);
@@ -218,8 +226,8 @@ function openLight() {
   const old = $('#lightPanel'); if (old) { old.remove(); return; }
   const p = document.createElement('div'); p.id = 'lightPanel'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Lighting'); document.body.appendChild(p);
   let only = lightKey(batch.students[cur]) !== '*';
-  const set = L => { batch.light = batch.light || {}; if (only) batch.light[batch.students[cur].key] = L; else { batch.light['*'] = L; } lightApply(); };
-  const opt = (k, v) => { batch.lightOpt = { ...lightOpts(), [k]: v }; lightApply(); render(); };
+  const set = (L, join) => { lightSnap(join); batch.light = batch.light || {}; if (only) batch.light[batch.students[cur].key] = L; else { batch.light['*'] = L; } lightApply(); };
+  const opt = (k, v) => { lightSnap(); batch.lightOpt = { ...lightOpts(), [k]: v }; lightApply(); render(); };
   const render = () => {
     const L = lightFor(batch.students[cur]), o = lightOpts();
     const offs = Object.entries(batch.lightPg || {}).filter(([, v]) => v === false).map(([k]) => k);
@@ -243,17 +251,17 @@ function openLight() {
   };
   render();
   p.onchange = e => { if (e.target.dataset.lexp != null) opt('exp', e.target.checked); if (e.target.dataset.lg != null) set({ ...lightFor(batch.students[cur]), g: e.target.checked ? 1 : 0 }); };
-  p.oninput = e => { const k = e.target.dataset.l; if (!k) return; const L = { ...lightFor(batch.students[cur]), [k]: +e.target.value }; e.target.nextElementSibling.textContent = e.target.value; set(L); };
+  p.oninput = e => { const k = e.target.dataset.l; if (!k) return; const L = { ...lightFor(batch.students[cur]), [k]: +e.target.value }; e.target.nextElementSibling.textContent = e.target.value; set(L, 'panel' + k); };
   p.onclick = e => {
     if (e.target.closest('[data-lx]')) return p.remove();
     if (e.target.closest('[data-lon]')) return opt('on', !lightOpts().on);
     const rb = e.target.closest('[data-lrub]'); if (rb) return opt('rub', rb.dataset.lrub === '1');
-    if (e.target.closest('[data-lpgown]')) { batch.lightPgL = {}; lightApply(); return render(); }
-    if (e.target.closest('[data-lpgreset]')) { for (const [k, v] of Object.entries(batch.lightPg || {})) if (v === false) delete batch.lightPg[k]; lightApply(); return render(); }
+    if (e.target.closest('[data-lpgown]')) { lightSnap(); batch.lightPgL = {}; lightApply(); return render(); }
+    if (e.target.closest('[data-lpgreset]')) { lightSnap(); for (const [k, v] of Object.entries(batch.lightPg || {})) if (v === false) delete batch.lightPg[k]; lightApply(); return render(); }
     if (e.target.closest('[data-lauto]')) { const pg = pages.find(q => q.bmp && q.file.kind !== 'docx'); if (!pg) return toast('No scanned page to fix here'); set({ ...lightAuto(pg), s: lightFor(batch.students[cur]).s || 0, g: lightFor(batch.students[cur]).g || 0 }); return render(); }
     if (e.target.closest('[data-lreset]')) { set({ ...LIGHT0 }); if (only) { delete batch.light[batch.students[cur].key]; only = false; lightApply(); } return render(); }
     const o = e.target.closest('[data-lo]');
-    if (o) { const want = o.dataset.lo === '1', stc = batch.students[cur]; if (want && !only) { batch.light = batch.light || {}; batch.light[stc.key] = { ...lightFor(stc) }; } if (!want && only) { delete batch.light[stc.key]; lightApply(); } only = want; return render(); }
+    if (o) { const want = o.dataset.lo === '1', stc = batch.students[cur]; lightSnap(); if (want && !only) { batch.light = batch.light || {}; batch.light[stc.key] = { ...lightFor(stc) }; } if (!want && only) { delete batch.light[stc.key]; lightApply(); } only = want; return render(); }
   };
   p.refresh = () => { only = lightKey(batch.students[cur]) !== '*'; render(); };
   p.tabIndex = -1; p.focus({ preventScroll: true });   // so Escape closes it

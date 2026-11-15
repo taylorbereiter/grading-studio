@@ -64,6 +64,7 @@ function vidRot(player, f) {
 }
 function vidTurn(st, f, card) {
   const k = vrotKey(f), d = (vrotOf(f) + 90) % 360;
+  fieldSnap(batch, ['vrot'], () => { for (const b of document.querySelectorAll('#paper .vrotbox')) if (b.vfit) b.vfit(); }, 'video turn');
   batch.vrot ||= {}; if (d) batch.vrot[k] = d; else delete batch.vrot[k];
   if (!Object.keys(batch.vrot).length) delete batch.vrot;
   for (const b of document.querySelectorAll('#paper .vrotbox')) if (b.vfit) b.vfit();

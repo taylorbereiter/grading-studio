@@ -22,10 +22,14 @@ async function removeFile(st, path, quiet) {
   goneNow(st, f);
   (batch.removed ||= {})[path] = { t: Date.now() };
   refound(st); wordScoresAll(); saveNow(); renderList(); openStudent(cur);
+  if (!quiet) pushUndo(actStep(() => bringBack(st, path, { L: L0, o: o0 }), () => removeFile(st, path, true), 'removed ' + nm));
   if (!quiet) toastDo('Removed ' + nm, 'Undo', () => bringBack(st, path, { L: L0, o: o0 }));
 }
+// After undo or redo: the student it happened to, on screen.
+function toStudent(st, path) { const i = batch.students.indexOf(st); renderList(); if (i >= 0) openStudent(i, path); }
 async function bringBack(st, path, was) {
   const f = (st.gone || []).find(g => g.path === path); if (!f) return;
+  if (!stepping) pushUndo(actStep(() => removeFile(st, path, true), () => bringBack(st, path), 'brought back ' + fileShown(st, f.name)));
   st.gone.splice(st.gone.indexOf(f), 1); st.files.push(f);
   if (was && was.L !== undefined) { st.layout = was.L; st.forder = was.o; }
   else if (st.layout && viewable(f) && f.numPages) st.layout.push({ name: f.name, file: f.path, pages: [...Array(f.numPages).keys()].map(p => [f.path, p]) });
@@ -86,6 +90,7 @@ function outPages(st) {
 function takePageOut(st, path, p) {
   commitEditors();
   const L0 = JSON.parse(JSON.stringify(layoutOf(st))), was = st.layout && JSON.parse(JSON.stringify(st.layout));
+  fieldSnap(st, ['layout'], () => { saveNow(); toStudent(st, path); }, 'page taken out');
   st.layout = L0.map(d => ({ ...d, pages: d.pages.filter(([q, n]) => !(q === path && n === p)) })).filter(d => d.pages.length);
   const f = fileByPath(st, path);
   saveNow(); renderList(); openStudent(cur);
@@ -94,6 +99,7 @@ function takePageOut(st, path, p) {
 // Back where it was: among the same file's pages in page order, or as a file of its own if none of them are left.
 function bringPageBack(st, path, p) {
   const f = fileByPath(st, path); if (!f || !st.layout) return;
+  fieldSnap(st, ['layout'], () => { saveNow(); toStudent(st, path); }, 'page brought back');
   let d = st.layout.find(x => x.file === path) || st.layout.find(x => x.pages.some(([q]) => q === path));
   if (!d && f.virtual && st.layout.length) d = st.layout[setup.rubricPos === 'start' ? 0 : st.layout.length - 1];
   if (!d) { st.layout.push({ name: f.name, file: path, pages: [[path, p]] }); }
