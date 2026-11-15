@@ -7,6 +7,7 @@
    What is saved, in lib.todo (so it goes wherever the classes go: the folder, the take-home file, safety copies), and never in the
    Planner's folder, because a to-do can name a student:
      items: [{ id, x: the words, d: 'YYYY-MM-DD' or '', c: class id, who: roster name, a: assignment id, rep: '' | 'day' | 'week' | 'meet',
+               ppl: [ids of people on the School page (gs.school people: the principal, a coordinator...)],
                note, done: time, made: time, t: time it last changed }]   (a deleted one stays as { id, t, gone: 1 } so it stays deleted after a merge)
      off:   { mark | back | plan | miss: 1 } the kinds the app no longer adds, offT when that was last changed
      auto:  { <line's key>: { d: day it was moved to, h: hidden while its number is this, t } } */
@@ -85,15 +86,38 @@ function tdReadWho(text) {
   for (const c of [...lib.classes].sort((a, b) => b.name.length - a.name.length)) if (c.name.trim().length > 2 && low.includes(c.name.trim().toLowerCase())) return { c: c.id, who: '' };
   return { c: '', who: '' };
 }
+// People on the School page named in the words: by their whole name; else by a last name only one of them has, written with its
+// capital ("ask Okafor"); else by a role only one person holds ("email the principal"; "vice principal" is not "principal").
+const tdPpl = () => typeof schPeople === 'function' ? schPeople() : [];
+const tdPerson = id => tdPpl().find(p => p.id === id) || null;
+function tdReadPpl(text) {
+  const ppl = tdPpl(); if (!ppl.length) return [];
+  const low = ' ' + text.toLowerCase().replace(/[^\p{L}\p{N}'’.-]+/gu, ' ') + ' ', has = w => low.includes(' ' + w.toLowerCase() + ' ');
+  const full = ppl.filter(p => p.name.length > 3 && has(p.name.replace(/[^\p{L}\p{N}'’.-]+/gu, ' ').trim()));
+  if (full.length) return full.map(p => p.id);
+  const words = new Set(text.split(/[^\p{L}\p{M}'’-]+/u).map(w => w.replace(/['’]s$/, '')));
+  const last = new Map();
+  for (const p of ppl) { const l = p.name.trim().split(/\s+/).pop().replace(/[.,]$/, ''); if (l.length > 2 && /^\p{Lu}/u.test(l)) last.set(l, last.has(l) ? null : p.id); }
+  for (const [l, id] of last) if (id && words.has(l)) return [id];
+  let rest = low;
+  const roles = [...new Set(ppl.map(p => p.role).filter(Boolean))].sort((a, b) => b.length - a.length);
+  for (const r of roles) {
+    const k = ' ' + r.toLowerCase().replace(/[^\p{L}\p{N}'’.-]+/gu, ' ').trim() + ' '; if (k.length < 4 || !rest.includes(k)) continue;
+    const who = ppl.filter(p => p.role === r); rest = rest.split(k).join(' ');
+    if (who.length === 1) return [who[0].id];
+  }
+  return [];
+}
 function todoRead(text, today) {
   const raw = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 300), day = tdReadDay(raw, today || tdToday()), who = tdReadWho(raw);
-  return { raw, x: day ? day.x : raw, d: day ? day.d : '', rep: day ? day.rep : '', c: who.c, who: who.who };
+  return { raw, x: day ? day.x : raw, d: day ? day.d : '', rep: day ? day.rep : '', c: who.c, who: who.who, ppl: tdReadPpl(raw) };
 }
 // drop: what the teacher said not to read out of the words ({ d, c, who }). base: what the line starts with when the words don't say.
 function todoAdd(text, drop, base) {
   drop = drop || {};
   const r = todoRead(text); if (!r.raw) return null;
   const now = Date.now(), it = { id: 'td' + uid(), x: drop.d ? r.raw : r.x, d: drop.d ? '' : r.d, c: drop.c ? '' : r.c, who: drop.c || drop.who ? '' : r.who, a: '', rep: drop.d ? '' : r.rep, note: '', done: 0, made: now, t: now };
+  if (!drop.p && r.ppl.length) it.ppl = r.ppl;
   for (const [k, v] of Object.entries(base || {})) if (!it[k]) it[k] = v;
   tdSave({ items: [...tdData().items, it] });
   return it;
@@ -195,6 +219,9 @@ const todoCount = () => { const today = tdToday(); return todoRows().filter(r =>
 /* ---------- drawing ---------- */
 const TD_TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const TD_REP = { day: 'Every school day', week: 'Every week', meet: 'Each time this class meets' };
+// The people a line names, each with a small person mark. One deleted from the School page since is left out.
+const tdPplOf = it => (Array.isArray(it.ppl) ? it.ppl : []).map(tdPerson).filter(Boolean);
+const tdPplHtml = it => tdPplOf(it).map(p => '<span class="tdp" data-raw>' + SCH_IC.person + esc(p.name) + '</span>').join('');
 const tdDot = (c, color) => '<span class="rdot" style="background:' + (color || classColor(c)) + '"></span>';
 function tdRow(r, today, card) {
   const done = !!r.done, late = !done && r.d && r.d < today, due = done ? 'Done' : tdDaySay(r.d, today);
@@ -203,7 +230,7 @@ function tdRow(r, today, card) {
   if (r.auto) meta = '<span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '');
   else {
     const it = r.it, a = it.a && findItem(it.a);
-    meta = [r.c ? '<span class="tdc" data-raw>' + tdDot(r.c) + esc(r.c.name) + '</span>' : '', it.who ? '<span data-raw>' + esc(it.who) + '</span>' : '', a ? '<span data-raw>' + esc(a.it.name) + '</span>' : '',
+    meta = [r.c ? '<span class="tdc" data-raw>' + tdDot(r.c) + esc(r.c.name) + '</span>' : '', it.who ? '<span data-raw>' + esc(it.who) + '</span>' : '', tdPplHtml(it), a ? '<span data-raw>' + esc(a.it.name) + '</span>' : '',
       it.rep ? '<span>' + TD_REP[it.rep] + '</span>' : '', it.note ? '<span>Note</span>' : ''].filter(Boolean).join('');
   }
   const btn = r.auto && !card ? (r.btn.open ? '<button class="btn sm" data-tdopen="' + esc(r.btn.open) + '">' + r.btn.label + '</button>' : '<a class="btn sm" href="' + esc(r.btn.href) + '">' + r.btn.label + '</a>') : '';
@@ -248,7 +275,7 @@ function tdGroups(rows, today) {
 const tdPid = r => r.pid || ((p => p ? p.id : '')(tdPlanClass(r.c)));
 function tdWRow(r) {
   const done = !!r.done, sub = r.from ? '<span class="late" data-raw>from ' + esc(tdAt(r.from).toLocaleDateString(LANG_LOCALE, { weekday: 'long' })) + '</span>' : r.auto ? (r.sub ? '<span data-raw>' + esc(r.sub.split(' · ').pop()) + '</span>' : '') :
-    [r.it.who ? '<span data-raw>' + esc(r.it.who) + '</span>' : '', r.it.rep ? '<span>' + TD_REP[r.it.rep] + '</span>' : ''].filter(Boolean).join('');
+    [r.it.who ? '<span data-raw>' + esc(r.it.who) + '</span>' : '', tdPplHtml(r.it), r.it.rep ? '<span>' + TD_REP[r.it.rep] + '</span>' : ''].filter(Boolean).join('');
   return '<div class="tdw' + (done ? ' done' : '') + (r.auto ? ' auto' : '') + (tdS.sel === r.id ? ' sel' : '') + '" data-td="' + esc(r.id) + '"' + (done ? '' : ' draggable="true"') + '>' +
     '<button class="tdck" data-raw data-tdtick="' + esc(r.id) + '" ' + (r.auto ? 'title="Hide this line. It goes by itself when the work is done." aria-label="Hide: ' + esc(r.x) + '"' : 'role="checkbox" aria-checked="' + done + '" aria-label="' + esc(r.x) + '" title="' + (done ? 'Not done after all' : 'Done') + '"') + '>' + (done ? TD_TICK : '') + '</button>' +
     '<button class="tdmain" data-tdsel="' + esc(r.id) + '"><span class="tdx" data-raw>' + esc(r.x) + '</span>' + (sub ? '<span class="tdm">' + sub + '</span>' : '') + '</button></div>';
@@ -306,8 +333,13 @@ function tdSideHtml(rows, today) {
       (c.names.length ? '<optgroup label="Students">' + c.names.map((n, i) => '<option value="s:' + i + '"' + (i === si ? ' selected' : '') + '>' + esc(n) + '</option>').join('') + '</optgroup>' : '') + '</select>' +
       (si >= 0 ? '<a class="link" href="' + classHash(c, 'students', si) + '">Open their page</a>' : a ? '<a class="link" href="' + classHash(c) + '">Open the class</a>' : '') + '</div></div>';
   }
+  const mine = tdPplOf(it), others = tdPpl().filter(p => !mine.includes(p));
+  const ppl = '<div class="tdf"><label class="tdl" for="tdPpl">People</label><div class="tdv tdppl">' +
+    mine.map(p => '<span class="tdpchip"><span class="tdp" data-raw>' + SCH_IC.person + esc(p.name) + '</span>' + (p.email ? '<a class="link" href="' + esc(schMailto(p, it.x)) + '" data-tdmail title="Write to ' + esc(p.email) + '">Email</a>' : '') +
+      '<button class="icon" data-tdpx="' + esc(p.id) + '" aria-label="Take ' + esc(p.name) + ' off this to-do" title="Take off">✕</button></span>').join('') +
+    '<select id="tdPpl" class="btn sm"><option value="">' + (mine.length ? 'Add someone else…' : 'Add someone…') + '</option>' + others.map(p => '<option value="' + esc(p.id) + '">' + esc(schWho(p)) + '</option>').join('') + '<option value="+">Someone new…</option></select></div></div>';
   const rep = '<div class="tdf"><span class="tdl">Repeats</span><div class="tdv">' + chip('data-tdrep=""', !it.rep, 'No') + chip('data-tdrep="day"', it.rep === 'day', 'Every school day') + chip('data-tdrep="week"', it.rep === 'week', 'Every week') + (pc || it.rep === 'meet' ? chip('data-tdrep="meet"', it.rep === 'meet', 'Each time this class meets') : '') + '</div></div>';
-  return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<textarea class="tdtitle" id="tdX" rows="2" maxlength="300" aria-label="What to do">' + esc(it.x) + '</textarea>' + when + cls + goes + rep +
+  return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<textarea class="tdtitle" id="tdX" rows="2" maxlength="300" aria-label="What to do">' + esc(it.x) + '</textarea>' + when + cls + goes + ppl + rep +
     '<div class="tdf top"><label class="tdl" for="tdNote">Note</label><div class="tdv"><textarea id="tdNote" rows="3" maxlength="2000" placeholder="Anything to remember about it">' + esc(it.note || '') + '</textarea></div></div>' +
     '<div class="tdacts"><button class="btn primary" data-tdfin>' + (it.done ? 'Not done after all' : 'Done') + '</button>' + (it.done ? '' : '<button class="btn" data-tdwhen="tomorrow">Move to tomorrow</button><button class="btn" data-tdfocus="' + esc('td:' + it.id) + '" title="Start a focus session on this to-do">Focus on this</button>') + '<span class="sp"></span><button class="btn ghost" data-tddel>Delete</button></div></div>';
 }
@@ -315,13 +347,20 @@ function tdPageRender() {
   const r = routeNow(); if (r.v !== 'todo' || batch) return;
   const today = tdToday(), all = todoRows();
   if (tdS.sel && !all.some(x => x.id === tdS.sel)) tdS.sel = '';
-  if (tdS.filter !== 'all' && tdS.filter !== 'mine' && !classById(tdS.filter)) tdS.filter = 'all';
-  const rows = all.filter(x => tdS.filter === 'all' || (tdS.filter === 'mine' ? x.own : x.c && x.c.id === tdS.filter)), g = tdGroups(rows, today);
+  const pf = tdS.filter.startsWith('p:') ? tdS.filter.slice(2) : '';
+  if (tdS.filter !== 'all' && tdS.filter !== 'mine' && !(pf ? tdPerson(pf) : classById(tdS.filter))) tdS.filter = 'all';
+  const rows = all.filter(x => tdS.filter === 'all' || (tdS.filter === 'mine' ? x.own : pf ? x.own && (x.it.ppl || []).includes(pf) : x.c && x.c.id === tdS.filter)), g = tdGroups(rows, today);
   const late = all.filter(x => !x.done && x.d && x.d < today).length, now = all.filter(x => !x.done && x.d === today).length;
   const say = late || now ? [late ? numWord(late) + ' overdue' : '', now ? (late ? numWord(now).toLowerCase() : numWord(now)) + ' for today' : ''].filter(Boolean).join(', ') + '.' : all.some(x => !x.done) ? 'Nothing due today.' : 'Nothing on your list.';
   if ($('#tdSay').textContent !== say) $('#tdSay').textContent = say;
   const fchip = (k, label, c) => '<button class="tdchip' + (tdS.filter === k ? ' on' : '') + '" data-tdf="' + esc(k) + '" aria-pressed="' + (tdS.filter === k) + '">' + (c ? tdDot(c) : '') + '<span' + (c ? ' data-raw' : '') + '>' + esc(label) + '</span></button>';
-  tdPutHtml($('#tdChips'), fchip('all', 'Everything') + fchip('mine', 'Only mine') + lib.classes.map(c => fchip(c.id, c.name, c)).join(''));
+  // a chip for each person a line still to do names (or the one being looked at), after the classes
+  const named = tdPpl().filter(p => tdS.filter === 'p:' + p.id || all.some(x => x.own && !x.done && (x.it.ppl || []).includes(p.id)));
+  const pchip = p => '<button class="tdchip' + (tdS.filter === 'p:' + p.id ? ' on' : '') + '" data-tdf="p:' + esc(p.id) + '" aria-pressed="' + (tdS.filter === 'p:' + p.id) + '" title="' + esc(schWho(p)) + '">' + SCH_IC.person + '<span data-raw>' + esc(p.name) + '</span></button>';
+  tdPutHtml($('#tdChips'), fchip('all', 'Everything') + fchip('mine', 'Only mine') + lib.classes.map(c => fchip(c.id, c.name, c)).join('') + (named.length ? '<span class="tdcsep" aria-hidden="true"></span>' + named.map(pchip).join('') : ''));
+  const fp = pf && tdPerson(pf), fb = $('#tdPplBar');
+  tdPutHtml(fb, fp ? '<span class="tdp" data-raw>' + SCH_IC.person + '<b>' + esc(fp.name) + '</b>' + (fp.role ? ' · ' + esc(fp.role) : '') + '</span>' + (fp.email ? '<a class="btn sm" href="' + esc(schMailto(fp)) + '">' + SCH_IC.mail + 'Email</a>' : '') + '<a class="link" href="#/school">On the School page</a>' : '');
+  fb.hidden = !fp;
   const nDone = tdGroups(all, today).done.length, db = $('#tdDoneBtn');
   db.hidden = !nDone; db.textContent = (tdS.done ? 'Hide' : 'Show') + ' done in the last 7 days · ' + nDone; db.setAttribute('aria-pressed', String(tdS.done));
   const sec = (k, name, list) => list.length ? '<div class="tdgrp' + (k === 'late' ? ' late' : '') + '" data-tdgrp="' + k + '">' + name + ' <span>' + (k === 'done' ? list.length : list.filter(x => !x.done).length) + '</span></div>' + list.map(x => tdRow(x, today)).join('') : '';
@@ -340,6 +379,7 @@ function tdUndRender() {
   if (r.d && !tdS.drop.d) parts.push('<button class="tdchip on" data-tddrop="d" title="Not a day: leave these words in">' + esc(tdDayLong(r.d)) + (r.rep ? ' · every week' : '') + '</button>');
   if (c && !tdS.drop.c) parts.push('<button class="tdchip" data-tddrop="c" title="Not about this class">' + tdDot(c) + '<span data-raw>' + esc(c.name) + '</span></button>');
   if (c && r.who && !tdS.drop.c && !tdS.drop.who) parts.push('<button class="tdchip" data-tddrop="who" title="Not about this student"><span data-raw>' + esc(r.who) + '</span></button>');
+  if (!tdS.drop.p) for (const p of r.ppl.map(tdPerson).filter(Boolean)) parts.push('<button class="tdchip" data-tddrop="p" title="Not about ' + esc(p.name) + '">' + SCH_IC.person + '<span data-raw>' + esc(p.name) + '</span></button>');
   box.hidden = !parts.length;
   tdPutHtml(box, parts.length ? '<span>Understood as</span>' + parts.join('') + '<span class="tdhint">Click one to take it off</span>' : '');
 }
@@ -358,7 +398,8 @@ function todoRender() {
 function tdFocusAdd() { go('#/todo'); const i = $('#tdIn'); i.focus(); i.select(); }
 $('#tdAdd').addEventListener('submit', e => {
   e.preventDefault();
-  const i = $('#tdIn'); if (!todoAdd(i.value, tdS.drop)) return;
+  const i = $('#tdIn'), pf = tdS.filter.startsWith('p:') ? tdS.filter.slice(2) : '';   // typed while looking at one person: it names them
+  if (!todoAdd(i.value, tdS.drop, pf ? { ppl: [pf] } : null)) return;
   i.value = ''; tdS.drop = {}; tdUndRender(); i.focus();
 });
 $('#tdIn').addEventListener('input', () => { if (!$('#tdIn').value.trim()) tdS.drop = {}; tdUndRender(); });
@@ -401,6 +442,7 @@ function tdClick(e) {
   if ((b = hit('data-tdwhen'))) { const today = tdToday(), k = b.dataset.tdwhen; setDay(k === 'today' ? today : k === 'tomorrow' ? tdAdd(today, 1) : k === 'week' ? tdNextMon(today) : ''); return; }
   if (hit('data-tdhide')) { tdAutoPut(r.key, { h: r.sig }); return; }
   if (auto) return;
+  if ((b = hit('data-tdpx'))) { const it = tdItem(id); tdPut(id, { ppl: (it.ppl || []).filter(x => x !== b.dataset.tdpx) }); return; }
   if ((b = hit('data-tdrep'))) { const rep = b.dataset.tdrep, it = tdItem(id); tdPut(id, { rep, ...(rep && !it.d ? { d: tdToday() } : {}) }); return; }
   if (hit('data-tdfin')) { todoTick(id); return; }
   if (hit('data-tddel')) todoDelete(id);
@@ -443,6 +485,11 @@ $('#tdSide').addEventListener('change', e => {
   if (t.id === 'tdX') { const x = t.value.replace(/\s+/g, ' ').trim(); if (x) tdPut(id, { x }); else t.value = (tdItem(id) || {}).x || ''; }
   else if (t.id === 'tdNote') tdPut(id, { note: t.value.trim() });
   else if (t.id === 'tdCls') { const it = tdItem(id); tdPut(id, { c: t.value, who: '', a: '', ...(it.rep === 'meet' ? { rep: 'week' } : {}) }); }
+  else if (t.id === 'tdPpl') {
+    const v = t.value, add = pid => { const it = tdItem(id); if (it && pid && !(it.ppl || []).includes(pid)) tdPut(id, { ppl: [...(it.ppl || []), pid] }); };
+    t.value = '';
+    if (v === '+') schPersonForm({}, p => add(p.id)); else add(v);
+  }
   else if (t.id === 'tdWith') { const it = tdItem(id), c = classById(it.c), v = t.value; tdPut(id, { who: v.startsWith('s:') && c ? c.names[+v.slice(2)] || '' : '', a: v.startsWith('a:') ? v.slice(2) : '' }); }
 });
 $('#tdSide').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'tdX') { e.preventDefault(); e.target.blur(); } });
@@ -453,4 +500,13 @@ document.addEventListener('keydown', e => {
   if ((t.closest && t.closest('input, textarea, select, [contenteditable]')) || $('#findDlg') || $('#askDlg') || !$('#dlg').hidden || !$('#welcome').hidden) return;
   e.preventDefault(); tdFocusAdd();
 });
-Object.assign(window.__gs, { todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove });
+// From the School page: the list of what is to do with one person, or a new line that names them.
+function todoShowPerson(pid) { tdS.filter = 'p:' + pid; tdS.sel = ''; go('#/todo'); tdPageRender(); }
+function todoForPerson(pid) {
+  const p = tdPerson(pid); if (!p) return;
+  const now = Date.now(), it = { id: 'td' + uid(), x: 'Talk to ' + p.name, d: '', c: '', who: '', a: '', rep: '', note: '', done: 0, made: now, t: now, ppl: [pid] };
+  tdSave({ items: [...tdData().items, it] });
+  tdS.filter = 'p:' + pid; tdS.sel = it.id; go('#/todo'); tdPageRender();
+  const x = $('#tdX'); if (x) { x.focus(); x.select(); }
+}
+Object.assign(window.__gs, { todoShowPerson, todoForPerson, todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove });

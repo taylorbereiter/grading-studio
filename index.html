@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"4626236c","zh-Hans":"cfb79ac0","es":"4c85c752","fr":"f86fdc38","de":"55f14f15","pt-BR":"b53ee0a7","ja":"5adbbf0c","ko":"c437a117"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"2c54ad79","zh-Hans":"1fadcc52","es":"4c3189f0","fr":"f723748b","de":"d9c301b7","pt-BR":"486f1bc5","ja":"2dd99d81","ko":"2bb9cf6d"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Grading Studio</title>
 <script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
    Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
@@ -2733,6 +2733,22 @@ html.welcoming .shell{visibility:hidden}
 .schform .schsay{margin:0;font-size:var(--text-control)}
 .schfiles{margin:0;padding-left:1.2em;font-size:var(--text-body);max-height:160px;overflow:auto}
 @media (max-width:640px){.schbar .btn{flex:1 1 auto}}
+
+/* people: spots for the roles at the school, filled in or not */
+.schppl .schhead .btn{margin-left:var(--space-1)}
+.schprow{display:flex;align-items:center;gap:var(--space-2);min-height:48px;padding:0 var(--space-2) 0 var(--space-4)}
+.schprow+.schprow{border-top:1px solid var(--line)}
+.schrole{flex:0 0 220px;font-size:var(--text-small);font-weight:500;color:var(--muted);overflow-wrap:anywhere}
+.schpname{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0;padding:var(--space-2) 0;border:0;background:none;color:var(--fg);font:inherit;text-align:left;cursor:pointer}
+.schpname:hover b{color:var(--accent)}
+.schpname b{font-weight:600}
+.schpadd{justify-self:start;padding:var(--space-1) var(--space-2);margin-left:calc(-1 * var(--space-2));border:0;border-radius:var(--corner-2);background:none;color:var(--faint);font:inherit;font-size:var(--text-control);cursor:pointer}
+.schpadd:hover{background:var(--hover);color:var(--accent)}
+.schptd{font-size:var(--text-small);font-weight:500;color:var(--accent);text-decoration:none;white-space:nowrap;padding:var(--space-1) var(--space-2);border-radius:var(--corner-pill);background:var(--accent-soft)}
+.schpmail svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.schpnone{margin:0;padding:var(--space-4)}
+.schppl .schsay{margin:var(--space-2) var(--space-1) 0;font-size:var(--text-small)}
+@media (max-width:640px){.schprow{flex-wrap:wrap}.schprow .schrole{flex-basis:100%;padding-top:var(--space-2)}}
 /* Bring a class over from Google Classroom: one box, two numbered steps. */
 .dlg .box.gcdlg{width:min(720px,100%)}
 .gcbox{display:flex;flex-direction:column;gap:var(--space-3)}
@@ -2985,6 +3001,21 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .tdgrid.wk .tdmainc{display:none}
 .tdgrid.wk #tdSide{position:fixed;right:var(--space-5);top:120px;z-index:6;width:340px;max-width:calc(100vw - 2 * var(--space-4))}
 .tdgrid.wk #tdSide .tdpane{box-shadow:var(--shadow)}
+
+/* people from the School page on a line, in the side pane, and as filters */
+.tdp{display:inline-flex;align-items:center;gap:3px;min-width:0}
+.tdp svg{flex:none;width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.tdchip svg{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.tdcsep{align-self:center;width:1px;height:18px;background:var(--line-strong);margin:0 var(--space-1)}
+.tdppl{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2)}
+.tdpchip{display:inline-flex;align-items:center;gap:var(--space-2);min-height:28px;padding:0 var(--space-1) 0 var(--space-3);border:1px solid var(--line-strong);border-radius:var(--corner-pill);background:var(--surface);font-size:var(--text-control)}
+.tdpchip .link{font-weight:500;text-decoration:none}
+.tdpchip .icon{width:24px;height:24px;font-size:var(--text-small)}
+.tdpplbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);margin:calc(-1 * var(--space-2)) 0 var(--space-4);padding:var(--space-2) var(--space-4);border:1px solid var(--line);border-radius:var(--corner-5);background:var(--surface);font-size:var(--text-control);color:var(--fg-2)}
+.tdpplbar[hidden]{display:none}
+.tdpplbar .tdp svg{width:16px;height:16px}
+.tdpplbar .btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin-right:var(--space-1)}
+.tdpplbar .link{margin-left:auto;font-weight:500;text-decoration:none}
 /* ---------- Focus: the work timer, the daily goal and the card on Today (src/focus.js). Every value is a token. ---------- */
 /* the card on Today and the start view of the panel share one body */
 .fcbody{display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-4)}
@@ -3534,6 +3565,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
   <section class="view" id="vTodo" hidden>
     <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button><div class="pseg" id="tdView" role="group" aria-label="View"><button data-tdview="" aria-pressed="true">List</button><button data-tdview="week" aria-pressed="false">Week</button></div></header>
     <div class="tdchips" id="tdChips" role="group" aria-label="Show"></div>
+    <div class="tdpplbar" id="tdPplBar" hidden></div>
     <div id="tdWeek" hidden></div>
     <div class="tdgrid">
       <div class="tcard tdmainc">
@@ -5154,7 +5186,7 @@ const HELP = [
   { id: 'todo', sec: 'start', q: 'How does the to-do list work?',
     a: ['**To do** in the sidebar is one list. Your own to-dos have a solid circle. Lines with a dashed circle are things the app noticed from your saved work: papers to mark, papers to hand back, a class with no lesson planned, missing work to chase.',
       'Type a to-do the way you would say it and press Enter. A day at the end (“tomorrow”, “friday”, “nov 20”), a class name or a student’s name is picked out for you, and a click on what was understood takes it off. Press **N** anywhere outside a paper to add one.',
-      'Click a line to give it a day, a class, something it goes with, a repeat or a note. The app’s own lines go by themselves when the work is done. You can move one to another day, hide it, or switch a whole kind off.',
+      'Click a line to give it a day, a class, something it goes with, a repeat or a note. The app’s own lines go by themselves when the work is done. You can move one to another day, hide it, or switch a whole kind off. **People** names someone from your School page, with an Email link when their address is saved.',
       '**Today** shows a short card of your own to-dos that are overdue or due today. The list is saved with your grading work, never in the Planner’s folder.'],
     go: ['Open To do', '#/todo'], words: 'todo task tasks list reminder remember checklist due' },
   { id: 'todo-week', sec: 'start', q: 'Can I see my to-dos by week?',
@@ -5166,11 +5198,11 @@ const HELP = [
       'Set a daily goal in papers or minutes in **Settings, Focus and goals**. A paper counts when its score is finished, wherever you do it. Today, the timer and the sidebar show how far along you are, and turn green when you get there. The length of a session and a break, and the chime, are set there too.'],
     go: ['Open Settings, Focus and goals', '#/settings/focus'], words: 'focus timer pomodoro session break goal daily papers minutes concentrate procrastinate start motivation adhd' },
   { id: 'school-resources', sec: 'start', q: 'Where can I keep my school’s links and files?',
-    a: ['On **School** in the sidebar. Keep the handbook, the calendar, the bell schedule, the portals you sign in to, forms, and notes like who to call. Put them in groups you name, and press the star on the ones you open most to keep them at the top.',
+    a: ['On **School** in the sidebar. Keep the handbook, the calendar, the bell schedule, the portals you sign in to, forms, and notes like who to call. Put them in groups you name, and press the star on the ones you open most to keep them at the top. **People** at the top has a spot for each role, like principal or curriculum coordinator. Fill in the ones you work with, or use **Change the spots…** for your school’s own roles.',
       '**Add a link** when the school keeps it online, since a link stays up to date by itself. **Add files…** keeps a copy of a file with your work, up to 50 MB each. You can also drop files on the page or paste a web address.',
       'Tick a class under **For a class** when a link, file or note belongs to one class. The page can then show one class at a time, and a link for a class shows on every lesson for that class in the Planner, under **Links** and in **Present**, all year. A lesson’s own links go in that same **Links** box, typed or picked from here.',
       'Everything is saved with the rest of your work: in this browser, in your folder and in a take-home file. Find anything finds each one by its name.'],
-    go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff bell schedule forms class course lesson links website textbook' },
+    go: ['Open School resources', '#/school'], words: 'handbook calendar policy policies portal bookmark link file document resources staff people principal coordinator email bell schedule forms class course lesson links website textbook' },
   { id: 'language', sec: 'start', q: 'Can I use the app in another language?',
     a: ['Yes. Choose one in Settings, Display, **App language**, or at the top of the welcome. The page is drawn again in the language you pick.',
       'So far a language other than English covers the sidebar, Today, the welcome, Settings, a class page with all its tabs and most boxes it opens, the marking screen with its Grades, Insights and Return tabs, Find anything, Help and the feedback page students get in a returned paper. The other screens are still in English.',
@@ -19482,6 +19514,15 @@ function schoolMerge(x, y) {
   for (const i of Y.items) { const o = by.get(i.id); if (!o || (i.at || 0) > (o.at || 0)) { by.set(i.id, i); toA = true; } }
   const out = { items: [...by.values()], order: X.order, ot: X.ot };
   if (Y.ot > X.ot) { out.order = Y.order; out.ot = Y.ot; toA = true; }
+  const px = x && Array.isArray(x.people) ? x.people.filter(p => p && p.id) : [], py = y && Array.isArray(y.people) ? y.people.filter(p => p && p.id) : [];
+  if (px.length || py.length) {
+    const pb = new Map(px.map(p => [p.id, p]));
+    for (const p of py) { const o = pb.get(p.id); if (!o || (p.at || 0) > (o.at || 0)) { pb.set(p.id, p); toA = true; } }
+    out.people = [...pb.values()];
+  }
+  const rx = x && x.roles && Array.isArray(x.roles.list) ? x.roles : null, ry = y && y.roles && Array.isArray(y.roles.list) ? y.roles : null;
+  if (rx) out.roles = rx;
+  if (ry && (!rx || (ry.at || 0) > (rx.at || 0))) { out.roles = ry; toA = true; }
   return { out, toA };
 }
 function mergeLs(a, b, skip = () => false) {
@@ -27545,6 +27586,7 @@ window.addEventListener('pageshow', e => { if (e.persisted) planRefresh(); });
    What is saved, in lib.todo (so it goes wherever the classes go: the folder, the take-home file, safety copies), and never in the
    Planner's folder, because a to-do can name a student:
      items: [{ id, x: the words, d: 'YYYY-MM-DD' or '', c: class id, who: roster name, a: assignment id, rep: '' | 'day' | 'week' | 'meet',
+               ppl: [ids of people on the School page (gs.school people: the principal, a coordinator...)],
                note, done: time, made: time, t: time it last changed }]   (a deleted one stays as { id, t, gone: 1 } so it stays deleted after a merge)
      off:   { mark | back | plan | miss: 1 } the kinds the app no longer adds, offT when that was last changed
      auto:  { <line's key>: { d: day it was moved to, h: hidden while its number is this, t } } */
@@ -27617,14 +27659,35 @@ function tdReadWho(text) {
   for (const c of [...lib.classes].sort((a, b) => b.name.length - a.name.length)) if (c.name.trim().length > 2 && low.includes(c.name.trim().toLowerCase())) return { c: c.id, who: '' };
   return { c: '', who: '' };
 }
+const tdPpl = () => typeof schPeople === 'function' ? schPeople() : [];
+const tdPerson = id => tdPpl().find(p => p.id === id) || null;
+function tdReadPpl(text) {
+  const ppl = tdPpl(); if (!ppl.length) return [];
+  const low = ' ' + text.toLowerCase().replace(/[^\p{L}\p{N}'’.-]+/gu, ' ') + ' ', has = w => low.includes(' ' + w.toLowerCase() + ' ');
+  const full = ppl.filter(p => p.name.length > 3 && has(p.name.replace(/[^\p{L}\p{N}'’.-]+/gu, ' ').trim()));
+  if (full.length) return full.map(p => p.id);
+  const words = new Set(text.split(/[^\p{L}\p{M}'’-]+/u).map(w => w.replace(/['’]s$/, '')));
+  const last = new Map();
+  for (const p of ppl) { const l = p.name.trim().split(/\s+/).pop().replace(/[.,]$/, ''); if (l.length > 2 && /^\p{Lu}/u.test(l)) last.set(l, last.has(l) ? null : p.id); }
+  for (const [l, id] of last) if (id && words.has(l)) return [id];
+  let rest = low;
+  const roles = [...new Set(ppl.map(p => p.role).filter(Boolean))].sort((a, b) => b.length - a.length);
+  for (const r of roles) {
+    const k = ' ' + r.toLowerCase().replace(/[^\p{L}\p{N}'’.-]+/gu, ' ').trim() + ' '; if (k.length < 4 || !rest.includes(k)) continue;
+    const who = ppl.filter(p => p.role === r); rest = rest.split(k).join(' ');
+    if (who.length === 1) return [who[0].id];
+  }
+  return [];
+}
 function todoRead(text, today) {
   const raw = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 300), day = tdReadDay(raw, today || tdToday()), who = tdReadWho(raw);
-  return { raw, x: day ? day.x : raw, d: day ? day.d : '', rep: day ? day.rep : '', c: who.c, who: who.who };
+  return { raw, x: day ? day.x : raw, d: day ? day.d : '', rep: day ? day.rep : '', c: who.c, who: who.who, ppl: tdReadPpl(raw) };
 }
 function todoAdd(text, drop, base) {
   drop = drop || {};
   const r = todoRead(text); if (!r.raw) return null;
   const now = Date.now(), it = { id: 'td' + uid(), x: drop.d ? r.raw : r.x, d: drop.d ? '' : r.d, c: drop.c ? '' : r.c, who: drop.c || drop.who ? '' : r.who, a: '', rep: drop.d ? '' : r.rep, note: '', done: 0, made: now, t: now };
+  if (!drop.p && r.ppl.length) it.ppl = r.ppl;
   for (const [k, v] of Object.entries(base || {})) if (!it[k]) it[k] = v;
   tdSave({ items: [...tdData().items, it] });
   return it;
@@ -27719,6 +27782,8 @@ const todoCount = () => { const today = tdToday(); return todoRows().filter(r =>
 /* ---------- drawing ---------- */
 const TD_TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const TD_REP = { day: 'Every school day', week: 'Every week', meet: 'Each time this class meets' };
+const tdPplOf = it => (Array.isArray(it.ppl) ? it.ppl : []).map(tdPerson).filter(Boolean);
+const tdPplHtml = it => tdPplOf(it).map(p => '<span class="tdp" data-raw>' + SCH_IC.person + esc(p.name) + '</span>').join('');
 const tdDot = (c, color) => '<span class="rdot" style="background:' + (color || classColor(c)) + '"></span>';
 function tdRow(r, today, card) {
   const done = !!r.done, late = !done && r.d && r.d < today, due = done ? 'Done' : tdDaySay(r.d, today);
@@ -27727,7 +27792,7 @@ function tdRow(r, today, card) {
   if (r.auto) meta = '<span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '');
   else {
     const it = r.it, a = it.a && findItem(it.a);
-    meta = [r.c ? '<span class="tdc" data-raw>' + tdDot(r.c) + esc(r.c.name) + '</span>' : '', it.who ? '<span data-raw>' + esc(it.who) + '</span>' : '', a ? '<span data-raw>' + esc(a.it.name) + '</span>' : '',
+    meta = [r.c ? '<span class="tdc" data-raw>' + tdDot(r.c) + esc(r.c.name) + '</span>' : '', it.who ? '<span data-raw>' + esc(it.who) + '</span>' : '', tdPplHtml(it), a ? '<span data-raw>' + esc(a.it.name) + '</span>' : '',
       it.rep ? '<span>' + TD_REP[it.rep] + '</span>' : '', it.note ? '<span>Note</span>' : ''].filter(Boolean).join('');
   }
   const btn = r.auto && !card ? (r.btn.open ? '<button class="btn sm" data-tdopen="' + esc(r.btn.open) + '">' + r.btn.label + '</button>' : '<a class="btn sm" href="' + esc(r.btn.href) + '">' + r.btn.label + '</a>') : '';
@@ -27768,7 +27833,7 @@ function tdGroups(rows, today) {
 const tdPid = r => r.pid || ((p => p ? p.id : '')(tdPlanClass(r.c)));
 function tdWRow(r) {
   const done = !!r.done, sub = r.from ? '<span class="late" data-raw>from ' + esc(tdAt(r.from).toLocaleDateString(LANG_LOCALE, { weekday: 'long' })) + '</span>' : r.auto ? (r.sub ? '<span data-raw>' + esc(r.sub.split(' · ').pop()) + '</span>' : '') :
-    [r.it.who ? '<span data-raw>' + esc(r.it.who) + '</span>' : '', r.it.rep ? '<span>' + TD_REP[r.it.rep] + '</span>' : ''].filter(Boolean).join('');
+    [r.it.who ? '<span data-raw>' + esc(r.it.who) + '</span>' : '', tdPplHtml(r.it), r.it.rep ? '<span>' + TD_REP[r.it.rep] + '</span>' : ''].filter(Boolean).join('');
   return '<div class="tdw' + (done ? ' done' : '') + (r.auto ? ' auto' : '') + (tdS.sel === r.id ? ' sel' : '') + '" data-td="' + esc(r.id) + '"' + (done ? '' : ' draggable="true"') + '>' +
     '<button class="tdck" data-raw data-tdtick="' + esc(r.id) + '" ' + (r.auto ? 'title="Hide this line. It goes by itself when the work is done." aria-label="Hide: ' + esc(r.x) + '"' : 'role="checkbox" aria-checked="' + done + '" aria-label="' + esc(r.x) + '" title="' + (done ? 'Not done after all' : 'Done') + '"') + '>' + (done ? TD_TICK : '') + '</button>' +
     '<button class="tdmain" data-tdsel="' + esc(r.id) + '"><span class="tdx" data-raw>' + esc(r.x) + '</span>' + (sub ? '<span class="tdm">' + sub + '</span>' : '') + '</button></div>';
@@ -27826,8 +27891,13 @@ function tdSideHtml(rows, today) {
       (c.names.length ? '<optgroup label="Students">' + c.names.map((n, i) => '<option value="s:' + i + '"' + (i === si ? ' selected' : '') + '>' + esc(n) + '</option>').join('') + '</optgroup>' : '') + '</select>' +
       (si >= 0 ? '<a class="link" href="' + classHash(c, 'students', si) + '">Open their page</a>' : a ? '<a class="link" href="' + classHash(c) + '">Open the class</a>' : '') + '</div></div>';
   }
+  const mine = tdPplOf(it), others = tdPpl().filter(p => !mine.includes(p));
+  const ppl = '<div class="tdf"><label class="tdl" for="tdPpl">People</label><div class="tdv tdppl">' +
+    mine.map(p => '<span class="tdpchip"><span class="tdp" data-raw>' + SCH_IC.person + esc(p.name) + '</span>' + (p.email ? '<a class="link" href="' + esc(schMailto(p, it.x)) + '" data-tdmail title="Write to ' + esc(p.email) + '">Email</a>' : '') +
+      '<button class="icon" data-tdpx="' + esc(p.id) + '" aria-label="Take ' + esc(p.name) + ' off this to-do" title="Take off">✕</button></span>').join('') +
+    '<select id="tdPpl" class="btn sm"><option value="">' + (mine.length ? 'Add someone else…' : 'Add someone…') + '</option>' + others.map(p => '<option value="' + esc(p.id) + '">' + esc(schWho(p)) + '</option>').join('') + '<option value="+">Someone new…</option></select></div></div>';
   const rep = '<div class="tdf"><span class="tdl">Repeats</span><div class="tdv">' + chip('data-tdrep=""', !it.rep, 'No') + chip('data-tdrep="day"', it.rep === 'day', 'Every school day') + chip('data-tdrep="week"', it.rep === 'week', 'Every week') + (pc || it.rep === 'meet' ? chip('data-tdrep="meet"', it.rep === 'meet', 'Each time this class meets') : '') + '</div></div>';
-  return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<textarea class="tdtitle" id="tdX" rows="2" maxlength="300" aria-label="What to do">' + esc(it.x) + '</textarea>' + when + cls + goes + rep +
+  return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<textarea class="tdtitle" id="tdX" rows="2" maxlength="300" aria-label="What to do">' + esc(it.x) + '</textarea>' + when + cls + goes + ppl + rep +
     '<div class="tdf top"><label class="tdl" for="tdNote">Note</label><div class="tdv"><textarea id="tdNote" rows="3" maxlength="2000" placeholder="Anything to remember about it">' + esc(it.note || '') + '</textarea></div></div>' +
     '<div class="tdacts"><button class="btn primary" data-tdfin>' + (it.done ? 'Not done after all' : 'Done') + '</button>' + (it.done ? '' : '<button class="btn" data-tdwhen="tomorrow">Move to tomorrow</button><button class="btn" data-tdfocus="' + esc('td:' + it.id) + '" title="Start a focus session on this to-do">Focus on this</button>') + '<span class="sp"></span><button class="btn ghost" data-tddel>Delete</button></div></div>';
 }
@@ -27835,13 +27905,19 @@ function tdPageRender() {
   const r = routeNow(); if (r.v !== 'todo' || batch) return;
   const today = tdToday(), all = todoRows();
   if (tdS.sel && !all.some(x => x.id === tdS.sel)) tdS.sel = '';
-  if (tdS.filter !== 'all' && tdS.filter !== 'mine' && !classById(tdS.filter)) tdS.filter = 'all';
-  const rows = all.filter(x => tdS.filter === 'all' || (tdS.filter === 'mine' ? x.own : x.c && x.c.id === tdS.filter)), g = tdGroups(rows, today);
+  const pf = tdS.filter.startsWith('p:') ? tdS.filter.slice(2) : '';
+  if (tdS.filter !== 'all' && tdS.filter !== 'mine' && !(pf ? tdPerson(pf) : classById(tdS.filter))) tdS.filter = 'all';
+  const rows = all.filter(x => tdS.filter === 'all' || (tdS.filter === 'mine' ? x.own : pf ? x.own && (x.it.ppl || []).includes(pf) : x.c && x.c.id === tdS.filter)), g = tdGroups(rows, today);
   const late = all.filter(x => !x.done && x.d && x.d < today).length, now = all.filter(x => !x.done && x.d === today).length;
   const say = late || now ? [late ? numWord(late) + ' overdue' : '', now ? (late ? numWord(now).toLowerCase() : numWord(now)) + ' for today' : ''].filter(Boolean).join(', ') + '.' : all.some(x => !x.done) ? 'Nothing due today.' : 'Nothing on your list.';
   if ($('#tdSay').textContent !== say) $('#tdSay').textContent = say;
   const fchip = (k, label, c) => '<button class="tdchip' + (tdS.filter === k ? ' on' : '') + '" data-tdf="' + esc(k) + '" aria-pressed="' + (tdS.filter === k) + '">' + (c ? tdDot(c) : '') + '<span' + (c ? ' data-raw' : '') + '>' + esc(label) + '</span></button>';
-  tdPutHtml($('#tdChips'), fchip('all', 'Everything') + fchip('mine', 'Only mine') + lib.classes.map(c => fchip(c.id, c.name, c)).join(''));
+  const named = tdPpl().filter(p => tdS.filter === 'p:' + p.id || all.some(x => x.own && !x.done && (x.it.ppl || []).includes(p.id)));
+  const pchip = p => '<button class="tdchip' + (tdS.filter === 'p:' + p.id ? ' on' : '') + '" data-tdf="p:' + esc(p.id) + '" aria-pressed="' + (tdS.filter === 'p:' + p.id) + '" title="' + esc(schWho(p)) + '">' + SCH_IC.person + '<span data-raw>' + esc(p.name) + '</span></button>';
+  tdPutHtml($('#tdChips'), fchip('all', 'Everything') + fchip('mine', 'Only mine') + lib.classes.map(c => fchip(c.id, c.name, c)).join('') + (named.length ? '<span class="tdcsep" aria-hidden="true"></span>' + named.map(pchip).join('') : ''));
+  const fp = pf && tdPerson(pf), fb = $('#tdPplBar');
+  tdPutHtml(fb, fp ? '<span class="tdp" data-raw>' + SCH_IC.person + '<b>' + esc(fp.name) + '</b>' + (fp.role ? ' · ' + esc(fp.role) : '') + '</span>' + (fp.email ? '<a class="btn sm" href="' + esc(schMailto(fp)) + '">' + SCH_IC.mail + 'Email</a>' : '') + '<a class="link" href="#/school">On the School page</a>' : '');
+  fb.hidden = !fp;
   const nDone = tdGroups(all, today).done.length, db = $('#tdDoneBtn');
   db.hidden = !nDone; db.textContent = (tdS.done ? 'Hide' : 'Show') + ' done in the last 7 days · ' + nDone; db.setAttribute('aria-pressed', String(tdS.done));
   const sec = (k, name, list) => list.length ? '<div class="tdgrp' + (k === 'late' ? ' late' : '') + '" data-tdgrp="' + k + '">' + name + ' <span>' + (k === 'done' ? list.length : list.filter(x => !x.done).length) + '</span></div>' + list.map(x => tdRow(x, today)).join('') : '';
@@ -27859,6 +27935,7 @@ function tdUndRender() {
   if (r.d && !tdS.drop.d) parts.push('<button class="tdchip on" data-tddrop="d" title="Not a day: leave these words in">' + esc(tdDayLong(r.d)) + (r.rep ? ' · every week' : '') + '</button>');
   if (c && !tdS.drop.c) parts.push('<button class="tdchip" data-tddrop="c" title="Not about this class">' + tdDot(c) + '<span data-raw>' + esc(c.name) + '</span></button>');
   if (c && r.who && !tdS.drop.c && !tdS.drop.who) parts.push('<button class="tdchip" data-tddrop="who" title="Not about this student"><span data-raw>' + esc(r.who) + '</span></button>');
+  if (!tdS.drop.p) for (const p of r.ppl.map(tdPerson).filter(Boolean)) parts.push('<button class="tdchip" data-tddrop="p" title="Not about ' + esc(p.name) + '">' + SCH_IC.person + '<span data-raw>' + esc(p.name) + '</span></button>');
   box.hidden = !parts.length;
   tdPutHtml(box, parts.length ? '<span>Understood as</span>' + parts.join('') + '<span class="tdhint">Click one to take it off</span>' : '');
 }
@@ -27877,7 +27954,8 @@ function todoRender() {
 function tdFocusAdd() { go('#/todo'); const i = $('#tdIn'); i.focus(); i.select(); }
 $('#tdAdd').addEventListener('submit', e => {
   e.preventDefault();
-  const i = $('#tdIn'); if (!todoAdd(i.value, tdS.drop)) return;
+  const i = $('#tdIn'), pf = tdS.filter.startsWith('p:') ? tdS.filter.slice(2) : '';   // typed while looking at one person: it names them
+  if (!todoAdd(i.value, tdS.drop, pf ? { ppl: [pf] } : null)) return;
   i.value = ''; tdS.drop = {}; tdUndRender(); i.focus();
 });
 $('#tdIn').addEventListener('input', () => { if (!$('#tdIn').value.trim()) tdS.drop = {}; tdUndRender(); });
@@ -27919,6 +27997,7 @@ function tdClick(e) {
   if ((b = hit('data-tdwhen'))) { const today = tdToday(), k = b.dataset.tdwhen; setDay(k === 'today' ? today : k === 'tomorrow' ? tdAdd(today, 1) : k === 'week' ? tdNextMon(today) : ''); return; }
   if (hit('data-tdhide')) { tdAutoPut(r.key, { h: r.sig }); return; }
   if (auto) return;
+  if ((b = hit('data-tdpx'))) { const it = tdItem(id); tdPut(id, { ppl: (it.ppl || []).filter(x => x !== b.dataset.tdpx) }); return; }
   if ((b = hit('data-tdrep'))) { const rep = b.dataset.tdrep, it = tdItem(id); tdPut(id, { rep, ...(rep && !it.d ? { d: tdToday() } : {}) }); return; }
   if (hit('data-tdfin')) { todoTick(id); return; }
   if (hit('data-tddel')) todoDelete(id);
@@ -27960,6 +28039,11 @@ $('#tdSide').addEventListener('change', e => {
   if (t.id === 'tdX') { const x = t.value.replace(/\s+/g, ' ').trim(); if (x) tdPut(id, { x }); else t.value = (tdItem(id) || {}).x || ''; }
   else if (t.id === 'tdNote') tdPut(id, { note: t.value.trim() });
   else if (t.id === 'tdCls') { const it = tdItem(id); tdPut(id, { c: t.value, who: '', a: '', ...(it.rep === 'meet' ? { rep: 'week' } : {}) }); }
+  else if (t.id === 'tdPpl') {
+    const v = t.value, add = pid => { const it = tdItem(id); if (it && pid && !(it.ppl || []).includes(pid)) tdPut(id, { ppl: [...(it.ppl || []), pid] }); };
+    t.value = '';
+    if (v === '+') schPersonForm({}, p => add(p.id)); else add(v);
+  }
   else if (t.id === 'tdWith') { const it = tdItem(id), c = classById(it.c), v = t.value; tdPut(id, { who: v.startsWith('s:') && c ? c.names[+v.slice(2)] || '' : '', a: v.startsWith('a:') ? v.slice(2) : '' }); }
 });
 $('#tdSide').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'tdX') { e.preventDefault(); e.target.blur(); } });
@@ -27969,7 +28053,15 @@ document.addEventListener('keydown', e => {
   if ((t.closest && t.closest('input, textarea, select, [contenteditable]')) || $('#findDlg') || $('#askDlg') || !$('#dlg').hidden || !$('#welcome').hidden) return;
   e.preventDefault(); tdFocusAdd();
 });
-Object.assign(window.__gs, { todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove });
+function todoShowPerson(pid) { tdS.filter = 'p:' + pid; tdS.sel = ''; go('#/todo'); tdPageRender(); }
+function todoForPerson(pid) {
+  const p = tdPerson(pid); if (!p) return;
+  const now = Date.now(), it = { id: 'td' + uid(), x: 'Talk to ' + p.name, d: '', c: '', who: '', a: '', rep: '', note: '', done: 0, made: now, t: now, ppl: [pid] };
+  tdSave({ items: [...tdData().items, it] });
+  tdS.filter = 'p:' + pid; tdS.sel = it.id; go('#/todo'); tdPageRender();
+  const x = $('#tdX'); if (x) { x.focus(); x.select(); }
+}
+Object.assign(window.__gs, { todoShowPerson, todoForPerson, todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove });
 
 /* ---------------- Focus: a work timer for grading, a daily goal, and a way straight into the next piece of work ----------------
    Made for getting started and keeping going: one press starts a short session on the next set of papers (or a to-do), a small
@@ -29373,7 +29465,9 @@ function stpRead(j) {
     if (typeof sc.assistantOpens === 'string') o.aiOpen = /^tab$/i.test(sc.assistantOpens.trim()) ? 'tab' : '';
     if (Array.isArray(sc.otherAssistants)) { o.aiUrls = {}; for (const x of sc.otherAssistants.slice(0, 12)) { const n = stpStr(stpObj(x) ? x.name : '', 30), u = stpObj(x) ? aiUrlClean(x.link) : ''; if (n && u) o.aiUrls[n] = u; } }
     if (Array.isArray(sc.assistantsNotListed)) o.aiOff = [...new Set(sc.assistantsNotListed.filter(x => typeof x === 'string').map(x => stpStr(x, 30)).filter(Boolean))].slice(0, 12);
-    if (Object.keys(o).length) S.school = o; }
+    if (Object.keys(o).length) S.school = o;
+    if (Array.isArray(sc.staff)) S.staff = sc.staff.slice(0, 40).map(stpObj).filter(Boolean).map(x => ({ role: stpStr(x.role, 80), name: stpStr(x.name, 80), email: typeof schMail === 'function' ? schMail(x.email) : '', note: stpStr(x.note, 200) })).filter(x => x.name);
+    if (Array.isArray(sc.staffRoles)) S.staffRoles = [...new Set(sc.staffRoles.filter(x => typeof x === 'string').map(x => stpStr(x, 80)).filter(Boolean))].slice(0, 30); }
   const g = stpObj(j.grading);
   if (g) {
     let way = STP_WAYS[stpKey(g.way)] || (stpArr(g.criteria).length ? 'rubric' : '');
@@ -29512,7 +29606,7 @@ const stpWayName = k => gradeWay(k)[1], stpWayLow = k => k === 'ib7' || k === 'm
 const stpTypeName = id => { const t = BK_TYPES.find(x => x[0] === id); return t ? t[2] : id; };
 function stpDiff(S, planNow) {
   const parts = [], add = (key, title, lines, sub) => { if (lines.length) parts.push({ key, title, lines, sub: sub || '' }); };
-  if (S.school || S.prog) {
+  if (S.school || S.prog || S.staff || S.staffRoles) {
     const L = [], m = me(), s = S.school || {};
     if (s.sys != null && s.sys !== sysName()) L.push(s.sys ? 'Students hand work in on <b>' + esc(s.sys) + '</b>' + (sysName() ? ' (now ' + esc(sysName()) + ')' : '') : 'No school system named (now ' + esc(sysName()) + ')');
     if (s.unit != null && s.unit !== unitLinkName()) L.push(s.unit ? 'Unit plans are kept in <b>' + esc(s.unit) + '</b>' + (unitLinkName() ? ' (now ' + esc(unitLinkName()) + ')' : '') : 'No place named for unit plans (now ' + esc(unitLinkName()) + ')');
@@ -29522,6 +29616,9 @@ function stpDiff(S, planNow) {
     if (s.aiUrls != null && JSON.stringify(s.aiUrls) !== JSON.stringify(m.aiUrls || {})) L.push(Object.keys(s.aiUrls).length ? 'Other assistants with a link of your own: <b>' + Object.keys(s.aiUrls).map(esc).join(', ') + '</b>' : 'No other assistant has a link of your own');
     if (s.aiOff != null && JSON.stringify(s.aiOff) !== JSON.stringify(m.aiOff || [])) L.push(s.aiOff.length ? 'Not in the sidebar’s list of assistants: <b>' + s.aiOff.map(esc).join(', ') + '</b>' : 'Every assistant the app knows is in the sidebar’s list');
     if (S.prog && S.prog !== (m.prog || '')) L.push('Programme: <b>' + esc(S.prog) + '</b>');
+    if (S.staffRoles && JSON.stringify(S.staffRoles) !== JSON.stringify(schRoles())) L.push('Spots for people on the School page: <b>' + S.staffRoles.map(esc).join(', ') + '</b>');
+    const newPpl = (S.staff || []).filter(x => !stpPersonHere(x));
+    if (newPpl.length) L.push('People on the School page: <b>' + newPpl.map(x => esc(x.name) + (x.role ? ' (' + esc(x.role) + ')' : '')).join(', ') + '</b>');
     add('school', 'Your school', L, 'Only the words the app uses. Nothing is connected to these.');
   }
   if (S.grading) {
@@ -29632,6 +29729,7 @@ function stpIbW(wn) {
 const stpIbChanges = (c, ib) => { const n = stpIbNext(c, ib); return c.way !== n.way || JSON.stringify(c.ib || {}) !== JSON.stringify(n.ib) || (!!ib.wn && JSON.stringify(stpIbW(ib.wn)) !== JSON.stringify((c.ib || {}).w || null)); };
 const stpOwnTypes = () => typeof bkCats === 'function';
 
+const stpPersonHere = x => schPeople().find(p => stpKey(p.name) === stpKey(x.name)) || null;
 /* ---- bringing it in, and what to put back ---- */
 const stpClone = v => v == null ? v : JSON.parse(JSON.stringify(v));
 async function stpApply(S, pick) {
@@ -29645,6 +29743,18 @@ async function stpApply(S, pick) {
     if (lib.me.aiUrls) { delete lib.me.aiUrls[lib.me.ai || '']; if (!Object.keys(lib.me.aiUrls).length) delete lib.me.aiUrls; }
     if (lib.me.aiOff && !lib.me.aiOff.length) delete lib.me.aiOff;
     saveLib();
+    if (S.staff || S.staffRoles) {
+      U.ppl = { added: [], was: [], roles: schNow().roles || null };
+      schChange(sc => {
+        sc.people = sc.people || [];
+        if (S.staffRoles) sc.roles = { list: S.staffRoles.length ? S.staffRoles.slice() : SCH_ROLES.slice(), at: now };
+        for (const x of S.staff || []) {
+          const had = sc.people.find(p => !p.gone && stpKey(p.name) === stpKey(x.name)), got = Object.fromEntries(Object.entries(x).filter(([, v]) => v));
+          if (had) { const nx = { ...had, ...got }; if (JSON.stringify(nx) !== JSON.stringify(had)) { U.ppl.was.push(stpClone(had)); Object.assign(had, got, { at: now }); } }
+          else { const id = 'sp' + uid(); sc.people.push({ id, at: now, ...got }); U.ppl.added.push(id); }
+        }
+      });
+    }
   }
   if (pick.grading) {
     U.setupLs = localStorage.getItem('gs.setup');
@@ -29738,6 +29848,12 @@ async function stpUndo() {
   if (U.goals && Array.isArray(lib.goals)) lib.goals = lib.goals.filter(g => !U.goals.includes(g.id));
   if (U.rubAdded || U.rubWas) { let all = savedRubrics().filter(r => !(U.rubAdded || []).includes(r.id)); for (const w of U.rubWas || []) { const i = all.findIndex(r => r.id === w.id); if (i >= 0) all[i] = { ...w, at: Date.now() }; } store.set('gs.rubrics', all); if ((U.rubAdded || []).length) { store.set('gs.rubricsGone', { ...store.get('gs.rubricsGone', {}), ...Object.fromEntries(U.rubAdded.map(id => [id, Date.now()])) }); bankJob(() => bankWrite(b => { b.rubrics = b.rubrics.filter(r => !U.rubAdded.includes(r.id)); for (const id of U.rubAdded) b.gone[id] = Date.now(); for (const w of U.rubWas || []) { const i = b.rubrics.findIndex(r => r.id === w.id); if (i >= 0) b.rubrics[i] = { ...w, at: Date.now() }; } })).catch(() => {}); } }
   if (U.mark) stpMarkSet(U.mark);
+  if (U.ppl) schChange(sc => {   // people the setup added go, unless changed since; ones it changed get their old details back
+    const t = Date.now(); sc.people = sc.people || [];
+    for (const id of U.ppl.added) { const i = sc.people.findIndex(p => p.id === id); if (i >= 0) { if ((sc.people[i].at || 0) <= U.t + 1000) sc.people[i] = { id, at: t, gone: 1 }; else kept.push('the person ' + sc.people[i].name); } }
+    for (const w of U.ppl.was) { const i = sc.people.findIndex(p => p.id === w.id); if (i >= 0) sc.people[i] = { ...w, at: t }; }
+    if (U.ppl.roles) sc.roles = { ...U.ppl.roles, at: t }; else if (sc.roles) sc.roles = { list: SCH_ROLES.slice(), at: t };
+  });
   if (U.comments) { bank = bank.filter(c => !U.comments.includes(c)); store.set('gs.bank', bank); }
   saveLib();
   if (U.plan) {
@@ -29755,6 +29871,8 @@ async function stpExport() {
   const out = { gradingStudioSetup: STP_V };
   if (me().prog) out.programme = me().prog;
   if (sysName() || unitLinkName() || me().ai) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}), ...(me().ai && aiUrlClean(me().aiUrl) ? { assistantLink: aiUrlClean(me().aiUrl) } : {}), ...(me().ai && me().aiOpen === 'tab' ? { assistantOpens: 'tab' } : {}), ...(me().ai && me().aiUrls && Object.keys(me().aiUrls).length ? { otherAssistants: Object.entries(me().aiUrls).map(([name, link]) => ({ name, link })) } : {}), ...(me().ai && Array.isArray(me().aiOff) && me().aiOff.length ? { assistantsNotListed: me().aiOff.slice() } : {}) };
+  const ppl = schPeople(), sr = schNow().roles;
+  if (ppl.length || sr) { out.school = out.school || {}; if (sr) out.school.staffRoles = sr.list.slice(); if (ppl.length) out.school.staff = ppl.map(p => ({ ...(p.role ? { role: p.role } : {}), name: p.name, ...(p.email ? { email: p.email } : {}), ...(p.note ? { note: p.note } : {}) })); }
   if (g) { const raw = (me().grade && me().grade.setup) || {}; out.grading = { way: g.way, score: g.setup.mode === 'rubric' ? 'rows' : 'total', ...(g.setup.mode === 'rubric' ? { criteria: g.setup.criteria } : { outOf: g.setup.outOf }), ...(raw.top ? { rowTop: raw.top } : {}), ...(typeof raw.half === 'boolean' ? { halfPoints: raw.half } : {}), ...(g.setup.scale ? { scale: g.setup.scale } : {}), ...(g.bands ? { bands: g.bands.map(b => ({ grade: b[1], from: b[0] })) } : {}) }; }
   const pc = p && Array.isArray(p.classes) ? p.classes.filter(c => c && c.name) : [], names = lib.classes.filter(c => !c.sample).map(c => c.name);
   for (const c of pc) if (!names.some(n => stpKey(n) === stpKey(c.name))) names.push(String(c.name));
@@ -29860,6 +29978,7 @@ FIELD NOTES
 - "bands" are the grades a percent earns, highest first, each with the lowest percent that earns it. If my boundaries are in points, give them in points and add "bandsOutOf" with the total.
 - "scale" (optional, inside "grading" or a rubric) turns a score into a percent, like { "12": 100, "11": 95, "10": 91 }.
 - "assistant" (inside "school") is the AI assistant I use, by name. "assistantLink" is an https address of my own for it to open at (my school account, a Gem, a project or a custom GPT) and "assistantOpens" is "window" (beside the app) or "tab". Leave both out unless I ask. "otherAssistants" is a list of { "name", "link" } for other assistants I switch to that should open at an https address of my own, and "assistantsNotListed" is a list of names (of Gemini, Claude, ChatGPT, Copilot) I don't want offered in the sidebar. Leave these out too unless I ask.
+- "staff" (inside "school") is a list of { "role", "name", "email", "note" } for the people at my school I work with, like my principal, vice principal, department head or MYP coordinator. Only "name" is needed. "staffRoles" is the list of roles my school has, in order, for the spots on the app's School page, using my school's own words. Leave both out unless I give them. Never put students or parents here.
 - Days are "Sun" to "Sat". Times are 24-hour, like "13:05". Dates are YYYY-MM-DD.
 - "daysOff" and "events" take one day, or a first and last day with "to".
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
@@ -29987,10 +30106,13 @@ Object.assign(window.__gs, { routeOf, helpTopics: () => HELP.map(t => ({ id: t.i
 /* ---------------- School resources: links, files and notes about the school, on a page of their own (#/school) ---------------- */
 const SCH_KEY = 'gs.school', SCH_MAX = 50 * 1024 * 1024, SCH_DAYS = 14;
 const SCH_IDEAS = ['Handbook and policies', 'Calendar and schedules', 'Portals', 'Forms', 'People and rooms'];
+const SCH_ROLES = ['Principal', 'Vice principal', 'Subject group coordinator / department head', 'Curriculum coordinator', 'Dean of academic affairs'];
 const SCH_IC = {
   link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-.9.9M13.5 10.5a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l.9-.9"/></svg>',
   file: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4v13H7zM14 3.5v4h4M10 12.5h5M10 16h5"/></svg>',
   note: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10l-4 4H5zM15 19v-4h4M8.5 9.5h7M8.5 12.5h4"/></svg>',
+  person: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11H4zM4.5 7l7.5 6 7.5-6"/></svg>',
   star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4-3.9-3.8 5.4-.8z"/></svg>',
 };
 let schQ = '', schHave = new Set(), schDbP = null, schBusy = false, schAgain = '', schFor = '', schClasses = [], schClsAt = 0;
@@ -29998,7 +30120,10 @@ let schQ = '', schHave = new Set(), schDbP = null, schBusy = false, schAgain = '
 /* the list */
 function schNow() {
   const v = store.get(SCH_KEY, null) || {};
-  return { items: Array.isArray(v.items) ? v.items.filter(i => i && i.id) : [], order: Array.isArray(v.order) ? v.order.map(String) : [], ot: v.ot || 0 };
+  const out = { items: Array.isArray(v.items) ? v.items.filter(i => i && i.id) : [], order: Array.isArray(v.order) ? v.order.map(String) : [], ot: v.ot || 0 };
+  if (Array.isArray(v.people)) out.people = v.people.filter(p => p && p.id);
+  if (v.roles && Array.isArray(v.roles.list)) out.roles = { list: v.roles.list.map(String).filter(Boolean), at: v.roles.at || 0 };
+  return out;
 }
 function schChange(fn) {
   const s = schNow(); fn(s);
@@ -30108,6 +30233,84 @@ function schOpen(id) {
   else { if (routeNow().v !== 'school') go('#/school'); schForm({ item: it }); }
 }
 
+/* people: who is who at the school, as spots for roles */
+const schPeople = s => ((s || schNow()).people || []).filter(p => !p.gone && p.name);
+const schPerson = id => schPeople().find(p => p.id === id) || null;
+const schRoles = s => { const r = (s || schNow()).roles; return r ? r.list : SCH_ROLES; };
+const schRoleKey = r => String(r || '').toLowerCase().replace(/\s+/g, ' ').trim();
+const schMail = t => { t = String(t || '').trim().replace(/^mailto:/i, ''); return /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(t) && t.length <= 120 ? t : ''; };
+const schMailto = (p, subject) => 'mailto:' + encodeURIComponent(p.email).replace(/%40/g, '@') + (subject ? '?subject=' + encodeURIComponent(subject) : '');
+const schWho = p => p.name + (p.role ? ' · ' + p.role : '');
+function schPeopleHtml(s) {
+  const ppl = schPeople(s), roles = schRoles(s), seen = new Set();
+  const nTodo = id => typeof tdItems === 'function' ? tdItems().filter(it => !it.done && Array.isArray(it.ppl) && it.ppl.includes(id)).length : 0;
+  const one = p => {
+    const n = nTodo(p.id), menu = '<button class="mitem" data-schpdo="edit">Edit…</button>' + (p.email ? '<button class="mitem" data-schpdo="copy">Copy the email address</button>' : '') + '<button class="mitem" data-schpdo="todo">Add a to-do for them…</button><button class="mitem" data-schpdo="del">Delete</button>';
+    return '<div class="schprow" data-schp="' + esc(p.id) + '"><span class="schrole">' + esc(p.role || 'No role') + '</span><button class="schpname" data-schpdo="edit"><b>' + esc(p.name) + '</b>' + (p.note ? '<span class="schsub">' + esc(p.note) + '</span>' : '') + '</button>' +
+      (n ? '<a class="schptd" href="#/todo" data-schptd="' + esc(p.id) + '">' + n + (n === 1 ? ' to-do' : ' to-dos') + '</a>' : '') +
+      (p.email ? '<a class="icon schpmail" href="' + esc(schMailto(p)) + '" title="Email ' + esc(p.email) + '" aria-label="Email ' + esc(p.name) + '">' + SCH_IC.mail + '</a>' : '') +
+      kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(p.name) + '" title="More"', menu, 'right') + '</div>';
+  };
+  let rows = '';
+  for (const r of roles) {
+    const k = schRoleKey(r), here = ppl.filter(p => schRoleKey(p.role) === k); seen.add(k);
+    rows += here.length ? here.map(one).join('') : '<div class="schprow empty"><span class="schrole">' + esc(r) + '</span><button class="schpadd" data-schpadd="' + esc(r) + '">Add a name</button></div>';
+  }
+  rows += ppl.filter(p => !seen.has(schRoleKey(p.role))).map(one).join('');
+  return '<section class="schsec schppl"><div class="schhead"><h2>People</h2><span class="schn">' + ppl.length + '</span><span class="sp"></span>' +
+    '<button class="btn sm ghost" data-schroles>Change the spots…</button><button class="btn sm" data-schpadd="">Add someone</button></div>' +
+    '<div class="schcard">' + (rows || '<p class="muted schpnone">No spots yet. Add someone, or Change the spots to list the roles at your school.</p>') + '</div>' +
+    '<p class="muted schsay">Optional. Fill in only the people you work with. A to-do can name them, and the email button starts a message.</p></section>';
+}
+function schPersonForm(o, done) {
+  o = o || {};
+  const p = o.person || null, s = schNow(), roles = [...new Set([...schRoles(s), ...schPeople(s).map(x => x.role).filter(Boolean)])];
+  openDlg('<div class="bh"><h2>' + (p ? 'Edit “' + esc(p.name) + '”' : o.role ? esc(o.role) : 'Add someone') + '</h2></div><div class="bb schform">' +
+    '<div class="field"><label for="schPRole">Role</label><input type="text" id="schPRole" list="schPRoles" autocomplete="off" maxlength="80" value="' + esc(p ? p.role || '' : o.role || '') + '" placeholder="Pick one or type your school’s own"><datalist id="schPRoles">' + roles.map(r => '<option value="' + esc(r) + '">').join('') + '</datalist></div>' +
+    '<div class="field"><label for="schPName">Name</label><input type="text" id="schPName" autocomplete="off" maxlength="80" value="' + esc(p ? p.name : '') + '" placeholder="As you would write it, like Ms. Okafor"></div>' +
+    '<div class="field"><label for="schPMail">Email <span class="muted">(optional)</span></label><input type="email" id="schPMail" autocomplete="off" spellcheck="false" maxlength="120" value="' + esc(p ? p.email || '' : '') + '"></div>' +
+    '<div class="field"><label for="schPNote">Note <span class="muted">(optional)</span></label><input type="text" id="schPNote" autocomplete="off" maxlength="200" value="' + esc(p ? p.note || '' : '') + '" placeholder="Room, extension, what to ask them about"></div>' +
+    '<p class="tkerr" id="schErr" role="alert" hidden></p></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>' + (p ? 'Save' : 'Add') + '</button></div>', true);
+  const box = $('#dlgBox'), err = (t, sel) => { const el = $('#schErr'); el.textContent = t; el.hidden = false; $(sel).focus(); };
+  const save = () => {
+    const role = $('#schPRole').value.replace(/\s+/g, ' ').trim().slice(0, 80), name = $('#schPName').value.replace(/\s+/g, ' ').trim().slice(0, 80), raw = $('#schPMail').value.trim(), note = $('#schPNote').value.trim().slice(0, 200);
+    if (!name) return err('Write their name first.', '#schPName');
+    const email = raw ? schMail(raw) : ''; if (raw && !email) return err('That doesn’t look like an email address.', '#schPMail');
+    const got = { role, name, email, note, at: Date.now() };
+    for (const k of ['email', 'note', 'role']) if (!got[k]) delete got[k];
+    let me = null;
+    closeDlg();
+    schChange(s => { s.people = s.people || []; const x = p && s.people.find(q => q.id === p.id); if (x) { for (const k of ['role', 'email', 'note']) delete x[k]; Object.assign(x, got); me = x; } else s.people.push(me = { id: 'sp' + uid(), ...got }); });
+    if (typeof todoRender === 'function') todoRender();
+    if (done && me) done(me);
+  };
+  box.onclick = e => { if (e.target.closest('[data-cancel]')) return closeDlg(); if (e.target.closest('[data-ok]')) save(); };
+  box.onkeydown = e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); save(); } };
+  const first = $(o.role || p ? '#schPName' : '#schPRole'); first.focus(); first.select();
+}
+function schPersonDelete(id) {
+  const was = schPerson(id); if (!was) return;
+  schChange(s => { const i = (s.people || []).findIndex(x => x.id === id); if (i >= 0) s.people[i] = { id, at: Date.now(), gone: 1 }; });
+  if (typeof todoRender === 'function') todoRender();
+  toastDo('Deleted “' + was.name + '”. To-dos that named them keep their words.', 'Undo', () => { schChange(s => { const i = (s.people || []).findIndex(x => x.id === id); if (i >= 0) s.people[i] = { ...was, at: Date.now() }; }); if (typeof todoRender === 'function') todoRender(); });
+}
+function schRolesEdit() {
+  openDlg('<div class="bh"><h2>Spots for people</h2></div><div class="bb schform">' +
+    '<div class="field"><label for="schRolesIn">One role a line, in the order to show them</label><textarea id="schRolesIn" rows="8" spellcheck="false">' + esc(schRoles().join('\n')) + '</textarea></div>' +
+    '<p class="muted schsay">Use your school’s own words, like MYP coordinator or Head of year. Someone already filled in keeps their spot even when their role is not on the list. Leave it empty for the usual ones.</p></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
+  const box = $('#dlgBox');
+  box.onclick = e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (!e.target.closest('[data-ok]')) return;
+    const list = [...new Set($('#schRolesIn').value.split(/\r?\n/).map(l => l.replace(/\s+/g, ' ').trim().slice(0, 80)).filter(Boolean))].slice(0, 30);
+    closeDlg();
+    schChange(s => { s.roles = { list: list.length ? list : SCH_ROLES.slice(), at: Date.now() }; });
+  };
+  $('#schRolesIn').focus();
+}
+
 /* the page */
 function schRowHtml(it) {
   const k = schKindOf(it), here = k !== 'file' || schHave.has(it.file.hash);
@@ -30133,9 +30336,9 @@ function schRender() {
   const mine = schFor ? all.filter(i => schCls(i).some(n => schNorm(n) === schFor)) : all;
   const items = words.length ? mine.filter(hit) : mine, groups = schGroups(s, items), named = groups.filter(Boolean);
   $('#schFind').hidden = all.length < 6 && !schQ;
-  let h = '';
+  let h = schQ.trim() ? '' : schPeopleHtml(s);
   if (!all.length) {
-    h = '<div class="schnone"><h2>Keep what you look up again and again in one place</h2>' +
+    h += '<div class="schnone"><h2>Keep what you look up again and again in one place</h2>' +
       '<p>The staff handbook, the school calendar, the bell schedule, the portals you sign in to, forms, who to call about what. Add a link when the school keeps it online, a file when you only have the file, or a short note of your own.</p>' +
       '<p class="muted">Everything here stays on this computer with the rest of your work. Drop files anywhere on this page, or paste a web address.</p></div>';
   } else {
@@ -30236,6 +30439,19 @@ async function schGroupDo(g, what) {
 $('#vSchool').addEventListener('click', e => {
   const add = e.target.closest('[data-schadd]');
   if (add) { if (add.dataset.schadd === 'file') { schAgain = ''; return $('#schIn').click(); } return schClsLoad().then(() => schForm({ kind: add.dataset.schadd, cls: schForNames() })); }
+  const padd = e.target.closest('[data-schpadd]'); if (padd) return schPersonForm({ role: padd.dataset.schpadd });
+  if (e.target.closest('[data-schroles]')) return schRolesEdit();
+  const ptd = e.target.closest('[data-schptd]'); if (ptd) { e.preventDefault(); return todoShowPerson(ptd.dataset.schptd); }
+  const prow = e.target.closest('[data-schp]'), pdo = e.target.closest('[data-schpdo]');
+  if (prow && pdo) {
+    const p = schPerson(prow.dataset.schp); if (!p) return;
+    const what = pdo.dataset.schpdo;
+    if (what === 'edit') return schPersonForm({ person: p });
+    if (what === 'del') return schPersonDelete(p.id);
+    if (what === 'todo') return todoForPerson(p.id);
+    if (what === 'copy') return navigator.clipboard.writeText(p.email).then(() => toast('Email address copied.'), () => toast('The address couldn’t be copied here.'));
+    return;
+  }
   const fb = e.target.closest('[data-schfor]'); if (fb) { schFor = fb.dataset.schfor; return schRender(); }
   const chip = e.target.closest('[data-schchip]'); if (chip) return schOpen(chip.dataset.schchip);
   const gdo = e.target.closest('[data-schg]'); if (gdo) return schGroupDo(gdo.closest('[data-schgroup]').dataset.schgroup, gdo.dataset.schg);
@@ -30278,8 +30494,8 @@ schReady.then(() => { schClsLoad(); schRender(); });
 
 /* Find anything: every resource by its name */
 const SCH_KIND_SAY = { link: 'Link', file: 'File', note: 'Note' };
-const schFindRows = () => schSort(schLive()).map(i => { const k = schKindOf(i); return { group: 'School resources', label: i.name, sub: SCH_KIND_SAY[k] + (i.group ? ' · ' + i.group : k === 'link' ? ' · ' + schHost(i.url) : '') + (schCls(i).length ? ' · For ' + schCls(i).join(', ') : ''), key: '', words: [i.url, i.note, i.file && i.file.name, ...schCls(i)].filter(Boolean).join(' '), run: () => schOpen(i.id) }; });
-Object.assign(window.__gs, { schNow, schHashes, schUrl, schoolMerge, schHave: async () => { await schReady; return [...schHave].sort(); } });
+const schFindRows = () => [...schPeople().map(p => ({ group: 'School resources', label: p.name, sub: [p.role, p.email].filter(Boolean).join(' · ') || 'Person', key: '', words: [p.role, p.email, p.note].filter(Boolean).join(' '), run: () => { go('#/school'); schPersonForm({ person: p }); } })), ...schSort(schLive()).map(i => { const k = schKindOf(i); return { group: 'School resources', label: i.name, sub: SCH_KIND_SAY[k] + (i.group ? ' · ' + i.group : k === 'link' ? ' · ' + schHost(i.url) : '') + (schCls(i).length ? ' · For ' + schCls(i).join(', ') : ''), key: '', words: [i.url, i.note, i.file && i.file.name, ...schCls(i)].filter(Boolean).join(' '), run: () => schOpen(i.id) }; })];
+Object.assign(window.__gs, { schNow, schPeople, schMail, schMailto, SCH_ROLES, schHashes, schUrl, schoolMerge, schHave: async () => { await schReady; return [...schHave].sort(); } });
 
 /* ---------------- Google Classroom: bring a class over with two downloads, and no sign-in ----------------
    1. The grades file ("Download all grades as CSV" on any assignment's Student work page, or the Google Sheet saved as Excel):

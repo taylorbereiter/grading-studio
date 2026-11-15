@@ -10,14 +10,22 @@
 // An item: { id, at, kind: 'link' | 'file' | 'note', name, group, note, pin, url, file: { hash, size, type, name }, cls: [names] }.
 // cls: the classes or courses it is for, by name ("English 10"). None: it is for the whole school. A link for a class shows on
 // every lesson for that class in the Planner (planner/links.js reads this list; it never writes it).
+// people: [{ id, at, role, name, email, note }] the people at the school a teacher works with: the principal, a coordinator, the
+// head of department. Each is a spot on the page for a role (roles), filled in or left empty; to-dos can name them (todo.js, `ppl`).
+// A deleted one stays as { id, at, gone: 1 }. roles: { list: [role names], at } the spots shown, when the teacher changed them;
+// until then SCH_ROLES. Nothing about a person here is about a student: students are on the class lists.
 // A deleted one stays as { id, at, gone: 1, file }, so it is deleted on the other computer too, and its bytes are kept for
 // SCH_DAYS days: long enough for Undo, and for Go back in time to bring it back whole.
 const SCH_KEY = 'gs.school', SCH_MAX = 50 * 1024 * 1024, SCH_DAYS = 14;
 const SCH_IDEAS = ['Handbook and policies', 'Calendar and schedules', 'Portals', 'Forms', 'People and rooms'];
+// The spots for people a school usually has. Each teacher changes the list for their own school (Change the spots…).
+const SCH_ROLES = ['Principal', 'Vice principal', 'Subject group coordinator / department head', 'Curriculum coordinator', 'Dean of academic affairs'];
 const SCH_IC = {
   link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-.9.9M13.5 10.5a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 0 0 5.7 5.7l.9-.9"/></svg>',
   file: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4v13H7zM14 3.5v4h4M10 12.5h5M10 16h5"/></svg>',
   note: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10l-4 4H5zM15 19v-4h4M8.5 9.5h7M8.5 12.5h4"/></svg>',
+  person: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16v11H4zM4.5 7l7.5 6 7.5-6"/></svg>',
   star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4-3.9-3.8 5.4-.8z"/></svg>',
 };
 let schQ = '', schHave = new Set(), schDbP = null, schBusy = false, schAgain = '', schFor = '', schClasses = [], schClsAt = 0;
@@ -25,7 +33,10 @@ let schQ = '', schHave = new Set(), schDbP = null, schBusy = false, schAgain = '
 /* the list */
 function schNow() {
   const v = store.get(SCH_KEY, null) || {};
-  return { items: Array.isArray(v.items) ? v.items.filter(i => i && i.id) : [], order: Array.isArray(v.order) ? v.order.map(String) : [], ot: v.ot || 0 };
+  const out = { items: Array.isArray(v.items) ? v.items.filter(i => i && i.id) : [], order: Array.isArray(v.order) ? v.order.map(String) : [], ot: v.ot || 0 };
+  if (Array.isArray(v.people)) out.people = v.people.filter(p => p && p.id);
+  if (v.roles && Array.isArray(v.roles.list)) out.roles = { list: v.roles.list.map(String).filter(Boolean), at: v.roles.at || 0 };
+  return out;
 }
 // Every change reads the list as it is stored now, so a change made in another tab a moment ago is never written over.
 function schChange(fn) {
@@ -153,6 +164,88 @@ function schOpen(id) {
   else { if (routeNow().v !== 'school') go('#/school'); schForm({ item: it }); }
 }
 
+/* people: who is who at the school, as spots for roles */
+const schPeople = s => ((s || schNow()).people || []).filter(p => !p.gone && p.name);
+const schPerson = id => schPeople().find(p => p.id === id) || null;
+const schRoles = s => { const r = (s || schNow()).roles; return r ? r.list : SCH_ROLES; };
+const schRoleKey = r => String(r || '').toLowerCase().replace(/\s+/g, ' ').trim();
+// Loose on purpose: something@somewhere.something, so a typo is caught and nothing else is refused.
+const schMail = t => { t = String(t || '').trim().replace(/^mailto:/i, ''); return /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(t) && t.length <= 120 ? t : ''; };
+// A mailto: address, with the subject filled in when there is one.
+const schMailto = (p, subject) => 'mailto:' + encodeURIComponent(p.email).replace(/%40/g, '@') + (subject ? '?subject=' + encodeURIComponent(subject) : '');
+const schWho = p => p.name + (p.role ? ' · ' + p.role : '');
+function schPeopleHtml(s) {
+  const ppl = schPeople(s), roles = schRoles(s), seen = new Set();
+  const nTodo = id => typeof tdItems === 'function' ? tdItems().filter(it => !it.done && Array.isArray(it.ppl) && it.ppl.includes(id)).length : 0;
+  const one = p => {
+    const n = nTodo(p.id), menu = '<button class="mitem" data-schpdo="edit">Edit…</button>' + (p.email ? '<button class="mitem" data-schpdo="copy">Copy the email address</button>' : '') + '<button class="mitem" data-schpdo="todo">Add a to-do for them…</button><button class="mitem" data-schpdo="del">Delete</button>';
+    return '<div class="schprow" data-schp="' + esc(p.id) + '"><span class="schrole">' + esc(p.role || 'No role') + '</span><button class="schpname" data-schpdo="edit"><b>' + esc(p.name) + '</b>' + (p.note ? '<span class="schsub">' + esc(p.note) + '</span>' : '') + '</button>' +
+      (n ? '<a class="schptd" href="#/todo" data-schptd="' + esc(p.id) + '">' + n + (n === 1 ? ' to-do' : ' to-dos') + '</a>' : '') +
+      (p.email ? '<a class="icon schpmail" href="' + esc(schMailto(p)) + '" title="Email ' + esc(p.email) + '" aria-label="Email ' + esc(p.name) + '">' + SCH_IC.mail + '</a>' : '') +
+      kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(p.name) + '" title="More"', menu, 'right') + '</div>';
+  };
+  let rows = '';
+  for (const r of roles) {
+    const k = schRoleKey(r), here = ppl.filter(p => schRoleKey(p.role) === k); seen.add(k);
+    rows += here.length ? here.map(one).join('') : '<div class="schprow empty"><span class="schrole">' + esc(r) + '</span><button class="schpadd" data-schpadd="' + esc(r) + '">Add a name</button></div>';
+  }
+  rows += ppl.filter(p => !seen.has(schRoleKey(p.role))).map(one).join('');
+  return '<section class="schsec schppl"><div class="schhead"><h2>People</h2><span class="schn">' + ppl.length + '</span><span class="sp"></span>' +
+    '<button class="btn sm ghost" data-schroles>Change the spots…</button><button class="btn sm" data-schpadd="">Add someone</button></div>' +
+    '<div class="schcard">' + (rows || '<p class="muted schpnone">No spots yet. Add someone, or Change the spots to list the roles at your school.</p>') + '</div>' +
+    '<p class="muted schsay">Optional. Fill in only the people you work with. A to-do can name them, and the email button starts a message.</p></section>';
+}
+// Add or change a person. o: { person } to change one, { role } for an empty spot. done(person) runs after it is saved.
+function schPersonForm(o, done) {
+  o = o || {};
+  const p = o.person || null, s = schNow(), roles = [...new Set([...schRoles(s), ...schPeople(s).map(x => x.role).filter(Boolean)])];
+  openDlg('<div class="bh"><h2>' + (p ? 'Edit “' + esc(p.name) + '”' : o.role ? esc(o.role) : 'Add someone') + '</h2></div><div class="bb schform">' +
+    '<div class="field"><label for="schPRole">Role</label><input type="text" id="schPRole" list="schPRoles" autocomplete="off" maxlength="80" value="' + esc(p ? p.role || '' : o.role || '') + '" placeholder="Pick one or type your school’s own"><datalist id="schPRoles">' + roles.map(r => '<option value="' + esc(r) + '">').join('') + '</datalist></div>' +
+    '<div class="field"><label for="schPName">Name</label><input type="text" id="schPName" autocomplete="off" maxlength="80" value="' + esc(p ? p.name : '') + '" placeholder="As you would write it, like Ms. Okafor"></div>' +
+    '<div class="field"><label for="schPMail">Email <span class="muted">(optional)</span></label><input type="email" id="schPMail" autocomplete="off" spellcheck="false" maxlength="120" value="' + esc(p ? p.email || '' : '') + '"></div>' +
+    '<div class="field"><label for="schPNote">Note <span class="muted">(optional)</span></label><input type="text" id="schPNote" autocomplete="off" maxlength="200" value="' + esc(p ? p.note || '' : '') + '" placeholder="Room, extension, what to ask them about"></div>' +
+    '<p class="tkerr" id="schErr" role="alert" hidden></p></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>' + (p ? 'Save' : 'Add') + '</button></div>', true);
+  const box = $('#dlgBox'), err = (t, sel) => { const el = $('#schErr'); el.textContent = t; el.hidden = false; $(sel).focus(); };
+  const save = () => {
+    const role = $('#schPRole').value.replace(/\s+/g, ' ').trim().slice(0, 80), name = $('#schPName').value.replace(/\s+/g, ' ').trim().slice(0, 80), raw = $('#schPMail').value.trim(), note = $('#schPNote').value.trim().slice(0, 200);
+    if (!name) return err('Write their name first.', '#schPName');
+    const email = raw ? schMail(raw) : ''; if (raw && !email) return err('That doesn’t look like an email address.', '#schPMail');
+    const got = { role, name, email, note, at: Date.now() };
+    for (const k of ['email', 'note', 'role']) if (!got[k]) delete got[k];
+    let me = null;
+    closeDlg();
+    schChange(s => { s.people = s.people || []; const x = p && s.people.find(q => q.id === p.id); if (x) { for (const k of ['role', 'email', 'note']) delete x[k]; Object.assign(x, got); me = x; } else s.people.push(me = { id: 'sp' + uid(), ...got }); });
+    if (typeof todoRender === 'function') todoRender();
+    if (done && me) done(me);
+  };
+  box.onclick = e => { if (e.target.closest('[data-cancel]')) return closeDlg(); if (e.target.closest('[data-ok]')) save(); };
+  box.onkeydown = e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); save(); } };
+  const first = $(o.role || p ? '#schPName' : '#schPRole'); first.focus(); first.select();
+}
+function schPersonDelete(id) {
+  const was = schPerson(id); if (!was) return;
+  schChange(s => { const i = (s.people || []).findIndex(x => x.id === id); if (i >= 0) s.people[i] = { id, at: Date.now(), gone: 1 }; });
+  if (typeof todoRender === 'function') todoRender();
+  toastDo('Deleted “' + was.name + '”. To-dos that named them keep their words.', 'Undo', () => { schChange(s => { const i = (s.people || []).findIndex(x => x.id === id); if (i >= 0) s.people[i] = { ...was, at: Date.now() }; }); if (typeof todoRender === 'function') todoRender(); });
+}
+// The spots: one role a line, in the order to show them. Empty brings back the usual ones.
+function schRolesEdit() {
+  openDlg('<div class="bh"><h2>Spots for people</h2></div><div class="bb schform">' +
+    '<div class="field"><label for="schRolesIn">One role a line, in the order to show them</label><textarea id="schRolesIn" rows="8" spellcheck="false">' + esc(schRoles().join('\n')) + '</textarea></div>' +
+    '<p class="muted schsay">Use your school’s own words, like MYP coordinator or Head of year. Someone already filled in keeps their spot even when their role is not on the list. Leave it empty for the usual ones.</p></div>' +
+    '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true);
+  const box = $('#dlgBox');
+  box.onclick = e => {
+    if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (!e.target.closest('[data-ok]')) return;
+    const list = [...new Set($('#schRolesIn').value.split(/\r?\n/).map(l => l.replace(/\s+/g, ' ').trim().slice(0, 80)).filter(Boolean))].slice(0, 30);
+    closeDlg();
+    schChange(s => { s.roles = { list: list.length ? list : SCH_ROLES.slice(), at: Date.now() }; });
+  };
+  $('#schRolesIn').focus();
+}
+
 /* the page */
 function schRowHtml(it) {
   const k = schKindOf(it), here = k !== 'file' || schHave.has(it.file.hash);
@@ -178,9 +271,9 @@ function schRender() {
   const mine = schFor ? all.filter(i => schCls(i).some(n => schNorm(n) === schFor)) : all;
   const items = words.length ? mine.filter(hit) : mine, groups = schGroups(s, items), named = groups.filter(Boolean);
   $('#schFind').hidden = all.length < 6 && !schQ;
-  let h = '';
+  let h = schQ.trim() ? '' : schPeopleHtml(s);
   if (!all.length) {
-    h = '<div class="schnone"><h2>Keep what you look up again and again in one place</h2>' +
+    h += '<div class="schnone"><h2>Keep what you look up again and again in one place</h2>' +
       '<p>The staff handbook, the school calendar, the bell schedule, the portals you sign in to, forms, who to call about what. Add a link when the school keeps it online, a file when you only have the file, or a short note of your own.</p>' +
       '<p class="muted">Everything here stays on this computer with the rest of your work. Drop files anywhere on this page, or paste a web address.</p></div>';
   } else {
@@ -285,6 +378,19 @@ async function schGroupDo(g, what) {
 $('#vSchool').addEventListener('click', e => {
   const add = e.target.closest('[data-schadd]');
   if (add) { if (add.dataset.schadd === 'file') { schAgain = ''; return $('#schIn').click(); } return schClsLoad().then(() => schForm({ kind: add.dataset.schadd, cls: schForNames() })); }
+  const padd = e.target.closest('[data-schpadd]'); if (padd) return schPersonForm({ role: padd.dataset.schpadd });
+  if (e.target.closest('[data-schroles]')) return schRolesEdit();
+  const ptd = e.target.closest('[data-schptd]'); if (ptd) { e.preventDefault(); return todoShowPerson(ptd.dataset.schptd); }
+  const prow = e.target.closest('[data-schp]'), pdo = e.target.closest('[data-schpdo]');
+  if (prow && pdo) {
+    const p = schPerson(prow.dataset.schp); if (!p) return;
+    const what = pdo.dataset.schpdo;
+    if (what === 'edit') return schPersonForm({ person: p });
+    if (what === 'del') return schPersonDelete(p.id);
+    if (what === 'todo') return todoForPerson(p.id);
+    if (what === 'copy') return navigator.clipboard.writeText(p.email).then(() => toast('Email address copied.'), () => toast('The address couldn’t be copied here.'));
+    return;
+  }
   const fb = e.target.closest('[data-schfor]'); if (fb) { schFor = fb.dataset.schfor; return schRender(); }
   const chip = e.target.closest('[data-schchip]'); if (chip) return schOpen(chip.dataset.schchip);
   const gdo = e.target.closest('[data-schg]'); if (gdo) return schGroupDo(gdo.closest('[data-schgroup]').dataset.schgroup, gdo.dataset.schg);
@@ -330,5 +436,5 @@ schReady.then(() => { schClsLoad(); schRender(); });
 
 /* Find anything: every resource by its name */
 const SCH_KIND_SAY = { link: 'Link', file: 'File', note: 'Note' };
-const schFindRows = () => schSort(schLive()).map(i => { const k = schKindOf(i); return { group: 'School resources', label: i.name, sub: SCH_KIND_SAY[k] + (i.group ? ' · ' + i.group : k === 'link' ? ' · ' + schHost(i.url) : '') + (schCls(i).length ? ' · For ' + schCls(i).join(', ') : ''), key: '', words: [i.url, i.note, i.file && i.file.name, ...schCls(i)].filter(Boolean).join(' '), run: () => schOpen(i.id) }; });
-Object.assign(window.__gs, { schNow, schHashes, schUrl, schoolMerge, schHave: async () => { await schReady; return [...schHave].sort(); } });
+const schFindRows = () => [...schPeople().map(p => ({ group: 'School resources', label: p.name, sub: [p.role, p.email].filter(Boolean).join(' · ') || 'Person', key: '', words: [p.role, p.email, p.note].filter(Boolean).join(' '), run: () => { go('#/school'); schPersonForm({ person: p }); } })), ...schSort(schLive()).map(i => { const k = schKindOf(i); return { group: 'School resources', label: i.name, sub: SCH_KIND_SAY[k] + (i.group ? ' · ' + i.group : k === 'link' ? ' · ' + schHost(i.url) : '') + (schCls(i).length ? ' · For ' + schCls(i).join(', ') : ''), key: '', words: [i.url, i.note, i.file && i.file.name, ...schCls(i)].filter(Boolean).join(' '), run: () => schOpen(i.id) }; })];
+Object.assign(window.__gs, { schNow, schPeople, schMail, schMailto, SCH_ROLES, schHashes, schUrl, schoolMerge, schHave: async () => { await schReady; return [...schHave].sort(); } });

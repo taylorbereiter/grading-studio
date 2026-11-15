@@ -117,3 +117,18 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .tdgrid.wk .tdmainc{display:none}
 .tdgrid.wk #tdSide{position:fixed;right:var(--space-5);top:120px;z-index:6;width:340px;max-width:calc(100vw - 2 * var(--space-4))}
 .tdgrid.wk #tdSide .tdpane{box-shadow:var(--shadow)}
+
+/* people from the School page on a line, in the side pane, and as filters */
+.tdp{display:inline-flex;align-items:center;gap:3px;min-width:0}
+.tdp svg{flex:none;width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.tdchip svg{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.tdcsep{align-self:center;width:1px;height:18px;background:var(--line-strong);margin:0 var(--space-1)}
+.tdppl{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2)}
+.tdpchip{display:inline-flex;align-items:center;gap:var(--space-2);min-height:28px;padding:0 var(--space-1) 0 var(--space-3);border:1px solid var(--line-strong);border-radius:var(--corner-pill);background:var(--surface);font-size:var(--text-control)}
+.tdpchip .link{font-weight:500;text-decoration:none}
+.tdpchip .icon{width:24px;height:24px;font-size:var(--text-small)}
+.tdpplbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);margin:calc(-1 * var(--space-2)) 0 var(--space-4);padding:var(--space-2) var(--space-4);border:1px solid var(--line);border-radius:var(--corner-5);background:var(--surface);font-size:var(--text-control);color:var(--fg-2)}
+.tdpplbar[hidden]{display:none}
+.tdpplbar .tdp svg{width:16px;height:16px}
+.tdpplbar .btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin-right:var(--space-1)}
+.tdpplbar .link{margin-left:auto;font-weight:500;text-decoration:none}

@@ -103,7 +103,10 @@ function stpRead(j) {
     // the other assistants in the sidebar's list: a link of her own for some, and the known ones she doesn't want listed
     if (Array.isArray(sc.otherAssistants)) { o.aiUrls = {}; for (const x of sc.otherAssistants.slice(0, 12)) { const n = stpStr(stpObj(x) ? x.name : '', 30), u = stpObj(x) ? aiUrlClean(x.link) : ''; if (n && u) o.aiUrls[n] = u; } }
     if (Array.isArray(sc.assistantsNotListed)) o.aiOff = [...new Set(sc.assistantsNotListed.filter(x => typeof x === 'string').map(x => stpStr(x, 30)).filter(Boolean))].slice(0, 12);
-    if (Object.keys(o).length) S.school = o; }
+    if (Object.keys(o).length) S.school = o;
+    // the people at the school a teacher works with (the School page's spots, school.js), and the spots themselves
+    if (Array.isArray(sc.staff)) S.staff = sc.staff.slice(0, 40).map(stpObj).filter(Boolean).map(x => ({ role: stpStr(x.role, 80), name: stpStr(x.name, 80), email: typeof schMail === 'function' ? schMail(x.email) : '', note: stpStr(x.note, 200) })).filter(x => x.name);
+    if (Array.isArray(sc.staffRoles)) S.staffRoles = [...new Set(sc.staffRoles.filter(x => typeof x === 'string').map(x => stpStr(x, 80)).filter(Boolean))].slice(0, 30); }
   // how a new assignment is graded
   const g = stpObj(j.grading);
   if (g) {
@@ -257,7 +260,7 @@ const stpTypeName = id => { const t = BK_TYPES.find(x => x[0] === id); return t 
 function stpDiff(S, planNow) {
   const parts = [], add = (key, title, lines, sub) => { if (lines.length) parts.push({ key, title, lines, sub: sub || '' }); };
   // school
-  if (S.school || S.prog) {
+  if (S.school || S.prog || S.staff || S.staffRoles) {
     const L = [], m = me(), s = S.school || {};
     if (s.sys != null && s.sys !== sysName()) L.push(s.sys ? 'Students hand work in on <b>' + esc(s.sys) + '</b>' + (sysName() ? ' (now ' + esc(sysName()) + ')' : '') : 'No school system named (now ' + esc(sysName()) + ')');
     if (s.unit != null && s.unit !== unitLinkName()) L.push(s.unit ? 'Unit plans are kept in <b>' + esc(s.unit) + '</b>' + (unitLinkName() ? ' (now ' + esc(unitLinkName()) + ')' : '') : 'No place named for unit plans (now ' + esc(unitLinkName()) + ')');
@@ -267,6 +270,9 @@ function stpDiff(S, planNow) {
     if (s.aiUrls != null && JSON.stringify(s.aiUrls) !== JSON.stringify(m.aiUrls || {})) L.push(Object.keys(s.aiUrls).length ? 'Other assistants with a link of your own: <b>' + Object.keys(s.aiUrls).map(esc).join(', ') + '</b>' : 'No other assistant has a link of your own');
     if (s.aiOff != null && JSON.stringify(s.aiOff) !== JSON.stringify(m.aiOff || [])) L.push(s.aiOff.length ? 'Not in the sidebar’s list of assistants: <b>' + s.aiOff.map(esc).join(', ') + '</b>' : 'Every assistant the app knows is in the sidebar’s list');
     if (S.prog && S.prog !== (m.prog || '')) L.push('Programme: <b>' + esc(S.prog) + '</b>');
+    if (S.staffRoles && JSON.stringify(S.staffRoles) !== JSON.stringify(schRoles())) L.push('Spots for people on the School page: <b>' + S.staffRoles.map(esc).join(', ') + '</b>');
+    const newPpl = (S.staff || []).filter(x => !stpPersonHere(x));
+    if (newPpl.length) L.push('People on the School page: <b>' + newPpl.map(x => esc(x.name) + (x.role ? ' (' + esc(x.role) + ')' : '')).join(', ') + '</b>');
     add('school', 'Your school', L, 'Only the words the app uses. Nothing is connected to these.');
   }
   // grading
@@ -386,6 +392,8 @@ const stpIbChanges = (c, ib) => { const n = stpIbNext(c, ib); return c.way !== n
 // Whether this version lets a teacher add gradebook types of their own (the gradebook's own setup knows).
 const stpOwnTypes = () => typeof bkCats === 'function';
 
+// A person already on the School page: the same name (spaces and capitals don't count).
+const stpPersonHere = x => schPeople().find(p => stpKey(p.name) === stpKey(x.name)) || null;
 /* ---- bringing it in, and what to put back ---- */
 const stpClone = v => v == null ? v : JSON.parse(JSON.stringify(v));
 async function stpApply(S, pick) {
@@ -399,6 +407,19 @@ async function stpApply(S, pick) {
     if (lib.me.aiUrls) { delete lib.me.aiUrls[lib.me.ai || '']; if (!Object.keys(lib.me.aiUrls).length) delete lib.me.aiUrls; }
     if (lib.me.aiOff && !lib.me.aiOff.length) delete lib.me.aiOff;
     saveLib();
+    // people: someone new is added, someone already there gets the role, email and note that were given; nobody is taken away
+    if (S.staff || S.staffRoles) {
+      U.ppl = { added: [], was: [], roles: schNow().roles || null };
+      schChange(sc => {
+        sc.people = sc.people || [];
+        if (S.staffRoles) sc.roles = { list: S.staffRoles.length ? S.staffRoles.slice() : SCH_ROLES.slice(), at: now };
+        for (const x of S.staff || []) {
+          const had = sc.people.find(p => !p.gone && stpKey(p.name) === stpKey(x.name)), got = Object.fromEntries(Object.entries(x).filter(([, v]) => v));
+          if (had) { const nx = { ...had, ...got }; if (JSON.stringify(nx) !== JSON.stringify(had)) { U.ppl.was.push(stpClone(had)); Object.assign(had, got, { at: now }); } }
+          else { const id = 'sp' + uid(); sc.people.push({ id, at: now, ...got }); U.ppl.added.push(id); }
+        }
+      });
+    }
   }
   if (pick.grading) {
     U.setupLs = localStorage.getItem('gs.setup');
@@ -494,6 +515,12 @@ async function stpUndo() {
   if (U.goals && Array.isArray(lib.goals)) lib.goals = lib.goals.filter(g => !U.goals.includes(g.id));
   if (U.rubAdded || U.rubWas) { let all = savedRubrics().filter(r => !(U.rubAdded || []).includes(r.id)); for (const w of U.rubWas || []) { const i = all.findIndex(r => r.id === w.id); if (i >= 0) all[i] = { ...w, at: Date.now() }; } store.set('gs.rubrics', all); if ((U.rubAdded || []).length) { store.set('gs.rubricsGone', { ...store.get('gs.rubricsGone', {}), ...Object.fromEntries(U.rubAdded.map(id => [id, Date.now()])) }); bankJob(() => bankWrite(b => { b.rubrics = b.rubrics.filter(r => !U.rubAdded.includes(r.id)); for (const id of U.rubAdded) b.gone[id] = Date.now(); for (const w of U.rubWas || []) { const i = b.rubrics.findIndex(r => r.id === w.id); if (i >= 0) b.rubrics[i] = { ...w, at: Date.now() }; } })).catch(() => {}); } }
   if (U.mark) stpMarkSet(U.mark);
+  if (U.ppl) schChange(sc => {   // people the setup added go, unless changed since; ones it changed get their old details back
+    const t = Date.now(); sc.people = sc.people || [];
+    for (const id of U.ppl.added) { const i = sc.people.findIndex(p => p.id === id); if (i >= 0) { if ((sc.people[i].at || 0) <= U.t + 1000) sc.people[i] = { id, at: t, gone: 1 }; else kept.push('the person ' + sc.people[i].name); } }
+    for (const w of U.ppl.was) { const i = sc.people.findIndex(p => p.id === w.id); if (i >= 0) sc.people[i] = { ...w, at: t }; }
+    if (U.ppl.roles) sc.roles = { ...U.ppl.roles, at: t }; else if (sc.roles) sc.roles = { list: SCH_ROLES.slice(), at: t };
+  });
   if (U.comments) { bank = bank.filter(c => !U.comments.includes(c)); store.set('gs.bank', bank); }
   saveLib();
   if (U.plan) {
@@ -511,6 +538,8 @@ async function stpExport() {
   const out = { gradingStudioSetup: STP_V };
   if (me().prog) out.programme = me().prog;
   if (sysName() || unitLinkName() || me().ai) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}), ...(me().ai && aiUrlClean(me().aiUrl) ? { assistantLink: aiUrlClean(me().aiUrl) } : {}), ...(me().ai && me().aiOpen === 'tab' ? { assistantOpens: 'tab' } : {}), ...(me().ai && me().aiUrls && Object.keys(me().aiUrls).length ? { otherAssistants: Object.entries(me().aiUrls).map(([name, link]) => ({ name, link })) } : {}), ...(me().ai && Array.isArray(me().aiOff) && me().aiOff.length ? { assistantsNotListed: me().aiOff.slice() } : {}) };
+  const ppl = schPeople(), sr = schNow().roles;
+  if (ppl.length || sr) { out.school = out.school || {}; if (sr) out.school.staffRoles = sr.list.slice(); if (ppl.length) out.school.staff = ppl.map(p => ({ ...(p.role ? { role: p.role } : {}), name: p.name, ...(p.email ? { email: p.email } : {}), ...(p.note ? { note: p.note } : {}) })); }
   if (g) { const raw = (me().grade && me().grade.setup) || {}; out.grading = { way: g.way, score: g.setup.mode === 'rubric' ? 'rows' : 'total', ...(g.setup.mode === 'rubric' ? { criteria: g.setup.criteria } : { outOf: g.setup.outOf }), ...(raw.top ? { rowTop: raw.top } : {}), ...(typeof raw.half === 'boolean' ? { halfPoints: raw.half } : {}), ...(g.setup.scale ? { scale: g.setup.scale } : {}), ...(g.bands ? { bands: g.bands.map(b => ({ grade: b[1], from: b[0] })) } : {}) }; }
   const pc = p && Array.isArray(p.classes) ? p.classes.filter(c => c && c.name) : [], names = lib.classes.filter(c => !c.sample).map(c => c.name);
   for (const c of pc) if (!names.some(n => stpKey(n) === stpKey(c.name))) names.push(String(c.name));
@@ -616,6 +645,7 @@ FIELD NOTES
 - "bands" are the grades a percent earns, highest first, each with the lowest percent that earns it. If my boundaries are in points, give them in points and add "bandsOutOf" with the total.
 - "scale" (optional, inside "grading" or a rubric) turns a score into a percent, like { "12": 100, "11": 95, "10": 91 }.
 - "assistant" (inside "school") is the AI assistant I use, by name. "assistantLink" is an https address of my own for it to open at (my school account, a Gem, a project or a custom GPT) and "assistantOpens" is "window" (beside the app) or "tab". Leave both out unless I ask. "otherAssistants" is a list of { "name", "link" } for other assistants I switch to that should open at an https address of my own, and "assistantsNotListed" is a list of names (of Gemini, Claude, ChatGPT, Copilot) I don't want offered in the sidebar. Leave these out too unless I ask.
+- "staff" (inside "school") is a list of { "role", "name", "email", "note" } for the people at my school I work with, like my principal, vice principal, department head or MYP coordinator. Only "name" is needed. "staffRoles" is the list of roles my school has, in order, for the spots on the app's School page, using my school's own words. Leave both out unless I give them. Never put students or parents here.
 - Days are "Sun" to "Sat". Times are 24-hour, like "13:05". Dates are YYYY-MM-DD.
 - "daysOff" and "events" take one day, or a first and last day with "to".
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
