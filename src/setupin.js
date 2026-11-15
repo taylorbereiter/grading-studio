@@ -203,6 +203,11 @@ function stpRead(j) {
     if (typeof fo.timeInTab === 'boolean') f.title = fo.timeInTab;
     if (typeof fo.countTime === 'boolean') f.track = fo.countTime;
     if (TK_IDLES.includes(n(fo.stopCountingAfterMinutes))) f.idle = n(fo.stopCountingAfterMinutes);
+    if (typeof fo.freePeriods === 'boolean') f.free = fo.freePeriods;
+    if (fo.weeklyLookBack === false || fo.weeklyLookBack === null) f.wk = false;
+    else if (typeof fo.weeklyLookBack === 'string' && GP_DAYS.some(d => d.toLowerCase() === fo.weeklyLookBack.trim().toLowerCase())) f.wk = GP_DAYS.findIndex(d => d.toLowerCase() === fo.weeklyLookBack.trim().toLowerCase());
+    if (typeof fo.quietWhileFocusing === 'boolean') f.quiet = fo.quietWhileFocusing;
+    if (typeof fo.shortestFirst === 'boolean') f.short = fo.shortestFirst;
     if (Object.keys(f).length) S.focus = f;
   }
   if (typeof j.attendance === 'boolean') S.att = j.attendance; else if (j.attendance != null && stpCount(j.attendance)) S.left.push('Attendance records.');
@@ -363,6 +368,10 @@ function stpDiff(S, planNow) {
     if (f.title != null && f.title !== c.title) L.push(f.title ? 'The time left shows in the browser tab’s name' : 'The time left stays out of the browser tab’s name');
     if (f.track != null && f.track !== c.track) L.push(f.track ? 'Grading and planning time are counted' : 'Grading and planning time are not counted');
     if (f.idle != null && f.idle !== c.idle) L.push('Time stops counting after ' + people(f.idle, 'minute') + ' with nothing done');
+    if (f.free != null && f.free !== c.free) L.push(f.free ? 'Free periods are offered for grading' : 'Free periods are not offered for grading');
+    if ('wk' in f && f.wk !== c.wk) L.push(f.wk === false ? 'No look back at the week' : 'A look back at the week from ' + GP_DAYS[f.wk]);
+    if (f.quiet != null && f.quiet !== c.quiet) L.push(f.quiet ? 'Counts are hidden during a focus session' : 'Counts stay on during a focus session');
+    if (f.short != null && f.short !== c.short) L.push(f.short ? 'Shortest papers first in a focus session' : 'Papers in their usual order in a focus session');
     if (L.length) add('focus', 'Focus timer and daily goal', L, '');
   }
   if (S.att != null && S.att !== attOn()) add('att', 'Attendance', [S.att ? 'Take attendance in Grading Studio' : 'Don’t take attendance in Grading Studio'], S.att ? '' : 'Days already saved are kept.');
@@ -532,7 +541,7 @@ async function stpExport() {
   if (bank.length) out.comments = bank.slice(0, 200);
   if (goalList().length) out.goals = goalList().map(x => x.name);
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
-  if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n } : null, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle }; }
+  if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n } : null, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle, freePeriods: c.free, weeklyLookBack: c.wk === false ? false : GP_DAYS[c.wk].toLowerCase(), quietWhileFocusing: c.quiet, shortestFirst: c.short }; }
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
   { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
@@ -609,7 +618,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "comments": ["Explain how your evidence supports your claim."],
   "goals": ["Uses evidence", "Designs a fair test"],
   "attendance": true,
-  "focus": { "sessionMinutes": 10, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5 },
+  "focus": { "sessionMinutes": 10, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5, "freePeriods": true, "weeklyLookBack": "friday", "quietWhileFocusing": false, "shortestFirst": false },
   "classTabs": ["Missing work"],
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
   "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide" }
@@ -625,7 +634,7 @@ FIELD NOTES
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
-- "focus" is the work timer for grading: "sessionMinutes" is one of 5, 10, 15, 20, 25, 30, 45, 60 and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. Leave it out if I have not said.
+- "focus" is the work timer for grading: "sessionMinutes" is one of 5, 10, 15, 20, 25, 30, 45, 60 and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. Leave it out if I have not said.
 - "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;

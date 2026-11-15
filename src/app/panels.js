@@ -136,6 +136,7 @@ function renderProg() {
 function nextUnscored() {
   const N = batch.students.length, o = anonOn() ? anonOrder() : batch.students.map((_, i) => i), p = o.indexOf(cur);
   const fm = fmNow(), left = st => fm ? !st.grade.fb && !noScore(st) : !gradeOf(st).done;
+  const short = gpShortNext(left); if (short >= 0) return openStudent(short);   // a focus session with shortest papers first (src/gradeplan.js)
   for (let k = 1; k <= N; k++) { const i = o[(p + k) % N]; if (left(batch.students[i])) return openStudent(i); }
   toast(fm ? 'Feedback is complete for everyone' : 'Everyone has a score');
 }

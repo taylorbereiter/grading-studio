@@ -255,7 +255,7 @@ function tdWRow(r) {
 }
 function tdWeekHtml(rows, today) {
   const mon = tdAdd(today, -((tdAt(today).getDay() + 6) % 7) + 7 * tdS.week), days = [0, 1, 2, 3, 4, 5, 6].map(i => tdAdd(mon, i)), end = days[6], cur = today >= mon && today <= end;
-  const by = new Map(days.map(d => [d, []])), later = [];
+  const by = new Map(days.map(d => [d, []])), later = [], due = gpWeek(mon, end);   // the grading due each day, at her pace (src/gradeplan.js)
   for (const r of rows) {
     if (r.done) { const dd = isoDay(r.done); if (by.has(dd)) by.get(dd).push(r); continue; }
     if (!r.d || r.d > end) later.push(r);
@@ -271,13 +271,13 @@ function tdWeekHtml(rows, today) {
     const under = new Map(meets.map(m => [m.c.id, []])), any = [];
     for (const r of list) { const p = tdPid(r); (under.has(p) ? under.get(p) : any).push(r); }
     const name = day === today ? 'Today' : tdAt(day).toLocaleDateString(LANG_LOCALE, { weekday: 'short' });
-    return '<section class="tdday' + (day === today ? ' now' : day < today ? ' past' : '') + '" data-tdday="' + day + '"><h3><b' + (day === today ? '' : ' data-raw') + '>' + esc(name) + '</b><span data-raw>' + esc(day === today ? tdDayLong(day) : bkDay(day)) + '</span></h3>' +
+    return '<section class="tdday' + (day === today ? ' now' : day < today ? ' past' : '') + '" data-tdday="' + day + '"><h3><b' + (day === today ? '' : ' data-raw') + '>' + esc(name) + '</b><span data-raw>' + esc(day === today ? tdDayLong(day) : bkDay(day)) + '</span></h3>' + due.day(day) +
       (t.off ? '<p class="tdoff" data-raw>' + esc(t.off) + '</p>' : '') + (any.length && meets.length ? '<div class="tdany">Any time</div>' : '') + any.map(tdWRow).join('') +
       meets.map(m => '<div class="tdcl" data-raw>' + tdDot(null, m.c.color) + '<b>' + esc(m.c.name) + '</b><span>' + esc(planTime(m.m.start)) + '</span></div>' + under.get(m.c.id).map(tdWRow).join('')).join('') + add(day, name) + '</section>';
   };
   const say = tdAt(mon).toLocaleDateString(LANG_LOCALE, { month: 'long', day: 'numeric' });
   return '<div class="tdwbar"><button class="btn sm" data-tdwk="-1" aria-label="The week before" title="The week before">‹</button><b>Week of <span data-raw>' + esc(say) + '</span></b><button class="btn sm" data-tdwk="1" aria-label="The week after" title="The week after">›</button>' +
-    (tdS.week ? '<button class="btn sm" data-tdwk="0">This week</button>' : '') + '<span class="muted">Anything not done moves to today on its own. Drag a line to another day.</span></div>' +
+    (tdS.week ? '<button class="btn sm" data-tdwk="0">This week</button>' : '') + (due.bar || '<span class="muted">Anything not done moves to today on its own. Drag a line to another day.</span>') + '</div>' +
     '<div class="tdwk">' + days.map(col).join('') + '<section class="tdday tdlater" data-tdday=""><h3><b>Later</b><span>no day, or after this week</span></h3>' + later.sort(tdSort).map(r => tdWRow(r)).join('') + add('', 'later') + '</section></div>';
 }
 function tdSideHtml(rows, today) {

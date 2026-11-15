@@ -309,6 +309,39 @@ test('the time tracker, its line on Today and its Settings leave nothing in Engl
   await close();
 });
 
+// Planning your grading (src/gradeplan.js): the tracker's seed with a set half scored a few hours ago, work due today, the look back on
+// today's day of the week, and a timetable with a free period going on now (left out near midnight).
+function planSeed() {
+  const s = trackSeed(), lib = JSON.parse(s.ls['gs.lib']), d = new Date();
+  lib.me.focus = { ...lib.me.focus, wk: d.getDay() };
+  lib.classes[0].units[1].items.push({ id: 'i7', name: 'Short story', classId: 'c1', type: 'sum', due: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') });
+  const idb = JSON.parse(JSON.stringify(s.idb));
+  for (const m of idb['grading-studio-keep'].stores.meta) if (m[0] === 'gs.b.n2') Object.assign(m[1], { scored: 3, papers: true, t: Date.now() - 3 * 3600e3 });
+  return { ...s, ls: { ...s.ls, 'gs.lib': JSON.stringify(lib) }, idb };
+}
+test('planning your grading, on Today, the Focus card, a class page and Settings, leaves nothing in English', async () => {
+  const { page, close } = await openApp(browser, { seed: planSeed() });
+  const own = ['Grade 9 English', 'Grade 10 Literature', 'Reading a poem', 'Quizzes on paper', 'Poetry analysis', 'Narrative essay', 'Short story', /^Reading check \d/, /^Unit \d/];
+  const free = await page.evaluate(async () => {
+    const d = new Date(), now = d.getHours() * 60 + d.getMinutes(); if (now < 70 || now > 23 * 60) return false;
+    const hm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+    const db = await new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onupgradeneeded = () => { r.result.createObjectStore('lessons', { keyPath: 'id' }); r.result.createObjectStore('kv'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    const cl = [{ id: 'A1', name: 'Grade 9 English', color: '#1F6FB2', meets: [{ dow: d.getDay(), start: hm(now - 60), end: hm(now - 10) }] }, { id: 'B1', name: 'Grade 10 Literature', color: '#0E7C86', meets: [{ dow: d.getDay(), start: hm(now + 40), end: hm(now + 90) }] }];
+    await new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put({ classes: cl, daysOff: [] }, 'setup'); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+    db.close(); return true;
+  });
+  if (free) { await page.reload(); await page.waitForSelector('#fcCard .fcnote'); }
+  await page.waitForSelector('#lbCard .lbk'); await page.waitForSelector('#fcCard .fcback'); await pause(300);
+  await miss(page, 'Today, the look back, a free period and where she left off', own);
+  await goTo(page, await page.$eval('#railClasses a', a => a.getAttribute('href'))); await page.waitForSelector('#classes .tkc'); await miss(page, 'a class page, the time left on an assignment', own);
+  await goTo(page, '#/settings/focus'); await page.waitForSelector('#gpFree'); await miss(page, 'Settings, Focus, planning your grading', own);
+  await goTo(page, '#/'); await page.waitForSelector('#fcCard .fcbody');
+  await page.evaluate(() => window.__gs.fcStart(10, '', 3)); await page.waitForSelector('#fcPanel .fcwhat'); await pause(300);
+  await miss(page, 'the focus panel, just 3 papers', own);
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
 // Learning goals on both rubrics, and two days of attendance, on the made-up class.
 function goalsSeed() {
   const s = gradingSeed(), lib = JSON.parse(s.ls['gs.lib']);

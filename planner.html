@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"f6bbb95f","zh-Hans":"1ebdebc7","es":"df11d553","fr":"ca67baa7","de":"3cde4478","pt-BR":"9ee3eb15","ja":"b51d1671","ko":"d244bc97"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"878773aa","zh-Hans":"aaa96c01","es":"b03d3797","fr":"ca695106","de":"f0bb3e50","pt-BR":"aeadef09","ja":"793becc0","ko":"9a999a8d"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Planner · Grading Studio</title>
 <script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
    Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
@@ -6707,12 +6707,13 @@ function langFill(t, m, P) {
 const LANG_ATT = { present: 'attp', late: 'attl', 'absent, reason unknown': 'atta', excused: 'atte' };
 const LANG_FILLS = [
   ['fcof', /^(?:(Focus|Today): )?(\d+) of (\d+) (papers|minutes)( today)?$/, (m, F, P) => { const x = langFill(m[4] === 'papers' ? F.fcofp : F.fcofm, [0, m[2], m[3]], P); return m[1] === 'Focus' ? langFill(F.fcrail, [0, x], P) : m[1] === 'Today' ? langFill(F.fctodayof, [0, x], P) : x; }],
-  ['fctime', /^(Focus|Paused|Break|Just one paper): (\d+:\d\d)( left)?$/, (m, F, P) => langFill(F[{ Focus: 'fctf', Paused: 'fctp', Break: 'fctb', 'Just one paper': 'fcto' }[m[1]]], [0, m[2]], P)],
+  ['fctime', /^(Focus|Paused|Break|Just one paper|Just 3 papers): (\d+:\d\d)( left)?$/, (m, F, P) => langFill(F[{ Focus: 'fctf', Paused: 'fctp', Break: 'fctb', 'Just one paper': 'fcto', 'Just 3 papers': 'fct3' }[m[1]]], [0, m[2]], P)],
   ['fcleft', /^(\d+) papers? left$/], ['fcstart', /^Start (\d+) minutes$/], ['fcpace', /^about (\d+) minutes? at your pace$/], ['fcmin', /^(\d+) minutes?$/], ['fcpapers', /^(\d+) papers?$/],
   ['fcaway', /^You were away for (\d+) minutes?, and the clock kept going\.$/], ['fcdone', /^(\d+) minutes? done$/], ['fcbrk', /^Take a (\d+)-minute break$/], ['fcmore', /^(\d+) more minutes$/],
   ['fckeep', /^Keep going for (\d+) minutes$/], ['fcfin', /^You finished (\d+) papers?\.$/], ['fcsum', /^Today: (\d+) papers? in (\d+) minutes? of focus\.$/], ['fcsum0', /^Today: (\d+) papers?\.$/],
   ['fcweek', /^This week: (\d+) papers?\.$/], ['fctoday', /^Today: (\d+) papers?$/], ['fcdn', /^(\d+) done$/],
   ['tkpace', /^about (\d+) minutes? a paper$/], ['tkso', /^(\S.*) so far$/], ['tklessons', /^(\d+) lessons?$/], ['tkdays', /^(\d+) days? reached the goal$/],
+  ['gpfor', /^Grade for (\d+) minutes$/], ['gpleft', /^about (.+) left$/], ['gpsets', /^(\d+) sets?$/], ['gpdays', /^(\d+) days?$/],
   ['tkcount', /^Time counts while the marking screen or the Planner is in front and you have done something there in the last (\d+) minutes?\.$/],
   ['besideopen', /^Open (.+) beside Grading Studio$/],
   ['sdet', /^Student details for (.+)$/], ['cnt', /^Count (.+) in the class average$/], ['wout', /^without (\d+) students? ·$/],
@@ -6920,6 +6921,10 @@ const HELP = [
     a: ['Yes, in the **Time tracker**: open it from the Focus card on Today, or find it with Find anything. Grading time counts while the marking screen is open and in front; planning time counts while the Planner is, except while you present a lesson. Time stops counting after a few minutes with nothing pressed, typed or scrolled.',
       'The tracker shows a week, a month or three months: the totals, a bar for each day, grading by assignment and planning by lesson. Use **Add time** for work done away from the app. **Download as a spreadsheet** saves every day as a CSV file. In **Settings, Focus and goals** you can switch counting off or change how soon it stops.'],
     go: ['Open the time tracker', '#/time'], words: 'time tracker hours minutes how long spent log track record grading planning workload csv spreadsheet' },
+  { id: 'plan-grading', sec: 'start', q: 'Can the app tell me how long my grading will take?',
+    a: ['Yes, once you have finished a few papers with the time tracker on. Each set then shows about how long its papers will take at your pace: on the Focus card, on the assignment’s card, in the week in To do, and under the date when you set when work is due.',
+      'The Focus card also offers a free period between your classes, picks up the set you were last on at the paper you left, and can start small with **Just 3 papers**. On the day you choose, Today shows a look back at the week. Each can be switched off in **Settings, Focus and goals**.'],
+    go: ['Open Settings, Focus and goals', '#/settings/focus'], words: 'estimate how long pace grading load pile up due dates free period gap pick up where left off shortest small steps weekly look back friday review quiet do not disturb' },
   { id: 'school-resources', sec: 'start', q: 'Where can I keep my school’s links and files?',
     a: ['On **School** in the sidebar. Keep the handbook, the calendar, the bell schedule, the portals you sign in to, forms, and notes like who to call. Put them in groups you name, and press the star on the ones you open most to keep them at the top.',
       '**Add a link** when the school keeps it online, since a link stays up to date by itself. **Add files…** keeps a copy of a file with your work, up to 50 MB each. You can also drop files on the page or paste a web address.',

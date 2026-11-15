@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"f6bbb95f","zh-Hans":"1ebdebc7","es":"df11d553","fr":"ca67baa7","de":"3cde4478","pt-BR":"9ee3eb15","ja":"b51d1671","ko":"d244bc97"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"878773aa","zh-Hans":"aaa96c01","es":"b03d3797","fr":"ca695106","de":"f0bb3e50","pt-BR":"aeadef09","ja":"793becc0","ko":"9a999a8d"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Grading Studio</title>
 <script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
    Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
@@ -3176,6 +3176,52 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .prog-s .ptk{margin:-4px 0 var(--space-2)}
 .prog-s .ptk:empty{display:none}
 @media (min-width:761px){.cols:not(.open):not(.peek) .ptk{display:none}}
+/* ---------- Planning your grading (src/gradeplan.js). Every value is a token. ---------- */
+/* the top of the Focus card: a free period going on now, and where she left off */
+.fcnote{display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-3);border-radius:var(--corner-3);background:var(--accent-soft)}
+.fcnote .fcnh{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);font-size:var(--text-small);font-weight:600;color:var(--accent)}
+.fcnote .fcnh svg{flex:none;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.fcnote .fcnh span + span{font-weight:500}
+.fcnote p{margin:0;font-size:var(--text-control);color:var(--fg)}
+.fcnote p span{color:var(--muted)}
+.fcback{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3);border:1px solid var(--line);border-radius:var(--corner-3)}
+.fcback .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.fcback .t b{font-size:var(--text-small);font-weight:600;color:var(--fg-2)}
+.fcback .t > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--text-control);color:var(--fg)}
+.fcback .t i{font-style:normal;font-size:var(--text-small);color:var(--muted)}
+.fcshort{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-small);color:var(--fg-2)}
+/* a free period in Today's list of classes */
+.trow.gpfree .nt b{font-weight:500;color:var(--fg-2)}
+/* the look back at the week */
+.lbk{padding:var(--space-4) var(--space-5)}
+.lbk h2{margin:0;font-size:var(--text-body);font-weight:600}
+.lbk .lbks{margin:2px 0 var(--space-3);font-size:var(--text-small);color:var(--muted)}
+.lbkg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--space-3)}
+.lbkg div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lbkg span{font-size:var(--text-small)}
+.lbkg div > span{font-weight:600;color:var(--fg-2)}
+.lbkg b{font-size:var(--text-heading);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--fg)}
+.lbkg b span{font-size:inherit}
+.lbkg i{font-style:normal;font-size:var(--text-small);color:var(--muted)}
+.lbkw{margin:var(--space-3) 0 0;padding:var(--space-3) 0 0;border-top:1px solid var(--line);font-size:var(--text-control);color:var(--fg-2)}
+.lbkw b{font-weight:600;color:var(--fg)}
+.lbkw ul{margin:var(--space-1) 0 0;padding:0 0 0 var(--space-4)}
+.lbkw li{margin:2px 0}
+.lbkw .m{color:var(--muted)}
+.lbkf{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);margin:var(--space-3) 0 0}
+/* the grading due each day in To do's week */
+.tdest{display:flex;flex-direction:column;gap:2px;margin:0 0 var(--space-2);padding:var(--space-2);border-radius:var(--corner-2);background:var(--surface-2);font-size:var(--text-small);color:var(--fg-2)}
+.tdest b{font-weight:600;color:var(--fg)}
+.tdest.heavy{background:var(--accent-soft)}
+.tdwsum{margin-left:auto;font-size:var(--text-small);color:var(--fg-2)}
+.tdwbar .tdwsum b{margin:0;font-weight:600;color:var(--fg)}
+/* under the date in an assignment's box */
+.duehint{margin:var(--space-1) 0 0;font-size:var(--text-small);color:var(--muted)}
+.duehint:empty{display:none}
+.duehint b{font-weight:600;color:var(--fg-2)}
+.gpnote{margin-top:calc(-1 * var(--space-2))}
+/* quiet while focusing: the counts in the sidebar and in To do wait until the session ends */
+body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #tdSay{visibility:hidden}
 /* ---------- progress sheets (sheet.js): the box that shows them, and the pages as they print ---------- */
 .dlg .box.pssbox{width:min(1000px,100%);height:calc(100vh - 32px)}
 .pssbody{display:flex;flex-direction:column;gap:var(--space-2);overflow:auto;background:var(--surface-2)}
@@ -3571,6 +3617,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
       <div class="hmain">
         <section class="safeask" id="sampleNote" hidden></section>
         <section class="safeask" id="safeAsk" hidden></section>
+        <section class="tsec" id="lbCard" hidden></section>
         <section class="tsec" id="today" hidden></section>
         <section class="tsec today" id="toMark" hidden>
           <h2 class="tcap">To mark</h2>
@@ -3707,6 +3754,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
         <section class="lib setsec" id="setFocus" data-sec="focus" hidden></section>
         <section class="lib setsec" id="setGoal" data-sec="focus" hidden></section>
         <section class="lib setsec" id="setTrack" data-sec="focus" hidden></section>
+        <section class="lib setsec" id="setPlan" data-sec="focus" hidden></section>
         <section class="lib setsec" id="setDisplay" data-sec="display" hidden>
           <div class="lhead"><h2>Display</h2><span class="muted">Light mode is the usual look. Text size and zoom apply while you grade.</span><span class="sp"></span><button class="btn sm themeBtn">Dark mode</button><button class="btn sm" id="setDisp">Text size and zoom</button></div>
         </section>
@@ -5039,12 +5087,13 @@ function langFill(t, m, P) {
 const LANG_ATT = { present: 'attp', late: 'attl', 'absent, reason unknown': 'atta', excused: 'atte' };
 const LANG_FILLS = [
   ['fcof', /^(?:(Focus|Today): )?(\d+) of (\d+) (papers|minutes)( today)?$/, (m, F, P) => { const x = langFill(m[4] === 'papers' ? F.fcofp : F.fcofm, [0, m[2], m[3]], P); return m[1] === 'Focus' ? langFill(F.fcrail, [0, x], P) : m[1] === 'Today' ? langFill(F.fctodayof, [0, x], P) : x; }],
-  ['fctime', /^(Focus|Paused|Break|Just one paper): (\d+:\d\d)( left)?$/, (m, F, P) => langFill(F[{ Focus: 'fctf', Paused: 'fctp', Break: 'fctb', 'Just one paper': 'fcto' }[m[1]]], [0, m[2]], P)],
+  ['fctime', /^(Focus|Paused|Break|Just one paper|Just 3 papers): (\d+:\d\d)( left)?$/, (m, F, P) => langFill(F[{ Focus: 'fctf', Paused: 'fctp', Break: 'fctb', 'Just one paper': 'fcto', 'Just 3 papers': 'fct3' }[m[1]]], [0, m[2]], P)],
   ['fcleft', /^(\d+) papers? left$/], ['fcstart', /^Start (\d+) minutes$/], ['fcpace', /^about (\d+) minutes? at your pace$/], ['fcmin', /^(\d+) minutes?$/], ['fcpapers', /^(\d+) papers?$/],
   ['fcaway', /^You were away for (\d+) minutes?, and the clock kept going\.$/], ['fcdone', /^(\d+) minutes? done$/], ['fcbrk', /^Take a (\d+)-minute break$/], ['fcmore', /^(\d+) more minutes$/],
   ['fckeep', /^Keep going for (\d+) minutes$/], ['fcfin', /^You finished (\d+) papers?\.$/], ['fcsum', /^Today: (\d+) papers? in (\d+) minutes? of focus\.$/], ['fcsum0', /^Today: (\d+) papers?\.$/],
   ['fcweek', /^This week: (\d+) papers?\.$/], ['fctoday', /^Today: (\d+) papers?$/], ['fcdn', /^(\d+) done$/],
   ['tkpace', /^about (\d+) minutes? a paper$/], ['tkso', /^(\S.*) so far$/], ['tklessons', /^(\d+) lessons?$/], ['tkdays', /^(\d+) days? reached the goal$/],
+  ['gpfor', /^Grade for (\d+) minutes$/], ['gpleft', /^about (.+) left$/], ['gpsets', /^(\d+) sets?$/], ['gpdays', /^(\d+) days?$/],
   ['tkcount', /^Time counts while the marking screen or the Planner is in front and you have done something there in the last (\d+) minutes?\.$/],
   ['besideopen', /^Open (.+) beside Grading Studio$/],
   ['sdet', /^Student details for (.+)$/], ['cnt', /^Count (.+) in the class average$/], ['wout', /^without (\d+) students? ·$/],
@@ -5252,6 +5301,10 @@ const HELP = [
     a: ['Yes, in the **Time tracker**: open it from the Focus card on Today, or find it with Find anything. Grading time counts while the marking screen is open and in front; planning time counts while the Planner is, except while you present a lesson. Time stops counting after a few minutes with nothing pressed, typed or scrolled.',
       'The tracker shows a week, a month or three months: the totals, a bar for each day, grading by assignment and planning by lesson. Use **Add time** for work done away from the app. **Download as a spreadsheet** saves every day as a CSV file. In **Settings, Focus and goals** you can switch counting off or change how soon it stops.'],
     go: ['Open the time tracker', '#/time'], words: 'time tracker hours minutes how long spent log track record grading planning workload csv spreadsheet' },
+  { id: 'plan-grading', sec: 'start', q: 'Can the app tell me how long my grading will take?',
+    a: ['Yes, once you have finished a few papers with the time tracker on. Each set then shows about how long its papers will take at your pace: on the Focus card, on the assignment’s card, in the week in To do, and under the date when you set when work is due.',
+      'The Focus card also offers a free period between your classes, picks up the set you were last on at the paper you left, and can start small with **Just 3 papers**. On the day you choose, Today shows a look back at the week. Each can be switched off in **Settings, Focus and goals**.'],
+    go: ['Open Settings, Focus and goals', '#/settings/focus'], words: 'estimate how long pace grading load pile up due dates free period gap pick up where left off shortest small steps weekly look back friday review quiet do not disturb' },
   { id: 'school-resources', sec: 'start', q: 'Where can I keep my school’s links and files?',
     a: ['On **School** in the sidebar. Keep the handbook, the calendar, the bell schedule, the portals you sign in to, forms, and notes like who to call. Put them in groups you name, and press the star on the ones you open most to keep them at the top.',
       '**Add a link** when the school keeps it online, since a link stays up to date by itself. **Add files…** keeps a copy of a file with your work, up to 50 MB each. You can also drop files on the page or paste a web address.',
@@ -7821,6 +7874,7 @@ function renderProg() {
 function nextUnscored() {
   const N = batch.students.length, o = anonOn() ? anonOrder() : batch.students.map((_, i) => i), p = o.indexOf(cur);
   const fm = fmNow(), left = st => fm ? !st.grade.fb && !noScore(st) : !gradeOf(st).done;
+  const short = gpShortNext(left); if (short >= 0) return openStudent(short);   // a focus session with shortest papers first (src/gradeplan.js)
   for (let k = 1; k <= N; k++) { const i = o[(p + k) % N]; if (left(batch.students[i])) return openStudent(i); }
   toast(fm ? 'Feedback is complete for everyone' : 'Everyone has a score');
 }
@@ -10735,7 +10789,7 @@ function renderLib() {
     return '<div class="card" draggable="true" data-card="' + it.id + '" title="' + (m && m.papers ? 'Open the papers' : it.typed && !it.batchId ? 'Scores typed in: open the gradebook' : 'Add this assignment’s papers') + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
       (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (it.typed ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + '</div>' +
       '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
-      '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (tkAsg(it.id) && tkAsg(it.id).s >= 60 ? '<div class="m">' + tkAsgHtml(it.id) + '</div>' : '') + (st ? stateChip(st) : '') + '</div>' +
+      '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (h => h ? '<div class="m">' + h + '</div>' : '')(tkAsgHtml(it.id)) + (st ? stateChip(st) : '') + '</div>' +
       '<div class="row">' + (m && m.papers ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
         : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') +
         kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-edit-asg="' + it.id + '">Edit<small>Name, type, due date, unit, rubric</small></button>' +
@@ -10933,7 +10987,7 @@ function editAssignment(id, unitId, clsId) {
     classPick +
     '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select><p class="muted" id="aUnitNote" style="font-size:13px;margin:6px 0 0" hidden></p></div>' +
     '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + bkCats().map(([t, , s]) => '<button type="button" data-atype="' + esc(t) + '" aria-pressed="' + (it.type === t) + '">' + esc(s) + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">' + esc(bkCountSay()) + '</p></div>' +
-    '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"></div>' +
+    '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"><p class="duehint" id="aDueSay">' + gpDueHint(it.due, f ? it.id : '') + '</p></div>' +
     ruHtml(f ? it.setup : null) + '</div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true, 'lg');
   const ticked = () => [...document.querySelectorAll('#aClasses input:checked')].map(x => holderById(x.value)).filter(Boolean);
@@ -10953,6 +11007,7 @@ function editAssignment(id, unitId, clsId) {
     const ok = $('#dlgBox [data-ok]'); ok.textContent = cs.length > 1 ? 'Add to ' + cs.length + ' classes' : 'Save'; ok.disabled = !cs.length;
   };
   fillUnits(start.u);
+  $('#aDue').oninput = () => { $('#aDueSay').innerHTML = gpDueHint($('#aDue').value, f ? it.id : ''); };   // what else is due that week (src/gradeplan.js)
   const ru = ruWire($('#dlgBox'), it);
   if (f) $('#aClass').onchange = () => fillUnits(null);
   else { $('#aClasses').onchange = () => fillUnits(null); $('#aUnit').onchange = () => fillUnits(null); }
@@ -27512,7 +27567,7 @@ function todayHtml(prim) {
       '<span class="btn sm' + (prim === 'lesson' && r === cur ? ' primary' : '') + '">' + (show ? 'Present' : l ? 'Open' : 'Plan it') + '</span></a>' + attTodayLine(c);
   };
   return '<div class="thd"><h2 class="tcap">Teaching today</h2><a class="link tweek" href="' + esc(planUrl('#week')) + '">Open the week</a></div><div class="tcard">' +
-    (t.off ? '<div class="trow none"><span class="nt"><b>No classes today</b><span class="ns">' + esc(t.off) + '</span></span></div>' : t.rows.length ? t.rows.map(row).join('') : '<div class="trow none"><span class="nt"><span class="ns">No classes on your timetable today.</span></span></div>') + '</div>';
+    (t.off ? '<div class="trow none"><span class="nt"><b>No classes today</b><span class="ns">' + esc(t.off) + '</span></span></div>' : t.rows.length ? t.rows.map((r, i) => row(r) + gpFreeRow(t.rows, i)).join('') : '<div class="trow none"><span class="nt"><span class="ns">No classes on your timetable today.</span></span></div>') + '</div>';
 }
 
 /* to mark, ready to hand back, earlier work: the work kept in this browser, sorted by where it stands */
@@ -27599,6 +27654,7 @@ function homeRender() {
   const asking = !!$('#safeAsk .btn.primary, #sampleNote .btn.primary');
   const prim = asking ? '' : cur && cur.lessons.length ? 'lesson' : g.mark.some(m => m.papers) ? 'mark' : g.back.some(m => m.papers) ? 'back' : 'drop';
   const firstMark = g.mark.find(m => m.papers);
+  put($('#lbCard'), gpLookHtml());
   put($('#today'), todayHtml(prim));
   put($('#toMark'), g.mark.map(m => markRow(m, prim === 'mark' && m === firstMark)).join(''));
   put($('#handBack'), backHtml(g.back, prim === 'back'));
@@ -27619,7 +27675,7 @@ $('#handBack').addEventListener('click', e => { const a = e.target.closest('a[da
 let planBusy = null;
 function planRefresh() {
   if (planBusy) return planBusy;
-  return planBusy = planRead().catch(() => { plan = null; }).then(() => { planBusy = null; homeRender(); if (shellReady) setRender(); });
+  return planBusy = planRead().catch(() => { plan = null; }).then(() => { planBusy = null; homeRender(); fcRender(); if (shellReady) setRender(); });
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !batch) planRefresh(); });
 window.addEventListener('pageshow', e => { if (e.persisted) planRefresh(); });
@@ -27863,7 +27919,7 @@ function tdWRow(r) {
 }
 function tdWeekHtml(rows, today) {
   const mon = tdAdd(today, -((tdAt(today).getDay() + 6) % 7) + 7 * tdS.week), days = [0, 1, 2, 3, 4, 5, 6].map(i => tdAdd(mon, i)), end = days[6], cur = today >= mon && today <= end;
-  const by = new Map(days.map(d => [d, []])), later = [];
+  const by = new Map(days.map(d => [d, []])), later = [], due = gpWeek(mon, end);   // the grading due each day, at her pace (src/gradeplan.js)
   for (const r of rows) {
     if (r.done) { const dd = isoDay(r.done); if (by.has(dd)) by.get(dd).push(r); continue; }
     if (!r.d || r.d > end) later.push(r);
@@ -27879,13 +27935,13 @@ function tdWeekHtml(rows, today) {
     const under = new Map(meets.map(m => [m.c.id, []])), any = [];
     for (const r of list) { const p = tdPid(r); (under.has(p) ? under.get(p) : any).push(r); }
     const name = day === today ? 'Today' : tdAt(day).toLocaleDateString(LANG_LOCALE, { weekday: 'short' });
-    return '<section class="tdday' + (day === today ? ' now' : day < today ? ' past' : '') + '" data-tdday="' + day + '"><h3><b' + (day === today ? '' : ' data-raw') + '>' + esc(name) + '</b><span data-raw>' + esc(day === today ? tdDayLong(day) : bkDay(day)) + '</span></h3>' +
+    return '<section class="tdday' + (day === today ? ' now' : day < today ? ' past' : '') + '" data-tdday="' + day + '"><h3><b' + (day === today ? '' : ' data-raw') + '>' + esc(name) + '</b><span data-raw>' + esc(day === today ? tdDayLong(day) : bkDay(day)) + '</span></h3>' + due.day(day) +
       (t.off ? '<p class="tdoff" data-raw>' + esc(t.off) + '</p>' : '') + (any.length && meets.length ? '<div class="tdany">Any time</div>' : '') + any.map(tdWRow).join('') +
       meets.map(m => '<div class="tdcl" data-raw>' + tdDot(null, m.c.color) + '<b>' + esc(m.c.name) + '</b><span>' + esc(planTime(m.m.start)) + '</span></div>' + under.get(m.c.id).map(tdWRow).join('')).join('') + add(day, name) + '</section>';
   };
   const say = tdAt(mon).toLocaleDateString(LANG_LOCALE, { month: 'long', day: 'numeric' });
   return '<div class="tdwbar"><button class="btn sm" data-tdwk="-1" aria-label="The week before" title="The week before">‹</button><b>Week of <span data-raw>' + esc(say) + '</span></b><button class="btn sm" data-tdwk="1" aria-label="The week after" title="The week after">›</button>' +
-    (tdS.week ? '<button class="btn sm" data-tdwk="0">This week</button>' : '') + '<span class="muted">Anything not done moves to today on its own. Drag a line to another day.</span></div>' +
+    (tdS.week ? '<button class="btn sm" data-tdwk="0">This week</button>' : '') + (due.bar || '<span class="muted">Anything not done moves to today on its own. Drag a line to another day.</span>') + '</div>' +
     '<div class="tdwk">' + days.map(col).join('') + '<section class="tdday tdlater" data-tdday=""><h3><b>Later</b><span>no day, or after this week</span></h3>' + later.sort(tdSort).map(r => tdWRow(r)).join('') + add('', 'later') + '</section></div>';
 }
 function tdSideHtml(rows, today) {
@@ -28089,6 +28145,7 @@ function fcConf() {
   const f = me().focus || {}, g = f.goal || null;
   return { len: FC_LENS.includes(+f.len) ? +f.len : 10, brk: FC_BRKS.includes(+f.brk) ? +f.brk : 5, sound: f.sound !== false, title: f.title !== false,
     track: f.track !== false, idle: TK_IDLES.includes(+f.idle) ? +f.idle : 5,
+    free: f.free !== false, wk: f.wk === false ? false : [0, 1, 2, 3, 4, 5, 6].includes(f.wk) ? f.wk : 5, quiet: f.quiet === true, short: f.short === true,   // src/gradeplan.js
     goal: g && (g.k === 'papers' || g.k === 'min') && +g.n > 0 ? { k: g.k, n: Math.min(g.k === 'min' ? 600 : 500, Math.round(+g.n)) } : null };
 }
 function fcConfSet(part) {
@@ -28100,6 +28157,10 @@ function fcConfSet(part) {
   if (!c.title) o.title = false;
   if (!c.track) o.track = false;
   if (c.idle !== 5) o.idle = c.idle;
+  if (!c.free) o.free = false;
+  if (c.wk !== 5) o.wk = c.wk;
+  if (c.quiet) o.quiet = true;
+  if (c.short) o.short = true;
   meDrop('focus', Object.keys(o).length ? o : null);
   if (typeof tkShare === 'function') tkShare();
   fcRender();
@@ -28110,7 +28171,8 @@ function fcLog() {
   const L = store.get('gs.focus', null) || {};
   return { day: typeof L.day === 'string' ? L.day : '', base: L.base && typeof L.base === 'object' ? L.base : {}, days: L.days && typeof L.days === 'object' ? L.days : {},
     pace: Array.isArray(L.pace) ? L.pace.filter(x => Array.isArray(x) && x[0] > 0 && x[1] > 0) : [], last: typeof L.last === 'string' ? L.last : '',
-    add: Array.isArray(L.add) ? L.add.filter(x => x && typeof x.d === 'string' && (x.k === 'g' || x.k === 'l') && x.s > 0) : [] };
+    add: Array.isArray(L.add) ? L.add.filter(x => x && typeof x.d === 'string' && (x.k === 'g' || x.k === 'l') && x.s > 0) : [],
+    ...(typeof L.lbHid === 'string' ? { lbHid: L.lbHid } : {}) };   // the week whose look-back was put away (src/gradeplan.js)
 }
 const fcLogSet = L => store.set('gs.focus', L);
 const fcToday = () => isoDay(Date.now());
@@ -28149,6 +28211,7 @@ const fcRunSet = r => { if (r) store.set('gs.focusRun', r); else store.del('gs.f
 const fcElapsed = r => Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.at) / 1000));
 const fcLeft = r => r.st === 'brk' ? Math.max(0, Math.round((r.brkAt + r.brkLen * 1000 - Date.now()) / 1000)) : Math.max(0, r.len - fcElapsed(r));
 const fcGot = r => r.got != null ? r.got : Math.max(0, fcPapersToday() - (r.p0 || 0));
+const fcN = r => r.one ? Math.max(1, +r.one || 1) : 0;   // papers a "Just one paper" or "Just 3 papers" session is for
 const fcClock = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 
 function fcWorks() {
@@ -28195,7 +28258,7 @@ function fcStart(len, key, one) {
   fcAudioWake();
   const L = fcLog(); L.last = key || ''; fcLogSet(L);
   const was = fcRun(); if (was && (was.st === 'run' || was.st === 'paused')) fcRecord(was);
-  fcRunSet({ st: 'run', len: Math.round(len * 60), at: Date.now(), w: key || '', one: !!one, p0: fcPapersToday(), fold: false });
+  fcRunSet({ st: 'run', len: Math.round(len * 60), at: Date.now(), w: key || '', one: one ? Math.max(1, +one || 1) : 0, p0: fcPapersToday(), fold: false });
   fcGoTo(false);
 }
 function fcGoTo(next) {
@@ -28236,7 +28299,7 @@ function fcTickOn() {
 function fcTick() {
   const r = fcRun(); if (!r) return fcTickOn();
   if (r.st === 'run') {
-    if (r.one ? fcGot(r) >= 1 : fcLeft(r) <= 0) return fcUp(r);
+    if (r.one ? fcGot(r) >= fcN(r) : fcLeft(r) <= 0) return fcUp(r);
   } else if (r.st === 'brk' && fcLeft(r) <= 0) { r.st = 'brkup'; r.fold = false; fcRunSet(r); fcChime(); return; }
   fcClockDraw(); fcTitle();
 }
@@ -28293,18 +28356,19 @@ function fcWorkSay(w) {
   if (!w) return 'A session with nothing set: the timer only.';
   if (!w.mark) return 'A to-do';
   if (!w.left) return w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score';
-  const pace = fcPace();
+  const it = cardOfKept(w.id), pace = gpReady ? gpPaces()(it ? it.id : '') : fcPace();
   return [people(w.left, 'paper') + ' left', pace ? 'about ' + people(Math.max(1, Math.round(w.left * pace / 60)), 'minute') + ' at your pace' : ''].filter(Boolean).join(' · ');
 }
 function fcStartHtml(card) {
   const c = fcConf(), works = fcWorks(), key = fcPicked(works), w = works.find(x => x.key === key) || null, len = fcS.len || c.len;
   const opt = x => '<option value="' + esc(x.key) + '"' + (x.key === key ? ' selected' : '') + ' data-raw>' + esc(x.name + (x.cls ? ' · ' + x.cls : '')) + '</option>';
   const marks = works.filter(x => x.mark), tds = works.filter(x => !x.mark);
-  return '<div class="fcbody">' + fcGoalHtml(c, true) + (card ? fcWeekHtml(c) + tkTodayHtml() : '') + '<div class="fcline"></div>' +
+  return '<div class="fcbody">' + gpTopHtml(w) + fcGoalHtml(c, true) + (card ? fcWeekHtml(c) + tkTodayHtml() : '') + '<div class="fcline"></div>' +
     '<div><label class="fcl">Work on</label><select class="fcwork" data-fcwork aria-label="Work on">' + marks.map(opt).join('') +
     (marks.length && tds.length ? '<option disabled data-raw>──────────</option>' : '') + tds.map(opt).join('') + '<option value=""' + (key === '' ? ' selected' : '') + '>' + esc(tr('Nothing in particular')) + '</option></select>' +
     '<p class="fcsay">' + esc(fcWorkSay(w)) + '</p></div>' +
-    '<div class="fcgo"><button class="btn' + (card ? '' : ' primary') + '" data-fcstart="' + len + '">' + FC_PLAY + '<span>Start ' + len + ' minutes</span></button>' + (w && w.mark && w.left ? '<button class="btn" data-fcone>Just one paper</button>' : '') + '</div>' +
+    '<div class="fcgo"><button class="btn' + (card ? '' : ' primary') + '" data-fcstart="' + len + '">' + FC_PLAY + '<span>Start ' + len + ' minutes</span></button>' + (w && w.mark && w.left ? '<button class="btn" data-fcone>Just one paper</button>' : '') + (w && w.mark && w.left >= 3 ? '<button class="btn" data-fcone="3">Just 3 papers</button>' : '') + '</div>' +
+    (w && w.mark && w.left > 1 ? '<label class="fcshort"><input type="checkbox" data-fcshort' + (c.short ? ' checked' : '') + '> Shortest papers first</label>' : '') +
     '<div class="fclens" role="group" aria-label="How long"><span>Or</span>' + [5, 10, 15, 25].concat(FC_LENS.includes(len) && ![5, 10, 15, 25].includes(len) ? [len] : []).sort((a, b) => a - b).map(n => '<button data-fclen="' + n + '" aria-pressed="' + (n === len) + '">' + n + '</button>').join('') + '<span>minutes</span></div></div>';
 }
 function fcCardRender() {
@@ -28315,7 +28379,7 @@ function fcCardRender() {
 }
 const fcHead = (cap, fold) => '<div class="fchead"><h2 class="tcap">' + cap + '</h2><span class="sp"></span>' + (fold ? '<button class="icon" data-fcfold title="Fold it away" aria-label="Fold it away">–</button>' : '<button class="icon" data-fcclose title="Close" aria-label="Close">✕</button>') + '</div>';
 function fcWhatHtml(r, w) {
-  const sub = [w && w.cls ? '<span data-raw>' + esc(w.cls) + '</span>' : '', r.one ? 'Just one paper' : w && w.mark ? (w.left ? people(w.left, 'paper') + ' left' : w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score') : w ? 'A to-do' : 'The timer only'].filter(Boolean);
+  const sub = [w && w.cls ? '<span data-raw>' + esc(w.cls) + '</span>' : '', r.one ? (fcN(r) > 1 ? 'Just 3 papers' : 'Just one paper') : w && w.mark ? (w.left ? people(w.left, 'paper') + ' left' : w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score') : w ? 'A to-do' : 'The timer only'].filter(Boolean);
   return '<div class="fcwhat"><b data-raw>' + esc(w ? w.name : tr('Focus')) + '</b><span>' + sub.map(x => x.startsWith('<') ? x : '<span>' + esc(x) + '</span>').join(' · ') + '</span>' +
     (w && w.mark && w.left && r.st !== 'brk' ? '<button class="btn sm primary" data-fcnext>Next paper →</button>' : '') + '</div>';
 }
@@ -28336,10 +28400,10 @@ function fcPanelHtml(r) {
   }
   if (r.st === 'up') {
     const got = r.got || 0;
-    return fcHead('Focus') + '<div class="fcrunv"><p class="fcbig ok"><span class="fcok">' + FC_TICK + '</span><span>' + (r.one ? 'One paper done' : people(Math.round(r.len / 60), 'minute') + ' done') + '</span></p>' +
+    return fcHead('Focus') + '<div class="fcrunv"><p class="fcbig ok"><span class="fcok">' + FC_TICK + '</span><span>' + (r.one ? (fcN(r) > 1 ? '3 papers done' : 'One paper done') : people(Math.round(r.len / 60), 'minute') + ' done') + '</span></p>' +
       (w && !w.mark && !got ? '' : '<p class="fcp">' + (got ? esc('You finished ' + people(got, 'paper') + '.') : 'Nothing was finished in this one.') + '</p>') +
       '<div class="fcstats">' + fcGoalHtml(c) + '</div>' +
-      (r.one ? '<div class="fcacts">' + (w && w.left ? '<button class="btn primary" data-fcone>One more paper</button>' : '') + '<button class="btn" data-fcstart="' + c.len + '">' + 'Keep going for ' + c.len + ' minutes' + '</button></div>'
+      (r.one ? '<div class="fcacts">' + (w && w.left ? (fcN(r) > 1 && w.left >= 3 ? '<button class="btn primary" data-fcone="3">3 more papers</button>' : '<button class="btn primary" data-fcone>One more paper</button>') : '') + '<button class="btn" data-fcstart="' + c.len + '">' + 'Keep going for ' + c.len + ' minutes' + '</button></div>'
         : '<div class="fcacts"><button class="btn primary" data-fcbreak>Take a ' + c.brk + '-minute break</button><button class="btn" data-fcstart="' + Math.round(r.len / 60) + '" data-fcagain>' + Math.round(r.len / 60) + ' more minutes</button></div>') +
       '<div class="fcacts"><button class="btn sm ghost" data-fcstop>Stop for now</button></div></div>';
   }
@@ -28373,7 +28437,7 @@ function fcClockDraw() {
   if (!want) { if (ring) ring.remove(); }
   else if (!ring) ico.insertAdjacentHTML('beforeend', fcRing(15, 2, frac, 'fcring'));
   else { const o = ring.querySelector('.on'), cc = +o.getAttribute('stroke-dasharray'); o.setAttribute('stroke-dashoffset', (cc * (1 - Math.max(0, Math.min(1, frac)))).toFixed(2)); }
-  rb.title = on ? (r.st === 'brk' ? 'Break: ' : r.st === 'paused' ? 'Paused: ' : r.one ? 'Just one paper: ' : 'Focus: ') + s + (r.one || r.st === 'paused' ? '' : ' left') : c.goal ? 'Focus: ' + gn + ' of ' + c.goal.n + ' ' + fcUnit(c.goal.k) + ' today' : 'Focus: a timer for grading, and your daily goal';
+  rb.title = on ? (r.st === 'brk' ? 'Break: ' : r.st === 'paused' ? 'Paused: ' : r.one ? (fcN(r) > 1 ? 'Just 3 papers: ' : 'Just one paper: ') : 'Focus: ') + s + (r.one || r.st === 'paused' ? '' : ' left') : c.goal ? 'Focus: ' + gn + ' of ' + c.goal.n + ' ' + fcUnit(c.goal.k) + ' today' : 'Focus: a timer for grading, and your daily goal';
 }
 function fcPanelRender() {
   const el = $('#fcPanel'); if (!el) return;
@@ -28390,7 +28454,7 @@ function fcPanelRender() {
 }
 function fcRender() {
   if (!FC_ON || !shellReady) return;
-  fcCardRender(); fcPanelRender(); fcTitle();
+  fcCardRender(); fcPanelRender(); fcTitle(); gpQuiet();
 }
 
 /* ---------- presses ---------- */
@@ -28401,7 +28465,7 @@ document.addEventListener('click', e => {
   const pick = () => sel ? sel.value : fcRun() ? fcRun().w : fcPicked(fcWorks());
   if (t.id === 'railFocus') { e.preventDefault(); const r = fcRun(); if (r) { r.fold = !r.fold && (r.st === 'run' || r.st === 'paused' || r.st === 'brk'); fcRunSet(r); } else { fcS.open = !fcS.open; fcRender(); } return; }
   if (d.fcstart != null) return fcStart(+d.fcstart, d.fcagain != null && fcRun() ? fcRun().w : pick(), false);
-  if (d.fcone != null) return fcStart(fcConf().len, d.fcone !== undefined && fcRun() && fcRun().st === 'up' ? fcRun().w : pick(), true);
+  if (d.fcone != null) return fcStart(fcConf().len, fcRun() && fcRun().st === 'up' ? fcRun().w : pick(), +d.fcone || 1);
   if (d.fclen != null) { fcS.len = +d.fclen; return fcRender(); }
   if (d.fcnext != null) return fcGoTo(true);
   if (d.fcpause != null) return fcPause();
@@ -28668,9 +28732,13 @@ function tkAsg(id) {
   return { s: s + (tkPend.a[id] || 0), p };
 }
 function tkAsgHtml(id) {
-  const t = tkAsg(id); if (!t || t.s < 60 || !fcConf().track && !t.s) return '';
-  const per = t.p ? Math.max(1, Math.round(t.s / 60 / t.p)) : 0;
-  return '<span class="tkc" title="' + esc(tr('Time spent grading this assignment, from the time tracker')) + '">' + TK_CLOCK + '<span>' + esc(tkDur(t.s) + ' so far') + '</span>' + (per ? '<span>·</span><span>' + esc('about ' + people(per, 'minute') + ' a paper') + '</span>' : '') + '</span>';
+  const t = tkAsg(id); if (!t) return '';
+  const per = t.p ? Math.max(1, Math.round(t.s / 60 / t.p)) : 0, left = gpLeft(id), bits = [];
+  if (t.s >= 60) bits.push(tkDur(t.s) + ' so far');
+  if (t.s >= 60 && per) bits.push('about ' + people(per, 'minute') + ' a paper');
+  if (left >= 60) bits.push('about ' + tkDur(left) + ' left');
+  if (!bits.length) return '';
+  return '<span class="tkc" title="' + esc(tr('Time spent grading this assignment, from the time tracker')) + '">' + TK_CLOCK + bits.map(x => '<span>' + esc(x) + '</span>').join('<span>·</span>') + '</span>';
 }
 
 /* ---------- the line on Today's Focus card ---------- */
@@ -28699,6 +28767,198 @@ tkOn();
 Object.assign(window.__gs, { tkCsvText, tkFlush, tkTick, tkDay: k => tkDay(k, fcLog(), tkPlan()), tkPeriod, tkAddTime, tkDur, tkPend: () => tkPend, tkActive: () => { tkLast = Date.now(); }, tkHold: () => { clearInterval(tkTimer); tkTimer = 0; } });   // tkHold: tests move the clock themselves
 tkReady = true;
 
+/* ---------- Planning your grading: how long the papers will take, free periods, picking up where she left off, small starts, a look
+   back at the week, and quiet while focusing. Built on the focus timer (src/focus.js) and the time tracker (src/tracker.js).
+   Settings are in lib.me.focus with the timer's: free (false: no free periods), wk (the day of the look-back, 0 Sunday to 6 Saturday,
+   or false), quiet (true: counts hidden during a session), short (true: shortest papers first). The only thing stored here is
+   gs.focus.lbHid, the Monday of the week whose look-back was put away. No names: assignment names, class names and times only. */
+var gpReady = false;
+const GP_FREE = 20, GP_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/* ---------- the teacher's pace ---------- */
+let gpMemo = null;
+function gpMemoOf(k, f) { if (!gpMemo) { gpMemo = {}; queueMicrotask(() => { gpMemo = null; }); } return k in gpMemo ? gpMemo[k] : (gpMemo[k] = f()); }
+function gpPaces() {
+  return gpMemoOf('pace', () => {
+    const L = fcLog(), by = new Map(); let os = 0, op = 0;
+    for (const d of Object.values(L.days)) {
+      if (!d || !d.pa) continue;
+      for (const [k, n] of Object.entries(d.pa)) { const t = (d.a || {})[k] || 0; if (!k || !(n > 0) || !(t > 0)) continue; os += t; op += n; const b = by.get(k) || [0, 0]; b[0] += t; b[1] += n; by.set(k, b); }
+    }
+    const all = op >= 3 ? os / op : fcPace();
+    return id => { const b = by.get(id); return b && b[1] >= 3 ? b[0] / b[1] : all; };
+  });
+}
+function gpKept() {
+  return gpMemoOf('kept', () => {
+    const by = new Map();
+    for (const m of keptMeta.values()) { if (!m || (m.newer && keptMeta.has(m.newer))) continue; const it = cardOfKept(m.id); if (it && (!by.has(it.id) || by.get(it.id).t < m.t)) by.set(it.id, m); }
+    return by;
+  });
+}
+function gpLeft(id) {
+  if (!gpReady || !id) return 0;
+  const m = gpKept().get(id); if (!m || m.ret) return 0;
+  return keptState(m).left * gpPaces()(id);
+}
+function gpDue(from, to, except) {
+  const by = gpKept(), pace = gpPaces(), today = fcToday(), out = [];
+  for (const c of lib.classes) for (const u of c.units || []) for (const it of u.items || []) {
+    if (!it.due || it.due < from || it.due > to || it.id === except || it.typed || it.type === 'xc') continue;
+    const m = by.get(it.id); let left = 0;
+    if (m) { if (m.ret) continue; left = keptState(m).left; } else if (it.due >= today && !it.batchId) left = (c.names || []).length;
+    if (left > 0) out.push({ it, c, left, secs: left * pace(it.id), inn: !!m });
+  }
+  return out.sort((a, b) => a.it.due.localeCompare(b.it.due));
+}
+const gpSum = list => list.reduce((a, x) => ({ n: a.n + 1, p: a.p + x.left, s: a.s + x.secs }), { n: 0, p: 0, s: 0 });
+const gpSay = e => e.s >= 60 ? '<span>about</span> <span data-raw>' + esc(tkDur(e.s)) + '</span>' : '<span>' + esc(people(e.p, 'paper')) + '</span>';
+const gpMon = day => { const d = new Date(day + 'T12:00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoDay(d.getTime()); };
+const gpAdd = (day, n) => { const d = new Date(day + 'T12:00:00'); d.setDate(d.getDate() + n); return isoDay(d.getTime()); };
+
+function gpDueHint(day, except) {
+  if (!gpReady || !/^\d{4}-\d\d-\d\d$/.test(day || '')) return '';
+  const mon = gpMon(day), e = gpSum(gpDue(mon, gpAdd(mon, 6), except));
+  if (!e.n) return '<span>Nothing else to grade is due that week.</span>';
+  return '<span>Also due that week</span>: <b><span>' + esc(people(e.n, 'set')) + '</span>, ' + gpSay(e) + '</b>';
+}
+
+/* ---------- the week in To do ---------- */
+function gpWeek(mon, end) {
+  const list = gpReady ? gpDue(mon, end) : [], by = new Map();
+  for (const x of list) { if (!by.has(x.it.due)) by.set(x.it.due, []); by.get(x.it.due).push(x); }
+  const top = [...by.entries()].map(([d, l]) => [d, gpSum(l)]).sort((a, b) => b[1].s - a[1].s || b[1].p - a[1].p)[0];
+  const e = gpSum(list);
+  return {
+    bar: e.n ? '<span class="tdwsum">Grading due this week: <b>' + esc(people(e.n, 'set')) + ', ' + gpSay(e) + '</b>' + (e.s >= 60 ? ' <span>at your pace</span>' : '') + (by.size > 1 && top ? ' · <span>Most on</span> <span data-raw>' + esc(new Date(top[0] + 'T12:00:00').toLocaleDateString(LANG_LOCALE, { weekday: 'long' })) + '</span>' : '') + '</span>' : '',
+    day: d => { const l = by.get(d); if (!l) return ''; const s = gpSum(l); return '<div class="tdest' + (s.s >= 3 * 3600 ? ' heavy' : '') + '">' + l.map(x => '<span>Due: <b data-raw>' + esc(x.it.name) + '</b></span><span><span data-raw>' + esc(x.c.name) + '</span> · ' + esc(people(x.left, 'paper')) + (x.inn ? ' left' : '') + (x.secs >= 60 ? ' · ' + gpSay({ s: x.secs, p: x.left }) : '') + '</span>').join('') + '</div>'; },
+  };
+}
+
+/* ---------- free periods ---------- */
+const gpMins = t => { const m = /^(\d{1,2}):(\d\d)$/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : null; };
+function gpGaps(rows) {
+  const out = [];
+  for (let i = 0; i + 1 < rows.length; i++) { const a = gpMins(rows[i].m.end), b = gpMins(rows[i + 1].m.start); if (a != null && b != null && b - a >= GP_FREE) out.push({ i, a, b, from: rows[i].m.end, to: rows[i + 1].m.start }); }
+  return out;
+}
+function gpFreeNow() {
+  if (!gpReady || !fcConf().free || typeof plan === 'undefined' || !plan) return null;
+  const t = todayRows(plan); if (t.off) return null;
+  const d = new Date(), now = d.getHours() * 60 + d.getMinutes();
+  return gpGaps(t.rows).find(g => now >= g.a && now < g.b - 5) || null;
+}
+function gpFreeRow(rows, i) {
+  if (!gpReady || !fcConf().free) return '';
+  const g = gpGaps(rows).find(x => x.i === i); if (!g) return '';
+  return '<div class="trow gpfree"><span class="tt"></span><span class="nt"><b>Free period</b><span class="ns" data-raw>' + esc(planTime(g.from) + ' – ' + planTime(g.to)) + '</span></span></div>';
+}
+
+/* ---------- the top of the Focus card: a free period, and where she left off ---------- */
+const GP_CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.3 1.6"/></svg>';
+function gpTopHtml(w) {
+  if (!gpReady) return '';
+  let h = '';
+  const f = gpFreeNow();
+  if (f) {
+    const d = new Date(), left = f.b - (d.getHours() * 60 + d.getMinutes()), n = Math.max(5, Math.min(60, Math.floor((left - 5) / 5) * 5));
+    h += '<div class="fcnote"><div class="fcnh">' + GP_CLOCK + '<span>Free period now</span><span data-raw>' + esc(planTime(f.from) + ' – ' + planTime(f.to)) + '</span></div>' +
+      (w ? '<p><b data-raw>' + esc(w.name) + '</b>' + (w.mark ? ' · <span>' + esc(fcWorkSay(w)) + '</span>' : '') + '</p>' : '') +
+      '<div class="fcgo"><button class="btn" data-fcstart="' + n + '">' + FC_PLAY + '<span>' + esc('Grade for ' + n + ' minutes') + '</span></button></div></div>';
+  }
+  const m = homeGroups().mark.filter(x => x.papers && keptState(x).left && (keptState(x).done || x.partial)).sort((a, b) => b.t - a.t)[0];
+  if (m && Date.now() - m.t > 20 * 60e3 && Date.now() - m.t < 7 * 864e5 && !(batch && batch.id === m.id && !$('#app').hidden)) {
+    const wh = keptWhere(m), when = new Date(m.t), day = isoDay(m.t) === fcToday() ? when.toLocaleTimeString(LANG_LOCALE, { hour: 'numeric', minute: '2-digit' }) : when.toLocaleDateString(LANG_LOCALE, { weekday: 'long' }) + ' ' + when.toLocaleTimeString(LANG_LOCALE, { hour: 'numeric', minute: '2-digit' });
+    h += '<div class="fcback"><div class="t"><b>Pick up where you left off</b><span data-raw>' + esc(m.name || 'Student work') + '</span><i><span>' + esc(people(keptState(m).left, 'paper') + ' left') + '</span> · <span data-raw>' + esc([wh.cls ? wh.cls.name : '', day].filter(Boolean).join(' · ')) + '</span></i></div>' +
+      '<button class="btn sm" data-gppick="' + esc(m.id) + '" title="' + esc(tr('Opens the paper you were on and starts the timer')) + '">Pick up</button></div>';
+  }
+  return h;
+}
+
+/* ---------- shortest papers first ---------- */
+const gpLens = new WeakMap();
+function gpPages(f) {
+  if (f.numPages) return f.numPages;
+  const d = f.data, size = f.size || (d ? d.length : 0);
+  if (f.kind === 'pdf' && d && d.length) { try { const m = new TextDecoder('latin1').decode(d.length > 8e6 ? d.subarray(0, 8e6) : d).match(/\/Type\s*\/Page(?![a-zA-Z])/g); if (m && m.length) return m.length; } catch {} }
+  return Math.max(1, Math.round(size / (f.kind === 'pdf' ? 6e4 : 4e3)));
+}
+function gpLen(st) { let n = 0; for (const f of st.files || []) { if (f.virtual) continue; let v = gpLens.get(f); if (v == null) { v = gpPages(f); gpLens.set(f, v); } n += v; } return n; }
+function gpShortNext(left) {
+  if (!gpReady || !batch || !fcConf().short) return -1;
+  const r = fcRun(); if (!r || (r.st !== 'run' && r.st !== 'paused') || r.w !== 'mark:' + batch.id) return -1;
+  let best = -1, bl = Infinity;
+  batch.students.forEach((st, i) => { if (i === cur || !left(st)) return; const l = gpLen(st) || 1e9; if (l < bl) { bl = l; best = i; } });   // a student with no paper in comes last
+  return best;
+}
+
+/* ---------- the look back at the week, on Today ---------- */
+function gpLookHtml() {
+  if (!gpReady) return '';
+  const c = fcConf(); if (c.wk === false) return '';
+  const today = fcToday(), mon = gpMon(today), dow = new Date().getDay(), L = fcLog();
+  if ((dow + 6) % 7 < (c.wk + 6) % 7 || L.lbHid === mon) return '';
+  const days = []; for (let k = mon; k <= today; k = gpAdd(k, 1)) days.push(k);
+  const t = tkSum(days, L, tkPlan()), lessons = Object.keys(t.la).filter(Boolean).length, papers = t.p, gday = t.list.filter(d => d.g >= 60).length;
+  const back = [...keptMeta.values()].filter(m => m && m.ret && isoDay(m.ret) >= mon && !(m.newer && keptMeta.has(m.newer)));
+  const wait = homeGroups().mark.filter(m => keptState(m).left).slice(0, 4), pace = gpPaces();
+  const next = gpSum(gpDue(gpAdd(mon, 7), gpAdd(mon, 13)));
+  const tile = (label, v, sub) => '<div><span>' + label + '</span><b>' + v + '</b><i>' + sub + '</i></div>';
+  const range = new Date(mon + 'T12:00:00').toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'short', day: 'numeric' }) + ' – ' + new Date().toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'short', day: 'numeric' });
+  return '<div class="thd"><h2 class="tcap">Your week</h2><a class="link" href="#/time">Time tracker</a></div><div class="tcard lbk">' +
+    '<h2>A look back at the week</h2><p class="lbks" data-raw>' + esc(range) + '</p><div class="lbkg">' +
+    tile('Grading time', tkD(t.g), gday ? '<span>' + esc(people(gday, 'day')) + '</span>' : '') +
+    tile('Planning time', tkD(t.l), lessons ? '<span>' + esc(people(lessons, 'lesson')) + '</span>' : '') +
+    tile('Papers marked', '<span data-raw>' + papers + '</span>', '') +
+    tile('Handed back', '<span>' + esc(people(back.length, 'set')) + '</span>', back.length ? '<span data-raw>' + esc(back.slice(0, 3).map(m => m.name || 'Student work').join(', ')) + '</span>' : '') + '</div>' +
+    (wait.length ? '<div class="lbkw"><b>Still waiting</b><ul>' + wait.map(m => { const st = keptState(m), it = cardOfKept(m.id), wh = keptWhere(m); return '<li><span data-raw>' + esc((m.name || 'Student work') + (wh.cls ? ', ' + wh.cls.name : '')) + '</span> <span class="m">· <span>' + esc(people(st.left, 'paper') + ' left') + '</span>' + (it && pace(it.id) ? ' · ' + gpSay({ s: st.left * pace(it.id), p: st.left }) : '') + '</span></li>'; }).join('') + '</ul></div>' : '') +
+    (next.n ? '<div class="lbkw"><b>Due next week</b> <span class="m">· <span>' + esc(people(next.n, 'set')) + '</span>, ' + gpSay(next) + '</span></div>' : '') +
+    '<div class="lbkf"><button class="btn sm" data-gplbhide>Put it away for this week</button><a class="link" href="#/settings/focus">Change the day</a></div></div>';
+}
+
+/* ---------- quiet while focusing ---------- */
+function gpQuiet() {
+  if (!gpReady) return;
+  const r = fcRun(), on = fcConf().quiet && !!r && (r.st === 'run' || r.st === 'paused');
+  if (document.body.classList.contains('fcquiet') !== on) document.body.classList.toggle('fcquiet', on);
+}
+
+/* ---------- Settings, Focus and goals: planning your grading ---------- */
+function gpSetRender(sec) {
+  if (sec !== 'focus' || !gpReady) return;
+  const el = $('#setPlan'); if (!el) return;
+  const c = fcConf(), ck = (id, on, label) => '<p class="setp"><label><input type="checkbox" id="' + id + '"' + (on ? ' checked' : '') + '> ' + label + '</label></p>';
+  const h = '<div class="lhead"><h2>Planning your grading</h2><span class="muted">How long the papers will take at your pace, and a few ways to start. Each can be switched off.</span></div>' +
+    ck('gpFree', c.free, 'Offer free periods for grading') + '<p class="muted setp gpnote">When a gap of 20 minutes or more between two of your classes starts, the Focus card on Today offers it, with the next papers ready.</p>' +
+    '<p class="setp fcset"><label><input type="checkbox" id="gpWk"' + (c.wk !== false ? ' checked' : '') + '> A look back at the week, from</label><select id="gpWkDay" class="btn sm" aria-label="The day of the look back"' + (c.wk === false ? ' disabled' : '') + '>' +
+    [1, 2, 3, 4, 5, 6, 0].map(d => '<option value="' + d + '"' + (d === (c.wk === false ? 5 : c.wk) ? ' selected' : '') + '>' + GP_DAYS[d] + '</option>').join('') + '</select></p>' +
+    ck('gpQuiet', c.quiet, 'Quiet while focusing: hide the counts in the sidebar and in To do during a session') +
+    ck('gpShort', c.short, 'Shortest papers first in a focus session');
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+$('#setPane').addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'gpFree') fcConfSet({ free: t.checked });
+  else if (t.id === 'gpWk') fcConfSet({ wk: t.checked ? +$('#gpWkDay').value : false });
+  else if (t.id === 'gpWkDay') fcConfSet({ wk: +t.value });
+  else if (t.id === 'gpQuiet') fcConfSet({ quiet: t.checked });
+  else if (t.id === 'gpShort') fcConfSet({ short: t.checked });
+  else return;
+  gpSetRender('focus'); homeRender();
+});
+
+/* ---------- presses ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-gppick], [data-gplbhide]'); if (!t) return;
+  if (t.dataset.gppick) { fcS.pick = 'mark:' + t.dataset.gppick; return fcStart(fcConf().len, fcS.pick, false); }
+  const L = fcLog(); L.lbHid = gpMon(fcToday()); fcLogSet(L); homeRender();
+});
+document.addEventListener('change', e => { if (e.target.matches('[data-fcshort]')) fcConfSet({ short: e.target.checked }); });
+setInterval(() => { if (shellReady && !document.hidden) fcRender(); }, 60e3);
+
+window.__gs = Object.assign(window.__gs || {}, { gpPaces: () => gpPaces(), gpDue, gpLeft, gpFreeNow, gpGaps, gpLen, gpShortNext, gpLookHtml, gpDueHint });
+gpReady = true;
+
 /* ---------------- Settings: one page per subject, each with its own address (#/settings/<key>) ---------------- */
 const SET_GROUPS = [['saving', 'Saving and carrying', 'Folder, take-home file, earlier days, new school year', ['saving', 'history']],
   ['classes', 'Classes and timetable', 'Rosters, class times, days off, links', ['classes', 'timetable']],
@@ -28720,7 +28980,7 @@ function setRender() {
   const box = $('#setNav'); if (box.dataset.h !== nav) { box.dataset.h = nav; box.innerHTML = nav; }
   for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = !on(el.dataset.sec);
   const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
-  for (const k of grp[3]) { meSetRender(k); attSetRender(k); stpSetRender(k); fcSetRender(k); tkSetRender(k); }
+  for (const k of grp[3]) { meSetRender(k); attSetRender(k); stpSetRender(k); fcSetRender(k); tkSetRender(k); gpSetRender(k); }
   if (on('marking')) setInksSay();
   if (on('history')) gbRender();
   if (on('about')) updRender();
@@ -29800,6 +30060,11 @@ function stpRead(j) {
     if (typeof fo.timeInTab === 'boolean') f.title = fo.timeInTab;
     if (typeof fo.countTime === 'boolean') f.track = fo.countTime;
     if (TK_IDLES.includes(n(fo.stopCountingAfterMinutes))) f.idle = n(fo.stopCountingAfterMinutes);
+    if (typeof fo.freePeriods === 'boolean') f.free = fo.freePeriods;
+    if (fo.weeklyLookBack === false || fo.weeklyLookBack === null) f.wk = false;
+    else if (typeof fo.weeklyLookBack === 'string' && GP_DAYS.some(d => d.toLowerCase() === fo.weeklyLookBack.trim().toLowerCase())) f.wk = GP_DAYS.findIndex(d => d.toLowerCase() === fo.weeklyLookBack.trim().toLowerCase());
+    if (typeof fo.quietWhileFocusing === 'boolean') f.quiet = fo.quietWhileFocusing;
+    if (typeof fo.shortestFirst === 'boolean') f.short = fo.shortestFirst;
     if (Object.keys(f).length) S.focus = f;
   }
   if (typeof j.attendance === 'boolean') S.att = j.attendance; else if (j.attendance != null && stpCount(j.attendance)) S.left.push('Attendance records.');
@@ -29950,6 +30215,10 @@ function stpDiff(S, planNow) {
     if (f.title != null && f.title !== c.title) L.push(f.title ? 'The time left shows in the browser tab’s name' : 'The time left stays out of the browser tab’s name');
     if (f.track != null && f.track !== c.track) L.push(f.track ? 'Grading and planning time are counted' : 'Grading and planning time are not counted');
     if (f.idle != null && f.idle !== c.idle) L.push('Time stops counting after ' + people(f.idle, 'minute') + ' with nothing done');
+    if (f.free != null && f.free !== c.free) L.push(f.free ? 'Free periods are offered for grading' : 'Free periods are not offered for grading');
+    if ('wk' in f && f.wk !== c.wk) L.push(f.wk === false ? 'No look back at the week' : 'A look back at the week from ' + GP_DAYS[f.wk]);
+    if (f.quiet != null && f.quiet !== c.quiet) L.push(f.quiet ? 'Counts are hidden during a focus session' : 'Counts stay on during a focus session');
+    if (f.short != null && f.short !== c.short) L.push(f.short ? 'Shortest papers first in a focus session' : 'Papers in their usual order in a focus session');
     if (L.length) add('focus', 'Focus timer and daily goal', L, '');
   }
   if (S.att != null && S.att !== attOn()) add('att', 'Attendance', [S.att ? 'Take attendance in Grading Studio' : 'Don’t take attendance in Grading Studio'], S.att ? '' : 'Days already saved are kept.');
@@ -30115,7 +30384,7 @@ async function stpExport() {
   if (bank.length) out.comments = bank.slice(0, 200);
   if (goalList().length) out.goals = goalList().map(x => x.name);
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
-  if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n } : null, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle }; }
+  if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n } : null, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle, freePeriods: c.free, weeklyLookBack: c.wk === false ? false : GP_DAYS[c.wk].toLowerCase(), quietWhileFocusing: c.quiet, shortestFirst: c.short }; }
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
   { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
@@ -30192,7 +30461,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "comments": ["Explain how your evidence supports your claim."],
   "goals": ["Uses evidence", "Designs a fair test"],
   "attendance": true,
-  "focus": { "sessionMinutes": 10, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5 },
+  "focus": { "sessionMinutes": 10, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5, "freePeriods": true, "weeklyLookBack": "friday", "quietWhileFocusing": false, "shortestFirst": false },
   "classTabs": ["Missing work"],
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
   "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide" }
@@ -30208,7 +30477,7 @@ FIELD NOTES
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
-- "focus" is the work timer for grading: "sessionMinutes" is one of 5, 10, 15, 20, 25, 30, 45, 60 and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. Leave it out if I have not said.
+- "focus" is the work timer for grading: "sessionMinutes" is one of 5, 10, 15, 20, 25, 30, 45, 60 and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. Leave it out if I have not said.
 - "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;

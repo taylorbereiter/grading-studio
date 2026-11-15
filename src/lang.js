@@ -42,13 +42,15 @@ const LANG_ATT = { present: 'attp', late: 'attl', 'absent, reason unknown': 'att
 const LANG_FILLS = [
   // the focus timer and the daily goal (src/focus.js)
   ['fcof', /^(?:(Focus|Today): )?(\d+) of (\d+) (papers|minutes)( today)?$/, (m, F, P) => { const x = langFill(m[4] === 'papers' ? F.fcofp : F.fcofm, [0, m[2], m[3]], P); return m[1] === 'Focus' ? langFill(F.fcrail, [0, x], P) : m[1] === 'Today' ? langFill(F.fctodayof, [0, x], P) : x; }],
-  ['fctime', /^(Focus|Paused|Break|Just one paper): (\d+:\d\d)( left)?$/, (m, F, P) => langFill(F[{ Focus: 'fctf', Paused: 'fctp', Break: 'fctb', 'Just one paper': 'fcto' }[m[1]]], [0, m[2]], P)],
+  ['fctime', /^(Focus|Paused|Break|Just one paper|Just 3 papers): (\d+:\d\d)( left)?$/, (m, F, P) => langFill(F[{ Focus: 'fctf', Paused: 'fctp', Break: 'fctb', 'Just one paper': 'fcto', 'Just 3 papers': 'fct3' }[m[1]]], [0, m[2]], P)],
   ['fcleft', /^(\d+) papers? left$/], ['fcstart', /^Start (\d+) minutes$/], ['fcpace', /^about (\d+) minutes? at your pace$/], ['fcmin', /^(\d+) minutes?$/], ['fcpapers', /^(\d+) papers?$/],
   ['fcaway', /^You were away for (\d+) minutes?, and the clock kept going\.$/], ['fcdone', /^(\d+) minutes? done$/], ['fcbrk', /^Take a (\d+)-minute break$/], ['fcmore', /^(\d+) more minutes$/],
   ['fckeep', /^Keep going for (\d+) minutes$/], ['fcfin', /^You finished (\d+) papers?\.$/], ['fcsum', /^Today: (\d+) papers? in (\d+) minutes? of focus\.$/], ['fcsum0', /^Today: (\d+) papers?\.$/],
   ['fcweek', /^This week: (\d+) papers?\.$/], ['fctoday', /^Today: (\d+) papers?$/], ['fcdn', /^(\d+) done$/],
   // the time tracker (src/tracker.js)
   ['tkpace', /^about (\d+) minutes? a paper$/], ['tkso', /^(\S.*) so far$/], ['tklessons', /^(\d+) lessons?$/], ['tkdays', /^(\d+) days? reached the goal$/],
+  // planning your grading (src/gradeplan.js)
+  ['gpfor', /^Grade for (\d+) minutes$/], ['gpleft', /^about (.+) left$/], ['gpsets', /^(\d+) sets?$/], ['gpdays', /^(\d+) days?$/],
   ['tkcount', /^Time counts while the marking screen or the Planner is in front and you have done something there in the last (\d+) minutes?\.$/],
   // Find anything: the teacher's AI assistant, to open beside the app (src/beside.js)
   ['besideopen', /^Open (.+) beside Grading Studio$/],

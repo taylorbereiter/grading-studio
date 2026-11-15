@@ -221,10 +221,15 @@ function tkAsg(id) {
 }
 // "1 hr 5 min so far · about 4 minutes a paper": the time counted on this assignment since the tracker began, and how long a
 // paper took, from the papers finished on the days it was counted.
+// And, while papers are left, about how long they will take at her pace (src/gradeplan.js).
 function tkAsgHtml(id) {
-  const t = tkAsg(id); if (!t || t.s < 60 || !fcConf().track && !t.s) return '';
-  const per = t.p ? Math.max(1, Math.round(t.s / 60 / t.p)) : 0;
-  return '<span class="tkc" title="' + esc(tr('Time spent grading this assignment, from the time tracker')) + '">' + TK_CLOCK + '<span>' + esc(tkDur(t.s) + ' so far') + '</span>' + (per ? '<span>·</span><span>' + esc('about ' + people(per, 'minute') + ' a paper') + '</span>' : '') + '</span>';
+  const t = tkAsg(id); if (!t) return '';
+  const per = t.p ? Math.max(1, Math.round(t.s / 60 / t.p)) : 0, left = gpLeft(id), bits = [];
+  if (t.s >= 60) bits.push(tkDur(t.s) + ' so far');
+  if (t.s >= 60 && per) bits.push('about ' + people(per, 'minute') + ' a paper');
+  if (left >= 60) bits.push('about ' + tkDur(left) + ' left');
+  if (!bits.length) return '';
+  return '<span class="tkc" title="' + esc(tr('Time spent grading this assignment, from the time tracker')) + '">' + TK_CLOCK + bits.map(x => '<span>' + esc(x) + '</span>').join('<span>·</span>') + '</span>';
 }
 
 /* ---------- the line on Today's Focus card ---------- */

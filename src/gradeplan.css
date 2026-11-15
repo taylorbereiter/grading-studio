@@ -1,0 +1,46 @@
+/* ---------- Planning your grading (src/gradeplan.js). Every value is a token. ---------- */
+/* the top of the Focus card: a free period going on now, and where she left off */
+.fcnote{display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-3);border-radius:var(--corner-3);background:var(--accent-soft)}
+.fcnote .fcnh{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);font-size:var(--text-small);font-weight:600;color:var(--accent)}
+.fcnote .fcnh svg{flex:none;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.fcnote .fcnh span + span{font-weight:500}
+.fcnote p{margin:0;font-size:var(--text-control);color:var(--fg)}
+.fcnote p span{color:var(--muted)}
+.fcback{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3);border:1px solid var(--line);border-radius:var(--corner-3)}
+.fcback .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.fcback .t b{font-size:var(--text-small);font-weight:600;color:var(--fg-2)}
+.fcback .t > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--text-control);color:var(--fg)}
+.fcback .t i{font-style:normal;font-size:var(--text-small);color:var(--muted)}
+.fcshort{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-small);color:var(--fg-2)}
+/* a free period in Today's list of classes */
+.trow.gpfree .nt b{font-weight:500;color:var(--fg-2)}
+/* the look back at the week */
+.lbk{padding:var(--space-4) var(--space-5)}
+.lbk h2{margin:0;font-size:var(--text-body);font-weight:600}
+.lbk .lbks{margin:2px 0 var(--space-3);font-size:var(--text-small);color:var(--muted)}
+.lbkg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--space-3)}
+.lbkg div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lbkg span{font-size:var(--text-small)}
+.lbkg div > span{font-weight:600;color:var(--fg-2)}
+.lbkg b{font-size:var(--text-heading);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--fg)}
+.lbkg b span{font-size:inherit}
+.lbkg i{font-style:normal;font-size:var(--text-small);color:var(--muted)}
+.lbkw{margin:var(--space-3) 0 0;padding:var(--space-3) 0 0;border-top:1px solid var(--line);font-size:var(--text-control);color:var(--fg-2)}
+.lbkw b{font-weight:600;color:var(--fg)}
+.lbkw ul{margin:var(--space-1) 0 0;padding:0 0 0 var(--space-4)}
+.lbkw li{margin:2px 0}
+.lbkw .m{color:var(--muted)}
+.lbkf{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);margin:var(--space-3) 0 0}
+/* the grading due each day in To do's week */
+.tdest{display:flex;flex-direction:column;gap:2px;margin:0 0 var(--space-2);padding:var(--space-2);border-radius:var(--corner-2);background:var(--surface-2);font-size:var(--text-small);color:var(--fg-2)}
+.tdest b{font-weight:600;color:var(--fg)}
+.tdest.heavy{background:var(--accent-soft)}
+.tdwsum{margin-left:auto;font-size:var(--text-small);color:var(--fg-2)}
+.tdwbar .tdwsum b{margin:0;font-weight:600;color:var(--fg)}
+/* under the date in an assignment's box */
+.duehint{margin:var(--space-1) 0 0;font-size:var(--text-small);color:var(--muted)}
+.duehint:empty{display:none}
+.duehint b{font-weight:600;color:var(--fg-2)}
+.gpnote{margin-top:calc(-1 * var(--space-2))}
+/* quiet while focusing: the counts in the sidebar and in To do wait until the session ends */
+body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #tdSay{visibility:hidden}

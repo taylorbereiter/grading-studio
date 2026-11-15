@@ -28,6 +28,7 @@ function fcConf() {
   const f = me().focus || {}, g = f.goal || null;
   return { len: FC_LENS.includes(+f.len) ? +f.len : 10, brk: FC_BRKS.includes(+f.brk) ? +f.brk : 5, sound: f.sound !== false, title: f.title !== false,
     track: f.track !== false, idle: TK_IDLES.includes(+f.idle) ? +f.idle : 5,
+    free: f.free !== false, wk: f.wk === false ? false : [0, 1, 2, 3, 4, 5, 6].includes(f.wk) ? f.wk : 5, quiet: f.quiet === true, short: f.short === true,   // src/gradeplan.js
     goal: g && (g.k === 'papers' || g.k === 'min') && +g.n > 0 ? { k: g.k, n: Math.min(g.k === 'min' ? 600 : 500, Math.round(+g.n)) } : null };
 }
 // Only what differs from the usual is kept; nothing at all for a teacher who changed nothing.
@@ -40,6 +41,10 @@ function fcConfSet(part) {
   if (!c.title) o.title = false;
   if (!c.track) o.track = false;
   if (c.idle !== 5) o.idle = c.idle;
+  if (!c.free) o.free = false;
+  if (c.wk !== 5) o.wk = c.wk;
+  if (c.quiet) o.quiet = true;
+  if (c.short) o.short = true;
   meDrop('focus', Object.keys(o).length ? o : null);
   if (typeof tkShare === 'function') tkShare();
   fcRender();
@@ -50,7 +55,8 @@ function fcLog() {
   const L = store.get('gs.focus', null) || {};
   return { day: typeof L.day === 'string' ? L.day : '', base: L.base && typeof L.base === 'object' ? L.base : {}, days: L.days && typeof L.days === 'object' ? L.days : {},
     pace: Array.isArray(L.pace) ? L.pace.filter(x => Array.isArray(x) && x[0] > 0 && x[1] > 0) : [], last: typeof L.last === 'string' ? L.last : '',
-    add: Array.isArray(L.add) ? L.add.filter(x => x && typeof x.d === 'string' && (x.k === 'g' || x.k === 'l') && x.s > 0) : [] };
+    add: Array.isArray(L.add) ? L.add.filter(x => x && typeof x.d === 'string' && (x.k === 'g' || x.k === 'l') && x.s > 0) : [],
+    ...(typeof L.lbHid === 'string' ? { lbHid: L.lbHid } : {}) };   // the week whose look-back was put away (src/gradeplan.js)
 }
 const fcLogSet = L => store.set('gs.focus', L);
 const fcToday = () => isoDay(Date.now());
@@ -100,6 +106,7 @@ const fcRunSet = r => { if (r) store.set('gs.focusRun', r); else store.del('gs.f
 const fcElapsed = r => Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.at) / 1000));
 const fcLeft = r => r.st === 'brk' ? Math.max(0, Math.round((r.brkAt + r.brkLen * 1000 - Date.now()) / 1000)) : Math.max(0, r.len - fcElapsed(r));
 const fcGot = r => r.got != null ? r.got : Math.max(0, fcPapersToday() - (r.p0 || 0));
+const fcN = r => r.one ? Math.max(1, +r.one || 1) : 0;   // papers a "Just one paper" or "Just 3 papers" session is for
 const fcClock = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 
 // The work a session can be about: each set of papers waiting to be marked, then the teacher's own to-dos for today or with no day.
@@ -149,7 +156,7 @@ function fcStart(len, key, one) {
   fcAudioWake();
   const L = fcLog(); L.last = key || ''; fcLogSet(L);
   const was = fcRun(); if (was && (was.st === 'run' || was.st === 'paused')) fcRecord(was);
-  fcRunSet({ st: 'run', len: Math.round(len * 60), at: Date.now(), w: key || '', one: !!one, p0: fcPapersToday(), fold: false });
+  fcRunSet({ st: 'run', len: Math.round(len * 60), at: Date.now(), w: key || '', one: one ? Math.max(1, +one || 1) : 0, p0: fcPapersToday(), fold: false });
   fcGoTo(false);
 }
 // Into the work: a set of papers opens at the next paper with nothing finished; one already on screen is left where it is.
@@ -193,7 +200,7 @@ function fcTickOn() {
 function fcTick() {
   const r = fcRun(); if (!r) return fcTickOn();
   if (r.st === 'run') {
-    if (r.one ? fcGot(r) >= 1 : fcLeft(r) <= 0) return fcUp(r);
+    if (r.one ? fcGot(r) >= fcN(r) : fcLeft(r) <= 0) return fcUp(r);
   } else if (r.st === 'brk' && fcLeft(r) <= 0) { r.st = 'brkup'; r.fold = false; fcRunSet(r); fcChime(); return; }
   fcClockDraw(); fcTitle();
 }
@@ -259,7 +266,7 @@ function fcWorkSay(w) {
   if (!w) return 'A session with nothing set: the timer only.';
   if (!w.mark) return 'A to-do';
   if (!w.left) return w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score';
-  const pace = fcPace();
+  const it = cardOfKept(w.id), pace = gpReady ? gpPaces()(it ? it.id : '') : fcPace();
   return [people(w.left, 'paper') + ' left', pace ? 'about ' + people(Math.max(1, Math.round(w.left * pace / 60)), 'minute') + ' at your pace' : ''].filter(Boolean).join(' · ');
 }
 // The start: today against the goal, what to work on, and one button. Shared by the card on Today and the panel. On Today the
@@ -268,11 +275,12 @@ function fcStartHtml(card) {
   const c = fcConf(), works = fcWorks(), key = fcPicked(works), w = works.find(x => x.key === key) || null, len = fcS.len || c.len;
   const opt = x => '<option value="' + esc(x.key) + '"' + (x.key === key ? ' selected' : '') + ' data-raw>' + esc(x.name + (x.cls ? ' · ' + x.cls : '')) + '</option>';
   const marks = works.filter(x => x.mark), tds = works.filter(x => !x.mark);
-  return '<div class="fcbody">' + fcGoalHtml(c, true) + (card ? fcWeekHtml(c) + tkTodayHtml() : '') + '<div class="fcline"></div>' +
+  return '<div class="fcbody">' + gpTopHtml(w) + fcGoalHtml(c, true) + (card ? fcWeekHtml(c) + tkTodayHtml() : '') + '<div class="fcline"></div>' +
     '<div><label class="fcl">Work on</label><select class="fcwork" data-fcwork aria-label="Work on">' + marks.map(opt).join('') +
     (marks.length && tds.length ? '<option disabled data-raw>──────────</option>' : '') + tds.map(opt).join('') + '<option value=""' + (key === '' ? ' selected' : '') + '>' + esc(tr('Nothing in particular')) + '</option></select>' +
     '<p class="fcsay">' + esc(fcWorkSay(w)) + '</p></div>' +
-    '<div class="fcgo"><button class="btn' + (card ? '' : ' primary') + '" data-fcstart="' + len + '">' + FC_PLAY + '<span>Start ' + len + ' minutes</span></button>' + (w && w.mark && w.left ? '<button class="btn" data-fcone>Just one paper</button>' : '') + '</div>' +
+    '<div class="fcgo"><button class="btn' + (card ? '' : ' primary') + '" data-fcstart="' + len + '">' + FC_PLAY + '<span>Start ' + len + ' minutes</span></button>' + (w && w.mark && w.left ? '<button class="btn" data-fcone>Just one paper</button>' : '') + (w && w.mark && w.left >= 3 ? '<button class="btn" data-fcone="3">Just 3 papers</button>' : '') + '</div>' +
+    (w && w.mark && w.left > 1 ? '<label class="fcshort"><input type="checkbox" data-fcshort' + (c.short ? ' checked' : '') + '> Shortest papers first</label>' : '') +
     '<div class="fclens" role="group" aria-label="How long"><span>Or</span>' + [5, 10, 15, 25].concat(FC_LENS.includes(len) && ![5, 10, 15, 25].includes(len) ? [len] : []).sort((a, b) => a - b).map(n => '<button data-fclen="' + n + '" aria-pressed="' + (n === len) + '">' + n + '</button>').join('') + '<span>minutes</span></div></div>';
 }
 function fcCardRender() {
@@ -283,7 +291,7 @@ function fcCardRender() {
 }
 const fcHead = (cap, fold) => '<div class="fchead"><h2 class="tcap">' + cap + '</h2><span class="sp"></span>' + (fold ? '<button class="icon" data-fcfold title="Fold it away" aria-label="Fold it away">–</button>' : '<button class="icon" data-fcclose title="Close" aria-label="Close">✕</button>') + '</div>';
 function fcWhatHtml(r, w) {
-  const sub = [w && w.cls ? '<span data-raw>' + esc(w.cls) + '</span>' : '', r.one ? 'Just one paper' : w && w.mark ? (w.left ? people(w.left, 'paper') + ' left' : w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score') : w ? 'A to-do' : 'The timer only'].filter(Boolean);
+  const sub = [w && w.cls ? '<span data-raw>' + esc(w.cls) + '</span>' : '', r.one ? (fcN(r) > 1 ? 'Just 3 papers' : 'Just one paper') : w && w.mark ? (w.left ? people(w.left, 'paper') + ' left' : w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score') : w ? 'A to-do' : 'The timer only'].filter(Boolean);
   return '<div class="fcwhat"><b data-raw>' + esc(w ? w.name : tr('Focus')) + '</b><span>' + sub.map(x => x.startsWith('<') ? x : '<span>' + esc(x) + '</span>').join(' · ') + '</span>' +
     (w && w.mark && w.left && r.st !== 'brk' ? '<button class="btn sm primary" data-fcnext>Next paper →</button>' : '') + '</div>';
 }
@@ -304,10 +312,10 @@ function fcPanelHtml(r) {
   }
   if (r.st === 'up') {
     const got = r.got || 0;
-    return fcHead('Focus') + '<div class="fcrunv"><p class="fcbig ok"><span class="fcok">' + FC_TICK + '</span><span>' + (r.one ? 'One paper done' : people(Math.round(r.len / 60), 'minute') + ' done') + '</span></p>' +
+    return fcHead('Focus') + '<div class="fcrunv"><p class="fcbig ok"><span class="fcok">' + FC_TICK + '</span><span>' + (r.one ? (fcN(r) > 1 ? '3 papers done' : 'One paper done') : people(Math.round(r.len / 60), 'minute') + ' done') + '</span></p>' +
       (w && !w.mark && !got ? '' : '<p class="fcp">' + (got ? esc('You finished ' + people(got, 'paper') + '.') : 'Nothing was finished in this one.') + '</p>') +
       '<div class="fcstats">' + fcGoalHtml(c) + '</div>' +
-      (r.one ? '<div class="fcacts">' + (w && w.left ? '<button class="btn primary" data-fcone>One more paper</button>' : '') + '<button class="btn" data-fcstart="' + c.len + '">' + 'Keep going for ' + c.len + ' minutes' + '</button></div>'
+      (r.one ? '<div class="fcacts">' + (w && w.left ? (fcN(r) > 1 && w.left >= 3 ? '<button class="btn primary" data-fcone="3">3 more papers</button>' : '<button class="btn primary" data-fcone>One more paper</button>') : '') + '<button class="btn" data-fcstart="' + c.len + '">' + 'Keep going for ' + c.len + ' minutes' + '</button></div>'
         : '<div class="fcacts"><button class="btn primary" data-fcbreak>Take a ' + c.brk + '-minute break</button><button class="btn" data-fcstart="' + Math.round(r.len / 60) + '" data-fcagain>' + Math.round(r.len / 60) + ' more minutes</button></div>') +
       '<div class="fcacts"><button class="btn sm ghost" data-fcstop>Stop for now</button></div></div>';
   }
@@ -344,7 +352,7 @@ function fcClockDraw() {
   if (!want) { if (ring) ring.remove(); }
   else if (!ring) ico.insertAdjacentHTML('beforeend', fcRing(15, 2, frac, 'fcring'));
   else { const o = ring.querySelector('.on'), cc = +o.getAttribute('stroke-dasharray'); o.setAttribute('stroke-dashoffset', (cc * (1 - Math.max(0, Math.min(1, frac)))).toFixed(2)); }
-  rb.title = on ? (r.st === 'brk' ? 'Break: ' : r.st === 'paused' ? 'Paused: ' : r.one ? 'Just one paper: ' : 'Focus: ') + s + (r.one || r.st === 'paused' ? '' : ' left') : c.goal ? 'Focus: ' + gn + ' of ' + c.goal.n + ' ' + fcUnit(c.goal.k) + ' today' : 'Focus: a timer for grading, and your daily goal';
+  rb.title = on ? (r.st === 'brk' ? 'Break: ' : r.st === 'paused' ? 'Paused: ' : r.one ? (fcN(r) > 1 ? 'Just 3 papers: ' : 'Just one paper: ') : 'Focus: ') + s + (r.one || r.st === 'paused' ? '' : ' left') : c.goal ? 'Focus: ' + gn + ' of ' + c.goal.n + ' ' + fcUnit(c.goal.k) + ' today' : 'Focus: a timer for grading, and your daily goal';
 }
 function fcPanelRender() {
   const el = $('#fcPanel'); if (!el) return;
@@ -361,7 +369,7 @@ function fcPanelRender() {
 }
 function fcRender() {
   if (!FC_ON || !shellReady) return;
-  fcCardRender(); fcPanelRender(); fcTitle();
+  fcCardRender(); fcPanelRender(); fcTitle(); gpQuiet();
 }
 
 /* ---------- presses ---------- */
@@ -372,7 +380,7 @@ document.addEventListener('click', e => {
   const pick = () => sel ? sel.value : fcRun() ? fcRun().w : fcPicked(fcWorks());
   if (t.id === 'railFocus') { e.preventDefault(); const r = fcRun(); if (r) { r.fold = !r.fold && (r.st === 'run' || r.st === 'paused' || r.st === 'brk'); fcRunSet(r); } else { fcS.open = !fcS.open; fcRender(); } return; }
   if (d.fcstart != null) return fcStart(+d.fcstart, d.fcagain != null && fcRun() ? fcRun().w : pick(), false);
-  if (d.fcone != null) return fcStart(fcConf().len, d.fcone !== undefined && fcRun() && fcRun().st === 'up' ? fcRun().w : pick(), true);
+  if (d.fcone != null) return fcStart(fcConf().len, fcRun() && fcRun().st === 'up' ? fcRun().w : pick(), +d.fcone || 1);
   if (d.fclen != null) { fcS.len = +d.fclen; return fcRender(); }
   if (d.fcnext != null) return fcGoTo(true);
   if (d.fcpause != null) return fcPause();
