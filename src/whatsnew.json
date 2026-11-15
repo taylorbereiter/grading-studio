@@ -1,4 +1,8 @@
 {
+  "1.28.23": [
+    "Undo for more of your work. On the marking screen, Ctrl Z (Cmd Z on a Mac) now also takes back lighting, a video's turn, a page taken out, a file removed, the rescan flag, anchor papers and Arrange pages. A short note says what came back, and Shift Ctrl Z or Ctrl Y does it again.",
+    "Everywhere else, Ctrl Z takes back your last change to classes, units, assignments, rosters, gradebook scores, to-dos and settings, deletes included. Inside a text box it still undoes your typing first. In the Planner, Ctrl Z works in the slide editor, and deleting a lesson has Undo."
+  ],
   "1.28.22": [
     "A time tracker for grading and planning, kept apart. Grading time counts while the marking screen is in front and you are working in it; planning time counts the same way in the Planner, but not while you present. Open it from the Focus card on Today or with Find anything: a week, a month or three months, by assignment and by lesson. Each assignment shows its own time on its card and on the marking screen, with about how long a paper takes, and each lesson shows its planning time in the Planner.",
     "Add time by hand for work away from the app, like marking on paper, and download every day as a spreadsheet. Settings, Focus and goals can switch the counting off or change how soon it stops."

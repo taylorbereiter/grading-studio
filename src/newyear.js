@@ -186,7 +186,7 @@ async function nyStart(o) {
     let x; try { x = JSON.parse(v); } catch { continue; }
     if (nyAbout(x, names)) localStorage.removeItem(k);
   }
-  lib = migrateLib(next); saveLib();
+  lib = migrateLib(next); libUndoForget(); saveLib();
   if (o.planner) try { localStorage.setItem('gsp.newYear', JSON.stringify({ id: Date.now().toString(36), from: o.from, dates: !!o.dates })); } catch {}
   renderLib(); railRender(); renderNeeds();
 }

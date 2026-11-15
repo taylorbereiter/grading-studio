@@ -1,13 +1,13 @@
 {
- "version": "1.28.22",
- "build": "32ad10725e18",
+ "version": "1.28.23",
+ "build": "4e743c919f1f",
  "notes": [
-  "A time tracker for grading and planning, kept apart. Grading time counts while the marking screen is in front and you are working in it; planning time counts the same way in the Planner, but not while you present. Open it from the Focus card on Today or with Find anything: a week, a month or three months, by assignment and by lesson. Each assignment shows its own time on its card and on the marking screen, with about how long a paper takes, and each lesson shows its planning time in the Planner.",
-  "Add time by hand for work away from the app, like marking on paper, and download every day as a spreadsheet. Settings, Focus and goals can switch the counting off or change how soon it stops."
+  "Undo for more of your work. On the marking screen, Ctrl Z (Cmd Z on a Mac) now also takes back lighting, a video's turn, a page taken out, a file removed, the rescan flag, anchor papers and Arrange pages. A short note says what came back, and Shift Ctrl Z or Ctrl Y does it again.",
+  "Everywhere else, Ctrl Z takes back your last change to classes, units, assignments, rosters, gradebook scores, to-dos and settings, deletes included. Inside a text box it still undoes your typing first. In the Planner, Ctrl Z works in the slide editor, and deleting a lesson has Undo."
  ],
  "files": {
-  "index.html": "4f15bc12ca21a58e19fd365a7af9e749d0aafe4de7393223b8e75eb51bb811f3",
-  "planner.html": "e6444247e967d8e5aa4a1f7699e744fb10501314a44da5e17a7af69f0b643463"
+  "index.html": "7b39e7cd1799d87b3e63971c654bbdeab4c106d71b246ef85c98175dcaccda67",
+  "planner.html": "13e1185ecefcbdaf301673b39a2914aa777fa358cccfabb3a2c01b6885b7e676"
  },
  "langs": {
   "lang/zh-Hant.js": "241b64c7293f2f6e266f7c89a6d61a79786166b79d6df3906303990ab681f5ed",
