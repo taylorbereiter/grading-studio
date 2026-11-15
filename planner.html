@@ -2803,7 +2803,9 @@ async function applySetup(j) {
     claudeUrl: /^https:\/\/claude\.ai\//.test(j.claudeUrl) ? String(j.claudeUrl) : '', profile: String(j.profile || '').slice(0, 80) };
   const deck = deckClean(j.deck); if (deck) setup.deck = deck;
   if (typeof j.sys === 'string' || typeof j.unitPlans === 'string' || (j.plain && !L.words)) { L.words = { sys: String(j.sys || '').slice(0, 40), unit: String(j.unitPlans || '').slice(0, 40) }; await kvSet('words', L.words); }
+  const thisWk = ymd(mondayOf(new Date())), wasThis = L.weekOf === thisWk;
   L.setup = setup; await kvSet('setup', setup); await tplPreview();
+  if (wasThis) L.weekOf = ymd(mondayOf(new Date()));
   folderWriteSchedule();
   let nu = 0;
   for (const x of Array.isArray(j.units) ? j.units : []) {

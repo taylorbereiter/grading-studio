@@ -1001,7 +1001,10 @@ async function applySetup(j) {
   const deck = deckClean(j.deck); if (deck) setup.deck = deck;
   // A setup file can name the school's systems; one typed in for the first time here starts with plain words (j.plain).
   if (typeof j.sys === 'string' || typeof j.unitPlans === 'string' || (j.plain && !L.words)) { L.words = { sys: String(j.sys || '').slice(0, 40), unit: String(j.unitPlans || '').slice(0, 40) }; await kvSet('words', L.words); }
+  // The week on screen was this week as the old timetable named it; a timetable that brings in Sunday classes moves this Sunday into next week's.
+  const thisWk = ymd(mondayOf(new Date())), wasThis = L.weekOf === thisWk;
   L.setup = setup; await kvSet('setup', setup); await tplPreview();
+  if (wasThis) L.weekOf = ymd(mondayOf(new Date()));
   folderWriteSchedule();
   // A profile can also bring units (only ones not here yet, so your edits stay) and a default look.
   let nu = 0;
