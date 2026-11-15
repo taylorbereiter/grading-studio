@@ -1,12 +1,11 @@
 {
- "version": "1.28.20",
- "build": "87ab291471f1",
+ "version": "1.28.21",
+ "build": "0975e2aa3da6",
  "notes": [
-  "Focus: a timer for grading in short sessions. Start it from the card on Today or from Focus in the sidebar, on a set of papers or one of your to-dos, and the next paper with nothing finished opens. A small panel keeps the time, folds to a pill, and offers a break when the time is up. To do has Focus on this.",
-  "A daily goal in papers or minutes, set in Settings, Focus and goals. Dots, a ring in the sidebar and this week’s bars fill in as you go, and turn green when you get there. A paper counts when its score is finished or its feedback is complete."
+  "Once a day, the app at its web address adds one to a public count of how many browsers opened it, so its maker can see whether anyone uses it. Nothing about you, your students or your work goes with it. Help, Privacy says the same."
  ],
  "files": {
-  "index.html": "4b72fe14dee1ee6f1c5b1d169473a83a4b938a0b5bf7f0910db60886072934e7",
+  "index.html": "8aa8fccc76ffa691562088d87ed798a6cb2c566a6891fbf3f30507feecdeb4ae",
   "planner.html": "75d092b8a28b170995c81464c574bba378847bd3f1eb81f4b273a555020a1995"
  },
  "langs": {
