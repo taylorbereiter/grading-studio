@@ -6,9 +6,12 @@
    What is kept, beside the focus timer's own log (src/focus.js):
      gs.focus     days[day].g: seconds grading, .a: { <assignment id> | '': seconds } (an assignment from the classes; '' is papers
                   not filed under one), .pa: papers finished by assignment, .sm: focus seconds on papers; add: time added by hand.
-     gs.planTime  written by the Planner: { days: { day: { l: seconds, a: { <lesson id> | '': seconds } } }, names: { <lesson id>: title } }.
+     gsp.planTime  written by the Planner: { days: { day: { l: seconds, a: { <lesson id> | '': seconds } } }, names: { <lesson id>: title } }.
                   A lesson's title is the teacher's own; nothing about a student is in it.
    A day from before time was counted has only its focus sessions: those are its grading time. */
+// Other screens can draw before this file has run (a reload straight onto a class page draws its cards at start), so each
+// way in waits for tkReady, a var that reads false until the last line here.
+var tkReady = false;
 const TK_STEP = 15, TK_FLUSH = 60e3;
 let tkLast = 0, tkPend = { g: 0, a: {} }, tkFlushed = Date.now(), tkTimer = 0;
 const tkS = { range: 'week', off: 0, kind: 'g', adding: false };
@@ -20,12 +23,14 @@ document.addEventListener('pointermove', () => { const t = Date.now(); if (t - t
 // Grading: the marking screen, in this tab, in front, with something done in the last few minutes.
 function tkGrading() { return !!batch && !$('#app').hidden && document.visibilityState === 'visible' && document.hasFocus() && Date.now() - tkLast < fcConf().idle * 60e3; }
 function tkTick() {
+  if (!tkReady) return;
   if (!fcConf().track) return;
   if (tkGrading()) { const it = batch.assignment && findItem(batch.assignment.id), k = it ? it.it.id : ''; tkPend.g += TK_STEP; tkPend.a[k] = (tkPend.a[k] || 0) + TK_STEP; }
   if (Date.now() - tkFlushed >= TK_FLUSH) tkFlush();
 }
 // Written down once a minute, and whenever the marking screen closes or the tab is left, so a minute is the most a closed tab loses.
 function tkFlush() {
+  if (!tkReady) return;
   tkFlushed = Date.now();
   if (!tkPend.g) return;
   const L = fcLog(), today = fcToday(), d = { ...(L.days[today] || {}) }, a = { ...(d.a || {}) };
@@ -38,14 +43,19 @@ function tkFlush() {
   if (routeNow().v === 'time') tkPageRender();
   if (batch) renderProg();
 }
-function tkOn() { if (!tkTimer) tkTimer = setInterval(tkTick, TK_STEP * 1000); }
+function tkOn() { if (!tkTimer) tkTimer = setInterval(tkTick, TK_STEP * 1000); tkShare(); }
+// The Planner reads only its own keys, so the two settings it needs are copied into one of them.
+function tkShare() {
+  const c = fcConf(), v = JSON.stringify({ on: !!c.track, idle: c.idle });
+  try { if (localStorage.getItem('gsp.timeCount') !== v) localStorage.setItem('gsp.timeCount', v); } catch { }
+}
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') tkFlush(); });
 window.addEventListener('pagehide', tkFlush);
 window.addEventListener('blur', tkFlush);
 
 /* ---------- reading the days back ---------- */
 function tkPlan() {
-  const P = store.get('gs.planTime', null) || {};
+  const P = store.get('gsp.planTime', null) || {};
   return { days: P.days && typeof P.days === 'object' ? P.days : {}, names: P.names && typeof P.names === 'object' ? P.names : {} };
 }
 // One day, everything about it: grading and planning seconds (counted and added by hand), papers, focus seconds, and what they went to.
@@ -110,6 +120,7 @@ function tkGrid(top) {
   return out.join('');
 }
 function tkPageRender() {
+  if (!tkReady) return;
   const r = routeNow(); if (r.v !== 'time' || batch) return;
   const box = $('#tkBody'); if (!box) return;
   const L = fcLog(), P = tkPlan(), c = fcConf(), per = tkPeriod(tkS.range, tkS.off), t = tkSum(per.days, L, P);
@@ -203,7 +214,7 @@ $('#vTime').addEventListener('submit', e => {
 /* ---------- one assignment's time, where the assignment is: the marking screen and its card on the class page ---------- */
 const TK_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.3 1.6"/></svg>';
 function tkAsg(id) {
-  if (!id) return null;
+  if (!id || !tkReady) return null;
   const L = fcLog(); let s = 0, p = 0;
   for (const d of Object.values(L.days)) { if (!d) continue; if (d.a && d.a[id]) s += d.a[id]; if (d.pa && d.pa[id]) p += d.pa[id]; }
   return { s: s + (tkPend.a[id] || 0), p };
@@ -218,6 +229,7 @@ function tkAsgHtml(id) {
 
 /* ---------- the line on Today's Focus card ---------- */
 function tkTodayHtml() {
+  if (!tkReady) return '';
   const L = fcLog(), P = tkPlan(), d = tkDay(fcToday(), L, P), g = d.g + (tkPend.g || 0);
   if (!g && !d.l) return '<div class="fctk"><span>' + (fcConf().track ? 'Grading and planning time count here as you work.' : 'Grading and planning time') + '</span><a class="link" href="#/time">Time tracker</a></div>';
   return '<div class="fctk"><span><i class="tkkey g"></i><span>Grading time</span><b>' + tkD(g) + '</b><i class="tkkey l"></i><span>Planning time</span><b>' + tkD(d.l) + '</b></span><a class="link" href="#/time">Time tracker</a></div>';
@@ -225,7 +237,7 @@ function tkTodayHtml() {
 
 /* ---------- Settings, Focus and goals: counting time ---------- */
 function tkSetRender(sec) {
-  if (sec !== 'focus') return;
+  if (sec !== 'focus' || !tkReady) return;
   const el = $('#setTrack'); if (!el) return;
   const c = fcConf();
   const h = '<div class="lhead"><h2>Time tracker</h2><span class="muted">How much time goes to grading and to planning, kept apart. <a class="link" href="#/time">Open the time tracker</a></span></div>' +
@@ -239,3 +251,4 @@ $('#setPane').addEventListener('change', e => {
 });
 tkOn();
 Object.assign(window.__gs, { tkCsvText, tkFlush, tkTick, tkDay: k => tkDay(k, fcLog(), tkPlan()), tkPeriod, tkAddTime, tkDur, tkPend: () => tkPend, tkActive: () => { tkLast = Date.now(); }, tkHold: () => { clearInterval(tkTimer); tkTimer = 0; } });   // tkHold: tests move the clock themselves
+tkReady = true;

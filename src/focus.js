@@ -41,6 +41,7 @@ function fcConfSet(part) {
   if (!c.track) o.track = false;
   if (c.idle !== 5) o.idle = c.idle;
   meDrop('focus', Object.keys(o).length ? o : null);
+  if (typeof tkShare === 'function') tkShare();
   fcRender();
 }
 

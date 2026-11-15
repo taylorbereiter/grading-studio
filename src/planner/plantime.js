@@ -1,15 +1,18 @@
 /* ---------- Planning time, for the grading app's time tracker (src/tracker.js) ----------
    While the Planner is the tab in front and something was pressed, typed or scrolled in the last few minutes, the time counts as
    planning: to the lesson that is open, or to '' (the week, the units, the bank). Presenting a lesson is teaching, so it doesn't count.
-   Kept in gs.planTime: { days: { 'YYYY-MM-DD': { l: seconds, a: { <lesson id> | '': seconds } } }, names: { <lesson id>: title } },
-   for 400 days. The grading app's Settings, Focus and goals can switch it off (lib.me.focus.track) and say how soon it stops (idle). */
+   Kept in gsp.planTime: { days: { 'YYYY-MM-DD': { l: seconds, a: { <lesson id> | '': seconds } } }, names: { <lesson id>: title } },
+   for 400 days. The grading app's Settings, Focus and goals can switch it off and say how soon it stops: the grading app copies those two
+   into gsp.timeCount { on, idle }, so the Planner reads only its own keys. */
+// The lesson editor can draw before this file has run (a reload straight onto a lesson), so ptReady, a var, guards the badge.
+var ptReady = false;
 const PT_STEP = 15, PT_FLUSH = 60e3;
 let ptLast = 0, ptMoved = 0, ptPend = { l: 0, a: {}, n: {} }, ptFlushed = Date.now();
 for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart', 'input']) document.addEventListener(ev, () => { ptLast = Date.now(); }, { capture: true, passive: true });
 document.addEventListener('pointermove', () => { const t = Date.now(); if (t - ptMoved > 5000) { ptMoved = t; ptLast = t; } }, { capture: true, passive: true });
 function ptConf() {
-  let f = {}; try { f = ((JSON.parse(localStorage.getItem('gs.lib') || 'null') || {}).me || {}).focus || {}; } catch { }
-  return { on: f.track !== false, idle: [2, 5, 10, 15].includes(+f.idle) ? +f.idle : 5 };
+  let f = {}; try { f = JSON.parse(localStorage.getItem('gsp.timeCount') || 'null') || {}; } catch { }
+  return { on: f.on !== false, idle: [2, 5, 10, 15].includes(+f.idle) ? +f.idle : 5 };
 }
 const ptDay = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 function ptTick() {
@@ -25,7 +28,7 @@ function ptTick() {
 function ptFlush() {
   ptFlushed = Date.now();
   if (!ptPend.l) return;
-  let P = null; try { P = JSON.parse(localStorage.getItem('gs.planTime') || 'null'); } catch { }
+  let P = null; try { P = JSON.parse(localStorage.getItem('gsp.planTime') || 'null'); } catch { }
   P = P && typeof P === 'object' ? P : {};
   const days = P.days && typeof P.days === 'object' ? P.days : {}, names = P.names && typeof P.names === 'object' ? P.names : {}, k = ptDay();
   const d = { ...(days[k] || {}) }, a = { ...(d.a || {}) };
@@ -36,12 +39,13 @@ function ptFlush() {
   for (const day of Object.keys(days)) if (Date.now() - new Date(day + 'T12:00:00') > 400 * 864e5) delete days[day];
   const used = new Set(Object.values(days).flatMap(x => Object.keys((x && x.a) || {})));
   for (const id of Object.keys(names)) if (!used.has(id)) delete names[id];
-  try { localStorage.setItem('gs.planTime', JSON.stringify({ days, names })); } catch { }
+  try { localStorage.setItem('gsp.planTime', JSON.stringify({ days, names })); } catch { }
   ptPend = { l: 0, a: {}, n: {} };
 }
 // The time this lesson has had, beside its name in the editor: what is written down, and what is waiting to be.
 function ptLessonSecs(id) {
-  let P = null; try { P = JSON.parse(localStorage.getItem('gs.planTime') || 'null'); } catch { }
+  if (!ptReady) return 0;
+  let P = null; try { P = JSON.parse(localStorage.getItem('gsp.planTime') || 'null'); } catch { }
   let s = ptPend.a[id] || 0;
   for (const d of Object.values((P && P.days) || {})) if (d && d.a && d.a[id]) s += d.a[id];
   return s;
@@ -57,3 +61,4 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 window.addEventListener('pagehide', ptFlush);
 window.addEventListener('blur', ptFlush);
 window.__plantime = { tick: ptTick, flush: ptFlush, lessonSecs: ptLessonSecs, active: () => { ptLast = Date.now(); }, pend: () => ptPend };
+ptReady = true;

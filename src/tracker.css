@@ -33,7 +33,7 @@
 .tkgoal{position:absolute;left:0;right:0;border-top:1.5px dashed var(--line-strong);pointer-events:none}
 .tkgoal span{position:absolute;right:0;top:-18px;font-size:var(--text-caption);color:var(--muted);background:var(--surface);padding:0 var(--space-1)}
 .tkbars.many{gap:2px}
-.tkbars.many .tkday i{flex-basis:8px;border-radius:0}
+.tkbars.many .tkday i{flex-basis:8px}
 /* by assignment, by lesson */
 .tkcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--space-4);margin:0 0 var(--space-4)}
 .tklist{padding:var(--space-4)}

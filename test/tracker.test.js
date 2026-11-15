@@ -43,6 +43,8 @@ test('time on the marking screen counts as grading, by assignment, only while sh
   // switched off in Settings: the marking screen doesn't count either
   await goTo(page, '#/settings/focus'); await page.waitForSelector('#tkOn'); await page.click('#tkOn'); await pause(200);
   assert.deepEqual(await page.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().lib.me.focus))), { track: false });
+  // and the Planner, which reads only its own keys, is told through one of them
+  assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.timeCount'))), { on: false, idle: 5 });
   assert.equal(await page.$eval('#tkIdle', e => e.disabled), true);
   await page.click('#tkOn'); await page.select('#tkIdle', '10'); await pause(200);
   assert.deepEqual(await page.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().lib.me.focus))), { idle: 10 });
@@ -71,7 +73,7 @@ test('the tracker shows grading and planning apart, by week, month and three mon
   const s = gradingSeed(), lib = JSON.parse(s.ls['gs.lib']), id = lib.classes[0].units[0].items[0].id, name = lib.classes[0].units[0].items[0].name;
   const days = { [today()]: { p: 3, s: 600, g: 3600, a: { [id]: 3000, '': 600 }, pa: { [id]: 3 } }, [dayAgo(9)]: { p: 1, s: 0, g: 1200, a: { [id]: 1200 } } };
   const plan = { days: { [today()]: { l: 1800, a: { L1: 1500, '': 300 } }, [dayAgo(40)]: { l: 600, a: { L1: 600 } } }, names: { L1: 'Reading a poem' } };
-  const { page, close } = await openApp(browser, { seed: withLs(s, { 'gs.focus': JSON.stringify({ day: today(), base: {}, days, pace: [], last: '' }), 'gs.planTime': JSON.stringify(plan) }) });
+  const { page, close } = await openApp(browser, { seed: withLs(s, { 'gs.focus': JSON.stringify({ day: today(), base: {}, days, pace: [], last: '' }), 'gsp.planTime': JSON.stringify(plan) }) });
   await goTo(page, '#/time'); await page.waitForSelector('#tkBody .tktile');
   assert.equal(await page.title(), 'Time tracker · Grading Studio');
   const tiles = () => page.$$eval('#tkBody .tktile', t => t.map(x => x.querySelector('.tkl').textContent + ' ' + x.querySelector('.tkv').textContent));
@@ -129,7 +131,7 @@ test('time in the Planner counts as planning, by lesson, but not while a lesson 
     await tick();
     await page.evaluate(() => { window.__present.PR.on = true; }); await tick(); await page.evaluate(() => { window.__present.PR.on = false; });
     await page.evaluate(() => window.__plantime.flush());
-    const P = await page.evaluate(() => JSON.parse(localStorage.getItem('gs.planTime')));
+    const P = await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.planTime')));
     assert.equal(P.days[today()].l, 45);
     assert.deepEqual(P.days[today()].a, { '': 30, [id]: 15 });
     assert.deepEqual(P.names, { [id]: 'Reading a poem' });
@@ -140,9 +142,9 @@ test('time in the Planner counts as planning, by lesson, but not while a lesson 
     assert.equal(await page.$eval('#lsTime', e => e.hidden ? '' : e.textContent), '1 min planning');
     await page.evaluate(() => window.__plantime.flush());
     // the grading app's setting switches it off here too
-    await page.evaluate(() => localStorage.setItem('gs.lib', JSON.stringify({ classes: [], me: { focus: { track: false } } })));
+    await page.evaluate(() => localStorage.setItem('gsp.timeCount', JSON.stringify({ on: false, idle: 5 })));
     await tick(); await page.evaluate(() => window.__plantime.flush());
-    assert.equal((await page.evaluate(() => JSON.parse(localStorage.getItem('gs.planTime')))).days[today()].l, 90);
+    assert.equal((await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.planTime')))).days[today()].l, 90);
     assert.deepEqual(errors, []);
   } finally { await page.close(); await server.close(); }
 });
@@ -150,5 +152,5 @@ test('time in the Planner counts as planning, by lesson, but not while a lesson 
 test('what the tracker keeps goes with the teacher’s work, and stays out of the new year’s clearing only because it names nobody', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'folder.js'), 'utf8');
   const re = new RegExp(src.match(/const LS_LOCAL = \/(.+?)\/;/)[1]);
-  assert.ok(!re.test('gs.planTime') && !re.test('gs.focus'));
+  assert.ok(!re.test('gsp.planTime') && !re.test('gs.focus'));
 });

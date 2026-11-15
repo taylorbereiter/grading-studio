@@ -1,22 +1,22 @@
 {
  "version": "1.28.21",
- "build": "e8777f961d1d",
+ "build": "fa45fdbbd26e",
  "notes": [
   "A time tracker for grading and planning, kept apart. Grading time counts while the marking screen is in front and you are working in it; planning time counts the same way in the Planner, but not while you present. Open it from the Focus card on Today or with Find anything: a week, a month or three months, by assignment and by lesson. Each assignment shows its own time on its card and on the marking screen, with about how long a paper takes, and each lesson shows its planning time in the Planner.",
   "Add time by hand for work away from the app, like marking on paper, and download every day as a spreadsheet. Settings, Focus and goals can switch the counting off or change how soon it stops."
  ],
  "files": {
-  "index.html": "fdd804b82bbaf871976823cc94586c9539eae3c15e6a4e9f1cbcd01a121dae11",
-  "planner.html": "2446c6eb7f11a6b923a4baf20160b77e0dd6872fe2395612169907003bbf1da8"
+  "index.html": "16455d20d9ebfbd3f6e8e9df526219b58d44de1a6f6048d04c81350268016922",
+  "planner.html": "367a69982be9d3e33f4a2c2ef6faaa8a6eb032e9ed4ed2b2a5325b6977cf593e"
  },
  "langs": {
-  "lang/zh-Hant.js": "7cae9c4afdc73f2781dbebd8089fc46c5e63da95d33887f14d38fa9d25ad5816",
-  "lang/zh-Hans.js": "1dd5799647b4b314664ea9f0ff1808ad1d81e3bcccda38e9c0f06bff49d84281",
-  "lang/es.js": "395aecc4fcfcab0232591b328f286fee615fd26e27e2b52d45b5ced995522f73",
-  "lang/fr.js": "054e407763c0772d9cd8b9a06eb9da73e60e934a1a46f55cd17ecf7ba01e3cec",
-  "lang/de.js": "9402ab307df9363141adf145467b362f3ea820a8fa71fae4df9b6c331f3646aa",
-  "lang/pt-BR.js": "5ce161fda1c14483396b5a1f5b674cdf008ac051796845e9a6d57d051c6b1667",
-  "lang/ja.js": "f79567b1b267d698e6937c4fd3762246f2c018dcea7f32998c563e3e88256e82",
-  "lang/ko.js": "8bc824333c63e09d87e189cae9eeca352f5ae6db3d68a3d96bc763540d03ecd5"
+  "lang/zh-Hant.js": "f6bbb95fb936f71b4c20f1d92f70d48fd2ea2adb59a7a850cf37ea6bf16955d2",
+  "lang/zh-Hans.js": "1ebdebc71bec7dc8ec29f2877b3e731185b68a046bb8d6082ecc249bae20b323",
+  "lang/es.js": "df11d5532cd309a8f36e9323b6756212fe753a8dc5df84070a445bb4a2884513",
+  "lang/fr.js": "ca67baa7413c03072a511d27f3e3c0e0e57a9399e43838951c289be665a55023",
+  "lang/de.js": "3cde44789f6ad5ade8aaf4fed4427791d22e4c56b61d3b4cd2acc39f5e1b3e92",
+  "lang/pt-BR.js": "9ee3eb15e00b45e1fe67c6e69d67b6957dac16c1e2429222fa387ba4994ee7d8",
+  "lang/ja.js": "b51d1671d7c05d138862c4b79a5b1a44cb29eef68ab50b23f76715bd1e8e346f",
+  "lang/ko.js": "d244bc97e0adec82038e44cff694e2391c1ecae5aaafbab85e632e7189dab661"
  }
 }

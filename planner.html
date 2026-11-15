@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"7cae9c4a","zh-Hans":"1dd57996","es":"395aecc4","fr":"054e4077","de":"9402ab30","pt-BR":"5ce161fd","ja":"f79567b1","ko":"8bc82433"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"f6bbb95f","zh-Hans":"1ebdebc7","es":"df11d553","fr":"ca67baa7","de":"3cde4478","pt-BR":"9ee3eb15","ja":"b51d1671","ko":"d244bc97"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script></head><body>
 <title>Planner · Grading Studio</title>
 <script>/* ---------------- the sample: a made-up school week, kept apart from everything real ----------------
    Runs first on both pages, before anything reads saved work. While the sample is open (gs.sampleOn in the browser's real storage),
@@ -6917,8 +6917,8 @@ const HELP = [
       'Set a daily goal in papers or minutes in **Settings, Focus and goals**. A paper counts when its score is finished, wherever you do it. Today, the timer and the sidebar show how far along you are, and turn green when you get there. The length of a session and a break, and the chime, are set there too.'],
     go: ['Open Settings, Focus and goals', '#/settings/focus'], words: 'focus timer pomodoro session break goal daily papers minutes concentrate procrastinate start motivation adhd' },
   { id: 'time-tracker', sec: 'start', q: 'Can I see how much time I spend grading and planning?',
-    a: ['Yes, in the **Time tracker**: open it from the Focus card on Today, or find it with Find anything. Grading time counts while the marking screen is open and in front; planning time counts while the Planner is, except while you present a lesson. The two are kept apart. Time stops counting after a few minutes with nothing pressed, typed or scrolled.',
-      'The tracker shows a week, a month or three months: the totals, a bar for each day, grading by assignment and planning by lesson. Use **Add time** for work away from the app, like marking on paper. **Download as a spreadsheet** saves every day as a CSV file. In **Settings, Focus and goals** you can switch the counting off or change how soon it stops.'],
+    a: ['Yes, in the **Time tracker**: open it from the Focus card on Today, or find it with Find anything. Grading time counts while the marking screen is open and in front; planning time counts while the Planner is, except while you present a lesson. Time stops counting after a few minutes with nothing pressed, typed or scrolled.',
+      'The tracker shows a week, a month or three months: the totals, a bar for each day, grading by assignment and planning by lesson. Use **Add time** for work done away from the app. **Download as a spreadsheet** saves every day as a CSV file. In **Settings, Focus and goals** you can switch counting off or change how soon it stops.'],
     go: ['Open the time tracker', '#/time'], words: 'time tracker hours minutes how long spent log track record grading planning workload csv spreadsheet' },
   { id: 'school-resources', sec: 'start', q: 'Where can I keep my school’s links and files?',
     a: ['On **School** in the sidebar. Keep the handbook, the calendar, the bell schedule, the portals you sign in to, forms, and notes like who to call. Put them in groups you name, and press the star on the ones you open most to keep them at the top.',
@@ -7814,15 +7814,17 @@ window.__gsFull = gsFull;
 /* ---------- Planning time, for the grading app's time tracker (src/tracker.js) ----------
    While the Planner is the tab in front and something was pressed, typed or scrolled in the last few minutes, the time counts as
    planning: to the lesson that is open, or to '' (the week, the units, the bank). Presenting a lesson is teaching, so it doesn't count.
-   Kept in gs.planTime: { days: { 'YYYY-MM-DD': { l: seconds, a: { <lesson id> | '': seconds } } }, names: { <lesson id>: title } },
-   for 400 days. The grading app's Settings, Focus and goals can switch it off (lib.me.focus.track) and say how soon it stops (idle). */
+   Kept in gsp.planTime: { days: { 'YYYY-MM-DD': { l: seconds, a: { <lesson id> | '': seconds } } }, names: { <lesson id>: title } },
+   for 400 days. The grading app's Settings, Focus and goals can switch it off and say how soon it stops: the grading app copies those two
+   into gsp.timeCount { on, idle }, so the Planner reads only its own keys. */
+var ptReady = false;
 const PT_STEP = 15, PT_FLUSH = 60e3;
 let ptLast = 0, ptMoved = 0, ptPend = { l: 0, a: {}, n: {} }, ptFlushed = Date.now();
 for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart', 'input']) document.addEventListener(ev, () => { ptLast = Date.now(); }, { capture: true, passive: true });
 document.addEventListener('pointermove', () => { const t = Date.now(); if (t - ptMoved > 5000) { ptMoved = t; ptLast = t; } }, { capture: true, passive: true });
 function ptConf() {
-  let f = {}; try { f = ((JSON.parse(localStorage.getItem('gs.lib') || 'null') || {}).me || {}).focus || {}; } catch { }
-  return { on: f.track !== false, idle: [2, 5, 10, 15].includes(+f.idle) ? +f.idle : 5 };
+  let f = {}; try { f = JSON.parse(localStorage.getItem('gsp.timeCount') || 'null') || {}; } catch { }
+  return { on: f.on !== false, idle: [2, 5, 10, 15].includes(+f.idle) ? +f.idle : 5 };
 }
 const ptDay = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 function ptTick() {
@@ -7838,7 +7840,7 @@ function ptTick() {
 function ptFlush() {
   ptFlushed = Date.now();
   if (!ptPend.l) return;
-  let P = null; try { P = JSON.parse(localStorage.getItem('gs.planTime') || 'null'); } catch { }
+  let P = null; try { P = JSON.parse(localStorage.getItem('gsp.planTime') || 'null'); } catch { }
   P = P && typeof P === 'object' ? P : {};
   const days = P.days && typeof P.days === 'object' ? P.days : {}, names = P.names && typeof P.names === 'object' ? P.names : {}, k = ptDay();
   const d = { ...(days[k] || {}) }, a = { ...(d.a || {}) };
@@ -7849,11 +7851,12 @@ function ptFlush() {
   for (const day of Object.keys(days)) if (Date.now() - new Date(day + 'T12:00:00') > 400 * 864e5) delete days[day];
   const used = new Set(Object.values(days).flatMap(x => Object.keys((x && x.a) || {})));
   for (const id of Object.keys(names)) if (!used.has(id)) delete names[id];
-  try { localStorage.setItem('gs.planTime', JSON.stringify({ days, names })); } catch { }
+  try { localStorage.setItem('gsp.planTime', JSON.stringify({ days, names })); } catch { }
   ptPend = { l: 0, a: {}, n: {} };
 }
 function ptLessonSecs(id) {
-  let P = null; try { P = JSON.parse(localStorage.getItem('gs.planTime') || 'null'); } catch { }
+  if (!ptReady) return 0;
+  let P = null; try { P = JSON.parse(localStorage.getItem('gsp.planTime') || 'null'); } catch { }
   let s = ptPend.a[id] || 0;
   for (const d of Object.values((P && P.days) || {})) if (d && d.a && d.a[id]) s += d.a[id];
   return s;
@@ -7869,6 +7872,7 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 window.addEventListener('pagehide', ptFlush);
 window.addEventListener('blur', ptFlush);
 window.__plantime = { tick: ptTick, flush: ptFlush, lessonSecs: ptLessonSecs, active: () => { ptLast = Date.now(); }, pend: () => ptPend };
+ptReady = true;
 
 })();
 </script>

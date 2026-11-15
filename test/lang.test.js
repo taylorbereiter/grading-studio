@@ -287,7 +287,7 @@ function trackSeed() {
   for (let n = 0; n < 40; n += 3) { days[day(n)] = { p: 5, s: 1200, g: 3000, a: { [ids[0]]: 2400, '': 600 }, pa: { [ids[0]]: 5 } }; pd[day(n + 1)] = { l: 2400, a: { L1: 1800, '': 600 } }; }
   days[day(50)] = { p: 2, s: 900 };   // from before time was counted: its focus time is its grading
   const focus = { day: day(0), base: {}, days, pace: [], last: '', add: [{ id: 'h1', d: day(1), k: 'g', s: 1800, x: 'Quizzes on paper' }] };
-  return { ...s, ls: { ...s.ls, 'gs.lib': JSON.stringify(lib), 'gs.focus': JSON.stringify(focus), 'gs.planTime': JSON.stringify({ days: pd, names: { L1: 'Reading a poem' } }) } };
+  return { ...s, ls: { ...s.ls, 'gs.lib': JSON.stringify(lib), 'gs.focus': JSON.stringify(focus), 'gsp.planTime': JSON.stringify({ days: pd, names: { L1: 'Reading a poem' } }) } };
 }
 test('the time tracker, its line on Today and its Settings leave nothing in English', async () => {
   const { page, close } = await openApp(browser, { seed: trackSeed() });
