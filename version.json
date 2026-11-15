@@ -1,12 +1,11 @@
 {
- "version": "1.28.24",
- "build": "d618e476ee4b",
+ "version": "1.28.25",
+ "build": "a9b0ae6ab462",
  "notes": [
-  "Quiz answer notes show their question (Q1, Q3) at both ends of their line, on screen and in exported files. With the pointer on a note, its line and its question light up.",
-  "Quiz boxes has Answer lines start: right of each box, under it, or by the mark. Each question has a gold pin you can drag to move its line on every paper, and on one paper you can drag a note’s pill with any tool but the eraser."
+  "A comment box opened near the bottom of a page no longer slips behind the next page. All of it stays on top, so saved comments, colors and Done can be clicked."
  ],
  "files": {
-  "index.html": "90dbe610cd8f96a3d84432baed97a7894e38eb07ce24fbdc5c3a6e6ba75957f8",
+  "index.html": "204416a7eb9b6738be10ea364bbf6374926ec1b479a89fd833af85bd6e8e86c8",
   "planner.html": "13e1185ecefcbdaf301673b39a2914aa777fa358cccfabb3a2c01b6885b7e676"
  },
  "langs": {
