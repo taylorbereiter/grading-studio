@@ -72,6 +72,19 @@ function numberBadge(ctx, cx, cy, n, col) {
   ctx.fillStyle = '#fff'; ctx.font = '700 ' + (t.length > 1 ? 6.5 : 7.5) + 'px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(t, cx, cy + 0.3); ctx.restore();
 }
+// A quiz answer note's question name (Q3) in a gold pill: at the start of its line and on its box, so each answer plainly
+// belongs to its question, on the screen and in the exported file.
+// Its question's name: kept on the note, or, on a note made before that, found from the quiz.
+const ansLab = n => !n.qza ? '' : n.qzl || (() => { const Q = typeof batch !== 'undefined' && batch && batch.quiz, q = Q && (Q.qs || []).find(x => x.id === n.qza); return q ? qzAnsLab(q) : ''; })();
+function qzPill(ctx, cx, cy, t, col) {
+  ctx.save(); ctx.font = '700 7px ' + FONT;
+  const w = Math.max(11, ctx.measureText(t).width + 6), h = 10, x = cx - w / 2, y = cy - h / 2, r = h / 2;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(x - 1.2, y - 1.2, w + 2.4, h + 2.4, r + 1.2); ctx.fill();
+  ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t, cx, cy + 0.3);
+  ctx.restore();
+  return w;
+}
 function noteMarkings(ctx, n, num) {
   const rects = n.rects || [n.hl], col = noteInk(n);
   ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 1.3; ctx.lineCap = 'butt';
@@ -119,9 +132,15 @@ function drawMarks(ctx, marks, W, H, side, screen) {
     boxes = layoutNotes(notes, W, H, side);
     for (const b of boxes) {
       const [r, g, bl] = rgb(b.n.color), dk = v => Math.round(v * 0.72), col = 'rgb(' + dk(r) + ',' + dk(g) + ',' + dk(bl) + ')';
-      ctx.strokeStyle = col; ctx.lineWidth = screen && screen.line === b.n ? 1.4 : 0.7;
+      const qa = ansLab(b.n), hot = qa && screen && screen.hot === b.n;
+      if (hot && b.n.qzr) {   // the pointer is on this answer: its question's box shows, outlined in gold
+        const [x, y, w, h] = b.n.qzr;
+        ctx.save(); ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + bl + ',0.10)'; ctx.fillRect(x, y, w, h);
+        ctx.strokeStyle = col; ctx.lineWidth = 1.2; ctx.setLineDash([4, 2]); ctx.strokeRect(x, y, w, h); ctx.restore();
+      }
+      ctx.strokeStyle = col; ctx.lineWidth = screen && screen.line === b.n ? 1.4 : hot ? 1.8 : qa ? 1.1 : 0.7;
       noteLeader(ctx, b, W);
-      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(b.ax, b.ay, 2.2, 0, Math.PI * 2); ctx.fill();
+      if (!qa) { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(b.ax, b.ay, 2.2, 0, Math.PI * 2); ctx.fill(); }
       ctx.fillStyle = '#fff'; ctx.fillRect(b.x, b.y, b.w, b.h);
       ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + bl + ',0.14)'; ctx.fillRect(b.x, b.y, b.w, b.h);
       ctx.strokeStyle = col; ctx.lineWidth = 0.9; ctx.strokeRect(b.x, b.y, b.w, b.h);
@@ -136,6 +155,15 @@ function drawMarks(ctx, marks, W, H, side, screen) {
         ctx.fillStyle = '#1B1F27'; ctx.font = b.fs + 'px ' + FONT; ctx.fillText(ln.slice(k + 1), x + w, y);
       });
       if (b.n.hl) numberBadge(ctx, b.x + 1.25, b.y, order.indexOf(b.n) + 1, col);
+      if (hot) { ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 1.8; ctx.strokeRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2); ctx.restore(); }
+    }
+    // the pills last, over every line, so none is hidden where lines cross
+    for (const b of boxes) {
+      const lab = ansLab(b.n); if (!lab) continue;
+      const col = noteInk(b.n);
+      qzPill(ctx, b.ax, b.ay, lab, col);
+      ctx.save(); ctx.font = '700 7px ' + FONT; const w = Math.max(11, ctx.measureText(lab).width + 6); ctx.restore();
+      qzPill(ctx, b.x + b.w - w / 2 - 3, b.y, lab, col);
     }
   }
   if (screen && screen.sel) {

@@ -192,6 +192,8 @@ function bindPage(pg) {
     // A comment box in the margin always opens for editing, whatever the tool.
     const box = (pg.boxes || []).find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
     if (box && !box.n.ro && tool !== 'erase') { e.preventDefault(); openNote(pg, box.n); return; }
+    const pill = tool !== 'erase' && !once ? ansPillAt(pg, x, y) : null;   // an answer note's pill: drag it to point the note elsewhere
+    if (pill) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = { move: pill, x, y, moved: false }; return; }
     // A comment's line can be dragged up or down so it runs between lines of writing, not through them.
     const ln = tool !== 'erase' && !once ? noteLineAt(pg, x, y) : null;
     if (ln) { e.preventDefault(); c.setPointerCapture(e.pointerId); g = { line: ln, y0: y, ly0: noteRunY(ln, pg.H), moved: false }; return; }
@@ -304,7 +306,7 @@ function bindPage(pg) {
     g = null;
     if (once && once.k !== 'pen') endOnce();   // a circle or highlight from the right-click: one, then back to her tool
   };
-  c.addEventListener('pointerleave', () => { if (!g && pg.lineOn) { pg.lineOn = null; draw(pg); } });
+  c.addEventListener('pointerleave', () => { if (!g && (pg.lineOn || pg.noteOn)) { pg.lineOn = null; pg.noteOn = null; draw(pg); } });
   c.addEventListener('pointerup', end);
   c.addEventListener('pointercancel', end);
   // A second finger came down (touch.js): a line, a circle or a box only just begun is taken back; anything else ends where it is.

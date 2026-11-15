@@ -1,12 +1,12 @@
 {
- "version": "1.28.23",
- "build": "4e743c919f1f",
+ "version": "1.28.24",
+ "build": "d618e476ee4b",
  "notes": [
-  "Undo for more of your work. On the marking screen, Ctrl Z (Cmd Z on a Mac) now also takes back lighting, a video's turn, a page taken out, a file removed, the rescan flag, anchor papers and Arrange pages. A short note says what came back, and Shift Ctrl Z or Ctrl Y does it again.",
-  "Everywhere else, Ctrl Z takes back your last change to classes, units, assignments, rosters, gradebook scores, to-dos and settings, deletes included. Inside a text box it still undoes your typing first. In the Planner, Ctrl Z works in the slide editor, and deleting a lesson has Undo."
+  "Quiz answer notes show their question (Q1, Q3) at both ends of their line, on screen and in exported files. With the pointer on a note, its line and its question light up.",
+  "Quiz boxes has Answer lines start: right of each box, under it, or by the mark. Each question has a gold pin you can drag to move its line on every paper, and on one paper you can drag a note’s pill with any tool but the eraser."
  ],
  "files": {
-  "index.html": "7b39e7cd1799d87b3e63971c654bbdeab4c106d71b246ef85c98175dcaccda67",
+  "index.html": "90dbe610cd8f96a3d84432baed97a7894e38eb07ce24fbdc5c3a6e6ba75957f8",
   "planner.html": "13e1185ecefcbdaf301673b39a2914aa777fa358cccfabb3a2c01b6885b7e676"
  },
  "langs": {

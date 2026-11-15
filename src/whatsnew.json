@@ -1,4 +1,8 @@
 {
+  "1.28.24": [
+    "Quiz answer notes show their question (Q1, Q3) at both ends of their line, on screen and in exported files. With the pointer on a note, its line and its question light up.",
+    "Quiz boxes has Answer lines start: right of each box, under it, or by the mark. Each question has a gold pin you can drag to move its line on every paper, and on one paper you can drag a note’s pill with any tool but the eraser."
+  ],
   "1.28.23": [
     "Undo for more of your work. On the marking screen, Ctrl Z (Cmd Z on a Mac) now also takes back lighting, a video's turn, a page taken out, a file removed, the rescan flag, anchor papers and Arrange pages. A short note says what came back, and Shift Ctrl Z or Ctrl Y does it again.",
     "Everywhere else, Ctrl Z takes back your last change to classes, units, assignments, rosters, gradebook scores, to-dos and settings, deletes included. Inside a text box it still undoes your typing first. In the Planner, Ctrl Z works in the slide editor, and deleting a lesson has Undo."
