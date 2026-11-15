@@ -15,6 +15,7 @@ function migrateLib(l) {
   return l;
 }
 let lib = migrateLib(store.get('gs.lib', null) || { classes: [] });
+LIBU.last = libSnap();   // what the first Ctrl Z away from the marking screen goes back to (libundo.js)
 // A brand-new browser starts with nothing in it: no classes, no scale, no school system. (Until 11/10 three starter classes were
 // added here. A browser that got them keeps them, and keeps lib.seed2627, which nothing reads any more.)
 /* ---------------- how this teacher works: lib.me ---------------- */
@@ -87,7 +88,7 @@ function bandOf(pct) {
   const b = g.bands.find(b => pct >= b[0]); return b ? b[1] : g.bands[g.bands.length - 1][1];
 }
 const bandSay = pct => { const b = bandOf(pct); return b ? ' · ' + b : ''; };
-function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); wordsShare(); rollsShare(); }
+function saveLib() { libVer++; if (!store.set('gs.lib', lib)) toast('This browser is out of room to keep your units and rosters.'); libTrack(); wordsShare(); rollsShare(); }
 // The two names (the school's system, where unit plans live) are also kept where the Planner can read them, beside the class links:
 // it is a separate page that never opens grading's work. Only for a teacher who has said them; nothing is written otherwise.
 function wordsShare() {

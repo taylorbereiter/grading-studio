@@ -105,11 +105,14 @@ const plannerReady = page => page.waitForFunction(() => window.__planner && docu
 // reads papers in the background after one opens (names to cover, grades written on the paper), and a picture taken
 // part-way through that would differ from the next for no reason of the build's.
 const quiet = (page, ms) => page.evaluate(ms => new Promise(res => {
-  const sig = () => document.body.innerText.length + '|' + document.querySelectorAll('canvas').length + '|' + [...document.querySelectorAll('canvas')].reduce((n, c) => n + c.width, 0);
+  // the words themselves, not only how many: a count in the sidebar going from 1 to 2 is the same length
+  const sig = () => document.body.innerText + '|' + document.querySelectorAll('canvas').length + '|' + [...document.querySelectorAll('canvas')].reduce((n, c) => n + c.width, 0);
   let last = sig(), since = performance.now(); const t0 = since;
   const look = () => {
     const now = sig(), t = performance.now(), ss = document.querySelector('#saveState');
-    if (now !== last || (ss && /Saving/.test(ss.textContent)) || /Reading the files first/.test(document.body.innerText)) { last = now; since = t; }
+    // and nothing still being read in the background that can change what the page says (the timetable, who owes work)
+    const busy = window.__gs && window.__gs.bgBusy && window.__gs.bgBusy();
+    if (now !== last || busy || (ss && /Saving/.test(ss.textContent)) || /Reading the files first/.test(document.body.innerText)) { last = now; since = t; }
     if (t - since >= ms || t - t0 > 20000) res(); else setTimeout(look, 100);
   };
   look();
@@ -168,7 +171,8 @@ async function capture(pages, label, want, work, port) {
           }
           if (sc.ready) await page.waitForSelector(sc.ready, { timeout: 15000 });
           if (sc.then) await sc.then(page);
-          await quiet(page, sc.hash.includes('{A}') ? 700 : 250);
+          // Settings and Today read the Planner's timetable when they open, and the To do count in the sidebar follows it
+          await quiet(page, sc.hash.includes('{A}') ? 700 : /^#\/(settings|$)/.test(sc.hash) ? 1000 : 250);
           shots[key] = await still(page);
           if (page.errors.length) missed[key] = 'the page reported: ' + page.errors[0].slice(0, 200);
         } catch (e) { missed[key] = String(e.message || e).split('\n')[0].slice(0, 200); }

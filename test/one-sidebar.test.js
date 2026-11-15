@@ -332,7 +332,7 @@ test('Today shows the day’s classes from the Planner’s timetable, and writes
       await page.goto(srv.url); await appReady(page); await page.waitForSelector('#today .trow');
       return page.$eval('#today .trow', x => [x.querySelector('.ns').textContent, x.querySelector('.btn').textContent]);
     };
-    assert.deepEqual(await taught(2), ['Annotating a sonnet · 3 slides · taught to slide 2 of 3', cur === 0 ? 'Present' : 'Open']);
+    assert.deepEqual(await taught(2), ['Annotating a sonnet · 3 slides · taught to slide 2 of 3', 'Present']);   // any time of day: a lesson with slides left offers Present (#137)
     await page.goto(srv.url + 'planner.html'); await plannerReady(page);
     assert.deepEqual(await taught(3), ['Annotating a sonnet · 3 slides · taught', 'Open']);
     await page.goto(srv.url + 'planner.html'); await plannerReady(page);

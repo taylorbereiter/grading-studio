@@ -453,4 +453,6 @@ document.addEventListener('keydown', e => {
   if ((t.closest && t.closest('input, textarea, select, [contenteditable]')) || $('#findDlg') || $('#askDlg') || !$('#dlg').hidden || !$('#welcome').hidden) return;
   e.preventDefault(); tdFocusAdd();
 });
-Object.assign(window.__gs, { todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove });
+// For the screens tool: true while the timetable or who owes work is still being read, either of which can change the To do count.
+const bgBusy = () => !!planBusy || !!tdMiss.busy;
+Object.assign(window.__gs, { todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove, bgBusy });

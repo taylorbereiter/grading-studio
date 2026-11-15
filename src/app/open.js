@@ -98,7 +98,7 @@ async function intake(entries, label, assignment, fromKeep) {   // entries: [{ p
   if (assignment && assignment.quiz && !batch.quiz && !assignment.batchId) { batch.quiz = JSON.parse(JSON.stringify(assignment.quiz)); setTimeout(saveSoon, 0); }   // a card from last year starts with its Quick mark boxes
   if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; shareRubric(assignment); saveLib(); }
   keepWait = keepPapers(batch, label, fromKeep ? null : keepList, sameSize.length > 0);
-  cur = 0; undoStack = []; selected = null;
+  cur = 0; undoStack = []; redoStack = []; selected = null;
   routeTok++; routeOpening = ''; go(batchHash(id), routeNow().v === 'a');   // from another open assignment (or this one's own address after a refresh): no extra step for Back
   setBatchName(); qzForget(); quizBtn();
   $('#trAllBtn').hidden = !CAN_TRANSCRIBE || !students.some(st => st.files.some(trMakeable));

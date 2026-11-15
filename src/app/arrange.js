@@ -196,6 +196,9 @@ function openArrange() {
     if (e.target.closest('[data-newfile]')) { L.push({ name: 'New file ' + (L.length + 1) + '.pdf', pages: [], out: false }); return render(); }
     if (e.target.closest('[data-reset]')) { L = defaultLayout(st).map(d => ({ ...d, pages: d.pages.map(x => x.slice()), out: null })); tray = []; sel = new Set(); strip = seqDefault(); return render(); }
     if (e.target.closest('[data-save]')) {
+      // One Ctrl Z puts every paper's pages back as they were before Save (page turns made here are steps of their own).
+      const redraw = () => { renderList(); openStudent(cur); };
+      pushUndo(groupStep([fieldStep(batch, ['lightPg'], redraw), ...batch.students.map(o => fieldStep(o, ['layout', 'forder'], o === st ? redraw : null))], 'arranged pages'));
       drawStrip();
       const inStrip = strip.filter(x => typeof x !== 'string' && x.pages.length);
       L = inStrip.concat(L.filter(d => !inStrip.includes(d) && d.pages.length));
