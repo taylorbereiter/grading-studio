@@ -411,7 +411,7 @@ function renderEditor() {
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities', library: 'Past lessons' }[L.backTo] || 'Week') + '</button>' +
     '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + mbBtn(classById(t.classId)) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
-    '<span class="sp"></span>' + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
+    '<span class="sp"></span>' + ptBadge(l) + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
     // Above the slide: the lesson's name, where it is taught, its status, the download and Present. The rest is one click away, in More.
     (lessonTalk(l) ? commentsBtn(l) : '') + panelBtn() + moreHtml(l) +
     '<button class="btn sm" data-a="pptx">Download .pptx</button><button class="btn sm primary" data-pr="present" title="Show this lesson full screen, from this slide">' + prIcon('play') + 'Present</button></div>' + pendingBar(l) + variantBar(l);

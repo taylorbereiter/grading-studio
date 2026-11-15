@@ -1,22 +1,22 @@
 {
- "version": "1.28.20",
- "build": "8aad2a27c1ca",
+ "version": "1.28.23",
+ "build": "4e743c919f1f",
  "notes": [
-  "Focus: a timer for grading in short sessions. Start it from the card on Today or from Focus in the sidebar, on a set of papers or one of your to-dos, and the next paper with nothing finished opens. A small panel keeps the time, folds to a pill, and offers a break when the time is up. To do has Focus on this.",
-  "A daily goal in papers or minutes, set in Settings, Focus and goals. Dots, a ring in the sidebar and this week’s bars fill in as you go, and turn green when you get there. A paper counts when its score is finished or its feedback is complete."
+  "Undo for more of your work. On the marking screen, Ctrl Z (Cmd Z on a Mac) now also takes back lighting, a video's turn, a page taken out, a file removed, the rescan flag, anchor papers and Arrange pages. A short note says what came back, and Shift Ctrl Z or Ctrl Y does it again.",
+  "Everywhere else, Ctrl Z takes back your last change to classes, units, assignments, rosters, gradebook scores, to-dos and settings, deletes included. Inside a text box it still undoes your typing first. In the Planner, Ctrl Z works in the slide editor, and deleting a lesson has Undo."
  ],
  "files": {
-  "index.html": "88d3cc29b3751bebb29031ae60d8bf410949f1b6dcf9804eb76b7e5fff397fbd",
-  "planner.html": "4e97fa014ec1f0bffa07a8918fa0623e145a04d12621c80e8beaef69a1a11172"
+  "index.html": "7b39e7cd1799d87b3e63971c654bbdeab4c106d71b246ef85c98175dcaccda67",
+  "planner.html": "13e1185ecefcbdaf301673b39a2914aa777fa358cccfabb3a2c01b6885b7e676"
  },
  "langs": {
-  "lang/zh-Hant.js": "4626236ce80cc43776ce9b962974b3341c2b20e899c3dc88c217982c8bf33d72",
-  "lang/zh-Hans.js": "cfb79ac04297b57854e0e9dc8d87637c978091a2d0a44e8134351458a1371302",
-  "lang/es.js": "4c85c752c2983b8e5d957d5f6e1890140cbf5f14588e32bfb4b205908eac4714",
-  "lang/fr.js": "f86fdc385071d03404d62f013cde51141bbf9f0e3d9d05f8685857b1ea5295f1",
-  "lang/de.js": "55f14f15179960d6586deb554534eec8104c18fc3773f398dc515ec58e6e8c99",
-  "lang/pt-BR.js": "b53ee0a79a5e731f65f3534908fb88c9ed056a447783f23e0b8f39639cba77e7",
-  "lang/ja.js": "5adbbf0cd2451b0c8e057b42866e8d3f7403aa1a2b1810167ab4e476916a62fd",
-  "lang/ko.js": "c437a117a7a60f5423749450b9ef9e6817d007c3c0d93e914b5a322a77e9116d"
+  "lang/zh-Hant.js": "241b64c7293f2f6e266f7c89a6d61a79786166b79d6df3906303990ab681f5ed",
+  "lang/zh-Hans.js": "0de3cf9dee06fe0ede588e40c8fea657badc5e83e113e4557a7009ab851199fd",
+  "lang/es.js": "649de9f6bafbba6233dfae3f223e6431e47c497f4dc8f4bfcb17a8676676875a",
+  "lang/fr.js": "61fb415b9ab41e6331d57cb51e984a52397e220639e72c3a356dd419a2549955",
+  "lang/de.js": "c6c9d2a70cbc9498cc23d3f4c13141f728c865ed7a81610feca80fc91bb23a87",
+  "lang/pt-BR.js": "5186b2ea8237bf5d50d729332d03db7c8a0a2a1734c7c63a37b040c5360a11d1",
+  "lang/ja.js": "40f47f41c11e5eb4327cb2aaed677d6cc288395e5b6baeb7db8d2eaac72c8584",
+  "lang/ko.js": "dd6449a0ee98c85de176f95607c4d6db8f3bdbf61a7eca56a8bb035e3641e599"
  }
 }
