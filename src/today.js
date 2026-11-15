@@ -56,7 +56,7 @@ function todayHtml(prim) {
       '<span class="btn sm' + (prim === 'lesson' && r === cur ? ' primary' : '') + '">' + (show ? 'Present' : l ? 'Open' : 'Plan it') + '</span></a>' + attTodayLine(c);
   };
   return '<div class="thd"><h2 class="tcap">Teaching today</h2><a class="link tweek" href="' + esc(planUrl('#week')) + '">Open the week</a></div><div class="tcard">' +
-    (t.off ? '<div class="trow none"><span class="nt"><b>No classes today</b><span class="ns">' + esc(t.off) + '</span></span></div>' : t.rows.length ? t.rows.map(row).join('') : '<div class="trow none"><span class="nt"><span class="ns">No classes on your timetable today.</span></span></div>') + '</div>';
+    (t.off ? '<div class="trow none"><span class="nt"><b>No classes today</b><span class="ns">' + esc(t.off) + '</span></span></div>' : t.rows.length ? t.rows.map((r, i) => row(r) + gpFreeRow(t.rows, i)).join('') : '<div class="trow none"><span class="nt"><span class="ns">No classes on your timetable today.</span></span></div>') + '</div>';
 }
 
 /* to mark, ready to hand back, earlier work: the work kept in this browser, sorted by where it stands */
@@ -147,6 +147,7 @@ function homeRender() {
   const asking = !!$('#safeAsk .btn.primary, #sampleNote .btn.primary');
   const prim = asking ? '' : cur && cur.lessons.length ? 'lesson' : g.mark.some(m => m.papers) ? 'mark' : g.back.some(m => m.papers) ? 'back' : 'drop';
   const firstMark = g.mark.find(m => m.papers);
+  put($('#lbCard'), gpLookHtml());
   put($('#today'), todayHtml(prim));
   put($('#toMark'), g.mark.map(m => markRow(m, prim === 'mark' && m === firstMark)).join(''));
   put($('#handBack'), backHtml(g.back, prim === 'back'));
@@ -169,7 +170,7 @@ $('#handBack').addEventListener('click', e => { const a = e.target.closest('a[da
 let planBusy = null;
 function planRefresh() {
   if (planBusy) return planBusy;
-  return planBusy = planRead().catch(() => { plan = null; }).then(() => { planBusy = null; homeRender(); if (shellReady) setRender(); });
+  return planBusy = planRead().catch(() => { plan = null; }).then(() => { planBusy = null; homeRender(); fcRender(); if (shellReady) { setRender(); todoRender(); } });   // the To do count in the sidebar and the Focus card's free period follow the timetable too
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !batch) planRefresh(); });
 window.addEventListener('pageshow', e => { if (e.persisted) planRefresh(); });

@@ -129,13 +129,14 @@ function renderProg() {
   const avg = fm ? '' : cs.n ? '<button class="pavg" id="pAvg" title="Average of ' + people(cs.n, 'finished score') + '’s percents: ' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '. Partial, missing, excused and left-out papers don’t count. Click for Insights."><span class="k">Avg</span> <span class="v">' + (cs.meanPct != null ? pctAvgText(cs.meanPct) : oneDp(cs.mean)) + '</span><span class="s">' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '</span></button>'
     : '<span class="pavg none" id="pAvg" title="No finished scores yet"><span class="k">Avg</span> <span class="v">–</span></span>';
   $('#progS').innerHTML = '<div class="phrow"><div class="ph">' + n + ' of ' + N + ' <span>' + (fm ? 'feedback complete' : 'scored') + (nOff ? ' · ' + nOff + ' missing or excused' : '') + '</span></div>' + avg + '</div>' +
-    '<div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>';
+    '<div class="pb"><i style="width:' + (N ? 100 * n / N : 0) + '%"></i></div>' + (batch.assignment ? '<div class="ptk">' + tkAsgHtml(batch.assignment.id) + '</div>' : '');
   $('#progS').title = n + ' of ' + N + (fm ? ' with feedback complete' : ' scored');
   lfDraw();
 }
 function nextUnscored() {
   const N = batch.students.length, o = anonOn() ? anonOrder() : batch.students.map((_, i) => i), p = o.indexOf(cur);
   const fm = fmNow(), left = st => fm ? !st.grade.fb && !noScore(st) : !gradeOf(st).done;
+  const short = gpShortNext(left); if (short >= 0) return openStudent(short);   // a focus session with shortest papers first (src/gradeplan.js)
   for (let k = 1; k <= N; k++) { const i = o[(p + k) % N]; if (left(batch.students[i])) return openStudent(i); }
   toast(fm ? 'Feedback is complete for everyone' : 'Everyone has a score');
 }

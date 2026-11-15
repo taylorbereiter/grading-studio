@@ -196,6 +196,9 @@ function openArrange() {
     if (e.target.closest('[data-newfile]')) { L.push({ name: 'New file ' + (L.length + 1) + '.pdf', pages: [], out: false }); return render(); }
     if (e.target.closest('[data-reset]')) { L = defaultLayout(st).map(d => ({ ...d, pages: d.pages.map(x => x.slice()), out: null })); tray = []; sel = new Set(); strip = seqDefault(); return render(); }
     if (e.target.closest('[data-save]')) {
+      // One Ctrl Z puts every paper's pages back as they were before Save (page turns made here are steps of their own).
+      const redraw = () => { renderList(); openStudent(cur); };
+      pushUndo(groupStep([fieldStep(batch, ['lightPg'], redraw), ...batch.students.map(o => fieldStep(o, ['layout', 'forder'], o === st ? redraw : null))], 'arranged pages'));
       drawStrip();
       const inStrip = strip.filter(x => typeof x !== 'string' && x.pages.length);
       L = inStrip.concat(L.filter(d => !inStrip.includes(d) && d.pages.length));
@@ -276,7 +279,7 @@ function draw(pg, live, part) {
   const anon = anonOn() && batch.students[cur];
   if (anon && pg.covers) { ctx.fillStyle = '#111'; for (const r of pg.covers) ctx.fillRect(r.x, r.y, r.w, r.h); }
   const marks = pg.marks().concat(anon ? scrubMarks(pg.extra || [], anonRx(anon)) : pg.extra || [], live || [], pg.pending ? [pg.pending] : []);
-  pg.boxes = drawMarks(ctx, marks, pg.W, pg.H, pg.side, { sel: selected && selected.page === pg && selected.mark !== pg.editing ? selected.mark : null, editing: pg.editing, s: pg.s, line: pg.lineOn || null });
+  pg.boxes = drawMarks(ctx, marks, pg.W, pg.H, pg.side, { sel: selected && selected.page === pg && selected.mark !== pg.editing ? selected.mark : null, editing: pg.editing, s: pg.s, line: pg.lineOn || null, hot: pg.noteOn || null });
   if (pg.ghost) { const b = pg.ghost; ctx.save(); ctx.strokeStyle = '#1F6FB2'; ctx.setLineDash([4, 3]); ctx.lineWidth = 1; ctx.strokeRect(b.x, b.y, b.w, b.h); ctx.restore(); }
   if (part) ctx.restore();
 }

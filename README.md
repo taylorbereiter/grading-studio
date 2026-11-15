@@ -20,7 +20,8 @@ Not ready to use it with real classes? On the first screen, click **Look around 
 ## Your students' privacy
 
 - Papers, names, marks, scores and comments are kept in your browser and, if you choose one, in a folder on your own computer. Nothing is uploaded to a server.
-- Opening the app contacts only the address it is served from, to ask which version is newest. Nothing about you or your work is sent.
+- Opening the app asks the address it is served from which version is newest. Nothing about you or your work is sent.
+- Once a day, the copy at the web address adds one to a public count of browsers that opened it (`abacus.jasoncameron.dev`, a free counter with no account), so the maker can see whether anyone uses the app. Only the visit is counted: no name, no setting and nothing about your work goes with it. Like any web request, the counter sees the internet address and the browser's name. It never runs in the sample or in the downloaded copy (`src/visits.js`).
 - Using an AI assistant is optional and manual. The app can make a file with student names covered and a random code for each student, and the key to the codes stays in your browser. Nothing is sent to an assistant unless you upload that file yourself.
 
 ## What it does
@@ -31,7 +32,9 @@ Not ready to use it with real classes? On the first screen, click **Look around 
 - **Gradebook and charts**: every assignment for a class in one table, with your own terms, types and weights, and charts for each class and each student. Missing work, retakes and extra credit are tracked.
 - **Hand work back**: one click makes the marked files, in the same student folders they came in, or one PDF per student.
 - **Plan and teach**: the Planner keeps units, lessons and slides beside your timetable. Present a lesson full screen with its agenda and a timer, and note where the class got to. Lessons also download as PowerPoint files.
-- **Around the class**: a seating chart with a random name picker and groups, report comment drafts made from the gradebook, one-page progress sheets for parent meetings, a to-do list and a focus timer for grading sessions.
+- **Around the class**: a seating chart with a random name picker and groups, report comment drafts made from the gradebook, one-page progress sheets for parent meetings, and a to-do list.
+- **Planning your grading time**: a focus timer with a daily goal, an estimate of how long a set of papers will take at your own pace, your free periods marked on Today, and a tracker of time spent grading and planning, kept in your browser.
+- **Undo** (Ctrl Z) works on every screen, including the slide editor.
 - **Languages**: the main screens can be shown in Traditional Chinese, Simplified Chinese, Spanish, French, German, Portuguese, Japanese or Korean. None has been checked by a fluent speaker yet, and some screens are still in English.
 
 ![The gradebook for a sample class: in-class and summative columns, averages and a term grade](docs/images/gradebook.png)

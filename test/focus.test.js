@@ -115,7 +115,7 @@ test('Settings keep only what differs from the usual, and a setup from an assist
   assert.equal(await meFocus(page), undefined);
   // a setup brings it in, says what it changes, goes out again the same, and Undo puts it back
   const r = await page.evaluate(async () => {
-    const G = window.__gs, S = G.stpRead({ gradingStudioSetup: 1, focus: { sessionMinutes: 15, breakMinutes: 7, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true } });
+    const G = window.__gs, S = G.stpRead({ gradingStudioSetup: 1, focus: { sessionMinutes: 15, breakMinutes: 7, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true, stopCountingAfterMinutes: 4 } });
     const diff = JSON.stringify(G.stpDiff(S)); await G.stpApply(S, { focus: true });
     const me = JSON.parse(JSON.stringify(G.state().lib.me.focus)), ex = await G.stpExport(), out = (typeof ex === 'string' ? JSON.parse(ex) : ex).focus;
     await G.stpUndo();
@@ -124,7 +124,7 @@ test('Settings keep only what differs from the usual, and a setup from an assist
   assert.deepEqual(r.read, { len: 15, goal: { k: 'min', n: 90 }, sound: false, title: true }, 'a break length the app does not offer is left out');
   assert.match(r.diff, /Focus timer and daily goal/);
   assert.deepEqual(r.me, { len: 15, goal: { k: 'min', n: 90 }, sound: false });
-  assert.deepEqual(r.out, { sessionMinutes: 15, breakMinutes: 5, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true });
+  assert.deepEqual(r.out, { sessionMinutes: 15, breakMinutes: 5, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true, countTime: true, stopCountingAfterMinutes: 5, freePeriods: true, weeklyLookBack: 'friday', quietWhileFocusing: false, shortestFirst: false, sessionGoals: true });
   assert.equal(r.after, undefined);
   assert.deepEqual(page.errors, []);
   await close();
