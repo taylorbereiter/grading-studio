@@ -1,7 +1,7 @@
 /* ---------------- Quick mark: a paper quiz marked one question at a time, across the class ---------------- */
 // She draws a box around each question once, on any student's paper. Each box is kept as a share of its page, by its place in
 // the student's page list (the first page, the second, ...), so the same box finds the same question on every scan.
-// batch.quiz = { qs: [{ id, lab, n, x, y, w, h, pts, key, how, kind, mx, my }], how, words, side: 'left' | 'right', total: { n, x, y } | null,
+// batch.quiz = { qs: [{ id, lab, n, x, y, w, h, pts, key, how, kind, mx, my, nx, ny }], how, words, ans, at, side: 'left' | 'right', total: { n, x, y } | null,
 //   shift: { student: { n: [dx, dy] } }, spot: { student: { id: [x, y] } } }
 // how is the way a question is marked on the paper: 'x' an ✗ on wrong answers only, 'cx' a check and an ✗, 'pts' the points
 // ("1/2"). A question saved before there was a choice has none and keeps the old look. mx, my is the spot she picked for its
@@ -11,7 +11,8 @@
 // words are what 0, the middle and the top of a scale mean, shown on the scale's buttons. spot is a mark moved on one student's paper only.
 // key is the question's right answer, as she typed it. ans says where it goes on the papers, as a gold comment labelled Answer
 // (an answer note, tagged qza: id): 'miss' by each question a student lost points on, 'all' by every question, 'off' nowhere.
-// A quiz saved before answer notes has none and gets none until she saves its boxes again.
+// A quiz saved before answer notes has none and gets none until she saves its boxes again. at is where each note's line starts
+// (QZ_AT), unless she dragged a question's gold pin (nx, ny, shares of the page like mx, my).
 // A student's marks are st.grade.q = { id: points }. Each one also goes on the paper by its box (marks tagged qz: id),
 // and the sum is their points score, partial until every question is marked.
 const QZ_PAD = 0.012;   // a little room around each box, since scans sit a bit differently
@@ -206,14 +207,47 @@ function qzAnsWant(q, v) {
   if (v == null || mode === 'off' || !String(q.key || '').trim()) return false;
   return mode === 'all' || v < (+q.pts || 1);
 }
-// Puts the answer note by the question on this page's marks, or takes it off. One she moved stays where she put it.
+// Where an answer note's line starts, in points on this student's page. Her own spot for the question (nx, ny, dragged in Boxes)
+// wins; otherwise the quiz's choice (batch.quiz.at): 'right' the middle of the box's right side, 'under' just under its
+// bottom right corner, 'mark' just right of the question's mark.
+const QZ_AT = { right: 'Right of each box', under: 'Under each box', mark: 'By the mark' };
+const qzAnsAt = () => (batch.quiz && QZ_AT[batch.quiz.at]) ? batch.quiz.at : 'right';
+function qzAnsSpot(st, q, sz) {
+  const [dx, dy] = qzShift(st, q.n), at = qzAnsAt();
+  let x, y;
+  if (q.nx != null) { x = (q.nx + dx) * sz.W; y = (q.ny + dy) * sz.H; }
+  else if (at === 'under') { x = (q.x + q.w + dx) * sz.W - 10; y = (q.y + q.h + dy) * sz.H + 6; }
+  else if (at === 'mark') { const s = qzSpot(st, q, sz); x = s.x * sz.W + 16; y = s.y * sz.H; }
+  else { x = (q.x + q.w + dx) * sz.W; y = (q.y + q.h / 2 + dy) * sz.H + 6; }
+  return [r1(clamp(x, 4, sz.W - 4)), r1(clamp(y, 4, sz.H - 4))];
+}
+// A note's spot before there was a choice, so one she never moved can follow a new choice.
+function qzAnsOld(st, q, sz) {
+  const [dx, dy] = qzShift(st, q.n);
+  return [r1(clamp((q.x + q.w + dx) * sz.W, 4, sz.W - 4)), r1(clamp((q.y + q.h / 2 + dy) * sz.H + 6, 4, sz.H - 4))];
+}
+// An answer note she moved on its paper: marked so once its quiz redid it, or since then off the spot it was given.
+const qzMoved = m => !!m.qza && (!!m.qzm || (!!m.qzp && (Math.abs(m.ax - m.qzp[0]) > 0.6 || Math.abs(m.ay - m.qzp[1]) > 0.6)));
+// The question's name shown on the note and at its spot (Q3), so it's plain which answer goes with which question.
+const qzAnsLab = q => { const i = batch.quiz.qs.indexOf(q), l = quizLabel(q, i < 0 ? 0 : i); return /^\d/.test(l) ? 'Q' + l : l; };
+// Puts the answer note by the question on this page's marks, or takes it off. One she moved on this paper stays where she put
+// it (qzm: its spot is no longer qzp, the spot it was given); the rest follow where the quiz says answer notes point from.
+// qzr is the question's box on this page, outlined while the pointer is on its note.
 async function qzAns(st, q, v, list) {
   const i = list.findIndex(m => m.qza === q.id), old = i >= 0 ? list[i] : null;
   if (!qzAnsWant(q, v)) { if (old) list.splice(i, 1); return; }
-  if (old) { old.text = qzAnsText(q); old.color = QZ_GOLD; return; }
-  const sz = await qzPageSize(st, q.n); if (!sz) return;
-  const [dx, dy] = qzShift(st, q.n);
-  list.push({ t: 'note', color: QZ_GOLD, ax: r1(clamp((q.x + q.w + dx) * sz.W, 4, sz.W - 4)), ay: r1(clamp((q.y + q.h / 2 + dy) * sz.H + 6, 4, sz.H - 4)), text: qzAnsText(q), qza: q.id });
+  const sz = await qzPageSize(st, q.n);
+  if (old) { old.text = qzAnsText(q); old.color = QZ_GOLD; }
+  if (!sz) return;
+  const [dx, dy] = qzShift(st, q.n), at = qzAnsSpot(st, q, sz), n = old || { t: 'note', color: QZ_GOLD, text: qzAnsText(q), qza: q.id };
+  n.qzl = qzAnsLab(q);
+  n.qzr = [r1((q.x + dx) * sz.W), r1((q.y + dy) * sz.H), r1(q.w * sz.W), r1(q.h * sz.H)];
+  if (old) {
+    const was = old.qzp || qzAnsOld(st, q, sz);
+    if (old.qzm || Math.abs(old.ax - was[0]) > 0.6 || Math.abs(old.ay - was[1]) > 0.6) { old.qzm = 1; delete old.qzp; return; }
+    if (old.ly != null) old.ly = r1(old.ly + at[1] - old.ay);
+  } else list.push(n);
+  n.ax = at[0]; n.ay = at[1]; n.qzp = at;
 }
 function qzAnsOf(st, q) {
   const [path, p] = quizPages(st)[q.n] || [], f = path && fileByPath(st, path), l = f && f.marks[p];
@@ -271,6 +305,8 @@ function openQuizBoxes(back) {
   const Q = batch.quiz ? JSON.parse(JSON.stringify(batch.quiz)) : { qs: [], how: 'x', side: 'left', total: null, shift: {} };
   Q.how ||= 'x';
   Q.ans ||= 'miss';   // answer notes go where points were lost, unless she picks otherwise
+  Q.at ||= 'right';
+  let ansBack = false;   // Put back: answer notes moved on single papers go back to where the quiz says, once she saves
   Q.words = JSON.parse(JSON.stringify(qzWordsAll()));
   let si = who[0], selId = null, picking = false, spotPick = false;
   if (Q.qs.length) { const was = who.find(i => batch.students[i].key === Q.from); if (was != null) si = was; }
@@ -284,6 +320,8 @@ function openQuizBoxes(back) {
     '<div class="chk" style="cursor:default;flex-wrap:wrap">Marks go <span class="seg" id="qbSide"><button data-side="left">Left of each box</button><button data-side="right">Right</button></span><span class="muted hsm">unless you picked a spot</span></div>' +
     '<div class="chk" style="cursor:default;flex-wrap:wrap">Answer notes <span class="seg" id="qbAns">' + Object.entries(QZ_ANS).map(([k, t]) => '<button data-ans="' + k + '">' + t + '</button>').join('') + '</span>' +
     '<span class="qbanssay"><span class="qzgold">' + esc(tr('Answer')) + '</span><span class="muted hsm" id="qbAnsSay"></span></span></div>' +
+    '<div class="chk" style="cursor:default;flex-wrap:wrap" id="qbAtRow">Answer lines start <span class="seg" id="qbAt">' + Object.entries(QZ_AT).map(([k, t]) => '<button data-at="' + k + '">' + t + '</button>').join('') + '</span>' +
+    '<span class="muted hsm" id="qbAtSay"></span></div>' +
     '<div class="chk" style="cursor:default;flex-wrap:wrap">Total <button class="btn sm" id="qbTotal"></button><span class="muted hsm" id="qbTotalSay"></span></div>' +
     '<p class="muted hsm" style="margin:0">Keys for the picked box: arrows move it, Shift + arrows resize it, Ctrl D copies it just below, Delete takes it out.</p></div>' +
     '</div></div>' +
@@ -298,6 +336,9 @@ function openQuizBoxes(back) {
     for (const b of $('#qbSide').children) b.setAttribute('aria-pressed', String(b.dataset.side === (Q.side || 'left')));
     for (const b of $('#qbHow').children) b.setAttribute('aria-pressed', String(b.dataset.how === Q.how));
     for (const b of $('#qbAns').children) b.setAttribute('aria-pressed', String(b.dataset.ans === Q.ans));
+    for (const b of $('#qbAt').children) b.setAttribute('aria-pressed', String(b.dataset.at === Q.at));
+    $('#qbAtRow').hidden = Q.ans === 'off';
+    $('#qbAtSay').innerHTML = 'unless you drag a gold pin. ' + (moved() ? (ansBack ? 'Answer notes moved on single papers go back when you save. <button class="link" data-ansback>Keep them</button>' : '<button class="link" data-ansback>Put back answer notes moved on single papers (' + moved() + ')</button>') : '');
     $('#qbAnsSay').textContent = Q.ans === 'off' ? 'The answers you type stay with you while you mark.' : Q.ans === 'all' ? 'A gold note with the answer goes by every question that has one, on every paper.' : 'A gold note with the answer goes by each question a student lost points on.';
   };
   const totalSay = () => {
@@ -309,7 +350,9 @@ function openQuizBoxes(back) {
     const q = qOf(selId), el = $('#qbSpot');
     if (!q) { el.innerHTML = ''; return; }
     el.innerHTML = '<div class="qbspot"><b class="hsm">Question ' + esc(quizLabel(q, Q.qs.indexOf(q))) + ' mark:</b><button class="btn sm" data-spot>' + (spotPick ? 'Click on the page…' : 'Pick mark spot') + '</button>' +
-      (q.mx != null ? '<button class="link" data-margin>Back to the margin</button>' : '<span class="muted hsm">in the margin</span>') + '</div>';
+      (q.mx != null ? '<button class="link" data-margin>Back to the margin</button>' : '<span class="muted hsm">in the margin</span>') + '</div>' +
+      (Q.ans !== 'off' && String(q.key || '').trim() ? '<div class="qbspot"><b class="hsm">Its answer line:</b><span class="muted hsm">' + (q.nx != null ? 'starts at the gold pin you dragged' : 'starts ' + QZ_AT[Q.at].toLowerCase().replace(/ each /, ' the ') + '. Drag the gold pin to change it.') + '</span>' +
+        (q.nx != null ? '<button class="link" data-ansdef>Back to ' + QZ_AT[Q.at].toLowerCase().replace(/ each /, ' the ') + '</button>' : '') + '</div>' : '');
   };
   // What each step of each scale in this quiz means, shown on its buttons while marking. Only there while some question is on a scale.
   const wordsSay = () => {
@@ -342,10 +385,20 @@ function openQuizBoxes(back) {
     const sz = qzSz(st(), q.n), right = (Q.side || 'left') === 'right';
     return [right ? q.x + q.w + 15 / sz.W : Math.max(13 / sz.W, q.x - 15 / sz.W), Math.max(12 / sz.H, q.y + 12 / sz.H)];
   };
+  // Where a question's answer line starts while setting up, as shares of the page: her gold pin, or the quiz's choice.
+  const ansAt = q => {
+    if (q.nx != null) return [q.nx, q.ny];
+    const sz = qzSz(st(), q.n);
+    if (Q.at === 'under') return [q.x + q.w - 10 / sz.W, q.y + q.h + 6 / sz.H];
+    if (Q.at === 'mark') { const [px, py] = pinAt(q); return [px + 16 / sz.W, py]; }
+    return [q.x + q.w, q.y + q.h / 2 + 6 / sz.H];
+  };
+  // How many answer notes she moved on single papers.
+  const moved = () => batch.students.reduce((a, s) => a + s.files.reduce((b, f) => b + Object.values(f.marks || {}).reduce((c, l) => c + l.filter(qzMoved).length, 0), 0), 0);
   const overlays = () => {
     for (const w of pagesEl.querySelectorAll('.qbpg')) {
       const n = +w.dataset.n;
-      for (const el of w.querySelectorAll('.qbbox,.qbtot,.qbpin')) el.remove();
+      for (const el of w.querySelectorAll('.qbbox,.qbtot,.qbpin,.qbapin')) el.remove();
       Q.qs.forEach((q, i) => {
         if (q.n !== n) return;
         const on = q.id === selId;
@@ -358,6 +411,13 @@ function openQuizBoxes(back) {
         Object.assign(pin.style, { left: px * 100 + '%', top: py * 100 + '%' });
         pin.textContent = (q.how || 'cx') === 'pts' ? fmtNum(+q.pts || 1) : '✗';
         w.appendChild(pin);
+        if (Q.ans !== 'off' && String(q.key || '').trim()) {
+          const [ax, ay] = ansAt(q), ap = document.createElement('div'), lab = quizLabel(q, i);
+          ap.className = 'qbapin' + (on ? ' on' : ''); ap.dataset.q = q.id; ap.title = 'Where the line to question ' + lab + '’s answer note starts. Drag to move it.';
+          Object.assign(ap.style, { left: ax * 100 + '%', top: ay * 100 + '%' });
+          ap.textContent = /^\d/.test(lab) ? 'Q' + lab : lab;
+          w.appendChild(ap);
+        }
       });
       if (Q.total && Q.total.n === n) { const d = document.createElement('div'); d.className = 'qbtot'; Object.assign(d.style, { left: Q.total.x * 100 + '%', top: Q.total.y * 100 + '%' }); d.textContent = fmtNum(Q.qs.reduce((a, q) => a + (+q.pts || 0), 0)) + '/' + fmtNum(Q.qs.reduce((a, q) => a + (+q.pts || 0), 0)); w.appendChild(d); }
     }
@@ -397,9 +457,10 @@ function openQuizBoxes(back) {
       spotSay(); overlays(); return;
     }
     e.preventDefault(); w.setPointerCapture(e.pointerId); pagesEl.focus({ preventScroll: true });
-    const pin = e.target.closest('.qbpin'), hd = e.target.closest('.qbh'), tab = e.target.closest('.qbbox>span');
+    const pin = e.target.closest('.qbpin'), apin = e.target.closest('.qbapin'), hd = e.target.closest('.qbh'), tab = e.target.closest('.qbbox>span');
     let kind = 'draw', q = null;
     if (pin) { kind = 'pin'; q = qOf(pin.dataset.q); }
+    else if (apin) { kind = 'apin'; q = qOf(apin.dataset.q); }
     else if (hd) { kind = hd.dataset.c; q = qOf(selId); }
     else if (tab) { kind = 'move'; q = qOf(tab.parentNode.dataset.q); }
     drag = { kind, q, orig: q ? { ...q } : null, hit: e.target.closest('.qbbox'), w, n, p0, at, r, moved: false };
@@ -418,9 +479,11 @@ function openQuizBoxes(back) {
     }
     if (!q) return;
     if (d.kind === 'pin') { q.mx = R(p[0]); q.my = R(p[1]); }
+    else if (d.kind === 'apin') { q.nx = R(p[0]); q.ny = R(p[1]); }
     else if (d.kind === 'move') {
       q.x = R(clamp(o.x + dx, 0, 1 - o.w)); q.y = R(clamp(o.y + dy, 0, 1 - o.h));
       if (o.mx != null) { q.mx = R(clamp(o.mx + q.x - o.x, 0, 1)); q.my = R(clamp(o.my + q.y - o.y, 0, 1)); }
+      if (o.nx != null) { q.nx = R(clamp(o.nx + q.x - o.x, 0, 1)); q.ny = R(clamp(o.ny + q.y - o.y, 0, 1)); }
     } else {   // a corner: nw, ne, sw or se
       let x0 = o.x, y0 = o.y, x1 = o.x + o.w, y1 = o.y + o.h;
       if (d.kind[1] === 'w') x0 = p[0]; else x1 = p[0];
@@ -458,7 +521,7 @@ function openQuizBoxes(back) {
       tr.querySelector('.qkind').innerHTML = qzKindOpts(q);
       wordsSay();
     }
-    if (e.target.classList.contains('qkey')) q.key = e.target.value;
+    if (e.target.classList.contains('qkey')) { q.key = e.target.value; spotSay(); }
     if (e.target.classList.contains('qhow')) q.how = e.target.value;
     if (e.target.dataset.qgoal != null) {   // a learning goal for this question (goals.js); the last choice makes a new one
       if (e.target.value === '+') { goalsDlg({ add: true }).then(r => { if (r.added) q.goal = r.added; if (pagesEl.isConnected) list(); }); return; }
@@ -474,7 +537,10 @@ function openQuizBoxes(back) {
     const dl = e.target.closest('[data-del]'); if (dl) { Q.qs = Q.qs.filter(q => q.id !== dl.dataset.del); if (selId === dl.dataset.del) selId = null; list(); overlays(); return; }
     const sd = e.target.closest('[data-side]'); if (sd) { Q.side = sd.dataset.side; sideSay(); overlays(); return; }
     const hw = e.target.closest('[data-how]'); if (hw) { Q.how = hw.dataset.how; sideSay(); return; }
-    const an = e.target.closest('[data-ans]'); if (an) { Q.ans = an.dataset.ans; sideSay(); return; }
+    const an = e.target.closest('[data-ans]'); if (an) { Q.ans = an.dataset.ans; sideSay(); spotSay(); overlays(); return; }
+    const at = e.target.closest('[data-at]'); if (at) { Q.at = at.dataset.at; sideSay(); spotSay(); overlays(); return; }
+    if (e.target.closest('[data-ansback]')) { ansBack = !ansBack; sideSay(); return; }
+    if (e.target.closest('[data-ansdef]')) { const q = qOf(selId); if (q) { delete q.nx; delete q.ny; } spotSay(); overlays(); return; }
     if (e.target.closest('[data-spot]')) { spotPick = !spotPick; picking = false; totalSay(); spotSay(); return; }
     if (e.target.closest('[data-margin]')) { const q = qOf(selId); if (q) { delete q.mx; delete q.my; } spotSay(); overlays(); return; }
     if (e.target.closest('#qbTotal')) { picking = !picking; spotPick = false; totalSay(); spotSay(); return; }
@@ -491,6 +557,7 @@ function openQuizBoxes(back) {
       batch.quiz = Q;
       if (!await qzOutOf()) { batch.quiz = old; return; }
       qzDropGone(new Set(Q.qs.map(q => q.id)));
+      if (ansBack) for (const s of batch.students) for (const f of s.files) for (const l of Object.values(f.marks || {})) for (const m of l) if (qzMoved(m)) { delete m.qzm; m.qzp = [m.ax, m.ay]; }
       qzForget();
       for (const s of batch.students) if (s.grade.q && Object.keys(s.grade.q).length) { await qzRedoPaper(s); quizScore(s); }
       saveSoon(); renderGrade(); renderList(); quizBtn();
@@ -507,6 +574,7 @@ function openQuizBoxes(back) {
       e.preventDefault();
       const y = R(clamp(q.y + q.h + 0.01, 0, 1 - q.h)), c = { ...q, id: uid(), lab: '', y };
       if (q.mx != null) c.my = R(clamp(q.my + y - q.y, 0, 1));
+      if (q.nx != null) c.ny = R(clamp(q.ny + y - q.y, 0, 1));
       Q.qs.splice(Q.qs.indexOf(q) + 1, 0, c); return pick(c.id);
     }
     const mv = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[k];
@@ -516,6 +584,7 @@ function openQuizBoxes(back) {
     else {
       const x = R(clamp(q.x + mv[0] * step, 0, 1 - q.w)), y = R(clamp(q.y + mv[1] * step, 0, 1 - q.h));
       if (q.mx != null) { q.mx = R(clamp(q.mx + x - q.x, 0, 1)); q.my = R(clamp(q.my + y - q.y, 0, 1)); }
+      if (q.nx != null) { q.nx = R(clamp(q.nx + x - q.x, 0, 1)); q.ny = R(clamp(q.ny + y - q.y, 0, 1)); }
       q.x = x; q.y = y;
     }
     overlays();
