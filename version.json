@@ -1,22 +1,22 @@
 {
  "version": "1.28.20",
- "build": "ac4b893edd0e",
+ "build": "3a8f5c267db7",
  "notes": [
   "Focus: a timer for grading in short sessions. Start it from the card on Today or from Focus in the sidebar, on a set of papers or one of your to-dos, and the next paper with nothing finished opens. A small panel keeps the time, folds to a pill, and offers a break when the time is up. To do has Focus on this.",
   "A daily goal in papers or minutes, set in Settings, Focus and goals. Dots, a ring in the sidebar and this week’s bars fill in as you go, and turn green when you get there. A paper counts when its score is finished or its feedback is complete."
  ],
  "files": {
-  "index.html": "47a1b9c5f9d4d2c1fce09e88ce6d618b52a033eddfa07cafef653d546319e445",
-  "planner.html": "197d0be060f93b09fc97cb358fea3015db12431ed05a96a0584820acbe75d4ec"
+  "index.html": "c1a1934803c5fdbaba3be353f59325946454cb1fbe68128d2452b7040ccdaf76",
+  "planner.html": "b01c8663b70c0e6760335f45385f057e27fd55b4f55cc4b325c6bb4e8a006bc2"
  },
  "langs": {
-  "lang/zh-Hant.js": "2c54ad793e205e028be5de8969b5717a3e454209738bf446f620f3b3c039491f",
-  "lang/zh-Hans.js": "1fadcc52b2422f6b56bc80c7eb8ed2c341a3eb3a7643a20505cb3a1f4f09c21f",
-  "lang/es.js": "4c3189f09e350de07830f3301b0594feec895659560afd0bcc798093a92be31f",
-  "lang/fr.js": "f723748b607f5d72fe849229d00bc992e1444de6285478978e4a2ceed8b0bc57",
-  "lang/de.js": "d9c301b7e879084acc9fb51d832cc34476289b30d57f939f6aaa1e5fe19b08a3",
-  "lang/pt-BR.js": "486f1bc5a5b0f29ffd3a54338a8831ffeabf41211d87bcb20d21f5ba21d97921",
-  "lang/ja.js": "2dd99d812ad4181a3e3f84ae7656f18033927a37921d74811bc212bb3c9e3a3d",
-  "lang/ko.js": "2bb9cf6db4f73dde78530d73cbe339e41021bfdd1e4c397ee997c3a84db950b2"
+  "lang/zh-Hant.js": "4735c6ce2b572689d084893998b82ffd412c64d349673615e4a9cc1f31523b70",
+  "lang/zh-Hans.js": "f7239ced77c3527a6a4a0775ff78d0df5b5c2e7aa2b05df646f19d7347cc8a61",
+  "lang/es.js": "d132d2c4897617f6bc771ee31d27d588492e8cd398b08e27bc82a2271ef0aeb3",
+  "lang/fr.js": "371ba91536cc9620f47460808566fcdebc1a2e43d6e6e395a4b5231018d26189",
+  "lang/de.js": "46c06aa1e10be042dc7d7689d8c97511b47b00bf63172b9f3d276254e625c5ab",
+  "lang/pt-BR.js": "fa67b04d80f54b30554ca1cd61f03418151f6d4f708afbc3efe89ae7520e12ae",
+  "lang/ja.js": "29c88a48c040e256befa23ec4425ae9b9168f5831f5bdbbac75ca00dad19ba7a",
+  "lang/ko.js": "372f1fe92d3638548093d1b30549b6644b9f0672072fd25d4178e00e716e342c"
  }
 }
