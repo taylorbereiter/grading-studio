@@ -81,6 +81,6 @@ npm run preview   # builds, then serves at http://localhost:4173
 npm run check     # builds and runs every test (about 15 minutes, needs Chrome)
 ```
 
-Use the preview address, never the live one, for trying changes: browsers keep saved work per address, so a test there could touch real student work. [docs/DEVELOPING.md](docs/DEVELOPING.md) covers the build, the tests, screen and saved-work checks, versions, moving to a new web address and changing how work is saved. [docs/PLAN.md](docs/PLAN.md) holds the plan. To run your own copy at another address, change `address` in `site.json`.
+Use the preview address, never the live one, for trying changes: browsers keep saved work per address, so a preview at the same address as the live link would open real student work. [docs/DEVELOPING.md](docs/DEVELOPING.md) covers the build, the tests, screen and saved-work checks, versions, moving to a new web address and changing how work is saved. [docs/PLAN.md](docs/PLAN.md) holds the plan. To run your own copy at another address, change `address` in `site.json`.
 
 The libraries built into the pages keep their own licenses.
