@@ -1,21 +1,22 @@
 {
- "version": "1.28.25",
- "build": "a9b0ae6ab462",
+ "version": "1.28.26",
+ "build": "2077786b1961",
  "notes": [
-  "A comment box opened near the bottom of a page no longer slips behind the next page. All of it stays on top, so saved comments, colors and Done can be clicked."
+  "The School page has a People card: optional spots for your principal, vice principal, department head or subject group coordinator, curriculum coordinator and dean of academic affairs, each with a name and email. Change the spots to your school’s own roles.",
+  "A to-do can name people from the School page. Type “ask the principal” or a last name and they are picked out; open the to-do to add someone or write to them by email, and filter your list by person."
  ],
  "files": {
-  "index.html": "204416a7eb9b6738be10ea364bbf6374926ec1b479a89fd833af85bd6e8e86c8",
-  "planner.html": "13e1185ecefcbdaf301673b39a2914aa777fa358cccfabb3a2c01b6885b7e676"
+  "index.html": "b8ca7cac2d26882a620277f16dbfe8e686fbd8c7ae6d2cc582a286b0be792cbb",
+  "planner.html": "f333d6e28f6ba72bfdfad085dc485c6cdc14e9b2ab1fe49360dd90794c5739a6"
  },
  "langs": {
-  "lang/zh-Hant.js": "241b64c7293f2f6e266f7c89a6d61a79786166b79d6df3906303990ab681f5ed",
-  "lang/zh-Hans.js": "0de3cf9dee06fe0ede588e40c8fea657badc5e83e113e4557a7009ab851199fd",
-  "lang/es.js": "649de9f6bafbba6233dfae3f223e6431e47c497f4dc8f4bfcb17a8676676875a",
-  "lang/fr.js": "61fb415b9ab41e6331d57cb51e984a52397e220639e72c3a356dd419a2549955",
-  "lang/de.js": "c6c9d2a70cbc9498cc23d3f4c13141f728c865ed7a81610feca80fc91bb23a87",
-  "lang/pt-BR.js": "5186b2ea8237bf5d50d729332d03db7c8a0a2a1734c7c63a37b040c5360a11d1",
-  "lang/ja.js": "40f47f41c11e5eb4327cb2aaed677d6cc288395e5b6baeb7db8d2eaac72c8584",
-  "lang/ko.js": "dd6449a0ee98c85de176f95607c4d6db8f3bdbf61a7eca56a8bb035e3641e599"
+  "lang/zh-Hant.js": "1f22c535de5db63c845d7582e0fd4df81e9ca6ef86bff89a2f720a44ba8784cb",
+  "lang/zh-Hans.js": "edbac187617f22c7be8a18fe3aab3cce9341af88c507561c2c5e9c06eda38fae",
+  "lang/es.js": "9a8d6166c1f8d446e8cf32950a3779a901e3411232ced921dd042a976bf8d451",
+  "lang/fr.js": "ce34ffc3a87728626ce72b16add845e5f59c90176489cadb8bc9bff960769773",
+  "lang/de.js": "30ef04463244a900de7469953040633220cd7c344527b70991384270dc16a3d1",
+  "lang/pt-BR.js": "e39fc5f80b9b17236906daab90e1f1bfad7278c4cf53a242f1c43faa2284763f",
+  "lang/ja.js": "1d39ce5cc31d3ba67bd03937412edaf281a47a84d7feeaae40ce40a38ff5703d",
+  "lang/ko.js": "9fcd368ec33e8089594937defddb2e1c5f7d693c958495b3d82ff90dec8ba4fa"
  }
 }
