@@ -1,98 +1,89 @@
 # Grading Studio
 
-Mark student papers, score them, plan lessons and hand work back, in your browser. Student work never leaves your computer: there is no account, no server and nothing to install.
+A free grading tool and lesson planner for teachers that runs in your web browser. You open student papers, mark them with a pen, score them, keep a gradebook and hand the marked files back. Beside it, a Planner holds your units, lessons and slides.
 
-**Open it:** https://taylorbereiter.github.io/grading-studio/ in Chrome or Edge. Or download `Grading Studio.html` and double-click it to run it with no internet at all.
+There is no account, no sign-up and nothing to install. Student work stays on your own computer.
 
-## What it does
+**Open it:** https://taylorbereiter.github.io/grading-studio/ in Chrome or Edge.
 
-- **Mark** PDFs, Word files, photos and scans with a pen, highlighter, text, margin comments, check marks and proofreading marks.
-- **Score** with rubric rows (0 to 4, half points too), plain points or a percent. Letter grades or an IB DP 1 to 7 can be worked out from the percent, with boundaries you set. An IB MYP class is marked against its criteria, 0 to 8, with a best-fit level per criterion and a final grade of 1 to 7.
-- **See the class**: a Grades list to copy from, a gradebook with terms and weights, and charts for each class and each student.
-- **Hand work back**: one click makes the marked files, in the same student folders they came in.
-- **Plan and teach**: the Planner keeps units, lessons and slides beside your timetable. Present a lesson full screen, with its agenda and a timer for the class, and note where the class got to. Lessons also download as PowerPoint files.
+Not ready to use it with real classes? On the first screen, click **Look around with a sample class first**. It opens two made-up classes part-way through a term, with marked papers, a gradebook, charts and a week of lessons. The sample is kept apart from your own work, and **Leave the sample** clears it.
+
+![Marking a paper: pen marks and margin comments on the left, rubric sliders and a comment on the right](docs/images/marking.png)
 
 ## Start in five minutes
 
-1. Open the link. A new browser asks three questions: what you teach, how you grade, and where your work should be kept. Every answer can be changed later in Settings.
-2. Or click **Look around with a sample class first**. It opens a sample: two made-up classes part-way through a term, with marked papers, a gradebook, charts, a timetable and lessons. The sample is kept apart from your own work, and **Leave the sample** clears it in one click.
-3. Download a class's submissions from your school's system and drop the ZIP on Today. A folder, loose files, or one scan of the whole class's papers work too.
-4. Mark and score. **Enter** goes to the next paper. The **Grades** tab lists every score to copy, and **Return** exports the marked files.
+1. Open the link. A new browser asks three questions: what you teach, how you grade, and where your work should be kept. You can change every answer later in Settings.
+2. Download an assignment's submissions from your school's system and drop the ZIP on the Today screen. A folder, loose files, or one scan of the whole class's papers work too.
+3. Mark and score. **Enter** goes to the next paper.
+4. The **Grades** tab lists every score to copy into your school's system, and **Return** makes the marked files to send back.
 
-## Where papers can come from
+## Your students' privacy
+
+- Papers, names, marks, scores and comments are kept in your browser and, if you choose one, in a folder on your own computer. Nothing is uploaded to a server.
+- Opening the app asks the address it is served from which version is newest. Nothing about you or your work is sent.
+- Once a day, the copy at the web address adds one to a public count of browsers that opened it (`abacus.jasoncameron.dev`, a free counter with no account), so the maker can see whether anyone uses the app. Only the visit is counted: no name, no setting and nothing about your work goes with it. Like any web request, the counter sees the internet address and the browser's name. It never runs in the sample or in the downloaded copy (`src/visits.js`).
+- Using an AI assistant is optional and manual. The app can make a file with student names covered and a random code for each student, and the key to the codes stays in your browser. Nothing is sent to an assistant unless you upload that file yourself.
+
+## What it does
+
+- **Mark** PDFs, Word files, photos and scans with a pen, highlighter, typed text, margin comments, check marks and proofreading marks. Audio and video submissions play beside the paper.
+- **Score** with rubric rows (half points too), plain points or a percent. Letter grades can be worked out from the percent, with boundaries you set.
+- **IB classes**: an MYP class is marked against its criteria, 0 to 8, with a best-fit level per criterion and a final grade of 1 to 7. A DP class gets 1 to 7 from boundaries you set.
+- **Gradebook and charts**: every assignment for a class in one table, with your own terms, types and weights, and charts for each class and each student. Missing work, retakes and extra credit are tracked.
+- **Hand work back**: one click makes the marked files, in the same student folders they came in, or one PDF per student.
+- **Plan and teach**: the Planner keeps units, lessons and slides beside your timetable. Present a lesson full screen with its agenda and a timer, and note where the class got to. Lessons also download as PowerPoint files.
+- **Around the class**: a seating chart with a random name picker and groups, report comment drafts made from the gradebook, one-page progress sheets for parent meetings, and a to-do list.
+- **Planning your grading time**: a focus timer with a daily goal, an estimate of how long a set of papers will take at your own pace, your free periods marked on Today, and a tracker of time spent grading and planning, kept in your browser.
+- **Undo** (Ctrl Z) works on every screen, including the slide editor.
+- **Languages**: the main screens can be shown in Traditional Chinese, Simplified Chinese, Spanish, French, German, Portuguese, Japanese or Korean. None has been checked by a fluent speaker yet, and some screens are still in English.
+
+![The gradebook for a sample class: in-class and summative columns, averages and a term grade](docs/images/gradebook.png)
+
+## Works for any teacher
+
+Nothing about a school, a timetable or a grading scale is built in. Your classes, rosters, terms, weights, timetable, grading scale and links all come from your own Settings. A test opens a brand-new browser and fails if anything shows up that the teacher didn't type.
+
+- **My setup** (in Settings) can bring your whole setup in at once. It gives you a prompt to copy into whichever AI assistant you use. You answer its questions, paste its reply back, see a preview, and can undo it afterwards. No student data comes in this way.
+- **Where papers can come from**:
 
 | From | What to drop on Today |
 |---|---|
 | ManageBac | The ZIP of submissions, or the unzipped folder: one folder per student. |
-| Google Classroom | The assignment's Drive folder, downloaded as a ZIP. Files named "Student name - title" are put together under each student. |
-| Canvas | "Download submissions": the app groups each student's files by the name Canvas puts at the start of each file name. |
-| Moodle | "Download all submissions", as folders or as loose files: either way each student's files are put together. |
+| Google Classroom | The assignment's Drive folder, downloaded as a ZIP. Settings can also bring a whole class over from Classroom's grades file. |
+| Canvas | "Download submissions": each student's files are grouped by the name Canvas puts at the start of each file name. |
+| Moodle | "Download all submissions", as folders or as loose files. |
 | Microsoft Teams, Schoology, anything else | A ZIP or folder with one folder (or one file) per student. |
 | Paper | One scan of the whole stack: **Split a scan of everyone's papers** deals the pages out to students. |
 | Email | **+ Add → Pasted text** turns text a student sent you into a page to mark. |
 
 With a class roster pasted in, students are listed in your roster's order and matched to their files by name.
 
-## Your students' privacy
-
-- Papers, names, marks, scores and comments are kept in your browser and, if you choose one, a folder on your own computer. Nothing is uploaded.
-- Opening the app contacts the address it is served from, to ask which version is newest. Once a day, the pages at the web address also add one to a public count of browsers that opened them (`abacus.jasoncameron.dev`, a free counter with no account), so the maker can see whether anyone uses the app. Only the visit itself is counted: no name, no setting and nothing about your work goes with it, and the first visit from a browser is also counted as new. The counter sees what any web request shows (the internet address and the browser's name). It never runs in the sample, in tests or in the double-click copies, and with no internet it simply doesn't count (src/visits.js).
-- Working with Claude is optional and manual. **Share with Claude** makes a file with student names covered and a random code for each student; the key to the codes stays in your browser.
+![Charts for a sample class: every student and every assignment, shaded by score](docs/images/charts.png)
 
 ## Keeping your work safe
 
-The sidebar says **Not backed up** until you choose a folder. Once you do, every save also goes to that folder, with a copy of each day that **Go back in time** (in Settings) can restore. A **take-home file**, protected by a passphrase, carries everything to another computer and back. Installed as an app (Settings, About and updates), Grading Studio opens with no internet, and a new version waits until you click **Update now**.
+Because your work lives in your browser, clearing the browser's site data would remove it. The sidebar says **Not backed up** until you choose a folder on your computer. Once you do, every save also goes to that folder, with a copy of each day that **Go back in time** (in Settings) can restore. A **take-home file**, protected by a passphrase, carries everything to another computer and back.
 
-## More
+Installed as an app (Settings, About and updates), Grading Studio opens without internet, and a new version waits until you click **Update now**. You can also download `Grading Studio.html` from this repository and double-click it to run it with no internet at all.
 
-- **Coming from Google Classroom**: Settings, Classes and rosters, **From Google Classroom…** brings a class over with two downloads and no sign-in. The grades file ("Download all grades as CSV" in Classroom) makes the class with its roster and takes every assignment and score through the gradebook's import, where they are checked before anything is saved. The assignment's folder from Google Drive brings the papers. Both are read in the browser (src/classroom.js). Scores can't be sent back into Classroom: Google only lets an app grade assignments that the same app created.
-- **To do** in the sidebar is a to-do list: the teacher's own to-dos (with a day, a class, a student or assignment, a repeat and a note) beside lines the app works out from saved work, such as papers to mark, papers to hand back, a class with no lesson planned and missing work to chase. Those are never stored and go when the work is done. A Week view (`#/todo/week`) lays the same lines out by day under the classes that meet, and a drag moves a line to another day. Today shows a short card of what is overdue or due today. The list is saved with the grading work (src/todo.js), never in the Planner's folder.
-- **School** in the sidebar is a page for the links, files and notes about your school: the handbook, the calendar, the portals, who to call. They are kept with your work (`gs.school`, and the files in their own store), so they reach the folder and the take-home file too. The code is src/school.js.
-- **An AI assistant beside the app** (optional): a teacher who names their assistant in Settings, Working with AI (Gemini, Claude, ChatGPT, Copilot or another, with a link of their own if they like) gets its name in the sidebar of both pages. A click opens the assistant's own page in a window on the right of the screen, or a tab. In Chrome, right-click it and choose **Open link in split view** to have both in one window. The assistants do not allow their pages inside another page, so this is as close as a web page can bring them. Nothing is connected and nothing is sent: the assistant sees only what the teacher pastes or attaches. The code is `src/beside.js`.
-- **Help** in the app's sidebar has short answers to common questions, and **Find anything** lists them too.
-- **Learning goals** (optional): keep your own list of goals or standards, tag rubric rows and quiz questions with them, and each class page gets a Goals tab that shows the class and every student by goal, lowest first.
-- **Report comments** (a tab on each class's page) drafts a comment for every student from the gradebook, the rubric scores and the comments written on their papers. The drafts are made in the browser from a bank of sentences the teacher can reword; nothing about a student is sent anywhere.
-- **Progress sheets** (on a class's Students list, or one student's page) print one page per student for a parent meeting: the term grade, type averages, every score, a chart of how the scores moved, missing work, each term's grade, the report comment and lines for notes. Printed from the browser; nothing is sent.
-- **Seating** (a tab on each class's page): a seating chart to drag students around, shuffle, show to the class and print, with a random name picker and group maker (`src/seating.js`, `src/pickshare.js`). The picker and groups also open while a lesson is presented (P and G). For that the grading page keeps a copy of each roster in the browser (`gs.rolls`); the Planner shows the names and never stores them, so no student's name reaches a lesson or the Planner folder.
-- **Tablet and pencil**: on a touch screen a pencil draws (with pressure), a finger moves the page, two fingers zoom and a resting palm is ignored (src/touch.js). Tested with the browser's synthetic pen and touch input; a real tablet is still the proof.
-- **Languages**: the app is written in English and can be shown in another language (Settings, Display, App language): Traditional Chinese, Simplified Chinese, Spanish, French, German, Portuguese, Japanese and Korean so far. They cover the sidebar, Today, the welcome, Settings, a class page with all its tabs and most boxes it opens, the marking screen with its Grades, Insights and Return tabs, Find anything, Help and the feedback page in a returned paper; the other screens are still in English. None has been checked by a fluent speaker yet, and corrections are welcome. A language is one file, like `src/lang-es.js`: English lines with their translation, rules for lines with a number or a name in them, and the Help answers. `src/lang.js` reads what is drawn on the covered parts of the page and puts it into the language; a line the file doesn't know stays in English, and names a teacher typed are never touched. The build writes each language out as its own file, `lang/<code>.js`. The pages at the web address carry no language: a page fetches the one the teacher chose and no other, and the offline copy keeps that file with the pages and updates it with them. The double-click copies (`Grading Studio.html`, `Planner.html`) have nowhere to fetch from, so they carry every language squeezed inside, about 25 KB each. To add a language, copy `src/lang-es.js`, translate it, and name it in `LANGS` in build.js. `test/lang.test.js` fails when a file leaves a line of the covered screens in English, so a change to one of those screens has to add its new lines to every language file.
-- **[The full guide](docs/GUIDE.md)**: every screen, tool and shortcut, and the Planner.
-- **Settings** in the app holds your classes and rosters, where students hand in work, how you usually grade, terms and weights, the timetable and the display.
-- Nothing about any teacher, school or timetable is built in. A test opens a brand-new browser and fails if a class, a grading scale or a school system's name appears that nobody typed.
+![The Planner's week: each class's lessons on the timetable](docs/images/planner.png)
 
-## License
+## Shared as is
 
-MIT. Use it, change it and share it, free of charge; see [LICENSE](LICENSE). The libraries built into the pages keep their own licenses.
+Grading Studio was made by one teacher for their own classes and is shared in case it helps others. It is free to use, change and share under the [MIT license](LICENSE). There is no support promise: issues and suggestions are welcome, but they may not get an answer or a fix. Please try it with the sample class or made-up files before trusting it with a term's grades, and keep a backup folder.
 
-## Rebuild, test and preview
+**Help** in the app's sidebar answers common questions, and [the full guide](docs/GUIDE.md) covers every screen, tool and shortcut.
 
-`npm install` once, then:
+## For developers
 
-- **`npm run build`** also writes `sw.js` (from src/sw.js), `version.json` (the version, what’s new from src/whatsnew.json, and a hash of each page) and `manifest.webmanifest`, which let the web address be installed and kept offline. The icons in `icons/` are drawn by `node test/tools/make-icons.js`. For a new version, set it in package.json and add its lines to src/whatsnew.json.
-- **`npm run build`** builds `index.html` and `Grading Studio.html` from src/app.html, src/tokens.css and src/parts.css (the colours, text sizes, spaces and corners, and the parts both pages share), src/polish.css, src/fonts, src/migrate.js, src/app/ (the app itself, one file per screen or job, joined in the order src/app/order.json lists), src/names.js, src/marking.js, src/grades.js, src/saving.js, src/carryover.js, src/exportreport.js, src/rubrics.js, src/rubrics.css, src/intake.js, src/polish.js, src/insight.js, src/insight.css, src/scans.js (with src/scans.css), src/merge.js, src/folder.js, src/takehome.js, src/quiz.js, src/imported.js, src/marksout.js, src/pastetext.js and src/examples.js (with src/examples.css) (pdfjs-dist 3.11.174, pdf-lib 1.17.1, fflate 0.8.2, mammoth 1.11.0, html2canvas 1.4.1, libheif-js 1.23.5). Lines that are only a comment stay in src/ but don't ship, which keeps the file under its size limit. It also builds `planner.html` and `Planner.html` from src/planner/ only (planner.html, base.js, review.js, lessons.js, looks.js, activities.js, present.js, rail.js, units.js, with fflate and the Inter font), plus src/present.css, the look of a lesson being presented. Two files go into both pages: src/rail.css, the look of the sidebar and Find anything (each page draws them with its own code), and src/helpdata.js, the answers on the Help page (src/help.js and src/help.css draw it on the grading page).
-- **`npm run check`** builds, then runs every test, which takes about a quarter of an hour. Run this before pushing, because a push to `main` changes the live link right away.
-- **`npm test`** runs the tests on the last build, four files at a time. A file that fails is run once more on its own, and is listed apart if it passes then (a slow moment on a busy computer). The full output of each file is kept in out/test-logs. `npm test -- nav marking` runs only the files with those words in their names. The tests use `node:test` and drive the Chrome already installed on this computer (Windows, Mac or Linux; set `CHROME_PATH` if it's somewhere unusual) with a throwaway profile. Nothing is downloaded, your real Chrome profile isn't touched, and the test browser can't reach the internet. All the papers are made-up and generated in code.
-- **`npm run screens`** takes a picture of every screen at three sizes (1024, 1366 and 1920 wide), in light and in dark, and compares each with the same screen as `main` has it. It fails when a screen looks different and the change doesn't say so: a change that means to alter a screen names it in `test/screens-changed.txt`. The pictures, and old, new and the difference side by side, go to out/screens.
-- **`npm run saved-work`** makes work with `main`'s pages (papers, marks, scores, a class, a lesson), then opens it with this build at the same address, as the website and as the double-clicked copy. It fails if anything saved is changed or missing afterwards, or if `main`'s pages can no longer read it. A change that means to alter what is stored says so in `test/saved-work-changed.txt`, and needs a step in `MIGRATIONS`.
-- **`npm run speed`** measures the pen (pointer move to ink), going to the next student, opening 30 papers and opening the app, and prints each beside its target. It fails only when one is several times slower than today.
-- **On GitHub**, every pull request and every change to `main` runs all of these (`.github/workflows/checks.yml`). The one result to require on `main` is **All checks**.
-- **`GS_BIG=1 node --test test/takehome-big.test.js`** sends over 600 MB of made-up papers through a take-home file and back, checking the tab keeps responding. It takes minutes and about 2 GB of disk, so `npm test` skips it.
-- **`npm run preview`** builds, then serves the app at http://localhost:4173, so you can try a change in a real browser before it reaches your grading link. Press Ctrl+C to stop.
+The app is plain HTML, CSS and JavaScript, built into single files (`index.html`, `Grading Studio.html` and `planner.html`) by `build.js`. There is no framework and no server.
 
-**Why the preview isn't on the live address.** Browsers keep saved work per address, and every page under one host (the one in `site.json`) is the same address, even in another folder or repo. A preview there would open your real saved student work, and a bad change could damage it. `localhost:4173` is a different address, so it starts empty and keeps its own saved work. Use the sample papers or made-up files there, and your real work stays on the real link.
+```
+npm install
+npm run preview   # builds, then serves at http://localhost:4173
+npm run check     # builds and runs every test (about 15 minutes, needs Chrome)
+```
 
-**The web address.** `site.json` is the one place that names where this copy is served (`address`). The app itself has no address written into it, so a fork served somewhere else needs only that line and the link at the top of this file changed. Saved work belongs to the address it was made at, so moving a copy that people already use takes three steps:
+Use the preview address, never the live one, for trying changes: browsers keep saved work per address, so a preview at the same address as the live link would open real student work. [docs/DEVELOPING.md](docs/DEVELOPING.md) covers the build, the tests, screen and saved-work checks, versions, moving to a new web address and changing how work is saved. [docs/PLAN.md](docs/PLAN.md) holds the plan. To run your own copy at another address, change `address` in `site.json`.
 
-1. Put the new address in `movingTo` and publish. Everyone who opens the old address is told about the move once a day and in Settings, with the way across: **Take my work with me** makes one file holding their grading work and their Planner.
-2. Make your own file, then switch the hosting. The old address usually stops working at that moment, so nobody can make their file after it.
-3. Set `address` to the new one, empty `movingTo`, and publish. At the new address, **Bring work in** takes the file in. Help has "Grading Studio moved to a new web address".
-
-Google Drive sign-in is tied to the address as well: add the new one to the Google client's authorised origins.
-
-**Version number.** Set it in `package.json`, and nowhere else. It shows at the bottom of Today and Settings, and in the Keys list (press ?).
-
-**Changing how work is saved.** Add a step to `MIGRATIONS` in src/migrate.js; the rules are at the top of that file. Before any step runs, the app keeps a safety copy of marks, scores, comments, units, rosters and settings in this browser (the last three copies; papers aren't copied, since they never change). If a step fails, everything goes back as it was, and it tries again on the next load with a fresh copy in place of the last one. If the tab closes partway, it starts again and keeps the copy it made first. If a step is still going after 30 seconds, a button offers to stop it and put everything back; a stopped update waits until the version number goes up or a new step is added, so raise the version when you fix it.
-
-Safety copies are listed under Saving and carrying, in Settings, each saying what it was made before, with a **Put back** button. Putting one back removes marks, scores, late files and readings added since, and a safety copy made first lets you undo it. The papers from each download stay, so a download opened since stays listed with no marks. **Forget** also removes that download from every safety copy, so Put back can't bring it back.
-
-**Old-format saved work.** `test/fixtures/legacy-v1/` holds what the app wrote before saved-data versions existed, made by `test/tools/capture-legacy.js` from that old build. Leave those files alone: they're how the tests prove old work still opens.
+The libraries built into the pages keep their own licenses.
