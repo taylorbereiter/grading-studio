@@ -1,12 +1,12 @@
 {
- "version": "1.28.19",
- "build": "180add8e430d",
+ "version": "1.28.20",
+ "build": "e38dc370aeb5",
  "notes": [
-  "A Timer tab in the side pane for presentations given live: a stopwatch beside the notes page, with the asked-for length and + Time to comment. It is offered to a student who has a notes page and no video.",
-  "A YouTube or Vimeo video played in the app has buttons to skip 10 seconds and change speed, and Space, J and L work on it. Video files have a Float button that keeps the video in a small window on top. Google Drive’s player can’t be driven from here."
+  "Focus: a timer for grading in short sessions. Start it from the card on Today or from Focus in the sidebar, on a set of papers or one of your to-dos, and the next paper with nothing finished opens. A small panel keeps the time, folds to a pill, and offers a break when the time is up. To do has Focus on this.",
+  "A daily goal in papers or minutes, set in Settings, Focus and goals. Dots, a ring in the sidebar and this week’s bars fill in as you go, and turn green when you get there. A paper counts when its score is finished or its feedback is complete."
  ],
  "files": {
-  "index.html": "ecb48b7f88cca98724d85450d3c1942fefa8337e4413abef5f160d0490a00fd5",
+  "index.html": "225276ee368473063b7d8851ae6d46206d4ff637b9ffd3f3109f0a582053ec25",
   "planner.html": "3a440d6bf62a134d6d91ed2f37e74db4f4835771f18444388b4e2eb28f6f7a7c"
  },
  "langs": {
