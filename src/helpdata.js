@@ -303,7 +303,8 @@ const HELP = [
 
   { id: 'privacy', sec: 'private', q: 'Does student work leave my computer?',
     a: ['No. Papers, names, scores and comments stay in this browser and in the folder you choose. The app has no server and no accounts, and it works with the internet off.',
-      'The only things that leave are the files you export yourself.'],
+      'The only things that leave are the files you export yourself.',
+      'Once a day, the app at its web address adds one to a public count of how many browsers opened it, so its maker can see whether anyone uses it. Nothing about you, your students or your work goes with it.'],
     words: 'private data protection gdpr ferpa cloud server secure safe' },
   { id: 'ai', sec: 'private', q: 'Does the app use AI on student work?',
     a: ['No. Nothing in the app sends student work to an AI, and scores are only ever given by you.', 'Sharing with an AI assistant, on the Return tab, is optional and off until you use it. It makes a copy with no names in it: each student gets a random code, typed names are covered, and the key stays in your browser.'],
