@@ -277,6 +277,38 @@ test('the focus timer, its card on Today and its Settings leave nothing in Engli
   await close();
 });
 
+// The time tracker (src/tracker.js): a week, a month and three months of made-up grading and planning time, time added by hand, and its Settings.
+function trackSeed() {
+  const s = gradingSeed(), lib = JSON.parse(s.ls['gs.lib']), ids = lib.classes.flatMap(c => c.units.flatMap(u => u.items.map(it => it.id)));
+  lib.me = { ...(lib.me || {}), focus: { goal: { k: 'papers', n: 4 } } };
+  const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const day = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return iso(d); };
+  const days = {}, pd = {};
+  for (let n = 0; n < 40; n += 3) { days[day(n)] = { p: 5, s: 1200, g: 3000, a: { [ids[0]]: 2400, '': 600 }, pa: { [ids[0]]: 5 } }; pd[day(n + 1)] = { l: 2400, a: { L1: 1800, '': 600 } }; }
+  days[day(50)] = { p: 2, s: 900 };   // from before time was counted: its focus time is its grading
+  const focus = { day: day(0), base: {}, days, pace: [], last: '', add: [{ id: 'h1', d: day(1), k: 'g', s: 1800, x: 'Quizzes on paper' }] };
+  return { ...s, ls: { ...s.ls, 'gs.lib': JSON.stringify(lib), 'gs.focus': JSON.stringify(focus), 'gs.planTime': JSON.stringify({ days: pd, names: { L1: 'Reading a poem' } }) } };
+}
+test('the time tracker, its line on Today and its Settings leave nothing in English', async () => {
+  const { page, close } = await openApp(browser, { seed: trackSeed() });
+  const own = ['Grade 9 English', 'Grade 10 Literature', 'Reading a poem', 'Quizzes on paper', /^Reading check \d/, /^Unit \d/];
+  await page.waitForSelector('#fcCard .fctk'); await miss(page, 'Today, the Focus card with time counted', own);
+  await goTo(page, await page.$eval('#railClasses a', a => a.getAttribute('href'))); await page.waitForSelector('#classes .tkc'); await miss(page, 'a class page, an assignment with its grading time', own);
+  await goTo(page, '#/time'); await page.waitForSelector('#tkBody .tktile'); await pause(300);
+  await miss(page, 'the time tracker, a week', own);
+  for (const r of ['month', 'quarter']) { await page.click('[data-tkrange="' + r + '"]'); await pause(300); await miss(page, 'the time tracker, ' + r, own); }
+  await page.click('[data-tkoff="-1"]'); await pause(300); await miss(page, 'the time tracker, three months back', own);
+  for (let i = 0; i < 4; i++) { await page.click('[data-tkoff="-1"]'); await pause(100); }
+  await pause(300); await miss(page, 'the time tracker, a stretch with nothing in it', own);
+  await page.click('[data-tknow]'); await page.click('[data-tkrange="week"]'); await page.click('[data-tkadd]'); await page.waitForSelector('#tkAdd');
+  await miss(page, 'the time tracker, adding time by hand', own);
+  await goTo(page, '#/settings/focus'); await page.waitForSelector('#tkOn'); await miss(page, 'Settings, Focus, the time tracker', own);
+  await page.click('#tkOn'); await pause(300); await miss(page, 'Settings, Focus, time not counted', own);
+  await goTo(page, '#/time'); await page.waitForSelector('#tkBody .tkfoot'); await miss(page, 'the time tracker, time not counted', own);
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
 // Learning goals on both rubrics, and two days of attendance, on the made-up class.
 function goalsSeed() {
   const s = gradingSeed(), lib = JSON.parse(s.ls['gs.lib']);

@@ -1,22 +1,22 @@
 {
- "version": "1.28.20",
- "build": "b80f3d2c1151",
+ "version": "1.28.21",
+ "build": "e8777f961d1d",
  "notes": [
-  "Focus: a timer for grading in short sessions. Start it from the card on Today or from Focus in the sidebar, on a set of papers or one of your to-dos, and the next paper with nothing finished opens. A small panel keeps the time, folds to a pill, and offers a break when the time is up. To do has Focus on this.",
-  "A daily goal in papers or minutes, set in Settings, Focus and goals. Dots, a ring in the sidebar and this week’s bars fill in as you go, and turn green when you get there. A paper counts when its score is finished or its feedback is complete."
+  "A time tracker for grading and planning, kept apart. Grading time counts while the marking screen is in front and you are working in it; planning time counts the same way in the Planner, but not while you present. Open it from the Focus card on Today or with Find anything: a week, a month or three months, by assignment and by lesson. Each assignment shows its own time on its card and on the marking screen, with about how long a paper takes, and each lesson shows its planning time in the Planner.",
+  "Add time by hand for work away from the app, like marking on paper, and download every day as a spreadsheet. Settings, Focus and goals can switch the counting off or change how soon it stops."
  ],
  "files": {
-  "index.html": "225276ee368473063b7d8851ae6d46206d4ff637b9ffd3f3109f0a582053ec25",
-  "planner.html": "682360eb7275f7476586b14795bdf2498147f998aebc2a035a5c00fd278c2453"
+  "index.html": "fdd804b82bbaf871976823cc94586c9539eae3c15e6a4e9f1cbcd01a121dae11",
+  "planner.html": "2446c6eb7f11a6b923a4baf20160b77e0dd6872fe2395612169907003bbf1da8"
  },
  "langs": {
-  "lang/zh-Hant.js": "4626236ce80cc43776ce9b962974b3341c2b20e899c3dc88c217982c8bf33d72",
-  "lang/zh-Hans.js": "cfb79ac04297b57854e0e9dc8d87637c978091a2d0a44e8134351458a1371302",
-  "lang/es.js": "4c85c752c2983b8e5d957d5f6e1890140cbf5f14588e32bfb4b205908eac4714",
-  "lang/fr.js": "f86fdc385071d03404d62f013cde51141bbf9f0e3d9d05f8685857b1ea5295f1",
-  "lang/de.js": "55f14f15179960d6586deb554534eec8104c18fc3773f398dc515ec58e6e8c99",
-  "lang/pt-BR.js": "b53ee0a79a5e731f65f3534908fb88c9ed056a447783f23e0b8f39639cba77e7",
-  "lang/ja.js": "5adbbf0cd2451b0c8e057b42866e8d3f7403aa1a2b1810167ab4e476916a62fd",
-  "lang/ko.js": "c437a117a7a60f5423749450b9ef9e6817d007c3c0d93e914b5a322a77e9116d"
+  "lang/zh-Hant.js": "7cae9c4afdc73f2781dbebd8089fc46c5e63da95d33887f14d38fa9d25ad5816",
+  "lang/zh-Hans.js": "1dd5799647b4b314664ea9f0ff1808ad1d81e3bcccda38e9c0f06bff49d84281",
+  "lang/es.js": "395aecc4fcfcab0232591b328f286fee615fd26e27e2b52d45b5ced995522f73",
+  "lang/fr.js": "054e407763c0772d9cd8b9a06eb9da73e60e934a1a46f55cd17ecf7ba01e3cec",
+  "lang/de.js": "9402ab307df9363141adf145467b362f3ea820a8fa71fae4df9b6c331f3646aa",
+  "lang/pt-BR.js": "5ce161fda1c14483396b5a1f5b674cdf008ac051796845e9a6d57d051c6b1667",
+  "lang/ja.js": "f79567b1b267d698e6937c4fd3762246f2c018dcea7f32998c563e3e88256e82",
+  "lang/ko.js": "8bc824333c63e09d87e189cae9eeca352f5ae6db3d68a3d96bc763540d03ecd5"
  }
 }
