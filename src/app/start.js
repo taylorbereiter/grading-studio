@@ -16,7 +16,7 @@ const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensiti
 
 /* ---------------- pdf.js worker (inlined, works from file://) ---------------- */
 const workerReady = (async () => {
-  const src = $('#pdfWorkerSrc').textContent;
+  const el = $('#pdfWorkerSrc'), src = el.dataset.z ? fflate.strFromU8(fflate.inflateSync(unpack85(el.textContent))) : el.textContent;   // packed by the build (pack85)
   let url = null;
   try {
     url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
@@ -92,6 +92,15 @@ function maxPoints() { return setupMax(setup); }
 // Uses the grading scale when its top score matches the total possible; half points fall between two rows.
 // Percents are whole numbers, with halves rounded up (10.5 between 95 and 90 is 92.5, so 93%), the way a teacher rounds by hand.
 const roundPct = v => Math.max(0, Math.round(v + 1e-9));
+// The points a percent comes to on a scale: the half point whose percent is nearest, the lower on a tie; above the scale's top, by plain share.
+// A percent she typed stays the score (grade.pk); this is only what it shows as in points.
+function pointsWith(pct, max, sc) {
+  if (pct == null || pct === '' || isNaN(pct) || !max) return null;
+  pct = +pct; if (pct >= (percentWith(max, max, sc) || 100)) return Math.round(pct * max / 50) / 2;
+  let best = 0; for (let t = 0.5; t <= max; t += 0.5) if (Math.abs(percentWith(t, max, sc) - pct) < Math.abs(percentWith(best, max, sc) - pct)) best = t;
+  return best;
+}
+const pointsFor = pct => pointsWith(pct, maxPoints(), setup.scale);
 function percentFor(total) { return ibSetup() ? null : percentWith(total, maxPoints(), setup.scale); }   // levels on MYP criteria are never a percent (ib.js)
 function percentWith(total, max, sc) {
   if (total == null || total === '' || isNaN(total)) return null;
@@ -163,6 +172,7 @@ function scoreOf(st) {
 }
 function ownGrade(st) {
   const g = st.grade;
+  if (g.pk != null && g.pk !== '' && !ibSetup()) return { total: pointsFor(g.pk), pct: +g.pk, done: true, pk: true };   // a percent she typed: it stays the score, whatever the rows say
   if (setup.mode === 'rubric') {
     const sc = setup.criteria.map((_, i) => g.rubric[i]);
     if (sc.every(v => v == null)) return { total: null, pct: null, done: false };

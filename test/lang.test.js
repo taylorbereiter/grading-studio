@@ -367,7 +367,7 @@ test('session goals, from the Focus card through a session, a break and the end,
   await up(); await page.waitForSelector('#fcPanel .fcsgr'); await miss(page, 'the focus panel, a session goal not reached', own);
   await page.click('#fcPanel [data-fcbreak]'); await page.waitForSelector('#fcPanel .fcsgnext'); await miss(page, 'the focus panel, a break with the next goal', own);
   await up(); await page.waitForSelector('#fcPanel [data-fcother]'); await miss(page, 'the focus panel, the break over', own);
-  await page.click('#fcPanel [data-fcstart]'); await page.evaluate(() => { const r = window.__gs.fcRun(); r.p0 -= 2; window.__gs.fcRunSet(r); });
+  await page.click('#fcPanel [data-fcstart]'); await page.evaluate(() => { const r = window.__gs.fcRun(); r.pg = 2; window.__gs.fcRunSet(r); });
   await goTo(page, '#/'); await page.waitForSelector('#fcPanel .fcsg.met'); await miss(page, 'the focus panel, the second session, its goal reached', own);
   await page.click('#fcPanel [data-fcstop]'); await page.waitForSelector('#fcPanel .fcsgr.met'); await miss(page, 'the focus panel, done, two sessions today', own);
   await page.click('#fcPanel [data-fcclose]');
@@ -805,6 +805,12 @@ test('the marking screen and its tabs leave nothing in English', async () => {
   await at('Return, every option flipped', async () => { for (const id of await page.$$eval('#dlgBox details input[type=checkbox]', x => x.map(y => y.id))) { await page.$eval('#' + id, b => b.click()); await pause(150); } });
   await tab('#markTab')(); await pause(300);
   await at('Rubric setup', tab('#setupBtn')); await press('Escape');
+  // the side pane's Type notes tab: empty, its ⋯ menu, kept by her, and lines with a kind and a time
+  await at('Type notes', () => page.evaluate(() => window.__gs.spOpen('typed')));
+  await at('Type notes, its menu', () => page.$eval('#pane2 .tn .kdots', b => b.click())); await press('Escape');
+  await at('Type notes, kept by her', () => page.$eval('#pane2 .tn [data-tnback]', b => b.click()));
+  await at('Type notes, lines', () => page.evaluate(() => { const st = window.__gs.state().batch.students[0]; st.grade.tn = { l: [{ s: 'Delivery', k: 'h' }, { s: 'Steady pace', t: 75 }, { s: 'Strong opening', k: 'p' }, { s: 'Cite a source', k: 'n' }, { s: 'Why this book?', k: 'q' }] }; window.__gs.spPick('typed'); }));
+  await at('Type notes, given back again', () => page.$eval('#pane2 .tn [data-tnback]', b => b.click()));
   assert.deepEqual(page.errors, []);
   await close();
   // a rubric that says what each score means: pointing at a score, the whole row open, and closed again

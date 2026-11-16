@@ -27,7 +27,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-km]');
   if (b) return b === kmOn ? kmClose() : kmOpen(b);
   if (!kmOn) return;
-  if (e.target.closest('.km [data-armed]')) return;   // Remove asks for a second click: the menu waits for it
+  if (e.target.closest('.km [data-armed], .km [data-kmstay]')) return;   // Remove asks for a second click, and an item that opens more choices under it: the menu waits
   kmClose();
 });
 // A press on the page only closes the menu. It mustn't also mark the paper underneath.
