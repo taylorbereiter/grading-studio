@@ -142,7 +142,7 @@ async function applyRow(row, src) {
     { const v = tabStamp(id, row.work.t); if (batch && batch.id === id) batch.seen = v; }   // other tabs are told, and this one knows it was itself
     store.del(id); const idx = store.get('gs.batches', {}); if (id in idx) { delete idx[id]; store.set('gs.batches', idx); }   // the quick copy is out of date now
   }
-  if (m && JSON.stringify(m) !== JSON.stringify(row.ma)) { await kdo('meta', 'readwrite', o => o.put(m, id)); keptMeta.set(id, m); }
+  if (m && JSON.stringify(m) !== JSON.stringify(row.ma)) { await kdo('meta', 'readwrite', o => o.put(m, id)); if (typeof fcCame === 'function') fcCame(id, keptMeta.get(id), m); keptMeta.set(id, m); }
 }
 
 /* the folder itself */

@@ -107,6 +107,14 @@ function fcSeen(id) {
   const old = L.add.length; L.add = L.add.filter(x => Date.now() - new Date(x.d + 'T12:00:00') <= FC_KEEP * FC_DAY); if (L.add.length !== old) ch = true;
   if (ch) fcLogSet(L);
 }
+// Work that comes in from somewhere else (the folder, with marks made on another computer, or a copy restored from an earlier day) wasn't
+// finished here today: the day's starting point moves with it, so only what is done here from now on counts. m0, m: the row before and after.
+function fcCame(id, m0, m) {
+  if (!FC_ON || !keptRead || !m) return;
+  const L = fcLog(); if (L.day !== fcToday() || !(id in L.base)) return;
+  const b = Math.max(0, L.base[id] + fcDone(m) - (m0 ? fcDone(m0) : 0));
+  if (b !== L.base[id]) { L.base[id] = b; fcLogSet(L); }
+}
 const fcPapersToday = () => { fcSeen(); return fcPapersOf(fcLog()); };
 const fcSecsToday = () => { const d = fcLog().days[fcToday()] || {}, r = fcRun(); return (d.s || 0) + (r && (r.st === 'run' || r.st === 'paused') ? fcBusy(r) : 0); };
 function fcWeekPapers() {
@@ -651,4 +659,4 @@ $('#setPane').addEventListener('click', e => {
 
 FC_ON = true;
 fcSeen(); fcTickOn();
-window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcTick, focusOn, fcMon, fcToday });
+window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcCame, fcTick, focusOn, fcMon, fcToday });

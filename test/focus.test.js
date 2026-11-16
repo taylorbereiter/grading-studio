@@ -237,3 +237,20 @@ test('a new copy of a download carries its marks over without counting them as t
   assert.deepEqual(n, [0, 0, 1]);
   await close();
 });
+
+test('marks that come in from the folder (made on another computer) or from a restored copy don’t count as today’s papers', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  const n = await page.evaluate(() => {
+    const G = window.__gs, K = G.kept(), out = [];
+    K.set('two-computers', { id: 'two-computers', name: 'Made-up lab report', n: 6, scored: 1 });
+    G.fcSeen(); const base = G.fcPapersToday();
+    // one more paper here
+    K.set('two-computers', { ...K.get('two-computers'), scored: 2 }); out.push(G.fcPapersToday() - base);
+    // four marked yesterday on the school computer arrive through the folder (src/folder.js applyRow)
+    const m0 = K.get('two-computers'), m = { ...m0, scored: 6 }; G.fcCame('two-computers', m0, m); K.set('two-computers', m);
+    out.push(G.fcPapersToday() - base);
+    return out;
+  });
+  assert.deepEqual(n, [1, 1]);
+  await close();
+});
