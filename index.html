@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"144bd232","zh-Hans":"b192e5f0","es":"cd6574a8","fr":"aa221c0e","de":"5d10159c","pt-BR":"380bdb23","ja":"90a24fac","ko":"403b2e0d"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"b81fd99e","zh-Hans":"5906cb17","es":"8a68b9ea","fr":"775b35e4","de":"d4e415d5","pt-BR":"8395bc1a","ja":"698871bc","ko":"f68d40d4"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -3192,7 +3192,8 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .fchead{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-3) 0 var(--space-4)}
 .fchead .tcap{margin:0}
 .fchead .sp{flex:1}
-.fchead .icon{width:28px;height:28px}
+.fchead .icon{width:28px;height:28px;padding:0;border-radius:var(--corner-2);border:1px solid transparent;background:none;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font:inherit;cursor:pointer}
+.fchead .icon:hover{background:var(--surface-2);color:var(--fg)}
 .fcrunv{display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-3) var(--space-4) var(--space-4)}
 .fctop{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:var(--space-4)}
 .fcclock{position:relative;width:92px;height:92px}
@@ -3235,6 +3236,9 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .fcset input[type=number]{width:76px;height:32px;padding:0 var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
 .fcset .seg{display:inline-flex}
 .fcext{align-items:center}
+.pfstart{display:inline-flex;align-items:center;gap:var(--space-1)}
+.pfstart[hidden]{display:none}
+.ls-top .btn.pfstart svg,.pfstart svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .fcext > span{font-size:var(--text-small);color:var(--muted)}
 
 
@@ -5052,7 +5056,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.42";
+  const APP_VERSION = "1.28.47";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -5322,7 +5326,7 @@ const LANG_FILLS = [
 ['gpsessn', /^Session (\d+)$/], ['gpsess', /^(\d+) sessions? today\.$/], ['gpaday', /^(\d+) papers? a day$/], ['tkweeks', /^(\d+) weeks? reached the goal$/],
 ['tkpace', /^about (\d+) minutes? a paper$/], ['fcsofar', /^from (\d+) papers? so far$/], ['tkso', /^(\S.*) so far$/], ['tklessons', /^(\d+) lessons?$/], ['tkdays', /^(\d+) days? reached the goal$/],
 ['gpleft', /^about (.+) left$/], ['gpsets', /^(\d+) sets?$/], ['gpdays', /^(\d+) days?$/],
-['tkcount', /^Time counts while the marking screen or the Planner is in front and you have done something there in the last (\d+) minutes?\.$/],
+['tkcount', /^Grading time counts while the marking screen is in front and you have done something there in the last (\d+) minutes?\.$/],
 ['besideopen', /^Open (.+) beside Grading Studio$/],
 ['sdet', /^Student details for (.+)$/], ['cnt', /^Count (.+) in the class average$/], ['wout', /^without (\d+) students? ·$/],
 ['nograde', /^Nothing graded for (.+) in this term yet\. Grade a download for it, or use \+ Add scores for work you did before\.$/],
@@ -10386,7 +10390,7 @@ if (GOK && G_REDIRECT && G.token && !G.email) setTimeout(() => gsync('about?fiel
 
 /* ---------- videos from Drive: Google's own chooser, and only what she picks ---------- */
 const driveCan = () => GOK && !!gcid();
-const VID_MIMES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/x-matroska', 'video/3gpp'];
+const VID_MIMES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/x-matroska', 'video/3gpp', 'video/ogg'];
 let gpP = null;
 function loadPicker() {
 if (window.google && google.picker) return Promise.resolve();
@@ -10404,13 +10408,23 @@ const t = await gToken(true, 'pick'); await loadPicker();
 if (!G.email) gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); syncNow(); }).catch(() => {});
 const P = google.picker;
 return new Promise(res => {
+const mk = (label, set) => {
 const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
-if (o.folder) v.setSelectFolderEnabled(true).setMimeTypes(FOLDER);
-else { v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(',')); if (o.parent) v.setParent(o.parent); }
-const b = new P.PickerBuilder().setOAuthToken(t).setAppId(gcid().split('-')[0]).setOrigin(location.origin).addView(v)
-.enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Choose your videos folder' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
+if (o.folder) v.setSelectFolderEnabled(true); v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(','));
+if (v.setLabel) v.setLabel(label);
+set(v); return v;
+};
+const views = [];
+if (o.parent && !o.folder) views.push(mk(o.parentName || 'Videos folder', v => v.setParent(o.parent)));
+views.push(mk('My Drive', v => v.setParent('root')));
+views.push(mk('Shared with me', v => v.setOwnedByMe && v.setOwnedByMe(false)));
+views.push(mk('Shared drives', v => v.setEnableDrives && v.setEnableDrives(true)));
+const b = new P.PickerBuilder().setOAuthToken(t).setAppId(gcid().split('-')[0]).setOrigin(location.origin);
+views.forEach(v => b.addView(v));
+b
+.enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Click your videos folder once (or any video in it), then Select' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
 .setCallback(d => {
-if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).filter(x => o.folder || x.mimeType !== FOLDER).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '' })));
+if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).map(x => o.folder && x.mimeType !== FOLDER ? (x.parentId ? { id: x.parentId, name: 'Folder with ' + x.name, mimeType: FOLDER } : null) : x).filter(x => x && (o.folder || x.mimeType !== FOLDER)).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '' })));
 else if (d[P.Response.ACTION] === P.Action.CANCEL) res([]);
 });
 if (GOOGLE_API_KEY && !/@@/.test(GOOGLE_API_KEY)) b.setDeveloperKey(GOOGLE_API_KEY);
@@ -10422,7 +10436,7 @@ const vidDir = () => store.get('gs.gVidDir', null);
 async function pickVidDir() { const [d] = await drivePick({ folder: true }); if (d) store.set('gs.gVidDir', { id: d.id, name: d.name }); return d || null; }
 async function driveVideos(multi) {
 let dir = vidDir(); if (!dir) { dir = await pickVidDir(); if (!dir) return []; }
-return drivePick({ parent: dir.id, multi });
+return drivePick({ parent: dir.id, parentName: dir.name, multi });
 }
 const drivePickReady = () => !!G.token && Date.now() < G.exp - 60000 && gHas(PICK_SCOPE);
 async function driveBytes(id, onStep, interactive) {
@@ -10431,6 +10445,27 @@ const total = +r.headers.get('content-length') || 0, rd = r.body.getReader(), pa
 for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; if (onStep) onStep(got, total); }
 return new Blob(parts, { type: r.headers.get('content-type') || '' });
 }
+
+/* ---------- playing a Drive video straight from Drive ---------- */
+let dsOn = false, dsAsk = null;
+function driveStreamOk() {
+const sw = navigator.serviceWorker;
+if (!sw || !sw.controller) return Promise.resolve(false);
+if (dsOn) return Promise.resolve(true);
+if (dsAsk) return dsAsk;
+return dsAsk = new Promise(res => {
+const ch = new MessageChannel(), done = v => { clearTimeout(to); dsAsk = null; dsOn = v; res(v); }, to = setTimeout(() => done(false), 1500);
+ch.port1.onmessage = e => done(!!(e.data && e.data.drive));
+try { sw.controller.postMessage({ type: 'gs-drive-ok' }, [ch.port2]); } catch { done(false); }
+});
+}
+const driveStreamUrl = id => 'gs-drive/' + encodeURIComponent(id);
+if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', e => {
+const d = e.data || {}, p = e.ports && e.ports[0];
+if (d.type !== 'gs-drive-token' || !p) return;
+if (d.fresh) { G.token = null; G.exp = 0; try { sessionStorage.removeItem('gs.gTok'); } catch {} }
+(gcid() && gHas(PICK_SCOPE) ? gToken(false, 'pick') : Promise.reject(new Error('sign-in'))).then(t => p.postMessage({ token: t, exp: G.exp }), () => p.postMessage({ token: null }));
+});
 /* ---------------- audio, video and Word files ---------------- */
 const MEDIA_RX = /\.(mp4|mov|m4v|webm|mkv|3gp|mp3|m4a|wav|aac|ogg|oga|opus|flac|weba|aif|aiff|caf|amr)$/i;
 const VIDEO_RX = /\.(mp4|mov|m4v|webm|mkv|3gp)$/i;
@@ -10453,7 +10488,7 @@ el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(kept ? linkTit
 const m = el.querySelector('audio,video');
 m.src = kept ? kept.url : mediaUrl(f); m.playbackRate = store.get('gs.rate', 1);
 m.onratechange = () => {};
-mediaWatch(el, m, kept ? { name: kept.name, data: kept.blob, kind: 'media', size: kept.blob.size } : f);
+mediaWatch(el, m, kept ? { name: kept.name, data: kept.blob, kind: 'media', size: kept.blob ? kept.blob.size : kept.size || 0 } : f);
 if (vid) { vidGrip(el.querySelector('.mstick'), vidRot(m, f)); el.querySelector('[data-vrot]').onclick = () => vidTurn(st, f, el); }
 if (!curMedia) curMedia = m;
 clipStrip(el.querySelector('.mstick'), f, () => m, c => clipRun(m, c));
@@ -10568,7 +10603,7 @@ mode = 'make'; err = ''; draw();
 const me = stop = { on: false };
 const say = (t, p) => { if (stop !== me) return; const s = box.querySelector('.trmsg'), b = box.querySelector('.prog i'); if (s) s.textContent = t; if (b && p != null) b.style.width = Math.round(p * 100) + '%'; };
 let lock = null; try { lock = await navigator.wakeLock.request('screen'); } catch {}
-try { await transcribeFile(f, say, me); if (stop === me) toast('The transcript is ready. Click a line to play from there.'); }
+try { await transcribeFile(f, say, me, true); if (stop === me) toast('The transcript is ready. Click a line to play from there.'); }
 catch (er) { if (!me.on) { console.error(er); err = (er && er.message) || String(er); } }
 try { lock && lock.release(); } catch {}
 if (stop === me) { stop = null; mode = ''; if (box.isConnected) draw(); }
@@ -10916,11 +10951,21 @@ say('Transcribing ' + fmtTime(b / SR) + ' of ' + fmtTime(dur) + '…', b / x.len
 }
 return words;
 }
-async function transcribeFile(f, say, stop) {
+const TR_DRIVE_MAX = 1.5e9;
+async function transcribeFile(f, say, stop, one) {
 const kv = keptId(f);
 if (f.kind === 'link' && !kv) throw new Error('Only a video file can be transcribed here. For a link, paste a transcript.');
 let k = kv && await vkGet(kv);
-if (kv && !k && drvRef(f.data)) { vkSeen.delete(kv); throw new Error('This Drive video isn’t in this browser yet. Open the student and press Get it from Drive first.'); }
+if (kv && !k && drvRef(f.data)) {
+vkSeen.delete(kv);
+if (!one) throw new Error('This Drive video isn’t downloaded. Open the student and press Make transcript there.');
+const size = +drvMeta(f, 'Size') || 0;
+if (size > TR_DRIVE_MAX) throw new Error('This video is too big (' + fmtSize(size) + ') to read for a transcript here. Paste a transcript instead, or download it for offline first.');
+const blob = await driveBytes(drvRef(f.data), (n, t) => { if (t && say) say('Reading the video from Drive… ' + Math.min(100, Math.round(n / t * 100)) + '%', n / t); }, true);
+if (stop && stop.on) return;
+trSet(f, { w: await transcribe(new Uint8Array(await blob.arrayBuffer()), say, stop) });
+return;
+}
 if (kv && !k) throw new Error('This video isn’t in this browser.');
 const w = await transcribe(kv ? new Uint8Array(await k.blob.arrayBuffer()) : f.data, say, stop);
 trSet(f, { w });
@@ -21441,7 +21486,7 @@ return true;
 }
 
 /* the Planner's records, from a file */
-const PLAN_LS_SKIP = /^gsp\.presentTimer$/;
+const PLAN_LS_SKIP = /^gsp\.(presentTimer|focusRun|focusQ|focusGo)$/;
 function planLs() {
 const o = {};
 try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gsp.') && !PLAN_LS_SKIP.test(k)) o[k] = localStorage.getItem(k); } } catch {}
@@ -21532,7 +21577,7 @@ await exRemoveAll();
 await vkClear();
 } catch (e) { console.error(e); tabsOver('done'); return sayDlg('Not everything could be removed. Close any other Grading Studio tabs and try again.'); }
 for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.startsWith('gsc.saved.') || k.startsWith('gsc.forgot.') || k.startsWith('gs.') && !LS_LOOKS.test(k))) localStorage.removeItem(k); }
-try { localStorage.removeItem('gsc.win'); } catch {}
+try { for (const k of ['gsc.win', 'gsp.focusRun', 'gsp.focusQ', 'gsp.focusGo']) localStorage.removeItem(k); } catch {}
 tabsOver('done');
 toast('Removed from this computer. Reloading…');
 setTimeout(reloadHome, 700);
@@ -23616,31 +23661,78 @@ const drvSay = err => {
 const m = (err && err.message) || String(err);
 if (m === 'setup') return 'This copy of Grading Studio isn’t connected to Google.';
 if (/\b404\b/.test(m)) return 'Drive says this video isn’t there for you now. It may have been moved to the bin, or picked with another Google account. Pick it again with + Add > A video….';
-if (/\b401\b|sign.?in|popup/i.test(m)) return 'Sign in with Google to get this video, then press Get it from Drive again.';
-if (/\b403\b/.test(m)) return m + '. Drive won’t let this video be downloaded right now. Watch it without downloading instead.';
+if (/\b401\b|sign.?in|popup/i.test(m)) return 'Sign in with Google to play this video, then press the button again.';
+if (/\b403\b/.test(m)) return m + '. Drive won’t hand this video over right now. Watch it in Drive’s player instead.';
 return m;
 };
-function driveCard(st, f) {
-const key = keptId(f), hold = document.createElement('div'); hold.className = 'media vfile vdrv';
-hold.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">Google Drive</span></div></div>';
-vkGet(key).then(k => {
-if (!hold.isConnected && !hold.parentNode) return;
-if (k) { hold.replaceWith(mediaCard(st, f, k)); return; }
-vkSeen.delete(key);
-const size = +((/^\s*Size\s*=\s*(\d+)/mi.exec(new TextDecoder().decode(f.data)) || [, 0])[1]);
-hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<div class="mctl"><button class="btn sm primary" data-drvget>Get it from Drive' + (size ? ' (' + fmtSize(size) + ')' : '') + '</button><button class="btn sm" data-drvweb>Watch without downloading</button></div>' +
-'<div class="prog" hidden><i style="width:0%"></i></div><p class="muted vlnote">Copied into this browser to play here, so the transcript can follow along. Only the link is kept in your work, and the video stays in your Drive.</p>');
-const bar = hold.querySelector('.prog'), say = hold.querySelector('.vlnote'), btn = hold.querySelector('[data-drvget]');
-const get = async interactive => {
-btn.disabled = true; bar.hidden = false; say.textContent = 'Getting the video from Drive…';
+const drvStreamBad = new Set();
+const drvKeep = f => { let name = drvMeta(f, 'Name') || linkTitle(f); if (!VIDEO_RX.test(name)) name += '.mp4'; return { name, url: driveStreamUrl(drvRef(f.data)), stream: true, size: +drvMeta(f, 'Size') || 0 }; };
+async function vkDrop(id) {
+await vkDo('readwrite', o => o.delete(id));
+const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id);
+}
+function drvPlayer(st, f, k, at) {
+const el = mediaCard(st, f, k), id = drvRef(f.data), size = +drvMeta(f, 'Size') || 0, m = el.querySelector('video,audio');
+el.classList.add('vdrv');
+el.querySelector('.mhead .muted').textContent = k.stream ? 'playing from Google Drive' : 'Google Drive · downloaded';
+el.querySelector('.mstick').insertAdjacentHTML('beforeend', '<div class="mctl">' + (k.stream
+? '<button class="btn sm" data-drvget>Download for offline' + (size ? ' (' + fmtSize(size) + ')' : '') + '</button>'
+: '<button class="btn sm" data-drvdrop>Remove download</button>') + '</div><div class="prog" hidden><i style="width:0%"></i></div><p class="muted vlnote">' + (k.stream
+? 'Plays from your Drive, a little at a time. Nothing is copied into this browser.'
+: 'Kept in this browser so it plays without internet. Remove download frees the space. The video in your Drive isn’t touched.') + '</p>');
+if (at) m.addEventListener('loadedmetadata', () => { m.currentTime = at; }, { once: true });
+const say = el.querySelector('.vlnote'), bar = el.querySelector('.prog');
+if (k.stream) {
+m.onerror = async () => {
+drvStreamBad.add(id);
+let why = ''; try { await gjson('files/' + encodeURIComponent(id) + '?fields=id&supportsAllDrives=true'); } catch (err) { why = drvSay(err); }
+if (el.isConnected) { const c = driveCard(st, f, why || 'This video wouldn’t play straight from Drive. Download it for offline, or watch it in Drive’s player.'); el.replaceWith(c); }
+};
+el.querySelector('[data-drvget]').onclick = async e => {
+const b = e.target; b.disabled = true; bar.hidden = false; say.textContent = 'Downloading from Drive…';
 try {
-const k2 = await drvGet(f, (n, t) => { if (t) { const p = Math.min(100, Math.round(n / t * 100)); bar.firstChild.style.width = p + '%'; say.textContent = 'Getting the video from Drive… ' + p + '%'; } }, interactive);
-if (hold.isConnected) hold.replaceWith(mediaCard(st, f, k2));
+const k2 = await drvGet(f, (n, t) => { if (t) { const p = Math.min(100, Math.round(n / t * 100)); bar.firstChild.style.width = p + '%'; say.textContent = 'Downloading from Drive… ' + p + '%'; } }, true);
+if (el.isConnected) el.replaceWith(drvPlayer(st, f, k2, m.currentTime));
+} catch (err) { console.error(err); b.disabled = false; bar.hidden = true; say.textContent = drvSay(err); }
+};
+} else el.querySelector('[data-drvdrop]').onclick = async () => {
+const t = m.currentTime; m.pause();
+try { await vkDrop(keptId(f)); } catch (err) { console.error(err); }
+toast('Download removed. The video is still in your Drive.');
+if (el.isConnected) { const c = driveCard(st, f, '', t); el.replaceWith(c); }
+};
+return el;
+}
+function driveCard(st, f, why, at) {
+const key = keptId(f), id = drvRef(f.data), hold = document.createElement('div'); hold.className = 'media vfile vdrv';
+hold.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">Google Drive</span></div></div>';
+vkGet(key).then(async k => {
+if (!hold.isConnected && !hold.parentNode) return;
+if (k) { hold.replaceWith(drvPlayer(st, f, k, at)); return; }
+vkSeen.delete(key);
+const stream = await driveStreamOk() && !drvStreamBad.has(id);
+if (!hold.isConnected && !hold.parentNode) return;
+if (stream && drivePickReady() && !why) { hold.replaceWith(drvPlayer(st, f, drvKeep(f), at)); return; }
+const size = +drvMeta(f, 'Size') || 0;
+hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<div class="mctl">' + (stream ? '<button class="btn sm primary" data-drvplay>Play from Drive</button>' : '') +
+'<button class="btn sm' + (stream ? '' : ' primary') + '" data-drvget>Download for offline' + (size ? ' (' + fmtSize(size) + ')' : '') + '</button><button class="btn sm" data-drvweb>Watch in Drive’s player</button></div>' +
+'<div class="prog" hidden><i style="width:0%"></i></div><p class="muted vlnote">' + esc(why || (stream ? 'Plays from your Drive, a little at a time, with the transcript following along. Only the link is kept in your work.'
+: 'Download it to play here with the transcript following along, or watch it in Drive’s player. Only the link is kept in your work, and the video stays in your Drive.')) + '</p>');
+const bar = hold.querySelector('.prog'), say = hold.querySelector('.vlnote'), btn = hold.querySelector('[data-drvget]'), play = hold.querySelector('[data-drvplay]');
+if (play) play.onclick = async () => {
+play.disabled = true; say.textContent = 'Opening the video from Drive…';
+try { await gToken(true, 'pick'); drvStreamBad.delete(id); if (hold.isConnected) hold.replaceWith(drvPlayer(st, f, drvKeep(f), at)); }
+catch (err) { console.error(err); play.disabled = false; say.textContent = drvSay(err); }
+};
+btn.onclick = async () => {
+btn.disabled = true; bar.hidden = false; say.textContent = 'Downloading from Drive…';
+try {
+const k2 = await drvGet(f, (n, t) => { if (t) { const p = Math.min(100, Math.round(n / t * 100)); bar.firstChild.style.width = p + '%'; say.textContent = 'Downloading from Drive… ' + p + '%'; } }, true);
+if (hold.isConnected) hold.replaceWith(drvPlayer(st, f, k2, at));
 } catch (err) { console.error(err); btn.disabled = false; bar.hidden = true; say.textContent = drvSay(err); }
 };
-btn.onclick = () => get(true);
 hold.querySelector('[data-drvweb]').onclick = () => { drvWebOn.add(linkKey(f)); hold.replaceWith(linkCard(st, f)); };
-if (drvGetting.has(drvRef(f.data)) || drivePickReady()) get(false);
+if (!why && drivePickReady()) gjson('files/' + encodeURIComponent(id) + '?fields=id&supportsAllDrives=true').catch(err => { if (hold.isConnected && err.status !== 401) say.textContent = drvSay(err); });
 });
 return hold;
 }
@@ -24084,7 +24176,7 @@ openStudent(cur);
 } catch (err) { console.error(err); closeDlg(); toast('The pages couldn’t be made: ' + ((err && err.message) || err)); }
 };
 }
-Object.assign(window.__gs, { gScope: () => G.scope, drvRef, openFromDrive, saveToDrive, linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes, openPartners, pvApply });
+Object.assign(window.__gs, { gScope: () => G.scope, drvRef, openFromDrive, pickVidDir, driveStreamOk, saveToDrive, linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes, openPartners, pvApply });
 
 /* ---------------- clips: a part of a video worth showing the class ---------------- */
 function clipSecs(v) {
@@ -24172,7 +24264,7 @@ const all = list(), c = all[at]; if (!c) return clipClose();
 const f = clipFile(c), vr = keptId(f);
 if (vr && !vkSeen.has(vr)) { vkGet(vr).then(() => { if (clipStage && clipStage.el === el) draw(); }); return; }
 const kv = vr && vkSeen.get(vr), url = f.kind === 'link' && !vr ? linkOf(f.data) : '';
-const pl = vr ? (kv ? { [VIDEO_RX.test(kv.name) ? 'video' : 'audio']: kv.url } : drvRef(f.data) ? linkPlayer(linkOf(f.data)) : null) : url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
+const pl = vr ? (kv ? { [VIDEO_RX.test(kv.name) ? 'video' : 'audio']: kv.url } : drvRef(f.data) ? (dsOn && drivePickReady() ? { video: driveStreamUrl(drvRef(f.data)) } : linkPlayer(linkOf(f.data))) : null) : url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
 const fr = pl && pl.frame ? clipFrame(pl.frame, c) : null;
 el.innerHTML = '<div class="clipbar"><b>' + esc(c.t) + '</b><span>' + (c.b != null ? fmtTime(c.a) + ' to ' + fmtTime(c.b) : 'from ' + fmtTime(c.a)) + (fr && !fr.stops && c.b != null ? ' · stop it at ' + fmtTime(c.b) : '') + '</span><span class="sp"></span>' +
 (all.length > 1 ? '<button data-cs="prev" aria-label="The clip before"' + (at ? '' : ' disabled') + '>‹</button><span>' + (at + 1) + ' of ' + all.length + '</span><button data-cs="next" aria-label="The next clip"' + (at < all.length - 1 ? '' : ' disabled') + '>›</button>' : '') +
@@ -30221,9 +30313,10 @@ pace: [[seconds, papers], …] the last sessions that finished a paper, last: th
 add: [{ id, d: day, k: 'g' | 'l', s: seconds, x: a few words }] time added by hand (src/tracker.js),
 carry: a session goal not reached, by: { <download id>: the day to finish it by } }
 A day also keeps n: the sessions of a minute or more. The goal can be { k, n, per: 'week' } or for some days { days: [1, 3] }.
-A session's own goal (sg on gs.focusRun) is a few papers, the whole set, the to-do, or a few words she typed.
+A session's own goal (sg on gsp.focusRun) is a few papers, the whole set, the to-do, or a few words she typed.
 Ids and numbers only: no name, no title, nothing a student wrote. Days are kept for 400 days.
-gs.focusRun   the session going on in this browser, so a refresh keeps it. It stays in this browser (LS_LOCAL).
+gsp.focusRun  the session going on in this browser, so a refresh keeps it and the Planner shows it. It stays in this browser
+(src/takehome.js PLAN_LS_SKIP). It used to be gs.focusRun.
 A paper counts toward the day when its score is finished, or its feedback complete on a formative activity, wherever that is
 done: the count is how far each download has come since the day began (keptState), so marking in Quick mark counts too. */
 var FC_ON = false;
@@ -30238,7 +30331,7 @@ let fcS = { len: 0, open: false, pick: null };
 /* ---------- the teacher's settings ---------- */
 function fcConf() {
 const f = me().focus || {}, g = f.goal || null;
-return { len: FC_LENS.includes(+f.len) ? +f.len : 10, brk: FC_BRKS.includes(+f.brk) ? +f.brk : 5, sound: f.sound !== false, title: f.title !== false,
+return { len: FC_LENS.includes(+f.len) ? +f.len : 10, llen: FC_LENS.includes(+f.llen) ? +f.llen : 45, brk: FC_BRKS.includes(+f.brk) ? +f.brk : 5, sound: f.sound !== false, title: f.title !== false,
 track: f.track !== false, idle: TK_IDLES.includes(+f.idle) ? +f.idle : 5,
 free: f.free !== false, wk: f.wk === false ? false : [0, 1, 2, 3, 4, 5, 6].includes(f.wk) ? f.wk : 5, quiet: f.quiet === true, short: f.short === true,
 sg: f.sg !== false,
@@ -30249,6 +30342,7 @@ days: g.per !== 'week' && Array.isArray(g.days) && g.days.some(d => FC_DOWS.incl
 function fcConfSet(part) {
 const c = { ...fcConf(), ...part }, o = {};
 if (c.len !== 10) o.len = c.len;
+if (c.llen !== 45) o.llen = c.llen;
 if (c.brk !== 5) o.brk = c.brk;
 if (c.goal) o.goal = { k: c.goal.k, n: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days && c.goal.days.length < 7 ? { days: c.goal.days } : {}) };
 if (!c.sg) o.sg = false;
@@ -30276,6 +30370,7 @@ return { day: typeof L.day === 'string' ? L.day : '', base: L.base && typeof L.b
 pace: Array.isArray(L.pace) ? L.pace.filter(x => Array.isArray(x) && x[0] > 0 && x[1] > 0) : [], last: typeof L.last === 'string' ? L.last : '',
 add: Array.isArray(L.add) ? L.add.filter(x => x && typeof x.d === 'string' && (x.k === 'g' || x.k === 'l') && x.s > 0) : [],
 ...(typeof L.lbHid === 'string' ? { lbHid: L.lbHid } : {}),
+...(Array.isArray(L.qd) ? { qd: L.qd.filter(x => typeof x === 'string').slice(-50) } : {}),
 ...(L.carry && typeof L.carry.w === 'string' && L.carry.t > 0 ? { carry: L.carry } : {}),
 ...(L.by && typeof L.by === 'object' ? { by: L.by } : {}) };
 }
@@ -30313,7 +30408,7 @@ const b = Math.max(0, L.base[id] + fcDone(m) - (m0 ? fcDone(m0) : 0));
 if (b !== L.base[id]) { L.base[id] = b; fcLogSet(L); }
 }
 const fcPapersToday = () => { fcSeen(); return fcPapersOf(fcLog()); };
-const fcSecsToday = () => { const d = fcLog().days[fcToday()] || {}, r = fcRun(); return (d.s || 0) + (r && (r.st === 'run' || r.st === 'paused') ? fcBusy(r) : 0); };
+const fcSecsToday = () => { const d = fcLog().days[fcToday()] || {}, r = fcRun(); return (d.s || 0) + (r && r.k !== 'l' && (r.st === 'run' || r.st === 'paused') ? fcBusy(r) : 0); };
 function fcWeekPapers() {
 const L = fcLog(), today = fcToday(), mon = fcMon(today); return Object.entries(L.days).filter(([k]) => k >= mon && k <= today).reduce((a, [, v]) => a + (v.p || 0), 0);
 }
@@ -30325,8 +30420,10 @@ const fcGoalNow = c => !c.goal ? 0 : c.goal.per === 'week' ? (c.goal.k === 'pape
 const fcGoalDay = (c, day) => !c.goal || c.goal.per === 'week' || !c.goal.days || c.goal.days.includes(new Date((day || fcToday()) + 'T12:00:00').getDay());
 
 /* ---------- the session ---------- */
-const fcRun = () => { const r = store.get('gs.focusRun', null); return r && r.st ? r : null; };
-const fcRunSet = r => { if (r) store.set('gs.focusRun', r); else store.del('gs.focusRun'); fcTickOn(); fcRender(); };
+const FC_KEY = 'gsp.focusRun';
+const fcRun = () => { const r = store.get(FC_KEY, null); return r && r.st ? r : null; };
+const fcPut = r => { if (r) store.set(FC_KEY, r); else store.del(FC_KEY); };
+const fcRunSet = r => { fcPut(r); fcTickOn(); fcRender(); };
 const fcElapsed = r => Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.at) / 1000));
 const fcBoot = Date.now();
 const fcIdle = r => (r.idl || 0) + (r.ii ? Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.ii) / 1000)) : 0);
@@ -30343,10 +30440,10 @@ const fcLeft = r => r.st === 'brk' ? Math.max(0, Math.round((r.brkAt + r.brkLen 
 const fcGot = r => r.got != null ? r.got : Math.max(0, r.pg || 0);
 function fcGain(m0, m) {
 if (!FC_ON || !m0 || !m) return;
-const r = fcOwnRun(fcRun()); if (!r || (r.st !== 'run' && r.st !== 'paused') || r.got != null) return;
+const r = fcOwnRun(fcRun()); if (!r || r.k === 'l' || (r.st !== 'run' && r.st !== 'paused') || r.got != null) return;
 if (!fcKnown(m0) || !fcKnown(m)) return;
 const d = fcDone(m) - (m0.scored == null && m0.marked == null ? fcFrom(m.id, m0) : fcDone(m0)); if (!d) return;
-r.pg = (r.pg || 0) + d; store.set('gs.focusRun', r);
+r.pg = (r.pg || 0) + d; fcPut(r);
 }
 const FC_P0 = 1e9;
 const fcN = r => r.one ? Math.max(1, +r.one || 1) : 0;
@@ -30361,19 +30458,38 @@ out.push({ key: 'mark:' + m.id, id: m.id, mark: true, name: m.name || 'Student w
 }
 for (const it of tdItems().filter(it => !it.done && (!it.d || it.d <= today)).sort((a, b) => (a.d || '9').localeCompare(b.d || '9') || (a.made || 0) - (b.made || 0)).slice(0, 12))
 out.push({ key: 'td:' + it.id, id: it.id, name: it.x, cls: it.c && classById(it.c) ? classById(it.c).name : '' });
-return out;
+return out.concat(fcLessons());
+}
+function fcLessons() {
+if (!plan || document.documentElement.classList.contains('gsphone')) return [];
+const out = [], seen = new Set(), today = tdToday();
+for (let i = 0; i < 7 && out.length < 12; i++) {
+const day = tdAdd(today, i); if ((plan.semStart && day < plan.semStart) || (plan.semEnd && day > plan.semEnd)) continue;
+const t = todayRows(plan, tdAt(day).getTime()), live = i ? null : nowRow(t.rows);
+const when = tdAt(day).toLocaleDateString(LANG_LOCALE, { weekday: 'short', month: 'short', day: 'numeric' });
+for (const r of t.rows) {
+if (!i && (!live || t.rows.indexOf(r) < t.rows.indexOf(live))) continue;
+if (!r.lessons.length) out.push({ key: 'les:+' + r.c.id + '|' + day, id: '', les: true, fresh: true, nw: { c: r.c.id, d: day }, name: r.c.name, cls: when });
+for (const l of r.lessons) if (!l.done && !seen.has(l.id)) { seen.add(l.id); out.push({ key: 'les:' + l.id, id: l.id, les: true, name: l.title, cls: r.c.name + ' · ' + when }); }
+}
+}
+return out.slice(0, 12);
 }
 function fcWork(key) {
 if (!key) return null;
 const [k, id] = [key.slice(0, key.indexOf(':')), key.slice(key.indexOf(':') + 1)];
 if (k === 'mark') { const m = keptMeta.get(id); if (!m) return null; const st = keptState(m), w = keptWhere(m); return { key, id, mark: true, name: m.name || 'Student work', cls: w.cls ? w.cls.name : '', left: st.left, fm: st.fm }; }
 if (k === 'td') { const it = tdItem(id); return it ? { key, id, name: it.x, cls: it.c && classById(it.c) ? classById(it.c).name : '', done: !!it.done } : null; }
+if (k === 'les') {
+const w = fcLessons().find(x => x.key === key); if (w) return w;
+const r = fcRun(); return r && r.k === 'l' && r.w === key ? { key, id: r.l || '', les: true, name: r.t || 'Lesson', cls: '' } : null;
+}
 return null;
 }
 function fcPicked(works) {
 if (fcS.pick === '') return '';
 const b = gpReady && fcS.pick == null && gpBack(), want = fcS.pick != null ? fcS.pick : b ? 'mark:' + b.id : fcLog().last;
-return works.some(w => w.key === want) ? want : works.length ? works[0].key : '';
+return works.some(w => w.key === want) ? want : works.length && !works[0].les ? works[0].key : '';
 }
 
 let fcAudio = null;
@@ -30402,10 +30518,10 @@ const cy = fcLog().carry, key = w ? w.key : '';
 if (cy && cy.w === key && Date.now() - cy.t < FC_CARRY) {
 if (cy.k === 'papers' && w && w.mark && w.left) return { k: 'papers', n: Math.max(1, Math.min(+cy.n || 1, w.left)), c: 1 };
 if (cy.k === 'set' && w && w.mark && w.left) return { k: 'set', c: 1 };
-if (cy.k === 'td' && w && !w.mark && !w.done) return { k: 'td', c: 1 };
+if (cy.k === 'td' && w && !w.mark && !w.les && !w.done) return { k: 'td', c: 1 };
 if (cy.k === 'note' && !w && cy.x) return { k: 'note', x: String(cy.x).slice(0, 80), c: 1 };
 }
-if (!fcConf().sg || !w) return null;
+if (!fcConf().sg || !w || w.les) return null;
 if (!w.mark) return w.done ? null : { k: 'td' };
 if (!w.left) return null;
 const it = cardOfKept(w.id), pace = gpReady ? gpPaces()(it ? it.id : '') : 0;
@@ -30430,7 +30546,7 @@ return g.k === 'set' ? 'Finish the set' : g.k === 'td' ? 'Finish this to-do' : '
 }
 const fcSgSpan = (g, r, w) => g.k === 'note' ? '<span data-raw>' + esc(g.x) + '</span>' : '<span>' + esc(fcSgText(g, r, w)) + '</span>';
 function fcSgPick(w, len) {
-if (w && (w.mark ? !w.left : w.done)) return '';
+if (w && (w.les || (w.mark ? !w.left : w.done))) return '';
 const g = fcSgNow(w, len), k = g ? g.k : '';
 const b = (v, label) => '<button data-fcsg="' + v + '" aria-pressed="' + (k === v) + '">' + label + '</button>';
 let h;
@@ -30470,16 +30586,47 @@ return '<div class="fcby"><label><span>Finish by</span> <input type="date" data-
 
 function fcStart(len, key, one, sg) {
 fcAudioWake();
+if (/^les:/.test(key || '')) return fcLesStart(len, key);
 const was = fcRun(); if (was && (was.st === 'run' || was.st === 'paused')) fcRecord(was);
 const L = fcLog(), w = fcWork(key);
 if (sg === undefined) sg = one ? null : fcSgNow(w, len);
 L.last = key || ''; if (L.carry && L.carry.w === (key || '')) delete L.carry; fcLogSet(L);
 fcS.sg = undefined; fcS.sgw = null;
 const no = ((fcLog().days[fcToday()] || {}).n || 0) + 1;
-fcRunSet({ st: 'run', len: Math.round(len * 60), at: Date.now(), w: key || '', one: one ? Math.max(1, +one || 1) : 0, p0: FC_P0, pg: 0, fold: false, no,
+fcRunSet({ st: 'run', len: Math.round(len * 60), at: Date.now(), w: key || '', t: w ? String(w.name || '').slice(0, 120) : '', one: one ? Math.max(1, +one || 1) : 0, p0: FC_P0, pg: 0, fold: false, no,
 ...(sg ? { sg: sg.k === 'papers' ? { k: 'papers', n: sg.n } : sg.k === 'note' ? { k: 'note', x: sg.x } : { k: sg.k } } : {}) });
 fcGoTo(false);
 }
+function fcLesStart(len, key) {
+const w = fcWork(key); if (!w) return;
+const was = fcRun(); if (was && (was.st === 'run' || was.st === 'paused')) fcRecord(was);
+fcS.sg = undefined; fcS.sgw = null; fcS.pick = null;
+const P = store.get('gsp.planTime', null), no = ((P && P.days && P.days[fcToday()]) || {}).n || 0;
+fcRunSet({ k: 'l', id: fcRid(), st: 'run', len: Math.round(len * 60), at: Date.now(), w: key, l: w.id || '', t: String(w.name || '').slice(0, 120), ...(w.nw ? { nw: w.nw } : {}), one: 0, fold: false, no: no + 1 });
+fcLesOpen();
+}
+const fcRid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, () => { const r = FC_ON && fcRun(); if (r && r.k === 'l' && r.st === 'run' && Date.now() - (r.seen || 0) > 30e3) { r.seen = Date.now(); fcPut(r); } }, { capture: true, passive: true });
+const fcLesHref = r => planUrl(r.l ? '#lesson/' + encodeURIComponent(r.l) : r.nw ? '#plan/' + encodeURIComponent(r.nw.c) + '/' + r.nw.d : '#week');
+function fcLesOpen() { const r = fcRun(); if (r && r.k === 'l') location.href = fcLesHref(r); }
+function fcPlanAdd(r, secs) {
+if (!(secs > 0)) return;
+const P = store.get('gsp.planTime', null) || {}, days = P.days && typeof P.days === 'object' ? P.days : {}, names = P.names && typeof P.names === 'object' ? P.names : {};
+const ids = Array.isArray(P.ids) ? P.ids.filter(x => typeof x === 'string').slice(-50) : [];
+if (r.id && ids.includes(r.id)) return;
+const id = r.l || '', k = fcToday(), d = { ...(days[k] || {}) }, a = { ...(d.a || {}) };
+d.l = (d.l || 0) + secs; a[id] = (a[id] || 0) + secs; d.f = (d.f || 0) + secs; if (secs >= 60 && !r.ext) d.n = (d.n || 0) + 1;
+d.a = a; days[k] = d; if (id && r.t) names[id] = String(r.t).slice(0, 120);
+for (const day of Object.keys(days)) if (Date.now() - new Date(day + 'T12:00:00') > FC_KEEP * FC_DAY) delete days[day];
+const used = new Set(Object.values(days).flatMap(x => Object.keys((x && x.a) || {})));
+for (const n of Object.keys(names)) if (!used.has(n)) delete names[n];
+store.set('gsp.planTime', { days, names, ...(r.id ? { ids: [...ids, r.id] } : {}) });
+}
+function fcLesSecs(r) {
+const last = Math.max(r.at, r.seen || 0), cap = r.st === 'paused' ? Infinity : Math.round((last + FC_LES_IDLE - r.at) / 1000);
+return Math.max(0, Math.min(r.len, fcElapsed(r), cap));
+}
+const FC_LES_IDLE = 20 * 60e3;
 function fcGoTo(next) {
 const r = fcRun(), w = r && fcWork(r.w); if (!w || !w.mark) return;
 if (batch && batch.id === w.id) {
@@ -30493,6 +30640,7 @@ reopenKept(w.id, f || null).then(() => { if (batch && batch.id === w.id && fcLef
 function fcLeftHere(i) { const st = batch && batch.students[i]; if (!st) return true; return fmNow() ? !!st.grade.fb || noScore(st) : gradeOf(st).done; }
 function fcRecord(r) {
 if (r.secs != null) return r;
+if (r.k === 'l') { const secs = fcLesSecs(r); fcPlanAdd(r, secs); return Object.assign(r, { secs, got: 0 }); }
 const secs = Math.min(r.one ? 4 * 3600 : r.len, fcBusy(r)), got = fcGot(r), L = fcLog(), today = fcToday(), d = L.days[today] || {};
 L.days[today] = { ...d, s: (d.s || 0) + secs, ...(/^mark:/.test(r.w || '') ? { sm: (d.sm || 0) + secs } : {}), ...(secs >= 60 && !r.ext ? { n: (d.n || 0) + 1 } : {}) };
 if (got > 0 && secs >= 30) L.pace = [...L.pace, [secs, got]].slice(-20);
@@ -30507,7 +30655,7 @@ function fcExt(min) {
 const r = fcRun(); if (!r || r.st !== 'up') return;
 const L = fcLog(), w = fcWork(r.w), g = r.sg && !fcSgMet(r, w) ? (r.sg.k === 'papers' ? { k: 'papers', n: Math.max(1, r.sg.n - (r.got || 0)) } : r.sg) : null;
 if (L.carry && L.carry.w === (r.w || '')) { delete L.carry; fcLogSet(L); }
-fcRunSet({ st: 'run', len: min * 60, at: Date.now(), w: r.w || '', one: 0, p0: FC_P0, pg: 0, fold: false, no: r.no, ext: 1, ...(g ? { sg: g } : {}) });
+fcRunSet({ ...(r.k === 'l' ? { k: 'l', id: fcRid(), l: r.l || '', ...(r.nw ? { nw: r.nw } : {}) } : {}), st: 'run', len: min * 60, at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: FC_P0, pg: 0, fold: false, no: r.no, ext: 1, ...(g ? { sg: g } : {}) });
 }
 function fcUp(r) { fcRecord(r); r.st = 'up'; r.fold = false; fcRunSet(r); fcChime(); }
 function fcPause() { const r = fcRun(); if (!r || r.st !== 'run') return; r.st = 'paused'; r.pz = Date.now(); r.idl = fcIdle(r); delete r.ii; fcRunSet(r); }
@@ -30525,12 +30673,12 @@ if (on && !fcTimer) fcTimer = setInterval(fcTick, 1000);
 if (!on && fcTimer) { clearInterval(fcTimer); fcTimer = 0; }
 fcTitle();
 }
-function fcOwnRun(r) { if (r && r.st !== 'done' && r.got == null && r.p0 !== FC_P0) { r.p0 = FC_P0; r.pg = r.pg || 0; store.set('gs.focusRun', r); } return r; }
+function fcOwnRun(r) { if (r && r.k !== 'l' && r.st !== 'done' && r.got == null && r.p0 !== FC_P0) { r.p0 = FC_P0; r.pg = r.pg || 0; fcPut(r); } return r; }
 function fcTick() {
 const r = fcOwnRun(fcRun()); if (!r) return fcTickOn();
 if (r.st === 'run') {
 if (r.one ? fcGot(r) >= fcN(r) : fcLeft(r) <= 0) return fcUp(r);
-if (fcIdleSee(r)) store.set('gs.focusRun', r);
+if (fcIdleSee(r)) fcPut(r);
 } else if (r.st === 'brk' && fcLeft(r) <= 0) { r.st = 'brkup'; r.fold = false; fcRunSet(r); fcChime(); return; }
 fcClockDraw(); fcTitle();
 }
@@ -30544,11 +30692,12 @@ const t = (pre ? pre + ' · ' : '') + base; if (document.title !== t) document.t
 }
 document.addEventListener('visibilitychange', () => {
 const r = fcRun(); if (!r || r.st !== 'run') return;
-if (document.hidden) { r.hid = Date.now(); store.set('gs.focusRun', r); return; }
+if (r.k === 'l') return;
+if (document.hidden) { r.hid = Date.now(); fcPut(r); return; }
 if (r.hid && Date.now() - r.hid >= FC_AWAY && !r.one) { r.away = Math.round((Date.now() - r.hid) / 60000); r.fold = false; }
 delete r.hid; fcRunSet(r);
 });
-window.addEventListener('storage', e => { if (e.key === 'gs.focusRun' || e.key === 'gs.focus') { fcTickOn(); fcRender(); } });
+window.addEventListener('storage', e => { if (e.key === FC_KEY || e.key === 'gs.focus') { fcTickOn(); fcRender(); } if (e.key === FC_Q) fcDrain(); });
 
 /* ---------- drawing ---------- */
 const fcRing = (r, w, frac, cls) => { const c = 2 * Math.PI * r, s = 2 * (r + w); return '<svg viewBox="0 0 ' + s + ' ' + s + '"' + (cls ? ' class="' + cls + '"' : '') + ' aria-hidden="true"><circle class="tr" cx="' + (r + w) + '" cy="' + (r + w) + '" r="' + r + '"/><circle class="on" cx="' + (r + w) + '" cy="' + (r + w) + '" r="' + r + '" stroke-dasharray="' + c.toFixed(2) + '" stroke-dashoffset="' + (c * (1 - Math.max(0, Math.min(1, frac)))).toFixed(2) + '"/></svg>'; };
@@ -30562,7 +30711,7 @@ const p = fcPapersToday();
 return '<div class="fcnogoal"><span>' + (p ? 'Today: ' + people(p, 'paper') : 'No daily goal yet') + '</span><a class="link" href="#/settings/focus">' + (p ? 'Set a goal' : 'Set one') + '</a></div>';
 }
 const n = fcGoalNow(c), met = n >= c.goal.n, r = fcRun(), mins = c.goal.k === 'min';
-const sess = r && (r.st === 'run' || r.st === 'paused') ? (mins ? Math.floor(Math.min(fcBusy(r), r.one ? 1e9 : r.len) / 60) : fcGot(r)) : 0;
+const sess = r && r.k !== 'l' && (r.st === 'run' || r.st === 'paused') ? (mins ? Math.floor(Math.min(fcBusy(r), r.one ? 1e9 : r.len) / 60) : fcGot(r)) : 0;
 const step = mins ? 5 : 1, total = Math.ceil(c.goal.n / step), had = Math.floor(n / step), was = Math.floor(Math.max(0, n - sess) / step);
 const pop = card ? '' : fcS.popAt != null && fcS.popAt < had ? had - 1 : -1;
 fcS.popAt = card ? fcS.popAt : had;
@@ -30588,6 +30737,7 @@ days.map(x => '<span class="fcwd' + (x.k === today ? ' now' : '') + (x.k > today
 function fcWorkSay(w) {
 const sp = x => '<span>' + esc(x) + '</span>';
 if (!w) return sp('A session with nothing set: the timer only.');
+if (w.les) return sp(w.fresh ? 'A new lesson to plan' : 'A lesson to plan');
 if (!w.mark) return sp('A to-do');
 if (!w.left) return sp(w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score');
 const it = cardOfKept(w.id), id = it ? it.id : '', pace = gpReady ? gpPaces()(id) : 0, n = pace ? gpPaceN(id) : 0;
@@ -30597,12 +30747,12 @@ const FC_BACK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l
 const FC_CHEV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 function fcStartHtml(card) {
 const c = fcConf(), works = fcWorks(), key = fcPicked(works), w = works.find(x => x.key === key) || null, f = gpReady ? gpFreeNow() : null;
-const len = fcS.len || (f ? gpFreeLen(f) : c.len), g = fcSgNow(w, len), open = w && w.mark && w.left, why = [];
+const len = fcS.len || (w && w.les ? c.llen : f ? gpFreeLen(f) : c.len), g = fcSgNow(w, len), open = w && w.mark && w.left, why = [];
 const opt = x => '<option value="' + esc(x.key) + '"' + (x.key === key ? ' selected' : '') + ' data-raw>' + esc(x.name + (x.cls ? ' · ' + x.cls : '')) + '</option>';
-const marks = works.filter(x => x.mark), tds = works.filter(x => !x.mark);
+const marks = works.filter(x => x.mark), tds = works.filter(x => !x.mark && !x.les), les = works.filter(x => x.les), sep = '<option disabled data-raw>──────────</option>';
 let h = '<div class="fcbody">' + fcGoalHtml(c, true) + '<div class="fcline"></div><div class="sug">';
 if (fcS.chg) h += '<div class="sugpick"><div class="fcgh"><label class="fcl">Work on</label><button class="link" data-fckeep>Done</button></div><select class="fcwork" data-fcwork aria-label="Work on">' + marks.map(opt).join('') +
-(marks.length && tds.length ? '<option disabled data-raw>──────────</option>' : '') + tds.map(opt).join('') + '<option value=""' + (key === '' ? ' selected' : '') + '>' + esc(tr('Nothing in particular')) + '</option></select></div>';
+(marks.length && tds.length ? sep : '') + tds.map(opt).join('') + ((marks.length || tds.length) && les.length ? sep : '') + les.map(opt).join('') + '<option value=""' + (key === '' ? ' selected' : '') + '>' + esc(tr('Nothing in particular')) + '</option></select></div>';
 else h += '<div class="sugh"><span class="t"><b data-raw>' + esc(w ? w.name : tr('Nothing in particular')) + '</b>' + (w && w.cls ? ' <span data-raw>· ' + esc(w.cls) + '</span>' : '') + '</span><button class="link" data-fcchg>Change</button></div>';
 h += '<p class="fcsay">' + fcWorkSay(w) + '</p>';
 const b = gpReady && w && w.mark && fcS.pick == null ? gpBack() : null;
@@ -30611,7 +30761,7 @@ else if (fcS.hand) why.push('<span>' + FC_BACK + '<span>You picked this</span></
 if (f) why.push('<span class="free">' + GP_CLOCK + '<span>Free period until</span> <span data-raw>' + esc(planTime(f.to)) + '</span></span>');
 if (why.length) h += '<p class="sugwhy">' + why.join('') + '</p>';
 h += '<div class="fcgo"><button class="btn primary" data-fcstart="' + len + '">' + FC_PLAY + '<span>Start ' + len + ' minutes</span></button>' + (open ? '<button class="btn" data-fcone>Just one paper</button>' : '') + '</div>';
-if (!(w && (w.mark ? !w.left : w.done))) h += '<p class="sugsg"><span>Goal for this session</span>: <b>' + (g ? fcSgSpan(g, null, w) : '<span>' + esc(tr('No goal')) + '</span>') + '</b> · <button class="link" data-fcsgchg>Change</button></p>';
+if (!(w && (w.les || (w.mark ? !w.left : w.done)))) h += '<p class="sugsg"><span>Goal for this session</span>: <b>' + (g ? fcSgSpan(g, null, w) : '<span>' + esc(tr('No goal')) + '</span>') + '</b> · <button class="link" data-fcsgchg>Change</button></p>';
 h += '</div>' + (card && tkReady ? tkWeekHtml() : '') + '<button class="fcmoreb" data-fcmo aria-expanded="' + !!fcS.more + '"><span>More</span>' + FC_CHEV + '</button>';
 if (fcS.more) h += '<div class="fcmorebox"><div class="fclens" role="group" aria-label="How long"><span>Or</span>' + [5, 10, 15, 25].concat(FC_LENS.includes(len) && ![5, 10, 15, 25].includes(len) ? [len] : []).sort((x, y) => x - y).map(n => '<button data-fclen="' + n + '" aria-pressed="' + (n === len) + '">' + n + '</button>').join('') + '<span>minutes</span></div>' +
 (open && w.left >= 3 ? '<div class="fcgo"><button class="btn" data-fcone="3">Just 3 papers</button></div>' : '') + fcSgPick(w, len) + fcByHtml(w) +
@@ -30627,6 +30777,7 @@ if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
 }
 const fcHead = (cap, fold) => '<div class="fchead"><h2 class="tcap">' + cap + '</h2><span class="sp"></span>' + (fold ? '<button class="icon" data-fcfold title="Fold it away" aria-label="Fold it away">–</button>' : '<button class="icon" data-fcclose title="Close" aria-label="Close">✕</button>') + '</div>';
 function fcWhatHtml(r, w) {
+if (r.k === 'l') return '<div class="fcwhat"><b data-raw>' + esc(w ? w.name : r.t || 'Lesson') + '</b><span><span>A lesson to plan</span></span>' + (r.st !== 'brk' ? '<a class="btn sm primary" href="' + esc(fcLesHref(r)) + '">Open the lesson</a>' : '') + '</div>';
 const sub = [w && w.cls ? '<span data-raw>' + esc(w.cls) + '</span>' : '', r.one ? (fcN(r) > 1 ? 'Just 3 papers' : 'Just one paper') : w && w.mark ? (w.left ? people(w.left, 'paper') + ' left' : w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score') : w ? 'A to-do' : 'The timer only'].filter(Boolean);
 return '<div class="fcwhat"><b data-raw>' + esc(w ? w.name : tr('Focus')) + '</b><span>' + sub.map(x => x.startsWith('<') ? x : '<span>' + esc(x) + '</span>').join(' · ') + '</span>' +
 (w && w.mark && w.left && r.st !== 'brk' ? '<button class="btn sm primary" data-fcnext>Next paper →</button>' : '') + '</div>';
@@ -30669,25 +30820,25 @@ if (t.matches('[data-fcvol]')) fcConfSet({ mvol: +t.value });
 else if (t.matches('[data-fcmood]')) fcConfSet({ mood: t.value });
 });
 function fcPanelHtml(r) {
-const c = fcConf(), w = r ? fcWork(r.w) : null;
+const c0 = fcConf(), w = r ? fcWork(r.w) : null, c = r && r.k === 'l' ? { ...c0, len: c0.llen } : c0;
 if (!r) return fcHead('Focus') + fcStartHtml();
 if (r.fold && (r.st === 'run' || r.st === 'paused' || r.st === 'brk')) {
 const got = r.st === 'brk' ? 0 : fcGot(r);
-return '<button class="fcpill' + (r.st === 'brk' ? ' brk' : '') + '" data-fcunfold title="Show the timer"><span class="fcpr"></span><b class="fct"></b>' + (w ? '<span data-raw>' + esc(w.name) + '</span>' : '') + (c.goal ? '<span class="fcpg' + (fcGoalNow(c) >= c.goal.n ? ' met' : '') + '">' + fcGoalNow(c) + '/' + c.goal.n + '</span>' : got ? '<span>' + got + ' done</span>' : '') + '</button>';
+return '<button class="fcpill' + (r.st === 'brk' ? ' brk' : '') + '" data-fcunfold title="Show the timer"><span class="fcpr"></span><b class="fct"></b>' + (w ? '<span data-raw>' + esc(w.name) + '</span>' : '') + (c.goal && r.k !== 'l' ? '<span class="fcpg' + (fcGoalNow(c) >= c.goal.n ? ' met' : '') + '">' + fcGoalNow(c) + '/' + c.goal.n + '</span>' : got ? '<span>' + got + ' done</span>' : '') + '</button>';
 }
 if (r.st === 'run' || r.st === 'paused') {
 if (r.away) return fcHead('Focusing', true) + '<div class="fcrunv"><p class="fcbig">Welcome back</p><p class="fcp">' + esc('You were away for ' + people(r.away, 'minute') + ', and the clock kept going.') + '</p>' +
 '<div class="fcacts"><button class="btn sm primary" data-fcaway="keep">Keep going</button><button class="btn sm" data-fcaway="again">Start the clock again</button></div></div>';
 const got = fcGot(r);
 return fcHead(r.st === 'paused' ? 'Paused' : 'Focusing', true) + '<div class="fcrunv"><div class="fctop"><div class="fcclock' + (r.st === 'paused' ? ' paused' : '') + '"><span class="fcpr"></span><span class="fctime fct"></span></div>' + fcWhatHtml(r, w) + '</div>' +
-'<div class="fcstats"><div class="fcstat"><span>' + (r.no > 1 ? 'Session ' + r.no : 'This session') + '</span><span>' + people(got, 'paper') + '</span></div>' + fcSgLine(r, w) + fcGoalHtml(c) + '</div>' + fcMusicHtml(c) +
+(r.k === 'l' ? '' : '<div class="fcstats"><div class="fcstat"><span>' + (r.no > 1 ? 'Session ' + r.no : 'This session') + '</span><span>' + people(got, 'paper') + '</span></div>' + fcSgLine(r, w) + fcGoalHtml(c) + '</div>') + fcMusicHtml(c) +
 '<div class="fcacts">' + (r.st === 'paused' ? '<button class="btn sm primary" data-fcresume>Carry on</button>' : '<button class="btn sm" data-fcpause>Pause</button>') + (r.one ? '' : '<button class="btn sm" data-fcmore="5">+5 minutes</button>') + '<span class="sp"></span><button class="btn sm ghost" data-fcstop>End</button></div></div>';
 }
 if (r.st === 'up') {
 const got = r.got || 0;
 return fcHead('Focus') + '<div class="fcrunv"><p class="fcbig ok"><span class="fcok">' + FC_TICK + '</span><span>' + (r.one ? (fcN(r) > 1 ? '3 papers done' : 'One paper done') : people(Math.round(r.len / 60), 'minute') + ' done') + '</span></p>' +
 (w && !w.mark && !got ? '' : '<p class="fcp">' + (got ? esc('You finished ' + people(got, 'paper') + '.') : 'Nothing was finished in this one.') + '</p>') +
-fcSgReview(r, w) + '<div class="fcstats">' + fcGoalHtml(c) + '</div>' +
+fcSgReview(r, w) + (r.k === 'l' ? '' : '<div class="fcstats">' + fcGoalHtml(c) + '</div>') +
 (r.one ? '<div class="fcacts">' + (w && w.left ? (fcN(r) > 1 && w.left >= 3 ? '<button class="btn primary" data-fcone="3">3 more papers</button>' : '<button class="btn primary" data-fcone>One more paper</button>') : '') + '<button class="btn" data-fcstart="' + c.len + '">' + 'Keep going for ' + c.len + ' minutes' + '</button></div>'
 : '<div class="fcacts"><button class="btn primary" data-fcbreak>Take a ' + c.brk + '-minute break</button><button class="btn" data-fcstart="' + Math.round(r.len / 60) + '" data-fcagain>' + Math.round(r.len / 60) + ' more minutes</button></div>' +
 '<div class="fcacts fcext" role="group" aria-label="A few more minutes"><span>A few more minutes</span>' + [2, 5, 10].map(n => '<button class="btn sm" data-fcext="' + n + '" data-raw>+' + n + '</button>').join('') + '</div>') +
@@ -30699,6 +30850,7 @@ if (r.st === 'brk') return fcHead('Break', true) + '<div class="fcrunv"><div cla
 '<div class="fcacts"><button class="btn sm primary" data-fcstart="' + c.len + '" data-fcagain>Back to work now</button><span class="sp"></span><button class="btn sm ghost" data-fcstop>Stop for now</button></div></div>';
 if (r.st === 'brkup') return fcHead('Focus') + '<div class="fcrunv"><p class="fcbig">Break’s over</p>' + (w ? '<p class="fcp"><span class="fcl">Next</span><b data-raw>' + esc(w.name) + '</b></p>' : '') + fcSgNext(w, c.len) +
 '<div class="fcacts"><button class="btn primary" data-fcstart="' + c.len + '" data-fcagain>' + FC_PLAY + '<span>Start ' + c.len + ' minutes</span></button><button class="btn sm" data-fcother>Something else</button><span class="sp"></span><button class="btn sm ghost" data-fcstop>Stop for now</button></div></div>';
+if (r.k === 'l') return fcHead('Focus') + '<div class="fcrunv"><p class="fcbig">Done for now</p><div class="fcacts"><button class="btn sm" data-fcclose>Close</button></div></div>';
 const p = fcPapersToday(), mins = Math.round(fcSecsToday() / 60), wk = fcWeekPapers(), met = c.goal && fcGoalNow(c) >= c.goal.n, tdOpen = w && !w.mark && !w.done, ns = (fcLog().days[fcToday()] || {}).n || 0;
 return fcHead('Focus') + '<div class="fcrunv">' + (met ? '<p class="fcbig ok"><span class="fcok">' + FC_TICK + '</span><span>' + (c.goal.per === 'week' ? 'This week’s goal reached' : 'Today’s goal reached') + '</span></p>' : '<p class="fcbig">Done for now</p>') +
 '<p class="fcp"><span>' + esc(mins ? 'Today: ' + people(p, 'paper') + ' in ' + people(mins, 'minute') + ' of focus.' : 'Today: ' + people(p, 'paper') + '.') + '</span>' + (wk > p ? ' <span>' + esc('This week: ' + people(wk, 'paper') + '.') + '</span>' : '') + (ns > 1 ? ' <span>' + esc(people(ns, 'session') + ' today.') + '</span>' : '') + '</p>' +
@@ -30798,7 +30950,7 @@ if (Object.keys(by).length) L.by = by; else delete L.by;
 fcLogSet(L); b.blur(); return fcRender();
 }
 const s = e.target.closest('[data-fcwork]'); if (!s) return;
-fcS.pick = s.value; fcS.sg = undefined; fcS.chg = false; fcS.hand = true; const L = fcLog(); L.last = s.value; fcLogSet(L); fcRender();
+fcS.pick = s.value; fcS.sg = undefined; fcS.chg = false; fcS.hand = true; fcS.len = 0; if (!/^les:/.test(s.value)) { const L = fcLog(); L.last = s.value; fcLogSet(L); } fcRender();
 });
 document.addEventListener('input', e => {
 const x = e.target.closest('[data-fcsgx]'); if (!x) return;
@@ -30818,7 +30970,7 @@ if (sec !== 'focus') return;
 const c = fcConf(), put = (id, h) => { const el = $(id); if (el && el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
 const sel = (id, list, v, label) => '<select id="' + id + '" class="btn sm" aria-label="' + label + '">' + list.map(n => '<option value="' + n + '"' + (n === v ? ' selected' : '') + '>' + n + ' minutes</option>').join('') + '</select>';
 put('#setFocus', '<div class="lhead"><h2>Focus timer</h2><span class="muted">A timer for grading in short sessions, with breaks in between. Start it from Focus in the sidebar or the card on Today.</span></div>' +
-'<p class="setp fcset"><label for="fcLen"><b>A session lasts</b></label>' + sel('fcLen', FC_LENS, c.len, 'A session lasts') + '<label for="fcBrk"><b>A break lasts</b></label>' + sel('fcBrk', FC_BRKS, c.brk, 'A break lasts') + '</p>' +
+'<p class="setp fcset"><label for="fcLen"><b>A session lasts</b></label>' + sel('fcLen', FC_LENS, c.len, 'A session lasts') + '<label for="fcBrk"><b>A break lasts</b></label>' + sel('fcBrk', FC_BRKS, c.brk, 'A break lasts') + '<label for="fcLLen"><b>A lesson session lasts</b></label>' + sel('fcLLen', FC_LENS, c.llen, 'A lesson session lasts') + '</p>' +
 '<p class="setp"><label><input type="checkbox" id="fcSound"' + (c.sound ? ' checked' : '') + '> A soft chime when a session or a break ends</label></p>' +
 '<p class="setp"><label><input type="checkbox" id="fcTitle"' + (c.title ? ' checked' : '') + '> The time left in the browser tab’s name, so you can see it from another tab</label></p>' +
 '<p class="setp"><label><input type="checkbox" id="fcSg"' + (c.sg ? ' checked' : '') + '> Suggest a goal for each session, from your pace</label></p>' +
@@ -30838,6 +30990,7 @@ $('#setPane').addEventListener('change', e => {
 const t = e.target;
 if (t.id === 'fcLen') { fcS.len = 0; fcConfSet({ len: +t.value }); return setRender(); }
 if (t.id === 'fcBrk') { fcConfSet({ brk: +t.value }); return setRender(); }
+if (t.id === 'fcLLen') { fcS.len = 0; fcConfSet({ llen: +t.value }); return setRender(); }
 if (t.id === 'fcSound') { fcConfSet({ sound: t.checked }); if (t.checked) { fcAudioWake(); fcChime(); } return setRender(); }
 if (t.id === 'fcMusic') { fcConfSet({ music: t.checked }); return setRender(); }
 if (t.id === 'fcMood') { fcConfSet({ mood: t.value }); return setRender(); }
@@ -30857,13 +31010,39 @@ setRender();
 const n = $('#fcGoalN'); if (n) { n.focus(); n.select(); }
 });
 
+/* ---------- sessions that ended in the Planner ----------
+The Planner can't open this log, so a session on papers that ends there leaves what it came to in gsp.focusQ
+([{ d: day, s: seconds, m: on papers, x: extra minutes, got: papers }], src/planner/plfocus.js); it is written in here. */
+const FC_Q = 'gsp.focusQ';
+function fcDrain() {
+const q = store.get(FC_Q, null); if (!Array.isArray(q)) return;
+store.del(FC_Q);
+const L = fcLog(), had = Array.isArray(L.qd) ? L.qd : [];
+for (const x of q) {
+if (x && x.id && had.includes(x.id)) continue;
+if (x && x.id) had.push(x.id);
+if (!x || !/^\d{4}-\d\d-\d\d$/.test(x.d) || !(x.s > 0)) continue;
+const s = Math.min(4 * 3600, Math.round(x.s)), d = L.days[x.d] || {};
+L.days[x.d] = { ...d, s: (d.s || 0) + s, ...(x.m ? { sm: (d.sm || 0) + s } : {}), ...(s >= 60 && !x.x ? { n: (d.n || 0) + 1 } : {}) };
+if (x.got > 0 && s >= 30) L.pace = [...L.pace, [s, x.got]].slice(-20);
+}
+L.qd = had.slice(-50);
+fcLogSet(L);
+}
+{ const old = store.get('gs.focusRun', null); if (old && old.st && !fcRun()) fcPut(old); store.del('gs.focusRun'); }
+{ const t = store.get('gsp.focusGo', null); if (t) store.del('gsp.focusGo'); if (t && Date.now() - t < 60e3) {
+let n = 0; const t = setInterval(() => { if (keptRead || ++n > 100) { clearInterval(t); if (keptRead) fcGoTo(true); } }, 200);
+} }
+
 FC_ON = true;
-fcSeen(); fcTickOn();
-window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcCame, fcTick, focusOn, fcMon, fcToday, lofi, lofiCompose, lofiRender, LOFI_STYLES });
+fcDrain(); fcSeen(); fcTickOn();
+window.addEventListener('pageshow', e => { if (e.persisted) { fcDrain(); fcTickOn(); fcRender(); } });
+window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcGain, fcWorks, fcPapersToday, fcSeen, fcCame, fcTick, focusOn, fcMon, fcToday, lofi, lofiCompose, lofiRender, LOFI_STYLES });
 
 /* ---------------- The time tracker: how much time goes to grading, and how much to planning, kept apart ----------------
-Time counts by itself while the teacher works: grading while the marking screen is open in a tab that is in front, planning
-while the Planner is (src/planner/plantime.js, but not while a lesson is presented). It stops when nothing has been pressed,
+Grading time counts by itself while the teacher works: while the marking screen is open in a tab that is in front. Planning time
+counts only in a focus session on a lesson (src/focus.js fcPlanAdd, src/planner/plfocus.js): opening the Planner to change a
+lesson before class, or presenting it, isn't planning. (Before that, time in the Planner counted; those days keep it.) It stops when nothing has been pressed,
 typed or scrolled for a few minutes (Settings, Focus and goals: 2, 5, 10 or 15), and it can be switched off there.
 Time spent away from the app (marking on paper, planning in a notebook) can be added by hand.
 What is kept, beside the focus timer's own log (src/focus.js):
@@ -30903,7 +31082,7 @@ if (batch) renderProg();
 }
 function tkOn() { if (!tkTimer) tkTimer = setInterval(tkTick, TK_STEP * 1000); tkShare(); }
 function tkShare() {
-const c = fcConf(), v = JSON.stringify({ on: !!c.track, idle: c.idle });
+const c = fcConf(), v = JSON.stringify({ on: !!c.track, idle: c.idle, len: c.len, llen: c.llen, brk: c.brk, sound: c.sound, title: c.title, music: c.music, mood: c.mood, mvol: c.mvol, mamb: c.mamb });
 try { if (localStorage.getItem('gsp.timeCount') !== v) localStorage.setItem('gsp.timeCount', v); } catch { }
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') tkFlush(); });
@@ -30921,7 +31100,7 @@ const hg = hand.filter(x => x.k === 'g').reduce((s, x) => s + x.s, 0), hl = hand
 const auto = d.g != null ? Math.max(d.g, d.sm || 0) : (d.s || 0);
 const ga = d.g != null ? { ...(d.a || {}) } : d.s ? { '': d.s } : {};
 if (d.g != null && auto > d.g) ga[''] = (ga[''] || 0) + auto - d.g;
-return { k, g: auto + hg, l: (pd.l || 0) + hl, hg, hl, p: d.p || 0, pa: d.pa || {}, s: d.s || 0, ga, la: pd.a || {}, hand };
+return { k, g: auto + hg, l: (pd.l || 0) + hl, hg, hl, p: d.p || 0, pa: d.pa || {}, s: (d.s || 0) + (pd.f || 0), ga, la: pd.a || {}, hand };
 }
 const tkYmd = d => isoDay(d.getTime());
 const tkDate = (k, o) => new Date(k + 'T12:00:00').toLocaleDateString(LANG_LOCALE, o);
@@ -31013,7 +31192,7 @@ const gmax = Math.max(1, ...ga.map(x => x[1]), hg), lmax = Math.max(1, ...la.map
 const gRows = ga.map(([id, v]) => { const n = tkAsgName(id), p = t.pa[id] || 0; return row(n.name, n.cls, v, gmax, p ? '<span>' + esc(people(p, 'paper')) + '</span>' : ''); }).join('') + (hg >= 60 ? row(tr('Added by hand'), '', hg, gmax) : '');
 const lRows = la.map(([id, v]) => row(id ? P.names[id] || tr('A lesson') : tr('The week, units and the bank'), '', v, lmax)).join('') + (hl >= 60 ? row(tr('Added by hand'), '', hl, lmax) : '');
 const lists = '<div class="tkcols"><div class="tcard tklist g"><h2>Grading, by assignment</h2>' + (gRows || '<p class="tknone">No grading time in this stretch.</p>') + '</div>' +
-'<div class="tcard tklist l"><h2>Planning, by lesson</h2>' + (lRows || '<p class="tknone">No planning time in this stretch. Time in the Planner counts here, except while a lesson is presented.</p>') + '</div></div>';
+'<div class="tcard tklist l"><h2>Planning, by lesson</h2>' + (lRows || '<p class="tknone">No planning time in this stretch. Focus sessions on a lesson count here.</p>') + '</div></div>';
 const ents = L.add.filter(x => x.d >= per.from && x.d <= per.to).sort((a, b) => b.d.localeCompare(a.d));
 const form = tkS.adding ? '<form class="tkadd" id="tkAdd" autocomplete="off"><label>Day<input type="date" id="tkDay" value="' + today + '" max="' + today + '"></label>' +
 '<label>What<span class="seg" role="group" aria-label="What">' + [['g', 'Grading time'], ['l', 'Planning time']].map(([k, l]) => '<button type="button" data-tkkind="' + k + '" aria-pressed="' + (tkS.kind === k) + '">' + l + '</button>').join('') + '</span></label>' +
@@ -31021,7 +31200,7 @@ const form = tkS.adding ? '<form class="tkadd" id="tkAdd" autocomplete="off"><la
 '<button class="btn primary" type="submit">Add</button><button class="btn" type="button" data-tkcancel>Cancel</button></form>' : '';
 const hand = '<div class="tcard tkhand"><div class="tkch"><h2>Added by hand</h2><span class="muted">For time away from the app, like marking on paper</span><span class="sp"></span>' + (tkS.adding ? '' : '<button class="btn sm" data-tkadd>Add time</button>') + '</div>' + form +
 ents.map(x => '<div class="tkent"><b data-raw>' + esc(tkDate(x.d, { weekday: 'short', month: 'short', day: 'numeric' })) + '</b><span>' + (x.k === 'g' ? 'Grading time' : 'Planning time') + '</span>' + tkD(x.s) + '<span class="sp" data-raw>' + esc(x.x || '') + '</span><button class="icon" data-tkdel="' + esc(x.id) + '" title="Remove" aria-label="Remove">' + TK_X + '</button></div>').join('') + '</div>';
-const foot = '<div class="tkfoot"><p>' + (c.track ? esc('Time counts while the marking screen or the Planner is in front and you have done something there in the last ' + people(c.idle, 'minute') + '.') : 'Time isn’t being counted. Turn it on in Settings, Focus and goals.') + ' <a class="link" href="#/settings/focus">Settings</a></p><button class="btn sm" data-tkcsv>Download as a spreadsheet</button></div>';
+const foot = '<div class="tkfoot"><p>' + (c.track ? esc('Grading time counts while the marking screen is in front and you have done something there in the last ' + people(c.idle, 'minute') + '.') + ' <span>Planning time counts in focus sessions on a lesson.</span>' : 'Time isn’t being counted. Turn it on in Settings, Focus and goals.') + ' <a class="link" href="#/settings/focus">Settings</a></p><button class="btn sm" data-tkcsv>Download as a spreadsheet</button></div>';
 const h = head + tiles + chart + lists + hand + foot;
 if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
 }
@@ -31087,8 +31266,8 @@ function tkWeekHtml() {
 if (!tkReady) return '';
 const today = fcToday(), days = [], d = new Date(fcMon(today) + 'T12:00:00');
 for (; isoDay(d) <= today; d.setDate(d.getDate() + 1)) days.push(isoDay(d));
-const g = tkSum(days, fcLog(), tkPlan()).g + (tkPend.g || 0);
-return '<div class="fctk"><span><span>This week</span><b>' + esc(people(fcWeekPapersNow(), 'paper')) + '</b><span>·</span><span>Grading time</span><b>' + tkD(g) + '</b></span><a class="link" href="#/time">Time tracker</a></div>';
+const t = tkSum(days, fcLog(), tkPlan()), g = t.g + (tkPend.g || 0);
+return '<div class="fctk"><span><span>This week</span><b>' + esc(people(fcWeekPapersNow(), 'paper')) + '</b><span>·</span><span>Grading time</span><b>' + tkD(g) + '</b>' + (t.l ? '<span>·</span><span>Planning time</span><b>' + tkD(t.l) + '</b>' : '') + '</span><a class="link" href="#/time">Time tracker</a></div>';
 }
 
 /* ---------- Settings, Focus and goals: counting time ---------- */
@@ -31097,7 +31276,7 @@ if (sec !== 'focus' || !tkReady) return;
 const el = $('#setTrack'); if (!el) return;
 const c = fcConf();
 const h = '<div class="lhead"><h2>Time tracker</h2><span class="muted">How much time goes to grading and to planning, kept apart. <a class="link" href="#/time">Open the time tracker</a></span></div>' +
-'<p class="setp"><label><input type="checkbox" id="tkOn"' + (c.track ? ' checked' : '') + '> Count grading time on the marking screen and planning time in the Planner</label></p>' +
+'<p class="setp"><label><input type="checkbox" id="tkOn"' + (c.track ? ' checked' : '') + '> Count grading time on the marking screen</label></p>' +
 '<p class="setp fcset"><label for="tkIdle"><b>Stop counting after</b></label><select id="tkIdle" class="btn sm" aria-label="Stop counting after"' + (c.track ? '' : ' disabled') + '>' + TK_IDLES.map(n => '<option value="' + n + '"' + (n === c.idle ? ' selected' : '') + '>' + n + ' minutes</option>').join('') + '</select><span class="muted">with nothing pressed, typed or scrolled</span></p>';
 if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
 }
@@ -31240,7 +31419,7 @@ tile('Handed back', '<span>' + esc(people(back.length, 'set')) + '</span>', back
 /* ---------- quiet while focusing ---------- */
 function gpQuiet() {
 if (!gpReady) return;
-const r = fcRun(), on = fcConf().quiet && !!r && (r.st === 'run' || r.st === 'paused');
+const r = fcRun(), on = fcConf().quiet && !!r && r.k !== 'l' && (r.st === 'run' || r.st === 'paused');
 if (document.body.classList.contains('fcquiet') !== on) document.body.classList.toggle('fcquiet', on);
 }
 
@@ -31526,7 +31705,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.42":["Videos from your Google Drive: in Partners and videos, Choose from Drive… opens Google's own chooser in your videos folder. Pick several at once and each goes to the student named in its file name. The video plays here, so the transcript follows along. The app can open only the videos you pick, nothing else in your Drive.","Open from Google Drive and Save to Google Drive use the same limited permission: pick the ZIP or the papers in Google's chooser. Grading Studio never asks for your whole Drive."]};
+const WHATS_NEW = {"1.28.47":["A lesson you send to your assistant now carries when each class meets, the unit plan for the week and your own activities. Its slides come back in the .zip, so the Planner makes the PowerPoint from your own template and you check the changes slide by slide. The assistant's own PowerPoint is kept in Materials as a preview."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -32376,6 +32555,7 @@ function stpRead(j) {
     const f = {}, n = v => Math.round(+v);
     if (FC_LENS.includes(n(fo.sessionMinutes))) f.len = n(fo.sessionMinutes);
     if (FC_BRKS.includes(n(fo.breakMinutes))) f.brk = n(fo.breakMinutes);
+    if (FC_LENS.includes(n(fo.lessonMinutes))) f.llen = n(fo.lessonMinutes);
     if (fo.dailyGoal === null || fo.dailyGoal === false) f.goal = null;
     else {
       const g = stpObj(fo.dailyGoal), wk = g && stpKey(g.per) === 'week', m = wk ? 7 : 1;
@@ -32546,6 +32726,7 @@ function stpDiff(S, planNow) {
   if (S.focus) {
     const c = fcConf(), f = S.focus, L = [];
     if (f.len != null && f.len !== c.len) L.push('A focus session lasts ' + f.len + ' minutes');
+    if (f.llen != null && f.llen !== c.llen) L.push('A lesson session lasts ' + f.llen + ' minutes');
     if (f.brk != null && f.brk !== c.brk) L.push('A break lasts ' + f.brk + ' minutes');
     const gk = g => g ? JSON.stringify([g.k, g.n, g.per || 'day', g.days || null]) : '';
     if ('goal' in f && gk(f.goal) !== gk(c.goal)) L.push(f.goal ? (f.goal.per === 'week' ? 'Weekly goal: ' : 'Daily goal: ') + people(f.goal.n, f.goal.k === 'min' ? 'minute' : 'paper') + (f.goal.days ? ' on ' + f.goal.days.map(d => GP_DAYS[d]).join(', ') : '') : 'No daily goal');
@@ -32748,7 +32929,7 @@ async function stpExport() {
   if (bank.length) out.comments = bank.slice(0, 200);
   if (goalList().length) out.goals = goalList().map(x => x.name);
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
-  if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days ? { days: c.goal.days.map(d => GP_DAYS[d].toLowerCase()) } : {}) } : null, sessionGoals: c.sg, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle, freePeriods: c.free, weeklyLookBack: c.wk === false ? false : GP_DAYS[c.wk].toLowerCase(), quietWhileFocusing: c.quiet, shortestFirst: c.short, music: c.music, musicMood: c.mood, musicVolume: Math.round(c.mvol * 100), musicBackground: c.mamb }; }
+  if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, lessonMinutes: c.llen, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days ? { days: c.goal.days.map(d => GP_DAYS[d].toLowerCase()) } : {}) } : null, sessionGoals: c.sg, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle, freePeriods: c.free, weeklyLookBack: c.wk === false ? false : GP_DAYS[c.wk].toLowerCase(), quietWhileFocusing: c.quiet, shortestFirst: c.short, music: c.music, musicMood: c.mood, musicVolume: Math.round(c.mvol * 100), musicBackground: c.mamb }; }
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
   { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
@@ -32825,7 +33006,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "comments": ["Explain how your evidence supports your claim."],
   "goals": ["Uses evidence", "Designs a fair test"],
   "attendance": true,
-  "focus": { "sessionMinutes": 10, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "sessionGoals": true, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5, "freePeriods": true, "weeklyLookBack": "friday", "quietWhileFocusing": false, "shortestFirst": false, "music": false, "musicMood": "mix", "musicVolume": 50, "musicBackground": false },
+  "focus": { "sessionMinutes": 10, "lessonMinutes": 45, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "sessionGoals": true, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5, "freePeriods": true, "weeklyLookBack": "friday", "quietWhileFocusing": false, "shortestFirst": false, "music": false, "musicMood": "mix", "musicVolume": 50, "musicBackground": false },
   "classTabs": ["Missing work"],
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
   "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide" }
@@ -32842,7 +33023,7 @@ FIELD NOTES
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
-- "focus" is the work timer for grading: "sessionMinutes" is one of 5, 10, 15, 20, 25, 30, 45, 60 and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none; add "per": "week" for a goal for the whole week, or "days": ["monday", "wednesday"] for a daily goal on some days only. "sessionGoals" false stops the app suggesting a goal for each session. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. "music" true plays lo-fi music while a session runs; "musicMood" is "mix" or one of "rain", "library", "coffee", "night", "tape", "garden", "blue", "quiet" (quiet has no drums), "musicVolume" is 5 to 100, and "musicBackground" true adds a soft record crackle or rain behind it. Leave it out if I have not said.
+- "focus" is the work timer for grading and for planning lessons: "sessionMinutes" (a grading session) and "lessonMinutes" (a session planning one lesson) are each one of 5, 10, 15, 20, 25, 30, 45, 60, and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none; add "per": "week" for a goal for the whole week, or "days": ["monday", "wednesday"] for a daily goal on some days only. "sessionGoals" false stops the app suggesting a goal for each session. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. "music" true plays lo-fi music while a session runs; "musicMood" is "mix" or one of "rain", "library", "coffee", "night", "tape", "garden", "blue", "quiet" (quiet has no drums), "musicVolume" is 5 to 100, and "musicBackground" true adds a soft record crackle or rain behind it. Leave it out if I have not said.
 - "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;

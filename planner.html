@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"144bd232","zh-Hans":"b192e5f0","es":"cd6574a8","fr":"aa221c0e","de":"5d10159c","pt-BR":"380bdb23","ja":"90a24fac","ko":"403b2e0d"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"b81fd99e","zh-Hans":"5906cb17","es":"8a68b9ea","fr":"775b35e4","de":"d4e415d5","pt-BR":"8395bc1a","ja":"698871bc","ko":"f68d40d4"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -978,6 +978,135 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .pk-wx{float:right;border:1px solid var(--stage-line);background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-1) var(--space-3);font:inherit;font-weight:600}
 .pk-wx:hover{background:var(--stage-hover)}
 
+
+.fcbody{display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-4)}
+.fcgoal{display:flex;flex-direction:column;gap:var(--space-2);font-size:var(--text-control);color:var(--fg-2)}
+.fcgh{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3)}
+.fcgh b{font-weight:600;color:var(--fg)}
+.fcnum{display:inline-flex;gap:var(--space-2);font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--muted)}
+.fcdots{display:flex;flex-wrap:wrap;gap:5px}
+.fcdots i{flex:none;width:14px;height:14px;border-radius:var(--corner-round);background:var(--track);transition:background .3s}
+.fcdots.blk i{width:12px;border-radius:var(--corner-1)}
+.fcdots i.fhalf{margin-left:var(--space-2)}
+.fcdots i.fon{background:var(--accent)}
+.fcdots i.fnow{background:var(--bk-sum)}
+.fcgoal.met .fcdots i{background:var(--ok)}
+.fcdots i.fpop{animation:fcpop .6s ease-out}
+@keyframes fcpop{0%{transform:scale(.4)}55%{transform:scale(1.35)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.fcdots i.fpop{animation:none}}
+.fcbar{position:relative;display:block;height:8px;border-radius:var(--corner-pill);background:var(--track);overflow:hidden}
+.fcbar i{display:block;height:100%;border-radius:var(--corner-pill);background:var(--accent);transition:width .4s}
+.fcbar b{position:absolute;top:0;bottom:0;width:2px;background:var(--surface)}
+.fcgoal.met .fcbar i{background:var(--ok)}
+.fcmet{display:inline-flex;align-items:center;gap:var(--space-1);color:var(--ok);font-weight:600}
+.fcmet svg,.fcok svg,.fcwc svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+
+.fcweek .fcl{margin-bottom:var(--space-2)}
+.fcwk{display:flex;gap:var(--space-2);height:76px}
+.fcwd{flex:1;display:grid;grid-template-rows:14px minmax(0,1fr) 16px;justify-items:center;min-width:0}
+.fcwc{display:grid;place-items:center;color:var(--ok)}
+.fcwb{position:relative;width:100%;max-width:26px;display:flex;align-items:flex-end;border-radius:var(--corner-1);background:var(--surface-2);overflow:hidden}
+.fcwb i{display:block;width:100%;background:var(--ch2);border-radius:var(--corner-1) var(--corner-1) 0 0}
+.fcwk.hasg .fcwb::after{content:"";position:absolute;left:0;right:0;bottom:var(--g);border-top:1.5px dashed var(--line-strong)}
+.fcwd.now .fcwb i{background:var(--accent)}
+.fcwd.met .fcwb i{background:var(--ok)}
+.fcwd.later .fcwb{background:none;box-shadow:inset 0 0 0 1px var(--line)}
+.fcwl{align-self:end;font-size:var(--text-caption);line-height:1;color:var(--faint)}
+.fcwd.now .fcwl{color:var(--accent);font-weight:600}
+.fcnogoal{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);font-size:var(--text-control);color:var(--muted)}
+.fcnogoal .link{font-weight:500;text-decoration:none;white-space:nowrap}
+.fcline{height:1px;margin:0 calc(-1 * var(--space-4));background:var(--line)}
+.fcl{display:block;margin:0 0 var(--space-1);font-size:var(--text-small);font-weight:600;color:var(--fg-2)}
+.fcwork{width:100%;min-width:0;height:34px;padding:0 var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
+.fcwork:focus{outline:2px solid var(--accent);outline-offset:1px}
+.fcsay{margin:var(--space-1) 0 0;font-size:var(--text-small);color:var(--muted)}
+.fcgo{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2)}
+.fcgo [data-fcstart]{display:inline-flex;align-items:center;gap:var(--space-2)}
+.fcgo .btn svg{width:14px;height:14px;fill:currentColor}
+.fclens{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-1);font-size:var(--text-small);color:var(--muted)}
+.fclens button{min-width:30px;height:24px;padding:0 var(--space-2);border:0;border-radius:var(--corner-pill);background:var(--surface-2);color:var(--fg-2);font:inherit;font-size:var(--text-small);font-weight:500;cursor:pointer}
+.fclens button:hover{background:var(--hover)}
+.fclens button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
+
+
+.rnav .rcnt.fcrun{color:var(--accent);font-weight:600}
+.rnav.fcbrk .rcnt.fcrun{color:var(--muted)}
+.fcico{position:relative;display:grid;place-items:center;flex:none;width:18px;height:18px}
+.fcico>svg:first-child{width:18px;height:18px}
+#railFocus .fcring{position:absolute;inset:-6px;width:30px;height:30px;transform:rotate(-90deg);pointer-events:none}
+:is(.shell.grading,.pfold,.gsfull) #railFocus .fcring{inset:-8px;width:34px;height:34px}
+.fcring circle{fill:none;stroke-width:2.4}
+.fcring .tr{stroke:var(--track)}
+.fcring .on{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .9s linear}
+#railFocus.fcbrk .fcring .on{stroke:var(--faint)}
+#railFocus.fcmet .fcring .on{stroke:var(--ok)}
+.rnav .rcnt.fcmetc{color:var(--ok);font-weight:600}
+#railFocus.fcgoalon .rcnt{font-variant-numeric:tabular-nums}
+
+
+.fcpanel{position:fixed;left:calc(var(--fc-left, 248px));bottom:var(--space-4);z-index:60;width:328px;max-width:calc(100vw - 2 * var(--space-4));background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);box-shadow:var(--shadow),0 10px 30px rgba(20,25,40,.12);color:var(--fg)}
+.fcpanel[hidden]{display:none}
+.fcpanel.fold{width:auto;border-radius:var(--corner-pill)}
+.fchead{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-3) 0 var(--space-4)}
+.fchead .tcap{margin:0}
+.fchead .sp{flex:1}
+.fchead .icon{width:28px;height:28px;padding:0;border-radius:var(--corner-2);border:1px solid transparent;background:none;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font:inherit;cursor:pointer}
+.fchead .icon:hover{background:var(--surface-2);color:var(--fg)}
+.fcrunv{display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-3) var(--space-4) var(--space-4)}
+.fctop{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:var(--space-4)}
+.fcclock{position:relative;width:92px;height:92px}
+.fcclock svg{width:100%;height:100%;transform:rotate(-90deg)}
+.fcclock circle{fill:none;stroke-width:6}
+.fcclock .tr{stroke:var(--track)}
+.fcclock .on{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .9s linear}
+.fcclock.brk .on{stroke:var(--faint)}
+.fcclock.paused .on{stroke:var(--line-strong)}
+.fctime{position:absolute;inset:0;display:grid;place-items:center;font-size:var(--text-title);font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.fcwhat{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
+.fcwhat b{max-width:100%;font-size:var(--text-body);font-weight:600;overflow-wrap:anywhere}
+.fcwhat span{font-size:var(--text-small);color:var(--muted)}
+.fcwhat .btn{margin-top:var(--space-2)}
+.fcstats{display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-3) 0 0;border-top:1px solid var(--line)}
+.fcstat{display:flex;justify-content:space-between;gap:var(--space-3);font-size:var(--text-control);color:var(--muted)}
+.fcstat b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums}
+.fcacts{display:flex;flex-wrap:wrap;gap:var(--space-2)}
+.fcacts .sp{flex:1}
+.fcbig{margin:0;font-size:var(--text-lead);font-weight:600;line-height:1.3}
+.fcbig.ok{display:flex;align-items:center;gap:var(--space-2)}
+.fcok{display:inline-grid;place-items:center;flex:none;width:22px;height:22px;border-radius:var(--corner-round);background:var(--ok);color:var(--accent-fg)}
+.fcp{margin:0;font-size:var(--text-control);line-height:1.45;color:var(--fg-2)}
+.fcp.muted{color:var(--muted)}
+.fcbrkbox{padding:var(--space-3);border-radius:var(--corner-3);background:var(--accent-soft);font-size:var(--text-control);line-height:1.45;color:var(--fg-2)}
+
+.fcpill{display:flex;align-items:center;gap:var(--space-2);height:40px;padding:0 var(--space-4) 0 var(--space-2);border:0;border-radius:var(--corner-pill);background:none;color:var(--fg);font:inherit;font-size:var(--text-control);cursor:pointer;max-width:320px}
+.fcpill svg{flex:none;width:26px;height:26px;transform:rotate(-90deg)}
+.fcpill circle{fill:none;stroke-width:3.4}
+.fcpill .tr{stroke:var(--track)}
+.fcpill .on{stroke:var(--accent);stroke-linecap:round}
+.fcpill.brk .on{stroke:var(--faint)}
+.fcpill b{font-weight:600;font-variant-numeric:tabular-nums}
+.fcpill span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.fcpill .fcpg{flex:none;padding:1px var(--space-2);border-radius:var(--corner-pill);background:var(--accent-soft);color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
+.fcpill .fcpg.met{background:var(--ok-soft);color:var(--ok)}
+
+
+.fcset{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3)}
+.fcset input[type=number]{width:76px;height:32px;padding:0 var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
+.fcset .seg{display:inline-flex}
+.fcext{align-items:center}
+.pfstart{display:inline-flex;align-items:center;gap:var(--space-1)}
+.pfstart[hidden]{display:none}
+.ls-top .btn.pfstart svg,.pfstart svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.fcext > span{font-size:var(--text-small);color:var(--muted)}
+
+
+.fcmus{display:flex;align-items:center;gap:var(--space-2);min-width:0}
+.fcmus svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.fcmus.on [data-fcmus]{color:var(--accent);border-color:var(--accent)}
+.fcmus select{min-width:0;flex:1}
+.fcmus input[type=range],#fcVol{accent-color:var(--accent);width:72px;flex:none}
+#fcVol{width:140px}
+
 /* The sidebar stays put at the left edge; the Planner's own screen scrolls beside it. It folds to icons while a lesson, a unit or a document is open. */
 .rail{position:fixed;left:0;top:0;bottom:0;z-index:6}
 .lsn{margin-left:232px}
@@ -1664,20 +1793,51 @@ async function versionsDlg(l) {
 }
 
 /* ---------- sending to Claude, approving ---------- */
+const lessonZipAsk = () => 'When you are done, give me ONE downloadable .zip file. In it:\n' +
+  '- lesson.json: { "kind": "grading-studio-lesson-zip", "lesson": { "title": "…", "slides": [ … ] }, "preview": "<the .pptx file name>", "materials": ["<each handout file name>"] }.\n' +
+  '  "slides" is every slide of the lesson, in order. My Planner makes the real PowerPoint from these with my school template, so they matter most. Each slide is one of:\n' +
+  '  { "layout": "title", "title": "…", "body": "" }   { "layout": "agenda", "title": "…", "body": "1. …\\n2. …" }\n' +
+  '  { "layout": "content", "title": "…", "body": "• Point\\n\\t• Smaller point", "notes": "speaker notes" }   { "layout": "text", "title": "…", "body": "plain paragraphs" }\n' +
+  '  { "layout": "warmup", "title": "Warm-up", "tag": "Journal", "body": "the prompt" }   { "layout": "objectives", "title": "Today we will", "body": "1. …" }\n' +
+  '  { "layout": "steps", "title": "…", "body": "1. …\\n2. …", "foot": "When you’re done: …" }   { "layout": "discuss", "title": "…", "body": "the question", "foot": "Think · Pair · Share" }\n' +
+  '  { "layout": "twocol", "title": "…", "h1": "left heading", "body": "left", "h2": "right heading", "body2": "right" }   { "layout": "passage", "title": "…", "body": "“the passage”", "cite": "source", "foot": "the question" }\n' +
+  '  { "layout": "vocab", "title": "Word of the day", "word": "…", "pos": "noun", "body": "meaning", "foot": "example" }   { "layout": "video", "title": "…", "video": { "url": "https://…", "start": 30 } }\n' +
+  '  { "layout": "exit", "title": "Exit ticket", "tag": "On a sticky note", "body": "the question" }   { "layout": "picture", "title": "…" } (keeps the picture already on that slide)\n' +
+  '  Any slide may have "notes" and "size" (' + deckSizeSay() + '). Lines are separated by \\n and show exactly as written. Reply to my comments with "talk": [{ "by": "claude", "text": "…" }] on that slide.\n' +
+  '- a preview PowerPoint (.pptx) of the same slides, so I can look before I upload;\n' +
+  '- any handouts or other files the lesson needs (.docx, .pdf and so on).\n' +
+  'Also give me each piece (the preview PowerPoint and every handout) as its own downloadable file, so I can open or use one without the .zip.\n' +
+  'Put nothing about any student in any of them. Then tell me in a few lines what you changed. I will upload the .zip on this lesson in my Planner.';
+async function lessonContext(l) {
+  let t = '';
+  const when = (l.slots || []).map(sl => { const c = classById(sl.classId); if (!c) return ''; const d = parseYmd(sl.date).getDay(), m = (c.meets || []).find(x => +x.dow === d);
+    return '- ' + c.name + (c.course && c.course !== c.name ? ' (' + c.course + ')' : '') + ', ' + longDate(sl.date) + (m && m.start ? ', ' + hm(m.start) + (m.end ? '–' + hm(m.end) + ' (' + (minsOf(m.end) - minsOf(m.start)) + ' minutes)' : '') : ''); }).filter(Boolean);
+  if (when.length) t += '## When I teach it\n' + when.join('\n') + '\n\n';
+  const hit = lessonUnit(l);
+  if (hit) {
+    const { u, n } = hit;
+    t += '## The unit: ' + u.title + (u.course ? ' (' + u.course + ')' : '') + '\nThis lesson is in week ' + (n + 1) + ' of ' + u.weeks.length + '.' + (u.atlas ? ' Unit plan page: ' + u.atlas : '') + '\n' +
+      u.weeks.map((w, i) => '- Week ' + (i + 1) + (i === n ? ' (this week)' : '') + ': ' + (w.focus || '…') + (w.standards ? ' [' + w.standards + ']' : '') + (w.notes ? ' My notes: ' + w.notes : '')).join('\n') + '\n\n';
+  }
+  const acts = (await myActivities()).slice(0, 25);
+  if (acts.length) t += '## Activities I like to use (use one where it fits)\n' + acts.map(a => '- ' + a.name + (a.what ? ': ' + a.what : '')).join('\n') + '\n\n';
+  return t;
+}
+const minsOf = s => { const m = /^(\d+):(\d\d)/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : 0; };
+const lessonAttach = l => { const p = l.slides.filter(s => s.img).length, c = l.slides.reduce((n, s) => n + (s.ctx || []).length, 0);
+  return [p ? p + ' slide picture' + (p === 1 ? '' : 's') : '', c ? c + ' screenshot' + (c === 1 ? '' : 's') + ' for context' : ''].filter(Boolean).join(' and '); };
 async function sendToClaude(l) {
   editorCommit(); boxNotesToSlides(l);
   await saveVersion(l, 'Sent to ' + plAi());
   l.status = 'claude'; await lPut(l);
   const asks = l.slides.filter(s => s.ask.trim()).length, talks = l.slides.filter(s => s.talk.some(t => t.by === 'you' && !t.done)).length;
-  const file = fileBase(l) + '.lesson.json';
-  const msg = L.dir && L.dirOk
-    ? 'Please work on my lesson "' + l.title + '" in my Planner folder ("' + L.dir.name + '"), file "' + file + '". Read "README - for ' + plAi() + '.md" there first.\n\n' +
-      (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' an "ask" saying what I want on it. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me in "talk". ' : '') + (lessonNotes(l).length ? 'My comments on the whole lesson are in the lesson\'s own "talk". ' : '') +
-      lessonNotes(l).map(x => 'My comment on the whole lesson: ' + x + '\n').join('') +
-      'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. When you\'re done, reply to my comments in "talk", put a short summary in "claudeNote", and set "status" to "review". Don\'t change "id" or "slots". I\'ll look at your version slide by slide in the Planner.'
-    : 'Here is a lesson from my Planner. Each slide may have "What I want here" notes and comments for you. Build it out, keep my wording where I wrote it, slide 1 stays the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + ', and slide text stays ' + deckSizeSay() + ' pt.\n\n' + lessonText(l);
+  const msg = 'Here is a lesson from my Planner. Everything you need is in this message. Don\'t look for, open or ask for any folder or file on my computer.\n\n' +
+    (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' a "What I want on this slide" note. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me. ' : '') +
+    'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. Slide 1 stays the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + ', and slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style.\n\n' +
+    lessonZipAsk() + '\n\n' + await lessonContext(l) + lessonText(l);
   await copyText(msg);
-  toast(L.dir && L.dirOk ? 'Copied. Paste it into ' + plAi() + '. ' + PlAi() + '’s changes show up here when it saves.' : 'Lesson copied. Paste it into ' + plAi() + '. Link the Planner folder so ' + plAi() + ' can save straight back.', 7000);
+  const att = lessonAttach(l);
+  toast('Lesson copied. Paste it into ' + plAi() + (att ? ' and attach the ' + att + ' (Copy on each one, then paste)' : '') + '. When it gives you a .zip, upload it on this lesson and check its changes slide by slide.', 9000);
   renderEditor();
 }
 
@@ -2246,7 +2406,7 @@ function renderEditor() {
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities', library: 'Past lessons' }[L.backTo] || 'Week') + '</button>' +
     '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + mbBtn(classById(t.classId)) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
-    '<span class="sp"></span>' + ptBadge(l) + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
+    '<span class="sp"></span>' + pfBtn(l) + ptBadge(l) + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
     (lessonTalk(l) ? commentsBtn(l) : '') + panelBtn() + moreHtml(l) +
     '<button class="btn sm" data-a="pptx">Download .pptx</button><button class="btn sm primary" data-pr="present" title="Show this lesson full screen, from this slide">' + prIcon('play') + 'Present</button></div>' + pendingBar(l) + variantBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
@@ -2790,17 +2950,16 @@ function lessonText(l) {
     if (s.video) t += '[Video: ' + s.video.url + (s.video.title ? ' (' + videoSource(s.video) + ')' : '') + ']\n';
     if (s.notes) t += 'Notes: ' + s.notes + '\n';
     if (s.ask) t += 'What I want on this slide: ' + s.ask + '\n';
-    for (const c of s.ctx || []) t += '[Screenshot for context, not on the slide' + (c.note ? ': ' + c.note : '') + (L.dir && L.dirOk && ctxFile(s, c) ? ' (in my Planner folder: ' + ctxFile(s, c) + ')' : '') + ']\n';
+    for (const c of s.ctx || []) t += '[Screenshot for context, not on the slide' + (c.note ? ': ' + c.note : '') + ']\n';
     for (const m of s.talk) if (!m.done) t += (m.by === 'claude' ? PlAi() + ': ' : 'My comment: ') + m.text + '\n';
   });
   if (l.notebook) t += '\n## My notebook for this lesson\n' + nbText(l.notebook) + '\n';
   return t;
 }
 async function askClaude(l) {
-  const where = L.dir && L.dirOk ? 'It is saved in my Planner folder as "' + fileBase(l) + '.lesson.json". Edit that file directly (keep the same id), and I will pick up your changes in the Planner.\n\n' : '';
-  await copyText('Here is a lesson from my Planner. ' + where + 'Slide 1 is the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + '. Slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + lessonText(l));
+  await copyText('Here is a lesson from my Planner. Everything you need is in this message. Don\'t look for, open or ask for any folder or file on my computer. Slide 1 is the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + '. Slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + await lessonContext(l) + lessonText(l));
   const shots = l.slides.reduce((n, s) => n + (s.ctx || []).length, 0);
-  toast('Lesson copied. Paste it into ' + plAi() + ' and say what you want.' + (shots && !(L.dir && L.dirOk) ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
+  toast('Lesson copied. Paste it into ' + plAi() + ' and say what you want.' + (shots ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
 }
 
 /* ---------- import ---------- */
@@ -4638,11 +4797,13 @@ async function lessonZip(l, file) {
   const files = names.filter(n => n !== mf);
   const byBase = b => files.find(n => baseName(n).toLowerCase() === baseName(b || '').toLowerCase());
   const decks = files.filter(n => /\.pptx$/i.test(n));
-  const deck = byBase(man.finished) || (decks.length === 1 ? decks[0] : decks.find(n => !n.includes('/')) || decks[0]);
-  let mats = Array.isArray(man.materials) ? man.materials.map(byBase).filter(Boolean) : files.filter(n => n !== deck);
+  const back = man.lesson && Array.isArray(man.lesson.slides) && man.lesson.slides.length ? man.lesson : null;
+  const deck = back ? null : byBase(man.finished) || (decks.length === 1 ? decks[0] : decks.find(n => !n.includes('/')) || decks[0]);
+  let mats = Array.isArray(man.materials) ? [...(back && man.preview ? [man.preview] : []), ...man.materials].map(byBase).filter(Boolean) : files.filter(n => n !== deck);
   mats = mats.filter((n, i) => mats.indexOf(n) === i && n !== deck);
   const big = mats.filter(n => z[n].length > MAX_FILE); mats = mats.filter(n => z[n].length <= MAX_FILE);
-  if (!deck && !mats.length) return toast('Nothing to add in that .zip');
+  if (!deck && !mats.length && !back) return toast('Nothing to add in that .zip');
+  if (back) { editorCommit(); await saveVersion(l, 'Before ' + plAi() + '’s changes'); }
   if (mats.length) {
     l.files = l.files || [];
     for (const n of mats) {
@@ -4654,13 +4815,41 @@ async function lessonZip(l, file) {
     }
     await lPut(l);
   }
-  if (deck) await finUpload(l, new File([z[deck]], baseName(deck), { type: MIME.pptx }));
+  if (back) {
+    lessonBack(l, back);
+    for (const s of l.slides) if (s.video && ytId(s.video.url) && !s.video.thumb) { try { const v = await videoFrom(s.video.url); s.video = { ...v, start: s.video.start || v.start, title: s.video.title || v.title }; } catch { } }   // the assistant gives just the link
+    await lPut(l); L.cur = 0; lessonChanged(false); renderEditor();
+    return toast(PlAi() + '’s ' + l.slides.length + ' slides came in' + (mats.length ? ', with ' + mats.length + ' file' + (mats.length === 1 ? '' : 's') + ' in Materials' : '') + '. Check the changes slide by slide above the slides. Download .pptx makes the PowerPoint from your template.' +
+      (big.length ? ' Too big to keep (over 40 MB): ' + big.map(baseName).join(', ') + '.' : ''), 9000);
+  }
+  if (deck) await finUpload(l, new File([z[deck]], baseName(deck), { type: MIME.pptx }), null, l.status === 'claude');
   else renderEditor();
   toast((deck ? 'Finished deck “' + baseName(deck) + '”' : 'No PowerPoint') + ' and ' + mats.length + ' material' + (mats.length === 1 ? '' : 's') + ' added from ' + file.name + '.' +
-    (big.length ? ' Too big to keep (over 40 MB): ' + big.map(baseName).join(', ') + '.' : '') + (deck ? ' The lesson before is under Versions.' : ''), 8000);
+    (big.length ? ' Too big to keep (over 40 MB): ' + big.map(baseName).join(', ') + '.' : '') + (deck ? (l.pending ? ' Check ' + plAi() + '’s changes slide by slide above the slides.' : ' The lesson before is under Versions.') : ''), 8000);
 }
 
-async function finUpload(l, file, keepId) {
+function lessonBack(l, back) {
+  const was = l.slides, old = JSON.parse(JSON.stringify(was));
+  const slides = back.slides.slice(0, 80).map((x, i) => {
+    const o = was[i], y = x && typeof x === 'object' ? { ...x } : {};
+    delete y.id; delete y.img; delete y.ctx; delete y.box; delete y.fs;
+    const s = normSlide({ ...y, fmt: 2 });
+    if (o) {
+      s.id = o.id; s.ask = o.ask; if (o.ctx) s.ctx = o.ctx; if (o.box) s.box = o.box; if (o.fs) s.fs = o.fs;
+      if (o.img && (s.layout === 'picture' || s.layout === 'fullpic' || s.layout === 'textpic' || s.layout === 'picprompt')) s.img = o.img;
+      if (o.video && s.layout === 'video' && (!s.video || s.video.url === o.video.url)) s.video = o.video;
+      if (!(x && x.size)) s.size = o.size;
+      s.talk = [...o.talk, ...s.talk.filter(t => t.by === 'claude')];
+    }
+    return s;
+  });
+  if (!l.pending) l.pending = { at: Date.now(), before: old, title: l.title };
+  l.slides = slides; l.status = 'review';
+  if (typeof back.title === 'string' && back.title.trim() && !l.titleApart) l.title = back.title.trim().slice(0, 200);
+  if (typeof back.claudeNote === 'string') l.claudeNote = back.claudeNote.slice(0, 2000);
+}
+
+async function finUpload(l, file, keepId, review) {
   if (!/\.pptx$/i.test(file.name || '')) return toast('That isn’t a .pptx file');
   if (file.size > MAX_FILE) return toast('That file is too big (over 40 MB)');
   let slides;
@@ -4671,12 +4860,13 @@ async function finUpload(l, file, keepId) {
   const id = keepId || lid(); if (!keepId) await kvSet('file:' + id, file);
   const finals = (l.finals || []).filter(o => o.id !== id);
   if (l.final && l.final.id !== id) finals.unshift(l.final);
-  slides.forEach((s, i) => { const was = l.slides[i]; if (was) { s.ask = was.ask; s.talk = was.talk; if (was.ctx) s.ctx = was.ctx; } });
+  slides.forEach((s, i) => { const was = l.slides[i]; if (was) { s.ask = was.ask; s.talk = was.talk; if (was.ctx) s.ctx = was.ctx; if (review) s.id = was.id; } });
+  if (review) { l.pending = l.pending || { at: Date.now(), before: JSON.parse(JSON.stringify(l.slides)), title: l.title }; l.status = 'review'; }
   l.slides = slides.map(s => normSlide({ ...s, fmt: 2 }));
   l.finals = finals;
   l.final = { id, name: file.name, size: file.size, at: Date.now(), sig: finSig(l) };
   L.cur = 0; await lPut(l); lessonChanged(false); renderEditor();
-  toast('Finished deck saved: ' + slides.length + ' slides. The lesson before it is under Versions.', 6000);
+  if (!review) toast('Finished deck saved: ' + slides.length + ' slides. The lesson before it is under Versions.', 6000);
 }
 async function finBack(l, id) {
   const o = (l.finals || []).find(x => x.id === id), b = o && await fileBlob(id); if (!b) return toast('That file is missing');
@@ -6767,7 +6957,7 @@ const LANG_FILLS = [
   ['gpsessn', /^Session (\d+)$/], ['gpsess', /^(\d+) sessions? today\.$/], ['gpaday', /^(\d+) papers? a day$/], ['tkweeks', /^(\d+) weeks? reached the goal$/],
   ['tkpace', /^about (\d+) minutes? a paper$/], ['fcsofar', /^from (\d+) papers? so far$/], ['tkso', /^(\S.*) so far$/], ['tklessons', /^(\d+) lessons?$/], ['tkdays', /^(\d+) days? reached the goal$/],
   ['gpleft', /^about (.+) left$/], ['gpsets', /^(\d+) sets?$/], ['gpdays', /^(\d+) days?$/],
-  ['tkcount', /^Time counts while the marking screen or the Planner is in front and you have done something there in the last (\d+) minutes?\.$/],
+  ['tkcount', /^Grading time counts while the marking screen is in front and you have done something there in the last (\d+) minutes?\.$/],
   ['besideopen', /^Open (.+) beside Grading Studio$/],
   ['sdet', /^Student details for (.+)$/], ['cnt', /^Count (.+) in the class average$/], ['wout', /^without (\d+) students? ·$/],
   ['nograde', /^Nothing graded for (.+) in this term yet\. Grade a download for it, or use \+ Add scores for work you did before\.$/],
@@ -7428,6 +7618,13 @@ function arriveAt() {
   else if (h === 'rubrics') list('bank');
   else if (h === 'timetable') { list('week'); openTimetable(); }
   else if (h.startsWith('lesson/')) { const l = L.lessons.find(x => x.id === h.slice(7)); L.weekOf = ymd(mondayOf(new Date())); list('week'); if (l) openLesson(l); }
+  else if (h.startsWith('plan/')) {
+    const [c, d] = h.slice(5).split('/'), cl = ((L.setup && L.setup.classes) || []).find(x => String(x.id) === c), ok = !!cl && /^\d{4}-\d\d-\d\d$/.test(d || '');
+    const l = ok ? lessonsAt(cl.id, d)[0] : null;
+    L.weekOf = ymd(mondayOf(new Date())); list('week');
+    if (l) { openLesson(l); pfLesson(l); }
+    else if (ok) createLesson([{ classId: cl.id, date: d }]).then(() => pfLesson(L.open)).catch(e => console.error(e));
+  }
   else if (h.startsWith('present/')) { L.weekOf = ymd(mondayOf(new Date())); list('week'); presentArrive(h.slice(8)); }
 }
 
@@ -7695,11 +7892,10 @@ async function viewFile(u, id) {
   saveBlob(f.name, b);   // Word files and the rest open in their own app
 }
 function askWeeks(u) {
-  const where = L.dir && L.dirOk ? 'In my Planner folder ("' + L.dir.name + '"), the unit file is Units/' + unitBase(u) + '.unit.json and its ' + (plCur() || 'unit plan') + ' screenshots are in Units/' + unitBase(u) + ' files/. ' : '';
-  const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshots. ' + where +
-    'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and write each week\'s focus (and standards, if shown) into "weeks" in the unit file, one entry per week, in order. Keep my notes. Then tell me what you filled in and anything you weren\'t sure of.' +
-    (where ? '' : '\n\n(My Planner folder isn\'t linked yet, so I\'ll attach the screenshots.)');
-  copyText(msg).then(() => { toast(where ? 'Message copied. Paste it into ' + plAi() + '.' : 'Message copied. Link the Planner folder so ' + plAi() + ' can read the screenshots, or attach them.', 6000); });
+  const n = u.files.filter(x => x.kind === 'atlas').length;
+  const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshot' + (n === 1 ? '' : 's') + ', which I am attaching. Everything you need is in this message and the screenshots. Don\'t look for, open or ask for any folder or file on my computer.\n\n' +
+    'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and reply with one line per week, in order, like "Week 1: what this week is about (standards, if shown)". Nothing else in those lines. Then tell me anything you weren\'t sure of.';
+  copyText(msg).then(() => { toast('Message copied. Paste it into ' + plAi() + ' and attach the ' + (plCur() || 'unit plan') + ' screenshot' + (n === 1 ? '' : 's') + '. Then use Type or paste the weeks for its answer.', 8000); });
 }
 function pasteWeeksDlg(u) {
   openDlg('<div class="bh"><h2>Weeks of ' + esc(u.title) + '</h2></div><div class="bb"><p class="muted" style="margin-top:0">One line per week: what that week is about. You can copy the week list straight out of ' + (plCur() ? esc(plCur()) : 'your unit plan') + '. Lines starting with “Week 3:” or similar are fine.</p>' +
@@ -7831,7 +8027,7 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { ACTIVITIES, VIDEOS, actVideo, readTemplate, openTimetable, bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, folderReadme, plWeekOffs, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, shareBuild, shareOpen, matAdd, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
+window.__planner = { arriveAt, ACTIVITIES, VIDEOS, actVideo, readTemplate, openTimetable, bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, folderReadme, plWeekOffs, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, shareBuild, shareOpen, matAdd, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek, lessonContext };
 openLessons();
 
 /* ---------------- Full screen (11/12): the whole page fills the screen, on both pages and every screen ----------------
@@ -7881,67 +8077,582 @@ gsFull.paint();
 window.__gsFull = gsFull;
 
 /* ---------- Planning time, for the grading app's time tracker (src/tracker.js) ----------
-   While the Planner is the tab in front and something was pressed, typed or scrolled in the last few minutes, the time counts as
-   planning: to the lesson that is open, or to '' (the week, the units, the bank). Presenting a lesson is teaching, so it doesn't count.
-   Kept in gsp.planTime: { days: { 'YYYY-MM-DD': { l: seconds, a: { <lesson id> | '': seconds } } }, names: { <lesson id>: title } },
-   for 400 days. The grading app's Settings, Focus and goals can switch it off and say how soon it stops: the grading app copies those two
-   into gsp.timeCount { on, idle }, so the Planner reads only its own keys. */
+   Planning time counts only in a focus session on a lesson (src/planner/plfocus.js here, src/focus.js on the grading page): opening a
+   lesson to change it before class, or presenting it, isn't planning. A session's minutes are written when it ends, into
+   gsp.planTime: { days: { 'YYYY-MM-DD': { l: seconds, a: { <lesson id> | '': seconds }, f: seconds in focus sessions, n: sessions } },
+   names: { <lesson id>: title } }, for 400 days. Days from before this kept the time the Planner was open; they stay as they were.
+   This file shows a lesson's own planning time beside its name in the editor. */
 var ptReady = false;
-const PT_STEP = 15, PT_FLUSH = 60e3;
-let ptLast = 0, ptMoved = 0, ptPend = { l: 0, a: {}, n: {} }, ptFlushed = Date.now();
-for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart', 'input']) document.addEventListener(ev, () => { ptLast = Date.now(); }, { capture: true, passive: true });
-document.addEventListener('pointermove', () => { const t = Date.now(); if (t - ptMoved > 5000) { ptMoved = t; ptLast = t; } }, { capture: true, passive: true });
-function ptConf() {
-  let f = {}; try { f = JSON.parse(localStorage.getItem('gsp.timeCount') || 'null') || {}; } catch { }
-  return { on: f.on !== false, idle: [2, 5, 10, 15].includes(+f.idle) ? +f.idle : 5 };
-}
-const ptDay = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-function ptTick() {
-  const c = ptConf();
-  if (c.on && !PR.on && document.visibilityState === 'visible' && document.hasFocus() && Date.now() - ptLast < c.idle * 60e3) {
-    const l = L.view === 'edit' && L.open ? L.open : null, k = l ? l.id : '';
-    ptPend.l += PT_STEP; ptPend.a[k] = (ptPend.a[k] || 0) + PT_STEP;
-    if (l) ptPend.n[k] = String(l.title || '').slice(0, 120);
-  }
-  if (Date.now() - ptFlushed >= PT_FLUSH) ptFlush();
-  ptBadgeDraw();
-}
-function ptFlush() {
-  ptFlushed = Date.now();
-  if (!ptPend.l) return;
-  let P = null; try { P = JSON.parse(localStorage.getItem('gsp.planTime') || 'null'); } catch { }
-  P = P && typeof P === 'object' ? P : {};
-  const days = P.days && typeof P.days === 'object' ? P.days : {}, names = P.names && typeof P.names === 'object' ? P.names : {}, k = ptDay();
-  const d = { ...(days[k] || {}) }, a = { ...(d.a || {}) };
-  d.l = (d.l || 0) + ptPend.l;
-  for (const [id, v] of Object.entries(ptPend.a)) a[id] = (a[id] || 0) + v;
-  d.a = a; days[k] = d;
-  for (const [id, t] of Object.entries(ptPend.n)) if (t) names[id] = t;
-  for (const day of Object.keys(days)) if (Date.now() - new Date(day + 'T12:00:00') > 400 * 864e5) delete days[day];
-  const used = new Set(Object.values(days).flatMap(x => Object.keys((x && x.a) || {})));
-  for (const id of Object.keys(names)) if (!used.has(id)) delete names[id];
-  try { localStorage.setItem('gsp.planTime', JSON.stringify({ days, names })); } catch { }
-  ptPend = { l: 0, a: {}, n: {} };
-}
+const PT_STEP = 15;
+function ptPlan() { try { const P = JSON.parse(localStorage.getItem('gsp.planTime') || 'null'); return P && typeof P === 'object' ? P : {}; } catch { return {}; } }
 function ptLessonSecs(id) {
-  if (!ptReady) return 0;
-  let P = null; try { P = JSON.parse(localStorage.getItem('gsp.planTime') || 'null'); } catch { }
-  let s = ptPend.a[id] || 0;
-  for (const d of Object.values((P && P.days) || {})) if (d && d.a && d.a[id]) s += d.a[id];
+  if (!ptReady || !id) return 0;
+  let s = 0;
+  for (const d of Object.values(ptPlan().days || {})) if (d && d.a && d.a[id]) s += d.a[id];
+  const r = pfReady ? pfRun() : null;   // src/planner/plfocus.js, which runs after this file
+  if (r && r.k === 'l' && r.l === id && (r.st === 'run' || r.st === 'paused')) s += Math.min(r.len, pfElapsed(r));
   return s;
 }
 function ptSay(secs) { const m = Math.round(secs / 60), h = Math.floor(m / 60); return h ? h + ' hr' + (m % 60 ? ' ' + (m % 60) + ' min' : '') : m + ' min'; }
 function ptBadge(l) {
   const s = l && l.id ? ptLessonSecs(l.id) : 0;
-  return '<span class="savest ls-ptime" id="lsTime" title="Time spent planning this lesson, counted while it is open"' + (s < 60 ? ' hidden' : '') + '>' + (s >= 60 ? ptSay(s) + ' planning' : '') + '</span>';
+  return '<span class="savest ls-ptime" id="lsTime" title="Time spent planning this lesson in focus sessions"' + (s < 60 ? ' hidden' : '') + '>' + (s >= 60 ? ptSay(s) + ' planning' : '') + '</span>';
 }
 function ptBadgeDraw() { const el = document.getElementById('lsTime'); if (!el || !L.open) return; const s = ptLessonSecs(L.open.id); el.hidden = s < 60; el.textContent = s >= 60 ? ptSay(s) + ' planning' : ''; }
+function ptTick() { ptBadgeDraw(); }
 setInterval(ptTick, PT_STEP * 1000);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') ptFlush(); });
-window.addEventListener('pagehide', ptFlush);
-window.addEventListener('blur', ptFlush);
-window.__plantime = { tick: ptTick, flush: ptFlush, lessonSecs: ptLessonSecs, active: () => { ptLast = Date.now(); }, pend: () => ptPend };
+window.__plantime = { tick: ptTick, lessonSecs: ptLessonSecs };
 ptReady = true;
+
+
+const LOFI_SCALES = { maj: [0, 2, 4, 5, 7, 9, 11], min: [0, 2, 3, 5, 7, 8, 10], dor: [0, 2, 3, 5, 7, 9, 10] };
+const LOFI_PROGS = {
+  maj: [[1, 4, 0, 5], [0, 5, 1, 4], [3, 2, 1, 0], [3, 4, 2, 5], [5, 3, 0, 4], [1, 4, 0, 0], [3, 0, 1, 5], [0, 2, 3, 4], [3, 4, 5, 0]],
+  min: [[0, 5, 2, 6], [0, 3, 6, 2], [5, 6, 0, 0], [3, 6, 2, 5], [0, 6, 5, 6], [0, 3, 5, 4], [0, 2, 5, 3], [5, 3, 0, 6]],
+  dor: [[0, 3, 0, 3], [0, 1, 2, 1], [0, 3, 0, 4], [0, 2, 3, 3], [0, 6, 3, 0]]
+};
+const LOFI_PENT = { maj: [0, 1, 2, 4, 5], min: [0, 2, 3, 4, 6], dor: [0, 2, 3, 4, 6] };
+const LOFI_KICKS = [[0, 10], [0, 7, 10], [0, 3, 10], [0, 8, 11], [0, 6, 10], [0, 10, 15], [0, 5, 10]];
+const LOFI_STYLES = [
+  { id: 'rain', name: 'Rainy window', bpm: [66, 74], modes: ['min', 'dor', 'maj', 'min'], keys: ['rhodes'], mel: ['bell', 'vibes'], kit: ['brush', 'rim'], amb: 'rain', swing: [.56, .6], cut: 2700, wow: 1, comp: ['hold', 'push', 'lazy'], pad: .5, dens: .8 },
+  { id: 'library', name: 'Late library', bpm: [74, 82], modes: ['maj', 'min', 'dor'], keys: ['piano'], mel: ['lead', 'vibes', 'bell'], kit: ['rim', 'snare'], amb: 'vinyl', swing: [.55, .6], cut: 3000, wow: 1, comp: ['push', 'lazy', 'two'], pad: 0, dens: .9 },
+  { id: 'coffee', name: 'Morning coffee', bpm: [82, 92], modes: ['maj', 'maj', 'dor'], keys: ['guitar', 'rhodes'], mel: ['bell', 'pluck', 'vibes'], kit: ['snare', 'rim'], amb: 'vinyl', swing: [.54, .58], cut: 3900, wow: .7, comp: ['push', 'two', 'arp'], pad: 0, dens: 1 },
+  { id: 'night', name: 'Night bus', bpm: [68, 76], modes: ['min', 'min', 'dor'], keys: ['rhodes'], mel: ['lead', 'bell'], kit: ['clap', 'snare'], amb: 'vinyl', swing: [.56, .62], cut: 2300, wow: 1.2, comp: ['hold', 'lazy'], pad: 1, dens: .7, half: 1 },
+  { id: 'tape', name: 'Sunday tape', bpm: [76, 84], modes: ['maj', 'min', 'dor', 'maj'], keys: ['piano', 'rhodes'], mel: ['bell', 'pluck'], kit: ['brush', 'snare'], amb: 'vinyl2', swing: [.56, .6], cut: 2400, wow: 2.2, comp: ['push', 'lazy', 'arp'], pad: .4, dens: .9 },
+  { id: 'garden', name: 'Garden', bpm: [86, 96], modes: ['maj', 'dor', 'maj'], keys: ['guitar'], mel: ['vibes', 'lead', 'bell'], kit: ['rim'], amb: 'none', swing: [.5, .52], cut: 4300, wow: .6, comp: ['bossa', 'arp'], pad: 0, dens: 1, bossa: 1 },
+  { id: 'blue', name: 'Blue hour', bpm: [80, 88], modes: ['dor', 'min', 'dor'], keys: ['rhodes', 'piano'], mel: ['vibes', 'lead'], kit: ['snare', 'brush'], amb: 'vinyl', swing: [.6, .64], cut: 3400, wow: 1, comp: ['push', 'two'], pad: 0, dens: 1, walk: 1 },
+  { id: 'quiet', name: 'Quiet desk', bpm: [60, 70], modes: ['maj', 'min', 'dor', 'maj'], keys: ['piano', 'rhodes', 'guitar'], mel: ['bell', 'vibes'], kit: [], amb: 'rain', swing: [.5, .5], cut: 2600, wow: 1.2, comp: ['arp', 'hold'], pad: 1, dens: .6, nodrums: 1 }
+];
+
+function lofiRng(seed) {   // mulberry32: the same seed always gives the same track
+  let a = (seed >>> 0) || 1;
+  return function () { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function lofiNear(pc, c) { let m = c - (((c - pc) % 12) + 12) % 12; if (c - m > 6) m += 12; return m; }
+
+function lofiCompose(seed, styleId) {
+  const r = lofiRng(seed), pick = a => a[Math.floor(r() * a.length)], rr = (a, b) => a + r() * (b - a);
+  const S = LOFI_STYLES.find(s => s.id === styleId) || pick(LOFI_STYLES);
+  const mode = pick(S.modes), sc = LOFI_SCALES[mode], tonic = Math.floor(r() * 12);
+  const bpm = Math.round(rr(S.bpm[0], S.bpm[1])), swing = rr(S.swing[0], S.swing[1]);
+  const cl = bpm >= 84 && r() < .5 ? 2 : 1;   // bars a chord lasts
+  const progA = pick(LOFI_PROGS[mode]); let progB = pick(LOFI_PROGS[mode]); if (progB === progA) progB = LOFI_PROGS[mode][(LOFI_PROGS[mode].indexOf(progA) + 1) % LOFI_PROGS[mode].length];
+  const centre = 59 + Math.floor(r() * 6), comp = pick(S.comp), kit = S.kit.length ? pick(S.kit) : '', kick = pick(LOFI_KICKS);
+  const keys = pick(S.keys), mel = pick(S.mel), strum = rr(.02, .06);
+  const pc = d => (tonic + sc[((d % 7) + 7) % 7]) % 12;
+  const chord = d => {
+    const root = pc(d), ninth = pc(d + 1), tones = [pc(d + 2), pc(d + 4), pc(d + 6), ((ninth - root + 12) % 12) === 2 ? ninth : root];
+    return { root, tones, notes: [...new Set(tones.map(p => lofiNear(p, centre)))].sort((a, b) => a - b), bass: 38 + ((root - 38) % 12 + 12) % 12 };
+  };
+  const ev = [], put = (t, k, n, d, v) => ev.push([Math.max(0, t), k, n, d, Math.round(Math.min(1, Math.max(.05, v)) * 100) / 100]);
+  const sw = step => Math.floor(step / 4) + [0, swing / 2, .5, .5 + swing / 2][step % 4];
+  const hum = () => (r() - .5) * .025;
+
+  const melLo = mel === 'lead' ? 62 : 67, pent = [];
+  for (let m = melLo; m <= melLo + 19; m++) if (LOFI_PENT[mode].some(d => (tonic + sc[d]) % 12 === m % 12)) pent.push(m);
+  const walk = (i) => { const hi = pent.length - 1; let j = i + pick(i > hi - 2 ? [-2, -1, -1, 0] : i < 2 ? [2, 1, 1, 0] : [-2, -1, -1, 1, 1, 2, 0]); return Math.min(hi, Math.max(0, j)); };
+  const phrase = () => {
+    const rhy = [];
+    for (let b = 0; b < 2; b++) for (let s = 0; s < 8; s++) {
+      let w = (s === 0 ? .6 : s === 4 ? .45 : s % 2 === 0 ? .32 : .22) * S.dens;
+      if (b === 1 && s >= 5) w *= .2;
+      if (r() < w) rhy.push(b * 8 + s);
+    }
+    for (const s of [0, 3, 6, 10]) if (rhy.length < 4 && !rhy.includes(s)) rhy.push(s);
+    rhy.sort((a, b) => a - b);
+    let i = 1 + Math.floor(r() * (pent.length - 2));
+    const first = rhy.map(s => ({ s, i: (i = walk(i)) })), bar3 = first.filter(n => n.s < 8).map(n => ({ s: n.s + 16, i: n.i }));
+    i = bar3.length ? bar3[bar3.length - 1].i : i;
+    const bar4 = first.filter(n => n.s >= 8).map(n => ({ s: n.s + 16, i: (i = walk(i)) }));
+    const all = first.concat(bar3, bar4), last = all[all.length - 1];
+    let best = last.i, bd = 99; pent.forEach((m, k) => { const p = (m - tonic + 120) % 12; if ((p === 0 || p === 7) && Math.abs(k - last.i) < bd) { bd = Math.abs(k - last.i); best = k; } }); last.i = best;
+    all.forEach((n, k) => { n.len = k < all.length - 1 ? Math.min(all[k + 1].s - n.s, 4) : Math.min(32 - n.s, 6); });
+    return all;
+  };
+  const tunes = [phrase(), phrase()]; tunes[2] = tunes[0].map(n => ({ s: n.s, len: n.len, i: Math.min(pent.length - 1, n.i + 1) }));
+  const sing = (bar0, tune, prog, vel) => {
+    for (const n of tune) {
+      let m = pent[n.i];
+      if (n.s % 8 === 0) {   // a note on the first beat of a bar leans on the chord under it
+        const c = chord(prog[Math.floor((bar0 + Math.floor(n.s / 8)) / cl) % prog.length]), ok = c.tones.concat(c.root);
+        let bd = 99; pent.forEach((p, k) => { if (Math.abs(k - n.i) <= 2 && ok.includes(p % 12) && Math.abs(k - n.i) < bd) { bd = Math.abs(k - n.i); m = p; } });
+      }
+      put(bar0 * 4 + n.s / 2 + .03 + hum(), 'm', m, n.len / 2 * .92, vel * rr(.75, 1));
+    }
+  };
+
+  const L = 4 * cl, sections = [
+    { bars: 4, keys: 1, soft: 1 },
+    { bars: 8, keys: 1, bass: 1, drums: 1 },
+    { bars: 8, keys: 1, bass: 1, drums: 1, mel: 0 },
+    { bars: L === 4 && r() < .5 ? 4 : 8, keys: 1, bass: 1, drums: 2, mel: 1, prog: progB, arp: 1 },
+    { bars: 8, keys: 1, bass: 1, drums: 1, mel: 0 },
+    { bars: 8, keys: 1, bass: 1, drums: 1, mel: 2 },
+    { bars: 4, keys: 1, soft: 1 }
+  ];
+  let bar = 0;
+  for (const sec of sections) {
+    const prog = sec.prog || progA, at = b => chord(prog[Math.floor(b / cl) % prog.length]);
+    for (let b = 0; b < sec.bars; b++) {
+      const t = (bar + b) * 4, c = at(b), nx = at(b + 1), again = cl === 2 && b % 2 === 1, how = sec.arp && comp !== 'arp' && r() < .6 ? 'arp' : comp, kv = sec.soft ? .5 : .62;
+      if (sec.keys) {
+        const hit = (bt, d, v) => c.notes.forEach((n, i) => put(t + bt + i * strum * rr(.7, 1.2) + hum(), 'k', n, d, v * rr(.85, 1) * (i === c.notes.length - 1 ? 1.08 : 1)));
+        if (how === 'hold') { hit(0, again ? 3 : 3.8, kv); if (again && r() < .6) hit(2.5, 1.3, kv * .7); }
+        else if (how === 'push') { hit(0, 1.4, kv); hit(1.5, 2.2, kv * .8); if (r() < .3) hit(3.5, .4, kv * .55); }
+        else if (how === 'lazy') { hit(0, 2.4, kv); hit(2.5, 1.3, kv * .72); }
+        else if (how === 'two') { hit(0, 1.8, kv); hit(2, 1.8, kv * .8); }
+        else if (how === 'bossa') { for (const [bt, d, v] of [[0, 1.3, 1], [1.5, .9, .75], [2.5, .9, .85], [3.5, .5, .6]]) hit(bt, d, kv * v); }
+        else {   // arp: the chord one note at a time, up and partly back
+          const ns = c.notes, order = [0, 1, 2, 3, 2, 1, 3, 2].map(i => ns[Math.min(i, ns.length - 1)]);
+          order.forEach((n, i) => { if (i < 4 || r() < .75) put(t + i * .5 + hum(), 'k', i === 6 ? n + 12 : n, i < 4 ? 4 - i * .5 : .9, kv * (i % 2 ? .7 : .9) * rr(.85, 1)); });
+        }
+        if (S.pad && b % cl === 0) c.notes.slice(0, 3).forEach(n => put(t, 'p', n, 4 * cl + .5, S.pad * (sec.soft ? .7 : .55)));
+      }
+      if (sec.bass) {
+        const v = .7;
+        if (S.walk && sec.drums === 1) {   // walking: root, a chord note, the fifth, then a step into the next chord
+          const steps = [c.bass, lofiNear(c.tones[0], c.bass + 4), lofiNear(c.tones[1], c.bass + 5), nx.bass + (r() < .5 ? 1 : -2)];
+          steps.forEach((n, i) => { if (i === 0 || r() < .8) put(t + i + hum(), 'b', n, .9, v * (i ? .8 : 1)); });
+        } else if (S.bossa) { put(t, 'b', c.bass, 1.4, v); put(t + 1.5, 'b', c.bass + 7, .5, v * .7); put(t + 2, 'b', c.bass + 7, 1.4, v * .85); put(t + 3.5, 'b', c.bass, .5, v * .7); }
+        else {
+          put(t + hum(), 'b', c.bass, 2.3, v);
+          if (r() < .7) put(t + 2.5 + hum(), 'b', r() < .3 ? c.bass + 7 : c.bass, r() < .5 ? .9 : 1.3, v * .8);
+          if (r() < .35 && nx.bass !== c.bass) put(t + 3.5, 'b', nx.bass + (r() < .5 ? -2 : 2), .45, v * .65);
+        }
+      }
+      if (sec.drums && kit) {
+        const fill = b % 8 === 7, light = sec.drums === 2;
+        if (S.bossa) {
+          for (const s of [0, 6, 8, 14]) put(sw(s) + t + hum(), 'K', 0, 0, s % 8 ? .5 : .75);
+          if (!light) for (const s of [3, 6, 10, 12]) put(sw(s) + t + hum(), 'S', 0, 0, .5 * rr(.8, 1));
+        } else {
+          if (!light) for (const s of kick) if (!(fill && s > 8) && (s === 0 || r() < .9)) put(sw(s) + t + hum() * .5, 'K', 0, 0, s === 0 ? .95 : .7 * rr(.8, 1));
+          if (!light) for (const s of (S.half ? [8] : [4, 12])) put(sw(s) + t + .02 + hum() * .5, 'S', 0, 0, .8 * rr(.85, 1));   // the backbeat drags a little
+          if (!light && fill) { for (const s of [13, 14, 15]) if (r() < .6) put(sw(s) + t + hum(), 'S', 0, 0, .3 * rr(.6, 1)); }
+          else if (!light && r() < .2) put(sw(pick([7, 9, 15])) + t, 'S', 0, 0, .22);   // a ghost note now and then
+        }
+        for (let s = 0; s < 16; s++) {
+          const eighth = s % 2 === 0;
+          if (eighth || r() < (light ? .05 : .18)) put(sw(s) + t + hum(), s === 14 && r() < .25 ? 'O' : 'H', 0, 0, (eighth ? (s % 4 === 0 ? .55 : .8) : .35) * rr(.7, 1) * (light ? .7 : 1));
+        }
+      }
+      if (sec.mel !== undefined && b % 4 === 0 && (b % 8 === 0 || r() < .65 * S.dens)) sing(bar + b, tunes[sec.mel], prog, .7);
+    }
+    bar += sec.bars;
+  }
+  ev.sort((a, b) => a[0] - b[0]);
+  return { seed, style: S.id, bpm, swing, mode, tonic, beats: bar * 4, ev, keys, mel, kit, amb: S.amb, cut: S.cut, wow: S.wow };
+}
+
+/* ---------- playing a track ---------- */
+
+const lofiHz = m => 440 * Math.pow(2, (m - 69) / 12);
+
+function lofiEngine(ctx) {
+  const E = { ctx, plk: {} }, sr = ctx.sampleRate;
+  E.out = ctx.createGain(); E.out.gain.value = 1;
+  E.comp = ctx.createDynamicsCompressor(); E.comp.threshold.value = -14; E.comp.knee.value = 10; E.comp.ratio.value = 2.5; E.comp.attack.value = .01; E.comp.release.value = .25;
+  E.comp.connect(E.out); E.out.connect(ctx.destination);
+  const noise = ctx.createBuffer(1, sr * 2, sr), nd = noise.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+  E.noise = noise;
+  const ir = ctx.createBuffer(2, Math.floor(sr * 2.4), sr);
+  for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); let lp = 0; for (let i = 0; i < d.length; i++) { const k = 1 - i / d.length; lp += ((Math.random() * 2 - 1) - lp) * .35; d[i] = lp * k * k * k; } }
+  E.ir = ir;
+  const vin = ctx.createBuffer(1, Math.floor(sr * 6.3), sr), vd = vin.getChannelData(0); let pop = 0;
+  for (let i = 0; i < vd.length; i++) { if (Math.random() < 1 / 2600) pop = (Math.random() * 2 - 1) * (Math.random() < .12 ? .5 : .2); vd[i] = (Math.random() * 2 - 1) * .018 + pop; pop *= .55; }
+  E.vinyl = vin;
+  const wave = [0, 1, .5, .22, .1, .06, .03]; E.piano = ctx.createPeriodicWave(new Float32Array(wave.length), new Float32Array(wave));
+  const curve = new Float32Array(1025); for (let i = 0; i < 1025; i++) { const x = i / 512 - 1; curve[i] = Math.tanh(1.6 * x) / Math.tanh(1.6); }
+  E.curve = curve;
+  return E;
+}
+function lofiPluck(E, n) {
+  if (E.plk[n]) return E.plk[n];
+  const sr = E.ctx.sampleRate, N = Math.round(sr / lofiHz(n)), buf = E.ctx.createBuffer(1, Math.floor(sr * 2.2), sr), d = buf.getChannelData(0);
+  let lp = 0; for (let i = 0; i < N; i++) { lp += ((Math.random() * 2 - 1) - lp) * .45; d[i] = lp; }
+  for (let i = N + 1; i < d.length; i++) d[i] = (d[i - N] + d[i - N - 1]) * .4975;
+  return (E.plk[n] = { buf, rate: lofiHz(n) * N / sr });
+}
+
+function lofiTrack(E, tr, t0) {
+  const c = E.ctx, g = (v, to) => { const n = c.createGain(); n.gain.value = v; if (to) n.connect(to); return n; };
+  const flt = (type, f, to, q) => { const n = c.createBiquadFilter(); n.type = type; n.frequency.value = f; if (q) n.Q.value = q; if (to) n.connect(to); return n; };
+  const T = { tr, t0, i: 0, spb: 60 / tr.bpm, live: [] }, end = t0 + tr.beats * T.spb, intro = 16 * T.spb;
+  T.end = end;
+  T.out = g(0, E.comp);
+  T.out.gain.setValueAtTime(0, t0); T.out.gain.linearRampToValueAtTime(1, t0 + 1.2);
+  T.out.gain.setValueAtTime(1, end - intro * .5); T.out.gain.linearRampToValueAtTime(0, end + .5);
+  const shape = c.createWaveShaper(); shape.curve = E.curve; shape.oversample = '2x'; shape.connect(T.out);
+  const lp = flt('lowpass', tr.cut, shape, .4);
+  lp.frequency.setValueAtTime(700, t0); lp.frequency.exponentialRampToValueAtTime(tr.cut, t0 + intro * .9);
+  lp.frequency.setValueAtTime(tr.cut, end - intro * .8); lp.frequency.exponentialRampToValueAtTime(600, end);
+  const tape = c.createDelay(.1); tape.delayTime.value = .02; tape.connect(lp);
+  const lfo = (hz, depth, param) => { const o = c.createOscillator(), a = g(depth); o.frequency.value = hz; o.connect(a); a.connect(param); o.start(t0); o.stop(end + 3); T.live.push(o); };
+  lfo(.31 + (tr.seed % 7) * .02, .0014 * tr.wow, tape.delayTime); lfo(5.9, .00004 * tr.wow, tape.delayTime);
+  T.mix = g(.6, tape);
+  T.duck = g(1, T.mix);   // the music leans back a touch under each kick
+  const verb = c.createConvolver(); verb.buffer = E.ir; const wet = g(.5, T.mix); verb.connect(flt('lowpass', 2400, wet)); T.verb = verb;
+  const bus = (level, send) => { const b = g(level, T.duck); if (send) b.connect(g(send, verb)); return b; };
+  T.keys = c.createStereoPanner ? c.createStereoPanner() : g(1); T.keys.connect(bus(1, .28));
+  if (T.keys.pan) lfo(.23, .3, T.keys.pan);
+  T.mel = bus(.8, .45); T.pad = bus(.9, .35); T.bass = bus(1, 0);
+  T.drum = flt('lowpass', Math.min(6500, tr.cut * 1.7), g(.5, T.mix)); T.dverb = g(.08, verb);
+  T.amb = g(lofi.amb ? 1 : 0, T.out);
+  const loop = (buf, rate) => { const s = c.createBufferSource(); s.buffer = buf; s.loop = true; s.playbackRate.value = rate; s.start(t0, Math.random() * buf.duration); s.stop(end + 3); T.live.push(s); return s; };
+  if (tr.amb === 'vinyl' || tr.amb === 'vinyl2') loop(E.vinyl, 1).connect(flt('highpass', 900, flt('lowpass', 7000, g(tr.amb === 'vinyl2' ? .55 : .3, T.amb))));
+  if (tr.amb === 'rain') {
+    const rain = g(.05, T.amb); loop(E.noise, .93).connect(flt('highpass', 500, flt('lowpass', 3200, rain))); lfo(.07, .015, rain.gain);
+    loop(E.noise, .61).connect(flt('lowpass', 380, g(.09, T.amb)));
+    loop(E.vinyl, .7).connect(flt('bandpass', 2600, g(.3, T.amb), .8));   // single drops
+  }
+  return T;
+}
+
+function lofiNote(E, T, e) {
+  const c = E.ctx, tr = T.tr, t = T.t0 + e[0] * T.spb, k = e[1], v = e[4], dur = e[3] * T.spb, f = lofiHz(e[2]);
+  const osc = (type, hz, to, det) => { const o = c.createOscillator(); if (type === 'piano') o.setPeriodicWave(E.piano); else o.type = type; o.frequency.value = hz; if (det) o.detune.value = det; o.connect(to); o.start(t); return o; };
+  const gain = to => { const n = c.createGain(); n.gain.value = 0; n.connect(to); return n; };
+  const env = (n, a, peak, fall, hold, rel, stop) => { const p = n.gain, e2 = Math.max(t + a + .01, t + dur); p.setValueAtTime(0, t); p.linearRampToValueAtTime(peak, t + a); p.setTargetAtTime(peak * hold, t + a, fall / 3); p.setTargetAtTime(0, e2, rel / 3); for (const o of stop) o.stop(e2 + rel * 2.2); };
+  const hitNoise = (to, len) => { const s = c.createBufferSource(); s.buffer = E.noise; s.connect(to); s.start(t, Math.random() * 1.5, len + .05); return s; };
+  const lpf = (hz, to) => { const n = c.createBiquadFilter(); n.type = 'lowpass'; n.frequency.value = hz; n.connect(to); return n; };
+  const voice = (kind, to, oct) => {
+    const hz = f * (oct || 1), a = gain(to);
+    if (kind === 'rhodes') {
+      const car = osc('sine', hz, a), mg = c.createGain(), mod = osc('sine', hz, mg); mg.connect(car.frequency);
+      mg.gain.setValueAtTime(hz * (.7 + 1.7 * v), t); mg.gain.setTargetAtTime(hz * .16, t, .13);
+      const b = gain(to), tine = osc('sine', hz * 4.01, b); b.gain.setValueAtTime(v * .035, t); b.gain.setTargetAtTime(0, t, .05); tine.stop(t + .5);
+      env(a, .004, v * .27, 1.5, .3, .35, [car, mod]);
+    } else if (kind === 'piano') {
+      const l = lpf(700, a); l.frequency.setValueAtTime(700 + 2800 * v, t); l.frequency.setTargetAtTime(520, t, .4);
+      env(a, .012, v * .2, 1.9, .14, .4, [osc('piano', hz, l, -4), osc('piano', hz, l, 5)]);
+    } else if (kind === 'guitar' || kind === 'pluck') {
+      const p = lofiPluck(E, e[2] + (oct === 2 ? 12 : 0)), s = c.createBufferSource(); s.buffer = p.buf; s.playbackRate.value = p.rate; s.connect(lpf(1500 + 2200 * v, a)); s.start(t);
+      env(a, .003, v * 1.4, 3, .5, .3, [s]);
+    } else if (kind === 'bell') {
+      const b = gain(to), hi = osc('sine', hz * 3, b); b.gain.setValueAtTime(v * .07, t); b.gain.setTargetAtTime(0, t, .06); hi.stop(t + .6);
+      env(a, .003, v * .4, .9, 0, .5, [osc('sine', hz, a)]);
+    } else if (kind === 'vibes') {
+      const b = gain(to), hi = osc('sine', hz * 4, b); b.gain.setValueAtTime(v * .04, t); b.gain.setTargetAtTime(0, t, .1); hi.stop(t + .8);
+      const o = osc('sine', hz, a), tg = c.createGain(), trem = osc('sine', 4.6, tg); tg.gain.value = v * .05; tg.connect(a.gain);
+      env(a, .004, v * .24, 2.2, 0, .6, [o, trem]);
+    } else if (kind === 'lead') {
+      const o = osc('triangle', hz, lpf(1500, a)), vg = c.createGain(), vib = osc('sine', 5.1, vg); vg.connect(o.frequency);
+      vg.gain.setValueAtTime(0, t); vg.gain.setTargetAtTime(hz * .005, t + .22, .15);
+      env(a, .05, v * .21, .6, .75, .25, [o, vib]);
+    }
+  };
+  if (k === 'k') voice(tr.keys, T.keys);
+  else if (k === 'm') voice(tr.mel === 'pluck' ? 'pluck' : tr.mel, T.mel);
+  else if (k === 'p') {
+    const a = gain(T.pad), l = lpf(620, a);
+    env(a, 1.1, v * .05, 1, 1, 1.6, [osc('sawtooth', f, l, -9), osc('sawtooth', f, l, 8)]);
+  } else if (k === 'b') {
+    const a = gain(T.bass), l = lpf(480, a), tri = c.createGain(); tri.gain.value = .3; tri.connect(l);
+    env(a, .012, v * .2, .7, .6, .12, [osc('sine', f, l), osc('triangle', f, tri)]);
+  } else if (k === 'K') {
+    const a = gain(T.drum), o = osc('sine', 48, a); o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(46, t + .09);
+    a.gain.setValueAtTime(v * .85, t); a.gain.setTargetAtTime(0, t + .03, .085); o.stop(t + .7);
+    T.duck.gain.setTargetAtTime(1 - .3 * v, t, .008); T.duck.gain.setTargetAtTime(1, t + .05, .11);
+  } else if (k === 'S') {
+    const a = gain(T.drum); a.connect(T.dverb);
+    const bp = (hz, q) => { const n = c.createBiquadFilter(); n.type = 'bandpass'; n.frequency.value = hz; n.Q.value = q; n.connect(a); return n; };
+    if (tr.kit === 'rim') { hitNoise(bp(2400, 1.5), .04); const o = osc('triangle', 470, a); o.stop(t + .1); a.gain.setValueAtTime(v * .4, t); a.gain.setTargetAtTime(0, t + .004, .018); }
+    else if (tr.kit === 'brush') { hitNoise(bp(3200, .6), .4); a.gain.setValueAtTime(0, t); a.gain.linearRampToValueAtTime(v * .28, t + .012); a.gain.setTargetAtTime(0, t + .02, .075); }
+    else if (tr.kit === 'clap') { hitNoise(bp(1500, 1), .4); for (const d of [0, .011, .022]) { a.gain.setValueAtTime(v * .5, t + d); a.gain.setTargetAtTime(v * .12, t + d + .001, .004); } a.gain.setTargetAtTime(0, t + .03, .06); }
+    else { hitNoise(bp(1900, .7), .4); const o = osc('triangle', 185, a); o.stop(t + .12); a.gain.setValueAtTime(v * .42, t); a.gain.setTargetAtTime(0, t + .01, .055); }
+  } else if (k === 'H' || k === 'O') {
+    const a = gain(T.drum), hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 6800; hp.connect(a); hitNoise(hp, .4);
+    a.gain.setValueAtTime(v * .16, t); a.gain.setTargetAtTime(0, t + .004, k === 'O' ? .09 : .02);
+  }
+}
+function lofiSchedule(E, T, until) { const ev = T.tr.ev; while (T.i < ev.length && T.t0 + ev[T.i][0] * T.spb < until) lofiNote(E, T, ev[T.i++]); }
+
+/* ---------- the player ---------- */
+
+const lofi = { E: null, on: false, vol: .5, amb: false, style: 'mix', cur: null, old: [], timer: 0, last: '', seed: 0, onTrack: null };
+const LOFI_AHEAD = 3;   // seconds written ahead, so a tab in the background (timers once a second) never runs dry
+function lofiLevel(v) { return Math.pow(v, 1.6); }
+function lofiPickStyle() {
+  if (lofi.style !== 'mix' && LOFI_STYLES.some(s => s.id === lofi.style)) return lofi.style;
+  const rest = LOFI_STYLES.filter(s => s.id !== lofi.last); return rest[Math.floor(Math.random() * rest.length)].id;
+}
+function lofiBegin(at) {
+  const E = lofi.E, id = lofiPickStyle(); lofi.last = id;
+  lofi.seed = (Math.random() * 4294967296) >>> 0;
+  lofi.cur = lofiTrack(E, lofiCompose(lofi.seed, id), at);
+  if (lofi.onTrack) try { lofi.onTrack(lofi.cur.tr); } catch { }
+}
+function lofiDrop(T, fade) {   // let a track go: quickly fade what is sounding, then take its parts apart
+  const c = lofi.E.ctx, now = c.currentTime; T.i = T.tr.ev.length;
+  try { T.out.gain.cancelScheduledValues(now); T.out.gain.setTargetAtTime(0, now, fade / 3); } catch { }
+  setTimeout(() => { try { T.out.disconnect(); for (const o of T.live) o.stop(); } catch { } }, (fade + .3) * 1000);
+}
+function lofiTick() {
+  const E = lofi.E; if (!E || !lofi.on || !lofi.cur) return;
+  const now = E.ctx.currentTime, T = lofi.cur;
+  lofiSchedule(E, T, now + LOFI_AHEAD);
+  for (const o of lofi.old) lofiSchedule(E, o, now + LOFI_AHEAD);
+  lofi.old = lofi.old.filter(o => { if (now < o.end + 4) return true; try { o.out.disconnect(); } catch { } return false; });
+  if (now + LOFI_AHEAD > T.end - 1.5) { lofi.old.push(T); lofiBegin(Math.max(now + .1, T.end - 1.5)); lofiSchedule(E, lofi.cur, now + LOFI_AHEAD); }
+}
+function lofiPlay() {
+  try {
+    if (!lofi.E) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return false; lofi.E = lofiEngine(new C()); lofi.E.out.gain.value = lofiLevel(lofi.vol); }
+    const c = lofi.E.ctx; if (c.state === 'suspended') c.resume();
+    lofi.on = true;
+    if (!lofi.cur) lofiBegin(c.currentTime + .15);
+    if (!lofi.timer) lofi.timer = setInterval(lofiTick, 250);
+    lofiTick(); return true;
+  } catch { return false; }
+}
+function lofiPause() { lofi.on = false; if (lofi.timer) { clearInterval(lofi.timer); lofi.timer = 0; } try { if (lofi.E) lofi.E.ctx.suspend(); } catch { } }
+function lofiNext() {
+  if (!lofi.E || !lofi.cur) return lofiPlay();
+  lofiDrop(lofi.cur, .5); for (const o of lofi.old) lofiDrop(o, .3); lofi.old = [];
+  lofiBegin(lofi.E.ctx.currentTime + .35); if (lofi.on) lofiTick();
+}
+function lofiStop() { lofiPause(); try { if (lofi.E) lofi.E.ctx.close(); } catch { } lofi.E = null; lofi.cur = null; lofi.old = []; }
+function lofiVolume(v) { lofi.vol = Math.min(1, Math.max(0, +v || 0)); if (lofi.E) lofi.E.out.gain.setTargetAtTime(lofiLevel(lofi.vol), lofi.E.ctx.currentTime, .03); }
+function lofiStyle(id) { const was = lofi.style; lofi.style = id; if (id !== was && lofi.cur && id !== 'mix' && lofi.cur.tr.style !== id) lofiNext(); }
+function lofiAmb(on) { lofi.amb = !!on; if (lofi.E && lofi.cur) for (const T of [lofi.cur, ...lofi.old]) T.amb.gain.setTargetAtTime(on ? 1 : 0, lofi.E.ctx.currentTime, .2); }
+function lofiRender(ctx, tr) {
+  const E = lofiEngine(ctx), T = lofiTrack(E, tr, .1), len = ctx.length / ctx.sampleRate;
+  const step = at => { lofiSchedule(E, T, at + LOFI_AHEAD); if (at + 2 < len) ctx.suspend(at + 2).then(() => { step(at + 2); ctx.resume(); }); };
+  step(0); return T;
+}
+
+/* ---------- Focus in the Planner: the session going on keeps going here ----------
+   The focus timer starts on the grading page (src/focus.js). Its session is kept in gsp.focusRun, a key this page may read and write,
+   so opening the Planner in the middle of one doesn't stop it: the same panel shows in the bottom left, the clock goes on, and it can
+   be paused, given more minutes, ended, or followed by a break. The settings it needs (how long a break is, the chime, the time in the
+   tab's name, the music) are copied by the grading page into gsp.timeCount.
+   A session on papers ends here without being written into the grading log, which this page can't open: what it came to waits in
+   gsp.focusQ ([{ d: day, s: seconds, m: on papers, x: extra minutes, got: papers }]) and the grading page writes it in when it next
+   opens. Both keys stay in this browser (src/takehome.js PLAN_LS_SKIP). Every word here is one the grading page's panel already uses,
+   so the languages cover it as they are. */
+var pfReady = false;   // src/planner/plantime.js and the lesson editor can ask before this file has run
+const PF_KEY = 'gsp.focusRun', PF_Q = 'gsp.focusQ', PF_P0 = 1e9;
+const pfGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
+const pfSetK = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch { } };
+const pfRun = () => { const r = pfGet(PF_KEY, null); return r && r.st ? r : null; };
+function pfConf() {
+  const f = pfGet('gsp.timeCount', null) || {};
+  return { len: +f.len > 0 ? +f.len : 10, llen: +f.llen > 0 ? +f.llen : 45, brk: +f.brk > 0 ? +f.brk : 5, sound: f.sound !== false, title: f.title !== false,
+    music: f.music === true, mood: typeof f.mood === 'string' ? f.mood : 'mix', mvol: +f.mvol >= .05 && +f.mvol <= 1 ? +f.mvol : .5, mamb: f.mamb === true };
+}
+const pfDay = () => ymd(new Date());
+const pfElapsed = r => Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.at) / 1000));
+const pfIdle = r => (r.idl || 0) + (r.ii ? Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.ii) / 1000)) : 0);
+const pfLeft = r => r.st === 'brk' ? Math.max(0, Math.round((r.brkAt + r.brkLen * 1000 - Date.now()) / 1000)) : Math.max(0, r.len - pfElapsed(r));
+const pfClock = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+const pfMins = n => n === 1 ? '1 minute' : n + ' minutes';
+let pfS = { mute: false };
+
+function pfRecord(r) {
+  if (r.secs != null) return r;
+  if (r.k === 'l') { const secs = pfLesSecs(r); pfPlanAdd(r, secs); return Object.assign(r, { secs, got: 0 }); }
+  const secs = Math.min(r.one ? 4 * 3600 : r.len, Math.max(0, pfElapsed(r) - pfIdle(r))), got = Math.max(0, r.pg || 0);
+  if (secs > 0) { const q = pfGet(PF_Q, []); pfSetK(PF_Q, [...(Array.isArray(q) ? q : []), { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), d: pfDay(), s: secs, m: /^mark:/.test(r.w || '') ? 1 : 0, x: r.ext ? 1 : 0, got }].slice(-50)); }
+  return Object.assign(r, { secs, got });
+}
+function pfPlanAdd(r, secs) {
+  if (!(secs > 0)) return;
+  const P = pfGet('gsp.planTime', null) || {}, days = P.days && typeof P.days === 'object' ? P.days : {}, names = P.names && typeof P.names === 'object' ? P.names : {};
+  const ids = Array.isArray(P.ids) ? P.ids.filter(x => typeof x === 'string').slice(-50) : [];
+  if (r.id && ids.includes(r.id)) return;   // written already, by the grading page or another tab
+  const id = r.l || '', k = pfDay(), d = { ...(days[k] || {}) }, a = { ...(d.a || {}) };
+  d.l = (d.l || 0) + secs; a[id] = (a[id] || 0) + secs; d.f = (d.f || 0) + secs; if (secs >= 60 && !r.ext) d.n = (d.n || 0) + 1;
+  d.a = a; days[k] = d; if (id && r.t) names[id] = String(r.t).slice(0, 120);
+  for (const day of Object.keys(days)) if (Date.now() - new Date(day + 'T12:00:00') > 400 * 864e5) delete days[day];
+  const used = new Set(Object.values(days).flatMap(x => Object.keys((x && x.a) || {})));
+  for (const n of Object.keys(names)) if (!used.has(n)) delete names[n];
+  pfSetK('gsp.planTime', { days, names, ...(r.id ? { ids: [...ids, r.id] } : {}) });
+}
+function pfLesSecs(r) {
+  const last = Math.max(r.at, r.seen || 0), cap = r.st === 'paused' ? Infinity : Math.round((last + 20 * 60e3 - r.at) / 1000);
+  return Math.max(0, Math.min(r.len, pfElapsed(r), cap));
+}
+const pfRid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const pfLes = r => r && r.k === 'l' ? { k: 'l', id: pfRid(), l: r.l || '', ...(r.nw ? { nw: r.nw } : {}) } : {};
+function pfStart(l) {
+  if (!l) return;
+  const was = pfRun(); if (was && (was.st === 'run' || was.st === 'paused')) pfRecord(was);
+  const P = pfGet('gsp.planTime', null), no = ((P && P.days && P.days[pfDay()]) || {}).n || 0;
+  pfSet({ k: 'l', id: pfRid(), st: 'run', len: pfConf().llen * 60, at: Date.now(), w: 'les:' + l.id, l: l.id, t: String(l.title || '').slice(0, 120), one: 0, fold: false, no: no + 1 });
+}
+function pfLesson(l) {
+  const r = pfRun(); if (!pfReady || !l || !r || r.k !== 'l' || r.l) return;
+  r.l = l.id; r.w = 'les:' + l.id; r.t = String(l.title || '').slice(0, 120); delete r.nw; pfSet(r);
+}
+const pfOnIt = l => { const r = pfRun(); return !!l && !!r && r.k === 'l' && r.l === l.id && r.st !== 'done'; };
+function pfBtn(l) {
+  if (!pfReady || !l) return '';
+  return '<button class="btn sm pfstart" data-pfstart title="Plan this lesson in a focus session"' + (pfOnIt(l) ? ' hidden' : '') + '>' + PF_CLOCK + 'Focus ' + pfConf().llen + ' min</button>';
+}
+function pfSet(r) { pfSetK(PF_KEY, r); pfTickOn(); pfRender(); }
+function pfStartAgain(min) {
+  const r = pfRun(); if (!r) return;
+  pfSet({ ...pfLes(r), st: 'run', len: Math.round(min * 60), at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: PF_P0, pg: 0, fold: false, no: (r.no || 1) + 1 });
+}
+function pfAct(a, n) {
+  const r = pfRun(); if (!r) return;
+  const on = r.st === 'run' || r.st === 'paused';
+  if (a === 'pause' && r.st === 'run') { r.st = 'paused'; r.pz = Date.now(); r.idl = pfIdle(r); delete r.ii; }
+  else if (a === 'resume' && r.st === 'paused') { r.at += Date.now() - r.pz; delete r.pz; r.st = 'run'; }
+  else if (a === 'more' && on) r.len += n * 60;
+  else if (a === 'ext' && r.st === 'up') return pfSet({ ...pfLes(r), st: 'run', len: n * 60, at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: PF_P0, pg: 0, fold: false, no: r.no, ext: 1, ...(r.sg && r.sg.k !== 'papers' ? { sg: r.sg } : {}) });
+  else if (a === 'break') { if (on) pfRecord(r); Object.assign(r, { st: 'brk', brkAt: Date.now(), brkLen: pfConf().brk * 60, fold: false }); }
+  else if (a === 'stop') { if (on) pfRecord(r); Object.assign(r, { st: 'done', fold: false }); }
+  else if (a === 'close') return pfSet(null);
+  else if (a === 'fold') r.fold = true;
+  else if (a === 'unfold') r.fold = false;
+  else return;
+  pfSet(r);
+}
+
+/* the chime and the clock */
+let pfAudio = null;
+function pfChime() {
+  if (!pfConf().sound) return;
+  try {
+    if (!pfAudio) pfAudio = new (window.AudioContext || window.webkitAudioContext)();
+    if (pfAudio.state === 'suspended') pfAudio.resume();
+    const t = pfAudio.currentTime + 0.02;
+    for (const [f, d] of [[659.25, 0], [987.77, 0.22]]) {
+      const o = pfAudio.createOscillator(), g = pfAudio.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t + d); g.gain.exponentialRampToValueAtTime(0.11, t + d + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 1.4);
+      o.connect(g); g.connect(pfAudio.destination); o.start(t + d); o.stop(t + d + 1.5);
+    }
+  } catch { }
+}
+let pfTimer = 0;
+function pfTickOn() {
+  const r = pfRun(), on = !!r && (r.st === 'run' || r.st === 'brk');
+  if (on && !pfTimer) pfTimer = setInterval(pfTick, 1000);
+  if (!on && pfTimer) { clearInterval(pfTimer); pfTimer = 0; }
+  pfTitle();
+}
+function pfTick() {
+  const r = pfRun(); if (!r) return pfTickOn();
+  if (r.k === 'l' && r.st === 'run' && PR.on) return pfAct('pause');
+  if (r.st === 'run' && !r.one && pfLeft(r) <= 0) { pfRecord(r); r.st = 'up'; r.fold = false; pfSet(r); pfChime(); return; }
+  if (r.st === 'brk' && pfLeft(r) <= 0) { r.st = 'brkup'; r.fold = false; pfSet(r); pfChime(); return; }
+  pfRender(); pfTitle();   // the panel's Open the lesson follows what is open
+}
+let pfTitlePre = '';
+function pfTitle() {
+  const r = pfRun(), now = document.title, base = pfTitlePre && now.startsWith(pfTitlePre + ' · ') ? now.slice(pfTitlePre.length + 3) : now;
+  let pre = '';
+  if (r && pfConf().title) pre = r.st === 'run' ? pfClock(r.one ? pfElapsed(r) : pfLeft(r)) : r.st === 'brk' ? tr('Break') + ' ' + pfClock(pfLeft(r)) : r.st === 'up' ? '0:00 ✓' : r.st === 'brkup' ? tr('Break’s over') : '';
+  pfTitlePre = pre;
+  const t = (pre ? pre + ' · ' : '') + base; if (document.title !== t) document.title = t;
+}
+
+/* drawing: the grading page's panel, with what this page can do */
+const PF_CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.3 1.6M10 3h4"/></svg>';
+const PF_TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const PF_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
+const PF_NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg>';
+const PF_SKIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6v12l9-6zM18 6v12"/></svg>';
+const pfRing = (r, w, frac) => { const c = 2 * Math.PI * r, s = 2 * (r + w); return '<svg viewBox="0 0 ' + s + ' ' + s + '" aria-hidden="true"><circle class="tr" cx="' + (r + w) + '" cy="' + (r + w) + '" r="' + r + '"/><circle class="on" cx="' + (r + w) + '" cy="' + (r + w) + '" r="' + r + '" stroke-dasharray="' + c.toFixed(2) + '" stroke-dashoffset="' + (c * (1 - Math.max(0, Math.min(1, frac)))).toFixed(2) + '"/></svg>'; };
+const pfFrac = r => r.st === 'brk' ? pfLeft(r) / (r.brkLen || 1) : r.one ? 1 : pfLeft(r) / (r.len || 1);
+const pfHead = (cap, fold) => '<div class="fchead"><h2 class="tcap">' + cap + '</h2><span class="sp"></span>' + (fold ? '<button class="icon" data-pf="fold" title="Fold it away" aria-label="Fold it away">–</button>' : '<button class="icon" data-pf="close" title="Close" aria-label="Close">✕</button>') + '</div>';
+const pfName = r => r.t ? '<b data-raw>' + esc(r.t) + '</b>' : '<b>' + esc(tr('Focus')) + '</b>';
+function pfSub(r) {
+  if (r.k === 'l') return '<span>A lesson to plan</span>' + (r.l && !(L.view === 'edit' && L.open && L.open.id === r.l) && r.st !== 'brk' ? '<button class="btn sm primary" data-pf="open">Open the lesson</button>' : '');
+  return '<span>' + (r.one ? (r.one > 1 ? 'Just 3 papers' : 'Just one paper') : r.w ? '' : 'The timer only') + '</span>' +
+    (/^mark:/.test(r.w || '') && r.st === 'run' ? '<button class="btn sm primary" data-pf="next">Next paper →</button>' : '');
+}
+function pfMusicHtml(c) {
+  if (!c.music || typeof lofiPlay !== 'function') return '';
+  const on = !pfS.mute;
+  return '<div class="fcmus' + (on ? ' on' : '') + '"><button class="btn sm' + (on ? '' : ' ghost') + '" data-pf="mus" aria-pressed="' + on + '" title="Lo-fi music">' + PF_NOTE + (on ? '' : '<span>Lo-fi music</span>') + '</button>' +
+    (on ? '<button class="btn sm" data-pf="skip" title="Next track">' + PF_SKIP + '</button>' : '') + '</div>';
+}
+function pfPanelHtml(r) {
+  const c0 = pfConf(), c = r.k === 'l' ? { ...c0, len: c0.llen } : c0, len = Math.round(r.len / 60);
+  if (r.fold && (r.st === 'run' || r.st === 'paused' || r.st === 'brk'))
+    return '<button class="fcpill' + (r.st === 'brk' ? ' brk' : '') + '" data-pf="unfold" title="Show the timer"><span class="fcpr"></span><b class="fct"></b>' + (r.t ? '<span data-raw>' + esc(r.t) + '</span>' : '') + '</button>';
+  if (r.st === 'run' || r.st === 'paused')
+    return pfHead(r.st === 'paused' ? 'Paused' : 'Focusing', true) + '<div class="fcrunv"><div class="fctop"><div class="fcclock' + (r.st === 'paused' ? ' paused' : '') + '"><span class="fcpr"></span><span class="fctime fct"></span></div><div class="fcwhat">' + pfName(r) + pfSub(r) + '</div></div>' + pfMusicHtml(c) +
+      '<div class="fcacts">' + (r.st === 'paused' ? '<button class="btn sm primary" data-pf="resume">Carry on</button>' : '<button class="btn sm" data-pf="pause">Pause</button>') + (r.one ? '' : '<button class="btn sm" data-pf="more" data-n="5">+5 minutes</button>') + '<span class="sp"></span><button class="btn sm ghost" data-pf="stop">End</button></div></div>';
+  if (r.st === 'up')
+    return pfHead('Focus') + '<div class="fcrunv"><p class="fcbig ok"><span class="fcok">' + PF_TICK + '</span><span>' + esc(pfMins(len) + ' done') + '</span></p>' +
+      '<div class="fcacts"><button class="btn primary" data-pf="break">Take a ' + c.brk + '-minute break</button><button class="btn" data-pf="again" data-n="' + len + '">' + len + ' more minutes</button></div>' +
+      '<div class="fcacts fcext" role="group" aria-label="A few more minutes"><span>A few more minutes</span>' + [2, 5, 10].map(n => '<button class="btn sm" data-pf="ext" data-n="' + n + '" data-raw>+' + n + '</button>').join('') + '</div>' +
+      '<div class="fcacts"><button class="btn sm ghost" data-pf="stop">Stop for now</button></div></div>';
+  if (r.st === 'brk')
+    return pfHead('Break', true) + '<div class="fcrunv"><div class="fctop"><div class="fcclock brk"><span class="fcpr"></span><span class="fctime fct"></span></div><div class="fcwhat"><b>' + (r.w ? 'After the break' : 'A break') + '</b>' + (r.t ? '<span data-raw>' + esc(r.t) + '</span>' : '') + '</div></div>' +
+      '<div class="fcbrkbox">Stand up, get some water, look at something far away. A chime says when the break is over.</div>' +
+      '<div class="fcacts"><button class="btn sm primary" data-pf="again" data-n="' + c.len + '">Back to work now</button><span class="sp"></span><button class="btn sm ghost" data-pf="stop">Stop for now</button></div></div>';
+  if (r.st === 'brkup')
+    return pfHead('Focus') + '<div class="fcrunv"><p class="fcbig">Break’s over</p>' + (r.t ? '<p class="fcp"><span class="fcl">Next</span><b data-raw>' + esc(r.t) + '</b></p>' : '') +
+      '<div class="fcacts"><button class="btn primary" data-pf="again" data-n="' + c.len + '">' + PF_PLAY + '<span>Start ' + c.len + ' minutes</span></button><span class="sp"></span><button class="btn sm ghost" data-pf="stop">Stop for now</button></div></div>';
+  return pfHead('Focus') + '<div class="fcrunv"><p class="fcbig">Done for now</p><div class="fcacts"><button class="btn sm" data-pf="close">Close</button></div></div>';
+}
+function pfClockDraw() {
+  const r = pfRun(), el = document.getElementById('fcPanel'); if (!r || !el || el.hidden) return;
+  const t = r.st === 'brk' ? pfLeft(r) : r.one ? pfElapsed(r) : pfLeft(r), frac = pfFrac(r), pill = el.querySelector('.fcpill');
+  for (const x of el.querySelectorAll('.fct')) { const s = pfClock(t); if (x.textContent !== s) x.textContent = s; }
+  for (const x of el.querySelectorAll('.fcpr')) x.innerHTML = pill ? pfRing(10, 3, frac) : pfRing(40, 6, frac);
+}
+function pfRender() {
+  let el = document.getElementById('fcPanel');
+  if (!el) { el = document.createElement('div'); el.className = 'fcpanel'; el.id = 'fcPanel'; el.setAttribute('role', 'region'); el.setAttribute('aria-label', 'Focus'); el.hidden = true; document.body.appendChild(el); }
+  const r = pfRun();
+  el.hidden = !r;
+  if (r) {
+    const rail = document.getElementById('rail'), rr = rail && rail.offsetParent !== null ? rail.getBoundingClientRect().right : 0;
+    el.style.setProperty('--fc-left', Math.max(0, Math.round(rr)) + 16 + 'px');
+    const h = pfPanelHtml(r);
+    el.classList.toggle('fold', !!r.fold && (r.st === 'run' || r.st === 'paused' || r.st === 'brk'));
+    if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+  } else if (el.dataset.h) { el.dataset.h = ''; el.innerHTML = ''; }
+  pfClockDraw(); pfMusic();
+  for (const b of document.querySelectorAll('[data-pfstart]')) b.hidden = pfOnIt(L.open);
+}
+function pfMusic() {
+  if (typeof lofiPlay !== 'function') return;
+  const r = pfRun(), c = pfConf(), run = !!r && r.st === 'run' && c.music && !pfS.mute;
+  if (!run) { if (lofi.on) lofiPause(); if (lofi.E && !(r && r.st === 'paused')) lofiStop(); return; }
+  if (lofi.vol !== c.mvol) lofiVolume(c.mvol);
+  if (lofi.amb !== c.mamb) lofiAmb(c.mamb);
+  if (lofi.style !== c.mood) lofiStyle(c.mood);
+  const pressed = !navigator.userActivation || navigator.userActivation.hasBeenActive;
+  if (!lofi.on && pressed && !document.hidden) lofiPlay();
+}
+for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, () => { if (typeof lofi !== 'undefined' && !lofi.on) setTimeout(pfMusic, 0); pfSeen(); }, true);
+function pfSeen() {
+  const r = pfRun(); if (!r || (r.st !== 'run' && r.st !== 'paused')) return;
+  const now = Date.now(); if (!r.ii && now - (r.seen || 0) < 30e3) return;
+  if (r.ii) { r.idl = (r.idl || 0) + Math.max(0, Math.round(((r.st === 'paused' ? r.pz : now) - r.ii) / 1000)); delete r.ii; }
+  r.seen = now; pfSetK(PF_KEY, r);
+}
+function pfBack() { const r = pfRun(); if (r && r.hid) { delete r.hid; pfSetK(PF_KEY, r); } pfTickOn(); pfRender(); }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) pfBack(); });
+window.addEventListener('pageshow', e => { if (e.persisted) pfBack(); });
+document.addEventListener('click', e => {
+  const b = e.target.closest('#fcPanel [data-pf]'); if (!b) return;
+  const a = b.dataset.pf, n = +b.dataset.n || 0;
+  if (a === 'again') return pfStartAgain(n);
+  if (a === 'open') { const l = L.lessons.find(x => x.id === (pfRun() || {}).l); if (l) openLesson(l); return pfRender(); }
+  if (a === 'next') { pfSetK('gsp.focusGo', Date.now()); location.href = GS_PAGE; return; }
+  if (a === 'mus') { pfS.mute = !pfS.mute; return pfRender(); }
+  if (a === 'skip') return typeof lofiNext === 'function' && lofiNext();
+  pfAct(a, n);
+});
+document.addEventListener('click', e => { if (e.target.closest('[data-pfstart]') && L.open) { pfStart(L.open); renderEditor(); } });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const r = pfRun(), el = document.getElementById('fcPanel');
+  if (r && el && el.contains(e.target) && (r.st === 'run' || r.st === 'paused' || r.st === 'brk') && !r.fold) pfAct('fold');
+});
+window.addEventListener('storage', e => { if (e.key === PF_KEY || e.key === 'gsp.timeCount') { pfTickOn(); pfRender(); } });
+{ const r = pfRun(); if (r && r.hid) { delete r.hid; pfSetK(PF_KEY, r); } }   // the grading page noted when it was left; here she is still working
+pfReady = true;
+pfTickOn(); pfRender();
+window.__plfocus = { run: pfRun, tick: pfTick, act: pfAct, conf: pfConf, start: pfStart };
 
 })();
 </script>

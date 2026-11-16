@@ -223,31 +223,81 @@ const drvSay = err => {
   const m = (err && err.message) || String(err);
   if (m === 'setup') return 'This copy of Grading Studio isn’t connected to Google.';
   if (/\b404\b/.test(m)) return 'Drive says this video isn’t there for you now. It may have been moved to the bin, or picked with another Google account. Pick it again with + Add > A video….';
-  if (/\b401\b|sign.?in|popup/i.test(m)) return 'Sign in with Google to get this video, then press Get it from Drive again.';
-  if (/\b403\b/.test(m)) return m + '. Drive won’t let this video be downloaded right now. Watch it without downloading instead.';
+  if (/\b401\b|sign.?in|popup/i.test(m)) return 'Sign in with Google to play this video, then press the button again.';
+  if (/\b403\b/.test(m)) return m + '. Drive won’t hand this video over right now. Watch it in Drive’s player instead.';
   return m;
 };
-function driveCard(st, f) {
-  const key = keptId(f), hold = document.createElement('div'); hold.className = 'media vfile vdrv';
-  hold.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">Google Drive</span></div></div>';
-  vkGet(key).then(k => {
-    if (!hold.isConnected && !hold.parentNode) return;
-    if (k) { hold.replaceWith(mediaCard(st, f, k)); return; }
-    vkSeen.delete(key);   // not here yet: look again once it is
-    const size = +((/^\s*Size\s*=\s*(\d+)/mi.exec(new TextDecoder().decode(f.data)) || [, 0])[1]);
-    hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<div class="mctl"><button class="btn sm primary" data-drvget>Get it from Drive' + (size ? ' (' + fmtSize(size) + ')' : '') + '</button><button class="btn sm" data-drvweb>Watch without downloading</button></div>' +
-      '<div class="prog" hidden><i style="width:0%"></i></div><p class="muted vlnote">Copied into this browser to play here, so the transcript can follow along. Only the link is kept in your work, and the video stays in your Drive.</p>');
-    const bar = hold.querySelector('.prog'), say = hold.querySelector('.vlnote'), btn = hold.querySelector('[data-drvget]');
-    const get = async interactive => {
-      btn.disabled = true; bar.hidden = false; say.textContent = 'Getting the video from Drive…';
+const drvStreamBad = new Set();   // Drive videos that wouldn't play straight from Drive, while this page is open
+const drvKeep = f => { let name = drvMeta(f, 'Name') || linkTitle(f); if (!VIDEO_RX.test(name)) name += '.mp4'; return { name, url: driveStreamUrl(drvRef(f.data)), stream: true, size: +drvMeta(f, 'Size') || 0 }; };
+async function vkDrop(id) {
+  await vkDo('readwrite', o => o.delete(id));
+  const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id);
+}
+// A Drive video on screen: played straight from Drive (nothing kept), or from its download in this browser.
+function drvPlayer(st, f, k, at) {
+  const el = mediaCard(st, f, k), id = drvRef(f.data), size = +drvMeta(f, 'Size') || 0, m = el.querySelector('video,audio');
+  el.classList.add('vdrv');
+  el.querySelector('.mhead .muted').textContent = k.stream ? 'playing from Google Drive' : 'Google Drive · downloaded';
+  el.querySelector('.mstick').insertAdjacentHTML('beforeend', '<div class="mctl">' + (k.stream
+    ? '<button class="btn sm" data-drvget>Download for offline' + (size ? ' (' + fmtSize(size) + ')' : '') + '</button>'
+    : '<button class="btn sm" data-drvdrop>Remove download</button>') + '</div><div class="prog" hidden><i style="width:0%"></i></div><p class="muted vlnote">' + (k.stream
+    ? 'Plays from your Drive, a little at a time. Nothing is copied into this browser.'
+    : 'Kept in this browser so it plays without internet. Remove download frees the space. The video in your Drive isn’t touched.') + '</p>');
+  if (at) m.addEventListener('loadedmetadata', () => { m.currentTime = at; }, { once: true });
+  const say = el.querySelector('.vlnote'), bar = el.querySelector('.prog');
+  if (k.stream) {
+    m.onerror = async () => {   // Drive wouldn't hand it over this way: say why, and offer the other ways
+      drvStreamBad.add(id);
+      let why = ''; try { await gjson('files/' + encodeURIComponent(id) + '?fields=id&supportsAllDrives=true'); } catch (err) { why = drvSay(err); }
+      if (el.isConnected) { const c = driveCard(st, f, why || 'This video wouldn’t play straight from Drive. Download it for offline, or watch it in Drive’s player.'); el.replaceWith(c); }
+    };
+    el.querySelector('[data-drvget]').onclick = async e => {
+      const b = e.target; b.disabled = true; bar.hidden = false; say.textContent = 'Downloading from Drive…';
       try {
-        const k2 = await drvGet(f, (n, t) => { if (t) { const p = Math.min(100, Math.round(n / t * 100)); bar.firstChild.style.width = p + '%'; say.textContent = 'Getting the video from Drive… ' + p + '%'; } }, interactive);
-        if (hold.isConnected) hold.replaceWith(mediaCard(st, f, k2));
+        const k2 = await drvGet(f, (n, t) => { if (t) { const p = Math.min(100, Math.round(n / t * 100)); bar.firstChild.style.width = p + '%'; say.textContent = 'Downloading from Drive… ' + p + '%'; } }, true);
+        if (el.isConnected) el.replaceWith(drvPlayer(st, f, k2, m.currentTime));
+      } catch (err) { console.error(err); b.disabled = false; bar.hidden = true; say.textContent = drvSay(err); }
+    };
+  } else el.querySelector('[data-drvdrop]').onclick = async () => {
+    const t = m.currentTime; m.pause();
+    try { await vkDrop(keptId(f)); } catch (err) { console.error(err); }
+    toast('Download removed. The video is still in your Drive.');
+    if (el.isConnected) { const c = driveCard(st, f, '', t); el.replaceWith(c); }
+  };
+  return el;
+}
+// why: what went wrong last time, shown above the choices. at: where to carry on from.
+function driveCard(st, f, why, at) {
+  const key = keptId(f), id = drvRef(f.data), hold = document.createElement('div'); hold.className = 'media vfile vdrv';
+  hold.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">Google Drive</span></div></div>';
+  vkGet(key).then(async k => {
+    if (!hold.isConnected && !hold.parentNode) return;
+    if (k) { hold.replaceWith(drvPlayer(st, f, k, at)); return; }
+    vkSeen.delete(key);   // not here yet: look again once it is
+    const stream = await driveStreamOk() && !drvStreamBad.has(id);
+    if (!hold.isConnected && !hold.parentNode) return;
+    if (stream && drivePickReady() && !why) { hold.replaceWith(drvPlayer(st, f, drvKeep(f), at)); return; }
+    const size = +drvMeta(f, 'Size') || 0;
+    hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<div class="mctl">' + (stream ? '<button class="btn sm primary" data-drvplay>Play from Drive</button>' : '') +
+      '<button class="btn sm' + (stream ? '' : ' primary') + '" data-drvget>Download for offline' + (size ? ' (' + fmtSize(size) + ')' : '') + '</button><button class="btn sm" data-drvweb>Watch in Drive’s player</button></div>' +
+      '<div class="prog" hidden><i style="width:0%"></i></div><p class="muted vlnote">' + esc(why || (stream ? 'Plays from your Drive, a little at a time, with the transcript following along. Only the link is kept in your work.'
+        : 'Download it to play here with the transcript following along, or watch it in Drive’s player. Only the link is kept in your work, and the video stays in your Drive.')) + '</p>');
+    const bar = hold.querySelector('.prog'), say = hold.querySelector('.vlnote'), btn = hold.querySelector('[data-drvget]'), play = hold.querySelector('[data-drvplay]');
+    if (play) play.onclick = async () => {
+      play.disabled = true; say.textContent = 'Opening the video from Drive…';
+      try { await gToken(true, 'pick'); drvStreamBad.delete(id); if (hold.isConnected) hold.replaceWith(drvPlayer(st, f, drvKeep(f), at)); }
+      catch (err) { console.error(err); play.disabled = false; say.textContent = drvSay(err); }
+    };
+    btn.onclick = async () => {
+      btn.disabled = true; bar.hidden = false; say.textContent = 'Downloading from Drive…';
+      try {
+        const k2 = await drvGet(f, (n, t) => { if (t) { const p = Math.min(100, Math.round(n / t * 100)); bar.firstChild.style.width = p + '%'; say.textContent = 'Downloading from Drive… ' + p + '%'; } }, true);
+        if (hold.isConnected) hold.replaceWith(drvPlayer(st, f, k2, at));
       } catch (err) { console.error(err); btn.disabled = false; bar.hidden = true; say.textContent = drvSay(err); }
     };
-    btn.onclick = () => get(true);
     hold.querySelector('[data-drvweb]').onclick = () => { drvWebOn.add(linkKey(f)); hold.replaceWith(linkCard(st, f)); };
-    if (drvGetting.has(drvRef(f.data)) || drivePickReady()) get(false);   // already signed in for videos, or already coming: no need to ask
+    // signed in already: check it's still there, so a video gone from Drive says so straight away
+    if (!why && drivePickReady()) gjson('files/' + encodeURIComponent(id) + '?fields=id&supportsAllDrives=true').catch(err => { if (hold.isConnected && err.status !== 401) say.textContent = drvSay(err); });
   });
   return hold;
 }
@@ -719,7 +769,7 @@ function openStartNotes(it) {
     } catch (err) { console.error(err); closeDlg(); toast('The pages couldn’t be made: ' + ((err && err.message) || err)); }
   };
 }
-Object.assign(window.__gs, { gScope: () => G.scope, drvRef, openFromDrive, saveToDrive, linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes, openPartners, pvApply });
+Object.assign(window.__gs, { gScope: () => G.scope, drvRef, openFromDrive, pickVidDir, driveStreamOk, saveToDrive, linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes, openPartners, pvApply });
 
 /* ---------------- clips: a part of a video worth showing the class ---------------- */
 // batch.clips: [{ id, u: the link | p: the path of a video file, a: where it starts (seconds), b: where it ends (or none), t: what it shows }]
@@ -816,7 +866,7 @@ function clipShow(id) {
     const f = clipFile(c), vr = keptId(f);
     if (vr && !vkSeen.has(vr)) { vkGet(vr).then(() => { if (clipStage && clipStage.el === el) draw(); }); return; }   // a kept video is read first
     const kv = vr && vkSeen.get(vr), url = f.kind === 'link' && !vr ? linkOf(f.data) : '';
-    const pl = vr ? (kv ? { [VIDEO_RX.test(kv.name) ? 'video' : 'audio']: kv.url } : drvRef(f.data) ? linkPlayer(linkOf(f.data)) : null) : url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
+    const pl = vr ? (kv ? { [VIDEO_RX.test(kv.name) ? 'video' : 'audio']: kv.url } : drvRef(f.data) ? (dsOn && drivePickReady() ? { video: driveStreamUrl(drvRef(f.data)) } : linkPlayer(linkOf(f.data))) : null) : url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
     const fr = pl && pl.frame ? clipFrame(pl.frame, c) : null;
     el.innerHTML = '<div class="clipbar"><b>' + esc(c.t) + '</b><span>' + (c.b != null ? fmtTime(c.a) + ' to ' + fmtTime(c.b) : 'from ' + fmtTime(c.a)) + (fr && !fr.stops && c.b != null ? ' · stop it at ' + fmtTime(c.b) : '') + '</span><span class="sp"></span>' +
       (all.length > 1 ? '<button data-cs="prev" aria-label="The clip before"' + (at ? '' : ' disabled') + '>‹</button><span>' + (at + 1) + ' of ' + all.length + '</span><button data-cs="next" aria-label="The next clip"' + (at < all.length - 1 ? '' : ' disabled') + '>›</button>' : '') +

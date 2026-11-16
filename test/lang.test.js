@@ -364,7 +364,7 @@ test('session goals, from the Focus card through a session, a break and the end,
   // a session with a goal in papers: running, time up, a break, the break over, and done
   await page.evaluate(() => window.__gs.fcStart(10, 'mark:gs.b.n2', 0, { k: 'papers', n: 2 })); await pause(500);
   await goTo(page, '#/'); await page.waitForSelector('#fcPanel .fcsg'); await miss(page, 'the focus panel, a session goal', own);
-  const up = () => page.evaluate(() => { const r = window.__gs.fcRun(); if (r.st === 'brk') r.brkAt -= r.brkLen * 1000 + 1000; else r.at -= r.len * 1000 + 1000; localStorage.setItem('gs.focusRun', JSON.stringify(r)); window.__gs.fcTick(); });
+  const up = () => page.evaluate(() => { const r = window.__gs.fcRun(); if (r.st === 'brk') r.brkAt -= r.brkLen * 1000 + 1000; else r.at -= r.len * 1000 + 1000; localStorage.setItem('gsp.focusRun', JSON.stringify(r)); window.__gs.fcTick(); });
   await up(); await page.waitForSelector('#fcPanel .fcsgr'); await miss(page, 'the focus panel, a session goal not reached', own);
   await page.click('#fcPanel [data-fcbreak]'); await page.waitForSelector('#fcPanel .fcsgnext'); await miss(page, 'the focus panel, a break with the next goal', own);
   await up(); await page.waitForSelector('#fcPanel [data-fcother]'); await miss(page, 'the focus panel, the break over', own);

@@ -858,7 +858,7 @@ test('screenshots for context: pasted or dropped on a slide’s Claude box, note
     await page.waitForFunction(() => document.querySelectorAll('.pl-csi').length === 2);
     let st = await page.evaluate(() => { const s = window.__planner.L.open.slides[1]; return { n: window.__planner.L.open.slides.length, ctx: s.ctx.map(x => x.note), img: !!s.img, stage: !!document.querySelector('#lsStage img') }; });
     assert.deepEqual(st, { n: 2, ctx: ['Task sheet instructions', ''], img: false, stage: false });
-    // Claude sees it in the lesson text and gets the picture as a file in the folder
+    // Claude sees it in the lesson text (the teacher attaches the picture); the folder copy keeps it as a file
     const txt = await page.evaluate(() => window.__planner.lessonText(window.__planner.L.open));
     assert.match(txt, /\[Screenshot for context, not on the slide: Task sheet instructions\]/);
     const file = await page.evaluate(() => { const imgs = new Map(), c = window.__planner.lessonForFile(window.__planner.L.open, imgs); return { src: c.slides[1].ctx[0].src, has: imgs.has(c.slides[1].ctx[0].src), keep: /^data:/.test(window.__planner.L.open.slides[1].ctx[0].src) }; });
@@ -1021,6 +1021,26 @@ test('a lesson .zip: the finished PowerPoint goes to Finished, every other file 
     assert.ok(!(await page.$('#plFin [data-a="finzip"]')));
     assert.ok(await page.$('.ls-top .ls-menu [data-a="finzip"]'));
     assert.match(await page.$eval('.pl-mats', d => d.textContent), /Exit ticket\.docx[\s\S]*Triangle handout\.pdf/);
+    // a lesson sent to the assistant that comes back as a .zip: its slides are offered slide by slide, and Go back to mine restores them
+    const back = await page.evaluate(async (tpl) => {
+      const P = window.__planner;
+      const deck = P.buildPptx(P.normLesson({ title: 'Prep', fmt: 2, slides: [{ layout: 'title', title: 'Book Cover Prep' }, { layout: 'content', title: 'Built out', body: '• Two' }, { layout: 'content', title: 'Added', body: '• Three' }] }));
+      const l = P.normLesson({ title: 'Prep', fmt: 2, slides: [{ layout: 'title', title: 'Book Cover Prep' }, { layout: 'content', title: 'My outline' }] }); P.L.lessons.push(l); P.openLessonForTest(l, 0);
+      l.status = 'claude'; const ids = l.slides.map(s => s.id);
+      await P.lessonZip(l, new File([fflate.zipSync({ 'Prep.pptx': deck, 'Handout.pdf': new TextEncoder().encode('%PDF') })], 'Prep.zip'));
+      return { pending: !!l.pending, status: l.status, before: l.pending && l.pending.before.map(s => s.title), keptIds: l.slides.slice(0, 2).map(s => s.id).join() === ids.join(), n: l.slides.length, bar: !!document.querySelector('[data-a="cmp"]') };
+    }, tpl);
+    assert.deepEqual(back, { pending: true, status: 'review', before: ['Book Cover Prep', 'My outline'], keptIds: true, n: 3, bar: true });
+    // the assistant's lesson.json carries the slides: they come in for review, the picture stays, the PowerPoint is made from the template, and its .pptx is a preview in Materials
+    const data = await page.evaluate(async () => {
+      const P = window.__planner, te = new TextEncoder();
+      const l = P.normLesson({ title: 'Prep', fmt: 2, slides: [{ layout: 'title', title: 'Prep' }, { layout: 'picture', title: 'Look', img: { src: 'data:image/png;base64,iVBORw0KGgo=', w: 10, h: 10 } }, { layout: 'content', title: 'Outline', ask: 'Three examples', talk: [{ by: 'you', text: 'shorter' }] }] }); P.L.lessons.push(l); P.openLessonForTest(l, 0);
+      l.status = 'claude'; const ids = l.slides.map(s => s.id);
+      const man = { kind: 'grading-studio-lesson-zip', preview: 'Prep preview.pptx', materials: ['Handout.pdf'], lesson: { title: 'Prep', slides: [{ layout: 'title', title: 'Prep' }, { layout: 'picture', title: 'Look closely' }, { layout: 'content', title: 'Three examples', body: '• One\n• Two\n• Three', talk: [{ by: 'claude', text: 'Made it shorter.' }] }, { layout: 'exit', title: 'Exit ticket', body: 'One thing you learned' }] } };
+      await P.lessonZip(l, new File([fflate.zipSync({ 'Prep preview.pptx': te.encode('pk'), 'Handout.pdf': te.encode('%PDF'), 'lesson.json': te.encode(JSON.stringify(man)) })], 'Prep.zip'));
+      return { pending: !!l.pending, status: l.status, final: !!l.final, titles: l.slides.map(s => s.title), ids: l.slides.slice(0, 3).map(s => s.id).join() === ids.join(), pic: !!l.slides[1].img, ask: l.slides[2].ask, talk: l.slides[2].talk.map(t => t.by + ':' + t.text), files: l.files.map(f => f.name) };
+    });
+    assert.deepEqual(data, { pending: true, status: 'review', final: false, titles: ['Prep', 'Look closely', 'Three examples', 'Exit ticket'], ids: true, pic: true, ask: 'Three examples', talk: ['you:shorter', 'claude:Made it shorter.'], files: ['Prep preview.pptx', 'Handout.pdf'] });
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
@@ -1180,6 +1200,11 @@ test('comments on the whole lesson: a box in the editor, kept on the lesson, sha
     assert.deepEqual(r.talk, ['you:Keep it lighter, they just had a test', 'you:Use the poem from Monday']);
     assert.match(r.copied, /My comment on the whole lesson: Keep it lighter[\s\S]*My comment on the whole lesson: Use the poem from Monday/);
     assert.equal(r.file, 2, 'saved in the lesson file for Claude');
+    // The copied text stands on its own: it never sends the assistant to a folder or a file on the computer, and asks for a .zip back plus each piece on its own.
+    assert.match(r.copied, /Everything you need is in this message/);
+    assert.match(r.copied, /ONE downloadable \.zip/); assert.match(r.copied, /its own downloadable file/);
+    assert.doesNotMatch(r.copied, /Planner folder|README|\.lesson\.json|\.unit\.json/);
+    assert.match(r.copied, /"lesson": \{ "title"/, 'asks for the slides back as data');
     // Claude's reply and Done; the Comments list has the whole lesson first
     await page.evaluate(() => { const P = window.__planner; P.L.open.talk.push({ by: 'claude', text: 'Made the warm-up a game.' }); P.renderLessons(); });
     await page.click('.pl-ltalk [data-ltalkdone="0"]');
@@ -1383,6 +1408,24 @@ test('Timetable: my school’s slide template picked from a file, and everything
     await page.click('[data-ok]');
     await page.waitForFunction(() => window.__planner.L.setup.template === '');
     fs.unlinkSync(tmp);
+    assert.deepEqual(errors, []);
+  } finally { await a.done(); }
+});
+
+test('the copied lesson carries its class times, its unit plan and my activities, never a folder or a file', async () => {
+  const a = await open();
+  try {
+    const { page, errors } = a;
+    const t = await page.evaluate(async s => {
+      const P = window.__planner; await P.applySetup(s);
+      const u = P.normUnit({ course: 'Course A', title: 'Unit 2: Argument', start: '2026-10-26', weeks: [{ focus: 'Claims', standards: 'W.1' }, { focus: 'Evidence', notes: 'Use the debate' }] });
+      await P.unitPut(u);
+      const l = P.normLesson({ title: 'Evidence day', slots: [{ classId: 'A1', date: '2026-11-03' }], slides: [{ layout: 'title', title: 'Evidence day' }] });
+      return P.lessonContext(l);
+    }, SETUP);
+    assert.match(t, /Course A-1 \(Course A\), Tuesday November 3rd 2026, 9:00–10:30 \(90 minutes\)/);
+    assert.match(t, /The unit: Unit 2: Argument[\s\S]*week 2 of 2[\s\S]*Week 1: Claims \[W\.1\][\s\S]*Week 2 \(this week\): Evidence My notes: Use the debate/);
+    assert.doesNotMatch(t, /folder|\.json/i);
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });

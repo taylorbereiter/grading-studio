@@ -1,22 +1,21 @@
 {
- "version": "1.28.42",
- "build": "b4b7fd101536",
+ "version": "1.28.47",
+ "build": "86cc5cb33170",
  "notes": [
-  "Videos from your Google Drive: in Partners and videos, Choose from Drive… opens Google's own chooser in your videos folder. Pick several at once and each goes to the student named in its file name. The video plays here, so the transcript follows along. The app can open only the videos you pick, nothing else in your Drive.",
-  "Open from Google Drive and Save to Google Drive use the same limited permission: pick the ZIP or the papers in Google's chooser. Grading Studio never asks for your whole Drive."
+  "A lesson you send to your assistant now carries when each class meets, the unit plan for the week and your own activities. Its slides come back in the .zip, so the Planner makes the PowerPoint from your own template and you check the changes slide by slide. The assistant's own PowerPoint is kept in Materials as a preview."
  ],
  "files": {
-  "index.html": "459221a4498c963cbe8efb52ae73c14be9ec9049c750ebc8dbfb575c4de9bc4d",
-  "planner.html": "9c262017b41519c69c1ef712677ef97684643b3e4687cb1f645201ee05d272b1"
+  "index.html": "7bc1c55cfdab65e8c6534b36ced17fee3c4615ead7db73de09b3a330da6721b7",
+  "planner.html": "49655abed229fa3e06c2b87ba3f3b85244cf1d682cf350ca98896289554fd852"
  },
  "langs": {
-  "lang/zh-Hant.js": "144bd2324398ec90858bc01bc3502f392a97285326eeb5a2c44911c39b7dae55",
-  "lang/zh-Hans.js": "b192e5f0f16147a1f09342c5bc0dcab963582b48f94b72ce41aec772d0bccd58",
-  "lang/es.js": "cd6574a82228806e75c2c7d4ff0845b8f290795a3a36f1db9ae948cce5674233",
-  "lang/fr.js": "aa221c0e837c28cc76c50bb25e3313bdc21485e6a99433edc894187c695c00ca",
-  "lang/de.js": "5d10159c0a3ebd6b1fa4b8123b16fd36c6084433d526511623b88a8f88cfdf57",
-  "lang/pt-BR.js": "380bdb23fff7f77b4d69e21fbe6eac77349a5614b93b7bed582f8f6a4c3fa2ed",
-  "lang/ja.js": "90a24fac1329ec55c5187c30fe5f25de6f1c0ff188b0be669269ced4ac9cfbd2",
-  "lang/ko.js": "403b2e0d81b4129dfe3f326e938c30bd94b0acb84b4abd71c56517eef32e6125"
+  "lang/zh-Hant.js": "b81fd99eaddb74b0274361f6761c25e697de76c9c94bb3581b35dee2d1de2b09",
+  "lang/zh-Hans.js": "5906cb17eab51a70ecb82be8f181c5c42522951da069c1afa14ab076f65e1f45",
+  "lang/es.js": "8a68b9ea977fec719273db5975424581d1113d951cefed975ff59e0b1f9f236f",
+  "lang/fr.js": "775b35e441e2c9054ae3ab9b2c9dcdf969d0546ea51e0f14e27f0680566bab9f",
+  "lang/de.js": "d4e415d52b81bfd5aa1feae0140eafae0d06e37021e8982a2b59c8d39155846e",
+  "lang/pt-BR.js": "8395bc1a85889cce24d923f8c2f65c374b83b12866becb4f44b4a586592c0a26",
+  "lang/ja.js": "698871bc06c0ba8da166f90fe5ffc16c0e6e77c3391ea37f3447f4f15724640a",
+  "lang/ko.js": "f68d40d49cfe697aae9bf5c154121d80b881e8ca1f66a7f30ac63ab7b4553064"
  }
 }

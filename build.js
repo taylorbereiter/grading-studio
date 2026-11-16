@@ -130,13 +130,13 @@ console.log((h.length / 1e6).toFixed(2) + 'MB');
   prep('/*@@TOKENS@@*/', tokensCss);
   prep('/*@@PARTSCSS@@*/', partsCss);
   prep('/*@@RAILCSS@@*/', css('src/rail.css'));   // the sidebar's look is shared; its code is the Planner's own (src/planner/rail.js)
-  prep('/*@@PRESENTCSS@@*/', css('src/present.css') + css('src/pick.css'));   // presenting a lesson (src/planner/present.js)
+  prep('/*@@PRESENTCSS@@*/', css('src/present.css') + css('src/pick.css') + css('src/focus.css'));   // + the focus timer's panel (src/planner/plfocus.js)   // presenting a lesson (src/planner/present.js)
   prep('/*@@FFLATE@@*/', fs.readFileSync(nm + 'fflate/umd/index.js', 'utf8'));
   // pdf.js for the side panel's books; the worker waits as text until a book is opened
   prep('/*@@PDFJS@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.min.js', 'utf8'));
   prep('/*@@MAMMOTH@@*/', fs.readFileSync(nm + 'mammoth/mammoth.browser.min.js', 'utf8'));
   prep('/*@@WORKER@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.worker.min.js', 'utf8'));
-  prep('/*@@PLANNER@@*/', ('(() => {\n' + ['base', '../beside', 'bank', 'review', 'lessons', 'plain', 'looks', 'boxes', 'rich', 'activities', 'materials', 'links', 'finished', 'share', 'variants', 'extras', 'library', 'panel', 'notebook', '../pickshare', 'present', '@langs', '../lang', '../helpdata', 'rail', 'units', '../fullscreen', 'plantime'].map(n => n === '@langs' ? langSrc : fs.readFileSync('src/planner/' + n + '.js', 'utf8')).join('\n') + '\n})();').replace(/^[ \t]*\/\/.*\r?\n/gm, ''));
+  prep('/*@@PLANNER@@*/', ('(() => {\n' + ['base', '../beside', 'bank', 'review', 'lessons', 'plain', 'looks', 'boxes', 'rich', 'activities', 'materials', 'links', 'finished', 'share', 'variants', 'extras', 'library', 'panel', 'notebook', '../pickshare', 'present', '@langs', '../lang', '../helpdata', 'rail', 'units', '../fullscreen', 'plantime', '../lofi', 'plfocus'].map(n => n === '@langs' ? langSrc : fs.readFileSync('src/planner/' + n + '.js', 'utf8')).join('\n') + '\n})();').replace(/^[ \t]*\/\/.*\r?\n/gm, ''));
   const page = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"></head><body>\n' + p + '\n</body></html>';
   fs.writeFileSync('planner.html', hosted(page).replace('<meta name="robots" content="noindex"></head>', HOSTED));
   fs.writeFileSync('Planner.html', page);
