@@ -83,7 +83,11 @@ test('away from the marking screen, Ctrl Z takes back a deleted unit, Ctrl Y del
     await page.evaluate(() => document.activeElement && document.activeElement.blur());
     await ctrl(page, 'z');
     assert.deepEqual(await units(), was, 'the unit is back, in its place');
-    assert.match(await toast(page), /^Undone: “/);
+    assert.match(await toast(page), /^Undone: “.*Redo$/);
+    // the note offers it back, as the change may have been made on another screen
+    await page.click('.toast .tact');
+    assert.equal((await units()).length, was.length - 1, 'Redo deletes it again');
+    await ctrl(page, 'z');
     await page.waitForFunction(() => document.querySelector('[data-udel]'));
     await ctrl(page, 'y');
     assert.equal((await units()).length, was.length - 1, 'Ctrl Y deletes it again');
@@ -115,4 +119,29 @@ test('in the Planner’s slide editor Ctrl Z takes back a slide added, and Shift
     assert.equal(await n(), n0 + 1, 'and back');
     assert.deepEqual(errors, []);
   } finally { await page.close(); await server.close(); }
+});
+
+test('away from the marking screen, saves a moment apart are one step, but a long run of them is cut every few seconds', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  try {
+    // ten saves half a second apart, over four and a half seconds, as if scores were typed into the gradebook one after another
+    const steps = await page.evaluate(() => {
+      const G = window.__gs, now = Date.now, t0 = now(); let t = t0;
+      Date.now = () => t;
+      try {
+        G.libTrack(); const n0 = G.libu().undo.length;
+        for (let i = 0; i < 10; i++) { t = t0 + 500 * i; G.state().lib.classes[0].name = 'Burst ' + i; G.libTrack(); }
+        return G.libu().undo.length - n0;
+      } finally { Date.now = now; }
+    });
+    assert.equal(steps, 2, 'one step for the first three seconds, then a new one');
+    // and saves far apart are a step each
+    const apart = await page.evaluate(() => {
+      const G = window.__gs, now = Date.now, t0 = now() + 60e3; let t = t0;
+      Date.now = () => t;
+      try { const n0 = G.libu().undo.length; for (let i = 0; i < 3; i++) { t = t0 + 2000 * i; G.state().lib.classes[0].name = 'Apart ' + i; G.libTrack(); } return G.libu().undo.length - n0; } finally { Date.now = now; }
+    });
+    assert.equal(apart, 3);
+    assert.deepEqual(page.errors, []);
+  } finally { await close(); }
 });
