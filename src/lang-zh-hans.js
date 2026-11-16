@@ -186,6 +186,7 @@ const LANG_ZHS = {
     'Whole year': '整个学年', 'This year': '本学年', 'Outside the terms': '学期以外', 'Every assignment': '所有作业', 'Averages only': '只看平均', '+ Add scores': '+ 添加分数', 'Student': '学生', 'typed in': '手动输入', 'average': '平均', 'Term grade': '学期成绩', 'Grade': '成绩',
     'Year': '学年', 'missing': '缺交', 'excused': '免交', 'started': '已开始', 'retake': '重考', 'partial': '部分', 'left out': '已排除', 'late': '迟交', 'Class average': '班级平均', 'count everyone': '全部计入', 'so far': '目前为止', 'Includes extra credit': '包含加分',
     'How this is worked out': '计算方式', 'Predicted grades': '预测成绩', 'The 1 to 7 you predict for each student': '你为每位学生预测的 1 到 7', 'Show points': '显示分数', 'Show percent': '显示百分比', 'Now percent': '目前：百分比', 'Now points': '目前：分数', 'Terms, types and weights': '学期、类型和比重',
+    'Entry list': '录入清单', 'Roster order': '名单顺序', 'Last name': '姓', 'First name': '名', 'Term levels': '本学期等级', 'Start over': '重新开始', 'Copy scores': '复制分数', 'Order': '顺序', 'Click a student once their score is in. Arrow keys work too.': '录好一个学生的分数后点一下他的名字。方向键也可以。',
     'Add extra credit…': '添加加分…', 'Import scores…': '导入分数…', 'From your old gradebook: a CSV or Excel file, or cells pasted': '从你原本的成绩册：CSV 或 Excel 文件，或粘贴的单元格', 'Copy the table': '复制表格', 'Leave students out…': '排除学生…', 'See the class averages without them': '看看不含这些学生的班级平均',
     'Looking through your saved work…': '正在读取你保存的工作…', 'Set types': '设置类型', 'Set up your terms with Term setup to see them side by side.': '在“学期设置”设置学期后，就能并排查看。', 'The year is the average of the terms each student has a grade in, and each type’s year average is the average of their term averages for it.': '学年成绩是学生有成绩的各学期的平均，每个类型的学年平均则是该类型各学期平均的平均。',
     'points on top': '额外加分', 'No type yet': '尚无类型', 'Extra credit': '加分', 'Extra credit adds to': '加分加到', 'Type': '类型', 'Due': '期限', 'Edit the extra credit': '编辑加分', 'Edit the typed-in scores': '编辑手动输入的分数', 'none': '无', 'Assignment': '作业',
@@ -394,6 +395,7 @@ const LANG_ZHS = {
     'Missing': '缺交', 'Excused': '免交', 'Late': '迟交',
   },
   rules: [
+    [/^(\d+) of (\d+) done$/, '已完成 $1/$2'], [/^out of ([\d.,]+)$/, '满分 $1'],
     /* a class page */
     [/^(\d+) students? on the roster$/, m => (m[1] === '1' ? '名单上有 {n} 位学生' : '名单上有 {n} 位学生').replace('{n}', m[1])], [/^(\d+) assignments?$/, m => (m[1] === '1' ? '{n} 份作业' : '{n} 份作业').replace('{n}', m[1])], [/^Due ([^·]+)$/, '期限：$1'],
     [/^Keep (.+) in the tab row$/, m => '把“{x}”留在标签页列'.replace('{x}', (LANG_ZHS.words[m[1]] || m[1]))], [/^Take (.+) out of the tab row$/, m => '把“{x}”移出标签页列'.replace('{x}', (LANG_ZHS.words[m[1]] || m[1]))],

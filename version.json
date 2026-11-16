@@ -1,21 +1,21 @@
 {
  "version": "1.28.38",
- "build": "c80dc618beb3",
+ "build": "d8b714e1c6be",
  "notes": [
   "Fixes for typed percents: editing a typed-in column keeps percents and extra credit, a percent-only score counts as scored on cards and in the sidebar, and No papers: just type the scores… shows only on assignments with no papers."
  ],
  "files": {
-  "index.html": "119c317b37cf3ad47020f6cb871bac061dd64394dbe81888dbdfe86fcfdaa064",
-  "planner.html": "703db0010a82aecbc78633a28f340f89b28159e1ed67c3a94b233fd96ba5bffe"
+  "index.html": "c0ffb7327e1504e8750c34adaff0f2b4cfe1170832a4510fa54a7f61b4314528",
+  "planner.html": "4ed7db2cf321e145495f9ea5d11ea0eb9630232445b631cff39e548c6cffacc8"
  },
  "langs": {
-  "lang/zh-Hant.js": "10c548640fa6172fba70eb97c5dc57ef5e7583305b2d4b342424d46eca0b1ff2",
-  "lang/zh-Hans.js": "7818a52bdcf350340b4aba5e933e73b84053be702a83e98f826100fdead8b978",
-  "lang/es.js": "a2f44a91c49e005c92800047072a8bab60962adaa3a597f00bed3fe36b1c32e7",
-  "lang/fr.js": "0e6bbd4ea0f0bda0e01a0bb41058ef8292a962ddd53bfe55a50f463f86614b8d",
-  "lang/de.js": "1f1ee28618182d0d4407dd4a93fcff981b6e1fdb026a1adaa9252f575fa75f64",
-  "lang/pt-BR.js": "5f079052e5c05a3d8e13f0f0fd45c69ed56b15cf7606e8ba68e2f9912e74237d",
-  "lang/ja.js": "f32acf3026f0ce8b1da34dcfc5b41fd465f9b90824226dcbb2d7fae7fcd0e8c1",
-  "lang/ko.js": "ef5f513fb769cfbc29f00e145104757ec1dbc44ea311686d82fc995b84546313"
+  "lang/zh-Hant.js": "fdb2d82c5b828acf579699dc880a815298d7d93c96ad3f04f0b49500343b7539",
+  "lang/zh-Hans.js": "c526b9ecd48ee2bef158c3a11471ec1ec56cf90868c5e3c6b256b32ea5a677fd",
+  "lang/es.js": "2c068e3120fcbd3e614d081e5312c029767e0a00bc72906da027c591062f1b4a",
+  "lang/fr.js": "f72a800903bf90a080ccc7821fa236c183cb6997981603d633cf787fbe8fe12f",
+  "lang/de.js": "13f1d74ace412e0df91c65d2ca125a0cafc7356c64b03c42c5b3ddf136765093",
+  "lang/pt-BR.js": "8934033189c8dcdf7a022a60dd9339b83806563c86e3f41763787da56a9e64f3",
+  "lang/ja.js": "06b5bf7916396efb317b33985d4f33b9567890a12d957b2f4356b2426e734cf4",
+  "lang/ko.js": "d833aac5ec132755d2a99290d47ff77f790aa3f17abd9a91bf17cf48879693d9"
  }
 }

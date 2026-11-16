@@ -180,6 +180,7 @@ words: {
 'Whole year': '1 年全体', 'This year': '今年度', 'Outside the terms': '学期の外', 'Every assignment': 'すべての課題', 'Averages only': '平均のみ', '+ Add scores': '+ 点数を追加', 'Student': '生徒', 'typed in': '入力', 'average': '平均', 'Term grade': '学期の成績', 'Grade': '成績',
 'Year': '年間', 'missing': '未提出', 'excused': '免除', 'started': '開始済み', 'retake': '再提出', 'partial': '一部', 'left out': '除外中', 'late': '遅れ', 'Class average': 'クラス平均', 'count everyone': '全員を数える', 'so far': '現時点', 'Includes extra credit': '加点を含みます',
 'How this is worked out': '計算方法', 'Predicted grades': '予測成績', 'The 1 to 7 you predict for each student': '生徒ごとに予測する 1〜7', 'Show points': '点数で表示', 'Show percent': 'パーセントで表示', 'Now percent': '現在：パーセント', 'Now points': '現在：点数', 'Terms, types and weights': '学期、種類、配分',
+'Entry list': '入力用リスト', 'Roster order': '名簿の順', 'Last name': '姓', 'First name': '名', 'Term levels': '学期のレベル', 'Start over': '最初から', 'Copy scores': '点数をコピー', 'Order': '順番', 'Click a student once their score is in. Arrow keys work too.': '点数を入れ終えた生徒をクリックします。矢印キーも使えます。',
 'Add extra credit…': '加点を追加…', 'Import scores…': '点数を取り込む…', 'From your old gradebook: a CSV or Excel file, or cells pasted': '以前の成績簿から：CSV や Excel のファイル、または貼り付けたセル', 'Copy the table': '表をコピー', 'Leave students out…': '生徒を除外…', 'See the class averages without them': 'その生徒を除いたクラス平均を見る',
 'Looking through your saved work…': '保存した作業を読み込んでいます…', 'Set types': '種類を設定', 'Set up your terms with Term setup to see them side by side.': '学期の設定で学期を登録すると、並べて表示できます。', 'The year is the average of the terms each student has a grade in, and each type’s year average is the average of their term averages for it.': '年間は、その生徒に成績がある学期の平均です。種類ごとの年間平均は、その種類の学期平均の平均です。',
 'points on top': '上乗せの点', 'No type yet': '種類は未設定', 'Extra credit': '加点', 'Extra credit adds to': '加点の加算先', 'Type': '種類', 'Due': '締め切り', 'Edit the extra credit': '加点を編集', 'Edit the typed-in scores': '入力した点数を編集', 'none': 'なし', 'Assignment': '課題',
@@ -392,6 +393,7 @@ words: {
 'Missing': '未提出', 'Excused': '免除', 'Late': '遅れて提出',
 },
 rules: [
+[/^(\d+) of (\d+) done$/, '$2人中$1人完了'], [/^out of ([\d.,]+)$/, '$1点満点'],
 /* a class page */
 [/^(\d+) students? on the roster$/, m => (m[1] === '1' ? '名簿に生徒 {n} 人' : '名簿に生徒 {n} 人').replace('{n}', m[1])], [/^(\d+) assignments?$/, m => (m[1] === '1' ? '課題 {n} 件' : '課題 {n} 件').replace('{n}', m[1])], [/^Due ([^·]+)$/, '締め切り：$1'],
 [/^Keep (.+) in the tab row$/, m => '{x}をタブの行に残す'.replace('{x}', (LANG_JA.words[m[1]] || m[1]))], [/^Take (.+) out of the tab row$/, m => '{x}をタブの行から外す'.replace('{x}', (LANG_JA.words[m[1]] || m[1]))],

@@ -246,7 +246,7 @@ function bkDraw() {
         '<button class="mitem" data-bksetup>Term setup<small>Terms, types and weights</small></button><hr>' +
         '<button class="mitem" data-bkaddxc>Add extra credit…</button>' +
         '<button class="mitem" data-bkimport>Import scores…<small>From your old gradebook: a CSV or Excel file, or cells pasted</small></button>' +
-        (bk.tab === 'table' ? '<button class="mitem" data-bkcopy>Copy the table</button>' + (bk.pick ? '' : '<hr><button class="mitem" data-bkpickon aria-pressed="false">Leave students out…<small>See the class averages without them</small></button>') : ''), 'right') : '') + '</div>';
+        (bk.tab === 'table' ? '<button class="mitem" data-mbopen="">Entry list</button><button class="mitem" data-bkcopy>Copy the table</button>' + (bk.pick ? '' : '<hr><button class="mitem" data-bkpickon aria-pressed="false">Leave students out…<small>See the class averages without them</small></button>') : ''), 'right') : '') + '</div>';
   let main;
   if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p><p class="bkpad"><button class="btn sm" data-bkimport>Import scores…</button></p>';   // a gradebook file's students can become the roster (bookimport.js)
   else if (bk.tab === 'class') main = myp ? ibClassView(c, cols, all) : bkClassView(c, cols, all, conf);   // an MYP class has levels, not percents (ib.js)
@@ -433,7 +433,7 @@ function bkColMenu(key, anchor) {
     : '<div class="bkpf">Type</div><div class="pseg bktypeseg" role="group">' + bkCats().map(([t, , s]) => '<button data-bksettype="' + esc(t) + '" aria-pressed="' + (col.type === t) + '">' + esc(s) + '</button>').join('') + '</div>') +
     '<label class="bkpf">Due <input type="date" id="bkDue" value="' + esc(col.due || '') + '"></label>' +
     (terms.length ? '<label class="bkpf">Term <select id="bkTerm" class="btn sm"><option value="">By the date (' + esc((terms.find(t => t.id === bkTermOf({ ...col, term: '' }, terms)) || { name: 'none' }).name) + ')</option>' + terms.map(t => '<option value="' + t.id + '"' + (col.term === t.id ? ' selected' : '') + '>' + esc(t.name) + '</option>').join('') + '</select></label>' : '') +
-    (col.typed && col.it && !col.d ? '<button class="btn sm" data-bkedittyped="' + esc(col.it.id) + '">' + (col.type === 'xc' ? 'Edit the extra credit' : 'Edit the typed-in scores') + '</button>' : '') + '<button class="btn sm" data-bkpopclose>Done</button>';
+    (col.typed && col.it && !col.d ? '<button class="btn sm" data-bkedittyped="' + esc(col.it.id) + '">' + (col.type === 'xc' ? 'Edit the extra credit' : 'Edit the typed-in scores') + '</button>' : '') + (col.type === 'xc' ? '' : '<button class="btn sm" data-mbopen="' + esc(col.key) + '">Entry list</button>') + '<button class="btn sm" data-bkpopclose>Done</button>';
   p.dataset.key = key;
   const host = bkHost();
   host.appendChild(p);

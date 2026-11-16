@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"10c54864","zh-Hans":"7818a52b","es":"a2f44a91","fr":"0e6bbd4e","de":"1f1ee286","pt-BR":"5f079052","ja":"f32acf30","ko":"ef5f513f"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"fdb2d82c","zh-Hans":"c526b9ec","es":"2c068e31","fr":"f72a8009","de":"13f1d74a","pt-BR":"89340331","ja":"06b5bf79","ko":"d833aac5"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -16840,7 +16840,7 @@ kmWrap('More <span aria-hidden="true">▾</span>', 'class="btn sm" id="bkMore"',
 '<button class="mitem" data-bksetup>Term setup<small>Terms, types and weights</small></button><hr>' +
 '<button class="mitem" data-bkaddxc>Add extra credit…</button>' +
 '<button class="mitem" data-bkimport>Import scores…<small>From your old gradebook: a CSV or Excel file, or cells pasted</small></button>' +
-(bk.tab === 'table' ? '<button class="mitem" data-bkcopy>Copy the table</button>' + (bk.pick ? '' : '<hr><button class="mitem" data-bkpickon aria-pressed="false">Leave students out…<small>See the class averages without them</small></button>') : ''), 'right') : '') + '</div>';
+(bk.tab === 'table' ? '<button class="mitem" data-mbopen="">Entry list</button><button class="mitem" data-bkcopy>Copy the table</button>' + (bk.pick ? '' : '<hr><button class="mitem" data-bkpickon aria-pressed="false">Leave students out…<small>See the class averages without them</small></button>') : ''), 'right') : '') + '</div>';
 let main;
 if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p><p class="bkpad"><button class="btn sm" data-bkimport>Import scores…</button></p>';
 else if (bk.tab === 'class') main = myp ? ibClassView(c, cols, all) : bkClassView(c, cols, all, conf);
@@ -17014,7 +17014,7 @@ p.innerHTML = '<b>' + esc(col.name) + '</b>' + (col.type === 'xc' ? '<div class=
 : '<div class="bkpf">Type</div><div class="pseg bktypeseg" role="group">' + bkCats().map(([t, , s]) => '<button data-bksettype="' + esc(t) + '" aria-pressed="' + (col.type === t) + '">' + esc(s) + '</button>').join('') + '</div>') +
 '<label class="bkpf">Due <input type="date" id="bkDue" value="' + esc(col.due || '') + '"></label>' +
 (terms.length ? '<label class="bkpf">Term <select id="bkTerm" class="btn sm"><option value="">By the date (' + esc((terms.find(t => t.id === bkTermOf({ ...col, term: '' }, terms)) || { name: 'none' }).name) + ')</option>' + terms.map(t => '<option value="' + t.id + '"' + (col.term === t.id ? ' selected' : '') + '>' + esc(t.name) + '</option>').join('') + '</select></label>' : '') +
-(col.typed && col.it && !col.d ? '<button class="btn sm" data-bkedittyped="' + esc(col.it.id) + '">' + (col.type === 'xc' ? 'Edit the extra credit' : 'Edit the typed-in scores') + '</button>' : '') + '<button class="btn sm" data-bkpopclose>Done</button>';
+(col.typed && col.it && !col.d ? '<button class="btn sm" data-bkedittyped="' + esc(col.it.id) + '">' + (col.type === 'xc' ? 'Edit the extra credit' : 'Edit the typed-in scores') + '</button>' : '') + (col.type === 'xc' ? '' : '<button class="btn sm" data-mbopen="' + esc(col.key) + '">Entry list</button>') + '<button class="btn sm" data-bkpopclose>Done</button>';
 p.dataset.key = key;
 const host = bkHost();
 host.appendChild(p);
@@ -26421,7 +26421,7 @@ function ibBookView(c, cols, all, tabs) {
 if (ibk.view === 'add' && ibk.add) return ibAddView(c);
 const crit = ibCrit(c), bounds = ibBounds(c), icols = ibCols(c, cols), top = crit.length * IB_TOP, termName = (tabs.find(t => t[0] === bk.term) || [, 'This year'])[1];
 if (ibk.view === 'fit') return ibFitView(c, crit, bounds, icols, tabs, termName);
-const bar = ibBar(c, tabs, '<button class="btn sm" data-bksetup>Term setup</button><button class="btn sm" data-ib-class="' + lib.classes.indexOf(c) + '">Criteria and boundaries</button><button class="btn sm" data-ibcopy>Copy levels</button><button class="btn sm primary" data-ibadd-lv>+ Add levels</button>');
+const bar = ibBar(c, tabs, '<button class="btn sm" data-bksetup>Term setup</button><button class="btn sm" data-ib-class="' + lib.classes.indexOf(c) + '">Criteria and boundaries</button><button class="btn sm" data-mbopen="">Entry list</button><button class="btn sm" data-ibcopy>Copy levels</button><button class="btn sm primary" data-ibadd-lv>+ Add levels</button>');
 let h = '<div class="bkwrap"><table class="bktab ibtab" id="ibTab"><thead><tr class="bkg"><th></th>' + (icols.length ? '<th colspan="' + icols.length + '">Evidence</th>' : '') + '<th colspan="' + (crit.length + 2) + '" class="bkgsum">' + esc(termName) + ' · your judgment</th></tr>' +
 '<tr><th class="bknm">Student</th>' + icols.map(x => '<th class="bkch' + (x.fm ? ' ibfm' : '') + '">' + (x.typed ? '<button data-ibedit="' + esc(x.key) + '" title="Change these levels">' : '<span>') + '<span data-raw>' + esc(x.name) + '</span><small>' + esc(bkDay(x.due)) + ' · ' + esc(x.crit.join(' ') || 'no criteria') + (x.fm ? ' · formative' : '') + '</small>' + (x.typed ? '</button>' : '</span>') + '</th>').join('') +
 crit.map(x => '<th class="bkavg bksum" data-rawa title="' + esc(x.name) + '">' + esc(x.k) + '</th>').join('') + '<th class="bkavg bksum">Total<small>of ' + top + '</small></th><th class="bkterm bksum">Grade<small>1 to 7</small></th></tr></thead><tbody>';
@@ -26775,6 +26775,149 @@ return true;
 }
 document.addEventListener('click', e => { if (e.target.closest('#ibTaskSet')) ibTaskDlg(); });
 Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibSetup, ibTaskDlg, ibQzLevel, ibQzEven, ibQzParts, classNewWay, GRADE_WAYS, ibConf, ibPredOf, ibk: () => ibk });
+
+/* ---------------- The entry list (11/16): one task's scores, short and in order, beside the school's own gradebook ----------------
+Built into the grading page. Many schools' systems (ManageBac among them) take no file of scores from a teacher, so every score is
+typed or picked by hand. This puts one task's scores in a narrow window the teacher keeps beside that page: each student's score,
+or the level for each criterion (A 7  B 4  C 6  D 5) in an MYP class, in the order the school's page lists them. A click on a student
+greys the row and moves on, so the place is never lost. Nothing is connected and nothing is sent; the school's page knows nothing
+of this one. Opened from a column's box or More in the gradebook, and from the MYP gradebook's bar.
+The order (roster, last name or first name) is a setting of the teacher's own: lib.me.mbOrder ('' is the roster), in setup import as
+school.entryOrder. What is ticked is kept only while the window is open. */
+const mbe = { cls: '', key: '', cur: 0, done: new Set(), win: null };
+const MB_ORDERS = [['', 'Roster order'], ['last', 'Last name'], ['first', 'First name']];
+const mbOrder = () => ['last', 'first'].includes(me().mbOrder) ? me().mbOrder : '';
+function mbParts(n) {
+const s = String(n).trim(), c = s.indexOf(',');
+if (c > 0) return { first: s.slice(c + 1).trim(), last: s.slice(0, c).trim() };
+const w = s.split(/\s+/); return { first: w[0], last: w.length > 1 ? w[w.length - 1] : '' };
+}
+function mbSorted(names, how) {
+const idx = names.map((n, i) => i);
+if (!how || anonOn()) return idx;
+const key = i => { const p = mbParts(names[i]); return how === 'last' ? [p.last, p.first] : [p.first, p.last]; };
+return idx.sort((a, b) => { const x = key(a), y = key(b); return x[0].localeCompare(y[0], undefined, { sensitivity: 'base' }) || x[1].localeCompare(y[1], undefined, { sensitivity: 'base' }) || a - b; });
+}
+function mbTasks(c) {
+if (classWay(c) === 'myp') return ibCols(c, bk.cols.filter(x => x.cls === c.id)).sort((a, b) => b.t - a.t).map(x => ({ key: x.key, name: x.name })).concat({ key: '*lv', name: tr('Term levels') });
+return bkClassCols(c, bk.cols).filter(x => x.type !== 'xc').reverse().map(x => ({ key: x.key, name: x.name }));
+}
+function mbRows(c, key) {
+const names = c.names, rows = [];
+let max = null, get;
+if (classWay(c) === 'myp') {
+const crit = ibCrit(c).map(x => x.k);
+if (key === '*lv') get = n => { const lv = ibLvOf(c, n); return { vals: crit.map(k => [k, ibLevel(lv[k])]) }; };
+else { const col = ibCols(c, bk.cols.filter(x => x.cls === c.id && x.key === key))[0]; if (!col) return { rows, max };
+get = n => { const cell = col.cells.get(n); return { st: cell && cell.st, vals: col.crit.map(k => [k, cell && cell.lv[k] != null ? cell.lv[k] : null]) }; }; }
+} else {
+const col = bkClassCols(c, bk.cols.filter(x => x.key === key))[0]; if (!col) return { rows, max };
+for (const x of col.cells.values()) if (x.max) { max = x.max; break; }
+get = n => { const x = col.cells.get(n); if (!x) return { vals: [['', null]] }; if (x.st === 'missing' || x.st === 'excused') return { st: x.st, vals: [['', null]] };
+return { vals: [['', x.total != null ? fmtNum(x.total) : x.pct != null ? x.pct + '%' : null]] }; };
+}
+for (const i of mbSorted(names, mbOrder())) { const r = get(names[i]); rows.push({ i, name: bkWho(names[i], i), vals: r.vals, st: r.st || '' }); }
+return { rows, max };
+}
+const MB_CSS = '.mbx{font:14px/1.35 Inter,system-ui,sans-serif;color:#1d2330;display:flex;flex-direction:column;gap:10px;height:100%;box-sizing:border-box;padding:14px}' +
+'.mbx *{box-sizing:border-box}.mbx header{display:flex;align-items:center;gap:8px}.mbx header b{font-size:16px}.mbx header span{color:#5c6475;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+'.mbx select,.mbx button{font:inherit;border:1px solid #d5d9e0;background:#fff;border-radius:8px;padding:6px 10px;color:inherit;cursor:pointer}.mbx select{width:100%}' +
+'.mbx .mbseg{display:flex;border:1px solid #d5d9e0;border-radius:8px;overflow:hidden}.mbx .mbseg button{flex:1;border:0;border-radius:0;padding:5px 4px;font-size:13px}.mbx .mbseg button+button{border-left:1px solid #d5d9e0}' +
+'.mbx .mbseg [aria-pressed=true]{background:#1F6FB2;color:#fff}.mbx .mbcount{display:flex;align-items:center;gap:8px;color:#5c6475;font-size:13px}.mbx .mbcount span{flex:1}.mbx .mbcount button{padding:3px 8px;font-size:12px}' +
+'.mbx ol{list-style:none;margin:0;padding:0;overflow:auto;flex:1;border:1px solid #e4e6ea;border-radius:10px}' +
+'.mbx li{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid #eef0f3;cursor:pointer}.mbx li:last-child{border-bottom:0}.mbx li:hover{background:#f4f5f7}' +
+'.mbx li .mbn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mbx li .mbv{display:flex;gap:6px;font-variant-numeric:tabular-nums;font-weight:600}' +
+'.mbx li .mbv{gap:14px}.mbx li .mbv i{font-style:normal;font-weight:500;color:#5c6475;margin-right:4px;font-size:.85em}.mbx li .mbc{min-width:2.4em;text-align:right;white-space:nowrap}.mbx li .mbv .mbst,.mbx li .mbv .mbno{color:#8a91a0;font-weight:500}' +
+'.mbx li.cur{background:#e8f1fa;box-shadow:inset 3px 0 0 #1F6FB2;font-size:17px;padding:11px 12px}.mbx li.done{color:#9aa1ae}.mbx li.done .mbv{color:#9aa1ae}.mbx li .mbok{width:16px;color:#1f9d55;font-weight:700}' +
+'.mbx .mbhint{margin:0;color:#5c6475;font-size:12px}';
+const mbClass = () => lib.classes.find(c => c.id === mbe.cls);
+function mbHtml() {
+const c = mbClass(); if (!c) return '';
+const tasks = mbTasks(c); if (!tasks.some(t => t.key === mbe.key)) mbe.key = tasks.length ? tasks[0].key : '';
+const { rows, max } = mbRows(c, mbe.key), myp = classWay(c) === 'myp';
+mbe.cur = Math.max(0, Math.min(rows.length - 1, mbe.cur));
+const val = ([k, v]) => '<span class="mbc">' + (k ? '<i>' + esc(k) + '</i>' : '') + (v == null ? '<span class="mbno">–</span>' : esc(String(v))) + '</span>';
+return '<div class="mbx"><header><b>' + esc(tr('Entry list')) + '</b><span>' + esc(c.name) + '</span><button data-mbclose>' + esc(tr('Close')) + '</button></header>' +
+'<select data-mbtask aria-label="' + esc(tr('Task')) + '">' + tasks.map(t => '<option value="' + esc(t.key) + '"' + (t.key === mbe.key ? ' selected' : '') + '>' + esc(t.name) + '</option>').join('') + '</select>' +
+(anonOn() ? '' : '<div class="mbseg" role="group" aria-label="' + esc(tr('Order')) + '">' + MB_ORDERS.map(([v, l]) => '<button data-mborder="' + v + '" aria-pressed="' + (mbOrder() === v) + '">' + esc(tr(l)) + '</button>').join('') + '</div>') +
+'<div class="mbcount"><span>' + esc(tr(mbe.done.size + ' of ' + rows.length + ' done')) + (max ? ' · ' + esc(tr('out of ' + fmtNum(max))) : '') + '</span>' +
+(mbe.done.size ? '<button data-mbreset>' + esc(tr('Start over')) + '</button>' : '') + (myp ? '' : '<button data-mbcopy>' + esc(tr('Copy scores')) + '</button>') + '</div>' +
+'<ol>' + rows.map((r, j) => '<li data-mbrow="' + j + '" class="' + (j === mbe.cur ? 'cur' : '') + (mbe.done.has(r.i) ? ' done' : '') + '"><span class="mbok">' + (mbe.done.has(r.i) ? '✓' : '') + '</span><span class="mbn">' + esc(r.name) + '</span><span class="mbv">' +
+(r.st ? '<span class="mbst">' + esc(tr(r.st)) + '</span>' : r.vals.map(val).join('')) + '</span></li>').join('') + '</ol>' +
+'<p class="mbhint">' + esc(tr('Click a student once their score is in. Arrow keys work too.')) + '</p></div>';
+}
+const mbRoot = () => mbe.win && !mbe.win.closed ? mbe.win.document.getElementById('mbRoot') : document.getElementById('mbPanel');
+function mbDraw() {
+const r = mbRoot(); if (!r) return;
+r.innerHTML = mbHtml();
+const cur = r.querySelector('li.cur'); if (cur) cur.scrollIntoView({ block: 'nearest' });
+}
+function mbStep(by) {
+const c = mbClass(); if (!c) return;
+const rows = mbRows(c, mbe.key).rows, r = rows[mbe.cur]; if (!r) return;
+if (by > 0) { mbe.done.add(r.i); mbe.cur = Math.min(rows.length - 1, mbe.cur + 1); }
+else { mbe.cur = Math.max(0, mbe.cur - 1); mbe.done.delete(rows[mbe.cur].i); }
+mbDraw();
+}
+function mbCopy() {
+const c = mbClass(); if (!c) return;
+const text = mbRows(c, mbe.key).rows.map(r => r.st ? '' : r.vals.map(v => v[1] == null ? '' : String(v[1]).replace('%', '')).join('\t')).join('\n');
+const w = mbe.win && !mbe.win.closed ? mbe.win : window;
+const b = mbRoot() && mbRoot().querySelector('[data-mbcopy]');
+w.navigator.clipboard.writeText(text).then(() => { toast('Copied: one line per student, in this order.'); if (b) b.textContent = '✓ ' + b.textContent; }, () => toast('Copying didn’t work in this browser.'));
+}
+function mbClick(e) {
+const b = e.target.closest('[data-mbclose], [data-mbreset], [data-mbcopy], [data-mborder], [data-mbrow]'); if (!b) return;
+const d = b.dataset, c = mbClass(); if (!c) return;
+if (d.mbclose != null) return mbClose();
+if (d.mbreset != null) { mbe.done.clear(); mbe.cur = 0; return mbDraw(); }
+if (d.mbcopy != null) return mbCopy();
+if (d.mborder != null) { meSet({ mbOrder: d.mborder }); if (!d.mborder) delete lib.me.mbOrder; mbe.cur = 0; return mbDraw(); }
+if (d.mbrow != null) {
+const rows = mbRows(c, mbe.key).rows, j = +d.mbrow, r = rows[j]; if (!r) return;
+if (mbe.done.has(r.i)) { mbe.done.delete(r.i); mbe.cur = j; }
+else { mbe.done.add(r.i); const next = rows.findIndex((x, k) => k > j && !mbe.done.has(x.i)); mbe.cur = next >= 0 ? next : j; }
+return mbDraw();
+}
+}
+function mbChange(e) { if (e.target.matches('[data-mbtask]')) { mbe.key = e.target.value; mbe.done.clear(); mbe.cur = 0; mbDraw(); } }
+function mbKey(e) {
+if (e.target.closest && e.target.closest('select, button')) return;
+if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); mbStep(1); }
+else if (e.key === 'ArrowUp') { e.preventDefault(); mbStep(-1); }
+else if (e.key === 'Escape' && !mbe.win) mbClose();
+}
+function mbClose() {
+if (mbe.win && !mbe.win.closed) mbe.win.close();
+mbe.win = null; const p = document.getElementById('mbPanel'); if (p) p.remove();
+}
+function mbOpen(c, key) {
+if (!c) return;
+if (mbe.cls !== c.id || mbe.key !== key) { mbe.done.clear(); mbe.cur = 0; }
+mbe.cls = c.id; mbe.key = key || '';
+if (!(mbe.win && !mbe.win.closed) && !document.getElementById('mbPanel')) {
+const W = 400, H = Math.min(900, (screen.availHeight || 800) - 60), L = Math.max(0, (screen.availLeft || 0) + (screen.availWidth || 1200) - W - 16);
+let w = null; try { w = window.open('about:blank', 'gsEntryList', 'popup,width=' + W + ',height=' + H + ',left=' + L + ',top=' + ((screen.availTop || 0) + 30)); } catch { }
+if (w && w.document) {
+mbe.win = w;
+w.document.open(); w.document.write('<!doctype html><html lang="' + esc(LANG) + '"><head><meta charset="utf-8"><title>' + esc(tr('Entry list') + ' · ' + c.name) + '</title><style>html,body{margin:0;height:100%;background:#fff}' + MB_CSS + '</style></head><body><div id="mbRoot" style="height:100%"></div></body></html>'); w.document.close();
+w.document.addEventListener('click', mbClick); w.document.addEventListener('change', mbChange); w.document.addEventListener('keydown', mbKey);
+w.addEventListener('pagehide', () => { if (mbe.win === w) mbe.win = null; });
+} else {
+if (!document.getElementById('mbCss')) { const s = document.createElement('style'); s.id = 'mbCss'; s.textContent = MB_CSS + '#mbPanel{position:fixed;right:16px;top:16px;bottom:16px;width:380px;z-index:60;background:#fff;border:1px solid #e4e6ea;border-radius:14px;box-shadow:0 12px 32px rgba(20,30,50,.18);outline:none}'; document.head.appendChild(s); }
+const p = document.createElement('div'); p.id = 'mbPanel'; p.tabIndex = -1; document.body.appendChild(p);
+p.addEventListener('click', mbClick); p.addEventListener('change', mbChange); p.addEventListener('keydown', mbKey);
+}
+}
+mbDraw();
+if (mbe.win) mbe.win.focus(); else { const p = document.getElementById('mbPanel'); if (p) p.focus(); }
+}
+document.addEventListener('click', e => {
+const b = e.target.closest('#bkBody [data-mbopen], #bkPop [data-mbopen]'); if (!b) return;
+const c = bkClass(); if (!c) return;
+if (typeof bkPopClose === 'function') bkPopClose();
+mbOpen(c, b.dataset.mbopen);
+});
 
 /* ---------------- Report comments: a draft for each student, from her own scores and comments (Stage 6) ----------------
 A class page's Report comments tab (#/class/<id>/reports). The draft is put together here, in the browser, from the
@@ -31517,6 +31660,7 @@ function stpRead(j) {
     if (typeof sc.assistantLink === 'string') o.aiUrl = aiUrlClean(sc.assistantLink);
     if (typeof sc.assistantOpens === 'string') o.aiOpen = /^tab$/i.test(sc.assistantOpens.trim()) ? 'tab' : '';
     if (Array.isArray(sc.otherAssistants)) { o.aiUrls = {}; for (const x of sc.otherAssistants.slice(0, 12)) { const n = stpStr(stpObj(x) ? x.name : '', 30), u = stpObj(x) ? aiUrlClean(x.link) : ''; if (n && u) o.aiUrls[n] = u; } }
+    if (typeof sc.entryOrder === 'string') { const v = sc.entryOrder.trim().toLowerCase(); o.mbOrder = /^last/.test(v) ? 'last' : /^first/.test(v) ? 'first' : ''; }
     if (Array.isArray(sc.assistantsNotListed)) o.aiOff = [...new Set(sc.assistantsNotListed.filter(x => typeof x === 'string').map(x => stpStr(x, 30)).filter(Boolean))].slice(0, 12);
     if (Object.keys(o).length) S.school = o;
     if (Array.isArray(sc.staff)) S.staff = sc.staff.slice(0, 40).map(stpObj).filter(Boolean).map(x => ({ role: stpStr(x.role, 80), name: stpStr(x.name, 80), email: typeof schMail === 'function' ? schMail(x.email) : '', note: stpStr(x.note, 200) })).filter(x => x.name);
@@ -31675,6 +31819,7 @@ function stpDiff(S, planNow) {
   if (S.school || S.prog || S.staff || S.staffRoles) {
     const L = [], m = me(), s = S.school || {};
     if (s.sys != null && s.sys !== sysName()) L.push(s.sys ? 'Students hand work in on <b>' + esc(s.sys) + '</b>' + (sysName() ? ' (now ' + esc(sysName()) + ')' : '') : 'No school system named (now ' + esc(sysName()) + ')');
+    if (s.mbOrder != null && s.mbOrder !== mbOrder()) L.push('The entry list goes by ' + (s.mbOrder === 'last' ? 'last name' : s.mbOrder === 'first' ? 'first name' : 'the roster') + ' (now ' + (mbOrder() === 'last' ? 'last name' : mbOrder() === 'first' ? 'first name' : 'the roster') + ')');
     if (s.unit != null && s.unit !== unitLinkName()) L.push(s.unit ? 'Unit plans are kept in <b>' + esc(s.unit) + '</b>' + (unitLinkName() ? ' (now ' + esc(unitLinkName()) + ')' : '') : 'No place named for unit plans (now ' + esc(unitLinkName()) + ')');
     if (s.ai != null && s.ai !== (m.ai || '')) L.push(s.ai ? 'Your AI assistant is <b>' + esc(s.ai) + '</b>' : 'No AI assistant named');
     if (s.aiUrl != null && s.aiUrl !== aiUrlClean(m.aiUrl)) L.push(s.aiUrl ? 'Your AI assistant opens at <b>' + esc(s.aiUrl) + '</b>' : 'Your AI assistant opens at its usual page');
@@ -31815,7 +31960,7 @@ async function stpApply(S, pick) {
     const sc = { ...(S.school || {}) };
     if (sc.ai != null && sc.ai !== (me().ai || '') && sc.aiUrl == null) sc.aiUrl = '';
     meSet({ ...sc, ...(S.prog ? { prog: S.prog } : {}) });
-    for (const k of ['aiUrl', 'aiOpen']) if (lib.me[k] === '') delete lib.me[k];
+    for (const k of ['aiUrl', 'aiOpen', 'mbOrder']) if (lib.me[k] === '') delete lib.me[k];
     if (lib.me.aiUrls) { delete lib.me.aiUrls[lib.me.ai || '']; if (!Object.keys(lib.me.aiUrls).length) delete lib.me.aiUrls; }
     if (lib.me.aiOff && !lib.me.aiOff.length) delete lib.me.aiOff;
     saveLib();
@@ -31948,7 +32093,7 @@ async function stpExport() {
   const p = await stpPlanGet(), g = meGrade(), conf = bkConf(), day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const out = { gradingStudioSetup: STP_V };
   if (me().prog) out.programme = me().prog;
-  if (sysName() || unitLinkName() || me().ai) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}), ...(me().ai && aiUrlClean(me().aiUrl) ? { assistantLink: aiUrlClean(me().aiUrl) } : {}), ...(me().ai && me().aiOpen === 'tab' ? { assistantOpens: 'tab' } : {}), ...(me().ai && me().aiUrls && Object.keys(me().aiUrls).length ? { otherAssistants: Object.entries(me().aiUrls).map(([name, link]) => ({ name, link })) } : {}), ...(me().ai && Array.isArray(me().aiOff) && me().aiOff.length ? { assistantsNotListed: me().aiOff.slice() } : {}) };
+  if (sysName() || unitLinkName() || me().ai || mbOrder()) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(mbOrder() ? { entryOrder: mbOrder() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}), ...(me().ai && aiUrlClean(me().aiUrl) ? { assistantLink: aiUrlClean(me().aiUrl) } : {}), ...(me().ai && me().aiOpen === 'tab' ? { assistantOpens: 'tab' } : {}), ...(me().ai && me().aiUrls && Object.keys(me().aiUrls).length ? { otherAssistants: Object.entries(me().aiUrls).map(([name, link]) => ({ name, link })) } : {}), ...(me().ai && Array.isArray(me().aiOff) && me().aiOff.length ? { assistantsNotListed: me().aiOff.slice() } : {}) };
   const ppl = schPeople(), sr = schNow().roles;
   if (ppl.length || sr) { out.school = out.school || {}; if (sr) out.school.staffRoles = sr.list.slice(); if (ppl.length) out.school.staff = ppl.map(p => ({ ...(p.role ? { role: p.role } : {}), name: p.name, ...(p.email ? { email: p.email } : {}), ...(p.note ? { note: p.note } : {}) })); }
   if (g) { const raw = (me().grade && me().grade.setup) || {}; out.grading = { way: g.way, score: g.setup.mode === 'rubric' ? 'rows' : 'total', ...(g.setup.mode === 'rubric' ? { criteria: g.setup.criteria } : { outOf: g.setup.outOf }), ...(raw.top ? { rowTop: raw.top } : {}), ...(typeof raw.half === 'boolean' ? { halfPoints: raw.half } : {}), ...(g.setup.scale ? { scale: g.setup.scale } : {}), ...(g.bands ? { bands: g.bands.map(b => ({ grade: b[1], from: b[0] })) } : {}) }; }
@@ -31986,7 +32131,7 @@ RULES
 
 WHAT TO FIND OUT
 - My classes: each one's name as I want to see it, the days and times it meets, and its page in my school's system if I have the link. Give two sections of the same course the same "course" (like "English 12"): they share a lesson deck and are linked, so an assignment and its strong examples can be shared between them.
-- My school: the system students hand work in on (ManageBac, Google Classroom, Canvas and so on), and where unit plans are kept, if anywhere.
+- My school: the system students hand work in on (ManageBac, Google Classroom, Canvas and so on), and where unit plans are kept, if anywhere, and whether that system lists students by last name or first name ("entryOrder": "last" or "first"; leave it out for my roster's order).
 - The calendar: the first and last day of this semester, days with no school, and dates I want to see (exams, reports due).
 - Terms: each term's name with its first and last day.
 - How I grade a new assignment: rubric rows, points, percent, letter grades, or IB 1 to 7. For rubric rows, the names of the rows I usually use.
