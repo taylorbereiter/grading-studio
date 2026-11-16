@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"ea0e5765","zh-Hans":"623bf0ca","es":"877a39aa","fr":"9bfb6c44","de":"efca8559","pt-BR":"50b1b8bb","ja":"197f41a9","ko":"1d4ed119"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"843605a9","zh-Hans":"d1df80f6","es":"a6703be7","fr":"c390b6f1","de":"895a0f6e","pt-BR":"06b01b50","ja":"33186075","ko":"273bd656"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -1094,6 +1094,9 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .fcset input[type=number]{width:76px;height:32px;padding:0 var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
 .fcset .seg{display:inline-flex}
 .fcext{align-items:center}
+.pfstart{display:inline-flex;align-items:center;gap:var(--space-1)}
+.pfstart[hidden]{display:none}
+.ls-top .btn.pfstart svg,.pfstart svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .fcext > span{font-size:var(--text-small);color:var(--muted)}
 
 
@@ -2372,7 +2375,7 @@ function renderEditor() {
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities', library: 'Past lessons' }[L.backTo] || 'Week') + '</button>' +
     '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + mbBtn(classById(t.classId)) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
-    '<span class="sp"></span>' + ptBadge(l) + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
+    '<span class="sp"></span>' + pfBtn(l) + ptBadge(l) + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
     (lessonTalk(l) ? commentsBtn(l) : '') + panelBtn() + moreHtml(l) +
     '<button class="btn sm" data-a="pptx">Download .pptx</button><button class="btn sm primary" data-pr="present" title="Show this lesson full screen, from this slide">' + prIcon('play') + 'Present</button></div>' + pendingBar(l) + variantBar(l);
   h += '<div class="ls-ed-cols"><nav class="ls-thumbs" id="lsThumbs">' + l.slides.map((x, i) => thumbHtml(x, l, i)).join('') +
@@ -6893,7 +6896,7 @@ const LANG_FILLS = [
   ['gpsessn', /^Session (\d+)$/], ['gpsess', /^(\d+) sessions? today\.$/], ['gpaday', /^(\d+) papers? a day$/], ['tkweeks', /^(\d+) weeks? reached the goal$/],
   ['tkpace', /^about (\d+) minutes? a paper$/], ['fcsofar', /^from (\d+) papers? so far$/], ['tkso', /^(\S.*) so far$/], ['tklessons', /^(\d+) lessons?$/], ['tkdays', /^(\d+) days? reached the goal$/],
   ['gpleft', /^about (.+) left$/], ['gpsets', /^(\d+) sets?$/], ['gpdays', /^(\d+) days?$/],
-  ['tkcount', /^Time counts while the marking screen or the Planner is in front and you have done something there in the last (\d+) minutes?\.$/],
+  ['tkcount', /^Grading time counts while the marking screen is in front and you have done something there in the last (\d+) minutes?\.$/],
   ['besideopen', /^Open (.+) beside Grading Studio$/],
   ['sdet', /^Student details for (.+)$/], ['cnt', /^Count (.+) in the class average$/], ['wout', /^without (\d+) students? ·$/],
   ['nograde', /^Nothing graded for (.+) in this term yet\. Grade a download for it, or use \+ Add scores for work you did before\.$/],
@@ -7554,6 +7557,13 @@ function arriveAt() {
   else if (h === 'rubrics') list('bank');
   else if (h === 'timetable') { list('week'); openTimetable(); }
   else if (h.startsWith('lesson/')) { const l = L.lessons.find(x => x.id === h.slice(7)); L.weekOf = ymd(mondayOf(new Date())); list('week'); if (l) openLesson(l); }
+  else if (h.startsWith('plan/')) {
+    const [c, d] = h.slice(5).split('/'), cl = ((L.setup && L.setup.classes) || []).find(x => String(x.id) === c), ok = !!cl && /^\d{4}-\d\d-\d\d$/.test(d || '');
+    const l = ok ? lessonsAt(cl.id, d)[0] : null;
+    L.weekOf = ymd(mondayOf(new Date())); list('week');
+    if (l) { openLesson(l); pfLesson(l); }
+    else if (ok) createLesson([{ classId: cl.id, date: d }]).then(() => pfLesson(L.open)).catch(e => console.error(e));
+  }
   else if (h.startsWith('present/')) { L.weekOf = ymd(mondayOf(new Date())); list('week'); presentArrive(h.slice(8)); }
 }
 
@@ -7957,7 +7967,7 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { ACTIVITIES, VIDEOS, actVideo, readTemplate, openTimetable, bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, folderReadme, plWeekOffs, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, shareBuild, shareOpen, matAdd, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
+window.__planner = { arriveAt, ACTIVITIES, VIDEOS, actVideo, readTemplate, openTimetable, bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, folderReadme, plWeekOffs, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, shareBuild, shareOpen, matAdd, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
 openLessons();
 
 /* ---------------- Full screen (11/12): the whole page fills the screen, on both pages and every screen ----------------
@@ -8007,66 +8017,31 @@ gsFull.paint();
 window.__gsFull = gsFull;
 
 /* ---------- Planning time, for the grading app's time tracker (src/tracker.js) ----------
-   While the Planner is the tab in front and something was pressed, typed or scrolled in the last few minutes, the time counts as
-   planning: to the lesson that is open, or to '' (the week, the units, the bank). Presenting a lesson is teaching, so it doesn't count.
-   Kept in gsp.planTime: { days: { 'YYYY-MM-DD': { l: seconds, a: { <lesson id> | '': seconds } } }, names: { <lesson id>: title } },
-   for 400 days. The grading app's Settings, Focus and goals can switch it off and say how soon it stops: the grading app copies those two
-   into gsp.timeCount { on, idle }, so the Planner reads only its own keys. */
+   Planning time counts only in a focus session on a lesson (src/planner/plfocus.js here, src/focus.js on the grading page): opening a
+   lesson to change it before class, or presenting it, isn't planning. A session's minutes are written when it ends, into
+   gsp.planTime: { days: { 'YYYY-MM-DD': { l: seconds, a: { <lesson id> | '': seconds }, f: seconds in focus sessions, n: sessions } },
+   names: { <lesson id>: title } }, for 400 days. Days from before this kept the time the Planner was open; they stay as they were.
+   This file shows a lesson's own planning time beside its name in the editor. */
 var ptReady = false;
-const PT_STEP = 15, PT_FLUSH = 60e3;
-let ptLast = 0, ptMoved = 0, ptPend = { l: 0, a: {}, n: {} }, ptFlushed = Date.now();
-for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart', 'input']) document.addEventListener(ev, () => { ptLast = Date.now(); }, { capture: true, passive: true });
-document.addEventListener('pointermove', () => { const t = Date.now(); if (t - ptMoved > 5000) { ptMoved = t; ptLast = t; } }, { capture: true, passive: true });
-function ptConf() {
-  let f = {}; try { f = JSON.parse(localStorage.getItem('gsp.timeCount') || 'null') || {}; } catch { }
-  return { on: f.on !== false, idle: [2, 5, 10, 15].includes(+f.idle) ? +f.idle : 5 };
-}
-const ptDay = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-function ptTick() {
-  const c = ptConf();
-  if (c.on && !PR.on && document.visibilityState === 'visible' && document.hasFocus() && Date.now() - ptLast < c.idle * 60e3) {
-    const l = L.view === 'edit' && L.open ? L.open : null, k = l ? l.id : '';
-    ptPend.l += PT_STEP; ptPend.a[k] = (ptPend.a[k] || 0) + PT_STEP;
-    if (l) ptPend.n[k] = String(l.title || '').slice(0, 120);
-  }
-  if (Date.now() - ptFlushed >= PT_FLUSH) ptFlush();
-  ptBadgeDraw();
-}
-function ptFlush() {
-  ptFlushed = Date.now();
-  if (!ptPend.l) return;
-  let P = null; try { P = JSON.parse(localStorage.getItem('gsp.planTime') || 'null'); } catch { }
-  P = P && typeof P === 'object' ? P : {};
-  const days = P.days && typeof P.days === 'object' ? P.days : {}, names = P.names && typeof P.names === 'object' ? P.names : {}, k = ptDay();
-  const d = { ...(days[k] || {}) }, a = { ...(d.a || {}) };
-  d.l = (d.l || 0) + ptPend.l;
-  for (const [id, v] of Object.entries(ptPend.a)) a[id] = (a[id] || 0) + v;
-  d.a = a; days[k] = d;
-  for (const [id, t] of Object.entries(ptPend.n)) if (t) names[id] = t;
-  for (const day of Object.keys(days)) if (Date.now() - new Date(day + 'T12:00:00') > 400 * 864e5) delete days[day];
-  const used = new Set(Object.values(days).flatMap(x => Object.keys((x && x.a) || {})));
-  for (const id of Object.keys(names)) if (!used.has(id)) delete names[id];
-  try { localStorage.setItem('gsp.planTime', JSON.stringify({ days, names })); } catch { }
-  ptPend = { l: 0, a: {}, n: {} };
-}
+const PT_STEP = 15;
+function ptPlan() { try { const P = JSON.parse(localStorage.getItem('gsp.planTime') || 'null'); return P && typeof P === 'object' ? P : {}; } catch { return {}; } }
 function ptLessonSecs(id) {
-  if (!ptReady) return 0;
-  let P = null; try { P = JSON.parse(localStorage.getItem('gsp.planTime') || 'null'); } catch { }
-  let s = ptPend.a[id] || 0;
-  for (const d of Object.values((P && P.days) || {})) if (d && d.a && d.a[id]) s += d.a[id];
+  if (!ptReady || !id) return 0;
+  let s = 0;
+  for (const d of Object.values(ptPlan().days || {})) if (d && d.a && d.a[id]) s += d.a[id];
+  const r = pfReady ? pfRun() : null;   // src/planner/plfocus.js, which runs after this file
+  if (r && r.k === 'l' && r.l === id && (r.st === 'run' || r.st === 'paused')) s += Math.min(r.len, pfElapsed(r));
   return s;
 }
 function ptSay(secs) { const m = Math.round(secs / 60), h = Math.floor(m / 60); return h ? h + ' hr' + (m % 60 ? ' ' + (m % 60) + ' min' : '') : m + ' min'; }
 function ptBadge(l) {
   const s = l && l.id ? ptLessonSecs(l.id) : 0;
-  return '<span class="savest ls-ptime" id="lsTime" title="Time spent planning this lesson, counted while it is open"' + (s < 60 ? ' hidden' : '') + '>' + (s >= 60 ? ptSay(s) + ' planning' : '') + '</span>';
+  return '<span class="savest ls-ptime" id="lsTime" title="Time spent planning this lesson in focus sessions"' + (s < 60 ? ' hidden' : '') + '>' + (s >= 60 ? ptSay(s) + ' planning' : '') + '</span>';
 }
 function ptBadgeDraw() { const el = document.getElementById('lsTime'); if (!el || !L.open) return; const s = ptLessonSecs(L.open.id); el.hidden = s < 60; el.textContent = s >= 60 ? ptSay(s) + ' planning' : ''; }
+function ptTick() { ptBadgeDraw(); }
 setInterval(ptTick, PT_STEP * 1000);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') ptFlush(); });
-window.addEventListener('pagehide', ptFlush);
-window.addEventListener('blur', ptFlush);
-window.__plantime = { tick: ptTick, flush: ptFlush, lessonSecs: ptLessonSecs, active: () => { ptLast = Date.now(); }, pend: () => ptPend };
+window.__plantime = { tick: ptTick, lessonSecs: ptLessonSecs };
 ptReady = true;
 
 
@@ -8395,13 +8370,14 @@ function lofiRender(ctx, tr) {
    gsp.focusQ ([{ d: day, s: seconds, m: on papers, x: extra minutes, got: papers }]) and the grading page writes it in when it next
    opens. Both keys stay in this browser (src/takehome.js PLAN_LS_SKIP). Every word here is one the grading page's panel already uses,
    so the languages cover it as they are. */
+var pfReady = false;   // src/planner/plantime.js and the lesson editor can ask before this file has run
 const PF_KEY = 'gsp.focusRun', PF_Q = 'gsp.focusQ', PF_P0 = 1e9;
 const pfGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
 const pfSetK = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch { } };
 const pfRun = () => { const r = pfGet(PF_KEY, null); return r && r.st ? r : null; };
 function pfConf() {
   const f = pfGet('gsp.timeCount', null) || {};
-  return { len: +f.len > 0 ? +f.len : 10, brk: +f.brk > 0 ? +f.brk : 5, sound: f.sound !== false, title: f.title !== false,
+  return { len: +f.len > 0 ? +f.len : 10, llen: +f.llen > 0 ? +f.llen : 45, brk: +f.brk > 0 ? +f.brk : 5, sound: f.sound !== false, title: f.title !== false,
     music: f.music === true, mood: typeof f.mood === 'string' ? f.mood : 'mix', mvol: +f.mvol >= .05 && +f.mvol <= 1 ? +f.mvol : .5, mamb: f.mamb === true };
 }
 const pfDay = () => ymd(new Date());
@@ -8414,14 +8390,49 @@ let pfS = { mute: false };
 
 function pfRecord(r) {
   if (r.secs != null) return r;
+  if (r.k === 'l') { const secs = pfLesSecs(r); pfPlanAdd(r, secs); return Object.assign(r, { secs, got: 0 }); }
   const secs = Math.min(r.one ? 4 * 3600 : r.len, Math.max(0, pfElapsed(r) - pfIdle(r))), got = Math.max(0, r.pg || 0);
   if (secs > 0) { const q = pfGet(PF_Q, []); pfSetK(PF_Q, [...(Array.isArray(q) ? q : []), { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), d: pfDay(), s: secs, m: /^mark:/.test(r.w || '') ? 1 : 0, x: r.ext ? 1 : 0, got }].slice(-50)); }
   return Object.assign(r, { secs, got });
 }
+function pfPlanAdd(r, secs) {
+  if (!(secs > 0)) return;
+  const P = pfGet('gsp.planTime', null) || {}, days = P.days && typeof P.days === 'object' ? P.days : {}, names = P.names && typeof P.names === 'object' ? P.names : {};
+  const ids = Array.isArray(P.ids) ? P.ids.filter(x => typeof x === 'string').slice(-50) : [];
+  if (r.id && ids.includes(r.id)) return;   // written already, by the grading page or another tab
+  const id = r.l || '', k = pfDay(), d = { ...(days[k] || {}) }, a = { ...(d.a || {}) };
+  d.l = (d.l || 0) + secs; a[id] = (a[id] || 0) + secs; d.f = (d.f || 0) + secs; if (secs >= 60 && !r.ext) d.n = (d.n || 0) + 1;
+  d.a = a; days[k] = d; if (id && r.t) names[id] = String(r.t).slice(0, 120);
+  for (const day of Object.keys(days)) if (Date.now() - new Date(day + 'T12:00:00') > 400 * 864e5) delete days[day];
+  const used = new Set(Object.values(days).flatMap(x => Object.keys((x && x.a) || {})));
+  for (const n of Object.keys(names)) if (!used.has(n)) delete names[n];
+  pfSetK('gsp.planTime', { days, names, ...(r.id ? { ids: [...ids, r.id] } : {}) });
+}
+function pfLesSecs(r) {
+  const last = Math.max(r.at, r.seen || 0), cap = r.st === 'paused' ? Infinity : Math.round((last + 20 * 60e3 - r.at) / 1000);
+  return Math.max(0, Math.min(r.len, pfElapsed(r), cap));
+}
+const pfRid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const pfLes = r => r && r.k === 'l' ? { k: 'l', id: pfRid(), l: r.l || '', ...(r.nw ? { nw: r.nw } : {}) } : {};
+function pfStart(l) {
+  if (!l) return;
+  const was = pfRun(); if (was && (was.st === 'run' || was.st === 'paused')) pfRecord(was);
+  const P = pfGet('gsp.planTime', null), no = ((P && P.days && P.days[pfDay()]) || {}).n || 0;
+  pfSet({ k: 'l', id: pfRid(), st: 'run', len: pfConf().llen * 60, at: Date.now(), w: 'les:' + l.id, l: l.id, t: String(l.title || '').slice(0, 120), one: 0, fold: false, no: no + 1 });
+}
+function pfLesson(l) {
+  const r = pfRun(); if (!pfReady || !l || !r || r.k !== 'l' || r.l) return;
+  r.l = l.id; r.w = 'les:' + l.id; r.t = String(l.title || '').slice(0, 120); delete r.nw; pfSet(r);
+}
+const pfOnIt = l => { const r = pfRun(); return !!l && !!r && r.k === 'l' && r.l === l.id && r.st !== 'done'; };
+function pfBtn(l) {
+  if (!pfReady || !l) return '';
+  return '<button class="btn sm pfstart" data-pfstart title="Plan this lesson in a focus session"' + (pfOnIt(l) ? ' hidden' : '') + '>' + PF_CLOCK + 'Focus ' + pfConf().llen + ' min</button>';
+}
 function pfSet(r) { pfSetK(PF_KEY, r); pfTickOn(); pfRender(); }
 function pfStartAgain(min) {
   const r = pfRun(); if (!r) return;
-  pfSet({ st: 'run', len: Math.round(min * 60), at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: PF_P0, pg: 0, fold: false, no: (r.no || 1) + 1 });
+  pfSet({ ...pfLes(r), st: 'run', len: Math.round(min * 60), at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: PF_P0, pg: 0, fold: false, no: (r.no || 1) + 1 });
 }
 function pfAct(a, n) {
   const r = pfRun(); if (!r) return;
@@ -8429,7 +8440,7 @@ function pfAct(a, n) {
   if (a === 'pause' && r.st === 'run') { r.st = 'paused'; r.pz = Date.now(); r.idl = pfIdle(r); delete r.ii; }
   else if (a === 'resume' && r.st === 'paused') { r.at += Date.now() - r.pz; delete r.pz; r.st = 'run'; }
   else if (a === 'more' && on) r.len += n * 60;
-  else if (a === 'ext' && r.st === 'up') return pfSet({ st: 'run', len: n * 60, at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: PF_P0, pg: 0, fold: false, no: r.no, ext: 1, ...(r.sg && r.sg.k !== 'papers' ? { sg: r.sg } : {}) });
+  else if (a === 'ext' && r.st === 'up') return pfSet({ ...pfLes(r), st: 'run', len: n * 60, at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: PF_P0, pg: 0, fold: false, no: r.no, ext: 1, ...(r.sg && r.sg.k !== 'papers' ? { sg: r.sg } : {}) });
   else if (a === 'break') { if (on) pfRecord(r); Object.assign(r, { st: 'brk', brkAt: Date.now(), brkLen: pfConf().brk * 60, fold: false }); }
   else if (a === 'stop') { if (on) pfRecord(r); Object.assign(r, { st: 'done', fold: false }); }
   else if (a === 'close') return pfSet(null);
@@ -8464,9 +8475,10 @@ function pfTickOn() {
 }
 function pfTick() {
   const r = pfRun(); if (!r) return pfTickOn();
+  if (r.k === 'l' && r.st === 'run' && PR.on) return pfAct('pause');
   if (r.st === 'run' && !r.one && pfLeft(r) <= 0) { pfRecord(r); r.st = 'up'; r.fold = false; pfSet(r); pfChime(); return; }
   if (r.st === 'brk' && pfLeft(r) <= 0) { r.st = 'brkup'; r.fold = false; pfSet(r); pfChime(); return; }
-  pfClockDraw(); pfTitle();
+  pfRender(); pfTitle();   // the panel's Open the lesson follows what is open
 }
 let pfTitlePre = '';
 function pfTitle() {
@@ -8478,6 +8490,7 @@ function pfTitle() {
 }
 
 /* drawing: the grading page's panel, with what this page can do */
+const PF_CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.3 1.6M10 3h4"/></svg>';
 const PF_TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const PF_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
 const PF_NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg>';
@@ -8487,6 +8500,7 @@ const pfFrac = r => r.st === 'brk' ? pfLeft(r) / (r.brkLen || 1) : r.one ? 1 : p
 const pfHead = (cap, fold) => '<div class="fchead"><h2 class="tcap">' + cap + '</h2><span class="sp"></span>' + (fold ? '<button class="icon" data-pf="fold" title="Fold it away" aria-label="Fold it away">–</button>' : '<button class="icon" data-pf="close" title="Close" aria-label="Close">✕</button>') + '</div>';
 const pfName = r => r.t ? '<b data-raw>' + esc(r.t) + '</b>' : '<b>' + esc(tr('Focus')) + '</b>';
 function pfSub(r) {
+  if (r.k === 'l') return '<span>A lesson to plan</span>' + (r.l && !(L.view === 'edit' && L.open && L.open.id === r.l) && r.st !== 'brk' ? '<button class="btn sm primary" data-pf="open">Open the lesson</button>' : '');
   return '<span>' + (r.one ? (r.one > 1 ? 'Just 3 papers' : 'Just one paper') : r.w ? '' : 'The timer only') + '</span>' +
     (/^mark:/.test(r.w || '') && r.st === 'run' ? '<button class="btn sm primary" data-pf="next">Next paper →</button>' : '');
 }
@@ -8497,7 +8511,7 @@ function pfMusicHtml(c) {
     (on ? '<button class="btn sm" data-pf="skip" title="Next track">' + PF_SKIP + '</button>' : '') + '</div>';
 }
 function pfPanelHtml(r) {
-  const c = pfConf(), len = Math.round(r.len / 60);
+  const c0 = pfConf(), c = r.k === 'l' ? { ...c0, len: c0.llen } : c0, len = Math.round(r.len / 60);
   if (r.fold && (r.st === 'run' || r.st === 'paused' || r.st === 'brk'))
     return '<button class="fcpill' + (r.st === 'brk' ? ' brk' : '') + '" data-pf="unfold" title="Show the timer"><span class="fcpr"></span><b class="fct"></b>' + (r.t ? '<span data-raw>' + esc(r.t) + '</span>' : '') + '</button>';
   if (r.st === 'run' || r.st === 'paused')
@@ -8536,6 +8550,7 @@ function pfRender() {
     if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
   } else if (el.dataset.h) { el.dataset.h = ''; el.innerHTML = ''; }
   pfClockDraw(); pfMusic();
+  for (const b of document.querySelectorAll('[data-pfstart]')) b.hidden = pfOnIt(L.open);
 }
 function pfMusic() {
   if (typeof lofiPlay !== 'function') return;
@@ -8561,11 +8576,13 @@ document.addEventListener('click', e => {
   const b = e.target.closest('#fcPanel [data-pf]'); if (!b) return;
   const a = b.dataset.pf, n = +b.dataset.n || 0;
   if (a === 'again') return pfStartAgain(n);
+  if (a === 'open') { const l = L.lessons.find(x => x.id === (pfRun() || {}).l); if (l) openLesson(l); return pfRender(); }
   if (a === 'next') { pfSetK('gsp.focusGo', Date.now()); location.href = GS_PAGE; return; }
   if (a === 'mus') { pfS.mute = !pfS.mute; return pfRender(); }
   if (a === 'skip') return typeof lofiNext === 'function' && lofiNext();
   pfAct(a, n);
 });
+document.addEventListener('click', e => { if (e.target.closest('[data-pfstart]') && L.open) { pfStart(L.open); renderEditor(); } });
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   const r = pfRun(), el = document.getElementById('fcPanel');
@@ -8573,8 +8590,9 @@ document.addEventListener('keydown', e => {
 });
 window.addEventListener('storage', e => { if (e.key === PF_KEY || e.key === 'gsp.timeCount') { pfTickOn(); pfRender(); } });
 { const r = pfRun(); if (r && r.hid) { delete r.hid; pfSetK(PF_KEY, r); } }   // the grading page noted when it was left; here she is still working
+pfReady = true;
 pfTickOn(); pfRender();
-window.__plfocus = { run: pfRun, tick: pfTick, act: pfAct, conf: pfConf };
+window.__plfocus = { run: pfRun, tick: pfTick, act: pfAct, conf: pfConf, start: pfStart };
 
 })();
 </script>

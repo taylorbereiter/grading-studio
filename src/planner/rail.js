@@ -165,7 +165,8 @@ document.addEventListener('keydown', e => {
 
 /* ---------- arriving from the grading page ---------- */
 // planner.html#week opens this week, #timetable the timetable, #rubrics the rubric bank, #lesson/<id> one lesson,
-// #present/<id>/<class id> one lesson, presenting.
+// #present/<id>/<class id> one lesson, presenting, #plan/<class id>/<day> the lesson for that meeting, made if there is none, for a
+// focus session on it started on the grading page (src/planner/plfocus.js).
 // The address is tidied afterwards, so a refresh doesn't do it again.
 function arriveAt() {
   let h; try { h = decodeURIComponent(location.hash.replace(/^#\/?/, '')); } catch { h = ''; }
@@ -176,5 +177,12 @@ function arriveAt() {
   else if (h === 'rubrics') list('bank');
   else if (h === 'timetable') { list('week'); openTimetable(); }
   else if (h.startsWith('lesson/')) { const l = L.lessons.find(x => x.id === h.slice(7)); L.weekOf = ymd(mondayOf(new Date())); list('week'); if (l) openLesson(l); }
+  else if (h.startsWith('plan/')) {
+    const [c, d] = h.slice(5).split('/'), cl = ((L.setup && L.setup.classes) || []).find(x => String(x.id) === c), ok = !!cl && /^\d{4}-\d\d-\d\d$/.test(d || '');
+    const l = ok ? lessonsAt(cl.id, d)[0] : null;
+    L.weekOf = ymd(mondayOf(new Date())); list('week');
+    if (l) { openLesson(l); pfLesson(l); }
+    else if (ok) createLesson([{ classId: cl.id, date: d }]).then(() => pfLesson(L.open)).catch(e => console.error(e));
+  }
   else if (h.startsWith('present/')) { L.weekOf = ymd(mondayOf(new Date())); list('week'); presentArrive(h.slice(8)); }
 }
