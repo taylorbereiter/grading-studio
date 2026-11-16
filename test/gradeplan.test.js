@@ -45,10 +45,10 @@ test('how long papers will take comes from her own pace: on the assignment, in t
   const { page, close } = await openApp(browser, { seed: paceSeed() });
   await page.waitForFunction(() => window.__gs.kept().size > 0);
   const due = await page.evaluate(d => window.__gs.gpDue(d, d).map(x => [x.it.id, x.left, Math.round(x.secs)]), today());
-  assert.deepEqual(due, [['i7', 6, 1800]], 'work not in yet counts the whole class, at 5 minutes a paper');
+  assert.deepEqual(due, [['i7', 6, 0]], 'work not in yet counts the whole class, with no time: a set has a pace only from its own papers');
   assert.equal(await page.evaluate(() => Math.round(window.__gs.gpLeft('i5'))), 900, 'three papers left on Poetry analysis');
   // under the date in an assignment's box
-  assert.equal(await page.evaluate(d => { const e = document.createElement('p'); e.innerHTML = window.__gs.gpDueHint(d); return e.textContent; }, today()), 'Also due that week: 1 set, about 30 min');
+  assert.equal(await page.evaluate(d => { const e = document.createElement('p'); e.innerHTML = window.__gs.gpDueHint(d); return e.textContent; }, today()), 'Also due that week: 1 set, 6 papers');
   assert.equal(await page.evaluate(d => { const e = document.createElement('p'); e.innerHTML = window.__gs.gpDueHint(d, 'i7'); return e.textContent; }, today()), 'Nothing else to grade is due that week.');
   // on the assignment's card
   await classPage(page, 'c1');
@@ -56,8 +56,12 @@ test('how long papers will take comes from her own pace: on the assignment, in t
   assert.match(await page.$$eval('#classes .tkc', l => l.map(e => e.textContent).join(' | ')), /about 15 min left/);
   // the week in To do: the total, and the day it is due
   await goTo(page, '#/todo'); await page.click('[data-tdview="week"]'); await page.waitForSelector('.tdwsum');
-  assert.equal(await page.$eval('.tdwsum', e => e.textContent), 'Grading due this week: 1 set, about 30 min at your pace');
-  assert.match(await page.$eval('.tdday.now .tdest', e => e.textContent), /^Due: Short storyGrade 9 English · 6 papers · about 30 min$/);
+  assert.equal(await page.$eval('.tdwsum', e => e.textContent), 'Grading due this week: 1 set, 6 papers');
+  assert.match(await page.$eval('.tdday.now .tdest', e => e.textContent), /^Due: Short storyGrade 9 English · 6 papers$/);
+  // with time on its own papers, the set gets a pace of its own: rough from one paper
+  await page.evaluate(d => { const L = JSON.parse(localStorage.getItem('gs.focus')); L.days[d] = { a: { i7: 600 }, pa: { i7: 1 } }; localStorage.setItem('gs.focus', JSON.stringify(L)); }, dayAgo(2));
+  assert.deepEqual(await page.evaluate(d => window.__gs.gpDue(d, d).map(x => [x.left, Math.round(x.secs)]), today()), [[6, 3600]]);
+  assert.equal(await page.evaluate(() => window.__gs.gpPaceN('i7')), 1);
   // with no pace yet, the papers and no time
   await page.evaluate(() => { localStorage.setItem('gs.focus', JSON.stringify({ day: '', base: {}, days: {}, pace: [], last: '' })); });
   assert.deepEqual(await page.evaluate(d => window.__gs.gpDue(d, d).map(x => x.secs), today()), [0]);
@@ -68,11 +72,11 @@ test('how long papers will take comes from her own pace: on the assignment, in t
 test('a free period offers itself on the Focus card with the next papers, and starts a session that fits; Settings can stop it', async t => {
   const { page, close } = await openApp(browser, { seed: paceSeed() });
   if (!await freeNow(page)) { await close(); return t.skip('too close to midnight for a free period'); }
-  await page.waitForSelector('#fcCard .fcnote');
-  assert.match(await page.$eval('#fcCard .fcnh', e => e.textContent), /^Free period now\d/);
-  assert.equal(await page.$eval('#fcCard .fcnote [data-fcstart]', e => e.textContent), 'Grade for 35 minutes');
+  await page.waitForSelector('#fcCard .sugwhy .free');
+  assert.match(await page.$eval('#fcCard .sugwhy .free', e => e.textContent), /^Free period until \d/);
+  assert.equal(await page.$eval('#fcCard .fcgo [data-fcstart]', e => e.textContent), 'Start 35 minutes', 'the suggestion takes the free period’s length');
   assert.equal(await page.$$eval('#today .trow.gpfree', r => r.length), 1, 'and a row for it between the two classes');
-  await page.click('#fcCard .fcnote [data-fcstart]');
+  await page.click('#fcCard .fcgo [data-fcstart]');
   const r = await page.evaluate(() => window.__gs.fcRun());
   assert.equal(r.st, 'run'); assert.equal(r.len, 35 * 60);
   await page.evaluate(() => window.__gs.fcRunSet(null));
@@ -80,7 +84,8 @@ test('a free period offers itself on the Focus card with the next papers, and st
   await page.click('#gpFree'); await pause(200);
   assert.deepEqual(await me(page), { free: false });
   await goTo(page, '#/'); await page.waitForSelector('#fcCard .fcbody');
-  assert.equal(await page.$('#fcCard .fcnote'), null);
+  assert.equal(await page.$('#fcCard .sugwhy .free'), null);
+  assert.equal(await page.$eval('#fcCard .fcgo [data-fcstart]', e => e.textContent), 'Start 10 minutes');
   assert.equal(await page.$('#today .trow.gpfree'), null);
   assert.deepEqual(page.errors, []);
   await close();
@@ -126,7 +131,9 @@ test('the look back at the week shows on the day she picks, says what happened a
   assert.match(txt, /A look back at the week/);
   assert.match(txt, /Still waiting Poetry analysis, Grade 9 English · 3 papers left · about 15 min/);
   // and on the Focus card, the set she was on, a few hours ago
-  assert.match(await page.$eval('#fcCard .fcback', e => e.textContent), /^Pick up where you left offPoetry analysis3 papers left · Grade 9 English/);
+  assert.equal(await page.$eval('#fcCard .sugh .t', e => e.textContent), 'Poetry analysis · Grade 9 English');
+  assert.match(await page.$eval('#fcCard .sugwhy', e => e.textContent), /^You left off here: \S/);
+  assert.equal(await page.$eval('#fcCard .fcsay', e => e.textContent), '3 papers left · about 15 minutes at your pace');
   await page.click('[data-gplbhide]'); await page.waitForFunction(() => document.querySelector('#lbCard').hidden);
   const L = await log(page), mon = await page.evaluate(() => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); });
   assert.equal(L.lbHid, mon);

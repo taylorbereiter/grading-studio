@@ -225,7 +225,7 @@ function tkAsg(id) {
   return { s: s + (tkPend.a[id] || 0), p };
 }
 // "1 hr 5 min so far · about 4 minutes a paper": the time counted on this assignment since the tracker began, and how long a
-// paper took, from the papers finished on the days it was counted.
+// paper took: all of it over all the papers finished.
 // And, while papers are left, about how long they will take at her pace (src/gradeplan.js).
 function tkAsgHtml(id) {
   const t = tkAsg(id); if (!t) return '';
@@ -233,16 +233,18 @@ function tkAsgHtml(id) {
   if (t.s >= 60) bits.push(tkDur(t.s) + ' so far');
   if (t.s >= 60 && per) bits.push('about ' + people(per, 'minute') + ' a paper');
   if (left >= 60) bits.push('about ' + tkDur(left) + ' left');
+  if (left >= 60 && t.p < 3) bits.push('from ' + people(t.p, 'paper') + ' so far');
   if (!bits.length) return '';
   return '<span class="tkc" title="' + esc(tr('Time spent grading this assignment, from the time tracker')) + '">' + TK_CLOCK + bits.map(x => '<span>' + esc(x) + '</span>').join('<span>·</span>') + '</span>';
 }
 
-/* ---------- the line on Today's Focus card ---------- */
-function tkTodayHtml() {
+/* ---------- the week's line on Today's Focus card: papers and grading time since Monday ---------- */
+function tkWeekHtml() {
   if (!tkReady) return '';
-  const L = fcLog(), P = tkPlan(), d = tkDay(fcToday(), L, P), g = d.g + (tkPend.g || 0);
-  if (!g && !d.l) return '<div class="fctk"><span>' + (fcConf().track ? 'Grading and planning time count here as you work.' : 'Grading and planning time') + '</span><a class="link" href="#/time">Time tracker</a></div>';
-  return '<div class="fctk"><span><i class="tkkey g"></i><span>Grading time</span><b>' + tkD(g) + '</b><i class="tkkey l"></i><span>Planning time</span><b>' + tkD(d.l) + '</b></span><a class="link" href="#/time">Time tracker</a></div>';
+  const today = fcToday(), days = [], d = new Date(fcMon(today) + 'T12:00:00');
+  for (; isoDay(d) <= today; d.setDate(d.getDate() + 1)) days.push(isoDay(d));
+  const g = tkSum(days, fcLog(), tkPlan()).g + (tkPend.g || 0);
+  return '<div class="fctk"><span><span>This week</span><b>' + esc(people(fcWeekPapersNow(), 'paper')) + '</b><span>·</span><span>Grading time</span><b>' + tkD(g) + '</b></span><a class="link" href="#/time">Time tracker</a></div>';
 }
 
 /* ---------- Settings, Focus and goals: counting time ---------- */
