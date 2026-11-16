@@ -3700,10 +3700,10 @@ html.vidsized #paper .vrotbox.on{height:var(--vid-h);min-height:0}
 .trbox .trl.cap{box-shadow:inset 3px 0 0 var(--accent)}
 .trhead .link[aria-pressed=true]{font-weight:600;text-decoration:none}
 
-.pvdrvrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 4px; font-size: 13px; }
-.pvdrvrow .link { font-size: 13px; }
-.pvdrv { font-size: 11px; font-weight: 600; color: var(--accent, #1F6FB2); border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; }
-.vdrv .prog { margin: 8px 0 0; }
+.pvdrvrow{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-2) 0 var(--space-1);font-size:var(--text-control)}
+.pvdrvrow .link{font-size:var(--text-control)}
+.pvdrv{font-size:var(--text-caption);font-weight:600;color:var(--accent);border:1px solid currentColor;border-radius:var(--corner-1);padding:0 var(--space-1)}
+.vdrv .prog{margin:var(--space-2) 0 0}
 
 .stpsteps{list-style:none;counter-reset:stp;margin:var(--space-3) 0 0;padding:0;display:grid;gap:var(--space-4)}
 .stpsteps li{counter-increment:stp;display:grid;grid-template-columns:28px 1fr;gap:var(--space-3);align-items:start}
