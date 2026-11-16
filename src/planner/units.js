@@ -200,7 +200,7 @@ function renderUnit() {
   // Atlas screenshots
   h += '<section class="pl-card"><div class="lhead"><h2>' + (plCur() ? 'From ' + esc(plCur()) : 'From your unit plan') + '</h2><span class="sp"></span><button class="btn sm" data-a="addshot">Add screenshot…</button><button class="btn sm" data-a="pasteweeks">Type or paste the weeks…</button>' +
     '<button class="btn sm primary" data-a="askweeks"' + (atlas.length ? '' : ' disabled title="Add a screenshot first"') + '>Ask ' + plAi() + ' to fill the weeks</button></div>' +
-    '<div class="pl-drop" id="plShotDrop" tabindex="0">' + (atlas.length ? '<div class="pl-shots">' + atlas.map(f => '<figure class="pl-shot"><button class="pl-shotimg" data-a="viewfile" data-fid="' + f.id + '" aria-label="Look at ' + esc(f.name) + '"><img data-fimg="' + f.id + '" alt=""></button><figcaption>' + esc(f.name) + '<button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></figcaption></figure>').join('') + '</div>' : '') +
+    '<div class="pl-drop" id="plShotDrop" tabindex="0">' + (atlas.length ? '<div class="pl-shots">' + atlas.map(f => '<figure class="pl-shot"><button class="pl-shotimg" data-a="viewfile" data-fid="' + f.id + '" aria-label="Look at ' + esc(f.name) + '"><img data-fimg="' + f.id + '" alt=""></button><figcaption>' + esc(f.name) + '<button class="btn sm ghost" data-a="rplshot" data-fid="' + f.id + '" title="' + RPL_TIP + '">Replace…</button><button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></figcaption></figure>').join('') + '</div>' : '') +
     '<p class="muted">' + (atlas.length ? 'Paste or drop more screenshots here.' : 'Take a screenshot of the unit ' + (plCur() ? 'in ' + esc(plCur()) : 'plan, wherever your school keeps it') + ', then paste it here (Ctrl+V or ⌘V) or drop the picture in.') + '</p></div></section>';
   // weeks
   h += '<section class="pl-card"><div class="lhead"><h2>Weeks</h2></div><div class="pl-weeks">';
@@ -223,7 +223,7 @@ function renderUnit() {
   h += '<section class="pl-card" data-owner="unit|' + esc(u.id) + '"><div class="lhead"><h2>Summative and unit files</h2><span class="sp"></span><button class="btn sm" data-ma="newdoc">+ New document</button><button class="btn sm" data-a="addfile">Add files…</button></div>' +
     '<div class="pl-drop" id="plFileDrop">' + (other.length ? '<div class="pl-files">' + other.map(f => '<div class="pl-file"><span class="pl-ft">' + (f.kind === 'doc' ? 'DOC' : esc((f.name.split('.').pop() || '').slice(0, 4).toUpperCase())) + '</span><div class="pl-fn"><b>' + esc(f.name) + '</b><span>' + (f.kind === 'doc' ? 'Document' : (f.kind === 'summative' ? 'Summative' : 'Unit file') + ' · ' + kb(f.size)) + '</span></div>' +
       (f.kind === 'doc' ? '<button class="btn sm ghost" data-ma="claude" data-id="' + f.id + '" title="Put this in the ' + plAiTag() + ' box">+ ' + plAiTag() + ' box</button>' : '<select class="btn sm" data-fkind="' + f.id + '" aria-label="Kind"><option value="summative"' + (f.kind === 'summative' ? ' selected' : '') + '>Summative</option><option value="other"' + (f.kind === 'other' ? ' selected' : '') + '>Unit file</option></select>') +
-      '<button class="btn sm" data-a="viewfile" data-fid="' + f.id + '">Open</button><button class="btn sm ghost" data-a="dlfile" data-fid="' + f.id + '">Download</button><button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></div>').join('') + '</div>' : '') +
+      '<button class="btn sm" data-a="viewfile" data-fid="' + f.id + '">Open</button>' + (f.kind === 'doc' ? '' : '<button class="btn sm ghost" data-ma="rpl" data-id="' + f.id + '" title="' + RPL_TIP + '">Replace…</button>') + '<button class="btn sm ghost" data-a="dlfile" data-fid="' + f.id + '">Download</button><button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></div>').join('') + '</div>' : '') +
     '<p class="muted">Drop task sheets, rubrics or exemplars here. Planning files only: never student work. They go to the Planner folder, where ' + plAi() + ' can read them.</p></div></section>';
   h += unitLessonsSection(u);
   h += bankUnitSection(u);
@@ -273,11 +273,11 @@ async function viewFile(u, id) {
   saveBlob(f.name, b);   // Word files and the rest open in their own app
 }
 function askWeeks(u) {
-  const where = L.dir && L.dirOk ? 'In my Planner folder ("' + L.dir.name + '"), the unit file is Units/' + unitBase(u) + '.unit.json and its ' + (plCur() || 'unit plan') + ' screenshots are in Units/' + unitBase(u) + ' files/. ' : '';
-  const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshots. ' + where +
-    'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and write each week\'s focus (and standards, if shown) into "weeks" in the unit file, one entry per week, in order. Keep my notes. Then tell me what you filled in and anything you weren\'t sure of.' +
-    (where ? '' : '\n\n(My Planner folder isn\'t linked yet, so I\'ll attach the screenshots.)');
-  copyText(msg).then(() => { toast(where ? 'Message copied. Paste it into ' + plAi() + '.' : 'Message copied. Link the Planner folder so ' + plAi() + ' can read the screenshots, or attach them.', 6000); });
+  // Self-contained: never a folder, path or file on this computer. The teacher attaches the screenshots and pastes the answer back.
+  const n = u.files.filter(x => x.kind === 'atlas').length;
+  const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshot' + (n === 1 ? '' : 's') + ', which I am attaching. Everything you need is in this message and the screenshots. Don\'t look for, open or ask for any folder or file on my computer.\n\n' +
+    'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and reply with one line per week, in order, like "Week 1: what this week is about (standards, if shown)". Nothing else in those lines. Then tell me anything you weren\'t sure of.';
+  copyText(msg).then(() => { toast('Message copied. Paste it into ' + plAi() + ' and attach the ' + (plCur() || 'unit plan') + ' screenshot' + (n === 1 ? '' : 's') + '. Then use Type or paste the weeks for its answer.', 8000); });
 }
 function pasteWeeksDlg(u) {
   openDlg('<div class="bh"><h2>Weeks of ' + esc(u.title) + '</h2></div><div class="bb"><p class="muted" style="margin-top:0">One line per week: what that week is about. You can copy the week list straight out of ' + (plCur() ? esc(plCur()) : 'your unit plan') + '. Lines starting with “Week 3:” or similar are fine.</p>' +
@@ -314,6 +314,7 @@ async function unitsClick(e) {
   if (a === 'addshot') { const i = $('#plShotIn'); i.onchange = () => { const fs = [...i.files]; i.value = ''; addUnitFiles(u, fs, 'atlas'); }; i.click(); return true; }
   if (a === 'addfile') { const i = $('#plFileIn'); i.onchange = () => { const fs = [...i.files]; i.value = ''; addUnitFiles(u, fs, null); }; i.click(); return true; }
   if (a === 'viewfile') { await viewFile(u, t.dataset.fid); return true; }
+  if (a === 'rplshot') { matPickReplace({ t: 'unit', id: u.id }, t.dataset.fid); return true; }
   if (a === 'dlfile') { const f = u.files.find(x => x.id === t.dataset.fid), b = await fileBlob(t.dataset.fid); if (f && b) { if (f.kind === 'doc') saveBlob(f.name + '.docx', await docxOf(await b.text(), f.name)); else saveBlob(f.name, b); } return true; }
   if (a === 'rmfile') {
     if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Click again to remove'; return true; }
@@ -380,7 +381,7 @@ async function unitFolderWrite(u) {
       // documents go to the folder as Word files, so Claude and Word can both open them
       if (f.kind === 'doc') { const b = await fileBlob(f.id); if (b) await writeFile(fd, f.name + '.docx', await docxOf(await b.text(), f.name)); continue; }
       let have = null; try { have = await (await fd.getFileHandle(f.name)).getFile(); } catch { }
-      if (have && have.size === f.size) continue;
+      if (have && have.size === f.size && have.lastModified >= (f.added || 0)) continue;   // a newer copy put in its place (Replace…) is written again, even at the same size
       const b = await fileBlob(f.id); if (b) await writeFile(fd, f.name, b);
     }
   }
@@ -412,5 +413,5 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { ACTIVITIES, VIDEOS, actVideo, readTemplate, openTimetable, bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, folderReadme, plWeekOffs, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, shareBuild, shareOpen, matAdd, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek };
+window.__planner = { matReplace, arriveAt, plxLoad, PLX, ACTIVITIES, VIDEOS, actVideo, readTemplate, openTimetable, bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, folderReadme, plWeekOffs, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, shareBuild, shareOpen, matAdd, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek, lessonContext };
 openLessons();

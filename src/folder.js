@@ -83,7 +83,7 @@ let setLibFrom, libNews;   // setLibFrom replaces the whole library, a merge hav
 }
 const browserFull = () => Object.assign(new DOMException('The small store is full', 'QuotaExceededError'), { small: true });
 // What travels with her work. Quick copies travel as work, and the rest belongs to this browser.
-const LS_LOCAL = /^gs\.(b\..+|batches|syncT|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|wlCodes|refOpen\..*)$/;   // rolls: a copy of the rosters for the Planner's name picker, made again from the classes wherever they go
+const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|planSeen|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|wlCodes|refOpen\..*)$/;   // rolls: a copy of the rosters for the Planner's name picker, made again from the classes wherever they go
 function carryLs() {
   const o = {};
   for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && !LS_LOCAL.test(k)) o[k] = localStorage.getItem(k); }
@@ -142,7 +142,7 @@ async function applyRow(row, src) {
     { const v = tabStamp(id, row.work.t); if (batch && batch.id === id) batch.seen = v; }   // other tabs are told, and this one knows it was itself
     store.del(id); const idx = store.get('gs.batches', {}); if (id in idx) { delete idx[id]; store.set('gs.batches', idx); }   // the quick copy is out of date now
   }
-  if (m && JSON.stringify(m) !== JSON.stringify(row.ma)) { await kdo('meta', 'readwrite', o => o.put(m, id)); keptMeta.set(id, m); }
+  if (m && JSON.stringify(m) !== JSON.stringify(row.ma)) { await kdo('meta', 'readwrite', o => o.put(m, id)); if (typeof fcCame === 'function') fcCame(id, keptMeta.get(id), m); keptMeta.set(id, m); }
 }
 
 /* the folder itself */
@@ -553,6 +553,8 @@ function whereSay() {
     case 'decide': return { safe: true, text: fld.asks.length + (fld.asks.length === 1 ? ' thing' : ' things') + ' to decide about your folder', tip: 'Two versions to choose between', cls: 'warn', act: 'Decide' };
     // Until a folder holds a second copy the work is not backed up, and every place that says where it is says so, in amber. Never "Saved" in green.
     default: return !fld.booted ? { safe: true, text: 'Checking where your work is kept…', tip: 'One moment', cls: '' }
+      // signed in with Google: every change goes to her Drive too (drive.js), a second copy outside this browser
+      : G.email && !sampleOn() ? { safe: true, sub: 'Backed up in your Google Drive', text: 'Backed up in your Google Drive', tip: 'Every change also goes to Grading Studio’s own hidden folder in your Google Drive', cls: '' }
       : { sub: 'Only in this browser', text: 'Not backed up. Only in this browser', tip: canPickFolder() ? 'Clearing this browser’s data would erase your work. Choose a folder and every save goes there too' : 'Clearing this browser’s data would erase your work. This browser can’t save to a folder, so make a take-home file when you finish marking', cls: 'warn' };
   }
 }
@@ -564,7 +566,7 @@ function renderWhere() {
   }
   if (top) { const cut = /^Not backed up\. /.exec(s.text); top.textContent = cut ? 'Not backed up' : s.text; if (cut) { const more = document.createElement('span'); more.className = 'sw-more'; more.textContent = s.text.slice(13); top.append(more); } top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
   if (line) {
-    const h = sampleOn() ? '<span class="wtext">This is the sample. It is kept only in this browser while you look around, and your own work is kept apart.</span>' : '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
+    const h = sampleOn() ? '<span class="wtext">This is the sample. It is kept only in this browser while you look around, and your own work is kept apart.</span>' : '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted && !G.email ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
       (s.act ? '<button class="btn sm primary" data-wact>' + s.act + '</button> ' : '') +
       (fld.state === 'none' ? (canPickFolder() ? '<button class="btn sm primary" data-wlink>Choose a folder…</button>' : '') : '<button class="btn sm" data-wopen>Folder…</button>') +
       (fld.state !== 'none' && fld.root ? ' <a class="btn sm" href="#/settings/history">Go back in time…</a>' : '');
@@ -606,4 +608,4 @@ async function folderGoBackAsk(name, when) {
   catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish. Your work may be partly back: use Put back on the newest safety copy under “Saving and carrying”.', 15000); }
 }
 folderBoot();
-Object.assign(window.__gs, { folderUse, folderUnlink, folderResume, folderReconcile, folderState: () => ({ state: fld.state, name: fld.name, at: fld.at, asks: fld.asks, root: fld.root, picked: fld.picked }), folderWait: async () => { for (let i = 0; i < 400; i++) { if (!fld.run && !fld.sync && !fld.work.size && !fld.lib && !fld.gone.size) return fld.state; await new Promise(r => setTimeout(r, 25)); } return 'busy'; }, folderSnapshot, snapList, folderGoBack, carryParts: { mergeWork, mergeStates, mergeLib, recHash, stampData, revsOf } });
+Object.assign(window.__gs, { folderUse, folderUnlink, folderResume, folderReconcile, folderState: () => ({ state: fld.state, name: fld.name, at: fld.at, asks: fld.asks, root: fld.root, picked: fld.picked }), folderWait: async () => { for (let i = 0; i < 400; i++) { if (!fld.run && !fld.sync && !fld.work.size && !fld.lib && !fld.gone.size) return fld.state; await new Promise(r => setTimeout(r, 25)); } return 'busy'; }, folderSnapshot, snapList, folderGoBack, carryParts: { mergeWork, mergeStates, mergeLib, recHash, stampData, revsOf, workCounts } });

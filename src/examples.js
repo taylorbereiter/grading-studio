@@ -10,6 +10,7 @@
 // The database is made only when the first example is kept, so a browser that never keeps one never has it.
 // watch: 1 marks a picture for the watch list (a concern or misconception, src/watch.js): kept in exWatch, never in exList, so no bank, tab or Show to the class sees one.
 // who: { c, n } is the class and roster name, kept only for the teacher, so a student's strong work and concerns stay theirs after the download is forgotten.
+// The Planner reads it (src/planner/plexamples.js), never writes it, and takes only the names above and the pictures, never from.
 const EX_DB = 'grading-studio-examples';
 let exDbP = null, exList = [], exWatch = [], exReady = null;
 const exDb = () => exDbP ||= new Promise((res, rej) => {
@@ -43,12 +44,12 @@ async function exPut(rec, blobs, raw) {
   await exTx(['ex', 'pix'], 'readwrite', tx => {
     tx.objectStore('ex').put(rec, rec.id);
     if (rec.gone) tx.objectStore('pix').delete(IDBKeyRange.bound(rec.id + '|', rec.id + '|\uffff'));
-    if (blobs) blobs.forEach((b, n) => tx.objectStore('pix').put(b, rec.id + '|' + n));
+    if (blobs) { tx.objectStore('pix').delete(IDBKeyRange.bound(rec.id + '|', rec.id + '|\uffff')); blobs.forEach((b, n) => tx.objectStore('pix').put(b, rec.id + '|' + n)); }
   });
+  if (blobs) exUrlsDrop(rec.id);   // new pictures for an example she changed
   for (const L of [exList, exWatch]) { const k = L.findIndex(r => r.id === rec.id); if (k >= 0) L.splice(k, 1); }
   if (rec.gone) exUrlsDrop(rec.id);
   else { const L = rec.watch ? exWatch : exList; L.push(rec); L.sort((a, b) => a.t - b.t); }
-  if (rec.pages && blobs) exUrlsDrop(rec.id);
   exTabSay(); exRailSay(); wlChanged();
   if (!raw) exFolderSoon();
   return rec;
@@ -195,6 +196,10 @@ function exScoreText(st) {
   if (g.status === 'missing' || g.status === 'excused' || (g.total == null && g.pct == null)) return '';
   return (g.total != null ? fmtNum(g.total) + ' / ' + fmtNum(g.outOf != null ? g.outOf : maxPoints()) : '') + (g.pct != null ? (g.total != null ? '   ' : '') + g.pct + '%' : '');
 }
+// Her own marks that say the score (the score sticker, a quiz's points, a typed grade): they go with The score, not with her marks.
+const exScoreMarks = st => st.files.some(f => Object.values(f.marks || {}).some(l => (l || []).some(isScoreMark)));
+// The score written at the top right, unless her own score mark is already on one of the pages kept (ks), with her marks shown.
+const exScoreTop = (U, ks) => !U.score ? '' : U.marks && U.kind !== 'part' && ks.some(k => { const it = U.items[k]; return it && ((it.f.marks || {})[it.p] || []).some(isScoreMark); }) ? '' : exScoreText(U.st);
 // The score, in the marks' red, at the top right of a picture.
 function exScoreOn(c, text) {
   if (!text) return;
@@ -207,16 +212,17 @@ function exScoreOn(c, text) {
 // One page as the example will keep it, at scale (pixels per point): covers, and her marks only when the switch is on.
 async function exuCanvas(k, scale) {
   const it = EXU.items[k], js = await exuDoc(it), st = EXU.st;
-  const r = await sharePage(st, it.f, js, it.p, scale, coverRx(st), shareOpts(st), { bare: !EXU.marks, light: true });
+  const r = await sharePage(st, it.f, js, it.p, scale, coverRx(st), shareOpts(st), { bare: !EXU.marks, light: true, noScore: !EXU.score });
   return r;
 }
-async function openUseExample(i) {
+// redo: a saved example made again from its paper ({ r, back }): it keeps its name, why and tags, and back() runs once it is saved.
+async function openUseExample(i, redo) {
   if (!batch) return;
   if (i == null) i = cur;
   const st = batch.students[i];
   if (!exCanUse(st)) return toast('This paper has no pages to keep as an example.');
   await exReady;
-  EXU = { st, i, items: [], kind: 'paper', marks: false, score: false, row: null, part: null, docs: new Map(), shown: [], tok: 0 };
+  EXU = { st, i, items: [], kind: 'paper', marks: false, score: false, row: (redo && redo.r.row) || null, part: null, docs: new Map(), shown: [], tok: 0, redo: redo || null };
   const rows = setup.mode === 'rubric' ? setup.criteria.filter(c => String(c || '').trim() && !/^Criterion \d+$/.test(c)) : [];   // the rows of a rubric she has named, not the starting ones
   openDlg('<div class="bh"><h2>Use as an example</h2><span class="sp"></span><button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb exuse"><div class="expv" id="exPv"><p class="muted">Getting the pages ready…</p></div>' +
@@ -224,7 +230,7 @@ async function openUseExample(i) {
       '<h3 class="exh">What to keep</h3><div class="exkind" role="group" aria-label="What to keep"><button data-exk="paper" aria-pressed="true"><b>Whole paper</b><small id="exPages"> </small></button><button data-exk="part" aria-pressed="false"><b>Part of a page</b><small>Drag a box</small></button></div>' +
       '<h3 class="exh">Names</h3><p class="exnames" id="exNames">Looking for names…</p>' +
       '<h3 class="exh">Show on it</h3><button class="exsw" role="switch" aria-checked="false" data-exsw="marks"><i></i>My marks and comments</button>' +
-        (exScoreText(st) ? '<button class="exsw" role="switch" aria-checked="false" data-exsw="score"><i></i>The score</button>' : '') +
+        (exScoreText(st) || exScoreMarks(st) ? '<button class="exsw" role="switch" aria-checked="false" data-exsw="score" title="The score, with your score sticker and any score you wrote on the paper. Off, they stay off even with your marks on."><i></i>The score</button>' : '') +
       '<h3 class="exh">Why it’s strong <span class="muted">(optional)</span></h3><input type="text" id="exWhy" class="exwhyin" maxlength="160" placeholder="Every claim is tied to a moment in the story." aria-label="Why it’s strong">' +
       (rows.length ? '<div class="exrows" role="group" aria-label="Rubric row">' + rows.map(c => '<button class="exrow" data-exrow="' + esc(c) + '" aria-pressed="false">' + esc(c) + '</button>').join('') + '</div>' : '') +
     '</aside></div>' +
@@ -233,6 +239,7 @@ async function openUseExample(i) {
   box.classList.add('exbox');
   const shut = () => { if (!EXU) return; for (const d of EXU.docs.values()) d.then(x => x.destroy(), () => {}); EXU = null; };
   dlgGone = shut;
+  if (redo) { dlgGone = () => { shut(); setTimeout(() => redo.back(), 0); }; $('#exWhy').value = redo.r.why || ''; for (const b of box.querySelectorAll('[data-exrow]')) b.setAttribute('aria-pressed', String(b.dataset.exrow === EXU.row)); }
   exuLockSay();
   box.onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
@@ -259,12 +266,12 @@ async function openUseExample(i) {
     await exuDrawAll();
   } catch (e) { console.error(e); if (EXU && $('#exPv')) $('#exPv').innerHTML = '<p class="muted">This paper couldn’t be drawn: ' + esc(e.message || String(e)) + '</p>'; }
 }
-const exuLockSay = () => { const el = $('#exLockSay'); if (!el || !EXU) return; const L = exNextLetter(batch.id, EXU.kind); el.textContent = 'Kept as pictures with the names blacked out for good. It’s called “' + (EXU.kind === 'paper' ? 'Example ' + L : 'Part of a page') + '”, never by name.'; };
+const exuLockSay = () => { const el = $('#exLockSay'); if (!el || !EXU) return; const L = EXU.redo && EXU.redo.r.kind === EXU.kind ? EXU.redo.r.letter : exNextLetter(batch.id, EXU.kind); el.textContent = 'Kept as pictures with the names blacked out for good. It’s called “' + (EXU.kind === 'paper' ? 'Example ' + L : 'Part of a page') + '”, never by name.'; };
 const exuSaveOk = () => { const b = $('#dlgBox [data-exsave]'); if (b && EXU) b.disabled = !EXU.items.length || (EXU.kind === 'part' && !EXU.part); };
 function exuNames() {
   const el = $('#exNames'); if (!el || !EXU) return;
   const n = EXU.shown.reduce((a, s) => a + (s ? exGroups(s.covers) : 0), 0);
-  el.innerHTML = '<b>' + (n === 1 ? '1 name covered.' : n + ' names covered.') + '</b> ' + (EXU.kind === 'part' ? 'Drag a box around the part to keep. Click a cover to take it off.' : 'Drag on a page to cover anything else, like a handwritten name. Click a cover to take it off.');
+  el.innerHTML = '<b>' + (n === 1 ? '1 name covered.' : n + ' names covered.') + '</b> ' + (EXU.kind === 'part' ? 'Drag a box around the part to keep. Click a cover to take it off.' : 'Drag on a page to cover anything else, like a handwritten name or score. Click a cover to take it off.');
 }
 // Covers that touch or sit side by side on a line are one name to her: Cara and Sample are two covers, one name.
 function exGroups(cs) {
@@ -289,7 +296,7 @@ async function exuDraw(k, my) {
   const colW = Math.max(240, cell.clientWidth || 360), scale = Math.min(3, colW * 1.25 / v1.width) * dpr;
   const r = await exuCanvas(k, scale);
   if (!EXU || (my != null && EXU.tok !== my) || !cell.isConnected) { r.c.width = 0; return; }
-  if (EXU.score && k === 0) exScoreOn(r.c, exScoreText(EXU.st));
+  if (k === 0) exScoreOn(r.c, exScoreTop(EXU, EXU.kind === 'part' ? [k] : EXU.items.map((_, j) => j)));
   const ctx = r.c.getContext('2d');
   // Where a cover she took off was: a dashed outline, so she can put it back.
   if (r.gone.length) { ctx.save(); ctx.setTransform(scale, 0, 0, scale, 0, 0); ctx.strokeStyle = '#1F6FB2'; ctx.lineWidth = 1.5 / scale * dpr; ctx.setLineDash([5 / scale * dpr, 3 / scale * dpr]); for (const g of r.gone) ctx.strokeRect(g.x, g.y, g.w, g.h); ctx.restore(); }
@@ -363,7 +370,7 @@ async function exuSave() {
   if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
   U.tok++;   // a redraw on its way stops
   try {
-    const list = U.kind === 'paper' ? U.items.map((_, k) => k) : [U.part.k], blobs = [], pages = [], score = U.score ? exScoreText(U.st) : '';
+    const list = U.kind === 'paper' ? U.items.map((_, k) => k) : [U.part.k], blobs = [], pages = [], score = exScoreTop(U, list);
     for (const k of list) {
       const it = U.items[k], js = await exuDoc(it), v1 = vpRot(it.f, it.p, await js.getPage(it.p + 1), 1);
       const r = await exuCanvas(k, Math.min(4, (U.kind === 'part' ? 2400 : 1600) / v1.width));
@@ -378,9 +385,12 @@ async function exuSave() {
       c.width = c.height = 0;
     }
     const why = ($('#exWhy') ? $('#exWhy').value : '').trim().slice(0, 160);
-    const rec = { ...exBase(U.kind, U.st), why, row: U.row, letter: exNextLetter(batch.id, U.kind), pages, marks: U.marks, score: !!score };
+    const R = U.redo && U.redo.r, same = R && R.kind === U.kind;
+    const rec = { ...exBase(U.kind, U.st), ...(same ? { id: R.id, t: R.t, letter: R.letter } : { letter: exNextLetter(batch.id, U.kind) }), ...(R && R.tags ? { tags: R.tags } : {}), why, row: U.row, pages, marks: U.marks, score: U.score && !!(exScoreText(U.st) || exScoreMarks(U.st)) };
     await exPut(rec, blobs);
+    if (R && !same) await exDelete(R.id);   // made again as the other kind: the new one takes its place
     closeDlg();
+    if (U.redo) return toast('Made again from the paper.');
     exToast('Saved as ' + (rec.kind === 'paper' ? 'Example ' + rec.letter : 'an example') + '.', [['See examples', exGo]]);
   } catch (e) {
     console.error(e);
@@ -437,25 +447,25 @@ function exShotWhere() {
 const exShotKey = w => w.asg || (w.work ? 'w:' + w.work : 'loose:' + (w.cls || '-'));
 const exShotNext = (w, watch) => String(1 + Math.max(0, ...(watch ? exWatch : exList).filter(r => r.kind === 'shot' && exAsgKey(r) === exShotKey(w)).map(r => parseInt(r.letter, 10) || 0)));
 let EXS = null;
-// watch: for the watch list (a concern, src/watch.js). where.redo: a picture already kept, to black out more of it.
+// watch: for the watch list (a concern, src/watch.js).
 async function exSaveShot(blob, where, watch) {
   await exReady;
   let im; try { im = await createImageBitmap(blob); } catch (e) { console.error(e); return toast('That picture couldn’t be read.'); }
   EXS = { im, where, covers: [], watch: !!watch };
-  const redo = where.redo, nm = redo ? exLabel(redo) : (watch ? 'Watch ' : 'Screenshot ') + exShotNext(where, watch);
+  const nm = (watch ? 'Watch ' : 'Screenshot ') + exShotNext(where, watch);
   const known = exAllTags(watch ? exWatch : exList);
   const classes = lib.classes.slice().sort((a, b) => natural(a.name, b.name));
-  const place = redo ? '' : where.work ? '<p class="exnames">From <b>' + esc(where.title) + '</b>' + (where.cls ? ' · ' + esc(exClassName(where.cls)) : '') + '</p>'
+  const place = where.work ? '<p class="exnames">From <b>' + esc(where.title) + '</b>' + (where.cls ? ' · ' + esc(exClassName(where.cls)) : '') + '</p>'
     : '<select class="btn sm exshotcls" id="exShotCls" aria-label="Class"><option value="">No class</option>' + classes.map(c => '<option value="' + esc(c.id) + '"' + (c.id === where.cls ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '</select>';
   const why = watch ? 'What you see' : 'Why it’s strong';
-  openDlg('<div class="bh"><h2>' + (redo ? 'Black out more of ' + esc(nm) : watch ? 'Add to the watch list' : 'Save as a strong example') + '</h2><span class="sp"></span><button class="icon" data-close aria-label="Close">✕</button></div>' +
+  openDlg('<div class="bh"><h2>' + (watch ? 'Add to the watch list' : 'Save as a strong example') + '</h2><span class="sp"></span><button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb exuse"><div class="expv one" id="exShotPv"><div class="expg"><div class="excv"><canvas class="exc"></canvas><div class="exdrag" hidden></div></div></div></div>' +
     '<aside class="exside">' +
       '<h3 class="exh">Names</h3><p class="exnames" id="exShotNames"></p>' +
-      (redo ? '' : '<h3 class="exh">' + why + ' <span class="muted">(optional)</span></h3><input type="text" id="exWhy" class="exwhyin" maxlength="160" placeholder="' + (watch ? 'Mixes up mean and median.' : 'Every claim is tied to a moment in the story.') + '" aria-label="' + why + '">' +
+      '<h3 class="exh">' + why + ' <span class="muted">(optional)</span></h3><input type="text" id="exWhy" class="exwhyin" maxlength="160" placeholder="' + (watch ? 'Mixes up mean and median.' : 'Every claim is tied to a moment in the story.') + '" aria-label="' + why + '">' +
       '<h3 class="exh">Tags <span class="muted">(optional)</span></h3><input type="text" id="exTagsIn" class="exwhyin" maxlength="200" placeholder="' + (watch ? 'misconception, fractions' : 'thesis, evidence, Unit 2') + '" aria-label="Tags, with commas between">' +
       (known.length ? '<div class="exrows exknown" role="group" aria-label="Tags you have used">' + known.slice(0, 12).map(t => '<button class="exrow" data-exaddtag="' + esc(t) + '">' + esc(t) + '</button>').join('') + '</div>' : '') +
-      '<h3 class="exh">Kept with</h3>' + place + '<h3 class="exh">Whose work <span class="muted">(only you see this)</span></h3><div id="exWhoBox"></div>') +
+      '<h3 class="exh">Kept with</h3>' + place + '<h3 class="exh">Whose work <span class="muted">(only you see this)</span></h3><div id="exWhoBox"></div>' +
     '</aside></div>' +
     '<div class="bf"><span class="exlock"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Kept in this browser only, with what you blacked out gone for good. It’s called “' + esc(nm) + '”, never by name.</span></span><span class="sp"></span><button class="btn" data-close>Cancel</button><button class="btn primary" data-exsave>' + (redo ? 'Save' : watch ? 'Add to the watch list' : 'Save example') + '</button></div>');
   const box = $('#dlgBox');
@@ -528,7 +538,6 @@ async function exsSave() {
     const c = document.createElement('canvas'); exsPaint(c, Math.min(S.im.width, 2400));
     const size = { w: c.width, h: c.height }, jpg = await exJpg(c); c.width = c.height = 0;
     const w = S.where;
-    if (w.redo) { await exPut({ ...(exById(w.redo.id) || w.redo), pages: [size] }, [jpg]); closeDlg(); wlRedraw(); toast('Blacked out for good'); return; }
     const sel = $('#exShotCls'), cls = w.work ? w.cls : sel ? sel.value || null : w.cls, ws = $('#exWho');
     const at = { ...w, cls };
     const rec = { id: uid() + uid(), t: Date.now(), kind: 'shot', work: w.work, asg: w.asg, cls, title: w.title, q: null, row: null,
@@ -540,7 +549,7 @@ async function exsSave() {
     exToast(rec.watch ? 'Added to the watch list' + (rec.who && !anonOn() ? ' for ' + rec.who.n : '') + '.' : 'Saved as Screenshot ' + rec.letter + ' in your strong examples.', [[rec.watch ? 'See the watch list' : 'See examples', see], ['Undo', () => exDelete(rec.id)]]);
   } catch (e) {
     console.error(e);
-    if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = S.where.redo ? 'Save' : S.watch ? 'Add to the watch list' : 'Save example'; }
+    if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = S.watch ? 'Add to the watch list' : 'Save example'; }
     toast('The example couldn’t be kept: ' + (e.message || e), 6000);
   }
 }
@@ -548,9 +557,9 @@ async function exsSave() {
 /* the Examples tab: between Insights and Return, once the assignment has an example */
 function exTabSay() {
   const a = $('#examplesTab'); if (!a) return;
-  let n = 0; try { n = batch ? exOfWork(batch.id).length : 0; } catch { return; }   // asked before this file has run
+  let n = 0, tw = 0; try { n = batch ? exOfWork(batch.id).length : 0; tw = batch ? lkExamples().length : 0; } catch { return; }   // asked before this file has run
   const here = batch && routeNow().v === 'a' && routeNow().tab === 'examples';
-  a.hidden = !n && !here;
+  a.hidden = !n && !tw && !here;
   wlBackfill();
   const c = a.querySelector('.atn'); if (c) { c.textContent = n || ''; c.hidden = !n; }
 }
@@ -562,40 +571,46 @@ function exSorted(list) {
   return [...ans, ...rest];
 }
 const exCanCopy = () => !!(navigator.clipboard && navigator.clipboard.write && window.ClipboardItem);
-function exCard(r) {
+function exCard(r, from) {
   const W = !!r.watch, sw = W ? 'Add a note' : 'Add why it’s strong', cw = W ? 'Change the note' : 'Change why it’s strong';
   const chip = r.kind === 'answer' && r.q && r.q.v != null ? fmtNum(r.q.v) + ' of ' + fmtNum(r.q.pts) : r.kind === 'paper' ? r.pages.length + (r.pages.length === 1 ? ' page' : ' pages') : '';
   const who = (r.who || r.from) && !anonOn() ? '<p class="exwho"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Only you see this: ' + (r.who ? wlHere(r) ? '<button class="link" data-exwhoc>' + esc(r.who.n) + '</button>' : esc(r.who.n) : esc(r.from.key)) + '</p>' : '';
   return '<div class="excard ' + r.kind + (W ? ' exw' : '') + '" data-exid="' + esc(r.id) + '"><button class="exthumb" data-exopen title="' + (W ? 'Look closer' : 'Show to the class') + '"><img alt="' + esc(exLabel(r)) + '" data-expic="' + esc(r.id) + '"></button>' +
-    '<div class="exct"><span class="exstar" aria-hidden="true">' + (W ? '⚑' : '★') + '</span><b>' + esc(exLabel(r)) + '</b>' + (r.row ? '<span class="exrowtag">' + esc(r.row) + '</span>' : chip ? '<span class="exchip">' + esc(chip) + '</span>' : '') + '</div>' +
+    '<div class="exct"><span class="exstar" aria-hidden="true">' + (W ? '⚑' : '★') + '</span><b>' + esc(exLabel(r)) + '</b>' + (r.row ? '<span class="exrowtag">' + esc(r.row) + '</span>' : chip ? '<span class="exchip">' + esc(chip) + '</span>' : '') + '</div>' + (from ? '<p class="exfrom">' + lkSvg() + '<span>From</span> <b data-raw>' + esc(from) + '</b></p>' : '') +
     '<p class="exwhy">' + (r.why ? esc(r.why) : '<button class="link exadd" data-exwhy>' + sw + '</button>') + '</p>' +
     '<p class="extags">' + exTagChips(r) + '</p>' +
     '<div class="exacts">' + (r.kind !== 'paper' && exCanCopy() ? '<button class="btn sm" data-excopy>Copy picture</button>' : '') + '<button class="btn sm" data-exdl>Download</button>' +
-      kmWrap('⋯', 'class="icon kdots" aria-label="More for this example" title="More for this example"', (W ? '' : '<button class="mitem" data-exopen>Show to the class</button>') + '<button class="mitem" data-exwhy>' + (r.why ? cw : sw) + '</button><button class="mitem" data-extags>' + (exTags(r).length ? 'Change tags' : 'Add tags') + '</button>' + (r.pages.length === 1 ? '<button class="mitem" data-exmore>Black out more</button>' : '') + '<button class="mitem" data-exdel>Delete</button>') + '</div>' + who + '</div>';
+      kmWrap('⋯', 'class="icon kdots" aria-label="More for this example" title="More for this example"', (W ? '' : '<button class="mitem" data-exopen>Show to the class</button>') + '<button class="mitem" data-exwhy>' + (r.why ? cw : sw) + '</button><button class="mitem" data-extags>' + (exTags(r).length ? 'Change tags' : 'Add tags') + '</button><button class="mitem" data-excover>Cover part of it</button>' + (exRedoAt(r) >= 0 ? '<button class="mitem" data-exredo>Make again from the paper</button>' : '') + '<button class="mitem" data-exdel>Delete</button>') + '</div>' + who + '</div>';
 }
+// Examples from the same assignment in a linked class (linked.js) show only after the button is pressed, for the assignment open now.
+let exLkOn = '';
+const exTw = () => exLkOn === batch.id ? exSorted(lkExamples()) : [];
 function openExamples() {
   if (!batch) return;
-  const list = exSorted(exOfWork(batch.id)), ans = list.filter(r => r.kind === 'answer'), rest = list.filter(r => r.kind !== 'answer');
+  const list = exSorted(exOfWork(batch.id)), ans = list.filter(r => r.kind === 'answer'), rest = list.filter(r => r.kind !== 'answer'), all = lkExamples(), tw = exTw();
   const qs = quizOn() ? batch.quiz.qs : [], none = qs.map((q, i) => ({ q, i })).filter(x => !ans.some(r => r.q && r.q.id === x.q.id)).map(x => quizLabel(x.q, x.i));
   const and = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
   const noneCard = qs.length && none.length ? '<div class="excard exnone"><p>' + (none.length === 1 ? 'Question ' + esc(none[0]) + ' has' : 'Questions ' + esc(and(none)) + ' have') + ' no example yet.<br>Press ☆ on an answer in Quick mark.</p></div>' : '';
   tabNext('examples');
   openDlg('<div class="bh"><h2>Examples</h2><span class="muted exsub">Strong work from this assignment, with no names on it.</span><span class="sp"></span>' +
-    (list.length ? '<button class="btn" data-exsheet><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download as a sheet</button><button class="btn primary" data-exshow><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M7 5l12 7-12 7z"/></svg>Show to the class</button>' : '') +
+    (list.length || tw.length ? '<button class="btn" data-exsheet><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download as a sheet</button><button class="btn primary" data-exshow><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M7 5l12 7-12 7z"/></svg>Show to the class</button>' : '') +
     '<button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb exbb" id="exBody">' +
-      (!list.length ? '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, pick <b>Use as an example</b> in a paper’s ⋯ menu, or take a screenshot (S) and save it as a strong example. Picking one is always up to you.</p></div>' : '') +
-      (ans.length || noneCard ? '<h3 class="exsec">Answers, by question</h3><div class="exgrid">' + ans.map(exCard).join('') + noneCard + '</div>' : '') +
-      (rest.length ? '<h3 class="exsec">' + (rest.some(r => r.kind === 'shot') ? 'Whole papers, parts of pages and screenshots' : 'Whole papers and parts of pages') + '</h3><div class="exgrid">' + rest.map(exCard).join('') + '</div>' : '') +
+      (!list.length && !all.length ? '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, pick <b>Use as an example</b> in a paper’s ⋯ menu, or take a screenshot (S) and save it as a strong example. Picking one is always up to you.</p></div>' : '') +
+      (ans.length || noneCard ? '<h3 class="exsec">Answers, by question</h3><div class="exgrid">' + ans.map(r => exCard(r)).join('') + noneCard + '</div>' : '') +
+      (rest.length ? '<h3 class="exsec">' + (rest.some(r => r.kind === 'shot') ? 'Whole papers, parts of pages and screenshots' : 'Whole papers and parts of pages') + '</h3><div class="exgrid">' + rest.map(r => exCard(r)).join('') + '</div>' : '') +
+      (all.length && !tw.length ? '<h3 class="exsec">' + lkSvg() + ' From linked classes</h3><button class="btn" data-exlk><span>Show ' + all.length + (all.length === 1 ? ' example' : ' examples') + ' from <b data-raw>' + esc([...new Set(all.map(r => exClassName(r.cls)))].join(', ')) + '</b></span></button>' : '') +
+      (tw.length ? '<h3 class="exsec">' + lkSvg() + ' From linked classes <button class="link" data-exlk>Hide</button></h3><p class="muted exsub2">The same assignment in another class. Each card says which class it came from.</p><div class="exgrid">' + tw.map(r => exCard(r, exClassName(r.cls))).join('') + '</div>' : '') +
     '</div>');
   const box = $('#dlgBox');
   box.classList.add('exbox-tab');
   for (const im of box.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
   box.onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
-    if (e.target.closest('[data-exshow]')) return exShow(exSorted(exOfWork(batch.id)), 0);
-    if (e.target.closest('[data-exsheet]')) return exSheet(exSorted(exOfWork(batch.id)));
-    exCardAct(e, () => exSorted(exOfWork(batch.id)), () => { if (dlgPage === 'examples') openExamples(); });
+    if (e.target.closest('[data-exlk]')) { exLkOn = exLkOn === batch.id ? '' : batch.id; return openExamples(); }
+    if (e.target.closest('[data-exshow]')) return exShow(exSorted(exOfWork(batch.id)).concat(exTw()), 0);
+    if (e.target.closest('[data-exsheet]')) return exSheet(exSorted(exOfWork(batch.id)).concat(exTw()));
+    exCardAct(e, () => exSorted(exOfWork(batch.id)).concat(exTw()), () => { if (dlgPage === 'examples') openExamples(); });
   };
 }
 // A click on an example's card, on the tab or the page. list() gives the examples Show to the class steps through; after() draws again once one is deleted.
@@ -604,11 +619,13 @@ function exCardAct(e, list, after) {
   const r = exById(card.dataset.exid); if (!r) return;
   if (e.target.closest('[data-exopen]')) { const all = list(); return exShow(all, Math.max(0, all.findIndex(x => x.id === r.id))); }
   if (e.target.closest('[data-exwhoc]')) return wlHere(r) && personCard(r.who.c, r.who.n);
-  if (e.target.closest('[data-exmore]')) { kmClose(); return exPic(r.id, 0).then(b => b && exSaveShot(b, { redo: r, paper: false }, r.watch)); }
   if (e.target.closest('[data-excopy]')) return exCopy(r);
   if (e.target.closest('[data-exdl]')) return exDownload(r);
   if (e.target.closest('[data-exwhy]')) return exWhyEdit(card, r);
   if (e.target.closest('[data-extags]')) return exTagsEdit(card, r);
+  const back = dlgPage === 'examples' ? () => openExamples() : after;   // the tab is a dialog of its own: open it again after
+  if (e.target.closest('[data-excover]')) { kmClose(); return exCoverEdit(r, back); }
+  if (e.target.closest('[data-exredo]')) { kmClose(); const i = exRedoAt(r); return i < 0 ? toast('Open the assignment with that paper first.') : openUseExample(i, { r, back }); }
   const tg = e.target.closest('[data-extag]');
   if (tg) { if ($('#exPage') && $('#exPage').contains(tg)) { exPageF.tag = tg.dataset.extag; exPageRender(); } return; }
   const del = e.target.closest('[data-exdel]');
@@ -617,6 +634,72 @@ function exCardAct(e, list, after) {
     kmClose();
     exDelete(r.id).then(() => { toast(r.watch ? 'Deleted' : 'Example deleted'); after(); }, er => { console.error(er); toast('That didn’t work. Try again.'); });
   }
+}
+// The paper a saved paper or part came from, in the assignment open now: -1 when it isn't here (another assignment, or the paper is gone).
+const exRedoAt = r => (r.kind === 'paper' || r.kind === 'part') && r.from && batch && r.work === batch.id ? batch.students.findIndex(s => s.key === r.from.key && exCanUse(s)) : -1;
+// Black boxes on a saved example: drag on a picture to cover something (a score sticker, a name she missed), click a new box to take it off.
+// Saving paints them into the pictures for good, like every cover.
+let EXC = null;
+async function exCoverEdit(r, back) {
+  let blobs; try { blobs = await exPics(r); } catch (e) { console.error(e); }
+  if (!blobs) return toast('That example’s pictures couldn’t be read.');
+  const ims = []; for (const b of blobs) ims.push(await createImageBitmap(b));
+  EXC = { r, ims, covers: ims.map(() => []) };
+  openDlg('<div class="bh"><h2>Cover part of ' + esc(exLabel(r)) + '</h2><span class="sp"></span><button class="icon" data-close aria-label="Close">✕</button></div>' +
+    '<div class="bb exuse"><div class="expv' + (ims.length === 1 ? ' one' : '') + '" id="exCovPv">' + ims.map((_, k) => '<div class="expg" data-k="' + k + '"><div class="excv"><canvas class="exc"></canvas><div class="exdrag" hidden></div></div>' + (ims.length > 1 ? '<span class="expgn">' + (k + 1) + ' of ' + ims.length + '</span>' : '') + '</div>').join('') + '</div>' +
+    '<aside class="exside"><h3 class="exh">Cover</h3><p class="exnames" id="exCovSay"></p></aside></div>' +
+    '<div class="bf"><span class="exlock"><span>What you cover is gone for good once you save.</span></span><span class="sp"></span><button class="btn" data-close>Cancel</button><button class="btn primary" data-exsave disabled>Save</button></div>');
+  const box = $('#dlgBox');
+  box.classList.add('exbox');
+  let saved = false;
+  dlgGone = () => { if (EXC) { for (const im of EXC.ims) try { im.close(); } catch {} EXC = null; } setTimeout(() => back(), 0); };
+  const say = () => { const n = EXC ? EXC.covers.flat().length : 0; $('#exCovSay').innerHTML = (n ? '<b>' + (n === 1 ? '1 area blacked out.' : n + ' areas blacked out.') + '</b> ' : '') + 'Drag over anything you want hidden, like a score sticker or a name. Click a black box to take it off.'; box.querySelector('[data-exsave]').disabled = !n; };
+  const paint = (c, k, W) => {
+    const im = EXC.ims[k], s = W / im.width; c.width = Math.round(im.width * s); c.height = Math.round(im.height * s);
+    const ctx = c.getContext('2d'); ctx.drawImage(im, 0, 0, c.width, c.height); ctx.fillStyle = '#111';
+    for (const q of EXC.covers[k]) ctx.fillRect(Math.floor(q.x * c.width), Math.floor(q.y * c.height), Math.ceil(q.w * c.width) + 1, Math.ceil(q.h * c.height) + 1);
+  };
+  const draw = k => { const c = box.querySelector('.expg[data-k="' + k + '"] canvas'); if (c && EXC) paint(c, k, Math.min(EXC.ims[k].width, 1800)); };
+  ims.forEach((_, k) => { draw(k); exBoxBind(box.querySelector('.expg[data-k="' + k + '"] .excv'), () => EXC && EXC.covers[k], () => { draw(k); say(); }); });
+  say();
+  box.onclick = async e => {
+    if (e.target.closest('[data-close]')) return closeDlg();
+    const btn = e.target.closest('[data-exsave]'); if (!btn || btn.disabled || saved || !EXC) return;
+    saved = true; btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const out = [], pages = [];
+      for (let k = 0; k < EXC.ims.length; k++) { const c = document.createElement('canvas'); paint(c, k, EXC.ims[k].width); out.push(await exJpg(c)); pages.push({ w: c.width, h: c.height }); c.width = c.height = 0; }
+      await exPut({ ...EXC.r, pages }, out);
+      closeDlg();
+      toast('Covered and saved.');
+    } catch (er) { console.error(er); saved = false; if (btn.isConnected) { btn.disabled = false; btn.textContent = 'Save'; } toast('That didn’t work: ' + (er.message || er), 6000); }
+  };
+}
+// Drag on el to add a box to list() (fractions of the picture); a click on a box takes it off, the smallest under the click first. done() draws again.
+function exBoxBind(el, list, done) {
+  if (!el) return;
+  let d = null;
+  el.onpointerdown = e => { if (e.button !== 0 || !list()) return; e.preventDefault(); el.setPointerCapture(e.pointerId); d = { r: el.getBoundingClientRect(), x0: e.clientX, y0: e.clientY, moved: false }; };
+  el.onpointermove = e => {
+    if (!d) return;
+    if (!d.moved && Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 5) return;
+    d.moved = true;
+    const b = el.querySelector('.exdrag'); b.hidden = false;
+    Object.assign(b.style, { left: Math.min(d.x0, e.clientX) - d.r.left + 'px', top: Math.min(d.y0, e.clientY) - d.r.top + 'px', width: Math.abs(e.clientX - d.x0) + 'px', height: Math.abs(e.clientY - d.y0) + 'px' });
+  };
+  el.onpointerup = e => {
+    const L = list(); if (!d || !L) { d = null; return; }
+    const g = d; d = null; el.querySelector('.exdrag').hidden = true;
+    const fx = v => clamp((v - g.r.left) / (g.r.width || 1), 0, 1), fy = v => clamp((v - g.r.top) / (g.r.height || 1), 0, 1);
+    if (!g.moved) {
+      const x = fx(e.clientX), y = fy(e.clientY), hits = L.map((q, i) => ({ q, i })).filter(({ q }) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h).sort((a, b) => a.q.w * a.q.h - b.q.w * b.q.h);
+      if (hits.length) { L.splice(hits[0].i, 1); done(); }
+      return;
+    }
+    const x = fx(Math.min(g.x0, e.clientX)), y = fy(Math.min(g.y0, e.clientY)), w = fx(Math.max(g.x0, e.clientX)) - x, h = fy(Math.max(g.y0, e.clientY)) - y;
+    if (w < 0.004 || h < 0.004) return;
+    L.push({ x, y, w, h }); done();
+  };
 }
 function exWhyEdit(card, r) {
   kmClose();
@@ -906,7 +989,7 @@ function exPageRender() {
       (filtered ? '<button class="link" data-exfclear>Clear</button>' : '') + '<span class="sp"></span><span class="muted exn">' + list.length + (W ? ' on the list' : list.length === 1 ? ' example' : ' examples') + '</span>' +
       (list.length && W ? '<button class="btn sm primary" data-wlsend>Send to ' + esc(aiSay()) + '</button>' : '') + (list.length && !W ? '<button class="btn sm" data-exsheet>Download as a sheet</button><button class="btn sm primary" data-exshow>Show to the class</button>' : '') + '</div>' +
       (!list.length ? '<p class="muted exnone2">None match. <button class="link" data-exfclear>Clear the filters</button></p>' : '') +
-      groups.map(g => '<section class="exgroup"><h2 class="exgh">' + esc(g[0].title || 'Assignment') + ' <span class="muted">· ' + esc(exClassName(g[0].cls)) + ' · ' + esc(new Date(Math.max(...g.map(r => r.t))).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })) + '</span></h2><div class="exgrid">' + g.map(exCard).join('') + '</div></section>').join(''));
+      groups.map(g => '<section class="exgroup"><h2 class="exgh">' + esc(g[0].title || 'Assignment') + ' <span class="muted">· ' + esc(exClassName(g[0].cls)) + ' · ' + esc(new Date(Math.max(...g.map(r => r.t))).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })) + '</span></h2><div class="exgrid">' + g.map(r => exCard(r)).join('') + '</div></section>').join('');
   for (const im of el.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
   if (typing) { const f = $('#exFind'); if (f) { f.focus(); try { f.setSelectionRange(at, at); } catch {} } }
 }
@@ -927,4 +1010,4 @@ function exPageRender() {
 }
 exReady.then(exRailSay);
 
-Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete, exSaveShot, exTagsOf, exShotWhere });
+Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete, exSaveShot, exTagsOf, exShotWhere, isScoreMark, scoreOffHides });

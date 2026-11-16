@@ -3,7 +3,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, goToStudent, score, classPage, pick, settle } = require('./helpers/app');
+const { noStamps, openApp, openZip, goToStudent, score, classPage, pick, settle } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -124,7 +124,7 @@ test('a typed-in score takes a retake as "14 > 18", and Term setup holds the rul
   await page.waitForFunction(() => /90%/.test(document.querySelector('#bkTab tbody tr:nth-child(2)').textContent));
   assert.match(await rowText(page, 2), /Bram Sample90% retake/);
   assert.match(await page.$eval('#bkTab tbody tr:nth-child(2) .retk', e => e.title), /First try 70%, retake 90%\. Counts: the highest of 2 tries\./);
-  assert.deepEqual(await page.evaluate(() => window.__gs.state().lib.classes[0].units[0].items[0].typed.s['Bram Sample']), { v: 18, st: '', tries: [14] });
+  assert.deepEqual(noStamps(await page.evaluate(() => window.__gs.state().lib)).classes[0].units[0].items[0].typed.s['Bram Sample'], { v: 18, st: '', tries: [14] });
   // The cell shows both again when it is changed.
   await page.click('#bkTab tbody tr:nth-child(2) td[data-bked="i1"]');
   await page.waitForSelector('#bkTab .bkcin');

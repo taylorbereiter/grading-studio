@@ -591,8 +591,16 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     <header class="vhead"><h1>Time tracker</h1><span class="muted">Grading and planning, kept apart</span></header>
     <div id="tkBody"></div>
   </section>
+  <section class="view" id="vPlans" hidden>
+    <header class="vhead"><h1>Plans</h1></header>
+    <div id="phPlans"></div>
+  </section>
+  <section class="view" id="vScores" hidden>
+    <header class="vhead"><h1>Scores</h1></header>
+    <div id="phScores"></div>
+  </section>
   <section class="view" id="vTodo" hidden>
-    <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button><div class="pseg" id="tdView" role="group" aria-label="View"><button data-tdview="" aria-pressed="true">List</button><button data-tdview="week" aria-pressed="false">Week</button></div></header>
+    <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button><div class="pseg" id="tdBy" role="group" aria-label="Group the list"><button data-tdby="day" aria-pressed="true">By day</button><button data-tdby="cat" aria-pressed="false">By category</button></div><div class="pseg" id="tdView" role="group" aria-label="View"><button data-tdview="" aria-pressed="true">List</button><button data-tdview="week" aria-pressed="false">Week</button></div></header>
     <div class="tdchips" id="tdChips" role="group" aria-label="Show"></div>
     <div class="tdpplbar" id="tdPplBar" hidden></div>
     <div id="tdWeek" hidden></div>
@@ -635,6 +643,11 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <div class="lhead"><h2>Where your work is saved</h2></div>
           <p class="muted setp">Your classes, papers, marks and scores live in this browser at this address. A linked folder keeps a second copy by itself.</p>
           <p id="whereLine" style="margin:0;font-size:14px"></p>
+        </section>
+        <section class="lib setsec" id="setGoogle" data-sec="saving" data-need="google" hidden>
+          <div class="lhead"><h2>Google sign-in</h2></div>
+          <p class="setp settch"><label><input type="checkbox" id="gAutoIn" checked> Renew it by itself every hour</label></p>
+          <p class="muted setp">Google asks again every hour. Left on, Google’s small window opens for a moment, usually as you come back to the app. Turned off, syncing waits until you tap “sign in again to sync”.</p>
         </section>
         <section class="lib setsec" id="setTake" data-sec="saving">
           <div class="lhead"><h2>Take your work with you</h2><span class="sp"></span><button class="btn sm" id="restoreBtn">Bring work in…</button><button class="btn sm primary" id="takeBtn">Take my work with me</button></div>
@@ -794,7 +807,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 <script>/*@@FFLATE@@*/</script>
 <script>/*@@MAMMOTH@@*/</script>
 <script>/*@@H2C@@*/</script>
-<script type="text/plain" id="pdfWorkerSrc">/*@@WORKER@@*/</script>
+<script type="text/plain" id="pdfWorkerSrc" data-z="1">/*@@WORKERZ@@*/</script>
 <script type="text/plain" id="heicLicense">/*@@HEICLICENSE@@*/</script>
 <script type="text/plain" id="heicSrc">/*@@HEIC@@*/</script>
 <script>/*@@APP@@*/</script>

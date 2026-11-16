@@ -62,7 +62,7 @@ test('a session opens the next paper with nothing finished, finished papers coun
   L = await log(page);
   assert.equal(L.days[today()].s, 600, 'a break is not counted as work');
   assert.ok(!JSON.stringify(L).match(/Aria|Bram|Cleo|Dov|Testwell/), 'the log has no names in it');
-  assert.equal(await page.evaluate(() => localStorage.getItem('gs.focusRun')), null);
+  assert.equal(await page.evaluate(() => localStorage.getItem('gsp.focusRun')), null);
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -115,16 +115,16 @@ test('Settings keep only what differs from the usual, and a setup from an assist
   assert.equal(await meFocus(page), undefined);
   // a setup brings it in, says what it changes, goes out again the same, and Undo puts it back
   const r = await page.evaluate(async () => {
-    const G = window.__gs, S = G.stpRead({ gradingStudioSetup: 1, focus: { sessionMinutes: 15, breakMinutes: 7, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true, stopCountingAfterMinutes: 4 } });
+    const G = window.__gs, S = G.stpRead({ gradingStudioSetup: 1, focus: { sessionMinutes: 15, lessonMinutes: 30, breakMinutes: 7, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true, stopCountingAfterMinutes: 4, planningAfterMinutes: 5 } });
     const diff = JSON.stringify(G.stpDiff(S)); await G.stpApply(S, { focus: true });
     const me = JSON.parse(JSON.stringify(G.state().lib.me.focus)), ex = await G.stpExport(), out = (typeof ex === 'string' ? JSON.parse(ex) : ex).focus;
     await G.stpUndo();
     return { read: S.focus, diff, me, out, after: (G.state().lib.me || {}).focus };
   });
-  assert.deepEqual(r.read, { len: 15, goal: { k: 'min', n: 90 }, sound: false, title: true }, 'a break length the app does not offer is left out');
-  assert.match(r.diff, /Focus timer and daily goal/);
-  assert.deepEqual(r.me, { len: 15, goal: { k: 'min', n: 90 }, sound: false });
-  assert.deepEqual(r.out, { sessionMinutes: 15, breakMinutes: 5, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true, countTime: true, stopCountingAfterMinutes: 5, freePeriods: true, weeklyLookBack: 'friday', quietWhileFocusing: false, shortestFirst: false, sessionGoals: true });
+  assert.deepEqual(r.read, { len: 15, llen: 30, goal: { k: 'min', n: 90 }, sound: false, title: true, pe: 5 }, 'a break length the app does not offer is left out');
+  assert.match(r.diff, /Focus timer and daily goal/); assert.match(r.diff, /A lesson session lasts 30 minutes/); assert.match(r.diff, /Planning outside focus sessions counts after 5 minutes of steady work/);
+  assert.deepEqual(r.me, { len: 15, llen: 30, goal: { k: 'min', n: 90 }, sound: false, pe: 5 });
+  assert.deepEqual(r.out, { sessionMinutes: 15, lessonMinutes: 30, breakMinutes: 5, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true, countTime: true, stopCountingAfterMinutes: 5, planningAfterMinutes: 5, freePeriods: true, weeklyLookBack: 'friday', quietWhileFocusing: false, shortestFirst: false, sessionGoals: true, music: false, musicMood: 'mix', musicVolume: 50, musicBackground: false });
   assert.equal(r.after, undefined);
   assert.deepEqual(page.errors, []);
   await close();
@@ -152,7 +152,8 @@ test('Focus on this in To do starts a session on the to-do, and the end offers t
 test('the running session stays in this browser; the settings and the log go with the teacher’s work', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'folder.js'), 'utf8');
   const re = new RegExp(src.match(/const LS_LOCAL = \/(.+?)\/;/)[1]);
-  assert.ok(re.test('gs.focusRun'), 'a session half done on one computer is not carried to another');
+  const th = fs.readFileSync(path.join(__dirname, '..', 'src', 'takehome.js'), 'utf8'), skip = new RegExp(th.match(/const PLAN_LS_SKIP = \/(.+?)\/;/)[1]);
+  for (const k of ['gsp.focusRun', 'gsp.focusQ', 'gsp.focusGo']) assert.ok(skip.test(k), 'a session half done on one computer is not carried to another: ' + k);
   assert.ok(!re.test('gs.focus'), 'the log of days and the pace go with the folder and the take-home file');
 });
 
@@ -196,5 +197,120 @@ test('the card shows one suggestion with one blue Start; Change opens the list o
   assert.deepEqual(await page.evaluate(() => { const r = window.__gs.fcRun(); return [r.idl, r.ii, r.away].map(x => x === undefined ? null : x); }), [null, null, null]);
   await page.evaluate(() => window.__gs.fcRunSet(null));
   assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('when the time is up, a few more minutes go on with the same session, and ending them early counts only what ran', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  await page.evaluate(() => window.__gs.fcStart(10, '', false));
+  await later(page, 'r.at -= r.len * 1000 + 2000;');
+  await page.waitForSelector('#fcPanel .fcext [data-fcext="5"]');
+  assert.deepEqual(await page.$$eval('#fcPanel .fcext button', b => b.map(x => x.textContent)), ['+2', '+5', '+10']);
+  const before = (await log(page)).days[today()];
+  await page.click('#fcPanel [data-fcext="5"]');
+  const r = await page.evaluate(() => window.__gs.fcRun());
+  assert.equal(r.st, 'run'); assert.equal(r.len, 300); assert.equal(r.no, 1, 'the same session goes on');
+  // ended after a minute and a half: that is what counts, not the five minutes
+  await later(page, 'r.at -= 90 * 1000;');
+  await page.click('#fcPanel [data-fcstop]');
+  const after = (await log(page)).days[today()];
+  assert.ok(Math.abs(after.s - before.s - 90) <= 2, JSON.stringify([before, after]));
+  assert.equal(after.n, before.n, 'not counted as another session');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('a new copy of a download carries its marks over without counting them as today’s papers', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  const n = await page.evaluate(() => {
+    const G = window.__gs, K = G.kept(), out = [];
+    // yesterday's copy, 4 of 5 scored, and the new copy listed before its first save, with no count yet
+    K.set('older-copy', { id: 'older-copy', name: 'Made-up essay', n: 5, scored: 4, marked: 4, newer: 'newer-copy' });
+    G.fcSeen(); const base = G.fcPapersToday();
+    K.set('newer-copy', { id: 'newer-copy', name: 'Made-up essay', n: 5 });
+    out.push(G.fcPapersToday() - base);
+    // its first save brings the carried marks over
+    K.set('newer-copy', { ...K.get('newer-copy'), scored: 4, marked: 4 }); out.push(G.fcPapersToday() - base);
+    // and one more paper finished today counts
+    K.set('newer-copy', { ...K.get('newer-copy'), scored: 5, marked: 5 }); out.push(G.fcPapersToday() - base);
+    return out;
+  });
+  assert.deepEqual(n, [0, 0, 1]);
+  await close();
+});
+
+test('marks that come in from the folder (made on another computer) or from a restored copy don’t count as today’s papers', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  const n = await page.evaluate(() => {
+    const G = window.__gs, K = G.kept(), out = [];
+    K.set('two-computers', { id: 'two-computers', name: 'Made-up lab report', n: 6, scored: 1, marked: 1 });
+    G.fcSeen(); const base = G.fcPapersToday();
+    // one more paper here
+    K.set('two-computers', { ...K.get('two-computers'), scored: 2, marked: 2 }); out.push(G.fcPapersToday() - base);
+    // four marked yesterday on the school computer arrive through the folder (src/folder.js applyRow)
+    const m0 = K.get('two-computers'), m = { ...m0, scored: 6, marked: 6 }; G.fcCame('two-computers', m0, m); K.set('two-computers', m);
+    out.push(G.fcPapersToday() - base);
+    return out;
+  });
+  assert.deepEqual(n, [1, 1]);
+  await close();
+});
+
+test('a grade only typed in, with no marking, is scored but isn’t a paper marked today', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  const out = await page.evaluate(() => {
+    const G = window.__gs, wc = G.carryParts.workCounts;
+    const pts = { setup: { mode: 'points' }, s: { 'Made-up One': { g: { points: '18' } }, 'Made-up Two': { g: { points: '15', comment: 'Clear opening.' } }, 'Made-up Three': { g: { points: '12' }, f: { 'a.pdf': { 0: [{ t: 'pen' }] } } } } };
+    const sheet = { setup: {}, s: { 'Made-up One': { g: { rubric: [], sheet: '17' } }, 'Made-up Two': { g: { rubric: [], sheet: '14' } } }, read: { 'Made-up Four': { score: 9, outOf: 10 } } };
+    const a = wc(pts), b = wc(sheet);
+    // the Focus count follows marked, not scored
+    const K = G.kept();
+    K.set('typed-only', { id: 'typed-only', name: 'Made-up email', n: 20, scored: 0, marked: 0 });
+    G.fcSeen(); const base = G.fcPapersToday();
+    K.set('typed-only', { ...K.get('typed-only'), scored: 19, marked: 0 }); const typed = G.fcPapersToday() - base;
+    K.set('typed-only', { ...K.get('typed-only'), scored: 19, marked: 2 }); const two = G.fcPapersToday() - base;
+    return [a.scored, a.marked, b.scored, b.marked, typed, two];
+  });
+  assert.deepEqual(out, [3, 2, 3, 0, 0, 2]);
+  await close();
+});
+
+test('Just one paper ends only when a paper is marked, even when another tab counts the day differently', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  await openZip(page, zip); await score(page, [4, 3, 3]); await settle(page);
+  await page.click('#closeBtn'); await page.waitForSelector('#fcCard [data-fcone]');
+  await page.click('#fcCard [data-fcone]');
+  await page.waitForFunction(() => !document.querySelector('#app').hidden && window.__gs.fcRun().st === 'run');
+  // a tab that counts scores (one not updated yet, or a row from before papers marked were counted) sees 20 more papers today
+  await page.evaluate(() => { const G = window.__gs, K = G.kept(); K.set('other-tab', { id: 'other-tab', name: 'Made-up quiz', n: 25, scored: 20 }); G.fcTick(); });
+  await pause(1500);
+  assert.equal(await runState(page), 'run', 'the session goes on');
+  assert.equal(await page.evaluate(() => window.__gs.fcRun().pg), 0);
+  // a paper marked here ends it, with one paper
+  await score(page, [2, 2, 2]); await settle(page);
+  await page.waitForFunction(() => window.__gs.fcRun().st === 'up');
+  assert.equal(await page.evaluate(() => window.__gs.fcRun().got), 1);
+  await close();
+});
+
+test('a paper scored just before Close counts once, and the next session starts from nothing', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  await openZip(page, zip); await settle(page);
+  await page.evaluate(() => window.__gs.fcStart(25, '', 0, null));
+  await score(page, [4, 3, 3]);
+  await page.click('#closeBtn');   // within the wait before a save
+  await pause(2500);
+  assert.deepEqual(await page.evaluate(() => [window.__gs.fcRun().pg, window.__gs.fcPapersToday()]), [1, 1], 'the list was read after the save, not before it');
+  const id = await page.evaluate(() => [...window.__gs.kept().keys()].find(k => k.startsWith('gs.b.') && k !== 'gs.b.n1' && k !== 'gs.b.n2'));
+  await page.evaluate(k => { const G = window.__gs; G.fcRunSet(null); G.fcStart(25, 'mark:' + k, 1, null); }, id);
+  await pause(4000);
+  assert.deepEqual(await page.evaluate(() => { const r = window.__gs.fcRun(); return [r.st, r.pg]; }), ['run', 0], 'opening it again doesn’t count that paper a second time');
+  await close();
+});
+
+test('a session started in a window not updated yet is counted by papers saved, not by the day', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  await page.evaluate(() => { localStorage.setItem('gsp.focusRun', JSON.stringify({ st: 'run', len: 1500, at: Date.now(), w: '', one: 1, p0: 0, fold: false, no: 1 })); window.__gs.fcTick(); });
+  assert.deepEqual(await page.evaluate(() => { const r = window.__gs.fcRun(); return [r.st, r.p0, r.pg]; }), ['run', 1e9, 0]);
   await close();
 });

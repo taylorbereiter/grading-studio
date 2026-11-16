@@ -1,0 +1,65 @@
+/* On a phone (src/phone.js): one column, a tab bar at the bottom, nothing that needs the papers. */
+.phnav{display:none}
+.gsphone .phnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+.phnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;color:var(--muted);text-decoration:none;font-size:var(--text-small);font-weight:500;border-radius:var(--corner-4)}
+.phnav a.on{color:var(--accent)}
+.phnav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.gsphone .rail,.gsphone #drop,.gsphone #earlier,.gsphone #handBack,.gsphone #needNext,.gsphone #lbCard,.gsphone .foot,.gsphone #toMark [data-kopen].btn,.gsphone #toMark .kdots,.gsphone #fcCard .thd .link{display:none!important}
+.gsphone .shell{height:auto;min-height:100vh}
+.gsphone .shellmain{height:auto;overflow:visible;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+.gsphone .start{padding:max(14px,env(safe-area-inset-top)) 16px 0}
+.gsphone .vhead{flex-wrap:wrap;gap:4px 8px;margin-bottom:12px}
+.gsphone .vhead h1{font-size:var(--text-display);line-height:1.15}
+.gsphone .hgrid{grid-template-columns:minmax(0,1fr)!important;gap:var(--space-4)}
+.gsphone #toMark .krow{grid-template-columns:minmax(0,1fr);gap:6px}
+.gsphone #toMark .kname{pointer-events:none;color:var(--fg)}
+.gsphone .tcard{border-radius:var(--corner-5)}
+.gsphone input,.gsphone select,.gsphone textarea{font-size:var(--text-lead)}
+/* Scores */
+.phchips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px;scrollbar-width:none}
+.phchip{flex:none;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--corner-pill);background:var(--surface);border:1px solid var(--line);color:var(--fg);text-decoration:none;font-weight:500}
+.phchip i{width:10px;height:10px;border-radius:var(--corner-round)}
+.phchip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.phlist{padding:0;overflow:hidden;margin-bottom:18px}
+.phitem{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--fg);text-decoration:none;font:inherit;text-align:left}
+.phitem:last-child{border-bottom:0}
+.phn{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.phn b{font-weight:600;overflow-wrap:anywhere}
+.phn small{color:var(--muted);font-size:var(--text-control)}
+.phc{flex:none;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:600}
+.phc.done{color:var(--ok)}
+.phpad{padding:14px 16px;margin:0}
+.phtop{margin-bottom:10px}
+.phtitle{margin:0 0 2px;font-size:var(--text-heading)}
+.phsub{margin:0 0 10px;font-size:var(--text-body)}
+.phstus{padding:0;overflow:visible}
+.phstu{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-bottom:1px solid var(--line);min-height:56px}
+.phstu:last-child{border-bottom:0}
+.phname{flex:1;min-width:0;overflow-wrap:anywhere}
+.phin{width:92px;padding:10px 12px;border:1px solid var(--line-strong);border-radius:var(--corner-4);background:var(--surface);color:var(--fg);text-align:right;font:inherit;font-size:var(--text-lead);font-variant-numeric:tabular-nums}
+.phin:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.phstu.st-missing .phin::placeholder,.phstu.st-excused .phin::placeholder{color:var(--gold-fg);opacity:1}
+.phpaper{min-width:92px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;padding-right:44px;white-space:nowrap}
+.phpaper:has(+ .phsee){padding-right:0}
+.phmore{width:40px;height:40px}
+.phfb{padding:10px 14px;border:1px solid var(--line-strong);border-radius:var(--corner-pill);background:var(--surface);color:var(--muted);font:inherit;font-size:var(--text-body)}
+.phfb[aria-pressed="true"]{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);font-weight:600}
+.gsphone [data-fcnext]{display:none!important}
+.phsee{width:40px;height:40px}
+.phsee svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8}
+.phview{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column}
+.phvhead{display:flex;align-items:center;gap:12px;padding:max(10px,env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--line);background:var(--surface)}
+.phvhead b{flex:1;min-width:0;overflow-wrap:anywhere}
+.phvbody{flex:1;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}
+.phvpage{display:block;width:100%;height:auto;margin:0 auto 12px;border-radius:var(--corner-2);box-shadow:var(--shadow)}
+.phqr{display:flex;justify-content:center;margin:0 0 6px}
+.phqr .qr{width:200px;height:200px}
+.phurl{text-align:center;margin:0 0 12px;font-size:var(--text-control);color:var(--muted);overflow-wrap:anywhere}
+.phsteps{margin:0 0 12px;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.phdot{display:inline-block;width:10px;height:10px;border-radius:var(--corner-round)}
+.phlt{font-size:var(--text-title);margin:8px 0}
+.phln{color:var(--muted);margin:0 0 12px}
+.phslides{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.phslides li{padding:14px 16px}
+.phslides p{margin:6px 0 0;line-height:1.45}
+.phslides .phsn{color:var(--muted);font-size:var(--text-small);border-top:1px solid var(--line);padding-top:6px}

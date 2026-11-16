@@ -148,14 +148,14 @@ function wlSend(list, one, keep) {
     if (e.target.closest('[data-wlcopyask]')) return navigator.clipboard.writeText($('#wlAsk').value).then(() => toast('Copied. Paste it into ' + aiSay() + ' with the PDF.'), () => toast('Copying didn’t work here.'));
     if (e.target.closest('[data-wlpdf]')) return wlPdf();
     const m = e.target.closest('[data-wlmore]');
-    if (m) { const r = exById(m.dataset.wlmore), S = WLS, k = { ask: $('#wlAsk').value, good: S.good, bad: S.bad }; if (r) exPic(r.id, 0).then(b => b && exSaveShot(b, { redo: r, paper: false, back: () => wlSend(S.list.map(x => exById(x.id)), S.one, k) }, r.watch)); }
+    if (m) { const r = exById(m.dataset.wlmore), S = WLS, k = { ask: $('#wlAsk').value, good: S.good, bad: S.bad }; if (r) exCoverEdit(r, () => wlSend(S.list.map(x => exById(x.id)), S.one, k)); }
   };
 }
 const wlPicked = () => WLS ? WLS.list.filter(r => r.watch ? WLS.bad : WLS.good) : [];
 function wlStrip() {
   const el = $('#wlStrip'); if (!el || !WLS) return;
   const l = wlPicked();
-  el.innerHTML = l.length ? l.map(r => '<figure><img alt="" data-expic="' + esc(r.id) + '"><figcaption><b>' + esc(WLS.code(r)) + '</b> · ' + (r.watch ? 'Concern' : 'Strength') + '' + (r.pages.length === 1 ? '<br><button class="link" data-wlmore="' + esc(r.id) + '">Black out more</button>' : '') + '</figcaption></figure>').join('') : '<p class="muted">Nothing picked.</p>';
+  el.innerHTML = l.length ? l.map(r => '<figure><img alt="" data-expic="' + esc(r.id) + '"><figcaption><b>' + esc(WLS.code(r)) + '</b> · ' + (r.watch ? 'Concern' : 'Strength') + '<br><button class="link" data-wlmore="' + esc(r.id) + '">Black out more</button></figcaption></figure>').join('') : '<p class="muted">Nothing picked.</p>';
   for (const im of el.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
   const b = $('#dlgBox [data-wlpdf]'); if (b) b.disabled = !l.length;
 }

@@ -25,7 +25,7 @@ let sampleDataP = null;
 function sampleData() {
   return sampleDataP ||= new Promise((res, rej) => {
     if (window.__gsSampleData) return res(window.__gsSampleData);
-    if (SAMPLE_PACKED) { try { const b = atob(SAMPLE_PACKED), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return res(window.__gsSampleData = Object.assign(new Function(fflate.strFromU8(fflate.inflateSync(u)))(), { api: SAMPLE_API })); } catch (e) { return rej(e); } }
+    if (SAMPLE_PACKED) { try { return res(window.__gsSampleData = Object.assign(new Function(fflate.strFromU8(fflate.inflateSync(unpack85(SAMPLE_PACKED))))(), { api: SAMPLE_API })); } catch (e) { return rej(e); } }
     const s = document.createElement('script'); s.src = 'sample.js' + (SAMPLE_STAMP ? '?' + SAMPLE_STAMP : '');
     s.onload = () => window.__gsSampleData ? res(window.__gsSampleData) : rej(new Error('sample.js held nothing')); s.onerror = () => rej(new Error('sample.js could not be fetched'));
     document.head.appendChild(s);
@@ -68,13 +68,13 @@ async function sampleExample(st, o) {
   EXU = { st, i: batch.students.indexOf(st), items: [], kind: 'paper', marks: !!o.marks, score: !!o.score, row: o.row || null, part: null, docs: new Map(), shown: [], tok: 0 };
   try {
     EXU.items = await exuExpand(exItems(st));
-    const blobs = [], pages = [], score = EXU.score ? exScoreText(st) : '';
+    const blobs = [], pages = [], score = exScoreTop(EXU, EXU.items.map((_, k) => k));
     for (let k = 0; k < EXU.items.length; k++) {
       const it = EXU.items[k], js = await exuDoc(it), v1 = vpRot(it.f, it.p, await js.getPage(it.p + 1), 1), c = (await exuCanvas(k, Math.min(4, 1600 / v1.width))).c;
       if (score && !blobs.length) exScoreOn(c, score);
       blobs.push(await exJpg(c)); pages.push({ w: c.width, h: c.height }); c.width = c.height = 0;
     }
-    await exPut({ ...exBase('paper', st), why: o.why || '', row: EXU.row, letter: exNextLetter(batch.id, 'paper'), pages, marks: EXU.marks, score: !!score }, blobs);
+    await exPut({ ...exBase('paper', st), why: o.why || '', row: EXU.row, letter: exNextLetter(batch.id, 'paper'), pages, marks: EXU.marks, score: EXU.score && !!(exScoreText(st) || exScoreMarks(st)) }, blobs);
   } finally { EXU = null; }
 }
 // What the builder may use. It is this page's own code, only kept out of the page until it is wanted.

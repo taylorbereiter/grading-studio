@@ -50,9 +50,11 @@ async function lTx(store, mode, fn) {
   return new Promise((res, rej) => {
     const t = db.transaction(store, mode), s = t.objectStore(store); let out;
     Promise.resolve(fn(s)).then(v => { out = v; });
-    t.oncomplete = () => res(out); t.onerror = () => rej(t.error);
+    t.oncomplete = () => { res(out); if (mode === 'readwrite') planOut(); }; t.onerror = () => rej(t.error);
   });
 }
+// A change here: the grading page, open in another tab or the next time it opens, sends it to her Google Drive (src/app/drive.js, planSync).
+function planOut() { try { const ch = new BroadcastChannel('gs-plan-out'); ch.postMessage('saved'); ch.close(); } catch { } }
 const reqP = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 const kvGet = k => lTx('kv', 'readonly', s => reqP(s.get(k)));
 const kvSet = (k, v) => lTx('kv', 'readwrite', s => { s.put(v, k); });
@@ -411,7 +413,7 @@ function renderEditor() {
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities', library: 'Past lessons' }[L.backTo] || 'Week') + '</button>' +
     '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + mbBtn(classById(t.classId)) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
-    '<span class="sp"></span>' + ptBadge(l) + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
+    '<span class="sp"></span>' + pfBtn(l) + ptBadge(l) + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
     // Above the slide: the lesson's name, where it is taught, its status, the download and Present. The rest is one click away, in More.
     (lessonTalk(l) ? commentsBtn(l) : '') + panelBtn() + moreHtml(l) +
     '<button class="btn sm" data-a="pptx">Download .pptx</button><button class="btn sm primary" data-pr="present" title="Show this lesson full screen, from this slide">' + prIcon('play') + 'Present</button></div>' + pendingBar(l) + variantBar(l);
@@ -472,7 +474,7 @@ function atlasDlg(l) {
   };
 }
 function thumbHtml(x, l, i) {
-  return '<div class="ls-th' + (i === L.cur ? ' on' : '') + '" data-go="' + i + '" draggable="true"><span class="n">' + (i + 1) + '</span><div class="ls-mini"><div class="ls-slide">' + slideHtml(x, l, false) + '</div>' + ((k => k ? '<span class="ls-thc" title="' + k + ' open comment' + (k === 1 ? '' : 's') + '">💬 ' + k + '</span>' : '')(openTalk(x))) + '</div></div>';
+  return '<div class="ls-th' + (i === L.cur ? ' on' : '') + '" data-go="' + i + '" draggable="true" tabindex="-1"><span class="n">' + (i + 1) + '</span><div class="ls-mini"><div class="ls-slide">' + slideHtml(x, l, false) + '</div>' + ((k => k ? '<span class="ls-thc" title="' + k + ' open comment' + (k === 1 ? '' : 's') + '">💬 ' + k + '</span>' : '')(openTalk(x))) + '</div></div>';
 }
 function fitStage() {
   const w = $('#lsWrap'), st = $('#lsStage'); if (!w || !st) return;
@@ -568,7 +570,13 @@ function onLessonsKey(e) {
     else if (e.key === 'Enter' && e.target.classList.contains('ls-ed')) { e.preventDefault(); startEdit(e.target); }
   }
 }
-function goSlide(i) { editorCommit(); if (!L.open) return; if (i !== L.cur) L.box = ''; L.cur = Math.max(0, Math.min(L.open.slides.length - 1, i)); renderEditor(); }
+// Drawing the editor again takes the focus away from what was clicked, so the keys would go to the page and scroll it.
+// The slide picked takes the focus instead, so Up and Down keep moving through the slides.
+function goSlide(i) {
+  editorCommit(); if (!L.open) return; if (i !== L.cur) L.box = ''; L.cur = Math.max(0, Math.min(L.open.slides.length - 1, i)); renderEditor();
+  const a = document.activeElement, th = $('#lsThumbs .ls-th.on');
+  if (th && (!a || a === document.body || !a.isConnected)) th.focus({ preventScroll: true });
+}
 function newSlide(layout) {
   const first = (L.open.slots[0] || {}).date, d = first ? plMd(first) + ' ' : '';
   const s = normSlide({ layout, fmt: 2, size: (TEACH[layout] || {}).size });
@@ -706,7 +714,7 @@ document.addEventListener('keydown', e => {
 function undoToast(msg, fn) {
   toast(msg, 6000);
   const t = $('.toast'); if (!t) return;
-  const b = document.createElement('button'); b.className = 'link'; b.style.cssText = 'color:inherit;margin-left:12px'; b.textContent = 'Undo';
+  const b = document.createElement('button'); b.className = 'link'; b.style.cssText = 'color:inherit;margin-left:12px;pointer-events:auto'; b.textContent = 'Undo';   // the note itself lets clicks through; its Undo doesn't
   b.onclick = () => { t.hidden = true; fn(); }; t.appendChild(b);
 }
 // Thumbnails drag to reorder.
@@ -986,7 +994,7 @@ function lessonText(l) {
     if (s.video) t += '[Video: ' + s.video.url + (s.video.title ? ' (' + videoSource(s.video) + ')' : '') + ']\n';
     if (s.notes) t += 'Notes: ' + s.notes + '\n';
     if (s.ask) t += 'What I want on this slide: ' + s.ask + '\n';
-    for (const c of s.ctx || []) t += '[Screenshot for context, not on the slide' + (c.note ? ': ' + c.note : '') + (L.dir && L.dirOk && ctxFile(s, c) ? ' (in my Planner folder: ' + ctxFile(s, c) + ')' : '') + ']\n';
+    for (const c of s.ctx || []) t += '[Screenshot for context, not on the slide' + (c.note ? ': ' + c.note : '') + ']\n';
     for (const m of s.talk) if (!m.done) t += (m.by === 'claude' ? PlAi() + ': ' : 'My comment: ') + m.text + '\n';
   });
   if (l.notebook) t += '\n## My notebook for this lesson\n' + nbText(l.notebook) + '\n';
@@ -994,10 +1002,10 @@ function lessonText(l) {
 }
 // Ask Claude: copies this lesson only (nothing from grading), to paste where the teacher is working with Claude.
 async function askClaude(l) {
-  const where = L.dir && L.dirOk ? 'It is saved in my Planner folder as "' + fileBase(l) + '.lesson.json". Edit that file directly (keep the same id), and I will pick up your changes in the Planner.\n\n' : '';
-  await copyText('Here is a lesson from my Planner. ' + where + 'Slide 1 is the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + '. Slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + lessonText(l));
+  // Self-contained: never a folder, path or file on this computer (see sendToClaude).
+  await copyText('Here is a lesson from my Planner. Everything you need is in this message. Don\'t look for, open or ask for any folder or file on my computer. Slide 1 is the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + '. Slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + await lessonContext(l) + lessonText(l));
   const shots = l.slides.reduce((n, s) => n + (s.ctx || []).length, 0);
-  toast('Lesson copied. Paste it into ' + plAi() + ' and say what you want.' + (shots && !(L.dir && L.dirOk) ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
+  toast('Lesson copied. Paste it into ' + plAi() + ' and say what you want.' + (shots ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
 }
 
 /* ---------- import ---------- */
@@ -1410,7 +1418,7 @@ function lessonForFile(l, imgs) {   // imgs: Map to collect pictures as separate
     const m = /^data:image\/(png|jpeg);base64,/.exec(x.src); if (!m) continue;
     const name = ctxFile(s, x); imgs.set(name, x.src); x.src = name;
   }
-  delete c._file; delete c._mod; delete c.pending;
+  delete c._file; delete c._mod; delete c._sync; delete c.pending;
   return c;
 }
 const wTimers = new Map();
@@ -1447,9 +1455,18 @@ async function profileFolderRead() {
   await kvSet('profMod', f.lastModified); await applySetup(j);
 }
 // Picks up lessons Claude added or changed in the folder. A file changed since the app last wrote it wins.
+// After a sync from her other device (src/app/drive.js, planApply): a lesson that changed there is written to its file here, and a lesson
+// deleted there has its file taken away, or reading the folder would bring the old copy back.
+async function planFolderCatchUp() {
+  const gone = (await kvGet('syncGoneFiles')) || [];
+  for (const name of gone) { if (!L.lessons.some(l => l._file === name)) { try { await L.dir.removeEntry(name); } catch { } } }
+  if (gone.length) await kvDel('syncGoneFiles');
+  for (const l of L.lessons.filter(l => l._sync)) { delete l._sync; await folderWrite(l); }
+}
 async function folderRead(say) {
   if (!L.dir || !L.dirOk) return;
   let added = 0, changed = 0;
+  try { await planFolderCatchUp(); } catch (e) { console.warn(e); }
   try {
     for await (const [name, h] of L.dir.entries()) {
       if (h.kind !== 'file' || !/\.lesson\.json$/i.test(name)) continue;

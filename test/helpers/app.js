@@ -293,4 +293,12 @@ async function menuPick(page, sel) {
   await page.waitForSelector('.stampmenu [data-fly="' + where + '"]:not([hidden])');
   await page.click('.stampmenu [data-fly="' + where + '"] ' + sel);
 }
-module.exports = { USED_BEFORE, openOwn, closeOwn, goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, toScreen, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };
+// Typed-in scores keep when each was typed (t) and when one was taken out (gone), for merging two devices (src/merge.js, typedMerge).
+// A test about what was typed reads the scores without those times.
+function noStamps(lib) {
+  for (const c of (lib && lib.classes) || []) for (const u of c.units || []) for (const it of u.items || []) if (it.typed) {
+    delete it.typed.gone; for (const r of Object.values(it.typed.s || {})) if (r) delete r.t;
+  }
+  return lib;
+}
+module.exports = { noStamps, USED_BEFORE, openOwn, closeOwn, goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, toScreen, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };

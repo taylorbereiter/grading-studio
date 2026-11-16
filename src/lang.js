@@ -16,8 +16,21 @@ function langPack(k) {
   if (!Object.prototype.hasOwnProperty.call(LANG_NAMES, k)) return null;
   if (window.__gsLangs && window.__gsLangs[k]) return window.__gsLangs[k];
   if (!Object.prototype.hasOwnProperty.call(LANG_PACKED, k)) return null;
-  if (!LANG_OPEN[k]) { try { const b = atob(LANG_PACKED[k]), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); LANG_OPEN[k] = new Function(fflate.strFromU8(fflate.inflateSync(u)))(); } catch (e) { console.error(e); return null; } }
+  if (!LANG_OPEN[k]) { try { LANG_OPEN[k] = new Function(fflate.strFromU8(fflate.inflateSync(unpack85(LANG_PACKED[k]))))(); } catch (e) { console.error(e); return null; } }
   return LANG_OPEN[k];
+}
+// What the build packs (the languages and the sample in a double-click copy, pdf.js's worker) is written in 85 characters, 5 for every
+// 4 bytes, rather than base64's 64: a sixteenth smaller. The characters are the printable ones but " \ and <, so the text can sit in a
+// script's string. build.js (pack85) writes it; a last group of 1 to 3 bytes is written with one character more than its bytes.
+function unpack85(s) {
+  let A = unpack85.a;
+  if (!A) { A = unpack85.a = new Uint8Array(128); let d = 0; for (let c = 33; c < 127 && d < 85; c++) if (c !== 34 && c !== 92 && c !== 60) A[c] = d++; }
+  const n = s.length, full = Math.floor(n / 5), rest = n % 5, out = new Uint8Array(full * 4 + (rest ? rest - 1 : 0));
+  for (let g = 0, o = 0; g * 5 < n; g++) {
+    let v = 0; for (let j = 0; j < 5; j++) { const i = g * 5 + j; v = v * 85 + (i < n ? A[s.charCodeAt(i)] : 84); }
+    for (let j = 0; j < 4 && o < out.length; j++) out[o++] = Math.floor(v / 2 ** (24 - 8 * j)) & 255;
+  }
+  return out;
 }
 // Fetches a language that isn't here yet. The app itself never needs this (the page fetched the chosen one as it opened); the tests do.
 const langLoad = k => langPack(k) || !Object.prototype.hasOwnProperty.call(LANG_NAMES, k) ? Promise.resolve(!!langPack(k)) : new Promise(done => {
@@ -52,7 +65,8 @@ const LANG_FILLS = [
   ['tkpace', /^about (\d+) minutes? a paper$/], ['fcsofar', /^from (\d+) papers? so far$/], ['tkso', /^(\S.*) so far$/], ['tklessons', /^(\d+) lessons?$/], ['tkdays', /^(\d+) days? reached the goal$/],
   // planning your grading (src/gradeplan.js)
   ['gpleft', /^about (.+) left$/], ['gpsets', /^(\d+) sets?$/], ['gpdays', /^(\d+) days?$/],
-  ['tkcount', /^Time counts while the marking screen or the Planner is in front and you have done something there in the last (\d+) minutes?\.$/],
+  ['tkcount', /^Grading time counts while the marking screen is in front and you have done something there in the last (\d+) minutes?\.$/],
+  ['tkplan', /^Planning time counts in focus sessions on a lesson, and after (\d+) minutes? of steady work in the Planner, but not during your classes\.$/], ['tkpe', /^After (\d+) minutes of steady work$/],
   // Find anything: the teacher's AI assistant, to open beside the app (src/beside.js)
   ['besideopen', /^Open (.+) beside Grading Studio$/],
   // the Gradebook tab
@@ -188,7 +202,7 @@ function trWith(s, P, ctx) {
 // For words that are drawn rather than put on the page, like the feedback page in a returned paper.
 const tr = (s, ctx) => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK, ctx) : s;
 // The parts of the page that are put into the language, and what inside them is never touched (what a teacher typed).
-const LANG_ROOTS = '#rail, #fcPanel, #vTime, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
+const LANG_ROOTS = '#rail, #fcPanel, #vTime, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .lkhead, #vClass .lkoffer, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
   // the marking screen: its top bar and menus, the student list, the tools, the bar above each paper and the chips beside each page, and the score panel (never a page itself)
   '#app .top, #side, #tools, #paper .who, #pane2 .sph, #spGrip, #pane2 .sptool, #bsMenu, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
 const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""]), #railClasses .rnav, #classSel option:not([value=""]), #crumbClass, #stuList .nm, #paper .who h2, #paper .fhead > span:first-child, #grade .cn > span';

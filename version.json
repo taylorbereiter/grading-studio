@@ -1,22 +1,23 @@
 {
- "version": "1.28.30",
- "build": "33084ea6d035",
+ "version": "1.28.63",
+ "build": "0988333fd3cd",
  "notes": [
-  "Type scores straight into the gradebook like a spreadsheet: start typing on a cell, Enter goes to the next student and Tab to the next assignment. Paste a column from a spreadsheet onto the first cell to fill it down.",
-  "+ Add scores: type the name and press Enter to start typing scores down the new column. MYP task levels can be typed in the table too."
+  "A watch list for misconceptions and concerns. In the Screenshot bar, tick Add to the watch list, black out any names, and note what you see. Every screenshot you save, strong or on the watch list, is kept with the student whose work it is.",
+  "Each student's card (the ⓘ beside a name) shows their strengths and concerns as a timeline, with the tags you have seen most and Copy notes for report comments. The Examples page has Watch list and Whose work, which shows who your strong examples come from.",
+  "Send to your assistant makes one PDF of a student's or an assignment's pictures and notes, with each student as a random code and names in your notes as [name]. Which code is which student stays in this browser."
  ],
  "files": {
-  "index.html": "6073cdbd779d300a473def1dabeb767dd21681a4d9e987636141899bfb9ebfdf",
-  "planner.html": "e7721eff7016d136d8cf2362e01a74799eed94ebc5bfbb12e35a62fed85807b2"
+  "index.html": "c0e42cb431d379ffa3c95651815a1141122dd98720e524b2ccab98ecfe298273",
+  "planner.html": "a5641fd92ceda0a02ac2917453faa229650be85046bec5e56713ed2717a5e7a5"
  },
  "langs": {
-  "lang/zh-Hant.js": "10dfa7de387abc6a5e80a56f8cda49ca4d21be6529c3df4e6cfc8da6c011c779",
-  "lang/zh-Hans.js": "81ca403135e7a9b032297d6745df3869d2807b772eca43c45253c58249d6c51c",
-  "lang/es.js": "984fb1d9eb40f2bb364e300f2d21c417f7c6c33f7e5747cbe7b4cbb8ae5cba46",
-  "lang/fr.js": "3e5c23f3a336c9ef8f4ce321774d50fdcfcf28b852a361ef17bf3043f915b428",
-  "lang/de.js": "3821ac202338f5a6a99a1a6eb9b98c723ff6657f7b14e1a9b6d65e16120a3cbc",
-  "lang/pt-BR.js": "1c89fe78f13e78816ef38a7d2f8da7964751366fcf45b50abc0b4ea7f9c28768",
-  "lang/ja.js": "644e9ae2a8a7e0ab47c7177912c42d57264821b8d4c31e10878db98d567c26d0",
-  "lang/ko.js": "a9d7cde5c616743022971fac4ad4754bafce5f3993e14b1fcfa16dd58843c66f"
+  "lang/zh-Hant.js": "f0e87a69b4d88733ce010c265b8f95b5ee273c7c2552a17a22b57f3d5080b697",
+  "lang/zh-Hans.js": "8f8df879cf440638cdfee176c65967d6b35152a83932ff836b9f513028baa655",
+  "lang/es.js": "b49f186ceef2ee164b12a77cceb059d077f5e2ceafcceb292ba4b9b3991a9daf",
+  "lang/fr.js": "2fbe2f1a988cd612dd4e69e4c53cfe901fed3258f82816b86def4e53286f4a47",
+  "lang/de.js": "e85b99083fc17a7f9cd8c3571c7b1b17135f5f339cf52eb94a22dd51bb4ef1b1",
+  "lang/pt-BR.js": "8bb2c13d737321823ea0446979112753e3300e3f5d4b8477d911e476884b5aba",
+  "lang/ja.js": "871c11b70c3c26bf3f549631906745b910410b2621fb6b3c130125d6e92be9e7",
+  "lang/ko.js": "64d92d34629a6b0022c3a8e137bd34aa2e8024c494c6d7c85fb773db64c00f0f"
  }
 }

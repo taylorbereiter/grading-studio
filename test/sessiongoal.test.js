@@ -37,7 +37,7 @@ function paceSeed(todo) {
   return { ls: { ...s.ls, 'gs.lib': JSON.stringify(lib), 'gs.focus': JSON.stringify(focus) }, idb };
 }
 // The session's clock moved on, as if its minutes had gone by.
-const timeUp = page => page.evaluate(() => { const r = window.__gs.fcRun(); r.at -= r.len * 1000 + 1000; localStorage.setItem('gs.focusRun', JSON.stringify(r)); window.__gs.fcTick(); });
+const timeUp = page => page.evaluate(() => { const r = window.__gs.fcRun(); r.at -= r.len * 1000 + 1000; localStorage.setItem('gsp.focusRun', JSON.stringify(r)); window.__gs.fcTick(); });
 
 test('a session goal is suggested from her pace, set in a press, shown while it runs, and carried into the next session', async () => {
   const { page, close } = await openApp(browser, { seed: paceSeed() });
@@ -74,7 +74,7 @@ test('a session goal is suggested from her pace, set in a press, shown while it 
   // a break says what comes next, and the next session picks it up
   await page.click('#fcPanel [data-fcbreak]');
   assert.equal(await text(page, '#fcPanel .fcsgnext'), 'Session goal 2 papers (carried over)');
-  await page.evaluate(() => { const r = window.__gs.fcRun(); r.brkAt -= r.brkLen * 1000 + 1000; localStorage.setItem('gs.focusRun', JSON.stringify(r)); window.__gs.fcTick(); });
+  await page.evaluate(() => { const r = window.__gs.fcRun(); r.brkAt -= r.brkLen * 1000 + 1000; localStorage.setItem('gsp.focusRun', JSON.stringify(r)); window.__gs.fcTick(); });
   await page.waitForSelector('#fcPanel [data-fcother]');
   assert.equal(await text(page, '#fcPanel .fcsgnext'), 'Session goal 2 papers (carried over)');
   await page.click('#fcPanel [data-fcstart]');
@@ -84,7 +84,7 @@ test('a session goal is suggested from her pace, set in a press, shown while it 
   await page.waitForSelector('#fcPanel .fcstat');
   assert.match(await text(page, '#fcPanel .fcstat'), /^Session 2/);
   // a paper finished in this one counts toward it
-  await page.evaluate(() => { const r = window.__gs.fcRun(); r.p0 -= 2; localStorage.setItem('gs.focusRun', JSON.stringify(r)); window.__gs.fcRunSet(r); });
+  await page.evaluate(() => { const r = window.__gs.fcRun(); r.pg = 2; localStorage.setItem('gsp.focusRun', JSON.stringify(r)); window.__gs.fcRunSet(r); });
   assert.match(await text(page, '#fcPanel .fcsg'), /^Session goal2 papersReached$/);
   // stopping early with it reached: nothing to carry
   await page.click('#fcPanel [data-fcstop]');
@@ -127,7 +127,7 @@ test('a goal of her own words, a to-do as the goal, letting a goal go, and start
   assert.equal(await page.$('#fcPanel [data-fccarryno]'), null);
   // after a break: something else opens the start again
   await page.click('#fcPanel [data-fcbreak]');
-  await page.evaluate(() => { const r = window.__gs.fcRun(); r.brkAt -= r.brkLen * 1000 + 1000; localStorage.setItem('gs.focusRun', JSON.stringify(r)); window.__gs.fcTick(); });
+  await page.evaluate(() => { const r = window.__gs.fcRun(); r.brkAt -= r.brkLen * 1000 + 1000; localStorage.setItem('gsp.focusRun', JSON.stringify(r)); window.__gs.fcTick(); });
   await page.waitForSelector('#fcPanel [data-fcother]');
   await page.click('#fcPanel [data-fcother]');
   assert.equal(await run(page), null);

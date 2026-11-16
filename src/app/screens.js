@@ -7,7 +7,7 @@ const routeOf = hash => {
   if (p[0] === 'class' && p[1]) {
     const c = p[1] === '-' ? lib.loose : classById(p[1]);
     if (c) {
-      const tab = c !== lib.loose && c.names.length && classTabs().some(t => t[0] && t[0] === p[2]) ? p[2] : '';
+      const tab = c !== lib.loose && (c.names.length || p[2] === 'gradebook') && classTabs().some(t => t[0] && t[0] === p[2]) ? p[2] : '';
       // one student: by place on the roster, never by name, since an address stays in the browser's history
       const stu = tab === 'students' && /^\d+$/.test(p[3] || '') && +p[3] >= 1 && +p[3] <= c.names.length ? +p[3] - 1 : null;
       // attendance: a day (YYYY-MM-DD), 'all' for looking back, or nothing for today
@@ -17,6 +17,8 @@ const routeOf = hash => {
   }
   // from the Planner's sidebar, which knows a class only by the name on its timetable (spaces, dashes and capitals don’t count: “Course A 2” there is “CourseA2” here)
   if (p[0] === 'class-named' && p[1]) { const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(p.slice(1).join('/')), c = k && lib.classes.find(c => nk(c.name) === k); return c ? { v: 'class', c, tab: '', stu: null, named: true } : { v: 'home', noClass: p.slice(1).join('/').slice(0, 60) }; }
+  if (p[0] === 'plans' && PHONE) return { v: 'plans', id: p[1] || '' };
+  if (p[0] === 'scores' && PHONE) return { v: 'scores', cls: p[1] || '', key: p[2] || '' };
   if (p[0] === 'todo') return { v: 'todo', week: p[1] === 'week' };
   if (p[0] === 'time') return { v: 'time' };
   if (p[0] === 'examples') return { v: 'examples' };
@@ -61,6 +63,7 @@ function go(hash, replace) {
 let routeTok = 0, routeOpening = '', routeTab = null;
 function applyRoute() {
   const r = routeNow();
+  if (soloRoute(r)) return;   // only this student on screen (src/solo.js)
   // its own address from here on
   if (r.named) { go(classHash(r.c), true); return; }
   if (r.noClass) { toast('There is no class called “' + r.noClass + '” in grading yet. “Add a class” in the sidebar makes one.', 7000); go('#/', true); return; }
@@ -89,7 +92,7 @@ async function openRoute(id) {
   const stale = () => tok !== routeTok;
   if (stale()) return;
   const m = keptMeta.get(id);
-  if (!m || !m.papers) { routeOpening = ''; if (m) toast('The papers for this one aren’t kept in this browser. Drop the download in again.', 6000); return go('#/', true); }
+  if (!m || !canOpen(m)) { routeOpening = ''; if (m) toast('The papers for this one aren’t kept in this browser. Drop the download in again.', 6000); return go('#/', true); }
   try { await reopenKept(id); } catch (e) { console.error(e); }
   if (stale()) return;
   routeOpening = '';
@@ -107,7 +110,8 @@ function showScreen(r) {
   if (grading && !$('#welcome').hidden) wlClose();
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
-  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
+  if (grading && $('#soloBar') && soloOn() && $('#soloBar').dataset.b !== batch.id) soloBar();   // src/solo.js
+  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening'], ['vScores', 'scores'], ['vPlans', 'plans']]) $('#' + id).hidden = grading || r.v !== v;
   if (r.v !== 'class') classLeave();
   // moving from one student to the next keeps her place on the page
   const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');
@@ -115,6 +119,9 @@ function showScreen(r) {
   screenKey = key;
   railRender();
   if (!grading && r.v === 'examples') exPageRender();
+  if (!grading && r.v === 'scores') phScoresRender(r);
+  if (!grading && r.v === 'plans') phPlansRender(r);
+  phNavRender();
   if (grading) tabShow(r); else if (dlgPage) dlgShut();
 }
 // How far along a kept download is, in the same words everywhere: on Home, on a class page and in the sidebar's counts.
@@ -142,14 +149,14 @@ function renderLib() {
   renderKept();
   const card = it => {
     const m = it.batchId ? keptMeta.get(it.batchId) : null, st = m ? keptState(m) : null, typedOnly = !!it.typed && !it.batchId;
-    return '<div class="card" draggable="true" data-card="' + it.id + '" title="' + (m && m.papers ? 'Open the papers' : it.typed && !it.batchId ? 'Scores typed in: open the gradebook' : 'Add this assignment’s papers') + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
-      (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (typedOnly ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + '</div>' +
+    return '<div class="card" draggable="true" data-card="' + it.id + '" title="' + (m && canOpen(m) ? 'Open the papers' : it.typed && !it.batchId ? 'Scores typed in: open the gradebook' : 'Add this assignment’s papers') + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
+      (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (typedOnly ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + lkCard(it) + '</div>' +
       '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
       '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (h => h ? '<div class="m">' + h + '</div>' : '')(tkAsgHtml(it.id)) + (st ? stateChip(st) : '') + '</div>' +
-      '<div class="row">' + (m && m.papers ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
+      '<div class="row">' + (m && canOpen(m) ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
         : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') +
         kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-edit-asg="' + it.id + '">Edit<small>Name, type, due date, unit, rubric</small></button>' +
-          (m && m.papers || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : ''), 'right') + '</div></div>';
+          (m && canOpen(m) || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : '') + lkMenu(it, holderById(it.classId) || lib.loose), 'right') + '</div></div>';
   };
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
     '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><span class="ucount">' + u.items.length + (u.items.length === 1 ? ' assignment' : ' assignments') + '</span><span class="sp"></span>' +
@@ -173,12 +180,14 @@ function renderLib() {
   // one button for what is set once: the school link, how the class is graded, the roster, its place in the sidebar
   const setup = (c, ci) => kmWrap('Class setup', 'class="btn sm" id="clsSetup"',
     '<button class="mitem" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '<small>Names, and the name of the class</small></button>' +
+    (c.names.length ? '' : '<a class="mitem" href="' + classHash(c, 'gradebook') + '" data-bkfirst>Import scores…<small>From your old gradebook: a CSV or Excel file, or cells pasted</small></a>') +   // its students can become the roster (bookimport.js)
     ibClassItem(c, ci) +
+    '<button class="mitem" data-lkedit="' + ci + '">Linked classes…</button>' +
     '<button class="mitem" data-mbset="' + ci + '">' + (mbOf(c) ? 'Change the ' + esc(sysLink()) + ' link' : 'Add the ' + esc(sysLink()) + ' link…') + '</button>' +
     '<hr><button class="mitem" data-cmove="' + ci + ':-1"' + (ci ? '' : ' disabled') + '>Move up in the sidebar</button><button class="mitem" data-cmove="' + ci + ':1"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>Move down in the sidebar</button>', 'right');
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' + (ci < 0 ? '' : ibPill(c)) +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.</span><span class="sp"></span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + (mbOf(c) ? mbLink(c) : '') + (c.names.length ? '' : '<button class="btn sm primary" data-edit-class="' + ci + '">Add roster</button>') + setup(c, ci)) + '</div>' + tabs(c, ci) +
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + (mbOf(c) ? mbLink(c) : '') + (c.names.length ? '' : '<button class="btn sm primary" data-edit-class="' + ci + '">Add roster</button>') + setup(c, ci)) + '</div>' + lkHead(c) + tabs(c, ci) +
     (tab ? '<div class="cpanel" id="classPanel" data-sig="' + rosterSig(c) + '"></div>'
       : '<div class="ctools"><span class="sp"></span><button class="btn sm' + (ci >= 0 && !c.names.length ? '' : ' primary') + '" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
         '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '<button class="addunit" data-addunit="' + esc(c.id) + '">+ Unit</button></div>') + '</div>';
@@ -316,9 +325,9 @@ $('#start').addEventListener('click', async e => {
   if (b.dataset.openAsg) {
     asgTarget = findItem(b.dataset.openAsg).it;
     openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">' + (sysName() ? 'Where is the ' + esc(sysName()) + ' download?' : 'Where are the papers?') + ' You can also drop the ZIP or the folder straight onto this assignment’s card.</p>' + ruHtml(asgTarget.setup, { now: 1 }) + '</div>' +
-      '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true, 'lg');
+      '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button>' + (asgTarget.batchId ? '' : '<button class="btn" data-typeonly title="No papers at all: an empty column in the class gradebook to type each score into">No papers: just type the scores…</button>') + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true, 'lg');
     ruWire($('#dlgBox'), asgTarget);
-    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a), 'lg'); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
+    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-typeonly]')) { closeDlg(); return bkTypeOnly(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a), 'lg'); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
     return;
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
@@ -355,14 +364,14 @@ function editAssignment(id, unitId, clsId) {
   const it = f ? f.it : { id: uid(), name: '', classId: start.c.id };
   const classPick = f
     ? '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>'
-    : '<div class="field"><label>Classes</label><div class="ctags" id="aClasses">' + holders().map(c => '<label class="ctag"><input type="checkbox" value="' + esc(c.id) + '"' + (c === start.c ? ' checked' : '') + '><span' + (c === lib.loose ? '' : ' data-raw') + '>' + esc(c === lib.loose ? 'No class' : c.name) + '</span></label>').join('') + '</div></div>';
+    : '<div class="field"><label>Classes</label><div class="ctags" id="aClasses">' + holders().map(c => '<label class="ctag"><input type="checkbox" value="' + esc(c.id) + '"' + (c === start.c || lkSibs(start.c).includes(c) ? ' checked' : '') + '><span' + (c === lib.loose ? '' : ' data-raw') + '>' + esc(c === lib.loose ? 'No class' : c.name) + '</span></label>').join('') + '</div>' + (lkSibs(start.c).length ? '<p class="muted lkhint">Linked classes are ticked. Untick one to keep this assignment out of it.</p>' : '') + '</div>';
   openDlg('<div class="bh"><h2>' + (f ? 'Edit assignment' : 'New assignment') + '</h2></div><div class="bb">' +
     '<div class="field"><label for="aName">Name</label><input type="text" id="aName" value="' + esc(it.name) + '" placeholder="e.g. Ch 3 Analysis Paragraph"></div>' +
     classPick +
     '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select><p class="muted" id="aUnitNote" style="font-size:13px;margin:6px 0 0" hidden></p></div>' +
     '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + bkCats().map(([t, , s]) => '<button type="button" data-atype="' + esc(t) + '" aria-pressed="' + (it.type === t) + '">' + esc(s) + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">' + esc(bkCountSay()) + '</p></div>' +
     '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"><p class="duehint" id="aDueSay">' + gpDueHint(it.due, f ? it.id : '') + '</p></div>' +
-    ruHtml(f ? it.setup : null) + '</div>' +
+    ruHtml(f ? it.setup : null) + (f ? lkAlsoHtml(it) : '') + '</div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true, 'lg');
   const ticked = () => [...document.querySelectorAll('#aClasses input:checked')].map(x => holderById(x.value)).filter(Boolean);
   const fillUnits = keep => {
@@ -415,15 +424,16 @@ function editAssignment(id, unitId, clsId) {
         if (cs.length > 1) toast('Added to ' + cs.map(c => c === lib.loose ? 'No class' : c.name).join(', ').replace(/, ([^,]*)$/, ' and $1'));
         return;
       }
-      const c = holderById($('#aClass').value);
+      const c = holderById($('#aClass').value), was = { name: it.name, type: it.type, due: it.due };
       let to = c.units.find(u => u.id === $('#aUnit').value);
       if (!to) c.units.push(to = { id: uid(), name: 'Unit 1', items: [] });
       it.name = name; it.classId = c.id;
-      setKind(it);
+      setKind(it); lkAlsoDo(it, was, false);
       if (f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
       if (f.u !== to) to.items.push(it);
+      const got = ru.got(), also = !!$('#aAlso') && $('#aAlso').checked;
       saveLib(); closeDlg(); renderLib();
-      if (ru.got()) ruPut(it, ru.got());
+      if (got && ruPut(it, got) && also) { for (const t of lkTwins(it)) t.it.setup = lkCopy(it.setup); saveLib(); }
       // a type changed while grading: the score panel follows
       if (batch) { renderGrade(); renderList(); }
     }

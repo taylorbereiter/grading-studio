@@ -135,7 +135,7 @@ const rubricsDiffer = (x, y) => rubricKey(x) !== rubricKey(y);
 function workScored(w) {
   const blank = v => v == null || v === '';
   if (w && Object.keys(w.read || {}).length) return true;
-  return !!w && Object.values(w.s || {}).some(r => { const g = (r && r.g) || {}; return g.status !== 'missing' && g.status !== 'excused' && ((g.rubric || []).some(v => v != null) || !blank(g.points) || !blank(g.sheet)); });
+  return !!w && Object.values(w.s || {}).some(r => { const g = (r && r.g) || {}; return g.status !== 'missing' && g.status !== 'excused' && ((g.rubric || []).some(v => v != null) || !blank(g.points) || !blank(g.pk) || !blank(g.sheet)); });
 }
 const noSpot = s => { const { spot, ...o } = s || {}; return o; };
 // Which of two copies of a rubric is the card's: by what it says, and then by what it would score.
@@ -396,16 +396,19 @@ function mergeEdits(aEd = {}, bEd = {}, work, rows, prefer) {
 function workCounts(work) {
   const su = work.setup || {}, s = work.s || {}, read = work.read || {}, blank = v => v == null || v === '';
   // fb: Feedback complete switched on, what a formative activity counts in place of scores
-  const out = { scored: 0, partial: 0, off: 0, fb: 0 };
+  // marked: scored papers she worked on here (rubric rows, ink or a comment), what Focus counts as papers marked. A grade only typed in
+  // (points, the Grade sheet) or read off the paper is scored, but not marked.
+  const out = { scored: 0, marked: 0, partial: 0, off: 0, fb: 0 };
   for (const k of new Set([...Object.keys(s), ...Object.keys(read)])) {
     const g = (s[k] && s[k].g) || {}, r = g.rubric || [], rows = su.criteria ? su.criteria.map((_, i) => r[i]) : r, on = rows.filter(v => v != null).length;
+    const worked = !!(s[k] && s[k].f && Object.keys(s[k].f).length) || !blank(g.comment);
     if (g.status !== 'missing' && g.status !== 'excused' && g.fb) out.fb++;
     // given back early, one student at a time
     if (g.status !== 'missing' && g.status !== 'excused' && g.sent) { out.sent = (out.sent || 0) + 1; out.sentT = Math.max(out.sentT || 0, g.sent); }
     if (g.status === 'missing' || g.status === 'excused') out.off++;
-    else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : on === rows.length && on) out.scored++;
+    else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : (!blank(g.pk) && !Array.isArray(su.ib)) || (on === rows.length && on)) { out.scored++; if ((su.mode !== 'points' && on === rows.length && on) || worked) out.marked++; }   // a percent typed as the score is a finished score, though not a paper marked
     else if (su.mode !== 'points' && on) out.partial++;
-    else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) out.scored++;
+    else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) { out.scored++; if (worked) out.marked++; }
   }
   // kept only when there is some, so work with no Feedback complete is stored as before
   if (!out.fb) delete out.fb;
@@ -688,7 +691,44 @@ function todoMerge(a, b) {
   const auto = { ...(b.auto || {}) };
   for (const [k, v] of Object.entries(a.auto || {})) if (!auto[k] || (v.t || 0) >= (auto[k].t || 0)) auto[k] = v;
   const offB = (b.offT || 0) > (a.offT || 0);
-  return { ...b, ...a, items: order.map(id => by.get(id)), auto, off: (offB ? b.off : a.off) || {}, offT: Math.max(a.offT || 0, b.offT || 0) };
+  const out = { ...b, ...a, items: order.map(id => by.get(id)), auto, off: (offB ? b.off : a.off) || {}, offT: Math.max(a.offT || 0, b.offT || 0) };
+  // categories one by one, as the lines are (a deleted one stays deleted); her order goes with whichever copy set it last
+  const cats = new Map();
+  for (const c of [...(Array.isArray(a.cats) ? a.cats : []), ...(Array.isArray(b.cats) ? b.cats : [])]) if (c && c.id && (!cats.has(c.id) || (c.t || 0) > (cats.get(c.id).t || 0))) cats.set(c.id, c);
+  if (cats.size) out.cats = [...cats.values()]; else delete out.cats;
+  const oa = a.corder && Array.isArray(a.corder.ids) ? a.corder : null, ob = b.corder && Array.isArray(b.corder.ids) ? b.corder : null;
+  const corder = oa && ob ? ((ob.t || 0) > (oa.t || 0) ? ob : oa) : oa || ob;
+  if (corder) out.corder = corder; else delete out.corder;
+  return out;
+}
+// Two copies of an assignment's typed-in scores (src/book.js, bkPut) made one: for each student, whichever copy changed theirs last
+// (each score has its time, t; a score taken out leaves its time in gone). Out of, and the rest, go with the copy changed later.
+function typedMerge(a, b, bLater) {
+  const sa = a.s || {}, sb = b.s || {}, ga = a.gone || {}, gb = b.gone || {}, s = {}, gone = {};
+  for (const n of new Set([...Object.keys(sa), ...Object.keys(sb), ...Object.keys(ga), ...Object.keys(gb)])) {
+    const ta = Math.max(sa[n] ? sa[n].t || 0 : -1, ga[n] || -1), tb = Math.max(sb[n] ? sb[n].t || 0 : -1, gb[n] || -1);
+    const fromB = tb > ta || (tb === ta && bLater), r = fromB ? sb[n] : sa[n], g = fromB ? gb[n] : ga[n];
+    if (r && !(g > (r.t || 0))) s[n] = r; else if (g) gone[n] = g;
+  }
+  const out = { ...(bLater ? { ...a, ...b } : { ...b, ...a }), s };
+  if (Object.keys(gone).length) out.gone = gone; else delete out.gone;
+  return out;
+}
+// The Planner on two devices (src/app/drive.js, planSync): each lesson by its own time (updated), each kept setting by its time; a lesson
+// deleted on either side after its last change stays deleted (gone: { 'l:<id>': time }).
+function mergePlan(A, B) {
+  const gone = { ...(B.gone || {}) };
+  for (const [k, t] of Object.entries(A.gone || {})) if (!(gone[k] >= t)) gone[k] = t;
+  const lessons = {}, la = A.lessons || {}, lb = B.lessons || {};
+  for (const id of new Set([...Object.keys(la), ...Object.keys(lb)])) {
+    const a = la[id], b = lb[id], w = !a ? b : !b ? a : (b.updated || 0) >= (a.updated || 0) ? b : a;   // the same time: Drive's, so both devices settle on one
+    if (gone['l:' + id] >= (w.updated || 0)) continue;
+    lessons[id] = w;
+  }
+  for (const k of Object.keys(gone)) if (k.startsWith('l:') && lessons[k.slice(2)]) delete gone[k];   // written again after it was deleted
+  const kv = {}, ka = A.kv || {}, kb = B.kv || {};
+  for (const k of new Set([...Object.keys(ka), ...Object.keys(kb)])) { const a = ka[k], b = kb[k]; kv[k] = !a ? b : !b ? a : (b.t || 0) >= (a.t || 0) ? b : a; }
+  return { lessons, kv, gone };
 }
 function mergeFields(x, y, win, dev, now, said) {
   const fx = nodeParts(x), fy = nodeParts(y), parts = {}, fv = {}, both = [], fromY = [];
@@ -704,6 +744,8 @@ function mergeFields(x, y, win, dev, now, said) {
       if (said) { parts[k] = (said === 'b' ? fy : fx)[k]; fv[k] = vBump(vJoin(vx, vy), dev, now); chose = true; if (said === 'b') fromY.push(k); }
       else { parts[k] = fx[k]; fv[k] = vx; ask = true; }
     }
+    // scores typed in on two devices (a phone and a computer): student by student, so both sets of scores stay
+    else if (k === 'typed' && fx[k] && fy[k] && typeof fx[k] === 'object' && typeof fy[k] === 'object') { parts[k] = typedMerge(fx[k], fy[k], win === y); fv[k] = vBump(vJoin(vx, vy), dev, now); if (hashOf(parts[k]) !== hx) fromY.push(k); }
     else { parts[k] = (win === y ? fy : fx)[k]; fv[k] = vBump(vJoin(vx, vy), dev, now); both.push(k); if (win === y) fromY.push(k); }
   }
   return { parts, fv, both, fromY, ask, chose };

@@ -54,11 +54,11 @@ function renderNeedsOnly() {
   safeAskRender(); sampleNoteRender();
   const el = $('#needs'), rows = [], chev = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
   for (const m of [...keptMeta.values()].sort((a, b) => b.t - a.t)) {
-    if (m.partial && m.papers) rows.push({ t: m.partial + (m.partial === 1 ? ' paper is' : ' papers are') + ' partly scored', s: m.name || 'A download', open: m.id });
-    else if (!m.papers) rows.push({ t: 'Papers not kept in this browser', s: (m.name || 'A download') + ': drop the download in again to reopen it' });
+    if (m.partial && canOpen(m)) rows.push({ t: m.partial + (m.partial === 1 ? ' paper is' : ' papers are') + ' partly scored', s: m.name || 'A download', open: m.id });
+    else if (!canOpen(m)) rows.push({ t: 'Papers not kept in this browser', s: (m.name || 'A download') + ': drop the download in again to reopen it' });
   }
   const last = store.get('gs.lastBackup', 0), days = Math.floor((Date.now() - last) / 864e5);
-  if (keptMeta.size > 0 && fld.state === 'none' && days >= 7 && !safeAskShown()) rows.push({ t: last ? 'Your take-home file is ' + days + ' days old' : 'Your work is not backed up', s: 'Choose a folder or make a take-home file, in Settings', href: '#/settings' });
+  if (keptMeta.size > 0 && fld.state === 'none' && !G.email && days >= 7 && !safeAskShown()) rows.push({ t: last ? 'Your take-home file is ' + days + ' days old' : 'Your work is not backed up', s: 'Choose a folder or make a take-home file, in Settings', href: '#/settings' });
   const h = !rows.length ? '' : '<section class="ncard"><div class="nhead"><h2>Needs a look</h2><span class="schip warn">' + rows.length + '</span></div>' +
     rows.slice(0, 6).map(r => { const body = '<span class="nt"><b>' + esc(r.t) + '</b><span class="ns">' + esc(r.s) + '</span></span>'; return r.open ? '<button class="nrow" data-nopen="' + esc(r.open) + '">' + body + chev + '</button>' : r.href ? '<a class="nrow" href="' + r.href + '">' + body + chev + '</a>' : '<div class="nrow">' + body + '</div>'; }).join('') +
     (rows.length > 6 ? '<div class="nrow"><span class="ns">and ' + (rows.length - 6) + ' more</span></div>' : '') + '</section>';
@@ -128,9 +128,9 @@ function findRows() {
   for (const c of holders()) for (const u of c.units) for (const it of u.items) {
     const m = it.batchId ? keptMeta.get(it.batchId) : null; if (it.batchId) carded.add(it.batchId);
     const here = batch && batch.id === it.batchId;
-    add('Assignments', it.name, (c === lib.loose ? 'No class' : c.name) + ' · ' + u.name + (here ? ' · open now' : m && m.papers ? ' · ' + keptSay(m) : ''), () => here ? null : m && m.papers ? reopenKept(it.batchId, it) : go(classHash(c)));
+    add('Assignments', it.name, (c === lib.loose ? 'No class' : c.name) + ' · ' + u.name + (here ? ' · open now' : m && canOpen(m) ? ' · ' + keptSay(m) : ''), () => here ? null : m && canOpen(m) ? reopenKept(it.batchId, it) : go(classHash(c)));
   }
-  for (const m of keptMeta.values()) if (!carded.has(m.id) && m.papers && !(batch && batch.id === m.id)) add('Assignments', m.name || 'A download', 'Kept in this browser · ' + keptSay(m), () => reopenKept(m.id));
+  for (const m of keptMeta.values()) if (!carded.has(m.id) && canOpen(m) && !(batch && batch.id === m.id)) add('Assignments', m.name || 'A download', 'Kept in this browser · ' + keptSay(m), () => reopenKept(m.id));
   if (!batch) {
     add('Do', sysName() ? 'Open a ' + sysName() + ' download' : 'Open student work', sysName() ? 'The ZIP or PDFs' : 'A ZIP, PDFs, Word files or photos', press('#pickFiles'));
     add('Do', 'Open a folder of papers', '', press('#pickFolder'));
@@ -181,6 +181,7 @@ function findMatch(rows, q) {
 // Rows named by something she typed (a class, a student, an assignment): never put into another language (lang.js).
 const FIND_NAMES = new Set(['Classes', 'Students', 'Assignments', 'School resources']);
 function openFind() {
+  if (soloOn()) return;   // only this student on screen (src/solo.js)
   if ($('#findDlg') || $('#askDlg') || (!$('#dlg').hidden && !dlgPage)) return;
   commitEditors(); setMore(false);
   const back = document.activeElement, el = document.createElement('div');
