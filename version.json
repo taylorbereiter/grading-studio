@@ -1,21 +1,21 @@
 {
- "version": "1.28.50",
- "build": "d5dfb77b369f",
+ "version": "1.28.57",
+ "build": "9d29a95a2b82",
  "notes": [
-  "Planning time also counts outside focus sessions once you've worked steadily in the Planner for a few minutes, 3 unless you change it in Settings, Focus and goals. A quick change before class doesn't count, and time during your classes on the timetable never counts."
+  "Typed notes: a small × beside a time hides it, and the faint clock left in its place brings it back. Hide all times in the notes' ⋯ menu hides or shows them all. A hidden time is kept, and left out of Copy notes."
  ],
  "files": {
-  "index.html": "479645ca1d7c8624f7bc3c5f8737e8041aff84bfd05d748b25d571b955cf5ec0",
-  "planner.html": "d1d5c4fa08e0e6426471ba8d2efe0cc60acf4ec3c925a71aa4a0faccfa85a351"
+  "index.html": "8f95a4f62b73d15c72c9abbc3e2a4ece0ad1822fd4112d195d4dd62ec2719544",
+  "planner.html": "9eac6262b9efabc91f25714e66479d2f122c35ed5d5e362c201739a09a70adeb"
  },
  "langs": {
-  "lang/zh-Hant.js": "a225fa659c2d2536905d1f8e57fec7f7e9d91f8fdff236fc1fdb81bb6fb233d4",
-  "lang/zh-Hans.js": "df63188e3cf63c005f27a3e880bfca19199cc9ef64831741650ac864b65e11ae",
-  "lang/es.js": "f8fb9cb98ee48111134859d00997608ba794e6b8d1be2ae57a8751ef43fe216f",
-  "lang/fr.js": "a7e85ec1600de489f5f557526345cd0132f9437e8a599d437859d72584444315",
-  "lang/de.js": "5cae9159dd14b156adc389271983079c5a92bbda8f9285341245d4a3d0b753da",
-  "lang/pt-BR.js": "8cb90d1b99ff5e378c6e53a0b9dbedad42b5cc8583b28d5cc37801233698b0cc",
-  "lang/ja.js": "af27810dc543922f2dcd9b593055a189f5ed07b76cf8c9cba9ee8d99ecf079b2",
-  "lang/ko.js": "b3c4658a96cf2ee12f92638ace99c44d6095137bb35551edfb82c1dc78ac95f9"
+  "lang/zh-Hant.js": "f0e87a69b4d88733ce010c265b8f95b5ee273c7c2552a17a22b57f3d5080b697",
+  "lang/zh-Hans.js": "8f8df879cf440638cdfee176c65967d6b35152a83932ff836b9f513028baa655",
+  "lang/es.js": "b49f186ceef2ee164b12a77cceb059d077f5e2ceafcceb292ba4b9b3991a9daf",
+  "lang/fr.js": "2fbe2f1a988cd612dd4e69e4c53cfe901fed3258f82816b86def4e53286f4a47",
+  "lang/de.js": "e85b99083fc17a7f9cd8c3571c7b1b17135f5f339cf52eb94a22dd51bb4ef1b1",
+  "lang/pt-BR.js": "8bb2c13d737321823ea0446979112753e3300e3f5d4b8477d911e476884b5aba",
+  "lang/ja.js": "871c11b70c3c26bf3f549631906745b910410b2621fb6b3c130125d6e92be9e7",
+  "lang/ko.js": "64d92d34629a6b0022c3a8e137bd34aa2e8024c494c6d7c85fb773db64c00f0f"
  }
 }
