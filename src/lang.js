@@ -66,6 +66,7 @@ const LANG_FILLS = [
   // planning your grading (src/gradeplan.js)
   ['gpleft', /^about (.+) left$/], ['gpsets', /^(\d+) sets?$/], ['gpdays', /^(\d+) days?$/],
   ['tkcount', /^Grading time counts while the marking screen is in front and you have done something there in the last (\d+) minutes?\.$/],
+  ['tkplan', /^Planning time counts in focus sessions on a lesson, and after (\d+) minutes? of steady work in the Planner, but not during your classes\.$/], ['tkpe', /^After (\d+) minutes of steady work$/],
   // Find anything: the teacher's AI assistant, to open beside the app (src/beside.js)
   ['besideopen', /^Open (.+) beside Grading Studio$/],
   // the Gradebook tab
