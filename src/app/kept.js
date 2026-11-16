@@ -120,6 +120,8 @@ async function keepPapers(b, label, list, again) {
     const m = { ...(keptMeta.get(b.id) || {}), id: b.id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (keptMeta.get(b.id) || {}).asg, ...more };
     await kdo('meta', 'readwrite', o => o.put(m, b.id)); keepOk = true; keptMeta.set(b.id, m);
     folderPapers(b);
+    // signed in with Google: new papers go up to her Drive straight away (drive.js, dvUp after the sync), so her phone has them on the way home
+    if (more.papers && G.email && !sampleOn()) setTimeout(() => syncNow(), 1500);
   } catch (e) {
     console.error(e);
     if (list) toast('This browser couldn’t keep these papers, usually because it’s out of room. Your marks are still saved, but the papers won’t reopen by themselves or go in a take-home file: drop the download in again to reopen it.', 12000);

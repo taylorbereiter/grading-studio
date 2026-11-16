@@ -50,9 +50,11 @@ async function lTx(store, mode, fn) {
   return new Promise((res, rej) => {
     const t = db.transaction(store, mode), s = t.objectStore(store); let out;
     Promise.resolve(fn(s)).then(v => { out = v; });
-    t.oncomplete = () => res(out); t.onerror = () => rej(t.error);
+    t.oncomplete = () => { res(out); if (mode === 'readwrite') planOut(); }; t.onerror = () => rej(t.error);
   });
 }
+// A change here: the grading page, open in another tab or the next time it opens, sends it to her Google Drive (src/app/drive.js, planSync).
+function planOut() { try { const ch = new BroadcastChannel('gs-plan-out'); ch.postMessage('saved'); ch.close(); } catch { } }
 const reqP = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 const kvGet = k => lTx('kv', 'readonly', s => reqP(s.get(k)));
 const kvSet = (k, v) => lTx('kv', 'readwrite', s => { s.put(v, k); });
@@ -706,7 +708,7 @@ document.addEventListener('keydown', e => {
 function undoToast(msg, fn) {
   toast(msg, 6000);
   const t = $('.toast'); if (!t) return;
-  const b = document.createElement('button'); b.className = 'link'; b.style.cssText = 'color:inherit;margin-left:12px'; b.textContent = 'Undo';
+  const b = document.createElement('button'); b.className = 'link'; b.style.cssText = 'color:inherit;margin-left:12px;pointer-events:auto'; b.textContent = 'Undo';   // the note itself lets clicks through; its Undo doesn't
   b.onclick = () => { t.hidden = true; fn(); }; t.appendChild(b);
 }
 // Thumbnails drag to reorder.
@@ -1410,7 +1412,7 @@ function lessonForFile(l, imgs) {   // imgs: Map to collect pictures as separate
     const m = /^data:image\/(png|jpeg);base64,/.exec(x.src); if (!m) continue;
     const name = ctxFile(s, x); imgs.set(name, x.src); x.src = name;
   }
-  delete c._file; delete c._mod; delete c.pending;
+  delete c._file; delete c._mod; delete c._sync; delete c.pending;
   return c;
 }
 const wTimers = new Map();
@@ -1447,9 +1449,18 @@ async function profileFolderRead() {
   await kvSet('profMod', f.lastModified); await applySetup(j);
 }
 // Picks up lessons Claude added or changed in the folder. A file changed since the app last wrote it wins.
+// After a sync from her other device (src/app/drive.js, planApply): a lesson that changed there is written to its file here, and a lesson
+// deleted there has its file taken away, or reading the folder would bring the old copy back.
+async function planFolderCatchUp() {
+  const gone = (await kvGet('syncGoneFiles')) || [];
+  for (const name of gone) { if (!L.lessons.some(l => l._file === name)) { try { await L.dir.removeEntry(name); } catch { } } }
+  if (gone.length) await kvDel('syncGoneFiles');
+  for (const l of L.lessons.filter(l => l._sync)) { delete l._sync; await folderWrite(l); }
+}
 async function folderRead(say) {
   if (!L.dir || !L.dirOk) return;
   let added = 0, changed = 0;
+  try { await planFolderCatchUp(); } catch (e) { console.warn(e); }
   try {
     for await (const [name, h] of L.dir.entries()) {
       if (h.kind !== 'file' || !/\.lesson\.json$/i.test(name)) continue;
