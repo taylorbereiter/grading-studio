@@ -1,22 +1,22 @@
 {
- "version": "1.28.41",
- "build": "5eead35cc16b",
+ "version": "1.28.42",
+ "build": "0cbb5006c134",
  "notes": [
-  "Grading Studio on your phone: add it to your iPhone's Home Screen to see what is left to mark, type in scores for a whole class, tick off to-dos and run the focus timer.",
-  "Keep your phone and computer the same through your own Google Drive: sign in with Google on each and your classes, scores and to-dos stay in step. Only Grading Studio's own hidden folder in your Drive is used."
+  "Videos from your Google Drive: in Partners and videos, Choose from Drive… opens Google's own chooser in your videos folder. Pick several at once and each goes to the student named in its file name. The video plays here, so the transcript follows along. The app can open only the videos you pick, nothing else in your Drive.",
+  "Open from Google Drive and Save to Google Drive use the same limited permission: pick the ZIP or the papers in Google's chooser. Grading Studio never asks for your whole Drive."
  ],
  "files": {
-  "index.html": "b57a941d35610f1c10a7404d322194bca9a14785ab63303826dfb5ecc10cb413",
-  "planner.html": "0e52615b4747f29b3e02c7dc67165160f04c7d317c7848d6e00816fa911c2b8d"
+  "index.html": "c9afa7aac41933e633ba862270536d76d75376efc78ff424b5ef3fc9695d3d93",
+  "planner.html": "db280c773b25e3366553d07ed39290edc5b8f547de09cea6e0b6b11535451c26"
  },
  "langs": {
-  "lang/zh-Hant.js": "1a4dd067572d6c94330a0c989038745afb46b5eda2c25edda93eaf9501a2aea4",
-  "lang/zh-Hans.js": "6fc2fb626716d8584c034810dccf5d0776f66012e41278abde85427fbda6ce7d",
-  "lang/es.js": "706fb973d0c8b49fb17bf77562c724cebac803a53afa5a388a1003ed134e2d53",
-  "lang/fr.js": "8e5cc10a6c360ae51faa8e6cc664cbeb4e4ddae22f211d225c84e94a08b5c6ca",
-  "lang/de.js": "61934cf785a8e52ef0ebad04ffc7158143cdc162fa29cc8d48e8e5cb4cd30c39",
-  "lang/pt-BR.js": "45231cbdd9ec9f72512c1badd00d9df76506a18593565028802e98ee1db57550",
-  "lang/ja.js": "79c161fe3b76ea4e6d347be616895687d24e01b43783ec4e2a222fb1c003fe44",
-  "lang/ko.js": "d196ca79c952acfbb90e69477e61b39e1d1931d5dac7cdc18df9bf7d9f9f7e03"
+  "lang/zh-Hant.js": "ea0e5765a6e2c1db58743ec97e0de9034a889dcff3c16cc53db62d28eb477c3a",
+  "lang/zh-Hans.js": "623bf0ca42b4782ca2cd150d6e914cdb931635b081fe4d4cede4c09b4a10c031",
+  "lang/es.js": "877a39aa830ede4d64434c38041de72b75cf94abdff85f00bc3d453db2209cee",
+  "lang/fr.js": "9bfb6c4480960874d4ab377dc83d1f2a9f4e079b48f87e23c71dc88bc0b3e322",
+  "lang/de.js": "efca855938683ed7c339d0396ed035da2cc03ef1b692fd2baf6f31979ee91b73",
+  "lang/pt-BR.js": "50b1b8bb95e585162a905e4474fee428963245d262da7268a6ab433290cc9a63",
+  "lang/ja.js": "197f41a9a5d3c836c11a846339a01820bdcdb8116c71e596fdc524c98d227efc",
+  "lang/ko.js": "1d4ed1199597d0515a04aadf87e76fc92a355bb5bf7ac00d08d04af1833a965d"
  }
 }
