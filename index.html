@@ -20162,7 +20162,7 @@ async function pushLibrary() {
 }
 async function folderState() {
   const B = { work: {}, meta: {}, tomb: await readJson(fld.root, 'tombstones.json') || {}, added: {}, edits: {}, info: {}, ls: null, lib: null, have: new Set(), missing: new Set() };
-  fld.info.clear(); fld.seen.clear();   // the folder may have changed or gone away and come back, so nothing remembered about it counts
+  fld.info.clear(); fld.seen.clear(); papersIdx = null;   // the folder may have changed or gone away and come back, so nothing remembered about it counts
   for await (const [n] of (await fld.root.getDirectoryHandle('files', { create: true })).entries()) B.have.add(n);
   fld.have = B.have;
   const l = await readJson(fld.root, 'library.json');
@@ -20257,6 +20257,7 @@ async function folderGoBack(name) {
 }
 function carryAfterPutBack() { if (fld.state !== 'none') try { localStorage.setItem('gsc.win', '1'); } catch {} }
 async function folderRemove(id) {
+  await papersForget(id);
   const dls = await fld.root.getDirectoryHandle('downloads', { create: true });
   await dls.removeEntry(dlDirName(id), { recursive: true }).catch(e => { if (e.name !== 'NotFoundError') throw e; });
   fld.info.delete(id); fld.seen.delete(id); delete fld.hold[id]; delete fld.holdSet[id];
@@ -20284,6 +20285,57 @@ async function folderRemove(id) {
   for (const n of drop) await files.removeEntry(n).catch(() => {});
 }
 
+/* Papers/: plain copies she can open from Finder or Explorer */
+const PAPERS = 'Papers', seg = s => String(s).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').replace(/[. ]+$/, '').trim().slice(0, 60) || '-';
+async function dirAt(root, parts, make) { let d = root; for (const p of parts) d = await d.getDirectoryHandle(p, { create: make }); return d; }
+async function rmAt(root, parts) {   // the file or folder, then whichever folders above it are left empty
+  for (let i = parts.length; i > 0; i--) {
+    try { await (await dirAt(root, parts.slice(0, i - 1), false)).removeEntry(parts[i - 1], { recursive: i === parts.length }); }
+    catch { return; }
+  }
+}
+function papersDir(id, info, idx) {
+  const f = findItem((keptMeta.get(id) || info.meta || {}).asg) || (() => { const it = cardOfKept(id); return it && findItem(it.id); })();
+  const base = seg(f ? (f.c === lib.loose ? 'No class' : f.c.name) : 'No class') + '/' + seg(f ? f.it.name : info.label || (info.meta && info.meta.name) || 'A download');
+  const taken = new Set(Object.entries(idx).filter(([k]) => k !== id).map(([, v]) => v.dir.toLowerCase()));
+  let dir = base, n = 1; while (taken.has(dir.toLowerCase())) dir = base + ' (' + ++n + ')';
+  return dir;
+}
+let papersIdx = null;
+async function papersMirror(ids, check) {
+  const idx = papersIdx ||= await readJson(fld.root, 'papers-index.json') || {}, before = JSON.stringify(idx), files = await fld.root.getDirectoryHandle('files', { create: true }), top = await fld.root.getDirectoryHandle(PAPERS, { create: true });
+  for (const id of ids) {
+    const info = fld.info.get(id); if (!info) continue;
+    const want = {};
+    for (const e of info.papers || []) if (e.hash) want[e.path] = e.hash;
+    for (const r of Object.values(info.added || {})) if (r.hash && r.path) want[r.path] = r.hash;
+    let had = idx[id] || { dir: '', files: {} };
+    const dir = papersDir(id, info, idx);
+    if (had.dir && had.dir !== dir) { await rmAt(top, had.dir.split('/')); had = { dir, files: {} }; }
+    had.dir = dir;
+    const at = p => [...dir.split('/'), ...p.split('/').map(seg)];
+    for (const p of Object.keys(had.files)) if (!(p in want)) { const a = at(p); await rmAt(top, a); delete had.files[p]; }
+    for (const [p, h] of Object.entries(want)) {
+      const a = at(p), name = a.pop();
+      if (had.files[p] === h && !check) continue;
+      const d = await dirAt(top, a, true);
+      if (had.files[p] === h) { try { await d.getFileHandle(name); continue; } catch {} }
+      let src; try { src = await (await files.getFileHandle(h + '.dat')).getFile(); } catch { continue; }
+      const w = await (await d.getFileHandle(name, { create: true })).createWritable();
+      try { await src.stream().pipeTo(w); } catch (e) { e.onFolder = true; throw e; }
+      had.files[p] = h;
+    }
+    idx[id] = had;
+  }
+  if (JSON.stringify(idx) !== before) await writeJson(fld.root, 'papers-index.json', idx);
+}
+async function papersForget(id) {
+  const idx = papersIdx ||= await readJson(fld.root, 'papers-index.json') || {};
+  if (!idx[id]) return;
+  await rmAt(await fld.root.getDirectoryHandle(PAPERS, { create: true }), idx[id].dir.split('/'));
+  delete idx[id]; await writeJson(fld.root, 'papers-index.json', idx);
+}
+
 /* the write queue */
 function folderKick() {
   if (!tabLive()) return;
@@ -20303,6 +20355,8 @@ async function folderRun() {
     }
     if (fld.lib) { fld.lib = false; try { await pushLibrary(); await schFolderSync(); } catch (e) { fld.lib = true; throw e; } }
     await dailySnapshot();
+    await papersMirror([...fld.info.keys()]).catch(e => console.error(e));
+    vkFolderSoon();
     fld.at = Date.now(); setWhere(fld.asks.length ? 'decide' : 'ok');
   } catch (e) { await folderTrouble(e); }
 }
@@ -20335,6 +20389,7 @@ const FOLDER_README = `This folder is where Grading Studio keeps a copy of your 
 It's saved here by itself every time you work, so there's nothing to do. Please leave these files as they are. They hold student work, so keep the folder private.
 
 files/ holds the papers and other files, under coded names. downloads/ holds your work on each download. snapshots/ holds dated copies you can go back to.
+Papers/ has plain copies of the papers, by class and assignment, to open from here. Videos/ has the students' video files. Deleting a copy in Papers/ loses nothing: it comes back.
 If this browser is ever cleared, open Grading Studio, link this folder again, and everything comes back.
 `;
 function folderReconcile() {
@@ -20390,6 +20445,8 @@ async function reconcileNow() {
   await pushLibrary();
   await schFolderSync();   // the files of the school resources, either way
   try { await exFolderSync(true); } catch (e) { console.error(e); }   // examples merge on their own, by id, and never hold up the rest
+  try { await papersMirror([...fld.info.keys()], true); } catch (e) { console.error(e); }
+  vkFolderSoon(true);
   fld.lib = false; fld.answers = {};
   try { localStorage.removeItem('gsc.win'); } catch {}
   await dailySnapshot();
@@ -22976,24 +23033,61 @@ async function vkPut(file, id) {
   try { await vkDo('readwrite', o => o.put({ id, name: file.name, type: file.type || MIME[extOf(file.name)] || '', size: file.size, at: Date.now(), blob: file }, id)); }
   catch (err) { console.error(err); throw new Error('This browser couldn’t keep that video, usually because the computer is out of room. A link to the video works at any size.'); }
   const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id);
+  vkFolderSoon();
   return id;
 }
 async function vkGet(id) {
   if (vkSeen.has(id)) return vkSeen.get(id);
   let r = null; try { r = await vkDo('readonly', o => o.get(id)); } catch (e) { console.error(e); }
-  const out = r && r.blob ? { name: r.name, size: r.size, blob: r.blob, url: URL.createObjectURL(r.blob.type ? r.blob : new Blob([r.blob], { type: r.type || MIME[extOf(r.name)] || '' })) } : null;
+  const out = r && r.blob ? { name: r.name, size: r.size, blob: r.blob, url: URL.createObjectURL(r.blob.type ? r.blob : new Blob([r.blob], { type: r.type || MIME[extOf(r.name)] || '' })) } : await vkFromFolder(id);
   vkSeen.set(id, out); return out;
+}
+async function vkUsed() {
+  const used = new Set();
+  for (const r of (await idbDo('readonly', o => o.getAll())) || []) { const v = r && /\.url$/i.test(r.path || '') && vidRef(r.data); if (v) used.add(v); }
+  if (batch) for (const st of batch.students) for (const f of st.files.concat(st.gone || [])) { const v = f.kind === 'link' && vidRef(f.data); if (v) used.add(v); }
+  return used;
 }
 async function vkSweep() {
   try {
     if (!vkDbP && indexedDB.databases && !(await indexedDB.databases()).some(d => d.name === 'grading-studio-videos')) return;   // never made here: nothing to sweep, and no database made for it
     const ids = await vkDo('readonly', o => o.getAllKeys()); if (!ids || !ids.length) return;
-    const used = new Set();
-    for (const r of (await idbDo('readonly', o => o.getAll())) || []) { const v = r && /\.url$/i.test(r.path || '') && vidRef(r.data); if (v) used.add(v); }
-    if (batch) for (const st of batch.students) for (const f of st.files.concat(st.gone || [])) { const v = f.kind === 'link' && vidRef(f.data); if (v) used.add(v); }
+    const used = await vkUsed();
     const old = Date.now() - 15 * 60e3;
     for (const id of ids) { if (used.has(id)) continue; const r = await vkDo('readonly', o => o.get(id)); if (r && r.at > old) continue; await vkDo('readwrite', o => o.delete(id)); const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id); }
   } catch (e) { console.error(e); }
+}
+/* video files in the linked folder: Videos/<name> [<id>].<ext>, playable from there */
+const vkFolderName = r => { const m = /^(.*?)(\.[\w]{1,6})?$/.exec(r.name || 'video'); return seg(m[1]) + ' [' + r.id + ']' + (m[2] || ''); };
+async function vkFolderList() {
+  const dir = await fld.root.getDirectoryHandle('Videos', { create: true }), out = new Map();
+  for await (const [n, h] of dir.entries()) { const m = h.kind === 'file' && / \[([\w-]{6,40})\](\.\w+)?$/.exec(n); if (m) out.set(m[1], h); }
+  return { dir, out };
+}
+let vkFolderP = null, vkFolderT = 0, vkFolderFull = false;
+function vkFolderSoon(full) { vkFolderFull ||= !!full; clearTimeout(vkFolderT); vkFolderT = setTimeout(() => { vkFolderP = (vkFolderP || Promise.resolve()).then(vkFolderSync); }, 1500); }
+async function vkFolderSync() {
+  const full = vkFolderFull; vkFolderFull = false;
+  if (!fld.root || !(fld.state === 'ok' || fld.state === 'saving' || fld.state === 'decide') || sampleOn()) return;
+  try {
+    if (!vkDbP && indexedDB.databases && !(await indexedDB.databases()).some(d => d.name === 'grading-studio-videos') && !full) return;
+    const used = await vkUsed(); if (!used.size) return;
+    const { dir, out } = await vkFolderList(), have = new Set((await vkDo('readonly', o => o.getAllKeys())) || []);
+    for (const id of used) {
+      if (have.has(id)) {
+        const r = await vkDo('readonly', o => o.get(id)), h = out.get(id); if (!r || !r.blob) continue;
+        if (h && (await h.getFile()).size === r.size) continue;
+        await r.blob.stream().pipeTo(await (await dir.getFileHandle(h ? h.name : vkFolderName(r), { create: true })).createWritable());
+      } else if (full && out.has(id)) {
+        try { await vkPut(await out.get(id).getFile(), id); } catch (e) { console.error(e); }   // no room here: it plays from the folder
+      }
+    }
+  } catch (e) { console.error(e); }
+}
+async function vkFromFolder(id) {
+  if (!fld.root || fld.state === 'none' || fld.state === 'ask' || fld.state === 'lost') return null;
+  try { const h = (await vkFolderList()).out.get(id); if (!h) return null; const f = await h.getFile(); return { name: f.name.replace(/ \[[\w-]+\](?=\.\w+$|$)/, ''), size: f.size, blob: f, url: URL.createObjectURL(f.type ? f : new Blob([f], { type: MIME[extOf(f.name)] || '' })) }; }
+  catch (e) { console.error(e); return null; }
 }
 const vkClear = () => vkDo('readwrite', o => o.clear()).catch(e => console.error(e)).then(() => { for (const v of vkSeen.values()) if (v) URL.revokeObjectURL(v.url); vkSeen.clear(); });
 const vidPick = () => new Promise(res => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*,audio/*,' + Object.keys(MIME).map(x => '.' + x).join(','); inp.onchange = () => res(inp.files[0] || null); inp.click(); });
@@ -23004,7 +23098,7 @@ function vfileCard(st, f) {
     if (!hold.isConnected && !hold.parentNode) return;
     if (k) { hold.replaceWith(mediaCard(st, f, k)); return; }
     hold.querySelector('.mhead .muted').textContent = 'video file';
-    hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<p class="vlnote">This video isn’t in this browser. A video file stays in the browser it was added in: it doesn’t go in take-home files or the linked folder.</p><div class="mctl"><button class="btn sm primary" data-vkback>Choose the video file…</button></div>');
+    hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<p class="vlnote">This video isn’t in this browser or your folder. A video file doesn’t go in take-home files.</p><div class="mctl"><button class="btn sm primary" data-vkback>Choose the video file…</button></div>');
     hold.querySelector('[data-vkback]').onclick = async () => {
       const file = await vidPick(); if (!file) return;
       try { await vkPut(file, id); toast('The video is back'); openStudent(cur, f.path); } catch (err) { sayDlg(err.message); }
