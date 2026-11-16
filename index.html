@@ -19732,15 +19732,16 @@ function mergeEdits(aEd = {}, bEd = {}, work, rows, prefer) {
 }
 function workCounts(work) {
   const su = work.setup || {}, s = work.s || {}, read = work.read || {}, blank = v => v == null || v === '';
-  const out = { scored: 0, partial: 0, off: 0, fb: 0 };
+  const out = { scored: 0, marked: 0, partial: 0, off: 0, fb: 0 };
   for (const k of new Set([...Object.keys(s), ...Object.keys(read)])) {
     const g = (s[k] && s[k].g) || {}, r = g.rubric || [], rows = su.criteria ? su.criteria.map((_, i) => r[i]) : r, on = rows.filter(v => v != null).length;
+    const worked = !!(s[k] && s[k].f && Object.keys(s[k].f).length) || !blank(g.comment);
     if (g.status !== 'missing' && g.status !== 'excused' && g.fb) out.fb++;
     if (g.status !== 'missing' && g.status !== 'excused' && g.sent) { out.sent = (out.sent || 0) + 1; out.sentT = Math.max(out.sentT || 0, g.sent); }
     if (g.status === 'missing' || g.status === 'excused') out.off++;
-    else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : on === rows.length && on) out.scored++;
+    else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : on === rows.length && on) { out.scored++; if (su.mode !== 'points' || worked) out.marked++; }
     else if (su.mode !== 'points' && on) out.partial++;
-    else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) out.scored++;
+    else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) { out.scored++; if (worked) out.marked++; }
   }
   if (!out.fb) delete out.fb;
   if (work.returned && work.returned.ok) out.back = work.returned.ok;
@@ -20223,7 +20224,7 @@ async function applyRow(row, src) {
     { const v = tabStamp(id, row.work.t); if (batch && batch.id === id) batch.seen = v; }
     store.del(id); const idx = store.get('gs.batches', {}); if (id in idx) { delete idx[id]; store.set('gs.batches', idx); }
   }
-  if (m && JSON.stringify(m) !== JSON.stringify(row.ma)) { await kdo('meta', 'readwrite', o => o.put(m, id)); keptMeta.set(id, m); }
+  if (m && JSON.stringify(m) !== JSON.stringify(row.ma)) { await kdo('meta', 'readwrite', o => o.put(m, id)); if (typeof fcCame === 'function') fcCame(id, keptMeta.get(id), m); keptMeta.set(id, m); }
 }
 
 /* the folder itself */
@@ -20669,7 +20670,7 @@ async function folderGoBackAsk(name, when) {
   catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish. Your work may be partly back: use Put back on the newest safety copy under “Saving and carrying”.', 15000); }
 }
 folderBoot();
-Object.assign(window.__gs, { folderUse, folderUnlink, folderResume, folderReconcile, folderState: () => ({ state: fld.state, name: fld.name, at: fld.at, asks: fld.asks, root: fld.root, picked: fld.picked }), folderWait: async () => { for (let i = 0; i < 400; i++) { if (!fld.run && !fld.sync && !fld.work.size && !fld.lib && !fld.gone.size) return fld.state; await new Promise(r => setTimeout(r, 25)); } return 'busy'; }, folderSnapshot, snapList, folderGoBack, carryParts: { mergeWork, mergeStates, mergeLib, recHash, stampData, revsOf } });
+Object.assign(window.__gs, { folderUse, folderUnlink, folderResume, folderReconcile, folderState: () => ({ state: fld.state, name: fld.name, at: fld.at, asks: fld.asks, root: fld.root, picked: fld.picked }), folderWait: async () => { for (let i = 0; i < 400; i++) { if (!fld.run && !fld.sync && !fld.work.size && !fld.lib && !fld.gone.size) return fld.state; await new Promise(r => setTimeout(r, 25)); } return 'busy'; }, folderSnapshot, snapList, folderGoBack, carryParts: { mergeWork, mergeStates, mergeLib, recHash, stampData, revsOf, workCounts } });
 
 /* ---------------- the take-home file: everything for grading in one passphrase-protected file ---------------- */
 const TAKE_MAGIC = 'GSWORK1\n', TAKE_ITER = 1000000, TAKE_CHUNK = 4 * 1024 * 1024, TAKE_EXT = '.gswork';
@@ -28734,19 +28735,20 @@ function fcLog() {
 const fcLogSet = L => store.set('gs.focus', L);
 function fcMon(day) { const d = new Date(day + 'T12:00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoDay(d); }
 const fcToday = () => isoDay(Date.now());
-const fcDone = m => keptState(m).done;
+const fcDone = m => { const st = keptState(m); return st.fm || m.marked == null ? st.done : Math.min(st.of, m.marked); };
 function fcPapersOf(L) { let n = 0; for (const m of keptMeta.values()) if (m && m.id in L.base) n += Math.max(0, fcDone(m) - L.base[m.id]); return n; }
 function fcPapersBy(L) {
   const o = {};
   for (const m of keptMeta.values()) if (m && m.id in L.base) { const n = Math.max(0, fcDone(m) - L.base[m.id]); if (!n) continue; const it = cardOfKept(m.id), k = it ? it.id : ''; o[k] = (o[k] || 0) + n; }
   return o;
 }
+function fcFrom(id, m) { const old = [...keptMeta.values()].find(o => o && o.newer === id); return Math.max(m ? fcDone(m) : 0, old ? fcDone(old) : 0); }
 function fcSeen(id) {
   if (!FC_ON || !keptRead) return;
   const L = fcLog(), today = fcToday(); let ch = false;
   if (L.day !== today) { L.day = today; L.base = {}; ch = true; }
-  if (id && !keptMeta.has(id) && !(id in L.base)) { const old = [...keptMeta.values()].find(m => m && m.newer === id); L.base[id] = old ? fcDone(old) : 0; ch = true; }
-  for (const m of keptMeta.values()) if (m && m.id && !(m.id in L.base)) { L.base[m.id] = fcDone(m); ch = true; }
+  if (id && !keptMeta.has(id) && !(id in L.base)) { L.base[id] = fcFrom(id, null); ch = true; }
+  for (const m of keptMeta.values()) if (m && m.id && !(m.id in L.base)) { L.base[m.id] = fcFrom(m.id, m); ch = true; }
   for (const k of Object.keys(L.base)) if (k !== id && !keptMeta.has(k)) { delete L.base[k]; ch = true; }
   const p = fcPapersOf(L), d = L.days[today] || {}, pa = fcPapersBy(L);
   if ((d.p || 0) !== p || JSON.stringify(d.pa || {}) !== JSON.stringify(pa)) { L.days[today] = { ...d, p, pa }; if (!p) delete L.days[today].pa; ch = true; }
@@ -28755,6 +28757,12 @@ function fcSeen(id) {
   if (L.carry && Date.now() - L.carry.t > 3 * FC_DAY) { delete L.carry; ch = true; }
   const old = L.add.length; L.add = L.add.filter(x => Date.now() - new Date(x.d + 'T12:00:00') <= FC_KEEP * FC_DAY); if (L.add.length !== old) ch = true;
   if (ch) fcLogSet(L);
+}
+function fcCame(id, m0, m) {
+  if (!FC_ON || !keptRead || !m) return;
+  const L = fcLog(); if (L.day !== fcToday() || !(id in L.base)) return;
+  const b = Math.max(0, L.base[id] + fcDone(m) - (m0 ? fcDone(m0) : 0));
+  if (b !== L.base[id]) { L.base[id] = b; fcLogSet(L); }
 }
 const fcPapersToday = () => { fcSeen(); return fcPapersOf(fcLog()); };
 const fcSecsToday = () => { const d = fcLog().days[fcToday()] || {}, r = fcRun(); return (d.s || 0) + (r && (r.st === 'run' || r.st === 'paused') ? fcBusy(r) : 0); };
@@ -29253,7 +29261,7 @@ $('#setPane').addEventListener('click', e => {
 
 FC_ON = true;
 fcSeen(); fcTickOn();
-window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcTick, focusOn, fcMon, fcToday });
+window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcCame, fcTick, focusOn, fcMon, fcToday });
 
 /* ---------------- The time tracker: how much time goes to grading, and how much to planning, kept apart ----------------
    Time counts by itself while the teacher works: grading while the marking screen is open in a tab that is in front, planning
@@ -29887,7 +29895,7 @@ async function gbPut(id, want, edits) {
   await kdo('work', 'readwrite', o => o.put(data, id));
   store.del(id); { const idx = store.get('gs.batches', {}); if (id in idx) { delete idx[id]; store.set('gs.batches', idx); } }
   tabStamp(id, data.t);
-  const m = metaFor(keptMeta.get(id), null, data, id); await kdo('meta', 'readwrite', o => o.put(m, id)); keptMeta.set(id, m);
+  const m = metaFor(keptMeta.get(id), null, data, id); await kdo('meta', 'readwrite', o => o.put(m, id)); if (typeof fcCame === 'function') fcCame(id, keptMeta.get(id), m); keptMeta.set(id, m);
   if (fld.state !== 'none') { const i = fld.info.get(id); if (i && edits) for (const p of Object.keys(i.edits || {})) delete i.edits[p]; fld.work.set(id, data); folderKick(); }
   railRender(); renderNeeds();
   return { cur, had: Object.fromEntries(Object.entries(had).map(([p, r]) => [p, { t: r.t || 1, data: async () => r.data, orig: async () => r.orig || null }])) };
