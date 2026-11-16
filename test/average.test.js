@@ -41,7 +41,7 @@ test('the average and papers left follow the scores, and a left-out paper stays 
   await press(page, '#pOut');
   assert.deepEqual(await page.$$eval('#stuList .stu', a => a.map(b => +b.dataset.i)), [0, 2]);
   assert.match(await page.$eval('#stuList .stu[data-i="2"]', e => e.textContent), /Cleo Fixture/);
-  await page.click('#stuList .stu[data-i="2"]');
+  await page.click('#stuList .stu[data-i="2"] .num');   // its number: the middle of the row can be the details button
   await page.waitForFunction(() => window.__gs.state().cur === 2);
   assert.deepEqual(await page.$$eval('#stuList .stu', a => a.map(b => +b.dataset.i)), [2]);
 
