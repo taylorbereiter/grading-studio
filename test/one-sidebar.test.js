@@ -384,12 +384,12 @@ test('Settings is one page per subject, each with its own address', async () => 
   await goTo(page, '#/settings/timetable'); assert.deepEqual(await shown(), ['setClasses', 'setSys', 'setAtt', 'setTimetable']);
   await page.waitForFunction(() => /No timetable in this browser yet/.test(document.querySelector('#setTimetable').textContent));
   assert.equal(await page.$eval('#setTimetable a.btn', a => a.textContent), 'Set up the timetable');
-  await goTo(page, '#/settings/display'); assert.deepEqual(await shown(), ['setDisplay', 'setLang', 'setKeys']);
+  await goTo(page, '#/settings/display'); assert.deepEqual(await shown(), ['setDisplay', 'setLang', 'setMail', 'setKeys']);
   await goTo(page, '#/settings/claude'); assert.deepEqual(await shown(), ['setSetupIn', 'setSetupOut', 'setClaude']);
-  await goTo(page, '#/settings/keys'); assert.deepEqual(await shown(), ['setDisplay', 'setLang', 'setKeys']);
+  await goTo(page, '#/settings/keys'); assert.deepEqual(await shown(), ['setDisplay', 'setLang', 'setMail', 'setKeys']);
   // a refresh stays on the section; Back walks the sections; an address that names no section is the first one
   await page.reloadHere(); await appReady(page);
-  assert.equal(await page.evaluate(() => location.hash), '#/settings/keys'); assert.deepEqual(await shown(), ['setDisplay', 'setLang', 'setKeys']);
+  assert.equal(await page.evaluate(() => location.hash), '#/settings/keys'); assert.deepEqual(await shown(), ['setDisplay', 'setLang', 'setMail', 'setKeys']);
   await page.goBack(); await page.waitForFunction(() => location.hash === '#/settings/claude'); assert.deepEqual(await shown(), ['setSetupIn', 'setSetupOut', 'setClaude']);
   await goTo(page, '#/settings/nothing-here'); assert.deepEqual((await shown()).filter(x => x !== 'setMoving'), ['setSaving', 'setTake', 'setYear', 'setRemove', 'setHistory']);
   // Find anything goes to a section
