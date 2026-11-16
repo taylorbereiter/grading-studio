@@ -391,7 +391,7 @@ function editText(pg, m, isNew) {
     Object.assign(bar.style, { left: m.x * s + 'px', top: m.y * s + 'px' });
     bar.innerHTML = '<span class="edgrip" data-grip title="Drag to move this box">⠿ Move</span><button data-sz="-1" title="Smaller text">A−</button><b>' + m.size + '</b><button data-sz="1" title="Bigger text">A+</button>' +
       '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span><button data-full class="' + (m.bw ? '' : 'on') + '" title="Wrap at the edge of the page">Page width</button>' +
-      '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span>' + Object.entries(COLORS).map(([k, v]) => '<button data-tc="' + k + '" class="edsw' + (v === m.color ? ' on' : '') + '" style="--c:' + v + '" title="' + k + '" aria-label="Text in ' + k + '" aria-pressed="' + (v === m.color) + '"></button>').join('');
+      '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span>' + Object.entries(TEXT_COLORS).map(([k, v]) => '<button data-tc="' + k + '" class="edsw' + (v === m.color ? ' on' : '') + '" style="--c:' + v + '" title="' + k + '" aria-label="Text in ' + k + '" aria-pressed="' + (v === m.color) + '"></button>').join('');
   };
   pg.wrap.append(ta, hd, bar); fit(); ta.focus();
   if (!isNew) snap(pg);
@@ -408,7 +408,7 @@ function editText(pg, m, isNew) {
     const z = e.target.closest('[data-sz]');
     if (z) { m.size = clamp(m.size + 2 * z.dataset.sz, 8, 40); disp.tsize = m.size; store.set('gs.disp', disp); }   // the next new box uses this size too
     if (e.target.closest('[data-full]')) delete m.bw;
-    const tc = e.target.closest('[data-tc]'); if (tc) m.color = COLORS[tc.dataset.tc];   // this box only; the pen keeps its own color
+    const tc = e.target.closest('[data-tc]'); if (tc) m.color = TEXT_COLORS[tc.dataset.tc];   // this box only; the pen keeps its own color
     fit(); ta.focus();
   });
   ta.addEventListener('keydown', e => {
@@ -480,8 +480,8 @@ function openNote(pg, m, isNew) {
   pop.addEventListener('click', e => {
     const nc = e.target.closest('[data-nc]'), nh = e.target.closest('[data-nh]');
     if (nc || nh) {
-      if (nc) m.color = COLORS[nc.dataset.nc]; else m.hc = HL[nh.dataset.nh];
-      for (const b of pop.querySelectorAll('[data-nc]')) b.setAttribute('aria-pressed', COLORS[b.dataset.nc] === m.color);
+      if (nc) m.color = NOTE_COLORS[nc.dataset.nc]; else m.hc = HL[nh.dataset.nh];
+      for (const b of pop.querySelectorAll('[data-nc]')) b.setAttribute('aria-pressed', NOTE_COLORS[b.dataset.nc] === m.color);
       for (const b of pop.querySelectorAll('[data-nh]')) b.setAttribute('aria-pressed', HL[b.dataset.nh] === (m.hc || HL.yellow));
       draw(pg); ta.focus({ preventScroll: true }); return;
     }
@@ -500,7 +500,7 @@ function openNote(pg, m, isNew) {
 }
 // The comment's color row: its ink (the words and the line), and the highlight behind the words when it has one.
 function noteSwatches(m) {
-  const inks = Object.entries(COLORS).map(([k, v]) => '<button type="button" class="nsw" data-nc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === m.color) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('');
+  const inks = Object.entries(NOTE_COLORS).map(([k, v]) => '<button type="button" class="nsw" data-nc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === m.color) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('');
   const hls = m.hl ? '<div class="row ncol"><span class="lbl">Highlight</span>' + Object.entries(HL).map(([k, v]) => '<button type="button" class="nsw sq" data-nh="' + k + '" style="background:' + v + '" aria-pressed="' + (v === (m.hc || HL.yellow)) + '" title="' + k + ' highlight" aria-label="Highlight in ' + k + '"></button>').join('') + '</div>' : '';
   return '<div class="row ncol"><span class="lbl">Color</span>' + inks + '</div>' + hls;
 }

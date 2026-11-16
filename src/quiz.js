@@ -642,7 +642,7 @@ function openQuiz(view) {
     if (e.target.closest('[data-rest]')) return qmRest();
     const as = e.target.closest('.qmned [data-as]'); if (as) { for (const b of as.parentNode.children) b.setAttribute('aria-pressed', String(b === as)); as.closest('.qmned').querySelector('textarea').focus(); return; }
     const nc = e.target.closest('.qmned [data-qnc]');
-    if (nc) { const ed = nc.closest('.qmned'), v = COLORS[nc.dataset.qnc]; ed.dataset.col = v; ed.querySelector('textarea').style.color = v; for (const b of ed.querySelectorAll('[data-qnc]')) b.setAttribute('aria-pressed', String(b === nc)); ed.querySelector('textarea').focus(); return; }
+    if (nc) { const ed = nc.closest('.qmned'), v = NOTE_COLORS[nc.dataset.qnc]; ed.dataset.col = v; ed.querySelector('textarea').style.color = v; for (const b of ed.querySelectorAll('[data-qnc]')) b.setAttribute('aria-pressed', String(b === nc)); ed.querySelector('textarea').focus(); return; }
     if (e.target.closest('[data-nsave]')) return qmNoteDone(e.target.closest('.qmc'), true);
     if (e.target.closest('.qmned')) return;
     const qn = e.target.closest('[data-qnote]'); if (qn) return qmNoteOpen(qn.closest('.qmc'));
@@ -750,7 +750,7 @@ function qmNoteOpen(el) {
   const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = true;
   const col = (m && m.color) || COLORS[inkColor] || COLORS.red;   // its color can change while she types, before it is saved
   el.insertAdjacentHTML('beforeend', '<div class="qmned" data-col="' + col + '"><textarea rows="2" placeholder="Type what to write on their paper…" aria-label="Comment" style="color:' + col + '">' + esc(m ? m.text : '') + '</textarea>' +
-    '<div class="qmnedc"><span class="muted hsm">Color</span>' + Object.entries(COLORS).map(([k, v]) => '<button type="button" class="sw" data-qnc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === col) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('') + '</div>' +
+    '<div class="qmnedc"><span class="muted hsm">Color</span>' + Object.entries(NOTE_COLORS).map(([k, v]) => '<button type="button" class="sw" data-qnc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === col || (k === 'yellow' && col === PTS_AMBER)) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('') + '</div>' +
     '<div class="qmnedb"><span class="seg sm"><button data-as="note" aria-pressed="' + (as === 'note') + '" title="In the margin, with a line to the answer">Margin comment</button><button data-as="text" aria-pressed="' + (as === 'text') + '" title="Written on the page under the answer">Text on page</button></span>' +
     '<span class="muted hsm">Enter to save, Esc to cancel</span><button class="btn sm primary" data-nsave>Save</button></div></div>');
   const ta = el.querySelector('.qmned textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
@@ -770,7 +770,7 @@ async function qzNoteSet(st, q, text, as, col) {
   if (text) {
     const sz = await qzPageSize(st, q.n); if (!sz) return;
     store.set('gs.qmNoteAs', as);
-    const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = col || COLORS[inkColor] || COLORS.red;
+    const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = as === 'text' && col === NOTE_COLORS.yellow ? PTS_AMBER : as === 'note' && col === PTS_AMBER ? NOTE_COLORS.yellow : col || COLORS[inkColor] || COLORS.red;   // yellow is a shade lighter on a comment, which draws darker
     let m;
     if (as === 'note') m = old && old.t === 'note' ? { ...old, text, color } : { t: 'note', color, ax: r1(clamp((q.x + q.w + dx) * W, 4, W - 4)), ay: r1(clamp((q.y + q.h / 2 + dy) * H, 4, H - 4)), text, qzn: q.id };
     else {

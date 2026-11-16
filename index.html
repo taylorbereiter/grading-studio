@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"eea85ced","zh-Hans":"129ab520","es":"5177df40","fr":"0a04d8ee","de":"4b65c5b7","pt-BR":"9279ce8f","ja":"2c1a756c","ko":"7e735b97"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"937457d4","zh-Hans":"d5523d89","es":"55bbdd23","fr":"e22bdae6","de":"2c8301de","pt-BR":"fa56ef8c","ja":"c8bb56a8","ko":"b2dbe48d"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -6255,6 +6255,8 @@ let CHECK_INK = COLORS[checkInk];
 function setCheckInk(k) { if (!COLORS[k]) return; checkInk = k; CHECK_INK = COLORS[k]; store.set('gs.checkInk', k); }
 const PTS_AMBER = '#A86400';
 const QZ_GOLD = '#C08C00';
+const NOTE_COLORS = { red: COLORS.red, yellow: '#D08A00', blue: COLORS.blue, green: COLORS.green, purple: COLORS.purple, black: COLORS.black };
+const TEXT_COLORS = { ...NOTE_COLORS, yellow: PTS_AMBER };
 let ptsInk = (k => k === 'credit' || COLORS[k] ? k : '')(store.get('gs.ptsInk', ''));
 function setPtsInk(k) { ptsInk = k === 'credit' || COLORS[k] ? k : ''; if (ptsInk) store.set('gs.ptsInk', ptsInk); else store.del('gs.ptsInk'); }
 function ptsColor(v, top) {
@@ -7782,7 +7784,7 @@ function editText(pg, m, isNew) {
     Object.assign(bar.style, { left: m.x * s + 'px', top: m.y * s + 'px' });
     bar.innerHTML = '<span class="edgrip" data-grip title="Drag to move this box">⠿ Move</span><button data-sz="-1" title="Smaller text">A−</button><b>' + m.size + '</b><button data-sz="1" title="Bigger text">A+</button>' +
       '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span><button data-full class="' + (m.bw ? '' : 'on') + '" title="Wrap at the edge of the page">Page width</button>' +
-      '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span>' + Object.entries(COLORS).map(([k, v]) => '<button data-tc="' + k + '" class="edsw' + (v === m.color ? ' on' : '') + '" style="--c:' + v + '" title="' + k + '" aria-label="Text in ' + k + '" aria-pressed="' + (v === m.color) + '"></button>').join('');
+      '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span>' + Object.entries(TEXT_COLORS).map(([k, v]) => '<button data-tc="' + k + '" class="edsw' + (v === m.color ? ' on' : '') + '" style="--c:' + v + '" title="' + k + '" aria-label="Text in ' + k + '" aria-pressed="' + (v === m.color) + '"></button>').join('');
   };
   pg.wrap.append(ta, hd, bar); fit(); ta.focus();
   if (!isNew) snap(pg);
@@ -7799,7 +7801,7 @@ function editText(pg, m, isNew) {
     const z = e.target.closest('[data-sz]');
     if (z) { m.size = clamp(m.size + 2 * z.dataset.sz, 8, 40); disp.tsize = m.size; store.set('gs.disp', disp); }   // the next new box uses this size too
     if (e.target.closest('[data-full]')) delete m.bw;
-    const tc = e.target.closest('[data-tc]'); if (tc) m.color = COLORS[tc.dataset.tc];   // this box only; the pen keeps its own color
+    const tc = e.target.closest('[data-tc]'); if (tc) m.color = TEXT_COLORS[tc.dataset.tc];   // this box only; the pen keeps its own color
     fit(); ta.focus();
   });
   ta.addEventListener('keydown', e => {
@@ -7869,8 +7871,8 @@ function openNote(pg, m, isNew) {
   pop.addEventListener('click', e => {
     const nc = e.target.closest('[data-nc]'), nh = e.target.closest('[data-nh]');
     if (nc || nh) {
-      if (nc) m.color = COLORS[nc.dataset.nc]; else m.hc = HL[nh.dataset.nh];
-      for (const b of pop.querySelectorAll('[data-nc]')) b.setAttribute('aria-pressed', COLORS[b.dataset.nc] === m.color);
+      if (nc) m.color = NOTE_COLORS[nc.dataset.nc]; else m.hc = HL[nh.dataset.nh];
+      for (const b of pop.querySelectorAll('[data-nc]')) b.setAttribute('aria-pressed', NOTE_COLORS[b.dataset.nc] === m.color);
       for (const b of pop.querySelectorAll('[data-nh]')) b.setAttribute('aria-pressed', HL[b.dataset.nh] === (m.hc || HL.yellow));
       draw(pg); ta.focus({ preventScroll: true }); return;
     }
@@ -7888,7 +7890,7 @@ function openNote(pg, m, isNew) {
   });
 }
 function noteSwatches(m) {
-  const inks = Object.entries(COLORS).map(([k, v]) => '<button type="button" class="nsw" data-nc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === m.color) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('');
+  const inks = Object.entries(NOTE_COLORS).map(([k, v]) => '<button type="button" class="nsw" data-nc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === m.color) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('');
   const hls = m.hl ? '<div class="row ncol"><span class="lbl">Highlight</span>' + Object.entries(HL).map(([k, v]) => '<button type="button" class="nsw sq" data-nh="' + k + '" style="background:' + v + '" aria-pressed="' + (v === (m.hc || HL.yellow)) + '" title="' + k + ' highlight" aria-label="Highlight in ' + k + '"></button>').join('') + '</div>' : '';
   return '<div class="row ncol"><span class="lbl">Color</span>' + inks + '</div>' + hls;
 }
@@ -21659,7 +21661,7 @@ function openQuiz(view) {
     if (e.target.closest('[data-rest]')) return qmRest();
     const as = e.target.closest('.qmned [data-as]'); if (as) { for (const b of as.parentNode.children) b.setAttribute('aria-pressed', String(b === as)); as.closest('.qmned').querySelector('textarea').focus(); return; }
     const nc = e.target.closest('.qmned [data-qnc]');
-    if (nc) { const ed = nc.closest('.qmned'), v = COLORS[nc.dataset.qnc]; ed.dataset.col = v; ed.querySelector('textarea').style.color = v; for (const b of ed.querySelectorAll('[data-qnc]')) b.setAttribute('aria-pressed', String(b === nc)); ed.querySelector('textarea').focus(); return; }
+    if (nc) { const ed = nc.closest('.qmned'), v = NOTE_COLORS[nc.dataset.qnc]; ed.dataset.col = v; ed.querySelector('textarea').style.color = v; for (const b of ed.querySelectorAll('[data-qnc]')) b.setAttribute('aria-pressed', String(b === nc)); ed.querySelector('textarea').focus(); return; }
     if (e.target.closest('[data-nsave]')) return qmNoteDone(e.target.closest('.qmc'), true);
     if (e.target.closest('.qmned')) return;
     const qn = e.target.closest('[data-qnote]'); if (qn) return qmNoteOpen(qn.closest('.qmc'));
@@ -21759,7 +21761,7 @@ function qmNoteOpen(el) {
   const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = true;
   const col = (m && m.color) || COLORS[inkColor] || COLORS.red;   // its color can change while she types, before it is saved
   el.insertAdjacentHTML('beforeend', '<div class="qmned" data-col="' + col + '"><textarea rows="2" placeholder="Type what to write on their paper…" aria-label="Comment" style="color:' + col + '">' + esc(m ? m.text : '') + '</textarea>' +
-    '<div class="qmnedc"><span class="muted hsm">Color</span>' + Object.entries(COLORS).map(([k, v]) => '<button type="button" class="sw" data-qnc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === col) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('') + '</div>' +
+    '<div class="qmnedc"><span class="muted hsm">Color</span>' + Object.entries(NOTE_COLORS).map(([k, v]) => '<button type="button" class="sw" data-qnc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === col || (k === 'yellow' && col === PTS_AMBER)) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('') + '</div>' +
     '<div class="qmnedb"><span class="seg sm"><button data-as="note" aria-pressed="' + (as === 'note') + '" title="In the margin, with a line to the answer">Margin comment</button><button data-as="text" aria-pressed="' + (as === 'text') + '" title="Written on the page under the answer">Text on page</button></span>' +
     '<span class="muted hsm">Enter to save, Esc to cancel</span><button class="btn sm primary" data-nsave>Save</button></div></div>');
   const ta = el.querySelector('.qmned textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
@@ -21779,7 +21781,7 @@ async function qzNoteSet(st, q, text, as, col) {
   if (text) {
     const sz = await qzPageSize(st, q.n); if (!sz) return;
     store.set('gs.qmNoteAs', as);
-    const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = col || COLORS[inkColor] || COLORS.red;
+    const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = as === 'text' && col === NOTE_COLORS.yellow ? PTS_AMBER : as === 'note' && col === PTS_AMBER ? NOTE_COLORS.yellow : col || COLORS[inkColor] || COLORS.red;   // yellow is a shade lighter on a comment, which draws darker
     let m;
     if (as === 'note') m = old && old.t === 'note' ? { ...old, text, color } : { t: 'note', color, ax: r1(clamp((q.x + q.w + dx) * W, 4, W - 4)), ay: r1(clamp((q.y + q.h / 2 + dy) * H, 4, H - 4)), text, qzn: q.id };
     else {
