@@ -1,22 +1,22 @@
 {
  "version": "1.28.29",
- "build": "9d9818225f98",
+ "build": "e822a42b423c",
  "notes": [
-  "Type notes: a tab beside the paper for notes you type line by line, with the time from the video or the clock on each new line, and headings, strengths, next steps and questions if you want them.",
-  "Each assignment says whether typed notes go back to the student as a page of the returned paper, and Help has a new answer."
+  "Type notes: a page beside the paper that you type on like any document, with headings, lists, bold, italic, underline and highlight. Beside a video or with the clock running, each new paragraph gets its time, and a paragraph can be marked as a strength, a next step or a question.",
+  "Each assignment says whether typed notes go back to the student as a page of the returned paper, and in what text size: Compact, Standard or Large. Help has a new answer."
  ],
  "files": {
-  "index.html": "b4681e468fc25bed4e478013a32be6014c5ff7b17fb7d557276c701960fe0d3e",
-  "planner.html": "d43734bf190921b1f8adc2810c7de4fb7b9dc9c4857a04014e9c97473c1bcff0"
+  "index.html": "42ef352b1acc7a6cb22b2d901022d33ba27f016caf418fd88baa575a0c9c9b81",
+  "planner.html": "39c9347952a91da1984de82f654a1b9dcf61ea2f453deb3c1fb7c623db186b49"
  },
  "langs": {
-  "lang/zh-Hant.js": "9af2fae1d83b30decdc9d04d4c63ece13eee630a623a8b2bbe621de0abf18ace",
-  "lang/zh-Hans.js": "afe9793912024c0a45535151c9c5f3378deb260e871c435c7c5cb28bed524fcd",
-  "lang/es.js": "2972aff9e84e3748afbd2fb6c84d609b98c4041572cf89a27a00e510a3a7aab3",
-  "lang/fr.js": "732f67d4a561de7a154c8218e3efcc171167116a0ae82790f8677365b4199049",
-  "lang/de.js": "7d21b18b7415ea4d79218a588d2c0a40229c2eb86c2980a4f6c7b0c89436a967",
-  "lang/pt-BR.js": "5c4930650a483eddf5a93716a345f3e1e1dcb3fa158197a8620e41ad9b2c1e3e",
-  "lang/ja.js": "db191e36c8703b485b13684c7ea7a7fd2fa6ee6f9e4b3f2ba1cb72157d307085",
-  "lang/ko.js": "b37ab1291d8ba0296c9033dbeda66508581b68f5899f20c411ba63d574e49f89"
+  "lang/zh-Hant.js": "694062b65efeff36372d783aeed2cdfed00dae49deb6869efbd43d85ac5c2914",
+  "lang/zh-Hans.js": "48df4ccce45386a398d5784815ed747f08395fe9e47a94d970d669404e4deafc",
+  "lang/es.js": "aea252d27c9468ed47bf25d181eeda5fa96f3c5f014e0cab325751a449eadf04",
+  "lang/fr.js": "592208cf529a6dae128837ce8104de93aa50db540bc2c87ade0c7caa510ad3a2",
+  "lang/de.js": "fcefcbe767c4e01d2c19bc4ca8559d16cd2a9cada168deaad886458738fa37c6",
+  "lang/pt-BR.js": "0f538f93ee2df1952b2c1d2061626818f1d006d82778eb213cc64b94d6847348",
+  "lang/ja.js": "0a600362c31ff27885f7f2933e3f0b693fe707c2eeb62bc9dc2b4992068e7649",
+  "lang/ko.js": "4fbff218f56e6e1172ef2286c61cb88a3b5372c2e3caebc5bee5fbf8aac7912b"
  }
 }

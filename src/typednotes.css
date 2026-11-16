@@ -24,7 +24,7 @@
 .tnhint{margin:8px 0 0;font-size:var(--text-small)}
 .tnhint .link{font-size:inherit}
 /* the page */
-.tnpage{position:relative;margin:10px 0 18px;padding:28px 26px 40px 56px;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-2);box-shadow:var(--shadow)}
+.tnpage{position:relative;margin:10px 0 18px;padding:28px 26px 40px 26px;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-2);box-shadow:var(--shadow)}
 .tned{outline:0;min-height:12em;white-space:pre-wrap;overflow-wrap:anywhere;font-family:Inter,var(--f-body);font-size:var(--text-body);line-height:1.55;color:var(--fg);counter-reset:tn1 tn2}
 .tnp{margin:0 0 6px}
 .tnp[data-k=h]{font-size:var(--text-heading);font-weight:650;line-height:1.3;margin:16px 0 6px}
@@ -42,9 +42,13 @@
 .tnp[data-y=ol]::before{content:counter(tn1) '.'}
 .tnp[data-y=ol][data-d="2"]::before{content:counter(tn2) '.'}
 .tned mark{background:var(--gold-soft);color:inherit;border-radius:var(--corner-1)}
-.tnph{position:absolute;left:56px;top:28px;right:26px;color:var(--faint);font-size:var(--text-body);line-height:1.55;pointer-events:none}
+.tnph{position:absolute;left:26px;top:28px;right:26px;color:var(--faint);font-size:var(--text-body);line-height:1.55;pointer-events:none}
 /* the margin: a paragraph's time and its mark */
-.tngut{position:absolute;left:0;top:0;width:52px}
+.tngut{position:absolute;left:0;top:0;width:24px}
+.tnpage[data-g=m]{padding-left:34px}
+.tnpage[data-g=m] .tngut{width:30px}
+.tnpage[data-g=t]{padding-left:60px}
+.tnpage[data-g=t] .tngut{width:56px}
 .tng{position:absolute;right:4px;display:flex;align-items:center;gap:3px;height:calc(var(--text-body) * 1.55)}
 .tngut i{font-size:var(--text-small);width:12px;text-align:center}
 .tnchip{border:0;background:none;font:inherit;font-size:var(--text-caption);color:var(--muted);font-variant-numeric:tabular-nums;padding:1px 3px;border-radius:var(--corner-1);cursor:pointer;user-select:none}
@@ -60,3 +64,9 @@
 /* in the Mark menu the glyphs already carry a ✓, so the mark in hand is shown by its background */
 .tn .km [data-tnmk][aria-checked=true]::before{content:none}
 .tn .km [data-tnmk][aria-checked=true]{background:var(--accent-soft)}
+/* Text size for the student: three choices that open under it, set in a little; the foot names a size that isn't Standard */
+.tn .km .tnszi{padding-left:28px}
+.tnback .tnszw::before{content:'· '}
+.tnback .tnszw{flex:none}
+.tn .km [data-tnm=size]::after{content:' ▾';color:var(--muted)}
+.tn .km [data-tnm=size][aria-expanded=true]::after{content:' ▴'}

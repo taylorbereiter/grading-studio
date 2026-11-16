@@ -289,11 +289,11 @@ test('returned papers: typed notes are a page after the feedback page, or last; 
   await waitPaper(page);
   // Aria and Bram work together: what Aria's notes say, Bram's say too
   await page.evaluate(() => { const G = window.__gs, S = G.state().batch.students; return G.videoAdd(S[0], { url: 'https://youtu.be/abcDEF12345', name: 'Talk video', kind: '', partners: [S[1]] }, true); });
-  await setNotes(page, 0, [{ s: 'Delivery', k: 'h' }, { s: 'Steady pace, clear voice', t: 75 }, { s: 'Strong opening question', k: 'p' }, { s: 'Cite the second source', k: 'n' }, { s: 'Why this book?', k: 'q' }]);
+  await setNotes(page, 0, [{ s: 'Delivery', k: 'h' }, { s: 'Steady pace, clear voice', t: 75, f: [[0, 11, 1], [13, 24, 8]] }, { s: 'Strong opening question', k: 'p' }, { s: 'Cite the second source', k: 'n' }, { s: 'Why this book?', k: 'q' }, { s: 'Sources', y: 'h2' }, { s: 'First source', y: 'ol' }, { s: 'Second source', y: 'ol' }, { s: 'A detail', y: 'ul', d: 2 }]);
   await markPage(page, 0);
   await score(page, [3, 3, 3]);   // a save after the notes keeps the group in step
   await settle(page);
-  assert.equal(await page.evaluate(() => window.__gs.state().batch.students[1].grade.tn.l.length), 5, 'the partner shares the notes');
+  assert.equal(await page.evaluate(() => window.__gs.state().batch.students[1].grade.tn.l.length), 9, 'the partner shares the notes');
   await noteDrawing(page);
   const dl = await catchDownloads(page);
   let got = await dl.next(() => page.click('#oneOutBtn'));
@@ -301,13 +301,14 @@ test('returned papers: typed notes are a page after the feedback page, or last; 
   let pdfN = await pdfPages(got.bytes), said = await drawn(page);
   assert.equal(await page.evaluate(() => window.__gs.tnPagesMade()), 1);
   assert.equal(pdfN, 3, 'feedback, notes, paper: ' + pdfN);
-  for (const t of ['Notes from your teacher', 'Delivery', 'Steady pace, clear voice', '1:15', 'Strength', 'Strong opening question', 'Next step', 'Cite the second source', 'Question', 'Why this book?', 'Your feedback continues on the next page.', 'Your marked paper starts on the next page.']) assert.ok(said.includes(t), t + ' is on the pages: ' + said.join(' | '));
+  for (const t of ['Notes from your teacher', 'Delivery', 'Steady ', 'pace', 'clear ', 'voice', '✓ Strength', 'Strong ', 'opening ', 'question', '→ Next step', '? Question', 'Why ', 'this ', 'book?', 'Sources', '1.', '2.', 'First ', 'source', '◦', 'A ', 'detail', 'Your feedback continues on the next page.', 'Your marked paper starts on the next page.']) assert.ok(said.includes(t), t + ' is on the pages: ' + said.join(' | '));
   assert.ok(!said.some(t => /Strength:/.test(t)), 'the kind is a word in its own column');
+  assert.ok(!said.includes('1:15'), 'no times on the returned page');
   assert.ok(said.indexOf('Notes from your teacher') > said.indexOf('Your feedback continues on the next page.'), 'the notes page comes after the feedback page');
   // the partner gets the page too
   await goToStudent(page, 1);
   got = await dl.next(() => page.click('#oneOutBtn')); said = await drawn(page);
-  assert.ok(said.includes('Cite the second source'));
+  assert.ok(said.includes('second '));
 
   // Cleo: headings only is nothing to give back, and nothing to export
   await goToStudent(page, 2);
@@ -332,12 +333,58 @@ test('returned papers: typed notes are a page after the feedback page, or last; 
   assert.equal(await page.$eval('#spBody [data-tnm="back"]', e => e.getAttribute('aria-checked')), 'false');
   got = await dl.next(() => page.click('#oneOutBtn')); said = await drawn(page);
   assert.equal(await pdfPages(got.bytes), 2, 'feedback and paper only');
-  assert.ok(!said.includes('Cite the second source') && !said.includes('Notes from your teacher'));
+  assert.ok(!said.includes('second ') && !said.includes('Notes from your teacher'));
   assert.ok(said.includes('Your marked paper starts on the next page.'));
   assert.equal(await page.evaluate(() => window.__gs.exportPlan(false).filter(o => o.st.key === 'Cleo Fixture').length), 0, 'notes kept back are nothing to return');
   // and on again from the menu
   await pick(page, '#spBody [data-tnm="back"]');
   assert.equal(await page.evaluate(() => 'tnBack' in window.__gs.state().setup), false);
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+// The size the drawn note text is in: the font of each fillText that drew a piece of a line.
+const sizesOf = page => page.evaluate(() => { const t = window.__fonts || []; window.__fonts = []; return t; });
+test('returned papers: the Notes page in Compact, Standard or Large, set from the ⋯, and a long note runs on at each size', async () => {
+  const { page, close } = await openApp(browser, { one: true, names: true });
+  await noWeb(page);
+  await openZip(page, await threeZip(), 'Talks.zip');
+  await waitPaper(page);
+  await setNotes(page, 0, Array.from({ length: 100 }, (_, i) => ({ s: 'Line ' + (i + 1) + ' of a long set of notes that wraps when it is long enough' })));
+  await settle(page);
+  await page.evaluate(() => { window.__fonts = []; const f = CanvasRenderingContext2D.prototype.fillText; CanvasRenderingContext2D.prototype.fillText = function (t, ...a) { if (/^Line $/.test(String(t))) window.__fonts.push(this.font); return f.call(this, t, ...a); }; });
+  const dl = await catchDownloads(page);
+  const size = async () => { const f = await sizesOf(page); assert.ok(f.length, 'the note was drawn'); return parseFloat(/([\d.]+)px/.exec(f[0])[1]); };
+  await dl.next(() => page.click('#oneOutBtn'));
+  const std = await size(), stdPages = await page.evaluate(() => window.__gs.tnPagesMade());
+  assert.equal(std, 12, 'Standard is 12 pt');
+  assert.ok(stdPages >= 2, 'a long note runs on at Standard');
+  // Large from the ⋯: one item opens the three sizes, the one in use checked
+  await openNotes(page);
+  await page.click('#spBody .tnbar .kdots');
+  assert.equal(await page.$eval('#spBody .tnszs', e => e.hidden), true);
+  await page.click('#spBody [data-tnm="size"]');
+  assert.deepEqual(await page.$$eval('#spBody [data-tnsz]', l => l.map(e => e.textContent + ':' + e.getAttribute('aria-checked'))), ['Compact:false', 'Standard:true', 'Large:false']);
+  await page.click('#spBody [data-tnsz="l"]');
+  assert.equal(await page.evaluate(() => window.__gs.state().setup.tnSize), 'l');
+  // the foot names it, after a dot drawn by the page
+  assert.deepEqual(await page.$eval('#spBody .tnback', e => [e.textContent, getComputedStyle(e.querySelector('.tnszw'), '::before').content, e.querySelector('.tnszw').hidden]), ['Goes back to the student with the paperLarge', '"· "', false]);
+  await dl.next(() => page.click('#oneOutBtn'));
+  const big = await size(), bigPages = await page.evaluate(() => window.__gs.tnPagesMade());
+  assert.equal(big, 15, 'Large is 15 pt');
+  assert.ok(bigPages > stdPages, 'larger text never shrinks to fit: it takes more pages (' + stdPages + ' then ' + bigPages + ')');
+  // undo puts Standard back, and the foot stops naming a size
+  await page.keyboard.down('Control'); await page.keyboard.press('KeyZ'); await page.keyboard.up('Control');
+  await settle(page);
+  assert.equal(await page.evaluate(() => 'tnSize' in window.__gs.state().setup), false);
+  assert.deepEqual(await page.$eval('#spBody .tnback', e => [e.textContent, e.querySelector('.tnszw').hidden]), ['Goes back to the student with the paper', true]);
+  // Compact, then notes kept back: the size can't be changed
+  await page.click('#spBody .tnbar .kdots'); await page.click('#spBody [data-tnm="size"]'); await page.click('#spBody [data-tnsz="s"]');
+  await dl.next(() => page.click('#oneOutBtn'));
+  assert.equal(await size(), 10, 'Compact is 10 pt');
+  await page.click('#spBody .tnback');
+  assert.equal(await page.$eval('#spBody [data-tnm="size"]', e => e.disabled), true);
+  assert.deepEqual(await page.$eval('#spBody .tnback', e => [e.textContent, e.querySelector('.tnszw').hidden]), ['Only for you. Not given back.', true]);
   assert.deepEqual(page.errors, []);
   await close();
 });

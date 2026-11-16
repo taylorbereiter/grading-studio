@@ -8,6 +8,7 @@
    On the grade, it is saved, merged, carried in a take-home file and the folder, and shared by a group, the way the comment is.
    setup.tnHead = [text]: every student with no notes starts with these headings, an empty paragraph under each.
    setup.tnBack: whether the notes go back to the student as a page of the returned paper (absent: they do).
+   setup.tnSize: the text size of that page: absent Standard (12 pt), 'l' Large (15 pt), 's' Compact (10 pt).
    The page is drawn from the blocks with DOM nodes, and read back by walking it; a paste is read the same way from an inert copy,
    so nothing pasted or saved is ever set as HTML. Every change is one of the app's own undo steps (typing joined within 1.5 s). */
 const TN_K = { h: ['Heading', 'H'], p: ['Strength', '✓'], n: ['Next step', '→'], q: ['Question', '?'] };
@@ -20,6 +21,9 @@ const tnStored = st => (st.grade.tn && Array.isArray(st.grade.tn.l) && st.grade.
 const tnTimesOn = () => store.get('gs.tnTime', true) !== false;
 // Whether the notes go back to the student as a page of the returned paper: the assignment's choice (setup.tnBack), on unless she turns it off.
 const tnBackOn = () => setup.tnBack !== false;
+// The text size of the returned Notes page: the body size in points, and its name. Long notes run on to more pages at any size.
+const TN_SIZE = { s: [10, 'Compact'], '': [12, 'Standard'], l: [15, 'Large'] };
+const tnSizeOf = () => (TN_SIZE[setup.tnSize] && setup.tnSize) || '';
 function tnOut(st) { return tnBackOn() && tnHas(st); }
 const tnHead = () => (Array.isArray(setup.tnHead) ? setup.tnHead.filter(s => typeof s === 'string' && s.trim()) : []);
 const tnHeadOf = x => x.k === 'h' || x.y === 'h2';
@@ -174,25 +178,28 @@ function tnFrame() {
   const b = (a, t, i) => '<button class="tnb" ' + a + ' aria-pressed="false" title="' + t + '" aria-label="' + t + '">' + i + '</button>';
   const marks = Object.entries(TN_K).filter(([k]) => k !== 'h').map(([k, [w, g]]) => '<button class="mitem" role="menuitemradio" data-tnmk="' + k + '"><i data-k="' + k + '" aria-hidden="true">' + g + '</i> ' + w + '</button>').join('') + '<button class="mitem" role="menuitemradio" data-tnmk="">None</button>';
   const times = '<button class="mitem tnr2" data-tntm>Time</button>';
-  return '<div class="tn"><span id="tnLab" hidden>Notes</span><div class="tnbar" role="toolbar" aria-label="Notes">' +
+  return '<div class="tn" data-lc="tn"><span id="tnLab" hidden>Notes</span><div class="tnbar" role="toolbar" aria-label="Notes">' +
     kmWrap('<span>Normal text</span>' + TN_SVG('<path d="m7 10 5 5 5-5"/>'), 'class="tnb tnsty" title="Text style"',
       '<button class="mitem" role="menuitemradio" data-tns="">Normal text</button><button class="mitem tnh1" role="menuitemradio" data-tns="h">Heading</button><button class="mitem tnh2" role="menuitemradio" data-tns="h2">Small heading</button>') +
     b('data-tnf="bold"', 'Bold', '<b>B</b>') + b('data-tnf="italic"', 'Italic', '<i class="tnit">I</i>') + b('data-tnf="underline"', 'Underline', '<u>U</u>') +
-    b('data-tnf="hl"', 'Highlight', TN_SVG('<path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/>')) +
+    b('data-tnf="hl"', 'Highlight', TN_SVG('<path d="M9 15l-3 3h5l1-1"/><path d="M9 15l7-10 4 3-7 10z"/><path d="M4 21h16"/>')) +
     b('data-tnl="ul"', 'Bulleted list', TN_SVG('<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>')) +
     b('data-tnl="ol"', 'Numbered list', TN_SVG('<path d="M10 6h10M10 12h10M10 18h10M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>')) +
     '<span class="tnsep tnr" aria-hidden="true"></span>' +
-    '<span class="tnr">' + kmWrap(TN_SVG('<path d="M5 21V4h11l-2 4 2 4H5"/>'), 'class="tnb tnmk" aria-pressed="false" title="Mark" aria-label="Mark"', marks) + '</span>' +
+    '<span class="tnr">' + kmWrap(TN_SVG('<path d="M5 21V4h11l-2 4 2 4H5"/>'), 'class="tnb tnmk" aria-pressed="false" title="Mark" aria-label="Mark"', marks, 'right') + '</span>' +
     '<span class="tnr">' + b('data-tntm', 'Put the time on this paragraph, or take it off', TN_SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')) + '</span>' +
     kmWrap('⋯', 'class="icon kdots" aria-label="More for these notes" title="More for these notes"',
       '<span class="tnr2">' + marks + times + '</span>' +
       '<button class="mitem" role="menuitemcheckbox" data-tnm="times" aria-checked="true">Times</button>' +
       '<button class="mitem" data-tnm="head">Use these headings for every student</button><button class="mitem" data-tnm="unhead">Clear the headings for every student</button>' +
-      '<button class="mitem" role="menuitemcheckbox" data-tnm="back" aria-checked="true">Give these notes back with the paper</button><button class="mitem" data-tnm="copy">Copy notes</button><button class="mitem" data-tnm="clear">Clear this student’s notes</button>', 'right') +
+      '<button class="mitem" role="menuitemcheckbox" data-tnm="back" aria-checked="true">Give these notes back with the paper</button>' +
+      '<button class="mitem" data-tnm="size" data-kmstay aria-expanded="false">Text size for the student</button><span class="tnszs" hidden>' +
+      Object.entries(TN_SIZE).map(([k, [, w]]) => '<button class="mitem tnszi" role="menuitemradio" data-tnsz="' + k + '">' + w + '</button>').join('') + '</span>' +
+      '<button class="mitem" data-tnm="copy">Copy notes</button><button class="mitem" data-tnm="clear">Clear this student’s notes</button>', 'right') +
     '</div><p class="tnhint" hidden><button class="link" data-tnrub>Start with a heading for each rubric row</button></p>' +
     '<div class="tnpage"><div class="tngut"></div><div class="tnph" aria-hidden="true">Type your notes. Enter starts a new line.</div>' +
     '<div class="tned" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="tnLab" spellcheck="true"></div></div>' +
-    '<div class="tnfoot"><button class="tnb tnclock" data-tnclk hidden></button><button class="tnback" data-tnback aria-pressed="true" title="Whether these notes go back to the student as a page of the returned paper, for every student in this assignment. Click to change."><i aria-hidden="true"></i><span></span></button></div></div>';
+    '<div class="tnfoot"><button class="tnb tnclock" data-tnclk hidden></button><button class="tnback" data-tnback aria-pressed="true" title="Whether these notes go back to the student as a page of the returned paper, for every student in this assignment. Click to change."><i aria-hidden="true"></i><span></span><span class="tnszw" hidden></span></button></div></div>';
 }
 function tnPaint() { const ed = tnEd(); if (!ed) return; ed.replaceChildren(...tnL.map(tnEl)); tnMore(); }
 function tnLoad(h, st) { tnSt = st; tnL = tnView(st); tnPaint(); }
@@ -216,6 +223,8 @@ function tnGutter() {
     rows.push(row);
   });
   g.replaceChildren(...rows);
+  // the margin only as wide as what is in it: times, marks, or nothing
+  g.parentNode.dataset.g = rows.some(r => r.querySelector('.tnchip')) ? 't' : rows.length ? 'm' : '';
 }
 // The bar: the formatting where the caret is, the clock, and what the ⋯ offers.
 function tnBar(h, st) {
@@ -233,14 +242,20 @@ function tnBar(h, st) {
   if (sl.dataset.say !== w) { sl.dataset.say = w; sl.textContent = w; }
   for (const b of h.querySelectorAll('[data-tns]')) b.setAttribute('aria-checked', String(b.dataset.tns === sty));
   const any = tnL.some(y => y.s.trim()), heads = tnL.some(y => y.k === 'h' && y.s.trim());
-  const show = { times: true, head: heads, unhead: tnHead().length > 0, copy: any, clear: !!tnStored(st), back: true };
+  const show = { times: true, head: heads, unhead: tnHead().length > 0, copy: any, clear: !!tnStored(st), back: true, size: true };
   for (const b of bar.querySelectorAll('[data-tnm]')) b.hidden = !show[b.dataset.tnm];
   bar.querySelector('[data-tnm="times"]').setAttribute('aria-checked', String(tnTimesOn()));
   const back = tnBackOn(); bar.querySelector('[data-tnm="back"]').setAttribute('aria-checked', String(back));
+  const sz = tnSizeOf(), szb = bar.querySelector('[data-tnm="size"]'); szb.disabled = !back;
+  if (!back) { szb.setAttribute('aria-expanded', 'false'); szb.nextElementSibling.hidden = true; }
+  for (const b of bar.querySelectorAll('[data-tnsz]')) { b.setAttribute('aria-checked', String(b.dataset.tnsz === sz)); b.disabled = !back; }
   const ck = h.querySelector('.tnclock'), live = tnTimer(st); ck.hidden = !live;
   if (live) { const c = spClockOf(st), say = (c.at ? '❚❚ ' : '▶ ') + fmtTime(spClockMs(c) / 1000); if (ck.dataset.say !== say) { ck.dataset.say = say; ck.textContent = say; ck.setAttribute('aria-pressed', String(!!c.at)); ck.title = c.at ? 'Pause the Timer' : 'Start the Timer'; } }
   const ft = h.querySelector('.tnback'), fs = back ? 'Goes back to the student with the paper' : 'Only for you. Not given back.';
   if (ft.dataset.say !== fs) { ft.dataset.say = fs; ft.dataset.on = String(back); ft.querySelector('span').textContent = fs; ft.setAttribute('aria-pressed', String(back)); }
+  // the size shows at the foot only when it isn't the usual one
+  const sw = ft.querySelector('.tnszw'), sws = back && sz ? TN_SIZE[sz][1] : '';
+  if (sw.dataset.say !== sws) { sw.dataset.say = sws; sw.textContent = sws; sw.hidden = !sws; }
 }
 function tnDraw(host, st) {
   if (host.dataset.st !== st.key || !host.querySelector('.tn')) {
@@ -420,7 +435,9 @@ document.addEventListener('selectionchange', () => {
 $('#paper').addEventListener('mousedown', e => { if (e.target.closest('.tnbar button, .tngut button, .tnclock')) e.preventDefault(); });
 $('#paper').addEventListener('click', async e => {
   const box = e.target.closest('.tn'); if (!box || !batch || tnSt !== batch.students[cur]) return;
-  const st = tnSt, el = e.target.closest('[data-tnf],[data-tnl],[data-tns],[data-tnmk],[data-tntm],[data-tnclk],[data-tnt],[data-tnrub],[data-tnm],[data-tnback]'); if (!el) return;
+  // the ⋯ opens with the three sizes folded under their item
+  if (e.target.closest('.kdots')) { const sb = box.querySelector('[data-tnm="size"]'); sb.setAttribute('aria-expanded', 'false'); sb.nextElementSibling.hidden = true; }
+  const st = tnSt, el = e.target.closest('[data-tnsz],[data-tnf],[data-tnl],[data-tns],[data-tnmk],[data-tntm],[data-tnclk],[data-tnt],[data-tnrub],[data-tnm],[data-tnback]'); if (!el) return;
   const d = el.dataset;
   if (d.tnf) { if (d.tnf === 'hl') return tnHl(); tnRestore(); return document.execCommand(d.tnf); }
   if (d.tnl) return tnList(d.tnl);
@@ -431,7 +448,15 @@ $('#paper').addEventListener('click', async e => {
   if (d.tnt) { const x = tnL[+d.tnt]; if (x && x.t != null && !vidSeek($('#paper'), x.t)) toast('This time is from the Timer. There is no video to go to.'); return; }
   if (d.tnrub != null) { tnL = setup.criteria.flatMap(s => [{ s: String(s), k: 'h' }, { s: '' }]); tnPaint(); tnSetPos({ a: [1, 0], z: [1, 0] }); return tnPut(st, false); }
   if (d.tnback != null || d.tnm === 'back') { if (tnBackOn()) setup.tnBack = false; else delete setup.tnBack; spSetupKeep(); tnBar(tnHost(), st); return toast(tnBackOn() ? 'Typed notes go back with each paper in this assignment' : 'Typed notes stay with you in this assignment'); }
+  if (d.tnsz != null) {
+    if (!tnBackOn() || d.tnsz === tnSizeOf()) return;
+    const redo = () => { spSetupKeep(); const h = tnHost(); if (h && tnSt) tnBar(h, tnSt); };
+    fieldSnap(setup, ['tnSize'], redo, 'Text size for the student');
+    if (d.tnsz) setup.tnSize = d.tnsz; else delete setup.tnSize;
+    redo(); return toast('The notes page goes back in ' + TN_SIZE[d.tnsz][1] + ' text');
+  }
   const m = d.tnm;
+  if (m === 'size') { const sub = el.nextElementSibling, on = sub.hidden; sub.hidden = !on; el.setAttribute('aria-expanded', String(on)); if (on) { const c = sub.querySelector('[aria-checked=true]') || sub.firstChild; c.focus({ preventScroll: true }); } return; }
   if (m === 'times') { if (tnTimesOn()) store.set('gs.tnTime', false); else store.del('gs.tnTime'); return tnMore(); }
   if (m === 'head') { setup.tnHead = tnL.filter(x => x.k === 'h' && x.s.trim()).map(x => x.s.trim()); spSetupKeep(); tnBar(tnHost(), st); return toast('Every student with no notes yet starts with ' + setup.tnHead.length + (setup.tnHead.length === 1 ? ' heading' : ' headings')); }
   if (m === 'unhead') { delete setup.tnHead; spSetupKeep(); tnLoad(tnHost(), st); return toast('Students with no notes start with an empty page again'); }
@@ -449,32 +474,70 @@ Object.assign(window.__gs, { tnText: () => tnText(tnL), tnLines: () => tnL.map(x
 
 /* ---------- the page that goes back with the paper ---------- */
 // Drawn like the feedback page (feedback.js): the same ink, fonts, margins and wrapping, drawn on a canvas so any language's letters come out.
-// Headings bold; a strength, a next step or a question named in a column of its own; a line's time muted in the first column.
-// No name: the paper it goes with says whose it is. last: these are the file's last pages (no feedback page in front).
+// The page as she typed it: headings, bold and italic, underline as a line and highlight as a pale band, bullets and numbers
+// indented, and a strength, a next step or a question named with its sign in a column of its own. No times (the paper has no video).
+// No name: the paper it goes with says whose it is.
+const TN_HL = '#FBF3D6';   // the pale amber of a highlight, on white paper
+// A paragraph's runs in lines no wider than w: [[{ t, b, w }]], each piece measured in its own face.
+function tnWrapRuns(ctx, x, face, w) {
+  const a = tnBits(x), bits = [], lines = [[]]; let lw = 0;
+  for (let i = 0; i < x.s.length;) {   // pieces: a word with the space after it, split again where the formatting changes
+    let j = i; while (j < x.s.length && a[j] === a[i] && x.s[j] !== ' ' && !/[\u3000-\u9fff\uac00-\ud7af\uf900-\ufaff]/.test(x.s[j])) j++;
+    if (j === i) j++;
+    while (j < x.s.length && x.s[j] === ' ' && a[j] === a[i]) j++;
+    bits.push({ t: x.s.slice(i, j), b: a[i] }); i = j;
+  }
+  for (const p of bits) {
+    ctx.font = face(p.b); p.w = ctx.measureText(p.t).width;
+    if (lw && lw + ctx.measureText(p.t.trimEnd()).width > w) { lines.push([]); lw = 0; if (!p.t.trim()) continue; }
+    while (p.w > w && p.t.length > 1) {   // a word wider than the line
+      let k = p.t.length - 1; while (k > 1 && ctx.measureText(p.t.slice(0, k)).width > w) k--;
+      lines[lines.length - 1].push({ t: p.t.slice(0, k), b: p.b, w: ctx.measureText(p.t.slice(0, k)).width }); lines.push([]); lw = 0;
+      p.t = p.t.slice(k); p.w = ctx.measureText(p.t).width;
+    }
+    lines[lines.length - 1].push(p); lw += p.w;
+  }
+  return lines.filter((l, i) => l.length || !i);
+}
 function tnBlocks(ctx, st, W, M) {
-  const UI = 'Inter, ' + FONT, cw = W - 2 * M, L = (st.grade.tn.l || []).filter(x => String(x.s || '').trim()), out = [];
-  const anyT = L.some(x => x.t != null), timeW = anyT ? 40 : 0, words = { p: tr('Strength'), n: tr('Next step'), q: tr('Question') };
-  ctx.font = '600 11px ' + UI;
-  const kinds = L.filter(x => words[x.k]), labW = kinds.length ? Math.min(Math.round(cw * 0.3), Math.max(...kinds.map(x => ctx.measureText(words[x.k]).width)) + 14) : 0;
+  // everything on the page is drawn to the body size: Standard 12 pt, and the headings, indents, spacing and marks with it
+  const z = TN_SIZE[tnSizeOf()][0] / 12, zz = n => Math.round(n * z * 10) / 10;
+  const UI = 'Inter, ' + FONT, cw = W - 2 * M, L = (st.grade.tn.l || []).map(tnClean), out = [];
+  const words = { p: tr('Strength'), n: tr('Next step'), q: tr('Question') };
+  ctx.font = '600 ' + zz(11) + 'px ' + UI;
+  const kinds = L.filter(x => words[x.k] && x.s.trim()), labW = kinds.length ? Math.min(Math.round(cw * 0.3), Math.max(...kinds.map(x => ctx.measureText(TN_K[x.k][1] + ' ' + words[x.k]).width)) + 14) : 0;
   const text = (lines, font, color, x, y, lh) => { ctx.font = font; ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; lines.forEach((l, i) => ctx.fillText(l, x, y + i * lh)); };
   const title = fbWrap(ctx, (batch.assignment && batch.assignment.name) || batch.name, '11.5px ' + UI, cw);
   out.push({ h: 30 + title.length * 16 + 14, draw: y => { text([tr('Notes from your teacher')], '700 19px ' + UI, FB_INK, M, y + 20, 24); text(title, '11.5px ' + UI, FB_MUTED, M, y + 40, 16); ctx.fillStyle = FB_INK; ctx.fillRect(M, y + 30 + title.length * 16 + 12, cw, 1.2); } });
-  L.forEach((x, i) => {
-    const head = x.k === 'h', font = head ? '700 13.5px ' + UI : '12.5px ' + UI, tx = M + timeW + (head ? 0 : labW), lh = head ? 19 : 18;
-    const lines = fbWrap(ctx, String(x.s).trim(), font, M + cw - tx), gap = head ? (i ? 16 : 8) : 5;
+  let n1 = 0, n2 = 0, first = true;
+  for (const x of L) {
+    const list = tnListOf(x), d2 = list && x.d === 2;
+    if (x.y === 'ol') { if (d2) n2++; else { n1++; n2 = 0; } } else if (!d2) { n1 = 0; n2 = 0; }
+    if (!x.s.trim()) { if (!first) out.push({ h: zz(8), draw: () => {} }); continue; }
+    const head = x.k === 'h', small = x.y === 'h2', size = zz(head ? 15 : small ? 13.5 : 12), base = head ? 700 : small ? 650 : 400, lh = zz(head ? 21 : small ? 19 : 18);
+    const face = b => ((b & 2) ? 'italic ' : '') + ((b & 1) ? Math.max(base, 700) : base) + ' ' + size + 'px ' + UI;
+    const tx = M + labW + (list ? zz(d2 ? 40 : 20) : 0), lines = tnWrapRuns(ctx, { ...x, s: x.s.trim() === x.s ? x.s : x.s.replace(/\s+$/, '') }, face, M + cw - tx);
+    const gap = first ? 0 : zz(head ? 14 : small ? 10 : list ? 3 : 6), mark = list ? (x.y === 'ol' ? (d2 ? n2 : n1) + '.' : d2 ? '◦' : '•') : '';
+    first = false;
     // one block a line of text, so a long note runs on to the next page where the page ends
     lines.forEach((ln, k) => out.push({ h: (k ? 0 : gap) + lh, draw: y => {
-      const b = y + (k ? 0 : gap) + lh - 5;
-      if (!k && x.t != null) text([fmtTime(x.t)], '10.5px ' + UI, FB_MUTED, M, b, lh);
-      if (!k && words[x.k]) text([words[x.k]], '600 11px ' + UI, FB_INK2, M + timeW, b, lh);
-      text([ln], font, FB_INK, tx, b, lh);
+      const b = y + (k ? 0 : gap) + lh - zz(5);
+      if (!k && words[x.k]) text([TN_K[x.k][1] + ' ' + words[x.k]], '600 ' + zz(11) + 'px ' + UI, FB_INK2, M, b, lh);
+      if (!k && mark) text([mark], face(0), FB_INK2, tx - zz(d2 ? 18 : 16), b, lh);
+      let px = tx;
+      for (const p of ln) {
+        if (p.b & 8) { ctx.fillStyle = TN_HL; ctx.fillRect(px, b - size, p.w, size + zz(4)); }
+        text([p.t], face(p.b), FB_INK, px, b, lh);
+        if (p.b & 4) { ctx.fillStyle = FB_INK; ctx.fillRect(px, b + zz(2), ctx.measureText(p.t.trimEnd()).width, 0.8); }
+        px += p.w;
+      }
     } }));
-  });
+  }
   return out;
 }
 async function tnAddPages(out, st, W, H, dpi, before) {
   if (!(W >= 400 && H >= 500 && W <= 1300 && H <= 1300) || W > H) { W = 612; H = 792; }
-  const M = Math.max(44, Math.round(W * 0.095)), scale = dpi / 72, UI = 'Inter, ' + FONT;
+  const M = Math.max(40, Math.round(W * 0.088)), scale = dpi / 72, UI = 'Inter, ' + FONT;
   const pages = fbPages(tnBlocks(document.createElement('canvas').getContext('2d'), st, W, M), M, H - M - 22);
   for (let i = 0; i < pages.length; i++) {
     const c = document.createElement('canvas'); c.width = Math.ceil(W * scale); c.height = Math.ceil(H * scale);
