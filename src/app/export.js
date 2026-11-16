@@ -1,7 +1,11 @@
 /* ---------------- export ---------------- */
 let xBusy = false;
 const xAll = () => !!store.get('gs.xall', false);
-const xEdit = () => store.get('gs.xedit', true) !== false;   // "Keep marks editable"   // "Also include files with no marks"
+// Students who got theirs early (Export one student's paper) can be left out of the class return. Off: everyone goes, so nobody is missed.
+const xEarly = () => !!store.get('gs.xearly', false);
+const gotEarly = st => !!(st.grade && st.grade.sent);
+// "Keep marks editable"   // "Also include files with no marks"
+const xEdit = () => store.get('gs.xedit', true) !== false;
 // Word files you edited or scored, any file you added; with "include everything", every file.
 // A student's copy of her own Word rubric goes back once she has highlighted or typed in it, and stays out while it's still blank.
 const rawOut = f => !viewable(f) && !!f.data && f.kind !== 'link' && (f.virtual ? f.kind === 'docx' && (!!f.edited || !!(wordScore(f) && f.wscore.total != null)) : xAll() || !!f.edited || !!f.added || !!(wordScore(f) && f.wscore.total != null));
@@ -13,7 +17,7 @@ function madeFromWord(f) {
 const docAdded = (st, d) => d.pages.some(([path]) => { const f = fileByPath(st, path); return !!f && !!f.added && !madeFromWord(f); });
 // A file you moved to another student goes back in that student's folder.
 const outPath = (st, path) => batch.moved && batch.moved[path] === st.key && path.includes('/') ? st.key + path.slice(path.indexOf('/')) : path;
-function exportPlan(keepFolders) {
+function exportPlan(keepFolders, early = !xEarly()) {
   const out = [];
   for (const st of batch.students) for (const f of st.files.filter(rawOut)) {
     const fp = outPath(st, f.path), dir = fp.includes('/') ? fp.slice(0, fp.lastIndexOf('/') + 1) : '';
@@ -27,6 +31,7 @@ function exportPlan(keepFolders) {
     if (!keepFolders) path = (dir ? st.key + ' - ' : '') + path.split('/').pop();
     out.push({ st, d, path: path.replace(/[\\:*?"<>|]+/g, '-') });
   }
+  if (!early) for (let i = out.length - 1; i >= 0; i--) if (gotEarly(out[i].st)) out.splice(i, 1);
   if (xOne()) oneEach(out);
   const used = new Set();
   for (const o of out) { let p = o.path, k = 2; while (used.has(p.toLowerCase())) p = o.path.replace(/(\.[^./]+)?$/, ' (' + k++ + ')$1'); used.add(p.toLowerCase()); o.path = p; }
@@ -84,7 +89,8 @@ function nameOut(items) {
     const named = list.map(o => {
       const dir = o.path.includes('/') ? o.path.slice(0, o.path.lastIndexOf('/') + 1) : '', e = ext(o.path);
       let base = o.path.slice(dir.length, o.path.length - e.length);
-      if (base.startsWith(st.key + ' - ')) base = base.slice(st.key.length + 3);   // "Student - " that a loose export put in front
+      // "Student - " that a loose export put in front
+      if (base.startsWith(st.key + ' - ')) base = base.slice(st.key.length + 3);
       const twin = list.filter(x => ext(x.path).toLowerCase() === e.toLowerCase()).length > 1;
       return dir + stem + (twin && !base.startsWith(stem) ? ' - ' + fileSafe(base) : '') + e;
     });
@@ -97,24 +103,28 @@ function nameOut(items) {
 // Builds one returned file from its pages (possibly from several turned-in files), baking in every mark.
 // fb: the feedback page goes in front (src/feedback.js), when there is anything for it to say.
 async function flattenDoc(st, d, dpi, edit, key, fb) {
-  syncScoreStamps(st);   // a score stamp goes out saying the score as it is now
+  // a score stamp goes out saying the score as it is now
+  syncScoreStamps(st);
   await workerReady;
   const srcs = new Map();
   const src = async path => {
     if (!srcs.has(path)) {
       const f = fileByPath(st, path);
-      const bytes = await viewBytes(f);   // less any marks from other apps that are hers now
+      // less any marks from other apps that are hers now
+      const bytes = await viewBytes(f);
       srcs.set(path, { f, js: await pdfjsLib.getDocument({ data: bytes.slice(), isEvalSupported: false }).promise, lib: await PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true, updateMetadata: false }) });
     }
     return srcs.get(path);
   };
   const out = await PDFLib.PDFDocument.create();
-  out.setCreator('Grading Studio'); out.setProducer('Grading Studio');   // so a flattened file brought back in can say why its marks can't be changed
+  // so a flattened file brought back in can say why its marks can't be changed
+  out.setCreator('Grading Studio'); out.setProducer('Grading Studio');
   try {
     const said = fb ? fbData(st, d) : null;
     if (said) {
       if (d.pages.length) { const [p0, n0] = d.pages[0], { f: f0, js: j0 } = await src(p0), v0 = vpRot(f0, n0, await j0.getPage(n0 + 1), 1); await fbAddPages(out, said, v0.width, v0.height, dpi); }
-      else await fbAddPages(out, said, 612, 792, dpi);   // only Word papers: a Letter page
+      // only Word papers: a Letter page
+      else await fbAddPages(out, said, 612, 792, dpi);
     }
     for (const [path, p] of d.pages) {
       const { f, js, lib } = await src(path);
@@ -135,7 +145,8 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
       const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
       await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, scale), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
       scanClip(ctx, f, p, W * scale, c.width, c.height);
-      if (Lx) lightCanvas(ctx, Math.min(c.width, Math.ceil(W * scale)), c.height, Lx);   // the page only, before her marks
+      // the page only, before her marks
+      if (Lx) lightCanvas(ctx, Math.min(c.width, Math.ceil(W * scale)), c.height, Lx);
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
       drawMarks(ctx, marks, W, H, side, null);
       const jpg = await canvasJpg(c, 0.88);
@@ -145,7 +156,8 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
     }
     // One PDF a student: their Word papers follow, as pages. One that can't be drawn goes back as the Word file beside it (d.left).
     if (d.words && d.words.length) {
-      if (typeof wordSaves !== 'undefined') await Promise.all([...wordSaves].map(s => s()));   // what was typed a moment ago is in the file first
+      // what was typed a moment ago is in the file first
+      if (typeof wordSaves !== 'undefined') await Promise.all([...wordSaves].map(s => s()));
       d.left = [];
       for (const f of d.words) {
         try { const wl = await PDFLib.PDFDocument.load(await wordPagesPdf(f)); for (const cp of await out.copyPages(wl, wl.getPageIndices())) out.addPage(cp); }
@@ -168,7 +180,8 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
         c.width = c.height = 0;
       }
     }
-    if (edit && d.pages.length) {   // the original pages and her own marks go along, so bringing the file back in opens it ready to change
+    // the original pages and her own marks go along, so bringing the file back in opens it ready to change
+    if (edit && d.pages.length) {
       const paths = [...new Set(d.pages.map(([path]) => path))];
       const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p), skewOf(f, p)]; }) };
       for (let k = 0; k < paths.length; k++) await out.attach(await viewBytes(fileByPath(st, paths[k])), 'gs-original-' + (k + 1) + '.pdf', { mimeType: 'application/pdf', description: 'Original pages, for reopening in Grading Studio' });
@@ -187,15 +200,20 @@ async function openExport() {
     tabNext('return');
     const wait = waitDlg('Return marked files', 'Reading the files first…');
     await scanAll();
-    if (!wait.isConnected) return;   // she closed it while it read
+    // she closed it while it read
+    if (!wait.isConnected) return;
   }
   let keep = true, dpi = 150;
   const plan = exportPlan(true);
-  const nStu = new Set(plan.map(o => o.st)).size, skipped = batch.students.length - nStu;
-  const nLeft = batch.students.reduce((a, st) => a + layoutOf(st).filter(d => !docAuto(st, d) && !docIn(st, d)).length, 0);   // left out by her; the check above lists files with no marks
+  // got theirs early, and of those, left out now
+  const early = [...new Set(exportPlan(true, true).map(o => o.st))].filter(gotEarly), nOut = xEarly() ? early.length : 0;
+  const nStu = new Set(plan.map(o => o.st)).size, skipped = batch.students.length - nStu - nOut;
+  // left out by her; the check above lists files with no marks
+  const nLeft = batch.students.reduce((a, st) => a + layoutOf(st).filter(d => !docAuto(st, d) && !docIn(st, d)).length, 0);
   const nKey = plan.filter(o => o.d && keyRows(o.d.pages.flatMap(([path, p]) => fileByPath(o.st, path).marks[p] || [])).length).length;
   const optsOpen = !!store.get('gs.xopts', false);
   const canDir = !!(window.showDirectoryPicker && window.self === window.top);
+  const earlyBox = early.length ? '<label class="chk xearly"><input type="checkbox" id="xEarly"' + (xEarly() ? ' checked' : '') + '> Leave out the ' + (early.length === 1 ? 'student who' : early.length + ' students who') + ' got theirs early</label><p class="xhint">' + early.slice(0, 4).map(st => esc(shownName(st, batch.students.indexOf(st)))).join(', ') + (early.length > 4 ? ' and ' + (early.length - 4) + ' more' : '') + '. ' + (xEarly() ? 'Untick to send theirs again with everyone else’s.' : 'Theirs go again with everyone else’s.') + '</p>' : '';
   const allBox = '<label class="chk"><input type="checkbox" id="xAll"' + (xAll() ? ' checked' : '') + '> Also send back files with no marks (Word files, other files and unmarked pages)</label>';
   tabNext('return');
   openDlg('<div class="bh"><h2>Return marked files</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb xp"><div class="rtmain">' +
@@ -204,6 +222,7 @@ async function openExport() {
         '<p class="xsub">From ' + nStu + (nStu === 1 ? ' student' : ' students') + ', in their own folders, ready to ' + (sysName() ? 'upload back on ' + esc(sysName()) : 'hand back') + '.' +
           (skipped ? ' ' + skipped + ' ' + (skipped === 1 ? 'student has' : 'students have') + ' nothing marked, so they’re left out.' : '') +
           (nLeft ? ' ' + nLeft + (nLeft === 1 ? ' file you left out isn’t' : ' files you left out aren’t') + ' in it.' : '') + '</p>' +
+        earlyBox +
         exportCheckHtml(exportCheck()) +
         '<button class="btn primary xgo" data-go="zip">Download ZIP</button><div id="rtState">' + returnedHtml() + '</div>' +
         ((canDir || G.email) ? '<p class="xalt">or ' + [canDir ? '<button class="link" data-go="dir">save into a folder…</button>' : '', G.email ? '<button class="link" data-go="drive">save to Google Drive</button>' : ''].filter(Boolean).join(' or ') + '</p>' : '') +
@@ -220,7 +239,7 @@ async function openExport() {
           '<div class="chk" style="cursor:default">Sharpness <span class="seg" id="xDpi"><button data-dpi="150" aria-pressed="true">Standard</button><button data-dpi="220" aria-pressed="false">Extra sharp</button></span></div>' +
         '</details>' +
         '<p class="xfoot">Your original files don’t change. A file you marked anywhere goes back whole, every page in order. Word rubrics you scored go back as Word files. ' + (xAll() ? 'Files with no marks go too.' : 'Files with no marks stay out.') + ' Comments go in a right-hand margin.</p>'
-      : '<p style="margin-top:0">Nothing is marked yet. Mark a paper and it will show up here.</p>' + exportCheckHtml(exportCheck()) + allBox + '<div id="rtState">' + returnedHtml() + '</div>') +
+      : (nOut ? '<p style="margin-top:0">Everyone with marked work got theirs early.</p>' + earlyBox : '<p style="margin-top:0">Nothing is marked yet. Mark a paper and it will show up here.</p>') + exportCheckHtml(exportCheck()) + allBox + '<div id="rtState">' + returnedHtml() + '</div>') +
     '</div>' + returnSideHtml() + '</div><div class="bf"><button class="btn" data-close>Close</button></div>', true, 'lg');
   const box = $('#dlgBox');
   // The Options line says what's on, so she doesn't have to open it to know.
@@ -236,18 +255,20 @@ async function openExport() {
     if ($('#xFb').checked) on.push('feedback page');
     if (xAll()) on.push('files with no marks too');
     if (dpi > 150) on.push('extra sharp');
-    el.innerHTML = on.length ? on.map(x => '<span>' + x + '</span>').join(', ') : 'none';   // one piece each, so each can be put into the app's language
+    // one piece each, so each can be put into the app's language
+    el.innerHTML = on.length ? on.map(x => '<span>' + x + '</span>').join(', ') : 'none';
   };
   // An example name from the first file on the list, so she sees what students will get.
   const namesSay = () => {
     const el = $('#xNamesSay'); if (!el) return;
     const o = plan[0]; if (!o) { el.textContent = ''; return; }
-    const one = anonOn() ? [tr('Student name'), asgName(), outWord(o.st)].map(fileSafe).join(' - ') + '.pdf' : nameOut([{ ...o }])[0].path.split('/').pop();   // names hidden while she marks: no name here either
+    // names hidden while she marks: no name here either
+    const one = anonOn() ? [tr('Student name'), asgName(), outWord(o.st)].map(fileSafe).join(' - ') + '.pdf' : nameOut([{ ...o }])[0].path.split('/').pop();
     el.textContent = xNames() ? 'Like “' + one + '”. Graded when it has a score, Feedback when it doesn’t.' : 'Files keep the names they were turned in with.';
   };
   optsSay(); namesSay();
   const xo = $('#xOpts'); if (xo) xo.ontoggle = () => store.set('gs.xopts', xo.open);
-  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xFb') store.set('gs.xfb', e.target.checked); if (e.target.id === 'xNames') { store.set('gs.xnames', e.target.checked); namesSay(); } if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } if (e.target.id === 'xOne') { store.set('gs.xone', e.target.checked); renderTools(); openExport(); } };
+  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xFb') store.set('gs.xfb', e.target.checked); if (e.target.id === 'xNames') { store.set('gs.xnames', e.target.checked); namesSay(); } if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } if (e.target.id === 'xEarly') { store.set('gs.xearly', e.target.checked); openExport(); } if (e.target.id === 'xOne') { store.set('gs.xone', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     const ck = e.target.closest('[data-chk]'); if (ck) { return toPaper(+ck.dataset.chk, ck.dataset.file || undefined); }
@@ -259,7 +280,8 @@ async function openExport() {
     const go = e.target.closest('[data-go]'); if (!go) return;
     if (xBusy) return toast('The last export is still going. It will say when it’s done.');
     keep = $('#xKeep').checked;
-    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked, withKey = $('#xKey').checked, withFb = $('#xFb').checked, fbGiven = new Set();   // one feedback page a student, on the first of their files
+    // one feedback page a student, on the first of their files
+    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked, withKey = $('#xKey').checked, withFb = $('#xFb').checked, fbGiven = new Set();
     // Closing the box doesn't stop the export: it finishes, and the last word comes up on its own.
     const say = (t, last) => { const el = $('#xStatus'); if (el) el.textContent = t; else if (last) toast(t, 6000); };
     let dir = null;
@@ -297,7 +319,8 @@ async function openExport() {
       for (let i = 0; i < items.length; i++) {
         say('Baking in marks ' + (i + 1) + ' of ' + items.length + '…');
         bar.firstChild.style.width = (30 + 70 * i / items.length) + '%';
-        const fk = items[i].one ? items[i] : items[i].st;   // one PDF a student carries its own feedback page, even a retake's earlier try
+        // one PDF a student carries its own feedback page, even a retake's earlier try
+        const fk = items[i].one ? items[i] : items[i].st;
         if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable, withKey, withFb && !fbGiven.has(fk) && !!fbGiven.add(fk)), items[i].st)) nOut++;
         if (items[i].one) for (const x of oneLeftOver(items[i])) if (await putOut(x.path, () => x.bytes, items[i].st)) nOut++;
       }
@@ -330,7 +353,8 @@ function sentWhen(t) {
   return d.toDateString() === now.toDateString() ? hm : d.toLocaleDateString([], { day: 'numeric', month: 'short' }) + ', ' + hm;
 }
 function oneOutHtml(st) {
-  if (!st.files.length) return '<div class="oneout" aria-hidden="true"><span class="link oneout-gap">&nbsp;</span></div>';   // the same height with nothing to export, so Previous and Next stay where they were
+  // the same height with nothing to export, so Previous and Next stay where they were
+  if (!st.files.length) return '<div class="oneout" aria-hidden="true"><span class="link oneout-gap">&nbsp;</span></div>';
   const nm = anonOn() ? 'this' : esc(st.key) + '’s', g = st.grade;
   return '<div class="oneout"><button class="link" id="oneOutBtn" title="Download just this student’s marked file, ready to upload. Uses the options on the Return tab.">Export ' + nm + ' paper now</button>' +
     '<p class="oneout-say' + (g.sent ? ' ok' : '') + '" id="oneOutSay">' + (g.sent ? '✓ Exported at ' + esc(sentWhen(g.sent)) + '. Export again after any change.' : '') + '</p></div>';
@@ -340,9 +364,10 @@ async function exportOne(st) {
   const btn = $('#oneOutBtn'), say = t => { const el = $('#oneOutSay'); if (el) { el.className = 'oneout-say'; el.textContent = t; } };
   saveNow(); commitEditors(); wordScoresAll();
   if (batch.lineBusy) await batch.lineRun;
-  const b0 = batch, mine = () => nameOut(exportPlan(false).filter(o => o.st === st));
+  const b0 = batch, mine = () => nameOut(exportPlan(false, true).filter(o => o.st === st));
   let items = mine();
-  if (!items.length && (!scanned || scanP)) { say('Reading the paper first…'); await scanAll(); if (batch !== b0) return; items = mine(); }   // a typed grade alone counts as a mark
+  // a typed grade alone counts as a mark
+  if (!items.length && (!scanned || scanP)) { say('Reading the paper first…'); await scanAll(); if (batch !== b0) return; items = mine(); }
   const who = anonOn() ? 'this paper' : st.key + '’s paper';
   if (!items.length) { renderGrade(); return toast('Nothing on ' + who + ' is marked yet. Mark it, then export.'); }
   xBusy = true; if (btn) btn.disabled = true;
@@ -352,7 +377,8 @@ async function exportOne(st) {
     for (let i = 0; i < items.length; i++) {
       say(items.length > 1 ? 'Baking in marks ' + (i + 1) + ' of ' + items.length + '…' : 'Baking in marks…');
       const o = items[i];
-      const base = o.path.split('/').pop(), name = xNames() || base.includes(st.key) ? base : st.key + ' - ' + base;   // her own download names each file for its student
+      // her own download names each file for its student
+      const base = o.path.split('/').pop(), name = xNames() || base.includes(st.key) ? base : st.key + ' - ' + base;
       try {
         files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn(), fbOn() && (o.one || !fbGiven) && (fbGiven = true));
         if (o.one) for (const x of oneLeftOver(o)) files[x.path.split('/').pop()] = x.bytes;

@@ -70,11 +70,13 @@ test('each tab of a class has its own address, and Refresh, Back and Forward fol
   await page.reloadHere(); await appReady(page);
   await page.waitForSelector('#bkHeat');
   assert.equal(await hash(page), '#/class/c1/charts', 'a refresh comes back to the same tab');
-  // a class with no roster has nothing to put in the other tabs
+  // a class with no roster has nothing to put in the other tabs; its gradebook only offers to import one, which can bring the roster
   await goTo(page, '#/class/c3');
   assert.equal(await page.$('.ctabs'), null);
-  await goTo(page, '#/class/c3/gradebook');
+  await goTo(page, '#/class/c3/charts');
   assert.equal(await page.$('#classPanel'), null); assert.ok(await page.$('.board'));
+  await goTo(page, '#/class/c3/gradebook');
+  await page.waitForSelector('#bkBody [data-bkimport]'); assert.equal(await page.$('.board'), null);
   // a class with a roster and nothing graded yet: every tab still opens, and says there's nothing to show
   await goTo(page, '#/class/c2/charts'); await page.waitForSelector('#bkTiles');
   assert.equal(await page.$('#bkHeat'), null);

@@ -1,6 +1,8 @@
 ﻿const fs = require('fs');
 const nm = fs.existsSync('node_modules/pdfjs-dist') ? 'node_modules/' : 'libs/node_modules/';
 let h = fs.readFileSync('src/app.html', 'utf8');
+// The app's own style sheets ship without their comments (the font's licence, added apart, keeps its own).
+const css = f => fs.readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const rep = (k, v) => { h = h.split(k).join(v); };
 // Inter (SIL Open Font License, which asks that its text travels with the font), built in so nothing is fetched on load.
 const face = (file, range) => '@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,' + fs.readFileSync('src/fonts/' + file).toString('base64') + ') format("woff2");unicode-range:' + range + '}\n';
@@ -11,13 +13,13 @@ const fontCss = ('/*\n' + fs.readFileSync('src/fonts/OFL.txt', 'utf8') + '*/\n' 
 const sampleMode = fs.readFileSync('src/samplemode.js', 'utf8').replace(/^[ \t]*\/\/.*\r?\n/gm, '');
 rep('/*@@SAMPLEMODE@@*/', sampleMode);
 rep('/*@@FONT@@*/', fontCss);
-const tokensCss = fs.readFileSync('src/tokens.css', 'utf8'), partsCss = fs.readFileSync('src/parts.css', 'utf8');   // the same tokens and shared parts in both pages
+const tokensCss = css('src/tokens.css'), partsCss = css('src/parts.css');   // the same tokens and shared parts in both pages
 rep('/*@@TOKENS@@*/', tokensCss);
 rep('/*@@PARTSCSS@@*/', partsCss);
-rep('/*@@POLISHCSS@@*/', fs.readFileSync('src/polish.css', 'utf8') + fs.readFileSync('src/scans.css', 'utf8') + fs.readFileSync('src/quiz.css', 'utf8'));
-rep('/*@@RUBRICSCSS@@*/', fs.readFileSync('src/rubrics.css', 'utf8') + fs.readFileSync('src/book.css', 'utf8'));
-rep('/*@@INSIGHTCSS@@*/', fs.readFileSync('src/insight.css', 'utf8'));
-rep('/*@@SHELLCSS@@*/', fs.readFileSync('src/rail.css', 'utf8') + fs.readFileSync('src/shell.css', 'utf8') + fs.readFileSync('src/today.css', 'utf8') + fs.readFileSync('src/classpage.css', 'utf8') + fs.readFileSync('src/goals.css', 'utf8') + fs.readFileSync('src/ib.css', 'utf8') + fs.readFileSync('src/tabs.css', 'utf8') + fs.readFileSync('src/markscreen.css', 'utf8') + fs.readFileSync('src/sidepane.css', 'utf8') + fs.readFileSync('src/safe.css', 'utf8') + fs.readFileSync('src/welcome.css', 'utf8') + fs.readFileSync('src/examples.css', 'utf8') + fs.readFileSync('src/help.css', 'utf8') + fs.readFileSync('src/school.css', 'utf8') + fs.readFileSync('src/classroom.css', 'utf8') + fs.readFileSync('src/reports.css', 'utf8') + fs.readFileSync('src/attend.css', 'utf8') + fs.readFileSync('src/missing.css', 'utf8') + fs.readFileSync('src/todo.css', 'utf8') + fs.readFileSync('src/focus.css', 'utf8') + fs.readFileSync('src/tracker.css', 'utf8') + fs.readFileSync('src/gradeplan.css', 'utf8') + fs.readFileSync('src/sheet.css', 'utf8') + fs.readFileSync('src/touch.css', 'utf8') + fs.readFileSync('src/seating.css', 'utf8') + fs.readFileSync('src/pick.css', 'utf8') + fs.readFileSync('src/snip.css', 'utf8') + fs.readFileSync('src/video.css', 'utf8') + fs.readFileSync('src/setupin.css', 'utf8'));
+rep('/*@@POLISHCSS@@*/', css('src/polish.css') + css('src/scans.css') + css('src/quiz.css'));
+rep('/*@@RUBRICSCSS@@*/', css('src/rubrics.css') + css('src/book.css'));
+rep('/*@@INSIGHTCSS@@*/', css('src/insight.css'));
+rep('/*@@SHELLCSS@@*/', css('src/rail.css') + css('src/shell.css') + css('src/today.css') + css('src/classpage.css') + css('src/goals.css') + css('src/ib.css') + css('src/tabs.css') + css('src/markscreen.css') + css('src/sidepane.css') + css('src/safe.css') + css('src/welcome.css') + css('src/examples.css') + css('src/help.css') + css('src/school.css') + css('src/classroom.css') + css('src/reports.css') + css('src/attend.css') + css('src/missing.css') + css('src/todo.css') + css('src/focus.css') + css('src/tracker.css') + css('src/gradeplan.css') + css('src/sheet.css') + css('src/touch.css') + css('src/seating.css') + css('src/pick.css') + css('src/snip.css') + css('src/video.css') + css('src/setupin.css'));
 rep('/*@@PDFJS@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.min.js', 'utf8'));
 rep('/*@@PDFLIB@@*/', fs.readFileSync(nm + 'pdf-lib/dist/pdf-lib.min.js', 'utf8'));
 rep('/*@@H2C@@*/', fs.readFileSync(nm + 'html2canvas/dist/html2canvas.min.js', 'utf8'));
@@ -48,10 +50,10 @@ const langFiles = {}, langNames = {}, langPacked = {};
 {
   const fflate = require('fflate');
   for (const [code, file, obj] of LANGS) {
-    const src = fs.readFileSync('src/lang-' + file + '.js', 'utf8') + '\nreturn ' + obj + ';';
+    const src = (fs.readFileSync('src/lang-' + file + '.js', 'utf8') + '\nreturn ' + obj + ';').replace(/^[ \t]*\/\/.*\r?\n/gm, '');   // lines that are only a comment ship in neither copy
     langNames[code] = new Function(src)().name;
     langPacked[code] = Buffer.from(fflate.deflateSync(Buffer.from(src, 'utf8'), { level: 9 })).toString('base64');
-    langFiles['lang/' + code + '.js'] = '(window.__gsLangs = window.__gsLangs || {})[' + JSON.stringify(code) + '] = (function () {\n' + src.replace(/^[ \t]*\/\/.*\r?\n/gm, '') + '\n})();\n';
+    langFiles['lang/' + code + '.js'] = '(window.__gsLangs = window.__gsLangs || {})[' + JSON.stringify(code) + '] = (function () {\n' + src + '\n})();\n';
   }
 }
 // What fills the sample (src/sample-data.js) is handled the same way: sample.js beside the pages at the web address, fetched only when
@@ -70,7 +72,9 @@ const hosted = page => { if (page.split(LANG_INSIDE).length !== 2) throw new Err
 // Each file is asked for with a stamp of its contents (lang/es.js?1a2b3c4d), so a page never gets the file of another version from a browser's own cache.
 const langStamp = Object.fromEntries(LANGS.map(([code]) => [code, require('crypto').createHash('sha256').update(langFiles['lang/' + code + '.js']).digest('hex').slice(0, 8)]));
 const LANG_LOADER = '<script>try{var gsLangV=' + JSON.stringify(langStamp) + ',gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write(\'<script src="lang/\'+gsL+\'.js?\'+gsLangV[gsL]+\'"><\\/script>\')}catch(e){}</script>';
-rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['@langs', '@sample', 'lang', 'helpdata', 'pickshare', 'beside', APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'feedback', 'rubrics', 'rubricup', 'book', 'bookimport', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'video', 'sidepane', 'anchors', 'wordnotes', 'wordpdf', 'classpage', 'seating', 'attend', 'goals', 'ib', 'reports', 'missing', 'sheet', 'tabs', 'markscreen', 'examples', 'snip', 'touch', 'today', 'todo', 'focus', 'tracker', 'gradeplan', 'settings', 'safe', 'newyear', 'welcome', 'setupin', 'help', 'school', 'classroom', 'shell', 'moving', 'fullscreen', 'sample'].map(n => n === APP ? appSrc : n === '@langs' ? langSrc : n === '@sample' ? sampleConsts : fs.readFileSync('src/' + n + '.js', 'utf8')).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace('/*@@STICKERS@@*/{}', () => stickerSrc));
+// A note after the code on a line ("x = 1;   // why") is left out of the page too, unless the code before it might still be inside a string.
+const tailNote = (line, code) => (code.replace(/\\./g, '').match(/['"`]/g) || []).length % 2 ? line : code;
+rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['@langs', '@sample', 'lang', 'helpdata', 'pickshare', 'beside', APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'feedback', 'rubrics', 'rubricup', 'book', 'bookimport', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'video', 'sidepane', 'anchors', 'wordnotes', 'wordpdf', 'classpage', 'seating', 'attend', 'goals', 'ib', 'reports', 'missing', 'sheet', 'tabs', 'markscreen', 'examples', 'snip', 'touch', 'today', 'todo', 'focus', 'tracker', 'gradeplan', 'settings', 'safe', 'newyear', 'welcome', 'setupin', 'help', 'school', 'classroom', 'shell', 'moving', 'fullscreen', 'sample'].map(n => n === APP ? appSrc : n === '@langs' ? langSrc : n === '@sample' ? sampleConsts : fs.readFileSync('src/' + n + '.js', 'utf8')).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace(/^(.*?[;{}),])[ \t]{2,}\/\/ .*$/gm, tailNote).replace('/*@@STICKERS@@*/{}', () => stickerSrc));
 rep("'/*@@GCID@@*/'", JSON.stringify(process.env.GCID || ''));
 // Where this copy lives and where it is moving to (site.json), only while a move is on. Otherwise the app has no address written into it.
 { const site = require('./site.json'); rep("'/*@@SITE@@*/'", JSON.stringify(site.movingTo ? { address: site.address || '', movingTo: site.movingTo } : null)); }
@@ -102,8 +106,8 @@ console.log((h.length / 1e6).toFixed(2) + 'MB');
   prep('/*@@FONT@@*/', fontCss);
   prep('/*@@TOKENS@@*/', tokensCss);
   prep('/*@@PARTSCSS@@*/', partsCss);
-  prep('/*@@RAILCSS@@*/', fs.readFileSync('src/rail.css', 'utf8'));   // the sidebar's look is shared; its code is the Planner's own (src/planner/rail.js)
-  prep('/*@@PRESENTCSS@@*/', fs.readFileSync('src/present.css', 'utf8') + fs.readFileSync('src/pick.css', 'utf8'));   // presenting a lesson (src/planner/present.js)
+  prep('/*@@RAILCSS@@*/', css('src/rail.css'));   // the sidebar's look is shared; its code is the Planner's own (src/planner/rail.js)
+  prep('/*@@PRESENTCSS@@*/', css('src/present.css') + css('src/pick.css'));   // presenting a lesson (src/planner/present.js)
   prep('/*@@FFLATE@@*/', fs.readFileSync(nm + 'fflate/umd/index.js', 'utf8'));
   // pdf.js for the side panel's books; the worker waits as text until a book is opened
   prep('/*@@PDFJS@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.min.js', 'utf8'));

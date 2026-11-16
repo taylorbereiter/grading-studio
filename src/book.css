@@ -160,7 +160,12 @@ small.bkxc{font-weight:500}
 .bkiscale{white-space:nowrap}
 .bkioff td:not(:first-child){opacity:.55}
 .bkiwhy{display:block;font-size:var(--text-small);margin-top:2px}
-.bkito{font-weight:600}
+.bkicats,.bkiclt{width:auto}
+.bkicats td,.bkiclt td{vertical-align:middle;padding-right:var(--space-4)}
+.bkigo.bkiask{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.bkigo + .stag{margin-left:var(--space-1)}
+.bkiinfo{margin-top:var(--space-3)}
+.bkiinfo small{display:block}
 .bkirow{display:flex;gap:var(--space-4);flex-wrap:wrap;align-items:flex-end}
 .bkiinl{display:flex;gap:var(--space-2);align-items:center}
 .bkiwho{width:auto;margin-top:var(--space-2)}

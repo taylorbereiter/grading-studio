@@ -1,23 +1,21 @@
 {
- "version": "1.28.28",
- "build": "b520a42172cc",
+ "version": "1.28.32",
+ "build": "5d35dddd075c",
  "notes": [
-  "A simpler Focus card on Today: one suggestion with a blue Start and Just one paper, the session’s goal in one line, and this week in one line. Change picks another set or a to-do; More has the lengths, Just 3 papers, the goal, Finish by and shortest first.",
-  "How long a set will take now comes only from that set’s own papers: no time before the first one, a rough guess after one or two, and all the time spent on it counts. Time with nothing done for a few minutes no longer counts in a focus session on papers.",
-  "Away from the marking screen, Ctrl Z now takes back a long run of changes a few seconds at a time, and the note it shows has a Redo button."
+  "When the Focus timer is up, add a few more minutes (+2, +5 or +10) to the same session. Stop early and only the time that ran is counted."
  ],
  "files": {
-  "index.html": "2dd34973896d0f3e08192ca1cc46019e52ceb87cd1c08a872b40c17c4b70671f",
-  "planner.html": "45a3dcd2dc6189cd5cbae57ca583fbaff490477623096c3ea947a9d3ffa9e7d2"
+  "index.html": "d9fe91a7c6243250fdf2bae07378e7e8716e74e59f2dfe16959c8d960b68c3d7",
+  "planner.html": "3c5ed237d7cdae204f3148226359aa5e009bd1127b9cc90a92bcb3ec84daa8c1"
  },
  "langs": {
-  "lang/zh-Hant.js": "810f7de77c3b5b4636898809a8c8e1ecaddd740a48f21462e1e951c007d22bfd",
-  "lang/zh-Hans.js": "7d6c7321b439594318ddae1b1c6d250e1d777717543c90641e08a3ea0718ce58",
-  "lang/es.js": "a6cd16abeef6749630a92cbce97e29249d619029b562c60a61826b902f009c07",
-  "lang/fr.js": "d8e5e0e31dc6b265d3632ab3cdfb2c8e601b419616d32a4ba31f4654d96bf116",
-  "lang/de.js": "7f91ca901932d154e6bb8350901e8d8eab262cba2f711ab5bd57b2e309c8e351",
-  "lang/pt-BR.js": "b3f23636f883e2fceb0c27ee6fd5755618648a40e9b88fa33c30ad4c14f4d500",
-  "lang/ja.js": "adcf3970b617c5b346091edb61ea018843cf90f044798f0b7c2e43d16c4f0afe",
-  "lang/ko.js": "1be1e3a96ce8fb78c1a0881db2e50a32ea757bd7ab1e6356b38319a2be4a3979"
+  "lang/zh-Hant.js": "aff24f70d582c0c884f41ce9ce753d4eb41191d0c09e0b8fcd73ae4f8607b402",
+  "lang/zh-Hans.js": "0f1aa43e21324c8c4d504a58c408df39c42668a41da4098d24ecba7a9db98a99",
+  "lang/es.js": "515976aadf4b42e54f75bdfe4799921a214a83cfd052a2b45ba423fc6b17bcbf",
+  "lang/fr.js": "981a4781688f68f5b81ac7f673bc0ff17ee3bba85995ac1c9e61c46a368363f0",
+  "lang/de.js": "7715076340ff53061c96e614ca35bf3d4d9ffb63c8673a51d977b50d1bd35672",
+  "lang/pt-BR.js": "6aaad309bf89774ea8794faf8e8dc5ccdbd6d3568af3e35944c7105019ffdc8e",
+  "lang/ja.js": "26f312966379eeea1b444779ac4b66baa7cefc0bab25f0d6fdb41819dae301a5",
+  "lang/ko.js": "f8d81619ff791bb430e921b4b632fcaf6899f3cac7d4cb7e1bf237d5901585fc"
  }
 }

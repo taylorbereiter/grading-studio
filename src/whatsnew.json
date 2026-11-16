@@ -1,4 +1,19 @@
 {
+  "1.28.32": [
+    "When the Focus timer is up, add a few more minutes (+2, +5 or +10) to the same session. Stop early and only the time that ran is counted."
+  ],
+  "1.28.31": [
+    "Import a gradebook from your school’s system or a spreadsheet more safely: names that are close to an assignment you have are matched for you to check (Same, New or Skip), each score that differs from yours can be kept or replaced, and the file’s categories go into your own types.",
+    "Nobody is added to a roster unless you choose that, students missing from the file are left as they are, and one Undo takes the whole import back. A class with no students yet can take its roster, student IDs and emails from the file."
+  ],
+  "1.28.30": [
+    "Type scores straight into the gradebook like a spreadsheet: start typing on a cell, Enter goes to the next student and Tab to the next assignment. Paste a column from a spreadsheet onto the first cell to fill it down.",
+    "+ Add scores: type the name and press Enter to start typing scores down the new column. MYP task levels can be typed in the table too."
+  ],
+  "1.28.29": [
+    "Downloading marked papers no longer marks an assignment Returned. The Return tab says when you exported, and Mark as returned (there or in the note after a download) says the work went back.",
+    "Students you give their paper one at a time show on the class page as Returned 3/20, and the class return can leave them out."
+  ],
   "1.28.28": [
     "A simpler Focus card on Today: one suggestion with a blue Start and Just one paper, the session’s goal in one line, and this week in one line. Change picks another set or a to-do; More has the lengths, Just 3 papers, the goal, Finish by and shortest first.",
     "How long a set will take now comes only from that set’s own papers: no time before the first one, a rough guess after one or two, and all the time spent on it counts. Time with nothing done for a few minutes no longer counts in a focus session on papers.",
