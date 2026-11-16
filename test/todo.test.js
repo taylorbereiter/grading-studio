@@ -232,7 +232,7 @@ test('Today has a short card: your own lines that are overdue or for today, and 
   const todo = { items: [item('a', 'Email the counselor', { d: day(-2) }), item('b', 'Write the quiz', { d: day(2) }), item('c', 'Order the novels')] };
   const { page, close } = await open(todo, null);
   await page.waitForSelector('#todoCard .tdrow');
-  assert.ok(!(await page.$eval('#hside', e => e.hidden)));
+  assert.ok(await page.$eval('#todoCard', e => !!e.offsetParent), 'the card shows at the top of Today');
   assert.deepEqual(await rows(page, '#tdCardList'), [['Email the counselor', await page.evaluate(d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short' }), day(-2))]]);
   assert.equal(await page.$eval('#todoCard .tdfoot', e => e.textContent), '2 more on your listSee everything');
   assert.equal(await page.$('#todoCard .tdrow.auto'), null, 'marking and handing back have their own sections here');

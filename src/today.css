@@ -6,6 +6,9 @@
 .hgrid:has(.hside:not([hidden])){grid-template-columns:minmax(0,1fr) 348px}
 @media (max-width:1180px){.hgrid:has(.hside:not([hidden])){grid-template-columns:minmax(0,1fr)}}
 .hmain{min-width:0}
+/* Focus and To do open the page, side by side when there is room */
+.hstart{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));column-gap:var(--space-4);align-items:start}
+.hstart>.tsec{min-width:0}
 .hside{display:flex;flex-direction:column;min-width:0}
 .tsec{margin:0 0 var(--space-5)}
 .thd{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3)}

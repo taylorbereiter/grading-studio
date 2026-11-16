@@ -135,7 +135,7 @@ function nextHtml(groups) {
     '<div class="tbars" role="img" aria-label="' + esc(s.rows.map(r => r.name + ' ' + fmtNum(Math.round(r.avg * 10) / 10) + ' of ' + r.top).join(', ')) + '">' + s.rows.map(r => '<span class="tbn">' + esc(r.name) + '</span><span class="tbt"><i class="' + (r === low && !flat ? 'low' : '') + '" style="width:' + Math.round(r.avg / r.top * 100) + '%"></i></span><span class="tbv">' + (Math.round(r.avg * 10) / 10).toFixed(1) + '</span>').join('') + '</div>' +
     (flat ? '' : '<p class="tsay">' + who + '</p>') + (m.papers ? '<a class="tlink" href="' + batchHash(m.id, 'insights') + '">' + (low.low && !flat ? 'See who' : 'Open Insights') + T_ARROW + '</a>' : '') + '</div>';
 }
-function hsideShow() { $('#hside').hidden = false; }   // the to-do card is always there
+function hsideShow() { const h = $('#hside'); h.hidden = ![...h.children].some(e => !e.hidden); }   // Focus and To do sit at the top of the main column; the side has what is left
 const OLD_SHOWN = 3;
 let oldAll = false;
 function homeRender() {

@@ -414,7 +414,7 @@ test('a class with learning goals and attendance, an MYP class and a DP class le
   {
     const { page, close } = await openApp(browser, { seed: ibBoth() });
     await page.waitForSelector('#railClasses a');
-    const [myp, dp] = await page.$$eval('#railClasses a', as => as.map(a => a.getAttribute('href')));
+    const [myp, dp] = await page.$$eval('#railClasses a[data-railcls]', as => as.map(a => a.getAttribute('href')));
     for (const [t, sel] of [['gradebook', '#ibTab'], ['students', '#peopleTbl table'], ['students/1', '#ibFit'], ['students/5', '#ibFit'], ['charts', '#ibTiles'], ['reports', '#rpt'], ['missing', '#mis']]) { await goTo(page, myp + '/' + t); await page.waitForSelector(sel); await pause(400); await miss(page, 'MYP, ' + t, own); }
     await goTo(page, myp + '/gradebook'); await page.waitForSelector('#ibTab');
     await page.click('#classPanel [data-ibfit]'); await page.waitForSelector('#ibFit'); await miss(page, 'MYP, best fit', own);
@@ -745,7 +745,7 @@ test('the boxes a class page opens leave nothing in English', async () => {
   }
   {
     const { page, close } = await openApp(browser, { seed: ibBoth() });
-    for (const base of await page.$$eval('#railClasses a', a => a.map(x => x.getAttribute('href')))) {
+    for (const base of await page.$$eval('#railClasses a[data-railcls]', a => a.map(x => x.getAttribute('href')))) {
       await goTo(page, base + '/students'); await page.waitForSelector('[data-pssall]'); await page.click('[data-pssall]'); await pause(500); await miss(page, 'IB progress sheets, ' + base, own); await esc(page);
       await goTo(page, base); await page.waitForSelector('#clsSetup'); await page.click('#clsSetup'); await pause(200); await page.click('[data-ib-class]'); await pause(400); await miss(page, 'IB grading box, ' + base, own); await esc(page);
     }
