@@ -2165,6 +2165,8 @@ a.opchip:hover{text-decoration:underline}
 .km{position:absolute;top:calc(100% + 4px);left:0;z-index:20;min-width:216px;max-width:300px;max-height:min(60vh,440px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--corner-4);box-shadow:0 10px 28px rgba(10,14,25,.2);padding:5px;display:flex;flex-direction:column;gap:1px;text-align:left;font-weight:400;white-space:normal}
 .km[hidden]{display:none}
 .km.right{left:auto;right:0}
+.km.kxr{left:auto;right:0}
+.km.right.kxl{right:auto;left:0}
 .km.up,.km.flip{top:auto;bottom:calc(100% + 4px)}
 .km .mitem{display:block;font-size:var(--text-body)}
 .km .mitem small{display:block;font-size:var(--text-small);font-weight:400;color:var(--muted);margin-top:1px}
@@ -27739,9 +27741,13 @@ if (focus) b.focus({ preventScroll: true });
 function kmOpen(b) {
 kmClose();
 const m = b.nextElementSibling; if (!m || !m.classList.contains('km')) return;
-m.hidden = false; m.classList.remove('flip'); b.setAttribute('aria-expanded', 'true'); kmOn = b;
+m.hidden = false; m.classList.remove('flip', 'kxr', 'kxl'); b.setAttribute('aria-expanded', 'true'); kmOn = b;
 const host = b.closest('#paper, #grade, .side'), r = m.getBoundingClientRect(), hr = host && host.getBoundingClientRect();
 if (hr && r.bottom > hr.bottom - 6 && b.getBoundingClientRect().top - hr.top > r.height + 8) m.classList.add('flip');
+const lo = Math.max(hr ? hr.left : 0, 0) + 6, hi = Math.min(hr ? hr.left + host.clientWidth : innerWidth, innerWidth) - 6;
+const br = b.getBoundingClientRect();
+if (r.right > hi && !m.classList.contains('right') && br.right - lo > hi - br.left) m.classList.add('kxr');
+else if (r.left < lo && m.classList.contains('right') && hi - br.left > br.right - lo) m.classList.add('kxl');
 const first = kmItems(m)[0]; if (first) first.focus({ preventScroll: true });
 }
 document.addEventListener('click', e => {
