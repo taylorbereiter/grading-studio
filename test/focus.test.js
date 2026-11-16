@@ -198,3 +198,23 @@ test('the card shows one suggestion with one blue Start; Change opens the list o
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('when the time is up, a few more minutes go on with the same session, and ending them early counts only what ran', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  await page.evaluate(() => window.__gs.fcStart(10, '', false));
+  await later(page, 'r.at -= r.len * 1000 + 2000;');
+  await page.waitForSelector('#fcPanel .fcext [data-fcext="5"]');
+  assert.deepEqual(await page.$$eval('#fcPanel .fcext button', b => b.map(x => x.textContent)), ['+2', '+5', '+10']);
+  const before = (await log(page)).days[today()];
+  await page.click('#fcPanel [data-fcext="5"]');
+  const r = await page.evaluate(() => window.__gs.fcRun());
+  assert.equal(r.st, 'run'); assert.equal(r.len, 300); assert.equal(r.no, 1, 'the same session goes on');
+  // ended after a minute and a half: that is what counts, not the five minutes
+  await later(page, 'r.at -= 90 * 1000;');
+  await page.click('#fcPanel [data-fcstop]');
+  const after = (await log(page)).days[today()];
+  assert.ok(Math.abs(after.s - before.s - 90) <= 2, JSON.stringify([before, after]));
+  assert.equal(after.n, before.n, 'not counted as another session');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
