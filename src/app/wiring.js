@@ -124,7 +124,11 @@ function setList(open) {
 const peekHeld = () => document.activeElement === $('#stuFind') || !!$('#side [data-km][aria-expanded=true]') || $('#side').matches(':hover') || $('#colL').matches(':hover');
 function listPeek(on, wait) {
   clearTimeout(peekT); if (listKept()) return;
-  const go = () => { if (!on && peekHeld()) return; const c = $('#cols'); if (c.classList.contains('peek') === on) return; c.classList.toggle('peek', on); if (!on && document.activeElement && $('#side').contains(document.activeElement) && !document.activeElement.classList.contains('stu')) document.activeElement.blur(); listToCur(); };
+  const go = () => { if (!on && peekHeld()) return; const c = $('#cols'); if (c.classList.contains('peek') === on) return;
+    // a long name wraps to two lines once the list opens, so the rows above can grow: keep the row under the pointer where it was
+    const hov = $('#stuList .stu:hover'), y0 = hov && hov.getBoundingClientRect().top;
+    c.classList.toggle('peek', on);
+    if (hov) $('#side').scrollTop += (hov.getBoundingClientRect().top - y0) / (disp.ui || 1); if (!on && document.activeElement && $('#side').contains(document.activeElement) && !document.activeElement.classList.contains('stu')) document.activeElement.blur(); listToCur(); };
   if (wait) peekT = setTimeout(go, wait); else go();
 }
 for (const el of [$('#side'), $('#colL')]) {

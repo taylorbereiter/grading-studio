@@ -82,8 +82,14 @@ button.pavg:hover .v{text-decoration:underline}
 .km .lf[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .lf .v{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:500}
 .lfnone{font-size:var(--text-control);padding:6px 8px}
-.stu{height:32px;padding:0 8px;margin-bottom:2px;grid-template-columns:22px minmax(0,1fr) auto auto}
+.stu{min-height:32px;padding:4px 8px;margin-bottom:2px;grid-template-columns:22px minmax(0,1fr) auto auto;row-gap:2px}
 .stu .tail{display:inline-flex;align-items:center;gap:4px}
+/* 11/16: a long name wraps onto more lines (up to three) instead of ending in "…"; the whole name is also on hover. The pills
+   (late, +1, group, sent, High/Mid/Low) sit on a line under the name, so they never squeeze it; the score keeps its place. */
+.stu .nm{white-space:normal;overflow-wrap:break-word;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;line-height:1.25}
+.stu .pills{grid-column:2/-1;grid-row:2;display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}
+.stu .pills:empty{display:none}
+.stu .pills .add{margin-left:0}
 .side .hd{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:10px 8px 2px}
 .sfoot{position:sticky;bottom:-10px;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;padding:8px 6px 10px;background:var(--bg);border-top:1px solid var(--line)}
 .sfoot .anonsw{font-size:var(--text-small);letter-spacing:0;text-transform:none;font-weight:500;white-space:nowrap}
@@ -102,7 +108,7 @@ button.pavg:hover .v{text-decoration:underline}
   .cols.peek>.side{width:232px;border-right-color:var(--line-strong);box-shadow:var(--shadow),8px 0 24px -12px color-mix(in srgb,var(--fg) 30%,transparent)}
   .cols:not(.open):not(.peek)>.side{padding-left:5px;padding-right:5px;padding-bottom:40px;scrollbar-width:none}
   .cols:not(.open):not(.peek)>.side::-webkit-scrollbar{display:none}
-  .cols:not(.open):not(.peek) :is(.ph span,.pavg,.lfnow .t,.stu .nm,.stu .whob,.stu .tail,#sideHd,.sfoot,.lfnone){display:none}
+  .cols:not(.open):not(.peek) :is(.ph span,.pavg,.lfnow .t,.stu .nm,.stu .whob,.stu .tail,.stu .pills,#sideHd,.sfoot,.lfnone){display:none}
   .cols:not(.open):not(.peek) .phrow{justify-content:center}
   .cols:not(.open):not(.peek) .prog-s .ph{font-size:var(--text-small)}
   .cols:not(.open):not(.peek) .lbar{justify-content:center;gap:2px}
@@ -110,7 +116,7 @@ button.pavg:hover .v{text-decoration:underline}
   .cols:not(.open):not(.peek) .sfind .stufind{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer}
   .cols:not(.open):not(.peek) .lfnow.on{background:var(--accent-soft)}
   .cols:not(.open):not(.peek) :is(.sfind,.lfnow):hover{background:var(--hover);color:var(--fg)}
-  .cols:not(.open):not(.peek) .stu{grid-template-columns:auto 1fr;gap:2px;padding:0 6px 0 7px}
+  .cols:not(.open):not(.peek) .stu{grid-template-columns:auto 1fr;gap:2px;padding:0 6px 0 7px;height:32px}
   .cols:not(.open):not(.peek) .stu::after{content:attr(data-sv);justify-self:end;font-size:var(--text-small);font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
   .cols:not(.open):not(.peek) .stu.sv-part::after{color:var(--warn)}
   .cols:not(.open):not(.peek) .stu.sv-quiet::after{color:var(--muted)}
