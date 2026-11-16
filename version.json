@@ -1,13 +1,12 @@
 {
- "version": "1.28.44",
- "build": "29a2984e6a8e",
+ "version": "1.28.45",
+ "build": "f77f97b14b2e",
  "notes": [
-  "Drive videos now play straight from your Drive, a little at a time, with the transcript following along. Nothing is copied into the browser unless you press Download for offline, and Remove download frees that space without touching the file in Drive.",
-  "Choosing your videos folder starts at My Drive, with tabs for Shared with me and shared drives, and shows the videos inside each folder. Pick any video and its folder becomes your videos folder."
+  "Send to your assistant, Copy for your assistant and Fill in the weeks now copy everything your assistant needs into the message itself. They never ask it to open a folder or file on your computer. Send asks it for one .zip with the PowerPoint and handouts, and each piece on its own; upload the .zip on the lesson and check its changes slide by slide."
  ],
  "files": {
-  "index.html": "88548eca857961f20f7a4b72d7ba03b1d9c2b30d09a4d05ac7b8303e2f2b2700",
-  "planner.html": "563c5356c9ca187b8c87fcba20310db862135e9e9de1874e703de0b94c9a635d"
+  "index.html": "c33e1bf638fbf31ac0ca9009a2d2e0b8690b22b824bcf9bc719190811bb5ed90",
+  "planner.html": "675f74d81a4d4b62863cfec11f19cb05f77b79a5d4175c321fe0f2fb06448bb2"
  },
  "langs": {
   "lang/zh-Hant.js": "ea0e5765a6e2c1db58743ec97e0de9034a889dcff3c16cc53db62d28eb477c3a",

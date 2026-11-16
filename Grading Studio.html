@@ -5036,7 +5036,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.44";
+  const APP_VERSION = "1.28.45";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -31518,7 +31518,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.44":["Drive videos now play straight from your Drive, a little at a time, with the transcript following along. Nothing is copied into the browser unless you press Download for offline, and Remove download frees that space without touching the file in Drive.","Choosing your videos folder starts at My Drive, with tabs for Shared with me and shared drives, and shows the videos inside each folder. Pick any video and its folder becomes your videos folder."]};
+const WHATS_NEW = {"1.28.45":["Send to your assistant, Copy for your assistant and Fill in the weeks now copy everything your assistant needs into the message itself. They never ask it to open a folder or file on your computer. Send asks it for one .zip with the PowerPoint and handouts, and each piece on its own; upload the .zip on the lesson and check its changes slide by slide."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
