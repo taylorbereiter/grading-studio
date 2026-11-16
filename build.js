@@ -54,7 +54,10 @@ const langFiles = {}, langNames = {}, langPacked = {};
   for (const [code, file, obj] of LANGS) {
     const src = (fs.readFileSync('src/lang-' + file + '.js', 'utf8') + '\nreturn ' + obj + ';').replace(/^[ \t]*\/\/.*\r?\n/gm, '');   // lines that are only a comment ship in neither copy
     langNames[code] = new Function(src)().name;
-    const lean = dent(src);   // leading spaces don't ship either (dent, above)
+    // Leading spaces don't ship either (dent, above), nor the space after each colon and comma between two quoted words; the
+    // squeezed file must read back the same as the source.
+    const lean = dent(src).replace(/(?<!\\)"([:,]) "/g, '"$1"');
+    if (JSON.stringify(new Function(lean)()) !== JSON.stringify(new Function(src)())) throw new Error('lang-' + file + '.js reads differently once squeezed');
     langPacked[code] = Buffer.from(fflate.deflateSync(Buffer.from(lean, 'utf8'), { level: 9 })).toString('base64');
     langFiles['lang/' + code + '.js'] = '(window.__gsLangs = window.__gsLangs || {})[' + JSON.stringify(code) + '] = (function () {\n' + lean + '\n})();\n';
   }

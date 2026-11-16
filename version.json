@@ -1,21 +1,21 @@
 {
  "version": "1.28.34",
- "build": "2d2164e73916",
+ "build": "02eeac5c29b4",
  "notes": [
   "Focus counts only papers you marked: rubric scores, marks on the page or a comment. A grade only typed in still counts as scored, and its time still counts as grading time, but it no longer counts as a paper marked today."
  ],
  "files": {
-  "index.html": "82c9ac94f32ddaf746a0ae059abdb37f3989bf748c06a0353a2c127f209413a1",
-  "planner.html": "5a5fbc30fcff26017fefd9cd5a6d6234d72f05dc5f1a68096b8fe15f440e5bc9"
+  "index.html": "2bd1004a54d4a33aaf00232e51e10b00a4646780259f7ffb3f973e48f7ae1f52",
+  "planner.html": "46056854c3405a8da778f329ee4fd79ae1c9cdab0915d9eff6550108b021463d"
  },
  "langs": {
-  "lang/zh-Hant.js": "a9b41e39c9bb0ae2bf191d963f25a21c7a744e77ac48ab58eb7838f187dbcbbd",
-  "lang/zh-Hans.js": "05397ffc10c0d79e587ef0a9b9256923c7dd321cc5dceaba86f7f14429600800",
-  "lang/es.js": "c2afb26b2fe4e3b2a50e99433ab2653e58ceb5c4f63e1a148d6a5dd169b9fe35",
-  "lang/fr.js": "db877d6bbe83435dd2929446e5a9a830767ef38d08d492c6fc5e21e9c9558c39",
-  "lang/de.js": "b46fae18c3293d95e1eff6e018143e26b204f0a2fb49e4ae1aae4ab5dd31a027",
-  "lang/pt-BR.js": "25f928976c2cd9f66eb0f747c573cc738c58997b096904779e8ee208835d650c",
-  "lang/ja.js": "ed31a72d57267bec6103b2ac64ccb6e557cd0d6ebc39c8aa0d3538e28e2fa03c",
-  "lang/ko.js": "52a6691f5746bdffa9d77a4bfdf2f44c26ce8745d3497737d2d63241731a2d0c"
+  "lang/zh-Hant.js": "afd2578a45f8481f4d8901a646cdf448b769a41883e84d43d9b037bf31069437",
+  "lang/zh-Hans.js": "806333caf0b88f189c444c36d12411dd6409b11310a1c1361fea23b8ec3236c9",
+  "lang/es.js": "3f5de54cc162e42082a7893f76c893875cd24606031f0b6511458f5f47d9b8f4",
+  "lang/fr.js": "004d0f1f2137466fda4b75ea03d2a388be04e12851b978784c33e6355ce71444",
+  "lang/de.js": "c64a3d6b807c1b5a456722bf5280fba6ccc254021f69d23cf1a4c03522af248a",
+  "lang/pt-BR.js": "9d983dcc01cb7acef4b90c2cbbfaf8e56079aee1723700592a1be82de4896b44",
+  "lang/ja.js": "8f66e1e5d109f42bb8b9c1ad4fcc2d6d7fc4ba2958f07ec43250cd01d178571d",
+  "lang/ko.js": "6cb79d2bedb0c692b133032033b550eeb8c9600640998d6491c03fadafe11ade"
  }
 }
