@@ -1,4 +1,8 @@
 {
+  "1.28.30": [
+    "Type scores straight into the gradebook like a spreadsheet: start typing on a cell, Enter goes to the next student and Tab to the next assignment. Paste a column from a spreadsheet onto the first cell to fill it down.",
+    "+ Add scores: type the name and press Enter to start typing scores down the new column. MYP task levels can be typed in the table too."
+  ],
   "1.28.29": [
     "Downloading marked papers no longer marks an assignment Returned. The Return tab says when you exported, and Mark as returned (there or in the note after a download) says the work went back.",
     "Students you give their paper one at a time show on the class page as Returned 3/20, and the class return can leave them out."

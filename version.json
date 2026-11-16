@@ -1,22 +1,32 @@
 {
+<<<<<<< HEAD
  "version": "1.28.29",
  "build": "5f96873260d3",
+=======
+ "version": "1.28.30",
+ "build": "06f1f5ebf68e",
+>>>>>>> origin/main
  "notes": [
-  "Downloading marked papers no longer marks an assignment Returned. The Return tab says when you exported, and Mark as returned (there or in the note after a download) says the work went back.",
-  "Students you give their paper one at a time show on the class page as Returned 3/20, and the class return can leave them out."
+  "Type scores straight into the gradebook like a spreadsheet: start typing on a cell, Enter goes to the next student and Tab to the next assignment. Paste a column from a spreadsheet onto the first cell to fill it down.",
+  "+ Add scores: type the name and press Enter to start typing scores down the new column. MYP task levels can be typed in the table too."
  ],
  "files": {
+<<<<<<< HEAD
   "index.html": "94db7bd90240f2f5916ad20ac60646467f1b5402098b002f6721ea27d78981c4",
   "planner.html": "34c9995f34608091017228047ed95d238840bf1e2116849b0c1d232ca478f3e1"
+=======
+  "index.html": "1a87de2ee86fdf0f45ffbe238f814ba7047073b8d56c69b9c4eb5a7f7ce9520d",
+  "planner.html": "e7721eff7016d136d8cf2362e01a74799eed94ebc5bfbb12e35a62fed85807b2"
+>>>>>>> origin/main
  },
  "langs": {
-  "lang/zh-Hant.js": "eea85ced9342abac8e985a5a036627971ef664f808bb01cff678949ae3cd2a90",
-  "lang/zh-Hans.js": "129ab520df90aca1195dfa75e723aac6b7a9c8ce1f830be255f42ef536db209d",
-  "lang/es.js": "5177df404b3afbb4d30fb082752b7c93f15205bf9271774ad764a7fc8c22aa82",
-  "lang/fr.js": "0a04d8ee911a0acf4582e8a065c6f4c741a9d1c06563406fc1b50155da71a2fb",
-  "lang/de.js": "4b65c5b79f0b5c6854ed9d4a68c5709736f09cd98a4e744a05ba6836c8dc3540",
-  "lang/pt-BR.js": "9279ce8f7f84a1ebda47e661c02d8c81253521409ab52ce7ae421fee00d1edee",
-  "lang/ja.js": "2c1a756cb833cdf269d29f001276a71cd48171156a21c6b23cf176adfb8e589f",
-  "lang/ko.js": "7e735b975f6e4910c9808345e5d5dc8fb36356d1ff3bab98c5e5504a10b24891"
+  "lang/zh-Hant.js": "10dfa7de387abc6a5e80a56f8cda49ca4d21be6529c3df4e6cfc8da6c011c779",
+  "lang/zh-Hans.js": "81ca403135e7a9b032297d6745df3869d2807b772eca43c45253c58249d6c51c",
+  "lang/es.js": "984fb1d9eb40f2bb364e300f2d21c417f7c6c33f7e5747cbe7b4cbb8ae5cba46",
+  "lang/fr.js": "3e5c23f3a336c9ef8f4ce321774d50fdcfcf28b852a361ef17bf3043f915b428",
+  "lang/de.js": "3821ac202338f5a6a99a1a6eb9b98c723ff6657f7b14e1a9b6d65e16120a3cbc",
+  "lang/pt-BR.js": "1c89fe78f13e78816ef38a7d2f8da7964751366fcf45b50abc0b4ea7f9c28768",
+  "lang/ja.js": "644e9ae2a8a7e0ab47c7177912c42d57264821b8d4c31e10878db98d567c26d0",
+  "lang/ko.js": "a9d7cde5c616743022971fac4ad4754bafce5f3993e14b1fcfa16dd58843c66f"
  }
 }
