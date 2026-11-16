@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"124aef91","zh-Hans":"97cb4df7","es":"e4405958","fr":"5ca6101e","de":"cd98ecf6","pt-BR":"e869d510","ja":"0cc4bca0","ko":"b9c3a1b3"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"6a21ba05","zh-Hans":"0f51454a","es":"bf2e9dcf","fr":"40517acb","de":"dc11c4be","pt-BR":"236469a6","ja":"532a8ce3","ko":"bbec9e05"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -3965,6 +3965,11 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
           <div class="lhead"><h2>Where your work is saved</h2></div>
           <p class="muted setp">Your classes, papers, marks and scores live in this browser at this address. A linked folder keeps a second copy by itself.</p>
           <p id="whereLine" style="margin:0;font-size:14px"></p>
+        </section>
+        <section class="lib setsec" id="setGoogle" data-sec="saving" hidden>
+          <div class="lhead"><h2>Google sign-in</h2></div>
+          <p class="setp settch"><label><input type="checkbox" id="gAutoIn" checked> Renew it by itself every hour</label></p>
+          <p class="muted setp">Google asks again every hour. Left on, Google’s small window opens for a moment, usually as you come back to the app. Turned off, syncing waits until you tap “sign in again to sync”.</p>
         </section>
         <section class="lib setsec" id="setTake" data-sec="saving">
           <div class="lhead"><h2>Take your work with you</h2><span class="sp"></span><button class="btn sm" id="restoreBtn">Bring work in…</button><button class="btn sm primary" id="takeBtn">Take my work with me</button></div>
@@ -10197,12 +10202,13 @@ function loadGis() {
 if (window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
 return gisP || (gisP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onload = res; s.onerror = () => { gisP = null; rej(new Error('Couldn’t reach Google. Check the internet connection.')); }; document.head.appendChild(s); }));
 }
+const gAuto = () => store.get('gs.gAuto', true) !== false;
 const gHas = scope => scope.split(' ').every(x => G.scope.split(' ').includes(x));
 async function gToken(interactive, full) {
 const scope = full ? PICK_SCOPE : SYNC_SCOPE;
 if (G.token && Date.now() < G.exp - 60000 && gHas(scope)) return G.token;
 if (!gcid()) throw new Error('setup');
-if (!interactive) throw new Error('Sign in again to sync');
+if (!interactive && !gAuto()) throw new Error('Sign in again to sync');
 if (G_REDIRECT) { gRedirect(scope); throw new Error('Sign in again to sync'); }
 await loadGis();
 if (!G.client || G.cscope !== scope) {
@@ -10213,7 +10219,13 @@ callback: r => { const w = G.waiters.splice(0); if (r.error) w.forEach(x => x.re
 error_callback: e => { const w = G.waiters.splice(0); w.forEach(x => x.rej(new Error(e && e.type === 'popup_closed' ? 'Sign-in was closed' : 'Sign-in didn’t finish'))); },
 });
 }
-return new Promise((res, rej) => { G.waiters.push({ res, rej }); G.client.requestAccessToken({ prompt: interactive && !G.email ? 'consent' : '' }); });
+return new Promise((res, rej) => { G.waiters.push({ res, rej }); if (G.waiters.length === 1) G.client.requestAccessToken({ prompt: interactive && !G.email ? 'consent' : '' }); });
+}
+const keepHas = k => PICK_SCOPE.split(' ').every(x => (k.scope || '').split(' ').includes(x));
+async function gRenew() {
+const keep = { token: G.token, exp: G.exp, scope: G.scope };
+G.exp = 0;
+try { return await gToken(false, keepHas(keep) ? 'pick' : false); } catch (e) { if (!G.exp) Object.assign(G, keep); throw e; }
 }
 async function gfetch(url, opt = {}, interactive, sync, again) {
 const t = await gToken(interactive, sync === true ? false : 'pick');
@@ -10249,7 +10261,9 @@ for (const el of document.querySelectorAll('.gAcct')) el.innerHTML = G.email
 : '<button class="btn sm" data-gin>Sign in with Google</button>';
 if (!PHONE) for (const el of document.querySelectorAll('.gAcct')) el.insertAdjacentHTML('beforeend', ' <button class="btn sm" data-gphone>Use on your phone</button>');
 for (const b of document.querySelectorAll('.needG')) b.hidden = !G.email;
+const gs = $('#setGoogle'); if (gs) { gs.hidden = !G.email || G_REDIRECT; $('#gAutoIn').checked = gAuto(); }
 }
+document.addEventListener('change', e => { if (e.target.id === 'gAutoIn') { store.set('gs.gAuto', e.target.checked); if (e.target.checked && syncPaused()) syncNow(); } });
 document.addEventListener('click', e => {
 if (e.target.closest('[data-gin]')) signIn();
 if (e.target.closest('[data-gout]')) signOut();
@@ -10417,8 +10431,13 @@ dvCloud(out.files);
 setSyncState('synced');
 dvUpSoon();
 }
-window.addEventListener('focus', () => { if (G.email) syncNow(); });
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && G.email) syncNow(); });
+function gBack2() {
+if (!G.email || sampleOn()) return;
+if (gAuto() && !G_REDIRECT && G.token && G.exp - Date.now() < 15 * 60000 && !gBack2.busy) { gBack2.busy = true; gRenew().catch(() => {}).finally(() => { gBack2.busy = false; syncNow(); }); return; }
+syncNow();
+}
+window.addEventListener('focus', gBack2);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') gBack2(); });
 if (GOK && G.email && gcid() && !sampleOn()) setTimeout(() => {
 if (G_REDIRECT && !(G.token && Date.now() < G.exp - 60000)) {
 if (navigator.onLine === false) return setSyncState('offline: syncs when you are back online');
@@ -10431,7 +10450,7 @@ gToken(false).then(() => { renderGoogle(); syncNow(); }).catch(() => setSyncStat
 if (GOK && G_REDIRECT && G.token && !G.email) setTimeout(() => gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); toast('Signed in as ' + G.email); syncNow(); }).catch(e => toast(e.message)), 400);
 
 /* Papers through Drive: each file once, named by what's in it (as a linked folder keeps them, folder.js), in the same hidden folder.
-A computer sends up the papers it keeps, in the background, after the marks; the sync file lists each download's files once they
+A computer sends up the papers it keeps, in the background, as soon as it keeps them (src/app/kept.js) and after each sync of the marks; the sync file lists each download's files once they
 are all there. Another device fetches a download's papers the first time she opens it there (reopenKept), and a phone fetches one
 student's at a time (phone.js). Late files come with the marks. */
 const DV = { names: null, files: store.get('gs.cloudP', null) || {}, up: null, full: false };
@@ -12033,6 +12052,7 @@ more.papers = true; more.size = list.reduce((a, e) => a + (e.data ? e.data.lengt
 const m = { ...(keptMeta.get(b.id) || {}), id: b.id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (keptMeta.get(b.id) || {}).asg, ...more };
 await kdo('meta', 'readwrite', o => o.put(m, b.id)); keepOk = true; keptMeta.set(b.id, m);
 folderPapers(b);
+if (more.papers && G.email && !sampleOn()) setTimeout(() => syncNow(), 1500);
 } catch (e) {
 console.error(e);
 if (list) toast('This browser couldn’t keep these papers, usually because it’s out of room. Your marks are still saved, but the papers won’t reopen by themselves or go in a take-home file: drop the download in again to reopen it.', 12000);
@@ -34110,7 +34130,7 @@ openDlg('<div class="bh"><h2>Use on your phone</h2></div><div class="bb phhow">'
 '<p class="muted">Your classes, scores and to-dos then stay the same on both. You can type scores and look at papers on the phone; marking stays on the computer.</p>' +
 '</div><div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
 }
-window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });
+window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), gAge: ms => { G.exp -= ms; }, syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });
 
 /* Plans: the lessons from the Planner on her computer, day by day, to read (the Planner itself is where they are written). They come
 through her Google Drive with the rest of her work (drive.js, planSync), into this browser's own copy of the Planner's store. */

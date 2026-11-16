@@ -77,12 +77,12 @@ function fakeDrive() {
 const sync = page => page.evaluate(async () => { await window.__gs.gIn(); return window.__gs.syncNow(); });   // signed in (a press on the Google line), then sync
 const typed = (page, id) => page.evaluate(id => { const l = JSON.parse(localStorage.getItem('gs.lib')); for (const c of l.classes) for (const u of c.units) for (const it of u.items) if (it.id === id) return it.typed; return null; }, id);
 
-test('Google’s window never opens by itself: with no key yet, the sync waits and says so, and a press there signs in and syncs', async () => {
+test('with Renew it by itself turned off, Google’s window never opens by itself: the sync waits and says so, and a press there signs in and syncs; on (the default), it renews by itself', async () => {
   const D = fakeDrive(), srv = await serve(builtHtml());
-  const mac = await openApp(browser, { server: srv, seed: seed(), beforeLoad: D.hook });
+  const mac = await openApp(browser, { server: srv, seed: seed({ 'gs.gAuto': 'false' }), beforeLoad: D.hook });
   try {
     await mac.page.evaluate(() => window.__gs.syncNow());
-    await mac.page.waitForSelector('button#syncState[data-gin]');
+    await mac.page.waitForSelector('button#syncState[data-gin]', { timeout: 26000 });
     assert.match(await mac.page.$eval('#syncState', b => b.textContent), /sign in again to sync/);
     assert.equal(await mac.page.evaluate(() => window.__gReq || 0), 0, 'no window opened');
     // focus and coming back to the tab don't open it either
@@ -90,11 +90,22 @@ test('Google’s window never opens by itself: with no key yet, the sync waits a
     await new Promise(r => setTimeout(r, 300));
     assert.equal(await mac.page.evaluate(() => window.__gReq || 0), 0);
     await mac.page.click('#syncState');
-    await mac.page.waitForFunction(() => document.querySelector('#syncState') && !/sign in again/.test(document.querySelector('#syncState').textContent) && window.__gReq === 1);
+    await mac.page.waitForFunction(() => document.querySelector('#syncState') && !/sign in again/.test(document.querySelector('#syncState').textContent) && window.__gReq === 1, { timeout: 25000 });
     await mac.page.waitForFunction(() => /synced/.test(document.querySelector('#syncState').textContent), { timeout: 15000 });
     assert.ok(D.writes >= 1, 'synced once signed in');
     assert.deepEqual(mac.page.errors, []);
-  } finally { await mac.close(); await srv.close(); }
+  } finally { await mac.close(); }
+  // the default: no key yet, and the sync gets one by itself
+  const pc = await openApp(browser, { server: srv, seed: seed(), beforeLoad: D.hook });
+  try {
+    await pc.page.waitForFunction(() => window.__gReq >= 1 && /synced/.test((document.querySelector('#syncState') || {}).textContent || ''), { timeout: 15000 });
+    // coming back with the key in its last quarter hour: a new one then, not mid-work
+    const n = await pc.page.evaluate(() => window.__gReq);
+    await pc.page.evaluate(() => window.__gs.gAge(50 * 60000));
+    await pc.page.evaluate(() => { window.dispatchEvent(new Event('focus')); });
+    await pc.page.waitForFunction(n => window.__gReq === n + 1, { timeout: 27000 }, n);
+    assert.deepEqual(pc.page.errors, []);
+  } finally { await pc.close(); await srv.close(); }
 });
 
 test('typed-in scores merge student by student: the later change for each student stays, a score taken out stays out', () => {

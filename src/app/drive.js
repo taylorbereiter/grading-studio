@@ -34,14 +34,15 @@ function loadGis() {
 }
 // Gets a fresh token; silent when she's already signed in to Google in this browser. full: 'pick' for the files she picks or the app
 // makes (drive.file), else only the app's own hidden folder.
+const gAuto = () => store.get('gs.gAuto', true) !== false;
 const gHas = scope => scope.split(' ').every(x => G.scope.split(' ').includes(x));
 async function gToken(interactive, full) {
   const scope = full ? PICK_SCOPE : SYNC_SCOPE;
   if (G.token && Date.now() < G.exp - 60000 && gHas(scope)) return G.token;
   if (!gcid()) throw new Error('setup');
-  // Google's key lasts an hour, and getting a new one in a browser opens Google's little window, even for a moment. That never happens by
-  // itself: the sync waits, the Google line says so, and a press there (or anything else that asks for Google) gets the new key.
-  if (!interactive) throw new Error('Sign in again to sync');
+  // Google's key lasts an hour, and getting a new one in a browser opens Google's little window, even for a moment. With "Renew it by
+  // itself" on (the default, Settings, Saving and carrying) that happens when it's needed; off, the sync waits for a tap on the Google line.
+  if (!interactive && !gAuto()) throw new Error('Sign in again to sync');
   if (G_REDIRECT) { gRedirect(scope); throw new Error('Sign in again to sync'); }
   await loadGis();
   if (!G.client || G.cscope !== scope) {
@@ -52,7 +53,15 @@ async function gToken(interactive, full) {
       error_callback: e => { const w = G.waiters.splice(0); w.forEach(x => x.rej(new Error(e && e.type === 'popup_closed' ? 'Sign-in was closed' : 'Sign-in didn’t finish'))); },
     });
   }
-  return new Promise((res, rej) => { G.waiters.push({ res, rej }); G.client.requestAccessToken({ prompt: interactive && !G.email ? 'consent' : '' }); });
+  // one window at a time: a second ask while Google's window is open waits for the same answer
+  return new Promise((res, rej) => { G.waiters.push({ res, rej }); if (G.waiters.length === 1) G.client.requestAccessToken({ prompt: interactive && !G.email ? 'consent' : '' }); });
+}
+// A new key before this one runs out, for what this one already covers. The old one stays in use if Google doesn't answer.
+const keepHas = k => PICK_SCOPE.split(' ').every(x => (k.scope || '').split(' ').includes(x));
+async function gRenew() {
+  const keep = { token: G.token, exp: G.exp, scope: G.scope };
+  G.exp = 0;   // so gToken asks Google now
+  try { return await gToken(false, keepHas(keep) ? 'pick' : false); } catch (e) { if (!G.exp) Object.assign(G, keep); throw e; }
 }
 // Every call but the sync's own (gsync) is for files she picked or the app made (drive.file).
 async function gfetch(url, opt = {}, interactive, sync, again) {
@@ -90,7 +99,9 @@ function renderGoogle() {
     : '<button class="btn sm" data-gin>Sign in with Google</button>';
   if (!PHONE) for (const el of document.querySelectorAll('.gAcct')) el.insertAdjacentHTML('beforeend', ' <button class="btn sm" data-gphone>Use on your phone</button>');
   for (const b of document.querySelectorAll('.needG')) b.hidden = !G.email;
+  const gs = $('#setGoogle'); if (gs) { gs.hidden = !G.email || G_REDIRECT; $('#gAutoIn').checked = gAuto(); }
 }
+document.addEventListener('change', e => { if (e.target.id === 'gAutoIn') { store.set('gs.gAuto', e.target.checked); if (e.target.checked && syncPaused()) syncNow(); } });
 document.addEventListener('click', e => {
   if (e.target.closest('[data-gin]')) signIn();
   if (e.target.closest('[data-gout]')) signOut();
@@ -274,8 +285,14 @@ async function syncOnce() {
   setSyncState('synced');
   dvUpSoon();
 }
-window.addEventListener('focus', () => { if (G.email) syncNow(); });
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && G.email) syncNow(); });
+// Coming back to the app: with the key in its last quarter hour, a new one now, so Google's window opens as she arrives rather than mid-work.
+function gBack2() {
+  if (!G.email || sampleOn()) return;
+  if (gAuto() && !G_REDIRECT && G.token && G.exp - Date.now() < 15 * 60000 && !gBack2.busy) { gBack2.busy = true; gRenew().catch(() => {}).finally(() => { gBack2.busy = false; syncNow(); }); return; }
+  syncNow();
+}
+window.addEventListener('focus', gBack2);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') gBack2(); });
 // Signed in last time: reconnect quietly when the page opens. On an iPhone's home screen that's a quick trip to Google and back, once an hour at most.
 if (GOK && G.email && gcid() && !sampleOn()) setTimeout(() => {
   if (G_REDIRECT && !(G.token && Date.now() < G.exp - 60000)) {
@@ -291,7 +308,7 @@ if (GOK && G.email && gcid() && !sampleOn()) setTimeout(() => {
 if (GOK && G_REDIRECT && G.token && !G.email) setTimeout(() => gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); toast('Signed in as ' + G.email); syncNow(); }).catch(e => toast(e.message)), 400);
 
 /* Papers through Drive: each file once, named by what's in it (as a linked folder keeps them, folder.js), in the same hidden folder.
-   A computer sends up the papers it keeps, in the background, after the marks; the sync file lists each download's files once they
+   A computer sends up the papers it keeps, in the background, as soon as it keeps them (src/app/kept.js) and after each sync of the marks; the sync file lists each download's files once they
    are all there. Another device fetches a download's papers the first time she opens it there (reopenKept), and a phone fetches one
    student's at a time (phone.js). Late files come with the marks. */
 const DV = { names: null, files: store.get('gs.cloudP', null) || {}, up: null, full: false };
