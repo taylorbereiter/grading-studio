@@ -978,4 +978,4 @@ function exPageRender() {
 }
 exReady.then(exRailSay);
 
-Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete, exSaveShot, exTagsOf, exShotWhere, isScoreMark });
+Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete, exSaveShot, exTagsOf, exShotWhere, isScoreMark, scoreOffHides });

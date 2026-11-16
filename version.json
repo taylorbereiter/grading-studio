@@ -1,23 +1,23 @@
 {
  "version": "1.28.49",
- "build": "050bffb2c294",
+ "build": "0eeba6b7d831",
  "notes": [
   "Papers through Google Drive: once you've marked them, your papers go up to your Drive by themselves. Your other computer gets them the first time you open that assignment there, and on your phone the eye button shows one student's paper.",
   "Use on your phone: a button beside the Google sign-in shows a QR code and four steps for adding Grading Studio to your phone's Home Screen. The Welcome screen has Sign in with Google too, and signing in works on any iPhone browser.",
   "Google's sign-in window no longer pops up by itself. When the hour-long sign-in runs out, syncing waits and the Google line says sign in again to sync. Tap it once to carry on. The Drive papers chooser now opens in the folder you last used."
  ],
  "files": {
-  "index.html": "38d1e391316be954a41b08a472844590f3c3c87edd5edc02e8c7b69863fdc3cc",
-  "planner.html": "65257175c59f2823715306be428bc45e814599ecaa85e682008fd710d2fe8ece"
+  "index.html": "f0bf3ccf8e1b3a791af71c8444f65bd0e04936b0cb29ef576d5d2090c698097a",
+  "planner.html": "dd76a43bfe2df6c245e40c12d37e99a4fe63dbf802324a3de188762cbaf6dee6"
  },
  "langs": {
-  "lang/zh-Hant.js": "124aef919fcedde9e5e7ea0fb47cecc681df7b77c51ed9e78021b5e918a68652",
-  "lang/zh-Hans.js": "97cb4df7f84e670796c9e1eeb998760c4ff657f78c680bf00336079e09f5ea48",
-  "lang/es.js": "e44059589e151cdf7e2220b4573c5a0413c7a1843ff3d3ca078d77e2a0a2409f",
-  "lang/fr.js": "5ca6101e13ae7488afbb38bebee5d51b9197ac518a56b80994ccf010248c79b5",
-  "lang/de.js": "cd98ecf672b057a9360f3fcd14ab89ce27f018b8a411bb32ff484e20e606cd63",
-  "lang/pt-BR.js": "e869d510b2558acd6552660a6fd249f2d210863328c7b7eb4e48f74b355e8b71",
-  "lang/ja.js": "0cc4bca046a06dc0e09267ce42f72d8aa8f7bfa7ed12583ad35717c8bb65c818",
-  "lang/ko.js": "b9c3a1b3cddb204d53e6a25c2150e223398afd9cb709fb3e3e87a6967dbc03c9"
+  "lang/zh-Hant.js": "cc1c57cd03fdefc41b41376b0e42b87d5e5082d812a4d43e42f93f321d9cf4c7",
+  "lang/zh-Hans.js": "a823c49a3e4f7884f0b211af3a48094cf5b422b92c4571cde7239030d27deb46",
+  "lang/es.js": "5a0276cc817d177d0601faa7eee994a3c98d931685a7cef0c2112bb2981ebab5",
+  "lang/fr.js": "62914d93810544ca65ce5a8b52eae19e663b5489b8f99e4705f7bd12914a9954",
+  "lang/de.js": "5bacc6600fa10996cde9b81c700f3572fb48a222b188e89f37ea6499b92c11e2",
+  "lang/pt-BR.js": "bc8e6cb11fc9365f7c1e31c44b243b055316633ceb7a5f66d5fff62eb5fc7fd9",
+  "lang/ja.js": "f462a5ab5b3e4cb05dccc55b8ae75fd1d5f0c97977e58dae788fcd7f0c0433d3",
+  "lang/ko.js": "e306aef1b3caa19c5cb4eaf27de60308ead0a7c009d6e93b0222265d8237f626"
  }
 }
