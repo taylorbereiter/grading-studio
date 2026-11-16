@@ -284,7 +284,7 @@ async function transcribeFile(f, say, stop) {
   const kv = keptId(f);
   if (f.kind === 'link' && !kv) throw new Error('Only a video file can be transcribed here. For a link, paste a transcript.');
   let k = kv && await vkGet(kv);
-  if (kv && !k && drvRef(f.data)) { vkSeen.delete(kv); say('Getting the video from Drive…'); k = await drvGet(f); }   // a Drive video comes into the browser first
+  if (kv && !k && drvRef(f.data)) { vkSeen.delete(kv); throw new Error('This Drive video isn’t in this browser yet. Open the student and press Get it from Drive first.'); }
   if (kv && !k) throw new Error('This video isn’t in this browser.');
   const w = await transcribe(kv ? new Uint8Array(await k.blob.arrayBuffer()) : f.data, say, stop);
   trSet(f, { w });

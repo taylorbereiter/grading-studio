@@ -43,11 +43,15 @@ async function fakeGoogle(page, D) {
     const u = r.url();
     if (/^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(u) || /^(data|blob|about):/.test(u)) return r.continue();
     D.asked.push(u);
-    const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Authorization', 'Access-Control-Expose-Headers': 'Content-Length, Content-Type' };
+    const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET, POST', 'Access-Control-Expose-Headers': 'Content-Length, Content-Type' };
     if (r.method() === 'OPTIONS') return r.respond({ status: 204, headers: cors, body: '' });
     if (/\/about\?/.test(u)) return r.respond({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify({ user: { emailAddress: 'teacher@example.com' } }) });
+    if (/googleapis\.com\/drive\/v3\/files\?/.test(u) && r.method() === 'POST') { D.made = (D.made || 0) + 1; const pd = r.postData() || ''; const parent = (/"parents":\["([^"]+)"/.exec(pd) || [])[1]; if (parent && parent !== 'root' && !String(parent).startsWith('made')) return r.respond({ status: 404, headers: cors, contentType: 'application/json', body: '{"error":{"message":"File not found"}}' }); return r.respond({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify({ id: 'made' + D.made }) }); }
+    if (/upload\/drive\/v3\/files\?uploadType=multipart/.test(u)) { D.uploads = (D.uploads || 0) + 1; return r.respond({ status: 200, headers: cors, contentType: 'application/json', body: '{"id":"up"}' }); }
+    if (/drive\/v3\/files\/[\w-]+\?fields=parents/.test(u)) return r.respond({ status: 200, headers: cors, contentType: 'application/json', body: '{"parents":["1ParentNotOursParentNotOurs000000"]}' });
     const m = /drive\/v3\/files\/([\w-]+)\?alt=media/.exec(u);
     if (m && D.videos[m[1]]) return r.respond({ status: 200, headers: { ...cors, 'Content-Length': String(D.videos[m[1]].length) }, contentType: 'video/webm', body: D.videos[m[1]] });
+    if (m && D.papers && D.papers[m[1]]) return r.respond({ status: 200, headers: cors, contentType: 'application/pdf', body: D.papers[m[1]] });
     if (m) return r.respond({ status: 404, headers: cors, contentType: 'application/json', body: '{"error":{"message":"File not found"}}' });
     r.respond({ status: 200, headers: cors, body: '' });   // anything else (sync, the chooser's own script) is not part of this test
   });
@@ -131,6 +135,27 @@ test('one student: + Add > A video… > From Google Drive, and a video Drive no 
     assert.ok(await page.$('#paper .vdrv [data-drvweb]'), 'it can still be watched through Drive’s own player');
     await page.click('#paper .vdrv [data-drvweb]');
     await page.waitForSelector('#paper .vlink [data-vplay]');
+    assert.deepEqual(page.errors, []);
+  } finally { await close(); }
+});
+
+test('Open from Google Drive uses the same chooser: only the picked papers are fetched, and saving back makes its own folder (My Drive when the one beside them isn’t the app’s)', async () => {
+  const D = { asked: [], videos: {}, papers: {} };
+  const { page, close } = await openApp(browser, { seed: seed(), beforeLoad: p => fakeGoogle(p, D) });
+  try {
+    D.papers['1PaperAriaPaperAriaPaperAria000000'] = Buffer.from(await makePaper({ title: 'Aria essay' }));
+    D.papers['1PaperBramPaperBramPaperBram000000'] = Buffer.from(await makePaper({ title: 'Bram essay' }));
+    await page.evaluate(() => window.__picks.push([{ id: '1PaperAriaPaperAriaPaperAria000000', name: 'Aria Testwell - Essay.pdf', mimeType: 'application/pdf' }, { id: '1PaperBramPaperBramPaperBram000000', name: 'Bram Sample - Essay.pdf', mimeType: 'application/pdf' }]));
+    await page.evaluate(() => window.__gs.openFromDrive(null));
+    await page.waitForFunction(() => { const b = window.__gs.state().batch; return b && b.students.length >= 2; }, { timeout: 20000 });
+    const seen = await page.evaluate(() => window.__pickerSeen);
+    assert.ok(seen[0].features.includes('multi') && /application\/pdf/.test(seen[0].view.mimes), 'papers, many at once');
+    assert.deepEqual(D.asked.filter(u => /drive\/v3\/files\?/.test(u) && !/spaces=appDataFolder/.test(u)), [], 'no list of her files');
+    const scopes = await page.evaluate(() => window.__gs.gScope());
+    assert.ok(!/auth\/drive( |$)/.test(scopes), 'never the whole Drive: ' + scopes);
+    // saving back: the folder beside the papers isn't the app's, so it goes to My Drive
+    const where = await page.evaluate(async () => { await window.__gs.saveToDrive('Marked - test', { 'Aria Testwell/Essay.pdf': new Uint8Array([1, 2, 3]) }); return window.__gs.saveToDrive.where; });
+    assert.equal(where, 'root'); assert.equal(D.uploads, 1);
     assert.deepEqual(page.errors, []);
   } finally { await close(); }
 });

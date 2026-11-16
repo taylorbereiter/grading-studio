@@ -82,7 +82,7 @@ function vidTurn(st, f, card) {
 // The card above the paper. The player stays at the top while the notes page scrolls under it.
 function linkCard(st, f) {
   if (vidRef(f.data)) return vfileCard(st, f);
-  if (drvRef(f.data) && !f.drvWeb) return driveCard(st, f);
+  if (drvRef(f.data) && !drvWebOn.has(linkKey(f)) && driveCan() && !sampleOn()) return driveCard(st, f);
   const url = linkOf(f.data), play = linkPlayer(url), ticks = !!play && (!play.frame || frameTicks(play.frame));
   const el = document.createElement('div'); el.className = 'media vlink';
   el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">' + esc(linkHost(url)) + '</span></div><div class="vlslot" hidden></div>' +
@@ -198,20 +198,35 @@ function vfileCard(st, f) {
 
 // Gets a Drive video into this browser. onStep(text). Throws with plain words.
 const drvGetting = new Map();   // id -> the download under way, so two cards (or the transcript) share one
-function drvGet(f, onStep) {
+const drvWebOn = new Set();   // Drive videos she chose to watch in Drive's own player, while this page is open
+const drvMeta = (f, k) => (new RegExp('^\\s*' + k + '\\s*=\\s*(.+)$', 'mi').exec(new TextDecoder().decode(f.data)) || [, ''])[1].trim();
+const VID_EXT = { 'video/mp4': 'mp4', 'video/quicktime': 'mov', 'video/webm': 'webm', 'video/x-m4v': 'm4v', 'video/x-matroska': 'mkv', 'video/3gpp': '3gp' };
+// interactive: only from a press, since it may open Google's sign-in.
+function drvGet(f, onStep, interactive) {
   const id = drvRef(f.data), key = 'd-' + id;
   if (!drvGetting.has(id)) drvGetting.set(id, (async () => {
-    const name = (/^\s*Name\s*=\s*(.+)$/mi.exec(new TextDecoder().decode(f.data)) || [, ''])[1].trim() || linkTitle(f) + '.mp4';
-    const size = +((/^\s*Size\s*=\s*(\d+)/mi.exec(new TextDecoder().decode(f.data)) || [, 0])[1]);
-    const blob = await driveBytes(id, (n, t) => { for (const cb of drvSteps.get(id) || []) cb(n, t || size); });
-    await vkPut(new File([blob], name, { type: blob.type && blob.type !== 'application/octet-stream' ? blob.type : MIME[extOf(name)] || 'video/mp4' }), key);
+    let name = drvMeta(f, 'Name') || linkTitle(f);
+    const size = +drvMeta(f, 'Size') || 0;
+    // room first, so a big video doesn't come all the way down only to find the computer full
+    try { const e = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; if (size && e && e.quota && e.quota - (e.usage || 0) < size * 1.05) throw new Error('room'); } catch (err) { if (err.message === 'room') throw new Error('There isn’t room on this computer for this video (' + fmtSize(size) + '). Watch it without downloading instead.'); }
+    const blob = await driveBytes(id, (n, t) => { for (const cb of drvSteps.get(id) || []) cb(n, t || size); }, interactive);
+    const type = blob.type && blob.type !== 'application/octet-stream' ? blob.type : MIME[extOf(name)] || 'video/mp4';
+    if (!VIDEO_RX.test(name)) name += '.' + (VID_EXT[type.split(';')[0]] || 'mp4');   // the player is chosen by the name: keep it a video
+    await vkPut(new File([blob], name, { type }), key);
     return vkGet(key);
   })().finally(() => { drvGetting.delete(id); drvSteps.delete(id); }));
   if (onStep) { if (!drvSteps.has(id)) drvSteps.set(id, new Set()); drvSteps.get(id).add(onStep); }
   return drvGetting.get(id);
 }
 const drvSteps = new Map();
-const drvSay = err => { const m = (err && err.message) || String(err); return /\b404\b/.test(m) ? 'Drive says this video isn’t there for you now. It may have been moved to the bin, or picked with another Google account. Pick it again with + Add > A video….' : /\b40[13]\b|sign in/i.test(m) ? 'Sign in with Google to get this video.' : m; };
+const drvSay = err => {
+  const m = (err && err.message) || String(err);
+  if (m === 'setup') return 'This copy of Grading Studio isn’t connected to Google.';
+  if (/\b404\b/.test(m)) return 'Drive says this video isn’t there for you now. It may have been moved to the bin, or picked with another Google account. Pick it again with + Add > A video….';
+  if (/\b401\b|sign.?in|popup/i.test(m)) return 'Sign in with Google to get this video, then press Get it from Drive again.';
+  if (/\b403\b/.test(m)) return m + '. Drive won’t let this video be downloaded right now. Watch it without downloading instead.';
+  return m;
+};
 function driveCard(st, f) {
   const key = keptId(f), hold = document.createElement('div'); hold.className = 'media vfile vdrv';
   hold.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">Google Drive</span></div></div>';
@@ -223,16 +238,16 @@ function driveCard(st, f) {
     hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<div class="mctl"><button class="btn sm primary" data-drvget>Get it from Drive' + (size ? ' (' + fmtSize(size) + ')' : '') + '</button><button class="btn sm" data-drvweb>Watch without downloading</button></div>' +
       '<div class="prog" hidden><i style="width:0%"></i></div><p class="muted vlnote">Copied into this browser to play here, so the transcript can follow along. Only the link is kept in your work, and the video stays in your Drive.</p>');
     const bar = hold.querySelector('.prog'), say = hold.querySelector('.vlnote'), btn = hold.querySelector('[data-drvget]');
-    const get = async () => {
+    const get = async interactive => {
       btn.disabled = true; bar.hidden = false; say.textContent = 'Getting the video from Drive…';
       try {
-        const k2 = await drvGet(f, (n, t) => { if (t) { const p = Math.min(100, Math.round(n / t * 100)); bar.firstChild.style.width = p + '%'; say.textContent = 'Getting the video from Drive… ' + p + '%'; } });
+        const k2 = await drvGet(f, (n, t) => { if (t) { const p = Math.min(100, Math.round(n / t * 100)); bar.firstChild.style.width = p + '%'; say.textContent = 'Getting the video from Drive… ' + p + '%'; } }, interactive);
         if (hold.isConnected) hold.replaceWith(mediaCard(st, f, k2));
       } catch (err) { console.error(err); btn.disabled = false; bar.hidden = true; say.textContent = drvSay(err); }
     };
-    btn.onclick = get;
-    hold.querySelector('[data-drvweb]').onclick = () => { const c = linkCard(st, Object.assign(Object.create(Object.getPrototypeOf(f)), f, { drvWeb: true })); hold.replaceWith(c); };
-    if (drvGetting.has(drvRef(f.data)) || (typeof G !== 'undefined' && G.token && G.scope.includes('drive.file'))) get();   // already signed in for videos, or already coming: no need to ask
+    btn.onclick = () => get(true);
+    hold.querySelector('[data-drvweb]').onclick = () => { drvWebOn.add(linkKey(f)); hold.replaceWith(linkCard(st, f)); };
+    if (drvGetting.has(drvRef(f.data)) || drivePickReady()) get(false);   // already signed in for videos, or already coming: no need to ask
   });
   return hold;
 }
@@ -688,7 +703,7 @@ function openStartNotes(it) {
     } catch (err) { console.error(err); closeDlg(); toast('The pages couldn’t be made: ' + ((err && err.message) || err)); }
   };
 }
-Object.assign(window.__gs, { gScope: () => G.scope, drvRef, linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes, openPartners, pvApply });
+Object.assign(window.__gs, { gScope: () => G.scope, drvRef, openFromDrive, saveToDrive, linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes, openPartners, pvApply });
 
 /* ---------------- clips: a part of a video worth showing the class ---------------- */
 // batch.clips: [{ id, u: the link | p: the path of a video file, a: where it starts (seconds), b: where it ends (or none), t: what it shows }]
