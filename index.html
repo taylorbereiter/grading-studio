@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"124aef91","zh-Hans":"97cb4df7","es":"e4405958","fr":"5ca6101e","de":"cd98ecf6","pt-BR":"e869d510","ja":"0cc4bca0","ko":"b9c3a1b3"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"0b709fb4","zh-Hans":"0fbe929f","es":"b3ee1f1f","fr":"2a1a333b","de":"308a291c","pt-BR":"064bad27","ja":"ff639ebc","ko":"87d21cac"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -2400,6 +2400,28 @@ button.pavg:hover .v{text-decoration:underline}
   .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek) .fstab{display:flex;align-items:center;justify-content:center;position:absolute;left:0;top:50%;z-index:7;width:22px;height:56px;margin-top:-28px;padding:0;border:1px solid var(--line-strong);border-left:0;border-top-right-radius:var(--corner-3);border-bottom-right-radius:var(--corner-3);background:var(--surface);color:var(--muted);font-size:var(--text-body);box-shadow:var(--shadow);cursor:pointer}
 }
 @media (prefers-reduced-motion:reduce){.gsfull .cols>.side,.gsfull .cols .tools{transition:none!important}}
+
+.solobar{display:flex;align-items:center;gap:10px;height:52px;box-sizing:border-box;padding:0 16px;background:var(--accent-soft);border-bottom:1px solid var(--line);position:relative;z-index:30}
+.solobar[hidden]{display:none}
+.solobar .sp{flex:1}
+.solo-ic svg,.solo-go svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;vertical-align:-3px}
+.solo-ic{color:var(--accent);display:flex}
+.solo-t{color:var(--accent);font-weight:650}
+.solo-n{font-weight:650;font-size:var(--text-lead);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.solo-x{position:relative;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none}
+.solo-fill{position:absolute;inset:0;background:var(--accent);opacity:.22;transform:scaleX(0);transform-origin:left}
+.solo-x.holding .solo-fill{transform:scaleX(1);transition:transform 1.5s linear}
+.solo-xl{position:relative}
+.solo-work{position:absolute;right:16px;top:48px;width:min(420px,calc(100vw - 32px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:12px 14px}
+.solo-work h3{margin:0 0 8px;font-size:var(--text-body);font-weight:650}
+.solo-row{display:block;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:0 6px;font:inherit;color:inherit}
+button.solo-row{cursor:pointer}
+button.solo-row:hover{background:var(--accent-soft)}
+.solo-row.on{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+html.solo .shell{height:calc(100vh - var(--savebar,0px) - 52px)}
+html.solo #rail,html.solo #side,html.solo #colL,html.solo #fsEdge,html.solo #fsTab,html.solo #progS,html.solo .app .top,html.solo #fcPanel,html.solo .toast,
+html.solo #paper .who .whon,html.solo #paper .who .whob,html.solo #readBtn,html.solo #addMenuBtn,html.solo #whoMore,html.solo #soloBtn,html.solo #grpBand,html.solo #grade .nav,html.solo #openRep,html.solo #pcard{display:none!important}
+html.solo .cols{--lw:0px}
 
 .spbtn{display:inline-flex;align-items:center;gap:6px}
 .spbtn[aria-pressed=true] span{display:none}
@@ -7130,6 +7152,7 @@ catch (e) { return undefined; }
 }
 async function openStudent(i, filePath) {
 if (!batch) return;
+if (soloOn()) { const si = soloIdx(); if (si < 0 || (i !== si && cur === si && $('#paper .who'))) return; i = si; }
 commitEditors();
 const moved = cur !== Math.max(0, Math.min(batch.students.length - 1, i));
 cur = Math.max(0, Math.min(batch.students.length - 1, i));
@@ -7144,7 +7167,7 @@ renderList(); renderGrade(); saveSoon();
 const st = batch.students[cur];
 const paper = $('#paper');
 const nRef = refsFor(st).length;
-paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + (anonOn() ? '' : whoBtn('data-wi="' + cur + '"', st.key)) + '<span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span class="whosp"></span>' +
+paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + (anonOn() ? '' : whoBtn('data-wi="' + cur + '"', st.key)) + '<span class="whon">' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span class="whosp"></span>' +
 '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (nRef ? ' <span class="atn">' + nRef + '</span>' : '') + '</button>' +
 kmWrap('<span aria-hidden="true">+</span> Add', 'id="addMenuBtn" class="btn sm" title="Add late or forgotten work to this student. You can also drop files on the paper or on a name."',
 '<button class="mitem" id="addFileBtn">A file…<small>A late or forgotten paper</small></button>' +
@@ -7152,6 +7175,7 @@ kmWrap('<span aria-hidden="true">+</span> Add', 'id="addMenuBtn" class="btn sm" 
 '<button class="mitem" id="addVideoBtn">A video…<small>A link to a recording, and who is in it</small></button>' +
 '<button class="mitem" id="addNotesBtn">A notes page…<small>To write on while you watch or listen</small></button>' +
 '<button class="mitem" id="addScanBtn">From a scan…<small>A stack of pages scanned as one PDF</small></button>') +
+'<button class="btn sm solo-go" id="soloBtn" title="Only this student" aria-label="Only this student"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.8 3.6-5.8 7-5.8s6.2 2 7 5.8"/></svg></button>' +
 kmWrap('⋯', 'id="whoMore" class="btn sm kdots" aria-label="More for this paper" title="More for this paper"',
 (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="mitem" id="arrangeBtn">Arrange pages<small>Combine files, reorder or take pages out</small></button>' : '') +
 (st.files.some(f => !f.virtual && !f.rubric && (viewable(f) || f.kind === 'docx')) ? '<button class="mitem" data-whodo="example">Use as an example<small>A strong paper or part of a page, with names covered</small></button>' : '') +
@@ -7281,6 +7305,7 @@ if (e.target.closest('#pasteTextBtn')) return openPasteText(batch.students[cur])
 if (e.target.closest('#addVideoBtn')) return openAddVideo(batch.students[cur]);
 if (e.target.closest('#addNotesBtn')) return openAddNotes(batch.students[cur]);
 if (e.target.closest('#addScanBtn')) { scanInto = true; scanFor = null; return $('#scanIn').click(); }
+if (e.target.closest('#soloBtn')) return soloStart(cur);
 const wd = e.target.closest('[data-whodo]'); if (wd) return wd.dataset.whodo === 'light' ? openLight() : wd.dataset.whodo === 'example' ? openUseExample(cur) : openCalc();
 const ra = e.target.closest('[data-rmfile]');
 if (ra) {
@@ -8430,7 +8455,7 @@ $('#grade').addEventListener('wheel', e => { if (e.target.id === 'ptsIn' || e.ta
 function openKeys() {
 const row = (k, t) => '<span>' + keyLabel(k).split(' ').map(x => '<kbd>' + esc(x) + '</kbd>').join(' ') + '</span><span>' + keyLabel(t) + '</span>';
 openDlg('<div class="bh"><h2>Keys</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb"><div class="keys">' +
-'<h4>Students</h4>' + row('← →', 'Previous / next student (also ↑ ↓)') + row('Enter', 'The blue button: the next student without a full score') + row('N', 'Next student without a full score') + row('/', 'Find a student by name') +
+'<h4>Students</h4>' + row('← →', 'Previous / next student (also ↑ ↓)') + row('Enter', 'The blue button: the next student without a full score') + row('N', 'Next student without a full score') + row('I', 'Only this student') + row('/', 'Find a student by name') +
 '<h4>Scoring</h4>' + row('0 1 2 3 4', 'Score the rubric row in hand, then move to the next row') + row('.', 'Right after a number: add the half, or take it off') + row('Tab', 'Go to the row in hand. Tab again for the next row, and ← → to change its score by a step') +
 '<h4>Marking</h4>' + row('V', 'Select') + row('P', 'Pen (hold Shift for a straight line)') + row('H', 'Highlight, snapping to typed lines. Press H again for freehand (Shift for straight)') + row('O', 'Circle') + row('T', 'Text') + row('C', 'Comment') + row('K', 'Check mark') + row('E', 'Eraser') +
 row('⌘Z', 'Undo') + row('⇧⌘Z', 'Redo (⌘Y works too)') +
@@ -11338,6 +11363,7 @@ applyRoute();
 let routeTok = 0, routeOpening = '', routeTab = null;
 function applyRoute() {
 const r = routeNow();
+if (soloRoute(r)) return;
 if (r.named) { go(classHash(r.c), true); return; }
 if (r.noClass) { toast('There is no class called “' + r.noClass + '” in grading yet. “Add a class” in the sidebar makes one.', 7000); go('#/', true); return; }
 if (r.v === 'a') {
@@ -11376,6 +11402,7 @@ const grading = r.v === 'a' && !!batch;
 if (grading && !$('#welcome').hidden) wlClose();
 $('#shell').classList.toggle('grading', grading);
 $('#app').hidden = !grading; $('#start').hidden = grading;
+if (grading && $('#soloBar') && soloOn() && $('#soloBar').dataset.b !== batch.id) soloBar();
 for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening'], ['vScores', 'scores']]) $('#' + id).hidden = grading || r.v !== v;
 if (r.v !== 'class') classLeave();
 const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');
@@ -12162,6 +12189,7 @@ return '<div class="gonerow"><span>' + [esc(fileShown(st, f.name)), f.numPages ?
 $('#paper').appendChild(el);
 }
 function toastDo(msg, label, fn) {
+if (soloOn()) return;
 const t = $('.toast');
 toast(msg, 6000);
 const b = document.createElement('button'); b.className = 'tact'; b.textContent = label;
@@ -13805,6 +13833,7 @@ render();
 /* ---------------- wiring ---------------- */
 let toastT;
 function toast(msg, ms) {
+if (soloOn()) return;
 const t = $('.toast');
 t.textContent = msg; t.hidden = false;
 clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; t.textContent = ''; }, ms || 3000);
@@ -14026,6 +14055,8 @@ if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
 if (e.key === 'Escape' && once) { e.preventDefault(); endOnce(); return; }
 if (e.key === '?') { e.preventDefault(); openKeys(); return; }
 if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') && selected && !(selected.fresh && selected.mark.t === 'text') && canResize(selected.mark)) { e.preventDefault(); stepSize(e.key === '+' || e.key === '=' ? 1 : -1); return; }
+if (soloOn() && (e.key === '/' || e.key === '[' || e.key === '?')) { e.preventDefault(); return; }
+if (e.key.toLowerCase() === 'i' && !e.shiftKey && !soloOn()) { e.preventDefault(); return soloStart(cur); }
 if (e.key === '/') { e.preventDefault(); listPeek(true); $('#stuFind').focus(); return; }
 if (selected && tool === 'select' && /^Arrow/.test(e.key)) {
 e.preventDefault();
@@ -19135,7 +19166,7 @@ const f = m.asg && findItem(m.asg), label = (f && f.it.name) || m.name || (batch
 if (seen.has(one)) continue; seen.add(one);
 const k = rosterPairs(c.names, Object.keys({ ...d.s, ...d.read })).get(name);
 const g = k ? { ...((d.s[k] || {}).g || {}), ...(d.read && d.read[k] ? { read: d.read[k] } : {}) } : null;
-rows.push({ name: label, t: workTime(d) || d.t || 0, p: g ? pastScore(d.setup, g) : null, none: !k || !!(d.s[k] && d.s[k].gap) });
+rows.push({ name: label, t: workTime(d) || d.t || 0, p: g ? pastScore(d.setup, g) : null, none: !k || !!(d.s[k] && d.s[k].gap), id, k: k && d.s[k] ? k : null });
 }
 return rows.sort((a, b) => a.t - b.t);
 }
@@ -19154,9 +19185,11 @@ const done = rows.filter(r => r.p).length, pc = rows.map(r => r.p).filter(p => p
 return 'In ' + esc(c.name) + (rows.length ? ' · ' + done + ' of ' + rows.length + ' turned in' + (pc.length ? ' · average ' + fmtPct(pc.reduce((a, b) => a + b, 0) / pc.length) : '') : '');
 }
 
+const soloHere = (c, name) => batch && !PHONE && !$('#app').hidden && c && batchClass() === c ? batch.students.findIndex(st => personOf(st).name === name) : -1;
 let pcOpen = null;
 function closeCard() { const el = $('#pcard'); if (el) el.remove(); const back = pcOpen && pcOpen.back; pcOpen = null; if (back && back.isConnected) back.focus(); }
 function personCard(cid, name, folder) {
+if (soloOn()) return;
 const c = cid ? classById(cid) : null, back = document.activeElement;
 closeCard(); pcOpen = { cid, name, folder, back };
 const el = document.createElement('div'); el.id = 'pcard'; el.className = 'pc-back';
@@ -19172,7 +19205,7 @@ const i = infoOf(c, name), pos = c.names.indexOf(name);
 const field = (k, label, ph, type) => '<label class="pc-f"><span class="pc-k">' + label + '</span><input class="pc-in" type="' + (type || 'text') + '" data-pf="' + k + '" value="' + esc(i[k] || '') + '" placeholder="' + ph + '" autocomplete="off" spellcheck="false">' +
 '<span class="pc-acts">' + (i[k] && k !== 'prev' ? '<button class="link" data-pcopy="' + k + '">Copy</button>' + (k === 'email' ? '<a class="link" href="mailto:' + esc(i.email) + '">Email</a>' : '') : '') + '</span></label>';
 el.innerHTML = '<div class="pc" role="dialog" aria-modal="true" aria-label="Student details"><div class="pc-hd"><div class="pc-av">' + esc(initials(name)) + '</div><div class="pc-tt"><h2>' + esc(name) + '</h2>' +
-'<div class="muted pc-sm">' + esc(c.name) + ' · ' + (pos + 1) + ' of ' + c.names.length + ' on the roster' + (folder && folder !== name ? ' · folder “' + esc(folder) + '”' : '') + '</div></div><button class="icon pc-x" aria-label="Close">✕</button></div>' +
+'<div class="muted pc-sm">' + esc(c.name) + ' · ' + (pos + 1) + ' of ' + c.names.length + ' on the roster' + (folder && folder !== name ? ' · folder “' + esc(folder) + '”' : '') + '</div></div>' + (soloHere(c, name) >= 0 ? '<button class="btn sm" data-psolo>Only this student</button>' : '') + '<button class="icon pc-x" aria-label="Close">✕</button></div>' +
 '<div class="pc-bd">' + field('id', 'Student ID', 'Add their student ID') + field('email', 'Email', 'Add their email', 'email') + field('prev', 'Last year', 'Their level last year (optional)') +
 '<div class="pc-f"><span class="pc-k">Also called</span><span class="pc-chips">' + (i.other || []).map((o, k) => '<span class="pc-chip">' + esc(o) + '<button data-pdrop="' + k + '" aria-label="Remove ' + esc(o) + '" title="Remove this spelling">×</button></span>').join('') +
 '<button class="pc-chip pc-add" data-padd>+ add</button></span><span></span></div>' +
@@ -19205,6 +19238,7 @@ document.addEventListener('click', async e => {
 const el = $('#pcard'); if (!el || !pcOpen) return;
 if (e.target === el || e.target.closest('.pc-x')) return closeCard();
 const c = classById(pcOpen.cid), n = pcOpen.name;
+if (e.target.closest('[data-psolo]')) { const k = soloHere(c, n); closeCard(); return soloStart(k); }
 const cp = e.target.closest('[data-pcopy]'); if (cp) return copy(infoOf(c, n)[cp.dataset.pcopy] || '', 'Copied');
 const dr = e.target.closest('[data-pdrop]');
 if (dr) { const o = [...(infoOf(c, n).other || [])]; o.splice(+dr.dataset.pdrop, 1); setInfo(c, n, { other: o }); saveLib(); afterInfo(c); return renderCard(); }
@@ -33980,6 +34014,114 @@ openDlg('<div class="bh"><h2>Use on your phone</h2></div><div class="bb phhow">'
 }
 window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });
 
+/* ---------------- Only this student: when a student comes to the desk, the screen shows them and nobody else ---------------- */
+let soloTry = '', soloUndo = null, soloOpen = false;
+const soloNow = () => { const s = store.get('gs.solo', null); return s && s.id && s.key != null ? s : null; };
+const soloOn = () => !!soloNow();
+function soloIdx() {
+const s = soloNow(); if (!s || !batch || batch.id !== s.id) return -1;
+return batch.students.findIndex(st => st.key === s.key);
+}
+function soloStart(i) {
+if (!batch || PHONE || !batch.students[i]) return;
+commitEditors(); saveNow();
+if (dlgPage) dlgShut();
+if (typeof closeCard === 'function') closeCard();
+store.set('gs.solo', { id: batch.id, key: batch.students[i].key });
+soloTry = ''; soloOpen = false;
+if (!soloUndo) { soloUndo = undoStack; undoStack = []; redoStack = []; }
+document.documentElement.classList.add('solo');
+if (location.hash !== batchHash(batch.id)) go(batchHash(batch.id), true);
+if (cur !== i) openStudent(i); else { renderList(); renderGrade(); }
+soloBar();
+}
+function soloEnd() {
+store.del('gs.solo'); soloTry = ''; soloOpen = false;
+document.documentElement.classList.remove('solo');
+if (soloUndo) { undoStack = soloUndo.concat(undoStack).slice(-200); redoStack = []; soloUndo = null; }
+$('#soloBar').hidden = true;
+if (batch) { renderList(); renderGrade(); renderTools(); }
+applyRoute();
+}
+function soloRoute(r) {
+const s = soloNow(); if (!s) return false;
+if (r.v === 'a' && r.id === s.id && !r.tab) {
+if (!(batch && batch.id === s.id)) {
+if (soloTry === s.id && routeOpening !== s.id) { soloStuck(); return true; }
+soloTry = s.id;
+}
+return false;
+}
+if (soloTry === s.id && routeOpening !== s.id && !(batch && batch.id === s.id)) { soloStuck(); return true; }
+go(batchHash(s.id), true); return true;
+}
+function soloStuck() {
+showScreen({ v: 'opening' });
+const p = $('#vOpening p'); if (p) p.textContent = 'The papers for this one aren’t kept in this browser. Drop the download in again.';
+soloBar();
+}
+function soloBar() {
+const s = soloNow(), el = $('#soloBar'); if (!el) return;
+if (!s) { el.hidden = true; return; }
+const i = soloIdx(), st = i >= 0 ? batch.students[i] : null;
+const p = st && !anonOn() ? personOf(st) : null, other = !!(p && p.c && p.name);
+el.hidden = false; el.dataset.b = st ? batch.id : '';
+el.innerHTML = '<span class="solo-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.8 3.6-5.8 7-5.8s6.2 2 7 5.8"/></svg></span>' +
+'<b class="solo-t">Only this student</b><span class="solo-n">' + (st ? esc(shownName(st, i)) : '') + '</span>' + (st ? '<span class="muted solo-a">' + esc(batch.name || '') + '</span>' : '') + '<span class="sp"></span>' +
+(other ? '<button class="btn sm" id="soloOther" aria-expanded="' + soloOpen + '" aria-controls="soloWork">Other work</button>' : '') +
+'<button class="btn sm solo-x" id="soloExit"><span class="solo-fill" aria-hidden="true"></span><span class="solo-xl">Hold to show everyone</span></button>' +
+(other && soloOpen ? '<div class="solo-work" id="soloWork"><h3 id="soloWorkH">' + workHead(p.c, []) + '</h3><div id="soloRows"><div class="muted pc-sm">Looking through saved work…</div></div></div>' : '');
+if (other && soloOpen) soloRows(p);
+}
+async function soloRows(p) {
+const rows = await classWork(p.c, p.name).catch(e => { console.error(e); return []; });
+const box = $('#soloRows'); if (!box || !soloOn()) return;
+const i = soloIdx(), st = i >= 0 ? batch.students[i] : null;
+if (st && !rows.some(r => r.id === batch.id)) { const g = st.grade || {}, any = g.status || g.points != null && g.points !== '' || (g.rubric || []).some(v => v != null); rows.push({ name: batch.name || '', t: Infinity, p: any ? pastScore(setup, g) : null, none: !st.files.length, id: batch.id, k: st.key }); }
+$('#soloWorkH').innerHTML = workHead(p.c, rows);
+if (!rows.length) { box.innerHTML = workRows(rows); return; }
+box.innerHTML = rows.map((r, n) => {
+const here = batch && r.id === batch.id, html = workRows([r]);
+return r.id && r.k ? '<button class="solo-row' + (here ? ' on' : '') + '" data-solog="' + n + '"' + (here ? ' aria-current="true"' : '') + '>' + html + '</button>' : '<div class="solo-row">' + html + '</div>';
+}).join('');
+box.onclick = e => { const b = e.target.closest('[data-solog]'); if (!b) return; const r = rows[+b.dataset.solog]; soloGo(r.id, r.k); };
+}
+function soloGo(id, key) {
+if (!soloOn()) return;
+if (batch && batch.id === id) { soloOpen = false; return soloBar(); }
+commitEditors(); saveNow();
+store.set('gs.solo', { id, key }); soloTry = ''; soloOpen = false;
+soloUndo = [];
+go(batchHash(id), true);
+soloBar();
+}
+let soloHoldT = 0;
+function soloHold(on) {
+const b = $('#soloExit'); if (!b) return;
+clearTimeout(soloHoldT); b.classList.toggle('holding', on);
+if (on) soloHoldT = setTimeout(() => { b.classList.remove('holding'); soloEnd(); }, 1500);
+}
+(() => {
+const bar = document.createElement('div');
+bar.id = 'soloBar'; bar.className = 'solobar'; bar.hidden = true; bar.setAttribute('role', 'region'); bar.setAttribute('aria-label', 'Only this student');
+$('#shell').before(bar);
+bar.addEventListener('click', e => { if (e.target.closest('#soloOther')) { soloOpen = !soloOpen; soloBar(); } });
+bar.addEventListener('pointerdown', e => { if (e.target.closest('#soloExit') && e.button === 0) { e.preventDefault(); soloHold(true); } });
+for (const t of ['pointerup', 'pointercancel']) document.addEventListener(t, () => { if (soloHoldT) soloHold(false); });
+bar.addEventListener('pointerout', e => { if (e.target.closest('#soloExit') && !e.target.closest('#soloExit').contains(e.relatedTarget)) soloHold(false); });
+bar.addEventListener('keydown', e => { if (e.target.closest('#soloExit') && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); if (!e.repeat) soloHold(true); } });
+bar.addEventListener('keyup', e => { if (e.target.closest('#soloExit') && (e.key === ' ' || e.key === 'Enter')) soloHold(false); });
+bar.addEventListener('contextmenu', e => e.preventDefault());
+const s = soloNow();
+if (s && !PHONE) {
+document.documentElement.classList.add('solo');
+soloUndo = [];
+if (location.hash !== batchHash(s.id)) { try { history.replaceState(null, '', batchHash(s.id)); } catch {} }
+soloBar();
+} else if (s) store.del('gs.solo');
+})();
+Object.assign(window.__gs, { toast, soloStart, soloEnd, soloNow });
+
 /* ---------------- the frame: the sidebar, Home's "Needs a look", and Find anything (11/9) ---------------- */
 var shellReady, screenWas = '';
 
@@ -34148,6 +34290,7 @@ return hit.sort((a, b) => a.rank - b.rank).map(x => x.r).slice(0, 40);
 }
 const FIND_NAMES = new Set(['Classes', 'Students', 'Assignments', 'School resources']);
 function openFind() {
+if (soloOn()) return;
 if ($('#findDlg') || $('#askDlg') || (!$('#dlg').hidden && !dlgPage)) return;
 commitEditors(); setMore(false);
 const back = document.activeElement, el = document.createElement('div');
