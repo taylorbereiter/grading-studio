@@ -10031,7 +10031,7 @@ bb.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); cons
 }
 
 /* ---------------- Google sign-in: open from Drive, save to Drive, keep work the same on every computer ---------------- */
-const GOOGLE_CLIENT_ID = "";
+const GOOGLE_CLIENT_ID = "652182763861-oq7s0d52n6uhq1b2q5rvfdts126v989r.apps.googleusercontent.com";
 const gcid = () => (/apps\.googleusercontent\.com$/.test(GOOGLE_CLIENT_ID) ? GOOGLE_CLIENT_ID : '') || store.get('gs.gcid', '');
 const SYNC_SCOPE = 'https://www.googleapis.com/auth/drive.appdata', DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive ' + SYNC_SCOPE;
 const G = { token: null, exp: 0, scope: '', client: null, cscope: '', email: store.get('gs.gEmail', ''), waiters: [] };
