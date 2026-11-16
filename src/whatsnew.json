@@ -1,4 +1,25 @@
 {
+  "1.28.40": [
+    "Lo-fi music for the focus timer: turn it on with the Lo-fi music button while a session runs, or in Settings, Focus and goals. Eight moods, a new track every time, made in your browser so nothing is downloaded. It is off until you turn it on."
+  ],
+  "1.28.39": [
+    "Linked classes: assignments each class made before they were linked can be linked too. After linking, or from Link assignments under the class name, the same names come ticked and very similar ones wait for your tick, with one Undo."
+  ],
+  "1.28.38": [
+    "Fixes for typed percents: editing a typed-in column keeps percents and extra credit, a percent-only score counts as scored on cards and in the sidebar, and No papers: just type the scores… shows only on assignments with no papers."
+  ],
+  "1.28.37": [
+    "“Just one paper” in Focus no longer ends straight away when Grading Studio is open in two windows, such as the installed app and the website. A session now counts only the papers saved while it runs, and every window shows the same count."
+  ],
+  "1.28.36": [
+    "Type a percent as a score and it stays the score. On a points paper, type 73% in the score box. With a rubric, choose Score as a percent from the score's ⋯ menu. The points that match on the assignment's scale show beside it, and moving rubric rows later doesn't change it.",
+    "In the gradebook, type 73% in a points column, or 8 + 1 to give one score a point of extra credit.",
+    "An assignment with no papers can go straight to typing scores: Add papers…, then No papers: just type the scores…. The class gradebook opens with the first student's box ready."
+  ],
+  "1.28.35": [
+    "Type notes: a page beside the paper that you type on like any document, with headings, lists, bold, italic, underline and highlight. Beside a video or with the clock running, each new paragraph gets its time, and a paragraph can be marked as a strength, a next step or a question.",
+    "Each assignment says whether typed notes go back to the student as a page of the returned paper, and in what text size: Compact, Standard or Large. Help has a new answer."
+  ],
   "1.28.34": [
     "Focus counts only papers you marked: rubric scores, marks on the page or a comment. A grade only typed in still counts as scored, and its time still counts as grading time, but it no longer counts as a paper marked today."
   ],

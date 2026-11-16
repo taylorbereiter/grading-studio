@@ -117,6 +117,8 @@
 .lkchip{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-control);font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:var(--corner-pill);padding:3px 10px}
 .lkchip a{color:inherit}
 .lkhead .link{font-size:var(--text-control);font-weight:500}
+.lkrow{display:flex;align-items:baseline;gap:var(--space-2);padding:6px 0;border-bottom:1px solid var(--line)}
+.lkrow:last-child{border-bottom:0}
 .lkoffer{display:flex;align-items:center;gap:var(--space-3);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:var(--r);padding:var(--space-3) var(--space-4);margin:0 0 var(--space-4);color:var(--fg-2);font-size:var(--text-body)}
 .lkoffer>svg{color:var(--accent);flex:none}
 .lkoffer p{margin:0;flex:1}

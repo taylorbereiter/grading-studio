@@ -1,21 +1,21 @@
 {
- "version": "1.28.34",
- "build": "98b6495638db",
+ "version": "1.28.40",
+ "build": "683d18d971c3",
  "notes": [
-  "Focus counts only papers you marked: rubric scores, marks on the page or a comment. A grade only typed in still counts as scored, and its time still counts as grading time, but it no longer counts as a paper marked today."
+  "Lo-fi music for the focus timer: turn it on with the Lo-fi music button while a session runs, or in Settings, Focus and goals. Eight moods, a new track every time, made in your browser so nothing is downloaded. It is off until you turn it on."
  ],
  "files": {
-  "index.html": "d5567c6371439b13c42b60e27c049a2eb24bda4c2b4747bb05f68f0f201352f4",
-  "planner.html": "b4fbfec2f21743d2e63b1cfe4d67a1ab4b4c5620d0cf1a64da215bfcf57b915a"
+  "index.html": "c72e9e56e4560f3c612911871f3347f87736c27fe00a3dbff4841937ac0227f3",
+  "planner.html": "9819b5660b23c7f76e80472962b024b6a99ff78ba870d25959e02aaedb93ed2e"
  },
  "langs": {
-  "lang/zh-Hant.js": "801f0ac086233a457d2b2b539822a87b2cf7ba9f8454c5a39fcb87cdda6d0c2c",
-  "lang/zh-Hans.js": "f193de14dddf8e679711782cd46b530b3d97ad5a4fa389043059c1938d7d9178",
-  "lang/es.js": "a99f8f14e1375717de6ecf994acc7d529fb68e8dfcc198255c816d6868194d98",
-  "lang/fr.js": "0b3d9dfd7c051ec9389e32c3cdb84f2ef5730ed15377b4c7709d83cc15f48f66",
-  "lang/de.js": "65909cd63907713dfc1d271ffddfc487df9d68ae2efd19b0864f7eab29d9ca10",
-  "lang/pt-BR.js": "e4c89bc8f13a06bdd843536c3e21b2cb8821449807ede53afa0e5f192eae2c20",
-  "lang/ja.js": "c532dbfbfed6cb452f33a1800dd1a56375f5c4b51130120228836e58f38f0657",
-  "lang/ko.js": "a1bacb07a856477b35158a95ac077ae26e1271d38b2d1275e0b6672fccefc526"
+  "lang/zh-Hant.js": "ff9ab514e14cfcadfaa93080aef73acde7f74260d6eb447349474cb9eb341a24",
+  "lang/zh-Hans.js": "f93e1737062b8ad82bb427c9dfbcf5474799f1aa132ecca8a0b1ea0665a89a35",
+  "lang/es.js": "e0880edee25846815e088258fc5c3b7f27cd70be2e7aac585851df933714643f",
+  "lang/fr.js": "afe0210cd260a4913210dead37fc2e74d05e9c151cd274c4d7b2a647e1d6aeed",
+  "lang/de.js": "3eb0f591dd179a5bb365a79114a699990d09e77cbf70476509f67ad413c7c39e",
+  "lang/pt-BR.js": "4219ff0f6313dd6b26013009295d64016fe40889a9893ffd192a5f112d2620c2",
+  "lang/ja.js": "4f2ef5210f711eaccfa596571854bdc7aa825cfeb46ea342e9c4379805413145",
+  "lang/ko.js": "cae07e2e806e017408928455160f075c7ab2b043becc8481688268034fbf564d"
  }
 }

@@ -84,7 +84,7 @@ test('a session goal is suggested from her pace, set in a press, shown while it 
   await page.waitForSelector('#fcPanel .fcstat');
   assert.match(await text(page, '#fcPanel .fcstat'), /^Session 2/);
   // a paper finished in this one counts toward it
-  await page.evaluate(() => { const r = window.__gs.fcRun(); r.p0 -= 2; localStorage.setItem('gs.focusRun', JSON.stringify(r)); window.__gs.fcRunSet(r); });
+  await page.evaluate(() => { const r = window.__gs.fcRun(); r.pg = 2; localStorage.setItem('gs.focusRun', JSON.stringify(r)); window.__gs.fcRunSet(r); });
   assert.match(await text(page, '#fcPanel .fcsg'), /^Session goal2 papersReached$/);
   // stopping early with it reached: nothing to carry
   await page.click('#fcPanel [data-fcstop]');

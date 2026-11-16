@@ -30,7 +30,7 @@ function docIn(st, d) {
   if (docAdded(st, d)) return true;   // a file you added goes back unless you leave it out
   const read = d.pages.every(([path]) => { const f = fileByPath(st, path); return f && f.kami !== undefined; });
   if (!read) return true;
-  return docMarked(st, d) || !batchHasMarks();
+  return docMarked(st, d) || tnOut(st) || !batchHasMarks();
 }
 const docAuto = (st, d) => d.out == null && !(d.file && st.inc && st.inc[d.file] != null);
 function setDocIn(st, d, on) {
