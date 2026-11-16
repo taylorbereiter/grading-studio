@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"397fa511","zh-Hans":"6bcd7ab3","es":"bfc8f474","fr":"1ebc74df","de":"42637c81","pt-BR":"155b006c","ja":"7f64ea8d","ko":"92572ba5"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"f0e87a69","zh-Hans":"8f8df879","es":"b49f186c","fr":"2fbe2f1a","de":"e85b9908","pt-BR":"8bb2c13d","ja":"871c11b7","ko":"64d92d34"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -1259,7 +1259,16 @@ function setTheme(t) {
   for (const b of document.querySelectorAll('.themeBtn')) b.textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
 }
 document.addEventListener('click', e => { if (e.target.closest('.themeBtn')) setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); });
-try { window.__planIn = new BroadcastChannel('gs-plan-in'); window.__planIn.onmessage = () => location.reload(); } catch { }   // Bring work in (the grading page) put Planner records in: start again from what is stored
+let planInWait = false;
+function planIn() {
+  const a = document.activeElement;
+  if (document.hidden || (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)))) { planInWait = true; return; }
+  location.reload();
+}
+const planInLater = () => { if (planInWait) { planInWait = false; setTimeout(planIn, 1500); } };
+document.addEventListener('visibilitychange', () => { if (!document.hidden) planInLater(); });
+document.addEventListener('focusout', planInLater);
+try { window.__planIn = new BroadcastChannel('gs-plan-in'); window.__planIn.onmessage = planIn; } catch { }
 
 /* ---------------- The assistant beside the app (11/13): Gemini, Claude, ChatGPT or another, opened next to Grading Studio ----------------
    Built into both pages. A teacher who has named an AI assistant gets its name in the sidebar on every screen. A click opens the
@@ -2063,9 +2072,10 @@ async function lTx(store, mode, fn) {
   return new Promise((res, rej) => {
     const t = db.transaction(store, mode), s = t.objectStore(store); let out;
     Promise.resolve(fn(s)).then(v => { out = v; });
-    t.oncomplete = () => res(out); t.onerror = () => rej(t.error);
+    t.oncomplete = () => { res(out); if (mode === 'readwrite') planOut(); }; t.onerror = () => rej(t.error);
   });
 }
+function planOut() { try { const ch = new BroadcastChannel('gs-plan-out'); ch.postMessage('saved'); ch.close(); } catch { } }
 const reqP = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 const kvGet = k => lTx('kv', 'readonly', s => reqP(s.get(k)));
 const kvSet = (k, v) => lTx('kv', 'readwrite', s => { s.put(v, k); });
@@ -2693,7 +2703,7 @@ document.addEventListener('keydown', e => {
 function undoToast(msg, fn) {
   toast(msg, 6000);
   const t = $('.toast'); if (!t) return;
-  const b = document.createElement('button'); b.className = 'link'; b.style.cssText = 'color:inherit;margin-left:12px'; b.textContent = 'Undo';
+  const b = document.createElement('button'); b.className = 'link'; b.style.cssText = 'color:inherit;margin-left:12px;pointer-events:auto'; b.textContent = 'Undo';   // the note itself lets clicks through; its Undo doesn't
   b.onclick = () => { t.hidden = true; fn(); }; t.appendChild(b);
 }
 document.addEventListener('dragstart', e => { const th = e.target.closest && e.target.closest('#lsThumbs .ls-th'); if (!th) return; e.dataTransfer.setData('text/x-slide', th.dataset.go); e.dataTransfer.effectAllowed = 'move'; });
@@ -3362,7 +3372,7 @@ function lessonForFile(l, imgs) {   // imgs: Map to collect pictures as separate
     const m = /^data:image\/(png|jpeg);base64,/.exec(x.src); if (!m) continue;
     const name = ctxFile(s, x); imgs.set(name, x.src); x.src = name;
   }
-  delete c._file; delete c._mod; delete c.pending;
+  delete c._file; delete c._mod; delete c._sync; delete c.pending;
   return c;
 }
 const wTimers = new Map();
@@ -3397,9 +3407,16 @@ async function profileFolderRead() {
   const j = JSON.parse(await f.text()); if (!Array.isArray(j.classes)) return;
   await kvSet('profMod', f.lastModified); await applySetup(j);
 }
+async function planFolderCatchUp() {
+  const gone = (await kvGet('syncGoneFiles')) || [];
+  for (const name of gone) { if (!L.lessons.some(l => l._file === name)) { try { await L.dir.removeEntry(name); } catch { } } }
+  if (gone.length) await kvDel('syncGoneFiles');
+  for (const l of L.lessons.filter(l => l._sync)) { delete l._sync; await folderWrite(l); }
+}
 async function folderRead(say) {
   if (!L.dir || !L.dirOk) return;
   let added = 0, changed = 0;
+  try { await planFolderCatchUp(); } catch (e) { console.warn(e); }
   try {
     for await (const [name, h] of L.dir.entries()) {
       if (h.kind !== 'file' || !/\.lesson\.json$/i.test(name)) continue;
@@ -4411,7 +4428,7 @@ function materialsHtml(o, t) {
     '<button class="btn sm" data-ma="newdoc">+ New document</button><button class="btn sm ghost" data-ma="add">+ Add files…</button><input type="file" multiple hidden data-mf="in"></div>' +
     (files.length ? '<div class="pl-files">' + files.map(f => '<div class="pl-file" draggable="true" data-chip=\'' + esc(JSON.stringify({ kind: 'file', t, owner: o.id, id: f.id })) + '\'><span class="pl-ft">' + fileIcon(f) + '</span><span class="pl-fn"><b>' + esc(f.name) + '</b><span>' + (f.kind === 'doc' ? 'Document' : (f.size / 1024 < 1024 ? Math.max(1, Math.round(f.size / 1024)) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB')) + '</span></span>' +
       '<button class="btn sm" data-ma="open" data-id="' + f.id + '">' + (f.kind === 'doc' ? 'Edit' : 'Open') + '</button>' + (isDocx(f) ? '<button class="btn sm ghost" data-ma="editdocx" data-id="' + f.id + '" title="Make an editable copy here">Edit a copy</button>' : '') +
-      '<button class="btn sm ghost" data-ma="dl" data-id="' + f.id + '" title="Download">↓</button><button class="btn sm ghost" data-ma="rm" data-id="' + f.id + '" title="Remove" aria-label="Remove">×</button></div>').join('') + '</div>'
+      (f.kind === 'doc' ? '' : '<button class="btn sm ghost" data-ma="rpl" data-id="' + f.id + '" title="' + RPL_TIP + '">Replace…</button>') + '<button class="btn sm ghost" data-ma="dl" data-id="' + f.id + '" title="Download">↓</button><button class="btn sm ghost" data-ma="rm" data-id="' + f.id + '" title="Remove" aria-label="Remove">×</button></div>').join('') + '</div>'
       : '<p class="muted sp-small" style="margin:4px 0 0">Nothing yet.</p>') + '</div>';
 }
 async function matAdd(ref, list) {
@@ -4423,6 +4440,27 @@ async function matAdd(ref, list) {
     o.files.push({ id, name: uniqueName(o, f.name || 'File'), kind: 'other', type: f.type || '', size: f.size, added: Date.now() }); n++;
   }
   if (n) { await ownerSave(ref, o); renderLessons(); toast(n === 1 ? 'Added' : 'Added ' + n + ' files'); }
+}
+const RPL_TIP = 'Put a newer copy in its place';
+function matPickReplace(ref, id) {
+  const i = document.createElement('input'); i.type = 'file';
+  i.onchange = () => { if (i.files[0]) matReplace(ref, id, i.files[0]); }; i.click();
+}
+async function matReplace(ref, id, file) {
+  const o = ownerOf(ref), f = o && (o.files || []).find(x => x.id === id); if (!f || f.kind === 'doc') return;
+  if (file.size > MAX_FILE) return toast(file.name + ' is too big (over 40 MB)');
+  const oldB = await fileBlob(id), was = { ...f };
+  const name = f.kind === 'atlas' && (!file.name || file.name === 'image.png') ? f.name : uniqueName({ files: o.files.filter(x => x !== f) }, file.name || f.name);
+  const put = async (b, meta) => {
+    const from = f.name;
+    await kvSet('file:' + id, b); Object.assign(f, meta);
+    if (ref.t === 'unit' && from !== f.name && L.dir && L.dirOk && o._file) { try { const d = await (await L.dir.getDirectoryHandle('Units')).getDirectoryHandle(unitBase(o) + ' files'); await d.removeEntry(from); } catch { } }
+    await ownerSave(ref, o);
+    if (ref.t === 'unit' && L.view === 'unit' && L.unit === o) renderUnit(); else renderLessons();
+  };
+  await put(file, { name, type: file.type || '', size: file.size, added: Date.now() });
+  if (!oldB) return toast('Replaced ' + was.name);
+  undoToast('Replaced ' + was.name + (was.name !== name ? ' with ' + name : ''), () => put(oldB, { name: was.name, type: was.type, size: was.size, added: Date.now() }));
 }
 async function matNewDoc(ref, name, html) {
   const o = ownerOf(ref); if (!o) return; o.files = o.files || [];
@@ -4453,6 +4491,7 @@ async function matClick(t) {
   if (a === 'open') { await matOpen(ref, id); return true; }
   if (a === 'claude') { boxAdd({ kind: 'file', t: tt, owner: oid, id }); return true; }
   if (a === 'editdocx') { await matEditDocx(ref, id); return true; }
+  if (a === 'rpl') { matPickReplace(ref, id); return true; }
   if (a === 'dl') { const o = ownerOf(ref), f = o.files.find(x => x.id === id); if (f.kind === 'doc') saveBlob(f.name + '.docx', await docxOf(await (await fileBlob(id)).text(), f.name)); else saveBlob(f.name, await fileBlob(id)); return true; }
   if (a === 'rm') {
     if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Remove?'; return true; }
@@ -7278,9 +7317,9 @@ const HELP = [
       'Each side scrolls on its own, and the pen works on a page in either one. Click a box in the Rubric tab to give that score. A video moved into the pane keeps playing.',
       'Drag the bar between the two to change their sizes; a double-click puts it back. **⋯** in the pane moves it to the left or across the top, which suits a narrow window. Under a file’s own **⋯**, **Show beside** puts that file in the pane.',
       'The pane stays open from student to student until you close it with **✕** or **B**. A student who has a video and a notes page opens side by side without being asked, unless you closed the pane on a video before.'] },
-  { id: 'typed-notes', sec: 'mark', q: 'Can I type my notes instead of writing on a notes page?', words: 'type typing notes text size large legible typed document page paragraph list bullet bold italic underline highlight presentation speech talk video timer headings strength next step question mark copy give back',
+  { id: 'typed-notes', sec: 'mark', q: 'Can I type my notes instead of writing on a notes page?', words: 'type typing notes text size large legible typed document page paragraph list bullet bold italic underline highlight presentation speech talk video timer time times hide show headings strength next step question mark copy give back',
     a: ['Yes. Open **Side by side** and choose **Type notes**. It is a page you type on like any document, with headings, lists, bold, italic, underline and highlight in the bar above. On a notes page, **Type notes instead** opens it too. It works on any assignment.',
-      'Beside a playing video, or with the clock at the foot running for a talk given live, each new paragraph gets its time in the margin. Click a time to play the video from there. **Time** puts one on or takes it off by hand, and **Times** in **⋯** turns this off.',
+      'Beside a playing video, or the clock at the foot running, each new paragraph gets its time in the margin. Click a time to play from there. The × beside it hides it, and the faint clock left brings it back. **Hide all times** in **⋯** does them all. **Time** adds or removes one by hand.',
       'A paragraph can be marked as a strength, a next step or a question with **Mark**. The mark shows beside it and is optional. **⋯** has **Use these headings for every student**, so each student starts with the same headings.',
       'The line at the foot says whether the notes go back to the student as a page of the returned paper. Click it to change that for the whole assignment. **Text size for the student** in **⋯** makes that page Compact, Standard or Large.'] },
   { id: 'ai-beside', sec: 'start', q: 'Can I have Gemini, Claude or ChatGPT open beside Grading Studio?',
@@ -7827,7 +7866,7 @@ function renderUnit() {
     '<label class="pl-atl">' + (plCur() ? esc(plCur()) + ' page' : 'Unit plan link') + ' <input class="btn sm" data-uf="atlas" placeholder="Paste ' + (plCur() ? 'the unit’s ' + esc(plCur()) + ' link' : 'a link to the unit plan') + '" value="' + esc(u.atlas) + '">' + (u.atlas ? '<a class="btn sm" href="' + esc(u.atlas) + '" target="_blank" rel="noopener">Open</a>' : '') + '</label></section>';
   h += '<section class="pl-card"><div class="lhead"><h2>' + (plCur() ? 'From ' + esc(plCur()) : 'From your unit plan') + '</h2><span class="sp"></span><button class="btn sm" data-a="addshot">Add screenshot…</button><button class="btn sm" data-a="pasteweeks">Type or paste the weeks…</button>' +
     '<button class="btn sm primary" data-a="askweeks"' + (atlas.length ? '' : ' disabled title="Add a screenshot first"') + '>Ask ' + plAi() + ' to fill the weeks</button></div>' +
-    '<div class="pl-drop" id="plShotDrop" tabindex="0">' + (atlas.length ? '<div class="pl-shots">' + atlas.map(f => '<figure class="pl-shot"><button class="pl-shotimg" data-a="viewfile" data-fid="' + f.id + '" aria-label="Look at ' + esc(f.name) + '"><img data-fimg="' + f.id + '" alt=""></button><figcaption>' + esc(f.name) + '<button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></figcaption></figure>').join('') + '</div>' : '') +
+    '<div class="pl-drop" id="plShotDrop" tabindex="0">' + (atlas.length ? '<div class="pl-shots">' + atlas.map(f => '<figure class="pl-shot"><button class="pl-shotimg" data-a="viewfile" data-fid="' + f.id + '" aria-label="Look at ' + esc(f.name) + '"><img data-fimg="' + f.id + '" alt=""></button><figcaption>' + esc(f.name) + '<button class="btn sm ghost" data-a="rplshot" data-fid="' + f.id + '" title="' + RPL_TIP + '">Replace…</button><button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></figcaption></figure>').join('') + '</div>' : '') +
     '<p class="muted">' + (atlas.length ? 'Paste or drop more screenshots here.' : 'Take a screenshot of the unit ' + (plCur() ? 'in ' + esc(plCur()) : 'plan, wherever your school keeps it') + ', then paste it here (Ctrl+V or ⌘V) or drop the picture in.') + '</p></div></section>';
   h += '<section class="pl-card"><div class="lhead"><h2>Weeks</h2></div><div class="pl-weeks">';
   u.weeks.forEach((w, i) => {
@@ -7848,7 +7887,7 @@ function renderUnit() {
   h += '<section class="pl-card" data-owner="unit|' + esc(u.id) + '"><div class="lhead"><h2>Summative and unit files</h2><span class="sp"></span><button class="btn sm" data-ma="newdoc">+ New document</button><button class="btn sm" data-a="addfile">Add files…</button></div>' +
     '<div class="pl-drop" id="plFileDrop">' + (other.length ? '<div class="pl-files">' + other.map(f => '<div class="pl-file"><span class="pl-ft">' + (f.kind === 'doc' ? 'DOC' : esc((f.name.split('.').pop() || '').slice(0, 4).toUpperCase())) + '</span><div class="pl-fn"><b>' + esc(f.name) + '</b><span>' + (f.kind === 'doc' ? 'Document' : (f.kind === 'summative' ? 'Summative' : 'Unit file') + ' · ' + kb(f.size)) + '</span></div>' +
       (f.kind === 'doc' ? '<button class="btn sm ghost" data-ma="claude" data-id="' + f.id + '" title="Put this in the ' + plAiTag() + ' box">+ ' + plAiTag() + ' box</button>' : '<select class="btn sm" data-fkind="' + f.id + '" aria-label="Kind"><option value="summative"' + (f.kind === 'summative' ? ' selected' : '') + '>Summative</option><option value="other"' + (f.kind === 'other' ? ' selected' : '') + '>Unit file</option></select>') +
-      '<button class="btn sm" data-a="viewfile" data-fid="' + f.id + '">Open</button><button class="btn sm ghost" data-a="dlfile" data-fid="' + f.id + '">Download</button><button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></div>').join('') + '</div>' : '') +
+      '<button class="btn sm" data-a="viewfile" data-fid="' + f.id + '">Open</button>' + (f.kind === 'doc' ? '' : '<button class="btn sm ghost" data-ma="rpl" data-id="' + f.id + '" title="' + RPL_TIP + '">Replace…</button>') + '<button class="btn sm ghost" data-a="dlfile" data-fid="' + f.id + '">Download</button><button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></div>').join('') + '</div>' : '') +
     '<p class="muted">Drop task sheets, rubrics or exemplars here. Planning files only: never student work. They go to the Planner folder, where ' + plAi() + ' can read them.</p></div></section>';
   h += unitLessonsSection(u);
   h += bankUnitSection(u);
@@ -7938,6 +7977,7 @@ async function unitsClick(e) {
   if (a === 'addshot') { const i = $('#plShotIn'); i.onchange = () => { const fs = [...i.files]; i.value = ''; addUnitFiles(u, fs, 'atlas'); }; i.click(); return true; }
   if (a === 'addfile') { const i = $('#plFileIn'); i.onchange = () => { const fs = [...i.files]; i.value = ''; addUnitFiles(u, fs, null); }; i.click(); return true; }
   if (a === 'viewfile') { await viewFile(u, t.dataset.fid); return true; }
+  if (a === 'rplshot') { matPickReplace({ t: 'unit', id: u.id }, t.dataset.fid); return true; }
   if (a === 'dlfile') { const f = u.files.find(x => x.id === t.dataset.fid), b = await fileBlob(t.dataset.fid); if (f && b) { if (f.kind === 'doc') saveBlob(f.name + '.docx', await docxOf(await b.text(), f.name)); else saveBlob(f.name, b); } return true; }
   if (a === 'rmfile') {
     if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = 'Click again to remove'; return true; }
@@ -8002,7 +8042,7 @@ async function unitFolderWrite(u) {
     for (const f of u.files) {
       if (f.kind === 'doc') { const b = await fileBlob(f.id); if (b) await writeFile(fd, f.name + '.docx', await docxOf(await b.text(), f.name)); continue; }
       let have = null; try { have = await (await fd.getFileHandle(f.name)).getFile(); } catch { }
-      if (have && have.size === f.size) continue;
+      if (have && have.size === f.size && have.lastModified >= (f.added || 0)) continue;   // a newer copy put in its place (Replace…) is written again, even at the same size
       const b = await fileBlob(f.id); if (b) await writeFile(fd, f.name, b);
     }
   }
@@ -8033,7 +8073,7 @@ async function unitsFolderRead() {
   return out;
 }
 
-window.__planner = { arriveAt, ACTIVITIES, VIDEOS, actVideo, readTemplate, openTimetable, bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, folderReadme, plWeekOffs, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, shareBuild, shareOpen, matAdd, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek, lessonContext };
+window.__planner = { matReplace, arriveAt, ACTIVITIES, VIDEOS, actVideo, readTemplate, openTimetable, bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, folderReadme, plWeekOffs, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, shareBuild, shareOpen, matAdd, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek, lessonContext };
 openLessons();
 
 /* ---------------- Full screen (11/12): the whole page fills the screen, on both pages and every screen ----------------
