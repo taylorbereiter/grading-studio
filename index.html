@@ -27927,7 +27927,7 @@ const W = 400, H = Math.min(900, (screen.availHeight || 800) - 60), L = Math.max
 let w = null; try { w = window.open('about:blank', 'gsEntryList', 'popup,width=' + W + ',height=' + H + ',left=' + L + ',top=' + ((screen.availTop || 0) + 30)); } catch { }
 if (w && w.document) {
 mbe.win = w;
-w.document.open(); w.document.write('<!doctype html><html lang="' + esc(LANG) + '"><head><meta charset="utf-8"><title>' + esc(tr('Entry list') + ' · ' + c.name) + '</title><style>html,body{margin:0;height:100%;background:#fff}' + MB_CSS + '</style></head><body><div id="mbRoot" style="height:100%"></div></body></html>'); w.document.close();
+w.document.open(); w.document.write('<!doctype html><html lang="' + esc(LANG) + '"><head><meta charset="utf-8"><title>' + esc(tr('Entry list') + ' · ' + c.name) + '</title><style>html,body{margin:0;height:100%;background:#fff}' + MB_CSS + '</style></head><body><div id="mbRoot" style="height:100%"></div><\/body></html>'); w.document.close();
 w.document.addEventListener('click', mbClick); w.document.addEventListener('change', mbChange); w.document.addEventListener('keydown', mbKey);
 w.addEventListener('pagehide', () => { if (mbe.win === w) mbe.win = null; });
 } else {

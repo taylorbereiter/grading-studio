@@ -1,6 +1,6 @@
 {
  "version": "1.28.64",
- "build": "c2d12061d8d2",
+ "build": "0f3d50d0da8e",
  "notes": [
   "The student list on the marking screen shows each score as a percent, with a % / pts switch beside the list's filter. Extra credit shows on its own after the score, like 93% +2%, in the list, the score panel and the score stamp.",
   "Partners: a shared paper can have shared notes with each partner's own score, and Write for: just one partner puts marks on the paper for that partner alone. Partners sit together in a blue box in the student list, and the done count goes by group.",
@@ -8,7 +8,7 @@
   "Email buttons open a new message in Gmail by default. Settings, Display has an Email section to use Outlook on the web or your computer's own mail app instead."
  ],
  "files": {
-  "index.html": "4b59f07bf7344d156bd9e9847e42b631d80e63c67a379802e08a263ddae7b17f",
+  "index.html": "4708ef0d2206493ce8dc820b13d33bc6bd5852649c3d671ee4813b2172bab7d9",
   "planner.html": "20eeca7e20c82ccb757c7c990153620129e196f94d7a45ce6a99f4c86ea711d6"
  },
  "langs": {
