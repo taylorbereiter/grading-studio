@@ -1,21 +1,21 @@
 {
- "version": "1.28.38",
- "build": "c80dc618beb3",
+ "version": "1.28.39",
+ "build": "c548b44844e1",
  "notes": [
-  "Fixes for typed percents: editing a typed-in column keeps percents and extra credit, a percent-only score counts as scored on cards and in the sidebar, and No papers: just type the scores… shows only on assignments with no papers."
+  "Linked classes: assignments each class made before they were linked can be linked too. After linking, or from Link assignments under the class name, the same names come ticked and very similar ones wait for your tick, with one Undo."
  ],
  "files": {
-  "index.html": "119c317b37cf3ad47020f6cb871bac061dd64394dbe81888dbdfe86fcfdaa064",
-  "planner.html": "703db0010a82aecbc78633a28f340f89b28159e1ed67c3a94b233fd96ba5bffe"
+  "index.html": "c80802a7c698c38d8331356e7c3bcf0a3115e7e91d6069ed51e71536ad2cb40e",
+  "planner.html": "8bfdb01e6866a5990436b7d7e72ff4e53fee7c760b8e724cbbfbb41df02ef70b"
  },
  "langs": {
-  "lang/zh-Hant.js": "10c548640fa6172fba70eb97c5dc57ef5e7583305b2d4b342424d46eca0b1ff2",
-  "lang/zh-Hans.js": "7818a52bdcf350340b4aba5e933e73b84053be702a83e98f826100fdead8b978",
-  "lang/es.js": "a2f44a91c49e005c92800047072a8bab60962adaa3a597f00bed3fe36b1c32e7",
-  "lang/fr.js": "0e6bbd4ea0f0bda0e01a0bb41058ef8292a962ddd53bfe55a50f463f86614b8d",
-  "lang/de.js": "1f1ee28618182d0d4407dd4a93fcff981b6e1fdb026a1adaa9252f575fa75f64",
-  "lang/pt-BR.js": "5f079052e5c05a3d8e13f0f0fd45c69ed56b15cf7606e8ba68e2f9912e74237d",
-  "lang/ja.js": "f32acf3026f0ce8b1da34dcfc5b41fd465f9b90824226dcbb2d7fae7fcd0e8c1",
-  "lang/ko.js": "ef5f513fb769cfbc29f00e145104757ec1dbc44ea311686d82fc995b84546313"
+  "lang/zh-Hant.js": "5db06ee6c09678c69baef05639933917a2c29709b10585ee617ff1c8927b475e",
+  "lang/zh-Hans.js": "84d7f6307d4d13d40d689b367a3760781a6aecd0bd88a2cd8a5ef88a48da240b",
+  "lang/es.js": "ad22bc58c3529a8b89ffc3ec409bd9ef3e45620dbe14f6de5658c3f01548c6c7",
+  "lang/fr.js": "481fab6986e42be8358b4003776a2927598e1071ad9b2a4b9eb09b0e93a11602",
+  "lang/de.js": "6cde4104bb48d072bb78872ee4cd36eb3a0ce93a05c03cb676e5edd8816432f1",
+  "lang/pt-BR.js": "d9fd3e77c5d0ece8b1e48ad2eefd1dd6fa1ae58cfd9a0cac62228aeddc53cf58",
+  "lang/ja.js": "219df1298d023a9cfde11ea264d1adf1bb30d3cf76c339d2400199e6346d3545",
+  "lang/ko.js": "654048b88361b50947e3f7f51b4b6c388871dd6583ec11bb3ca8ed12ed8e37b9"
  }
 }
