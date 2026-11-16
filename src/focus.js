@@ -21,7 +21,7 @@
    A paper counts toward the day when its score is finished, or its feedback complete on a formative activity, wherever that is
    done: the count is how far each download has come since the day began (keptState), so marking in Quick mark counts too. */
 var FC_ON = false;   // set at the end of this file; keepWork (src/app/kept.js) may run before it
-const FC_LENS = [5, 10, 15, 20, 25, 30, 45, 60], FC_BRKS = [3, 5, 10, 15], FC_AWAY = 180e3, FC_DAY = 864e5, FC_KEEP = 400, TK_IDLES = [2, 5, 10, 15];
+const FC_LENS = [5, 10, 15, 20, 25, 30, 45, 60], FC_BRKS = [3, 5, 10, 15], FC_AWAY = 180e3, FC_DAY = 864e5, FC_KEEP = 400, TK_IDLES = [2, 5, 10, 15], TK_PES = [0, 2, 3, 5, 10];
 // A goal a week can be bigger than a goal a day. The days are 0 Sunday to 6 Saturday; null is every day.
 const FC_DOWS = [1, 2, 3, 4, 5, 6, 0];
 const fcGoalMax = (k, per) => (k === 'min' ? 600 : 500) * (per === 'week' ? 7 : 1);
@@ -34,7 +34,7 @@ let fcS = { len: 0, open: false, pick: null };   // for this visit only: a lengt
 function fcConf() {
   const f = me().focus || {}, g = f.goal || null;
   return { len: FC_LENS.includes(+f.len) ? +f.len : 10, llen: FC_LENS.includes(+f.llen) ? +f.llen : 45, brk: FC_BRKS.includes(+f.brk) ? +f.brk : 5, sound: f.sound !== false, title: f.title !== false,
-    track: f.track !== false, idle: TK_IDLES.includes(+f.idle) ? +f.idle : 5,
+    track: f.track !== false, idle: TK_IDLES.includes(+f.idle) ? +f.idle : 5, pe: TK_PES.includes(+f.pe) ? +f.pe : 3,   // pe: minutes of steady work in the Planner before it counts as planning; 0 never
     free: f.free !== false, wk: f.wk === false ? false : [0, 1, 2, 3, 4, 5, 6].includes(f.wk) ? f.wk : 5, quiet: f.quiet === true, short: f.short === true,   // src/gradeplan.js
     sg: f.sg !== false,   // a goal suggested for each session
     music: f.music === true, mood: LOFI_STYLES.some(x => x.id === f.mood) ? f.mood : 'mix', mvol: +f.mvol >= .05 && +f.mvol <= 1 ? +f.mvol : .5, mamb: f.mamb === true,   // lo-fi music while a session runs (src/lofi.js)
@@ -57,6 +57,7 @@ function fcConfSet(part) {
   if (!c.title) o.title = false;
   if (!c.track) o.track = false;
   if (c.idle !== 5) o.idle = c.idle;
+  if (c.pe !== 3) o.pe = c.pe;
   if (!c.free) o.free = false;
   if (c.wk !== 5) o.wk = c.wk;
   if (c.quiet) o.quiet = true;
