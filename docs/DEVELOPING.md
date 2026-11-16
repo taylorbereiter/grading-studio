@@ -27,6 +27,8 @@ How the pages are built, tested and published, and how saved work is kept safe a
 
 Google Drive sign-in is tied to the address as well: add the new one to the Google client's authorised origins.
 
+**Google setup for a copy of your own.** In the Google Cloud project that holds the Client ID (`site.json` `googleClientId`): turn on the **Google Picker API**, and on the consent screen (Google Auth Platform → Data access) add only two scopes, `drive.appdata` (keeping devices the same) and `drive.file` (only the files the teacher picks in Google's chooser, or that the app makes). The app never asks for the whole Drive. If the chooser asks for a developer key, make an API key limited to your address and the Picker API and put it in `site.json` as `googleApiKey`.
+
 **Version number.** Set it in `package.json`, and nowhere else. It shows at the bottom of Today and Settings, and in the Keys list (press ?).
 
 **Changing how work is saved.** Add a step to `MIGRATIONS` in src/migrate.js; the rules are at the top of that file. Before any step runs, the app keeps a safety copy of marks, scores, comments, units, rosters and settings in this browser (the last three copies; papers aren't copied, since they never change). If a step fails, everything goes back as it was, and it tries again on the next load with a fresh copy in place of the last one. If the tab closes partway, it starts again and keeps the copy it made first. If a step is still going after 30 seconds, a button offers to stop it and put everything back; a stopped update waits until the version number goes up or a new step is added, so raise the version when you fix it.
