@@ -217,8 +217,9 @@ const HELP = [
 
   { id: 'gradebook', sec: 'class', q: 'Where is the gradebook?',
     a: ['Open a class from the sidebar and choose its **Gradebook** tab. It has every assignment for the class in one table, grouped by type, with an average for each type and a term grade.',
-      '**+ Add scores** types in scores for work that was not marked here.'],
-    words: 'grades table term average overall marks book' },
+      '**+ Add scores** types in scores for work that was not marked here.',
+      'To type scores straight into the table, click a cell or start typing on it. **Enter** goes to the next student and **Tab** to the next assignment, and a column copied from a spreadsheet can be pasted onto the first cell.'],
+    words: 'grades table term average overall marks book enter paste spreadsheet keyboard' },
   { id: 'import-scores', sec: 'class', q: 'Can I bring in scores from my old gradebook?',
     a: ['Yes. In the class’s gradebook press **Import…**, then choose a CSV or Excel file, or paste the cells from your spreadsheet. One row per student, one column per assignment.',
       'Before anything is saved you see each column with its type, date and what it is out of, which rows matched your roster, and any score that is already in the gradebook. Scores already there stay unless you choose the file’s.'],

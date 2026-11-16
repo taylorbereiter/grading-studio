@@ -7,7 +7,7 @@ const routeOf = hash => {
   if (p[0] === 'class' && p[1]) {
     const c = p[1] === '-' ? lib.loose : classById(p[1]);
     if (c) {
-      const tab = c !== lib.loose && c.names.length && classTabs().some(t => t[0] && t[0] === p[2]) ? p[2] : '';
+      const tab = c !== lib.loose && (c.names.length || p[2] === 'gradebook') && classTabs().some(t => t[0] && t[0] === p[2]) ? p[2] : '';
       // one student: by place on the roster, never by name, since an address stays in the browser's history
       const stu = tab === 'students' && /^\d+$/.test(p[3] || '') && +p[3] >= 1 && +p[3] <= c.names.length ? +p[3] - 1 : null;
       // attendance: a day (YYYY-MM-DD), 'all' for looking back, or nothing for today
@@ -34,12 +34,14 @@ const routeNow = () => routeOf(location.hash);
 const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, new school year'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['setup', 'My setup', 'Bring it in from an AI assistant, or copy it out'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
   ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, mark colors, Word papers, tablet and pencil'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
   ['focus', 'Focus and goals', 'Work timer, breaks, a daily grading goal'], ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with AI', 'Optional. What an AI assistant can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
-const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['attendance', 'Attendance'], ['seating', 'Seating'], ['missing', 'Missing work'], ['charts', 'Charts'], ['goals', 'Goals'], ['reports', 'Report comments']];   // Goals shows only once the teacher has a learning goal (goals.js)
+// Goals shows only once the teacher has a learning goal (goals.js)
+const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['attendance', 'Attendance'], ['seating', 'Seating'], ['missing', 'Missing work'], ['charts', 'Charts'], ['goals', 'Goals'], ['reports', 'Report comments']];
 // Assignments, Gradebook and Students are always in the tab row. The rest sit under More, and a teacher keeps the ones they use beside them (lib.me.tabs).
 const TABS_FIRST = ['', 'gradebook', 'students'];
 const tabsKept = () => (Array.isArray(me().tabs) ? me().tabs : []).filter(k => CLASS_TABS.some(t => t[0] === k) && !TABS_FIRST.includes(k));
 function tabKeep(k) { const now = tabsKept(), on = !now.includes(k), l = (CLASS_TABS.find(t => t[0] === k) || [])[1]; if (!l) return; meSet({ tabs: on ? [...now, k] : now.filter(x => x !== k) }); renderLib(); toast(on ? l + ' stays in the tab row' : l + ' is under More'); }
-const classTabs = () => CLASS_TABS.filter(t => t[0] !== 'attendance' || attOn());   // attendance is the teacher's to turn off
+// attendance is the teacher's to turn off
+const classTabs = () => CLASS_TABS.filter(t => t[0] !== 'attendance' || attOn());
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 // An open assignment has four screens: the papers (Mark), Grades, Insights and Return. Grades and Insights each have a second view.
 const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['examples', 'Examples'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
@@ -59,7 +61,8 @@ function go(hash, replace) {
 let routeTok = 0, routeOpening = '', routeTab = null;
 function applyRoute() {
   const r = routeNow();
-  if (r.named) { go(classHash(r.c), true); return; }   // its own address from here on
+  // its own address from here on
+  if (r.named) { go(classHash(r.c), true); return; }
   if (r.noClass) { toast('There is no class called “' + r.noClass + '” in grading yet. “Add a class” in the sidebar makes one.', 7000); go('#/', true); return; }
   if (r.v === 'a') {
     if (batch && batch.id === r.id) return showScreen(r);
@@ -68,18 +71,21 @@ function applyRoute() {
   }
   routeTok++; routeOpening = ''; routeTab = null;
   if (dlgPage) dlgShut();
-  if (batch && !$('#app').hidden) { commitEditors(); saveNow(); closeDownload(true); }   // leaving the paper closes it, saved first. (Still hidden: a download on its way in, which shows itself when it's ready.)
+  // leaving the paper closes it, saved first. (Still hidden: a download on its way in, which shows itself when it's ready.)
+  if (batch && !$('#app').hidden) { commitEditors(); saveNow(); closeDownload(true); }
   showScreen(r);
   if (r.v === 'class') renderLib();
 }
 // The address of an open assignment, with no paper on screen: after a refresh, or Back or Forward. Its kept papers open again where she left off.
 async function openRoute(id) {
   const tok = ++routeTok, want = routeNow(); routeOpening = id;
-  routeTab = want.v === 'a' && want.tab ? { id, tab: want.tab + (want.sub ? '/' + want.sub : '') } : null;   // a refresh on one of its tabs comes back to that tab, once the papers are open
+  // a refresh on one of its tabs comes back to that tab, once the papers are open
+  routeTab = want.v === 'a' && want.tab ? { id, tab: want.tab + (want.sub ? '/' + want.sub : '') } : null;
   if (dlgPage) dlgShut();
   if (batch && !$('#app').hidden) { commitEditors(); saveNow(); closeDownload(true); }
   showScreen({ v: 'opening' });
-  try { await keptFirst; await workerReady; } catch {}   // the list of kept work, and the PDF reader, which a click would have given time to start
+  // the list of kept work, and the PDF reader, which a click would have given time to start
+  try { await keptFirst; await workerReady; } catch {}
   const stale = () => tok !== routeTok;
   if (stale()) return;
   const m = keptMeta.get(id);
@@ -87,7 +93,8 @@ async function openRoute(id) {
   try { await reopenKept(id); } catch (e) { console.error(e); }
   if (stale()) return;
   routeOpening = '';
-  if (!batch || batch.id !== id) return go('#/', true);   // not opened (Not now, or its papers are gone)
+  // not opened (Not now, or its papers are gone)
+  if (!batch || batch.id !== id) return go('#/', true);
   showScreen(routeNow());
 }
 let screenKey = '';
@@ -96,12 +103,14 @@ const rosterSig = c => { let h = 5381; for (const ch of c.names.join('\n')) h = 
 function classLeave() { const box = $('#classes'); if (box.firstChild) { box.innerHTML = ''; delete box.dataset.h; } if (shellReady) classPanelGone(); }
 function showScreen(r) {
   const grading = r.v === 'a' && !!batch;
-  if (grading && !$('#welcome').hidden) wlClose();   // papers opened past the welcome (dropped on the page): the questions wait on Home's card instead
+  // papers opened past the welcome (dropped on the page): the questions wait on Home's card instead
+  if (grading && !$('#welcome').hidden) wlClose();
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
   for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
   if (r.v !== 'class') classLeave();
-  const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');   // moving from one student to the next keeps her place on the page
+  // moving from one student to the next keeps her place on the page
+  const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');
   if (!grading && key !== screenKey) $('#shellMain').scrollTop = 0;
   screenKey = key;
   railRender();
@@ -113,24 +122,34 @@ function showScreen(r) {
 function keptState(m) {
   const it = typeof cardOfKept === 'function' ? cardOfKept(m.id) : null, fm = !!it && it.type === 'fm';
   const of = Math.max(0, (m.n || 0) - (m.off || 0)), done = Math.min(of, (fm ? m.fb : m.scored) || 0), left = of - done, began = done || (!fm && m.partial);
-  return { of, done, left, fm, word: fm ? 'feedback complete' : 'scored', pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? (m.ret ? 'Returned' : 'Ready to return') : began ? (fm ? 'Giving feedback' : 'Scoring') : 'Not started', cls: !of ? '' : !left ? (m.ret ? 'ret' : 'ok') : began ? 'on' : '' };
+  const back = !!keptBack(m), sent = back ? of : Math.min(of, m.sent || 0);
+  return { of, done, left, fm, sent, word: fm ? 'feedback complete' : 'scored', pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? (back ? 'Returned' : 'Ready to return') : began ? (fm ? 'Giving feedback' : 'Scoring') : 'Not started', cls: !of ? '' : !left ? (back ? 'ret' : 'ok') : began ? 'on' : '' };
+}
+// When the work went back: the day she marked it returned, or the day the last student got theirs when everyone got theirs early. 0 if not.
+// A download alone is never returned (m.ret, from before, is never read).
+function keptBack(m) {
+  if (m.back) return m.back;
+  const of = Math.max(0, (m.n || 0) - (m.off || 0));
+  return of && (m.sent || 0) >= of ? m.sentT || m.t : 0;
 }
 // "12 of 20 scored", or "12 of 20 feedback complete" on a formative activity.
 const keptSay = (m, st = keptState(m)) => st.done + ' of ' + st.of + ' ' + st.word + (st.fm ? (m.off ? ' · ' + m.off + ' missing or excused' : '') : keptMore(m));
-const stateChip = st => st.label ? '<span class="schip ' + st.cls + '">' + st.label + '</span>' : '';
+const stateChip = st => (st.label ? '<span class="schip ' + st.cls + '">' + st.label + '</span>' : '') +
+  // some got theirs early
+  (st.sent && st.sent < st.of ? ' <span class="schip ret" title="Students who got theirs early, one at a time"><span>Returned</span>&nbsp;<span data-raw>' + st.sent + '/' + st.of + '</span></span>' : '');
 const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st.done + ' of ' + st.of + ' ' + st.word + '"><i style="width:' + st.pct + '%"></i></span>' : '';
 function renderLib() {
   renderKept();
   const card = it => {
     const m = it.batchId ? keptMeta.get(it.batchId) : null, st = m ? keptState(m) : null, typedOnly = !!it.typed && !it.batchId;
     return '<div class="card" draggable="true" data-card="' + it.id + '" title="' + (m && m.papers ? 'Open the papers' : it.typed && !it.batchId ? 'Scores typed in: open the gradebook' : 'Add this assignment’s papers') + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
-      (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (it.typed ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + '</div>' +
+      (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (typedOnly ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + lkCard(it) + '</div>' +
       '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
       '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (h => h ? '<div class="m">' + h + '</div>' : '')(tkAsgHtml(it.id)) + (st ? stateChip(st) : '') + '</div>' +
       '<div class="row">' + (m && m.papers ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
         : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') +
         kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-edit-asg="' + it.id + '">Edit<small>Name, type, due date, unit, rubric</small></button>' +
-          (m && m.papers || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : ''), 'right') + '</div></div>';
+          (m && m.papers || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : '') + lkMenu(it, holderById(it.classId) || lib.loose), 'right') + '</div></div>';
   };
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
     '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><span class="ucount">' + u.items.length + (u.items.length === 1 ? ' assignment' : ' assignments') + '</span><span class="sp"></span>' +
@@ -154,12 +173,14 @@ function renderLib() {
   // one button for what is set once: the school link, how the class is graded, the roster, its place in the sidebar
   const setup = (c, ci) => kmWrap('Class setup', 'class="btn sm" id="clsSetup"',
     '<button class="mitem" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '<small>Names, and the name of the class</small></button>' +
+    (c.names.length ? '' : '<a class="mitem" href="' + classHash(c, 'gradebook') + '" data-bkfirst>Import scores…<small>From your old gradebook: a CSV or Excel file, or cells pasted</small></a>') +   // its students can become the roster (bookimport.js)
     ibClassItem(c, ci) +
+    '<button class="mitem" data-lkedit="' + ci + '">Linked classes…</button>' +
     '<button class="mitem" data-mbset="' + ci + '">' + (mbOf(c) ? 'Change the ' + esc(sysLink()) + ' link' : 'Add the ' + esc(sysLink()) + ' link…') + '</button>' +
     '<hr><button class="mitem" data-cmove="' + ci + ':-1"' + (ci ? '' : ' disabled') + '>Move up in the sidebar</button><button class="mitem" data-cmove="' + ci + ':1"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>Move down in the sidebar</button>', 'right');
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' + (ci < 0 ? '' : ibPill(c)) +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.</span><span class="sp"></span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + (mbOf(c) ? mbLink(c) : '') + (c.names.length ? '' : '<button class="btn sm primary" data-edit-class="' + ci + '">Add roster</button>') + setup(c, ci)) + '</div>' + tabs(c, ci) +
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + (mbOf(c) ? mbLink(c) : '') + (c.names.length ? '' : '<button class="btn sm primary" data-edit-class="' + ci + '">Add roster</button>') + setup(c, ci)) + '</div>' + lkHead(c) + tabs(c, ci) +
     (tab ? '<div class="cpanel" id="classPanel" data-sig="' + rosterSig(c) + '"></div>'
       : '<div class="ctools"><span class="sp"></span><button class="btn sm' + (ci >= 0 && !c.names.length ? '' : ' primary') + '" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
         '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '<button class="addunit" data-addunit="' + esc(c.id) + '">+ Unit</button></div>') + '</div>';
@@ -228,7 +249,8 @@ document.addEventListener('drop', e => {
     const i = from.u.items.indexOf(from.it);
     from.u.items.splice(i, 1); if (from.u === to.u && i < k) k--;
     to.u.items.splice(k, 0, from.it);
-    from.it.classId = to.c.id;   // moved to another class: it uses that class's roster
+    // moved to another class: it uses that class's roster
+    from.it.classId = to.c.id;
   } else {
     const from = findUnit(ldrag.id), to = holderById(t.cls); if (!from || !to) return;
     const i = from.c.units.indexOf(from.u);
@@ -286,8 +308,10 @@ $('#start').addEventListener('click', async e => {
   }
   if (b.dataset.additem != null) return editAssignment(null, b.dataset.additem);
   if (b.dataset.editAsg) return editAssignment(b.dataset.editAsg);
-  if (b.dataset.kopen) { const f = b.dataset.kasg ? findItem(b.dataset.kasg) : null; const was = b.textContent, named = b.classList.contains('kname'); b.disabled = true; if (!named) b.textContent = 'Opening…'; return reopenKept(b.dataset.kopen, f ? f.it : null).finally(() => { b.disabled = false; if (!named) b.textContent = was; }); }   // a button that is the assignment's own name keeps saying it
-  if (b.dataset.kforget) {   // two clicks, so a stray click can't throw work away
+  // a button that is the assignment's own name keeps saying it
+  if (b.dataset.kopen) { const f = b.dataset.kasg ? findItem(b.dataset.kasg) : null; const was = b.textContent, named = b.classList.contains('kname'); b.disabled = true; if (!named) b.textContent = 'Opening…'; return reopenKept(b.dataset.kopen, f ? f.it : null).finally(() => { b.disabled = false; if (!named) b.textContent = was; }); }
+  // two clicks, so a stray click can't throw work away
+  if (b.dataset.kforget) {
     if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Click again to forget it'; setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = 'Forget'; } }, 4000); return; }
     return forgetKept(b.dataset.kforget);
   }
@@ -319,7 +343,8 @@ function renderTopAtlas() {
     : '<button class="link" data-uatlas="' + f.u.id + '" title="Link ' + esc(f.u.name) + ' to its ' + (unitLinkName() ? esc(unitLinkName()) + ' page' : 'unit plan') + '">+ ' + esc(unitLinkName() || 'Unit plan') + ' link</button>';
   // the class's page in the school's system, where the grades go
   const c = batchClass(), ci = c ? lib.classes.indexOf(c) : -1;
-  const tm = $('#topMb'); if (tm) tm.innerHTML = c && mbOf(c) ? mbLink(c) : '';   // in the top bar, beside the Grades list
+  // in the top bar, beside the Grades list
+  const tm = $('#topMb'); if (tm) tm.innerHTML = c && mbOf(c) ? mbLink(c) : '';
   if (c) el.innerHTML += mbOf(c) ? ' <a href="' + esc(mbOf(c)) + '" target="_blank" rel="noopener" title="' + esc(c.name) + (sysName() ? ' on ' + esc(sysName()) : ': its class page') + '">' + esc(sysLink()) + ' ↗</a>' : ' <button class="link" data-mbset="' + ci + '" title="Link ' + esc(c.name) + ' to its ' + (sysName() ? esc(sysName()) + ' page' : 'page in your school’s system') + '">+ ' + esc(sysLink()) + ' link</button>';
 }
 $('#topAtlas').addEventListener('click', e => { const b = e.target.closest('[data-uatlas]'); if (b) askAtlas(b.dataset.uatlas); const m = e.target.closest('[data-mbset]'); if (m) askMb(+m.dataset.mbset); });
@@ -332,14 +357,14 @@ function editAssignment(id, unitId, clsId) {
   const it = f ? f.it : { id: uid(), name: '', classId: start.c.id };
   const classPick = f
     ? '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>'
-    : '<div class="field"><label>Classes</label><div class="ctags" id="aClasses">' + holders().map(c => '<label class="ctag"><input type="checkbox" value="' + esc(c.id) + '"' + (c === start.c ? ' checked' : '') + '><span' + (c === lib.loose ? '' : ' data-raw') + '>' + esc(c === lib.loose ? 'No class' : c.name) + '</span></label>').join('') + '</div></div>';
+    : '<div class="field"><label>Classes</label><div class="ctags" id="aClasses">' + holders().map(c => '<label class="ctag"><input type="checkbox" value="' + esc(c.id) + '"' + (c === start.c || lkSibs(start.c).includes(c) ? ' checked' : '') + '><span' + (c === lib.loose ? '' : ' data-raw') + '>' + esc(c === lib.loose ? 'No class' : c.name) + '</span></label>').join('') + '</div>' + (lkSibs(start.c).length ? '<p class="muted lkhint">Linked classes are ticked. Untick one to keep this assignment out of it.</p>' : '') + '</div>';
   openDlg('<div class="bh"><h2>' + (f ? 'Edit assignment' : 'New assignment') + '</h2></div><div class="bb">' +
     '<div class="field"><label for="aName">Name</label><input type="text" id="aName" value="' + esc(it.name) + '" placeholder="e.g. Ch 3 Analysis Paragraph"></div>' +
     classPick +
     '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select><p class="muted" id="aUnitNote" style="font-size:13px;margin:6px 0 0" hidden></p></div>' +
     '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + bkCats().map(([t, , s]) => '<button type="button" data-atype="' + esc(t) + '" aria-pressed="' + (it.type === t) + '">' + esc(s) + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">' + esc(bkCountSay()) + '</p></div>' +
     '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"><p class="duehint" id="aDueSay">' + gpDueHint(it.due, f ? it.id : '') + '</p></div>' +
-    ruHtml(f ? it.setup : null) + '</div>' +
+    ruHtml(f ? it.setup : null) + (f ? lkAlsoHtml(it) : '') + '</div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true, 'lg');
   const ticked = () => [...document.querySelectorAll('#aClasses input:checked')].map(x => holderById(x.value)).filter(Boolean);
   const fillUnits = keep => {
@@ -359,11 +384,13 @@ function editAssignment(id, unitId, clsId) {
     const ok = $('#dlgBox [data-ok]'); ok.textContent = cs.length > 1 ? 'Add to ' + cs.length + ' classes' : 'Save'; ok.disabled = !cs.length;
   };
   fillUnits(start.u);
-  $('#aDue').oninput = () => { $('#aDueSay').innerHTML = gpDueHint($('#aDue').value, f ? it.id : ''); };   // what else is due that week (src/gradeplan.js)
+  // what else is due that week (src/gradeplan.js)
+  $('#aDue').oninput = () => { $('#aDueSay').innerHTML = gpDueHint($('#aDue').value, f ? it.id : ''); };
   const ru = ruWire($('#dlgBox'), it);
   if (f) $('#aClass').onchange = () => fillUnits(null);
   else { $('#aClasses').onchange = () => fillUnits(null); $('#aUnit').onchange = () => fillUnits(null); }
-  setTimeout(() => $('#aName')?.focus(), 0);   // the box can be shut before this runs
+  // the box can be shut before this runs
+  setTimeout(() => $('#aName')?.focus(), 0);
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const tb = e.target.closest('[data-atype]');
@@ -372,7 +399,8 @@ function editAssignment(id, unitId, clsId) {
     if (e.target.closest('[data-ok]')) {
       const name = $('#aName').value.trim(); if (!name) { $('#aName').focus(); return; }
       const ty = document.querySelector('[data-atype][aria-pressed="true"]'), due = $('#aDue').value;
-      const setKind = a => { if (ty) a.type = ty.dataset.atype; else delete a.type; if (due) a.due = due; else delete a.due; };   // every copy in every class gets the same type and date
+      // every copy in every class gets the same type and date
+      const setKind = a => { if (ty) a.type = ty.dataset.atype; else delete a.type; if (due) a.due = due; else delete a.due; };
       if (!f) {
         const cs = ticked(); if (!cs.length) return;
         const un = $('#aUnit').value || 'Unit 1', group = cs.length > 1 ? uid() : undefined;
@@ -389,16 +417,18 @@ function editAssignment(id, unitId, clsId) {
         if (cs.length > 1) toast('Added to ' + cs.map(c => c === lib.loose ? 'No class' : c.name).join(', ').replace(/, ([^,]*)$/, ' and $1'));
         return;
       }
-      const c = holderById($('#aClass').value);
+      const c = holderById($('#aClass').value), was = { name: it.name, type: it.type, due: it.due };
       let to = c.units.find(u => u.id === $('#aUnit').value);
       if (!to) c.units.push(to = { id: uid(), name: 'Unit 1', items: [] });
       it.name = name; it.classId = c.id;
-      setKind(it);
+      setKind(it); lkAlsoDo(it, was, false);
       if (f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
       if (f.u !== to) to.items.push(it);
+      const got = ru.got(), also = !!$('#aAlso') && $('#aAlso').checked;
       saveLib(); closeDlg(); renderLib();
-      if (ru.got()) ruPut(it, ru.got());
-      if (batch) { renderGrade(); renderList(); }   // a type changed while grading: the score panel follows
+      if (got && ruPut(it, got) && also) { for (const t of lkTwins(it)) t.it.setup = lkCopy(it.setup); saveLib(); }
+      // a type changed while grading: the score panel follows
+      if (batch) { renderGrade(); renderList(); }
     }
   };
 }
@@ -414,7 +444,8 @@ function parseRosterRows(text) {
   const out = [];
   for (const line of text.split(/\r?\n/)) {
     const all = line.split(/\t|,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim()).filter(Boolean);
-    if (all.some(c => /^(e-?mail( address)?|student id|student number|id)$/i.test(c))) continue;   // a header row
+    // a header row
+    if (all.some(c => /^(e-?mail( address)?|student id|student number|id)$/i.test(c))) continue;
     const cells = all.filter(c => !/^\d[\d\s-]*$/.test(c) && !EMAIL_RX.test(c));
     if (!cells.length || /^(name|student|students|first|last|first name|last name|student name)$/i.test(cells[0])) continue;
     const id = all.find(c => /^\d[\d\s-]*$/.test(c)), email = all.find(c => EMAIL_RX.test(c));
@@ -479,7 +510,8 @@ function rosterMatch(names) {
   const used = new Set(), map = new Map(), left = () => [...new Set(names)].filter(n => !map.has(n));
   const studs = batch.students.map(st => ({ st, w: new Set(nameWords(st.key)) }));
   const give = (n, x) => { used.add(x.st); map.set(n, x.st); };
-  const c = classOfNames(names);   // a spelling she linked, or the student's ID in the folder name, is a sure match, even over an empty roster spot of the same name
+  // a spelling she linked, or the student's ID in the folder name, is a sure match, even over an empty roster spot of the same name
+  const c = classOfNames(names);
   if (c && c.info) for (const x of studs) { if (used.has(x.st) || (x.st.gap && !x.st.files.length)) continue; const h = infoHits(c, x.st.key).filter(n => !map.has(n)); if (h.length === 1) give(h[0], x); }
   for (const n of left()) { const x = studs.find(x => !used.has(x.st) && x.st.key === n); if (x) give(n, x); }
   for (const n of left()) {
@@ -524,7 +556,8 @@ function rosterSort() {
   batch.students = batch.students.filter(st => !(st.gap && !st.files.length && !gradeHasWork(st.grade) && !(c && c.names.includes(st.key))));
   if (c && c.names.length) {
     let have = rosterMatch(c.names);
-    const spare = batch.students.filter(st => st.gap && !st.files.length && !gradeHasWork(st.grade) && have.has(st.key) && have.get(st.key) !== st);   // an empty spot another folder now fills
+    // an empty spot another folder now fills
+    const spare = batch.students.filter(st => st.gap && !st.files.length && !gradeHasWork(st.grade) && have.has(st.key) && have.get(st.key) !== st);
     if (spare.length) { batch.students = batch.students.filter(st => !spare.includes(st)); have = rosterMatch(c.names); }
     const saved = newestWork(store.get(batch.id, null), batch.keptWork);
     for (const nm of c.names) if (!have.has(nm)) {
@@ -548,7 +581,8 @@ function renderClassSel() {
 $('#classSel').onchange = e => {
   batch.classId = e.target.value;
   const a = batch.assignment, f = a && findItem(a.id);
-  if (f && f.c.id !== batch.classId) {   // the assignment card moves to that class, into a unit of the same name
+  // the assignment card moves to that class, into a unit of the same name
+  if (f && f.c.id !== batch.classId) {
     const to = holderById(batch.classId);
     let u = to.units.find(x => x.name === f.u.name); if (!u) to.units.push(u = { id: uid(), name: f.u.name, items: [] });
     f.u.items.splice(f.u.items.indexOf(a), 1); u.items.push(a); a.classId = batch.classId; saveLib();

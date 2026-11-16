@@ -45,7 +45,8 @@ function recTime(r, t0) {
 function decideRec(a, b, ta, tb) {
   const ha = recHash(a), hb = recHash(b);
   if (ha === hb) return { pick: 'same' };
-  if (!ha && !(a && a.v)) return { pick: 'b', by: 'order' };   // nothing here yet
+  // nothing here yet
+  if (!ha && !(a && a.v)) return { pick: 'b', by: 'order' };
   if (!hb && !(b && b.v)) return { pick: 'a', by: 'order' };
   const va = vOf(a), vb = vOf(b), ge = vGeq(va, vb), le = vGeq(vb, va);
   if (ge && !le) return { pick: 'a', by: 'order' };
@@ -64,7 +65,8 @@ const partV = (w, k) => (w.pv && w.pv[k]) || (h => h ? { ['~' + h]: 1 } : {})(ha
 const partHashes = w => { const o = {}; for (const k of WORK_SET) { const h = hashOf(w && w[k]); if (h) o[k] = h; } return o; };
 // When a setting last changed: a counter is a time, and a setting too old to have one goes by the whole download.
 const partT = (w, k) => Math.max(0, ...Object.values((w.pv && w.pv[k]) || {}).filter(n => n > 1)) || w.sat || w.t || 0;
-const SET_ASK = 'set:';   // her answer about a setting, among her answers about students
+// her answer about a setting, among her answers about students
+const SET_ASK = 'set:';
 // Everything this copy has seen, for checking against a forgotten download.
 function workVec(w) {
   let v = setV(w);
@@ -92,7 +94,8 @@ function stampData(prev, data, dev, now, seen) {
   for (const key of new Set([...Object.keys(data.s), ...Object.keys(prev.s)])) {
     const p = prev.s[key] || { h: '' };
     if (!data.s[key] && !p.h && !p.v) continue;
-    const r = data.s[key] ||= BLANK_REC();   // everything on this student was taken off: that's a change too, so the record stays
+    // everything on this student was taken off: that's a change too, so the record stays
+    const r = data.s[key] ||= BLANK_REC();
     const h = recHash(r), fh = fileHashes(r);
     let { v, at, ft } = p;
     if (h !== p.h) {
@@ -123,7 +126,8 @@ function stampData(prev, data, dev, now, seen) {
 function rubricKey(su) {
   const s = su || {}, pts = s.mode === 'points', max = pts ? +(s.outOf == null ? 10 : s.outOf) || 0 : (!s.criteria ? 12 : typeof rowsMax === 'function' ? rowsMax(s) : s.criteria.length * 4), sc   /* this file also runs on its own in tests, where a row is always 0 to 4 */ = s.scale === undefined ? SCALE12 : s.scale || {};
   const keys = Object.keys(sc).filter(k => sc[k] !== '' && sc[k] != null && !isNaN(+sc[k])).map(Number).sort((a, b) => a - b);
-  const own = pts || typeof rowScaleOf !== 'function' ? {} : rowScaleOf(s);   // rows scored on another scale than 0 to 4 with halves: a different rubric, even when the total is the same
+  // rows scored on another scale than 0 to 4 with halves: a different rubric, even when the total is the same
+  const own = pts || typeof rowScaleOf !== 'function' ? {} : rowScaleOf(s);
   return JSON.stringify([pts, max, keys.length >= 2 && keys[keys.length - 1] === max ? keys.map(k => [k, +sc[k]]) : 0].concat(Object.keys(own).length ? [own] : []));
 }
 const rubricsDiffer = (x, y) => rubricKey(x) !== rubricKey(y);
@@ -147,7 +151,8 @@ function cardSide(x, y, c) {
 function rowLine(from, to) {
   const nf = from.map(normName), nt = to.map(normName), once = (l, n) => l.includes(n) && l.indexOf(n) === l.lastIndexOf(n);
   const named = nt.flatMap((n, t) => once(nt, n) && once(nf, n) ? [[nf.indexOf(n), t]] : []);
-  if (!named.length && to.length >= from.length) return null;   // no name in common and no row gone: renamed rows or a saved rubric, which go by place
+  // no name in common and no row gone: renamed rows or a saved rubric, which go by place
+  if (!named.length && to.length >= from.length) return null;
   let map = to.map(() => null), f0 = 0, t0 = 0, sure = true;
   for (const [f, t] of [...named, [from.length, to.length]]) {
     if (f < f0) { sure = false; continue; }
@@ -195,7 +200,8 @@ function mergeShare(hi, lo) {
 }
 // Which settings changed on both sides are hers to choose: they change grades, whose paper is whose, or who she can see. The rest have a safe answer.
 function partAsks(k, x, y, card) {
-  if (k === 'setup') return !card && hashOf(noSpot(x)) !== hashOf(noSpot(y));   // with a card, the only question is one about the scores (below)
+  // with a card, the only question is one about the scores (below)
+  if (k === 'setup') return !card && hashOf(noSpot(x)) !== hashOf(noSpot(y));
   if (k === 'cls') return true;
   if (k === 'anon') return !!(x && x.on) !== !!(y && y.on);
   if (k === 'moved') return Object.keys(x || {}).some(p => y && y[p] != null && y[p] !== x[p]);
@@ -268,14 +274,18 @@ function mergeWork(a, b, o = {}) {
       const card = k === 'setup' && o.linked && o.linked.setup, newer = ge && !le ? x : le && !ge ? y : null;
       const choose = () => { if (said) { both(said); if (k === 'setup') rubricSaid = true; } else { v = px; ask.push({ key: SET_ASK + k, part: k, a: x, b: y, vb: py, ta: partT(a, k), tb: partT(b, k), notBoth: !!newer }); } };
       if (prefer) { val = prefer === 'a' ? x : y; v = vBump(join(), dev, now); merged = true; }
-      else if (k === 'setup' && o.linked === 'ask') v = px;   // the question is about the card this download opens from
-      else if (k === 'setup' && (o.linked === 'a' || o.linked === 'b')) both(o.linked);   // and this copy of the rubric goes with her answer
+      // the question is about the card this download opens from
+      else if (k === 'setup' && o.linked === 'ask') v = px;
+      // and this copy of the rubric goes with her answer
+      else if (k === 'setup' && (o.linked === 'a' || o.linked === 'b')) both(o.linked);
       else if (card && rubricsDiffer(x, y) && (workScored(a) || workScored(b)) && (!newer || rubricsDiffer(newer, card))) choose();
       else if (ge && !le) v = px;
       else if (le && !ge) { val = y; v = py; }
-      else if (((px && py) || (k === 'setup' && rubricsDiffer(x, y) && (workScored(a) || workScored(b)))) && partAsks(k, x, y, card)) choose();   // copies too old to have stamps get no guess about a grade either
+      // copies too old to have stamps get no guess about a grade either
+      else if (((px && py) || (k === 'setup' && rubricsDiffer(x, y) && (workScored(a) || workScored(b)))) && partAsks(k, x, y, card)) choose();
       else {
-        const side = card && cardSide(x, y, card);   // no scores hang on it, so the card's rubric stands
+        // no scores hang on it, so the card's rubric stands
+        const side = card && cardSide(x, y, card);
         both(side || (partT(b, k) > partT(a, k) ? 'b' : 'a'));
         if (!side) setBoth.push({ k, pooled: SET_POOL.has(k) });
       }
@@ -304,7 +314,8 @@ function mergeWork(a, b, o = {}) {
     }
     if (!line || !scored(s[key])) continue;
     s[key] = placeRows(s[key], line);
-    if (row.pick === 'ask') continue;   // until she's answered, this copy keeps its own stamps
+    // until she's answered, this copy keeps its own stamps
+    if (row.pick === 'ask') continue;
     s[key].v = vBump(vJoin(vOf(ra), vOf(rb)), dev, now);
     lined.push(key); toA = toB = true;
   }
@@ -335,7 +346,8 @@ function mergeWork(a, b, o = {}) {
   const sat = Math.max(a.sat || 0, b.sat || 0); if (sat) out.sat = sat;
   const gone = { ...(a.gone || {}) };
   if (prefer !== 'a') { for (const [k, t] of Object.entries(b.gone || {})) if (!(gone[k] >= t)) gone[k] = t; }
-  else if (!sameV(gone, b.gone)) toB = true;   // going back: a file taken off since comes back with everything else, so it can't stay marked as off
+  // going back: a file taken off since comes back with everything else, so it can't stay marked as off
+  else if (!sameV(gone, b.gone)) toB = true;
   if (Object.keys(gone).length) out.gone = gone;
   out.t = Math.max(ta, tb) + (toA ? 1 : 0);
   return { work: out, rows, ask, toA, toB, setIn, setBoth, rubricSaid, lined };
@@ -352,7 +364,8 @@ function mergeFiles(aHas = {}, bHas = {}, aGone = {}, bGone = {}, prefer) {
   for (const k of Object.keys(aHas)) {
     if (k in bHas) {
       if (off(aHas[k], bGone[k])) out.dropA.push(k); else if (off(bHas[k], aGone[k])) out.dropB.push(k);
-      else if (aHas[k] && bHas[k] && aHas[k] !== bHas[k]) out[bHas[k] > aHas[k] ? 'fromB' : 'fromA'].push(k);   // replaced under the same name: the later one goes both ways
+      // replaced under the same name: the later one goes both ways
+      else if (aHas[k] && bHas[k] && aHas[k] !== bHas[k]) out[bHas[k] > aHas[k] ? 'fromB' : 'fromA'].push(k);
       continue;
     }
     if (off(aHas[k], bGone[k])) out.dropA.push(k); else out.fromA.push(k);
@@ -362,7 +375,8 @@ function mergeFiles(aHas = {}, bHas = {}, aGone = {}, bGone = {}, prefer) {
 // Word edits follow the student they belong to: whichever copy of the student won brings its edits. edits: { path: time }.
 // A stamped copy that won without an edit has had it taken off. An old record doesn't say, so the edit stays. Nor does a copy she picked over the other, which may never have seen the edit, unless it says she took this one off.
 const editKey = path => { const parts = path.split('/').filter(Boolean); return parts.length > 1 ? parts[0] : parts[0].replace(/\.[^.]+$/, ''); };   // a loose file is a student of its own, by its name
-const EDIT_OFF = '~edit|';   // in work.gone: when a Word edit was taken off
+// in work.gone: when a Word edit was taken off
+const EDIT_OFF = '~edit|';
 function mergeEdits(aEd = {}, bEd = {}, work, rows, prefer) {
   const out = { fromB: [], fromA: [], dropA: [], dropB: [] }, pickOf = {}, her = {};
   for (const r of rows || []) { pickOf[r.key] = r.pick; her[r.key] = r.by === 'her'; }
@@ -381,28 +395,38 @@ function mergeEdits(aEd = {}, bEd = {}, work, rows, prefer) {
 // How a saved download's scores stand, counted the way the Grades list counts them. Missing and excused have no number, and a partial isn't finished.
 function workCounts(work) {
   const su = work.setup || {}, s = work.s || {}, read = work.read || {}, blank = v => v == null || v === '';
-  const out = { scored: 0, partial: 0, off: 0, fb: 0 };   // fb: Feedback complete switched on, what a formative activity counts in place of scores
+  // fb: Feedback complete switched on, what a formative activity counts in place of scores
+  // marked: scored papers she worked on here (rubric rows, ink or a comment), what Focus counts as papers marked. A grade only typed in
+  // (points, the Grade sheet) or read off the paper is scored, but not marked.
+  const out = { scored: 0, marked: 0, partial: 0, off: 0, fb: 0 };
   for (const k of new Set([...Object.keys(s), ...Object.keys(read)])) {
     const g = (s[k] && s[k].g) || {}, r = g.rubric || [], rows = su.criteria ? su.criteria.map((_, i) => r[i]) : r, on = rows.filter(v => v != null).length;
+    const worked = !!(s[k] && s[k].f && Object.keys(s[k].f).length) || !blank(g.comment);
     if (g.status !== 'missing' && g.status !== 'excused' && g.fb) out.fb++;
+    // given back early, one student at a time
+    if (g.status !== 'missing' && g.status !== 'excused' && g.sent) { out.sent = (out.sent || 0) + 1; out.sentT = Math.max(out.sentT || 0, g.sent); }
     if (g.status === 'missing' || g.status === 'excused') out.off++;
-    else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : on === rows.length && on) out.scored++;
+    else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : on === rows.length && on) { out.scored++; if (su.mode !== 'points' || worked) out.marked++; }
     else if (su.mode !== 'points' && on) out.partial++;
-    else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) out.scored++;
+    else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) { out.scored++; if (worked) out.marked++; }
   }
-  if (!out.fb) delete out.fb;   // kept only when there is some, so work with no Feedback complete is stored as before
-  if (work.returned) out.ret = work.returned.t;   // the marked files went back to the students
+  // kept only when there is some, so work with no Feedback complete is stored as before
+  if (!out.fb) delete out.fb;
+  // she said the marked work went back to the students (an export alone isn't that)
+  if (work.returned && work.returned.ok) out.back = work.returned.ok;
   return out;
 }
 // The row for the list of downloads.
 function metaFor(ma, mb, work, id) {
   const m = { ...(mb || {}), ...(ma || {}), id };
-  if (!m.name) m.name = 'A download';   // work from before the list of downloads was kept says nothing about its name
+  // work from before the list of downloads was kept says nothing about its name
+  if (!m.name) m.name = 'A download';
   if (work) {
     m.t = work.t || m.t;
-    delete m.fb;
+    delete m.fb; delete m.sent; delete m.sentT;
     Object.assign(m, workCounts(work));
-    if (!work.returned) delete m.ret;
+    // ret was set by any export: never read again
+    delete m.ret; if (!(work.returned && work.returned.ok)) delete m.back;
     m.n = Math.max(m.n || 0, Object.keys(work.s || {}).length);
   }
   return m;
@@ -420,7 +444,8 @@ function mergeStates(A, B, o = {}) {
     if (t) {
       if (!onA && !onB) { tomb[id] = t; continue; }
       const vec = vJoin(workVec(wa), workVec(wb)), answer = ans['!' + id];
-      if (!vGeq(vec, t.v)) {   // a copy opened again on purpose has seen the tombstone, so it comes after it; anything else hasn't
+      // a copy opened again on purpose has seen the tombstone, so it comes after it; anything else hasn't
+      if (!vGeq(vec, t.v)) {
         if (vGeq(t.v, vec) || answer === 'gone') { tomb[id] = t; rows.push({ id, name, kind: 'gone', onA, onB, t: t.t }); continue; }
         if (answer !== 'back') { tomb[id] = t; rows.push({ id, name, kind: 'askGone', onA, onB, t: t.t, work: wa || wb }); continue; }
         seen = t.v;
@@ -432,7 +457,8 @@ function mergeStates(A, B, o = {}) {
     const files = mergeFiles((A.added || {})[id], (B.added || {})[id], (wa && wa.gone) || {}, (wb && wb.gone) || {}, o.prefer);
     const edits = mergeEdits((A.edits || {})[id], (B.edits || {})[id], m.work, m.rows, o.prefer);
     const real = m.rows.filter(r => r.pick === 'a' || r.pick === 'b');
-    const extra = files.fromB.length + files.dropA.length + edits.fromB.length + edits.dropA.length;   // what she'd see change here besides students
+    // what she'd see change here besides students
+    const extra = files.fromB.length + files.dropA.length + edits.fromB.length + edits.dropA.length;
     const kind = !onA ? 'new' : !onB ? 'onlyA' : m.ask.length || real.length || extra || m.setIn.length || m.setBoth.length ? 'merge' : 'same';
     // Still different from its card, with nothing here to settle it: the question comes when she opens it.
     const cardOff = !m.ask.length && !m.rubricSaid && !!(lk && lk.setup && m.work && m.work.setup) && rubricsDiffer(lk.setup, m.work.setup) && workScored(m.work);
@@ -462,7 +488,8 @@ function tabMerge(data, was, other) {
   }
   const out = { ...data, s, t: Math.max(data.t, (other.t || 0) + 1) }, mine = partHashes(data), pv = { ...data.pv };
   let ownSet = false;
-  for (const k of WORK_SET) {   // settings go one at a time too: what this tab changed, and the other's word and stamps on the rest
+  // settings go one at a time too: what this tab changed, and the other's word and stamps on the rest
+  for (const k of WORK_SET) {
     const ov = other.pv && other.pv[k];
     if (mine[k] !== was.ph[k]) { ownSet = true; if (ov) pv[k] = vJoin(ov, pv[k] || {}); continue; }
     if (other[k] !== undefined) out[k] = other[k]; else delete out[k];
@@ -476,7 +503,8 @@ function tabMerge(data, was, other) {
   }
   const gone = { ...(other.gone || {}), ...(data.gone || {}) };
   if (Object.keys(gone).length) out.gone = gone;
-  for (const k of ['read', 'scan']) if (data[k] || other[k]) out[k] = { ...(data[k] || {}), ...(other[k] || {}) };   // readings kept from the papers, which the newer copy knows best
+  // readings kept from the papers, which the newer copy knows best
+  for (const k of ['read', 'scan']) if (data[k] || other[k]) out[k] = { ...(data[k] || {}), ...(other[k] || {}) };
   return { data: out, changed };
 }
 
@@ -589,12 +617,14 @@ function mergeLib(a0, b0, o = {}) {
       e.fields.names = e.node.names = [...(x.fields.names || []), ...add];
       if (add.length) notes.push({ kind: 'roster', name: x.fields.name, add, drop: [], both: true });
     } else if (x.type === 'c' && m.fromY.includes('names')) rosterNote(notes, x, y);
-    if (x.type === 'c' && m.both.includes('info')) {   // student details: per student, and a saved spelling is never lost
+    // student details: per student, and a saved spelling is never lost
+    if (x.type === 'c' && m.both.includes('info')) {
       const xi = x.fields.info || {}, yi = y.fields.info || {}, [lo, hi] = win === y ? [xi, yi] : [yi, xi], out = {};
       for (const k of new Set([...Object.keys(xi), ...Object.keys(yi)])) { const o2 = [...new Set([...((lo[k] || {}).other || []), ...((hi[k] || {}).other || [])])]; out[k] = { ...lo[k], ...hi[k], ...(o2.length ? { other: o2 } : {}) }; }
       e.fields.info = e.node.info = out;
     }
-    if (x.type === 'c' && m.both.includes('att')) {   // attendance: day by day, and for a day both changed, the one saved later
+    // attendance: day by day, and for a day both changed, the one saved later
+    if (x.type === 'c' && m.both.includes('att')) {
       const xa = x.fields.att || {}, ya = y.fields.att || {}, out = {};
       for (const k of new Set([...Object.keys(xa), ...Object.keys(ya)])) out[k] = !xa[k] ? ya[k] : !ya[k] ? xa[k] : (ya[k].t || 0) > (xa[k].t || 0) ? ya[k] : xa[k];
       e.fields.att = e.node.att = out;
@@ -610,7 +640,8 @@ function mergeLib(a0, b0, o = {}) {
     else if (m.fromY.some(k => k !== 'names')) notes.push({ kind: 'changed', type: x.type, name: e.fields.name });
     kept.set(id, e);
   }
-  for (const [id, e] of kept) {   // when it was last opened, anywhere
+  // when it was last opened, anywhere
+  for (const [id, e] of kept) {
     const t = Math.max((wa.get(id) || { node: {} }).node.opened || 0, (wb.get(id) || { node: {} }).node.opened || 0);
     if (t && e.node.opened !== t) kept.set(id, { ...e, node: { ...e.node, opened: t } });
   }
@@ -632,7 +663,8 @@ function mergeLib(a0, b0, o = {}) {
   }
   for (const e of by('i')) {
     let u = units.get(e.parent);
-    if (!u) {   // its unit is gone, and the assignment isn't: it goes back in a unit of its own, in its class
+    // its unit is gone, and the assignment isn't: it goes back in a unit of its own, in its class
+    if (!u) {
       const home = classes.get(e.fields.classId) || lib.loose;
       u = home.units.find(x => x.id === 'gs-brought');
       if (!u) { u = { id: 'gs-brought', name: 'Brought in', items: [] }; units.set(u.id, u); home.units.push(u); }
@@ -670,7 +702,8 @@ function mergeFields(x, y, win, dev, now, said) {
     const ge = vGeq(vx, vy), le = vGeq(vy, vx);
     if (ge && !le) { parts[k] = fx[k]; if (real) fv[k] = vx; }
     else if (le && !ge) { parts[k] = fy[k]; if (real) fv[k] = vy; fromY.push(k); }
-    else if (k === 'setup' && x.type === 'i' && partAsks(k, fx[k], fy[k])) {   // a card's rubric decides its grades, so it's hers to choose, as it is for a download with no card
+    // a card's rubric decides its grades, so it's hers to choose, as it is for a download with no card
+    else if (k === 'setup' && x.type === 'i' && partAsks(k, fx[k], fy[k])) {
       if (said) { parts[k] = (said === 'b' ? fy : fx)[k]; fv[k] = vBump(vJoin(vx, vy), dev, now); chose = true; if (said === 'b') fromY.push(k); }
       else { parts[k] = fx[k]; fv[k] = vx; ask = true; }
     }
@@ -744,22 +777,26 @@ function mergeLs(a, b, skip = () => false) {
       try { x = JSON.parse(a[k] || '[]'); y = JSON.parse(v); } catch {}
       const add = y.filter(t => !x.includes(t));
       if (add.length) set[k] = JSON.stringify(x.concat(add));
-    } else if (k === 'gs.rubrics') {   // by id, and a rubric changed on both keeps the later one
+    // by id, and a rubric changed on both keeps the later one
+    } else if (k === 'gs.rubrics') {
       let x = [], y = [];
       try { x = JSON.parse(a[k] || '[]'); y = JSON.parse(v); } catch {}
       const by = new Map(x.filter(alive).map(r => [r.id, r])), n = by.size;
       let ch = n !== x.length;
       for (const r of y) { if (!alive(r)) continue; const o = by.get(r.id); if (!o || (r.at || 0) > (o.at || 0)) { by.set(r.id, r); ch = true; } }
       if (ch) set[k] = n || y.some(r => !alive(r)) ? JSON.stringify([...by.values()]) : v;
-    } else if (k === 'gs.histSame') {   // her answers here stay, and answers made there come in
+    // her answers here stay, and answers made there come in
+    } else if (k === 'gs.histSame') {
       let x = {}, y = {};
       try { x = JSON.parse(a[k] || '{}'); y = JSON.parse(v); } catch {}
       const add = Object.keys(y).filter(n => !(n in x));
       if (add.length) set[k] = a[k] == null ? v : JSON.stringify({ ...x, ...Object.fromEntries(add.map(n => [n, y[n]])) });
-    } else if (k === 'gs.school') {   // school resources: an item at a time, and the one changed later is kept
+    // school resources: an item at a time, and the one changed later is kept
+    } else if (k === 'gs.school') {
       const m = schoolMerge(parse((a || {})[k], null), parse(v, null));
       if (m.toA) set[k] = JSON.stringify(m.out);
-    } else if (k.startsWith('gs.rd.') && a[k] != null) {   // the Word document for a download, replaced there later
+    // the Word document for a download, replaced there later
+    } else if (k.startsWith('gs.rd.') && a[k] != null) {
       const x = parse(a[k], {}), y = parse(v, {});
       if (y.at > (x.at || 0)) set[k] = v;
     } else if (a[k] == null) set[k] = v;

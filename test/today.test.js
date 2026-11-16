@@ -77,7 +77,10 @@ test('kept work moves from To mark to Ready to hand back to Earlier work, with o
   assert.equal(await page.evaluate(() => location.hash), '#/a/' + encodeURIComponent(id.replace(/^gs\.b\./, '')) + '/return');
   const dl = await catchDownloads(page);
   await dl.next(() => page.click('#dlgBox [data-go="zip"]'));
-  await page.waitForSelector('#rtState .rtdone'); await settle(page);
+  await page.waitForSelector('#rtState [data-doreturn]');
+  await page.waitForFunction(() => /^Exported/.test(document.querySelector('#rtState').textContent)); await settle(page);
+  // still ready to hand back until she says it went back
+  await page.click('#rtState [data-doreturn]'); await page.waitForSelector('#rtState [data-unreturn]'); await settle(page);
   await goTo(page, '#/'); await until(page, '#/');
   await page.waitForSelector('#earlier .krow');
   assert.match(await text(page, '#earlier .krow'), /^Narrative essay\s*Test English · returned \w+ \d+ · \d of \d scored/);

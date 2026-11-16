@@ -1,22 +1,22 @@
 {
- "version": "1.28.29",
- "build": "e822a42b423c",
+ "version": "1.28.35",
+ "build": "669bad3e7aa2",
  "notes": [
   "Type notes: a page beside the paper that you type on like any document, with headings, lists, bold, italic, underline and highlight. Beside a video or with the clock running, each new paragraph gets its time, and a paragraph can be marked as a strength, a next step or a question.",
   "Each assignment says whether typed notes go back to the student as a page of the returned paper, and in what text size: Compact, Standard or Large. Help has a new answer."
  ],
  "files": {
-  "index.html": "42ef352b1acc7a6cb22b2d901022d33ba27f016caf418fd88baa575a0c9c9b81",
-  "planner.html": "39c9347952a91da1984de82f654a1b9dcf61ea2f453deb3c1fb7c623db186b49"
+  "index.html": "8dc1e4c6675dbf085200566d041936745e11a1bebfb1c486b5f426df7d7bd20f",
+  "planner.html": "ddb51d28c398f2628341f9ebccdb32d8ef033825c169b67b3e0256358844cde7"
  },
  "langs": {
-  "lang/zh-Hant.js": "694062b65efeff36372d783aeed2cdfed00dae49deb6869efbd43d85ac5c2914",
-  "lang/zh-Hans.js": "48df4ccce45386a398d5784815ed747f08395fe9e47a94d970d669404e4deafc",
-  "lang/es.js": "aea252d27c9468ed47bf25d181eeda5fa96f3c5f014e0cab325751a449eadf04",
-  "lang/fr.js": "592208cf529a6dae128837ce8104de93aa50db540bc2c87ade0c7caa510ad3a2",
-  "lang/de.js": "fcefcbe767c4e01d2c19bc4ca8559d16cd2a9cada168deaad886458738fa37c6",
-  "lang/pt-BR.js": "0f538f93ee2df1952b2c1d2061626818f1d006d82778eb213cc64b94d6847348",
-  "lang/ja.js": "0a600362c31ff27885f7f2933e3f0b693fe707c2eeb62bc9dc2b4992068e7649",
-  "lang/ko.js": "4fbff218f56e6e1172ef2286c61cb88a3b5372c2e3caebc5bee5fbf8aac7912b"
+  "lang/zh-Hant.js": "ca730818e52fea5bdc4425d02121db2ecb86464f9f7fc73bbb1cded7c257be00",
+  "lang/zh-Hans.js": "5b35832439558ce46935de55023bfbc1d016e700e8d0993e5c772a2c51626f7b",
+  "lang/es.js": "4cdcdd3f623779999f06c011af83724efaee315521eebddb97423eb60fdb2cc2",
+  "lang/fr.js": "82e1c3ef5233f2cbced888c6f72063550a0cd57250d4906d193b14c9f1bb0995",
+  "lang/de.js": "d73eb9095884001168820a393485ce701fd9b94439046c979bb00b5aea694f30",
+  "lang/pt-BR.js": "6d7f53882bca6a1a7c1299b63d90fb801d23c029bc821337b316f90a6b33118e",
+  "lang/ja.js": "9e0cd5d365e7701075b13b8b2fa72ab378bca0594a3a191860894b0f1ace519c",
+  "lang/ko.js": "5ff12a92da88238424c8a90f8b53eb3e6ea1b2a0bc2928acbc33f4536f1750f2"
  }
 }

@@ -198,3 +198,78 @@ test('the card shows one suggestion with one blue Start; Change opens the list o
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('when the time is up, a few more minutes go on with the same session, and ending them early counts only what ran', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  await page.evaluate(() => window.__gs.fcStart(10, '', false));
+  await later(page, 'r.at -= r.len * 1000 + 2000;');
+  await page.waitForSelector('#fcPanel .fcext [data-fcext="5"]');
+  assert.deepEqual(await page.$$eval('#fcPanel .fcext button', b => b.map(x => x.textContent)), ['+2', '+5', '+10']);
+  const before = (await log(page)).days[today()];
+  await page.click('#fcPanel [data-fcext="5"]');
+  const r = await page.evaluate(() => window.__gs.fcRun());
+  assert.equal(r.st, 'run'); assert.equal(r.len, 300); assert.equal(r.no, 1, 'the same session goes on');
+  // ended after a minute and a half: that is what counts, not the five minutes
+  await later(page, 'r.at -= 90 * 1000;');
+  await page.click('#fcPanel [data-fcstop]');
+  const after = (await log(page)).days[today()];
+  assert.ok(Math.abs(after.s - before.s - 90) <= 2, JSON.stringify([before, after]));
+  assert.equal(after.n, before.n, 'not counted as another session');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('a new copy of a download carries its marks over without counting them as today’s papers', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  const n = await page.evaluate(() => {
+    const G = window.__gs, K = G.kept(), out = [];
+    // yesterday's copy, 4 of 5 scored, and the new copy listed before its first save, with no count yet
+    K.set('older-copy', { id: 'older-copy', name: 'Made-up essay', n: 5, scored: 4, newer: 'newer-copy' });
+    G.fcSeen(); const base = G.fcPapersToday();
+    K.set('newer-copy', { id: 'newer-copy', name: 'Made-up essay', n: 5 });
+    out.push(G.fcPapersToday() - base);
+    // its first save brings the carried marks over
+    K.set('newer-copy', { ...K.get('newer-copy'), scored: 4 }); out.push(G.fcPapersToday() - base);
+    // and one more paper finished today counts
+    K.set('newer-copy', { ...K.get('newer-copy'), scored: 5 }); out.push(G.fcPapersToday() - base);
+    return out;
+  });
+  assert.deepEqual(n, [0, 0, 1]);
+  await close();
+});
+
+test('marks that come in from the folder (made on another computer) or from a restored copy don’t count as today’s papers', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  const n = await page.evaluate(() => {
+    const G = window.__gs, K = G.kept(), out = [];
+    K.set('two-computers', { id: 'two-computers', name: 'Made-up lab report', n: 6, scored: 1 });
+    G.fcSeen(); const base = G.fcPapersToday();
+    // one more paper here
+    K.set('two-computers', { ...K.get('two-computers'), scored: 2 }); out.push(G.fcPapersToday() - base);
+    // four marked yesterday on the school computer arrive through the folder (src/folder.js applyRow)
+    const m0 = K.get('two-computers'), m = { ...m0, scored: 6 }; G.fcCame('two-computers', m0, m); K.set('two-computers', m);
+    out.push(G.fcPapersToday() - base);
+    return out;
+  });
+  assert.deepEqual(n, [1, 1]);
+  await close();
+});
+
+test('a grade only typed in, with no marking, is scored but isn’t a paper marked today', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  const out = await page.evaluate(() => {
+    const G = window.__gs, wc = G.carryParts.workCounts;
+    const pts = { setup: { mode: 'points' }, s: { 'Made-up One': { g: { points: '18' } }, 'Made-up Two': { g: { points: '15', comment: 'Clear opening.' } }, 'Made-up Three': { g: { points: '12' }, f: { 'a.pdf': { 0: [{ t: 'pen' }] } } } } };
+    const sheet = { setup: {}, s: { 'Made-up One': { g: { rubric: [], sheet: '17' } }, 'Made-up Two': { g: { rubric: [], sheet: '14' } } }, read: { 'Made-up Four': { score: 9, outOf: 10 } } };
+    const a = wc(pts), b = wc(sheet);
+    // the Focus count follows marked, not scored
+    const K = G.kept();
+    K.set('typed-only', { id: 'typed-only', name: 'Made-up email', n: 20, scored: 0, marked: 0 });
+    G.fcSeen(); const base = G.fcPapersToday();
+    K.set('typed-only', { ...K.get('typed-only'), scored: 19, marked: 0 }); const typed = G.fcPapersToday() - base;
+    K.set('typed-only', { ...K.get('typed-only'), scored: 19, marked: 2 }); const two = G.fcPapersToday() - base;
+    return [a.scored, a.marked, b.scored, b.marked, typed, two];
+  });
+  assert.deepEqual(out, [3, 2, 3, 0, 0, 2]);
+  await close();
+});
