@@ -110,7 +110,7 @@ async function snipPage(pg, k, marks) {
   const L = lightForPage(st, f, p); if (L) lightCanvas(ctx, Math.ceil(W * k), c.height, L);
   scanClip(ctx, f, p, W * k, Math.ceil(W * k), c.height);
   ctx.setTransform(k, 0, 0, k, 0, 0);
-  if (marks) drawMarks(ctx, scrubMarks(pg.marks().concat(pg.extra || []), rx), W, H, side, null);
+  if (marks) drawMarks(ctx, scrubMarks(marksMine(pg.marks(), pg.file).concat(pg.extra || []), rx), W, H, side, null);
   ctx.fillStyle = '#111';
   for (const r of await anonCovers(st, pg)) ctx.fillRect(r.x, r.y, r.w, r.h);   // after the marks, so a mark can't show a name either
   ctx.setTransform(1, 0, 0, 1, 0, 0);

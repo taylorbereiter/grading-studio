@@ -256,14 +256,14 @@ function qzAnsOf(st, q) {
 // The total, as a score sticker in the spot she picked, once every question is marked. The grade sheet reads it off the paper.
 async function qzTotal(st) {
   const t = batch.quiz.total;
-  for (const [path, p] of quizPages(st)) { const f = fileByPath(st, path), l = f && f.marks[p]; if (l) for (let i = l.length - 1; i >= 0; i--) if (l[i].qz === 'total') l.splice(i, 1); }
+  for (const [path, p] of quizPages(st)) { const f = fileByPath(st, path), l = f && f.marks[p]; if (l) for (let i = l.length - 1; i >= 0; i--) if (l[i].qz === 'total' && !stampHidden(l[i], st.key)) l.splice(i, 1); }
   if (!t || quizCount(st) < batch.quiz.qs.length) return;
   const text = ibQzOn() ? ibStampText(st) : stickerText(quizSum(st));
   if (!text) return;
   const [path, p] = quizPages(st)[t.n] || [], f = path && fileByPath(st, path), sz = await qzPageSize(st, t.n);
   if (!f || !sz) return;
   const [dx, dy] = qzShift(st, t.n);
-  (f.marks[p] ||= []).push({ t: 'stamp', k: 'score', text, x: r1((t.x + dx) * sz.W), y: r1((t.y + dy) * sz.H), size: 52, color: totalInk(), qz: 'total' });
+  (f.marks[p] ||= []).push(stampOwner({ t: 'stamp', k: 'score', text, x: r1((t.x + dx) * sz.W), y: r1((t.y + dy) * sz.H), size: 52, color: totalInk(), qz: 'total' }, st));
 }
 // After boxes move or a student's page is lined up again, the marks already given move with them.
 async function qzRedoPaper(st) {

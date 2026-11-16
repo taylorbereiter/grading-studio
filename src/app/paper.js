@@ -24,7 +24,7 @@ function fieldBack(u, to) {
 const actStep = (back, again, what) => ({ act: { back, again }, what });
 // Several steps that undo together, last one first: tagging one anchor paper takes the tag off another.
 const groupStep = (steps, what) => ({ group: steps, what });
-function snap(pg) { pushUndo(stepOf(pg.file, pg.idx)); }
+function snap(pg) { pushUndo(stepOf(pg.file, pg.idx)); justSeen(pg); }
 // A score is a step too: the student's whole score as it was (rows, points, status), so Ctrl Z takes back a slip of the
 // hand on a slider or a number key the same way it takes back a mark. Called just before the score changes.
 const gradeStep = st => ({ grade: st, before: JSON.stringify(st.grade) });
@@ -43,7 +43,7 @@ function gradeBack(u, to) {
   if (si !== cur) openStudent(si); else renderGrade();
   saveSoon(); renderList(); renderTools();
 }
-function changed(pg) { scanned = false; draw(pg); gradeMarksChanged(pg.file); saveSoon(); renderList(); }
+function changed(pg) { justTag(pg); scanned = false; draw(pg); gradeMarksChanged(pg.file); saveSoon(); renderList(); }
 function undo() { swapStep(undoStack, redoStack, 'Undone'); }
 function redo() { swapStep(redoStack, undoStack, 'Redone'); }
 function swapStep(from, to, said) {
@@ -131,7 +131,7 @@ async function rescanFile(f) {
 // The panel's total, without touching the comment box she may be typing in.
 function gradeShown(st) { const t = $('#grade .total'); if (t && st === batch.students[cur]) t.innerHTML = totalHtml(st); }
 // A grade lives in the mark that holds it. "page|words" for each of her marks with a grade in it.
-const gradeMarks = f => Object.entries(f.marks || {}).flatMap(([p, a]) => a.filter(m => !m.qza && (m.t === 'text' || m.t === 'note' || (m.t === 'stamp' && m.k === 'score')) && m.text && parseGrade(m.t === 'stamp' ? stampScore(m.text) : m.text, false)).map(m => p + '|' + m.text)).sort();
+const gradeMarks = f => Object.entries(f.marks || {}).flatMap(([p, a]) => marksMine(a, f).filter(m => !m.qza && (m.t === 'text' || m.t === 'note' || (m.t === 'stamp' && m.k === 'score')) && m.text && parseGrade(m.t === 'stamp' ? stampScore(m.text) : m.text, false)).map(m => p + '|' + m.text)).sort();
 const rereadTimers = new Map();
 let rereadQ = Promise.resolve(), rereadsLeft = 0;
 // When those marks change, the old reading goes this moment and the file is read again for the new one. Pen strokes and plain comments change nothing here.
