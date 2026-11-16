@@ -52,7 +52,7 @@ const langFiles = {}, langNames = {}, langPacked = {};
 {
   const fflate = require('fflate');
   for (const [code, file, obj] of LANGS) {
-    const src = (fs.readFileSync('src/lang-' + file + '.js', 'utf8') + '\nreturn ' + obj + ';').replace(/^[ \t]*\/\/.*\r?\n/gm, '');   // lines that are only a comment ship in neither copy
+    const src = (fs.readFileSync('src/lang-' + file + '.js', 'utf8').replace(/^\s*\/\*[\s\S]*?\*\/\s*/, '') + '\nreturn ' + obj + ';').replace(/^[ \t]*\/\/.*\r?\n/gm, '');   // lines that are only a comment, and the note at the top of the file, ship in neither copy
     langNames[code] = new Function(src)().name;
     const lean = dent(src);   // leading spaces don't ship either (dent, above)
     langPacked[code] = Buffer.from(fflate.deflateSync(Buffer.from(lean, 'utf8'), { level: 9 })).toString('base64');
@@ -81,6 +81,8 @@ rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(f
 // The Google sign-in key (a Client ID, not a secret: every page that signs in with Google shows its own). site.json holds the one for the
 // pages at the web address; GCID in the environment is for a copy of your own.
 rep("'/*@@GCID@@*/'", JSON.stringify(process.env.GCID || require('./site.json').googleClientId || ''));
+// The key Google's file chooser may need (videos from Drive), locked to the site's address. Empty until one is made.
+rep("'/*@@GKEY@@*/'", JSON.stringify(process.env.GKEY || require('./site.json').googleApiKey || ''));
 // Where this copy lives and where it is moving to (site.json), only while a move is on. Otherwise the app has no address written into it.
 { const site = require('./site.json'); rep("'/*@@SITE@@*/'", JSON.stringify(site.movingTo ? { address: site.address || '', movingTo: site.movingTo } : null)); }
 const VERSION = require('./package.json').version, whatsNew = require('./src/whatsnew.json');

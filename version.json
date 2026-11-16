@@ -1,21 +1,21 @@
 {
  "version": "1.28.34",
- "build": "b79c81796c7a",
+ "build": "225f5acd6151",
  "notes": [
   "Focus counts only papers you marked: rubric scores, marks on the page or a comment. A grade only typed in still counts as scored, and its time still counts as grading time, but it no longer counts as a paper marked today."
  ],
  "files": {
-  "index.html": "c98ccf5e47873d2cb50fdc4a54ba2ebb1ea20dedfd5c49a0d6f46f09bafcd29e",
-  "planner.html": "5a5fbc30fcff26017fefd9cd5a6d6234d72f05dc5f1a68096b8fe15f440e5bc9"
+  "index.html": "eff2a607e0ed7859d6135375f802027cae440abb490b189cbc5d3aa409471909",
+  "planner.html": "b403a22b366503b90c0fe45a76df6b5c0cd8c8b060f2d542a6d937827d6edb31"
  },
  "langs": {
-  "lang/zh-Hant.js": "a9b41e39c9bb0ae2bf191d963f25a21c7a744e77ac48ab58eb7838f187dbcbbd",
-  "lang/zh-Hans.js": "05397ffc10c0d79e587ef0a9b9256923c7dd321cc5dceaba86f7f14429600800",
-  "lang/es.js": "c2afb26b2fe4e3b2a50e99433ab2653e58ceb5c4f63e1a148d6a5dd169b9fe35",
-  "lang/fr.js": "db877d6bbe83435dd2929446e5a9a830767ef38d08d492c6fc5e21e9c9558c39",
-  "lang/de.js": "b46fae18c3293d95e1eff6e018143e26b204f0a2fb49e4ae1aae4ab5dd31a027",
-  "lang/pt-BR.js": "25f928976c2cd9f66eb0f747c573cc738c58997b096904779e8ee208835d650c",
-  "lang/ja.js": "ed31a72d57267bec6103b2ac64ccb6e557cd0d6ebc39c8aa0d3538e28e2fa03c",
-  "lang/ko.js": "52a6691f5746bdffa9d77a4bfdf2f44c26ce8745d3497737d2d63241731a2d0c"
+  "lang/zh-Hant.js": "a239a49ad534192da429531a26576ce4c4ae2e5de98fdebd6df6a44421e06ed7",
+  "lang/zh-Hans.js": "378cc3a2b05456d103770d0ab079e424f2a612f95661e0d4b0ae1411a8d357b4",
+  "lang/es.js": "84e4bb719901d2f59c042df6c7477be94d463c5e4f99249e7ec83b86a1988188",
+  "lang/fr.js": "834fcbe59b721a167bd1f81274e541a5bace26e169d0e75bdaee55fa4320cea9",
+  "lang/de.js": "2e2994a04c869804f0446d320c6a6e92cfdb252ea06a48b6b1b82c68566a7189",
+  "lang/pt-BR.js": "5dc86d54815816795cc38de39eff73c6454ee07ec53eb9177b09aac24a75427f",
+  "lang/ja.js": "385a7a518bb4af7aea595253df1cc17ee7ad931cbae2692ba38efce868ada566",
+  "lang/ko.js": "b7114959097c7b91b379694bf249913f857d16b8945401e062785ef7d98ddb5a"
  }
 }

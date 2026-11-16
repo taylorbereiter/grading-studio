@@ -281,9 +281,11 @@ async function transcribe(bytes, say, stop) {
 }
 // A recording's transcript, kept on the file. A video kept in this browser is read from where it is kept; its partners get the same transcript.
 async function transcribeFile(f, say, stop) {
-  const kv = f.kind === 'link' && vidRef(f.data);
+  const kv = keptId(f);
   if (f.kind === 'link' && !kv) throw new Error('Only a video file can be transcribed here. For a link, paste a transcript.');
-  const k = kv && await vkGet(kv); if (kv && !k) throw new Error('This video isn’t in this browser.');
+  let k = kv && await vkGet(kv);
+  if (kv && !k && drvRef(f.data)) { vkSeen.delete(kv); say('Getting the video from Drive…'); k = await drvGet(f); }   // a Drive video comes into the browser first
+  if (kv && !k) throw new Error('This video isn’t in this browser.');
   const w = await transcribe(kv ? new Uint8Array(await k.blob.arrayBuffer()) : f.data, say, stop);
   trSet(f, { w });
 }

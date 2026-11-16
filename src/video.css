@@ -114,3 +114,8 @@ html.vidsized #paper .vrotbox.on{height:var(--vid-h);min-height:0}
 .trcap .icon:disabled{opacity:.35}
 .trbox .trl.cap{box-shadow:inset 3px 0 0 var(--accent)}
 .trhead .link[aria-pressed=true]{font-weight:600;text-decoration:none}
+/* videos from Google Drive */
+.pvdrvrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 4px; font-size: 13px; }
+.pvdrvrow .link { font-size: 13px; }
+.pvdrv { font-size: 11px; font-weight: 600; color: var(--accent, #1F6FB2); border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; }
+.vdrv .prog { margin: 8px 0 0; }
