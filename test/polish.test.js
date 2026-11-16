@@ -549,7 +549,7 @@ test('Today puts the work to mark above opening new work', async () => {
   assert.ok(o.kept < o.drop && !o.classes, JSON.stringify(o));
   assert.equal(await page.$eval('#toMark .krow .btn[data-kopen]', e => e.textContent), 'Continue');
   // much earlier work: the three newest, and the rest a click away
-  await page.evaluate(() => { const k = window.__gs.kept(), m = [...k.values()][0]; for (let i = 0; i < 7; i++) k.set('x' + i, { ...m, id: 'x' + i, name: 'Old ' + i, t: 1000 + i, ret: 2000 }); window.__gs.renderKept(); });
+  await page.evaluate(() => { const k = window.__gs.kept(), m = [...k.values()][0]; for (let i = 0; i < 7; i++) k.set('x' + i, { ...m, id: 'x' + i, name: 'Old ' + i, t: 1000 + i, back: 2000 }); window.__gs.renderKept(); });
   const shown = () => page.$$eval('#earlier .krow', r => r.filter(e => e.checkVisibility()).length);
   assert.equal(await shown(), 3, await page.evaluate(() => JSON.stringify({ home: document.querySelector('#vHome').checkVisibility(), kept: window.__gs.kept().size, earlier: document.querySelectorAll('#earlier .krow').length, at: location.hash })));
   await page.click('#keptAll');

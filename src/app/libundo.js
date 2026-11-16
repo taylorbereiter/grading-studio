@@ -1,11 +1,12 @@
 /* ---------------- undo outside the marking screen ---------------- */
 // Ctrl Z (Cmd Z on a Mac) on Home, a class page, the gradebook, To do or Settings takes back the last change to the classes, units,
 // rosters, gradebook, To do and settings, whatever made it: each save keeps the library as it was just before. Shift Ctrl Z or Ctrl Y
-// does it again. Saves a moment apart are one step, so a burst of scores typed into the gradebook is one Ctrl Z. Typing in a box
+// does it again. Saves a moment apart are one step, up to a few seconds from the first, so a burst of typing is one Ctrl Z but a long run
+// of scores is several. Typing in a box
 // keeps the box's own undo. The marking screen has its own steps (paper.js), so a change made there isn't one here: the steps from
 // before are let go, because putting back an older library would also take back what the download wrote into it.
-const LIBU = { undo: [], redo: [], last: null, t: 0, quiet: false };
-const LIBU_MAX = 60, LIBU_ROOM = 40e6;   // steps, and characters kept in all, so a big library can't eat the computer's memory
+const LIBU = { undo: [], redo: [], last: null, t: 0, t0: 0, quiet: false };
+const LIBU_MAX = 60, LIBU_ROOM = 40e6, LIBU_JOIN = 3000;   // steps, and characters kept in all, so a big library can't eat the computer's memory
 // Stamps and "last opened" times change without her doing anything, so they don't make a step.
 const LIBU_SKIP = new Set(['v', 'at', 'fv', 'gone', 'opened']);
 function libSnap() { try { return { s: JSON.stringify(lib), sig: JSON.stringify(lib, (k, v) => LIBU_SKIP.has(k) ? undefined : v) }; } catch { return null; } }
@@ -16,8 +17,8 @@ function libTrack() {
   if (!was || was.sig === now.sig || LIBU.quiet) return;
   if (batch) { LIBU.undo = []; LIBU.redo = []; return; }
   const t = Date.now();
-  if (!(LIBU.undo.length && !LIBU.redo.length && t - LIBU.t < 1000)) {
-    LIBU.undo.push(was);
+  if (!(LIBU.undo.length && !LIBU.redo.length && t - LIBU.t < 1000 && t - LIBU.t0 < LIBU_JOIN)) {
+    LIBU.undo.push(was); LIBU.t0 = t;
     let room = LIBU.undo.reduce((n, u) => n + u.s.length, 0);
     while (LIBU.undo.length > LIBU_MAX || (room > LIBU_ROOM && LIBU.undo.length > 1)) room -= LIBU.undo.shift().s.length;
   }
@@ -56,7 +57,8 @@ function libStep(from, to, said) {
   } finally { LIBU.quiet = false; }
   LIBU.last = libSnap(); LIBU.t = 0;
   libRedraw();
-  toast(said + (what ? ': ' + what : ''));
+  // Ctrl Z can reach a change made on another screen, so the note offers it back.
+  if (said === 'Undone') toastDo(said + (what ? ': ' + what : ''), 'Redo', libRedo); else toast(said + (what ? ': ' + what : ''));
 }
 // Every screen that shows the library, drawn again from the one now kept.
 function libRedraw() {

@@ -105,9 +105,9 @@ test('a column named like an assignment already there adds to it, keeps what’s
   await paste(page, 'Student,Poetry test,Narrative essay\nAria Testwell,24,10\nBram Sample,21,11\nCleo Fixture,30,12\n');
   await page.waitForSelector('#bkiClash');
   assert.match(await page.$eval('#bkiClash', e => e.textContent), /1 score is already in the gradebook/);
-  assert.match(await page.$eval('#bkiClash details', e => e.textContent), /Poetry test, Aria Testwell: 27\/30 now, 24\/30 in the file/);
+  assert.match(await page.$eval('.bkiclt', e => e.textContent), /Poetry test.*Aria Testwell.*Mine: 27\/30.*File: 24\/30/);
   assert.match(await page.$eval('#bkiOut', e => e.textContent), /2 scores already come from graded papers/);
-  assert.match(await page.$eval('#bkiOut', e => e.textContent), /Adds to “Poetry test”/);
+  assert.deepEqual(await page.$$eval('[data-bkigo]', s => s.map(x => x.value)), ['i2', 'i1'], 'the same names go to the assignments already there');
   await page.click('[data-bkisave]');
   await page.waitForSelector('#bkTab');
   let its = await items(page);
@@ -182,5 +182,148 @@ test('the type of each column is one of the teacher’s own gradebook types', as
   const its = await items(page);
   assert.equal(its.find(x => x.name === 'Quiz 2').type, 'hw');
   assert.equal(its.find(x => x.name === 'Homework 3').type, 'hw');
+  noErrors(page); await close();
+});
+
+test('names a little different are matched, but "Quiz 1" is never "Quiz 2" and a shared word alone is not enough', async () => {
+  const { page, close } = await openApp(browser, { seed: seed() });
+  const f = await page.evaluate(() => { const { bkiFit } = window.__gs; return [bkiFit('Quiz 1', 'Quiz 2'), bkiFit('Map test', 'Poetry test'), bkiFit('Poetry Test (Unit 1)', 'Poetry test'), bkiFit('Narative Essay', 'Narrative essay'), bkiFit('Poetry analysis', 'Poetry test'), bkiFit('poetry test', 'Poetry test'), bkiFit('Test (Unit 2)', 'Test (Unit 1)')]; });
+  assert.deepEqual(f.map(x => Math.round(x * 100) / 100), [0, 0, 0.95, 0.94, 0.5, 1, 0]);
+  await openImport(page);
+  await paste(page, 'Name\tPoetry Test (Unit 1)\tNarative Essay\tNarrative essay 2\tMap test\nCleo Fixture\t25\t15\t16\t9\n');
+  await page.waitForSelector('.bkitab');
+  const go = () => page.$$eval('[data-bkigo]', s => Object.fromEntries(s.map(x => [x.closest('tr').querySelector('[data-bkiname]').value, x.value])));
+  assert.deepEqual(await go(), { 'Poetry Test (Unit 1)': 'i2', 'Narative Essay': 'i1', 'Narrative essay 2': 'new', 'Map test': 'new' });
+  assert.equal(await page.$$eval('.bkigo + .stag', t => t.length), 2, 'close matches are flagged to check');
+  // One assignment can't take two columns: Poetry test is already taken, so it can't be picked for Map test.
+  assert.equal(await page.$eval('[data-bkigo="4"] option[value="i2"]', o => o.disabled), true);
+  await page.click('[data-bkisave]');
+  await page.waitForSelector('#bkTab');
+  const its = await items(page);
+  assert.equal(its.length, 4, 'two new, two added to');
+  assert.deepEqual(its.find(x => x.id === 'i2').typed.s['Cleo Fixture'], { v: 25, st: '' });
+  noErrors(page); await close();
+});
+
+test('a loosely close name waits for the teacher: Same, New or Skip, and nothing is saved before that', async () => {
+  const { page, close } = await openApp(browser, { seed: seed() });
+  await openImport(page);
+  await paste(page, 'Name\tPoetry analysis\nAria Testwell\t20\n');
+  await page.waitForSelector('.bkitab');
+  assert.equal(await page.$eval('[data-bkigo]', s => s.value), '');
+  assert.equal(await page.$eval('[data-bkisave]', b => b.disabled), true);
+  assert.match(await page.$eval('#bkiCount', e => e.textContent), /Choose where one assignment goes first/);
+  await page.select('[data-bkigo]', 'skip');
+  assert.equal(await page.$eval('[data-bkisave]', b => b.disabled), true, 'nothing left to import');
+  await page.select('[data-bkigo]', 'i2');
+  assert.equal(await page.$eval('[data-bkisave]', b => b.disabled), false);
+  assert.match(await page.$eval('.bkiclt', e => e.textContent), /Mine: 27\/30.*File: 20\/30/);
+  noErrors(page); await close();
+});
+
+test('each differing score can be kept or replaced on its own, and one Undo takes the whole import back', async () => {
+  const { page, close } = await openApp(browser, { seed: seed() });
+  const before = (await items(page)).find(x => x.id === 'i2').typed;
+  await openImport(page);
+  await paste(page, 'Student,Poetry test,Spelling bee\nAria Testwell,24,8\nBram Sample,18,9\nZed Nobody,30,10\n');
+  await page.waitForSelector('#bkiClash');
+  assert.match(await page.$eval('#bkiClash', e => e.textContent), /2 scores are already/);
+  await page.click('[data-bkiover="1|Bram Sample"][data-v="file"]');
+  await page.waitForSelector('[data-bkiover="1|Bram Sample"][data-v="file"][aria-pressed="true"]');
+  assert.equal(await page.$eval('[data-bkiover="1|Aria Testwell"][data-v="keep"]', b => b.getAttribute('aria-pressed')), 'true');
+  // The row nobody matches is left out unless the teacher adds it.
+  assert.equal(await page.$eval('[data-bkipick]', s => s.value), '');
+  await page.click('[data-bkisave]');
+  await page.waitForSelector('#bkTab');
+  let l = await lib(page), its = l.classes[0].units.flatMap(u => u.items);
+  assert.deepEqual(its.find(x => x.id === 'i2').typed.s, { 'Aria Testwell': { v: 27 }, 'Bram Sample': { v: 18, st: '' } });
+  assert.deepEqual(l.classes[0].names, NAMES, 'no student added, and the ones missing from the file are still there');
+  await page.waitForSelector('.toast .tact');
+  await page.click('.toast .tact');
+  await page.waitForFunction(() => !window.__gs.state().lib.classes[0].units.some(u => u.items.some(i => i.name === 'Spelling bee')));
+  its = await items(page);
+  assert.deepEqual(its.find(x => x.id === 'i2').typed, before);
+  noErrors(page); await close();
+});
+
+test('the file’s categories go into the teacher’s own types once each, or make a new type', async () => {
+  const { page, close } = await openApp(browser, { seed: seed() });
+  await openImport(page);
+  await paste(page, 'Name,Lab 1,Lab 2,Unit test,Reading log [In-class]\nCategory,Practical,Practical,Summative,\nAria Testwell,8,9,30,5\n');
+  await page.waitForSelector('.bkicats');
+  assert.deepEqual(await page.$$eval('[data-bkicat]', s => s.map(x => x.dataset.bkicat + '=' + x.value)), ['Practical=+:Practical', 'Summative=sum', 'In-class=ic']);
+  assert.match(await page.$eval('#bkiOut', e => e.textContent), /counts for nothing in the term grade until you give it a weight/);
+  await page.click('[data-bkisave]');
+  await page.waitForSelector('#bkTab');
+  const l = await lib(page), its = l.classes[0].units.flatMap(u => u.items), made = l.book.cats.find(x => x.name === 'Practical');
+  assert.deepEqual(l.book.cats.map(x => x.id).slice(0, 3), ['ic', 'sum', 'fm']);
+  assert.equal(l.book.cats.length, 4); assert.ok(made.k >= 1 && made.k <= 5);
+  assert.deepEqual(['Lab 1', 'Lab 2', 'Unit test', 'Reading log'].map(n => its.find(x => x.name === n).type), [made.id, made.id, 'sum', 'ic']);
+  noErrors(page); await close();
+});
+
+test('a class with no students yet gets its roster, IDs and emails from the file, read the long way round too', async () => {
+  const s = seed(), l0 = JSON.parse(s.ls['gs.lib']);
+  l0.classes.push({ id: 'c2', name: 'Grade 10 History', names: [], units: [{ id: 'u2', name: 'Unit A', items: [] }] });
+  s.ls['gs.lib'] = JSON.stringify(l0);
+  const { page, close } = await openApp(browser, { seed: s });
+  const long = 'Student,Student ID,Email,Assignment,Score,Out of,Category\n' +
+    'Ezra Placeholder,200101,ezra@example.org,Map quiz,8,10,Formative\nEzra Placeholder,200101,ezra@example.org,Essay,30,40,Summative\n' +
+    'Faye Invented,200102,faye@example.org,Map quiz,9,10,Formative\nFaye Invented,200102,faye@example.org,Essay,35,40,Summative\n';
+  const w = await page.evaluate(t => { const { bkiParse, bkiWide } = window.__gs; return bkiWide(bkiParse(t)); }, long);
+  assert.deepEqual(w[0], ['Student', 'Student ID', 'Email', 'Map quiz', 'Essay']);
+  await classPage(page, 'c2');
+  await pick(page, '[data-bkfirst]');
+  await page.waitForSelector('#bkBody [data-bkimport]');
+  await page.$eval('#bkBody [data-bkimport]', b => b.click());
+  await page.waitForSelector('#bkImp');
+  await paste(page, long);
+  await page.waitForSelector('.bkitab');
+  assert.match(await page.$eval('.bkisum', e => e.textContent), /no students yet, so they become its roster/);
+  assert.deepEqual(await page.$$eval('[data-bkipick]', s => s.map(x => x.value)), ['+', '+']);
+  assert.match(await page.$eval('.bkiinfo', e => e.textContent), /Fill in 2 student IDs and 2 emails/);
+  await page.click('[data-bkisave]');
+  await page.waitForSelector('#bkTab');
+  const c = (await lib(page)).classes.find(x => x.id === 'c2');
+  assert.deepEqual(c.names, ['Ezra Placeholder', 'Faye Invented']);
+  assert.deepEqual(c.info['Faye Invented'], { id: '200102', email: 'faye@example.org' });
+  const it = c.units.flatMap(u => u.items).find(x => x.name === 'Essay');
+  assert.deepEqual(it.typed, { max: 40, s: { 'Ezra Placeholder': { v: 30, st: '' }, 'Faye Invented': { v: 35, st: '' } } });
+  assert.equal(it.type, 'sum');
+  noErrors(page); await close();
+});
+
+test('a class with a roster adds a student only when asked, and fills in only the details it has none of', async () => {
+  const s = seed(), l0 = JSON.parse(s.ls['gs.lib']);
+  l0.classes[0].info = { 'Aria Testwell': { email: 'aria@school.example' } };
+  s.ls['gs.lib'] = JSON.stringify(l0);
+  const { page, close } = await openApp(browser, { seed: s });
+  await openImport(page);
+  await paste(page, 'Name,Email,Pop quiz\nAria Testwell,aria.other@example.org,5\nBram Sample,bram@example.org,6\nGus Newcomer,gus@example.org,7\n');
+  await page.waitForSelector('.bkiinfo');
+  assert.match(await page.$eval('.bkiinfo', e => e.textContent), /Fill in 1 email where you have none.*1 student already has a different one/);
+  await page.select('[data-bkipick]', '+');
+  await page.waitForFunction(() => /1 new student/.test(document.querySelector('#bkiCount').textContent));
+  await page.click('[data-bkisave]');
+  await page.waitForSelector('#bkTab');
+  const c = (await lib(page)).classes[0];
+  assert.deepEqual(c.names, [...NAMES, 'Gus Newcomer']);
+  assert.deepEqual(c.info, { 'Aria Testwell': { email: 'aria@school.example' }, 'Bram Sample': { email: 'bram@example.org' }, 'Gus Newcomer': { email: 'gus@example.org' } });
+  noErrors(page); await close();
+});
+
+test('a score is put on the scale of the assignment it goes to, and a name already on the roster can’t be added again', async () => {
+  const { page, close } = await openApp(browser, { seed: seed() });
+  await openImport(page);
+  await paste(page, 'Name,Poetry test (50)\nCleo Fixture,45\nAria Testwell,40\nAria Testwell,41\n');
+  await page.waitForSelector('.bkitab');
+  assert.match(await page.$eval('.bkiscale', e => e.textContent), /Out of 30, as it is now \(the file’s out of 50 is scaled to it\)/);
+  // The two Aria rows can't both be her, so neither is matched, and neither can be added as a second Aria.
+  assert.deepEqual(await page.$$eval('[data-bkipick] option[value="+"]', o => o.map(x => x.disabled)), [true, true]);
+  await page.click('[data-bkisave]');
+  await page.waitForSelector('#bkTab');
+  const l = await lib(page);
+  assert.deepEqual(l.classes[0].units.flatMap(u => u.items).find(x => x.id === 'i2').typed.s['Cleo Fixture'], { v: 27, st: '' });
+  assert.deepEqual(l.classes[0].names, NAMES);
   noErrors(page); await close();
 });

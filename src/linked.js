@@ -54,7 +54,7 @@ function lkMenu(it, c) {
   for (const x of lkSibs(c)) {
     if (have.has(x)) continue;
     const same = x.units.flatMap(u => u.items).find(y => lkKey(y.name) === lkKey(it.name));
-    out.push(same ? '<button class="mitem" data-lkjoin="' + it.id + ':' + same.id + '"><span>Link with the copy in</span> <span data-raw>' + esc(x.name) + '</span><small>Same name there. Each keeps its papers and scores</small></button>'
+    out.push(same ? '<button class="mitem" data-lkjoin="' + it.id + ':' + same.id + '"><span>Link with the copy in</span> <span data-raw>' + esc(x.name) + '</span><small>Each keeps its papers and scores</small></button>'
       : '<button class="mitem" data-lkadd="' + it.id + ':' + x.id + '"><span>Add to</span> <span data-raw>' + esc(x.name) + '</span><small>A copy with the same name, type, due date and rubric</small></button>');
   }
   if (t.length) out.push('<button class="mitem" data-lkoff="' + it.id + '">Unlink from the other classes<small>This copy keeps everything and stops sharing</small></button>');

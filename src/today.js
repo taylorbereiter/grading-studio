@@ -6,7 +6,8 @@
 // The Planner keeps its timetable and its lessons in its own database. This opens that database only to read, never writes to it, and never
 // makes it: with no Planner work in this browser, nothing shows. Class names, colours, times and lesson names are all it takes. Nothing of
 // grading's goes the other way, and the Planner never opens grading's work.
-let plan = null;   // { classes, daysOff, lessons } or null when there is no timetable
+// { classes, daysOff, lessons } or null when there is no timetable
+let plan = null;
 async function planRead() {
   const db = await planDb(false); let setup = null, lessons = [];
   if (db) {
@@ -20,7 +21,8 @@ async function planRead() {
     classes, semStart: String(setup.semStart || ''), semEnd: String(setup.semEnd || ''),
     daysOff: (Array.isArray(setup.daysOff) ? setup.daysOff : []).filter(d => d && d.date).map(d => ({ date: String(d.date), label: String(d.label || '') })),
     lessons: (Array.isArray(lessons) ? lessons : []).filter(l => l && l.id && Array.isArray(l.slots) && l.slots.length).map(l => ({ id: String(l.id), title: String(l.title || 'Untitled lesson'), status: String(l.status || ''), done: !!l.final, n: Array.isArray(l.slides) ? l.slides.length : 0,
-      taught: (Array.isArray(l.taught) ? l.taught : []).filter(t => t && t.date).map(t => ({ classId: String(t.classId || ''), date: String(t.date), slide: +t.slide || 1, of: +t.of || 1 })),   // where each class got to, noted after presenting
+      // where each class got to, noted after presenting
+      taught: (Array.isArray(l.taught) ? l.taught : []).filter(t => t && t.date).map(t => ({ classId: String(t.classId || ''), date: String(t.date), slide: +t.slide || 1, of: +t.of || 1 })),
       slots: l.slots.map(s => ({ classId: String(s.classId), date: String(s.date) })) })),
   };
   return plan;
@@ -64,8 +66,10 @@ function homeGroups() {
   const mark = [], back = [], old = [];
   for (const m of [...keptMeta.values()].sort((a, b) => b.t - a.t)) {
     const st = keptState(m), it = cardOfKept(m.id);
-    if ((m.newer && keptMeta.has(m.newer)) || m.ret || !st.of) old.push(m);   // an older copy, handed back already, or nothing in it to score
-    else if (it && it.type === 'fm') mark.push(m);   // feedback only: it waits here until it is handed back
+    // an older copy, handed back already, or nothing in it to score
+    if ((m.newer && keptMeta.has(m.newer)) || keptBack(m) || !st.of) old.push(m);
+    // feedback only: it waits here until it is handed back
+    else if (it && it.type === 'fm') mark.push(m);
     else if (st.left) mark.push(m);
     else back.push(m);
   }
@@ -85,7 +89,7 @@ function markRow(m, prim) {
 }
 function oldRow(m) {
   const st = keptState(m), w = keptWhere(m), stale = m.newer && keptMeta.has(m.newer);
-  const sub = [w.cls ? w.cls.name : '', stale ? 'an older copy: your work went on in a newer one' : m.ret ? 'returned ' + fmtDay(m.ret) : 'last worked on ' + fmtDay(m.t),
+  const sub = [w.cls ? w.cls.name : '', stale ? 'an older copy: your work went on in a newer one' : keptBack(m) ? 'returned ' + fmtDay(keptBack(m)) : 'last worked on ' + fmtDay(m.t),
     st.of ? keptSay(m, st) : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
   return '<div class="krow old"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + '</div>';
 }
@@ -128,14 +132,16 @@ const NEXT_DAYS = 30;
 function nextHtml(groups) {
   const m = [...groups.back, ...groups.old].filter(m => keptState(m).of && !keptState(m).left && !(m.newer && keptMeta.has(m.newer)) && Date.now() - m.t < NEXT_DAYS * 864e5).sort((a, b) => b.t - a.t)[0];
   const s = m && statOf(m); if (!s || !s.rows.length) return '';
-  const w = keptWhere(m), low = s.rows.reduce((a, b) => b.avg / b.top < a.avg / a.top ? b : a), flat = s.rows.every(r => Math.abs(r.avg / r.top - low.avg / low.top) < 0.0125);   // rows can be on different scales, so they are compared by their share of the top (0.05 of a point on 0 to 4)
+  // rows can be on different scales, so they are compared by their share of the top (0.05 of a point on 0 to 4)
+  const w = keptWhere(m), low = s.rows.reduce((a, b) => b.avg / b.top < a.avg / a.top ? b : a), flat = s.rows.every(r => Math.abs(r.avg / r.top - low.avg / low.top) < 0.0125);
   const head = (w.cls ? esc(w.cls.name) + ': ' : '') + (flat ? 'every row came out the same on ' : esc(low.name) + ' was the weakest row on ') + esc(m.name || 'the last set of papers') + '.';
   const who = low.low ? numWord(low.low) + (low.low === 1 ? ' student' : ' students') + ' scored ' + fmtNum(low.top / 2) + ' or below on ' + esc(low.name) + '.' : 'Nobody scored ' + fmtNum(low.top / 2) + ' or below on ' + esc(low.name) + '.';
   return '<h2 class="tcap">What the class needs next</h2><div class="tcard tneed"><p class="tbig">' + head.charAt(0).toUpperCase() + head.slice(1) + '</p>' +
     '<div class="tbars" role="img" aria-label="' + esc(s.rows.map(r => r.name + ' ' + fmtNum(Math.round(r.avg * 10) / 10) + ' of ' + r.top).join(', ')) + '">' + s.rows.map(r => '<span class="tbn">' + esc(r.name) + '</span><span class="tbt"><i class="' + (r === low && !flat ? 'low' : '') + '" style="width:' + Math.round(r.avg / r.top * 100) + '%"></i></span><span class="tbv">' + (Math.round(r.avg * 10) / 10).toFixed(1) + '</span>').join('') + '</div>' +
     (flat ? '' : '<p class="tsay">' + who + '</p>') + (m.papers ? '<a class="tlink" href="' + batchHash(m.id, 'insights') + '">' + (low.low && !flat ? 'See who' : 'Open Insights') + T_ARROW + '</a>' : '') + '</div>';
 }
-function hsideShow() { $('#hside').hidden = false; }   // the to-do card is always there
+// the to-do card is always there
+function hsideShow() { $('#hside').hidden = false; }
 const OLD_SHOWN = 3;
 let oldAll = false;
 function homeRender() {
@@ -170,7 +176,8 @@ $('#handBack').addEventListener('click', e => { const a = e.target.closest('a[da
 let planBusy = null;
 function planRefresh() {
   if (planBusy) return planBusy;
-  return planBusy = planRead().catch(() => { plan = null; }).then(() => { planBusy = null; homeRender(); fcRender(); if (shellReady) { setRender(); todoRender(); } });   // the To do count in the sidebar and the Focus card's free period follow the timetable too
+  // the To do count in the sidebar and the Focus card's free period follow the timetable too
+  return planBusy = planRead().catch(() => { plan = null; }).then(() => { planBusy = null; homeRender(); fcRender(); if (shellReady) { setRender(); todoRender(); } });
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !batch) planRefresh(); });
 window.addEventListener('pageshow', e => { if (e.persisted) planRefresh(); });

@@ -155,3 +155,66 @@ test('the running session stays in this browser; the settings and the log go wit
   assert.ok(re.test('gs.focusRun'), 'a session half done on one computer is not carried to another');
   assert.ok(!re.test('gs.focus'), 'the log of days and the pace go with the folder and the take-home file');
 });
+
+test('the card shows one suggestion with one blue Start; Change opens the list of work, More the rest; idle time on papers is not counted', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  await page.bringToFront();
+  await openZip(page, zip); await score(page, [4, 3, 3]); await settle(page);
+  const id = await page.evaluate(() => window.__gs.state().batch.id);
+  await page.click('#closeBtn'); await page.waitForSelector('#fcCard .sug');
+  assert.deepEqual(await page.$$eval('#fcCard .btn.primary', b => b.map(x => x.textContent)), ['Start 10 minutes'], 'one blue button, on Start');
+  assert.equal(await page.$('#fcCard [data-fcwork]'), null, 'the list of work waits behind Change');
+  assert.equal(await page.$('#fcCard [data-fclen]'), null, 'the lengths wait under More');
+  assert.match(await page.$eval('#fcCard .fcsay', e => e.textContent), /^\d+ papers left$/, 'no time before any time is counted on this set');
+  assert.match(await page.$eval('#fcCard .fctk', e => e.textContent), /^This week1 paper·Grading time\d+ minTime tracker$/);
+  await page.click('#fcCard [data-fcchg]'); await page.waitForSelector('#fcCard [data-fcwork]');
+  assert.equal(await page.$eval('#fcCard [data-fcwork]', s => s.value), 'mark:' + id);
+  await page.click('#fcCard [data-fckeep]'); await page.waitForSelector('#fcCard [data-fcchg]');
+  await page.click('#fcCard [data-fcmo]'); await page.waitForSelector('#fcCard .fcmorebox [data-fclen]');
+  assert.equal(await page.$eval('#fcCard [data-fcmo]', b => b.getAttribute('aria-expanded')), 'true');
+  assert.notEqual(await page.$('#fcCard .fcmorebox [data-fcone="3"]'), null, 'Just 3 papers is under More');
+  // Just one paper, left alone for twenty minutes: only the first five count, as the tracker would (Settings: 5 minutes)
+  const secs = await page.evaluate(k => {
+    const G = window.__gs, now = Date.now, t0 = now(); let t = t0;
+    Date.now = () => t;
+    try {
+      const s0 = (G.fcLog().days[Object.keys(G.fcLog().days).sort().pop()] || {}).s || 0;
+      G.fcStart(10, k, 1);
+      t = t0 + 20 * 60e3; G.fcTick(); G.fcTick();
+      G.tkActive(); G.fcTick();
+      const r = G.fcRun();
+      document.querySelector('#fcPanel [data-fcstop]').click();
+      const L = G.fcLog(), d = L.days[Object.keys(L.days).sort().pop()];
+      return { idl: r.idl, s: d.s - s0 };
+    } finally { Date.now = now; }
+  }, 'mark:' + id);
+  assert.ok(Math.abs(secs.idl - 900) <= 2, JSON.stringify(secs));
+  assert.ok(Math.abs(secs.s - 300) <= 2, JSON.stringify(secs));
+  // starting the clock again after time away starts the uncounted time again too
+  await page.evaluate(k => { const G = window.__gs; G.fcStart(10, k, 1); const r = G.fcRun(); Object.assign(r, { idl: 600, ii: Date.now() - 1000, away: 6, fold: false }); G.fcRunSet(r); }, 'mark:' + id);
+  await page.waitForSelector('#fcPanel [data-fcaway="again"]'); await page.click('#fcPanel [data-fcaway="again"]');
+  assert.deepEqual(await page.evaluate(() => { const r = window.__gs.fcRun(); return [r.idl, r.ii, r.away].map(x => x === undefined ? null : x); }), [null, null, null]);
+  await page.evaluate(() => window.__gs.fcRunSet(null));
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('when the time is up, a few more minutes go on with the same session, and ending them early counts only what ran', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  await page.evaluate(() => window.__gs.fcStart(10, '', false));
+  await later(page, 'r.at -= r.len * 1000 + 2000;');
+  await page.waitForSelector('#fcPanel .fcext [data-fcext="5"]');
+  assert.deepEqual(await page.$$eval('#fcPanel .fcext button', b => b.map(x => x.textContent)), ['+2', '+5', '+10']);
+  const before = (await log(page)).days[today()];
+  await page.click('#fcPanel [data-fcext="5"]');
+  const r = await page.evaluate(() => window.__gs.fcRun());
+  assert.equal(r.st, 'run'); assert.equal(r.len, 300); assert.equal(r.no, 1, 'the same session goes on');
+  // ended after a minute and a half: that is what counts, not the five minutes
+  await later(page, 'r.at -= 90 * 1000;');
+  await page.click('#fcPanel [data-fcstop]');
+  const after = (await log(page)).days[today()];
+  assert.ok(Math.abs(after.s - before.s - 90) <= 2, JSON.stringify([before, after]));
+  assert.equal(after.n, before.n, 'not counted as another session');
+  assert.deepEqual(page.errors, []);
+  await close();
+});

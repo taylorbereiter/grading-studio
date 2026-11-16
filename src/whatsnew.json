@@ -1,4 +1,28 @@
 {
+  "1.28.33": [
+    "Link classes on the same schedule, like two sections of one course (Class setup, Linked classes). If your Planner already has them on one course, the class page offers to link them. A new assignment is ticked for every linked class, and a card’s ⋯ menu adds it to another class later or joins two copies you made separately.",
+    "Editing a copy can make the same changes in the other copies; only what you change goes across. In the Examples tab, a button shows the strong examples kept in the other class, each labelled with where it came from. Rosters, papers, scores and comments stay with each class."
+  ],
+  "1.28.32": [
+    "When the Focus timer is up, add a few more minutes (+2, +5 or +10) to the same session. Stop early and only the time that ran is counted."
+  ],
+  "1.28.31": [
+    "Import a gradebook from your school’s system or a spreadsheet more safely: names that are close to an assignment you have are matched for you to check (Same, New or Skip), each score that differs from yours can be kept or replaced, and the file’s categories go into your own types.",
+    "Nobody is added to a roster unless you choose that, students missing from the file are left as they are, and one Undo takes the whole import back. A class with no students yet can take its roster, student IDs and emails from the file."
+  ],
+  "1.28.30": [
+    "Type scores straight into the gradebook like a spreadsheet: start typing on a cell, Enter goes to the next student and Tab to the next assignment. Paste a column from a spreadsheet onto the first cell to fill it down.",
+    "+ Add scores: type the name and press Enter to start typing scores down the new column. MYP task levels can be typed in the table too."
+  ],
+  "1.28.29": [
+    "Downloading marked papers no longer marks an assignment Returned. The Return tab says when you exported, and Mark as returned (there or in the note after a download) says the work went back.",
+    "Students you give their paper one at a time show on the class page as Returned 3/20, and the class return can leave them out."
+  ],
+  "1.28.28": [
+    "A simpler Focus card on Today: one suggestion with a blue Start and Just one paper, the session’s goal in one line, and this week in one line. Change picks another set or a to-do; More has the lengths, Just 3 papers, the goal, Finish by and shortest first.",
+    "How long a set will take now comes only from that set’s own papers: no time before the first one, a rough guess after one or two, and all the time spent on it counts. Time with nothing done for a few minutes no longer counts in a focus session on papers.",
+    "Away from the marking screen, Ctrl Z now takes back a long run of changes a few seconds at a time, and the note it shows has a Redo button."
+  ],
   "1.28.27": [
     "Planning your grading. Each set shows about how long its papers will take at your own pace: on the Focus card, on the assignment’s card, in the week in To do, and under the date when you set when work is due. The Focus card also offers a free period between your classes, picks up the set you were last on, and can start small with Just 3 papers or the shortest papers first.",
     "A goal for each focus session: a few papers, the whole set, a to-do or a few words of your own, suggested from your pace. The timer shows how far along you are, the end of the session says whether you got there, and what is left goes into your next session on the same work. Today also counts your sessions.",

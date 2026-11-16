@@ -1,23 +1,22 @@
 {
- "version": "1.28.27",
- "build": "bf313c55370f",
+ "version": "1.28.33",
+ "build": "42b64ea9ec7a",
  "notes": [
-  "Planning your grading. Each set shows about how long its papers will take at your own pace: on the Focus card, on the assignment’s card, in the week in To do, and under the date when you set when work is due. The Focus card also offers a free period between your classes, picks up the set you were last on, and can start small with Just 3 papers or the shortest papers first.",
-  "A goal for each focus session: a few papers, the whole set, a to-do or a few words of your own, suggested from your pace. The timer shows how far along you are, the end of the session says whether you got there, and what is left goes into your next session on the same work. Today also counts your sessions.",
-  "Your grading goal can be for a day or a week, and a daily goal for some days only. A set can have a day to finish it by, with the papers a day that takes. On the day you choose, Today shows a look back at the week. Settings, Focus and goals switches each of these on or off."
+  "Link classes on the same schedule, like two sections of one course (Class setup, Linked classes). If your Planner already has them on one course, the class page offers to link them. A new assignment is ticked for every linked class, and a card’s ⋯ menu adds it to another class later or joins two copies you made separately.",
+  "Editing a copy can make the same changes in the other copies; only what you change goes across. In the Examples tab, a button shows the strong examples kept in the other class, each labelled with where it came from. Rosters, papers, scores and comments stay with each class."
  ],
  "files": {
-  "index.html": "d094d8a40a6c7b225ac201a18460f583c824e744b9db55b646ff8f576ff0634d",
-  "planner.html": "bebc665132ba4d921465e5a345f2ae97e8f40c21912fc8730587d4e83f51a432"
+  "index.html": "4cb3dd7fccf0cde86f9d586daad9edbd7e01acdcc51fe001d4bd1c08237e0020",
+  "planner.html": "5a5fbc30fcff26017fefd9cd5a6d6234d72f05dc5f1a68096b8fe15f440e5bc9"
  },
  "langs": {
-  "lang/zh-Hant.js": "ad70362dbdb21d65206c08e7a572c920b72c7495260f724daca17ca2b1cd3d37",
-  "lang/zh-Hans.js": "74caa08b10a11ae48be765a56b704185158ffcc17169c2988026efa6666e2b50",
-  "lang/es.js": "6e361aa1b4f3fa9af88052b7b2af01bd79fdc2ff1c522161958459d9ebec1fcb",
-  "lang/fr.js": "ed9bca0c6d946448ccfd2677555e1c0929e937c9dd87421f75c1d92715fac4b9",
-  "lang/de.js": "e26702540864ee01861cc4c0ef8ea5f33e9bcf77e6893be467b99f5d5a6f02ae",
-  "lang/pt-BR.js": "ee9bc4229ade65af180ff4048c6f9982073288a914010d2f35c1dd834b03c456",
-  "lang/ja.js": "1ae2a8c615eaabf127c074d49c496faa24999138e5796c85d267be2dd82b22dd",
-  "lang/ko.js": "a43e233bf3e9885ecd1ab1dffd47c2351ab9db422b481eb57bfd39431f98a0d8"
+  "lang/zh-Hant.js": "a9b41e39c9bb0ae2bf191d963f25a21c7a744e77ac48ab58eb7838f187dbcbbd",
+  "lang/zh-Hans.js": "05397ffc10c0d79e587ef0a9b9256923c7dd321cc5dceaba86f7f14429600800",
+  "lang/es.js": "c2afb26b2fe4e3b2a50e99433ab2653e58ceb5c4f63e1a148d6a5dd169b9fe35",
+  "lang/fr.js": "db877d6bbe83435dd2929446e5a9a830767ef38d08d492c6fc5e21e9c9558c39",
+  "lang/de.js": "b46fae18c3293d95e1eff6e018143e26b204f0a2fb49e4ae1aae4ab5dd31a027",
+  "lang/pt-BR.js": "25f928976c2cd9f66eb0f747c573cc738c58997b096904779e8ee208835d650c",
+  "lang/ja.js": "ed31a72d57267bec6103b2ac64ccb6e557cd0d6ebc39c8aa0d3538e28e2fa03c",
+  "lang/ko.js": "52a6691f5746bdffa9d77a4bfdf2f44c26ce8745d3497737d2d63241731a2d0c"
  }
 }

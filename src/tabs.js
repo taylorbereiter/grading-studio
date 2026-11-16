@@ -52,19 +52,31 @@ function glPaper() {
 }
 
 /* ---------- Return: "Returned", one student at a time, and the Claude steps ---------- */
+// batch.returned is { t, n, ok }: t and n are the last export (when, how many files), ok is when she said the work went back.
+// Downloading isn't handing back, so only ok makes it say Returned. Work from before ok was kept has only t and n: exported.
+const rtDay = t => { const d = new Date(t); return d.toDateString() === new Date().toDateString() ? 'today at ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'on ' + d.toLocaleDateString([], { day: 'numeric', month: 'short' }); };
 function returnedHtml() {
-  const r = batch && batch.returned; if (!r) return '';
-  const d = new Date(r.t), hm = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), today = d.toDateString() === new Date().toDateString();
-  return '<p class="rtdone"><span>✓ Returned ' + (today ? 'today at ' + esc(hm) : 'on ' + esc(d.toLocaleDateString([], { day: 'numeric', month: 'short' }))) + ' · ' + r.n + (r.n === 1 ? ' file' : ' files') + '.</span> <button class="link" data-unreturn>Mark as not returned</button></p>';
+  const r = (batch && batch.returned) || {}, files = r.n ? ' · ' + r.n + (r.n === 1 ? ' file' : ' files') : '';
+  if (r.ok) return '<p class="rtdone"><span>✓ Returned ' + esc(rtDay(r.ok)) + '.</span> <button class="link" data-unreturn>Mark as not returned</button></p>';
+  return '<p class="rtdone"><span>' + (r.t ? 'Exported ' + esc(rtDay(r.t)) + files + '.' : '') + '</span> <button class="link" data-doreturn>Mark as returned</button></p>';
 }
 function returnedDraw() { const el = $('#rtState'); if (el) el.innerHTML = returnedHtml(); }
-// The marked files went out (ZIP, folder or Drive): the assignment says Returned on Home and on its class page. One click takes it back.
+// She says the work went back (uploaded, handed over): the assignment says Returned on Home and on its class page.
+function markReturned(on) {
+  if (!batch) return;
+  if (typeof fieldSnap === 'function') fieldSnap(batch, ['returned'], returnedDraw, on ? 'marked as returned' : 'marked as not returned');
+  const r = { ...(batch.returned || {}) };
+  if (on) r.ok = Date.now(); else delete r.ok;
+  if (Object.keys(r).length) batch.returned = r; else delete batch.returned;
+  saveSoon(); returnedDraw();
+}
+// The marked files went out (ZIP, folder or Drive): kept as exported. Whether they reached the students is hers to say.
 function setReturned(n, said) {
   if (!batch) return;
-  const b0 = batch, was = batch.returned;
-  batch.returned = { t: Date.now(), n }; saveSoon();
+  const b0 = batch;
+  batch.returned = { ...(batch.returned || {}), t: Date.now(), n }; saveSoon();
   if ($('#rtState')) returnedDraw();
-  else toastDo((said || 'Done.') + ' This assignment is marked as returned.', 'Undo', () => { if (batch !== b0) return; batch.returned = was; saveSoon(); });
+  else if (!batch.returned.ok) toastDo((said || 'Done.') + ' Once the students have it, mark it as returned.', 'Mark as returned', () => { if (batch === b0) markReturned(true); });
 }
 function returnSideHtml() {
   const st = batch.students[cur], who = st && st.files.length ? (anonOn() ? 'this paper' : esc(st.key) + '’s paper') : '';
@@ -85,7 +97,8 @@ function returnSideHtml() {
 // true when the click was one of these cards'.
 function returnSideClick(e) {
   if (anchorCardClick(e)) return true;
-  if (e.target.closest('[data-unreturn]')) { delete batch.returned; saveSoon(); returnedDraw(); toast('Marked as not returned'); return true; }
+  if (e.target.closest('[data-unreturn]')) { markReturned(false); toast('Marked as not returned'); return true; }
+  if (e.target.closest('[data-doreturn]')) { markReturned(true); toast('Marked as returned'); return true; }
   if (e.target.closest('[data-rtone]')) {
     const st = batch.students[cur], b0 = batch;
     toast('Making ' + (anonOn() ? 'this paper' : st.key + '’s paper') + '…');
@@ -104,7 +117,8 @@ function returnSideClick(e) {
 // Every scored row counted by level, in the rubric's own order. A half point counts with the whole number below it.
 function insRowsHtml() {
   if (setup.mode !== 'rubric') return '';
-  const hi = Math.max(...setup.criteria.map((_, r) => rowTop(setup, r))), lv = Array.from({ length: hi + 1 }, (_, v) => v), shade = v => 'b' + (1 + Math.round(v / hi * 4));   // five blues, spread over whatever the top is
+  // five blues, spread over whatever the top is
+  const hi = Math.max(...setup.criteria.map((_, r) => rowTop(setup, r))), lv = Array.from({ length: hi + 1 }, (_, v) => v), shade = v => 'b' + (1 + Math.round(v / hi * 4));
   const rows = setup.criteria.map((name, r) => {
     const by = lv.map(() => []);
     batch.students.forEach((st, i) => { const v = st.grade.outAvg ? null : rowShown(st, r); if (v != null) by[Math.max(0, Math.min(hi, Math.floor(v)))].push(shownName(st, i)); });
@@ -192,4 +206,4 @@ async function insMore() {
 let insResize = 0;
 window.addEventListener('resize', () => { if (!$('#insMore')) return; clearTimeout(insResize); insResize = setTimeout(() => { if ($('#insMore')) insMore(); }, 200); });
 
-Object.assign(window.__gs, { tabsRender, tabShow, glPaperOf, setReturned, insNow });
+Object.assign(window.__gs, { tabsRender, tabShow, glPaperOf, setReturned, markReturned, insNow });
