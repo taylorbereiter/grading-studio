@@ -3192,7 +3192,8 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .fchead{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-3) 0 var(--space-4)}
 .fchead .tcap{margin:0}
 .fchead .sp{flex:1}
-.fchead .icon{width:28px;height:28px}
+.fchead .icon{width:28px;height:28px;padding:0;border-radius:var(--corner-2);border:1px solid transparent;background:none;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font:inherit;cursor:pointer}
+.fchead .icon:hover{background:var(--surface-2);color:var(--fg)}
 .fcrunv{display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-3) var(--space-4) var(--space-4)}
 .fctop{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:var(--space-4)}
 .fcclock{position:relative;width:92px;height:92px}
@@ -21436,7 +21437,7 @@ return true;
 }
 
 /* the Planner's records, from a file */
-const PLAN_LS_SKIP = /^gsp\.presentTimer$/;
+const PLAN_LS_SKIP = /^gsp\.(presentTimer|focusRun|focusQ|focusGo)$/;
 function planLs() {
 const o = {};
 try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gsp.') && !PLAN_LS_SKIP.test(k)) o[k] = localStorage.getItem(k); } } catch {}
@@ -30027,9 +30028,10 @@ pace: [[seconds, papers], …] the last sessions that finished a paper, last: th
 add: [{ id, d: day, k: 'g' | 'l', s: seconds, x: a few words }] time added by hand (src/tracker.js),
 carry: a session goal not reached, by: { <download id>: the day to finish it by } }
 A day also keeps n: the sessions of a minute or more. The goal can be { k, n, per: 'week' } or for some days { days: [1, 3] }.
-A session's own goal (sg on gs.focusRun) is a few papers, the whole set, the to-do, or a few words she typed.
+A session's own goal (sg on gsp.focusRun) is a few papers, the whole set, the to-do, or a few words she typed.
 Ids and numbers only: no name, no title, nothing a student wrote. Days are kept for 400 days.
-gs.focusRun   the session going on in this browser, so a refresh keeps it. It stays in this browser (LS_LOCAL).
+gsp.focusRun  the session going on in this browser, so a refresh keeps it and the Planner shows it. It stays in this browser
+(src/takehome.js PLAN_LS_SKIP). It used to be gs.focusRun.
 A paper counts toward the day when its score is finished, or its feedback complete on a formative activity, wherever that is
 done: the count is how far each download has come since the day began (keptState), so marking in Quick mark counts too. */
 var FC_ON = false;
@@ -30131,8 +30133,10 @@ const fcGoalNow = c => !c.goal ? 0 : c.goal.per === 'week' ? (c.goal.k === 'pape
 const fcGoalDay = (c, day) => !c.goal || c.goal.per === 'week' || !c.goal.days || c.goal.days.includes(new Date((day || fcToday()) + 'T12:00:00').getDay());
 
 /* ---------- the session ---------- */
-const fcRun = () => { const r = store.get('gs.focusRun', null); return r && r.st ? r : null; };
-const fcRunSet = r => { if (r) store.set('gs.focusRun', r); else store.del('gs.focusRun'); fcTickOn(); fcRender(); };
+const FC_KEY = 'gsp.focusRun';
+const fcRun = () => { const r = store.get(FC_KEY, null); return r && r.st ? r : null; };
+const fcPut = r => { if (r) store.set(FC_KEY, r); else store.del(FC_KEY); };
+const fcRunSet = r => { fcPut(r); fcTickOn(); fcRender(); };
 const fcElapsed = r => Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.at) / 1000));
 const fcBoot = Date.now();
 const fcIdle = r => (r.idl || 0) + (r.ii ? Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.ii) / 1000)) : 0);
@@ -30152,7 +30156,7 @@ if (!FC_ON || !m0 || !m) return;
 const r = fcOwnRun(fcRun()); if (!r || (r.st !== 'run' && r.st !== 'paused') || r.got != null) return;
 if (!fcKnown(m0) || !fcKnown(m)) return;
 const d = fcDone(m) - (m0.scored == null && m0.marked == null ? fcFrom(m.id, m0) : fcDone(m0)); if (!d) return;
-r.pg = (r.pg || 0) + d; store.set('gs.focusRun', r);
+r.pg = (r.pg || 0) + d; fcPut(r);
 }
 const FC_P0 = 1e9;
 const fcN = r => r.one ? Math.max(1, +r.one || 1) : 0;
@@ -30282,7 +30286,7 @@ if (sg === undefined) sg = one ? null : fcSgNow(w, len);
 L.last = key || ''; if (L.carry && L.carry.w === (key || '')) delete L.carry; fcLogSet(L);
 fcS.sg = undefined; fcS.sgw = null;
 const no = ((fcLog().days[fcToday()] || {}).n || 0) + 1;
-fcRunSet({ st: 'run', len: Math.round(len * 60), at: Date.now(), w: key || '', one: one ? Math.max(1, +one || 1) : 0, p0: FC_P0, pg: 0, fold: false, no,
+fcRunSet({ st: 'run', len: Math.round(len * 60), at: Date.now(), w: key || '', t: w ? String(w.name || '').slice(0, 120) : '', one: one ? Math.max(1, +one || 1) : 0, p0: FC_P0, pg: 0, fold: false, no,
 ...(sg ? { sg: sg.k === 'papers' ? { k: 'papers', n: sg.n } : sg.k === 'note' ? { k: 'note', x: sg.x } : { k: sg.k } } : {}) });
 fcGoTo(false);
 }
@@ -30313,7 +30317,7 @@ function fcExt(min) {
 const r = fcRun(); if (!r || r.st !== 'up') return;
 const L = fcLog(), w = fcWork(r.w), g = r.sg && !fcSgMet(r, w) ? (r.sg.k === 'papers' ? { k: 'papers', n: Math.max(1, r.sg.n - (r.got || 0)) } : r.sg) : null;
 if (L.carry && L.carry.w === (r.w || '')) { delete L.carry; fcLogSet(L); }
-fcRunSet({ st: 'run', len: min * 60, at: Date.now(), w: r.w || '', one: 0, p0: FC_P0, pg: 0, fold: false, no: r.no, ext: 1, ...(g ? { sg: g } : {}) });
+fcRunSet({ st: 'run', len: min * 60, at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: FC_P0, pg: 0, fold: false, no: r.no, ext: 1, ...(g ? { sg: g } : {}) });
 }
 function fcUp(r) { fcRecord(r); r.st = 'up'; r.fold = false; fcRunSet(r); fcChime(); }
 function fcPause() { const r = fcRun(); if (!r || r.st !== 'run') return; r.st = 'paused'; r.pz = Date.now(); r.idl = fcIdle(r); delete r.ii; fcRunSet(r); }
@@ -30331,12 +30335,12 @@ if (on && !fcTimer) fcTimer = setInterval(fcTick, 1000);
 if (!on && fcTimer) { clearInterval(fcTimer); fcTimer = 0; }
 fcTitle();
 }
-function fcOwnRun(r) { if (r && r.st !== 'done' && r.got == null && r.p0 !== FC_P0) { r.p0 = FC_P0; r.pg = r.pg || 0; store.set('gs.focusRun', r); } return r; }
+function fcOwnRun(r) { if (r && r.st !== 'done' && r.got == null && r.p0 !== FC_P0) { r.p0 = FC_P0; r.pg = r.pg || 0; fcPut(r); } return r; }
 function fcTick() {
 const r = fcOwnRun(fcRun()); if (!r) return fcTickOn();
 if (r.st === 'run') {
 if (r.one ? fcGot(r) >= fcN(r) : fcLeft(r) <= 0) return fcUp(r);
-if (fcIdleSee(r)) store.set('gs.focusRun', r);
+if (fcIdleSee(r)) fcPut(r);
 } else if (r.st === 'brk' && fcLeft(r) <= 0) { r.st = 'brkup'; r.fold = false; fcRunSet(r); fcChime(); return; }
 fcClockDraw(); fcTitle();
 }
@@ -30350,11 +30354,11 @@ const t = (pre ? pre + ' · ' : '') + base; if (document.title !== t) document.t
 }
 document.addEventListener('visibilitychange', () => {
 const r = fcRun(); if (!r || r.st !== 'run') return;
-if (document.hidden) { r.hid = Date.now(); store.set('gs.focusRun', r); return; }
+if (document.hidden) { r.hid = Date.now(); fcPut(r); return; }
 if (r.hid && Date.now() - r.hid >= FC_AWAY && !r.one) { r.away = Math.round((Date.now() - r.hid) / 60000); r.fold = false; }
 delete r.hid; fcRunSet(r);
 });
-window.addEventListener('storage', e => { if (e.key === 'gs.focusRun' || e.key === 'gs.focus') { fcTickOn(); fcRender(); } });
+window.addEventListener('storage', e => { if (e.key === FC_KEY || e.key === 'gs.focus') { fcTickOn(); fcRender(); } if (e.key === FC_Q) fcDrain(); });
 
 /* ---------- drawing ---------- */
 const fcRing = (r, w, frac, cls) => { const c = 2 * Math.PI * r, s = 2 * (r + w); return '<svg viewBox="0 0 ' + s + ' ' + s + '"' + (cls ? ' class="' + cls + '"' : '') + ' aria-hidden="true"><circle class="tr" cx="' + (r + w) + '" cy="' + (r + w) + '" r="' + r + '"/><circle class="on" cx="' + (r + w) + '" cy="' + (r + w) + '" r="' + r + '" stroke-dasharray="' + c.toFixed(2) + '" stroke-dashoffset="' + (c * (1 - Math.max(0, Math.min(1, frac)))).toFixed(2) + '"/></svg>'; };
@@ -30663,8 +30667,30 @@ setRender();
 const n = $('#fcGoalN'); if (n) { n.focus(); n.select(); }
 });
 
+/* ---------- sessions that ended in the Planner ----------
+The Planner can't open this log, so a session on papers that ends there leaves what it came to in gsp.focusQ
+([{ d: day, s: seconds, m: on papers, x: extra minutes, got: papers }], src/planner/plfocus.js); it is written in here. */
+const FC_Q = 'gsp.focusQ';
+function fcDrain() {
+const q = store.get(FC_Q, null); if (!Array.isArray(q)) return;
+store.del(FC_Q);
+const L = fcLog();
+for (const x of q) {
+if (!x || !/^\d{4}-\d\d-\d\d$/.test(x.d) || !(x.s > 0)) continue;
+const s = Math.min(4 * 3600, Math.round(x.s)), d = L.days[x.d] || {};
+L.days[x.d] = { ...d, s: (d.s || 0) + s, ...(x.m ? { sm: (d.sm || 0) + s } : {}), ...(s >= 60 && !x.x ? { n: (d.n || 0) + 1 } : {}) };
+if (x.got > 0 && s >= 30) L.pace = [...L.pace, [s, x.got]].slice(-20);
+}
+fcLogSet(L);
+}
+{ const old = store.get('gs.focusRun', null); if (old && old.st && !fcRun()) fcPut(old); store.del('gs.focusRun'); }
+if (store.get('gsp.focusGo', null)) {
+store.del('gsp.focusGo');
+let n = 0; const t = setInterval(() => { if (keptRead || ++n > 100) { clearInterval(t); if (keptRead) fcGoTo(true); } }, 200);
+}
+
 FC_ON = true;
-fcSeen(); fcTickOn();
+fcDrain(); fcSeen(); fcTickOn();
 window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcCame, fcTick, focusOn, fcMon, fcToday, lofi, lofiCompose, lofiRender, LOFI_STYLES });
 
 /* ---------------- The time tracker: how much time goes to grading, and how much to planning, kept apart ----------------
@@ -30709,7 +30735,7 @@ if (batch) renderProg();
 }
 function tkOn() { if (!tkTimer) tkTimer = setInterval(tkTick, TK_STEP * 1000); tkShare(); }
 function tkShare() {
-const c = fcConf(), v = JSON.stringify({ on: !!c.track, idle: c.idle });
+const c = fcConf(), v = JSON.stringify({ on: !!c.track, idle: c.idle, len: c.len, brk: c.brk, sound: c.sound, title: c.title, music: c.music, mood: c.mood, mvol: c.mvol, mamb: c.mamb });
 try { if (localStorage.getItem('gsp.timeCount') !== v) localStorage.setItem('gsp.timeCount', v); } catch { }
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') tkFlush(); });

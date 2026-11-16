@@ -14,9 +14,10 @@
                      add: [{ id, d: day, k: 'g' | 'l', s: seconds, x: a few words }] time added by hand (src/tracker.js),
                      carry: a session goal not reached, by: { <download id>: the day to finish it by } }
                    A day also keeps n: the sessions of a minute or more. The goal can be { k, n, per: 'week' } or for some days { days: [1, 3] }.
-                   A session's own goal (sg on gs.focusRun) is a few papers, the whole set, the to-do, or a few words she typed.
+                   A session's own goal (sg on gsp.focusRun) is a few papers, the whole set, the to-do, or a few words she typed.
                    Ids and numbers only: no name, no title, nothing a student wrote. Days are kept for 400 days.
-     gs.focusRun   the session going on in this browser, so a refresh keeps it. It stays in this browser (LS_LOCAL).
+     gsp.focusRun  the session going on in this browser, so a refresh keeps it and the Planner shows it. It stays in this browser
+                   (src/takehome.js PLAN_LS_SKIP). It used to be gs.focusRun.
    A paper counts toward the day when its score is finished, or its feedback complete on a formative activity, wherever that is
    done: the count is how far each download has come since the day began (keptState), so marking in Quick mark counts too. */
 var FC_ON = false;   // set at the end of this file; keepWork (src/app/kept.js) may run before it
@@ -142,8 +143,11 @@ const fcGoalDay = (c, day) => !c.goal || c.goal.per === 'week' || !c.goal.days |
 // { st: 'run' | 'paused' | 'up' | 'brk' | 'brkup' | 'done', len: seconds, at: when it started (moved on by any pause), pz: when it was paused,
 //   w: 'mark:<download>' | 'td:<to-do>' | '', one: just one paper, p0: see FC_P0, pg: papers finished so far (fcGain), fold, hid: when the tab was left,
 //   away: minutes away to say so, got: papers the session finished, secs: seconds it ran, brkAt, brkLen }
-const fcRun = () => { const r = store.get('gs.focusRun', null); return r && r.st ? r : null; };
-const fcRunSet = r => { if (r) store.set('gs.focusRun', r); else store.del('gs.focusRun'); fcTickOn(); fcRender(); };
+// Kept in gsp.focusRun, a key the Planner may read and write too (src/planner/plfocus.js), so a session goes on when the Planner is opened.
+const FC_KEY = 'gsp.focusRun';
+const fcRun = () => { const r = store.get(FC_KEY, null); return r && r.st ? r : null; };
+const fcPut = r => { if (r) store.set(FC_KEY, r); else store.del(FC_KEY); };
+const fcRunSet = r => { fcPut(r); fcTickOn(); fcRender(); };
 const fcElapsed = r => Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.at) / 1000));
 // On papers, time with nothing pressed, typed or scrolled for longer than the tracker's minutes (src/tracker.js) doesn't count, the
 // same as grading time: a session left running, or a laptop asleep, isn't grading. A to-do may be done away from the screen, so its
@@ -172,7 +176,7 @@ function fcGain(m0, m) {
   if (!fcKnown(m0) || !fcKnown(m)) return;
   // a first save brings marks carried over from an older copy, which weren't finished now
   const d = fcDone(m) - (m0.scored == null && m0.marked == null ? fcFrom(m.id, m0) : fcDone(m0)); if (!d) return;
-  r.pg = (r.pg || 0) + d; store.set('gs.focusRun', r);
+  r.pg = (r.pg || 0) + d; fcPut(r);
 }
 // p0 is for pages from before fcGain (a tab not updated yet), which count a session from the day's papers less p0: a number they never
 // reach keeps such a tab from ending a session it didn't see.
@@ -315,7 +319,7 @@ function fcStart(len, key, one, sg) {
   L.last = key || ''; if (L.carry && L.carry.w === (key || '')) delete L.carry; fcLogSet(L);
   fcS.sg = undefined; fcS.sgw = null;
   const no = ((fcLog().days[fcToday()] || {}).n || 0) + 1;
-  fcRunSet({ st: 'run', len: Math.round(len * 60), at: Date.now(), w: key || '', one: one ? Math.max(1, +one || 1) : 0, p0: FC_P0, pg: 0, fold: false, no,
+  fcRunSet({ st: 'run', len: Math.round(len * 60), at: Date.now(), w: key || '', t: w ? String(w.name || '').slice(0, 120) : '', one: one ? Math.max(1, +one || 1) : 0, p0: FC_P0, pg: 0, fold: false, no,
     ...(sg ? { sg: sg.k === 'papers' ? { k: 'papers', n: sg.n } : sg.k === 'note' ? { k: 'note', x: sg.x } : { k: sg.k } } : {}) });
   fcGoTo(false);
 }
@@ -352,7 +356,7 @@ function fcExt(min) {
   const r = fcRun(); if (!r || r.st !== 'up') return;
   const L = fcLog(), w = fcWork(r.w), g = r.sg && !fcSgMet(r, w) ? (r.sg.k === 'papers' ? { k: 'papers', n: Math.max(1, r.sg.n - (r.got || 0)) } : r.sg) : null;
   if (L.carry && L.carry.w === (r.w || '')) { delete L.carry; fcLogSet(L); }
-  fcRunSet({ st: 'run', len: min * 60, at: Date.now(), w: r.w || '', one: 0, p0: FC_P0, pg: 0, fold: false, no: r.no, ext: 1, ...(g ? { sg: g } : {}) });
+  fcRunSet({ st: 'run', len: min * 60, at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: FC_P0, pg: 0, fold: false, no: r.no, ext: 1, ...(g ? { sg: g } : {}) });
 }
 function fcUp(r) { fcRecord(r); r.st = 'up'; r.fold = false; fcRunSet(r); fcChime(); }
 function fcPause() { const r = fcRun(); if (!r || r.st !== 'run') return; r.st = 'paused'; r.pz = Date.now(); r.idl = fcIdle(r); delete r.ii; fcRunSet(r); }
@@ -371,12 +375,12 @@ function fcTickOn() {
   fcTitle();
 }
 // A session started in a window not updated yet counts from p0: from here on it counts by pg, and that window can't end it.
-function fcOwnRun(r) { if (r && r.st !== 'done' && r.got == null && r.p0 !== FC_P0) { r.p0 = FC_P0; r.pg = r.pg || 0; store.set('gs.focusRun', r); } return r; }
+function fcOwnRun(r) { if (r && r.st !== 'done' && r.got == null && r.p0 !== FC_P0) { r.p0 = FC_P0; r.pg = r.pg || 0; fcPut(r); } return r; }
 function fcTick() {
   const r = fcOwnRun(fcRun()); if (!r) return fcTickOn();
   if (r.st === 'run') {
     if (r.one ? fcGot(r) >= fcN(r) : fcLeft(r) <= 0) return fcUp(r);
-    if (fcIdleSee(r)) store.set('gs.focusRun', r);
+    if (fcIdleSee(r)) fcPut(r);
   } else if (r.st === 'brk' && fcLeft(r) <= 0) { r.st = 'brkup'; r.fold = false; fcRunSet(r); fcChime(); return; }
   fcClockDraw(); fcTitle();
 }
@@ -392,12 +396,12 @@ function fcTitle() {
 // Leaving the tab while the clock runs: on the way back after a few minutes, the panel says how long, and the session can go on or start again.
 document.addEventListener('visibilitychange', () => {
   const r = fcRun(); if (!r || r.st !== 'run') return;
-  if (document.hidden) { r.hid = Date.now(); store.set('gs.focusRun', r); return; }
+  if (document.hidden) { r.hid = Date.now(); fcPut(r); return; }
   if (r.hid && Date.now() - r.hid >= FC_AWAY && !r.one) { r.away = Math.round((Date.now() - r.hid) / 60000); r.fold = false; }
   delete r.hid; fcRunSet(r);
 });
 // Another tab of the app started, paused or ended a session: this one shows the same.
-window.addEventListener('storage', e => { if (e.key === 'gs.focusRun' || e.key === 'gs.focus') { fcTickOn(); fcRender(); } });
+window.addEventListener('storage', e => { if (e.key === FC_KEY || e.key === 'gs.focus') { fcTickOn(); fcRender(); } if (e.key === FC_Q) fcDrain(); });
 
 /* ---------- drawing ---------- */
 const fcRing = (r, w, frac, cls) => { const c = 2 * Math.PI * r, s = 2 * (r + w); return '<svg viewBox="0 0 ' + s + ' ' + s + '"' + (cls ? ' class="' + cls + '"' : '') + ' aria-hidden="true"><circle class="tr" cx="' + (r + w) + '" cy="' + (r + w) + '" r="' + r + '"/><circle class="on" cx="' + (r + w) + '" cy="' + (r + w) + '" r="' + r + '" stroke-dasharray="' + c.toFixed(2) + '" stroke-dashoffset="' + (c * (1 - Math.max(0, Math.min(1, frac)))).toFixed(2) + '"/></svg>'; };
@@ -728,6 +732,30 @@ $('#setPane').addEventListener('click', e => {
   const n = $('#fcGoalN'); if (n) { n.focus(); n.select(); }
 });
 
+/* ---------- sessions that ended in the Planner ----------
+   The Planner can't open this log, so a session on papers that ends there leaves what it came to in gsp.focusQ
+   ([{ d: day, s: seconds, m: on papers, x: extra minutes, got: papers }], src/planner/plfocus.js); it is written in here. */
+const FC_Q = 'gsp.focusQ';
+function fcDrain() {
+  const q = store.get(FC_Q, null); if (!Array.isArray(q)) return;
+  store.del(FC_Q);
+  const L = fcLog();
+  for (const x of q) {
+    if (!x || !/^\d{4}-\d\d-\d\d$/.test(x.d) || !(x.s > 0)) continue;
+    const s = Math.min(4 * 3600, Math.round(x.s)), d = L.days[x.d] || {};
+    L.days[x.d] = { ...d, s: (d.s || 0) + s, ...(x.m ? { sm: (d.sm || 0) + s } : {}), ...(s >= 60 && !x.x ? { n: (d.n || 0) + 1 } : {}) };
+    if (x.got > 0 && s >= 30) L.pace = [...L.pace, [s, x.got]].slice(-20);
+  }
+  fcLogSet(L);
+}
+// A session from before the Planner could show it, kept under its old name.
+{ const old = store.get('gs.focusRun', null); if (old && old.st && !fcRun()) fcPut(old); store.del('gs.focusRun'); }
+// "Next paper" pressed in the Planner: once the papers are read, the next one opens.
+if (store.get('gsp.focusGo', null)) {
+  store.del('gsp.focusGo');
+  let n = 0; const t = setInterval(() => { if (keptRead || ++n > 100) { clearInterval(t); if (keptRead) fcGoTo(true); } }, 200);
+}
+
 FC_ON = true;
-fcSeen(); fcTickOn();
+fcDrain(); fcSeen(); fcTickOn();
 window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcCame, fcTick, focusOn, fcMon, fcToday, lofi, lofiCompose, lofiRender, LOFI_STYLES });
