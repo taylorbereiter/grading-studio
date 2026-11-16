@@ -25,11 +25,11 @@ async function fakeGoogle(page, D) {
     const P = {
       ViewId: { DOCS: 'docs' }, DocsViewMode: { LIST: 'list' }, Feature: { MULTISELECT_ENABLED: 'multi', SUPPORT_DRIVES: 'drives' },
       Action: { PICKED: 'picked', CANCEL: 'cancel' }, Response: { ACTION: 'action', DOCUMENTS: 'docs' },
-      DocsView: class { constructor() { this.o = {}; } setIncludeFolders(v) { this.o.folders = v; return this; } setMode() { return this; } setSelectFolderEnabled(v) { this.o.pickFolder = v; return this; } setMimeTypes(v) { this.o.mimes = v; return this; } setParent(v) { this.o.parent = v; return this; } },
+      DocsView: class { constructor() { this.o = {}; } setIncludeFolders(v) { this.o.folders = v; return this; } setMode() { return this; } setSelectFolderEnabled(v) { this.o.pickFolder = v; return this; } setMimeTypes(v) { this.o.mimes = v; return this; } setParent(v) { this.o.parent = v; return this; } setLabel(v) { this.o.label = v; return this; } setOwnedByMe(v) { this.o.mine = v; return this; } setEnableDrives(v) { this.o.drives = v; return this; } },
       PickerBuilder: class {
         constructor() { this.o = { features: [] }; }
         setOAuthToken(t) { this.o.token = t; return this; } setAppId(v) { this.o.app = v; return this; } setOrigin() { return this; } setTitle() { return this; } setDeveloperKey(k) { this.o.key = k; return this; }
-        addView(v) { this.o.view = v.o; return this; } enableFeature(f) { this.o.features.push(f); return this; } setCallback(cb) { this.cb = cb; return this; }
+        addView(v) { (this.o.views = this.o.views || []).push(v.o); this.o.view = this.o.views[0]; return this; } enableFeature(f) { this.o.features.push(f); return this; } setCallback(cb) { this.cb = cb; return this; }
         build() { return { setVisible: () => { window.__pickerSeen.push(this.o); const docs = window.__picks.shift() || []; setTimeout(() => this.cb(docs.length ? { action: 'picked', docs } : { action: 'cancel' }), 20); } }; }
       },
     };
@@ -85,6 +85,9 @@ test('Partners and videos: videos picked from Drive in the videos folder go to t
     const seen = await page.evaluate(() => window.__pickerSeen);
     assert.equal(seen.length, 2);
     assert.equal(seen[0].view.pickFolder, true, 'the folder is picked in Google’s chooser');
+    assert.equal(seen[0].view.parent, 'root', 'choosing the folder starts at the top of My Drive, not a pile of every folder');
+    assert.deepEqual(seen[0].views.map(v => v.label), ['My Drive', 'Shared with me', 'Shared drives'], 'with tabs for shared folders too');
+    assert.equal(seen[1].views[1].parent, 'root', 'videos can still be found outside the folder');
     assert.equal(seen[1].view.parent, '1FoldFoldFoldFoldFoldFoldFold11111', 'the videos open in that folder');
     assert.ok(seen[1].features.includes('multi') && seen[1].view.folders, 'many at once, and subfolders can be opened');
     assert.match(seen[1].app, /^\d+$/, 'the project number comes from the Client ID');

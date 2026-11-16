@@ -291,10 +291,21 @@ async function drivePick(o = {}) {
   if (!G.email) gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); syncNow(); }).catch(() => {});
   const P = google.picker;
   return new Promise(res => {
-    const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
-    if (o.folder) v.setSelectFolderEnabled(true).setMimeTypes(FOLDER);
-    else { v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(',')); if (o.parent) v.setParent(o.parent); }
-    const b = new P.PickerBuilder().setOAuthToken(t).setAppId(gcid().split('-')[0]).setOrigin(location.origin).addView(v)
+    // Tabs: her chosen folder first (if any), then My Drive from the top, Shared with me, and shared drives. Each one can be opened folder by folder.
+    const mk = (label, set) => {
+      const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
+      if (o.folder) v.setSelectFolderEnabled(true).setMimeTypes(FOLDER); else v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(','));
+      if (v.setLabel) v.setLabel(label);
+      set(v); return v;
+    };
+    const views = [];
+    if (o.parent && !o.folder) views.push(mk(o.parentName || 'Videos folder', v => v.setParent(o.parent)));
+    views.push(mk('My Drive', v => v.setParent('root')));
+    views.push(mk('Shared with me', v => v.setOwnedByMe && v.setOwnedByMe(false)));
+    views.push(mk('Shared drives', v => v.setEnableDrives && v.setEnableDrives(true)));
+    const b = new P.PickerBuilder().setOAuthToken(t).setAppId(gcid().split('-')[0]).setOrigin(location.origin);
+    views.forEach(v => b.addView(v));
+    b
       .enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Choose your videos folder' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
       .setCallback(d => {
         if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).filter(x => o.folder || x.mimeType !== FOLDER).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '' })));
@@ -310,7 +321,7 @@ async function pickVidDir() { const [d] = await drivePick({ folder: true }); if 
 // Videos she picks, opening in her videos folder (asking for the folder first, once).
 async function driveVideos(multi) {
   let dir = vidDir(); if (!dir) { dir = await pickVidDir(); if (!dir) return []; }
-  return drivePick({ parent: dir.id, multi });
+  return drivePick({ parent: dir.id, parentName: dir.name, multi });
 }
 // Signed in for the chooser's files right now, so a video can come down without asking anything.
 const drivePickReady = () => !!G.token && Date.now() < G.exp - 60000 && gHas(PICK_SCOPE);
