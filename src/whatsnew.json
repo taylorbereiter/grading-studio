@@ -1,4 +1,11 @@
 {
+  "1.28.34": [
+    "Focus counts only papers you marked: rubric scores, marks on the page or a comment. A grade only typed in still counts as scored, and its time still counts as grading time, but it no longer counts as a paper marked today."
+  ],
+  "1.28.33": [
+    "Link classes on the same schedule, like two sections of one course (Class setup, Linked classes). If your Planner already has them on one course, the class page offers to link them. A new assignment is ticked for every linked class, and a card’s ⋯ menu adds it to another class later or joins two copies you made separately.",
+    "Editing a copy can make the same changes in the other copies; only what you change goes across. In the Examples tab, a button shows the strong examples kept in the other class, each labelled with where it came from. Rosters, papers, scores and comments stay with each class."
+  ],
   "1.28.32": [
     "When the Focus timer is up, add a few more minutes (+2, +5 or +10) to the same session. Stop early and only the time that ran is counted."
   ],
