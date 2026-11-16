@@ -14,7 +14,8 @@ before(async () => { browser = await launch(); zip = zipOf(await standardFiles()
 after(async () => { await browser.close(); });
 
 const until = (page, h) => page.waitForFunction(h => location.hash === h, {}, h);
-const blues = page => page.$$eval('#vHome .btn.primary', b => b.filter(x => x.checkVisibility()).map(x => x.textContent.trim()));
+// The Focus card keeps its own blue Start (chosen for this card on purpose), so it is left out here and checked in focus.test.js.
+const blues = page => page.$$eval('#vHome .btn.primary', b => b.filter(x => x.checkVisibility() && !x.closest('#fcCard')).map(x => x.textContent.trim()));
 const text = (page, sel) => page.$eval(sel, e => e.textContent.replace(/\s+/g, ' ').trim());
 const LIB = JSON.stringify({ seed2627: true, classes: [
   { id: 'c1', name: 'Test English', names: ['Aria Testwell', 'Bram Sample', 'Cleo Fixture', 'Dov Madeup'], units: [{ id: 'u1', name: 'Unit 1: Narrative', items: [{ id: 'i1', name: 'Narrative essay', classId: 'c1', due: '2026-11-06' }, { id: 'i2', name: 'Reading check', classId: 'c1', typed: { max: 10, s: { 'Aria Testwell': { v: 8 } } } }] }] },

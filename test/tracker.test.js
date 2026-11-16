@@ -16,9 +16,9 @@ after(async () => { await browser.close(); });
 const pause = ms => new Promise(r => setTimeout(r, ms));
 const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 const dayAgo = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return iso(d); };
+// A Thursday in last week (a week starts on Monday), whatever day the test runs on.
+const lastWk = () => dayAgo((new Date().getDay() + 6) % 7 + 4);
 const today = () => dayAgo(0);
-// Wednesday of last week, whatever day the tests run (nine days back missed last week on a Monday).
-const lastWeek = () => dayAgo((new Date().getDay() + 6) % 7 + 5);
 const log = page => page.evaluate(() => JSON.parse(localStorage.getItem('gs.focus') || 'null'));
 const withLs = (s, ls) => ({ ...s, ls: { ...s.ls, ...ls } });
 // One step of the clock, as if fifteen seconds had passed with the teacher at work (or not).
@@ -41,7 +41,7 @@ test('time on the marking screen counts as grading, by assignment, only while sh
   // on Today, nothing more counts: it isn't the marking screen
   await step(page); await page.evaluate(() => window.__gs.tkFlush());
   assert.equal((await log(page)).days[today()].g, d.g);
-  assert.match(await page.$eval('#fcCard .fctk', e => e.textContent), /Grading time\d+ min.*Planning time0 min.*Time tracker/);
+  assert.match(await page.$eval('#fcCard .fctk', e => e.textContent), /^This week\d+ papers?·Grading time\d+ minTime tracker$/);
   // switched off in Settings: the marking screen doesn't count either
   await goTo(page, '#/settings/focus'); await page.waitForSelector('#tkOn'); await page.click('#tkOn'); await pause(200);
   assert.deepEqual(await page.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().lib.me.focus))), { track: false });
@@ -73,7 +73,7 @@ test('a day from before time was counted keeps its focus sessions as grading tim
 
 test('the tracker shows grading and planning apart, by week, month and three months, takes time added by hand, and gives the days as a spreadsheet', async () => {
   const s = gradingSeed(), lib = JSON.parse(s.ls['gs.lib']), id = lib.classes[0].units[0].items[0].id, name = lib.classes[0].units[0].items[0].name;
-  const days = { [today()]: { p: 3, s: 600, g: 3600, a: { [id]: 3000, '': 600 }, pa: { [id]: 3 } }, [lastWeek()]: { p: 1, s: 0, g: 1200, a: { [id]: 1200 } } };
+  const days = { [today()]: { p: 3, s: 600, g: 3600, a: { [id]: 3000, '': 600 }, pa: { [id]: 3 } }, [lastWk()]: { p: 1, s: 0, g: 1200, a: { [id]: 1200 } } };
   const plan = { days: { [today()]: { l: 1800, a: { L1: 1500, '': 300 } }, [dayAgo(40)]: { l: 600, a: { L1: 600 } } }, names: { L1: 'Reading a poem' } };
   const { page, close } = await openApp(browser, { seed: withLs(s, { 'gs.focus': JSON.stringify({ day: today(), base: {}, days, pace: [], last: '' }), 'gsp.planTime': JSON.stringify(plan) }) });
   await goTo(page, '#/time'); await page.waitForSelector('#tkBody .tktile');
@@ -107,7 +107,7 @@ test('the tracker shows grading and planning apart, by week, month and three mon
   const csv = await page.evaluate(() => window.__gs.tkCsvText());
   assert.equal(csv.split('\r\n')[0], 'Date,Grading minutes,Planning minutes,Focus minutes,Papers,Grading added by hand,Planning added by hand');
   assert.ok(csv.includes(today() + ',60,75,10,0,0,45'), csv);   // today's papers are counted again from the downloads, and none are open here
-  assert.ok(csv.includes(lastWeek() + ',20,0,0,1,0,0'), csv);
+  assert.ok(csv.includes(lastWk() + ',20,0,0,1,0,0'), csv);
   // taken away again
   await page.click('#tkBody [data-tkdel]'); await pause(200);
   assert.equal(await page.$('#tkBody .tkent'), null);
