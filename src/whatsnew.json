@@ -1,4 +1,8 @@
 {
+  "1.28.46": [
+    "Focus sessions for lesson planning: the Focus panel lists your lessons for the coming week, and the Planner's lesson editor has a Focus button. A lesson session lasts 45 minutes unless you change it in Settings, Focus and goals.",
+    "Planning time now counts only in focus sessions on a lesson. Opening the Planner for a quick change or presenting a lesson doesn't add to it, and presenting pauses a lesson session."
+  ],
   "1.28.45": [
     "Send to your assistant, Copy for your assistant and Fill in the weeks now copy everything your assistant needs into the message itself. They never ask it to open a folder or file on your computer. Send asks it for one .zip with the PowerPoint and handouts, and each piece on its own; upload the .zip on the lesson and check its changes slide by slide."
   ],

@@ -1,21 +1,22 @@
 {
- "version": "1.28.45",
- "build": "f77f97b14b2e",
+ "version": "1.28.46",
+ "build": "4418c7a494f2",
  "notes": [
-  "Send to your assistant, Copy for your assistant and Fill in the weeks now copy everything your assistant needs into the message itself. They never ask it to open a folder or file on your computer. Send asks it for one .zip with the PowerPoint and handouts, and each piece on its own; upload the .zip on the lesson and check its changes slide by slide."
+  "Focus sessions for lesson planning: the Focus panel lists your lessons for the coming week, and the Planner's lesson editor has a Focus button. A lesson session lasts 45 minutes unless you change it in Settings, Focus and goals.",
+  "Planning time now counts only in focus sessions on a lesson. Opening the Planner for a quick change or presenting a lesson doesn't add to it, and presenting pauses a lesson session."
  ],
  "files": {
-  "index.html": "c33e1bf638fbf31ac0ca9009a2d2e0b8690b22b824bcf9bc719190811bb5ed90",
-  "planner.html": "675f74d81a4d4b62863cfec11f19cb05f77b79a5d4175c321fe0f2fb06448bb2"
+  "index.html": "5d210a615552b130c5fcdce901ebf4b533cb9f4e871a906e2f7238ae1f338bc0",
+  "planner.html": "689fb714bf0157af3a387c073777f14466fafa29b3cf6eed60e469dc181571df"
  },
  "langs": {
-  "lang/zh-Hant.js": "ea0e5765a6e2c1db58743ec97e0de9034a889dcff3c16cc53db62d28eb477c3a",
-  "lang/zh-Hans.js": "623bf0ca42b4782ca2cd150d6e914cdb931635b081fe4d4cede4c09b4a10c031",
-  "lang/es.js": "877a39aa830ede4d64434c38041de72b75cf94abdff85f00bc3d453db2209cee",
-  "lang/fr.js": "9bfb6c4480960874d4ab377dc83d1f2a9f4e079b48f87e23c71dc88bc0b3e322",
-  "lang/de.js": "efca855938683ed7c339d0396ed035da2cc03ef1b692fd2baf6f31979ee91b73",
-  "lang/pt-BR.js": "50b1b8bb95e585162a905e4474fee428963245d262da7268a6ab433290cc9a63",
-  "lang/ja.js": "197f41a9a5d3c836c11a846339a01820bdcdb8116c71e596fdc524c98d227efc",
-  "lang/ko.js": "1d4ed1199597d0515a04aadf87e76fc92a355bb5bf7ac00d08d04af1833a965d"
+  "lang/zh-Hant.js": "843605a93ef5287b4ebea96932f39cbaf5f0fa00605ba46393116ff63fcaf49d",
+  "lang/zh-Hans.js": "d1df80f624b41765785db45d0ae03da60c1d80dae977892c2ddcbba18c0fd110",
+  "lang/es.js": "a6703be70f24613c5fcb042a1a5e1e59a72d3d60bcc6f6c051ef62b44ca73380",
+  "lang/fr.js": "c390b6f17c891e65f62e987d6db9fc15b09ee119ae9d6e76472c150a6f978252",
+  "lang/de.js": "895a0f6e4bb1b2a895b6699f71636bf1564548f96048bf4dfca53d92cd200d9c",
+  "lang/pt-BR.js": "06b01b50965caa95303ee17048385fd96725d89326e93d26764e9af525465bcd",
+  "lang/ja.js": "331860754695b68a3717b946864c0d96c3ea7c97c979946c186f549cc9fdb316",
+  "lang/ko.js": "273bd656bd8c9b805fc2c91ec8ee1e7da921c7606669c99af12b8a71d5f63524"
  }
 }
