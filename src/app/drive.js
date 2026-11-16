@@ -265,6 +265,7 @@ async function syncOnce() {
   }
   delete out.ls['gs.lib'];
   out.plan = (await syncPlan()) || (got && got.plan) || null;   // a device with no Planner passes on the one it was given
+  out.planT = await planSync(got && got.planT);   // the Planner, in a file of its own (below)
   out.files = dvFiles(got && got.files, tomb);
   const body = JSON.stringify(out);
   if (!got || body !== JSON.stringify({ ...got, t: now })) await syncWrite(body);
@@ -471,3 +472,118 @@ if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('message',
   if (d.fresh) { G.token = null; G.exp = 0; try { sessionStorage.removeItem('gs.gTok'); } catch {} }
   (gcid() && gHas(PICK_SCOPE) ? gToken(false, 'pick') : Promise.reject(new Error('sign-in'))).then(t => p.postMessage({ token: t, exp: G.exp }), () => p.postMessage({ token: null }));
 });
+
+/* The Planner through Drive: lessons, units, the timetable, the comment bank, activities and words, both ways, in a second hidden file
+   (grading-studio-plan.json). The Planner keeps its own store (gs-lessons, src/planner/lessons.js); this page reads and writes it, so the
+   Planner needs no sign-in of its own. What changed here since the last sync is found by comparing with what was seen then (gs.planSeen):
+   a key whose value is different gets the time now, a lesson that was there and isn't was deleted here. Each lesson goes by its own time
+   (updated), each key by its time; a deletion stays in gone. A store that can't be read, or comes back empty when it had lessons (an
+   iPhone clears a site's storage after weeks unused), never counts as deleting anything: Drive fills it again. */
+const PLAN_NAME = 'grading-studio-plan.json', PLAN_KEYS = ['setup', 'units', 'bank', 'activities', 'words', 'deflook'], PLAN_BIG = 2e6;
+let planFile = null;
+const planVer = async () => String((await (await gsync('files/' + planFile.id + '?fields=id,version')).json()).version || '');
+async function planFileRead() {
+  if (!planFile) { const f = (await (await gsync("files?spaces=appDataFolder&orderBy=createdTime&fields=files(id)&q=" + encodeURIComponent("name='" + PLAN_NAME + "' and trashed=false"))).json()).files[0]; planFile = f ? { id: f.id } : null; }
+  if (!planFile) return null;
+  planFile.ver = await planVer();
+  try { return await (await gsync('files/' + planFile.id + '?alt=media')).json(); } catch { return null; }
+}
+async function planFileWrite(body) {
+  if (planFile) {
+    if (await planVer() !== planFile.ver) { const e = new Error('changed on another device'); e.status = 412; throw e; }
+    await gsync('https://www.googleapis.com/upload/drive/v3/files/' + planFile.id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+  } else {
+    const fd = new FormData();
+    fd.append('metadata', new Blob([JSON.stringify({ name: PLAN_NAME, parents: ['appDataFolder'] })], { type: 'application/json' }));
+    fd.append('file', new Blob([body], { type: 'application/json' }));
+    planFile = { id: (await (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: fd })).json()).id };
+  }
+  planFile.ver = await planVer();
+}
+// Units carry where each is kept in this computer's Planner folder (_file, _mod): that stays here.
+const planOutV = (k, v) => k === 'units' && Array.isArray(v) ? v.map(u => { if (!u || typeof u !== 'object') return u; const { _file, _mod, ...x } = u; return x; }) : v;
+// What this device's Planner holds, with a time on everything that changed since the last sync. null: the store couldn't be read.
+async function planHere() {
+  let seen = store.get('gs.planSeen', null) || { keys: {}, ids: [], gone: {}, t: {} };
+  const db = await planDb(false);
+  let lessons = [], kv = {};
+  if (db) {
+    try {
+      const t = db.transaction(['lessons', 'kv']);
+      lessons = (await idbP(t.objectStore('lessons').getAll())) || [];
+      for (const k of PLAN_KEYS) { const v = await idbP(t.objectStore('kv').get(k)); if (v !== undefined) kv[k] = planOutV(k, v); }
+    } catch { db.close(); return null; }
+    db.close();
+  }
+  // nothing here, though there were lessons at the last sync: the store was cleared, not every lesson deleted
+  if (!lessons.length && !Object.keys(kv).length && (seen.ids || []).length) seen = { keys: {}, ids: [], gone: { ...(seen.gone || {}) }, t: {} };
+  const A = { lessons: {}, kv: {}, gone: { ...(seen.gone || {}) } }, ids = new Set(), big = new Set();
+  for (const l of lessons) {
+    if (!l || !l.id) continue;
+    const { _file, _mod, _sync, ...x } = l; ids.add(x.id);
+    if (JSON.stringify(x).length > PLAN_BIG) { big.add(x.id); continue; }   // a lesson full of pictures stays on its own device for now
+    A.lessons[x.id] = x;
+  }
+  const lost = [];
+  for (const id of seen.ids || []) if (!ids.has(id) && !A.gone['l:' + id]) lost.push(id);   // deleted here since the last sync (timed once the time is known)
+  for (const [k, v] of Object.entries(kv)) { const h = shaLite(JSON.stringify(v)); A.kv[k] = { v, t: seen.keys[k] === h ? (seen.t[k] || 0) : seen.at ? -1 : null }; }   // -1: changed here; null: never synced from here
+  const mine = !seen.at ? !!(lessons.length || Object.keys(kv).length) : lost.length > 0 || Object.values(A.kv).some(x => x.t === -1) || [...ids].some(id => !(seen.ids || []).includes(id)) || Object.values(A.lessons).some(l => (l.updated || 0) > (seen.at || 0));
+  return { A, seen, big, lost, mine };
+}
+const shaLite = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + s.length.toString(36); };
+async function planSync(remoteT) {
+  if (sampleOn()) return remoteT;
+  const here = await planHere(); if (!here) return remoteT;
+  const { A, seen, big, lost, mine } = here;
+  if (!mine && remoteT && remoteT === seen.planT) return remoteT;   // nothing new on either side
+  const now = Date.now(), B = (await planFileRead()) || { lessons: {}, kv: {}, gone: {} };
+  for (const id of lost) A.gone['l:' + id] = now;
+  // a key changed here goes in now; on this device's first sync, what is already in Drive comes first
+  for (const [k, x] of Object.entries(A.kv)) if (x.t === -1) x.t = now; else if (x.t === null) x.t = B.kv && B.kv[k] ? 0 : now;
+  for (const id of big) { delete A.gone['l:' + id]; if (B.lessons && B.lessons[id]) A.lessons[id] = B.lessons[id]; }   // the copy in Drive stays as it was
+  const M = mergePlan(A, B);
+  await planApply(A, M, big);
+  const body = JSON.stringify(M), t = shaLite(body);
+  // what this device now holds is what was merged, before it goes up: if sending fails, the next sync finds nothing changed here and tries again
+  const was = { keys: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, shaLite(JSON.stringify(x.v))])), t: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, x.t])), ids: [...new Set([...Object.keys(M.lessons), ...big])], gone: M.gone, at: now };
+  store.set('gs.planSeen', { ...was, planT: null });
+  if (JSON.stringify(B) !== body) await planFileWrite(body);
+  store.set('gs.planSeen', { ...was, planT: t });
+  return t;
+}
+// Into this device's Planner: what came from the other side. A lesson or key the Planner saved again while the merge was on its way stays
+// as she left it (it goes up next time). Lessons kept in the Planner folder: a changed one is written to its file again, a deleted one's
+// file is taken away (src/planner/lessons.js, planFolderCatchUp), or the folder would bring it back. A Planner open in another tab picks
+// it all up (gs-plan-in, src/planner/base.js).
+async function planApply(A, M, big) {
+  const put = Object.values(M.lessons).filter(l => !big.has(l.id) && JSON.stringify(A.lessons[l.id]) !== JSON.stringify(l));
+  const del = Object.keys(M.gone).filter(k => k.startsWith('l:')).map(k => k.slice(2)).filter(id => A.lessons[id] && !big.has(id));
+  const keys = Object.entries(M.kv).filter(([k, x]) => !A.kv[k] || JSON.stringify(A.kv[k].v) !== JSON.stringify(x.v));
+  if (!put.length && !del.length && !keys.length) return;
+  const db = await planDb(true); if (!db) return;
+  try {
+    await new Promise((res, rej) => {
+      const t = db.transaction(['lessons', 'kv'], 'readwrite'), ls = t.objectStore('lessons'), kv = t.objectStore('kv'), goneFiles = [];
+      const same = (was, id) => (was ? was.updated || 0 : null) === (A.lessons[id] ? A.lessons[id].updated || 0 : null);
+      for (const l of put) { const r = ls.get(l.id); r.onsuccess = () => { const was = r.result; if (!same(was, l.id)) return; ls.put(was && was._file ? { ...l, _file: was._file, _mod: was._mod, _sync: 1 } : l); }; }
+      for (const id of del) { const r = ls.get(id); r.onsuccess = () => { const was = r.result; if (!was || !same(was, id)) return; if (was._file) goneFiles.push(was._file); ls.delete(id); }; }
+      for (const [k, x] of keys) {
+        const r = kv.get(k);
+        r.onsuccess = () => {
+          const was = r.result; if (JSON.stringify(planOutV(k, was)) !== JSON.stringify(A.kv[k] ? A.kv[k].v : undefined)) return;
+          let v = x.v;
+          if (k === 'units' && Array.isArray(v) && Array.isArray(was)) v = v.map(u => { const o = was.find(w => w && u && w.id === u.id); return o && o._file ? { ...u, _file: o._file, _mod: o._mod } : u; });
+          kv.put(v, k);
+        };
+      }
+      // after the reads above: the files of lessons deleted here by the sync, for the Planner to take out of its folder
+      const g = kv.get('syncGoneFiles');
+      const last = ls.count(); last.onsuccess = () => { if (goneFiles.length) kv.put([...new Set([...(g.result || []), ...goneFiles])], 'syncGoneFiles'); };   // asked last, so it answers after every read above
+      t.oncomplete = res; t.onerror = t.onabort = () => rej(t.error);
+    });
+  } finally { db.close(); }
+  try { const ch = new BroadcastChannel('gs-plan-in'); ch.postMessage('sync'); ch.close(); } catch {}
+  if (typeof planRefresh === 'function') planRefresh();
+}
+// The Planner in another tab saved something: sync soon, the same as a save here.
+try { new BroadcastChannel('gs-plan-out').onmessage = () => syncSoon(); } catch {}

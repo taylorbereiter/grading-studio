@@ -3,8 +3,8 @@
 // handing back come from the work kept in this browser. Nothing new is stored: every line is worked out from what is already there.
 
 /* teaching today: a one-way read of the Planner's timetable */
-// The Planner keeps its timetable and its lessons in its own database. This opens that database only to read, never writes to it, and never
-// makes it: with no Planner work in this browser, nothing shows. Class names, colours, times and lesson names are all it takes. Nothing of
+// The Planner keeps its timetable and its lessons in its own database. This opens that database only to read (signed in with Google,
+// drive.js brings the Planner from her other devices into it): with no Planner work in this browser, nothing shows. Class names, colours, times and lesson names are all it takes. Nothing of
 // grading's goes the other way, and the Planner never opens grading's work.
 // { classes, daysOff, lessons } or null when there is no timetable
 let plan = null;
@@ -14,7 +14,7 @@ async function planRead() {
     try { const t = db.transaction(['kv', 'lessons']); [setup, lessons] = await Promise.all([idbP(t.objectStore('kv').get('setup')), idbP(t.objectStore('lessons').getAll())]); } catch {}
     db.close();
   }
-  // no Planner in this browser (a phone): the timetable synced from the computer through her Drive (drive.js), to show the day
+  // the Planner hasn't come through to this browser yet: the timetable the computer sent with the rest of her work (drive.js)
   if (!(setup && Array.isArray(setup.classes) && setup.classes.length)) setup = store.get('gs.planCopy', null);
   const hex = c => /^#[0-9a-f]{6}$/i.test(c) ? c : '#1F6FB2';
   const classes = (setup && Array.isArray(setup.classes) ? setup.classes : []).filter(c => c && c.id != null).map(c => ({ id: String(c.id), name: String(c.name || c.id), color: hex(c.color),

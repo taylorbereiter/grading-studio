@@ -1242,7 +1242,16 @@ function setTheme(t) {
   for (const b of document.querySelectorAll('.themeBtn')) b.textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
 }
 document.addEventListener('click', e => { if (e.target.closest('.themeBtn')) setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); });
-try { window.__planIn = new BroadcastChannel('gs-plan-in'); window.__planIn.onmessage = () => location.reload(); } catch { }   // Bring work in (the grading page) put Planner records in: start again from what is stored
+let planInWait = false;
+function planIn() {
+  const a = document.activeElement;
+  if (document.hidden || (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)))) { planInWait = true; return; }
+  location.reload();
+}
+const planInLater = () => { if (planInWait) { planInWait = false; setTimeout(planIn, 1500); } };
+document.addEventListener('visibilitychange', () => { if (!document.hidden) planInLater(); });
+document.addEventListener('focusout', planInLater);
+try { window.__planIn = new BroadcastChannel('gs-plan-in'); window.__planIn.onmessage = planIn; } catch { }
 
 /* ---------------- The assistant beside the app (11/13): Gemini, Claude, ChatGPT or another, opened next to Grading Studio ----------------
    Built into both pages. A teacher who has named an AI assistant gets its name in the sidebar on every screen. A click opens the
@@ -2046,9 +2055,10 @@ async function lTx(store, mode, fn) {
   return new Promise((res, rej) => {
     const t = db.transaction(store, mode), s = t.objectStore(store); let out;
     Promise.resolve(fn(s)).then(v => { out = v; });
-    t.oncomplete = () => res(out); t.onerror = () => rej(t.error);
+    t.oncomplete = () => { res(out); if (mode === 'readwrite') planOut(); }; t.onerror = () => rej(t.error);
   });
 }
+function planOut() { try { const ch = new BroadcastChannel('gs-plan-out'); ch.postMessage('saved'); ch.close(); } catch { } }
 const reqP = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 const kvGet = k => lTx('kv', 'readonly', s => reqP(s.get(k)));
 const kvSet = (k, v) => lTx('kv', 'readwrite', s => { s.put(v, k); });
@@ -3341,7 +3351,7 @@ function lessonForFile(l, imgs) {   // imgs: Map to collect pictures as separate
     const m = /^data:image\/(png|jpeg);base64,/.exec(x.src); if (!m) continue;
     const name = ctxFile(s, x); imgs.set(name, x.src); x.src = name;
   }
-  delete c._file; delete c._mod; delete c.pending;
+  delete c._file; delete c._mod; delete c._sync; delete c.pending;
   return c;
 }
 const wTimers = new Map();
@@ -3376,9 +3386,16 @@ async function profileFolderRead() {
   const j = JSON.parse(await f.text()); if (!Array.isArray(j.classes)) return;
   await kvSet('profMod', f.lastModified); await applySetup(j);
 }
+async function planFolderCatchUp() {
+  const gone = (await kvGet('syncGoneFiles')) || [];
+  for (const name of gone) { if (!L.lessons.some(l => l._file === name)) { try { await L.dir.removeEntry(name); } catch { } } }
+  if (gone.length) await kvDel('syncGoneFiles');
+  for (const l of L.lessons.filter(l => l._sync)) { delete l._sync; await folderWrite(l); }
+}
 async function folderRead(say) {
   if (!L.dir || !L.dirOk) return;
   let added = 0, changed = 0;
+  try { await planFolderCatchUp(); } catch (e) { console.warn(e); }
   try {
     for await (const [name, h] of L.dir.entries()) {
       if (h.kind !== 'file' || !/\.lesson\.json$/i.test(name)) continue;

@@ -3539,6 +3539,13 @@ body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #td
 .phqr .qr{width:200px;height:200px}
 .phurl{text-align:center;margin:0 0 12px;font-size:var(--text-control);color:var(--muted);overflow-wrap:anywhere}
 .phsteps{margin:0 0 12px;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.phdot{display:inline-block;width:10px;height:10px;border-radius:var(--corner-round)}
+.phlt{font-size:var(--text-title);margin:8px 0}
+.phln{color:var(--muted);margin:0 0 12px}
+.phslides{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.phslides li{padding:14px 16px}
+.phslides p{margin:6px 0 0;line-height:1.45}
+.phslides .phsn{color:var(--muted);font-size:var(--text-small);border-top:1px solid var(--line);padding-top:6px}
 
 .seatbar b{font-weight:600}
 .seatbar2{background:var(--bg)}
@@ -3905,6 +3912,10 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
   <section class="view" id="vTime" hidden>
     <header class="vhead"><h1>Time tracker</h1><span class="muted">Grading and planning, kept apart</span></header>
     <div id="tkBody"></div>
+  </section>
+  <section class="view" id="vPlans" hidden>
+    <header class="vhead"><h1>Plans</h1></header>
+    <div id="phPlans"></div>
   </section>
   <section class="view" id="vScores" hidden>
     <header class="vhead"><h1>Scores</h1></header>
@@ -10397,6 +10408,7 @@ if (m) { const { papers, size, ...rest } = m; out.meta[id] = rest; }
 }
 delete out.ls['gs.lib'];
 out.plan = (await syncPlan()) || (got && got.plan) || null;
+out.planT = await planSync(got && got.planT);
 out.files = dvFiles(got && got.files, tomb);
 const body = JSON.stringify(out);
 if (!got || body !== JSON.stringify({ ...got, t: now })) await syncWrite(body);
@@ -10583,6 +10595,110 @@ if (d.type !== 'gs-drive-token' || !p) return;
 if (d.fresh) { G.token = null; G.exp = 0; try { sessionStorage.removeItem('gs.gTok'); } catch {} }
 (gcid() && gHas(PICK_SCOPE) ? gToken(false, 'pick') : Promise.reject(new Error('sign-in'))).then(t => p.postMessage({ token: t, exp: G.exp }), () => p.postMessage({ token: null }));
 });
+
+/* The Planner through Drive: lessons, units, the timetable, the comment bank, activities and words, both ways, in a second hidden file
+(grading-studio-plan.json). The Planner keeps its own store (gs-lessons, src/planner/lessons.js); this page reads and writes it, so the
+Planner needs no sign-in of its own. What changed here since the last sync is found by comparing with what was seen then (gs.planSeen):
+a key whose value is different gets the time now, a lesson that was there and isn't was deleted here. Each lesson goes by its own time
+(updated), each key by its time; a deletion stays in gone. A store that can't be read, or comes back empty when it had lessons (an
+iPhone clears a site's storage after weeks unused), never counts as deleting anything: Drive fills it again. */
+const PLAN_NAME = 'grading-studio-plan.json', PLAN_KEYS = ['setup', 'units', 'bank', 'activities', 'words', 'deflook'], PLAN_BIG = 2e6;
+let planFile = null;
+const planVer = async () => String((await (await gsync('files/' + planFile.id + '?fields=id,version')).json()).version || '');
+async function planFileRead() {
+if (!planFile) { const f = (await (await gsync("files?spaces=appDataFolder&orderBy=createdTime&fields=files(id)&q=" + encodeURIComponent("name='" + PLAN_NAME + "' and trashed=false"))).json()).files[0]; planFile = f ? { id: f.id } : null; }
+if (!planFile) return null;
+planFile.ver = await planVer();
+try { return await (await gsync('files/' + planFile.id + '?alt=media')).json(); } catch { return null; }
+}
+async function planFileWrite(body) {
+if (planFile) {
+if (await planVer() !== planFile.ver) { const e = new Error('changed on another device'); e.status = 412; throw e; }
+await gsync('https://www.googleapis.com/upload/drive/v3/files/' + planFile.id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+} else {
+const fd = new FormData();
+fd.append('metadata', new Blob([JSON.stringify({ name: PLAN_NAME, parents: ['appDataFolder'] })], { type: 'application/json' }));
+fd.append('file', new Blob([body], { type: 'application/json' }));
+planFile = { id: (await (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: fd })).json()).id };
+}
+planFile.ver = await planVer();
+}
+const planOutV = (k, v) => k === 'units' && Array.isArray(v) ? v.map(u => { if (!u || typeof u !== 'object') return u; const { _file, _mod, ...x } = u; return x; }) : v;
+async function planHere() {
+let seen = store.get('gs.planSeen', null) || { keys: {}, ids: [], gone: {}, t: {} };
+const db = await planDb(false);
+let lessons = [], kv = {};
+if (db) {
+try {
+const t = db.transaction(['lessons', 'kv']);
+lessons = (await idbP(t.objectStore('lessons').getAll())) || [];
+for (const k of PLAN_KEYS) { const v = await idbP(t.objectStore('kv').get(k)); if (v !== undefined) kv[k] = planOutV(k, v); }
+} catch { db.close(); return null; }
+db.close();
+}
+if (!lessons.length && !Object.keys(kv).length && (seen.ids || []).length) seen = { keys: {}, ids: [], gone: { ...(seen.gone || {}) }, t: {} };
+const A = { lessons: {}, kv: {}, gone: { ...(seen.gone || {}) } }, ids = new Set(), big = new Set();
+for (const l of lessons) {
+if (!l || !l.id) continue;
+const { _file, _mod, _sync, ...x } = l; ids.add(x.id);
+if (JSON.stringify(x).length > PLAN_BIG) { big.add(x.id); continue; }
+A.lessons[x.id] = x;
+}
+const lost = [];
+for (const id of seen.ids || []) if (!ids.has(id) && !A.gone['l:' + id]) lost.push(id);
+for (const [k, v] of Object.entries(kv)) { const h = shaLite(JSON.stringify(v)); A.kv[k] = { v, t: seen.keys[k] === h ? (seen.t[k] || 0) : seen.at ? -1 : null }; }
+const mine = !seen.at ? !!(lessons.length || Object.keys(kv).length) : lost.length > 0 || Object.values(A.kv).some(x => x.t === -1) || [...ids].some(id => !(seen.ids || []).includes(id)) || Object.values(A.lessons).some(l => (l.updated || 0) > (seen.at || 0));
+return { A, seen, big, lost, mine };
+}
+const shaLite = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + s.length.toString(36); };
+async function planSync(remoteT) {
+if (sampleOn()) return remoteT;
+const here = await planHere(); if (!here) return remoteT;
+const { A, seen, big, lost, mine } = here;
+if (!mine && remoteT && remoteT === seen.planT) return remoteT;
+const now = Date.now(), B = (await planFileRead()) || { lessons: {}, kv: {}, gone: {} };
+for (const id of lost) A.gone['l:' + id] = now;
+for (const [k, x] of Object.entries(A.kv)) if (x.t === -1) x.t = now; else if (x.t === null) x.t = B.kv && B.kv[k] ? 0 : now;
+for (const id of big) { delete A.gone['l:' + id]; if (B.lessons && B.lessons[id]) A.lessons[id] = B.lessons[id]; }
+const M = mergePlan(A, B);
+await planApply(A, M, big);
+const body = JSON.stringify(M), t = shaLite(body);
+const was = { keys: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, shaLite(JSON.stringify(x.v))])), t: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, x.t])), ids: [...new Set([...Object.keys(M.lessons), ...big])], gone: M.gone, at: now };
+store.set('gs.planSeen', { ...was, planT: null });
+if (JSON.stringify(B) !== body) await planFileWrite(body);
+store.set('gs.planSeen', { ...was, planT: t });
+return t;
+}
+async function planApply(A, M, big) {
+const put = Object.values(M.lessons).filter(l => !big.has(l.id) && JSON.stringify(A.lessons[l.id]) !== JSON.stringify(l));
+const del = Object.keys(M.gone).filter(k => k.startsWith('l:')).map(k => k.slice(2)).filter(id => A.lessons[id] && !big.has(id));
+const keys = Object.entries(M.kv).filter(([k, x]) => !A.kv[k] || JSON.stringify(A.kv[k].v) !== JSON.stringify(x.v));
+if (!put.length && !del.length && !keys.length) return;
+const db = await planDb(true); if (!db) return;
+try {
+await new Promise((res, rej) => {
+const t = db.transaction(['lessons', 'kv'], 'readwrite'), ls = t.objectStore('lessons'), kv = t.objectStore('kv'), goneFiles = [];
+const same = (was, id) => (was ? was.updated || 0 : null) === (A.lessons[id] ? A.lessons[id].updated || 0 : null);
+for (const l of put) { const r = ls.get(l.id); r.onsuccess = () => { const was = r.result; if (!same(was, l.id)) return; ls.put(was && was._file ? { ...l, _file: was._file, _mod: was._mod, _sync: 1 } : l); }; }
+for (const id of del) { const r = ls.get(id); r.onsuccess = () => { const was = r.result; if (!was || !same(was, id)) return; if (was._file) goneFiles.push(was._file); ls.delete(id); }; }
+for (const [k, x] of keys) {
+const r = kv.get(k);
+r.onsuccess = () => {
+const was = r.result; if (JSON.stringify(planOutV(k, was)) !== JSON.stringify(A.kv[k] ? A.kv[k].v : undefined)) return;
+let v = x.v;
+if (k === 'units' && Array.isArray(v) && Array.isArray(was)) v = v.map(u => { const o = was.find(w => w && u && w.id === u.id); return o && o._file ? { ...u, _file: o._file, _mod: o._mod } : u; });
+kv.put(v, k);
+};
+}
+const g = kv.get('syncGoneFiles');
+const last = ls.count(); last.onsuccess = () => { if (goneFiles.length) kv.put([...new Set([...(g.result || []), ...goneFiles])], 'syncGoneFiles'); };
+t.oncomplete = res; t.onerror = t.onabort = () => rej(t.error);
+});
+} finally { db.close(); }
+try { const ch = new BroadcastChannel('gs-plan-in'); ch.postMessage('sync'); ch.close(); } catch {}
+if (typeof planRefresh === 'function') planRefresh();
+}
+try { new BroadcastChannel('gs-plan-out').onmessage = () => syncSoon(); } catch {}
 /* ---------------- audio, video and Word files ---------------- */
 const MEDIA_RX = /\.(mp4|mov|m4v|webm|mkv|3gp|mp3|m4a|wav|aac|ogg|oga|opus|flac|weba|aif|aiff|caf|amr)$/i;
 const VIDEO_RX = /\.(mp4|mov|m4v|webm|mkv|3gp)$/i;
@@ -11301,6 +11417,7 @@ return { v: 'class', c, tab, stu, att };
 }
 }
 if (p[0] === 'class-named' && p[1]) { const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(p.slice(1).join('/')), c = k && lib.classes.find(c => nk(c.name) === k); return c ? { v: 'class', c, tab: '', stu: null, named: true } : { v: 'home', noClass: p.slice(1).join('/').slice(0, 60) }; }
+if (p[0] === 'plans' && PHONE) return { v: 'plans', id: p[1] || '' };
 if (p[0] === 'scores' && PHONE) return { v: 'scores', cls: p[1] || '', key: p[2] || '' };
 if (p[0] === 'todo') return { v: 'todo', week: p[1] === 'week' };
 if (p[0] === 'time') return { v: 'time' };
@@ -11376,7 +11493,7 @@ const grading = r.v === 'a' && !!batch;
 if (grading && !$('#welcome').hidden) wlClose();
 $('#shell').classList.toggle('grading', grading);
 $('#app').hidden = !grading; $('#start').hidden = grading;
-for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening'], ['vScores', 'scores']]) $('#' + id).hidden = grading || r.v !== v;
+for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening'], ['vScores', 'scores'], ['vPlans', 'plans']]) $('#' + id).hidden = grading || r.v !== v;
 if (r.v !== 'class') classLeave();
 const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');
 if (!grading && key !== screenKey) $('#shellMain').scrollTop = 0;
@@ -11384,6 +11501,7 @@ screenKey = key;
 railRender();
 if (!grading && r.v === 'examples') exPageRender();
 if (!grading && r.v === 'scores') phScoresRender(r);
+if (!grading && r.v === 'plans') phPlansRender(r);
 phNavRender();
 if (grading) tabShow(r); else if (dlgPage) dlgShut();
 }
@@ -20466,6 +20584,20 @@ const out = { ...(bLater ? { ...a, ...b } : { ...b, ...a }), s };
 if (Object.keys(gone).length) out.gone = gone; else delete out.gone;
 return out;
 }
+function mergePlan(A, B) {
+const gone = { ...(B.gone || {}) };
+for (const [k, t] of Object.entries(A.gone || {})) if (!(gone[k] >= t)) gone[k] = t;
+const lessons = {}, la = A.lessons || {}, lb = B.lessons || {};
+for (const id of new Set([...Object.keys(la), ...Object.keys(lb)])) {
+const a = la[id], b = lb[id], w = !a ? b : !b ? a : (b.updated || 0) >= (a.updated || 0) ? b : a;
+if (gone['l:' + id] >= (w.updated || 0)) continue;
+lessons[id] = w;
+}
+for (const k of Object.keys(gone)) if (k.startsWith('l:') && lessons[k.slice(2)]) delete gone[k];
+const kv = {}, ka = A.kv || {}, kb = B.kv || {};
+for (const k of new Set([...Object.keys(ka), ...Object.keys(kb)])) { const a = ka[k], b = kb[k]; kv[k] = !a ? b : !b ? a : (b.t || 0) >= (a.t || 0) ? b : a; }
+return { lessons, kv, gone };
+}
 function mergeFields(x, y, win, dev, now, said) {
 const fx = nodeParts(x), fy = nodeParts(y), parts = {}, fv = {}, both = [], fromY = [];
 let ask = false, chose = false;
@@ -20644,7 +20776,7 @@ let setLibFrom, libNews;
   };
 }
 const browserFull = () => Object.assign(new DOMException('The small store is full', 'QuotaExceededError'), { small: true });
-const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|refOpen\..*)$/;
+const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|planSeen|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|refOpen\..*)$/;
 function carryLs() {
   const o = {};
   for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && !LS_LOCAL.test(k)) o[k] = localStorage.getItem(k); }
@@ -33819,13 +33951,13 @@ const nav = document.createElement('nav');
 nav.className = 'phnav'; nav.id = 'phNav'; nav.setAttribute('aria-label', 'Main');
 const ic = d => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>';
 nav.innerHTML = [['#/', 'Today', 'M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8'],
-['#/scores', 'Scores', 'M4 5h16M4 12h16M4 19h10M17 17l2 2 3-4'], ['#/todo', 'To do', 'M5 12l4 4 10-10']]
+['#/plans', 'Plans', 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11M9 8h6'], ['#/scores', 'Scores', 'M4 5h16M4 12h16M4 19h10M17 17l2 2 3-4'], ['#/todo', 'To do', 'M5 12l4 4 10-10']]
 .map(([h, l, d]) => '<a href="' + h + '" data-phnav="' + h + '">' + ic(d) + '<span>' + l + '</span></a>').join('');
 document.body.appendChild(nav);
 }
 function phNavRender() {
 if (!PHONE) return;
-const v = routeNow().v, on = v === 'scores' ? '#/scores' : v === 'todo' ? '#/todo' : '#/';
+const v = routeNow().v, on = v === 'scores' ? '#/scores' : v === 'plans' ? '#/plans' : v === 'todo' ? '#/todo' : '#/';
 for (const a of document.querySelectorAll('[data-phnav]')) { const me = a.dataset.phnav === on; a.classList.toggle('on', me); if (me) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
 }
 window.addEventListener('hashchange', phNavRender);
@@ -33979,6 +34111,36 @@ openDlg('<div class="bh"><h2>Use on your phone</h2></div><div class="bb phhow">'
 '</div><div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
 }
 window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });
+
+/* Plans: the lessons from the Planner on her computer, day by day, to read (the Planner itself is where they are written). They come
+through her Google Drive with the rest of her work (drive.js, planSync), into this browser's own copy of the Planner's store. */
+async function phPlansRender(r) {
+const box = $('#phPlans'); if (!box) return;
+if (r.id) return phLessonRender(box, r.id);
+const p = await planRead();
+if (!$('#phPlans') || routeNow().v !== 'plans' || routeNow().id) return;
+if (!p) { box.innerHTML = '<p class="muted">Your lesson plans show here once the Planner on your computer has a timetable. Sign in with Google here and on the computer.</p>'; return; }
+const days = [];
+for (let i = 0; i < 28 && days.length < 10; i++) { const at = Date.now() + i * 864e5, d = todayRows(p, at); if (d.off || d.rows.length) days.push({ at, ...d }); }
+const day = at => new Date(at).toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'short', day: 'numeric' });
+const when = (c, m) => [c.name, m.start ? planTime(m.start) + (m.end ? '–' + planTime(m.end) : '') : ''].filter(Boolean).join(' · ');
+box.innerHTML = days.length ? days.map(d => '<h2 class="tcap" data-raw>' + esc(day(d.at)) + '</h2>' + (d.off ? '<p class="muted phpad" data-raw>' + esc(d.off) + '</p>' :
+'<div class="tcard phlist">' + d.rows.map(({ c, m, lessons }) => lessons.length ? lessons.map(l => '<a class="phitem" href="#/plans/' + encodeURIComponent(l.id) + '"><span class="phn"><b data-raw>' + esc(l.title) + '</b><small data-raw>' + esc(when(c, m)) + '</small></span><span class="phc"><i class="phdot" style="background:' + esc(c.color) + '"></i></span></a>').join('') :
+'<div class="phitem"><span class="phn"><b data-raw>' + esc(c.name) + '</b><small>' + esc((m.start ? planTime(m.start) + ' · ' : '') + 'No lesson planned') + '</small></span></div>').join('') + '</div>')).join('')
+: '<p class="muted">No classes in the next four weeks.</p>';
+}
+async function phLessonRender(box, id) {
+const db = await planDb(false); let l = null;
+if (db) { try { l = await idbP(db.transaction('lessons').objectStore('lessons').get(id)); } catch {} db.close(); }
+if (!$('#phPlans') || routeNow().id !== id) return;
+const back = '<p><a class="btn sm" href="#/plans">‹ Plans</a></p>';
+if (!l) { box.innerHTML = back + '<p class="muted">This lesson isn’t here yet. It comes with the next sync.</p>'; return; }
+const txt = s => esc(String(s || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim()).replace(/\n/g, '<br>');
+const slides = Array.isArray(l.slides) ? l.slides : [];
+box.innerHTML = back + '<h2 class="phlt" data-raw>' + esc(l.title || 'Untitled lesson') + '</h2>' +
+(l.note ? '<p class="phln" data-raw>' + txt(l.note) + '</p>' : '') +
+(slides.length ? '<ol class="phslides">' + slides.map(s => '<li class="tcard"><b data-raw>' + txt(s.title) + '</b>' + (s.body ? '<p data-raw>' + txt(s.body) + '</p>' : '') + (s.img || (s.ctx && s.ctx.length) ? '<small class="muted">A picture, on your computer</small>' : '') + (s.notes ? '<p class="phsn" data-raw>' + txt(s.notes) + '</p>' : '') + '</li>').join('') + '</ol>' : '<p class="muted">No slides yet.</p>');
+}
 
 /* ---------------- the frame: the sidebar, Home's "Needs a look", and Find anything (11/9) ---------------- */
 var shellReady, screenWas = '';
