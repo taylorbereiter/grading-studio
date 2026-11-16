@@ -8,6 +8,7 @@
 // work is the download, asg the assignment, title the assignment's name when it was kept. from.key is the only place a student appears: shown only
 // to the teacher, never on a picture, in a download or in Show to the class, and dropped when the download is forgotten.
 // The database is made only when the first example is kept, so a browser that never keeps one never has it.
+// The Planner reads it (src/planner/plexamples.js), never writes it, and takes only the names above and the pictures, never from.
 const EX_DB = 'grading-studio-examples';
 let exDbP = null, exList = [], exReady = null;
 const exDb = () => exDbP ||= new Promise((res, rej) => {

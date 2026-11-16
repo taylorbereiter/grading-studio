@@ -227,9 +227,11 @@ function addSlideDlg(mode) {
   const change = mode === 'change', cur = l.slides[L.cur];
   openDlg('<div class="bh"><h2>' + (change ? 'Layout for this slide' : 'Add a slide') + '</h2></div><div class="bb">' + (change ? '<p class="muted" style="margin-top:0">Your text stays. Any new boxes start empty, with a gray hint of what goes there.</p>' : '') + LAYOUT_GROUPS.map(([g, ks]) => '<h3 class="pl-h3">' + g + '</h3><div class="pl-looks">' +
     ks.map(k => '<button class="pl-look' + (change && k === cur.layout ? ' on' : '') + '" data-addslide="' + k + '">' + miniSlide(normSlide({ layout: k, size: (TEACH[k] || {}).size, ...(TEACH_SAMPLE[k] || {}) }), l, lookOf(l), 164) + '<span>' + esc(LAYOUTS[k]) + '</span></button>').join('') + '</div>').join('') +
+    (!change && plxHas() ? '<h3 class="pl-h3">From your strong examples</h3><button class="btn sm" data-plxadd>Pick a strong example…</button>' : '') +
     '</div><div class="bf"><button class="btn" data-x>Cancel</button></div>');
   $('#dlgBox').onclick = e => {
     if (e.target.closest('[data-x]')) return closeDlg();
+    if (e.target.closest('[data-plxadd]')) { closeDlg(); return plxPick('slide'); }
     const b = e.target.closest('[data-addslide]'); if (!b) return;
     closeDlg();
     if (!change) return newSlide(b.dataset.addslide);
