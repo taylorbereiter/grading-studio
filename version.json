@@ -1,23 +1,22 @@
 {
- "version": "1.28.49",
- "build": "c124ca7126fe",
+ "version": "1.28.53",
+ "build": "1f58dc0d53ef",
  "notes": [
-  "Papers through Google Drive: once you've marked them, your papers go up to your Drive by themselves. Your other computer gets them the first time you open that assignment there, and on your phone the eye button shows one student's paper.",
-  "Use on your phone: a button beside the Google sign-in shows a QR code and four steps for adding Grading Studio to your phone's Home Screen. The Welcome screen has Sign in with Google too, and signing in works on any iPhone browser.",
-  "Google's sign-in window no longer pops up by itself. When the hour-long sign-in runs out, syncing waits and the Google line says sign in again to sync. Tap it once to carry on. The Drive papers chooser now opens in the folder you last used."
+  "Replace in one step: Replace… on a student's file can take the new one from your computer or from Google Drive, and a video link can be replaced by a new link, video file or Drive video, for partners too. The score stays, and Undo puts the old one back.",
+  "In the Planner, lesson materials, unit files and unit-plan screenshots have Replace… too, with Undo."
  ],
  "files": {
-  "index.html": "2d923cb482485757f8b97937d1bf63317431a8d6ca37c8c378bc90d3ee510001",
-  "planner.html": "b353c7c0ef97430057370eb2bc5026a8a3731518bd24abcc678bafc6752cee42"
+  "index.html": "31f46cf78f232aabbc6c53cc66e3d6ebc102f19b89c7d266ef0ed22b362c50fa",
+  "planner.html": "2a62d35b24d36e96dac61a2218d88061a73aff97d7711dd07af66b3cc76ce8fc"
  },
  "langs": {
-  "lang/zh-Hant.js": "124aef919fcedde9e5e7ea0fb47cecc681df7b77c51ed9e78021b5e918a68652",
-  "lang/zh-Hans.js": "97cb4df7f84e670796c9e1eeb998760c4ff657f78c680bf00336079e09f5ea48",
-  "lang/es.js": "e44059589e151cdf7e2220b4573c5a0413c7a1843ff3d3ca078d77e2a0a2409f",
-  "lang/fr.js": "5ca6101e13ae7488afbb38bebee5d51b9197ac518a56b80994ccf010248c79b5",
-  "lang/de.js": "cd98ecf672b057a9360f3fcd14ab89ce27f018b8a411bb32ff484e20e606cd63",
-  "lang/pt-BR.js": "e869d510b2558acd6552660a6fd249f2d210863328c7b7eb4e48f74b355e8b71",
-  "lang/ja.js": "0cc4bca046a06dc0e09267ce42f72d8aa8f7bfa7ed12583ad35717c8bb65c818",
-  "lang/ko.js": "b9c3a1b3cddb204d53e6a25c2150e223398afd9cb709fb3e3e87a6967dbc03c9"
+  "lang/zh-Hant.js": "b8d5a5fa409e9104847e740ca0c3162e10f9ec763cfc74ef80351ecee78029a4",
+  "lang/zh-Hans.js": "5745ccfaf54b1c0728aedb9a4ea809521d23af3a57a608c1e84d827a46410b98",
+  "lang/es.js": "da065db7bc401458b8497b70e496511c65e17dec7dc865f9837aa4e570cea6b9",
+  "lang/fr.js": "e1ae3aa03c8926eed56efc3d4064b601690dbff9ef7804d8128d808586133971",
+  "lang/de.js": "3a858d2d2115a534be9fae2275bc05b2c73f21d9d6af29b896614a6731f2d825",
+  "lang/pt-BR.js": "0d7df1fde236f4378802102e5fe2ba122c6f3598b20295a11065899edefaa35e",
+  "lang/ja.js": "f98347b337b77c667d190c164b85260885bfe57cfac2b26483f763c134200f15",
+  "lang/ko.js": "783e294fd4887651984c5812c604fe5eb0952c3196f01a95b83717aa8bb795e2"
  }
 }
