@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"843605a9","zh-Hans":"d1df80f6","es":"a6703be7","fr":"c390b6f1","de":"895a0f6e","pt-BR":"06b01b50","ja":"33186075","ko":"273bd656"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"124aef91","zh-Hans":"97cb4df7","es":"e4405958","fr":"5ca6101e","de":"cd98ecf6","pt-BR":"e869d510","ja":"0cc4bca0","ko":"b9c3a1b3"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -3522,11 +3522,23 @@ body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #td
 .phin{width:92px;padding:10px 12px;border:1px solid var(--line-strong);border-radius:var(--corner-4);background:var(--surface);color:var(--fg);text-align:right;font:inherit;font-size:var(--text-lead);font-variant-numeric:tabular-nums}
 .phin:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
 .phstu.st-missing .phin::placeholder,.phstu.st-excused .phin::placeholder{color:var(--gold-fg);opacity:1}
-.phpaper{width:92px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;padding-right:44px}
+.phpaper{min-width:92px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;padding-right:44px;white-space:nowrap}
+.phpaper:has(+ .phsee){padding-right:0}
 .phmore{width:40px;height:40px}
 .phfb{padding:10px 14px;border:1px solid var(--line-strong);border-radius:var(--corner-pill);background:var(--surface);color:var(--muted);font:inherit;font-size:var(--text-body)}
 .phfb[aria-pressed="true"]{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);font-weight:600}
 .gsphone [data-fcnext]{display:none!important}
+.phsee{width:40px;height:40px}
+.phsee svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8}
+.phview{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column}
+.phvhead{display:flex;align-items:center;gap:12px;padding:max(10px,env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--line);background:var(--surface)}
+.phvhead b{flex:1;min-width:0;overflow-wrap:anywhere}
+.phvbody{flex:1;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}
+.phvpage{display:block;width:100%;height:auto;margin:0 auto 12px;border-radius:var(--corner-2);box-shadow:var(--shadow)}
+.phqr{display:flex;justify-content:center;margin:0 0 6px}
+.phqr .qr{width:200px;height:200px}
+.phurl{text-align:center;margin:0 0 12px;font-size:var(--text-control);color:var(--muted);overflow-wrap:anywhere}
+.phsteps{margin:0 0 12px;padding-left:22px;display:flex;flex-direction:column;gap:6px}
 
 .seatbar b{font-weight:600}
 .seatbar2{background:var(--bg)}
@@ -5055,7 +5067,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.48";
+  const APP_VERSION = "1.28.49";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -10155,7 +10167,7 @@ const SYNC_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
 const PICK_SCOPE = 'https://www.googleapis.com/auth/drive.file ' + SYNC_SCOPE;
 const GOOGLE_API_KEY = '/*@@GKEY@@*/';
 const G = { token: null, exp: 0, scope: '', client: null, cscope: '', email: store.get('gs.gEmail', ''), waiters: [] };
-const G_REDIRECT = navigator.standalone === true;
+const G_REDIRECT = navigator.standalone === true || /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 const gBack = () => location.origin + location.pathname.replace(/index\.html$/, '');
 {
 const h = new URLSearchParams(location.hash.replace(/^#/, '')), want = (() => { try { return sessionStorage.getItem('gs.gState'); } catch { return null; } })();
@@ -10179,7 +10191,8 @@ async function gToken(interactive, full) {
 const scope = full ? PICK_SCOPE : SYNC_SCOPE;
 if (G.token && Date.now() < G.exp - 60000 && gHas(scope)) return G.token;
 if (!gcid()) throw new Error('setup');
-if (G_REDIRECT) { if (interactive) gRedirect(scope); throw new Error('Sign in again to sync'); }
+if (!interactive) throw new Error('Sign in again to sync');
+if (G_REDIRECT) { gRedirect(scope); throw new Error('Sign in again to sync'); }
 await loadGis();
 if (!G.client || G.cscope !== scope) {
 G.cscope = scope;
@@ -10221,13 +10234,15 @@ function renderGoogle() {
 for (const el of document.querySelectorAll('.gAcct, #pickDrive')) el.hidden = !GOK || !gcid();
 if (!GOK || !gcid()) return;
 for (const el of document.querySelectorAll('.gAcct')) el.innerHTML = G.email
-? '<span class="muted" style="font-size:13px">Google: ' + esc(G.email) + ' · <span id="syncState">' + (syncState || 'synced') + '</span></span> <button class="link" data-gout>Sign out</button>'
+? '<span class="muted" style="font-size:13px">Google: ' + esc(G.email) + ' · ' + (syncPaused() ? '<button class="link" data-gin id="syncState">' + syncState + '</button>' : '<span id="syncState">' + (syncState || 'synced') + '</span>') + '</span> <button class="link" data-gout>Sign out</button>'
 : '<button class="btn sm" data-gin>Sign in with Google</button>';
+if (!PHONE) for (const el of document.querySelectorAll('.gAcct')) el.insertAdjacentHTML('beforeend', ' <button class="btn sm" data-gphone>Use on your phone</button>');
 for (const b of document.querySelectorAll('.needG')) b.hidden = !G.email;
 }
 document.addEventListener('click', e => {
 if (e.target.closest('[data-gin]')) signIn();
 if (e.target.closest('[data-gout]')) signOut();
+if (e.target.closest('[data-gphone]')) phoneHowTo();
 });
 function driveSetup() {
 openDlg('<div class="bh"><h2>Connect Google</h2></div><div class="bb"><p style="margin-top:0">This copy of Grading Studio doesn’t have its Google key yet. Paste the Client ID here (it ends in apps.googleusercontent.com).</p>' +
@@ -10242,8 +10257,10 @@ if (e.target.closest('[data-ok]')) { const v = $('#gcidIn').value.trim(); if (!/
 const paperMimes = () => ['application/pdf', 'image/png', 'image/jpeg', 'image/heic', 'application/zip', 'application/x-zip-compressed', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-word.document.macroEnabled.12', 'application/vnd.google-apps.document', 'application/vnd.google-apps.presentation', 'application/vnd.google-apps.spreadsheet', 'application/vnd.google-apps.drawing'].concat(VID_MIMES);
 async function openFromDrive(assignment) {
 let picked;
-try { picked = await drivePick({ multi: true, mimes: paperMimes(), title: 'Choose the ZIP, or the papers' }); } catch (e) { console.error(e); return sayDlg(e.message); }
+const dir = store.get('gs.gPaperDir', null);
+try { picked = await drivePick({ multi: true, mimes: paperMimes(), title: 'Choose the ZIP, or the papers', ...(dir ? { parent: dir, parentName: 'Last folder' } : {}) }); } catch (e) { console.error(e); return sayDlg(e.message); }
 if (!picked.length) return;
+if (picked[0].parent) store.set('gs.gPaperDir', picked[0].parent);
 openDlg('<div class="bh"><h2>Open from Google Drive</h2></div><div class="bb"><div class="prog"><i></i></div><p class="muted" id="dvStatus" style="font-size:13px"></p></div>');
 const bar = $('#dlgBox .prog');
 try {
@@ -10292,7 +10309,8 @@ const SYNC_RX = /^gs\.(lib|setup|bank|rubrics|school|b\..+|rp\..+|rd\..+)$/;
 const raw = store.set.bind(store);
 store.set = (k, v) => { const ok = raw(k, v); if (ok && SYNC_RX.test(k)) syncSoon(); return ok; };
 }
-function setSyncState(s) { syncState = s; const el = document.getElementById('syncState'); if (el) el.textContent = s; }
+function syncPaused() { return /sign in again/.test(syncState || ''); }
+function setSyncState(s) { const was = syncPaused(); syncState = s; if (syncPaused() !== was) return renderGoogle(); const el = document.getElementById('syncState'); if (el) el.textContent = s; }
 function syncSoon() { if (!G.email || sampleOn()) return; clearTimeout(syncT); setSyncState('saving…'); syncT = setTimeout(syncNow, 15000); }
 const syncVer = async () => String((await (await gsync('files/' + syncFile.id + '?fields=id,version')).json()).version || '');
 async function syncRead() {
@@ -10312,7 +10330,6 @@ fd.append('metadata', new Blob([JSON.stringify({ name: SYNC_NAME, parents: ['app
 fd.append('file', new Blob([body], { type: 'application/json' }));
 syncFile = { id: (await (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: fd })).json()).id };
 }
-const syncNone = { papers: async () => null, added: async () => null, edit: async () => null };
 function syncDecide(asks) {
 const out = {};
 for (const q of asks) {
@@ -10336,10 +10353,16 @@ console.warn(e); setSyncState(/sign in/i.test(e && e.message) ? 'sign in again t
 })().finally(() => { syncBusy = null; if (syncAgain) { syncAgain = false; syncNow(); } });
 return syncBusy;
 }
+async function syncPlan() {
+const db = await planDb(false); if (!db) return null;
+let su = null; try { su = await idbP(db.transaction('kv').objectStore('kv').get('setup')); } catch {} db.close();
+if (!su || !Array.isArray(su.classes) || !su.classes.length) return null;
+return { classes: su.classes.map(c => ({ id: c.id, name: c.name, color: c.color, meets: c.meets })), semStart: su.semStart || '', semEnd: su.semEnd || '', daysOff: su.daysOff || [] };
+}
 async function syncOnce() {
 setSyncState('syncing…');
 if (batch) await saveNow();
-const got = await syncRead(), B = got && got.app === 'Grading Studio sync' ? { work: got.work || {}, meta: got.meta || {}, tomb: got.tomb || {}, added: {}, edits: {}, lib: got.lib, ls: got.ls || {} } : null;
+const got = await syncRead(), B = got && got.app === 'Grading Studio sync' ? { work: got.work || {}, meta: got.meta || {}, tomb: got.tomb || {}, added: dvAdded(got.files), edits: {}, lib: got.lib, ls: got.ls || {} } : null;
 const A = await localState(), dev = devId(), now = Date.now();
 let rows = [], tomb = A.tomb;
 if (B) {
@@ -10355,12 +10378,13 @@ if (plan.asks.length) plan = mergeStates(A, B, { dev, now, linked: libLinked(lib
 libFollow(libm, plan.rows, dev, now);
 rows = plan.rows; tomb = plan.tomb;
 const open = batch && batch.id, came = rows.filter(r => r.kind === 'new' || r.kind === 'gone' && r.onA || r.toA || (r.meta && JSON.stringify(r.meta) !== JSON.stringify(r.ma)));
-for (const row of came) if (row.id !== open && row.kind !== 'askGone') await applyRow(row, syncNone);
+for (const row of came) if (row.id !== open && row.kind !== 'askGone') await applyRow(row, dvSource(got.files || {}));
 if (libVer !== v0) { libm.lib = mergeLib(libHere(), libm.lib, { dev, now }).lib; libm.toA = true; }
 if (libm.toA) { lib = migrateLib(libm.lib); libUndoForget(); if (!setLibFrom(lib)) throw browserFull(); if (batch && batch.assignment) { const f = findItem(batch.assignment.id); if (f) batch.assignment = f.it; } }
 store.set('gs.tomb', tomb);
+if (got.plan && JSON.stringify(got.plan) !== JSON.stringify(store.get('gs.planCopy', null))) { store.set('gs.planCopy', got.plan); if (typeof planRefresh === 'function') planRefresh(); }
 for (const [k, v] of Object.entries(mergeLs(carryLs(), B.ls, k => Object.keys(tomb).some(id => k.includes(id))))) lsPut(k, v);
-if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); }
+if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); if (wl.on && lib.classes.length) { wlClose(); go('#/'); } }
 if (open && rows.some(r => r.id === open && r.toA)) syncAgain = false;
 }
 const out = { app: 'Grading Studio sync', v: 1, t: now, lib: libHere(), work: {}, meta: {}, tomb, ls: carryLs() };
@@ -10372,10 +10396,14 @@ if (w) out.work[id] = w;
 if (m) { const { papers, size, ...rest } = m; out.meta[id] = rest; }
 }
 delete out.ls['gs.lib'];
+out.plan = (await syncPlan()) || (got && got.plan) || null;
+out.files = dvFiles(got && got.files, tomb);
 const body = JSON.stringify(out);
 if (!got || body !== JSON.stringify({ ...got, t: now })) await syncWrite(body);
 store.set('gs.syncAt', now);
+dvCloud(out.files);
 setSyncState('synced');
+dvUpSoon();
 }
 window.addEventListener('focus', () => { if (G.email) syncNow(); });
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && G.email) syncNow(); });
@@ -10390,6 +10418,93 @@ gToken(false).then(() => { renderGoogle(); syncNow(); }).catch(() => setSyncStat
 }, 400);
 if (GOK && G_REDIRECT && G.token && !G.email) setTimeout(() => gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); toast('Signed in as ' + G.email); syncNow(); }).catch(e => toast(e.message)), 400);
 
+/* Papers through Drive: each file once, named by what's in it (as a linked folder keeps them, folder.js), in the same hidden folder.
+A computer sends up the papers it keeps, in the background, after the marks; the sync file lists each download's files once they
+are all there. Another device fetches a download's papers the first time she opens it there (reopenKept), and a phone fetches one
+student's at a time (phone.js). Late files come with the marks. */
+const DV = { names: null, files: store.get('gs.cloudP', null) || {}, up: null, full: false };
+function canOpen(m) { return !!m && (!!m.papers || (!!DV.files[m.id] && !!G.email && GOK && !sampleOn())); }
+function dvCloud(files) { DV.files = Object.fromEntries(Object.entries(files || {}).filter(([, f]) => f && f.papers)); store.set('gs.cloudP', DV.files); }
+const dvAdded = files => Object.fromEntries(Object.entries(files || {}).map(([id, f]) => [id, Object.fromEntries(Object.entries(f.added || {}).map(([k, r]) => [k, r.added || 0]))]));
+function dvFiles(was, tomb) { const o = { ...(was || {}), ...(DV.sent || {}) }; for (const id of Object.keys(o)) if (tomb[id]) delete o[id]; return o; }
+async function dvNames() {
+if (DV.names) return DV.names;
+const m = new Map(); let page = '';
+do {
+const j = await (await gsync("files?spaces=appDataFolder&pageSize=1000&fields=nextPageToken,files(id,name)&q=" + encodeURIComponent("name contains '.dat' and trashed=false") + (page ? '&pageToken=' + page : ''))).json();
+for (const f of j.files || []) m.set(f.name, f.id); page = j.nextPageToken;
+} while (page);
+return (DV.names = m);
+}
+async function dvPut(bytes) {
+const hash = await shaOf(bytes), name = hash + '.dat', names = await dvNames();
+if (names.has(name)) return { hash, size: bytes.length };
+const meta = JSON.stringify({ name, parents: ['appDataFolder'] });
+let id;
+if (bytes.length <= 4e6) {
+const fd = new FormData(); fd.append('metadata', new Blob([meta], { type: 'application/json' })); fd.append('file', new Blob([bytes]));
+id = (await (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: fd })).json()).id;
+} else {
+const at = (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Upload-Content-Length': String(bytes.length) }, body: meta })).headers.get('Location');
+id = (await (await gsync(at + '&fields=id', { method: 'PUT', body: new Blob([bytes]) })).json()).id;
+}
+names.set(name, id);
+return { hash, size: bytes.length };
+}
+async function dvGet(ref) {
+let id = (await dvNames()).get(ref.hash + '.dat');
+if (!id) { DV.names = null; id = (await dvNames()).get(ref.hash + '.dat'); }
+if (!id) throw new Error('A paper isn’t in your Google Drive any more. Open it on the computer that has it, and it goes up again.');
+const bytes = new Uint8Array(await (await gsync('files/' + id + '?alt=media')).arrayBuffer());
+if (bytes.length !== ref.size || await shaOf(bytes) !== ref.hash) throw new Error('A paper came down from Google Drive damaged. Try again.');
+return bytes;
+}
+async function dvSend(id) {
+const rec = await kget('papers', id); if (!rec || !rec.entries) return null;
+const papers = [];
+for (let i = 0; i < rec.entries.length; i++) { const data = await keptBytes(id, i, rec.entries[i]); papers.push({ path: rec.entries[i].path, ...(data ? await dvPut(data) : {}) }); }
+const added = {}, range = IDBKeyRange.bound(id + '|', id + '|￿');
+for (const k of ((await idbDo('readonly', o => o.getAllKeys(range))) || []).map(k => k.slice(id.length + 1))) { const r = await idbDo('readonly', o => o.get(id + '|' + k)); if (r) { const { data, ...x } = r; added[k] = { ...x, ...await dvPut(data) }; } }
+return { label: rec.label || '', papers, added };
+}
+function dvUpSoon() { if (!DV.up && !DV.full && !PHONE) DV.up = dvUp().finally(() => { DV.up = null; }); }
+async function dvUp() {
+let sent = 0;
+for (const m of [...keptMeta.values()].sort((a, b) => b.t - a.t)) {
+if (!m.papers || !G.email) continue;
+const have = DV.files[m.id], added = await idbDo('readonly', o => o.getAllKeys(IDBKeyRange.bound(m.id + '|', m.id + '|￿'))) || [];
+if (have && added.every(k => have.added && k.slice(m.id.length + 1) in have.added)) continue;
+try {
+setSyncState('sending papers…');
+const f = await dvSend(m.id); if (!f) continue;
+(DV.sent ||= {})[m.id] = f; DV.files[m.id] = f; sent++;
+} catch (e) {
+if (/storageQuotaExceeded|quota/i.test(e && e.message)) { DV.full = true; setSyncState('marks synced; your Google Drive is full, so papers stay here'); return; }
+console.warn(e); setSyncState('marks synced; papers not sent yet'); return;
+}
+}
+if (sent) { store.set('gs.cloudP', DV.files); await syncNow(); DV.sent = null; } else if (!syncBusy) setSyncState('synced');
+}
+const dvSource = files => ({
+papers: async () => null, edit: async () => null,
+async added(id, k) { const r = files[id] && files[id].added && files[id].added[k]; if (!r) return null; const { hash, size, ...x } = r; return { ...x, data: await dvGet({ hash, size }) }; },
+});
+async function dvPull(id, onStep) {
+const f = DV.files[id]; if (!f) return null;
+const entries = []; let n = 0;
+for (const e of f.papers) { entries.push({ path: e.path, data: e.hash ? await dvGet(e) : null }); onStep && onStep(++n, f.papers.length); }
+const rec = { id, label: f.label || '', entries };
+await paperPut(id, rec);
+const m = { ...(keptMeta.get(id) || await kget('meta', id) || { id }), papers: true, size: entries.reduce((a, e) => a + (e.data ? e.data.length : 0), 0) };
+await kdo('meta', 'readwrite', o => o.put(m, id)); keptMeta.set(id, m);
+return rec;
+}
+async function dvPullOne(id, key) {
+const f = DV.files[id]; if (!f) return [];
+const mine = f.papers.filter(e => e.hash && e.path.split('/')[0] === key);
+const out = []; for (const e of mine) out.push({ path: e.path, data: await dvGet(e) });
+return out;
+}
 /* ---------- videos from Drive: Google's own chooser, and only what she picks ---------- */
 const driveCan = () => GOK && !!gcid();
 const VID_MIMES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/x-matroska', 'video/3gpp', 'video/ogg'];
@@ -10426,7 +10541,7 @@ views.forEach(v => b.addView(v));
 b
 .enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Click your videos folder once (or any video in it), then Select' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
 .setCallback(d => {
-if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).map(x => o.folder && x.mimeType !== FOLDER ? (x.parentId ? { id: x.parentId, name: 'Folder with ' + x.name, mimeType: FOLDER } : null) : x).filter(x => x && (o.folder || x.mimeType !== FOLDER)).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '' })));
+if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).map(x => o.folder && x.mimeType !== FOLDER ? (x.parentId ? { id: x.parentId, name: 'Folder with ' + x.name, mimeType: FOLDER } : null) : x).filter(x => x && (o.folder || x.mimeType !== FOLDER)).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '', ...(x.parentId ? { parent: x.parentId } : {}) })));
 else if (d[P.Response.ACTION] === P.Action.CANCEL) res([]);
 });
 if (GOOGLE_API_KEY && !/@@/.test(GOOGLE_API_KEY)) b.setDeveloperKey(GOOGLE_API_KEY);
@@ -11170,7 +11285,7 @@ let n = 0;
 const fm = it.type === 'fm';
 if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (fm ? g.fb : (g.rubric || []).some(v => v != null) || g.points !== '' || (g.pk != null && g.pk !== ''))) n++; }
 const m = keptMeta.get(it.batchId);
-if (m) return keptSay(m) + (m.papers ? '' : ' · papers not kept');
+if (m) return keptSay(m) + (canOpen(m) ? '' : ' · papers not kept');
 return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + (fm ? ' feedback complete' : ' scored') : '') + ' · drop the same ZIP to keep going';
 }
 /* ---------------- where she is: every screen has its own address, the part after # ---------------- */
@@ -11246,7 +11361,7 @@ try { await keptFirst; await workerReady; } catch {}
 const stale = () => tok !== routeTok;
 if (stale()) return;
 const m = keptMeta.get(id);
-if (!m || !m.papers) { routeOpening = ''; if (m) toast('The papers for this one aren’t kept in this browser. Drop the download in again.', 6000); return go('#/', true); }
+if (!m || !canOpen(m)) { routeOpening = ''; if (m) toast('The papers for this one aren’t kept in this browser. Drop the download in again.', 6000); return go('#/', true); }
 try { await reopenKept(id); } catch (e) { console.error(e); }
 if (stale()) return;
 routeOpening = '';
@@ -11291,14 +11406,14 @@ function renderLib() {
 renderKept();
 const card = it => {
 const m = it.batchId ? keptMeta.get(it.batchId) : null, st = m ? keptState(m) : null, typedOnly = !!it.typed && !it.batchId;
-return '<div class="card" draggable="true" data-card="' + it.id + '" title="' + (m && m.papers ? 'Open the papers' : it.typed && !it.batchId ? 'Scores typed in: open the gradebook' : 'Add this assignment’s papers') + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
+return '<div class="card" draggable="true" data-card="' + it.id + '" title="' + (m && canOpen(m) ? 'Open the papers' : it.typed && !it.batchId ? 'Scores typed in: open the gradebook' : 'Add this assignment’s papers') + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
 (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (typedOnly ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + lkCard(it) + '</div>' +
 '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
 '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (h => h ? '<div class="m">' + h + '</div>' : '')(tkAsgHtml(it.id)) + (st ? stateChip(st) : '') + '</div>' +
-'<div class="row">' + (m && m.papers ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
+'<div class="row">' + (m && canOpen(m) ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
 : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') +
 kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-edit-asg="' + it.id + '">Edit<small>Name, type, due date, unit, rubric</small></button>' +
-(m && m.papers || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : '') + lkMenu(it, holderById(it.classId) || lib.loose), 'right') + '</div></div>';
+(m && canOpen(m) || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : '') + lkMenu(it, holderById(it.classId) || lib.loose), 'right') + '</div></div>';
 };
 const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
 '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><span class="ucount">' + u.items.length + (u.items.length === 1 ? ' assignment' : ' assignments') + '</span><span class="sp"></span>' +
@@ -11824,7 +11939,8 @@ for (const c of holders()) for (const u of c.units) { const it = u.items.find(x 
 return null;
 }
 async function reopenKept(id, assignment) {
-const rec = await paperGet(id);
+let rec = await paperGet(id);
+if (!rec && DV.files[id] && G.email) { try { toast('Getting the papers from your Google Drive…', 60000); rec = await dvPull(id, (n, t) => toast('Getting the papers from your Google Drive: ' + n + ' of ' + t + '…', 60000)); toast('The papers are here now.'); } catch (e) { toast(e.message, 8000); return; } }
 if (!rec) { toast('The papers for this one aren’t kept in this browser. Drop the download in again.'); return; }
 await intake(rec.entries, rec.label, assignment || cardOfKept(id), true);
 }
@@ -20528,7 +20644,7 @@ let setLibFrom, libNews;
   };
 }
 const browserFull = () => Object.assign(new DOMException('The small store is full', 'QuotaExceededError'), { small: true });
-const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|refOpen\..*)$/;
+const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|refOpen\..*)$/;
 function carryLs() {
   const o = {};
   for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && !LS_LOCAL.test(k)) o[k] = localStorage.getItem(k); }
@@ -20978,6 +21094,7 @@ function whereSay() {
     case 'lost': return { text: 'Only in this browser. ' + (fld.why === 'full' ? 'The disk with ' + nm + ' is full' : fld.why === 'room' ? 'This browser is out of room, so ' + nm + ' can’t catch up' : 'Can’t reach ' + nm), tip: 'It’ll catch up by itself as soon as the folder is back.', cls: 'warn' };
     case 'decide': return { safe: true, text: fld.asks.length + (fld.asks.length === 1 ? ' thing' : ' things') + ' to decide about your folder', tip: 'Two versions to choose between', cls: 'warn', act: 'Decide' };
     default: return !fld.booted ? { safe: true, text: 'Checking where your work is kept…', tip: 'One moment', cls: '' }
+      : G.email && !sampleOn() ? { safe: true, sub: 'Backed up in your Google Drive', text: 'Backed up in your Google Drive', tip: 'Every change also goes to Grading Studio’s own hidden folder in your Google Drive', cls: '' }
       : { sub: 'Only in this browser', text: 'Not backed up. Only in this browser', tip: canPickFolder() ? 'Clearing this browser’s data would erase your work. Choose a folder and every save goes there too' : 'Clearing this browser’s data would erase your work. This browser can’t save to a folder, so make a take-home file when you finish marking', cls: 'warn' };
   }
 }
@@ -20989,7 +21106,7 @@ function renderWhere() {
   }
   if (top) { const cut = /^Not backed up\. /.exec(s.text); top.textContent = cut ? 'Not backed up' : s.text; if (cut) { const more = document.createElement('span'); more.className = 'sw-more'; more.textContent = s.text.slice(13); top.append(more); } top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
   if (line) {
-    const h = sampleOn() ? '<span class="wtext">This is the sample. It is kept only in this browser while you look around, and your own work is kept apart.</span>' : '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
+    const h = sampleOn() ? '<span class="wtext">This is the sample. It is kept only in this browser while you look around, and your own work is kept apart.</span>' : '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted && !G.email ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
       (s.act ? '<button class="btn sm primary" data-wact>' + s.act + '</button> ' : '') +
       (fld.state === 'none' ? (canPickFolder() ? '<button class="btn sm primary" data-wlink>Choose a folder…</button>' : '') : '<button class="btn sm" data-wopen>Folder…</button>') +
       (fld.state !== 'none' && fld.root ? ' <a class="btn sm" href="#/settings/history">Go back in time…</a>' : '');
@@ -23583,6 +23700,7 @@ if (at) m.addEventListener('loadedmetadata', () => { m.currentTime = at; }, { on
 const say = el.querySelector('.vlnote'), bar = el.querySelector('.prog');
 if (k.stream) {
 m.onerror = async () => {
+if (!drivePickReady()) { if (el.isConnected) el.replaceWith(driveCard(st, f, '', m.currentTime)); return; }
 drvStreamBad.add(id);
 let why = ''; try { await gjson('files/' + encodeURIComponent(id) + '?fields=id&supportsAllDrives=true'); } catch (err) { why = drvSay(err); }
 if (el.isConnected) { const c = driveCard(st, f, why || 'This video wouldn’t play straight from Drive. Download it for offline, or watch it in Drive’s player.'); el.replaceWith(c); }
@@ -29306,6 +29424,7 @@ if (db) {
 try { const t = db.transaction(['kv', 'lessons']); [setup, lessons] = await Promise.all([idbP(t.objectStore('kv').get('setup')), idbP(t.objectStore('lessons').getAll())]); } catch {}
 db.close();
 }
+if (!(setup && Array.isArray(setup.classes) && setup.classes.length)) setup = store.get('gs.planCopy', null);
 const hex = c => /^#[0-9a-f]{6}$/i.test(c) ? c : '#1F6FB2';
 const classes = (setup && Array.isArray(setup.classes) ? setup.classes : []).filter(c => c && c.id != null).map(c => ({ id: String(c.id), name: String(c.name || c.id), color: hex(c.color),
 meets: (Array.isArray(c.meets) ? c.meets : []).map(m => ({ dow: +m.dow, start: String(m.start || ''), end: String(m.end || '') })) }));
@@ -29363,19 +29482,19 @@ return { mark, back, old };
 const keptWhere = m => { const it = cardOfKept(m.id), f = it && findItem(it.id); return { it, cls: f && f.c !== lib.loose ? f.c : null }; };
 const keptDots = m => kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(m.name || 'this assignment') + '" title="More"',
 '<button class="mitem" data-kforget="' + esc(m.id) + '" title="Removes the papers, your marks and scores for this assignment from this browser and any linked folder">Forget</button>', 'right');
-const keptName = m => m.papers ? '<button class="kname" data-kopen="' + esc(m.id) + '" title="Open the papers">' + esc(m.name || 'Student work') + '</button>' : '<b class="kname">' + esc(m.name || 'Student work') + '</b>';
+const keptName = m => canOpen(m) ? '<button class="kname" data-kopen="' + esc(m.id) + '" title="Open the papers">' + esc(m.name || 'Student work') + '</button>' : '<b class="kname">' + esc(m.name || 'Student work') + '</b>';
 function markRow(m, prim) {
 const st = keptState(m), w = keptWhere(m), fm = w.it && w.it.type === 'fm', began = st.done || m.partial;
-const sub = [w.cls ? w.cls.name : '', w.it && w.it.due ? 'due ' + bkDay(w.it.due) : 'last worked on ' + fmtDay(m.t), m.papers || PHONE ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
+const sub = [w.cls ? w.cls.name : '', w.it && w.it.due ? 'due ' + bkDay(w.it.due) : 'last worked on ' + fmtDay(m.t), canOpen(m) || PHONE ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
 const say = fm ? 'Formative · feedback only' + (st.done ? ' · ' + keptSay(m, st) : st.of ? ' · ' + people(st.of, 'paper') + ', not started' : '') : began ? st.done + ' of ' + st.of + ' scored' + keptMore(m) : st.of + (st.of === 1 ? ' paper' : ' papers') + ', not started' + (m.off ? ' · ' + m.off + ' missing or excused' : '');
 return '<div class="krow"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' +
 '<div class="kp">' + stateBar(st) + '<span class="kl">' + esc(say) + '</span></div>' +
-(m.papers ? '<button class="btn sm' + (prim ? ' primary' : '') + '" data-kopen="' + esc(m.id) + '">' + (began || fm ? 'Continue' : 'Start') + '</button>' : '<span></span>') + keptDots(m) + '</div>';
+(canOpen(m) ? '<button class="btn sm' + (prim ? ' primary' : '') + '" data-kopen="' + esc(m.id) + '">' + (began || fm ? 'Continue' : 'Start') + '</button>' : '<span></span>') + keptDots(m) + '</div>';
 }
 function oldRow(m) {
 const st = keptState(m), w = keptWhere(m), stale = m.newer && keptMeta.has(m.newer);
 const sub = [w.cls ? w.cls.name : '', stale ? 'an older copy: your work went on in a newer one' : keptBack(m) ? 'returned ' + fmtDay(keptBack(m)) : 'last worked on ' + fmtDay(m.t),
-st.of ? keptSay(m, st) : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
+st.of ? keptSay(m, st) : '', canOpen(m) ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
 return '<div class="krow old"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + '</div>';
 }
 const homeStat = new Map();
@@ -29406,8 +29525,8 @@ function backHtml(list, prim) {
 if (!list.length) return '';
 return '<h2 class="tcap">Ready to hand back</h2><div class="tcard">' + list.map(m => {
 const st = keptState(m), w = keptWhere(m), s = statOf(m);
-const sub = [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' ' + st.word, s && s.avg != null ? 'average ' + s.avg + '%' : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
-return '<div class="krow back"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + (m.papers ? '<div class="kact"><a class="btn sm' + (prim && m === list.find(x => x.papers) ? ' primary' : '') + '" href="' + batchHash(m.id, 'return') + '" data-kret="' + esc(m.id) + '">Return papers</a></div>' : '') + '</div>';
+const sub = [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' ' + st.word, s && s.avg != null ? 'average ' + s.avg + '%' : '', canOpen(m) ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
+return '<div class="krow back"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + (canOpen(m) ? '<div class="kact"><a class="btn sm' + (prim && m === list.find(x => canOpen(x)) ? ' primary' : '') + '" href="' + batchHash(m.id, 'return') + '" data-kret="' + esc(m.id) + '">Return papers</a></div>' : '') + '</div>';
 }).join('') + '</div>';
 }
 const NEXT_DAYS = 30;
@@ -29419,7 +29538,7 @@ const head = (w.cls ? esc(w.cls.name) + ': ' : '') + (flat ? 'every row came out
 const who = low.low ? numWord(low.low) + (low.low === 1 ? ' student' : ' students') + ' scored ' + fmtNum(low.top / 2) + ' or below on ' + esc(low.name) + '.' : 'Nobody scored ' + fmtNum(low.top / 2) + ' or below on ' + esc(low.name) + '.';
 return '<h2 class="tcap">What the class needs next</h2><div class="tcard tneed"><p class="tbig">' + head.charAt(0).toUpperCase() + head.slice(1) + '</p>' +
 '<div class="tbars" role="img" aria-label="' + esc(s.rows.map(r => r.name + ' ' + fmtNum(Math.round(r.avg * 10) / 10) + ' of ' + r.top).join(', ')) + '">' + s.rows.map(r => '<span class="tbn">' + esc(r.name) + '</span><span class="tbt"><i class="' + (r === low && !flat ? 'low' : '') + '" style="width:' + Math.round(r.avg / r.top * 100) + '%"></i></span><span class="tbv">' + (Math.round(r.avg * 10) / 10).toFixed(1) + '</span>').join('') + '</div>' +
-(flat ? '' : '<p class="tsay">' + who + '</p>') + (m.papers ? '<a class="tlink" href="' + batchHash(m.id, 'insights') + '">' + (low.low && !flat ? 'See who' : 'Open Insights') + T_ARROW + '</a>' : '') + '</div>';
+(flat ? '' : '<p class="tsay">' + who + '</p>') + (canOpen(m) ? '<a class="tlink" href="' + batchHash(m.id, 'insights') + '">' + (low.low && !flat ? 'See who' : 'Open Insights') + T_ARROW + '</a>' : '') + '</div>';
 }
 function hsideShow() { $('#hside').hidden = false; }
 const OLD_SHOWN = 3;
@@ -29430,8 +29549,8 @@ const put = (el, h) => { el.hidden = !h; if (el.dataset.h !== h) { el.dataset.h 
 renderNeedsOnly();
 const g = homeGroups(), t = plan ? todayRows(plan) : null, cur = t ? nowRow(t.rows) : null;
 const asking = !!$('#safeAsk .btn.primary, #sampleNote .btn.primary');
-const prim = asking ? '' : cur && cur.lessons.length ? 'lesson' : g.mark.some(m => m.papers) ? 'mark' : g.back.some(m => m.papers) ? 'back' : 'drop';
-const firstMark = g.mark.find(m => m.papers);
+const prim = asking ? '' : cur && cur.lessons.length ? 'lesson' : g.mark.some(m => canOpen(m)) ? 'mark' : g.back.some(m => canOpen(m)) ? 'back' : 'drop';
+const firstMark = g.mark.find(m => canOpen(m));
 put($('#lbCard'), gpLookHtml());
 put($('#today'), todayHtml(prim));
 put($('#toMark'), g.mark.map(m => markRow(m, prim === 'mark' && m === firstMark)).join(''));
@@ -29628,12 +29747,12 @@ out.push(row); return row;
 };
 const g = homeGroups();
 if (!d.off.mark) for (const m of g.mark) {
-if (!m.papers) continue;
+if (!canOpen(m)) continue;
 const st = keptState(m), w = keptWhere(m), fm = w.it && w.it.type === 'fm', began = st.done || m.partial, name = m.name || 'Student work';
 add('mark', 'mark:' + m.id, (fm ? 'Give feedback on ' : began ? 'Finish marking ' : 'Mark ') + name, [w.cls ? w.cls.name : '', fm ? 'feedback only' + (st.done ? ' · ' + st.left + ' of ' + st.of + ' left' : '') : began ? st.left + ' of ' + st.of + ' left' : people(st.of, 'paper') + ', not started'].filter(Boolean).join(' · '), w.cls, today, { label: began || fm ? 'Continue' : 'Start', open: m.id }, 'x');
 }
 if (!d.off.back) for (const m of g.back) {
-if (!m.papers) continue;
+if (!canOpen(m)) continue;
 const st = keptState(m), w = keptWhere(m);
 add('back', 'back:' + m.id, 'Hand back ' + (m.name || 'Student work'), [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' ' + st.word].filter(Boolean).join(' · '), w.cls, today, { label: 'Return papers', href: batchHash(m.id, 'return') }, 'x');
 }
@@ -30417,7 +30536,7 @@ const fcClock = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 function fcWorks() {
 const out = [], today = tdToday();
 for (const m of homeGroups().mark) {
-if (!m.papers) continue;
+if (!canOpen(m)) continue;
 const st = keptState(m), w = keptWhere(m);
 out.push({ key: 'mark:' + m.id, id: m.id, mark: true, name: m.name || 'Student work', cls: w.cls ? w.cls.name : '', left: st.left, fm: st.fm });
 }
@@ -31336,7 +31455,7 @@ const GP_CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy
 const gpFreeLen = f => { const d = new Date(), left = f.b - (d.getHours() * 60 + d.getMinutes()); return Math.max(5, Math.min(60, Math.floor((left - 5) / 5) * 5)); };
 function gpBack() {
 if (!gpReady) return null;
-const m = homeGroups().mark.filter(x => x.papers && keptState(x).left && (keptState(x).done || x.partial)).sort((a, b) => b.t - a.t)[0];
+const m = homeGroups().mark.filter(x => canOpen(x) && keptState(x).left && (keptState(x).done || x.partial)).sort((a, b) => b.t - a.t)[0];
 return m && Date.now() - m.t > 20 * 60e3 && Date.now() - m.t < 7 * 864e5 && !(batch && batch.id === m.id && !$('#app').hidden) ? m : null;
 }
 
@@ -31512,7 +31631,7 @@ renderTools(); setInksSay();
 const ASK_LATER = 7 * 864e5;
 const IC_FOLDER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
 function safeAskShown() {
-if (fld.state !== 'none' || !fld.booted) return false;
+if (fld.state !== 'none' || !fld.booted || G.email) return false;
 let later = 0; try { later = +localStorage.getItem('gsc.folderLater') || 0; } catch {}
 if (Date.now() - later < ASK_LATER) return false;
 return canPickFolder() || keptMeta.size > 0;
@@ -31670,7 +31789,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.48":["Strong examples: with The score switched off, your score sticker, quiz points and any score you typed on its own stay off the example, even with your marks shown. A saved example's ⋯ menu now has Cover part of it, to black out anything you missed, and Make again from the paper."]};
+const WHATS_NEW = {"1.28.49":["Papers through Google Drive: once you've marked them, your papers go up to your Drive by themselves. Your other computer gets them the first time you open that assignment there, and on your phone the eye button shows one student's paper.","Use on your phone: a button beside the Google sign-in shows a QR code and four steps for adding Grading Studio to your phone's Home Screen. The Welcome screen has Sign in with Google too, and signing in works on any iPhone browser.","Google's sign-in window no longer pops up by itself. When the hour-long sign-in runs out, syncing waits and the Google line says sign in again to sync. Tap it once to carry on. The Drive papers chooser now opens in the folder you last used."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -32151,7 +32270,7 @@ $('#welcome').innerHTML = '<div class="wlsheet" role="dialog" aria-modal="true" 
 '<div class="wlbody">' + body + '</div>' +
 '<div class="wlact">' + (wl.step ? '<button class="btn" data-wlback>Back</button>' : '') + '<button class="btn primary" data-wlnext>' + (last ? 'Start' : 'Continue') + '</button>' +
 '<button class="link" data-wlsample>Look around with a sample class first</button>' + '</div>' +
-(wl.step === 0 && !lib.classes.length ? '<p class="wlfoot">Already use Grading Studio on another computer? <button class="link" data-wlbring>Bring your work in</button></p><p class="wlfoot wlfoot2">Have an AI assistant that knows how you teach? <button class="link" data-wlai>Let it set this up</button></p>' : '') +
+(wl.step === 0 && !lib.classes.length ? '<p class="wlfoot">Already use Grading Studio on another computer? <button class="link" data-wlbring>Bring your work in</button></p>' + (GOK && gcid() ? '<p class="wlfoot"><button class="btn sm" data-wlg>Sign in with Google</button></p>' : '') + '<p class="wlfoot wlfoot2">Have an AI assistant that knows how you teach? <button class="link" data-wlai>Let it set this up</button></p>' : '') +
 '</div><div class="wlr">' +
 [['lock', 'Private', 'Student work never leaves this computer. No account, nothing uploaded.'],
 ['drop', 'Works with what you have', 'Google Classroom, ManageBac, Canvas, Teams, a folder of files, or a scan of the whole class.'],
@@ -32196,6 +32315,7 @@ if (e.target.closest('[data-wlnext]')) return wlNext();
 if (e.target.closest('[data-wlfolder]')) { wl.busy = true; try { await folderPick(); } finally { wl.busy = false; } if (wl.on) wlRender(); return; }
 if (e.target.closest('[data-wlsample]')) return sampleEnter();
 if (e.target.closest('[data-wlai]')) { wlClose(); return go('#/settings/setup'); }
+if (e.target.closest('[data-wlg]')) { wlClose(); go('#/'); signIn(); return; }
 if (e.target.closest('[data-wlbring]')) { wlClose(); go('#/settings'); toast('Choose your Grading Studio folder, or bring in a take-home file. Your classes and work come with it.', 8000); }
 });
 $('#welcome').addEventListener('input', e => {
@@ -32336,7 +32456,7 @@ setRender(); toast('New assignments start with ' + way[1].toLowerCase() + ' from
 });
 
 sysWords();
-if (fresh && !asked() && !lib.classes.length && routeNow().v === 'home' && !sampleOn()) wlOpen();
+if (fresh && !asked() && !lib.classes.length && routeNow().v === 'home' && !sampleOn() && !G.token && !G.email) wlOpen();
 Object.assign(window.__gs, { wlOpen, wlShown, sampleRemove, me, meGrade, bandOf, sysName });
 
 /* ---------------- My setup: bring a teacher's setup in as one block of text, or copy it out ----------------
@@ -33607,6 +33727,78 @@ if (t.id === 'gcTo') { const n = $('#gcName'); if (n) gc.name = n.value; gc.to =
 });
 Object.assign(window.__gs, { gcOpen, gcRead, gcNameOf });
 
+/* ---------------- A QR code, made here: nothing is fetched and no outside service sees the address ----------------
+Byte mode, error correction level M, sizes 1 to 6 (up to about 100 letters, plenty for a web address). qrMatrix(text) gives rows of
+true (dark) and false, or null if the text is too long; qrSvg(text) draws it. The steps are the ones in the QR standard (ISO 18004). */
+const QR_M = [null, [16, 1, 10], [28, 1, 16], [44, 1, 26], [32, 2, 18], [43, 2, 24], [27, 4, 16]];
+const QR_ALIGN = [null, [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34]];
+function qrMatrix(text) {
+const bytes = [...new TextEncoder().encode(text)];
+let ver = 1; while (ver <= 6 && QR_M[ver][0] * QR_M[ver][1] < bytes.length + 2) ver++;
+if (ver > 6) return null;
+const [per, blocks, ecn] = QR_M[ver], cap = per * blocks;
+const bits = [], put = (v, n) => { for (let i = n - 1; i >= 0; i--) bits.push((v >>> i) & 1); };
+put(4, 4); put(bytes.length, 8); for (const b of bytes) put(b, 8);
+put(0, Math.min(4, cap * 8 - bits.length)); while (bits.length % 8) bits.push(0);
+const data = []; for (let i = 0; i < bits.length; i += 8) data.push(bits.slice(i, i + 8).reduce((a, b) => a * 2 + b, 0));
+for (let p = 0; data.length < cap; p++) data.push(p % 2 ? 0x11 : 0xEC);
+const EXP = [], LOG = []; for (let i = 0, x = 1; i < 255; i++) { EXP[i] = x; LOG[x] = i; x = (x << 1) ^ (x & 128 ? 0x11D : 0); }
+const mul = (a, b) => a && b ? EXP[(LOG[a] + LOG[b]) % 255] : 0;
+let gen = [1]; for (let i = 0; i < ecn; i++) { const g = new Array(gen.length + 1).fill(0); gen.forEach((c, j) => { g[j] ^= c; g[j + 1] ^= mul(c, EXP[i]); }); gen = g; }
+const dataB = [], ecB = [];
+for (let b = 0; b < blocks; b++) {
+const d = data.slice(b * per, (b + 1) * per), r = d.concat(new Array(ecn).fill(0));
+for (let i = 0; i < d.length; i++) { const f = r[i]; if (f) gen.forEach((c, j) => { r[i + j] ^= mul(c, f); }); }
+dataB.push(d); ecB.push(r.slice(d.length));
+}
+const words = []; for (let i = 0; i < per; i++) for (const d of dataB) words.push(d[i]); for (let i = 0; i < ecn; i++) for (const e of ecB) words.push(e[i]);
+const n = ver * 4 + 17, m = [...Array(n)].map(() => new Array(n).fill(null)), fixed = (r, c, v) => { if (r >= 0 && r < n && c >= 0 && c < n) m[r][c] = v; };
+for (const [r0, c0] of [[0, 0], [0, n - 7], [n - 7, 0]]) for (let r = -1; r <= 7; r++) for (let c = -1; c <= 7; c++) fixed(r0 + r, c0 + c, r >= 0 && r <= 6 && c >= 0 && c <= 6 && (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)));
+for (let i = 8; i < n - 8; i++) { fixed(6, i, i % 2 === 0); fixed(i, 6, i % 2 === 0); }
+for (const r of QR_ALIGN[ver]) for (const c of QR_ALIGN[ver]) if (m[r][c] === null) for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) fixed(r + dr, c + dc, Math.max(Math.abs(dr), Math.abs(dc)) !== 1);
+fixed(n - 8, 8, true);
+for (let i = 0; i < 9; i++) { if (m[8][i] === null) m[8][i] = false; if (m[i][8] === null) m[i][8] = false; }
+for (let i = 0; i < 8; i++) { m[8][n - 1 - i] = false; m[n - 1 - i][8] = false; }
+m[n - 8][8] = true;
+const free = m.map(row => row.map(v => v === null));
+const stream = []; for (const w of words) for (let i = 7; i >= 0; i--) stream.push((w >>> i) & 1);
+let k = 0;
+for (let c = n - 1, up = true; c > 0; c -= 2, up = !up) {
+if (c === 6) c--;
+for (let i = 0; i < n; i++) { const r = up ? n - 1 - i : i; for (const cc of [c, c - 1]) if (free[r][cc]) m[r][cc] = !!stream[k++]; }
+}
+const MASKS = [(r, c) => (r + c) % 2 === 0, r => r % 2 === 0, (r, c) => c % 3 === 0, (r, c) => (r + c) % 3 === 0, (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0, (r, c) => (r * c) % 2 + (r * c) % 3 === 0, (r, c) => ((r * c) % 2 + (r * c) % 3) % 2 === 0, (r, c) => ((r + c) % 2 + (r * c) % 3) % 2 === 0];
+const withMask = mk => {
+const g = m.map((row, r) => row.map((v, c) => free[r][c] && MASKS[mk](r, c) ? !v : v));
+let f = (0 << 3) | mk, e = f << 10; for (let i = 14; i >= 10; i--) if ((e >>> i) & 1) e ^= 0x537 << (i - 10);
+const fmt = ((f << 10) | e) ^ 0x5412, bit = i => !!((fmt >>> i) & 1);
+for (let i = 0; i <= 5; i++) g[8][i] = bit(14 - i);
+g[8][7] = bit(8); g[8][8] = bit(7); g[7][8] = bit(6);
+for (let i = 9; i <= 14; i++) g[14 - i][8] = bit(14 - i);
+for (let i = 0; i <= 6; i++) g[n - 1 - i][8] = bit(14 - i);
+for (let i = 0; i <= 7; i++) g[8][n - 8 + i] = bit(7 - i);
+return g;
+};
+const score = g => {
+let s = 0, dark = 0;
+for (let a = 0; a < 2; a++) for (let i = 0; i < n; i++) { let run = 1; for (let j = 1; j < n; j++) { const v = a ? g[j][i] : g[i][j], p = a ? g[j - 1][i] : g[i][j - 1]; if (v === p) { run++; if (run === 5) s += 3; else if (run > 5) s++; } else run = 1; } }
+for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++) if (g[r][c] === g[r][c + 1] && g[r][c] === g[r + 1][c] && g[r][c] === g[r + 1][c + 1]) s += 3;
+const pat = [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0], rev = pat.slice().reverse();
+for (let a = 0; a < 2; a++) for (let i = 0; i < n; i++) for (let j = 0; j <= n - 11; j++) for (const p of [pat, rev]) if (p.every((b, x) => (a ? g[j + x][i] : g[i][j + x]) === !!b)) s += 40;
+for (const row of g) for (const v of row) if (v) dark++;
+return s + Math.floor(Math.abs(dark * 20 / (n * n) - 10)) * 10;
+};
+let best = null, bestS = Infinity;
+for (let mk = 0; mk < 8; mk++) { const g = withMask(mk), s = score(g); if (s < bestS) { best = g; bestS = s; } }
+return best;
+}
+function qrSvg(text, label) {
+const g = qrMatrix(text); if (!g) return '';
+const n = g.length, q = 4; let d = '';
+g.forEach((row, r) => row.forEach((v, c) => { if (v) d += 'M' + (c + q) + ' ' + (r + q) + 'h1v1h-1z'; }));
+return '<svg class="qr" viewBox="0 0 ' + (n + 2 * q) + ' ' + (n + 2 * q) + '" role="img" aria-label="' + esc(label || text) + '" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#FFFFFF"/><path d="' + d + '" fill="#000000"/></svg>';
+}
+
 /* ---------------- On a phone: what's left, quick scores, to-dos and the focus timer, nothing that needs the papers ----------------
 Grading Studio added to an iPhone's Home Screen (or opened in a phone's browser) shows a narrow version of the same app, with the
 same saved work. Papers stay on the computer: here the teacher sees what is left to score, types scores in for a whole class one
@@ -33669,12 +33861,13 @@ box.innerHTML = chips + '<h2 class="tcap">Assignments</h2><div class="tcard phli
 }
 function phOneRender(box, c, col) {
 const max = col.typed && col.typed.max, s = (col.typed && col.typed.s) || {}, fm = col.type === 'fm' && !(col.typed && col.typed.lv);
+const see = !!col.dl && canOpen(keptMeta.get(col.dl));
 const row = (n, i) => {
 const cell = col.cells.get(n), paper = col.d && cell && !cell.typed, r = s[n] || {};
 const val = paper ? (cell.total != null ? fmtNum(cell.total) + (cell.max ? ' / ' + fmtNum(cell.max) : '') : cell.pct != null ? cell.pct + '%' : cell.st || '') : bkCellVal(r, col);
 const st = (paper ? cell.st : r.st) || '';
 return '<div class="phstu' + (st ? ' st-' + st : '') + '"><span class="phname" data-raw>' + esc(bkWho(n, i)) + '</span>' +
-(fm && !paper ? '<button class="phfb" data-phfb="' + esc(n) + '" aria-pressed="' + !!r.fb + '">' + (r.fb ? '✓ Feedback complete' : 'Feedback complete?') + '</button>' : paper ? '<span class="phpaper" title="Scored on the paper, on your computer">' + esc(val) + '</span>' :
+(fm && !paper ? '<button class="phfb" data-phfb="' + esc(n) + '" aria-pressed="' + !!r.fb + '">' + (r.fb ? '✓ Feedback complete' : 'Feedback complete?') + '</button>' : paper ? '<span class="phpaper" title="Scored on the paper, on your computer">' + esc(val) + '</span>' + (see ? '<button class="icon phsee" data-phsee="' + esc(n) + '" aria-label="' + esc('See the paper for ' + bkWho(n, i)) + '">' + PH_EYE + '</button>' : '') :
 '<input class="phin" type="text" inputmode="decimal" enterkeyhint="next" autocomplete="off" value="' + esc(st === 'missing' || st === 'excused' ? '' : val) + '" placeholder="' + (st === 'missing' ? 'Missing' : st === 'excused' ? 'Excused' : '–') + '" data-phn="' + esc(n) + '" aria-label="' + esc('Score for ' + bkWho(n, i)) + '">' +
 kmWrap('⋯', 'class="icon phmore" aria-label="' + esc('More for ' + bkWho(n, i)) + '"', '<button class="mitem" data-phst="missing" data-phn="' + esc(n) + '">Missing</button><button class="mitem" data-phst="excused" data-phn="' + esc(n) + '">Excused</button><button class="mitem" data-phst="" data-phn="' + esc(n) + '">Clear</button>', 'right')) + '</div>';
 };
@@ -33733,7 +33926,59 @@ go(phHash(classById(f.c.id) || f.c, f.it.id));
 });
 }
 });
-window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), syncNow: () => syncNow(), phone: () => PHONE });
+/* One student's paper, to look at (no marking here): from this browser if it keeps the papers, else just that student's files from her Drive. */
+const PH_EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+async function phSee(col, c, n) {
+const d = col.d || {}, key = rosterPairs(c.names, Object.keys({ ...(d.s || {}), ...(d.read || {}) })).get(n) || n, cell = col.cells.get(n) || {};
+const box = document.createElement('div'); box.className = 'phview'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Paper for ' + n);
+const score = cell.total != null ? fmtNum(cell.total) + (cell.max ? ' / ' + fmtNum(cell.max) : '') : cell.pct != null ? cell.pct + '%' : '';
+box.innerHTML = '<header class="phvhead"><button class="btn sm" data-phvclose>Close</button><b data-raw>' + esc(n) + '</b><span class="phc">' + esc(score) + '</span></header><div class="phvbody"><p class="muted phpad">Getting the paper…</p></div>';
+document.body.appendChild(box);
+const body = box.querySelector('.phvbody');
+try {
+const m = keptMeta.get(col.dl), rec = m && m.papers ? await paperGet(col.dl) : null;
+const files = rec ? rec.entries.filter(e => e.data && (e.path.split('/')[0] === key || e.path.replace(/\.[^.]+$/, '') === key)) : await dvPullOne(col.dl, key);
+if (!box.isConnected) return;
+body.innerHTML = files.length ? '' : '<p class="muted phpad">No paper for this student in this download.</p>';
+for (const f of files) {
+const ext = (f.path.match(/\.([^.\/]+)$/) || [, ''])[1].toLowerCase();
+if (ext === 'pdf') {
+const doc = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
+for (let p = 1; p <= doc.numPages; p++) {
+const page = await doc.getPage(p), w = body.clientWidth || 360, vp0 = page.getViewport({ scale: 1 }), k = w / vp0.width * Math.min(2, devicePixelRatio || 1), vp = page.getViewport({ scale: k });
+const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height; cv.className = 'phvpage'; cv.setAttribute('aria-label', 'Page ' + p);
+await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+if (!box.isConnected) return; body.appendChild(cv);
+}
+} else if (/^(png|jpe?g|gif|webp|heic)$/.test(ext)) {
+const img = document.createElement('img'); img.className = 'phvpage'; img.alt = f.path; img.src = URL.createObjectURL(new Blob([f.data])); body.appendChild(img);
+} else body.insertAdjacentHTML('beforeend', '<p class="muted phpad">' + esc(f.path.split('/').pop()) + ' opens on your computer.</p>');
+}
+body.insertAdjacentHTML('beforeend', '<p class="muted phpad">Your marks on the paper show on your computer.</p>');
+} catch (e) { if (box.isConnected) body.innerHTML = '<p class="muted phpad">' + esc(e.message || 'The paper couldn’t be fetched.') + '</p>'; }
+}
+document.addEventListener('click', e => {
+const b = e.target.closest('[data-phsee]');
+if (b) { const key = b.closest('[data-phcol]').dataset.phcol, col = ph.cols && ph.cols.find(x => x.key === key), c = classById(store.get('gs.phCls', '')); if (col && c) phSee(bkClassCols(c, [col])[0], c, b.dataset.phsee); return; }
+if (e.target.closest('[data-phvclose]')) e.target.closest('.phview').remove();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { const v = document.querySelector('.phview'); if (v) v.remove(); } });
+/* Use on your phone: a QR code for this page's own address (src/qr.js, made here), and the steps to put it on a phone's Home Screen and sign in. */
+function phoneHowTo() {
+const url = location.origin + location.pathname.replace(/index\.html$/, ''), qr = qrSvg(url, 'QR code for Grading Studio');
+openDlg('<div class="bh"><h2>Use on your phone</h2></div><div class="bb phhow">' +
+(qr ? '<div class="phqr">' + qr + '</div>' : '') + '<p class="phurl" data-raw>' + esc(url) + '</p>' +
+'<ol class="phsteps">' +
+'<li>Point your phone’s camera at the code and tap the link, or type the address above.</li>' +
+'<li>On an iPhone: in Safari, tap Share, then Add to Home Screen.</li>' +
+'<li>On Android: in Chrome, tap the ⋮ menu, then Add to Home screen or Install app.</li>' +
+'<li>Open Grading Studio from your Home Screen and tap Sign in with Google. Use the same Google account as on this computer.</li>' +
+'</ol>' +
+'<p class="muted">If Google says it hasn’t verified the app, tap Advanced, then Go to Grading Studio. The sign-in key was made for your copy rather than reviewed by Google, and the app can only use its own hidden folder in your Drive.</p>' +
+'<p class="muted">Your classes, scores and to-dos then stay the same on both. You can type scores and look at papers on the phone; marking stays on the computer.</p>' +
+'</div><div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
+}
+window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });
 
 /* ---------------- the frame: the sidebar, Home's "Needs a look", and Find anything (11/9) ---------------- */
 var shellReady, screenWas = '';
@@ -33782,11 +34027,11 @@ function renderNeedsOnly() {
 safeAskRender(); sampleNoteRender();
 const el = $('#needs'), rows = [], chev = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
 for (const m of [...keptMeta.values()].sort((a, b) => b.t - a.t)) {
-if (m.partial && m.papers) rows.push({ t: m.partial + (m.partial === 1 ? ' paper is' : ' papers are') + ' partly scored', s: m.name || 'A download', open: m.id });
-else if (!m.papers) rows.push({ t: 'Papers not kept in this browser', s: (m.name || 'A download') + ': drop the download in again to reopen it' });
+if (m.partial && canOpen(m)) rows.push({ t: m.partial + (m.partial === 1 ? ' paper is' : ' papers are') + ' partly scored', s: m.name || 'A download', open: m.id });
+else if (!canOpen(m)) rows.push({ t: 'Papers not kept in this browser', s: (m.name || 'A download') + ': drop the download in again to reopen it' });
 }
 const last = store.get('gs.lastBackup', 0), days = Math.floor((Date.now() - last) / 864e5);
-if (keptMeta.size > 0 && fld.state === 'none' && days >= 7 && !safeAskShown()) rows.push({ t: last ? 'Your take-home file is ' + days + ' days old' : 'Your work is not backed up', s: 'Choose a folder or make a take-home file, in Settings', href: '#/settings' });
+if (keptMeta.size > 0 && fld.state === 'none' && !G.email && days >= 7 && !safeAskShown()) rows.push({ t: last ? 'Your take-home file is ' + days + ' days old' : 'Your work is not backed up', s: 'Choose a folder or make a take-home file, in Settings', href: '#/settings' });
 const h = !rows.length ? '' : '<section class="ncard"><div class="nhead"><h2>Needs a look</h2><span class="schip warn">' + rows.length + '</span></div>' +
 rows.slice(0, 6).map(r => { const body = '<span class="nt"><b>' + esc(r.t) + '</b><span class="ns">' + esc(r.s) + '</span></span>'; return r.open ? '<button class="nrow" data-nopen="' + esc(r.open) + '">' + body + chev + '</button>' : r.href ? '<a class="nrow" href="' + r.href + '">' + body + chev + '</a>' : '<div class="nrow">' + body + '</div>'; }).join('') +
 (rows.length > 6 ? '<div class="nrow"><span class="ns">and ' + (rows.length - 6) + ' more</span></div>' : '') + '</section>';
@@ -33852,9 +34097,9 @@ const carded = new Set();
 for (const c of holders()) for (const u of c.units) for (const it of u.items) {
 const m = it.batchId ? keptMeta.get(it.batchId) : null; if (it.batchId) carded.add(it.batchId);
 const here = batch && batch.id === it.batchId;
-add('Assignments', it.name, (c === lib.loose ? 'No class' : c.name) + ' · ' + u.name + (here ? ' · open now' : m && m.papers ? ' · ' + keptSay(m) : ''), () => here ? null : m && m.papers ? reopenKept(it.batchId, it) : go(classHash(c)));
+add('Assignments', it.name, (c === lib.loose ? 'No class' : c.name) + ' · ' + u.name + (here ? ' · open now' : m && canOpen(m) ? ' · ' + keptSay(m) : ''), () => here ? null : m && canOpen(m) ? reopenKept(it.batchId, it) : go(classHash(c)));
 }
-for (const m of keptMeta.values()) if (!carded.has(m.id) && m.papers && !(batch && batch.id === m.id)) add('Assignments', m.name || 'A download', 'Kept in this browser · ' + keptSay(m), () => reopenKept(m.id));
+for (const m of keptMeta.values()) if (!carded.has(m.id) && canOpen(m) && !(batch && batch.id === m.id)) add('Assignments', m.name || 'A download', 'Kept in this browser · ' + keptSay(m), () => reopenKept(m.id));
 if (!batch) {
 add('Do', sysName() ? 'Open a ' + sysName() + ' download' : 'Open student work', sysName() ? 'The ZIP or PDFs' : 'A ZIP, PDFs, Word files or photos', press('#pickFiles'));
 add('Do', 'Open a folder of papers', '', press('#pickFolder'));

@@ -1,21 +1,23 @@
 {
- "version": "1.28.48",
- "build": "3d8a85a116d3",
+ "version": "1.28.49",
+ "build": "050bffb2c294",
  "notes": [
-  "Strong examples: with The score switched off, your score sticker, quiz points and any score you typed on its own stay off the example, even with your marks shown. A saved example's ⋯ menu now has Cover part of it, to black out anything you missed, and Make again from the paper."
+  "Papers through Google Drive: once you've marked them, your papers go up to your Drive by themselves. Your other computer gets them the first time you open that assignment there, and on your phone the eye button shows one student's paper.",
+  "Use on your phone: a button beside the Google sign-in shows a QR code and four steps for adding Grading Studio to your phone's Home Screen. The Welcome screen has Sign in with Google too, and signing in works on any iPhone browser.",
+  "Google's sign-in window no longer pops up by itself. When the hour-long sign-in runs out, syncing waits and the Google line says sign in again to sync. Tap it once to carry on. The Drive papers chooser now opens in the folder you last used."
  ],
  "files": {
-  "index.html": "3fb721e8872a24eadeeaf3804529faf40b788d3f5c27659efd4d021aba777bac",
-  "planner.html": "239b2bbf73dcd98785fb9514401cbcd2f1e101d90383cc4e949c1a06ef33965e"
+  "index.html": "38d1e391316be954a41b08a472844590f3c3c87edd5edc02e8c7b69863fdc3cc",
+  "planner.html": "65257175c59f2823715306be428bc45e814599ecaa85e682008fd710d2fe8ece"
  },
  "langs": {
-  "lang/zh-Hant.js": "843605a93ef5287b4ebea96932f39cbaf5f0fa00605ba46393116ff63fcaf49d",
-  "lang/zh-Hans.js": "d1df80f624b41765785db45d0ae03da60c1d80dae977892c2ddcbba18c0fd110",
-  "lang/es.js": "a6703be70f24613c5fcb042a1a5e1e59a72d3d60bcc6f6c051ef62b44ca73380",
-  "lang/fr.js": "c390b6f17c891e65f62e987d6db9fc15b09ee119ae9d6e76472c150a6f978252",
-  "lang/de.js": "895a0f6e4bb1b2a895b6699f71636bf1564548f96048bf4dfca53d92cd200d9c",
-  "lang/pt-BR.js": "06b01b50965caa95303ee17048385fd96725d89326e93d26764e9af525465bcd",
-  "lang/ja.js": "331860754695b68a3717b946864c0d96c3ea7c97c979946c186f549cc9fdb316",
-  "lang/ko.js": "273bd656bd8c9b805fc2c91ec8ee1e7da921c7606669c99af12b8a71d5f63524"
+  "lang/zh-Hant.js": "124aef919fcedde9e5e7ea0fb47cecc681df7b77c51ed9e78021b5e918a68652",
+  "lang/zh-Hans.js": "97cb4df7f84e670796c9e1eeb998760c4ff657f78c680bf00336079e09f5ea48",
+  "lang/es.js": "e44059589e151cdf7e2220b4573c5a0413c7a1843ff3d3ca078d77e2a0a2409f",
+  "lang/fr.js": "5ca6101e13ae7488afbb38bebee5d51b9197ac518a56b80994ccf010248c79b5",
+  "lang/de.js": "cd98ecf672b057a9360f3fcd14ab89ce27f018b8a411bb32ff484e20e606cd63",
+  "lang/pt-BR.js": "e869d510b2558acd6552660a6fd249f2d210863328c7b7eb4e48f74b355e8b71",
+  "lang/ja.js": "0cc4bca046a06dc0e09267ce42f72d8aa8f7bfa7ed12583ad35717c8bb65c818",
+  "lang/ko.js": "b9c3a1b3cddb204d53e6a25c2150e223398afd9cb709fb3e3e87a6967dbc03c9"
  }
 }

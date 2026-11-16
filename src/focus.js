@@ -190,7 +190,7 @@ const fcClock = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 function fcWorks() {
   const out = [], today = tdToday();
   for (const m of homeGroups().mark) {
-    if (!m.papers) continue;
+    if (!canOpen(m)) continue;
     const st = keptState(m), w = keptWhere(m);
     out.push({ key: 'mark:' + m.id, id: m.id, mark: true, name: m.name || 'Student work', cls: w.cls ? w.cls.name : '', left: st.left, fm: st.fm });
   }
