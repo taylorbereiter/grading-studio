@@ -115,3 +115,11 @@
 .fcset .seg{display:inline-flex}
 .fcext{align-items:center}
 .fcext > span{font-size:var(--text-small);color:var(--muted)}
+
+/* lo-fi music in the timer panel */
+.fcmus{display:flex;align-items:center;gap:var(--space-2);min-width:0}
+.fcmus svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.fcmus.on [data-fcmus]{color:var(--accent);border-color:var(--accent)}
+.fcmus select{min-width:0;flex:1}
+.fcmus input[type=range],#fcVol{accent-color:var(--accent);width:72px;flex:none}
+#fcVol{width:140px}

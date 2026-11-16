@@ -1,21 +1,22 @@
 {
- "version": "1.28.39",
- "build": "2d46619c24d6",
+ "version": "1.28.41",
+ "build": "5eead35cc16b",
  "notes": [
-  "Linked classes: assignments each class made before they were linked can be linked too. After linking, or from Link assignments under the class name, the same names come ticked and very similar ones wait for your tick, with one Undo."
+  "Grading Studio on your phone: add it to your iPhone's Home Screen to see what is left to mark, type in scores for a whole class, tick off to-dos and run the focus timer.",
+  "Keep your phone and computer the same through your own Google Drive: sign in with Google on each and your classes, scores and to-dos stay in step. Only Grading Studio's own hidden folder in your Drive is used."
  ],
  "files": {
-  "index.html": "b0726c9bf37320c868595d85d056b94f2d37cfa75b58c3694bd82b42e48a2143",
-  "planner.html": "d922a8f6327420fd8ff4d9e304fd2c557da738bbb3e4c6767660b0c5fe06b20f"
+  "index.html": "b57a941d35610f1c10a7404d322194bca9a14785ab63303826dfb5ecc10cb413",
+  "planner.html": "0e52615b4747f29b3e02c7dc67165160f04c7d317c7848d6e00816fa911c2b8d"
  },
  "langs": {
-  "lang/zh-Hant.js": "ef01679ce6f1dff57986609ff4cea13ebc035a8ce006e28461a93fbcab743b06",
-  "lang/zh-Hans.js": "82117603454375e9701d43475831146459484b54868cd5c4c3df75284a70ca0d",
-  "lang/es.js": "f32ef9cd9bb74fc2fe9e84a5aaa7adc4e5067ff3bcdecf878e437cf293db111d",
-  "lang/fr.js": "a953633ac637741c3c2c4accd6ca171f41032068ecd15d4e65e43d621459b5d9",
-  "lang/de.js": "aea10749211181ff57b97bbd78851d8b91505ddd79dc5e0d83c9fc45d4e22456",
-  "lang/pt-BR.js": "c4028954e1e2b46c849c9c5fce3c02b883f9d66b9309e7dcac7f9ad800d73f81",
-  "lang/ja.js": "439ecc2f2220493aec2b11a15fe76c582fcd579670234682921bdc854e05ba5a",
-  "lang/ko.js": "d4803a24a6988297ff9df7812097b061e9163a349b001741918ec1f06582c94b"
+  "lang/zh-Hant.js": "1a4dd067572d6c94330a0c989038745afb46b5eda2c25edda93eaf9501a2aea4",
+  "lang/zh-Hans.js": "6fc2fb626716d8584c034810dccf5d0776f66012e41278abde85427fbda6ce7d",
+  "lang/es.js": "706fb973d0c8b49fb17bf77562c724cebac803a53afa5a388a1003ed134e2d53",
+  "lang/fr.js": "8e5cc10a6c360ae51faa8e6cc664cbeb4e4ddae22f211d225c84e94a08b5c6ca",
+  "lang/de.js": "61934cf785a8e52ef0ebad04ffc7158143cdc162fa29cc8d48e8e5cb4cd30c39",
+  "lang/pt-BR.js": "45231cbdd9ec9f72512c1badd00d9df76506a18593565028802e98ee1db57550",
+  "lang/ja.js": "79c161fe3b76ea4e6d347be616895687d24e01b43783ec4e2a222fb1c003fe44",
+  "lang/ko.js": "d196ca79c952acfbb90e69477e61b39e1d1931d5dac7cdc18df9bf7d9f9f7e03"
  }
 }
