@@ -14,6 +14,8 @@ async function planRead() {
     try { const t = db.transaction(['kv', 'lessons']); [setup, lessons] = await Promise.all([idbP(t.objectStore('kv').get('setup')), idbP(t.objectStore('lessons').getAll())]); } catch {}
     db.close();
   }
+  // no Planner in this browser (a phone): the timetable synced from the computer through her Drive (drive.js), to show the day
+  if (!(setup && Array.isArray(setup.classes) && setup.classes.length)) setup = store.get('gs.planCopy', null);
   const hex = c => /^#[0-9a-f]{6}$/i.test(c) ? c : '#1F6FB2';
   const classes = (setup && Array.isArray(setup.classes) ? setup.classes : []).filter(c => c && c.id != null).map(c => ({ id: String(c.id), name: String(c.name || c.id), color: hex(c.color),
     meets: (Array.isArray(c.meets) ? c.meets : []).map(m => ({ dow: +m.dow, start: String(m.start || ''), end: String(m.end || '') })) }));

@@ -169,4 +169,19 @@ document.addEventListener('click', e => {
   if (e.target.closest('[data-phvclose]')) e.target.closest('.phview').remove();
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { const v = document.querySelector('.phview'); if (v) v.remove(); } });
-window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), canOpen: id => canOpen(keptMeta.get(id)) });
+/* Use on your phone: a QR code for this page's own address (src/qr.js, made here), and the steps to put it on a phone's Home Screen and sign in. */
+function phoneHowTo() {
+  const url = location.origin + location.pathname.replace(/index\.html$/, ''), qr = qrSvg(url, 'QR code for Grading Studio');
+  openDlg('<div class="bh"><h2>Use on your phone</h2></div><div class="bb phhow">' +
+    (qr ? '<div class="phqr">' + qr + '</div>' : '') + '<p class="phurl" data-raw>' + esc(url) + '</p>' +
+    '<ol class="phsteps">' +
+    '<li>Point your phone’s camera at the code and tap the link, or type the address above.</li>' +
+    '<li>On an iPhone: in Safari, tap Share, then Add to Home Screen.</li>' +
+    '<li>On Android: in Chrome, tap the ⋮ menu, then Add to Home screen or Install app.</li>' +
+    '<li>Open Grading Studio from your Home Screen and tap Sign in with Google. Use the same Google account as on this computer.</li>' +
+    '</ol>' +
+    '<p class="muted">If Google says it hasn’t verified the app, tap Advanced, then Go to Grading Studio. The sign-in key was made for your copy rather than reviewed by Google, and the app can only use its own hidden folder in your Drive.</p>' +
+    '<p class="muted">Your classes, scores and to-dos then stay the same on both. You can type scores and look at papers on the phone; marking stays on the computer.</p>' +
+    '</div><div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
+}
+window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });

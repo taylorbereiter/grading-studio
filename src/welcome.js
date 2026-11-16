@@ -64,7 +64,7 @@ function wlRender() {
     '<div class="wlbody">' + body + '</div>' +
     '<div class="wlact">' + (wl.step ? '<button class="btn" data-wlback>Back</button>' : '') + '<button class="btn primary" data-wlnext>' + (last ? 'Start' : 'Continue') + '</button>' +
     '<button class="link" data-wlsample>Look around with a sample class first</button>' + '</div>' +
-    (wl.step === 0 && !lib.classes.length ? '<p class="wlfoot">Already use Grading Studio on another computer? <button class="link" data-wlbring>Bring your work in</button></p><p class="wlfoot wlfoot2">Have an AI assistant that knows how you teach? <button class="link" data-wlai>Let it set this up</button></p>' : '') +
+    (wl.step === 0 && !lib.classes.length ? '<p class="wlfoot">Already use Grading Studio on another computer? <button class="link" data-wlbring>Bring your work in</button></p>' + (GOK && gcid() ? '<p class="wlfoot"><button class="btn sm" data-wlg>Sign in with Google</button></p>' : '') + '<p class="wlfoot wlfoot2">Have an AI assistant that knows how you teach? <button class="link" data-wlai>Let it set this up</button></p>' : '') +
     '</div><div class="wlr">' +
     [['lock', 'Private', 'Student work never leaves this computer. No account, nothing uploaded.'],
       ['drop', 'Works with what you have', 'Google Classroom, ManageBac, Canvas, Teams, a folder of files, or a scan of the whole class.'],
@@ -112,6 +112,8 @@ $('#welcome').addEventListener('click', async e => {
   if (e.target.closest('[data-wlfolder]')) { wl.busy = true; try { await folderPick(); } finally { wl.busy = false; } if (wl.on) wlRender(); return; }
   if (e.target.closest('[data-wlsample]')) return sampleEnter();
   if (e.target.closest('[data-wlai]')) { wlClose(); return go('#/settings/setup'); }
+  // signed in on another device already: the work comes down from her Drive (drive.js), and Today opens with it
+  if (e.target.closest('[data-wlg]')) { wlClose(); go('#/'); signIn(); return; }
   if (e.target.closest('[data-wlbring]')) { wlClose(); go('#/settings'); toast('Choose your Grading Studio folder, or bring in a take-home file. Your classes and work come with it.', 8000); }
 });
 $('#welcome').addEventListener('input', e => {
@@ -261,5 +263,5 @@ $('#setPane').addEventListener('click', async e => {
 
 sysWords();
 // A brand-new browser is asked. One that looked at the sample class first is asked again from the card on Home.
-if (fresh && !asked() && !lib.classes.length && routeNow().v === 'home' && !sampleOn()) wlOpen();
+if (fresh && !asked() && !lib.classes.length && routeNow().v === 'home' && !sampleOn() && !G.token && !G.email) wlOpen();   // signing in with Google (drive.js) brings the work instead
 Object.assign(window.__gs, { wlOpen, wlShown, sampleRemove, me, meGrade, bandOf, sysName });

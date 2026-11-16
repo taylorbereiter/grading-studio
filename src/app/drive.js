@@ -7,7 +7,8 @@ const gcid = () => (/apps\.googleusercontent\.com$/.test(GOOGLE_CLIENT_ID) ? GOO
 const SYNC_SCOPE = 'https://www.googleapis.com/auth/drive.appdata', DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive ' + SYNC_SCOPE;
 const G = { token: null, exp: 0, scope: '', client: null, cscope: '', email: store.get('gs.gEmail', ''), waiters: [] };
 // A home-screen app on an iPhone can't use Google's pop-up window, so it goes to Google's page and comes back with the key in the address.
-const G_REDIRECT = navigator.standalone === true;
+// The same on any iPhone or iPad browser (Safari, Chrome): there the pop-up is left as a blank page after Continue and never comes back.
+const G_REDIRECT = navigator.standalone === true || /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 const gBack = () => location.origin + location.pathname.replace(/index\.html$/, '');
 {
   // Back from Google's page: the key is taken out of the address before anything reads it
@@ -87,11 +88,13 @@ function renderGoogle() {
   for (const el of document.querySelectorAll('.gAcct')) el.innerHTML = G.email
     ? '<span class="muted" style="font-size:13px">Google: ' + esc(G.email) + ' · <span id="syncState">' + (syncState || 'synced') + '</span></span> <button class="link" data-gout>Sign out</button>'
     : '<button class="btn sm" data-gin>Sign in with Google</button>';
+  if (!PHONE) for (const el of document.querySelectorAll('.gAcct')) el.insertAdjacentHTML('beforeend', ' <button class="btn sm" data-gphone>Use on your phone</button>');
   for (const b of document.querySelectorAll('.needG')) b.hidden = !G.email;
 }
 document.addEventListener('click', e => {
   if (e.target.closest('[data-gin]')) signIn();
   if (e.target.closest('[data-gout]')) signOut();
+  if (e.target.closest('[data-gphone]')) phoneHowTo();
 });
 // Only shown if the page was built without its Google key.
 function driveSetup() {
@@ -256,6 +259,13 @@ function syncNow() {
   })().finally(() => { syncBusy = null; if (syncAgain) { syncAgain = false; syncNow(); } });
   return syncBusy;
 }
+// The Planner's timetable (classes, their times, the term and days off), for Today on a device that has no Planner of its own. Lessons stay put.
+async function syncPlan() {
+  const db = await planDb(false); if (!db) return null;
+  let su = null; try { su = await idbP(db.transaction('kv').objectStore('kv').get('setup')); } catch {} db.close();
+  if (!su || !Array.isArray(su.classes) || !su.classes.length) return null;
+  return { classes: su.classes.map(c => ({ id: c.id, name: c.name, color: c.color, meets: c.meets })), semStart: su.semStart || '', semEnd: su.semEnd || '', daysOff: su.daysOff || [] };
+}
 async function syncOnce() {
   setSyncState('syncing…');
   if (batch) await saveNow();
@@ -281,8 +291,9 @@ async function syncOnce() {
     if (libVer !== v0) { libm.lib = mergeLib(libHere(), libm.lib, { dev, now }).lib; libm.toA = true; }
     if (libm.toA) { lib = migrateLib(libm.lib); libUndoForget(); if (!setLibFrom(lib)) throw browserFull(); if (batch && batch.assignment) { const f = findItem(batch.assignment.id); if (f) batch.assignment = f.it; } }
     store.set('gs.tomb', tomb);
+    if (got.plan && JSON.stringify(got.plan) !== JSON.stringify(store.get('gs.planCopy', null))) { store.set('gs.planCopy', got.plan); if (typeof planRefresh === 'function') planRefresh(); }
     for (const [k, v] of Object.entries(mergeLs(carryLs(), B.ls, k => Object.keys(tomb).some(id => k.includes(id))))) lsPut(k, v);
-    if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); }
+    if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); if (wl.on && lib.classes.length) { wlClose(); go('#/'); } }
     if (open && rows.some(r => r.id === open && r.toA)) syncAgain = false;   // nothing to push for it until it is closed and merged
   }
   // What goes up: the merged copy. Papers go up apart (dvUp below) and are named in files. A row's own "papers" says where they are kept, so it stays on each device.
@@ -295,6 +306,7 @@ async function syncOnce() {
     if (m) { const { papers, size, ...rest } = m; out.meta[id] = rest; }
   }
   delete out.ls['gs.lib'];
+  out.plan = (await syncPlan()) || (got && got.plan) || null;   // a device with no Planner passes on the one it was given
   out.files = dvFiles(got && got.files, tomb);
   const body = JSON.stringify(out);
   if (!got || body !== JSON.stringify({ ...got, t: now })) await syncWrite(body);

@@ -58,7 +58,7 @@ function renderNeedsOnly() {
     else if (!canOpen(m)) rows.push({ t: 'Papers not kept in this browser', s: (m.name || 'A download') + ': drop the download in again to reopen it' });
   }
   const last = store.get('gs.lastBackup', 0), days = Math.floor((Date.now() - last) / 864e5);
-  if (keptMeta.size > 0 && fld.state === 'none' && days >= 7 && !safeAskShown()) rows.push({ t: last ? 'Your take-home file is ' + days + ' days old' : 'Your work is not backed up', s: 'Choose a folder or make a take-home file, in Settings', href: '#/settings' });
+  if (keptMeta.size > 0 && fld.state === 'none' && !G.email && days >= 7 && !safeAskShown()) rows.push({ t: last ? 'Your take-home file is ' + days + ' days old' : 'Your work is not backed up', s: 'Choose a folder or make a take-home file, in Settings', href: '#/settings' });
   const h = !rows.length ? '' : '<section class="ncard"><div class="nhead"><h2>Needs a look</h2><span class="schip warn">' + rows.length + '</span></div>' +
     rows.slice(0, 6).map(r => { const body = '<span class="nt"><b>' + esc(r.t) + '</b><span class="ns">' + esc(r.s) + '</span></span>'; return r.open ? '<button class="nrow" data-nopen="' + esc(r.open) + '">' + body + chev + '</button>' : r.href ? '<a class="nrow" href="' + r.href + '">' + body + chev + '</a>' : '<div class="nrow">' + body + '</div>'; }).join('') +
     (rows.length > 6 ? '<div class="nrow"><span class="ns">and ' + (rows.length - 6) + ' more</span></div>' : '') + '</section>';

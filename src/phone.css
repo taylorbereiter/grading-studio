@@ -52,3 +52,7 @@
 .phvhead b{flex:1;min-width:0;overflow-wrap:anywhere}
 .phvbody{flex:1;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}
 .phvpage{display:block;width:100%;height:auto;margin:0 auto 12px;border-radius:var(--corner-2);box-shadow:var(--shadow)}
+.phqr{display:flex;justify-content:center;margin:0 0 6px}
+.phqr .qr{width:200px;height:200px}
+.phurl{text-align:center;margin:0 0 12px;font-size:var(--text-control);color:var(--muted);overflow-wrap:anywhere}
+.phsteps{margin:0 0 12px;padding-left:22px;display:flex;flex-direction:column;gap:6px}

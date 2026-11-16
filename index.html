@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"1a4dd067","zh-Hans":"6fc2fb62","es":"706fb973","fr":"8e5cc10a","de":"61934cf7","pt-BR":"45231cbd","ja":"79c161fe","ko":"d196ca79"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"284be2e2","zh-Hans":"9b440a88","es":"0a1b6a0c","fr":"f354d9b1","de":"81a500d9","pt-BR":"0a0505ad","ja":"b64fa682","ko":"eff13095"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -3531,6 +3531,10 @@ body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #td
 .phvhead b{flex:1;min-width:0;overflow-wrap:anywhere}
 .phvbody{flex:1;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}
 .phvpage{display:block;width:100%;height:auto;margin:0 auto 12px;border-radius:var(--corner-2);box-shadow:var(--shadow)}
+.phqr{display:flex;justify-content:center;margin:0 0 6px}
+.phqr .qr{width:200px;height:200px}
+.phurl{text-align:center;margin:0 0 12px;font-size:var(--text-control);color:var(--muted);overflow-wrap:anywhere}
+.phsteps{margin:0 0 12px;padding-left:22px;display:flex;flex-direction:column;gap:6px}
 
 .seatbar b{font-weight:600}
 .seatbar2{background:var(--bg)}
@@ -10149,7 +10153,7 @@ const GOOGLE_CLIENT_ID = "652182763861-oq7s0d52n6uhq1b2q5rvfdts126v989r.apps.goo
 const gcid = () => (/apps\.googleusercontent\.com$/.test(GOOGLE_CLIENT_ID) ? GOOGLE_CLIENT_ID : '') || store.get('gs.gcid', '');
 const SYNC_SCOPE = 'https://www.googleapis.com/auth/drive.appdata', DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive ' + SYNC_SCOPE;
 const G = { token: null, exp: 0, scope: '', client: null, cscope: '', email: store.get('gs.gEmail', ''), waiters: [] };
-const G_REDIRECT = navigator.standalone === true;
+const G_REDIRECT = navigator.standalone === true || /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 const gBack = () => location.origin + location.pathname.replace(/index\.html$/, '');
 {
 const h = new URLSearchParams(location.hash.replace(/^#/, '')), want = (() => { try { return sessionStorage.getItem('gs.gState'); } catch { return null; } })();
@@ -10225,11 +10229,13 @@ if (!GOK || !gcid()) return;
 for (const el of document.querySelectorAll('.gAcct')) el.innerHTML = G.email
 ? '<span class="muted" style="font-size:13px">Google: ' + esc(G.email) + ' · <span id="syncState">' + (syncState || 'synced') + '</span></span> <button class="link" data-gout>Sign out</button>'
 : '<button class="btn sm" data-gin>Sign in with Google</button>';
+if (!PHONE) for (const el of document.querySelectorAll('.gAcct')) el.insertAdjacentHTML('beforeend', ' <button class="btn sm" data-gphone>Use on your phone</button>');
 for (const b of document.querySelectorAll('.needG')) b.hidden = !G.email;
 }
 document.addEventListener('click', e => {
 if (e.target.closest('[data-gin]')) signIn();
 if (e.target.closest('[data-gout]')) signOut();
+if (e.target.closest('[data-gphone]')) phoneHowTo();
 });
 function driveSetup() {
 openDlg('<div class="bh"><h2>Connect Google</h2></div><div class="bb"><p style="margin-top:0">This copy of Grading Studio doesn’t have its Google key yet. Paste the Client ID here (it ends in apps.googleusercontent.com).</p>' +
@@ -10383,6 +10389,12 @@ console.warn(e); setSyncState(/sign in/i.test(e && e.message) ? 'sign in again t
 })().finally(() => { syncBusy = null; if (syncAgain) { syncAgain = false; syncNow(); } });
 return syncBusy;
 }
+async function syncPlan() {
+const db = await planDb(false); if (!db) return null;
+let su = null; try { su = await idbP(db.transaction('kv').objectStore('kv').get('setup')); } catch {} db.close();
+if (!su || !Array.isArray(su.classes) || !su.classes.length) return null;
+return { classes: su.classes.map(c => ({ id: c.id, name: c.name, color: c.color, meets: c.meets })), semStart: su.semStart || '', semEnd: su.semEnd || '', daysOff: su.daysOff || [] };
+}
 async function syncOnce() {
 setSyncState('syncing…');
 if (batch) await saveNow();
@@ -10406,8 +10418,9 @@ for (const row of came) if (row.id !== open && row.kind !== 'askGone') await app
 if (libVer !== v0) { libm.lib = mergeLib(libHere(), libm.lib, { dev, now }).lib; libm.toA = true; }
 if (libm.toA) { lib = migrateLib(libm.lib); libUndoForget(); if (!setLibFrom(lib)) throw browserFull(); if (batch && batch.assignment) { const f = findItem(batch.assignment.id); if (f) batch.assignment = f.it; } }
 store.set('gs.tomb', tomb);
+if (got.plan && JSON.stringify(got.plan) !== JSON.stringify(store.get('gs.planCopy', null))) { store.set('gs.planCopy', got.plan); if (typeof planRefresh === 'function') planRefresh(); }
 for (const [k, v] of Object.entries(mergeLs(carryLs(), B.ls, k => Object.keys(tomb).some(id => k.includes(id))))) lsPut(k, v);
-if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); }
+if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); if (wl.on && lib.classes.length) { wlClose(); go('#/'); } }
 if (open && rows.some(r => r.id === open && r.toA)) syncAgain = false;
 }
 const out = { app: 'Grading Studio sync', v: 1, t: now, lib: libHere(), work: {}, meta: {}, tomb, ls: carryLs() };
@@ -10419,6 +10432,7 @@ if (w) out.work[id] = w;
 if (m) { const { papers, size, ...rest } = m; out.meta[id] = rest; }
 }
 delete out.ls['gs.lib'];
+out.plan = (await syncPlan()) || (got && got.plan) || null;
 out.files = dvFiles(got && got.files, tomb);
 const body = JSON.stringify(out);
 if (!got || body !== JSON.stringify({ ...got, t: now })) await syncWrite(body);
@@ -20576,7 +20590,7 @@ let setLibFrom, libNews;
   };
 }
 const browserFull = () => Object.assign(new DOMException('The small store is full', 'QuotaExceededError'), { small: true });
-const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|refOpen\..*)$/;
+const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|refOpen\..*)$/;
 function carryLs() {
   const o = {};
   for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && !LS_LOCAL.test(k)) o[k] = localStorage.getItem(k); }
@@ -21026,6 +21040,7 @@ function whereSay() {
     case 'lost': return { text: 'Only in this browser. ' + (fld.why === 'full' ? 'The disk with ' + nm + ' is full' : fld.why === 'room' ? 'This browser is out of room, so ' + nm + ' can’t catch up' : 'Can’t reach ' + nm), tip: 'It’ll catch up by itself as soon as the folder is back.', cls: 'warn' };
     case 'decide': return { safe: true, text: fld.asks.length + (fld.asks.length === 1 ? ' thing' : ' things') + ' to decide about your folder', tip: 'Two versions to choose between', cls: 'warn', act: 'Decide' };
     default: return !fld.booted ? { safe: true, text: 'Checking where your work is kept…', tip: 'One moment', cls: '' }
+      : G.email && !sampleOn() ? { safe: true, sub: 'Backed up in your Google Drive', text: 'Backed up in your Google Drive', tip: 'Every change also goes to Grading Studio’s own hidden folder in your Google Drive', cls: '' }
       : { sub: 'Only in this browser', text: 'Not backed up. Only in this browser', tip: canPickFolder() ? 'Clearing this browser’s data would erase your work. Choose a folder and every save goes there too' : 'Clearing this browser’s data would erase your work. This browser can’t save to a folder, so make a take-home file when you finish marking', cls: 'warn' };
   }
 }
@@ -21037,7 +21052,7 @@ function renderWhere() {
   }
   if (top) { const cut = /^Not backed up\. /.exec(s.text); top.textContent = cut ? 'Not backed up' : s.text; if (cut) { const more = document.createElement('span'); more.className = 'sw-more'; more.textContent = s.text.slice(13); top.append(more); } top.title = s.tip; top.className = 'savewhere link' + (s.cls ? ' ' + s.cls : ''); }
   if (line) {
-    const h = sampleOn() ? '<span class="wtext">This is the sample. It is kept only in this browser while you look around, and your own work is kept apart.</span>' : '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
+    const h = sampleOn() ? '<span class="wtext">This is the sample. It is kept only in this browser while you look around, and your own work is kept apart.</span>' : '<span class="wtext' + (s.cls ? ' ' + s.cls : '') + '">' + (fld.state === 'none' && fld.booted && !G.email ? 'Your work is saved only in this browser, and is not backed up' : 'Your work is saved: ' + esc(s.text.charAt(0).toLowerCase() + s.text.slice(1))) + '.</span> ' +
       (s.act ? '<button class="btn sm primary" data-wact>' + s.act + '</button> ' : '') +
       (fld.state === 'none' ? (canPickFolder() ? '<button class="btn sm primary" data-wlink>Choose a folder…</button>' : '') : '<button class="btn sm" data-wopen>Folder…</button>') +
       (fld.state !== 'none' && fld.root ? ' <a class="btn sm" href="#/settings/history">Go back in time…</a>' : '');
@@ -29154,6 +29169,7 @@ if (db) {
 try { const t = db.transaction(['kv', 'lessons']); [setup, lessons] = await Promise.all([idbP(t.objectStore('kv').get('setup')), idbP(t.objectStore('lessons').getAll())]); } catch {}
 db.close();
 }
+if (!(setup && Array.isArray(setup.classes) && setup.classes.length)) setup = store.get('gs.planCopy', null);
 const hex = c => /^#[0-9a-f]{6}$/i.test(c) ? c : '#1F6FB2';
 const classes = (setup && Array.isArray(setup.classes) ? setup.classes : []).filter(c => c && c.id != null).map(c => ({ id: String(c.id), name: String(c.name || c.id), color: hex(c.color),
 meets: (Array.isArray(c.meets) ? c.meets : []).map(m => ({ dow: +m.dow, start: String(m.start || ''), end: String(m.end || '') })) }));
@@ -31273,7 +31289,7 @@ renderTools(); setInksSay();
 const ASK_LATER = 7 * 864e5;
 const IC_FOLDER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
 function safeAskShown() {
-if (fld.state !== 'none' || !fld.booted) return false;
+if (fld.state !== 'none' || !fld.booted || G.email) return false;
 let later = 0; try { later = +localStorage.getItem('gsc.folderLater') || 0; } catch {}
 if (Date.now() - later < ASK_LATER) return false;
 return canPickFolder() || keptMeta.size > 0;
@@ -31912,7 +31928,7 @@ $('#welcome').innerHTML = '<div class="wlsheet" role="dialog" aria-modal="true" 
 '<div class="wlbody">' + body + '</div>' +
 '<div class="wlact">' + (wl.step ? '<button class="btn" data-wlback>Back</button>' : '') + '<button class="btn primary" data-wlnext>' + (last ? 'Start' : 'Continue') + '</button>' +
 '<button class="link" data-wlsample>Look around with a sample class first</button>' + '</div>' +
-(wl.step === 0 && !lib.classes.length ? '<p class="wlfoot">Already use Grading Studio on another computer? <button class="link" data-wlbring>Bring your work in</button></p><p class="wlfoot wlfoot2">Have an AI assistant that knows how you teach? <button class="link" data-wlai>Let it set this up</button></p>' : '') +
+(wl.step === 0 && !lib.classes.length ? '<p class="wlfoot">Already use Grading Studio on another computer? <button class="link" data-wlbring>Bring your work in</button></p>' + (GOK && gcid() ? '<p class="wlfoot"><button class="btn sm" data-wlg>Sign in with Google</button></p>' : '') + '<p class="wlfoot wlfoot2">Have an AI assistant that knows how you teach? <button class="link" data-wlai>Let it set this up</button></p>' : '') +
 '</div><div class="wlr">' +
 [['lock', 'Private', 'Student work never leaves this computer. No account, nothing uploaded.'],
 ['drop', 'Works with what you have', 'Google Classroom, ManageBac, Canvas, Teams, a folder of files, or a scan of the whole class.'],
@@ -31957,6 +31973,7 @@ if (e.target.closest('[data-wlnext]')) return wlNext();
 if (e.target.closest('[data-wlfolder]')) { wl.busy = true; try { await folderPick(); } finally { wl.busy = false; } if (wl.on) wlRender(); return; }
 if (e.target.closest('[data-wlsample]')) return sampleEnter();
 if (e.target.closest('[data-wlai]')) { wlClose(); return go('#/settings/setup'); }
+if (e.target.closest('[data-wlg]')) { wlClose(); go('#/'); signIn(); return; }
 if (e.target.closest('[data-wlbring]')) { wlClose(); go('#/settings'); toast('Choose your Grading Studio folder, or bring in a take-home file. Your classes and work come with it.', 8000); }
 });
 $('#welcome').addEventListener('input', e => {
@@ -32097,7 +32114,7 @@ setRender(); toast('New assignments start with ' + way[1].toLowerCase() + ' from
 });
 
 sysWords();
-if (fresh && !asked() && !lib.classes.length && routeNow().v === 'home' && !sampleOn()) wlOpen();
+if (fresh && !asked() && !lib.classes.length && routeNow().v === 'home' && !sampleOn() && !G.token && !G.email) wlOpen();
 Object.assign(window.__gs, { wlOpen, wlShown, sampleRemove, me, meGrade, bandOf, sysName });
 
 /* ---------------- My setup: bring a teacher's setup in as one block of text, or copy it out ----------------
@@ -33366,6 +33383,78 @@ if (t.id === 'gcTo') { const n = $('#gcName'); if (n) gc.name = n.value; gc.to =
 });
 Object.assign(window.__gs, { gcOpen, gcRead, gcNameOf });
 
+/* ---------------- A QR code, made here: nothing is fetched and no outside service sees the address ----------------
+Byte mode, error correction level M, sizes 1 to 6 (up to about 100 letters, plenty for a web address). qrMatrix(text) gives rows of
+true (dark) and false, or null if the text is too long; qrSvg(text) draws it. The steps are the ones in the QR standard (ISO 18004). */
+const QR_M = [null, [16, 1, 10], [28, 1, 16], [44, 1, 26], [32, 2, 18], [43, 2, 24], [27, 4, 16]];
+const QR_ALIGN = [null, [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34]];
+function qrMatrix(text) {
+const bytes = [...new TextEncoder().encode(text)];
+let ver = 1; while (ver <= 6 && QR_M[ver][0] * QR_M[ver][1] < bytes.length + 2) ver++;
+if (ver > 6) return null;
+const [per, blocks, ecn] = QR_M[ver], cap = per * blocks;
+const bits = [], put = (v, n) => { for (let i = n - 1; i >= 0; i--) bits.push((v >>> i) & 1); };
+put(4, 4); put(bytes.length, 8); for (const b of bytes) put(b, 8);
+put(0, Math.min(4, cap * 8 - bits.length)); while (bits.length % 8) bits.push(0);
+const data = []; for (let i = 0; i < bits.length; i += 8) data.push(bits.slice(i, i + 8).reduce((a, b) => a * 2 + b, 0));
+for (let p = 0; data.length < cap; p++) data.push(p % 2 ? 0x11 : 0xEC);
+const EXP = [], LOG = []; for (let i = 0, x = 1; i < 255; i++) { EXP[i] = x; LOG[x] = i; x = (x << 1) ^ (x & 128 ? 0x11D : 0); }
+const mul = (a, b) => a && b ? EXP[(LOG[a] + LOG[b]) % 255] : 0;
+let gen = [1]; for (let i = 0; i < ecn; i++) { const g = new Array(gen.length + 1).fill(0); gen.forEach((c, j) => { g[j] ^= c; g[j + 1] ^= mul(c, EXP[i]); }); gen = g; }
+const dataB = [], ecB = [];
+for (let b = 0; b < blocks; b++) {
+const d = data.slice(b * per, (b + 1) * per), r = d.concat(new Array(ecn).fill(0));
+for (let i = 0; i < d.length; i++) { const f = r[i]; if (f) gen.forEach((c, j) => { r[i + j] ^= mul(c, f); }); }
+dataB.push(d); ecB.push(r.slice(d.length));
+}
+const words = []; for (let i = 0; i < per; i++) for (const d of dataB) words.push(d[i]); for (let i = 0; i < ecn; i++) for (const e of ecB) words.push(e[i]);
+const n = ver * 4 + 17, m = [...Array(n)].map(() => new Array(n).fill(null)), fixed = (r, c, v) => { if (r >= 0 && r < n && c >= 0 && c < n) m[r][c] = v; };
+for (const [r0, c0] of [[0, 0], [0, n - 7], [n - 7, 0]]) for (let r = -1; r <= 7; r++) for (let c = -1; c <= 7; c++) fixed(r0 + r, c0 + c, r >= 0 && r <= 6 && c >= 0 && c <= 6 && (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)));
+for (let i = 8; i < n - 8; i++) { fixed(6, i, i % 2 === 0); fixed(i, 6, i % 2 === 0); }
+for (const r of QR_ALIGN[ver]) for (const c of QR_ALIGN[ver]) if (m[r][c] === null) for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) fixed(r + dr, c + dc, Math.max(Math.abs(dr), Math.abs(dc)) !== 1);
+fixed(n - 8, 8, true);
+for (let i = 0; i < 9; i++) { if (m[8][i] === null) m[8][i] = false; if (m[i][8] === null) m[i][8] = false; }
+for (let i = 0; i < 8; i++) { m[8][n - 1 - i] = false; m[n - 1 - i][8] = false; }
+m[n - 8][8] = true;
+const free = m.map(row => row.map(v => v === null));
+const stream = []; for (const w of words) for (let i = 7; i >= 0; i--) stream.push((w >>> i) & 1);
+let k = 0;
+for (let c = n - 1, up = true; c > 0; c -= 2, up = !up) {
+if (c === 6) c--;
+for (let i = 0; i < n; i++) { const r = up ? n - 1 - i : i; for (const cc of [c, c - 1]) if (free[r][cc]) m[r][cc] = !!stream[k++]; }
+}
+const MASKS = [(r, c) => (r + c) % 2 === 0, r => r % 2 === 0, (r, c) => c % 3 === 0, (r, c) => (r + c) % 3 === 0, (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0, (r, c) => (r * c) % 2 + (r * c) % 3 === 0, (r, c) => ((r * c) % 2 + (r * c) % 3) % 2 === 0, (r, c) => ((r + c) % 2 + (r * c) % 3) % 2 === 0];
+const withMask = mk => {
+const g = m.map((row, r) => row.map((v, c) => free[r][c] && MASKS[mk](r, c) ? !v : v));
+let f = (0 << 3) | mk, e = f << 10; for (let i = 14; i >= 10; i--) if ((e >>> i) & 1) e ^= 0x537 << (i - 10);
+const fmt = ((f << 10) | e) ^ 0x5412, bit = i => !!((fmt >>> i) & 1);
+for (let i = 0; i <= 5; i++) g[8][i] = bit(14 - i);
+g[8][7] = bit(8); g[8][8] = bit(7); g[7][8] = bit(6);
+for (let i = 9; i <= 14; i++) g[14 - i][8] = bit(14 - i);
+for (let i = 0; i <= 6; i++) g[n - 1 - i][8] = bit(14 - i);
+for (let i = 0; i <= 7; i++) g[8][n - 8 + i] = bit(7 - i);
+return g;
+};
+const score = g => {
+let s = 0, dark = 0;
+for (let a = 0; a < 2; a++) for (let i = 0; i < n; i++) { let run = 1; for (let j = 1; j < n; j++) { const v = a ? g[j][i] : g[i][j], p = a ? g[j - 1][i] : g[i][j - 1]; if (v === p) { run++; if (run === 5) s += 3; else if (run > 5) s++; } else run = 1; } }
+for (let r = 0; r < n - 1; r++) for (let c = 0; c < n - 1; c++) if (g[r][c] === g[r][c + 1] && g[r][c] === g[r + 1][c] && g[r][c] === g[r + 1][c + 1]) s += 3;
+const pat = [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0], rev = pat.slice().reverse();
+for (let a = 0; a < 2; a++) for (let i = 0; i < n; i++) for (let j = 0; j <= n - 11; j++) for (const p of [pat, rev]) if (p.every((b, x) => (a ? g[j + x][i] : g[i][j + x]) === !!b)) s += 40;
+for (const row of g) for (const v of row) if (v) dark++;
+return s + Math.floor(Math.abs(dark * 20 / (n * n) - 10)) * 10;
+};
+let best = null, bestS = Infinity;
+for (let mk = 0; mk < 8; mk++) { const g = withMask(mk), s = score(g); if (s < bestS) { best = g; bestS = s; } }
+return best;
+}
+function qrSvg(text, label) {
+const g = qrMatrix(text); if (!g) return '';
+const n = g.length, q = 4; let d = '';
+g.forEach((row, r) => row.forEach((v, c) => { if (v) d += 'M' + (c + q) + ' ' + (r + q) + 'h1v1h-1z'; }));
+return '<svg class="qr" viewBox="0 0 ' + (n + 2 * q) + ' ' + (n + 2 * q) + '" role="img" aria-label="' + esc(label || text) + '" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#FFFFFF"/><path d="' + d + '" fill="#000000"/></svg>';
+}
+
 /* ---------------- On a phone: what's left, quick scores, to-dos and the focus timer, nothing that needs the papers ----------------
 Grading Studio added to an iPhone's Home Screen (or opened in a phone's browser) shows a narrow version of the same app, with the
 same saved work. Papers stay on the computer: here the teacher sees what is left to score, types scores in for a whole class one
@@ -33530,7 +33619,22 @@ if (b) { const key = b.closest('[data-phcol]').dataset.phcol, col = ph.cols && p
 if (e.target.closest('[data-phvclose]')) e.target.closest('.phview').remove();
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { const v = document.querySelector('.phview'); if (v) v.remove(); } });
-window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), canOpen: id => canOpen(keptMeta.get(id)) });
+/* Use on your phone: a QR code for this page's own address (src/qr.js, made here), and the steps to put it on a phone's Home Screen and sign in. */
+function phoneHowTo() {
+const url = location.origin + location.pathname.replace(/index\.html$/, ''), qr = qrSvg(url, 'QR code for Grading Studio');
+openDlg('<div class="bh"><h2>Use on your phone</h2></div><div class="bb phhow">' +
+(qr ? '<div class="phqr">' + qr + '</div>' : '') + '<p class="phurl" data-raw>' + esc(url) + '</p>' +
+'<ol class="phsteps">' +
+'<li>Point your phone’s camera at the code and tap the link, or type the address above.</li>' +
+'<li>On an iPhone: in Safari, tap Share, then Add to Home Screen.</li>' +
+'<li>On Android: in Chrome, tap the ⋮ menu, then Add to Home screen or Install app.</li>' +
+'<li>Open Grading Studio from your Home Screen and tap Sign in with Google. Use the same Google account as on this computer.</li>' +
+'</ol>' +
+'<p class="muted">If Google says it hasn’t verified the app, tap Advanced, then Go to Grading Studio. The sign-in key was made for your copy rather than reviewed by Google, and the app can only use its own hidden folder in your Drive.</p>' +
+'<p class="muted">Your classes, scores and to-dos then stay the same on both. You can type scores and look at papers on the phone; marking stays on the computer.</p>' +
+'</div><div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
+}
+window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });
 
 /* ---------------- the frame: the sidebar, Home's "Needs a look", and Find anything (11/9) ---------------- */
 var shellReady, screenWas = '';
@@ -33583,7 +33687,7 @@ if (m.partial && canOpen(m)) rows.push({ t: m.partial + (m.partial === 1 ? ' pap
 else if (!canOpen(m)) rows.push({ t: 'Papers not kept in this browser', s: (m.name || 'A download') + ': drop the download in again to reopen it' });
 }
 const last = store.get('gs.lastBackup', 0), days = Math.floor((Date.now() - last) / 864e5);
-if (keptMeta.size > 0 && fld.state === 'none' && days >= 7 && !safeAskShown()) rows.push({ t: last ? 'Your take-home file is ' + days + ' days old' : 'Your work is not backed up', s: 'Choose a folder or make a take-home file, in Settings', href: '#/settings' });
+if (keptMeta.size > 0 && fld.state === 'none' && !G.email && days >= 7 && !safeAskShown()) rows.push({ t: last ? 'Your take-home file is ' + days + ' days old' : 'Your work is not backed up', s: 'Choose a folder or make a take-home file, in Settings', href: '#/settings' });
 const h = !rows.length ? '' : '<section class="ncard"><div class="nhead"><h2>Needs a look</h2><span class="schip warn">' + rows.length + '</span></div>' +
 rows.slice(0, 6).map(r => { const body = '<span class="nt"><b>' + esc(r.t) + '</b><span class="ns">' + esc(r.s) + '</span></span>'; return r.open ? '<button class="nrow" data-nopen="' + esc(r.open) + '">' + body + chev + '</button>' : r.href ? '<a class="nrow" href="' + r.href + '">' + body + chev + '</a>' : '<div class="nrow">' + body + '</div>'; }).join('') +
 (rows.length > 6 ? '<div class="nrow"><span class="ns">and ' + (rows.length - 6) + ' more</span></div>' : '') + '</section>';
