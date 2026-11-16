@@ -342,7 +342,7 @@ const LANG_ES = {
     'Help: short answers to common questions': 'Ayuda: respuestas breves a las preguntas más comunes',
     'This tab is still on the older version. Reload it when you’re ready.': 'Esta pestaña sigue en la versión anterior. Recárgala cuando quieras.',
     'Calendar': 'Calendario', 'Units': 'Unidades', 'Past lessons': 'Lecciones anteriores', 'Activities': 'Actividades', 'Rubrics': 'Rúbricas', 'Timetable': 'Horario', 'Set up your timetable': 'Configura tu horario',
-    'Calendar: your lessons by week, or the whole semester': 'Calendario: tus lecciones por semana o todo el semestre',
+    'Plan lessons': 'Planificar lecciones', 'Plan lessons: this week’s classes, and what to plan next': 'Planificar lecciones: las clases de esta semana y lo que toca planificar', 'Library': 'Biblioteca', 'Library: units, past lessons, activities and rubrics': 'Biblioteca: unidades, lecciones anteriores, actividades y rúbricas',
     'Units: each unit, its weeks and its files': 'Unidades: cada unidad, sus semanas y sus archivos',
     'Past lessons: old decks and their handouts, to use again': 'Lecciones anteriores: presentaciones y materiales para usar de nuevo',
     'Activities: the activity bank': 'Actividades: el banco de actividades',

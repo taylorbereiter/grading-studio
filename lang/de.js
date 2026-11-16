@@ -340,7 +340,7 @@ words: {
 'Help: short answers to common questions': 'Hilfe: kurze Antworten auf häufige Fragen',
 'This tab is still on the older version. Reload it when you’re ready.': 'Dieser Tab nutzt noch die ältere Version. Laden Sie ihn neu, wenn es passt.',
 'Calendar': 'Kalender', 'Units': 'Einheiten', 'Past lessons': 'Frühere Stunden', 'Activities': 'Aktivitäten', 'Rubrics': 'Bewertungsraster', 'Timetable': 'Stundenplan', 'Set up your timetable': 'Stundenplan einrichten',
-'Calendar: your lessons by week, or the whole semester': 'Kalender: Ihre Stunden nach Woche oder das ganze Halbjahr',
+'Plan lessons': 'Stunden planen', 'Plan lessons: this week’s classes, and what to plan next': 'Stunden planen: die Klassen dieser Woche und was als Nächstes zu planen ist', 'Library': 'Bibliothek', 'Library: units, past lessons, activities and rubrics': 'Bibliothek: Einheiten, frühere Stunden, Aktivitäten und Bewertungsraster',
 'Units: each unit, its weeks and its files': 'Einheiten: jede Einheit, ihre Wochen und ihre Dateien',
 'Past lessons: old decks and their handouts, to use again': 'Frühere Stunden: alte Folien und Arbeitsblätter zum Wiederverwenden',
 'Activities: the activity bank': 'Aktivitäten: die Aktivitätensammlung',

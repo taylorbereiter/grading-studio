@@ -272,7 +272,7 @@ const LANG_ZH = {
     'Help: short answers to common questions': '說明：常見問題的簡短解答',
     'This tab is still on the older version. Reload it when you’re ready.': '這個分頁還是舊版本。方便的時候請重新載入。',
     'Calendar': '行事曆', 'Units': '單元', 'Past lessons': '過去的課程', 'Activities': '活動', 'Rubrics': '評分規準', 'Timetable': '課表', 'Set up your timetable': '設定課表',
-    'Calendar: your lessons by week, or the whole semester': '行事曆：按週或整個學期查看課程',
+    'Plan lessons': '備課', 'Plan lessons: this week’s classes, and what to plan next': '備課：本週的課，以及接下來要準備的課', 'Library': '資料庫', 'Library: units, past lessons, activities and rubrics': '資料庫：單元、以往課程、活動和評分標準',
     'Units: each unit, its weeks and its files': '單元：每個單元、所屬週次與檔案',
     'Past lessons: old decks and their handouts, to use again': '過去的課程：以前的簡報與講義，可以再次使用',
     'Activities: the activity bank': '活動：活動庫',

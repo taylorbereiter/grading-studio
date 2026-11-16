@@ -270,7 +270,7 @@ test('the activity bank: filter, add one to a lesson as a steps slide, and keep 
   try {
     const { page, errors } = a;
     await page.evaluate(async s => { await window.__planner.applySetup(s); }, SETUP);
-    await page.click('#rail [data-v="activities"]');
+    await page.click('#railLib'); await page.click('#rail [data-v="activities"]');
     await page.waitForSelector('.pl-act');
     const all = await page.$$eval('.pl-act', c => c.length);
     assert.ok(all >= 30, 'the bank starts with plenty of activities');

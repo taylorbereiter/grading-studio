@@ -278,7 +278,7 @@ words: {
 'Help: short answers to common questions': '도움말: 자주 묻는 질문에 대한 짧은 답변',
 'This tab is still on the older version. Reload it when you’re ready.': '이 탭은 아직 이전 버전입니다. 편할 때 새로 고침하세요.',
 'Calendar': '달력', 'Units': '단원', 'Past lessons': '지난 수업', 'Activities': '활동', 'Rubrics': '루브릭', 'Timetable': '시간표', 'Set up your timetable': '시간표 설정',
-'Calendar: your lessons by week, or the whole semester': '달력: 주별 수업 또는 학기 전체',
+'Plan lessons': '수업 계획', 'Plan lessons: this week’s classes, and what to plan next': '수업 계획: 이번 주 수업과 다음에 계획할 수업', 'Library': '자료실', 'Library: units, past lessons, activities and rubrics': '자료실: 단원, 지난 수업, 활동, 루브릭',
 'Units: each unit, its weeks and its files': '단원: 각 단원과 해당 주, 파일',
 'Past lessons: old decks and their handouts, to use again': '지난 수업: 이전 슬라이드와 유인물을 다시 사용',
 'Activities: the activity bank': '활동: 활동 모음',

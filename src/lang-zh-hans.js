@@ -278,7 +278,7 @@ const LANG_ZHS = {
     'Help: short answers to common questions': '帮助：常见问题的简短解答',
     'This tab is still on the older version. Reload it when you’re ready.': '这个标签页还是旧版本。方便的时候请重新加载。',
     'Calendar': '日历', 'Units': '单元', 'Past lessons': '过去的课程', 'Activities': '活动', 'Rubrics': '评分标准', 'Timetable': '课程表', 'Set up your timetable': '设置课程表',
-    'Calendar: your lessons by week, or the whole semester': '日历：按周或整个学期查看课程',
+    'Plan lessons': '备课', 'Plan lessons: this week’s classes, and what to plan next': '备课：本周的课，以及接下来要准备的课', 'Library': '资料库', 'Library: units, past lessons, activities and rubrics': '资料库：单元、以往课程、活动和评分标准',
     'Units: each unit, its weeks and its files': '单元：每个单元、所属周次与文件',
     'Past lessons: old decks and their handouts, to use again': '过去的课程：以前的演示文稿与讲义，可以再次使用',
     'Activities: the activity bank': '活动：活动库',

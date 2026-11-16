@@ -270,7 +270,7 @@ words: {
 'Help: short answers to common questions': 'ヘルプ：よくある質問への短い回答',
 'This tab is still on the older version. Reload it when you’re ready.': 'このタブはまだ古いバージョンです。都合のよいときに再読み込みしてください。',
 'Calendar': 'カレンダー', 'Units': '単元', 'Past lessons': '過去の授業', 'Activities': '活動', 'Rubrics': 'ルーブリック', 'Timetable': '時間割', 'Set up your timetable': '時間割を設定',
-'Calendar: your lessons by week, or the whole semester': 'カレンダー：週ごと、または学期全体の授業',
+'Plan lessons': '授業を計画', 'Plan lessons: this week’s classes, and what to plan next': '授業を計画：今週のクラスと、次に計画する授業', 'Library': 'ライブラリ', 'Library: units, past lessons, activities and rubrics': 'ライブラリ：単元、過去の授業、アクティビティ、ルーブリック',
 'Units: each unit, its weeks and its files': '単元：各単元とその週、ファイル',
 'Past lessons: old decks and their handouts, to use again': '過去の授業：以前のスライドと配布資料を再利用',
 'Activities: the activity bank': '活動：活動バンク',
