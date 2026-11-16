@@ -62,7 +62,7 @@ test('a session opens the next paper with nothing finished, finished papers coun
   L = await log(page);
   assert.equal(L.days[today()].s, 600, 'a break is not counted as work');
   assert.ok(!JSON.stringify(L).match(/Aria|Bram|Cleo|Dov|Testwell/), 'the log has no names in it');
-  assert.equal(await page.evaluate(() => localStorage.getItem('gs.focusRun')), null);
+  assert.equal(await page.evaluate(() => localStorage.getItem('gsp.focusRun')), null);
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -152,7 +152,8 @@ test('Focus on this in To do starts a session on the to-do, and the end offers t
 test('the running session stays in this browser; the settings and the log go with the teacher’s work', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'folder.js'), 'utf8');
   const re = new RegExp(src.match(/const LS_LOCAL = \/(.+?)\/;/)[1]);
-  assert.ok(re.test('gs.focusRun'), 'a session half done on one computer is not carried to another');
+  const th = fs.readFileSync(path.join(__dirname, '..', 'src', 'takehome.js'), 'utf8'), skip = new RegExp(th.match(/const PLAN_LS_SKIP = \/(.+?)\/;/)[1]);
+  for (const k of ['gsp.focusRun', 'gsp.focusQ', 'gsp.focusGo']) assert.ok(skip.test(k), 'a session half done on one computer is not carried to another: ' + k);
   assert.ok(!re.test('gs.focus'), 'the log of days and the pace go with the folder and the take-home file');
 });
 
@@ -309,7 +310,7 @@ test('a paper scored just before Close counts once, and the next session starts 
 
 test('a session started in a window not updated yet is counted by papers saved, not by the day', async () => {
   const { page, close } = await openApp(browser, { seed: gradingSeed() });
-  await page.evaluate(() => { localStorage.setItem('gs.focusRun', JSON.stringify({ st: 'run', len: 1500, at: Date.now(), w: '', one: 1, p0: 0, fold: false, no: 1 })); window.__gs.fcTick(); });
+  await page.evaluate(() => { localStorage.setItem('gsp.focusRun', JSON.stringify({ st: 'run', len: 1500, at: Date.now(), w: '', one: 1, p0: 0, fold: false, no: 1 })); window.__gs.fcTick(); });
   assert.deepEqual(await page.evaluate(() => { const r = window.__gs.fcRun(); return [r.st, r.p0, r.pg]; }), ['run', 1e9, 0]);
   await close();
 });

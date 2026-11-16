@@ -1,13 +1,12 @@
 {
- "version": "1.28.42",
- "build": "0cbb5006c134",
+ "version": "1.28.43",
+ "build": "ac387d61cbfe",
  "notes": [
-  "Videos from your Google Drive: in Partners and videos, Choose from Drive… opens Google's own chooser in your videos folder. Pick several at once and each goes to the student named in its file name. The video plays here, so the transcript follows along. The app can open only the videos you pick, nothing else in your Drive.",
-  "Open from Google Drive and Save to Google Drive use the same limited permission: pick the ZIP or the papers in Google's chooser. Grading Studio never asks for your whole Drive."
+  "The focus timer keeps going when you open the Planner. The panel shows there with the clock, pause, more time and break, and a session that ends in the Planner is added to your focus log when you come back to grading."
  ],
  "files": {
-  "index.html": "c9afa7aac41933e633ba862270536d76d75376efc78ff424b5ef3fc9695d3d93",
-  "planner.html": "db280c773b25e3366553d07ed39290edc5b8f547de09cea6e0b6b11535451c26"
+  "index.html": "225d352202516c4289cb1c04c8ed426b0f811fd6fc3aadf9eb63cfb3c18289a1",
+  "planner.html": "563c5356c9ca187b8c87fcba20310db862135e9e9de1874e703de0b94c9a635d"
  },
  "langs": {
   "lang/zh-Hant.js": "ea0e5765a6e2c1db58743ec97e0de9034a889dcff3c16cc53db62d28eb477c3a",

@@ -44,9 +44,9 @@ function tkFlush() {
   if (batch) renderProg();
 }
 function tkOn() { if (!tkTimer) tkTimer = setInterval(tkTick, TK_STEP * 1000); tkShare(); }
-// The Planner reads only its own keys, so the two settings it needs are copied into one of them.
+// The Planner reads only its own keys, so the settings it needs (counting time, and the focus timer's) are copied into one of them.
 function tkShare() {
-  const c = fcConf(), v = JSON.stringify({ on: !!c.track, idle: c.idle });
+  const c = fcConf(), v = JSON.stringify({ on: !!c.track, idle: c.idle, len: c.len, brk: c.brk, sound: c.sound, title: c.title, music: c.music, mood: c.mood, mvol: c.mvol, mamb: c.mamb });
   try { if (localStorage.getItem('gsp.timeCount') !== v) localStorage.setItem('gsp.timeCount', v); } catch { }
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') tkFlush(); });
