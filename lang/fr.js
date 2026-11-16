@@ -1,10 +1,4 @@
 (window.__gsLangs = window.__gsLangs || {})["fr"] = (function () {
-/* ---------------- French. One language is one file like this; src/lang.js explains how it is used. ----------------
-words: a whole English line, or one part of a line between " · ", with its French.
-rules: the same for lines with a number or a name in them. The first rule that fits wins; a rule that answers null is passed over.
-help:  the Help page's answers, by topic id (src/helpdata.js has the English). A button named in **bold** keeps its English name
-when its screen is still in English, so it can be found.
-Covered so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page in a returned paper. */
 const FR_NUM = { no: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
 const frN = w => { const k = String(w).toLowerCase(); return k in FR_NUM ? FR_NUM[k] : +w; };
 const frP = (n, one, many) => n + ' ' + (n > 1 ? many : one);
@@ -380,7 +374,7 @@ words: {
 'Choose a folder or make a take-home file, in Settings': 'Choisissez un dossier ou créez un fichier à emporter, dans Réglages',
 'Drop new student work anywhere': 'Déposez ici les nouveaux travaux d’élèves', 'Choose files…': 'Choisir des fichiers…', 'More ways': 'Autres façons',
 'A folder, a scan of the whole class, or files to match to a roster': 'Un dossier, un scan de toute la classe ou des fichiers à associer à une liste',
-'A folder of papers…': 'Un dossier de copies…', 'A scan of everyone’s papers…': 'Un scan des copies de toute la classe…', 'Files to match to a roster…': 'Des fichiers à associer à une liste…', 'From Google Drive…': 'Depuis Google Drive…',
+'A folder of papers…': 'Un dossier de copies…', 'A scan of everyone’s papers…': 'Un scan des copies de toute la classe…', 'Files to match to a roster…': 'Des fichiers à associer à une liste…', 'From Google Drive…': 'Depuis Google Drive…', 'Sign in with Google': 'Se connecter avec Google',
 'Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off.': 'Vos annotations, notes, séquences et listes sont gardées dans ce navigateur : vous pouvez fermer l’onglet et reprendre plus tard là où vous en étiez.',
 'Try it with a sample class': 'Essayer avec une classe d’exemple', 'preview copy, with its own saved work': 'copie d’aperçu, avec son propre travail enregistré',
 'Choose where your work is kept': 'Choisissez où garder votre travail',

@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { classPage, openApp, pick } = require('./helpers/app');
+const { noStamps, classPage, openApp, pick } = require('./helpers/app');
 
 let browser;
 before(async () => { browser = await launch(); });
@@ -51,7 +51,7 @@ async function openBook(page) {
   await page.waitForSelector('#bkTab');
 }
 const termCol = page => page.$$eval('#bkTab tbody tr', rs => rs.map(r => r.firstElementChild.textContent + ' ' + r.lastElementChild.textContent.trim()));
-const lib = page => page.evaluate(() => window.__gs.state().lib);
+const lib = async page => noStamps(await page.evaluate(() => window.__gs.state().lib));
 
 test('the table groups a term’s assignments by type, averages each type, and weights them into a term grade', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });

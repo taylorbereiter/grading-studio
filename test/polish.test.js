@@ -537,7 +537,9 @@ test('the build only leaves out lines that really are comments', () => {   // a 
 test('Today puts the work to mark above opening new work', async () => {
   const { page, close } = await openApp(browser);
   const order = () => page.evaluate(() => { const y = s => document.querySelector(s).getBoundingClientRect().top; return { kept: document.querySelector('#toMark').checkVisibility() ? y('#toMark') : null, drop: y('#drop'), classes: document.querySelector('#classes').checkVisibility() }; });
-  assert.ok(await page.$eval('#pickDrive', e => e.hidden) && await page.$eval('.gAcct', e => e.hidden), 'no Google key built in, so no Google buttons');
+  // the Google buttons show only when a Google key is built in (site.json googleClientId, or GCID when building)
+  const gKey = !!(process.env.GCID || require('../site.json').googleClientId);
+  assert.equal(await page.$eval('#pickDrive', e => e.hidden) && await page.$eval('.gAcct', e => e.hidden), !gKey, gKey ? 'a Google key built in, so the Google buttons show' : 'no Google key built in, so no Google buttons');
   let o = await order();
   assert.equal(o.kept, null, 'nothing kept yet, so the download box comes first'); assert.equal(o.classes, false, 'classes are on their own pages now');
   await openZip(page, zip); await score(page, [3, 3, 3]); await settle(page);

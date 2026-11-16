@@ -1,10 +1,4 @@
 (window.__gsLangs = window.__gsLangs || {})["ko"] = (function () {
-/* ---------------- Korean. One language is one file like this; src/lang.js explains how it is used. ----------------
-words: a whole English line, or one part of a line between " · ", with its Korean.
-rules: the same for lines with a number or a name in them. The first rule that fits wins; a rule that answers null is passed over.
-help:  the Help page's answers, by topic id (src/helpdata.js has the English). A button named in **bold** keeps its English name
-when its screen is still in English, so it can be found.
-Covered so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page in a returned paper. */
 const KO_NUM = { no: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
 const koN = w => { const k = String(w).toLowerCase(); return k in KO_NUM ? KO_NUM[k] : +w; };
 const koLast = s => s === 'the last set of papers' ? '가장 최근 제출물' : s;
@@ -317,7 +311,7 @@ words: {
 'Choose a folder or make a take-home file, in Settings': '설정에서 폴더를 선택하거나 휴대용 파일을 만드세요',
 'Drop new student work anywhere': '새 학생 제출물을 여기에 끌어다 놓으세요', 'Choose files…': '파일 선택…', 'More ways': '다른 방법',
 'A folder, a scan of the whole class, or files to match to a roster': '폴더, 학급 전체 스캔 또는 명단과 맞출 파일',
-'A folder of papers…': '제출물 폴더…', 'A scan of everyone’s papers…': '모든 학생의 제출물 스캔…', 'Files to match to a roster…': '명단과 맞출 파일…', 'From Google Drive…': 'Google Drive에서…',
+'A folder of papers…': '제출물 폴더…', 'A scan of everyone’s papers…': '모든 학생의 제출물 스캔…', 'Files to match to a roster…': '명단과 맞출 파일…', 'From Google Drive…': 'Google Drive에서…', 'Sign in with Google': 'Google로 로그인',
 'Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off.': '표시, 점수, 단원, 명단은 이 브라우저에 저장되므로 탭을 닫았다가 돌아와도 하던 곳에서 이어서 할 수 있습니다.',
 'Try it with a sample class': '샘플 학급으로 사용해 보기', 'preview copy, with its own saved work': '미리보기 사본(저장 데이터가 따로 있음)',
 'Choose where your work is kept': '작업을 저장할 위치 선택',

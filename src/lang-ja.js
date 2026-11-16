@@ -320,7 +320,7 @@ const LANG_JA = {
     'Choose a folder or make a take-home file, in Settings': '設定でフォルダを選ぶか、持ち出しファイルを作成してください',
     'Drop new student work anywhere': '新しい提出物をここにドロップ', 'Choose files…': 'ファイルを選択…', 'More ways': 'その他の方法',
     'A folder, a scan of the whole class, or files to match to a roster': 'フォルダ、クラス全員分のスキャン、または名簿と照合するファイル',
-    'A folder of papers…': '提出物のフォルダ…', 'A scan of everyone’s papers…': '全員分の提出物のスキャン…', 'Files to match to a roster…': '名簿と照合するファイル…', 'From Google Drive…': 'Google ドライブから…',
+    'A folder of papers…': '提出物のフォルダ…', 'A scan of everyone’s papers…': '全員分の提出物のスキャン…', 'Files to match to a roster…': '名簿と照合するファイル…', 'From Google Drive…': 'Google ドライブから…', 'Sign in with Google': 'Google でログイン',
     'Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off.': '書き込み、点数、単元、名簿はこのブラウザに保存されるので、タブを閉じても、戻って続きから再開できます。',
     'Try it with a sample class': 'サンプルクラスで試す', 'preview copy, with its own saved work': 'プレビュー版（保存データは別です）',
     'Choose where your work is kept': '作業の保存先を選んでください',

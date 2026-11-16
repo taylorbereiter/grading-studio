@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { classPage, openApp, pickFile, waitPaper, press } = require('./helpers/app');
+const { noStamps, classPage, openApp, pickFile, waitPaper, press } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -95,7 +95,7 @@ test('Add scores for a formative activity ticks Feedback complete per student', 
   assert.equal(await page.$eval('#bkaCount', e => e.textContent), '2 of 4 complete');
   await page.click('[data-bkasave]');
   await page.waitForFunction(() => /Peer review/.test(document.querySelector('#bkTab thead').textContent));
-  const it = (await page.evaluate(() => window.__gs.state().lib)).classes[0].units.flatMap(u => u.items).find(x => x.name === 'Peer review');
+  const it = noStamps(await page.evaluate(() => window.__gs.state().lib)).classes[0].units.flatMap(u => u.items).find(x => x.name === 'Peer review');
   assert.equal(it.type, 'fm');
   assert.deepEqual(it.typed.s, { 'Aria Testwell': { v: null, st: '', fb: true }, 'Cleo Fixture': { v: null, st: '', fb: true } });
   // A click in the table switches one.

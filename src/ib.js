@@ -375,7 +375,7 @@ function ibAddSave(c) {
   if (!a.crit.length) { toast('Tick the criteria this task assessed'); return; }
   const s = {};
   for (const [n, r] of Object.entries(a.s)) { const l = {}; for (const k of a.crit) if (r.l && r.l[k] != null) l[k] = r.l[k]; if (Object.keys(l).length || r.st) s[n] = { l, ...(r.st ? { st: r.st } : {}) }; }
-  const typed = { lv: true, s }, type = a.fm ? 'fm' : a.it && a.it.type && a.it.type !== 'fm' ? a.it.type : 'sum', due = a.due || isoDay(Date.now());
+  const typed = typedStamp(a.it && a.it.typed, { lv: true, s }), type = a.fm ? 'fm' : a.it && a.it.type && a.it.type !== 'fm' ? a.it.type : 'sum', due = a.due || isoDay(Date.now());
   let it = a.it;
   if (it) Object.assign(it, { name: a.name, type, due, crit: a.crit.slice(), typed });
   else { let u = c.units[c.units.length - 1]; if (!u) c.units.push(u = { id: uid(), name: 'Unit 1', items: [] }); u.items.push(it = { id: uid(), name: a.name, classId: c.id, type, due, crit: a.crit.slice(), typed }); }

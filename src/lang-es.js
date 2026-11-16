@@ -375,7 +375,7 @@ const LANG_ES = {
     'Choose a folder or make a take-home file, in Settings': 'Elige una carpeta o crea un archivo para llevar, en Ajustes',
     'Drop new student work anywhere': 'Suelta aquí los trabajos nuevos de tus estudiantes', 'Choose files…': 'Elegir archivos…', 'More ways': 'Más opciones',
     'A folder, a scan of the whole class, or files to match to a roster': 'Una carpeta, un escaneo de toda la clase o archivos para emparejar con una lista',
-    'A folder of papers…': 'Una carpeta de trabajos…', 'A scan of everyone’s papers…': 'Un escaneo con los trabajos de todos…', 'Files to match to a roster…': 'Archivos para emparejar con una lista…', 'From Google Drive…': 'Desde Google Drive…',
+    'A folder of papers…': 'Una carpeta de trabajos…', 'A scan of everyone’s papers…': 'Un escaneo con los trabajos de todos…', 'Files to match to a roster…': 'Archivos para emparejar con una lista…', 'From Google Drive…': 'Desde Google Drive…', 'Sign in with Google': 'Iniciar sesión con Google',
     'Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off.': 'Tus marcas, notas, unidades y listas se guardan en este navegador, así que puedes cerrar la pestaña y volver para seguir donde lo dejaste.',
     'Try it with a sample class': 'Pruébalo con una clase de ejemplo', 'preview copy, with its own saved work': 'copia de prueba, con su propio trabajo guardado',
     'Choose where your work is kept': 'Elige dónde se guarda tu trabajo',

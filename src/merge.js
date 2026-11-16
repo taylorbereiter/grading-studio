@@ -693,6 +693,19 @@ function todoMerge(a, b) {
   const offB = (b.offT || 0) > (a.offT || 0);
   return { ...b, ...a, items: order.map(id => by.get(id)), auto, off: (offB ? b.off : a.off) || {}, offT: Math.max(a.offT || 0, b.offT || 0) };
 }
+// Two copies of an assignment's typed-in scores (src/book.js, bkPut) made one: for each student, whichever copy changed theirs last
+// (each score has its time, t; a score taken out leaves its time in gone). Out of, and the rest, go with the copy changed later.
+function typedMerge(a, b, bLater) {
+  const sa = a.s || {}, sb = b.s || {}, ga = a.gone || {}, gb = b.gone || {}, s = {}, gone = {};
+  for (const n of new Set([...Object.keys(sa), ...Object.keys(sb), ...Object.keys(ga), ...Object.keys(gb)])) {
+    const ta = Math.max(sa[n] ? sa[n].t || 0 : -1, ga[n] || -1), tb = Math.max(sb[n] ? sb[n].t || 0 : -1, gb[n] || -1);
+    const fromB = tb > ta || (tb === ta && bLater), r = fromB ? sb[n] : sa[n], g = fromB ? gb[n] : ga[n];
+    if (r && !(g > (r.t || 0))) s[n] = r; else if (g) gone[n] = g;
+  }
+  const out = { ...(bLater ? { ...a, ...b } : { ...b, ...a }), s };
+  if (Object.keys(gone).length) out.gone = gone; else delete out.gone;
+  return out;
+}
 function mergeFields(x, y, win, dev, now, said) {
   const fx = nodeParts(x), fy = nodeParts(y), parts = {}, fv = {}, both = [], fromY = [];
   let ask = false, chose = false;
@@ -707,6 +720,8 @@ function mergeFields(x, y, win, dev, now, said) {
       if (said) { parts[k] = (said === 'b' ? fy : fx)[k]; fv[k] = vBump(vJoin(vx, vy), dev, now); chose = true; if (said === 'b') fromY.push(k); }
       else { parts[k] = fx[k]; fv[k] = vx; ask = true; }
     }
+    // scores typed in on two devices (a phone and a computer): student by student, so both sets of scores stay
+    else if (k === 'typed' && fx[k] && fy[k] && typeof fx[k] === 'object' && typeof fy[k] === 'object') { parts[k] = typedMerge(fx[k], fy[k], win === y); fv[k] = vBump(vJoin(vx, vy), dev, now); if (hashOf(parts[k]) !== hx) fromY.push(k); }
     else { parts[k] = (win === y ? fy : fx)[k]; fv[k] = vBump(vJoin(vx, vy), dev, now); both.push(k); if (win === y) fromY.push(k); }
   }
   return { parts, fv, both, fromY, ask, chose };

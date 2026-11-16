@@ -605,7 +605,7 @@ function bkAddSave() {
     const o = was && was.s && was.s[n];
     if (s[n] && !fm && v != null && r.p != null && keepP && o && o.v === +r.v) { s[n].v = o.v; s[n].p = r.p; }   // and a typed percent, while its points and the column's total are unchanged
   }
-  const typed = { max, s };
+  const typed = typedStamp(bkAdd.it && bkAdd.it.typed, { max, s });
   const card = !bkAdd.it && bkEmptyCards(c).find(x => x.name.trim().toLowerCase() === name.toLowerCase());   // a card already on the class page with nothing in it yet takes the scores, and keeps its own name and date
   let it = bkAdd.it || card;
   if (card) Object.assign(it, { type: it.type || bkAdd.type, due: it.due || due, typed });
@@ -656,10 +656,21 @@ const bkColMax = col => { for (const x of bkClassCols(bkClass(), [col])[0].cells
 // One student's record into a column's typed-in scores (the first one for a graded download starts them). Saved by the caller.
 function bkPut(col, n, rec) {
   if (!col.typed && !rec) return;
-  const ty = col.typed || { max: bkColMax(col), s: {} }, s = { ...(ty.s || {}) };
-  if (rec) s[n] = rec; else delete s[n];
-  col.typed = col.d && !Object.keys(s).length ? null : { ...ty, s };   // a download with no typed score left has none
+  const ty = col.typed || { max: bkColMax(col), s: {} }, s = { ...(ty.s || {}) }, gone = { ...(ty.gone || {}) }, t = Date.now();
+  // each score keeps when it was typed, and a score taken out when, so a phone and a computer can merge them student by student (typedMerge)
+  if (rec) { s[n] = { ...rec, t }; delete gone[n]; } else { delete s[n]; gone[n] = t; }
+  const kept = { ...ty, s }; if (Object.keys(gone).length) kept.gone = gone; else delete kept.gone;
+  col.typed = col.d && !Object.keys(s).length ? null : kept;   // a download with no typed score left has none
   if (col.it) { if (col.typed) col.it.typed = col.typed; else delete col.it.typed; }
+}
+// Scores written all at once (the Add scores box, a gradebook import, IB levels): each one that changed gets its time, and each one taken
+// out goes into gone, the way bkPut does one at a time, so typedMerge still knows which device changed a student last.
+function typedStamp(old, nu) {
+  const so = (old && old.s) || {}, sn = nu.s || {}, gone = { ...((old && old.gone) || {}) }, t = Date.now(), bare = r => { const { t, ...x } = r || {}; return JSON.stringify(x); };
+  for (const [n, r] of Object.entries(sn)) { sn[n] = { ...r, t: so[n] && bare(so[n]) === bare(r) ? so[n].t || t : t }; delete gone[n]; }
+  for (const n of Object.keys(so)) if (!sn[n]) gone[n] = t;
+  if (Object.keys(gone).length) nu.gone = gone; else delete nu.gone;
+  return nu;
 }
 // The cell dr rows down or dc cells across from td that can be typed in, as [column, student]; null at the edge.
 function bkNext(td, dr, dc) {

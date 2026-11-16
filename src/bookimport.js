@@ -384,12 +384,12 @@ function bkiSave() {
       it = p.t.it;
       const s = { ...p.old };
       for (const [who, v] of Object.entries(p.s)) { const was = p.old[who]; if (!was || (was.v == null && !was.st) || bkiSame(was, v) || bkiUse(col, who)) s[who] = v; }
-      it.typed = { max: p.max, s };
+      it.typed = typedStamp(it.typed, { max: p.max, s });
       if (!it.type) it.type = type;
       if (!it.due && col.due) it.due = col.due;
     } else {
       if (!u) { u = c.units.find(x => x.id === bki.unit); if (!u) c.units.push(u = { id: uid(), name: 'Imported', items: [] }); }
-      u.items.push(it = { id: uid(), name, classId: c.id, type, due: col.due, typed: { max: p.max, s: p.s } });
+      u.items.push(it = { id: uid(), name, classId: c.id, type, due: col.due, typed: typedStamp(null, { max: p.max, s: p.s }) });
     }
     const bc = bk.cols.find(x => x.key === it.id);
     if (bc) Object.assign(bc, { typed: it.typed, type: it.type, due: it.due || bc.due });

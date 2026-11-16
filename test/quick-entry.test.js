@@ -2,7 +2,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { classPage, openApp } = require('./helpers/app');
+const { noStamps, classPage, openApp } = require('./helpers/app');
 const { ibSeed } = require('./helpers/ibseed');
 
 let browser;
@@ -39,7 +39,7 @@ async function openBook(page, tab = '#bkTab') {
   await page.click('[data-book="c1"]');
   await page.waitForSelector(tab);
 }
-const typed = (page, id) => page.evaluate(id => { for (const c of window.__gs.state().lib.classes) for (const u of c.units) for (const it of u.items) if (it.id === id) return it.typed; }, id);
+const typed = async (page, id) => { const t = await page.evaluate(id => { for (const c of window.__gs.state().lib.classes) for (const u of c.units) for (const it of u.items) if (it.id === id) return it.typed; }, id); return t ? noStamps({ classes: [{ units: [{ items: [{ typed: t }] }] }] }).classes[0].units[0].items[0].typed : t; };
 const focused = page => page.evaluate(() => { const a = document.activeElement.closest('[data-bked]'); return a ? [a.dataset.bked, a.dataset.bkn, document.activeElement.tagName] : null; });
 const cell = (page, key, n) => '#bkBody [data-bked="' + key + '"][data-bkn="' + n + '"]';
 const keys = async (page, ...ks) => { for (const k of ks) { if (k.length > 1) await page.keyboard.press(k); else await page.keyboard.type(k); } };

@@ -1,21 +1,22 @@
 {
- "version": "1.28.40",
- "build": "683d18d971c3",
+ "version": "1.28.41",
+ "build": "5eead35cc16b",
  "notes": [
-  "Lo-fi music for the focus timer: turn it on with the Lo-fi music button while a session runs, or in Settings, Focus and goals. Eight moods, a new track every time, made in your browser so nothing is downloaded. It is off until you turn it on."
+  "Grading Studio on your phone: add it to your iPhone's Home Screen to see what is left to mark, type in scores for a whole class, tick off to-dos and run the focus timer.",
+  "Keep your phone and computer the same through your own Google Drive: sign in with Google on each and your classes, scores and to-dos stay in step. Only Grading Studio's own hidden folder in your Drive is used."
  ],
  "files": {
-  "index.html": "c72e9e56e4560f3c612911871f3347f87736c27fe00a3dbff4841937ac0227f3",
-  "planner.html": "9819b5660b23c7f76e80472962b024b6a99ff78ba870d25959e02aaedb93ed2e"
+  "index.html": "b57a941d35610f1c10a7404d322194bca9a14785ab63303826dfb5ecc10cb413",
+  "planner.html": "0e52615b4747f29b3e02c7dc67165160f04c7d317c7848d6e00816fa911c2b8d"
  },
  "langs": {
-  "lang/zh-Hant.js": "ff9ab514e14cfcadfaa93080aef73acde7f74260d6eb447349474cb9eb341a24",
-  "lang/zh-Hans.js": "f93e1737062b8ad82bb427c9dfbcf5474799f1aa132ecca8a0b1ea0665a89a35",
-  "lang/es.js": "e0880edee25846815e088258fc5c3b7f27cd70be2e7aac585851df933714643f",
-  "lang/fr.js": "afe0210cd260a4913210dead37fc2e74d05e9c151cd274c4d7b2a647e1d6aeed",
-  "lang/de.js": "3eb0f591dd179a5bb365a79114a699990d09e77cbf70476509f67ad413c7c39e",
-  "lang/pt-BR.js": "4219ff0f6313dd6b26013009295d64016fe40889a9893ffd192a5f112d2620c2",
-  "lang/ja.js": "4f2ef5210f711eaccfa596571854bdc7aa825cfeb46ea342e9c4379805413145",
-  "lang/ko.js": "cae07e2e806e017408928455160f075c7ab2b043becc8481688268034fbf564d"
+  "lang/zh-Hant.js": "1a4dd067572d6c94330a0c989038745afb46b5eda2c25edda93eaf9501a2aea4",
+  "lang/zh-Hans.js": "6fc2fb626716d8584c034810dccf5d0776f66012e41278abde85427fbda6ce7d",
+  "lang/es.js": "706fb973d0c8b49fb17bf77562c724cebac803a53afa5a388a1003ed134e2d53",
+  "lang/fr.js": "8e5cc10a6c360ae51faa8e6cc664cbeb4e4ddae22f211d225c84e94a08b5c6ca",
+  "lang/de.js": "61934cf785a8e52ef0ebad04ffc7158143cdc162fa29cc8d48e8e5cb4cd30c39",
+  "lang/pt-BR.js": "45231cbdd9ec9f72512c1badd00d9df76506a18593565028802e98ee1db57550",
+  "lang/ja.js": "79c161fe3b76ea4e6d347be616895687d24e01b43783ec4e2a222fb1c003fe44",
+  "lang/ko.js": "d196ca79c952acfbb90e69477e61b39e1d1931d5dac7cdc18df9bf7d9f9f7e03"
  }
 }

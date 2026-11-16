@@ -2,33 +2,59 @@
 // Everything happens between this browser and Taylor's own Google account. The sign-in is never stored or sent anywhere else.
 const GOOGLE_CLIENT_ID = '/*@@GCID@@*/';
 const gcid = () => (/apps\.googleusercontent\.com$/.test(GOOGLE_CLIENT_ID) ? GOOGLE_CLIENT_ID : '') || store.get('gs.gcid', '');
-const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata';
-const G = { token: null, exp: 0, client: null, email: store.get('gs.gEmail', ''), waiters: [] };
+// Keeping two devices the same needs only Grading Studio's own hidden folder in her Drive (drive.appdata: it can't see her other files).
+// Opening papers from Drive and saving to it ask for the whole Drive, and only when she uses them.
+const SYNC_SCOPE = 'https://www.googleapis.com/auth/drive.appdata', DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive ' + SYNC_SCOPE;
+const G = { token: null, exp: 0, scope: '', client: null, cscope: '', email: store.get('gs.gEmail', ''), waiters: [] };
+// A home-screen app on an iPhone can't use Google's pop-up window, so it goes to Google's page and comes back with the key in the address.
+const G_REDIRECT = navigator.standalone === true;
+const gBack = () => location.origin + location.pathname.replace(/index\.html$/, '');
+{
+  // Back from Google's page: the key is taken out of the address before anything reads it
+  const h = new URLSearchParams(location.hash.replace(/^#/, '')), want = (() => { try { return sessionStorage.getItem('gs.gState'); } catch { return null; } })();
+  if ((h.get('access_token') || h.get('error')) && h.get('state')) {
+    if (want && h.get('state') === want && h.get('access_token')) { G.token = h.get('access_token'); G.exp = Date.now() + (+h.get('expires_in') || 3600) * 1000; G.scope = h.get('scope') || SYNC_SCOPE; try { sessionStorage.setItem('gs.gTok', JSON.stringify({ t: G.token, exp: G.exp, scope: G.scope })); } catch {} }
+    try { sessionStorage.removeItem('gs.gState'); history.replaceState(null, '', location.pathname + location.search); } catch {}
+  } else try { const k = JSON.parse(sessionStorage.getItem('gs.gTok')); if (k && k.exp > Date.now()) { G.token = k.t; G.exp = k.exp; G.scope = k.scope || ''; } } catch {}
+}
+function gRedirect(scope, quiet) {
+  const st = crypto.getRandomValues(new Uint32Array(2)).join('');
+  try { sessionStorage.setItem('gs.gState', st); } catch {}
+  location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({ client_id: gcid(), redirect_uri: gBack(), response_type: 'token', scope, include_granted_scopes: 'true', state: st, ...(G.email ? { login_hint: G.email } : {}), ...(quiet ? { prompt: 'none' } : {}) });
+}
 let gisP = null;
 function loadGis() {
   if (window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
   return gisP || (gisP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onload = res; s.onerror = () => { gisP = null; rej(new Error('Couldn’t reach Google. Check the internet connection.')); }; document.head.appendChild(s); }));
 }
-// Gets a fresh token; silent when she's already signed in to Google in this browser.
-async function gToken(interactive) {
-  if (G.token && Date.now() < G.exp - 60000) return G.token;
+// Gets a fresh token; silent when she's already signed in to Google in this browser. full: the whole Drive, for opening and saving papers.
+const gHas = scope => scope.split(' ').every(x => G.scope.split(' ').includes(x));
+async function gToken(interactive, full) {
+  const scope = full ? DRIVE_SCOPES : SYNC_SCOPE;
+  if (G.token && Date.now() < G.exp - 60000 && gHas(scope)) return G.token;
   if (!gcid()) throw new Error('setup');
+  if (G_REDIRECT) { if (interactive) gRedirect(scope); throw new Error('Sign in again to sync'); }
   await loadGis();
-  if (!G.client) G.client = google.accounts.oauth2.initTokenClient({
-    client_id: gcid(), scope: DRIVE_SCOPES, hint: G.email || undefined,
-    callback: r => { const w = G.waiters.splice(0); if (r.error) w.forEach(x => x.rej(new Error(r.error))); else { G.token = r.access_token; G.exp = Date.now() + (r.expires_in || 3600) * 1000; w.forEach(x => x.res(G.token)); } },
-    error_callback: e => { const w = G.waiters.splice(0); w.forEach(x => x.rej(new Error(e && e.type === 'popup_closed' ? 'Sign-in was closed' : 'Sign-in didn’t finish'))); },
-  });
+  if (!G.client || G.cscope !== scope) {
+    G.cscope = scope;
+    G.client = google.accounts.oauth2.initTokenClient({
+      client_id: gcid(), scope, hint: G.email || undefined, include_granted_scopes: true,
+      callback: r => { const w = G.waiters.splice(0); if (r.error) w.forEach(x => x.rej(new Error(r.error))); else { G.token = r.access_token; G.exp = Date.now() + (r.expires_in || 3600) * 1000; G.scope = r.scope || scope; w.forEach(x => x.res(G.token)); } },
+      error_callback: e => { const w = G.waiters.splice(0); w.forEach(x => x.rej(new Error(e && e.type === 'popup_closed' ? 'Sign-in was closed' : 'Sign-in didn’t finish'))); },
+    });
+  }
   return new Promise((res, rej) => { G.waiters.push({ res, rej }); G.client.requestAccessToken({ prompt: interactive && !G.email ? 'consent' : '' }); });
 }
-async function gfetch(url, opt = {}, interactive) {
-  const t = await gToken(interactive);
+// Every call but the sync's own (gsync) is for opening or saving papers, so it asks for the whole Drive.
+async function gfetch(url, opt = {}, interactive, sync, again) {
+  const t = await gToken(interactive, !sync);
   const r = await fetch(url.startsWith('http') ? url : 'https://www.googleapis.com/drive/v3/' + url, { ...opt, headers: { ...(opt.headers || {}), Authorization: 'Bearer ' + t } });
-  if (r.status === 401) { G.token = null; return gfetch(url, opt, interactive); }
-  if (!r.ok) throw new Error('Google Drive said ' + r.status + ': ' + ((await r.text()).match(/"message":\s*"([^"]+)/) || [, ''])[1]);
+  if (r.status === 401 && !again) { G.token = null; G.exp = 0; try { sessionStorage.removeItem('gs.gTok'); } catch {} return gfetch(url, opt, interactive, sync, true); }
+  if (!r.ok) { const e = new Error('Google Drive said ' + r.status + ': ' + ((await r.text()).match(/"message":\s*"([^"]+)/) || [, ''])[1]); e.status = r.status; throw e; }
   return r;
 }
 const gjson = (u, o, i) => gfetch(u, o, i).then(r => r.json());
+const gsync = (u, o, i) => gfetch(u, o, i, true);
 async function gList(q, fields) {
   const out = []; let page = '';
   do {
@@ -43,15 +69,15 @@ async function signIn() {
   if (!gcid()) return driveSetup();
   try {
     await gToken(true);
-    const me = await gjson('about?fields=user(emailAddress)');
+    const me = await (await gsync('about?fields=user(emailAddress)')).json();
     G.email = me.user.emailAddress; store.set('gs.gEmail', G.email);
     renderGoogle(); toast('Signed in as ' + G.email);
-    syncPull();
+    syncNow();
   } catch (e) { toast(e.message || 'Sign-in didn’t finish'); }
 }
 function signOut() {
   if (G.token && window.google) try { google.accounts.oauth2.revoke(G.token); } catch {}
-  G.token = null; G.email = ''; store.del('gs.gEmail'); renderGoogle(); toast('Signed out of Google');
+  G.token = null; G.scope = ''; G.email = ''; store.del('gs.gEmail'); try { sessionStorage.removeItem('gs.gTok'); } catch {} renderGoogle(); toast('Signed out of Google');
 }
 // Google sign-in only works on the hosted copy (not a downloaded file or a preview frame).
 const GOK = /^https?:$/.test(location.protocol) && window.self === window.top;
@@ -168,68 +194,125 @@ async function saveToDrive(name, files, onStep) {
   return top;
 }
 
-// Sync: units, assignments, rosters, setup, saved comments and each download's marks and scores, in a hidden app file in her Drive.
-const SYNC_RX = /^gs\.(lib|setup|bank|batches|b\..+|rp\..+|rd\..+)$/;
+
+/* Sync: the same work on every device she signs in on (a phone and a computer), through one hidden file in her own Drive.
+   It carries what folder.js carries to a folder, without the papers: classes, units, rosters, typed scores and to-dos (gs.lib), each
+   download's marks and scores and its row in the list, and the settings that travel (carryLs). Each side is merged the way a folder
+   or a take-home file is (merge.js), student by student and field by field, so a score typed on the phone and a comment written on
+   the computer both stay. Nothing goes anywhere but her browser and her Drive. */
 const SYNC_NAME = 'grading-studio-sync.json';
-let syncState = '', syncT = null, syncBusy = false, syncFileId = null;
-const syncTimes = () => store.get('gs.syncT', {});
+let syncState = '', syncT = null, syncBusy = null, syncAgain = false, syncFile = null;
+const SYNC_RX = /^gs\.(lib|setup|bank|rubrics|school|b\..+|rp\..+|rd\..+)$/;
 {
   const raw = store.set.bind(store);
-  store.set = (k, v) => { const ok = raw(k, v); if (ok && SYNC_RX.test(k)) { const t = syncTimes(); t[k] = Date.now(); raw('gs.syncT', t); syncSoon(); } return ok; };
-  const rawDel = store.del.bind(store);
-  store.del = k => { rawDel(k); if (SYNC_RX.test(k)) { const t = syncTimes(); t[k] = -Date.now(); raw('gs.syncT', t); syncSoon(); } };
+  store.set = (k, v) => { const ok = raw(k, v); if (ok && SYNC_RX.test(k)) syncSoon(); return ok; };
 }
 function setSyncState(s) { syncState = s; const el = document.getElementById('syncState'); if (el) el.textContent = s; }
-function syncSoon() { if (!G.email) return; clearTimeout(syncT); setSyncState('saving…'); syncT = setTimeout(syncPush, 4000); }
-async function syncFile() {
-  if (syncFileId) return syncFileId;
-  const f = (await gjson("files?spaces=appDataFolder&fields=files(id)&q=" + encodeURIComponent("name='" + SYNC_NAME + "'"))).files[0];
-  return (syncFileId = f ? f.id : null);
+function syncSoon() { if (!G.email || sampleOn()) return; clearTimeout(syncT); setSyncState('saving…'); syncT = setTimeout(syncNow, 15000); }
+// The file and its version, so two devices saving at once can't write over each other. Drive counts every change to a file (version):
+// the count is read with the file, and read again just before writing. If another device saved in between, this one merges again first.
+const syncVer = async () => String((await (await gsync('files/' + syncFile.id + '?fields=id,version')).json()).version || '');
+async function syncRead() {
+  if (!syncFile) { const f = (await (await gsync("files?spaces=appDataFolder&fields=files(id)&q=" + encodeURIComponent("name='" + SYNC_NAME + "' and trashed=false"))).json()).files[0]; syncFile = f ? { id: f.id } : null; }
+  if (!syncFile) return null;
+  syncFile.ver = await syncVer();
+  const r = await gsync('files/' + syncFile.id + '?alt=media');
+  try { return await r.json(); } catch { return null; }
 }
-async function syncRead() { const id = await syncFile(); return id ? await (await gfetch('files/' + id + '?alt=media')).json() : { t: {}, v: {} }; }
-// Newest copy of each item wins, so work from two computers merges instead of overwriting.
-async function syncPull() {
-  if (!G.email || syncBusy) return;
-  syncBusy = true; setSyncState('syncing…');
-  try {
-    const remote = await syncRead(), local = syncTimes(); let changed = 0;
-    for (const [k, t] of Object.entries(remote.t || {})) {
-      if (Math.abs(t) <= Math.abs(local[k] || 0)) continue;
-      if (batch && k === batch.id) continue;   // the open download keeps what's on screen
-      try { if (t < 0) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(remote.v[k])); } catch {}
-      local[k] = t; changed++;
-    }
-    try { localStorage.setItem('gs.syncT', JSON.stringify(local)); } catch {}
-    if (changed) {
-      const l = store.get('gs.lib', null); if (l) { lib = migrateLib(l); libUndoForget(); }
-      bank = store.get('gs.bank', bank);
-      if (!batch) { const s = store.get('gs.setup', null); if (s) setup = setupOver(s); }
-      renderLib(); if (batch) renderClassSel();
-    }
-    syncBusy = false;
-    if (Object.keys(local).some(k => Math.abs(local[k]) > Math.abs((remote.t || {})[k] || 0))) await syncPush(); else setSyncState('synced');
-  } catch (e) { syncBusy = false; setSyncState('not synced'); console.warn(e); }
+async function syncWrite(body) {
+  if (syncFile) {
+    if (syncFile.ver && await syncVer() !== syncFile.ver) { const e = new Error('changed on another device'); e.status = 412; throw e; }
+    return gsync('https://www.googleapis.com/upload/drive/v3/files/' + syncFile.id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+  }
+  const fd = new FormData();
+  fd.append('metadata', new Blob([JSON.stringify({ name: SYNC_NAME, parents: ['appDataFolder'] })], { type: 'application/json' }));
+  fd.append('file', new Blob([body], { type: 'application/json' }));
+  syncFile = { id: (await (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: fd })).json()).id };
 }
-async function syncPush() {
-  if (!G.email) return;
-  if (syncBusy) { syncSoon(); return; }
-  syncBusy = true; setSyncState('saving…');
-  try {
-    const remote = await syncRead(), local = syncTimes(), out = { t: { ...(remote.t || {}) }, v: { ...(remote.v || {}) } };
-    for (const [k, t] of Object.entries(local)) if (Math.abs(t) > Math.abs(out.t[k] || 0)) { out.t[k] = t; if (t < 0) delete out.v[k]; else out.v[k] = store.get(k, null); }
-    const body = JSON.stringify(out), id = await syncFile();
-    if (id) await gfetch('https://www.googleapis.com/upload/drive/v3/files/' + id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
-    else {
-      const fd = new FormData();
-      fd.append('metadata', new Blob([JSON.stringify({ name: SYNC_NAME, parents: ['appDataFolder'] })], { type: 'application/json' }));
-      fd.append('file', new Blob([body], { type: 'application/json' }));
-      syncFileId = (await (await gfetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: fd })).json()).id;
-    }
-    setSyncState('synced');
-  } catch (e) { setSyncState('not synced'); console.warn(e); }
-  syncBusy = false;
+const syncNone = { papers: async () => null, added: async () => null, edit: async () => null };   // papers never come through Drive
+// Where a folder would ask her (the same student, or a card's rubric, changed on two devices since they last matched), sync can't wait for
+// an answer on every device: the copy changed later is kept, the same choice on both sides, so they agree and stop asking. A download
+// forgotten on one device and worked on since on another comes back.
+function syncDecide(asks) {
+  const out = {};
+  for (const q of asks) {
+    if (q.gone) { out['!' + q.id] = 'back'; continue; }
+    const ta = q.ta || 0, tb = q.tb || 0, side = ta !== tb ? (tb > ta ? 'b' : 'a') : hashOf(q.b) > hashOf(q.a) ? 'b' : 'a';
+    (out[q.id] ||= {})[q.key] = side;
+  }
+  return out;
 }
-window.addEventListener('focus', () => { if (G.email && !batch) syncPull(); });
-// Signed in last time: reconnect quietly when the page opens.
-if (GOK && G.email && gcid()) setTimeout(() => gToken(false).then(() => { renderGoogle(); syncPull(); }).catch(() => { setSyncState('sign in again to sync'); }), 400);
-
+function syncNow() {
+  if (!G.email || sampleOn()) return Promise.resolve();
+  if (syncBusy) { syncAgain = true; return syncBusy; }
+  clearTimeout(syncT);
+  syncBusy = (async () => {
+    for (let tries = 1; ; tries++) {
+      try { await syncOnce(); return; } catch (e) {
+        // the other device saved first: merge again with what it saved, a little later each time, and stop after a few tries
+        if (e && e.status === 412 && tries < 5) { await new Promise(r => setTimeout(r, 500 * 2 ** tries + Math.random() * 500)); continue; }
+        console.warn(e); setSyncState(/sign in/i.test(e && e.message) ? 'sign in again to sync' : 'not synced'); return;
+      }
+    }
+  })().finally(() => { syncBusy = null; if (syncAgain) { syncAgain = false; syncNow(); } });
+  return syncBusy;
+}
+async function syncOnce() {
+  setSyncState('syncing…');
+  if (batch) await saveNow();
+  const got = await syncRead(), B = got && got.app === 'Grading Studio sync' ? { work: got.work || {}, meta: got.meta || {}, tomb: got.tomb || {}, added: {}, edits: {}, lib: got.lib, ls: got.ls || {} } : null;
+  const A = await localState(), dev = devId(), now = Date.now();
+  let rows = [], tomb = A.tomb;
+  if (B) {
+    B.edits = A.edits;   // Word edits stay on the computer they were made on: the file carries none, and that mustn't read as "taken off"
+    await addedDates(A, B);   // a late file's own date, where the other side took one off under the same name
+    const v0 = libVer;
+    let libm = mergeLib(libHere(), B.lib, { dev, now });
+    if (libm.asks.length) libm = mergeLib(libHere(), B.lib, { dev, now, answers: syncDecide(libm.asks) });
+    for (const w of Object.values(A.work)) if (libm.mapA[w.cls]) w.cls = libm.mapA[w.cls];
+    for (const w of Object.values(B.work)) if (libm.mapB[w.cls]) w.cls = libm.mapB[w.cls];
+    let plan = mergeStates(A, B, { dev, now, linked: libLinked(libm.lib, libm.cards) });
+    if (plan.asks.length) plan = mergeStates(A, B, { dev, now, linked: libLinked(libm.lib, libm.cards), answers: syncDecide(plan.asks) });
+    libFollow(libm, plan.rows, dev, now);
+    rows = plan.rows; tomb = plan.tomb;
+    // The download open on screen keeps what's there; it takes what came in the next time round, once it's closed.
+    const open = batch && batch.id, came = rows.filter(r => r.kind === 'new' || r.kind === 'gone' && r.onA || r.toA || (r.meta && JSON.stringify(r.meta) !== JSON.stringify(r.ma)));
+    for (const row of came) if (row.id !== open && row.kind !== 'askGone') await applyRow(row, syncNone);
+    // a score saved while the rows above were being written: merge it in again, so the copy taken before doesn't write over it
+    if (libVer !== v0) { libm.lib = mergeLib(libHere(), libm.lib, { dev, now }).lib; libm.toA = true; }
+    if (libm.toA) { lib = migrateLib(libm.lib); libUndoForget(); if (!setLibFrom(lib)) throw browserFull(); if (batch && batch.assignment) { const f = findItem(batch.assignment.id); if (f) batch.assignment = f.it; } }
+    store.set('gs.tomb', tomb);
+    for (const [k, v] of Object.entries(mergeLs(carryLs(), B.ls, k => Object.keys(tomb).some(id => k.includes(id))))) lsPut(k, v);
+    if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); }
+    if (open && rows.some(r => r.id === open && r.toA)) syncAgain = false;   // nothing to push for it until it is closed and merged
+  }
+  // What goes up: the merged copy, with the papers left behind. A row's own "papers" says where they are kept, so it stays on each device.
+  const out = { app: 'Grading Studio sync', v: 1, t: now, lib: libHere(), work: {}, meta: {}, tomb, ls: carryLs() };
+  const ids = new Set([...Object.keys(A.work), ...Object.keys(A.meta), ...rows.map(r => r.id)]);
+  for (const id of ids) {
+    if (tomb[id]) continue;
+    const row = rows.find(r => r.id === id), w = row ? row.work : A.work[id], m = row ? row.meta : A.meta[id];
+    if (w) out.work[id] = w;
+    if (m) { const { papers, size, ...rest } = m; out.meta[id] = rest; }
+  }
+  delete out.ls['gs.lib'];
+  const body = JSON.stringify(out);
+  if (!got || body !== JSON.stringify({ ...got, t: now })) await syncWrite(body);
+  store.set('gs.syncAt', now);
+  setSyncState('synced');
+}
+window.addEventListener('focus', () => { if (G.email) syncNow(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && G.email) syncNow(); });
+// Signed in last time: reconnect quietly when the page opens. On an iPhone's home screen that's a quick trip to Google and back, once an hour at most.
+if (GOK && G.email && gcid() && !sampleOn()) setTimeout(() => {
+  if (G_REDIRECT && !(G.token && Date.now() < G.exp - 60000)) {
+    // offline, Google's page wouldn't load and a home-screen app has no back button: stay here and sync next time
+    if (navigator.onLine === false) return setSyncState('offline: syncs when you are back online');
+    let last = 0; try { last = +sessionStorage.getItem('gs.gQuiet') || 0; } catch {}
+    if (Date.now() - last > 50 * 60000) { try { sessionStorage.setItem('gs.gQuiet', String(Date.now())); } catch {} return gRedirect(SYNC_SCOPE, true); }
+    return setSyncState('sign in again to sync');
+  }
+  gToken(false).then(() => { renderGoogle(); syncNow(); }).catch(() => setSyncState('sign in again to sync'));
+}, 400);
+// Back from signing in on Google's page (an iPhone home-screen app), with no email kept yet: finish signing in.
+if (GOK && G_REDIRECT && G.token && !G.email) setTimeout(() => gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); toast('Signed in as ' + G.email); syncNow(); }).catch(e => toast(e.message)), 400);

@@ -389,7 +389,7 @@ const LANG_DE = {
     'Choose a folder or make a take-home file, in Settings': 'Wählen Sie in den Einstellungen einen Ordner oder erstellen Sie eine Mitnahmedatei',
     'Drop new student work anywhere': 'Neue Arbeiten hier ablegen', 'Choose files…': 'Dateien wählen…', 'More ways': 'Weitere Wege',
     'A folder, a scan of the whole class, or files to match to a roster': 'Ein Ordner, ein Scan der ganzen Klasse oder Dateien, die einer Klassenliste zugeordnet werden',
-    'A folder of papers…': 'Ein Ordner mit Arbeiten…', 'A scan of everyone’s papers…': 'Ein Scan aller Arbeiten…', 'Files to match to a roster…': 'Dateien einer Klassenliste zuordnen…', 'From Google Drive…': 'Aus Google Drive…',
+    'A folder of papers…': 'Ein Ordner mit Arbeiten…', 'A scan of everyone’s papers…': 'Ein Scan aller Arbeiten…', 'Files to match to a roster…': 'Dateien einer Klassenliste zuordnen…', 'From Google Drive…': 'Aus Google Drive…', 'Sign in with Google': 'Mit Google anmelden',
     'Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off.': 'Ihre Anmerkungen, Bewertungen, Einheiten und Klassenlisten liegen in diesem Browser. Sie können den Tab schließen und später dort weitermachen, wo Sie aufgehört haben.',
     'Try it with a sample class': 'Mit einer Beispielklasse ausprobieren', 'preview copy, with its own saved work': 'Vorschaukopie mit eigenen gespeicherten Daten',
     'Choose where your work is kept': 'Wählen Sie, wo Ihre Arbeit liegt',
