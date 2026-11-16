@@ -20091,11 +20091,7 @@ let setLibFrom, libNews;
   };
 }
 const browserFull = () => Object.assign(new DOMException('The small store is full', 'QuotaExceededError'), { small: true });
-<<<<<<< HEAD
-const LS_LOCAL = /^gs\.(b\..+|batches|syncT|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|wlCodes|refOpen\..*)$/;   // rolls: a copy of the rosters for the Planner's name picker, made again from the classes wherever they go
-=======
-const LS_LOCAL = /^gs\.(b\..+|batches|syncT|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|refOpen\..*)$/;
->>>>>>> origin/main
+const LS_LOCAL = /^gs\.(b\..+|batches|syncT|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|wlCodes|refOpen\..*)$/;
 function carryLs() {
   const o = {};
   for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && !LS_LOCAL.test(k)) o[k] = localStorage.getItem(k); }
@@ -20736,7 +20732,7 @@ async function takeScan(rd, onp) {
       else if (f.k === 'paper') { const p = B.papers[f.id] ||= { label: f.label, entries: [], size: 0 }; p.entries.push({ path: f.path, off: pos, n, none: f.none }); p.size += n; }
       else if (f.k === 'added') { (B.addedAt[f.id] ||= {})[f.lk] = { rec: f.rec, off: pos, n }; (B.added[f.id] ||= {})[f.lk] = f.rec.added || 0; }
       else if (f.k === 'edit') { (B.editAt[f.id] ||= {})[f.path] = { t: f.t, off: pos, n, nd: f.nd, hasOrig: f.hasOrig }; (B.edits[f.id] ||= {})[f.path] = f.t; }
-      else if (f.k === 'ex' || f.k === 'exw') { if (f.rec && f.rec.id) B.ex[f.rec.id] = f.rec; }   // exw: the watch list (watch.js), which an older copy skips
+      else if (f.k === 'ex' || f.k === 'exw') { if (f.rec && f.rec.id) B.ex[f.rec.id] = f.rec; }
       else if (f.k === 'expix' || f.k === 'exwpix') B.exAt[f.id + '|' + f.i] = { off: pos, n };
       else if (f.k === 'school') B.school[f.hash] = { off: pos, n };
       else if (f.k === 'plan') (B.plan ||= []).push({ f, off: pos, n });
@@ -27284,7 +27280,7 @@ async function exSaveShot(blob, where, watch) {
     '<div class="bf"><span class="exlock"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Kept in this browser only, with what you blacked out gone for good. It’s called “' + esc(nm) + '”, never by name.</span></span><span class="sp"></span><button class="btn" data-close>Cancel</button><button class="btn primary" data-exsave>' + (redo ? 'Save' : watch ? 'Add to the watch list' : 'Save example') + '</button></div>');
   const box = $('#dlgBox');
   box.classList.add('exbox');
-  dlgGone = () => { if (EXS) { try { EXS.im.close(); } catch {} const b = EXS.where.back; EXS = null; if (b) setTimeout(b, 0); } };   // back: to the Send box it was opened from, saved or not
+  dlgGone = () => { if (EXS) { try { EXS.im.close(); } catch {} const b = EXS.where.back; EXS = null; if (b) setTimeout(b, 0); } };
   exsDraw(); exsNames();
   if (where.who && anonOn()) { EXS.who = where.who; const b = $('#exWhoBox'); if (b) b.innerHTML = '<p class="exnames">This paper’s student. Hidden while you mark anonymously.</p>'; } else wlWhoPick(where.who, where.cls);
   box.onchange = e => { if (e.target.id === 'exShotCls') wlWhoPick(null, e.target.value); };
@@ -27647,7 +27643,7 @@ async function exKeepFor(rec) {
 }
 async function exTakeFrames(frame) {
   for (const r of await exAll()) {
-    const w = r.watch ? 'exw' : 'ex';   // watch-list records go in frames an older copy skips, so it never shows a concern as a strong example
+    const w = r.watch ? 'exw' : 'ex';
     if (r.gone) { await frame({ k: w, rec: r }); continue; }
     const blobs = await exPics(r); if (!blobs) continue;
     await frame({ k: w, rec: r });
@@ -27671,7 +27667,7 @@ function exRailSay() {
   let here = false; try { here = !batch && routeNow().v === 'examples'; } catch {}
   a.hidden = !exList.length && !exWatch.length && !here;
 }
-const exPageF = { cls: '', asg: '', kind: '', row: '', tag: '', q: '', view: '' };   // view: '' strong examples, 'watch' the watch list, 'who' whose work they are
+const exPageF = { cls: '', asg: '', kind: '', row: '', tag: '', q: '', view: '' };
 const exSrc = () => exPageF.view === 'watch' ? exWatch : exList;
 const EX_KINDS = [['answer', 'Answers'], ['paper', 'Whole papers'], ['part', 'Parts of pages'], ['shot', 'Screenshots']];
 const exAsgKey = r => r.asg || (r.work ? 'w:' + r.work : 'loose:' + (r.cls || '-'));
@@ -30300,7 +30296,7 @@ async function nyStart(o) {
     if (nyAbout(x, names)) localStorage.removeItem(k);
   }
   lib = migrateLib(next); libUndoForget(); saveLib();
-  try { await wlNewYear(o.roster); } catch (e) { console.error(e); }   // the watch list goes with the roster; a strong example is kept, no longer anyone's (watch.js)
+  try { await wlNewYear(o.roster); } catch (e) { console.error(e); }
   if (o.planner) try { localStorage.setItem('gsp.newYear', JSON.stringify({ id: Date.now().toString(36), from: o.from, dates: !!o.dates })); } catch {}
   renderLib(); railRender(); renderNeeds();
 }

@@ -1,23 +1,13 @@
 {
-<<<<<<< HEAD
- "version": "1.28.29",
- "build": "5f96873260d3",
-=======
  "version": "1.28.30",
- "build": "06f1f5ebf68e",
->>>>>>> origin/main
+ "build": "a6c47238fcad",
  "notes": [
   "Type scores straight into the gradebook like a spreadsheet: start typing on a cell, Enter goes to the next student and Tab to the next assignment. Paste a column from a spreadsheet onto the first cell to fill it down.",
   "+ Add scores: type the name and press Enter to start typing scores down the new column. MYP task levels can be typed in the table too."
  ],
  "files": {
-<<<<<<< HEAD
-  "index.html": "94db7bd90240f2f5916ad20ac60646467f1b5402098b002f6721ea27d78981c4",
-  "planner.html": "34c9995f34608091017228047ed95d238840bf1e2116849b0c1d232ca478f3e1"
-=======
-  "index.html": "1a87de2ee86fdf0f45ffbe238f814ba7047073b8d56c69b9c4eb5a7f7ce9520d",
+  "index.html": "c08802f05663595fd8c984da0228baf93b553e671525ba9872a58d71a29d8372",
   "planner.html": "e7721eff7016d136d8cf2362e01a74799eed94ebc5bfbb12e35a62fed85807b2"
->>>>>>> origin/main
  },
  "langs": {
   "lang/zh-Hant.js": "10dfa7de387abc6a5e80a56f8cda49ca4d21be6529c3df4e6cfc8da6c011c779",
