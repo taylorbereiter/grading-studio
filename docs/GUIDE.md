@@ -130,8 +130,9 @@ Under **About and updates**, in Settings. This is for the web address; the doubl
 
 ## Google sign-in (switched off)
 This stays dormant: without a Google key built in, none of it shows, and the live copy has no key. If a copy is built with one:
-- **Open from Google Drive**: pick the download folder (one folder per student) or the ZIP; Google Docs come down as PDFs.
-- **Export → Save to Google Drive**: a "Marked - …" folder with the student folders, inside the folder you opened (or My Drive).
+- **Open from Google Drive**: Google's own chooser opens; pick the ZIP, or the papers themselves (many at once). Google Docs come down as PDFs. The app can open only what you pick, never the rest of your Drive (Google's drive.file permission), so a whole folder can't be opened by picking the folder.
+- **Export → Save to Google Drive**: a "Marked - …" folder with the student folders, next to what you opened when the app may write there, otherwise in My Drive.
+- **Videos from Google Drive**: Partners and videos → **Choose from Drive…**, or + Add → A video… → **Google Drive**. The chooser opens in your videos folder (chosen once); each picked video goes to the student named in its file name, is copied into the browser to play here, and the transcript follows along. Only the videos you pick can be opened.
 - **Sync**: units, assignments, rosters, setup, saved comments and each download's marks and scores are kept in a hidden app file in your own Drive, newest copy wins, so every computer matches.
 - Needs a Google Client ID (Web application, origin = the address where you host it) built in as GCID: `GCID=… npm run build`.
 

@@ -44,7 +44,7 @@ function mediaCard(st, f, kept) {
 //   { w: [[word, seconds]] }  made in this browser by the speech engine (readings.js), or
 //   { l: [[line, seconds or null]] }  pasted or typed by the teacher, for any video: a link (Google Drive won't hand its captions to this page) or a file.
 // It is the student's words, so it never leaves this browser: not in the export, a take-home file or the linked folder.
-const trMakeable = f => f.kind === 'media' || (f.kind === 'link' && !!vidRef(f.data));
+const trMakeable = f => f.kind === 'media' || !!keptId(f);
 // The lines to show: pasted ones as they are, made ones cut after a sentence once a line is long enough.
 function trLines(tr) {
   if (!tr) return [];
