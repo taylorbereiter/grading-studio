@@ -25,7 +25,7 @@ function seed(extra = {}) {
 }
 // One Drive for every page in a test: the hidden app file, its version (Drive's count of changes), and what was asked of it.
 function fakeDrive() {
-  const D = { body: null, etag: 0, readAt: null, writes: 0, refused: 0, afterRead: null };
+  const D = { body: null, etag: 0, readAt: null, blobs: {}, n: 0, writes: 0, refused: 0, afterRead: null };
   D.hook = async page => {
     await page.evaluateOnNewDocument(() => {
       // Google's sign-in script, as far as the app uses it: a key straight away, for whatever was asked
@@ -43,14 +43,22 @@ function fakeDrive() {
       const json = (o, status = 200, h = {}) => r.respond({ status, headers: { ...cors, ...h }, contentType: 'application/json', body: JSON.stringify(o) });
       if (r.method() === 'OPTIONS') return r.respond({ status: 204, headers: cors, body: '' });
       if (/\/about\?/.test(u)) return json({ user: { emailAddress: 'teacher@example.com' } });
+      if (/drive\/v3\/files\?spaces=appDataFolder/.test(u) && /\.dat/.test(decodeURIComponent(u))) return json({ files: Object.entries(D.blobs).map(([id, b]) => ({ id, name: b.name })) });
       if (/drive\/v3\/files\?spaces=appDataFolder/.test(u)) return json({ files: D.body ? [{ id: 'f1' }] : [] });
+      const blob = u.match(/drive\/v3\/files\/(p\d+)\?alt=media/);
+      if (blob) return r.respond({ status: 200, headers: cors, contentType: 'application/octet-stream', body: D.blobs[blob[1]].body });
       if (/drive\/v3\/files\/f1\?fields=id,version/.test(u)) { if (D.readAt != null && D.readAt !== D.etag) D.refused++; D.readAt = null; return json({ id: 'f1', version: String(D.etag) }); }
       if (/drive\/v3\/files\/f1\?alt=media/.test(u)) { D.readAt = D.etag; const out = json(JSON.parse(D.body), 200, { ETag: '"' + D.etag + '"' }); if (D.afterRead) { const f = D.afterRead; D.afterRead = null; f(); } return out; }
       if (/upload\/drive\/v3\/files\/f1\?uploadType=media/.test(u) && r.method() === 'PATCH') {
         D.body = r.postData() || await r.fetchPostData(); D.etag++; D.writes++; D.readAt = null; return json({ id: 'f1' });
       }
       if (/upload\/drive\/v3\/files\?uploadType=multipart/.test(u)) {
-        const t = r.postData() || await r.fetchPostData() || '', i = t.indexOf('{"app"'), j = t.lastIndexOf('}');
+        const t = r.postData() || await r.fetchPostData() || '', dat = t.match(/"name":"([0-9a-f]+\.dat)"/);
+        if (dat) {   // a paper: the part after the metadata, up to the closing boundary
+          const b = t.split(/\r\n/)[0], parts = t.split(b), body = parts[2].slice(parts[2].indexOf('\r\n\r\n') + 4, -2), id = 'p' + (++D.n);
+          D.blobs[id] = { name: dat[1], body }; return json({ id });
+        }
+        const i = t.indexOf('{"app"'), j = t.lastIndexOf('}');
         D.body = t.slice(i, j + 1); D.etag++; D.writes++; D.readAt = null; return json({ id: 'f1' });
       }
       return json({ error: { message: 'not in this test: ' + u } }, 404);
@@ -145,4 +153,54 @@ test('a download marked on the computer shows on the phone as what is left, with
     assert.equal(await mac.page.evaluate(() => window.__gs.kept().get('gs.b.a1').papers), true, 'the computer still has its papers');
     assert.deepEqual(mac.page.errors, []); assert.deepEqual(ph.page.errors, []);
   } finally { await mac.close(); await ph.close(); await srv.close(); }
+});
+
+test('papers go up to Drive once, after the marks, and another computer fetches them the first time they are opened there', async () => {
+  const D = fakeDrive(), srv = await serve(builtHtml());
+  const work = { t: Date.now() - 6e4, cls: 'c1', setup: { mode: 'points', criteria: [], outOf: 20 }, s: { 'Aria Testwell': { f: {}, h: {}, g: { rubric: [], points: '16', comment: '' } } } };
+  const s0 = seed({ 'gs.b.a1': JSON.stringify(work) }), l = JSON.parse(s0.ls['gs.lib']);
+  l.classes[0].units[0].items.push({ id: 'i2', name: 'Narrative essay', classId: 'c1', type: 'sum', due: '2026-11-12', batchId: 'gs.b.a1' });
+  s0.ls['gs.lib'] = JSON.stringify(l);
+  s0.idb = { 'grading-studio-keep': { version: 2, stores: { papers: [], work: [], edits: [], meta: [['gs.b.a1', { id: 'gs.b.a1', name: 'Narrative essay', n: 1, scored: 1, t: work.t, asg: 'i2', papers: true }]] } } };
+  const PAPER = 'pretend paper for Aria, plain letters only';
+  const mac = await openApp(browser, { server: srv, seed: s0, beforeLoad: D.hook });
+  const other = await openApp(browser, { server: srv, seed: seed(), beforeLoad: D.hook });
+  try {
+    // the kept papers, put in the way the app keeps them
+    await mac.page.evaluate(async text => {
+      const db = await new Promise((res, rej) => { const q = indexedDB.open('grading-studio-keep'); q.onsuccess = () => res(q.result); q.onerror = rej; });
+      await new Promise((res, rej) => { const t = db.transaction('papers', 'readwrite'); t.objectStore('papers').put({ id: 'gs.b.a1', label: 'Essays', entries: [{ path: 'Aria Testwell/notes.txt', data: new TextEncoder().encode(text) }] }, 'gs.b.a1'); t.oncomplete = res; t.onerror = rej; });
+      db.close();
+    }, PAPER);
+    await sync(mac.page);
+    await mac.page.evaluate(() => window.__gs.dvUp());
+    assert.equal(Object.keys(D.blobs).length, 1, 'one file in Drive for the one paper');
+    assert.equal(Object.values(D.blobs)[0].body, PAPER);
+    const listed = D.file().files['gs.b.a1'];
+    assert.equal(listed.papers.length, 1); assert.equal(listed.papers[0].path, 'Aria Testwell/notes.txt');
+    // sending again sends nothing new
+    await mac.page.evaluate(() => window.__gs.dvUp());
+    assert.equal(Object.keys(D.blobs).length, 1);
+    // the other computer: the download's row, papers waiting in Drive, fetched when asked
+    await sync(other.page);
+    assert.equal(await other.page.evaluate(() => window.__gs.kept().get('gs.b.a1').papers), false);
+    assert.equal(await other.page.evaluate(() => window.__gs.canOpen('gs.b.a1')), true);
+    const got = await other.page.evaluate(async () => { const r = await window.__gs.dvPull('gs.b.a1'); return new TextDecoder().decode(r.entries[0].data); });
+    assert.equal(got, PAPER);
+    assert.equal(await other.page.evaluate(() => window.__gs.kept().get('gs.b.a1').papers), true, 'kept here from then on');
+    // a phone: the score from the paper, and that one student's file fetched to look at
+    const ph = await openApp(browser, { server: srv, seed: seed({ 'gs.phone': '1' }), beforeLoad: D.hook });
+    try {
+      await sync(ph.page);
+      await ph.page.evaluate(() => { location.hash = '#/scores/c1/i2'; });
+      await ph.page.waitForSelector('[data-phsee="Aria Testwell"]', { timeout: 15000 });
+      const before = Object.keys(D.blobs).length;
+      await ph.page.click('[data-phsee="Aria Testwell"]');
+      await ph.page.waitForFunction(() => /notes\.txt opens on your computer/.test(document.querySelector('.phview').innerText), { timeout: 15000 });
+      assert.equal(Object.keys(D.blobs).length, before);
+      assert.equal(await ph.page.evaluate(() => window.__gs.kept().get('gs.b.a1').papers), false, 'a phone keeps no papers');
+      assert.deepEqual(ph.page.errors, []);
+    } finally { await ph.close(); }
+    assert.deepEqual(mac.page.errors, []); assert.deepEqual(other.page.errors, []);
+  } finally { await mac.close(); await other.close(); await srv.close(); }
 });

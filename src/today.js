@@ -78,19 +78,19 @@ function homeGroups() {
 const keptWhere = m => { const it = cardOfKept(m.id), f = it && findItem(it.id); return { it, cls: f && f.c !== lib.loose ? f.c : null }; };
 const keptDots = m => kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(m.name || 'this assignment') + '" title="More"',
   '<button class="mitem" data-kforget="' + esc(m.id) + '" title="Removes the papers, your marks and scores for this assignment from this browser and any linked folder">Forget</button>', 'right');
-const keptName = m => m.papers ? '<button class="kname" data-kopen="' + esc(m.id) + '" title="Open the papers">' + esc(m.name || 'Student work') + '</button>' : '<b class="kname">' + esc(m.name || 'Student work') + '</b>';
+const keptName = m => canOpen(m) ? '<button class="kname" data-kopen="' + esc(m.id) + '" title="Open the papers">' + esc(m.name || 'Student work') + '</button>' : '<b class="kname">' + esc(m.name || 'Student work') + '</b>';
 function markRow(m, prim) {
   const st = keptState(m), w = keptWhere(m), fm = w.it && w.it.type === 'fm', began = st.done || m.partial;
-  const sub = [w.cls ? w.cls.name : '', w.it && w.it.due ? 'due ' + bkDay(w.it.due) : 'last worked on ' + fmtDay(m.t), m.papers || PHONE ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
+  const sub = [w.cls ? w.cls.name : '', w.it && w.it.due ? 'due ' + bkDay(w.it.due) : 'last worked on ' + fmtDay(m.t), canOpen(m) || PHONE ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
   const say = fm ? 'Formative · feedback only' + (st.done ? ' · ' + keptSay(m, st) : st.of ? ' · ' + people(st.of, 'paper') + ', not started' : '') : began ? st.done + ' of ' + st.of + ' scored' + keptMore(m) : st.of + (st.of === 1 ? ' paper' : ' papers') + ', not started' + (m.off ? ' · ' + m.off + ' missing or excused' : '');
   return '<div class="krow"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' +
     '<div class="kp">' + stateBar(st) + '<span class="kl">' + esc(say) + '</span></div>' +
-    (m.papers ? '<button class="btn sm' + (prim ? ' primary' : '') + '" data-kopen="' + esc(m.id) + '">' + (began || fm ? 'Continue' : 'Start') + '</button>' : '<span></span>') + keptDots(m) + '</div>';
+    (canOpen(m) ? '<button class="btn sm' + (prim ? ' primary' : '') + '" data-kopen="' + esc(m.id) + '">' + (began || fm ? 'Continue' : 'Start') + '</button>' : '<span></span>') + keptDots(m) + '</div>';
 }
 function oldRow(m) {
   const st = keptState(m), w = keptWhere(m), stale = m.newer && keptMeta.has(m.newer);
   const sub = [w.cls ? w.cls.name : '', stale ? 'an older copy: your work went on in a newer one' : keptBack(m) ? 'returned ' + fmtDay(keptBack(m)) : 'last worked on ' + fmtDay(m.t),
-    st.of ? keptSay(m, st) : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
+    st.of ? keptSay(m, st) : '', canOpen(m) ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
   return '<div class="krow old"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + '</div>';
 }
 // What a finished set of papers says about the class: the average of each paper's percent, and each rubric row's average. Read from the
@@ -123,8 +123,8 @@ function backHtml(list, prim) {
   if (!list.length) return '';
   return '<h2 class="tcap">Ready to hand back</h2><div class="tcard">' + list.map(m => {
     const st = keptState(m), w = keptWhere(m), s = statOf(m);
-    const sub = [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' ' + st.word, s && s.avg != null ? 'average ' + s.avg + '%' : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
-    return '<div class="krow back"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + (m.papers ? '<div class="kact"><a class="btn sm' + (prim && m === list.find(x => x.papers) ? ' primary' : '') + '" href="' + batchHash(m.id, 'return') + '" data-kret="' + esc(m.id) + '">Return papers</a></div>' : '') + '</div>';
+    const sub = [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' ' + st.word, s && s.avg != null ? 'average ' + s.avg + '%' : '', canOpen(m) ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
+    return '<div class="krow back"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + (canOpen(m) ? '<div class="kact"><a class="btn sm' + (prim && m === list.find(x => canOpen(x)) ? ' primary' : '') + '" href="' + batchHash(m.id, 'return') + '" data-kret="' + esc(m.id) + '">Return papers</a></div>' : '') + '</div>';
   }).join('') + '</div>';
 }
 // One card: the newest finished rubric assignment, its weakest row, and how many students to sit down with. Who they are is one click away, on Insights.
@@ -138,7 +138,7 @@ function nextHtml(groups) {
   const who = low.low ? numWord(low.low) + (low.low === 1 ? ' student' : ' students') + ' scored ' + fmtNum(low.top / 2) + ' or below on ' + esc(low.name) + '.' : 'Nobody scored ' + fmtNum(low.top / 2) + ' or below on ' + esc(low.name) + '.';
   return '<h2 class="tcap">What the class needs next</h2><div class="tcard tneed"><p class="tbig">' + head.charAt(0).toUpperCase() + head.slice(1) + '</p>' +
     '<div class="tbars" role="img" aria-label="' + esc(s.rows.map(r => r.name + ' ' + fmtNum(Math.round(r.avg * 10) / 10) + ' of ' + r.top).join(', ')) + '">' + s.rows.map(r => '<span class="tbn">' + esc(r.name) + '</span><span class="tbt"><i class="' + (r === low && !flat ? 'low' : '') + '" style="width:' + Math.round(r.avg / r.top * 100) + '%"></i></span><span class="tbv">' + (Math.round(r.avg * 10) / 10).toFixed(1) + '</span>').join('') + '</div>' +
-    (flat ? '' : '<p class="tsay">' + who + '</p>') + (m.papers ? '<a class="tlink" href="' + batchHash(m.id, 'insights') + '">' + (low.low && !flat ? 'See who' : 'Open Insights') + T_ARROW + '</a>' : '') + '</div>';
+    (flat ? '' : '<p class="tsay">' + who + '</p>') + (canOpen(m) ? '<a class="tlink" href="' + batchHash(m.id, 'insights') + '">' + (low.low && !flat ? 'See who' : 'Open Insights') + T_ARROW + '</a>' : '') + '</div>';
 }
 // the to-do card is always there
 function hsideShow() { $('#hside').hidden = false; }
@@ -151,8 +151,8 @@ function homeRender() {
   const g = homeGroups(), t = plan ? todayRows(plan) : null, cur = t ? nowRow(t.rows) : null;
   // One blue button on the screen: a card that is asking her something, else the class that is on, else the papers to go on with, else the papers to hand back, else opening new work.
   const asking = !!$('#safeAsk .btn.primary, #sampleNote .btn.primary');
-  const prim = asking ? '' : cur && cur.lessons.length ? 'lesson' : g.mark.some(m => m.papers) ? 'mark' : g.back.some(m => m.papers) ? 'back' : 'drop';
-  const firstMark = g.mark.find(m => m.papers);
+  const prim = asking ? '' : cur && cur.lessons.length ? 'lesson' : g.mark.some(m => canOpen(m)) ? 'mark' : g.back.some(m => canOpen(m)) ? 'back' : 'drop';
+  const firstMark = g.mark.find(m => canOpen(m));
   put($('#lbCard'), gpLookHtml());
   put($('#today'), todayHtml(prim));
   put($('#toMark'), g.mark.map(m => markRow(m, prim === 'mark' && m === firstMark)).join(''));

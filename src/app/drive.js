@@ -229,7 +229,6 @@ async function syncWrite(body) {
   fd.append('file', new Blob([body], { type: 'application/json' }));
   syncFile = { id: (await (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: fd })).json()).id };
 }
-const syncNone = { papers: async () => null, added: async () => null, edit: async () => null };   // papers never come through Drive
 // Where a folder would ask her (the same student, or a card's rubric, changed on two devices since they last matched), sync can't wait for
 // an answer on every device: the copy changed later is kept, the same choice on both sides, so they agree and stop asking. A download
 // forgotten on one device and worked on since on another comes back.
@@ -260,7 +259,7 @@ function syncNow() {
 async function syncOnce() {
   setSyncState('syncing…');
   if (batch) await saveNow();
-  const got = await syncRead(), B = got && got.app === 'Grading Studio sync' ? { work: got.work || {}, meta: got.meta || {}, tomb: got.tomb || {}, added: {}, edits: {}, lib: got.lib, ls: got.ls || {} } : null;
+  const got = await syncRead(), B = got && got.app === 'Grading Studio sync' ? { work: got.work || {}, meta: got.meta || {}, tomb: got.tomb || {}, added: dvAdded(got.files), edits: {}, lib: got.lib, ls: got.ls || {} } : null;
   const A = await localState(), dev = devId(), now = Date.now();
   let rows = [], tomb = A.tomb;
   if (B) {
@@ -277,7 +276,7 @@ async function syncOnce() {
     rows = plan.rows; tomb = plan.tomb;
     // The download open on screen keeps what's there; it takes what came in the next time round, once it's closed.
     const open = batch && batch.id, came = rows.filter(r => r.kind === 'new' || r.kind === 'gone' && r.onA || r.toA || (r.meta && JSON.stringify(r.meta) !== JSON.stringify(r.ma)));
-    for (const row of came) if (row.id !== open && row.kind !== 'askGone') await applyRow(row, syncNone);
+    for (const row of came) if (row.id !== open && row.kind !== 'askGone') await applyRow(row, dvSource(got.files || {}));
     // a score saved while the rows above were being written: merge it in again, so the copy taken before doesn't write over it
     if (libVer !== v0) { libm.lib = mergeLib(libHere(), libm.lib, { dev, now }).lib; libm.toA = true; }
     if (libm.toA) { lib = migrateLib(libm.lib); libUndoForget(); if (!setLibFrom(lib)) throw browserFull(); if (batch && batch.assignment) { const f = findItem(batch.assignment.id); if (f) batch.assignment = f.it; } }
@@ -286,7 +285,7 @@ async function syncOnce() {
     if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); }
     if (open && rows.some(r => r.id === open && r.toA)) syncAgain = false;   // nothing to push for it until it is closed and merged
   }
-  // What goes up: the merged copy, with the papers left behind. A row's own "papers" says where they are kept, so it stays on each device.
+  // What goes up: the merged copy. Papers go up apart (dvUp below) and are named in files. A row's own "papers" says where they are kept, so it stays on each device.
   const out = { app: 'Grading Studio sync', v: 1, t: now, lib: libHere(), work: {}, meta: {}, tomb, ls: carryLs() };
   const ids = new Set([...Object.keys(A.work), ...Object.keys(A.meta), ...rows.map(r => r.id)]);
   for (const id of ids) {
@@ -296,10 +295,13 @@ async function syncOnce() {
     if (m) { const { papers, size, ...rest } = m; out.meta[id] = rest; }
   }
   delete out.ls['gs.lib'];
+  out.files = dvFiles(got && got.files, tomb);
   const body = JSON.stringify(out);
   if (!got || body !== JSON.stringify({ ...got, t: now })) await syncWrite(body);
   store.set('gs.syncAt', now);
+  dvCloud(out.files);
   setSyncState('synced');
+  dvUpSoon();
 }
 window.addEventListener('focus', () => { if (G.email) syncNow(); });
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && G.email) syncNow(); });
@@ -316,3 +318,97 @@ if (GOK && G.email && gcid() && !sampleOn()) setTimeout(() => {
 }, 400);
 // Back from signing in on Google's page (an iPhone home-screen app), with no email kept yet: finish signing in.
 if (GOK && G_REDIRECT && G.token && !G.email) setTimeout(() => gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); toast('Signed in as ' + G.email); syncNow(); }).catch(e => toast(e.message)), 400);
+
+/* Papers through Drive: each file once, named by what's in it (as a linked folder keeps them, folder.js), in the same hidden folder.
+   A computer sends up the papers it keeps, in the background, after the marks; the sync file lists each download's files once they
+   are all there. Another device fetches a download's papers the first time she opens it there (reopenKept), and a phone fetches one
+   student's at a time (phone.js). Late files come with the marks. */
+const DV = { names: null, files: store.get('gs.cloudP', null) || {}, up: null, full: false };
+// Papers she can open here: kept in this browser, or waiting in her Drive.
+function canOpen(m) { return !!m && (!!m.papers || (!!DV.files[m.id] && !!G.email && GOK && !sampleOn())); }
+function dvCloud(files) { DV.files = Object.fromEntries(Object.entries(files || {}).filter(([, f]) => f && f.papers)); store.set('gs.cloudP', DV.files); }
+const dvAdded = files => Object.fromEntries(Object.entries(files || {}).map(([id, f]) => [id, Object.fromEntries(Object.entries(f.added || {}).map(([k, r]) => [k, r.added || 0]))]));
+// What the sync file lists: what was there, what this device has sent up since, nothing for a forgotten download.
+function dvFiles(was, tomb) { const o = { ...(was || {}), ...(DV.sent || {}) }; for (const id of Object.keys(o)) if (tomb[id]) delete o[id]; return o; }
+async function dvNames() {
+  if (DV.names) return DV.names;
+  const m = new Map(); let page = '';
+  do {
+    const j = await (await gsync("files?spaces=appDataFolder&pageSize=1000&fields=nextPageToken,files(id,name)&q=" + encodeURIComponent("name contains '.dat' and trashed=false") + (page ? '&pageToken=' + page : ''))).json();
+    for (const f of j.files || []) m.set(f.name, f.id); page = j.nextPageToken;
+  } while (page);
+  return (DV.names = m);
+}
+async function dvPut(bytes) {
+  const hash = await shaOf(bytes), name = hash + '.dat', names = await dvNames();
+  if (names.has(name)) return { hash, size: bytes.length };
+  const meta = JSON.stringify({ name, parents: ['appDataFolder'] });
+  let id;
+  if (bytes.length <= 4e6) {
+    const fd = new FormData(); fd.append('metadata', new Blob([meta], { type: 'application/json' })); fd.append('file', new Blob([bytes]));
+    id = (await (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: fd })).json()).id;
+  } else {
+    const at = (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Upload-Content-Length': String(bytes.length) }, body: meta })).headers.get('Location');
+    id = (await (await gsync(at + '&fields=id', { method: 'PUT', body: new Blob([bytes]) })).json()).id;
+  }
+  names.set(name, id);
+  return { hash, size: bytes.length };
+}
+async function dvGet(ref) {
+  let id = (await dvNames()).get(ref.hash + '.dat');
+  if (!id) { DV.names = null; id = (await dvNames()).get(ref.hash + '.dat'); }
+  if (!id) throw new Error('A paper isn’t in your Google Drive any more. Open it on the computer that has it, and it goes up again.');
+  const bytes = new Uint8Array(await (await gsync('files/' + id + '?alt=media')).arrayBuffer());
+  if (bytes.length !== ref.size || await shaOf(bytes) !== ref.hash) throw new Error('A paper came down from Google Drive damaged. Try again.');
+  return bytes;
+}
+// One download's papers and late files, sent up; its line in the sync file once every file is there.
+async function dvSend(id) {
+  const rec = await kget('papers', id); if (!rec || !rec.entries) return null;
+  const papers = [];
+  for (let i = 0; i < rec.entries.length; i++) { const data = await keptBytes(id, i, rec.entries[i]); papers.push({ path: rec.entries[i].path, ...(data ? await dvPut(data) : {}) }); }
+  const added = {}, range = IDBKeyRange.bound(id + '|', id + '|￿');
+  for (const k of ((await idbDo('readonly', o => o.getAllKeys(range))) || []).map(k => k.slice(id.length + 1))) { const r = await idbDo('readonly', o => o.get(id + '|' + k)); if (r) { const { data, ...x } = r; added[k] = { ...x, ...await dvPut(data) }; } }
+  return { label: rec.label || '', papers, added };
+}
+function dvUpSoon() { if (!DV.up && !DV.full && !PHONE) DV.up = dvUp().finally(() => { DV.up = null; }); }
+async function dvUp() {
+  let sent = 0;
+  for (const m of [...keptMeta.values()].sort((a, b) => b.t - a.t)) {
+    if (!m.papers || !G.email) continue;
+    const have = DV.files[m.id], added = await idbDo('readonly', o => o.getAllKeys(IDBKeyRange.bound(m.id + '|', m.id + '|￿'))) || [];
+    if (have && added.every(k => have.added && k.slice(m.id.length + 1) in have.added)) continue;
+    try {
+      setSyncState('sending papers…');
+      const f = await dvSend(m.id); if (!f) continue;
+      (DV.sent ||= {})[m.id] = f; DV.files[m.id] = f; sent++;
+    } catch (e) {
+      if (/storageQuotaExceeded|quota/i.test(e && e.message)) { DV.full = true; setSyncState('marks synced; your Google Drive is full, so papers stay here'); return; }
+      console.warn(e); setSyncState('marks synced; papers not sent yet'); return;
+    }
+  }
+  if (sent) { store.set('gs.cloudP', DV.files); await syncNow(); DV.sent = null; } else if (!syncBusy) setSyncState('synced');
+}
+// Late files come with the marks; papers wait until she opens them (dvPull).
+const dvSource = files => ({
+  papers: async () => null, edit: async () => null,
+  async added(id, k) { const r = files[id] && files[id].added && files[id].added[k]; if (!r) return null; const { hash, size, ...x } = r; return { ...x, data: await dvGet({ hash, size }) }; },
+});
+// A download's papers from her Drive, kept in this browser from then on.
+async function dvPull(id, onStep) {
+  const f = DV.files[id]; if (!f) return null;
+  const entries = []; let n = 0;
+  for (const e of f.papers) { entries.push({ path: e.path, data: e.hash ? await dvGet(e) : null }); onStep && onStep(++n, f.papers.length); }
+  const rec = { id, label: f.label || '', entries };
+  await paperPut(id, rec);
+  const m = { ...(keptMeta.get(id) || await kget('meta', id) || { id }), papers: true, size: entries.reduce((a, e) => a + (e.data ? e.data.length : 0), 0) };
+  await kdo('meta', 'readwrite', o => o.put(m, id)); keptMeta.set(id, m);
+  return rec;
+}
+// One student's files only, for a quick look on a phone. Not kept.
+async function dvPullOne(id, key) {
+  const f = DV.files[id]; if (!f) return [];
+  const mine = f.papers.filter(e => e.hash && e.path.split('/')[0] === key);
+  const out = []; for (const e of mine) out.push({ path: e.path, data: await dvGet(e) });
+  return out;
+}

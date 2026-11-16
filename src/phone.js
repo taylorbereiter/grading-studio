@@ -63,12 +63,13 @@ async function phScoresRender(r) {
 }
 function phOneRender(box, c, col) {
   const max = col.typed && col.typed.max, s = (col.typed && col.typed.s) || {}, fm = col.type === 'fm' && !(col.typed && col.typed.lv);
+  const see = !!col.dl && canOpen(keptMeta.get(col.dl));   // the papers are kept here, or waiting in her Drive
   const row = (n, i) => {
     const cell = col.cells.get(n), paper = col.d && cell && !cell.typed, r = s[n] || {};
     const val = paper ? (cell.total != null ? fmtNum(cell.total) + (cell.max ? ' / ' + fmtNum(cell.max) : '') : cell.pct != null ? cell.pct + '%' : cell.st || '') : bkCellVal(r, col);
     const st = (paper ? cell.st : r.st) || '';
     return '<div class="phstu' + (st ? ' st-' + st : '') + '"><span class="phname" data-raw>' + esc(bkWho(n, i)) + '</span>' +
-      (fm && !paper ? '<button class="phfb" data-phfb="' + esc(n) + '" aria-pressed="' + !!r.fb + '">' + (r.fb ? '✓ Feedback complete' : 'Feedback complete?') + '</button>' : paper ? '<span class="phpaper" title="Scored on the paper, on your computer">' + esc(val) + '</span>' :
+      (fm && !paper ? '<button class="phfb" data-phfb="' + esc(n) + '" aria-pressed="' + !!r.fb + '">' + (r.fb ? '✓ Feedback complete' : 'Feedback complete?') + '</button>' : paper ? '<span class="phpaper" title="Scored on the paper, on your computer">' + esc(val) + '</span>' + (see ? '<button class="icon phsee" data-phsee="' + esc(n) + '" aria-label="' + esc('See the paper for ' + bkWho(n, i)) + '">' + PH_EYE + '</button>' : '') :
         '<input class="phin" type="text" inputmode="decimal" enterkeyhint="next" autocomplete="off" value="' + esc(st === 'missing' || st === 'excused' ? '' : val) + '" placeholder="' + (st === 'missing' ? 'Missing' : st === 'excused' ? 'Excused' : '–') + '" data-phn="' + esc(n) + '" aria-label="' + esc('Score for ' + bkWho(n, i)) + '">' +
         kmWrap('⋯', 'class="icon phmore" aria-label="' + esc('More for ' + bkWho(n, i)) + '"', '<button class="mitem" data-phst="missing" data-phn="' + esc(n) + '">Missing</button><button class="mitem" data-phst="excused" data-phn="' + esc(n) + '">Excused</button><button class="mitem" data-phst="" data-phn="' + esc(n) + '">Clear</button>', 'right')) + '</div>';
   };
@@ -131,4 +132,41 @@ document.addEventListener('click', e => {
     });
   }
 });
-window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), syncNow: () => syncNow(), phone: () => PHONE });
+/* One student's paper, to look at (no marking here): from this browser if it keeps the papers, else just that student's files from her Drive. */
+const PH_EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+async function phSee(col, c, n) {
+  const d = col.d || {}, key = rosterPairs(c.names, Object.keys({ ...(d.s || {}), ...(d.read || {}) })).get(n) || n, cell = col.cells.get(n) || {};
+  const box = document.createElement('div'); box.className = 'phview'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Paper for ' + n);
+  const score = cell.total != null ? fmtNum(cell.total) + (cell.max ? ' / ' + fmtNum(cell.max) : '') : cell.pct != null ? cell.pct + '%' : '';
+  box.innerHTML = '<header class="phvhead"><button class="btn sm" data-phvclose>Close</button><b data-raw>' + esc(n) + '</b><span class="phc">' + esc(score) + '</span></header><div class="phvbody"><p class="muted phpad">Getting the paper…</p></div>';
+  document.body.appendChild(box);
+  const body = box.querySelector('.phvbody');
+  try {
+    const m = keptMeta.get(col.dl), rec = m && m.papers ? await paperGet(col.dl) : null;
+    const files = rec ? rec.entries.filter(e => e.data && (e.path.split('/')[0] === key || e.path.replace(/\.[^.]+$/, '') === key)) : await dvPullOne(col.dl, key);
+    if (!box.isConnected) return;
+    body.innerHTML = files.length ? '' : '<p class="muted phpad">No paper for this student in this download.</p>';
+    for (const f of files) {
+      const ext = (f.path.match(/\.([^.\/]+)$/) || [, ''])[1].toLowerCase();
+      if (ext === 'pdf') {
+        const doc = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
+        for (let p = 1; p <= doc.numPages; p++) {
+          const page = await doc.getPage(p), w = body.clientWidth || 360, vp0 = page.getViewport({ scale: 1 }), k = w / vp0.width * Math.min(2, devicePixelRatio || 1), vp = page.getViewport({ scale: k });
+          const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height; cv.className = 'phvpage'; cv.setAttribute('aria-label', 'Page ' + p);
+          await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+          if (!box.isConnected) return; body.appendChild(cv);
+        }
+      } else if (/^(png|jpe?g|gif|webp|heic)$/.test(ext)) {
+        const img = document.createElement('img'); img.className = 'phvpage'; img.alt = f.path; img.src = URL.createObjectURL(new Blob([f.data])); body.appendChild(img);
+      } else body.insertAdjacentHTML('beforeend', '<p class="muted phpad">' + esc(f.path.split('/').pop()) + ' opens on your computer.</p>');
+    }
+    body.insertAdjacentHTML('beforeend', '<p class="muted phpad">Your marks on the paper show on your computer.</p>');
+  } catch (e) { if (box.isConnected) body.innerHTML = '<p class="muted phpad">' + esc(e.message || 'The paper couldn’t be fetched.') + '</p>'; }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-phsee]');
+  if (b) { const key = b.closest('[data-phcol]').dataset.phcol, col = ph.cols && ph.cols.find(x => x.key === key), c = classById(store.get('gs.phCls', '')); if (col && c) phSee(bkClassCols(c, [col])[0], c, b.dataset.phsee); return; }
+  if (e.target.closest('[data-phvclose]')) e.target.closest('.phview').remove();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { const v = document.querySelector('.phview'); if (v) v.remove(); } });
+window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), canOpen: id => canOpen(keptMeta.get(id)) });
