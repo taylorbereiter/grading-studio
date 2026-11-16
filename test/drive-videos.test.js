@@ -4,12 +4,13 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip } = require('./helpers/app');
+const { ROOT, openApp, openOwn, closeOwn, openZip } = require('./helpers/app');
+const fs = require('fs'), path = require('path'), http = require('http');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser;
 before(async () => { browser = await launch(); });
-after(async () => { await browser.close(); });
+after(async () => { await browser.close(); await closeOwn(); });
 
 const GCID = '1234-test.apps.googleusercontent.com';
 const seed = extra => ({ ls: { 'gs.gcid': JSON.stringify(GCID), ...extra } });
@@ -49,6 +50,8 @@ async function fakeGoogle(page, D) {
     if (/googleapis\.com\/drive\/v3\/files\?/.test(u) && r.method() === 'POST') { D.made = (D.made || 0) + 1; const pd = r.postData() || ''; const parent = (/"parents":\["([^"]+)"/.exec(pd) || [])[1]; if (parent && parent !== 'root' && !String(parent).startsWith('made')) return r.respond({ status: 404, headers: cors, contentType: 'application/json', body: '{"error":{"message":"File not found"}}' }); return r.respond({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify({ id: 'made' + D.made }) }); }
     if (/upload\/drive\/v3\/files\?uploadType=multipart/.test(u)) { D.uploads = (D.uploads || 0) + 1; return r.respond({ status: 200, headers: cors, contentType: 'application/json', body: '{"id":"up"}' }); }
     if (/drive\/v3\/files\/[\w-]+\?fields=parents/.test(u)) return r.respond({ status: 200, headers: cors, contentType: 'application/json', body: '{"parents":["1ParentNotOursParentNotOurs000000"]}' });
+    const fm = /drive\/v3\/files\/([\w-]+)\?fields=id/.exec(u);
+    if (fm) return D.videos[fm[1]] ? r.respond({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify({ id: fm[1] }) }) : r.respond({ status: 404, headers: cors, contentType: 'application/json', body: '{"error":{"message":"File not found"}}' });
     const m = /drive\/v3\/files\/([\w-]+)\?alt=media/.exec(u);
     if (m && D.videos[m[1]]) return r.respond({ status: 200, headers: { ...cors, 'Content-Length': String(D.videos[m[1]].length) }, contentType: 'video/webm', body: D.videos[m[1]] });
     if (m && D.papers && D.papers[m[1]]) return r.respond({ status: 200, headers: cors, contentType: 'application/pdf', body: D.papers[m[1]] });
@@ -105,11 +108,23 @@ test('Partners and videos: videos picked from Drive in the videos folder go to t
     // only the link (with the file's id) is in her work
     const link = await page.evaluate(() => new TextDecoder().decode(window.__gs.state().batch.students[0].files.find(f => f.kind === 'link').data));
     assert.match(link, /URL=https:\/\/drive\.google\.com\/file\/d\/1AbCdEfGhIjKlMnOpQrStUvWxYz012345\/view/); assert.match(link, /GsDrive=1AbCdEfGhIjKlMnOpQrStUvWxYz012345/);
-    // signed in for videos already, so the card gets it from Drive and plays it in the page's own player
+    // no service worker here (the double-click copy is like this), so it can't play straight from Drive: Download for offline plays it in the page's own player
     await page.evaluate(() => window.__gs.openStudent && window.__gs.openStudent(0));
+    await page.waitForSelector('#paper .vdrv [data-drvget]', { timeout: 15000 });
+    assert.ok(!(await page.$('#paper .vdrv [data-drvplay]')), 'no Play from Drive where it can’t work');
+    await page.click('#paper .vdrv [data-drvget]');
     await page.waitForSelector('#paper .media video', { timeout: 15000 });
     assert.match(await page.$eval('#paper .media video', v => v.src), /^blob:/);
     assert.ok(await page.$('#paper .media .trbox'), 'the transcript panel is there, so it can follow the video');
+    const keptKeys = () => page.evaluate(() => new Promise(res => { const q = indexedDB.open('grading-studio-videos'); q.onsuccess = () => { const db = q.result, r = db.transaction('v').objectStore('v').getAllKeys(); r.onsuccess = () => { res(r.result); db.close(); }; }; }));
+    assert.deepEqual(await keptKeys(), ['d-1AbCdEfGhIjKlMnOpQrStUvWxYz012345']);
+    // Remove download frees the browser and touches nothing in Drive
+    const before = D.asked.length;
+    await page.click('#paper [data-drvdrop]');
+    await page.waitForSelector('#paper .vdrv [data-drvget]', { timeout: 15000 });
+    assert.deepEqual(await keptKeys(), [], 'the download is gone from this browser');
+    assert.ok(!D.asked.slice(before).some(u => /upload|DELETE|trash/i.test(u)), 'nothing was sent to Drive');
+    assert.equal(D.uploads || 0, 0);
     // Google was asked only for the picked video, with the small permission
     assert.ok(D.asked.some(u => /files\/1AbCdEfGhIjKlMnOpQrStUvWxYz012345\?alt=media/.test(u)));
     assert.deepEqual(D.asked.filter(u => /drive\/v3\/files\?/.test(u) && !/spaces=appDataFolder/.test(u)), [], 'no list of her files was asked for (only the app’s own hidden folder, for keeping devices the same)');
@@ -165,4 +180,71 @@ test('Open from Google Drive uses the same chooser: only the picked papers are f
     assert.equal(where, 'root'); assert.equal(D.uploads, 1);
     assert.deepEqual(page.errors, []);
   } finally { await close(); }
+});
+
+// The built site served the way the web address serves it, so the offline copy's service worker runs (it is what plays Drive videos straight from Drive).
+async function swSite() {
+  const types = { html: 'text/html; charset=utf-8', js: 'text/javascript', json: 'application/json', webmanifest: 'application/manifest+json', png: 'image/png' };
+  const srv = http.createServer((req, res) => {
+    const [p0, q = ''] = req.url.split('?'); let p = p0 === '/' ? '/index.html' : p0;
+    if (/blank/.test(q) || p === '/blank') { res.writeHead(200, { 'Content-Type': types.html }); return res.end('<!doctype html><title>blank</title>'); }
+    const file = path.join(ROOT, p);
+    if (!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); return res.end('Not found'); }
+    res.writeHead(200, { 'Content-Type': types[p.split('.').pop()] || 'application/octet-stream' }); res.end(fs.readFileSync(file));
+  });
+  await new Promise(r => srv.listen(0, '127.0.0.1', r)); srv.unref();
+  return { url: 'http://localhost:' + srv.address().port + '/?sw=1', close: () => new Promise(r => { srv.closeAllConnections(); srv.close(r); }) };
+}
+
+test('played straight from Drive: nothing is kept in the browser, Drive is asked for parts with her token, and a seek after the worker rests still plays', async () => {
+  const D = { asked: [], videos: {} }, S = { got: [] }, site = await swSite();
+  const id = '1StrmStrmStrmStrmStrmStrmStrm44444';
+  const { page, close } = await openOwn({ server: site, seed: seed({ 'gs.gVidDir': JSON.stringify({ id: '1FoldFoldFoldFoldFoldFoldFold11111', name: 'Speech videos' }) }), beforeLoad: p => fakeGoogle(p, D) });
+  let bytes;
+  try {
+    bytes = Buffer.from(await makeVideo(page), 'base64'); D.videos[id] = bytes;
+    await page.waitForFunction(() => !!navigator.serviceWorker.controller, { timeout: 30000 });
+    // Drive, as the service worker sees it: answers by Range, and remembers the token and Range it was asked with
+    const sw = await page.browser().waitForTarget(t => t.type() === 'service_worker');
+    const cdp = await sw.createCDPSession();
+    await cdp.send('Fetch.enable', { patterns: [{ urlPattern: '*googleapis.com*' }] });
+    cdp.on('Fetch.requestPaused', async ev => {
+      const h = ev.request.headers, auth = h.Authorization || h.authorization || '', rg = h.Range || h.range || '';
+      S.got.push({ url: ev.request.url, auth, rg });
+      const cors = [{ name: 'Access-Control-Allow-Origin', value: '*' }, { name: 'Access-Control-Allow-Headers', value: 'Authorization, Range' }, { name: 'Access-Control-Expose-Headers', value: 'Content-Range, Content-Length, Accept-Ranges' }];
+      if (ev.request.method === 'OPTIONS') return cdp.send('Fetch.fulfillRequest', { requestId: ev.requestId, responseCode: 204, responseHeaders: cors, body: '' }).catch(() => {});
+      if (S.deny) { S.deny--; return cdp.send('Fetch.fulfillRequest', { requestId: ev.requestId, responseCode: 401, responseHeaders: cors, body: '' }).catch(() => {}); }
+      const m = /bytes=(\d+)-(\d*)/.exec(rg), a = m ? +m[1] : 0, b = m && m[2] ? Math.min(+m[2], bytes.length - 1) : bytes.length - 1, part = bytes.subarray(a, b + 1);
+      cdp.send('Fetch.fulfillRequest', { requestId: ev.requestId, responseCode: m ? 206 : 200, body: part.toString('base64'), responseHeaders: [...cors, { name: 'Content-Type', value: 'video/webm' }, { name: 'Accept-Ranges', value: 'bytes' }, { name: 'Content-Length', value: String(part.length) }, ...(m ? [{ name: 'Content-Range', value: 'bytes ' + a + '-' + b + '/' + bytes.length }] : [])] }).catch(() => {});
+    });
+    await openZip(page, await threeZip(), 'Speeches.zip');
+    await page.evaluate(() => window.__gs.openAddVideo(window.__gs.state().batch.students[0]));
+    await page.waitForSelector('[data-vdby="drive"]');
+    await page.evaluate(id => window.__picks.push([{ id, name: 'Aria talk.webm', sizeBytes: '4000', mimeType: 'video/webm' }]), id);
+    await page.click('[data-vdby="drive"]');
+    await page.waitForFunction(() => /Aria talk/.test((document.querySelector('#vdDriveName') || {}).textContent || ''));
+    await page.click('#vdAdd');
+    await page.waitForFunction(() => document.querySelector('#dlg').hidden);
+    await page.evaluate(() => window.__gs.openStudent(0));
+    await page.waitForSelector('#paper .media video', { timeout: 15000 });
+    assert.match(await page.$eval('#paper .media video', v => v.getAttribute('src')), /^gs-drive\/1StrmStrm/, 'the player asks this site, not a copy');
+    await page.waitForFunction(() => { const v = document.querySelector('#paper .media video'); return v && v.readyState >= 1; }, { timeout: 15000 });
+    assert.ok(await page.$('#paper .media .trbox'), 'the transcript panel follows it as it would a file');
+    assert.ok(await page.$('#paper .vdrv [data-drvget]'), 'Download for offline is offered');
+    assert.ok(S.got.some(g => g.url.includes(id + '?alt=media') && g.auth === 'Bearer tok'), 'Drive was asked with her token');
+    assert.ok(S.got.some(g => /^bytes=\d+-/.test(g.rg)), 'and for a part at a time');
+    const kept = await page.evaluate(() => new Promise(res => { const q = indexedDB.open('grading-studio-videos'); q.onsuccess = () => { const db = q.result; if (!db.objectStoreNames.contains('v')) { db.close(); return res([]); } const r = db.transaction('v').objectStore('v').getAllKeys(); r.onsuccess = () => { res(r.result); db.close(); }; }; }));
+    assert.deepEqual(kept, [], 'nothing is kept in the browser');
+    // the browser rests the worker, which forgets the token: the next part asks the page for it again
+    await cdp.send('Runtime.evaluate', { expression: 'dTok = null' });
+    let n = S.got.length;
+    const part = () => page.evaluate(id => fetch('gs-drive/' + id, { headers: { Range: 'bytes=0-99' } }).then(async r => [r.status, (await r.arrayBuffer()).byteLength]), id);
+    assert.deepEqual(await part(), [206, 100]);
+    assert.equal(S.got.slice(n).filter(g => g.auth === 'Bearer tok').length, 1);
+    // a token Drive refuses is asked for fresh, once
+    S.deny = 1; n = S.got.length;
+    assert.deepEqual(await part(), [206, 100]);
+    assert.equal(S.got.slice(n).length, 2, 'refused once, then answered');
+    assert.deepEqual(page.errors, []);
+  } finally { await close(); await site.close(); }
 });

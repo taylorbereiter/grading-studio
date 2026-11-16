@@ -333,3 +333,27 @@ async function driveBytes(id, onStep, interactive) {
   for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; if (onStep) onStep(got, total); }
   return new Blob(parts, { type: r.headers.get('content-type') || '' });
 }
+
+/* ---------- playing a Drive video straight from Drive ---------- */
+// The video isn't copied: the player asks this site for gs-drive/<id>, and the offline copy's service worker (src/sw.js) asks Drive for just the
+// part being watched, signed with her token. It works where that service worker runs this page (the web app, not the double-click copy).
+let dsOn = false, dsAsk = null;
+function driveStreamOk() {
+  const sw = navigator.serviceWorker;
+  if (!sw || !sw.controller) return Promise.resolve(false);
+  if (dsOn) return Promise.resolve(true);
+  if (dsAsk) return dsAsk;
+  return dsAsk = new Promise(res => {
+    const ch = new MessageChannel(), done = v => { clearTimeout(to); dsAsk = null; dsOn = v; res(v); }, to = setTimeout(() => done(false), 1500);
+    ch.port1.onmessage = e => done(!!(e.data && e.data.drive));
+    try { sw.controller.postMessage({ type: 'gs-drive-ok' }, [ch.port2]); } catch { done(false); }
+  });
+}
+const driveStreamUrl = id => 'gs-drive/' + encodeURIComponent(id);
+// The service worker asks for her token when it has none (it forgets it whenever the browser rests it). Never opens a sign-in window.
+if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', e => {
+  const d = e.data || {}, p = e.ports && e.ports[0];
+  if (d.type !== 'gs-drive-token' || !p) return;
+  if (d.fresh) { G.token = null; G.exp = 0; try { sessionStorage.removeItem('gs.gTok'); } catch {} }
+  (gcid() && gHas(PICK_SCOPE) ? gToken(false, 'pick') : Promise.reject(new Error('sign-in'))).then(t => p.postMessage({ token: t, exp: G.exp }), () => p.postMessage({ token: null }));
+});
