@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"956f88b7","zh-Hans":"0a85dcd9","es":"dd1ff57d","fr":"210bee2f","de":"c3fe200b","pt-BR":"fe77b978","ja":"03af009d","ko":"9a02294a"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"b8d5a5fa","zh-Hans":"5745ccfa","es":"da065db7","fr":"e1ae3aa0","de":"3a858d2d","pt-BR":"0d7df1fd","ja":"f98347b3","ko":"783e294f"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -2278,6 +2278,9 @@ button.pavg:hover .v{text-decoration:underline}
 .grade .crit.on{background:var(--accent-soft)}
 .crit .cn{align-items:baseline;gap:8px;margin-bottom:3px;cursor:pointer}
 .crit .cn span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crit .cn .critstamp{flex:none;margin-left:auto;align-self:center;display:inline-grid;place-items:center;width:22px;height:20px;padding:0;border:1px solid transparent;border-radius:var(--corner-1);background:none;color:var(--muted);cursor:pointer;opacity:0;transition:opacity .12s}
+.crit.on .critstamp,.crit:hover .critstamp,.crit .critstamp:focus-visible{opacity:1}
+.crit .cn .critstamp:hover{border-color:var(--line);background:var(--surface);color:var(--accent)}
 .crit .cn em{flex:none;font-size:var(--text-body);font-weight:650;font-variant-numeric:tabular-nums}
 .crit .cn em small{font-size:var(--text-small);font-weight:500;color:var(--muted)}
 .crit .cn em:empty::before{content:"–";font-weight:500;color:var(--faint)}
@@ -3468,7 +3471,7 @@ body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #td
 .settch{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
 .settch select{max-width:100%}
 
-@media (hover:none){.pg .rchip{opacity:.92}.crit .sticks{opacity:1}}
+@media (hover:none){.pg .rchip{opacity:.92}.crit .sticks{opacity:1}.crit .critstamp{opacity:1}}
 
 @media (pointer:coarse){
   .tools .tool{height:40px}
@@ -5083,7 +5086,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.51";
+  const APP_VERSION = "1.28.52";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -8237,7 +8240,7 @@ if (setup.mode === 'rubric') {
 if (rowOn >= setup.criteria.length) rowOn = -1;
 h += ibPanelAsk() + '<h3>Score <button class="link" id="editRubric">Edit rubric</button>' + ibPanelHead() + '</h3><div class="crits">';
 h += setup.criteria.map((c, i) => { const v = g.rubric[i], steps = rowSteps(setup, i), k = steps.indexOf(v), top = rowTop(setup, i);
-return '<div class="crit' + (i === rowOn ? ' on' : '') + '" data-row="' + i + '"><div class="cn"><span title="' + esc(c) + '">' + esc(c) + '</span><em>' + critScore(v, i) + '</em></div><div class="scores slide' + (steps.length > 9 ? ' many' : '') + '" data-c="' + i + '" style="--n:' + (steps.length - 1) + '">' +
+return '<div class="crit' + (i === rowOn ? ' on' : '') + '" data-row="' + i + '"><div class="cn"><span title="' + esc(c) + '">' + esc(c) + '</span>' + (v != null && !noScore(st) ? '<button class="critstamp" data-critstamp="' + i + '" title="Stamp this score on the paper" aria-label="Stamp this score on the paper">' + STAMP_ICON + '</button>' : '') + '<em>' + critScore(v, i) + '</em></div><div class="scores slide' + (steps.length > 9 ? ' many' : '') + '" data-c="' + i + '" style="--n:' + (steps.length - 1) + '">' +
 '<input type="range" class="srange' + (v == null ? ' unset' : '') + '" style="--k:' + Math.max(0, k) + '" min="0" max="' + (steps.length - 1) + '" step="1" value="' + Math.max(0, k) + '" aria-label="Score for ' + esc(c) + '" aria-valuetext="' + (v == null ? 'Not scored' : fmtNum(v) + ' out of ' + top) + '">' +
 '<div class="sticks">' + steps.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div></div>'; }).join('') + '</div>' + lvBox();
 } else {
@@ -8287,6 +8290,12 @@ if (own.total != null && ps != null && Math.abs(ps - own.total) > 0.001) h += '<
 return h;
 }
 const STAMP_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="2" y="9.5" width="12" height="3.5" rx="1"/><path d="M6 9.5V7.2a2 2 0 1 1 4 0v2.3M3.5 15h9"/></svg>';
+function critStampOf(st, i) {
+const v = st.grade.rubric[i]; if (v == null || i < 0 || i >= setup.criteria.length) return null;
+const ib = ibSetup() && setup.ib[i];
+return ib ? { of: ib, name: ib, text: fmtNum(v) } : { of: setup.criteria[i], name: setup.criteria[i], text: fmtNum(v) + '/' + rowTop(setup, i) };
+}
+const critRowOf = m => setup.mode !== 'rubric' ? -1 : ibSetup() ? setup.ib.indexOf(m.of) : setup.criteria.indexOf(m.of);
 function scoreStampText(gr, st) {
 if (ibSetup()) return ibStampText(st || batch.students[cur]);
 const max = gr.outOf != null ? gr.outOf : maxPoints();
@@ -8295,12 +8304,15 @@ return fmtNum(gr.total) + (max ? '/' + fmtNum(max) : '') + (gr.pct != null ? ' =
 function syncScoreStamps(st) {
 if (!st || noScore(st)) return false;
 const gr = gradeOf(st);
-if (gr.total == null || gr.paper) return false;
-const text = scoreStampText(gr, st);
+const text = gr.total == null || gr.paper ? null : scoreStampText(gr, st);
 let changed = false;
 for (const f of st.files) {
 if (!f.marks || tryOfFile(st, f)) continue;
-for (const l of Object.values(f.marks)) for (const m of l || []) if (m.t === 'stamp' && m.k === 'score' && m.text !== text) { m.text = text; changed = true; }
+for (const l of Object.values(f.marks)) for (const m of l || []) {
+if (m.t !== 'stamp') continue;
+if (m.k === 'score' && text != null && m.text !== text) { m.text = text; changed = true; }
+if (m.k === 'crit') { const c = critStampOf(st, critRowOf(m)); if (c && (m.text !== c.text || m.name !== c.name)) { m.text = c.text; m.name = c.name; changed = true; } }
+}
 }
 return changed;
 }
@@ -8311,6 +8323,7 @@ return ty !== '' && ty != null && !isNaN(+ty) ? +ty : null;
 }
 $('#grade').addEventListener('click', e => {
 if (e.target.closest('#oneOutBtn')) return exportOne(batch.students[cur]);
+{ const cs = e.target.closest('[data-critstamp]'); if (cs) { const c = critStampOf(batch.students[cur], +cs.dataset.critstamp); if (!c) return; if (!pages.length) return toast('Open the paper first, then stamp the score on it'); return startScorePlace(c.text, { k: 'crit', of: c.of, name: c.name }); } }
 const b = e.target.closest('.scores button');
 if (b) {
 const st = batch.students[cur], i = +b.closest('.scores').dataset.c, v = +b.dataset.v;
@@ -9787,11 +9800,12 @@ return Object.assign(kept, { gone });
 const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: scrub(m.text, rx) } : m);
 const scoreWordsOnly = t => { const g = parseGrade(t, false); if (!g || g.at == null) return false; return /^[\s:=\-–,.()]*(?:total|score|grade|points?|pts|marks?|final)?[\s:=\-–,.()]*$/i.test(t.slice(0, g.at) + t.slice(g.at + g.len).replace(/^\s*(?:points?|pts)\b/i, '')); };
 const isScoreMark = m => (m.t === 'stamp' && m.k === 'score') || (m.t === 'text' && !!m.qz) || ((m.t === 'text' || m.t === 'note') && !m.qza && m.text != null && String(m.text).trim().length <= 40 && scoreWordsOnly(String(m.text).trim()));
+const scoreOffHides = m => isScoreMark(m) || (m.t === 'stamp' && m.k === 'crit');
 async function sharePage(st, f, js, p, scale, rx, opts, look) {
 const page = await js.getPage(p + 1);
 const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
 let marks = look && look.bare ? [] : scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
-if (look && look.noScore) marks = marks.filter(m => !isScoreMark(m));
+if (look && look.noScore) marks = marks.filter(m => !scoreOffHides(m));
 const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
 const c = document.createElement('canvas');
 c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
@@ -12584,7 +12598,7 @@ const max = maxPoints(), pct = max ? percentFor(v) : null;
 return calcFmt(v) + (max ? '/' + calcFmt(max) : '') + (pct != null ? ' = ' + pct + '%' : '');
 }
 let scorePlacing = null;
-function startScorePlace(text) {
+function startScorePlace(text, extra) {
 stopScorePlace();
 const gh = document.createElement('canvas'); gh.id = 'scoreGhost'; gh.hidden = true;
 const bar = document.createElement('div'); bar.className = 'toast'; bar.id = 'scoreBar'; bar.textContent = 'Click where the score goes · Esc to cancel';
@@ -12593,7 +12607,7 @@ const panel = $('#calcPanel'); if (panel) panel.classList.add('placing');
 const move = e => {
 const pg = pages.find(q => q.canvas === e.target);
 if (!pg) { gh.hidden = true; return; }
-const m = { t: 'stamp', k: 'score', x: 0, y: 0, size: newStampSize('score'), color: totalInk(), text }, b = stampBox(m), dpr = window.devicePixelRatio || 1, k = pg.s;
+const m = { t: 'stamp', k: 'score', x: 0, y: 0, color: totalInk(), text, ...extra }; m.size = newStampSize(m.k); const b = stampBox(m), dpr = window.devicePixelRatio || 1, k = pg.s;
 gh.width = Math.ceil(b.w * k * dpr) + 2; gh.height = Math.ceil(b.h * k * dpr) + 2;
 gh.style.width = gh.width / dpr + 'px'; gh.style.height = gh.height / dpr + 'px';
 gh.style.left = (e.clientX - gh.width / dpr / 2) + 'px'; gh.style.top = (e.clientY - gh.height / dpr / 2) + 'px';
@@ -12603,12 +12617,12 @@ gh.hidden = false;
 const key = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); stopScorePlace(); } };
 const away = e => { if (!pages.some(q => q.canvas === e.target)) stopScorePlace(); };
 document.addEventListener('pointermove', move, true); document.addEventListener('keydown', key, true); document.addEventListener('pointerdown', away, true);
-scorePlacing = { text, stop: () => { document.removeEventListener('pointermove', move, true); document.removeEventListener('keydown', key, true); document.removeEventListener('pointerdown', away, true); gh.remove(); bar.remove(); if (panel) panel.classList.remove('placing'); } };
+scorePlacing = { text, extra, stop: () => { document.removeEventListener('pointermove', move, true); document.removeEventListener('keydown', key, true); document.removeEventListener('pointerdown', away, true); gh.remove(); bar.remove(); if (panel) panel.classList.remove('placing'); } };
 }
 function stopScorePlace() { if (scorePlacing) { scorePlacing.stop(); scorePlacing = null; } }
 function placeScore(pg, x, y) {
-const text = scorePlacing.text; stopScorePlace();
-const m = { t: 'stamp', k: 'score', x: r1(x), y: r1(y), size: newStampSize('score'), color: totalInk(), text };
+const { text, extra } = scorePlacing; stopScorePlace();
+const m = { t: 'stamp', k: 'score', x: r1(x), y: r1(y), color: totalInk(), text, ...extra }; m.size = newStampSize(m.k);
 const bb = stampBox(m);
 m.x = r1(m.x + Math.max(0, -bb.x) - Math.max(0, bb.x + bb.w - pg.W)); m.y = r1(m.y + Math.max(0, -bb.y) - Math.max(0, bb.y + bb.h - pg.H));
 snap(pg); pg.marks().push(m); selected = { page: pg, mark: m, fresh: true }; changed(pg); redrawAll();
@@ -14917,16 +14931,31 @@ const stickersReady = Promise.all(STICKERS.map(([k]) => new Promise(done => {
   const im = new Image(); im.onload = im.onerror = () => done(); im.src = STICKER_SRC[k]; stickerImg[k] = im;
 })));
 const isSticker = k => STICKERS.some(s => s[0] === k);
-const isScoreStamp = k => k === 'score';
+const isScoreStamp = k => k === 'score' || k === 'crit';
 const scoreLines = m => String(m.text || '').split(' = ').map(t => t.replace('/', ' / '));
 function scoreSize(m) {
+  if (m.k === 'crit') return critSize(m);
   const s = m.size || 52, [a, b] = scoreLines(m);
   measureCtx.font = '700 ' + (s * 0.34) + 'px ' + FONT; const wa = measureCtx.measureText(a || '').width;
   measureCtx.font = '600 ' + (s * 0.26) + 'px ' + FONT; const wb = b ? measureCtx.measureText(b).width : 0;
   return { w: Math.max(s * 1.5, Math.max(wa, wb) + s * 0.4), h: b ? s : s * 0.6, two: !!b };
 }
+function critName(m, s) {
+  let t = String(m.name || '').trim(); if (!t) return '';
+  measureCtx.font = '600 ' + (s * 0.24) + 'px ' + FONT;
+  const room = s * 3.4;
+  if (measureCtx.measureText(t).width <= room) return t;
+  while (t.length > 1 && measureCtx.measureText(t + '…').width > room) t = t.slice(0, -1);
+  return t.trimEnd() + '…';
+}
+function critSize(m) {
+  const s = m.size || 40, nm = critName(m, s);
+  measureCtx.font = '700 ' + (s * 0.4) + 'px ' + FONT; const wa = measureCtx.measureText(String(m.text || '').replace('/', ' / ')).width;
+  measureCtx.font = '600 ' + (s * 0.24) + 'px ' + FONT; const wb = nm ? measureCtx.measureText(nm).width : 0;
+  return { w: Math.max(s * 1.1, Math.max(wa, wb) + s * 0.36), h: nm ? s : s * 0.62, two: !!nm, nm };
+}
 const stickerAspect = k => (STICKERS.find(s => s[0] === k) || [0, 0, 1])[2];
-const stampName = k => isProof(k) ? markLabel(k) : ((STICKERS.find(p => p[0] === k)) || [k, k])[1];
+const stampName = k => k === 'crit' ? 'Criterion score' : isProof(k) ? markLabel(k) : ((STICKERS.find(p => p[0] === k)) || [k, k])[1];
 
 /* ---------------- the mark key: a page at the end of a returned file saying what each mark on it means ---------------- */
 const MARK_MEAN = {
@@ -15018,9 +15047,9 @@ function openMarkKey(back) {
     }
   };
 }
-const MARK_SIZES = 'gs.markSizes', SIZE0 = { proof: 16, sticker: 44, score: 52 };
-const sizeKind = k => isSticker(k) ? 'sticker' : isScoreStamp(k) ? 'score' : 'proof';
-const SIZE_LIMITS = { proof: [8, 80], sticker: [16, 240], check: [8, 120], score: [20, 160] };
+const MARK_SIZES = 'gs.markSizes', SIZE0 = { proof: 16, sticker: 44, score: 52, crit: 40 };
+const sizeKind = k => isSticker(k) ? 'sticker' : k === 'crit' ? 'crit' : isScoreStamp(k) ? 'score' : 'proof';
+const SIZE_LIMITS = { proof: [8, 80], sticker: [16, 240], check: [8, 120], score: [20, 160], crit: [16, 160] };
 const sizesHere = () => { const all = store.get(MARK_SIZES, {}) || {}; return (batch && all[batch.id]) || {}; };
 function lastSize(key, lim, dflt) { const v = +sizesHere()[key]; return v >= lim[0] && v <= lim[1] ? v : dflt; }
 const newStampSize = k => lastSize(k, SIZE_LIMITS[sizeKind(k)], SIZE0[sizeKind(k)]);
@@ -15059,6 +15088,15 @@ function drawStamp(ctx, m) {
     ctx.drawImage(im, -s / 2, -h / 2, s, h);
     ctx.restore();
     return;
+  }
+  if (m.k === 'crit') {
+    const z = critSize(m), l = x - z.w / 2, t = y - z.h / 2;
+    ctx.save(); ctx.lineWidth = Math.max(1, s * 0.045);
+    ctx.beginPath(); ctx.roundRect(l, t, z.w, z.h, s * 0.14); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = m.color; ctx.stroke();
+    ctx.fillStyle = m.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (z.two) { ctx.font = '600 ' + (s * 0.24) + 'px ' + FONT; ctx.fillText(z.nm, x, t + s * 0.25); }
+    ctx.font = '700 ' + (s * 0.4) + 'px ' + FONT; ctx.fillText(String(m.text || '').replace('/', ' / '), x, z.two ? t + s * 0.66 : y + s * 0.01);
+    ctx.restore(); return;
   }
   if (isScoreStamp(m.k)) {
     const z = scoreSize(m), [a, b] = scoreLines(m), l = x - z.w / 2, t = y - z.h / 2, r = s * 0.14;
@@ -23240,6 +23278,7 @@ else if (m.t === 'text' && o.comments && one(m.text)) lines.push('text on page: 
 else if (m.t === 'stamp') {
 const name = stampName(m.k);
 if (m.k === 'score') { if (o.comments) lines.push('score sticker: ' + mdq(m.text)); continue; }
+if (m.k === 'crit') { if (o.comments) lines.push('criterion score sticker: ' + mdq((m.name ? m.name + ' ' : '') + m.text)); continue; }
 count(name);
 if (o.stamps) lines.push(isSticker(m.k) ? 'sticker: ' + name : name + (o.words ? on(quoteOf(lineNear(words, m.x, m.y, 60), rx)) : ''));
 } else if (m.t === 'hl') { ink.hl++; count('Highlight'); if (o.words) { const q = quoteOf(wordsIn(words, markRects(m)), rx); if (q) lines.push('highlighted: ' + mdq(q)); } }
@@ -29141,7 +29180,7 @@ exCardAct(e, page, exPageRender);
 }
 exReady.then(exRailSay);
 
-Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete, exSaveShot, exTagsOf, exShotWhere, isScoreMark });
+Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete, exSaveShot, exTagsOf, exShotWhere, isScoreMark, scoreOffHides });
 
 /* ---------------- linked classes: sections of one course on the same schedule (11/16) ---------------- */
 function lkKey(s) { return String(s || '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''); }
@@ -31946,7 +31985,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.51":["Your Planner syncs too: lessons, units, your timetable, the comment bank and activities go between your devices through your own Google Drive, both ways. Lessons full of pictures (over 2 MB) stay on their computer for now.","On your phone, a new Plans tab shows your next classes day by day with their lessons. Tap one to read its slides and notes.","Papers go up to your Google Drive as soon as you open them, so they're on your phone straight away. Google's sign-in renews by itself again, usually as you come back to the app. If you'd rather tap to sign in, turn it off in Settings, Saving and carrying."]};
+const WHATS_NEW = {"1.28.52":["Criterion stamps: each rubric row you've scored has a small stamp button beside its score. Click it, then click on the paper to put that row's name and score there, like the total stamp. It changes when the score does, and it's optional, one row at a time."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };

@@ -1,23 +1,21 @@
 {
- "version": "1.28.51",
- "build": "169c557f2992",
+ "version": "1.28.52",
+ "build": "1a754b8035a9",
  "notes": [
-  "Your Planner syncs too: lessons, units, your timetable, the comment bank and activities go between your devices through your own Google Drive, both ways. Lessons full of pictures (over 2 MB) stay on their computer for now.",
-  "On your phone, a new Plans tab shows your next classes day by day with their lessons. Tap one to read its slides and notes.",
-  "Papers go up to your Google Drive as soon as you open them, so they're on your phone straight away. Google's sign-in renews by itself again, usually as you come back to the app. If you'd rather tap to sign in, turn it off in Settings, Saving and carrying."
+  "Criterion stamps: each rubric row you've scored has a small stamp button beside its score. Click it, then click on the paper to put that row's name and score there, like the total stamp. It changes when the score does, and it's optional, one row at a time."
  ],
  "files": {
-  "index.html": "482b3876bb20bf832721fd72f896a1b7c3cd5f8dbd3c5a5bebaaeaa6f7363ac0",
-  "planner.html": "9b26326d07de83a8161c7b8cc57361817268eccef809bcdd19a57f72b8a8a4bc"
+  "index.html": "4fc10f690d162f8f6116c53e58a305dde26be13364f00badd9e6dff2367b11a8",
+  "planner.html": "7372451ec3b40084440ebd8dae16904209081b9f6f58eb5f7be2d7d9e4458284"
  },
  "langs": {
-  "lang/zh-Hant.js": "956f88b709cc59b1c0d597a573ab8fda43c7391b46b24ee4d955ec16674c9834",
-  "lang/zh-Hans.js": "0a85dcd91643862fe923661bedc4095fd781c35f3c96298fb6fb905bcd14fb4f",
-  "lang/es.js": "dd1ff57d2ed5255465517b264961ddfb192e5d82605beccf3dc166b813ce2846",
-  "lang/fr.js": "210bee2f35a8f198565f6bb7963e6df3aa05221569d80b6cf65b3e4042baeaf6",
-  "lang/de.js": "c3fe200b206955b44151b0b05d6d914e00b96e0696770cfa3a2ec1ead7409535",
-  "lang/pt-BR.js": "fe77b978b3e2ba7e2f107c614483c316aee8f8bb45c88b75c2347873ca134b32",
-  "lang/ja.js": "03af009d72cd98f3ad59cd06e7be8eccb988db9a838586b917c12dedd77afbf0",
-  "lang/ko.js": "9a02294a392ec4b918c448b7b41ef4a4e01303a78a1160614da2e2a9d44d5c1d"
+  "lang/zh-Hant.js": "b8d5a5fa409e9104847e740ca0c3162e10f9ec763cfc74ef80351ecee78029a4",
+  "lang/zh-Hans.js": "5745ccfaf54b1c0728aedb9a4ea809521d23af3a57a608c1e84d827a46410b98",
+  "lang/es.js": "da065db7bc401458b8497b70e496511c65e17dec7dc865f9837aa4e570cea6b9",
+  "lang/fr.js": "e1ae3aa03c8926eed56efc3d4064b601690dbff9ef7804d8128d808586133971",
+  "lang/de.js": "3a858d2d2115a534be9fae2275bc05b2c73f21d9d6af29b896614a6731f2d825",
+  "lang/pt-BR.js": "0d7df1fde236f4378802102e5fe2ba122c6f3598b20295a11065899edefaa35e",
+  "lang/ja.js": "f98347b337b77c667d190c164b85260885bfe57cfac2b26483f763c134200f15",
+  "lang/ko.js": "783e294fd4887651984c5812c604fe5eb0952c3196f01a95b83717aa8bb795e2"
  }
 }

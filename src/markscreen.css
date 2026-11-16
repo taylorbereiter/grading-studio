@@ -131,6 +131,9 @@ button.pavg:hover .v{text-decoration:underline}
 .grade .crit.on{background:var(--accent-soft)}
 .crit .cn{align-items:baseline;gap:8px;margin-bottom:3px;cursor:pointer}
 .crit .cn span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crit .cn .critstamp{flex:none;margin-left:auto;align-self:center;display:inline-grid;place-items:center;width:22px;height:20px;padding:0;border:1px solid transparent;border-radius:var(--corner-1);background:none;color:var(--muted);cursor:pointer;opacity:0;transition:opacity .12s}
+.crit.on .critstamp,.crit:hover .critstamp,.crit .critstamp:focus-visible{opacity:1}
+.crit .cn .critstamp:hover{border-color:var(--line);background:var(--surface);color:var(--accent)}
 .crit .cn em{flex:none;font-size:var(--text-body);font-weight:650;font-variant-numeric:tabular-nums}
 .crit .cn em small{font-size:var(--text-small);font-weight:500;color:var(--muted)}
 .crit .cn em:empty::before{content:"–";font-weight:500;color:var(--faint)}
