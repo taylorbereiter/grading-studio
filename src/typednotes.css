@@ -47,12 +47,20 @@
 .tngut{position:absolute;left:0;top:0;width:24px}
 .tnpage[data-g=m]{padding-left:34px}
 .tnpage[data-g=m] .tngut{width:30px}
-.tnpage[data-g=t]{padding-left:60px}
-.tnpage[data-g=t] .tngut{width:56px}
+.tnpage[data-g=t]{padding-left:76px}
+.tnpage[data-g=t] .tngut{width:72px}
 .tng{position:absolute;right:4px;display:flex;align-items:center;gap:3px;height:calc(var(--text-body) * 1.55)}
 .tngut i{font-size:var(--text-small);width:12px;text-align:center}
 .tnchip{border:0;background:none;font:inherit;font-size:var(--text-caption);color:var(--muted);font-variant-numeric:tabular-nums;padding:1px 3px;border-radius:var(--corner-1);cursor:pointer;user-select:none}
 .tnchip:hover{background:var(--hover);color:var(--accent)}
+/* hiding a time: a small × beside it when the pointer is on it (always there on a touch screen); a hidden time is a faint clock */
+.tnhide,.tnhid{display:inline-flex;align-items:center;justify-content:center;border:0;background:none;padding:0;width:14px;height:14px;border-radius:var(--corner-round);color:var(--faint);cursor:pointer}
+.tnhide svg{width:10px;height:10px}
+.tnhid svg{width:12px;height:12px}
+.tnhide{opacity:0}
+.tng:hover .tnhide,.tnhide:focus-visible{opacity:1}
+.tnhide:hover,.tnhid:hover{background:var(--hover);color:var(--accent)}
+@media (pointer:coarse){.tnhide{opacity:.7}.tnhide,.tnhid{width:20px;height:20px}.tnpage[data-g=t]{padding-left:84px}.tnpage[data-g=t] .tngut{width:80px}}
 /* the line at the foot: the Timer for a talk given live, and whether the notes go back with the paper */
 .tnfoot{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;margin-top:auto;padding:6px 2px;border-top:1px solid var(--line);background:var(--bg)}
 .tnclock{font-variant-numeric:tabular-nums}

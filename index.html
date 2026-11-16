@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"397fa511","zh-Hans":"6bcd7ab3","es":"bfc8f474","fr":"1ebc74df","de":"42637c81","pt-BR":"155b006c","ja":"7f64ea8d","ko":"92572ba5"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"a225fa65","zh-Hans":"df63188e","es":"f8fb9cb9","fr":"a7e85ec1","de":"5cae9159","pt-BR":"8cb90d1b","ja":"af27810d","ko":"b3c4658a"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -2525,12 +2525,20 @@ html.vidsized #paper .spb .media{max-width:none}
 .tngut{position:absolute;left:0;top:0;width:24px}
 .tnpage[data-g=m]{padding-left:34px}
 .tnpage[data-g=m] .tngut{width:30px}
-.tnpage[data-g=t]{padding-left:60px}
-.tnpage[data-g=t] .tngut{width:56px}
+.tnpage[data-g=t]{padding-left:76px}
+.tnpage[data-g=t] .tngut{width:72px}
 .tng{position:absolute;right:4px;display:flex;align-items:center;gap:3px;height:calc(var(--text-body) * 1.55)}
 .tngut i{font-size:var(--text-small);width:12px;text-align:center}
 .tnchip{border:0;background:none;font:inherit;font-size:var(--text-caption);color:var(--muted);font-variant-numeric:tabular-nums;padding:1px 3px;border-radius:var(--corner-1);cursor:pointer;user-select:none}
 .tnchip:hover{background:var(--hover);color:var(--accent)}
+
+.tnhide,.tnhid{display:inline-flex;align-items:center;justify-content:center;border:0;background:none;padding:0;width:14px;height:14px;border-radius:var(--corner-round);color:var(--faint);cursor:pointer}
+.tnhide svg{width:10px;height:10px}
+.tnhid svg{width:12px;height:12px}
+.tnhide{opacity:0}
+.tng:hover .tnhide,.tnhide:focus-visible{opacity:1}
+.tnhide:hover,.tnhid:hover{background:var(--hover);color:var(--accent)}
+@media (pointer:coarse){.tnhide{opacity:.7}.tnhide,.tnhid{width:20px;height:20px}.tnpage[data-g=t]{padding-left:84px}.tnpage[data-g=t] .tngut{width:80px}}
 
 .tnfoot{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;margin-top:auto;padding:6px 2px;border-top:1px solid var(--line);background:var(--bg)}
 .tnclock{font-variant-numeric:tabular-nums}
@@ -5653,9 +5661,9 @@ a: ['Yes. Press **Side by side** above the paper, or the **B** key. A pane opens
 'Each side scrolls on its own, and the pen works on a page in either one. Click a box in the Rubric tab to give that score. A video moved into the pane keeps playing.',
 'Drag the bar between the two to change their sizes; a double-click puts it back. **⋯** in the pane moves it to the left or across the top, which suits a narrow window. Under a file’s own **⋯**, **Show beside** puts that file in the pane.',
 'The pane stays open from student to student until you close it with **✕** or **B**. A student who has a video and a notes page opens side by side without being asked, unless you closed the pane on a video before.'] },
-{ id: 'typed-notes', sec: 'mark', q: 'Can I type my notes instead of writing on a notes page?', words: 'type typing notes text size large legible typed document page paragraph list bullet bold italic underline highlight presentation speech talk video timer headings strength next step question mark copy give back',
+{ id: 'typed-notes', sec: 'mark', q: 'Can I type my notes instead of writing on a notes page?', words: 'type typing notes text size large legible typed document page paragraph list bullet bold italic underline highlight presentation speech talk video timer time times hide show headings strength next step question mark copy give back',
 a: ['Yes. Open **Side by side** and choose **Type notes**. It is a page you type on like any document, with headings, lists, bold, italic, underline and highlight in the bar above. On a notes page, **Type notes instead** opens it too. It works on any assignment.',
-'Beside a playing video, or with the clock at the foot running for a talk given live, each new paragraph gets its time in the margin. Click a time to play the video from there. **Time** puts one on or takes it off by hand, and **Times** in **⋯** turns this off.',
+'Beside a playing video, or the clock at the foot running, each new paragraph gets its time in the margin. Click a time to play from there. The × beside it hides it, and the faint clock left brings it back. **Hide all times** in **⋯** does them all. **Time** adds or removes one by hand.',
 'A paragraph can be marked as a strength, a next step or a question with **Mark**. The mark shows beside it and is optional. **⋯** has **Use these headings for every student**, so each student starts with the same headings.',
 'The line at the foot says whether the notes go back to the student as a page of the returned paper. Click it to change that for the whole assignment. **Text size for the student** in **⋯** makes that page Compact, Standard or Large.'] },
 { id: 'ai-beside', sec: 'start', q: 'Can I have Gemini, Claude or ChatGPT open beside Grading Studio?',
@@ -24587,7 +24595,7 @@ One editing surface (contenteditable) on a white page: paragraphs, a heading, a 
 levels deep, bold, italic, underline and highlight. A paragraph can carry a mark (a strength, a next step or a question, shown
 beside it, never typed) and the moment it was started on the video or the Timer (a chip in the margin, a click plays from there).
 Kept on the student's grade as blocks, never as HTML: st.grade.tn = { l: [{ s: text, k: 'h' heading | 'p' | 'n' | 'q' mark,
-t: seconds, y: 'h2' small heading | 'ul' | 'ol', d: 2 (second list level), f: [[from, to, bits]] (1 bold, 2 italic, 4 underline,
+t: seconds, h: 1 (the time is kept but hidden: a click in the margin hides it or brings it back), y: 'h2' small heading | 'ul' | 'ol', d: 2 (second list level), f: [[from, to, bits]] (1 bold, 2 italic, 4 underline,
 8 highlight) }] }, and gone when empty. The first version saved { s, k, t } only, and that still reads the same.
 On the grade, it is saved, merged, carried in a take-home file and the folder, and shared by a group, the way the comment is.
 setup.tnHead = [text]: every student with no notes starts with these headings, an empty paragraph under each.
@@ -24617,7 +24625,7 @@ if (TN_K[x.k]) o.k = x.k;
 if (/^(h2|ul|ol)$/.test(x.y) && o.k !== 'h') o.y = x.y;
 if (o.y === 'h2' && o.k) delete o.k;
 if (tnListOf(o) && +x.d === 2) o.d = 2;
-if (typeof x.t === 'number' && isFinite(x.t) && x.t >= 0) o.t = Math.floor(x.t);
+if (typeof x.t === 'number' && isFinite(x.t) && x.t >= 0) { o.t = Math.floor(x.t); if (x.h && +x.h) o.h = 1; }
 const f = tnRuns(tnBits({ s: o.s, f: x.f })); if (f.length) o.f = f;
 return o;
 }
@@ -24661,7 +24669,7 @@ const tnHost = () => $('#spBody > .sptool[data-tool="typed"]');
 const tnEd = () => document.querySelector('#spBody .tned');
 function tnEl(x) {
 const el = document.createElement('div'); el.className = 'tnp'; el.tnWas = x.s;
-for (const k of ['k', 'y', 'd', 't']) if (x[k] != null) el.dataset[k] = x[k];
+for (const k of ['k', 'y', 'd', 't', 'h']) if (x[k] != null) el.dataset[k] = x[k];
 if (tnHeadOf(x)) { el.setAttribute('role', 'heading'); el.setAttribute('aria-level', x.k === 'h' ? '3' : '4'); }
 const a = tnBits(x);
 for (let i = 0; i < x.s.length;) {
@@ -24695,7 +24703,7 @@ else if (c.nodeType === 1) walk(c, tnFx(c, b));
 }
 })(el, 0);
 const d = el.dataset || {};
-return tnClean({ s: s.join(''), k: d.k, y: d.y, d: d.d, t: d.t != null && d.t !== '' ? +d.t : null, f: tnRuns(a) });
+return tnClean({ s: s.join(''), k: d.k, y: d.y, d: d.d, t: d.t != null && d.t !== '' ? +d.t : null, h: d.h, f: tnRuns(a) });
 }
 function tnFix(ed) {
 let box = null, moved = null;
@@ -24761,7 +24769,7 @@ b('data-tnl="ol"', 'Numbered list', TN_SVG('<path d="M10 6h10M10 12h10M10 18h10M
 '<span class="tnr">' + b('data-tntm', 'Put the time on this paragraph, or take it off', TN_SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')) + '</span>' +
 kmWrap('⋯', 'class="icon kdots" aria-label="More for these notes" title="More for these notes"',
 '<span class="tnr2">' + marks + times + '</span>' +
-'<button class="mitem" role="menuitemcheckbox" data-tnm="times" aria-checked="true">Times</button>' +
+'<button class="mitem" role="menuitemcheckbox" data-tnm="times" aria-checked="true">Times</button><button class="mitem" data-tnm="alltimes">Hide all times</button>' +
 '<button class="mitem" data-tnm="head">Use these headings for every student</button><button class="mitem" data-tnm="unhead">Clear the headings for every student</button>' +
 '<button class="mitem" role="menuitemcheckbox" data-tnm="back" aria-checked="true">Give these notes back with the paper</button>' +
 '<button class="mitem" data-tnm="size" data-kmstay aria-expanded="false">Text size for the student</button><span class="tnszs" hidden>' +
@@ -24787,13 +24795,24 @@ const vid = tnHasVid(tnSt), on = tnTimesOn(), rows = [];
 const x = tnL[i]; if (!x) return;
 const mk = x.k && x.k !== 'h', tm = on && x.t != null; if (!mk && !tm) return;
 const row = document.createElement('div'); row.className = 'tng'; row.style.top = el.offsetTop + 'px';
-if (tm) { const b = document.createElement('button'); b.className = 'tnchip'; b.dataset.tnt = i; b.title = vid ? 'Play the video from here' : 'The time on the Timer'; b.textContent = fmtTime(x.t); row.appendChild(b); }
+const btn = (c, k, t, txt) => { const b = document.createElement('button'); b.className = c; b.dataset[k] = i; b.title = t; if (txt) b.textContent = txt; else b.innerHTML = TN_SVG(c === 'tnhid' ? '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' : '<path d="M6 6l12 12M18 6 6 18"/>'); if (!txt) b.setAttribute('aria-label', t); row.appendChild(b); };
+if (tm && x.h) btn('tnhid', 'tnts', 'Show this time');
+else if (tm) { btn('tnhide', 'tnts', 'Hide this time'); btn('tnchip', 'tnt', vid ? 'Play the video from here' : 'The time on the Timer', fmtTime(x.t)); }
 if (mk) { const m = document.createElement('i'); m.dataset.k = x.k; m.title = TN_K[x.k][0]; m.textContent = TN_K[x.k][1]; row.appendChild(m); }
 rows.push(row);
 });
 g.replaceChildren(...rows);
 g.parentNode.dataset.g = rows.some(r => r.querySelector('.tnchip')) ? 't' : rows.length ? 'm' : '';
 }
+function tnShowTime(i) {
+const st = tnSt, ed = tnEd(); if (!st || !ed) return;
+const p = document.activeElement === ed ? tnPos() : null;
+tnL = tnReadAll();
+if (i == null) { const T = tnL.filter(x => x.t != null), hide = T.some(x => !x.h); T.forEach(x => { if (hide) x.h = 1; else delete x.h; }); }
+else { const x = tnL[i]; if (!x || x.t == null) return; if (x.h) delete x.h; else x.h = 1; }
+tnL = tnL.map(tnClean); tnPaint(); if (p) tnSetPos(p); tnPut(st, false);
+}
+function tnAllHid() { const T = tnL.filter(x => x.t != null); return T.length > 0 && T.every(x => x.h); }
 function tnBar(h, st) {
 const bar = h && h.querySelector('.tnbar'); if (!bar || !st) return;
 const ed = tnEd(), s = getSelection(), inEd = !!(ed && s.rangeCount && ed.contains(s.anchorNode));
@@ -24802,14 +24821,16 @@ const set = (el, on) => { if (el) el.setAttribute('aria-pressed', String(!!on));
 for (const c of ['bold', 'italic', 'underline']) set(bar.querySelector('[data-tnf="' + c + '"]'), inEd && document.queryCommandState(c));
 set(bar.querySelector('[data-tnf="hl"]'), p && x.s && (tnBits(x)[Math.max(0, Math.min(p.a[1], x.s.length) - 1)] & 8));
 set(bar.querySelector('[data-tnl="ul"]'), x.y === 'ul'); set(bar.querySelector('[data-tnl="ol"]'), x.y === 'ol');
-set(bar.querySelector('[data-tntm]'), x.t != null);
+set(bar.querySelector('[data-tntm]'), x.t != null && !x.h);
 const mk = x.k && x.k !== 'h' ? x.k : ''; set(bar.querySelector('.tnmk'), mk);
 for (const b of h.querySelectorAll('[data-tnmk]')) b.setAttribute('aria-checked', String(b.dataset.tnmk === mk));
 const sty = x.k === 'h' ? 'h' : x.y === 'h2' ? 'h2' : '', w = { '': 'Normal text', h: 'Heading', h2: 'Small heading' }[sty], sl = bar.querySelector('.tnsty span');
 if (sl.dataset.say !== w) { sl.dataset.say = w; sl.textContent = w; }
 for (const b of h.querySelectorAll('[data-tns]')) b.setAttribute('aria-checked', String(b.dataset.tns === sty));
 const any = tnL.some(y => y.s.trim()), heads = tnL.some(y => y.k === 'h' && y.s.trim());
-const show = { times: true, head: heads, unhead: tnHead().length > 0, copy: any, clear: !!tnStored(st), back: true, size: true };
+const timed = tnTimesOn() && tnL.some(y => y.t != null), allw = tnAllHid() ? 'Show all times' : 'Hide all times', ab = bar.querySelector('[data-tnm="alltimes"]');
+if (ab.dataset.say !== allw) { ab.dataset.say = allw; ab.textContent = allw; }
+const show = { times: true, alltimes: timed, head: heads, unhead: tnHead().length > 0, copy: any, clear: !!tnStored(st), back: true, size: true };
 for (const b of bar.querySelectorAll('[data-tnm]')) b.hidden = !show[b.dataset.tnm];
 bar.querySelector('[data-tnm="times"]').setAttribute('aria-checked', String(tnTimesOn()));
 const back = tnBackOn(); bar.querySelector('[data-tnm="back"]').setAttribute('aria-checked', String(back));
@@ -24853,7 +24874,7 @@ for (const [x, a, z] of parts) { const bits = tnBits(x); for (let i = a; i < z; 
 });
 function tnTime() {
 const st = tnSt, t = tnNow(st);
-tnApply((xs, p) => { const x = tnL[p.a[0]]; if (x.t != null) delete x.t; else if (t != null) x.t = Math.floor(t); });
+tnApply((xs, p) => { const x = tnL[p.a[0]]; if (x.t != null && x.h) delete x.h; else if (x.t != null) delete x.t; else if (t != null) x.t = Math.floor(t); });
 if (t == null && tnL.every(x => x.t == null)) toast('A video, or the Timer for a talk given live, gives the times');
 }
 function tnEnter() {
@@ -24874,7 +24895,7 @@ if (s.rangeCount && !s.isCollapsed) { tnQuiet = true; document.execCommand('dele
 tnL = tnReadAll();
 const p = tnPos() || { a: [tnL.length - 1, tnL[tnL.length - 1].s.length] }, i = p.a[0], o = p.a[1], x = tnL[i], a = tnBits(x);
 const head = { s: x.s.slice(0, o), f: tnRuns(a.slice(0, o)) }, tail = { s: x.s.slice(o), f: tnRuns(a.slice(o)) };
-const join = (u, v) => ({ s: u.s + v.s, f: tnRuns([...tnBits(u), ...tnBits(v)]) }), kind = b => ({ k: b.k, y: b.y, d: b.d, t: b.t });
+const join = (u, v) => ({ s: u.s + v.s, f: tnRuns([...tnBits(u), ...tnBits(v)]) }), kind = b => ({ k: b.k, y: b.y, d: b.d, t: b.t, h: b.h });
 const last = P[P.length - 1], out = P.length === 1 ? [{ ...kind(x.s ? x : P[0]), ...join(join(head, P[0]), tail) }]
 : [{ ...kind(head.s ? x : P[0]), ...join(head, P[0]) }, ...P.slice(1, -1), { ...kind(last), ...join(last, tail) }];
 tnL.splice(i, 1, ...out.map(tnClean));
@@ -24929,7 +24950,7 @@ const d2 = tnListOf(x) && x.d === 2;
 if (x.y === 'ol') { if (d2) n2++; else { n1++; n2 = 0; } } else if (!d2) { n1 = 0; n2 = 0; }
 if (!x.s.trim()) continue;
 if (tnHeadOf(x)) { out.push((out.length ? '\n' : '') + x.s); continue; }
-out.push((d2 ? '    ' : '') + (tnListOf(x) ? (x.y === 'ol' ? (d2 ? n2 : n1) + '. ' : '• ') : '') + (x.t != null ? '[' + fmtTime(x.t) + '] ' : '') + (x.k ? TN_K[x.k][0] + ': ' : '') + x.s);
+out.push((d2 ? '    ' : '') + (tnListOf(x) ? (x.y === 'ol' ? (d2 ? n2 : n1) + '. ' : '• ') : '') + (x.t != null && !x.h ? '[' + fmtTime(x.t) + '] ' : '') + (x.k ? TN_K[x.k][0] + ': ' : '') + x.s);
 }
 return out.join('\n');
 }
@@ -24946,7 +24967,7 @@ if (m && p.a[1] === m[0].length) {
 x.y = /^1/.test(m[0]) ? 'ol' : 'ul'; x.f = tnRuns(tnBits(x).slice(m[0].length)); x.s = x.s.slice(m[0].length);
 tnL = L.map(tnClean); tnPaint(); tnSetPos({ a: [i, 0], z: [i, 0] }); return tnPut(st, false);
 }
-if (/^insert/.test(type) && el && !el.tnWas && x.s && x.t == null && !tnHeadOf(x) && tnTimesOn()) { const t = tnNow(st); if (t != null) { x.t = Math.floor(t); el.dataset.t = x.t; } }
+if (/^insert/.test(type) && el && !el.tnWas && x.s && x.t == null && !tnHeadOf(x) && tnTimesOn()) { const t = tnNow(st); if (t != null) { const hid = tnAllHid(); x.t = Math.floor(t); el.dataset.t = x.t; if (hid) { x.h = 1; el.dataset.h = 1; } } }
 }
 [...ed.children].forEach((el, j) => { el.tnWas = L[j].s; });
 tnL = L; tnPut(st, /^(insertText|insertCompositionText|deleteContent)/.test(type)); tnMore();
@@ -24990,7 +25011,7 @@ $('#paper').addEventListener('mousedown', e => { if (e.target.closest('.tnbar bu
 $('#paper').addEventListener('click', async e => {
 const box = e.target.closest('.tn'); if (!box || !batch || tnSt !== batch.students[cur]) return;
 if (e.target.closest('.kdots')) { const sb = box.querySelector('[data-tnm="size"]'); sb.setAttribute('aria-expanded', 'false'); sb.nextElementSibling.hidden = true; }
-const st = tnSt, el = e.target.closest('[data-tnsz],[data-tnf],[data-tnl],[data-tns],[data-tnmk],[data-tntm],[data-tnclk],[data-tnt],[data-tnrub],[data-tnm],[data-tnback]'); if (!el) return;
+const st = tnSt, el = e.target.closest('[data-tnsz],[data-tnf],[data-tnl],[data-tns],[data-tnmk],[data-tntm],[data-tnclk],[data-tnt],[data-tnts],[data-tnrub],[data-tnm],[data-tnback]'); if (!el) return;
 const d = el.dataset;
 if (d.tnf) { if (d.tnf === 'hl') return tnHl(); tnRestore(); return document.execCommand(d.tnf); }
 if (d.tnl) return tnList(d.tnl);
@@ -24998,6 +25019,7 @@ if (d.tns != null) return tnStyle(d.tns);
 if (d.tnmk != null) return tnMark(d.tnmk);
 if (d.tntm != null) return tnTime();
 if (d.tnclk != null) { spClockGo(spClockOf(st)); return tnBar(tnHost(), st); }
+if (d.tnts != null) return tnShowTime(+d.tnts);
 if (d.tnt) { const x = tnL[+d.tnt]; if (x && x.t != null && !vidSeek($('#paper'), x.t)) toast('This time is from the Timer. There is no video to go to.'); return; }
 if (d.tnrub != null) { tnL = setup.criteria.flatMap(s => [{ s: String(s), k: 'h' }, { s: '' }]); tnPaint(); tnSetPos({ a: [1, 0], z: [1, 0] }); return tnPut(st, false); }
 if (d.tnback != null || d.tnm === 'back') { if (tnBackOn()) setup.tnBack = false; else delete setup.tnBack; spSetupKeep(); tnBar(tnHost(), st); return toast(tnBackOn() ? 'Typed notes go back with each paper in this assignment' : 'Typed notes stay with you in this assignment'); }
@@ -25010,6 +25032,7 @@ redo(); return toast('The notes page goes back in ' + TN_SIZE[d.tnsz][1] + ' tex
 }
 const m = d.tnm;
 if (m === 'size') { const sub = el.nextElementSibling, on = sub.hidden; sub.hidden = !on; el.setAttribute('aria-expanded', String(on)); if (on) { const c = sub.querySelector('[aria-checked=true]') || sub.firstChild; c.focus({ preventScroll: true }); } return; }
+if (m === 'alltimes') { const hid = tnAllHid(); tnShowTime(null); return toast(hid ? 'Times shown again' : 'Times hidden. Show all times brings them back.'); }
 if (m === 'times') { if (tnTimesOn()) store.set('gs.tnTime', false); else store.del('gs.tnTime'); return tnMore(); }
 if (m === 'head') { setup.tnHead = tnL.filter(x => x.k === 'h' && x.s.trim()).map(x => x.s.trim()); spSetupKeep(); tnBar(tnHost(), st); return toast('Every student with no notes yet starts with ' + setup.tnHead.length + (setup.tnHead.length === 1 ? ' heading' : ' headings')); }
 if (m === 'unhead') { delete setup.tnHead; spSetupKeep(); tnLoad(tnHost(), st); return toast('Students with no notes start with an empty page again'); }
