@@ -48,10 +48,10 @@ const langFiles = {}, langNames = {}, langPacked = {};
 {
   const fflate = require('fflate');
   for (const [code, file, obj] of LANGS) {
-    const src = fs.readFileSync('src/lang-' + file + '.js', 'utf8') + '\nreturn ' + obj + ';';
+    const src = (fs.readFileSync('src/lang-' + file + '.js', 'utf8') + '\nreturn ' + obj + ';').replace(/^[ \t]*\/\/.*\r?\n/gm, '');   // lines that are only a comment ship in neither copy
     langNames[code] = new Function(src)().name;
     langPacked[code] = Buffer.from(fflate.deflateSync(Buffer.from(src, 'utf8'), { level: 9 })).toString('base64');
-    langFiles['lang/' + code + '.js'] = '(window.__gsLangs = window.__gsLangs || {})[' + JSON.stringify(code) + '] = (function () {\n' + src.replace(/^[ \t]*\/\/.*\r?\n/gm, '') + '\n})();\n';
+    langFiles['lang/' + code + '.js'] = '(window.__gsLangs = window.__gsLangs || {})[' + JSON.stringify(code) + '] = (function () {\n' + src + '\n})();\n';
   }
 }
 // What fills the sample (src/sample-data.js) is handled the same way: sample.js beside the pages at the web address, fetched only when
@@ -70,7 +70,9 @@ const hosted = page => { if (page.split(LANG_INSIDE).length !== 2) throw new Err
 // Each file is asked for with a stamp of its contents (lang/es.js?1a2b3c4d), so a page never gets the file of another version from a browser's own cache.
 const langStamp = Object.fromEntries(LANGS.map(([code]) => [code, require('crypto').createHash('sha256').update(langFiles['lang/' + code + '.js']).digest('hex').slice(0, 8)]));
 const LANG_LOADER = '<script>try{var gsLangV=' + JSON.stringify(langStamp) + ',gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write(\'<script src="lang/\'+gsL+\'.js?\'+gsLangV[gsL]+\'"><\\/script>\')}catch(e){}</script>';
-rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['@langs', '@sample', 'lang', 'helpdata', 'pickshare', 'beside', APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'feedback', 'rubrics', 'rubricup', 'book', 'bookimport', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'video', 'sidepane', 'anchors', 'wordnotes', 'wordpdf', 'classpage', 'seating', 'attend', 'goals', 'ib', 'reports', 'missing', 'sheet', 'tabs', 'markscreen', 'examples', 'snip', 'touch', 'today', 'todo', 'focus', 'tracker', 'gradeplan', 'settings', 'safe', 'newyear', 'welcome', 'setupin', 'help', 'school', 'classroom', 'shell', 'moving', 'fullscreen', 'sample'].map(n => n === APP ? appSrc : n === '@langs' ? langSrc : n === '@sample' ? sampleConsts : fs.readFileSync('src/' + n + '.js', 'utf8')).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace('/*@@STICKERS@@*/{}', () => stickerSrc));
+// A note after the code on a line ("x = 1;   // why") is left out of the page too, unless the code before it might still be inside a string.
+const tailNote = (line, code) => (code.replace(/\\./g, '').match(/['"`]/g) || []).length % 2 ? line : code;
+rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['@langs', '@sample', 'lang', 'helpdata', 'pickshare', 'beside', APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'feedback', 'rubrics', 'rubricup', 'book', 'bookimport', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'video', 'sidepane', 'anchors', 'wordnotes', 'wordpdf', 'classpage', 'seating', 'attend', 'goals', 'ib', 'reports', 'missing', 'sheet', 'tabs', 'markscreen', 'examples', 'snip', 'touch', 'today', 'todo', 'focus', 'tracker', 'gradeplan', 'settings', 'safe', 'newyear', 'welcome', 'setupin', 'help', 'school', 'classroom', 'shell', 'moving', 'fullscreen', 'sample'].map(n => n === APP ? appSrc : n === '@langs' ? langSrc : n === '@sample' ? sampleConsts : fs.readFileSync('src/' + n + '.js', 'utf8')).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace(/^(.*?[;{}),])[ \t]{2,}\/\/ .*$/gm, tailNote).replace('/*@@STICKERS@@*/{}', () => stickerSrc));
 rep("'/*@@GCID@@*/'", JSON.stringify(process.env.GCID || ''));
 // Where this copy lives and where it is moving to (site.json), only while a move is on. Otherwise the app has no address written into it.
 { const site = require('./site.json'); rep("'/*@@SITE@@*/'", JSON.stringify(site.movingTo ? { address: site.address || '', movingTo: site.movingTo } : null)); }

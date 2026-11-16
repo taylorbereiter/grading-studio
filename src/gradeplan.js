@@ -43,7 +43,7 @@ function gpLeft(id) {
 function gpDue(from, to, except) {
   const by = gpKept(), pace = gpPaces(), today = fcToday(), out = [];
   for (const c of lib.classes) for (const u of c.units || []) for (const it of u.items || []) {
-    if (!it.due || it.due < from || it.due > to || it.id === except || it.typed || it.type === 'xc') continue;
+    if (!it.due || it.due < from || it.due > to || it.id === except || it.typed && !it.batchId || it.type === 'xc') continue;
     const m = by.get(it.id); let left = 0;
     if (m) { if (m.ret) continue; left = keptState(m).left; } else if (it.due >= today && !it.batchId) left = (c.names || []).length;
     if (left > 0) out.push({ it, c, left, secs: left * pace(it.id), inn: !!m });
