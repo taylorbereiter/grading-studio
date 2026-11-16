@@ -5039,7 +5039,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.46";
+  const APP_VERSION = "1.28.47";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -31579,7 +31579,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.46":["Focus sessions for lesson planning: the Focus panel lists your lessons for the coming week, and the Planner's lesson editor has a Focus button. A lesson session lasts 45 minutes unless you change it in Settings, Focus and goals.","Planning time now counts only in focus sessions on a lesson. Opening the Planner for a quick change or presenting a lesson doesn't add to it, and presenting pauses a lesson session."]};
+const WHATS_NEW = {"1.28.47":["A lesson you send to your assistant now carries when each class meets, the unit plan for the week and your own activities. Its slides come back in the .zip, so the Planner makes the PowerPoint from your own template and you check the changes slide by slide. The assistant's own PowerPoint is kept in Materials as a preview."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };

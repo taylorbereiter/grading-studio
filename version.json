@@ -1,13 +1,12 @@
 {
- "version": "1.28.46",
- "build": "4418c7a494f2",
+ "version": "1.28.47",
+ "build": "811f111a63cd",
  "notes": [
-  "Focus sessions for lesson planning: the Focus panel lists your lessons for the coming week, and the Planner's lesson editor has a Focus button. A lesson session lasts 45 minutes unless you change it in Settings, Focus and goals.",
-  "Planning time now counts only in focus sessions on a lesson. Opening the Planner for a quick change or presenting a lesson doesn't add to it, and presenting pauses a lesson session."
+  "A lesson you send to your assistant now carries when each class meets, the unit plan for the week and your own activities. Its slides come back in the .zip, so the Planner makes the PowerPoint from your own template and you check the changes slide by slide. The assistant's own PowerPoint is kept in Materials as a preview."
  ],
  "files": {
-  "index.html": "5d210a615552b130c5fcdce901ebf4b533cb9f4e871a906e2f7238ae1f338bc0",
-  "planner.html": "689fb714bf0157af3a387c073777f14466fafa29b3cf6eed60e469dc181571df"
+  "index.html": "ed6645677fb15e19beaf033c2a5de0b2472c996b88b3875fef4e5a29475ba17c",
+  "planner.html": "239b2bbf73dcd98785fb9514401cbcd2f1e101d90383cc4e949c1a06ef33965e"
  },
  "langs": {
   "lang/zh-Hant.js": "843605a93ef5287b4ebea96932f39cbaf5f0fa00605ba46393116ff63fcaf49d",

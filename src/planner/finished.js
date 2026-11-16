@@ -45,11 +45,15 @@ async function lessonZip(l, file) {
   const files = names.filter(n => n !== mf);
   const byBase = b => files.find(n => baseName(n).toLowerCase() === baseName(b || '').toLowerCase());
   const decks = files.filter(n => /\.pptx$/i.test(n));
-  const deck = byBase(man.finished) || (decks.length === 1 ? decks[0] : decks.find(n => !n.includes('/')) || decks[0]);
-  let mats = Array.isArray(man.materials) ? man.materials.map(byBase).filter(Boolean) : files.filter(n => n !== deck);
+  // The assistant's answer: lesson.json carries the slides themselves, so the app makes the PowerPoint from the teacher's own
+  // template and the assistant's .pptx is only a preview (kept in Materials).
+  const back = man.lesson && Array.isArray(man.lesson.slides) && man.lesson.slides.length ? man.lesson : null;
+  const deck = back ? null : byBase(man.finished) || (decks.length === 1 ? decks[0] : decks.find(n => !n.includes('/')) || decks[0]);
+  let mats = Array.isArray(man.materials) ? [...(back && man.preview ? [man.preview] : []), ...man.materials].map(byBase).filter(Boolean) : files.filter(n => n !== deck);
   mats = mats.filter((n, i) => mats.indexOf(n) === i && n !== deck);
   const big = mats.filter(n => z[n].length > MAX_FILE); mats = mats.filter(n => z[n].length <= MAX_FILE);
-  if (!deck && !mats.length) return toast('Nothing to add in that .zip');
+  if (!deck && !mats.length && !back) return toast('Nothing to add in that .zip');
+  if (back) { editorCommit(); await saveVersion(l, 'Before ' + plAi() + '’s changes'); }
   // Materials first, so the deck's redraw shows them. A file with the same name is the newer copy.
   if (mats.length) {
     l.files = l.files || [];
@@ -62,11 +66,42 @@ async function lessonZip(l, file) {
     }
     await lPut(l);
   }
+  if (back) {
+    lessonBack(l, back);
+    for (const s of l.slides) if (s.video && ytId(s.video.url) && !s.video.thumb) { try { const v = await videoFrom(s.video.url); s.video = { ...v, start: s.video.start || v.start, title: s.video.title || v.title }; } catch { } }   // the assistant gives just the link
+    await lPut(l); L.cur = 0; lessonChanged(false); renderEditor();
+    return toast(PlAi() + '’s ' + l.slides.length + ' slides came in' + (mats.length ? ', with ' + mats.length + ' file' + (mats.length === 1 ? '' : 's') + ' in Materials' : '') + '. Check the changes slide by slide above the slides. Download .pptx makes the PowerPoint from your template.' +
+      (big.length ? ' Too big to keep (over 40 MB): ' + big.map(baseName).join(', ') + '.' : ''), 9000);
+  }
   // A lesson sent to the assistant comes back as a .zip: its slides are offered slide by slide (Keep mine / Keep theirs).
   if (deck) await finUpload(l, new File([z[deck]], baseName(deck), { type: MIME.pptx }), null, l.status === 'claude');
   else renderEditor();
   toast((deck ? 'Finished deck “' + baseName(deck) + '”' : 'No PowerPoint') + ' and ' + mats.length + ' material' + (mats.length === 1 ? '' : 's') + ' added from ' + file.name + '.' +
     (big.length ? ' Too big to keep (over 40 MB): ' + big.map(baseName).join(', ') + '.' : '') + (deck ? (l.pending ? ' Check ' + plAi() + '’s changes slide by slide above the slides.' : ' The lesson before is under Versions.') : ''), 8000);
+}
+
+// The slides from an assistant's lesson.json take the place of the lesson's, with the ones before kept on offer slide by slide.
+// A slide keeps its place's id (so the changes line up), and what can't travel as text stays: its picture, video picture,
+// screenshots for context, what the teacher asked for and the teacher's comments.
+function lessonBack(l, back) {
+  const was = l.slides, old = JSON.parse(JSON.stringify(was));
+  const slides = back.slides.slice(0, 80).map((x, i) => {
+    const o = was[i], y = x && typeof x === 'object' ? { ...x } : {};
+    delete y.id; delete y.img; delete y.ctx; delete y.box; delete y.fs;
+    const s = normSlide({ ...y, fmt: 2 });
+    if (o) {
+      s.id = o.id; s.ask = o.ask; if (o.ctx) s.ctx = o.ctx; if (o.box) s.box = o.box; if (o.fs) s.fs = o.fs;
+      if (o.img && (s.layout === 'picture' || s.layout === 'fullpic' || s.layout === 'textpic' || s.layout === 'picprompt')) s.img = o.img;
+      if (o.video && s.layout === 'video' && (!s.video || s.video.url === o.video.url)) s.video = o.video;
+      if (!(x && x.size)) s.size = o.size;
+      s.talk = [...o.talk, ...s.talk.filter(t => t.by === 'claude')];
+    }
+    return s;
+  });
+  if (!l.pending) l.pending = { at: Date.now(), before: old, title: l.title };
+  l.slides = slides; l.status = 'review';
+  if (typeof back.title === 'string' && back.title.trim() && !l.titleApart) l.title = back.title.trim().slice(0, 200);
+  if (typeof back.claudeNote === 'string') l.claudeNote = back.claudeNote.slice(0, 2000);
 }
 
 // Puts a finished deck on the lesson. file: a File or Blob with a name; keepId: reuse stored bytes (going back to an older one);
