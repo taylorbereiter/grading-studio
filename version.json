@@ -1,22 +1,21 @@
 {
- "version": "1.28.56",
- "build": "15f41a08f7eb",
+ "version": "1.28.57",
+ "build": "9d29a95a2b82",
  "notes": [
-  "The pen tools stay on top of a video's buttons when the paper scrolls sideways, instead of being cut through by them.",
-  "Adding a video a student already has, however its link is written (or the same file picked from Google Drive), no longer adds a second copy. It says they already have it."
+  "Typed notes: a small × beside a time hides it, and the faint clock left in its place brings it back. Hide all times in the notes' ⋯ menu hides or shows them all. A hidden time is kept, and left out of Copy notes."
  ],
  "files": {
-  "index.html": "d8c2a139e65ea8750e37e183e862e496104d95879f5de1907eac57e3021e0002",
-  "planner.html": "4b312322d338293eba003a1bd613a198ac327fe5c4449f2b553683f93795c4ff"
+  "index.html": "8f95a4f62b73d15c72c9abbc3e2a4ece0ad1822fd4112d195d4dd62ec2719544",
+  "planner.html": "9eac6262b9efabc91f25714e66479d2f122c35ed5d5e362c201739a09a70adeb"
  },
  "langs": {
-  "lang/zh-Hant.js": "71b3e95310ab9a4dcc6824ff1f8c7ed6465bffb72c8de2abda507427dba46198",
-  "lang/zh-Hans.js": "e932e5c3290b3b2c208b70d8956a900b11d2864795368afe47ea28af79deae97",
-  "lang/es.js": "b5f88c1c6663849c24b4205f52462bd5eef4b3a94ac9788ac778e991be92fe1a",
-  "lang/fr.js": "0ddf478a4f83c558b0c111b42961612cdf7abe55878dd1b5cf8bda06883af996",
-  "lang/de.js": "5da1baf421ef4735d9f27f48950a30a439e9768f14bfece1bf6db093e5fb16f4",
-  "lang/pt-BR.js": "e58209f983f08183cdf6d49d6ccafb3deea889fe85c7ede2e6b7b09499c5ce68",
-  "lang/ja.js": "abbc107ee279f8a31de76f6183e806affe384f649f29d361c73cf1eba55c20f3",
-  "lang/ko.js": "214aff323afa2beb90b28dca84c6a958a4f6e50a05478939f2e63e9233add77e"
+  "lang/zh-Hant.js": "f0e87a69b4d88733ce010c265b8f95b5ee273c7c2552a17a22b57f3d5080b697",
+  "lang/zh-Hans.js": "8f8df879cf440638cdfee176c65967d6b35152a83932ff836b9f513028baa655",
+  "lang/es.js": "b49f186ceef2ee164b12a77cceb059d077f5e2ceafcceb292ba4b9b3991a9daf",
+  "lang/fr.js": "2fbe2f1a988cd612dd4e69e4c53cfe901fed3258f82816b86def4e53286f4a47",
+  "lang/de.js": "e85b99083fc17a7f9cd8c3571c7b1b17135f5f339cf52eb94a22dd51bb4ef1b1",
+  "lang/pt-BR.js": "8bb2c13d737321823ea0446979112753e3300e3f5d4b8477d911e476884b5aba",
+  "lang/ja.js": "871c11b70c3c26bf3f549631906745b910410b2621fb6b3c130125d6e92be9e7",
+  "lang/ko.js": "64d92d34629a6b0022c3a8e137bd34aa2e8024c494c6d7c85fb773db64c00f0f"
  }
 }
