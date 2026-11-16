@@ -1,4 +1,8 @@
 {
+  "1.28.56": [
+    "The pen tools stay on top of a video's buttons when the paper scrolls sideways, instead of being cut through by them.",
+    "Adding a video a student already has, however its link is written (or the same file picked from Google Drive), no longer adds a second copy. It says they already have it."
+  ],
   "1.28.55": [
     "A fix to the app's own checks for automatic Google renewal, so updates go out on time. Nothing changes in the app."
   ],

@@ -1,11 +1,12 @@
 {
- "version": "1.28.55",
- "build": "fe97fd4192a0",
+ "version": "1.28.56",
+ "build": "15f41a08f7eb",
  "notes": [
-  "A fix to the app's own checks for automatic Google renewal, so updates go out on time. Nothing changes in the app."
+  "The pen tools stay on top of a video's buttons when the paper scrolls sideways, instead of being cut through by them.",
+  "Adding a video a student already has, however its link is written (or the same file picked from Google Drive), no longer adds a second copy. It says they already have it."
  ],
  "files": {
-  "index.html": "8e0b439931da6572cc60d1caa75c3e2765a1fbf2abd3f23a3a38867d6494d7fe",
+  "index.html": "d8c2a139e65ea8750e37e183e862e496104d95879f5de1907eac57e3021e0002",
   "planner.html": "4b312322d338293eba003a1bd613a198ac327fe5c4449f2b553683f93795c4ff"
  },
  "langs": {
