@@ -29,23 +29,25 @@ function fbData(st, d) {
     total: scored ? g.total : null, max: g.outOf != null ? g.outOf : maxPoints(), pct: scored ? g.pct : null, status: [g.status ? tr(STATUS_LABEL[g.status]) : '', trySay].filter(Boolean).join(' · '), rows, comment, notes };
 }
 
+// Text cut into lines no wider than w, in that font. Typed notes' page (typednotes.js) wraps the same way.
+function fbWrap(ctx, t, font, w) {
+  ctx.font = font; const lines = [];
+  for (const para of String(t).split(/\n/)) {
+    let line = '';
+    for (let word of para.split(/\s+/).filter(Boolean)) {
+      while (ctx.measureText(word).width > w) { let k = word.length - 1; while (k > 1 && ctx.measureText(word.slice(0, k)).width > w) k--; if (line) { lines.push(line); line = ''; } lines.push(word.slice(0, k)); word = word.slice(k); }   // a word longer than the line
+      const t2 = line ? line + ' ' + word : word;
+      if (line && ctx.measureText(t2).width > w) { lines.push(line); line = word; } else line = t2;
+    }
+    lines.push(line);
+  }
+  while (lines.length > 1 && !lines[lines.length - 1]) lines.pop();
+  return lines;
+}
 // Lays the page out as blocks, each with a height and a way to draw itself at a y. off is how many feedback pages come before the paper.
 function fbBlocks(ctx, data, W, M, off) {
   const UI = 'Inter, ' + FONT, cw = W - 2 * M, out = [];
-  const wrap = (t, font, w) => {
-    ctx.font = font; const lines = [];
-    for (const para of String(t).split(/\n/)) {
-      let line = '';
-      for (let word of para.split(/\s+/).filter(Boolean)) {
-        while (ctx.measureText(word).width > w) { let k = word.length - 1; while (k > 1 && ctx.measureText(word.slice(0, k)).width > w) k--; if (line) { lines.push(line); line = ''; } lines.push(word.slice(0, k)); word = word.slice(k); }   // a word longer than the line
-        const t2 = line ? line + ' ' + word : word;
-        if (line && ctx.measureText(t2).width > w) { lines.push(line); line = word; } else line = t2;
-      }
-      lines.push(line);
-    }
-    while (lines.length > 1 && !lines[lines.length - 1]) lines.pop();
-    return lines;
-  };
+  const wrap = (t, font, w) => fbWrap(ctx, t, font, w);
   const text = (lines, font, color, x, y, lh) => { ctx.font = font; ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; lines.forEach((l, i) => ctx.fillText(l, x, y + i * lh)); };
   const cap = t => out.push({ h: 34, draw: y => { ctx.font = '600 8.5px ' + UI; ctx.fillStyle = FB_MUTED; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; try { ctx.letterSpacing = '0.9px'; } catch { } ctx.fillText(t.toUpperCase(), M, y + 26); try { ctx.letterSpacing = '0px'; } catch { } } });
 
@@ -139,7 +141,7 @@ function fbPages(blocks, top, bottom) {
 
 // Adds the feedback page(s) to a PDF being made, the size of the paper's first page when that is an ordinary sheet.
 // Returns how many pages it added.
-async function fbAddPages(out, data, W, H, dpi) {
+async function fbAddPages(out, data, W, H, dpi, more) {
   if (!(W >= 400 && H >= 500 && W <= 1300 && H <= 1300) || W > H) { W = 612; H = 792; }
   const M = Math.max(44, Math.round(W * 0.095)), top = M, bottom = H - M - 22, UI = 'Inter, ' + FONT, scale = dpi / 72;
   const probe = document.createElement('canvas').getContext('2d');
@@ -154,7 +156,7 @@ async function fbAddPages(out, data, W, H, dpi) {
     const mine = fbPages(fbBlocks(ctx, data, W, M, pages.length), top, bottom)[i] || [];
     let y = top; for (const b of mine) { b.draw(y); y += b.h; }
     ctx.font = '10px ' + UI; ctx.fillStyle = FB_MUTED; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-    ctx.fillText(tr(i === pages.length - 1 ? 'Your marked paper starts on the next page.' : 'Your feedback continues on the next page.'), M, H - M + 6);
+    ctx.fillText(tr(i === pages.length - 1 && !more ? 'Your marked paper starts on the next page.' : 'Your feedback continues on the next page.'), M, H - M + 6);
     out.addPage([W, H]).drawImage(await out.embedJpg(await canvasJpg(c, 0.92)), { x: 0, y: 0, width: W, height: H });
     c.width = c.height = 0;
   }

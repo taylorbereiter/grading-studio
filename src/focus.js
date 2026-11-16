@@ -75,7 +75,9 @@ const fcLogSet = L => store.set('gs.focus', L);
 // of clocks from moving the day.
 function fcMon(day) { const d = new Date(day + 'T12:00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoDay(d); }
 const fcToday = () => isoDay(Date.now());
-const fcDone = m => keptState(m).done;
+// Papers marked: a formative activity's feedback complete, else scored papers she worked on (src/merge.js workCounts marked). A grade
+// only typed in, with no marking, isn't one. A download saved before marked was counted falls back on its scores until its next save.
+const fcDone = m => { const st = keptState(m); return st.fm || m.marked == null ? st.done : Math.min(st.of, m.marked); };
 // Papers finished today: how far each download has come since the day began, never below nothing.
 function fcPapersOf(L) { let n = 0; for (const m of keptMeta.values()) if (m && m.id in L.base) n += Math.max(0, fcDone(m) - L.base[m.id]); return n; }
 // The same, by assignment (an id from the classes, or '' for papers that aren't filed under one), for the tracker.
@@ -84,6 +86,9 @@ function fcPapersBy(L) {
   for (const m of keptMeta.values()) if (m && m.id in L.base) { const n = Math.max(0, fcDone(m) - L.base[m.id]); if (!n) continue; const it = cardOfKept(m.id), k = it ? it.id : ''; o[k] = (o[k] || 0) + n; }
   return o;
 }
+// Where a download's count starts today: where it stands, or where the older copy it carried marks over from stood. A new copy is
+// listed before its first save, with no count yet, so the marks it carries from yesterday would otherwise all count as today's.
+function fcFrom(id, m) { const old = [...keptMeta.values()].find(o => o && o.newer === id); return Math.max(m ? fcDone(m) : 0, old ? fcDone(old) : 0); }
 // Called before a download's count changes (keepWork) and whenever the card or panel is drawn: a new day starts from where each
 // download stands, a download seen for the first time starts from where it is, and today's total is written down for the week.
 // id: a download about to be saved (keepWork). One not known yet is new: it starts from nothing, or from where the older copy it
@@ -93,8 +98,8 @@ function fcSeen(id) {
   if (!FC_ON || !keptRead) return;
   const L = fcLog(), today = fcToday(); let ch = false;
   if (L.day !== today) { L.day = today; L.base = {}; ch = true; }
-  if (id && !keptMeta.has(id) && !(id in L.base)) { const old = [...keptMeta.values()].find(m => m && m.newer === id); L.base[id] = old ? fcDone(old) : 0; ch = true; }
-  for (const m of keptMeta.values()) if (m && m.id && !(m.id in L.base)) { L.base[m.id] = fcDone(m); ch = true; }
+  if (id && !keptMeta.has(id) && !(id in L.base)) { L.base[id] = fcFrom(id, null); ch = true; }
+  for (const m of keptMeta.values()) if (m && m.id && !(m.id in L.base)) { L.base[m.id] = fcFrom(m.id, m); ch = true; }
   for (const k of Object.keys(L.base)) if (k !== id && !keptMeta.has(k)) { delete L.base[k]; ch = true; }
   const p = fcPapersOf(L), d = L.days[today] || {}, pa = fcPapersBy(L);
   if ((d.p || 0) !== p || JSON.stringify(d.pa || {}) !== JSON.stringify(pa)) { L.days[today] = { ...d, p, pa }; if (!p) delete L.days[today].pa; ch = true; }
@@ -103,6 +108,14 @@ function fcSeen(id) {
   if (L.carry && Date.now() - L.carry.t > 3 * FC_DAY) { delete L.carry; ch = true; }
   const old = L.add.length; L.add = L.add.filter(x => Date.now() - new Date(x.d + 'T12:00:00') <= FC_KEEP * FC_DAY); if (L.add.length !== old) ch = true;
   if (ch) fcLogSet(L);
+}
+// Work that comes in from somewhere else (the folder, with marks made on another computer, or a copy restored from an earlier day) wasn't
+// finished here today: the day's starting point moves with it, so only what is done here from now on counts. m0, m: the row before and after.
+function fcCame(id, m0, m) {
+  if (!FC_ON || !keptRead || !m) return;
+  const L = fcLog(); if (L.day !== fcToday() || !(id in L.base)) return;
+  const b = Math.max(0, L.base[id] + fcDone(m) - (m0 ? fcDone(m0) : 0));
+  if (b !== L.base[id]) { L.base[id] = b; fcLogSet(L); }
 }
 const fcPapersToday = () => { fcSeen(); return fcPapersOf(fcLog()); };
 const fcSecsToday = () => { const d = fcLog().days[fcToday()] || {}, r = fcRun(); return (d.s || 0) + (r && (r.st === 'run' || r.st === 'paused') ? fcBusy(r) : 0); };
@@ -648,4 +661,4 @@ $('#setPane').addEventListener('click', e => {
 
 FC_ON = true;
 fcSeen(); fcTickOn();
-window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcTick, focusOn, fcMon, fcToday });
+window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcCame, fcTick, focusOn, fcMon, fcToday });

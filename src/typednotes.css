@@ -1,0 +1,72 @@
+/* typed notes: a tab of the side pane (src/typednotes.js). A white page on the pane's grey, a small bar above it. */
+.tn{display:flex;flex-direction:column;min-height:100%}
+.tnbar{position:sticky;top:0;z-index:2;display:flex;flex-wrap:nowrap;align-items:center;gap:1px;padding:2px 0 6px;background:var(--bg);border-bottom:1px solid var(--line);overflow:visible}
+.tnb{display:inline-flex;align-items:center;justify-content:center;gap:3px;min-width:28px;height:28px;border:0;background:none;font:inherit;font-size:var(--text-small);color:var(--muted);padding:0 5px;border-radius:var(--corner-2);cursor:pointer;white-space:nowrap}
+.tnb:hover{background:var(--hover);color:var(--fg)}
+.tnb[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
+.tnb b,.tnb u,.tnb .tnit{font-size:var(--text-body);color:inherit}
+.tnb .tnit{font-family:Georgia,serif;font-style:italic}
+.tnsty{max-width:118px;color:var(--fg-2)}
+.tnsty span{overflow:hidden;text-overflow:ellipsis}
+.tnbar .km i,.tngut i{font-style:normal;font-weight:700}
+.tnbar .km i[data-k=p],.tngut i[data-k=p]{color:var(--ok)}
+.tnbar .km i[data-k=n],.tngut i[data-k=n]{color:var(--accent)}
+.tnbar .km i[data-k=q],.tngut i[data-k=q]{color:var(--muted)}
+.tnbar .km .tnh1{font-weight:650;font-size:var(--text-lead)}
+.tnbar .km .tnh2{font-weight:650}
+.tnsep{flex:none;width:1px;height:16px;background:var(--line);margin:0 4px}
+.tnr{display:inline-flex}
+.tnr2{display:none}
+.tnbar > .kmw:last-child{margin-left:auto}
+.tn .km [aria-checked=true]::before{content:'✓ ';color:var(--accent)}
+/* a narrow pane: Mark and Time go into the ⋯ rather than wrapping */
+@container (max-width:400px){.tnr{display:none}.tnr2{display:block}.tnsty{max-width:84px}}
+.tnhint{margin:8px 0 0;font-size:var(--text-small)}
+.tnhint .link{font-size:inherit}
+/* the page */
+.tnpage{position:relative;margin:10px 0 18px;padding:28px 26px 40px 26px;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-2);box-shadow:var(--shadow)}
+.tned{outline:0;min-height:12em;white-space:pre-wrap;overflow-wrap:anywhere;font-family:Inter,var(--f-body);font-size:var(--text-body);line-height:1.55;color:var(--fg);counter-reset:tn1 tn2}
+.tnp{margin:0 0 6px}
+.tnp[data-k=h]{font-size:var(--text-heading);font-weight:650;line-height:1.3;margin:16px 0 6px}
+.tnp[data-y=h2]{font-size:var(--text-lead);font-weight:650;line-height:1.35;margin:12px 0 4px}
+.tnp:first-child{margin-top:0}
+.tnp[data-y=ul],.tnp[data-y=ol]{position:relative;padding-left:1.6em;margin-bottom:2px}
+.tnp[data-d="2"]{padding-left:3.2em}
+.tnp[data-y=ul]::before,.tnp[data-y=ol]::before{position:absolute;left:.2em;color:var(--fg-2)}
+.tnp[data-d="2"]::before{left:1.8em}
+.tnp[data-y=ul]::before{content:'•'}
+.tnp[data-y=ul][data-d="2"]::before{content:'◦'}
+.tnp:not([data-y=ol]):not([data-d="2"]){counter-reset:tn1 tn2}
+.tnp[data-y=ol]:not([data-d="2"]){counter-increment:tn1;counter-reset:tn2}
+.tnp[data-y=ol][data-d="2"]{counter-increment:tn2}
+.tnp[data-y=ol]::before{content:counter(tn1) '.'}
+.tnp[data-y=ol][data-d="2"]::before{content:counter(tn2) '.'}
+.tned mark{background:var(--gold-soft);color:inherit;border-radius:var(--corner-1)}
+.tnph{position:absolute;left:26px;top:28px;right:26px;color:var(--faint);font-size:var(--text-body);line-height:1.55;pointer-events:none}
+/* the margin: a paragraph's time and its mark */
+.tngut{position:absolute;left:0;top:0;width:24px}
+.tnpage[data-g=m]{padding-left:34px}
+.tnpage[data-g=m] .tngut{width:30px}
+.tnpage[data-g=t]{padding-left:60px}
+.tnpage[data-g=t] .tngut{width:56px}
+.tng{position:absolute;right:4px;display:flex;align-items:center;gap:3px;height:calc(var(--text-body) * 1.55)}
+.tngut i{font-size:var(--text-small);width:12px;text-align:center}
+.tnchip{border:0;background:none;font:inherit;font-size:var(--text-caption);color:var(--muted);font-variant-numeric:tabular-nums;padding:1px 3px;border-radius:var(--corner-1);cursor:pointer;user-select:none}
+.tnchip:hover{background:var(--hover);color:var(--accent)}
+/* the line at the foot: the Timer for a talk given live, and whether the notes go back with the paper */
+.tnfoot{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;margin-top:auto;padding:6px 2px;border-top:1px solid var(--line);background:var(--bg)}
+.tnclock{font-variant-numeric:tabular-nums}
+.tnback{display:flex;align-items:center;gap:8px;flex:1;min-width:0;border:0;background:none;font:inherit;font-size:var(--text-small);color:var(--muted);text-align:left;padding:4px 2px;cursor:pointer}
+.tnback i{flex:none;width:8px;height:8px;border-radius:var(--corner-round);background:var(--faint)}
+.tnback[data-on=true]{color:var(--accent)}
+.tnback[data-on=true] i{background:var(--accent)}
+.tnback:hover span{text-decoration:underline}
+/* in the Mark menu the glyphs already carry a ✓, so the mark in hand is shown by its background */
+.tn .km [data-tnmk][aria-checked=true]::before{content:none}
+.tn .km [data-tnmk][aria-checked=true]{background:var(--accent-soft)}
+/* Text size for the student: three choices that open under it, set in a little; the foot names a size that isn't Standard */
+.tn .km .tnszi{padding-left:28px}
+.tnback .tnszw::before{content:'· '}
+.tnback .tnszw{flex:none}
+.tn .km [data-tnm=size]::after{content:' ▾';color:var(--muted)}
+.tn .km [data-tnm=size][aria-expanded=true]::after{content:' ▴'}

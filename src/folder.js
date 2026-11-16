@@ -142,7 +142,7 @@ async function applyRow(row, src) {
     { const v = tabStamp(id, row.work.t); if (batch && batch.id === id) batch.seen = v; }   // other tabs are told, and this one knows it was itself
     store.del(id); const idx = store.get('gs.batches', {}); if (id in idx) { delete idx[id]; store.set('gs.batches', idx); }   // the quick copy is out of date now
   }
-  if (m && JSON.stringify(m) !== JSON.stringify(row.ma)) { await kdo('meta', 'readwrite', o => o.put(m, id)); keptMeta.set(id, m); }
+  if (m && JSON.stringify(m) !== JSON.stringify(row.ma)) { await kdo('meta', 'readwrite', o => o.put(m, id)); if (typeof fcCame === 'function') fcCame(id, keptMeta.get(id), m); keptMeta.set(id, m); }
 }
 
 /* the folder itself */
@@ -606,4 +606,4 @@ async function folderGoBackAsk(name, when) {
   catch (er) { console.error(er); tabsOver('done'); toast('That didn’t finish. Your work may be partly back: use Put back on the newest safety copy under “Saving and carrying”.', 15000); }
 }
 folderBoot();
-Object.assign(window.__gs, { folderUse, folderUnlink, folderResume, folderReconcile, folderState: () => ({ state: fld.state, name: fld.name, at: fld.at, asks: fld.asks, root: fld.root, picked: fld.picked }), folderWait: async () => { for (let i = 0; i < 400; i++) { if (!fld.run && !fld.sync && !fld.work.size && !fld.lib && !fld.gone.size) return fld.state; await new Promise(r => setTimeout(r, 25)); } return 'busy'; }, folderSnapshot, snapList, folderGoBack, carryParts: { mergeWork, mergeStates, mergeLib, recHash, stampData, revsOf } });
+Object.assign(window.__gs, { folderUse, folderUnlink, folderResume, folderReconcile, folderState: () => ({ state: fld.state, name: fld.name, at: fld.at, asks: fld.asks, root: fld.root, picked: fld.picked }), folderWait: async () => { for (let i = 0; i < 400; i++) { if (!fld.run && !fld.sync && !fld.work.size && !fld.lib && !fld.gone.size) return fld.state; await new Promise(r => setTimeout(r, 25)); } return 'busy'; }, folderSnapshot, snapList, folderGoBack, carryParts: { mergeWork, mergeStates, mergeLib, recHash, stampData, revsOf, workCounts } });

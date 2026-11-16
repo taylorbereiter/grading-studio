@@ -16,7 +16,7 @@ const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensiti
 
 /* ---------------- pdf.js worker (inlined, works from file://) ---------------- */
 const workerReady = (async () => {
-  const src = $('#pdfWorkerSrc').textContent;
+  const el = $('#pdfWorkerSrc'), src = el.dataset.z ? fflate.strFromU8(fflate.inflateSync(unpack85(el.textContent))) : el.textContent;   // packed by the build (pack85)
   let url = null;
   try {
     url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));

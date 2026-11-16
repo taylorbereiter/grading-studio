@@ -22,6 +22,8 @@ const spBodyOf = pg => (pg && pg.wrap && pg.wrap.closest('.spb')) || null;
 // What can go in the pane for this student. A file is only offered when something else is left for the main column.
 function spTabs(st) {
   const out = [], seq = fileSeq(st), vids = st.files.filter(f => f.kind === 'link' || f.kind === 'media');
+  // The tools first, Type notes, Rubric, Timer, then the student's files.
+  for (const k of ['typed', 'rubric', 'timer']) { const t = SP_TOOLS.find(x => x.key === k); if (t && t.ok(st)) out.push({ key: t.key, kind: t.key, label: t.label, tool: t }); }
   if (vids.length + seq.length > 1) {
     for (const f of vids) out.push({ key: 'file:' + f.path, kind: 'video', label: f.kind === 'link' ? linkTitle(f) : f.name });
     for (const it of seq) {
@@ -30,18 +32,19 @@ function spTabs(st) {
       out.push({ key: spDocKey(it.d), kind: f && !f.virtual && isNotes(f.data) ? 'notes' : 'f:' + it.d.name, label: it.d.name });
     }
   }
-  for (const t of SP_TOOLS) if (t.ok(st)) out.push({ key: t.key, kind: t.key, label: t.label, tool: t });
   return out;
 }
 const spHasVideo = tabs => tabs.some(t => t.kind === 'video') && tabs.some(t => t.kind !== 'video' && !t.tool);
-function spWanted(tabs) {
+// A student whose only work is a video: the video takes the main column, and the pane opens on Type notes beside it.
+const spVidOnly = st => !!st && st.files.some(f => f.kind === 'link' || f.kind === 'media') && !fileSeq(st).length;
+function spWanted(tabs, st) {
   const c = spConf();
   if (!tabs.length) return false;
-  return !!c.on || (!c.noVid && spHasVideo(tabs));
+  return !!c.on || (!c.noVid && (spHasVideo(tabs) || (spVidOnly(st) && tabs.some(t => t.kind === 'typed'))));
 }
-function spChoose(tabs) {
+function spChoose(tabs, st) {
   const c = spConf();
-  return tabs.find(t => t.kind === c.tab) || tabs.find(t => t.kind === 'video') || tabs.find(t => t.tool) || tabs[0];
+  return (spVidOnly(st) && tabs.find(t => t.kind === 'typed')) || tabs.find(t => t.kind === c.tab) || tabs.find(t => t.kind === 'video') || tabs.find(t => t.kind === 'rubric') || tabs[0];
 }
 
 // Called as a student's paper starts to be drawn: the button in the student's bar, and the pane if it is wanted.
@@ -49,7 +52,7 @@ function spReset(st) {
   spNow = { st, tabs: spTabs(st), key: '', shown: false, seq: 0 };
   const rb = $('#paper #readBtn');
   if (rb && spNow.tabs.length) rb.insertAdjacentHTML('beforebegin', '<button class="btn sm spbtn" id="spBtn" aria-pressed="false" title="Side by side: keep a video, the rubric or another file beside the paper ( B )">' + SP_ICON + '<span>Side by side</span></button>');
-  if (spWanted(spNow.tabs)) { spNow.shown = true; spNow.key = spChoose(spNow.tabs).key; spBuild(); spPaint(); }
+  if (spWanted(spNow.tabs, st)) { spNow.shown = true; spNow.key = spChoose(spNow.tabs, st).key; spBuild(); spPaint(); }
   spLay();
 }
 function spBuild() {
@@ -67,6 +70,7 @@ function spBuild() {
 function spPaint() {
   const tabs = $('#spTabs'), body = $('#spBody'); if (!tabs) return;
   tabs.innerHTML = spNow.tabs.map(t => '<button class="sptab" role="tab" aria-selected="' + (t.key === spNow.key) + '" data-sptab="' + esc(t.key) + '"' + (t.tool ? '' : ' data-raw') + '>' + esc(t.tool ? t.label : fileShown(spNow.st, t.label).replace(/\.(pdf|docx?|docm|txt|rtf|jpe?g|png|heic|mp4|mov|m4a|mp3|webm)$/i, '')) + '</button>').join('');
+  const sel = tabs.querySelector('[aria-selected="true"]'); if (sel) tabs.scrollLeft = Math.max(0, Math.min(tabs.scrollLeft, sel.offsetLeft - 4), sel.offsetLeft + sel.offsetWidth - tabs.clientWidth + 4);   // the tab shown is never off the end
   const t = spNow.tabs.find(x => x.key === spNow.key);
   let host = body.querySelector(':scope > .sptool');
   if (t && t.tool) {
@@ -122,7 +126,7 @@ function spOpen(key) {
   if (!spNow.tabs.length) return toast('There is nothing to show beside this paper yet. Add a video, a notes page or a rubric first.');
   spConfSet({ on: true, noVid: null });
   spNow.shown = true; spBuild();
-  spPick(key && spNow.tabs.some(t => t.key === key) ? key : (spNow.tabs.find(t => t.key === spNow.key) || spChoose(spNow.tabs)).key, !!key);
+  spPick(key && spNow.tabs.some(t => t.key === key) ? key : (spNow.tabs.find(t => t.key === spNow.key) || spChoose(spNow.tabs, spNow.st)).key, !!key);
   spLay();
 }
 function spClose() {
@@ -226,10 +230,16 @@ const spTalk = () => { const t = Array.isArray(setup.talk) ? setup.talk : []; re
 function spTalkSet(i, v) {
   const t = spTalk(); t[i] = v > 0 && isFinite(v) ? Math.min(600, Math.round(v * 2) / 2) : null;
   if (t[0] == null && t[1] == null) delete setup.talk; else setup.talk = t;
+  spSetupKeep();
+}
+// The assignment's setup kept after a change made here (the asked-for length, the headings typed notes start with).
+function spSetupKeep() {
   store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined });
   if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); }
   saveSoon();
 }
+// Start or pause a student's clock. Only one runs at a time.
+function spClockGo(c) { if (c.at) { c.ms += Date.now() - c.at; c.at = 0; } else { for (const o of spClocks.values()) if (o.at) { o.ms += Date.now() - o.at; o.at = 0; } c.at = Date.now(); } }
 let spTickIv = 0;
 function spTimerShow(host, st) {
   const box = host.querySelector('.sptimer'); if (!box) return;
@@ -259,11 +269,12 @@ function spTimerDraw(host, st) {
     spTimerShow(h, batch.students[cur]);
   }, 250);
 }
-SP_TOOLS.push({ key: 'timer', label: 'Timer', ok: st => st.files.some(f => !f.virtual && f.data && isNotes(f.data)) && !st.files.some(f => f.kind === 'link' || f.kind === 'media'), draw: spTimerDraw });
+// The Timer, for a talk given live: a notes page and no video, or a clock already started from Type notes.
+SP_TOOLS.push({ key: 'timer', label: 'Timer', ok: st => !st.files.some(f => f.kind === 'link' || f.kind === 'media') && (st.files.some(f => !f.virtual && f.data && isNotes(f.data)) || spClockMs(spClockOf(st)) > 0), draw: spTimerDraw });
 $('#paper').addEventListener('click', e => {
   const box = e.target.closest('.sptimer'); if (!box || !batch) return;
   const st = batch.students[cur], c = spClockOf(st);
-  if (e.target.closest('[data-sptgo]')) { if (c.at) { c.ms += Date.now() - c.at; c.at = 0; } else { for (const o of spClocks.values()) if (o.at) { o.ms += Date.now() - o.at; o.at = 0; } c.at = Date.now(); } }
+  if (e.target.closest('[data-sptgo]')) spClockGo(c);
   else if (e.target.closest('[data-sptreset]')) { c.ms = 0; c.at = 0; }
   else if (e.target.closest('[data-sptnote]')) { addStamp(st, spClockMs(c) / 1000); return; }
   else return;

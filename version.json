@@ -1,21 +1,23 @@
 {
- "version": "1.28.32",
- "build": "16df25cdd1b6",
+ "version": "1.28.36",
+ "build": "7b4d3f31d47b",
  "notes": [
-  "When the Focus timer is up, add a few more minutes (+2, +5 or +10) to the same session. Stop early and only the time that ran is counted."
+  "Type a percent as a score and it stays the score. On a points paper, type 73% in the score box. With a rubric, choose Score as a percent from the score's ⋯ menu. The points that match on the assignment's scale show beside it, and moving rubric rows later doesn't change it.",
+  "In the gradebook, type 73% in a points column, or 8 + 1 to give one score a point of extra credit.",
+  "An assignment with no papers can go straight to typing scores: Add papers…, then No papers: just type the scores…. The class gradebook opens with the first student's box ready."
  ],
  "files": {
-  "index.html": "7435ad52739ebdd3041dafddb85467086fbe0a2cb4333aab9eea3170aefae595",
-  "planner.html": "eceff42045debf0aa0a5c046297d12106bb7626e4078c8053115eb7e0acf5d33"
+  "index.html": "b4addf56e2044d3f49b0de519922cf6dc134857ec6505d37b7de69d2e0aa3ebf",
+  "planner.html": "703db0010a82aecbc78633a28f340f89b28159e1ed67c3a94b233fd96ba5bffe"
  },
  "langs": {
-  "lang/zh-Hant.js": "505cee3e101d813a280f4ad0d55a4e7dc9d5d79570082b49bd262f1da1eb70bb",
-  "lang/zh-Hans.js": "548dc4122fbe77c453746a4a3a6441d6cb3dacf08fb86f2927f521a82c769965",
-  "lang/es.js": "53e9c52ca7f1339bfea3bf8386262b8dfa10722d215390d05ca91ecc364b4fbe",
-  "lang/fr.js": "e81d1131b1f3c6b08500f51b89ced54c4d065d47eef80554c09b6fd54f188977",
-  "lang/de.js": "fd286b6612ec4d14a46edd2e5dc77c43529cf489cb7cde0c6d6540ffabd9bac6",
-  "lang/pt-BR.js": "52697d7275e5545e5670e40101c562900f32f44a0583de612ae3d3d071a07243",
-  "lang/ja.js": "0f7fc38677a8953a2be75e30a250f121103bc47c158070b61fed5b886d1a74f9",
-  "lang/ko.js": "6c421de2aba07320e1767780372a33e77e63913a6b7053040105e29547330e6b"
+  "lang/zh-Hant.js": "10c548640fa6172fba70eb97c5dc57ef5e7583305b2d4b342424d46eca0b1ff2",
+  "lang/zh-Hans.js": "7818a52bdcf350340b4aba5e933e73b84053be702a83e98f826100fdead8b978",
+  "lang/es.js": "a2f44a91c49e005c92800047072a8bab60962adaa3a597f00bed3fe36b1c32e7",
+  "lang/fr.js": "0e6bbd4ea0f0bda0e01a0bb41058ef8292a962ddd53bfe55a50f463f86614b8d",
+  "lang/de.js": "1f1ee28618182d0d4407dd4a93fcff981b6e1fdb026a1adaa9252f575fa75f64",
+  "lang/pt-BR.js": "5f079052e5c05a3d8e13f0f0fd45c69ed56b15cf7606e8ba68e2f9912e74237d",
+  "lang/ja.js": "f32acf3026f0ce8b1da34dcfc5b41fd465f9b90824226dcbb2d7fae7fcd0e8c1",
+  "lang/ko.js": "ef5f513fb769cfbc29f00e145104757ec1dbc44ea311686d82fc995b84546313"
  }
 }

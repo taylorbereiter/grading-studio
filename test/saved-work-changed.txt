@@ -4,3 +4,6 @@ localStorage:gs.focus
 # gsp.timeCount is new: the two time-tracker settings ({ on, idle }) copied from lib.me.focus for the Planner, which reads only
 # its own keys. Older pages never read it, and it is written again from lib.me.focus on every load.
 localStorage:gsp.timeCount
+# Papers marked, for Focus. A download's row in the list now also counts marked: scored papers with rubric rows, ink or a comment,
+# so a grade only typed in isn't counted as a paper marked today. Numbers only; older pages ignore it.
+grading-studio-keep/meta/*

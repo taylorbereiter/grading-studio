@@ -528,9 +528,9 @@ async function exsSave() {
 /* the Examples tab: between Insights and Return, once the assignment has an example */
 function exTabSay() {
   const a = $('#examplesTab'); if (!a) return;
-  let n = 0; try { n = batch ? exOfWork(batch.id).length : 0; } catch { return; }   // asked before this file has run
+  let n = 0, tw = 0; try { n = batch ? exOfWork(batch.id).length : 0; tw = batch ? lkExamples().length : 0; } catch { return; }   // asked before this file has run
   const here = batch && routeNow().v === 'a' && routeNow().tab === 'examples';
-  a.hidden = !n && !here;
+  a.hidden = !n && !tw && !here;
   const c = a.querySelector('.atn'); if (c) { c.textContent = n || ''; c.hidden = !n; }
 }
 // Answers by question, in the quiz's order; then whole papers and parts of pages.
@@ -541,39 +541,45 @@ function exSorted(list) {
   return [...ans, ...rest];
 }
 const exCanCopy = () => !!(navigator.clipboard && navigator.clipboard.write && window.ClipboardItem);
-function exCard(r) {
+function exCard(r, from) {
   const chip = r.kind === 'answer' && r.q && r.q.v != null ? fmtNum(r.q.v) + ' of ' + fmtNum(r.q.pts) : r.kind === 'paper' ? r.pages.length + (r.pages.length === 1 ? ' page' : ' pages') : '';
   const who = r.from && !anonOn() ? '<p class="exwho"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Only you see this: ' + esc(r.from.key) + '</p>' : '';
   return '<div class="excard ' + r.kind + '" data-exid="' + esc(r.id) + '"><button class="exthumb" data-exopen title="Show to the class"><img alt="' + esc(exLabel(r)) + '" data-expic="' + esc(r.id) + '"></button>' +
-    '<div class="exct"><span class="exstar" aria-hidden="true">★</span><b>' + esc(exLabel(r)) + '</b>' + (r.row ? '<span class="exrowtag">' + esc(r.row) + '</span>' : chip ? '<span class="exchip">' + esc(chip) + '</span>' : '') + '</div>' +
+    '<div class="exct"><span class="exstar" aria-hidden="true">★</span><b>' + esc(exLabel(r)) + '</b>' + (r.row ? '<span class="exrowtag">' + esc(r.row) + '</span>' : chip ? '<span class="exchip">' + esc(chip) + '</span>' : '') + '</div>' + (from ? '<p class="exfrom">' + lkSvg() + '<span>From</span> <b data-raw>' + esc(from) + '</b></p>' : '') +
     '<p class="exwhy">' + (r.why ? esc(r.why) : '<button class="link exadd" data-exwhy>Add why it’s strong</button>') + '</p>' +
     '<p class="extags">' + exTagChips(r) + '</p>' +
     '<div class="exacts">' + (r.kind !== 'paper' && exCanCopy() ? '<button class="btn sm" data-excopy>Copy picture</button>' : '') + '<button class="btn sm" data-exdl>Download</button>' +
       kmWrap('⋯', 'class="icon kdots" aria-label="More for this example" title="More for this example"', '<button class="mitem" data-exopen>Show to the class</button><button class="mitem" data-exwhy>' + (r.why ? 'Change why it’s strong' : 'Add why it’s strong') + '</button><button class="mitem" data-extags>' + (exTags(r).length ? 'Change tags' : 'Add tags') + '</button><button class="mitem" data-exdel>Delete</button>') + '</div>' + who + '</div>';
 }
+// Examples from the same assignment in a linked class (linked.js) show only after the button is pressed, for the assignment open now.
+let exLkOn = '';
+const exTw = () => exLkOn === batch.id ? exSorted(lkExamples()) : [];
 function openExamples() {
   if (!batch) return;
-  const list = exSorted(exOfWork(batch.id)), ans = list.filter(r => r.kind === 'answer'), rest = list.filter(r => r.kind !== 'answer');
+  const list = exSorted(exOfWork(batch.id)), ans = list.filter(r => r.kind === 'answer'), rest = list.filter(r => r.kind !== 'answer'), all = lkExamples(), tw = exTw();
   const qs = quizOn() ? batch.quiz.qs : [], none = qs.map((q, i) => ({ q, i })).filter(x => !ans.some(r => r.q && r.q.id === x.q.id)).map(x => quizLabel(x.q, x.i));
   const and = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
   const noneCard = qs.length && none.length ? '<div class="excard exnone"><p>' + (none.length === 1 ? 'Question ' + esc(none[0]) + ' has' : 'Questions ' + esc(and(none)) + ' have') + ' no example yet.<br>Press ☆ on an answer in Quick mark.</p></div>' : '';
   tabNext('examples');
   openDlg('<div class="bh"><h2>Examples</h2><span class="muted exsub">Strong work from this assignment, with no names on it.</span><span class="sp"></span>' +
-    (list.length ? '<button class="btn" data-exsheet><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download as a sheet</button><button class="btn primary" data-exshow><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M7 5l12 7-12 7z"/></svg>Show to the class</button>' : '') +
+    (list.length || tw.length ? '<button class="btn" data-exsheet><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download as a sheet</button><button class="btn primary" data-exshow><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M7 5l12 7-12 7z"/></svg>Show to the class</button>' : '') +
     '<button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb exbb" id="exBody">' +
-      (!list.length ? '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, pick <b>Use as an example</b> in a paper’s ⋯ menu, or take a screenshot (S) and save it as a strong example. Picking one is always up to you.</p></div>' : '') +
-      (ans.length || noneCard ? '<h3 class="exsec">Answers, by question</h3><div class="exgrid">' + ans.map(exCard).join('') + noneCard + '</div>' : '') +
-      (rest.length ? '<h3 class="exsec">' + (rest.some(r => r.kind === 'shot') ? 'Whole papers, parts of pages and screenshots' : 'Whole papers and parts of pages') + '</h3><div class="exgrid">' + rest.map(exCard).join('') + '</div>' : '') +
+      (!list.length && !all.length ? '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, pick <b>Use as an example</b> in a paper’s ⋯ menu, or take a screenshot (S) and save it as a strong example. Picking one is always up to you.</p></div>' : '') +
+      (ans.length || noneCard ? '<h3 class="exsec">Answers, by question</h3><div class="exgrid">' + ans.map(r => exCard(r)).join('') + noneCard + '</div>' : '') +
+      (rest.length ? '<h3 class="exsec">' + (rest.some(r => r.kind === 'shot') ? 'Whole papers, parts of pages and screenshots' : 'Whole papers and parts of pages') + '</h3><div class="exgrid">' + rest.map(r => exCard(r)).join('') + '</div>' : '') +
+      (all.length && !tw.length ? '<h3 class="exsec">' + lkSvg() + ' From linked classes</h3><button class="btn" data-exlk><span>Show ' + all.length + (all.length === 1 ? ' example' : ' examples') + ' from <b data-raw>' + esc([...new Set(all.map(r => exClassName(r.cls)))].join(', ')) + '</b></span></button>' : '') +
+      (tw.length ? '<h3 class="exsec">' + lkSvg() + ' From linked classes <button class="link" data-exlk>Hide</button></h3><p class="muted exsub2">The same assignment in another class. Each card says which class it came from.</p><div class="exgrid">' + tw.map(r => exCard(r, exClassName(r.cls))).join('') + '</div>' : '') +
     '</div>');
   const box = $('#dlgBox');
   box.classList.add('exbox-tab');
   for (const im of box.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
   box.onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
-    if (e.target.closest('[data-exshow]')) return exShow(exSorted(exOfWork(batch.id)), 0);
-    if (e.target.closest('[data-exsheet]')) return exSheet(exSorted(exOfWork(batch.id)));
-    exCardAct(e, () => exSorted(exOfWork(batch.id)), () => { if (dlgPage === 'examples') openExamples(); });
+    if (e.target.closest('[data-exlk]')) { exLkOn = exLkOn === batch.id ? '' : batch.id; return openExamples(); }
+    if (e.target.closest('[data-exshow]')) return exShow(exSorted(exOfWork(batch.id)).concat(exTw()), 0);
+    if (e.target.closest('[data-exsheet]')) return exSheet(exSorted(exOfWork(batch.id)).concat(exTw()));
+    exCardAct(e, () => exSorted(exOfWork(batch.id)).concat(exTw()), () => { if (dlgPage === 'examples') openExamples(); });
   };
 }
 // A click on an example's card, on the tab or the page. list() gives the examples Show to the class steps through; after() draws again once one is deleted.
@@ -873,7 +879,7 @@ function exPageRender() {
       (filtered ? '<button class="link" data-exfclear>Clear</button>' : '') + '<span class="sp"></span><span class="muted exn">' + list.length + (list.length === 1 ? ' example' : ' examples') + '</span>' +
       (list.length ? '<button class="btn sm" data-exsheet>Download as a sheet</button>' : '') + (list.length ? '<button class="btn sm primary" data-exshow>Show to the class</button>' : '') + '</div>' +
       (!list.length ? '<p class="muted exnone2">None match. <button class="link" data-exfclear>Clear the filters</button></p>' : '') +
-      groups.map(g => '<section class="exgroup"><h2 class="exgh">' + esc(g[0].title || 'Assignment') + ' <span class="muted">· ' + esc(exClassName(g[0].cls)) + ' · ' + esc(new Date(Math.max(...g.map(r => r.t))).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })) + '</span></h2><div class="exgrid">' + g.map(exCard).join('') + '</div></section>').join('');
+      groups.map(g => '<section class="exgroup"><h2 class="exgh">' + esc(g[0].title || 'Assignment') + ' <span class="muted">· ' + esc(exClassName(g[0].cls)) + ' · ' + esc(new Date(Math.max(...g.map(r => r.t))).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })) + '</span></h2><div class="exgrid">' + g.map(r => exCard(r)).join('') + '</div></section>').join('');
   for (const im of el.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
   if (typing) { const f = $('#exFind'); if (f) { f.focus(); try { f.setSelectionRange(at, at); } catch {} } }
 }
