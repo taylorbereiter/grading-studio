@@ -1,23 +1,23 @@
 {
- "version": "1.28.27",
- "build": "cdd4ec38e8d0",
+ "version": "1.28.28",
+ "build": "ad599ab686e7",
  "notes": [
-  "Planning your grading. Each set shows about how long its papers will take at your own pace: on the Focus card, on the assignment’s card, in the week in To do, and under the date when you set when work is due. The Focus card also offers a free period between your classes, picks up the set you were last on, and can start small with Just 3 papers or the shortest papers first.",
-  "A goal for each focus session: a few papers, the whole set, a to-do or a few words of your own, suggested from your pace. The timer shows how far along you are, the end of the session says whether you got there, and what is left goes into your next session on the same work. Today also counts your sessions.",
-  "Your grading goal can be for a day or a week, and a daily goal for some days only. A set can have a day to finish it by, with the papers a day that takes. On the day you choose, Today shows a look back at the week. Settings, Focus and goals switches each of these on or off."
+  "A simpler Focus card on Today: one suggestion with a blue Start and Just one paper, the session’s goal in one line, and this week in one line. Change picks another set or a to-do; More has the lengths, Just 3 papers, the goal, Finish by and shortest first.",
+  "How long a set will take now comes only from that set’s own papers: no time before the first one, a rough guess after one or two, and all the time spent on it counts. Time with nothing done for a few minutes no longer counts in a focus session on papers.",
+  "Away from the marking screen, Ctrl Z now takes back a long run of changes a few seconds at a time, and the note it shows has a Redo button."
  ],
  "files": {
-  "index.html": "1dd5bfa959882745b84484a78323851ce20c7f93427551e396f20c98d90efe2f",
-  "planner.html": "336cce553ae53dd9dede8f644efd6fab8c292e09be0ad60f6a8ffd2afe18869a"
+  "index.html": "af3cbb8a60da1f16f8e9e56690cd9fa41a3a5793cd3b4db058530619da333431",
+  "planner.html": "75236c2a5c40dd73b3bd2c6c2c5530c1672d365953d2f2662a5ea0a366f959a5"
  },
  "langs": {
-  "lang/zh-Hant.js": "99e0aef17d1fc2ca62d71f744406c0ad8e183a9277835ff772baed5bf23bf542",
-  "lang/zh-Hans.js": "23825ad27c9ced428284dfeaf218896a63aebc6bcd5f7544a8f6892f213f6a23",
-  "lang/es.js": "8084cd2a9cf151df452794c63b6b3644978d74f59160e28b025c36df67854350",
-  "lang/fr.js": "274e800047ba963e362c91fb3c28137110219b1787e268c6137b020dd14c909b",
-  "lang/de.js": "e02b0921779bb3e6b95173f3d1533ded182ca6524ec81e6313a8123330ae01fa",
-  "lang/pt-BR.js": "e690043ad1be9c2bab3c0c6d47a69281660f86f2f8e6d74c8e31a15594009ac2",
-  "lang/ja.js": "0b31e474d09a9e7ff45a28564e3d3810a4e9576d31c3a94d15cd116f305e9af9",
-  "lang/ko.js": "1c18c6af95bed042c140ec619f1f5f7e55ac64913488e0c613cd9839c45b74d0"
+  "lang/zh-Hant.js": "9b55031920366b10b3cf2781cbd7d18b4dbc8ba131cf604d00b1a6ec89068f51",
+  "lang/zh-Hans.js": "57133fe085ee3567ee5b5c19e1e7f23dc6a97443b58cbf43e22c70bb67f0dcf4",
+  "lang/es.js": "8a299ed14ddc8ceb8294d0a640f07e299340ca3f9f758c18acfe3798b1bd62ed",
+  "lang/fr.js": "2bb1ae755a6a748d069e5e5389ee9cb0e424635737239113768f98940d8af451",
+  "lang/de.js": "f3543cb6ed88e9d4b85f43f96e23269f325282ae9219ca7e2f6db06a07a5062c",
+  "lang/pt-BR.js": "a11eb6e09be5ecd9c675d4f1fe77065f319360f193244ae9476e58b42042e18a",
+  "lang/ja.js": "f664bfe45de82a735b34fbaa347b716553422329ef594ab86c49063cad4c4fce",
+  "lang/ko.js": "8393ee7894c3e85ef29ac73fd265528d3b1c7ea3e50d3fdc66021b9ed9056e46"
  }
 }

@@ -269,7 +269,8 @@ test('the focus timer, its card on Today and its Settings leave nothing in Engli
   await at('one paper done', () => run('r.got = 1; r.st = "run";'));
   await page.click('#fcPanel [data-fcstop]'); await page.click('#fcPanel [data-fcclose]');
   // a to-do as the work, with nothing set, and the goal reached
-  await goTo(page, '#/'); await page.waitForSelector('#fcCard [data-fcwork]');
+  await goTo(page, '#/'); await page.waitForSelector('#fcCard [data-fcchg]');
+  await at('Today, the Focus card with the list of work and More open', async () => { await page.click('#fcCard [data-fcchg]'); await page.click('#fcCard [data-fcmo]'); await page.waitForSelector('#fcCard .fcmorebox'); });
   await at('Today, the Focus card on nothing in particular', () => page.select('#fcCard [data-fcwork]', ''));
   await at('Settings, Focus, a goal already reached', async () => { await goTo(page, '#/settings/focus'); await page.waitForSelector('#fcGoalN'); await page.$eval('#fcGoalN', e => { e.value = 1; e.dispatchEvent(new Event('change', { bubbles: true })); }); });
   await at('Today, the goal reached', async () => { await goTo(page, '#/'); await page.waitForSelector('#fcCard .fcmet'); });
@@ -330,8 +331,8 @@ test('planning your grading, on Today, the Focus card, a class page and Settings
     await new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put({ classes: cl, daysOff: [] }, 'setup'); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
     db.close(); return true;
   });
-  if (free) { await page.reload(); await page.waitForSelector('#fcCard .fcnote'); }
-  await page.waitForSelector('#lbCard .lbk'); await page.waitForSelector('#fcCard .fcback'); await pause(300);
+  if (free) { await page.reload(); await page.waitForSelector('#fcCard .sugwhy .free'); }
+  await page.waitForSelector('#lbCard .lbk'); await page.waitForSelector('#fcCard .sugwhy'); await pause(300);
   await miss(page, 'Today, the look back, a free period and where she left off', own);
   await goTo(page, await page.$eval('#railClasses a', a => a.getAttribute('href'))); await page.waitForSelector('#classes .tkc'); await miss(page, 'a class page, the time left on an assignment', own);
   await goTo(page, '#/settings/focus'); await page.waitForSelector('#gpFree'); await miss(page, 'Settings, Focus, planning your grading', own);
@@ -351,12 +352,14 @@ test('session goals, from the Focus card through a session, a break and the end,
   const set = async (sel, v) => page.evaluate((sel, v) => { const i = document.querySelector(sel); i.value = v; i.dispatchEvent(new Event('change', { bubbles: true })); }, sel, v);
   const later = new Date(Date.now() + 9 * 864e5), day = later.getFullYear() + '-' + String(later.getMonth() + 1).padStart(2, '0') + '-' + String(later.getDate()).padStart(2, '0');
   await page.waitForFunction(() => window.__gs.kept().size > 0);
+  const pickWork = async v => { await page.click('#fcCard [data-fcchg]'); await page.waitForSelector('#fcCard [data-fcwork]'); await page.select('#fcCard [data-fcwork]', v); };
+  await page.waitForSelector('#fcCard [data-fcmo]'); await page.click('#fcCard [data-fcmo]');
   await page.waitForSelector('#fcCard .fcsgpick [data-fcsgn]');
   await set('#fcCard [data-fcby]', day); await page.waitForSelector('#fcCard .fcby > span');
   await miss(page, 'the Focus card, a goal in papers and a day to finish by', own);
   await page.click('#fcCard [data-fcsg="set"]'); await miss(page, 'the Focus card, finish the set', own);
-  await page.select('#fcCard [data-fcwork]', 'td:t1'); await page.waitForSelector('#fcCard [data-fcsg="td"]'); await miss(page, 'the Focus card, a to-do as the goal', own);
-  await page.select('#fcCard [data-fcwork]', ''); await page.waitForSelector('#fcCard [data-fcsgx]'); await miss(page, 'the Focus card, a goal of her own words', own);
+  await pickWork('td:t1'); await page.waitForSelector('#fcCard [data-fcsg="td"]'); await miss(page, 'the Focus card, a to-do as the goal', own);
+  await pickWork(''); await page.waitForSelector('#fcCard [data-fcsgx]'); await miss(page, 'the Focus card, a goal of her own words', own);
   // a session with a goal in papers: running, time up, a break, the break over, and done
   await page.evaluate(() => window.__gs.fcStart(10, 'mark:gs.b.n2', 0, { k: 'papers', n: 2 })); await pause(500);
   await goTo(page, '#/'); await page.waitForSelector('#fcPanel .fcsg'); await miss(page, 'the focus panel, a session goal', own);
@@ -835,5 +838,16 @@ test('in Spanish the marking screen is in Spanish, and names, rubric rows, comme
   assert.ok((await page.$$eval('#dlgBox td.cm', t => t.map(x => x.textContent))).includes('Missing evidence'), 'the comment is as typed');
   assert.ok((await page.$$eval('#dlgBox th', t => t.map(x => x.textContent))).some(x => /Thesis/.test(x)), 'a rubric row is as typed');
   assert.deepEqual(page.errors, []);
+  await close();
+});
+
+// The Focus card's rough estimate and its reasons, in every language (they show only on some days, so the walks above can miss them).
+test('the Focus card’s rough estimate and reasons are in every language', async () => {
+  const { page, close } = await openApp(browser);
+  const lines = ['from 1 paper so far', 'from 2 papers so far', 'You left off here:', 'You picked this', 'Free period until', 'Change'];
+  for (const k of await page.evaluate(() => window.__gsLang.packs)) {
+    const out = await page.evaluate(async (k, l) => { await window.__gsLang.load(k); return l.map(s => window.__gsLang.tr(s, k)); }, k, lines);
+    out.forEach((x, i) => assert.ok(x && x !== lines[i], k + ': ' + lines[i]));
+  }
   await close();
 });

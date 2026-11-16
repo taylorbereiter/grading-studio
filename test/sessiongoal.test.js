@@ -17,6 +17,16 @@ const dayAgo = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d
 const log = page => page.evaluate(() => JSON.parse(localStorage.getItem('gs.focus') || 'null'));
 const run = page => page.evaluate(() => window.__gs.fcRun());
 const text = (page, sel) => page.$eval(sel, e => e.textContent);
+// The card keeps one suggestion in view: More opens the lengths, the goal picker and Finish by, and Change opens the list of work.
+async function more(page, box = '#fcCard') {
+  await page.waitForSelector(box + ' [data-fcmo]');
+  if (await page.$eval(box + ' [data-fcmo]', b => b.getAttribute('aria-expanded')) !== 'true') await page.click(box + ' [data-fcmo]');
+}
+async function change(page, box = '#fcCard') {
+  await page.waitForSelector(box + ' [data-fcchg], ' + box + ' [data-fcwork]');
+  if (await page.$(box + ' [data-fcchg]')) await page.click(box + ' [data-fcchg]');
+  await page.waitForSelector(box + ' [data-fcwork]');
+}
 // The made-up class with a pace behind it (5 minutes a paper on Poetry analysis), and Poetry analysis with 3 of 6 papers scored.
 function paceSeed(todo) {
   const s = gradingSeed(), lib = JSON.parse(s.ls['gs.lib']);
@@ -32,9 +42,11 @@ const timeUp = page => page.evaluate(() => { const r = window.__gs.fcRun(); r.at
 test('a session goal is suggested from her pace, set in a press, shown while it runs, and carried into the next session', async () => {
   const { page, close } = await openApp(browser, { seed: paceSeed() });
   await page.waitForFunction(() => window.__gs.kept().size > 0);
-  await page.waitForFunction(() => { const s = document.querySelector('#fcCard [data-fcwork]'); return s && s.value === 'mark:gs.b.n2'; });
-  // 10 minutes at 5 minutes a paper: 2 of the 3 papers left
-  await page.waitForSelector('#fcCard .fcsgpick');
+  await page.waitForFunction(() => { const s = document.querySelector('#fcCard .sugh .t'); return s && s.textContent.startsWith('Poetry analysis'); });
+  // 10 minutes at 5 minutes a paper: 2 of the 3 papers left, said in a line on the card
+  assert.equal(await text(page, '#fcCard .sugsg'), 'Goal for this session: 2 papers · Change');
+  await page.click('#fcCard [data-fcsgchg]');
+  await page.waitForSelector('#fcCard .fcmorebox .fcsgpick');
   assert.equal(await text(page, '#fcCard [data-fcsg][aria-pressed="true"]'), '2 papers');
   await page.click('#fcCard [data-fcsgn="1"]');
   assert.equal(await text(page, '#fcCard [data-fcsg][aria-pressed="true"]'), '3 papers');
@@ -87,8 +99,10 @@ test('a session goal is suggested from her pace, set in a press, shown while it 
 test('a goal of her own words, a to-do as the goal, letting a goal go, and starting something else after a break', async () => {
   const { page, close } = await openApp(browser, { seed: paceSeed([{ id: 't1', x: 'Write the parent letter', d: '', made: Date.now() }]) });
   await page.waitForFunction(() => window.__gs.kept().size > 0);
-  await page.waitForSelector('#fcCard [data-fcwork]');
+  await change(page);
   await page.select('#fcCard [data-fcwork]', '');
+  assert.equal(await text(page, '#fcCard .sugwhy'), 'You picked this');
+  await more(page);
   await page.waitForSelector('#fcCard [data-fcsgx]');
   await page.type('#fcCard [data-fcsgx]', 'Plan the poetry lesson');
   await page.click('#fcCard [data-fcstart]');
@@ -117,7 +131,7 @@ test('a goal of her own words, a to-do as the goal, letting a goal go, and start
   await page.waitForSelector('#fcPanel [data-fcother]');
   await page.click('#fcPanel [data-fcother]');
   assert.equal(await run(page), null);
-  await page.waitForSelector('#fcPanel [data-fcwork]');
+  await page.waitForSelector('#fcPanel [data-fcchg]');
   // a to-do: finishing it is the goal, and it can be ticked from the end of the session
   await page.evaluate(() => window.__gs.focusOn('td:t1'));
   assert.deepEqual((await run(page)).sg, { k: 'td' });
@@ -130,8 +144,9 @@ test('a goal of her own words, a to-do as the goal, letting a goal go, and start
   await page.click('#fcSg'); await pause(100);
   assert.equal(await page.evaluate(() => window.__gs.state().lib.me.focus.sg), false);
   await goTo(page, '#/');
-  await page.waitForSelector('#fcCard [data-fcwork]');
+  await change(page);
   await page.select('#fcCard [data-fcwork]', 'mark:gs.b.n2');
+  await more(page);
   await page.waitForSelector('#fcCard .fcsgpick');
   assert.equal(await page.$eval('#fcCard [data-fcsg][aria-pressed="true"]', b => b.dataset.fcsg), '');
   assert.deepEqual(page.errors, []);
@@ -161,6 +176,7 @@ test('a goal for the week or for some days, a set finished by a day, and both in
   await goTo(page, '#/'); await page.waitForSelector('#fcCard .fcnogoal');
   assert.match(await text(page, '#fcCard .fcnogoal'), /^No goal todayGoal days$/);
   // finish the set by a day: the papers a day it takes
+  await more(page);
   await page.waitForSelector('#fcCard [data-fcby]');
   await page.evaluate(d => { const i = document.querySelector('#fcCard [data-fcby]'); i.value = d; i.dispatchEvent(new Event('change', { bubbles: true })); }, dayAgo(-14));
   assert.equal((await log(page)).by['gs.b.n2'], dayAgo(-14));
