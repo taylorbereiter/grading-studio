@@ -117,7 +117,7 @@ function findRows() {
   add('Go to', 'To do, by week', 'Your list laid out on the days of the week, under the classes that meet', () => go('#/todo/week'));
   add('Go to', 'Planner', 'Units and lessons, on its own page', () => { location.href = $('#lessonsBtn').href; });
   add('Go to', 'School resources', 'Links, files and notes about your school', () => go('#/school'));
-  if (exList.length) add('Go to', 'Examples', 'Strong work from every class, with no names on it', () => go('#/examples'), '', 'strong example exemplar model answer show class');
+  if (exList.length || exWatch.length) add('Go to', 'Examples', 'Strong work from every class, with no names on it', () => go('#/examples'), '', 'strong example exemplar model answer show class');
   add('Go to', 'Settings', 'Saving, classes, terms, marking, display and keys', () => go('#/settings'));
   add('Go to', 'Help', 'Short answers to common questions', () => go('#/help'));
   for (const c of lib.classes) {

@@ -11,6 +11,8 @@ function wlOf(cid, name) {
   const other = new Set((infoOf(classById(cid), name).other || []).concat(name));
   return exList.concat(exWatch).filter(r => r.who && r.who.c === cid && other.has(r.who.n)).sort((a, b) => a.t - b.t);
 }
+// The student is still on that class's roster, so their card can open.
+const wlHere = r => { const c = r.who && classById(r.who.c); return !!c && (c.names || []).includes(r.who.n); };
 const wlDay = t => new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 // After a save, an edit or a delete: the student card and the Examples page show it.
 function wlChanged() {
@@ -23,8 +25,10 @@ function wlRedraw() { exRefreshViews(); wlChanged(); }
 const wlTied = new Set();
 function wlBackfill() {
   if (!batch || wlTied.has(batch.id)) return;
-  wlTied.add(batch.id);
+  const id = batch.id;
+  wlTied.add(id);
   setTimeout(async () => {
+    try { await exReady; } catch {}
     for (const r of exList.concat(exWatch).filter(r => batch && r.work === batch.id && r.from && !r.who)) {
       const st = batch.students.find(s => s.key === r.from.key), who = st && exWho(st);
       if (who) try { await exPut({ ...r, who }); } catch (e) { console.error(e); }
@@ -110,7 +114,7 @@ function wlCodes(list) {
 // Names in her notes become [name]: every student on the rosters these come from, with their other spellings.
 function wlScrub(list) {
   const words = new Set();
-  for (const id of new Set(list.map(r => r.who ? r.who.c : r.cls).filter(Boolean))) { const c = classById(id); if (!c) continue; for (const n of c.names || []) for (const s of [n, ...(infoOf(c, n).other || [])]) for (const w of String(s).split(/[\s,]+/)) if (w.length > 1) words.add(w); }
+  for (const id of new Set(list.map(r => r.who ? r.who.c : r.cls).filter(Boolean))) { const c = classById(id); if (!c) continue; for (const n of c.names || []) for (const s of [n, ...(infoOf(c, n).other || [])]) for (const w of String(s).split(/[\s,'’-]+/)) if (w.length > 1) words.add(w); }
   const rx = words.size ? new RegExp('(?<![\\p{L}])(' + [...words].sort((a, b) => b.length - a.length).map(rxEsc).join('|') + ')(?![\\p{L}])', 'giu') : null;
   return s => rx ? String(s || '').replace(rx, '[name]') : String(s || '');
 }
@@ -119,19 +123,20 @@ function wlAsk(one, code, title) {
     : 'These are pictures of students’ work' + (title ? ' on ' + title : '') + ', saved by me, their teacher. Each student is a random code (S-XXXX). Each picture is marked Strength or Concern, with the assignment and my note.\n\n1. Group the concerns into the misconceptions behind them, with the codes that show each.\n2. Suggest how I could reteach the most common ones.\n3. Give one or two lines of feedback for each code.\n\nUse the codes only.';
 }
 let WLS = null;
-function wlSend(list, one) {
+// one: { c, n } for one student's card. keep: the ask and ticks, coming back from Black out more.
+function wlSend(list, one, keep) {
   list = list.filter(Boolean);
   if (!list.length) return toast('Nothing to send yet.');
-  const codes = wlCodes(list), scrub = wlScrub(list), title = one ? '' : [...new Set(list.map(r => r.title))].length === 1 ? list[0].title : '';
-  const code = r => r.who ? codes.get(wlKey(r.who.c, r.who.n)) : 'No student';
-  WLS = { list, one, codes, scrub, code, good: !!one || list.every(r => !r.watch), bad: true };
+  const codes = wlCodes(one ? [{ who: one }].concat(list) : list), scrub = wlScrub(list), title = one ? '' : [...new Set(list.map(r => r.title))].length === 1 ? list[0].title : '';
+  const code = r => one ? codes.get(wlKey(one.c, one.n)) : r.who ? codes.get(wlKey(r.who.c, r.who.n)) : 'No student';
+  WLS = { list, one, codes, scrub, code, good: keep ? keep.good : !!one || list.every(r => !r.watch), bad: keep ? keep.bad : true };
   const n1 = list.filter(r => r.watch).length, n2 = list.length - n1;
-  const key = [...codes.entries()].map(([k, c]) => '<li><b>' + c + '</b> is <span data-raw>' + esc(k.split('\n')[1]) + '</span></li>').join('');
+  const key = [...codes.entries()].map(([k, c]) => '<li><b>' + esc(c) + '</b> is <span data-raw>' + esc(k.split('\n')[1]) + '</span></li>').join('');
   openDlg('<div class="bh"><h2>Send to ' + esc(aiSay()) + '</h2><span class="sp"></span><button class="icon" data-close aria-label="Close">✕</button></div>' +
     '<div class="bb wlsend"><p class="muted">One PDF with the pictures and your notes, made on this computer. Each student is a random code, and names in your notes become [name]. The pictures were blacked out when you saved them: look them over and black out more if you need to.</p>' +
-      (n1 && n2 ? '<p><label><input type="checkbox" id="wlBad" checked> Concerns (' + n1 + ')</label> <label><input type="checkbox" id="wlGood"' + (WLS.good ? ' checked' : '') + '> Strengths (' + n2 + ')</label></p>' : '') +
+      (n1 && n2 ? '<p><label><input type="checkbox" id="wlBad"' + (WLS.bad ? ' checked' : '') + '> Concerns (' + n1 + ')</label> <label><input type="checkbox" id="wlGood"' + (WLS.good ? ' checked' : '') + '> Strengths (' + n2 + ')</label></p>' : '') +
       '<div class="wlstrip" id="wlStrip"></div>' +
-      '<h3 class="exh">What to ask</h3><textarea id="wlAsk" rows="7" spellcheck="true">' + esc(wlAsk(!!one, one ? code(list[0]) : '', title)) + '</textarea>' +
+      '<h3 class="exh">What to ask</h3><textarea id="wlAsk" rows="7" spellcheck="true">' + esc(keep ? keep.ask : wlAsk(!!one, one ? code(list[0]) : '', title)) + '</textarea>' +
       (key ? '<details class="wlkey"><summary>Which code is which student (only on this computer)</summary><ul>' + key + '</ul></details>' : '') + '</div>' +
     '<div class="bf"><span class="sp"></span><button class="btn" data-wlcopyask>Copy what to ask</button>' + (aiLink() ? '<a class="btn" href="' + esc(aiLink()) + '" target="_blank" rel="noopener">Open ' + esc(aiSay()) + '</a>' : '') + '<button class="btn primary" data-wlpdf>Download the PDF</button></div>');
   const box = $('#dlgBox'); box.classList.add('wlbox');
@@ -143,7 +148,7 @@ function wlSend(list, one) {
     if (e.target.closest('[data-wlcopyask]')) return navigator.clipboard.writeText($('#wlAsk').value).then(() => toast('Copied. Paste it into ' + aiSay() + ' with the PDF.'), () => toast('Copying didn’t work here.'));
     if (e.target.closest('[data-wlpdf]')) return wlPdf();
     const m = e.target.closest('[data-wlmore]');
-    if (m) { const r = exById(m.dataset.wlmore), S = WLS; if (r) exPic(r.id, 0).then(b => b && exSaveShot(b, { redo: r, paper: false, back: () => wlSend(S.list.map(x => exById(x.id)), S.one) }, r.watch)); }
+    if (m) { const r = exById(m.dataset.wlmore), S = WLS, k = { ask: $('#wlAsk').value, good: S.good, bad: S.bad }; if (r) exPic(r.id, 0).then(b => b && exSaveShot(b, { redo: r, paper: false, back: () => wlSend(S.list.map(x => exById(x.id)), S.one, k) }, r.watch)); }
   };
 }
 const wlPicked = () => WLS ? WLS.list.filter(r => r.watch ? WLS.bad : WLS.good) : [];
@@ -164,14 +169,23 @@ async function wlPdf() {
     pdf.setTitle('Student work'); pdf.setAuthor(''); pdf.setCreator('Grading Studio'); pdf.setProducer('');
     let pg = null, y = 0;
     const page = () => { pg = pdf.addPage([PW, PH]); y = PH - M; }, room = h => { if (!pg || y - h < M) page(); };
-    const text = (s, font, size, color) => { let line = ''; const put = () => { room(size + 5); pg.drawText(line, { x: M, y: y - size, size, font, color }); y -= size + 5; };
-      for (const para of exPdfText(s).split('\n')) { line = ''; for (const w of para.split(/\s+/).filter(Boolean)) { const t = line ? line + ' ' + w : w; if (line && font.widthOfTextAtSize(t, size) > CW) { put(); line = w; } else line = t; } put(); } };
-    text('What I need', B, 15, ink); text($('#wlAsk') ? $('#wlAsk').value : wlAsk(!!S.one, '', ''), F, 11, ink); y -= 10;
+    // A line in letters the PDF's own font can't write (Japanese, Korean, Chinese and others) goes in as a picture of the words.
+    const wlPict = async (s, size, bold) => {
+      const k = 3, c = document.createElement('canvas'), x = c.getContext('2d'), f = (bold ? '600 ' : '') + size * k + 'px Inter, sans-serif', lines = []; x.font = f;
+      let line = ''; for (const ch of [...s]) { const t = line + ch; if (line && x.measureText(t).width > CW * k) { lines.push(line); line = ch; } else line = t; } lines.push(line);
+      c.width = CW * k; c.height = Math.ceil(lines.length * (size + 5) * k); x.font = f; x.fillStyle = '#1f2125'; x.textBaseline = 'top';
+      lines.forEach((l, i) => x.fillText(l, 0, i * (size + 5) * k));
+      const img = await pdf.embedPng(await (await canvasPng(c)).arrayBuffer()), h = lines.length * (size + 5);
+      room(h); pg.drawImage(img, { x: M, y: y - h, width: CW, height: h }); y -= h;
+    };
+    const text = async (s, font, size, color) => { let line = ''; const put = () => { room(size + 5); pg.drawText(line, { x: M, y: y - size, size, font, color }); y -= size + 5; };
+      for (const p0 of String(s).split('\n')) { const para = exPdfText(p0); if (/[^\x00-\xFF‘’“”–—…]/.test(p0)) { await wlPict(p0, size, font === B); continue; } line = ''; for (const w of para.split(/\s+/).filter(Boolean)) { const t = line ? line + ' ' + w : w; if (line && font.widthOfTextAtSize(t, size) > CW) { put(); line = w; } else line = t; } put(); } };
+    await text('What I need', B, 15, ink); await text($('#wlAsk') ? $('#wlAsk').value : wlAsk(!!S.one, '', ''), F, 11, ink); y -= 10;
     for (const r of l) {
       room(120);
-      text(S.code(r) + ' - ' + (r.watch ? 'Concern' : 'Strength') + ' - ' + S.scrub(r.title || 'Assignment') + ' - ' + wlDay(r.t), B, 12, ink);
-      if (r.why) text('Note: ' + S.scrub(r.why), F, 11, ink);
-      if (exTags(r).length) text('Tags: ' + S.scrub(exTags(r).join(', ')), F, 9.5, soft);
+      await text(S.code(r) + ' - ' + (r.watch ? 'Concern' : 'Strength') + ' - ' + S.scrub(r.title || 'Assignment') + ' - ' + new Date(r.t).toISOString().slice(0, 10), B, 12, ink);
+      if (r.why) await text('Note: ' + S.scrub(r.why), F, 11, ink);
+      if (exTags(r).length) await text('Tags: ' + S.scrub(exTags(r).join(', ')), F, 9.5, soft);
       for (let n = 0; n < r.pages.length; n++) {
         const b = await exPic(r.id, n); if (!b) continue;
         const img = await pdf.embedJpg(new Uint8Array(await b.arrayBuffer())), k = Math.min(CW / img.width, (r.kind === 'paper' ? PH - 2 * M : 380) / img.height), w = img.width * k, h = img.height * k;

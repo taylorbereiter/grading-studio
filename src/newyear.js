@@ -178,7 +178,6 @@ async function nyStart(o) {
   try { await gsData.snapshot('Before starting ' + o.to, gsData.version()); } catch (e) { console.error(e); }
   if (fld.state === 'ok' || fld.state === 'decide') { try { await folderSnapshot('Before starting ' + o.to); } catch (e) { console.error(e); } }
   for (const id of ids) await forgetKept(id);
-  await wlNewYear(o.roster);   // the watch list goes with the roster; a strong example is kept, no longer anyone's (watch.js)
   const left = [...keptMeta.keys()];
   if (left.length) throw new Error(left.length + ' downloads could not be cleared');
   // Anything else kept with her work that's about a student (keyed by name). Settings, the comment bank and saved rubrics stay.
@@ -188,6 +187,7 @@ async function nyStart(o) {
     if (nyAbout(x, names)) localStorage.removeItem(k);
   }
   lib = migrateLib(next); libUndoForget(); saveLib();
+  try { await wlNewYear(o.roster); } catch (e) { console.error(e); }   // the watch list goes with the roster; a strong example is kept, no longer anyone's (watch.js)
   if (o.planner) try { localStorage.setItem('gsp.newYear', JSON.stringify({ id: Date.now().toString(36), from: o.from, dates: !!o.dates })); } catch {}
   renderLib(); railRender(); renderNeeds();
 }
@@ -208,7 +208,7 @@ async function openNewYear() {
     '<label class="nyck"><input type="checkbox" checked disabled> <span><b>' + nCls + (nCls === 1 ? ' class' : ' classes') + ', with their units and assignment cards</b><small>Each card keeps its rubric and its Quick mark boxes. No papers, scores or comments.</small></span></label>' +
     '<label class="nyck"><input type="checkbox" id="nyDates" checked> <span><b>Due dates and term dates, a year later</b><small>Change any of them afterwards in Term setup or on the card.</small></span></label>' +
     (planner ? '<label class="nyck"><input type="checkbox" id="nyPlan" checked> <span><b>Planner units and the semester, a year later</b><small>This year’s lessons move to Past lessons, under “' + '<span id="nyFromSay">' + esc(from) + '</span>' + '”, ready to reuse.</small></span></label>' : '') +
-    '<label class="nyck"><input type="checkbox" id="nyRoster"> <span><b>Class lists</b><small>Only for classes that keep the same students. Left empty otherwise.</small></span></label>' +
+    '<label class="nyck"><input type="checkbox" id="nyRoster"> <span><b>Class lists</b><small>Only for classes that keep the same students. Left empty otherwise, and the watch list is cleared.</small></span></label>' +
     '<p class="muted" style="font-size:14px;margin:10px 0 0">Your settings, grading scale, saved rubrics and comment bank stay as they are. ' + (nDl ? nDl + (nDl === 1 ? ' set of papers goes' : ' sets of papers go') + ' into the file and leave this browser.' : '') + '</p>' +
     '<h3 class="nyh">Protect the file</h3>' +
     '<p class="muted" style="font-size:14px;margin:0 0 8px">Choose a passphrase of a few words. Nobody can open the file without it, you included, so write it down somewhere safe.</p>' +

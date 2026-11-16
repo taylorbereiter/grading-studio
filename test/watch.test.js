@@ -65,7 +65,7 @@ test('a watch-list screenshot and a strong example are tied to their students an
   await page.waitForFunction(() => window.__gs.exList().length === 1, { timeout: 30000 });
   assert.deepEqual(await page.evaluate(() => window.__gs.exList()[0].who), { c: 'c1', n: 'Bram Sample' });
   await snap(page, '#snipWl');
-  await page.type('#exTagsIn', 'adding fractions');
+  await page.type('#exTagsIn', 'adding fractions, 分数');   // letters the PDF's own font can't write go in as a picture
   await page.click('[data-exsave]');
   await page.waitForFunction(() => window.__gs.exWatch().length === 2, { timeout: 30000 });
 
@@ -114,6 +114,19 @@ test('a watch-list screenshot and a strong example are tied to their students an
   assert.equal(String.fromCharCode(...got.bytes.slice(0, 5)), '%PDF-');
   await dl.close();
   assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('gs.wlCodes'))['c1\nAria Testwell']), code, 'the key stays in this browser');
+
+  // The whole watch list from the Examples page, one PDF with both students as codes
+  await page.keyboard.press('Escape').catch(() => {});
+  await page.evaluate(() => { window.__gs.exPageF.view = 'watch'; window.__gs.exPageRender(); });
+  await page.waitForSelector('#exPage [data-wlsend]'); await page.click('#exPage [data-wlsend]');
+  await page.waitForSelector('#wlStrip figure img');
+  assert.equal(await page.$$eval('#wlStrip figure', l => l.length), 2);
+  assert.equal(new Set(await page.$$eval('#wlStrip figure b', l => l.map(b => b.textContent))).size, 2, 'a code each');
+  const dl2 = await catchDownloads(page);
+  const got2 = await dl2.next(() => page.click('[data-wlpdf]'));
+  assert.match(got2.name, /Fractions quiz\.pdf$/);
+  await dl2.close();
+  await page.keyboard.press('Escape');
 
   // A new year without the roster: the watch list goes, the strong example stays, no longer anyone's
   await page.evaluate(() => window.__gs.wlNewYear(false));

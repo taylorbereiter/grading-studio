@@ -55,8 +55,8 @@ async function exPut(rec, blobs, raw) {
 }
 const exById = id => exList.find(r => r.id === id) || exWatch.find(r => r.id === id);
 async function exDelete(id) {
-  if (!exById(id)) return;
-  await exPut({ id, t: Date.now(), gone: true });
+  const r = exById(id); if (!r) return;
+  await exPut({ id, t: Date.now(), gone: true, ...(r.watch ? { watch: 1 } : {}) });
 }
 const exUrlsDrop = id => { for (const [k, u] of exUrls) if (k.startsWith(id + '|')) { u.then(x => x && URL.revokeObjectURL(x)); exUrls.delete(k); } };
 // Every record, the deleted ones too, and the pictures of one.
@@ -392,7 +392,7 @@ async function exuSave() {
 /* tags: short words she types on an example, to find it again in the bank (11/13) */
 const EX_TAG_MAX = 8, EX_TAG_LEN = 30;
 const exTags = r => Array.isArray(r && r.tags) ? r.tags : [];
-const exAllTags = (L = exList) => [...new Set(L.flatMap(exTags))].sort(natural);
+const exAllTags = (L = exList.concat(exWatch)) => [...new Set(L.flatMap(exTags))].sort(natural);
 // Comma-separated words, tidied: a tag already used somewhere keeps the way it was first written, so "Thesis" and "thesis" are one tag.
 function exTagsOf(text) {
   const known = new Map(exAllTags().map(t => [t.toLowerCase(), t])), out = [];
@@ -460,8 +460,9 @@ async function exSaveShot(blob, where, watch) {
     '<div class="bf"><span class="exlock"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Kept in this browser only, with what you blacked out gone for good. It’s called “' + esc(nm) + '”, never by name.</span></span><span class="sp"></span><button class="btn" data-close>Cancel</button><button class="btn primary" data-exsave>' + (redo ? 'Save' : watch ? 'Add to the watch list' : 'Save example') + '</button></div>');
   const box = $('#dlgBox');
   box.classList.add('exbox');
-  dlgGone = () => { if (EXS) { try { EXS.im.close(); } catch {} EXS = null; } };
-  exsDraw(); exsNames(); wlWhoPick(where.who, where.cls);
+  dlgGone = () => { if (EXS) { try { EXS.im.close(); } catch {} const b = EXS.where.back; EXS = null; if (b) setTimeout(b, 0); } };   // back: to the Send box it was opened from, saved or not
+  exsDraw(); exsNames();
+  if (where.who && anonOn()) { EXS.who = where.who; const b = $('#exWhoBox'); if (b) b.innerHTML = '<p class="exnames">This paper’s student. Hidden while you mark anonymously.</p>'; } else wlWhoPick(where.who, where.cls);
   box.onchange = e => { if (e.target.id === 'exShotCls') wlWhoPick(null, e.target.value); };
   box.onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
@@ -527,19 +528,19 @@ async function exsSave() {
     const c = document.createElement('canvas'); exsPaint(c, Math.min(S.im.width, 2400));
     const size = { w: c.width, h: c.height }, jpg = await exJpg(c); c.width = c.height = 0;
     const w = S.where;
-    if (w.redo) { await exPut({ ...w.redo, pages: [size] }, [jpg]); closeDlg(); wlRedraw(); toast('Blacked out for good'); if (w.back) w.back(); return; }
+    if (w.redo) { await exPut({ ...(exById(w.redo.id) || w.redo), pages: [size] }, [jpg]); closeDlg(); wlRedraw(); toast('Blacked out for good'); return; }
     const sel = $('#exShotCls'), cls = w.work ? w.cls : sel ? sel.value || null : w.cls, ws = $('#exWho');
     const at = { ...w, cls };
     const rec = { id: uid() + uid(), t: Date.now(), kind: 'shot', work: w.work, asg: w.asg, cls, title: w.title, q: null, row: null,
       why: ($('#exWhy') ? $('#exWhy').value : '').trim().slice(0, 160), tags: exTagsOf($('#exTagsIn') ? $('#exTagsIn').value : ''),
-      letter: exShotNext(at, S.watch), pages: [size], marks: true, score: false, from: w.from, who: ws && ws.value && S.whoC ? { c: S.whoC, n: ws.value } : null, ...(S.watch ? { watch: 1 } : {}) };
+      letter: exShotNext(at, S.watch), pages: [size], marks: true, score: false, from: w.from, who: S.who || (ws && ws.value && S.whoC ? { c: S.whoC, n: ws.value } : null), ...(S.watch ? { watch: 1 } : {}) };
     await exPut(rec, [jpg]);
     closeDlg();
     const see = () => { if (rec.watch) { exPageF.view = 'watch'; go('#/examples'); } else if (batch && rec.work === batch.id) exGo(); else go('#/examples'); };
-    exToast(rec.watch ? 'Added to the watch list' + (rec.who ? ' for ' + rec.who.n : '') + '.' : 'Saved as Screenshot ' + rec.letter + ' in your strong examples.', [[rec.watch ? 'See the watch list' : 'See examples', see], ['Undo', () => exDelete(rec.id)]]);
+    exToast(rec.watch ? 'Added to the watch list' + (rec.who && !anonOn() ? ' for ' + rec.who.n : '') + '.' : 'Saved as Screenshot ' + rec.letter + ' in your strong examples.', [[rec.watch ? 'See the watch list' : 'See examples', see], ['Undo', () => exDelete(rec.id)]]);
   } catch (e) {
     console.error(e);
-    if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = 'Save example'; }
+    if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = S.where.redo ? 'Save' : S.watch ? 'Add to the watch list' : 'Save example'; }
     toast('The example couldn’t be kept: ' + (e.message || e), 6000);
   }
 }
@@ -564,7 +565,7 @@ const exCanCopy = () => !!(navigator.clipboard && navigator.clipboard.write && w
 function exCard(r) {
   const W = !!r.watch, sw = W ? 'Add a note' : 'Add why it’s strong', cw = W ? 'Change the note' : 'Change why it’s strong';
   const chip = r.kind === 'answer' && r.q && r.q.v != null ? fmtNum(r.q.v) + ' of ' + fmtNum(r.q.pts) : r.kind === 'paper' ? r.pages.length + (r.pages.length === 1 ? ' page' : ' pages') : '';
-  const who = (r.who || r.from) && !anonOn() ? '<p class="exwho"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Only you see this: ' + (r.who ? '<button class="link" data-exwhoc>' + esc(r.who.n) + '</button>' : esc(r.from.key)) + '</p>' : '';
+  const who = (r.who || r.from) && !anonOn() ? '<p class="exwho"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Only you see this: ' + (r.who ? wlHere(r) ? '<button class="link" data-exwhoc>' + esc(r.who.n) + '</button>' : esc(r.who.n) : esc(r.from.key)) + '</p>' : '';
   return '<div class="excard ' + r.kind + (W ? ' exw' : '') + '" data-exid="' + esc(r.id) + '"><button class="exthumb" data-exopen title="' + (W ? 'Look closer' : 'Show to the class') + '"><img alt="' + esc(exLabel(r)) + '" data-expic="' + esc(r.id) + '"></button>' +
     '<div class="exct"><span class="exstar" aria-hidden="true">' + (W ? '⚑' : '★') + '</span><b>' + esc(exLabel(r)) + '</b>' + (r.row ? '<span class="exrowtag">' + esc(r.row) + '</span>' : chip ? '<span class="exchip">' + esc(chip) + '</span>' : '') + '</div>' +
     '<p class="exwhy">' + (r.why ? esc(r.why) : '<button class="link exadd" data-exwhy>' + sw + '</button>') + '</p>' +
@@ -602,7 +603,7 @@ function exCardAct(e, list, after) {
   const card = e.target.closest('[data-exid]'); if (!card) return;
   const r = exById(card.dataset.exid); if (!r) return;
   if (e.target.closest('[data-exopen]')) { const all = list(); return exShow(all, Math.max(0, all.findIndex(x => x.id === r.id))); }
-  if (e.target.closest('[data-exwhoc]')) return personCard(r.who.c, r.who.n);
+  if (e.target.closest('[data-exwhoc]')) return wlHere(r) && personCard(r.who.c, r.who.n);
   if (e.target.closest('[data-exmore]')) { kmClose(); return exPic(r.id, 0).then(b => b && exSaveShot(b, { redo: r, paper: false }, r.watch)); }
   if (e.target.closest('[data-excopy]')) return exCopy(r);
   if (e.target.closest('[data-exdl]')) return exDownload(r);
@@ -800,7 +801,8 @@ function exFolderSync(inSync) {
 async function exFolderRun() {
   const dir = await fld.root.getDirectoryHandle('examples', { create: true }), ids = new Set(), B = new Map();
   for await (const [nm, h] of dir.entries()) { const m = h.kind === 'file' && /^(.+)\.json(?:\.new)?$/.exec(nm); if (m) ids.add(m[1]); }
-  for (const id of ids) { const o = await readJson(dir, id + '.json'); if (o && o.rec && o.rec.id === id) B.set(id, o); }
+  // A watch-list record is <id>.w.json: an older copy reads its id as "<id>.w", finds it doesn't match and leaves it alone.
+  for (const id of ids) { const o = await readJson(dir, id + '.json'), rid = id.replace(/\.w$/, ''); if (o && o.rec && o.rec.id === rid && !(B.has(rid) && exU(B.get(rid).rec) >= exU(o.rec))) B.set(rid, o); }
   const A = await exAll();
   if (!A.length && !B.size) return;
   const { toA, toB } = exMergePlan(A, [...B.values()].map(o => o.rec));
@@ -810,10 +812,11 @@ async function exFolderRun() {
     return out;
   });
   for (const r of toB) {
-    if (r.gone) { await writeJson(dir, r.id + '.json', { rec: r, pix: [] }); continue; }
+    const fn = r.id + (r.watch ? '.w' : '') + '.json';
+    if (r.gone) { await writeJson(dir, fn, { rec: r, pix: [] }); continue; }
     const blobs = await exPics(r); if (!blobs) continue;
     const pix = []; for (const b of blobs) pix.push(await putBlob(new Uint8Array(await b.arrayBuffer())));
-    await writeJson(dir, r.id + '.json', { rec: r, pix });
+    await writeJson(dir, fn, { rec: r, pix });
   }
   if (got) exRefreshViews();
 }
@@ -838,10 +841,11 @@ async function exKeepFor(rec) {
 // The take-home file: an { k: 'ex', rec } frame for each record, then an { k: 'expix', id, i } frame for each of its pictures. An older copy of the app skips both.
 async function exTakeFrames(frame) {
   for (const r of await exAll()) {
-    if (r.gone) { await frame({ k: 'ex', rec: r }); continue; }
+    const w = r.watch ? 'exw' : 'ex';   // watch-list records go in frames an older copy skips, so it never shows a concern as a strong example
+    if (r.gone) { await frame({ k: w, rec: r }); continue; }
     const blobs = await exPics(r); if (!blobs) continue;
-    await frame({ k: 'ex', rec: r });
-    for (let i = 0; i < blobs.length; i++) await frame({ k: 'expix', id: r.id, i }, new Uint8Array(await blobs[i].arrayBuffer()));
+    await frame({ k: w, rec: r });
+    for (let i = 0; i < blobs.length; i++) await frame({ k: w + 'pix', id: r.id, i }, new Uint8Array(await blobs[i].arrayBuffer()));
   }
 }
 // What Bring work in would do with a file's examples.
@@ -886,7 +890,8 @@ function exPageRender() {
   exRailSay();
   const opts = (key, list, all) => '<select class="btn sm" data-exf="' + key + '" aria-label="' + all + '"><option value="">' + all + '</option>' + list.map(([v, l]) => '<option value="' + esc(v) + '"' + (exPageF[key] === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select>';
   const uniq = pairs => [...new Map(pairs).entries()];
-  const W = exPageF.view === 'watch', S = exSrc(), tabs = wlTabs();
+  const W = exPageF.view === 'watch', S = exSrc(), tabs = wlTabs(), sub = $('#vExamples .vhead .muted');
+  if (sub) sub.textContent = W ? 'Misconceptions and concerns, kept with each student. Only you see whose they are.' : exPageF.view === 'who' ? 'Who your strong examples come from, class by class.' : 'Strong work from every class, with no names on it.';
   if (exPageF.view === 'who') { el.innerHTML = tabs + wlWhoHtml(); return; }
   const classes = uniq(S.map(r => [r.cls || '-', exClassName(r.cls)])).sort((a, b) => natural(a[1], b[1]));
   const asgs = uniq(S.filter(r => !exPageF.cls || (r.cls || '-') === exPageF.cls).map(r => [exAsgKey(r), r.title || 'Assignment'])).sort((a, b) => natural(a[1], b[1]));
