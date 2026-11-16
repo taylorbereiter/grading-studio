@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"ca730818","zh-Hans":"5b358324","es":"4cdcdd3f","fr":"82e1c3ef","de":"d73eb909","pt-BR":"6d7f5388","ja":"9e0cd5d3","ko":"5ff12a92"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"10c54864","zh-Hans":"7818a52b","es":"a2f44a91","fr":"0e6bbd4e","de":"1f1ee286","pt-BR":"5f079052","ja":"f32acf30","ko":"ef5f513f"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -4986,7 +4986,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.35";
+  const APP_VERSION = "1.28.36";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -6241,6 +6241,13 @@ let setup = setupOver(store.get('gs.setup', null));
 
 function maxPoints() { return setupMax(setup); }
 const roundPct = v => Math.max(0, Math.round(v + 1e-9));
+function pointsWith(pct, max, sc) {
+if (pct == null || pct === '' || isNaN(pct) || !max) return null;
+pct = +pct; if (pct >= (percentWith(max, max, sc) || 100)) return Math.round(pct * max / 50) / 2;
+let best = 0; for (let t = 0.5; t <= max; t += 0.5) if (Math.abs(percentWith(t, max, sc) - pct) < Math.abs(percentWith(best, max, sc) - pct)) best = t;
+return best;
+}
+const pointsFor = pct => pointsWith(pct, maxPoints(), setup.scale);
 function percentFor(total) { return ibSetup() ? null : percentWith(total, maxPoints(), setup.scale); }
 function percentWith(total, max, sc) {
 if (total == null || total === '' || isNaN(total)) return null;
@@ -6307,6 +6314,7 @@ return off ? { total: fd.score, pct, done: true, paper: true, outOf: fd.outOf } 
 }
 function ownGrade(st) {
 const g = st.grade;
+if (g.pk != null && g.pk !== '' && !ibSetup()) return { total: pointsFor(g.pk), pct: +g.pk, done: true, pk: true };
 if (setup.mode === 'rubric') {
 const sc = setup.criteria.map((_, i) => g.rubric[i]);
 if (sc.every(v => v == null)) return { total: null, pct: null, done: false };
@@ -8136,7 +8144,7 @@ return '<div class="crit' + (i === rowOn ? ' on' : '') + '" data-row="' + i + '"
 '<div class="sticks">' + steps.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div></div>'; }).join('') + '</div>' + lvBox();
 } else {
 h += ibPanelAsk() + '<h3>Score <button class="link" id="editRubric">Edit</button></h3>' +
-'<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
+'<div class="pts"><input type="text" inputmode="decimal" id="ptsIn" value="' + esc(g.pk != null && g.pk !== '' ? g.pk + '%' : g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
 }
 h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st) + anchorHtml(st);
 h += cmtHtml(g) + histSlot(st) + '<div class="gfoot"><div class="hint keysrow">' + (setup.mode === 'rubric' ? '<span><kbd>1</kbd>–<kbd>' + Math.min(9, Math.max(...setup.criteria.map((_, i) => rowTop(setup, i)))) + '</kbd> score</span>' + (rowHalf(setup) ? '<span><kbd>.</kbd> half</span>' : '') : '<span>Type the score</span>') + '<button class="link" data-keys title="Every key">All keys <kbd>?</kbd></button></div>' + navHtml(st) + '</div>';
@@ -8220,6 +8228,8 @@ if (e.target.closest('#outAvg, [data-outoff]')) return setOutAvg(batch.students[
 if (e.target.closest('[data-gxc]')) { kmClose(); return xcStart(batch.students[cur]); }
 { const u = e.target.closest('[data-xcu]'); if (u) return xcUnitSet(batch.students[cur], u.dataset.xcu); }
 if (e.target.closest('[data-xcoff]')) return xcSet(batch.students[cur], 0, true);
+if (e.target.closest('[data-gpk]')) { kmClose(); return pctStart(batch.students[cur]); }
+if (e.target.closest('[data-pkoff]')) { gradeSnap(batch.students[cur]); return pctSet(batch.students[cur], '', true); }
 if (e.target.closest('[data-gretake]')) { kmClose(); return retakeStart(batch.students[cur]); }
 if (e.target.closest('[data-tryoff]')) return retakeOff(batch.students[cur]);
 { const u = e.target.closest('[data-tryrule]'); if (u) { kmClose(); return retakeRuleSet(u.dataset.tryrule); } }
@@ -8313,20 +8323,23 @@ redraw(rowOn); return true;
 return false;
 }
 let ptsSnapFor = null;
-$('#grade').addEventListener('focusout', e => { if (e.target.id === 'ptsIn') ptsSnapFor = null; });
+$('#grade').addEventListener('focusout', e => { if (e.target.id === 'ptsIn' || e.target.id === 'pkIn') ptsSnapFor = null; });
 $('#grade').addEventListener('input', e => {
 const st = batch.students[cur];
 if (e.target.id === 'cmtIn') { st.grade.comment = e.target.value; touchGrade(st); saveSoon(); }
 if (e.target.id === 'xcIn') xcSet(st, e.target.value);
+if (e.target.id === 'pkIn') { if (ptsSnapFor !== e.target) { gradeSnap(st); ptsSnapFor = e.target; } pctSet(st, e.target.value); }
 if (e.target.id === 'ptsIn') {
 if (ptsSnapFor !== e.target) { gradeSnap(st); ptsSnapFor = e.target; }
-st.grade.points = e.target.value; const was = st.grade.status; scoreTouched(st); saveSoon(); renderList();
+const raw = e.target.value.trim().replace(',', '.'), m = raw.match(/^(\d+(?:\.\d+)?)\s*%$/);
+if (m) { st.grade.pk = roundPct(+m[1]); st.grade.points = String(pointsFor(st.grade.pk)); } else { delete st.grade.pk; st.grade.points = raw; }
+const was = st.grade.status; scoreTouched(st); saveSoon(); renderList();
 if (was !== st.grade.status) { $('#gstat').outerHTML = statusHtml(st); }
 $('#grade .total').innerHTML = totalHtml(st);
 }
 });
 $('#grade').addEventListener('keydown', e => {
-if (e.target.id === 'xcIn' && (e.key === 'Enter' || e.key === 'Escape')) { e.preventDefault(); e.stopPropagation(); e.target.blur(); return; }
+if ((e.target.id === 'xcIn' || e.target.id === 'pkIn') && (e.key === 'Enter' || e.key === 'Escape')) { e.preventDefault(); e.stopPropagation(); e.target.blur(); return; }
 if ((e.target.id === 'ptsIn' && e.key === 'Enter') || (e.target.id === 'cmtIn' && e.key === 'Escape')) { e.preventDefault(); e.target.blur(); }
 if (e.target.id === 'ptsIn' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); e.stopPropagation(); stepStudent(e.key === 'ArrowDown' ? 1 : -1); }
 });
@@ -11260,9 +11273,9 @@ return forgetKept(b.dataset.kforget);
 if (b.dataset.openAsg) {
 asgTarget = findItem(b.dataset.openAsg).it;
 openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">' + (sysName() ? 'Where is the ' + esc(sysName()) + ' download?' : 'Where are the papers?') + ' You can also drop the ZIP or the folder straight onto this assignment’s card.</p>' + ruHtml(asgTarget.setup, { now: 1 }) + '</div>' +
-'<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true, 'lg');
+'<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button><button class="btn" data-typeonly title="No papers at all: an empty column in the class gradebook to type each score into">No papers: just type the scores…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true, 'lg');
 ruWire($('#dlgBox'), asgTarget);
-$('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a), 'lg'); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
+$('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-typeonly]')) { closeDlg(); return bkTypeOnly(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a), 'lg'); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
 return;
 }
 if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
@@ -13766,7 +13779,7 @@ for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLa
 if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, libTrack, libu: () => LIBU, gsData, gradeOf, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool, redrawAll };
+window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, pointsWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, libTrack, libu: () => LIBU, gsData, gradeOf, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool, redrawAll };
 
 /* ---------------- names: finding a student's name in text, in any alphabet, for the Claude ZIP and anonymous grading ---------------- */
 const NAME_PLAIN = new Set(('al am an art as at august autumn ban bay be best bill bin black brown by can case chase chin dawn day de dean do don dung da ed faith far frank gay go grace gray green grey ha hang he hope ho hung if in is it ivy jade joy june king la lane le little long love major man mark may me min my new no nice on or page pan park pat pearl pen penny price rich rose ruby sandy sang short sing small so son song star stone su sue summer sun sung tan tang ten tin to tu up us van violet von we white will win wing won wood wu ye young april').split(' '));
@@ -14898,7 +14911,7 @@ toast('No longer marked ' + was);
 function scoreTouched(st, rowIndex) {
 touchGrade(st, rowIndex != null ? rowIndex : 'points');
 if (st.found !== undefined) refound(st);
-const g = st.grade, has = rowIndex != null ? g.rubric[rowIndex] != null : g.points !== '' || hasSheet(g);
+const g = st.grade, has = rowIndex != null ? g.rubric[rowIndex] != null : g.points !== '' || g.pk != null || hasSheet(g);
 if (has) liftStatus(st);
 }
 function setStatus(st, s) {
@@ -14911,9 +14924,10 @@ return '<div id="gstat"><div class="gstat"><span class="seg" role="group" aria-l
 (plain ? '' : kmWrap('⋯', 'class="btn sm kdots" id="gMore" aria-label="More for this score" title="More for this score"',
 (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average or on the Insights tab.</small></span></button>') +
 (noScore(st) ? '' : '<button class="mitem" data-gxc>Extra credit points</button>') +
+(noScore(st) || ibSetup() || setup.mode !== 'rubric' ? '' : '<button class="mitem" data-gpk>Score as a percent</button>') +
 (noScore(st) || fmNow() ? '' : '<button class="mitem" data-gretake title="A second try at this assignment. The score, comment and paper so far are kept as the ' + (st.grade.tries && st.grade.tries.length ? 'try before it' : 'first try') + '.">' + (st.grade.tries && st.grade.tries.length ? 'Another retake' : 'Start a retake') + '</button>') +
 '<button class="mitem" data-gcalc>Calculator <kbd>=</kbd></button>', 'right')) + '</div>' +
-(out && !noScore(st) && !plain ? '<p class="outnote">Left out of the average. <button class="link" data-outoff>Count it again</button></p>' : '') + (plain ? '' : xcHtml(st) + tryHtml(st)) + '</div>';
+(out && !noScore(st) && !plain ? '<p class="outnote">Left out of the average. <button class="link" data-outoff>Count it again</button></p>' : '') + (plain ? '' : pctHtml(st) + xcHtml(st) + tryHtml(st)) + '</div>';
 }
 /* ---------------- extra credit on one paper ---------------- */
 let xcOpen = null, xcUnit = store.get('gs.xcU', 'pts') === 'pct' ? 'pct' : 'pts';
@@ -14940,8 +14954,22 @@ else { delete st.grade.xc; delete st.grade.xcU; if (redraw) xcOpen = null; }
 touchGrade(st); saveSoon(); renderList();
 if (redraw) renderGrade(); else { const t = $('#grade .total'); if (t) t.innerHTML = totalHtml(st); }
 }
+/* ---------------- a percent typed as the score ---------------- */
+let pctOpen = null;
+function pctHtml(st) {
+const g = st.grade; if (noScore(st) || setup.mode !== 'rubric' || (g.pk == null && pctOpen !== st)) return '';
+return '<p class="xcnote" id="pkNote"><label>Percent <input type="text" inputmode="decimal" id="pkIn" value="' + (g.pk != null ? g.pk : '') + '" aria-label="Percent"></label> <button class="link" data-pkoff>Remove</button><small style="flex-basis:100%">It stays as the score. Rubric rows don’t change it.</small></p>';
+}
+function pctStart(st) { pctOpen = st; const gs = $('#gstat'); if (gs) gs.outerHTML = statusHtml(st); const i = $('#pkIn'); if (i) { i.focus(); i.select(); } }
+function pctSet(st, raw, redraw) {
+const t = String(raw == null ? '' : raw).replace('%', '').replace(',', '.').trim(), v = t === '' || isNaN(+t) || +t < 0 ? null : roundPct(+t);
+if (v === (st.grade.pk == null ? null : st.grade.pk)) { if (redraw) { if (v == null) pctOpen = null; renderGrade(); } return; }
+if (v == null) { delete st.grade.pk; if (redraw) pctOpen = null; } else st.grade.pk = v;
+scoreTouched(st); saveSoon(); renderList();
+if (redraw) renderGrade(); else { const tt = $('#grade .total'); if (tt) tt.innerHTML = totalHtml(st); }
+}
 /* ---------------- retakes: a second try that keeps the first ---------------- */
-const TRY_KEEP = ['rubric', 'points', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'comment'];
+const TRY_KEEP = ['rubric', 'points', 'pk', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'comment'];
 const tryName = n => n === 1 ? 'First try' : 'Try ' + n;
 function tryOfFile(st, f) {
 const ts = st && st.grade && st.grade.tries; if (!ts || !ts.length || !f) return 0;
@@ -14960,7 +14988,7 @@ for (const k of TRY_KEEP) if (g[k] != null && g[k] !== '' && !(Array.isArray(g[k
 was.files = st.files.filter(f => !tryOfFile(st, f) && !(batch.carry && batch.carry.flags[f.path] === 'new') && (!f.virtual || (f.kind === 'docx' && (f.edited || (wordScore(f) && f.wscore.total != null))))).map(f => f.path);
 (g.tries ||= []).push(was);
 g.rubric = []; g.points = ''; g.comment = '';
-for (const k of ['sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'atR']) delete g[k];
+for (const k of ['pk', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'atR']) delete g[k];
 if (g.status === 'late') g.status = '';
 touchGrade(st); if (st.found !== undefined) refound(st);
 rowOnOf = null; saveSoon(); renderList(); renderGrade();
@@ -14975,7 +15003,7 @@ if (has && tryOffArm !== st) { tryOffArm = st; renderGrade(); return; }
 tryOffArm = null;
 const was = ts.pop(); if (!ts.length) delete g.tries;
 g.rubric = []; g.points = ''; g.comment = '';
-for (const k of ['sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'atR']) delete g[k];
+for (const k of ['pk', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'atR']) delete g[k];
 for (const k of TRY_KEEP) if (was[k] != null) g[k] = was[k];
 if (was.late && !g.status) g.status = 'late';
 touchGrade(st); if (st.found !== undefined) refound(st);
@@ -16652,12 +16680,14 @@ const goals = d ? goalCell(d, g, p) : null; if (goals) cell.goals = goals;
 if (p.tries) cell.tries = triesSay(p);
 return cell;
 }
-function bkTypedCell(ty, r) {
+function bkTypedCell(ty, r, sc) {
 if (!r) return null;
 if (r.st === 'missing' || r.st === 'excused') return { st: r.st, typed: true };
 if (r.v == null || r.v === '' || isNaN(+r.v)) return r.fb ? { fb: true, typed: true } : null;
-const v = +r.v, max = ty.max ? +ty.max : null, one = x => ({ pct: max ? roundPct(x / max * 100) : roundPct(x), total: max ? x : null, max });
-const was = (r.tries || []).filter(x => x != null && !isNaN(+x)).map(x => one(+x)), p = was.length ? withTries(one(v), was, max, true) : one(v);
+const v = +r.v, max = ty.max ? +ty.max : null, one = x => ({ pct: max ? percentWith(x, max, sc) : roundPct(x), total: max ? x : null, max }), xc = +r.xc || 0;
+let p0 = r.p != null && max ? { pct: +r.p, total: pointsWith(+r.p, max, sc), max } : one(v);
+if (xc > 0) p0 = { ...p0, total: p0.total != null ? p0.total + xc : null, pct: roundPct(p0.pct + (max ? xc / max * 100 : xc)) };
+const was = (r.tries || []).filter(x => x != null && !isNaN(+x)).map(x => one(+x)), p = was.length ? withTries(p0, was, max, true) : p0;
 return { pct: p.pct, total: p.total, max, st: r.st || '', typed: true, fb: true, ...(was.length ? { tries: triesSay(p) } : {}) };
 }
 async function bkLoad() {
@@ -16692,7 +16722,7 @@ if (cell) cells.set(n, cell);
 }
 }
 if (col.type === 'xc') { cells.clear(); if (col.typed) for (const n of names) { const r = col.typed.s && col.typed.s[n], v = r ? +r.v : 0; if (v > 0) cells.set(n, { xc: v, typed: true }); } }
-else if (col.typed) for (const n of names) if (!cells.has(n) || (cells.get(n).pct == null && !cells.get(n).st)) { const cell = bkTypedCell(col.typed, col.typed.s && col.typed.s[n]); if (cell) cells.set(n, cell); }
+else if (col.typed) for (const n of names) if (!cells.has(n) || (cells.get(n).pct == null && !cells.get(n).st)) { const cell = bkTypedCell(col.typed, col.typed.s && col.typed.s[n], col.d && setupOver(col.d.setup).scale); if (cell) cells.set(n, cell); }
 return { ...col, cells, termId: bkTermOf(col, terms) };
 }).sort((a, b) => (a.due || '').localeCompare(b.due || '') || natural(a.name, b.name));
 }
@@ -16736,6 +16766,14 @@ if (opts.hi) { const x = bkClassCols(c, cols).find(k => k.key === opts.hi); if (
 bkDraw();
 }
 const bkClass = () => classById(bk.cls);
+let bkWant = null;
+function bkTypeOnly(it) {
+const f = findItem(it.id), c = f && classById(f.c.id);
+if (!c || !c.names.length) return toast('Put this assignment in a class with a roster first.');
+if (classWay(c) === 'myp') bkWant = [c.id, it.id, 'ib'];
+else { if (!it.typed) { const su = setupOver(it.setup || setup), m = su.mode === 'rubric' ? 0 : setupMax(su); it.typed = { max: m > 0 ? m : null, s: {} }; saveLib(); } bkWant = [c.id, it.id]; }
+go(classHash(c, 'gradebook'));
+}
 const bkW = () => bk.w || 640;
 const bkWho = (n, i) => anonOn() ? 'Student ' + (i + 1) : n;
 const bkInfo = n => anonOn() ? '' : whoBtn('data-wc="' + esc(bk.cls) + '" data-wn="' + esc(n) + '"', n);
@@ -16761,6 +16799,12 @@ const body = $('#bkBody'), c = bkClass(); if (!body || !c || !bk.cols) return;
 for (const b of document.querySelectorAll('[data-bktab]')) b.setAttribute('aria-selected', String(b.dataset.bktab === bk.tab));
 const conf = ibConf(c, bkConf()), all = bkClassCols(c, bk.cols), tabs = bkTabs(all);
 if (bk.term == null || !tabs.some(t => t[0] === bk.term)) bk.term = conf.terms.length ? bkTermNow(conf.terms) : '';
+if (bkWant && bkWant[0] === c.id && bk.tab === 'table') {
+const w = bkWant; bkWant = null;
+if (w[2]) return ibAddOpen(c, w[1]);
+const x = all.find(k => k.key === w[1]); if (x && tabs.some(t => t[0] === x.termId)) bk.term = x.termId;
+bk.hi = w[1]; setTimeout(() => bkShow(document.querySelector('#bkBody [data-bked="' + CSS.escape(w[1]) + '"]')), 0);
+}
 const cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term);
 const myp = classWay(c) === 'myp', page = bkPage(), tools = (!page || bk.tab === 'table') && !myp;
 if (myp && bk.tab === 'table' && c.names.length) { body.innerHTML = ibBookView(c, cols, all, tabs); return; }
@@ -17144,15 +17188,18 @@ vs.forEach((x, i) => { if (x !== '-') l[crit[i]] = +x; });
 return Object.keys(l).length ? { l, st: '' } : null;
 }
 if (st) return { v: null, st };
+let xc = 0; const mx = t.match(/\s*\+\s*(\d+(?:[.,]\d+)?)$/); if (mx) { xc = hp(mx[1].replace(',', '.')); t = t.slice(0, mx.index).trim(); }
+const late = r.st === 'late' ? 'late' : '', max = col.typed ? col.typed.max : col.d ? bkColMax(col) : null, add = o => xc > 0 ? { ...o, xc } : o;
+if (max && /^\d+([.,]\d+)?\s*%$/.test(t)) { const p = roundPct(+t.replace('%', '').replace(',', '.').trim()); return add({ v: Math.round(p * max) / 100, p, st: late }); }
 const vs = t.split('>').map(x => x.trim().replace('%', '').replace(',', '.')); if (!vs.every(ok)) return undefined;
-const n = vs.map(hp), v = n.pop(), late = r.st === 'late' ? 'late' : '';
-return n.length ? { v, st: late, tries: n } : { v, st: late };
+const n = vs.map(hp), v = n.pop();
+return add(n.length ? { v, st: late, tries: n } : { v, st: late });
 }
 function bkCellVal(r, col) {
 if (r.st === 'missing' || r.st === 'excused') return r.st;
 if (col.typed && col.typed.lv) { const vs = ((col.it && col.it.crit) || []).map(k => r.l && r.l[k] != null ? r.l[k] : '-'); return vs.some(x => x !== '-') ? vs.join(' ') : ''; }
 if (col.type === 'xc') return +r.v > 0 ? fmtNum(+r.v) : '';
-return r.v != null ? (r.tries || []).concat(r.v).map(fmtNum).join(' > ') : '';
+return r.v == null ? '' : (r.tries || []).map(fmtNum).concat(r.p != null ? r.p + '%' : fmtNum(r.v)).join(' > ') + (+r.xc > 0 ? ' + ' + fmtNum(+r.xc) : '');
 }
 const bkColMax = col => { for (const x of bkClassCols(bkClass(), [col])[0].cells.values()) if (x.max) return x.max; return null; };
 function bkPut(col, n, rec) {
@@ -18311,6 +18358,7 @@ if (rub) { const v = s.criteria.map((_, i) => r[i]); if (v.some(x => x != null))
 else if (g.points !== '' && g.points != null && !isNaN(+g.points)) total = +g.points;
 if (total == null && hasSheet(g) && !isNaN(+g.sheet)) { total = +g.sheet; paper = true; }
 let pct = percentWith(total, max, s.scale);
+if (g.pk != null && g.pk !== '' && !Array.isArray(s.ib)) { pct = +g.pk; total = pointsWith(pct, max, s.scale); partial = paper = false; }
 if (total == null && g.read && !(g.tries && g.tries.length)) { const d = g.read; paper = true; total = d.score; if (d.outOf != null) max = d.outOf; pct = d.pct != null ? d.pct : percentWith(total, max, s.scale); }
 const one = addXc({ total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => rowTop(s, i) === ROW_TOP ? [c, r[i]] : [c, r[i], rowTop(s, i)]).filter(x => x[1] != null) : [] }, g.xc, max, g.xcU);
 if (!g.tries || !g.tries.length) return one;
@@ -26467,20 +26515,20 @@ return { html: h + '</div></article>', draft: !!(rep && rep.text.trim() && rep.d
 }
 function ibAddOpen(c, itId) {
 const f = itId && findItem(itId), it = f ? f.it : null, crit = ibCrit(c);
-ibk.add = { it, name: it ? it.name : '', due: it ? it.due || '' : isoDay(Date.now()), fm: !!it && it.type === 'fm', crit: it ? (it.crit || []).slice() : crit.slice(0, 2).map(x => x.k),
+ibk.add = { it, name: it ? it.name : '', due: it ? it.due || '' : isoDay(Date.now()), fm: !!it && it.type === 'fm', crit: it && it.crit ? it.crit.slice() : crit.slice(0, 2).map(x => x.k),
 s: it ? JSON.parse(JSON.stringify((it.typed && it.typed.s) || {})) : {} };
 ibk.view = 'add'; bkDraw(); const n = $('#ibaName'); if (n && !it) n.focus();
 }
 function ibAddView(c) {
 const a = ibk.add, crit = ibCrit(c), on = crit.filter(x => a.crit.includes(x.k));
-return '<div class="ibadd" id="ibAdd"><div class="ibaddhead"><h3>' + (a.it ? 'Change levels' : 'Add levels') + '</h3><span class="muted">For a task you marked on paper or somewhere else.</span></div>' +
+return '<div class="ibadd" id="ibAdd"><div class="ibaddhead"><h3>' + (a.it && a.it.typed ? 'Change levels' : 'Add levels') + '</h3><span class="muted">For a task you marked on paper or somewhere else.</span></div>' +
 '<div class="ibaddtop"><label>Task <input type="text" id="ibaName" value="' + esc(a.name) + '" maxlength="80" placeholder="e.g. Cells lab report"></label><label>Date <input type="date" id="ibaDue" value="' + esc(a.due) + '"></label>' +
 '<label class="ibchk"><input type="checkbox" id="ibaFm"' + (a.fm ? ' checked' : '') + '> Formative</label></div>' +
 '<div class="ibaddcrit" role="group" aria-label="Criteria this task assessed"><span class="muted">Assessed:</span>' + crit.map(x => '<label class="ibchk" data-raw title="' + esc(x.name) + '"><input type="checkbox" data-ibacrit="' + esc(x.k) + '"' + (a.crit.includes(x.k) ? ' checked' : '') + '> ' + esc(x.k) + ' <span class="muted">' + esc(x.name) + '</span></label>').join('') + '</div>' +
 (on.length ? '<div class="bkwrap"><table class="bktab ibaddtab"><thead><tr><th class="bknm">Student</th>' + on.map(x => '<th>' + esc(x.k) + '<small>0 to ' + IB_TOP + '</small></th>').join('') + '</tr></thead><tbody>' +
 c.names.map((nm, i) => '<tr><td class="bknm" data-raw>' + esc(bkWho(nm, i)) + '</td>' + on.map(x => { const v = ((a.s[nm] || {}).l || {})[x.k]; return '<td><input type="number" class="ibain" min="0" max="' + IB_TOP + '" step="1" data-iban="' + esc(nm) + '" data-ibak="' + esc(x.k) + '" value="' + (v == null ? '' : v) + '" aria-label="' + esc(x.k + ' for ' + bkWho(nm, i)) + '"></td>'; }).join('') + '</tr>').join('') + '</tbody></table></div>'
 : '<p class="muted bkpad">Tick the criteria this task assessed.</p>') +
-'<div class="ibaddfoot">' + (a.it ? '<button class="btn" data-ibadel style="margin-right:auto">Delete these levels</button>' : '') + '<button class="btn" data-ibacancel>Cancel</button><button class="btn primary" data-ibasave>Save</button></div></div>';
+'<div class="ibaddfoot">' + (a.it && a.it.typed ? '<button class="btn" data-ibadel style="margin-right:auto">Delete these levels</button>' : '') + '<button class="btn" data-ibacancel>Cancel</button><button class="btn primary" data-ibasave>Save</button></div></div>';
 }
 function ibAddRead() {
 const a = ibk.add; if (!a || !$('#ibAdd')) return;
@@ -30673,7 +30721,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.35":["Type notes: a page beside the paper that you type on like any document, with headings, lists, bold, italic, underline and highlight. Beside a video or with the clock running, each new paragraph gets its time, and a paragraph can be marked as a strength, a next step or a question.","Each assignment says whether typed notes go back to the student as a page of the returned paper, and in what text size: Compact, Standard or Large. Help has a new answer."]};
+const WHATS_NEW = {"1.28.36":["Type a percent as a score and it stays the score. On a points paper, type 73% in the score box. With a rubric, choose Score as a percent from the score's ⋯ menu. The points that match on the assignment's scale show beside it, and moving rubric rows later doesn't change it.","In the gradebook, type 73% in a points column, or 8 + 1 to give one score a point of extra credit.","An assignment with no papers can go straight to typing scores: Add papers…, then No papers: just type the scores…. The class gradebook opens with the first student's box ready."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };

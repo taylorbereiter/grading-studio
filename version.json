@@ -1,22 +1,23 @@
 {
- "version": "1.28.35",
- "build": "669bad3e7aa2",
+ "version": "1.28.36",
+ "build": "7b4d3f31d47b",
  "notes": [
-  "Type notes: a page beside the paper that you type on like any document, with headings, lists, bold, italic, underline and highlight. Beside a video or with the clock running, each new paragraph gets its time, and a paragraph can be marked as a strength, a next step or a question.",
-  "Each assignment says whether typed notes go back to the student as a page of the returned paper, and in what text size: Compact, Standard or Large. Help has a new answer."
+  "Type a percent as a score and it stays the score. On a points paper, type 73% in the score box. With a rubric, choose Score as a percent from the score's ⋯ menu. The points that match on the assignment's scale show beside it, and moving rubric rows later doesn't change it.",
+  "In the gradebook, type 73% in a points column, or 8 + 1 to give one score a point of extra credit.",
+  "An assignment with no papers can go straight to typing scores: Add papers…, then No papers: just type the scores…. The class gradebook opens with the first student's box ready."
  ],
  "files": {
-  "index.html": "8dc1e4c6675dbf085200566d041936745e11a1bebfb1c486b5f426df7d7bd20f",
-  "planner.html": "ddb51d28c398f2628341f9ebccdb32d8ef033825c169b67b3e0256358844cde7"
+  "index.html": "b4addf56e2044d3f49b0de519922cf6dc134857ec6505d37b7de69d2e0aa3ebf",
+  "planner.html": "703db0010a82aecbc78633a28f340f89b28159e1ed67c3a94b233fd96ba5bffe"
  },
  "langs": {
-  "lang/zh-Hant.js": "ca730818e52fea5bdc4425d02121db2ecb86464f9f7fc73bbb1cded7c257be00",
-  "lang/zh-Hans.js": "5b35832439558ce46935de55023bfbc1d016e700e8d0993e5c772a2c51626f7b",
-  "lang/es.js": "4cdcdd3f623779999f06c011af83724efaee315521eebddb97423eb60fdb2cc2",
-  "lang/fr.js": "82e1c3ef5233f2cbced888c6f72063550a0cd57250d4906d193b14c9f1bb0995",
-  "lang/de.js": "d73eb9095884001168820a393485ce701fd9b94439046c979bb00b5aea694f30",
-  "lang/pt-BR.js": "6d7f53882bca6a1a7c1299b63d90fb801d23c029bc821337b316f90a6b33118e",
-  "lang/ja.js": "9e0cd5d365e7701075b13b8b2fa72ab378bca0594a3a191860894b0f1ace519c",
-  "lang/ko.js": "5ff12a92da88238424c8a90f8b53eb3e6ea1b2a0bc2928acbc33f4536f1750f2"
+  "lang/zh-Hant.js": "10c548640fa6172fba70eb97c5dc57ef5e7583305b2d4b342424d46eca0b1ff2",
+  "lang/zh-Hans.js": "7818a52bdcf350340b4aba5e933e73b84053be702a83e98f826100fdead8b978",
+  "lang/es.js": "a2f44a91c49e005c92800047072a8bab60962adaa3a597f00bed3fe36b1c32e7",
+  "lang/fr.js": "0e6bbd4ea0f0bda0e01a0bb41058ef8292a962ddd53bfe55a50f463f86614b8d",
+  "lang/de.js": "1f1ee28618182d0d4407dd4a93fcff981b6e1fdb026a1adaa9252f575fa75f64",
+  "lang/pt-BR.js": "5f079052e5c05a3d8e13f0f0fd45c69ed56b15cf7606e8ba68e2f9912e74237d",
+  "lang/ja.js": "f32acf3026f0ce8b1da34dcfc5b41fd465f9b90824226dcbb2d7fae7fcd0e8c1",
+  "lang/ko.js": "ef5f513fb769cfbc29f00e145104757ec1dbc44ea311686d82fc995b84546313"
  }
 }

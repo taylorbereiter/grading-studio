@@ -177,7 +177,7 @@ function renderGrade() {
         '<div class="sticks">' + steps.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div></div>'; }).join('') + '</div>' + lvBox();
   } else {
     h += ibPanelAsk() + '<h3>Score <button class="link" id="editRubric">Edit</button></h3>' +
-      '<div class="pts"><input type="number" step="0.5" min="0" id="ptsIn" value="' + esc(g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
+      '<div class="pts"><input type="text" inputmode="decimal" id="ptsIn" value="' + esc(g.pk != null && g.pk !== '' ? g.pk + '%' : g.points) + '" aria-label="Points"><span class="muted">out of ' + esc(setup.outOf) + '</span></div>';
   }
   h += '<div class="total">' + totalHtml(st) + '</div>' + statusHtml(st) + anchorHtml(st);
   h += cmtHtml(g) + histSlot(st) + '<div class="gfoot"><div class="hint keysrow">' + (setup.mode === 'rubric' ? '<span><kbd>1</kbd>–<kbd>' + Math.min(9, Math.max(...setup.criteria.map((_, i) => rowTop(setup, i)))) + '</kbd> score</span>' + (rowHalf(setup) ? '<span><kbd>.</kbd> half</span>' : '') : '<span>Type the score</span>') + '<button class="link" data-keys title="Every key">All keys <kbd>?</kbd></button></div>' + navHtml(st) + '</div>';
@@ -270,6 +270,8 @@ $('#grade').addEventListener('click', e => {
   if (e.target.closest('[data-gxc]')) { kmClose(); return xcStart(batch.students[cur]); }
   { const u = e.target.closest('[data-xcu]'); if (u) return xcUnitSet(batch.students[cur], u.dataset.xcu); }
   if (e.target.closest('[data-xcoff]')) return xcSet(batch.students[cur], 0, true);
+  if (e.target.closest('[data-gpk]')) { kmClose(); return pctStart(batch.students[cur]); }
+  if (e.target.closest('[data-pkoff]')) { gradeSnap(batch.students[cur]); return pctSet(batch.students[cur], '', true); }
   if (e.target.closest('[data-gretake]')) { kmClose(); return retakeStart(batch.students[cur]); }
   if (e.target.closest('[data-tryoff]')) return retakeOff(batch.students[cur]);
   { const u = e.target.closest('[data-tryrule]'); if (u) { kmClose(); return retakeRuleSet(u.dataset.tryrule); } }
@@ -370,20 +372,23 @@ function scoreKey(e, onRange) {
   return false;
 }
 let ptsSnapFor = null;
-$('#grade').addEventListener('focusout', e => { if (e.target.id === 'ptsIn') ptsSnapFor = null; });
+$('#grade').addEventListener('focusout', e => { if (e.target.id === 'ptsIn' || e.target.id === 'pkIn') ptsSnapFor = null; });
 $('#grade').addEventListener('input', e => {
   const st = batch.students[cur];
   if (e.target.id === 'cmtIn') { st.grade.comment = e.target.value; touchGrade(st); saveSoon(); }
   if (e.target.id === 'xcIn') xcSet(st, e.target.value);
+  if (e.target.id === 'pkIn') { if (ptsSnapFor !== e.target) { gradeSnap(st); ptsSnapFor = e.target; } pctSet(st, e.target.value); }
   if (e.target.id === 'ptsIn') {
     if (ptsSnapFor !== e.target) { gradeSnap(st); ptsSnapFor = e.target; }   // one step for a visit to the box, not one a keystroke
-    st.grade.points = e.target.value; const was = st.grade.status; scoreTouched(st); saveSoon(); renderList();
+    const raw = e.target.value.trim().replace(',', '.'), m = raw.match(/^(\d+(?:\.\d+)?)\s*%$/);   // "73%" is a percent that stays the score; a plain number is points
+    if (m) { st.grade.pk = roundPct(+m[1]); st.grade.points = String(pointsFor(st.grade.pk)); } else { delete st.grade.pk; st.grade.points = raw; }
+    const was = st.grade.status; scoreTouched(st); saveSoon(); renderList();
     if (was !== st.grade.status) { $('#gstat').outerHTML = statusHtml(st); }
     $('#grade .total').innerHTML = totalHtml(st);
   }
 });
 $('#grade').addEventListener('keydown', e => {   // Enter or Escape leaves the box, so the arrow keys go back to moving between students
-  if (e.target.id === 'xcIn' && (e.key === 'Enter' || e.key === 'Escape')) { e.preventDefault(); e.stopPropagation(); e.target.blur(); return; }
+  if ((e.target.id === 'xcIn' || e.target.id === 'pkIn') && (e.key === 'Enter' || e.key === 'Escape')) { e.preventDefault(); e.stopPropagation(); e.target.blur(); return; }
   if ((e.target.id === 'ptsIn' && e.key === 'Enter') || (e.target.id === 'cmtIn' && e.key === 'Escape')) { e.preventDefault(); e.target.blur(); }
   if (e.target.id === 'ptsIn' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); e.stopPropagation(); stepStudent(e.key === 'ArrowDown' ? 1 : -1); }   // not half a point up or down: these keys move between students
 });
