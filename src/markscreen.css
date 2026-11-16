@@ -258,3 +258,26 @@ button.pavg:hover .v{text-decoration:underline}
   .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek) .fstab{display:flex;align-items:center;justify-content:center;position:absolute;left:0;top:50%;z-index:7;width:22px;height:56px;margin-top:-28px;padding:0;border:1px solid var(--line-strong);border-left:0;border-top-right-radius:var(--corner-3);border-bottom-right-radius:var(--corner-3);background:var(--surface);color:var(--muted);font-size:var(--text-body);box-shadow:var(--shadow);cursor:pointer}
 }
 @media (prefers-reduced-motion:reduce){.gsfull .cols>.side,.gsfull .cols .tools{transition:none!important}}
+/* Only this student (src/solo.js): one bar across the top with their name, their other work and a held button out. Everything
+   that lists or names other students steps aside: the list, the tabs, the sidebar, the class's numbers, notes that pop up. */
+.solobar{display:flex;align-items:center;gap:10px;height:52px;box-sizing:border-box;padding:0 16px;background:var(--accent-soft);border-bottom:1px solid var(--line);position:relative;z-index:30}
+.solobar[hidden]{display:none}
+.solobar .sp{flex:1}
+.solo-ic svg,.solo-go svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;vertical-align:-3px}
+.solo-ic{color:var(--accent);display:flex}
+.solo-t{color:var(--accent);font-weight:650}
+.solo-n{font-weight:650;font-size:var(--text-lead);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.solo-x{position:relative;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none}
+.solo-fill{position:absolute;inset:0;background:var(--accent);opacity:.22;transform:scaleX(0);transform-origin:left}
+.solo-x.holding .solo-fill{transform:scaleX(1);transition:transform 1.5s linear}
+.solo-xl{position:relative}
+.solo-work{position:absolute;right:16px;top:48px;width:min(420px,calc(100vw - 32px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 14px}
+.solo-work h3{margin:0 0 8px;font-size:var(--text-body);font-weight:650}
+.solo-row{display:block;width:100%;text-align:left;background:none;border:0;border-radius:var(--r-sm);padding:0 6px;font:inherit;color:inherit}
+button.solo-row{cursor:pointer}
+button.solo-row:hover{background:var(--accent-soft)}
+.solo-row.on{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+html.solo .shell{height:calc(100vh - var(--savebar,0px) - 52px)}
+html.solo #rail,html.solo #side,html.solo #colL,html.solo #fsEdge,html.solo #fsTab,html.solo #progS,html.solo .app .top,html.solo #fcPanel,html.solo .toast,
+html.solo #paper .who .whon,html.solo #paper .who .whob,html.solo #readBtn,html.solo #addMenuBtn,html.solo #whoMore,html.solo #soloBtn,html.solo #grpBand,html.solo #grade .nav,html.solo #openRep,html.solo #pcard{display:none!important}
+html.solo .cols{--lw:0px}

@@ -228,6 +228,7 @@ function goneList(st) {
 }
 // A short note with one button, like Undo. It stays a little longer than a plain one.
 function toastDo(msg, label, fn) {
+  if (soloOn()) return;
   const t = $('.toast');
   toast(msg, 6000);
   const b = document.createElement('button'); b.className = 'tact'; b.textContent = label;

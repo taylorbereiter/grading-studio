@@ -1,22 +1,21 @@
 {
- "version": "1.28.53",
- "build": "1f58dc0d53ef",
+ "version": "1.28.54",
+ "build": "8fcf01c10c6a",
  "notes": [
-  "Replace in one step: Replace… on a student's file can take the new one from your computer or from Google Drive, and a video link can be replaced by a new link, video file or Drive video, for partners too. The score stays, and Undo puts the old one back.",
-  "In the Planner, lesson materials, unit files and unit-plan screenshots have Replace… too, with Undo."
+  "Only this student: when a student comes to your desk, the person button on their paper (or I) shows them and nobody else. The student list, tabs, sidebar and class numbers step aside, and the arrow keys stay on them. Other work shows their own score on each assignment in the class and opens it. Hold \"Hold to show everyone\" to go back."
  ],
  "files": {
-  "index.html": "31f46cf78f232aabbc6c53cc66e3d6ebc102f19b89c7d266ef0ed22b362c50fa",
-  "planner.html": "2a62d35b24d36e96dac61a2218d88061a73aff97d7711dd07af66b3cc76ce8fc"
+  "index.html": "97e579651a063e10e446bb00aad6a8e9b129e6254148c52a0f7dd44ef814f7bd",
+  "planner.html": "4b312322d338293eba003a1bd613a198ac327fe5c4449f2b553683f93795c4ff"
  },
  "langs": {
-  "lang/zh-Hant.js": "b8d5a5fa409e9104847e740ca0c3162e10f9ec763cfc74ef80351ecee78029a4",
-  "lang/zh-Hans.js": "5745ccfaf54b1c0728aedb9a4ea809521d23af3a57a608c1e84d827a46410b98",
-  "lang/es.js": "da065db7bc401458b8497b70e496511c65e17dec7dc865f9837aa4e570cea6b9",
-  "lang/fr.js": "e1ae3aa03c8926eed56efc3d4064b601690dbff9ef7804d8128d808586133971",
-  "lang/de.js": "3a858d2d2115a534be9fae2275bc05b2c73f21d9d6af29b896614a6731f2d825",
-  "lang/pt-BR.js": "0d7df1fde236f4378802102e5fe2ba122c6f3598b20295a11065899edefaa35e",
-  "lang/ja.js": "f98347b337b77c667d190c164b85260885bfe57cfac2b26483f763c134200f15",
-  "lang/ko.js": "783e294fd4887651984c5812c604fe5eb0952c3196f01a95b83717aa8bb795e2"
+  "lang/zh-Hant.js": "71b3e95310ab9a4dcc6824ff1f8c7ed6465bffb72c8de2abda507427dba46198",
+  "lang/zh-Hans.js": "e932e5c3290b3b2c208b70d8956a900b11d2864795368afe47ea28af79deae97",
+  "lang/es.js": "b5f88c1c6663849c24b4205f52462bd5eef4b3a94ac9788ac778e991be92fe1a",
+  "lang/fr.js": "0ddf478a4f83c558b0c111b42961612cdf7abe55878dd1b5cf8bda06883af996",
+  "lang/de.js": "5da1baf421ef4735d9f27f48950a30a439e9768f14bfece1bf6db093e5fb16f4",
+  "lang/pt-BR.js": "e58209f983f08183cdf6d49d6ccafb3deea889fe85c7ede2e6b7b09499c5ce68",
+  "lang/ja.js": "abbc107ee279f8a31de76f6183e806affe384f649f29d361c73cf1eba55c20f3",
+  "lang/ko.js": "214aff323afa2beb90b28dca84c6a958a4f6e50a05478939f2e63e9233add77e"
  }
 }
