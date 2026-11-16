@@ -115,6 +115,9 @@
 .fcset input[type=number]{width:76px;height:32px;padding:0 var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
 .fcset .seg{display:inline-flex}
 .fcext{align-items:center}
+.pfstart{display:inline-flex;align-items:center;gap:var(--space-1)}
+.pfstart[hidden]{display:none}
+.ls-top .btn.pfstart svg,.pfstart svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .fcext > span{font-size:var(--text-small);color:var(--muted)}
 
 /* lo-fi music in the timer panel */

@@ -7,13 +7,14 @@
    gsp.focusQ ([{ d: day, s: seconds, m: on papers, x: extra minutes, got: papers }]) and the grading page writes it in when it next
    opens. Both keys stay in this browser (src/takehome.js PLAN_LS_SKIP). Every word here is one the grading page's panel already uses,
    so the languages cover it as they are. */
+var pfReady = false;   // src/planner/plantime.js and the lesson editor can ask before this file has run
 const PF_KEY = 'gsp.focusRun', PF_Q = 'gsp.focusQ', PF_P0 = 1e9;
 const pfGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
 const pfSetK = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch { } };
 const pfRun = () => { const r = pfGet(PF_KEY, null); return r && r.st ? r : null; };
 function pfConf() {
   const f = pfGet('gsp.timeCount', null) || {};
-  return { len: +f.len > 0 ? +f.len : 10, brk: +f.brk > 0 ? +f.brk : 5, sound: f.sound !== false, title: f.title !== false,
+  return { len: +f.len > 0 ? +f.len : 10, llen: +f.llen > 0 ? +f.llen : 45, brk: +f.brk > 0 ? +f.brk : 5, sound: f.sound !== false, title: f.title !== false,
     music: f.music === true, mood: typeof f.mood === 'string' ? f.mood : 'mix', mvol: +f.mvol >= .05 && +f.mvol <= 1 ? +f.mvol : .5, mamb: f.mamb === true };
 }
 const pfDay = () => ymd(new Date());
@@ -27,14 +28,54 @@ let pfS = { mute: false };
 // A session that ends here: its minutes wait for the grading page (once: r.secs says it is written down).
 function pfRecord(r) {
   if (r.secs != null) return r;
+  if (r.k === 'l') { const secs = pfLesSecs(r); pfPlanAdd(r, secs); return Object.assign(r, { secs, got: 0 }); }
   const secs = Math.min(r.one ? 4 * 3600 : r.len, Math.max(0, pfElapsed(r) - pfIdle(r))), got = Math.max(0, r.pg || 0);
   if (secs > 0) { const q = pfGet(PF_Q, []); pfSetK(PF_Q, [...(Array.isArray(q) ? q : []), { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), d: pfDay(), s: secs, m: /^mark:/.test(r.w || '') ? 1 : 0, x: r.ext ? 1 : 0, got }].slice(-50)); }
   return Object.assign(r, { secs, got });
 }
+// A lesson session's minutes are planning time (src/planner/plantime.js; the grading page's fcPlanAdd writes the same).
+function pfPlanAdd(r, secs) {
+  if (!(secs > 0)) return;
+  const P = pfGet('gsp.planTime', null) || {}, days = P.days && typeof P.days === 'object' ? P.days : {}, names = P.names && typeof P.names === 'object' ? P.names : {};
+  const ids = Array.isArray(P.ids) ? P.ids.filter(x => typeof x === 'string').slice(-50) : [];
+  if (r.id && ids.includes(r.id)) return;   // written already, by the grading page or another tab
+  const id = r.l || '', k = pfDay(), d = { ...(days[k] || {}) }, a = { ...(d.a || {}) };
+  d.l = (d.l || 0) + secs; a[id] = (a[id] || 0) + secs; d.f = (d.f || 0) + secs; if (secs >= 60 && !r.ext) d.n = (d.n || 0) + 1;
+  d.a = a; days[k] = d; if (id && r.t) names[id] = String(r.t).slice(0, 120);
+  for (const day of Object.keys(days)) if (Date.now() - new Date(day + 'T12:00:00') > 400 * 864e5) delete days[day];
+  const used = new Set(Object.values(days).flatMap(x => Object.keys((x && x.a) || {})));
+  for (const n of Object.keys(names)) if (!used.has(n)) delete names[n];
+  pfSetK('gsp.planTime', { days, names, ...(r.id ? { ids: [...ids, r.id] } : {}) });
+}
+// The seconds a lesson session counts (src/focus.js fcLesSecs says the same): no pauses, and no more than 20 minutes past the last thing done.
+function pfLesSecs(r) {
+  const last = Math.max(r.at, r.seen || 0), cap = r.st === 'paused' ? Infinity : Math.round((last + 20 * 60e3 - r.at) / 1000);
+  return Math.max(0, Math.min(r.len, pfElapsed(r), cap));
+}
+const pfRid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const pfLes = r => r && r.k === 'l' ? { k: 'l', id: pfRid(), l: r.l || '', ...(r.nw ? { nw: r.nw } : {}) } : {};
+// A focus session on the lesson open in the editor, from its Focus button. A session going on ends first, and counts.
+function pfStart(l) {
+  if (!l) return;
+  const was = pfRun(); if (was && (was.st === 'run' || was.st === 'paused')) pfRecord(was);
+  const P = pfGet('gsp.planTime', null), no = ((P && P.days && P.days[pfDay()]) || {}).n || 0;
+  pfSet({ k: 'l', id: pfRid(), st: 'run', len: pfConf().llen * 60, at: Date.now(), w: 'les:' + l.id, l: l.id, t: String(l.title || '').slice(0, 120), one: 0, fold: false, no: no + 1 });
+}
+// A session started on the grading page for a class with nothing planned yet: the lesson made for it on arrival (src/planner/rail.js).
+function pfLesson(l) {
+  const r = pfRun(); if (!pfReady || !l || !r || r.k !== 'l' || r.l) return;
+  r.l = l.id; r.w = 'les:' + l.id; r.t = String(l.title || '').slice(0, 120); delete r.nw; pfSet(r);
+}
+// The Focus button in the lesson editor's top bar, hidden while a session is on this lesson.
+const pfOnIt = l => { const r = pfRun(); return !!l && !!r && r.k === 'l' && r.l === l.id && r.st !== 'done'; };
+function pfBtn(l) {
+  if (!pfReady || !l) return '';
+  return '<button class="btn sm pfstart" data-pfstart title="Plan this lesson in a focus session"' + (pfOnIt(l) ? ' hidden' : '') + '>' + PF_CLOCK + 'Focus ' + pfConf().llen + ' min</button>';
+}
 function pfSet(r) { pfSetK(PF_KEY, r); pfTickOn(); pfRender(); }
 function pfStartAgain(min) {
   const r = pfRun(); if (!r) return;
-  pfSet({ st: 'run', len: Math.round(min * 60), at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: PF_P0, pg: 0, fold: false, no: (r.no || 1) + 1 });
+  pfSet({ ...pfLes(r), st: 'run', len: Math.round(min * 60), at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: PF_P0, pg: 0, fold: false, no: (r.no || 1) + 1 });
 }
 function pfAct(a, n) {
   const r = pfRun(); if (!r) return;
@@ -42,7 +83,7 @@ function pfAct(a, n) {
   if (a === 'pause' && r.st === 'run') { r.st = 'paused'; r.pz = Date.now(); r.idl = pfIdle(r); delete r.ii; }
   else if (a === 'resume' && r.st === 'paused') { r.at += Date.now() - r.pz; delete r.pz; r.st = 'run'; }
   else if (a === 'more' && on) r.len += n * 60;
-  else if (a === 'ext' && r.st === 'up') return pfSet({ st: 'run', len: n * 60, at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: PF_P0, pg: 0, fold: false, no: r.no, ext: 1, ...(r.sg && r.sg.k !== 'papers' ? { sg: r.sg } : {}) });
+  else if (a === 'ext' && r.st === 'up') return pfSet({ ...pfLes(r), st: 'run', len: n * 60, at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: PF_P0, pg: 0, fold: false, no: r.no, ext: 1, ...(r.sg && r.sg.k !== 'papers' ? { sg: r.sg } : {}) });
   else if (a === 'break') { if (on) pfRecord(r); Object.assign(r, { st: 'brk', brkAt: Date.now(), brkLen: pfConf().brk * 60, fold: false }); }
   else if (a === 'stop') { if (on) pfRecord(r); Object.assign(r, { st: 'done', fold: false }); }
   else if (a === 'close') return pfSet(null);
@@ -77,10 +118,12 @@ function pfTickOn() {
 }
 function pfTick() {
   const r = pfRun(); if (!r) return pfTickOn();
+  // presenting is teaching, not planning: a lesson session waits while a lesson is presented
+  if (r.k === 'l' && r.st === 'run' && PR.on) return pfAct('pause');
   // "Just one paper" is finished on the grading page; here its clock only counts up
   if (r.st === 'run' && !r.one && pfLeft(r) <= 0) { pfRecord(r); r.st = 'up'; r.fold = false; pfSet(r); pfChime(); return; }
   if (r.st === 'brk' && pfLeft(r) <= 0) { r.st = 'brkup'; r.fold = false; pfSet(r); pfChime(); return; }
-  pfClockDraw(); pfTitle();
+  pfRender(); pfTitle();   // the panel's Open the lesson follows what is open
 }
 let pfTitlePre = '';
 function pfTitle() {
@@ -92,6 +135,7 @@ function pfTitle() {
 }
 
 /* drawing: the grading page's panel, with what this page can do */
+const PF_CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.3 1.6M10 3h4"/></svg>';
 const PF_TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const PF_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
 const PF_NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg>';
@@ -101,6 +145,7 @@ const pfFrac = r => r.st === 'brk' ? pfLeft(r) / (r.brkLen || 1) : r.one ? 1 : p
 const pfHead = (cap, fold) => '<div class="fchead"><h2 class="tcap">' + cap + '</h2><span class="sp"></span>' + (fold ? '<button class="icon" data-pf="fold" title="Fold it away" aria-label="Fold it away">–</button>' : '<button class="icon" data-pf="close" title="Close" aria-label="Close">✕</button>') + '</div>';
 const pfName = r => r.t ? '<b data-raw>' + esc(r.t) + '</b>' : '<b>' + esc(tr('Focus')) + '</b>';
 function pfSub(r) {
+  if (r.k === 'l') return '<span>A lesson to plan</span>' + (r.l && !(L.view === 'edit' && L.open && L.open.id === r.l) && r.st !== 'brk' ? '<button class="btn sm primary" data-pf="open">Open the lesson</button>' : '');
   return '<span>' + (r.one ? (r.one > 1 ? 'Just 3 papers' : 'Just one paper') : r.w ? '' : 'The timer only') + '</span>' +
     (/^mark:/.test(r.w || '') && r.st === 'run' ? '<button class="btn sm primary" data-pf="next">Next paper →</button>' : '');
 }
@@ -111,7 +156,7 @@ function pfMusicHtml(c) {
     (on ? '<button class="btn sm" data-pf="skip" title="Next track">' + PF_SKIP + '</button>' : '') + '</div>';
 }
 function pfPanelHtml(r) {
-  const c = pfConf(), len = Math.round(r.len / 60);
+  const c0 = pfConf(), c = r.k === 'l' ? { ...c0, len: c0.llen } : c0, len = Math.round(r.len / 60);
   if (r.fold && (r.st === 'run' || r.st === 'paused' || r.st === 'brk'))
     return '<button class="fcpill' + (r.st === 'brk' ? ' brk' : '') + '" data-pf="unfold" title="Show the timer"><span class="fcpr"></span><b class="fct"></b>' + (r.t ? '<span data-raw>' + esc(r.t) + '</span>' : '') + '</button>';
   if (r.st === 'run' || r.st === 'paused')
@@ -150,6 +195,7 @@ function pfRender() {
     if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
   } else if (el.dataset.h) { el.dataset.h = ''; el.innerHTML = ''; }
   pfClockDraw(); pfMusic();
+  for (const b of document.querySelectorAll('[data-pfstart]')) b.hidden = pfOnIt(L.open);
 }
 // The music goes on here too, while the clock runs (src/lofi.js). A browser lets it start only once this page has been pressed.
 function pfMusic() {
@@ -180,11 +226,13 @@ document.addEventListener('click', e => {
   const a = b.dataset.pf, n = +b.dataset.n || 0;
   if (a === 'again') return pfStartAgain(n);
   // back to the papers: the grading page opens the next one when it has read them (src/focus.js)
+  if (a === 'open') { const l = L.lessons.find(x => x.id === (pfRun() || {}).l); if (l) openLesson(l); return pfRender(); }
   if (a === 'next') { pfSetK('gsp.focusGo', Date.now()); location.href = GS_PAGE; return; }
   if (a === 'mus') { pfS.mute = !pfS.mute; return pfRender(); }
   if (a === 'skip') return typeof lofiNext === 'function' && lofiNext();
   pfAct(a, n);
 });
+document.addEventListener('click', e => { if (e.target.closest('[data-pfstart]') && L.open) { pfStart(L.open); renderEditor(); } });
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   const r = pfRun(), el = document.getElementById('fcPanel');
@@ -193,5 +241,6 @@ document.addEventListener('keydown', e => {
 // The grading page in another tab started, paused or ended it: this page shows the same.
 window.addEventListener('storage', e => { if (e.key === PF_KEY || e.key === 'gsp.timeCount') { pfTickOn(); pfRender(); } });
 { const r = pfRun(); if (r && r.hid) { delete r.hid; pfSetK(PF_KEY, r); } }   // the grading page noted when it was left; here she is still working
+pfReady = true;
 pfTickOn(); pfRender();
-window.__plfocus = { run: pfRun, tick: pfTick, act: pfAct, conf: pfConf };
+window.__plfocus = { run: pfRun, tick: pfTick, act: pfAct, conf: pfConf, start: pfStart };

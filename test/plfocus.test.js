@@ -89,3 +89,47 @@ test('a session kept under the old name carries on; the Planner shows nothing wh
     assert.deepEqual(errors, []);
   } finally { await ctx.close(); }
 });
+
+test('a lesson session: picked on the grading page, 45 minutes, the lesson made in the Planner, papers never count, minutes go to planning time', async () => {
+  const ctx = await browser.createBrowserContext(), page = await ctx.newPage(), errors = [];
+  page.on('pageerror', e => errors.push(String(e)));
+  try {
+    // a made-up class that meets every day, late, so today's meeting isn't over
+    await page.goto(srv.url + 'planner.html', { waitUntil: 'load' }); await plannerReady(page);
+    await page.evaluate(() => window.__planner.applySetup({ kind: 'grading-studio-lessons-setup', version: 1, semStart: '2026-01-05', semEnd: '2030-12-20',
+      classes: [{ id: 'A1', name: 'Course A-1', course: 'Course A', color: '#1F6FB2', meets: [0, 1, 2, 3, 4, 5, 6].map(dow => ({ dow, start: '23:58', end: '23:59' })) }], daysOff: [], events: [] }));
+    await page.goto(srv.url, { waitUntil: 'load' }); await gradingReady(page);
+    await page.waitForFunction(() => window.__gs.fcWorks().some(w => w.les));
+    const works = await page.evaluate(() => window.__gs.fcWorks().filter(w => w.les));
+    const day = iso(new Date(Date.now() + 864e5));
+    const fresh = works.find(w => w.key === 'les:+A1|' + day);
+    assert.ok(fresh && fresh.fresh, 'a class with nothing planned is offered');
+    // the card's suggestion is never a lesson on its own: grading stays the default
+    assert.doesNotMatch(await page.$eval('#fcCardBody', e => e.textContent), /A new lesson to plan/);
+    // picked, it starts at the lesson length and opens the Planner, where the lesson is made
+    await page.evaluate(() => { const s = document.querySelector('#fcCardBody [data-fcchg]'); if (s) s.click(); });
+    await page.select('#fcCardBody [data-fcwork]', fresh.key);
+    assert.match(await page.$eval('#fcCardBody [data-fcstart]', e => e.textContent), /Start 45 minutes/);
+    assert.equal(await page.$('#fcCardBody [data-fcone]'), null, 'no Just one paper for a lesson');
+    await Promise.all([page.waitForNavigation(), page.evaluate(() => document.querySelector('#fcCardBody [data-fcstart]').click())]);   // the welcome covers the card for a new teacher
+    await plannerReady(page);
+    await page.waitForFunction(() => { const r = window.__plfocus.run(); return r && r.l; });
+    const r = await run(page);
+    assert.equal(r.k, 'l'); assert.equal(r.len, 45 * 60); assert.equal(r.t, 'New lesson'); assert.equal(r.nw, undefined);
+    assert.ok(await page.evaluate(id => window.__planner.L.open && window.__planner.L.open.id === id, r.l), 'the new lesson is open in the editor');
+    assert.equal(await page.$eval('#fcPanel .fcwhat', e => e.textContent.includes('A lesson to plan')), true);
+    // back on the grading page, a paper's save doesn't touch it, and its end goes to planning time, not the grading log
+    await page.goto(srv.url, { waitUntil: 'load' }); await gradingReady(page);
+    await page.evaluate(() => window.__gs.fcGain({ id: 'x', scored: 1, marked: 1, of: 5, done: 1 }, { id: 'x', scored: 3, marked: 3, of: 5, done: 3 }));
+    assert.equal((await run(page)).pg, undefined);
+    assert.match(await page.$eval('#fcPanel', e => e.textContent), /Open the lesson/);
+    assert.doesNotMatch(await page.$eval('#fcPanel', e => e.textContent), /paper/);
+    await page.evaluate(() => { const r = JSON.parse(localStorage.getItem('gsp.focusRun')); r.at -= 1200e3; localStorage.setItem('gsp.focusRun', JSON.stringify(r)); });
+    await page.evaluate(() => document.querySelector('#fcPanel [data-fcstop]').click());
+    const P = await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.planTime')));
+    const pd = P.days[iso(new Date())]; assert.ok(pd.a[r.l] >= 1200 && pd.a[r.l] < 1260, 'twenty minutes'); assert.equal(pd.f, pd.a[r.l]);
+    const L = await page.evaluate(() => JSON.parse(localStorage.getItem('gs.focus') || '{}'));
+    assert.ok(!((L.days || {})[iso(new Date())] || {}).s, 'not in the grading log');
+    assert.deepEqual(errors, []);
+  } finally { await ctx.close(); }
+});
