@@ -1,6 +1,8 @@
 ﻿const fs = require('fs');
 const nm = fs.existsSync('node_modules/pdfjs-dist') ? 'node_modules/' : 'libs/node_modules/';
 let h = fs.readFileSync('src/app.html', 'utf8');
+// The app's own style sheets ship without their comments (the font's licence, added apart, keeps its own).
+const css = f => fs.readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const rep = (k, v) => { h = h.split(k).join(v); };
 // Inter (SIL Open Font License, which asks that its text travels with the font), built in so nothing is fetched on load.
 const face = (file, range) => '@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url(data:font/woff2;base64,' + fs.readFileSync('src/fonts/' + file).toString('base64') + ') format("woff2");unicode-range:' + range + '}\n';
@@ -11,13 +13,13 @@ const fontCss = ('/*\n' + fs.readFileSync('src/fonts/OFL.txt', 'utf8') + '*/\n' 
 const sampleMode = fs.readFileSync('src/samplemode.js', 'utf8').replace(/^[ \t]*\/\/.*\r?\n/gm, '');
 rep('/*@@SAMPLEMODE@@*/', sampleMode);
 rep('/*@@FONT@@*/', fontCss);
-const tokensCss = fs.readFileSync('src/tokens.css', 'utf8'), partsCss = fs.readFileSync('src/parts.css', 'utf8');   // the same tokens and shared parts in both pages
+const tokensCss = css('src/tokens.css'), partsCss = css('src/parts.css');   // the same tokens and shared parts in both pages
 rep('/*@@TOKENS@@*/', tokensCss);
 rep('/*@@PARTSCSS@@*/', partsCss);
-rep('/*@@POLISHCSS@@*/', fs.readFileSync('src/polish.css', 'utf8') + fs.readFileSync('src/scans.css', 'utf8') + fs.readFileSync('src/quiz.css', 'utf8'));
-rep('/*@@RUBRICSCSS@@*/', fs.readFileSync('src/rubrics.css', 'utf8') + fs.readFileSync('src/book.css', 'utf8'));
-rep('/*@@INSIGHTCSS@@*/', fs.readFileSync('src/insight.css', 'utf8'));
-rep('/*@@SHELLCSS@@*/', fs.readFileSync('src/rail.css', 'utf8') + fs.readFileSync('src/shell.css', 'utf8') + fs.readFileSync('src/today.css', 'utf8') + fs.readFileSync('src/classpage.css', 'utf8') + fs.readFileSync('src/goals.css', 'utf8') + fs.readFileSync('src/ib.css', 'utf8') + fs.readFileSync('src/tabs.css', 'utf8') + fs.readFileSync('src/markscreen.css', 'utf8') + fs.readFileSync('src/sidepane.css', 'utf8') + fs.readFileSync('src/safe.css', 'utf8') + fs.readFileSync('src/welcome.css', 'utf8') + fs.readFileSync('src/examples.css', 'utf8') + fs.readFileSync('src/help.css', 'utf8') + fs.readFileSync('src/school.css', 'utf8') + fs.readFileSync('src/classroom.css', 'utf8') + fs.readFileSync('src/reports.css', 'utf8') + fs.readFileSync('src/attend.css', 'utf8') + fs.readFileSync('src/missing.css', 'utf8') + fs.readFileSync('src/todo.css', 'utf8') + fs.readFileSync('src/focus.css', 'utf8') + fs.readFileSync('src/tracker.css', 'utf8') + fs.readFileSync('src/gradeplan.css', 'utf8') + fs.readFileSync('src/sheet.css', 'utf8') + fs.readFileSync('src/touch.css', 'utf8') + fs.readFileSync('src/seating.css', 'utf8') + fs.readFileSync('src/pick.css', 'utf8') + fs.readFileSync('src/snip.css', 'utf8') + fs.readFileSync('src/video.css', 'utf8') + fs.readFileSync('src/setupin.css', 'utf8'));
+rep('/*@@POLISHCSS@@*/', css('src/polish.css') + css('src/scans.css') + css('src/quiz.css'));
+rep('/*@@RUBRICSCSS@@*/', css('src/rubrics.css') + css('src/book.css'));
+rep('/*@@INSIGHTCSS@@*/', css('src/insight.css'));
+rep('/*@@SHELLCSS@@*/', css('src/rail.css') + css('src/shell.css') + css('src/today.css') + css('src/classpage.css') + css('src/goals.css') + css('src/ib.css') + css('src/tabs.css') + css('src/markscreen.css') + css('src/sidepane.css') + css('src/safe.css') + css('src/welcome.css') + css('src/examples.css') + css('src/help.css') + css('src/school.css') + css('src/classroom.css') + css('src/reports.css') + css('src/attend.css') + css('src/missing.css') + css('src/todo.css') + css('src/focus.css') + css('src/tracker.css') + css('src/gradeplan.css') + css('src/sheet.css') + css('src/touch.css') + css('src/seating.css') + css('src/pick.css') + css('src/snip.css') + css('src/video.css') + css('src/setupin.css'));
 rep('/*@@PDFJS@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.min.js', 'utf8'));
 rep('/*@@PDFLIB@@*/', fs.readFileSync(nm + 'pdf-lib/dist/pdf-lib.min.js', 'utf8'));
 rep('/*@@H2C@@*/', fs.readFileSync(nm + 'html2canvas/dist/html2canvas.min.js', 'utf8'));
@@ -104,8 +106,8 @@ console.log((h.length / 1e6).toFixed(2) + 'MB');
   prep('/*@@FONT@@*/', fontCss);
   prep('/*@@TOKENS@@*/', tokensCss);
   prep('/*@@PARTSCSS@@*/', partsCss);
-  prep('/*@@RAILCSS@@*/', fs.readFileSync('src/rail.css', 'utf8'));   // the sidebar's look is shared; its code is the Planner's own (src/planner/rail.js)
-  prep('/*@@PRESENTCSS@@*/', fs.readFileSync('src/present.css', 'utf8') + fs.readFileSync('src/pick.css', 'utf8'));   // presenting a lesson (src/planner/present.js)
+  prep('/*@@RAILCSS@@*/', css('src/rail.css'));   // the sidebar's look is shared; its code is the Planner's own (src/planner/rail.js)
+  prep('/*@@PRESENTCSS@@*/', css('src/present.css') + css('src/pick.css'));   // presenting a lesson (src/planner/present.js)
   prep('/*@@FFLATE@@*/', fs.readFileSync(nm + 'fflate/umd/index.js', 'utf8'));
   // pdf.js for the side panel's books; the worker waits as text until a book is opened
   prep('/*@@PDFJS@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.min.js', 'utf8'));
