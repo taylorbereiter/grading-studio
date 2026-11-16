@@ -71,7 +71,8 @@ function fcLog() {
   return { day: typeof L.day === 'string' ? L.day : '', base: L.base && typeof L.base === 'object' ? L.base : {}, days: L.days && typeof L.days === 'object' ? L.days : {},
     pace: Array.isArray(L.pace) ? L.pace.filter(x => Array.isArray(x) && x[0] > 0 && x[1] > 0) : [], last: typeof L.last === 'string' ? L.last : '',
     add: Array.isArray(L.add) ? L.add.filter(x => x && typeof x.d === 'string' && (x.k === 'g' || x.k === 'l') && x.s > 0) : [],
-    ...(typeof L.lbHid === 'string' ? { lbHid: L.lbHid } : {}),   // the week whose look-back was put away (src/gradeplan.js)
+    ...(typeof L.lbHid === 'string' ? { lbHid: L.lbHid } : {}),
+    ...(Array.isArray(L.qd) ? { qd: L.qd.filter(x => typeof x === 'string').slice(-50) } : {}),   // sessions from the Planner written in already (fcDrain)   // the week whose look-back was put away (src/gradeplan.js)
     // carry: a session goal not reached, for the next session on the same work: { w, t: when, k: 'papers' | 'set' | 'td' | 'note', n, x }
     ...(L.carry && typeof L.carry.w === 'string' && L.carry.t > 0 ? { carry: L.carry } : {}),
     ...(L.by && typeof L.by === 'object' ? { by: L.by } : {}) };   // { <download>: 'YYYY-MM-DD' }: the day a set is to be finished by
@@ -739,23 +740,28 @@ const FC_Q = 'gsp.focusQ';
 function fcDrain() {
   const q = store.get(FC_Q, null); if (!Array.isArray(q)) return;
   store.del(FC_Q);
-  const L = fcLog();
+  // each entry has an id, kept for a while, so two tabs reading the queue at once write it in once
+  const L = fcLog(), had = Array.isArray(L.qd) ? L.qd : [];
   for (const x of q) {
+    if (x && x.id && had.includes(x.id)) continue;
+    if (x && x.id) had.push(x.id);
     if (!x || !/^\d{4}-\d\d-\d\d$/.test(x.d) || !(x.s > 0)) continue;
     const s = Math.min(4 * 3600, Math.round(x.s)), d = L.days[x.d] || {};
     L.days[x.d] = { ...d, s: (d.s || 0) + s, ...(x.m ? { sm: (d.sm || 0) + s } : {}), ...(s >= 60 && !x.x ? { n: (d.n || 0) + 1 } : {}) };
     if (x.got > 0 && s >= 30) L.pace = [...L.pace, [s, x.got]].slice(-20);
   }
+  L.qd = had.slice(-50);
   fcLogSet(L);
 }
 // A session from before the Planner could show it, kept under its old name.
 { const old = store.get('gs.focusRun', null); if (old && old.st && !fcRun()) fcPut(old); store.del('gs.focusRun'); }
 // "Next paper" pressed in the Planner: once the papers are read, the next one opens.
-if (store.get('gsp.focusGo', null)) {
-  store.del('gsp.focusGo');
+{ const t = store.get('gsp.focusGo', null); if (t) store.del('gsp.focusGo'); if (t && Date.now() - t < 60e3) {
   let n = 0; const t = setInterval(() => { if (keptRead || ++n > 100) { clearInterval(t); if (keptRead) fcGoTo(true); } }, 200);
-}
+} }
 
 FC_ON = true;
 fcDrain(); fcSeen(); fcTickOn();
+// Back from the Planner with the browser's back button: the page comes back as it was left, so it catches up.
+window.addEventListener('pageshow', e => { if (e.persisted) { fcDrain(); fcTickOn(); fcRender(); } });
 window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcCame, fcTick, focusOn, fcMon, fcToday, lofi, lofiCompose, lofiRender, LOFI_STYLES });

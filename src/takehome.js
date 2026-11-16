@@ -578,7 +578,7 @@ async function removeHere() {
     await vkClear();   // video files kept in this browser
   } catch (e) { console.error(e); tabsOver('done'); return sayDlg('Not everything could be removed. Close any other Grading Studio tabs and try again.'); }
   for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.startsWith('gsc.saved.') || k.startsWith('gsc.forgot.') || k.startsWith('gs.') && !LS_LOOKS.test(k))) localStorage.removeItem(k); }
-  try { localStorage.removeItem('gsc.win'); } catch {}
+  try { for (const k of ['gsc.win', 'gsp.focusRun', 'gsp.focusQ', 'gsp.focusGo']) localStorage.removeItem(k); } catch {}   // the focus session going on names the work
   tabsOver('done');
   toast('Removed from this computer. Reloading…');
   setTimeout(reloadHome, 700);

@@ -21512,7 +21512,7 @@ await exRemoveAll();
 await vkClear();
 } catch (e) { console.error(e); tabsOver('done'); return sayDlg('Not everything could be removed. Close any other Grading Studio tabs and try again.'); }
 for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.startsWith('gsc.saved.') || k.startsWith('gsc.forgot.') || k.startsWith('gs.') && !LS_LOOKS.test(k))) localStorage.removeItem(k); }
-try { localStorage.removeItem('gsc.win'); } catch {}
+try { for (const k of ['gsc.win', 'gsp.focusRun', 'gsp.focusQ', 'gsp.focusGo']) localStorage.removeItem(k); } catch {}
 tabsOver('done');
 toast('Removed from this computer. Reloading…');
 setTimeout(reloadHome, 700);
@@ -30068,6 +30068,7 @@ return { day: typeof L.day === 'string' ? L.day : '', base: L.base && typeof L.b
 pace: Array.isArray(L.pace) ? L.pace.filter(x => Array.isArray(x) && x[0] > 0 && x[1] > 0) : [], last: typeof L.last === 'string' ? L.last : '',
 add: Array.isArray(L.add) ? L.add.filter(x => x && typeof x.d === 'string' && (x.k === 'g' || x.k === 'l') && x.s > 0) : [],
 ...(typeof L.lbHid === 'string' ? { lbHid: L.lbHid } : {}),
+...(Array.isArray(L.qd) ? { qd: L.qd.filter(x => typeof x === 'string').slice(-50) } : {}),
 ...(L.carry && typeof L.carry.w === 'string' && L.carry.t > 0 ? { carry: L.carry } : {}),
 ...(L.by && typeof L.by === 'object' ? { by: L.by } : {}) };
 }
@@ -30658,23 +30659,26 @@ const FC_Q = 'gsp.focusQ';
 function fcDrain() {
 const q = store.get(FC_Q, null); if (!Array.isArray(q)) return;
 store.del(FC_Q);
-const L = fcLog();
+const L = fcLog(), had = Array.isArray(L.qd) ? L.qd : [];
 for (const x of q) {
+if (x && x.id && had.includes(x.id)) continue;
+if (x && x.id) had.push(x.id);
 if (!x || !/^\d{4}-\d\d-\d\d$/.test(x.d) || !(x.s > 0)) continue;
 const s = Math.min(4 * 3600, Math.round(x.s)), d = L.days[x.d] || {};
 L.days[x.d] = { ...d, s: (d.s || 0) + s, ...(x.m ? { sm: (d.sm || 0) + s } : {}), ...(s >= 60 && !x.x ? { n: (d.n || 0) + 1 } : {}) };
 if (x.got > 0 && s >= 30) L.pace = [...L.pace, [s, x.got]].slice(-20);
 }
+L.qd = had.slice(-50);
 fcLogSet(L);
 }
 { const old = store.get('gs.focusRun', null); if (old && old.st && !fcRun()) fcPut(old); store.del('gs.focusRun'); }
-if (store.get('gsp.focusGo', null)) {
-store.del('gsp.focusGo');
+{ const t = store.get('gsp.focusGo', null); if (t) store.del('gsp.focusGo'); if (t && Date.now() - t < 60e3) {
 let n = 0; const t = setInterval(() => { if (keptRead || ++n > 100) { clearInterval(t); if (keptRead) fcGoTo(true); } }, 200);
-}
+} }
 
 FC_ON = true;
 fcDrain(); fcSeen(); fcTickOn();
+window.addEventListener('pageshow', e => { if (e.persisted) { fcDrain(); fcTickOn(); fcRender(); } });
 window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcCame, fcTick, focusOn, fcMon, fcToday, lofi, lofiCompose, lofiRender, LOFI_STYLES });
 
 /* ---------------- The time tracker: how much time goes to grading, and how much to planning, kept apart ----------------

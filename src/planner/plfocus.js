@@ -28,7 +28,7 @@ let pfS = { mute: false };
 function pfRecord(r) {
   if (r.secs != null) return r;
   const secs = Math.min(r.one ? 4 * 3600 : r.len, Math.max(0, pfElapsed(r) - pfIdle(r))), got = Math.max(0, r.pg || 0);
-  if (secs > 0) { const q = pfGet(PF_Q, []); pfSetK(PF_Q, [...(Array.isArray(q) ? q : []), { d: pfDay(), s: secs, m: /^mark:/.test(r.w || '') ? 1 : 0, x: r.ext ? 1 : 0, got }].slice(-50)); }
+  if (secs > 0) { const q = pfGet(PF_Q, []); pfSetK(PF_Q, [...(Array.isArray(q) ? q : []), { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), d: pfDay(), s: secs, m: /^mark:/.test(r.w || '') ? 1 : 0, x: r.ext ? 1 : 0, got }].slice(-50)); }
   return Object.assign(r, { secs, got });
 }
 function pfSet(r) { pfSetK(PF_KEY, r); pfTickOn(); pfRender(); }
@@ -42,7 +42,7 @@ function pfAct(a, n) {
   if (a === 'pause' && r.st === 'run') { r.st = 'paused'; r.pz = Date.now(); r.idl = pfIdle(r); delete r.ii; }
   else if (a === 'resume' && r.st === 'paused') { r.at += Date.now() - r.pz; delete r.pz; r.st = 'run'; }
   else if (a === 'more' && on) r.len += n * 60;
-  else if (a === 'ext' && r.st === 'up') return pfSet({ st: 'run', len: n * 60, at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: PF_P0, pg: 0, fold: false, no: r.no, ext: 1 });
+  else if (a === 'ext' && r.st === 'up') return pfSet({ st: 'run', len: n * 60, at: Date.now(), w: r.w || '', t: r.t || '', one: 0, p0: PF_P0, pg: 0, fold: false, no: r.no, ext: 1, ...(r.sg && r.sg.k !== 'papers' ? { sg: r.sg } : {}) });
   else if (a === 'break') { if (on) pfRecord(r); Object.assign(r, { st: 'brk', brkAt: Date.now(), brkLen: pfConf().brk * 60, fold: false }); }
   else if (a === 'stop') { if (on) pfRecord(r); Object.assign(r, { st: 'done', fold: false }); }
   else if (a === 'close') return pfSet(null);
@@ -162,13 +162,25 @@ function pfMusic() {
   const pressed = !navigator.userActivation || navigator.userActivation.hasBeenActive;
   if (!lofi.on && pressed && !document.hidden) lofiPlay();
 }
-for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, () => { if (typeof lofi !== 'undefined' && !lofi.on) setTimeout(pfMusic, 0); }, true);
+for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, () => { if (typeof lofi !== 'undefined' && !lofi.on) setTimeout(pfMusic, 0); pfSeen(); }, true);
+// She is working here: a grading tab left open in the background must not take the time for idle (src/focus.js fcIdleSee reads
+// r.seen, and r.ii is a stretch with nothing done), so what she does here is noted on the session, at most every half minute.
+function pfSeen() {
+  const r = pfRun(); if (!r || (r.st !== 'run' && r.st !== 'paused')) return;
+  const now = Date.now(); if (!r.ii && now - (r.seen || 0) < 30e3) return;
+  if (r.ii) { r.idl = (r.idl || 0) + Math.max(0, Math.round(((r.st === 'paused' ? r.pz : now) - r.ii) / 1000)); delete r.ii; }
+  r.seen = now; pfSetK(PF_KEY, r);
+}
+// Back to this page (another tab, or the browser's back button): no "you were away", and the panel catches up.
+function pfBack() { const r = pfRun(); if (r && r.hid) { delete r.hid; pfSetK(PF_KEY, r); } pfTickOn(); pfRender(); }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) pfBack(); });
+window.addEventListener('pageshow', e => { if (e.persisted) pfBack(); });
 document.addEventListener('click', e => {
   const b = e.target.closest('#fcPanel [data-pf]'); if (!b) return;
   const a = b.dataset.pf, n = +b.dataset.n || 0;
   if (a === 'again') return pfStartAgain(n);
   // back to the papers: the grading page opens the next one when it has read them (src/focus.js)
-  if (a === 'next') { pfSetK('gsp.focusGo', 1); location.href = GS_PAGE; return; }
+  if (a === 'next') { pfSetK('gsp.focusGo', Date.now()); location.href = GS_PAGE; return; }
   if (a === 'mus') { pfS.mute = !pfS.mute; return pfRender(); }
   if (a === 'skip') return typeof lofiNext === 'function' && lofiNext();
   pfAct(a, n);

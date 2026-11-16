@@ -73,7 +73,10 @@ test('a session kept under the old name carries on; the Planner shows nothing wh
     await page.goto(srv.url + 'planner.html', { waitUntil: 'load' }); await plannerReady(page);
     assert.equal(await page.$eval('#fcPanel', e => e.hidden), true);
     await page.evaluate(() => localStorage.setItem('gs.focusRun', JSON.stringify({ st: 'run', len: 600, at: Date.now(), w: '', one: 0, p0: 1e9, pg: 0, fold: false, no: 1 })));
+    // an entry two tabs both read is written in once
+    await page.evaluate(d => localStorage.setItem('gsp.focusQ', JSON.stringify([{ id: 'a1', d, s: 300, m: 0, x: 0, got: 0 }, { id: 'a1', d, s: 300, m: 0, x: 0, got: 0 }])), iso(new Date()));
     await page.goto(srv.url, { waitUntil: 'load' }); await gradingReady(page);
+    assert.equal((await page.evaluate(() => JSON.parse(localStorage.getItem('gs.focus')))).days[iso(new Date())].s, 300);
     assert.equal((await run(page)).len, 600);
     assert.equal(await page.evaluate(() => localStorage.getItem('gs.focusRun')), null);
     await page.goto(srv.url + 'planner.html', { waitUntil: 'load' }); await plannerReady(page);
