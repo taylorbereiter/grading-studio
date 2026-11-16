@@ -97,6 +97,26 @@ test('+ Add is one menu: a file, pasted text, a video, a notes page, or pages fr
   await close();
 });
 
+test('+ Add and the paper’s ⋯ open fully inside the paper, whatever its width (they used to slide under Score)', async () => {
+  const { page, close } = await standard();
+  for (const w of [1440, 1180, 980]) {
+    await page.setViewport({ width: w, height: 900 }); await settle(page);
+    for (const sel of ['#addMenuBtn', '#whoMore']) {
+      await page.click(sel);
+      const m = await box(page, sel + ' + .km'), p = await page.$eval('#paper', e => { const r = e.getBoundingClientRect(); return { l: r.left, r: r.left + e.clientWidth }; });
+      assert.ok(m.l >= p.l && m.r <= p.r, sel + ' menu at ' + w + 'px wide sits inside the paper: menu ' + m.l + '–' + m.r + ', paper ' + p.l + '–' + p.r);
+      await page.keyboard.press('Escape');
+    }
+  }
+  // with room to spare it still opens under the button, starting at its left edge
+  await page.setViewport({ width: 1440, height: 900 }); await settle(page);
+  await page.$eval('#addMenuBtn', b => { b.closest('.kmw').style.marginRight = '400px'; });
+  await page.click('#addMenuBtn');
+  const b = await box(page, '#addMenuBtn'), m = await box(page, '#addMenuBtn + .km');
+  assert.ok(Math.abs(m.l - b.l) < 1, 'left-aligned when it fits: button ' + b.l + ', menu ' + m.l);
+  await close();
+});
+
 test('what belongs to one file is under that file’s ⋯, and Remove still asks for a second click', async () => {
   const { page, close } = await standard();
   await goToStudent(page, 1);   // Bram: Essay.pdf and Extra notes.pdf
