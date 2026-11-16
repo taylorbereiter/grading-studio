@@ -1,10 +1,4 @@
 (window.__gsLangs = window.__gsLangs || {})["zh-Hant"] = (function () {
-/* ---------------- Traditional Chinese. One language is one file like this; src/lang.js explains how it is used. ----------------
-words: a whole English line, or one part of a line between " · ", with its Chinese.
-rules: the same for lines with a number or a name in them. The first rule that fits wins; a rule that answers null is passed over.
-help:  the Help page's answers, by topic id (src/helpdata.js has the English). A button named in **bold** keeps its English name
-when its screen is still in English, so it can be found.
-Covered so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page in a returned paper. */
 const ZH_NUM = { no: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
 const zhN = w => { const k = String(w).toLowerCase(); return k in ZH_NUM ? ZH_NUM[k] : +w; };
 const zhLast = s => s === 'the last set of papers' ? '最近一批作業' : s;
@@ -293,7 +287,7 @@ words: {
 'Choose a folder or make a take-home file, in Settings': '請到設定選擇資料夾，或製作攜帶檔',
 'Drop new student work anywhere': '把新的學生作業拖到這裡', 'Choose files…': '選擇檔案…', 'More ways': '其他方式',
 'A folder, a scan of the whole class, or files to match to a roster': '資料夾、全班的掃描檔，或要與名單配對的檔案',
-'A folder of papers…': '一個作業資料夾…', 'A scan of everyone’s papers…': '全班作業的掃描檔…', 'Files to match to a roster…': '要與名單配對的檔案…', 'From Google Drive…': '從 Google 雲端硬碟…',
+'A folder of papers…': '一個作業資料夾…', 'A scan of everyone’s papers…': '全班作業的掃描檔…', 'Files to match to a roster…': '要與名單配對的檔案…', 'From Google Drive…': '從 Google 雲端硬碟…', 'Sign in with Google': '使用 Google 登入',
 'Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off.': '你的批註、分數、單元和名單都存在這個瀏覽器，所以可以關閉分頁，回來後從上次的地方繼續。',
 'Try it with a sample class': '用範例班級試試看', 'preview copy, with its own saved work': '預覽版，有自己的儲存資料',
 'Choose where your work is kept': '選擇工作成果儲存的位置',

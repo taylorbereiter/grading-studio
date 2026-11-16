@@ -1,10 +1,4 @@
 (window.__gsLangs = window.__gsLangs || {})["zh-Hans"] = (function () {
-/* ---------------- Simplified Chinese. Made from src/lang-zh.js (Traditional) with mainland wording, then read through. One language is one file like this; src/lang.js explains how it is used. ----------------
-words: a whole English line, or one part of a line between " · ", with its Chinese.
-rules: the same for lines with a number or a name in them. The first rule that fits wins; a rule that answers null is passed over.
-help:  the Help page's answers, by topic id (src/helpdata.js has the English). A button named in **bold** keeps its English name
-when its screen is still in English, so it can be found.
-Covered so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page in a returned paper. */
 const ZHS_NUM = { no: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
 const zhsN = w => { const k = String(w).toLowerCase(); return k in ZHS_NUM ? ZHS_NUM[k] : +w; };
 const zhsLast = s => s === 'the last set of papers' ? '最近一批作业' : s;
@@ -299,7 +293,7 @@ words: {
 'Choose a folder or make a take-home file, in Settings': '请到设置选择文件夹，或制作随身文件',
 'Drop new student work anywhere': '把新的学生作业拖到这里', 'Choose files…': '选择文件…', 'More ways': '其他方式',
 'A folder, a scan of the whole class, or files to match to a roster': '文件夹、全班的扫描件，或要与名单配对的文件',
-'A folder of papers…': '一个作业文件夹…', 'A scan of everyone’s papers…': '全班作业的扫描件…', 'Files to match to a roster…': '要与名单配对的文件…', 'From Google Drive…': '从 Google 云端硬盘…',
+'A folder of papers…': '一个作业文件夹…', 'A scan of everyone’s papers…': '全班作业的扫描件…', 'Files to match to a roster…': '要与名单配对的文件…', 'From Google Drive…': '从 Google 云端硬盘…', 'Sign in with Google': '使用 Google 登录',
 'Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off.': '你的批注、分数、单元和名单都存在这个浏览器，所以可以关闭标签页，回来后从上次的地方继续。',
 'Try it with a sample class': '用范例班级试试看', 'preview copy, with its own saved work': '预览版，有自己的保存数据',
 'Choose where your work is kept': '选择工作成果保存的位置',

@@ -1,10 +1,4 @@
 (window.__gsLangs = window.__gsLangs || {})["de"] = (function () {
-/* ---------------- German. One language is one file like this; src/lang.js explains how it is used. ----------------
-words: a whole English line, or one part of a line between " · ", with its German.
-rules: the same for lines with a number or a name in them. The first rule that fits wins; a rule that answers null is passed over.
-help:  the Help page's answers, by topic id (src/helpdata.js has the English). A button named in **bold** keeps its English name
-when its screen is still in English, so it can be found.
-Covered so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page in a returned paper. */
 const DE_NUM = { no: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
 const deN = w => { const k = String(w).toLowerCase(); return k in DE_NUM ? DE_NUM[k] : +w; };
 const deP = (n, one, many) => n + ' ' + (n === 1 ? one : many);
@@ -378,7 +372,7 @@ words: {
 'Choose a folder or make a take-home file, in Settings': 'Wählen Sie in den Einstellungen einen Ordner oder erstellen Sie eine Mitnahmedatei',
 'Drop new student work anywhere': 'Neue Arbeiten hier ablegen', 'Choose files…': 'Dateien wählen…', 'More ways': 'Weitere Wege',
 'A folder, a scan of the whole class, or files to match to a roster': 'Ein Ordner, ein Scan der ganzen Klasse oder Dateien, die einer Klassenliste zugeordnet werden',
-'A folder of papers…': 'Ein Ordner mit Arbeiten…', 'A scan of everyone’s papers…': 'Ein Scan aller Arbeiten…', 'Files to match to a roster…': 'Dateien einer Klassenliste zuordnen…', 'From Google Drive…': 'Aus Google Drive…',
+'A folder of papers…': 'Ein Ordner mit Arbeiten…', 'A scan of everyone’s papers…': 'Ein Scan aller Arbeiten…', 'Files to match to a roster…': 'Dateien einer Klassenliste zuordnen…', 'From Google Drive…': 'Aus Google Drive…', 'Sign in with Google': 'Mit Google anmelden',
 'Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off.': 'Ihre Anmerkungen, Bewertungen, Einheiten und Klassenlisten liegen in diesem Browser. Sie können den Tab schließen und später dort weitermachen, wo Sie aufgehört haben.',
 'Try it with a sample class': 'Mit einer Beispielklasse ausprobieren', 'preview copy, with its own saved work': 'Vorschaukopie mit eigenen gespeicherten Daten',
 'Choose where your work is kept': 'Wählen Sie, wo Ihre Arbeit liegt',

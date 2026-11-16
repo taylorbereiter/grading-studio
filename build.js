@@ -52,7 +52,8 @@ const langFiles = {}, langNames = {}, langPacked = {};
 {
   const fflate = require('fflate');
   for (const [code, file, obj] of LANGS) {
-    const src = (fs.readFileSync('src/lang-' + file + '.js', 'utf8') + '\nreturn ' + obj + ';').replace(/^[ \t]*\/\/.*\r?\n/gm, '');   // lines that are only a comment ship in neither copy
+    // lines that are only a comment ship in neither copy, nor does the note at the top of the file (it explains the file to whoever edits it)
+    const src = (fs.readFileSync('src/lang-' + file + '.js', 'utf8').replace(/^\/\*[\s\S]*?\*\/[ \t]*\r?\n/, '') + '\nreturn ' + obj + ';').replace(/^[ \t]*\/\/.*\r?\n/gm, '');
     langNames[code] = new Function(src)().name;
     const lean = dent(src);   // leading spaces don't ship either (dent, above)
     langPacked[code] = Buffer.from(fflate.deflateSync(Buffer.from(lean, 'utf8'), { level: 9 })).toString('base64');

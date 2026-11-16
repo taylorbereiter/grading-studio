@@ -1,10 +1,4 @@
 (window.__gsLangs = window.__gsLangs || {})["ja"] = (function () {
-/* ---------------- Japanese. One language is one file like this; src/lang.js explains how it is used. ----------------
-words: a whole English line, or one part of a line between " · ", with its Japanese.
-rules: the same for lines with a number or a name in them. The first rule that fits wins; a rule that answers null is passed over.
-help:  the Help page's answers, by topic id (src/helpdata.js has the English). A button named in **bold** keeps its English name
-when its screen is still in English, so it can be found.
-Covered so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page in a returned paper. */
 const JA_NUM = { no: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
 const jaN = w => { const k = String(w).toLowerCase(); return k in JA_NUM ? JA_NUM[k] : +w; };
 const jaLast = s => s === 'the last set of papers' ? '直近の提出物' : s;
@@ -308,7 +302,7 @@ words: {
 'Choose a folder or make a take-home file, in Settings': '設定でフォルダを選ぶか、持ち出しファイルを作成してください',
 'Drop new student work anywhere': '新しい提出物をここにドロップ', 'Choose files…': 'ファイルを選択…', 'More ways': 'その他の方法',
 'A folder, a scan of the whole class, or files to match to a roster': 'フォルダ、クラス全員分のスキャン、または名簿と照合するファイル',
-'A folder of papers…': '提出物のフォルダ…', 'A scan of everyone’s papers…': '全員分の提出物のスキャン…', 'Files to match to a roster…': '名簿と照合するファイル…', 'From Google Drive…': 'Google ドライブから…',
+'A folder of papers…': '提出物のフォルダ…', 'A scan of everyone’s papers…': '全員分の提出物のスキャン…', 'Files to match to a roster…': '名簿と照合するファイル…', 'From Google Drive…': 'Google ドライブから…', 'Sign in with Google': 'Google でログイン',
 'Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off.': '書き込み、点数、単元、名簿はこのブラウザに保存されるので、タブを閉じても、戻って続きから再開できます。',
 'Try it with a sample class': 'サンプルクラスで試す', 'preview copy, with its own saved work': 'プレビュー版（保存データは別です）',
 'Choose where your work is kept': '作業の保存先を選んでください',

@@ -1,10 +1,4 @@
 (window.__gsLangs = window.__gsLangs || {})["es"] = (function () {
-/* ---------------- Spanish (Stage 6). One language is one file like this; src/lang.js explains how it is used. ----------------
-words: a whole English line, or one part of a line between " · ", with its Spanish.
-rules: the same for lines with a number or a name in them. The first rule that fits wins; a rule that answers null is passed over.
-help:  the Help page's answers, by topic id (src/helpdata.js has the English). A button named in **bold** keeps its English name
-when its screen is still in English, so it can be found.
-Covered so far: the sidebar, Today, the welcome, Find anything, Help, and the feedback page in a returned paper. */
 const ES_NUM = { no: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
 const ES_WORD = ['ningún', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce'];
 const esN = w => { const k = String(w).toLowerCase(); return k in ES_NUM ? ES_NUM[k] : +w; };
@@ -363,7 +357,7 @@ words: {
 'Choose a folder or make a take-home file, in Settings': 'Elige una carpeta o crea un archivo para llevar, en Ajustes',
 'Drop new student work anywhere': 'Suelta aquí los trabajos nuevos de tus estudiantes', 'Choose files…': 'Elegir archivos…', 'More ways': 'Más opciones',
 'A folder, a scan of the whole class, or files to match to a roster': 'Una carpeta, un escaneo de toda la clase o archivos para emparejar con una lista',
-'A folder of papers…': 'Una carpeta de trabajos…', 'A scan of everyone’s papers…': 'Un escaneo con los trabajos de todos…', 'Files to match to a roster…': 'Archivos para emparejar con una lista…', 'From Google Drive…': 'Desde Google Drive…',
+'A folder of papers…': 'Una carpeta de trabajos…', 'A scan of everyone’s papers…': 'Un escaneo con los trabajos de todos…', 'Files to match to a roster…': 'Archivos para emparejar con una lista…', 'From Google Drive…': 'Desde Google Drive…', 'Sign in with Google': 'Iniciar sesión con Google',
 'Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off.': 'Tus marcas, notas, unidades y listas se guardan en este navegador, así que puedes cerrar la pestaña y volver para seguir donde lo dejaste.',
 'Try it with a sample class': 'Pruébalo con una clase de ejemplo', 'preview copy, with its own saved work': 'copia de prueba, con su propio trabajo guardado',
 'Choose where your work is kept': 'Elige dónde se guarda tu trabajo',
