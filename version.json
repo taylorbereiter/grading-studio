@@ -1,11 +1,11 @@
 {
- "version": "1.28.59",
- "build": "9fc00c6e187e",
+ "version": "1.28.60",
+ "build": "4e7c01144bdd",
  "notes": [
-  "In the Planner's lesson editor, click a slide in the slide list, then press Up or Down to go to the previous or next slide. The page no longer scrolls instead."
+  "Long names in the student list on the marking screen now wrap onto a second line instead of ending in …, so you can tell everyone apart. Tags like late, group and sent sit under the name."
  ],
  "files": {
-  "index.html": "0d49c531efde7b5e135bcee66075604f6812347b6a4c77dde32043d2eef3b0f7",
+  "index.html": "f9a75479c579d21af89712438d981b4736e3473d0dac899185de5aba719bcd14",
   "planner.html": "8907d47c2ad5681c223eae867f306ef84c79af8c7f9d4def3639fe7975cc77ac"
  },
  "langs": {

@@ -2229,8 +2229,13 @@ button.pavg:hover .v{text-decoration:underline}
 .km .lf[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .lf .v{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:500}
 .lfnone{font-size:var(--text-control);padding:6px 8px}
-.stu{height:32px;padding:0 8px;margin-bottom:2px;grid-template-columns:22px minmax(0,1fr) auto auto}
+.stu{min-height:32px;padding:4px 8px;margin-bottom:2px;grid-template-columns:22px minmax(0,1fr) auto auto;row-gap:2px}
 .stu .tail{display:inline-flex;align-items:center;gap:4px}
+
+.stu .nm{white-space:normal;overflow-wrap:break-word;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;line-height:1.25}
+.stu .pills{grid-column:2/-1;grid-row:2;display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}
+.stu .pills:empty{display:none}
+.stu .pills .add{margin-left:0}
 .side .hd{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:10px 8px 2px}
 .sfoot{position:sticky;bottom:-10px;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;padding:8px 6px 10px;background:var(--bg);border-top:1px solid var(--line)}
 .sfoot .anonsw{font-size:var(--text-small);letter-spacing:0;text-transform:none;font-weight:500;white-space:nowrap}
@@ -2249,7 +2254,7 @@ button.pavg:hover .v{text-decoration:underline}
   .cols.peek>.side{width:232px;border-right-color:var(--line-strong);box-shadow:var(--shadow),8px 0 24px -12px color-mix(in srgb,var(--fg) 30%,transparent)}
   .cols:not(.open):not(.peek)>.side{padding-left:5px;padding-right:5px;padding-bottom:40px;scrollbar-width:none}
   .cols:not(.open):not(.peek)>.side::-webkit-scrollbar{display:none}
-  .cols:not(.open):not(.peek) :is(.ph span,.pavg,.lfnow .t,.stu .nm,.stu .whob,.stu .tail,#sideHd,.sfoot,.lfnone){display:none}
+  .cols:not(.open):not(.peek) :is(.ph span,.pavg,.lfnow .t,.stu .nm,.stu .whob,.stu .tail,.stu .pills,#sideHd,.sfoot,.lfnone){display:none}
   .cols:not(.open):not(.peek) .phrow{justify-content:center}
   .cols:not(.open):not(.peek) .prog-s .ph{font-size:var(--text-small)}
   .cols:not(.open):not(.peek) .lbar{justify-content:center;gap:2px}
@@ -2257,7 +2262,7 @@ button.pavg:hover .v{text-decoration:underline}
   .cols:not(.open):not(.peek) .sfind .stufind{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer}
   .cols:not(.open):not(.peek) .lfnow.on{background:var(--accent-soft)}
   .cols:not(.open):not(.peek) :is(.sfind,.lfnow):hover{background:var(--hover);color:var(--fg)}
-  .cols:not(.open):not(.peek) .stu{grid-template-columns:auto 1fr;gap:2px;padding:0 6px 0 7px}
+  .cols:not(.open):not(.peek) .stu{grid-template-columns:auto 1fr;gap:2px;padding:0 6px 0 7px;height:32px}
   .cols:not(.open):not(.peek) .stu::after{content:attr(data-sv);justify-self:end;font-size:var(--text-small);font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
   .cols:not(.open):not(.peek) .stu.sv-part::after{color:var(--warn)}
   .cols:not(.open):not(.peek) .stu.sv-quiet::after{color:var(--muted)}
@@ -5133,7 +5138,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.59";
+  const APP_VERSION = "1.28.60";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -8231,7 +8236,7 @@ const nAdd = st.files.filter(f => f.added && !f.from && !madeFromWord(f)).length
 const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
 : val != null ? [ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
 return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
-'<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + right + '</span></button>';
+'<span class="pills">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + '</span><span class="tail">' + right + '</span></button>';
 }).join('');
 if (listFilter !== 'all' && !q && !order.some(i => lfMatch(batch.students[i]))) $('#stuList').insertAdjacentHTML('beforeend', '<div class="muted lfnone">No one else here. <button class="link" data-lf="all">Show everyone</button></div>');
 listToCur();
@@ -14226,7 +14231,10 @@ clearTimeout(resizeT); resizeT = setTimeout(() => pages.forEach(renderPage), 60)
 const peekHeld = () => document.activeElement === $('#stuFind') || !!$('#side [data-km][aria-expanded=true]') || $('#side').matches(':hover') || $('#colL').matches(':hover');
 function listPeek(on, wait) {
 clearTimeout(peekT); if (listKept()) return;
-const go = () => { if (!on && peekHeld()) return; const c = $('#cols'); if (c.classList.contains('peek') === on) return; c.classList.toggle('peek', on); if (!on && document.activeElement && $('#side').contains(document.activeElement) && !document.activeElement.classList.contains('stu')) document.activeElement.blur(); listToCur(); };
+const go = () => { if (!on && peekHeld()) return; const c = $('#cols'); if (c.classList.contains('peek') === on) return;
+const hov = $('#stuList .stu:hover'), y0 = hov && hov.getBoundingClientRect().top;
+c.classList.toggle('peek', on);
+if (hov) $('#side').scrollTop += (hov.getBoundingClientRect().top - y0) / (disp.ui || 1); if (!on && document.activeElement && $('#side').contains(document.activeElement) && !document.activeElement.classList.contains('stu')) document.activeElement.blur(); listToCur(); };
 if (wait) peekT = setTimeout(go, wait); else go();
 }
 for (const el of [$('#side'), $('#colL')]) {
@@ -32295,7 +32303,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.59":["In the Planner's lesson editor, click a slide in the slide list, then press Up or Down to go to the previous or next slide. The page no longer scrolls instead."]};
+const WHATS_NEW = {"1.28.60":["Long names in the student list on the marking screen now wrap onto a second line instead of ending in …, so you can tell everyone apart. Tags like late, group and sent sit under the name."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
