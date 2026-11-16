@@ -1,11 +1,11 @@
 {
- "version": "1.28.54",
- "build": "8fcf01c10c6a",
+ "version": "1.28.55",
+ "build": "fe97fd4192a0",
  "notes": [
-  "Only this student: when a student comes to your desk, the person button on their paper (or I) shows them and nobody else. The student list, tabs, sidebar and class numbers step aside, and the arrow keys stay on them. Other work shows their own score on each assignment in the class and opens it. Hold \"Hold to show everyone\" to go back."
+  "A fix to the app's own checks for automatic Google renewal, so updates go out on time. Nothing changes in the app."
  ],
  "files": {
-  "index.html": "97e579651a063e10e446bb00aad6a8e9b129e6254148c52a0f7dd44ef814f7bd",
+  "index.html": "8e0b439931da6572cc60d1caa75c3e2765a1fbf2abd3f23a3a38867d6494d7fe",
   "planner.html": "4b312322d338293eba003a1bd613a198ac327fe5c4449f2b553683f93795c4ff"
  },
  "langs": {
