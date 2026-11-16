@@ -10,22 +10,114 @@
                ppl: [ids of people on the School page (gs.school people: the principal, a coordinator...)],
                note, done: time, made: time, t: time it last changed }]   (a deleted one stays as { id, t, gone: 1 } so it stays deleted after a merge)
      off:   { mark | back | plan | miss: 1 } the kinds the app no longer adds, offT when that was last changed
-     auto:  { <line's key>: { d: day it was moved to, h: hidden while its number is this, t } } */
+     auto:  { <line's key>: { d: day it was moved to, h: hidden while its number is this, k: category it was moved to, t } }
+     cats:  [{ id, name (only once she renames one the app starts with, or for her own), w: her words that bring a line there, t, gone }]
+     corder: { ids: [category ids in her order], t }
+   A line's category is k on the line (or '-' for none) when she chose one, and otherwise worked out from its words each time it is
+   drawn, so lines saved before categories existed are never rewritten. */
 const TD_KINDS = [['mark', 'Papers to mark'], ['back', 'Papers to hand back'], ['plan', 'Lessons not planned yet'], ['miss', 'Missing work to chase']];
 let tdS = { filter: 'all', sel: '', done: false, drop: {}, week: 0, drag: '' };   // for this visit only
+// The list by day or by category: a choice for this browser only, so it is not saved with the work.
+const tdBy = () => { try { return localStorage.getItem('gs.tdBy') === 'cat' ? 'cat' : 'day'; } catch { return 'day'; } };
 const TD_DAY = 864e5;
-const tdData = () => { const t = lib.todo || {}; return { items: Array.isArray(t.items) ? t.items : [], off: t.off || {}, offT: t.offT || 0, auto: t.auto || {} }; };
+const tdData = () => { const t = lib.todo || {}; return { items: Array.isArray(t.items) ? t.items : [], off: t.off || {}, offT: t.offT || 0, auto: t.auto || {}, cats: Array.isArray(t.cats) ? t.cats : [], corder: t.corder && Array.isArray(t.corder.ids) ? t.corder : null }; };
 function tdSave(part) {
   const d = { ...tdData(), ...part }, now = Date.now();
   // What nobody will look for again goes: a deletion after half a year, a finished line after four months, a moved or hidden app line after two.
   d.items = d.items.filter(it => it && it.id && !(it.gone && now - (it.t || 0) > 180 * TD_DAY) && !(it.done && now - it.done > 120 * TD_DAY));
   d.auto = Object.fromEntries(Object.entries(d.auto).filter(([, a]) => a && now - (a.t || 0) < 60 * TD_DAY));
+  // a category of her own that she deleted is forgotten after half a year; one the app starts with stays deleted for good
+  d.cats = d.cats.filter(c => c && c.id && !(c.gone && !TD_CAT0.some(b => b[0] === c.id) && now - (c.t || 0) > 180 * TD_DAY));
+  if (!d.cats.length) delete d.cats;
+  if (!d.corder) delete d.corder;
   lib.todo = d; saveLib(); todoRender();
 }
 const tdItems = () => tdData().items.filter(it => it && it.id && !it.gone);
 const tdItem = id => tdItems().find(it => it.id === id) || null;
 function tdPut(id, part) { const now = Date.now(); tdSave({ items: tdData().items.map(it => it.id === id ? { ...it, ...part, t: now } : it) }); }
 function tdAutoPut(key, part) { const d = tdData(); tdSave({ auto: { ...d.auto, [key]: { ...(d.auto[key] || {}), ...part, t: Date.now() } } }); }
+
+/* ---------- categories ---------- */
+// The ones every teacher starts with. Each can be renamed, moved or deleted; "Leadership role" is there to be renamed to the role she
+// holds beside teaching (a coach, a coordinator, a head of department).
+const TD_CAT0 = [['grade', 'Grading and feedback'], ['plan', 'Lesson planning'], ['admin', 'Administrative'], ['role', 'Leadership role']];
+// Words that put a line in one of those, in English. Tier 1 is read first; tier 2 (words that could go either way) only when nothing in
+// tier 1 matched. Within a tier the word that comes first in the line wins: "Make a rubric" is planning, "Email parents about grades" is admin.
+const TD_CATW = {
+  grade: ['mark|marks|marked|marking|grade|grades|graded|grading|regrade|feedback|score|scores|scoring|assess|assessing|assessment|assessments|moderate|moderation|moderating|hand back|report comments|report card|report cards|conference|conferences|retake|retakes|gradebook|proofread', 'return|rubric|rubrics|quiz|quizzes|test|tests|exam|exams|essay|essays|papers|drafts|lab reports|comments'],
+  plan: ['plan|plans|planning|lesson|lessons|slides|slide deck|handout|handouts|worksheet|worksheets|print|photocopy|copies|prep|curriculum|activity|activities|materials|resources|reading list|answer key|seating chart|lab setup', 'make|create|write|prepare|design|build|set up|assignment|assignments|project|projects'],
+  admin: ['email|emails|meeting|meetings|form|forms|attendance|duty|duties|sign|submit|deadline|budget|order|permission|parent|parents|call|phone|admin|paperwork|register|trip|field trip|calendar|schedule|supplies|reimbursement|office|newsletter|report to', ''],
+  role: ['coach|coaching|workshop|workshops|training|mentor|mentoring|committee|professional development|pd|demo|lead|leading', ''],
+};
+const TD_STOP = new Set(['role', 'work', 'other', 'things', 'stuff', 'tasks', 'with', 'from', 'misc', 'more', 'about', 'general']);
+const tdRx = alts => new RegExp('(?<![\\p{L}\\p{N}])(?:' + alts + ')(?![\\p{L}\\p{N}])', 'iu');
+const tdEsc = w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// Her categories in her order, deleted ones left out. A default she has not renamed has no name stored: it shows the app's.
+function tdCats() {
+  const d = tdData(), by = new Map(d.cats.map(c => [c.id, c])), ids = d.corder ? d.corder.ids.filter(x => typeof x === 'string') : [];
+  for (const [id] of TD_CAT0) if (!ids.includes(id)) ids.push(id);
+  for (const c of d.cats) if (c && c.id && !ids.includes(c.id)) ids.push(c.id);
+  return [...new Set(ids)].map(id => {
+    const c = by.get(id), b = TD_CAT0.find(x => x[0] === id);
+    if ((c && c.gone) || (!c && !b)) return null;
+    return { id, name: (c && c.name) || (b ? b[1] : ''), own: !!(c && c.name), w: (c && c.w) || '', base: !!b };
+  }).filter(Boolean);
+}
+const tdCat = id => tdCats().find(c => c.id === id) || null;
+// The words of her own that bring a line to a category: the words she gave it, and the name she gave it (long words only).
+const tdOwnWords = c => [...String(c.w || '').split(/[,;\n]+/).map(x => x.trim()).filter(x => x.length >= 2), ...(c.own ? c.name.split(/[^\p{L}\p{N}]+/u).filter(x => x.length >= 4 && !TD_STOP.has(x.toLowerCase())) : [])];
+// The category that fits some words best: the earliest match among her own words, then a line about an assignment is grading, then
+// the app's own words. '' when nothing fits.
+function tdGuess(text, it) {
+  const cats = tdCats(), t = String(text || '');
+  const first = list => { let best = null; for (const [id, alts] of list) { if (!alts) continue; const m = tdRx(alts).exec(t); if (m && (!best || m.index < best.i || (m.index === best.i && m[0].length > best.n))) best = { id, i: m.index, n: m[0].length }; } return best ? best.id : ''; };
+  const own = cats.map(c => [c.id, tdOwnWords(c).map(w => tdEsc(w) + '(?:s|es)?').join('|')]);
+  let k = first(own); if (k) return k;
+  const base = cats.filter(c => c.base && TD_CATW[c.id]);
+  k = first(base.map(c => [c.id, TD_CATW[c.id][0]])); if (k) return k;
+  if (it && it.a && cats.some(c => c.id === 'grade')) return 'grade';
+  return first(base.map(c => [c.id, TD_CATW[c.id][1]]));
+}
+const TD_KIND_CAT = { mark: 'grade', back: 'grade', miss: 'grade', plan: 'plan' };
+// The category a line is in now ('' for none), and whether she chose it or it was worked out.
+function tdCatOf(r) {
+  const k = r.auto ? (tdData().auto[r.key] || {}).k : r.it && r.it.k;
+  if (k === '-') return { id: '', chose: true };
+  if (k && tdCat(k)) return { id: k, chose: true };
+  if (r.auto) { const id = TD_KIND_CAT[r.kind]; return { id: id && tdCat(id) ? id : '', chose: false }; }
+  return { id: tdGuess(r.it.x + ' ' + (r.it.note || ''), r.it), chose: false };
+}
+function tdCatSave(list, order) {
+  const d = tdData(), now = Date.now(), by = new Map(d.cats.map(c => [c.id, c]));
+  for (const c of list) by.set(c.id, { ...c, t: now });
+  tdSave({ cats: [...by.values()], ...(order ? { corder: { ids: order, t: now } } : {}) });
+}
+function tdCatPut(id, part) {
+  const had = tdData().cats.find(c => c.id === id) || { id }, next = { ...had, ...part };
+  const b = TD_CAT0.find(x => x[0] === id);
+  if (next.name != null && (!next.name || (b && next.name === b[1]))) delete next.name;   // the app's own name again: nothing to keep
+  if (!next.w) delete next.w;
+  tdCatSave([next]);
+}
+function todoCatAdd(name, w) {
+  name = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 40); if (!name) return null;
+  const same = tdCats().find(c => c.name.toLowerCase() === name.toLowerCase()); if (same) return same.id;
+  const id = 'tc' + uid();
+  tdCatSave([{ id, name, ...(w ? { w: String(w).slice(0, 300) } : {}) }], [...tdCats().map(c => c.id), id]);
+  return id;
+}
+function todoCatMove(id, by) {
+  const ids = tdCats().map(c => c.id), i = ids.indexOf(id), j = i + by;
+  if (i < 0 || j < 0 || j >= ids.length) return;
+  [ids[i], ids[j]] = [ids[j], ids[i]];
+  const now = Date.now(); tdSave({ corder: { ids, t: now } });
+}
+function todoCatDelete(id) {
+  const c = tdCat(id); if (!c) return;
+  const was = tdData().cats.find(x => x.id === id) || null;
+  tdCatSave([{ id, gone: 1 }]);
+  toastDo('Category “' + c.name + '” deleted. Its lines go where their words fit.', 'Undo', () => { const d = tdData(); tdSave({ cats: [...d.cats.filter(x => x.id !== id), { ...(was || { id }), t: Date.now() }] }); });
+}
 
 /* ---------- days ---------- */
 const tdToday = () => isoDay(Date.now());
@@ -118,6 +210,7 @@ function todoAdd(text, drop, base) {
   const r = todoRead(text); if (!r.raw) return null;
   const now = Date.now(), it = { id: 'td' + uid(), x: drop.d ? r.raw : r.x, d: drop.d ? '' : r.d, c: drop.c ? '' : r.c, who: drop.c || drop.who ? '' : r.who, a: '', rep: drop.d ? '' : r.rep, note: '', done: 0, made: now, t: now };
   if (!drop.p && r.ppl.length) it.ppl = r.ppl;
+  if (drop.k) it.k = '-';   // she said it is not the category the words suggest
   for (const [k, v] of Object.entries(base || {})) if (!it[k]) it[k] = v;
   tdSave({ items: [...tdData().items, it] });
   return it;
@@ -181,12 +274,12 @@ function todoAuto() {
   };
   const g = homeGroups();
   if (!d.off.mark) for (const m of g.mark) {
-    if (!m.papers) continue;
+    if (!canOpen(m)) continue;
     const st = keptState(m), w = keptWhere(m), fm = w.it && w.it.type === 'fm', began = st.done || m.partial, name = m.name || 'Student work';
     add('mark', 'mark:' + m.id, (fm ? 'Give feedback on ' : began ? 'Finish marking ' : 'Mark ') + name, [w.cls ? w.cls.name : '', fm ? 'feedback only' + (st.done ? ' · ' + st.left + ' of ' + st.of + ' left' : '') : began ? st.left + ' of ' + st.of + ' left' : people(st.of, 'paper') + ', not started'].filter(Boolean).join(' · '), w.cls, today, { label: began || fm ? 'Continue' : 'Start', open: m.id }, 'x');
   }
   if (!d.off.back) for (const m of g.back) {
-    if (!m.papers) continue;
+    if (!canOpen(m)) continue;
     const st = keptState(m), w = keptWhere(m);
     add('back', 'back:' + m.id, 'Hand back ' + (m.name || 'Student work'), [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' ' + st.word].filter(Boolean).join(' · '), w.cls, today, { label: 'Return papers', href: batchHash(m.id, 'return') }, 'x');
   }
@@ -227,11 +320,12 @@ function tdRow(r, today, card) {
   const done = !!r.done, late = !done && r.d && r.d < today, due = done ? 'Done' : tdDaySay(r.d, today);
   const word = !due || due === 'Done' || due === 'Today' || due === 'Tomorrow';   // a weekday or a date is written by the browser in the app's language already
   let meta = '';
-  if (r.auto) meta = '<span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '');
+  const cat = !card && tdBy() !== 'cat' ? tdCat(tdCatOf(r).id) : null, catH = cat ? '<span class="tdcat"' + (cat.own ? ' data-raw' : '') + '>' + esc(cat.name) + '</span>' : '';
+  if (r.auto) meta = '<span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '') + catH;
   else {
     const it = r.it, a = it.a && findItem(it.a);
     meta = [r.c ? '<span class="tdc" data-raw>' + tdDot(r.c) + esc(r.c.name) + '</span>' : '', it.who ? '<span data-raw>' + esc(it.who) + '</span>' : '', tdPplHtml(it), a ? '<span data-raw>' + esc(a.it.name) + '</span>' : '',
-      it.rep ? '<span>' + TD_REP[it.rep] + '</span>' : '', it.note ? '<span>Note</span>' : ''].filter(Boolean).join('');
+      it.rep ? '<span>' + TD_REP[it.rep] + '</span>' : '', it.note ? '<span>Note</span>' : ''].filter(Boolean).join('') + catH;
   }
   const btn = r.auto && !card ? (r.btn.open ? '<button class="btn sm" data-tdopen="' + esc(r.btn.open) + '">' + r.btn.label + '</button>' : '<a class="btn sm" href="' + esc(r.btn.href) + '">' + r.btn.label + '</a>') : '';
   return '<div class="tdrow' + (done ? ' done' : '') + (r.auto ? ' auto' : '') + (!card && tdS.sel === r.id ? ' sel' : '') + '" data-td="' + esc(r.id) + '">' +
@@ -313,13 +407,15 @@ function tdSideHtml(rows, today) {
   if (!r) {
     const off = tdData().off;
     return '<h2 class="tcap">The app adds these for you</h2><div class="tcard tdkinds">' + TD_KINDS.map(([k, l]) => '<button class="tdsw" role="switch" aria-checked="' + !off[k] + '" data-tdkind="' + k + '"><span>' + l + '</span><i aria-hidden="true"></i></button>').join('') +
-      '<p class="muted">These come from your saved work and go by themselves when the work is done. You can move one to another day or hide it, and you never have to type it.</p></div>';
+      '<p class="muted">These come from your saved work and go by themselves when the work is done. You can move one to another day or hide it, and you never have to type it.</p></div>' + tdCatsCard();
   }
   const chip = (attr, on, label) => '<button class="tdchip' + (on ? ' on' : '') + '" ' + attr + ' aria-pressed="' + !!on + '">' + label + '</button>';
   const when = '<div class="tdf"><span class="tdl">When</span><div class="tdv">' + chip('data-tdwhen="today"', r.d === today, 'Today') + chip('data-tdwhen="tomorrow"', r.d === tdAdd(today, 1), 'Tomorrow') + chip('data-tdwhen="week"', r.d === tdNextMon(today), 'Next week') + (r.own ? chip('data-tdwhen="none"', !r.d, 'No day') : '') +
     '<input type="date" id="tdDate" value="' + esc(r.d) + '" aria-label="Pick a day" title="Pick a day"></div></div>';
   const x = '<button class="icon tdclose" data-tdclose aria-label="Close" title="Close">✕</button>';
-  if (r.auto) return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<h2 class="tdtitle" data-raw>' + esc(r.x) + '</h2><p class="tdm"><span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '') + '</p>' + when +
+  const ck = tdCatOf(r), catF = '<div class="tdf"><label class="tdl" for="tdCat">Category</label><div class="tdv"><select id="tdCat" class="btn sm">' + tdCats().map(c => '<option value="' + esc(c.id) + '"' + (c.id === ck.id ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') +
+    '<option value="-"' + (ck.id ? '' : ' selected') + '>No category</option><option value="+">New category…</option></select>' + (ck.chose ? '' : '<span class="muted tdguess">' + (ck.id ? 'from its words' : 'no category fits its words') + '</span>') + '</div></div>';
+  if (r.auto) return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<h2 class="tdtitle" data-raw>' + esc(r.x) + '</h2><p class="tdm"><span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '') + '</p>' + when + catF +
     '<p class="muted tdsay">The app noticed this from your saved work. It goes by itself when the work is done.</p><div class="tdacts">' + (r.btn.open ? '<button class="btn primary" data-tdopen="' + esc(r.btn.open) + '">' + r.btn.label + '</button>' : '<a class="btn primary" href="' + esc(r.btn.href) + '">' + r.btn.label + '</a>') +
     (r.kind === 'mark' ? '<button class="btn" data-tdfocus="' + esc('mark:' + r.key.slice(5)) + '" title="Start a focus session on these papers">Focus on this</button>' : '') +
     '<span class="sp"></span><button class="btn" data-tdhide>Hide this</button></div></div>';
@@ -339,9 +435,29 @@ function tdSideHtml(rows, today) {
       '<button class="icon" data-tdpx="' + esc(p.id) + '" aria-label="Take ' + esc(p.name) + ' off this to-do" title="Take off">✕</button></span>').join('') +
     '<select id="tdPpl" class="btn sm"><option value="">' + (mine.length ? 'Add someone else…' : 'Add someone…') + '</option>' + others.map(p => '<option value="' + esc(p.id) + '">' + esc(schWho(p)) + '</option>').join('') + '<option value="+">Someone new…</option></select></div></div>';
   const rep = '<div class="tdf"><span class="tdl">Repeats</span><div class="tdv">' + chip('data-tdrep=""', !it.rep, 'No') + chip('data-tdrep="day"', it.rep === 'day', 'Every school day') + chip('data-tdrep="week"', it.rep === 'week', 'Every week') + (pc || it.rep === 'meet' ? chip('data-tdrep="meet"', it.rep === 'meet', 'Each time this class meets') : '') + '</div></div>';
-  return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<textarea class="tdtitle" id="tdX" rows="2" maxlength="300" aria-label="What to do">' + esc(it.x) + '</textarea>' + when + cls + goes + ppl + rep +
+  return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<textarea class="tdtitle" id="tdX" rows="2" maxlength="300" aria-label="What to do">' + esc(it.x) + '</textarea>' + when + catF + cls + goes + ppl + rep +
     '<div class="tdf top"><label class="tdl" for="tdNote">Note</label><div class="tdv"><textarea id="tdNote" rows="3" maxlength="2000" placeholder="Anything to remember about it">' + esc(it.note || '') + '</textarea></div></div>' +
     '<div class="tdacts"><button class="btn primary" data-tdfin>' + (it.done ? 'Not done after all' : 'Done') + '</button>' + (it.done ? '' : '<button class="btn" data-tdwhen="tomorrow">Move to tomorrow</button><button class="btn" data-tdfocus="' + esc('td:' + it.id) + '" title="Start a focus session on this to-do">Focus on this</button>') + '<span class="sp"></span><button class="btn ghost" data-tddel>Delete</button></div></div>';
+}
+// The list by category: each of hers in her order, then the lines no category fits. Inside one, the same order as by day
+// (overdue first, then by day, no day last); what was done today stays at the foot, older done lines in their own group when shown.
+function tdCatGroupsHtml(rows, g, today, sec) {
+  const live = [...g.late, ...g.now, ...g.week, ...g.later], by = new Map(), cats = tdCats();
+  for (const r of live) { const k = tdCatOf(r).id; if (!by.has(k)) by.set(k, []); by.get(k).push(r); }
+  const csec = (k, name, own, list) => list.length ? '<div class="tdgrp" data-tdgrp="cat:' + esc(k) + '"><b' + (own ? ' data-raw' : '') + '>' + esc(name) + '</b> <span>' + list.filter(x => !x.done).length + '</span></div>' + list.map(x => tdRow(x, today)).join('') : '';
+  const order = list => list.sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || tdSort(a, b));
+  return cats.map(c => csec(c.id, c.name, c.own, order(by.get(c.id) || []))).join('') + csec('', 'No category', false, order(by.get('') || [])) + (tdS.done ? sec('done', 'Done in the last 7 days', g.done) : '');
+}
+// Her categories, in the side when no line is open: rename, the words that bring a line there, move up or down, delete, add.
+function tdCatsCard() {
+  const cats = tdCats();
+  return '<h2 class="tcap">Categories</h2><div class="tcard tdcats">' + cats.map((c, i) => '<div class="tdcatrow" data-tdcat="' + esc(c.id) + '">' +
+    '<input class="tdcatn" type="text" maxlength="40" value="' + esc(c.name) + '" aria-label="Category name"' + (c.own ? ' data-raw' : '') + '>' +
+    '<button class="icon" data-tdcmv="-1"' + (i ? '' : ' disabled') + ' aria-label="Move up" title="Move up">↑</button><button class="icon" data-tdcmv="1"' + (i < cats.length - 1 ? '' : ' disabled') + ' aria-label="Move down" title="Move down">↓</button>' +
+    '<button class="icon" data-tdcdel aria-label="Delete ' + esc(c.name) + '" title="Delete">✕</button>' +
+    '<input class="tdcatw" type="text" maxlength="300" value="' + esc(c.w) + '" placeholder="' + (c.id === 'role' && !c.own ? 'Rename it for your role, like Instructional coach' : 'Words that bring a line here, like ' + ({ grade: 'conferences', plan: 'labs', admin: 'IEP', role: 'tech' }[c.id] || 'yearbook, club')) + '" aria-label="Words that bring a line to ' + esc(c.name) + '"></div>').join('') +
+    '<form class="tdcatadd" id="tdCatAdd" autocomplete="off"><input type="text" maxlength="40" placeholder="Add a category, like Yearbook" aria-label="Add a category"><button class="btn sm">Add</button></form>' +
+    '<p class="muted">A new line goes to the category its words fit. Pick another on the line any time; your pick stays.</p></div>';
 }
 function tdPageRender() {
   const r = routeNow(); if (r.v !== 'todo' || batch) return;
@@ -364,11 +480,13 @@ function tdPageRender() {
   const nDone = tdGroups(all, today).done.length, db = $('#tdDoneBtn');
   db.hidden = !nDone; db.textContent = (tdS.done ? 'Hide' : 'Show') + ' done in the last 7 days · ' + nDone; db.setAttribute('aria-pressed', String(tdS.done));
   const sec = (k, name, list) => list.length ? '<div class="tdgrp' + (k === 'late' ? ' late' : '') + '" data-tdgrp="' + k + '">' + name + ' <span>' + (k === 'done' ? list.length : list.filter(x => !x.done).length) + '</span></div>' + list.map(x => tdRow(x, today)).join('') : '';
-  const h = sec('late', 'Overdue', g.late) + sec('now', 'Today', g.now) + sec('week', 'Next 7 days', g.week) + sec('later', 'Later', g.later) + (tdS.done ? sec('done', 'Done in the last 7 days', g.done) : '');
+  const byCat = tdBy() === 'cat';
+  for (const b of document.querySelectorAll('#tdBy [data-tdby]')) b.setAttribute('aria-pressed', String((b.dataset.tdby === 'cat') === byCat));
+  const h = byCat ? tdCatGroupsHtml(rows, g, today, sec) : sec('late', 'Overdue', g.late) + sec('now', 'Today', g.now) + sec('week', 'Next 7 days', g.week) + sec('later', 'Later', g.later) + (tdS.done ? sec('done', 'Done in the last 7 days', g.done) : '');
   tdPutHtml($('#tdList'), h || '<p class="tdnone">' + (tdS.filter === 'all' ? 'Nothing here yet. Type something above and press Enter, like “Print handouts tomorrow”.' : 'Nothing here for this view.') + '</p>');
   const wk = !!r.week, box = $('#tdWeek');
   for (const b of document.querySelectorAll('#tdView [data-tdview]')) b.setAttribute('aria-pressed', String((b.dataset.tdview === 'week') === wk));
-  $('#vTodo .tdgrid').classList.toggle('wk', wk); box.hidden = !wk;
+  $('#vTodo .tdgrid').classList.toggle('wk', wk); box.hidden = !wk; $('#tdBy').hidden = wk;
   // a line being typed into a day is not drawn over
   const typing = wk && box.contains(document.activeElement) && document.activeElement.matches('input') && document.activeElement.value;
   if (wk && !typing) tdPutHtml(box, tdWeekHtml(rows, today));
@@ -380,6 +498,8 @@ function tdUndRender() {
   if (c && !tdS.drop.c) parts.push('<button class="tdchip" data-tddrop="c" title="Not about this class">' + tdDot(c) + '<span data-raw>' + esc(c.name) + '</span></button>');
   if (c && r.who && !tdS.drop.c && !tdS.drop.who) parts.push('<button class="tdchip" data-tddrop="who" title="Not about this student"><span data-raw>' + esc(r.who) + '</span></button>');
   if (!tdS.drop.p) for (const p of r.ppl.map(tdPerson).filter(Boolean)) parts.push('<button class="tdchip" data-tddrop="p" title="Not about ' + esc(p.name) + '">' + SCH_IC.person + '<span data-raw>' + esc(p.name) + '</span></button>');
+  const k = !tdS.drop.k && r.raw ? tdCat(tdGuess(r.x)) : null;
+  if (k) parts.push('<button class="tdchip" data-tddrop="k" title="Not this category"><span' + (k.own ? ' data-raw' : '') + '>' + esc(k.name) + '</span></button>');
   box.hidden = !parts.length;
   tdPutHtml(box, parts.length ? '<span>Understood as</span>' + parts.join('') + '<span class="tdhint">Click one to take it off</span>' : '');
 }
@@ -436,6 +556,9 @@ function tdClick(e) {
   if ((b = hit('data-tdf'))) { tdS.filter = b.dataset.tdf; tdPageRender(); return; }
   if ((b = hit('data-tdkind'))) { const d = tdData(), off = { ...d.off }, k = b.dataset.tdkind; if (off[k]) delete off[k]; else off[k] = 1; tdSave({ off, offT: Date.now() }); if (k === 'miss' && !off.miss) tdMissLoad(); return; }
   if (hit('data-tdclose')) { tdS.sel = ''; tdPageRender(); return; }
+  if ((b = hit('data-tdby'))) { try { localStorage.setItem('gs.tdBy', b.dataset.tdby); } catch {} tdPageRender(); return; }
+  if ((b = hit('data-tdcmv'))) { todoCatMove(b.closest('[data-tdcat]').dataset.tdcat, +b.dataset.tdcmv); return; }
+  if ((b = hit('data-tdcdel'))) { todoCatDelete(b.closest('[data-tdcat]').dataset.tdcat); return; }
   const id = tdS.sel, auto = id.startsWith('auto:'), r = auto ? todoAuto().find(x => x.id === id) : null;
   if (!id || (auto && !r)) return;
   const setDay = d => auto ? tdAutoPut(r.key, { d }) : tdPut(id, { d, ...(d ? {} : { rep: '' }) });
@@ -474,8 +597,23 @@ function todoMove(id, day) {
   tdAutoPut(r.key, { d: day });
 }
 $('#tdDoneBtn').onclick = () => { tdS.done = !tdS.done; tdPageRender(); };
+// Picks a category for a line: hers, none ('-'), or a new one she names (+).
+async function tdCatPick(id, v) {
+  if (v === '+') { const name = await askTextDlg('Name the new category', '', { ok: 'Add' }); v = name && todoCatAdd(name); if (!v) { tdPageRender(); return; } }
+  if (id.startsWith('auto:')) { const r = todoAuto().find(x => x.id === id); if (r) tdAutoPut(r.key, { k: v }); }
+  else if (tdItem(id)) tdPut(id, { k: v });
+}
+$('#tdSide').addEventListener('submit', e => {
+  const f = e.target.closest('#tdCatAdd'); if (!f) return;
+  e.preventDefault();
+  const i = f.querySelector('input'); if (todoCatAdd(i.value)) { const again = $('#tdCatAdd input'); if (again) again.focus(); }
+});
 $('#tdSide').addEventListener('change', e => {
-  const id = tdS.sel, t = e.target; if (!id) return;
+  const id = tdS.sel, t = e.target, row = t.closest && t.closest('[data-tdcat]');
+  if (row && t.classList.contains('tdcatn')) { const v = t.value.replace(/\s+/g, ' ').trim(); if (v) tdCatPut(row.dataset.tdcat, { name: v }); else t.value = (tdCat(row.dataset.tdcat) || {}).name || ''; return; }
+  if (row && t.classList.contains('tdcatw')) { tdCatPut(row.dataset.tdcat, { w: t.value.replace(/\s+/g, ' ').trim() }); return; }
+  if (!id) return;
+  if (t.id === 'tdCat') { tdCatPick(id, t.value); return; }
   if (t.id === 'tdDate') {
     if (id.startsWith('auto:')) { const r = todoAuto().find(x => x.id === id); if (r && t.value) tdAutoPut(r.key, { d: t.value }); }
     else tdPut(id, { d: t.value || '', ...(t.value ? {} : { rep: '' }) });
@@ -511,4 +649,4 @@ function todoForPerson(pid) {
 }
 // For the screens tool: true while the timetable or who owes work is still being read, either of which can change the To do count.
 const bgBusy = () => !!planBusy || !!tdMiss.busy;
-Object.assign(window.__gs, { todoShowPerson, todoForPerson, todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove, bgBusy });
+Object.assign(window.__gs, { tdCats, tdGuess, tdCatOf, todoCatAdd, todoCatMove, todoCatDelete, todoShowPerson, todoForPerson, todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove, bgBusy });

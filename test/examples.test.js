@@ -181,3 +181,59 @@ test('a whole paper and part of a page: covers painted in, marks off unless swit
   assert.ok(left.every(x => x.from === null), 'whose they were is dropped');
   await close();
 });
+
+test('the score switch covers her score sticker too: off, the sticker stays off the example even with her marks on', async () => {
+  const { page, close } = await openApp(browser);
+  await openZip(page, essayZip, 'River essay.zip');
+  await waitPaper(page);
+  // What counts as a mark that says the score.
+  const says = await page.evaluate(() => [{ t: 'stamp', k: 'score', text: '18/20 = 90%' }, { t: 'text', text: '18/20 = 90%' }, { t: 'text', text: 'Total: 18/20' }, { t: 'note', text: '85%' },
+    { t: 'text', qz: 'q1', text: '2' }, { t: 'check', qz: 'q1' }, { t: 'text', text: 'Great thesis! 18/20' }, { t: 'text', text: 'Nice start' }, { t: 'stamp', k: 'star' }].map(m => window.__gs.isScoreMark(m)));
+  assert.deepEqual(says, [true, true, true, true, true, false, false, false, false]);
+  // Only a big red score sticker on the first page, so the marks' red is the sticker and nothing else.
+  await page.evaluate(() => { const st = window.__gs.state().batch.students.find(s => s.files.length && /Cara/.test(s.files[0].path)); const f = st.files[0]; (f.marks[0] ||= []).push({ t: 'stamp', k: 'score', text: '18/20 = 90%', x: 300, y: 300, size: 120, color: '#D0302A' }); });
+  const keep = async (score) => {
+    await pick(page, '[data-whodo="example"]');
+    await page.waitForFunction(() => document.querySelectorAll('#exPv canvas.exc').length === 2, { timeout: 60000 });
+    assert.equal(await page.$eval('[data-exsw="score"]', b => b.getAttribute('aria-checked')), 'false', 'the score is off by default, and the switch is there for a paper with a sticker');
+    await page.click('[data-exsw="marks"]');
+    if (score) await page.click('[data-exsw="score"]');
+    await page.waitForFunction(s => { const u = window.__gs.exUse(); return u && u.marks && u.score === s; }, {}, score);
+    const n = (await exList(page)).length;
+    await page.click('[data-exsave]');
+    await page.waitForFunction(n => window.__gs.exList().length === n + 1 && document.querySelector('#dlg').hidden, { timeout: 60000 }, n);
+    return (await exList(page)).sort((a, b) => b.t - a.t)[0];
+  };
+  let r = await keep(false);
+  assert.equal(r.marks, true); assert.equal(r.score, false);
+  assert.equal((await picFacts(page, r.id, 0)).red, 0, 'marks on, score off: no sticker');
+  r = await keep(true);
+  assert.equal(r.score, true);
+  assert.ok((await picFacts(page, r.id, 0)).red > 200, 'score on: the sticker is there');
+  // A saved example can be changed: cover part of it, or make it again from the paper.
+  await goTo(page, await page.evaluate(() => '#/a/' + window.__gs.state().batch.id.replace(/^gs\.b\./, '') + '/examples'));
+  const card = '#exBody .excard[data-exid="' + r.id + '"] ';
+  await page.waitForSelector(card);
+  await pick(page, card + '[data-excover]');
+  await page.waitForSelector('#exCovPv .expg[data-k="0"] canvas');
+  const c0 = await page.$eval('#exCovPv .expg[data-k="0"] canvas', c => { c.scrollIntoView({ block: 'center' }); const r = c.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
+  await page.mouse.move(c0.x + 0.05 * c0.w, c0.y + 0.05 * c0.h); await page.mouse.down();
+  await page.mouse.move(c0.x + 0.95 * c0.w, c0.y + 0.95 * c0.h, { steps: 5 }); await page.mouse.up();
+  await page.waitForFunction(() => /1 area blacked out/.test(document.querySelector('#exCovSay').textContent) && !document.querySelector('#dlgBox [data-exsave]').disabled);
+  await page.click('#dlgBox [data-exsave]');
+  await page.waitForSelector(card, { timeout: 30000 });   // back on the tab
+  assert.equal((await picFacts(page, r.id, 0)).red, 0, 'the cover is painted into the saved picture');
+  const n = (await exList(page)).length;
+  await pick(page, card + '[data-exredo]');
+  await page.waitForFunction(() => document.querySelectorAll('#exPv canvas.exc').length === 2, { timeout: 60000 });
+  await page.click('[data-exsw="marks"]');
+  await page.waitForFunction(() => window.__gs.exUse() && window.__gs.exUse().marks);
+  await page.click('[data-exsave]');
+  await page.waitForSelector(card, { timeout: 60000 });
+  const all = await exList(page), again = all.find(x => x.id === r.id);
+  assert.equal(all.length, n, 'made again in its place, not added');
+  assert.equal(again.letter, r.letter); assert.equal(again.marks, true); assert.equal(again.score, false);
+  assert.ok(again.u > r.u, 'it is newer');
+  assert.equal((await picFacts(page, r.id, 0)).red, 0, 'made again with the score off: no sticker');
+  await close();
+});

@@ -66,7 +66,7 @@ async function classWork(c, name) {
     if (seen.has(one)) continue; seen.add(one);
     const k = rosterPairs(c.names, Object.keys({ ...d.s, ...d.read })).get(name);
     const g = k ? { ...((d.s[k] || {}).g || {}), ...(d.read && d.read[k] ? { read: d.read[k] } : {}) } : null;
-    rows.push({ name: label, t: workTime(d) || d.t || 0, p: g ? pastScore(d.setup, g) : null, none: !k || !!(d.s[k] && d.s[k].gap) });
+    rows.push({ name: label, t: workTime(d) || d.t || 0, p: g ? pastScore(d.setup, g) : null, none: !k || !!(d.s[k] && d.s[k].gap), id, k: k && d.s[k] ? k : null });   // id, k: for opening it (src/solo.js)
   }
   return rows.sort((a, b) => a.t - b.t);
 }
@@ -85,10 +85,13 @@ function workHead(c, rows) {
   return 'In ' + esc(c.name) + (rows.length ? ' · ' + done + ' of ' + rows.length + ' turned in' + (pc.length ? ' · average ' + fmtPct(pc.reduce((a, b) => a + b, 0) / pc.length) : '') : '');
 }
 
+// The place in the open download of this roster student, for Only this student (src/solo.js); -1 when they aren't in it.
+const soloHere = (c, name) => batch && !PHONE && !$('#app').hidden && c && batchClass() === c ? batch.students.findIndex(st => personOf(st).name === name) : -1;
 let pcOpen = null;
 function closeCard() { const el = $('#pcard'); if (el) el.remove(); const back = pcOpen && pcOpen.back; pcOpen = null; if (back && back.isConnected) back.focus(); }
 // cid: the class. name: the roster name, or null for a folder the roster doesn't know (folder: its name).
 function personCard(cid, name, folder) {
+  if (soloOn()) return;   // only this student on screen (src/solo.js)
   const c = cid ? classById(cid) : null, back = document.activeElement;
   closeCard(); pcOpen = { cid, name, folder, back };
   const el = document.createElement('div'); el.id = 'pcard'; el.className = 'pc-back';
@@ -104,7 +107,7 @@ function renderCard() {
   const field = (k, label, ph, type) => '<label class="pc-f"><span class="pc-k">' + label + '</span><input class="pc-in" type="' + (type || 'text') + '" data-pf="' + k + '" value="' + esc(i[k] || '') + '" placeholder="' + ph + '" autocomplete="off" spellcheck="false">' +
     '<span class="pc-acts">' + (i[k] && k !== 'prev' ? '<button class="link" data-pcopy="' + k + '">Copy</button>' + (k === 'email' ? '<a class="link" href="mailto:' + esc(i.email) + '">Email</a>' : '') : '') + '</span></label>';
   el.innerHTML = '<div class="pc" role="dialog" aria-modal="true" aria-label="Student details"><div class="pc-hd"><div class="pc-av">' + esc(initials(name)) + '</div><div class="pc-tt"><h2>' + esc(name) + '</h2>' +
-    '<div class="muted pc-sm">' + esc(c.name) + ' · ' + (pos + 1) + ' of ' + c.names.length + ' on the roster' + (folder && folder !== name ? ' · folder “' + esc(folder) + '”' : '') + '</div></div><button class="icon pc-x" aria-label="Close">✕</button></div>' +
+    '<div class="muted pc-sm">' + esc(c.name) + ' · ' + (pos + 1) + ' of ' + c.names.length + ' on the roster' + (folder && folder !== name ? ' · folder “' + esc(folder) + '”' : '') + '</div></div>' + (soloHere(c, name) >= 0 ? '<button class="btn sm" data-psolo>Only this student</button>' : '') + '<button class="icon pc-x" aria-label="Close">✕</button></div>' +
     '<div class="pc-bd">' + field('id', 'Student ID', 'Add their student ID') + field('email', 'Email', 'Add their email', 'email') + field('prev', 'Last year', 'Their level last year (optional)') +
     '<div class="pc-f"><span class="pc-k">Also called</span><span class="pc-chips">' + (i.other || []).map((o, k) => '<span class="pc-chip">' + esc(o) + '<button data-pdrop="' + k + '" aria-label="Remove ' + esc(o) + '" title="Remove this spelling">×</button></span>').join('') +
     '<button class="pc-chip pc-add" data-padd>+ add</button></span><span></span></div>' +
@@ -138,6 +141,7 @@ document.addEventListener('click', async e => {
   const el = $('#pcard'); if (!el || !pcOpen) return;
   if (e.target === el || e.target.closest('.pc-x')) return closeCard();
   const c = classById(pcOpen.cid), n = pcOpen.name;
+  if (e.target.closest('[data-psolo]')) { const k = soloHere(c, n); closeCard(); return soloStart(k); }
   const cp = e.target.closest('[data-pcopy]'); if (cp) return copy(infoOf(c, n)[cp.dataset.pcopy] || '', 'Copied');
   const dr = e.target.closest('[data-pdrop]');
   if (dr) { const o = [...(infoOf(c, n).other || [])]; o.splice(+dr.dataset.pdrop, 1); setInfo(c, n, { other: o }); saveLib(); afterInfo(c); return renderCard(); }

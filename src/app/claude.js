@@ -148,11 +148,19 @@ function keptCovers(cs, path, p, W, H) {
 }
 const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: scrub(m.text, rx) } : m);
 // Renders one page the way Claude will see it: her marks (names scrubbed from her text) and black covers.
-// look, for a strong example: { bare: leave her marks off, light: with the page's lighting }.
+// A mark that says the score: the score sticker, a quiz question's points, or a typed grade with nothing else beside it ("18/20 = 90%", "Total: 18/20").
+// A comment with a grade inside it ("Great thesis! 18/20") is a comment, and stays.
+const scoreWordsOnly = t => { const g = parseGrade(t, false); if (!g || g.at == null) return false; return /^[\s:=\-–,.()]*(?:total|score|grade|points?|pts|marks?|final)?[\s:=\-–,.()]*$/i.test(t.slice(0, g.at) + t.slice(g.at + g.len).replace(/^\s*(?:points?|pts)\b/i, '')); };
+const isScoreMark = m => (m.t === 'stamp' && m.k === 'score') || (m.t === 'text' && !!m.qz) || ((m.t === 'text' || m.t === 'note') && !m.qza && m.text != null && String(m.text).trim().length <= 40 && scoreWordsOnly(String(m.text).trim()));
+// What a strong example leaves off with "The score" switched off: every score mark, and the criterion stickers too. (A criterion
+// sticker alone isn't a total, so isScoreMark leaves it out and the example still writes its own score caption.)
+const scoreOffHides = m => isScoreMark(m) || (m.t === 'stamp' && m.k === 'crit');
+// look, for a strong example: { bare: leave her marks off, light: with the page's lighting, noScore: leave off every mark that says the score }.
 async function sharePage(st, f, js, p, scale, rx, opts, look) {
   const page = await js.getPage(p + 1);
   const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
-  const marks = look && look.bare ? [] : scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
+  let marks = look && look.bare ? [] : scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
+  if (look && look.noScore) marks = marks.filter(m => !scoreOffHides(m));
   const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
   const c = document.createElement('canvas');
   c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);

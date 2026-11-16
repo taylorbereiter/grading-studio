@@ -242,6 +242,31 @@ test('times: a chip in the margin from a playing video (a click goes back there)
   assert.deepEqual(await lines(page), ['Before it starts', 'Eye contact']);
   await para(page, 0); await page.click('#spBody [data-tntm]');
   assert.match((await lines(page))[0], /^Before it starts@[12]$/);
+  // a click on the × beside a time hides it, kept; the faint clock left in its place brings it back
+  const hids = () => page.evaluate(() => window.__gs.state().batch.students[0].grade.tn.l.map(x => (x.t != null ? 't' : '') + (x.h ? 'h' : '')));
+  await page.click('#spBody .tnhide[data-tnts="0"]');
+  assert.deepEqual(await hids(page), ['th', '']);
+  assert.equal(await page.$('#spBody .tnchip'), null);
+  assert.equal(await page.evaluate(() => window.__gs.tnText()), 'Before it starts\nEye contact', 'a hidden time is left out of Copy notes');
+  await page.click('#spBody .tnhid[data-tnts="0"]');
+  assert.deepEqual(await hids(page), ['t', '']);
+  assert.ok(await page.$('#spBody .tnchip'));
+  // Hide all times: every time hidden, and a new one comes in hidden until they are shown again
+  await pick(page, '#spBody [data-tnm="alltimes"]');
+  assert.deepEqual(await hids(page), ['th', '']);
+  assert.equal(await page.$eval('#spBody [data-tnm="alltimes"]', e => e.textContent), 'Show all times');
+  await page.evaluate(() => document.querySelector('#paper .media video').play());
+  await para(page, 1); await page.keyboard.press('Enter'); await page.keyboard.type('Gestures');
+  await page.evaluate(() => document.querySelector('#paper .media video').pause());
+  assert.deepEqual(await hids(page), ['th', '', 'th']);
+  // the Time button on a hidden time shows it again
+  await para(page, 2); await page.click('#spBody [data-tntm]');
+  assert.deepEqual(await hids(page), ['th', '', 't']);
+  await pick(page, '#spBody [data-tnm="alltimes"]');
+  assert.deepEqual(await hids(page), ['th', '', 'th']);
+  await pick(page, '#spBody [data-tnm="alltimes"]');
+  assert.deepEqual(await hids(page), ['t', '', 't']);
+  assert.equal(await page.$eval('#spBody [data-tnm="alltimes"]', e => e.textContent), 'Hide all times');
   // Times off: no chips, and no time on a new paragraph
   await pick(page, '#spBody [data-tnm="times"]');
   assert.equal(await page.evaluate(() => localStorage.getItem('gs.tnTime')), 'false');

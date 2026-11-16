@@ -106,7 +106,7 @@ function renderList() {
     const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
       : val != null ? [ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
-      '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + right + '</span></button>';
+      '<span class="pills">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + '</span><span class="tail">' + right + '</span></button>';
   }).join('');
   if (listFilter !== 'all' && !q && !order.some(i => lfMatch(batch.students[i]))) $('#stuList').insertAdjacentHTML('beforeend', '<div class="muted lfnone">No one else here. <button class="link" data-lf="all">Show everyone</button></div>');
   listToCur();
@@ -172,7 +172,7 @@ function renderGrade() {
     h += ibPanelAsk() + '<h3>Score <button class="link" id="editRubric">Edit rubric</button>' + ibPanelHead() + '</h3><div class="crits">';   // an MYP class's task is marked against its criteria (ib.js)
     // Each row is one line: its name, its score, and a slider over its steps (0, 1, 1.5 … 4 unless the rubric says otherwise). The numbers under the slider show on the row in hand and under the pointer.
     h += setup.criteria.map((c, i) => { const v = g.rubric[i], steps = rowSteps(setup, i), k = steps.indexOf(v), top = rowTop(setup, i);
-      return '<div class="crit' + (i === rowOn ? ' on' : '') + '" data-row="' + i + '"><div class="cn"><span title="' + esc(c) + '">' + esc(c) + '</span><em>' + critScore(v, i) + '</em></div><div class="scores slide' + (steps.length > 9 ? ' many' : '') + '" data-c="' + i + '" style="--n:' + (steps.length - 1) + '">' +
+      return '<div class="crit' + (i === rowOn ? ' on' : '') + '" data-row="' + i + '"><div class="cn"><span title="' + esc(c) + '">' + esc(c) + '</span>' + (v != null && !noScore(st) ? '<button class="critstamp" data-critstamp="' + i + '" title="Stamp this score on the paper" aria-label="Stamp this score on the paper">' + STAMP_ICON + '</button>' : '') + '<em>' + critScore(v, i) + '</em></div><div class="scores slide' + (steps.length > 9 ? ' many' : '') + '" data-c="' + i + '" style="--n:' + (steps.length - 1) + '">' +
         '<input type="range" class="srange' + (v == null ? ' unset' : '') + '" style="--k:' + Math.max(0, k) + '" min="0" max="' + (steps.length - 1) + '" step="1" value="' + Math.max(0, k) + '" aria-label="Score for ' + esc(c) + '" aria-valuetext="' + (v == null ? 'Not scored' : fmtNum(v) + ' out of ' + top) + '">' +
         '<div class="sticks">' + steps.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div></div>'; }).join('') + '</div>' + lvBox();
   } else {
@@ -227,6 +227,14 @@ function totalHtml(st) {
 // The score stamp, the same one the calculator's "Score sticker" places: "12.5/15 = 83%", from the score however it was given
 // (rubric, points, Quick mark or the grade sheet), so she doesn't need the calculator to get it onto the paper.
 const STAMP_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="2" y="9.5" width="12" height="3.5" rx="1"/><path d="M6 9.5V7.2a2 2 0 1 1 4 0v2.3M3.5 15h9"/></svg>';
+// A criterion sticker for one rubric row: the row's name (an IB criterion's letter) and its score, "3/4" (an IB level alone, "5").
+function critStampOf(st, i) {
+  const v = st.grade.rubric[i]; if (v == null || i < 0 || i >= setup.criteria.length) return null;
+  const ib = ibSetup() && setup.ib[i];
+  return ib ? { of: ib, name: ib, text: fmtNum(v) } : { of: setup.criteria[i], name: setup.criteria[i], text: fmtNum(v) + '/' + rowTop(setup, i) };
+}
+// Which row a criterion sticker follows: by the IB letter or the row's name, so moving or removing rows never gives it another row's score.
+const critRowOf = m => setup.mode !== 'rubric' ? -1 : ibSetup() ? setup.ib.indexOf(m.of) : setup.criteria.indexOf(m.of);
 function scoreStampText(gr, st) {
   if (ibSetup()) return ibStampText(st || batch.students[cur]);
   const max = gr.outOf != null ? gr.outOf : maxPoints();
@@ -235,15 +243,19 @@ function scoreStampText(gr, st) {
 // Every score stamp on a paper says the score the app holds for that student, so the stamp, the score panel, the grade sheet
 // and the export all show one number. A stamp placed earlier changes when the score does (more points, extra credit, a retake).
 // Stamps on an earlier try's paper keep that try's words. With no score in the app, a stamp keeps what it says. True when one changed.
+// Criterion stickers follow their own row the same way; one whose row is unscored or gone keeps what it says.
 function syncScoreStamps(st) {
   if (!st || noScore(st)) return false;
   const gr = gradeOf(st);
-  if (gr.total == null || gr.paper) return false;   // a score read off the paper itself isn't the app's own
-  const text = scoreStampText(gr, st);
+  const text = gr.total == null || gr.paper ? null : scoreStampText(gr, st);   // a score read off the paper itself isn't the app's own
   let changed = false;
   for (const f of st.files) {
     if (!f.marks || tryOfFile(st, f)) continue;
-    for (const l of Object.values(f.marks)) for (const m of l || []) if (m.t === 'stamp' && m.k === 'score' && m.text !== text) { m.text = text; changed = true; }
+    for (const l of Object.values(f.marks)) for (const m of l || []) {
+      if (m.t !== 'stamp') continue;
+      if (m.k === 'score' && text != null && m.text !== text) { m.text = text; changed = true; }
+      if (m.k === 'crit') { const c = critStampOf(st, critRowOf(m)); if (c && (m.text !== c.text || m.name !== c.name)) { m.text = c.text; m.name = c.name; changed = true; } }
+    }
   }
   return changed;
 }
@@ -255,6 +267,7 @@ function paperScore(st) {
 }
 $('#grade').addEventListener('click', e => {
   if (e.target.closest('#oneOutBtn')) return exportOne(batch.students[cur]);
+  { const cs = e.target.closest('[data-critstamp]'); if (cs) { const c = critStampOf(batch.students[cur], +cs.dataset.critstamp); if (!c) return; if (!pages.length) return toast('Open the paper first, then stamp the score on it'); return startScorePlace(c.text, { k: 'crit', of: c.of, name: c.name }); } }
   const b = e.target.closest('.scores button');
   if (b) {
     const st = batch.students[cur], i = +b.closest('.scores').dataset.c, v = +b.dataset.v;
@@ -398,7 +411,7 @@ $('#grade').addEventListener('wheel', e => { if (e.target.id === 'ptsIn' || e.ta
 function openKeys() {
   const row = (k, t) => '<span>' + keyLabel(k).split(' ').map(x => '<kbd>' + esc(x) + '</kbd>').join(' ') + '</span><span>' + keyLabel(t) + '</span>';
   openDlg('<div class="bh"><h2>Keys</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb"><div class="keys">' +
-    '<h4>Students</h4>' + row('← →', 'Previous / next student (also ↑ ↓)') + row('Enter', 'The blue button: the next student without a full score') + row('N', 'Next student without a full score') + row('/', 'Find a student by name') +
+    '<h4>Students</h4>' + row('← →', 'Previous / next student (also ↑ ↓)') + row('Enter', 'The blue button: the next student without a full score') + row('N', 'Next student without a full score') + row('I', 'Only this student') + row('/', 'Find a student by name') +
     '<h4>Scoring</h4>' + row('0 1 2 3 4', 'Score the rubric row in hand, then move to the next row') + row('.', 'Right after a number: add the half, or take it off') + row('Tab', 'Go to the row in hand. Tab again for the next row, and ← → to change its score by a step') +
     '<h4>Marking</h4>' + row('V', 'Select') + row('P', 'Pen (hold Shift for a straight line)') + row('H', 'Highlight, snapping to typed lines. Press H again for freehand (Shift for straight)') + row('O', 'Circle') + row('T', 'Text') + row('C', 'Comment') + row('K', 'Check mark') + row('E', 'Eraser') +
     row('⌘Z', 'Undo') + row('⇧⌘Z', 'Redo (⌘Y works too)') +

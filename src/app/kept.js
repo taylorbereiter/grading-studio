@@ -120,6 +120,8 @@ async function keepPapers(b, label, list, again) {
     const m = { ...(keptMeta.get(b.id) || {}), id: b.id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (keptMeta.get(b.id) || {}).asg, ...more };
     await kdo('meta', 'readwrite', o => o.put(m, b.id)); keepOk = true; keptMeta.set(b.id, m);
     folderPapers(b);
+    // signed in with Google: new papers go up to her Drive straight away (drive.js, dvUp after the sync), so her phone has them on the way home
+    if (more.papers && G.email && !sampleOn()) setTimeout(() => syncNow(), 1500);
   } catch (e) {
     console.error(e);
     if (list) toast('This browser couldn’t keep these papers, usually because it’s out of room. Your marks are still saved, but the papers won’t reopen by themselves or go in a take-home file: drop the download in again to reopen it.', 12000);
@@ -150,7 +152,9 @@ function cardOfKept(id) {
   return null;
 }
 async function reopenKept(id, assignment) {
-  const rec = await paperGet(id);
+  let rec = await paperGet(id);
+  // waiting in her Google Drive (drive.js): fetched once, kept here from then on
+  if (!rec && DV.files[id] && G.email) { try { toast('Getting the papers from your Google Drive…', 60000); rec = await dvPull(id, (n, t) => toast('Getting the papers from your Google Drive: ' + n + ' of ' + t + '…', 60000)); toast('The papers are here now.'); } catch (e) { toast(e.message, 8000); return; } }
   if (!rec) { toast('The papers for this one aren’t kept in this browser. Drop the download in again.'); return; }
   await intake(rec.entries, rec.label, assignment || cardOfKept(id), true);
 }

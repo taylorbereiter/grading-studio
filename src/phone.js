@@ -19,13 +19,13 @@ if (PHONE) {
   nav.className = 'phnav'; nav.id = 'phNav'; nav.setAttribute('aria-label', 'Main');
   const ic = d => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>';
   nav.innerHTML = [['#/', 'Today', 'M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8'],
-    ['#/scores', 'Scores', 'M4 5h16M4 12h16M4 19h10M17 17l2 2 3-4'], ['#/todo', 'To do', 'M5 12l4 4 10-10']]
+    ['#/plans', 'Plans', 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11M9 8h6'], ['#/scores', 'Scores', 'M4 5h16M4 12h16M4 19h10M17 17l2 2 3-4'], ['#/todo', 'To do', 'M5 12l4 4 10-10']]
     .map(([h, l, d]) => '<a href="' + h + '" data-phnav="' + h + '">' + ic(d) + '<span>' + l + '</span></a>').join('');
   document.body.appendChild(nav);
 }
 function phNavRender() {
   if (!PHONE) return;
-  const v = routeNow().v, on = v === 'scores' ? '#/scores' : v === 'todo' ? '#/todo' : '#/';
+  const v = routeNow().v, on = v === 'scores' ? '#/scores' : v === 'plans' ? '#/plans' : v === 'todo' ? '#/todo' : '#/';
   for (const a of document.querySelectorAll('[data-phnav]')) { const me = a.dataset.phnav === on; a.classList.toggle('on', me); if (me) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
 }
 window.addEventListener('hashchange', phNavRender);
@@ -63,12 +63,13 @@ async function phScoresRender(r) {
 }
 function phOneRender(box, c, col) {
   const max = col.typed && col.typed.max, s = (col.typed && col.typed.s) || {}, fm = col.type === 'fm' && !(col.typed && col.typed.lv);
+  const see = !!col.dl && canOpen(keptMeta.get(col.dl));   // the papers are kept here, or waiting in her Drive
   const row = (n, i) => {
     const cell = col.cells.get(n), paper = col.d && cell && !cell.typed, r = s[n] || {};
     const val = paper ? (cell.total != null ? fmtNum(cell.total) + (cell.max ? ' / ' + fmtNum(cell.max) : '') : cell.pct != null ? cell.pct + '%' : cell.st || '') : bkCellVal(r, col);
     const st = (paper ? cell.st : r.st) || '';
     return '<div class="phstu' + (st ? ' st-' + st : '') + '"><span class="phname" data-raw>' + esc(bkWho(n, i)) + '</span>' +
-      (fm && !paper ? '<button class="phfb" data-phfb="' + esc(n) + '" aria-pressed="' + !!r.fb + '">' + (r.fb ? '✓ Feedback complete' : 'Feedback complete?') + '</button>' : paper ? '<span class="phpaper" title="Scored on the paper, on your computer">' + esc(val) + '</span>' :
+      (fm && !paper ? '<button class="phfb" data-phfb="' + esc(n) + '" aria-pressed="' + !!r.fb + '">' + (r.fb ? '✓ Feedback complete' : 'Feedback complete?') + '</button>' : paper ? '<span class="phpaper" title="Scored on the paper, on your computer">' + esc(val) + '</span>' + (see ? '<button class="icon phsee" data-phsee="' + esc(n) + '" aria-label="' + esc('See the paper for ' + bkWho(n, i)) + '">' + PH_EYE + '</button>' : '') :
         '<input class="phin" type="text" inputmode="decimal" enterkeyhint="next" autocomplete="off" value="' + esc(st === 'missing' || st === 'excused' ? '' : val) + '" placeholder="' + (st === 'missing' ? 'Missing' : st === 'excused' ? 'Excused' : '–') + '" data-phn="' + esc(n) + '" aria-label="' + esc('Score for ' + bkWho(n, i)) + '">' +
         kmWrap('⋯', 'class="icon phmore" aria-label="' + esc('More for ' + bkWho(n, i)) + '"', '<button class="mitem" data-phst="missing" data-phn="' + esc(n) + '">Missing</button><button class="mitem" data-phst="excused" data-phn="' + esc(n) + '">Excused</button><button class="mitem" data-phst="" data-phn="' + esc(n) + '">Clear</button>', 'right')) + '</div>';
   };
@@ -131,4 +132,87 @@ document.addEventListener('click', e => {
     });
   }
 });
-window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), syncNow: () => syncNow(), phone: () => PHONE });
+/* One student's paper, to look at (no marking here): from this browser if it keeps the papers, else just that student's files from her Drive. */
+const PH_EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+async function phSee(col, c, n) {
+  const d = col.d || {}, key = rosterPairs(c.names, Object.keys({ ...(d.s || {}), ...(d.read || {}) })).get(n) || n, cell = col.cells.get(n) || {};
+  const box = document.createElement('div'); box.className = 'phview'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Paper for ' + n);
+  const score = cell.total != null ? fmtNum(cell.total) + (cell.max ? ' / ' + fmtNum(cell.max) : '') : cell.pct != null ? cell.pct + '%' : '';
+  box.innerHTML = '<header class="phvhead"><button class="btn sm" data-phvclose>Close</button><b data-raw>' + esc(n) + '</b><span class="phc">' + esc(score) + '</span></header><div class="phvbody"><p class="muted phpad">Getting the paper…</p></div>';
+  document.body.appendChild(box);
+  const body = box.querySelector('.phvbody');
+  try {
+    const m = keptMeta.get(col.dl), rec = m && m.papers ? await paperGet(col.dl) : null;
+    const files = rec ? rec.entries.filter(e => e.data && (e.path.split('/')[0] === key || e.path.replace(/\.[^.]+$/, '') === key)) : await dvPullOne(col.dl, key);
+    if (!box.isConnected) return;
+    body.innerHTML = files.length ? '' : '<p class="muted phpad">No paper for this student in this download.</p>';
+    for (const f of files) {
+      const ext = (f.path.match(/\.([^.\/]+)$/) || [, ''])[1].toLowerCase();
+      if (ext === 'pdf') {
+        const doc = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
+        for (let p = 1; p <= doc.numPages; p++) {
+          const page = await doc.getPage(p), w = body.clientWidth || 360, vp0 = page.getViewport({ scale: 1 }), k = w / vp0.width * Math.min(2, devicePixelRatio || 1), vp = page.getViewport({ scale: k });
+          const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height; cv.className = 'phvpage'; cv.setAttribute('aria-label', 'Page ' + p);
+          await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+          if (!box.isConnected) return; body.appendChild(cv);
+        }
+      } else if (/^(png|jpe?g|gif|webp|heic)$/.test(ext)) {
+        const img = document.createElement('img'); img.className = 'phvpage'; img.alt = f.path; img.src = URL.createObjectURL(new Blob([f.data])); body.appendChild(img);
+      } else body.insertAdjacentHTML('beforeend', '<p class="muted phpad">' + esc(f.path.split('/').pop()) + ' opens on your computer.</p>');
+    }
+    body.insertAdjacentHTML('beforeend', '<p class="muted phpad">Your marks on the paper show on your computer.</p>');
+  } catch (e) { if (box.isConnected) body.innerHTML = '<p class="muted phpad">' + esc(e.message || 'The paper couldn’t be fetched.') + '</p>'; }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-phsee]');
+  if (b) { const key = b.closest('[data-phcol]').dataset.phcol, col = ph.cols && ph.cols.find(x => x.key === key), c = classById(store.get('gs.phCls', '')); if (col && c) phSee(bkClassCols(c, [col])[0], c, b.dataset.phsee); return; }
+  if (e.target.closest('[data-phvclose]')) e.target.closest('.phview').remove();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { const v = document.querySelector('.phview'); if (v) v.remove(); } });
+/* Use on your phone: a QR code for this page's own address (src/qr.js, made here), and the steps to put it on a phone's Home Screen and sign in. */
+function phoneHowTo() {
+  const url = location.origin + location.pathname.replace(/index\.html$/, ''), qr = qrSvg(url, 'QR code for Grading Studio');
+  openDlg('<div class="bh"><h2>Use on your phone</h2></div><div class="bb phhow">' +
+    (qr ? '<div class="phqr">' + qr + '</div>' : '') + '<p class="phurl" data-raw>' + esc(url) + '</p>' +
+    '<ol class="phsteps">' +
+    '<li>Point your phone’s camera at the code and tap the link, or type the address above.</li>' +
+    '<li>On an iPhone: in Safari, tap Share, then Add to Home Screen.</li>' +
+    '<li>On Android: in Chrome, tap the ⋮ menu, then Add to Home screen or Install app.</li>' +
+    '<li>Open Grading Studio from your Home Screen and tap Sign in with Google. Use the same Google account as on this computer.</li>' +
+    '</ol>' +
+    '<p class="muted">If Google says it hasn’t verified the app, tap Advanced, then Go to Grading Studio. The sign-in key was made for your copy rather than reviewed by Google, and the app can only use its own hidden folder in your Drive.</p>' +
+    '<p class="muted">Your classes, scores and to-dos then stay the same on both. You can type scores and look at papers on the phone; marking stays on the computer.</p>' +
+    '</div><div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
+}
+window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), gAge: ms => { G.exp -= ms; }, syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });
+
+/* Plans: the lessons from the Planner on her computer, day by day, to read (the Planner itself is where they are written). They come
+   through her Google Drive with the rest of her work (drive.js, planSync), into this browser's own copy of the Planner's store. */
+async function phPlansRender(r) {
+  const box = $('#phPlans'); if (!box) return;
+  if (r.id) return phLessonRender(box, r.id);
+  const p = await planRead();
+  if (!$('#phPlans') || routeNow().v !== 'plans' || routeNow().id) return;
+  if (!p) { box.innerHTML = '<p class="muted">Your lesson plans show here once the Planner on your computer has a timetable. Sign in with Google here and on the computer.</p>'; return; }
+  const days = [];
+  for (let i = 0; i < 28 && days.length < 10; i++) { const at = Date.now() + i * 864e5, d = todayRows(p, at); if (d.off || d.rows.length) days.push({ at, ...d }); }
+  const day = at => new Date(at).toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'short', day: 'numeric' });
+  const when = (c, m) => [c.name, m.start ? planTime(m.start) + (m.end ? '–' + planTime(m.end) : '') : ''].filter(Boolean).join(' · ');
+  box.innerHTML = days.length ? days.map(d => '<h2 class="tcap" data-raw>' + esc(day(d.at)) + '</h2>' + (d.off ? '<p class="muted phpad" data-raw>' + esc(d.off) + '</p>' :
+    '<div class="tcard phlist">' + d.rows.map(({ c, m, lessons }) => lessons.length ? lessons.map(l => '<a class="phitem" href="#/plans/' + encodeURIComponent(l.id) + '"><span class="phn"><b data-raw>' + esc(l.title) + '</b><small data-raw>' + esc(when(c, m)) + '</small></span><span class="phc"><i class="phdot" style="background:' + esc(c.color) + '"></i></span></a>').join('') :
+      '<div class="phitem"><span class="phn"><b data-raw>' + esc(c.name) + '</b><small>' + esc((m.start ? planTime(m.start) + ' · ' : '') + 'No lesson planned') + '</small></span></div>').join('') + '</div>')).join('')
+    : '<p class="muted">No classes in the next four weeks.</p>';
+}
+// One lesson to read: each slide's title and words, the teacher's notes under them. Pictures and files stay on the computer for now.
+async function phLessonRender(box, id) {
+  const db = await planDb(false); let l = null;
+  if (db) { try { l = await idbP(db.transaction('lessons').objectStore('lessons').get(id)); } catch {} db.close(); }
+  if (!$('#phPlans') || routeNow().id !== id) return;
+  const back = '<p><a class="btn sm" href="#/plans">‹ Plans</a></p>';
+  if (!l) { box.innerHTML = back + '<p class="muted">This lesson isn’t here yet. It comes with the next sync.</p>'; return; }
+  const txt = s => esc(String(s || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim()).replace(/\n/g, '<br>');
+  const slides = Array.isArray(l.slides) ? l.slides : [];
+  box.innerHTML = back + '<h2 class="phlt" data-raw>' + esc(l.title || 'Untitled lesson') + '</h2>' +
+    (l.note ? '<p class="phln" data-raw>' + txt(l.note) + '</p>' : '') +
+    (slides.length ? '<ol class="phslides">' + slides.map(s => '<li class="tcard"><b data-raw>' + txt(s.title) + '</b>' + (s.body ? '<p data-raw>' + txt(s.body) + '</p>' : '') + (s.img || (s.ctx && s.ctx.length) ? '<small class="muted">A picture, on your computer</small>' : '') + (s.notes ? '<p class="phsn" data-raw>' + txt(s.notes) + '</p>' : '') + '</li>').join('') + '</ol>' : '<p class="muted">No slides yet.</p>');
+}

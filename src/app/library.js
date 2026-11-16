@@ -110,6 +110,6 @@ function batchSummary(it) {
   const fm = it.type === 'fm';
   if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (fm ? g.fb : (g.rubric || []).some(v => v != null) || g.points !== '' || (g.pk != null && g.pk !== ''))) n++; }
   const m = keptMeta.get(it.batchId);
-  if (m) return keptSay(m) + (m.papers ? '' : ' · papers not kept');
+  if (m) return keptSay(m) + (canOpen(m) ? '' : ' · papers not kept');
   return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + (fm ? ' feedback complete' : ' scored') : '') + ' · drop the same ZIP to keep going';
 }

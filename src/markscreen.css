@@ -1,7 +1,7 @@
 /* ---------------- the marking screen ---------------- */
 /* The tools: one slim dock down the left edge of the paper, so the paper keeps the full height. Zoom is a pill at the paper's foot. */
 .main{position:relative}
-.tools{position:absolute;left:12px;top:12px;z-index:3;width:44px;margin:0;padding:5px;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:2px;max-height:calc(100% - 24px);overflow-x:hidden;overflow-y:auto;scrollbar-width:none;border-radius:var(--corner-5);box-shadow:var(--shadow)}
+.tools{position:absolute;left:12px;top:12px;z-index:4;width:44px;margin:0;padding:5px;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:2px;max-height:calc(100% - 24px);overflow-x:hidden;overflow-y:auto;scrollbar-width:none;border-radius:var(--corner-5);box-shadow:var(--shadow)}
 .tools::-webkit-scrollbar{display:none}
 .tools .tool{justify-content:center;padding:0;height:32px;flex:none}
 .tools .tool svg{width:18px;height:18px}
@@ -84,8 +84,14 @@ button.pavg:hover .v{text-decoration:underline}
 .km .lf[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .lf .v{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:500}
 .lfnone{font-size:var(--text-control);padding:6px 8px}
-.stu{height:32px;padding:0 8px;margin-bottom:2px;grid-template-columns:22px minmax(0,1fr) auto auto}
+.stu{min-height:32px;padding:4px 8px;margin-bottom:2px;grid-template-columns:22px minmax(0,1fr) auto auto;row-gap:2px}
 .stu .tail{display:inline-flex;align-items:center;gap:4px}
+/* 11/16: a long name wraps onto more lines (up to three) instead of ending in "…"; the whole name is also on hover. The pills
+   (late, +1, group, sent, High/Mid/Low) sit on a line under the name, so they never squeeze it; the score keeps its place. */
+.stu .nm{white-space:normal;overflow-wrap:break-word;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;line-height:1.25}
+.stu .pills{grid-column:2/-1;grid-row:2;display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}
+.stu .pills:empty{display:none}
+.stu .pills .add{margin-left:0}
 .side .hd{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:10px 8px 2px}
 .sfoot{position:sticky;bottom:-10px;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;padding:8px 6px 10px;background:var(--bg);border-top:1px solid var(--line)}
 .sfoot .anonsw{font-size:var(--text-small);letter-spacing:0;text-transform:none;font-weight:500;white-space:nowrap}
@@ -104,7 +110,7 @@ button.pavg:hover .v{text-decoration:underline}
   .cols.peek>.side{width:232px;border-right-color:var(--line-strong);box-shadow:var(--shadow),8px 0 24px -12px color-mix(in srgb,var(--fg) 30%,transparent)}
   .cols:not(.open):not(.peek)>.side{padding-left:5px;padding-right:5px;padding-bottom:40px;scrollbar-width:none}
   .cols:not(.open):not(.peek)>.side::-webkit-scrollbar{display:none}
-  .cols:not(.open):not(.peek) :is(.ph span,.pavg,.lfnow .t,.stu .nm,.stu .whob,.stu .tail,#sideHd,.sfoot,.lfnone){display:none}
+  .cols:not(.open):not(.peek) :is(.ph span,.pavg,.lfnow .t,.stu .nm,.stu .whob,.stu .tail,.stu .pills,#sideHd,.sfoot,.lfnone){display:none}
   .cols:not(.open):not(.peek) .phrow{justify-content:center}
   .cols:not(.open):not(.peek) .prog-s .ph{font-size:var(--text-small)}
   .cols:not(.open):not(.peek) .lbar{justify-content:center;gap:2px}
@@ -112,7 +118,7 @@ button.pavg:hover .v{text-decoration:underline}
   .cols:not(.open):not(.peek) .sfind .stufind{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer}
   .cols:not(.open):not(.peek) .lfnow.on{background:var(--accent-soft)}
   .cols:not(.open):not(.peek) :is(.sfind,.lfnow):hover{background:var(--hover);color:var(--fg)}
-  .cols:not(.open):not(.peek) .stu{grid-template-columns:auto 1fr;gap:2px;padding:0 6px 0 7px}
+  .cols:not(.open):not(.peek) .stu{grid-template-columns:auto 1fr;gap:2px;padding:0 6px 0 7px;height:32px}
   .cols:not(.open):not(.peek) .stu::after{content:attr(data-sv);justify-self:end;font-size:var(--text-small);font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
   .cols:not(.open):not(.peek) .stu.sv-part::after{color:var(--warn)}
   .cols:not(.open):not(.peek) .stu.sv-quiet::after{color:var(--muted)}
@@ -133,6 +139,9 @@ button.pavg:hover .v{text-decoration:underline}
 .grade .crit.on{background:var(--accent-soft)}
 .crit .cn{align-items:baseline;gap:8px;margin-bottom:3px;cursor:pointer}
 .crit .cn span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crit .cn .critstamp{flex:none;margin-left:auto;align-self:center;display:inline-grid;place-items:center;width:22px;height:20px;padding:0;border:1px solid transparent;border-radius:var(--corner-1);background:none;color:var(--muted);cursor:pointer;opacity:0;transition:opacity .12s}
+.crit.on .critstamp,.crit:hover .critstamp,.crit .critstamp:focus-visible{opacity:1}
+.crit .cn .critstamp:hover{border-color:var(--line);background:var(--surface);color:var(--accent)}
 .crit .cn em{flex:none;font-size:var(--text-body);font-weight:650;font-variant-numeric:tabular-nums}
 .crit .cn em small{font-size:var(--text-small);font-weight:500;color:var(--muted)}
 .crit .cn em:empty::before{content:"–";font-weight:500;color:var(--faint)}
@@ -257,3 +266,26 @@ button.pavg:hover .v{text-decoration:underline}
   .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek) .fstab{display:flex;align-items:center;justify-content:center;position:absolute;left:0;top:50%;z-index:7;width:22px;height:56px;margin-top:-28px;padding:0;border:1px solid var(--line-strong);border-left:0;border-top-right-radius:var(--corner-3);border-bottom-right-radius:var(--corner-3);background:var(--surface);color:var(--muted);font-size:var(--text-body);box-shadow:var(--shadow);cursor:pointer}
 }
 @media (prefers-reduced-motion:reduce){.gsfull .cols>.side,.gsfull .cols .tools{transition:none!important}}
+/* Only this student (src/solo.js): one bar across the top with their name, their other work and a held button out. Everything
+   that lists or names other students steps aside: the list, the tabs, the sidebar, the class's numbers, notes that pop up. */
+.solobar{display:flex;align-items:center;gap:10px;height:52px;box-sizing:border-box;padding:0 16px;background:var(--accent-soft);border-bottom:1px solid var(--line);position:relative;z-index:30}
+.solobar[hidden]{display:none}
+.solobar .sp{flex:1}
+.solo-ic svg,.solo-go svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;vertical-align:-3px}
+.solo-ic{color:var(--accent);display:flex}
+.solo-t{color:var(--accent);font-weight:650}
+.solo-n{font-weight:650;font-size:var(--text-lead);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.solo-x{position:relative;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none}
+.solo-fill{position:absolute;inset:0;background:var(--accent);opacity:.22;transform:scaleX(0);transform-origin:left}
+.solo-x.holding .solo-fill{transform:scaleX(1);transition:transform 1.5s linear}
+.solo-xl{position:relative}
+.solo-work{position:absolute;right:16px;top:48px;width:min(420px,calc(100vw - 32px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 14px}
+.solo-work h3{margin:0 0 8px;font-size:var(--text-body);font-weight:650}
+.solo-row{display:block;width:100%;text-align:left;background:none;border:0;border-radius:var(--r-sm);padding:0 6px;font:inherit;color:inherit}
+button.solo-row{cursor:pointer}
+button.solo-row:hover{background:var(--accent-soft)}
+.solo-row.on{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+html.solo .shell{height:calc(100vh - var(--savebar,0px) - 52px)}
+html.solo #rail,html.solo #side,html.solo #colL,html.solo #fsEdge,html.solo #fsTab,html.solo #progS,html.solo .app .top,html.solo #fcPanel,html.solo .toast,
+html.solo #paper .who .whon,html.solo #paper .who .whob,html.solo #readBtn,html.solo #addMenuBtn,html.solo #whoMore,html.solo #soloBtn,html.solo #grpBand,html.solo #grade .nav,html.solo #openRep,html.solo #pcard{display:none!important}
+html.solo .cols{--lw:0px}

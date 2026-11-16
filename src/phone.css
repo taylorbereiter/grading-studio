@@ -39,8 +39,27 @@
 .phin{width:92px;padding:10px 12px;border:1px solid var(--line-strong);border-radius:var(--corner-4);background:var(--surface);color:var(--fg);text-align:right;font:inherit;font-size:var(--text-lead);font-variant-numeric:tabular-nums}
 .phin:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
 .phstu.st-missing .phin::placeholder,.phstu.st-excused .phin::placeholder{color:var(--gold-fg);opacity:1}
-.phpaper{width:92px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;padding-right:44px}
+.phpaper{min-width:92px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;padding-right:44px;white-space:nowrap}
+.phpaper:has(+ .phsee){padding-right:0}
 .phmore{width:40px;height:40px}
 .phfb{padding:10px 14px;border:1px solid var(--line-strong);border-radius:var(--corner-pill);background:var(--surface);color:var(--muted);font:inherit;font-size:var(--text-body)}
 .phfb[aria-pressed="true"]{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);font-weight:600}
 .gsphone [data-fcnext]{display:none!important}
+.phsee{width:40px;height:40px}
+.phsee svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8}
+.phview{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column}
+.phvhead{display:flex;align-items:center;gap:12px;padding:max(10px,env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--line);background:var(--surface)}
+.phvhead b{flex:1;min-width:0;overflow-wrap:anywhere}
+.phvbody{flex:1;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}
+.phvpage{display:block;width:100%;height:auto;margin:0 auto 12px;border-radius:var(--corner-2);box-shadow:var(--shadow)}
+.phqr{display:flex;justify-content:center;margin:0 0 6px}
+.phqr .qr{width:200px;height:200px}
+.phurl{text-align:center;margin:0 0 12px;font-size:var(--text-control);color:var(--muted);overflow-wrap:anywhere}
+.phsteps{margin:0 0 12px;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.phdot{display:inline-block;width:10px;height:10px;border-radius:var(--corner-round)}
+.phlt{font-size:var(--text-title);margin:8px 0}
+.phln{color:var(--muted);margin:0 0 12px}
+.phslides{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.phslides li{padding:14px 16px}
+.phslides p{margin:6px 0 0;line-height:1.45}
+.phslides .phsn{color:var(--muted);font-size:var(--text-small);border-top:1px solid var(--line);padding-top:6px}

@@ -11,7 +11,8 @@ const PICK_SCOPE = 'https://www.googleapis.com/auth/drive.file ' + SYNC_SCOPE;
 const GOOGLE_API_KEY = '/*@@GKEY@@*/';
 const G = { token: null, exp: 0, scope: '', client: null, cscope: '', email: store.get('gs.gEmail', ''), waiters: [] };
 // A home-screen app on an iPhone can't use Google's pop-up window, so it goes to Google's page and comes back with the key in the address.
-const G_REDIRECT = navigator.standalone === true;
+// The same on any iPhone or iPad browser (Safari, Chrome): there the pop-up is left as a blank page after Continue and never comes back.
+const G_REDIRECT = navigator.standalone === true || /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 const gBack = () => location.origin + location.pathname.replace(/index\.html$/, '');
 {
   // Back from Google's page: the key is taken out of the address before anything reads it
@@ -33,12 +34,16 @@ function loadGis() {
 }
 // Gets a fresh token; silent when she's already signed in to Google in this browser. full: 'pick' for the files she picks or the app
 // makes (drive.file), else only the app's own hidden folder.
+const gAuto = () => store.get('gs.gAuto', true) !== false;
 const gHas = scope => scope.split(' ').every(x => G.scope.split(' ').includes(x));
 async function gToken(interactive, full) {
   const scope = full ? PICK_SCOPE : SYNC_SCOPE;
   if (G.token && Date.now() < G.exp - 60000 && gHas(scope)) return G.token;
   if (!gcid()) throw new Error('setup');
-  if (G_REDIRECT) { if (interactive) gRedirect(scope); throw new Error('Sign in again to sync'); }
+  // Google's key lasts an hour, and getting a new one in a browser opens Google's little window, even for a moment. With "Renew it by
+  // itself" on (the default, Settings, Saving and carrying) that happens when it's needed; off, the sync waits for a tap on the Google line.
+  if (!interactive && !gAuto()) throw new Error('Sign in again to sync');
+  if (G_REDIRECT) { gRedirect(scope); throw new Error('Sign in again to sync'); }
   await loadGis();
   if (!G.client || G.cscope !== scope) {
     G.cscope = scope;
@@ -48,7 +53,15 @@ async function gToken(interactive, full) {
       error_callback: e => { const w = G.waiters.splice(0); w.forEach(x => x.rej(new Error(e && e.type === 'popup_closed' ? 'Sign-in was closed' : 'Sign-in didn’t finish'))); },
     });
   }
-  return new Promise((res, rej) => { G.waiters.push({ res, rej }); G.client.requestAccessToken({ prompt: interactive && !G.email ? 'consent' : '' }); });
+  // one window at a time: a second ask while Google's window is open waits for the same answer
+  return new Promise((res, rej) => { G.waiters.push({ res, rej }); if (G.waiters.length === 1) G.client.requestAccessToken({ prompt: interactive && !G.email ? 'consent' : '' }); });
+}
+// A new key before this one runs out, for what this one already covers. The old one stays in use if Google doesn't answer.
+const keepHas = k => PICK_SCOPE.split(' ').every(x => (k.scope || '').split(' ').includes(x));
+async function gRenew() {
+  const keep = { token: G.token, exp: G.exp, scope: G.scope };
+  G.exp = 0;   // so gToken asks Google now
+  try { return await gToken(false, keepHas(keep) ? 'pick' : false); } catch (e) { if (!G.exp) Object.assign(G, keep); throw e; }
 }
 // Every call but the sync's own (gsync) is for files she picked or the app made (drive.file).
 async function gfetch(url, opt = {}, interactive, sync, again) {
@@ -82,13 +95,17 @@ function renderGoogle() {
   for (const el of document.querySelectorAll('.gAcct, #pickDrive')) el.hidden = !GOK || !gcid();   // no key built in: nothing to sign in to
   if (!GOK || !gcid()) return;
   for (const el of document.querySelectorAll('.gAcct')) el.innerHTML = G.email
-    ? '<span class="muted" style="font-size:13px">Google: ' + esc(G.email) + ' · <span id="syncState">' + (syncState || 'synced') + '</span></span> <button class="link" data-gout>Sign out</button>'
+    ? '<span class="muted" style="font-size:13px">Google: ' + esc(G.email) + ' · ' + (syncPaused() ? '<button class="link" data-gin id="syncState">' + syncState + '</button>' : '<span id="syncState">' + (syncState || 'synced') + '</span>') + '</span> <button class="link" data-gout>Sign out</button>'
     : '<button class="btn sm" data-gin>Sign in with Google</button>';
+  if (!PHONE) for (const el of document.querySelectorAll('.gAcct')) el.insertAdjacentHTML('beforeend', ' <button class="btn sm" data-gphone>Use on your phone</button>');
   for (const b of document.querySelectorAll('.needG')) b.hidden = !G.email;
+  const gs = $('#setGoogle'); if (gs) { if (!G.email || G_REDIRECT) gs.hidden = true; $('#gAutoIn').checked = gAuto(); }   // shown on its settings page (settings.js)
 }
+document.addEventListener('change', e => { if (e.target.id === 'gAutoIn') { store.set('gs.gAuto', e.target.checked); if (e.target.checked && syncPaused()) syncNow(); } });
 document.addEventListener('click', e => {
   if (e.target.closest('[data-gin]')) signIn();
   if (e.target.closest('[data-gout]')) signOut();
+  if (e.target.closest('[data-gphone]')) phoneHowTo();
 });
 // Only shown if the page was built without its Google key.
 function driveSetup() {
@@ -106,8 +123,11 @@ function driveSetup() {
 const paperMimes = () => ['application/pdf', 'image/png', 'image/jpeg', 'image/heic', 'application/zip', 'application/x-zip-compressed', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-word.document.macroEnabled.12', 'application/vnd.google-apps.document', 'application/vnd.google-apps.presentation', 'application/vnd.google-apps.spreadsheet', 'application/vnd.google-apps.drawing'].concat(VID_MIMES);
 async function openFromDrive(assignment) {
   let picked;
-  try { picked = await drivePick({ multi: true, mimes: paperMimes(), title: 'Choose the ZIP, or the papers' }); } catch (e) { console.error(e); return sayDlg(e.message); }
+  // it opens first in the folder she last took papers from (gs.gPaperDir: just where the chooser opens, it hands over nothing in it)
+  const dir = store.get('gs.gPaperDir', null);
+  try { picked = await drivePick({ multi: true, mimes: paperMimes(), title: 'Choose the ZIP, or the papers', ...(dir ? { parent: dir, parentName: 'Last folder' } : {}) }); } catch (e) { console.error(e); return sayDlg(e.message); }
   if (!picked.length) return;
+  if (picked[0].parent) store.set('gs.gPaperDir', picked[0].parent);
   openDlg('<div class="bh"><h2>Open from Google Drive</h2></div><div class="bb"><div class="prog"><i></i></div><p class="muted" id="dvStatus" style="font-size:13px"></p></div>');
   const bar = $('#dlgBox .prog');
   try {
@@ -158,7 +178,8 @@ const SYNC_RX = /^gs\.(lib|setup|bank|rubrics|school|b\..+|rp\..+|rd\..+)$/;
   const raw = store.set.bind(store);
   store.set = (k, v) => { const ok = raw(k, v); if (ok && SYNC_RX.test(k)) syncSoon(); return ok; };
 }
-function setSyncState(s) { syncState = s; const el = document.getElementById('syncState'); if (el) el.textContent = s; }
+function syncPaused() { return /sign in again/.test(syncState || ''); }
+function setSyncState(s) { const was = syncPaused(); syncState = s; if (syncPaused() !== was) return renderGoogle(); const el = document.getElementById('syncState'); if (el) el.textContent = s; }
 function syncSoon() { if (!G.email || sampleOn()) return; clearTimeout(syncT); setSyncState('saving…'); syncT = setTimeout(syncNow, 15000); }
 // The file and its version, so two devices saving at once can't write over each other. Drive counts every change to a file (version):
 // the count is read with the file, and read again just before writing. If another device saved in between, this one merges again first.
@@ -180,7 +201,6 @@ async function syncWrite(body) {
   fd.append('file', new Blob([body], { type: 'application/json' }));
   syncFile = { id: (await (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: fd })).json()).id };
 }
-const syncNone = { papers: async () => null, added: async () => null, edit: async () => null };   // papers never come through Drive
 // Where a folder would ask her (the same student, or a card's rubric, changed on two devices since they last matched), sync can't wait for
 // an answer on every device: the copy changed later is kept, the same choice on both sides, so they agree and stop asking. A download
 // forgotten on one device and worked on since on another comes back.
@@ -208,10 +228,17 @@ function syncNow() {
   })().finally(() => { syncBusy = null; if (syncAgain) { syncAgain = false; syncNow(); } });
   return syncBusy;
 }
+// The Planner's timetable (classes, their times, the term and days off), for Today on a device that has no Planner of its own. Lessons stay put.
+async function syncPlan() {
+  const db = await planDb(false); if (!db) return null;
+  let su = null; try { su = await idbP(db.transaction('kv').objectStore('kv').get('setup')); } catch {} db.close();
+  if (!su || !Array.isArray(su.classes) || !su.classes.length) return null;
+  return { classes: su.classes.map(c => ({ id: c.id, name: c.name, color: c.color, meets: c.meets })), semStart: su.semStart || '', semEnd: su.semEnd || '', daysOff: su.daysOff || [] };
+}
 async function syncOnce() {
   setSyncState('syncing…');
   if (batch) await saveNow();
-  const got = await syncRead(), B = got && got.app === 'Grading Studio sync' ? { work: got.work || {}, meta: got.meta || {}, tomb: got.tomb || {}, added: {}, edits: {}, lib: got.lib, ls: got.ls || {} } : null;
+  const got = await syncRead(), B = got && got.app === 'Grading Studio sync' ? { work: got.work || {}, meta: got.meta || {}, tomb: got.tomb || {}, added: dvAdded(got.files), edits: {}, lib: got.lib, ls: got.ls || {} } : null;
   const A = await localState(), dev = devId(), now = Date.now();
   let rows = [], tomb = A.tomb;
   if (B) {
@@ -228,16 +255,17 @@ async function syncOnce() {
     rows = plan.rows; tomb = plan.tomb;
     // The download open on screen keeps what's there; it takes what came in the next time round, once it's closed.
     const open = batch && batch.id, came = rows.filter(r => r.kind === 'new' || r.kind === 'gone' && r.onA || r.toA || (r.meta && JSON.stringify(r.meta) !== JSON.stringify(r.ma)));
-    for (const row of came) if (row.id !== open && row.kind !== 'askGone') await applyRow(row, syncNone);
+    for (const row of came) if (row.id !== open && row.kind !== 'askGone') await applyRow(row, dvSource(got.files || {}));
     // a score saved while the rows above were being written: merge it in again, so the copy taken before doesn't write over it
     if (libVer !== v0) { libm.lib = mergeLib(libHere(), libm.lib, { dev, now }).lib; libm.toA = true; }
     if (libm.toA) { lib = migrateLib(libm.lib); libUndoForget(); if (!setLibFrom(lib)) throw browserFull(); if (batch && batch.assignment) { const f = findItem(batch.assignment.id); if (f) batch.assignment = f.it; } }
     store.set('gs.tomb', tomb);
+    if (got.plan && JSON.stringify(got.plan) !== JSON.stringify(store.get('gs.planCopy', null))) { store.set('gs.planCopy', got.plan); if (typeof planRefresh === 'function') planRefresh(); }
     for (const [k, v] of Object.entries(mergeLs(carryLs(), B.ls, k => Object.keys(tomb).some(id => k.includes(id))))) lsPut(k, v);
-    if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); }
+    if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); if (wl.on && lib.classes.length) { wlClose(); go('#/'); } }
     if (open && rows.some(r => r.id === open && r.toA)) syncAgain = false;   // nothing to push for it until it is closed and merged
   }
-  // What goes up: the merged copy, with the papers left behind. A row's own "papers" says where they are kept, so it stays on each device.
+  // What goes up: the merged copy. Papers go up apart (dvUp below) and are named in files. A row's own "papers" says where they are kept, so it stays on each device.
   const out = { app: 'Grading Studio sync', v: 1, t: now, lib: libHere(), work: {}, meta: {}, tomb, ls: carryLs() };
   const ids = new Set([...Object.keys(A.work), ...Object.keys(A.meta), ...rows.map(r => r.id)]);
   for (const id of ids) {
@@ -247,13 +275,24 @@ async function syncOnce() {
     if (m) { const { papers, size, ...rest } = m; out.meta[id] = rest; }
   }
   delete out.ls['gs.lib'];
+  out.plan = (await syncPlan()) || (got && got.plan) || null;   // a device with no Planner passes on the one it was given
+  out.planT = await planSync(got && got.planT);   // the Planner, in a file of its own (below)
+  out.files = dvFiles(got && got.files, tomb);
   const body = JSON.stringify(out);
   if (!got || body !== JSON.stringify({ ...got, t: now })) await syncWrite(body);
   store.set('gs.syncAt', now);
+  dvCloud(out.files);
   setSyncState('synced');
+  dvUpSoon();
 }
-window.addEventListener('focus', () => { if (G.email) syncNow(); });
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && G.email) syncNow(); });
+// Coming back to the app: with the key in its last quarter hour, a new one now, so Google's window opens as she arrives rather than mid-work.
+function gBack2() {
+  if (!G.email || sampleOn()) return;
+  if (gAuto() && !G_REDIRECT && G.token && G.exp - Date.now() < 15 * 60000 && !gBack2.busy) { gBack2.busy = true; gRenew().catch(() => {}).finally(() => { gBack2.busy = false; syncNow(); }); return; }
+  syncNow();
+}
+window.addEventListener('focus', gBack2);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') gBack2(); });
 // Signed in last time: reconnect quietly when the page opens. On an iPhone's home screen that's a quick trip to Google and back, once an hour at most.
 if (GOK && G.email && gcid() && !sampleOn()) setTimeout(() => {
   if (G_REDIRECT && !(G.token && Date.now() < G.exp - 60000)) {
@@ -268,11 +307,104 @@ if (GOK && G.email && gcid() && !sampleOn()) setTimeout(() => {
 // Back from signing in on Google's page (an iPhone home-screen app), with no email kept yet: finish signing in.
 if (GOK && G_REDIRECT && G.token && !G.email) setTimeout(() => gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); toast('Signed in as ' + G.email); syncNow(); }).catch(e => toast(e.message)), 400);
 
+/* Papers through Drive: each file once, named by what's in it (as a linked folder keeps them, folder.js), in the same hidden folder.
+   A computer sends up the papers it keeps, in the background, as soon as it keeps them (src/app/kept.js) and after each sync of the marks; the sync file lists each download's files once they
+   are all there. Another device fetches a download's papers the first time she opens it there (reopenKept), and a phone fetches one
+   student's at a time (phone.js). Late files come with the marks. */
+const DV = { names: null, files: store.get('gs.cloudP', null) || {}, up: null, full: false };
+// Papers she can open here: kept in this browser, or waiting in her Drive.
+function canOpen(m) { return !!m && (!!m.papers || (!!DV.files[m.id] && !!G.email && GOK && !sampleOn())); }
+function dvCloud(files) { DV.files = Object.fromEntries(Object.entries(files || {}).filter(([, f]) => f && f.papers)); store.set('gs.cloudP', DV.files); }
+const dvAdded = files => Object.fromEntries(Object.entries(files || {}).map(([id, f]) => [id, Object.fromEntries(Object.entries(f.added || {}).map(([k, r]) => [k, r.added || 0]))]));
+// What the sync file lists: what was there, what this device has sent up since, nothing for a forgotten download.
+function dvFiles(was, tomb) { const o = { ...(was || {}), ...(DV.sent || {}) }; for (const id of Object.keys(o)) if (tomb[id]) delete o[id]; return o; }
+async function dvNames() {
+  if (DV.names) return DV.names;
+  const m = new Map(); let page = '';
+  do {
+    const j = await (await gsync("files?spaces=appDataFolder&pageSize=1000&fields=nextPageToken,files(id,name)&q=" + encodeURIComponent("name contains '.dat' and trashed=false") + (page ? '&pageToken=' + page : ''))).json();
+    for (const f of j.files || []) m.set(f.name, f.id); page = j.nextPageToken;
+  } while (page);
+  return (DV.names = m);
+}
+async function dvPut(bytes) {
+  const hash = await shaOf(bytes), name = hash + '.dat', names = await dvNames();
+  if (names.has(name)) return { hash, size: bytes.length };
+  const meta = JSON.stringify({ name, parents: ['appDataFolder'] });
+  let id;
+  if (bytes.length <= 4e6) {
+    const fd = new FormData(); fd.append('metadata', new Blob([meta], { type: 'application/json' })); fd.append('file', new Blob([bytes]));
+    id = (await (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: fd })).json()).id;
+  } else {
+    const at = (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Upload-Content-Length': String(bytes.length) }, body: meta })).headers.get('Location');
+    id = (await (await gsync(at + '&fields=id', { method: 'PUT', body: new Blob([bytes]) })).json()).id;
+  }
+  names.set(name, id);
+  return { hash, size: bytes.length };
+}
+async function dvGet(ref) {
+  let id = (await dvNames()).get(ref.hash + '.dat');
+  if (!id) { DV.names = null; id = (await dvNames()).get(ref.hash + '.dat'); }
+  if (!id) throw new Error('A paper isn’t in your Google Drive any more. Open it on the computer that has it, and it goes up again.');
+  const bytes = new Uint8Array(await (await gsync('files/' + id + '?alt=media')).arrayBuffer());
+  if (bytes.length !== ref.size || await shaOf(bytes) !== ref.hash) throw new Error('A paper came down from Google Drive damaged. Try again.');
+  return bytes;
+}
+// One download's papers and late files, sent up; its line in the sync file once every file is there.
+async function dvSend(id) {
+  const rec = await kget('papers', id); if (!rec || !rec.entries) return null;
+  const papers = [];
+  for (let i = 0; i < rec.entries.length; i++) { const data = await keptBytes(id, i, rec.entries[i]); papers.push({ path: rec.entries[i].path, ...(data ? await dvPut(data) : {}) }); }
+  const added = {}, range = IDBKeyRange.bound(id + '|', id + '|￿');
+  for (const k of ((await idbDo('readonly', o => o.getAllKeys(range))) || []).map(k => k.slice(id.length + 1))) { const r = await idbDo('readonly', o => o.get(id + '|' + k)); if (r) { const { data, ...x } = r; added[k] = { ...x, ...await dvPut(data) }; } }
+  return { label: rec.label || '', papers, added };
+}
+function dvUpSoon() { if (!DV.up && !DV.full && !PHONE) DV.up = dvUp().finally(() => { DV.up = null; }); }
+async function dvUp() {
+  let sent = 0;
+  for (const m of [...keptMeta.values()].sort((a, b) => b.t - a.t)) {
+    if (!m.papers || !G.email) continue;
+    const have = DV.files[m.id], added = await idbDo('readonly', o => o.getAllKeys(IDBKeyRange.bound(m.id + '|', m.id + '|￿'))) || [];
+    if (have && added.every(k => have.added && k.slice(m.id.length + 1) in have.added)) continue;
+    try {
+      setSyncState('sending papers…');
+      const f = await dvSend(m.id); if (!f) continue;
+      (DV.sent ||= {})[m.id] = f; DV.files[m.id] = f; sent++;
+    } catch (e) {
+      if (/storageQuotaExceeded|quota/i.test(e && e.message)) { DV.full = true; setSyncState('marks synced; your Google Drive is full, so papers stay here'); return; }
+      console.warn(e); setSyncState('marks synced; papers not sent yet'); return;
+    }
+  }
+  if (sent) { store.set('gs.cloudP', DV.files); await syncNow(); DV.sent = null; } else if (!syncBusy) setSyncState('synced');
+}
+// Late files come with the marks; papers wait until she opens them (dvPull).
+const dvSource = files => ({
+  papers: async () => null, edit: async () => null,
+  async added(id, k) { const r = files[id] && files[id].added && files[id].added[k]; if (!r) return null; const { hash, size, ...x } = r; return { ...x, data: await dvGet({ hash, size }) }; },
+});
+// A download's papers from her Drive, kept in this browser from then on.
+async function dvPull(id, onStep) {
+  const f = DV.files[id]; if (!f) return null;
+  const entries = []; let n = 0;
+  for (const e of f.papers) { entries.push({ path: e.path, data: e.hash ? await dvGet(e) : null }); onStep && onStep(++n, f.papers.length); }
+  const rec = { id, label: f.label || '', entries };
+  await paperPut(id, rec);
+  const m = { ...(keptMeta.get(id) || await kget('meta', id) || { id }), papers: true, size: entries.reduce((a, e) => a + (e.data ? e.data.length : 0), 0) };
+  await kdo('meta', 'readwrite', o => o.put(m, id)); keptMeta.set(id, m);
+  return rec;
+}
+// One student's files only, for a quick look on a phone. Not kept.
+async function dvPullOne(id, key) {
+  const f = DV.files[id]; if (!f) return [];
+  const mine = f.papers.filter(e => e.hash && e.path.split('/')[0] === key);
+  const out = []; for (const e of mine) out.push({ path: e.path, data: await dvGet(e) });
+  return out;
+}
 /* ---------- videos from Drive: Google's own chooser, and only what she picks ---------- */
 // Picking a folder lets the app know only where the folder is, not what is in it, so the folder is just where the chooser opens.
 // gs.gVidDir = { id, name }: kept in this browser, like the Google account.
 const driveCan = () => GOK && !!gcid();
-const VID_MIMES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/x-matroska', 'video/3gpp'];   // the kinds a browser can play here
+const VID_MIMES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/x-matroska', 'video/3gpp', 'video/ogg'];   // the kinds a browser can play here
 let gpP = null;
 function loadPicker() {
   if (window.google && google.picker) return Promise.resolve();
@@ -291,13 +423,25 @@ async function drivePick(o = {}) {
   if (!G.email) gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); syncNow(); }).catch(() => {});
   const P = google.picker;
   return new Promise(res => {
-    const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
-    if (o.folder) v.setSelectFolderEnabled(true).setMimeTypes(FOLDER);
-    else { v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(',')); if (o.parent) v.setParent(o.parent); }
-    const b = new P.PickerBuilder().setOAuthToken(t).setAppId(gcid().split('-')[0]).setOrigin(location.origin).addView(v)
-      .enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Choose your videos folder' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
+    // Tabs: her chosen folder first (if any), then My Drive from the top, Shared with me, and shared drives. Each one can be opened folder by folder.
+    const mk = (label, set) => {
+      const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
+      // Choosing the folder still lists the videos inside, so a folder of videos doesn't look empty; picking one of them chooses its folder.
+      if (o.folder) v.setSelectFolderEnabled(true); v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(','));
+      if (v.setLabel) v.setLabel(label);
+      set(v); return v;
+    };
+    const views = [];
+    if (o.parent && !o.folder) views.push(mk(o.parentName || 'Videos folder', v => v.setParent(o.parent)));
+    views.push(mk('My Drive', v => v.setParent('root')));
+    views.push(mk('Shared with me', v => v.setOwnedByMe && v.setOwnedByMe(false)));
+    views.push(mk('Shared drives', v => v.setEnableDrives && v.setEnableDrives(true)));
+    const b = new P.PickerBuilder().setOAuthToken(t).setAppId(gcid().split('-')[0]).setOrigin(location.origin);
+    views.forEach(v => b.addView(v));
+    b
+      .enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Click your videos folder once (or any video in it), then Select' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
       .setCallback(d => {
-        if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).filter(x => o.folder || x.mimeType !== FOLDER).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '' })));
+        if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).map(x => o.folder && x.mimeType !== FOLDER ? (x.parentId ? { id: x.parentId, name: 'Folder with ' + x.name, mimeType: FOLDER } : null) : x).filter(x => x && (o.folder || x.mimeType !== FOLDER)).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '', ...(x.parentId ? { parent: x.parentId } : {}) })));
         else if (d[P.Response.ACTION] === P.Action.CANCEL) res([]);
       });
     if (GOOGLE_API_KEY && !/@@/.test(GOOGLE_API_KEY)) b.setDeveloperKey(GOOGLE_API_KEY);
@@ -310,7 +454,7 @@ async function pickVidDir() { const [d] = await drivePick({ folder: true }); if 
 // Videos she picks, opening in her videos folder (asking for the folder first, once).
 async function driveVideos(multi) {
   let dir = vidDir(); if (!dir) { dir = await pickVidDir(); if (!dir) return []; }
-  return drivePick({ parent: dir.id, multi });
+  return drivePick({ parent: dir.id, parentName: dir.name, multi });
 }
 // Signed in for the chooser's files right now, so a video can come down without asking anything.
 const drivePickReady = () => !!G.token && Date.now() < G.exp - 60000 && gHas(PICK_SCOPE);
@@ -321,3 +465,142 @@ async function driveBytes(id, onStep, interactive) {
   for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; if (onStep) onStep(got, total); }
   return new Blob(parts, { type: r.headers.get('content-type') || '' });
 }
+
+/* ---------- playing a Drive video straight from Drive ---------- */
+// The video isn't copied: the player asks this site for gs-drive/<id>, and the offline copy's service worker (src/sw.js) asks Drive for just the
+// part being watched, signed with her token. It works where that service worker runs this page (the web app, not the double-click copy).
+let dsOn = false, dsAsk = null;
+function driveStreamOk() {
+  const sw = navigator.serviceWorker;
+  if (!sw || !sw.controller) return Promise.resolve(false);
+  if (dsOn) return Promise.resolve(true);
+  if (dsAsk) return dsAsk;
+  return dsAsk = new Promise(res => {
+    const ch = new MessageChannel(), done = v => { clearTimeout(to); dsAsk = null; dsOn = v; res(v); }, to = setTimeout(() => done(false), 1500);
+    ch.port1.onmessage = e => done(!!(e.data && e.data.drive));
+    try { sw.controller.postMessage({ type: 'gs-drive-ok' }, [ch.port2]); } catch { done(false); }
+  });
+}
+const driveStreamUrl = id => 'gs-drive/' + encodeURIComponent(id);
+// The service worker asks for her token when it has none (it forgets it whenever the browser rests it). Never opens a sign-in window.
+if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', e => {
+  const d = e.data || {}, p = e.ports && e.ports[0];
+  if (d.type !== 'gs-drive-token' || !p) return;
+  if (d.fresh) { G.token = null; G.exp = 0; try { sessionStorage.removeItem('gs.gTok'); } catch {} }
+  (gcid() && gHas(PICK_SCOPE) ? gToken(false, 'pick') : Promise.reject(new Error('sign-in'))).then(t => p.postMessage({ token: t, exp: G.exp }), () => p.postMessage({ token: null }));
+});
+
+/* The Planner through Drive: lessons, units, the timetable, the comment bank, activities and words, both ways, in a second hidden file
+   (grading-studio-plan.json). The Planner keeps its own store (gs-lessons, src/planner/lessons.js); this page reads and writes it, so the
+   Planner needs no sign-in of its own. What changed here since the last sync is found by comparing with what was seen then (gs.planSeen):
+   a key whose value is different gets the time now, a lesson that was there and isn't was deleted here. Each lesson goes by its own time
+   (updated), each key by its time; a deletion stays in gone. A store that can't be read, or comes back empty when it had lessons (an
+   iPhone clears a site's storage after weeks unused), never counts as deleting anything: Drive fills it again. */
+const PLAN_NAME = 'grading-studio-plan.json', PLAN_KEYS = ['setup', 'units', 'bank', 'activities', 'words', 'deflook'], PLAN_BIG = 2e6;
+let planFile = null;
+const planVer = async () => String((await (await gsync('files/' + planFile.id + '?fields=id,version')).json()).version || '');
+async function planFileRead() {
+  if (!planFile) { const f = (await (await gsync("files?spaces=appDataFolder&orderBy=createdTime&fields=files(id)&q=" + encodeURIComponent("name='" + PLAN_NAME + "' and trashed=false"))).json()).files[0]; planFile = f ? { id: f.id } : null; }
+  if (!planFile) return null;
+  planFile.ver = await planVer();
+  try { return await (await gsync('files/' + planFile.id + '?alt=media')).json(); } catch { return null; }
+}
+async function planFileWrite(body) {
+  if (planFile) {
+    if (await planVer() !== planFile.ver) { const e = new Error('changed on another device'); e.status = 412; throw e; }
+    await gsync('https://www.googleapis.com/upload/drive/v3/files/' + planFile.id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+  } else {
+    const fd = new FormData();
+    fd.append('metadata', new Blob([JSON.stringify({ name: PLAN_NAME, parents: ['appDataFolder'] })], { type: 'application/json' }));
+    fd.append('file', new Blob([body], { type: 'application/json' }));
+    planFile = { id: (await (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: fd })).json()).id };
+  }
+  planFile.ver = await planVer();
+}
+// Units carry where each is kept in this computer's Planner folder (_file, _mod): that stays here.
+const planOutV = (k, v) => k === 'units' && Array.isArray(v) ? v.map(u => { if (!u || typeof u !== 'object') return u; const { _file, _mod, ...x } = u; return x; }) : v;
+// What this device's Planner holds, with a time on everything that changed since the last sync. null: the store couldn't be read.
+async function planHere() {
+  let seen = store.get('gs.planSeen', null) || { keys: {}, ids: [], gone: {}, t: {} };
+  const db = await planDb(false);
+  let lessons = [], kv = {};
+  if (db) {
+    try {
+      const t = db.transaction(['lessons', 'kv']);
+      lessons = (await idbP(t.objectStore('lessons').getAll())) || [];
+      for (const k of PLAN_KEYS) { const v = await idbP(t.objectStore('kv').get(k)); if (v !== undefined) kv[k] = planOutV(k, v); }
+    } catch { db.close(); return null; }
+    db.close();
+  }
+  // nothing here, though there were lessons at the last sync: the store was cleared, not every lesson deleted
+  if (!lessons.length && !Object.keys(kv).length && (seen.ids || []).length) seen = { keys: {}, ids: [], gone: { ...(seen.gone || {}) }, t: {} };
+  const A = { lessons: {}, kv: {}, gone: { ...(seen.gone || {}) } }, ids = new Set(), big = new Set();
+  for (const l of lessons) {
+    if (!l || !l.id) continue;
+    const { _file, _mod, _sync, ...x } = l; ids.add(x.id);
+    if (JSON.stringify(x).length > PLAN_BIG) { big.add(x.id); continue; }   // a lesson full of pictures stays on its own device for now
+    A.lessons[x.id] = x;
+  }
+  const lost = [];
+  for (const id of seen.ids || []) if (!ids.has(id) && !A.gone['l:' + id]) lost.push(id);   // deleted here since the last sync (timed once the time is known)
+  for (const [k, v] of Object.entries(kv)) { const h = shaLite(JSON.stringify(v)); A.kv[k] = { v, t: seen.keys[k] === h ? (seen.t[k] || 0) : seen.at ? -1 : null }; }   // -1: changed here; null: never synced from here
+  const mine = !seen.at ? !!(lessons.length || Object.keys(kv).length) : lost.length > 0 || Object.values(A.kv).some(x => x.t === -1) || [...ids].some(id => !(seen.ids || []).includes(id)) || Object.values(A.lessons).some(l => (l.updated || 0) > (seen.at || 0));
+  return { A, seen, big, lost, mine };
+}
+const shaLite = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + s.length.toString(36); };
+async function planSync(remoteT) {
+  if (sampleOn()) return remoteT;
+  const here = await planHere(); if (!here) return remoteT;
+  const { A, seen, big, lost, mine } = here;
+  if (!mine && remoteT && remoteT === seen.planT) return remoteT;   // nothing new on either side
+  const now = Date.now(), B = (await planFileRead()) || { lessons: {}, kv: {}, gone: {} };
+  for (const id of lost) A.gone['l:' + id] = now;
+  // a key changed here goes in now; on this device's first sync, what is already in Drive comes first
+  for (const [k, x] of Object.entries(A.kv)) if (x.t === -1) x.t = now; else if (x.t === null) x.t = B.kv && B.kv[k] ? 0 : now;
+  for (const id of big) { delete A.gone['l:' + id]; if (B.lessons && B.lessons[id]) A.lessons[id] = B.lessons[id]; }   // the copy in Drive stays as it was
+  const M = mergePlan(A, B);
+  await planApply(A, M, big);
+  const body = JSON.stringify(M), t = shaLite(body);
+  // what this device now holds is what was merged, before it goes up: if sending fails, the next sync finds nothing changed here and tries again
+  const was = { keys: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, shaLite(JSON.stringify(x.v))])), t: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, x.t])), ids: [...new Set([...Object.keys(M.lessons), ...big])], gone: M.gone, at: now };
+  store.set('gs.planSeen', { ...was, planT: null });
+  if (JSON.stringify(B) !== body) await planFileWrite(body);
+  store.set('gs.planSeen', { ...was, planT: t });
+  return t;
+}
+// Into this device's Planner: what came from the other side. A lesson or key the Planner saved again while the merge was on its way stays
+// as she left it (it goes up next time). Lessons kept in the Planner folder: a changed one is written to its file again, a deleted one's
+// file is taken away (src/planner/lessons.js, planFolderCatchUp), or the folder would bring it back. A Planner open in another tab picks
+// it all up (gs-plan-in, src/planner/base.js).
+async function planApply(A, M, big) {
+  const put = Object.values(M.lessons).filter(l => !big.has(l.id) && JSON.stringify(A.lessons[l.id]) !== JSON.stringify(l));
+  const del = Object.keys(M.gone).filter(k => k.startsWith('l:')).map(k => k.slice(2)).filter(id => A.lessons[id] && !big.has(id));
+  const keys = Object.entries(M.kv).filter(([k, x]) => !A.kv[k] || JSON.stringify(A.kv[k].v) !== JSON.stringify(x.v));
+  if (!put.length && !del.length && !keys.length) return;
+  const db = await planDb(true); if (!db) return;
+  try {
+    await new Promise((res, rej) => {
+      const t = db.transaction(['lessons', 'kv'], 'readwrite'), ls = t.objectStore('lessons'), kv = t.objectStore('kv'), goneFiles = [];
+      const same = (was, id) => (was ? was.updated || 0 : null) === (A.lessons[id] ? A.lessons[id].updated || 0 : null);
+      for (const l of put) { const r = ls.get(l.id); r.onsuccess = () => { const was = r.result; if (!same(was, l.id)) return; ls.put(was && was._file ? { ...l, _file: was._file, _mod: was._mod, _sync: 1 } : l); }; }
+      for (const id of del) { const r = ls.get(id); r.onsuccess = () => { const was = r.result; if (!was || !same(was, id)) return; if (was._file) goneFiles.push(was._file); ls.delete(id); }; }
+      for (const [k, x] of keys) {
+        const r = kv.get(k);
+        r.onsuccess = () => {
+          const was = r.result; if (JSON.stringify(planOutV(k, was)) !== JSON.stringify(A.kv[k] ? A.kv[k].v : undefined)) return;
+          let v = x.v;
+          if (k === 'units' && Array.isArray(v) && Array.isArray(was)) v = v.map(u => { const o = was.find(w => w && u && w.id === u.id); return o && o._file ? { ...u, _file: o._file, _mod: o._mod } : u; });
+          kv.put(v, k);
+        };
+      }
+      // after the reads above: the files of lessons deleted here by the sync, for the Planner to take out of its folder
+      const g = kv.get('syncGoneFiles');
+      const last = ls.count(); last.onsuccess = () => { if (goneFiles.length) kv.put([...new Set([...(g.result || []), ...goneFiles])], 'syncGoneFiles'); };   // asked last, so it answers after every read above
+      t.oncomplete = res; t.onerror = t.onabort = () => rej(t.error);
+    });
+  } finally { db.close(); }
+  try { const ch = new BroadcastChannel('gs-plan-in'); ch.postMessage('sync'); ch.close(); } catch {}
+  if (typeof planRefresh === 'function') planRefresh();
+}
+// The Planner in another tab saved something: sync soon, the same as a save here.
+try { new BroadcastChannel('gs-plan-out').onmessage = () => syncSoon(); } catch {}
