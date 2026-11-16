@@ -31416,7 +31416,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.42":[]};
+const WHATS_NEW = {"1.28.42":["Videos from your Google Drive: in Partners and videos, Choose from Drive… opens Google's own chooser in your videos folder. Pick several at once and each goes to the student named in its file name. The video plays here, so the transcript follows along. The app can open only the videos you pick, nothing else in your Drive.","Open from Google Drive and Save to Google Drive use the same limited permission: pick the ZIP or the papers in Google's chooser. Grading Studio never asks for your whole Drive."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
