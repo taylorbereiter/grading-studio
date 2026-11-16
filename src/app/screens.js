@@ -7,7 +7,7 @@ const routeOf = hash => {
   if (p[0] === 'class' && p[1]) {
     const c = p[1] === '-' ? lib.loose : classById(p[1]);
     if (c) {
-      const tab = c !== lib.loose && c.names.length && classTabs().some(t => t[0] && t[0] === p[2]) ? p[2] : '';
+      const tab = c !== lib.loose && (c.names.length || p[2] === 'gradebook') && classTabs().some(t => t[0] && t[0] === p[2]) ? p[2] : '';
       // one student: by place on the roster, never by name, since an address stays in the browser's history
       const stu = tab === 'students' && /^\d+$/.test(p[3] || '') && +p[3] >= 1 && +p[3] <= c.names.length ? +p[3] - 1 : null;
       // attendance: a day (YYYY-MM-DD), 'all' for looking back, or nothing for today
@@ -173,6 +173,7 @@ function renderLib() {
   // one button for what is set once: the school link, how the class is graded, the roster, its place in the sidebar
   const setup = (c, ci) => kmWrap('Class setup', 'class="btn sm" id="clsSetup"',
     '<button class="mitem" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '<small>Names, and the name of the class</small></button>' +
+    (c.names.length ? '' : '<a class="mitem" href="' + classHash(c, 'gradebook') + '" data-bkfirst>Import scores…<small>From your old gradebook: a CSV or Excel file, or cells pasted</small></a>') +   // its students can become the roster (bookimport.js)
     ibClassItem(c, ci) +
     '<button class="mitem" data-mbset="' + ci + '">' + (mbOf(c) ? 'Change the ' + esc(sysLink()) + ' link' : 'Add the ' + esc(sysLink()) + ' link…') + '</button>' +
     '<hr><button class="mitem" data-cmove="' + ci + ':-1"' + (ci ? '' : ' disabled') + '>Move up in the sidebar</button><button class="mitem" data-cmove="' + ci + ':1"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>Move down in the sidebar</button>', 'right');

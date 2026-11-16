@@ -3,7 +3,11 @@
    starts from zero. It is read in this browser and nothing leaves it. Nothing is saved until the teacher has seen the preview
    and pressed Import. Rows are matched to the class roster by name (rosterPairs, as everywhere else); a row it can't match is
    shown so the teacher can pick the student or leave it out. A column with the same name as an assignment already in the class
-   adds to it, and a score already there is only replaced when the teacher says so: "Keep what's there" is the default.
+   may be the same as one already in the class, spelled a little differently: a close name is suggested, and the teacher says
+   Same, New or Skip for each column before anything happens. A score already there is only replaced when the teacher says so,
+   score by score or all at once ("Keep what's there" is the default). Students are never added unless the teacher picks that
+   for a row, or the class has no students yet, when the file's rows become its roster. The file's categories are matched once
+   to the teacher's own types (or make a new type). Student IDs and emails fill in only where the class has none. One Undo.
    Each imported column is stored exactly as "+ Add scores" stores one: item.typed = { max, s: { roster name: { v, st } } }. */
 
 // One table from CSV or TSV text. Quotes may hold commas, tabs and line breaks; "" is a quote inside quotes.
@@ -96,9 +100,29 @@ const BKI_SKIP = /(^|\b)(id|student\s*(id|no|number|#)|e-?mail|homeroom|advis[eo
 const BKI_SUM = /(total|average|avg|overall|final grade|term grade|semester|quarter|grade to date|current grade|^grade$|^%$|percent)/i;
 const BKI_FIRST = /^(first|given|preferred)(\s*name)?$/i, BKI_LAST = /^(last|sur|family)(\s*name)?$|^surname$/i, BKI_NAME = /(name|student|pupil|learner)/i;
 const BKI_MAXROW = /^(points?(\s*possible)?|possible|max(imum)?(\s*(points|score))?|out\s*of|total\s*points|pts\s*possible|worth)$/i, BKI_DUEROW = /^(due(\s*date)?|date(\s*due)?|assigned)$/i;
-const BKI_AVGROW = /^(class\s*)?(average|avg|mean|median|high|low|count)$/i;
+const BKI_AVGROW = /^(class\s*)?(average|avg|mean|median|high|low|count)$/i, BKI_CATROW = /^(category|categories|type|assessment type|task type|grading category)$/i;
+const BKI_IDH = /^(student\s*(id|no\.?|number|#)|id(\s*(no\.?|number))?)$/i, BKI_MAILH = /e-?mail/i;
+// One row per student per assignment (a "long" export: Student, Assignment, Score, maybe Category, Out of, Due) is turned the usual way round.
+function bkiWide(rows) {
+  const h = rows[0] || [], f = rx => h.findIndex(x => rx.test(String(x).trim()));
+  const ai = f(/^(assignment|task|assessment|activity|item|title)(\s*(name|title))?$/i), si = f(/^(score|points?(\s*earned)?|marks?|result)$/i);
+  if (ai < 0 || si < 0 || rows.length < 2) return rows;
+  const ci = f(BKI_CATROW), oi = f(/^(out of|max(imum)?(\s*(points|score))?|points possible|possible|total points|worth)$/i), di = f(/^(due(\s*date)?|date)$/i);
+  const rest = h.map((_, i) => i).filter(i => ![ai, si, ci, oi, di].includes(i)), who0 = rest.filter(i => [BKI_NAME, BKI_FIRST, BKI_LAST, BKI_IDH, BKI_MAILH].some(rx => rx.test(String(h[i]).trim())));
+  const keep = who0.length ? who0 : rest; if (!keep.length) return rows;   // a student is their name, ID and email; a comment or "submitted" column isn't
+  const tasks = [], who = new Map();
+  for (const r of rows.slice(1)) {
+    const t = r[ai]; if (!t) continue;
+    let k = tasks.findIndex(x => x[0] === t); if (k < 0) k = tasks.push([t, r[ci] || '', r[oi] || '', r[di] || '']) - 1;
+    const key = keep.map(i => r[i]).join('\u0001'); if (!who.has(key)) who.set(key, keep.map(i => r[i]));
+    who.get(key)[keep.length + k] = r[si];
+  }
+  const pad = Array(keep.length - 1).fill(''), meta = [['Category', 1], ['Points possible', 2], ['Due', 3]].filter(([, j]) => tasks.some(x => x[j])).map(([l, j]) => [l, ...pad, ...tasks.map(x => x[j])]);
+  return [keep.map(i => h[i]).concat(tasks.map(x => x[0])), ...meta, ...[...who.values()].map(r => [...r].map(x => x || ''))];
+}
 function bkiRead(rows) {
   if (!rows.length) return null;
+  rows = bkiWide(rows);
   const w = Math.max(...rows.map(r => r.length));
   rows = rows.map(r => { const x = r.slice(); while (x.length < w) x.push(''); return x; });
   const isNum = s => { const c = bkiCell(s); return !!c && !c.bad; };
@@ -115,11 +139,13 @@ function bkiRead(rows) {
   const nameOf = r => { let n = fi >= 0 ? (r[fi] + ' ' + r[li]).trim() : r[ni]; const m = n.match(/^([^,]+),\s*([^,]+)$/); return m ? m[2] + ' ' + m[1] : n; };   // "Testwell, Aria" is Aria Testwell
   const nameCols = new Set([fi, li, ni].filter(i => i >= 0));
   // Rows that describe the columns rather than a student.
-  const maxRow = body.find(r => BKI_MAXROW.test(nameOf(r)) || BKI_MAXROW.test(r[0])), dueRow = body.find(r => BKI_DUEROW.test(nameOf(r)) || BKI_DUEROW.test(r[0]));
-  body = body.filter(r => r !== maxRow && r !== dueRow && !BKI_AVGROW.test(nameOf(r)) && nameOf(r));
+  const row = rx => body.find(r => rx.test(nameOf(r)) || rx.test(r[0])), maxRow = row(BKI_MAXROW), dueRow = row(BKI_DUEROW), catRow = row(BKI_CATROW);
+  body = body.filter(r => r !== maxRow && r !== dueRow && r !== catRow && !BKI_AVGROW.test(nameOf(r)) && nameOf(r));
+  const idc = head.findIndex(x => BKI_IDH.test(x.trim())), mc = head.findIndex(x => BKI_MAILH.test(x));
   const cols = [];
-  head.forEach((h, i) => {
-    if (nameCols.has(i) || BKI_SKIP.test(h)) return;
+  head.forEach((h0, i) => {
+    if (nameCols.has(i) || BKI_SKIP.test(h0)) return;
+    const tag = h0.match(/\s*\[([^\]]+)\]\s*$/), h = tag ? h0.slice(0, tag.index).trim() || h0 : h0;   // "Essay [Summative]": the category in the heading
     const cells = body.map(r => bkiCell(r[i])), filled = cells.filter(Boolean), good = filled.filter(c => !c.bad);
     if (!good.length || good.length < filled.length / 2) return;
     // Out of: the "points possible" row, else "17/20" cells, else the header ("Quiz (20)", "/20", "out of 20", "20 pts"), else guessed.
@@ -134,9 +160,9 @@ function bkiRead(rows) {
     const name = h.replace(/\s*(?:\(\s*\d+(?:\.\d+)?\s*(?:pts?|points?|marks?)?\s*\)|\/\s*\d+(?:\.\d+)?|out of\s*\d+(?:\.\d+)?)\s*$/i, '').trim() || h;
     const due = bkiDate(dueRow ? dueRow[i] : '') || bkiDate(h);
     cols.push({ i, head: h, name, max, pct, how, due, on: !BKI_SUM.test(h), type: bkiGuess(h),
-      bad: filled.length - good.length });
+      bad: filled.length - good.length, cat: ((catRow && catRow[i]) || (tag && tag[1]) || '').trim() });
   });
-  return { students: body.map(r => ({ name: nameOf(r), cells: r })), cols };
+  return { students: body.map(r => ({ name: nameOf(r), cells: r, id: idc >= 0 ? r[idc] : '', email: mc >= 0 && EMAIL_RX.test(r[mc]) ? r[mc] : '' })), cols, ids: idc >= 0, mails: mc >= 0 };
 }
 
 // A type for a column from its heading, among the teacher's own types: one whose name is in the heading, else a test-like heading is a
@@ -148,20 +174,61 @@ function bkiGuess(h) {
   if (bkIsType('ic')) return 'ic';
   const sc = cats.find(([t]) => t !== 'fm'); return (sc || cats[0] || ['ic'])[0];
 }
+/* ---------- matching a file's column to an assignment already in the class ---------- */
+// The words of a name, without a bracketed note, a "(40)" or punctuation.
+const bkiWords = s => String(s || '').toLowerCase().replace(/\[[^\]]*\]|\([^)]*\)/g, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().split(' ').filter(Boolean);
+// Words many assignments share, which alone don't make two names alike.
+const BKI_COMMON = /^(test|quiz|exam|essay|project|lab|report|homework|hw|assignment|task|unit|chapter|ch|assessment|summative|formative|worksheet|practice|review|final|midterm|presentation|the|a|an|of|on|and|in|to|for|part|week|term|semester|draft)$/;
+// How alike two names are, 0 to 1. The numbers in them must be the same ("Quiz 1" is never "Quiz 2"); a word one letter off, or cut short, still counts.
+function bkiFit(a, b) {
+  const A = bkiWords(a), B = bkiWords(b); if (!A.length || !B.length) return 0;
+  const nums = W => W.filter(w => /^\d+$/.test(w)).sort().join(); if (nums(A) !== nums(B)) return 0;
+  const raw = x => (String(x).match(/\d+/g) || []).sort().join(), ra = raw(a), rb = raw(b); if (ra && rb && ra !== rb) return 0;   // "Test (Unit 2)" is not "Test (Unit 1)"
+  if (A.join(' ') === B.join(' ')) return String(a).trim().toLowerCase() === String(b).trim().toLowerCase() ? 1 : 0.95;
+  const like = (x, y) => x === y || (x.length > 3 && y.length > 3 && (oneEdit(x, y) || x.startsWith(y) || y.startsWith(x)));
+  const used = new Set(); let hit = 0, own = 0;
+  for (const x of A) { const j = B.findIndex((y, k) => !used.has(k) && like(x, y)); if (j >= 0) { used.add(j); hit++; if (!BKI_COMMON.test(x) && !/^\d+$/.test(x)) own++; } }
+  return own ? Math.min(0.94, 2 * hit / (A.length + B.length)) : 0;   // "Map test" and "Poetry test" share only "test": not alike
+}
+// Each column gets the assignment it most likely is, one column per assignment: the same name is taken as it is, a close one is
+// taken but flagged to check, a looser one is only suggested and waits for the teacher (col.to null). A due date within a few days helps.
+function bkiMatch(cols, ex) {
+  const pairs = [];
+  for (const col of cols) for (const x of ex) {
+    let f = bkiFit(col.name, x.name); if (!f) continue;
+    if (f < 1 && col.due && x.due && Math.abs(Date.parse(col.due) - Date.parse(x.due)) < 4 * 864e5) f = Math.min(0.99, f + 0.1);
+    pairs.push([f, col, x.it.id]);
+  }
+  pairs.sort((a, b) => b[0] - a[0]);
+  for (const col of cols) { col.to = ''; col.sure = 0; col.opts = pairs.filter(p => p[1] === col && p[0] >= 0.5).map(p => p[2]); }
+  const took = new Set();
+  for (const [f, col, id] of pairs) {
+    if (f < 0.5 || col.sure || took.has(id)) continue;
+    took.add(id); col.sure = f >= 1 ? 2 : 1; col.to = f >= 0.75 ? id : null;
+  }
+}
+// The teacher's type for a category in the file: one of the same name (or one inside the other), else a new type of that name ('+:name').
+function bkiCatGuess(cat) {
+  const low = cat.toLowerCase(), cats = bkCats();
+  const t = cats.find(([, l, s]) => [l, s].some(x => x && x.toLowerCase() === low)) || cats.find(([t, , s]) => t !== 'fm' && low.length > 3 && s && s.length > 3 && (low.includes(s.toLowerCase()) || s.toLowerCase().includes(low)));
+  return t ? t[0] : '+:' + cat;
+}
 /* ---------- the screen ---------- */
 let bki = null;
 function bkImportView() {
   const c = bkClass(); if (!c) return;
-  bki = { data: null, pick: {}, keep: true, unit: '', all: '' };
+  bki = { data: null, pick: {}, keep: true, over: {}, unit: '', all: '', cats: {}, info: true };
   bkTabsOff();
-  $('#bkBody').innerHTML = '<div class="bkpad bkaddv bkiv" id="bkImp"><h3 class="bkh">Import scores from a spreadsheet · ' + esc(c.name) + '</h3>' +
-    '<p class="muted bkimeta">For work marked before you used this app: your old gradebook, one row per student and one column per assignment. Each column becomes a typed-in assignment. Nothing is saved until you check it and press Import, and nothing leaves this browser.</p>' +
+  $('#bkBody').innerHTML = '<div class="bkpad bkaddv bkiv" id="bkImp"><h3 class="bkh">Import a gradebook · ' + esc(c.name) + '</h3>' +
+    '<p class="muted bkimeta">A gradebook downloaded from your school’s system or a spreadsheet: one row per student and one column per assignment. Assignments you already have are matched by name, and you check each match. Nothing is saved until you press Import, and nothing leaves this browser.</p>' +
     '<div class="bkidrop" id="bkiDrop"><button class="btn primary" data-bkifile>Choose a file…</button><span class="muted">CSV, TSV or Excel (.xlsx). In Google Sheets: File, Download, CSV.</span><input type="file" id="bkiFile" accept=".csv,.tsv,.txt,.xlsx,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>' +
     '<textarea class="bkin bkpaste" id="bkiPaste" rows="3" placeholder="Or copy the cells in your spreadsheet, headings included, and paste them here."></textarea>' +
     '<p class="bkierr" id="bkiErr" role="alert" hidden></p><div id="bkiOut"></div>' +
     '<div class="bkfootbtns"><span class="muted" id="bkiCount"></span><span class="sp"></span><button class="btn" data-bkback>Cancel</button><button class="btn primary" data-bkisave disabled>Import</button></div></div>';
 }
 function bkiErr(msg) { const e = $('#bkiErr'); if (!e) return; e.hidden = !msg; e.textContent = msg || ''; }
+// Every assignment in the class, with scores yet or not (extra credit, and MYP levels typed in by criterion, aside).
+const bkiEx = () => { const c = bkClass(); return c.units.flatMap(u => u.items).filter(it => it.type !== 'xc' && !(it.typed && it.typed.lv)).map(it => ({ it, name: it.name, due: it.due || '' })); };
 function bkiTake(rows) {
   const r = bkiRead(rows || []);
   if (!r || r.err) { bkiErr(r && r.err === 'none' ? 'There’s no column of student names in that. Keep the names in one column (or first and last names in two), with a heading row above.' : 'That looks empty.'); return; }
@@ -170,20 +237,29 @@ function bkiTake(rows) {
   const c = bkClass();
   const keys = r.students.map(s => s.name), pairs = rosterPairs(c.names, keys);
   r.match = new Map([...pairs].map(([n, k]) => [k, n]));
-  bki.data = r; bki.pick = {};
-  const ex = bkClassCols(c, bk.cols);
-  for (const col of r.cols) { const t = ex.find(x => x.it && x.type !== 'xc' && x.name.trim().toLowerCase() === col.name.trim().toLowerCase()); col.to = t ? t.it.id : ''; if (t && !col.due) col.due = t.due || ''; }
+  bki.data = r; bki.pick = {}; bki.over = {}; bki.cats = {};
+  // A class with no students yet takes the file's rows as its roster (each name once).
+  bki.build = !c.names.length;
+  if (bki.build) { const seen = new Set(); r.students.forEach((s, i) => { const k = normName(s.name); bki.pick[i] = seen.has(k) ? '' : '+'; seen.add(k); }); }
+  const ex = bkiEx(); bkiMatch(r.cols, ex);
+  for (const col of r.cols) {
+    if (col.cat) { if (!(col.cat in bki.cats)) bki.cats[col.cat] = bkiCatGuess(col.cat); col.type = bki.cats[col.cat]; }
+    const t = col.to && ex.find(x => x.it.id === col.to); if (t && !col.due) col.due = t.due || '';
+  }
   bkiDraw();
 }
-// The roster name for each row: the match, or what the teacher picked ('' leaves it out).
-function bkiWho(s, i) { return Object.prototype.hasOwnProperty.call(bki.pick, i) ? bki.pick[i] : bki.data.match.get(s.name) || ''; }
+// The roster name for each row: the match, or what the teacher picked ('' leaves it out, '+' adds the row as a new student).
+function bkiWho(s, i) { const p = Object.prototype.hasOwnProperty.call(bki.pick, i) ? bki.pick[i] : bki.data.match.get(s.name) || ''; return p === '+' ? (bkiPlusOk(i) ? s.name : '') : p; }
+// A row can be a new student only under a name nobody on the roster, or an earlier new row, already has.
+function bkiPlusOk(i) { const d = bki.data, k = normName(d.students[i].name); return !bkClass().names.some(n => normName(n) === k) && !d.students.some((s, j) => j < i && bki.pick[j] === '+' && normName(s.name) === k); }
 // A file cell as it will be stored on a scale (max points, or null for percents).
-function bkiVal(cell, max) {
+function bkiVal(cell, max, of) {   // of: what the file says the column is out of, when the assignment here has its own scale
   if (!cell || cell.bad) return null;
   if (cell.st === 'missing' || cell.st === 'excused') return { v: null, st: cell.st };
   let v;
   if (cell.pct != null) v = max ? cell.pct / 100 * max : cell.pct;
   else if (cell.of && cell.of !== max) v = max ? cell.v / cell.of * max : cell.v / cell.of * 100;
+  else if (of && of !== max) v = max ? cell.v / of * max : cell.v / of * 100;
   else v = cell.v;
   return { v: Math.max(0, Math.round(v * 2) / 2), st: cell.st || '' };
 }
@@ -196,82 +272,124 @@ function bkiFixed(col) {
 }
 const bkiMax = col => { const f = bkiFixed(col); return f !== undefined ? f : col.pct ? null : col.max; };
 const bkiSame = (a, b) => (a.st || '') === (b.st || '') && (a.v == null ? null : +a.v) === (b.v == null ? null : +b.v);
+// Whether the file's score wins where one is already there and differs: the teacher's pick for that score, else the choice for all.
+const bkiUse = (col, who) => { const o = bki.over[col.i + '|' + who]; return o ? o === 'file' : !bki.keep; };
 // What each included column will store, and where a score is already there and differs.
 function bkiPlan() {
   const d = bki.data, out = [];
   for (const col of d.cols) {
     if (!col.on) continue;
     const max = bkiMax(col), t = col.to ? findItem(col.to) : null, old = (t && t.it.typed && t.it.typed.s) || {}, s = {}, clash = [];
-    const exCol = col.to ? bkClassCols(bkClass(), bk.cols).find(x => x.key === col.to) : null;
+    const exCol = col.to ? bkClassCols(bkClass(), bk.cols).find(x => x.key === col.to) : null, fb = (t ? t.it.type : col.type) === 'fm';
     let papers = 0;
     d.students.forEach((st, i) => {
       const who = bkiWho(st, i); if (!who) return;
-      const v = bkiVal(bkiCell(st.cells[col.i]), max); if (!v) return;
+      const v = bkiVal(bkiCell(st.cells[col.i]), max, bkiFixed(col) !== undefined && col.how !== 'guess' && !col.pct ? col.max : null); if (!v) return;
       const gc = exCol && exCol.cells.get(who);
       if (gc && !gc.typed && (gc.pct != null || gc.st)) { papers++; return; }   // a graded paper's score always wins; it's changed in that paper
-      if (old[who] && (old[who].v != null || old[who].st) && !bkiSame(old[who], v)) clash.push({ who, was: old[who], now: v });
-      s[who] = col.type === 'fm' ? { ...v, fb: true } : v;
+      if (old[who] && (old[who].v != null || old[who].st || old[who].fb) && !bkiSame(old[who], v)) clash.push({ who, was: old[who], now: v });
+      s[who] = fb ? { ...v, fb: true } : v;
     });
     out.push({ col, max, t, s, old, clash, papers });
   }
   return out;
 }
 const bkiShow = (r, max) => r.st === 'missing' || r.st === 'excused' ? r.st : r.v == null ? '–' : fmtNum(r.v) + (max ? '/' + fmtNum(max) : '%') + (r.st === 'late' ? ' late' : '');
+// Student IDs and emails the file has where the class has none (they fill in), and ones that differ (kept as they are).
+function bkiInfo() {
+  const c = bkClass(), d = bki.data, add = [], differ = [];
+  d.students.forEach((s, i) => {
+    const who = bkiWho(s, i), had = (who && c.info && c.info[who]) || {}; if (!who) return;
+    for (const k of ['id', 'email']) if (s[k]) { if (!had[k]) add.push([who, k, s[k]]); else if (String(had[k]).toLowerCase() !== s[k].toLowerCase()) differ.push(who); }
+  });
+  return { add, differ };
+}
+const bkiTypeName = t => t.startsWith('+:') ? t.slice(2) + ' (new type)' : bkLabel(t);
 function bkiDraw() {
   const c = bkClass(), d = bki.data, out = $('#bkiOut'); if (!out || !d) return;
   $('#bkiDrop').hidden = $('#bkiPaste').hidden = true;
-  const units = c.units, plan = bkiPlan(), clashes = plan.reduce((a, p) => a + p.clash.length, 0);
-  const matched = d.students.map((s, i) => bkiWho(s, i)).filter(Boolean), unmatched = d.students.map((s, i) => [s, i]).filter(([s, i]) => !bkiWho(s, i));
-  const taken = new Set(matched), absent = c.names.filter(n => !taken.has(n));
-  const typeSel = col => '<select class="btn sm" data-bkitype="' + col.i + '" aria-label="Type">' + bkCats().map(([t, , s]) => '<option value="' + t + '"' + (col.type === t ? ' selected' : '') + '>' + s + '</option>').join('') + '</select>';
+  const units = c.units, plan = bkiPlan(), ex = bkiEx(), clash = plan.flatMap(p => p.clash.map(x => [p, x]));
+  const rows = d.students.map((s, i) => [s, i, bkiWho(s, i)]), matched = rows.filter(r => r[2]), unmatched = rows.filter(r => !r[2] || bki.pick[r[1]] === '+');
+  const added = rows.filter(r => bki.pick[r[1]] === '+'), taken = new Set(matched.map(r => r[2])), absent = c.names.filter(n => !taken.has(n));
+  const newTypes = [...new Set(Object.values(bki.cats).concat(d.cols.map(x => x.type)).filter(t => t && t.startsWith('+:')))];
+  const typeOpts = sel => bkCats().map(([t, , s]) => [t, s]).concat(newTypes.map(t => [t, bkiTypeName(t)])).map(([t, s]) => '<option value="' + esc(t) + '"' + (sel === t ? ' selected' : '') + '>' + esc(s) + '</option>').join('');
+  const typeCell = col => { const t = col.to && findItem(col.to); return t && t.it.type ? '<span class="muted">' + esc(bkLabel(t.it.type)) + '</span>' : '<select class="btn sm" data-bkitype="' + col.i + '" aria-label="Type">' + typeOpts(col.type) + '</select>'; };
   const scale = col => {
     const f = bkiFixed(col);
-    if (f !== undefined) return '<span class="muted">' + (f ? 'Points out of ' + fmtNum(f) : 'Percent') + ', as it is now</span>';
+    if (f !== undefined) return '<span class="muted">' + (f ? 'Out of ' + fmtNum(f) : 'Percent') + ', as it is now' + (col.max && col.how !== 'guess' && !col.pct && col.max !== f ? ' (the file’s out of ' + fmtNum(col.max) + ' is scaled to it)' : '') + '</span>';
     return '<select class="btn sm" data-bkimode="' + col.i + '" aria-label="Scored as"><option value="pts"' + (col.pct ? '' : ' selected') + '>Points out of</option><option value="pct"' + (col.pct ? ' selected' : '') + '>Percent</option></select>' +
       (col.pct ? '' : ' <input type="number" class="bkin bksc" min="0.5" step="0.5" data-bkimax="' + col.i + '" value="' + esc(col.max || '') + '" aria-label="Out of">') + (col.how === 'guess' ? ' <span class="stag" title="Nothing in the file said what it’s out of, so this is a guess from the scores">check</span>' : '');
   };
   const found = col => { const cs = d.students.map(s => bkiCell(s.cells[col.i])).filter(Boolean), n = cs.filter(x => x.v != null || x.pct != null).length, m = cs.filter(x => x.st === 'missing').length, e = cs.filter(x => x.st === 'excused').length;
     return [people(n, 'score'), m ? m + ' missing' : '', e ? e + ' excused' : '', col.bad ? col.bad + ' not read' : ''].filter(Boolean).join(', '); };
-  const goes = col => { if (!col.to) return '<span class="muted">New assignment</span>'; const t = findItem(col.to); return '<span class="bkito">Adds to “' + esc(t ? t.it.name : col.name) + '”</span> <button class="link" data-bkinew="' + col.i + '">make it a new one</button>'; };
-  const n = d.cols.filter(x => x.on).length;
-  out.innerHTML = '<p class="bkisum">Found <b>' + people(d.cols.length, 'assignment') + '</b> and <b>' + people(d.students.length, 'student') + '</b>. ' + matched.length + ' of them match your roster.' + ' <button class="link" data-bkiagain>Use another file</button></p>' +
-    '<h4 class="ovh3">Assignments</h4><div class="bkiwrap"><table class="ptab bkitab"><thead><tr><th><span class="sr">Import</span></th><th>Assignment</th><th>Type</th><th>Due</th><th>Scored as</th><th>In the file</th><th>Goes to</th></tr></thead><tbody>' +
-    d.cols.map(col => '<tr class="' + (col.on ? '' : 'bkioff') + '"><td><input type="checkbox" data-bkion="' + col.i + '"' + (col.on ? ' checked' : '') + ' aria-label="' + esc('Import ' + col.name) + '"></td>' +
-      '<td><input type="text" class="bkin bkiname" data-bkiname="' + col.i + '" value="' + esc(col.name) + '" aria-label="Assignment name"' + (col.to ? ' disabled' : '') + '>' + (BKI_SUM.test(col.head) && !col.on ? '<small class="muted bkiwhy">Looks like a total, so it’s left out</small>' : '') + '</td>' +
-      '<td>' + typeSel(col) + '</td><td><input type="date" class="bkin" data-bkidue="' + col.i + '" value="' + esc(col.due) + '" aria-label="Due"></td><td class="bkiscale">' + scale(col) + '</td><td class="muted">' + found(col) + '</td><td>' + goes(col) + '</td></tr>').join('') + '</tbody></table></div>' +
+  // Where a column goes: the same as an assignment already here (the likely ones first), a new assignment, or left out.
+  const usedBy = new Map(d.cols.filter(x => x.on && x.to).map(x => [x.to, x.i]));
+  const goes = col => {
+    const v = !col.on ? 'skip' : col.to === null ? '' : col.to || 'new', opt = x => '<option value="' + x.it.id + '"' + (v === x.it.id ? ' selected' : '') + (usedBy.has(x.it.id) && usedBy.get(x.it.id) !== col.i ? ' disabled' : '') + '>Same as “' + esc(x.it.name) + '”</option>';
+    const sug = col.opts.map(id => ex.find(x => x.it.id === id)).filter(Boolean), rest = ex.filter(x => !col.opts.includes(x.it.id));
+    return '<select class="btn sm bkigo' + (v === '' ? ' bkiask' : '') + '" data-bkigo="' + col.i + '" aria-label="' + esc('Where “' + col.name + '” goes') + '">' + (v === '' ? '<option value="" selected>Choose…</option>' : '') +
+      sug.map(opt).join('') + '<option value="new"' + (v === 'new' ? ' selected' : '') + '>New assignment</option><option value="skip"' + (v === 'skip' ? ' selected' : '') + '>Skip: leave it out</option>' +
+      (rest.length ? '<optgroup label="Same as another assignment">' + rest.map(opt).join('') + '</optgroup>' : '') + '</select>' +
+      (col.on && col.to && col.sure === 1 ? ' <span class="stag" title="The names are close, not the same">check</span>' : '');
+  };
+  const order = d.cols.slice().sort((a, b) => (a.on && a.to === null ? 0 : a.on && a.sure === 1 && a.to ? 1 : 2) - (b.on && b.to === null ? 0 : b.on && b.sure === 1 && b.to ? 1 : 2));
+  const ask = d.cols.filter(x => x.on && x.to === null).length, n = d.cols.filter(x => x.on).length;
+  const cats = Object.keys(bki.cats), info = (d.ids || d.mails) ? bkiInfo() : null;
+  out.innerHTML = '<p class="bkisum">Found <b>' + people(d.cols.length, 'assignment') + '</b> and <b>' + people(d.students.length, 'student') + '</b>. ' +
+    (bki.build ? 'This class has no students yet, so they become its roster.' : matched.length - added.length + ' of them match your roster.') + ' <button class="link" data-bkiagain>Use another file</button></p>' +
+    (cats.length ? '<h4 class="ovh3">Categories in the file</h4><p class="muted bkhint">Each one goes into one of your gradebook types. You can still change a single assignment below.</p><table class="ptab bkitab bkicats"><tbody>' +
+      cats.map(k => '<tr><td>' + esc(k) + '</td><td><select class="btn sm" data-bkicat="' + esc(k) + '" aria-label="' + esc('Type for ' + k) + '">' + bkCats().map(([t, , s]) => '<option value="' + t + '"' + (bki.cats[k] === t ? ' selected' : '') + '>' + esc(s) + '</option>').join('') + '<option value="' + esc('+:' + k) + '"' + (bki.cats[k] === '+:' + k ? ' selected' : '') + '>New type: ' + esc(k) + '</option></select></td></tr>').join('') + '</tbody></table>' +
+      (newTypes.length ? '<p class="muted bkhint">A new type counts for nothing in the term grade until you give it a weight in the gradebook’s Term setup.</p>' : '') : '') +
+    '<h4 class="ovh3">Assignments</h4>' + (ask ? '<p class="bkhint"><b>' + (ask === 1 ? 'One name is' : ask + ' names are') + ' close to an assignment you have.</b> Say for each whether it is the same one, a new one, or to leave it out.</p>' : '') +
+    '<div class="bkiwrap"><table class="ptab bkitab"><thead><tr><th>In the file</th><th>Goes to</th><th>Type</th><th>Due</th><th>Scored as</th><th>Scores</th></tr></thead><tbody>' +
+    order.map(col => '<tr class="' + (col.on ? '' : 'bkioff') + '"><td><input type="text" class="bkin bkiname" data-bkiname="' + col.i + '" value="' + esc(col.name) + '" aria-label="Assignment name"' + (col.to || !col.on ? ' disabled' : '') + '>' + (BKI_SUM.test(col.head) && !col.on ? '<small class="muted bkiwhy">Looks like a total, so it’s left out</small>' : '') + '</td>' +
+      '<td>' + goes(col) + '</td><td>' + (col.on ? typeCell(col) : '') + '</td><td>' + (col.on ? '<input type="date" class="bkin" data-bkidue="' + col.i + '" value="' + esc(col.due) + '" aria-label="Due">' : '') + '</td><td class="bkiscale">' + (col.on ? scale(col) : '') + '</td><td class="muted">' + found(col) + '</td></tr>').join('') + '</tbody></table></div>' +
     '<div class="bkirow"><label class="bkpf">Date for every assignment without one<span class="bkiinl"><input type="date" class="bkin" id="bkiAll" value="' + esc(bki.all) + '"><button class="btn sm" data-bkiall>Use it</button></span></label>' +
     '<label class="bkpf">New assignments go in<select class="btn sm" id="bkiUnit">' + units.map(u => '<option value="' + u.id + '"' + (bki.unit === u.id ? ' selected' : '') + '>' + esc(u.name) + '</option>').join('') + '<option value=""' + (bki.unit ? '' : ' selected') + '>A new unit: Imported</option></select></label></div>' +
-    (d.cols.some(x => x.on && !x.due) ? '<p class="muted bkhint">An assignment with no date counts in no term until it has one. Set it here, or later from its column in the gradebook.</p>' : '') +
+    (d.cols.some(x => x.on && !x.to && !x.due) ? '<p class="muted bkhint">An assignment with no date counts in no term until it has one. Set it here, or later from its column in the gradebook.</p>' : '') +
     '<h4 class="ovh3">Students</h4>' +
-    (unmatched.length ? '<p class="bkhint">' + (unmatched.length === 1 ? 'This row doesn’t' : 'These rows don’t') + ' match anyone on your roster. Pick the student, or leave the row out.</p><table class="ptab bkitab bkiwho"><tbody>' +
-      unmatched.map(([s, i]) => '<tr><td>' + esc(s.name) + '</td><td><select class="btn sm" data-bkipick="' + i + '" aria-label="' + esc('Roster student for ' + s.name) + '"><option value="">Leave this row out</option>' + absent.map(nm => '<option value="' + esc(nm) + '">' + esc(nm) + '</option>').join('') + '</select></td></tr>').join('') + '</tbody></table>' : '<p class="bkhint">Every row matches a student on your roster.</p>') +
-    (absent.length ? '<p class="muted bkhint">Not in the file, so nothing changes for them: ' + esc(absent.join(', ')) + '.</p>' : '') +
-    (matched.length ? '<details class="bkidet"><summary>' + people(matched.length, 'row') + ' matched</summary><ul>' + d.students.map((s, i) => [s.name, bkiWho(s, i)]).filter(x => x[1]).map(([f, r]) => '<li>' + esc(f) + (f === r ? '' : ' → ' + esc(r)) + '</li>').join('') + '</ul></details>' : '') +
-    (clashes ? '<div class="bknote bkiclash" id="bkiClash"><div><b>' + (clashes === 1 ? '1 score is' : clashes + ' scores are') + ' already in the gradebook and ' + (clashes === 1 ? 'differs' : 'differ') + ' from the file.</b> Which should stay?</div><div class="pseg" role="group">' +
-      [['keep', 'Keep what’s there'], ['file', 'Use the file’s scores']].map(([v, l]) => '<button data-bkikeep="' + v + '" aria-pressed="' + ((v === 'keep') === bki.keep) + '">' + l + '</button>').join('') + '</div>' +
-      '<details class="bkidet"><summary>See them</summary><ul>' + plan.flatMap(p => p.clash.map(x => '<li>' + esc(p.col.name) + ', ' + esc(x.who) + ': ' + esc(bkiShow(x.was, p.max)) + ' now, ' + esc(bkiShow(x.now, p.max)) + ' in the file</li>')).join('') + '</ul></details></div>' : '') +
+    (unmatched.length ? '<p class="bkhint">' + (bki.build ? 'Each row becomes a student unless you leave it out.' : (unmatched.length === 1 ? 'This row doesn’t' : 'These rows don’t') + ' match anyone on your roster. Pick the student, or leave the row out. Nobody is added unless you choose that.') + '</p><table class="ptab bkitab bkiwho"><tbody>' +
+      unmatched.map(([s, i]) => { const p = bki.pick[i] || ''; return '<tr><td>' + esc(s.name) + '</td><td><select class="btn sm" data-bkipick="' + i + '" aria-label="' + esc('Roster student for ' + s.name) + '"><option value=""' + (p === '' ? ' selected' : '') + '>Leave this row out</option><option value="+"' + (p === '+' ? ' selected' : '') + (bkiPlusOk(i) ? '>Add as a new student' : ' disabled>Add as a new student (the name is taken)') + '</option>' + absent.map(nm => '<option value="' + esc(nm) + '">' + esc(nm) + '</option>').join('') + '</select></td></tr>'; }).join('') + '</tbody></table>' : '<p class="bkhint">Every row matches a student on your roster.</p>') +
+    (absent.length && !bki.build ? '<p class="muted bkhint">On your roster but not in the file, so nothing changes for them: ' + esc(absent.join(', ')) + '.</p>' : '') +
+    (matched.length - added.length > 0 ? '<details class="bkidet"><summary>' + people(matched.length - added.length, 'row') + ' matched</summary><ul>' + rows.filter(r => r[2] && bki.pick[r[1]] !== '+').map(([s, , r]) => '<li>' + esc(s.name) + (s.name === r ? '' : ' → ' + esc(r)) + '</li>').join('') + '</ul></details>' : '') +
+    (info && (info.add.length || info.differ.length) ? '<label class="bkpf bkiinfo"><span><input type="checkbox" id="bkiInfo"' + (bki.info ? ' checked' : '') + '> Fill in ' + [['id', 'student ID'], ['email', 'email']].map(([k, w]) => { const m = info.add.filter(x => x[1] === k).length; return m ? people(m, w) : ''; }).filter(Boolean).join(' and ') + ' where you have none</span>' +
+      (info.differ.length ? '<small class="muted">' + people(new Set(info.differ).size, 'student') + ' already ' + (new Set(info.differ).size === 1 ? 'has' : 'have') + ' a different one, which stays.</small>' : '') + '</label>' : '') +
+    (clash.length ? '<div class="bknote bkiclash" id="bkiClash"><div><b>' + (clash.length === 1 ? '1 score is' : clash.length + ' scores are') + ' already in the gradebook and ' + (clash.length === 1 ? 'differs' : 'differ') + ' from the file.</b> Which should stay?</div><div class="pseg" role="group">' +
+      [['keep', 'Keep all of mine'], ['file', 'Use all of the file’s']].map(([v, l]) => '<button data-bkikeep="' + v + '" aria-pressed="' + ((v === 'keep') === bki.keep && !Object.keys(bki.over).length) + '">' + l + '</button>').join('') + '</div>' +
+      '<table class="ptab bkitab bkiclt"><tbody>' + clash.map(([p, x]) => { const f = bkiUse(p.col, x.who), k = p.col.i + '|' + esc(x.who); return '<tr><td>' + esc(p.t ? p.t.it.name : p.col.name) + '</td><td>' + esc(x.who) + '</td><td><div class="pseg" role="group"><button data-bkiover="' + k + '" data-v="keep" aria-pressed="' + !f + '">Mine: ' + esc(bkiShow(x.was, p.max)) + '</button><button data-bkiover="' + k + '" data-v="file" aria-pressed="' + f + '">File: ' + esc(bkiShow(x.now, p.max)) + '</button></div></td></tr>'; }).join('') + '</tbody></table></div>' : '') +
     (plan.some(p => p.papers) ? '<p class="muted bkhint">' + people(plan.reduce((a, p) => a + p.papers, 0), 'score') + ' already come from graded papers. Those stay as they are; change them in the paper.</p>' : '');
-  const sv = $('[data-bkisave]'); sv.disabled = !n || !matched.length; sv.textContent = n ? 'Import ' + people(n, 'assignment') : 'Import';
-  $('#bkiCount').textContent = n ? people(plan.reduce((a, p) => a + Object.keys(p.s).length, 0), 'score') + ' for ' + people(matched.length, 'student') : '';
+  const sv = $('[data-bkisave]'); sv.disabled = !n || !matched.length || !!ask; sv.textContent = n ? 'Import ' + people(n, 'assignment') : 'Import';
+  $('#bkiCount').textContent = ask ? 'Choose where ' + (ask === 1 ? 'one assignment goes' : ask + ' assignments go') + ' first' : n ? people(plan.reduce((a, p) => a + Object.keys(p.s).length, 0), 'score') + ' for ' + people(matched.length, 'student') + (added.length ? ', ' + people(added.length, 'new student') : '') : '';
 }
 function bkiSave() {
-  const c = bkClass(), plan = bkiPlan(); if (!plan.length) return false;
+  const c = bkClass(), plan = bkiPlan(); if (!plan.length || plan.some(p => p.col.to === null)) return false;
   const bad = plan.find(p => bkiFixed(p.col) === undefined && !p.col.pct && !(p.col.max > 0));
   if (bad) { toast('Say what “' + bad.col.name + '” is out of.'); return false; }
+  // New types first, as the teacher's own (lib.book.cats holds the whole list once it differs from the usual three).
+  const made = {}, want = [...new Set(plan.filter(p => !p.t || !p.t.it.type).map(p => p.col.type).filter(t => t && t.startsWith('+:')))];
+  if (want.length) {
+    const b = lib.book || {}, list = (Array.isArray(b.cats) ? b.cats : BK_DEF.map(([id]) => ({ id }))).slice();
+    for (const t of want) { const id = 'c' + uid(); made[t] = id; list.push({ id, name: t.slice(2), k: list.filter(x => x.k).length % 5 + 1 }); }
+    lib.book = { ...b, cats: list };
+  }
+  // Students the teacher chose to add (or the whole roster of a class that had none), then their IDs and emails where the class has none.
+  const d = bki.data, added = d.students.filter((s, i) => bki.pick[i] === '+' && bkiPlusOk(i)).map(s => s.name), info = bki.info && (d.ids || d.mails) ? bkiInfo().add : [];
+  c.names.push(...added);
+  for (const [who, k, v] of info) setInfo(c, who, { [k]: v });
   let u = null, first = null;
   for (const p of plan) {
-    const col = p.col, name = col.name.trim() || col.head;
+    const col = p.col, name = col.name.trim() || col.head, type = made[col.type] || col.type;
     let it;
     if (p.t) {
       it = p.t.it;
       const s = { ...p.old };
-      for (const [who, v] of Object.entries(p.s)) { const was = p.old[who]; if (!bki.keep || !was || (was.v == null && !was.st) || bkiSame(was, v)) s[who] = v; }
+      for (const [who, v] of Object.entries(p.s)) { const was = p.old[who]; if (!was || (was.v == null && !was.st) || bkiSame(was, v) || bkiUse(col, who)) s[who] = v; }
       it.typed = { max: p.max, s };
-      if (!it.type) it.type = col.type;
+      if (!it.type) it.type = type;
       if (!it.due && col.due) it.due = col.due;
     } else {
       if (!u) { u = c.units.find(x => x.id === bki.unit); if (!u) c.units.push(u = { id: uid(), name: 'Imported', items: [] }); }
-      u.items.push(it = { id: uid(), name, classId: c.id, type: col.type, due: col.due, typed: { max: p.max, s: p.s } });
+      u.items.push(it = { id: uid(), name, classId: c.id, type, due: col.due, typed: { max: p.max, s: p.s } });
     }
     const bc = bk.cols.find(x => x.key === it.id);
     if (bc) Object.assign(bc, { typed: it.typed, type: it.type, due: it.due || bc.due });
@@ -280,7 +398,8 @@ function bkiSave() {
   }
   bkSaveLib(); if (!batch) renderLib();
   bk.term = bkTermOf({ due: first.due || '', term: first.term || '' }, bkConf().terms); bk.hi = first.id;
-  toast('Imported ' + people(plan.length, 'assignment') + '. Click a column’s name to change its type, date or term.');
+  const msg = 'Imported ' + people(plan.length, 'assignment') + (added.length ? ' and ' + people(added.length, 'student') : '') + '.';
+  if (batch) toast(msg); else toastDo(msg, 'Undo', libUndo);
   return true;
 }
 async function bkiFile(f) {
@@ -303,9 +422,9 @@ function bkiClick(e) {
   if (!bki || !$('#bkImp')) return;
   if (d.bkifile != null) return $('#bkiFile').click();
   if (d.bkiagain != null) return bkImportView();
-  if (d.bkinew != null) { const col = bkiCol(d.bkinew); col.to = ''; col.name = col.name + ' (imported)'; return bkiDraw(); }
   if (d.bkiall != null) { const v = $('#bkiAll').value; bki.all = v; if (v) for (const col of bki.data.cols) if (!col.due) col.due = v; return bkiDraw(); }
-  if (d.bkikeep) { bki.keep = d.bkikeep === 'keep'; for (const x of document.querySelectorAll('[data-bkikeep]')) x.setAttribute('aria-pressed', String(x === b)); return; }
+  if (d.bkikeep) { bki.keep = d.bkikeep === 'keep'; bki.over = {}; return bkiDraw(); }
+  if (d.bkiover) { bki.over[d.bkiover] = d.v; return bkiDraw(); }
   if (d.bkisave != null) { if (bkiSave()) { bki = null; bkAdd = null; bkDraw(); } }
 }
 function bkiChange(e) {
@@ -313,8 +432,14 @@ function bkiChange(e) {
   const t = e.target, d = t.dataset;
   if (t.id === 'bkiFile') { bkiFile(t.files && t.files[0]); t.value = ''; return; }
   if (!bki.data) return;
-  if (d.bkion != null) { bkiCol(d.bkion).on = t.checked; return bkiDraw(); }
-  if (d.bkitype != null) { bkiCol(d.bkitype).type = t.value; return bkiDraw(); }
+  if (d.bkigo != null) {   // Same as an assignment here, New, or Skip
+    const col = bkiCol(d.bkigo), v = t.value; col.on = v !== 'skip';
+    if (v !== 'skip') { col.to = v === 'new' ? '' : v; col.sure = 2; const x = col.to && findItem(col.to); if (x && x.it.due) col.due = x.it.due; }
+    return bkiDraw();
+  }
+  if (d.bkicat != null) { const k = d.bkicat; bki.cats[k] = t.value; for (const col of bki.data.cols) if (col.cat === k && !col.typeSet) col.type = t.value; return bkiDraw(); }
+  if (d.bkitype != null) { const col = bkiCol(d.bkitype); col.type = t.value; col.typeSet = true; return bkiDraw(); }
+  if (t.id === 'bkiInfo') { bki.info = t.checked; return; }
   if (d.bkidue != null) { bkiCol(d.bkidue).due = t.value; return; }
   if (d.bkimode != null) { const col = bkiCol(d.bkimode); col.pct = t.value === 'pct'; if (!col.pct && !col.max) col.max = 20; col.how = ''; return bkiDraw(); }
   if (d.bkimax != null) { const col = bkiCol(d.bkimax); col.max = Math.max(0.5, Math.round(+t.value * 2) / 2) || null; col.how = ''; return bkiDraw(); }
@@ -328,4 +453,4 @@ function bkiPasted(e) {
   bkiTake(bkiParse((e.clipboardData || window.clipboardData).getData('text')));
 }
 for (const host of [$('#dlgBox'), $('#vClass')]) { host.addEventListener('click', bkiClick); host.addEventListener('change', bkiChange); host.addEventListener('paste', bkiPasted); }
-Object.assign(window.__gs, { bkiParse, bkiRead, bkiCell, bkiDate });
+Object.assign(window.__gs, { bkiParse, bkiRead, bkiCell, bkiDate, bkiFit, bkiWide });

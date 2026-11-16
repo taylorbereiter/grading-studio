@@ -1,22 +1,21 @@
 {
- "version": "1.28.30",
- "build": "e69fc30828a8",
+ "version": "1.28.32",
+ "build": "16df25cdd1b6",
  "notes": [
-  "Type scores straight into the gradebook like a spreadsheet: start typing on a cell, Enter goes to the next student and Tab to the next assignment. Paste a column from a spreadsheet onto the first cell to fill it down.",
-  "+ Add scores: type the name and press Enter to start typing scores down the new column. MYP task levels can be typed in the table too."
+  "When the Focus timer is up, add a few more minutes (+2, +5 or +10) to the same session. Stop early and only the time that ran is counted."
  ],
  "files": {
-  "index.html": "00d9de3be86161a91ff3939e4a13ce023d0ac4fbadfd8593fa2c3087a6920331",
-  "planner.html": "e07d98d34baec46cbadde933c9e40462a611f457794ef152727d8869ea894e53"
+  "index.html": "7435ad52739ebdd3041dafddb85467086fbe0a2cb4333aab9eea3170aefae595",
+  "planner.html": "eceff42045debf0aa0a5c046297d12106bb7626e4078c8053115eb7e0acf5d33"
  },
  "langs": {
-  "lang/zh-Hant.js": "96b00c2d4d731f981b650b9b5a23e3218b68500a849463d124f8ee0cbc215621",
-  "lang/zh-Hans.js": "7830f0b9a6b71c8c2e6f910cc58feb6213a8916d03951cc60692b564a8144952",
-  "lang/es.js": "6c3972574cc8c6b2d076b5179cd7cadae06465e8fa1e643ad82d79c46a2d5e35",
-  "lang/fr.js": "ee8657b958e2efcab92d3b95f3793262493d5baa58acd9d325331d033b72f54d",
-  "lang/de.js": "0fffd0a5119d33a2209188dd7c3b2916c75817283f46167fa857f292aff05a1c",
-  "lang/pt-BR.js": "08f60e9fb45e2c6ee76dbe2f73766e48311ccd9960a55081336281c24da4542c",
-  "lang/ja.js": "7b6f8465aaccd7d09f23b6b71843850151e15d96bd78cca2e7e904f8ddd37cb0",
-  "lang/ko.js": "07e7d733a71deffd0109f01f38e549e614f673f240764aac9a5e3146e36cf035"
+  "lang/zh-Hant.js": "505cee3e101d813a280f4ad0d55a4e7dc9d5d79570082b49bd262f1da1eb70bb",
+  "lang/zh-Hans.js": "548dc4122fbe77c453746a4a3a6441d6cb3dacf08fb86f2927f521a82c769965",
+  "lang/es.js": "53e9c52ca7f1339bfea3bf8386262b8dfa10722d215390d05ca91ecc364b4fbe",
+  "lang/fr.js": "e81d1131b1f3c6b08500f51b89ced54c4d065d47eef80554c09b6fd54f188977",
+  "lang/de.js": "fd286b6612ec4d14a46edd2e5dc77c43529cf489cb7cde0c6d6540ffabd9bac6",
+  "lang/pt-BR.js": "52697d7275e5545e5670e40101c562900f32f44a0583de612ae3d3d071a07243",
+  "lang/ja.js": "0f7fc38677a8953a2be75e30a250f121103bc47c158070b61fed5b886d1a74f9",
+  "lang/ko.js": "6c421de2aba07320e1767780372a33e77e63913a6b7053040105e29547330e6b"
  }
 }
