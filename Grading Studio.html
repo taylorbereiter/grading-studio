@@ -5092,7 +5092,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.54";
+  const APP_VERSION = "1.28.55";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -32101,7 +32101,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.54":["Only this student: when a student comes to your desk, the person button on their paper (or I) shows them and nobody else. The student list, tabs, sidebar and class numbers step aside, and the arrow keys stay on them. Other work shows their own score on each assignment in the class and opens it. Hold \"Hold to show everyone\" to go back."]};
+const WHATS_NEW = {"1.28.55":["A fix to the app's own checks for automatic Google renewal, so updates go out on time. Nothing changes in the app."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
