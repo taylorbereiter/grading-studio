@@ -35,14 +35,16 @@ function spTabs(st) {
   return out;
 }
 const spHasVideo = tabs => tabs.some(t => t.kind === 'video') && tabs.some(t => t.kind !== 'video' && !t.tool);
-function spWanted(tabs) {
+// A student whose only work is a video: the video takes the main column, and the pane opens on Type notes beside it.
+const spVidOnly = st => !!st && st.files.some(f => f.kind === 'link' || f.kind === 'media') && !fileSeq(st).length;
+function spWanted(tabs, st) {
   const c = spConf();
   if (!tabs.length) return false;
-  return !!c.on || (!c.noVid && spHasVideo(tabs));
+  return !!c.on || (!c.noVid && (spHasVideo(tabs) || (spVidOnly(st) && tabs.some(t => t.kind === 'typed'))));
 }
-function spChoose(tabs) {
+function spChoose(tabs, st) {
   const c = spConf();
-  return tabs.find(t => t.kind === c.tab) || tabs.find(t => t.kind === 'video') || tabs.find(t => t.kind === 'rubric') || tabs[0];
+  return (spVidOnly(st) && tabs.find(t => t.kind === 'typed')) || tabs.find(t => t.kind === c.tab) || tabs.find(t => t.kind === 'video') || tabs.find(t => t.kind === 'rubric') || tabs[0];
 }
 
 // Called as a student's paper starts to be drawn: the button in the student's bar, and the pane if it is wanted.
@@ -50,7 +52,7 @@ function spReset(st) {
   spNow = { st, tabs: spTabs(st), key: '', shown: false, seq: 0 };
   const rb = $('#paper #readBtn');
   if (rb && spNow.tabs.length) rb.insertAdjacentHTML('beforebegin', '<button class="btn sm spbtn" id="spBtn" aria-pressed="false" title="Side by side: keep a video, the rubric or another file beside the paper ( B )">' + SP_ICON + '<span>Side by side</span></button>');
-  if (spWanted(spNow.tabs)) { spNow.shown = true; spNow.key = spChoose(spNow.tabs).key; spBuild(); spPaint(); }
+  if (spWanted(spNow.tabs, st)) { spNow.shown = true; spNow.key = spChoose(spNow.tabs, st).key; spBuild(); spPaint(); }
   spLay();
 }
 function spBuild() {
@@ -124,7 +126,7 @@ function spOpen(key) {
   if (!spNow.tabs.length) return toast('There is nothing to show beside this paper yet. Add a video, a notes page or a rubric first.');
   spConfSet({ on: true, noVid: null });
   spNow.shown = true; spBuild();
-  spPick(key && spNow.tabs.some(t => t.key === key) ? key : (spNow.tabs.find(t => t.key === spNow.key) || spChoose(spNow.tabs)).key, !!key);
+  spPick(key && spNow.tabs.some(t => t.key === key) ? key : (spNow.tabs.find(t => t.key === spNow.key) || spChoose(spNow.tabs, spNow.st)).key, !!key);
   spLay();
 }
 function spClose() {
@@ -267,7 +269,8 @@ function spTimerDraw(host, st) {
     spTimerShow(h, batch.students[cur]);
   }, 250);
 }
-SP_TOOLS.push({ key: 'timer', label: 'Timer', ok: st => st.files.some(f => !f.virtual && f.data && isNotes(f.data)) && !st.files.some(f => f.kind === 'link' || f.kind === 'media'), draw: spTimerDraw });
+// The Timer, for a talk given live: a notes page and no video, or a clock already started from Type notes.
+SP_TOOLS.push({ key: 'timer', label: 'Timer', ok: st => !st.files.some(f => f.kind === 'link' || f.kind === 'media') && (st.files.some(f => !f.virtual && f.data && isNotes(f.data)) || spClockMs(spClockOf(st)) > 0), draw: spTimerDraw });
 $('#paper').addEventListener('click', e => {
   const box = e.target.closest('.sptimer'); if (!box || !batch) return;
   const st = batch.students[cur], c = spClockOf(st);
