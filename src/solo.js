@@ -3,9 +3,10 @@
 // While it's on, <html> has the class "solo": the student list, the tabs, the sidebar and anything with other names steps
 // aside (end of src/markscreen.css), and openStudent, applyRoute, Find anything and toasts stay with this student.
 // It stays through a reload. It ends only by holding "Hold to show everyone" for a moment and a half, so a click can't end it.
-let soloTry = '', soloUndo = null, soloOpen = false;
-const soloNow = () => { const s = store.get('gs.solo', null); return s && s.id && s.key != null ? s : null; };
-const soloOn = () => !!soloNow();
+// var and function, not let and const: toast, openStudent and applyRoute can ask before this file has run (a boot note, say).
+var soloTry = '', soloUndo = null, soloOpen = false, soloHoldT = 0;
+function soloNow() { const s = store.get('gs.solo', null); return s && s.id && s.key != null ? s : null; }
+function soloOn() { return !!soloNow(); }
 // The student's place in the open download, or -1 while another one is open (on the way to theirs).
 function soloIdx() {
   const s = soloNow(); if (!s || !batch || batch.id !== s.id) return -1;
@@ -90,7 +91,6 @@ function soloGo(id, key) {
   soloBar();
 }
 // Holding the button: a pointer held down, or Space or Enter held, for 1.5 s. Letting go sooner does nothing.
-let soloHoldT = 0;
 function soloHold(on) {
   const b = $('#soloExit'); if (!b) return;
   clearTimeout(soloHoldT); b.classList.toggle('holding', on);

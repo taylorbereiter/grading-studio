@@ -268,9 +268,9 @@ button.pavg:hover .v{text-decoration:underline}
 .solo-fill{position:absolute;inset:0;background:var(--accent);opacity:.22;transform:scaleX(0);transform-origin:left}
 .solo-x.holding .solo-fill{transform:scaleX(1);transition:transform 1.5s linear}
 .solo-xl{position:relative}
-.solo-work{position:absolute;right:16px;top:48px;width:min(420px,calc(100vw - 32px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:12px 14px}
+.solo-work{position:absolute;right:16px;top:48px;width:min(420px,calc(100vw - 32px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 14px}
 .solo-work h3{margin:0 0 8px;font-size:var(--text-body);font-weight:650}
-.solo-row{display:block;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:0 6px;font:inherit;color:inherit}
+.solo-row{display:block;width:100%;text-align:left;background:none;border:0;border-radius:var(--r-sm);padding:0 6px;font:inherit;color:inherit}
 button.solo-row{cursor:pointer}
 button.solo-row:hover{background:var(--accent-soft)}
 .solo-row.on{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}

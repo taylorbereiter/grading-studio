@@ -2396,9 +2396,9 @@ button.pavg:hover .v{text-decoration:underline}
 .solo-fill{position:absolute;inset:0;background:var(--accent);opacity:.22;transform:scaleX(0);transform-origin:left}
 .solo-x.holding .solo-fill{transform:scaleX(1);transition:transform 1.5s linear}
 .solo-xl{position:relative}
-.solo-work{position:absolute;right:16px;top:48px;width:min(420px,calc(100vw - 32px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:12px 14px}
+.solo-work{position:absolute;right:16px;top:48px;width:min(420px,calc(100vw - 32px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 14px}
 .solo-work h3{margin:0 0 8px;font-size:var(--text-body);font-weight:650}
-.solo-row{display:block;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:0 6px;font:inherit;color:inherit}
+.solo-row{display:block;width:100%;text-align:left;background:none;border:0;border-radius:var(--r-sm);padding:0 6px;font:inherit;color:inherit}
 button.solo-row{cursor:pointer}
 button.solo-row:hover{background:var(--accent-soft)}
 .solo-row.on{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
@@ -33999,9 +33999,9 @@ openDlg('<div class="bh"><h2>Use on your phone</h2></div><div class="bb phhow">'
 window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });
 
 /* ---------------- Only this student: when a student comes to the desk, the screen shows them and nobody else ---------------- */
-let soloTry = '', soloUndo = null, soloOpen = false;
-const soloNow = () => { const s = store.get('gs.solo', null); return s && s.id && s.key != null ? s : null; };
-const soloOn = () => !!soloNow();
+var soloTry = '', soloUndo = null, soloOpen = false, soloHoldT = 0;
+function soloNow() { const s = store.get('gs.solo', null); return s && s.id && s.key != null ? s : null; }
+function soloOn() { return !!soloNow(); }
 function soloIdx() {
 const s = soloNow(); if (!s || !batch || batch.id !== s.id) return -1;
 return batch.students.findIndex(st => st.key === s.key);
@@ -34079,7 +34079,6 @@ soloUndo = [];
 go(batchHash(id), true);
 soloBar();
 }
-let soloHoldT = 0;
 function soloHold(on) {
 const b = $('#soloExit'); if (!b) return;
 clearTimeout(soloHoldT); b.classList.toggle('holding', on);
