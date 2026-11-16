@@ -145,3 +145,40 @@ test('an MYP task takes its levels typed in the table, one for each criterion in
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('a percent typed in a points column stays the percent, the points follow it, and "+ 1" is extra credit on top', async () => {
+  const { page, close } = await openApp(browser, { seed: seed() });
+  await openBook(page);
+  await page.focus(cell(page, 'i1', 'Aria Testwell'));
+  await keys(page, '7', '3', '%', 'Enter', '8', ' ', '+', ' ', '1', 'Enter');
+  assert.deepEqual((await typed(page, 'i1')).s, { 'Aria Testwell': { v: 7.3, p: 73, st: '' }, 'Bram Sample': { v: 8, st: '', xc: 1 } });
+  assert.equal(await page.$eval(cell(page, 'i1', 'Aria Testwell'), x => x.textContent), '73%');
+  assert.equal(await page.$eval(cell(page, 'i1', 'Bram Sample'), x => x.textContent), '90%');
+  await page.click(cell(page, 'i1', 'Aria Testwell'));
+  assert.equal(await page.$eval(cell(page, 'i1', 'Aria Testwell') + ' input', x => x.value), '73%');
+  await keys(page, 'Escape');
+  await page.$eval('[data-bkshow="pts"]', b => b.click());
+  assert.equal(await page.$eval(cell(page, 'i1', 'Aria Testwell'), x => x.textContent), '7.5/10', 'shown as the half point nearest 73%');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('an assignment with no papers at all opens as an empty gradebook column, the first student ready to type', async () => {
+  const sd = seed(), l = JSON.parse(sd.ls['gs.lib']);
+  l.classes[0].units[0].items[4].setup = { mode: 'points', criteria: [], outOf: 25 };
+  sd.ls['gs.lib'] = JSON.stringify(l);
+  const { page, close } = await openApp(browser, { seed: sd });
+  await classPage(page, 'c1');
+  await page.waitForSelector('[data-open-asg="i5"]');
+  await page.click('[data-open-asg="i5"]');
+  await page.waitForSelector('#dlgBox [data-typeonly]');
+  await page.click('#dlgBox [data-typeonly]');
+  await page.waitForFunction(() => { const a = document.activeElement; return a && a.dataset && a.dataset.bked === 'i5'; });
+  assert.deepEqual(await focused(page), ['i5', 'Aria Testwell', 'TD']);
+  assert.match(await page.evaluate(() => location.hash), /gradebook/);
+  await keys(page, '2', '0', 'Enter', '1', '2', '.', '5', 'Enter');
+  assert.deepEqual(await typed(page, 'i5'), { max: 25, s: { 'Aria Testwell': { v: 20, st: '' }, 'Bram Sample': { v: 12.5, st: '' } } }, 'points out of the assignment’s own total');
+  assert.equal(await page.$eval(cell(page, 'i5', 'Aria Testwell'), x => x.textContent), '80%');
+  assert.deepEqual(page.errors, []);
+  await close();
+});

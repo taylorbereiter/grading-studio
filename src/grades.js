@@ -4,7 +4,7 @@ const STATUS_LABEL = { missing: 'Missing', excused: 'Excused', late: 'Late' };
 function noScore(st) { const s = st.grade.status; return s === 'missing' || s === 'excused'; }
 const hasSheet = g => g.sheet != null && g.sheet !== '';
 // Anything she has put on this student besides files: a score, a comment or a status.
-const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || hasSheet(g) || !!g.comment || !!g.status || !!g.fb || !!+g.xc);
+const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || hasSheet(g) || !!g.comment || !!g.status || !!g.fb || !!+g.xc || tnHasG(g));
 // A score she gave this student, here or typed on the Grade sheet. A highlighted Word rubric doesn't write over it.
 const hasOwnScore = st => ownGrade(st).total != null || hasSheet(st.grade);
 // The same, in words: 'a score of 10', 'a comment'…
@@ -48,7 +48,7 @@ function liftStatus(st) {
 function scoreTouched(st, rowIndex) {
   touchGrade(st, rowIndex != null ? rowIndex : 'points');
   if (st.found !== undefined) refound(st);   // a table is only quiet while her score matches it
-  const g = st.grade, has = rowIndex != null ? g.rubric[rowIndex] != null : g.points !== '' || hasSheet(g);
+  const g = st.grade, has = rowIndex != null ? g.rubric[rowIndex] != null : g.points !== '' || g.pk != null || hasSheet(g);
   if (has) liftStatus(st);
 }
 function setStatus(st, s) {
@@ -62,9 +62,10 @@ function statusHtml(st, plain) {
     (plain ? '' : kmWrap('⋯', 'class="btn sm kdots" id="gMore" aria-label="More for this score" title="More for this score"',
       (noScore(st) ? '' : '<button class="outsw" id="outAvg" role="switch" aria-checked="' + out + '"><i></i><span><b>Leave out of the average</b><small>The score stays and still copies. It doesn’t count in the average or on the Insights tab.</small></span></button>') +
       (noScore(st) ? '' : '<button class="mitem" data-gxc>Extra credit points</button>') +
+      (noScore(st) || ibSetup() || setup.mode !== 'rubric' ? '' : '<button class="mitem" data-gpk>Score as a percent</button>') +
       (noScore(st) || fmNow() ? '' : '<button class="mitem" data-gretake title="A second try at this assignment. The score, comment and paper so far are kept as the ' + (st.grade.tries && st.grade.tries.length ? 'try before it' : 'first try') + '.">' + (st.grade.tries && st.grade.tries.length ? 'Another retake' : 'Start a retake') + '</button>') +
       '<button class="mitem" data-gcalc>Calculator <kbd>=</kbd></button>', 'right')) + '</div>' +
-    (out && !noScore(st) && !plain ? '<p class="outnote">Left out of the average. <button class="link" data-outoff>Count it again</button></p>' : '') + (plain ? '' : xcHtml(st) + tryHtml(st)) + '</div>';
+    (out && !noScore(st) && !plain ? '<p class="outnote">Left out of the average. <button class="link" data-outoff>Count it again</button></p>' : '') + (plain ? '' : pctHtml(st) + xcHtml(st) + tryHtml(st)) + '</div>';
 }
 /* ---------------- extra credit on one paper ---------------- */
 // st.grade.xc: points on top of the score (half points, like any score), or with st.grade.xcU 'pct' percentage points on its percent. It shows as its own line under the score so it's never mistaken
@@ -94,9 +95,26 @@ function xcSet(st, raw, redraw) {
   touchGrade(st); saveSoon(); renderList();
   if (redraw) renderGrade(); else { const t = $('#grade .total'); if (t) t.innerHTML = totalHtml(st); }
 }
+/* ---------------- a percent typed as the score ---------------- */
+// st.grade.pk: a whole percent she typed (in the points box as "73%", or here with a rubric). It stays the score; the points shown are
+// what it comes to on the assignment's own scale (pointsWith in start.js), and rubric rows moved later don't change it. pctOpen: the box is open before it has one.
+let pctOpen = null;
+function pctHtml(st) {
+  const g = st.grade; if (noScore(st) || setup.mode !== 'rubric' || (g.pk == null && pctOpen !== st)) return '';
+  return '<p class="xcnote" id="pkNote"><label>Percent <input type="text" inputmode="decimal" id="pkIn" value="' + (g.pk != null ? g.pk : '') + '" aria-label="Percent"></label> <button class="link" data-pkoff>Remove</button><small style="flex-basis:100%">It stays as the score. Rubric rows don’t change it.</small></p>';
+}
+function pctStart(st) { pctOpen = st; const gs = $('#gstat'); if (gs) gs.outerHTML = statusHtml(st); const i = $('#pkIn'); if (i) { i.focus(); i.select(); } }
+// "73", "73%" or nothing. Whole percents, halves up.
+function pctSet(st, raw, redraw) {
+  const t = String(raw == null ? '' : raw).replace('%', '').replace(',', '.').trim(), v = t === '' || isNaN(+t) || +t < 0 ? null : roundPct(+t);
+  if (v === (st.grade.pk == null ? null : st.grade.pk)) { if (redraw) { if (v == null) pctOpen = null; renderGrade(); } return; }
+  if (v == null) { delete st.grade.pk; if (redraw) pctOpen = null; } else st.grade.pk = v;
+  scoreTouched(st); saveSoon(); renderList();
+  if (redraw) renderGrade(); else { const tt = $('#grade .total'); if (tt) tt.innerHTML = totalHtml(st); }
+}
 /* ---------------- retakes: a second try that keeps the first ---------------- */
 // How the tries are kept and which one counts: start.js (withTries). Here: starting one, taking it off, and what the score panel says.
-const TRY_KEEP = ['rubric', 'points', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'comment'];
+const TRY_KEEP = ['rubric', 'points', 'pk', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'comment'];
 const tryName = n => n === 1 ? 'First try' : 'Try ' + n;
 // Which earlier try a file belongs to (1 is the first), or 0 for the try in hand: it was on the paper when a retake began.
 function tryOfFile(st, f) {
@@ -117,7 +135,7 @@ function retakeStart(st) {
   was.files = st.files.filter(f => !tryOfFile(st, f) && !(batch.carry && batch.carry.flags[f.path] === 'new') && (!f.virtual || (f.kind === 'docx' && (f.edited || (wordScore(f) && f.wscore.total != null))))).map(f => f.path);
   (g.tries ||= []).push(was);
   g.rubric = []; g.points = ''; g.comment = '';
-  for (const k of ['sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'atR']) delete g[k];
+  for (const k of ['pk', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'atR']) delete g[k];
   if (g.status === 'late') g.status = '';
   touchGrade(st); if (st.found !== undefined) refound(st);
   rowOnOf = null; saveSoon(); renderList(); renderGrade();
@@ -133,7 +151,7 @@ function retakeOff(st) {
   tryOffArm = null;
   const was = ts.pop(); if (!ts.length) delete g.tries;
   g.rubric = []; g.points = ''; g.comment = '';
-  for (const k of ['sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'atR']) delete g[k];
+  for (const k of ['pk', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'atR']) delete g[k];
   for (const k of TRY_KEEP) if (was[k] != null) g[k] = was[k];
   if (was.late && !g.status) g.status = 'late';
   touchGrade(st); if (st.found !== undefined) refound(st);
