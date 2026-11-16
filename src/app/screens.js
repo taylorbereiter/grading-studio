@@ -149,6 +149,7 @@ function renderLib() {
       '<div class="row">' + (m && m.papers ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
         : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') +
         kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-edit-asg="' + it.id + '">Edit<small>Name, type, due date, unit, rubric</small></button>' +
+          '<button class="mitem" data-qmake="' + it.id + '">' + (it.quiz && it.quiz.made ? 'Edit the quiz…' : 'Make a quiz…') + '<small>Questions with bubbles, printed and scored from the scan</small></button>' + (it.quiz && it.quiz.made ? '<button class="mitem" data-qread="' + it.id + '">Bring in the scanned quiz…<small>One scan of the whole stack</small></button>' : '') +
           (m && m.papers || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : '') + lkMenu(it, holderById(it.classId) || lib.loose), 'right') + '</div></div>';
   };
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
@@ -308,6 +309,8 @@ $('#start').addEventListener('click', async e => {
   }
   if (b.dataset.additem != null) return editAssignment(null, b.dataset.additem);
   if (b.dataset.editAsg) return editAssignment(b.dataset.editAsg);
+  if (b.dataset.qmake) return openQuizMaker(b.dataset.qmake);
+  if (b.dataset.qread) return openQuizRead(b.dataset.qread);
   // a button that is the assignment's own name keeps saying it
   if (b.dataset.kopen) { const f = b.dataset.kasg ? findItem(b.dataset.kasg) : null; const was = b.textContent, named = b.classList.contains('kname'); b.disabled = true; if (!named) b.textContent = 'Opening…'; return reopenKept(b.dataset.kopen, f ? f.it : null).finally(() => { b.disabled = false; if (!named) b.textContent = was; }); }
   // two clicks, so a stray click can't throw work away
