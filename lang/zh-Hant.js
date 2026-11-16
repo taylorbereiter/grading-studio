@@ -170,6 +170,7 @@ words: {
 'Whole year': '整個學年', 'This year': '本學年', 'Outside the terms': '學期以外', 'Every assignment': '所有作業', 'Averages only': '只看平均', '+ Add scores': '+ 新增分數', 'Student': '學生', 'typed in': '手動輸入', 'average': '平均', 'Term grade': '學期成績', 'Grade': '成績',
 'Year': '學年', 'missing': '缺交', 'excused': '免交', 'started': '已開始', 'retake': '重考', 'partial': '部分', 'left out': '已排除', 'late': '遲交', 'Class average': '班級平均', 'count everyone': '全部計入', 'so far': '目前為止', 'Includes extra credit': '包含加分',
 'How this is worked out': '計算方式', 'Predicted grades': '預測成績', 'The 1 to 7 you predict for each student': '你為每位學生預測的 1 到 7', 'Show points': '顯示分數', 'Show percent': '顯示百分比', 'Now percent': '目前：百分比', 'Now points': '目前：分數', 'Terms, types and weights': '學期、類型和比重',
+'Entry list': '輸入清單', 'Roster order': '名單順序', 'Last name': '姓', 'First name': '名', 'Term levels': '本學期等級', 'Start over': '重新開始', 'Copy scores': '複製分數', 'Order': '順序', 'Click a student once their score is in. Arrow keys work too.': '輸入好一個學生的分數後點一下他的名字。方向鍵也可以。',
 'Add extra credit…': '新增加分…', 'Import scores…': '匯入分數…', 'From your old gradebook: a CSV or Excel file, or cells pasted': '從你原本的成績冊：CSV 或 Excel 檔，或貼上的儲存格', 'Copy the table': '複製表格', 'Leave students out…': '排除學生…', 'See the class averages without them': '看看不含這些學生的班級平均',
 'Looking through your saved work…': '正在讀取你儲存的工作…', 'Set types': '設定類型', 'Set up your terms with Term setup to see them side by side.': '在「學期設定」設定學期後，就能並排檢視。', 'The year is the average of the terms each student has a grade in, and each type’s year average is the average of their term averages for it.': '學年成績是學生有成績的各學期的平均，每個類型的學年平均則是該類型各學期平均的平均。',
 'points on top': '額外加分', 'No type yet': '尚無類型', 'Extra credit': '加分', 'Extra credit adds to': '加分加到', 'Type': '類型', 'Due': '期限', 'Edit the extra credit': '編輯加分', 'Edit the typed-in scores': '編輯手動輸入的分數', 'none': '無', 'Assignment': '作業',
@@ -384,6 +385,7 @@ words: {
 'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'Answer': '答案', 'First try': '第一次', 'counts as': '採計',
 },
 rules: [
+[/^(\d+) of (\d+) done$/, '已完成 $1/$2'], [/^out of ([\d.,]+)$/, '滿分 $1'],
 /* a class page */
 [/^(\d+) students? on the roster$/, m => (m[1] === '1' ? '名單上有 {n} 位學生' : '名單上有 {n} 位學生').replace('{n}', m[1])], [/^(\d+) assignments?$/, m => (m[1] === '1' ? '{n} 份作業' : '{n} 份作業').replace('{n}', m[1])], [/^Due ([^·]+)$/, '期限：$1'],
 [/^Keep (.+) in the tab row$/, m => '把「{x}」留在分頁列'.replace('{x}', (LANG_ZH.words[m[1]] || m[1]))], [/^Take (.+) out of the tab row$/, m => '把「{x}」移出分頁列'.replace('{x}', (LANG_ZH.words[m[1]] || m[1]))],

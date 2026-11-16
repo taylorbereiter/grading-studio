@@ -196,6 +196,7 @@ words: {
 'Draft': 'Brouillon', 'Edited': 'Modifié', 'Called': 'Prénom', 'Pronoun': 'Pronom', 'they / their': 'they / their', 'she / her': 'she / her', 'he / his': 'he / his', 'No pronoun: use the name': 'Pas de pronom : utiliser le nom', 'Draft again': 'Autre brouillon',
 'Done, next student': 'Fait, élève suivant', 'Not done yet': 'Pas encore fait', 'What you wrote on their papers': 'Ce que vous avez écrit sur ses copies', 'Add this to the end of the comment': 'Ajouter ceci à la fin de l’appréciation',
 'Add': 'Ajouter', 'No grade yet': 'Pas encore de note', 'Nothing scored in this term yet': 'Rien de noté sur cette période pour l’instant', 'Change these levels': 'Modifier ces niveaux', 'Criteria and boundaries': 'Critères et seuils de note',
+'Entry list': 'Liste de saisie', 'Roster order': 'Ordre de la liste', 'Last name': 'Nom', 'First name': 'Prénom', 'Term levels': 'Niveaux de la période', 'Start over': 'Recommencer', 'Copy scores': 'Copier les notes', 'Order': 'Ordre', 'Click a student once their score is in. Arrow keys work too.': 'Cliquez sur un élève une fois sa note saisie. Les flèches marchent aussi.',
 'Copy levels': 'Copier les niveaux', '+ Add levels': '+ Ajouter des niveaux', 'Evidence': 'Éléments d’évaluation', 'your judgment': 'votre jugement', 'Total': 'Total', '1 to 7': '1 à 7', 'set': 'fixer', 'Each task shows the level given for the criteria it assessed. The levels on the right are yours to set: click one to see all of a student’s evidence and choose the level that fits best. Levels are never averaged. The total and the grade appear once every criterion has a level.': 'Chaque tâche montre le niveau donné pour les critères qu’elle évaluait. Les niveaux de droite sont à vous de fixer : cliquez sur l’un d’eux pour voir tous les éléments d’un élève et choisir le niveau qui convient le mieux. Les niveaux ne sont jamais moyennés. Le total et la note apparaissent quand chaque critère a un niveau.',
 'no evidence': 'aucun élément', 'not set': 'non fixé', 'no criteria': 'aucun critère', 'formative': 'formatif', 'Levels': 'Niveaux', 'choose the level that fits best': 'choisissez le niveau qui convient le mieux', 'limited': 'limité',
 'adequate': 'convenable', 'substantial': 'considérable', 'excellent': 'excellent', 'Set with no evidence here': 'Fixé sans élément ici', 'Nothing to judge from yet.': 'Rien encore pour en juger.', '← Gradebook': '← Carnet de notes',
@@ -459,6 +460,7 @@ words: {
 'Missing': 'Non rendu', 'Excused': 'Dispensé', 'Late': 'En retard',
 },
 rules: [
+[/^(\d+) of (\d+) done$/, '$1 sur $2 faits'], [/^out of ([\d.,]+)$/, 'sur $1'],
 /* a class page */
 [/^(\d+) students? on the roster$/, m => (m[1] === '1' ? '{n} élève sur la liste' : '{n} élèves sur la liste').replace('{n}', m[1])], [/^(\d+) assignments?$/, m => (m[1] === '1' ? '{n} devoir' : '{n} devoirs').replace('{n}', m[1])], [/^Due ([^·]+)$/, 'À rendre : $1'],
 [/^Keep (.+) in the tab row$/, m => 'Garder {x} dans la rangée d’onglets'.replace('{x}', (LANG_FR.words[m[1]] || m[1]))], [/^Take (.+) out of the tab row$/, m => 'Retirer {x} de la rangée d’onglets'.replace('{x}', (LANG_FR.words[m[1]] || m[1]))],

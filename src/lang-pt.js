@@ -232,6 +232,7 @@ const LANG_PT = {
     'started': 'iniciado', 'retake': 'refação', 'partial': 'parcial', 'left out': 'excluído', 'late': 'atrasado', 'Class average': 'Média da turma', 'count everyone': 'contar todos', 'so far': 'até agora', 'Includes extra credit': 'Inclui pontos extras',
     'How this is worked out': 'Como isto é calculado', 'Predicted grades': 'Notas previstas', 'The 1 to 7 you predict for each student': 'O 1 a 7 que você prevê para cada aluno', 'Show points': 'Mostrar pontos', 'Show percent': 'Mostrar porcentagem',
     'Now percent': 'Agora: porcentagem', 'Now points': 'Agora: pontos', 'Terms, types and weights': 'Períodos, tipos e pesos', 'Add extra credit…': 'Adicionar pontos extras…', 'Import scores…': 'Importar notas…', 'From your old gradebook: a CSV or Excel file, or cells pasted': 'Do seu diário de notas antigo: um arquivo CSV ou Excel, ou células coladas',
+    'Entry list': 'Lista para lançar', 'Roster order': 'Ordem da lista', 'Last name': 'Sobrenome', 'First name': 'Nome', 'Term levels': 'Níveis do período', 'Start over': 'Recomeçar', 'Copy scores': 'Copiar notas', 'Order': 'Ordem', 'Click a student once their score is in. Arrow keys work too.': 'Clique num aluno quando a nota dele já estiver lançada. As setas também funcionam.',
     'Copy the table': 'Copiar a tabela', 'Leave students out…': 'Excluir alunos…', 'See the class averages without them': 'Veja as médias da turma sem eles', 'Looking through your saved work…': 'Lendo seu trabalho salvo…', 'Set types': 'Definir tipos',
     'Set up your terms with Term setup to see them side by side.': 'Configure seus períodos em Configurar períodos para vê-los lado a lado.', 'The year is the average of the terms each student has a grade in, and each type’s year average is the average of their term averages for it.': 'O ano é a média dos períodos em que cada aluno tem nota, e a média anual de cada tipo é a média das médias de período dele.',
     'points on top': 'pontos adicionais', 'No type yet': 'Ainda sem tipo', 'Extra credit': 'Pontos extras', 'Extra credit adds to': 'Os pontos extras somam em', 'Type': 'Tipo', 'Due': 'Entrega', 'Edit the extra credit': 'Editar os pontos extras',
@@ -466,6 +467,7 @@ const LANG_PT = {
     'Missing': 'Não entregue', 'Excused': 'Dispensado', 'Late': 'Atrasado',
   },
   rules: [
+    [/^(\d+) of (\d+) done$/, '$1 de $2 feitos'], [/^out of ([\d.,]+)$/, 'de $1'],
     /* a class page */
     [/^(\d+) students? on the roster$/, m => (m[1] === '1' ? '{n} aluno na lista' : '{n} alunos na lista').replace('{n}', m[1])], [/^(\d+) assignments?$/, m => (m[1] === '1' ? '{n} atividade' : '{n} atividades').replace('{n}', m[1])], [/^Due ([^·]+)$/, 'Entrega: $1'],
     [/^Keep (.+) in the tab row$/, m => 'Manter {x} na fileira de abas'.replace('{x}', (LANG_PT.words[m[1]] || m[1]))], [/^Take (.+) out of the tab row$/, m => 'Tirar {x} da fileira de abas'.replace('{x}', (LANG_PT.words[m[1]] || m[1]))],

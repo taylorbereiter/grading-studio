@@ -102,6 +102,8 @@ function stpRead(j) {
     if (typeof sc.assistantOpens === 'string') o.aiOpen = /^tab$/i.test(sc.assistantOpens.trim()) ? 'tab' : '';
     // the other assistants in the sidebar's list: a link of her own for some, and the known ones she doesn't want listed
     if (Array.isArray(sc.otherAssistants)) { o.aiUrls = {}; for (const x of sc.otherAssistants.slice(0, 12)) { const n = stpStr(stpObj(x) ? x.name : '', 30), u = stpObj(x) ? aiUrlClean(x.link) : ''; if (n && u) o.aiUrls[n] = u; } }
+    // the order the school's own gradebook lists students in, for the entry list (src/mbentry.js): roster, last or first
+    if (typeof sc.entryOrder === 'string') { const v = sc.entryOrder.trim().toLowerCase(); o.mbOrder = /^last/.test(v) ? 'last' : /^first/.test(v) ? 'first' : ''; }
     if (Array.isArray(sc.assistantsNotListed)) o.aiOff = [...new Set(sc.assistantsNotListed.filter(x => typeof x === 'string').map(x => stpStr(x, 30)).filter(Boolean))].slice(0, 12);
     if (Object.keys(o).length) S.school = o;
     // the people at the school a teacher works with (the School page's spots, school.js), and the spots themselves
@@ -292,6 +294,7 @@ function stpDiff(S, planNow) {
   if (S.school || S.prog || S.staff || S.staffRoles) {
     const L = [], m = me(), s = S.school || {};
     if (s.sys != null && s.sys !== sysName()) L.push(s.sys ? 'Students hand work in on <b>' + esc(s.sys) + '</b>' + (sysName() ? ' (now ' + esc(sysName()) + ')' : '') : 'No school system named (now ' + esc(sysName()) + ')');
+    if (s.mbOrder != null && s.mbOrder !== mbOrder()) L.push('The entry list goes by ' + (s.mbOrder === 'last' ? 'last name' : s.mbOrder === 'first' ? 'first name' : 'the roster') + ' (now ' + (mbOrder() === 'last' ? 'last name' : mbOrder() === 'first' ? 'first name' : 'the roster') + ')');
     if (s.unit != null && s.unit !== unitLinkName()) L.push(s.unit ? 'Unit plans are kept in <b>' + esc(s.unit) + '</b>' + (unitLinkName() ? ' (now ' + esc(unitLinkName()) + ')' : '') : 'No place named for unit plans (now ' + esc(unitLinkName()) + ')');
     if (s.ai != null && s.ai !== (m.ai || '')) L.push(s.ai ? 'Your AI assistant is <b>' + esc(s.ai) + '</b>' : 'No AI assistant named');
     if (s.aiUrl != null && s.aiUrl !== aiUrlClean(m.aiUrl)) L.push(s.aiUrl ? 'Your AI assistant opens at <b>' + esc(s.aiUrl) + '</b>' : 'Your AI assistant opens at its usual page');
@@ -472,7 +475,7 @@ async function stpApply(S, pick) {
     const sc = { ...(S.school || {}) };
     if (sc.ai != null && sc.ai !== (me().ai || '') && sc.aiUrl == null) sc.aiUrl = '';   // another assistant: the last one's own link doesn't go with it
     meSet({ ...sc, ...(S.prog ? { prog: S.prog } : {}) });
-    for (const k of ['aiUrl', 'aiOpen']) if (lib.me[k] === '') delete lib.me[k];   // kept only while they say something
+    for (const k of ['aiUrl', 'aiOpen', 'mbOrder']) if (lib.me[k] === '') delete lib.me[k];   // kept only while they say something
     if (lib.me.aiUrls) { delete lib.me.aiUrls[lib.me.ai || '']; if (!Object.keys(lib.me.aiUrls).length) delete lib.me.aiUrls; }
     if (lib.me.aiOff && !lib.me.aiOff.length) delete lib.me.aiOff;
     saveLib();
@@ -610,7 +613,7 @@ async function stpExport() {
   const p = await stpPlanGet(), g = meGrade(), conf = bkConf(), day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const out = { gradingStudioSetup: STP_V };
   if (me().prog) out.programme = me().prog;
-  if (sysName() || unitLinkName() || me().ai) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}), ...(me().ai && aiUrlClean(me().aiUrl) ? { assistantLink: aiUrlClean(me().aiUrl) } : {}), ...(me().ai && me().aiOpen === 'tab' ? { assistantOpens: 'tab' } : {}), ...(me().ai && me().aiUrls && Object.keys(me().aiUrls).length ? { otherAssistants: Object.entries(me().aiUrls).map(([name, link]) => ({ name, link })) } : {}), ...(me().ai && Array.isArray(me().aiOff) && me().aiOff.length ? { assistantsNotListed: me().aiOff.slice() } : {}) };
+  if (sysName() || unitLinkName() || me().ai || mbOrder()) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(mbOrder() ? { entryOrder: mbOrder() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}), ...(me().ai && aiUrlClean(me().aiUrl) ? { assistantLink: aiUrlClean(me().aiUrl) } : {}), ...(me().ai && me().aiOpen === 'tab' ? { assistantOpens: 'tab' } : {}), ...(me().ai && me().aiUrls && Object.keys(me().aiUrls).length ? { otherAssistants: Object.entries(me().aiUrls).map(([name, link]) => ({ name, link })) } : {}), ...(me().ai && Array.isArray(me().aiOff) && me().aiOff.length ? { assistantsNotListed: me().aiOff.slice() } : {}) };
   const ppl = schPeople(), sr = schNow().roles;
   if (ppl.length || sr) { out.school = out.school || {}; if (sr) out.school.staffRoles = sr.list.slice(); if (ppl.length) out.school.staff = ppl.map(p => ({ ...(p.role ? { role: p.role } : {}), name: p.name, ...(p.email ? { email: p.email } : {}), ...(p.note ? { note: p.note } : {}) })); }
   if (g) { const raw = (me().grade && me().grade.setup) || {}; out.grading = { way: g.way, score: g.setup.mode === 'rubric' ? 'rows' : 'total', ...(g.setup.mode === 'rubric' ? { criteria: g.setup.criteria } : { outOf: g.setup.outOf }), ...(raw.top ? { rowTop: raw.top } : {}), ...(typeof raw.half === 'boolean' ? { halfPoints: raw.half } : {}), ...(g.setup.scale ? { scale: g.setup.scale } : {}), ...(g.bands ? { bands: g.bands.map(b => ({ grade: b[1], from: b[0] })) } : {}) }; }
@@ -649,7 +652,7 @@ RULES
 
 WHAT TO FIND OUT
 - My classes: each one's name as I want to see it, the days and times it meets, and its page in my school's system if I have the link. Give two sections of the same course the same "course" (like "English 12"): they share a lesson deck and are linked, so an assignment and its strong examples can be shared between them.
-- My school: the system students hand work in on (ManageBac, Google Classroom, Canvas and so on), and where unit plans are kept, if anywhere.
+- My school: the system students hand work in on (ManageBac, Google Classroom, Canvas and so on), and where unit plans are kept, if anywhere, and whether that system lists students by last name or first name ("entryOrder": "last" or "first"; leave it out for my roster's order).
 - The calendar: the first and last day of this semester, days with no school, and dates I want to see (exams, reports due).
 - Terms: each term's name with its first and last day.
 - How I grade a new assignment: rubric rows, points, percent, letter grades, or IB 1 to 7. For rubric rows, the names of the rows I usually use.

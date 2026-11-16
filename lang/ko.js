@@ -179,6 +179,7 @@ words: {
 'Whole year': '한 해 전체', 'This year': '올해', 'Outside the terms': '학기 밖', 'Every assignment': '모든 과제', 'Averages only': '평균만', '+ Add scores': '+ 점수 추가', 'Student': '학생', 'typed in': '직접 입력', 'average': '평균', 'Term grade': '학기 성적', 'Grade': '성적',
 'Year': '연간', 'missing': '미제출', 'excused': '면제', 'started': '시작함', 'retake': '재응시', 'partial': '일부', 'left out': '제외됨', 'late': '지각', 'Class average': '학급 평균', 'count everyone': '모두 포함하기', 'so far': '현재까지', 'Includes extra credit': '추가 점수 포함',
 'How this is worked out': '계산 방법', 'Predicted grades': '예상 성적', 'The 1 to 7 you predict for each student': '학생마다 예상하는 1~7', 'Show points': '점수로 보기', 'Show percent': '백분율로 보기', 'Now percent': '현재: 백분율', 'Now points': '현재: 점수', 'Terms, types and weights': '학기, 유형, 비중',
+'Entry list': '입력용 목록', 'Roster order': '명단 순서', 'Last name': '성', 'First name': '이름', 'Term levels': '학기 수준', 'Start over': '처음부터', 'Copy scores': '점수 복사', 'Order': '순서', 'Click a student once their score is in. Arrow keys work too.': '점수를 다 넣은 학생을 클릭하세요. 화살표 키도 됩니다.',
 'Add extra credit…': '추가 점수 넣기…', 'Import scores…': '점수 가져오기…', 'From your old gradebook: a CSV or Excel file, or cells pasted': '예전 성적부에서: CSV 또는 Excel 파일, 또는 붙여 넣은 셀', 'Copy the table': '표 복사', 'Leave students out…': '학생 제외하기…', 'See the class averages without them': '그 학생들을 뺀 학급 평균 보기',
 'Looking through your saved work…': '저장된 작업을 살펴보는 중…', 'Set types': '유형 정하기', 'Set up your terms with Term setup to see them side by side.': '학기 설정에서 학기를 정하면 나란히 볼 수 있습니다.', 'The year is the average of the terms each student has a grade in, and each type’s year average is the average of their term averages for it.': '연간은 학생에게 성적이 있는 학기들의 평균이고, 유형별 연간 평균은 그 유형의 학기 평균들의 평균입니다.',
 'points on top': '덧붙는 점수', 'No type yet': '유형 없음', 'Extra credit': '추가 점수', 'Extra credit adds to': '추가 점수가 더해지는 곳', 'Type': '유형', 'Due': '마감', 'Edit the extra credit': '추가 점수 편집', 'Edit the typed-in scores': '직접 입력한 점수 편집', 'none': '없음',
@@ -396,6 +397,7 @@ words: {
 'Missing': '미제출', 'Excused': '면제', 'Late': '지각 제출',
 },
 rules: [
+[/^(\d+) of (\d+) done$/, '$2명 중 $1명 완료'], [/^out of ([\d.,]+)$/, '$1점 만점'],
 /* a class page */
 [/^(\d+) students? on the roster$/, m => (m[1] === '1' ? '명단에 학생 {n}명' : '명단에 학생 {n}명').replace('{n}', m[1])], [/^(\d+) assignments?$/, m => (m[1] === '1' ? '과제 {n}개' : '과제 {n}개').replace('{n}', m[1])], [/^Due ([^·]+)$/, '마감: $1'],
 [/^Keep (.+) in the tab row$/, m => '{x} 탭 줄에 두기'.replace('{x}', (LANG_KO.words[m[1]] || m[1]))], [/^Take (.+) out of the tab row$/, m => '{x} 탭 줄에서 빼기'.replace('{x}', (LANG_KO.words[m[1]] || m[1]))],
