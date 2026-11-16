@@ -95,7 +95,7 @@ async function openStudent(i, filePath) {
     const head = document.createElement('div'); head.className = 'fhead';
     head.innerHTML = '<span style="color:var(--fg)">' + esc(d.name) + '</span><span>' + d.pages.length + (d.pages.length === 1 ? ' page' : ' pages') + '</span>' + tryTag(st, af || fileByPath(st, (d.pages[0] || [])[0])) + (af && af.added ? addTag(af) : '') + carryTag(batch.carry && d.pages.map(([q]) => fileByPath(st, q)).find(f => f && !f.virtual && batch.carry.flags[f.path])) +
       (on ? '' : '<span class="pill warn" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">' + (auto ? 'No marks, left out' : 'Left out') + '</span>') +
-      '<span style="flex:1"></span>' + (on ? '' : '<button class="link" style="font-size:13px" data-inout="' + di + '">Bring back</button>') +
+      '<span style="flex:1"></span>' + (on && af && !af.virtual && af.data && isNotes(af.data) ? '<button class="link" style="font-size:13px" data-tntry>Type notes instead</button>' : '') + (on ? '' : '<button class="link" style="font-size:13px" data-inout="' + di + '">Bring back</button>') +
       fileMenu((on || auto ? '<button class="link" data-rotdoc="' + di + '" title="Turn every page of this file a quarter turn to the right">⟳ Turn all pages</button>' : '') + (one ? moveLink(af) + replaceLink(af) : '') + (on ? '<button class="link" data-inout="' + di + '" title="Keep this file off the screen and out of what goes back. Bring back undoes it.">Leave out</button>' : '') + (one ? removeLink(af) : ''));
     if (oneFile) whoHead(paper, head); else { paper.appendChild(head); spTake(spDocKey(d), head); }
     if (!on && !auto) continue;   // left out on purpose: just the bar

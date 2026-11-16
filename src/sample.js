@@ -25,7 +25,7 @@ let sampleDataP = null;
 function sampleData() {
   return sampleDataP ||= new Promise((res, rej) => {
     if (window.__gsSampleData) return res(window.__gsSampleData);
-    if (SAMPLE_PACKED) { try { const b = atob(SAMPLE_PACKED), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return res(window.__gsSampleData = Object.assign(new Function(fflate.strFromU8(fflate.inflateSync(u)))(), { api: SAMPLE_API })); } catch (e) { return rej(e); } }
+    if (SAMPLE_PACKED) { try { return res(window.__gsSampleData = Object.assign(new Function(fflate.strFromU8(fflate.inflateSync(unpack85(SAMPLE_PACKED))))(), { api: SAMPLE_API })); } catch (e) { return rej(e); } }
     const s = document.createElement('script'); s.src = 'sample.js' + (SAMPLE_STAMP ? '?' + SAMPLE_STAMP : '');
     s.onload = () => window.__gsSampleData ? res(window.__gsSampleData) : rej(new Error('sample.js held nothing')); s.onerror = () => rej(new Error('sample.js could not be fetched'));
     document.head.appendChild(s);

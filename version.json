@@ -1,21 +1,22 @@
 {
- "version": "1.28.34",
- "build": "2d2164e73916",
+ "version": "1.28.35",
+ "build": "669bad3e7aa2",
  "notes": [
-  "Focus counts only papers you marked: rubric scores, marks on the page or a comment. A grade only typed in still counts as scored, and its time still counts as grading time, but it no longer counts as a paper marked today."
+  "Type notes: a page beside the paper that you type on like any document, with headings, lists, bold, italic, underline and highlight. Beside a video or with the clock running, each new paragraph gets its time, and a paragraph can be marked as a strength, a next step or a question.",
+  "Each assignment says whether typed notes go back to the student as a page of the returned paper, and in what text size: Compact, Standard or Large. Help has a new answer."
  ],
  "files": {
-  "index.html": "82c9ac94f32ddaf746a0ae059abdb37f3989bf748c06a0353a2c127f209413a1",
-  "planner.html": "5a5fbc30fcff26017fefd9cd5a6d6234d72f05dc5f1a68096b8fe15f440e5bc9"
+  "index.html": "8dc1e4c6675dbf085200566d041936745e11a1bebfb1c486b5f426df7d7bd20f",
+  "planner.html": "ddb51d28c398f2628341f9ebccdb32d8ef033825c169b67b3e0256358844cde7"
  },
  "langs": {
-  "lang/zh-Hant.js": "a9b41e39c9bb0ae2bf191d963f25a21c7a744e77ac48ab58eb7838f187dbcbbd",
-  "lang/zh-Hans.js": "05397ffc10c0d79e587ef0a9b9256923c7dd321cc5dceaba86f7f14429600800",
-  "lang/es.js": "c2afb26b2fe4e3b2a50e99433ab2653e58ceb5c4f63e1a148d6a5dd169b9fe35",
-  "lang/fr.js": "db877d6bbe83435dd2929446e5a9a830767ef38d08d492c6fc5e21e9c9558c39",
-  "lang/de.js": "b46fae18c3293d95e1eff6e018143e26b204f0a2fb49e4ae1aae4ab5dd31a027",
-  "lang/pt-BR.js": "25f928976c2cd9f66eb0f747c573cc738c58997b096904779e8ee208835d650c",
-  "lang/ja.js": "ed31a72d57267bec6103b2ac64ccb6e557cd0d6ebc39c8aa0d3538e28e2fa03c",
-  "lang/ko.js": "52a6691f5746bdffa9d77a4bfdf2f44c26ce8745d3497737d2d63241731a2d0c"
+  "lang/zh-Hant.js": "ca730818e52fea5bdc4425d02121db2ecb86464f9f7fc73bbb1cded7c257be00",
+  "lang/zh-Hans.js": "5b35832439558ce46935de55023bfbc1d016e700e8d0993e5c772a2c51626f7b",
+  "lang/es.js": "4cdcdd3f623779999f06c011af83724efaee315521eebddb97423eb60fdb2cc2",
+  "lang/fr.js": "82e1c3ef5233f2cbced888c6f72063550a0cd57250d4906d193b14c9f1bb0995",
+  "lang/de.js": "d73eb9095884001168820a393485ce701fd9b94439046c979bb00b5aea694f30",
+  "lang/pt-BR.js": "6d7f53882bca6a1a7c1299b63d90fb801d23c029bc821337b316f90a6b33118e",
+  "lang/ja.js": "9e0cd5d365e7701075b13b8b2fa72ab378bca0594a3a191860894b0f1ace519c",
+  "lang/ko.js": "5ff12a92da88238424c8a90f8b53eb3e6ea1b2a0bc2928acbc33f4536f1750f2"
  }
 }
