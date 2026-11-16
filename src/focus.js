@@ -84,6 +84,9 @@ function fcPapersBy(L) {
   for (const m of keptMeta.values()) if (m && m.id in L.base) { const n = Math.max(0, fcDone(m) - L.base[m.id]); if (!n) continue; const it = cardOfKept(m.id), k = it ? it.id : ''; o[k] = (o[k] || 0) + n; }
   return o;
 }
+// Where a download's count starts today: where it stands, or where the older copy it carried marks over from stood. A new copy is
+// listed before its first save, with no count yet, so the marks it carries from yesterday would otherwise all count as today's.
+function fcFrom(id, m) { const old = [...keptMeta.values()].find(o => o && o.newer === id); return Math.max(m ? fcDone(m) : 0, old ? fcDone(old) : 0); }
 // Called before a download's count changes (keepWork) and whenever the card or panel is drawn: a new day starts from where each
 // download stands, a download seen for the first time starts from where it is, and today's total is written down for the week.
 // id: a download about to be saved (keepWork). One not known yet is new: it starts from nothing, or from where the older copy it
@@ -93,8 +96,8 @@ function fcSeen(id) {
   if (!FC_ON || !keptRead) return;
   const L = fcLog(), today = fcToday(); let ch = false;
   if (L.day !== today) { L.day = today; L.base = {}; ch = true; }
-  if (id && !keptMeta.has(id) && !(id in L.base)) { const old = [...keptMeta.values()].find(m => m && m.newer === id); L.base[id] = old ? fcDone(old) : 0; ch = true; }
-  for (const m of keptMeta.values()) if (m && m.id && !(m.id in L.base)) { L.base[m.id] = fcDone(m); ch = true; }
+  if (id && !keptMeta.has(id) && !(id in L.base)) { L.base[id] = fcFrom(id, null); ch = true; }
+  for (const m of keptMeta.values()) if (m && m.id && !(m.id in L.base)) { L.base[m.id] = fcFrom(m.id, m); ch = true; }
   for (const k of Object.keys(L.base)) if (k !== id && !keptMeta.has(k)) { delete L.base[k]; ch = true; }
   const p = fcPapersOf(L), d = L.days[today] || {}, pa = fcPapersBy(L);
   if ((d.p || 0) !== p || JSON.stringify(d.pa || {}) !== JSON.stringify(pa)) { L.days[today] = { ...d, p, pa }; if (!p) delete L.days[today].pa; ch = true; }

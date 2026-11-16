@@ -218,3 +218,22 @@ test('when the time is up, a few more minutes go on with the same session, and e
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('a new copy of a download carries its marks over without counting them as today’s papers', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  const n = await page.evaluate(() => {
+    const G = window.__gs, K = G.kept(), out = [];
+    // yesterday's copy, 4 of 5 scored, and the new copy listed before its first save, with no count yet
+    K.set('older-copy', { id: 'older-copy', name: 'Made-up essay', n: 5, scored: 4, newer: 'newer-copy' });
+    G.fcSeen(); const base = G.fcPapersToday();
+    K.set('newer-copy', { id: 'newer-copy', name: 'Made-up essay', n: 5 });
+    out.push(G.fcPapersToday() - base);
+    // its first save brings the carried marks over
+    K.set('newer-copy', { ...K.get('newer-copy'), scored: 4 }); out.push(G.fcPapersToday() - base);
+    // and one more paper finished today counts
+    K.set('newer-copy', { ...K.get('newer-copy'), scored: 5 }); out.push(G.fcPapersToday() - base);
+    return out;
+  });
+  assert.deepEqual(n, [0, 0, 1]);
+  await close();
+});
