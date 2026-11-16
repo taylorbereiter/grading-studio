@@ -36,6 +36,7 @@ function fcConf() {
     track: f.track !== false, idle: TK_IDLES.includes(+f.idle) ? +f.idle : 5,
     free: f.free !== false, wk: f.wk === false ? false : [0, 1, 2, 3, 4, 5, 6].includes(f.wk) ? f.wk : 5, quiet: f.quiet === true, short: f.short === true,   // src/gradeplan.js
     sg: f.sg !== false,   // a goal suggested for each session
+    music: f.music === true, mood: LOFI_STYLES.some(x => x.id === f.mood) ? f.mood : 'mix', mvol: +f.mvol >= .05 && +f.mvol <= 1 ? +f.mvol : .5, mamb: f.mamb !== false,   // lo-fi music while a session runs (src/lofi.js)
     goal: g && (g.k === 'papers' || g.k === 'min') && +g.n > 0 ? { k: g.k, n: Math.min(fcGoalMax(g.k, g.per), Math.round(+g.n)), per: g.per === 'week' ? 'week' : 'day',
       days: g.per !== 'week' && Array.isArray(g.days) && g.days.some(d => FC_DOWS.includes(d)) ? FC_DOWS.filter(d => g.days.includes(d)) : null } : null };
 }
@@ -47,6 +48,10 @@ function fcConfSet(part) {
   if (c.goal) o.goal = { k: c.goal.k, n: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days && c.goal.days.length < 7 ? { days: c.goal.days } : {}) };
   if (!c.sg) o.sg = false;
   if (!c.sound) o.sound = false;
+  if (c.music) o.music = true;
+  if (c.mood !== 'mix') o.mood = c.mood;
+  if (c.mvol !== .5) o.mvol = c.mvol;
+  if (!c.mamb) o.mamb = false;
   if (!c.title) o.title = false;
   if (!c.track) o.track = false;
   if (c.idle !== 5) o.idle = c.idle;
@@ -471,6 +476,42 @@ function fcSgNext(w, len) {
   const g = fcSgNow(w, len); if (!g) return '';
   return '<p class="fcp fcsgnext"><span class="fcl">Session goal</span> ' + fcSgSpan(g, null, w) + (g.c ? ' <span class="muted">(carried over)</span>' : '') + '</p>';
 }
+/* ---------- lo-fi music while a session runs (src/lofi.js writes and plays it) ---------- */
+const FC_NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg>';
+const FC_SKIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6v12l9-6zM18 6v12"/></svg>';
+const fcMoods = (id, v) => '<select ' + id + ' class="btn sm" aria-label="Mood">' + [{ id: 'mix', name: 'Mix of everything' }, ...LOFI_STYLES].map(m => '<option value="' + m.id + '"' + (m.id === v ? ' selected' : '') + '>' + m.name + '</option>').join('') + '</select>';
+const fcVol = (id, v) => '<input type="range" ' + id + ' min="0.05" max="1" step="0.05" value="' + v + '" aria-label="Volume">';
+function fcMusicHtml(c) {
+  return '<div class="fcmus' + (c.music ? ' on' : '') + '"><button class="btn sm' + (c.music ? '' : ' ghost') + '" data-fcmus aria-pressed="' + c.music + '" title="Lo-fi music">' + FC_NOTE + (c.music ? '' : '<span>Lo-fi music</span>') + '</button>' +
+    (c.music ? fcMoods('data-fcmood', c.mood) + '<button class="btn sm" data-fcskip title="Next track">' + FC_SKIP + '</button>' + fcVol('data-fcvol', c.mvol) : '') + '</div>';
+}
+// One tab plays at a time: the one being used. A tab that starts playing tells the others, and they go quiet until they are pressed again.
+let fcMusCh = null;
+try { fcMusCh = new BroadcastChannel('gs-lofi'); fcMusCh.onmessage = () => { fcS.myield = true; fcMusicSync(); }; } catch { }
+// Music plays while a session's clock runs, and stops with it: on a pause, when the time is up, on a break.
+function fcMusicSync() {
+  const r = fcRun(), c = fcConf(), run = !!r && r.st === 'run' && c.music;
+  if (!run) { if (lofi.on) lofiPause(); if (lofi.E && !(r && r.st === 'paused' && c.music)) lofiStop(); return; }   // only a pause keeps the player, to carry on mid-track
+  if (lofi.vol !== c.mvol) lofiVolume(c.mvol);
+  if (lofi.amb !== c.mamb) lofiAmb(c.mamb);
+  if (lofi.style !== c.mood) lofiStyle(c.mood);
+  // A browser lets sound start only on a page that has been pressed, and a tab in the background doesn't start any.
+  const pressed = !navigator.userActivation || navigator.userActivation.hasBeenActive;
+  if (fcS.myield) { if (lofi.on) lofiPause(); }
+  else if (!lofi.on && pressed && !document.hidden && lofiPlay() && fcMusCh) fcMusCh.postMessage(1);
+}
+for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, () => { if (!lofi.on && fcConf().music) setTimeout(() => { fcS.myield = false; fcMusicSync(); }, 0); }, true);
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-fcmus], [data-fcskip]'); if (!t) return;
+  if (t.dataset.fcskip != null) return lofiNext();
+  fcS.myield = false; fcConfSet({ music: !fcConf().music }); if ($('#setFocus')) setRender();
+});
+document.addEventListener('input', e => { if (e.target.matches('[data-fcvol], #fcVol')) lofiVolume(e.target.value); });
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.matches('[data-fcvol]')) fcConfSet({ mvol: +t.value });
+  else if (t.matches('[data-fcmood]')) fcConfSet({ mood: t.value });
+});
 function fcPanelHtml(r) {
   const c = fcConf(), w = r ? fcWork(r.w) : null;
   if (!r) return fcHead('Focus') + fcStartHtml();
@@ -483,7 +524,7 @@ function fcPanelHtml(r) {
       '<div class="fcacts"><button class="btn sm primary" data-fcaway="keep">Keep going</button><button class="btn sm" data-fcaway="again">Start the clock again</button></div></div>';
     const got = fcGot(r);
     return fcHead(r.st === 'paused' ? 'Paused' : 'Focusing', true) + '<div class="fcrunv"><div class="fctop"><div class="fcclock' + (r.st === 'paused' ? ' paused' : '') + '"><span class="fcpr"></span><span class="fctime fct"></span></div>' + fcWhatHtml(r, w) + '</div>' +
-      '<div class="fcstats"><div class="fcstat"><span>' + (r.no > 1 ? 'Session ' + r.no : 'This session') + '</span><span>' + people(got, 'paper') + '</span></div>' + fcSgLine(r, w) + fcGoalHtml(c) + '</div>' +
+      '<div class="fcstats"><div class="fcstat"><span>' + (r.no > 1 ? 'Session ' + r.no : 'This session') + '</span><span>' + people(got, 'paper') + '</span></div>' + fcSgLine(r, w) + fcGoalHtml(c) + '</div>' + fcMusicHtml(c) +
       '<div class="fcacts">' + (r.st === 'paused' ? '<button class="btn sm primary" data-fcresume>Carry on</button>' : '<button class="btn sm" data-fcpause>Pause</button>') + (r.one ? '' : '<button class="btn sm" data-fcmore="5">+5 minutes</button>') + '<span class="sp"></span><button class="btn sm ghost" data-fcstop>End</button></div></div>';
   }
   if (r.st === 'up') {
@@ -548,7 +589,7 @@ function fcPanelRender() {
 }
 function fcRender() {
   if (!FC_ON || !shellReady) return;
-  fcCardRender(); fcPanelRender(); fcTitle(); gpQuiet();
+  fcCardRender(); fcPanelRender(); fcTitle(); gpQuiet(); fcMusicSync();
 }
 
 /* ---------- presses ---------- */
@@ -631,7 +672,11 @@ function fcSetRender(sec) {
     '<p class="setp fcset"><label for="fcLen"><b>A session lasts</b></label>' + sel('fcLen', FC_LENS, c.len, 'A session lasts') + '<label for="fcBrk"><b>A break lasts</b></label>' + sel('fcBrk', FC_BRKS, c.brk, 'A break lasts') + '</p>' +
     '<p class="setp"><label><input type="checkbox" id="fcSound"' + (c.sound ? ' checked' : '') + '> A soft chime when a session or a break ends</label></p>' +
     '<p class="setp"><label><input type="checkbox" id="fcTitle"' + (c.title ? ' checked' : '') + '> The time left in the browser tab’s name, so you can see it from another tab</label></p>' +
-    '<p class="setp"><label><input type="checkbox" id="fcSg"' + (c.sg ? ' checked' : '') + '> Suggest a goal for each session, from your pace</label></p>');
+    '<p class="setp"><label><input type="checkbox" id="fcSg"' + (c.sg ? ' checked' : '') + '> Suggest a goal for each session, from your pace</label></p>' +
+    '<p class="setp"><label><input type="checkbox" id="fcMusic"' + (c.music ? ' checked' : '') + '> Lo-fi music while a session runs</label></p>' +
+    (c.music ? '<p class="setp fcset"><label for="fcMood"><b>Mood</b></label>' + fcMoods('id="fcMood"', c.mood) + '<label for="fcVol"><b>Volume</b></label>' + fcVol('id="fcVol"', c.mvol) + '</p>' +
+      '<p class="setp"><label><input type="checkbox" id="fcAmb"' + (c.mamb ? ' checked' : '') + '> Record crackle and rain in the background</label></p>' : '') +
+    '<p class="muted setp">The music is made in your browser as it plays, so it never repeats and nothing is downloaded.</p>');
   const k = c.goal ? c.goal.k : '';
   put('#setGoal', '<div class="lhead"><h2>Grading goal</h2><span class="muted">How much you want to grade in a day or a week. Today and the timer show how far along you are. Nothing happens on a day you don’t get there.</span></div>' +
     '<p class="setp fcset"><span class="seg" id="fcGoalK" role="group" aria-label="Grading goal">' + [['', 'No goal'], ['papers', 'Papers'], ['min', 'Minutes']].map(([v, l]) => '<button data-v="' + v + '" aria-pressed="' + (k === v) + '">' + l + '</button>').join('') + '</span>' +
@@ -645,6 +690,10 @@ $('#setPane').addEventListener('change', e => {
   if (t.id === 'fcLen') { fcS.len = 0; fcConfSet({ len: +t.value }); return setRender(); }
   if (t.id === 'fcBrk') { fcConfSet({ brk: +t.value }); return setRender(); }
   if (t.id === 'fcSound') { fcConfSet({ sound: t.checked }); if (t.checked) { fcAudioWake(); fcChime(); } return setRender(); }
+  if (t.id === 'fcMusic') { fcConfSet({ music: t.checked }); return setRender(); }
+  if (t.id === 'fcMood') { fcConfSet({ mood: t.value }); return setRender(); }
+  if (t.id === 'fcVol') { fcConfSet({ mvol: +t.value }); return setRender(); }
+  if (t.id === 'fcAmb') { fcConfSet({ mamb: t.checked }); return setRender(); }
   if (t.id === 'fcTitle') { fcConfSet({ title: t.checked }); return setRender(); }
   if (t.id === 'fcGoalN') { const g = fcConf().goal; if (!g) return; const n = Math.round(+t.value); if (n > 0) fcConfSet({ goal: { ...g, n } }); return setRender(); }
   if (t.id === 'fcGoalPer') { const g = fcConf().goal; if (!g) return; const week = t.value === 'week'; fcConfSet({ goal: { ...g, per: t.value, n: week ? g.n * (g.days ? g.days.length : 5) : Math.max(1, Math.round(g.n / 5)), days: null } }); return setRender(); }
@@ -661,4 +710,4 @@ $('#setPane').addEventListener('click', e => {
 
 FC_ON = true;
 fcSeen(); fcTickOn();
-window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcCame, fcTick, focusOn, fcMon, fcToday });
+window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcCame, fcTick, focusOn, fcMon, fcToday, lofi, lofiCompose, lofiRender, LOFI_STYLES });

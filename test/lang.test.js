@@ -257,6 +257,7 @@ test('the focus timer, its card on Today and its Settings leave nothing in Engli
   await at('the panel, opened from the sidebar', () => page.click('#railFocus'));
   await at('a session on a set of papers', async () => { await page.click('#fcPanel [data-fcstart]'); await page.waitForSelector('#fcPanel .fcclock'); });
   const run = f => page.evaluate(f => { const G = window.__gs, r = G.fcRun(); new Function('r', f)(r); G.fcRunSet(r); G.fcTick(); }, f);
+  await at('lo-fi music turned on in the panel', async () => { await page.click('#fcPanel [data-fcmus]'); await page.waitForSelector('#fcPanel [data-fcmood]'); });
   await at('paused', () => page.click('#fcPanel [data-fcpause]'));
   await at('carrying on, folded', async () => { await page.click('#fcPanel [data-fcresume]'); await page.click('#fcPanel [data-fcfold]'); });
   await at('back from another tab', () => run('r.fold = false; r.away = 6;'));
