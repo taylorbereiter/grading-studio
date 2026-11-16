@@ -1,6 +1,6 @@
 /* ================= Planner: the small helpers it needs =================
    The Planner is its own page with its own code. None of Grading Studio's grading code is in it,
-   and it never opens the grading database or the grading folder. These are its own copies of the few
+   and it never opens the grading database or the grading folder (it only reads the strong examples' own database: plexamples.js). These are its own copies of the few
    helpers it shares in spirit with the grading app. */
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

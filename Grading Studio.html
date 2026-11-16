@@ -5122,7 +5122,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.60";
+  const APP_VERSION = "1.28.61";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -32287,7 +32287,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.60":["Long names in the student list on the marking screen now wrap onto a second line instead of ending in …, so you can tell everyone apart. Tags like late, group and sent sit under the name."]};
+const WHATS_NEW = {"1.28.61":["In the Planner, put a strong example from your saved bank into a lesson: Add a slide ▾ has Pick a strong example…, and Materials has + Strong example…. Each page goes on its own slide, or into Materials as a picture. Names stay covered and whose paper it was never comes along."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };

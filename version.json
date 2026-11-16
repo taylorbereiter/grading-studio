@@ -1,12 +1,12 @@
 {
- "version": "1.28.60",
- "build": "4e7c01144bdd",
+ "version": "1.28.61",
+ "build": "4dd4a694ed7c",
  "notes": [
-  "Long names in the student list on the marking screen now wrap onto a second line instead of ending in …, so you can tell everyone apart. Tags like late, group and sent sit under the name."
+  "In the Planner, put a strong example from your saved bank into a lesson: Add a slide ▾ has Pick a strong example…, and Materials has + Strong example…. Each page goes on its own slide, or into Materials as a picture. Names stay covered and whose paper it was never comes along."
  ],
  "files": {
-  "index.html": "f9a75479c579d21af89712438d981b4736e3473d0dac899185de5aba719bcd14",
-  "planner.html": "8907d47c2ad5681c223eae867f306ef84c79af8c7f9d4def3639fe7975cc77ac"
+  "index.html": "dd78c134dcc9d9284ab7b32d83ef386dacefb8f8c0c6834e41c0eb7c9623c880",
+  "planner.html": "bd3c227815a1235e223d25e3d4a7213d3bbecbfa6ba160590822f02099673a7f"
  },
  "langs": {
   "lang/zh-Hant.js": "f0e87a69b4d88733ce010c265b8f95b5ee273c7c2552a17a22b57f3d5080b697",

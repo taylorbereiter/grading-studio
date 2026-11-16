@@ -12,7 +12,7 @@ async function ownerSave(ref, o) { if (ref.t === 'lesson') { await lPut(o); if (
 function materialsHtml(o, t) {
   const files = o.files || [];
   return '<div class="pl-mats" data-owner="' + t + '|' + o.id + '"><div class="pl-mats-h"><h3>Materials</h3><span class="muted sp-small">Handouts, readings, task sheets and documents for this ' + t + '. Drag files here.</span><span class="sp"></span>' +
-    '<button class="btn sm" data-ma="newdoc">+ New document</button><button class="btn sm ghost" data-ma="add">+ Add files…</button><input type="file" multiple hidden data-mf="in"></div>' +
+    '<button class="btn sm" data-ma="newdoc">+ New document</button><button class="btn sm ghost" data-ma="add">+ Add files…</button>' + (t === 'lesson' && plxHas() ? '<button class="btn sm ghost" data-ma="ex" title="A strong example saved while marking, with names covered">+ Strong example…</button>' : '') + '<input type="file" multiple hidden data-mf="in"></div>' +
     (files.length ? '<div class="pl-files">' + files.map(f => '<div class="pl-file" draggable="true" data-chip=\'' + esc(JSON.stringify({ kind: 'file', t, owner: o.id, id: f.id })) + '\'><span class="pl-ft">' + fileIcon(f) + '</span><span class="pl-fn"><b>' + esc(f.name) + '</b><span>' + (f.kind === 'doc' ? 'Document' : (f.size / 1024 < 1024 ? Math.max(1, Math.round(f.size / 1024)) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB')) + '</span></span>' +
       '<button class="btn sm" data-ma="open" data-id="' + f.id + '">' + (f.kind === 'doc' ? 'Edit' : 'Open') + '</button>' + (isDocx(f) ? '<button class="btn sm ghost" data-ma="editdocx" data-id="' + f.id + '" title="Make an editable copy here">Edit a copy</button>' : '') +
       (f.kind === 'doc' ? '' : '<button class="btn sm ghost" data-ma="rpl" data-id="' + f.id + '" title="' + RPL_TIP + '">Replace…</button>') + '<button class="btn sm ghost" data-ma="dl" data-id="' + f.id + '" title="Download">↓</button><button class="btn sm ghost" data-ma="rm" data-id="' + f.id + '" title="Remove" aria-label="Remove">×</button></div>').join('') + '</div>'
@@ -78,6 +78,7 @@ async function matClick(t) {
   if (a === 'add') { const i = box.querySelector('[data-mf="in"]'); i.onchange = () => matAdd(ref, [...i.files]); i.click(); return true; }
   if (a === 'newdoc') { const o = ownerOf(ref); await matNewDoc(ref, (o.title || 'Untitled') + ' handout'); return true; }
   if (a === 'open') { await matOpen(ref, id); return true; }
+  if (a === 'ex') { plxPick('mats'); return true; }
   if (a === 'claude') { boxAdd({ kind: 'file', t: tt, owner: oid, id }); return true; }
   if (a === 'editdocx') { await matEditDocx(ref, id); return true; }
   if (a === 'rpl') { matPickReplace(ref, id); return true; }
