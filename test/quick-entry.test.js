@@ -162,3 +162,23 @@ test('a percent typed in a points column stays the percent, the points follow it
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('an assignment with no papers at all opens as an empty gradebook column, the first student ready to type', async () => {
+  const sd = seed(), l = JSON.parse(sd.ls['gs.lib']);
+  l.classes[0].units[0].items[4].setup = { mode: 'points', criteria: [], outOf: 25 };
+  sd.ls['gs.lib'] = JSON.stringify(l);
+  const { page, close } = await openApp(browser, { seed: sd });
+  await classPage(page, 'c1');
+  await page.waitForSelector('[data-open-asg="i5"]');
+  await page.click('[data-open-asg="i5"]');
+  await page.waitForSelector('#dlgBox [data-typeonly]');
+  await page.click('#dlgBox [data-typeonly]');
+  await page.waitForFunction(() => { const a = document.activeElement; return a && a.dataset && a.dataset.bked === 'i5'; });
+  assert.deepEqual(await focused(page), ['i5', 'Aria Testwell', 'TD']);
+  assert.match(await page.evaluate(() => location.hash), /gradebook/);
+  await keys(page, '2', '0', 'Enter', '1', '2', '.', '5', 'Enter');
+  assert.deepEqual(await typed(page, 'i5'), { max: 25, s: { 'Aria Testwell': { v: 20, st: '' }, 'Bram Sample': { v: 12.5, st: '' } } }, 'points out of the assignment’s own total');
+  assert.equal(await page.$eval(cell(page, 'i5', 'Aria Testwell'), x => x.textContent), '80%');
+  assert.deepEqual(page.errors, []);
+  await close();
+});

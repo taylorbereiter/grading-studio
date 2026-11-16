@@ -179,6 +179,15 @@ async function openBook(clsId, opts = {}) {
   bkDraw();
 }
 const bkClass = () => classById(bk.cls);
+// An assignment with no papers at all: its own empty column in the class gradebook, the first cell ready to type into. An MYP class gets its Add levels page for the task.
+let bkWant = null;
+function bkTypeOnly(it) {
+  const f = findItem(it.id), c = f && classById(f.c.id);
+  if (!c || !c.names.length) return toast('Put this assignment in a class with a roster first.');
+  if (classWay(c) === 'myp') bkWant = [c.id, it.id, 'ib'];
+  else { if (!it.typed) { const su = setupOver(it.setup || setup), m = su.mode === 'rubric' ? 0 : setupMax(su); it.typed = { max: m > 0 ? m : null, s: {} }; saveLib(); } bkWant = [c.id, it.id]; }   // saveLib, not bkSaveLib, so the class page loads the new column. Points out of the assignment's total; a rubric assignment's column takes percents, since its scale is not a straight line.
+  go(classHash(c, 'gradebook'));
+}
 // How wide one chart is on screen (bkDraw measures it): a chart drawn at that width has text the size of the text around it.
 const bkW = () => bk.w || 640;
 // During anonymous grading, names stay hidden here too.
@@ -211,6 +220,12 @@ function bkDraw() {
   for (const b of document.querySelectorAll('[data-bktab]')) b.setAttribute('aria-selected', String(b.dataset.bktab === bk.tab));
   const conf = ibConf(c, bkConf()), all = bkClassCols(c, bk.cols), tabs = bkTabs(all);   // a DP class can weigh its components its own way (ib.js)
   if (bk.term == null || !tabs.some(t => t[0] === bk.term)) bk.term = conf.terms.length ? bkTermNow(conf.terms) : '';
+  if (bkWant && bkWant[0] === c.id && bk.tab === 'table') {
+    const w = bkWant; bkWant = null;
+    if (w[2]) return ibAddOpen(c, w[1]);
+    const x = all.find(k => k.key === w[1]); if (x && tabs.some(t => t[0] === x.termId)) bk.term = x.termId;
+    bk.hi = w[1]; setTimeout(() => bkShow(document.querySelector('#bkBody [data-bked="' + CSS.escape(w[1]) + '"]')), 0);
+  }
   const cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term);
   const myp = classWay(c) === 'myp', page = bkPage(), tools = (!page || bk.tab === 'table') && !myp;
   if (myp && bk.tab === 'table' && c.names.length) { body.innerHTML = ibBookView(c, cols, all, tabs); return; }   // an MYP class: levels by criterion, not percents (ib.js)

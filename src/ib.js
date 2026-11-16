@@ -347,20 +347,20 @@ function ibSheetOne(c, all, cols, conf, n, o, rc) {
 // Levels typed in for one task: its name, date, the criteria it assessed, and a level per student for each.
 function ibAddOpen(c, itId) {
   const f = itId && findItem(itId), it = f ? f.it : null, crit = ibCrit(c);
-  ibk.add = { it, name: it ? it.name : '', due: it ? it.due || '' : isoDay(Date.now()), fm: !!it && it.type === 'fm', crit: it ? (it.crit || []).slice() : crit.slice(0, 2).map(x => x.k),
+  ibk.add = { it, name: it ? it.name : '', due: it ? it.due || '' : isoDay(Date.now()), fm: !!it && it.type === 'fm', crit: it && it.crit ? it.crit.slice() : crit.slice(0, 2).map(x => x.k),
     s: it ? JSON.parse(JSON.stringify((it.typed && it.typed.s) || {})) : {} };
   ibk.view = 'add'; bkDraw(); const n = $('#ibaName'); if (n && !it) n.focus();
 }
 function ibAddView(c) {
   const a = ibk.add, crit = ibCrit(c), on = crit.filter(x => a.crit.includes(x.k));
-  return '<div class="ibadd" id="ibAdd"><div class="ibaddhead"><h3>' + (a.it ? 'Change levels' : 'Add levels') + '</h3><span class="muted">For a task you marked on paper or somewhere else.</span></div>' +
+  return '<div class="ibadd" id="ibAdd"><div class="ibaddhead"><h3>' + (a.it && a.it.typed ? 'Change levels' : 'Add levels') + '</h3><span class="muted">For a task you marked on paper or somewhere else.</span></div>' +
     '<div class="ibaddtop"><label>Task <input type="text" id="ibaName" value="' + esc(a.name) + '" maxlength="80" placeholder="e.g. Cells lab report"></label><label>Date <input type="date" id="ibaDue" value="' + esc(a.due) + '"></label>' +
     '<label class="ibchk"><input type="checkbox" id="ibaFm"' + (a.fm ? ' checked' : '') + '> Formative</label></div>' +
     '<div class="ibaddcrit" role="group" aria-label="Criteria this task assessed"><span class="muted">Assessed:</span>' + crit.map(x => '<label class="ibchk" data-raw title="' + esc(x.name) + '"><input type="checkbox" data-ibacrit="' + esc(x.k) + '"' + (a.crit.includes(x.k) ? ' checked' : '') + '> ' + esc(x.k) + ' <span class="muted">' + esc(x.name) + '</span></label>').join('') + '</div>' +
     (on.length ? '<div class="bkwrap"><table class="bktab ibaddtab"><thead><tr><th class="bknm">Student</th>' + on.map(x => '<th>' + esc(x.k) + '<small>0 to ' + IB_TOP + '</small></th>').join('') + '</tr></thead><tbody>' +
       c.names.map((nm, i) => '<tr><td class="bknm" data-raw>' + esc(bkWho(nm, i)) + '</td>' + on.map(x => { const v = ((a.s[nm] || {}).l || {})[x.k]; return '<td><input type="number" class="ibain" min="0" max="' + IB_TOP + '" step="1" data-iban="' + esc(nm) + '" data-ibak="' + esc(x.k) + '" value="' + (v == null ? '' : v) + '" aria-label="' + esc(x.k + ' for ' + bkWho(nm, i)) + '"></td>'; }).join('') + '</tr>').join('') + '</tbody></table></div>'
       : '<p class="muted bkpad">Tick the criteria this task assessed.</p>') +
-    '<div class="ibaddfoot">' + (a.it ? '<button class="btn" data-ibadel style="margin-right:auto">Delete these levels</button>' : '') + '<button class="btn" data-ibacancel>Cancel</button><button class="btn primary" data-ibasave>Save</button></div></div>';
+    '<div class="ibaddfoot">' + (a.it && a.it.typed ? '<button class="btn" data-ibadel style="margin-right:auto">Delete these levels</button>' : '') + '<button class="btn" data-ibacancel>Cancel</button><button class="btn primary" data-ibasave>Save</button></div></div>';
 }
 function ibAddRead() {
   const a = ibk.add; if (!a || !$('#ibAdd')) return;

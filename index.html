@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"5b12b82f","zh-Hans":"c86c65d7","es":"93b7bffe","fr":"39a0ee70","de":"1cd7256c","pt-BR":"b6917df6","ja":"bf373f0b","ko":"07d74252"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"96b00c2d","zh-Hans":"7830f0b9","es":"6c397257","fr":"ee8657b9","de":"0fffd0a5","pt-BR":"08f60e9f","ja":"7b6f8465","ko":"07e7d733"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -11194,9 +11194,9 @@ $('#start').addEventListener('click', async e => {
   if (b.dataset.openAsg) {
     asgTarget = findItem(b.dataset.openAsg).it;
     openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">' + (sysName() ? 'Where is the ' + esc(sysName()) + ' download?' : 'Where are the papers?') + ' You can also drop the ZIP or the folder straight onto this assignment’s card.</p>' + ruHtml(asgTarget.setup, { now: 1 }) + '</div>' +
-      '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true, 'lg');
+      '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button><button class="btn" data-typeonly title="No papers at all: an empty column in the class gradebook to type each score into">No papers: just type the scores…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true, 'lg');
     ruWire($('#dlgBox'), asgTarget);
-    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a), 'lg'); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
+    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-typeonly]')) { closeDlg(); return bkTypeOnly(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a), 'lg'); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
     return;
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);
@@ -16685,6 +16685,14 @@ async function openBook(clsId, opts = {}) {
   bkDraw();
 }
 const bkClass = () => classById(bk.cls);
+let bkWant = null;
+function bkTypeOnly(it) {
+  const f = findItem(it.id), c = f && classById(f.c.id);
+  if (!c || !c.names.length) return toast('Put this assignment in a class with a roster first.');
+  if (classWay(c) === 'myp') bkWant = [c.id, it.id, 'ib'];
+  else { if (!it.typed) { const su = setupOver(it.setup || setup), m = su.mode === 'rubric' ? 0 : setupMax(su); it.typed = { max: m > 0 ? m : null, s: {} }; saveLib(); } bkWant = [c.id, it.id]; }
+  go(classHash(c, 'gradebook'));
+}
 const bkW = () => bk.w || 640;
 const bkWho = (n, i) => anonOn() ? 'Student ' + (i + 1) : n;
 const bkInfo = n => anonOn() ? '' : whoBtn('data-wc="' + esc(bk.cls) + '" data-wn="' + esc(n) + '"', n);
@@ -16710,6 +16718,12 @@ function bkDraw() {
   for (const b of document.querySelectorAll('[data-bktab]')) b.setAttribute('aria-selected', String(b.dataset.bktab === bk.tab));
   const conf = ibConf(c, bkConf()), all = bkClassCols(c, bk.cols), tabs = bkTabs(all);
   if (bk.term == null || !tabs.some(t => t[0] === bk.term)) bk.term = conf.terms.length ? bkTermNow(conf.terms) : '';
+  if (bkWant && bkWant[0] === c.id && bk.tab === 'table') {
+    const w = bkWant; bkWant = null;
+    if (w[2]) return ibAddOpen(c, w[1]);
+    const x = all.find(k => k.key === w[1]); if (x && tabs.some(t => t[0] === x.termId)) bk.term = x.termId;
+    bk.hi = w[1]; setTimeout(() => bkShow(document.querySelector('#bkBody [data-bked="' + CSS.escape(w[1]) + '"]')), 0);
+  }
   const cols = bk.term === '*' ? all : all.filter(x => x.termId === bk.term);
   const myp = classWay(c) === 'myp', page = bkPage(), tools = (!page || bk.tab === 'table') && !myp;
   if (myp && bk.tab === 'table' && c.names.length) { body.innerHTML = ibBookView(c, cols, all, tabs); return; }
@@ -25777,20 +25791,20 @@ function ibSheetOne(c, all, cols, conf, n, o, rc) {
 }
 function ibAddOpen(c, itId) {
   const f = itId && findItem(itId), it = f ? f.it : null, crit = ibCrit(c);
-  ibk.add = { it, name: it ? it.name : '', due: it ? it.due || '' : isoDay(Date.now()), fm: !!it && it.type === 'fm', crit: it ? (it.crit || []).slice() : crit.slice(0, 2).map(x => x.k),
+  ibk.add = { it, name: it ? it.name : '', due: it ? it.due || '' : isoDay(Date.now()), fm: !!it && it.type === 'fm', crit: it && it.crit ? it.crit.slice() : crit.slice(0, 2).map(x => x.k),
     s: it ? JSON.parse(JSON.stringify((it.typed && it.typed.s) || {})) : {} };
   ibk.view = 'add'; bkDraw(); const n = $('#ibaName'); if (n && !it) n.focus();
 }
 function ibAddView(c) {
   const a = ibk.add, crit = ibCrit(c), on = crit.filter(x => a.crit.includes(x.k));
-  return '<div class="ibadd" id="ibAdd"><div class="ibaddhead"><h3>' + (a.it ? 'Change levels' : 'Add levels') + '</h3><span class="muted">For a task you marked on paper or somewhere else.</span></div>' +
+  return '<div class="ibadd" id="ibAdd"><div class="ibaddhead"><h3>' + (a.it && a.it.typed ? 'Change levels' : 'Add levels') + '</h3><span class="muted">For a task you marked on paper or somewhere else.</span></div>' +
     '<div class="ibaddtop"><label>Task <input type="text" id="ibaName" value="' + esc(a.name) + '" maxlength="80" placeholder="e.g. Cells lab report"></label><label>Date <input type="date" id="ibaDue" value="' + esc(a.due) + '"></label>' +
     '<label class="ibchk"><input type="checkbox" id="ibaFm"' + (a.fm ? ' checked' : '') + '> Formative</label></div>' +
     '<div class="ibaddcrit" role="group" aria-label="Criteria this task assessed"><span class="muted">Assessed:</span>' + crit.map(x => '<label class="ibchk" data-raw title="' + esc(x.name) + '"><input type="checkbox" data-ibacrit="' + esc(x.k) + '"' + (a.crit.includes(x.k) ? ' checked' : '') + '> ' + esc(x.k) + ' <span class="muted">' + esc(x.name) + '</span></label>').join('') + '</div>' +
     (on.length ? '<div class="bkwrap"><table class="bktab ibaddtab"><thead><tr><th class="bknm">Student</th>' + on.map(x => '<th>' + esc(x.k) + '<small>0 to ' + IB_TOP + '</small></th>').join('') + '</tr></thead><tbody>' +
       c.names.map((nm, i) => '<tr><td class="bknm" data-raw>' + esc(bkWho(nm, i)) + '</td>' + on.map(x => { const v = ((a.s[nm] || {}).l || {})[x.k]; return '<td><input type="number" class="ibain" min="0" max="' + IB_TOP + '" step="1" data-iban="' + esc(nm) + '" data-ibak="' + esc(x.k) + '" value="' + (v == null ? '' : v) + '" aria-label="' + esc(x.k + ' for ' + bkWho(nm, i)) + '"></td>'; }).join('') + '</tr>').join('') + '</tbody></table></div>'
       : '<p class="muted bkpad">Tick the criteria this task assessed.</p>') +
-    '<div class="ibaddfoot">' + (a.it ? '<button class="btn" data-ibadel style="margin-right:auto">Delete these levels</button>' : '') + '<button class="btn" data-ibacancel>Cancel</button><button class="btn primary" data-ibasave>Save</button></div></div>';
+    '<div class="ibaddfoot">' + (a.it && a.it.typed ? '<button class="btn" data-ibadel style="margin-right:auto">Delete these levels</button>' : '') + '<button class="btn" data-ibacancel>Cancel</button><button class="btn primary" data-ibasave>Save</button></div></div>';
 }
 function ibAddRead() {
   const a = ibk.add; if (!a || !$('#ibAdd')) return;
