@@ -1,23 +1,21 @@
 {
- "version": "1.28.49",
- "build": "0eeba6b7d831",
+ "version": "1.28.52",
+ "build": "1a754b8035a9",
  "notes": [
-  "Papers through Google Drive: once you've marked them, your papers go up to your Drive by themselves. Your other computer gets them the first time you open that assignment there, and on your phone the eye button shows one student's paper.",
-  "Use on your phone: a button beside the Google sign-in shows a QR code and four steps for adding Grading Studio to your phone's Home Screen. The Welcome screen has Sign in with Google too, and signing in works on any iPhone browser.",
-  "Google's sign-in window no longer pops up by itself. When the hour-long sign-in runs out, syncing waits and the Google line says sign in again to sync. Tap it once to carry on. The Drive papers chooser now opens in the folder you last used."
+  "Criterion stamps: each rubric row you've scored has a small stamp button beside its score. Click it, then click on the paper to put that row's name and score there, like the total stamp. It changes when the score does, and it's optional, one row at a time."
  ],
  "files": {
-  "index.html": "f0bf3ccf8e1b3a791af71c8444f65bd0e04936b0cb29ef576d5d2090c698097a",
-  "planner.html": "dd76a43bfe2df6c245e40c12d37e99a4fe63dbf802324a3de188762cbaf6dee6"
+  "index.html": "4fc10f690d162f8f6116c53e58a305dde26be13364f00badd9e6dff2367b11a8",
+  "planner.html": "7372451ec3b40084440ebd8dae16904209081b9f6f58eb5f7be2d7d9e4458284"
  },
  "langs": {
-  "lang/zh-Hant.js": "cc1c57cd03fdefc41b41376b0e42b87d5e5082d812a4d43e42f93f321d9cf4c7",
-  "lang/zh-Hans.js": "a823c49a3e4f7884f0b211af3a48094cf5b422b92c4571cde7239030d27deb46",
-  "lang/es.js": "5a0276cc817d177d0601faa7eee994a3c98d931685a7cef0c2112bb2981ebab5",
-  "lang/fr.js": "62914d93810544ca65ce5a8b52eae19e663b5489b8f99e4705f7bd12914a9954",
-  "lang/de.js": "5bacc6600fa10996cde9b81c700f3572fb48a222b188e89f37ea6499b92c11e2",
-  "lang/pt-BR.js": "bc8e6cb11fc9365f7c1e31c44b243b055316633ceb7a5f66d5fff62eb5fc7fd9",
-  "lang/ja.js": "f462a5ab5b3e4cb05dccc55b8ae75fd1d5f0c97977e58dae788fcd7f0c0433d3",
-  "lang/ko.js": "e306aef1b3caa19c5cb4eaf27de60308ead0a7c009d6e93b0222265d8237f626"
+  "lang/zh-Hant.js": "b8d5a5fa409e9104847e740ca0c3162e10f9ec763cfc74ef80351ecee78029a4",
+  "lang/zh-Hans.js": "5745ccfaf54b1c0728aedb9a4ea809521d23af3a57a608c1e84d827a46410b98",
+  "lang/es.js": "da065db7bc401458b8497b70e496511c65e17dec7dc865f9837aa4e570cea6b9",
+  "lang/fr.js": "e1ae3aa03c8926eed56efc3d4064b601690dbff9ef7804d8128d808586133971",
+  "lang/de.js": "3a858d2d2115a534be9fae2275bc05b2c73f21d9d6af29b896614a6731f2d825",
+  "lang/pt-BR.js": "0d7df1fde236f4378802102e5fe2ba122c6f3598b20295a11065899edefaa35e",
+  "lang/ja.js": "f98347b337b77c667d190c164b85260885bfe57cfac2b26483f763c134200f15",
+  "lang/ko.js": "783e294fd4887651984c5812c604fe5eb0952c3196f01a95b83717aa8bb795e2"
  }
 }

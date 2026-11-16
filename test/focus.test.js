@@ -115,16 +115,16 @@ test('Settings keep only what differs from the usual, and a setup from an assist
   assert.equal(await meFocus(page), undefined);
   // a setup brings it in, says what it changes, goes out again the same, and Undo puts it back
   const r = await page.evaluate(async () => {
-    const G = window.__gs, S = G.stpRead({ gradingStudioSetup: 1, focus: { sessionMinutes: 15, lessonMinutes: 30, breakMinutes: 7, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true, stopCountingAfterMinutes: 4 } });
+    const G = window.__gs, S = G.stpRead({ gradingStudioSetup: 1, focus: { sessionMinutes: 15, lessonMinutes: 30, breakMinutes: 7, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true, stopCountingAfterMinutes: 4, planningAfterMinutes: 5 } });
     const diff = JSON.stringify(G.stpDiff(S)); await G.stpApply(S, { focus: true });
     const me = JSON.parse(JSON.stringify(G.state().lib.me.focus)), ex = await G.stpExport(), out = (typeof ex === 'string' ? JSON.parse(ex) : ex).focus;
     await G.stpUndo();
     return { read: S.focus, diff, me, out, after: (G.state().lib.me || {}).focus };
   });
-  assert.deepEqual(r.read, { len: 15, llen: 30, goal: { k: 'min', n: 90 }, sound: false, title: true }, 'a break length the app does not offer is left out');
-  assert.match(r.diff, /Focus timer and daily goal/); assert.match(r.diff, /A lesson session lasts 30 minutes/);
-  assert.deepEqual(r.me, { len: 15, llen: 30, goal: { k: 'min', n: 90 }, sound: false });
-  assert.deepEqual(r.out, { sessionMinutes: 15, lessonMinutes: 30, breakMinutes: 5, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true, countTime: true, stopCountingAfterMinutes: 5, freePeriods: true, weeklyLookBack: 'friday', quietWhileFocusing: false, shortestFirst: false, sessionGoals: true, music: false, musicMood: 'mix', musicVolume: 50, musicBackground: false });
+  assert.deepEqual(r.read, { len: 15, llen: 30, goal: { k: 'min', n: 90 }, sound: false, title: true, pe: 5 }, 'a break length the app does not offer is left out');
+  assert.match(r.diff, /Focus timer and daily goal/); assert.match(r.diff, /A lesson session lasts 30 minutes/); assert.match(r.diff, /Planning outside focus sessions counts after 5 minutes of steady work/);
+  assert.deepEqual(r.me, { len: 15, llen: 30, goal: { k: 'min', n: 90 }, sound: false, pe: 5 });
+  assert.deepEqual(r.out, { sessionMinutes: 15, lessonMinutes: 30, breakMinutes: 5, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true, countTime: true, stopCountingAfterMinutes: 5, planningAfterMinutes: 5, freePeriods: true, weeklyLookBack: 'friday', quietWhileFocusing: false, shortestFirst: false, sessionGoals: true, music: false, musicMood: 'mix', musicVolume: 50, musicBackground: false });
   assert.equal(r.after, undefined);
   assert.deepEqual(page.errors, []);
   await close();
