@@ -10,7 +10,6 @@
 // Each kind: its word, its sign in the bar and beside the line, and its number for the keys (Ctrl Alt, or ⌘ ⌥, and the number).
 // Ctrl and a number alone is the browser's own: it goes to that tab.
 const TN_K = { h: ['Heading', 'H', 1], p: ['Strength', '✓', 2], n: ['Next step', '→', 3], q: ['Question', '?', 4] };
-const TN_KEY = navigator.platform && /Mac|iP/.test(navigator.platform) ? '⌘⌥' : 'Ctrl+Alt+';
 const TN_FS = !!(window.CSS && CSS.supports && CSS.supports('field-sizing', 'content'));
 let tnL = [], tnSt = null, tnAt = 0, tnLast = null, tnMz = null, tnIv = 0;
 // Started: a line with words in it that isn't a heading (headings alone are only the shape of the notes).
@@ -18,6 +17,9 @@ function tnHasG(g) { return !!(g && g.tn && Array.isArray(g.tn.l) && g.tn.l.some
 function tnHas(st) { return !!st && tnHasG(st.grade); }
 const tnStored = st => (st.grade.tn && Array.isArray(st.grade.tn.l) && st.grade.tn.l.length ? st.grade.tn.l : null);
 const tnTimesOn = () => store.get('gs.tnTime', true) !== false;
+// Whether the notes go back to the student as a page of the returned paper: the assignment's choice (setup.tnBack), on unless she turns it off.
+const tnBackOn = () => setup.tnBack !== false;
+function tnOut(st) { return tnBackOn() && tnHas(st); }
 const tnHead = () => (Array.isArray(setup.tnHead) ? setup.tnHead.filter(s => typeof s === 'string' && s.trim()) : []);
 // What she sees for a student: their notes, or the headings for everyone with a line under each, or one empty line.
 function tnView(st) {
@@ -62,7 +64,7 @@ function tnBack(st) {
 /* ---------- drawing ---------- */
 const tnHost = () => $('#spBody > .sptool[data-tool="typed"]');
 const tnGut = (x, i) => (x.t != null ? '<button class="tnchip" data-tnt="' + i + '" title="' + (tnSt && tnHasVid(tnSt) ? 'Play the video from here' : 'The time on the Timer') + '">' + fmtTime(x.t) + '</button><button class="tnx" data-tnx="' + i + '" aria-label="Take the time off" title="Take the time off">×</button>' : '') + (x.k && x.k !== 'h' ? '<i aria-hidden="true">' + TN_K[x.k][1] + '</i>' : '');
-const tnRowHtml = (x, i) => '<div class="tnrow"' + (x.k ? ' data-k="' + x.k + '"' : '') + '><span class="tngut">' + tnGut(x, i) + '</span><textarea class="tnin" rows="1" data-tni="' + i + '" aria-label="' + (x.k ? TN_K[x.k][0] : 'Note') + ' ' + (i + 1) + '"' +
+const tnRowHtml = (x, i) => '<div class="tnrow"' + (x.k ? ' data-k="' + x.k + '"' : '') + '><span class="tngut">' + tnGut(x, i) + '</span><textarea class="tnin" rows="1" data-tni="' + i + '" aria-label="' + (x.k ? TN_K[x.k][0] : 'Note') + '"' +
   (tnL.length === 1 ? ' placeholder="Type your notes. Enter starts a new line."' : '') + '>' + esc(x.s) + '</textarea></div>';
 function tnFit(ta) { if (!TN_FS) { ta.style.height = '0'; ta.style.height = ta.scrollHeight + 'px'; } }
 function tnPaint() {
@@ -85,19 +87,23 @@ function tnBar(h, st) {
   const ck = bar.querySelector('.tnclock'); ck.hidden = !live;
   if (live) { const c = spClockOf(st), say = (c.at ? '❚❚ ' : '▶ ') + fmtTime(spClockMs(c) / 1000); if (ck.dataset.say !== say) { ck.dataset.say = say; ck.textContent = say; ck.setAttribute('aria-pressed', String(!!c.at)); ck.title = c.at ? 'Pause the Timer' : 'Start the Timer'; } }
   const any = tnL.some(y => y.s.trim()), heads = tnL.some(y => y.k === 'h' && y.s.trim());
-  const show = { head: heads, unhead: tnHead().length > 0, copy: any, clear: !!tnStored(st) };
+  const show = { head: heads, unhead: tnHead().length > 0, copy: any, clear: !!tnStored(st), back: true };
   for (const b of bar.querySelectorAll('[data-tnm]')) b.hidden = !show[b.dataset.tnm];
+  const back = tnBackOn(), bm = bar.querySelector('[data-tnm="back"]'); bm.setAttribute('aria-checked', String(back));
+  const ft = h.querySelector('.tnfoot'), say = back ? 'Goes back to the student with the paper' : 'Only for you. Not given back.';
+  if (ft && ft.dataset.say !== say) { ft.dataset.say = say; ft.dataset.on = String(back); ft.querySelector('span').textContent = say; ft.setAttribute('aria-pressed', String(back)); }
 }
 function tnDraw(host, st) {
   if (host.dataset.st !== st.key || !host.querySelector('.tn')) {
     host.dataset.st = st.key; tnSt = null;
     host.innerHTML = '<div class="tn"><div class="tnbar" role="toolbar" aria-label="Notes">' +
-      Object.entries(TN_K).map(([k, [w, g, m]]) => '<button class="tnb" data-tnk="' + k + '" aria-pressed="false" title="' + w + ' for the line you are on (' + TN_KEY + m + ')"><i data-k="' + k + '">' + g + '</i><span>' + w + '</span></button>').join('') +
+      Object.entries(TN_K).map(([k, [w, g]]) => '<button class="tnb" data-tnk="' + k + '" aria-pressed="false" title="' + w + '"><i data-k="' + k + '">' + g + '</i><span>' + w + '</span></button>').join('') +
       '<span class="tnsep" aria-hidden="true"></span><button class="tnb" data-tntime aria-pressed="true">Times</button><button class="tnb tnclock" data-tnclk hidden></button>' +
       kmWrap('⋯', 'class="icon kdots" aria-label="More for these notes" title="More for these notes"',
         '<button class="mitem" data-tnm="head">Use these headings for every student</button><button class="mitem" data-tnm="unhead">Clear the headings for every student</button>' +
-        '<button class="mitem" data-tnm="copy">Copy notes</button><button class="mitem" data-tnm="clear">Clear this student’s notes</button>', 'right') +
-      '</div><div class="tnlist"></div><p class="tnhint" hidden><button class="link" data-tnrub>Start with a heading for each rubric row</button></p></div>';
+        '<button class="mitem" role="menuitemcheckbox" data-tnm="back" aria-checked="true">Give these notes back with the paper</button><button class="mitem" data-tnm="copy">Copy notes</button><button class="mitem" data-tnm="clear">Clear this student’s notes</button>', 'right') +
+      '</div><div class="tnlist"></div><p class="tnhint" hidden><button class="link" data-tnrub>Start with a heading for each rubric row</button></p>' +
+      '<button class="tnfoot" data-tnback aria-pressed="true" title="Whether these notes go back to the student as a page of the returned paper, for every student in this assignment. Click to change."><i aria-hidden="true"></i><span></span></button></div>';
   }
   const a = document.activeElement, typing = !!(a && a.classList.contains('tnin') && host.contains(a));
   if (tnSt !== st || (!typing && JSON.stringify(tnView(st)) !== JSON.stringify(tnL))) tnRows(host, st); else tnBar(host, st);
@@ -134,7 +140,7 @@ $('#paper').addEventListener('input', e => {
   if (v !== ta.value) ta.value = v;
   if (!x.s && v && x.t == null && tnTimesOn() && (tnHasVid(st) || tnTimer(st))) { const t = tnNow(st); if (t != null) { x.t = Math.floor(t); kind = true; } }
   x.s = v; tnFit(ta);
-  if (kind) { const row = ta.parentNode; if (x.k) row.dataset.k = x.k; row.firstChild.innerHTML = tnGut(x, i); ta.setAttribute('aria-label', (x.k ? TN_K[x.k][0] : 'Note') + ' ' + (i + 1)); }
+  if (kind) { const row = ta.parentNode; if (x.k) row.dataset.k = x.k; row.firstChild.innerHTML = tnGut(x, i); ta.setAttribute('aria-label', x.k ? TN_K[x.k][0] : 'Note'); }
   tnPut(st, !kind);
   tnBar(tnHost(), st);
 });
@@ -182,7 +188,7 @@ $('#paper').addEventListener('focusin', e => { const ta = tnIn(e); if (ta) { tnA
 $('#paper').addEventListener('mousedown', e => { if (e.target.closest('.tnbar .tnb, .tnchip, .tnx')) e.preventDefault(); });
 $('#paper').addEventListener('click', async e => {
   const box = e.target.closest('.tn'); if (!box || !batch || tnSt !== batch.students[cur]) return;
-  const st = tnSt, el = e.target.closest('[data-tnk],[data-tntime],[data-tnclk],[data-tnt],[data-tnx],[data-tnrub],[data-tnm]'); if (!el) return;
+  const st = tnSt, el = e.target.closest('[data-tnk],[data-tntime],[data-tnclk],[data-tnt],[data-tnx],[data-tnrub],[data-tnm],[data-tnback]'); if (!el) return;
   const d = el.dataset, ta = box.querySelector('.tnin[data-tni="' + tnAt + '"]'), c = ta ? ta.selectionStart : 0;
   if (d.tnk) { const x = tnL[tnAt]; if (!x) return; if (x.k === d.tnk) delete x.k; else x.k = d.tnk; return tnRe(st, tnAt, c); }
   if (d.tntime != null) { if (tnTimesOn()) store.set('gs.tnTime', false); else store.del('gs.tnTime'); return tnBar(tnHost(), st); }
@@ -190,14 +196,62 @@ $('#paper').addEventListener('click', async e => {
   if (d.tnt) { const x = tnL[+d.tnt]; if (x && x.t != null && !vidSeek($('#paper'), x.t)) toast('This time is from the Timer. There is no video to go to.'); return; }
   if (d.tnx) { const x = tnL[+d.tnx]; if (x) delete x.t; return tnRe(st, +d.tnx, (tnL[+d.tnx] || { s: '' }).s.length); }
   if (d.tnrub != null) { tnL = setup.criteria.flatMap(s => [{ s: String(s), k: 'h' }, { s: '' }]); return tnRe(st, 1, 0); }
+  if (d.tnback != null || d.tnm === 'back') { if (tnBackOn()) setup.tnBack = false; else delete setup.tnBack; spSetupKeep(); tnBar(tnHost(), st); return toast(tnBackOn() ? 'Typed notes go back with each paper in this assignment' : 'Typed notes stay with you in this assignment'); }
   const m = d.tnm;
-  if (m === 'head') { setup.tnHead = tnL.filter(x => x.k === 'h' && x.s.trim()).map(x => x.s.trim()); spSetupKeep(); tnBar(tnHost(), st); return toast('A student with no notes yet starts with these ' + setup.tnHead.length + (setup.tnHead.length === 1 ? ' heading' : ' headings')); }
+  if (m === 'head') { setup.tnHead = tnL.filter(x => x.k === 'h' && x.s.trim()).map(x => x.s.trim()); spSetupKeep(); tnBar(tnHost(), st); return toast('Every student with no notes yet starts with ' + setup.tnHead.length + (setup.tnHead.length === 1 ? ' heading' : ' headings')); }
   if (m === 'unhead') { delete setup.tnHead; spSetupKeep(); tnRows(tnHost(), st); return toast('Students with no notes start with an empty page again'); }
   if (m === 'copy') return navigator.clipboard.writeText(tnText(tnL)).then(() => toast('Notes copied'), () => toast('Copying didn’t work in this browser.'));
   if (m === 'clear') {
-    if (!await askDlg('Clear the typed notes for this student?\n\nCtrl Z brings them back.', { ok: 'Clear', danger: true })) return;
+    if (!await askDlg('Clear the typed notes for this student?\n\nUndo brings them back.', { ok: 'Clear', danger: true, lg: 1 })) return;
     if (batch.students[cur] !== st) return;
     tnSnap(st); delete st.grade.tn; touchGrade(st); saveSoon(); renderList(); tnRows(tnHost(), st);
   }
 });
 Object.assign(window.__gs, { tnText: () => tnText(tnL), tnLines: () => tnL.map(x => ({ ...x })) });
+
+/* ---------- the page that goes back with the paper ---------- */
+// Drawn like the feedback page (feedback.js): the same ink, fonts, margins and wrapping, drawn on a canvas so any language's letters come out.
+// Headings bold; a strength, a next step or a question named in a column of its own; a line's time muted in the first column.
+// No name: the paper it goes with says whose it is. last: these are the file's last pages (no feedback page in front).
+function tnBlocks(ctx, st, W, M) {
+  const UI = 'Inter, ' + FONT, cw = W - 2 * M, L = (st.grade.tn.l || []).filter(x => String(x.s || '').trim()), out = [];
+  const anyT = L.some(x => x.t != null), timeW = anyT ? 40 : 0, words = { p: tr('Strength'), n: tr('Next step'), q: tr('Question') };
+  ctx.font = '600 11px ' + UI;
+  const kinds = L.filter(x => words[x.k]), labW = kinds.length ? Math.min(Math.round(cw * 0.3), Math.max(...kinds.map(x => ctx.measureText(words[x.k]).width)) + 14) : 0;
+  const text = (lines, font, color, x, y, lh) => { ctx.font = font; ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; lines.forEach((l, i) => ctx.fillText(l, x, y + i * lh)); };
+  const title = fbWrap(ctx, (batch.assignment && batch.assignment.name) || batch.name, '11.5px ' + UI, cw);
+  out.push({ h: 30 + title.length * 16 + 14, draw: y => { text([tr('Notes from your teacher')], '700 19px ' + UI, FB_INK, M, y + 20, 24); text(title, '11.5px ' + UI, FB_MUTED, M, y + 40, 16); ctx.fillStyle = FB_INK; ctx.fillRect(M, y + 30 + title.length * 16 + 12, cw, 1.2); } });
+  L.forEach((x, i) => {
+    const head = x.k === 'h', font = head ? '700 13.5px ' + UI : '12.5px ' + UI, tx = M + timeW + (head ? 0 : labW), lh = head ? 19 : 18;
+    const lines = fbWrap(ctx, String(x.s).trim(), font, M + cw - tx), gap = head ? (i ? 16 : 8) : 5;
+    // one block a line of text, so a long note runs on to the next page where the page ends
+    lines.forEach((ln, k) => out.push({ h: (k ? 0 : gap) + lh, draw: y => {
+      const b = y + (k ? 0 : gap) + lh - 5;
+      if (!k && x.t != null) text([fmtTime(x.t)], '10.5px ' + UI, FB_MUTED, M, b, lh);
+      if (!k && words[x.k]) text([words[x.k]], '600 11px ' + UI, FB_INK2, M + timeW, b, lh);
+      text([ln], font, FB_INK, tx, b, lh);
+    } }));
+  });
+  return out;
+}
+async function tnAddPages(out, st, W, H, dpi, before) {
+  if (!(W >= 400 && H >= 500 && W <= 1300 && H <= 1300) || W > H) { W = 612; H = 792; }
+  const M = Math.max(44, Math.round(W * 0.095)), scale = dpi / 72, UI = 'Inter, ' + FONT;
+  const pages = fbPages(tnBlocks(document.createElement('canvas').getContext('2d'), st, W, M), M, H - M - 22);
+  for (let i = 0; i < pages.length; i++) {
+    const c = document.createElement('canvas'); c.width = Math.ceil(W * scale); c.height = Math.ceil(H * scale);
+    const ctx = c.getContext('2d'); ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+    const mine = fbPages(tnBlocks(ctx, st, W, M), M, H - M - 22)[i] || [];
+    let y = M; for (const b of mine) { b.draw(y); y += b.h; }
+    const foot = i < pages.length - 1 ? 'The notes continue on the next page.' : before ? 'Your marked paper starts on the next page.' : '';
+    if (foot) { ctx.font = '10px ' + UI; ctx.fillStyle = FB_MUTED; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillText(tr(foot), M, H - M + 6); }
+    out.addPage([W, H]).drawImage(await out.embedJpg(await canvasJpg(c, 0.92)), { x: 0, y: 0, width: W, height: H });
+    c.width = c.height = 0;
+  }
+  tnPagesMade = pages.length;
+  return pages.length;
+}
+let tnPagesMade = 0;
+Object.assign(window.__gs, { tnPagesMade: () => tnPagesMade, tnOut: i => tnOut(batch.students[i]) });
+

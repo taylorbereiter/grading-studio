@@ -22,6 +22,8 @@ const spBodyOf = pg => (pg && pg.wrap && pg.wrap.closest('.spb')) || null;
 // What can go in the pane for this student. A file is only offered when something else is left for the main column.
 function spTabs(st) {
   const out = [], seq = fileSeq(st), vids = st.files.filter(f => f.kind === 'link' || f.kind === 'media');
+  // The tools first, Type notes, Rubric, Timer, then the student's files.
+  for (const k of ['typed', 'rubric', 'timer']) { const t = SP_TOOLS.find(x => x.key === k); if (t && t.ok(st)) out.push({ key: t.key, kind: t.key, label: t.label, tool: t }); }
   if (vids.length + seq.length > 1) {
     for (const f of vids) out.push({ key: 'file:' + f.path, kind: 'video', label: f.kind === 'link' ? linkTitle(f) : f.name });
     for (const it of seq) {
@@ -30,7 +32,6 @@ function spTabs(st) {
       out.push({ key: spDocKey(it.d), kind: f && !f.virtual && isNotes(f.data) ? 'notes' : 'f:' + it.d.name, label: it.d.name });
     }
   }
-  for (const t of SP_TOOLS) if (t.ok(st)) out.push({ key: t.key, kind: t.key, label: t.label, tool: t });
   return out;
 }
 const spHasVideo = tabs => tabs.some(t => t.kind === 'video') && tabs.some(t => t.kind !== 'video' && !t.tool);
@@ -41,7 +42,7 @@ function spWanted(tabs) {
 }
 function spChoose(tabs) {
   const c = spConf();
-  return tabs.find(t => t.kind === c.tab) || tabs.find(t => t.kind === 'video') || tabs.find(t => t.tool) || tabs[0];
+  return tabs.find(t => t.kind === c.tab) || tabs.find(t => t.kind === 'video') || tabs.find(t => t.kind === 'rubric') || tabs[0];
 }
 
 // Called as a student's paper starts to be drawn: the button in the student's bar, and the pane if it is wanted.

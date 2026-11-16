@@ -20,7 +20,7 @@ function exportPlan(keepFolders) {
     out.push({ st, f, raw: true, path: (keepFolders ? fp : (dir ? st.key + ' - ' : '') + f.name).replace(/[\\:*?"<>|]+/g, '-') });
   }
   for (const st of batch.students) for (const d of layoutOf(st)) {
-    if (xAll() ? !(docIn(st, d) || docAuto(st, d)) : (!docIn(st, d) || !(docMarked(st, d) || docAdded(st, d)))) continue;
+    if (xAll() ? !(docIn(st, d) || docAuto(st, d)) : (!docIn(st, d) || !(docMarked(st, d) || docAdded(st, d) || tnOut(st)))) continue;   // typed notes that go back are something to return
     const first = outPath(st, d.pages[0][0]), dir = first.includes('/') ? first.slice(0, first.lastIndexOf('/') + 1) : '';
     let path = dir + d.name.replace(/\.(png|jpe?g|gif|webp|bmp|heic|heif|tiff?|avif)$/i, '.pdf');
     if (!/\.pdf$/i.test(path)) path += '.pdf';
@@ -96,7 +96,8 @@ function nameOut(items) {
 }
 // Builds one returned file from its pages (possibly from several turned-in files), baking in every mark.
 // fb: the feedback page goes in front (src/feedback.js), when there is anything for it to say.
-async function flattenDoc(st, d, dpi, edit, key, fb) {
+// tn: her typed notes go with this file when the assignment gives them back (typednotes.js): after the feedback page, or last without one.
+async function flattenDoc(st, d, dpi, edit, key, fb, tn) {
   syncScoreStamps(st);   // a score stamp goes out saying the score as it is now
   await workerReady;
   const srcs = new Map();
@@ -111,11 +112,11 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
   const out = await PDFLib.PDFDocument.create();
   out.setCreator('Grading Studio'); out.setProducer('Grading Studio');   // so a flattened file brought back in can say why its marks can't be changed
   try {
-    const said = fb ? fbData(st, d) : null;
-    if (said) {
-      if (d.pages.length) { const [p0, n0] = d.pages[0], { f: f0, js: j0 } = await src(p0), v0 = vpRot(f0, n0, await j0.getPage(n0 + 1), 1); await fbAddPages(out, said, v0.width, v0.height, dpi); }
-      else await fbAddPages(out, said, 612, 792, dpi);   // only Word papers: a Letter page
-    }
+    const said = fb ? fbData(st, d) : null, notes = !!tn && tnOut(st);
+    let W0 = 612, H0 = 792;   // only Word papers: a Letter page
+    if ((said || notes) && d.pages.length) { const [p0, n0] = d.pages[0], { f: f0, js: j0 } = await src(p0), v0 = vpRot(f0, n0, await j0.getPage(n0 + 1), 1); W0 = v0.width; H0 = v0.height; }
+    if (said) await fbAddPages(out, said, W0, H0, dpi, notes);
+    if (said && notes) await tnAddPages(out, st, W0, H0, dpi, true);
     for (const [path, p] of d.pages) {
       const { f, js, lib } = await src(path);
       const marks = (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
@@ -168,6 +169,7 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
         c.width = c.height = 0;
       }
     }
+    if (notes && !said) await tnAddPages(out, st, W0, H0, dpi, false);
     if (edit && d.pages.length) {   // the original pages and her own marks go along, so bringing the file back in opens it ready to change
       const paths = [...new Set(d.pages.map(([path]) => path))];
       const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p), skewOf(f, p)]; }) };
@@ -259,7 +261,7 @@ async function openExport() {
     const go = e.target.closest('[data-go]'); if (!go) return;
     if (xBusy) return toast('The last export is still going. It will say when it’s done.');
     keep = $('#xKeep').checked;
-    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked, withKey = $('#xKey').checked, withFb = $('#xFb').checked, fbGiven = new Set();   // one feedback page a student, on the first of their files
+    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked, withKey = $('#xKey').checked, withFb = $('#xFb').checked, fbGiven = new Set(), tnGiven = new Set();   // one feedback page a student, on the first of their files; typed notes once a student
     // Closing the box doesn't stop the export: it finishes, and the last word comes up on its own.
     const say = (t, last) => { const el = $('#xStatus'); if (el) el.textContent = t; else if (last) toast(t, 6000); };
     let dir = null;
@@ -298,7 +300,7 @@ async function openExport() {
         say('Baking in marks ' + (i + 1) + ' of ' + items.length + '…');
         bar.firstChild.style.width = (30 + 70 * i / items.length) + '%';
         const fk = items[i].one ? items[i] : items[i].st;   // one PDF a student carries its own feedback page, even a retake's earlier try
-        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable, withKey, withFb && !fbGiven.has(fk) && !!fbGiven.add(fk)), items[i].st)) nOut++;
+        if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable, withKey, withFb && !fbGiven.has(fk) && !!fbGiven.add(fk), !tnGiven.has(items[i].st) && !!tnGiven.add(items[i].st)), items[i].st)) nOut++;
         if (items[i].one) for (const x of oneLeftOver(items[i])) if (await putOut(x.path, () => x.bytes, items[i].st)) nOut++;
       }
       await unopenable(failed);
@@ -347,14 +349,14 @@ async function exportOne(st) {
   if (!items.length) { renderGrade(); return toast('Nothing on ' + who + ' is marked yet. Mark it, then export.'); }
   xBusy = true; if (btn) btn.disabled = true;
   const files = {}, failed = [];
-  let fbGiven = false;
+  let fbGiven = false, tnGiven = false;
   try {
     for (let i = 0; i < items.length; i++) {
       say(items.length > 1 ? 'Baking in marks ' + (i + 1) + ' of ' + items.length + '…' : 'Baking in marks…');
       const o = items[i];
       const base = o.path.split('/').pop(), name = xNames() || base.includes(st.key) ? base : st.key + ' - ' + base;   // her own download names each file for its student
       try {
-        files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn(), fbOn() && (o.one || !fbGiven) && (fbGiven = true));
+        files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn(), fbOn() && (o.one || !fbGiven) && (fbGiven = true), !tnGiven && (tnGiven = true));
         if (o.one) for (const x of oneLeftOver(o)) files[x.path.split('/').pop()] = x.bytes;
       }
       catch (er) { console.error(o.path, er); failed.push({ path: o.path, st, why: exportWhy(er, false) }); }

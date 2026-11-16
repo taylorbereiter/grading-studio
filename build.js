@@ -23,7 +23,21 @@ rep('/*@@PDFLIB@@*/', fs.readFileSync(nm + 'pdf-lib/dist/pdf-lib.min.js', 'utf8'
 rep('/*@@H2C@@*/', fs.readFileSync(nm + 'html2canvas/dist/html2canvas.min.js', 'utf8'));
 rep('/*@@MAMMOTH@@*/', fs.readFileSync(nm + 'mammoth/mammoth.browser.min.js', 'utf8'));
 rep('/*@@FFLATE@@*/', fs.readFileSync(nm + 'fflate/umd/index.js', 'utf8'));
-rep('/*@@WORKER@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.worker.min.js', 'utf8'));
+// What the page packs is written in 85 characters, 5 for every 4 bytes (src/lang.js, unpack85, reads it back): the printable ones but " \ and <.
+const P85 = (() => { let a = ''; for (let c = 33; c < 127; c++) if (c !== 34 && c !== 92 && c !== 60) a += String.fromCharCode(c); return a.slice(0, 85); })();
+function pack85(buf) {
+  let out = '';
+  for (let i = 0; i < buf.length; i += 4) {
+    const k = Math.min(4, buf.length - i); let v = 0;
+    for (let j = 0; j < 4; j++) v = v * 256 + (j < k ? buf[i + j] : 0);
+    const d = []; for (let j = 0; j < 5; j++) { d.unshift(P85[v % 85]); v = Math.floor(v / 85); }
+    out += d.slice(0, k + 1).join('');
+  }
+  return out;
+}
+const squeeze = s => pack85(Buffer.from(require('fflate').deflateSync(Buffer.from(s, 'utf8'), { level: 9 })));
+// pdf.js's worker waits as text until a paper is opened, so the grading page keeps it squeezed (src/app/start.js unpacks it).
+rep('/*@@WORKERZ@@*/', squeeze(fs.readFileSync(nm + 'pdfjs-dist/build/pdf.worker.min.js', 'utf8')));
 // The main code is in src/app/, one file per part of the app, joined in the order src/app/order.json gives. They share one scope, as when they were one file.
 const APP = Symbol('app'), appSrc = require('./src/app/order.json').map(n => fs.readFileSync('src/app/' + n + '.js', 'utf8')).join('');
 // migrate.js runs first; the rest of the app waits inside gsData.boot until saved work is ready for it.
@@ -50,7 +64,7 @@ const langFiles = {}, langNames = {}, langPacked = {};
   for (const [code, file, obj] of LANGS) {
     const src = fs.readFileSync('src/lang-' + file + '.js', 'utf8') + '\nreturn ' + obj + ';';
     langNames[code] = new Function(src)().name;
-    langPacked[code] = Buffer.from(fflate.deflateSync(Buffer.from(src, 'utf8'), { level: 9 })).toString('base64');
+    langPacked[code] = squeeze(src.replace(/^[ \t]*\/\/.*\r?\n/gm, ''));
     langFiles['lang/' + code + '.js'] = '(window.__gsLangs = window.__gsLangs || {})[' + JSON.stringify(code) + '] = (function () {\n' + src.replace(/^[ \t]*\/\/.*\r?\n/gm, '') + '\n})();\n';
   }
 }
@@ -60,7 +74,7 @@ const sampleSrc = fs.readFileSync('src/sample-data.js', 'utf8').replace(/^[ \t]*
 // The builder is named by a stamp of its own contents. A page only uses the builder it was made with, and a sample another one made is made again.
 const sampleStamp = require('crypto').createHash('sha256').update(sampleSrc).digest('hex').slice(0, 8);
 const sampleFile = 'window.__gsSampleData = (function () {\n' + sampleSrc + '\n})();\nwindow.__gsSampleData.api = ' + JSON.stringify(sampleStamp) + ';\n';
-const SAMPLE_INSIDE = 'const SAMPLE_PACKED = ' + JSON.stringify(Buffer.from(require('fflate').deflateSync(Buffer.from(sampleSrc, 'utf8'), { level: 9 })).toString('base64')) + ';', SAMPLE_FETCHED = 'const SAMPLE_PACKED = "";';
+const SAMPLE_INSIDE = 'const SAMPLE_PACKED = ' + JSON.stringify(squeeze(sampleSrc)) + ';', SAMPLE_FETCHED = 'const SAMPLE_PACKED = "";';
 const LANG_INSIDE = 'const LANG_PACKED = ' + JSON.stringify(langPacked) + ';', LANG_FETCHED = 'const LANG_PACKED = {};';
 const langSrc = 'const LANG_NAMES = ' + JSON.stringify(langNames) + ';\n' + LANG_INSIDE;
 const sampleConsts = 'const SAMPLE_API = ' + JSON.stringify(sampleStamp) + ';\nconst SAMPLE_STAMP = ' + JSON.stringify(sampleStamp) + ';\n' + SAMPLE_INSIDE;

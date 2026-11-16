@@ -3,7 +3,8 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, waitPaper, goToStudent, settle, pick, answerDlg } = require('./helpers/app');
+const { openApp, openZip, waitPaper, goToStudent, settle, pick, answerDlg, catchDownloads, score, markPage } = require('./helpers/app');
+const { PDFDocument } = require('pdf-lib');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 
 let browser;
@@ -229,6 +230,72 @@ test('times: from a playing video file (a click goes back there), from the Timer
   assert.equal(await page.evaluate(k => window.__gs.spClock(k).on, key), true);
   await page.click('#spBody .tnclock');
   assert.equal(await page.evaluate(k => window.__gs.spClock(k).on, key), false);
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+// What a returned file's pages say: the text drawn on each canvas the export makes is noted, since its pages are pictures.
+const drawn = page => page.evaluate(() => { const t = window.__drawn || []; window.__drawn = []; return t; });
+const noteDrawing = page => page.evaluate(() => { window.__drawn = []; const f = CanvasRenderingContext2D.prototype.fillText; CanvasRenderingContext2D.prototype.fillText = function (t, ...a) { window.__drawn.push(String(t)); return f.call(this, t, ...a); }; });
+const setNotes = (page, i, l) => page.evaluate((i, l) => { const st = window.__gs.state().batch.students[i]; if (l) st.grade.tn = { l }; else delete st.grade.tn; st.grade.at = Date.now(); window.__gs.saveNow(); }, i, l);
+const pdfPages = async u => (await PDFDocument.load(u)).getPageCount();
+
+test('returned papers: typed notes are a page after the feedback page, or last; a long note runs on; off, headings only and partners', async () => {
+  const { page, close } = await openApp(browser, { one: true, names: true, feedback: true });
+  await noWeb(page);
+  await openZip(page, await threeZip(), 'Talks.zip');
+  await waitPaper(page);
+  // Aria and Bram work together: what Aria's notes say, Bram's say too
+  await page.evaluate(() => { const G = window.__gs, S = G.state().batch.students; return G.videoAdd(S[0], { url: 'https://youtu.be/abcDEF12345', name: 'Talk video', kind: '', partners: [S[1]] }, true); });
+  await setNotes(page, 0, [{ s: 'Delivery', k: 'h' }, { s: 'Steady pace, clear voice', t: 75 }, { s: 'Strong opening question', k: 'p' }, { s: 'Cite the second source', k: 'n' }, { s: 'Why this book?', k: 'q' }]);
+  await markPage(page, 0);
+  await score(page, [3, 3, 3]);   // a save after the notes keeps the group in step
+  await settle(page);
+  assert.equal(await page.evaluate(() => window.__gs.state().batch.students[1].grade.tn.l.length), 5, 'the partner shares the notes');
+  await noteDrawing(page);
+  const dl = await catchDownloads(page);
+  let got = await dl.next(() => page.click('#oneOutBtn'));
+  // the feedback page, the notes page, then the paper
+  let pdfN = await pdfPages(got.bytes), said = await drawn(page);
+  assert.equal(await page.evaluate(() => window.__gs.tnPagesMade()), 1);
+  assert.equal(pdfN, 3, 'feedback, notes, paper: ' + pdfN);
+  for (const t of ['Notes from your teacher', 'Delivery', 'Steady pace, clear voice', '1:15', 'Strength', 'Strong opening question', 'Next step', 'Cite the second source', 'Question', 'Why this book?', 'Your feedback continues on the next page.', 'Your marked paper starts on the next page.']) assert.ok(said.includes(t), t + ' is on the pages: ' + said.join(' | '));
+  assert.ok(!said.some(t => /Strength:/.test(t)), 'the kind is a word in its own column');
+  assert.ok(said.indexOf('Notes from your teacher') > said.indexOf('Your feedback continues on the next page.'), 'the notes page comes after the feedback page');
+  // the partner gets the page too
+  await goToStudent(page, 1);
+  got = await dl.next(() => page.click('#oneOutBtn')); said = await drawn(page);
+  assert.ok(said.includes('Cite the second source'));
+
+  // Cleo: headings only is nothing to give back, and nothing to export
+  await goToStudent(page, 2);
+  await setNotes(page, 2, [{ s: 'Delivery', k: 'h' }, { s: 'Content', k: 'h' }]);
+  assert.equal(await page.evaluate(() => window.__gs.tnOut(2)), false);
+  assert.equal(await page.evaluate(() => window.__gs.exportPlan(false).filter(o => o.st.key === 'Cleo Fixture').length), 0);
+  // a long note and nothing else: a returned file all the same, the notes last, running on to a second page
+  await setNotes(page, 2, Array.from({ length: 70 }, (_, i) => ({ s: 'Line ' + (i + 1) + ' of a long set of notes that wraps when it is long enough to need it' })));
+  got = await dl.next(() => page.click('#oneOutBtn')); said = await drawn(page);
+  assert.ok(await page.evaluate(() => window.__gs.tnPagesMade()) >= 2);
+  assert.ok(said.includes('The notes continue on the next page.'));
+  assert.ok(!said.includes('Your marked paper starts on the next page.'), 'no feedback page and the notes last: no word of a paper to come');
+  assert.equal(await pdfPages(got.bytes), 1 + await page.evaluate(() => window.__gs.tnPagesMade()), 'the paper, then the notes');
+
+  // off for the assignment: the foot line says so, and nothing of the notes leaves
+  await goToStudent(page, 0);
+  await openNotes(page);
+  assert.equal(await page.$eval('#spBody .tnfoot', e => e.textContent), 'Goes back to the student with the paper');
+  await page.click('#spBody .tnfoot');
+  assert.equal(await page.$eval('#spBody .tnfoot', e => e.textContent), 'Only for you. Not given back.');
+  assert.equal(await page.evaluate(() => window.__gs.state().setup.tnBack), false);
+  assert.equal(await page.$eval('#spBody [data-tnm="back"]', e => e.getAttribute('aria-checked')), 'false');
+  got = await dl.next(() => page.click('#oneOutBtn')); said = await drawn(page);
+  assert.equal(await pdfPages(got.bytes), 2, 'feedback and paper only');
+  assert.ok(!said.includes('Cite the second source') && !said.includes('Notes from your teacher'));
+  assert.ok(said.includes('Your marked paper starts on the next page.'));
+  assert.equal(await page.evaluate(() => window.__gs.exportPlan(false).filter(o => o.st.key === 'Cleo Fixture').length), 0, 'notes kept back are nothing to return');
+  // and on again from the menu
+  await pick(page, '#spBody [data-tnm="back"]');
+  assert.equal(await page.evaluate(() => 'tnBack' in window.__gs.state().setup), false);
   assert.deepEqual(page.errors, []);
   await close();
 });

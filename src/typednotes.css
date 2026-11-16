@@ -32,3 +32,10 @@
 .tnmz{position:absolute;left:0;top:0;visibility:hidden;height:0;field-sizing:fixed;pointer-events:none}
 .tnhint{margin:0 0 0 62px;font-size:var(--text-small)}
 .tnhint .link{font-size:inherit}
+/* the line at the foot that always says whether the notes go back with the paper */
+.tnfoot{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;width:100%;margin-top:auto;padding:8px 2px 8px 62px;border:0;border-top:1px solid var(--line);background:var(--bg);font:inherit;font-size:var(--text-small);color:var(--muted);text-align:left;cursor:pointer}
+.tnfoot i{flex:none;width:8px;height:8px;border-radius:var(--corner-round);background:var(--faint)}
+.tnfoot[data-on=true]{color:var(--accent)}
+.tnfoot[data-on=true] i{background:var(--accent)}
+.tnfoot:hover span{text-decoration:underline}
+.tn .km [aria-checked=true]::before{content:'✓ ';color:var(--accent)}
