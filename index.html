@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"99e0aef1","zh-Hans":"23825ad2","es":"8084cd2a","fr":"274e8000","de":"e02b0921","pt-BR":"e690043a","ja":"0b31e474","ko":"1c18c6af"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"d541217b","zh-Hans":"087e8742","es":"bef5e056","fr":"1365c39a","de":"11bbae9b","pt-BR":"95e74b12","ja":"d814efe4","ko":"a7a6813b"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -767,7 +767,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .xopts{border-top:1px solid var(--line);margin-top:12px;padding-top:10px;font-size:var(--text-body)}
 .xopts summary{cursor:pointer;color:var(--muted)}
 .xopts summary #xOptsSay{color:var(--fg-2)}
-.xopts .xhint{margin:-4px 0 8px 32px;color:var(--muted);font-size:var(--text-control)}
+.xopts .xhint,.xp .xearly+.xhint{margin:-4px 0 8px 32px;color:var(--muted);font-size:var(--text-control)}
 .xp .xfoot{color:var(--muted);font-size:12.5px;margin:12px 0 0}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);pointer-events:none;background:var(--fg);color:var(--surface);padding:10px 16px;border-radius:var(--corner-3);font-weight:600;font-size:var(--text-body);box-shadow:var(--shadow);z-index:40;max-width:calc(100vw - 32px)}
 @media (max-width:1100px){.tool .lb{display:none}}
@@ -5127,8 +5127,8 @@ const gsData = (() => {
 gsData.boot(function () {
 const LANG_NAMES = {"zh-Hant":"繁體中文","zh-Hans":"简体中文","es":"Español","fr":"Français","de":"Deutsch","pt-BR":"Português (Brasil)","ja":"日本語","ko":"한국어"};
 const LANG_PACKED = {};
-const SAMPLE_API = "fa0a5747";
-const SAMPLE_STAMP = "fa0a5747";
+const SAMPLE_API = "83b810f9";
+const SAMPLE_STAMP = "83b810f9";
 const SAMPLE_PACKED = "";
 /* ---------------- languages (Stage 6): the app in a language other than English ----------------
    Built into both pages, after the language files (src/lang-*.js) and before everything else.
@@ -8535,7 +8535,9 @@ async function copy(text, msg) {
 /* ---------------- export ---------------- */
 let xBusy = false;
 const xAll = () => !!store.get('gs.xall', false);
-const xEdit = () => store.get('gs.xedit', true) !== false;   // "Keep marks editable"   // "Also include files with no marks"
+const xEarly = () => !!store.get('gs.xearly', false);
+const gotEarly = st => !!(st.grade && st.grade.sent);
+const xEdit = () => store.get('gs.xedit', true) !== false;
 const rawOut = f => !viewable(f) && !!f.data && f.kind !== 'link' && (f.virtual ? f.kind === 'docx' && (!!f.edited || !!(wordScore(f) && f.wscore.total != null)) : xAll() || !!f.edited || !!f.added || !!(wordScore(f) && f.wscore.total != null));
 function madeFromWord(f) {
   if (!f || !f.added || !batch || !batch.removed || !/\.pdf$/i.test(f.name)) return false;
@@ -8543,7 +8545,7 @@ function madeFromWord(f) {
 }
 const docAdded = (st, d) => d.pages.some(([path]) => { const f = fileByPath(st, path); return !!f && !!f.added && !madeFromWord(f); });
 const outPath = (st, path) => batch.moved && batch.moved[path] === st.key && path.includes('/') ? st.key + path.slice(path.indexOf('/')) : path;
-function exportPlan(keepFolders) {
+function exportPlan(keepFolders, early = !xEarly()) {
   const out = [];
   for (const st of batch.students) for (const f of st.files.filter(rawOut)) {
     const fp = outPath(st, f.path), dir = fp.includes('/') ? fp.slice(0, fp.lastIndexOf('/') + 1) : '';
@@ -8557,6 +8559,7 @@ function exportPlan(keepFolders) {
     if (!keepFolders) path = (dir ? st.key + ' - ' : '') + path.split('/').pop();
     out.push({ st, d, path: path.replace(/[\\:*?"<>|]+/g, '-') });
   }
+  if (!early) for (let i = out.length - 1; i >= 0; i--) if (gotEarly(out[i].st)) out.splice(i, 1);
   if (xOne()) oneEach(out);
   const used = new Set();
   for (const o of out) { let p = o.path, k = 2; while (used.has(p.toLowerCase())) p = o.path.replace(/(\.[^./]+)?$/, ' (' + k++ + ')$1'); used.add(p.toLowerCase()); o.path = p; }
@@ -8604,7 +8607,7 @@ function nameOut(items) {
     const named = list.map(o => {
       const dir = o.path.includes('/') ? o.path.slice(0, o.path.lastIndexOf('/') + 1) : '', e = ext(o.path);
       let base = o.path.slice(dir.length, o.path.length - e.length);
-      if (base.startsWith(st.key + ' - ')) base = base.slice(st.key.length + 3);   // "Student - " that a loose export put in front
+      if (base.startsWith(st.key + ' - ')) base = base.slice(st.key.length + 3);
       const twin = list.filter(x => ext(x.path).toLowerCase() === e.toLowerCase()).length > 1;
       return dir + stem + (twin && !base.startsWith(stem) ? ' - ' + fileSafe(base) : '') + e;
     });
@@ -8615,24 +8618,24 @@ function nameOut(items) {
   return items;
 }
 async function flattenDoc(st, d, dpi, edit, key, fb) {
-  syncScoreStamps(st);   // a score stamp goes out saying the score as it is now
+  syncScoreStamps(st);
   await workerReady;
   const srcs = new Map();
   const src = async path => {
     if (!srcs.has(path)) {
       const f = fileByPath(st, path);
-      const bytes = await viewBytes(f);   // less any marks from other apps that are hers now
+      const bytes = await viewBytes(f);
       srcs.set(path, { f, js: await pdfjsLib.getDocument({ data: bytes.slice(), isEvalSupported: false }).promise, lib: await PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true, updateMetadata: false }) });
     }
     return srcs.get(path);
   };
   const out = await PDFLib.PDFDocument.create();
-  out.setCreator('Grading Studio'); out.setProducer('Grading Studio');   // so a flattened file brought back in can say why its marks can't be changed
+  out.setCreator('Grading Studio'); out.setProducer('Grading Studio');
   try {
     const said = fb ? fbData(st, d) : null;
     if (said) {
       if (d.pages.length) { const [p0, n0] = d.pages[0], { f: f0, js: j0 } = await src(p0), v0 = vpRot(f0, n0, await j0.getPage(n0 + 1), 1); await fbAddPages(out, said, v0.width, v0.height, dpi); }
-      else await fbAddPages(out, said, 612, 792, dpi);   // only Word papers: a Letter page
+      else await fbAddPages(out, said, 612, 792, dpi);
     }
     for (const [path, p] of d.pages) {
       const { f, js, lib } = await src(path);
@@ -8652,7 +8655,7 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
       const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
       await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, scale), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
       scanClip(ctx, f, p, W * scale, c.width, c.height);
-      if (Lx) lightCanvas(ctx, Math.min(c.width, Math.ceil(W * scale)), c.height, Lx);   // the page only, before her marks
+      if (Lx) lightCanvas(ctx, Math.min(c.width, Math.ceil(W * scale)), c.height, Lx);
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
       drawMarks(ctx, marks, W, H, side, null);
       const jpg = await canvasJpg(c, 0.88);
@@ -8661,7 +8664,7 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
       c.width = c.height = 0; page.cleanup();
     }
     if (d.words && d.words.length) {
-      if (typeof wordSaves !== 'undefined') await Promise.all([...wordSaves].map(s => s()));   // what was typed a moment ago is in the file first
+      if (typeof wordSaves !== 'undefined') await Promise.all([...wordSaves].map(s => s()));
       d.left = [];
       for (const f of d.words) {
         try { const wl = await PDFLib.PDFDocument.load(await wordPagesPdf(f)); for (const cp of await out.copyPages(wl, wl.getPageIndices())) out.addPage(cp); }
@@ -8682,7 +8685,7 @@ async function flattenDoc(st, d, dpi, edit, key, fb) {
         c.width = c.height = 0;
       }
     }
-    if (edit && d.pages.length) {   // the original pages and her own marks go along, so bringing the file back in opens it ready to change
+    if (edit && d.pages.length) {
       const paths = [...new Set(d.pages.map(([path]) => path))];
       const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p), skewOf(f, p)]; }) };
       for (let k = 0; k < paths.length; k++) await out.attach(await viewBytes(fileByPath(st, paths[k])), 'gs-original-' + (k + 1) + '.pdf', { mimeType: 'application/pdf', description: 'Original pages, for reopening in Grading Studio' });
@@ -8701,15 +8704,17 @@ async function openExport() {
     tabNext('return');
     const wait = waitDlg('Return marked files', 'Reading the files first…');
     await scanAll();
-    if (!wait.isConnected) return;   // she closed it while it read
+    if (!wait.isConnected) return;
   }
   let keep = true, dpi = 150;
   const plan = exportPlan(true);
-  const nStu = new Set(plan.map(o => o.st)).size, skipped = batch.students.length - nStu;
-  const nLeft = batch.students.reduce((a, st) => a + layoutOf(st).filter(d => !docAuto(st, d) && !docIn(st, d)).length, 0);   // left out by her; the check above lists files with no marks
+  const early = [...new Set(exportPlan(true, true).map(o => o.st))].filter(gotEarly), nOut = xEarly() ? early.length : 0;
+  const nStu = new Set(plan.map(o => o.st)).size, skipped = batch.students.length - nStu - nOut;
+  const nLeft = batch.students.reduce((a, st) => a + layoutOf(st).filter(d => !docAuto(st, d) && !docIn(st, d)).length, 0);
   const nKey = plan.filter(o => o.d && keyRows(o.d.pages.flatMap(([path, p]) => fileByPath(o.st, path).marks[p] || [])).length).length;
   const optsOpen = !!store.get('gs.xopts', false);
   const canDir = !!(window.showDirectoryPicker && window.self === window.top);
+  const earlyBox = early.length ? '<label class="chk xearly"><input type="checkbox" id="xEarly"' + (xEarly() ? ' checked' : '') + '> Leave out the ' + (early.length === 1 ? 'student who' : early.length + ' students who') + ' got theirs early</label><p class="xhint">' + early.slice(0, 4).map(st => esc(shownName(st, batch.students.indexOf(st)))).join(', ') + (early.length > 4 ? ' and ' + (early.length - 4) + ' more' : '') + '. ' + (xEarly() ? 'Untick to send theirs again with everyone else’s.' : 'Theirs go again with everyone else’s.') + '</p>' : '';
   const allBox = '<label class="chk"><input type="checkbox" id="xAll"' + (xAll() ? ' checked' : '') + '> Also send back files with no marks (Word files, other files and unmarked pages)</label>';
   tabNext('return');
   openDlg('<div class="bh"><h2>Return marked files</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb xp"><div class="rtmain">' +
@@ -8718,6 +8723,7 @@ async function openExport() {
         '<p class="xsub">From ' + nStu + (nStu === 1 ? ' student' : ' students') + ', in their own folders, ready to ' + (sysName() ? 'upload back on ' + esc(sysName()) : 'hand back') + '.' +
           (skipped ? ' ' + skipped + ' ' + (skipped === 1 ? 'student has' : 'students have') + ' nothing marked, so they’re left out.' : '') +
           (nLeft ? ' ' + nLeft + (nLeft === 1 ? ' file you left out isn’t' : ' files you left out aren’t') + ' in it.' : '') + '</p>' +
+        earlyBox +
         exportCheckHtml(exportCheck()) +
         '<button class="btn primary xgo" data-go="zip">Download ZIP</button><div id="rtState">' + returnedHtml() + '</div>' +
         ((canDir || G.email) ? '<p class="xalt">or ' + [canDir ? '<button class="link" data-go="dir">save into a folder…</button>' : '', G.email ? '<button class="link" data-go="drive">save to Google Drive</button>' : ''].filter(Boolean).join(' or ') + '</p>' : '') +
@@ -8734,7 +8740,7 @@ async function openExport() {
           '<div class="chk" style="cursor:default">Sharpness <span class="seg" id="xDpi"><button data-dpi="150" aria-pressed="true">Standard</button><button data-dpi="220" aria-pressed="false">Extra sharp</button></span></div>' +
         '</details>' +
         '<p class="xfoot">Your original files don’t change. A file you marked anywhere goes back whole, every page in order. Word rubrics you scored go back as Word files. ' + (xAll() ? 'Files with no marks go too.' : 'Files with no marks stay out.') + ' Comments go in a right-hand margin.</p>'
-      : '<p style="margin-top:0">Nothing is marked yet. Mark a paper and it will show up here.</p>' + exportCheckHtml(exportCheck()) + allBox + '<div id="rtState">' + returnedHtml() + '</div>') +
+      : (nOut ? '<p style="margin-top:0">Everyone with marked work got theirs early.</p>' + earlyBox : '<p style="margin-top:0">Nothing is marked yet. Mark a paper and it will show up here.</p>') + exportCheckHtml(exportCheck()) + allBox + '<div id="rtState">' + returnedHtml() + '</div>') +
     '</div>' + returnSideHtml() + '</div><div class="bf"><button class="btn" data-close>Close</button></div>', true, 'lg');
   const box = $('#dlgBox');
   const optsSay = () => {
@@ -8749,17 +8755,17 @@ async function openExport() {
     if ($('#xFb').checked) on.push('feedback page');
     if (xAll()) on.push('files with no marks too');
     if (dpi > 150) on.push('extra sharp');
-    el.innerHTML = on.length ? on.map(x => '<span>' + x + '</span>').join(', ') : 'none';   // one piece each, so each can be put into the app's language
+    el.innerHTML = on.length ? on.map(x => '<span>' + x + '</span>').join(', ') : 'none';
   };
   const namesSay = () => {
     const el = $('#xNamesSay'); if (!el) return;
     const o = plan[0]; if (!o) { el.textContent = ''; return; }
-    const one = anonOn() ? [tr('Student name'), asgName(), outWord(o.st)].map(fileSafe).join(' - ') + '.pdf' : nameOut([{ ...o }])[0].path.split('/').pop();   // names hidden while she marks: no name here either
+    const one = anonOn() ? [tr('Student name'), asgName(), outWord(o.st)].map(fileSafe).join(' - ') + '.pdf' : nameOut([{ ...o }])[0].path.split('/').pop();
     el.textContent = xNames() ? 'Like “' + one + '”. Graded when it has a score, Feedback when it doesn’t.' : 'Files keep the names they were turned in with.';
   };
   optsSay(); namesSay();
   const xo = $('#xOpts'); if (xo) xo.ontoggle = () => store.set('gs.xopts', xo.open);
-  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xFb') store.set('gs.xfb', e.target.checked); if (e.target.id === 'xNames') { store.set('gs.xnames', e.target.checked); namesSay(); } if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } if (e.target.id === 'xOne') { store.set('gs.xone', e.target.checked); renderTools(); openExport(); } };
+  box.onchange = e => { optsSay(); if (e.target.id === 'xEdit') store.set('gs.xedit', e.target.checked); if (e.target.id === 'xKey') setKey(v => { v.on = e.target.checked; }); if (e.target.id === 'xFb') store.set('gs.xfb', e.target.checked); if (e.target.id === 'xNames') { store.set('gs.xnames', e.target.checked); namesSay(); } if (e.target.id === 'xAll') { store.set('gs.xall', e.target.checked); renderTools(); openExport(); } if (e.target.id === 'xEarly') { store.set('gs.xearly', e.target.checked); openExport(); } if (e.target.id === 'xOne') { store.set('gs.xone', e.target.checked); renderTools(); openExport(); } };
   box.onclick = async e => {
     if (e.target.closest('[data-close]')) return closeDlg();
     const ck = e.target.closest('[data-chk]'); if (ck) { return toPaper(+ck.dataset.chk, ck.dataset.file || undefined); }
@@ -8771,7 +8777,7 @@ async function openExport() {
     const go = e.target.closest('[data-go]'); if (!go) return;
     if (xBusy) return toast('The last export is still going. It will say when it’s done.');
     keep = $('#xKeep').checked;
-    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked, withKey = $('#xKey').checked, withFb = $('#xFb').checked, fbGiven = new Set();   // one feedback page a student, on the first of their files
+    const withSheet = $('#xSheet').checked, editable = $('#xEdit').checked, withKey = $('#xKey').checked, withFb = $('#xFb').checked, fbGiven = new Set();
     const say = (t, last) => { const el = $('#xStatus'); if (el) el.textContent = t; else if (last) toast(t, 6000); };
     let dir = null;
     if (go.dataset.go === 'dir') {
@@ -8806,7 +8812,7 @@ async function openExport() {
       for (let i = 0; i < items.length; i++) {
         say('Baking in marks ' + (i + 1) + ' of ' + items.length + '…');
         bar.firstChild.style.width = (30 + 70 * i / items.length) + '%';
-        const fk = items[i].one ? items[i] : items[i].st;   // one PDF a student carries its own feedback page, even a retake's earlier try
+        const fk = items[i].one ? items[i] : items[i].st;
         if (await putOut(items[i].path, () => items[i].raw ? items[i].f.data : flattenDoc(items[i].st, items[i].d, dpi, editable, withKey, withFb && !fbGiven.has(fk) && !!fbGiven.add(fk)), items[i].st)) nOut++;
         if (items[i].one) for (const x of oneLeftOver(items[i])) if (await putOut(x.path, () => x.bytes, items[i].st)) nOut++;
       }
@@ -8837,7 +8843,7 @@ function sentWhen(t) {
   return d.toDateString() === now.toDateString() ? hm : d.toLocaleDateString([], { day: 'numeric', month: 'short' }) + ', ' + hm;
 }
 function oneOutHtml(st) {
-  if (!st.files.length) return '<div class="oneout" aria-hidden="true"><span class="link oneout-gap">&nbsp;</span></div>';   // the same height with nothing to export, so Previous and Next stay where they were
+  if (!st.files.length) return '<div class="oneout" aria-hidden="true"><span class="link oneout-gap">&nbsp;</span></div>';
   const nm = anonOn() ? 'this' : esc(st.key) + '’s', g = st.grade;
   return '<div class="oneout"><button class="link" id="oneOutBtn" title="Download just this student’s marked file, ready to upload. Uses the options on the Return tab.">Export ' + nm + ' paper now</button>' +
     '<p class="oneout-say' + (g.sent ? ' ok' : '') + '" id="oneOutSay">' + (g.sent ? '✓ Exported at ' + esc(sentWhen(g.sent)) + '. Export again after any change.' : '') + '</p></div>';
@@ -8847,9 +8853,9 @@ async function exportOne(st) {
   const btn = $('#oneOutBtn'), say = t => { const el = $('#oneOutSay'); if (el) { el.className = 'oneout-say'; el.textContent = t; } };
   saveNow(); commitEditors(); wordScoresAll();
   if (batch.lineBusy) await batch.lineRun;
-  const b0 = batch, mine = () => nameOut(exportPlan(false).filter(o => o.st === st));
+  const b0 = batch, mine = () => nameOut(exportPlan(false, true).filter(o => o.st === st));
   let items = mine();
-  if (!items.length && (!scanned || scanP)) { say('Reading the paper first…'); await scanAll(); if (batch !== b0) return; items = mine(); }   // a typed grade alone counts as a mark
+  if (!items.length && (!scanned || scanP)) { say('Reading the paper first…'); await scanAll(); if (batch !== b0) return; items = mine(); }
   const who = anonOn() ? 'this paper' : st.key + '’s paper';
   if (!items.length) { renderGrade(); return toast('Nothing on ' + who + ' is marked yet. Mark it, then export.'); }
   xBusy = true; if (btn) btn.disabled = true;
@@ -8859,7 +8865,7 @@ async function exportOne(st) {
     for (let i = 0; i < items.length; i++) {
       say(items.length > 1 ? 'Baking in marks ' + (i + 1) + ' of ' + items.length + '…' : 'Baking in marks…');
       const o = items[i];
-      const base = o.path.split('/').pop(), name = xNames() || base.includes(st.key) ? base : st.key + ' - ' + base;   // her own download names each file for its student
+      const base = o.path.split('/').pop(), name = xNames() || base.includes(st.key) ? base : st.key + ' - ' + base;
       try {
         files[name] = o.raw ? o.f.data : await flattenDoc(st, o.d, 150, xEdit(), keyOn(), fbOn() && (o.one || !fbGiven) && (fbGiven = true));
         if (o.one) for (const x of oneLeftOver(o)) files[x.path.split('/').pop()] = x.bytes;
@@ -10911,11 +10917,11 @@ const routeNow = () => routeOf(location.hash);
 const SET_SECS = [['saving', 'Saving and carrying', 'Folder, take-home file, new school year'], ['history', 'Go back in time', 'Your work as it was on an earlier day'], ['setup', 'My setup', 'Bring it in from an AI assistant, or copy it out'], ['classes', 'Classes and rosters', 'Names, students, ' + (sysName() ? sysName() + ' links' : 'class links')], ['terms', 'Terms and weights', 'Your terms and how each type counts'],
   ['grading', 'Grading scale and rubrics', 'Your saved scales and rubrics'], ['marking', 'Marking', 'Mark key, mark colors, Word papers, tablet and pencil'], ['timetable', 'Timetable and calendar', 'Class times and days off, in the Planner'],
   ['focus', 'Focus and goals', 'Work timer, breaks, a daily grading goal'], ['display', 'Display', 'Text size, zoom, dark mode'], ['claude', 'Working with AI', 'Optional. What an AI assistant can and can’t see'], ['keys', 'Keys', 'Every shortcut'], ['about', 'About and updates', 'Version, what’s new, install as an app']];
-const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['attendance', 'Attendance'], ['seating', 'Seating'], ['missing', 'Missing work'], ['charts', 'Charts'], ['goals', 'Goals'], ['reports', 'Report comments']];   // Goals shows only once the teacher has a learning goal (goals.js)
+const CLASS_TABS = [['', 'Assignments'], ['gradebook', 'Gradebook'], ['students', 'Students'], ['attendance', 'Attendance'], ['seating', 'Seating'], ['missing', 'Missing work'], ['charts', 'Charts'], ['goals', 'Goals'], ['reports', 'Report comments']];
 const TABS_FIRST = ['', 'gradebook', 'students'];
 const tabsKept = () => (Array.isArray(me().tabs) ? me().tabs : []).filter(k => CLASS_TABS.some(t => t[0] === k) && !TABS_FIRST.includes(k));
 function tabKeep(k) { const now = tabsKept(), on = !now.includes(k), l = (CLASS_TABS.find(t => t[0] === k) || [])[1]; if (!l) return; meSet({ tabs: on ? [...now, k] : now.filter(x => x !== k) }); renderLib(); toast(on ? l + ' stays in the tab row' : l + ' is under More'); }
-const classTabs = () => CLASS_TABS.filter(t => t[0] !== 'attendance' || attOn());   // attendance is the teacher's to turn off
+const classTabs = () => CLASS_TABS.filter(t => t[0] !== 'attendance' || attOn());
 const classHash = (c, tab, stu) => '#/class/' + (c === lib.loose || !c.id ? '-' : encodeURIComponent(c.id)) + (tab ? '/' + tab + (stu != null ? '/' + (stu + 1) : '') : '');
 const A_TABS = [['', 'Mark'], ['grades', 'Grades'], ['insights', 'Insights'], ['examples', 'Examples'], ['return', 'Return']], A_SUBS = { grades: ['sheet'], insights: ['consistency'] };
 const batchHash = (id, tab) => '#/a/' + encodeURIComponent(String(id).replace(/^gs\.b\./, '')) + (tab ? '/' + tab : '');
@@ -10931,7 +10937,7 @@ function go(hash, replace) {
 let routeTok = 0, routeOpening = '', routeTab = null;
 function applyRoute() {
   const r = routeNow();
-  if (r.named) { go(classHash(r.c), true); return; }   // its own address from here on
+  if (r.named) { go(classHash(r.c), true); return; }
   if (r.noClass) { toast('There is no class called “' + r.noClass + '” in grading yet. “Add a class” in the sidebar makes one.', 7000); go('#/', true); return; }
   if (r.v === 'a') {
     if (batch && batch.id === r.id) return showScreen(r);
@@ -10940,17 +10946,17 @@ function applyRoute() {
   }
   routeTok++; routeOpening = ''; routeTab = null;
   if (dlgPage) dlgShut();
-  if (batch && !$('#app').hidden) { commitEditors(); saveNow(); closeDownload(true); }   // leaving the paper closes it, saved first. (Still hidden: a download on its way in, which shows itself when it's ready.)
+  if (batch && !$('#app').hidden) { commitEditors(); saveNow(); closeDownload(true); }
   showScreen(r);
   if (r.v === 'class') renderLib();
 }
 async function openRoute(id) {
   const tok = ++routeTok, want = routeNow(); routeOpening = id;
-  routeTab = want.v === 'a' && want.tab ? { id, tab: want.tab + (want.sub ? '/' + want.sub : '') } : null;   // a refresh on one of its tabs comes back to that tab, once the papers are open
+  routeTab = want.v === 'a' && want.tab ? { id, tab: want.tab + (want.sub ? '/' + want.sub : '') } : null;
   if (dlgPage) dlgShut();
   if (batch && !$('#app').hidden) { commitEditors(); saveNow(); closeDownload(true); }
   showScreen({ v: 'opening' });
-  try { await keptFirst; await workerReady; } catch {}   // the list of kept work, and the PDF reader, which a click would have given time to start
+  try { await keptFirst; await workerReady; } catch {}
   const stale = () => tok !== routeTok;
   if (stale()) return;
   const m = keptMeta.get(id);
@@ -10958,7 +10964,7 @@ async function openRoute(id) {
   try { await reopenKept(id); } catch (e) { console.error(e); }
   if (stale()) return;
   routeOpening = '';
-  if (!batch || batch.id !== id) return go('#/', true);   // not opened (Not now, or its papers are gone)
+  if (!batch || batch.id !== id) return go('#/', true);
   showScreen(routeNow());
 }
 let screenKey = '';
@@ -10966,12 +10972,12 @@ const rosterSig = c => { let h = 5381; for (const ch of c.names.join('\n')) h = 
 function classLeave() { const box = $('#classes'); if (box.firstChild) { box.innerHTML = ''; delete box.dataset.h; } if (shellReady) classPanelGone(); }
 function showScreen(r) {
   const grading = r.v === 'a' && !!batch;
-  if (grading && !$('#welcome').hidden) wlClose();   // papers opened past the welcome (dropped on the page): the questions wait on Home's card instead
+  if (grading && !$('#welcome').hidden) wlClose();
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
   for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
   if (r.v !== 'class') classLeave();
-  const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');   // moving from one student to the next keeps her place on the page
+  const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');
   if (!grading && key !== screenKey) $('#shellMain').scrollTop = 0;
   screenKey = key;
   railRender();
@@ -10981,10 +10987,17 @@ function showScreen(r) {
 function keptState(m) {
   const it = typeof cardOfKept === 'function' ? cardOfKept(m.id) : null, fm = !!it && it.type === 'fm';
   const of = Math.max(0, (m.n || 0) - (m.off || 0)), done = Math.min(of, (fm ? m.fb : m.scored) || 0), left = of - done, began = done || (!fm && m.partial);
-  return { of, done, left, fm, word: fm ? 'feedback complete' : 'scored', pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? (m.ret ? 'Returned' : 'Ready to return') : began ? (fm ? 'Giving feedback' : 'Scoring') : 'Not started', cls: !of ? '' : !left ? (m.ret ? 'ret' : 'ok') : began ? 'on' : '' };
+  const back = !!keptBack(m), sent = back ? of : Math.min(of, m.sent || 0);
+  return { of, done, left, fm, sent, word: fm ? 'feedback complete' : 'scored', pct: of ? Math.round(done / of * 100) : 0, label: !of ? '' : !left ? (back ? 'Returned' : 'Ready to return') : began ? (fm ? 'Giving feedback' : 'Scoring') : 'Not started', cls: !of ? '' : !left ? (back ? 'ret' : 'ok') : began ? 'on' : '' };
+}
+function keptBack(m) {
+  if (m.back) return m.back;
+  const of = Math.max(0, (m.n || 0) - (m.off || 0));
+  return of && (m.sent || 0) >= of ? m.sentT || m.t : 0;
 }
 const keptSay = (m, st = keptState(m)) => st.done + ' of ' + st.of + ' ' + st.word + (st.fm ? (m.off ? ' · ' + m.off + ' missing or excused' : '') : keptMore(m));
-const stateChip = st => st.label ? '<span class="schip ' + st.cls + '">' + st.label + '</span>' : '';
+const stateChip = st => (st.label ? '<span class="schip ' + st.cls + '">' + st.label + '</span>' : '') +
+  (st.sent && st.sent < st.of ? ' <span class="schip ret" title="Students who got theirs early, one at a time"><span>Returned</span>&nbsp;<span data-raw>' + st.sent + '/' + st.of + '</span></span>' : '');
 const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st.done + ' of ' + st.of + ' ' + st.word + '"><i style="width:' + st.pct + '%"></i></span>' : '';
 function renderLib() {
   renderKept();
@@ -11090,7 +11103,7 @@ document.addEventListener('drop', e => {
     const i = from.u.items.indexOf(from.it);
     from.u.items.splice(i, 1); if (from.u === to.u && i < k) k--;
     to.u.items.splice(k, 0, from.it);
-    from.it.classId = to.c.id;   // moved to another class: it uses that class's roster
+    from.it.classId = to.c.id;
   } else {
     const from = findUnit(ldrag.id), to = holderById(t.cls); if (!from || !to) return;
     const i = from.c.units.indexOf(from.u);
@@ -11145,8 +11158,8 @@ $('#start').addEventListener('click', async e => {
   }
   if (b.dataset.additem != null) return editAssignment(null, b.dataset.additem);
   if (b.dataset.editAsg) return editAssignment(b.dataset.editAsg);
-  if (b.dataset.kopen) { const f = b.dataset.kasg ? findItem(b.dataset.kasg) : null; const was = b.textContent, named = b.classList.contains('kname'); b.disabled = true; if (!named) b.textContent = 'Opening…'; return reopenKept(b.dataset.kopen, f ? f.it : null).finally(() => { b.disabled = false; if (!named) b.textContent = was; }); }   // a button that is the assignment's own name keeps saying it
-  if (b.dataset.kforget) {   // two clicks, so a stray click can't throw work away
+  if (b.dataset.kopen) { const f = b.dataset.kasg ? findItem(b.dataset.kasg) : null; const was = b.textContent, named = b.classList.contains('kname'); b.disabled = true; if (!named) b.textContent = 'Opening…'; return reopenKept(b.dataset.kopen, f ? f.it : null).finally(() => { b.disabled = false; if (!named) b.textContent = was; }); }
+  if (b.dataset.kforget) {
     if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Click again to forget it'; setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = 'Forget'; } }, 4000); return; }
     return forgetKept(b.dataset.kforget);
   }
@@ -11176,7 +11189,7 @@ function renderTopAtlas() {
   el.innerHTML = !f ? '' : f.u.atlas ? '<a href="' + esc(f.u.atlas) + '" target="_blank" rel="noopener noreferrer" title="' + esc(f.u.name) + (unitLinkName() ? ' in ' + esc(unitLinkName()) : ': its unit plan') + '">' + esc(unitLinkName() || 'Unit plan') + ' ↗</a>'
     : '<button class="link" data-uatlas="' + f.u.id + '" title="Link ' + esc(f.u.name) + ' to its ' + (unitLinkName() ? esc(unitLinkName()) + ' page' : 'unit plan') + '">+ ' + esc(unitLinkName() || 'Unit plan') + ' link</button>';
   const c = batchClass(), ci = c ? lib.classes.indexOf(c) : -1;
-  const tm = $('#topMb'); if (tm) tm.innerHTML = c && mbOf(c) ? mbLink(c) : '';   // in the top bar, beside the Grades list
+  const tm = $('#topMb'); if (tm) tm.innerHTML = c && mbOf(c) ? mbLink(c) : '';
   if (c) el.innerHTML += mbOf(c) ? ' <a href="' + esc(mbOf(c)) + '" target="_blank" rel="noopener" title="' + esc(c.name) + (sysName() ? ' on ' + esc(sysName()) : ': its class page') + '">' + esc(sysLink()) + ' ↗</a>' : ' <button class="link" data-mbset="' + ci + '" title="Link ' + esc(c.name) + ' to its ' + (sysName() ? esc(sysName()) + ' page' : 'page in your school’s system') + '">+ ' + esc(sysLink()) + ' link</button>';
 }
 $('#topAtlas').addEventListener('click', e => { const b = e.target.closest('[data-uatlas]'); if (b) askAtlas(b.dataset.uatlas); const m = e.target.closest('[data-mbset]'); if (m) askMb(+m.dataset.mbset); });
@@ -11211,11 +11224,11 @@ function editAssignment(id, unitId, clsId) {
     const ok = $('#dlgBox [data-ok]'); ok.textContent = cs.length > 1 ? 'Add to ' + cs.length + ' classes' : 'Save'; ok.disabled = !cs.length;
   };
   fillUnits(start.u);
-  $('#aDue').oninput = () => { $('#aDueSay').innerHTML = gpDueHint($('#aDue').value, f ? it.id : ''); };   // what else is due that week (src/gradeplan.js)
+  $('#aDue').oninput = () => { $('#aDueSay').innerHTML = gpDueHint($('#aDue').value, f ? it.id : ''); };
   const ru = ruWire($('#dlgBox'), it);
   if (f) $('#aClass').onchange = () => fillUnits(null);
   else { $('#aClasses').onchange = () => fillUnits(null); $('#aUnit').onchange = () => fillUnits(null); }
-  setTimeout(() => $('#aName')?.focus(), 0);   // the box can be shut before this runs
+  setTimeout(() => $('#aName')?.focus(), 0);
   $('#dlgBox').onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const tb = e.target.closest('[data-atype]');
@@ -11224,7 +11237,7 @@ function editAssignment(id, unitId, clsId) {
     if (e.target.closest('[data-ok]')) {
       const name = $('#aName').value.trim(); if (!name) { $('#aName').focus(); return; }
       const ty = document.querySelector('[data-atype][aria-pressed="true"]'), due = $('#aDue').value;
-      const setKind = a => { if (ty) a.type = ty.dataset.atype; else delete a.type; if (due) a.due = due; else delete a.due; };   // every copy in every class gets the same type and date
+      const setKind = a => { if (ty) a.type = ty.dataset.atype; else delete a.type; if (due) a.due = due; else delete a.due; };
       if (!f) {
         const cs = ticked(); if (!cs.length) return;
         const un = $('#aUnit').value || 'Unit 1', group = cs.length > 1 ? uid() : undefined;
@@ -11250,7 +11263,7 @@ function editAssignment(id, unitId, clsId) {
       if (f.u !== to) to.items.push(it);
       saveLib(); closeDlg(); renderLib();
       if (ru.got()) ruPut(it, ru.got());
-      if (batch) { renderGrade(); renderList(); }   // a type changed while grading: the score panel follows
+      if (batch) { renderGrade(); renderList(); }
     }
   };
 }
@@ -11263,7 +11276,7 @@ function parseRosterRows(text) {
   const out = [];
   for (const line of text.split(/\r?\n/)) {
     const all = line.split(/\t|,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim()).filter(Boolean);
-    if (all.some(c => /^(e-?mail( address)?|student id|student number|id)$/i.test(c))) continue;   // a header row
+    if (all.some(c => /^(e-?mail( address)?|student id|student number|id)$/i.test(c))) continue;
     const cells = all.filter(c => !/^\d[\d\s-]*$/.test(c) && !EMAIL_RX.test(c));
     if (!cells.length || /^(name|student|students|first|last|first name|last name|student name)$/i.test(cells[0])) continue;
     const id = all.find(c => /^\d[\d\s-]*$/.test(c)), email = all.find(c => EMAIL_RX.test(c));
@@ -11322,7 +11335,7 @@ function rosterMatch(names) {
   const used = new Set(), map = new Map(), left = () => [...new Set(names)].filter(n => !map.has(n));
   const studs = batch.students.map(st => ({ st, w: new Set(nameWords(st.key)) }));
   const give = (n, x) => { used.add(x.st); map.set(n, x.st); };
-  const c = classOfNames(names);   // a spelling she linked, or the student's ID in the folder name, is a sure match, even over an empty roster spot of the same name
+  const c = classOfNames(names);
   if (c && c.info) for (const x of studs) { if (used.has(x.st) || (x.st.gap && !x.st.files.length)) continue; const h = infoHits(c, x.st.key).filter(n => !map.has(n)); if (h.length === 1) give(h[0], x); }
   for (const n of left()) { const x = studs.find(x => !used.has(x.st) && x.st.key === n); if (x) give(n, x); }
   for (const n of left()) {
@@ -11360,7 +11373,7 @@ function rosterSort() {
   batch.students = batch.students.filter(st => !(st.gap && !st.files.length && !gradeHasWork(st.grade) && !(c && c.names.includes(st.key))));
   if (c && c.names.length) {
     let have = rosterMatch(c.names);
-    const spare = batch.students.filter(st => st.gap && !st.files.length && !gradeHasWork(st.grade) && have.has(st.key) && have.get(st.key) !== st);   // an empty spot another folder now fills
+    const spare = batch.students.filter(st => st.gap && !st.files.length && !gradeHasWork(st.grade) && have.has(st.key) && have.get(st.key) !== st);
     if (spare.length) { batch.students = batch.students.filter(st => !spare.includes(st)); have = rosterMatch(c.names); }
     const saved = newestWork(store.get(batch.id, null), batch.keptWork);
     for (const nm of c.names) if (!have.has(nm)) {
@@ -11384,7 +11397,7 @@ function renderClassSel() {
 $('#classSel').onchange = e => {
   batch.classId = e.target.value;
   const a = batch.assignment, f = a && findItem(a.id);
-  if (f && f.c.id !== batch.classId) {   // the assignment card moves to that class, into a unit of the same name
+  if (f && f.c.id !== batch.classId) {
     const to = holderById(batch.classId);
     let u = to.units.find(x => x.name === f.u.name); if (!u) to.units.push(u = { id: uid(), name: f.u.name, items: [] });
     f.u.items.splice(f.u.items.indexOf(a), 1); u.items.push(a); a.classId = batch.classId; saveLib();
@@ -11408,7 +11421,7 @@ async function kdo(name, mode, fn) {
   return new Promise((res, rej) => { const tx = db.transaction(name, mode), req = fn(tx.objectStore(name)); tx.oncomplete = () => res(req && req.result); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); });
 }
 const kget = (name, k) => kdo(name, 'readonly', o => o.get(k)).catch(() => null);
-let keptMeta = new Map(), keptRead = false;   // keptRead: the list has been read from the browser, so a download missing from it is really gone
+let keptMeta = new Map(), keptRead = false;
 async function loadKept() {
   try { const all = await kdo('meta', 'readonly', o => o.getAll()); keepOk = true; keptMeta = new Map((all || []).map(m => [m.id, m])); keptRead = true; } catch { keptMeta = new Map(); }
   await keptFbCounts();
@@ -11422,14 +11435,14 @@ async function keptFbCounts() {
     if (m.fb != null || !m.n) continue;
     const it = cardOfKept(m.id); if (!it || it.type !== 'fm') continue;
     try {
-      const work = await kget('work', m.id), fb = work && workCounts(work).fb; if (!fb) continue;   // none complete: nothing to store
+      const work = await kget('work', m.id), fb = work && workCounts(work).fb; if (!fb) continue;
       const n = { ...m, fb };
       await kdo('meta', 'readwrite', o => o.put(n, m.id)); keptMeta.set(m.id, n);
     } catch (e) { console.error(e); }
   }
 }
 let askedKeep = false;
-function askToKeep() {   // asks the browser not to clear this site's storage when the disk gets full
+function askToKeep() {
   if (askedKeep || !navigator.storage || !navigator.storage.persist) return;
   askedKeep = true; navigator.storage.persist().catch(() => {});
 }
@@ -11438,7 +11451,7 @@ const underId = id => IDBKeyRange.bound(id + '|', id + '|\uffff');
 const paperHeads = async () => ((await kdo('papers', 'readonly', o => o.getAllKeys())) || []).filter(k => !String(k).includes('|'));
 const paperDrop = id => kdo('papers', 'readwrite', o => { o.delete(id); o.delete(underId(id)); });
 async function paperPut(id, rec) {
-  const held = e => e.data ? e.data.buffer.byteLength : 0;   // a view is stored with its whole buffer
+  const held = e => e.data ? e.data.buffer.byteLength : 0;
   if (rec.entries.reduce((a, e) => a + held(e), 0) <= PAPER_ONE) return kdo('papers', 'readwrite', o => { o.delete(underId(id)); o.put(rec, id); });
   try {
     const entries = [];
@@ -11471,7 +11484,7 @@ async function paperGet(id) {
     return { ...rec, entries };
   } catch (e) { console.error(e); return null; }
 }
-let keepWait = null;   // the papers still going into the browser
+let keepWait = null;
 async function keepPapers(b, label, list, again) {
   try {
     const more = {};
@@ -11479,7 +11492,7 @@ async function keepPapers(b, label, list, again) {
       await paperPut(b.id, { id: b.id, label: label || '', entries: list });
       more.papers = true; more.size = list.reduce((a, e) => a + (e.data ? e.data.length : 0), 0);
     }
-    const m = { ...(keptMeta.get(b.id) || {}), id: b.id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (keptMeta.get(b.id) || {}).asg, ...more };   // only now: a big download takes a while, and she may have saved since
+    const m = { ...(keptMeta.get(b.id) || {}), id: b.id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (keptMeta.get(b.id) || {}).asg, ...more };
     await kdo('meta', 'readwrite', o => o.put(m, b.id)); keepOk = true; keptMeta.set(b.id, m);
     folderPapers(b);
   } catch (e) {
@@ -11490,13 +11503,13 @@ async function keepPapers(b, label, list, again) {
 let keepT = null;
 function keepWork(b, data) {
   const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name }), n: b.students.length, t: data.t };
-  if (typeof fcSeen === 'function') fcSeen(b.id);   // the day's count of finished papers starts from where this download stood (src/focus.js)
-  delete m.fb; Object.assign(m, workCounts(data));   // fb is there only while some feedback is complete
-  if (!data.returned) delete m.ret;
+  if (typeof fcSeen === 'function') fcSeen(b.id);
+  delete m.fb; delete m.sent; delete m.sentT; Object.assign(m, workCounts(data));
+  delete m.ret; if (!(data.returned && data.returned.ok)) delete m.back;
   keptMeta.set(b.id, m);
   if (typeof fcRender === 'function') fcRender();
   return kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })
-    .catch(e => { keepOk = false; console.error(e); if (e && e.name === 'InvalidStateError') keepDbP = null; keepDb().catch(() => { keepDbP = null; }); return false; });   // so Try again reopens a store that went away
+    .catch(e => { keepOk = false; console.error(e); if (e && e.name === 'InvalidStateError') keepDbP = null; keepDb().catch(() => { keepDbP = null; }); return false; });
 }
 function cardOfKept(id) {
   const m = keptMeta.get(id), f = m && m.asg ? findItem(m.asg) : null;
@@ -11510,10 +11523,10 @@ async function reopenKept(id, assignment) {
   await intake(rec.entries, rec.label, assignment || cardOfKept(id), true);
 }
 async function forgetKept(id) {
-  try { await gsData.forget(id); }   // first, so if this fails it can simply be clicked again
+  try { await gsData.forget(id); }
   catch (e) { console.error(e); return toast('That didn’t work, so nothing was forgotten. Try again.'); }
-  lsPut(forgotKey(id), String(Date.now()));   // any tab with it open lets go now
-  await exForgetWork(id);   // its strong examples stay; whose they were goes
+  lsPut(forgotKey(id), String(Date.now()));
+  await exForgetWork(id);
   await noteForgotten(id);
   try {
     await paperDrop(id);
@@ -11526,7 +11539,7 @@ async function forgetKept(id) {
   try { localStorage.removeItem(savedKey(id)); } catch {}
   const seen = store.get('gs.openSeen', {}); if (seen[id]) { delete seen[id]; store.set('gs.openSeen', seen); }
   keptMeta.delete(id); renderLib();
-  vkSweep();   // a video file kept for that download, when nothing else names it
+  vkSweep();
 }
 const fmtSize = b => b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? Math.round(b / 1e6) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
 function renderKept() { if (shellReady) homeRender(); }
@@ -11544,16 +11557,16 @@ const addTag = f => {
 async function loadAdded() {
   let recs = [];
   try { recs = (await idbDo('readonly', o => o.getAll(underId(batch.id)))) || []; } catch { return; }
-  for (const r of recs.filter(r => r.bid === batch.id && r.key !== REF_KEY).sort((a, b) => a.added - b.added)) {   // readings sit in the same store, and aren't a student
+  for (const r of recs.filter(r => r.bid === batch.id && r.key !== REF_KEY).sort((a, b) => a.added - b.added)) {
     let st = batch.students.find(s => s.key === r.key);
-    if (!st) { st = { key: r.key, files: [], grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} }; batch.students.push(st); }   // added from a later scan
+    if (!st) { st = { key: r.key, files: [], grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} }; batch.students.push(st); }
     if (st.files.some(f => f.path === r.path)) continue;
     const f = await makeFile(r.path, r.data); f.added = r.added; f.akey = r.key; if (r.from) f.from = r.from; st.files.push(f);
   }
 }
 function pickAdd(st) {
   const inp = document.createElement('input');
-  inp.type = 'file'; inp.multiple = true;   // any kind of file
+  inp.type = 'file'; inp.multiple = true;
   inp.onchange = () => addFiles(st, [...inp.files].map(f => ({ path: f.name, file: f })));
   inp.click();
 }
@@ -19244,7 +19257,7 @@ function recTime(r, t0) {
 function decideRec(a, b, ta, tb) {
   const ha = recHash(a), hb = recHash(b);
   if (ha === hb) return { pick: 'same' };
-  if (!ha && !(a && a.v)) return { pick: 'b', by: 'order' };   // nothing here yet
+  if (!ha && !(a && a.v)) return { pick: 'b', by: 'order' };
   if (!hb && !(b && b.v)) return { pick: 'a', by: 'order' };
   const va = vOf(a), vb = vOf(b), ge = vGeq(va, vb), le = vGeq(vb, va);
   if (ge && !le) return { pick: 'a', by: 'order' };
@@ -19260,7 +19273,7 @@ const setV = w => w && w.sv ? w.sv : (h => h ? { ['~' + h]: 1 } : {})(hashOf(set
 const partV = (w, k) => (w.pv && w.pv[k]) || (h => h ? { ['~' + h]: 1 } : {})(hashOf(w[k]));
 const partHashes = w => { const o = {}; for (const k of WORK_SET) { const h = hashOf(w && w[k]); if (h) o[k] = h; } return o; };
 const partT = (w, k) => Math.max(0, ...Object.values((w.pv && w.pv[k]) || {}).filter(n => n > 1)) || w.sat || w.t || 0;
-const SET_ASK = 'set:';   // her answer about a setting, among her answers about students
+const SET_ASK = 'set:';
 function workVec(w) {
   let v = setV(w);
   for (const r of Object.values((w && w.s) || {})) v = vJoin(v, vOf(r));
@@ -19285,7 +19298,7 @@ function stampData(prev, data, dev, now, seen) {
   for (const key of new Set([...Object.keys(data.s), ...Object.keys(prev.s)])) {
     const p = prev.s[key] || { h: '' };
     if (!data.s[key] && !p.h && !p.v) continue;
-    const r = data.s[key] ||= BLANK_REC();   // everything on this student was taken off: that's a change too, so the record stays
+    const r = data.s[key] ||= BLANK_REC();
     const h = recHash(r), fh = fileHashes(r);
     let { v, at, ft } = p;
     if (h !== p.h) {
@@ -19314,7 +19327,7 @@ function stampData(prev, data, dev, now, seen) {
 function rubricKey(su) {
   const s = su || {}, pts = s.mode === 'points', max = pts ? +(s.outOf == null ? 10 : s.outOf) || 0 : (!s.criteria ? 12 : typeof rowsMax === 'function' ? rowsMax(s) : s.criteria.length * 4), sc   /* this file also runs on its own in tests, where a row is always 0 to 4 */ = s.scale === undefined ? SCALE12 : s.scale || {};
   const keys = Object.keys(sc).filter(k => sc[k] !== '' && sc[k] != null && !isNaN(+sc[k])).map(Number).sort((a, b) => a - b);
-  const own = pts || typeof rowScaleOf !== 'function' ? {} : rowScaleOf(s);   // rows scored on another scale than 0 to 4 with halves: a different rubric, even when the total is the same
+  const own = pts || typeof rowScaleOf !== 'function' ? {} : rowScaleOf(s);
   return JSON.stringify([pts, max, keys.length >= 2 && keys[keys.length - 1] === max ? keys.map(k => [k, +sc[k]]) : 0].concat(Object.keys(own).length ? [own] : []));
 }
 const rubricsDiffer = (x, y) => rubricKey(x) !== rubricKey(y);
@@ -19333,7 +19346,7 @@ function cardSide(x, y, c) {
 function rowLine(from, to) {
   const nf = from.map(normName), nt = to.map(normName), once = (l, n) => l.includes(n) && l.indexOf(n) === l.lastIndexOf(n);
   const named = nt.flatMap((n, t) => once(nt, n) && once(nf, n) ? [[nf.indexOf(n), t]] : []);
-  if (!named.length && to.length >= from.length) return null;   // no name in common and no row gone: renamed rows or a saved rubric, which go by place
+  if (!named.length && to.length >= from.length) return null;
   let map = to.map(() => null), f0 = 0, t0 = 0, sure = true;
   for (const [f, t] of [...named, [from.length, to.length]]) {
     if (f < f0) { sure = false; continue; }
@@ -19375,7 +19388,7 @@ function mergeShare(hi, lo) {
   return out;
 }
 function partAsks(k, x, y, card) {
-  if (k === 'setup') return !card && hashOf(noSpot(x)) !== hashOf(noSpot(y));   // with a card, the only question is one about the scores (below)
+  if (k === 'setup') return !card && hashOf(noSpot(x)) !== hashOf(noSpot(y));
   if (k === 'cls') return true;
   if (k === 'anon') return !!(x && x.on) !== !!(y && y.on);
   if (k === 'moved') return Object.keys(x || {}).some(p => y && y[p] != null && y[p] !== x[p]);
@@ -19440,14 +19453,14 @@ function mergeWork(a, b, o = {}) {
       const card = k === 'setup' && o.linked && o.linked.setup, newer = ge && !le ? x : le && !ge ? y : null;
       const choose = () => { if (said) { both(said); if (k === 'setup') rubricSaid = true; } else { v = px; ask.push({ key: SET_ASK + k, part: k, a: x, b: y, vb: py, ta: partT(a, k), tb: partT(b, k), notBoth: !!newer }); } };
       if (prefer) { val = prefer === 'a' ? x : y; v = vBump(join(), dev, now); merged = true; }
-      else if (k === 'setup' && o.linked === 'ask') v = px;   // the question is about the card this download opens from
-      else if (k === 'setup' && (o.linked === 'a' || o.linked === 'b')) both(o.linked);   // and this copy of the rubric goes with her answer
+      else if (k === 'setup' && o.linked === 'ask') v = px;
+      else if (k === 'setup' && (o.linked === 'a' || o.linked === 'b')) both(o.linked);
       else if (card && rubricsDiffer(x, y) && (workScored(a) || workScored(b)) && (!newer || rubricsDiffer(newer, card))) choose();
       else if (ge && !le) v = px;
       else if (le && !ge) { val = y; v = py; }
-      else if (((px && py) || (k === 'setup' && rubricsDiffer(x, y) && (workScored(a) || workScored(b)))) && partAsks(k, x, y, card)) choose();   // copies too old to have stamps get no guess about a grade either
+      else if (((px && py) || (k === 'setup' && rubricsDiffer(x, y) && (workScored(a) || workScored(b)))) && partAsks(k, x, y, card)) choose();
       else {
-        const side = card && cardSide(x, y, card);   // no scores hang on it, so the card's rubric stands
+        const side = card && cardSide(x, y, card);
         both(side || (partT(b, k) > partT(a, k) ? 'b' : 'a'));
         if (!side) setBoth.push({ k, pooled: SET_POOL.has(k) });
       }
@@ -19475,7 +19488,7 @@ function mergeWork(a, b, o = {}) {
     }
     if (!line || !scored(s[key])) continue;
     s[key] = placeRows(s[key], line);
-    if (row.pick === 'ask') continue;   // until she's answered, this copy keeps its own stamps
+    if (row.pick === 'ask') continue;
     s[key].v = vBump(vJoin(vOf(ra), vOf(rb)), dev, now);
     lined.push(key); toA = toB = true;
   }
@@ -19505,7 +19518,7 @@ function mergeWork(a, b, o = {}) {
   const sat = Math.max(a.sat || 0, b.sat || 0); if (sat) out.sat = sat;
   const gone = { ...(a.gone || {}) };
   if (prefer !== 'a') { for (const [k, t] of Object.entries(b.gone || {})) if (!(gone[k] >= t)) gone[k] = t; }
-  else if (!sameV(gone, b.gone)) toB = true;   // going back: a file taken off since comes back with everything else, so it can't stay marked as off
+  else if (!sameV(gone, b.gone)) toB = true;
   if (Object.keys(gone).length) out.gone = gone;
   out.t = Math.max(ta, tb) + (toA ? 1 : 0);
   return { work: out, rows, ask, toA, toB, setIn, setBoth, rubricSaid, lined };
@@ -19520,7 +19533,7 @@ function mergeFiles(aHas = {}, bHas = {}, aGone = {}, bGone = {}, prefer) {
   for (const k of Object.keys(aHas)) {
     if (k in bHas) {
       if (off(aHas[k], bGone[k])) out.dropA.push(k); else if (off(bHas[k], aGone[k])) out.dropB.push(k);
-      else if (aHas[k] && bHas[k] && aHas[k] !== bHas[k]) out[bHas[k] > aHas[k] ? 'fromB' : 'fromA'].push(k);   // replaced under the same name: the later one goes both ways
+      else if (aHas[k] && bHas[k] && aHas[k] !== bHas[k]) out[bHas[k] > aHas[k] ? 'fromB' : 'fromA'].push(k);
       continue;
     }
     if (off(aHas[k], bGone[k])) out.dropA.push(k); else out.fromA.push(k);
@@ -19528,7 +19541,7 @@ function mergeFiles(aHas = {}, bHas = {}, aGone = {}, bGone = {}, prefer) {
   return out;
 }
 const editKey = path => { const parts = path.split('/').filter(Boolean); return parts.length > 1 ? parts[0] : parts[0].replace(/\.[^.]+$/, ''); };   // a loose file is a student of its own, by its name
-const EDIT_OFF = '~edit|';   // in work.gone: when a Word edit was taken off
+const EDIT_OFF = '~edit|';
 function mergeEdits(aEd = {}, bEd = {}, work, rows, prefer) {
   const out = { fromB: [], fromA: [], dropA: [], dropB: [] }, pickOf = {}, her = {};
   for (const r of rows || []) { pickOf[r.key] = r.pick; her[r.key] = r.by === 'her'; }
@@ -19546,27 +19559,28 @@ function mergeEdits(aEd = {}, bEd = {}, work, rows, prefer) {
 }
 function workCounts(work) {
   const su = work.setup || {}, s = work.s || {}, read = work.read || {}, blank = v => v == null || v === '';
-  const out = { scored: 0, partial: 0, off: 0, fb: 0 };   // fb: Feedback complete switched on, what a formative activity counts in place of scores
+  const out = { scored: 0, partial: 0, off: 0, fb: 0 };
   for (const k of new Set([...Object.keys(s), ...Object.keys(read)])) {
     const g = (s[k] && s[k].g) || {}, r = g.rubric || [], rows = su.criteria ? su.criteria.map((_, i) => r[i]) : r, on = rows.filter(v => v != null).length;
     if (g.status !== 'missing' && g.status !== 'excused' && g.fb) out.fb++;
+    if (g.status !== 'missing' && g.status !== 'excused' && g.sent) { out.sent = (out.sent || 0) + 1; out.sentT = Math.max(out.sentT || 0, g.sent); }
     if (g.status === 'missing' || g.status === 'excused') out.off++;
     else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : on === rows.length && on) out.scored++;
     else if (su.mode !== 'points' && on) out.partial++;
     else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) out.scored++;
   }
-  if (!out.fb) delete out.fb;   // kept only when there is some, so work with no Feedback complete is stored as before
-  if (work.returned) out.ret = work.returned.t;   // the marked files went back to the students
+  if (!out.fb) delete out.fb;
+  if (work.returned && work.returned.ok) out.back = work.returned.ok;
   return out;
 }
 function metaFor(ma, mb, work, id) {
   const m = { ...(mb || {}), ...(ma || {}), id };
-  if (!m.name) m.name = 'A download';   // work from before the list of downloads was kept says nothing about its name
+  if (!m.name) m.name = 'A download';
   if (work) {
     m.t = work.t || m.t;
-    delete m.fb;
+    delete m.fb; delete m.sent; delete m.sentT;
     Object.assign(m, workCounts(work));
-    if (!work.returned) delete m.ret;
+    delete m.ret; if (!(work.returned && work.returned.ok)) delete m.back;
     m.n = Math.max(m.n || 0, Object.keys(work.s || {}).length);
   }
   return m;
@@ -19582,7 +19596,7 @@ function mergeStates(A, B, o = {}) {
     if (t) {
       if (!onA && !onB) { tomb[id] = t; continue; }
       const vec = vJoin(workVec(wa), workVec(wb)), answer = ans['!' + id];
-      if (!vGeq(vec, t.v)) {   // a copy opened again on purpose has seen the tombstone, so it comes after it; anything else hasn't
+      if (!vGeq(vec, t.v)) {
         if (vGeq(t.v, vec) || answer === 'gone') { tomb[id] = t; rows.push({ id, name, kind: 'gone', onA, onB, t: t.t }); continue; }
         if (answer !== 'back') { tomb[id] = t; rows.push({ id, name, kind: 'askGone', onA, onB, t: t.t, work: wa || wb }); continue; }
         seen = t.v;
@@ -19593,7 +19607,7 @@ function mergeStates(A, B, o = {}) {
     const files = mergeFiles((A.added || {})[id], (B.added || {})[id], (wa && wa.gone) || {}, (wb && wb.gone) || {}, o.prefer);
     const edits = mergeEdits((A.edits || {})[id], (B.edits || {})[id], m.work, m.rows, o.prefer);
     const real = m.rows.filter(r => r.pick === 'a' || r.pick === 'b');
-    const extra = files.fromB.length + files.dropA.length + edits.fromB.length + edits.dropA.length;   // what she'd see change here besides students
+    const extra = files.fromB.length + files.dropA.length + edits.fromB.length + edits.dropA.length;
     const kind = !onA ? 'new' : !onB ? 'onlyA' : m.ask.length || real.length || extra || m.setIn.length || m.setBoth.length ? 'merge' : 'same';
     const cardOff = !m.ask.length && !m.rubricSaid && !!(lk && lk.setup && m.work && m.work.setup) && rubricsDiffer(lk.setup, m.work.setup) && workScored(m.work);
     rows.push({ id, name, kind, work: m.work, rows: m.rows, lined: m.lined, ask: m.ask, toA: m.toA, toB: m.toB, setIn: m.setIn, setBoth: m.setBoth, follow: m.rubricSaid ? m.work.setup : undefined, cardOff, files, edits, extra, meta: metaFor(ma, mb, m.work, id), ma, mb, anon: !!((wa && wa.anon && wa.anon.on) || (wb && wb.anon && wb.anon.on)) });
@@ -19619,7 +19633,7 @@ function tabMerge(data, was, other) {
   }
   const out = { ...data, s, t: Math.max(data.t, (other.t || 0) + 1) }, mine = partHashes(data), pv = { ...data.pv };
   let ownSet = false;
-  for (const k of WORK_SET) {   // settings go one at a time too: what this tab changed, and the other's word and stamps on the rest
+  for (const k of WORK_SET) {
     const ov = other.pv && other.pv[k];
     if (mine[k] !== was.ph[k]) { ownSet = true; if (ov) pv[k] = vJoin(ov, pv[k] || {}); continue; }
     if (other[k] !== undefined) out[k] = other[k]; else delete out[k];
@@ -19633,7 +19647,7 @@ function tabMerge(data, was, other) {
   }
   const gone = { ...(other.gone || {}), ...(data.gone || {}) };
   if (Object.keys(gone).length) out.gone = gone;
-  for (const k of ['read', 'scan']) if (data[k] || other[k]) out[k] = { ...(data[k] || {}), ...(other[k] || {}) };   // readings kept from the papers, which the newer copy knows best
+  for (const k of ['read', 'scan']) if (data[k] || other[k]) out[k] = { ...(data[k] || {}), ...(other[k] || {}) };
   return { data: out, changed };
 }
 
@@ -19738,12 +19752,12 @@ function mergeLib(a0, b0, o = {}) {
       e.fields.names = e.node.names = [...(x.fields.names || []), ...add];
       if (add.length) notes.push({ kind: 'roster', name: x.fields.name, add, drop: [], both: true });
     } else if (x.type === 'c' && m.fromY.includes('names')) rosterNote(notes, x, y);
-    if (x.type === 'c' && m.both.includes('info')) {   // student details: per student, and a saved spelling is never lost
+    if (x.type === 'c' && m.both.includes('info')) {
       const xi = x.fields.info || {}, yi = y.fields.info || {}, [lo, hi] = win === y ? [xi, yi] : [yi, xi], out = {};
       for (const k of new Set([...Object.keys(xi), ...Object.keys(yi)])) { const o2 = [...new Set([...((lo[k] || {}).other || []), ...((hi[k] || {}).other || [])])]; out[k] = { ...lo[k], ...hi[k], ...(o2.length ? { other: o2 } : {}) }; }
       e.fields.info = e.node.info = out;
     }
-    if (x.type === 'c' && m.both.includes('att')) {   // attendance: day by day, and for a day both changed, the one saved later
+    if (x.type === 'c' && m.both.includes('att')) {
       const xa = x.fields.att || {}, ya = y.fields.att || {}, out = {};
       for (const k of new Set([...Object.keys(xa), ...Object.keys(ya)])) out[k] = !xa[k] ? ya[k] : !ya[k] ? xa[k] : (ya[k].t || 0) > (xa[k].t || 0) ? ya[k] : xa[k];
       e.fields.att = e.node.att = out;
@@ -19758,7 +19772,7 @@ function mergeLib(a0, b0, o = {}) {
     else if (m.fromY.some(k => k !== 'names')) notes.push({ kind: 'changed', type: x.type, name: e.fields.name });
     kept.set(id, e);
   }
-  for (const [id, e] of kept) {   // when it was last opened, anywhere
+  for (const [id, e] of kept) {
     const t = Math.max((wa.get(id) || { node: {} }).node.opened || 0, (wb.get(id) || { node: {} }).node.opened || 0);
     if (t && e.node.opened !== t) kept.set(id, { ...e, node: { ...e.node, opened: t } });
   }
@@ -19777,7 +19791,7 @@ function mergeLib(a0, b0, o = {}) {
   }
   for (const e of by('i')) {
     let u = units.get(e.parent);
-    if (!u) {   // its unit is gone, and the assignment isn't: it goes back in a unit of its own, in its class
+    if (!u) {
       const home = classes.get(e.fields.classId) || lib.loose;
       u = home.units.find(x => x.id === 'gs-brought');
       if (!u) { u = { id: 'gs-brought', name: 'Brought in', items: [] }; units.set(u.id, u); home.units.push(u); }
@@ -19813,7 +19827,7 @@ function mergeFields(x, y, win, dev, now, said) {
     const ge = vGeq(vx, vy), le = vGeq(vy, vx);
     if (ge && !le) { parts[k] = fx[k]; if (real) fv[k] = vx; }
     else if (le && !ge) { parts[k] = fy[k]; if (real) fv[k] = vy; fromY.push(k); }
-    else if (k === 'setup' && x.type === 'i' && partAsks(k, fx[k], fy[k])) {   // a card's rubric decides its grades, so it's hers to choose, as it is for a download with no card
+    else if (k === 'setup' && x.type === 'i' && partAsks(k, fx[k], fy[k])) {
       if (said) { parts[k] = (said === 'b' ? fy : fx)[k]; fv[k] = vBump(vJoin(vx, vy), dev, now); chose = true; if (said === 'b') fromY.push(k); }
       else { parts[k] = fx[k]; fv[k] = vx; ask = true; }
     }
@@ -19879,22 +19893,22 @@ function mergeLs(a, b, skip = () => false) {
       try { x = JSON.parse(a[k] || '[]'); y = JSON.parse(v); } catch {}
       const add = y.filter(t => !x.includes(t));
       if (add.length) set[k] = JSON.stringify(x.concat(add));
-    } else if (k === 'gs.rubrics') {   // by id, and a rubric changed on both keeps the later one
+    } else if (k === 'gs.rubrics') {
       let x = [], y = [];
       try { x = JSON.parse(a[k] || '[]'); y = JSON.parse(v); } catch {}
       const by = new Map(x.filter(alive).map(r => [r.id, r])), n = by.size;
       let ch = n !== x.length;
       for (const r of y) { if (!alive(r)) continue; const o = by.get(r.id); if (!o || (r.at || 0) > (o.at || 0)) { by.set(r.id, r); ch = true; } }
       if (ch) set[k] = n || y.some(r => !alive(r)) ? JSON.stringify([...by.values()]) : v;
-    } else if (k === 'gs.histSame') {   // her answers here stay, and answers made there come in
+    } else if (k === 'gs.histSame') {
       let x = {}, y = {};
       try { x = JSON.parse(a[k] || '{}'); y = JSON.parse(v); } catch {}
       const add = Object.keys(y).filter(n => !(n in x));
       if (add.length) set[k] = a[k] == null ? v : JSON.stringify({ ...x, ...Object.fromEntries(add.map(n => [n, y[n]])) });
-    } else if (k === 'gs.school') {   // school resources: an item at a time, and the one changed later is kept
+    } else if (k === 'gs.school') {
       const m = schoolMerge(parse((a || {})[k], null), parse(v, null));
       if (m.toA) set[k] = JSON.stringify(m.out);
-    } else if (k.startsWith('gs.rd.') && a[k] != null) {   // the Word document for a download, replaced there later
+    } else if (k.startsWith('gs.rd.') && a[k] != null) {
       const x = parse(a[k], {}), y = parse(v, {});
       if (y.at > (x.at || 0)) set[k] = v;
     } else if (a[k] == null) set[k] = v;
@@ -26482,18 +26496,27 @@ function glPaper() {
 }
 
 /* ---------- Return: "Returned", one student at a time, and the Claude steps ---------- */
+const rtDay = t => { const d = new Date(t); return d.toDateString() === new Date().toDateString() ? 'today at ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'on ' + d.toLocaleDateString([], { day: 'numeric', month: 'short' }); };
 function returnedHtml() {
-  const r = batch && batch.returned; if (!r) return '';
-  const d = new Date(r.t), hm = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }), today = d.toDateString() === new Date().toDateString();
-  return '<p class="rtdone"><span>✓ Returned ' + (today ? 'today at ' + esc(hm) : 'on ' + esc(d.toLocaleDateString([], { day: 'numeric', month: 'short' }))) + ' · ' + r.n + (r.n === 1 ? ' file' : ' files') + '.</span> <button class="link" data-unreturn>Mark as not returned</button></p>';
+  const r = (batch && batch.returned) || {}, files = r.n ? ' · ' + r.n + (r.n === 1 ? ' file' : ' files') : '';
+  if (r.ok) return '<p class="rtdone"><span>✓ Returned ' + esc(rtDay(r.ok)) + '.</span> <button class="link" data-unreturn>Mark as not returned</button></p>';
+  return '<p class="rtdone"><span>' + (r.t ? 'Exported ' + esc(rtDay(r.t)) + files + '.' : '') + '</span> <button class="link" data-doreturn>Mark as returned</button></p>';
 }
 function returnedDraw() { const el = $('#rtState'); if (el) el.innerHTML = returnedHtml(); }
+function markReturned(on) {
+  if (!batch) return;
+  if (typeof fieldSnap === 'function') fieldSnap(batch, ['returned'], returnedDraw, on ? 'marked as returned' : 'marked as not returned');
+  const r = { ...(batch.returned || {}) };
+  if (on) r.ok = Date.now(); else delete r.ok;
+  if (Object.keys(r).length) batch.returned = r; else delete batch.returned;
+  saveSoon(); returnedDraw();
+}
 function setReturned(n, said) {
   if (!batch) return;
-  const b0 = batch, was = batch.returned;
-  batch.returned = { t: Date.now(), n }; saveSoon();
+  const b0 = batch;
+  batch.returned = { ...(batch.returned || {}), t: Date.now(), n }; saveSoon();
   if ($('#rtState')) returnedDraw();
-  else toastDo((said || 'Done.') + ' This assignment is marked as returned.', 'Undo', () => { if (batch !== b0) return; batch.returned = was; saveSoon(); });
+  else if (!batch.returned.ok) toastDo((said || 'Done.') + ' Once the students have it, mark it as returned.', 'Mark as returned', () => { if (batch === b0) markReturned(true); });
 }
 function returnSideHtml() {
   const st = batch.students[cur], who = st && st.files.length ? (anonOn() ? 'this paper' : esc(st.key) + '’s paper') : '';
@@ -26513,7 +26536,8 @@ function returnSideHtml() {
 }
 function returnSideClick(e) {
   if (anchorCardClick(e)) return true;
-  if (e.target.closest('[data-unreturn]')) { delete batch.returned; saveSoon(); returnedDraw(); toast('Marked as not returned'); return true; }
+  if (e.target.closest('[data-unreturn]')) { markReturned(false); toast('Marked as not returned'); return true; }
+  if (e.target.closest('[data-doreturn]')) { markReturned(true); toast('Marked as returned'); return true; }
   if (e.target.closest('[data-rtone]')) {
     const st = batch.students[cur], b0 = batch;
     toast('Making ' + (anonOn() ? 'this paper' : st.key + '’s paper') + '…');
@@ -26531,7 +26555,7 @@ function returnSideClick(e) {
 /* ---------- Insights: how each row was scored, change since the last summative, and the same assignment in her other classes ---------- */
 function insRowsHtml() {
   if (setup.mode !== 'rubric') return '';
-  const hi = Math.max(...setup.criteria.map((_, r) => rowTop(setup, r))), lv = Array.from({ length: hi + 1 }, (_, v) => v), shade = v => 'b' + (1 + Math.round(v / hi * 4));   // five blues, spread over whatever the top is
+  const hi = Math.max(...setup.criteria.map((_, r) => rowTop(setup, r))), lv = Array.from({ length: hi + 1 }, (_, v) => v), shade = v => 'b' + (1 + Math.round(v / hi * 4));
   const rows = setup.criteria.map((name, r) => {
     const by = lv.map(() => []);
     batch.students.forEach((st, i) => { const v = st.grade.outAvg ? null : rowShown(st, r); if (v != null) by[Math.max(0, Math.min(hi, Math.floor(v)))].push(shownName(st, i)); });
@@ -26615,7 +26639,7 @@ async function insMore() {
 let insResize = 0;
 window.addEventListener('resize', () => { if (!$('#insMore')) return; clearTimeout(insResize); insResize = setTimeout(() => { if ($('#insMore')) insMore(); }, 200); });
 
-Object.assign(window.__gs, { tabsRender, tabShow, glPaperOf, setReturned, insNow });
+Object.assign(window.__gs, { tabsRender, tabShow, glPaperOf, setReturned, markReturned, insNow });
 
 /* ---------------- the marking screen: small menus, the student list's filters, the score panel's extras ---------------- */
 function kmWrap(label, attrs, items, cls) { return '<span class="kmw"><button ' + attrs + ' data-km aria-haspopup="true" aria-expanded="false">' + label + '</button><div class="km' + (cls ? ' ' + cls : '') + '" hidden>' + items + '</div></span>'; }
@@ -27819,7 +27843,7 @@ Object.assign(window.__gs, { touch: () => ({ penSeen, penDown, mode: tch.mode, f
 /* ---------------- Today: what she teaches, what is waiting to be marked, what is ready to hand back (stage 4) ---------------- */
 
 /* teaching today: a one-way read of the Planner's timetable */
-let plan = null;   // { classes, daysOff, lessons } or null when there is no timetable
+let plan = null;
 async function planRead() {
   const db = await planDb(false); let setup = null, lessons = [];
   if (db) {
@@ -27833,7 +27857,7 @@ async function planRead() {
     classes, semStart: String(setup.semStart || ''), semEnd: String(setup.semEnd || ''),
     daysOff: (Array.isArray(setup.daysOff) ? setup.daysOff : []).filter(d => d && d.date).map(d => ({ date: String(d.date), label: String(d.label || '') })),
     lessons: (Array.isArray(lessons) ? lessons : []).filter(l => l && l.id && Array.isArray(l.slots) && l.slots.length).map(l => ({ id: String(l.id), title: String(l.title || 'Untitled lesson'), status: String(l.status || ''), done: !!l.final, n: Array.isArray(l.slides) ? l.slides.length : 0,
-      taught: (Array.isArray(l.taught) ? l.taught : []).filter(t => t && t.date).map(t => ({ classId: String(t.classId || ''), date: String(t.date), slide: +t.slide || 1, of: +t.of || 1 })),   // where each class got to, noted after presenting
+      taught: (Array.isArray(l.taught) ? l.taught : []).filter(t => t && t.date).map(t => ({ classId: String(t.classId || ''), date: String(t.date), slide: +t.slide || 1, of: +t.of || 1 })),
       slots: l.slots.map(s => ({ classId: String(s.classId), date: String(s.date) })) })),
   };
   return plan;
@@ -27873,8 +27897,8 @@ function homeGroups() {
   const mark = [], back = [], old = [];
   for (const m of [...keptMeta.values()].sort((a, b) => b.t - a.t)) {
     const st = keptState(m), it = cardOfKept(m.id);
-    if ((m.newer && keptMeta.has(m.newer)) || m.ret || !st.of) old.push(m);   // an older copy, handed back already, or nothing in it to score
-    else if (it && it.type === 'fm') mark.push(m);   // feedback only: it waits here until it is handed back
+    if ((m.newer && keptMeta.has(m.newer)) || keptBack(m) || !st.of) old.push(m);
+    else if (it && it.type === 'fm') mark.push(m);
     else if (st.left) mark.push(m);
     else back.push(m);
   }
@@ -27894,7 +27918,7 @@ function markRow(m, prim) {
 }
 function oldRow(m) {
   const st = keptState(m), w = keptWhere(m), stale = m.newer && keptMeta.has(m.newer);
-  const sub = [w.cls ? w.cls.name : '', stale ? 'an older copy: your work went on in a newer one' : m.ret ? 'returned ' + fmtDay(m.ret) : 'last worked on ' + fmtDay(m.t),
+  const sub = [w.cls ? w.cls.name : '', stale ? 'an older copy: your work went on in a newer one' : keptBack(m) ? 'returned ' + fmtDay(keptBack(m)) : 'last worked on ' + fmtDay(m.t),
     st.of ? keptSay(m, st) : '', m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
   return '<div class="krow old"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' + keptDots(m) + '</div>';
 }
@@ -27934,14 +27958,14 @@ const NEXT_DAYS = 30;
 function nextHtml(groups) {
   const m = [...groups.back, ...groups.old].filter(m => keptState(m).of && !keptState(m).left && !(m.newer && keptMeta.has(m.newer)) && Date.now() - m.t < NEXT_DAYS * 864e5).sort((a, b) => b.t - a.t)[0];
   const s = m && statOf(m); if (!s || !s.rows.length) return '';
-  const w = keptWhere(m), low = s.rows.reduce((a, b) => b.avg / b.top < a.avg / a.top ? b : a), flat = s.rows.every(r => Math.abs(r.avg / r.top - low.avg / low.top) < 0.0125);   // rows can be on different scales, so they are compared by their share of the top (0.05 of a point on 0 to 4)
+  const w = keptWhere(m), low = s.rows.reduce((a, b) => b.avg / b.top < a.avg / a.top ? b : a), flat = s.rows.every(r => Math.abs(r.avg / r.top - low.avg / low.top) < 0.0125);
   const head = (w.cls ? esc(w.cls.name) + ': ' : '') + (flat ? 'every row came out the same on ' : esc(low.name) + ' was the weakest row on ') + esc(m.name || 'the last set of papers') + '.';
   const who = low.low ? numWord(low.low) + (low.low === 1 ? ' student' : ' students') + ' scored ' + fmtNum(low.top / 2) + ' or below on ' + esc(low.name) + '.' : 'Nobody scored ' + fmtNum(low.top / 2) + ' or below on ' + esc(low.name) + '.';
   return '<h2 class="tcap">What the class needs next</h2><div class="tcard tneed"><p class="tbig">' + head.charAt(0).toUpperCase() + head.slice(1) + '</p>' +
     '<div class="tbars" role="img" aria-label="' + esc(s.rows.map(r => r.name + ' ' + fmtNum(Math.round(r.avg * 10) / 10) + ' of ' + r.top).join(', ')) + '">' + s.rows.map(r => '<span class="tbn">' + esc(r.name) + '</span><span class="tbt"><i class="' + (r === low && !flat ? 'low' : '') + '" style="width:' + Math.round(r.avg / r.top * 100) + '%"></i></span><span class="tbv">' + (Math.round(r.avg * 10) / 10).toFixed(1) + '</span>').join('') + '</div>' +
     (flat ? '' : '<p class="tsay">' + who + '</p>') + (m.papers ? '<a class="tlink" href="' + batchHash(m.id, 'insights') + '">' + (low.low && !flat ? 'See who' : 'Open Insights') + T_ARROW + '</a>' : '') + '</div>';
 }
-function hsideShow() { $('#hside').hidden = false; }   // the to-do card is always there
+function hsideShow() { $('#hside').hidden = false; }
 const OLD_SHOWN = 3;
 let oldAll = false;
 function homeRender() {
@@ -27973,7 +27997,7 @@ $('#handBack').addEventListener('click', e => { const a = e.target.closest('a[da
 let planBusy = null;
 function planRefresh() {
   if (planBusy) return planBusy;
-  return planBusy = planRead().catch(() => { plan = null; }).then(() => { planBusy = null; homeRender(); fcRender(); if (shellReady) { setRender(); todoRender(); } });   // the To do count in the sidebar and the Focus card's free period follow the timetable too
+  return planBusy = planRead().catch(() => { plan = null; }).then(() => { planBusy = null; homeRender(); fcRender(); if (shellReady) { setRender(); todoRender(); } });
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !batch) planRefresh(); });
 window.addEventListener('pageshow', e => { if (e.persisted) planRefresh(); });
@@ -29296,7 +29320,7 @@ function gpKept() {
 }
 function gpLeft(id) {
   if (!gpReady || !id) return 0;
-  const m = gpKept().get(id); if (!m || m.ret) return 0;
+  const m = gpKept().get(id); if (!m || keptBack(m)) return 0;
   return keptState(m).left * gpPaces()(id);
 }
 function gpDue(from, to, except) {
@@ -29304,7 +29328,7 @@ function gpDue(from, to, except) {
   for (const c of lib.classes) for (const u of c.units || []) for (const it of u.items || []) {
     if (!it.due || it.due < from || it.due > to || it.id === except || it.typed || it.type === 'xc') continue;
     const m = by.get(it.id); let left = 0;
-    if (m) { if (m.ret) continue; left = keptState(m).left; } else if (it.due >= today && !it.batchId) left = (c.names || []).length;
+    if (m) { if (keptBack(m)) continue; left = keptState(m).left; } else if (it.due >= today && !it.batchId) left = (c.names || []).length;
     if (left > 0) out.push({ it, c, left, secs: left * pace(it.id), inn: !!m });
   }
   return out.sort((a, b) => a.it.due.localeCompare(b.it.due));
@@ -29386,7 +29410,7 @@ function gpShortNext(left) {
   if (!gpReady || !batch || !fcConf().short) return -1;
   const r = fcRun(); if (!r || (r.st !== 'run' && r.st !== 'paused') || r.w !== 'mark:' + batch.id) return -1;
   let best = -1, bl = Infinity;
-  batch.students.forEach((st, i) => { if (i === cur || !left(st)) return; const l = gpLen(st) || 1e9; if (l < bl) { bl = l; best = i; } });   // a student with no paper in comes last
+  batch.students.forEach((st, i) => { if (i === cur || !left(st)) return; const l = gpLen(st) || 1e9; if (l < bl) { bl = l; best = i; } });
   return best;
 }
 
@@ -29398,7 +29422,7 @@ function gpLookHtml() {
   if ((dow + 6) % 7 < (c.wk + 6) % 7 || L.lbHid === mon) return '';
   const days = []; for (let k = mon; k <= today; k = gpAdd(k, 1)) days.push(k);
   const t = tkSum(days, L, tkPlan()), lessons = Object.keys(t.la).filter(Boolean).length, papers = t.p, gday = t.list.filter(d => d.g >= 60).length;
-  const back = [...keptMeta.values()].filter(m => m && m.ret && isoDay(m.ret) >= mon && !(m.newer && keptMeta.has(m.newer)));
+  const back = [...keptMeta.values()].filter(m => m && keptBack(m) && isoDay(keptBack(m)) >= mon && !(m.newer && keptMeta.has(m.newer)));
   const wait = homeGroups().mark.filter(m => keptState(m).left).slice(0, 4), pace = gpPaces();
   const next = gpSum(gpDue(gpAdd(mon, 7), gpAdd(mon, 13)));
   const tile = (label, v, sub) => '<div><span>' + label + '</span><b>' + v + '</b><i>' + sub + '</i></div>';

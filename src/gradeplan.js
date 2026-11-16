@@ -35,7 +35,7 @@ function gpKept() {
 // Seconds still to go on one assignment's papers at her pace, or 0.
 function gpLeft(id) {
   if (!gpReady || !id) return 0;
-  const m = gpKept().get(id); if (!m || m.ret) return 0;
+  const m = gpKept().get(id); if (!m || keptBack(m)) return 0;
   return keptState(m).left * gpPaces()(id);
 }
 // What is due between two days and still to grade: papers left in a set that is in, or the whole class for work not in yet that is
@@ -45,7 +45,7 @@ function gpDue(from, to, except) {
   for (const c of lib.classes) for (const u of c.units || []) for (const it of u.items || []) {
     if (!it.due || it.due < from || it.due > to || it.id === except || it.typed || it.type === 'xc') continue;
     const m = by.get(it.id); let left = 0;
-    if (m) { if (m.ret) continue; left = keptState(m).left; } else if (it.due >= today && !it.batchId) left = (c.names || []).length;
+    if (m) { if (keptBack(m)) continue; left = keptState(m).left; } else if (it.due >= today && !it.batchId) left = (c.names || []).length;
     if (left > 0) out.push({ it, c, left, secs: left * pace(it.id), inn: !!m });
   }
   return out.sort((a, b) => a.it.due.localeCompare(b.it.due));
@@ -136,7 +136,8 @@ function gpShortNext(left) {
   if (!gpReady || !batch || !fcConf().short) return -1;
   const r = fcRun(); if (!r || (r.st !== 'run' && r.st !== 'paused') || r.w !== 'mark:' + batch.id) return -1;
   let best = -1, bl = Infinity;
-  batch.students.forEach((st, i) => { if (i === cur || !left(st)) return; const l = gpLen(st) || 1e9; if (l < bl) { bl = l; best = i; } });   // a student with no paper in comes last
+  // a student with no paper in comes last
+  batch.students.forEach((st, i) => { if (i === cur || !left(st)) return; const l = gpLen(st) || 1e9; if (l < bl) { bl = l; best = i; } });
   return best;
 }
 
@@ -148,7 +149,7 @@ function gpLookHtml() {
   if ((dow + 6) % 7 < (c.wk + 6) % 7 || L.lbHid === mon) return '';
   const days = []; for (let k = mon; k <= today; k = gpAdd(k, 1)) days.push(k);
   const t = tkSum(days, L, tkPlan()), lessons = Object.keys(t.la).filter(Boolean).length, papers = t.p, gday = t.list.filter(d => d.g >= 60).length;
-  const back = [...keptMeta.values()].filter(m => m && m.ret && isoDay(m.ret) >= mon && !(m.newer && keptMeta.has(m.newer)));
+  const back = [...keptMeta.values()].filter(m => m && keptBack(m) && isoDay(keptBack(m)) >= mon && !(m.newer && keptMeta.has(m.newer)));
   const wait = homeGroups().mark.filter(m => keptState(m).left).slice(0, 4), pace = gpPaces();
   const next = gpSum(gpDue(gpAdd(mon, 7), gpAdd(mon, 13)));
   const tile = (label, v, sub) => '<div><span>' + label + '</span><b>' + v + '</b><i>' + sub + '</i></div>';
