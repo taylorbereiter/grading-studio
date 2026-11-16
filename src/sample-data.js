@@ -284,7 +284,7 @@ SAMPLE.papers = async function (A, S) {
     await open('para', made, async (b, of) => {
       for (const i of Object.keys(PARA)) { const st = of(ENG[i]); grade(st, { rubric: rows(+i, 3), comment: PARA_SAY[tier(+i)](first(ENG[i])) }, at(-46)); mark(st, made[ENG[i]]); }
       grade(of('Oliver Grant'), { status: 'excused', comment: 'Joined the class after this was set.' }, at(-46));
-      b.returned = { t: at(-45), n: 13 };
+      b.returned = { t: at(-45), n: 13, ok: at(-45) };
     });
   }
 
@@ -321,7 +321,7 @@ SAMPLE.papers = async function (A, S) {
       b.quiz = { qs, how: 'cx', ans: 'miss', side: 'right', total: { n: 0, x: Math.round(500 / PW * 1000) / 1000, y: Math.round(92 / PH * 1000) / 1000 } };
       for (const n of Object.keys(made)) { const st = of(n); for (let k = 0; k < qs.length; k++) await A.quizSet(st, qs[k], marks[n][k]); st.grade.at = at(-40); }
       grade(of('Daniel Kim'), { status: 'excused', comment: 'Away on quiz day.' }, at(-40));
-      b.returned = { t: at(-39), n: 13 };
+      b.returned = { t: at(-39), n: 13, ok: at(-39) };
     });
   }
 
@@ -356,7 +356,7 @@ SAMPLE.papers = async function (A, S) {
     for (let i = 0; i < ENG.length; i++) { const t = tier(i), [a, b] = ESSAY.pairs[i]; made[ENG[i]] = await paper(ENG[i], 'English 9 · Persuasive essay', ESSAY.titles[i % 4], [ESSAY.I[t], ESSAY.B[t > 1 ? Math.max(a, 3) : Math.min(a, 3)], ESSAY.B[t > 1 ? (b === Math.max(a, 3) ? 3 : b) : (Math.min(b, 3) === Math.min(a, 3) ? (Math.min(a, 3) + 1) % 4 : Math.min(b, 3))], ESSAY.C[t]]); }
     await open('essay', made, async (b, of) => {
       for (let i = 0; i < ENG.length; i++) { const st = of(ENG[i]); grade(st, { rubric: rows(i, 4), comment: ESSAY.say[tier(i)](first(ENG[i])), ...(i === 9 ? { status: 'late' } : {}), ...(i === 4 ? { anchor: 'high' } : i === 10 ? { anchor: 'mid' } : i === 7 ? { anchor: 'low' } : {}) }, at(-25)); mark(st, made[ENG[i]]); }
-      b.returned = { t: at(-24), n: 14 };
+      b.returned = { t: at(-24), n: 14, ok: at(-24) };
       await A.example(of('Aiko Tanaka'), { marks: true, why: 'The claim stays in view and every piece of evidence is explained.' });
       await A.example(of('Zara Ahmed'), { why: 'A solid middle paper: clear claim, evidence that needs explaining.' });
     });
@@ -395,7 +395,7 @@ SAMPLE.papers = async function (A, S) {
         f.marks = { 0: [ck(350, 136), ck(710, 136), ck(350, 368), ...(g === 2 ? [{ t: 'note', color: RED, ax: 520, ay: 404, text: 'A topic, not yet a theme. What does the story SAY about families?' }] : [ck(710, 368)]), ...(g === 3 ? [{ t: 'note', color: RED, ax: 600, ay: 172, text: 'What might the river stand for?' }] : []), { t: 'stamp', k: 'score', text: A.scoreStampText(A.gradeOf(st), st), x: 690, y: 62, size: 52, color: A.totalInk() }, ...(g === 1 ? [{ t: 'stamp', k: 'star', x: 610, y: 66, size: 44, rot: -4 }] : [])] };
       });
       A.groupSync();
-      b.returned = { t: at(-11), n: 14 };
+      b.returned = { t: at(-11), n: 14, ok: at(-11) };
     });
   }
 
