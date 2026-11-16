@@ -129,7 +129,7 @@ function linkCard(st, f) {
   };
   clipStrip(el.querySelector('.mstick'), f, now, c => (play ? fill(c) : clipShow(c.id)), play && play.frame && !ticks ? 'drive' : '');
   // a pasted transcript: a line with a time plays the video from there (a site's player starts again at that time)
-  const pan = trPanel(el, f, { make: false, seek: t => {
+  const pan = trPanel(el, f, { make: false, seek: el.vseek = t => {
     const m = el.querySelector('.vlslot video, .vlslot audio');
     if (m) { try { m.currentTime = t; } catch {} m.play().catch(() => {}); return; }
     if (play) { fill({ a: t }); return; }
@@ -292,6 +292,14 @@ function frameToggle(fr) { for (const k of clocks) if (k.fr === fr) { frameSay(f
 // A video of the page's own in a small window that stays on top of every other (the browser's picture in picture).
 const PIP_BTN = '<button class="btn sm" data-pip title="Keeps the video in a small window on top of everything else, so the whole screen is free for the paper">Float</button>';
 function vidFloat(m) { if (!m) return; if (document.pictureInPictureElement === m) document.exitPictureInPicture().catch(() => {}); else m.requestPictureInPicture().catch(() => toast('This browser couldn’t float the video')); }
+// Where the video on screen is, in seconds: a video file that is playing or has been played, or a YouTube or Vimeo player that says. null if none.
+// Typed notes take a line's time from here (typednotes.js). A card's vseek(t) plays it from t, the way a line of its transcript does.
+function vidClock(root) {
+  for (const m of root.querySelectorAll('.media video, .media audio')) if (!m.paused || m.currentTime > 0) return m.currentTime;
+  for (const fr of root.querySelectorAll('.vlslot iframe')) { const t = frameTime(fr); if (t != null) return t; }
+  return null;
+}
+function vidSeek(root, t) { const c = [...root.querySelectorAll('.media')].find(c => c.vseek); if (c) c.vseek(t); return !!c; }
 let curPlay = null;   // a link's player that takes orders, for the keys (Space, J, L) when there is no video file on screen
 function frameTime(fr) { for (const k of clocks) if (k.fr === fr) return k.t == null ? null : k.t + (k.on ? (Date.now() - k.at) / 1000 : 0); return null; }
 

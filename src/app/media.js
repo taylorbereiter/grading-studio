@@ -26,7 +26,7 @@ function mediaCard(st, f, kept) {
   if (vid) { vidGrip(el.querySelector('.mstick'), vidRot(m, f)); el.querySelector('[data-vrot]').onclick = () => vidTurn(st, f, el); }
   if (!curMedia) curMedia = m;
   clipStrip(el.querySelector('.mstick'), f, () => m, c => clipRun(m, c));
-  const pan = trPanel(el, f, { make: CAN_TRANSCRIBE, seek: t => { m.currentTime = t; if (m.paused) m.play().catch(() => {}); } });
+  const pan = trPanel(el, f, { make: CAN_TRANSCRIBE, seek: el.vseek = t => { m.currentTime = t; if (m.paused) m.play().catch(() => {}); } });
   el.querySelector('.mstick').after(el.querySelector('.trbox'));
   m.ontimeupdate = () => pan.tick(m.currentTime, !m.paused);
   el.onclick = e => {

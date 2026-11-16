@@ -1,21 +1,21 @@
 {
- "version": "1.28.34",
- "build": "902169b3465b",
+ "version": "1.28.39",
+ "build": "5879960aa2ca",
  "notes": [
-  "Focus counts only papers you marked: rubric scores, marks on the page or a comment. A grade only typed in still counts as scored, and its time still counts as grading time, but it no longer counts as a paper marked today."
+  "Linked classes: assignments each class made before they were linked can be linked too. After linking, or from Link assignments under the class name, the same names come ticked and very similar ones wait for your tick, with one Undo."
  ],
  "files": {
-  "index.html": "2d9d931892a0320f220d433fe989c7ceed4fde62d9f38e0750ae1bc91fcf7d8a",
-  "planner.html": "b403a22b366503b90c0fe45a76df6b5c0cd8c8b060f2d542a6d937827d6edb31"
+  "index.html": "541ded3e70f491514ad0240a04753833d8424198108bf89f37bc22eaa0322aa9",
+  "planner.html": "93a7526d94b78e2c07e3721876bee813771ee661ad07c6534f4ddd52b72c227d"
  },
  "langs": {
-  "lang/zh-Hant.js": "a239a49ad534192da429531a26576ce4c4ae2e5de98fdebd6df6a44421e06ed7",
-  "lang/zh-Hans.js": "378cc3a2b05456d103770d0ab079e424f2a612f95661e0d4b0ae1411a8d357b4",
-  "lang/es.js": "84e4bb719901d2f59c042df6c7477be94d463c5e4f99249e7ec83b86a1988188",
-  "lang/fr.js": "834fcbe59b721a167bd1f81274e541a5bace26e169d0e75bdaee55fa4320cea9",
-  "lang/de.js": "2e2994a04c869804f0446d320c6a6e92cfdb252ea06a48b6b1b82c68566a7189",
-  "lang/pt-BR.js": "5dc86d54815816795cc38de39eff73c6454ee07ec53eb9177b09aac24a75427f",
-  "lang/ja.js": "385a7a518bb4af7aea595253df1cc17ee7ad931cbae2692ba38efce868ada566",
-  "lang/ko.js": "b7114959097c7b91b379694bf249913f857d16b8945401e062785ef7d98ddb5a"
+  "lang/zh-Hant.js": "970a0695cd36e69759677e805a200c9f36637abe3358c7d3d802f4bc9b14df1b",
+  "lang/zh-Hans.js": "66f6183997485eab0888792b63cfc2e47f1d821c241d728ee5af5553dd9daade",
+  "lang/es.js": "e207774fabdb61be893e4304e19c6f8732df3f5792ef7b0c67f8fe1472f02af1",
+  "lang/fr.js": "73b44aac4c34d3dacaf46538acba09835e546148a22ff89b1e869045e1745d43",
+  "lang/de.js": "1945350284a9188d26308f993a1e67946ae94b180a8e0e9bb6b905c0f5346869",
+  "lang/pt-BR.js": "4fcfc70b318815a07fd7e9cea477ac01e946cec940b24c6bb6d302c6ec11b2d9",
+  "lang/ja.js": "343df5fd7e232f849f2f5b11b832f45910e7fb9fef1804459c4e4669ab138b39",
+  "lang/ko.js": "3ab8fa1e67101d3b4964289608535bc7bb1e91b48178485a4ec797d93c35a3dc"
  }
 }

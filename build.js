@@ -21,13 +21,27 @@ rep('/*@@PARTSCSS@@*/', partsCss);
 rep('/*@@POLISHCSS@@*/', css('src/polish.css') + css('src/scans.css') + css('src/quiz.css'));
 rep('/*@@RUBRICSCSS@@*/', css('src/rubrics.css') + css('src/book.css'));
 rep('/*@@INSIGHTCSS@@*/', css('src/insight.css'));
-rep('/*@@SHELLCSS@@*/', css('src/rail.css') + css('src/shell.css') + css('src/today.css') + css('src/classpage.css') + css('src/goals.css') + css('src/ib.css') + css('src/tabs.css') + css('src/markscreen.css') + css('src/sidepane.css') + css('src/safe.css') + css('src/welcome.css') + css('src/examples.css') + css('src/help.css') + css('src/school.css') + css('src/classroom.css') + css('src/reports.css') + css('src/attend.css') + css('src/missing.css') + css('src/todo.css') + css('src/focus.css') + css('src/tracker.css') + css('src/gradeplan.css') + css('src/sheet.css') + css('src/touch.css') + css('src/phone.css') + css('src/seating.css') + css('src/pick.css') + css('src/snip.css') + css('src/video.css') + css('src/setupin.css'));
+rep('/*@@SHELLCSS@@*/', css('src/rail.css') + css('src/shell.css') + css('src/today.css') + css('src/classpage.css') + css('src/goals.css') + css('src/ib.css') + css('src/tabs.css') + css('src/markscreen.css') + css('src/sidepane.css') + css('src/typednotes.css') + css('src/safe.css') + css('src/welcome.css') + css('src/examples.css') + css('src/help.css') + css('src/school.css') + css('src/classroom.css') + css('src/reports.css') + css('src/attend.css') + css('src/missing.css') + css('src/todo.css') + css('src/focus.css') + css('src/tracker.css') + css('src/gradeplan.css') + css('src/sheet.css') + css('src/touch.css') + css('src/phone.css') + css('src/seating.css') + css('src/pick.css') + css('src/snip.css') + css('src/video.css') + css('src/setupin.css'));
 rep('/*@@PDFJS@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.min.js', 'utf8'));
 rep('/*@@PDFLIB@@*/', fs.readFileSync(nm + 'pdf-lib/dist/pdf-lib.min.js', 'utf8'));
 rep('/*@@H2C@@*/', fs.readFileSync(nm + 'html2canvas/dist/html2canvas.min.js', 'utf8'));
 rep('/*@@MAMMOTH@@*/', fs.readFileSync(nm + 'mammoth/mammoth.browser.min.js', 'utf8'));
 rep('/*@@FFLATE@@*/', fs.readFileSync(nm + 'fflate/umd/index.js', 'utf8'));
-rep('/*@@WORKER@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.worker.min.js', 'utf8'));
+// What the page packs is written in 85 characters, 5 for every 4 bytes (src/lang.js, unpack85, reads it back): the printable ones but " \ and <.
+const P85 = (() => { let a = ''; for (let c = 33; c < 127; c++) if (c !== 34 && c !== 92 && c !== 60) a += String.fromCharCode(c); return a.slice(0, 85); })();
+function pack85(buf) {
+  let out = '';
+  for (let i = 0; i < buf.length; i += 4) {
+    const k = Math.min(4, buf.length - i); let v = 0;
+    for (let j = 0; j < 4; j++) v = v * 256 + (j < k ? buf[i + j] : 0);
+    const d = []; for (let j = 0; j < 5; j++) { d.unshift(P85[v % 85]); v = Math.floor(v / 85); }
+    out += d.slice(0, k + 1).join('');
+  }
+  return out;
+}
+const squeeze = s => pack85(Buffer.from(require('fflate').deflateSync(Buffer.from(s, 'utf8'), { level: 9 })));
+// pdf.js's worker waits as text until a paper is opened, so the grading page keeps it squeezed (src/app/start.js unpacks it).
+rep('/*@@WORKERZ@@*/', squeeze(fs.readFileSync(nm + 'pdfjs-dist/build/pdf.worker.min.js', 'utf8')));
 // The main code is in src/app/, one file per part of the app, joined in the order src/app/order.json gives. They share one scope, as when they were one file.
 const APP = Symbol('app'), appSrc = require('./src/app/order.json').map(n => dent(fs.readFileSync('src/app/' + n + '.js', 'utf8'))).join('');
 // migrate.js runs first; the rest of the app waits inside gsData.boot until saved work is ready for it.
@@ -52,10 +66,14 @@ const langFiles = {}, langNames = {}, langPacked = {};
 {
   const fflate = require('fflate');
   for (const [code, file, obj] of LANGS) {
-    const src = (fs.readFileSync('src/lang-' + file + '.js', 'utf8').replace(/^\s*\/\*[\s\S]*?\*\/\s*/, '') + '\nreturn ' + obj + ';').replace(/^[ \t]*\/\/.*\r?\n/gm, '');   // lines that are only a comment, and the note at the top of the file, ship in neither copy
+    // lines that are only a comment ship in neither copy, nor does the note at the top of the file (it explains the file to whoever edits it)
+    const src = (fs.readFileSync('src/lang-' + file + '.js', 'utf8').replace(/^\/\*[\s\S]*?\*\/[ \t]*\r?\n/, '') + '\nreturn ' + obj + ';').replace(/^[ \t]*\/\/.*\r?\n/gm, '');
     langNames[code] = new Function(src)().name;
-    const lean = dent(src);   // leading spaces don't ship either (dent, above)
-    langPacked[code] = Buffer.from(fflate.deflateSync(Buffer.from(lean, 'utf8'), { level: 9 })).toString('base64');
+    // Leading spaces don't ship either (dent, above), nor the space after each colon and comma between two quoted words; the
+    // squeezed file must read back the same as the source. Comment lines are already out.
+    const lean = dent(src).replace(/(?<!\\)"([:,]) "/g, '"$1"');
+    if (JSON.stringify(new Function(lean)()) !== JSON.stringify(new Function(src)())) throw new Error('lang-' + file + '.js reads differently once squeezed');
+    langPacked[code] = squeeze(lean);
     langFiles['lang/' + code + '.js'] = '(window.__gsLangs = window.__gsLangs || {})[' + JSON.stringify(code) + '] = (function () {\n' + lean + '\n})();\n';
   }
 }
@@ -65,7 +83,7 @@ const sampleSrc = dent(fs.readFileSync('src/sample-data.js', 'utf8').replace(/^[
 // The builder is named by a stamp of its own contents. A page only uses the builder it was made with, and a sample another one made is made again.
 const sampleStamp = require('crypto').createHash('sha256').update(sampleSrc).digest('hex').slice(0, 8);
 const sampleFile = 'window.__gsSampleData = (function () {\n' + sampleSrc + '\n})();\nwindow.__gsSampleData.api = ' + JSON.stringify(sampleStamp) + ';\n';
-const SAMPLE_INSIDE = 'const SAMPLE_PACKED = ' + JSON.stringify(Buffer.from(require('fflate').deflateSync(Buffer.from(sampleSrc, 'utf8'), { level: 9 })).toString('base64')) + ';', SAMPLE_FETCHED = 'const SAMPLE_PACKED = "";';
+const SAMPLE_INSIDE = 'const SAMPLE_PACKED = ' + JSON.stringify(squeeze(sampleSrc)) + ';', SAMPLE_FETCHED = 'const SAMPLE_PACKED = "";';
 const LANG_INSIDE = 'const LANG_PACKED = ' + JSON.stringify(langPacked) + ';', LANG_FETCHED = 'const LANG_PACKED = {};';
 const langSrc = 'const LANG_NAMES = ' + JSON.stringify(langNames) + ';\n' + LANG_INSIDE;
 const sampleConsts = 'const SAMPLE_API = ' + JSON.stringify(sampleStamp) + ';\nconst SAMPLE_STAMP = ' + JSON.stringify(sampleStamp) + ';\n' + SAMPLE_INSIDE;
@@ -77,12 +95,10 @@ const langStamp = Object.fromEntries(LANGS.map(([code]) => [code, require('crypt
 const LANG_LOADER = '<script>try{var gsLangV=' + JSON.stringify(langStamp) + ',gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write(\'<script src="lang/\'+gsL+\'.js?\'+gsLangV[gsL]+\'"><\\/script>\')}catch(e){}</script>';
 // A note after the code on a line ("x = 1;   // why") is left out of the page too, unless the code before it might still be inside a string.
 const tailNote = (line, code) => (code.replace(/\\./g, '').match(/['"`]/g) || []).length % 2 ? line : code;
-rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['@langs', '@sample', 'lang', 'helpdata', 'pickshare', 'beside', APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'feedback', 'rubrics', 'rubricup', 'book', 'bookimport', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'video', 'sidepane', 'anchors', 'wordnotes', 'wordpdf', 'classpage', 'seating', 'attend', 'goals', 'ib', 'reports', 'missing', 'sheet', 'tabs', 'markscreen', 'examples', 'linked', 'snip', 'touch', 'today', 'todo', 'focus', 'tracker', 'gradeplan', 'settings', 'safe', 'newyear', 'welcome', 'setupin', 'help', 'school', 'classroom', 'phone', 'shell', 'moving', 'fullscreen', 'sample'].map(n => n === APP ? appSrc : n === '@langs' ? langSrc : n === '@sample' ? sampleConsts : dent(fs.readFileSync('src/' + n + '.js', 'utf8'))).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace(/^(.*?[;{}),])[ \t]{2,}\/\/ .*$/gm, tailNote).replace('/*@@STICKERS@@*/{}', () => stickerSrc));
+rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['@langs', '@sample', 'lang', 'helpdata', 'pickshare', 'beside', APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'feedback', 'rubrics', 'rubricup', 'book', 'bookimport', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'video', 'sidepane', 'typednotes', 'anchors', 'wordnotes', 'wordpdf', 'classpage', 'seating', 'attend', 'goals', 'ib', 'reports', 'missing', 'sheet', 'tabs', 'markscreen', 'examples', 'linked', 'snip', 'touch', 'today', 'todo', 'focus', 'tracker', 'gradeplan', 'settings', 'safe', 'newyear', 'welcome', 'setupin', 'help', 'school', 'classroom', 'phone', 'shell', 'moving', 'fullscreen', 'sample'].map(n => n === APP ? appSrc : n === '@langs' ? langSrc : n === '@sample' ? sampleConsts : dent(fs.readFileSync('src/' + n + '.js', 'utf8'))).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace(/^(.*?[;{}),])[ \t]{2,}\/\/ .*$/gm, tailNote).replace('/*@@STICKERS@@*/{}', () => stickerSrc));
 // The Google sign-in key (a Client ID, not a secret: every page that signs in with Google shows its own). site.json holds the one for the
 // pages at the web address; GCID in the environment is for a copy of your own.
 rep("'/*@@GCID@@*/'", JSON.stringify(process.env.GCID || require('./site.json').googleClientId || ''));
-// The key Google's file chooser may need (videos from Drive), locked to the site's address. Empty until one is made.
-rep("'/*@@GKEY@@*/'", JSON.stringify(process.env.GKEY || require('./site.json').googleApiKey || ''));
 // Where this copy lives and where it is moving to (site.json), only while a move is on. Otherwise the app has no address written into it.
 { const site = require('./site.json'); rep("'/*@@SITE@@*/'", JSON.stringify(site.movingTo ? { address: site.address || '', movingTo: site.movingTo } : null)); }
 const VERSION = require('./package.json').version, whatsNew = require('./src/whatsnew.json');

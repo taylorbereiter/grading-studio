@@ -3,7 +3,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, goToStudent, score, classPage, pick } = require('./helpers/app');
+const { noStamps, openApp, openZip, goToStudent, score, classPage, pick } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -98,7 +98,7 @@ test('an extra credit entry gives points to some or all students, adds them to t
   assert.match(await page.$eval('#bkTab tbody tr:nth-child(3) td.bkterm', t => t.dataset.tn), /Extra credit \+2 on the grade · kept at 100%/);
   // The assignments' own percents and averages don't move.
   assert.deepEqual(await page.$$eval('#bkTab tbody tr:first-child td', t => t.map(x => x.textContent.trim()).slice(1, 6)), ['80%', '80%', '+2', '80.00%', '80.00%']);
-  const stored = await page.evaluate(() => window.__gs.state().lib.classes[0].units[0].items.find(x => x.type === 'xc'));
+  const stored = noStamps(await page.evaluate(() => window.__gs.state().lib)).classes[0].units[0].items.find(x => x.type === 'xc');
   assert.deepEqual(stored.typed, { max: null, s: { 'Aria Testwell': { v: 2 }, 'Cleo Fixture': { v: 2 }, 'Dov Madeup': { v: 3 } } });
   assert.equal(stored.xcTo, 'term');
   // A cell changes in place, like any typed-in score.
