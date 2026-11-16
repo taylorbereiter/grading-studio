@@ -1,21 +1,22 @@
 {
- "version": "1.28.32",
- "build": "5d35dddd075c",
+ "version": "1.28.33",
+ "build": "42b64ea9ec7a",
  "notes": [
-  "When the Focus timer is up, add a few more minutes (+2, +5 or +10) to the same session. Stop early and only the time that ran is counted."
+  "Link classes on the same schedule, like two sections of one course (Class setup, Linked classes). If your Planner already has them on one course, the class page offers to link them. A new assignment is ticked for every linked class, and a card’s ⋯ menu adds it to another class later or joins two copies you made separately.",
+  "Editing a copy can make the same changes in the other copies; only what you change goes across. In the Examples tab, a button shows the strong examples kept in the other class, each labelled with where it came from. Rosters, papers, scores and comments stay with each class."
  ],
  "files": {
-  "index.html": "d9fe91a7c6243250fdf2bae07378e7e8716e74e59f2dfe16959c8d960b68c3d7",
-  "planner.html": "3c5ed237d7cdae204f3148226359aa5e009bd1127b9cc90a92bcb3ec84daa8c1"
+  "index.html": "4cb3dd7fccf0cde86f9d586daad9edbd7e01acdcc51fe001d4bd1c08237e0020",
+  "planner.html": "5a5fbc30fcff26017fefd9cd5a6d6234d72f05dc5f1a68096b8fe15f440e5bc9"
  },
  "langs": {
-  "lang/zh-Hant.js": "aff24f70d582c0c884f41ce9ce753d4eb41191d0c09e0b8fcd73ae4f8607b402",
-  "lang/zh-Hans.js": "0f1aa43e21324c8c4d504a58c408df39c42668a41da4098d24ecba7a9db98a99",
-  "lang/es.js": "515976aadf4b42e54f75bdfe4799921a214a83cfd052a2b45ba423fc6b17bcbf",
-  "lang/fr.js": "981a4781688f68f5b81ac7f673bc0ff17ee3bba85995ac1c9e61c46a368363f0",
-  "lang/de.js": "7715076340ff53061c96e614ca35bf3d4d9ffb63c8673a51d977b50d1bd35672",
-  "lang/pt-BR.js": "6aaad309bf89774ea8794faf8e8dc5ccdbd6d3568af3e35944c7105019ffdc8e",
-  "lang/ja.js": "26f312966379eeea1b444779ac4b66baa7cefc0bab25f0d6fdb41819dae301a5",
-  "lang/ko.js": "f8d81619ff791bb430e921b4b632fcaf6899f3cac7d4cb7e1bf237d5901585fc"
+  "lang/zh-Hant.js": "a9b41e39c9bb0ae2bf191d963f25a21c7a744e77ac48ab58eb7838f187dbcbbd",
+  "lang/zh-Hans.js": "05397ffc10c0d79e587ef0a9b9256923c7dd321cc5dceaba86f7f14429600800",
+  "lang/es.js": "c2afb26b2fe4e3b2a50e99433ab2653e58ceb5c4f63e1a148d6a5dd169b9fe35",
+  "lang/fr.js": "db877d6bbe83435dd2929446e5a9a830767ef38d08d492c6fc5e21e9c9558c39",
+  "lang/de.js": "b46fae18c3293d95e1eff6e018143e26b204f0a2fb49e4ae1aae4ab5dd31a027",
+  "lang/pt-BR.js": "25f928976c2cd9f66eb0f747c573cc738c58997b096904779e8ee208835d650c",
+  "lang/ja.js": "ed31a72d57267bec6103b2ac64ccb6e557cd0d6ebc39c8aa0d3538e28e2fa03c",
+  "lang/ko.js": "52a6691f5746bdffa9d77a4bfdf2f44c26ce8745d3497737d2d63241731a2d0c"
  }
 }

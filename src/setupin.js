@@ -303,10 +303,11 @@ function stpDiff(S, planNow) {
   }
   // classes
   if (S.classes.length) {
-    const L = [], fresh = [], linked = [], units = [], times = [], ibs = [];
+    const L = [], fresh = [], linked = [], units = [], times = [], ibs = [], course = [];
     for (const c of S.classes) {
       const had = lib.classes.find(x => stpKey(x.name) === stpKey(c.name));
       if (!had) fresh.push(c.name); else if (c.link && c.link !== mbOf(had)) linked.push(c.name);
+      if (c.course && (!had || lkKey(had.course) !== lkKey(c.course))) course.push(c.name + ' (' + c.course + ')');
       if (c.ib && (!had || stpIbChanges(had, c.ib))) ibs.push(c.name + ' (' + c.ib.way.toUpperCase() + ')');
       const nu = c.units.filter(u => !had || !had.units.some(x => stpKey(x.name) === stpKey(u))); if (nu.length) units.push(c.name + ' (' + nu.length + ')');
       if (c.meets) { const p = planNow && Array.isArray(planNow.classes) ? planNow.classes.find(x => x && stpKey(x.name) === stpKey(c.name)) : null, was = p && Array.isArray(p.meets) ? p.meets.map(m => m.dow + m.start + m.end).join() : null; if (was !== c.meets.map(m => m.dow + m.start + m.end).join()) times.push(c.name + ' (' + c.meets.length + ' a week)'); }
@@ -315,6 +316,7 @@ function stpDiff(S, planNow) {
     if (linked.length) L.push(esc(sysLink()) + ' link for ' + esc(stpList(linked)));
     if (ibs.length) L.push('IB programme, criteria and grade boundaries for ' + esc(stpList(ibs)) + (typeof classWay === 'function' ? '' : ' <span class="muted">Kept with the class. They are used once the IB update arrives.</span>'));
     if (units.length) L.push('New units in ' + esc(stpList(units)));
+    if (course.length) L.push('Course for ' + esc(stpList(course)) + '. Classes on the same course are linked.');
     if (times.length) L.push('Meeting times for ' + esc(stpList(times)) + ', in the Planner’s timetable');
     add('classes', 'Classes and timetable', L, 'Classes you already have stay, with their students and their work. No student is added by this.');
   }
@@ -452,10 +454,11 @@ async function stpApply(S, pick) {
   if (pick.focus) fcConfSet(S.focus);
   if (pick.tabs) meSet({ tabs: S.tabs });
   if (pick.classes) {
-    U.classes = []; U.links = []; U.units = []; U.ib = []; U.mbWas = localStorage.getItem(MB_KEY);
+    U.classes = []; U.links = []; U.units = []; U.ib = []; U.course = []; U.mbWas = localStorage.getItem(MB_KEY);
     for (const c of S.classes) {
       let had = lib.classes.find(x => stpKey(x.name) === stpKey(c.name));
       if (!had) { lib.classes.push(had = { id: uid(), name: c.name, names: [], units: [] }); U.classes.push(had.id); }
+      if (c.course && lkKey(had.course) !== lkKey(c.course)) { U.course.push([had.id, had.course == null ? null : had.course]); had.course = c.course; }
       if (c.link && c.link !== mbOf(had)) { U.links.push([had.id, had.mb || '']); had.mb = c.link; mbRemember(had.name, c.link); }
       if (c.ib && stpIbChanges(had, c.ib)) { U.ib.push([had.id, had.way || '', stpClone(had.ib || null)]); const n = stpIbNext(had, c.ib); had.way = n.way; had.ib = n.ib; }
       for (const u of c.units) if (!had.units.some(x => stpKey(x.name) === stpKey(u))) { const nu = { id: uid(), name: u, items: [] }; had.units.push(nu); U.units.push([had.id, nu.id]); }
@@ -530,6 +533,7 @@ async function stpUndo() {
   for (const [cid, uidd] of U.units || []) { const c = classById(cid), i = c ? c.units.findIndex(u => u.id === uidd) : -1; if (i >= 0) { if (c.units[i].items.length) kept.push('the unit ' + c.units[i].name); else c.units.splice(i, 1); } }
   for (const [cid, way, ib] of U.ib || []) { const c = classById(cid); if (c && !(U.classes || []).includes(cid)) {   // a class the import made goes whole, or stays whole
     if (way) c.way = way; else delete c.way; if (ib) c.ib = ib; else delete c.ib; } }
+  for (const [cid, was] of U.course || []) { const c = classById(cid); if (c) { if (was == null) delete c.course; else c.course = was; } }
   for (const [cid, was] of U.links || []) { const c = classById(cid); if (c) { if (was) c.mb = was; else delete c.mb; } }
   if ('mbWas' in U) try { if (U.mbWas == null) localStorage.removeItem(MB_KEY); else localStorage.setItem(MB_KEY, U.mbWas); } catch {}
   for (const id of U.classes || []) { const i = lib.classes.findIndex(c => c.id === id); if (i >= 0) { const c = lib.classes[i]; if (c.names.length || c.units.some(u => u.items.length)) kept.push('the class ' + c.name); else lib.classes.splice(i, 1); } }
@@ -567,7 +571,7 @@ async function stpExport() {
   if (names.length) out.classes = names.map(n => {
     const c = lib.classes.find(x => stpKey(x.name) === stpKey(n)), q = pc.find(x => stpKey(x.name) === stpKey(n)), link = (c && mbOf(c)) || (q && mbUrl(q.mb)) || '';
     const ib = c && (c.way === 'myp' || c.way === 'dp') ? { programme: c.way.toUpperCase(), ...(c.way === 'dp' && c.ib && c.ib.w && typeof c.ib.w === 'object' ? { weights: Object.entries(c.ib.w).filter(([id]) => BK_TYPES.some(t => t[0] === id)).map(([id, w]) => ({ name: BK_TYPES.find(t => t[0] === id)[1], weight: +w || 0 })) } : {}), ...(c.ib && c.ib.group ? { subjectGroup: c.ib.group } : {}), ...(c.ib && Array.isArray(c.ib.crit) && c.ib.crit.length ? { criteria: c.ib.crit.map(x => ({ letter: x.k, name: x.name })) } : {}), ...(c.ib && Array.isArray(c.ib.bounds) && c.ib.bounds.length ? { boundaries: { outOf: c.way === 'dp' ? 100 : ((c.ib.crit || []).length || 4) * 8, grades: c.ib.bounds.map(b => ({ grade: b[1], from: b[0] })) } } : {}) } : {};
-    return { name: n, ...(q && q.course ? { course: String(q.course) } : {}), ...ib, ...(link ? { link } : {}), ...(q && Array.isArray(q.meets) && q.meets.length ? { meets: q.meets.filter(m => day[+m.dow]).map(m => ({ day: day[+m.dow], start: String(m.start), end: String(m.end), ...(m.label ? { label: String(m.label) } : {}) })) } : {}), ...(c && c.units.length ? { units: c.units.map(u => u.name) } : {}) };
+    return { name: n, ...(c && c.course ? { course: c.course } : q && q.course ? { course: String(q.course) } : {}), ...ib, ...(link ? { link } : {}), ...(q && Array.isArray(q.meets) && q.meets.length ? { meets: q.meets.filter(m => day[+m.dow]).map(m => ({ day: day[+m.dow], start: String(m.start), end: String(m.end), ...(m.label ? { label: String(m.label) } : {}) })) } : {}), ...(c && c.units.length ? { units: c.units.map(u => u.name) } : {}) };
   });
   if (p && (p.semStart || (p.daysOff || []).length || (p.events || []).length)) out.calendar = { ...(p.semStart && p.semEnd ? { start: p.semStart, end: p.semEnd } : {}), ...((p.daysOff || []).length ? { daysOff: p.daysOff.map(d => ({ date: d.date, label: d.label })) } : {}), ...((p.events || []).length ? { events: p.events.map(e => ({ date: e.date, ...(e.to ? { to: e.to } : {}), label: e.label })) } : {}) };
   if (p && stpObj(p.deck) && (p.deck.agenda === false || p.deck.sizes === 'any' || STP_LAYOUTS[p.deck.add])) out.slides = { ...(p.deck.agenda === false ? { agenda: false } : {}), ...(p.deck.sizes === 'any' ? { textSizes: 'any' } : {}), ...(STP_LAYOUTS[p.deck.add] && p.deck.add !== 'content' ? { newSlide: STP_LAYOUTS[p.deck.add] } : {}) };
@@ -595,7 +599,7 @@ RULES
 5. When you have what you need, tell me in a few plain sentences what the setup says and ask if it is right. After I agree, reply with the setup as ONE code block of JSON, with nothing after it.
 
 WHAT TO FIND OUT
-- My classes: each one's name as I want to see it, the days and times it meets, and its page in my school's system if I have the link.
+- My classes: each one's name as I want to see it, the days and times it meets, and its page in my school's system if I have the link. Give two sections of the same course the same "course" (like "English 12"): they share a lesson deck and are linked, so an assignment and its strong examples can be shared between them.
 - My school: the system students hand work in on (ManageBac, Google Classroom, Canvas and so on), and where unit plans are kept, if anywhere.
 - The calendar: the first and last day of this semester, days with no school, and dates I want to see (exams, reports due).
 - Terms: each term's name with its first and last day.
