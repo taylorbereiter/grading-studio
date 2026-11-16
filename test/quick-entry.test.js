@@ -159,6 +159,14 @@ test('a percent typed in a points column stays the percent, the points follow it
   await keys(page, 'Escape');
   await page.$eval('[data-bkshow="pts"]', b => b.click());
   assert.equal(await page.$eval(cell(page, 'i1', 'Aria Testwell'), x => x.textContent), '7.5/10', 'shown as the half point nearest 73%');
+  // Editing the column in its box and saving keeps the percent and the extra credit
+  await page.click('[data-bkcol="i1"]');
+  await page.waitForSelector('#bkPop [data-bkedittyped]');
+  await page.$eval('#bkPop [data-bkedittyped]', b => b.click());
+  await page.waitForSelector('[data-bkasave]');
+  await page.click('[data-bkasave]');
+  await page.waitForFunction(() => !document.querySelector('[data-bkasave]'));
+  assert.deepEqual((await typed(page, 'i1')).s, { 'Aria Testwell': { v: 7.3, p: 73, st: '' }, 'Bram Sample': { v: 8, st: '', xc: 1 } });
   assert.deepEqual(page.errors, []);
   await close();
 });

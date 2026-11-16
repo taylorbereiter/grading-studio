@@ -4970,7 +4970,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.37";
+  const APP_VERSION = "1.28.38";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -8316,7 +8316,7 @@ if (e.target.id === 'pkIn') { if (ptsSnapFor !== e.target) { gradeSnap(st); ptsS
 if (e.target.id === 'ptsIn') {
 if (ptsSnapFor !== e.target) { gradeSnap(st); ptsSnapFor = e.target; }
 const raw = e.target.value.trim().replace(',', '.'), m = raw.match(/^(\d+(?:\.\d+)?)\s*%$/);
-if (m) { st.grade.pk = roundPct(+m[1]); st.grade.points = String(pointsFor(st.grade.pk)); } else { delete st.grade.pk; st.grade.points = raw; }
+if (m) { st.grade.pk = roundPct(+m[1]); const pp = pointsFor(st.grade.pk); st.grade.points = pp == null ? '' : String(pp); } else { delete st.grade.pk; st.grade.points = raw; }
 const was = st.grade.status; scoreTouched(st); saveSoon(); renderList();
 if (was !== st.grade.status) { $('#gstat').outerHTML = statusHtml(st); }
 $('#grade .total').innerHTML = totalHtml(st);
@@ -10972,7 +10972,7 @@ const data = store.get(it.batchId, null);
 const d = new Date(it.opened || (data && data.t) || Date.now());
 let n = 0;
 const fm = it.type === 'fm';
-if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (fm ? g.fb : (g.rubric || []).some(v => v != null) || g.points !== '')) n++; }
+if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (fm ? g.fb : (g.rubric || []).some(v => v != null) || g.points !== '' || (g.pk != null && g.pk !== ''))) n++; }
 const m = keptMeta.get(it.batchId);
 if (m) return keptSay(m) + (m.papers ? '' : ' · papers not kept');
 return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + (fm ? ' feedback complete' : ' scored') : '') + ' · drop the same ZIP to keep going';
@@ -11257,7 +11257,7 @@ return forgetKept(b.dataset.kforget);
 if (b.dataset.openAsg) {
 asgTarget = findItem(b.dataset.openAsg).it;
 openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">' + (sysName() ? 'Where is the ' + esc(sysName()) + ' download?' : 'Where are the papers?') + ' You can also drop the ZIP or the folder straight onto this assignment’s card.</p>' + ruHtml(asgTarget.setup, { now: 1 }) + '</div>' +
-'<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button><button class="btn" data-typeonly title="No papers at all: an empty column in the class gradebook to type each score into">No papers: just type the scores…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true, 'lg');
+'<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button>' + (asgTarget.batchId ? '' : '<button class="btn" data-typeonly title="No papers at all: an empty column in the class gradebook to type each score into">No papers: just type the scores…</button>') + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true, 'lg');
 ruWire($('#dlgBox'), asgTarget);
 $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-typeonly]')) { closeDlg(); return bkTypeOnly(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a), 'lg'); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
 return;
@@ -14871,7 +14871,7 @@ Object.assign(window.__gs, { unpackExport, keyRows, drawKeyPage, openMarkKey, ma
 const STATUS_LABEL = { missing: 'Missing', excused: 'Excused', late: 'Late' };
 function noScore(st) { const s = st.grade.status; return s === 'missing' || s === 'excused'; }
 const hasSheet = g => g.sheet != null && g.sheet !== '';
-const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || hasSheet(g) || !!g.comment || !!g.status || !!g.fb || !!+g.xc || tnHasG(g));
+const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || (g.pk != null && g.pk !== '') || hasSheet(g) || !!g.comment || !!g.status || !!g.fb || !!+g.xc || tnHasG(g));
 const hasOwnScore = st => ownGrade(st).total != null || hasSheet(st.grade);
 function gradeWords(st) {
 const g = st.grade, own = ownGrade(st).total, out = [];
@@ -14956,12 +14956,13 @@ if (redraw) renderGrade(); else { const t = $('#grade .total'); if (t) t.innerHT
 /* ---------------- a percent typed as the score ---------------- */
 let pctOpen = null;
 function pctHtml(st) {
-const g = st.grade; if (noScore(st) || setup.mode !== 'rubric' || (g.pk == null && pctOpen !== st)) return '';
+const g = st.grade; if (noScore(st) || setup.mode !== 'rubric' || ibSetup() || (g.pk == null && pctOpen !== st)) return '';
 return '<p class="xcnote" id="pkNote"><label>Percent <input type="text" inputmode="decimal" id="pkIn" value="' + (g.pk != null ? g.pk : '') + '" aria-label="Percent"></label> <button class="link" data-pkoff>Remove</button><small style="flex-basis:100%">It stays as the score. Rubric rows don’t change it.</small></p>';
 }
 function pctStart(st) { pctOpen = st; const gs = $('#gstat'); if (gs) gs.outerHTML = statusHtml(st); const i = $('#pkIn'); if (i) { i.focus(); i.select(); } }
 function pctSet(st, raw, redraw) {
 const t = String(raw == null ? '' : raw).replace('%', '').replace(',', '.').trim(), v = t === '' || isNaN(+t) || +t < 0 ? null : roundPct(+t);
+if (t !== '' && v == null) return;
 if (v === (st.grade.pk == null ? null : st.grade.pk)) { if (redraw) { if (v == null) pctOpen = null; renderGrade(); } return; }
 if (v == null) { delete st.grade.pk; if (redraw) pctOpen = null; } else st.grade.pk = v;
 scoreTouched(st); saveSoon(); renderList();
@@ -16769,7 +16770,8 @@ let bkWant = null;
 function bkTypeOnly(it) {
 const f = findItem(it.id), c = f && classById(f.c.id);
 if (!c || !c.names.length) return toast('Put this assignment in a class with a roster first.');
-if (classWay(c) === 'myp') bkWant = [c.id, it.id, 'ib'];
+if (it.batchId) bkWant = [c.id, it.id];
+else if (classWay(c) === 'myp') bkWant = [c.id, it.id, 'ib'];
 else { if (!it.typed) { const su = setupOver(it.setup || setup), m = su.mode === 'rubric' ? 0 : setupMax(su); it.typed = { max: m > 0 ? m : null, s: {} }; saveLib(); } bkWant = [c.id, it.id]; }
 go(classHash(c, 'gradebook'));
 }
@@ -17151,12 +17153,15 @@ function bkAddSave() {
 const c = bkClass(), name = $('#bkaName').value.trim(), due = $('#bkaDue').value;
 if (!name) { $('#bkaName').focus(); return false; }
 const xc = bkAdd.type === 'xc', max = xc ? null : bkAddMax(), s = {};
-const fm = bkAdd.type === 'fm';
+const fm = bkAdd.type === 'fm', was = bkAdd.it && bkAdd.it.typed, keepP = !!(was && max && was.max === max);
 if (xc) for (const [n, r] of Object.entries(bkAdd.s)) { const v = r.v === '' || r.v == null || isNaN(+r.v) ? 0 : Math.round(+r.v * 2) / 2; if (v > 0) s[n] = { v }; }
 else for (const [n, r] of Object.entries(bkAdd.s)) {
 const v = fm || r.v === '' || r.v == null || isNaN(+r.v) ? null : Math.round(+r.v * 2) / 2;
 if (fm ? r.fb || r.st : v != null || r.st) s[n] = fm && r.fb ? { v: null, st: r.st || '', fb: true } : { v, st: r.st || '' }
 if (s[n] && !fm && v != null && r.tries && r.tries.length) s[n].tries = r.tries;
+if (s[n] && !fm && v != null && +r.xc > 0) s[n].xc = r.xc;
+const o = was && was.s && was.s[n];
+if (s[n] && !fm && v != null && r.p != null && keepP && o && o.v === +r.v) { s[n].v = o.v; s[n].p = r.p; }
 }
 const typed = { max, s };
 const card = !bkAdd.it && bkEmptyCards(c).find(x => x.name.trim().toLowerCase() === name.toLowerCase());
@@ -17190,6 +17195,7 @@ if (st) return { v: null, st };
 let xc = 0; const mx = t.match(/\s*\+\s*(\d+(?:[.,]\d+)?)$/); if (mx) { xc = hp(mx[1].replace(',', '.')); t = t.slice(0, mx.index).trim(); }
 const late = r.st === 'late' ? 'late' : '', max = col.typed ? col.typed.max : col.d ? bkColMax(col) : null, add = o => xc > 0 ? { ...o, xc } : o;
 if (max && /^\d+([.,]\d+)?\s*%$/.test(t)) { const p = roundPct(+t.replace('%', '').replace(',', '.').trim()); return add({ v: Math.round(p * max) / 100, p, st: late }); }
+if (max && t.includes('%')) return undefined;
 const vs = t.split('>').map(x => x.trim().replace('%', '').replace(',', '.')); if (!vs.every(ok)) return undefined;
 const n = vs.map(hp), v = n.pop();
 return add(n.length ? { v, st: late, tries: n } : { v, st: late });
@@ -19641,7 +19647,7 @@ const rubricsDiffer = (x, y) => rubricKey(x) !== rubricKey(y);
 function workScored(w) {
 const blank = v => v == null || v === '';
 if (w && Object.keys(w.read || {}).length) return true;
-return !!w && Object.values(w.s || {}).some(r => { const g = (r && r.g) || {}; return g.status !== 'missing' && g.status !== 'excused' && ((g.rubric || []).some(v => v != null) || !blank(g.points) || !blank(g.sheet)); });
+return !!w && Object.values(w.s || {}).some(r => { const g = (r && r.g) || {}; return g.status !== 'missing' && g.status !== 'excused' && ((g.rubric || []).some(v => v != null) || !blank(g.points) || !blank(g.pk) || !blank(g.sheet)); });
 }
 const noSpot = s => { const { spot, ...o } = s || {}; return o; };
 function cardSide(x, y, c) {
@@ -19873,7 +19879,7 @@ const worked = !!(s[k] && s[k].f && Object.keys(s[k].f).length) || !blank(g.comm
 if (g.status !== 'missing' && g.status !== 'excused' && g.fb) out.fb++;
 if (g.status !== 'missing' && g.status !== 'excused' && g.sent) { out.sent = (out.sent || 0) + 1; out.sentT = Math.max(out.sentT || 0, g.sent); }
 if (g.status === 'missing' || g.status === 'excused') out.off++;
-else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : on === rows.length && on) { out.scored++; if (su.mode !== 'points' || worked) out.marked++; }
+else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : (!blank(g.pk) && !Array.isArray(su.ib)) || (on === rows.length && on)) { out.scored++; if ((su.mode !== 'points' && on === rows.length && on) || worked) out.marked++; }
 else if (su.mode !== 'points' && on) out.partial++;
 else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) { out.scored++; if (worked) out.marked++; }
 }
@@ -26542,7 +26548,7 @@ if (bad) { toast('A level is a whole number from 0 to ' + IB_TOP); bad.focus(); 
 if (!a.crit.length) { toast('Tick the criteria this task assessed'); return; }
 const s = {};
 for (const [n, r] of Object.entries(a.s)) { const l = {}; for (const k of a.crit) if (r.l && r.l[k] != null) l[k] = r.l[k]; if (Object.keys(l).length || r.st) s[n] = { l, ...(r.st ? { st: r.st } : {}) }; }
-const typed = { lv: true, s }, type = a.fm ? 'fm' : 'sum', due = a.due || isoDay(Date.now());
+const typed = { lv: true, s }, type = a.fm ? 'fm' : a.it && a.it.type && a.it.type !== 'fm' ? a.it.type : 'sum', due = a.due || isoDay(Date.now());
 let it = a.it;
 if (it) Object.assign(it, { name: a.name, type, due, crit: a.crit.slice(), typed });
 else { let u = c.units[c.units.length - 1]; if (!u) c.units.push(u = { id: uid(), name: 'Unit 1', items: [] }); u.items.push(it = { id: uid(), name: a.name, classId: c.id, type, due, crit: a.crit.slice(), typed }); }
@@ -30730,7 +30736,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.37":["“Just one paper” in Focus no longer ends straight away when Grading Studio is open in two windows, such as the installed app and the website. A session now counts only the papers saved while it runs, and every window shows the same count."]};
+const WHATS_NEW = {"1.28.38":["Fixes for typed percents: editing a typed-in column keeps percents and extra credit, a percent-only score counts as scored on cards and in the sidebar, and No papers: just type the scores… shows only on assignments with no papers."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };

@@ -184,7 +184,8 @@ let bkWant = null;
 function bkTypeOnly(it) {
   const f = findItem(it.id), c = f && classById(f.c.id);
   if (!c || !c.names.length) return toast('Put this assignment in a class with a roster first.');
-  if (classWay(c) === 'myp') bkWant = [c.id, it.id, 'ib'];
+  if (it.batchId) bkWant = [c.id, it.id];   // it has papers: its column is already in the gradebook
+  else if (classWay(c) === 'myp') bkWant = [c.id, it.id, 'ib'];
   else { if (!it.typed) { const su = setupOver(it.setup || setup), m = su.mode === 'rubric' ? 0 : setupMax(su); it.typed = { max: m > 0 ? m : null, s: {} }; saveLib(); } bkWant = [c.id, it.id]; }   // saveLib, not bkSaveLib, so the class page loads the new column. Points out of the assignment's total; a rubric assignment's column takes percents, since its scale is not a straight line.
   go(classHash(c, 'gradebook'));
 }
@@ -594,12 +595,15 @@ function bkAddSave() {
   const c = bkClass(), name = $('#bkaName').value.trim(), due = $('#bkaDue').value;
   if (!name) { $('#bkaName').focus(); return false; }
   const xc = bkAdd.type === 'xc', max = xc ? null : bkAddMax(), s = {};
-  const fm = bkAdd.type === 'fm';
+  const fm = bkAdd.type === 'fm', was = bkAdd.it && bkAdd.it.typed, keepP = !!(was && max && was.max === max);
   if (xc) for (const [n, r] of Object.entries(bkAdd.s)) { const v = r.v === '' || r.v == null || isNaN(+r.v) ? 0 : Math.round(+r.v * 2) / 2; if (v > 0) s[n] = { v }; }
   else for (const [n, r] of Object.entries(bkAdd.s)) {
     const v = fm || r.v === '' || r.v == null || isNaN(+r.v) ? null : Math.round(+r.v * 2) / 2;
     if (fm ? r.fb || r.st : v != null || r.st) s[n] = fm && r.fb ? { v: null, st: r.st || '', fb: true } : { v, st: r.st || '' }
     if (s[n] && !fm && v != null && r.tries && r.tries.length) s[n].tries = r.tries;   // a retake typed in the table stays when the scores are edited here
+    if (s[n] && !fm && v != null && +r.xc > 0) s[n].xc = r.xc;   // so does extra credit typed as "8 + 1"
+    const o = was && was.s && was.s[n];
+    if (s[n] && !fm && v != null && r.p != null && keepP && o && o.v === +r.v) { s[n].v = o.v; s[n].p = r.p; }   // and a typed percent, while its points and the column's total are unchanged
   }
   const typed = { max, s };
   const card = !bkAdd.it && bkEmptyCards(c).find(x => x.name.trim().toLowerCase() === name.toLowerCase());   // a card already on the class page with nothing in it yet takes the scores, and keeps its own name and date
@@ -635,6 +639,7 @@ function bkParse(t, r, col) {
   let xc = 0; const mx = t.match(/\s*\+\s*(\d+(?:[.,]\d+)?)$/); if (mx) { xc = hp(mx[1].replace(',', '.')); t = t.slice(0, mx.index).trim(); }   // "8 + 1": extra credit on top
   const late = r.st === 'late' ? 'late' : '', max = col.typed ? col.typed.max : col.d ? bkColMax(col) : null, add = o => xc > 0 ? { ...o, xc } : o;
   if (max && /^\d+([.,]\d+)?\s*%$/.test(t)) { const p = roundPct(+t.replace('%', '').replace(',', '.').trim()); return add({ v: Math.round(p * max) / 100, p, st: late }); }   // "73%" in a points column: the percent stays the score
+  if (max && t.includes('%')) return undefined;   // a percent goes in on its own, not in a retake
   const vs = t.split('>').map(x => x.trim().replace('%', '').replace(',', '.')); if (!vs.every(ok)) return undefined;
   const n = vs.map(hp), v = n.pop();
   return add(n.length ? { v, st: late, tries: n } : { v, st: late });

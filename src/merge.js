@@ -135,7 +135,7 @@ const rubricsDiffer = (x, y) => rubricKey(x) !== rubricKey(y);
 function workScored(w) {
   const blank = v => v == null || v === '';
   if (w && Object.keys(w.read || {}).length) return true;
-  return !!w && Object.values(w.s || {}).some(r => { const g = (r && r.g) || {}; return g.status !== 'missing' && g.status !== 'excused' && ((g.rubric || []).some(v => v != null) || !blank(g.points) || !blank(g.sheet)); });
+  return !!w && Object.values(w.s || {}).some(r => { const g = (r && r.g) || {}; return g.status !== 'missing' && g.status !== 'excused' && ((g.rubric || []).some(v => v != null) || !blank(g.points) || !blank(g.pk) || !blank(g.sheet)); });
 }
 const noSpot = s => { const { spot, ...o } = s || {}; return o; };
 // Which of two copies of a rubric is the card's: by what it says, and then by what it would score.
@@ -406,7 +406,7 @@ function workCounts(work) {
     // given back early, one student at a time
     if (g.status !== 'missing' && g.status !== 'excused' && g.sent) { out.sent = (out.sent || 0) + 1; out.sentT = Math.max(out.sentT || 0, g.sent); }
     if (g.status === 'missing' || g.status === 'excused') out.off++;
-    else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : on === rows.length && on) { out.scored++; if (su.mode !== 'points' || worked) out.marked++; }
+    else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : (!blank(g.pk) && !Array.isArray(su.ib)) || (on === rows.length && on)) { out.scored++; if ((su.mode !== 'points' && on === rows.length && on) || worked) out.marked++; }   // a percent typed as the score is a finished score, though not a paper marked
     else if (su.mode !== 'points' && on) out.partial++;
     else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) { out.scored++; if (worked) out.marked++; }
   }

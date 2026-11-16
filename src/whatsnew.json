@@ -1,4 +1,7 @@
 {
+  "1.28.38": [
+    "Fixes for typed percents: editing a typed-in column keeps percents and extra credit, a percent-only score counts as scored on cards and in the sidebar, and No papers: just type the scores… shows only on assignments with no papers."
+  ],
   "1.28.37": [
     "“Just one paper” in Focus no longer ends straight away when Grading Studio is open in two windows, such as the installed app and the website. A session now counts only the papers saved while it runs, and every window shows the same count."
   ],
