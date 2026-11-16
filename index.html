@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"970a0695","zh-Hans":"66f61839","es":"e207774f","fr":"73b44aac","de":"19453502","pt-BR":"4fcfc70b","ja":"343df5fd","ko":"3ab8fa1e"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"ea0e5765","zh-Hans":"623bf0ca","es":"877a39aa","fr":"9bfb6c44","de":"efca8559","pt-BR":"50b1b8bb","ja":"197f41a9","ko":"1d4ed119"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -3237,6 +3237,14 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .fcext{align-items:center}
 .fcext > span{font-size:var(--text-small);color:var(--muted)}
 
+
+.fcmus{display:flex;align-items:center;gap:var(--space-2);min-width:0}
+.fcmus svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.fcmus.on [data-fcmus]{color:var(--accent);border-color:var(--accent)}
+.fcmus select{min-width:0;flex:1}
+.fcmus input[type=range],#fcVol{accent-color:var(--accent);width:72px;flex:none}
+#fcVol{width:140px}
+
 #vTime .vhead{flex-wrap:wrap;row-gap:var(--space-2)}
 .tkrange{display:flex;align-items:center;gap:var(--space-2);margin:0 0 var(--space-4);flex-wrap:wrap}
 .tkrange .tkwhen{min-width:0;font-size:var(--text-body);font-weight:600;color:var(--fg)}
@@ -5043,7 +5051,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.39";
+  const APP_VERSION = "1.28.42";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -29770,6 +29778,323 @@ const x = $('#tdX'); if (x) { x.focus(); x.select(); }
 const bgBusy = () => !!planBusy || !!tdMiss.busy;
 Object.assign(window.__gs, { todoShowPerson, todoForPerson, todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove, bgBusy });
 
+
+const LOFI_SCALES = { maj: [0, 2, 4, 5, 7, 9, 11], min: [0, 2, 3, 5, 7, 8, 10], dor: [0, 2, 3, 5, 7, 9, 10] };
+const LOFI_PROGS = {
+maj: [[1, 4, 0, 5], [0, 5, 1, 4], [3, 2, 1, 0], [3, 4, 2, 5], [5, 3, 0, 4], [1, 4, 0, 0], [3, 0, 1, 5], [0, 2, 3, 4], [3, 4, 5, 0]],
+min: [[0, 5, 2, 6], [0, 3, 6, 2], [5, 6, 0, 0], [3, 6, 2, 5], [0, 6, 5, 6], [0, 3, 5, 4], [0, 2, 5, 3], [5, 3, 0, 6]],
+dor: [[0, 3, 0, 3], [0, 1, 2, 1], [0, 3, 0, 4], [0, 2, 3, 3], [0, 6, 3, 0]]
+};
+const LOFI_PENT = { maj: [0, 1, 2, 4, 5], min: [0, 2, 3, 4, 6], dor: [0, 2, 3, 4, 6] };
+const LOFI_KICKS = [[0, 10], [0, 7, 10], [0, 3, 10], [0, 8, 11], [0, 6, 10], [0, 10, 15], [0, 5, 10]];
+const LOFI_STYLES = [
+{ id: 'rain', name: 'Rainy window', bpm: [66, 74], modes: ['min', 'dor', 'maj', 'min'], keys: ['rhodes'], mel: ['bell', 'vibes'], kit: ['brush', 'rim'], amb: 'rain', swing: [.56, .6], cut: 2700, wow: 1, comp: ['hold', 'push', 'lazy'], pad: .5, dens: .8 },
+{ id: 'library', name: 'Late library', bpm: [74, 82], modes: ['maj', 'min', 'dor'], keys: ['piano'], mel: ['lead', 'vibes', 'bell'], kit: ['rim', 'snare'], amb: 'vinyl', swing: [.55, .6], cut: 3000, wow: 1, comp: ['push', 'lazy', 'two'], pad: 0, dens: .9 },
+{ id: 'coffee', name: 'Morning coffee', bpm: [82, 92], modes: ['maj', 'maj', 'dor'], keys: ['guitar', 'rhodes'], mel: ['bell', 'pluck', 'vibes'], kit: ['snare', 'rim'], amb: 'vinyl', swing: [.54, .58], cut: 3900, wow: .7, comp: ['push', 'two', 'arp'], pad: 0, dens: 1 },
+{ id: 'night', name: 'Night bus', bpm: [68, 76], modes: ['min', 'min', 'dor'], keys: ['rhodes'], mel: ['lead', 'bell'], kit: ['clap', 'snare'], amb: 'vinyl', swing: [.56, .62], cut: 2300, wow: 1.2, comp: ['hold', 'lazy'], pad: 1, dens: .7, half: 1 },
+{ id: 'tape', name: 'Sunday tape', bpm: [76, 84], modes: ['maj', 'min', 'dor', 'maj'], keys: ['piano', 'rhodes'], mel: ['bell', 'pluck'], kit: ['brush', 'snare'], amb: 'vinyl2', swing: [.56, .6], cut: 2400, wow: 2.2, comp: ['push', 'lazy', 'arp'], pad: .4, dens: .9 },
+{ id: 'garden', name: 'Garden', bpm: [86, 96], modes: ['maj', 'dor', 'maj'], keys: ['guitar'], mel: ['vibes', 'lead', 'bell'], kit: ['rim'], amb: 'none', swing: [.5, .52], cut: 4300, wow: .6, comp: ['bossa', 'arp'], pad: 0, dens: 1, bossa: 1 },
+{ id: 'blue', name: 'Blue hour', bpm: [80, 88], modes: ['dor', 'min', 'dor'], keys: ['rhodes', 'piano'], mel: ['vibes', 'lead'], kit: ['snare', 'brush'], amb: 'vinyl', swing: [.6, .64], cut: 3400, wow: 1, comp: ['push', 'two'], pad: 0, dens: 1, walk: 1 },
+{ id: 'quiet', name: 'Quiet desk', bpm: [60, 70], modes: ['maj', 'min', 'dor', 'maj'], keys: ['piano', 'rhodes', 'guitar'], mel: ['bell', 'vibes'], kit: [], amb: 'rain', swing: [.5, .5], cut: 2600, wow: 1.2, comp: ['arp', 'hold'], pad: 1, dens: .6, nodrums: 1 }
+];
+
+function lofiRng(seed) {
+let a = (seed >>> 0) || 1;
+return function () { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function lofiNear(pc, c) { let m = c - (((c - pc) % 12) + 12) % 12; if (c - m > 6) m += 12; return m; }
+
+function lofiCompose(seed, styleId) {
+const r = lofiRng(seed), pick = a => a[Math.floor(r() * a.length)], rr = (a, b) => a + r() * (b - a);
+const S = LOFI_STYLES.find(s => s.id === styleId) || pick(LOFI_STYLES);
+const mode = pick(S.modes), sc = LOFI_SCALES[mode], tonic = Math.floor(r() * 12);
+const bpm = Math.round(rr(S.bpm[0], S.bpm[1])), swing = rr(S.swing[0], S.swing[1]);
+const cl = bpm >= 84 && r() < .5 ? 2 : 1;
+const progA = pick(LOFI_PROGS[mode]); let progB = pick(LOFI_PROGS[mode]); if (progB === progA) progB = LOFI_PROGS[mode][(LOFI_PROGS[mode].indexOf(progA) + 1) % LOFI_PROGS[mode].length];
+const centre = 59 + Math.floor(r() * 6), comp = pick(S.comp), kit = S.kit.length ? pick(S.kit) : '', kick = pick(LOFI_KICKS);
+const keys = pick(S.keys), mel = pick(S.mel), strum = rr(.02, .06);
+const pc = d => (tonic + sc[((d % 7) + 7) % 7]) % 12;
+const chord = d => {
+const root = pc(d), ninth = pc(d + 1), tones = [pc(d + 2), pc(d + 4), pc(d + 6), ((ninth - root + 12) % 12) === 2 ? ninth : root];
+return { root, tones, notes: [...new Set(tones.map(p => lofiNear(p, centre)))].sort((a, b) => a - b), bass: 38 + ((root - 38) % 12 + 12) % 12 };
+};
+const ev = [], put = (t, k, n, d, v) => ev.push([Math.max(0, t), k, n, d, Math.round(Math.min(1, Math.max(.05, v)) * 100) / 100]);
+const sw = step => Math.floor(step / 4) + [0, swing / 2, .5, .5 + swing / 2][step % 4];
+const hum = () => (r() - .5) * .025;
+
+const melLo = mel === 'lead' ? 62 : 67, pent = [];
+for (let m = melLo; m <= melLo + 19; m++) if (LOFI_PENT[mode].some(d => (tonic + sc[d]) % 12 === m % 12)) pent.push(m);
+const walk = (i) => { const hi = pent.length - 1; let j = i + pick(i > hi - 2 ? [-2, -1, -1, 0] : i < 2 ? [2, 1, 1, 0] : [-2, -1, -1, 1, 1, 2, 0]); return Math.min(hi, Math.max(0, j)); };
+const phrase = () => {
+const rhy = [];
+for (let b = 0; b < 2; b++) for (let s = 0; s < 8; s++) {
+let w = (s === 0 ? .6 : s === 4 ? .45 : s % 2 === 0 ? .32 : .22) * S.dens;
+if (b === 1 && s >= 5) w *= .2;
+if (r() < w) rhy.push(b * 8 + s);
+}
+for (const s of [0, 3, 6, 10]) if (rhy.length < 4 && !rhy.includes(s)) rhy.push(s);
+rhy.sort((a, b) => a - b);
+let i = 1 + Math.floor(r() * (pent.length - 2));
+const first = rhy.map(s => ({ s, i: (i = walk(i)) })), bar3 = first.filter(n => n.s < 8).map(n => ({ s: n.s + 16, i: n.i }));
+i = bar3.length ? bar3[bar3.length - 1].i : i;
+const bar4 = first.filter(n => n.s >= 8).map(n => ({ s: n.s + 16, i: (i = walk(i)) }));
+const all = first.concat(bar3, bar4), last = all[all.length - 1];
+let best = last.i, bd = 99; pent.forEach((m, k) => { const p = (m - tonic + 120) % 12; if ((p === 0 || p === 7) && Math.abs(k - last.i) < bd) { bd = Math.abs(k - last.i); best = k; } }); last.i = best;
+all.forEach((n, k) => { n.len = k < all.length - 1 ? Math.min(all[k + 1].s - n.s, 4) : Math.min(32 - n.s, 6); });
+return all;
+};
+const tunes = [phrase(), phrase()]; tunes[2] = tunes[0].map(n => ({ s: n.s, len: n.len, i: Math.min(pent.length - 1, n.i + 1) }));
+const sing = (bar0, tune, prog, vel) => {
+for (const n of tune) {
+let m = pent[n.i];
+if (n.s % 8 === 0) {
+const c = chord(prog[Math.floor((bar0 + Math.floor(n.s / 8)) / cl) % prog.length]), ok = c.tones.concat(c.root);
+let bd = 99; pent.forEach((p, k) => { if (Math.abs(k - n.i) <= 2 && ok.includes(p % 12) && Math.abs(k - n.i) < bd) { bd = Math.abs(k - n.i); m = p; } });
+}
+put(bar0 * 4 + n.s / 2 + .03 + hum(), 'm', m, n.len / 2 * .92, vel * rr(.75, 1));
+}
+};
+
+const L = 4 * cl, sections = [
+{ bars: 4, keys: 1, soft: 1 },
+{ bars: 8, keys: 1, bass: 1, drums: 1 },
+{ bars: 8, keys: 1, bass: 1, drums: 1, mel: 0 },
+{ bars: L === 4 && r() < .5 ? 4 : 8, keys: 1, bass: 1, drums: 2, mel: 1, prog: progB, arp: 1 },
+{ bars: 8, keys: 1, bass: 1, drums: 1, mel: 0 },
+{ bars: 8, keys: 1, bass: 1, drums: 1, mel: 2 },
+{ bars: 4, keys: 1, soft: 1 }
+];
+let bar = 0;
+for (const sec of sections) {
+const prog = sec.prog || progA, at = b => chord(prog[Math.floor(b / cl) % prog.length]);
+for (let b = 0; b < sec.bars; b++) {
+const t = (bar + b) * 4, c = at(b), nx = at(b + 1), again = cl === 2 && b % 2 === 1, how = sec.arp && comp !== 'arp' && r() < .6 ? 'arp' : comp, kv = sec.soft ? .5 : .62;
+if (sec.keys) {
+const hit = (bt, d, v) => c.notes.forEach((n, i) => put(t + bt + i * strum * rr(.7, 1.2) + hum(), 'k', n, d, v * rr(.85, 1) * (i === c.notes.length - 1 ? 1.08 : 1)));
+if (how === 'hold') { hit(0, again ? 3 : 3.8, kv); if (again && r() < .6) hit(2.5, 1.3, kv * .7); }
+else if (how === 'push') { hit(0, 1.4, kv); hit(1.5, 2.2, kv * .8); if (r() < .3) hit(3.5, .4, kv * .55); }
+else if (how === 'lazy') { hit(0, 2.4, kv); hit(2.5, 1.3, kv * .72); }
+else if (how === 'two') { hit(0, 1.8, kv); hit(2, 1.8, kv * .8); }
+else if (how === 'bossa') { for (const [bt, d, v] of [[0, 1.3, 1], [1.5, .9, .75], [2.5, .9, .85], [3.5, .5, .6]]) hit(bt, d, kv * v); }
+else {
+const ns = c.notes, order = [0, 1, 2, 3, 2, 1, 3, 2].map(i => ns[Math.min(i, ns.length - 1)]);
+order.forEach((n, i) => { if (i < 4 || r() < .75) put(t + i * .5 + hum(), 'k', i === 6 ? n + 12 : n, i < 4 ? 4 - i * .5 : .9, kv * (i % 2 ? .7 : .9) * rr(.85, 1)); });
+}
+if (S.pad && b % cl === 0) c.notes.slice(0, 3).forEach(n => put(t, 'p', n, 4 * cl + .5, S.pad * (sec.soft ? .7 : .55)));
+}
+if (sec.bass) {
+const v = .7;
+if (S.walk && sec.drums === 1) {
+const steps = [c.bass, lofiNear(c.tones[0], c.bass + 4), lofiNear(c.tones[1], c.bass + 5), nx.bass + (r() < .5 ? 1 : -2)];
+steps.forEach((n, i) => { if (i === 0 || r() < .8) put(t + i + hum(), 'b', n, .9, v * (i ? .8 : 1)); });
+} else if (S.bossa) { put(t, 'b', c.bass, 1.4, v); put(t + 1.5, 'b', c.bass + 7, .5, v * .7); put(t + 2, 'b', c.bass + 7, 1.4, v * .85); put(t + 3.5, 'b', c.bass, .5, v * .7); }
+else {
+put(t + hum(), 'b', c.bass, 2.3, v);
+if (r() < .7) put(t + 2.5 + hum(), 'b', r() < .3 ? c.bass + 7 : c.bass, r() < .5 ? .9 : 1.3, v * .8);
+if (r() < .35 && nx.bass !== c.bass) put(t + 3.5, 'b', nx.bass + (r() < .5 ? -2 : 2), .45, v * .65);
+}
+}
+if (sec.drums && kit) {
+const fill = b % 8 === 7, light = sec.drums === 2;
+if (S.bossa) {
+for (const s of [0, 6, 8, 14]) put(sw(s) + t + hum(), 'K', 0, 0, s % 8 ? .5 : .75);
+if (!light) for (const s of [3, 6, 10, 12]) put(sw(s) + t + hum(), 'S', 0, 0, .5 * rr(.8, 1));
+} else {
+if (!light) for (const s of kick) if (!(fill && s > 8) && (s === 0 || r() < .9)) put(sw(s) + t + hum() * .5, 'K', 0, 0, s === 0 ? .95 : .7 * rr(.8, 1));
+if (!light) for (const s of (S.half ? [8] : [4, 12])) put(sw(s) + t + .02 + hum() * .5, 'S', 0, 0, .8 * rr(.85, 1));
+if (!light && fill) { for (const s of [13, 14, 15]) if (r() < .6) put(sw(s) + t + hum(), 'S', 0, 0, .3 * rr(.6, 1)); }
+else if (!light && r() < .2) put(sw(pick([7, 9, 15])) + t, 'S', 0, 0, .22);
+}
+for (let s = 0; s < 16; s++) {
+const eighth = s % 2 === 0;
+if (eighth || r() < (light ? .05 : .18)) put(sw(s) + t + hum(), s === 14 && r() < .25 ? 'O' : 'H', 0, 0, (eighth ? (s % 4 === 0 ? .55 : .8) : .35) * rr(.7, 1) * (light ? .7 : 1));
+}
+}
+if (sec.mel !== undefined && b % 4 === 0 && (b % 8 === 0 || r() < .65 * S.dens)) sing(bar + b, tunes[sec.mel], prog, .7);
+}
+bar += sec.bars;
+}
+ev.sort((a, b) => a[0] - b[0]);
+return { seed, style: S.id, bpm, swing, mode, tonic, beats: bar * 4, ev, keys, mel, kit, amb: S.amb, cut: S.cut, wow: S.wow };
+}
+
+/* ---------- playing a track ---------- */
+
+const lofiHz = m => 440 * Math.pow(2, (m - 69) / 12);
+
+function lofiEngine(ctx) {
+const E = { ctx, plk: {} }, sr = ctx.sampleRate;
+E.out = ctx.createGain(); E.out.gain.value = 1;
+E.comp = ctx.createDynamicsCompressor(); E.comp.threshold.value = -14; E.comp.knee.value = 10; E.comp.ratio.value = 2.5; E.comp.attack.value = .01; E.comp.release.value = .25;
+E.comp.connect(E.out); E.out.connect(ctx.destination);
+const noise = ctx.createBuffer(1, sr * 2, sr), nd = noise.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+E.noise = noise;
+const ir = ctx.createBuffer(2, Math.floor(sr * 2.4), sr);
+for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); let lp = 0; for (let i = 0; i < d.length; i++) { const k = 1 - i / d.length; lp += ((Math.random() * 2 - 1) - lp) * .35; d[i] = lp * k * k * k; } }
+E.ir = ir;
+const vin = ctx.createBuffer(1, Math.floor(sr * 6.3), sr), vd = vin.getChannelData(0); let pop = 0;
+for (let i = 0; i < vd.length; i++) { if (Math.random() < 1 / 2600) pop = (Math.random() * 2 - 1) * (Math.random() < .12 ? .5 : .2); vd[i] = (Math.random() * 2 - 1) * .018 + pop; pop *= .55; }
+E.vinyl = vin;
+const wave = [0, 1, .5, .22, .1, .06, .03]; E.piano = ctx.createPeriodicWave(new Float32Array(wave.length), new Float32Array(wave));
+const curve = new Float32Array(1025); for (let i = 0; i < 1025; i++) { const x = i / 512 - 1; curve[i] = Math.tanh(1.6 * x) / Math.tanh(1.6); }
+E.curve = curve;
+return E;
+}
+function lofiPluck(E, n) {
+if (E.plk[n]) return E.plk[n];
+const sr = E.ctx.sampleRate, N = Math.round(sr / lofiHz(n)), buf = E.ctx.createBuffer(1, Math.floor(sr * 2.2), sr), d = buf.getChannelData(0);
+let lp = 0; for (let i = 0; i < N; i++) { lp += ((Math.random() * 2 - 1) - lp) * .45; d[i] = lp; }
+for (let i = N + 1; i < d.length; i++) d[i] = (d[i - N] + d[i - N - 1]) * .4975;
+return (E.plk[n] = { buf, rate: lofiHz(n) * N / sr });
+}
+
+function lofiTrack(E, tr, t0) {
+const c = E.ctx, g = (v, to) => { const n = c.createGain(); n.gain.value = v; if (to) n.connect(to); return n; };
+const flt = (type, f, to, q) => { const n = c.createBiquadFilter(); n.type = type; n.frequency.value = f; if (q) n.Q.value = q; if (to) n.connect(to); return n; };
+const T = { tr, t0, i: 0, spb: 60 / tr.bpm, live: [] }, end = t0 + tr.beats * T.spb, intro = 16 * T.spb;
+T.end = end;
+T.out = g(0, E.comp);
+T.out.gain.setValueAtTime(0, t0); T.out.gain.linearRampToValueAtTime(1, t0 + 1.2);
+T.out.gain.setValueAtTime(1, end - intro * .5); T.out.gain.linearRampToValueAtTime(0, end + .5);
+const shape = c.createWaveShaper(); shape.curve = E.curve; shape.oversample = '2x'; shape.connect(T.out);
+const lp = flt('lowpass', tr.cut, shape, .4);
+lp.frequency.setValueAtTime(700, t0); lp.frequency.exponentialRampToValueAtTime(tr.cut, t0 + intro * .9);
+lp.frequency.setValueAtTime(tr.cut, end - intro * .8); lp.frequency.exponentialRampToValueAtTime(600, end);
+const tape = c.createDelay(.1); tape.delayTime.value = .02; tape.connect(lp);
+const lfo = (hz, depth, param) => { const o = c.createOscillator(), a = g(depth); o.frequency.value = hz; o.connect(a); a.connect(param); o.start(t0); o.stop(end + 3); T.live.push(o); };
+lfo(.31 + (tr.seed % 7) * .02, .0014 * tr.wow, tape.delayTime); lfo(5.9, .00004 * tr.wow, tape.delayTime);
+T.mix = g(.6, tape);
+T.duck = g(1, T.mix);
+const verb = c.createConvolver(); verb.buffer = E.ir; const wet = g(.5, T.mix); verb.connect(flt('lowpass', 2400, wet)); T.verb = verb;
+const bus = (level, send) => { const b = g(level, T.duck); if (send) b.connect(g(send, verb)); return b; };
+T.keys = c.createStereoPanner ? c.createStereoPanner() : g(1); T.keys.connect(bus(1, .28));
+if (T.keys.pan) lfo(.23, .3, T.keys.pan);
+T.mel = bus(.8, .45); T.pad = bus(.9, .35); T.bass = bus(1, 0);
+T.drum = flt('lowpass', Math.min(6500, tr.cut * 1.7), g(.5, T.mix)); T.dverb = g(.08, verb);
+T.amb = g(lofi.amb ? 1 : 0, T.out);
+const loop = (buf, rate) => { const s = c.createBufferSource(); s.buffer = buf; s.loop = true; s.playbackRate.value = rate; s.start(t0, Math.random() * buf.duration); s.stop(end + 3); T.live.push(s); return s; };
+if (tr.amb === 'vinyl' || tr.amb === 'vinyl2') loop(E.vinyl, 1).connect(flt('highpass', 900, flt('lowpass', 7000, g(tr.amb === 'vinyl2' ? .55 : .3, T.amb))));
+if (tr.amb === 'rain') {
+const rain = g(.05, T.amb); loop(E.noise, .93).connect(flt('highpass', 500, flt('lowpass', 3200, rain))); lfo(.07, .015, rain.gain);
+loop(E.noise, .61).connect(flt('lowpass', 380, g(.09, T.amb)));
+loop(E.vinyl, .7).connect(flt('bandpass', 2600, g(.3, T.amb), .8));
+}
+return T;
+}
+
+function lofiNote(E, T, e) {
+const c = E.ctx, tr = T.tr, t = T.t0 + e[0] * T.spb, k = e[1], v = e[4], dur = e[3] * T.spb, f = lofiHz(e[2]);
+const osc = (type, hz, to, det) => { const o = c.createOscillator(); if (type === 'piano') o.setPeriodicWave(E.piano); else o.type = type; o.frequency.value = hz; if (det) o.detune.value = det; o.connect(to); o.start(t); return o; };
+const gain = to => { const n = c.createGain(); n.gain.value = 0; n.connect(to); return n; };
+const env = (n, a, peak, fall, hold, rel, stop) => { const p = n.gain, e2 = Math.max(t + a + .01, t + dur); p.setValueAtTime(0, t); p.linearRampToValueAtTime(peak, t + a); p.setTargetAtTime(peak * hold, t + a, fall / 3); p.setTargetAtTime(0, e2, rel / 3); for (const o of stop) o.stop(e2 + rel * 2.2); };
+const hitNoise = (to, len) => { const s = c.createBufferSource(); s.buffer = E.noise; s.connect(to); s.start(t, Math.random() * 1.5, len + .05); return s; };
+const lpf = (hz, to) => { const n = c.createBiquadFilter(); n.type = 'lowpass'; n.frequency.value = hz; n.connect(to); return n; };
+const voice = (kind, to, oct) => {
+const hz = f * (oct || 1), a = gain(to);
+if (kind === 'rhodes') {
+const car = osc('sine', hz, a), mg = c.createGain(), mod = osc('sine', hz, mg); mg.connect(car.frequency);
+mg.gain.setValueAtTime(hz * (.7 + 1.7 * v), t); mg.gain.setTargetAtTime(hz * .16, t, .13);
+const b = gain(to), tine = osc('sine', hz * 4.01, b); b.gain.setValueAtTime(v * .035, t); b.gain.setTargetAtTime(0, t, .05); tine.stop(t + .5);
+env(a, .004, v * .27, 1.5, .3, .35, [car, mod]);
+} else if (kind === 'piano') {
+const l = lpf(700, a); l.frequency.setValueAtTime(700 + 2800 * v, t); l.frequency.setTargetAtTime(520, t, .4);
+env(a, .012, v * .2, 1.9, .14, .4, [osc('piano', hz, l, -4), osc('piano', hz, l, 5)]);
+} else if (kind === 'guitar' || kind === 'pluck') {
+const p = lofiPluck(E, e[2] + (oct === 2 ? 12 : 0)), s = c.createBufferSource(); s.buffer = p.buf; s.playbackRate.value = p.rate; s.connect(lpf(1500 + 2200 * v, a)); s.start(t);
+env(a, .003, v * 1.4, 3, .5, .3, [s]);
+} else if (kind === 'bell') {
+const b = gain(to), hi = osc('sine', hz * 3, b); b.gain.setValueAtTime(v * .07, t); b.gain.setTargetAtTime(0, t, .06); hi.stop(t + .6);
+env(a, .003, v * .4, .9, 0, .5, [osc('sine', hz, a)]);
+} else if (kind === 'vibes') {
+const b = gain(to), hi = osc('sine', hz * 4, b); b.gain.setValueAtTime(v * .04, t); b.gain.setTargetAtTime(0, t, .1); hi.stop(t + .8);
+const o = osc('sine', hz, a), tg = c.createGain(), trem = osc('sine', 4.6, tg); tg.gain.value = v * .05; tg.connect(a.gain);
+env(a, .004, v * .24, 2.2, 0, .6, [o, trem]);
+} else if (kind === 'lead') {
+const o = osc('triangle', hz, lpf(1500, a)), vg = c.createGain(), vib = osc('sine', 5.1, vg); vg.connect(o.frequency);
+vg.gain.setValueAtTime(0, t); vg.gain.setTargetAtTime(hz * .005, t + .22, .15);
+env(a, .05, v * .21, .6, .75, .25, [o, vib]);
+}
+};
+if (k === 'k') voice(tr.keys, T.keys);
+else if (k === 'm') voice(tr.mel === 'pluck' ? 'pluck' : tr.mel, T.mel);
+else if (k === 'p') {
+const a = gain(T.pad), l = lpf(620, a);
+env(a, 1.1, v * .05, 1, 1, 1.6, [osc('sawtooth', f, l, -9), osc('sawtooth', f, l, 8)]);
+} else if (k === 'b') {
+const a = gain(T.bass), l = lpf(480, a), tri = c.createGain(); tri.gain.value = .3; tri.connect(l);
+env(a, .012, v * .2, .7, .6, .12, [osc('sine', f, l), osc('triangle', f, tri)]);
+} else if (k === 'K') {
+const a = gain(T.drum), o = osc('sine', 48, a); o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(46, t + .09);
+a.gain.setValueAtTime(v * .85, t); a.gain.setTargetAtTime(0, t + .03, .085); o.stop(t + .7);
+T.duck.gain.setTargetAtTime(1 - .3 * v, t, .008); T.duck.gain.setTargetAtTime(1, t + .05, .11);
+} else if (k === 'S') {
+const a = gain(T.drum); a.connect(T.dverb);
+const bp = (hz, q) => { const n = c.createBiquadFilter(); n.type = 'bandpass'; n.frequency.value = hz; n.Q.value = q; n.connect(a); return n; };
+if (tr.kit === 'rim') { hitNoise(bp(2400, 1.5), .04); const o = osc('triangle', 470, a); o.stop(t + .1); a.gain.setValueAtTime(v * .4, t); a.gain.setTargetAtTime(0, t + .004, .018); }
+else if (tr.kit === 'brush') { hitNoise(bp(3200, .6), .4); a.gain.setValueAtTime(0, t); a.gain.linearRampToValueAtTime(v * .28, t + .012); a.gain.setTargetAtTime(0, t + .02, .075); }
+else if (tr.kit === 'clap') { hitNoise(bp(1500, 1), .4); for (const d of [0, .011, .022]) { a.gain.setValueAtTime(v * .5, t + d); a.gain.setTargetAtTime(v * .12, t + d + .001, .004); } a.gain.setTargetAtTime(0, t + .03, .06); }
+else { hitNoise(bp(1900, .7), .4); const o = osc('triangle', 185, a); o.stop(t + .12); a.gain.setValueAtTime(v * .42, t); a.gain.setTargetAtTime(0, t + .01, .055); }
+} else if (k === 'H' || k === 'O') {
+const a = gain(T.drum), hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 6800; hp.connect(a); hitNoise(hp, .4);
+a.gain.setValueAtTime(v * .16, t); a.gain.setTargetAtTime(0, t + .004, k === 'O' ? .09 : .02);
+}
+}
+function lofiSchedule(E, T, until) { const ev = T.tr.ev; while (T.i < ev.length && T.t0 + ev[T.i][0] * T.spb < until) lofiNote(E, T, ev[T.i++]); }
+
+/* ---------- the player ---------- */
+
+const lofi = { E: null, on: false, vol: .5, amb: false, style: 'mix', cur: null, old: [], timer: 0, last: '', seed: 0, onTrack: null };
+const LOFI_AHEAD = 3;
+function lofiLevel(v) { return Math.pow(v, 1.6); }
+function lofiPickStyle() {
+if (lofi.style !== 'mix' && LOFI_STYLES.some(s => s.id === lofi.style)) return lofi.style;
+const rest = LOFI_STYLES.filter(s => s.id !== lofi.last); return rest[Math.floor(Math.random() * rest.length)].id;
+}
+function lofiBegin(at) {
+const E = lofi.E, id = lofiPickStyle(); lofi.last = id;
+lofi.seed = (Math.random() * 4294967296) >>> 0;
+lofi.cur = lofiTrack(E, lofiCompose(lofi.seed, id), at);
+if (lofi.onTrack) try { lofi.onTrack(lofi.cur.tr); } catch { }
+}
+function lofiDrop(T, fade) {
+const c = lofi.E.ctx, now = c.currentTime; T.i = T.tr.ev.length;
+try { T.out.gain.cancelScheduledValues(now); T.out.gain.setTargetAtTime(0, now, fade / 3); } catch { }
+setTimeout(() => { try { T.out.disconnect(); for (const o of T.live) o.stop(); } catch { } }, (fade + .3) * 1000);
+}
+function lofiTick() {
+const E = lofi.E; if (!E || !lofi.on || !lofi.cur) return;
+const now = E.ctx.currentTime, T = lofi.cur;
+lofiSchedule(E, T, now + LOFI_AHEAD);
+for (const o of lofi.old) lofiSchedule(E, o, now + LOFI_AHEAD);
+lofi.old = lofi.old.filter(o => { if (now < o.end + 4) return true; try { o.out.disconnect(); } catch { } return false; });
+if (now + LOFI_AHEAD > T.end - 1.5) { lofi.old.push(T); lofiBegin(Math.max(now + .1, T.end - 1.5)); lofiSchedule(E, lofi.cur, now + LOFI_AHEAD); }
+}
+function lofiPlay() {
+try {
+if (!lofi.E) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return false; lofi.E = lofiEngine(new C()); lofi.E.out.gain.value = lofiLevel(lofi.vol); }
+const c = lofi.E.ctx; if (c.state === 'suspended') c.resume();
+lofi.on = true;
+if (!lofi.cur) lofiBegin(c.currentTime + .15);
+if (!lofi.timer) lofi.timer = setInterval(lofiTick, 250);
+lofiTick(); return true;
+} catch { return false; }
+}
+function lofiPause() { lofi.on = false; if (lofi.timer) { clearInterval(lofi.timer); lofi.timer = 0; } try { if (lofi.E) lofi.E.ctx.suspend(); } catch { } }
+function lofiNext() {
+if (!lofi.E || !lofi.cur) return lofiPlay();
+lofiDrop(lofi.cur, .5); for (const o of lofi.old) lofiDrop(o, .3); lofi.old = [];
+lofiBegin(lofi.E.ctx.currentTime + .35); if (lofi.on) lofiTick();
+}
+function lofiStop() { lofiPause(); try { if (lofi.E) lofi.E.ctx.close(); } catch { } lofi.E = null; lofi.cur = null; lofi.old = []; }
+function lofiVolume(v) { lofi.vol = Math.min(1, Math.max(0, +v || 0)); if (lofi.E) lofi.E.out.gain.setTargetAtTime(lofiLevel(lofi.vol), lofi.E.ctx.currentTime, .03); }
+function lofiStyle(id) { const was = lofi.style; lofi.style = id; if (id !== was && lofi.cur && id !== 'mix' && lofi.cur.tr.style !== id) lofiNext(); }
+function lofiAmb(on) { lofi.amb = !!on; if (lofi.E && lofi.cur) for (const T of [lofi.cur, ...lofi.old]) T.amb.gain.setTargetAtTime(on ? 1 : 0, lofi.E.ctx.currentTime, .2); }
+function lofiRender(ctx, tr) {
+const E = lofiEngine(ctx), T = lofiTrack(E, tr, .1), len = ctx.length / ctx.sampleRate;
+const step = at => { lofiSchedule(E, T, at + LOFI_AHEAD); if (at + 2 < len) ctx.suspend(at + 2).then(() => { step(at + 2); ctx.resume(); }); };
+step(0); return T;
+}
+
 /* ---------------- Focus: a work timer for grading, a daily goal, and a way straight into the next piece of work ----------------
 Made for getting started and keeping going: one press starts a short session on the next set of papers (or a to-do), a small
 panel keeps the time and the next paper in view, a soft chime says when the time is up, and a break is offered. Nothing scolds:
@@ -29807,6 +30132,7 @@ return { len: FC_LENS.includes(+f.len) ? +f.len : 10, brk: FC_BRKS.includes(+f.b
 track: f.track !== false, idle: TK_IDLES.includes(+f.idle) ? +f.idle : 5,
 free: f.free !== false, wk: f.wk === false ? false : [0, 1, 2, 3, 4, 5, 6].includes(f.wk) ? f.wk : 5, quiet: f.quiet === true, short: f.short === true,
 sg: f.sg !== false,
+music: f.music === true, mood: LOFI_STYLES.some(x => x.id === f.mood) ? f.mood : 'mix', mvol: +f.mvol >= .05 && +f.mvol <= 1 ? +f.mvol : .5, mamb: f.mamb === true,
 goal: g && (g.k === 'papers' || g.k === 'min') && +g.n > 0 ? { k: g.k, n: Math.min(fcGoalMax(g.k, g.per), Math.round(+g.n)), per: g.per === 'week' ? 'week' : 'day',
 days: g.per !== 'week' && Array.isArray(g.days) && g.days.some(d => FC_DOWS.includes(d)) ? FC_DOWS.filter(d => g.days.includes(d)) : null } : null };
 }
@@ -29817,6 +30143,10 @@ if (c.brk !== 5) o.brk = c.brk;
 if (c.goal) o.goal = { k: c.goal.k, n: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days && c.goal.days.length < 7 ? { days: c.goal.days } : {}) };
 if (!c.sg) o.sg = false;
 if (!c.sound) o.sound = false;
+if (c.music) o.music = true;
+if (c.mood !== 'mix') o.mood = c.mood;
+if (c.mvol !== .5) o.mvol = c.mvol;
+if (c.mamb) o.mamb = true;
 if (!c.title) o.title = false;
 if (!c.track) o.track = false;
 if (c.idle !== 5) o.idle = c.idle;
@@ -30195,6 +30525,39 @@ function fcSgNext(w, len) {
 const g = fcSgNow(w, len); if (!g) return '';
 return '<p class="fcp fcsgnext"><span class="fcl">Session goal</span> ' + fcSgSpan(g, null, w) + (g.c ? ' <span class="muted">(carried over)</span>' : '') + '</p>';
 }
+/* ---------- lo-fi music while a session runs (src/lofi.js writes and plays it) ---------- */
+const FC_NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/></svg>';
+const FC_SKIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6v12l9-6zM18 6v12"/></svg>';
+const fcMoods = (id, v) => '<select ' + id + ' class="btn sm" aria-label="Mood">' + [{ id: 'mix', name: 'Mix of everything' }, ...LOFI_STYLES].map(m => '<option value="' + m.id + '"' + (m.id === v ? ' selected' : '') + '>' + m.name + '</option>').join('') + '</select>';
+const fcVol = (id, v) => '<input type="range" ' + id + ' min="0.05" max="1" step="0.05" value="' + v + '" aria-label="Volume">';
+function fcMusicHtml(c) {
+return '<div class="fcmus' + (c.music ? ' on' : '') + '"><button class="btn sm' + (c.music ? '' : ' ghost') + '" data-fcmus aria-pressed="' + c.music + '" title="Lo-fi music">' + FC_NOTE + (c.music ? '' : '<span>Lo-fi music</span>') + '</button>' +
+(c.music ? fcMoods('data-fcmood', c.mood) + '<button class="btn sm" data-fcskip title="Next track">' + FC_SKIP + '</button>' + fcVol('data-fcvol', c.mvol) : '') + '</div>';
+}
+let fcMusCh = null;
+try { fcMusCh = new BroadcastChannel('gs-lofi'); fcMusCh.onmessage = () => { fcS.myield = true; fcMusicSync(); }; } catch { }
+function fcMusicSync() {
+const r = fcRun(), c = fcConf(), run = !!r && r.st === 'run' && c.music;
+if (!run) { if (lofi.on) lofiPause(); if (lofi.E && !(r && r.st === 'paused' && c.music)) lofiStop(); return; }
+if (lofi.vol !== c.mvol) lofiVolume(c.mvol);
+if (lofi.amb !== c.mamb) lofiAmb(c.mamb);
+if (lofi.style !== c.mood) lofiStyle(c.mood);
+const pressed = !navigator.userActivation || navigator.userActivation.hasBeenActive;
+if (fcS.myield) { if (lofi.on) lofiPause(); }
+else if (!lofi.on && pressed && !document.hidden && lofiPlay() && fcMusCh) fcMusCh.postMessage(1);
+}
+for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, () => { if (!lofi.on && fcConf().music) setTimeout(() => { fcS.myield = false; fcMusicSync(); }, 0); }, true);
+document.addEventListener('click', e => {
+const t = e.target.closest('[data-fcmus], [data-fcskip]'); if (!t) return;
+if (t.dataset.fcskip != null) return lofiNext();
+fcS.myield = false; fcConfSet({ music: !fcConf().music }); if ($('#setFocus')) setRender();
+});
+document.addEventListener('input', e => { if (e.target.matches('[data-fcvol], #fcVol')) lofiVolume(e.target.value); });
+document.addEventListener('change', e => {
+const t = e.target;
+if (t.matches('[data-fcvol]')) fcConfSet({ mvol: +t.value });
+else if (t.matches('[data-fcmood]')) fcConfSet({ mood: t.value });
+});
 function fcPanelHtml(r) {
 const c = fcConf(), w = r ? fcWork(r.w) : null;
 if (!r) return fcHead('Focus') + fcStartHtml();
@@ -30207,7 +30570,7 @@ if (r.away) return fcHead('Focusing', true) + '<div class="fcrunv"><p class="fcb
 '<div class="fcacts"><button class="btn sm primary" data-fcaway="keep">Keep going</button><button class="btn sm" data-fcaway="again">Start the clock again</button></div></div>';
 const got = fcGot(r);
 return fcHead(r.st === 'paused' ? 'Paused' : 'Focusing', true) + '<div class="fcrunv"><div class="fctop"><div class="fcclock' + (r.st === 'paused' ? ' paused' : '') + '"><span class="fcpr"></span><span class="fctime fct"></span></div>' + fcWhatHtml(r, w) + '</div>' +
-'<div class="fcstats"><div class="fcstat"><span>' + (r.no > 1 ? 'Session ' + r.no : 'This session') + '</span><span>' + people(got, 'paper') + '</span></div>' + fcSgLine(r, w) + fcGoalHtml(c) + '</div>' +
+'<div class="fcstats"><div class="fcstat"><span>' + (r.no > 1 ? 'Session ' + r.no : 'This session') + '</span><span>' + people(got, 'paper') + '</span></div>' + fcSgLine(r, w) + fcGoalHtml(c) + '</div>' + fcMusicHtml(c) +
 '<div class="fcacts">' + (r.st === 'paused' ? '<button class="btn sm primary" data-fcresume>Carry on</button>' : '<button class="btn sm" data-fcpause>Pause</button>') + (r.one ? '' : '<button class="btn sm" data-fcmore="5">+5 minutes</button>') + '<span class="sp"></span><button class="btn sm ghost" data-fcstop>End</button></div></div>';
 }
 if (r.st === 'up') {
@@ -30269,7 +30632,7 @@ fcClockDraw();
 }
 function fcRender() {
 if (!FC_ON || !shellReady) return;
-fcCardRender(); fcPanelRender(); fcTitle(); gpQuiet();
+fcCardRender(); fcPanelRender(); fcTitle(); gpQuiet(); fcMusicSync();
 }
 
 /* ---------- presses ---------- */
@@ -30348,7 +30711,11 @@ put('#setFocus', '<div class="lhead"><h2>Focus timer</h2><span class="muted">A t
 '<p class="setp fcset"><label for="fcLen"><b>A session lasts</b></label>' + sel('fcLen', FC_LENS, c.len, 'A session lasts') + '<label for="fcBrk"><b>A break lasts</b></label>' + sel('fcBrk', FC_BRKS, c.brk, 'A break lasts') + '</p>' +
 '<p class="setp"><label><input type="checkbox" id="fcSound"' + (c.sound ? ' checked' : '') + '> A soft chime when a session or a break ends</label></p>' +
 '<p class="setp"><label><input type="checkbox" id="fcTitle"' + (c.title ? ' checked' : '') + '> The time left in the browser tab’s name, so you can see it from another tab</label></p>' +
-'<p class="setp"><label><input type="checkbox" id="fcSg"' + (c.sg ? ' checked' : '') + '> Suggest a goal for each session, from your pace</label></p>');
+'<p class="setp"><label><input type="checkbox" id="fcSg"' + (c.sg ? ' checked' : '') + '> Suggest a goal for each session, from your pace</label></p>' +
+'<p class="setp"><label><input type="checkbox" id="fcMusic"' + (c.music ? ' checked' : '') + '> Lo-fi music while a session runs</label></p>' +
+(c.music ? '<p class="setp fcset"><label for="fcMood"><b>Mood</b></label>' + fcMoods('id="fcMood"', c.mood) + '<label for="fcVol"><b>Volume</b></label>' + fcVol('id="fcVol"', c.mvol) + '</p>' +
+'<p class="setp"><label><input type="checkbox" id="fcAmb"' + (c.mamb ? ' checked' : '') + '> Record crackle and rain in the background</label></p>' : '') +
+'<p class="muted setp">The music is made in your browser as it plays, so it never repeats and nothing is downloaded.</p>');
 const k = c.goal ? c.goal.k : '';
 put('#setGoal', '<div class="lhead"><h2>Grading goal</h2><span class="muted">How much you want to grade in a day or a week. Today and the timer show how far along you are. Nothing happens on a day you don’t get there.</span></div>' +
 '<p class="setp fcset"><span class="seg" id="fcGoalK" role="group" aria-label="Grading goal">' + [['', 'No goal'], ['papers', 'Papers'], ['min', 'Minutes']].map(([v, l]) => '<button data-v="' + v + '" aria-pressed="' + (k === v) + '">' + l + '</button>').join('') + '</span>' +
@@ -30362,6 +30729,10 @@ const t = e.target;
 if (t.id === 'fcLen') { fcS.len = 0; fcConfSet({ len: +t.value }); return setRender(); }
 if (t.id === 'fcBrk') { fcConfSet({ brk: +t.value }); return setRender(); }
 if (t.id === 'fcSound') { fcConfSet({ sound: t.checked }); if (t.checked) { fcAudioWake(); fcChime(); } return setRender(); }
+if (t.id === 'fcMusic') { fcConfSet({ music: t.checked }); return setRender(); }
+if (t.id === 'fcMood') { fcConfSet({ mood: t.value }); return setRender(); }
+if (t.id === 'fcVol') { fcConfSet({ mvol: +t.value }); return setRender(); }
+if (t.id === 'fcAmb') { fcConfSet({ mamb: t.checked }); return setRender(); }
 if (t.id === 'fcTitle') { fcConfSet({ title: t.checked }); return setRender(); }
 if (t.id === 'fcGoalN') { const g = fcConf().goal; if (!g) return; const n = Math.round(+t.value); if (n > 0) fcConfSet({ goal: { ...g, n } }); return setRender(); }
 if (t.id === 'fcGoalPer') { const g = fcConf().goal; if (!g) return; const week = t.value === 'week'; fcConfSet({ goal: { ...g, per: t.value, n: week ? g.n * (g.days ? g.days.length : 5) : Math.max(1, Math.round(g.n / 5)), days: null } }); return setRender(); }
@@ -30378,7 +30749,7 @@ const n = $('#fcGoalN'); if (n) { n.focus(); n.select(); }
 
 FC_ON = true;
 fcSeen(); fcTickOn();
-window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcCame, fcTick, focusOn, fcMon, fcToday });
+window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcCame, fcTick, focusOn, fcMon, fcToday, lofi, lofiCompose, lofiRender, LOFI_STYLES });
 
 /* ---------------- The time tracker: how much time goes to grading, and how much to planning, kept apart ----------------
 Time counts by itself while the teacher works: grading while the marking screen is open in a tab that is in front, planning
@@ -31045,7 +31416,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.39":["Linked classes: assignments each class made before they were linked can be linked too. After linking, or from Link assignments under the class name, the same names come ticked and very similar ones wait for your tick, with one Undo."]};
+const WHATS_NEW = {"1.28.42":[]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -31912,6 +32283,10 @@ function stpRead(j) {
     else if (typeof fo.weeklyLookBack === 'string' && GP_DAYS.some(d => d.toLowerCase() === fo.weeklyLookBack.trim().toLowerCase())) f.wk = GP_DAYS.findIndex(d => d.toLowerCase() === fo.weeklyLookBack.trim().toLowerCase());
     if (typeof fo.quietWhileFocusing === 'boolean') f.quiet = fo.quietWhileFocusing;
     if (typeof fo.shortestFirst === 'boolean') f.short = fo.shortestFirst;
+    if (typeof fo.music === 'boolean') f.music = fo.music;
+    if (fo.musicMood === 'mix' || LOFI_STYLES.some(x => x.id === fo.musicMood)) f.mood = fo.musicMood;
+    if (stpNum(fo.musicVolume, 5, 100) != null) f.mvol = Math.round(stpNum(fo.musicVolume, 5, 100) / 5) / 20;
+    if (typeof fo.musicBackground === 'boolean') f.mamb = fo.musicBackground;
     if (Object.keys(f).length) S.focus = f;
   }
   if (typeof j.attendance === 'boolean') S.att = j.attendance; else if (j.attendance != null && stpCount(j.attendance)) S.left.push('Attendance records.');
@@ -32073,6 +32448,8 @@ function stpDiff(S, planNow) {
     if ('wk' in f && f.wk !== c.wk) L.push(f.wk === false ? 'No look back at the week' : 'A look back at the week from ' + GP_DAYS[f.wk]);
     if (f.quiet != null && f.quiet !== c.quiet) L.push(f.quiet ? 'Counts are hidden during a focus session' : 'Counts stay on during a focus session');
     if (f.short != null && f.short !== c.short) L.push(f.short ? 'Shortest papers first in a focus session' : 'Papers in their usual order in a focus session');
+    if (f.music != null && f.music !== c.music) L.push(f.music ? 'Lo-fi music while a session runs' : 'No music while a session runs');
+    if ((f.mood != null && f.mood !== c.mood) || (f.mvol != null && f.mvol !== c.mvol) || (f.mamb != null && f.mamb !== c.mamb)) L.push('The music’s mood, volume and background sound');
     if (L.length) add('focus', 'Focus timer and daily goal', L, '');
   }
   if (S.att != null && S.att !== attOn()) add('att', 'Attendance', [S.att ? 'Take attendance in Grading Studio' : 'Don’t take attendance in Grading Studio'], S.att ? '' : 'Days already saved are kept.');
@@ -32261,7 +32638,7 @@ async function stpExport() {
   if (bank.length) out.comments = bank.slice(0, 200);
   if (goalList().length) out.goals = goalList().map(x => x.name);
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
-  if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days ? { days: c.goal.days.map(d => GP_DAYS[d].toLowerCase()) } : {}) } : null, sessionGoals: c.sg, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle, freePeriods: c.free, weeklyLookBack: c.wk === false ? false : GP_DAYS[c.wk].toLowerCase(), quietWhileFocusing: c.quiet, shortestFirst: c.short }; }
+  if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days ? { days: c.goal.days.map(d => GP_DAYS[d].toLowerCase()) } : {}) } : null, sessionGoals: c.sg, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle, freePeriods: c.free, weeklyLookBack: c.wk === false ? false : GP_DAYS[c.wk].toLowerCase(), quietWhileFocusing: c.quiet, shortestFirst: c.short, music: c.music, musicMood: c.mood, musicVolume: Math.round(c.mvol * 100), musicBackground: c.mamb }; }
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
   { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
@@ -32338,7 +32715,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "comments": ["Explain how your evidence supports your claim."],
   "goals": ["Uses evidence", "Designs a fair test"],
   "attendance": true,
-  "focus": { "sessionMinutes": 10, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "sessionGoals": true, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5, "freePeriods": true, "weeklyLookBack": "friday", "quietWhileFocusing": false, "shortestFirst": false },
+  "focus": { "sessionMinutes": 10, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "sessionGoals": true, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5, "freePeriods": true, "weeklyLookBack": "friday", "quietWhileFocusing": false, "shortestFirst": false, "music": false, "musicMood": "mix", "musicVolume": 50, "musicBackground": false },
   "classTabs": ["Missing work"],
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
   "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide" }
@@ -32355,7 +32732,7 @@ FIELD NOTES
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
-- "focus" is the work timer for grading: "sessionMinutes" is one of 5, 10, 15, 20, 25, 30, 45, 60 and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none; add "per": "week" for a goal for the whole week, or "days": ["monday", "wednesday"] for a daily goal on some days only. "sessionGoals" false stops the app suggesting a goal for each session. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. Leave it out if I have not said.
+- "focus" is the work timer for grading: "sessionMinutes" is one of 5, 10, 15, 20, 25, 30, 45, 60 and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none; add "per": "week" for a goal for the whole week, or "days": ["monday", "wednesday"] for a daily goal on some days only. "sessionGoals" false stops the app suggesting a goal for each session. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. "music" true plays lo-fi music while a session runs; "musicMood" is "mix" or one of "rain", "library", "coffee", "night", "tape", "garden", "blue", "quiet" (quiet has no drums), "musicVolume" is 5 to 100, and "musicBackground" true adds a soft record crackle or rain behind it. Leave it out if I have not said.
 - "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;

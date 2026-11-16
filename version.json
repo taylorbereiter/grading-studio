@@ -1,21 +1,19 @@
 {
- "version": "1.28.39",
- "build": "5879960aa2ca",
- "notes": [
-  "Linked classes: assignments each class made before they were linked can be linked too. After linking, or from Link assignments under the class name, the same names come ticked and very similar ones wait for your tick, with one Undo."
- ],
+ "version": "1.28.42",
+ "build": "d44b1c3469ad",
+ "notes": [],
  "files": {
-  "index.html": "541ded3e70f491514ad0240a04753833d8424198108bf89f37bc22eaa0322aa9",
-  "planner.html": "93a7526d94b78e2c07e3721876bee813771ee661ad07c6534f4ddd52b72c227d"
+  "index.html": "cf4d76a17375c87eea6a3a72ee7a18238d852b186921feae7e6e64d841da06a2",
+  "planner.html": "db280c773b25e3366553d07ed39290edc5b8f547de09cea6e0b6b11535451c26"
  },
  "langs": {
-  "lang/zh-Hant.js": "970a0695cd36e69759677e805a200c9f36637abe3358c7d3d802f4bc9b14df1b",
-  "lang/zh-Hans.js": "66f6183997485eab0888792b63cfc2e47f1d821c241d728ee5af5553dd9daade",
-  "lang/es.js": "e207774fabdb61be893e4304e19c6f8732df3f5792ef7b0c67f8fe1472f02af1",
-  "lang/fr.js": "73b44aac4c34d3dacaf46538acba09835e546148a22ff89b1e869045e1745d43",
-  "lang/de.js": "1945350284a9188d26308f993a1e67946ae94b180a8e0e9bb6b905c0f5346869",
-  "lang/pt-BR.js": "4fcfc70b318815a07fd7e9cea477ac01e946cec940b24c6bb6d302c6ec11b2d9",
-  "lang/ja.js": "343df5fd7e232f849f2f5b11b832f45910e7fb9fef1804459c4e4669ab138b39",
-  "lang/ko.js": "3ab8fa1e67101d3b4964289608535bc7bb1e91b48178485a4ec797d93c35a3dc"
+  "lang/zh-Hant.js": "ea0e5765a6e2c1db58743ec97e0de9034a889dcff3c16cc53db62d28eb477c3a",
+  "lang/zh-Hans.js": "623bf0ca42b4782ca2cd150d6e914cdb931635b081fe4d4cede4c09b4a10c031",
+  "lang/es.js": "877a39aa830ede4d64434c38041de72b75cf94abdff85f00bc3d453db2209cee",
+  "lang/fr.js": "9bfb6c4480960874d4ab377dc83d1f2a9f4e079b48f87e23c71dc88bc0b3e322",
+  "lang/de.js": "efca855938683ed7c339d0396ed035da2cc03ef1b692fd2baf6f31979ee91b73",
+  "lang/pt-BR.js": "50b1b8bb95e585162a905e4474fee428963245d262da7268a6ab433290cc9a63",
+  "lang/ja.js": "197f41a9a5d3c836c11a846339a01820bdcdb8116c71e596fdc524c98d227efc",
+  "lang/ko.js": "1d4ed1199597d0515a04aadf87e76fc92a355bb5bf7ac00d08d04af1833a965d"
  }
 }
