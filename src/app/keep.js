@@ -5,7 +5,7 @@ function saveNow(leaving) {
   if (!batch || !tabLive()) return;
   clearTimeout(saveT); saveDue = false;
   if (batch.revs && tabForgot(batch)) return tabLetGo();
-  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: groupsSave(false), groupsOwn: groupsSave(true), returned: batch.returned || undefined, read: (batch.read = paperReads()), s: {} };
+  const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: groupsSave(false), ...(groupsSave(true) ? { groupsOwn: groupsSave(true) } : {}), returned: batch.returned || undefined, read: (batch.read = paperReads()), s: {} };
   if (batch.vrot) data.vrot = batch.vrot;   // videos turned the right way up (video.js); no key at all without one
   if (batch.clips && batch.clips.length) data.clips = batch.clips;   // parts of videos to show the class (video.js); no key at all without one
   if (batch.goal) data.goal = batch.goal;   // a learning goal for the whole score (goals.js); no key at all without one

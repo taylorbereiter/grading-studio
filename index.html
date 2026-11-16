@@ -6699,7 +6699,7 @@ function saveNow(leaving) {
 if (!batch || !tabLive()) return;
 clearTimeout(saveT); saveDue = false;
 if (batch.revs && tabForgot(batch)) return tabLetGo();
-const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: groupsSave(false), groupsOwn: groupsSave(true), returned: batch.returned || undefined, read: (batch.read = paperReads()), s: {} };
+const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: groupsSave(false), ...(groupsSave(true) ? { groupsOwn: groupsSave(true) } : {}), returned: batch.returned || undefined, read: (batch.read = paperReads()), s: {} };
 if (batch.vrot) data.vrot = batch.vrot;
 if (batch.clips && batch.clips.length) data.clips = batch.clips;
 if (batch.goal) data.goal = batch.goal;
