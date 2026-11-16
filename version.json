@@ -1,11 +1,11 @@
 {
- "version": "1.28.57",
- "build": "9d29a95a2b82",
+ "version": "1.28.58",
+ "build": "0c29aae91b50",
  "notes": [
-  "Typed notes: a small × beside a time hides it, and the faint clock left in its place brings it back. Hide all times in the notes' ⋯ menu hides or shows them all. A hidden time is kept, and left out of Copy notes."
+  "To do has categories: Grading and feedback, Lesson planning, Administrative and Leadership role (rename it for your own role). A new to-do goes to the category its words fit, and you can pick another on any line. Add, rename, reorder or delete categories, and switch the list between By day and By category."
  ],
  "files": {
-  "index.html": "8f95a4f62b73d15c72c9abbc3e2a4ece0ad1822fd4112d195d4dd62ec2719544",
+  "index.html": "8741426465fbfd4cd9e74502de04ef2885ba1158af751774ac59411a90904693",
   "planner.html": "9eac6262b9efabc91f25714e66479d2f122c35ed5d5e362c201739a09a70adeb"
  },
  "langs": {

@@ -3042,6 +3042,23 @@ html.welcoming .shell{visibility:hidden}
 .tdrow.done .tdx{color:var(--faint);text-decoration:line-through}
 .tdm{display:flex;flex-wrap:wrap;align-items:center;gap:2px var(--space-3);font-size:var(--text-small);color:var(--muted)}
 .tdc{display:inline-flex;align-items:center;gap:var(--space-1)}
+.tdcat{padding:1px var(--space-2);border-radius:var(--corner-1);background:var(--surface-2);color:var(--fg-2);font-weight:500}
+.tdguess{font-size:var(--text-small)}
+#tdBy[hidden]{display:none}
+.tdcats{padding:var(--space-3) var(--space-4) var(--space-4);margin-top:var(--space-4)}
+.tdcatrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:var(--space-1);padding:var(--space-2) 0;border-top:1px solid var(--line)}
+.tdcatrow:first-child{border-top:0;padding-top:0}
+.tdcatrow input{min-width:0;height:30px;padding:0 var(--space-2);border:1px solid transparent;border-radius:var(--corner-2);background:none;color:var(--fg);font:inherit;font-size:var(--text-control)}
+.tdcatrow input:hover{border-color:var(--line)}
+.tdcatrow input:focus{border-color:var(--accent);outline:0;background:var(--surface)}
+.tdcatn{font-weight:600}
+.tdcatw{grid-column:1/-1;height:26px!important;font-size:var(--text-small)!important;color:var(--muted)!important}
+.tdcatw::placeholder{color:var(--faint)}
+.tdcatrow .icon{width:26px;height:26px;color:var(--muted)}
+.tdcatrow .icon:disabled{opacity:.35;cursor:default}
+.tdcatadd{display:flex;gap:var(--space-2);margin-top:var(--space-2);padding-top:var(--space-3);border-top:1px solid var(--line)}
+.tdcatadd input{flex:1;min-width:0;height:30px;padding:0 var(--space-2);border:1px solid var(--line);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
+.tdcats p{margin:var(--space-3) 0 0;font-size:var(--text-small);line-height:1.45}
 .tdtag{padding:1px var(--space-2);border-radius:var(--corner-1);background:var(--accent-soft);color:var(--accent);font-weight:500}
 .tddue{min-width:52px;text-align:right;font-size:var(--text-small);font-weight:500;color:var(--muted);white-space:nowrap}
 .tddue.now{color:var(--accent);font-weight:600}
@@ -3939,7 +3956,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
     <div id="phScores"></div>
   </section>
   <section class="view" id="vTodo" hidden>
-    <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button><div class="pseg" id="tdView" role="group" aria-label="View"><button data-tdview="" aria-pressed="true">List</button><button data-tdview="week" aria-pressed="false">Week</button></div></header>
+    <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button><div class="pseg" id="tdBy" role="group" aria-label="Group the list"><button data-tdby="day" aria-pressed="true">By day</button><button data-tdby="cat" aria-pressed="false">By category</button></div><div class="pseg" id="tdView" role="group" aria-label="View"><button data-tdview="" aria-pressed="true">List</button><button data-tdview="week" aria-pressed="false">Week</button></div></header>
     <div class="tdchips" id="tdChips" role="group" aria-label="Show"></div>
     <div class="tdpplbar" id="tdPplBar" hidden></div>
     <div id="tdWeek" hidden></div>
@@ -5100,7 +5117,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.57";
+  const APP_VERSION = "1.28.58";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -20754,7 +20771,14 @@ if (!had || (it.t || 0) > (had.t || 0)) by.set(it.id, it);
 const auto = { ...(b.auto || {}) };
 for (const [k, v] of Object.entries(a.auto || {})) if (!auto[k] || (v.t || 0) >= (auto[k].t || 0)) auto[k] = v;
 const offB = (b.offT || 0) > (a.offT || 0);
-return { ...b, ...a, items: order.map(id => by.get(id)), auto, off: (offB ? b.off : a.off) || {}, offT: Math.max(a.offT || 0, b.offT || 0) };
+const out = { ...b, ...a, items: order.map(id => by.get(id)), auto, off: (offB ? b.off : a.off) || {}, offT: Math.max(a.offT || 0, b.offT || 0) };
+const cats = new Map();
+for (const c of [...(Array.isArray(a.cats) ? a.cats : []), ...(Array.isArray(b.cats) ? b.cats : [])]) if (c && c.id && (!cats.has(c.id) || (c.t || 0) > (cats.get(c.id).t || 0))) cats.set(c.id, c);
+if (cats.size) out.cats = [...cats.values()]; else delete out.cats;
+const oa = a.corder && Array.isArray(a.corder.ids) ? a.corder : null, ob = b.corder && Array.isArray(b.corder.ids) ? b.corder : null;
+const corder = oa && ob ? ((ob.t || 0) > (oa.t || 0) ? ob : oa) : oa || ob;
+if (corder) out.corder = corder; else delete out.corder;
+return out;
 }
 function typedMerge(a, b, bLater) {
 const sa = a.s || {}, sb = b.s || {}, ga = a.gone || {}, gb = b.gone || {}, s = {}, gone = {};
@@ -29928,21 +29952,102 @@ items: [{ id, x: the words, d: 'YYYY-MM-DD' or '', c: class id, who: roster name
 ppl: [ids of people on the School page (gs.school people: the principal, a coordinator...)],
 note, done: time, made: time, t: time it last changed }]   (a deleted one stays as { id, t, gone: 1 } so it stays deleted after a merge)
 off:   { mark | back | plan | miss: 1 } the kinds the app no longer adds, offT when that was last changed
-auto:  { <line's key>: { d: day it was moved to, h: hidden while its number is this, t } } */
+auto:  { <line's key>: { d: day it was moved to, h: hidden while its number is this, k: category it was moved to, t } }
+cats:  [{ id, name (only once she renames one the app starts with, or for her own), w: her words that bring a line there, t, gone }]
+corder: { ids: [category ids in her order], t }
+A line's category is k on the line (or '-' for none) when she chose one, and otherwise worked out from its words each time it is
+drawn, so lines saved before categories existed are never rewritten. */
 const TD_KINDS = [['mark', 'Papers to mark'], ['back', 'Papers to hand back'], ['plan', 'Lessons not planned yet'], ['miss', 'Missing work to chase']];
 let tdS = { filter: 'all', sel: '', done: false, drop: {}, week: 0, drag: '' };
+const tdBy = () => { try { return localStorage.getItem('gs.tdBy') === 'cat' ? 'cat' : 'day'; } catch { return 'day'; } };
 const TD_DAY = 864e5;
-const tdData = () => { const t = lib.todo || {}; return { items: Array.isArray(t.items) ? t.items : [], off: t.off || {}, offT: t.offT || 0, auto: t.auto || {} }; };
+const tdData = () => { const t = lib.todo || {}; return { items: Array.isArray(t.items) ? t.items : [], off: t.off || {}, offT: t.offT || 0, auto: t.auto || {}, cats: Array.isArray(t.cats) ? t.cats : [], corder: t.corder && Array.isArray(t.corder.ids) ? t.corder : null }; };
 function tdSave(part) {
 const d = { ...tdData(), ...part }, now = Date.now();
 d.items = d.items.filter(it => it && it.id && !(it.gone && now - (it.t || 0) > 180 * TD_DAY) && !(it.done && now - it.done > 120 * TD_DAY));
 d.auto = Object.fromEntries(Object.entries(d.auto).filter(([, a]) => a && now - (a.t || 0) < 60 * TD_DAY));
+d.cats = d.cats.filter(c => c && c.id && !(c.gone && !TD_CAT0.some(b => b[0] === c.id) && now - (c.t || 0) > 180 * TD_DAY));
+if (!d.cats.length) delete d.cats;
+if (!d.corder) delete d.corder;
 lib.todo = d; saveLib(); todoRender();
 }
 const tdItems = () => tdData().items.filter(it => it && it.id && !it.gone);
 const tdItem = id => tdItems().find(it => it.id === id) || null;
 function tdPut(id, part) { const now = Date.now(); tdSave({ items: tdData().items.map(it => it.id === id ? { ...it, ...part, t: now } : it) }); }
 function tdAutoPut(key, part) { const d = tdData(); tdSave({ auto: { ...d.auto, [key]: { ...(d.auto[key] || {}), ...part, t: Date.now() } } }); }
+
+/* ---------- categories ---------- */
+const TD_CAT0 = [['grade', 'Grading and feedback'], ['plan', 'Lesson planning'], ['admin', 'Administrative'], ['role', 'Leadership role']];
+const TD_CATW = {
+grade: ['mark|marks|marked|marking|grade|grades|graded|grading|regrade|feedback|score|scores|scoring|assess|assessing|assessment|assessments|moderate|moderation|moderating|hand back|report comments|report card|report cards|conference|conferences|retake|retakes|gradebook|proofread', 'return|rubric|rubrics|quiz|quizzes|test|tests|exam|exams|essay|essays|papers|drafts|lab reports|comments'],
+plan: ['plan|plans|planning|lesson|lessons|slides|slide deck|handout|handouts|worksheet|worksheets|print|photocopy|copies|prep|curriculum|activity|activities|materials|resources|reading list|answer key|seating chart|lab setup', 'make|create|write|prepare|design|build|set up|assignment|assignments|project|projects'],
+admin: ['email|emails|meeting|meetings|form|forms|attendance|duty|duties|sign|submit|deadline|budget|order|permission|parent|parents|call|phone|admin|paperwork|register|trip|field trip|calendar|schedule|supplies|reimbursement|office|newsletter|report to', ''],
+role: ['coach|coaching|workshop|workshops|training|mentor|mentoring|committee|professional development|pd|demo|lead|leading', ''],
+};
+const TD_STOP = new Set(['role', 'work', 'other', 'things', 'stuff', 'tasks', 'with', 'from', 'misc', 'more', 'about', 'general']);
+const tdRx = alts => new RegExp('(?<![\\p{L}\\p{N}])(?:' + alts + ')(?![\\p{L}\\p{N}])', 'iu');
+const tdEsc = w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function tdCats() {
+const d = tdData(), by = new Map(d.cats.map(c => [c.id, c])), ids = d.corder ? d.corder.ids.filter(x => typeof x === 'string') : [];
+for (const [id] of TD_CAT0) if (!ids.includes(id)) ids.push(id);
+for (const c of d.cats) if (c && c.id && !ids.includes(c.id)) ids.push(c.id);
+return [...new Set(ids)].map(id => {
+const c = by.get(id), b = TD_CAT0.find(x => x[0] === id);
+if ((c && c.gone) || (!c && !b)) return null;
+return { id, name: (c && c.name) || (b ? b[1] : ''), own: !!(c && c.name), w: (c && c.w) || '', base: !!b };
+}).filter(Boolean);
+}
+const tdCat = id => tdCats().find(c => c.id === id) || null;
+const tdOwnWords = c => [...String(c.w || '').split(/[,;\n]+/).map(x => x.trim()).filter(x => x.length >= 2), ...(c.own ? c.name.split(/[^\p{L}\p{N}]+/u).filter(x => x.length >= 4 && !TD_STOP.has(x.toLowerCase())) : [])];
+function tdGuess(text, it) {
+const cats = tdCats(), t = String(text || '');
+const first = list => { let best = null; for (const [id, alts] of list) { if (!alts) continue; const m = tdRx(alts).exec(t); if (m && (!best || m.index < best.i || (m.index === best.i && m[0].length > best.n))) best = { id, i: m.index, n: m[0].length }; } return best ? best.id : ''; };
+const own = cats.map(c => [c.id, tdOwnWords(c).map(w => tdEsc(w) + '(?:s|es)?').join('|')]);
+let k = first(own); if (k) return k;
+const base = cats.filter(c => c.base && TD_CATW[c.id]);
+k = first(base.map(c => [c.id, TD_CATW[c.id][0]])); if (k) return k;
+if (it && it.a && cats.some(c => c.id === 'grade')) return 'grade';
+return first(base.map(c => [c.id, TD_CATW[c.id][1]]));
+}
+const TD_KIND_CAT = { mark: 'grade', back: 'grade', miss: 'grade', plan: 'plan' };
+function tdCatOf(r) {
+const k = r.auto ? (tdData().auto[r.key] || {}).k : r.it && r.it.k;
+if (k === '-') return { id: '', chose: true };
+if (k && tdCat(k)) return { id: k, chose: true };
+if (r.auto) { const id = TD_KIND_CAT[r.kind]; return { id: id && tdCat(id) ? id : '', chose: false }; }
+return { id: tdGuess(r.it.x + ' ' + (r.it.note || ''), r.it), chose: false };
+}
+function tdCatSave(list, order) {
+const d = tdData(), now = Date.now(), by = new Map(d.cats.map(c => [c.id, c]));
+for (const c of list) by.set(c.id, { ...c, t: now });
+tdSave({ cats: [...by.values()], ...(order ? { corder: { ids: order, t: now } } : {}) });
+}
+function tdCatPut(id, part) {
+const had = tdData().cats.find(c => c.id === id) || { id }, next = { ...had, ...part };
+const b = TD_CAT0.find(x => x[0] === id);
+if (next.name != null && (!next.name || (b && next.name === b[1]))) delete next.name;
+if (!next.w) delete next.w;
+tdCatSave([next]);
+}
+function todoCatAdd(name, w) {
+name = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 40); if (!name) return null;
+const same = tdCats().find(c => c.name.toLowerCase() === name.toLowerCase()); if (same) return same.id;
+const id = 'tc' + uid();
+tdCatSave([{ id, name, ...(w ? { w: String(w).slice(0, 300) } : {}) }], [...tdCats().map(c => c.id), id]);
+return id;
+}
+function todoCatMove(id, by) {
+const ids = tdCats().map(c => c.id), i = ids.indexOf(id), j = i + by;
+if (i < 0 || j < 0 || j >= ids.length) return;
+[ids[i], ids[j]] = [ids[j], ids[i]];
+const now = Date.now(); tdSave({ corder: { ids, t: now } });
+}
+function todoCatDelete(id) {
+const c = tdCat(id); if (!c) return;
+const was = tdData().cats.find(x => x.id === id) || null;
+tdCatSave([{ id, gone: 1 }]);
+toastDo('Category “' + c.name + '” deleted. Its lines go where their words fit.', 'Undo', () => { const d = tdData(); tdSave({ cats: [...d.cats.filter(x => x.id !== id), { ...(was || { id }), t: Date.now() }] }); });
+}
 
 /* ---------- days ---------- */
 const tdToday = () => isoDay(Date.now());
@@ -30027,6 +30132,7 @@ drop = drop || {};
 const r = todoRead(text); if (!r.raw) return null;
 const now = Date.now(), it = { id: 'td' + uid(), x: drop.d ? r.raw : r.x, d: drop.d ? '' : r.d, c: drop.c ? '' : r.c, who: drop.c || drop.who ? '' : r.who, a: '', rep: drop.d ? '' : r.rep, note: '', done: 0, made: now, t: now };
 if (!drop.p && r.ppl.length) it.ppl = r.ppl;
+if (drop.k) it.k = '-';
 for (const [k, v] of Object.entries(base || {})) if (!it[k]) it[k] = v;
 tdSave({ items: [...tdData().items, it] });
 return it;
@@ -30128,11 +30234,12 @@ function tdRow(r, today, card) {
 const done = !!r.done, late = !done && r.d && r.d < today, due = done ? 'Done' : tdDaySay(r.d, today);
 const word = !due || due === 'Done' || due === 'Today' || due === 'Tomorrow';
 let meta = '';
-if (r.auto) meta = '<span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '');
+const cat = !card && tdBy() !== 'cat' ? tdCat(tdCatOf(r).id) : null, catH = cat ? '<span class="tdcat"' + (cat.own ? ' data-raw' : '') + '>' + esc(cat.name) + '</span>' : '';
+if (r.auto) meta = '<span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '') + catH;
 else {
 const it = r.it, a = it.a && findItem(it.a);
 meta = [r.c ? '<span class="tdc" data-raw>' + tdDot(r.c) + esc(r.c.name) + '</span>' : '', it.who ? '<span data-raw>' + esc(it.who) + '</span>' : '', tdPplHtml(it), a ? '<span data-raw>' + esc(a.it.name) + '</span>' : '',
-it.rep ? '<span>' + TD_REP[it.rep] + '</span>' : '', it.note ? '<span>Note</span>' : ''].filter(Boolean).join('');
+it.rep ? '<span>' + TD_REP[it.rep] + '</span>' : '', it.note ? '<span>Note</span>' : ''].filter(Boolean).join('') + catH;
 }
 const btn = r.auto && !card ? (r.btn.open ? '<button class="btn sm" data-tdopen="' + esc(r.btn.open) + '">' + r.btn.label + '</button>' : '<a class="btn sm" href="' + esc(r.btn.href) + '">' + r.btn.label + '</a>') : '';
 return '<div class="tdrow' + (done ? ' done' : '') + (r.auto ? ' auto' : '') + (!card && tdS.sel === r.id ? ' sel' : '') + '" data-td="' + esc(r.id) + '">' +
@@ -30210,13 +30317,15 @@ if (!r && routeNow().week) return '';
 if (!r) {
 const off = tdData().off;
 return '<h2 class="tcap">The app adds these for you</h2><div class="tcard tdkinds">' + TD_KINDS.map(([k, l]) => '<button class="tdsw" role="switch" aria-checked="' + !off[k] + '" data-tdkind="' + k + '"><span>' + l + '</span><i aria-hidden="true"></i></button>').join('') +
-'<p class="muted">These come from your saved work and go by themselves when the work is done. You can move one to another day or hide it, and you never have to type it.</p></div>';
+'<p class="muted">These come from your saved work and go by themselves when the work is done. You can move one to another day or hide it, and you never have to type it.</p></div>' + tdCatsCard();
 }
 const chip = (attr, on, label) => '<button class="tdchip' + (on ? ' on' : '') + '" ' + attr + ' aria-pressed="' + !!on + '">' + label + '</button>';
 const when = '<div class="tdf"><span class="tdl">When</span><div class="tdv">' + chip('data-tdwhen="today"', r.d === today, 'Today') + chip('data-tdwhen="tomorrow"', r.d === tdAdd(today, 1), 'Tomorrow') + chip('data-tdwhen="week"', r.d === tdNextMon(today), 'Next week') + (r.own ? chip('data-tdwhen="none"', !r.d, 'No day') : '') +
 '<input type="date" id="tdDate" value="' + esc(r.d) + '" aria-label="Pick a day" title="Pick a day"></div></div>';
 const x = '<button class="icon tdclose" data-tdclose aria-label="Close" title="Close">✕</button>';
-if (r.auto) return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<h2 class="tdtitle" data-raw>' + esc(r.x) + '</h2><p class="tdm"><span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '') + '</p>' + when +
+const ck = tdCatOf(r), catF = '<div class="tdf"><label class="tdl" for="tdCat">Category</label><div class="tdv"><select id="tdCat" class="btn sm">' + tdCats().map(c => '<option value="' + esc(c.id) + '"' + (c.id === ck.id ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') +
+'<option value="-"' + (ck.id ? '' : ' selected') + '>No category</option><option value="+">New category…</option></select>' + (ck.chose ? '' : '<span class="muted tdguess">' + (ck.id ? 'from its words' : 'no category fits its words') + '</span>') + '</div></div>';
+if (r.auto) return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<h2 class="tdtitle" data-raw>' + esc(r.x) + '</h2><p class="tdm"><span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '') + '</p>' + when + catF +
 '<p class="muted tdsay">The app noticed this from your saved work. It goes by itself when the work is done.</p><div class="tdacts">' + (r.btn.open ? '<button class="btn primary" data-tdopen="' + esc(r.btn.open) + '">' + r.btn.label + '</button>' : '<a class="btn primary" href="' + esc(r.btn.href) + '">' + r.btn.label + '</a>') +
 (r.kind === 'mark' ? '<button class="btn" data-tdfocus="' + esc('mark:' + r.key.slice(5)) + '" title="Start a focus session on these papers">Focus on this</button>' : '') +
 '<span class="sp"></span><button class="btn" data-tdhide>Hide this</button></div></div>';
@@ -30236,9 +30345,26 @@ mine.map(p => '<span class="tdpchip"><span class="tdp" data-raw>' + SCH_IC.perso
 '<button class="icon" data-tdpx="' + esc(p.id) + '" aria-label="Take ' + esc(p.name) + ' off this to-do" title="Take off">✕</button></span>').join('') +
 '<select id="tdPpl" class="btn sm"><option value="">' + (mine.length ? 'Add someone else…' : 'Add someone…') + '</option>' + others.map(p => '<option value="' + esc(p.id) + '">' + esc(schWho(p)) + '</option>').join('') + '<option value="+">Someone new…</option></select></div></div>';
 const rep = '<div class="tdf"><span class="tdl">Repeats</span><div class="tdv">' + chip('data-tdrep=""', !it.rep, 'No') + chip('data-tdrep="day"', it.rep === 'day', 'Every school day') + chip('data-tdrep="week"', it.rep === 'week', 'Every week') + (pc || it.rep === 'meet' ? chip('data-tdrep="meet"', it.rep === 'meet', 'Each time this class meets') : '') + '</div></div>';
-return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<textarea class="tdtitle" id="tdX" rows="2" maxlength="300" aria-label="What to do">' + esc(it.x) + '</textarea>' + when + cls + goes + ppl + rep +
+return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<textarea class="tdtitle" id="tdX" rows="2" maxlength="300" aria-label="What to do">' + esc(it.x) + '</textarea>' + when + catF + cls + goes + ppl + rep +
 '<div class="tdf top"><label class="tdl" for="tdNote">Note</label><div class="tdv"><textarea id="tdNote" rows="3" maxlength="2000" placeholder="Anything to remember about it">' + esc(it.note || '') + '</textarea></div></div>' +
 '<div class="tdacts"><button class="btn primary" data-tdfin>' + (it.done ? 'Not done after all' : 'Done') + '</button>' + (it.done ? '' : '<button class="btn" data-tdwhen="tomorrow">Move to tomorrow</button><button class="btn" data-tdfocus="' + esc('td:' + it.id) + '" title="Start a focus session on this to-do">Focus on this</button>') + '<span class="sp"></span><button class="btn ghost" data-tddel>Delete</button></div></div>';
+}
+function tdCatGroupsHtml(rows, g, today, sec) {
+const live = [...g.late, ...g.now, ...g.week, ...g.later], by = new Map(), cats = tdCats();
+for (const r of live) { const k = tdCatOf(r).id; if (!by.has(k)) by.set(k, []); by.get(k).push(r); }
+const csec = (k, name, own, list) => list.length ? '<div class="tdgrp" data-tdgrp="cat:' + esc(k) + '"><b' + (own ? ' data-raw' : '') + '>' + esc(name) + '</b> <span>' + list.filter(x => !x.done).length + '</span></div>' + list.map(x => tdRow(x, today)).join('') : '';
+const order = list => list.sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || tdSort(a, b));
+return cats.map(c => csec(c.id, c.name, c.own, order(by.get(c.id) || []))).join('') + csec('', 'No category', false, order(by.get('') || [])) + (tdS.done ? sec('done', 'Done in the last 7 days', g.done) : '');
+}
+function tdCatsCard() {
+const cats = tdCats();
+return '<h2 class="tcap">Categories</h2><div class="tcard tdcats">' + cats.map((c, i) => '<div class="tdcatrow" data-tdcat="' + esc(c.id) + '">' +
+'<input class="tdcatn" type="text" maxlength="40" value="' + esc(c.name) + '" aria-label="Category name"' + (c.own ? ' data-raw' : '') + '>' +
+'<button class="icon" data-tdcmv="-1"' + (i ? '' : ' disabled') + ' aria-label="Move up" title="Move up">↑</button><button class="icon" data-tdcmv="1"' + (i < cats.length - 1 ? '' : ' disabled') + ' aria-label="Move down" title="Move down">↓</button>' +
+'<button class="icon" data-tdcdel aria-label="Delete ' + esc(c.name) + '" title="Delete">✕</button>' +
+'<input class="tdcatw" type="text" maxlength="300" value="' + esc(c.w) + '" placeholder="' + (c.id === 'role' && !c.own ? 'Rename it for your role, like Instructional coach' : 'Words that bring a line here, like ' + ({ grade: 'conferences', plan: 'labs', admin: 'IEP', role: 'tech' }[c.id] || 'yearbook, club')) + '" aria-label="Words that bring a line to ' + esc(c.name) + '"></div>').join('') +
+'<form class="tdcatadd" id="tdCatAdd" autocomplete="off"><input type="text" maxlength="40" placeholder="Add a category, like Yearbook" aria-label="Add a category"><button class="btn sm">Add</button></form>' +
+'<p class="muted">A new line goes to the category its words fit. Pick another on the line any time; your pick stays.</p></div>';
 }
 function tdPageRender() {
 const r = routeNow(); if (r.v !== 'todo' || batch) return;
@@ -30260,11 +30386,13 @@ fb.hidden = !fp;
 const nDone = tdGroups(all, today).done.length, db = $('#tdDoneBtn');
 db.hidden = !nDone; db.textContent = (tdS.done ? 'Hide' : 'Show') + ' done in the last 7 days · ' + nDone; db.setAttribute('aria-pressed', String(tdS.done));
 const sec = (k, name, list) => list.length ? '<div class="tdgrp' + (k === 'late' ? ' late' : '') + '" data-tdgrp="' + k + '">' + name + ' <span>' + (k === 'done' ? list.length : list.filter(x => !x.done).length) + '</span></div>' + list.map(x => tdRow(x, today)).join('') : '';
-const h = sec('late', 'Overdue', g.late) + sec('now', 'Today', g.now) + sec('week', 'Next 7 days', g.week) + sec('later', 'Later', g.later) + (tdS.done ? sec('done', 'Done in the last 7 days', g.done) : '');
+const byCat = tdBy() === 'cat';
+for (const b of document.querySelectorAll('#tdBy [data-tdby]')) b.setAttribute('aria-pressed', String((b.dataset.tdby === 'cat') === byCat));
+const h = byCat ? tdCatGroupsHtml(rows, g, today, sec) : sec('late', 'Overdue', g.late) + sec('now', 'Today', g.now) + sec('week', 'Next 7 days', g.week) + sec('later', 'Later', g.later) + (tdS.done ? sec('done', 'Done in the last 7 days', g.done) : '');
 tdPutHtml($('#tdList'), h || '<p class="tdnone">' + (tdS.filter === 'all' ? 'Nothing here yet. Type something above and press Enter, like “Print handouts tomorrow”.' : 'Nothing here for this view.') + '</p>');
 const wk = !!r.week, box = $('#tdWeek');
 for (const b of document.querySelectorAll('#tdView [data-tdview]')) b.setAttribute('aria-pressed', String((b.dataset.tdview === 'week') === wk));
-$('#vTodo .tdgrid').classList.toggle('wk', wk); box.hidden = !wk;
+$('#vTodo .tdgrid').classList.toggle('wk', wk); box.hidden = !wk; $('#tdBy').hidden = wk;
 const typing = wk && box.contains(document.activeElement) && document.activeElement.matches('input') && document.activeElement.value;
 if (wk && !typing) tdPutHtml(box, tdWeekHtml(rows, today));
 tdPutHtml($('#tdSide'), tdSideHtml(all, today));
@@ -30275,6 +30403,8 @@ if (r.d && !tdS.drop.d) parts.push('<button class="tdchip on" data-tddrop="d" ti
 if (c && !tdS.drop.c) parts.push('<button class="tdchip" data-tddrop="c" title="Not about this class">' + tdDot(c) + '<span data-raw>' + esc(c.name) + '</span></button>');
 if (c && r.who && !tdS.drop.c && !tdS.drop.who) parts.push('<button class="tdchip" data-tddrop="who" title="Not about this student"><span data-raw>' + esc(r.who) + '</span></button>');
 if (!tdS.drop.p) for (const p of r.ppl.map(tdPerson).filter(Boolean)) parts.push('<button class="tdchip" data-tddrop="p" title="Not about ' + esc(p.name) + '">' + SCH_IC.person + '<span data-raw>' + esc(p.name) + '</span></button>');
+const k = !tdS.drop.k && r.raw ? tdCat(tdGuess(r.x)) : null;
+if (k) parts.push('<button class="tdchip" data-tddrop="k" title="Not this category"><span' + (k.own ? ' data-raw' : '') + '>' + esc(k.name) + '</span></button>');
 box.hidden = !parts.length;
 tdPutHtml(box, parts.length ? '<span>Understood as</span>' + parts.join('') + '<span class="tdhint">Click one to take it off</span>' : '');
 }
@@ -30330,6 +30460,9 @@ if ((b = hit('data-tdwk'))) { tdS.week = +b.dataset.tdwk ? tdS.week + +b.dataset
 if ((b = hit('data-tdf'))) { tdS.filter = b.dataset.tdf; tdPageRender(); return; }
 if ((b = hit('data-tdkind'))) { const d = tdData(), off = { ...d.off }, k = b.dataset.tdkind; if (off[k]) delete off[k]; else off[k] = 1; tdSave({ off, offT: Date.now() }); if (k === 'miss' && !off.miss) tdMissLoad(); return; }
 if (hit('data-tdclose')) { tdS.sel = ''; tdPageRender(); return; }
+if ((b = hit('data-tdby'))) { try { localStorage.setItem('gs.tdBy', b.dataset.tdby); } catch {} tdPageRender(); return; }
+if ((b = hit('data-tdcmv'))) { todoCatMove(b.closest('[data-tdcat]').dataset.tdcat, +b.dataset.tdcmv); return; }
+if ((b = hit('data-tdcdel'))) { todoCatDelete(b.closest('[data-tdcat]').dataset.tdcat); return; }
 const id = tdS.sel, auto = id.startsWith('auto:'), r = auto ? todoAuto().find(x => x.id === id) : null;
 if (!id || (auto && !r)) return;
 const setDay = d => auto ? tdAutoPut(r.key, { d }) : tdPut(id, { d, ...(d ? {} : { rep: '' }) });
@@ -30367,8 +30500,22 @@ if (!day || day < tdToday()) { toast('A line the app added needs a day, today or
 tdAutoPut(r.key, { d: day });
 }
 $('#tdDoneBtn').onclick = () => { tdS.done = !tdS.done; tdPageRender(); };
+async function tdCatPick(id, v) {
+if (v === '+') { const name = await askTextDlg('Name the new category', '', { ok: 'Add' }); v = name && todoCatAdd(name); if (!v) { tdPageRender(); return; } }
+if (id.startsWith('auto:')) { const r = todoAuto().find(x => x.id === id); if (r) tdAutoPut(r.key, { k: v }); }
+else if (tdItem(id)) tdPut(id, { k: v });
+}
+$('#tdSide').addEventListener('submit', e => {
+const f = e.target.closest('#tdCatAdd'); if (!f) return;
+e.preventDefault();
+const i = f.querySelector('input'); if (todoCatAdd(i.value)) { const again = $('#tdCatAdd input'); if (again) again.focus(); }
+});
 $('#tdSide').addEventListener('change', e => {
-const id = tdS.sel, t = e.target; if (!id) return;
+const id = tdS.sel, t = e.target, row = t.closest && t.closest('[data-tdcat]');
+if (row && t.classList.contains('tdcatn')) { const v = t.value.replace(/\s+/g, ' ').trim(); if (v) tdCatPut(row.dataset.tdcat, { name: v }); else t.value = (tdCat(row.dataset.tdcat) || {}).name || ''; return; }
+if (row && t.classList.contains('tdcatw')) { tdCatPut(row.dataset.tdcat, { w: t.value.replace(/\s+/g, ' ').trim() }); return; }
+if (!id) return;
+if (t.id === 'tdCat') { tdCatPick(id, t.value); return; }
 if (t.id === 'tdDate') {
 if (id.startsWith('auto:')) { const r = todoAuto().find(x => x.id === id); if (r && t.value) tdAutoPut(r.key, { d: t.value }); }
 else tdPut(id, { d: t.value || '', ...(t.value ? {} : { rep: '' }) });
@@ -30401,7 +30548,7 @@ tdS.filter = 'p:' + pid; tdS.sel = it.id; go('#/todo'); tdPageRender();
 const x = $('#tdX'); if (x) { x.focus(); x.select(); }
 }
 const bgBusy = () => !!planBusy || !!tdMiss.busy;
-Object.assign(window.__gs, { todoShowPerson, todoForPerson, todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove, bgBusy });
+Object.assign(window.__gs, { tdCats, tdGuess, tdCatOf, todoCatAdd, todoCatMove, todoCatDelete, todoShowPerson, todoForPerson, todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove, bgBusy });
 
 
 const LOFI_SCALES = { maj: [0, 2, 4, 5, 7, 9, 11], min: [0, 2, 3, 5, 7, 8, 10], dor: [0, 2, 3, 5, 7, 9, 10] };
@@ -32132,7 +32279,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.57":["Typed notes: a small × beside a time hides it, and the faint clock left in its place brings it back. Hide all times in the notes' ⋯ menu hides or shows them all. A hidden time is kept, and left out of Copy notes."]};
+const WHATS_NEW = {"1.28.58":["To do has categories: Grading and feedback, Lesson planning, Administrative and Leadership role (rename it for your own role). A new to-do goes to the category its words fit, and you can pick another on any line. Add, rename, reorder or delete categories, and switch the list between By day and By category."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -32274,7 +32421,8 @@ nyStrip(L.book, names, ['terms', 'cats', 'w']);
 }
 if (L.todo && typeof L.todo === 'object') {
 const low = [...names].map(n => n.toLowerCase()), says = i => { const t = (String(i.x || '') + ' ' + String(i.note || '')).toLowerCase(); return low.some(n => t.includes(n)); };
-L.todo = { items: (Array.isArray(L.todo.items) ? L.todo.items : []).filter(i => i && !i.gone && !i.done && (o.roster || !(i.who || says(i)))), off: { ...(L.todo.off || {}) }, offT: L.todo.offT || 0, auto: {} };
+L.todo = { items: (Array.isArray(L.todo.items) ? L.todo.items : []).filter(i => i && !i.gone && !i.done && (o.roster || !(i.who || says(i)))), off: { ...(L.todo.off || {}) }, offT: L.todo.offT || 0, auto: {},
+...(Array.isArray(L.todo.cats) ? { cats: L.todo.cats.filter(c => c && c.id && (o.roster || !says({ x: c.name, note: c.w }))) } : {}), ...(L.todo.corder ? { corder: L.todo.corder } : {}) };
 }
 nyStrip(L, names, ['classes', 'loose', 'me', 'book', 'gone', 'years', 'todo']);
 L.year = o.to;
@@ -32885,7 +33033,7 @@ function stpIb(o) {
 const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', points: 'points', percent: 'percent', percentage: 'percent', letters: 'letters', lettergrades: 'letters', letter: 'letters', ib7: 'ib7', ib: 'ib7', ib1to7: 'ib7', myp: 'myp', mypcriteria: 'myp', ibmyp: 'myp', dp: 'ib7' };
 const STP_LAYOUTS = { agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Title and text', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', fullpic: 'Full picture', textpic: 'Text + picture', picprompt: 'Picture + questions', video: 'Video' };
 function stpRead(j) {
-  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking', 'focus']);
+  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking', 'focus', 'todo']);
   for (const k of Object.keys(j)) {
     if (STP_STUDENT.test(k)) { if (stpCount(j[k])) S.left.push('Something about students (“' + stpStr(k, 30) + '”).'); }
     else if (!known.has(k)) S.unknown.push(stpStr(k, 30));
@@ -33007,6 +33155,13 @@ function stpRead(j) {
     if (stpNum(fo.musicVolume, 5, 100) != null) f.mvol = Math.round(stpNum(fo.musicVolume, 5, 100) / 5) / 20;
     if (typeof fo.musicBackground === 'boolean') f.mamb = fo.musicBackground;
     if (Object.keys(f).length) S.focus = f;
+  }
+  const td = stpObj(j.todo);
+  if (td && Array.isArray(td.categories)) {
+    const seen = new Set(), words = v => Array.isArray(v) ? v.filter(w => typeof w === 'string').map(w => stpStr(w, 40)).filter(Boolean).join(', ') : stpStr(v, 300);
+    const list = td.categories.slice(0, 20).map(x => typeof x === 'string' ? { name: x } : stpObj(x)).filter(Boolean).map(x => ({ name: stpStr(x.name, 40), w: words(x.words).slice(0, 300), role: x.role === true }));
+    S.todo = list.filter(x => x.name && !seen.has(stpKey(x.name)) && seen.add(stpKey(x.name)));
+    if (!S.todo.length) delete S.todo;
   }
   if (typeof j.attendance === 'boolean') S.att = j.attendance; else if (j.attendance != null && stpCount(j.attendance)) S.left.push('Attendance records.');
   if (Array.isArray(j.classTabs)) S.tabs = [...new Set(j.classTabs.map(x => (CLASS_TABS.find(t => stpKey(t[1]) === stpKey(x) && !TABS_FIRST.includes(t[0])) || [])[0]).filter(Boolean))];
@@ -33173,6 +33328,14 @@ function stpDiff(S, planNow) {
     if ((f.mood != null && f.mood !== c.mood) || (f.mvol != null && f.mvol !== c.mvol) || (f.mamb != null && f.mamb !== c.mamb)) L.push('The music’s mood, volume and background sound');
     if (L.length) add('focus', 'Focus timer and daily goal', L, '');
   }
+  if (S.todo) {
+    const now = tdCats(), next = stpTodoNext(S.todo), names = next.corder.ids.map(id => { const c = next.cats.find(x => x.id === id); return (c && c.name) || (TD_CAT0.find(b => b[0] === id) || [])[1]; });
+    const L = [];
+    if (names.join('\n') !== now.map(c => c.name).join('\n')) L.push('To-do categories: <b>' + names.map(esc).join(', ') + '</b>');
+    for (const x of S.todo) if (x.w) { const c = now.find(c => stpKey(c.name) === stpKey(x.name)); if (!c || c.w !== x.w) L.push('Words that bring a line to ' + esc(x.name) + ': <b>' + esc(x.w) + '</b>'); }
+    const gone = now.filter(c => !next.corder.ids.includes(c.id));
+    add('todo', 'To do', L, gone.length ? 'Deleted: ' + gone.map(c => esc(c.name)).join(', ') + '. Their lines go to the category their words fit.' : '');
+  }
   if (S.att != null && S.att !== attOn()) add('att', 'Attendance', [S.att ? 'Take attendance in Grading Studio' : 'Don’t take attendance in Grading Studio'], S.att ? '' : 'Days already saved are kept.');
   if (S.tabs && S.tabs.join() !== tabsKept().join()) add('tabs', 'Class tabs', [S.tabs.length ? 'Kept in the tab row: ' + S.tabs.map(k => CLASS_TABS.find(t => t[0] === k)[1]).join(', ') : 'Only Assignments, Gradebook and Students in the tab row'], 'The other pages stay under More.');
   return parts;
@@ -33196,6 +33359,20 @@ function stpIbW(wn) {
 const stpIbChanges = (c, ib) => { const n = stpIbNext(c, ib); return c.way !== n.way || JSON.stringify(c.ib || {}) !== JSON.stringify(n.ib) || (!!ib.wn && JSON.stringify(stpIbW(ib.wn)) !== JSON.stringify((c.ib || {}).w || null)); };
 const stpOwnTypes = () => typeof bkCats === 'function';
 
+function stpTodoNext(list) {
+  const now = Date.now(), cur = tdCats(), by = new Map(tdData().cats.map(c => [c.id, c])), ids = [];
+  for (const x of list) {
+    let id = (cur.find(c => stpKey(c.name) === stpKey(x.name) && !ids.includes(c.id)) || {}).id;
+    if (!id) id = (TD_CAT0.find(b => stpKey(b[1]) === stpKey(x.name) && !ids.includes(b[0])) || [])[0];
+    if (!id && x.role && !ids.includes('role')) id = 'role';
+    if (!id) id = 'tc' + uid();
+    const b = TD_CAT0.find(b => b[0] === id), w = x.w || (by.get(id) || {}).w || '';
+    by.set(id, { id, t: now, ...(b && stpKey(b[1]) === stpKey(x.name) ? {} : { name: x.name }), ...(w ? { w } : {}) });
+    ids.push(id);
+  }
+  for (const c of cur) if (!ids.includes(c.id)) by.set(c.id, { ...(by.get(c.id) || { id: c.id }), gone: 1, t: now });
+  return { cats: [...by.values()], corder: { ids, t: now } };
+}
 const stpPersonHere = x => schPeople().find(p => stpKey(p.name) === stpKey(x.name)) || null;
 /* ---- bringing it in, and what to put back ---- */
 const stpClone = v => v == null ? v : JSON.parse(JSON.stringify(v));
@@ -33231,6 +33408,7 @@ async function stpApply(S, pick) {
   }
   if (pick.att) meSet({ att: S.att });
   if (pick.focus) fcConfSet(S.focus);
+  if (pick.todo) { const t = lib.todo || {}; U.todo = { cats: stpClone(t.cats || null), corder: stpClone(t.corder || null) }; lib.todo = { ...t, ...stpTodoNext(S.todo) }; }
   if (pick.tabs) meSet({ tabs: S.tabs });
   if (pick.classes) {
     U.classes = []; U.links = []; U.units = []; U.ib = []; U.course = []; U.mbWas = localStorage.getItem(MB_KEY);
@@ -33297,7 +33475,7 @@ async function stpApply(S, pick) {
   return U;
 }
 function stpAfter() {
-  sysWords(); gradeDefaultApply(); renderLib(); railRender(); homeRender(); planRefresh(); setRender();
+  sysWords(); gradeDefaultApply(); renderLib(); railRender(); homeRender(); planRefresh(); setRender(); if (typeof todoRender === 'function') todoRender();
   if (batch) renderGrade();
 }
 const stpUndoRec = () => { const u = store.get('gs.setupUndo', null); return stpObj(u) && u.t ? u : null; };
@@ -33317,6 +33495,7 @@ async function stpUndo() {
   if (U.goals && Array.isArray(lib.goals)) lib.goals = lib.goals.filter(g => !U.goals.includes(g.id));
   if (U.rubAdded || U.rubWas) { let all = savedRubrics().filter(r => !(U.rubAdded || []).includes(r.id)); for (const w of U.rubWas || []) { const i = all.findIndex(r => r.id === w.id); if (i >= 0) all[i] = { ...w, at: Date.now() }; } store.set('gs.rubrics', all); if ((U.rubAdded || []).length) { store.set('gs.rubricsGone', { ...store.get('gs.rubricsGone', {}), ...Object.fromEntries(U.rubAdded.map(id => [id, Date.now()])) }); bankJob(() => bankWrite(b => { b.rubrics = b.rubrics.filter(r => !U.rubAdded.includes(r.id)); for (const id of U.rubAdded) b.gone[id] = Date.now(); for (const w of U.rubWas || []) { const i = b.rubrics.findIndex(r => r.id === w.id); if (i >= 0) b.rubrics[i] = { ...w, at: Date.now() }; } })).catch(() => {}); } }
   if (U.mark) stpMarkSet(U.mark);
+  if (U.todo && lib.todo) { for (const k of ['cats', 'corder']) { if (U.todo[k]) lib.todo[k] = U.todo[k]; else delete lib.todo[k]; } }
   if (U.ppl) schChange(sc => {
     const t = Date.now(); sc.people = sc.people || [];
     for (const id of U.ppl.added) { const i = sc.people.findIndex(p => p.id === id); if (i >= 0) { if ((sc.people[i].at || 0) <= U.t + 1000) sc.people[i] = { id, at: t, gone: 1 }; else kept.push('the person ' + sc.people[i].name); } }
@@ -33360,6 +33539,7 @@ async function stpExport() {
   if (goalList().length) out.goals = goalList().map(x => x.name);
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
   if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, lessonMinutes: c.llen, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days ? { days: c.goal.days.map(d => GP_DAYS[d].toLowerCase()) } : {}) } : null, sessionGoals: c.sg, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle, planningAfterMinutes: c.pe, freePeriods: c.free, weeklyLookBack: c.wk === false ? false : GP_DAYS[c.wk].toLowerCase(), quietWhileFocusing: c.quiet, shortestFirst: c.short, music: c.music, musicMood: c.mood, musicVolume: Math.round(c.mvol * 100), musicBackground: c.mamb }; }
+  if (lib.todo && (lib.todo.cats || lib.todo.corder)) out.todo = { categories: tdCats().map(c => ({ name: c.name, ...(c.w ? { words: c.w.split(/\s*,\s*/).filter(Boolean) } : {}), ...(c.id === 'role' ? { role: true } : {}) })) };
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
   { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
@@ -33438,6 +33618,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "attendance": true,
   "focus": { "sessionMinutes": 10, "lessonMinutes": 45, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "sessionGoals": true, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5, "planningAfterMinutes": 3, "freePeriods": true, "weeklyLookBack": "friday", "quietWhileFocusing": false, "shortestFirst": false, "music": false, "musicMood": "mix", "musicVolume": 50, "musicBackground": false },
   "classTabs": ["Missing work"],
+  "todo": { "categories": [{ "name": "Grading and feedback" }, { "name": "Lesson planning", "words": ["labs"] }, { "name": "Administrative" }, { "name": "Grade-level lead", "role": true, "words": ["team meeting"] }] },
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
   "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide" }
 }
@@ -33454,6 +33635,7 @@ FIELD NOTES
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
 - "focus" is the work timer for grading and for planning lessons: "sessionMinutes" (a grading session) and "lessonMinutes" (a session planning one lesson) are each one of 5, 10, 15, 20, 25, 30, 45, 60, and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none; add "per": "week" for a goal for the whole week, or "days": ["monday", "wednesday"] for a daily goal on some days only. "sessionGoals" false stops the app suggesting a goal for each session. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "planningAfterMinutes" (2, 3, 5 or 10, or 0 for never) is how many minutes of steady work in the Planner, outside a focus session, before it counts as planning; time during my classes never counts. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. "music" true plays lo-fi music while a session runs; "musicMood" is "mix" or one of "rain", "library", "coffee", "night", "tape", "garden", "blue", "quiet" (quiet has no drums), "musicVolume" is 5 to 100, and "musicBackground" true adds a soft record crackle or rain behind it. Leave it out if I have not said.
+- "todo" is how my to-do list is sorted. "categories" are its groups in my order (the app starts with "Grading and feedback", "Lesson planning", "Administrative" and "Leadership role"). Mark the one for a role I hold beside teaching (a coach, a coordinator, a head of department) with "role": true and name it with my role's title. "words" are words that put a to-do in that category. A category I don't list is deleted. Leave it out unless I ask.
 - "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;

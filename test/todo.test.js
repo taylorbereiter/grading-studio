@@ -66,9 +66,9 @@ test('the To do page: a link in the sidebar, adding by typing, what was understo
 
   await page.type('#tdIn', 'Call Bram’s parents about the essay tomorrow');
   await page.waitForSelector('#tdUnd [data-tddrop="who"]');
-  assert.deepEqual(await page.$$eval('#tdUnd [data-tddrop]', b => b.map(x => x.dataset.tddrop + ':' + x.textContent)), ['d:' + await page.evaluate(d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }), day(1)), 'c:Grade 9 English', 'who:Bram Sample']);
+  assert.deepEqual(await page.$$eval('#tdUnd [data-tddrop]', b => b.map(x => x.dataset.tddrop + ':' + x.textContent)), ['d:' + await page.evaluate(d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }), day(1)), 'c:Grade 9 English', 'who:Bram Sample', 'k:Administrative']);
   await page.click('#tdUnd [data-tddrop="who"]');
-  assert.deepEqual(await page.$$eval('#tdUnd [data-tddrop]', b => b.map(x => x.dataset.tddrop)), ['d', 'c'], 'a click takes one off');
+  assert.deepEqual(await page.$$eval('#tdUnd [data-tddrop]', b => b.map(x => x.dataset.tddrop)), ['d', 'c', 'k'], 'a click takes one off');
   await page.keyboard.press('Enter');
   assert.equal(await page.$eval('#tdIn', i => i.value), '');
   assert.ok(await page.$eval('#tdUnd', e => e.hidden));
@@ -174,7 +174,7 @@ test('what the app adds comes from saved work, is never stored, can be hidden or
   const { page, close } = await open();
   await page.waitForSelector('#tdList [data-td="auto:miss:c1"]');
   assert.deepEqual(await page.$$eval('#tdSide .tdsw', b => b.map(x => x.textContent + ':' + x.getAttribute('aria-checked'))), ['Papers to mark:true', 'Papers to hand back:true', 'Lessons not planned yet:true', 'Missing work to chase:true']);
-  assert.match(await page.$eval('#tdList [data-td="auto:miss:c1"]', e => e.textContent.replace(/\s+/g, ' ')), /Remind 1 student about missing work\s*From your work\s*Grade 9 English\s*See who\s*Today/);
+  assert.match(await page.$eval('#tdList [data-td="auto:miss:c1"]', e => e.textContent.replace(/\s+/g, ' ')), /Remind 1 student about missing work\s*From your work\s*Grade 9 English\s*Grading and feedback\s*See who\s*Today/);
   assert.equal(await page.$eval('#tdList [data-td="auto:miss:c1"] a.btn', a => a.getAttribute('href')), '#/class/c1/missing');
   assert.equal(await saved(page), null, 'nothing is stored for a line the app worked out');
   // moved to tomorrow
@@ -367,4 +367,71 @@ test('two copies of the list merge line by line: the later change wins, and a de
   assert.deepEqual(plain(M.mergeLib(L(), L(b)).lib.todo), plain(b));
   assert.equal('todo' in M.mergeLib(L(), L()).lib, false);
   assert.deepEqual(plain(M.mergeLib(L(a), L(b)).lib.todo.items.map(i => i.id)), ['1', '2', '3', '4']);
+});
+
+test('categories: lines go where their words fit, she can pick another, and her categories can be renamed, added, moved and deleted', async () => {
+  const old = item('o1', 'Mark the lab reports', { d: day(0) });   // saved before categories existed: no k
+  const { page, close } = await open({ items: [old, item('o2', 'Email the office about the trip'), item('o3', 'Make slides for the poem'), item('o4', 'Water the plants')], off: {}, offT: 0, auto: {} });
+  const guess = t => page.evaluate(t => window.__gs.tdGuess(t), t);
+  assert.equal(await guess('Mark the lab reports'), 'grade');
+  assert.equal(await guess('Give feedback on drafts'), 'grade');
+  assert.equal(await guess('Make a rubric for the essay'), 'plan', 'making something is planning, though a rubric is for grading');
+  assert.equal(await guess('Print handouts'), 'plan');
+  assert.equal(await guess('Email parents about grades'), 'admin', 'the first word that fits wins');
+  assert.equal(await guess('Run the coaching workshop'), 'role');
+  assert.equal(await guess('Water the plants'), '');
+  assert.equal(await guess('Role play for drama'), '', 'a short word in a name does not catch other lines');
+  // the list by category
+  await page.click('#tdBy [data-tdby="cat"]');
+  await page.waitForSelector('#tdList [data-tdgrp="cat:grade"]');
+  assert.deepEqual(await page.$$eval('#tdList .tdgrp', g => g.map(x => x.dataset.tdgrp)), ['cat:grade', 'cat:plan', 'cat:admin', 'cat:'], 'only the ones with lines, then No category');
+  assert.equal(await page.evaluate(() => localStorage.getItem('gs.tdBy')), 'cat', 'remembered in this browser');
+  assert.deepEqual((await saved(page)).items.map(i => i.k), [undefined, undefined, undefined, undefined], 'nothing saved is rewritten');
+  // renaming the role and giving it words brings lines to it
+  await page.evaluate(() => { const i = document.querySelector('#tdSide [data-tdcat="role"] .tdcatn'); i.value = 'Instructional coach'; i.dispatchEvent(new Event('change', { bubbles: true })); });
+  await page.evaluate(() => { const i = document.querySelector('#tdSide [data-tdcat="role"] .tdcatw'); i.value = 'plants, greenhouse'; i.dispatchEvent(new Event('change', { bubbles: true })); });
+  assert.deepEqual((await saved(page)).cats.map(c => [c.id, c.name, c.w]), [['role', 'Instructional coach', 'plants, greenhouse']]);
+  assert.equal(await guess('Water the plants'), 'role', 'her own words');
+  assert.equal(await guess('Plan with the instructional team'), 'role', 'a long word of her own name counts before the app’s words');
+  // picking a category on a line stays, whatever its words say
+  await page.click('#tdList [data-td="o1"] .tdmain');
+  await page.waitForSelector('#tdCat');
+  assert.match(await page.$eval('#tdSide .tdguess', e => e.textContent), /from its words/);
+  await page.select('#tdCat', 'admin');
+  assert.equal((await saved(page)).items[0].k, 'admin');
+  await page.select('#tdCat', '-');
+  assert.equal((await saved(page)).items[0].k, '-');
+  await page.click('#tdSide [data-tdclose]');
+  // adding, moving, deleting
+  await page.type('#tdCatAdd input', 'Yearbook'); await page.keyboard.press('Enter');
+  const ids = async () => page.evaluate(() => window.__gs.tdCats().map(c => c.id));
+  let all = await ids(); assert.equal(all.length, 5); const yb = all[4];
+  assert.equal(await guess('Yearbook photos'), yb, 'a new one’s name brings lines to it');
+  await page.click('#tdSide [data-tdcat="' + yb + '"] [data-tdcmv="-1"]');
+  assert.deepEqual(await ids(), ['grade', 'plan', 'admin', yb, 'role']);
+  await page.click('#tdSide [data-tdcat="plan"] [data-tdcdel]');
+  assert.deepEqual(await ids(), ['grade', 'admin', yb, 'role']);
+  assert.equal(await guess('Print handouts'), '', 'a deleted one’s words bring nothing');
+  await page.click('.toast button, #toast button');
+  assert.deepEqual(await ids(), ['grade', 'plan', 'admin', yb, 'role'], 'Undo brings it back');
+  // typed with a category understood, and taken off
+  await page.type('#tdIn', 'Grade the quizzes');
+  await page.waitForSelector('#tdUnd [data-tddrop="k"]');
+  assert.equal(await page.$eval('#tdUnd [data-tddrop="k"]', b => b.textContent), 'Grading and feedback');
+  await page.click('#tdUnd [data-tddrop="k"]'); await page.keyboard.press('Enter');
+  assert.equal((await saved(page)).items.at(-1).k, '-');
+  // the app's lines go to grading and planning
+  assert.ok((await page.evaluate(() => window.__gs.todoRows().filter(r => r.auto).map(r => [r.kind, window.__gs.tdCatOf(r).id]))).every(([k, c]) => c === (k === 'plan' ? 'plan' : 'grade')));
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('categories from two copies are joined one by one, and carry into a new school year', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'merge.js'), 'utf8'), ctx = {};
+  vm.createContext(ctx); vm.runInContext(src + ';this.todoMerge = todoMerge;', ctx);
+  const a = { items: [], cats: [{ id: 'role', name: 'Coach', t: 5 }, { id: 'tc1', name: 'Clubs', t: 2 }], corder: { ids: ['role', 'grade'], t: 9 } };
+  const b = { items: [], cats: [{ id: 'role', name: 'Mentor', t: 3 }, { id: 'tc1', gone: 1, t: 4 }, { id: 'tc2', name: 'Yearbook', t: 1 }], corder: { ids: ['grade', 'role'], t: 2 } };
+  const m = ctx.todoMerge(a, b);
+  assert.deepEqual(JSON.parse(JSON.stringify(m.cats)).sort((x, y) => x.id.localeCompare(y.id)), [{ id: 'role', name: 'Coach', t: 5 }, { id: 'tc1', gone: 1, t: 4 }, { id: 'tc2', name: 'Yearbook', t: 1 }]);
+  assert.deepEqual(JSON.parse(JSON.stringify(m.corder)), { ids: ['role', 'grade'], t: 9 });
 });
