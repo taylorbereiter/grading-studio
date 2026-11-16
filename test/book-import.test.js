@@ -187,8 +187,8 @@ test('the type of each column is one of the teacher’s own gradebook types', as
 
 test('names a little different are matched, but "Quiz 1" is never "Quiz 2" and a shared word alone is not enough', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
-  const f = await page.evaluate(() => { const { bkiFit } = window.__gs; return [bkiFit('Quiz 1', 'Quiz 2'), bkiFit('Map test', 'Poetry test'), bkiFit('Poetry Test (Unit 1)', 'Poetry test'), bkiFit('Narative Essay', 'Narrative essay'), bkiFit('Poetry analysis', 'Poetry test'), bkiFit('poetry test', 'Poetry test')]; });
-  assert.deepEqual(f.map(x => Math.round(x * 100) / 100), [0, 0, 0.95, 0.94, 0.5, 1]);
+  const f = await page.evaluate(() => { const { bkiFit } = window.__gs; return [bkiFit('Quiz 1', 'Quiz 2'), bkiFit('Map test', 'Poetry test'), bkiFit('Poetry Test (Unit 1)', 'Poetry test'), bkiFit('Narative Essay', 'Narrative essay'), bkiFit('Poetry analysis', 'Poetry test'), bkiFit('poetry test', 'Poetry test'), bkiFit('Test (Unit 2)', 'Test (Unit 1)')]; });
+  assert.deepEqual(f.map(x => Math.round(x * 100) / 100), [0, 0, 0.95, 0.94, 0.5, 1, 0]);
   await openImport(page);
   await paste(page, 'Name\tPoetry Test (Unit 1)\tNarative Essay\tNarrative essay 2\tMap test\nCleo Fixture\t25\t15\t16\t9\n');
   await page.waitForSelector('.bkitab');
@@ -309,5 +309,21 @@ test('a class with a roster adds a student only when asked, and fills in only th
   const c = (await lib(page)).classes[0];
   assert.deepEqual(c.names, [...NAMES, 'Gus Newcomer']);
   assert.deepEqual(c.info, { 'Aria Testwell': { email: 'aria@school.example' }, 'Bram Sample': { email: 'bram@example.org' }, 'Gus Newcomer': { email: 'gus@example.org' } });
+  noErrors(page); await close();
+});
+
+test('a score is put on the scale of the assignment it goes to, and a name already on the roster can’t be added again', async () => {
+  const { page, close } = await openApp(browser, { seed: seed() });
+  await openImport(page);
+  await paste(page, 'Name,Poetry test (50)\nCleo Fixture,45\nAria Testwell,40\nAria Testwell,41\n');
+  await page.waitForSelector('.bkitab');
+  assert.match(await page.$eval('.bkiscale', e => e.textContent), /Out of 30, as it is now \(the file’s out of 50 is scaled to it\)/);
+  // The two Aria rows can't both be her, so neither is matched, and neither can be added as a second Aria.
+  assert.deepEqual(await page.$$eval('[data-bkipick] option[value="+"]', o => o.map(x => x.disabled)), [true, true]);
+  await page.click('[data-bkisave]');
+  await page.waitForSelector('#bkTab');
+  const l = await lib(page);
+  assert.deepEqual(l.classes[0].units.flatMap(u => u.items).find(x => x.id === 'i2').typed.s['Cleo Fixture'], { v: 27, st: '' });
+  assert.deepEqual(l.classes[0].names, NAMES);
   noErrors(page); await close();
 });
