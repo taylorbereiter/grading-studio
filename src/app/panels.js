@@ -89,7 +89,7 @@ function setListPts(on) { listPts = !!on; if (listPts) store.set('gs.listPts', t
 // Extra credit shows on its own, after the score it was added to ("85% +2%"), never folded into an odd total; the strip only marks it with a +.
 function listScore(g, strip) {
   const x = !!g.xc && g.base != null, pc = x ? g.bpct : g.pct, t = x ? g.base : g.total;
-  const more = !x ? '' : strip ? '+' : '<small>+' + (!listPts && !g.partial && pc != null && g.pct != null ? fmtNum(g.pct - pc) + '%' : fmtNum(g.xc) + (g.xcU === 'pct' ? '%' : '')) + '</small>';
+  const more = !x ? '' : strip ? '+' : '<small>+' + (!listPts && !g.partial ? xcSay(g) : fmtNum(g.xc) + (g.xcU === 'pct' ? '%' : '')) + '</small>';
   if (g.total == null) return fmtNum(g.pct) + '%';
   if (!listPts && !g.partial && pc != null) return fmtNum(pc) + '%' + more;
   const of = g.outOf != null ? g.outOf : maxPoints();
@@ -231,8 +231,8 @@ function totalHtml(st) {
   if (noScore(st)) return '<b>' + STATUS_LABEL[gr.status] + '</b><span style="width:100%;font-size:12.5px">No score counts. Giving a score takes this off.</span>';
   if (ibSetup()) return ibTotalHtml(st);   // an MYP task has levels, no total and no percent
   // With extra credit the big number is the score she gave, and the extra credit follows its percent ("93% +2%"), so the total never looks odd.
-  const x = !!gr.xc && gr.base != null && gr.bpct != null && gr.pct != null, t = x ? gr.base : gr.total;
-  let h = '<b>' + (t == null ? '–' : fmtNum(t)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : x ? fmtPct(gr.bpct) + '<small class="xcplus"> +' + fmtNum(gr.pct - gr.bpct) + '%</small>' + bandSay(gr.pct) : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
+  const x = !!gr.xc && gr.base != null, t = x ? gr.base : gr.total, plus = x ? '<small class="xcplus"> +' + xcSay(gr) + '</small>' : '';
+  let h = '<b>' + (t == null ? '–' : fmtNum(t)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? plus : x && gr.bpct != null ? fmtPct(gr.bpct) + plus + bandSay(gr.pct) : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
   if (gr.total != null) h += '<button class="btn sm ghost" id="stampScore" title="Put the score on the paper: ' + esc(scoreStampText(gr)) + '">' + STAMP_ICON + 'Stamp</button>';
   if (gr.xc) h += '<span class="xcsay" style="width:100%">' + fmtNum(gr.base) + ' earned + ' + fmtNum(gr.xc) + (gr.xcU === 'pct' ? '%' : '') + ' extra credit</span>';
   if (gr.partial) h += '<span class="sc-warn" style="width:100%">Partial: ' + partNote(st) + '. This total isn’t final.</span>';
@@ -248,7 +248,7 @@ function scoreStampText(gr, st) {
   if (ibSetup()) return ibStampText(st || batch.students[cur]);
   const max = gr.outOf != null ? gr.outOf : maxPoints();
   // Extra credit goes on a line of its own under the score it was added to: "17/20 = 85% + 5% extra credit" (src/stamps.js draws the three lines).
-  if (gr.xc && gr.base != null) return fmtNum(gr.base) + (max ? '/' + fmtNum(max) : '') + (gr.bpct != null ? ' = ' + gr.bpct + '%' : '') + ' + ' + (gr.bpct != null && gr.pct != null ? fmtNum(gr.pct - gr.bpct) + '%' : fmtNum(gr.xc) + (gr.xcU === 'pct' ? '%' : '')) + ' extra credit';
+  if (gr.xc && gr.base != null) return fmtNum(gr.base) + (max ? '/' + fmtNum(max) : '') + (gr.bpct != null ? ' = ' + gr.bpct + '%' : '') + ' + ' + xcSay(gr) + ' extra credit';
   return fmtNum(gr.total) + (max ? '/' + fmtNum(max) : '') + (gr.pct != null ? ' = ' + gr.pct + '%' : '');
 }
 // Every score stamp on a paper says the score the app holds for that student, so the stamp, the score panel, the grade sheet

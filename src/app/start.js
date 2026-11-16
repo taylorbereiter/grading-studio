@@ -159,6 +159,8 @@ function addXc(r, xc, max, unit) {
   if (unit === 'pct') return { ...r, total: max ? r.total + Math.round(xc * max) / 100 : r.total, base: r.total, bpct: r.pct, xc, xcU: 'pct', pct: r.pct == null ? r.pct : roundPct(r.pct + xc) };
   return { ...r, total: r.total + xc, base: r.total, bpct: r.pct, xc, pct: r.pct == null || !max ? r.pct : roundPct(r.pct + xc / max * 100) };
 }
+// Extra credit said on its own: the percent it adds, or in its own unit when that rounds to nothing or there is no percent.
+const xcSay = g => g.bpct != null && g.pct != null && g.pct - g.bpct > 0 ? fmtNum(g.pct - g.bpct) + '%' : fmtNum(g.xc) + (g.xcU === 'pct' ? '%' : '');
 function scoreOf(st) {
   const own = ownGrade(st);
   if (own.total != null) return own;

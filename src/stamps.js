@@ -34,7 +34,7 @@ const isSticker = k => STICKERS.some(s => s[0] === k);
 const isScoreStamp = k => k === 'score';
 // Extra credit follows the score after " + " ("17/20 = 85% + 5% extra credit") and is a third, smaller line; the grade sheet reads only the score before it.
 const stampScore = t => String(t || '').split(' + ')[0];
-const scoreLines = m => { const t = String(m.text || ''), i = t.indexOf(' + '), L = stampScore(t).split(' = ').map(x => x.replace('/', ' / ')); if (i >= 0) { if (L.length < 2) L.push(''); L.push(t.slice(i + 1)); } return L; };
+const scoreLines = m => { const t = String(m.text || ''), i = t.indexOf(' + '), L = stampScore(t).split(' = ').map(x => x.replace('/', ' / ')); if (i >= 0) L.push(t.slice(i + 1)); return L; };   // with no percent line the extra credit is the second line
 function scoreSize(m) {
   const s = m.size || 52, [a, b, c] = scoreLines(m);
   measureCtx.font = '700 ' + (s * 0.34) + 'px ' + FONT; const wa = measureCtx.measureText(a || '').width;

@@ -1,11 +1,11 @@
 {
  "version": "1.28.38",
- "build": "655a64ff8175",
+ "build": "0d47ec0f6e67",
  "notes": [
   "Fixes for typed percents: editing a typed-in column keeps percents and extra credit, a percent-only score counts as scored on cards and in the sidebar, and No papers: just type the scores… shows only on assignments with no papers."
  ],
  "files": {
-  "index.html": "18d220cf0f820e82de5b3fb5617717aabca2af6303815fd1e517171f8b91216a",
+  "index.html": "8fa98c38081304590d497bcc5ed1ac9c0c8806e00880d10145d457b882ff2011",
   "planner.html": "045ee6408c342fbbeaca3bd9bdab4ba80a093d50d2d09e0527cf693de11ed710"
  },
  "langs": {
