@@ -404,6 +404,7 @@ function tdWeekHtml(rows, today) {
 function tdSideHtml(rows, today) {
   const r = tdS.sel ? rows.find(x => x.id === tdS.sel) : null;
   if (!r && routeNow().week) return '';   // the week has no room for the switches: they are on the list
+  if (!r && PHONE) return '';   // the switches and categories are set on the computer; the phone keeps the list
   if (!r) {
     const off = tdData().off;
     return '<h2 class="tcap">The app adds these for you</h2><div class="tcard tdkinds">' + TD_KINDS.map(([k, l]) => '<button class="tdsw" role="switch" aria-checked="' + !off[k] + '" data-tdkind="' + k + '"><span>' + l + '</span><i aria-hidden="true"></i></button>').join('') +

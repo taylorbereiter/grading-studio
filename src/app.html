@@ -550,6 +550,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
       <div class="hmain">
         <section class="safeask" id="sampleNote" hidden></section>
         <section class="safeask" id="safeAsk" hidden></section>
+        <section class="tsec" id="phSign" hidden></section>
         <section class="tsec" id="lbCard" hidden></section>
         <section class="tsec" id="today" hidden></section>
         <section class="tsec today" id="toMark" hidden>
@@ -592,12 +593,16 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     <div id="tkBody"></div>
   </section>
   <section class="view" id="vPlans" hidden>
-    <header class="vhead"><h1>Plans</h1></header>
+    <header class="vhead"><h1>Plans</h1><span class="muted">Your lessons from the Planner, to read.</span></header>
     <div id="phPlans"></div>
   </section>
   <section class="view" id="vScores" hidden>
-    <header class="vhead"><h1>Scores</h1></header>
+    <header class="vhead"><h1>Scores</h1><span class="muted">Type in scores for a class.</span></header>
     <div id="phScores"></div>
+  </section>
+  <section class="view" id="vMore" hidden>
+    <header class="vhead"><h1>More</h1></header>
+    <div id="phMore"></div>
   </section>
   <section class="view" id="vTodo" hidden>
     <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button><div class="pseg" id="tdBy" role="group" aria-label="Group the list"><button data-tdby="day" aria-pressed="true">By day</button><button data-tdby="cat" aria-pressed="false">By category</button></div><div class="pseg" id="tdView" role="group" aria-label="View"><button data-tdview="" aria-pressed="true">List</button><button data-tdview="week" aria-pressed="false">Week</button></div></header>

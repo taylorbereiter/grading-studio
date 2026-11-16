@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"f0e87a69","zh-Hans":"8f8df879","es":"b49f186c","fr":"2fbe2f1a","de":"e85b9908","pt-BR":"8bb2c13d","ja":"871c11b7","ko":"64d92d34"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"a6197dc0","zh-Hans":"025d97f9","es":"67492f9b","fr":"c0012f1a","de":"7fd735a5","pt-BR":"f020a80c","ja":"2c6f75e3","ko":"a2542ec9"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -3604,6 +3604,17 @@ body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #td
 .phslides p{margin:6px 0 0;line-height:1.45}
 .phslides .phsn{color:var(--muted);font-size:var(--text-small);border-top:1px solid var(--line);padding-top:6px}
 
+.phnav a{position:relative}
+.phbadge{position:absolute;top:4px;left:calc(50% + 8px);width:9px;height:9px;border-radius:var(--corner-round);background:var(--accent);box-shadow:0 0 0 2px var(--surface)}
+.phupd{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:41;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 16px;border-radius:var(--corner-5);background:var(--accent);color:var(--accent-fg);box-shadow:var(--shadow);font-weight:600}
+.phupd[hidden]{display:none}
+.phupd span{flex:1;min-width:0}
+.phupd .btn{background:var(--accent-fg);color:var(--accent);border-color:var(--accent-fg);font-weight:600}
+.gsphone body:has(.phupd:not([hidden])) .shellmain{padding-bottom:calc(140px + env(safe-area-inset-bottom))}
+.phsign{padding:16px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.phsign p{margin:0;color:var(--muted)}
+.gsphone #vHome .gAcct,.gsphone #tdView,.gsphone #tdAdd kbd{display:none!important}
+
 .seatbar b{font-weight:600}
 .seatbar2{background:var(--bg)}
 .seatstep{display:inline-flex;align-items:center;gap:var(--space-1);color:var(--muted)}
@@ -3929,6 +3940,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
       <div class="hmain">
         <section class="safeask" id="sampleNote" hidden></section>
         <section class="safeask" id="safeAsk" hidden></section>
+        <section class="tsec" id="phSign" hidden></section>
         <section class="tsec" id="lbCard" hidden></section>
         <section class="tsec" id="today" hidden></section>
         <section class="tsec today" id="toMark" hidden>
@@ -3971,12 +3983,16 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
     <div id="tkBody"></div>
   </section>
   <section class="view" id="vPlans" hidden>
-    <header class="vhead"><h1>Plans</h1></header>
+    <header class="vhead"><h1>Plans</h1><span class="muted">Your lessons from the Planner, to read.</span></header>
     <div id="phPlans"></div>
   </section>
   <section class="view" id="vScores" hidden>
-    <header class="vhead"><h1>Scores</h1></header>
+    <header class="vhead"><h1>Scores</h1><span class="muted">Type in scores for a class.</span></header>
     <div id="phScores"></div>
+  </section>
+  <section class="view" id="vMore" hidden>
+    <header class="vhead"><h1>More</h1></header>
+    <div id="phMore"></div>
   </section>
   <section class="view" id="vTodo" hidden>
     <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button><div class="pseg" id="tdBy" role="group" aria-label="Group the list"><button data-tdby="day" aria-pressed="true">By day</button><button data-tdby="cat" aria-pressed="false">By category</button></div><div class="pseg" id="tdView" role="group" aria-label="View"><button data-tdview="" aria-pressed="true">List</button><button data-tdview="week" aria-pressed="false">Week</button></div></header>
@@ -10333,6 +10349,7 @@ for (const el of document.querySelectorAll('.gAcct')) el.innerHTML = G.email
 : '<button class="btn sm" data-gin>Sign in with Google</button>';
 if (!PHONE) for (const el of document.querySelectorAll('.gAcct')) el.insertAdjacentHTML('beforeend', ' <button class="btn sm" data-gphone>Use on your phone</button>');
 for (const b of document.querySelectorAll('.needG')) b.hidden = !G.email;
+if (typeof phSignRender === 'function') phSignRender();
 const gs = $('#setGoogle'); if (gs) { if (!G.email || G_REDIRECT) gs.hidden = true; $('#gAutoIn').checked = gAuto(); }
 }
 document.addEventListener('change', e => { if (e.target.id === 'gAutoIn') { store.set('gs.gAuto', e.target.checked); if (e.target.checked && syncPaused()) syncNow(); } });
@@ -10407,7 +10424,7 @@ const raw = store.set.bind(store);
 store.set = (k, v) => { const ok = raw(k, v); if (ok && SYNC_RX.test(k)) syncSoon(); return ok; };
 }
 function syncPaused() { return /sign in again/.test(syncState || ''); }
-function setSyncState(s) { const was = syncPaused(); syncState = s; if (syncPaused() !== was) return renderGoogle(); const el = document.getElementById('syncState'); if (el) el.textContent = s; }
+function setSyncState(s) { const was = syncPaused(); syncState = s; if (PHONE) phMoreRender(); if (syncPaused() !== was) return renderGoogle(); const el = document.getElementById('syncState'); if (el) el.textContent = s; }
 function syncSoon() { if (!G.email || sampleOn()) return; clearTimeout(syncT); setSyncState('saving…'); syncT = setTimeout(syncNow, 15000); }
 const syncVer = async () => String((await (await gsync('files/' + syncFile.id + '?fields=id,version')).json()).version || '');
 async function syncRead() {
@@ -11509,6 +11526,7 @@ return { v: 'class', c, tab, stu, att };
 }
 if (p[0] === 'class-named' && p[1]) { const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(p.slice(1).join('/')), c = k && lib.classes.find(c => nk(c.name) === k); return c ? { v: 'class', c, tab: '', stu: null, named: true } : { v: 'home', noClass: p.slice(1).join('/').slice(0, 60) }; }
 if (p[0] === 'plans' && PHONE) return { v: 'plans', id: p[1] || '' };
+if (p[0] === 'more' && PHONE) return { v: 'more' };
 if (p[0] === 'scores' && PHONE) return { v: 'scores', cls: p[1] || '', key: p[2] || '' };
 if (p[0] === 'todo') return { v: 'todo', week: p[1] === 'week' };
 if (p[0] === 'time') return { v: 'time' };
@@ -11586,7 +11604,7 @@ if (grading && !$('#welcome').hidden) wlClose();
 $('#shell').classList.toggle('grading', grading);
 $('#app').hidden = !grading; $('#start').hidden = grading;
 if (grading && $('#soloBar') && soloOn() && $('#soloBar').dataset.b !== batch.id) soloBar();
-for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening'], ['vScores', 'scores'], ['vPlans', 'plans']]) $('#' + id).hidden = grading || r.v !== v;
+for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening'], ['vScores', 'scores'], ['vPlans', 'plans'], ['vMore', 'more']]) $('#' + id).hidden = grading || r.v !== v;
 if (r.v !== 'class') classLeave();
 const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');
 if (!grading && key !== screenKey) $('#shellMain').scrollTop = 0;
@@ -11595,6 +11613,7 @@ railRender();
 if (!grading && r.v === 'examples') exPageRender();
 if (!grading && r.v === 'scores') phScoresRender(r);
 if (!grading && r.v === 'plans') phPlansRender(r);
+if (!grading && r.v === 'more') phMoreRender();
 phNavRender();
 if (grading) tabShow(r); else if (dlgPage) dlgShut();
 }
@@ -29846,7 +29865,7 @@ return rows.find(r => pad(r.m.end || r.m.start) > hm) || null;
 const T_ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 const numWord = n => ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'][n] || String(n);
 function todayHtml(prim) {
-if (!plan) return '<h2 class="tcap">Teaching today</h2><div class="tcard"><div class="trow none"><span class="nt"><b>Your timetable isn’t here yet</b><span class="ns">Add your class times in the Planner, and each day’s classes and lessons show here.</span></span><a class="btn sm" href="' + esc(planUrl('#timetable')) + '">Open the Planner</a></div></div>';
+if (!plan) return '<h2 class="tcap">Teaching today</h2><div class="tcard"><div class="trow none"><span class="nt"><b>Your timetable isn’t here yet</b><span class="ns">' + (PHONE ? 'Add your class times in the Planner on your computer, and each day’s classes and lessons show here.' : 'Add your class times in the Planner, and each day’s classes and lessons show here.') + '</span></span>' + (PHONE ? '' : '<a class="btn sm" href="' + esc(planUrl('#timetable')) + '">Open the Planner</a>') + '</div></div>';
 const t = todayRows(plan), cur = nowRow(t.rows), day = isoDay(Date.now());
 const say = l => l.done ? 'finished' : l.status === 'review' ? 'ready for you' : l.status === 'claude' ? 'with ' + aiSay() : 'draft';
 const row = r => {
@@ -30344,6 +30363,7 @@ return '<div class="tdwbar"><button class="btn sm" data-tdwk="-1" aria-label="Th
 function tdSideHtml(rows, today) {
 const r = tdS.sel ? rows.find(x => x.id === tdS.sel) : null;
 if (!r && routeNow().week) return '';
+if (!r && PHONE) return '';
 if (!r) {
 const off = tdData().off;
 return '<h2 class="tcap">The app adds these for you</h2><div class="tcard tdkinds">' + TD_KINDS.map(([k, l]) => '<button class="tdsw" role="switch" aria-checked="' + !off[k] + '" data-tdkind="' + k + '"><span>' + l + '</span><i aria-hidden="true"></i></button>').join('') +
@@ -32151,6 +32171,7 @@ renderTools(); setInksSay();
 const ASK_LATER = 7 * 864e5;
 const IC_FOLDER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
 function safeAskShown() {
+if (PHONE) return false;
 if (fld.state !== 'none' || !fld.booted || G.email) return false;
 let later = 0; try { later = +localStorage.getItem('gsc.folderLater') || 0; } catch {}
 if (Date.now() - later < ASK_LATER) return false;
@@ -32322,6 +32343,7 @@ const next = updNext(), stale = updStale(), rail = $('#railUpdate');
 rail.hidden = !(next || stale);
 rail.title = next ? 'A newer version is ready. It waits until you say so.' : 'This tab is still on the older version. Reload it when you’re ready.';
 rail.querySelector('.rl').textContent = next ? 'Update ready' : 'Reload to update';
+if (PHONE) phUpdRender();
 const el = $('#setAbout'), box = $('#setInstall'); if (!el || el.hidden) return;
 const notes = v => (WHATS_NEW[v] || []).map(n => '<li>' + esc(n) + '</li>').join('');
 let h = '<div class="lhead"><h2 data-raw>Grading Studio ' + esc(gsData.APP_VERSION) + '</h2><span class="muted">' + (upd.on ? 'Kept on this computer, so it opens with no internet.' : '') + '</span></div>';
@@ -34376,13 +34398,15 @@ const nav = document.createElement('nav');
 nav.className = 'phnav'; nav.id = 'phNav'; nav.setAttribute('aria-label', 'Main');
 const ic = d => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>';
 nav.innerHTML = [['#/', 'Today', 'M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8'],
-['#/plans', 'Plans', 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11M9 8h6'], ['#/scores', 'Scores', 'M4 5h16M4 12h16M4 19h10M17 17l2 2 3-4'], ['#/todo', 'To do', 'M5 12l4 4 10-10']]
-.map(([h, l, d]) => '<a href="' + h + '" data-phnav="' + h + '">' + ic(d) + '<span>' + l + '</span></a>').join('');
+['#/plans', 'Plans', 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11M9 8h6'], ['#/scores', 'Scores', 'M4 5h16M4 12h16M4 19h10M17 17l2 2 3-4'], ['#/todo', 'To do', 'M5 12l4 4 10-10'], ['#/more', 'More', 'M4 6h16M4 12h16M4 18h16']]
+.map(([h, l, d]) => '<a href="' + h + '" data-phnav="' + h + '">' + ic(d) + '<span>' + l + '</span>' + (h === '#/more' ? '<i class="phbadge" hidden></i>' : '') + '</a>').join('');
 document.body.appendChild(nav);
+const bar = document.createElement('div'); bar.className = 'phupd'; bar.id = 'phUpd'; bar.hidden = true; bar.setAttribute('role', 'status');
+document.body.appendChild(bar);
 }
 function phNavRender() {
 if (!PHONE) return;
-const v = routeNow().v, on = v === 'scores' ? '#/scores' : v === 'plans' ? '#/plans' : v === 'todo' ? '#/todo' : '#/';
+const v = routeNow().v, on = v === 'scores' ? '#/scores' : v === 'plans' ? '#/plans' : v === 'todo' ? '#/todo' : v === 'more' || v === 'settings' || v === 'help' ? '#/more' : '#/';
 for (const a of document.querySelectorAll('[data-phnav]')) { const me = a.dataset.phnav === on; a.classList.toggle('on', me); if (me) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
 }
 window.addEventListener('hashchange', phNavRender);
@@ -34535,7 +34559,7 @@ openDlg('<div class="bh"><h2>Use on your phone</h2></div><div class="bb phhow">'
 '<p class="muted">Your classes, scores and to-dos then stay the same on both. You can type scores and look at papers on the phone; marking stays on the computer.</p>' +
 '</div><div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
 }
-window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), gAge: ms => { G.exp -= ms; }, syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });
+window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), gAge: ms => { G.exp -= ms; }, syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)), updAs: st => { upd.on = true; upd.st = st; updRender(); }, syncSay: t => setSyncState(t) });
 
 /* Plans: the lessons from the Planner on her computer, day by day, to read (the Planner itself is where they are written). They come
 through her Google Drive with the rest of her work (drive.js, planSync), into this browser's own copy of the Planner's store. */
@@ -34566,6 +34590,43 @@ box.innerHTML = back + '<h2 class="phlt" data-raw>' + esc(l.title || 'Untitled l
 (l.note ? '<p class="phln" data-raw>' + txt(l.note) + '</p>' : '') +
 (slides.length ? '<ol class="phslides">' + slides.map(s => '<li class="tcard"><b data-raw>' + txt(s.title) + '</b>' + (s.body ? '<p data-raw>' + txt(s.body) + '</p>' : '') + (s.img || (s.ctx && s.ctx.length) ? '<small class="muted">A picture, on your computer</small>' : '') + (s.notes ? '<p class="phsn" data-raw>' + txt(s.notes) + '</p>' : '') + '</li>').join('') + '</ol>' : '<p class="muted">No slides yet.</p>');
 }
+
+/* More: what isn't the day's work, in one place. Google and syncing, updates (the computer has these in its sidebar), help and settings. */
+const phRow = (title, sub, btn) => '<div class="phitem"><span class="phn"><b>' + title + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>' + (btn || '') + '</div>';
+const phLink = (href, title) => '<a class="phitem" href="' + href + '"><span class="phn"><b>' + title + '</b></span><span class="phc" aria-hidden="true">›</span></a>';
+function phMoreRender() {
+const box = $('#phMore'); if (!box || routeNow().v !== 'more') return;
+const next = updNext(), stale = updStale();
+const g = !GOK || !gcid() ? '' : '<h2 class="tcap">Google</h2><div class="tcard phlist">' + (G.email
+? phRow('<span data-raw>' + esc(G.email) + '</span>', esc(syncState || 'synced'), syncPaused() ? '<button class="btn sm primary" data-gin>Sign in again</button>' : '<button class="btn sm" data-phsync>Sync now</button>') +
+phRow('Use a different account', '', '<button class="btn sm" data-gout>Sign out</button>')
+: phRow('Sign in with Google', 'Use the same Google account as on your computer, and your work comes here.', '<button class="btn sm primary" data-gin>Sign in</button>')) + '</div>';
+const say = next || stale ? 'A new version is ready.' : !upd.on ? '' : upd.checking ? 'Checking…' : upd.err || upd.said || 'You have the newest version.';
+const btn = next ? '<button class="btn sm primary" data-phupd>Update now</button>' : stale ? '<button class="btn sm primary" data-phupd>Reload to update</button>' : upd.on ? '<button class="btn sm" data-phcheck' + (upd.checking ? ' disabled' : '') + '>Check for updates</button>' : '';
+const h = g + '<h2 class="tcap">Updates</h2><div class="tcard phlist">' + phRow('<span data-raw>Grading Studio ' + esc(gsData.APP_VERSION) + '</span>', esc(say), btn) + '</div>' +
+'<div class="tcard phlist">' + phLink('#/help', 'Help') + phLink('#/settings', 'Settings') + '</div>';
+if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
+}
+function phUpdRender() {
+const next = updNext(), stale = updStale(), bar = $('#phUpd'), dot = document.querySelector('.phbadge'); if (!bar) return;
+const h = next || stale ? '<span>A new version is ready.</span><button class="btn sm" data-phupd>' + (next ? 'Update now' : 'Reload to update') + '</button>' : '';
+bar.hidden = !h; if (dot) dot.hidden = !h;
+if (bar.dataset.h !== h) { bar.dataset.h = h; bar.innerHTML = h; }
+phMoreRender();
+}
+function phSignRender() {
+const el = $('#phSign'); if (!el || !PHONE) return;
+const h = !GOK || !gcid() ? '' : !G.email ? '<div class="tcard phsign"><b>Bring your work from your computer</b><p>Sign in with the same Google account as on your computer. Your classes, scores, plans and to-dos then come here.</p><button class="btn primary" data-gin>Sign in with Google</button></div>'
+: syncPaused() ? '<div class="tcard phsign"><b>Google wants you to sign in again</b><p>Your work here waits to sync until you do.</p><button class="btn primary" data-gin>Sign in again</button></div>' : '';
+el.hidden = !h;
+if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+document.addEventListener('click', e => {
+if (e.target.closest('[data-phupd]')) return updNext() ? updApply() : location.reload();
+if (e.target.closest('[data-phcheck]')) { upd.checking = true; upd.err = ''; upd.said = ''; updRender(); updSend({ type: 'gs-check' }); return; }
+if (e.target.closest('[data-phsync]')) { setSyncState('syncing…'); syncNow(); }
+});
+if (PHONE) phSignRender();
 
 /* ---------------- Only this student: when a student comes to the desk, the screen shows them and nobody else ---------------- */
 var soloTry = '', soloUndo = null, soloOpen = false, soloHoldT = 0;

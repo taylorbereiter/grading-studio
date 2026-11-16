@@ -1,21 +1,21 @@
 {
  "version": "1.28.62",
- "build": "df53d02ba93c",
+ "build": "441c58a7d996",
  "notes": [
   "On the marking screen, the + Add menu now opens fully on screen instead of sliding under the Score panel."
  ],
  "files": {
-  "index.html": "048d53dc2f62e23683a7394ce401e6c411e16f0e484d81a67257c877c6215d39",
-  "planner.html": "bd3c227815a1235e223d25e3d4a7213d3bbecbfa6ba160590822f02099673a7f"
+  "index.html": "1a325eaa996c8d2f3a44c667ac6ed3fbc16c5e41ee625c9acef43238e5093f14",
+  "planner.html": "6768af1f19ea577650f5729683ec184ca8278e459d29a5ebc4fb88b4460c83eb"
  },
  "langs": {
-  "lang/zh-Hant.js": "f0e87a69b4d88733ce010c265b8f95b5ee273c7c2552a17a22b57f3d5080b697",
-  "lang/zh-Hans.js": "8f8df879cf440638cdfee176c65967d6b35152a83932ff836b9f513028baa655",
-  "lang/es.js": "b49f186ceef2ee164b12a77cceb059d077f5e2ceafcceb292ba4b9b3991a9daf",
-  "lang/fr.js": "2fbe2f1a988cd612dd4e69e4c53cfe901fed3258f82816b86def4e53286f4a47",
-  "lang/de.js": "e85b99083fc17a7f9cd8c3571c7b1b17135f5f339cf52eb94a22dd51bb4ef1b1",
-  "lang/pt-BR.js": "8bb2c13d737321823ea0446979112753e3300e3f5d4b8477d911e476884b5aba",
-  "lang/ja.js": "871c11b70c3c26bf3f549631906745b910410b2621fb6b3c130125d6e92be9e7",
-  "lang/ko.js": "64d92d34629a6b0022c3a8e137bd34aa2e8024c494c6d7c85fb773db64c00f0f"
+  "lang/zh-Hant.js": "a6197dc08d5c18b278a1b0efc0f5d303e2786ffae9bef4fbb9595b92c3be9f12",
+  "lang/zh-Hans.js": "025d97f93a4a3faf66d0b57f600d0715f68973317f2906c2f8d8baf35a2c0219",
+  "lang/es.js": "67492f9b992cb652c08ad3b1eba1df9aad3ca2c54554d9e16f16d30c1f28efcb",
+  "lang/fr.js": "c0012f1a82bbf3456a84089d52c3330a5e9b0624a26ba7ad3f10cf5ac7e7aed7",
+  "lang/de.js": "7fd735a517b7163b099d724ee979477d066afa0d00854b3fc25cbc6caa253523",
+  "lang/pt-BR.js": "f020a80c95dbf12980ac379da01fa008cc020e91d6bec9ec6d5bfe6693bcccf9",
+  "lang/ja.js": "2c6f75e3a34c1c0b435972a494d3a31e15f78a8b585ef8ebac5ddc3008a5f1c7",
+  "lang/ko.js": "a2542ec9bbea7c363cb3cbf6db08b5158b7079d75c4201c55e3906a6627a68f1"
  }
 }
