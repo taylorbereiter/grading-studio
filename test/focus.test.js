@@ -62,7 +62,7 @@ test('a session opens the next paper with nothing finished, finished papers coun
   L = await log(page);
   assert.equal(L.days[today()].s, 600, 'a break is not counted as work');
   assert.ok(!JSON.stringify(L).match(/Aria|Bram|Cleo|Dov|Testwell/), 'the log has no names in it');
-  assert.equal(await page.evaluate(() => localStorage.getItem('gs.focusRun')), null);
+  assert.equal(await page.evaluate(() => localStorage.getItem('gsp.focusRun')), null);
   assert.deepEqual(page.errors, []);
   await close();
 });
@@ -115,16 +115,16 @@ test('Settings keep only what differs from the usual, and a setup from an assist
   assert.equal(await meFocus(page), undefined);
   // a setup brings it in, says what it changes, goes out again the same, and Undo puts it back
   const r = await page.evaluate(async () => {
-    const G = window.__gs, S = G.stpRead({ gradingStudioSetup: 1, focus: { sessionMinutes: 15, breakMinutes: 7, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true, stopCountingAfterMinutes: 4 } });
+    const G = window.__gs, S = G.stpRead({ gradingStudioSetup: 1, focus: { sessionMinutes: 15, lessonMinutes: 30, breakMinutes: 7, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true, stopCountingAfterMinutes: 4 } });
     const diff = JSON.stringify(G.stpDiff(S)); await G.stpApply(S, { focus: true });
     const me = JSON.parse(JSON.stringify(G.state().lib.me.focus)), ex = await G.stpExport(), out = (typeof ex === 'string' ? JSON.parse(ex) : ex).focus;
     await G.stpUndo();
     return { read: S.focus, diff, me, out, after: (G.state().lib.me || {}).focus };
   });
-  assert.deepEqual(r.read, { len: 15, goal: { k: 'min', n: 90 }, sound: false, title: true }, 'a break length the app does not offer is left out');
-  assert.match(r.diff, /Focus timer and daily goal/);
-  assert.deepEqual(r.me, { len: 15, goal: { k: 'min', n: 90 }, sound: false });
-  assert.deepEqual(r.out, { sessionMinutes: 15, breakMinutes: 5, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true, countTime: true, stopCountingAfterMinutes: 5, freePeriods: true, weeklyLookBack: 'friday', quietWhileFocusing: false, shortestFirst: false, sessionGoals: true, music: false, musicMood: 'mix', musicVolume: 50, musicBackground: false });
+  assert.deepEqual(r.read, { len: 15, llen: 30, goal: { k: 'min', n: 90 }, sound: false, title: true }, 'a break length the app does not offer is left out');
+  assert.match(r.diff, /Focus timer and daily goal/); assert.match(r.diff, /A lesson session lasts 30 minutes/);
+  assert.deepEqual(r.me, { len: 15, llen: 30, goal: { k: 'min', n: 90 }, sound: false });
+  assert.deepEqual(r.out, { sessionMinutes: 15, lessonMinutes: 30, breakMinutes: 5, dailyGoal: { minutes: 90 }, chime: false, timeInTab: true, countTime: true, stopCountingAfterMinutes: 5, freePeriods: true, weeklyLookBack: 'friday', quietWhileFocusing: false, shortestFirst: false, sessionGoals: true, music: false, musicMood: 'mix', musicVolume: 50, musicBackground: false });
   assert.equal(r.after, undefined);
   assert.deepEqual(page.errors, []);
   await close();
@@ -152,7 +152,8 @@ test('Focus on this in To do starts a session on the to-do, and the end offers t
 test('the running session stays in this browser; the settings and the log go with the teacher’s work', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'folder.js'), 'utf8');
   const re = new RegExp(src.match(/const LS_LOCAL = \/(.+?)\/;/)[1]);
-  assert.ok(re.test('gs.focusRun'), 'a session half done on one computer is not carried to another');
+  const th = fs.readFileSync(path.join(__dirname, '..', 'src', 'takehome.js'), 'utf8'), skip = new RegExp(th.match(/const PLAN_LS_SKIP = \/(.+?)\/;/)[1]);
+  for (const k of ['gsp.focusRun', 'gsp.focusQ', 'gsp.focusGo']) assert.ok(skip.test(k), 'a session half done on one computer is not carried to another: ' + k);
   assert.ok(!re.test('gs.focus'), 'the log of days and the pace go with the folder and the take-home file');
 });
 
@@ -309,7 +310,7 @@ test('a paper scored just before Close counts once, and the next session starts 
 
 test('a session started in a window not updated yet is counted by papers saved, not by the day', async () => {
   const { page, close } = await openApp(browser, { seed: gradingSeed() });
-  await page.evaluate(() => { localStorage.setItem('gs.focusRun', JSON.stringify({ st: 'run', len: 1500, at: Date.now(), w: '', one: 1, p0: 0, fold: false, no: 1 })); window.__gs.fcTick(); });
+  await page.evaluate(() => { localStorage.setItem('gsp.focusRun', JSON.stringify({ st: 'run', len: 1500, at: Date.now(), w: '', one: 1, p0: 0, fold: false, no: 1 })); window.__gs.fcTick(); });
   assert.deepEqual(await page.evaluate(() => { const r = window.__gs.fcRun(); return [r.st, r.p0, r.pg]; }), ['run', 1e9, 0]);
   await close();
 });

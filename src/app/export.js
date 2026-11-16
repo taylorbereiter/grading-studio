@@ -334,7 +334,7 @@ async function openExport() {
         const plain = {}; for (const [k, v] of Object.entries(files)) plain[k] = v[0];
         const fname = 'Marked - ' + batch.name;
         await saveToDrive(fname, plain, (n, t) => { say('Saving to Google Drive ' + n + ' of ' + t + '…'); });
-        say(done = 'Done. Saved to Google Drive in “' + fname + '”' + (batch.drive && batch.drive.kind === 'folder' ? ', inside the folder you opened.' : batch.drive ? ', next to the ZIP you opened.' : ', in My Drive.'), true);
+        say(done = 'Done. Saved to Google Drive in “' + fname + '”' + (saveToDrive.where !== 'next' ? ', in My Drive.' : batch.drive.kind === 'folder' ? ', inside the folder you opened.' : batch.drive.kind === 'zip' ? ', next to the ZIP you opened.' : ', next to the papers you opened.'), true);
       } else {
         if (!dir) saveBlob('Marked - ' + batch.name + '.zip', new Blob([fflate.zipSync(files)], { type: 'application/zip' }));
         say(done = 'Done. ' + nOut + (nOut === 1 ? ' file' : ' files') + (dir ? ' saved into “' + dir.name + '”.' : ' in the ZIP.'), true);

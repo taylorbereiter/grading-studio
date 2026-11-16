@@ -1,22 +1,22 @@
 {
- "version": "1.28.41",
- "build": "6a16393e4325",
+ "version": "1.28.46",
+ "build": "ab3bf6ed7be5",
  "notes": [
-  "Grading Studio on your phone: add it to your iPhone's Home Screen to see what is left to mark, type in scores for a whole class, tick off to-dos and run the focus timer.",
-  "Keep your phone and computer the same through your own Google Drive: sign in with Google on each and your classes, scores and to-dos stay in step. Only Grading Studio's own hidden folder in your Drive is used."
+  "Focus sessions for lesson planning: the Focus panel lists your lessons for the coming week, and the Planner's lesson editor has a Focus button. A lesson session lasts 45 minutes unless you change it in Settings, Focus and goals.",
+  "Planning time now counts only in focus sessions on a lesson. Opening the Planner for a quick change or presenting a lesson doesn't add to it, and presenting pauses a lesson session."
  ],
  "files": {
-  "index.html": "51321df94856ace87d5ee65648856def6976eabd20a2791c0e496b9ce118968d",
-  "planner.html": "67747eaad33a75b726a957f5f057bc7d22bcada362f92e5114a98320e080f25f"
+  "index.html": "cf12afe780be4d6d4a4e1be76349e3573eadee4c931f784431578d7057cb82da",
+  "planner.html": "5578b6830f47f9741d79f82d5df13f0eb16aeb74b36c581c1fcc9c3709fec260"
  },
  "langs": {
-  "lang/zh-Hant.js": "284be2e26b0c29f49cff65452e5b9108218eb90921ba1b6cd2ef62f13da8b209",
-  "lang/zh-Hans.js": "9b440a888bdbba11d8000e892b1994e61c5640798349a833b4bcad1720a9ae24",
-  "lang/es.js": "0a1b6a0cbc7223b0b0acb2f323e12ef0a5c0f9b6cd8e4b91b7a096fc2ed74661",
-  "lang/fr.js": "f354d9b17f68c7f70bc24fe45bd91edbe91789deccfdaecdf97e6d9261670b83",
-  "lang/de.js": "81a500d9da0d47e1f9e832832bb5421b63d0036d8c9d401f793523f61c795fd4",
-  "lang/pt-BR.js": "0a0505ad5d9f80cc7a717196edf313c6ee4e1d05382e64b8cada6ea2e967a4ad",
-  "lang/ja.js": "b64fa68208c66537906ecee774d94e2c46f7189c910ab9f66c84f2023d6ea91d",
-  "lang/ko.js": "eff1309562d0f42b115ed443e4e2c893249099bd037043793448953c25006954"
+  "lang/zh-Hant.js": "124aef919fcedde9e5e7ea0fb47cecc681df7b77c51ed9e78021b5e918a68652",
+  "lang/zh-Hans.js": "97cb4df7f84e670796c9e1eeb998760c4ff657f78c680bf00336079e09f5ea48",
+  "lang/es.js": "e44059589e151cdf7e2220b4573c5a0413c7a1843ff3d3ca078d77e2a0a2409f",
+  "lang/fr.js": "5ca6101e13ae7488afbb38bebee5d51b9197ac518a56b80994ccf010248c79b5",
+  "lang/de.js": "cd98ecf672b057a9360f3fcd14ab89ce27f018b8a411bb32ff484e20e606cd63",
+  "lang/pt-BR.js": "e869d510b2558acd6552660a6fd249f2d210863328c7b7eb4e48f74b355e8b71",
+  "lang/ja.js": "0cc4bca046a06dc0e09267ce42f72d8aa8f7bfa7ed12583ad35717c8bb65c818",
+  "lang/ko.js": "b9c3a1b3cddb204d53e6a25c2150e223398afd9cb709fb3e3e87a6967dbc03c9"
  }
 }

@@ -46,7 +46,7 @@ test('time on the marking screen counts as grading, by assignment, only while sh
   await goTo(page, '#/settings/focus'); await page.waitForSelector('#tkOn'); await page.click('#tkOn'); await pause(200);
   assert.deepEqual(await page.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().lib.me.focus))), { track: false });
   // and the Planner, which reads only its own keys, is told through one of them
-  assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.timeCount'))), { on: false, idle: 5 });
+  { const tc = await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.timeCount'))); assert.deepEqual({ on: tc.on, idle: tc.idle }, { on: false, idle: 5 }); assert.equal(tc.len, 10, 'the focus timer’s settings go to the Planner too'); }
   assert.equal(await page.$eval('#tkIdle', e => e.disabled), true);
   await page.click('#tkOn'); await page.select('#tkIdle', '10'); await pause(200);
   assert.deepEqual(await page.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().lib.me.focus))), { idle: 10 });
@@ -117,36 +117,41 @@ test('the tracker shows grading and planning apart, by week, month and three mon
   await close();
 });
 
-test('time in the Planner counts as planning, by lesson, but not while a lesson is presented, and not when switched off', async () => {
+test('planning time counts only in a focus session on a lesson: opening a lesson, or presenting it, counts nothing', async () => {
   const server = await serve(() => fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8'));
   const page = await browser.newPage(); const errors = []; page.on('pageerror', e => errors.push(e.message));
   try {
     await page.goto(server.url, { waitUntil: 'load' });
-    await page.waitForFunction(() => window.__planner && document.querySelector('#lessons .ls-top'));
+    await page.waitForFunction(() => window.__planner && window.__plfocus && document.querySelector('#lessons .ls-top'));
     await page.bringToFront();
-    const tick = () => page.evaluate(() => { window.__plantime.active(); window.__plantime.tick(); });
-    await tick(); await tick();
     const id = await page.evaluate(async () => {
       const P = window.__planner, l = P.normLesson({ title: 'Reading a poem', slides: [{ layout: 'title', title: 'Reading a poem' }] });
       P.L.lessons.push(l); P.openLessonForTest(l, 0); return l.id;
     });
-    await tick();
-    await page.evaluate(() => { window.__present.PR.on = true; }); await tick(); await page.evaluate(() => { window.__present.PR.on = false; });
-    await page.evaluate(() => window.__plantime.flush());
+    // open, ticking, presenting: nothing is written
+    for (let i = 0; i < 3; i++) await page.evaluate(() => window.__plantime.tick());
+    await page.evaluate(() => { window.__present.PR.on = true; window.__plantime.tick(); window.__present.PR.on = false; });
+    assert.equal(await page.evaluate(() => localStorage.getItem('gsp.planTime')), null);
+    // the editor's Focus button starts a 45-minute session on this lesson
+    await page.click('[data-pfstart]');
+    const r = await page.evaluate(() => window.__plfocus.run());
+    assert.equal(r.k, 'l'); assert.equal(r.l, id); assert.equal(r.len, 45 * 60); assert.equal(r.t, 'Reading a poem');
+    assert.equal(await page.$eval('[data-pfstart]', e => e.hidden), true, 'no second Focus button while it runs');
+    // presenting is teaching: the session waits
+    await page.evaluate(() => { window.__present.PR.on = true; window.__plfocus.tick(); window.__present.PR.on = false; });
+    assert.equal((await page.evaluate(() => window.__plfocus.run())).st, 'paused');
+    await page.evaluate(() => window.__plfocus.act('resume'));
+    // ten minutes in: the lesson's own time shows beside its name, then the session ends and is written down once
+    await page.evaluate(() => { const r = JSON.parse(localStorage.getItem('gsp.focusRun')); r.at -= 600e3; localStorage.setItem('gsp.focusRun', JSON.stringify(r)); window.__plantime.tick(); });
+    assert.equal(await page.$eval('#lsTime', e => e.hidden ? '' : e.textContent), '10 min planning');
+    await page.click('#fcPanel [data-pf="stop"]'); await page.click('#fcPanel [data-pf="close"]');
     const P = await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.planTime')));
-    assert.equal(P.days[today()].l, 45);
-    assert.deepEqual(P.days[today()].a, { '': 30, [id]: 15 });
+    const d = P.days[today()], secs = d.l;
+    assert.ok(secs >= 600 && secs < 660, 'ten minutes'); assert.equal(d.f, secs); assert.equal(d.n, 1);
+    assert.deepEqual(d.a, { [id]: secs });
     assert.deepEqual(P.names, { [id]: 'Reading a poem' });
-    // the lesson's own time, beside its name, once it reaches a minute
-    assert.equal(await page.$eval('#lsTime', e => e.hidden), true);
-    for (let i = 0; i < 3; i++) await tick();
-    assert.equal(await page.evaluate(id => window.__plantime.lessonSecs(id), id), 60);
-    assert.equal(await page.$eval('#lsTime', e => e.hidden ? '' : e.textContent), '1 min planning');
-    await page.evaluate(() => window.__plantime.flush());
-    // the grading app's setting switches it off here too
-    await page.evaluate(() => localStorage.setItem('gsp.timeCount', JSON.stringify({ on: false, idle: 5 })));
-    await tick(); await page.evaluate(() => window.__plantime.flush());
-    assert.equal((await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.planTime')))).days[today()].l, 90);
+    assert.equal(await page.evaluate(() => localStorage.getItem('gsp.focusQ')), null, 'nothing for the grading log');
+    assert.equal(await page.evaluate(id => window.__plantime.lessonSecs(id), id), secs);
     assert.deepEqual(errors, []);
   } finally { await page.close(); await server.close(); }
 });

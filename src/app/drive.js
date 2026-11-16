@@ -3,8 +3,12 @@
 const GOOGLE_CLIENT_ID = '/*@@GCID@@*/';
 const gcid = () => (/apps\.googleusercontent\.com$/.test(GOOGLE_CLIENT_ID) ? GOOGLE_CLIENT_ID : '') || store.get('gs.gcid', '');
 // Keeping two devices the same needs only Grading Studio's own hidden folder in her Drive (drive.appdata: it can't see her other files).
-// Opening papers from Drive and saving to it ask for the whole Drive, and only when she uses them.
-const SYNC_SCOPE = 'https://www.googleapis.com/auth/drive.appdata', DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive ' + SYNC_SCOPE;
+// Opening papers and videos from Drive and saving to it need only drive.file: the app can open just the files she picks in Google's own
+// chooser and the ones it makes, nothing else (not even the rest of the folder the chooser opens in). It never asks for the whole Drive.
+const SYNC_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+const PICK_SCOPE = 'https://www.googleapis.com/auth/drive.file ' + SYNC_SCOPE;
+// A key for Google's chooser, only if the chooser asks for one (site.json googleApiKey). Not a secret: it is locked to this site's address.
+const GOOGLE_API_KEY = '/*@@GKEY@@*/';
 const G = { token: null, exp: 0, scope: '', client: null, cscope: '', email: store.get('gs.gEmail', ''), waiters: [] };
 // A home-screen app on an iPhone can't use Google's pop-up window, so it goes to Google's page and comes back with the key in the address.
 // The same on any iPhone or iPad browser (Safari, Chrome): there the pop-up is left as a blank page after Continue and never comes back.
@@ -28,10 +32,11 @@ function loadGis() {
   if (window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
   return gisP || (gisP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onload = res; s.onerror = () => { gisP = null; rej(new Error('Couldn’t reach Google. Check the internet connection.')); }; document.head.appendChild(s); }));
 }
-// Gets a fresh token; silent when she's already signed in to Google in this browser. full: the whole Drive, for opening and saving papers.
+// Gets a fresh token; silent when she's already signed in to Google in this browser. full: 'pick' for the files she picks or the app
+// makes (drive.file), else only the app's own hidden folder.
 const gHas = scope => scope.split(' ').every(x => G.scope.split(' ').includes(x));
 async function gToken(interactive, full) {
-  const scope = full ? DRIVE_SCOPES : SYNC_SCOPE;
+  const scope = full ? PICK_SCOPE : SYNC_SCOPE;
   if (G.token && Date.now() < G.exp - 60000 && gHas(scope)) return G.token;
   if (!gcid()) throw new Error('setup');
   // Google's key lasts an hour, and getting a new one in a browser opens Google's little window, even for a moment. That never happens by
@@ -49,9 +54,9 @@ async function gToken(interactive, full) {
   }
   return new Promise((res, rej) => { G.waiters.push({ res, rej }); G.client.requestAccessToken({ prompt: interactive && !G.email ? 'consent' : '' }); });
 }
-// Every call but the sync's own (gsync) is for opening or saving papers, so it asks for the whole Drive.
+// Every call but the sync's own (gsync) is for files she picked or the app made (drive.file).
 async function gfetch(url, opt = {}, interactive, sync, again) {
-  const t = await gToken(interactive, !sync);
+  const t = await gToken(interactive, sync === true ? false : 'pick');
   const r = await fetch(url.startsWith('http') ? url : 'https://www.googleapis.com/drive/v3/' + url, { ...opt, headers: { ...(opt.headers || {}), Authorization: 'Bearer ' + t } });
   if (r.status === 401 && !again) { G.token = null; G.exp = 0; try { sessionStorage.removeItem('gs.gTok'); } catch {} return gfetch(url, opt, interactive, sync, true); }
   if (!r.ok) { const e = new Error('Google Drive said ' + r.status + ': ' + ((await r.text()).match(/"message":\s*"([^"]+)/) || [, ''])[1]); e.status = r.status; throw e; }
@@ -59,14 +64,6 @@ async function gfetch(url, opt = {}, interactive, sync, again) {
 }
 const gjson = (u, o, i) => gfetch(u, o, i).then(r => r.json());
 const gsync = (u, o, i) => gfetch(u, o, i, true);
-async function gList(q, fields) {
-  const out = []; let page = '';
-  do {
-    const j = await gjson('files?pageSize=1000&supportsAllDrives=true&includeItemsFromAllDrives=true&orderBy=folder,name_natural&fields=nextPageToken,files(' + (fields || 'id,name,mimeType,size') + ')&q=' + encodeURIComponent(q) + (page ? '&pageToken=' + page : ''));
-    out.push(...j.files); page = j.nextPageToken;
-  } while (page);
-  return out;
-}
 const FOLDER = 'application/vnd.google-apps.folder';
 async function signIn() {
   if (sampleStops('Google Drive')) return;
@@ -110,84 +107,41 @@ function driveSetup() {
   };
 }
 
-// Folder browser: My Drive and Shared drives, or search by name. Opens a folder (one subfolder per student) or a ZIP.
+// Open from Drive: Google's chooser, so the app gets only the papers she picks (drive.file), never a look at the rest of her Drive.
+// Picking a folder wouldn't hand over what is in it, so she picks the ZIP, or the papers themselves (many at once).
+const paperMimes = () => ['application/pdf', 'image/png', 'image/jpeg', 'image/heic', 'application/zip', 'application/x-zip-compressed', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-word.document.macroEnabled.12', 'application/vnd.google-apps.document', 'application/vnd.google-apps.presentation', 'application/vnd.google-apps.spreadsheet', 'application/vnd.google-apps.drawing'].concat(VID_MIMES);
 async function openFromDrive(assignment) {
-  if (!G.email) { await signIn(); if (!G.email) return; }
-  const trail = [{ id: 'root', name: 'My Drive' }];
-  let mode = 'browse', q = '';
-  openDlg('<div class="bh"><h2>Open from Google Drive</h2><button class="icon" data-close aria-label="Close">✕</button></div>' +
-    '<div class="bb"><div style="display:flex;gap:8px;margin-bottom:10px"><input type="search" id="dvQ" placeholder="Search your Drive for a folder or ZIP" style="flex:1;padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);color:var(--fg);font:inherit"><button class="btn sm" data-shared>Shared drives</button><button class="btn sm" data-recent>Recent</button></div>' +
-    '<div id="dvTrail" style="font-size:14px;margin-bottom:8px"></div><div id="dvList" style="min-height:260px"></div><div class="prog" hidden><i></i></div><p class="muted" id="dvStatus" style="font-size:13px"></p></div>' +
-    '<div class="bf"><span class="muted" style="font-size:13px;margin-right:auto;align-self:center">Pick the folder with one folder per student, or the ZIP.</span><button class="btn" data-close>Cancel</button><button class="btn primary" data-here>Open this folder</button></div>');
-  const box = $('#dlgBox');
-  const row = f => '<button class="dvRow" data-id="' + esc(f.id) + '" data-kind="' + (f.mimeType === FOLDER || f.kind === 'drive#drive' ? 'folder' : 'zip') + '" data-name="' + esc(f.name) + '" style="display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:9px 10px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--fg);font:inherit;cursor:pointer"><span>' + (f.mimeType === FOLDER || f.kind === 'drive#drive' ? '📁' : '🗜️') + '</span><span style="overflow-wrap:anywhere">' + esc(f.name) + '</span></button>';
-  async function show() {
-    const L = $('#dvList'); L.innerHTML = '<p class="muted">Loading…</p>';
-    $('#dvTrail').innerHTML = mode === 'browse' ? trail.map((t, i) => i === trail.length - 1 ? '<b>' + esc(t.name) + '</b>' : '<button class="link" data-up="' + i + '">' + esc(t.name) + '</button> › ').join('') : '<button class="link" data-up="0">My Drive</button> › <b>' + (mode === 'search' ? 'Search: ' + esc(q) : mode === 'shared' ? 'Shared drives' : 'Recent') + '</b>';
-    box.querySelector('[data-here]').disabled = mode !== 'browse' || trail.length === 1 && trail[0].id === 'root';
-    try {
-      let files;
-      if (mode === 'shared') files = (await gjson('drives?pageSize=100')).drives.map(d => ({ ...d, kind: 'drive#drive' }));
-      else if (mode === 'search') files = await gList("name contains '" + q.replace(/['\\]/g, '\\$&') + "' and (mimeType='" + FOLDER + "' or name contains '.zip') and trashed=false");
-      else if (mode === 'recent') files = (await gjson("files?pageSize=30&orderBy=modifiedByMeTime desc&supportsAllDrives=true&includeItemsFromAllDrives=true&fields=files(id,name,mimeType)&q=" + encodeURIComponent("(mimeType='" + FOLDER + "' or name contains '.zip') and trashed=false"))).files;
-      else files = await gList("'" + trail[trail.length - 1].id + "' in parents and trashed=false and (mimeType='" + FOLDER + "' or name contains '.zip')");
-      L.innerHTML = files.length ? files.map(row).join('') : '<p class="muted">No folders or ZIPs here.</p>';
-    } catch (e) { L.innerHTML = '<p>' + esc(e.message) + '</p>'; }
-  }
-  const take = async (id, name, kind) => {
-    for (const b of box.querySelectorAll('.bf .btn')) b.disabled = true;
-    const bar = box.querySelector('.prog'); bar.hidden = false;
-    try {
-      const entries = kind === 'zip' ? [{ path: name, data: new Uint8Array(await (await gfetch('files/' + id + '?alt=media&supportsAllDrives=true')).arrayBuffer()) }] : await driveFolderFiles(id, (n, t) => { bar.firstChild.style.width = (100 * n / Math.max(t, 1)) + '%'; $('#dvStatus').textContent = 'Downloading ' + n + ' of ' + t + ' files…'; });
-      closeDlg();
-      await intake(entries, name.replace(/\.zip$/i, ''), assignment || null);
-      if (batch) { batch.drive = { id, name, kind }; saveSoon(); }
-    } catch (e) { $('#dvStatus').textContent = e.message; for (const b of box.querySelectorAll('.bf .btn')) b.disabled = false; }
-  };
-  box.onclick = e => {
-    if (e.target.closest('[data-close]')) return closeDlg();
-    const u = e.target.closest('[data-up]'); if (u) { mode = 'browse'; trail.splice(+u.dataset.up + 1); return show(); }
-    if (e.target.closest('[data-shared]')) { mode = 'shared'; return show(); }
-    if (e.target.closest('[data-recent]')) { mode = 'recent'; return show(); }
-    if (e.target.closest('[data-here]')) { const t = trail[trail.length - 1]; return take(t.id, t.name, 'folder'); }
-    const r = e.target.closest('.dvRow'); if (!r) return;
-    if (r.dataset.kind === 'zip') return take(r.dataset.id, r.dataset.name, 'zip');
-    if (mode !== 'browse') trail.splice(1);
-    mode = 'browse'; trail.push({ id: r.dataset.id, name: r.dataset.name }); show();
-  };
-  let qt; $('#dvQ').oninput = e => { clearTimeout(qt); qt = setTimeout(() => { q = e.target.value.trim(); mode = q ? 'search' : 'browse'; show(); }, 350); };
-  show();
-}
-// Every file under a folder, with paths relative to it. Google Docs come down as PDFs.
-async function driveFolderFiles(id, onStep) {
-  const files = [];
-  const walk = async (fid, prefix) => {
-    for (const f of await gList("'" + fid + "' in parents and trashed=false")) {
-      if (f.mimeType === FOLDER) await walk(f.id, prefix + f.name + '/');
-      else if (/^application\/vnd\.google-apps\.(document|presentation|spreadsheet|drawing)$/.test(f.mimeType)) files.push({ ...f, path: prefix + f.name + '.pdf', exp: true });
-      else if (/\.(pdf|png|jpe?g|zip|docx)$/i.test(f.name) || MEDIA_RX.test(f.name) || /^(application\/pdf|image\/(png|jpeg)|audio\/.*|video\/.*)$/.test(f.mimeType)) files.push({ ...f, path: prefix + f.name });
-      else files.push({ ...f, path: prefix + f.name, skip: true });
+  let picked;
+  // it opens first in the folder she last took papers from (gs.gPaperDir: just where the chooser opens, it hands over nothing in it)
+  const dir = store.get('gs.gPaperDir', null);
+  try { picked = await drivePick({ multi: true, mimes: paperMimes(), title: 'Choose the ZIP, or the papers', ...(dir ? { parent: dir, parentName: 'Last folder' } : {}) }); } catch (e) { console.error(e); return sayDlg(e.message); }
+  if (!picked.length) return;
+  if (picked[0].parent) store.set('gs.gPaperDir', picked[0].parent);
+  openDlg('<div class="bh"><h2>Open from Google Drive</h2></div><div class="bb"><div class="prog"><i></i></div><p class="muted" id="dvStatus" style="font-size:13px"></p></div>');
+  const bar = $('#dlgBox .prog');
+  try {
+    const out = []; let n = 0;
+    for (const f of picked) {
+      const gdoc = /^application\/vnd\.google-apps\./.test(f.mime);
+      const r = await gfetch(gdoc ? 'files/' + encodeURIComponent(f.id) + '/export?mimeType=application/pdf' : 'files/' + encodeURIComponent(f.id) + '?alt=media&supportsAllDrives=true');
+      out.push({ path: f.name + (gdoc ? '.pdf' : ''), data: new Uint8Array(await r.arrayBuffer()) });
+      bar.firstChild.style.width = (100 * ++n / picked.length) + '%'; $('#dvStatus').textContent = 'Downloading ' + n + ' of ' + picked.length + ' files…';
     }
-  };
-  await walk(id, '');
-  const out = [];
-  const todo = files.filter(f => !f.skip);
-  for (const f of files.filter(f => f.skip)) out.push({ path: f.path, data: new Uint8Array(0) });
-  const total = todo.length; let done = 0;
-  const step = () => onStep && onStep(++done, total);
-  const run2 = async () => { while (todo.length) { const f = todo.shift(); const r = await gfetch(f.exp ? 'files/' + f.id + '/export?mimeType=application/pdf' : 'files/' + f.id + '?alt=media&supportsAllDrives=true'); out.push({ path: f.path, data: new Uint8Array(await r.arrayBuffer()) }); step(); } };
-  await Promise.all([run2(), run2(), run2(), run2()]);
-  // Same as a ZIP: one wrapping folder around all the student folders is dropped.
-  const tops = new Set(out.map(o => o.path.split('/')[0]));
-  if (tops.size === 1 && out.every(o => o.path.split('/').length > 2)) for (const o of out) o.path = o.path.split('/').slice(1).join('/');
-  return out;
+    closeDlg();
+    const zip = picked.length === 1 && /\.zip$/i.test(picked[0].name);
+    await intake(out, zip ? picked[0].name.replace(/\.zip$/i, '') : (assignment && assignment.name) || 'Papers from Drive', assignment || null);
+    if (batch) { batch.drive = { id: picked[0].id, name: picked[0].name, kind: zip ? 'zip' : 'files' }; saveSoon(); }
+  } catch (e) { console.error(e); $('#dvStatus').textContent = e.message; $('#dlgBox .bb').insertAdjacentHTML('afterend', '<div class="bf"><button class="btn" data-close>Close</button></div>'); $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-close]')) closeDlg(); }; }
 }
 // Saves the export into a new folder in Drive: next to the download she opened from Drive, or in My Drive.
 async function saveToDrive(name, files, onStep) {
   let parent = 'root';
   if (batch.drive) { try { const j = await gjson('files/' + batch.drive.id + '?fields=parents&supportsAllDrives=true'); parent = batch.drive.kind === 'folder' ? batch.drive.id : (j.parents && j.parents[0]) || 'root'; } catch {} }
   const mk = async (nm, par) => (await gjson('files?supportsAllDrives=true&fields=id', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: nm, mimeType: FOLDER, parents: [par] }) })).id;
-  const top = await mk(name, parent), dirs = new Map([['', top]]);
+  // The app may write only in folders it made or she picked (drive.file): if the folder next to the opened file isn't one, My Drive.
+  let top; try { top = await mk(name, parent); } catch (e) { if (parent === 'root' || ![403, 404].includes(e.status)) throw e; parent = 'root'; top = await mk(name, parent); }
+  saveToDrive.where = parent === 'root' ? 'root' : 'next';
+  const dirs = new Map([['', top]]);
   const dirOf = async d => { if (dirs.has(d)) return dirs.get(d); const i = d.lastIndexOf('/'), up = await dirOf(i < 0 ? '' : d.slice(0, i)); const id = await mk(d.slice(i + 1), up); dirs.set(d, id); return id; };
   const list = Object.entries(files); let n = 0;
   for (const [path, bytes] of list) {
@@ -428,3 +382,92 @@ async function dvPullOne(id, key) {
   const out = []; for (const e of mine) out.push({ path: e.path, data: await dvGet(e) });
   return out;
 }
+/* ---------- videos from Drive: Google's own chooser, and only what she picks ---------- */
+// Picking a folder lets the app know only where the folder is, not what is in it, so the folder is just where the chooser opens.
+// gs.gVidDir = { id, name }: kept in this browser, like the Google account.
+const driveCan = () => GOK && !!gcid();
+const VID_MIMES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/x-matroska', 'video/3gpp', 'video/ogg'];   // the kinds a browser can play here
+let gpP = null;
+function loadPicker() {
+  if (window.google && google.picker) return Promise.resolve();
+  return gpP || (gpP = new Promise((res, rej) => {
+    const fail = () => { gpP = null; rej(new Error('Couldn’t reach Google. Check the internet connection.')); };
+    const go = () => gapi.load('picker', { callback: res, onerror: fail });
+    if (window.gapi && gapi.load) return go();
+    const s = document.createElement('script'); s.src = 'https://apis.google.com/js/api.js'; s.async = true; s.onload = go; s.onerror = fail; document.head.appendChild(s);
+  }));
+}
+// o: { folder: true to pick the videos folder; else videos, opening in o.parent; multi }. Gives [{ id, name, size, mime }], or [] if she closes it.
+async function drivePick(o = {}) {
+  if (sampleStops('Google Drive')) return [];
+  if (!gcid()) { driveSetup(); return []; }
+  const t = await gToken(true, 'pick'); await loadPicker();
+  if (!G.email) gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); syncNow(); }).catch(() => {});
+  const P = google.picker;
+  return new Promise(res => {
+    // Tabs: her chosen folder first (if any), then My Drive from the top, Shared with me, and shared drives. Each one can be opened folder by folder.
+    const mk = (label, set) => {
+      const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
+      // Choosing the folder still lists the videos inside, so a folder of videos doesn't look empty; picking one of them chooses its folder.
+      if (o.folder) v.setSelectFolderEnabled(true); v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(','));
+      if (v.setLabel) v.setLabel(label);
+      set(v); return v;
+    };
+    const views = [];
+    if (o.parent && !o.folder) views.push(mk(o.parentName || 'Videos folder', v => v.setParent(o.parent)));
+    views.push(mk('My Drive', v => v.setParent('root')));
+    views.push(mk('Shared with me', v => v.setOwnedByMe && v.setOwnedByMe(false)));
+    views.push(mk('Shared drives', v => v.setEnableDrives && v.setEnableDrives(true)));
+    const b = new P.PickerBuilder().setOAuthToken(t).setAppId(gcid().split('-')[0]).setOrigin(location.origin);
+    views.forEach(v => b.addView(v));
+    b
+      .enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Click your videos folder once (or any video in it), then Select' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
+      .setCallback(d => {
+        if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).map(x => o.folder && x.mimeType !== FOLDER ? (x.parentId ? { id: x.parentId, name: 'Folder with ' + x.name, mimeType: FOLDER } : null) : x).filter(x => x && (o.folder || x.mimeType !== FOLDER)).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '', ...(x.parentId ? { parent: x.parentId } : {}) })));
+        else if (d[P.Response.ACTION] === P.Action.CANCEL) res([]);
+      });
+    if (GOOGLE_API_KEY && !/@@/.test(GOOGLE_API_KEY)) b.setDeveloperKey(GOOGLE_API_KEY);
+    if (o.multi) b.enableFeature(P.Feature.MULTISELECT_ENABLED);
+    b.build().setVisible(true);
+  });
+}
+const vidDir = () => store.get('gs.gVidDir', null);
+async function pickVidDir() { const [d] = await drivePick({ folder: true }); if (d) store.set('gs.gVidDir', { id: d.id, name: d.name }); return d || null; }
+// Videos she picks, opening in her videos folder (asking for the folder first, once).
+async function driveVideos(multi) {
+  let dir = vidDir(); if (!dir) { dir = await pickVidDir(); if (!dir) return []; }
+  return drivePick({ parent: dir.id, parentName: dir.name, multi });
+}
+// Signed in for the chooser's files right now, so a video can come down without asking anything.
+const drivePickReady = () => !!G.token && Date.now() < G.exp - 60000 && gHas(PICK_SCOPE);
+// One picked video's bytes, a piece at a time. onStep(got, total). interactive: only after a press (it may open Google's sign-in).
+async function driveBytes(id, onStep, interactive) {
+  const r = await gfetch('files/' + encodeURIComponent(id) + '?alt=media&supportsAllDrives=true', {}, interactive, 'pick');
+  const total = +r.headers.get('content-length') || 0, rd = r.body.getReader(), parts = []; let got = 0;
+  for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; if (onStep) onStep(got, total); }
+  return new Blob(parts, { type: r.headers.get('content-type') || '' });
+}
+
+/* ---------- playing a Drive video straight from Drive ---------- */
+// The video isn't copied: the player asks this site for gs-drive/<id>, and the offline copy's service worker (src/sw.js) asks Drive for just the
+// part being watched, signed with her token. It works where that service worker runs this page (the web app, not the double-click copy).
+let dsOn = false, dsAsk = null;
+function driveStreamOk() {
+  const sw = navigator.serviceWorker;
+  if (!sw || !sw.controller) return Promise.resolve(false);
+  if (dsOn) return Promise.resolve(true);
+  if (dsAsk) return dsAsk;
+  return dsAsk = new Promise(res => {
+    const ch = new MessageChannel(), done = v => { clearTimeout(to); dsAsk = null; dsOn = v; res(v); }, to = setTimeout(() => done(false), 1500);
+    ch.port1.onmessage = e => done(!!(e.data && e.data.drive));
+    try { sw.controller.postMessage({ type: 'gs-drive-ok' }, [ch.port2]); } catch { done(false); }
+  });
+}
+const driveStreamUrl = id => 'gs-drive/' + encodeURIComponent(id);
+// The service worker asks for her token when it has none (it forgets it whenever the browser rests it). Never opens a sign-in window.
+if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', e => {
+  const d = e.data || {}, p = e.ports && e.ports[0];
+  if (d.type !== 'gs-drive-token' || !p) return;
+  if (d.fresh) { G.token = null; G.exp = 0; try { sessionStorage.removeItem('gs.gTok'); } catch {} }
+  (gcid() && gHas(PICK_SCOPE) ? gToken(false, 'pick') : Promise.reject(new Error('sign-in'))).then(t => p.postMessage({ token: t, exp: G.exp }), () => p.postMessage({ token: null }));
+});

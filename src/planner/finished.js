@@ -62,14 +62,16 @@ async function lessonZip(l, file) {
     }
     await lPut(l);
   }
-  if (deck) await finUpload(l, new File([z[deck]], baseName(deck), { type: MIME.pptx }));
+  // A lesson sent to the assistant comes back as a .zip: its slides are offered slide by slide (Keep mine / Keep theirs).
+  if (deck) await finUpload(l, new File([z[deck]], baseName(deck), { type: MIME.pptx }), null, l.status === 'claude');
   else renderEditor();
   toast((deck ? 'Finished deck “' + baseName(deck) + '”' : 'No PowerPoint') + ' and ' + mats.length + ' material' + (mats.length === 1 ? '' : 's') + ' added from ' + file.name + '.' +
-    (big.length ? ' Too big to keep (over 40 MB): ' + big.map(baseName).join(', ') + '.' : '') + (deck ? ' The lesson before is under Versions.' : ''), 8000);
+    (big.length ? ' Too big to keep (over 40 MB): ' + big.map(baseName).join(', ') + '.' : '') + (deck ? (l.pending ? ' Check ' + plAi() + '’s changes slide by slide above the slides.' : ' The lesson before is under Versions.') : ''), 8000);
 }
 
-// Puts a finished deck on the lesson. file: a File or Blob with a name; keepId: reuse stored bytes (going back to an older one).
-async function finUpload(l, file, keepId) {
+// Puts a finished deck on the lesson. file: a File or Blob with a name; keepId: reuse stored bytes (going back to an older one);
+// review: the deck is the assistant's answer, so the slides before it stay on offer slide by slide (review.js changesOf).
+async function finUpload(l, file, keepId, review) {
   if (!/\.pptx$/i.test(file.name || '')) return toast('That isn’t a .pptx file');
   if (file.size > MAX_FILE) return toast('That file is too big (over 40 MB)');
   let slides;
@@ -81,12 +83,13 @@ async function finUpload(l, file, keepId) {
   const finals = (l.finals || []).filter(o => o.id !== id);
   if (l.final && l.final.id !== id) finals.unshift(l.final);
   // Comments and notes for Claude stay with the slide they were on, matched by position.
-  slides.forEach((s, i) => { const was = l.slides[i]; if (was) { s.ask = was.ask; s.talk = was.talk; if (was.ctx) s.ctx = was.ctx; } });
+  slides.forEach((s, i) => { const was = l.slides[i]; if (was) { s.ask = was.ask; s.talk = was.talk; if (was.ctx) s.ctx = was.ctx; if (review) s.id = was.id; } });
+  if (review) { l.pending = l.pending || { at: Date.now(), before: JSON.parse(JSON.stringify(l.slides)), title: l.title }; l.status = 'review'; }
   l.slides = slides.map(s => normSlide({ ...s, fmt: 2 }));
   l.finals = finals;
   l.final = { id, name: file.name, size: file.size, at: Date.now(), sig: finSig(l) };
   L.cur = 0; await lPut(l); lessonChanged(false); renderEditor();
-  toast('Finished deck saved: ' + slides.length + ' slides. The lesson before it is under Versions.', 6000);
+  if (!review) toast('Finished deck saved: ' + slides.length + ' slides. The lesson before it is under Versions.', 6000);
 }
 async function finBack(l, id) {
   const o = (l.finals || []).find(x => x.id === id), b = o && await fileBlob(id); if (!b) return toast('That file is missing');

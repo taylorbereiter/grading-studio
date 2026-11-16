@@ -1,4 +1,22 @@
 {
+  "1.28.46": [
+    "Focus sessions for lesson planning: the Focus panel lists your lessons for the coming week, and the Planner's lesson editor has a Focus button. A lesson session lasts 45 minutes unless you change it in Settings, Focus and goals.",
+    "Planning time now counts only in focus sessions on a lesson. Opening the Planner for a quick change or presenting a lesson doesn't add to it, and presenting pauses a lesson session."
+  ],
+  "1.28.45": [
+    "Send to your assistant, Copy for your assistant and Fill in the weeks now copy everything your assistant needs into the message itself. They never ask it to open a folder or file on your computer. Send asks it for one .zip with the PowerPoint and handouts, and each piece on its own; upload the .zip on the lesson and check its changes slide by slide."
+  ],
+  "1.28.44": [
+    "Drive videos now play straight from your Drive, a little at a time, with the transcript following along. Nothing is copied into the browser unless you press Download for offline, and Remove download frees that space without touching the file in Drive.",
+    "Choosing your videos folder starts at My Drive, with tabs for Shared with me and shared drives, and shows the videos inside each folder. Pick any video and its folder becomes your videos folder."
+  ],
+  "1.28.43": [
+    "The focus timer keeps going when you open the Planner. The panel shows there with the clock, pause, more time and break, and a session that ends in the Planner is added to your focus log when you come back to grading."
+  ],
+  "1.28.42": [
+    "Videos from your Google Drive: in Partners and videos, Choose from Drive… opens Google's own chooser in your videos folder. Pick several at once and each goes to the student named in its file name. The video plays here, so the transcript follows along. The app can open only the videos you pick, nothing else in your Drive.",
+    "Open from Google Drive and Save to Google Drive use the same limited permission: pick the ZIP or the papers in Google's chooser. Grading Studio never asks for your whole Drive."
+  ],
   "1.28.41": [
     "Grading Studio on your phone: add it to your iPhone's Home Screen to see what is left to mark, type in scores for a whole class, tick off to-dos and run the focus timer.",
     "Keep your phone and computer the same through your own Google Drive: sign in with Google on each and your classes, scores and to-dos stay in step. Only Grading Studio's own hidden folder in your Drive is used."

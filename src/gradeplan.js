@@ -151,7 +151,7 @@ function gpLookHtml() {
 /* ---------- quiet while focusing ---------- */
 function gpQuiet() {
   if (!gpReady) return;
-  const r = fcRun(), on = fcConf().quiet && !!r && (r.st === 'run' || r.st === 'paused');
+  const r = fcRun(), on = fcConf().quiet && !!r && r.k !== 'l' && (r.st === 'run' || r.st === 'paused');   // quiet is for grading
   if (document.body.classList.contains('fcquiet') !== on) document.body.classList.toggle('fcquiet', on);
 }
 
