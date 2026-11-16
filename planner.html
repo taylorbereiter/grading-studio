@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"1a4dd067","zh-Hans":"6fc2fb62","es":"706fb973","fr":"8e5cc10a","de":"61934cf7","pt-BR":"45231cbd","ja":"79c161fe","ko":"d196ca79"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"7a531a04","zh-Hans":"e84c5c30","es":"66941ef2","fr":"10f03ec1","de":"03ec9055","pt-BR":"bdf3fd94","ja":"c986ddb7","ko":"ccbad566"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -7879,6 +7879,55 @@ document.addEventListener('keydown', e => {
 });
 gsFull.paint();
 window.__gsFull = gsFull;
+
+/* ---------------- Email buttons (11/16): Gmail, Outlook on the web, or the computer's mail app ----------------
+   Every Email button in the app is a mailto: link (the School page, a to-do's people, a student's card, Missing work reminders, links in
+   Planner notes). gs.mailApp, a per-teacher choice in Settings, Display (and in My setup), decides where it opens: 'gmail' (the usual)
+   opens a new Gmail message in a new tab, 'outlook' a new Outlook on the web message, 'app' leaves the link to the computer's own mail
+   app. To, Cc, Bcc, subject and body carry over. Gmail opens the Google account the teacher signed in with for saving (gs.gEmail),
+   so a school message doesn't start in a personal inbox. On a phone a web compose page is unreliable, so the phone's own mail app
+   opens (a teacher who wants Gmail there makes it the phone's default mail app). Nothing is sent by the app. */
+const MAIL_APPS = ['gmail', 'outlook', 'app'];
+const mailGet = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+const mailApp = () => { const v = mailGet('gs.mailApp'); return MAIL_APPS.includes(v) ? v : 'gmail'; };
+const mailPhone = () => { try { const k = localStorage.getItem('gs.phone'); if (k === '1' || k === '0') return k === '1'; return Math.min(screen.width, screen.height) < 600 && matchMedia('(pointer: coarse)').matches; } catch { return false; } };
+function mailParts(href) {
+  const m = /^mailto:([^?#]*)(?:\?([^#]*))?/i.exec(String(href || '').trim()); if (!m) return null;
+  const dec = s => { try { return decodeURIComponent(s); } catch { return s; } }, p = { to: dec(m[1]), cc: '', bcc: '', subject: '', body: '' };
+  for (const kv of (m[2] || '').split('&')) {
+    const i = kv.indexOf('='), k = (i < 0 ? kv : kv.slice(0, i)).toLowerCase(), v = i < 0 ? '' : dec(kv.slice(i + 1));
+    if (k === 'to') p.to = p.to ? p.to + ',' + v : v; else if (k in p) p[k] = v;
+  }
+  return p;
+}
+function mailWeb(href, app) {
+  app = app || mailApp(); if (app === 'app') return '';
+  const p = mailParts(href); if (!p) return '';
+  const e = encodeURIComponent, q = (k, v) => v ? '&' + k + '=' + e(v) : '', who = String(mailGet('gs.gEmail') || '');
+  if (app === 'outlook') return ('https://outlook.office.com/mail/deeplink/compose?' + q('to', p.to) + q('cc', p.cc) + q('bcc', p.bcc) + q('subject', p.subject) + q('body', p.body)).replace('?&', '?');
+  return 'https://mail.google.com/mail/?view=cm&fs=1' + (/@/.test(who) ? q('authuser', who) : '') + q('to', p.to) + q('cc', p.cc) + q('bcc', p.bcc) + q('su', p.subject) + q('body', p.body);
+}
+function mailGo(href) {
+  const url = mailPhone() ? '' : mailWeb(href);
+  if (window.__gsMailTest) return window.__gsMailTest(href, url);
+  if (url) { window.open(url, '_blank', 'noopener'); return; }
+  const a = document.createElement('a'); a.href = href; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+}
+document.addEventListener('click', e => {
+  if (e.defaultPrevented || e.button || mailPhone() || mailApp() === 'app') return;
+  const a = e.target.closest && e.target.closest('a[href]'); if (!a || !/^mailto:/i.test(a.getAttribute('href').trim())) return;
+  const url = mailWeb(a.getAttribute('href')); if (!url) return;
+  e.preventDefault();
+  if (window.__gsMailTest) window.__gsMailTest(a.getAttribute('href'), url); else window.open(url, '_blank', 'noopener');
+}, true);
+function mailAppSet(v) {
+  if (!MAIL_APPS.includes(v)) return;
+  try { if (v === 'gmail') localStorage.removeItem('gs.mailApp'); else localStorage.setItem('gs.mailApp', JSON.stringify(v)); } catch { }
+  mailAppShow();
+}
+function mailAppShow() { const v = mailApp(); for (const b of document.querySelectorAll('#setMailApp button')) b.setAttribute('aria-pressed', String(b.dataset.v === v)); }
+if (document.getElementById('setMailApp')) { document.getElementById('setMailApp').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (b) mailAppSet(b.dataset.v); }); mailAppShow(); }
+if (window.__gs) Object.assign(window.__gs, { mailParts, mailWeb, mailApp, mailAppSet });
 
 /* ---------- Planning time, for the grading app's time tracker (src/tracker.js) ----------
    While the Planner is the tab in front and something was pressed, typed or scrolled in the last few minutes, the time counts as
