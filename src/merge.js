@@ -714,6 +714,22 @@ function typedMerge(a, b, bLater) {
   if (Object.keys(gone).length) out.gone = gone; else delete out.gone;
   return out;
 }
+// The Planner on two devices (src/app/drive.js, planSync): each lesson by its own time (updated), each kept setting by its time; a lesson
+// deleted on either side after its last change stays deleted (gone: { 'l:<id>': time }).
+function mergePlan(A, B) {
+  const gone = { ...(B.gone || {}) };
+  for (const [k, t] of Object.entries(A.gone || {})) if (!(gone[k] >= t)) gone[k] = t;
+  const lessons = {}, la = A.lessons || {}, lb = B.lessons || {};
+  for (const id of new Set([...Object.keys(la), ...Object.keys(lb)])) {
+    const a = la[id], b = lb[id], w = !a ? b : !b ? a : (b.updated || 0) >= (a.updated || 0) ? b : a;   // the same time: Drive's, so both devices settle on one
+    if (gone['l:' + id] >= (w.updated || 0)) continue;
+    lessons[id] = w;
+  }
+  for (const k of Object.keys(gone)) if (k.startsWith('l:') && lessons[k.slice(2)]) delete gone[k];   // written again after it was deleted
+  const kv = {}, ka = A.kv || {}, kb = B.kv || {};
+  for (const k of new Set([...Object.keys(ka), ...Object.keys(kb)])) { const a = ka[k], b = kb[k]; kv[k] = !a ? b : !b ? a : (b.t || 0) >= (a.t || 0) ? b : a; }
+  return { lessons, kv, gone };
+}
 function mergeFields(x, y, win, dev, now, said) {
   const fx = nodeParts(x), fy = nodeParts(y), parts = {}, fv = {}, both = [], fromY = [];
   let ask = false, chose = false;

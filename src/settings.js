@@ -21,7 +21,7 @@ function setRender() {
   if (moved) { const was = setSecWas; setSecWas = r.sec; if (!was || setGroupOf(was) !== grp) { if (on('grading')) setBankCount(); if (on('timetable')) planRefresh(); if (on('history')) gbOpen(); } }
   const nav = SET_GROUPS.map(([k, t, s]) => '<a class="setlink' + (k === grp[0] ? ' on' : '') + '" href="' + setHash(k) + '" data-set="' + k + '"' + (k === grp[0] ? ' aria-current="page"' : '') + '><b>' + t + '</b><span>' + s + '</span></a>').join('');
   const box = $('#setNav'); if (box.dataset.h !== nav) { box.dataset.h = nav; box.innerHTML = nav; }
-  for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = !on(el.dataset.sec);
+  for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = !on(el.dataset.sec) || (el.dataset.need === 'google' && !(G.email && !G_REDIRECT));   // Google sign-in: only when signed in
   const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
   for (const k of grp[3]) { meSetRender(k); attSetRender(k); stpSetRender(k); fcSetRender(k); tkSetRender(k); gpSetRender(k); }
   if (on('marking')) setInksSay();

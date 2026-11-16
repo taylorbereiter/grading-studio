@@ -17,6 +17,7 @@ const routeOf = hash => {
   }
   // from the Planner's sidebar, which knows a class only by the name on its timetable (spaces, dashes and capitals don’t count: “Course A 2” there is “CourseA2” here)
   if (p[0] === 'class-named' && p[1]) { const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(p.slice(1).join('/')), c = k && lib.classes.find(c => nk(c.name) === k); return c ? { v: 'class', c, tab: '', stu: null, named: true } : { v: 'home', noClass: p.slice(1).join('/').slice(0, 60) }; }
+  if (p[0] === 'plans' && PHONE) return { v: 'plans', id: p[1] || '' };
   if (p[0] === 'scores' && PHONE) return { v: 'scores', cls: p[1] || '', key: p[2] || '' };
   if (p[0] === 'todo') return { v: 'todo', week: p[1] === 'week' };
   if (p[0] === 'time') return { v: 'time' };
@@ -62,6 +63,7 @@ function go(hash, replace) {
 let routeTok = 0, routeOpening = '', routeTab = null;
 function applyRoute() {
   const r = routeNow();
+  if (soloRoute(r)) return;   // only this student on screen (src/solo.js)
   // its own address from here on
   if (r.named) { go(classHash(r.c), true); return; }
   if (r.noClass) { toast('There is no class called “' + r.noClass + '” in grading yet. “Add a class” in the sidebar makes one.', 7000); go('#/', true); return; }
@@ -108,7 +110,8 @@ function showScreen(r) {
   if (grading && !$('#welcome').hidden) wlClose();
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
-  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening'], ['vScores', 'scores']]) $('#' + id).hidden = grading || r.v !== v;
+  if (grading && $('#soloBar') && soloOn() && $('#soloBar').dataset.b !== batch.id) soloBar();   // src/solo.js
+  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening'], ['vScores', 'scores'], ['vPlans', 'plans']]) $('#' + id).hidden = grading || r.v !== v;
   if (r.v !== 'class') classLeave();
   // moving from one student to the next keeps her place on the page
   const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');
@@ -117,6 +120,7 @@ function showScreen(r) {
   railRender();
   if (!grading && r.v === 'examples') exPageRender();
   if (!grading && r.v === 'scores') phScoresRender(r);
+  if (!grading && r.v === 'plans') phPlansRender(r);
   phNavRender();
   if (grading) tabShow(r); else if (dlgPage) dlgShut();
 }

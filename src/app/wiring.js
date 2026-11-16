@@ -1,6 +1,7 @@
 /* ---------------- wiring ---------------- */
 let toastT;
 function toast(msg, ms) {
+  if (soloOn()) return;   // a note could name someone else while a student looks on (src/solo.js)
   const t = $('.toast');
   t.textContent = msg; t.hidden = false;
   clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; t.textContent = ''; }, ms || 3000);
@@ -240,6 +241,8 @@ document.addEventListener('keydown', e => {
   if (e.key === '?') { e.preventDefault(); openKeys(); return; }
   // A picked sticker, mark, check, circle or text box: + and − make it bigger or smaller.
   if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') && selected && !(selected.fresh && selected.mark.t === 'text') && canResize(selected.mark)) { e.preventDefault(); stepSize(e.key === '+' || e.key === '=' ? 1 : -1); return; }
+  if (soloOn() && (e.key === '/' || e.key === '[' || e.key === '?')) { e.preventDefault(); return; }   // the list stays away (src/solo.js)
+  if (e.key.toLowerCase() === 'i' && !e.shiftKey && !soloOn()) { e.preventDefault(); return soloStart(cur); }   // only this student
   if (e.key === '/') { e.preventDefault(); listPeek(true); $('#stuFind').focus(); return; }   // open first: a hidden list can't take focus
   // A picked mark moves with the arrow keys (Shift for bigger steps); Esc lets go of it.
   if (selected && tool === 'select' && /^Arrow/.test(e.key)) {
@@ -312,4 +315,4 @@ for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLa
 if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, pointsWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, libTrack, libu: () => LIBU, gsData, gradeOf, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool, redrawAll };
+window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, askReplace, replaceDo, openReplace, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, pointsWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, libTrack, libu: () => LIBU, gsData, gradeOf, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool, redrawAll };
