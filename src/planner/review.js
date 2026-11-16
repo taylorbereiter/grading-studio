@@ -41,20 +41,26 @@ async function versionsDlg(l) {
 }
 
 /* ---------- sending to Claude, approving ---------- */
+// What to hand back: one .zip the teacher uploads on the lesson (finished.js lessonZip takes exactly this).
+const lessonZipAsk = () => 'When you are done, give me ONE downloadable .zip file. In it:\n' +
+  '- the finished PowerPoint (.pptx), one slide per slide of the lesson, in order, with speaker notes where useful;\n' +
+  '- any handouts or other files the lesson needs (.docx, .pdf and so on);\n' +
+  '- lesson.json: { "kind": "grading-studio-lesson-zip", "finished": "<the .pptx file name>", "materials": ["<each other file name>"] }.\n' +
+  'Also give me each of those pieces (the PowerPoint and every handout) as its own downloadable file, so I can open or use one without the .zip.\n' +
+  'Put nothing about any student in any of them. Then tell me in a few lines what you changed. I will upload the .zip on this lesson in my Planner.';
 async function sendToClaude(l) {
   editorCommit(); boxNotesToSlides(l);
   await saveVersion(l, 'Sent to ' + plAi());
   l.status = 'claude'; await lPut(l);
   const asks = l.slides.filter(s => s.ask.trim()).length, talks = l.slides.filter(s => s.talk.some(t => t.by === 'you' && !t.done)).length;
-  const file = fileBase(l) + '.lesson.json';
-  const msg = L.dir && L.dirOk
-    ? 'Please work on my lesson "' + l.title + '" in my Planner folder ("' + L.dir.name + '"), file "' + file + '". Read "README - for ' + plAi() + '.md" there first.\n\n' +
-      (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' an "ask" saying what I want on it. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me in "talk". ' : '') + (lessonNotes(l).length ? 'My comments on the whole lesson are in the lesson\'s own "talk". ' : '') +
-      lessonNotes(l).map(x => 'My comment on the whole lesson: ' + x + '\n').join('') +
-      'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. When you\'re done, reply to my comments in "talk", put a short summary in "claudeNote", and set "status" to "review". Don\'t change "id" or "slots". I\'ll look at your version slide by slide in the Planner.'
-    : 'Here is a lesson from my Planner. Each slide may have "What I want here" notes and comments for you. Build it out, keep my wording where I wrote it, slide 1 stays the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + ', and slide text stays ' + deckSizeSay() + ' pt.\n\n' + lessonText(l);
+  // Self-contained on purpose: the text never names a folder, a path or a file on this computer, so the assistant
+  // never goes looking on the teacher's computer. It hands back one .zip, which the teacher uploads on the lesson (lessonZip).
+  const msg = 'Here is a lesson from my Planner. Everything you need is in this message. Don\'t look for, open or ask for any folder or file on my computer.\n\n' +
+    (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' a "What I want on this slide" note. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me. ' : '') +
+    'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. Slide 1 stays the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + ', and slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style.\n\n' +
+    lessonZipAsk() + '\n\n' + lessonText(l);
   await copyText(msg);
-  toast(L.dir && L.dirOk ? 'Copied. Paste it into ' + plAi() + '. ' + PlAi() + '’s changes show up here when it saves.' : 'Lesson copied. Paste it into ' + plAi() + '. Link the Planner folder so ' + plAi() + ' can save straight back.', 7000);
+  toast('Lesson copied. Paste it into ' + plAi() + '. When it gives you a .zip, upload it on this lesson (Upload .pptx or .zip) and check its changes slide by slide.', 8000);
   renderEditor();
 }
 

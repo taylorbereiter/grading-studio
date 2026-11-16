@@ -273,11 +273,11 @@ async function viewFile(u, id) {
   saveBlob(f.name, b);   // Word files and the rest open in their own app
 }
 function askWeeks(u) {
-  const where = L.dir && L.dirOk ? 'In my Planner folder ("' + L.dir.name + '"), the unit file is Units/' + unitBase(u) + '.unit.json and its ' + (plCur() || 'unit plan') + ' screenshots are in Units/' + unitBase(u) + ' files/. ' : '';
-  const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshots. ' + where +
-    'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and write each week\'s focus (and standards, if shown) into "weeks" in the unit file, one entry per week, in order. Keep my notes. Then tell me what you filled in and anything you weren\'t sure of.' +
-    (where ? '' : '\n\n(My Planner folder isn\'t linked yet, so I\'ll attach the screenshots.)');
-  copyText(msg).then(() => { toast(where ? 'Message copied. Paste it into ' + plAi() + '.' : 'Message copied. Link the Planner folder so ' + plAi() + ' can read the screenshots, or attach them.', 6000); });
+  // Self-contained: never a folder, path or file on this computer. The teacher attaches the screenshots and pastes the answer back.
+  const n = u.files.filter(x => x.kind === 'atlas').length;
+  const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshot' + (n === 1 ? '' : 's') + ', which I am attaching. Everything you need is in this message and the screenshots. Don\'t look for, open or ask for any folder or file on my computer.\n\n' +
+    'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and reply with one line per week, in order, like "Week 1: what this week is about (standards, if shown)". Nothing else in those lines. Then tell me anything you weren\'t sure of.';
+  copyText(msg).then(() => { toast('Message copied. Paste it into ' + plAi() + ' and attach the ' + (plCur() || 'unit plan') + ' screenshot' + (n === 1 ? '' : 's') + '. Then use Type or paste the weeks for its answer.', 8000); });
 }
 function pasteWeeksDlg(u) {
   openDlg('<div class="bh"><h2>Weeks of ' + esc(u.title) + '</h2></div><div class="bb"><p class="muted" style="margin-top:0">One line per week: what that week is about. You can copy the week list straight out of ' + (plCur() ? esc(plCur()) : 'your unit plan') + '. Lines starting with “Week 3:” or similar are fine.</p>' +

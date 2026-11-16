@@ -280,11 +280,22 @@ async function transcribe(bytes, say, stop) {
   return words;
 }
 // A recording's transcript, kept on the file. A video kept in this browser is read from where it is kept; its partners get the same transcript.
-async function transcribeFile(f, say, stop) {
+// one: she pressed for this one video, so a Drive video not downloaded is read from Drive for the transcript and then let go (only the words are kept).
+const TR_DRIVE_MAX = 1.5e9;
+async function transcribeFile(f, say, stop, one) {
   const kv = keptId(f);
   if (f.kind === 'link' && !kv) throw new Error('Only a video file can be transcribed here. For a link, paste a transcript.');
   let k = kv && await vkGet(kv);
-  if (kv && !k && drvRef(f.data)) { vkSeen.delete(kv); throw new Error('This Drive video isn’t in this browser yet. Open the student and press Get it from Drive first.'); }
+  if (kv && !k && drvRef(f.data)) {
+    vkSeen.delete(kv);
+    if (!one) throw new Error('This Drive video isn’t downloaded. Open the student and press Make transcript there.');
+    const size = +drvMeta(f, 'Size') || 0;
+    if (size > TR_DRIVE_MAX) throw new Error('This video is too big (' + fmtSize(size) + ') to read for a transcript here. Paste a transcript instead, or download it for offline first.');
+    const blob = await driveBytes(drvRef(f.data), (n, t) => { if (t && say) say('Reading the video from Drive… ' + Math.min(100, Math.round(n / t * 100)) + '%', n / t); }, true);
+    if (stop && stop.on) return;
+    trSet(f, { w: await transcribe(new Uint8Array(await blob.arrayBuffer()), say, stop) });
+    return;
+  }
   if (kv && !k) throw new Error('This video isn’t in this browser.');
   const w = await transcribe(kv ? new Uint8Array(await k.blob.arrayBuffer()) : f.data, say, stop);
   trSet(f, { w });

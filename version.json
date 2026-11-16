@@ -1,12 +1,13 @@
 {
- "version": "1.28.43",
- "build": "39bbdfe593b1",
+ "version": "1.28.46",
+ "build": "4418c7a494f2",
  "notes": [
-  "The focus timer keeps going when you open the Planner. The panel shows there with the clock, pause, more time and break, and a session that ends in the Planner is added to your focus log when you come back to grading."
+  "Focus sessions for lesson planning: the Focus panel lists your lessons for the coming week, and the Planner's lesson editor has a Focus button. A lesson session lasts 45 minutes unless you change it in Settings, Focus and goals.",
+  "Planning time now counts only in focus sessions on a lesson. Opening the Planner for a quick change or presenting a lesson doesn't add to it, and presenting pauses a lesson session."
  ],
  "files": {
-  "index.html": "34a3005f5faf933f90131c35add9a040e9fc14f5fe320b3b357c96bb14929074",
-  "planner.html": "becf6956c658a5f141f5843bf94f04987ca998a2190d0022f4e53a29e50865c0"
+  "index.html": "5d210a615552b130c5fcdce901ebf4b533cb9f4e871a906e2f7238ae1f338bc0",
+  "planner.html": "689fb714bf0157af3a387c073777f14466fafa29b3cf6eed60e469dc181571df"
  },
  "langs": {
   "lang/zh-Hant.js": "843605a93ef5287b4ebea96932f39cbaf5f0fa00605ba46393116ff63fcaf49d",

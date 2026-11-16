@@ -272,7 +272,7 @@ if (GOK && G_REDIRECT && G.token && !G.email) setTimeout(() => gsync('about?fiel
 // Picking a folder lets the app know only where the folder is, not what is in it, so the folder is just where the chooser opens.
 // gs.gVidDir = { id, name }: kept in this browser, like the Google account.
 const driveCan = () => GOK && !!gcid();
-const VID_MIMES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/x-matroska', 'video/3gpp'];   // the kinds a browser can play here
+const VID_MIMES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/x-matroska', 'video/3gpp', 'video/ogg'];   // the kinds a browser can play here
 let gpP = null;
 function loadPicker() {
   if (window.google && google.picker) return Promise.resolve();
@@ -291,13 +291,25 @@ async function drivePick(o = {}) {
   if (!G.email) gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); syncNow(); }).catch(() => {});
   const P = google.picker;
   return new Promise(res => {
-    const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
-    if (o.folder) v.setSelectFolderEnabled(true).setMimeTypes(FOLDER);
-    else { v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(',')); if (o.parent) v.setParent(o.parent); }
-    const b = new P.PickerBuilder().setOAuthToken(t).setAppId(gcid().split('-')[0]).setOrigin(location.origin).addView(v)
-      .enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Choose your videos folder' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
+    // Tabs: her chosen folder first (if any), then My Drive from the top, Shared with me, and shared drives. Each one can be opened folder by folder.
+    const mk = (label, set) => {
+      const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
+      // Choosing the folder still lists the videos inside, so a folder of videos doesn't look empty; picking one of them chooses its folder.
+      if (o.folder) v.setSelectFolderEnabled(true); v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(','));
+      if (v.setLabel) v.setLabel(label);
+      set(v); return v;
+    };
+    const views = [];
+    if (o.parent && !o.folder) views.push(mk(o.parentName || 'Videos folder', v => v.setParent(o.parent)));
+    views.push(mk('My Drive', v => v.setParent('root')));
+    views.push(mk('Shared with me', v => v.setOwnedByMe && v.setOwnedByMe(false)));
+    views.push(mk('Shared drives', v => v.setEnableDrives && v.setEnableDrives(true)));
+    const b = new P.PickerBuilder().setOAuthToken(t).setAppId(gcid().split('-')[0]).setOrigin(location.origin);
+    views.forEach(v => b.addView(v));
+    b
+      .enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Click your videos folder once (or any video in it), then Select' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
       .setCallback(d => {
-        if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).filter(x => o.folder || x.mimeType !== FOLDER).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '' })));
+        if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).map(x => o.folder && x.mimeType !== FOLDER ? (x.parentId ? { id: x.parentId, name: 'Folder with ' + x.name, mimeType: FOLDER } : null) : x).filter(x => x && (o.folder || x.mimeType !== FOLDER)).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '' })));
         else if (d[P.Response.ACTION] === P.Action.CANCEL) res([]);
       });
     if (GOOGLE_API_KEY && !/@@/.test(GOOGLE_API_KEY)) b.setDeveloperKey(GOOGLE_API_KEY);
@@ -310,7 +322,7 @@ async function pickVidDir() { const [d] = await drivePick({ folder: true }); if 
 // Videos she picks, opening in her videos folder (asking for the folder first, once).
 async function driveVideos(multi) {
   let dir = vidDir(); if (!dir) { dir = await pickVidDir(); if (!dir) return []; }
-  return drivePick({ parent: dir.id, multi });
+  return drivePick({ parent: dir.id, parentName: dir.name, multi });
 }
 // Signed in for the chooser's files right now, so a video can come down without asking anything.
 const drivePickReady = () => !!G.token && Date.now() < G.exp - 60000 && gHas(PICK_SCOPE);
@@ -321,3 +333,27 @@ async function driveBytes(id, onStep, interactive) {
   for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; if (onStep) onStep(got, total); }
   return new Blob(parts, { type: r.headers.get('content-type') || '' });
 }
+
+/* ---------- playing a Drive video straight from Drive ---------- */
+// The video isn't copied: the player asks this site for gs-drive/<id>, and the offline copy's service worker (src/sw.js) asks Drive for just the
+// part being watched, signed with her token. It works where that service worker runs this page (the web app, not the double-click copy).
+let dsOn = false, dsAsk = null;
+function driveStreamOk() {
+  const sw = navigator.serviceWorker;
+  if (!sw || !sw.controller) return Promise.resolve(false);
+  if (dsOn) return Promise.resolve(true);
+  if (dsAsk) return dsAsk;
+  return dsAsk = new Promise(res => {
+    const ch = new MessageChannel(), done = v => { clearTimeout(to); dsAsk = null; dsOn = v; res(v); }, to = setTimeout(() => done(false), 1500);
+    ch.port1.onmessage = e => done(!!(e.data && e.data.drive));
+    try { sw.controller.postMessage({ type: 'gs-drive-ok' }, [ch.port2]); } catch { done(false); }
+  });
+}
+const driveStreamUrl = id => 'gs-drive/' + encodeURIComponent(id);
+// The service worker asks for her token when it has none (it forgets it whenever the browser rests it). Never opens a sign-in window.
+if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', e => {
+  const d = e.data || {}, p = e.ports && e.ports[0];
+  if (d.type !== 'gs-drive-token' || !p) return;
+  if (d.fresh) { G.token = null; G.exp = 0; try { sessionStorage.removeItem('gs.gTok'); } catch {} }
+  (gcid() && gHas(PICK_SCOPE) ? gToken(false, 'pick') : Promise.reject(new Error('sign-in'))).then(t => p.postMessage({ token: t, exp: G.exp }), () => p.postMessage({ token: null }));
+});

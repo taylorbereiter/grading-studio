@@ -5055,7 +5055,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.43";
+  const APP_VERSION = "1.28.46";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -10389,7 +10389,7 @@ if (GOK && G_REDIRECT && G.token && !G.email) setTimeout(() => gsync('about?fiel
 
 /* ---------- videos from Drive: Google's own chooser, and only what she picks ---------- */
 const driveCan = () => GOK && !!gcid();
-const VID_MIMES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/x-matroska', 'video/3gpp'];
+const VID_MIMES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/x-matroska', 'video/3gpp', 'video/ogg'];
 let gpP = null;
 function loadPicker() {
 if (window.google && google.picker) return Promise.resolve();
@@ -10407,13 +10407,23 @@ const t = await gToken(true, 'pick'); await loadPicker();
 if (!G.email) gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); syncNow(); }).catch(() => {});
 const P = google.picker;
 return new Promise(res => {
+const mk = (label, set) => {
 const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
-if (o.folder) v.setSelectFolderEnabled(true).setMimeTypes(FOLDER);
-else { v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(',')); if (o.parent) v.setParent(o.parent); }
-const b = new P.PickerBuilder().setOAuthToken(t).setAppId(gcid().split('-')[0]).setOrigin(location.origin).addView(v)
-.enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Choose your videos folder' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
+if (o.folder) v.setSelectFolderEnabled(true); v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(','));
+if (v.setLabel) v.setLabel(label);
+set(v); return v;
+};
+const views = [];
+if (o.parent && !o.folder) views.push(mk(o.parentName || 'Videos folder', v => v.setParent(o.parent)));
+views.push(mk('My Drive', v => v.setParent('root')));
+views.push(mk('Shared with me', v => v.setOwnedByMe && v.setOwnedByMe(false)));
+views.push(mk('Shared drives', v => v.setEnableDrives && v.setEnableDrives(true)));
+const b = new P.PickerBuilder().setOAuthToken(t).setAppId(gcid().split('-')[0]).setOrigin(location.origin);
+views.forEach(v => b.addView(v));
+b
+.enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Click your videos folder once (or any video in it), then Select' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
 .setCallback(d => {
-if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).filter(x => o.folder || x.mimeType !== FOLDER).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '' })));
+if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).map(x => o.folder && x.mimeType !== FOLDER ? (x.parentId ? { id: x.parentId, name: 'Folder with ' + x.name, mimeType: FOLDER } : null) : x).filter(x => x && (o.folder || x.mimeType !== FOLDER)).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '' })));
 else if (d[P.Response.ACTION] === P.Action.CANCEL) res([]);
 });
 if (GOOGLE_API_KEY && !/@@/.test(GOOGLE_API_KEY)) b.setDeveloperKey(GOOGLE_API_KEY);
@@ -10425,7 +10435,7 @@ const vidDir = () => store.get('gs.gVidDir', null);
 async function pickVidDir() { const [d] = await drivePick({ folder: true }); if (d) store.set('gs.gVidDir', { id: d.id, name: d.name }); return d || null; }
 async function driveVideos(multi) {
 let dir = vidDir(); if (!dir) { dir = await pickVidDir(); if (!dir) return []; }
-return drivePick({ parent: dir.id, multi });
+return drivePick({ parent: dir.id, parentName: dir.name, multi });
 }
 const drivePickReady = () => !!G.token && Date.now() < G.exp - 60000 && gHas(PICK_SCOPE);
 async function driveBytes(id, onStep, interactive) {
@@ -10434,6 +10444,27 @@ const total = +r.headers.get('content-length') || 0, rd = r.body.getReader(), pa
 for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; if (onStep) onStep(got, total); }
 return new Blob(parts, { type: r.headers.get('content-type') || '' });
 }
+
+/* ---------- playing a Drive video straight from Drive ---------- */
+let dsOn = false, dsAsk = null;
+function driveStreamOk() {
+const sw = navigator.serviceWorker;
+if (!sw || !sw.controller) return Promise.resolve(false);
+if (dsOn) return Promise.resolve(true);
+if (dsAsk) return dsAsk;
+return dsAsk = new Promise(res => {
+const ch = new MessageChannel(), done = v => { clearTimeout(to); dsAsk = null; dsOn = v; res(v); }, to = setTimeout(() => done(false), 1500);
+ch.port1.onmessage = e => done(!!(e.data && e.data.drive));
+try { sw.controller.postMessage({ type: 'gs-drive-ok' }, [ch.port2]); } catch { done(false); }
+});
+}
+const driveStreamUrl = id => 'gs-drive/' + encodeURIComponent(id);
+if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', e => {
+const d = e.data || {}, p = e.ports && e.ports[0];
+if (d.type !== 'gs-drive-token' || !p) return;
+if (d.fresh) { G.token = null; G.exp = 0; try { sessionStorage.removeItem('gs.gTok'); } catch {} }
+(gcid() && gHas(PICK_SCOPE) ? gToken(false, 'pick') : Promise.reject(new Error('sign-in'))).then(t => p.postMessage({ token: t, exp: G.exp }), () => p.postMessage({ token: null }));
+});
 /* ---------------- audio, video and Word files ---------------- */
 const MEDIA_RX = /\.(mp4|mov|m4v|webm|mkv|3gp|mp3|m4a|wav|aac|ogg|oga|opus|flac|weba|aif|aiff|caf|amr)$/i;
 const VIDEO_RX = /\.(mp4|mov|m4v|webm|mkv|3gp)$/i;
@@ -10456,7 +10487,7 @@ el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(kept ? linkTit
 const m = el.querySelector('audio,video');
 m.src = kept ? kept.url : mediaUrl(f); m.playbackRate = store.get('gs.rate', 1);
 m.onratechange = () => {};
-mediaWatch(el, m, kept ? { name: kept.name, data: kept.blob, kind: 'media', size: kept.blob.size } : f);
+mediaWatch(el, m, kept ? { name: kept.name, data: kept.blob, kind: 'media', size: kept.blob ? kept.blob.size : kept.size || 0 } : f);
 if (vid) { vidGrip(el.querySelector('.mstick'), vidRot(m, f)); el.querySelector('[data-vrot]').onclick = () => vidTurn(st, f, el); }
 if (!curMedia) curMedia = m;
 clipStrip(el.querySelector('.mstick'), f, () => m, c => clipRun(m, c));
@@ -10571,7 +10602,7 @@ mode = 'make'; err = ''; draw();
 const me = stop = { on: false };
 const say = (t, p) => { if (stop !== me) return; const s = box.querySelector('.trmsg'), b = box.querySelector('.prog i'); if (s) s.textContent = t; if (b && p != null) b.style.width = Math.round(p * 100) + '%'; };
 let lock = null; try { lock = await navigator.wakeLock.request('screen'); } catch {}
-try { await transcribeFile(f, say, me); if (stop === me) toast('The transcript is ready. Click a line to play from there.'); }
+try { await transcribeFile(f, say, me, true); if (stop === me) toast('The transcript is ready. Click a line to play from there.'); }
 catch (er) { if (!me.on) { console.error(er); err = (er && er.message) || String(er); } }
 try { lock && lock.release(); } catch {}
 if (stop === me) { stop = null; mode = ''; if (box.isConnected) draw(); }
@@ -10919,11 +10950,21 @@ say('Transcribing ' + fmtTime(b / SR) + ' of ' + fmtTime(dur) + '…', b / x.len
 }
 return words;
 }
-async function transcribeFile(f, say, stop) {
+const TR_DRIVE_MAX = 1.5e9;
+async function transcribeFile(f, say, stop, one) {
 const kv = keptId(f);
 if (f.kind === 'link' && !kv) throw new Error('Only a video file can be transcribed here. For a link, paste a transcript.');
 let k = kv && await vkGet(kv);
-if (kv && !k && drvRef(f.data)) { vkSeen.delete(kv); throw new Error('This Drive video isn’t in this browser yet. Open the student and press Get it from Drive first.'); }
+if (kv && !k && drvRef(f.data)) {
+vkSeen.delete(kv);
+if (!one) throw new Error('This Drive video isn’t downloaded. Open the student and press Make transcript there.');
+const size = +drvMeta(f, 'Size') || 0;
+if (size > TR_DRIVE_MAX) throw new Error('This video is too big (' + fmtSize(size) + ') to read for a transcript here. Paste a transcript instead, or download it for offline first.');
+const blob = await driveBytes(drvRef(f.data), (n, t) => { if (t && say) say('Reading the video from Drive… ' + Math.min(100, Math.round(n / t * 100)) + '%', n / t); }, true);
+if (stop && stop.on) return;
+trSet(f, { w: await transcribe(new Uint8Array(await blob.arrayBuffer()), say, stop) });
+return;
+}
 if (kv && !k) throw new Error('This video isn’t in this browser.');
 const w = await transcribe(kv ? new Uint8Array(await k.blob.arrayBuffer()) : f.data, say, stop);
 trSet(f, { w });
@@ -23516,31 +23557,78 @@ const drvSay = err => {
 const m = (err && err.message) || String(err);
 if (m === 'setup') return 'This copy of Grading Studio isn’t connected to Google.';
 if (/\b404\b/.test(m)) return 'Drive says this video isn’t there for you now. It may have been moved to the bin, or picked with another Google account. Pick it again with + Add > A video….';
-if (/\b401\b|sign.?in|popup/i.test(m)) return 'Sign in with Google to get this video, then press Get it from Drive again.';
-if (/\b403\b/.test(m)) return m + '. Drive won’t let this video be downloaded right now. Watch it without downloading instead.';
+if (/\b401\b|sign.?in|popup/i.test(m)) return 'Sign in with Google to play this video, then press the button again.';
+if (/\b403\b/.test(m)) return m + '. Drive won’t hand this video over right now. Watch it in Drive’s player instead.';
 return m;
 };
-function driveCard(st, f) {
-const key = keptId(f), hold = document.createElement('div'); hold.className = 'media vfile vdrv';
-hold.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">Google Drive</span></div></div>';
-vkGet(key).then(k => {
-if (!hold.isConnected && !hold.parentNode) return;
-if (k) { hold.replaceWith(mediaCard(st, f, k)); return; }
-vkSeen.delete(key);
-const size = +((/^\s*Size\s*=\s*(\d+)/mi.exec(new TextDecoder().decode(f.data)) || [, 0])[1]);
-hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<div class="mctl"><button class="btn sm primary" data-drvget>Get it from Drive' + (size ? ' (' + fmtSize(size) + ')' : '') + '</button><button class="btn sm" data-drvweb>Watch without downloading</button></div>' +
-'<div class="prog" hidden><i style="width:0%"></i></div><p class="muted vlnote">Copied into this browser to play here, so the transcript can follow along. Only the link is kept in your work, and the video stays in your Drive.</p>');
-const bar = hold.querySelector('.prog'), say = hold.querySelector('.vlnote'), btn = hold.querySelector('[data-drvget]');
-const get = async interactive => {
-btn.disabled = true; bar.hidden = false; say.textContent = 'Getting the video from Drive…';
+const drvStreamBad = new Set();
+const drvKeep = f => { let name = drvMeta(f, 'Name') || linkTitle(f); if (!VIDEO_RX.test(name)) name += '.mp4'; return { name, url: driveStreamUrl(drvRef(f.data)), stream: true, size: +drvMeta(f, 'Size') || 0 }; };
+async function vkDrop(id) {
+await vkDo('readwrite', o => o.delete(id));
+const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id);
+}
+function drvPlayer(st, f, k, at) {
+const el = mediaCard(st, f, k), id = drvRef(f.data), size = +drvMeta(f, 'Size') || 0, m = el.querySelector('video,audio');
+el.classList.add('vdrv');
+el.querySelector('.mhead .muted').textContent = k.stream ? 'playing from Google Drive' : 'Google Drive · downloaded';
+el.querySelector('.mstick').insertAdjacentHTML('beforeend', '<div class="mctl">' + (k.stream
+? '<button class="btn sm" data-drvget>Download for offline' + (size ? ' (' + fmtSize(size) + ')' : '') + '</button>'
+: '<button class="btn sm" data-drvdrop>Remove download</button>') + '</div><div class="prog" hidden><i style="width:0%"></i></div><p class="muted vlnote">' + (k.stream
+? 'Plays from your Drive, a little at a time. Nothing is copied into this browser.'
+: 'Kept in this browser so it plays without internet. Remove download frees the space. The video in your Drive isn’t touched.') + '</p>');
+if (at) m.addEventListener('loadedmetadata', () => { m.currentTime = at; }, { once: true });
+const say = el.querySelector('.vlnote'), bar = el.querySelector('.prog');
+if (k.stream) {
+m.onerror = async () => {
+drvStreamBad.add(id);
+let why = ''; try { await gjson('files/' + encodeURIComponent(id) + '?fields=id&supportsAllDrives=true'); } catch (err) { why = drvSay(err); }
+if (el.isConnected) { const c = driveCard(st, f, why || 'This video wouldn’t play straight from Drive. Download it for offline, or watch it in Drive’s player.'); el.replaceWith(c); }
+};
+el.querySelector('[data-drvget]').onclick = async e => {
+const b = e.target; b.disabled = true; bar.hidden = false; say.textContent = 'Downloading from Drive…';
 try {
-const k2 = await drvGet(f, (n, t) => { if (t) { const p = Math.min(100, Math.round(n / t * 100)); bar.firstChild.style.width = p + '%'; say.textContent = 'Getting the video from Drive… ' + p + '%'; } }, interactive);
-if (hold.isConnected) hold.replaceWith(mediaCard(st, f, k2));
+const k2 = await drvGet(f, (n, t) => { if (t) { const p = Math.min(100, Math.round(n / t * 100)); bar.firstChild.style.width = p + '%'; say.textContent = 'Downloading from Drive… ' + p + '%'; } }, true);
+if (el.isConnected) el.replaceWith(drvPlayer(st, f, k2, m.currentTime));
+} catch (err) { console.error(err); b.disabled = false; bar.hidden = true; say.textContent = drvSay(err); }
+};
+} else el.querySelector('[data-drvdrop]').onclick = async () => {
+const t = m.currentTime; m.pause();
+try { await vkDrop(keptId(f)); } catch (err) { console.error(err); }
+toast('Download removed. The video is still in your Drive.');
+if (el.isConnected) { const c = driveCard(st, f, '', t); el.replaceWith(c); }
+};
+return el;
+}
+function driveCard(st, f, why, at) {
+const key = keptId(f), id = drvRef(f.data), hold = document.createElement('div'); hold.className = 'media vfile vdrv';
+hold.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">Google Drive</span></div></div>';
+vkGet(key).then(async k => {
+if (!hold.isConnected && !hold.parentNode) return;
+if (k) { hold.replaceWith(drvPlayer(st, f, k, at)); return; }
+vkSeen.delete(key);
+const stream = await driveStreamOk() && !drvStreamBad.has(id);
+if (!hold.isConnected && !hold.parentNode) return;
+if (stream && drivePickReady() && !why) { hold.replaceWith(drvPlayer(st, f, drvKeep(f), at)); return; }
+const size = +drvMeta(f, 'Size') || 0;
+hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<div class="mctl">' + (stream ? '<button class="btn sm primary" data-drvplay>Play from Drive</button>' : '') +
+'<button class="btn sm' + (stream ? '' : ' primary') + '" data-drvget>Download for offline' + (size ? ' (' + fmtSize(size) + ')' : '') + '</button><button class="btn sm" data-drvweb>Watch in Drive’s player</button></div>' +
+'<div class="prog" hidden><i style="width:0%"></i></div><p class="muted vlnote">' + esc(why || (stream ? 'Plays from your Drive, a little at a time, with the transcript following along. Only the link is kept in your work.'
+: 'Download it to play here with the transcript following along, or watch it in Drive’s player. Only the link is kept in your work, and the video stays in your Drive.')) + '</p>');
+const bar = hold.querySelector('.prog'), say = hold.querySelector('.vlnote'), btn = hold.querySelector('[data-drvget]'), play = hold.querySelector('[data-drvplay]');
+if (play) play.onclick = async () => {
+play.disabled = true; say.textContent = 'Opening the video from Drive…';
+try { await gToken(true, 'pick'); drvStreamBad.delete(id); if (hold.isConnected) hold.replaceWith(drvPlayer(st, f, drvKeep(f), at)); }
+catch (err) { console.error(err); play.disabled = false; say.textContent = drvSay(err); }
+};
+btn.onclick = async () => {
+btn.disabled = true; bar.hidden = false; say.textContent = 'Downloading from Drive…';
+try {
+const k2 = await drvGet(f, (n, t) => { if (t) { const p = Math.min(100, Math.round(n / t * 100)); bar.firstChild.style.width = p + '%'; say.textContent = 'Downloading from Drive… ' + p + '%'; } }, true);
+if (hold.isConnected) hold.replaceWith(drvPlayer(st, f, k2, at));
 } catch (err) { console.error(err); btn.disabled = false; bar.hidden = true; say.textContent = drvSay(err); }
 };
-btn.onclick = () => get(true);
 hold.querySelector('[data-drvweb]').onclick = () => { drvWebOn.add(linkKey(f)); hold.replaceWith(linkCard(st, f)); };
-if (drvGetting.has(drvRef(f.data)) || drivePickReady()) get(false);
+if (!why && drivePickReady()) gjson('files/' + encodeURIComponent(id) + '?fields=id&supportsAllDrives=true').catch(err => { if (hold.isConnected && err.status !== 401) say.textContent = drvSay(err); });
 });
 return hold;
 }
@@ -23978,7 +24066,7 @@ openStudent(cur);
 } catch (err) { console.error(err); closeDlg(); toast('The pages couldn’t be made: ' + ((err && err.message) || err)); }
 };
 }
-Object.assign(window.__gs, { gScope: () => G.scope, drvRef, openFromDrive, saveToDrive, linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes, openPartners, pvApply });
+Object.assign(window.__gs, { gScope: () => G.scope, drvRef, openFromDrive, pickVidDir, driveStreamOk, saveToDrive, linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes, openPartners, pvApply });
 
 /* ---------------- clips: a part of a video worth showing the class ---------------- */
 function clipSecs(v) {
@@ -24066,7 +24154,7 @@ const all = list(), c = all[at]; if (!c) return clipClose();
 const f = clipFile(c), vr = keptId(f);
 if (vr && !vkSeen.has(vr)) { vkGet(vr).then(() => { if (clipStage && clipStage.el === el) draw(); }); return; }
 const kv = vr && vkSeen.get(vr), url = f.kind === 'link' && !vr ? linkOf(f.data) : '';
-const pl = vr ? (kv ? { [VIDEO_RX.test(kv.name) ? 'video' : 'audio']: kv.url } : drvRef(f.data) ? linkPlayer(linkOf(f.data)) : null) : url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
+const pl = vr ? (kv ? { [VIDEO_RX.test(kv.name) ? 'video' : 'audio']: kv.url } : drvRef(f.data) ? (dsOn && drivePickReady() ? { video: driveStreamUrl(drvRef(f.data)) } : linkPlayer(linkOf(f.data))) : null) : url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
 const fr = pl && pl.frame ? clipFrame(pl.frame, c) : null;
 el.innerHTML = '<div class="clipbar"><b>' + esc(c.t) + '</b><span>' + (c.b != null ? fmtTime(c.a) + ' to ' + fmtTime(c.b) : 'from ' + fmtTime(c.a)) + (fr && !fr.stops && c.b != null ? ' · stop it at ' + fmtTime(c.b) : '') + '</span><span class="sp"></span>' +
 (all.length > 1 ? '<button data-cs="prev" aria-label="The clip before"' + (at ? '' : ' disabled') + '>‹</button><span>' + (at + 1) + ' of ' + all.length + '</span><button data-cs="next" aria-label="The next clip"' + (at < all.length - 1 ? '' : ' disabled') + '>›</button>' : '') +
@@ -31507,7 +31595,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.43":["The focus timer keeps going when you open the Planner. The panel shows there with the clock, pause, more time and break, and a session that ends in the Planner is added to your focus log when you come back to grading."]};
+const WHATS_NEW = {"1.28.46":["Focus sessions for lesson planning: the Focus panel lists your lessons for the coming week, and the Planner's lesson editor has a Focus button. A lesson session lasts 45 minutes unless you change it in Settings, Focus and goals.","Planning time now counts only in focus sessions on a lesson. Opening the Planner for a quick change or presenting a lesson doesn't add to it, and presenting pauses a lesson session."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
