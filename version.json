@@ -1,23 +1,22 @@
 {
- "version": "1.28.27",
- "build": "0580d3b2e9a0",
+ "version": "1.28.30",
+ "build": "06f1f5ebf68e",
  "notes": [
-  "Planning your grading. Each set shows about how long its papers will take at your own pace: on the Focus card, on the assignment’s card, in the week in To do, and under the date when you set when work is due. The Focus card also offers a free period between your classes, picks up the set you were last on, and can start small with Just 3 papers or the shortest papers first.",
-  "A goal for each focus session: a few papers, the whole set, a to-do or a few words of your own, suggested from your pace. The timer shows how far along you are, the end of the session says whether you got there, and what is left goes into your next session on the same work. Today also counts your sessions.",
-  "Your grading goal can be for a day or a week, and a daily goal for some days only. A set can have a day to finish it by, with the papers a day that takes. On the day you choose, Today shows a look back at the week. Settings, Focus and goals switches each of these on or off."
+  "Type scores straight into the gradebook like a spreadsheet: start typing on a cell, Enter goes to the next student and Tab to the next assignment. Paste a column from a spreadsheet onto the first cell to fill it down.",
+  "+ Add scores: type the name and press Enter to start typing scores down the new column. MYP task levels can be typed in the table too."
  ],
  "files": {
-  "index.html": "93726ae237494e108db55d97d5fcbf2443ad2a1a29f107d67f568fc6f5e93a89",
-  "planner.html": "41f7d7c8881149b90b88eb37ebcae67e5a2d48b684496059320b3c5075d6eacc"
+  "index.html": "1a87de2ee86fdf0f45ffbe238f814ba7047073b8d56c69b9c4eb5a7f7ce9520d",
+  "planner.html": "e7721eff7016d136d8cf2362e01a74799eed94ebc5bfbb12e35a62fed85807b2"
  },
  "langs": {
-  "lang/zh-Hant.js": "342990eceef32b0bfc036a705b005a0aa4e8ecce2fc90b6342a523ad1edd5a7d",
-  "lang/zh-Hans.js": "5f58cdc4da2d633012e05130e26db12aac5034d7df6a21d01960caf165d2755f",
-  "lang/es.js": "0702747f3ed383616a1bb6539a43ca1a24fe7a229f775514fe49bfb873c96872",
-  "lang/fr.js": "bfe1cc74e177090d57116bc878b628b7e7f996c5290a1f26c149480249c84443",
-  "lang/de.js": "a0c0b83e9558848eec67bf587fb8e488dae243a11f5cd3ff23619b7bc8444bce",
-  "lang/pt-BR.js": "288b77acf36e55d1008abbbdcb93eb0a306cf7f4cad34268af2e6b96e60877d7",
-  "lang/ja.js": "dd275e2a2469e9700d9c400b1ae2f8ac9c7a587755d4df48835372e7f5a10a76",
-  "lang/ko.js": "383b915644404a372c0206646a7427a4d7d6e5e8b0ebdbe58f46402a6c097ad4"
+  "lang/zh-Hant.js": "10dfa7de387abc6a5e80a56f8cda49ca4d21be6529c3df4e6cfc8da6c011c779",
+  "lang/zh-Hans.js": "81ca403135e7a9b032297d6745df3869d2807b772eca43c45253c58249d6c51c",
+  "lang/es.js": "984fb1d9eb40f2bb364e300f2d21c417f7c6c33f7e5747cbe7b4cbb8ae5cba46",
+  "lang/fr.js": "3e5c23f3a336c9ef8f4ce321774d50fdcfcf28b852a361ef17bf3043f915b428",
+  "lang/de.js": "3821ac202338f5a6a99a1a6eb9b98c723ff6657f7b14e1a9b6d65e16120a3cbc",
+  "lang/pt-BR.js": "1c89fe78f13e78816ef38a7d2f8da7964751366fcf45b50abc0b4ea7f9c28768",
+  "lang/ja.js": "644e9ae2a8a7e0ab47c7177912c42d57264821b8d4c31e10878db98d567c26d0",
+  "lang/ko.js": "a9d7cde5c616743022971fac4ad4754bafce5f3993e14b1fcfa16dd58843c66f"
  }
 }

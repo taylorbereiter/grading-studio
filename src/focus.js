@@ -71,6 +71,9 @@ function fcLog() {
     ...(L.by && typeof L.by === 'object' ? { by: L.by } : {}) };   // { <download>: 'YYYY-MM-DD' }: the day a set is to be finished by
 }
 const fcLogSet = L => store.set('gs.focus', L);
+// The Monday of a day's week ('YYYY-MM-DD'): a week starts on Monday, and Sunday belongs to the week before. Noon keeps a change
+// of clocks from moving the day.
+function fcMon(day) { const d = new Date(day + 'T12:00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoDay(d); }
 const fcToday = () => isoDay(Date.now());
 const fcDone = m => keptState(m).done;
 // Papers finished today: how far each download has come since the day began, never below nothing.
@@ -102,16 +105,12 @@ function fcSeen(id) {
   if (ch) fcLogSet(L);
 }
 const fcPapersToday = () => { fcSeen(); return fcPapersOf(fcLog()); };
-const fcSecsToday = () => { const d = fcLog().days[fcToday()] || {}, r = fcRun(); return (d.s || 0) + (r && (r.st === 'run' || r.st === 'paused') ? fcElapsed(r) : 0); };
+const fcSecsToday = () => { const d = fcLog().days[fcToday()] || {}, r = fcRun(); return (d.s || 0) + (r && (r.st === 'run' || r.st === 'paused') ? fcBusy(r) : 0); };
 function fcWeekPapers() {
-  const L = fcLog(), today = fcToday(), d = new Date(today + 'T12:00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7);
-  const mon = isoDay(d); return Object.entries(L.days).filter(([k]) => k >= mon && k <= today).reduce((a, [, v]) => a + (v.p || 0), 0);
+  const L = fcLog(), today = fcToday(), mon = fcMon(today); return Object.entries(L.days).filter(([k]) => k >= mon && k <= today).reduce((a, [, v]) => a + (v.p || 0), 0);
 }
-// Seconds a paper usually takes, from the last sessions that finished at least one. Nothing is said until three papers are behind it.
-function fcPace() { const p = fcLog().pace, s = p.reduce((a, x) => a + x[0], 0), n = p.reduce((a, x) => a + x[1], 0); return n >= 3 ? s / n : 0; }
 function fcWeekMins() {
-  const L = fcLog(), today = fcToday(), d = new Date(today + 'T12:00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7);
-  const mon = isoDay(d); return Math.floor((Object.entries(L.days).filter(([k]) => k >= mon && k < today).reduce((a, [, v]) => a + (v.s || 0), 0) + fcSecsToday()) / 60);
+  const L = fcLog(), today = fcToday(), mon = fcMon(today); return Math.floor((Object.entries(L.days).filter(([k]) => k >= mon && k < today).reduce((a, [, v]) => a + (v.s || 0), 0) + fcSecsToday()) / 60);
 }
 const fcWeekPapersNow = () => { const L = fcLog(), t = (L.days[fcToday()] || {}).p || 0; return fcWeekPapers() - t + fcPapersToday(); };
 const fcGoalNow = c => !c.goal ? 0 : c.goal.per === 'week' ? (c.goal.k === 'papers' ? fcWeekPapersNow() : fcWeekMins()) : (c.goal.k === 'papers' ? fcPapersToday() : Math.floor(fcSecsToday() / 60));
@@ -125,6 +124,21 @@ const fcGoalDay = (c, day) => !c.goal || c.goal.per === 'week' || !c.goal.days |
 const fcRun = () => { const r = store.get('gs.focusRun', null); return r && r.st ? r : null; };
 const fcRunSet = r => { if (r) store.set('gs.focusRun', r); else store.del('gs.focusRun'); fcTickOn(); fcRender(); };
 const fcElapsed = r => Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.at) / 1000));
+// On papers, time with nothing pressed, typed or scrolled for longer than the tracker's minutes (src/tracker.js) doesn't count, the
+// same as grading time: a session left running, or a laptop asleep, isn't grading. A to-do may be done away from the screen, so its
+// time counts as it runs. r.idl: seconds not counted so far; r.ii: when the stretch going on began.
+const fcBoot = Date.now();
+const fcIdle = r => (r.idl || 0) + (r.ii ? Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.ii) / 1000)) : 0);
+const fcBusy = r => Math.max(0, fcElapsed(r) - fcIdle(r));
+function fcIdleSee(r) {
+  if (!/^mark:/.test(r.w || '')) return false;
+  // r.seen: the last time she did something, written every half minute, so another tab of the app doesn't take her for away
+  const a = Math.max(fcBoot, r.at, r.seen || 0, tkReady ? tkLast : 0), lim = fcConf().idle * 60e3;
+  if (tkReady && tkLast - (r.seen || 0) > 30e3 && !r.ii) { r.seen = tkLast; return true; }
+  if (r.ii && a > r.ii) { r.idl = (r.idl || 0) + Math.round((a - r.ii) / 1000); delete r.ii; return true; }
+  if (!r.ii && Date.now() - a > lim) { r.ii = a + lim; return true; }
+  return false;
+}
 const fcLeft = r => r.st === 'brk' ? Math.max(0, Math.round((r.brkAt + r.brkLen * 1000 - Date.now()) / 1000)) : Math.max(0, r.len - fcElapsed(r));
 const fcGot = r => r.got != null ? r.got : Math.max(0, fcPapersToday() - (r.p0 || 0));
 const fcN = r => r.one ? Math.max(1, +r.one || 1) : 0;   // papers a "Just one paper" or "Just 3 papers" session is for
@@ -149,9 +163,10 @@ function fcWork(key) {
   if (k === 'td') { const it = tdItem(id); return it ? { key, id, name: it.x, cls: it.c && classById(it.c) ? classById(it.c).name : '', done: !!it.done } : null; }
   return null;
 }
+// The work the card suggests: one picked by hand, else the set she left off on, else the work picked last, else the first.
 function fcPicked(works) {
-  const want = fcS.pick != null ? fcS.pick : fcLog().last;
-  if (want === '' && fcS.pick === '') return '';
+  if (fcS.pick === '') return '';
+  const b = gpReady && fcS.pick == null && gpBack(), want = fcS.pick != null ? fcS.pick : b ? 'mark:' + b.id : fcLog().last;
   return works.some(w => w.key === want) ? want : works.length ? works[0].key : '';
 }
 
@@ -189,7 +204,7 @@ function fcSgSuggest(w, len) {
   if (!fcConf().sg || !w) return null;
   if (!w.mark) return w.done ? null : { k: 'td' };
   if (!w.left) return null;
-  const it = cardOfKept(w.id), pace = gpReady ? gpPaces()(it ? it.id : '') : fcPace();
+  const it = cardOfKept(w.id), pace = gpReady ? gpPaces()(it ? it.id : '') : 0;
   if (!pace) return null;
   const n = Math.max(1, Math.round(len * 60 / pace));
   return n >= w.left ? { k: 'set' } : { k: 'papers', n };
@@ -284,7 +299,7 @@ function fcLeftHere(i) { const st = batch && batch.students[i]; if (!st) return 
 // A session that ends is written into today: its minutes, and how long its papers took for the pace.
 function fcRecord(r) {
   if (r.secs != null) return r;
-  const secs = Math.min(r.one ? 4 * 3600 : r.len, fcElapsed(r)), got = fcGot(r), L = fcLog(), today = fcToday(), d = L.days[today] || {};
+  const secs = Math.min(r.one ? 4 * 3600 : r.len, fcBusy(r)), got = fcGot(r), L = fcLog(), today = fcToday(), d = L.days[today] || {};
   L.days[today] = { ...d, s: (d.s || 0) + secs, ...(/^mark:/.test(r.w || '') ? { sm: (d.sm || 0) + secs } : {}), ...(secs >= 60 ? { n: (d.n || 0) + 1 } : {}) };
   if (got > 0 && secs >= 30) L.pace = [...L.pace, [secs, got]].slice(-20);
   Object.assign(r, { secs, got });
@@ -296,7 +311,7 @@ function fcRecord(r) {
   return r;
 }
 function fcUp(r) { fcRecord(r); r.st = 'up'; r.fold = false; fcRunSet(r); fcChime(); }
-function fcPause() { const r = fcRun(); if (!r || r.st !== 'run') return; r.st = 'paused'; r.pz = Date.now(); fcRunSet(r); }
+function fcPause() { const r = fcRun(); if (!r || r.st !== 'run') return; r.st = 'paused'; r.pz = Date.now(); r.idl = fcIdle(r); delete r.ii; fcRunSet(r); }
 function fcResume() { const r = fcRun(); if (!r || r.st !== 'paused') return; r.at += Date.now() - r.pz; delete r.pz; r.st = 'run'; fcRunSet(r); }
 function fcMore(min) { const r = fcRun(); if (!r) return; if (r.st === 'run' || r.st === 'paused') { r.len += min * 60; fcRunSet(r); } }
 function fcBreak() { const r = fcRun(); if (!r) return; fcAudioWake(); if (r.st === 'run' || r.st === 'paused') fcRecord(r); fcRunSet({ ...r, st: 'brk', brkAt: Date.now(), brkLen: fcConf().brk * 60, fold: false }); }
@@ -315,6 +330,7 @@ function fcTick() {
   const r = fcRun(); if (!r) return fcTickOn();
   if (r.st === 'run') {
     if (r.one ? fcGot(r) >= fcN(r) : fcLeft(r) <= 0) return fcUp(r);
+    if (fcIdleSee(r)) store.set('gs.focusRun', r);
   } else if (r.st === 'brk' && fcLeft(r) <= 0) { r.st = 'brkup'; r.fold = false; fcRunSet(r); fcChime(); return; }
   fcClockDraw(); fcTitle();
 }
@@ -352,7 +368,7 @@ function fcGoalHtml(c, card) {
     return '<div class="fcnogoal"><span>' + (p ? 'Today: ' + people(p, 'paper') : 'No daily goal yet') + '</span><a class="link" href="#/settings/focus">' + (p ? 'Set a goal' : 'Set one') + '</a></div>';
   }
   const n = fcGoalNow(c), met = n >= c.goal.n, r = fcRun(), mins = c.goal.k === 'min';
-  const sess = r && (r.st === 'run' || r.st === 'paused') ? (mins ? Math.floor(Math.min(fcElapsed(r), r.one ? 1e9 : r.len) / 60) : fcGot(r)) : 0;
+  const sess = r && (r.st === 'run' || r.st === 'paused') ? (mins ? Math.floor(Math.min(fcBusy(r), r.one ? 1e9 : r.len) / 60) : fcGot(r)) : 0;
   const step = mins ? 5 : 1, total = Math.ceil(c.goal.n / step), had = Math.floor(n / step), was = Math.floor(Math.max(0, n - sess) / step);
   const pop = card ? '' : fcS.popAt != null && fcS.popAt < had ? had - 1 : -1;
   fcS.popAt = card ? fcS.popAt : had;
@@ -370,7 +386,7 @@ function fcGoalHtml(c, card) {
 // on it is left empty: no mark, no colour. Saturday and Sunday show only when something was done on them. The day names come from
 // the browser in the app's language, so the chart is left as it is (data-raw).
 function fcWeekHtml(c) {
-  const L = fcLog(), today = fcToday(), d0 = new Date(today + 'T12:00:00'); d0.setDate(d0.getDate() - (d0.getDay() + 6) % 7);
+  const L = fcLog(), today = fcToday(), d0 = new Date(fcMon(today) + 'T12:00:00');
   const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(d0); d.setDate(d0.getDate() + i); const k = isoDay(d), v = L.days[k] || {}; return { k, d, v: c.goal && c.goal.k === 'min' ? Math.floor((v.s || 0) / 60) + (k === today ? Math.floor(fcSecsToday() / 60) - Math.floor((v.s || 0) / 60) : 0) : (k === today ? fcPapersToday() : v.p || 0) }; })
     .filter((x, i) => i < 5 || x.v > 0 || x.k === today);
   if (!days.some(x => x.v > 0)) return '';
@@ -378,32 +394,49 @@ function fcWeekHtml(c) {
   return '<div class="fcweek"><span class="fcl">This week</span><div class="fcwk' + (goal ? ' hasg' : '') + '" style="--g:' + Math.round(goal / top * 100) + '%" role="img" data-raw aria-label="' + esc(days.map(x => x.d.toLocaleDateString(LANG_LOCALE, { weekday: 'short' }) + ' ' + x.v).join(', ')) + '">' +
     days.map(x => '<span class="fcwd' + (x.k === today ? ' now' : '') + (x.k > today ? ' later' : '') + (goal && x.v >= goal && fcGoalDay(c, x.k) ? ' met' : '') + '"><span class="fcwc">' + (goal && x.v >= goal && fcGoalDay(c, x.k) ? FC_TICK : '') + '</span><span class="fcwb"><i style="height:' + Math.round(x.v / top * 100) + '%"></i></span><span class="fcwl" data-raw>' + esc(x.d.toLocaleDateString(LANG_LOCALE, { weekday: 'narrow' })) + '</span></span>').join('') + '</div></div>';
 }
+// What the work is, as spans: the papers left and how long they will take at her pace on this set, from its own papers only.
+// Before its first paper only the papers are said; from fewer than three, how many it comes from.
 function fcWorkSay(w) {
-  if (!w) return 'A session with nothing set: the timer only.';
-  if (!w.mark) return 'A to-do';
-  if (!w.left) return w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score';
-  const it = cardOfKept(w.id), pace = gpReady ? gpPaces()(it ? it.id : '') : fcPace();
-  return [people(w.left, 'paper') + ' left', pace ? 'about ' + people(Math.max(1, Math.round(w.left * pace / 60)), 'minute') + ' at your pace' : ''].filter(Boolean).join(' · ');
+  const sp = x => '<span>' + esc(x) + '</span>';
+  if (!w) return sp('A session with nothing set: the timer only.');
+  if (!w.mark) return sp('A to-do');
+  if (!w.left) return sp(w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score');
+  const it = cardOfKept(w.id), id = it ? it.id : '', pace = gpReady ? gpPaces()(id) : 0, n = pace ? gpPaceN(id) : 0;
+  return [people(w.left, 'paper') + ' left', pace ? 'about ' + people(Math.max(1, Math.round(w.left * pace / 60)), 'minute') + ' at your pace' : '', n && n < 3 ? 'from ' + people(n, 'paper') + ' so far' : ''].filter(Boolean).map(sp).join(' · ');
 }
-// The start: today against the goal, what to work on, and one button. Shared by the card on Today and the panel. On Today the
-// button is a plain one, as Today keeps its one blue button for the next thing to do with the papers.
+const FC_BACK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>';
+const FC_CHEV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+// The start, shared by the card on Today and the panel: today against the goal, one suggestion with why, a blue Start and Just one
+// paper, the session's goal in a line, and the rest under More. "Change" opens the list of work in place.
+// fcS.chg: the list is open; fcS.more: More is open; fcS.hand: the work was picked by hand on this visit.
 function fcStartHtml(card) {
-  const c = fcConf(), works = fcWorks(), key = fcPicked(works), w = works.find(x => x.key === key) || null, len = fcS.len || c.len;
+  const c = fcConf(), works = fcWorks(), key = fcPicked(works), w = works.find(x => x.key === key) || null, f = gpReady ? gpFreeNow() : null;
+  const len = fcS.len || (f ? gpFreeLen(f) : c.len), g = fcSgNow(w, len), open = w && w.mark && w.left, why = [];
   const opt = x => '<option value="' + esc(x.key) + '"' + (x.key === key ? ' selected' : '') + ' data-raw>' + esc(x.name + (x.cls ? ' · ' + x.cls : '')) + '</option>';
   const marks = works.filter(x => x.mark), tds = works.filter(x => !x.mark);
-  return '<div class="fcbody">' + gpTopHtml(w) + fcGoalHtml(c, true) + (card ? fcWeekHtml(c) + tkTodayHtml() : '') + '<div class="fcline"></div>' +
-    '<div><label class="fcl">Work on</label><select class="fcwork" data-fcwork aria-label="Work on">' + marks.map(opt).join('') +
-    (marks.length && tds.length ? '<option disabled data-raw>──────────</option>' : '') + tds.map(opt).join('') + '<option value=""' + (key === '' ? ' selected' : '') + '>' + esc(tr('Nothing in particular')) + '</option></select>' +
-    '<p class="fcsay">' + esc(fcWorkSay(w)) + '</p>' + fcByHtml(w) + '</div>' + fcSgPick(w, len) +
-    '<div class="fcgo"><button class="btn' + (card ? '' : ' primary') + '" data-fcstart="' + len + '">' + FC_PLAY + '<span>Start ' + len + ' minutes</span></button>' + (w && w.mark && w.left ? '<button class="btn" data-fcone>Just one paper</button>' : '') + (w && w.mark && w.left >= 3 ? '<button class="btn" data-fcone="3">Just 3 papers</button>' : '') + '</div>' +
-    (w && w.mark && w.left > 1 ? '<label class="fcshort"><input type="checkbox" data-fcshort' + (c.short ? ' checked' : '') + '> Shortest papers first</label>' : '') +
-    '<div class="fclens" role="group" aria-label="How long"><span>Or</span>' + [5, 10, 15, 25].concat(FC_LENS.includes(len) && ![5, 10, 15, 25].includes(len) ? [len] : []).sort((a, b) => a - b).map(n => '<button data-fclen="' + n + '" aria-pressed="' + (n === len) + '">' + n + '</button>').join('') + '<span>minutes</span></div></div>';
+  let h = '<div class="fcbody">' + fcGoalHtml(c, true) + '<div class="fcline"></div><div class="sug">';
+  if (fcS.chg) h += '<div class="sugpick"><div class="fcgh"><label class="fcl">Work on</label><button class="link" data-fckeep>Done</button></div><select class="fcwork" data-fcwork aria-label="Work on">' + marks.map(opt).join('') +
+    (marks.length && tds.length ? '<option disabled data-raw>──────────</option>' : '') + tds.map(opt).join('') + '<option value=""' + (key === '' ? ' selected' : '') + '>' + esc(tr('Nothing in particular')) + '</option></select></div>';
+  else h += '<div class="sugh"><span class="t"><b data-raw>' + esc(w ? w.name : tr('Nothing in particular')) + '</b>' + (w && w.cls ? ' <span data-raw>· ' + esc(w.cls) + '</span>' : '') + '</span><button class="link" data-fcchg>Change</button></div>';
+  h += '<p class="fcsay">' + fcWorkSay(w) + '</p>';
+  const b = gpReady && w && w.mark && fcS.pick == null ? gpBack() : null;
+  if (b && b.id === w.id) { const t = new Date(b.t); why.push('<span>' + FC_BACK + '<span>You left off here:</span> <span data-raw>' + esc((isoDay(b.t) === fcToday() ? '' : t.toLocaleDateString(LANG_LOCALE, { weekday: 'long' }) + ' ') + t.toLocaleTimeString(LANG_LOCALE, { hour: 'numeric', minute: '2-digit' })) + '</span></span>'); }
+  else if (fcS.hand) why.push('<span>' + FC_BACK + '<span>You picked this</span></span>');
+  if (f) why.push('<span class="free">' + GP_CLOCK + '<span>Free period until</span> <span data-raw>' + esc(planTime(f.to)) + '</span></span>');
+  if (why.length) h += '<p class="sugwhy">' + why.join('') + '</p>';
+  h += '<div class="fcgo"><button class="btn primary" data-fcstart="' + len + '">' + FC_PLAY + '<span>Start ' + len + ' minutes</span></button>' + (open ? '<button class="btn" data-fcone>Just one paper</button>' : '') + '</div>';
+  if (!(w && (w.mark ? !w.left : w.done))) h += '<p class="sugsg"><span>Goal for this session</span>: <b>' + (g ? fcSgSpan(g, null, w) : '<span>' + esc(tr('No goal')) + '</span>') + '</b> · <button class="link" data-fcsgchg>Change</button></p>';
+  h += '</div>' + (card && tkReady ? tkWeekHtml() : '') + '<button class="fcmoreb" data-fcmo aria-expanded="' + !!fcS.more + '"><span>More</span>' + FC_CHEV + '</button>';
+  if (fcS.more) h += '<div class="fcmorebox"><div class="fclens" role="group" aria-label="How long"><span>Or</span>' + [5, 10, 15, 25].concat(FC_LENS.includes(len) && ![5, 10, 15, 25].includes(len) ? [len] : []).sort((x, y) => x - y).map(n => '<button data-fclen="' + n + '" aria-pressed="' + (n === len) + '">' + n + '</button>').join('') + '<span>minutes</span></div>' +
+    (open && w.left >= 3 ? '<div class="fcgo"><button class="btn" data-fcone="3">Just 3 papers</button></div>' : '') + fcSgPick(w, len) + fcByHtml(w) +
+    (open && w.left > 1 ? '<label class="fcshort"><input type="checkbox" data-fcshort' + (c.short ? ' checked' : '') + '> Shortest papers first</label>' : '') + '</div>';
+  return h + '</div>';
 }
 function fcCardRender() {
   const box = $('#fcCardBody'); if (!box) return;
   const r = fcRun(), on = r && r.st !== 'done';
   if (box.contains(document.activeElement) && document.activeElement.matches('[data-fcsgx], [data-fcby]')) return;   // not under her typing
-  const h = on ? '<div class="fcbody">' + fcGoalHtml(fcConf(), true) + fcWeekHtml(fcConf()) + '<div class="fcline"></div><div class="fcnogoal"><span>' + (r.st === 'brk' || r.st === 'brkup' ? 'You are on a break' : 'A session is on') + '</span><button class="btn sm" data-fcshow>Show the timer</button></div></div>' : fcStartHtml(true);
+  const h = on ? '<div class="fcbody">' + fcGoalHtml(fcConf(), true) + (tkReady ? tkWeekHtml() : '') + '<div class="fcline"></div><div class="fcnogoal"><span>' + (r.st === 'brk' || r.st === 'brkup' ? 'You are on a break' : 'A session is on') + '</span><button class="btn sm" data-fcshow>Show the timer</button></div></div>' : fcStartHtml(true);
   if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
 }
 const fcHead = (cap, fold) => '<div class="fchead"><h2 class="tcap">' + cap + '</h2><span class="sp"></span>' + (fold ? '<button class="icon" data-fcfold title="Fold it away" aria-label="Fold it away">–</button>' : '<button class="icon" data-fcclose title="Close" aria-label="Close">✕</button>') + '</div>';
@@ -498,10 +531,10 @@ function fcRender() {
 
 /* ---------- presses ---------- */
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-fcstart], [data-fcone], [data-fclen], [data-fcnext], [data-fcpause], [data-fcresume], [data-fcmore], [data-fcstop], [data-fcbreak], [data-fcfold], [data-fcunfold], [data-fcclose], [data-fcshow], [data-fcaway], [data-fctick], [data-fcsg], [data-fcsgn], [data-fcsgdone], [data-fccarryno], [data-fcother], #railFocus');
+  const t = e.target.closest('[data-fcstart], [data-fcone], [data-fclen], [data-fcnext], [data-fcpause], [data-fcresume], [data-fcmore], [data-fcstop], [data-fcbreak], [data-fcfold], [data-fcunfold], [data-fcclose], [data-fcshow], [data-fcaway], [data-fctick], [data-fcsg], [data-fcsgn], [data-fcsgdone], [data-fccarryno], [data-fcother], [data-fcchg], [data-fckeep], [data-fcmo], [data-fcsgchg], #railFocus');
   if (!t) return;
   const d = t.dataset, box = t.closest('.fcbody, #fcPanel'), sel = box && box.querySelector('[data-fcwork]');
-  const pick = () => sel ? sel.value : fcRun() ? fcRun().w : fcPicked(fcWorks());
+  const pick = () => sel ? sel.value : fcRun() && box && box.closest('#fcPanel') ? fcRun().w : fcPicked(fcWorks());
   if (t.id === 'railFocus') { e.preventDefault(); const r = fcRun(); if (r) { r.fold = !r.fold && (r.st === 'run' || r.st === 'paused' || r.st === 'brk'); fcRunSet(r); } else { fcS.open = !fcS.open; fcRender(); } return; }
   if (d.fcstart != null) return fcStart(+d.fcstart, d.fcagain != null && fcRun() ? fcRun().w : pick(), false);
   if (d.fcone != null) return fcStart(fcConf().len, fcRun() && fcRun().st === 'up' ? fcRun().w : pick(), +d.fcone || 1);
@@ -513,9 +546,16 @@ document.addEventListener('click', e => {
   if (d.fcbreak != null) return fcBreak();
   if (d.fcstop != null) return fcStop();
   if (d.fcfold != null || d.fcunfold != null || d.fcshow != null) { const r = fcRun(); if (r) { r.fold = d.fcfold != null; fcRunSet(r); } else { fcS.open = true; fcRender(); } return; }
-  if (d.fcaway) { const r = fcRun(); if (!r) return; delete r.away; if (d.fcaway === 'again') { r.at = Date.now(); r.st = 'run'; delete r.pz; } return fcRunSet(r); }
+  if (d.fcaway) { const r = fcRun(); if (!r) return; delete r.away; if (d.fcaway === 'again') { r.at = Date.now(); r.st = 'run'; delete r.pz; delete r.idl; delete r.ii; } return fcRunSet(r); }
   if (d.fctick != null) { const r = fcRun(), w = r && fcWork(r.w); if (w && !w.mark && !w.done) todoTick(w.id); fcS.open = false; return fcRunSet(null); }
   if (d.fcclose != null) return fcClose();
+  if (d.fcchg != null || d.fckeep != null) { fcS.chg = d.fcchg != null; fcRender(); const s2 = document.querySelector((t.closest('#fcPanel') ? '#fcPanel ' : '#fcCardBody ') + (fcS.chg ? '[data-fcwork]' : '[data-fcchg]')); return s2 && s2.focus(); }
+  if (d.fcmo != null || d.fcsgchg != null) {
+    fcS.more = d.fcsgchg != null || !fcS.more; fcRender();
+    const g = d.fcsgchg != null && document.querySelector((t.closest('#fcPanel') ? '#fcPanel' : '#fcCardBody') + ' .fcmorebox .fcsgpick');
+    if (g) { g.scrollIntoView({ block: 'nearest' }); const x = g.querySelector('[aria-pressed=true], .fcsgx, button'); if (x) x.focus({ preventScroll: true }); }
+    return;
+  }
   // the session's goal
   if (d.fcsg != null || d.fcsgn != null) {
     const key = pick(), w = fcWork(key), len = fcS.len || fcConf().len, g = fcSgNow(w, len);
@@ -536,13 +576,13 @@ document.addEventListener('click', e => {
 document.addEventListener('change', e => {
   const b = e.target.closest('[data-fcby]');
   if (b) {
-    const box = b.closest('.fcbody, #fcPanel'), sel = box && box.querySelector('[data-fcwork]'), w = sel && fcWork(sel.value); if (!w || !w.mark) return;
+    const box = b.closest('.fcbody, #fcPanel'), sel = box && box.querySelector('[data-fcwork]'), w = fcWork(sel ? sel.value : fcPicked(fcWorks())); if (!w || !w.mark) return;
     const L = fcLog(), by = { ...(L.by || {}) }; if (/^\d{4}-\d\d-\d\d$/.test(b.value) && b.value >= fcToday()) by[w.id] = b.value; else delete by[w.id];
     if (Object.keys(by).length) L.by = by; else delete L.by;
     fcLogSet(L); b.blur(); return fcRender();
   }
   const s = e.target.closest('[data-fcwork]'); if (!s) return;
-  fcS.pick = s.value; fcS.sg = undefined; const L = fcLog(); L.last = s.value; fcLogSet(L); fcRender();
+  fcS.pick = s.value; fcS.sg = undefined; fcS.chg = false; fcS.hand = true; const L = fcLog(); L.last = s.value; fcLogSet(L); fcRender();
 });
 // The few words of a session goal of her own, kept as she types them (nothing is drawn again under her).
 document.addEventListener('input', e => {
@@ -598,4 +638,4 @@ $('#setPane').addEventListener('click', e => {
 
 FC_ON = true;
 fcSeen(); fcTickOn();
-window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcTick, fcPace, focusOn });
+window.__gs = Object.assign(window.__gs || {}, { fcConf, fcLog, fcRun, fcRunSet, fcStart, fcPapersToday, fcSeen, fcTick, focusOn, fcMon, fcToday });

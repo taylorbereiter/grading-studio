@@ -77,7 +77,7 @@ rep("'/*@@GCID@@*/'", JSON.stringify(process.env.GCID || ''));
 // Where this copy lives and where it is moving to (site.json), only while a move is on. Otherwise the app has no address written into it.
 { const site = require('./site.json'); rep("'/*@@SITE@@*/'", JSON.stringify(site.movingTo ? { address: site.address || '', movingTo: site.movingTo } : null)); }
 const VERSION = require('./package.json').version, whatsNew = require('./src/whatsnew.json');
-rep("'/*@@WHATSNEW@@*/'", JSON.stringify(whatsNew));   // what each version brought, for About and updates
+rep("'/*@@WHATSNEW@@*/'", JSON.stringify({ [VERSION]: whatsNew[VERSION] || [] }));   // what this version brought, for About (only this one is shown; a newer version's notes come in version.json)
 rep("'/*@@VERSION@@*/'", JSON.stringify(VERSION));   // the version shown in the app: set it in package.json
 fs.mkdirSync('out', { recursive: true });
 const fullHtml = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>\n' + h + '\n</body></html>';
