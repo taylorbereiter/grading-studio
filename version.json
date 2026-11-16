@@ -1,21 +1,22 @@
 {
- "version": "1.28.50",
- "build": "5200d2c77204",
+ "version": "1.28.55",
+ "build": "d6adfaf9d1ef",
  "notes": [
-  "Planning time also counts outside focus sessions once you've worked steadily in the Planner for a few minutes, 3 unless you change it in Settings, Focus and goals. A quick change before class doesn't count, and time during your classes on the timetable never counts."
+  "The pen tools stay on top of a video's buttons when the paper scrolls sideways, instead of being cut through by them.",
+  "Adding a video a student already has, however its link is written (or the same file picked from Google Drive), no longer adds a second copy. It says they already have it."
  ],
  "files": {
-  "index.html": "f30de27813e5d57ae2f5fd6f20e910618ec784a0992f0dbc51704fb725a09ce9",
-  "planner.html": "4dc1b18b1b748dff711b0ec0b74f1704d716fab33ec48e6cde5b62bd292a4d59"
+  "index.html": "fd900eb6e1f42eb572f6244c1fcf326a061c48d1483043d06973e2fedd210aa6",
+  "planner.html": "4b312322d338293eba003a1bd613a198ac327fe5c4449f2b553683f93795c4ff"
  },
  "langs": {
-  "lang/zh-Hant.js": "397fa5119e4f6b0bbd75dcf5bf46471cb15611e6bf7fb2fa4493bbb808ba79cd",
-  "lang/zh-Hans.js": "6bcd7ab31eb28679d65df40cd8fc58465a214039db70bed6f09141d5a807eb9b",
-  "lang/es.js": "bfc8f474a6cc415f96b45102c4ef5bc78080e9f970ae02c731c9ab26e60963c2",
-  "lang/fr.js": "1ebc74df9169d3619713ea55f1daed9695079c403a2a2d132480a2bb62b47402",
-  "lang/de.js": "42637c8186fe8d91eeb79b0410ac2975bf9be7dfd76985aa98a2d7d504393f2a",
-  "lang/pt-BR.js": "155b006ca9cc2fdac4cfd4c7358aa4617a58f6727a17eb92250d3fff881d3616",
-  "lang/ja.js": "7f64ea8d20c29f0e29aaa9c87218324ac1ea8261befec157a1085ebf973a324b",
-  "lang/ko.js": "92572ba54d3683f1bb2f147b3169b1f4289bdab3842868348fc0aae2eee321b0"
+  "lang/zh-Hant.js": "71b3e95310ab9a4dcc6824ff1f8c7ed6465bffb72c8de2abda507427dba46198",
+  "lang/zh-Hans.js": "e932e5c3290b3b2c208b70d8956a900b11d2864795368afe47ea28af79deae97",
+  "lang/es.js": "b5f88c1c6663849c24b4205f52462bd5eef4b3a94ac9788ac778e991be92fe1a",
+  "lang/fr.js": "0ddf478a4f83c558b0c111b42961612cdf7abe55878dd1b5cf8bda06883af996",
+  "lang/de.js": "5da1baf421ef4735d9f27f48950a30a439e9768f14bfece1bf6db093e5fb16f4",
+  "lang/pt-BR.js": "e58209f983f08183cdf6d49d6ccafb3deea889fe85c7ede2e6b7b09499c5ce68",
+  "lang/ja.js": "abbc107ee279f8a31de76f6183e806affe384f649f29d361c73cf1eba55c20f3",
+  "lang/ko.js": "214aff323afa2beb90b28dca84c6a958a4f6e50a05478939f2e63e9233add77e"
  }
 }

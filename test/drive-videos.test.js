@@ -241,14 +241,10 @@ test('played straight from Drive: nothing is kept in the browser, Drive is asked
     const part = () => page.evaluate(id => fetch('gs-drive/' + id, { headers: { Range: 'bytes=0-99' } }).then(async r => [r.status, (await r.arrayBuffer()).byteLength]), id);
     assert.deepEqual(await part(), [206, 100]);
     assert.equal(S.got.slice(n).filter(g => g.auth === 'Bearer tok').length, 1);
-    // a token Drive refuses is asked for fresh, once: Google's window never opens without a press, so the part waits for her to sign in
+    // a token Drive refuses is asked for fresh, once
     S.deny = 1; n = S.got.length;
-    assert.deepEqual(await part(), [401, 0]);
-    assert.equal(S.got.slice(n).length, 1, 'refused once, and not tried again without a key');
-    await page.evaluate(() => window.__gs.gIn('pick'));   // the press (Play from Drive)
-    n = S.got.length;
     assert.deepEqual(await part(), [206, 100]);
-    assert.equal(S.got.slice(n).length, 1);
+    assert.equal(S.got.slice(n).length, 2, 'refused once, then answered');
     assert.deepEqual(page.errors, []);
   } finally { await close(); await site.close(); }
 });

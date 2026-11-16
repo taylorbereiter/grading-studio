@@ -181,6 +181,7 @@ function findMatch(rows, q) {
 // Rows named by something she typed (a class, a student, an assignment): never put into another language (lang.js).
 const FIND_NAMES = new Set(['Classes', 'Students', 'Assignments', 'School resources']);
 function openFind() {
+  if (soloOn()) return;   // only this student on screen (src/solo.js)
   if ($('#findDlg') || $('#askDlg') || (!$('#dlg').hidden && !dlgPage)) return;
   commitEditors(); setMore(false);
   const back = document.activeElement, el = document.createElement('div');

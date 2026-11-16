@@ -2,7 +2,7 @@
 .settch{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
 .settch select{max-width:100%}
 /* nothing can be pointed at, so what shows on pointing shows always */
-@media (hover:none){.pg .rchip{opacity:.92}.crit .sticks{opacity:1}}
+@media (hover:none){.pg .rchip{opacity:.92}.crit .sticks{opacity:1}.crit .critstamp{opacity:1}}
 /* a fingertip is wider than a mouse pointer: the tools, the student rows and the score ticks get more room to be hit */
 @media (pointer:coarse){
   .tools .tool{height:40px}
