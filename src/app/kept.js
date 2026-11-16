@@ -19,7 +19,11 @@ async function kdo(name, mode, fn) {
 const kget = (name, k) => kdo(name, 'readonly', o => o.get(k)).catch(() => null);
 // keptRead: the list has been read from the browser, so a download missing from it is really gone
 let keptMeta = new Map(), keptRead = false;
+// The last save of work and its row (keepWork). Reading the list waits for it: a row read while its save is still going is the one
+// from before, and would put the list a paper behind (src/focus.js fcGain counts from it).
+let keepBusy = Promise.resolve();
 async function loadKept() {
+  await keepBusy;
   try { const all = await kdo('meta', 'readonly', o => o.getAll()); keepOk = true; keptMeta = new Map((all || []).map(m => [m.id, m])); keptRead = true; } catch { keptMeta = new Map(); }
   await keptFbCounts();
   await keptMarkCounts();
@@ -48,7 +52,9 @@ async function keptMarkCounts() {
     if (m.marked != null || !m.n) continue;
     try {
       const work = await kget('work', m.id); if (!work) continue;
-      const n = { ...keptMeta.get(m.id), marked: workCounts(work).marked };
+      // a save while the work was read has counted it already
+      const now = keptMeta.get(m.id); if (!now || now.marked != null) continue;
+      const n = { ...now, marked: workCounts(work).marked };
       await kdo('meta', 'readwrite', o => o.put(n, m.id)); keptMeta.set(m.id, n);
     } catch (e) { console.error(e); }
   }
@@ -132,7 +138,7 @@ function keepWork(b, data) {
   if (typeof fcGain === 'function') fcGain(m0, m);
   keptMeta.set(b.id, m);
   if (typeof fcRender === 'function') fcRender();
-  return kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })
+  return keepBusy = kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })
     // so Try again reopens a store that went away
     .catch(e => { keepOk = false; console.error(e); if (e && e.name === 'InvalidStateError') keepDbP = null; keepDb().catch(() => { keepDbP = null; }); return false; });
 }

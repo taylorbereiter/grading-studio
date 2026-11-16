@@ -163,7 +163,7 @@ const fcGot = r => r.got != null ? r.got : Math.max(0, r.pg || 0);
 // tab that saved, with the row before and after. A row from before marked was counted says nothing, rather than a jump.
 function fcGain(m0, m) {
   if (!FC_ON || !m0 || !m) return;
-  const r = fcRun(); if (!r || (r.st !== 'run' && r.st !== 'paused') || r.got != null) return;
+  const r = fcOwnRun(fcRun()); if (!r || (r.st !== 'run' && r.st !== 'paused') || r.got != null) return;
   if (!fcKnown(m0) || !fcKnown(m)) return;
   // a first save brings marks carried over from an older copy, which weren't finished now
   const d = fcDone(m) - (m0.scored == null && m0.marked == null ? fcFrom(m.id, m0) : fcDone(m0)); if (!d) return;
@@ -365,8 +365,10 @@ function fcTickOn() {
   if (!on && fcTimer) { clearInterval(fcTimer); fcTimer = 0; }
   fcTitle();
 }
+// A session started in a window not updated yet counts from p0: from here on it counts by pg, and that window can't end it.
+function fcOwnRun(r) { if (r && r.st !== 'done' && r.got == null && r.p0 !== FC_P0) { r.p0 = FC_P0; r.pg = r.pg || 0; store.set('gs.focusRun', r); } return r; }
 function fcTick() {
-  const r = fcRun(); if (!r) return fcTickOn();
+  const r = fcOwnRun(fcRun()); if (!r) return fcTickOn();
   if (r.st === 'run') {
     if (r.one ? fcGot(r) >= fcN(r) : fcLeft(r) <= 0) return fcUp(r);
     if (fcIdleSee(r)) store.set('gs.focusRun', r);

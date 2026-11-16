@@ -291,3 +291,25 @@ test('Just one paper ends only when a paper is marked, even when another tab cou
   assert.equal(await page.evaluate(() => window.__gs.fcRun().got), 1);
   await close();
 });
+
+test('a paper scored just before Close counts once, and the next session starts from nothing', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  await openZip(page, zip); await settle(page);
+  await page.evaluate(() => window.__gs.fcStart(25, '', 0, null));
+  await score(page, [4, 3, 3]);
+  await page.click('#closeBtn');   // within the wait before a save
+  await pause(2500);
+  assert.deepEqual(await page.evaluate(() => [window.__gs.fcRun().pg, window.__gs.fcPapersToday()]), [1, 1], 'the list was read after the save, not before it');
+  const id = await page.evaluate(() => [...window.__gs.kept().keys()].find(k => k.startsWith('gs.b.') && k !== 'gs.b.n1' && k !== 'gs.b.n2'));
+  await page.evaluate(k => { const G = window.__gs; G.fcRunSet(null); G.fcStart(25, 'mark:' + k, 1, null); }, id);
+  await pause(4000);
+  assert.deepEqual(await page.evaluate(() => { const r = window.__gs.fcRun(); return [r.st, r.pg]; }), ['run', 0], 'opening it again doesn’t count that paper a second time');
+  await close();
+});
+
+test('a session started in a window not updated yet is counted by papers saved, not by the day', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  await page.evaluate(() => { localStorage.setItem('gs.focusRun', JSON.stringify({ st: 'run', len: 1500, at: Date.now(), w: '', one: 1, p0: 0, fold: false, no: 1 })); window.__gs.fcTick(); });
+  assert.deepEqual(await page.evaluate(() => { const r = window.__gs.fcRun(); return [r.st, r.p0, r.pg]; }), ['run', 1e9, 0]);
+  await close();
+});

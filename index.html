@@ -11530,7 +11530,9 @@ return new Promise((res, rej) => { const tx = db.transaction(name, mode), req = 
 }
 const kget = (name, k) => kdo(name, 'readonly', o => o.get(k)).catch(() => null);
 let keptMeta = new Map(), keptRead = false;
+let keepBusy = Promise.resolve();
 async function loadKept() {
+await keepBusy;
 try { const all = await kdo('meta', 'readonly', o => o.getAll()); keepOk = true; keptMeta = new Map((all || []).map(m => [m.id, m])); keptRead = true; } catch { keptMeta = new Map(); }
 await keptFbCounts();
 await keptMarkCounts();
@@ -11555,7 +11557,8 @@ for (const m of keptMeta.values()) {
 if (m.marked != null || !m.n) continue;
 try {
 const work = await kget('work', m.id); if (!work) continue;
-const n = { ...keptMeta.get(m.id), marked: workCounts(work).marked };
+const now = keptMeta.get(m.id); if (!now || now.marked != null) continue;
+const n = { ...now, marked: workCounts(work).marked };
 await kdo('meta', 'readwrite', o => o.put(n, m.id)); keptMeta.set(m.id, n);
 } catch (e) { console.error(e); }
 }
@@ -11628,7 +11631,7 @@ delete m.ret; if (!(data.returned && data.returned.ok)) delete m.back;
 if (typeof fcGain === 'function') fcGain(m0, m);
 keptMeta.set(b.id, m);
 if (typeof fcRender === 'function') fcRender();
-return kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })
+return keepBusy = kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })
 .catch(e => { keepOk = false; console.error(e); if (e && e.name === 'InvalidStateError') keepDbP = null; keepDb().catch(() => { keepDbP = null; }); return false; });
 }
 function cardOfKept(id) {
@@ -29601,7 +29604,7 @@ const fcLeft = r => r.st === 'brk' ? Math.max(0, Math.round((r.brkAt + r.brkLen 
 const fcGot = r => r.got != null ? r.got : Math.max(0, r.pg || 0);
 function fcGain(m0, m) {
 if (!FC_ON || !m0 || !m) return;
-const r = fcRun(); if (!r || (r.st !== 'run' && r.st !== 'paused') || r.got != null) return;
+const r = fcOwnRun(fcRun()); if (!r || (r.st !== 'run' && r.st !== 'paused') || r.got != null) return;
 if (!fcKnown(m0) || !fcKnown(m)) return;
 const d = fcDone(m) - (m0.scored == null && m0.marked == null ? fcFrom(m.id, m0) : fcDone(m0)); if (!d) return;
 r.pg = (r.pg || 0) + d; store.set('gs.focusRun', r);
@@ -29783,8 +29786,9 @@ if (on && !fcTimer) fcTimer = setInterval(fcTick, 1000);
 if (!on && fcTimer) { clearInterval(fcTimer); fcTimer = 0; }
 fcTitle();
 }
+function fcOwnRun(r) { if (r && r.st !== 'done' && r.got == null && r.p0 !== FC_P0) { r.p0 = FC_P0; r.pg = r.pg || 0; store.set('gs.focusRun', r); } return r; }
 function fcTick() {
-const r = fcRun(); if (!r) return fcTickOn();
+const r = fcOwnRun(fcRun()); if (!r) return fcTickOn();
 if (r.st === 'run') {
 if (r.one ? fcGot(r) >= fcN(r) : fcLeft(r) <= 0) return fcUp(r);
 if (fcIdleSee(r)) store.set('gs.focusRun', r);
