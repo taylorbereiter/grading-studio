@@ -8,7 +8,7 @@
 const ASK_LATER = 7 * 864e5;
 const IC_FOLDER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
 function safeAskShown() {
-  if (fld.state !== 'none' || !fld.booted) return false;
+  if (fld.state !== 'none' || !fld.booted || G.email) return false;   // signed in with Google, her Drive holds a copy (drive.js)
   let later = 0; try { later = +localStorage.getItem('gsc.folderLater') || 0; } catch {}
   if (Date.now() - later < ASK_LATER) return false;
   return canPickFolder() || keptMeta.size > 0;   // a browser that can't save to a folder has nothing to be asked until there is work to lose

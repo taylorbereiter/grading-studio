@@ -247,6 +247,7 @@ function drvPlayer(st, f, k, at) {
   const say = el.querySelector('.vlnote'), bar = el.querySelector('.prog');
   if (k.stream) {
     m.onerror = async () => {   // Drive wouldn't hand it over this way: say why, and offer the other ways
+      if (!drivePickReady()) { if (el.isConnected) el.replaceWith(driveCard(st, f, '', m.currentTime)); return; }   // Google's key ran out: Play from Drive gets a new one with her press
       drvStreamBad.add(id);
       let why = ''; try { await gjson('files/' + encodeURIComponent(id) + '?fields=id&supportsAllDrives=true'); } catch (err) { why = drvSay(err); }
       if (el.isConnected) { const c = driveCard(st, f, why || 'This video wouldn’t play straight from Drive. Download it for offline, or watch it in Drive’s player.'); el.replaceWith(c); }

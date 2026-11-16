@@ -100,7 +100,7 @@ const gpFreeLen = f => { const d = new Date(), left = f.b - (d.getHours() * 60 +
 // Where she left off: the set worked on last, not finished, from the last week, and not the one open now.
 function gpBack() {
   if (!gpReady) return null;
-  const m = homeGroups().mark.filter(x => x.papers && keptState(x).left && (keptState(x).done || x.partial)).sort((a, b) => b.t - a.t)[0];
+  const m = homeGroups().mark.filter(x => canOpen(x) && keptState(x).left && (keptState(x).done || x.partial)).sort((a, b) => b.t - a.t)[0];
   return m && Date.now() - m.t > 20 * 60e3 && Date.now() - m.t < 7 * 864e5 && !(batch && batch.id === m.id && !$('#app').hidden) ? m : null;
 }
 

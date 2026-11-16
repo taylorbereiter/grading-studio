@@ -90,7 +90,7 @@ async function openRoute(id) {
   const stale = () => tok !== routeTok;
   if (stale()) return;
   const m = keptMeta.get(id);
-  if (!m || !m.papers) { routeOpening = ''; if (m) toast('The papers for this one aren’t kept in this browser. Drop the download in again.', 6000); return go('#/', true); }
+  if (!m || !canOpen(m)) { routeOpening = ''; if (m) toast('The papers for this one aren’t kept in this browser. Drop the download in again.', 6000); return go('#/', true); }
   try { await reopenKept(id); } catch (e) { console.error(e); }
   if (stale()) return;
   routeOpening = '';
@@ -145,14 +145,14 @@ function renderLib() {
   renderKept();
   const card = it => {
     const m = it.batchId ? keptMeta.get(it.batchId) : null, st = m ? keptState(m) : null, typedOnly = !!it.typed && !it.batchId;
-    return '<div class="card" draggable="true" data-card="' + it.id + '" title="' + (m && m.papers ? 'Open the papers' : it.typed && !it.batchId ? 'Scores typed in: open the gradebook' : 'Add this assignment’s papers') + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
+    return '<div class="card" draggable="true" data-card="' + it.id + '" title="' + (m && canOpen(m) ? 'Open the papers' : it.typed && !it.batchId ? 'Scores typed in: open the gradebook' : 'Add this assignment’s papers') + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
       (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (typedOnly ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + lkCard(it) + '</div>' +
       '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
       '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (h => h ? '<div class="m">' + h + '</div>' : '')(tkAsgHtml(it.id)) + (st ? stateChip(st) : '') + '</div>' +
-      '<div class="row">' + (m && m.papers ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
+      '<div class="row">' + (m && canOpen(m) ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
         : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') +
         kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-edit-asg="' + it.id + '">Edit<small>Name, type, due date, unit, rubric</small></button>' +
-          (m && m.papers || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : '') + lkMenu(it, holderById(it.classId) || lib.loose), 'right') + '</div></div>';
+          (m && canOpen(m) || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : '') + lkMenu(it, holderById(it.classId) || lib.loose), 'right') + '</div></div>';
   };
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
     '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><span class="ucount">' + u.items.length + (u.items.length === 1 ? ' assignment' : ' assignments') + '</span><span class="sp"></span>' +

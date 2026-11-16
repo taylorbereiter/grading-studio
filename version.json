@@ -1,22 +1,21 @@
 {
- "version": "1.28.46",
- "build": "663feeb79f34",
+ "version": "1.28.50",
+ "build": "c531c79370f1",
  "notes": [
-  "Focus sessions for lesson planning: the Focus panel lists your lessons for the coming week, and the Planner's lesson editor has a Focus button. A lesson session lasts 45 minutes unless you change it in Settings, Focus and goals.",
-  "Planning time now counts only in focus sessions on a lesson. Opening the Planner for a quick change or presenting a lesson doesn't add to it, and presenting pauses a lesson session."
+  "Planning time also counts outside focus sessions once you've worked steadily in the Planner for a few minutes, 3 unless you change it in Settings, Focus and goals. A quick change before class doesn't count, and time during your classes on the timetable never counts."
  ],
  "files": {
-  "index.html": "69e3dd9117ee99430919edc244db09667b0648c069dfd5c619d3b83769cdf32e",
-  "planner.html": "a3a4813ade4dc5b50f47e93e1cfe1c8a747910ecac7b12d2a6f6634b0167cc64"
+  "index.html": "15280d7f156de27a23af7e7e8b26e1329cd8bb37c497a459299c8b422116404e",
+  "planner.html": "4dc1b18b1b748dff711b0ec0b74f1704d716fab33ec48e6cde5b62bd292a4d59"
  },
  "langs": {
-  "lang/zh-Hant.js": "6941ff123eb3f09846abf54c203452054e20663e4ea683cf1894e7a72d18dbe0",
-  "lang/zh-Hans.js": "5e7a299bdcfb18ebaa8dc22d468b9e25a3c07e725226afd11dd8a5540696816b",
-  "lang/es.js": "3027de8f0d7cf284cf394ff0b878f78a8c66a2eb76b27f26f95fcc8d59e5d1df",
-  "lang/fr.js": "b23b7a478937c7380577cced291aaa8d368ad589daccdfa7030d5f160585e9c9",
-  "lang/de.js": "4d4e590434526cc3557e8b8b8412fccbe922b2ad3fb2ad8cfa840711b0fee5d7",
-  "lang/pt-BR.js": "0359a88bb51e5750a1d188209cc402c830e265c3cd2376a8e6483c0eaab2ce95",
-  "lang/ja.js": "7970f3d30997eaf6cbfbe9338018de03e2ef35e32a5c0a388290bd9382d2b482",
-  "lang/ko.js": "9ad3d6a0758533a26b7c74c3eda0e070b02813692669c74f2bc71d8391b220e1"
+  "lang/zh-Hant.js": "397fa5119e4f6b0bbd75dcf5bf46471cb15611e6bf7fb2fa4493bbb808ba79cd",
+  "lang/zh-Hans.js": "6bcd7ab31eb28679d65df40cd8fc58465a214039db70bed6f09141d5a807eb9b",
+  "lang/es.js": "bfc8f474a6cc415f96b45102c4ef5bc78080e9f970ae02c731c9ab26e60963c2",
+  "lang/fr.js": "1ebc74df9169d3619713ea55f1daed9695079c403a2a2d132480a2bb62b47402",
+  "lang/de.js": "42637c8186fe8d91eeb79b0410ac2975bf9be7dfd76985aa98a2d7d504393f2a",
+  "lang/pt-BR.js": "155b006ca9cc2fdac4cfd4c7358aa4617a58f6727a17eb92250d3fff881d3616",
+  "lang/ja.js": "7f64ea8d20c29f0e29aaa9c87218324ac1ea8261befec157a1085ebf973a324b",
+  "lang/ko.js": "92572ba54d3683f1bb2f147b3169b1f4289bdab3842868348fc0aae2eee321b0"
  }
 }
