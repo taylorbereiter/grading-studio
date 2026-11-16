@@ -75,6 +75,7 @@ async function marksOf(st, o) {
           else if (m.t === 'stamp') {
             const name = stampName(m.k);
             if (m.k === 'score') { if (o.comments) lines.push('score sticker: ' + mdq(m.text)); continue; }
+            if (m.k === 'crit') { if (o.comments) lines.push('criterion score sticker: ' + mdq((m.name ? m.name + ' ' : '') + m.text)); continue; }
             count(name);
             if (o.stamps) lines.push(isSticker(m.k) ? 'sticker: ' + name : name + (o.words ? on(quoteOf(lineNear(words, m.x, m.y, 60), rx)) : ''));
           } else if (m.t === 'hl') { ink.hl++; count('Highlight'); if (o.words) { const q = quoteOf(wordsIn(words, markRects(m)), rx); if (q) lines.push('highlighted: ' + mdq(q)); } }

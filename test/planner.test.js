@@ -86,6 +86,16 @@ test('units line up with the semester and the week, and screenshots and files st
     assert.match(await page.$eval('.pl-file', f => f.textContent), /Summative task sheet\.docx.*Summative/);
     assert.ok(!(await page.$eval('[data-a="askweeks"]', b => b.disabled)), 'Ask Claude is ready once there is a screenshot');
 
+    // Replace… puts a newer copy in the file's place, under the same id; Undo puts the old one back
+    assert.ok(await page.$('.pl-file [data-ma="rpl"]') && await page.$('.pl-shot [data-a="rplshot"]'));
+    const fid = await page.evaluate(() => window.__planner.L.unit.files.find(f => f.kind === 'summative').id);
+    await page.evaluate(async id => { const P = window.__planner; await P.matReplace({ t: 'unit', id: P.L.unit.id }, id, new File(['task, version two'], 'Summative task sheet v2.docx', { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })); }, fid);
+    await page.waitForFunction(() => /Summative task sheet v2\.docx/.test(document.querySelector('.pl-file').textContent));
+    assert.deepEqual(await page.evaluate(id => { const f = window.__planner.L.unit.files.find(x => x.id === id); return [f.name, f.size, f.kind]; }, fid), ['Summative task sheet v2.docx', 17, 'summative']);
+    await page.click('.toast button');
+    await page.waitForFunction(() => /Summative task sheet\.docx/.test(document.querySelector('.pl-file').textContent));
+    assert.deepEqual(await page.evaluate(id => { const f = window.__planner.L.unit.files.find(x => x.id === id); return [f.name, f.size]; }, fid), ['Summative task sheet.docx', 4]);
+
     // typing a week's notes saves it
     await page.type('[data-uw="notes"][data-i="0"]', 'Bring the debate cards');
     await page.waitForFunction(() => document.querySelector('#plSaved').textContent === '✓ Saved');

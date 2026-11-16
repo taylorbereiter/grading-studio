@@ -691,7 +691,15 @@ function todoMerge(a, b) {
   const auto = { ...(b.auto || {}) };
   for (const [k, v] of Object.entries(a.auto || {})) if (!auto[k] || (v.t || 0) >= (auto[k].t || 0)) auto[k] = v;
   const offB = (b.offT || 0) > (a.offT || 0);
-  return { ...b, ...a, items: order.map(id => by.get(id)), auto, off: (offB ? b.off : a.off) || {}, offT: Math.max(a.offT || 0, b.offT || 0) };
+  const out = { ...b, ...a, items: order.map(id => by.get(id)), auto, off: (offB ? b.off : a.off) || {}, offT: Math.max(a.offT || 0, b.offT || 0) };
+  // categories one by one, as the lines are (a deleted one stays deleted); her order goes with whichever copy set it last
+  const cats = new Map();
+  for (const c of [...(Array.isArray(a.cats) ? a.cats : []), ...(Array.isArray(b.cats) ? b.cats : [])]) if (c && c.id && (!cats.has(c.id) || (c.t || 0) > (cats.get(c.id).t || 0))) cats.set(c.id, c);
+  if (cats.size) out.cats = [...cats.values()]; else delete out.cats;
+  const oa = a.corder && Array.isArray(a.corder.ids) ? a.corder : null, ob = b.corder && Array.isArray(b.corder.ids) ? b.corder : null;
+  const corder = oa && ob ? ((ob.t || 0) > (oa.t || 0) ? ob : oa) : oa || ob;
+  if (corder) out.corder = corder; else delete out.corder;
+  return out;
 }
 // Two copies of an assignment's typed-in scores (src/book.js, bkPut) made one: for each student, whichever copy changed theirs last
 // (each score has its time, t; a score taken out leaves its time in gone). Out of, and the rest, go with the copy changed later.
@@ -705,6 +713,22 @@ function typedMerge(a, b, bLater) {
   const out = { ...(bLater ? { ...a, ...b } : { ...b, ...a }), s };
   if (Object.keys(gone).length) out.gone = gone; else delete out.gone;
   return out;
+}
+// The Planner on two devices (src/app/drive.js, planSync): each lesson by its own time (updated), each kept setting by its time; a lesson
+// deleted on either side after its last change stays deleted (gone: { 'l:<id>': time }).
+function mergePlan(A, B) {
+  const gone = { ...(B.gone || {}) };
+  for (const [k, t] of Object.entries(A.gone || {})) if (!(gone[k] >= t)) gone[k] = t;
+  const lessons = {}, la = A.lessons || {}, lb = B.lessons || {};
+  for (const id of new Set([...Object.keys(la), ...Object.keys(lb)])) {
+    const a = la[id], b = lb[id], w = !a ? b : !b ? a : (b.updated || 0) >= (a.updated || 0) ? b : a;   // the same time: Drive's, so both devices settle on one
+    if (gone['l:' + id] >= (w.updated || 0)) continue;
+    lessons[id] = w;
+  }
+  for (const k of Object.keys(gone)) if (k.startsWith('l:') && lessons[k.slice(2)]) delete gone[k];   // written again after it was deleted
+  const kv = {}, ka = A.kv || {}, kb = B.kv || {};
+  for (const k of new Set([...Object.keys(ka), ...Object.keys(kb)])) { const a = ka[k], b = kb[k]; kv[k] = !a ? b : !b ? a : (b.t || 0) >= (a.t || 0) ? b : a; }
+  return { lessons, kv, gone };
 }
 function mergeFields(x, y, win, dev, now, said) {
   const fx = nodeParts(x), fy = nodeParts(y), parts = {}, fv = {}, both = [], fromY = [];

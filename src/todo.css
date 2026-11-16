@@ -38,6 +38,23 @@
 .tdrow.done .tdx{color:var(--faint);text-decoration:line-through}
 .tdm{display:flex;flex-wrap:wrap;align-items:center;gap:2px var(--space-3);font-size:var(--text-small);color:var(--muted)}
 .tdc{display:inline-flex;align-items:center;gap:var(--space-1)}
+.tdcat{padding:1px var(--space-2);border-radius:var(--corner-1);background:var(--surface-2);color:var(--fg-2);font-weight:500}
+.tdguess{font-size:var(--text-small)}
+#tdBy[hidden]{display:none}
+.tdcats{padding:var(--space-3) var(--space-4) var(--space-4);margin-top:var(--space-4)}
+.tdcatrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:var(--space-1);padding:var(--space-2) 0;border-top:1px solid var(--line)}
+.tdcatrow:first-child{border-top:0;padding-top:0}
+.tdcatrow input{min-width:0;height:30px;padding:0 var(--space-2);border:1px solid transparent;border-radius:var(--corner-2);background:none;color:var(--fg);font:inherit;font-size:var(--text-control)}
+.tdcatrow input:hover{border-color:var(--line)}
+.tdcatrow input:focus{border-color:var(--accent);outline:0;background:var(--surface)}
+.tdcatn{font-weight:600}
+.tdcatw{grid-column:1/-1;height:26px!important;font-size:var(--text-small)!important;color:var(--muted)!important}
+.tdcatw::placeholder{color:var(--faint)}
+.tdcatrow .icon{width:26px;height:26px;color:var(--muted)}
+.tdcatrow .icon:disabled{opacity:.35;cursor:default}
+.tdcatadd{display:flex;gap:var(--space-2);margin-top:var(--space-2);padding-top:var(--space-3);border-top:1px solid var(--line)}
+.tdcatadd input{flex:1;min-width:0;height:30px;padding:0 var(--space-2);border:1px solid var(--line);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
+.tdcats p{margin:var(--space-3) 0 0;font-size:var(--text-small);line-height:1.45}
 .tdtag{padding:1px var(--space-2);border-radius:var(--corner-1);background:var(--accent-soft);color:var(--accent);font-weight:500}
 .tddue{min-width:52px;text-align:right;font-size:var(--text-small);font-weight:500;color:var(--muted);white-space:nowrap}
 .tddue.now{color:var(--accent);font-weight:600}

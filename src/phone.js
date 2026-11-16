@@ -19,13 +19,13 @@ if (PHONE) {
   nav.className = 'phnav'; nav.id = 'phNav'; nav.setAttribute('aria-label', 'Main');
   const ic = d => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>';
   nav.innerHTML = [['#/', 'Today', 'M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8'],
-    ['#/scores', 'Scores', 'M4 5h16M4 12h16M4 19h10M17 17l2 2 3-4'], ['#/todo', 'To do', 'M5 12l4 4 10-10']]
+    ['#/plans', 'Plans', 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11M9 8h6'], ['#/scores', 'Scores', 'M4 5h16M4 12h16M4 19h10M17 17l2 2 3-4'], ['#/todo', 'To do', 'M5 12l4 4 10-10']]
     .map(([h, l, d]) => '<a href="' + h + '" data-phnav="' + h + '">' + ic(d) + '<span>' + l + '</span></a>').join('');
   document.body.appendChild(nav);
 }
 function phNavRender() {
   if (!PHONE) return;
-  const v = routeNow().v, on = v === 'scores' ? '#/scores' : v === 'todo' ? '#/todo' : '#/';
+  const v = routeNow().v, on = v === 'scores' ? '#/scores' : v === 'plans' ? '#/plans' : v === 'todo' ? '#/todo' : '#/';
   for (const a of document.querySelectorAll('[data-phnav]')) { const me = a.dataset.phnav === on; a.classList.toggle('on', me); if (me) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
 }
 window.addEventListener('hashchange', phNavRender);
@@ -184,4 +184,35 @@ function phoneHowTo() {
     '<p class="muted">Your classes, scores and to-dos then stay the same on both. You can type scores and look at papers on the phone; marking stays on the computer.</p>' +
     '</div><div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
 }
-window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });
+window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), gAge: ms => { G.exp -= ms; }, syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });
+
+/* Plans: the lessons from the Planner on her computer, day by day, to read (the Planner itself is where they are written). They come
+   through her Google Drive with the rest of her work (drive.js, planSync), into this browser's own copy of the Planner's store. */
+async function phPlansRender(r) {
+  const box = $('#phPlans'); if (!box) return;
+  if (r.id) return phLessonRender(box, r.id);
+  const p = await planRead();
+  if (!$('#phPlans') || routeNow().v !== 'plans' || routeNow().id) return;
+  if (!p) { box.innerHTML = '<p class="muted">Your lesson plans show here once the Planner on your computer has a timetable. Sign in with Google here and on the computer.</p>'; return; }
+  const days = [];
+  for (let i = 0; i < 28 && days.length < 10; i++) { const at = Date.now() + i * 864e5, d = todayRows(p, at); if (d.off || d.rows.length) days.push({ at, ...d }); }
+  const day = at => new Date(at).toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'short', day: 'numeric' });
+  const when = (c, m) => [c.name, m.start ? planTime(m.start) + (m.end ? '–' + planTime(m.end) : '') : ''].filter(Boolean).join(' · ');
+  box.innerHTML = days.length ? days.map(d => '<h2 class="tcap" data-raw>' + esc(day(d.at)) + '</h2>' + (d.off ? '<p class="muted phpad" data-raw>' + esc(d.off) + '</p>' :
+    '<div class="tcard phlist">' + d.rows.map(({ c, m, lessons }) => lessons.length ? lessons.map(l => '<a class="phitem" href="#/plans/' + encodeURIComponent(l.id) + '"><span class="phn"><b data-raw>' + esc(l.title) + '</b><small data-raw>' + esc(when(c, m)) + '</small></span><span class="phc"><i class="phdot" style="background:' + esc(c.color) + '"></i></span></a>').join('') :
+      '<div class="phitem"><span class="phn"><b data-raw>' + esc(c.name) + '</b><small>' + esc((m.start ? planTime(m.start) + ' · ' : '') + 'No lesson planned') + '</small></span></div>').join('') + '</div>')).join('')
+    : '<p class="muted">No classes in the next four weeks.</p>';
+}
+// One lesson to read: each slide's title and words, the teacher's notes under them. Pictures and files stay on the computer for now.
+async function phLessonRender(box, id) {
+  const db = await planDb(false); let l = null;
+  if (db) { try { l = await idbP(db.transaction('lessons').objectStore('lessons').get(id)); } catch {} db.close(); }
+  if (!$('#phPlans') || routeNow().id !== id) return;
+  const back = '<p><a class="btn sm" href="#/plans">‹ Plans</a></p>';
+  if (!l) { box.innerHTML = back + '<p class="muted">This lesson isn’t here yet. It comes with the next sync.</p>'; return; }
+  const txt = s => esc(String(s || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim()).replace(/\n/g, '<br>');
+  const slides = Array.isArray(l.slides) ? l.slides : [];
+  box.innerHTML = back + '<h2 class="phlt" data-raw>' + esc(l.title || 'Untitled lesson') + '</h2>' +
+    (l.note ? '<p class="phln" data-raw>' + txt(l.note) + '</p>' : '') +
+    (slides.length ? '<ol class="phslides">' + slides.map(s => '<li class="tcard"><b data-raw>' + txt(s.title) + '</b>' + (s.body ? '<p data-raw>' + txt(s.body) + '</p>' : '') + (s.img || (s.ctx && s.ctx.length) ? '<small class="muted">A picture, on your computer</small>' : '') + (s.notes ? '<p class="phsn" data-raw>' + txt(s.notes) + '</p>' : '') + '</li>').join('') + '</ol>' : '<p class="muted">No slides yet.</p>');
+}

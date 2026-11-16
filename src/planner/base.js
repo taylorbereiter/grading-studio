@@ -45,4 +45,15 @@ function setTheme(t) {
   for (const b of document.querySelectorAll('.themeBtn')) b.textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
 }
 document.addEventListener('click', e => { if (e.target.closest('.themeBtn')) setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); });
-try { window.__planIn = new BroadcastChannel('gs-plan-in'); window.__planIn.onmessage = () => location.reload(); } catch { }   // Bring work in (the grading page) put Planner records in: start again from what is stored
+// Bring work in, or her other device through Google Drive (the grading page), put Planner records in: start again from what is stored.
+// Not while she is typing or the page is out of sight: then when she leaves the box or comes back, after the last save has gone in.
+let planInWait = false;
+function planIn() {
+  const a = document.activeElement;
+  if (document.hidden || (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)))) { planInWait = true; return; }
+  location.reload();
+}
+const planInLater = () => { if (planInWait) { planInWait = false; setTimeout(planIn, 1500); } };
+document.addEventListener('visibilitychange', () => { if (!document.hidden) planInLater(); });
+document.addEventListener('focusout', planInLater);
+try { window.__planIn = new BroadcastChannel('gs-plan-in'); window.__planIn.onmessage = planIn; } catch { }

@@ -1,21 +1,21 @@
 {
- "version": "1.28.50",
- "build": "60a130b78837",
+ "version": "1.28.61",
+ "build": "da85802d160e",
  "notes": [
-  "Planning time also counts outside focus sessions once you've worked steadily in the Planner for a few minutes, 3 unless you change it in Settings, Focus and goals. A quick change before class doesn't count, and time during your classes on the timetable never counts."
+  "In the Planner, put a strong example from your saved bank into a lesson: Add a slide ▾ has Pick a strong example…, and Materials has + Strong example…. Each page goes on its own slide, or into Materials as a picture. Names stay covered and whose paper it was never comes along."
  ],
  "files": {
-  "index.html": "15280d7f156de27a23af7e7e8b26e1329cd8bb37c497a459299c8b422116404e",
-  "planner.html": "5dff060e6d1881428ebf66cb46f1ef56fc2683aff0004c2476f306c48a499a99"
+  "index.html": "dd78c134dcc9d9284ab7b32d83ef386dacefb8f8c0c6834e41c0eb7c9623c880",
+  "planner.html": "ec53853b4a060c62209f3678574d8787e17eb6409202247b90a15854a3d2a886"
  },
  "langs": {
-  "lang/zh-Hant.js": "397fa5119e4f6b0bbd75dcf5bf46471cb15611e6bf7fb2fa4493bbb808ba79cd",
-  "lang/zh-Hans.js": "6bcd7ab31eb28679d65df40cd8fc58465a214039db70bed6f09141d5a807eb9b",
-  "lang/es.js": "bfc8f474a6cc415f96b45102c4ef5bc78080e9f970ae02c731c9ab26e60963c2",
-  "lang/fr.js": "1ebc74df9169d3619713ea55f1daed9695079c403a2a2d132480a2bb62b47402",
-  "lang/de.js": "42637c8186fe8d91eeb79b0410ac2975bf9be7dfd76985aa98a2d7d504393f2a",
-  "lang/pt-BR.js": "155b006ca9cc2fdac4cfd4c7358aa4617a58f6727a17eb92250d3fff881d3616",
-  "lang/ja.js": "7f64ea8d20c29f0e29aaa9c87218324ac1ea8261befec157a1085ebf973a324b",
-  "lang/ko.js": "92572ba54d3683f1bb2f147b3169b1f4289bdab3842868348fc0aae2eee321b0"
+  "lang/zh-Hant.js": "f0e87a69b4d88733ce010c265b8f95b5ee273c7c2552a17a22b57f3d5080b697",
+  "lang/zh-Hans.js": "8f8df879cf440638cdfee176c65967d6b35152a83932ff836b9f513028baa655",
+  "lang/es.js": "b49f186ceef2ee164b12a77cceb059d077f5e2ceafcceb292ba4b9b3991a9daf",
+  "lang/fr.js": "2fbe2f1a988cd612dd4e69e4c53cfe901fed3258f82816b86def4e53286f4a47",
+  "lang/de.js": "e85b99083fc17a7f9cd8c3571c7b1b17135f5f339cf52eb94a22dd51bb4ef1b1",
+  "lang/pt-BR.js": "8bb2c13d737321823ea0446979112753e3300e3f5d4b8477d911e476884b5aba",
+  "lang/ja.js": "871c11b70c3c26bf3f549631906745b910410b2621fb6b3c130125d6e92be9e7",
+  "lang/ko.js": "64d92d34629a6b0022c3a8e137bd34aa2e8024c494c6d7c85fb773db64c00f0f"
  }
 }
