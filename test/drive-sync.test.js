@@ -98,7 +98,8 @@ test('with Renew it by itself turned off, Google’s window never opens by itsel
   // the default: no key yet, and the sync gets one by itself
   const pc = await openApp(browser, { server: srv, seed: seed(), beforeLoad: fakeDrive().hook });   // a Drive of its own: the choice above travels with her work
   try {
-    await pc.page.waitForFunction(() => window.__gReq >= 1 && /synced/.test((document.querySelector('#syncState') || {}).textContent || ''), { timeout: 15000 });
+    // the first sync done (its time kept), so the key has come back: the Google line says "synced" from the start, before any sync
+    await pc.page.waitForFunction(() => window.__gReq >= 1 && localStorage.getItem('gs.syncAt') && /synced/.test((document.querySelector('#syncState') || {}).textContent || ''), { timeout: 15000 });
     // coming back with the key in its last quarter hour: a new one then, not mid-work
     const n = await pc.page.evaluate(() => window.__gReq);
     await pc.page.evaluate(() => window.__gs.gAge(50 * 60000));
