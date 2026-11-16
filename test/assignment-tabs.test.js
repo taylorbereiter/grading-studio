@@ -155,7 +155,7 @@ test('the Grades tab puts the grade on the paper beside her score, and says whic
   noErrors(page); await close();
 });
 
-test('Return: downloading the marked files marks the assignment Returned, on Home too, and one click takes it back', async () => {
+test('Return: downloading the marked files only marks them exported; she marks the assignment Returned, on Home too, and one click takes it back', async () => {
   const { page, close } = await riverOpen();
   const dl = await catchDownloads(page);
   await markPage(page, 0);
@@ -163,16 +163,22 @@ test('Return: downloading the marked files marks the assignment Returned, on Hom
   // before: all four are not scored, so the card says Scoring
   await page.click('#exportBtn'); await page.waitForSelector('#rtSide');
   assert.equal(await page.$eval('#dlgBox h2', e => e.textContent), 'Return marked files');
-  assert.equal(await page.$eval('#rtState', e => e.textContent), '');
+  assert.equal(await page.$eval('#rtState', e => e.textContent.trim()), 'Mark as returned');
   assert.match(await page.$eval('#rtOne', e => e.textContent), /Export Aria Testwell’s paper/);
   assert.deepEqual(await page.$$eval('#rtClaude .rtrow b', a => a.map(b => b.textContent)), ['Papers with names covered', 'Marks only', 'Bring back Claude’s feedback']);
   const got = await dl.next(() => page.click('#dlgBox [data-go="zip"]'));
   assert.match(got.name, /^Marked - River essay\.zip$/);
   await page.waitForSelector('#rtState .rtdone');
-  assert.match(await page.$eval('#rtState', e => e.textContent), /^✓ Returned today at .+ · \d+ files?\. Mark as not returned$/);
+  // a download isn't handing back: it says exported, and Returned waits for her to say so
+  await page.waitForFunction(() => /^Exported today at /.test(document.querySelector('#rtState').textContent));
+  assert.match(await page.$eval('#rtState', e => e.textContent), /^Exported today at .+ · \d+ files?\. Mark as returned$/);
   await settle(page);
-  const saved = () => page.evaluate(async () => { const id = window.__gs.state().batch.id, w = JSON.parse(localStorage.getItem(id)); const db = await new Promise(res => { const r = indexedDB.open('grading-studio-keep'); r.onsuccess = () => res(r.result); }); const m = await new Promise(res => { const q = db.transaction('meta').objectStore('meta').get(id); q.onsuccess = () => res(q.result); }); db.close(); return { work: !!(w.returned && w.returned.t && w.returned.n), meta: !!m.ret }; });
-  assert.deepEqual(await saved(), { work: true, meta: true });
+  const saved = () => page.evaluate(async () => { const id = window.__gs.state().batch.id, w = JSON.parse(localStorage.getItem(id)); const db = await new Promise(res => { const r = indexedDB.open('grading-studio-keep'); r.onsuccess = () => res(r.result); }); const m = await new Promise(res => { const q = db.transaction('meta').objectStore('meta').get(id); q.onsuccess = () => res(q.result); }); db.close(); return { work: !!(w.returned && w.returned.t && w.returned.n), ok: !!(w.returned && w.returned.ok), meta: !!m.back, old: 'ret' in m }; });
+  assert.deepEqual(await saved(), { work: true, ok: false, meta: false, old: false });
+  await page.click('#rtState [data-doreturn]');
+  assert.match(await page.$eval('#rtState', e => e.textContent), /^✓ Returned today at .+\. Mark as not returned$/);
+  await settle(page);
+  assert.deepEqual(await saved(), { work: true, ok: true, meta: true, old: false });
   // Dov has no score yet, so the card still says Scoring; once everyone is scored or marked missing it says Returned
   await page.evaluate(() => { const G = window.__gs; G.setStatus(G.state().batch.students[3], 'missing'); });
   await settle(page);
@@ -193,12 +199,37 @@ test('Return: downloading the marked files marks the assignment Returned, on Hom
   await page.$eval('#dlgBox [data-close]', b => b.click()); await page.waitForSelector('#rtSide');
   // taking it back
   await page.click('#rtState [data-unreturn]');
-  assert.equal(await page.$eval('#rtState', e => e.textContent), '');
+  assert.match(await page.$eval('#rtState', e => e.textContent), /^Exported today at .+ Mark as returned$/);
   await settle(page);
-  assert.deepEqual(await saved(), { work: false, meta: false });
+  assert.deepEqual(await saved(), { work: true, ok: false, meta: false, old: false });
   await page.keyboard.press('Escape');
   await classPage(page, 'i1'); await page.waitForSelector('[data-card="i1"] .schip');
   assert.equal(await page.$eval('[data-card="i1"] .schip', e => e.textContent), 'Ready to return');
+  await dl.close(); noErrors(page); await close();
+});
+
+test('Return: students who got theirs early can be left out of the class return, and the class page counts them', async () => {
+  const { page, close } = await riverOpen();
+  const dl = await catchDownloads(page);
+  await markPage(page, 0); await goToStudent(page, 1); await markPage(page, 0); await settle(page);
+  await goToStudent(page, 0);
+  await page.click('#exportBtn'); await page.waitForSelector('#rtSide');
+  assert.equal(await page.$('#xEarly'), null);   // nobody has had theirs yet
+  await dl.next(() => page.click('#rtOne [data-rtone]'));
+  await page.waitForSelector('#rtOne .rtsent li'); await settle(page);
+  await page.$eval('#dlgBox [data-close]', b => b.click());
+  await page.click('#exportBtn'); await page.waitForSelector('#xEarly');
+  assert.match(await page.$eval('label.xearly', e => e.textContent), /^ Leave out the student who got theirs early$/);
+  assert.equal(await page.$eval('#xEarly', e => e.checked), false);   // everyone goes unless she says so
+  const who = () => page.evaluate(() => [...new Set(window.__gs.exportPlan(true).map(o => o.st.key))].sort());
+  assert.deepEqual(await who(), ['Aria Testwell', 'Bram Sample']);
+  await page.click('#xEarly'); await page.waitForSelector('#xEarly:checked');
+  assert.deepEqual(await who(), ['Bram Sample']);
+  assert.match(await page.$eval('.xsub', e => e.textContent), /^From 1 student,/);
+  await page.click('#xEarly'); await page.waitForSelector('#xEarly:not(:checked)');
+  await page.keyboard.press('Escape');
+  await classPage(page, 'i1'); await page.waitForSelector('[data-card="i1"] .schip.ret');
+  assert.equal(await page.$eval('[data-card="i1"] .schip.ret', e => e.textContent), 'Returned\u00a01/4');
   await dl.close(); noErrors(page); await close();
 });
 

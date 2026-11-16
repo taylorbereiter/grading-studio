@@ -247,7 +247,7 @@ const bkCellText = (cell, show, col) => {
   const v = show === 'pts' && cell.total != null ? fmtNum(cell.total) + '<small>/' + fmtNum(cell.max) + '</small>' : cell.pct + '%';
   return v + (cell.tries ? ' <span class="stag retk" title="' + esc(cell.tries) + '">retake</span>' : '') + (cell.partial ? ' <span class="stag">partial</span>' : cell.out ? ' <span class="stag">left out</span>' : cell.st === 'late' ? ' <span class="stag">late</span>' : '');
 };
-const bkColHead = col => '<th class="bkch' + (col.key === bk.hi ? ' hi' : '') + '"><button data-bkcol="' + esc(col.key) + '" title="Type, date and term"><span data-raw>' + esc(col.name) + '</span><small>' + esc(bkDay(col.due)) + (col.typed ? ' · typed in' : '') + '</small></button></th>';
+const bkColHead = col => '<th class="bkch' + (col.key === bk.hi ? ' hi' : '') + '"><button data-bkcol="' + esc(col.key) + '" title="Type, date and term"><span data-raw>' + esc(col.name) + '</span><small>' + esc(bkDay(col.due)) + (col.typed && !col.d ? ' · typed in' : '') + '</small></button></th>';
 function bkGroups(cols) {
   const g = bkCats().map(([t, , s]) => ({ t, s, cols: cols.filter(x => x.type === t) })).filter(x => x.cols.length);
   const xc = cols.filter(x => x.type === 'xc'); if (xc.length) g.push({ t: 'xc', s: 'Extra credit', cols: xc });
@@ -284,7 +284,7 @@ function bkTable(c, cols, conf) {
   const grades = [];
   c.names.forEach((nm, i) => {
     const r = bkGrade(nm, cols, conf); if (bkIn(nm)) grades.push(r);
-    h += '<tr' + bkRowCls(nm) + '>' + bkNameCell(nm, i) + groups.map(g => g.cols.map(col => { const cell = col.cells.get(nm), ed = !!col.typed && !(cell && !cell.typed);
+    h += '<tr' + bkRowCls(nm) + '>' + bkNameCell(nm, i) + groups.map(g => g.cols.map(col => { const cell = col.cells.get(nm), ed = !!(col.typed || col.d && col.it) && !(cell && !cell.typed);   // a graded download takes a typed score only for a student with no paper in it
       return '<td' + (ed ? ' class="bked" tabindex="0" data-bked="' + esc(col.key) + '" data-bkn="' + esc(nm) + '" title="Click to change"' : col.d ? ' title="Change this score in its download"' : '') + '>' + bkCellText(cell, bk.show, col) + '</td>'; }).join('')).join('') +
       ct.map(([t], j) => '<td class="bkavg bksum"' + bkStick(j, n) + '>' + bkAvgCell(r, t) + '</td>').join('') +
       '<td class="bkterm bksum"' + bkStick(n, n) + ' tabindex="0" ' + bkWhy(nm, r, conf) + '>' + bkGradeCell(r, nm) + '</td></tr>';
@@ -413,7 +413,7 @@ function bkColMenu(key, anchor) {
     : '<div class="bkpf">Type</div><div class="pseg bktypeseg" role="group">' + bkCats().map(([t, , s]) => '<button data-bksettype="' + esc(t) + '" aria-pressed="' + (col.type === t) + '">' + esc(s) + '</button>').join('') + '</div>') +
     '<label class="bkpf">Due <input type="date" id="bkDue" value="' + esc(col.due || '') + '"></label>' +
     (terms.length ? '<label class="bkpf">Term <select id="bkTerm" class="btn sm"><option value="">By the date (' + esc((terms.find(t => t.id === bkTermOf({ ...col, term: '' }, terms)) || { name: 'none' }).name) + ')</option>' + terms.map(t => '<option value="' + t.id + '"' + (col.term === t.id ? ' selected' : '') + '>' + esc(t.name) + '</option>').join('') + '</select></label>' : '') +
-    (col.typed && col.it ? '<button class="btn sm" data-bkedittyped="' + esc(col.it.id) + '">' + (col.type === 'xc' ? 'Edit the extra credit' : 'Edit the typed-in scores') + '</button>' : '') + '<button class="btn sm" data-bkpopclose>Done</button>';
+    (col.typed && col.it && !col.d ? '<button class="btn sm" data-bkedittyped="' + esc(col.it.id) + '">' + (col.type === 'xc' ? 'Edit the extra credit' : 'Edit the typed-in scores') + '</button>' : '') + '<button class="btn sm" data-bkpopclose>Done</button>';
   p.dataset.key = key;
   const host = bkHost();
   host.appendChild(p);
@@ -514,7 +514,7 @@ function bkAddView(itId, opts = {}) {
   const units = c.units;
   bkTabsOff();
   $('#bkBody').innerHTML = '<div class="bkpad bkaddv" id="bkAdd"><h3 class="bkh">' + (it ? 'Typed-in scores for ' + esc(it.name) : 'Add scores for ' + esc(c.name)) + '</h3><div class="bkaddgrid">' +
-    '<label class="bkpf">Assignment<input type="text" class="bkin" id="bkaName" value="' + esc(it ? it.name : '') + '" placeholder="e.g. Vocab quiz 2"></label>' +
+    '<label class="bkpf">Assignment<input type="text" class="bkin" id="bkaName" list="bkaCards" value="' + esc(it ? it.name : '') + '" placeholder="e.g. Vocab quiz 2"></label><datalist id="bkaCards">' + (it ? '' : bkEmptyCards(c).map(x => '<option value="' + esc(x.name) + '">').join('')) + '</datalist>' +
     '<div class="bkpf bktypef">Type<div class="pseg" role="group">' + bkCats().concat([BK_XC]).map(([t, , s]) => '<button data-bkatype="' + esc(t) + '" aria-pressed="' + (bkAdd.type === t) + '">' + esc(s) + '</button>').join('') + '</div></div>' +
     '<label class="bkpf">Due<input type="date" class="bkin" id="bkaDue" value="' + esc((it && it.due) || isoDay(Date.now())) + '"></label>' +
     (it ? '' : '<label class="bkpf">Unit<select class="btn sm" id="bkaUnit">' + units.map(u => '<option value="' + u.id + '">' + esc(u.name) + '</option>').join('') + '<option value="">' + (units.length ? 'A new unit: Typed in' : 'Unit 1 (new)') + '</option></select></label>') +
@@ -569,6 +569,8 @@ function bkPaste(text) {
   $('#bkaPasteNote').textContent = left.length ? 'Not on the roster, so left out: ' + left.join(', ') + '. Type their scores in by hand.' : lines.length > c.names.length && !named.every(Boolean) ? 'There were more lines than students; the extra ones were left out.' : 'Pasted. Check them below.';
   bkAddRows();
 }
+// This class's assignment cards with no papers and no scores yet, which are not in the gradebook.
+const bkEmptyCards = c => c.units.flatMap(u => u.items).filter(x => !x.typed && !x.batchId && x.type !== 'xc' && x.name && !bk.cols.some(k => k.key === x.id));
 function bkAddSave() {
   const c = bkClass(), name = $('#bkaName').value.trim(), due = $('#bkaDue').value;
   if (!name) { $('#bkaName').focus(); return false; }
@@ -581,8 +583,10 @@ function bkAddSave() {
     if (s[n] && !fm && v != null && r.tries && r.tries.length) s[n].tries = r.tries;   // a retake typed in the table stays when the scores are edited here
   }
   const typed = { max, s };
-  let it = bkAdd.it;
-  if (it) { Object.assign(it, { name, type: bkAdd.type, due, typed }); if (xc) it.xcTo = bkAdd.xcTo; else delete it.xcTo; }
+  const card = !bkAdd.it && bkEmptyCards(c).find(x => x.name.trim().toLowerCase() === name.toLowerCase());   // a card already on the class page with nothing in it yet takes the scores, and keeps its own name and date
+  let it = bkAdd.it || card;
+  if (card) Object.assign(it, { type: it.type || bkAdd.type, due: it.due || due, typed });
+  else if (it) { Object.assign(it, { name, type: bkAdd.type, due, typed }); if (xc) it.xcTo = bkAdd.xcTo; else delete it.xcTo; }
   else {
     const uid0 = $('#bkaUnit') && $('#bkaUnit').value;
     let u = c.units.find(x => x.id === uid0);
@@ -590,54 +594,101 @@ function bkAddSave() {
     u.items.push(it = { id: uid(), name, classId: c.id, type: bkAdd.type, due, typed, ...(xc ? { xcTo: bkAdd.xcTo } : {}) });
   }
   bkSaveLib(); if (!batch) renderLib();
-  const col = bk.cols.find(x => x.key === it.id);
-  if (col) Object.assign(col, { name, type: it.type, due, typed, xcTo: it.xcTo || '' }); else bk.cols.push({ key: it.id, it, cls: c.id, name, type: it.type, due, term: it.term || '', typed, xcTo: it.xcTo || '' });
-  bk.term = bkTermOf({ due, term: it.term || '' }, bkConf().terms); bk.hi = it.id;
+  const col = bk.cols.find(x => x.key === it.id), o = { name: it.name, type: bkType(it.type), due: it.due, typed, xcTo: it.xcTo || '' };
+  if (col) Object.assign(col, o); else bk.cols.push({ key: it.id, it, cls: c.id, term: it.term || '', ...o });
+  bk.term = bkTermOf({ due: it.due, term: it.term || '' }, bkConf().terms); bk.hi = it.id;
   return true;
 }
-// A typed-in cell changed right in the table.
-function bkCellEdit(td) {
-  const col = bk.cols.find(x => x.key === td.dataset.bked), n = td.dataset.bkn; if (!col || !col.typed) return;
-  const r = (col.typed.s || {})[n] || {}, max = col.typed.max;
-  if (col.type === 'fm') {   // feedback only: a click switches Feedback complete
-    const s = { ...(col.typed.s || {}) }; s[n] = { ...r, v: null, fb: !r.fb };
-    col.typed = { ...col.typed, s }; if (col.it) { col.it.typed = col.typed; bkSaveLib(); }
-    bkDraw(); const back = document.querySelector('[data-bked="' + CSS.escape(col.key) + '"][data-bkn="' + CSS.escape(n) + '"]'); if (back) back.focus();
-    return;
+// What text typed into a cell means: the student's new record, null to empty the cell, or undefined when it can't be read.
+// Half points; "m" or "e" for Missing or Excused; "7 > 10" a first try and its retake; an MYP task takes one level a criterion, in order ("6 5", "-" skips one).
+function bkParse(t, r, col) {
+  t = String(t).trim().toLowerCase(); if (!t) return null;
+  const hp = x => Math.round(+x * 2) / 2, ok = x => x !== '' && !isNaN(+x) && +x >= 0, st = /^m(issing)?$/.test(t) ? 'missing' : /^e(xcused)?$/.test(t) ? 'excused' : '';
+  if (col.type === 'xc') { t = t.replace(/^\+/, ''); return ok(t) ? hp(t) > 0 ? { v: hp(t) } : null : undefined; }
+  if (col.typed && col.typed.lv) {
+    if (st) return { st };
+    const crit = (col.it && col.it.crit) || [], vs = t.split(/[\s,/]+/), l = {};
+    if (vs.length > crit.length || vs.some(x => x !== '-' && ibLevel(x) == null)) return undefined;
+    vs.forEach((x, i) => { if (x !== '-') l[crit[i]] = +x; });
+    return Object.keys(l).length ? { l, st: '' } : null;
   }
-  if (col.type === 'xc') {
-    td.innerHTML = '<input type="text" class="bkcin" value="' + esc(+r.v > 0 ? fmtNum(+r.v) : '') + '" aria-label="Extra credit points">';
-    const inp = td.querySelector('input'); inp.focus(); inp.select();
-    let done = false;
-    const finish = keep => {
-      if (done) return; done = true;
-      if (keep) { const v = Math.round(+inp.value.trim().replace(/^\+/, '') * 2) / 2, s = { ...(col.typed.s || {}) }; if (v > 0) s[n] = { v }; else delete s[n]; col.typed = { ...col.typed, s }; if (col.it) { col.it.typed = col.typed; bkSaveLib(); } }
-      bkDraw(); const back = document.querySelector('[data-bked="' + CSS.escape(col.key) + '"][data-bkn="' + CSS.escape(n) + '"]'); if (back) back.focus();
-    };
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(false); } });
-    inp.addEventListener('blur', () => finish(true));
-    return;
-  }
-  td.innerHTML = '<input type="text" class="bkcin" value="' + esc(r.st === 'missing' || r.st === 'excused' ? r.st : r.v != null ? (r.tries || []).concat(r.v).map(fmtNum).join(' > ') : '') + '" aria-label="Score' + (max ? ' out of ' + fmtNum(max) : ' as a percent') + '">';
-  const inp = td.querySelector('input'); inp.focus(); inp.select();
+  if (st) return { v: null, st };
+  const vs = t.split('>').map(x => x.trim().replace('%', '').replace(',', '.')); if (!vs.every(ok)) return undefined;
+  const n = vs.map(hp), v = n.pop(), late = r.st === 'late' ? 'late' : '';
+  return n.length ? { v, st: late, tries: n } : { v, st: late };
+}
+// The text a cell's box opens with.
+function bkCellVal(r, col) {
+  if (r.st === 'missing' || r.st === 'excused') return r.st;
+  if (col.typed && col.typed.lv) { const vs = ((col.it && col.it.crit) || []).map(k => r.l && r.l[k] != null ? r.l[k] : '-'); return vs.some(x => x !== '-') ? vs.join(' ') : ''; }
+  if (col.type === 'xc') return +r.v > 0 ? fmtNum(+r.v) : '';
+  return r.v != null ? (r.tries || []).concat(r.v).map(fmtNum).join(' > ') : '';
+}
+// A graded download's "out of", for a score typed in for a student who has no paper in it.
+const bkColMax = col => { for (const x of bkClassCols(bkClass(), [col])[0].cells.values()) if (x.max) return x.max; return null; };
+// One student's record into a column's typed-in scores (the first one for a graded download starts them). Saved by the caller.
+function bkPut(col, n, rec) {
+  if (!col.typed && !rec) return;
+  const ty = col.typed || { max: bkColMax(col), s: {} }, s = { ...(ty.s || {}) };
+  if (rec) s[n] = rec; else delete s[n];
+  col.typed = col.d && !Object.keys(s).length ? null : { ...ty, s };   // a download with no typed score left has none
+  if (col.it) { if (col.typed) col.it.typed = col.typed; else delete col.it.typed; }
+}
+// The cell dr rows down or dc cells across from td that can be typed in, as [column, student]; null at the edge.
+function bkNext(td, dr, dc) {
+  const all = [...(dc ? td.parentElement : $('#bkBody')).querySelectorAll(dc ? '[data-bked]' : '[data-bked="' + CSS.escape(td.dataset.bked) + '"]')], x = all[all.indexOf(td) + (dc || dr)];
+  return x ? [x.dataset.bked, x.dataset.bkn] : null;
+}
+// Draw again, keep the table where it was scrolled to, and put the keys on one cell.
+function bkFocus(at) {
+  const w = $('#bkBody .bkwrap'), l = w ? w.scrollLeft : 0, t = w ? w.scrollTop : 0;
+  bkDraw(); const w2 = $('#bkBody .bkwrap'); if (w2) { w2.scrollLeft = l; w2.scrollTop = t; }
+  bkShow(at && document.querySelector('#bkBody [data-bked="' + CSS.escape(at[0]) + '"][data-bkn="' + CSS.escape(at[1]) + '"]'));
+}
+// Keys on a cell, scrolled out from under the names and the averages that stay in view.
+function bkShow(x) {
+  if (!x) return; x.focus(); const w = x.closest('.bkwrap'); if (!w) return;
+  const r = x.getBoundingClientRect(), tr = x.parentElement, nm = tr.querySelector('.bknm'), sum = [...tr.querySelectorAll('.bksum')].find(c => getComputedStyle(c).position === 'sticky');
+  const lo = nm ? nm.getBoundingClientRect().right : -1e9, hi = sum ? sum.getBoundingClientRect().left : 1e9;
+  if (r.right > hi) w.scrollLeft += r.right - hi + 8; else if (r.left < lo) w.scrollLeft -= lo - r.left + 8;
+}
+const bkBad = col => toast(col.typed && col.typed.lv ? 'Type a level from 0 to 8 for each criterion, in order, like “6 5”.' : 'That isn’t a score, so the cell was left as it was.');
+// A cell changed right in the table, like a spreadsheet: type, then Enter for the next student or Tab for the next assignment. seed: the key that started it.
+function bkCellEdit(td, seed) {
+  const col = bk.cols.find(x => x.key === td.dataset.bked), n = td.dataset.bkn; if (!col) return;
+  const r = ((col.typed || {}).s || {})[n] || {}, here = [col.key, n];
+  if (col.type === 'fm' && !(col.typed && col.typed.lv)) { bkPut(col, n, { ...r, v: null, fb: !r.fb }); bkSaveLib(); return bkFocus(here); }   // feedback only: a click switches Feedback complete
+  td.innerHTML = '<input type="text" class="bkcin" value="' + esc(seed || bkCellVal(r, col)) + '" aria-label="Score for ' + esc(n) + '">';
+  const inp = td.querySelector('input'); inp.focus(); if (seed) inp.setSelectionRange(seed.length, seed.length); else inp.select();
   let done = false;
-  const finish = keep => {
-    if (done) return; done = true;
-    if (keep) {
-      const t = inp.value.trim().toLowerCase(), s = { ...(col.typed.s || {}) };
-      if (!t) delete s[n];
-      else if (/^m(issing)?$/.test(t)) s[n] = { v: null, st: 'missing' };
-      else if (/^e(xcused)?$/.test(t)) s[n] = { v: null, st: 'excused' };
-      else if (/>/.test(t) && t.split('>').every(x => x.trim() && !isNaN(+x.replace('%', '')))) { const vs = t.split('>').map(x => Math.round(+x.replace('%', '') * 2) / 2); s[n] = { v: vs.pop(), st: r.st === 'late' ? 'late' : '', tries: vs }; }   // "7 > 10": a first try and its retake
-      else if (!isNaN(+t.replace('%', ''))) s[n] = { v: Math.round(+t.replace('%', '') * 2) / 2, st: r.st === 'late' ? 'late' : '' };
-      col.typed = { ...col.typed, s };
-      if (col.it) { col.it.typed = col.typed; bkSaveLib(); }
-    }
-    bkDraw();
-    const back = document.querySelector('[data-bked="' + CSS.escape(col.key) + '"][data-bkn="' + CSS.escape(n) + '"]'); if (back) back.focus();
+  const finish = (keep, dr, dc) => {
+    if (done || !inp.isConnected || inp.dataset.off) return; done = true;
+    if (keep) { const rec = bkParse(inp.value, r, col); if (rec === undefined) { if (inp.value.trim() !== bkCellVal(r, col)) bkBad(col); } else { bkPut(col, n, rec); bkSaveLib(); } }
+    bkFocus(dr || dc ? bkNext(td, dr, dc) || here : here);
   };
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(false); } });
+  inp.addEventListener('keydown', e => {
+    const k = e.key, s = e.shiftKey ? -1 : 1;
+    if (k === 'Enter' || k === 'Tab' || k === 'ArrowUp' || k === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); finish(true, k === 'Tab' ? 0 : k === 'Enter' ? s : k === 'ArrowUp' ? -1 : 1, k === 'Tab' ? s : 0); }
+    else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(false); }
+  });
   inp.addEventListener('blur', () => finish(true));
+}
+// Cells copied from a spreadsheet, pasted onto a cell: each line goes to the next student down, each tab to the next assignment across. One Undo takes it all back.
+function bkGridPaste(td, text) {
+  const lines = text.replace(/\r/g, '').replace(/\n+$/, '').split('\n'), rows = [...td.closest('tbody').rows].filter(x => !x.classList.contains('bkfoot'));
+  let row = rows.indexOf(td.parentElement), put = 0, bad = 0, over = 0;
+  for (const line of lines) {   // every student and every column keeps its place: a cell that can't be typed in (a paper's score) is passed over
+    const tr = rows[row++]; if (!tr) { over++; continue; }
+    line.split('\t').forEach((v, j) => {
+      const c = tr.cells[td.cellIndex + j], col = c && c.dataset.bked && bk.cols.find(x => x.key === c.dataset.bked); if (!col || !v.trim()) return;
+      if (col.type === 'fm' && !(col.typed && col.typed.lv)) return;
+      const n = c.dataset.bkn, rec = bkParse(v, ((col.typed || {}).s || {})[n] || {}, col); if (rec === undefined) { bad++; return; }
+      bkPut(col, n, rec); put++;
+    });
+  }
+  if (put) bkSaveLib();
+  bkFocus([td.dataset.bked, td.dataset.bkn]);
+  toast(put + ' pasted' + (bad ? ', ' + bad + ' left as they were (not a score)' : '') + (over ? '. There were more lines than students; the extra ones were left out.' : '.'));
 }
 function bkCopy() {
   const t = $('#bkTab'); if (!t) return;
@@ -692,7 +743,7 @@ function bkClick(e) {
   if (d.bkatype) { bkAdd.type = d.bkatype; for (const x of document.querySelectorAll('[data-bkatype]')) x.setAttribute('aria-pressed', String(x === b)); return bkAddRows(); }
   if (d.bkamode) { bkAdd.mode = d.bkamode; for (const x of document.querySelectorAll('[data-bkamode]')) x.setAttribute('aria-pressed', String(x === b)); $('#bkaMax').hidden = d.bkamode === 'pct'; return bkAddRows(); }
   if (d.bkast) { const n = c.names[+d.bkai], r = bkAdd.s[n] || {}; bkAdd.s[n] = { ...r, st: r.st === d.bkast ? '' : d.bkast, v: d.bkast === 'late' || r.st === d.bkast ? r.v : null }; return bkAddRows(); }
-  if (d.bkasave != null) { if (bkAddSave()) { bkAdd = null; bkDraw(); } return; }
+  if (d.bkasave != null) return bkAddDone();
 }
 function bkChange(e) {
   if (!bkHere(e)) return;
@@ -711,12 +762,26 @@ function bkInput(e) {
     if (bkAdd.type === 'xc') { p.textContent = bkXcSay(t.value); $('#bkaCount').textContent = bkClass().names.filter(x => +((bkAdd.s[x] || {}).v) > 0).length + ' of ' + bkClass().names.length + ' given extra credit'; return; }
     const max = bkAddMax(); p.textContent = t.value === '' || isNaN(+t.value) ? '' : (max ? roundPct(+t.value / max * 100) : roundPct(+t.value)) + '%'; return; }
 }
+// Added: straight to the new column's first student, ready to type down it.
+function bkAddDone() { if (bkAddSave()) { bkAdd = null; bkFocus([bk.hi, bkClass().names[0]]); } }
 function bkPasted(e) {
-  if (!bkHere(e) || e.target.id !== 'bkaPaste') return;
-  e.preventDefault(); bkPaste((e.clipboardData || window.clipboardData).getData('text')); e.target.value = '';
+  if (!bkHere(e)) return;
+  const text = (e.clipboardData || window.clipboardData).getData('text'), td = e.target.closest && e.target.closest('[data-bked]');
+  const inp = td && td.querySelector('input');
+  if (td && (!inp || /[\t\n]/.test(text.trim()))) { e.preventDefault(); if (inp) inp.dataset.off = 1; return bkGridPaste(td, text); }   // the box's own text is not saved over what is pasted
+  if (e.target.id !== 'bkaPaste') return;
+  e.preventDefault(); bkPaste(text); e.target.value = '';
 }
 function bkKey(e) {
-  if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset && e.target.dataset.bked && !e.target.querySelector('input')) { e.preventDefault(); return bkCellEdit(e.target); }
+  const t = e.target, k = e.key;
+  if (k === 'Enter' && !e.isComposing && (t.id === 'bkaName' || t.id === 'bkaMax')) { e.preventDefault(); return bkAddDone(); }
+  if (t.dataset && t.dataset.bked && !t.querySelector('input') && !e.ctrlKey && !e.metaKey && !e.altKey) {   // a cell with the keys on it, as in a spreadsheet
+    const mv = { ArrowDown: [1, 0], ArrowUp: [-1, 0], ArrowRight: [0, 1], ArrowLeft: [0, -1], Tab: [0, e.shiftKey ? -1 : 1] }[k], col = bk.cols.find(x => x.key === t.dataset.bked), fm = col && col.type === 'fm' && !(col.typed && col.typed.lv);
+    if (k === 'Enter' || k === ' ') { e.preventDefault(); return bkCellEdit(t); }
+    if (mv) { const at = bkNext(t, mv[0], mv[1]), x = at && t.closest('tbody').querySelector('[data-bked="' + CSS.escape(at[0]) + '"][data-bkn="' + CSS.escape(at[1]) + '"]'); if (x || k !== 'Tab') e.preventDefault(); bkShow(x); return; }
+    if ((k === 'Delete' || k === 'Backspace') && col) { e.preventDefault(); bkPut(col, t.dataset.bkn, null); bkSaveLib(); return bkFocus([col.key, t.dataset.bkn]); }
+    if (k.length === 1 && /[\d.,+me-]/i.test(k) && !fm) { e.preventDefault(); return bkCellEdit(t, k); }
+  }
   if (bk.tab === 'one' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.altKey && !e.ctrlKey && !e.metaKey && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) { const c = bkClass(); if (!c) return; const n = bk.stu + (e.key === 'ArrowRight' ? 1 : -1); if (n >= 0 && n < c.names.length) { e.preventDefault(); bkGoStu(n); } }
   if (e.key === 'Escape' && $('#bkPop')) { e.preventDefault(); e.stopPropagation(); bkPopClose(); }
 }

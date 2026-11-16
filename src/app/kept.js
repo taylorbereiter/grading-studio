@@ -17,7 +17,8 @@ async function kdo(name, mode, fn) {
   return new Promise((res, rej) => { const tx = db.transaction(name, mode), req = fn(tx.objectStore(name)); tx.oncomplete = () => res(req && req.result); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); });
 }
 const kget = (name, k) => kdo(name, 'readonly', o => o.get(k)).catch(() => null);
-let keptMeta = new Map(), keptRead = false;   // keptRead: the list has been read from the browser, so a download missing from it is really gone
+// keptRead: the list has been read from the browser, so a download missing from it is really gone
+let keptMeta = new Map(), keptRead = false;
 async function loadKept() {
   try { const all = await kdo('meta', 'readonly', o => o.getAll()); keepOk = true; keptMeta = new Map((all || []).map(m => [m.id, m])); keptRead = true; } catch { keptMeta = new Map(); }
   await keptFbCounts();
@@ -32,14 +33,16 @@ async function keptFbCounts() {
     if (m.fb != null || !m.n) continue;
     const it = cardOfKept(m.id); if (!it || it.type !== 'fm') continue;
     try {
-      const work = await kget('work', m.id), fb = work && workCounts(work).fb; if (!fb) continue;   // none complete: nothing to store
+      // none complete: nothing to store
+      const work = await kget('work', m.id), fb = work && workCounts(work).fb; if (!fb) continue;
       const n = { ...m, fb };
       await kdo('meta', 'readwrite', o => o.put(n, m.id)); keptMeta.set(m.id, n);
     } catch (e) { console.error(e); }
   }
 }
 let askedKeep = false;
-function askToKeep() {   // asks the browser not to clear this site's storage when the disk gets full
+// asks the browser not to clear this site's storage when the disk gets full
+function askToKeep() {
   if (askedKeep || !navigator.storage || !navigator.storage.persist) return;
   askedKeep = true; navigator.storage.persist().catch(() => {});
 }
@@ -50,7 +53,8 @@ const underId = id => IDBKeyRange.bound(id + '|', id + '|\uffff');
 const paperHeads = async () => ((await kdo('papers', 'readonly', o => o.getAllKeys())) || []).filter(k => !String(k).includes('|'));
 const paperDrop = id => kdo('papers', 'readwrite', o => { o.delete(id); o.delete(underId(id)); });
 async function paperPut(id, rec) {
-  const held = e => e.data ? e.data.buffer.byteLength : 0;   // a view is stored with its whole buffer
+  // a view is stored with its whole buffer
+  const held = e => e.data ? e.data.buffer.byteLength : 0;
   if (rec.entries.reduce((a, e) => a + held(e), 0) <= PAPER_ONE) return kdo('papers', 'readwrite', o => { o.delete(underId(id)); o.put(rec, id); });
   try {
     const entries = [];
@@ -84,7 +88,8 @@ async function paperGet(id) {
     return { ...rec, entries };
   } catch (e) { console.error(e); return null; }
 }
-let keepWait = null;   // the papers still going into the browser
+// the papers still going into the browser
+let keepWait = null;
 async function keepPapers(b, label, list, again) {
   try {
     const more = {};
@@ -92,7 +97,8 @@ async function keepPapers(b, label, list, again) {
       await paperPut(b.id, { id: b.id, label: label || '', entries: list });
       more.papers = true; more.size = list.reduce((a, e) => a + (e.data ? e.data.length : 0), 0);
     }
-    const m = { ...(keptMeta.get(b.id) || {}), id: b.id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (keptMeta.get(b.id) || {}).asg, ...more };   // only now: a big download takes a while, and she may have saved since
+    // only now: a big download takes a while, and she may have saved since
+    const m = { ...(keptMeta.get(b.id) || {}), id: b.id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (keptMeta.get(b.id) || {}).asg, ...more };
     await kdo('meta', 'readwrite', o => o.put(m, b.id)); keepOk = true; keptMeta.set(b.id, m);
     folderPapers(b);
   } catch (e) {
@@ -103,13 +109,17 @@ async function keepPapers(b, label, list, again) {
 let keepT = null;
 function keepWork(b, data) {
   const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name }), n: b.students.length, t: data.t };
-  if (typeof fcSeen === 'function') fcSeen(b.id);   // the day's count of finished papers starts from where this download stood (src/focus.js)
-  delete m.fb; Object.assign(m, workCounts(data));   // fb is there only while some feedback is complete
-  if (!data.returned) delete m.ret;
+  // the day's count of finished papers starts from where this download stood (src/focus.js)
+  if (typeof fcSeen === 'function') fcSeen(b.id);
+  // fb is there only while some feedback is complete
+  delete m.fb; delete m.sent; delete m.sentT; Object.assign(m, workCounts(data));
+  // ret was set by any export alone: never read again
+  delete m.ret; if (!(data.returned && data.returned.ok)) delete m.back;
   keptMeta.set(b.id, m);
   if (typeof fcRender === 'function') fcRender();
   return kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })
-    .catch(e => { keepOk = false; console.error(e); if (e && e.name === 'InvalidStateError') keepDbP = null; keepDb().catch(() => { keepDbP = null; }); return false; });   // so Try again reopens a store that went away
+    // so Try again reopens a store that went away
+    .catch(e => { keepOk = false; console.error(e); if (e && e.name === 'InvalidStateError') keepDbP = null; keepDb().catch(() => { keepDbP = null; }); return false; });
 }
 // The card a download belongs to: the one it was last opened through, or else one that opens it. Its rubric lives on the card, so every way in has to find it.
 function cardOfKept(id) {
@@ -124,10 +134,13 @@ async function reopenKept(id, assignment) {
   await intake(rec.entries, rec.label, assignment || cardOfKept(id), true);
 }
 async function forgetKept(id) {
-  try { await gsData.forget(id); }   // first, so if this fails it can simply be clicked again
+  // first, so if this fails it can simply be clicked again
+  try { await gsData.forget(id); }
   catch (e) { console.error(e); return toast('That didn’t work, so nothing was forgotten. Try again.'); }
-  lsPut(forgotKey(id), String(Date.now()));   // any tab with it open lets go now
-  await exForgetWork(id);   // its strong examples stay; whose they were goes
+  // any tab with it open lets go now
+  lsPut(forgotKey(id), String(Date.now()));
+  // its strong examples stay; whose they were goes
+  await exForgetWork(id);
   await noteForgotten(id);
   try {
     await paperDrop(id);
@@ -140,7 +153,8 @@ async function forgetKept(id) {
   try { localStorage.removeItem(savedKey(id)); } catch {}
   const seen = store.get('gs.openSeen', {}); if (seen[id]) { delete seen[id]; store.set('gs.openSeen', seen); }
   keptMeta.delete(id); renderLib();
-  vkSweep();   // a video file kept for that download, when nothing else names it
+  // a video file kept for that download, when nothing else names it
+  vkSweep();
 }
 const fmtSize = b => b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? Math.round(b / 1e6) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
 // The lists of kept work are on Today (today.js draws them).
@@ -160,16 +174,19 @@ const addTag = f => {
 async function loadAdded() {
   let recs = [];
   try { recs = (await idbDo('readonly', o => o.getAll(underId(batch.id)))) || []; } catch { return; }
-  for (const r of recs.filter(r => r.bid === batch.id && r.key !== REF_KEY).sort((a, b) => a.added - b.added)) {   // readings sit in the same store, and aren't a student
+  // readings sit in the same store, and aren't a student
+  for (const r of recs.filter(r => r.bid === batch.id && r.key !== REF_KEY).sort((a, b) => a.added - b.added)) {
     let st = batch.students.find(s => s.key === r.key);
-    if (!st) { st = { key: r.key, files: [], grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} }; batch.students.push(st); }   // added from a later scan
+    // added from a later scan
+    if (!st) { st = { key: r.key, files: [], grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} }; batch.students.push(st); }
     if (st.files.some(f => f.path === r.path)) continue;
     const f = await makeFile(r.path, r.data); f.added = r.added; f.akey = r.key; if (r.from) f.from = r.from; st.files.push(f);
   }
 }
 function pickAdd(st) {
   const inp = document.createElement('input');
-  inp.type = 'file'; inp.multiple = true;   // any kind of file
+  // any kind of file
+  inp.type = 'file'; inp.multiple = true;
   inp.onchange = () => addFiles(st, [...inp.files].map(f => ({ path: f.name, file: f })));
   inp.click();
 }

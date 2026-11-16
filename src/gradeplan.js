@@ -8,22 +8,15 @@ var gpReady = false;
 const GP_FREE = 20, GP_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /* ---------- the teacher's pace ---------- */
-// Seconds a paper takes: this assignment's own once three of its papers were finished on days its time was counted, else the same from
-// every assignment, else the focus sessions' pace. Nothing is guessed: with none of these there is no time, only the number of papers.
+// Seconds a paper takes on one assignment: all the time counted on it over all its papers finished, from its own papers only. Nothing
+// is borrowed from other assignments: before its first paper there is no time, only the number of papers. gpPaceN says how many
+// papers it comes from, so one from fewer than three can be called rough.
 // Worked out once for each drawing: what is kept for one pass is dropped as soon as the code drawing it has finished.
 let gpMemo = null;
 function gpMemoOf(k, f) { if (!gpMemo) { gpMemo = {}; queueMicrotask(() => { gpMemo = null; }); } return k in gpMemo ? gpMemo[k] : (gpMemo[k] = f()); }
-function gpPaces() {
-  return gpMemoOf('pace', () => {
-    const L = fcLog(), by = new Map(); let os = 0, op = 0;
-    for (const d of Object.values(L.days)) {
-      if (!d || !d.pa) continue;
-      for (const [k, n] of Object.entries(d.pa)) { const t = (d.a || {})[k] || 0; if (!k || !(n > 0) || !(t > 0)) continue; os += t; op += n; const b = by.get(k) || [0, 0]; b[0] += t; b[1] += n; by.set(k, b); }
-    }
-    const all = op >= 3 ? os / op : fcPace();
-    return id => { const b = by.get(id); return b && b[1] >= 3 ? b[0] / b[1] : all; };
-  });
-}
+// The same sums as the tracker's line on the assignment (tkAsg), so the two never disagree.
+const gpPaceN = id => { const t = tkReady && tkAsg(id); return t && t.s > 0 ? t.p : 0; };
+const gpPaces = () => id => { const t = tkReady && tkAsg(id); return t && t.s > 0 && t.p > 0 ? t.s / t.p : 0; };
 // The newest set of papers kept for each assignment.
 function gpKept() {
   return gpMemoOf('kept', () => {
@@ -35,7 +28,7 @@ function gpKept() {
 // Seconds still to go on one assignment's papers at her pace, or 0.
 function gpLeft(id) {
   if (!gpReady || !id) return 0;
-  const m = gpKept().get(id); if (!m || m.ret) return 0;
+  const m = gpKept().get(id); if (!m || keptBack(m)) return 0;
   return keptState(m).left * gpPaces()(id);
 }
 // What is due between two days and still to grade: papers left in a set that is in, or the whole class for work not in yet that is
@@ -43,17 +36,18 @@ function gpLeft(id) {
 function gpDue(from, to, except) {
   const by = gpKept(), pace = gpPaces(), today = fcToday(), out = [];
   for (const c of lib.classes) for (const u of c.units || []) for (const it of u.items || []) {
-    if (!it.due || it.due < from || it.due > to || it.id === except || it.typed || it.type === 'xc') continue;
+    if (!it.due || it.due < from || it.due > to || it.id === except || it.typed && !it.batchId || it.type === 'xc') continue;
     const m = by.get(it.id); let left = 0;
-    if (m) { if (m.ret) continue; left = keptState(m).left; } else if (it.due >= today && !it.batchId) left = (c.names || []).length;
+    if (m) { if (keptBack(m)) continue; left = keptState(m).left; } else if (it.due >= today && !it.batchId) left = (c.names || []).length;
     if (left > 0) out.push({ it, c, left, secs: left * pace(it.id), inn: !!m });
   }
   return out.sort((a, b) => a.it.due.localeCompare(b.it.due));
 }
-const gpSum = list => list.reduce((a, x) => ({ n: a.n + 1, p: a.p + x.left, s: a.s + x.secs }), { n: 0, p: 0, s: 0 });
+// A total in time only when every set in it has a pace of its own; else -1, and the papers are said instead.
+const gpSum = list => list.reduce((a, x) => ({ n: a.n + 1, p: a.p + x.left, s: a.s < 0 || !(x.secs > 0) ? -1 : a.s + x.secs }), { n: 0, p: 0, s: 0 });
 // "about 2 hr 20 min" at her pace, or the papers when there is no pace yet.
 const gpSay = e => e.s >= 60 ? '<span>about</span> <span data-raw>' + esc(tkDur(e.s)) + '</span>' : '<span>' + esc(people(e.p, 'paper')) + '</span>';
-const gpMon = day => { const d = new Date(day + 'T12:00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoDay(d.getTime()); };
+const gpMon = fcMon;
 const gpAdd = (day, n) => { const d = new Date(day + 'T12:00:00'); d.setDate(d.getDate() + n); return isoDay(d.getTime()); };
 
 // Under the date in an assignment's box: what else is due that week, so a week that piles up is seen while there is time to move it.
@@ -99,26 +93,15 @@ function gpFreeRow(rows, i) {
   return '<div class="trow gpfree"><span class="tt"></span><span class="nt"><b>Free period</b><span class="ns" data-raw>' + esc(planTime(g.from) + ' – ' + planTime(g.to)) + '</span></span></div>';
 }
 
-/* ---------- the top of the Focus card: a free period, and where she left off ---------- */
+/* ---------- for the Focus card's suggestion: a free period, and where she left off ---------- */
 const GP_CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.3 1.6"/></svg>';
-function gpTopHtml(w) {
-  if (!gpReady) return '';
-  let h = '';
-  const f = gpFreeNow();
-  if (f) {
-    const d = new Date(), left = f.b - (d.getHours() * 60 + d.getMinutes()), n = Math.max(5, Math.min(60, Math.floor((left - 5) / 5) * 5));
-    h += '<div class="fcnote"><div class="fcnh">' + GP_CLOCK + '<span>Free period now</span><span data-raw>' + esc(planTime(f.from) + ' – ' + planTime(f.to)) + '</span></div>' +
-      (w ? '<p><b data-raw>' + esc(w.name) + '</b>' + (w.mark ? ' · <span>' + esc(fcWorkSay(w)) + '</span>' : '') + '</p>' : '') +
-      '<div class="fcgo"><button class="btn" data-fcstart="' + n + '">' + FC_PLAY + '<span>' + esc('Grade for ' + n + ' minutes') + '</span></button></div></div>';
-  }
-  // Where she left off: the set worked on last, not finished, from the last week. Starting it reopens the paper she was on.
+// The minutes a free period going on leaves for a session, in fives, with five to spare.
+const gpFreeLen = f => { const d = new Date(), left = f.b - (d.getHours() * 60 + d.getMinutes()); return Math.max(5, Math.min(60, Math.floor((left - 5) / 5) * 5)); };
+// Where she left off: the set worked on last, not finished, from the last week, and not the one open now.
+function gpBack() {
+  if (!gpReady) return null;
   const m = homeGroups().mark.filter(x => x.papers && keptState(x).left && (keptState(x).done || x.partial)).sort((a, b) => b.t - a.t)[0];
-  if (m && Date.now() - m.t > 20 * 60e3 && Date.now() - m.t < 7 * 864e5 && !(batch && batch.id === m.id && !$('#app').hidden)) {
-    const wh = keptWhere(m), when = new Date(m.t), day = isoDay(m.t) === fcToday() ? when.toLocaleTimeString(LANG_LOCALE, { hour: 'numeric', minute: '2-digit' }) : when.toLocaleDateString(LANG_LOCALE, { weekday: 'long' }) + ' ' + when.toLocaleTimeString(LANG_LOCALE, { hour: 'numeric', minute: '2-digit' });
-    h += '<div class="fcback"><div class="t"><b>Pick up where you left off</b><span data-raw>' + esc(m.name || 'Student work') + '</span><i><span>' + esc(people(keptState(m).left, 'paper') + ' left') + '</span> · <span data-raw>' + esc([wh.cls ? wh.cls.name : '', day].filter(Boolean).join(' · ')) + '</span></i></div>' +
-      '<button class="btn sm" data-gppick="' + esc(m.id) + '" title="' + esc(tr('Opens the paper you were on and starts the timer')) + '">Pick up</button></div>';
-  }
-  return h;
+  return m && Date.now() - m.t > 20 * 60e3 && Date.now() - m.t < 7 * 864e5 && !(batch && batch.id === m.id && !$('#app').hidden) ? m : null;
 }
 
 /* ---------- shortest papers first ---------- */
@@ -136,7 +119,8 @@ function gpShortNext(left) {
   if (!gpReady || !batch || !fcConf().short) return -1;
   const r = fcRun(); if (!r || (r.st !== 'run' && r.st !== 'paused') || r.w !== 'mark:' + batch.id) return -1;
   let best = -1, bl = Infinity;
-  batch.students.forEach((st, i) => { if (i === cur || !left(st)) return; const l = gpLen(st) || 1e9; if (l < bl) { bl = l; best = i; } });   // a student with no paper in comes last
+  // a student with no paper in comes last
+  batch.students.forEach((st, i) => { if (i === cur || !left(st)) return; const l = gpLen(st) || 1e9; if (l < bl) { bl = l; best = i; } });
   return best;
 }
 
@@ -148,7 +132,7 @@ function gpLookHtml() {
   if ((dow + 6) % 7 < (c.wk + 6) % 7 || L.lbHid === mon) return '';
   const days = []; for (let k = mon; k <= today; k = gpAdd(k, 1)) days.push(k);
   const t = tkSum(days, L, tkPlan()), lessons = Object.keys(t.la).filter(Boolean).length, papers = t.p, gday = t.list.filter(d => d.g >= 60).length;
-  const back = [...keptMeta.values()].filter(m => m && m.ret && isoDay(m.ret) >= mon && !(m.newer && keptMeta.has(m.newer)));
+  const back = [...keptMeta.values()].filter(m => m && keptBack(m) && isoDay(keptBack(m)) >= mon && !(m.newer && keptMeta.has(m.newer)));
   const wait = homeGroups().mark.filter(m => keptState(m).left).slice(0, 4), pace = gpPaces();
   const next = gpSum(gpDue(gpAdd(mon, 7), gpAdd(mon, 13)));
   const tile = (label, v, sub) => '<div><span>' + label + '</span><b>' + v + '</b><i>' + sub + '</i></div>';
@@ -197,13 +181,12 @@ $('#setPane').addEventListener('change', e => {
 
 /* ---------- presses ---------- */
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-gppick], [data-gplbhide]'); if (!t) return;
-  if (t.dataset.gppick) { fcS.pick = 'mark:' + t.dataset.gppick; return fcStart(fcConf().len, fcS.pick, false); }
+  if (!e.target.closest('[data-gplbhide]')) return;
   const L = fcLog(); L.lbHid = gpMon(fcToday()); fcLogSet(L); homeRender();
 });
 document.addEventListener('change', e => { if (e.target.matches('[data-fcshort]')) fcConfSet({ short: e.target.checked }); });
 // A free period starts or ends as the clock goes on, so the card is looked at again each minute.
 setInterval(() => { if (shellReady && !document.hidden) fcRender(); }, 60e3);
 
-window.__gs = Object.assign(window.__gs || {}, { gpPaces: () => gpPaces(), gpDue, gpLeft, gpFreeNow, gpGaps, gpLen, gpShortNext, gpLookHtml, gpDueHint });
+window.__gs = Object.assign(window.__gs || {}, { gpPaces: () => gpPaces(), gpPaceN, gpDue, gpLeft, gpFreeNow, gpGaps, gpLen, gpShortNext, gpLookHtml, gpDueHint });
 gpReady = true;

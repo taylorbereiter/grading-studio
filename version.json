@@ -1,23 +1,22 @@
 {
- "version": "1.28.27",
- "build": "ae09643d0a14",
+ "version": "1.28.31",
+ "build": "73158905fc0a",
  "notes": [
-  "Planning your grading. Each set shows about how long its papers will take at your own pace: on the Focus card, on the assignment’s card, in the week in To do, and under the date when you set when work is due. The Focus card also offers a free period between your classes, picks up the set you were last on, and can start small with Just 3 papers or the shortest papers first.",
-  "A goal for each focus session: a few papers, the whole set, a to-do or a few words of your own, suggested from your pace. The timer shows how far along you are, the end of the session says whether you got there, and what is left goes into your next session on the same work. Today also counts your sessions.",
-  "Your grading goal can be for a day or a week, and a daily goal for some days only. A set can have a day to finish it by, with the papers a day that takes. On the day you choose, Today shows a look back at the week. Settings, Focus and goals switches each of these on or off."
+  "Import a gradebook from your school’s system or a spreadsheet more safely: names that are close to an assignment you have are matched for you to check (Same, New or Skip), each score that differs from yours can be kept or replaced, and the file’s categories go into your own types.",
+  "Nobody is added to a roster unless you choose that, students missing from the file are left as they are, and one Undo takes the whole import back. A class with no students yet can take its roster, student IDs and emails from the file."
  ],
  "files": {
-  "index.html": "7154abcb0a339f970e4142b2ee3bd78719fc2e614b4aa7e7bd27d0edde4ca3b2",
-  "planner.html": "5a2d5957b537e0d47fe3c4064d44096bccfced2a69e865c75696a6f976b77a0a"
+  "index.html": "cb9a6cc3bdd24cf2422ceecd589dd6ab6f44db945803ea393ffb5b87f2250f54",
+  "planner.html": "fe7300dd9f9c76376a1d3ea669a8a55c4aae0761346afd3dbd1bd60da8d870fa"
  },
  "langs": {
-  "lang/zh-Hant.js": "99e0aef17d1fc2ca62d71f744406c0ad8e183a9277835ff772baed5bf23bf542",
-  "lang/zh-Hans.js": "23825ad27c9ced428284dfeaf218896a63aebc6bcd5f7544a8f6892f213f6a23",
-  "lang/es.js": "8084cd2a9cf151df452794c63b6b3644978d74f59160e28b025c36df67854350",
-  "lang/fr.js": "274e800047ba963e362c91fb3c28137110219b1787e268c6137b020dd14c909b",
-  "lang/de.js": "e02b0921779bb3e6b95173f3d1533ded182ca6524ec81e6313a8123330ae01fa",
-  "lang/pt-BR.js": "e690043ad1be9c2bab3c0c6d47a69281660f86f2f8e6d74c8e31a15594009ac2",
-  "lang/ja.js": "0b31e474d09a9e7ff45a28564e3d3810a4e9576d31c3a94d15cd116f305e9af9",
-  "lang/ko.js": "1c18c6af95bed042c140ec619f1f5f7e55ac64913488e0c613cd9839c45b74d0"
+  "lang/zh-Hant.js": "10dfa7de387abc6a5e80a56f8cda49ca4d21be6529c3df4e6cfc8da6c011c779",
+  "lang/zh-Hans.js": "81ca403135e7a9b032297d6745df3869d2807b772eca43c45253c58249d6c51c",
+  "lang/es.js": "984fb1d9eb40f2bb364e300f2d21c417f7c6c33f7e5747cbe7b4cbb8ae5cba46",
+  "lang/fr.js": "3e5c23f3a336c9ef8f4ce321774d50fdcfcf28b852a361ef17bf3043f915b428",
+  "lang/de.js": "3821ac202338f5a6a99a1a6eb9b98c723ff6657f7b14e1a9b6d65e16120a3cbc",
+  "lang/pt-BR.js": "1c89fe78f13e78816ef38a7d2f8da7964751366fcf45b50abc0b4ea7f9c28768",
+  "lang/ja.js": "644e9ae2a8a7e0ab47c7177912c42d57264821b8d4c31e10878db98d567c26d0",
+  "lang/ko.js": "a9d7cde5c616743022971fac4ad4754bafce5f3993e14b1fcfa16dd58843c66f"
  }
 }
