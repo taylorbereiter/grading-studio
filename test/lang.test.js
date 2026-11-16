@@ -367,7 +367,7 @@ test('session goals, from the Focus card through a session, a break and the end,
   await up(); await page.waitForSelector('#fcPanel .fcsgr'); await miss(page, 'the focus panel, a session goal not reached', own);
   await page.click('#fcPanel [data-fcbreak]'); await page.waitForSelector('#fcPanel .fcsgnext'); await miss(page, 'the focus panel, a break with the next goal', own);
   await up(); await page.waitForSelector('#fcPanel [data-fcother]'); await miss(page, 'the focus panel, the break over', own);
-  await page.click('#fcPanel [data-fcstart]'); await page.evaluate(() => { const r = window.__gs.fcRun(); r.p0 -= 2; window.__gs.fcRunSet(r); });
+  await page.click('#fcPanel [data-fcstart]'); await page.evaluate(() => { const r = window.__gs.fcRun(); r.pg = 2; window.__gs.fcRunSet(r); });
   await goTo(page, '#/'); await page.waitForSelector('#fcPanel .fcsg.met'); await miss(page, 'the focus panel, the second session, its goal reached', own);
   await page.click('#fcPanel [data-fcstop]'); await page.waitForSelector('#fcPanel .fcsgr.met'); await miss(page, 'the focus panel, done, two sessions today', own);
   await page.click('#fcPanel [data-fcclose]');

@@ -1,4 +1,10 @@
 {
+  "1.28.38": [
+    "Fixes for typed percents: editing a typed-in column keeps percents and extra credit, a percent-only score counts as scored on cards and in the sidebar, and No papers: just type the scores… shows only on assignments with no papers."
+  ],
+  "1.28.37": [
+    "“Just one paper” in Focus no longer ends straight away when Grading Studio is open in two windows, such as the installed app and the website. A session now counts only the papers saved while it runs, and every window shows the same count."
+  ],
   "1.28.36": [
     "Type a percent as a score and it stays the score. On a points paper, type 73% in the score box. With a rubric, choose Score as a percent from the score's ⋯ menu. The points that match on the assignment's scale show beside it, and moving rubric rows later doesn't change it.",
     "In the gradebook, type 73% in a points column, or 8 + 1 to give one score a point of extra credit.",

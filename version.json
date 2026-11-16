@@ -1,13 +1,11 @@
 {
- "version": "1.28.36",
- "build": "dd5c66eb73d5",
+ "version": "1.28.38",
+ "build": "c80dc618beb3",
  "notes": [
-  "Type a percent as a score and it stays the score. On a points paper, type 73% in the score box. With a rubric, choose Score as a percent from the score's ⋯ menu. The points that match on the assignment's scale show beside it, and moving rubric rows later doesn't change it.",
-  "In the gradebook, type 73% in a points column, or 8 + 1 to give one score a point of extra credit.",
-  "An assignment with no papers can go straight to typing scores: Add papers…, then No papers: just type the scores…. The class gradebook opens with the first student's box ready."
+  "Fixes for typed percents: editing a typed-in column keeps percents and extra credit, a percent-only score counts as scored on cards and in the sidebar, and No papers: just type the scores… shows only on assignments with no papers."
  ],
  "files": {
-  "index.html": "3d0ac3e69bfa4a6bce7d989b824f57d9ab29a7454b5f5196a2047d1351614f05",
+  "index.html": "119c317b37cf3ad47020f6cb871bac061dd64394dbe81888dbdfe86fcfdaa064",
   "planner.html": "703db0010a82aecbc78633a28f340f89b28159e1ed67c3a94b233fd96ba5bffe"
  },
  "langs": {
