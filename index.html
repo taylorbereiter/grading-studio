@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"397fa511","zh-Hans":"6bcd7ab3","es":"bfc8f474","fr":"1ebc74df","de":"42637c81","pt-BR":"155b006c","ja":"7f64ea8d","ko":"92572ba5"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"f0e87a69","zh-Hans":"8f8df879","es":"b49f186c","fr":"2fbe2f1a","de":"e85b9908","pt-BR":"8bb2c13d","ja":"871c11b7","ko":"64d92d34"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -2150,7 +2150,7 @@ a.opchip:hover{text-decoration:underline}
 
 
 .main{position:relative}
-.tools{position:absolute;left:12px;top:12px;z-index:3;width:44px;margin:0;padding:5px;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:2px;max-height:calc(100% - 24px);overflow-x:hidden;overflow-y:auto;scrollbar-width:none;border-radius:var(--corner-5);box-shadow:var(--shadow)}
+.tools{position:absolute;left:12px;top:12px;z-index:4;width:44px;margin:0;padding:5px;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:2px;max-height:calc(100% - 24px);overflow-x:hidden;overflow-y:auto;scrollbar-width:none;border-radius:var(--corner-5);box-shadow:var(--shadow)}
 .tools::-webkit-scrollbar{display:none}
 .tools .tool{justify-content:center;padding:0;height:32px;flex:none}
 .tools .tool svg{width:18px;height:18px}
@@ -2283,6 +2283,9 @@ button.pavg:hover .v{text-decoration:underline}
 .grade .crit.on{background:var(--accent-soft)}
 .crit .cn{align-items:baseline;gap:8px;margin-bottom:3px;cursor:pointer}
 .crit .cn span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crit .cn .critstamp{flex:none;margin-left:auto;align-self:center;display:inline-grid;place-items:center;width:22px;height:20px;padding:0;border:1px solid transparent;border-radius:var(--corner-1);background:none;color:var(--muted);cursor:pointer;opacity:0;transition:opacity .12s}
+.crit.on .critstamp,.crit:hover .critstamp,.crit .critstamp:focus-visible{opacity:1}
+.crit .cn .critstamp:hover{border-color:var(--line);background:var(--surface);color:var(--accent)}
 .crit .cn em{flex:none;font-size:var(--text-body);font-weight:650;font-variant-numeric:tabular-nums}
 .crit .cn em small{font-size:var(--text-small);font-weight:500;color:var(--muted)}
 .crit .cn em:empty::before{content:"–";font-weight:500;color:var(--faint)}
@@ -2405,6 +2408,28 @@ button.pavg:hover .v{text-decoration:underline}
   .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek) .fstab{display:flex;align-items:center;justify-content:center;position:absolute;left:0;top:50%;z-index:7;width:22px;height:56px;margin-top:-28px;padding:0;border:1px solid var(--line-strong);border-left:0;border-top-right-radius:var(--corner-3);border-bottom-right-radius:var(--corner-3);background:var(--surface);color:var(--muted);font-size:var(--text-body);box-shadow:var(--shadow);cursor:pointer}
 }
 @media (prefers-reduced-motion:reduce){.gsfull .cols>.side,.gsfull .cols .tools{transition:none!important}}
+
+.solobar{display:flex;align-items:center;gap:10px;height:52px;box-sizing:border-box;padding:0 16px;background:var(--accent-soft);border-bottom:1px solid var(--line);position:relative;z-index:30}
+.solobar[hidden]{display:none}
+.solobar .sp{flex:1}
+.solo-ic svg,.solo-go svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;vertical-align:-3px}
+.solo-ic{color:var(--accent);display:flex}
+.solo-t{color:var(--accent);font-weight:650}
+.solo-n{font-weight:650;font-size:var(--text-lead);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.solo-x{position:relative;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none}
+.solo-fill{position:absolute;inset:0;background:var(--accent);opacity:.22;transform:scaleX(0);transform-origin:left}
+.solo-x.holding .solo-fill{transform:scaleX(1);transition:transform 1.5s linear}
+.solo-xl{position:relative}
+.solo-work{position:absolute;right:16px;top:48px;width:min(420px,calc(100vw - 32px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 14px}
+.solo-work h3{margin:0 0 8px;font-size:var(--text-body);font-weight:650}
+.solo-row{display:block;width:100%;text-align:left;background:none;border:0;border-radius:var(--r-sm);padding:0 6px;font:inherit;color:inherit}
+button.solo-row{cursor:pointer}
+button.solo-row:hover{background:var(--accent-soft)}
+.solo-row.on{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+html.solo .shell{height:calc(100vh - var(--savebar,0px) - 52px)}
+html.solo #rail,html.solo #side,html.solo #colL,html.solo #fsEdge,html.solo #fsTab,html.solo #progS,html.solo .app .top,html.solo #fcPanel,html.solo .toast,
+html.solo #paper .who .whon,html.solo #paper .who .whob,html.solo #readBtn,html.solo #addMenuBtn,html.solo #whoMore,html.solo #soloBtn,html.solo #grpBand,html.solo #grade .nav,html.solo #openRep,html.solo #pcard{display:none!important}
+html.solo .cols{--lw:0px}
 
 .spbtn{display:inline-flex;align-items:center;gap:6px}
 .spbtn[aria-pressed=true] span{display:none}
@@ -2530,12 +2555,20 @@ html.vidsized #paper .spb .media{max-width:none}
 .tngut{position:absolute;left:0;top:0;width:24px}
 .tnpage[data-g=m]{padding-left:34px}
 .tnpage[data-g=m] .tngut{width:30px}
-.tnpage[data-g=t]{padding-left:60px}
-.tnpage[data-g=t] .tngut{width:56px}
+.tnpage[data-g=t]{padding-left:76px}
+.tnpage[data-g=t] .tngut{width:72px}
 .tng{position:absolute;right:4px;display:flex;align-items:center;gap:3px;height:calc(var(--text-body) * 1.55)}
 .tngut i{font-size:var(--text-small);width:12px;text-align:center}
 .tnchip{border:0;background:none;font:inherit;font-size:var(--text-caption);color:var(--muted);font-variant-numeric:tabular-nums;padding:1px 3px;border-radius:var(--corner-1);cursor:pointer;user-select:none}
 .tnchip:hover{background:var(--hover);color:var(--accent)}
+
+.tnhide,.tnhid{display:inline-flex;align-items:center;justify-content:center;border:0;background:none;padding:0;width:14px;height:14px;border-radius:var(--corner-round);color:var(--faint);cursor:pointer}
+.tnhide svg{width:10px;height:10px}
+.tnhid svg{width:12px;height:12px}
+.tnhide{opacity:0}
+.tng:hover .tnhide,.tnhide:focus-visible{opacity:1}
+.tnhide:hover,.tnhid:hover{background:var(--hover);color:var(--accent)}
+@media (pointer:coarse){.tnhide{opacity:.7}.tnhide,.tnhid{width:20px;height:20px}.tnpage[data-g=t]{padding-left:84px}.tnpage[data-g=t] .tngut{width:80px}}
 
 .tnfoot{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;margin-top:auto;padding:6px 2px;border-top:1px solid var(--line);background:var(--bg)}
 .tnclock{font-variant-numeric:tabular-nums}
@@ -3030,6 +3063,23 @@ html.welcoming .shell{visibility:hidden}
 .tdrow.done .tdx{color:var(--faint);text-decoration:line-through}
 .tdm{display:flex;flex-wrap:wrap;align-items:center;gap:2px var(--space-3);font-size:var(--text-small);color:var(--muted)}
 .tdc{display:inline-flex;align-items:center;gap:var(--space-1)}
+.tdcat{padding:1px var(--space-2);border-radius:var(--corner-1);background:var(--surface-2);color:var(--fg-2);font-weight:500}
+.tdguess{font-size:var(--text-small)}
+#tdBy[hidden]{display:none}
+.tdcats{padding:var(--space-3) var(--space-4) var(--space-4);margin-top:var(--space-4)}
+.tdcatrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:var(--space-1);padding:var(--space-2) 0;border-top:1px solid var(--line)}
+.tdcatrow:first-child{border-top:0;padding-top:0}
+.tdcatrow input{min-width:0;height:30px;padding:0 var(--space-2);border:1px solid transparent;border-radius:var(--corner-2);background:none;color:var(--fg);font:inherit;font-size:var(--text-control)}
+.tdcatrow input:hover{border-color:var(--line)}
+.tdcatrow input:focus{border-color:var(--accent);outline:0;background:var(--surface)}
+.tdcatn{font-weight:600}
+.tdcatw{grid-column:1/-1;height:26px!important;font-size:var(--text-small)!important;color:var(--muted)!important}
+.tdcatw::placeholder{color:var(--faint)}
+.tdcatrow .icon{width:26px;height:26px;color:var(--muted)}
+.tdcatrow .icon:disabled{opacity:.35;cursor:default}
+.tdcatadd{display:flex;gap:var(--space-2);margin-top:var(--space-2);padding-top:var(--space-3);border-top:1px solid var(--line)}
+.tdcatadd input{flex:1;min-width:0;height:30px;padding:0 var(--space-2);border:1px solid var(--line);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
+.tdcats p{margin:var(--space-3) 0 0;font-size:var(--text-small);line-height:1.45}
 .tdtag{padding:1px var(--space-2);border-radius:var(--corner-1);background:var(--accent-soft);color:var(--accent);font-weight:500}
 .tddue{min-width:52px;text-align:right;font-size:var(--text-small);font-weight:500;color:var(--muted);white-space:nowrap}
 .tddue.now{color:var(--accent);font-weight:600}
@@ -3473,7 +3523,7 @@ body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #td
 .settch{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
 .settch select{max-width:100%}
 
-@media (hover:none){.pg .rchip{opacity:.92}.crit .sticks{opacity:1}}
+@media (hover:none){.pg .rchip{opacity:.92}.crit .sticks{opacity:1}.crit .critstamp{opacity:1}}
 
 @media (pointer:coarse){
   .tools .tool{height:40px}
@@ -3544,6 +3594,13 @@ body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #td
 .phqr .qr{width:200px;height:200px}
 .phurl{text-align:center;margin:0 0 12px;font-size:var(--text-control);color:var(--muted);overflow-wrap:anywhere}
 .phsteps{margin:0 0 12px;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.phdot{display:inline-block;width:10px;height:10px;border-radius:var(--corner-round)}
+.phlt{font-size:var(--text-title);margin:8px 0}
+.phln{color:var(--muted);margin:0 0 12px}
+.phslides{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.phslides li{padding:14px 16px}
+.phslides p{margin:6px 0 0;line-height:1.45}
+.phslides .phsn{color:var(--muted);font-size:var(--text-small);border-top:1px solid var(--line);padding-top:6px}
 
 .seatbar b{font-weight:600}
 .seatbar2{background:var(--bg)}
@@ -3911,12 +3968,16 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
     <header class="vhead"><h1>Time tracker</h1><span class="muted">Grading and planning, kept apart</span></header>
     <div id="tkBody"></div>
   </section>
+  <section class="view" id="vPlans" hidden>
+    <header class="vhead"><h1>Plans</h1></header>
+    <div id="phPlans"></div>
+  </section>
   <section class="view" id="vScores" hidden>
     <header class="vhead"><h1>Scores</h1></header>
     <div id="phScores"></div>
   </section>
   <section class="view" id="vTodo" hidden>
-    <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button><div class="pseg" id="tdView" role="group" aria-label="View"><button data-tdview="" aria-pressed="true">List</button><button data-tdview="week" aria-pressed="false">Week</button></div></header>
+    <header class="vhead"><h1>To do</h1><span class="muted" id="tdSay"></span><span class="sp"></span><button class="btn sm" id="tdDoneBtn" hidden></button><div class="pseg" id="tdBy" role="group" aria-label="Group the list"><button data-tdby="day" aria-pressed="true">By day</button><button data-tdby="cat" aria-pressed="false">By category</button></div><div class="pseg" id="tdView" role="group" aria-label="View"><button data-tdview="" aria-pressed="true">List</button><button data-tdview="week" aria-pressed="false">Week</button></div></header>
     <div class="tdchips" id="tdChips" role="group" aria-label="Show"></div>
     <div class="tdpplbar" id="tdPplBar" hidden></div>
     <div id="tdWeek" hidden></div>
@@ -3959,6 +4020,11 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
           <div class="lhead"><h2>Where your work is saved</h2></div>
           <p class="muted setp">Your classes, papers, marks and scores live in this browser at this address. A linked folder keeps a second copy by itself.</p>
           <p id="whereLine" style="margin:0;font-size:14px"></p>
+        </section>
+        <section class="lib setsec" id="setGoogle" data-sec="saving" data-need="google" hidden>
+          <div class="lhead"><h2>Google sign-in</h2></div>
+          <p class="setp settch"><label><input type="checkbox" id="gAutoIn" checked> Renew it by itself every hour</label></p>
+          <p class="muted setp">Google asks again every hour. Left on, Google’s small window opens for a moment, usually as you come back to the app. Turned off, syncing waits until you tap “sign in again to sync”.</p>
         </section>
         <section class="lib setsec" id="setTake" data-sec="saving">
           <div class="lhead"><h2>Take your work with you</h2><span class="sp"></span><button class="btn sm" id="restoreBtn">Bring work in…</button><button class="btn sm primary" id="takeBtn">Take my work with me</button></div>
@@ -5072,7 +5138,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.50";
+  const APP_VERSION = "1.28.60";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -5658,9 +5724,9 @@ a: ['Yes. Press **Side by side** above the paper, or the **B** key. A pane opens
 'Each side scrolls on its own, and the pen works on a page in either one. Click a box in the Rubric tab to give that score. A video moved into the pane keeps playing.',
 'Drag the bar between the two to change their sizes; a double-click puts it back. **⋯** in the pane moves it to the left or across the top, which suits a narrow window. Under a file’s own **⋯**, **Show beside** puts that file in the pane.',
 'The pane stays open from student to student until you close it with **✕** or **B**. A student who has a video and a notes page opens side by side without being asked, unless you closed the pane on a video before.'] },
-{ id: 'typed-notes', sec: 'mark', q: 'Can I type my notes instead of writing on a notes page?', words: 'type typing notes text size large legible typed document page paragraph list bullet bold italic underline highlight presentation speech talk video timer headings strength next step question mark copy give back',
+{ id: 'typed-notes', sec: 'mark', q: 'Can I type my notes instead of writing on a notes page?', words: 'type typing notes text size large legible typed document page paragraph list bullet bold italic underline highlight presentation speech talk video timer time times hide show headings strength next step question mark copy give back',
 a: ['Yes. Open **Side by side** and choose **Type notes**. It is a page you type on like any document, with headings, lists, bold, italic, underline and highlight in the bar above. On a notes page, **Type notes instead** opens it too. It works on any assignment.',
-'Beside a playing video, or with the clock at the foot running for a talk given live, each new paragraph gets its time in the margin. Click a time to play the video from there. **Time** puts one on or takes it off by hand, and **Times** in **⋯** turns this off.',
+'Beside a playing video, or the clock at the foot running, each new paragraph gets its time in the margin. Click a time to play from there. The × beside it hides it, and the faint clock left brings it back. **Hide all times** in **⋯** does them all. **Time** adds or removes one by hand.',
 'A paragraph can be marked as a strength, a next step or a question with **Mark**. The mark shows beside it and is optional. **⋯** has **Use these headings for every student**, so each student starts with the same headings.',
 'The line at the foot says whether the notes go back to the student as a page of the returned paper. Click it to change that for the whole assignment. **Text size for the student** in **⋯** makes that page Compact, Standard or Large.'] },
 { id: 'ai-beside', sec: 'start', q: 'Can I have Gemini, Claude or ChatGPT open beside Grading Studio?',
@@ -7136,6 +7202,7 @@ catch (e) { return undefined; }
 }
 async function openStudent(i, filePath) {
 if (!batch) return;
+if (soloOn()) { const si = soloIdx(); if (si < 0 || (i !== si && cur === si && $('#paper .who'))) return; i = si; }
 commitEditors();
 const moved = cur !== Math.max(0, Math.min(batch.students.length - 1, i));
 cur = Math.max(0, Math.min(batch.students.length - 1, i));
@@ -7150,7 +7217,7 @@ renderList(); renderGrade(); saveSoon();
 const st = batch.students[cur];
 const paper = $('#paper');
 const nRef = refsFor(st).length;
-paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + (anonOn() ? '' : whoBtn('data-wi="' + cur + '"', st.key)) + '<span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span class="whosp"></span>' +
+paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + (anonOn() ? '' : whoBtn('data-wi="' + cur + '"', st.key)) + '<span class="whon">' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span class="whosp"></span>' +
 '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (nRef ? ' <span class="atn">' + nRef + '</span>' : '') + '</button>' +
 kmWrap('<span aria-hidden="true">+</span> Add', 'id="addMenuBtn" class="btn sm" title="Add late or forgotten work to this student. You can also drop files on the paper or on a name."',
 '<button class="mitem" id="addFileBtn">A file…<small>A late or forgotten paper</small></button>' +
@@ -7158,6 +7225,7 @@ kmWrap('<span aria-hidden="true">+</span> Add', 'id="addMenuBtn" class="btn sm" 
 '<button class="mitem" id="addVideoBtn">A video…<small>A link to a recording, and who is in it</small></button>' +
 '<button class="mitem" id="addNotesBtn">A notes page…<small>To write on while you watch or listen</small></button>' +
 '<button class="mitem" id="addScanBtn">From a scan…<small>A stack of pages scanned as one PDF</small></button>') +
+'<button class="btn sm solo-go" id="soloBtn" title="Only this student" aria-label="Only this student"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.8 3.6-5.8 7-5.8s6.2 2 7 5.8"/></svg></button>' +
 kmWrap('⋯', 'id="whoMore" class="btn sm kdots" aria-label="More for this paper" title="More for this paper"',
 (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="mitem" id="arrangeBtn">Arrange pages<small>Combine files, reorder or take pages out</small></button>' : '') +
 (st.files.some(f => !f.virtual && !f.rubric && (viewable(f) || f.kind === 'docx')) ? '<button class="mitem" data-whodo="example">Use as an example<small>A strong paper or part of a page, with names covered</small></button>' : '') +
@@ -7177,7 +7245,7 @@ $('#gapNotes').onclick = () => openAddNotes(st);
 const gs = $('#gapScan'); if (gs) gs.onclick = () => { scanInto = true; scanFor = null; $('#scanIn').click(); };
 }
 curMedia = null; curPlay = null; clipsBtn();
-for (const f of st.files.filter(f => f.kind === 'link')) { paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(linkTitle(f)) + '</span><span>' + (vidRef(f.data) ? 'Video file' : 'Video link') + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(moveLink(f) + removeLink(f)) + '</div>'); const lh = paper.lastElementChild, lc = linkCard(st, f); paper.appendChild(lc); spTake('file:' + f.path, lh, lc); }
+for (const f of st.files.filter(f => f.kind === 'link')) { paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(linkTitle(f)) + '</span><span>' + (vidRef(f.data) ? 'Video file' : 'Video link') + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(moveLink(f) + replaceLink(f) + removeLink(f)) + '</div>'); const lh = paper.lastElementChild, lc = linkCard(st, f); paper.appendChild(lc); spTake('file:' + f.path, lh, lc); }
 for (const f of st.files.filter(f => f.kind === 'media')) { if (f.added || carryTag(f) || tryTag(st, f)) paper.insertAdjacentHTML('beforeend', '<div class="fhead"><span style="color:var(--fg)">' + esc(f.name) + '</span>' + tryTag(st, f) + (f.added ? addTag(f) : '') + carryTag(f) + '<span style="flex:1"></span>' + fileMenu(fileLinks(f)) + '</div>'); const mh = f.added || carryTag(f) || tryTag(st, f) ? paper.lastElementChild : null, mc = mediaCard(st, f); paper.appendChild(mc); spTake('file:' + f.path, mh, mc); }
 const rd = refDoc();
 if (rd) { const det = document.createElement('details'); det.className = 'refd'; det.open = store.get('gs.rdOpen', true); det.innerHTML = '<summary>Your document: ' + esc(rd.name) + '</summary>'; det.ontoggle = () => store.set('gs.rdOpen', det.open); paper.appendChild(det); docxCard(rd, rd.name).then(c => { c.querySelector('.fhead').remove(); det.appendChild(c); }); }
@@ -7287,6 +7355,7 @@ if (e.target.closest('#pasteTextBtn')) return openPasteText(batch.students[cur])
 if (e.target.closest('#addVideoBtn')) return openAddVideo(batch.students[cur]);
 if (e.target.closest('#addNotesBtn')) return openAddNotes(batch.students[cur]);
 if (e.target.closest('#addScanBtn')) { scanInto = true; scanFor = null; return $('#scanIn').click(); }
+if (e.target.closest('#soloBtn')) return soloStart(cur);
 const wd = e.target.closest('[data-whodo]'); if (wd) return wd.dataset.whodo === 'light' ? openLight() : wd.dataset.whodo === 'example' ? openUseExample(cur) : openCalc();
 const ra = e.target.closest('[data-rmfile]');
 if (ra) {
@@ -8226,7 +8295,7 @@ if (setup.mode === 'rubric') {
 if (rowOn >= setup.criteria.length) rowOn = -1;
 h += ibPanelAsk() + '<h3>Score <button class="link" id="editRubric">Edit rubric</button>' + ibPanelHead() + '</h3><div class="crits">';
 h += setup.criteria.map((c, i) => { const v = g.rubric[i], steps = rowSteps(setup, i), k = steps.indexOf(v), top = rowTop(setup, i);
-return '<div class="crit' + (i === rowOn ? ' on' : '') + '" data-row="' + i + '"><div class="cn"><span title="' + esc(c) + '">' + esc(c) + '</span><em>' + critScore(v, i) + '</em></div><div class="scores slide' + (steps.length > 9 ? ' many' : '') + '" data-c="' + i + '" style="--n:' + (steps.length - 1) + '">' +
+return '<div class="crit' + (i === rowOn ? ' on' : '') + '" data-row="' + i + '"><div class="cn"><span title="' + esc(c) + '">' + esc(c) + '</span>' + (v != null && !noScore(st) ? '<button class="critstamp" data-critstamp="' + i + '" title="Stamp this score on the paper" aria-label="Stamp this score on the paper">' + STAMP_ICON + '</button>' : '') + '<em>' + critScore(v, i) + '</em></div><div class="scores slide' + (steps.length > 9 ? ' many' : '') + '" data-c="' + i + '" style="--n:' + (steps.length - 1) + '">' +
 '<input type="range" class="srange' + (v == null ? ' unset' : '') + '" style="--k:' + Math.max(0, k) + '" min="0" max="' + (steps.length - 1) + '" step="1" value="' + Math.max(0, k) + '" aria-label="Score for ' + esc(c) + '" aria-valuetext="' + (v == null ? 'Not scored' : fmtNum(v) + ' out of ' + top) + '">' +
 '<div class="sticks">' + steps.map((w, j) => '<button class="' + (w % 1 ? 'half' : '') + '" style="--k:' + j + '" data-v="' + w + '" tabindex="-1" aria-pressed="' + (v === w) + '">' + w + '</button>').join('') + '</div></div></div>'; }).join('') + '</div>' + lvBox();
 } else {
@@ -8276,6 +8345,12 @@ if (own.total != null && ps != null && Math.abs(ps - own.total) > 0.001) h += '<
 return h;
 }
 const STAMP_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="2" y="9.5" width="12" height="3.5" rx="1"/><path d="M6 9.5V7.2a2 2 0 1 1 4 0v2.3M3.5 15h9"/></svg>';
+function critStampOf(st, i) {
+const v = st.grade.rubric[i]; if (v == null || i < 0 || i >= setup.criteria.length) return null;
+const ib = ibSetup() && setup.ib[i];
+return ib ? { of: ib, name: ib, text: fmtNum(v) } : { of: setup.criteria[i], name: setup.criteria[i], text: fmtNum(v) + '/' + rowTop(setup, i) };
+}
+const critRowOf = m => setup.mode !== 'rubric' ? -1 : ibSetup() ? setup.ib.indexOf(m.of) : setup.criteria.indexOf(m.of);
 function scoreStampText(gr, st) {
 if (ibSetup()) return ibStampText(st || batch.students[cur]);
 const max = gr.outOf != null ? gr.outOf : maxPoints();
@@ -8284,12 +8359,15 @@ return fmtNum(gr.total) + (max ? '/' + fmtNum(max) : '') + (gr.pct != null ? ' =
 function syncScoreStamps(st) {
 if (!st || noScore(st)) return false;
 const gr = gradeOf(st);
-if (gr.total == null || gr.paper) return false;
-const text = scoreStampText(gr, st);
+const text = gr.total == null || gr.paper ? null : scoreStampText(gr, st);
 let changed = false;
 for (const f of st.files) {
 if (!f.marks || tryOfFile(st, f)) continue;
-for (const l of Object.values(f.marks)) for (const m of l || []) if (m.t === 'stamp' && m.k === 'score' && m.text !== text) { m.text = text; changed = true; }
+for (const l of Object.values(f.marks)) for (const m of l || []) {
+if (m.t !== 'stamp') continue;
+if (m.k === 'score' && text != null && m.text !== text) { m.text = text; changed = true; }
+if (m.k === 'crit') { const c = critStampOf(st, critRowOf(m)); if (c && (m.text !== c.text || m.name !== c.name)) { m.text = c.text; m.name = c.name; changed = true; } }
+}
 }
 return changed;
 }
@@ -8300,6 +8378,7 @@ return ty !== '' && ty != null && !isNaN(+ty) ? +ty : null;
 }
 $('#grade').addEventListener('click', e => {
 if (e.target.closest('#oneOutBtn')) return exportOne(batch.students[cur]);
+{ const cs = e.target.closest('[data-critstamp]'); if (cs) { const c = critStampOf(batch.students[cur], +cs.dataset.critstamp); if (!c) return; if (!pages.length) return toast('Open the paper first, then stamp the score on it'); return startScorePlace(c.text, { k: 'crit', of: c.of, name: c.name }); } }
 const b = e.target.closest('.scores button');
 if (b) {
 const st = batch.students[cur], i = +b.closest('.scores').dataset.c, v = +b.dataset.v;
@@ -8436,7 +8515,7 @@ $('#grade').addEventListener('wheel', e => { if (e.target.id === 'ptsIn' || e.ta
 function openKeys() {
 const row = (k, t) => '<span>' + keyLabel(k).split(' ').map(x => '<kbd>' + esc(x) + '</kbd>').join(' ') + '</span><span>' + keyLabel(t) + '</span>';
 openDlg('<div class="bh"><h2>Keys</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb"><div class="keys">' +
-'<h4>Students</h4>' + row('← →', 'Previous / next student (also ↑ ↓)') + row('Enter', 'The blue button: the next student without a full score') + row('N', 'Next student without a full score') + row('/', 'Find a student by name') +
+'<h4>Students</h4>' + row('← →', 'Previous / next student (also ↑ ↓)') + row('Enter', 'The blue button: the next student without a full score') + row('N', 'Next student without a full score') + row('I', 'Only this student') + row('/', 'Find a student by name') +
 '<h4>Scoring</h4>' + row('0 1 2 3 4', 'Score the rubric row in hand, then move to the next row') + row('.', 'Right after a number: add the half, or take it off') + row('Tab', 'Go to the row in hand. Tab again for the next row, and ← → to change its score by a step') +
 '<h4>Marking</h4>' + row('V', 'Select') + row('P', 'Pen (hold Shift for a straight line)') + row('H', 'Highlight, snapping to typed lines. Press H again for freehand (Shift for straight)') + row('O', 'Circle') + row('T', 'Text') + row('C', 'Comment') + row('K', 'Check mark') + row('E', 'Eraser') +
 row('⌘Z', 'Undo') + row('⇧⌘Z', 'Redo (⌘Y works too)') +
@@ -9776,11 +9855,12 @@ return Object.assign(kept, { gone });
 const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: scrub(m.text, rx) } : m);
 const scoreWordsOnly = t => { const g = parseGrade(t, false); if (!g || g.at == null) return false; return /^[\s:=\-–,.()]*(?:total|score|grade|points?|pts|marks?|final)?[\s:=\-–,.()]*$/i.test(t.slice(0, g.at) + t.slice(g.at + g.len).replace(/^\s*(?:points?|pts)\b/i, '')); };
 const isScoreMark = m => (m.t === 'stamp' && m.k === 'score') || (m.t === 'text' && !!m.qz) || ((m.t === 'text' || m.t === 'note') && !m.qza && m.text != null && String(m.text).trim().length <= 40 && scoreWordsOnly(String(m.text).trim()));
+const scoreOffHides = m => isScoreMark(m) || (m.t === 'stamp' && m.k === 'crit');
 async function sharePage(st, f, js, p, scale, rx, opts, look) {
 const page = await js.getPage(p + 1);
 const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
 let marks = look && look.bare ? [] : scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
-if (look && look.noScore) marks = marks.filter(m => !isScoreMark(m));
+if (look && look.noScore) marks = marks.filter(m => !scoreOffHides(m));
 const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
 const c = document.createElement('canvas');
 c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
@@ -10192,12 +10272,13 @@ function loadGis() {
 if (window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
 return gisP || (gisP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onload = res; s.onerror = () => { gisP = null; rej(new Error('Couldn’t reach Google. Check the internet connection.')); }; document.head.appendChild(s); }));
 }
+const gAuto = () => store.get('gs.gAuto', true) !== false;
 const gHas = scope => scope.split(' ').every(x => G.scope.split(' ').includes(x));
 async function gToken(interactive, full) {
 const scope = full ? PICK_SCOPE : SYNC_SCOPE;
 if (G.token && Date.now() < G.exp - 60000 && gHas(scope)) return G.token;
 if (!gcid()) throw new Error('setup');
-if (!interactive) throw new Error('Sign in again to sync');
+if (!interactive && !gAuto()) throw new Error('Sign in again to sync');
 if (G_REDIRECT) { gRedirect(scope); throw new Error('Sign in again to sync'); }
 await loadGis();
 if (!G.client || G.cscope !== scope) {
@@ -10208,7 +10289,13 @@ callback: r => { const w = G.waiters.splice(0); if (r.error) w.forEach(x => x.re
 error_callback: e => { const w = G.waiters.splice(0); w.forEach(x => x.rej(new Error(e && e.type === 'popup_closed' ? 'Sign-in was closed' : 'Sign-in didn’t finish'))); },
 });
 }
-return new Promise((res, rej) => { G.waiters.push({ res, rej }); G.client.requestAccessToken({ prompt: interactive && !G.email ? 'consent' : '' }); });
+return new Promise((res, rej) => { G.waiters.push({ res, rej }); if (G.waiters.length === 1) G.client.requestAccessToken({ prompt: interactive && !G.email ? 'consent' : '' }); });
+}
+const keepHas = k => PICK_SCOPE.split(' ').every(x => (k.scope || '').split(' ').includes(x));
+async function gRenew() {
+const keep = { token: G.token, exp: G.exp, scope: G.scope };
+G.exp = 0;
+try { return await gToken(false, keepHas(keep) ? 'pick' : false); } catch (e) { if (!G.exp) Object.assign(G, keep); throw e; }
 }
 async function gfetch(url, opt = {}, interactive, sync, again) {
 const t = await gToken(interactive, sync === true ? false : 'pick');
@@ -10244,7 +10331,9 @@ for (const el of document.querySelectorAll('.gAcct')) el.innerHTML = G.email
 : '<button class="btn sm" data-gin>Sign in with Google</button>';
 if (!PHONE) for (const el of document.querySelectorAll('.gAcct')) el.insertAdjacentHTML('beforeend', ' <button class="btn sm" data-gphone>Use on your phone</button>');
 for (const b of document.querySelectorAll('.needG')) b.hidden = !G.email;
+const gs = $('#setGoogle'); if (gs) { if (!G.email || G_REDIRECT) gs.hidden = true; $('#gAutoIn').checked = gAuto(); }
 }
+document.addEventListener('change', e => { if (e.target.id === 'gAutoIn') { store.set('gs.gAuto', e.target.checked); if (e.target.checked && syncPaused()) syncNow(); } });
 document.addEventListener('click', e => {
 if (e.target.closest('[data-gin]')) signIn();
 if (e.target.closest('[data-gout]')) signOut();
@@ -10403,6 +10492,7 @@ if (m) { const { papers, size, ...rest } = m; out.meta[id] = rest; }
 }
 delete out.ls['gs.lib'];
 out.plan = (await syncPlan()) || (got && got.plan) || null;
+out.planT = await planSync(got && got.planT);
 out.files = dvFiles(got && got.files, tomb);
 const body = JSON.stringify(out);
 if (!got || body !== JSON.stringify({ ...got, t: now })) await syncWrite(body);
@@ -10411,8 +10501,13 @@ dvCloud(out.files);
 setSyncState('synced');
 dvUpSoon();
 }
-window.addEventListener('focus', () => { if (G.email) syncNow(); });
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && G.email) syncNow(); });
+function gBack2() {
+if (!G.email || sampleOn()) return;
+if (gAuto() && !G_REDIRECT && G.token && G.exp - Date.now() < 15 * 60000 && !gBack2.busy) { gBack2.busy = true; gRenew().catch(() => {}).finally(() => { gBack2.busy = false; syncNow(); }); return; }
+syncNow();
+}
+window.addEventListener('focus', gBack2);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') gBack2(); });
 if (GOK && G.email && gcid() && !sampleOn()) setTimeout(() => {
 if (G_REDIRECT && !(G.token && Date.now() < G.exp - 60000)) {
 if (navigator.onLine === false) return setSyncState('offline: syncs when you are back online');
@@ -10425,7 +10520,7 @@ gToken(false).then(() => { renderGoogle(); syncNow(); }).catch(() => setSyncStat
 if (GOK && G_REDIRECT && G.token && !G.email) setTimeout(() => gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); toast('Signed in as ' + G.email); syncNow(); }).catch(e => toast(e.message)), 400);
 
 /* Papers through Drive: each file once, named by what's in it (as a linked folder keeps them, folder.js), in the same hidden folder.
-A computer sends up the papers it keeps, in the background, after the marks; the sync file lists each download's files once they
+A computer sends up the papers it keeps, in the background, as soon as it keeps them (src/app/kept.js) and after each sync of the marks; the sync file lists each download's files once they
 are all there. Another device fetches a download's papers the first time she opens it there (reopenKept), and a phone fetches one
 student's at a time (phone.js). Late files come with the marks. */
 const DV = { names: null, files: store.get('gs.cloudP', null) || {}, up: null, full: false };
@@ -10589,6 +10684,110 @@ if (d.type !== 'gs-drive-token' || !p) return;
 if (d.fresh) { G.token = null; G.exp = 0; try { sessionStorage.removeItem('gs.gTok'); } catch {} }
 (gcid() && gHas(PICK_SCOPE) ? gToken(false, 'pick') : Promise.reject(new Error('sign-in'))).then(t => p.postMessage({ token: t, exp: G.exp }), () => p.postMessage({ token: null }));
 });
+
+/* The Planner through Drive: lessons, units, the timetable, the comment bank, activities and words, both ways, in a second hidden file
+(grading-studio-plan.json). The Planner keeps its own store (gs-lessons, src/planner/lessons.js); this page reads and writes it, so the
+Planner needs no sign-in of its own. What changed here since the last sync is found by comparing with what was seen then (gs.planSeen):
+a key whose value is different gets the time now, a lesson that was there and isn't was deleted here. Each lesson goes by its own time
+(updated), each key by its time; a deletion stays in gone. A store that can't be read, or comes back empty when it had lessons (an
+iPhone clears a site's storage after weeks unused), never counts as deleting anything: Drive fills it again. */
+const PLAN_NAME = 'grading-studio-plan.json', PLAN_KEYS = ['setup', 'units', 'bank', 'activities', 'words', 'deflook'], PLAN_BIG = 2e6;
+let planFile = null;
+const planVer = async () => String((await (await gsync('files/' + planFile.id + '?fields=id,version')).json()).version || '');
+async function planFileRead() {
+if (!planFile) { const f = (await (await gsync("files?spaces=appDataFolder&orderBy=createdTime&fields=files(id)&q=" + encodeURIComponent("name='" + PLAN_NAME + "' and trashed=false"))).json()).files[0]; planFile = f ? { id: f.id } : null; }
+if (!planFile) return null;
+planFile.ver = await planVer();
+try { return await (await gsync('files/' + planFile.id + '?alt=media')).json(); } catch { return null; }
+}
+async function planFileWrite(body) {
+if (planFile) {
+if (await planVer() !== planFile.ver) { const e = new Error('changed on another device'); e.status = 412; throw e; }
+await gsync('https://www.googleapis.com/upload/drive/v3/files/' + planFile.id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+} else {
+const fd = new FormData();
+fd.append('metadata', new Blob([JSON.stringify({ name: PLAN_NAME, parents: ['appDataFolder'] })], { type: 'application/json' }));
+fd.append('file', new Blob([body], { type: 'application/json' }));
+planFile = { id: (await (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: fd })).json()).id };
+}
+planFile.ver = await planVer();
+}
+const planOutV = (k, v) => k === 'units' && Array.isArray(v) ? v.map(u => { if (!u || typeof u !== 'object') return u; const { _file, _mod, ...x } = u; return x; }) : v;
+async function planHere() {
+let seen = store.get('gs.planSeen', null) || { keys: {}, ids: [], gone: {}, t: {} };
+const db = await planDb(false);
+let lessons = [], kv = {};
+if (db) {
+try {
+const t = db.transaction(['lessons', 'kv']);
+lessons = (await idbP(t.objectStore('lessons').getAll())) || [];
+for (const k of PLAN_KEYS) { const v = await idbP(t.objectStore('kv').get(k)); if (v !== undefined) kv[k] = planOutV(k, v); }
+} catch { db.close(); return null; }
+db.close();
+}
+if (!lessons.length && !Object.keys(kv).length && (seen.ids || []).length) seen = { keys: {}, ids: [], gone: { ...(seen.gone || {}) }, t: {} };
+const A = { lessons: {}, kv: {}, gone: { ...(seen.gone || {}) } }, ids = new Set(), big = new Set();
+for (const l of lessons) {
+if (!l || !l.id) continue;
+const { _file, _mod, _sync, ...x } = l; ids.add(x.id);
+if (JSON.stringify(x).length > PLAN_BIG) { big.add(x.id); continue; }
+A.lessons[x.id] = x;
+}
+const lost = [];
+for (const id of seen.ids || []) if (!ids.has(id) && !A.gone['l:' + id]) lost.push(id);
+for (const [k, v] of Object.entries(kv)) { const h = shaLite(JSON.stringify(v)); A.kv[k] = { v, t: seen.keys[k] === h ? (seen.t[k] || 0) : seen.at ? -1 : null }; }
+const mine = !seen.at ? !!(lessons.length || Object.keys(kv).length) : lost.length > 0 || Object.values(A.kv).some(x => x.t === -1) || [...ids].some(id => !(seen.ids || []).includes(id)) || Object.values(A.lessons).some(l => (l.updated || 0) > (seen.at || 0));
+return { A, seen, big, lost, mine };
+}
+const shaLite = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + s.length.toString(36); };
+async function planSync(remoteT) {
+if (sampleOn()) return remoteT;
+const here = await planHere(); if (!here) return remoteT;
+const { A, seen, big, lost, mine } = here;
+if (!mine && remoteT && remoteT === seen.planT) return remoteT;
+const now = Date.now(), B = (await planFileRead()) || { lessons: {}, kv: {}, gone: {} };
+for (const id of lost) A.gone['l:' + id] = now;
+for (const [k, x] of Object.entries(A.kv)) if (x.t === -1) x.t = now; else if (x.t === null) x.t = B.kv && B.kv[k] ? 0 : now;
+for (const id of big) { delete A.gone['l:' + id]; if (B.lessons && B.lessons[id]) A.lessons[id] = B.lessons[id]; }
+const M = mergePlan(A, B);
+await planApply(A, M, big);
+const body = JSON.stringify(M), t = shaLite(body);
+const was = { keys: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, shaLite(JSON.stringify(x.v))])), t: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, x.t])), ids: [...new Set([...Object.keys(M.lessons), ...big])], gone: M.gone, at: now };
+store.set('gs.planSeen', { ...was, planT: null });
+if (JSON.stringify(B) !== body) await planFileWrite(body);
+store.set('gs.planSeen', { ...was, planT: t });
+return t;
+}
+async function planApply(A, M, big) {
+const put = Object.values(M.lessons).filter(l => !big.has(l.id) && JSON.stringify(A.lessons[l.id]) !== JSON.stringify(l));
+const del = Object.keys(M.gone).filter(k => k.startsWith('l:')).map(k => k.slice(2)).filter(id => A.lessons[id] && !big.has(id));
+const keys = Object.entries(M.kv).filter(([k, x]) => !A.kv[k] || JSON.stringify(A.kv[k].v) !== JSON.stringify(x.v));
+if (!put.length && !del.length && !keys.length) return;
+const db = await planDb(true); if (!db) return;
+try {
+await new Promise((res, rej) => {
+const t = db.transaction(['lessons', 'kv'], 'readwrite'), ls = t.objectStore('lessons'), kv = t.objectStore('kv'), goneFiles = [];
+const same = (was, id) => (was ? was.updated || 0 : null) === (A.lessons[id] ? A.lessons[id].updated || 0 : null);
+for (const l of put) { const r = ls.get(l.id); r.onsuccess = () => { const was = r.result; if (!same(was, l.id)) return; ls.put(was && was._file ? { ...l, _file: was._file, _mod: was._mod, _sync: 1 } : l); }; }
+for (const id of del) { const r = ls.get(id); r.onsuccess = () => { const was = r.result; if (!was || !same(was, id)) return; if (was._file) goneFiles.push(was._file); ls.delete(id); }; }
+for (const [k, x] of keys) {
+const r = kv.get(k);
+r.onsuccess = () => {
+const was = r.result; if (JSON.stringify(planOutV(k, was)) !== JSON.stringify(A.kv[k] ? A.kv[k].v : undefined)) return;
+let v = x.v;
+if (k === 'units' && Array.isArray(v) && Array.isArray(was)) v = v.map(u => { const o = was.find(w => w && u && w.id === u.id); return o && o._file ? { ...u, _file: o._file, _mod: o._mod } : u; });
+kv.put(v, k);
+};
+}
+const g = kv.get('syncGoneFiles');
+const last = ls.count(); last.onsuccess = () => { if (goneFiles.length) kv.put([...new Set([...(g.result || []), ...goneFiles])], 'syncGoneFiles'); };
+t.oncomplete = res; t.onerror = t.onabort = () => rej(t.error);
+});
+} finally { db.close(); }
+try { const ch = new BroadcastChannel('gs-plan-in'); ch.postMessage('sync'); ch.close(); } catch {}
+if (typeof planRefresh === 'function') planRefresh();
+}
+try { new BroadcastChannel('gs-plan-out').onmessage = () => syncSoon(); } catch {}
 /* ---------------- audio, video and Word files ---------------- */
 const MEDIA_RX = /\.(mp4|mov|m4v|webm|mkv|3gp|mp3|m4a|wav|aac|ogg|oga|opus|flac|weba|aif|aiff|caf|amr)$/i;
 const VIDEO_RX = /\.(mp4|mov|m4v|webm|mkv|3gp)$/i;
@@ -11307,6 +11506,7 @@ return { v: 'class', c, tab, stu, att };
 }
 }
 if (p[0] === 'class-named' && p[1]) { const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(p.slice(1).join('/')), c = k && lib.classes.find(c => nk(c.name) === k); return c ? { v: 'class', c, tab: '', stu: null, named: true } : { v: 'home', noClass: p.slice(1).join('/').slice(0, 60) }; }
+if (p[0] === 'plans' && PHONE) return { v: 'plans', id: p[1] || '' };
 if (p[0] === 'scores' && PHONE) return { v: 'scores', cls: p[1] || '', key: p[2] || '' };
 if (p[0] === 'todo') return { v: 'todo', week: p[1] === 'week' };
 if (p[0] === 'time') return { v: 'time' };
@@ -11344,6 +11544,7 @@ applyRoute();
 let routeTok = 0, routeOpening = '', routeTab = null;
 function applyRoute() {
 const r = routeNow();
+if (soloRoute(r)) return;
 if (r.named) { go(classHash(r.c), true); return; }
 if (r.noClass) { toast('There is no class called “' + r.noClass + '” in grading yet. “Add a class” in the sidebar makes one.', 7000); go('#/', true); return; }
 if (r.v === 'a') {
@@ -11382,7 +11583,8 @@ const grading = r.v === 'a' && !!batch;
 if (grading && !$('#welcome').hidden) wlClose();
 $('#shell').classList.toggle('grading', grading);
 $('#app').hidden = !grading; $('#start').hidden = grading;
-for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening'], ['vScores', 'scores']]) $('#' + id).hidden = grading || r.v !== v;
+if (grading && $('#soloBar') && soloOn() && $('#soloBar').dataset.b !== batch.id) soloBar();
+for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening'], ['vScores', 'scores'], ['vPlans', 'plans']]) $('#' + id).hidden = grading || r.v !== v;
 if (r.v !== 'class') classLeave();
 const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');
 if (!grading && key !== screenKey) $('#shellMain').scrollTop = 0;
@@ -11390,6 +11592,7 @@ screenKey = key;
 railRender();
 if (!grading && r.v === 'examples') exPageRender();
 if (!grading && r.v === 'scores') phScoresRender(r);
+if (!grading && r.v === 'plans') phPlansRender(r);
 phNavRender();
 if (grading) tabShow(r); else if (dlgPage) dlgShut();
 }
@@ -11921,6 +12124,7 @@ more.papers = true; more.size = list.reduce((a, e) => a + (e.data ? e.data.lengt
 const m = { ...(keptMeta.get(b.id) || {}), id: b.id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (keptMeta.get(b.id) || {}).asg, ...more };
 await kdo('meta', 'readwrite', o => o.put(m, b.id)); keepOk = true; keptMeta.set(b.id, m);
 folderPapers(b);
+if (more.papers && G.email && !sampleOn()) setTimeout(() => syncNow(), 1500);
 } catch (e) {
 console.error(e);
 if (list) toast('This browser couldn’t keep these papers, usually because it’s out of room. Your marks are still saved, but the papers won’t reopen by themselves or go in a take-home file: drop the download in again to reopen it.', 12000);
@@ -12085,28 +12289,125 @@ refound(st); wordScoresAll(); saveNow(); renderList(); openStudent(cur, path);
 toast('Brought back ' + fileShown(st, f.name));
 }
 function pickReplace(st, path) {
+const old = fileByPath(st, path); if (!old) return;
+if (old.kind === 'link' || driveCan()) return openReplace(st, path);
 const inp = document.createElement('input');
 inp.type = 'file';
 inp.onchange = () => { if (inp.files[0]) askReplace(st, path, inp.files[0]); };
 inp.click();
 }
+function sameCopies(st, f) {
+const g = groupOf(st), mates = groupMates(st);
+if (f.kind === 'link') { const k = linkKey(f); return mates.map(s => [s, s.files.find(x => x.kind === 'link' && linkKey(x) === k)]).filter(([, x]) => x); }
+if (g && g.p && g.p[st.key] === f.path) return mates.map(s => [s, groupFileOf(g, s)]).filter(([, x]) => x);
+return [];
+}
+const groupPaperOf = (st, f) => { const g = groupOf(st); return !!(g && g.p && g.p[st.key] === f.path); };
+function openReplace(st, path) {
+const old = fileByPath(st, path); if (!old) return;
+const link = old.kind === 'link', nm = link ? linkTitle(old) : fileShown(st, old.name);
+const go = file => file && askReplace(st, path, file);
+const named = bytes => new File([bytes], linkTitle(old) + '.url');
+openDlg('<div class="bh"><h2>Replace ' + esc(nm) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+'<div class="bb vdbox">' + (link
+? '<label class="vdlab" for="rpLink">A new link</label><div style="display:flex;gap:8px"><input class="btn" id="rpLink" placeholder="' + VID_HINT + '" aria-label="New link" autocomplete="off" spellcheck="false" style="flex:1"><button class="btn primary" id="rpLinkGo" disabled>Next</button></div>' +
+'<div class="vdlab">Or</div><div class="vdfile"><button class="btn" data-rpsrc="vfile">A video file…</button>' + (driveCan() ? '<button class="btn" data-rpsrc="vdrive">Google Drive…</button>' : '') + '</div>'
+: '<div class="vdfile"><button class="btn" data-rpsrc="file">From this computer…</button>' + (driveCan() ? '<button class="btn" data-rpsrc="drive">From Google Drive…</button>' : '') + '<span class="muted" style="font-size:13px">or drop the new file here</span></div>') +
+'<p class="muted vdsay">' + (link ? 'Partners with the same video get the new one too, unless you say not on the next step.' : 'You check the two files side by side before anything changes.') + '</p></div>' +
+'<div class="bf"><button class="btn" data-cancel>Cancel</button></div>', true);
+const box = $('#dlgBox'), inp = $('#rpLink');
+if (inp) { inp.oninput = () => { const ok = !!linkClean(inp.value.trim()); $('#rpLinkGo').disabled = !ok; inp.classList.toggle('bad', !!inp.value.trim() && !ok); }; inp.onkeydown = e => { if (e.key === 'Enter' && !$('#rpLinkGo').disabled) $('#rpLinkGo').click(); }; inp.focus(); }
+box.ondragover = e => { if (!link) e.preventDefault(); };
+box.ondrop = e => { if (link) return; e.preventDefault(); go(e.dataTransfer.files[0]); };
+box.onclick = async e => {
+if (e.target.closest('[data-cancel]')) return closeDlg();
+if (e.target.id === 'rpLinkGo') return go(named(linkBytes(linkClean(inp.value.trim()))));
+const b = e.target.closest('[data-rpsrc]'); if (!b) return;
+const k = b.dataset.rpsrc;
+try {
+if (k === 'file') { const i = document.createElement('input'); i.type = 'file'; i.onchange = () => go(i.files[0]); i.click(); return; }
+if (k === 'vfile') { const f = await vidPick(); if (!f) return; if (!MEDIA_RX.test(f.name) && !/^(video|audio)\//.test(f.type)) return toast('That isn’t a video or sound file'); return go(named(vidBytes(await vkPut(f), f.name, f.size))); }
+if (k === 'vdrive') { const [d] = await driveVideos(false); return d && go(named(drvBytes(d))); }
+if (k === 'drive') {
+const [d] = await drivePick({ mimes: paperMimes(), title: 'Choose the new file' }); if (!d) return;
+const gdoc = /^application\/vnd\.google-apps\./.test(d.mime);
+b.disabled = true; b.textContent = 'Getting it from Drive…';
+const r = await gfetch(gdoc ? 'files/' + encodeURIComponent(d.id) + '/export?mimeType=application/pdf' : 'files/' + encodeURIComponent(d.id) + '?alt=media&supportsAllDrives=true', {}, true, 'pick');
+return go(new File([await r.arrayBuffer()], d.name + (gdoc ? '.pdf' : ''), { type: gdoc ? 'application/pdf' : d.mime }));
+}
+} catch (err) { console.error(err); sayDlg(link ? drvSay(err) : (err && err.message) || String(err)); }
+};
+}
 async function askReplace(st, path, file) {
 const old = fileByPath(st, path); if (!old) return;
-const n = markCount(old), pg = k => k ? k + (k === 1 ? ' page' : ' pages') : '';
+const n = markCount(old), pg = k => k ? k + (k === 1 ? ' page' : ' pages') : '', link = old.kind === 'link' && LINK_RX.test(file.name);
 let np = 0;
 if (/\.pdf$/i.test(file.name)) try { await workerReady; const d = await pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise; np = d.numPages; d.destroy(); } catch {}
+const short = u => u.replace(/^https?:\/\/(www\.)?/, '').slice(0, 48) + (u.length > 56 ? '…' : '');
+const about = b => vidRef(b) ? 'video file' : drvRef(b) ? 'from Google Drive' : short(linkOf(b)) || 'new';
+const said = async () => link ? about(new Uint8Array(await file.arrayBuffer())) : [pg(np), 'new'].filter(Boolean).join(' · ');
+const oldSaid = link ? about(old.data) : [pg(old.numPages), n ? n + (n === 1 ? ' mark' : ' marks') : 'no marks'].filter(Boolean).join(' · ');
+const copies = sameCopies(st, old), grp = groupPaperOf(st, old), who = groupNames(copies.map(c => c[0]));
 const card = (name, said) => '<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;min-width:0"><b style="overflow-wrap:anywhere">' + esc(name) + '</b><div class="muted">' + said + '</div></div>';
-openDlg('<div class="bh"><h2>Replace this file?</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
+const shown = link ? linkTitle(old) : fileShown(st, old.name);
+openDlg('<div class="bh"><h2>Replace this ' + (link ? 'video' : 'file') + '?</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
 '<div class="bb"><div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin:0 0 12px">' +
-card(fileShown(st, old.name), [pg(old.numPages), n ? n + (n === 1 ? ' mark' : ' marks') : 'no marks'].filter(Boolean).join(' · ')) + '<span class="muted">→</span>' + card(file.name, [pg(np), 'new'].filter(Boolean).join(' · ')) + '</div>' +
-'<p style="margin:0">The new file takes the old one’s place on the paper and in the export. ' + (n ? 'Marks can’t move onto different pages, so the old file keeps its ' + n + (n === 1 ? ' mark' : ' marks') + '. It waits under Removed files, so you can bring it back.' : 'The old file waits under Removed files, so you can bring it back.') + '</p></div>' +
+card(shown, oldSaid) + '<span class="muted">→</span>' + card(link ? shown : file.name, await said()) + '</div>' +
+'<p style="margin:0">' + (link ? 'The new video takes the old one’s place. The score and the notes stay as they are. The old link waits under Removed files, so you can bring it back.'
+: 'The new file takes the old one’s place on the paper and in the export. The score stays as it is. ' + (n ? 'Marks can’t move onto different pages, so the old file keeps its ' + n + (n === 1 ? ' mark' : ' marks') + '. It waits under Removed files, so you can bring it back.' : 'The old file waits under Removed files, so you can bring it back.')) + '</p>' +
+(copies.length ? (grp ? '<p class="muted" style="margin:10px 0 0;font-size:13px">' + esc(who) + (copies.length === 1 ? ' shares' : ' share') + ' this paper, so theirs changes too.</p>'
+: '<label style="display:flex;gap:8px;align-items:center;margin:10px 0 0;font-size:14px"><input type="checkbox" id="rpAlso" checked> Also for ' + esc(who) + '</label>') : '') + '</div>' +
 '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Replace</button></div>', true);
 $('#dlgBox').onclick = async e => {
 if (e.target.closest('[data-cancel]')) return closeDlg();
 if (!e.target.closest('[data-ok]')) return;
+const also = grp || !!($('#rpAlso') && $('#rpAlso').checked);
 closeDlg();
-await replaceFile(st, path, file);
+await replaceDo(st, path, file, also);
 };
+}
+const rplJ = v => v == null ? null : JSON.parse(JSON.stringify(v));
+function rplSnap(sts, paths) {
+return { s: sts.map(s => [s, { files: s.files.slice(), gone: (s.gone || []).slice(), layout: rplJ(s.layout), forder: s.forder ? s.forder.slice() : null, inc: rplJ(s.inc), tries: ((s.grade && s.grade.tries) || []).map(t => (t.files || []).slice()) }]),
+rm: Object.fromEntries(paths.map(p => [p, rplJ((batch.removed || {})[p])])), g: JSON.stringify(batch.groups || null), c: JSON.stringify(batch.clips || null) };
+}
+function rplPut(sn, made) {
+for (const [s, o] of sn.s) {
+s.files = o.files.slice(); s.gone = o.gone.slice(); s.layout = rplJ(o.layout);
+if (o.forder) s.forder = o.forder.slice(); else delete s.forder;
+if (o.inc) s.inc = rplJ(o.inc); else delete s.inc;
+((s.grade && s.grade.tries) || []).forEach((t, i) => { if (o.tries[i]) t.files = o.tries[i].slice(); });
+}
+batch.removed ||= {};
+for (const [p, r] of Object.entries(sn.rm)) if (r) batch.removed[p] = r; else delete batch.removed[p];
+const g = JSON.parse(sn.g), c = JSON.parse(sn.c);
+if (g) batch.groups = g; else delete batch.groups;
+if (c) batch.clips = c; else delete batch.clips;
+if (made) for (const [s, x] of made) if (!s.files.includes(x) && !s.gone.includes(x)) { s.gone.push(x); batch.removed[x.path] = { t: Date.now() }; }
+for (const [s] of sn.s) refound(s);
+groupSync(); wordScoresAll(); saveNow(); renderList();
+}
+async function replaceDo(st, path, file, also) {
+const old = fileByPath(st, path); if (!old) return;
+await Promise.all([...wordSaves].map(s => s()));
+const copies = also ? sameCopies(st, old) : [], oldKey = old.kind === 'link' ? linkKey(old) : '';
+const sts = [st, ...copies.map(c => c[0])], was = [[st, path], ...copies.map(([s, f]) => [s, f.path])];
+const before = rplSnap(sts, was.map(w => w[1])), made = [];
+for (const [s, p] of was) { const x = await replaceFile(s, p, s === st ? file : new File([file], file.name, { type: file.type }), true); if (x) made.push([s, x, p]); }
+if (!made.length) return;
+const nf = made[0][1], g = groupOf(st);
+if (g && g.p) for (const [s, x, p] of made) if (g.p[s.key] === p) g.p[s.key] = x.path;
+if (batch.clips) {
+const left = oldKey && batch.students.some(s => s.files.some(f => f.kind === 'link' && linkKey(f) === oldKey));
+for (const c of batch.clips) { if (oldKey && !left && c.u === oldKey && nf.kind === 'link') c.u = linkKey(nf); if (c.p === path) c.p = nf.path; }
+}
+groupSync(); saveNow();
+const after = rplSnap(sts, was.map(w => w[1]).concat(made.map(m => m[1].path))), nm = old.kind === 'link' ? linkTitle(old) : fileShown(st, old.name);
+const show = p => { const i = batch.students.indexOf(st); if (i >= 0) openStudent(i, p); };
+const step = actStep(() => { rplPut(before, made); show(path); }, () => { rplPut(after); show(nf.path); }, 'replaced ' + nm);
+pushUndo(step);
+openStudent(cur, nf.path);
+toastDo('Replaced ' + nm + (made.length > 1 ? ' for ' + groupNames(made.map(m => m[0])) : ''), 'Undo', () => { const i = undoStack.indexOf(step); if (i >= 0) undoStack.splice(i, 1); rplPut(before, made); show(path); });
 }
 async function replaceFile(st, path, file, quiet) {
 const old = fileByPath(st, path); if (!old) return;
@@ -12118,6 +12419,7 @@ const nf = st.files.find(f => !had.has(f)); if (!nf) return;
 if (at >= 0) { const k = st.layout.findIndex(d => d.file === nf.path); if (k >= 0) { const [d] = st.layout.splice(k, 1); st.layout.splice(Math.min(at, st.layout.length), 0, d); } }
 if (oi >= 0) st.forder.splice(oi, 0, 'f:' + nf.path);
 if (st.inc && st.inc[path] != null) st.inc[nf.path] = st.inc[path];
+for (const t of (st.grade && st.grade.tries) || []) if ((t.files || []).includes(path)) t.files.push(nf.path);
 goneNow(st, old);
 (batch.removed ||= {})[path] = { t: Date.now(), by: nf.path };
 refound(st); wordScoresAll(); saveNow(); renderList();
@@ -12168,6 +12470,7 @@ return '<div class="gonerow"><span>' + [esc(fileShown(st, f.name)), f.numPages ?
 $('#paper').appendChild(el);
 }
 function toastDo(msg, label, fn) {
+if (soloOn()) return;
 const t = $('.toast');
 toast(msg, 6000);
 const b = document.createElement('button'); b.className = 'tact'; b.textContent = label;
@@ -12451,7 +12754,7 @@ const max = maxPoints(), pct = max ? percentFor(v) : null;
 return calcFmt(v) + (max ? '/' + calcFmt(max) : '') + (pct != null ? ' = ' + pct + '%' : '');
 }
 let scorePlacing = null;
-function startScorePlace(text) {
+function startScorePlace(text, extra) {
 stopScorePlace();
 const gh = document.createElement('canvas'); gh.id = 'scoreGhost'; gh.hidden = true;
 const bar = document.createElement('div'); bar.className = 'toast'; bar.id = 'scoreBar'; bar.textContent = 'Click where the score goes · Esc to cancel';
@@ -12460,7 +12763,7 @@ const panel = $('#calcPanel'); if (panel) panel.classList.add('placing');
 const move = e => {
 const pg = pages.find(q => q.canvas === e.target);
 if (!pg) { gh.hidden = true; return; }
-const m = { t: 'stamp', k: 'score', x: 0, y: 0, size: newStampSize('score'), color: totalInk(), text }, b = stampBox(m), dpr = window.devicePixelRatio || 1, k = pg.s;
+const m = { t: 'stamp', k: 'score', x: 0, y: 0, color: totalInk(), text, ...extra }; m.size = newStampSize(m.k); const b = stampBox(m), dpr = window.devicePixelRatio || 1, k = pg.s;
 gh.width = Math.ceil(b.w * k * dpr) + 2; gh.height = Math.ceil(b.h * k * dpr) + 2;
 gh.style.width = gh.width / dpr + 'px'; gh.style.height = gh.height / dpr + 'px';
 gh.style.left = (e.clientX - gh.width / dpr / 2) + 'px'; gh.style.top = (e.clientY - gh.height / dpr / 2) + 'px';
@@ -12470,12 +12773,12 @@ gh.hidden = false;
 const key = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); stopScorePlace(); } };
 const away = e => { if (!pages.some(q => q.canvas === e.target)) stopScorePlace(); };
 document.addEventListener('pointermove', move, true); document.addEventListener('keydown', key, true); document.addEventListener('pointerdown', away, true);
-scorePlacing = { text, stop: () => { document.removeEventListener('pointermove', move, true); document.removeEventListener('keydown', key, true); document.removeEventListener('pointerdown', away, true); gh.remove(); bar.remove(); if (panel) panel.classList.remove('placing'); } };
+scorePlacing = { text, extra, stop: () => { document.removeEventListener('pointermove', move, true); document.removeEventListener('keydown', key, true); document.removeEventListener('pointerdown', away, true); gh.remove(); bar.remove(); if (panel) panel.classList.remove('placing'); } };
 }
 function stopScorePlace() { if (scorePlacing) { scorePlacing.stop(); scorePlacing = null; } }
 function placeScore(pg, x, y) {
-const text = scorePlacing.text; stopScorePlace();
-const m = { t: 'stamp', k: 'score', x: r1(x), y: r1(y), size: newStampSize('score'), color: totalInk(), text };
+const { text, extra } = scorePlacing; stopScorePlace();
+const m = { t: 'stamp', k: 'score', x: r1(x), y: r1(y), color: totalInk(), text, ...extra }; m.size = newStampSize(m.k);
 const bb = stampBox(m);
 m.x = r1(m.x + Math.max(0, -bb.x) - Math.max(0, bb.x + bb.w - pg.W)); m.y = r1(m.y + Math.max(0, -bb.y) - Math.max(0, bb.y + bb.h - pg.H));
 snap(pg); pg.marks().push(m); selected = { page: pg, mark: m, fresh: true }; changed(pg); redrawAll();
@@ -13811,6 +14114,7 @@ render();
 /* ---------------- wiring ---------------- */
 let toastT;
 function toast(msg, ms) {
+if (soloOn()) return;
 const t = $('.toast');
 t.textContent = msg; t.hidden = false;
 clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; t.textContent = ''; }, ms || 3000);
@@ -14035,6 +14339,8 @@ if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
 if (e.key === 'Escape' && once) { e.preventDefault(); endOnce(); return; }
 if (e.key === '?') { e.preventDefault(); openKeys(); return; }
 if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') && selected && !(selected.fresh && selected.mark.t === 'text') && canResize(selected.mark)) { e.preventDefault(); stepSize(e.key === '+' || e.key === '=' ? 1 : -1); return; }
+if (soloOn() && (e.key === '/' || e.key === '[' || e.key === '?')) { e.preventDefault(); return; }
+if (e.key.toLowerCase() === 'i' && !e.shiftKey && !soloOn()) { e.preventDefault(); return soloStart(cur); }
 if (e.key === '/') { e.preventDefault(); listPeek(true); $('#stuFind').focus(); return; }
 if (selected && tool === 'select' && /^Arrow/.test(e.key)) {
 e.preventDefault();
@@ -14102,7 +14408,7 @@ for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLa
 if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, pointsWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, libTrack, libu: () => LIBU, gsData, gradeOf, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool, redrawAll };
+window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, askReplace, replaceDo, openReplace, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, pointsWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, libTrack, libu: () => LIBU, gsData, gradeOf, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool, redrawAll };
 
 /* ---------------- names: finding a student's name in text, in any alphabet, for the Claude ZIP and anonymous grading ---------------- */
 const NAME_PLAIN = new Set(('al am an art as at august autumn ban bay be best bill bin black brown by can case chase chin dawn day de dean do don dung da ed faith far frank gay go grace gray green grey ha hang he hope ho hung if in is it ivy jade joy june king la lane le little long love major man mark may me min my new no nice on or page pan park pat pearl pen penny price rich rose ruby sandy sang short sing small so son song star stone su sue summer sun sung tan tang ten tin to tu up us van violet von we white will win wing won wood wu ye young april').split(' '));
@@ -14787,16 +15093,31 @@ const stickersReady = Promise.all(STICKERS.map(([k]) => new Promise(done => {
   const im = new Image(); im.onload = im.onerror = () => done(); im.src = STICKER_SRC[k]; stickerImg[k] = im;
 })));
 const isSticker = k => STICKERS.some(s => s[0] === k);
-const isScoreStamp = k => k === 'score';
+const isScoreStamp = k => k === 'score' || k === 'crit';
 const scoreLines = m => String(m.text || '').split(' = ').map(t => t.replace('/', ' / '));
 function scoreSize(m) {
+  if (m.k === 'crit') return critSize(m);
   const s = m.size || 52, [a, b] = scoreLines(m);
   measureCtx.font = '700 ' + (s * 0.34) + 'px ' + FONT; const wa = measureCtx.measureText(a || '').width;
   measureCtx.font = '600 ' + (s * 0.26) + 'px ' + FONT; const wb = b ? measureCtx.measureText(b).width : 0;
   return { w: Math.max(s * 1.5, Math.max(wa, wb) + s * 0.4), h: b ? s : s * 0.6, two: !!b };
 }
+function critName(m, s) {
+  let t = String(m.name || '').trim(); if (!t) return '';
+  measureCtx.font = '600 ' + (s * 0.24) + 'px ' + FONT;
+  const room = s * 3.4;
+  if (measureCtx.measureText(t).width <= room) return t;
+  while (t.length > 1 && measureCtx.measureText(t + '…').width > room) t = t.slice(0, -1);
+  return t.trimEnd() + '…';
+}
+function critSize(m) {
+  const s = m.size || 40, nm = critName(m, s);
+  measureCtx.font = '700 ' + (s * 0.4) + 'px ' + FONT; const wa = measureCtx.measureText(String(m.text || '').replace('/', ' / ')).width;
+  measureCtx.font = '600 ' + (s * 0.24) + 'px ' + FONT; const wb = nm ? measureCtx.measureText(nm).width : 0;
+  return { w: Math.max(s * 1.1, Math.max(wa, wb) + s * 0.36), h: nm ? s : s * 0.62, two: !!nm, nm };
+}
 const stickerAspect = k => (STICKERS.find(s => s[0] === k) || [0, 0, 1])[2];
-const stampName = k => isProof(k) ? markLabel(k) : ((STICKERS.find(p => p[0] === k)) || [k, k])[1];
+const stampName = k => k === 'crit' ? 'Criterion score' : isProof(k) ? markLabel(k) : ((STICKERS.find(p => p[0] === k)) || [k, k])[1];
 
 /* ---------------- the mark key: a page at the end of a returned file saying what each mark on it means ---------------- */
 const MARK_MEAN = {
@@ -14888,9 +15209,9 @@ function openMarkKey(back) {
     }
   };
 }
-const MARK_SIZES = 'gs.markSizes', SIZE0 = { proof: 16, sticker: 44, score: 52 };
-const sizeKind = k => isSticker(k) ? 'sticker' : isScoreStamp(k) ? 'score' : 'proof';
-const SIZE_LIMITS = { proof: [8, 80], sticker: [16, 240], check: [8, 120], score: [20, 160] };
+const MARK_SIZES = 'gs.markSizes', SIZE0 = { proof: 16, sticker: 44, score: 52, crit: 40 };
+const sizeKind = k => isSticker(k) ? 'sticker' : k === 'crit' ? 'crit' : isScoreStamp(k) ? 'score' : 'proof';
+const SIZE_LIMITS = { proof: [8, 80], sticker: [16, 240], check: [8, 120], score: [20, 160], crit: [16, 160] };
 const sizesHere = () => { const all = store.get(MARK_SIZES, {}) || {}; return (batch && all[batch.id]) || {}; };
 function lastSize(key, lim, dflt) { const v = +sizesHere()[key]; return v >= lim[0] && v <= lim[1] ? v : dflt; }
 const newStampSize = k => lastSize(k, SIZE_LIMITS[sizeKind(k)], SIZE0[sizeKind(k)]);
@@ -14929,6 +15250,15 @@ function drawStamp(ctx, m) {
     ctx.drawImage(im, -s / 2, -h / 2, s, h);
     ctx.restore();
     return;
+  }
+  if (m.k === 'crit') {
+    const z = critSize(m), l = x - z.w / 2, t = y - z.h / 2;
+    ctx.save(); ctx.lineWidth = Math.max(1, s * 0.045);
+    ctx.beginPath(); ctx.roundRect(l, t, z.w, z.h, s * 0.14); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = m.color; ctx.stroke();
+    ctx.fillStyle = m.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (z.two) { ctx.font = '600 ' + (s * 0.24) + 'px ' + FONT; ctx.fillText(z.nm, x, t + s * 0.25); }
+    ctx.font = '700 ' + (s * 0.4) + 'px ' + FONT; ctx.fillText(String(m.text || '').replace('/', ' / '), x, z.two ? t + s * 0.66 : y + s * 0.01);
+    ctx.restore(); return;
   }
   if (isScoreStamp(m.k)) {
     const z = scoreSize(m), [a, b] = scoreLines(m), l = x - z.w / 2, t = y - z.h / 2, r = s * 0.14;
@@ -19144,7 +19474,7 @@ const f = m.asg && findItem(m.asg), label = (f && f.it.name) || m.name || (batch
 if (seen.has(one)) continue; seen.add(one);
 const k = rosterPairs(c.names, Object.keys({ ...d.s, ...d.read })).get(name);
 const g = k ? { ...((d.s[k] || {}).g || {}), ...(d.read && d.read[k] ? { read: d.read[k] } : {}) } : null;
-rows.push({ name: label, t: workTime(d) || d.t || 0, p: g ? pastScore(d.setup, g) : null, none: !k || !!(d.s[k] && d.s[k].gap) });
+rows.push({ name: label, t: workTime(d) || d.t || 0, p: g ? pastScore(d.setup, g) : null, none: !k || !!(d.s[k] && d.s[k].gap), id, k: k && d.s[k] ? k : null });
 }
 return rows.sort((a, b) => a.t - b.t);
 }
@@ -19163,9 +19493,11 @@ const done = rows.filter(r => r.p).length, pc = rows.map(r => r.p).filter(p => p
 return 'In ' + esc(c.name) + (rows.length ? ' · ' + done + ' of ' + rows.length + ' turned in' + (pc.length ? ' · average ' + fmtPct(pc.reduce((a, b) => a + b, 0) / pc.length) : '') : '');
 }
 
+const soloHere = (c, name) => batch && !PHONE && !$('#app').hidden && c && batchClass() === c ? batch.students.findIndex(st => personOf(st).name === name) : -1;
 let pcOpen = null;
 function closeCard() { const el = $('#pcard'); if (el) el.remove(); const back = pcOpen && pcOpen.back; pcOpen = null; if (back && back.isConnected) back.focus(); }
 function personCard(cid, name, folder) {
+if (soloOn()) return;
 const c = cid ? classById(cid) : null, back = document.activeElement;
 closeCard(); pcOpen = { cid, name, folder, back };
 const el = document.createElement('div'); el.id = 'pcard'; el.className = 'pc-back';
@@ -19181,7 +19513,7 @@ const i = infoOf(c, name), pos = c.names.indexOf(name);
 const field = (k, label, ph, type) => '<label class="pc-f"><span class="pc-k">' + label + '</span><input class="pc-in" type="' + (type || 'text') + '" data-pf="' + k + '" value="' + esc(i[k] || '') + '" placeholder="' + ph + '" autocomplete="off" spellcheck="false">' +
 '<span class="pc-acts">' + (i[k] && k !== 'prev' ? '<button class="link" data-pcopy="' + k + '">Copy</button>' + (k === 'email' ? '<a class="link" href="mailto:' + esc(i.email) + '">Email</a>' : '') : '') + '</span></label>';
 el.innerHTML = '<div class="pc" role="dialog" aria-modal="true" aria-label="Student details"><div class="pc-hd"><div class="pc-av">' + esc(initials(name)) + '</div><div class="pc-tt"><h2>' + esc(name) + '</h2>' +
-'<div class="muted pc-sm">' + esc(c.name) + ' · ' + (pos + 1) + ' of ' + c.names.length + ' on the roster' + (folder && folder !== name ? ' · folder “' + esc(folder) + '”' : '') + '</div></div><button class="icon pc-x" aria-label="Close">✕</button></div>' +
+'<div class="muted pc-sm">' + esc(c.name) + ' · ' + (pos + 1) + ' of ' + c.names.length + ' on the roster' + (folder && folder !== name ? ' · folder “' + esc(folder) + '”' : '') + '</div></div>' + (soloHere(c, name) >= 0 ? '<button class="btn sm" data-psolo>Only this student</button>' : '') + '<button class="icon pc-x" aria-label="Close">✕</button></div>' +
 '<div class="pc-bd">' + field('id', 'Student ID', 'Add their student ID') + field('email', 'Email', 'Add their email', 'email') + field('prev', 'Last year', 'Their level last year (optional)') +
 '<div class="pc-f"><span class="pc-k">Also called</span><span class="pc-chips">' + (i.other || []).map((o, k) => '<span class="pc-chip">' + esc(o) + '<button data-pdrop="' + k + '" aria-label="Remove ' + esc(o) + '" title="Remove this spelling">×</button></span>').join('') +
 '<button class="pc-chip pc-add" data-padd>+ add</button></span><span></span></div>' +
@@ -19214,6 +19546,7 @@ document.addEventListener('click', async e => {
 const el = $('#pcard'); if (!el || !pcOpen) return;
 if (e.target === el || e.target.closest('.pc-x')) return closeCard();
 const c = classById(pcOpen.cid), n = pcOpen.name;
+if (e.target.closest('[data-psolo]')) { const k = soloHere(c, n); closeCard(); return soloStart(k); }
 const cp = e.target.closest('[data-pcopy]'); if (cp) return copy(infoOf(c, n)[cp.dataset.pcopy] || '', 'Copied');
 const dr = e.target.closest('[data-pdrop]');
 if (dr) { const o = [...(infoOf(c, n).other || [])]; o.splice(+dr.dataset.pdrop, 1); setInfo(c, n, { other: o }); saveLib(); afterInfo(c); return renderCard(); }
@@ -20462,7 +20795,14 @@ if (!had || (it.t || 0) > (had.t || 0)) by.set(it.id, it);
 const auto = { ...(b.auto || {}) };
 for (const [k, v] of Object.entries(a.auto || {})) if (!auto[k] || (v.t || 0) >= (auto[k].t || 0)) auto[k] = v;
 const offB = (b.offT || 0) > (a.offT || 0);
-return { ...b, ...a, items: order.map(id => by.get(id)), auto, off: (offB ? b.off : a.off) || {}, offT: Math.max(a.offT || 0, b.offT || 0) };
+const out = { ...b, ...a, items: order.map(id => by.get(id)), auto, off: (offB ? b.off : a.off) || {}, offT: Math.max(a.offT || 0, b.offT || 0) };
+const cats = new Map();
+for (const c of [...(Array.isArray(a.cats) ? a.cats : []), ...(Array.isArray(b.cats) ? b.cats : [])]) if (c && c.id && (!cats.has(c.id) || (c.t || 0) > (cats.get(c.id).t || 0))) cats.set(c.id, c);
+if (cats.size) out.cats = [...cats.values()]; else delete out.cats;
+const oa = a.corder && Array.isArray(a.corder.ids) ? a.corder : null, ob = b.corder && Array.isArray(b.corder.ids) ? b.corder : null;
+const corder = oa && ob ? ((ob.t || 0) > (oa.t || 0) ? ob : oa) : oa || ob;
+if (corder) out.corder = corder; else delete out.corder;
+return out;
 }
 function typedMerge(a, b, bLater) {
 const sa = a.s || {}, sb = b.s || {}, ga = a.gone || {}, gb = b.gone || {}, s = {}, gone = {};
@@ -20474,6 +20814,20 @@ if (r && !(g > (r.t || 0))) s[n] = r; else if (g) gone[n] = g;
 const out = { ...(bLater ? { ...a, ...b } : { ...b, ...a }), s };
 if (Object.keys(gone).length) out.gone = gone; else delete out.gone;
 return out;
+}
+function mergePlan(A, B) {
+const gone = { ...(B.gone || {}) };
+for (const [k, t] of Object.entries(A.gone || {})) if (!(gone[k] >= t)) gone[k] = t;
+const lessons = {}, la = A.lessons || {}, lb = B.lessons || {};
+for (const id of new Set([...Object.keys(la), ...Object.keys(lb)])) {
+const a = la[id], b = lb[id], w = !a ? b : !b ? a : (b.updated || 0) >= (a.updated || 0) ? b : a;
+if (gone['l:' + id] >= (w.updated || 0)) continue;
+lessons[id] = w;
+}
+for (const k of Object.keys(gone)) if (k.startsWith('l:') && lessons[k.slice(2)]) delete gone[k];
+const kv = {}, ka = A.kv || {}, kb = B.kv || {};
+for (const k of new Set([...Object.keys(ka), ...Object.keys(kb)])) { const a = ka[k], b = kb[k]; kv[k] = !a ? b : !b ? a : (b.t || 0) >= (a.t || 0) ? b : a; }
+return { lessons, kv, gone };
 }
 function mergeFields(x, y, win, dev, now, said) {
 const fx = nodeParts(x), fy = nodeParts(y), parts = {}, fv = {}, both = [], fromY = [];
@@ -20653,7 +21007,7 @@ let setLibFrom, libNews;
   };
 }
 const browserFull = () => Object.assign(new DOMException('The small store is full', 'QuotaExceededError'), { small: true });
-const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|refOpen\..*)$/;
+const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|planSeen|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|refOpen\..*)$/;
 function carryLs() {
   const o = {};
   for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && !LS_LOCAL.test(k)) o[k] = localStorage.getItem(k); }
@@ -23096,6 +23450,7 @@ else if (m.t === 'text' && o.comments && one(m.text)) lines.push('text on page: 
 else if (m.t === 'stamp') {
 const name = stampName(m.k);
 if (m.k === 'score') { if (o.comments) lines.push('score sticker: ' + mdq(m.text)); continue; }
+if (m.k === 'crit') { if (o.comments) lines.push('criterion score sticker: ' + mdq((m.name ? m.name + ' ' : '') + m.text)); continue; }
 count(name);
 if (o.stamps) lines.push(isSticker(m.k) ? 'sticker: ' + name : name + (o.words ? on(quoteOf(lineNear(words, m.x, m.y, 60), rx)) : ''));
 } else if (m.t === 'hl') { ink.hl++; count('Highlight'); if (o.words) { const q = quoteOf(wordsIn(words, markRects(m)), rx); if (q) lines.push('highlighted: ' + mdq(q)); } }
@@ -23919,7 +24274,7 @@ return st.files.filter(f => !had.has(f));
 }
 const copyFor = (st, f) => ({ path: f.name, file: new File([f.data], f.name), from: st.key });
 async function partnerCopy(st, f, to) {
-if (f.kind === 'link') { const have = to.files.find(x => x.kind === 'link' && linkKey(x) === linkKey(f)); if (have) return have; }
+if (f.kind === 'link') { const d = linkSame(f), have = to.files.find(x => x.kind === 'link' && (linkKey(x) === linkKey(f) || (!!d && linkSame(x) === d))); if (have) return have; }
 const have = to.files.find(x => x.from === st.key && x.name === f.name); if (have) return have;
 return (await addAndFind(to, [copyFor(st, f)]))[0] || null;
 }
@@ -24003,15 +24358,23 @@ if (o.drive) return { path: o.name + '.url', file: new File([drvBytes(o.drive)],
 if (o.file) { const id = await vkPut(o.file); return { path: o.name + '.url', file: new File([vidBytes(id, o.file.name, o.file.size)], o.name + '.url') }; }
 return { path: o.name + '.url', file: new File([linkBytes(o.url)], o.name + '.url') };
 }
+const linkSpot = url => { const p = url && linkPlayer(url); return p && p.frame ? p.frame : ''; };
+const linkSame = f => linkSpot(linkOf(f.data));
+function sameVideo(st, o) {
+if (o.file) return null;
+const url = o.drive ? 'https://drive.google.com/file/d/' + o.drive.id + '/view' : linkClean(o.url), spot = linkSpot(url);
+if (!url) return null;
+return st.files.find(f => f.kind === 'link' && !vidRef(f.data) && (linkOf(f.data) === url || (!!spot && linkSame(f) === spot))) || null;
+}
 async function videoAdd(st, o, quiet) {
-const list = [await videoEntry(o)];
+const had = sameVideo(st, o), list = had ? [] : [await videoEntry(o)];
 if (o.kind) { npLast = o.kind; const n = npFileName(o.name.replace(/\s*video$/i, '') + ' notes') + '.pdf'; list.push({ path: n, file: new File([await notesPdf(o.kind, batch.name, npRows(setup))], n, { type: 'application/pdf' }) }); }
-const made = await addAndFind(st, list), vid = made.find(f => f.kind === 'link' || f.kind === 'media') || made[0], page = made.find(f => f.kind === 'pdf') || notesFileOf(st);
+const made = list.length ? await addAndFind(st, list) : [], vid = had || made.find(f => f.kind === 'link' || f.kind === 'media') || made[0], page = made.find(f => f.kind === 'pdf') || notesFileOf(st);
 const all = [...new Set([...groupMates(st), ...(o.partners || [])])];
-if (all.length) await partnersJoin(st, page || vid, all, made.filter(f => f.kind !== 'media'));
+if (all.length) await partnersJoin(st, page || vid, all, (had ? [had] : []).concat(made).filter(f => f.kind !== 'media'));
 if (quiet) return made;
 saveSoon(); renderList();
-toast('Added the video to ' + groupNames([st, ...all]));
+toast(had && !made.length && !all.length ? shownName(st, batch.students.indexOf(st)) + ' already has this video' : 'Added the video to ' + groupNames([st, ...all]));
 await openStudent(batch.students.indexOf(st), vid && vid.path);
 return made;
 }
@@ -24595,7 +24958,7 @@ One editing surface (contenteditable) on a white page: paragraphs, a heading, a 
 levels deep, bold, italic, underline and highlight. A paragraph can carry a mark (a strength, a next step or a question, shown
 beside it, never typed) and the moment it was started on the video or the Timer (a chip in the margin, a click plays from there).
 Kept on the student's grade as blocks, never as HTML: st.grade.tn = { l: [{ s: text, k: 'h' heading | 'p' | 'n' | 'q' mark,
-t: seconds, y: 'h2' small heading | 'ul' | 'ol', d: 2 (second list level), f: [[from, to, bits]] (1 bold, 2 italic, 4 underline,
+t: seconds, h: 1 (the time is kept but hidden: a click in the margin hides it or brings it back), y: 'h2' small heading | 'ul' | 'ol', d: 2 (second list level), f: [[from, to, bits]] (1 bold, 2 italic, 4 underline,
 8 highlight) }] }, and gone when empty. The first version saved { s, k, t } only, and that still reads the same.
 On the grade, it is saved, merged, carried in a take-home file and the folder, and shared by a group, the way the comment is.
 setup.tnHead = [text]: every student with no notes starts with these headings, an empty paragraph under each.
@@ -24625,7 +24988,7 @@ if (TN_K[x.k]) o.k = x.k;
 if (/^(h2|ul|ol)$/.test(x.y) && o.k !== 'h') o.y = x.y;
 if (o.y === 'h2' && o.k) delete o.k;
 if (tnListOf(o) && +x.d === 2) o.d = 2;
-if (typeof x.t === 'number' && isFinite(x.t) && x.t >= 0) o.t = Math.floor(x.t);
+if (typeof x.t === 'number' && isFinite(x.t) && x.t >= 0) { o.t = Math.floor(x.t); if (x.h && +x.h) o.h = 1; }
 const f = tnRuns(tnBits({ s: o.s, f: x.f })); if (f.length) o.f = f;
 return o;
 }
@@ -24669,7 +25032,7 @@ const tnHost = () => $('#spBody > .sptool[data-tool="typed"]');
 const tnEd = () => document.querySelector('#spBody .tned');
 function tnEl(x) {
 const el = document.createElement('div'); el.className = 'tnp'; el.tnWas = x.s;
-for (const k of ['k', 'y', 'd', 't']) if (x[k] != null) el.dataset[k] = x[k];
+for (const k of ['k', 'y', 'd', 't', 'h']) if (x[k] != null) el.dataset[k] = x[k];
 if (tnHeadOf(x)) { el.setAttribute('role', 'heading'); el.setAttribute('aria-level', x.k === 'h' ? '3' : '4'); }
 const a = tnBits(x);
 for (let i = 0; i < x.s.length;) {
@@ -24703,7 +25066,7 @@ else if (c.nodeType === 1) walk(c, tnFx(c, b));
 }
 })(el, 0);
 const d = el.dataset || {};
-return tnClean({ s: s.join(''), k: d.k, y: d.y, d: d.d, t: d.t != null && d.t !== '' ? +d.t : null, f: tnRuns(a) });
+return tnClean({ s: s.join(''), k: d.k, y: d.y, d: d.d, t: d.t != null && d.t !== '' ? +d.t : null, h: d.h, f: tnRuns(a) });
 }
 function tnFix(ed) {
 let box = null, moved = null;
@@ -24769,7 +25132,7 @@ b('data-tnl="ol"', 'Numbered list', TN_SVG('<path d="M10 6h10M10 12h10M10 18h10M
 '<span class="tnr">' + b('data-tntm', 'Put the time on this paragraph, or take it off', TN_SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')) + '</span>' +
 kmWrap('⋯', 'class="icon kdots" aria-label="More for these notes" title="More for these notes"',
 '<span class="tnr2">' + marks + times + '</span>' +
-'<button class="mitem" role="menuitemcheckbox" data-tnm="times" aria-checked="true">Times</button>' +
+'<button class="mitem" role="menuitemcheckbox" data-tnm="times" aria-checked="true">Times</button><button class="mitem" data-tnm="alltimes">Hide all times</button>' +
 '<button class="mitem" data-tnm="head">Use these headings for every student</button><button class="mitem" data-tnm="unhead">Clear the headings for every student</button>' +
 '<button class="mitem" role="menuitemcheckbox" data-tnm="back" aria-checked="true">Give these notes back with the paper</button>' +
 '<button class="mitem" data-tnm="size" data-kmstay aria-expanded="false">Text size for the student</button><span class="tnszs" hidden>' +
@@ -24795,13 +25158,24 @@ const vid = tnHasVid(tnSt), on = tnTimesOn(), rows = [];
 const x = tnL[i]; if (!x) return;
 const mk = x.k && x.k !== 'h', tm = on && x.t != null; if (!mk && !tm) return;
 const row = document.createElement('div'); row.className = 'tng'; row.style.top = el.offsetTop + 'px';
-if (tm) { const b = document.createElement('button'); b.className = 'tnchip'; b.dataset.tnt = i; b.title = vid ? 'Play the video from here' : 'The time on the Timer'; b.textContent = fmtTime(x.t); row.appendChild(b); }
+const btn = (c, k, t, txt) => { const b = document.createElement('button'); b.className = c; b.dataset[k] = i; b.title = t; if (txt) b.textContent = txt; else b.innerHTML = TN_SVG(c === 'tnhid' ? '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' : '<path d="M6 6l12 12M18 6 6 18"/>'); if (!txt) b.setAttribute('aria-label', t); row.appendChild(b); };
+if (tm && x.h) btn('tnhid', 'tnts', 'Show this time');
+else if (tm) { btn('tnhide', 'tnts', 'Hide this time'); btn('tnchip', 'tnt', vid ? 'Play the video from here' : 'The time on the Timer', fmtTime(x.t)); }
 if (mk) { const m = document.createElement('i'); m.dataset.k = x.k; m.title = TN_K[x.k][0]; m.textContent = TN_K[x.k][1]; row.appendChild(m); }
 rows.push(row);
 });
 g.replaceChildren(...rows);
 g.parentNode.dataset.g = rows.some(r => r.querySelector('.tnchip')) ? 't' : rows.length ? 'm' : '';
 }
+function tnShowTime(i) {
+const st = tnSt, ed = tnEd(); if (!st || !ed) return;
+const p = document.activeElement === ed ? tnPos() : null;
+tnL = tnReadAll();
+if (i == null) { const T = tnL.filter(x => x.t != null), hide = T.some(x => !x.h); T.forEach(x => { if (hide) x.h = 1; else delete x.h; }); }
+else { const x = tnL[i]; if (!x || x.t == null) return; if (x.h) delete x.h; else x.h = 1; }
+tnL = tnL.map(tnClean); tnPaint(); if (p) tnSetPos(p); tnPut(st, false);
+}
+function tnAllHid() { const T = tnL.filter(x => x.t != null); return T.length > 0 && T.every(x => x.h); }
 function tnBar(h, st) {
 const bar = h && h.querySelector('.tnbar'); if (!bar || !st) return;
 const ed = tnEd(), s = getSelection(), inEd = !!(ed && s.rangeCount && ed.contains(s.anchorNode));
@@ -24810,14 +25184,16 @@ const set = (el, on) => { if (el) el.setAttribute('aria-pressed', String(!!on));
 for (const c of ['bold', 'italic', 'underline']) set(bar.querySelector('[data-tnf="' + c + '"]'), inEd && document.queryCommandState(c));
 set(bar.querySelector('[data-tnf="hl"]'), p && x.s && (tnBits(x)[Math.max(0, Math.min(p.a[1], x.s.length) - 1)] & 8));
 set(bar.querySelector('[data-tnl="ul"]'), x.y === 'ul'); set(bar.querySelector('[data-tnl="ol"]'), x.y === 'ol');
-set(bar.querySelector('[data-tntm]'), x.t != null);
+set(bar.querySelector('[data-tntm]'), x.t != null && !x.h);
 const mk = x.k && x.k !== 'h' ? x.k : ''; set(bar.querySelector('.tnmk'), mk);
 for (const b of h.querySelectorAll('[data-tnmk]')) b.setAttribute('aria-checked', String(b.dataset.tnmk === mk));
 const sty = x.k === 'h' ? 'h' : x.y === 'h2' ? 'h2' : '', w = { '': 'Normal text', h: 'Heading', h2: 'Small heading' }[sty], sl = bar.querySelector('.tnsty span');
 if (sl.dataset.say !== w) { sl.dataset.say = w; sl.textContent = w; }
 for (const b of h.querySelectorAll('[data-tns]')) b.setAttribute('aria-checked', String(b.dataset.tns === sty));
 const any = tnL.some(y => y.s.trim()), heads = tnL.some(y => y.k === 'h' && y.s.trim());
-const show = { times: true, head: heads, unhead: tnHead().length > 0, copy: any, clear: !!tnStored(st), back: true, size: true };
+const timed = tnTimesOn() && tnL.some(y => y.t != null), allw = tnAllHid() ? 'Show all times' : 'Hide all times', ab = bar.querySelector('[data-tnm="alltimes"]');
+if (ab.dataset.say !== allw) { ab.dataset.say = allw; ab.textContent = allw; }
+const show = { times: true, alltimes: timed, head: heads, unhead: tnHead().length > 0, copy: any, clear: !!tnStored(st), back: true, size: true };
 for (const b of bar.querySelectorAll('[data-tnm]')) b.hidden = !show[b.dataset.tnm];
 bar.querySelector('[data-tnm="times"]').setAttribute('aria-checked', String(tnTimesOn()));
 const back = tnBackOn(); bar.querySelector('[data-tnm="back"]').setAttribute('aria-checked', String(back));
@@ -24861,7 +25237,7 @@ for (const [x, a, z] of parts) { const bits = tnBits(x); for (let i = a; i < z; 
 });
 function tnTime() {
 const st = tnSt, t = tnNow(st);
-tnApply((xs, p) => { const x = tnL[p.a[0]]; if (x.t != null) delete x.t; else if (t != null) x.t = Math.floor(t); });
+tnApply((xs, p) => { const x = tnL[p.a[0]]; if (x.t != null && x.h) delete x.h; else if (x.t != null) delete x.t; else if (t != null) x.t = Math.floor(t); });
 if (t == null && tnL.every(x => x.t == null)) toast('A video, or the Timer for a talk given live, gives the times');
 }
 function tnEnter() {
@@ -24882,7 +25258,7 @@ if (s.rangeCount && !s.isCollapsed) { tnQuiet = true; document.execCommand('dele
 tnL = tnReadAll();
 const p = tnPos() || { a: [tnL.length - 1, tnL[tnL.length - 1].s.length] }, i = p.a[0], o = p.a[1], x = tnL[i], a = tnBits(x);
 const head = { s: x.s.slice(0, o), f: tnRuns(a.slice(0, o)) }, tail = { s: x.s.slice(o), f: tnRuns(a.slice(o)) };
-const join = (u, v) => ({ s: u.s + v.s, f: tnRuns([...tnBits(u), ...tnBits(v)]) }), kind = b => ({ k: b.k, y: b.y, d: b.d, t: b.t });
+const join = (u, v) => ({ s: u.s + v.s, f: tnRuns([...tnBits(u), ...tnBits(v)]) }), kind = b => ({ k: b.k, y: b.y, d: b.d, t: b.t, h: b.h });
 const last = P[P.length - 1], out = P.length === 1 ? [{ ...kind(x.s ? x : P[0]), ...join(join(head, P[0]), tail) }]
 : [{ ...kind(head.s ? x : P[0]), ...join(head, P[0]) }, ...P.slice(1, -1), { ...kind(last), ...join(last, tail) }];
 tnL.splice(i, 1, ...out.map(tnClean));
@@ -24937,7 +25313,7 @@ const d2 = tnListOf(x) && x.d === 2;
 if (x.y === 'ol') { if (d2) n2++; else { n1++; n2 = 0; } } else if (!d2) { n1 = 0; n2 = 0; }
 if (!x.s.trim()) continue;
 if (tnHeadOf(x)) { out.push((out.length ? '\n' : '') + x.s); continue; }
-out.push((d2 ? '    ' : '') + (tnListOf(x) ? (x.y === 'ol' ? (d2 ? n2 : n1) + '. ' : '• ') : '') + (x.t != null ? '[' + fmtTime(x.t) + '] ' : '') + (x.k ? TN_K[x.k][0] + ': ' : '') + x.s);
+out.push((d2 ? '    ' : '') + (tnListOf(x) ? (x.y === 'ol' ? (d2 ? n2 : n1) + '. ' : '• ') : '') + (x.t != null && !x.h ? '[' + fmtTime(x.t) + '] ' : '') + (x.k ? TN_K[x.k][0] + ': ' : '') + x.s);
 }
 return out.join('\n');
 }
@@ -24954,7 +25330,7 @@ if (m && p.a[1] === m[0].length) {
 x.y = /^1/.test(m[0]) ? 'ol' : 'ul'; x.f = tnRuns(tnBits(x).slice(m[0].length)); x.s = x.s.slice(m[0].length);
 tnL = L.map(tnClean); tnPaint(); tnSetPos({ a: [i, 0], z: [i, 0] }); return tnPut(st, false);
 }
-if (/^insert/.test(type) && el && !el.tnWas && x.s && x.t == null && !tnHeadOf(x) && tnTimesOn()) { const t = tnNow(st); if (t != null) { x.t = Math.floor(t); el.dataset.t = x.t; } }
+if (/^insert/.test(type) && el && !el.tnWas && x.s && x.t == null && !tnHeadOf(x) && tnTimesOn()) { const t = tnNow(st); if (t != null) { const hid = tnAllHid(); x.t = Math.floor(t); el.dataset.t = x.t; if (hid) { x.h = 1; el.dataset.h = 1; } } }
 }
 [...ed.children].forEach((el, j) => { el.tnWas = L[j].s; });
 tnL = L; tnPut(st, /^(insertText|insertCompositionText|deleteContent)/.test(type)); tnMore();
@@ -24998,7 +25374,7 @@ $('#paper').addEventListener('mousedown', e => { if (e.target.closest('.tnbar bu
 $('#paper').addEventListener('click', async e => {
 const box = e.target.closest('.tn'); if (!box || !batch || tnSt !== batch.students[cur]) return;
 if (e.target.closest('.kdots')) { const sb = box.querySelector('[data-tnm="size"]'); sb.setAttribute('aria-expanded', 'false'); sb.nextElementSibling.hidden = true; }
-const st = tnSt, el = e.target.closest('[data-tnsz],[data-tnf],[data-tnl],[data-tns],[data-tnmk],[data-tntm],[data-tnclk],[data-tnt],[data-tnrub],[data-tnm],[data-tnback]'); if (!el) return;
+const st = tnSt, el = e.target.closest('[data-tnsz],[data-tnf],[data-tnl],[data-tns],[data-tnmk],[data-tntm],[data-tnclk],[data-tnt],[data-tnts],[data-tnrub],[data-tnm],[data-tnback]'); if (!el) return;
 const d = el.dataset;
 if (d.tnf) { if (d.tnf === 'hl') return tnHl(); tnRestore(); return document.execCommand(d.tnf); }
 if (d.tnl) return tnList(d.tnl);
@@ -25006,6 +25382,7 @@ if (d.tns != null) return tnStyle(d.tns);
 if (d.tnmk != null) return tnMark(d.tnmk);
 if (d.tntm != null) return tnTime();
 if (d.tnclk != null) { spClockGo(spClockOf(st)); return tnBar(tnHost(), st); }
+if (d.tnts != null) return tnShowTime(+d.tnts);
 if (d.tnt) { const x = tnL[+d.tnt]; if (x && x.t != null && !vidSeek($('#paper'), x.t)) toast('This time is from the Timer. There is no video to go to.'); return; }
 if (d.tnrub != null) { tnL = setup.criteria.flatMap(s => [{ s: String(s), k: 'h' }, { s: '' }]); tnPaint(); tnSetPos({ a: [1, 0], z: [1, 0] }); return tnPut(st, false); }
 if (d.tnback != null || d.tnm === 'back') { if (tnBackOn()) setup.tnBack = false; else delete setup.tnBack; spSetupKeep(); tnBar(tnHost(), st); return toast(tnBackOn() ? 'Typed notes go back with each paper in this assignment' : 'Typed notes stay with you in this assignment'); }
@@ -25018,6 +25395,7 @@ redo(); return toast('The notes page goes back in ' + TN_SIZE[d.tnsz][1] + ' tex
 }
 const m = d.tnm;
 if (m === 'size') { const sub = el.nextElementSibling, on = sub.hidden; sub.hidden = !on; el.setAttribute('aria-expanded', String(on)); if (on) { const c = sub.querySelector('[aria-checked=true]') || sub.firstChild; c.focus({ preventScroll: true }); } return; }
+if (m === 'alltimes') { const hid = tnAllHid(); tnShowTime(null); return toast(hid ? 'Times shown again' : 'Times hidden. Show all times brings them back.'); }
 if (m === 'times') { if (tnTimesOn()) store.set('gs.tnTime', false); else store.del('gs.tnTime'); return tnMore(); }
 if (m === 'head') { setup.tnHead = tnL.filter(x => x.k === 'h' && x.s.trim()).map(x => x.s.trim()); spSetupKeep(); tnBar(tnHost(), st); return toast('Every student with no notes yet starts with ' + setup.tnHead.length + (setup.tnHead.length === 1 ? ' heading' : ' headings')); }
 if (m === 'unhead') { delete setup.tnHead; spSetupKeep(); tnLoad(tnHost(), st); return toast('Students with no notes start with an empty page again'); }
@@ -28997,7 +29375,7 @@ exCardAct(e, page, exPageRender);
 }
 exReady.then(exRailSay);
 
-Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete, exSaveShot, exTagsOf, exShotWhere, isScoreMark });
+Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete, exSaveShot, exTagsOf, exShotWhere, isScoreMark, scoreOffHides });
 
 /* ---------------- linked classes: sections of one course on the same schedule (11/16) ---------------- */
 function lkKey(s) { return String(s || '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''); }
@@ -29598,21 +29976,102 @@ items: [{ id, x: the words, d: 'YYYY-MM-DD' or '', c: class id, who: roster name
 ppl: [ids of people on the School page (gs.school people: the principal, a coordinator...)],
 note, done: time, made: time, t: time it last changed }]   (a deleted one stays as { id, t, gone: 1 } so it stays deleted after a merge)
 off:   { mark | back | plan | miss: 1 } the kinds the app no longer adds, offT when that was last changed
-auto:  { <line's key>: { d: day it was moved to, h: hidden while its number is this, t } } */
+auto:  { <line's key>: { d: day it was moved to, h: hidden while its number is this, k: category it was moved to, t } }
+cats:  [{ id, name (only once she renames one the app starts with, or for her own), w: her words that bring a line there, t, gone }]
+corder: { ids: [category ids in her order], t }
+A line's category is k on the line (or '-' for none) when she chose one, and otherwise worked out from its words each time it is
+drawn, so lines saved before categories existed are never rewritten. */
 const TD_KINDS = [['mark', 'Papers to mark'], ['back', 'Papers to hand back'], ['plan', 'Lessons not planned yet'], ['miss', 'Missing work to chase']];
 let tdS = { filter: 'all', sel: '', done: false, drop: {}, week: 0, drag: '' };
+const tdBy = () => { try { return localStorage.getItem('gs.tdBy') === 'cat' ? 'cat' : 'day'; } catch { return 'day'; } };
 const TD_DAY = 864e5;
-const tdData = () => { const t = lib.todo || {}; return { items: Array.isArray(t.items) ? t.items : [], off: t.off || {}, offT: t.offT || 0, auto: t.auto || {} }; };
+const tdData = () => { const t = lib.todo || {}; return { items: Array.isArray(t.items) ? t.items : [], off: t.off || {}, offT: t.offT || 0, auto: t.auto || {}, cats: Array.isArray(t.cats) ? t.cats : [], corder: t.corder && Array.isArray(t.corder.ids) ? t.corder : null }; };
 function tdSave(part) {
 const d = { ...tdData(), ...part }, now = Date.now();
 d.items = d.items.filter(it => it && it.id && !(it.gone && now - (it.t || 0) > 180 * TD_DAY) && !(it.done && now - it.done > 120 * TD_DAY));
 d.auto = Object.fromEntries(Object.entries(d.auto).filter(([, a]) => a && now - (a.t || 0) < 60 * TD_DAY));
+d.cats = d.cats.filter(c => c && c.id && !(c.gone && !TD_CAT0.some(b => b[0] === c.id) && now - (c.t || 0) > 180 * TD_DAY));
+if (!d.cats.length) delete d.cats;
+if (!d.corder) delete d.corder;
 lib.todo = d; saveLib(); todoRender();
 }
 const tdItems = () => tdData().items.filter(it => it && it.id && !it.gone);
 const tdItem = id => tdItems().find(it => it.id === id) || null;
 function tdPut(id, part) { const now = Date.now(); tdSave({ items: tdData().items.map(it => it.id === id ? { ...it, ...part, t: now } : it) }); }
 function tdAutoPut(key, part) { const d = tdData(); tdSave({ auto: { ...d.auto, [key]: { ...(d.auto[key] || {}), ...part, t: Date.now() } } }); }
+
+/* ---------- categories ---------- */
+const TD_CAT0 = [['grade', 'Grading and feedback'], ['plan', 'Lesson planning'], ['admin', 'Administrative'], ['role', 'Leadership role']];
+const TD_CATW = {
+grade: ['mark|marks|marked|marking|grade|grades|graded|grading|regrade|feedback|score|scores|scoring|assess|assessing|assessment|assessments|moderate|moderation|moderating|hand back|report comments|report card|report cards|conference|conferences|retake|retakes|gradebook|proofread', 'return|rubric|rubrics|quiz|quizzes|test|tests|exam|exams|essay|essays|papers|drafts|lab reports|comments'],
+plan: ['plan|plans|planning|lesson|lessons|slides|slide deck|handout|handouts|worksheet|worksheets|print|photocopy|copies|prep|curriculum|activity|activities|materials|resources|reading list|answer key|seating chart|lab setup', 'make|create|write|prepare|design|build|set up|assignment|assignments|project|projects'],
+admin: ['email|emails|meeting|meetings|form|forms|attendance|duty|duties|sign|submit|deadline|budget|order|permission|parent|parents|call|phone|admin|paperwork|register|trip|field trip|calendar|schedule|supplies|reimbursement|office|newsletter|report to', ''],
+role: ['coach|coaching|workshop|workshops|training|mentor|mentoring|committee|professional development|pd|demo|lead|leading', ''],
+};
+const TD_STOP = new Set(['role', 'work', 'other', 'things', 'stuff', 'tasks', 'with', 'from', 'misc', 'more', 'about', 'general']);
+const tdRx = alts => new RegExp('(?<![\\p{L}\\p{N}])(?:' + alts + ')(?![\\p{L}\\p{N}])', 'iu');
+const tdEsc = w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function tdCats() {
+const d = tdData(), by = new Map(d.cats.map(c => [c.id, c])), ids = d.corder ? d.corder.ids.filter(x => typeof x === 'string') : [];
+for (const [id] of TD_CAT0) if (!ids.includes(id)) ids.push(id);
+for (const c of d.cats) if (c && c.id && !ids.includes(c.id)) ids.push(c.id);
+return [...new Set(ids)].map(id => {
+const c = by.get(id), b = TD_CAT0.find(x => x[0] === id);
+if ((c && c.gone) || (!c && !b)) return null;
+return { id, name: (c && c.name) || (b ? b[1] : ''), own: !!(c && c.name), w: (c && c.w) || '', base: !!b };
+}).filter(Boolean);
+}
+const tdCat = id => tdCats().find(c => c.id === id) || null;
+const tdOwnWords = c => [...String(c.w || '').split(/[,;\n]+/).map(x => x.trim()).filter(x => x.length >= 2), ...(c.own ? c.name.split(/[^\p{L}\p{N}]+/u).filter(x => x.length >= 4 && !TD_STOP.has(x.toLowerCase())) : [])];
+function tdGuess(text, it) {
+const cats = tdCats(), t = String(text || '');
+const first = list => { let best = null; for (const [id, alts] of list) { if (!alts) continue; const m = tdRx(alts).exec(t); if (m && (!best || m.index < best.i || (m.index === best.i && m[0].length > best.n))) best = { id, i: m.index, n: m[0].length }; } return best ? best.id : ''; };
+const own = cats.map(c => [c.id, tdOwnWords(c).map(w => tdEsc(w) + '(?:s|es)?').join('|')]);
+let k = first(own); if (k) return k;
+const base = cats.filter(c => c.base && TD_CATW[c.id]);
+k = first(base.map(c => [c.id, TD_CATW[c.id][0]])); if (k) return k;
+if (it && it.a && cats.some(c => c.id === 'grade')) return 'grade';
+return first(base.map(c => [c.id, TD_CATW[c.id][1]]));
+}
+const TD_KIND_CAT = { mark: 'grade', back: 'grade', miss: 'grade', plan: 'plan' };
+function tdCatOf(r) {
+const k = r.auto ? (tdData().auto[r.key] || {}).k : r.it && r.it.k;
+if (k === '-') return { id: '', chose: true };
+if (k && tdCat(k)) return { id: k, chose: true };
+if (r.auto) { const id = TD_KIND_CAT[r.kind]; return { id: id && tdCat(id) ? id : '', chose: false }; }
+return { id: tdGuess(r.it.x + ' ' + (r.it.note || ''), r.it), chose: false };
+}
+function tdCatSave(list, order) {
+const d = tdData(), now = Date.now(), by = new Map(d.cats.map(c => [c.id, c]));
+for (const c of list) by.set(c.id, { ...c, t: now });
+tdSave({ cats: [...by.values()], ...(order ? { corder: { ids: order, t: now } } : {}) });
+}
+function tdCatPut(id, part) {
+const had = tdData().cats.find(c => c.id === id) || { id }, next = { ...had, ...part };
+const b = TD_CAT0.find(x => x[0] === id);
+if (next.name != null && (!next.name || (b && next.name === b[1]))) delete next.name;
+if (!next.w) delete next.w;
+tdCatSave([next]);
+}
+function todoCatAdd(name, w) {
+name = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 40); if (!name) return null;
+const same = tdCats().find(c => c.name.toLowerCase() === name.toLowerCase()); if (same) return same.id;
+const id = 'tc' + uid();
+tdCatSave([{ id, name, ...(w ? { w: String(w).slice(0, 300) } : {}) }], [...tdCats().map(c => c.id), id]);
+return id;
+}
+function todoCatMove(id, by) {
+const ids = tdCats().map(c => c.id), i = ids.indexOf(id), j = i + by;
+if (i < 0 || j < 0 || j >= ids.length) return;
+[ids[i], ids[j]] = [ids[j], ids[i]];
+const now = Date.now(); tdSave({ corder: { ids, t: now } });
+}
+function todoCatDelete(id) {
+const c = tdCat(id); if (!c) return;
+const was = tdData().cats.find(x => x.id === id) || null;
+tdCatSave([{ id, gone: 1 }]);
+toastDo('Category “' + c.name + '” deleted. Its lines go where their words fit.', 'Undo', () => { const d = tdData(); tdSave({ cats: [...d.cats.filter(x => x.id !== id), { ...(was || { id }), t: Date.now() }] }); });
+}
 
 /* ---------- days ---------- */
 const tdToday = () => isoDay(Date.now());
@@ -29697,6 +30156,7 @@ drop = drop || {};
 const r = todoRead(text); if (!r.raw) return null;
 const now = Date.now(), it = { id: 'td' + uid(), x: drop.d ? r.raw : r.x, d: drop.d ? '' : r.d, c: drop.c ? '' : r.c, who: drop.c || drop.who ? '' : r.who, a: '', rep: drop.d ? '' : r.rep, note: '', done: 0, made: now, t: now };
 if (!drop.p && r.ppl.length) it.ppl = r.ppl;
+if (drop.k) it.k = '-';
 for (const [k, v] of Object.entries(base || {})) if (!it[k]) it[k] = v;
 tdSave({ items: [...tdData().items, it] });
 return it;
@@ -29798,11 +30258,12 @@ function tdRow(r, today, card) {
 const done = !!r.done, late = !done && r.d && r.d < today, due = done ? 'Done' : tdDaySay(r.d, today);
 const word = !due || due === 'Done' || due === 'Today' || due === 'Tomorrow';
 let meta = '';
-if (r.auto) meta = '<span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '');
+const cat = !card && tdBy() !== 'cat' ? tdCat(tdCatOf(r).id) : null, catH = cat ? '<span class="tdcat"' + (cat.own ? ' data-raw' : '') + '>' + esc(cat.name) + '</span>' : '';
+if (r.auto) meta = '<span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '') + catH;
 else {
 const it = r.it, a = it.a && findItem(it.a);
 meta = [r.c ? '<span class="tdc" data-raw>' + tdDot(r.c) + esc(r.c.name) + '</span>' : '', it.who ? '<span data-raw>' + esc(it.who) + '</span>' : '', tdPplHtml(it), a ? '<span data-raw>' + esc(a.it.name) + '</span>' : '',
-it.rep ? '<span>' + TD_REP[it.rep] + '</span>' : '', it.note ? '<span>Note</span>' : ''].filter(Boolean).join('');
+it.rep ? '<span>' + TD_REP[it.rep] + '</span>' : '', it.note ? '<span>Note</span>' : ''].filter(Boolean).join('') + catH;
 }
 const btn = r.auto && !card ? (r.btn.open ? '<button class="btn sm" data-tdopen="' + esc(r.btn.open) + '">' + r.btn.label + '</button>' : '<a class="btn sm" href="' + esc(r.btn.href) + '">' + r.btn.label + '</a>') : '';
 return '<div class="tdrow' + (done ? ' done' : '') + (r.auto ? ' auto' : '') + (!card && tdS.sel === r.id ? ' sel' : '') + '" data-td="' + esc(r.id) + '">' +
@@ -29880,13 +30341,15 @@ if (!r && routeNow().week) return '';
 if (!r) {
 const off = tdData().off;
 return '<h2 class="tcap">The app adds these for you</h2><div class="tcard tdkinds">' + TD_KINDS.map(([k, l]) => '<button class="tdsw" role="switch" aria-checked="' + !off[k] + '" data-tdkind="' + k + '"><span>' + l + '</span><i aria-hidden="true"></i></button>').join('') +
-'<p class="muted">These come from your saved work and go by themselves when the work is done. You can move one to another day or hide it, and you never have to type it.</p></div>';
+'<p class="muted">These come from your saved work and go by themselves when the work is done. You can move one to another day or hide it, and you never have to type it.</p></div>' + tdCatsCard();
 }
 const chip = (attr, on, label) => '<button class="tdchip' + (on ? ' on' : '') + '" ' + attr + ' aria-pressed="' + !!on + '">' + label + '</button>';
 const when = '<div class="tdf"><span class="tdl">When</span><div class="tdv">' + chip('data-tdwhen="today"', r.d === today, 'Today') + chip('data-tdwhen="tomorrow"', r.d === tdAdd(today, 1), 'Tomorrow') + chip('data-tdwhen="week"', r.d === tdNextMon(today), 'Next week') + (r.own ? chip('data-tdwhen="none"', !r.d, 'No day') : '') +
 '<input type="date" id="tdDate" value="' + esc(r.d) + '" aria-label="Pick a day" title="Pick a day"></div></div>';
 const x = '<button class="icon tdclose" data-tdclose aria-label="Close" title="Close">✕</button>';
-if (r.auto) return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<h2 class="tdtitle" data-raw>' + esc(r.x) + '</h2><p class="tdm"><span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '') + '</p>' + when +
+const ck = tdCatOf(r), catF = '<div class="tdf"><label class="tdl" for="tdCat">Category</label><div class="tdv"><select id="tdCat" class="btn sm">' + tdCats().map(c => '<option value="' + esc(c.id) + '"' + (c.id === ck.id ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') +
+'<option value="-"' + (ck.id ? '' : ' selected') + '>No category</option><option value="+">New category…</option></select>' + (ck.chose ? '' : '<span class="muted tdguess">' + (ck.id ? 'from its words' : 'no category fits its words') + '</span>') + '</div></div>';
+if (r.auto) return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<h2 class="tdtitle" data-raw>' + esc(r.x) + '</h2><p class="tdm"><span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '') + '</p>' + when + catF +
 '<p class="muted tdsay">The app noticed this from your saved work. It goes by itself when the work is done.</p><div class="tdacts">' + (r.btn.open ? '<button class="btn primary" data-tdopen="' + esc(r.btn.open) + '">' + r.btn.label + '</button>' : '<a class="btn primary" href="' + esc(r.btn.href) + '">' + r.btn.label + '</a>') +
 (r.kind === 'mark' ? '<button class="btn" data-tdfocus="' + esc('mark:' + r.key.slice(5)) + '" title="Start a focus session on these papers">Focus on this</button>' : '') +
 '<span class="sp"></span><button class="btn" data-tdhide>Hide this</button></div></div>';
@@ -29906,9 +30369,26 @@ mine.map(p => '<span class="tdpchip"><span class="tdp" data-raw>' + SCH_IC.perso
 '<button class="icon" data-tdpx="' + esc(p.id) + '" aria-label="Take ' + esc(p.name) + ' off this to-do" title="Take off">✕</button></span>').join('') +
 '<select id="tdPpl" class="btn sm"><option value="">' + (mine.length ? 'Add someone else…' : 'Add someone…') + '</option>' + others.map(p => '<option value="' + esc(p.id) + '">' + esc(schWho(p)) + '</option>').join('') + '<option value="+">Someone new…</option></select></div></div>';
 const rep = '<div class="tdf"><span class="tdl">Repeats</span><div class="tdv">' + chip('data-tdrep=""', !it.rep, 'No') + chip('data-tdrep="day"', it.rep === 'day', 'Every school day') + chip('data-tdrep="week"', it.rep === 'week', 'Every week') + (pc || it.rep === 'meet' ? chip('data-tdrep="meet"', it.rep === 'meet', 'Each time this class meets') : '') + '</div></div>';
-return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<textarea class="tdtitle" id="tdX" rows="2" maxlength="300" aria-label="What to do">' + esc(it.x) + '</textarea>' + when + cls + goes + ppl + rep +
+return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<textarea class="tdtitle" id="tdX" rows="2" maxlength="300" aria-label="What to do">' + esc(it.x) + '</textarea>' + when + catF + cls + goes + ppl + rep +
 '<div class="tdf top"><label class="tdl" for="tdNote">Note</label><div class="tdv"><textarea id="tdNote" rows="3" maxlength="2000" placeholder="Anything to remember about it">' + esc(it.note || '') + '</textarea></div></div>' +
 '<div class="tdacts"><button class="btn primary" data-tdfin>' + (it.done ? 'Not done after all' : 'Done') + '</button>' + (it.done ? '' : '<button class="btn" data-tdwhen="tomorrow">Move to tomorrow</button><button class="btn" data-tdfocus="' + esc('td:' + it.id) + '" title="Start a focus session on this to-do">Focus on this</button>') + '<span class="sp"></span><button class="btn ghost" data-tddel>Delete</button></div></div>';
+}
+function tdCatGroupsHtml(rows, g, today, sec) {
+const live = [...g.late, ...g.now, ...g.week, ...g.later], by = new Map(), cats = tdCats();
+for (const r of live) { const k = tdCatOf(r).id; if (!by.has(k)) by.set(k, []); by.get(k).push(r); }
+const csec = (k, name, own, list) => list.length ? '<div class="tdgrp" data-tdgrp="cat:' + esc(k) + '"><b' + (own ? ' data-raw' : '') + '>' + esc(name) + '</b> <span>' + list.filter(x => !x.done).length + '</span></div>' + list.map(x => tdRow(x, today)).join('') : '';
+const order = list => list.sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || tdSort(a, b));
+return cats.map(c => csec(c.id, c.name, c.own, order(by.get(c.id) || []))).join('') + csec('', 'No category', false, order(by.get('') || [])) + (tdS.done ? sec('done', 'Done in the last 7 days', g.done) : '');
+}
+function tdCatsCard() {
+const cats = tdCats();
+return '<h2 class="tcap">Categories</h2><div class="tcard tdcats">' + cats.map((c, i) => '<div class="tdcatrow" data-tdcat="' + esc(c.id) + '">' +
+'<input class="tdcatn" type="text" maxlength="40" value="' + esc(c.name) + '" aria-label="Category name"' + (c.own ? ' data-raw' : '') + '>' +
+'<button class="icon" data-tdcmv="-1"' + (i ? '' : ' disabled') + ' aria-label="Move up" title="Move up">↑</button><button class="icon" data-tdcmv="1"' + (i < cats.length - 1 ? '' : ' disabled') + ' aria-label="Move down" title="Move down">↓</button>' +
+'<button class="icon" data-tdcdel aria-label="Delete ' + esc(c.name) + '" title="Delete">✕</button>' +
+'<input class="tdcatw" type="text" maxlength="300" value="' + esc(c.w) + '" placeholder="' + (c.id === 'role' && !c.own ? 'Rename it for your role, like Instructional coach' : 'Words that bring a line here, like ' + ({ grade: 'conferences', plan: 'labs', admin: 'IEP', role: 'tech' }[c.id] || 'yearbook, club')) + '" aria-label="Words that bring a line to ' + esc(c.name) + '"></div>').join('') +
+'<form class="tdcatadd" id="tdCatAdd" autocomplete="off"><input type="text" maxlength="40" placeholder="Add a category, like Yearbook" aria-label="Add a category"><button class="btn sm">Add</button></form>' +
+'<p class="muted">A new line goes to the category its words fit. Pick another on the line any time; your pick stays.</p></div>';
 }
 function tdPageRender() {
 const r = routeNow(); if (r.v !== 'todo' || batch) return;
@@ -29930,11 +30410,13 @@ fb.hidden = !fp;
 const nDone = tdGroups(all, today).done.length, db = $('#tdDoneBtn');
 db.hidden = !nDone; db.textContent = (tdS.done ? 'Hide' : 'Show') + ' done in the last 7 days · ' + nDone; db.setAttribute('aria-pressed', String(tdS.done));
 const sec = (k, name, list) => list.length ? '<div class="tdgrp' + (k === 'late' ? ' late' : '') + '" data-tdgrp="' + k + '">' + name + ' <span>' + (k === 'done' ? list.length : list.filter(x => !x.done).length) + '</span></div>' + list.map(x => tdRow(x, today)).join('') : '';
-const h = sec('late', 'Overdue', g.late) + sec('now', 'Today', g.now) + sec('week', 'Next 7 days', g.week) + sec('later', 'Later', g.later) + (tdS.done ? sec('done', 'Done in the last 7 days', g.done) : '');
+const byCat = tdBy() === 'cat';
+for (const b of document.querySelectorAll('#tdBy [data-tdby]')) b.setAttribute('aria-pressed', String((b.dataset.tdby === 'cat') === byCat));
+const h = byCat ? tdCatGroupsHtml(rows, g, today, sec) : sec('late', 'Overdue', g.late) + sec('now', 'Today', g.now) + sec('week', 'Next 7 days', g.week) + sec('later', 'Later', g.later) + (tdS.done ? sec('done', 'Done in the last 7 days', g.done) : '');
 tdPutHtml($('#tdList'), h || '<p class="tdnone">' + (tdS.filter === 'all' ? 'Nothing here yet. Type something above and press Enter, like “Print handouts tomorrow”.' : 'Nothing here for this view.') + '</p>');
 const wk = !!r.week, box = $('#tdWeek');
 for (const b of document.querySelectorAll('#tdView [data-tdview]')) b.setAttribute('aria-pressed', String((b.dataset.tdview === 'week') === wk));
-$('#vTodo .tdgrid').classList.toggle('wk', wk); box.hidden = !wk;
+$('#vTodo .tdgrid').classList.toggle('wk', wk); box.hidden = !wk; $('#tdBy').hidden = wk;
 const typing = wk && box.contains(document.activeElement) && document.activeElement.matches('input') && document.activeElement.value;
 if (wk && !typing) tdPutHtml(box, tdWeekHtml(rows, today));
 tdPutHtml($('#tdSide'), tdSideHtml(all, today));
@@ -29945,6 +30427,8 @@ if (r.d && !tdS.drop.d) parts.push('<button class="tdchip on" data-tddrop="d" ti
 if (c && !tdS.drop.c) parts.push('<button class="tdchip" data-tddrop="c" title="Not about this class">' + tdDot(c) + '<span data-raw>' + esc(c.name) + '</span></button>');
 if (c && r.who && !tdS.drop.c && !tdS.drop.who) parts.push('<button class="tdchip" data-tddrop="who" title="Not about this student"><span data-raw>' + esc(r.who) + '</span></button>');
 if (!tdS.drop.p) for (const p of r.ppl.map(tdPerson).filter(Boolean)) parts.push('<button class="tdchip" data-tddrop="p" title="Not about ' + esc(p.name) + '">' + SCH_IC.person + '<span data-raw>' + esc(p.name) + '</span></button>');
+const k = !tdS.drop.k && r.raw ? tdCat(tdGuess(r.x)) : null;
+if (k) parts.push('<button class="tdchip" data-tddrop="k" title="Not this category"><span' + (k.own ? ' data-raw' : '') + '>' + esc(k.name) + '</span></button>');
 box.hidden = !parts.length;
 tdPutHtml(box, parts.length ? '<span>Understood as</span>' + parts.join('') + '<span class="tdhint">Click one to take it off</span>' : '');
 }
@@ -30000,6 +30484,9 @@ if ((b = hit('data-tdwk'))) { tdS.week = +b.dataset.tdwk ? tdS.week + +b.dataset
 if ((b = hit('data-tdf'))) { tdS.filter = b.dataset.tdf; tdPageRender(); return; }
 if ((b = hit('data-tdkind'))) { const d = tdData(), off = { ...d.off }, k = b.dataset.tdkind; if (off[k]) delete off[k]; else off[k] = 1; tdSave({ off, offT: Date.now() }); if (k === 'miss' && !off.miss) tdMissLoad(); return; }
 if (hit('data-tdclose')) { tdS.sel = ''; tdPageRender(); return; }
+if ((b = hit('data-tdby'))) { try { localStorage.setItem('gs.tdBy', b.dataset.tdby); } catch {} tdPageRender(); return; }
+if ((b = hit('data-tdcmv'))) { todoCatMove(b.closest('[data-tdcat]').dataset.tdcat, +b.dataset.tdcmv); return; }
+if ((b = hit('data-tdcdel'))) { todoCatDelete(b.closest('[data-tdcat]').dataset.tdcat); return; }
 const id = tdS.sel, auto = id.startsWith('auto:'), r = auto ? todoAuto().find(x => x.id === id) : null;
 if (!id || (auto && !r)) return;
 const setDay = d => auto ? tdAutoPut(r.key, { d }) : tdPut(id, { d, ...(d ? {} : { rep: '' }) });
@@ -30037,8 +30524,22 @@ if (!day || day < tdToday()) { toast('A line the app added needs a day, today or
 tdAutoPut(r.key, { d: day });
 }
 $('#tdDoneBtn').onclick = () => { tdS.done = !tdS.done; tdPageRender(); };
+async function tdCatPick(id, v) {
+if (v === '+') { const name = await askTextDlg('Name the new category', '', { ok: 'Add' }); v = name && todoCatAdd(name); if (!v) { tdPageRender(); return; } }
+if (id.startsWith('auto:')) { const r = todoAuto().find(x => x.id === id); if (r) tdAutoPut(r.key, { k: v }); }
+else if (tdItem(id)) tdPut(id, { k: v });
+}
+$('#tdSide').addEventListener('submit', e => {
+const f = e.target.closest('#tdCatAdd'); if (!f) return;
+e.preventDefault();
+const i = f.querySelector('input'); if (todoCatAdd(i.value)) { const again = $('#tdCatAdd input'); if (again) again.focus(); }
+});
 $('#tdSide').addEventListener('change', e => {
-const id = tdS.sel, t = e.target; if (!id) return;
+const id = tdS.sel, t = e.target, row = t.closest && t.closest('[data-tdcat]');
+if (row && t.classList.contains('tdcatn')) { const v = t.value.replace(/\s+/g, ' ').trim(); if (v) tdCatPut(row.dataset.tdcat, { name: v }); else t.value = (tdCat(row.dataset.tdcat) || {}).name || ''; return; }
+if (row && t.classList.contains('tdcatw')) { tdCatPut(row.dataset.tdcat, { w: t.value.replace(/\s+/g, ' ').trim() }); return; }
+if (!id) return;
+if (t.id === 'tdCat') { tdCatPick(id, t.value); return; }
 if (t.id === 'tdDate') {
 if (id.startsWith('auto:')) { const r = todoAuto().find(x => x.id === id); if (r && t.value) tdAutoPut(r.key, { d: t.value }); }
 else tdPut(id, { d: t.value || '', ...(t.value ? {} : { rep: '' }) });
@@ -30071,7 +30572,7 @@ tdS.filter = 'p:' + pid; tdS.sel = it.id; go('#/todo'); tdPageRender();
 const x = $('#tdX'); if (x) { x.focus(); x.select(); }
 }
 const bgBusy = () => !!planBusy || !!tdMiss.busy;
-Object.assign(window.__gs, { todoShowPerson, todoForPerson, todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove, bgBusy });
+Object.assign(window.__gs, { tdCats, tdGuess, tdCatOf, todoCatAdd, todoCatMove, todoCatDelete, todoShowPerson, todoForPerson, todoRead, todoAdd, todoRows, todoCount, todoTick, todoMove, bgBusy });
 
 
 const LOFI_SCALES = { maj: [0, 2, 4, 5, 7, 9, 11], min: [0, 2, 3, 5, 7, 8, 10], dor: [0, 2, 3, 5, 7, 9, 10] };
@@ -31574,7 +32075,7 @@ const grp = setGroupOf(r.sec), on = k => grp[3].includes(k), moved = r.sec !== s
 if (moved) { const was = setSecWas; setSecWas = r.sec; if (!was || setGroupOf(was) !== grp) { if (on('grading')) setBankCount(); if (on('timetable')) planRefresh(); if (on('history')) gbOpen(); } }
 const nav = SET_GROUPS.map(([k, t, s]) => '<a class="setlink' + (k === grp[0] ? ' on' : '') + '" href="' + setHash(k) + '" data-set="' + k + '"' + (k === grp[0] ? ' aria-current="page"' : '') + '><b>' + t + '</b><span>' + s + '</span></a>').join('');
 const box = $('#setNav'); if (box.dataset.h !== nav) { box.dataset.h = nav; box.innerHTML = nav; }
-for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = !on(el.dataset.sec);
+for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = !on(el.dataset.sec) || (el.dataset.need === 'google' && !(G.email && !G_REDIRECT));
 const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
 for (const k of grp[3]) { meSetRender(k); attSetRender(k); stpSetRender(k); fcSetRender(k); tkSetRender(k); gpSetRender(k); }
 if (on('marking')) setInksSay();
@@ -31802,7 +32303,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.50":["Planning time also counts outside focus sessions once you've worked steadily in the Planner for a few minutes, 3 unless you change it in Settings, Focus and goals. A quick change before class doesn't count, and time during your classes on the timetable never counts."]};
+const WHATS_NEW = {"1.28.60":["Long names in the student list on the marking screen now wrap onto a second line instead of ending in …, so you can tell everyone apart. Tags like late, group and sent sit under the name."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -31944,7 +32445,8 @@ nyStrip(L.book, names, ['terms', 'cats', 'w']);
 }
 if (L.todo && typeof L.todo === 'object') {
 const low = [...names].map(n => n.toLowerCase()), says = i => { const t = (String(i.x || '') + ' ' + String(i.note || '')).toLowerCase(); return low.some(n => t.includes(n)); };
-L.todo = { items: (Array.isArray(L.todo.items) ? L.todo.items : []).filter(i => i && !i.gone && !i.done && (o.roster || !(i.who || says(i)))), off: { ...(L.todo.off || {}) }, offT: L.todo.offT || 0, auto: {} };
+L.todo = { items: (Array.isArray(L.todo.items) ? L.todo.items : []).filter(i => i && !i.gone && !i.done && (o.roster || !(i.who || says(i)))), off: { ...(L.todo.off || {}) }, offT: L.todo.offT || 0, auto: {},
+...(Array.isArray(L.todo.cats) ? { cats: L.todo.cats.filter(c => c && c.id && (o.roster || !says({ x: c.name, note: c.w }))) } : {}), ...(L.todo.corder ? { corder: L.todo.corder } : {}) };
 }
 nyStrip(L, names, ['classes', 'loose', 'me', 'book', 'gone', 'years', 'todo']);
 L.year = o.to;
@@ -32555,7 +33057,7 @@ function stpIb(o) {
 const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', points: 'points', percent: 'percent', percentage: 'percent', letters: 'letters', lettergrades: 'letters', letter: 'letters', ib7: 'ib7', ib: 'ib7', ib1to7: 'ib7', myp: 'myp', mypcriteria: 'myp', ibmyp: 'myp', dp: 'ib7' };
 const STP_LAYOUTS = { agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Title and text', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', fullpic: 'Full picture', textpic: 'Text + picture', picprompt: 'Picture + questions', video: 'Video' };
 function stpRead(j) {
-  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking', 'focus']);
+  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking', 'focus', 'todo']);
   for (const k of Object.keys(j)) {
     if (STP_STUDENT.test(k)) { if (stpCount(j[k])) S.left.push('Something about students (“' + stpStr(k, 30) + '”).'); }
     else if (!known.has(k)) S.unknown.push(stpStr(k, 30));
@@ -32677,6 +33179,13 @@ function stpRead(j) {
     if (stpNum(fo.musicVolume, 5, 100) != null) f.mvol = Math.round(stpNum(fo.musicVolume, 5, 100) / 5) / 20;
     if (typeof fo.musicBackground === 'boolean') f.mamb = fo.musicBackground;
     if (Object.keys(f).length) S.focus = f;
+  }
+  const td = stpObj(j.todo);
+  if (td && Array.isArray(td.categories)) {
+    const seen = new Set(), words = v => Array.isArray(v) ? v.filter(w => typeof w === 'string').map(w => stpStr(w, 40)).filter(Boolean).join(', ') : stpStr(v, 300);
+    const list = td.categories.slice(0, 20).map(x => typeof x === 'string' ? { name: x } : stpObj(x)).filter(Boolean).map(x => ({ name: stpStr(x.name, 40), w: words(x.words).slice(0, 300), role: x.role === true }));
+    S.todo = list.filter(x => x.name && !seen.has(stpKey(x.name)) && seen.add(stpKey(x.name)));
+    if (!S.todo.length) delete S.todo;
   }
   if (typeof j.attendance === 'boolean') S.att = j.attendance; else if (j.attendance != null && stpCount(j.attendance)) S.left.push('Attendance records.');
   if (Array.isArray(j.classTabs)) S.tabs = [...new Set(j.classTabs.map(x => (CLASS_TABS.find(t => stpKey(t[1]) === stpKey(x) && !TABS_FIRST.includes(t[0])) || [])[0]).filter(Boolean))];
@@ -32843,6 +33352,14 @@ function stpDiff(S, planNow) {
     if ((f.mood != null && f.mood !== c.mood) || (f.mvol != null && f.mvol !== c.mvol) || (f.mamb != null && f.mamb !== c.mamb)) L.push('The music’s mood, volume and background sound');
     if (L.length) add('focus', 'Focus timer and daily goal', L, '');
   }
+  if (S.todo) {
+    const now = tdCats(), next = stpTodoNext(S.todo), names = next.corder.ids.map(id => { const c = next.cats.find(x => x.id === id); return (c && c.name) || (TD_CAT0.find(b => b[0] === id) || [])[1]; });
+    const L = [];
+    if (names.join('\n') !== now.map(c => c.name).join('\n')) L.push('To-do categories: <b>' + names.map(esc).join(', ') + '</b>');
+    for (const x of S.todo) if (x.w) { const c = now.find(c => stpKey(c.name) === stpKey(x.name)); if (!c || c.w !== x.w) L.push('Words that bring a line to ' + esc(x.name) + ': <b>' + esc(x.w) + '</b>'); }
+    const gone = now.filter(c => !next.corder.ids.includes(c.id));
+    add('todo', 'To do', L, gone.length ? 'Deleted: ' + gone.map(c => esc(c.name)).join(', ') + '. Their lines go to the category their words fit.' : '');
+  }
   if (S.att != null && S.att !== attOn()) add('att', 'Attendance', [S.att ? 'Take attendance in Grading Studio' : 'Don’t take attendance in Grading Studio'], S.att ? '' : 'Days already saved are kept.');
   if (S.tabs && S.tabs.join() !== tabsKept().join()) add('tabs', 'Class tabs', [S.tabs.length ? 'Kept in the tab row: ' + S.tabs.map(k => CLASS_TABS.find(t => t[0] === k)[1]).join(', ') : 'Only Assignments, Gradebook and Students in the tab row'], 'The other pages stay under More.');
   return parts;
@@ -32866,6 +33383,20 @@ function stpIbW(wn) {
 const stpIbChanges = (c, ib) => { const n = stpIbNext(c, ib); return c.way !== n.way || JSON.stringify(c.ib || {}) !== JSON.stringify(n.ib) || (!!ib.wn && JSON.stringify(stpIbW(ib.wn)) !== JSON.stringify((c.ib || {}).w || null)); };
 const stpOwnTypes = () => typeof bkCats === 'function';
 
+function stpTodoNext(list) {
+  const now = Date.now(), cur = tdCats(), by = new Map(tdData().cats.map(c => [c.id, c])), ids = [];
+  for (const x of list) {
+    let id = (cur.find(c => stpKey(c.name) === stpKey(x.name) && !ids.includes(c.id)) || {}).id;
+    if (!id) id = (TD_CAT0.find(b => stpKey(b[1]) === stpKey(x.name) && !ids.includes(b[0])) || [])[0];
+    if (!id && x.role && !ids.includes('role')) id = 'role';
+    if (!id) id = 'tc' + uid();
+    const b = TD_CAT0.find(b => b[0] === id), w = x.w || (by.get(id) || {}).w || '';
+    by.set(id, { id, t: now, ...(b && stpKey(b[1]) === stpKey(x.name) ? {} : { name: x.name }), ...(w ? { w } : {}) });
+    ids.push(id);
+  }
+  for (const c of cur) if (!ids.includes(c.id)) by.set(c.id, { ...(by.get(c.id) || { id: c.id }), gone: 1, t: now });
+  return { cats: [...by.values()], corder: { ids, t: now } };
+}
 const stpPersonHere = x => schPeople().find(p => stpKey(p.name) === stpKey(x.name)) || null;
 /* ---- bringing it in, and what to put back ---- */
 const stpClone = v => v == null ? v : JSON.parse(JSON.stringify(v));
@@ -32901,6 +33432,7 @@ async function stpApply(S, pick) {
   }
   if (pick.att) meSet({ att: S.att });
   if (pick.focus) fcConfSet(S.focus);
+  if (pick.todo) { const t = lib.todo || {}; U.todo = { cats: stpClone(t.cats || null), corder: stpClone(t.corder || null) }; lib.todo = { ...t, ...stpTodoNext(S.todo) }; }
   if (pick.tabs) meSet({ tabs: S.tabs });
   if (pick.classes) {
     U.classes = []; U.links = []; U.units = []; U.ib = []; U.course = []; U.mbWas = localStorage.getItem(MB_KEY);
@@ -32967,7 +33499,7 @@ async function stpApply(S, pick) {
   return U;
 }
 function stpAfter() {
-  sysWords(); gradeDefaultApply(); renderLib(); railRender(); homeRender(); planRefresh(); setRender();
+  sysWords(); gradeDefaultApply(); renderLib(); railRender(); homeRender(); planRefresh(); setRender(); if (typeof todoRender === 'function') todoRender();
   if (batch) renderGrade();
 }
 const stpUndoRec = () => { const u = store.get('gs.setupUndo', null); return stpObj(u) && u.t ? u : null; };
@@ -32987,6 +33519,7 @@ async function stpUndo() {
   if (U.goals && Array.isArray(lib.goals)) lib.goals = lib.goals.filter(g => !U.goals.includes(g.id));
   if (U.rubAdded || U.rubWas) { let all = savedRubrics().filter(r => !(U.rubAdded || []).includes(r.id)); for (const w of U.rubWas || []) { const i = all.findIndex(r => r.id === w.id); if (i >= 0) all[i] = { ...w, at: Date.now() }; } store.set('gs.rubrics', all); if ((U.rubAdded || []).length) { store.set('gs.rubricsGone', { ...store.get('gs.rubricsGone', {}), ...Object.fromEntries(U.rubAdded.map(id => [id, Date.now()])) }); bankJob(() => bankWrite(b => { b.rubrics = b.rubrics.filter(r => !U.rubAdded.includes(r.id)); for (const id of U.rubAdded) b.gone[id] = Date.now(); for (const w of U.rubWas || []) { const i = b.rubrics.findIndex(r => r.id === w.id); if (i >= 0) b.rubrics[i] = { ...w, at: Date.now() }; } })).catch(() => {}); } }
   if (U.mark) stpMarkSet(U.mark);
+  if (U.todo && lib.todo) { for (const k of ['cats', 'corder']) { if (U.todo[k]) lib.todo[k] = U.todo[k]; else delete lib.todo[k]; } }
   if (U.ppl) schChange(sc => {
     const t = Date.now(); sc.people = sc.people || [];
     for (const id of U.ppl.added) { const i = sc.people.findIndex(p => p.id === id); if (i >= 0) { if ((sc.people[i].at || 0) <= U.t + 1000) sc.people[i] = { id, at: t, gone: 1 }; else kept.push('the person ' + sc.people[i].name); } }
@@ -33030,6 +33563,7 @@ async function stpExport() {
   if (goalList().length) out.goals = goalList().map(x => x.name);
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
   if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, lessonMinutes: c.llen, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days ? { days: c.goal.days.map(d => GP_DAYS[d].toLowerCase()) } : {}) } : null, sessionGoals: c.sg, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle, planningAfterMinutes: c.pe, freePeriods: c.free, weeklyLookBack: c.wk === false ? false : GP_DAYS[c.wk].toLowerCase(), quietWhileFocusing: c.quiet, shortestFirst: c.short, music: c.music, musicMood: c.mood, musicVolume: Math.round(c.mvol * 100), musicBackground: c.mamb }; }
+  if (lib.todo && (lib.todo.cats || lib.todo.corder)) out.todo = { categories: tdCats().map(c => ({ name: c.name, ...(c.w ? { words: c.w.split(/\s*,\s*/).filter(Boolean) } : {}), ...(c.id === 'role' ? { role: true } : {}) })) };
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
   { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
@@ -33108,6 +33642,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "attendance": true,
   "focus": { "sessionMinutes": 10, "lessonMinutes": 45, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "sessionGoals": true, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5, "planningAfterMinutes": 3, "freePeriods": true, "weeklyLookBack": "friday", "quietWhileFocusing": false, "shortestFirst": false, "music": false, "musicMood": "mix", "musicVolume": 50, "musicBackground": false },
   "classTabs": ["Missing work"],
+  "todo": { "categories": [{ "name": "Grading and feedback" }, { "name": "Lesson planning", "words": ["labs"] }, { "name": "Administrative" }, { "name": "Grade-level lead", "role": true, "words": ["team meeting"] }] },
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
   "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide" }
 }
@@ -33124,6 +33659,7 @@ FIELD NOTES
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
 - "focus" is the work timer for grading and for planning lessons: "sessionMinutes" (a grading session) and "lessonMinutes" (a session planning one lesson) are each one of 5, 10, 15, 20, 25, 30, 45, 60, and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none; add "per": "week" for a goal for the whole week, or "days": ["monday", "wednesday"] for a daily goal on some days only. "sessionGoals" false stops the app suggesting a goal for each session. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "planningAfterMinutes" (2, 3, 5 or 10, or 0 for never) is how many minutes of steady work in the Planner, outside a focus session, before it counts as planning; time during my classes never counts. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. "music" true plays lo-fi music while a session runs; "musicMood" is "mix" or one of "rain", "library", "coffee", "night", "tape", "garden", "blue", "quiet" (quiet has no drums), "musicVolume" is 5 to 100, and "musicBackground" true adds a soft record crackle or rain behind it. Leave it out if I have not said.
+- "todo" is how my to-do list is sorted. "categories" are its groups in my order (the app starts with "Grading and feedback", "Lesson planning", "Administrative" and "Leadership role"). Mark the one for a role I hold beside teaching (a coach, a coordinator, a head of department) with "role": true and name it with my role's title. "words" are words that put a to-do in that category. A category I don't list is deleted. Leave it out unless I ask.
 - "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;
@@ -33834,13 +34370,13 @@ const nav = document.createElement('nav');
 nav.className = 'phnav'; nav.id = 'phNav'; nav.setAttribute('aria-label', 'Main');
 const ic = d => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>';
 nav.innerHTML = [['#/', 'Today', 'M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8'],
-['#/scores', 'Scores', 'M4 5h16M4 12h16M4 19h10M17 17l2 2 3-4'], ['#/todo', 'To do', 'M5 12l4 4 10-10']]
+['#/plans', 'Plans', 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11M9 8h6'], ['#/scores', 'Scores', 'M4 5h16M4 12h16M4 19h10M17 17l2 2 3-4'], ['#/todo', 'To do', 'M5 12l4 4 10-10']]
 .map(([h, l, d]) => '<a href="' + h + '" data-phnav="' + h + '">' + ic(d) + '<span>' + l + '</span></a>').join('');
 document.body.appendChild(nav);
 }
 function phNavRender() {
 if (!PHONE) return;
-const v = routeNow().v, on = v === 'scores' ? '#/scores' : v === 'todo' ? '#/todo' : '#/';
+const v = routeNow().v, on = v === 'scores' ? '#/scores' : v === 'plans' ? '#/plans' : v === 'todo' ? '#/todo' : '#/';
 for (const a of document.querySelectorAll('[data-phnav]')) { const me = a.dataset.phnav === on; a.classList.toggle('on', me); if (me) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
 }
 window.addEventListener('hashchange', phNavRender);
@@ -33993,7 +34529,144 @@ openDlg('<div class="bh"><h2>Use on your phone</h2></div><div class="bb phhow">'
 '<p class="muted">Your classes, scores and to-dos then stay the same on both. You can type scores and look at papers on the phone; marking stays on the computer.</p>' +
 '</div><div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
 }
-window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });
+window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), gAge: ms => { G.exp -= ms; }, syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });
+
+/* Plans: the lessons from the Planner on her computer, day by day, to read (the Planner itself is where they are written). They come
+through her Google Drive with the rest of her work (drive.js, planSync), into this browser's own copy of the Planner's store. */
+async function phPlansRender(r) {
+const box = $('#phPlans'); if (!box) return;
+if (r.id) return phLessonRender(box, r.id);
+const p = await planRead();
+if (!$('#phPlans') || routeNow().v !== 'plans' || routeNow().id) return;
+if (!p) { box.innerHTML = '<p class="muted">Your lesson plans show here once the Planner on your computer has a timetable. Sign in with Google here and on the computer.</p>'; return; }
+const days = [];
+for (let i = 0; i < 28 && days.length < 10; i++) { const at = Date.now() + i * 864e5, d = todayRows(p, at); if (d.off || d.rows.length) days.push({ at, ...d }); }
+const day = at => new Date(at).toLocaleDateString(LANG_LOCALE, { weekday: 'long', month: 'short', day: 'numeric' });
+const when = (c, m) => [c.name, m.start ? planTime(m.start) + (m.end ? '–' + planTime(m.end) : '') : ''].filter(Boolean).join(' · ');
+box.innerHTML = days.length ? days.map(d => '<h2 class="tcap" data-raw>' + esc(day(d.at)) + '</h2>' + (d.off ? '<p class="muted phpad" data-raw>' + esc(d.off) + '</p>' :
+'<div class="tcard phlist">' + d.rows.map(({ c, m, lessons }) => lessons.length ? lessons.map(l => '<a class="phitem" href="#/plans/' + encodeURIComponent(l.id) + '"><span class="phn"><b data-raw>' + esc(l.title) + '</b><small data-raw>' + esc(when(c, m)) + '</small></span><span class="phc"><i class="phdot" style="background:' + esc(c.color) + '"></i></span></a>').join('') :
+'<div class="phitem"><span class="phn"><b data-raw>' + esc(c.name) + '</b><small>' + esc((m.start ? planTime(m.start) + ' · ' : '') + 'No lesson planned') + '</small></span></div>').join('') + '</div>')).join('')
+: '<p class="muted">No classes in the next four weeks.</p>';
+}
+async function phLessonRender(box, id) {
+const db = await planDb(false); let l = null;
+if (db) { try { l = await idbP(db.transaction('lessons').objectStore('lessons').get(id)); } catch {} db.close(); }
+if (!$('#phPlans') || routeNow().id !== id) return;
+const back = '<p><a class="btn sm" href="#/plans">‹ Plans</a></p>';
+if (!l) { box.innerHTML = back + '<p class="muted">This lesson isn’t here yet. It comes with the next sync.</p>'; return; }
+const txt = s => esc(String(s || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim()).replace(/\n/g, '<br>');
+const slides = Array.isArray(l.slides) ? l.slides : [];
+box.innerHTML = back + '<h2 class="phlt" data-raw>' + esc(l.title || 'Untitled lesson') + '</h2>' +
+(l.note ? '<p class="phln" data-raw>' + txt(l.note) + '</p>' : '') +
+(slides.length ? '<ol class="phslides">' + slides.map(s => '<li class="tcard"><b data-raw>' + txt(s.title) + '</b>' + (s.body ? '<p data-raw>' + txt(s.body) + '</p>' : '') + (s.img || (s.ctx && s.ctx.length) ? '<small class="muted">A picture, on your computer</small>' : '') + (s.notes ? '<p class="phsn" data-raw>' + txt(s.notes) + '</p>' : '') + '</li>').join('') + '</ol>' : '<p class="muted">No slides yet.</p>');
+}
+
+/* ---------------- Only this student: when a student comes to the desk, the screen shows them and nobody else ---------------- */
+var soloTry = '', soloUndo = null, soloOpen = false, soloHoldT = 0;
+function soloNow() { const s = store.get('gs.solo', null); return s && s.id && s.key != null ? s : null; }
+function soloOn() { return !!soloNow(); }
+function soloIdx() {
+const s = soloNow(); if (!s || !batch || batch.id !== s.id) return -1;
+return batch.students.findIndex(st => st.key === s.key);
+}
+function soloStart(i) {
+if (!batch || PHONE || !batch.students[i]) return;
+commitEditors(); saveNow();
+if (dlgPage) dlgShut();
+if (typeof closeCard === 'function') closeCard();
+store.set('gs.solo', { id: batch.id, key: batch.students[i].key });
+soloTry = ''; soloOpen = false;
+if (!soloUndo) { soloUndo = undoStack; undoStack = []; redoStack = []; }
+document.documentElement.classList.add('solo');
+if (location.hash !== batchHash(batch.id)) go(batchHash(batch.id), true);
+if (cur !== i) openStudent(i); else { renderList(); renderGrade(); }
+soloBar();
+}
+function soloEnd() {
+store.del('gs.solo'); soloTry = ''; soloOpen = false;
+document.documentElement.classList.remove('solo');
+if (soloUndo) { undoStack = soloUndo.concat(undoStack).slice(-200); redoStack = []; soloUndo = null; }
+$('#soloBar').hidden = true;
+if (batch) { renderList(); renderGrade(); renderTools(); }
+applyRoute();
+}
+function soloRoute(r) {
+const s = soloNow(); if (!s) return false;
+if (r.v === 'a' && r.id === s.id && !r.tab) {
+if (!(batch && batch.id === s.id)) {
+if (soloTry === s.id && routeOpening !== s.id) { soloStuck(); return true; }
+soloTry = s.id;
+}
+return false;
+}
+if (soloTry === s.id && routeOpening !== s.id && !(batch && batch.id === s.id)) { soloStuck(); return true; }
+go(batchHash(s.id), true); return true;
+}
+function soloStuck() {
+showScreen({ v: 'opening' });
+const p = $('#vOpening p'); if (p) p.textContent = 'The papers for this one aren’t kept in this browser. Drop the download in again.';
+soloBar();
+}
+function soloBar() {
+const s = soloNow(), el = $('#soloBar'); if (!el) return;
+if (!s) { el.hidden = true; return; }
+const i = soloIdx(), st = i >= 0 ? batch.students[i] : null;
+const p = st && !anonOn() ? personOf(st) : null, other = !!(p && p.c && p.name);
+el.hidden = false; el.dataset.b = st ? batch.id : '';
+el.innerHTML = '<span class="solo-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.8 3.6-5.8 7-5.8s6.2 2 7 5.8"/></svg></span>' +
+'<b class="solo-t">Only this student</b><span class="solo-n">' + (st ? esc(shownName(st, i)) : '') + '</span>' + (st ? '<span class="muted solo-a">' + esc(batch.name || '') + '</span>' : '') + '<span class="sp"></span>' +
+(other ? '<button class="btn sm" id="soloOther" aria-expanded="' + soloOpen + '" aria-controls="soloWork">Other work</button>' : '') +
+'<button class="btn sm solo-x" id="soloExit"><span class="solo-fill" aria-hidden="true"></span><span class="solo-xl">Hold to show everyone</span></button>' +
+(other && soloOpen ? '<div class="solo-work" id="soloWork"><h3 id="soloWorkH">' + workHead(p.c, []) + '</h3><div id="soloRows"><div class="muted pc-sm">Looking through saved work…</div></div></div>' : '');
+if (other && soloOpen) soloRows(p);
+}
+async function soloRows(p) {
+const rows = await classWork(p.c, p.name).catch(e => { console.error(e); return []; });
+const box = $('#soloRows'); if (!box || !soloOn()) return;
+const i = soloIdx(), st = i >= 0 ? batch.students[i] : null;
+if (st && !rows.some(r => r.id === batch.id)) { const g = st.grade || {}, any = g.status || g.points != null && g.points !== '' || (g.rubric || []).some(v => v != null); rows.push({ name: batch.name || '', t: Infinity, p: any ? pastScore(setup, g) : null, none: !st.files.length, id: batch.id, k: st.key }); }
+$('#soloWorkH').innerHTML = workHead(p.c, rows);
+if (!rows.length) { box.innerHTML = workRows(rows); return; }
+box.innerHTML = rows.map((r, n) => {
+const here = batch && r.id === batch.id, html = workRows([r]);
+return r.id && r.k ? '<button class="solo-row' + (here ? ' on' : '') + '" data-solog="' + n + '"' + (here ? ' aria-current="true"' : '') + '>' + html + '</button>' : '<div class="solo-row">' + html + '</div>';
+}).join('');
+box.onclick = e => { const b = e.target.closest('[data-solog]'); if (!b) return; const r = rows[+b.dataset.solog]; soloGo(r.id, r.k); };
+}
+function soloGo(id, key) {
+if (!soloOn()) return;
+if (batch && batch.id === id) { soloOpen = false; return soloBar(); }
+commitEditors(); saveNow();
+store.set('gs.solo', { id, key }); soloTry = ''; soloOpen = false;
+soloUndo = [];
+go(batchHash(id), true);
+soloBar();
+}
+function soloHold(on) {
+const b = $('#soloExit'); if (!b) return;
+clearTimeout(soloHoldT); b.classList.toggle('holding', on);
+if (on) soloHoldT = setTimeout(() => { b.classList.remove('holding'); soloEnd(); }, 1500);
+}
+(() => {
+const bar = document.createElement('div');
+bar.id = 'soloBar'; bar.className = 'solobar'; bar.hidden = true; bar.setAttribute('role', 'region'); bar.setAttribute('aria-label', 'Only this student');
+$('#shell').before(bar);
+bar.addEventListener('click', e => { if (e.target.closest('#soloOther')) { soloOpen = !soloOpen; soloBar(); } });
+bar.addEventListener('pointerdown', e => { if (e.target.closest('#soloExit') && e.button === 0) { e.preventDefault(); soloHold(true); } });
+for (const t of ['pointerup', 'pointercancel']) document.addEventListener(t, () => { if (soloHoldT) soloHold(false); });
+bar.addEventListener('pointerout', e => { if (e.target.closest('#soloExit') && !e.target.closest('#soloExit').contains(e.relatedTarget)) soloHold(false); });
+bar.addEventListener('keydown', e => { if (e.target.closest('#soloExit') && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); if (!e.repeat) soloHold(true); } });
+bar.addEventListener('keyup', e => { if (e.target.closest('#soloExit') && (e.key === ' ' || e.key === 'Enter')) soloHold(false); });
+bar.addEventListener('contextmenu', e => e.preventDefault());
+const s = soloNow();
+if (s && !PHONE) {
+document.documentElement.classList.add('solo');
+soloUndo = [];
+if (location.hash !== batchHash(s.id)) { try { history.replaceState(null, '', batchHash(s.id)); } catch {} }
+soloBar();
+} else if (s) store.del('gs.solo');
+})();
+Object.assign(window.__gs, { toast, soloStart, soloEnd, soloNow });
 
 /* ---------------- the frame: the sidebar, Home's "Needs a look", and Find anything (11/9) ---------------- */
 var shellReady, screenWas = '';
@@ -34163,6 +34836,7 @@ return hit.sort((a, b) => a.rank - b.rank).map(x => x.r).slice(0, 40);
 }
 const FIND_NAMES = new Set(['Classes', 'Students', 'Assignments', 'School resources']);
 function openFind() {
+if (soloOn()) return;
 if ($('#findDlg') || $('#askDlg') || (!$('#dlg').hidden && !dlgPage)) return;
 commitEditors(); setMore(false);
 const back = document.activeElement, el = document.createElement('div');

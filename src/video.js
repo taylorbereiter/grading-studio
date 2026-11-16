@@ -471,7 +471,7 @@ async function addAndFind(st, list) {
 const copyFor = (st, f) => ({ path: f.name, file: new File([f.data], f.name), from: st.key });
 // A partner's own copy of one of st's files: the one they have, or a new one.
 async function partnerCopy(st, f, to) {
-  if (f.kind === 'link') { const have = to.files.find(x => x.kind === 'link' && linkKey(x) === linkKey(f)); if (have) return have; }
+  if (f.kind === 'link') { const d = linkSame(f), have = to.files.find(x => x.kind === 'link' && (linkKey(x) === linkKey(f) || (!!d && linkSame(x) === d))); if (have) return have; }
   const have = to.files.find(x => x.from === st.key && x.name === f.name); if (have) return have;
   return (await addAndFind(to, [copyFor(st, f)]))[0] || null;
 }
@@ -558,16 +558,28 @@ async function videoEntry(o) {
   if (o.file) { const id = await vkPut(o.file); return { path: o.name + '.url', file: new File([vidBytes(id, o.file.name, o.file.size)], o.name + '.url') }; }
   return { path: o.name + '.url', file: new File([linkBytes(o.url)], o.name + '.url') };
 }
+// Where a link's video plays, the same however its link was written (youtu.be/… or youtube.com/watch?v=…, a Drive link ending
+// /view?usp=sharing or open?id=…), or ''. A video picked from Drive gives its Drive player too.
+const linkSpot = url => { const p = url && linkPlayer(url); return p && p.frame ? p.frame : ''; };
+const linkSame = f => linkSpot(linkOf(f.data));
+// The video st already has that o names: the same link, or the same video however its link was written, pasted or picked from Drive.
+// Adding it again would show the same video twice on the paper. A file from the computer is a new copy each time, so it never matches.
+function sameVideo(st, o) {
+  if (o.file) return null;
+  const url = o.drive ? 'https://drive.google.com/file/d/' + o.drive.id + '/view' : linkClean(o.url), spot = linkSpot(url);
+  if (!url) return null;
+  return st.files.find(f => f.kind === 'link' && !vidRef(f.data) && (linkOf(f.data) === url || (!!spot && linkSame(f) === spot))) || null;
+}
 // o: { url | file | drive: { id, name, size } picked from Drive, name, kind: a notes page or '', partners: [students] }. quiet: no toast and the student isn't opened (many at once).
 async function videoAdd(st, o, quiet) {
-  const list = [await videoEntry(o)];
+  const had = sameVideo(st, o), list = had ? [] : [await videoEntry(o)];
   if (o.kind) { npLast = o.kind; const n = npFileName(o.name.replace(/\s*video$/i, '') + ' notes') + '.pdf'; list.push({ path: n, file: new File([await notesPdf(o.kind, batch.name, npRows(setup))], n, { type: 'application/pdf' }) }); }
-  const made = await addAndFind(st, list), vid = made.find(f => f.kind === 'link' || f.kind === 'media') || made[0], page = made.find(f => f.kind === 'pdf') || notesFileOf(st);
+  const made = list.length ? await addAndFind(st, list) : [], vid = had || made.find(f => f.kind === 'link' || f.kind === 'media') || made[0], page = made.find(f => f.kind === 'pdf') || notesFileOf(st);
   const all = [...new Set([...groupMates(st), ...(o.partners || [])])];
-  if (all.length) await partnersJoin(st, page || vid, all, made.filter(f => f.kind !== 'media'));
+  if (all.length) await partnersJoin(st, page || vid, all, (had ? [had] : []).concat(made).filter(f => f.kind !== 'media'));
   if (quiet) return made;
   saveSoon(); renderList();
-  toast('Added the video to ' + groupNames([st, ...all]));
+  toast(had && !made.length && !all.length ? shownName(st, batch.students.indexOf(st)) + ' already has this video' : 'Added the video to ' + groupNames([st, ...all]));
   await openStudent(batch.students.indexOf(st), vid && vid.path);
   return made;
 }

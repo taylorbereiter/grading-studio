@@ -1,21 +1,21 @@
 {
- "version": "1.28.50",
- "build": "54cdba34092b",
+ "version": "1.28.60",
+ "build": "4e7c01144bdd",
  "notes": [
-  "Planning time also counts outside focus sessions once you've worked steadily in the Planner for a few minutes, 3 unless you change it in Settings, Focus and goals. A quick change before class doesn't count, and time during your classes on the timetable never counts."
+  "Long names in the student list on the marking screen now wrap onto a second line instead of ending in …, so you can tell everyone apart. Tags like late, group and sent sit under the name."
  ],
  "files": {
-  "index.html": "3a4f54b66318be45624ab7851e96348b3c3338877b29a37854e5e9a4e7199202",
-  "planner.html": "4dc1b18b1b748dff711b0ec0b74f1704d716fab33ec48e6cde5b62bd292a4d59"
+  "index.html": "f9a75479c579d21af89712438d981b4736e3473d0dac899185de5aba719bcd14",
+  "planner.html": "8907d47c2ad5681c223eae867f306ef84c79af8c7f9d4def3639fe7975cc77ac"
  },
  "langs": {
-  "lang/zh-Hant.js": "397fa5119e4f6b0bbd75dcf5bf46471cb15611e6bf7fb2fa4493bbb808ba79cd",
-  "lang/zh-Hans.js": "6bcd7ab31eb28679d65df40cd8fc58465a214039db70bed6f09141d5a807eb9b",
-  "lang/es.js": "bfc8f474a6cc415f96b45102c4ef5bc78080e9f970ae02c731c9ab26e60963c2",
-  "lang/fr.js": "1ebc74df9169d3619713ea55f1daed9695079c403a2a2d132480a2bb62b47402",
-  "lang/de.js": "42637c8186fe8d91eeb79b0410ac2975bf9be7dfd76985aa98a2d7d504393f2a",
-  "lang/pt-BR.js": "155b006ca9cc2fdac4cfd4c7358aa4617a58f6727a17eb92250d3fff881d3616",
-  "lang/ja.js": "7f64ea8d20c29f0e29aaa9c87218324ac1ea8261befec157a1085ebf973a324b",
-  "lang/ko.js": "92572ba54d3683f1bb2f147b3169b1f4289bdab3842868348fc0aae2eee321b0"
+  "lang/zh-Hant.js": "f0e87a69b4d88733ce010c265b8f95b5ee273c7c2552a17a22b57f3d5080b697",
+  "lang/zh-Hans.js": "8f8df879cf440638cdfee176c65967d6b35152a83932ff836b9f513028baa655",
+  "lang/es.js": "b49f186ceef2ee164b12a77cceb059d077f5e2ceafcceb292ba4b9b3991a9daf",
+  "lang/fr.js": "2fbe2f1a988cd612dd4e69e4c53cfe901fed3258f82816b86def4e53286f4a47",
+  "lang/de.js": "e85b99083fc17a7f9cd8c3571c7b1b17135f5f339cf52eb94a22dd51bb4ef1b1",
+  "lang/pt-BR.js": "8bb2c13d737321823ea0446979112753e3300e3f5d4b8477d911e476884b5aba",
+  "lang/ja.js": "871c11b70c3c26bf3f549631906745b910410b2621fb6b3c130125d6e92be9e7",
+  "lang/ko.js": "64d92d34629a6b0022c3a8e137bd34aa2e8024c494c6d7c85fb773db64c00f0f"
  }
 }
