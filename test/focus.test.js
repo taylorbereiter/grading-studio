@@ -254,3 +254,22 @@ test('marks that come in from the folder (made on another computer) or from a re
   assert.deepEqual(n, [1, 1]);
   await close();
 });
+
+test('a grade only typed in, with no marking, is scored but isn’t a paper marked today', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  const out = await page.evaluate(() => {
+    const G = window.__gs, wc = G.carryParts.workCounts;
+    const pts = { setup: { mode: 'points' }, s: { 'Made-up One': { g: { points: '18' } }, 'Made-up Two': { g: { points: '15', comment: 'Clear opening.' } }, 'Made-up Three': { g: { points: '12' }, f: { 'a.pdf': { 0: [{ t: 'pen' }] } } } } };
+    const sheet = { setup: {}, s: { 'Made-up One': { g: { rubric: [], sheet: '17' } }, 'Made-up Two': { g: { rubric: [], sheet: '14' } } }, read: { 'Made-up Four': { score: 9, outOf: 10 } } };
+    const a = wc(pts), b = wc(sheet);
+    // the Focus count follows marked, not scored
+    const K = G.kept();
+    K.set('typed-only', { id: 'typed-only', name: 'Made-up email', n: 20, scored: 0, marked: 0 });
+    G.fcSeen(); const base = G.fcPapersToday();
+    K.set('typed-only', { ...K.get('typed-only'), scored: 19, marked: 0 }); const typed = G.fcPapersToday() - base;
+    K.set('typed-only', { ...K.get('typed-only'), scored: 19, marked: 2 }); const two = G.fcPapersToday() - base;
+    return [a.scored, a.marked, b.scored, b.marked, typed, two];
+  });
+  assert.deepEqual(out, [3, 2, 3, 0, 0, 2]);
+  await close();
+});

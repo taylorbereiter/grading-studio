@@ -75,7 +75,9 @@ const fcLogSet = L => store.set('gs.focus', L);
 // of clocks from moving the day.
 function fcMon(day) { const d = new Date(day + 'T12:00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoDay(d); }
 const fcToday = () => isoDay(Date.now());
-const fcDone = m => keptState(m).done;
+// Papers marked: a formative activity's feedback complete, else scored papers she worked on (src/merge.js workCounts marked). A grade
+// only typed in, with no marking, isn't one. A download saved before marked was counted falls back on its scores until its next save.
+const fcDone = m => { const st = keptState(m); return st.fm || m.marked == null ? st.done : Math.min(st.of, m.marked); };
 // Papers finished today: how far each download has come since the day began, never below nothing.
 function fcPapersOf(L) { let n = 0; for (const m of keptMeta.values()) if (m && m.id in L.base) n += Math.max(0, fcDone(m) - L.base[m.id]); return n; }
 // The same, by assignment (an id from the classes, or '' for papers that aren't filed under one), for the tracker.
