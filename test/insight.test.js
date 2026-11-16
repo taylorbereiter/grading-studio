@@ -784,6 +784,7 @@ test('the consistency check: a comment doesn’t move a points score, the gap is
 test('the same score means out of the same total, and papers with no rubric rows show none', async () => {
   const { page, close } = await openApp(browser);
   await openZip(page, zipOf(files), 'Tide essay.zip');
+  await page.evaluate(() => window.__gs.scanAll());   // the papers' own reading is done first, or it can clear the scores set here
   await page.evaluate(() => {
     const [a, b, c] = window.__gs.state().batch.students;
     for (const st of [a, c]) st.found = { found: true, score: 10, outOf: 15, pct: 67 };

@@ -45,15 +45,15 @@ test('a student with a video and a notes page opens side by side; tabs move thin
   await openZip(page, await threeZip(), 'Speeches.zip');
   await waitPaper(page);
   assert.equal((await sp(page)).shown, false, 'one paper and nothing else: no pane');
-  assert.deepEqual((await sp(page)).tabs.map(t => t.kind), ['rubric']);
+  assert.deepEqual((await sp(page)).tabs.map(t => t.kind), ['typed', 'rubric']);
   assert.equal(await page.$eval('#spBtn', b => b.getAttribute('aria-pressed')), 'false');
 
   await addVideo(page);
   let s = await sp(page);
   assert.equal(s.shown, true); assert.equal(s.at, 'right');
-  assert.deepEqual(s.tabs.map(t => t.kind), ['video', 'f:Outline.pdf', 'notes', 'rubric']);
+  assert.deepEqual(s.tabs.map(t => t.kind), ['typed', 'rubric', 'video', 'f:Outline.pdf', 'notes']);
   assert.deepEqual(await where(page), { pane: ['bar:Presentation video', 'video'], main: ['bar:Outline.pdf', 'page', 'bar:Presentation notes.pdf', 'page'] });
-  assert.deepEqual(await page.$$eval('#spTabs .sptab', l => l.map(b => b.textContent + (b.getAttribute('aria-selected') === 'true' ? '*' : ''))), ['Presentation video*', 'Outline', 'Presentation notes', 'Rubric']);
+  assert.deepEqual(await page.$$eval('#spTabs .sptab', l => l.map(b => b.textContent + (b.getAttribute('aria-selected') === 'true' ? '*' : ''))), ['Type notes', 'Rubric', 'Presentation video*', 'Outline', 'Presentation notes']);
   assert.equal(await conf(page), null, 'opened by the video, not by her: nothing is kept');
   // the two columns sit side by side inside the paper area, and a page fits its own column
   const P = await box(page, '#paper'), pane = await box(page, '#pane2'), pg = await box(page, '#paper > .pg');

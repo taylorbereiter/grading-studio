@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"afd2578a","zh-Hans":"806333ca","es":"3f5de54c","fr":"004d0f1f","de":"c64a3d6b","pt-BR":"9d983dcc","ja":"8f66e1e5","ko":"6cb79d2b"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"5db06ee6","zh-Hans":"84d7f630","es":"ad22bc58","fr":"481fab69","de":"6cde4104","pt-BR":"d9fd3e77","ja":"219df129","ko":"654048b8"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -6731,8 +6731,18 @@ function langPack(k) {
   if (!Object.prototype.hasOwnProperty.call(LANG_NAMES, k)) return null;
   if (window.__gsLangs && window.__gsLangs[k]) return window.__gsLangs[k];
   if (!Object.prototype.hasOwnProperty.call(LANG_PACKED, k)) return null;
-  if (!LANG_OPEN[k]) { try { const b = atob(LANG_PACKED[k]), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); LANG_OPEN[k] = new Function(fflate.strFromU8(fflate.inflateSync(u)))(); } catch (e) { console.error(e); return null; } }
+  if (!LANG_OPEN[k]) { try { LANG_OPEN[k] = new Function(fflate.strFromU8(fflate.inflateSync(unpack85(LANG_PACKED[k]))))(); } catch (e) { console.error(e); return null; } }
   return LANG_OPEN[k];
+}
+function unpack85(s) {
+  let A = unpack85.a;
+  if (!A) { A = unpack85.a = new Uint8Array(128); let d = 0; for (let c = 33; c < 127 && d < 85; c++) if (c !== 34 && c !== 92 && c !== 60) A[c] = d++; }
+  const n = s.length, full = Math.floor(n / 5), rest = n % 5, out = new Uint8Array(full * 4 + (rest ? rest - 1 : 0));
+  for (let g = 0, o = 0; g * 5 < n; g++) {
+    let v = 0; for (let j = 0; j < 5; j++) { const i = g * 5 + j; v = v * 85 + (i < n ? A[s.charCodeAt(i)] : 84); }
+    for (let j = 0; j < 4 && o < out.length; j++) out[o++] = Math.floor(v / 2 ** (24 - 8 * j)) & 255;
+  }
+  return out;
 }
 const langLoad = k => langPack(k) || !Object.prototype.hasOwnProperty.call(LANG_NAMES, k) ? Promise.resolve(!!langPack(k)) : new Promise(done => {
   const s = document.createElement('script'); s.src = 'lang/' + k + '.js' + (window.gsLangV && window.gsLangV[k] ? '?' + window.gsLangV[k] : ''); s.onload = () => done(!!langPack(k)); s.onerror = () => done(false); document.head.appendChild(s);
@@ -7072,6 +7082,11 @@ const HELP = [
       'Each side scrolls on its own, and the pen works on a page in either one. Click a box in the Rubric tab to give that score. A video moved into the pane keeps playing.',
       'Drag the bar between the two to change their sizes; a double-click puts it back. **⋯** in the pane moves it to the left or across the top, which suits a narrow window. Under a file’s own **⋯**, **Show beside** puts that file in the pane.',
       'The pane stays open from student to student until you close it with **✕** or **B**. A student who has a video and a notes page opens side by side without being asked, unless you closed the pane on a video before.'] },
+  { id: 'typed-notes', sec: 'mark', q: 'Can I type my notes instead of writing on a notes page?', words: 'type typing notes text size large legible typed document page paragraph list bullet bold italic underline highlight presentation speech talk video timer headings strength next step question mark copy give back',
+    a: ['Yes. Open **Side by side** and choose **Type notes**. It is a page you type on like any document, with headings, lists, bold, italic, underline and highlight in the bar above. On a notes page, **Type notes instead** opens it too. It works on any assignment.',
+      'Beside a playing video, or with the clock at the foot running for a talk given live, each new paragraph gets its time in the margin. Click a time to play the video from there. **Time** puts one on or takes it off by hand, and **Times** in **⋯** turns this off.',
+      'A paragraph can be marked as a strength, a next step or a question with **Mark**. The mark shows beside it and is optional. **⋯** has **Use these headings for every student**, so each student starts with the same headings.',
+      'The line at the foot says whether the notes go back to the student as a page of the returned paper. Click it to change that for the whole assignment. **Text size for the student** in **⋯** makes that page Compact, Standard or Large.'] },
   { id: 'ai-beside', sec: 'start', q: 'Can I have Gemini, Claude or ChatGPT open beside Grading Studio?',
     a: ['Yes. Name your assistant in **Settings**, **Working with AI**, and its name appears near the bottom of the sidebar on every screen, in the Planner too. Click it and the assistant opens in a window on the right of the screen. If the Grading Studio window covers it, make that window narrower so both show.',
       'In Chrome there is a tidier way: right-click the name in the sidebar and choose **Open link in split view**. Both are then in one window, with a divider you can drag. They can’t be joined more closely than that, because Gemini, Claude and ChatGPT don’t let their pages be shown inside another app.',

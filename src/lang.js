@@ -16,8 +16,21 @@ function langPack(k) {
   if (!Object.prototype.hasOwnProperty.call(LANG_NAMES, k)) return null;
   if (window.__gsLangs && window.__gsLangs[k]) return window.__gsLangs[k];
   if (!Object.prototype.hasOwnProperty.call(LANG_PACKED, k)) return null;
-  if (!LANG_OPEN[k]) { try { const b = atob(LANG_PACKED[k]), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); LANG_OPEN[k] = new Function(fflate.strFromU8(fflate.inflateSync(u)))(); } catch (e) { console.error(e); return null; } }
+  if (!LANG_OPEN[k]) { try { LANG_OPEN[k] = new Function(fflate.strFromU8(fflate.inflateSync(unpack85(LANG_PACKED[k]))))(); } catch (e) { console.error(e); return null; } }
   return LANG_OPEN[k];
+}
+// What the build packs (the languages and the sample in a double-click copy, pdf.js's worker) is written in 85 characters, 5 for every
+// 4 bytes, rather than base64's 64: a sixteenth smaller. The characters are the printable ones but " \ and <, so the text can sit in a
+// script's string. build.js (pack85) writes it; a last group of 1 to 3 bytes is written with one character more than its bytes.
+function unpack85(s) {
+  let A = unpack85.a;
+  if (!A) { A = unpack85.a = new Uint8Array(128); let d = 0; for (let c = 33; c < 127 && d < 85; c++) if (c !== 34 && c !== 92 && c !== 60) A[c] = d++; }
+  const n = s.length, full = Math.floor(n / 5), rest = n % 5, out = new Uint8Array(full * 4 + (rest ? rest - 1 : 0));
+  for (let g = 0, o = 0; g * 5 < n; g++) {
+    let v = 0; for (let j = 0; j < 5; j++) { const i = g * 5 + j; v = v * 85 + (i < n ? A[s.charCodeAt(i)] : 84); }
+    for (let j = 0; j < 4 && o < out.length; j++) out[o++] = Math.floor(v / 2 ** (24 - 8 * j)) & 255;
+  }
+  return out;
 }
 // Fetches a language that isn't here yet. The app itself never needs this (the page fetched the chosen one as it opened); the tests do.
 const langLoad = k => langPack(k) || !Object.prototype.hasOwnProperty.call(LANG_NAMES, k) ? Promise.resolve(!!langPack(k)) : new Promise(done => {
