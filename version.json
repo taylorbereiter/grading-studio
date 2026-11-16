@@ -1,22 +1,22 @@
 {
  "version": "1.28.42",
- "build": "0cbb5006c134",
+ "build": "21f3a95a7f55",
  "notes": [
   "Videos from your Google Drive: in Partners and videos, Choose from Drive… opens Google's own chooser in your videos folder. Pick several at once and each goes to the student named in its file name. The video plays here, so the transcript follows along. The app can open only the videos you pick, nothing else in your Drive.",
   "Open from Google Drive and Save to Google Drive use the same limited permission: pick the ZIP or the papers in Google's chooser. Grading Studio never asks for your whole Drive."
  ],
  "files": {
-  "index.html": "c9afa7aac41933e633ba862270536d76d75376efc78ff424b5ef3fc9695d3d93",
-  "planner.html": "db280c773b25e3366553d07ed39290edc5b8f547de09cea6e0b6b11535451c26"
+  "index.html": "46c729bb93a6347f1f5232b4e39746704a219fb2ff161a2bb3b8fa3d27b6ad85",
+  "planner.html": "9c262017b41519c69c1ef712677ef97684643b3e4687cb1f645201ee05d272b1"
  },
  "langs": {
-  "lang/zh-Hant.js": "ea0e5765a6e2c1db58743ec97e0de9034a889dcff3c16cc53db62d28eb477c3a",
-  "lang/zh-Hans.js": "623bf0ca42b4782ca2cd150d6e914cdb931635b081fe4d4cede4c09b4a10c031",
-  "lang/es.js": "877a39aa830ede4d64434c38041de72b75cf94abdff85f00bc3d453db2209cee",
-  "lang/fr.js": "9bfb6c4480960874d4ab377dc83d1f2a9f4e079b48f87e23c71dc88bc0b3e322",
-  "lang/de.js": "efca855938683ed7c339d0396ed035da2cc03ef1b692fd2baf6f31979ee91b73",
-  "lang/pt-BR.js": "50b1b8bb95e585162a905e4474fee428963245d262da7268a6ab433290cc9a63",
-  "lang/ja.js": "197f41a9a5d3c836c11a846339a01820bdcdb8116c71e596fdc524c98d227efc",
-  "lang/ko.js": "1d4ed1199597d0515a04aadf87e76fc92a355bb5bf7ac00d08d04af1833a965d"
+  "lang/zh-Hant.js": "144bd2324398ec90858bc01bc3502f392a97285326eeb5a2c44911c39b7dae55",
+  "lang/zh-Hans.js": "b192e5f0f16147a1f09342c5bc0dcab963582b48f94b72ce41aec772d0bccd58",
+  "lang/es.js": "cd6574a82228806e75c2c7d4ff0845b8f290795a3a36f1db9ae948cce5674233",
+  "lang/fr.js": "aa221c0e837c28cc76c50bb25e3313bdc21485e6a99433edc894187c695c00ca",
+  "lang/de.js": "5d10159c0a3ebd6b1fa4b8123b16fd36c6084433d526511623b88a8f88cfdf57",
+  "lang/pt-BR.js": "380bdb23fff7f77b4d69e21fbe6eac77349a5614b93b7bed582f8f6a4c3fa2ed",
+  "lang/ja.js": "90a24fac1329ec55c5187c30fe5f25de6f1c0ff188b0be669269ced4ac9cfbd2",
+  "lang/ko.js": "403b2e0d81b4129dfe3f326e938c30bd94b0acb84b4abd71c56517eef32e6125"
  }
 }

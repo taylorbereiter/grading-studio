@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"ea0e5765","zh-Hans":"623bf0ca","es":"877a39aa","fr":"9bfb6c44","de":"efca8559","pt-BR":"50b1b8bb","ja":"197f41a9","ko":"1d4ed119"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"144bd232","zh-Hans":"b192e5f0","es":"cd6574a8","fr":"aa221c0e","de":"5d10159c","pt-BR":"380bdb23","ja":"90a24fac","ko":"403b2e0d"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -319,12 +319,12 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .po{display:flex;width:100%;justify-content:space-between;gap:8px;border:0;background:none;font:inherit;font-size:var(--text-control);color:var(--fg);padding:5px 6px;border-radius:var(--corner-2);cursor:pointer;text-align:left}
 .po:hover{background:var(--hover)}.po span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.po span:last-child{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .stag.out{background:var(--surface-2);color:var(--muted)}
-.outsw{display:flex;align-items:flex-start;gap:9px;width:100%;margin:10px 0 2px;padding:9px 11px;border:1px solid var(--line);border-radius:var(--corner-3);background:var(--bg);font:inherit;color:var(--fg);text-align:left;cursor:pointer}
+.outsw[hidden]{display:none}.grpjust button{padding:3px 10px;font-size:13px}.outsw{display:flex;align-items:flex-start;gap:9px;width:100%;margin:10px 0 2px;padding:9px 11px;border:1px solid var(--line);border-radius:var(--corner-3);background:var(--bg);font:inherit;color:var(--fg);text-align:left;cursor:pointer}
 .outsw[aria-checked=true]{border-color:var(--accent);background:var(--accent-soft)}
 .outsw i{flex:none;width:30px;height:17px;border-radius:var(--corner-pill);background:var(--line-strong);position:relative;margin-top:1px;transition:background .15s}
 .outsw i::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:var(--corner-round);background:var(--surface);transition:left .15s}
 .outsw[aria-checked=true] i{background:var(--accent)}.outsw[aria-checked=true] i::after{left:15px}
-.grpband{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border:1px solid #B9D3EC;border-radius:9px;background:var(--accent-soft);font-size:13.5px;color:var(--fg-2)}.grpband b{color:var(--fg);font-weight:600}.grpband .link{font-size:var(--text-control)}
+.grpband{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border:1px solid #B9D3EC;border-radius:9px;background:var(--accent-soft);font-size:13.5px;color:var(--fg-2)}.grpband b{color:var(--fg);font-weight:600}.grpband .link{font-size:var(--text-control)}.grpmode{font:inherit;font-size:13px;color:var(--accent);background:transparent;border:1px solid transparent;border-radius:var(--r-sm);padding:2px 4px;cursor:pointer}.grpmode:hover,.grpmode:focus-visible{border-color:#B9D3EC;background:var(--surface)}
 .outsw b{font-weight:600;font-size:13.5px;display:block}.outsw small{font-size:var(--text-small);color:var(--muted);display:block;line-height:1.4;margin-top:1px}
 .prog-s kbd,.hint kbd{font:500 10.5px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:0 4px;background:var(--surface);color:var(--muted)}
 .stu .dot{width:8px;height:8px;border-radius:var(--corner-round);background:var(--accent);display:inline-block}
@@ -3784,6 +3784,7 @@ html.vidsized #paper .vrotbox.on{height:var(--vid-h);min-height:0}
 
 .pvdrvrow{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-2) 0 var(--space-1);font-size:var(--text-control)}
 .pvdrvrow .link{font-size:var(--text-control)}
+.pvown{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-2) 0 var(--space-1);font-size:var(--text-control)}.pvown>span:first-child{font-weight:600}
 .pvdrv{font-size:var(--text-caption);font-weight:600;color:var(--accent);border:1px solid currentColor;border-radius:var(--corner-1);padding:0 var(--space-1)}
 .vdrv .prog{margin:var(--space-2) 0 0}
 
@@ -6698,7 +6699,7 @@ function saveNow(leaving) {
 if (!batch || !tabLive()) return;
 clearTimeout(saveT); saveDue = false;
 if (batch.revs && tabForgot(batch)) return tabLetGo();
-const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: batch.groups && batch.groups.length ? batch.groups : undefined, returned: batch.returned || undefined, read: (batch.read = paperReads()), s: {} };
+const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: groupsSave(false), groupsOwn: groupsSave(true), returned: batch.returned || undefined, read: (batch.read = paperReads()), s: {} };
 if (batch.vrot) data.vrot = batch.vrot;
 if (batch.clips && batch.clips.length) data.clips = batch.clips;
 if (batch.goal) data.goal = batch.goal;
@@ -6770,7 +6771,7 @@ if (data.refSkip) batch.refSkip = data.refSkip;
 if (data.quiz) batch.quiz = data.quiz;
 if (data.goal) batch.goal = data.goal;
 if (data.returned) batch.returned = data.returned;
-batch.groups = data.groups || [];
+batch.groups = [...(data.groups || []), ...(data.groupsOwn || []).map(g => ({ ...g, own: 1 }))];
 batch.clips = data.clips || [];
 if (data.vrot) batch.vrot = data.vrot; else delete batch.vrot;
 groupSync();
@@ -6974,7 +6975,7 @@ let t = L ? ((px - a[0]) * dx + (py - a[1]) * dy) / L : 0; t = Math.max(0, Math.
 return Math.hypot(px - (a[0] + t * dx), py - (a[1] + t * dy));
 }
 function hitMark(pg, x, y, slop) {
-const marks = pg.marks();
+const marks = marksMine(pg.marks(), pg.file, batch.students[cur]);
 for (const b of pg.boxes || []) if (!b.n.ro && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return b.n;
 for (let i = marks.length - 1; i >= 0; i--) {
 const m = marks[i];
@@ -7554,7 +7555,7 @@ ctx.drawImage(src, 0, 0, src.width, src.height, 0, 0, pg.W * k, pg.H * k);
 ctx.setTransform(k, 0, 0, k, 0, 0);
 const anon = anonOn() && batch.students[cur];
 if (anon && pg.covers) { ctx.fillStyle = '#111'; for (const r of pg.covers) ctx.fillRect(r.x, r.y, r.w, r.h); }
-const marks = pg.marks().concat(anon ? scrubMarks(pg.extra || [], anonRx(anon)) : pg.extra || [], live || [], pg.pending ? [pg.pending] : []);
+const marks = marksMine(pg.marks(), pg.file, batch.students[cur]).concat(anon ? scrubMarks(pg.extra || [], anonRx(anon)) : pg.extra || [], live || [], pg.pending ? [pg.pending] : []);
 pg.boxes = drawMarks(ctx, marks, pg.W, pg.H, pg.side, { sel: selected && selected.page === pg && selected.mark !== pg.editing ? selected.mark : null, editing: pg.editing, s: pg.s, line: pg.lineOn || null, hot: pg.noteOn || null });
 if (pg.ghost) { const b = pg.ghost; ctx.save(); ctx.strokeStyle = '#1F6FB2'; ctx.setLineDash([4, 3]); ctx.lineWidth = 1; ctx.strokeRect(b.x, b.y, b.w, b.h); ctx.restore(); }
 if (part) ctx.restore();
@@ -7583,7 +7584,7 @@ saveSoon(); renderList();
 }
 const actStep = (back, again, what) => ({ act: { back, again }, what });
 const groupStep = (steps, what) => ({ group: steps, what });
-function snap(pg) { pushUndo(stepOf(pg.file, pg.idx)); }
+function snap(pg) { pushUndo(stepOf(pg.file, pg.idx)); justSeen(pg); }
 const gradeStep = st => ({ grade: st, before: JSON.stringify(st.grade) });
 function gradeSnap(st) { pushUndo(gradeStep(st)); }
 function gradeBack(u, to) {
@@ -7599,7 +7600,7 @@ rowKeyed = -1;
 if (si !== cur) openStudent(si); else renderGrade();
 saveSoon(); renderList(); renderTools();
 }
-function changed(pg) { scanned = false; draw(pg); gradeMarksChanged(pg.file); saveSoon(); renderList(); }
+function changed(pg) { justTag(pg); scanned = false; draw(pg); gradeMarksChanged(pg.file); saveSoon(); renderList(); }
 function undo() { swapStep(undoStack, redoStack, 'Undone'); }
 function redo() { swapStep(redoStack, undoStack, 'Redone'); }
 function swapStep(from, to, said) {
@@ -7681,7 +7682,7 @@ refound(st); renderList(); gradeShown(st);
 for (const pg of pages) if (pg.file === f) { pg.extra = (f.kami && f.kami[pg.idx] && f.kami[pg.idx].notes) || []; draw(pg); if (pg.impFirst) impNote(pg); }
 }
 function gradeShown(st) { const t = $('#grade .total'); if (t && st === batch.students[cur]) t.innerHTML = totalHtml(st); }
-const gradeMarks = f => Object.entries(f.marks || {}).flatMap(([p, a]) => a.filter(m => !m.qza && (m.t === 'text' || m.t === 'note' || (m.t === 'stamp' && m.k === 'score')) && m.text && parseGrade(m.text, false)).map(m => p + '|' + m.text)).sort();
+const gradeMarks = f => Object.entries(f.marks || {}).flatMap(([p, a]) => marksMine(a, f).filter(m => !m.qza && (m.t === 'text' || m.t === 'note' || (m.t === 'stamp' && m.k === 'score')) && m.text && parseGrade(m.text, false)).map(m => p + '|' + m.text)).sort();
 const rereadTimers = new Map();
 let rereadQ = Promise.resolve(), rereadsLeft = 0;
 function gradeMarksChanged(f) {
@@ -8267,7 +8268,7 @@ const text = scoreStampText(gr, st);
 let changed = false;
 for (const f of st.files) {
 if (!f.marks || tryOfFile(st, f)) continue;
-for (const l of Object.values(f.marks)) for (const m of l || []) if (m.t === 'stamp' && m.k === 'score' && m.text !== text) { m.text = text; changed = true; }
+for (const l of Object.values(f.marks)) for (const m of l || []) if (m.t === 'stamp' && m.k === 'score' && m.text !== text && !stampHidden(m, st.key)) { m.text = text; changed = true; }
 }
 return changed;
 }
@@ -8808,7 +8809,7 @@ if (said) await fbAddPages(out, said, W0, H0, dpi, notes);
 if (said && notes) await tnAddPages(out, st, W0, H0, dpi, true);
 for (const [path, p] of d.pages) {
 const { f, js, lib } = await src(path);
-const marks = (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
+const marks = marksMine(f.marks[p] || [], f, st).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
 const Lx = lightOpts().exp ? lightForPage(st, f, p) : null;
 if (!marks.length && !(f.kami && f.kami[p]) && !Lx && !lib.isEncrypted && !skewOf(f, p)) {
 const [cp] = await out.copyPages(lib, [p]);
@@ -8857,7 +8858,7 @@ c.width = c.height = 0;
 if (notes && !said) await tnAddPages(out, st, W0, H0, dpi, false);
 if (edit && d.pages.length) {
 const paths = [...new Set(d.pages.map(([path]) => path))];
-const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p), skewOf(f, p)]; }) };
+const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, marksMine(f.marks[p] || [], f, st), rotOf(f, p), skewOf(f, p)]; }) };
 for (let k = 0; k < paths.length; k++) await out.attach(await viewBytes(fileByPath(st, paths[k])), 'gs-original-' + (k + 1) + '.pdf', { mimeType: 'application/pdf', description: 'Original pages, for reopening in Grading Studio' });
 await out.attach(new TextEncoder().encode(JSON.stringify(info)), 'grading-studio.json', { mimeType: 'application/json', description: 'Marks, for reopening in Grading Studio' });
 }
@@ -9165,7 +9166,7 @@ if (found.some(o => o.page === p && o.score === g.score && o.pct === g.pct && Ma
 found.push({ ...g, boxed: !!spot, page: p, rect: r, from, hover: !!hover, full: text, text: text.length > 140 ? text.slice(0, 140) + '…' : text });
 };
 for (const a of annots) { const t = annText(a); if (t && seen.length < 4) seen.push(t.length > 60 ? t.slice(0, 60) + '…' : t); if (t && !f.virtual) add(parseGrade(annText(a, true), false), vp.convertToViewportRectangle(a.rect), 'note', t, isPopupComment(a)); }
-for (const m of (f.marks || {})[p] || []) {
+for (const m of marksMine((f.marks || {})[p] || [], f)) {
 if (m.t === 'text') { const L = textLayout(m, vp.width); add(ofMark(m.text), [m.x, m.y, m.x + L.ink, m.y + L.h], 'note', m.text); }
 if (m.t === 'note' && !m.qza) add(ofMark(m.text), [m.ax - 4, m.ay - 4, m.ax + 4, m.ay + 4], 'note', m.text, true);
 if (m.t === 'stamp' && m.k === 'score') { const b = stampBox(m); add(ofMark(m.text) && { ...ofMark(m.text), stamp: true }, [b.x, b.y, b.x + b.w, b.y + b.h], 'note', m.text); }
@@ -9210,7 +9211,7 @@ const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.wid
 ctx.translate(-x * k, -y * k);
 await page.render({ canvasContext: ctx, ...vpDraw(f, g.page, page, k), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
 ctx.setTransform(k, 0, 0, k, -x * k, -y * k);
-const mk = ((f.marks || {})[g.page] || []).filter(m => m.t !== 'note');
+const mk = marksMine((f.marks || {})[g.page] || [], f).filter(m => m.t !== 'note');
 if (mk.length) drawMarks(ctx, mk, vp1.width, vp1.height, 0, null);
 if (g.hover) {
 ctx.font = '11px ' + FONT;
@@ -9474,7 +9475,7 @@ Object.assign(c.style, { width: v1.width * k + 'px', height: v1.height * k + 'px
 const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
 await page.render({ canvasContext: ctx, viewport: vp, transform: skewXf(f, p, vp), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
 if (my !== token) break;
-const mk = ((f.marks || {})[p] || []).filter(m => m.t !== 'note');
+const mk = marksMine((f.marks || {})[p] || [], f).filter(m => m.t !== 'note');
 if (mk.length) { ctx.save(); ctx.scale(k * dpr, k * dpr); drawMarks(ctx, mk, v1.width, v1.height, 0, null); ctx.restore(); }
 const base = ctx.getImageData(0, 0, c.width, c.height);
 const paint = sel => {
@@ -9755,7 +9756,7 @@ const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: 
 async function sharePage(st, f, js, p, scale, rx, opts, look) {
 const page = await js.getPage(p + 1);
 const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
-const marks = look && look.bare ? [] : scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
+const marks = look && look.bare ? [] : scrubMarks(marksMine(f.marks[p] || [], f, st).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
 const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
 const c = document.createElement('canvas');
 c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
@@ -10025,7 +10026,7 @@ out.addPage([r.W + r.side, r.H]).drawImage(await out.embedJpg(jpg), { x: 0, y: 0
 r.c.width = r.c.height = 0;
 const list = (notes[code] = notes[code] || []);
 const pageNo = d.pages.findIndex(x => x[0] === path && x[1] === p) + 1;
-for (const m of (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []))
+for (const m of marksMine(f.marks[p] || [], f, st).concat((f.kami && f.kami[p] && f.kami[p].notes) || []))
 if (m.text) list.push({ paper: code + (k ? '-' + (k + 1) : ''), page: pageNo, kind: m.t === 'note' ? (m.ro ? 'Kami comment' : 'margin comment') : 'text on page', text: scrub(m.text, rx) });
 onStep && onStep(++done, total);
 }
@@ -12305,7 +12306,7 @@ scorePlacing = { text, stop: () => { document.removeEventListener('pointermove',
 function stopScorePlace() { if (scorePlacing) { scorePlacing.stop(); scorePlacing = null; } }
 function placeScore(pg, x, y) {
 const text = scorePlacing.text; stopScorePlace();
-const m = { t: 'stamp', k: 'score', x: r1(x), y: r1(y), size: newStampSize('score'), color: totalInk(), text };
+const m = stampOwner({ t: 'stamp', k: 'score', x: r1(x), y: r1(y), size: newStampSize('score'), color: totalInk(), text }, batch.students[cur]);
 const bb = stampBox(m);
 m.x = r1(m.x + Math.max(0, -bb.x) - Math.max(0, bb.x + bb.w - pg.W)); m.y = r1(m.y + Math.max(0, -bb.y) - Math.max(0, bb.y + bb.h - pg.H));
 snap(pg); pg.marks().push(m); selected = { page: pg, mark: m, fresh: true }; changed(pg); redrawAll();
@@ -15665,10 +15666,11 @@ const moved = d.moved ? Object.fromEntries(Object.entries(d.moved).filter(([p]) 
 const removed = d.removed ? Object.fromEntries(Object.entries(d.removed).filter(([p]) => c.map[p]).map(([p, r]) => [c.map[p], r.by && c.map[r.by] ? { ...r, by: c.map[r.by] } : r])) : undefined;
 const share = d.share && { ...d.share, boxes: mapBoxes(d.share.boxes, c.map), checked: mapBoxes(d.share.checked, c.map) };
 const scan = c.unchecked || !d.scan ? undefined : mapPaths(d.scan, Object.fromEntries(Object.entries(c.map).filter(([, to]) => !c.flags[to])));
-const groups = d.groups && d.groups.map(g => ({ k: g.k.map(k => keyOf.get(nfc(k)) || k), p: Object.fromEntries(Object.entries(g.p || {}).map(([k, p]) => [keyOf.get(nfc(k)) || k, c.map[p] || p])) }));
+const grpMap = l => l && l.map(g => ({ ...g, k: g.k.map(k => keyOf.get(nfc(k)) || k), p: Object.fromEntries(Object.entries(g.p || {}).map(([k, p]) => [keyOf.get(nfc(k)) || k, c.map[p] || p])) }));
+const groups = grpMap(d.groups), groupsOwn = grpMap(d.groupsOwn);
 const clips = d.clips && d.clips.map(x => (x.p ? { ...x, p: c.map[x.p] || x.p } : x));
 const vrot = d.vrot && Object.fromEntries(Object.entries(d.vrot).map(([k, v]) => [c.map[k] || k, v]));
-batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, clips, vrot, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
+batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, groupsOwn, clips, vrot, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
 batch.carry = carry;
 await carryExtras(from, carry);
 const m = keptMeta.get(from);
@@ -18791,7 +18793,7 @@ await workerReady;
 let js;
 try {
 js = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
-const pg = await js.getPage(p + 1), v1 = vpRot(f, p, pg, 1), dpr = window.devicePixelRatio || 1, marks = f.marks[p] || [];
+const pg = await js.getPage(p + 1), v1 = vpRot(f, p, pg, 1), dpr = window.devicePixelRatio || 1, marks = marksMine(f.marks[p] || [], f);
 const wide = v1.width + (marks.some(m => m.t === 'note') ? sideFor(v1.width) : 0), k = Math.min(1.6, (spot.clientWidth || 380) / wide);
 const r = await sharePage(c.st, f, js, p, k * dpr, anonOn() ? anonRx(c.st) : null);
 if (my !== c.tok || !spot.isConnected) return;
@@ -19739,7 +19741,7 @@ const x = recTime(a, ta), y = recTime(b, tb);
 return x === y ? { pick: 'ask' } : { pick: x > y ? 'a' : 'b', by: 'date' };
 }
 const BLANK_REC = () => ({ f: {}, g: { rubric: [], points: '', comment: '' }, h: {} });
-const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned', 'goal', 'clips', 'vrot'];
+const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'groupsOwn', 'returned', 'goal', 'clips', 'vrot'];
 const setOf = w => { const o = {}; if (w) for (const k of WORK_SET) if (w[k] !== undefined) o[k] = w[k]; return o; };
 const setV = w => w && w.sv ? w.sv : (h => h ? { ['~' + h]: 1 } : {})(hashOf(setOf(w)));
 const partV = (w, k) => (w.pv && w.pv[k]) || (h => h ? { ['~' + h]: 1 } : {})(hashOf(w[k]));
@@ -21258,7 +21260,7 @@ out.push('<div>' + (anon ? 'A file' : esc(p.split('/').pop())) + ': ' + n + (n =
 if (out.length === 1) out.push('<div class="muted">No score, comment or marks</div>');
 return out.join('');
 }
-const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and share codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', clips: 'Video clips', vrot: 'Videos turned the right way up', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
+const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and share codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', groupsOwn: 'Group work', clips: 'Video clips', vrot: 'Videos turned the right way up', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
 const partNames = list => [...new Set(list.map(k => PART_SAY[k] || k))].join(', ');
 const scaleSay = su => !rubricsDiffer(su, { ...su, scale: null }) ? 'No scale: percent is the plain share of points' : !rubricsDiffer(su, { ...su, scale: SCALE12 }) ? 'The usual grading scale' : 'A grading scale of its own';
 function partSide(part, v, other, t, anon) {
@@ -21754,14 +21756,14 @@ return (l && l.find(m => m.qza === q.id)) || null;
 }
 async function qzTotal(st) {
 const t = batch.quiz.total;
-for (const [path, p] of quizPages(st)) { const f = fileByPath(st, path), l = f && f.marks[p]; if (l) for (let i = l.length - 1; i >= 0; i--) if (l[i].qz === 'total') l.splice(i, 1); }
+for (const [path, p] of quizPages(st)) { const f = fileByPath(st, path), l = f && f.marks[p]; if (l) for (let i = l.length - 1; i >= 0; i--) if (l[i].qz === 'total' && !stampHidden(l[i], st.key)) l.splice(i, 1); }
 if (!t || quizCount(st) < batch.quiz.qs.length) return;
 const text = ibQzOn() ? ibStampText(st) : stickerText(quizSum(st));
 if (!text) return;
 const [path, p] = quizPages(st)[t.n] || [], f = path && fileByPath(st, path), sz = await qzPageSize(st, t.n);
 if (!f || !sz) return;
 const [dx, dy] = qzShift(st, t.n);
-(f.marks[p] ||= []).push({ t: 'stamp', k: 'score', text, x: r1((t.x + dx) * sz.W), y: r1((t.y + dy) * sz.H), size: 52, color: totalInk(), qz: 'total' });
+(f.marks[p] ||= []).push(stampOwner({ t: 'stamp', k: 'score', text, x: r1((t.x + dx) * sz.W), y: r1((t.y + dy) * sz.H), size: 52, color: totalInk(), qz: 'total' }, st));
 }
 async function qzRedoPaper(st) {
 const m = quizMarks(st);
@@ -22865,7 +22867,7 @@ const MARKS_OPTS = [
 const MARKS_ASK = 'The attached file has my marks for one assignment: rubric scores, my comments and every mark I made, with each student as a code instead of a name. Please read it all first.\n\nThen help me spot patterns across the class: what most students did well, the mistakes that came up again and again, which rubric rows were hardest and why, and anything in my own marking that looks inconsistent. Refer to students only by their code.';
 function marksOpts() { const sh = shareState(); return (sh.marksOpt ||= Object.fromEntries(MARKS_OPTS.map(([k]) => [k, true]))); }
 const marksFiles = st => st.files.filter(f => viewable(f) && (Object.values(f.marks || {}).some(l => l && l.length) || (f.kami && Object.values(f.kami).some(k => k && k.notes && k.notes.length))));
-const marksOnPage = (f, p) => ((f.marks || {})[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
+const marksOnPage = (f, p) => marksMine((f.marks || {})[p] || [], f).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
 const marksPages = f => [...new Set(Object.keys(f.marks || {}).concat(Object.keys(f.kami || {})))].map(Number).filter(p => marksOnPage(f, p).length).sort((a, b) => a - b);
 const marksEmpty = st => !marksFiles(st).length && gradeOf(st).total == null && !noScore(st) && !String(st.grade.comment || '').trim();
 async function pageWords(js, f, p) {
@@ -23177,6 +23179,33 @@ for (const k of Object.keys(a)) if (!GROUP_SKIP.has(k) && !(k in b)) delete a[k]
 for (const [k, v] of Object.entries(b)) if (!GROUP_SKIP.has(k)) a[k] = v && typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : v;
 if (!a.rubric) a.rubric = [];
 }
+const GROUP_NOTES = ['tn'];
+const groupOwn = g => !!(g && g.own);
+const notesSig = gr => JSON.stringify(GROUP_NOTES.map(k => gr[k] ?? null));
+function groupNotesCopy(to, from) { for (const k of GROUP_NOTES) { if (from.grade[k] != null) to.grade[k] = JSON.parse(JSON.stringify(from.grade[k])); else delete to.grade[k]; } }
+function stampOwner(m, st) { const g = groupOf(st); if (groupOwn(g) && groupFileOf(g, st)) m.o = st.key; return m; }
+const stampHidden = (m, key) => !!(m && m.o && m.o !== key && batch.students.some(s => s.key === m.o));
+let groupJust = null;
+const groupJustOn = st => !!(st && groupJust === st.key && groupOwn(groupOf(st)) && groupFileOf(groupOf(st), st));
+function justSeen(pg) { pg.seen = groupJustOn(batch.students[cur]) ? new Set(pg.marks()) : null; }
+function justTag(pg) { if (!pg.seen || !groupJustOn(batch.students[cur])) return; for (const m of pg.marks()) if (!pg.seen.has(m) && !m.o) m.o = groupJust; pg.seen = null; }
+function marksMine(list, f, st) {
+if (!list || !list.some(m => m && m.o)) return list;
+st = st || (batch && batch.students.find(s => s.files.includes(f)));
+return st ? list.filter(m => !stampHidden(m, st.key)) : list;
+}
+function stampsSplit(marks, keys) {
+for (const l of Object.values(marks || {})) for (let i = l.length - 1; i >= 0; i--) {
+const m = l[i]; if (m.t !== 'stamp' || m.k !== 'score' || m.o) continue;
+l.splice(i, 1, ...keys.map(k => ({ ...m, o: k })));
+}
+}
+function stampsJoin(marks, keep) {
+for (const l of Object.values(marks || {})) for (let i = l.length - 1; i >= 0; i--) {
+const m = l[i]; if (!m.o) continue;
+if (m.o === keep) delete m.o; else l.splice(i, 1);
+}
+}
 const gradeSig = g => JSON.stringify(Object.fromEntries(Object.entries(g).filter(([k]) => !GROUP_SKIP.has(k)).sort()));
 
 function groupMergeMarks(into, from) {
@@ -23189,11 +23218,19 @@ for (const m of list) if (!have.has(JSON.stringify(m))) into[p].push(m);
 function groupSync() {
 if (!batch || !batch.groups || !batch.groups.length) return false;
 let changed = false;
-batch.groups = batch.groups.filter(g => g.k.filter(k => batch.students.some(s => s.key === k)).length > 1);
+const seen = new Set();
+batch.groups = batch.groups.filter(g => g.k.filter(k => batch.students.some(s => s.key === k)).length > 1 && !g.k.some(k => seen.has(k)) && (g.k.forEach(k => seen.add(k)), true));
 for (const g of batch.groups) {
 const sts = g.k.map(k => batch.students.find(s => s.key === k)).filter(Boolean);
-const src = sts.reduce((a, s) => ((s.grade.at || 0) > (a.grade.at || 0) ? s : a), sts[0]), sig = gradeSig(src.grade);
+const newest = l => l.reduce((a, s) => ((s.grade.at || 0) > (a.grade.at || 0) ? s : a), l[0]);
+if (groupOwn(g)) {
+const moved = sts.filter(s => notesSig(s.grade) !== g.ns), src = moved.length ? newest(moved) : sts[0], sig = notesSig(src.grade);
+for (const s of sts) if (s !== src && notesSig(s.grade) !== sig) { groupNotesCopy(s, src); changed = true; }
+if (g.ns !== sig) { g.ns = sig; changed = true; }
+} else {
+const src = newest(sts), sig = gradeSig(src.grade);
 for (const s of sts) if (s !== src && gradeSig(s.grade) !== sig) { groupGradeCopy(s, src); changed = true; }
+}
 const files = sts.map(s => groupFileOf(g, s)).filter(Boolean);
 if (files.length < 2) continue;
 const base = files[0];
@@ -23213,19 +23250,44 @@ if (!g.p[st.key]) g.p[st.key] = f.path;
 const old = groupOf(to); if (old && old !== g) groupLeave(to, true);
 if (!g.k.includes(to.key)) g.k.push(to.key);
 if (toFile) g.p[to.key] = toFile.path; else delete g.p[to.key];
-if (gradeHasWork(st.grade) || !gradeHasWork(to.grade)) { groupGradeCopy(to, st); if (!st.grade.at) touchGrade(st); to.grade.at = st.grade.at; }
+if (groupOwn(g)) {
+const has = gr => GROUP_NOTES.some(k => k === 'tn' ? !!(gr.tn && gr.tn.l && gr.tn.l.length) : String(gr[k] || '').trim());
+if (has(st.grade) || !has(to.grade)) groupNotesCopy(to, st); else { groupNotesCopy(st, to); touchGrade(st); }
+g.ns = notesSig(st.grade);
+if (toFile && toFile.marks) stampsSplit(toFile.marks, [to.key]);
+} else if (gradeHasWork(st.grade) || !gradeHasWork(to.grade)) { groupGradeCopy(to, st); if (!st.grade.at) touchGrade(st); to.grade.at = st.grade.at; }
 else { groupGradeCopy(st, to); }
 groupSync();
 }
 function groupLeave(st, quiet) {
 const g = groupOf(st); if (!g) return;
 const f = groupFileOf(g, st);
-if (f) { f.marks = JSON.parse(JSON.stringify(f.marks || {})); for (const k of ['rot', 'skew']) if (f[k]) f[k] = { ...f[k] }; }
+const shared = f && f.marks;
+if (f) { f.marks = JSON.parse(JSON.stringify(f.marks || {})); stampsJoin(f.marks, st.key); for (const k of ['rot', 'skew']) if (f[k]) f[k] = { ...f[k] }; }
+if (shared) for (const l of Object.values(shared)) for (let i = l.length - 1; i >= 0; i--) if (l[i].o === st.key) l.splice(i, 1);
 g.k = g.k.filter(k => k !== st.key); delete g.p[st.key];
-if (g.k.length < 2) { batch.groups = batch.groups.filter(x => x !== g); const last = g.k[0] && batch.students.find(s => s.key === g.k[0]), lf = last && groupFileOf(g, last); if (lf) lf.marks = JSON.parse(JSON.stringify(lf.marks || {})); }
+if (g.k.length < 2) { batch.groups = batch.groups.filter(x => x !== g); const last = g.k[0] && batch.students.find(s => s.key === g.k[0]), lf = last && groupFileOf(g, last); if (lf) { lf.marks = JSON.parse(JSON.stringify(lf.marks || {})); stampsJoin(lf.marks, last.key); } }
 touchGrade(st);
 if (!quiet) { saveSoon(); renderList(); openStudent(cur); toast(shownName(st, batch.students.indexOf(st)) + ' is graded on their own now'); }
 }
+
+function groupSetOwn(st, own) {
+const g = groupOf(st); if (!g || groupOwn(g) === !!own) return false;
+const sts = g.k.map(k => batch.students.find(s => s.key === k)).filter(Boolean), files = [...new Set(sts.map(s => groupFileOf(g, s)).filter(Boolean).map(f => f.marks))];
+if (own) {
+g.own = 1; g.ns = notesSig(st.grade);
+for (const m of files) stampsSplit(m, sts.filter(s => groupFileOf(g, s)).map(s => s.key));
+for (const s of sts) if (s !== st && notesSig(s.grade) !== g.ns) groupNotesCopy(s, st);
+for (const s of sts) syncScoreStamps(s);
+} else {
+delete g.own; delete g.ns;
+for (const m of files) stampsJoin(m, st.key);
+touchGrade(st);
+}
+groupSync();
+return true;
+}
+const groupsSave = own => { const l = (batch.groups || []).filter(g => groupOwn(g) === own); return l.length ? l : undefined; };
 
 function splitMates(st) {
 const out = [];
@@ -23249,8 +23311,13 @@ toast('Marked and graded once with ' + groupNames(groupMates(st)));
 function groupBand(st) {
 const mates = groupMates(st);
 if (mates.length) {
-const g = groupOf(st), marks = !!groupFileOf(g, st);
-return '<div class="grpband" id="grpBand"><b>Group work</b><span>with ' + esc(groupNames(mates)) + ' · ' + (marks ? 'marks and grade shared' : 'grade shared') + '</span><span style="flex:1"></span>' +
+const g = groupOf(st), marks = !!groupFileOf(g, st), own = groupOwn(g);
+if (groupJust !== st.key) groupJust = null;
+const name = shownName(st, batch.students.indexOf(st)), first = name.split(/[\s,]+/)[0] || name;
+const just = own && marks ? '<span class="seg grpjust" role="group" aria-label="New marks go on"><button type="button" data-grpjust="0" aria-pressed="' + !groupJust + '" title="Marks you make now show on every partner’s paper">Both</button><button type="button" data-grpjust="1" aria-pressed="' + !!groupJust + '" title="Marks you make now show only on ' + esc(name) + '’s paper. Their comment is always their own.">Just ' + esc(first) + '</button></span>' : '';
+const opt = (v, t) => '<option value="' + v + '"' + ((v === 'own') === own ? ' selected' : '') + '>' + t + '</option>';
+return '<div class="grpband" id="grpBand"><b>Group work</b><span>with ' + esc(groupNames(mates)) + ' ·</span>' +
+'<select class="grpmode" data-grpmode aria-label="What the group shares" title="Share everything, or share the notes and give each partner their own score">' + opt('all', marks ? 'Marks and grade shared' : 'Grade shared') + opt('own', marks ? 'Shared notes, own scores' : 'Own scores and comments') + '</select>' + (just ? '<span class="muted">Write for</span>' + just : '') + '<span style="flex:1"></span>' +
 '<button class="link" data-grpout title="Give this student their own grade and their own copy of the marks so far. The rest stay together.">Grade on their own…</button></div>';
 }
 const sm = splitMates(st);
@@ -23267,12 +23334,41 @@ else if (html) $('#paper .who').insertAdjacentHTML('afterend', html);
 function groupClick(e) {
 const st = batch.students[cur];
 if (e.target.closest('[data-grpjoin]')) { groupFromSplit(st); return true; }
+const j = e.target.closest('[data-grpjust]');
+if (j) { groupJust = j.dataset.grpjust === '1' ? st.key : null; groupBandRefresh(); return true; }
 if (e.target.closest('[data-grpout]')) {
 askDlg(shownName(st, cur) + ' gets their own grade and their own copy of the marks so far. ' + groupNames(groupMates(st)) + (groupMates(st).length > 1 ? ' stay together.' : ' keeps theirs.'), { ok: 'Grade on their own', cancel: 'Keep the group' }).then(ok => { if (ok) groupLeave(st); });
 return true;
 }
 return false;
 }
+
+async function groupModePick(own) {
+const st = batch.students[cur], g = groupOf(st); if (!g || groupOwn(g) === own) return;
+if (!own) {
+const t = gradeOf(st).total, ok = await askDlg('Everyone in the group gets ' + shownName(st, cur) + '’s score' + (t != null ? ' (' + fmtNum(t) + ')' : '') + ' and comment. The other partners’ own scores, comments and notes just for them are replaced.', { ok: 'Share this score', cancel: 'Keep own scores' });
+if (!ok) { groupBandRefresh(); return; }
+}
+const back = groupSnapOf(g);
+groupSetOwn(st, own);
+pushUndo(actStep(back, () => { groupSetOwn(st, own); groupRedraw(); }, own ? 'own scores' : 'one grade'));
+groupRedraw();
+toast(own ? 'Each partner has their own score and comment now. The notes page stays shared.' : 'One grade for the group now');
+}
+const groupRedraw = () => { saveSoon(); renderList(); openStudent(cur); };
+function groupSnapOf(g) {
+const was = JSON.parse(JSON.stringify(g)), sts = g.k.map(k => batch.students.find(s => s.key === k)).filter(Boolean);
+const grades = sts.map(s => [s, JSON.stringify(s.grade)]), files = sts.map(s => groupFileOf(g, s)).filter(Boolean), marks = files.length ? JSON.stringify(files[0].marks || {}) : null;
+return () => {
+const live = (batch.groups || []).find(x => x === g || x.k.some(k => was.k.includes(k))); if (!live) return;
+for (const k of Object.keys(live)) delete live[k]; Object.assign(live, JSON.parse(JSON.stringify(was)));
+const t = Date.now();
+for (const [s, gr] of grades) { s.grade = JSON.parse(gr); s.grade.at = t; }
+if (marks) { const m = JSON.parse(marks); for (const f of files) f.marks = m; }
+groupRedraw();
+};
+}
+document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('[data-grpmode]'); if (s && batch) groupModePick(s.value === 'own'); });
 
 /* ---------------- Group work… on a file ---------------- */
 const shareCopies = (st, f) => batch.students.filter(s => s !== st && s.files.some(x => x.from === st.key && x.name === f.name));
@@ -23282,9 +23378,10 @@ const f = fileByPath(st, path); if (!f || !f.data) return;
 const anon = anonOn(), others = batch.students.map((s, i) => ({ s, i, label: shownName(s, i) })).filter(x => x.s !== st);
 if (anon) others.sort((a, b) => anonPos(a.i) - anonPos(b.i));
 const copyOf = s => s.files.find(x => x.from === st.key && x.name === f.name);
-let once = !(shareCopies(st, f).length && !groupOf(st));
+let once = !(shareCopies(st, f).length && !groupOf(st)), own = groupOwn(groupOf(st));
 openDlg('<div class="bh"><h2>Group work: ' + esc(fileShown(st, f.name)) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
 '<div class="bb"><button class="outsw" id="grpOnce" role="switch" aria-checked="' + once + '" style="margin:0 0 12px"><i></i><span><b>Mark and grade once for the group</b><small>Your marks, score and comment show on every partner’s paper. Turn off to mark each copy on its own.</small></span></button>' +
+'<button class="outsw" id="grpOwn" role="switch" aria-checked="' + groupOwn(groupOf(st)) + '" style="margin:0 0 12px"' + (once ? '' : ' hidden') + '><i></i><span><b>Own score for each partner</b><small>The notes page, its marks and typed notes stay shared. Each partner gets their own score and comment, and you can write on the paper just for one of them.</small></span></button>' +
 '<p class="muted" style="margin:0 0 10px;font-size:14px">Click each student who worked on it with ' + esc(shownName(st, batch.students.indexOf(st))) + '. They get their own copy of the file, so the export gives each of them the marked paper. Remove on a copy takes it back.</p>' +
 '<input class="btn" id="mvFind" placeholder="' + (anon ? 'Type a paper number' : 'Type a name') + '" autocomplete="off" style="width:100%;margin-bottom:8px"><div id="mvList" class="mvlist"></div></div>' +
 '<div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
@@ -23301,20 +23398,27 @@ $('#mvFind').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); con
 $('#dlgBox').onclick = async e => {
 if (e.target.closest('[data-cancel]')) { closeDlg(); return openStudent(cur); }
 if (e.target.closest('#grpOnce')) {
-once = !once; $('#grpOnce').setAttribute('aria-checked', once);
-if (once) { for (const s of shareCopies(st, f)) groupAdd(st, f, s, copyOf(s)); }
+once = !once; $('#grpOnce').setAttribute('aria-checked', once); $('#grpOwn').hidden = !once;
+if (once) { for (const s of shareCopies(st, f)) groupAdd(st, f, s, copyOf(s)); if (own && groupOf(st)) groupSetOwn(st, true); }
 else if (groupOf(st)) { for (const s of groupMates(st)) groupLeave(s, true); }
 saveSoon(); renderList(); draw(); return;
+}
+if (e.target.closest('#grpOwn')) {
+if (own && groupOf(st) && groupMates(st).length && !(await askDlg('Everyone in the group gets ' + shownName(st, batch.students.indexOf(st)) + '’s score and comment. The other partners’ own scores, comments and notes just for them are replaced.', { ok: 'Share this score', cancel: 'Keep own scores' }))) return;
+own = !own; $('#grpOwn').setAttribute('aria-checked', own);
+if (groupOf(st)) { const back = groupSnapOf(groupOf(st)); if (groupSetOwn(st, own)) pushUndo(actStep(back, () => groupSetOwn(st, own), own ? 'own scores' : 'one grade')); }
+saveSoon(); renderList(); return;
 }
 const b = e.target.closest('[data-shto]'); if (!b || b.disabled) return;
 const to = batch.students[+b.dataset.shto]; b.disabled = true;
 if (!copyOf(to)) await addFiles(to, [{ path: f.name, file: new File([f.data], f.name), from: st.key }], true);
-if (once) { groupAdd(st, f, to, copyOf(to)); for (const lf of st.files.filter(x => x.kind === 'link')) await partnerCopy(st, lf, to); }
+if (once) { groupAdd(st, f, to, copyOf(to)); if (own) groupSetOwn(st, true); for (const lf of st.files.filter(x => x.kind === 'link')) await partnerCopy(st, lf, to); }
 saveSoon(); renderList();
 toast((once ? 'In the group: ' : 'Shared with ') + shownName(to, +b.dataset.shto)); draw(); $('#mvFind').focus();
 };
 $('#mvFind').focus();
 }
+Object.assign(window.__gs, { groupSync, groupSetOwn, marksMine, saveSoon });
 
 /* ---------------- work with no paper: a video by its link, the partners in it, and a page for notes ---------------- */
 const LINK_RX = /\.(url|webloc)$/i;
@@ -23886,7 +23990,7 @@ const bad = () => rows.some(r => { const v = vid.get(r.k); return v && v.url && 
 draw();
 return { draw, drop, fromDrive, out, bad };
 }
-async function pvApply(groups, stOf) {
+async function pvApply(groups, stOf, own) {
 let n = 0;
 for (const g of groups) {
 const all = g.k.map(stOf).filter(Boolean); if (!all.length) continue;
@@ -23895,6 +23999,7 @@ if (!g.url && !g.file && !g.drive && !(notesFileOf(st) || groupPaper(st))) st = 
 const partners = all.filter(s => s !== st && !groupMates(st).includes(s));
 if (g.url || g.file || g.drive) await videoAdd(st, { url: g.url, file: g.file, drive: g.drive, name: 'Presentation video', kind: '', partners }, true);
 else if (partners.length) { const gg = groupOf(st), anchor = (gg && groupFileOf(gg, st)) || notesFileOf(st) || groupPaper(st) || st.files.find(f => f.kind === 'link'); if (!anchor) continue; await partnersJoin(st, anchor, partners, st.files.filter(f => f.kind === 'link' && f !== anchor)); }
+if (own && partners.length) groupSetOwn(st, true);
 n++;
 }
 groupSync(); saveSoon(); renderList();
@@ -23902,6 +24007,9 @@ return n;
 }
 const DRV_ONLY = 'Only the videos you pick can be opened, nothing else in your Drive.';
 const vdDirLine = k => vidDir() ? '<span class="muted vddir"><span data-raw title="Google Drive">📁 ' + esc(vidDir().name) + '</span> <button class="link" data-' + k + '>Change folder</button></span>' : '';
+const pvOwnRow = () => '<div class="pvown"><span>Partners get</span><span class="seg" role="group" aria-label="Partners get"><button type="button" data-pvown="0" aria-pressed="true">One grade</button><button type="button" data-pvown="1" aria-pressed="false">Their own scores</button></span><span class="muted">The notes are shared either way.</span></div>';
+const pvOwnOf = box => { const b = box.querySelector('[data-pvown][aria-pressed=true]'); return !!b && b.dataset.pvown === '1'; };
+const pvOwnClick = (box, e) => { const b = e.target.closest('[data-pvown]'); if (!b) return false; for (const x of box.querySelectorAll('[data-pvown]')) x.setAttribute('aria-pressed', x === b); return true; };
 const pvDriveRow = () => driveCan() ? '<div class="pvdrvrow"><button class="btn sm" data-pvmany>Choose from Drive…</button>' + vdDirLine('pvdir') + '<span class="muted">' + DRV_ONLY + '</span></div>' : '';
 function pvDriveWire(box, pv) {
 box.addEventListener('click', async e => {
@@ -23919,7 +24027,7 @@ const anon = anonOn(), list = batch.students.map((st, i) => ({ st, i })).filter(
 if (anon) list.sort((a, b) => anonPos(a.i) - anonPos(b.i));
 const rows = list.map(({ st, i }) => ({ k: st.key, label: shownName(st, i), has: pvHas(st), mates: groupMates(st).map(s => s.key) }));
 openDlg('<div class="bh"><h2>Partners and videos</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
-'<div class="bb vdbox"><p class="muted" style="margin:0;font-size:14px">Pick each group’s partners: one grade covers the group, and a group with no video shares the first one’s paper and marks. Paste a link to a video, or choose a video file. You can also drop video files here, and each goes to the student named in its file name.</p>' + pvDriveRow() + '<div id="pvList" class="pvlist"></div></div>' +
+'<div class="bb vdbox"><p class="muted" style="margin:0;font-size:14px">Pick each group’s partners: one grade covers the group, and a group with no video shares the first one’s paper and marks. Paste a link to a video, or choose a video file. You can also drop video files here, and each goes to the student named in its file name.</p>' + pvOwnRow() + pvDriveRow() + '<div id="pvList" class="pvlist"></div></div>' +
 '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="pvGo" disabled>Save</button></div>', false, 'lg');
 const box = $('#dlgBox'), host = $('#pvList'), pv = pvList(host, rows), go = $('#pvGo'); pvDriveWire(host.parentElement, pv);
 host.addEventListener('pvchange', () => { go.disabled = !pv.out().length || pv.bad(); });
@@ -23927,9 +24035,10 @@ box.ondragover = e => e.preventDefault();
 box.ondrop = e => { e.preventDefault(); pv.drop([...e.dataTransfer.files]); };
 box.onclick = async e => {
 if (e.target.closest('[data-cancel]')) return closeDlg();
+if (pvOwnClick(box, e)) return;
 if (e.target !== go || go.disabled) return;
 go.disabled = true; go.textContent = 'Saving…';
-try { const n = await pvApply(pv.out(), k => batch.students.find(s => s.key === k)); closeDlg(); toast(n === 1 ? 'Saved 1 group or video' : 'Saved ' + n + ' groups and videos'); openStudent(cur); }
+try { const n = await pvApply(pv.out(), k => batch.students.find(s => s.key === k), pvOwnOf(box)); closeDlg(); toast(n === 1 ? 'Saved 1 group or video' : 'Saved ' + n + ' groups and videos'); openStudent(cur); }
 catch (err) { console.error(err); go.disabled = false; go.textContent = 'Save'; sayDlg((err && err.message) || String(err)); }
 };
 }
@@ -23943,7 +24052,7 @@ let np = npLast === 'rubric' && !rows.length ? 'lined' : npLast;
 openDlg('<div class="bh"><h2>“' + esc(it.name) + '” with no papers</h2></div>' +
 '<div class="bb vdbox"><p style="margin:0 0 4px">For presentations, speeches, performances and videos. Each of the ' + names.length + ' students in ' + esc(c.name) + ' gets a notes page to write on while you watch. Mark it, score it and return it like a paper.</p>' + npTiles(np, rows, false) +
 (rows.length ? '' : '<p class="muted" style="margin:8px 0 0;font-size:13px">Rubric rows can be picked once this assignment has a rubric.</p>') +
-'<div class="vdlab">Videos and partners<small>Optional, and you can add them later too. Paste a link or choose a file for each video, or drop video files here and each goes to the student named in its file name. Partners share one notes page, one set of marks and one grade.</small></div>' + pvDriveRow() + '<div id="pvList" class="pvlist"></div></div>' +
+'<div class="vdlab">Videos and partners<small>Optional, and you can add them later too. Paste a link or choose a file for each video, or drop video files here and each goes to the student named in its file name. Partners share one notes page, one set of marks and one grade.</small></div>' + pvOwnRow() + pvDriveRow() + '<div id="pvList" class="pvlist"></div></div>' +
 '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="snGo">Make the pages and open</button></div>', false, 'lg');
 const box = $('#dlgBox'), folder = n => String(n).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').trim();
 const pv = pvList($('#pvList'), names.map(n => ({ k: folder(n), label: n, has: '', mates: [] })));
@@ -23954,9 +24063,10 @@ box.ondrop = e => { e.preventDefault(); pv.drop([...e.dataTransfer.files]); };
 box.onclick = async e => {
 if (e.target.closest('[data-cancel]')) return closeDlg();
 const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick(box, np); return; }
+if (pvOwnClick(box, e)) return;
 if (e.target.id !== 'snGo') return;
 e.target.disabled = true; npLast = np;
-const groups = pv.out();
+const groups = pv.out(), own = pvOwnOf(box);
 try {
 const bytes = await notesPdf(np, it.name, rows);
 const make = k => names.map(n => ({ path: folder(n) + '/' + npFileName(it.name) + ' notes' + (k > 1 ? ' (' + k + ')' : '') + '.pdf', data: bytes.slice() }));
@@ -23967,7 +24077,7 @@ closeDlg();
 await intake(list, it.name, it);
 if (groups.length && batch && batch.id === id) {
 const stOf = key => batch.students.find(s => s.key === key);
-await pvApply(groups, stOf);
+await pvApply(groups, stOf, own);
 toast(groups.length === 1 ? 'Added 1 group or video' : 'Added ' + groups.length + ' groups and videos');
 openStudent(cur);
 }
@@ -28990,7 +29100,7 @@ await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, k), annotationMode
 const L = lightForPage(st, f, p); if (L) lightCanvas(ctx, Math.ceil(W * k), c.height, L);
 scanClip(ctx, f, p, W * k, Math.ceil(W * k), c.height);
 ctx.setTransform(k, 0, 0, k, 0, 0);
-if (marks) drawMarks(ctx, scrubMarks(pg.marks().concat(pg.extra || []), rx), W, H, side, null);
+if (marks) drawMarks(ctx, scrubMarks(marksMine(pg.marks(), pg.file).concat(pg.extra || []), rx), W, H, side, null);
 ctx.fillStyle = '#111';
 for (const r of await anonCovers(st, pg)) ctx.fillRect(r.x, r.y, r.w, r.h);
 ctx.setTransform(1, 0, 0, 1, 0, 0);
