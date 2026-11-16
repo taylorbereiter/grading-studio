@@ -178,6 +178,7 @@ async function nyStart(o) {
   try { await gsData.snapshot('Before starting ' + o.to, gsData.version()); } catch (e) { console.error(e); }
   if (fld.state === 'ok' || fld.state === 'decide') { try { await folderSnapshot('Before starting ' + o.to); } catch (e) { console.error(e); } }
   for (const id of ids) await forgetKept(id);
+  await wlNewYear(o.roster);   // the watch list goes with the roster; a strong example is kept, no longer anyone's (watch.js)
   const left = [...keptMeta.keys()];
   if (left.length) throw new Error(left.length + ' downloads could not be cleared');
   // Anything else kept with her work that's about a student (keyed by name). Settings, the comment bank and saved rubrics stay.
