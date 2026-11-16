@@ -29397,7 +29397,7 @@ el.innerHTML = tabs + (!S.length ? W ? '<div class="exempty"><p><b>Nothing on th
 (filtered ? '<button class="link" data-exfclear>Clear</button>' : '') + '<span class="sp"></span><span class="muted exn">' + list.length + (W ? ' on the list' : list.length === 1 ? ' example' : ' examples') + '</span>' +
 (list.length && W ? '<button class="btn sm primary" data-wlsend>Send to ' + esc(aiSay()) + '</button>' : '') + (list.length && !W ? '<button class="btn sm" data-exsheet>Download as a sheet</button><button class="btn sm primary" data-exshow>Show to the class</button>' : '') + '</div>' +
 (!list.length ? '<p class="muted exnone2">None match. <button class="link" data-exfclear>Clear the filters</button></p>' : '') +
-groups.map(g => '<section class="exgroup"><h2 class="exgh">' + esc(g[0].title || 'Assignment') + ' <span class="muted">· ' + esc(exClassName(g[0].cls)) + ' · ' + esc(new Date(Math.max(...g.map(r => r.t))).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })) + '</span></h2><div class="exgrid">' + g.map(r => exCard(r)).join('') + '</div></section>').join('');
+groups.map(g => '<section class="exgroup"><h2 class="exgh">' + esc(g[0].title || 'Assignment') + ' <span class="muted">· ' + esc(exClassName(g[0].cls)) + ' · ' + esc(new Date(Math.max(...g.map(r => r.t))).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })) + '</span></h2><div class="exgrid">' + g.map(r => exCard(r)).join('') + '</div></section>').join(''));
 for (const im of el.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
 if (typing) { const f = $('#exFind'); if (f) { f.focus(); try { f.setSelectionRange(at, at); } catch {} } }
 }
