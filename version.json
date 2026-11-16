@@ -1,12 +1,12 @@
 {
- "version": "1.28.55",
- "build": "d6adfaf9d1ef",
+ "version": "1.28.56",
+ "build": "15f41a08f7eb",
  "notes": [
   "The pen tools stay on top of a video's buttons when the paper scrolls sideways, instead of being cut through by them.",
   "Adding a video a student already has, however its link is written (or the same file picked from Google Drive), no longer adds a second copy. It says they already have it."
  ],
  "files": {
-  "index.html": "fd900eb6e1f42eb572f6244c1fcf326a061c48d1483043d06973e2fedd210aa6",
+  "index.html": "d8c2a139e65ea8750e37e183e862e496104d95879f5de1907eac57e3021e0002",
   "planner.html": "4b312322d338293eba003a1bd613a198ac327fe5c4449f2b553683f93795c4ff"
  },
  "langs": {
