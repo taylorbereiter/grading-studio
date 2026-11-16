@@ -65,8 +65,7 @@ const misPlain = m => (m.to ? 'To: ' + m.to.replace(/,/g, ', ') + '\n' : '') + (
 function misOpen(m) {
   let href = misHref(m), cut = false;
   if (href.length > 1900) { href = misHref(m, true); cut = true; navigator.clipboard.writeText(m.body).catch(() => {}); }
-  if (window.__gsMailTest) window.__gsMailTest(href);
-  else { const a = document.createElement('a'); a.href = href; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); }
+  mailGo(href);   // mail.js: Gmail, Outlook on the web or the mail app, as the teacher chose
   return cut;
 }
 // Saves that these students were reminded about these columns today. Reminders for work no longer missing anywhere are dropped.

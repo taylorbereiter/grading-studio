@@ -195,6 +195,7 @@ function stpRead(j) {
     const pc = stpKey(mk.pointsColor); if (pc === 'pen') m.ptsInk = ''; else if (pc === 'credit' || COLORS[pc]) m.ptsInk = pc;
     const fs = stpKey(mk.fullScreenSide); if (FS_SIDES.includes(fs)) m.fside = fs;
     const ls = stpKey(mk.listScores); if (ls === 'percent' || ls === 'points') m.listPts = ls === 'points';
+    const ma = stpKey(mk.emailsOpenIn); if (/^(gmail|outlook)/.test(ma)) m.mail = ma.slice(0, ma[0] === 'g' ? 5 : 7); else if (/^(app|mail|computer|default)/.test(ma)) m.mail = 'app';
     if (Object.keys(m).length) S.mark = m;
   }
   // the focus timer and the daily goal (src/focus.js): lengths from the lists the app offers, a goal in papers or in minutes
@@ -391,6 +392,7 @@ function stpDiff(S, planNow) {
     if (m.sheetfound != null && m.sheetfound !== now.sheetfound) L.push(m.sheetfound ? 'The grade sheet also shows grades found on the papers' : 'The grade sheet shows only the scores given in the app');
     if (m.fside != null && m.fside !== now.fside) L.push(m.fside === 'show' ? 'In full screen the student list and the tools stay beside the paper' : m.fside === 'all' ? 'In full screen the student list and the tools hide until you point at them' : 'In full screen the student list hides until you point at the left edge');
     if (m.listPts != null && m.listPts !== now.listPts) L.push(m.listPts ? 'The student list shows points out of the total' : 'The student list shows percents');
+    if (m.mail != null && m.mail !== now.mail) L.push(m.mail === 'outlook' ? 'Email buttons open a new message in Outlook on the web' : m.mail === 'app' ? 'Email buttons open the computer’s own mail app' : 'Email buttons open a new message in Gmail');
     add('mark', 'Marking and handing back', L, 'No paper, mark or score changes.');
   }
   if (S.focus) {
@@ -426,9 +428,10 @@ function stpDiff(S, planNow) {
   if (S.tabs && S.tabs.join() !== tabsKept().join()) add('tabs', 'Class tabs', [S.tabs.length ? 'Kept in the tab row: ' + S.tabs.map(k => CLASS_TABS.find(t => t[0] === k)[1]).join(', ') : 'Only Assignments, Gradebook and Students in the tab row'], 'The other pages stay under More.');
   return parts;
 }
-const stpMarkNow = () => ({ xnames: xNames(), xone: xOne(), anchorCover: anchorCoverOn(), nameFind: nameFindOn(), ptsInk, sheetfound: !!store.get('gs.sheetfound', false), fside: fsSide(), listPts });
+const stpMarkNow = () => ({ xnames: xNames(), xone: xOne(), anchorCover: anchorCoverOn(), nameFind: nameFindOn(), ptsInk, sheetfound: !!store.get('gs.sheetfound', false), fside: fsSide(), listPts, mail: mailApp() });
 function stpMarkSet(m) {
   if (m.fside != null) fullSideSet(m.fside);
+  if (m.mail != null) mailAppSet(m.mail);
   if (m.xnames != null) store.set('gs.xnames', m.xnames);
   if (m.xone != null) store.set('gs.xone', m.xone);
   if (m.anchorCover != null) store.set('gs.anchorCover', m.anchorCover);
@@ -636,7 +639,7 @@ async function stpExport() {
   if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, lessonMinutes: c.llen, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days ? { days: c.goal.days.map(d => GP_DAYS[d].toLowerCase()) } : {}) } : null, sessionGoals: c.sg, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle, planningAfterMinutes: c.pe, freePeriods: c.free, weeklyLookBack: c.wk === false ? false : GP_DAYS[c.wk].toLowerCase(), quietWhileFocusing: c.quiet, shortestFirst: c.short, music: c.music, musicMood: c.mood, musicVolume: Math.round(c.mvol * 100), musicBackground: c.mamb }; }
   if (lib.todo && (lib.todo.cats || lib.todo.corder)) out.todo = { categories: tdCats().map(c => ({ name: c.name, ...(c.w ? { words: c.w.split(/\s*,\s*/).filter(Boolean) } : {}), ...(c.id === 'role' ? { role: true } : {}) })) };
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
-  { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}), ...(m.listPts ? { listScores: 'points' } : {}) }; if (Object.keys(o).length) out.marking = o; }
+  { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}), ...(m.listPts ? { listScores: 'points' } : {}), ...(m.mail !== 'gmail' ? { emailsOpenIn: m.mail } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
 }
 
@@ -715,7 +718,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "classTabs": ["Missing work"],
   "todo": { "categories": [{ "name": "Grading and feedback" }, { "name": "Lesson planning", "words": ["labs"] }, { "name": "Administrative" }, { "name": "Grade-level lead", "role": true, "words": ["team meeting"] }] },
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
-  "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide", "listScores": "percent" }
+  "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide", "listScores": "percent", "emailsOpenIn": "gmail" }
 }
 
 FIELD NOTES
@@ -731,7 +734,7 @@ FIELD NOTES
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
 - "focus" is the work timer for grading and for planning lessons: "sessionMinutes" (a grading session) and "lessonMinutes" (a session planning one lesson) are each one of 5, 10, 15, 20, 25, 30, 45, 60, and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none; add "per": "week" for a goal for the whole week, or "days": ["monday", "wednesday"] for a daily goal on some days only. "sessionGoals" false stops the app suggesting a goal for each session. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "planningAfterMinutes" (2, 3, 5 or 10, or 0 for never) is how many minutes of steady work in the Planner, outside a focus session, before it counts as planning; time during my classes never counts. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. "music" true plays lo-fi music while a session runs; "musicMood" is "mix" or one of "rain", "library", "coffee", "night", "tape", "garden", "blue", "quiet" (quiet has no drums), "musicVolume" is 5 to 100, and "musicBackground" true adds a soft record crackle or rain behind it. Leave it out if I have not said.
 - "todo" is how my to-do list is sorted. "categories" are its groups in my order (the app starts with "Grading and feedback", "Lesson planning", "Administrative" and "Leadership role"). Mark the one for a role I hold beside teaching (a coach, a coordinator, a head of department) with "role": true and name it with my role's title. "words" are words that put a to-do in that category. A category I don't list is deleted. Leave it out unless I ask.
-- "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both. "listScores" is how scores show in the student list while I mark: "percent" or "points" (out of the total).
+- "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both. "listScores" is how scores show in the student list while I mark: "percent" or "points" (out of the total). "emailsOpenIn" is where Email buttons start a message: "gmail", "outlook" (Outlook on the web) or "app" (the computer's own mail app).
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;
 
