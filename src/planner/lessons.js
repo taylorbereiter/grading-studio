@@ -706,7 +706,7 @@ document.addEventListener('keydown', e => {
 function undoToast(msg, fn) {
   toast(msg, 6000);
   const t = $('.toast'); if (!t) return;
-  const b = document.createElement('button'); b.className = 'link'; b.style.cssText = 'color:inherit;margin-left:12px'; b.textContent = 'Undo';
+  const b = document.createElement('button'); b.className = 'link'; b.style.cssText = 'color:inherit;margin-left:12px;pointer-events:auto'; b.textContent = 'Undo';   // the note itself lets clicks through; its Undo doesn't
   b.onclick = () => { t.hidden = true; fn(); }; t.appendChild(b);
 }
 // Thumbnails drag to reorder.
