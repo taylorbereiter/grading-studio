@@ -3966,7 +3966,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
           <p class="muted setp">Your classes, papers, marks and scores live in this browser at this address. A linked folder keeps a second copy by itself.</p>
           <p id="whereLine" style="margin:0;font-size:14px"></p>
         </section>
-        <section class="lib setsec" id="setGoogle" data-sec="saving" hidden>
+        <section class="lib setsec" id="setGoogle" data-sec="saving" data-need="google" hidden>
           <div class="lhead"><h2>Google sign-in</h2></div>
           <p class="setp settch"><label><input type="checkbox" id="gAutoIn" checked> Renew it by itself every hour</label></p>
           <p class="muted setp">Google asks again every hour. Left on, Google’s small window opens for a moment, usually as you come back to the app. Turned off, syncing waits until you tap “sign in again to sync”.</p>
@@ -10262,7 +10262,7 @@ for (const el of document.querySelectorAll('.gAcct')) el.innerHTML = G.email
 : '<button class="btn sm" data-gin>Sign in with Google</button>';
 if (!PHONE) for (const el of document.querySelectorAll('.gAcct')) el.insertAdjacentHTML('beforeend', ' <button class="btn sm" data-gphone>Use on your phone</button>');
 for (const b of document.querySelectorAll('.needG')) b.hidden = !G.email;
-const gs = $('#setGoogle'); if (gs) { gs.hidden = !G.email || G_REDIRECT; $('#gAutoIn').checked = gAuto(); }
+const gs = $('#setGoogle'); if (gs) { if (!G.email || G_REDIRECT) gs.hidden = true; $('#gAutoIn').checked = gAuto(); }
 }
 document.addEventListener('change', e => { if (e.target.id === 'gAutoIn') { store.set('gs.gAuto', e.target.checked); if (e.target.checked && syncPaused()) syncNow(); } });
 document.addEventListener('click', e => {
@@ -31718,7 +31718,7 @@ const grp = setGroupOf(r.sec), on = k => grp[3].includes(k), moved = r.sec !== s
 if (moved) { const was = setSecWas; setSecWas = r.sec; if (!was || setGroupOf(was) !== grp) { if (on('grading')) setBankCount(); if (on('timetable')) planRefresh(); if (on('history')) gbOpen(); } }
 const nav = SET_GROUPS.map(([k, t, s]) => '<a class="setlink' + (k === grp[0] ? ' on' : '') + '" href="' + setHash(k) + '" data-set="' + k + '"' + (k === grp[0] ? ' aria-current="page"' : '') + '><b>' + t + '</b><span>' + s + '</span></a>').join('');
 const box = $('#setNav'); if (box.dataset.h !== nav) { box.dataset.h = nav; box.innerHTML = nav; }
-for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = !on(el.dataset.sec);
+for (const el of document.querySelectorAll('#setPane [data-sec]')) el.hidden = !on(el.dataset.sec) || (el.dataset.need === 'google' && !(G.email && !G_REDIRECT));
 const put = (id, h) => { const el = $(id); if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; } };
 for (const k of grp[3]) { meSetRender(k); attSetRender(k); stpSetRender(k); fcSetRender(k); tkSetRender(k); gpSetRender(k); }
 if (on('marking')) setInksSay();

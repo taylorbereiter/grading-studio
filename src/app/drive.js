@@ -99,7 +99,7 @@ function renderGoogle() {
     : '<button class="btn sm" data-gin>Sign in with Google</button>';
   if (!PHONE) for (const el of document.querySelectorAll('.gAcct')) el.insertAdjacentHTML('beforeend', ' <button class="btn sm" data-gphone>Use on your phone</button>');
   for (const b of document.querySelectorAll('.needG')) b.hidden = !G.email;
-  const gs = $('#setGoogle'); if (gs) { gs.hidden = !G.email || G_REDIRECT; $('#gAutoIn').checked = gAuto(); }
+  const gs = $('#setGoogle'); if (gs) { if (!G.email || G_REDIRECT) gs.hidden = true; $('#gAutoIn').checked = gAuto(); }   // shown on its settings page (settings.js)
 }
 document.addEventListener('change', e => { if (e.target.id === 'gAutoIn') { store.set('gs.gAuto', e.target.checked); if (e.target.checked && syncPaused()) syncNow(); } });
 document.addEventListener('click', e => {
