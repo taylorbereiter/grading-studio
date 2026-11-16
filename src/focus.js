@@ -546,7 +546,7 @@ document.addEventListener('click', e => {
   if (d.fcbreak != null) return fcBreak();
   if (d.fcstop != null) return fcStop();
   if (d.fcfold != null || d.fcunfold != null || d.fcshow != null) { const r = fcRun(); if (r) { r.fold = d.fcfold != null; fcRunSet(r); } else { fcS.open = true; fcRender(); } return; }
-  if (d.fcaway) { const r = fcRun(); if (!r) return; delete r.away; if (d.fcaway === 'again') { r.at = Date.now(); r.st = 'run'; delete r.pz; } return fcRunSet(r); }
+  if (d.fcaway) { const r = fcRun(); if (!r) return; delete r.away; if (d.fcaway === 'again') { r.at = Date.now(); r.st = 'run'; delete r.pz; delete r.idl; delete r.ii; } return fcRunSet(r); }
   if (d.fctick != null) { const r = fcRun(), w = r && fcWork(r.w); if (w && !w.mark && !w.done) todoTick(w.id); fcS.open = false; return fcRunSet(null); }
   if (d.fcclose != null) return fcClose();
   if (d.fcchg != null || d.fckeep != null) { fcS.chg = d.fcchg != null; fcRender(); const s2 = document.querySelector((t.closest('#fcPanel') ? '#fcPanel ' : '#fcCardBody ') + (fcS.chg ? '[data-fcwork]' : '[data-fcchg]')); return s2 && s2.focus(); }

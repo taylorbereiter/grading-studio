@@ -190,6 +190,11 @@ test('the card shows one suggestion with one blue Start; Change opens the list o
   }, 'mark:' + id);
   assert.ok(Math.abs(secs.idl - 900) <= 2, JSON.stringify(secs));
   assert.ok(Math.abs(secs.s - 300) <= 2, JSON.stringify(secs));
+  // starting the clock again after time away starts the uncounted time again too
+  await page.evaluate(k => { const G = window.__gs; G.fcStart(10, k, 1); const r = G.fcRun(); Object.assign(r, { idl: 600, ii: Date.now() - 1000, away: 6, fold: false }); G.fcRunSet(r); }, 'mark:' + id);
+  await page.waitForSelector('#fcPanel [data-fcaway="again"]'); await page.click('#fcPanel [data-fcaway="again"]');
+  assert.deepEqual(await page.evaluate(() => { const r = window.__gs.fcRun(); return [r.idl, r.ii, r.away].map(x => x === undefined ? null : x); }), [null, null, null]);
+  await page.evaluate(() => window.__gs.fcRunSet(null));
   assert.deepEqual(page.errors, []);
   await close();
 });
