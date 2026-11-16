@@ -87,6 +87,7 @@ test('Partners and videos: videos picked from Drive in the videos folder go to t
     assert.equal(seen[0].view.pickFolder, true, 'the folder is picked in Google’s chooser');
     assert.equal(seen[0].view.parent, 'root', 'choosing the folder starts at the top of My Drive, not a pile of every folder');
     assert.deepEqual(seen[0].views.map(v => v.label), ['My Drive', 'Shared with me', 'Shared drives'], 'with tabs for shared folders too');
+    assert.match(seen[0].view.mimes, /video\/webm/, 'the videos inside still show, so a folder of videos isn’t empty');
     assert.equal(seen[1].views[1].parent, 'root', 'videos can still be found outside the folder');
     assert.equal(seen[1].view.parent, '1FoldFoldFoldFoldFoldFoldFold11111', 'the videos open in that folder');
     assert.ok(seen[1].features.includes('multi') && seen[1].view.folders, 'many at once, and subfolders can be opened');
@@ -116,6 +117,9 @@ test('Partners and videos: videos picked from Drive in the videos folder go to t
     const scopes = await page.evaluate(() => window.__gs.gScope && window.__gs.gScope());
     if (scopes != null) assert.ok(!/auth\/drive( |$)|drive\.readonly/.test(scopes), 'never the whole Drive: ' + scopes);
     assert.deepEqual(page.errors, []);
+    // picking a video while choosing the folder chooses the folder it sits in
+    await page.evaluate(() => window.__picks.push([{ id: '1StudStudStudStudStudStudStud22222', name: 'Ben talk.mp4', mimeType: 'video/mp4', parentId: '1OtherOtherOtherOtherOtherOth3333' }]));
+    assert.deepEqual(await page.evaluate(() => window.__gs.pickVidDir()), { id: '1OtherOtherOtherOtherOtherOth3333', name: 'Folder with Ben talk.mp4', size: 0, mime: 'application/vnd.google-apps.folder' });
   } finally { await close(); }
 });
 

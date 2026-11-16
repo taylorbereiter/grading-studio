@@ -272,7 +272,7 @@ if (GOK && G_REDIRECT && G.token && !G.email) setTimeout(() => gsync('about?fiel
 // Picking a folder lets the app know only where the folder is, not what is in it, so the folder is just where the chooser opens.
 // gs.gVidDir = { id, name }: kept in this browser, like the Google account.
 const driveCan = () => GOK && !!gcid();
-const VID_MIMES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/x-matroska', 'video/3gpp'];   // the kinds a browser can play here
+const VID_MIMES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/x-matroska', 'video/3gpp', 'video/ogg'];   // the kinds a browser can play here
 let gpP = null;
 function loadPicker() {
   if (window.google && google.picker) return Promise.resolve();
@@ -294,7 +294,8 @@ async function drivePick(o = {}) {
     // Tabs: her chosen folder first (if any), then My Drive from the top, Shared with me, and shared drives. Each one can be opened folder by folder.
     const mk = (label, set) => {
       const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
-      if (o.folder) v.setSelectFolderEnabled(true).setMimeTypes(FOLDER); else v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(','));
+      // Choosing the folder still lists the videos inside, so a folder of videos doesn't look empty; picking one of them chooses its folder.
+      if (o.folder) v.setSelectFolderEnabled(true); v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(','));
       if (v.setLabel) v.setLabel(label);
       set(v); return v;
     };
@@ -306,9 +307,9 @@ async function drivePick(o = {}) {
     const b = new P.PickerBuilder().setOAuthToken(t).setAppId(gcid().split('-')[0]).setOrigin(location.origin);
     views.forEach(v => b.addView(v));
     b
-      .enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Choose your videos folder' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
+      .enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Click your videos folder once (or any video in it), then Select' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
       .setCallback(d => {
-        if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).filter(x => o.folder || x.mimeType !== FOLDER).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '' })));
+        if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).map(x => o.folder && x.mimeType !== FOLDER ? (x.parentId ? { id: x.parentId, name: 'Folder with ' + x.name, mimeType: FOLDER } : null) : x).filter(x => x && (o.folder || x.mimeType !== FOLDER)).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '' })));
         else if (d[P.Response.ACTION] === P.Action.CANCEL) res([]);
       });
     if (GOOGLE_API_KEY && !/@@/.test(GOOGLE_API_KEY)) b.setDeveloperKey(GOOGLE_API_KEY);
