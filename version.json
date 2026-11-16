@@ -1,13 +1,14 @@
 {
- "version": "1.28.46",
- "build": "ab3bf6ed7be5",
+ "version": "1.28.49",
+ "build": "050bffb2c294",
  "notes": [
-  "Focus sessions for lesson planning: the Focus panel lists your lessons for the coming week, and the Planner's lesson editor has a Focus button. A lesson session lasts 45 minutes unless you change it in Settings, Focus and goals.",
-  "Planning time now counts only in focus sessions on a lesson. Opening the Planner for a quick change or presenting a lesson doesn't add to it, and presenting pauses a lesson session."
+  "Papers through Google Drive: once you've marked them, your papers go up to your Drive by themselves. Your other computer gets them the first time you open that assignment there, and on your phone the eye button shows one student's paper.",
+  "Use on your phone: a button beside the Google sign-in shows a QR code and four steps for adding Grading Studio to your phone's Home Screen. The Welcome screen has Sign in with Google too, and signing in works on any iPhone browser.",
+  "Google's sign-in window no longer pops up by itself. When the hour-long sign-in runs out, syncing waits and the Google line says sign in again to sync. Tap it once to carry on. The Drive papers chooser now opens in the folder you last used."
  ],
  "files": {
-  "index.html": "cf12afe780be4d6d4a4e1be76349e3573eadee4c931f784431578d7057cb82da",
-  "planner.html": "5578b6830f47f9741d79f82d5df13f0eb16aeb74b36c581c1fcc9c3709fec260"
+  "index.html": "38d1e391316be954a41b08a472844590f3c3c87edd5edc02e8c7b69863fdc3cc",
+  "planner.html": "65257175c59f2823715306be428bc45e814599ecaa85e682008fd710d2fe8ece"
  },
  "langs": {
   "lang/zh-Hant.js": "124aef919fcedde9e5e7ea0fb47cecc681df7b77c51ed9e78021b5e918a68652",
