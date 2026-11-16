@@ -326,6 +326,7 @@ words: {
 'Only so the app can use its name. Nothing is connected to it, and nothing is sent.': 'アプリ内でその名称を表示するためだけに使います。接続も送信もしません。',
 'How do you usually grade?': '普段の評価方法は？',
 'Rubric rows': 'ルーブリックの観点', 'Score each row 0 to 4, half points too. The total and percent add up by themselves.': '各観点を 0 から 4 で採点します。0.5 刻みも使えます。合計とパーセントは自動で計算されます。',
+'pts': '点',
 'Points': '点数', 'Type a total, like 17 out of 20. Each assignment has its own “out of”.': '20 点中 17 点のように合計を入力します。満点は課題ごとに設定できます。',
 'Percent': 'パーセント', 'Type a percent for each paper.': '提出物ごとにパーセントを入力します。',
 'Letter grades': '段階評価（A〜F）', 'A to F, worked out from the percent. You set where each letter starts.': 'パーセントから A〜F を求めます。各段階の下限は自分で設定します。',

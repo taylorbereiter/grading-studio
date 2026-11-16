@@ -404,6 +404,7 @@ const LANG_PT = {
     'Only so the app can use its name. Nothing is connected to it, and nothing is sent.': 'Só para o aplicativo usar o nome. Nada é conectado a ele e nada é enviado.',
     'How do you usually grade?': 'Como você costuma avaliar?',
     'Rubric rows': 'Critérios de rubrica', 'Score each row 0 to 4, half points too. The total and percent add up by themselves.': 'Dê de 0 a 4 a cada critério, com meios pontos também. O total e a porcentagem são calculados sozinhos.',
+    'pts': 'pts',
     'Points': 'Pontos', 'Type a total, like 17 out of 20. Each assignment has its own “out of”.': 'Digite um total, como 17 de 20. Cada atividade tem seu próprio valor máximo.',
     'Percent': 'Porcentagem', 'Type a percent for each paper.': 'Digite uma porcentagem para cada trabalho.',
     'Letter grades': 'Conceitos', 'A to F, worked out from the percent. You set where each letter starts.': 'De A a F, calculados a partir da porcentagem. Você define onde cada letra começa.',

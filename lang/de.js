@@ -396,6 +396,7 @@ words: {
 'Only so the app can use its name. Nothing is connected to it, and nothing is sent.': 'Nur damit die App den Namen verwenden kann. Es wird keine Verbindung hergestellt und nichts gesendet.',
 'How do you usually grade?': 'Wie bewerten Sie meistens?',
 'Rubric rows': 'Rasterkriterien', 'Score each row 0 to 4, half points too. The total and percent add up by themselves.': 'Bewerten Sie jedes Kriterium mit 0 bis 4, auch mit halben Punkten. Summe und Prozent werden automatisch berechnet.',
+'pts': 'Pkt.',
 'Points': 'Punkte', 'Type a total, like 17 out of 20. Each assignment has its own “out of”.': 'Geben Sie eine Summe ein, zum Beispiel 17 von 20. Jede Aufgabe hat ihre eigene Höchstpunktzahl.',
 'Percent': 'Prozent', 'Type a percent for each paper.': 'Geben Sie für jede Arbeit einen Prozentwert ein.',
 'Letter grades': 'Buchstabennoten', 'A to F, worked out from the percent. You set where each letter starts.': 'A bis F, aus dem Prozentwert berechnet. Sie legen fest, wo jeder Buchstabe beginnt.',

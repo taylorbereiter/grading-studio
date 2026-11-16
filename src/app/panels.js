@@ -82,6 +82,21 @@ const fileMarked = f => viewable(f) && (Object.values(f.marks).some(a => a.lengt
 function fmNow() { const a = batch && batch.assignment, f = a && findItem(a.id); return ((f && f.it) || a || {}).type === 'fm'; }
 function setFb(st, on) { if (on) st.grade.fb = true; else delete st.grade.fb; touchGrade(st); saveSoon(); }
 function hasMarks(st) { return st.files.some(f => fileMarked(f) || f.edited); }
+// Scores in the list show as a percent unless the teacher switches the list to points (gs.listPts), which show out of their total.
+// A part-scored paper always shows its points: a percent of the rows scored so far would mislead.
+let listPts = !!store.get('gs.listPts', false);
+function setListPts(on) { listPts = !!on; if (listPts) store.set('gs.listPts', true); else store.del('gs.listPts'); }
+// Extra credit shows on its own, after the score it was added to ("85% +2%"), never folded into an odd total; the strip only marks it with a +.
+function listScore(g, strip) {
+  const x = !!g.xc && g.base != null, pc = x ? g.bpct : g.pct, t = x ? g.base : g.total;
+  const more = !x ? '' : strip ? '+' : '<small>+' + (!listPts && !g.partial ? xcSay(g) : fmtNum(g.xc) + (g.xcU === 'pct' ? '%' : '')) + '</small>';
+  if (g.total == null) return fmtNum(g.pct) + '%';
+  if (!listPts && !g.partial && pc != null) return fmtNum(pc) + '%' + more;
+  const of = g.outOf != null ? g.outOf : maxPoints();
+  return (strip || !of ? fmtNum(t) : fmtNum(t) + '\u2009/\u2009' + fmtNum(of)) + more;
+}
+const listWayBtns = () => ibSetup() || fmNow() ? '' : '<span class="scway" role="group"><button data-scway="pct" aria-pressed="' + !listPts + '" title="Percent">%</button><button data-scway="pts" aria-pressed="' + listPts + '" title="Points">pts</button></span>';
+document.addEventListener('click', e => { const b = e.target.closest('[data-scway]'); if (!b || !batch) return; setListPts(b.dataset.scway === 'pts'); renderList(); });
 function renderList() {
   if (!batch) return;
   renderAnonHead();
@@ -95,7 +110,7 @@ function renderList() {
     if (!lfShows(i)) return '';
     const g = gradeOf(st);
     const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
-    let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.tries ? esc(triesSay(g)) : g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + (ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct)) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
+    let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.tries ? esc(triesSay(g)) : g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + (ibSetup() ? ibListSay(st) : listScore(g)) + (g.partial ? '<small>partial</small>' : '') + '</span>'
       : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
       : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
       : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : tnHas(st) ? '<span class="dot" title="Started: you have typed notes"></span>' : '';
@@ -104,7 +119,7 @@ function renderList() {
     const nAdd = st.files.filter(f => f.added && !f.from && !madeFromWord(f)).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
     // Folded to a strip, a row is its number and one sign: the score, a ring for nothing yet, a dot for marked, a dash for no paper.
     const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
-      : val != null ? [ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
+      : val != null ? [ibSetup() ? ibListSay(st) : listScore(g, true), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
       '<span class="pills">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + '</span><span class="tail">' + right + '</span></button>';
   }).join('');
@@ -215,7 +230,9 @@ function totalHtml(st) {
   const gr = noScore(st) ? gradeOf(st) : tryGrade(st), own = ownGrade(st);   // with a retake, the big number is the try being scored; what counts is in the retake box under it
   if (noScore(st)) return '<b>' + STATUS_LABEL[gr.status] + '</b><span style="width:100%;font-size:12.5px">No score counts. Giving a score takes this off.</span>';
   if (ibSetup()) return ibTotalHtml(st);   // an MYP task has levels, no total and no percent
-  let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
+  // With extra credit the big number is the score she gave, and the extra credit follows its percent ("93% +2%"), so the total never looks odd.
+  const x = !!gr.xc && gr.base != null, t = x ? gr.base : gr.total, plus = x ? '<small class="xcplus"> +' + xcSay(gr) + '</small>' : '';
+  let h = '<b>' + (t == null ? '–' : fmtNum(t)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? plus : x && gr.bpct != null ? fmtPct(gr.bpct) + plus + bandSay(gr.pct) : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
   if (gr.total != null) h += '<button class="btn sm ghost" id="stampScore" title="Put the score on the paper: ' + esc(scoreStampText(gr)) + '">' + STAMP_ICON + 'Stamp</button>';
   if (gr.xc) h += '<span class="xcsay" style="width:100%">' + fmtNum(gr.base) + ' earned + ' + fmtNum(gr.xc) + (gr.xcU === 'pct' ? '%' : '') + ' extra credit</span>';
   if (gr.partial) h += '<span class="sc-warn" style="width:100%">Partial: ' + partNote(st) + '. This total isn’t final.</span>';
@@ -238,6 +255,8 @@ const critRowOf = m => setup.mode !== 'rubric' ? -1 : ibSetup() ? setup.ib.index
 function scoreStampText(gr, st) {
   if (ibSetup()) return ibStampText(st || batch.students[cur]);
   const max = gr.outOf != null ? gr.outOf : maxPoints();
+  // Extra credit goes on a line of its own under the score it was added to: "17/20 = 85% + 5% extra credit" (src/stamps.js draws the three lines).
+  if (gr.xc && gr.base != null) return fmtNum(gr.base) + (max ? '/' + fmtNum(max) : '') + (gr.bpct != null ? ' = ' + gr.bpct + '%' : '') + ' + ' + xcSay(gr) + ' extra credit';
   return fmtNum(gr.total) + (max ? '/' + fmtNum(max) : '') + (gr.pct != null ? ' = ' + gr.pct + '%' : '');
 }
 // Every score stamp on a paper says the score the app holds for that student, so the stamp, the score panel, the grade sheet

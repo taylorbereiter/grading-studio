@@ -30,7 +30,7 @@ const MYP = {
   goals: ['Uses evidence', 'Designs a fair test'],
   attendance: false,
   slides: { agenda: false, textSizes: 'any', newSlide: 'two columns' },
-  marking: { pointsColor: 'credit', studentFileNames: false, onePdfPerStudent: false, coverNamesOnAnchors: false, findTypedNames: true, gradeSheetFromPapers: true, fullScreenSide: 'all' },
+  marking: { pointsColor: 'credit', studentFileNames: false, onePdfPerStudent: false, coverNamesOnAnchors: false, findTypedNames: true, gradeSheetFromPapers: true, fullScreenSide: 'all', listScores: 'points' },
 };
 const NAMES = ['Aria Testwell', 'Bram Sample', 'Cleo Fixture'];
 // A browser with work in it already: one class with students, a unit with an assignment, a term, a saved comment.
@@ -246,7 +246,7 @@ test('Copy my setup gives the same block back, with no student in it, and it set
   assert.equal(j.grading.rowTop, 8); assert.equal(j.programme, 'MYP');
   assert.deepEqual([j.classes[1].programme, j.classes[1].subjectGroup, j.classes[1].criteria[1], j.classes[1].boundaries.outOf, j.classes[1].boundaries.grades[0], j.classes[2].programme, j.classes[2].boundaries.grades[1]], ['MYP', 'sci', { letter: 'B', name: 'Inquiring and designing' }, 32, { grade: 7, from: 28 }, 'DP', { grade: 6, from: 68 }]);
   assert.deepEqual(j.slides, { agenda: false, textSizes: 'any', newSlide: 'Two columns' });
-  assert.deepEqual(j.marking, { studentFileNames: false, onePdfPerStudent: false, coverNamesOnAnchors: false, findTypedNames: true, pointsColor: 'credit', gradeSheetFromPapers: true, fullScreenSide: 'all' });
+  assert.deepEqual(j.marking, { studentFileNames: false, onePdfPerStudent: false, coverNamesOnAnchors: false, findTypedNames: true, pointsColor: 'credit', gradeSheetFromPapers: true, fullScreenSide: 'all', listScores: 'points' });
   assert.deepEqual(j.gradebook, { weights: { summative: 70, inClass: 30 }, emptyType: 'zero', extraCredit: { addsTo: 'inClass', cap: false }, retakes: 'latest' });
   const la = await lib(a.page), pa = await plan(a.page);
   await a.close();

@@ -111,7 +111,7 @@ async function scanFile(f, spot) {
       for (const m of (f.marks || {})[p] || []) {
         if (m.t === 'text') { const L = textLayout(m, vp.width); add(ofMark(m.text), [m.x, m.y, m.x + L.ink, m.y + L.h], 'note', m.text); }
         if (m.t === 'note' && !m.qza) add(ofMark(m.text), [m.ax - 4, m.ay - 4, m.ax + 4, m.ay + 4], 'note', m.text, true);
-        if (m.t === 'stamp' && m.k === 'score') { const b = stampBox(m); add(ofMark(m.text) && { ...ofMark(m.text), stamp: true }, [b.x, b.y, b.x + b.w, b.y + b.h], 'note', m.text); }   // her score sticker
+        if (m.t === 'stamp' && m.k === 'score') { const b = stampBox(m); const sg = ofMark(stampScore(m.text)); add(sg && { ...sg, stamp: true }, [b.x, b.y, b.x + b.w, b.y + b.h], 'note', m.text); }   // her score sticker
       }
       // text in the page itself (already flattened files): strict "9.5 = 88%" form only, so essay numbers don't count.
       // A student could type this, so it's only offered, unless she boxed this very paper by hand. A rubric page's own printing isn't anyone's grade.

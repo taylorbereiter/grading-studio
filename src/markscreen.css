@@ -76,9 +76,14 @@ button.pavg:hover .v{text-decoration:underline}
 .sfind:focus-within{outline:2px solid var(--accent);outline-offset:1px}
 .sfind svg{flex:none}
 .sfind .stufind{flex:1;min-width:0;width:auto;margin:0;padding:0;border:0;background:none;outline:0;font-size:var(--text-control);color:var(--fg)}
+#lfSlot{display:flex;gap:6px;flex:none}
 .lfilt{display:flex;margin:0}
 .lfnow{height:30px;display:inline-flex;align-items:center;gap:5px;padding:0 8px;border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);font-size:var(--text-small);font-weight:500;color:var(--fg-2);white-space:nowrap}
 .lfnow:hover{color:var(--fg)}
+.scway{display:inline-flex;flex:none;height:30px;border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);overflow:hidden}
+.scway button{min-width:30px;padding:0 6px;border:0;background:none;font-size:var(--text-small);font-weight:500;color:var(--fg-2);cursor:pointer}
+.scway button:hover{color:var(--fg)}
+.scway button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .lfnow.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
 .km .lf{display:flex;justify-content:space-between;gap:12px}
 .km .lf[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);font-weight:600}
@@ -110,7 +115,7 @@ button.pavg:hover .v{text-decoration:underline}
   .cols.peek>.side{width:232px;border-right-color:var(--line-strong);box-shadow:var(--shadow),8px 0 24px -12px color-mix(in srgb,var(--fg) 30%,transparent)}
   .cols:not(.open):not(.peek)>.side{padding-left:5px;padding-right:5px;padding-bottom:40px;scrollbar-width:none}
   .cols:not(.open):not(.peek)>.side::-webkit-scrollbar{display:none}
-  .cols:not(.open):not(.peek) :is(.ph span,.pavg,.lfnow .t,.stu .nm,.stu .whob,.stu .tail,.stu .pills,#sideHd,.sfoot,.lfnone){display:none}
+  .cols:not(.open):not(.peek) :is(.ph span,.pavg,.lfnow .t,.scway,.stu .nm,.stu .whob,.stu .tail,.stu .pills,#sideHd,.sfoot,.lfnone){display:none}
   .cols:not(.open):not(.peek) .phrow{justify-content:center}
   .cols:not(.open):not(.peek) .prog-s .ph{font-size:var(--text-small)}
   .cols:not(.open):not(.peek) .lbar{justify-content:center;gap:2px}
@@ -166,6 +171,7 @@ button.pavg:hover .v{text-decoration:underline}
 #lvBox .lvrow{margin-top:2px}
 /* the percent beside the total had picked up the student card's box (both were called .pc) */
 .total span.pc{width:auto;max-height:none;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;font-size:var(--text-title);font-weight:650;letter-spacing:-.02em}
+.total span.pc .xcplus{font-size:.6em;font-weight:600;letter-spacing:0}
 .total{padding:10px 2px 0;border-top:1px solid var(--line)}
 #stampScore{align-self:center;gap:5px;padding:3px 8px;color:var(--accent)}
 #stampScore svg{flex:none}
