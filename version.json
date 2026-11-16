@@ -1,12 +1,12 @@
 {
- "version": "1.28.58",
- "build": "0c29aae91b50",
+ "version": "1.28.59",
+ "build": "9fc00c6e187e",
  "notes": [
-  "To do has categories: Grading and feedback, Lesson planning, Administrative and Leadership role (rename it for your own role). A new to-do goes to the category its words fit, and you can pick another on any line. Add, rename, reorder or delete categories, and switch the list between By day and By category."
+  "In the Planner's lesson editor, click a slide in the slide list, then press Up or Down to go to the previous or next slide. The page no longer scrolls instead."
  ],
  "files": {
-  "index.html": "8741426465fbfd4cd9e74502de04ef2885ba1158af751774ac59411a90904693",
-  "planner.html": "9eac6262b9efabc91f25714e66479d2f122c35ed5d5e362c201739a09a70adeb"
+  "index.html": "0d49c531efde7b5e135bcee66075604f6812347b6a4c77dde32043d2eef3b0f7",
+  "planner.html": "8907d47c2ad5681c223eae867f306ef84c79af8c7f9d4def3639fe7975cc77ac"
  },
  "langs": {
   "lang/zh-Hant.js": "f0e87a69b4d88733ce010c265b8f95b5ee273c7c2552a17a22b57f3d5080b697",

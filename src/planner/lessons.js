@@ -474,7 +474,7 @@ function atlasDlg(l) {
   };
 }
 function thumbHtml(x, l, i) {
-  return '<div class="ls-th' + (i === L.cur ? ' on' : '') + '" data-go="' + i + '" draggable="true"><span class="n">' + (i + 1) + '</span><div class="ls-mini"><div class="ls-slide">' + slideHtml(x, l, false) + '</div>' + ((k => k ? '<span class="ls-thc" title="' + k + ' open comment' + (k === 1 ? '' : 's') + '">💬 ' + k + '</span>' : '')(openTalk(x))) + '</div></div>';
+  return '<div class="ls-th' + (i === L.cur ? ' on' : '') + '" data-go="' + i + '" draggable="true" tabindex="-1"><span class="n">' + (i + 1) + '</span><div class="ls-mini"><div class="ls-slide">' + slideHtml(x, l, false) + '</div>' + ((k => k ? '<span class="ls-thc" title="' + k + ' open comment' + (k === 1 ? '' : 's') + '">💬 ' + k + '</span>' : '')(openTalk(x))) + '</div></div>';
 }
 function fitStage() {
   const w = $('#lsWrap'), st = $('#lsStage'); if (!w || !st) return;
@@ -570,7 +570,13 @@ function onLessonsKey(e) {
     else if (e.key === 'Enter' && e.target.classList.contains('ls-ed')) { e.preventDefault(); startEdit(e.target); }
   }
 }
-function goSlide(i) { editorCommit(); if (!L.open) return; if (i !== L.cur) L.box = ''; L.cur = Math.max(0, Math.min(L.open.slides.length - 1, i)); renderEditor(); }
+// Drawing the editor again takes the focus away from what was clicked, so the keys would go to the page and scroll it.
+// The slide picked takes the focus instead, so Up and Down keep moving through the slides.
+function goSlide(i) {
+  editorCommit(); if (!L.open) return; if (i !== L.cur) L.box = ''; L.cur = Math.max(0, Math.min(L.open.slides.length - 1, i)); renderEditor();
+  const a = document.activeElement, th = $('#lsThumbs .ls-th.on');
+  if (th && (!a || a === document.body || !a.isConnected)) th.focus({ preventScroll: true });
+}
 function newSlide(layout) {
   const first = (L.open.slots[0] || {}).date, d = first ? plMd(first) + ' ' : '';
   const s = normSlide({ layout, fmt: 2, size: (TEACH[layout] || {}).size });
