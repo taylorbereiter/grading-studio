@@ -299,6 +299,7 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .stu.drop-on{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent)}
 .stu:hover{background:var(--hover)}
 .stu.on{background:var(--surface);color:var(--fg);font-weight:600;box-shadow:0 1px 2px rgba(20,25,35,.08),0 0 0 1px var(--line)}
+.stugrp{margin:3px 0 5px;padding:2px 2px 2px 4px;border-left:3px solid var(--accent);border-radius:var(--corner-3);background:var(--accent-soft)}.stugrp .stu{margin-bottom:0}
 .stu.on .num{color:var(--accent)}
 .stu .num{color:var(--faint);font-size:var(--text-small);font-variant-numeric:tabular-nums}
 .stu .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -8130,11 +8131,11 @@ function hasMarks(st) { return st.files.some(f => fileMarked(f) || f.edited); }
 function renderList() {
 if (!batch) return;
 renderAnonHead();
-const order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
+const order = groupOrder(anonOn() ? anonOrder() : batch.students.map((_, i) => i));
 const q = ($('#stuFind').value || '').trim().toLowerCase();
 lfCheck();
 const rn = anonOn() ? null : rosterNames();
-$('#stuList').innerHTML = order.map((i, pos) => { const st = batch.students[i];
+$('#stuList').innerHTML = groupRuns(order, order.map((i, pos) => { const st = batch.students[i];
 const nm = rn && rn.get(st) || shownName(st, i), full = rn && rn.has(st) && st.key !== nm ? nm + ' (' + st.key + ')' : nm;
 if (q && !full.toLowerCase().includes(q)) return '';
 if (!lfShows(i)) return '';
@@ -8150,8 +8151,8 @@ const nAdd = st.files.filter(f => f.added && !f.from && !madeFromWord(f)).length
 const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
 : val != null ? [ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
 return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
-'<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + right + '</span></button>';
-}).join('');
+'<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + right + '</span></button>';
+}));
 if (listFilter !== 'all' && !q && !order.some(i => lfMatch(batch.students[i]))) $('#stuList').insertAdjacentHTML('beforeend', '<div class="muted lfnone">No one else here. <button class="link" data-lf="all">Show everyone</button></div>');
 listToCur();
 const nExp = exportPlan(true).length;
@@ -8166,7 +8167,8 @@ else if (r.bottom > b.bottom - fh - 4) box.scrollTop += (r.bottom - (b.bottom - 
 }
 function renderProg() {
 const fm = fmNow();
-const on = batch.students.filter(s => !noScore(s)), N = on.length, n = on.filter(s => fm ? s.grade.fb : gradeOf(s).done).length, nOff = batch.students.length - N;
+const units = groupUnits().map(u => u.filter(s => !noScore(s))), live = units.filter(u => u.length);
+const N = live.length, n = live.filter(u => u.every(s => fm ? s.grade.fb : gradeOf(s).done)).length, nOff = units.length - N;
 const cs = fm ? null : classStats();
 const avg = fm ? '' : cs.n ? '<button class="pavg" id="pAvg" title="Average of ' + people(cs.n, 'finished score') + '’s percents: ' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '. Partial, missing, excused and left-out papers don’t count. Click for Insights."><span class="k">Avg</span> <span class="v">' + (cs.meanPct != null ? pctAvgText(cs.meanPct) : oneDp(cs.mean)) + '</span><span class="s">' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '</span></button>'
 : '<span class="pavg none" id="pAvg" title="No finished scores yet"><span class="k">Avg</span> <span class="v">–</span></span>';
@@ -11807,7 +11809,8 @@ let keepT = null;
 function keepWork(b, data) {
 const m0 = keptMeta.get(b.id), m = { ...(m0 || { id: b.id, name: b.name }), n: b.students.length, t: data.t };
 if (typeof fcSeen === 'function') fcSeen(b.id);
-delete m.fb; delete m.sent; delete m.sentT; Object.assign(m, workCounts(data));
+delete m.fb; delete m.sent; delete m.sentT; delete m.joined; Object.assign(m, workCounts(data));
+if (m.joined) m.n = b.students.length - m.joined;
 delete m.ret; if (!(data.returned && data.returned.ok)) delete m.back;
 if (typeof fcGain === 'function') fcGain(m0, m);
 keptMeta.set(b.id, m);
@@ -20076,20 +20079,39 @@ else out['from' + other].push(path);
 }
 return out;
 }
+function workUnits(keys, groups) {
+const seen = new Set(), out = [];
+for (const g of groups || []) { const k = (g.k || []).filter(x => keys.has(x) && !seen.has(x)); if (k.length) { k.forEach(x => seen.add(x)); out.push(k); } }
+for (const k of keys) if (!seen.has(k)) out.push([k]);
+return out;
+}
 function workCounts(work) {
 const su = work.setup || {}, s = work.s || {}, read = work.read || {}, blank = v => v == null || v === '';
 const out = { scored: 0, marked: 0, partial: 0, off: 0, fb: 0 };
-for (const k of new Set([...Object.keys(s), ...Object.keys(read)])) {
+const one = k => {
 const g = (s[k] && s[k].g) || {}, r = g.rubric || [], rows = su.criteria ? su.criteria.map((_, i) => r[i]) : r, on = rows.filter(v => v != null).length;
 const worked = !!(s[k] && s[k].f && Object.keys(s[k].f).length) || !blank(g.comment);
-if (g.status !== 'missing' && g.status !== 'excused' && g.fb) out.fb++;
-if (g.status !== 'missing' && g.status !== 'excused' && g.sent) { out.sent = (out.sent || 0) + 1; out.sentT = Math.max(out.sentT || 0, g.sent); }
-if (g.status === 'missing' || g.status === 'excused') out.off++;
-else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : (!blank(g.pk) && !Array.isArray(su.ib)) || (on === rows.length && on)) { out.scored++; if ((su.mode !== 'points' && on === rows.length && on) || worked) out.marked++; }
-else if (su.mode !== 'points' && on) out.partial++;
-else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) { out.scored++; if (worked) out.marked++; }
+const o = { off: g.status === 'missing' || g.status === 'excused' };
+if (!o.off && g.fb) o.fb = 1;
+if (!o.off && g.sent) o.sent = g.sent;
+if (o.off) return o;
+if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : (!blank(g.pk) && !Array.isArray(su.ib)) || (on === rows.length && on)) { o.scored = 1; if ((su.mode !== 'points' && on === rows.length && on) || worked) o.marked = 1; }
+else if (su.mode !== 'points' && on) o.partial = 1;
+else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) { o.scored = 1; if (worked) o.marked = 1; }
+return o;
+};
+const units = workUnits(new Set([...Object.keys(s), ...Object.keys(read)]), [...(work.groups || []), ...(work.groupsOwn || [])]);
+for (const u of units) {
+const all = u.map(one), on = all.filter(o => !o.off), every = f => on.length > 0 && on.every(o => o[f]);
+if (u.length > 1) out.joined = (out.joined || 0) + u.length - 1;
+if (every('fb')) out.fb++;
+if (every('sent')) { out.sent = (out.sent || 0) + 1; out.sentT = Math.max(out.sentT || 0, ...on.map(o => o.sent)); }
+if (!on.length) out.off++;
+else if (every('scored')) { out.scored++; if (on.some(o => o.marked)) out.marked++; }
+else if (on.some(o => o.scored || o.partial)) out.partial++;
 }
 if (!out.fb) delete out.fb;
+if (!out.joined) delete out.joined;
 if (work.returned && work.returned.ok) out.back = work.returned.ok;
 return out;
 }
@@ -20098,10 +20120,10 @@ const m = { ...(mb || {}), ...(ma || {}), id };
 if (!m.name) m.name = 'A download';
 if (work) {
 m.t = work.t || m.t;
-delete m.fb; delete m.sent; delete m.sentT;
+delete m.fb; delete m.sent; delete m.sentT; delete m.joined;
 Object.assign(m, workCounts(work));
 delete m.ret; if (!(work.returned && work.returned.ok)) delete m.back;
-m.n = Math.max(m.n || 0, Object.keys(work.s || {}).length);
+m.n = m.joined ? Object.keys(work.s || {}).length - m.joined : Math.max(m.n || 0, Object.keys(work.s || {}).length);
 }
 return m;
 }
@@ -23331,6 +23353,36 @@ touchGrade(st);
 }
 groupSync();
 return true;
+}
+function groupUnits() {
+const seen = new Set(), out = [];
+for (const st of batch.students) {
+if (seen.has(st)) continue;
+const u = [st, ...groupMates(st)]; u.forEach(s => seen.add(s)); out.push(u);
+}
+return out;
+}
+function groupOrder(order) {
+if (!(batch.groups || []).length) return order;
+const out = [], put = new Set();
+for (const i of order) {
+if (put.has(i)) continue;
+const mates = groupMates(batch.students[i]).map(s => batch.students.indexOf(s)).filter(j => j >= 0 && !put.has(j)).sort((a, b) => order.indexOf(a) - order.indexOf(b));
+for (const j of [i, ...mates]) { put.add(j); out.push(j); }
+}
+return out;
+}
+function groupRuns(order, rows) {
+let html = '';
+for (let p = 0; p < order.length;) {
+const g = groupOf(batch.students[order[p]]);
+let q = p + 1;
+if (g) while (q < order.length && groupOf(batch.students[order[q]]) === g) q++;
+const shown = rows.slice(p, q).filter(Boolean);
+html += g && shown.length > 1 ? '<div class="stugrp' + (groupOwn(g) ? ' own' : '') + '" title="' + esc('Group work: ' + groupNames(g.k.map(k => batch.students.find(s => s.key === k)).filter(Boolean)) + (groupOwn(g) ? ', shared notes and own scores' : ', marked and graded once')) + '">' + shown.join('') + '</div>' : shown.join('');
+p = q;
+}
+return html;
 }
 const groupsSave = own => { const l = (batch.groups || []).filter(g => groupOwn(g) === own); return l.length ? l : undefined; };
 

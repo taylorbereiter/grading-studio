@@ -392,6 +392,13 @@ function mergeEdits(aEd = {}, bEd = {}, work, rows, prefer) {
   }
   return out;
 }
+// The units a download is counted in, each a list of student keys: partners in a group are one.
+function workUnits(keys, groups) {
+  const seen = new Set(), out = [];
+  for (const g of groups || []) { const k = (g.k || []).filter(x => keys.has(x) && !seen.has(x)); if (k.length) { k.forEach(x => seen.add(x)); out.push(k); } }
+  for (const k of keys) if (!seen.has(k)) out.push([k]);
+  return out;
+}
 // How a saved download's scores stand, counted the way the Grades list counts them. Missing and excused have no number, and a partial isn't finished.
 function workCounts(work) {
   const su = work.setup || {}, s = work.s || {}, read = work.read || {}, blank = v => v == null || v === '';
@@ -399,19 +406,32 @@ function workCounts(work) {
   // marked: scored papers she worked on here (rubric rows, ink or a comment), what Focus counts as papers marked. A grade only typed in
   // (points, the Grade sheet) or read off the paper is scored, but not marked.
   const out = { scored: 0, marked: 0, partial: 0, off: 0, fb: 0 };
-  for (const k of new Set([...Object.keys(s), ...Object.keys(read)])) {
+  const one = k => {
     const g = (s[k] && s[k].g) || {}, r = g.rubric || [], rows = su.criteria ? su.criteria.map((_, i) => r[i]) : r, on = rows.filter(v => v != null).length;
     const worked = !!(s[k] && s[k].f && Object.keys(s[k].f).length) || !blank(g.comment);
-    if (g.status !== 'missing' && g.status !== 'excused' && g.fb) out.fb++;
-    // given back early, one student at a time
-    if (g.status !== 'missing' && g.status !== 'excused' && g.sent) { out.sent = (out.sent || 0) + 1; out.sentT = Math.max(out.sentT || 0, g.sent); }
-    if (g.status === 'missing' || g.status === 'excused') out.off++;
-    else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : (!blank(g.pk) && !Array.isArray(su.ib)) || (on === rows.length && on)) { out.scored++; if ((su.mode !== 'points' && on === rows.length && on) || worked) out.marked++; }   // a percent typed as the score is a finished score, though not a paper marked
-    else if (su.mode !== 'points' && on) out.partial++;
-    else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) { out.scored++; if (worked) out.marked++; }
+    const o = { off: g.status === 'missing' || g.status === 'excused' };
+    if (!o.off && g.fb) o.fb = 1;
+    if (!o.off && g.sent) o.sent = g.sent;   // given back early, one student at a time
+    if (o.off) return o;
+    if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : (!blank(g.pk) && !Array.isArray(su.ib)) || (on === rows.length && on)) { o.scored = 1; if ((su.mode !== 'points' && on === rows.length && on) || worked) o.marked = 1; }   // a percent typed as the score is a finished score, though not a paper marked
+    else if (su.mode !== 'points' && on) o.partial = 1;
+    else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) { o.scored = 1; if (worked) o.marked = 1; }
+    return o;
+  };
+  // Partners (Group work) count once, as one paper: finished when every partner is, missing or excused only when all of them are.
+  const units = workUnits(new Set([...Object.keys(s), ...Object.keys(read)]), [...(work.groups || []), ...(work.groupsOwn || [])]);
+  for (const u of units) {
+    const all = u.map(one), on = all.filter(o => !o.off), every = f => on.length > 0 && on.every(o => o[f]);
+    if (u.length > 1) out.joined = (out.joined || 0) + u.length - 1;
+    if (every('fb')) out.fb++;
+    if (every('sent')) { out.sent = (out.sent || 0) + 1; out.sentT = Math.max(out.sentT || 0, ...on.map(o => o.sent)); }
+    if (!on.length) out.off++;
+    else if (every('scored')) { out.scored++; if (on.some(o => o.marked)) out.marked++; }
+    else if (on.some(o => o.scored || o.partial)) out.partial++;
   }
   // kept only when there is some, so work with no Feedback complete is stored as before
   if (!out.fb) delete out.fb;
+  if (!out.joined) delete out.joined;
   // she said the marked work went back to the students (an export alone isn't that)
   if (work.returned && work.returned.ok) out.back = work.returned.ok;
   return out;
@@ -423,11 +443,11 @@ function metaFor(ma, mb, work, id) {
   if (!m.name) m.name = 'A download';
   if (work) {
     m.t = work.t || m.t;
-    delete m.fb; delete m.sent; delete m.sentT;
+    delete m.fb; delete m.sent; delete m.sentT; delete m.joined;
     Object.assign(m, workCounts(work));
     // ret was set by any export: never read again
     delete m.ret; if (!(work.returned && work.returned.ok)) delete m.back;
-    m.n = Math.max(m.n || 0, Object.keys(work.s || {}).length);
+    m.n = m.joined ? Object.keys(work.s || {}).length - m.joined : Math.max(m.n || 0, Object.keys(work.s || {}).length);   // partners count once
   }
   return m;
 }

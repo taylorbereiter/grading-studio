@@ -50,7 +50,7 @@ test('Group work…: partners get the paper, one set of marks and one grade; Gra
   assert.deepEqual(w['Cleo Fixture'].marks, [0, 1]);
   assert.equal(w['Aria Testwell'].total, 10.5); assert.equal(w['Cleo Fixture'].total, 10.5); assert.equal(w['Bram Sample'].total, 10.5);
   const chips = await page.$$eval('#stuList .stu', b => b.map(x => [x.querySelector('.nm').textContent, [...x.querySelectorAll('.add')].map(a => a.textContent).join()]));
-  assert.deepEqual(chips.map(c => c[1]), ['group', 'group', 'group']);
+  assert.deepEqual(chips.map(c => c[1]), ['', '', '']); assert.equal(await page.$$eval('#stuList .stugrp .stu', l => l.length), 3, 'the three sit together in one box');
 
   // Still together after reopening.
   await settle(page);
@@ -113,6 +113,9 @@ test('Shared notes, own scores: one notes page and typed notes, each partner’s
   assert.equal(w['Aria Testwell'].total, 12); assert.equal(w['Bram Sample'].total, 7.5);
   assert.equal(w['Aria Testwell'].comment, 'Aria: clear voice'); assert.equal(w['Bram Sample'].comment, 'Bram: speak up');
   assert.deepEqual(w['Bram Sample'].marks, [0, 1]);
+  // partners count once, and sit together in the list
+  assert.match(await page.$eval('#progS .ph', e => e.textContent), /^1 of 1 scored/);
+  assert.equal(await page.$$eval('#stuList .stugrp .stu', l => l.length), 2);
   assert.equal(await page.evaluate(() => JSON.stringify(window.__gs.state().batch.students.find(x => x.key === 'Bram Sample').grade.tn)), JSON.stringify({ l: [{ s: 'Good hook for both', k: 'p' }] }));
 
   // Just Bram: a mark only on his paper.
@@ -122,6 +125,9 @@ test('Shared notes, own scores: one notes page and typed notes, each partner’s
   await setTool(page, 'pen'); await drag(page, talk, [[100, 500], [160, 530], [220, 500]]); await setTool(page, 'select');
   const seen = () => page.evaluate(() => { const b = window.__gs.state().batch; return b.students.map(s => { const f = s.files.find(x => x.name === 'Talk.pdf'); return f ? window.__gs.marksMine(f.marks[0] || [], f, s).length : -1; }); });
   assert.deepEqual(await seen(), [1, 2], 'Aria sees the shared mark, Bram sees it and his own');
+
+  await settle(page);
+  assert.deepEqual(await page.evaluate(() => [...window.__gs.kept().values()].map(m => [m.n, m.scored])), [[1, 1]], 'the download counts one paper, scored');
 
   // Kept after reopening: still own scores, saved apart from the shared groups.
   await settle(page);

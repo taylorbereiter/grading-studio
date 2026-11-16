@@ -140,6 +140,39 @@ function groupSetOwn(st, own) {
   groupSync();
   return true;
 }
+// The students counted as one each: a group's partners together, everyone else alone, in list order.
+function groupUnits() {
+  const seen = new Set(), out = [];
+  for (const st of batch.students) {
+    if (seen.has(st)) continue;
+    const u = [st, ...groupMates(st)]; u.forEach(s => seen.add(s)); out.push(u);
+  }
+  return out;
+}
+// The list's order with each group's partners right after the first of them.
+function groupOrder(order) {
+  if (!(batch.groups || []).length) return order;
+  const out = [], put = new Set();
+  for (const i of order) {
+    if (put.has(i)) continue;
+    const mates = groupMates(batch.students[i]).map(s => batch.students.indexOf(s)).filter(j => j >= 0 && !put.has(j)).sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    for (const j of [i, ...mates]) { put.add(j); out.push(j); }
+  }
+  return out;
+}
+// The list's rows, each group's partners in one box so the link shows. rows: the html for each index in order ('' when hidden).
+function groupRuns(order, rows) {
+  let html = '';
+  for (let p = 0; p < order.length;) {
+    const g = groupOf(batch.students[order[p]]);
+    let q = p + 1;
+    if (g) while (q < order.length && groupOf(batch.students[order[q]]) === g) q++;
+    const shown = rows.slice(p, q).filter(Boolean);
+    html += g && shown.length > 1 ? '<div class="stugrp' + (groupOwn(g) ? ' own' : '') + '" title="' + esc('Group work: ' + groupNames(g.k.map(k => batch.students.find(s => s.key === k)).filter(Boolean)) + (groupOwn(g) ? ', shared notes and own scores' : ', marked and graded once')) + '">' + shown.join('') + '</div>' : shown.join('');
+    p = q;
+  }
+  return html;
+}
 // Saved apart, so an older copy of the app (another tab, a phone not updated yet) never sees a group with its own scores.
 const groupsSave = own => { const l = (batch.groups || []).filter(g => groupOwn(g) === own); return l.length ? l : undefined; };
 

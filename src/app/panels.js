@@ -85,11 +85,11 @@ function hasMarks(st) { return st.files.some(f => fileMarked(f) || f.edited); }
 function renderList() {
   if (!batch) return;
   renderAnonHead();
-  const order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
+  const order = groupOrder(anonOn() ? anonOrder() : batch.students.map((_, i) => i));   // partners side by side
   const q = ($('#stuFind').value || '').trim().toLowerCase();
   lfCheck();
   const rn = anonOn() ? null : rosterNames();
-  $('#stuList').innerHTML = order.map((i, pos) => { const st = batch.students[i];
+  $('#stuList').innerHTML = groupRuns(order, order.map((i, pos) => { const st = batch.students[i];
     const nm = rn && rn.get(st) || shownName(st, i), full = rn && rn.has(st) && st.key !== nm ? nm + ' (' + st.key + ')' : nm;
     if (q && !full.toLowerCase().includes(q)) return '';
     if (!lfShows(i)) return '';
@@ -106,8 +106,8 @@ function renderList() {
     const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
       : val != null ? [ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
-      '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + right + '</span></button>';
-  }).join('');
+      '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + right + '</span></button>';
+  }));
   if (listFilter !== 'all' && !q && !order.some(i => lfMatch(batch.students[i]))) $('#stuList').insertAdjacentHTML('beforeend', '<div class="muted lfnone">No one else here. <button class="link" data-lf="all">Show everyone</button></div>');
   listToCur();
   const nExp = exportPlan(true).length;
@@ -124,7 +124,9 @@ function listToCur() {
 // The top left: how many are scored, the class average so far (the same one Insights gives), and the list's filters.
 function renderProg() {
   const fm = fmNow();
-  const on = batch.students.filter(s => !noScore(s)), N = on.length, n = on.filter(s => fm ? s.grade.fb : gradeOf(s).done).length, nOff = batch.students.length - N;
+  // partners (Group work) count once: a group is done when each of them is
+  const units = groupUnits().map(u => u.filter(s => !noScore(s))), live = units.filter(u => u.length);
+  const N = live.length, n = live.filter(u => u.every(s => fm ? s.grade.fb : gradeOf(s).done)).length, nOff = units.length - N;
   const cs = fm ? null : classStats();
   const avg = fm ? '' : cs.n ? '<button class="pavg" id="pAvg" title="Average of ' + people(cs.n, 'finished score') + '’s percents: ' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '. Partial, missing, excused and left-out papers don’t count. Click for Insights."><span class="k">Avg</span> <span class="v">' + (cs.meanPct != null ? pctAvgText(cs.meanPct) : oneDp(cs.mean)) + '</span><span class="s">' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '</span></button>'
     : '<span class="pavg none" id="pAvg" title="No finished scores yet"><span class="k">Avg</span> <span class="v">–</span></span>';
