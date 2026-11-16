@@ -124,13 +124,13 @@ function renderLib() {
   const card = it => {
     const m = it.batchId ? keptMeta.get(it.batchId) : null, st = m ? keptState(m) : null, typedOnly = !!it.typed && !it.batchId;
     return '<div class="card" draggable="true" data-card="' + it.id + '" title="' + (m && m.papers ? 'Open the papers' : it.typed && !it.batchId ? 'Scores typed in: open the gradebook' : 'Add this assignment’s papers') + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
-      (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (it.typed ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + '</div>' +
+      (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (it.typed ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + lkCard(it) + '</div>' +
       '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
       '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (h => h ? '<div class="m">' + h + '</div>' : '')(tkAsgHtml(it.id)) + (st ? stateChip(st) : '') + '</div>' +
       '<div class="row">' + (m && m.papers ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
         : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') +
         kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-edit-asg="' + it.id + '">Edit<small>Name, type, due date, unit, rubric</small></button>' +
-          (m && m.papers || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : ''), 'right') + '</div></div>';
+          (m && m.papers || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : '') + lkMenu(it, holderById(it.classId) || lib.loose), 'right') + '</div></div>';
   };
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
     '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><span class="ucount">' + u.items.length + (u.items.length === 1 ? ' assignment' : ' assignments') + '</span><span class="sp"></span>' +
@@ -155,11 +155,12 @@ function renderLib() {
   const setup = (c, ci) => kmWrap('Class setup', 'class="btn sm" id="clsSetup"',
     '<button class="mitem" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '<small>Names, and the name of the class</small></button>' +
     ibClassItem(c, ci) +
+    '<button class="mitem" data-lkedit="' + ci + '">Linked classes…<small>Sections on the same schedule</small></button>' +
     '<button class="mitem" data-mbset="' + ci + '">' + (mbOf(c) ? 'Change the ' + esc(sysLink()) + ' link' : 'Add the ' + esc(sysLink()) + ' link…') + '</button>' +
     '<hr><button class="mitem" data-cmove="' + ci + ':-1"' + (ci ? '' : ' disabled') + '>Move up in the sidebar</button><button class="mitem" data-cmove="' + ci + ':1"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>Move down in the sidebar</button>', 'right');
   const block = (c, ci) => '<div class="cls" data-cls="' + esc(c.id) + '"><div class="clshead"><h1>' + esc(ci < 0 ? 'No class' : c.name) + '</h1>' + (ci < 0 ? '' : ibPill(c)) +
     (ci < 0 ? '<span class="muted">Assignments with no roster. Drag them onto a class in the sidebar, or use Edit to pick a class.</span><span class="sp"></span>' :
-      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + (mbOf(c) ? mbLink(c) : '') + (c.names.length ? '' : '<button class="btn sm primary" data-edit-class="' + ci + '">Add roster</button>') + setup(c, ci)) + '</div>' + tabs(c, ci) +
+      '<span class="muted">' + (c.names.length ? c.names.length + ' students on the roster' : 'No roster yet') + '</span><span class="sp"></span>' + (mbOf(c) ? mbLink(c) : '') + (c.names.length ? '' : '<button class="btn sm primary" data-edit-class="' + ci + '">Add roster</button>') + setup(c, ci)) + '</div>' + lkHead(c) + tabs(c, ci) +
     (tab ? '<div class="cpanel" id="classPanel" data-sig="' + rosterSig(c) + '"></div>'
       : '<div class="ctools"><span class="sp"></span><button class="btn sm' + (ci >= 0 && !c.names.length ? '' : ' primary') + '" data-newasg="' + esc(c.id) + '">+ Assignment</button></div>' +
         '<div class="board">' + (c.units.map(unit).join('') || '<div class="empty-note">No units yet. Click + Unit.</div>') + '<button class="addunit" data-addunit="' + esc(c.id) + '">+ Unit</button></div>') + '</div>';
@@ -332,14 +333,14 @@ function editAssignment(id, unitId, clsId) {
   const it = f ? f.it : { id: uid(), name: '', classId: start.c.id };
   const classPick = f
     ? '<div class="field"><label for="aClass">Class</label><select id="aClass" class="btn" style="justify-content:flex-start">' + lib.classes.map(c => '<option value="' + c.id + '"' + (c === start.c ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '<option value=""' + (start.c === lib.loose ? ' selected' : '') + '>No class</option></select></div>'
-    : '<div class="field"><label>Classes</label><div class="ctags" id="aClasses">' + holders().map(c => '<label class="ctag"><input type="checkbox" value="' + esc(c.id) + '"' + (c === start.c ? ' checked' : '') + '><span' + (c === lib.loose ? '' : ' data-raw') + '>' + esc(c === lib.loose ? 'No class' : c.name) + '</span></label>').join('') + '</div></div>';
+    : '<div class="field"><label>Classes</label><div class="ctags" id="aClasses">' + holders().map(c => '<label class="ctag"><input type="checkbox" value="' + esc(c.id) + '"' + (c === start.c || lkSibs(start.c).includes(c) ? ' checked' : '') + '><span' + (c === lib.loose ? '' : ' data-raw') + '>' + esc(c === lib.loose ? 'No class' : c.name) + '</span></label>').join('') + '</div>' + (lkSibs(start.c).length ? '<p class="muted lkhint">Linked classes are ticked. Untick one to keep this assignment out of it.</p>' : '') + '</div>';
   openDlg('<div class="bh"><h2>' + (f ? 'Edit assignment' : 'New assignment') + '</h2></div><div class="bb">' +
     '<div class="field"><label for="aName">Name</label><input type="text" id="aName" value="' + esc(it.name) + '" placeholder="e.g. Ch 3 Analysis Paragraph"></div>' +
     classPick +
     '<div class="field"><label for="aUnit">Unit</label><select id="aUnit" class="btn" style="justify-content:flex-start"></select><p class="muted" id="aUnitNote" style="font-size:13px;margin:6px 0 0" hidden></p></div>' +
     '<div class="field"><label>Type</label><div class="pseg" role="group" id="aType">' + bkCats().map(([t, , s]) => '<button type="button" data-atype="' + esc(t) + '" aria-pressed="' + (it.type === t) + '">' + esc(s) + '</button>').join('') + '</div><p class="muted" style="font-size:12.5px;margin:4px 0 0">' + esc(bkCountSay()) + '</p></div>' +
     '<div class="field"><label for="aDue">Due</label><input type="date" id="aDue" class="btn" value="' + esc(it.due || '') + '"><p class="duehint" id="aDueSay">' + gpDueHint(it.due, f ? it.id : '') + '</p></div>' +
-    ruHtml(f ? it.setup : null) + '</div>' +
+    ruHtml(f ? it.setup : null) + (f ? lkAlsoHtml(it) : '') + '</div>' +
     '<div class="bf">' + (f ? '<button class="btn" data-del style="margin-right:auto">Delete</button>' : '') + '<button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Save</button></div>', true, 'lg');
   const ticked = () => [...document.querySelectorAll('#aClasses input:checked')].map(x => holderById(x.value)).filter(Boolean);
   const fillUnits = keep => {
@@ -389,15 +390,16 @@ function editAssignment(id, unitId, clsId) {
         if (cs.length > 1) toast('Added to ' + cs.map(c => c === lib.loose ? 'No class' : c.name).join(', ').replace(/, ([^,]*)$/, ' and $1'));
         return;
       }
-      const c = holderById($('#aClass').value);
+      const c = holderById($('#aClass').value), was = { name: it.name, type: it.type, due: it.due };
       let to = c.units.find(u => u.id === $('#aUnit').value);
       if (!to) c.units.push(to = { id: uid(), name: 'Unit 1', items: [] });
       it.name = name; it.classId = c.id;
-      setKind(it);
+      setKind(it); lkAlsoDo(it, was, false);
       if (f.u !== to) f.u.items.splice(f.u.items.indexOf(it), 1);
       if (f.u !== to) to.items.push(it);
+      const got = ru.got(), also = !!$('#aAlso') && $('#aAlso').checked;
       saveLib(); closeDlg(); renderLib();
-      if (ru.got()) ruPut(it, ru.got());
+      if (got && ruPut(it, got) && also) { for (const t of lkTwins(it)) t.it.setup = lkCopy(it.setup); saveLib(); }
       if (batch) { renderGrade(); renderList(); }   // a type changed while grading: the score panel follows
     }
   };

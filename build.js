@@ -8,6 +8,8 @@ const fontCss = ('/*\n' + fs.readFileSync('src/fonts/OFL.txt', 'utf8') + '*/\n' 
   face('inter-latin-wght-normal.woff2', 'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD') +
   face('inter-latin-ext-wght-normal.woff2', 'U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF'));
 // The sample is kept apart from real work by a few lines that run before anything else, on both pages (src/samplemode.js).
+// A file with no template literal in it can't hold a line whose leading spaces mean anything, so they don't ship either (about 65 KB).
+const dent = js => js.includes('`') ? js : js.replace(/^[ \t]+/gm, '');
 const sampleMode = fs.readFileSync('src/samplemode.js', 'utf8').replace(/^[ \t]*\/\/.*\r?\n/gm, '');
 rep('/*@@SAMPLEMODE@@*/', sampleMode);
 rep('/*@@FONT@@*/', fontCss);
@@ -25,7 +27,7 @@ rep('/*@@MAMMOTH@@*/', fs.readFileSync(nm + 'mammoth/mammoth.browser.min.js', 'u
 rep('/*@@FFLATE@@*/', fs.readFileSync(nm + 'fflate/umd/index.js', 'utf8'));
 rep('/*@@WORKER@@*/', fs.readFileSync(nm + 'pdfjs-dist/build/pdf.worker.min.js', 'utf8'));
 // The main code is in src/app/, one file per part of the app, joined in the order src/app/order.json gives. They share one scope, as when they were one file.
-const APP = Symbol('app'), appSrc = require('./src/app/order.json').map(n => fs.readFileSync('src/app/' + n + '.js', 'utf8')).join('');
+const APP = Symbol('app'), appSrc = require('./src/app/order.json').map(n => dent(fs.readFileSync('src/app/' + n + '.js', 'utf8'))).join('');
 // migrate.js runs first; the rest of the app waits inside gsData.boot until saved work is ready for it.
 // Reads iPhone photos. libheif and libde265, built by libheif-js, are under the LGPL, whose text travels with them. Packed to a third of its size (heicLoad unpacks it) and left alone until a photo needs it.
 rep('/*@@HEICLICENSE@@*/', 'libheif-js ' + require('./' + nm + 'libheif-js/package.json').version + ': libheif (https://github.com/strukturag/libheif), libde265 (https://github.com/strukturag/libde265), built by https://github.com/catdad-experiments/libheif-js\n' + fs.readFileSync(nm + 'libheif-js/libheif-wasm/LICENSE', 'utf8'));
@@ -50,13 +52,14 @@ const langFiles = {}, langNames = {}, langPacked = {};
   for (const [code, file, obj] of LANGS) {
     const src = fs.readFileSync('src/lang-' + file + '.js', 'utf8') + '\nreturn ' + obj + ';';
     langNames[code] = new Function(src)().name;
-    langPacked[code] = Buffer.from(fflate.deflateSync(Buffer.from(src, 'utf8'), { level: 9 })).toString('base64');
-    langFiles['lang/' + code + '.js'] = '(window.__gsLangs = window.__gsLangs || {})[' + JSON.stringify(code) + '] = (function () {\n' + src.replace(/^[ \t]*\/\/.*\r?\n/gm, '') + '\n})();\n';
+    const lean = dent(src.replace(/^[ \t]*\/\/.*\r?\n/gm, ''));   // comment lines and leading spaces don't ship (dent, above)
+    langPacked[code] = Buffer.from(fflate.deflateSync(Buffer.from(lean, 'utf8'), { level: 9 })).toString('base64');
+    langFiles['lang/' + code + '.js'] = '(window.__gsLangs = window.__gsLangs || {})[' + JSON.stringify(code) + '] = (function () {\n' + lean + '\n})();\n';
   }
 }
 // What fills the sample (src/sample-data.js) is handled the same way: sample.js beside the pages at the web address, fetched only when
 // somebody opens the sample, and squeezed inside the double-click copy.
-const sampleSrc = fs.readFileSync('src/sample-data.js', 'utf8').replace(/^[ \t]*\/\/.*\r?\n/gm, '') + '\nreturn SAMPLE;';
+const sampleSrc = dent(fs.readFileSync('src/sample-data.js', 'utf8').replace(/^[ \t]*\/\/.*\r?\n/gm, '')) + '\nreturn SAMPLE;';
 // The builder is named by a stamp of its own contents. A page only uses the builder it was made with, and a sample another one made is made again.
 const sampleStamp = require('crypto').createHash('sha256').update(sampleSrc).digest('hex').slice(0, 8);
 const sampleFile = 'window.__gsSampleData = (function () {\n' + sampleSrc + '\n})();\nwindow.__gsSampleData.api = ' + JSON.stringify(sampleStamp) + ';\n';
@@ -70,7 +73,7 @@ const hosted = page => { if (page.split(LANG_INSIDE).length !== 2) throw new Err
 // Each file is asked for with a stamp of its contents (lang/es.js?1a2b3c4d), so a page never gets the file of another version from a browser's own cache.
 const langStamp = Object.fromEntries(LANGS.map(([code]) => [code, require('crypto').createHash('sha256').update(langFiles['lang/' + code + '.js']).digest('hex').slice(0, 8)]));
 const LANG_LOADER = '<script>try{var gsLangV=' + JSON.stringify(langStamp) + ',gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write(\'<script src="lang/\'+gsL+\'.js?\'+gsLangV[gsL]+\'"><\\/script>\')}catch(e){}</script>';
-rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['@langs', '@sample', 'lang', 'helpdata', 'pickshare', 'beside', APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'feedback', 'rubrics', 'rubricup', 'book', 'bookimport', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'video', 'sidepane', 'anchors', 'wordnotes', 'wordpdf', 'classpage', 'seating', 'attend', 'goals', 'ib', 'reports', 'missing', 'sheet', 'tabs', 'markscreen', 'examples', 'snip', 'touch', 'today', 'todo', 'focus', 'tracker', 'gradeplan', 'settings', 'safe', 'newyear', 'welcome', 'setupin', 'help', 'school', 'classroom', 'shell', 'moving', 'fullscreen', 'sample'].map(n => n === APP ? appSrc : n === '@langs' ? langSrc : n === '@sample' ? sampleConsts : fs.readFileSync('src/' + n + '.js', 'utf8')).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace('/*@@STICKERS@@*/{}', () => stickerSrc));
+rep('/*@@APP@@*/', (fs.readFileSync('src/migrate.js', 'utf8') + '\ngsData.boot(function () {\n' + ['@langs', '@sample', 'lang', 'helpdata', 'pickshare', 'beside', APP, 'names', 'marking', 'stamps', 'grades', 'saving', 'carryover', 'exportreport', 'feedback', 'rubrics', 'rubricup', 'book', 'bookimport', 'intake', 'polish', 'insight', 'people', 'scans', 'merge', 'folder', 'takehome', 'quiz', 'imported', 'marksout', 'pastetext', 'groups', 'video', 'sidepane', 'anchors', 'wordnotes', 'wordpdf', 'classpage', 'seating', 'attend', 'goals', 'ib', 'reports', 'missing', 'sheet', 'tabs', 'markscreen', 'examples', 'linked', 'snip', 'touch', 'today', 'todo', 'focus', 'tracker', 'gradeplan', 'settings', 'safe', 'newyear', 'welcome', 'setupin', 'help', 'school', 'classroom', 'shell', 'moving', 'fullscreen', 'sample'].map(n => n === APP ? appSrc : n === '@langs' ? langSrc : n === '@sample' ? sampleConsts : dent(fs.readFileSync('src/' + n + '.js', 'utf8'))).join('\n') + '\n});').replace(/^[ \t]*\/\/.*\r?\n/gm, '').replace('/*@@STICKERS@@*/{}', () => stickerSrc));
 rep("'/*@@GCID@@*/'", JSON.stringify(process.env.GCID || ''));
 // Where this copy lives and where it is moving to (site.json), only while a move is on. Otherwise the app has no address written into it.
 { const site = require('./site.json'); rep("'/*@@SITE@@*/'", JSON.stringify(site.movingTo ? { address: site.address || '', movingTo: site.movingTo } : null)); }
