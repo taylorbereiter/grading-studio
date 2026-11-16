@@ -4,7 +4,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, classPage, goTo, openZip, score, settle, answerDlg, closeBox, pick } = require('./helpers/app');
+const { noStamps, openApp, classPage, goTo, openZip, score, settle, answerDlg, closeBox, pick } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
 const { ibSeed } = require('./helpers/ibseed');
 
@@ -18,7 +18,7 @@ function seed() {
   return { ls: { 'gs.lib': JSON.stringify(lib) } };
 }
 const libOf = page => page.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().lib)));
-const stored = page => page.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')));
+const stored = async page => noStamps(await page.evaluate(() => JSON.parse(localStorage.getItem('gs.lib'))));
 const shut = page => page.waitForFunction(() => document.querySelector('#dlg').hidden);
 const type = (page, sel, v) => page.$eval(sel, (e, v) => { e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); }, v);
 

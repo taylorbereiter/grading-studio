@@ -32,10 +32,10 @@ window.addEventListener('hashchange', phNavRender);
 
 /* Scores: a class, then one of its assignments, then every student with a box for the score. Saved the same way as typing in the
    Gradebook (bkParse, bkPut), so the Gradebook, term grades and the sidebar's counts on the computer read them as typed in there. */
-const ph = { cols: null, ver: -1, busy: null };
+const ph = { cols: null, ver: -1, busy: null, lib: null, later: false };
 async function phCols() {
-  if (ph.cols && ph.ver === libVer) return ph.cols;
-  if (!ph.busy) ph.busy = bkLoad().then(c => { ph.cols = c; ph.ver = libVer; ph.busy = null; return c; });
+  if (ph.cols && ph.ver === libVer && ph.lib === lib) return ph.cols;
+  if (!ph.busy) { const at = lib; ph.busy = bkLoad().then(c => { ph.cols = c; ph.ver = libVer; ph.lib = at; ph.busy = null; return c; }); }
   return ph.busy;
 }
 const phHash = (c, key) => '#/scores' + (c ? '/' + encodeURIComponent(c.id) + (key ? '/' + encodeURIComponent(key) : '') : '');
@@ -80,6 +80,8 @@ function phOneRender(box, c, col) {
 // A score typed in: kept when the box is left, and Next (Enter) goes to the student below.
 function phPut(colKey, n, text, st) {
   const col = ph.cols && ph.cols.find(x => x.key === colKey); if (!col) return false;
+  // a sync may have brought in a whole new library since the list was drawn: write into today's copy of the assignment, not the old one
+  if (ph.lib !== lib && col.it) { const f = findItem(col.it.id); if (!f) return false; col.it = f.it; col.typed = f.it.typed || null; }
   if (!col.typed && col.d) col.typed = { max: bkColMax(col), s: {} };
   const r = ((col.typed || {}).s || {})[n] || {};
   const rec = st != null ? (st ? { v: null, st } : null) : bkParse(text, r, col);
@@ -93,6 +95,15 @@ document.addEventListener('change', e => {
   const key = i.closest('[data-phcol]').dataset.phcol;
   if (phPut(key, i.dataset.phn, i.value)) phDone();
 });
+// After a sync brought in changes: draw Scores again, but not under the teacher's thumb. While a box has the keyboard it waits for them to leave the list.
+function phSynced() {
+  if (routeNow().v !== 'scores') return;
+  if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.phstus')) { ph.later = true; return; }
+  ph.cols = null; ph.later = false; phScoresRender(routeNow());
+}
+document.addEventListener('focusout', () => setTimeout(() => {
+  if (ph.later && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('.phstus'))) phSynced();
+}, 0));
 // The count at the top, without drawing the list again (that would take the keyboard away from the next student).
 function phDone() {
   ph.ver = -1;

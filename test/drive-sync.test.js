@@ -23,9 +23,9 @@ function seed(extra = {}) {
   };
   return { ls: { 'gs.lib': JSON.stringify(lib), 'gs.gcid': JSON.stringify(GCID), 'gs.gEmail': JSON.stringify('teacher@example.com'), ...extra } };
 }
-// One Drive for every page in a test: the hidden app file, its version, and what was asked of it.
+// One Drive for every page in a test: the hidden app file, its version (Drive's count of changes), and what was asked of it.
 function fakeDrive() {
-  const D = { body: null, etag: 0, writes: 0, refused: 0, afterRead: null };
+  const D = { body: null, etag: 0, readAt: null, writes: 0, refused: 0, afterRead: null };
   D.hook = async page => {
     await page.evaluateOnNewDocument(() => {
       // Google's sign-in script, as far as the app uses it: a key straight away, for whatever was asked
@@ -44,15 +44,14 @@ function fakeDrive() {
       if (r.method() === 'OPTIONS') return r.respond({ status: 204, headers: cors, body: '' });
       if (/\/about\?/.test(u)) return json({ user: { emailAddress: 'teacher@example.com' } });
       if (/drive\/v3\/files\?spaces=appDataFolder/.test(u)) return json({ files: D.body ? [{ id: 'f1' }] : [] });
-      if (/drive\/v3\/files\/f1\?alt=media/.test(u)) { const out = json(JSON.parse(D.body), 200, { ETag: '"' + D.etag + '"' }); if (D.afterRead) { const f = D.afterRead; D.afterRead = null; f(); } return out; }
+      if (/drive\/v3\/files\/f1\?fields=id,version/.test(u)) { if (D.readAt != null && D.readAt !== D.etag) D.refused++; return json({ id: 'f1', version: String(D.etag) }); }
+      if (/drive\/v3\/files\/f1\?alt=media/.test(u)) { D.readAt = D.etag; const out = json(JSON.parse(D.body), 200, { ETag: '"' + D.etag + '"' }); if (D.afterRead) { const f = D.afterRead; D.afterRead = null; f(); } return out; }
       if (/upload\/drive\/v3\/files\/f1\?uploadType=media/.test(u) && r.method() === 'PATCH') {
-        const want = r.headers()['if-match'];
-        if (want && want !== '"' + D.etag + '"') { D.refused++; return json({ error: { message: 'Precondition Failed' } }, 412); }
-        D.body = r.postData() || await r.fetchPostData(); D.etag++; D.writes++; return json({ id: 'f1' });
+        D.body = r.postData() || await r.fetchPostData(); D.etag++; D.writes++; D.readAt = null; return json({ id: 'f1' });
       }
       if (/upload\/drive\/v3\/files\?uploadType=multipart/.test(u)) {
         const t = r.postData() || await r.fetchPostData() || '', i = t.indexOf('{"app"'), j = t.lastIndexOf('}');
-        D.body = t.slice(i, j + 1); D.etag++; D.writes++; return json({ id: 'f1' });
+        D.body = t.slice(i, j + 1); D.etag++; D.writes++; D.readAt = null; return json({ id: 'f1' });
       }
       return json({ error: { message: 'not in this test: ' + u } }, 404);
     };
@@ -107,7 +106,7 @@ test('a score typed on the phone and another typed on the computer both reach bo
   } finally { await mac.close(); await ph.close(); await srv.close(); }
 });
 
-test('two devices saving at once: the second is turned away by Drive, merges again, and nothing is lost', async () => {
+test('two devices saving at once: the second sees the file changed, merges again, and nothing is lost', async () => {
   const D = fakeDrive(), srv = await serve(builtHtml());
   const b = await openApp(browser, { server: srv, seed: seed(), beforeLoad: D.hook });
   try {
@@ -116,7 +115,7 @@ test('two devices saving at once: the second is turned away by Drive, merges aga
     // just after this device reads the file, another device saves a score for Bram into it
     D.afterRead = () => { const f = D.file(); f.lib.classes[0].units[0].items[0].typed.s['Bram Sample'] = { v: 3, t: Date.now() }; D.body = JSON.stringify(f); D.etag++; };
     await sync(b.page);
-    assert.equal(D.refused, 1, 'Drive turned the out-of-date write away');
+    assert.equal(D.refused, 1, 'the out-of-date write was held back');
     await b.page.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); return l.classes[0].units[0].items[0].typed.s['Bram Sample']; }, { timeout: 15000 });
     await sync(b.page);
     const t = await typed(b.page, 'i1'), f = D.file().lib.classes[0].units[0].items[0].typed;

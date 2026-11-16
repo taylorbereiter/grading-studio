@@ -49,7 +49,7 @@ async function gToken(interactive, full) {
 async function gfetch(url, opt = {}, interactive, sync, again) {
   const t = await gToken(interactive, !sync);
   const r = await fetch(url.startsWith('http') ? url : 'https://www.googleapis.com/drive/v3/' + url, { ...opt, headers: { ...(opt.headers || {}), Authorization: 'Bearer ' + t } });
-  if (r.status === 401 && !again) { G.token = null; return gfetch(url, opt, interactive, sync, true); }
+  if (r.status === 401 && !again) { G.token = null; G.exp = 0; try { sessionStorage.removeItem('gs.gTok'); } catch {} return gfetch(url, opt, interactive, sync, true); }
   if (!r.ok) { const e = new Error('Google Drive said ' + r.status + ': ' + ((await r.text()).match(/"message":\s*"([^"]+)/) || [, ''])[1]); e.status = r.status; throw e; }
   return r;
 }
@@ -201,7 +201,7 @@ async function saveToDrive(name, files, onStep) {
    or a take-home file is (merge.js), student by student and field by field, so a score typed on the phone and a comment written on
    the computer both stay. Nothing goes anywhere but her browser and her Drive. */
 const SYNC_NAME = 'grading-studio-sync.json';
-let syncState = '', syncT = null, syncBusy = null, syncAgain = false, syncFile = null;
+let syncTries = 0, syncState = '', syncT = null, syncBusy = null, syncAgain = false, syncFile = null;
 const SYNC_RX = /^gs\.(lib|setup|bank|rubrics|school|b\..+|rp\..+|rd\..+)$/;
 {
   const raw = store.set.bind(store);
@@ -209,28 +209,46 @@ const SYNC_RX = /^gs\.(lib|setup|bank|rubrics|school|b\..+|rp\..+|rd\..+)$/;
 }
 function setSyncState(s) { syncState = s; const el = document.getElementById('syncState'); if (el) el.textContent = s; }
 function syncSoon() { if (!G.email || sampleOn()) return; clearTimeout(syncT); setSyncState('saving…'); syncT = setTimeout(syncNow, 15000); }
-// The file and its version, so two devices saving at once can't write over each other: the second one is turned away and merges again.
+// The file and its version, so two devices saving at once can't write over each other. Drive counts every change to a file (version):
+// the count is read with the file, and read again just before writing. If another device saved in between, this one merges again first.
+const syncVer = async () => String((await (await gsync('files/' + syncFile.id + '?fields=id,version')).json()).version || '');
 async function syncRead() {
   if (!syncFile) { const f = (await (await gsync("files?spaces=appDataFolder&fields=files(id)&q=" + encodeURIComponent("name='" + SYNC_NAME + "' and trashed=false"))).json()).files[0]; syncFile = f ? { id: f.id } : null; }
   if (!syncFile) return null;
+  syncFile.ver = await syncVer();
   const r = await gsync('files/' + syncFile.id + '?alt=media');
-  syncFile.etag = r.headers.get('ETag');
   try { return await r.json(); } catch { return null; }
 }
 async function syncWrite(body) {
-  if (syncFile) return gsync('https://www.googleapis.com/upload/drive/v3/files/' + syncFile.id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json', ...(syncFile.etag ? { 'If-Match': syncFile.etag } : {}) }, body });
+  if (syncFile) {
+    if (syncFile.ver && await syncVer() !== syncFile.ver) { const e = new Error('changed on another device'); e.status = 412; throw e; }
+    return gsync('https://www.googleapis.com/upload/drive/v3/files/' + syncFile.id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+  }
   const fd = new FormData();
   fd.append('metadata', new Blob([JSON.stringify({ name: SYNC_NAME, parents: ['appDataFolder'] })], { type: 'application/json' }));
   fd.append('file', new Blob([body], { type: 'application/json' }));
   syncFile = { id: (await (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: fd })).json()).id };
 }
 const syncNone = { papers: async () => null, added: async () => null, edit: async () => null };   // papers never come through Drive
+// Where a folder would ask her (the same student, or a card's rubric, changed on two devices since they last matched), sync can't wait for
+// an answer on every device: the copy changed later is kept, the same choice on both sides, so they agree and stop asking. A download
+// forgotten on one device and worked on since on another comes back.
+function syncDecide(asks) {
+  const out = {};
+  for (const q of asks) {
+    if (q.gone) { out['!' + q.id] = 'back'; continue; }
+    const ta = q.ta || 0, tb = q.tb || 0, side = ta !== tb ? (tb > ta ? 'b' : 'a') : hashOf(q.b) > hashOf(q.a) ? 'b' : 'a';
+    (out[q.id] ||= {})[q.key] = side;
+  }
+  return out;
+}
 function syncNow() {
   if (!G.email || sampleOn()) return Promise.resolve();
   if (syncBusy) { syncAgain = true; return syncBusy; }
   clearTimeout(syncT);
-  syncBusy = syncOnce().catch(e => {
-    if (e && e.status === 412) { syncAgain = true; return; }   // the other device saved first: merge again with what it saved
+  syncBusy = syncOnce().then(() => { syncTries = 0; }).catch(e => {
+    // the other device saved first: merge again with what it saved, a little later each time, and stop after a few tries
+    if (e && e.status === 412) { if (++syncTries < 5) { syncAgain = false; setTimeout(syncNow, 500 * 2 ** syncTries + Math.random() * 500); } else { syncTries = 0; setSyncState('not synced'); } return; }
     console.warn(e); setSyncState(/sign in/i.test(e && e.message) ? 'sign in again to sync' : 'not synced');
   }).finally(() => { syncBusy = null; if (syncAgain) { syncAgain = false; syncNow(); } });
   return syncBusy;
@@ -242,19 +260,26 @@ async function syncOnce() {
   const A = await localState(), dev = devId(), now = Date.now();
   let rows = [], tomb = A.tomb;
   if (B) {
-    const libm = mergeLib(libHere(), B.lib, { dev, now });
+    B.edits = A.edits;   // Word edits stay on the computer they were made on: the file carries none, and that mustn't read as "taken off"
+    await addedDates(A, B);   // a late file's own date, where the other side took one off under the same name
+    const v0 = libVer;
+    let libm = mergeLib(libHere(), B.lib, { dev, now });
+    if (libm.asks.length) libm = mergeLib(libHere(), B.lib, { dev, now, answers: syncDecide(libm.asks) });
     for (const w of Object.values(A.work)) if (libm.mapA[w.cls]) w.cls = libm.mapA[w.cls];
     for (const w of Object.values(B.work)) if (libm.mapB[w.cls]) w.cls = libm.mapB[w.cls];
-    const plan = mergeStates(A, B, { dev, now, linked: libLinked(libm.lib, libm.cards) });
+    let plan = mergeStates(A, B, { dev, now, linked: libLinked(libm.lib, libm.cards) });
+    if (plan.asks.length) plan = mergeStates(A, B, { dev, now, linked: libLinked(libm.lib, libm.cards), answers: syncDecide(plan.asks) });
     libFollow(libm, plan.rows, dev, now);
     rows = plan.rows; tomb = plan.tomb;
     // The download open on screen keeps what's there; it takes what came in the next time round, once it's closed.
     const open = batch && batch.id, came = rows.filter(r => r.kind === 'new' || r.kind === 'gone' && r.onA || r.toA || (r.meta && JSON.stringify(r.meta) !== JSON.stringify(r.ma)));
     for (const row of came) if (row.id !== open && row.kind !== 'askGone') await applyRow(row, syncNone);
+    // a score saved while the rows above were being written: merge it in again, so the copy taken before doesn't write over it
+    if (libVer !== v0) { libm.lib = mergeLib(libHere(), libm.lib, { dev, now }).lib; libm.toA = true; }
     if (libm.toA) { lib = migrateLib(libm.lib); libUndoForget(); if (!setLibFrom(lib)) throw browserFull(); if (batch && batch.assignment) { const f = findItem(batch.assignment.id); if (f) batch.assignment = f.it; } }
     store.set('gs.tomb', tomb);
     for (const [k, v] of Object.entries(mergeLs(carryLs(), B.ls, k => Object.keys(tomb).some(id => k.includes(id))))) lsPut(k, v);
-    if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE && routeNow().v === 'scores') { ph.cols = null; phScoresRender(routeNow()); } }
+    if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); }
     if (open && rows.some(r => r.id === open && r.toA)) syncAgain = false;   // nothing to push for it until it is closed and merged
   }
   // What goes up: the merged copy, with the papers left behind. A row's own "papers" says where they are kept, so it stays on each device.
@@ -277,8 +302,10 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 // Signed in last time: reconnect quietly when the page opens. On an iPhone's home screen that's a quick trip to Google and back, once an hour at most.
 if (GOK && G.email && gcid() && !sampleOn()) setTimeout(() => {
   if (G_REDIRECT && !(G.token && Date.now() < G.exp - 60000)) {
-    let tried = false; try { tried = sessionStorage.getItem('gs.gQuiet') === '1'; sessionStorage.setItem('gs.gQuiet', '1'); } catch {}
-    if (!tried) return gRedirect(SYNC_SCOPE, true);
+    // offline, Google's page wouldn't load and a home-screen app has no back button: stay here and sync next time
+    if (navigator.onLine === false) return setSyncState('offline: syncs when you are back online');
+    let last = 0; try { last = +sessionStorage.getItem('gs.gQuiet') || 0; } catch {}
+    if (Date.now() - last > 50 * 60000) { try { sessionStorage.setItem('gs.gQuiet', String(Date.now())); } catch {} return gRedirect(SYNC_SCOPE, true); }
     return setSyncState('sign in again to sync');
   }
   gToken(false).then(() => { renderGoogle(); syncNow(); }).catch(() => setSyncState('sign in again to sync'));

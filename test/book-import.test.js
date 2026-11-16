@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs'), os = require('os'), path = require('path');
 const fflate = require('fflate');
 const { launch } = require('./helpers/chrome');
-const { classPage, openApp, pick } = require('./helpers/app');
+const { noStamps, classPage, openApp, pick } = require('./helpers/app');
 
 let browser;
 before(async () => { browser = await launch(); });
@@ -32,7 +32,7 @@ function seed() {
   return { ls, idb: { 'grading-studio-keep': { version: 2, stores: { papers: [], work: [], edits: [], meta } } } };
 }
 const noErrors = page => assert.deepEqual(page.errors, []);
-const lib = page => page.evaluate(() => window.__gs.state().lib);
+const lib = async page => noStamps(await page.evaluate(() => window.__gs.state().lib));
 const items = async page => (await lib(page)).classes[0].units.flatMap(u => u.items);
 async function openImport(page) {
   await classPage(page, 'c1');

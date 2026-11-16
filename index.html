@@ -10090,7 +10090,7 @@ return new Promise((res, rej) => { G.waiters.push({ res, rej }); G.client.reques
 async function gfetch(url, opt = {}, interactive, sync, again) {
 const t = await gToken(interactive, !sync);
 const r = await fetch(url.startsWith('http') ? url : 'https://www.googleapis.com/drive/v3/' + url, { ...opt, headers: { ...(opt.headers || {}), Authorization: 'Bearer ' + t } });
-if (r.status === 401 && !again) { G.token = null; return gfetch(url, opt, interactive, sync, true); }
+if (r.status === 401 && !again) { G.token = null; G.exp = 0; try { sessionStorage.removeItem('gs.gTok'); } catch {} return gfetch(url, opt, interactive, sync, true); }
 if (!r.ok) { const e = new Error('Google Drive said ' + r.status + ': ' + ((await r.text()).match(/"message":\s*"([^"]+)/) || [, ''])[1]); e.status = r.status; throw e; }
 return r;
 }
@@ -10236,7 +10236,7 @@ download's marks and scores and its row in the list, and the settings that trave
 or a take-home file is (merge.js), student by student and field by field, so a score typed on the phone and a comment written on
 the computer both stay. Nothing goes anywhere but her browser and her Drive. */
 const SYNC_NAME = 'grading-studio-sync.json';
-let syncState = '', syncT = null, syncBusy = null, syncAgain = false, syncFile = null;
+let syncTries = 0, syncState = '', syncT = null, syncBusy = null, syncAgain = false, syncFile = null;
 const SYNC_RX = /^gs\.(lib|setup|bank|rubrics|school|b\..+|rp\..+|rd\..+)$/;
 {
 const raw = store.set.bind(store);
@@ -10244,27 +10244,40 @@ store.set = (k, v) => { const ok = raw(k, v); if (ok && SYNC_RX.test(k)) syncSoo
 }
 function setSyncState(s) { syncState = s; const el = document.getElementById('syncState'); if (el) el.textContent = s; }
 function syncSoon() { if (!G.email || sampleOn()) return; clearTimeout(syncT); setSyncState('savingâ€¦'); syncT = setTimeout(syncNow, 15000); }
+const syncVer = async () => String((await (await gsync('files/' + syncFile.id + '?fields=id,version')).json()).version || '');
 async function syncRead() {
 if (!syncFile) { const f = (await (await gsync("files?spaces=appDataFolder&fields=files(id)&q=" + encodeURIComponent("name='" + SYNC_NAME + "' and trashed=false"))).json()).files[0]; syncFile = f ? { id: f.id } : null; }
 if (!syncFile) return null;
+syncFile.ver = await syncVer();
 const r = await gsync('files/' + syncFile.id + '?alt=media');
-syncFile.etag = r.headers.get('ETag');
 try { return await r.json(); } catch { return null; }
 }
 async function syncWrite(body) {
-if (syncFile) return gsync('https://www.googleapis.com/upload/drive/v3/files/' + syncFile.id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json', ...(syncFile.etag ? { 'If-Match': syncFile.etag } : {}) }, body });
+if (syncFile) {
+if (syncFile.ver && await syncVer() !== syncFile.ver) { const e = new Error('changed on another device'); e.status = 412; throw e; }
+return gsync('https://www.googleapis.com/upload/drive/v3/files/' + syncFile.id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+}
 const fd = new FormData();
 fd.append('metadata', new Blob([JSON.stringify({ name: SYNC_NAME, parents: ['appDataFolder'] })], { type: 'application/json' }));
 fd.append('file', new Blob([body], { type: 'application/json' }));
 syncFile = { id: (await (await gsync('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', body: fd })).json()).id };
 }
 const syncNone = { papers: async () => null, added: async () => null, edit: async () => null };
+function syncDecide(asks) {
+const out = {};
+for (const q of asks) {
+if (q.gone) { out['!' + q.id] = 'back'; continue; }
+const ta = q.ta || 0, tb = q.tb || 0, side = ta !== tb ? (tb > ta ? 'b' : 'a') : hashOf(q.b) > hashOf(q.a) ? 'b' : 'a';
+(out[q.id] ||= {})[q.key] = side;
+}
+return out;
+}
 function syncNow() {
 if (!G.email || sampleOn()) return Promise.resolve();
 if (syncBusy) { syncAgain = true; return syncBusy; }
 clearTimeout(syncT);
-syncBusy = syncOnce().catch(e => {
-if (e && e.status === 412) { syncAgain = true; return; }
+syncBusy = syncOnce().then(() => { syncTries = 0; }).catch(e => {
+if (e && e.status === 412) { if (++syncTries < 5) { syncAgain = false; setTimeout(syncNow, 500 * 2 ** syncTries + Math.random() * 500); } else { syncTries = 0; setSyncState('not synced'); } return; }
 console.warn(e); setSyncState(/sign in/i.test(e && e.message) ? 'sign in again to sync' : 'not synced');
 }).finally(() => { syncBusy = null; if (syncAgain) { syncAgain = false; syncNow(); } });
 return syncBusy;
@@ -10276,18 +10289,24 @@ const got = await syncRead(), B = got && got.app === 'Grading Studio sync' ? { w
 const A = await localState(), dev = devId(), now = Date.now();
 let rows = [], tomb = A.tomb;
 if (B) {
-const libm = mergeLib(libHere(), B.lib, { dev, now });
+B.edits = A.edits;
+await addedDates(A, B);
+const v0 = libVer;
+let libm = mergeLib(libHere(), B.lib, { dev, now });
+if (libm.asks.length) libm = mergeLib(libHere(), B.lib, { dev, now, answers: syncDecide(libm.asks) });
 for (const w of Object.values(A.work)) if (libm.mapA[w.cls]) w.cls = libm.mapA[w.cls];
 for (const w of Object.values(B.work)) if (libm.mapB[w.cls]) w.cls = libm.mapB[w.cls];
-const plan = mergeStates(A, B, { dev, now, linked: libLinked(libm.lib, libm.cards) });
+let plan = mergeStates(A, B, { dev, now, linked: libLinked(libm.lib, libm.cards) });
+if (plan.asks.length) plan = mergeStates(A, B, { dev, now, linked: libLinked(libm.lib, libm.cards), answers: syncDecide(plan.asks) });
 libFollow(libm, plan.rows, dev, now);
 rows = plan.rows; tomb = plan.tomb;
 const open = batch && batch.id, came = rows.filter(r => r.kind === 'new' || r.kind === 'gone' && r.onA || r.toA || (r.meta && JSON.stringify(r.meta) !== JSON.stringify(r.ma)));
 for (const row of came) if (row.id !== open && row.kind !== 'askGone') await applyRow(row, syncNone);
+if (libVer !== v0) { libm.lib = mergeLib(libHere(), libm.lib, { dev, now }).lib; libm.toA = true; }
 if (libm.toA) { lib = migrateLib(libm.lib); libUndoForget(); if (!setLibFrom(lib)) throw browserFull(); if (batch && batch.assignment) { const f = findItem(batch.assignment.id); if (f) batch.assignment = f.it; } }
 store.set('gs.tomb', tomb);
 for (const [k, v] of Object.entries(mergeLs(carryLs(), B.ls, k => Object.keys(tomb).some(id => k.includes(id))))) lsPut(k, v);
-if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE && routeNow().v === 'scores') { ph.cols = null; phScoresRender(routeNow()); } }
+if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); }
 if (open && rows.some(r => r.id === open && r.toA)) syncAgain = false;
 }
 const out = { app: 'Grading Studio sync', v: 1, t: now, lib: libHere(), work: {}, meta: {}, tomb, ls: carryLs() };
@@ -10308,8 +10327,9 @@ window.addEventListener('focus', () => { if (G.email) syncNow(); });
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && G.email) syncNow(); });
 if (GOK && G.email && gcid() && !sampleOn()) setTimeout(() => {
 if (G_REDIRECT && !(G.token && Date.now() < G.exp - 60000)) {
-let tried = false; try { tried = sessionStorage.getItem('gs.gQuiet') === '1'; sessionStorage.setItem('gs.gQuiet', '1'); } catch {}
-if (!tried) return gRedirect(SYNC_SCOPE, true);
+if (navigator.onLine === false) return setSyncState('offline: syncs when you are back online');
+let last = 0; try { last = +sessionStorage.getItem('gs.gQuiet') || 0; } catch {}
+if (Date.now() - last > 50 * 60000) { try { sessionStorage.setItem('gs.gQuiet', String(Date.now())); } catch {} return gRedirect(SYNC_SCOPE, true); }
 return setSyncState('sign in again to sync');
 }
 gToken(false).then(() => { renderGoogle(); syncNow(); }).catch(() => setSyncState('sign in again to sync'));
@@ -17145,7 +17165,7 @@ const v = fm || r.v === '' || r.v == null || isNaN(+r.v) ? null : Math.round(+r.
 if (fm ? r.fb || r.st : v != null || r.st) s[n] = fm && r.fb ? { v: null, st: r.st || '', fb: true } : { v, st: r.st || '' }
 if (s[n] && !fm && v != null && r.tries && r.tries.length) s[n].tries = r.tries;
 }
-const typed = { max, s };
+const typed = typedStamp(bkAdd.it && bkAdd.it.typed, { max, s });
 const card = !bkAdd.it && bkEmptyCards(c).find(x => x.name.trim().toLowerCase() === name.toLowerCase());
 let it = bkAdd.it || card;
 if (card) Object.assign(it, { type: it.type || bkAdd.type, due: it.due || due, typed });
@@ -17192,6 +17212,13 @@ if (rec) { s[n] = { ...rec, t }; delete gone[n]; } else { delete s[n]; gone[n] =
 const kept = { ...ty, s }; if (Object.keys(gone).length) kept.gone = gone; else delete kept.gone;
 col.typed = col.d && !Object.keys(s).length ? null : kept;
 if (col.it) { if (col.typed) col.it.typed = col.typed; else delete col.it.typed; }
+}
+function typedStamp(old, nu) {
+const so = (old && old.s) || {}, sn = nu.s || {}, gone = { ...((old && old.gone) || {}) }, t = Date.now(), bare = r => { const { t, ...x } = r || {}; return JSON.stringify(x); };
+for (const [n, r] of Object.entries(sn)) { sn[n] = { ...r, t: so[n] && bare(so[n]) === bare(r) ? so[n].t || t : t }; delete gone[n]; }
+for (const n of Object.keys(so)) if (!sn[n]) gone[n] = t;
+if (Object.keys(gone).length) nu.gone = gone; else delete nu.gone;
+return nu;
 }
 function bkNext(td, dr, dc) {
 const all = [...(dc ? td.parentElement : $('#bkBody')).querySelectorAll(dc ? '[data-bked]' : '[data-bked="' + CSS.escape(td.dataset.bked) + '"]')], x = all[all.indexOf(td) + (dc || dr)];
@@ -17702,12 +17729,12 @@ if (p.t) {
 it = p.t.it;
 const s = { ...p.old };
 for (const [who, v] of Object.entries(p.s)) { const was = p.old[who]; if (!was || (was.v == null && !was.st) || bkiSame(was, v) || bkiUse(col, who)) s[who] = v; }
-it.typed = { max: p.max, s };
+it.typed = typedStamp(it.typed, { max: p.max, s });
 if (!it.type) it.type = type;
 if (!it.due && col.due) it.due = col.due;
 } else {
 if (!u) { u = c.units.find(x => x.id === bki.unit); if (!u) c.units.push(u = { id: uid(), name: 'Imported', items: [] }); }
-u.items.push(it = { id: uid(), name, classId: c.id, type, due: col.due, typed: { max: p.max, s: p.s } });
+u.items.push(it = { id: uid(), name, classId: c.id, type, due: col.due, typed: typedStamp(null, { max: p.max, s: p.s }) });
 }
 const bc = bk.cols.find(x => x.key === it.id);
 if (bc) Object.assign(bc, { typed: it.typed, type: it.type, due: it.due || bc.due });
@@ -26006,7 +26033,7 @@ if (bad) { toast('A level is a whole number from 0 to ' + IB_TOP); bad.focus(); 
 if (!a.crit.length) { toast('Tick the criteria this task assessed'); return; }
 const s = {};
 for (const [n, r] of Object.entries(a.s)) { const l = {}; for (const k of a.crit) if (r.l && r.l[k] != null) l[k] = r.l[k]; if (Object.keys(l).length || r.st) s[n] = { l, ...(r.st ? { st: r.st } : {}) }; }
-const typed = { lv: true, s }, type = a.fm ? 'fm' : 'sum', due = a.due || isoDay(Date.now());
+const typed = typedStamp(a.it && a.it.typed, { lv: true, s }), type = a.fm ? 'fm' : 'sum', due = a.due || isoDay(Date.now());
 let it = a.it;
 if (it) Object.assign(it, { name: a.name, type, due, crit: a.crit.slice(), typed });
 else { let u = c.units[c.units.length - 1]; if (!u) c.units.push(u = { id: uid(), name: 'Unit 1', items: [] }); u.items.push(it = { id: uid(), name: a.name, classId: c.id, type, due, crit: a.crit.slice(), typed }); }
@@ -32146,10 +32173,10 @@ window.addEventListener('hashchange', phNavRender);
 
 /* Scores: a class, then one of its assignments, then every student with a box for the score. Saved the same way as typing in the
 Gradebook (bkParse, bkPut), so the Gradebook, term grades and the sidebar's counts on the computer read them as typed in there. */
-const ph = { cols: null, ver: -1, busy: null };
+const ph = { cols: null, ver: -1, busy: null, lib: null, later: false };
 async function phCols() {
-if (ph.cols && ph.ver === libVer) return ph.cols;
-if (!ph.busy) ph.busy = bkLoad().then(c => { ph.cols = c; ph.ver = libVer; ph.busy = null; return c; });
+if (ph.cols && ph.ver === libVer && ph.lib === lib) return ph.cols;
+if (!ph.busy) { const at = lib; ph.busy = bkLoad().then(c => { ph.cols = c; ph.ver = libVer; ph.lib = at; ph.busy = null; return c; }); }
 return ph.busy;
 }
 const phHash = (c, key) => '#/scores' + (c ? '/' + encodeURIComponent(c.id) + (key ? '/' + encodeURIComponent(key) : '') : '');
@@ -32191,6 +32218,7 @@ box.innerHTML = '<div class="phtop"><a class="btn sm" href="' + phHash(c) + '">â
 }
 function phPut(colKey, n, text, st) {
 const col = ph.cols && ph.cols.find(x => x.key === colKey); if (!col) return false;
+if (ph.lib !== lib && col.it) { const f = findItem(col.it.id); if (!f) return false; col.it = f.it; col.typed = f.it.typed || null; }
 if (!col.typed && col.d) col.typed = { max: bkColMax(col), s: {} };
 const r = ((col.typed || {}).s || {})[n] || {};
 const rec = st != null ? (st ? { v: null, st } : null) : bkParse(text, r, col);
@@ -32204,6 +32232,14 @@ const i = e.target.closest && e.target.closest('.phin'); if (!i) return;
 const key = i.closest('[data-phcol]').dataset.phcol;
 if (phPut(key, i.dataset.phn, i.value)) phDone();
 });
+function phSynced() {
+if (routeNow().v !== 'scores') return;
+if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.phstus')) { ph.later = true; return; }
+ph.cols = null; ph.later = false; phScoresRender(routeNow());
+}
+document.addEventListener('focusout', () => setTimeout(() => {
+if (ph.later && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('.phstus'))) phSynced();
+}, 0));
 function phDone() {
 ph.ver = -1;
 const el = $('#phDone'); if (!el) return;
