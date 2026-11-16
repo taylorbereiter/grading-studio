@@ -412,6 +412,7 @@ const LANG_FR = {
     'Only so the app can use its name. Nothing is connected to it, and nothing is sent.': 'Seulement pour que l’application utilise son nom. Rien n’y est connecté et rien n’est envoyé.',
     'How do you usually grade?': 'Comment notez-vous d’habitude ?',
     'Rubric rows': 'Critères de grille', 'Score each row 0 to 4, half points too. The total and percent add up by themselves.': 'Notez chaque critère de 0 à 4, demi-points compris. Le total et le pourcentage se calculent seuls.',
+    'pts': 'pts',
     'Points': 'Points', 'Type a total, like 17 out of 20. Each assignment has its own “out of”.': 'Saisissez un total, par exemple 17 sur 20. Chaque devoir a son propre barème.',
     'Percent': 'Pourcentage', 'Type a percent for each paper.': 'Saisissez un pourcentage pour chaque copie.',
     'Letter grades': 'Lettres', 'A to F, worked out from the percent. You set where each letter starts.': 'De A à F, calculées à partir du pourcentage. Vous fixez le seuil de chaque lettre.',

@@ -350,6 +350,7 @@ const LANG_KO = {
     'Only so the app can use its name. Nothing is connected to it, and nothing is sent.': '앱에서 그 이름을 표시하기 위한 것입니다. 연결되지 않으며 아무것도 전송되지 않습니다.',
     'How do you usually grade?': '보통 어떻게 평가하나요?',
     'Rubric rows': '루브릭 항목', 'Score each row 0 to 4, half points too. The total and percent add up by themselves.': '각 항목을 0에서 4까지, 0.5점 단위로 채점합니다. 합계와 백분율은 자동으로 계산됩니다.',
+    'pts': '점',
     'Points': '점수', 'Type a total, like 17 out of 20. Each assignment has its own “out of”.': '20점 만점에 17점처럼 합계를 입력합니다. 만점은 과제마다 따로 정합니다.',
     'Percent': '백분율', 'Type a percent for each paper.': '제출물마다 백분율을 입력합니다.',
     'Letter grades': '등급(A~F)', 'A to F, worked out from the percent. You set where each letter starts.': '백분율에서 A~F를 계산합니다. 각 등급의 시작점은 직접 정합니다.',

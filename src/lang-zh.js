@@ -327,6 +327,7 @@ const LANG_ZH = {
     'Only so the app can use its name. Nothing is connected to it, and nothing is sent.': '只是為了讓介面顯示它的名稱。不會與它連線，也不會傳送任何資料。',
     'How do you usually grade?': '你通常怎麼評分？',
     'Rubric rows': '評分規準項目', 'Score each row 0 to 4, half points too. The total and percent add up by themselves.': '每個項目評 0 到 4 分，也可以給半分。總分和百分比會自動計算。',
+    'pts': '分',
     'Points': '分數', 'Type a total, like 17 out of 20. Each assignment has its own “out of”.': '輸入總分，例如滿分 20 得 17。每份作業有自己的滿分。',
     'Percent': '百分比', 'Type a percent for each paper.': '為每份作業輸入百分比。',
     'Letter grades': '等第', 'A to F, worked out from the percent. You set where each letter starts.': 'A 到 F，依百分比換算。每個等第的起點由你設定。',

@@ -32,12 +32,15 @@ const isSticker = k => STICKERS.some(s => s[0] === k);
 // A score sticker from the calculator: { k: 'score', text: '12.5/15 = 83%', color }. A boxed stamp, the score over the percent,
 // in her ink color. Its text reads like a typed grade, so the grade sheet finds it on the paper by itself.
 const isScoreStamp = k => k === 'score';
-const scoreLines = m => String(m.text || '').split(' = ').map(t => t.replace('/', ' / '));
+// Extra credit follows the score after " + " ("17/20 = 85% + 5% extra credit") and is a third, smaller line; the grade sheet reads only the score before it.
+const stampScore = t => String(t || '').split(' + ')[0];
+const scoreLines = m => { const t = String(m.text || ''), i = t.indexOf(' + '), L = stampScore(t).split(' = ').map(x => x.replace('/', ' / ')); if (i >= 0) { if (L.length < 2) L.push(''); L.push(t.slice(i + 1)); } return L; };
 function scoreSize(m) {
-  const s = m.size || 52, [a, b] = scoreLines(m);
+  const s = m.size || 52, [a, b, c] = scoreLines(m);
   measureCtx.font = '700 ' + (s * 0.34) + 'px ' + FONT; const wa = measureCtx.measureText(a || '').width;
   measureCtx.font = '600 ' + (s * 0.26) + 'px ' + FONT; const wb = b ? measureCtx.measureText(b).width : 0;
-  return { w: Math.max(s * 1.5, Math.max(wa, wb) + s * 0.4), h: b ? s : s * 0.6, two: !!b };
+  measureCtx.font = '600 ' + (s * 0.19) + 'px ' + FONT; const wc = c ? measureCtx.measureText(c).width : 0;
+  return { w: Math.max(s * 1.5, Math.max(wa, wb, wc) + s * 0.4), h: c ? s * 1.28 : b ? s : s * 0.6, two: b != null, xc: c };
 }
 const stickerAspect = k => (STICKERS.find(s => s[0] === k) || [0, 0, 1])[2];
 const stampName = k => isProof(k) ? markLabel(k) : ((STICKERS.find(p => p[0] === k)) || [k, k])[1];
@@ -190,6 +193,7 @@ function drawStamp(ctx, m) {
       ctx.lineWidth = Math.max(0.8, s * 0.022); ctx.beginPath(); ctx.moveTo(l, t + s * 0.6); ctx.lineTo(l + z.w, t + s * 0.6); ctx.stroke();
       ctx.font = '600 ' + (s * 0.26) + 'px ' + FONT; ctx.fillText(b, x, t + s * 0.8);
     }
+    if (z.xc) { ctx.font = '600 ' + (s * 0.19) + 'px ' + FONT; ctx.fillText(z.xc, x, t + s * 1.1); }
     ctx.restore(); return;
   }
   ctx.save(); ctx.strokeStyle = ctx.fillStyle = m.color; ctx.lineWidth = Math.max(1.1, s * 0.085); ctx.lineCap = 'round'; ctx.lineJoin = 'round';

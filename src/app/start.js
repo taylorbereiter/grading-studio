@@ -146,7 +146,7 @@ function withTries(r, tries, max, full) {
     if (c.total == null && max) c.total = Math.round(c.pct * max) / 100;
   } else c = all.reduce((a, t) => t.pct >= a.pct ? t : a);
   const out = { ...r, total: c.total, pct: c.pct, tries: was, tryNow: now, tryRule: rule, tryOwn: { total: r.total, pct: r.pct } };
-  if (c !== now) { for (const k of ['xc', 'xcU', 'base', 'paper', 'outOf']) delete out[k]; if (c.max != null && c.max !== max) out.outOf = c.max; }
+  if (c !== now) { for (const k of ['xc', 'xcU', 'base', 'bpct', 'paper', 'outOf']) delete out[k]; if (c.max != null && c.max !== max) out.outOf = c.max; }
   if (!now) { out.done = false; out.wait = true; delete out.partial; }   // the retake has no full score yet: the earlier tries stand
   return out;
 }
@@ -156,8 +156,8 @@ function withTries(r, tries, max, full) {
 // unit 'pct' (grade.xcU): the extra credit is percentage points on the paper's percent instead, and the total grows by that share of the points.
 function addXc(r, xc, max, unit) {
   xc = +xc; if (!xc || isNaN(xc) || r.total == null) return r;
-  if (unit === 'pct') return { ...r, total: max ? r.total + Math.round(xc * max) / 100 : r.total, base: r.total, xc, xcU: 'pct', pct: r.pct == null ? r.pct : roundPct(r.pct + xc) };
-  return { ...r, total: r.total + xc, base: r.total, xc, pct: r.pct == null || !max ? r.pct : roundPct(r.pct + xc / max * 100) };
+  if (unit === 'pct') return { ...r, total: max ? r.total + Math.round(xc * max) / 100 : r.total, base: r.total, bpct: r.pct, xc, xcU: 'pct', pct: r.pct == null ? r.pct : roundPct(r.pct + xc) };
+  return { ...r, total: r.total + xc, base: r.total, bpct: r.pct, xc, pct: r.pct == null || !max ? r.pct : roundPct(r.pct + xc / max * 100) };
 }
 function scoreOf(st) {
   const own = ownGrade(st);

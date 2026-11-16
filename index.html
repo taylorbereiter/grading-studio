@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"10c54864","zh-Hans":"7818a52b","es":"a2f44a91","fr":"0e6bbd4e","de":"1f1ee286","pt-BR":"5f079052","ja":"f32acf30","ko":"ef5f513f"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"8ca39548","zh-Hans":"d93a647c","es":"4e273c57","fr":"8e69eb22","de":"978c7c46","pt-BR":"730112d5","ja":"8bb32fec","ko":"edd497b1"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -2219,9 +2219,14 @@ button.pavg:hover .v{text-decoration:underline}
 .sfind:focus-within{outline:2px solid var(--accent);outline-offset:1px}
 .sfind svg{flex:none}
 .sfind .stufind{flex:1;min-width:0;width:auto;margin:0;padding:0;border:0;background:none;outline:0;font-size:var(--text-control);color:var(--fg)}
+#lfSlot{display:flex;gap:6px;flex:none}
 .lfilt{display:flex;margin:0}
 .lfnow{height:30px;display:inline-flex;align-items:center;gap:5px;padding:0 8px;border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);font-size:var(--text-small);font-weight:500;color:var(--fg-2);white-space:nowrap}
 .lfnow:hover{color:var(--fg)}
+.scway{display:inline-flex;flex:none;height:30px;border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);overflow:hidden}
+.scway button{min-width:30px;padding:0 6px;border:0;background:none;font-size:var(--text-small);font-weight:500;color:var(--fg-2);cursor:pointer}
+.scway button:hover{color:var(--fg)}
+.scway button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .lfnow.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
 .km .lf{display:flex;justify-content:space-between;gap:12px}
 .km .lf[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);font-weight:600}
@@ -2247,7 +2252,7 @@ button.pavg:hover .v{text-decoration:underline}
   .cols.peek>.side{width:232px;border-right-color:var(--line-strong);box-shadow:var(--shadow),8px 0 24px -12px color-mix(in srgb,var(--fg) 30%,transparent)}
   .cols:not(.open):not(.peek)>.side{padding-left:5px;padding-right:5px;padding-bottom:40px;scrollbar-width:none}
   .cols:not(.open):not(.peek)>.side::-webkit-scrollbar{display:none}
-  .cols:not(.open):not(.peek) :is(.ph span,.pavg,.lfnow .t,.stu .nm,.stu .whob,.stu .tail,#sideHd,.sfoot,.lfnone){display:none}
+  .cols:not(.open):not(.peek) :is(.ph span,.pavg,.lfnow .t,.scway,.stu .nm,.stu .whob,.stu .tail,#sideHd,.sfoot,.lfnone){display:none}
   .cols:not(.open):not(.peek) .phrow{justify-content:center}
   .cols:not(.open):not(.peek) .prog-s .ph{font-size:var(--text-small)}
   .cols:not(.open):not(.peek) .lbar{justify-content:center;gap:2px}
@@ -2300,6 +2305,7 @@ button.pavg:hover .v{text-decoration:underline}
 #lvBox .lvrow{margin-top:2px}
 
 .total span.pc{width:auto;max-height:none;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;font-size:var(--text-title);font-weight:650;letter-spacing:-.02em}
+.total span.pc .xcplus{font-size:.6em;font-weight:600;letter-spacing:0}
 .total{padding:10px 2px 0;border-top:1px solid var(--line)}
 #stampScore{align-self:center;gap:5px;padding:3px 8px;color:var(--accent)}
 #stampScore svg{flex:none}
@@ -6292,14 +6298,14 @@ c = { pct: roundPct(all.reduce((a, t) => a + t.pct, 0) / all.length), max: same 
 if (c.total == null && max) c.total = Math.round(c.pct * max) / 100;
 } else c = all.reduce((a, t) => t.pct >= a.pct ? t : a);
 const out = { ...r, total: c.total, pct: c.pct, tries: was, tryNow: now, tryRule: rule, tryOwn: { total: r.total, pct: r.pct } };
-if (c !== now) { for (const k of ['xc', 'xcU', 'base', 'paper', 'outOf']) delete out[k]; if (c.max != null && c.max !== max) out.outOf = c.max; }
+if (c !== now) { for (const k of ['xc', 'xcU', 'base', 'bpct', 'paper', 'outOf']) delete out[k]; if (c.max != null && c.max !== max) out.outOf = c.max; }
 if (!now) { out.done = false; out.wait = true; delete out.partial; }
 return out;
 }
 function addXc(r, xc, max, unit) {
 xc = +xc; if (!xc || isNaN(xc) || r.total == null) return r;
-if (unit === 'pct') return { ...r, total: max ? r.total + Math.round(xc * max) / 100 : r.total, base: r.total, xc, xcU: 'pct', pct: r.pct == null ? r.pct : roundPct(r.pct + xc) };
-return { ...r, total: r.total + xc, base: r.total, xc, pct: r.pct == null || !max ? r.pct : roundPct(r.pct + xc / max * 100) };
+if (unit === 'pct') return { ...r, total: max ? r.total + Math.round(xc * max) / 100 : r.total, base: r.total, bpct: r.pct, xc, xcU: 'pct', pct: r.pct == null ? r.pct : roundPct(r.pct + xc) };
+return { ...r, total: r.total + xc, base: r.total, bpct: r.pct, xc, pct: r.pct == null || !max ? r.pct : roundPct(r.pct + xc / max * 100) };
 }
 function scoreOf(st) {
 const own = ownGrade(st);
@@ -8057,6 +8063,18 @@ const fileMarked = f => viewable(f) && (Object.values(f.marks).some(a => a.lengt
 function fmNow() { const a = batch && batch.assignment, f = a && findItem(a.id); return ((f && f.it) || a || {}).type === 'fm'; }
 function setFb(st, on) { if (on) st.grade.fb = true; else delete st.grade.fb; touchGrade(st); saveSoon(); }
 function hasMarks(st) { return st.files.some(f => fileMarked(f) || f.edited); }
+let listPts = !!store.get('gs.listPts', false);
+function setListPts(on) { listPts = !!on; if (listPts) store.set('gs.listPts', true); else store.del('gs.listPts'); }
+function listScore(g, strip) {
+const x = !!g.xc && g.base != null, pc = x ? g.bpct : g.pct, t = x ? g.base : g.total;
+const more = !x ? '' : strip ? '+' : '<small>+' + (!listPts && !g.partial && pc != null && g.pct != null ? fmtNum(g.pct - pc) + '%' : fmtNum(g.xc) + (g.xcU === 'pct' ? '%' : '')) + '</small>';
+if (g.total == null) return fmtNum(g.pct) + '%';
+if (!listPts && !g.partial && pc != null) return fmtNum(pc) + '%' + more;
+const of = g.outOf != null ? g.outOf : maxPoints();
+return (strip || !of ? fmtNum(t) : fmtNum(t) + '\u2009/\u2009' + fmtNum(of)) + more;
+}
+const listWayBtns = () => ibSetup() || fmNow() ? '' : '<span class="scway" role="group"><button data-scway="pct" aria-pressed="' + !listPts + '" title="Percent">%</button><button data-scway="pts" aria-pressed="' + listPts + '" title="Points">pts</button></span>';
+document.addEventListener('click', e => { const b = e.target.closest('[data-scway]'); if (!b || !batch) return; setListPts(b.dataset.scway === 'pts'); renderList(); });
 function renderList() {
 if (!batch) return;
 renderAnonHead();
@@ -8070,7 +8088,7 @@ if (q && !full.toLowerCase().includes(q)) return '';
 if (!lfShows(i)) return '';
 const g = gradeOf(st);
 const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
-let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.tries ? esc(triesSay(g)) : g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + (ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct)) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
+let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.tries ? esc(triesSay(g)) : g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + (ibSetup() ? ibListSay(st) : listScore(g)) + (g.partial ? '<small>partial</small>' : '') + '</span>'
 : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
 : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
 : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : tnHas(st) ? '<span class="dot" title="Started: you have typed notes"></span>' : '';
@@ -8078,7 +8096,7 @@ const sent = st.grade.sent ? '<span class="sent" title="You exported this paper 
 if (fmNow() && !noScore(st)) right = st.grade.fb ? '<span class="fbck" title="Feedback complete">✓</span>' : hasMarks(st) || (st.grade.comment || '').trim() || tnHas(st) ? '<span class="dot" title="Started, not complete yet"></span>' : '';
 const nAdd = st.files.filter(f => f.added && !f.from && !madeFromWord(f)).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
 const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
-: val != null ? [ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
+: val != null ? [ibSetup() ? ibListSay(st) : listScore(g, true), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
 return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
 '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + right + '</span></button>';
 }).join('');
@@ -8179,7 +8197,8 @@ function totalHtml(st) {
 const gr = noScore(st) ? gradeOf(st) : tryGrade(st), own = ownGrade(st);
 if (noScore(st)) return '<b>' + STATUS_LABEL[gr.status] + '</b><span style="width:100%;font-size:12.5px">No score counts. Giving a score takes this off.</span>';
 if (ibSetup()) return ibTotalHtml(st);
-let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
+const x = !!gr.xc && gr.base != null && gr.bpct != null && gr.pct != null, t = x ? gr.base : gr.total;
+let h = '<b>' + (t == null ? '–' : fmtNum(t)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : x ? fmtPct(gr.bpct) + '<small class="xcplus"> +' + fmtNum(gr.pct - gr.bpct) + '%</small>' + bandSay(gr.pct) : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
 if (gr.total != null) h += '<button class="btn sm ghost" id="stampScore" title="Put the score on the paper: ' + esc(scoreStampText(gr)) + '">' + STAMP_ICON + 'Stamp</button>';
 if (gr.xc) h += '<span class="xcsay" style="width:100%">' + fmtNum(gr.base) + ' earned + ' + fmtNum(gr.xc) + (gr.xcU === 'pct' ? '%' : '') + ' extra credit</span>';
 if (gr.partial) h += '<span class="sc-warn" style="width:100%">Partial: ' + partNote(st) + '. This total isn’t final.</span>';
@@ -8192,6 +8211,7 @@ const STAMP_ICON = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden=
 function scoreStampText(gr, st) {
 if (ibSetup()) return ibStampText(st || batch.students[cur]);
 const max = gr.outOf != null ? gr.outOf : maxPoints();
+if (gr.xc && gr.base != null) return fmtNum(gr.base) + (max ? '/' + fmtNum(max) : '') + (gr.bpct != null ? ' = ' + gr.bpct + '%' : '') + ' + ' + (gr.bpct != null && gr.pct != null ? fmtNum(gr.pct - gr.bpct) + '%' : fmtNum(gr.xc) + (gr.xcU === 'pct' ? '%' : '')) + ' extra credit';
 return fmtNum(gr.total) + (max ? '/' + fmtNum(max) : '') + (gr.pct != null ? ' = ' + gr.pct + '%' : '');
 }
 function syncScoreStamps(st) {
@@ -9103,7 +9123,7 @@ for (const a of annots) { const t = annText(a); if (t && seen.length < 4) seen.p
 for (const m of (f.marks || {})[p] || []) {
 if (m.t === 'text') { const L = textLayout(m, vp.width); add(ofMark(m.text), [m.x, m.y, m.x + L.ink, m.y + L.h], 'note', m.text); }
 if (m.t === 'note' && !m.qza) add(ofMark(m.text), [m.ax - 4, m.ay - 4, m.ax + 4, m.ay + 4], 'note', m.text, true);
-if (m.t === 'stamp' && m.k === 'score') { const b = stampBox(m); add(ofMark(m.text) && { ...ofMark(m.text), stamp: true }, [b.x, b.y, b.x + b.w, b.y + b.h], 'note', m.text); }
+if (m.t === 'stamp' && m.k === 'score') { const b = stampBox(m); add(ofMark(stampScore(m.text)) && { ...ofMark(stampScore(m.text)), stamp: true }, [b.x, b.y, b.x + b.w, b.y + b.h], 'note', m.text); }
 }
 const tc = await page.getTextContent();
 let str = '';
@@ -13794,7 +13814,7 @@ for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLa
 if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, pointsWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, libTrack, libu: () => LIBU, gsData, gradeOf, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool, redrawAll };
+window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, pointsWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, libTrack, libu: () => LIBU, gsData, gradeOf, scoreStampText, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool, redrawAll };
 
 /* ---------------- names: finding a student's name in text, in any alphabet, for the Claude ZIP and anonymous grading ---------------- */
 const NAME_PLAIN = new Set(('al am an art as at august autumn ban bay be best bill bin black brown by can case chase chin dawn day de dean do don dung da ed faith far frank gay go grace gray green grey ha hang he hope ho hung if in is it ivy jade joy june king la lane le little long love major man mark may me min my new no nice on or page pan park pat pearl pen penny price rich rose ruby sandy sang short sing small so son song star stone su sue summer sun sung tan tang ten tin to tu up us van violet von we white will win wing won wood wu ye young april').split(' '));
@@ -14480,12 +14500,14 @@ const stickersReady = Promise.all(STICKERS.map(([k]) => new Promise(done => {
 })));
 const isSticker = k => STICKERS.some(s => s[0] === k);
 const isScoreStamp = k => k === 'score';
-const scoreLines = m => String(m.text || '').split(' = ').map(t => t.replace('/', ' / '));
+const stampScore = t => String(t || '').split(' + ')[0];
+const scoreLines = m => { const t = String(m.text || ''), i = t.indexOf(' + '), L = stampScore(t).split(' = ').map(x => x.replace('/', ' / ')); if (i >= 0) { if (L.length < 2) L.push(''); L.push(t.slice(i + 1)); } return L; };
 function scoreSize(m) {
-  const s = m.size || 52, [a, b] = scoreLines(m);
+  const s = m.size || 52, [a, b, c] = scoreLines(m);
   measureCtx.font = '700 ' + (s * 0.34) + 'px ' + FONT; const wa = measureCtx.measureText(a || '').width;
   measureCtx.font = '600 ' + (s * 0.26) + 'px ' + FONT; const wb = b ? measureCtx.measureText(b).width : 0;
-  return { w: Math.max(s * 1.5, Math.max(wa, wb) + s * 0.4), h: b ? s : s * 0.6, two: !!b };
+  measureCtx.font = '600 ' + (s * 0.19) + 'px ' + FONT; const wc = c ? measureCtx.measureText(c).width : 0;
+  return { w: Math.max(s * 1.5, Math.max(wa, wb, wc) + s * 0.4), h: c ? s * 1.28 : b ? s : s * 0.6, two: b != null, xc: c };
 }
 const stickerAspect = k => (STICKERS.find(s => s[0] === k) || [0, 0, 1])[2];
 const stampName = k => isProof(k) ? markLabel(k) : ((STICKERS.find(p => p[0] === k)) || [k, k])[1];
@@ -14632,6 +14654,7 @@ function drawStamp(ctx, m) {
       ctx.lineWidth = Math.max(0.8, s * 0.022); ctx.beginPath(); ctx.moveTo(l, t + s * 0.6); ctx.lineTo(l + z.w, t + s * 0.6); ctx.stroke();
       ctx.font = '600 ' + (s * 0.26) + 'px ' + FONT; ctx.fillText(b, x, t + s * 0.8);
     }
+    if (z.xc) { ctx.font = '600 ' + (s * 0.19) + 'px ' + FONT; ctx.fillText(z.xc, x, t + s * 1.1); }
     ctx.restore(); return;
   }
   ctx.save(); ctx.strokeStyle = ctx.fillStyle = m.color; ctx.lineWidth = Math.max(1.1, s * 0.085); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -27580,7 +27603,7 @@ const n = batch.students.filter(fn).length, id = k === 'todo' ? ' id="pLeft"' : 
 const quiet = n === 0 && listFilter !== k && k !== 'all' && k !== 'todo' && k !== 'flag';
 return '<button class="mitem lf" data-lf="' + k + '"' + id + ' aria-pressed="' + (listFilter === k) + '" title="' + tip + '"' + (quiet ? ' hidden' : '') + '>' + name(k) + ' <span class="v">' + n + '</span></button>';
 }).join('');
-return '<div class="lfilt" role="group" aria-label="Show in the list">' + kmWrap(LF_ICON + '<span class="t">' + name(listFilter) + '</span>', 'class="lfnow' + (listFilter === 'all' ? '' : ' on') + '" id="lfBtn" aria-label="Show in the list: ' + name(listFilter) + '" title="Which papers the list shows: ' + name(listFilter) + '. Previous and Next follow it."', items, 'right') + '</div>';
+return '<div class="lfilt" role="group" aria-label="Show in the list">' + kmWrap(LF_ICON + '<span class="t">' + name(listFilter) + '</span>', 'class="lfnow' + (listFilter === 'all' ? '' : ' on') + '" id="lfBtn" aria-label="Show in the list: ' + name(listFilter) + '" title="Which papers the list shows: ' + name(listFilter) + '. Previous and Next follow it."', items, 'right') + '</div>' + listWayBtns();
 }
 function lfDraw() { const el = $('#lfSlot'); if (el && batch) el.innerHTML = lfChips(); }
 function lfSet(k) {
@@ -31595,6 +31618,7 @@ function stpRead(j) {
     const m = {}; for (const [k, to] of [['studentFileNames', 'xnames'], ['onePdfPerStudent', 'xone'], ['coverNamesOnAnchors', 'anchorCover'], ['findTypedNames', 'nameFind'], ['gradeSheetFromPapers', 'sheetfound']]) if (typeof mk[k] === 'boolean') m[to] = mk[k];
     const pc = stpKey(mk.pointsColor); if (pc === 'pen') m.ptsInk = ''; else if (pc === 'credit' || COLORS[pc]) m.ptsInk = pc;
     const fs = stpKey(mk.fullScreenSide); if (FS_SIDES.includes(fs)) m.fside = fs;
+    const ls = stpKey(mk.listScores); if (ls === 'percent' || ls === 'points') m.listPts = ls === 'points';
     if (Object.keys(m).length) S.mark = m;
   }
   const fo = stpObj(j.focus);
@@ -31763,6 +31787,7 @@ function stpDiff(S, planNow) {
     if (m.ptsInk != null && m.ptsInk !== now.ptsInk) L.push(m.ptsInk === 'credit' ? 'Points are colored by credit: full, part or none' : m.ptsInk ? 'Points are written in ' + m.ptsInk : 'Points are written in the pen’s color');
     if (m.sheetfound != null && m.sheetfound !== now.sheetfound) L.push(m.sheetfound ? 'The grade sheet also shows grades found on the papers' : 'The grade sheet shows only the scores given in the app');
     if (m.fside != null && m.fside !== now.fside) L.push(m.fside === 'show' ? 'In full screen the student list and the tools stay beside the paper' : m.fside === 'all' ? 'In full screen the student list and the tools hide until you point at them' : 'In full screen the student list hides until you point at the left edge');
+    if (m.listPts != null && m.listPts !== now.listPts) L.push(m.listPts ? 'The student list shows points out of the total' : 'The student list shows percents');
     add('mark', 'Marking and handing back', L, 'No paper, mark or score changes.');
   }
   if (S.focus) {
@@ -31786,7 +31811,7 @@ function stpDiff(S, planNow) {
   if (S.tabs && S.tabs.join() !== tabsKept().join()) add('tabs', 'Class tabs', [S.tabs.length ? 'Kept in the tab row: ' + S.tabs.map(k => CLASS_TABS.find(t => t[0] === k)[1]).join(', ') : 'Only Assignments, Gradebook and Students in the tab row'], 'The other pages stay under More.');
   return parts;
 }
-const stpMarkNow = () => ({ xnames: xNames(), xone: xOne(), anchorCover: anchorCoverOn(), nameFind: nameFindOn(), ptsInk, sheetfound: !!store.get('gs.sheetfound', false), fside: fsSide() });
+const stpMarkNow = () => ({ xnames: xNames(), xone: xOne(), anchorCover: anchorCoverOn(), nameFind: nameFindOn(), ptsInk, sheetfound: !!store.get('gs.sheetfound', false), fside: fsSide(), listPts });
 function stpMarkSet(m) {
   if (m.fside != null) fullSideSet(m.fside);
   if (m.xnames != null) store.set('gs.xnames', m.xnames);
@@ -31794,6 +31819,7 @@ function stpMarkSet(m) {
   if (m.anchorCover != null) store.set('gs.anchorCover', m.anchorCover);
   if (m.nameFind != null) { if (m.nameFind) store.set('gs.nameFind', true); else store.del('gs.nameFind'); }
   if (m.ptsInk != null) setPtsInk(m.ptsInk);
+  if (m.listPts != null) setListPts(m.listPts);
   if (m.sheetfound != null) { sheetFound = m.sheetfound; store.set('gs.sheetfound', sheetFound); }
 }
 const stpIbNext = (c, ib) => ({ way: ib.way, ib: { ...(stpObj(c.ib) || {}), ...(ib.group ? { group: ib.group } : {}), ...(ib.crit ? { crit: ib.crit } : {}), ...(ib.bounds ? { bounds: ib.bounds } : {}) } });
@@ -31970,7 +31996,7 @@ async function stpExport() {
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
   if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days ? { days: c.goal.days.map(d => GP_DAYS[d].toLowerCase()) } : {}) } : null, sessionGoals: c.sg, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle, freePeriods: c.free, weeklyLookBack: c.wk === false ? false : GP_DAYS[c.wk].toLowerCase(), quietWhileFocusing: c.quiet, shortestFirst: c.short }; }
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
-  { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}) }; if (Object.keys(o).length) out.marking = o; }
+  { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}), ...(m.listPts ? { listScores: 'points' } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
 }
 
@@ -32048,7 +32074,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "focus": { "sessionMinutes": 10, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "sessionGoals": true, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5, "freePeriods": true, "weeklyLookBack": "friday", "quietWhileFocusing": false, "shortestFirst": false },
   "classTabs": ["Missing work"],
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
-  "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide" }
+  "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide", "listScores": "percent" }
 }
 
 FIELD NOTES
@@ -32063,7 +32089,7 @@ FIELD NOTES
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
 - "focus" is the work timer for grading: "sessionMinutes" is one of 5, 10, 15, 20, 25, 30, 45, 60 and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none; add "per": "week" for a goal for the whole week, or "days": ["monday", "wednesday"] for a daily goal on some days only. "sessionGoals" false stops the app suggesting a goal for each session. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. Leave it out if I have not said.
-- "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both.
+- "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both. "listScores" is how scores show in the student list while I mark: "percent" or "points" (out of the total).
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;
 

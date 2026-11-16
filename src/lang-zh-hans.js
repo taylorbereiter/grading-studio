@@ -333,6 +333,7 @@ const LANG_ZHS = {
     'Only so the app can use its name. Nothing is connected to it, and nothing is sent.': '只是为了让界面显示它的名称。不会与它连接，也不会发送任何数据。',
     'How do you usually grade?': '你通常怎么评分？',
     'Rubric rows': '评分标准项目', 'Score each row 0 to 4, half points too. The total and percent add up by themselves.': '每个项目评 0 到 4 分，也可以给半分。总分和百分比会自动计算。',
+    'pts': '分',
     'Points': '分数', 'Type a total, like 17 out of 20. Each assignment has its own “out of”.': '输入总分，例如满分 20 得 17。每份作业有自己的满分。',
     'Percent': '百分比', 'Type a percent for each paper.': '为每份作业输入百分比。',
     'Letter grades': '等级', 'A to F, worked out from the percent. You set where each letter starts.': 'A 到 F，依百分比换算。每个等级的起点由你设置。',

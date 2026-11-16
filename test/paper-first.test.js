@@ -69,7 +69,7 @@ test('the strip shows each student’s number and how far their score is; pointi
   await page.waitForFunction(() => !document.querySelector('#cols').classList.contains('peek'));
   const strip = await page.$$eval('#stuList .stu', a => a.map(b => ({ n: b.querySelector('.num').textContent.trim(), sv: b.dataset.sv, name: b.querySelector('.nm').checkVisibility(), label: b.getAttribute('aria-label') || b.title || b.textContent })));
   assert.deepEqual(strip.map(r => r.n), ['1', '2', '3', '4']);
-  assert.equal(strip[0].sv, '10', 'a finished score shows as its total');
+  assert.equal(strip[0].sv, (await page.evaluate(() => window.__gs.gradeOf(window.__gs.state().batch.students[0]).pct)) + '%', 'a finished score shows as its percent');
   assert.ok(strip.every(r => !r.name), 'no names in the strip');
   assert.ok(await page.$eval('#stuList .stu.sv-part', b => b.dataset.i === '1'), 'a part-scored paper is marked as such');
   assert.equal(await page.$eval('#stuList .stu[aria-current="true"]', b => b.dataset.i), '0');
@@ -159,7 +159,7 @@ test('a number scores the row in hand and moves to the next, a full stop makes i
   assert.deepEqual(await rubric(page), [3, 4, 2.5]);
   assert.match(await page.$eval('#grade .total', e => e.textContent.replace(/\s+/g, ' ')), /9\.5/);
   assert.equal(await page.$eval('#grade .crit[data-row="2"] .cn em', e => e.textContent.replace(/\s+/g, ' ').trim()), '2.5 / 4');
-  assert.equal(await page.$eval('#stuList .stu[data-i="0"]', b => b.dataset.sv), '9.5', 'the strip shows the total');
+  assert.equal(await page.$eval('#stuList .stu[data-i="0"]', b => b.dataset.sv), (await page.evaluate(() => window.__gs.gradeOf(window.__gs.state().batch.students[0]).pct)) + '%', 'the strip shows the percent');
   await page.keyboard.press('Enter');
   await page.waitForFunction(() => window.__gs.state().cur === 1);
   assert.equal(await rowOn(page), 0, 'the next paper starts at its first row');
