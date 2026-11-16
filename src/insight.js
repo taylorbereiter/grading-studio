@@ -357,7 +357,7 @@ async function sbsDraw(c) {
   let js;
   try {
     js = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
-    const pg = await js.getPage(p + 1), v1 = vpRot(f, p, pg, 1), dpr = window.devicePixelRatio || 1, marks = f.marks[p] || [];
+    const pg = await js.getPage(p + 1), v1 = vpRot(f, p, pg, 1), dpr = window.devicePixelRatio || 1, marks = marksMine(f.marks[p] || [], f);
     const wide = v1.width + (marks.some(m => m.t === 'note') ? sideFor(v1.width) : 0), k = Math.min(1.6, (spot.clientWidth || 380) / wide);
     const r = await sharePage(c.st, f, js, p, k * dpr, anonOn() ? anonRx(c.st) : null);
     if (my !== c.tok || !spot.isConnected) return;

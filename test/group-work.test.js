@@ -37,7 +37,8 @@ test('Group work…: partners get the paper, one set of marks and one grade; Gra
   await page.click('#dlgBox .bf [data-cancel]');
   await waitPaper(page);
   await page.waitForSelector('#grpBand');
-  assert.match(await page.$eval('#grpBand', e => e.textContent), /with Bram Sample and Cleo Fixture · marks and grade shared/);
+  assert.match(await page.$eval('#grpBand', e => e.textContent), /with Bram Sample and Cleo Fixture ·/);
+  assert.equal(await page.$eval('#grpBand [data-grpmode]', e => e.value), 'all', 'one grade by default');
 
   // A mark on Aria's paper is on both copies; a score given on Bram's paper is everyone's.
   await setTool(page, 'pen'); await drag(page, 0, [[100, 300], [160, 330], [220, 300]]); await setTool(page, 'select');
@@ -81,6 +82,76 @@ test('Group work…: partners get the paper, one set of marks and one grade; Gra
   await close();
 });
 
+test('Shared notes, own scores: one notes page and typed notes, each partner’s own score and comment, marks just for one; kept after reopening; back to one grade, and undo', async () => {
+  const { page, close } = await openApp(browser);
+  const zip = zipOf({
+    'Aria Testwell/Talk.pdf': await makePaper({ title: 'Our talk' }),
+    'Bram Sample/Other.pdf': await makePaper({ title: 'Something else' }),
+  });
+  await openZip(page, zip);
+  await waitPaper(page);
+  await pick(page, '#paper [data-shfile]');
+  await page.waitForSelector('#grpOwn');
+  await page.click('#grpOwn');
+  assert.equal(await page.$eval('#grpOwn', e => e.getAttribute('aria-checked')), 'true');
+  await shareTo(page, 'Bram Sample');
+  await page.click('#dlgBox .bf [data-cancel]');
+  await waitPaper(page);
+  await page.waitForSelector('#grpBand [data-grpmode]');
+  assert.equal(await page.$eval('#grpBand [data-grpmode]', e => e.value), 'own');
+
+  // A mark on Aria's paper is on both; scores and comments are each their own; typed notes go to both.
+  await setTool(page, 'pen'); await drag(page, 0, [[100, 300], [160, 330], [220, 300]]); await setTool(page, 'select');
+  await score(page, [4, 4, 4]);
+  await page.click('#cmtIn'); await page.keyboard.type('Aria: clear voice');
+  await page.evaluate(() => { const s = window.__gs.state().batch.students.find(x => x.key === 'Aria Testwell'); s.grade.tn = { l: [{ s: 'Good hook for both', k: 'p' }] }; window.__gs.saveSoon(); });
+  await goToStudent(page, await idx(page, 'Bram Sample'));
+  await page.waitForSelector('#grpBand [data-grpjust]');
+  await score(page, [2, 2.5, 3]);
+  await page.click('#cmtIn'); await page.keyboard.type('Bram: speak up');
+  let w = await who(page);
+  assert.equal(w['Aria Testwell'].total, 12); assert.equal(w['Bram Sample'].total, 7.5);
+  assert.equal(w['Aria Testwell'].comment, 'Aria: clear voice'); assert.equal(w['Bram Sample'].comment, 'Bram: speak up');
+  assert.deepEqual(w['Bram Sample'].marks, [0, 1]);
+  assert.equal(await page.evaluate(() => JSON.stringify(window.__gs.state().batch.students.find(x => x.key === 'Bram Sample').grade.tn)), JSON.stringify({ l: [{ s: 'Good hook for both', k: 'p' }] }));
+
+  // Just Bram: a mark only on his paper.
+  await page.click('#grpBand [data-grpjust="1"]');
+  await page.waitForFunction(() => document.querySelector('#grpBand [data-grpjust="1"]').getAttribute('aria-pressed') === 'true');
+  const talk = await page.evaluate(() => window.__gs.state().pages.findIndex(g => g.file.name === 'Talk.pdf'));
+  await setTool(page, 'pen'); await drag(page, talk, [[100, 500], [160, 530], [220, 500]]); await setTool(page, 'select');
+  const seen = () => page.evaluate(() => { const b = window.__gs.state().batch; return b.students.map(s => { const f = s.files.find(x => x.name === 'Talk.pdf'); return f ? window.__gs.marksMine(f.marks[0] || [], f, s).length : -1; }); });
+  assert.deepEqual(await seen(), [1, 2], 'Aria sees the shared mark, Bram sees it and his own');
+
+  // Kept after reopening: still own scores, saved apart from the shared groups.
+  await settle(page);
+  await page.reload(); await appReady(page);
+  await openZip(page, zip);
+  await waitPaper(page);
+  await page.waitForFunction(() => window.__gs.state().batch.students.every(s => s.files.length >= 1) && (window.__gs.state().batch.groups || []).length === 1);
+  w = await who(page);
+  assert.equal(w['Aria Testwell'].total, 12); assert.equal(w['Bram Sample'].total, 7.5);
+  assert.deepEqual(await seen(), [1, 2]);
+  await goToStudent(page, await idx(page, 'Aria Testwell'));
+  await page.waitForSelector('#grpBand [data-grpmode]');
+  assert.equal(await page.$eval('#grpBand [data-grpmode]', e => e.value), 'own');
+
+  // Back to one grade from Aria's paper: her score and comment go to Bram, and his own mark goes. Undo puts his back.
+  await page.select('#grpBand [data-grpmode]', 'all');
+  await answerDlg(page);
+  await page.waitForFunction(() => window.__gs.state().batch.students.every(s => s.grade.comment === 'Aria: clear voice'));
+  w = await who(page);
+  assert.equal(w['Bram Sample'].total, 12);
+  assert.deepEqual(await seen(), [1, 1]);
+  await page.evaluate(() => window.__gs.undo());
+  await page.waitForFunction(() => window.__gs.state().batch.students.find(s => s.key === 'Bram Sample').grade.comment === 'Bram: speak up');
+  w = await who(page);
+  assert.equal(w['Bram Sample'].total, 7.5); assert.equal(w['Aria Testwell'].total, 12);
+  assert.deepEqual(await seen(), [1, 2]);
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
 test('pages given to several in a scan split: Mark and grade once for the group joins them', async () => {
   const { page, close } = await openApp(browser);
   await pickFile(page, '#scanIn', await makePaper({ title: 'Posters', pages: 2 }), 'Posters.pdf');
@@ -104,7 +175,7 @@ test('pages given to several in a scan split: Mark and grade once for the group 
   await page.click('#grpBand [data-grpjoin]');
   await page.waitForSelector('#grpBand [data-grpout]');
   await page.waitForFunction(() => window.__gs.state().pages[0] && window.__gs.state().pages[0].canvas);
-  assert.match(await page.$eval('#grpBand', e => e.textContent), /marks and grade shared/);
+  assert.equal(await page.$eval('#grpBand [data-grpmode]', e => e.selectedOptions[0].textContent), 'Marks and grade shared');
   await score(page, [4, 4, 4]);
   await setTool(page, 'pen'); await drag(page, 0, [[100, 300], [160, 330]]); await setTool(page, 'select');
   const w = await who(page);

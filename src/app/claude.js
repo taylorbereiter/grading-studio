@@ -152,7 +152,7 @@ const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: 
 async function sharePage(st, f, js, p, scale, rx, opts, look) {
   const page = await js.getPage(p + 1);
   const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
-  const marks = look && look.bare ? [] : scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
+  const marks = look && look.bare ? [] : scrubMarks(marksMine(f.marks[p] || [], f, st).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
   const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
   const c = document.createElement('canvas');
   c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
@@ -438,7 +438,7 @@ async function makeSharePackage(onStep) {
         r.c.width = r.c.height = 0;
         const list = (notes[code] = notes[code] || []);
         const pageNo = d.pages.findIndex(x => x[0] === path && x[1] === p) + 1;
-        for (const m of (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []))
+        for (const m of marksMine(f.marks[p] || [], f, st).concat((f.kami && f.kami[p] && f.kami[p].notes) || []))
           if (m.text) list.push({ paper: code + (k ? '-' + (k + 1) : ''), page: pageNo, kind: m.t === 'note' ? (m.ro ? 'Kami comment' : 'margin comment') : 'text on page', text: scrub(m.text, rx) });
         onStep && onStep(++done, total);
       }

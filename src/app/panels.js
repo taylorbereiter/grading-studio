@@ -243,7 +243,7 @@ function syncScoreStamps(st) {
   let changed = false;
   for (const f of st.files) {
     if (!f.marks || tryOfFile(st, f)) continue;
-    for (const l of Object.values(f.marks)) for (const m of l || []) if (m.t === 'stamp' && m.k === 'score' && m.text !== text) { m.text = text; changed = true; }
+    for (const l of Object.values(f.marks)) for (const m of l || []) if (m.t === 'stamp' && m.k === 'score' && m.text !== text && !stampHidden(m, st.key)) { m.text = text; changed = true; }
   }
   return changed;
 }
