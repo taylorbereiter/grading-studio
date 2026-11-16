@@ -140,7 +140,7 @@ async function gbPut(id, want, edits) {
   await kdo('work', 'readwrite', o => o.put(data, id));
   store.del(id); { const idx = store.get('gs.batches', {}); if (id in idx) { delete idx[id]; store.set('gs.batches', idx); } }   // the quick copy is out of date now
   tabStamp(id, data.t);   // another tab with this one open is told, and keeps only what it changes from here on
-  const m = metaFor(keptMeta.get(id), null, data, id); await kdo('meta', 'readwrite', o => o.put(m, id)); keptMeta.set(id, m);
+  const m = metaFor(keptMeta.get(id), null, data, id); await kdo('meta', 'readwrite', o => o.put(m, id)); if (typeof fcCame === 'function') fcCame(id, keptMeta.get(id), m); keptMeta.set(id, m);
   if (fld.state !== 'none') { const i = fld.info.get(id); if (i && edits) for (const p of Object.keys(i.edits || {})) delete i.edits[p]; fld.work.set(id, data); folderKick(); }
   railRender(); renderNeeds();
   return { cur, had: Object.fromEntries(Object.entries(had).map(([p, r]) => [p, { t: r.t || 1, data: async () => r.data, orig: async () => r.orig || null }])) };

@@ -1,12 +1,11 @@
 {
- "version": "1.28.33",
- "build": "42b64ea9ec7a",
+ "version": "1.28.34",
+ "build": "2d2164e73916",
  "notes": [
-  "Link classes on the same schedule, like two sections of one course (Class setup, Linked classes). If your Planner already has them on one course, the class page offers to link them. A new assignment is ticked for every linked class, and a card’s ⋯ menu adds it to another class later or joins two copies you made separately.",
-  "Editing a copy can make the same changes in the other copies; only what you change goes across. In the Examples tab, a button shows the strong examples kept in the other class, each labelled with where it came from. Rosters, papers, scores and comments stay with each class."
+  "Focus counts only papers you marked: rubric scores, marks on the page or a comment. A grade only typed in still counts as scored, and its time still counts as grading time, but it no longer counts as a paper marked today."
  ],
  "files": {
-  "index.html": "4cb3dd7fccf0cde86f9d586daad9edbd7e01acdcc51fe001d4bd1c08237e0020",
+  "index.html": "82c9ac94f32ddaf746a0ae059abdb37f3989bf748c06a0353a2c127f209413a1",
   "planner.html": "5a5fbc30fcff26017fefd9cd5a6d6234d72f05dc5f1a68096b8fe15f440e5bc9"
  },
  "langs": {
