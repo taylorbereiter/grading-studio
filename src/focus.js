@@ -36,7 +36,7 @@ function fcConf() {
     track: f.track !== false, idle: TK_IDLES.includes(+f.idle) ? +f.idle : 5,
     free: f.free !== false, wk: f.wk === false ? false : [0, 1, 2, 3, 4, 5, 6].includes(f.wk) ? f.wk : 5, quiet: f.quiet === true, short: f.short === true,   // src/gradeplan.js
     sg: f.sg !== false,   // a goal suggested for each session
-    music: f.music === true, mood: LOFI_STYLES.some(x => x.id === f.mood) ? f.mood : 'mix', mvol: +f.mvol >= .05 && +f.mvol <= 1 ? +f.mvol : .5, mamb: f.mamb !== false,   // lo-fi music while a session runs (src/lofi.js)
+    music: f.music === true, mood: LOFI_STYLES.some(x => x.id === f.mood) ? f.mood : 'mix', mvol: +f.mvol >= .05 && +f.mvol <= 1 ? +f.mvol : .5, mamb: f.mamb === true,   // lo-fi music while a session runs (src/lofi.js)
     goal: g && (g.k === 'papers' || g.k === 'min') && +g.n > 0 ? { k: g.k, n: Math.min(fcGoalMax(g.k, g.per), Math.round(+g.n)), per: g.per === 'week' ? 'week' : 'day',
       days: g.per !== 'week' && Array.isArray(g.days) && g.days.some(d => FC_DOWS.includes(d)) ? FC_DOWS.filter(d => g.days.includes(d)) : null } : null };
 }
@@ -51,7 +51,7 @@ function fcConfSet(part) {
   if (c.music) o.music = true;
   if (c.mood !== 'mix') o.mood = c.mood;
   if (c.mvol !== .5) o.mvol = c.mvol;
-  if (!c.mamb) o.mamb = false;
+  if (c.mamb) o.mamb = true;
   if (!c.title) o.title = false;
   if (!c.track) o.track = false;
   if (c.idle !== 5) o.idle = c.idle;

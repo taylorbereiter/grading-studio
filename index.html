@@ -29081,7 +29081,7 @@ function lofiSchedule(E, T, until) { const ev = T.tr.ev; while (T.i < ev.length 
 
 /* ---------- the player ---------- */
 
-const lofi = { E: null, on: false, vol: .5, amb: true, style: 'mix', cur: null, old: [], timer: 0, last: '', seed: 0, onTrack: null };
+const lofi = { E: null, on: false, vol: .5, amb: false, style: 'mix', cur: null, old: [], timer: 0, last: '', seed: 0, onTrack: null };
 const LOFI_AHEAD = 3;
 function lofiLevel(v) { return Math.pow(v, 1.6); }
 function lofiPickStyle() {
@@ -29170,7 +29170,7 @@ return { len: FC_LENS.includes(+f.len) ? +f.len : 10, brk: FC_BRKS.includes(+f.b
 track: f.track !== false, idle: TK_IDLES.includes(+f.idle) ? +f.idle : 5,
 free: f.free !== false, wk: f.wk === false ? false : [0, 1, 2, 3, 4, 5, 6].includes(f.wk) ? f.wk : 5, quiet: f.quiet === true, short: f.short === true,
 sg: f.sg !== false,
-music: f.music === true, mood: LOFI_STYLES.some(x => x.id === f.mood) ? f.mood : 'mix', mvol: +f.mvol >= .05 && +f.mvol <= 1 ? +f.mvol : .5, mamb: f.mamb !== false,
+music: f.music === true, mood: LOFI_STYLES.some(x => x.id === f.mood) ? f.mood : 'mix', mvol: +f.mvol >= .05 && +f.mvol <= 1 ? +f.mvol : .5, mamb: f.mamb === true,
 goal: g && (g.k === 'papers' || g.k === 'min') && +g.n > 0 ? { k: g.k, n: Math.min(fcGoalMax(g.k, g.per), Math.round(+g.n)), per: g.per === 'week' ? 'week' : 'day',
 days: g.per !== 'week' && Array.isArray(g.days) && g.days.some(d => FC_DOWS.includes(d)) ? FC_DOWS.filter(d => g.days.includes(d)) : null } : null };
 }
@@ -29184,7 +29184,7 @@ if (!c.sound) o.sound = false;
 if (c.music) o.music = true;
 if (c.mood !== 'mix') o.mood = c.mood;
 if (c.mvol !== .5) o.mvol = c.mvol;
-if (!c.mamb) o.mamb = false;
+if (c.mamb) o.mamb = true;
 if (!c.title) o.title = false;
 if (!c.track) o.track = false;
 if (c.idle !== 5) o.idle = c.idle;
@@ -31743,7 +31743,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "comments": ["Explain how your evidence supports your claim."],
   "goals": ["Uses evidence", "Designs a fair test"],
   "attendance": true,
-  "focus": { "sessionMinutes": 10, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "sessionGoals": true, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5, "freePeriods": true, "weeklyLookBack": "friday", "quietWhileFocusing": false, "shortestFirst": false, "music": false, "musicMood": "mix", "musicVolume": 50, "musicBackground": true },
+  "focus": { "sessionMinutes": 10, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "sessionGoals": true, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5, "freePeriods": true, "weeklyLookBack": "friday", "quietWhileFocusing": false, "shortestFirst": false, "music": false, "musicMood": "mix", "musicVolume": 50, "musicBackground": false },
   "classTabs": ["Missing work"],
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
   "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide" }
@@ -31760,7 +31760,7 @@ FIELD NOTES
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
-- "focus" is the work timer for grading: "sessionMinutes" is one of 5, 10, 15, 20, 25, 30, 45, 60 and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none; add "per": "week" for a goal for the whole week, or "days": ["monday", "wednesday"] for a daily goal on some days only. "sessionGoals" false stops the app suggesting a goal for each session. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. "music" true plays lo-fi music while a session runs; "musicMood" is "mix" or one of "rain", "library", "coffee", "night", "tape", "garden", "blue", "quiet" (quiet has no drums), "musicVolume" is 5 to 100, and "musicBackground" false leaves out the record crackle and rain behind it. Leave it out if I have not said.
+- "focus" is the work timer for grading: "sessionMinutes" is one of 5, 10, 15, 20, 25, 30, 45, 60 and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none; add "per": "week" for a goal for the whole week, or "days": ["monday", "wednesday"] for a daily goal on some days only. "sessionGoals" false stops the app suggesting a goal for each session. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. "music" true plays lo-fi music while a session runs; "musicMood" is "mix" or one of "rain", "library", "coffee", "night", "tape", "garden", "blue", "quiet" (quiet has no drums), "musicVolume" is 5 to 100, and "musicBackground" true adds a soft record crackle or rain behind it. Leave it out if I have not said.
 - "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;

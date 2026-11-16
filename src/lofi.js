@@ -279,7 +279,7 @@ function lofiSchedule(E, T, until) { const ev = T.tr.ev; while (T.i < ev.length 
 
 /* ---------- the player ---------- */
 
-const lofi = { E: null, on: false, vol: .5, amb: true, style: 'mix', cur: null, old: [], timer: 0, last: '', seed: 0, onTrack: null };
+const lofi = { E: null, on: false, vol: .5, amb: false, style: 'mix', cur: null, old: [], timer: 0, last: '', seed: 0, onTrack: null };
 const LOFI_AHEAD = 3;   // seconds written ahead, so a tab in the background (timers once a second) never runs dry
 function lofiLevel(v) { return Math.pow(v, 1.6); }
 function lofiPickStyle() {

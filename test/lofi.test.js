@@ -84,20 +84,20 @@ test('music is off until it is turned on, plays only while the clock runs, and i
   await goTo(page, '#/settings/focus'); await page.waitForSelector('#fcMusic');
   assert.equal(await page.$eval('#fcMusic', e => e.checked), true);
   assert.equal(await page.$eval('#fcMood', e => e.value), 'garden');
-  await page.click('#fcAmb'); await page.waitForFunction(() => (window.__gs.state().lib.me.focus || {}).mamb === false);
+  await page.click('#fcAmb'); await page.waitForFunction(() => (window.__gs.state().lib.me.focus || {}).mamb === true);
   await page.click('#fcMusic'); await page.waitForFunction(() => !document.querySelector('#fcMood'));
-  assert.deepEqual(await meFocus(page), { mood: 'garden', mvol: 0.3, mamb: false });
+  assert.deepEqual(await meFocus(page), { mood: 'garden', mvol: 0.3, mamb: true });
   await close();
 });
 
 test('My setup carries the music choices out and back in', async () => {
   const { page, close } = await openApp(browser, { seed: gradingSeed() });
   const r = await page.evaluate(async () => {
-    const G = window.__gs, S = G.stpRead({ gradingStudioSetup: 1, focus: { music: true, musicMood: 'rain', musicVolume: 35, musicBackground: false } });
+    const G = window.__gs, S = G.stpRead({ gradingStudioSetup: 1, focus: { music: true, musicMood: 'rain', musicVolume: 35, musicBackground: true } });
     const odd = G.stpRead({ gradingStudioSetup: 1, focus: { music: 'yes', musicMood: 'polka', musicVolume: 900 } });
     return { focus: S.focus, odd: odd.focus || null };
   });
-  assert.deepEqual(r.focus, { music: true, mood: 'rain', mvol: 0.35, mamb: false });
+  assert.deepEqual(r.focus, { music: true, mood: 'rain', mvol: 0.35, mamb: true });
   assert.equal(r.odd, null, 'a mood or a volume the app does not have is left out');
   await close();
 });
