@@ -117,7 +117,7 @@ test('the tracker shows grading and planning apart, by week, month and three mon
   await close();
 });
 
-test('planning time counts only in a focus session on a lesson: opening a lesson, or presenting it, counts nothing', async () => {
+test('a focus session on a lesson counts as planning; opening a lesson, or presenting it, counts nothing', async () => {
   const server = await serve(() => fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8'));
   const page = await browser.newPage(); const errors = []; page.on('pageerror', e => errors.push(e.message));
   try {
@@ -152,6 +152,50 @@ test('planning time counts only in a focus session on a lesson: opening a lesson
     assert.deepEqual(P.names, { [id]: 'Reading a poem' });
     assert.equal(await page.evaluate(() => localStorage.getItem('gsp.focusQ')), null, 'nothing for the grading log');
     assert.equal(await page.evaluate(id => window.__plantime.lessonSecs(id), id), secs);
+    assert.deepEqual(errors, []);
+  } finally { await page.close(); await server.close(); }
+});
+
+test('steady work in the Planner counts as planning after a few minutes; a quick change, class time and presenting do not', async () => {
+  const server = await serve(() => fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8'));
+  const page = await browser.newPage(); const errors = []; page.on('pageerror', e => errors.push(e.message));
+  try {
+    await page.goto(server.url, { waitUntil: 'load' });
+    await page.waitForFunction(() => window.__planner && window.__plantime && document.querySelector('#lessons .ls-top'));
+    await page.bringToFront();
+    const id = await page.evaluate(async () => {
+      localStorage.setItem('gsp.timeCount', JSON.stringify({ on: true, idle: 5, pe: 3 }));
+      const P = window.__planner, l = P.normLesson({ title: 'Reading a poem', slides: [{ layout: 'title', title: 'Reading a poem' }] });
+      P.L.lessons.push(l); P.openLessonForTest(l, 0); return l.id;
+    });
+    const work = (n, ago) => page.evaluate((n, ago) => { for (let i = 0; i < n; i++) { window.__plantime.active(ago); window.__plantime.tick(); } }, n, ago || 0);
+    const pend = () => page.evaluate(() => window.__plantime.pend());
+    // a quick change: under three minutes, then nothing done for a while, counts nothing
+    await work(11); assert.equal((await pend()).l, 0);
+    await work(1, 100e3); assert.equal((await pend()).l, 0); assert.equal((await page.evaluate(() => window.__plantime.run())).s, 0);
+    // three minutes of steady work: all of it counts, and each step after it
+    await work(12); assert.equal((await pend()).l, 180); assert.deepEqual((await pend()).a, { [id]: 180 });
+    await work(1); assert.equal((await pend()).l, 195);
+    // presenting stops it
+    await page.evaluate(() => { window.__present.PR.on = true; window.__plantime.active(); window.__plantime.tick(); window.__present.PR.on = false; });
+    assert.equal((await pend()).l, 195);
+    await page.evaluate(() => window.__plantime.flush());
+    const P = await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.planTime')));
+    assert.equal(P.days[today()].l, 195); assert.deepEqual(P.days[today()].a, { [id]: 195 }); assert.equal(P.days[today()].f, undefined);
+    assert.deepEqual(P.names, { [id]: 'Reading a poem' });
+    assert.equal(await page.$eval('#lsTime', e => e.hidden ? '' : e.textContent), '3 min planning');
+    // one of the teacher's classes meets now: nothing counts, however steady
+    await page.evaluate(() => {
+      const d = new Date(), hm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'), now = d.getHours() * 60 + d.getMinutes();
+      const P = window.__planner; P.L.setup = P.L.setup || {}; P.L.setup.classes = [...(P.L.setup.classes || []), { id: 'cx', name: 'Class X', meets: [{ dow: d.getDay(), start: hm(Math.max(0, now - 30)), end: hm(Math.min(1439, now + 30)) }] }];
+      P.L.setup.daysOff = [];
+    });
+    assert.equal(await page.evaluate(() => window.__plantime.inClass()), true);
+    await work(16); assert.equal((await pend()).l, 0);
+    await page.evaluate(() => { window.__planner.L.setup.classes = window.__planner.L.setup.classes.filter(c => c.id !== 'cx'); });
+    // the teacher can say never
+    await page.evaluate(() => localStorage.setItem('gsp.timeCount', JSON.stringify({ on: true, idle: 5, pe: 0 })));
+    await work(16); assert.equal((await pend()).l, 0);
     assert.deepEqual(errors, []);
   } finally { await page.close(); await server.close(); }
 });

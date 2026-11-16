@@ -1,23 +1,23 @@
 {
- "version": "1.28.49",
- "build": "399be25ce0a1",
+ "version": "1.28.51",
+ "build": "c08952e3238b",
  "notes": [
-  "Papers through Google Drive: once you've marked them, your papers go up to your Drive by themselves. Your other computer gets them the first time you open that assignment there, and on your phone the eye button shows one student's paper.",
-  "Use on your phone: a button beside the Google sign-in shows a QR code and four steps for adding Grading Studio to your phone's Home Screen. The Welcome screen has Sign in with Google too, and signing in works on any iPhone browser.",
-  "Google's sign-in window no longer pops up by itself. When the hour-long sign-in runs out, syncing waits and the Google line says sign in again to sync. Tap it once to carry on. The Drive papers chooser now opens in the folder you last used."
+  "Your Planner syncs too: lessons, units, your timetable, the comment bank and activities go between your devices through your own Google Drive, both ways. Lessons full of pictures (over 2 MB) stay on their computer for now.",
+  "On your phone, a new Plans tab shows your next classes day by day with their lessons. Tap one to read its slides and notes.",
+  "Papers go up to your Google Drive as soon as you open them, so they're on your phone straight away. Google's sign-in renews by itself again, usually as you come back to the app. If you'd rather tap to sign in, turn it off in Settings, Saving and carrying."
  ],
  "files": {
-  "index.html": "a8aa5b7716c734406856821b7127c610f5cd8518127f509578645a2a72e5ef60",
-  "planner.html": "28ccbd86aa3e4bf0b58f479a70e1defbacc52f213e942c8712e590f898adb8c8"
+  "index.html": "2f7efe4838abe4fe93b83213699ebbb15a918826e53920b057bb9ab3bcb44166",
+  "planner.html": "9b26326d07de83a8161c7b8cc57361817268eccef809bcdd19a57f72b8a8a4bc"
  },
  "langs": {
-  "lang/zh-Hant.js": "6a21ba056ddd350434380f0f2caa8522a705b9e6037477f5cdbfc594e6744acc",
-  "lang/zh-Hans.js": "0f51454a6249557998b085cf3a4005620a7d827b2f99643d441f6a9fb47e9d8c",
-  "lang/es.js": "bf2e9dcf6af13a84f2efb764d9ddd763b1c137549d76b57fca79b6fb34588494",
-  "lang/fr.js": "40517acbd41777ece2037d1f47ded8cac156fd39f259c212d65b200f5fc09459",
-  "lang/de.js": "dc11c4beaf939214744f49f19f7ab809fc3e478cb93758fe8d6221cb27c1c016",
-  "lang/pt-BR.js": "236469a60cd629d2ac70604bade455ba6e288be4eac1fc6bb0e7d510f10ac420",
-  "lang/ja.js": "532a8ce33fcb9b5dd3fc98179cc80bb70bf077304c157b56998ccd76e18ad755",
-  "lang/ko.js": "bbec9e05ad8cb825ed1df847db664f76c6165238804974d1d245518f0ea73b02"
+  "lang/zh-Hant.js": "956f88b709cc59b1c0d597a573ab8fda43c7391b46b24ee4d955ec16674c9834",
+  "lang/zh-Hans.js": "0a85dcd91643862fe923661bedc4095fd781c35f3c96298fb6fb905bcd14fb4f",
+  "lang/es.js": "dd1ff57d2ed5255465517b264961ddfb192e5d82605beccf3dc166b813ce2846",
+  "lang/fr.js": "210bee2f35a8f198565f6bb7963e6df3aa05221569d80b6cf65b3e4042baeaf6",
+  "lang/de.js": "c3fe200b206955b44151b0b05d6d914e00b96e0696770cfa3a2ec1ead7409535",
+  "lang/pt-BR.js": "fe77b978b3e2ba7e2f107c614483c316aee8f8bb45c88b75c2347873ca134b32",
+  "lang/ja.js": "03af009d72cd98f3ad59cd06e7be8eccb988db9a838586b917c12dedd77afbf0",
+  "lang/ko.js": "9a02294a392ec4b918c448b7b41ef4a4e01303a78a1160614da2e2a9d44d5c1d"
  }
 }
