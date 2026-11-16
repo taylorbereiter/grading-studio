@@ -79,11 +79,14 @@ const fcToday = () => isoDay(Date.now());
 // only typed in, with no marking, isn't one. A download saved before marked was counted falls back on its scores until its next save.
 const fcDone = m => { const st = keptState(m); return st.fm || m.marked == null ? st.done : Math.min(st.of, m.marked); };
 // Papers finished today: how far each download has come since the day began, never below nothing.
-function fcPapersOf(L) { let n = 0; for (const m of keptMeta.values()) if (m && m.id in L.base) n += Math.max(0, fcDone(m) - L.base[m.id]); return n; }
+// A download whose papers marked aren't known yet (a row from before they were counted, until loadKept works them out) isn't counted.
+// One with no counts at all hasn't been saved yet: nothing is finished in it.
+const fcKnown = m => !!m && (m.marked != null || m.scored == null || keptState(m).fm);
+function fcPapersOf(L) { let n = 0; for (const m of keptMeta.values()) if (fcKnown(m) && m.id in L.base) n += Math.max(0, fcDone(m) - L.base[m.id]); return n; }
 // The same, by assignment (an id from the classes, or '' for papers that aren't filed under one), for the tracker.
 function fcPapersBy(L) {
   const o = {};
-  for (const m of keptMeta.values()) if (m && m.id in L.base) { const n = Math.max(0, fcDone(m) - L.base[m.id]); if (!n) continue; const it = cardOfKept(m.id), k = it ? it.id : ''; o[k] = (o[k] || 0) + n; }
+  for (const m of keptMeta.values()) if (fcKnown(m) && m.id in L.base) { const n = Math.max(0, fcDone(m) - L.base[m.id]); if (!n) continue; const it = cardOfKept(m.id), k = it ? it.id : ''; o[k] = (o[k] || 0) + n; }
   return o;
 }
 // Where a download's count starts today: where it stands, or where the older copy it carried marks over from stood. A new copy is
@@ -99,7 +102,7 @@ function fcSeen(id) {
   const L = fcLog(), today = fcToday(); let ch = false;
   if (L.day !== today) { L.day = today; L.base = {}; ch = true; }
   if (id && !keptMeta.has(id) && !(id in L.base)) { L.base[id] = fcFrom(id, null); ch = true; }
-  for (const m of keptMeta.values()) if (m && m.id && !(m.id in L.base)) { L.base[m.id] = fcFrom(m.id, m); ch = true; }
+  for (const m of keptMeta.values()) if (fcKnown(m) && m.id && !(m.id in L.base)) { L.base[m.id] = fcFrom(m.id, m); ch = true; }
   for (const k of Object.keys(L.base)) if (k !== id && !keptMeta.has(k)) { delete L.base[k]; ch = true; }
   const p = fcPapersOf(L), d = L.days[today] || {}, pa = fcPapersBy(L);
   if ((d.p || 0) !== p || JSON.stringify(d.pa || {}) !== JSON.stringify(pa)) { L.days[today] = { ...d, p, pa }; if (!p) delete L.days[today].pa; ch = true; }
@@ -132,7 +135,7 @@ const fcGoalDay = (c, day) => !c.goal || c.goal.per === 'week' || !c.goal.days |
 
 /* ---------- the session ---------- */
 // { st: 'run' | 'paused' | 'up' | 'brk' | 'brkup' | 'done', len: seconds, at: when it started (moved on by any pause), pz: when it was paused,
-//   w: 'mark:<download>' | 'td:<to-do>' | '', one: just one paper, p0: papers today when it started, fold, hid: when the tab was left,
+//   w: 'mark:<download>' | 'td:<to-do>' | '', one: just one paper, p0: see FC_P0, pg: papers finished so far (fcGain), fold, hid: when the tab was left,
 //   away: minutes away to say so, got: papers the session finished, secs: seconds it ran, brkAt, brkLen }
 const fcRun = () => { const r = store.get('gs.focusRun', null); return r && r.st ? r : null; };
 const fcRunSet = r => { if (r) store.set('gs.focusRun', r); else store.del('gs.focusRun'); fcTickOn(); fcRender(); };
@@ -153,7 +156,22 @@ function fcIdleSee(r) {
   return false;
 }
 const fcLeft = r => r.st === 'brk' ? Math.max(0, Math.round((r.brkAt + r.brkLen * 1000 - Date.now()) / 1000)) : Math.max(0, r.len - fcElapsed(r));
-const fcGot = r => r.got != null ? r.got : Math.max(0, fcPapersToday() - (r.p0 || 0));
+// Papers a session has finished: counted as they are saved (fcGain), in the run itself, so every tab says the same. A count of the day
+// in each tab would differ between tabs (each has its own list of downloads), and the first tab to see a bigger one ended the session.
+const fcGot = r => r.got != null ? r.got : Math.max(0, r.pg || 0);
+// A save of a download's work while a session runs: the papers it finished (or took back) go into the session. Called by keepWork in the
+// tab that saved, with the row before and after. A row from before marked was counted says nothing, rather than a jump.
+function fcGain(m0, m) {
+  if (!FC_ON || !m0 || !m) return;
+  const r = fcRun(); if (!r || (r.st !== 'run' && r.st !== 'paused') || r.got != null) return;
+  if (!fcKnown(m0) || !fcKnown(m)) return;
+  // a first save brings marks carried over from an older copy, which weren't finished now
+  const d = fcDone(m) - (m0.scored == null && m0.marked == null ? fcFrom(m.id, m0) : fcDone(m0)); if (!d) return;
+  r.pg = (r.pg || 0) + d; store.set('gs.focusRun', r);
+}
+// p0 is for pages from before fcGain (a tab not updated yet), which count a session from the day's papers less p0: a number they never
+// reach keeps such a tab from ending a session it didn't see.
+const FC_P0 = 1e9;
 const fcN = r => r.one ? Math.max(1, +r.one || 1) : 0;   // papers a "Just one paper" or "Just 3 papers" session is for
 const fcClock = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 
@@ -292,7 +310,7 @@ function fcStart(len, key, one, sg) {
   L.last = key || ''; if (L.carry && L.carry.w === (key || '')) delete L.carry; fcLogSet(L);
   fcS.sg = undefined; fcS.sgw = null;
   const no = ((fcLog().days[fcToday()] || {}).n || 0) + 1;
-  fcRunSet({ st: 'run', len: Math.round(len * 60), at: Date.now(), w: key || '', one: one ? Math.max(1, +one || 1) : 0, p0: fcPapersToday(), fold: false, no,
+  fcRunSet({ st: 'run', len: Math.round(len * 60), at: Date.now(), w: key || '', one: one ? Math.max(1, +one || 1) : 0, p0: FC_P0, pg: 0, fold: false, no,
     ...(sg ? { sg: sg.k === 'papers' ? { k: 'papers', n: sg.n } : sg.k === 'note' ? { k: 'note', x: sg.x } : { k: sg.k } } : {}) });
   fcGoTo(false);
 }
@@ -329,7 +347,7 @@ function fcExt(min) {
   const r = fcRun(); if (!r || r.st !== 'up') return;
   const L = fcLog(), w = fcWork(r.w), g = r.sg && !fcSgMet(r, w) ? (r.sg.k === 'papers' ? { k: 'papers', n: Math.max(1, r.sg.n - (r.got || 0)) } : r.sg) : null;
   if (L.carry && L.carry.w === (r.w || '')) { delete L.carry; fcLogSet(L); }
-  fcRunSet({ st: 'run', len: min * 60, at: Date.now(), w: r.w || '', one: 0, p0: fcPapersToday(), fold: false, no: r.no, ext: 1, ...(g ? { sg: g } : {}) });
+  fcRunSet({ st: 'run', len: min * 60, at: Date.now(), w: r.w || '', one: 0, p0: FC_P0, pg: 0, fold: false, no: r.no, ext: 1, ...(g ? { sg: g } : {}) });
 }
 function fcUp(r) { fcRecord(r); r.st = 'up'; r.fold = false; fcRunSet(r); fcChime(); }
 function fcPause() { const r = fcRun(); if (!r || r.st !== 'run') return; r.st = 'paused'; r.pz = Date.now(); r.idl = fcIdle(r); delete r.ii; fcRunSet(r); }

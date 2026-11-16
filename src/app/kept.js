@@ -22,6 +22,7 @@ let keptMeta = new Map(), keptRead = false;
 async function loadKept() {
   try { const all = await kdo('meta', 'readonly', o => o.getAll()); keepOk = true; keptMeta = new Map((all || []).map(m => [m.id, m])); keptRead = true; } catch { keptMeta = new Map(); }
   await keptFbCounts();
+  await keptMarkCounts();
   if (typeof fcRender === 'function') fcRender();
   if (!batch) renderLib();
   renderBackup();
@@ -36,6 +37,18 @@ async function keptFbCounts() {
       // none complete: nothing to store
       const work = await kget('work', m.id), fb = work && workCounts(work).fb; if (!fb) continue;
       const n = { ...m, fb };
+      await kdo('meta', 'readwrite', o => o.put(n, m.id)); keptMeta.set(m.id, n);
+    } catch (e) { console.error(e); }
+  }
+}
+// Work saved before papers marked were counted (or by a tab not updated yet) has no count of them: worked out from the saved work,
+// so Focus never falls back on scores, which count grades only typed in.
+async function keptMarkCounts() {
+  for (const m of keptMeta.values()) {
+    if (m.marked != null || !m.n) continue;
+    try {
+      const work = await kget('work', m.id); if (!work) continue;
+      const n = { ...keptMeta.get(m.id), marked: workCounts(work).marked };
       await kdo('meta', 'readwrite', o => o.put(n, m.id)); keptMeta.set(m.id, n);
     } catch (e) { console.error(e); }
   }
@@ -108,13 +121,15 @@ async function keepPapers(b, label, list, again) {
 }
 let keepT = null;
 function keepWork(b, data) {
-  const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name }), n: b.students.length, t: data.t };
+  const m0 = keptMeta.get(b.id), m = { ...(m0 || { id: b.id, name: b.name }), n: b.students.length, t: data.t };
   // the day's count of finished papers starts from where this download stood (src/focus.js)
   if (typeof fcSeen === 'function') fcSeen(b.id);
   // fb is there only while some feedback is complete
   delete m.fb; delete m.sent; delete m.sentT; Object.assign(m, workCounts(data));
   // ret was set by any export alone: never read again
   delete m.ret; if (!(data.returned && data.returned.ok)) delete m.back;
+  // the papers this save finished go into a Focus session that is running (src/focus.js)
+  if (typeof fcGain === 'function') fcGain(m0, m);
   keptMeta.set(b.id, m);
   if (typeof fcRender === 'function') fcRender();
   return kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })

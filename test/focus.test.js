@@ -224,14 +224,14 @@ test('a new copy of a download carries its marks over without counting them as t
   const n = await page.evaluate(() => {
     const G = window.__gs, K = G.kept(), out = [];
     // yesterday's copy, 4 of 5 scored, and the new copy listed before its first save, with no count yet
-    K.set('older-copy', { id: 'older-copy', name: 'Made-up essay', n: 5, scored: 4, newer: 'newer-copy' });
+    K.set('older-copy', { id: 'older-copy', name: 'Made-up essay', n: 5, scored: 4, marked: 4, newer: 'newer-copy' });
     G.fcSeen(); const base = G.fcPapersToday();
     K.set('newer-copy', { id: 'newer-copy', name: 'Made-up essay', n: 5 });
     out.push(G.fcPapersToday() - base);
     // its first save brings the carried marks over
-    K.set('newer-copy', { ...K.get('newer-copy'), scored: 4 }); out.push(G.fcPapersToday() - base);
+    K.set('newer-copy', { ...K.get('newer-copy'), scored: 4, marked: 4 }); out.push(G.fcPapersToday() - base);
     // and one more paper finished today counts
-    K.set('newer-copy', { ...K.get('newer-copy'), scored: 5 }); out.push(G.fcPapersToday() - base);
+    K.set('newer-copy', { ...K.get('newer-copy'), scored: 5, marked: 5 }); out.push(G.fcPapersToday() - base);
     return out;
   });
   assert.deepEqual(n, [0, 0, 1]);
@@ -242,12 +242,12 @@ test('marks that come in from the folder (made on another computer) or from a re
   const { page, close } = await openApp(browser, { seed: gradingSeed() });
   const n = await page.evaluate(() => {
     const G = window.__gs, K = G.kept(), out = [];
-    K.set('two-computers', { id: 'two-computers', name: 'Made-up lab report', n: 6, scored: 1 });
+    K.set('two-computers', { id: 'two-computers', name: 'Made-up lab report', n: 6, scored: 1, marked: 1 });
     G.fcSeen(); const base = G.fcPapersToday();
     // one more paper here
-    K.set('two-computers', { ...K.get('two-computers'), scored: 2 }); out.push(G.fcPapersToday() - base);
+    K.set('two-computers', { ...K.get('two-computers'), scored: 2, marked: 2 }); out.push(G.fcPapersToday() - base);
     // four marked yesterday on the school computer arrive through the folder (src/folder.js applyRow)
-    const m0 = K.get('two-computers'), m = { ...m0, scored: 6 }; G.fcCame('two-computers', m0, m); K.set('two-computers', m);
+    const m0 = K.get('two-computers'), m = { ...m0, scored: 6, marked: 6 }; G.fcCame('two-computers', m0, m); K.set('two-computers', m);
     out.push(G.fcPapersToday() - base);
     return out;
   });
@@ -271,5 +271,23 @@ test('a grade only typed in, with no marking, is scored but isn’t a paper mark
     return [a.scored, a.marked, b.scored, b.marked, typed, two];
   });
   assert.deepEqual(out, [3, 2, 3, 0, 0, 2]);
+  await close();
+});
+
+test('Just one paper ends only when a paper is marked, even when another tab counts the day differently', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  await openZip(page, zip); await score(page, [4, 3, 3]); await settle(page);
+  await page.click('#closeBtn'); await page.waitForSelector('#fcCard [data-fcone]');
+  await page.click('#fcCard [data-fcone]');
+  await page.waitForFunction(() => !document.querySelector('#app').hidden && window.__gs.fcRun().st === 'run');
+  // a tab that counts scores (one not updated yet, or a row from before papers marked were counted) sees 20 more papers today
+  await page.evaluate(() => { const G = window.__gs, K = G.kept(); K.set('other-tab', { id: 'other-tab', name: 'Made-up quiz', n: 25, scored: 20 }); G.fcTick(); });
+  await pause(1500);
+  assert.equal(await runState(page), 'run', 'the session goes on');
+  assert.equal(await page.evaluate(() => window.__gs.fcRun().pg), 0);
+  // a paper marked here ends it, with one paper
+  await score(page, [2, 2, 2]); await settle(page);
+  await page.waitForFunction(() => window.__gs.fcRun().st === 'up');
+  assert.equal(await page.evaluate(() => window.__gs.fcRun().got), 1);
   await close();
 });
