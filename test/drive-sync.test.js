@@ -30,7 +30,7 @@ function fakeDrive() {
     await page.evaluateOnNewDocument(() => {
       // Google's sign-in script, as far as the app uses it: a key straight away, for whatever was asked
       window.google = { accounts: { oauth2: {
-        initTokenClient: o => ({ requestAccessToken: () => setTimeout(() => o.callback({ access_token: 'tok-' + o.scope.length, expires_in: 3600, scope: o.scope }), 10) }),
+        initTokenClient: o => ({ requestAccessToken: () => (window.__gReq = (window.__gReq || 0) + 1) && setTimeout(() => o.callback({ access_token: 'tok-' + o.scope.length, expires_in: 3600, scope: o.scope }), 10) }),
         revoke: () => {},
       } } };
     });
@@ -67,8 +67,28 @@ function fakeDrive() {
   D.file = () => JSON.parse(D.body);
   return D;
 }
-const sync = page => page.evaluate(() => window.__gs.syncNow());
+const sync = page => page.evaluate(async () => { await window.__gs.gIn(); return window.__gs.syncNow(); });   // signed in (a press on the Google line), then sync
 const typed = (page, id) => page.evaluate(id => { const l = JSON.parse(localStorage.getItem('gs.lib')); for (const c of l.classes) for (const u of c.units) for (const it of u.items) if (it.id === id) return it.typed; return null; }, id);
+
+test('Google’s window never opens by itself: with no key yet, the sync waits and says so, and a press there signs in and syncs', async () => {
+  const D = fakeDrive(), srv = await serve(builtHtml());
+  const mac = await openApp(browser, { server: srv, seed: seed(), beforeLoad: D.hook });
+  try {
+    await mac.page.evaluate(() => window.__gs.syncNow());
+    await mac.page.waitForSelector('button#syncState[data-gin]');
+    assert.match(await mac.page.$eval('#syncState', b => b.textContent), /sign in again to sync/);
+    assert.equal(await mac.page.evaluate(() => window.__gReq || 0), 0, 'no window opened');
+    // focus and coming back to the tab don't open it either
+    await mac.page.evaluate(() => { window.dispatchEvent(new Event('focus')); });
+    await new Promise(r => setTimeout(r, 300));
+    assert.equal(await mac.page.evaluate(() => window.__gReq || 0), 0);
+    await mac.page.click('#syncState');
+    await mac.page.waitForFunction(() => document.querySelector('#syncState') && !/sign in again/.test(document.querySelector('#syncState').textContent) && window.__gReq === 1);
+    await mac.page.waitForFunction(() => /synced/.test(document.querySelector('#syncState').textContent), { timeout: 15000 });
+    assert.ok(D.writes >= 1, 'synced once signed in');
+    assert.deepEqual(mac.page.errors, []);
+  } finally { await mac.close(); await srv.close(); }
+});
 
 test('typed-in scores merge student by student: the later change for each student stays, a score taken out stays out', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'merge.js'), 'utf8');

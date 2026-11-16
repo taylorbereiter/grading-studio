@@ -34,7 +34,10 @@ async function gToken(interactive, full) {
   const scope = full ? DRIVE_SCOPES : SYNC_SCOPE;
   if (G.token && Date.now() < G.exp - 60000 && gHas(scope)) return G.token;
   if (!gcid()) throw new Error('setup');
-  if (G_REDIRECT) { if (interactive) gRedirect(scope); throw new Error('Sign in again to sync'); }
+  // Google's key lasts an hour, and getting a new one in a browser opens Google's little window, even for a moment. That never happens by
+  // itself: the sync waits, the Google line says so, and a press there (or anything else that asks for Google) gets the new key.
+  if (!interactive) throw new Error('Sign in again to sync');
+  if (G_REDIRECT) { gRedirect(scope); throw new Error('Sign in again to sync'); }
   await loadGis();
   if (!G.client || G.cscope !== scope) {
     G.cscope = scope;
@@ -86,7 +89,7 @@ function renderGoogle() {
   for (const el of document.querySelectorAll('.gAcct, #pickDrive')) el.hidden = !GOK || !gcid();   // no key built in: nothing to sign in to
   if (!GOK || !gcid()) return;
   for (const el of document.querySelectorAll('.gAcct')) el.innerHTML = G.email
-    ? '<span class="muted" style="font-size:13px">Google: ' + esc(G.email) + ' · <span id="syncState">' + (syncState || 'synced') + '</span></span> <button class="link" data-gout>Sign out</button>'
+    ? '<span class="muted" style="font-size:13px">Google: ' + esc(G.email) + ' · ' + (syncPaused() ? '<button class="link" data-gin id="syncState">' + syncState + '</button>' : '<span id="syncState">' + (syncState || 'synced') + '</span>') + '</span> <button class="link" data-gout>Sign out</button>'
     : '<button class="btn sm" data-gin>Sign in with Google</button>';
   if (!PHONE) for (const el of document.querySelectorAll('.gAcct')) el.insertAdjacentHTML('beforeend', ' <button class="btn sm" data-gphone>Use on your phone</button>');
   for (const b of document.querySelectorAll('.needG')) b.hidden = !G.email;
@@ -210,7 +213,8 @@ const SYNC_RX = /^gs\.(lib|setup|bank|rubrics|school|b\..+|rp\..+|rd\..+)$/;
   const raw = store.set.bind(store);
   store.set = (k, v) => { const ok = raw(k, v); if (ok && SYNC_RX.test(k)) syncSoon(); return ok; };
 }
-function setSyncState(s) { syncState = s; const el = document.getElementById('syncState'); if (el) el.textContent = s; }
+function syncPaused() { return /sign in again/.test(syncState || ''); }
+function setSyncState(s) { const was = syncPaused(); syncState = s; if (syncPaused() !== was) return renderGoogle(); const el = document.getElementById('syncState'); if (el) el.textContent = s; }
 function syncSoon() { if (!G.email || sampleOn()) return; clearTimeout(syncT); setSyncState('saving…'); syncT = setTimeout(syncNow, 15000); }
 // The file and its version, so two devices saving at once can't write over each other. Drive counts every change to a file (version):
 // the count is read with the file, and read again just before writing. If another device saved in between, this one merges again first.
