@@ -1,21 +1,21 @@
 {
- "version": "1.28.39",
- "build": "c548b44844e1",
+ "version": "1.28.40",
+ "build": "683d18d971c3",
  "notes": [
-  "Linked classes: assignments each class made before they were linked can be linked too. After linking, or from Link assignments under the class name, the same names come ticked and very similar ones wait for your tick, with one Undo."
+  "Lo-fi music for the focus timer: turn it on with the Lo-fi music button while a session runs, or in Settings, Focus and goals. Eight moods, a new track every time, made in your browser so nothing is downloaded. It is off until you turn it on."
  ],
  "files": {
-  "index.html": "c80802a7c698c38d8331356e7c3bcf0a3115e7e91d6069ed51e71536ad2cb40e",
-  "planner.html": "8bfdb01e6866a5990436b7d7e72ff4e53fee7c760b8e724cbbfbb41df02ef70b"
+  "index.html": "c72e9e56e4560f3c612911871f3347f87736c27fe00a3dbff4841937ac0227f3",
+  "planner.html": "9819b5660b23c7f76e80472962b024b6a99ff78ba870d25959e02aaedb93ed2e"
  },
  "langs": {
-  "lang/zh-Hant.js": "5db06ee6c09678c69baef05639933917a2c29709b10585ee617ff1c8927b475e",
-  "lang/zh-Hans.js": "84d7f6307d4d13d40d689b367a3760781a6aecd0bd88a2cd8a5ef88a48da240b",
-  "lang/es.js": "ad22bc58c3529a8b89ffc3ec409bd9ef3e45620dbe14f6de5658c3f01548c6c7",
-  "lang/fr.js": "481fab6986e42be8358b4003776a2927598e1071ad9b2a4b9eb09b0e93a11602",
-  "lang/de.js": "6cde4104bb48d072bb78872ee4cd36eb3a0ce93a05c03cb676e5edd8816432f1",
-  "lang/pt-BR.js": "d9fd3e77c5d0ece8b1e48ad2eefd1dd6fa1ae58cfd9a0cac62228aeddc53cf58",
-  "lang/ja.js": "219df1298d023a9cfde11ea264d1adf1bb30d3cf76c339d2400199e6346d3545",
-  "lang/ko.js": "654048b88361b50947e3f7f51b4b6c388871dd6583ec11bb3ca8ed12ed8e37b9"
+  "lang/zh-Hant.js": "ff9ab514e14cfcadfaa93080aef73acde7f74260d6eb447349474cb9eb341a24",
+  "lang/zh-Hans.js": "f93e1737062b8ad82bb427c9dfbcf5474799f1aa132ecca8a0b1ea0665a89a35",
+  "lang/es.js": "e0880edee25846815e088258fc5c3b7f27cd70be2e7aac585851df933714643f",
+  "lang/fr.js": "afe0210cd260a4913210dead37fc2e74d05e9c151cd274c4d7b2a647e1d6aeed",
+  "lang/de.js": "3eb0f591dd179a5bb365a79114a699990d09e77cbf70476509f67ad413c7c39e",
+  "lang/pt-BR.js": "4219ff0f6313dd6b26013009295d64016fe40889a9893ffd192a5f112d2620c2",
+  "lang/ja.js": "4f2ef5210f711eaccfa596571854bdc7aa825cfeb46ea342e9c4379805413145",
+  "lang/ko.js": "cae07e2e806e017408928455160f075c7ab2b043becc8481688268034fbf564d"
  }
 }
