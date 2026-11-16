@@ -1,4 +1,8 @@
 {
+  "1.28.44": [
+    "Drive videos now play straight from your Drive, a little at a time, with the transcript following along. Nothing is copied into the browser unless you press Download for offline, and Remove download frees that space without touching the file in Drive.",
+    "Choosing your videos folder starts at My Drive, with tabs for Shared with me and shared drives, and shows the videos inside each folder. Pick any video and its folder becomes your videos folder."
+  ],
   "1.28.43": [
     "The focus timer keeps going when you open the Planner. The panel shows there with the clock, pause, more time and break, and a session that ends in the Planner is added to your focus log when you come back to grading."
   ],

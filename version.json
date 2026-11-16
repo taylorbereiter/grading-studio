@@ -1,11 +1,12 @@
 {
- "version": "1.28.43",
- "build": "ac387d61cbfe",
+ "version": "1.28.44",
+ "build": "29a2984e6a8e",
  "notes": [
-  "The focus timer keeps going when you open the Planner. The panel shows there with the clock, pause, more time and break, and a session that ends in the Planner is added to your focus log when you come back to grading."
+  "Drive videos now play straight from your Drive, a little at a time, with the transcript following along. Nothing is copied into the browser unless you press Download for offline, and Remove download frees that space without touching the file in Drive.",
+  "Choosing your videos folder starts at My Drive, with tabs for Shared with me and shared drives, and shows the videos inside each folder. Pick any video and its folder becomes your videos folder."
  ],
  "files": {
-  "index.html": "225d352202516c4289cb1c04c8ed426b0f811fd6fc3aadf9eb63cfb3c18289a1",
+  "index.html": "88548eca857961f20f7a4b72d7ba03b1d9c2b30d09a4d05ac7b8303e2f2b2700",
   "planner.html": "563c5356c9ca187b8c87fcba20310db862135e9e9de1874e703de0b94c9a635d"
  },
  "langs": {
