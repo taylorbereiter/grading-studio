@@ -13,7 +13,7 @@
 .tnsep{width:1px;height:14px;background:var(--line);margin:0 4px}
 .tnclock{font-variant-numeric:tabular-nums}
 .tnbar .kmw{margin-left:auto}
-@container (max-width:430px){.tnb[data-tnk] span{display:none}}
+@container (max-width:340px){.tnb[data-tnk] span{display:none}}
 .tnlist{padding:10px 0 28px}
 .tnrow{display:grid;grid-template-columns:62px minmax(0,1fr);align-items:start}
 .tngut{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:5px;height:calc(var(--text-body) * 1.6 + 6px);padding-right:10px}

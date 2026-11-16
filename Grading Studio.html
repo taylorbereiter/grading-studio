@@ -2464,7 +2464,7 @@ html.vidsized #paper .spb .media{max-width:none}
 .tnsep{width:1px;height:14px;background:var(--line);margin:0 4px}
 .tnclock{font-variant-numeric:tabular-nums}
 .tnbar .kmw{margin-left:auto}
-@container (max-width:430px){.tnb[data-tnk] span{display:none}}
+@container (max-width:340px){.tnb[data-tnk] span{display:none}}
 .tnlist{padding:10px 0 28px}
 .tnrow{display:grid;grid-template-columns:62px minmax(0,1fr);align-items:start}
 .tngut{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:5px;height:calc(var(--text-body) * 1.6 + 6px);padding-right:10px}
@@ -23599,6 +23599,7 @@ function spBuild() {
 function spPaint() {
   const tabs = $('#spTabs'), body = $('#spBody'); if (!tabs) return;
   tabs.innerHTML = spNow.tabs.map(t => '<button class="sptab" role="tab" aria-selected="' + (t.key === spNow.key) + '" data-sptab="' + esc(t.key) + '"' + (t.tool ? '' : ' data-raw') + '>' + esc(t.tool ? t.label : fileShown(spNow.st, t.label).replace(/\.(pdf|docx?|docm|txt|rtf|jpe?g|png|heic|mp4|mov|m4a|mp3|webm)$/i, '')) + '</button>').join('');
+  const sel = tabs.querySelector('[aria-selected="true"]'); if (sel) tabs.scrollLeft = Math.max(0, Math.min(tabs.scrollLeft, sel.offsetLeft - 4), sel.offsetLeft + sel.offsetWidth - tabs.clientWidth + 4);   // the tab shown is never off the end
   const t = spNow.tabs.find(x => x.key === spNow.key);
   let host = body.querySelector(':scope > .sptool');
   if (t && t.tool) {

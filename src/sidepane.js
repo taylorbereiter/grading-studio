@@ -67,6 +67,7 @@ function spBuild() {
 function spPaint() {
   const tabs = $('#spTabs'), body = $('#spBody'); if (!tabs) return;
   tabs.innerHTML = spNow.tabs.map(t => '<button class="sptab" role="tab" aria-selected="' + (t.key === spNow.key) + '" data-sptab="' + esc(t.key) + '"' + (t.tool ? '' : ' data-raw') + '>' + esc(t.tool ? t.label : fileShown(spNow.st, t.label).replace(/\.(pdf|docx?|docm|txt|rtf|jpe?g|png|heic|mp4|mov|m4a|mp3|webm)$/i, '')) + '</button>').join('');
+  const sel = tabs.querySelector('[aria-selected="true"]'); if (sel) tabs.scrollLeft = Math.max(0, Math.min(tabs.scrollLeft, sel.offsetLeft - 4), sel.offsetLeft + sel.offsetWidth - tabs.clientWidth + 4);   // the tab shown is never off the end
   const t = spNow.tabs.find(x => x.key === spNow.key);
   let host = body.querySelector(':scope > .sptool');
   if (t && t.tool) {
