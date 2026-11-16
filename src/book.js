@@ -85,12 +85,16 @@ function bkCellOf(p, g, d, k) {
   if (p.tries) cell.tries = triesSay(p);   // a retake: every try and which counts, in words
   return cell;
 }
-function bkTypedCell(ty, r) {
+// A typed-in score. sc: a graded download's own scale, for a student with no paper in it. r.p: a percent she typed, which stays the score
+// (r.v is then its plain share of the points, for older versions); r.xc: extra credit on top, in the column's points (percentage points in a percent column).
+function bkTypedCell(ty, r, sc) {
   if (!r) return null;
   if (r.st === 'missing' || r.st === 'excused') return { st: r.st, typed: true };
   if (r.v == null || r.v === '' || isNaN(+r.v)) return r.fb ? { fb: true, typed: true } : null;
-  const v = +r.v, max = ty.max ? +ty.max : null, one = x => ({ pct: max ? roundPct(x / max * 100) : roundPct(x), total: max ? x : null, max });
-  const was = (r.tries || []).filter(x => x != null && !isNaN(+x)).map(x => one(+x)), p = was.length ? withTries(one(v), was, max, true) : one(v);
+  const v = +r.v, max = ty.max ? +ty.max : null, one = x => ({ pct: max ? percentWith(x, max, sc) : roundPct(x), total: max ? x : null, max }), xc = +r.xc || 0;
+  let p0 = r.p != null && max ? { pct: +r.p, total: pointsWith(+r.p, max, sc), max } : one(v);
+  if (xc > 0) p0 = { ...p0, total: p0.total != null ? p0.total + xc : null, pct: roundPct(p0.pct + (max ? xc / max * 100 : xc)) };
+  const was = (r.tries || []).filter(x => x != null && !isNaN(+x)).map(x => one(+x)), p = was.length ? withTries(p0, was, max, true) : p0;
   return { pct: p.pct, total: p.total, max, st: r.st || '', typed: true, fb: true, ...(was.length ? { tries: triesSay(p) } : {}) };
 }
 // Every column for every class, from saved work. Read once each time the gradebook opens.
@@ -127,7 +131,7 @@ function bkClassCols(c, cols) {
       }
     }
     if (col.type === 'xc') { cells.clear(); if (col.typed) for (const n of names) { const r = col.typed.s && col.typed.s[n], v = r ? +r.v : 0; if (v > 0) cells.set(n, { xc: v, typed: true }); } }
-    else if (col.typed) for (const n of names) if (!cells.has(n) || (cells.get(n).pct == null && !cells.get(n).st)) { const cell = bkTypedCell(col.typed, col.typed.s && col.typed.s[n]); if (cell) cells.set(n, cell); }
+    else if (col.typed) for (const n of names) if (!cells.has(n) || (cells.get(n).pct == null && !cells.get(n).st)) { const cell = bkTypedCell(col.typed, col.typed.s && col.typed.s[n], col.d && setupOver(col.d.setup).scale); if (cell) cells.set(n, cell); }
     return { ...col, cells, termId: bkTermOf(col, terms) };
   }).sort((a, b) => (a.due || '').localeCompare(b.due || '') || natural(a.name, b.name));
 }
@@ -613,16 +617,19 @@ function bkParse(t, r, col) {
     return Object.keys(l).length ? { l, st: '' } : null;
   }
   if (st) return { v: null, st };
+  let xc = 0; const mx = t.match(/\s*\+\s*(\d+(?:[.,]\d+)?)$/); if (mx) { xc = hp(mx[1].replace(',', '.')); t = t.slice(0, mx.index).trim(); }   // "8 + 1": extra credit on top
+  const late = r.st === 'late' ? 'late' : '', max = col.typed ? col.typed.max : col.d ? bkColMax(col) : null, add = o => xc > 0 ? { ...o, xc } : o;
+  if (max && /^\d+([.,]\d+)?\s*%$/.test(t)) { const p = roundPct(+t.replace('%', '').replace(',', '.').trim()); return add({ v: Math.round(p * max) / 100, p, st: late }); }   // "73%" in a points column: the percent stays the score
   const vs = t.split('>').map(x => x.trim().replace('%', '').replace(',', '.')); if (!vs.every(ok)) return undefined;
-  const n = vs.map(hp), v = n.pop(), late = r.st === 'late' ? 'late' : '';
-  return n.length ? { v, st: late, tries: n } : { v, st: late };
+  const n = vs.map(hp), v = n.pop();
+  return add(n.length ? { v, st: late, tries: n } : { v, st: late });
 }
 // The text a cell's box opens with.
 function bkCellVal(r, col) {
   if (r.st === 'missing' || r.st === 'excused') return r.st;
   if (col.typed && col.typed.lv) { const vs = ((col.it && col.it.crit) || []).map(k => r.l && r.l[k] != null ? r.l[k] : '-'); return vs.some(x => x !== '-') ? vs.join(' ') : ''; }
   if (col.type === 'xc') return +r.v > 0 ? fmtNum(+r.v) : '';
-  return r.v != null ? (r.tries || []).concat(r.v).map(fmtNum).join(' > ') : '';
+  return r.v == null ? '' : (r.tries || []).map(fmtNum).concat(r.p != null ? r.p + '%' : fmtNum(r.v)).join(' > ') + (+r.xc > 0 ? ' + ' + fmtNum(+r.xc) : '');
 }
 // A graded download's "out of", for a score typed in for a student who has no paper in it.
 const bkColMax = col => { for (const x of bkClassCols(bkClass(), [col])[0].cells.values()) if (x.max) return x.max; return null; };

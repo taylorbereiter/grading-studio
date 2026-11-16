@@ -1,22 +1,22 @@
 {
  "version": "1.28.30",
- "build": "06f1f5ebf68e",
+ "build": "b48248128aa1",
  "notes": [
   "Type scores straight into the gradebook like a spreadsheet: start typing on a cell, Enter goes to the next student and Tab to the next assignment. Paste a column from a spreadsheet onto the first cell to fill it down.",
   "+ Add scores: type the name and press Enter to start typing scores down the new column. MYP task levels can be typed in the table too."
  ],
  "files": {
-  "index.html": "1a87de2ee86fdf0f45ffbe238f814ba7047073b8d56c69b9c4eb5a7f7ce9520d",
-  "planner.html": "e7721eff7016d136d8cf2362e01a74799eed94ebc5bfbb12e35a62fed85807b2"
+  "index.html": "ec1a3940122e9141872119daac51844f580bbf8f017c6942e678c47f72268ccb",
+  "planner.html": "523aa14fc991e7cf442583256facedf0d28da6a7e78e689493a004a59867589a"
  },
  "langs": {
-  "lang/zh-Hant.js": "10dfa7de387abc6a5e80a56f8cda49ca4d21be6529c3df4e6cfc8da6c011c779",
-  "lang/zh-Hans.js": "81ca403135e7a9b032297d6745df3869d2807b772eca43c45253c58249d6c51c",
-  "lang/es.js": "984fb1d9eb40f2bb364e300f2d21c417f7c6c33f7e5747cbe7b4cbb8ae5cba46",
-  "lang/fr.js": "3e5c23f3a336c9ef8f4ce321774d50fdcfcf28b852a361ef17bf3043f915b428",
-  "lang/de.js": "3821ac202338f5a6a99a1a6eb9b98c723ff6657f7b14e1a9b6d65e16120a3cbc",
-  "lang/pt-BR.js": "1c89fe78f13e78816ef38a7d2f8da7964751366fcf45b50abc0b4ea7f9c28768",
-  "lang/ja.js": "644e9ae2a8a7e0ab47c7177912c42d57264821b8d4c31e10878db98d567c26d0",
-  "lang/ko.js": "a9d7cde5c616743022971fac4ad4754bafce5f3993e14b1fcfa16dd58843c66f"
+  "lang/zh-Hant.js": "5b12b82fe6fdc85440fa2c25be94b1595d2d4130c8fd9ae60ea24e21de82dc67",
+  "lang/zh-Hans.js": "c86c65d73ffb049896ab4b904986ab17c737a6b93fc04301dff3d07ce704408d",
+  "lang/es.js": "93b7bffe754807b40712a417c381db15d1f05856d9bd7c3b703a21f537c97ef7",
+  "lang/fr.js": "39a0ee709b5311620c296a290d8f96a5f20fa383745344ef97126c2d87ea72cf",
+  "lang/de.js": "1cd7256c171044b05c46e0d3fb54d1269acf6b3ed003f5e17e40f6f158df5c1a",
+  "lang/pt-BR.js": "b6917df650b7627079e1eb958f0e09559e84666bd4238df65b2356bf084a326b",
+  "lang/ja.js": "bf373f0bc83525ec89a7883c0d14d62eb2d802a7ed7e50a14abb1461749382af",
+  "lang/ko.js": "07d74252a78213ac1f8803c03df8e81906cede012cbc5965ee62a59287ed078e"
  }
 }

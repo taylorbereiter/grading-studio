@@ -145,3 +145,20 @@ test('an MYP task takes its levels typed in the table, one for each criterion in
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('a percent typed in a points column stays the percent, the points follow it, and "+ 1" is extra credit on top', async () => {
+  const { page, close } = await openApp(browser, { seed: seed() });
+  await openBook(page);
+  await page.focus(cell(page, 'i1', 'Aria Testwell'));
+  await keys(page, '7', '3', '%', 'Enter', '8', ' ', '+', ' ', '1', 'Enter');
+  assert.deepEqual((await typed(page, 'i1')).s, { 'Aria Testwell': { v: 7.3, p: 73, st: '' }, 'Bram Sample': { v: 8, st: '', xc: 1 } });
+  assert.equal(await page.$eval(cell(page, 'i1', 'Aria Testwell'), x => x.textContent), '73%');
+  assert.equal(await page.$eval(cell(page, 'i1', 'Bram Sample'), x => x.textContent), '90%');
+  await page.click(cell(page, 'i1', 'Aria Testwell'));
+  assert.equal(await page.$eval(cell(page, 'i1', 'Aria Testwell') + ' input', x => x.value), '73%');
+  await keys(page, 'Escape');
+  await page.$eval('[data-bkshow="pts"]', b => b.click());
+  assert.equal(await page.$eval(cell(page, 'i1', 'Aria Testwell'), x => x.textContent), '7.5/10', 'shown as the half point nearest 73%');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
