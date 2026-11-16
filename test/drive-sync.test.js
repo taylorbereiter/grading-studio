@@ -44,7 +44,7 @@ function fakeDrive() {
       if (r.method() === 'OPTIONS') return r.respond({ status: 204, headers: cors, body: '' });
       if (/\/about\?/.test(u)) return json({ user: { emailAddress: 'teacher@example.com' } });
       if (/drive\/v3\/files\?spaces=appDataFolder/.test(u)) return json({ files: D.body ? [{ id: 'f1' }] : [] });
-      if (/drive\/v3\/files\/f1\?fields=id,version/.test(u)) { if (D.readAt != null && D.readAt !== D.etag) D.refused++; return json({ id: 'f1', version: String(D.etag) }); }
+      if (/drive\/v3\/files\/f1\?fields=id,version/.test(u)) { if (D.readAt != null && D.readAt !== D.etag) D.refused++; D.readAt = null; return json({ id: 'f1', version: String(D.etag) }); }
       if (/drive\/v3\/files\/f1\?alt=media/.test(u)) { D.readAt = D.etag; const out = json(JSON.parse(D.body), 200, { ETag: '"' + D.etag + '"' }); if (D.afterRead) { const f = D.afterRead; D.afterRead = null; f(); } return out; }
       if (/upload\/drive\/v3\/files\/f1\?uploadType=media/.test(u) && r.method() === 'PATCH') {
         D.body = r.postData() || await r.fetchPostData(); D.etag++; D.writes++; D.readAt = null; return json({ id: 'f1' });

@@ -201,7 +201,7 @@ async function saveToDrive(name, files, onStep) {
    or a take-home file is (merge.js), student by student and field by field, so a score typed on the phone and a comment written on
    the computer both stay. Nothing goes anywhere but her browser and her Drive. */
 const SYNC_NAME = 'grading-studio-sync.json';
-let syncTries = 0, syncState = '', syncT = null, syncBusy = null, syncAgain = false, syncFile = null;
+let syncState = '', syncT = null, syncBusy = null, syncAgain = false, syncFile = null;
 const SYNC_RX = /^gs\.(lib|setup|bank|rubrics|school|b\..+|rp\..+|rd\..+)$/;
 {
   const raw = store.set.bind(store);
@@ -246,11 +246,15 @@ function syncNow() {
   if (!G.email || sampleOn()) return Promise.resolve();
   if (syncBusy) { syncAgain = true; return syncBusy; }
   clearTimeout(syncT);
-  syncBusy = syncOnce().then(() => { syncTries = 0; }).catch(e => {
-    // the other device saved first: merge again with what it saved, a little later each time, and stop after a few tries
-    if (e && e.status === 412) { if (++syncTries < 5) { syncAgain = false; setTimeout(syncNow, 500 * 2 ** syncTries + Math.random() * 500); } else { syncTries = 0; setSyncState('not synced'); } return; }
-    console.warn(e); setSyncState(/sign in/i.test(e && e.message) ? 'sign in again to sync' : 'not synced');
-  }).finally(() => { syncBusy = null; if (syncAgain) { syncAgain = false; syncNow(); } });
+  syncBusy = (async () => {
+    for (let tries = 1; ; tries++) {
+      try { await syncOnce(); return; } catch (e) {
+        // the other device saved first: merge again with what it saved, a little later each time, and stop after a few tries
+        if (e && e.status === 412 && tries < 5) { await new Promise(r => setTimeout(r, 500 * 2 ** tries + Math.random() * 500)); continue; }
+        console.warn(e); setSyncState(/sign in/i.test(e && e.message) ? 'sign in again to sync' : 'not synced'); return;
+      }
+    }
+  })().finally(() => { syncBusy = null; if (syncAgain) { syncAgain = false; syncNow(); } });
   return syncBusy;
 }
 async function syncOnce() {
