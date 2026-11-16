@@ -46,7 +46,7 @@ test('time on the marking screen counts as grading, by assignment, only while sh
   await goTo(page, '#/settings/focus'); await page.waitForSelector('#tkOn'); await page.click('#tkOn'); await pause(200);
   assert.deepEqual(await page.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().lib.me.focus))), { track: false });
   // and the Planner, which reads only its own keys, is told through one of them
-  assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.timeCount'))), { on: false, idle: 5 });
+  { const tc = await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.timeCount'))); assert.deepEqual({ on: tc.on, idle: tc.idle }, { on: false, idle: 5 }); assert.equal(tc.len, 10, 'the focus timer’s settings go to the Planner too'); }
   assert.equal(await page.$eval('#tkIdle', e => e.disabled), true);
   await page.click('#tkOn'); await page.select('#tkIdle', '10'); await pause(200);
   assert.deepEqual(await page.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().lib.me.focus))), { idle: 10 });
