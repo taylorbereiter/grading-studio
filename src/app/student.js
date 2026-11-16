@@ -11,6 +11,8 @@ function viewWorker() {
 }
 async function openStudent(i, filePath) {
   if (!batch) return;
+  // only this student on screen (src/solo.js): every way to another student comes back to them
+  if (soloOn()) { const si = soloIdx(); if (si < 0 || (i !== si && cur === si && $('#paper .who'))) return; i = si; }
   commitEditors();
   const moved = cur !== Math.max(0, Math.min(batch.students.length - 1, i));
   cur = Math.max(0, Math.min(batch.students.length - 1, i));
@@ -26,7 +28,7 @@ async function openStudent(i, filePath) {
   const paper = $('#paper');
   // The student's bar: who it is, then Readings, one Add menu, and a menu for the whole paper. What belongs to one file is under that file's own ⋯.
   const nRef = refsFor(st).length;
-  paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + (anonOn() ? '' : whoBtn('data-wi="' + cur + '"', st.key)) + '<span>' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span class="whosp"></span>' +
+  paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + (anonOn() ? '' : whoBtn('data-wi="' + cur + '"', st.key)) + '<span class="whon">' + ((anonOn() ? anonPos(cur) : cur) + 1) + ' of ' + batch.students.length + '</span><span class="whosp"></span>' +
     '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (nRef ? ' <span class="atn">' + nRef + '</span>' : '') + '</button>' +
     kmWrap('<span aria-hidden="true">+</span> Add', 'id="addMenuBtn" class="btn sm" title="Add late or forgotten work to this student. You can also drop files on the paper or on a name."',
       '<button class="mitem" id="addFileBtn">A file…<small>A late or forgotten paper</small></button>' +
@@ -34,6 +36,7 @@ async function openStudent(i, filePath) {
       '<button class="mitem" id="addVideoBtn">A video…<small>A link to a recording, and who is in it</small></button>' +
       '<button class="mitem" id="addNotesBtn">A notes page…<small>To write on while you watch or listen</small></button>' +
       '<button class="mitem" id="addScanBtn">From a scan…<small>A stack of pages scanned as one PDF</small></button>') +
+    '<button class="btn sm solo-go" id="soloBtn" title="Only this student" aria-label="Only this student"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.8 3.6-5.8 7-5.8s6.2 2 7 5.8"/></svg></button>' +
     kmWrap('⋯', 'id="whoMore" class="btn sm kdots" aria-label="More for this paper" title="More for this paper"',
       (st.files.some(viewable) || fileSeq(st).length > 1 ? '<button class="mitem" id="arrangeBtn">Arrange pages<small>Combine files, reorder or take pages out</small></button>' : '') +
       (st.files.some(f => !f.virtual && !f.rubric && (viewable(f) || f.kind === 'docx')) ? '<button class="mitem" data-whodo="example">Use as an example<small>A strong paper or part of a page, with names covered</small></button>' : '') +
@@ -165,6 +168,7 @@ $('#paper').addEventListener('click', e => {
   if (e.target.closest('#addVideoBtn')) return openAddVideo(batch.students[cur]);
   if (e.target.closest('#addNotesBtn')) return openAddNotes(batch.students[cur]);
   if (e.target.closest('#addScanBtn')) { scanInto = true; scanFor = null; return $('#scanIn').click(); }
+  if (e.target.closest('#soloBtn')) return soloStart(cur);
   const wd = e.target.closest('[data-whodo]'); if (wd) return wd.dataset.whodo === 'light' ? openLight() : wd.dataset.whodo === 'example' ? openUseExample(cur) : openCalc();
   const ra = e.target.closest('[data-rmfile]');
   if (ra) {   // two clicks, so a stray click can't throw a file away

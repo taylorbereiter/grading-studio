@@ -1,6 +1,7 @@
 /* ---------------- wiring ---------------- */
 let toastT;
 function toast(msg, ms) {
+  if (soloOn()) return;   // a note could name someone else while a student looks on (src/solo.js)
   const t = $('.toast');
   t.textContent = msg; t.hidden = false;
   clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; t.textContent = ''; }, ms || 3000);
@@ -240,6 +241,8 @@ document.addEventListener('keydown', e => {
   if (e.key === '?') { e.preventDefault(); openKeys(); return; }
   // A picked sticker, mark, check, circle or text box: + and − make it bigger or smaller.
   if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') && selected && !(selected.fresh && selected.mark.t === 'text') && canResize(selected.mark)) { e.preventDefault(); stepSize(e.key === '+' || e.key === '=' ? 1 : -1); return; }
+  if (soloOn() && (e.key === '/' || e.key === '[' || e.key === '?')) { e.preventDefault(); return; }   // the list stays away (src/solo.js)
+  if (e.key.toLowerCase() === 'i' && !e.shiftKey && !soloOn()) { e.preventDefault(); return soloStart(cur); }   // only this student
   if (e.key === '/') { e.preventDefault(); listPeek(true); $('#stuFind').focus(); return; }   // open first: a hidden list can't take focus
   // A picked mark moves with the arrow keys (Shift for bigger steps); Esc lets go of it.
   if (selected && tool === 'select' && /^Arrow/.test(e.key)) {

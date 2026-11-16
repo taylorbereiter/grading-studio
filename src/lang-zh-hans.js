@@ -27,6 +27,8 @@ function zhsHomeSay(k) {
 const LANG_ZHS = {
   name: '简体中文', locale: 'zh-Hans',
   words: {
+    // only this student (src/solo.js)
+    "Only this student": "只显示这位学生", "Hold to show everyone": "按住以显示所有人", "Other work": "其他作业",
     // linked classes (src/linked.js)
     "Link assignments": "链接作业", "Linked with": "已链接：", "Change": "更改", "Your Planner has these classes on the same course:": "你的备课表中，这些班级属于同一门课：", "Link them, so an assignment and its strong examples can be shared between them?": "要链接它们，让作业和优秀范例在班级间共用吗？", "Link them": "链接", "No thanks": "不用了", "Also in": "也在：", "Linked classes…": "链接的班级…", "Link with the copy in": "与此班的副本链接：", "Each keeps its papers and scores": "各自保留作品和分数", "Add to": "加到：", "A copy with the same name, type, due date and rubric": "名称、类型、截止日期和评分标准都相同的副本", "Unlink from the other classes": "与其他班级取消链接", "This copy keeps everything and stops sharing": "这份副本保留一切，只是不再共用", "Linked classes are ticked. Untick one to keep this assignment out of it.": "已勾选链接的班级。取消勾选即不加入该班。", "Make these changes in the copies too:": "也在副本中做这些更改：", "Linked classes": "链接的班级", "For classes on the same schedule. A new assignment is offered to all of them, and strong examples show in each, with the class they came from. Rosters, papers, scores and comments stay separate.": "适用于课表相同的班级。新作业会提供给所有班级，优秀范例会在各班显示并标明来源班级。名单、作品、分数和评语各自分开。", "Course": "课程", "No other classes yet": "还没有其他班级", "e.g. English 12": "例如：英语 12",
     // typed notes in the side pane, and the page of them in a returned paper (src/typednotes.js)
