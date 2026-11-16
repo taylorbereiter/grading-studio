@@ -52,7 +52,7 @@ test('the Planner has the same sidebar: its own classes, no grading counts, and 
   const srv = await serveBoth(), ctx = await browser.createBrowserContext();
   try {
     const g = await openApp(browser, { server: srv, context: ctx, seed: GRADING });
-    assert.equal(await g.page.$eval('#railClasses .rcnt', e => e.textContent), '3', 'grading’s own sidebar counts what is left');
+    assert.equal(await g.page.$eval('#railClasses .rcnt', e => e.textContent), '3 left to score', 'grading’s own sidebar says what is left');
     const page = await planner(ctx, srv);
     await page.evaluate(async s => { await window.__planner.applySetup(s); }, setupFor(2));
     await page.waitForSelector('#railClasses a');
