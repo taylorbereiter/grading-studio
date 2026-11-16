@@ -83,7 +83,7 @@ function fmNow() { const a = batch && batch.assignment, f = a && findItem(a.id);
 function setFb(st, on) { if (on) st.grade.fb = true; else delete st.grade.fb; touchGrade(st); saveSoon(); }
 function hasMarks(st) { return st.files.some(f => fileMarked(f) || f.edited); }
 // Scores in the list show as a percent unless the teacher switches the list to points (gs.listPts), which show out of their total.
-// A part-scored paper always shows its points: a percent of the rows scored so far would mislead.
+// A part-scored paper always shows its points so far: a percent of the rows scored so far would mislead.
 let listPts = !!store.get('gs.listPts', false);
 function setListPts(on) { listPts = !!on; if (listPts) store.set('gs.listPts', true); else store.del('gs.listPts'); }
 // Extra credit shows on its own, after the score it was added to ("85% +2%"), never folded into an odd total; the strip only marks it with a +.
@@ -92,8 +92,8 @@ function listScore(g, strip) {
   const more = !x ? '' : strip ? '+' : '<small>+' + (!listPts && !g.partial ? xcSay(g) : fmtNum(g.xc) + (g.xcU === 'pct' ? '%' : '')) + '</small>';
   if (g.total == null) return fmtNum(g.pct) + '%';
   if (!listPts && !g.partial && pc != null) return fmtNum(pc) + '%' + more;
-  const of = g.outOf != null ? g.outOf : maxPoints();
-  return (strip || !of ? fmtNum(t) : fmtNum(t) + '\u2009/\u2009' + fmtNum(of)) + more;
+  const of = g.outOf != null ? g.outOf : maxPoints();   // a part score is its points alone: "partial" follows it, and the row keeps its height
+  return (strip || !of || g.partial ? fmtNum(t) : fmtNum(t) + '\u2009/\u2009' + fmtNum(of)) + more;
 }
 const listWayBtns = () => ibSetup() || fmNow() ? '' : '<span class="scway" role="group"><button data-scway="pct" aria-pressed="' + !listPts + '" title="Percent">%</button><button data-scway="pts" aria-pressed="' + listPts + '" title="Points">pts</button></span>';
 document.addEventListener('click', e => { const b = e.target.closest('[data-scway]'); if (!b || !batch) return; setListPts(b.dataset.scway === 'pts'); renderList(); });

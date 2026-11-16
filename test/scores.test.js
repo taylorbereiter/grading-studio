@@ -39,7 +39,7 @@ test('a partial rubric score says so in the panel, the student list, the Grades 
   const s = await stu(page, 0);
   assert.deepEqual(s.computed, { total: 4, pct: 64, done: false, partial: true });
   assert.match(await page.$eval('#grade .total', e => e.textContent), /Partial: 1 of 3 rows scored/);
-  assert.match(await page.$eval('#stuList .stu[data-i="0"]', e => e.textContent), /4\u2009\/\u2009\d+partial/, 'a part score shows its points, out of the total');
+  assert.match(await page.$eval('#stuList .stu[data-i="0"]', e => e.textContent), /4partial/, 'a part score shows its points so far');
   await page.click('#gradesBtn');
   await page.waitForSelector('table.gl');
   assert.match(await page.$eval('.bh .muted', e => e.textContent), /0 of 4 scored · 1 partial/);
