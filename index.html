@@ -2150,7 +2150,7 @@ a.opchip:hover{text-decoration:underline}
 
 
 .main{position:relative}
-.tools{position:absolute;left:12px;top:12px;z-index:3;width:44px;margin:0;padding:5px;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:2px;max-height:calc(100% - 24px);overflow-x:hidden;overflow-y:auto;scrollbar-width:none;border-radius:var(--corner-5);box-shadow:var(--shadow)}
+.tools{position:absolute;left:12px;top:12px;z-index:4;width:44px;margin:0;padding:5px;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:2px;max-height:calc(100% - 24px);overflow-x:hidden;overflow-y:auto;scrollbar-width:none;border-radius:var(--corner-5);box-shadow:var(--shadow)}
 .tools::-webkit-scrollbar{display:none}
 .tools .tool{justify-content:center;padding:0;height:32px;flex:none}
 .tools .tool svg{width:18px;height:18px}
@@ -23911,7 +23911,7 @@ return st.files.filter(f => !had.has(f));
 }
 const copyFor = (st, f) => ({ path: f.name, file: new File([f.data], f.name), from: st.key });
 async function partnerCopy(st, f, to) {
-if (f.kind === 'link') { const have = to.files.find(x => x.kind === 'link' && linkKey(x) === linkKey(f)); if (have) return have; }
+if (f.kind === 'link') { const d = linkSame(f), have = to.files.find(x => x.kind === 'link' && (linkKey(x) === linkKey(f) || (!!d && linkSame(x) === d))); if (have) return have; }
 const have = to.files.find(x => x.from === st.key && x.name === f.name); if (have) return have;
 return (await addAndFind(to, [copyFor(st, f)]))[0] || null;
 }
@@ -23995,15 +23995,23 @@ if (o.drive) return { path: o.name + '.url', file: new File([drvBytes(o.drive)],
 if (o.file) { const id = await vkPut(o.file); return { path: o.name + '.url', file: new File([vidBytes(id, o.file.name, o.file.size)], o.name + '.url') }; }
 return { path: o.name + '.url', file: new File([linkBytes(o.url)], o.name + '.url') };
 }
+const linkSpot = url => { const p = url && linkPlayer(url); return p && p.frame ? p.frame : ''; };
+const linkSame = f => linkSpot(linkOf(f.data));
+function sameVideo(st, o) {
+if (o.file) return null;
+const url = o.drive ? 'https://drive.google.com/file/d/' + o.drive.id + '/view' : linkClean(o.url), spot = linkSpot(url);
+if (!url) return null;
+return st.files.find(f => f.kind === 'link' && !vidRef(f.data) && (linkOf(f.data) === url || (!!spot && linkSame(f) === spot))) || null;
+}
 async function videoAdd(st, o, quiet) {
-const list = [await videoEntry(o)];
+const had = sameVideo(st, o), list = had ? [] : [await videoEntry(o)];
 if (o.kind) { npLast = o.kind; const n = npFileName(o.name.replace(/\s*video$/i, '') + ' notes') + '.pdf'; list.push({ path: n, file: new File([await notesPdf(o.kind, batch.name, npRows(setup))], n, { type: 'application/pdf' }) }); }
-const made = await addAndFind(st, list), vid = made.find(f => f.kind === 'link' || f.kind === 'media') || made[0], page = made.find(f => f.kind === 'pdf') || notesFileOf(st);
+const made = list.length ? await addAndFind(st, list) : [], vid = had || made.find(f => f.kind === 'link' || f.kind === 'media') || made[0], page = made.find(f => f.kind === 'pdf') || notesFileOf(st);
 const all = [...new Set([...groupMates(st), ...(o.partners || [])])];
-if (all.length) await partnersJoin(st, page || vid, all, made.filter(f => f.kind !== 'media'));
+if (all.length) await partnersJoin(st, page || vid, all, (had ? [had] : []).concat(made).filter(f => f.kind !== 'media'));
 if (quiet) return made;
 saveSoon(); renderList();
-toast('Added the video to ' + groupNames([st, ...all]));
+toast(had && !made.length && !all.length ? shownName(st, batch.students.indexOf(st)) + ' already has this video' : 'Added the video to ' + groupNames([st, ...all]));
 await openStudent(batch.students.indexOf(st), vid && vid.path);
 return made;
 }
