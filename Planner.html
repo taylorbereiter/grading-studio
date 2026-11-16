@@ -1774,20 +1774,23 @@ async function versionsDlg(l) {
 }
 
 /* ---------- sending to Claude, approving ---------- */
+const lessonZipAsk = () => 'When you are done, give me ONE downloadable .zip file. In it:\n' +
+  '- the finished PowerPoint (.pptx), one slide per slide of the lesson, in order, with speaker notes where useful;\n' +
+  '- any handouts or other files the lesson needs (.docx, .pdf and so on);\n' +
+  '- lesson.json: { "kind": "grading-studio-lesson-zip", "finished": "<the .pptx file name>", "materials": ["<each other file name>"] }.\n' +
+  'Also give me each of those pieces (the PowerPoint and every handout) as its own downloadable file, so I can open or use one without the .zip.\n' +
+  'Put nothing about any student in any of them. Then tell me in a few lines what you changed. I will upload the .zip on this lesson in my Planner.';
 async function sendToClaude(l) {
   editorCommit(); boxNotesToSlides(l);
   await saveVersion(l, 'Sent to ' + plAi());
   l.status = 'claude'; await lPut(l);
   const asks = l.slides.filter(s => s.ask.trim()).length, talks = l.slides.filter(s => s.talk.some(t => t.by === 'you' && !t.done)).length;
-  const file = fileBase(l) + '.lesson.json';
-  const msg = L.dir && L.dirOk
-    ? 'Please work on my lesson "' + l.title + '" in my Planner folder ("' + L.dir.name + '"), file "' + file + '". Read "README - for ' + plAi() + '.md" there first.\n\n' +
-      (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' an "ask" saying what I want on it. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me in "talk". ' : '') + (lessonNotes(l).length ? 'My comments on the whole lesson are in the lesson\'s own "talk". ' : '') +
-      lessonNotes(l).map(x => 'My comment on the whole lesson: ' + x + '\n').join('') +
-      'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. When you\'re done, reply to my comments in "talk", put a short summary in "claudeNote", and set "status" to "review". Don\'t change "id" or "slots". I\'ll look at your version slide by slide in the Planner.'
-    : 'Here is a lesson from my Planner. Each slide may have "What I want here" notes and comments for you. Build it out, keep my wording where I wrote it, slide 1 stays the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + ', and slide text stays ' + deckSizeSay() + ' pt.\n\n' + lessonText(l);
+  const msg = 'Here is a lesson from my Planner. Everything you need is in this message. Don\'t look for, open or ask for any folder or file on my computer.\n\n' +
+    (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' a "What I want on this slide" note. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me. ' : '') +
+    'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. Slide 1 stays the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + ', and slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style.\n\n' +
+    lessonZipAsk() + '\n\n' + lessonText(l);
   await copyText(msg);
-  toast(L.dir && L.dirOk ? 'Copied. Paste it into ' + plAi() + '. ' + PlAi() + '’s changes show up here when it saves.' : 'Lesson copied. Paste it into ' + plAi() + '. Link the Planner folder so ' + plAi() + ' can save straight back.', 7000);
+  toast('Lesson copied. Paste it into ' + plAi() + '. When it gives you a .zip, upload it on this lesson (Upload .pptx or .zip) and check its changes slide by slide.', 8000);
   renderEditor();
 }
 
@@ -2900,17 +2903,16 @@ function lessonText(l) {
     if (s.video) t += '[Video: ' + s.video.url + (s.video.title ? ' (' + videoSource(s.video) + ')' : '') + ']\n';
     if (s.notes) t += 'Notes: ' + s.notes + '\n';
     if (s.ask) t += 'What I want on this slide: ' + s.ask + '\n';
-    for (const c of s.ctx || []) t += '[Screenshot for context, not on the slide' + (c.note ? ': ' + c.note : '') + (L.dir && L.dirOk && ctxFile(s, c) ? ' (in my Planner folder: ' + ctxFile(s, c) + ')' : '') + ']\n';
+    for (const c of s.ctx || []) t += '[Screenshot for context, not on the slide' + (c.note ? ': ' + c.note : '') + ']\n';
     for (const m of s.talk) if (!m.done) t += (m.by === 'claude' ? PlAi() + ': ' : 'My comment: ') + m.text + '\n';
   });
   if (l.notebook) t += '\n## My notebook for this lesson\n' + nbText(l.notebook) + '\n';
   return t;
 }
 async function askClaude(l) {
-  const where = L.dir && L.dirOk ? 'It is saved in my Planner folder as "' + fileBase(l) + '.lesson.json". Edit that file directly (keep the same id), and I will pick up your changes in the Planner.\n\n' : '';
-  await copyText('Here is a lesson from my Planner. ' + where + 'Slide 1 is the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + '. Slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + lessonText(l));
+  await copyText('Here is a lesson from my Planner. Everything you need is in this message. Don\'t look for, open or ask for any folder or file on my computer. Slide 1 is the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + '. Slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + lessonText(l));
   const shots = l.slides.reduce((n, s) => n + (s.ctx || []).length, 0);
-  toast('Lesson copied. Paste it into ' + plAi() + ' and say what you want.' + (shots && !(L.dir && L.dirOk) ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
+  toast('Lesson copied. Paste it into ' + plAi() + ' and say what you want.' + (shots ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
 }
 
 /* ---------- import ---------- */
@@ -4764,13 +4766,13 @@ async function lessonZip(l, file) {
     }
     await lPut(l);
   }
-  if (deck) await finUpload(l, new File([z[deck]], baseName(deck), { type: MIME.pptx }));
+  if (deck) await finUpload(l, new File([z[deck]], baseName(deck), { type: MIME.pptx }), null, l.status === 'claude');
   else renderEditor();
   toast((deck ? 'Finished deck “' + baseName(deck) + '”' : 'No PowerPoint') + ' and ' + mats.length + ' material' + (mats.length === 1 ? '' : 's') + ' added from ' + file.name + '.' +
-    (big.length ? ' Too big to keep (over 40 MB): ' + big.map(baseName).join(', ') + '.' : '') + (deck ? ' The lesson before is under Versions.' : ''), 8000);
+    (big.length ? ' Too big to keep (over 40 MB): ' + big.map(baseName).join(', ') + '.' : '') + (deck ? (l.pending ? ' Check ' + plAi() + '’s changes slide by slide above the slides.' : ' The lesson before is under Versions.') : ''), 8000);
 }
 
-async function finUpload(l, file, keepId) {
+async function finUpload(l, file, keepId, review) {
   if (!/\.pptx$/i.test(file.name || '')) return toast('That isn’t a .pptx file');
   if (file.size > MAX_FILE) return toast('That file is too big (over 40 MB)');
   let slides;
@@ -4781,12 +4783,13 @@ async function finUpload(l, file, keepId) {
   const id = keepId || lid(); if (!keepId) await kvSet('file:' + id, file);
   const finals = (l.finals || []).filter(o => o.id !== id);
   if (l.final && l.final.id !== id) finals.unshift(l.final);
-  slides.forEach((s, i) => { const was = l.slides[i]; if (was) { s.ask = was.ask; s.talk = was.talk; if (was.ctx) s.ctx = was.ctx; } });
+  slides.forEach((s, i) => { const was = l.slides[i]; if (was) { s.ask = was.ask; s.talk = was.talk; if (was.ctx) s.ctx = was.ctx; if (review) s.id = was.id; } });
+  if (review) { l.pending = l.pending || { at: Date.now(), before: JSON.parse(JSON.stringify(l.slides)), title: l.title }; l.status = 'review'; }
   l.slides = slides.map(s => normSlide({ ...s, fmt: 2 }));
   l.finals = finals;
   l.final = { id, name: file.name, size: file.size, at: Date.now(), sig: finSig(l) };
   L.cur = 0; await lPut(l); lessonChanged(false); renderEditor();
-  toast('Finished deck saved: ' + slides.length + ' slides. The lesson before it is under Versions.', 6000);
+  if (!review) toast('Finished deck saved: ' + slides.length + ' slides. The lesson before it is under Versions.', 6000);
 }
 async function finBack(l, id) {
   const o = (l.finals || []).find(x => x.id === id), b = o && await fileBlob(id); if (!b) return toast('That file is missing');
@@ -7805,11 +7808,10 @@ async function viewFile(u, id) {
   saveBlob(f.name, b);   // Word files and the rest open in their own app
 }
 function askWeeks(u) {
-  const where = L.dir && L.dirOk ? 'In my Planner folder ("' + L.dir.name + '"), the unit file is Units/' + unitBase(u) + '.unit.json and its ' + (plCur() || 'unit plan') + ' screenshots are in Units/' + unitBase(u) + ' files/. ' : '';
-  const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshots. ' + where +
-    'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and write each week\'s focus (and standards, if shown) into "weeks" in the unit file, one entry per week, in order. Keep my notes. Then tell me what you filled in and anything you weren\'t sure of.' +
-    (where ? '' : '\n\n(My Planner folder isn\'t linked yet, so I\'ll attach the screenshots.)');
-  copyText(msg).then(() => { toast(where ? 'Message copied. Paste it into ' + plAi() + '.' : 'Message copied. Link the Planner folder so ' + plAi() + ' can read the screenshots, or attach them.', 6000); });
+  const n = u.files.filter(x => x.kind === 'atlas').length;
+  const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshot' + (n === 1 ? '' : 's') + ', which I am attaching. Everything you need is in this message and the screenshots. Don\'t look for, open or ask for any folder or file on my computer.\n\n' +
+    'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and reply with one line per week, in order, like "Week 1: what this week is about (standards, if shown)". Nothing else in those lines. Then tell me anything you weren\'t sure of.';
+  copyText(msg).then(() => { toast('Message copied. Paste it into ' + plAi() + ' and attach the ' + (plCur() || 'unit plan') + ' screenshot' + (n === 1 ? '' : 's') + '. Then use Type or paste the weeks for its answer.', 8000); });
 }
 function pasteWeeksDlg(u) {
   openDlg('<div class="bh"><h2>Weeks of ' + esc(u.title) + '</h2></div><div class="bb"><p class="muted" style="margin-top:0">One line per week: what that week is about. You can copy the week list straight out of ' + (plCur() ? esc(plCur()) : 'your unit plan') + '. Lines starting with “Week 3:” or similar are fine.</p>' +

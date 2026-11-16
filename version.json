@@ -1,12 +1,12 @@
 {
  "version": "1.28.43",
- "build": "ac387d61cbfe",
+ "build": "db480014d94c",
  "notes": [
   "The focus timer keeps going when you open the Planner. The panel shows there with the clock, pause, more time and break, and a session that ends in the Planner is added to your focus log when you come back to grading."
  ],
  "files": {
   "index.html": "225d352202516c4289cb1c04c8ed426b0f811fd6fc3aadf9eb63cfb3c18289a1",
-  "planner.html": "563c5356c9ca187b8c87fcba20310db862135e9e9de1874e703de0b94c9a635d"
+  "planner.html": "675f74d81a4d4b62863cfec11f19cb05f77b79a5d4175c321fe0f2fb06448bb2"
  },
  "langs": {
   "lang/zh-Hant.js": "ea0e5765a6e2c1db58743ec97e0de9034a889dcff3c16cc53db62d28eb477c3a",
