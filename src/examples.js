@@ -190,6 +190,10 @@ function exScoreText(st) {
   if (g.status === 'missing' || g.status === 'excused' || (g.total == null && g.pct == null)) return '';
   return (g.total != null ? fmtNum(g.total) + ' / ' + fmtNum(g.outOf != null ? g.outOf : maxPoints()) : '') + (g.pct != null ? (g.total != null ? '   ' : '') + g.pct + '%' : '');
 }
+// Her own marks that say the score (the score sticker, a quiz's points, a typed grade): they go with The score, not with her marks.
+const exScoreMarks = st => st.files.some(f => Object.values(f.marks || {}).some(l => (l || []).some(isScoreMark)));
+// The score written at the top right, unless her own score mark is already on one of the pages kept (ks), with her marks shown.
+const exScoreTop = (U, ks) => !U.score ? '' : U.marks && U.kind !== 'part' && ks.some(k => { const it = U.items[k]; return it && ((it.f.marks || {})[it.p] || []).some(isScoreMark); }) ? '' : exScoreText(U.st);
 // The score, in the marks' red, at the top right of a picture.
 function exScoreOn(c, text) {
   if (!text) return;
@@ -202,7 +206,7 @@ function exScoreOn(c, text) {
 // One page as the example will keep it, at scale (pixels per point): covers, and her marks only when the switch is on.
 async function exuCanvas(k, scale) {
   const it = EXU.items[k], js = await exuDoc(it), st = EXU.st;
-  const r = await sharePage(st, it.f, js, it.p, scale, coverRx(st), shareOpts(st), { bare: !EXU.marks, light: true });
+  const r = await sharePage(st, it.f, js, it.p, scale, coverRx(st), shareOpts(st), { bare: !EXU.marks, light: true, noScore: !EXU.score });
   return r;
 }
 async function openUseExample(i) {
@@ -219,7 +223,7 @@ async function openUseExample(i) {
       '<h3 class="exh">What to keep</h3><div class="exkind" role="group" aria-label="What to keep"><button data-exk="paper" aria-pressed="true"><b>Whole paper</b><small id="exPages"> </small></button><button data-exk="part" aria-pressed="false"><b>Part of a page</b><small>Drag a box</small></button></div>' +
       '<h3 class="exh">Names</h3><p class="exnames" id="exNames">Looking for names…</p>' +
       '<h3 class="exh">Show on it</h3><button class="exsw" role="switch" aria-checked="false" data-exsw="marks"><i></i>My marks and comments</button>' +
-        (exScoreText(st) ? '<button class="exsw" role="switch" aria-checked="false" data-exsw="score"><i></i>The score</button>' : '') +
+        (exScoreText(st) || exScoreMarks(st) ? '<button class="exsw" role="switch" aria-checked="false" data-exsw="score" title="The score, with your score sticker and any score you wrote on the paper. Off, they stay off even with your marks on."><i></i>The score</button>' : '') +
       '<h3 class="exh">Why it’s strong <span class="muted">(optional)</span></h3><input type="text" id="exWhy" class="exwhyin" maxlength="160" placeholder="Every claim is tied to a moment in the story." aria-label="Why it’s strong">' +
       (rows.length ? '<div class="exrows" role="group" aria-label="Rubric row">' + rows.map(c => '<button class="exrow" data-exrow="' + esc(c) + '" aria-pressed="false">' + esc(c) + '</button>').join('') + '</div>' : '') +
     '</aside></div>' +
@@ -259,7 +263,7 @@ const exuSaveOk = () => { const b = $('#dlgBox [data-exsave]'); if (b && EXU) b.
 function exuNames() {
   const el = $('#exNames'); if (!el || !EXU) return;
   const n = EXU.shown.reduce((a, s) => a + (s ? exGroups(s.covers) : 0), 0);
-  el.innerHTML = '<b>' + (n === 1 ? '1 name covered.' : n + ' names covered.') + '</b> ' + (EXU.kind === 'part' ? 'Drag a box around the part to keep. Click a cover to take it off.' : 'Drag on a page to cover anything else, like a handwritten name. Click a cover to take it off.');
+  el.innerHTML = '<b>' + (n === 1 ? '1 name covered.' : n + ' names covered.') + '</b> ' + (EXU.kind === 'part' ? 'Drag a box around the part to keep. Click a cover to take it off.' : 'Drag on a page to cover anything else, like a handwritten name or score. Click a cover to take it off.');
 }
 // Covers that touch or sit side by side on a line are one name to her: Cara and Sample are two covers, one name.
 function exGroups(cs) {
@@ -284,7 +288,7 @@ async function exuDraw(k, my) {
   const colW = Math.max(240, cell.clientWidth || 360), scale = Math.min(3, colW * 1.25 / v1.width) * dpr;
   const r = await exuCanvas(k, scale);
   if (!EXU || (my != null && EXU.tok !== my) || !cell.isConnected) { r.c.width = 0; return; }
-  if (EXU.score && k === 0) exScoreOn(r.c, exScoreText(EXU.st));
+  if (k === 0) exScoreOn(r.c, exScoreTop(EXU, EXU.kind === 'part' ? [k] : EXU.items.map((_, j) => j)));
   const ctx = r.c.getContext('2d');
   // Where a cover she took off was: a dashed outline, so she can put it back.
   if (r.gone.length) { ctx.save(); ctx.setTransform(scale, 0, 0, scale, 0, 0); ctx.strokeStyle = '#1F6FB2'; ctx.lineWidth = 1.5 / scale * dpr; ctx.setLineDash([5 / scale * dpr, 3 / scale * dpr]); for (const g of r.gone) ctx.strokeRect(g.x, g.y, g.w, g.h); ctx.restore(); }
@@ -358,7 +362,7 @@ async function exuSave() {
   if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
   U.tok++;   // a redraw on its way stops
   try {
-    const list = U.kind === 'paper' ? U.items.map((_, k) => k) : [U.part.k], blobs = [], pages = [], score = U.score ? exScoreText(U.st) : '';
+    const list = U.kind === 'paper' ? U.items.map((_, k) => k) : [U.part.k], blobs = [], pages = [], score = exScoreTop(U, list);
     for (const k of list) {
       const it = U.items[k], js = await exuDoc(it), v1 = vpRot(it.f, it.p, await js.getPage(it.p + 1), 1);
       const r = await exuCanvas(k, Math.min(4, (U.kind === 'part' ? 2400 : 1600) / v1.width));
@@ -373,7 +377,7 @@ async function exuSave() {
       c.width = c.height = 0;
     }
     const why = ($('#exWhy') ? $('#exWhy').value : '').trim().slice(0, 160);
-    const rec = { ...exBase(U.kind, U.st), why, row: U.row, letter: exNextLetter(batch.id, U.kind), pages, marks: U.marks, score: !!score };
+    const rec = { ...exBase(U.kind, U.st), why, row: U.row, letter: exNextLetter(batch.id, U.kind), pages, marks: U.marks, score: U.score && !!(exScoreText(U.st) || exScoreMarks(U.st)) };
     await exPut(rec, blobs);
     closeDlg();
     exToast('Saved as ' + (rec.kind === 'paper' ? 'Example ' + rec.letter : 'an example') + '.', [['See examples', exGo]]);
@@ -899,4 +903,4 @@ function exPageRender() {
 }
 exReady.then(exRailSay);
 
-Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete, exSaveShot, exTagsOf, exShotWhere });
+Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete, exSaveShot, exTagsOf, exShotWhere, isScoreMark });

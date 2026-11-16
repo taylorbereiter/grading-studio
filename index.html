@@ -9753,10 +9753,13 @@ const kept = cs.filter(r => { const out = off.some(b => sameSpot(r, b, W, H)); i
 return Object.assign(kept, { gone });
 }
 const scrubMarks = (marks, rx) => marks.map(m => m.text != null ? { ...m, text: scrub(m.text, rx) } : m);
+const scoreWordsOnly = t => { const g = parseGrade(t, false); if (!g || g.at == null) return false; return /^[\s:=\-–,.()]*(?:total|score|grade|points?|pts|marks?|final)?[\s:=\-–,.()]*$/i.test(t.slice(0, g.at) + t.slice(g.at + g.len).replace(/^\s*(?:points?|pts)\b/i, '')); };
+const isScoreMark = m => (m.t === 'stamp' && m.k === 'score') || (m.t === 'text' && !!m.qz) || ((m.t === 'text' || m.t === 'note') && !m.qza && m.text != null && String(m.text).trim().length <= 40 && scoreWordsOnly(String(m.text).trim()));
 async function sharePage(st, f, js, p, scale, rx, opts, look) {
 const page = await js.getPage(p + 1);
 const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
-const marks = look && look.bare ? [] : scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
+let marks = look && look.bare ? [] : scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
+if (look && look.noScore) marks = marks.filter(m => !isScoreMark(m));
 const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
 const c = document.createElement('canvas');
 c.width = Math.ceil((W + side) * scale); c.height = Math.ceil(H * scale);
@@ -28115,6 +28118,8 @@ const g = gradeOf(st);
 if (g.status === 'missing' || g.status === 'excused' || (g.total == null && g.pct == null)) return '';
 return (g.total != null ? fmtNum(g.total) + ' / ' + fmtNum(g.outOf != null ? g.outOf : maxPoints()) : '') + (g.pct != null ? (g.total != null ? '   ' : '') + g.pct + '%' : '');
 }
+const exScoreMarks = st => st.files.some(f => Object.values(f.marks || {}).some(l => (l || []).some(isScoreMark)));
+const exScoreTop = (U, ks) => !U.score ? '' : U.marks && U.kind !== 'part' && ks.some(k => { const it = U.items[k]; return it && ((it.f.marks || {})[it.p] || []).some(isScoreMark); }) ? '' : exScoreText(U.st);
 function exScoreOn(c, text) {
 if (!text) return;
 const ctx = c.getContext('2d'), s = Math.max(14, Math.round(c.width * 0.028));
@@ -28125,7 +28130,7 @@ ctx.restore();
 }
 async function exuCanvas(k, scale) {
 const it = EXU.items[k], js = await exuDoc(it), st = EXU.st;
-const r = await sharePage(st, it.f, js, it.p, scale, coverRx(st), shareOpts(st), { bare: !EXU.marks, light: true });
+const r = await sharePage(st, it.f, js, it.p, scale, coverRx(st), shareOpts(st), { bare: !EXU.marks, light: true, noScore: !EXU.score });
 return r;
 }
 async function openUseExample(i) {
@@ -28142,7 +28147,7 @@ openDlg('<div class="bh"><h2>Use as an example</h2><span class="sp"></span><butt
 '<h3 class="exh">What to keep</h3><div class="exkind" role="group" aria-label="What to keep"><button data-exk="paper" aria-pressed="true"><b>Whole paper</b><small id="exPages"> </small></button><button data-exk="part" aria-pressed="false"><b>Part of a page</b><small>Drag a box</small></button></div>' +
 '<h3 class="exh">Names</h3><p class="exnames" id="exNames">Looking for names…</p>' +
 '<h3 class="exh">Show on it</h3><button class="exsw" role="switch" aria-checked="false" data-exsw="marks"><i></i>My marks and comments</button>' +
-(exScoreText(st) ? '<button class="exsw" role="switch" aria-checked="false" data-exsw="score"><i></i>The score</button>' : '') +
+(exScoreText(st) || exScoreMarks(st) ? '<button class="exsw" role="switch" aria-checked="false" data-exsw="score" title="The score, with your score sticker and any score you wrote on the paper. Off, they stay off even with your marks on."><i></i>The score</button>' : '') +
 '<h3 class="exh">Why it’s strong <span class="muted">(optional)</span></h3><input type="text" id="exWhy" class="exwhyin" maxlength="160" placeholder="Every claim is tied to a moment in the story." aria-label="Why it’s strong">' +
 (rows.length ? '<div class="exrows" role="group" aria-label="Rubric row">' + rows.map(c => '<button class="exrow" data-exrow="' + esc(c) + '" aria-pressed="false">' + esc(c) + '</button>').join('') + '</div>' : '') +
 '</aside></div>' +
@@ -28182,7 +28187,7 @@ const exuSaveOk = () => { const b = $('#dlgBox [data-exsave]'); if (b && EXU) b.
 function exuNames() {
 const el = $('#exNames'); if (!el || !EXU) return;
 const n = EXU.shown.reduce((a, s) => a + (s ? exGroups(s.covers) : 0), 0);
-el.innerHTML = '<b>' + (n === 1 ? '1 name covered.' : n + ' names covered.') + '</b> ' + (EXU.kind === 'part' ? 'Drag a box around the part to keep. Click a cover to take it off.' : 'Drag on a page to cover anything else, like a handwritten name. Click a cover to take it off.');
+el.innerHTML = '<b>' + (n === 1 ? '1 name covered.' : n + ' names covered.') + '</b> ' + (EXU.kind === 'part' ? 'Drag a box around the part to keep. Click a cover to take it off.' : 'Drag on a page to cover anything else, like a handwritten name or score. Click a cover to take it off.');
 }
 function exGroups(cs) {
 const near = (a, b) => a.x <= b.x + b.w + 8 && b.x <= a.x + a.w + 8 && a.y <= b.y + b.h + 2 && b.y <= a.y + a.h + 2;
@@ -28206,7 +28211,7 @@ const it = EXU.items[k], js = await exuDoc(it), pg0 = await js.getPage(it.p + 1)
 const colW = Math.max(240, cell.clientWidth || 360), scale = Math.min(3, colW * 1.25 / v1.width) * dpr;
 const r = await exuCanvas(k, scale);
 if (!EXU || (my != null && EXU.tok !== my) || !cell.isConnected) { r.c.width = 0; return; }
-if (EXU.score && k === 0) exScoreOn(r.c, exScoreText(EXU.st));
+if (k === 0) exScoreOn(r.c, exScoreTop(EXU, EXU.kind === 'part' ? [k] : EXU.items.map((_, j) => j)));
 const ctx = r.c.getContext('2d');
 if (r.gone.length) { ctx.save(); ctx.setTransform(scale, 0, 0, scale, 0, 0); ctx.strokeStyle = '#1F6FB2'; ctx.lineWidth = 1.5 / scale * dpr; ctx.setLineDash([5 / scale * dpr, 3 / scale * dpr]); for (const g of r.gone) ctx.strokeRect(g.x, g.y, g.w, g.h); ctx.restore(); }
 const old = cell.querySelector('canvas'); r.c.className = 'exc'; old.replaceWith(r.c); old.width = 0;
@@ -28276,7 +28281,7 @@ if (U.kind === 'part' && !U.part) return toast('Drag a box around the part to ke
 if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 U.tok++;
 try {
-const list = U.kind === 'paper' ? U.items.map((_, k) => k) : [U.part.k], blobs = [], pages = [], score = U.score ? exScoreText(U.st) : '';
+const list = U.kind === 'paper' ? U.items.map((_, k) => k) : [U.part.k], blobs = [], pages = [], score = exScoreTop(U, list);
 for (const k of list) {
 const it = U.items[k], js = await exuDoc(it), v1 = vpRot(it.f, it.p, await js.getPage(it.p + 1), 1);
 const r = await exuCanvas(k, Math.min(4, (U.kind === 'part' ? 2400 : 1600) / v1.width));
@@ -28291,7 +28296,7 @@ blobs.push(await exJpg(c)); pages.push({ w: c.width, h: c.height });
 c.width = c.height = 0;
 }
 const why = ($('#exWhy') ? $('#exWhy').value : '').trim().slice(0, 160);
-const rec = { ...exBase(U.kind, U.st), why, row: U.row, letter: exNextLetter(batch.id, U.kind), pages, marks: U.marks, score: !!score };
+const rec = { ...exBase(U.kind, U.st), why, row: U.row, letter: exNextLetter(batch.id, U.kind), pages, marks: U.marks, score: U.score && !!(exScoreText(U.st) || exScoreMarks(U.st)) };
 await exPut(rec, blobs);
 closeDlg();
 exToast('Saved as ' + (rec.kind === 'paper' ? 'Example ' + rec.letter : 'an example') + '.', [['See examples', exGo]]);
@@ -28792,7 +28797,7 @@ exCardAct(e, page, exPageRender);
 }
 exReady.then(exRailSay);
 
-Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete, exSaveShot, exTagsOf, exShotWhere });
+Object.assign(window.__gs, { exList: () => exList, exReady: () => exReady, exStar, openUseExample, openExamples, exShow, exSheet, exPdfOf, exPng, exDownload, exForgetWork, exUse: () => EXU, exItems, exAll, exFolderSync: () => exFolderSync(), exMergePlan, exPageRender, exPageF, exDeleteTest: exDelete, exSaveShot, exTagsOf, exShotWhere, isScoreMark });
 
 /* ---------------- linked classes: sections of one course on the same schedule (11/16) ---------------- */
 function lkKey(s) { return String(s || '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''); }
@@ -33956,13 +33961,13 @@ await exReady; await workerReady; await classCommon();
 EXU = { st, i: batch.students.indexOf(st), items: [], kind: 'paper', marks: !!o.marks, score: !!o.score, row: o.row || null, part: null, docs: new Map(), shown: [], tok: 0 };
 try {
 EXU.items = await exuExpand(exItems(st));
-const blobs = [], pages = [], score = EXU.score ? exScoreText(st) : '';
+const blobs = [], pages = [], score = exScoreTop(EXU, EXU.items.map((_, k) => k));
 for (let k = 0; k < EXU.items.length; k++) {
 const it = EXU.items[k], js = await exuDoc(it), v1 = vpRot(it.f, it.p, await js.getPage(it.p + 1), 1), c = (await exuCanvas(k, Math.min(4, 1600 / v1.width))).c;
 if (score && !blobs.length) exScoreOn(c, score);
 blobs.push(await exJpg(c)); pages.push({ w: c.width, h: c.height }); c.width = c.height = 0;
 }
-await exPut({ ...exBase('paper', st), why: o.why || '', row: EXU.row, letter: exNextLetter(batch.id, 'paper'), pages, marks: EXU.marks, score: !!score }, blobs);
+await exPut({ ...exBase('paper', st), why: o.why || '', row: EXU.row, letter: exNextLetter(batch.id, 'paper'), pages, marks: EXU.marks, score: EXU.score && !!(exScoreText(st) || exScoreMarks(st)) }, blobs);
 } finally { EXU = null; }
 }
 function sampleKit(say) {
