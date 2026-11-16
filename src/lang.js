@@ -62,9 +62,9 @@ const LANG_FILLS = [
   ['fcweek', /^This week: (\d+) papers?\.$/], ['fctoday', /^Today: (\d+) papers?$/], ['fcdn', /^(\d+) done$/],
   ['gpsessn', /^Session (\d+)$/], ['gpsess', /^(\d+) sessions? today\.$/], ['gpaday', /^(\d+) papers? a day$/], ['tkweeks', /^(\d+) weeks? reached the goal$/],
   // the time tracker (src/tracker.js)
-  ['tkpace', /^about (\d+) minutes? a paper$/], ['tkso', /^(\S.*) so far$/], ['tklessons', /^(\d+) lessons?$/], ['tkdays', /^(\d+) days? reached the goal$/],
+  ['tkpace', /^about (\d+) minutes? a paper$/], ['fcsofar', /^from (\d+) papers? so far$/], ['tkso', /^(\S.*) so far$/], ['tklessons', /^(\d+) lessons?$/], ['tkdays', /^(\d+) days? reached the goal$/],
   // planning your grading (src/gradeplan.js)
-  ['gpfor', /^Grade for (\d+) minutes$/], ['gpleft', /^about (.+) left$/], ['gpsets', /^(\d+) sets?$/], ['gpdays', /^(\d+) days?$/],
+  ['gpleft', /^about (.+) left$/], ['gpsets', /^(\d+) sets?$/], ['gpdays', /^(\d+) days?$/],
   ['tkcount', /^Time counts while the marking screen or the Planner is in front and you have done something there in the last (\d+) minutes?\.$/],
   // Find anything: the teacher's AI assistant, to open beside the app (src/beside.js)
   ['besideopen', /^Open (.+) beside Grading Studio$/],

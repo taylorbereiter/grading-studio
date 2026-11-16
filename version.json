@@ -1,22 +1,22 @@
 {
- "version": "1.28.28",
- "build": "fdf2ff489b01",
+ "version": "1.28.29",
+ "build": "ed82c3850597",
  "notes": [
   "Type notes: a tab beside the paper for notes you type line by line, with the time from the video or the clock on each new line, and headings, strengths, next steps and questions if you want them.",
   "Each assignment says whether typed notes go back to the student as a page of the returned paper, and Help has a new answer."
  ],
  "files": {
-  "index.html": "4883a3ac8f8c5386170bf5d02e4b1bc2ca6cf1465884ecb6a9372eb15361f82d",
-  "planner.html": "63b9055839570bd7edd38cf99c42b6ce65f87bf3dc95fa052f0debd2f71c12a6"
+  "index.html": "7f272b287fae006d88543a98889a8aff6173ebf1482ddc874c67bdedf9e8b7ca",
+  "planner.html": "d43734bf190921b1f8adc2810c7de4fb7b9dc9c4857a04014e9c97473c1bcff0"
  },
  "langs": {
-  "lang/zh-Hant.js": "47af7d4bb6ae7407bd24c71e1775a7e66eeaa0b519a0a022483ef2f8e8eb928e",
-  "lang/zh-Hans.js": "805e71e5bebc89c71cc9fbe3361de37f4874c7fade3a7630ae3e9a170e4c0b7e",
-  "lang/es.js": "98cec28927dafe990826b5c513d3249611b767bb962139e8c1b00e042fda8009",
-  "lang/fr.js": "3c571fd9c6ed4f724496b43ffe259494ac62382459d88efa3826813ae8149747",
-  "lang/de.js": "d3edc97cc35c4ff8ad59d5d2f608b542308cf48b758f326e3e847d9de964da8b",
-  "lang/pt-BR.js": "7367868bd7d48056eb79abad3ef525a5d72b18044ce9b0dbee95c92a87805c60",
-  "lang/ja.js": "41fcf61f63d0dc45e4c0d3c3cc6b1c581fc05187ba2861be15affa55f5f45811",
-  "lang/ko.js": "15c40cd36d1e32c88e25f9cea827fc13e2ed8c4576372f86297abbce995310f3"
+  "lang/zh-Hant.js": "9af2fae1d83b30decdc9d04d4c63ece13eee630a623a8b2bbe621de0abf18ace",
+  "lang/zh-Hans.js": "afe9793912024c0a45535151c9c5f3378deb260e871c435c7c5cb28bed524fcd",
+  "lang/es.js": "2972aff9e84e3748afbd2fb6c84d609b98c4041572cf89a27a00e510a3a7aab3",
+  "lang/fr.js": "732f67d4a561de7a154c8218e3efcc171167116a0ae82790f8677365b4199049",
+  "lang/de.js": "7d21b18b7415ea4d79218a588d2c0a40229c2eb86c2980a4f6c7b0c89436a967",
+  "lang/pt-BR.js": "5c4930650a483eddf5a93716a345f3e1e1dcb3fa158197a8620e41ad9b2c1e3e",
+  "lang/ja.js": "db191e36c8703b485b13684c7ea7a7fd2fa6ee6f9e4b3f2ba1cb72157d307085",
+  "lang/ko.js": "b37ab1291d8ba0296c9033dbeda66508581b68f5899f20c411ba63d574e49f89"
  }
 }

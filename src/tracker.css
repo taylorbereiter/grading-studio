@@ -63,9 +63,10 @@
 .tkent .icon{width:26px;height:26px}
 .tkfoot{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);margin:0 0 var(--space-5)}
 .tkfoot p{flex:1;min-width:240px;margin:0;font-size:var(--text-small);color:var(--muted)}
-/* the line on Today's Focus card */
+/* the week's line on Today's Focus card */
 .fctk{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);font-size:var(--text-small);color:var(--muted)}
-.fctk span{display:inline-flex;align-items:center;gap:var(--space-2);min-width:0}
+.fctk > span{display:flex;flex-wrap:wrap;column-gap:var(--space-1);min-width:0}
+.fctk > span > *{white-space:nowrap}
 .fctk b{font-weight:600;color:var(--fg-2);font-variant-numeric:tabular-nums}
 .fctk .link{white-space:nowrap;font-weight:500;text-decoration:none}
 .tkc{display:inline-flex;align-items:center;gap:var(--space-1);min-width:0;font-size:var(--text-small);color:var(--muted);white-space:nowrap}

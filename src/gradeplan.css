@@ -1,16 +1,29 @@
 /* ---------- Planning your grading (src/gradeplan.js). Every value is a token. ---------- */
-/* the top of the Focus card: a free period going on now, and where she left off */
-.fcnote{display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-3);border-radius:var(--corner-3);background:var(--accent-soft)}
-.fcnote .fcnh{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);font-size:var(--text-small);font-weight:600;color:var(--accent)}
-.fcnote .fcnh svg{flex:none;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
-.fcnote .fcnh span + span{font-weight:500}
-.fcnote p{margin:0;font-size:var(--text-control);color:var(--fg)}
-.fcnote p span{color:var(--muted)}
-.fcback{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3);border:1px solid var(--line);border-radius:var(--corner-3)}
-.fcback .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.fcback .t b{font-size:var(--text-small);font-weight:600;color:var(--fg-2)}
-.fcback .t > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--text-control);color:var(--fg)}
-.fcback .t i{font-style:normal;font-size:var(--text-small);color:var(--muted)}
+/* the Focus card's suggestion: the work, why it is suggested, Start, the session's goal, and More */
+.sug{display:flex;flex-direction:column;gap:var(--space-2)}
+.sugh{display:flex;align-items:baseline;gap:var(--space-2);min-width:0}
+.sugh .t{flex:1;min-width:0;font-size:var(--text-body)}
+.sugh .t b{font-weight:600}
+.sugh .t span,.sugwhy{color:var(--muted);font-size:var(--text-control)}
+.sug .link{font-size:var(--text-small);font-weight:500;text-decoration:none;white-space:nowrap}
+.sug .link:hover{text-decoration:underline}
+.sug .fcsay,.sugwhy,.sugsg{margin:0}
+.sugwhy{display:flex;flex-direction:column;gap:2px;font-size:var(--text-small)}
+.sugwhy > span{display:inline-flex;align-items:center;gap:var(--space-1)}
+.sugwhy svg{flex:none;width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sugwhy .free{color:var(--accent);font-weight:500}
+.sug .fcgo{margin-top:var(--space-1)}
+.sugsg{font-size:var(--text-small);color:var(--muted)}
+.sugsg b{font-weight:600;color:var(--fg-2)}
+.sugpick .fcgh .fcl{margin:0}
+.fcmoreb{display:inline-flex;align-items:center;gap:var(--space-1);align-self:flex-start;padding:2px 0;border:0;background:none;color:var(--fg-2);font-size:var(--text-control);font-weight:500}
+.fcmoreb:hover{color:var(--accent)}
+.fcmoreb svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+.fcmoreb[aria-expanded=true] svg{transform:rotate(180deg)}
+.fcmorebox{display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-3);border-radius:var(--corner-3);background:var(--surface-2)}
+.fcmorebox .seg button,.fcmorebox .fcsgn .icon,.fcmorebox .fcby input,.fcmorebox .fclens button{background:var(--surface)}
+.fcmorebox .seg button[aria-pressed=true],.fcmorebox .fclens button[aria-pressed=true]{background:var(--accent-soft)}
+.fcmorebox .fcby{margin:0}
 .fcshort{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-small);color:var(--fg-2)}
 /* a free period in Today's list of classes */
 .trow.gpfree .nt b{font-weight:500;color:var(--fg-2)}
