@@ -155,3 +155,28 @@ test('words are never cut off: the editor marks the box and offers a fix, and Pr
     assert.deepEqual(errors, []);
   } finally { await a.done(); }
 });
+
+test('after clicking a slide in the list, Up and Down move between slides instead of scrolling the page, but not while typing', async () => {
+  const t = await open();
+  try {
+    const { page } = t;
+    await page.setViewport({ width: 1400, height: 600 });
+    await lesson(page, [{ layout: 'title', title: 'One' }, { layout: 'bullets', title: 'Two', body: 'a' }, { layout: 'bullets', title: 'Three', body: 'b' }]);
+    await page.waitForSelector('#lsThumbs [data-go="2"]');
+    await page.click('#lsThumbs [data-go="0"]');
+    await until(page, () => window.__planner.L.cur === 0);
+    const y0 = await page.evaluate(() => scrollY);
+    await page.keyboard.press('ArrowDown'); await until(page, () => window.__planner.L.cur === 1);
+    await page.keyboard.press('ArrowDown'); await until(page, () => window.__planner.L.cur === 2);
+    await page.keyboard.press('ArrowDown'); await wait(100);
+    assert.strictEqual(await page.evaluate(() => window.__planner.L.cur), 2, 'stays on the last slide');
+    await page.keyboard.press('ArrowUp'); await until(page, () => window.__planner.L.cur === 1);
+    assert.strictEqual(await page.evaluate(() => scrollY), y0, 'the page did not scroll');
+    assert.ok(await page.evaluate(() => document.activeElement === document.querySelector('#lsThumbs .ls-th.on')), 'the picked slide keeps the focus');
+    // Typing in the speaker notes: the arrows stay in the text.
+    await page.click('textarea[data-f="notes"]');
+    await page.keyboard.press('ArrowDown'); await wait(100);
+    assert.strictEqual(await page.evaluate(() => window.__planner.L.cur), 1);
+    assert.deepStrictEqual(t.errors, []);
+  } finally { await t.done(); }
+});
