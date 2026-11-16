@@ -71,7 +71,8 @@ test('a day from before time was counted keeps its focus sessions as grading tim
 
 test('the tracker shows grading and planning apart, by week, month and three months, takes time added by hand, and gives the days as a spreadsheet', async () => {
   const s = gradingSeed(), lib = JSON.parse(s.ls['gs.lib']), id = lib.classes[0].units[0].items[0].id, name = lib.classes[0].units[0].items[0].name;
-  const days = { [today()]: { p: 3, s: 600, g: 3600, a: { [id]: 3000, '': 600 }, pa: { [id]: 3 } }, [dayAgo(9)]: { p: 1, s: 0, g: 1200, a: { [id]: 1200 } } };
+  // seven days back is always in the week before, whatever day it is today (nine days back is two weeks back on a Monday)
+  const days = { [today()]: { p: 3, s: 600, g: 3600, a: { [id]: 3000, '': 600 }, pa: { [id]: 3 } }, [dayAgo(7)]: { p: 1, s: 0, g: 1200, a: { [id]: 1200 } } };
   const plan = { days: { [today()]: { l: 1800, a: { L1: 1500, '': 300 } }, [dayAgo(40)]: { l: 600, a: { L1: 600 } } }, names: { L1: 'Reading a poem' } };
   const { page, close } = await openApp(browser, { seed: withLs(s, { 'gs.focus': JSON.stringify({ day: today(), base: {}, days, pace: [], last: '' }), 'gsp.planTime': JSON.stringify(plan) }) });
   await goTo(page, '#/time'); await page.waitForSelector('#tkBody .tktile');
@@ -105,7 +106,7 @@ test('the tracker shows grading and planning apart, by week, month and three mon
   const csv = await page.evaluate(() => window.__gs.tkCsvText());
   assert.equal(csv.split('\r\n')[0], 'Date,Grading minutes,Planning minutes,Focus minutes,Papers,Grading added by hand,Planning added by hand');
   assert.ok(csv.includes(today() + ',60,75,10,0,0,45'), csv);   // today's papers are counted again from the downloads, and none are open here
-  assert.ok(csv.includes(dayAgo(9) + ',20,0,0,1,0,0'), csv);
+  assert.ok(csv.includes(dayAgo(7) + ',20,0,0,1,0,0'), csv);
   // taken away again
   await page.click('#tkBody [data-tkdel]'); await pause(200);
   assert.equal(await page.$('#tkBody .tkent'), null);
