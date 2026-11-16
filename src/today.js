@@ -81,7 +81,7 @@ const keptDots = m => kmWrap('⋯', 'class="icon kdots" aria-label="More for ' +
 const keptName = m => m.papers ? '<button class="kname" data-kopen="' + esc(m.id) + '" title="Open the papers">' + esc(m.name || 'Student work') + '</button>' : '<b class="kname">' + esc(m.name || 'Student work') + '</b>';
 function markRow(m, prim) {
   const st = keptState(m), w = keptWhere(m), fm = w.it && w.it.type === 'fm', began = st.done || m.partial;
-  const sub = [w.cls ? w.cls.name : '', w.it && w.it.due ? 'due ' + bkDay(w.it.due) : 'last worked on ' + fmtDay(m.t), m.papers ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
+  const sub = [w.cls ? w.cls.name : '', w.it && w.it.due ? 'due ' + bkDay(w.it.due) : 'last worked on ' + fmtDay(m.t), m.papers || PHONE ? '' : 'papers not kept, drop the download again'].filter(Boolean).join(' · ');
   const say = fm ? 'Formative · feedback only' + (st.done ? ' · ' + keptSay(m, st) : st.of ? ' · ' + people(st.of, 'paper') + ', not started' : '') : began ? st.done + ' of ' + st.of + ' scored' + keptMore(m) : st.of + (st.of === 1 ? ' paper' : ' papers') + ', not started' + (m.off ? ' · ' + m.off + ' missing or excused' : '');
   return '<div class="krow"><div class="kn">' + keptName(m) + '<span class="ks">' + esc(sub) + '</span></div>' +
     '<div class="kp">' + stateBar(st) + '<span class="kl">' + esc(say) + '</span></div>' +

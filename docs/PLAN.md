@@ -22,7 +22,7 @@ In order of importance:
 - **Use made-up student data only in tests and in this repo.** The repo is public.
 - **Claude stays manual.** Nothing leaves the app unless you carry it out.
 - **Stay browser-based, in Chrome.** No installer to get past school laptop rules, and the same link works on both computers.
-- **No cloud sync.** The laptop is home base, and a file you carry replaces syncing through Google Drive.
+- **Sync only through your own Google Drive, and only if you turn it on.** The laptop is home base. Since November 2026 a phone can join it: signing in with Google keeps a hidden file in your own Drive (only Grading Studio's own folder, not your other files), with scores, to-dos and marks but never papers. A file you carry still works with no Google at all.
 
 ## Phase 0: Safety net (small)
 
@@ -139,9 +139,8 @@ Also smooth the manual Claude steps, and show clearly which papers have had thei
 ## Not in this plan
 
 - Sending papers to Claude from inside the app.
-- New Google Drive work, including sync. The existing Drive code stays dormant, since the live copy has no Google key built in.
 - Automatic entry into ManageBac, which wasn't a pain point. The copy tools stay.
-- iPad or stylus work, since you grade on Mac and Windows.
+- iPad or stylus work, since you grade on Mac and Windows. (The phone version shows what's left, typed scores, to-dos and the timer, not papers.)
 - Weighted rubrics, other level counts and IB or MYP bands.
 - Changes to Lessons, beyond keeping it working and matching the new look.
 

@@ -629,9 +629,11 @@ const bkColMax = col => { for (const x of bkClassCols(bkClass(), [col])[0].cells
 // One student's record into a column's typed-in scores (the first one for a graded download starts them). Saved by the caller.
 function bkPut(col, n, rec) {
   if (!col.typed && !rec) return;
-  const ty = col.typed || { max: bkColMax(col), s: {} }, s = { ...(ty.s || {}) };
-  if (rec) s[n] = rec; else delete s[n];
-  col.typed = col.d && !Object.keys(s).length ? null : { ...ty, s };   // a download with no typed score left has none
+  const ty = col.typed || { max: bkColMax(col), s: {} }, s = { ...(ty.s || {}) }, gone = { ...(ty.gone || {}) }, t = Date.now();
+  // each score keeps when it was typed, and a score taken out when, so a phone and a computer can merge them student by student (typedMerge)
+  if (rec) { s[n] = { ...rec, t }; delete gone[n]; } else { delete s[n]; gone[n] = t; }
+  const kept = { ...ty, s }; if (Object.keys(gone).length) kept.gone = gone; else delete kept.gone;
+  col.typed = col.d && !Object.keys(s).length ? null : kept;   // a download with no typed score left has none
   if (col.it) { if (col.typed) col.it.typed = col.typed; else delete col.it.typed; }
 }
 // The cell dr rows down or dc cells across from td that can be typed in, as [column, student]; null at the edge.
