@@ -1,22 +1,21 @@
 {
- "version": "1.28.31",
- "build": "73158905fc0a",
+ "version": "1.28.32",
+ "build": "5d35dddd075c",
  "notes": [
-  "Import a gradebook from your school’s system or a spreadsheet more safely: names that are close to an assignment you have are matched for you to check (Same, New or Skip), each score that differs from yours can be kept or replaced, and the file’s categories go into your own types.",
-  "Nobody is added to a roster unless you choose that, students missing from the file are left as they are, and one Undo takes the whole import back. A class with no students yet can take its roster, student IDs and emails from the file."
+  "When the Focus timer is up, add a few more minutes (+2, +5 or +10) to the same session. Stop early and only the time that ran is counted."
  ],
  "files": {
-  "index.html": "cb9a6cc3bdd24cf2422ceecd589dd6ab6f44db945803ea393ffb5b87f2250f54",
-  "planner.html": "fe7300dd9f9c76376a1d3ea669a8a55c4aae0761346afd3dbd1bd60da8d870fa"
+  "index.html": "d9fe91a7c6243250fdf2bae07378e7e8716e74e59f2dfe16959c8d960b68c3d7",
+  "planner.html": "3c5ed237d7cdae204f3148226359aa5e009bd1127b9cc90a92bcb3ec84daa8c1"
  },
  "langs": {
-  "lang/zh-Hant.js": "10dfa7de387abc6a5e80a56f8cda49ca4d21be6529c3df4e6cfc8da6c011c779",
-  "lang/zh-Hans.js": "81ca403135e7a9b032297d6745df3869d2807b772eca43c45253c58249d6c51c",
-  "lang/es.js": "984fb1d9eb40f2bb364e300f2d21c417f7c6c33f7e5747cbe7b4cbb8ae5cba46",
-  "lang/fr.js": "3e5c23f3a336c9ef8f4ce321774d50fdcfcf28b852a361ef17bf3043f915b428",
-  "lang/de.js": "3821ac202338f5a6a99a1a6eb9b98c723ff6657f7b14e1a9b6d65e16120a3cbc",
-  "lang/pt-BR.js": "1c89fe78f13e78816ef38a7d2f8da7964751366fcf45b50abc0b4ea7f9c28768",
-  "lang/ja.js": "644e9ae2a8a7e0ab47c7177912c42d57264821b8d4c31e10878db98d567c26d0",
-  "lang/ko.js": "a9d7cde5c616743022971fac4ad4754bafce5f3993e14b1fcfa16dd58843c66f"
+  "lang/zh-Hant.js": "aff24f70d582c0c884f41ce9ce753d4eb41191d0c09e0b8fcd73ae4f8607b402",
+  "lang/zh-Hans.js": "0f1aa43e21324c8c4d504a58c408df39c42668a41da4098d24ecba7a9db98a99",
+  "lang/es.js": "515976aadf4b42e54f75bdfe4799921a214a83cfd052a2b45ba423fc6b17bcbf",
+  "lang/fr.js": "981a4781688f68f5b81ac7f673bc0ff17ee3bba85995ac1c9e61c46a368363f0",
+  "lang/de.js": "7715076340ff53061c96e614ca35bf3d4d9ffb63c8673a51d977b50d1bd35672",
+  "lang/pt-BR.js": "6aaad309bf89774ea8794faf8e8dc5ccdbd6d3568af3e35944c7105019ffdc8e",
+  "lang/ja.js": "26f312966379eeea1b444779ac4b66baa7cefc0bab25f0d6fdb41819dae301a5",
+  "lang/ko.js": "f8d81619ff791bb430e921b4b632fcaf6899f3cac7d4cb7e1bf237d5901585fc"
  }
 }

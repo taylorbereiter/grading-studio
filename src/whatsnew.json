@@ -1,4 +1,7 @@
 {
+  "1.28.32": [
+    "When the Focus timer is up, add a few more minutes (+2, +5 or +10) to the same session. Stop early and only the time that ran is counted."
+  ],
   "1.28.31": [
     "Import a gradebook from your school’s system or a spreadsheet more safely: names that are close to an assignment you have are matched for you to check (Same, New or Skip), each score that differs from yours can be kept or replaced, and the file’s categories go into your own types.",
     "Nobody is added to a roster unless you choose that, students missing from the file are left as they are, and one Undo takes the whole import back. A class with no students yet can take its roster, student IDs and emails from the file."

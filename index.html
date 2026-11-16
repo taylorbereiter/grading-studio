@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"10dfa7de","zh-Hans":"81ca4031","es":"984fb1d9","fr":"3e5c23f3","de":"3821ac20","pt-BR":"1c89fe78","ja":"644e9ae2","ko":"a9d7cde5"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"aff24f70","zh-Hans":"0f1aa43e","es":"515976aa","fr":"981a4781","de":"77150763","pt-BR":"6aaad309","ja":"26f31296","ko":"f8d81619"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -3143,6 +3143,8 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .fcset{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3)}
 .fcset input[type=number]{width:76px;height:32px;padding:0 var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
 .fcset .seg{display:inline-flex}
+.fcext{align-items:center}
+.fcext > span{font-size:var(--text-small);color:var(--muted)}
 
 #vTime .vhead{flex-wrap:wrap;row-gap:var(--space-2)}
 .tkrange{display:flex;align-items:center;gap:var(--space-2);margin:0 0 var(--space-4);flex-wrap:wrap}
@@ -4916,7 +4918,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.31";
+  const APP_VERSION = "1.28.32";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -28928,7 +28930,7 @@ function fcLeftHere(i) { const st = batch && batch.students[i]; if (!st) return 
 function fcRecord(r) {
   if (r.secs != null) return r;
   const secs = Math.min(r.one ? 4 * 3600 : r.len, fcBusy(r)), got = fcGot(r), L = fcLog(), today = fcToday(), d = L.days[today] || {};
-  L.days[today] = { ...d, s: (d.s || 0) + secs, ...(/^mark:/.test(r.w || '') ? { sm: (d.sm || 0) + secs } : {}), ...(secs >= 60 ? { n: (d.n || 0) + 1 } : {}) };
+  L.days[today] = { ...d, s: (d.s || 0) + secs, ...(/^mark:/.test(r.w || '') ? { sm: (d.sm || 0) + secs } : {}), ...(secs >= 60 && !r.ext ? { n: (d.n || 0) + 1 } : {}) };
   if (got > 0 && secs >= 30) L.pace = [...L.pace, [secs, got]].slice(-20);
   Object.assign(r, { secs, got });
   const g = r.sg, w = g ? fcWork(r.w) : null;
@@ -28936,6 +28938,12 @@ function fcRecord(r) {
   else if (L.carry && L.carry.w === (r.w || '')) delete L.carry;
   fcLogSet(L);
   return r;
+}
+function fcExt(min) {
+  const r = fcRun(); if (!r || r.st !== 'up') return;
+  const L = fcLog(), w = fcWork(r.w), g = r.sg && !fcSgMet(r, w) ? (r.sg.k === 'papers' ? { k: 'papers', n: Math.max(1, r.sg.n - (r.got || 0)) } : r.sg) : null;
+  if (L.carry && L.carry.w === (r.w || '')) { delete L.carry; fcLogSet(L); }
+  fcRunSet({ st: 'run', len: min * 60, at: Date.now(), w: r.w || '', one: 0, p0: fcPapersToday(), fold: false, no: r.no, ext: 1, ...(g ? { sg: g } : {}) });
 }
 function fcUp(r) { fcRecord(r); r.st = 'up'; r.fold = false; fcRunSet(r); fcChime(); }
 function fcPause() { const r = fcRun(); if (!r || r.st !== 'run') return; r.st = 'paused'; r.pz = Date.now(); r.idl = fcIdle(r); delete r.ii; fcRunSet(r); }
@@ -29083,7 +29091,8 @@ function fcPanelHtml(r) {
       (w && !w.mark && !got ? '' : '<p class="fcp">' + (got ? esc('You finished ' + people(got, 'paper') + '.') : 'Nothing was finished in this one.') + '</p>') +
       fcSgReview(r, w) + '<div class="fcstats">' + fcGoalHtml(c) + '</div>' +
       (r.one ? '<div class="fcacts">' + (w && w.left ? (fcN(r) > 1 && w.left >= 3 ? '<button class="btn primary" data-fcone="3">3 more papers</button>' : '<button class="btn primary" data-fcone>One more paper</button>') : '') + '<button class="btn" data-fcstart="' + c.len + '">' + 'Keep going for ' + c.len + ' minutes' + '</button></div>'
-        : '<div class="fcacts"><button class="btn primary" data-fcbreak>Take a ' + c.brk + '-minute break</button><button class="btn" data-fcstart="' + Math.round(r.len / 60) + '" data-fcagain>' + Math.round(r.len / 60) + ' more minutes</button></div>') +
+        : '<div class="fcacts"><button class="btn primary" data-fcbreak>Take a ' + c.brk + '-minute break</button><button class="btn" data-fcstart="' + Math.round(r.len / 60) + '" data-fcagain>' + Math.round(r.len / 60) + ' more minutes</button></div>' +
+          '<div class="fcacts fcext" role="group" aria-label="A few more minutes"><span>A few more minutes</span>' + [2, 5, 10].map(n => '<button class="btn sm" data-fcext="' + n + '" data-raw>+' + n + '</button>').join('') + '</div>') +
       '<div class="fcacts"><button class="btn sm ghost" data-fcstop>Stop for now</button></div></div>';
   }
   if (r.st === 'brk') return fcHead('Break', true) + '<div class="fcrunv"><div class="fctop"><div class="fcclock brk"><span class="fcpr"></span><span class="fctime fct"></span></div>' +
@@ -29140,7 +29149,7 @@ function fcRender() {
 
 /* ---------- presses ---------- */
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-fcstart], [data-fcone], [data-fclen], [data-fcnext], [data-fcpause], [data-fcresume], [data-fcmore], [data-fcstop], [data-fcbreak], [data-fcfold], [data-fcunfold], [data-fcclose], [data-fcshow], [data-fcaway], [data-fctick], [data-fcsg], [data-fcsgn], [data-fcsgdone], [data-fccarryno], [data-fcother], [data-fcchg], [data-fckeep], [data-fcmo], [data-fcsgchg], #railFocus');
+  const t = e.target.closest('[data-fcstart], [data-fcone], [data-fclen], [data-fcnext], [data-fcpause], [data-fcresume], [data-fcmore], [data-fcstop], [data-fcbreak], [data-fcfold], [data-fcunfold], [data-fcclose], [data-fcshow], [data-fcaway], [data-fctick], [data-fcsg], [data-fcsgn], [data-fcsgdone], [data-fccarryno], [data-fcother], [data-fcchg], [data-fckeep], [data-fcext], [data-fcmo], [data-fcsgchg], #railFocus');
   if (!t) return;
   const d = t.dataset, box = t.closest('.fcbody, #fcPanel'), sel = box && box.querySelector('[data-fcwork]');
   const pick = () => sel ? sel.value : fcRun() && box && box.closest('#fcPanel') ? fcRun().w : fcPicked(fcWorks());
@@ -29152,6 +29161,7 @@ document.addEventListener('click', e => {
   if (d.fcpause != null) return fcPause();
   if (d.fcresume != null) return fcResume();
   if (d.fcmore != null) return fcMore(+d.fcmore);
+  if (d.fcext != null) return fcExt(+d.fcext);
   if (d.fcbreak != null) return fcBreak();
   if (d.fcstop != null) return fcStop();
   if (d.fcfold != null || d.fcunfold != null || d.fcshow != null) { const r = fcRun(); if (r) { r.fold = d.fcfold != null; fcRunSet(r); } else { fcS.open = true; fcRender(); } return; }
@@ -29910,7 +29920,7 @@ $('#setHistory').addEventListener('click', e => {
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.31":["Import a gradebook from your school’s system or a spreadsheet more safely: names that are close to an assignment you have are matched for you to check (Same, New or Skip), each score that differs from yours can be kept or replaced, and the file’s categories go into your own types.","Nobody is added to a roster unless you choose that, students missing from the file are left as they are, and one Undo takes the whole import back. A class with no students yet can take its roster, student IDs and emails from the file."]};
+const WHATS_NEW = {"1.28.32":["When the Focus timer is up, add a few more minutes (+2, +5 or +10) to the same session. Stop early and only the time that ran is counted."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
