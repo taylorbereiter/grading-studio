@@ -193,40 +193,35 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 
 /* Three columns: students in folder order, the paper, the grade. A start screen takes the class's papers.
    Look: "Calm Desk" in ocean blue (Taylor, 10/21): white and cool gray, one blue accent, red only for marks on the paper. */
-/* ---------- tokens: every colour, text size, space and corner the app is drawn from ----------
-   One file, built into both pages (grading and the Planner). A rule anywhere else names a token; it doesn't write a
-   colour code or a size of its own. Where older rules still do, test/tokens.test.js counts them, and the count may
-   only go down.
-   Look: "Calm Desk" in ocean blue: white and cool gray, one blue accent, red only for marks on the paper.
-   Light is the default and never follows the system; dark is the same names with other values. */
+
 :root{
-  /* colour: surfaces, from the page behind everything to the things on it */
+  
   --bg:#F4F5F7; --surface:#FFFFFF; --surface-2:#EEF0F3; --hover:#EBEDF1; --track:#DDE0E6; --line:#E4E6EA; --line-strong:#CDD1D9;
-  /* colour: text, strongest first */
+  
   --fg:#1E2024; --fg-2:#3F444C; --muted:#5C616A; --faint:#666B74;
-  /* colour: the one accent */
+  
   --accent:#1A67A8; --accent-hover:#15568C; --accent-fg:#FFFFFF; --accent-soft:#E6F0F9;
-  /* colour: saying how things stand. Each has a soft background to sit on. */
+  
   --warn:#8A5A0E; --warn-soft:#FBF0D9; --ok:#17704A; --ok-soft:#DFF3E9; --bad:#B4321F; --bad-soft:#FCE7E3; --warn-fg:#FFFFFF;
   --gold:#8A6500; --gold-soft:#FBF3D6; --gold-line:#C08C00; --gold-fg:#FFFFFF;
   --paper-chip:#FFFFFF;
   --shadow:0 1px 2px rgba(20,25,40,.06),0 4px 14px rgba(20,25,40,.06);
-  /* type */
+  
   --f-display:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   --f-body:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   --text-caption:11px; --text-small:12px; --text-control:13px; --text-body:14px; --text-lead:16px; --text-title:20px; --text-heading:24px; --text-display:28px;
-  /* space: gaps and padding step along this scale */
+  
   --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:24px; --space-6:32px; --space-7:48px;
-  /* corners */
+  
   --corner-1:4px; --corner-2:6px; --corner-3:8px; --corner-4:10px; --corner-5:12px; --corner-pill:999px; --corner-round:50%;
-  /* the teacher's own display settings (Settings, Display) */
+  
   --uz:1; --dfs:15px; --dlh:1.45;
-  /* older names for corners, still used by a few rules */
+  
   --r:10px; --r-sm:7px;
-  /* colour: the stage a lesson is presented on. The same in light and dark: black around the slide, a dark bar for the teacher, a light panel for what the class reads. */
+  
   --stage:#0B0D12; --stage-fg:#F3F4F7; --stage-muted:#A9B0C0; --stage-bar:#1B1F29; --stage-line:#3A4150; --stage-hover:#2C3342;
   --stage-blue:#1A67A8; --stage-blue-2:#15568C; --stage-blue-soft:#E6F0F9; --stage-paper:#FFFFFF; --stage-ink:#1E2024; --stage-ink-2:#5C616A;
-  /* colour: charts and the gradebook (types of assignment, the five steps of a heat map, up and down, the dot plot) */
+  
   --bk-sum:#164E80; --bk-ic:#6FA3D2; --bk-fm:#8A919E; --bk-k1:#0F7C82; --bk-k2:#6A55B0; --bk-k3:#A8590F; --bk-k4:#8A3F7D; --bk-k5:#4B5563; --ch1:#8FB5DC; --ch2:#5F96CB; --ch3:#3478B7; --ch4:#1A5D9A; --ch5:#0F3F6C; --ch-lo:#0D2740; --ch-hi:#FFFFFF; --ch-up:#1A67A8; --ch-down:#B4610F; --ch-band:#DCE7F3; --dot:var(--accent); --ov-bar:#1A67A8; --ov-mute:#8A919E;
 }
 :root[data-theme="dark"]{
@@ -241,10 +236,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   color-scheme:dark;
 }
 
-/* ---------- parts: the pieces every screen is built from, the same on the grading page and the Planner ----------
-   So far: the page itself, focus, the page title, buttons (.btn, with .primary, .ghost, .sm, .big) and text links (.link).
-   Menus, tabs, chips, boxes, tables, fields, notices and empty screens join them here as each screen is rebuilt;
-   until then each page still has its own. Every value comes from src/tokens.css. */
+
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
@@ -265,7 +257,7 @@ h1 i,.top .title i{font-style:normal;font-weight:500;color:var(--accent)}
 .btn.big{padding:12px 20px;font-size:15px}
 .link{background:none;border:0;padding:0;color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:2px}
 
-/* ---------- start screen ---------- */
+
 .start{max-width:1180px;margin:0 auto;padding:32px 16px 60px}
 .start .sub{color:var(--muted);margin:6px 0 24px;max-width:62ch}
 
@@ -772,7 +764,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);pointer-events:none;background:var(--fg);color:var(--surface);padding:10px 16px;border-radius:var(--corner-3);font-weight:600;font-size:var(--text-body);box-shadow:var(--shadow);z-index:40;max-width:calc(100vw - 32px)}
 @media (max-width:1100px){.tool .lb{display:none}}
 @media (max-width:760px){.cols{grid-template-columns:1fr}.side{max-height:160px;border-right:0;border-bottom:1px solid var(--line)}.grade{border-left:0;border-top:1px solid var(--line)}.app{height:auto;min-height:100vh}.top{flex-wrap:wrap}}
-/* ---------- polish: one top bar row, the More menu, pop-ups, the start screen ---------- */
+
 .top{flex-wrap:nowrap}
 .top .title,.top .btn,.top .icon,.savest{flex:none}
 .top .batch{flex:0 1000 auto}
@@ -794,13 +786,13 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
 .toast[hidden]{display:block!important;opacity:0;pointer-events:none}
 .toast:empty{padding:0}
 
-/* the red save bar keeps its own strip at the bottom: dialogs and toasts stay above it */
+
 .dlg{bottom:var(--savebar,0px)}
-/* the box is zoomed with the app text, its lengths too, so what must fit the window is divided back by the zoom */
+
 .dlg .box{max-height:calc((100vh - 32px - var(--savebar,0px)) / var(--uz))}
 .dlg .box.spbox,.dlg .box.arrbox{height:calc((100vh - 32px - var(--savebar,0px)) / var(--uz))}
 .toast{bottom:calc(24px + var(--savebar,0px))}
-/* a short note never lands on the bar that says what opened: it sits above it while the bar is up */
+
 body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 
 ::placeholder{color:var(--muted)}
@@ -815,17 +807,17 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 
 }
 
-/* a narrow student list keeps room for the name: the tags go under the score */
+
 @media (max-width:1100px){.stu .sc small{display:block;margin-left:0}}
 
-/* start screen: today's work first */
+
 .start{padding-top:26px}
 .start .sub{margin:4px 0 20px}
-/* where work is saved, and the take-home file */
+
 .savewhere{flex:0 1 auto;min-width:0;max-width:48ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:var(--faint);text-decoration:none}
 .savewhere:hover{text-decoration:underline}
 .savewhere.warn,.wtext.warn{color:var(--warn);font-weight:600}
-/* in a narrow window the line keeps to its first words ("Not backed up") and is never cut mid-word; the tip still says the rest */
+
 @media (max-width:1180px){.savewhere .sw-more{display:none}}
 .nyrow{display:flex;gap:12px}.nyrow .tkf{flex:1}.nyh{margin:16px 0 4px;font-size:var(--text-body)}.nyck{display:flex;gap:10px;align-items:flex-start;margin:8px 0;font-size:var(--text-body)}.nyck input{margin-top:3px}.nyck small{display:block;color:var(--muted);font-size:var(--text-small)}
 .tkf{display:block;margin:10px 0;font-size:var(--text-body)}.tkf input{display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit}
@@ -834,7 +826,7 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .cfcols{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cfside{display:block;border:1px solid var(--line);border-radius:var(--corner-3);padding:8px 10px;font-size:13.5px;cursor:pointer}
 .cfside:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.cfc{overflow-wrap:anywhere;white-space:pre-wrap}
 #bringBox ul{margin:4px 0 8px;padding-left:18px}#bringBox p{margin:10px 0 2px}
-/* the right-click menu: a short list, with the long ones (punctuation, proofreading marks, stickers) in panels beside it */
+
 .stampmenu{position:fixed;z-index:60;width:240px;max-height:calc(100vh - 16px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--corner-5);box-shadow:0 12px 32px rgba(10,14,25,.22);padding:6px;font:13px var(--f-body);color:var(--fg)}
 .stampmenu:focus{outline:none}
 .stampmenu .st-fly{position:fixed;z-index:61;width:max-content;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--corner-5);box-shadow:0 12px 32px rgba(10,14,25,.22);padding:6px}
@@ -870,12 +862,12 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .stampmenu .st-puncs{display:grid;grid-template-columns:repeat(5,52px);gap:2px}
 .stampmenu .st-punc{display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 0 4px;font-size:10.5px;line-height:1.1;color:var(--muted)}
 .stampmenu .st-punc canvas{background:#fff;border-radius:var(--corner-2)}
-/* a tool picked from the right-click for one go: its toolbar button is outlined, and a small note says so */
+
 .tool.once{border-color:var(--accent);color:var(--accent)}
 .oncepill{position:fixed;z-index:59;display:flex;align-items:center;gap:8px;background:#1E2024;color:#fff;font:500 12.5px var(--f-body);padding:6px 8px 6px 12px;border-radius:var(--corner-pill);box-shadow:0 4px 14px rgba(0,0,0,.18);white-space:nowrap;pointer-events:none}
 .oncepill u{text-decoration:none;opacity:.7;padding-right:4px}
 .oncepill button{pointer-events:auto;border:0;border-radius:var(--corner-pill);background:#fff;color:#1E2024;font:600 12px var(--f-body);padding:3px 10px;cursor:pointer}
-/* More > Mark key: each mark with its name and what it means */
+
 .mk .mkhint{margin:-2px 0 8px 26px;color:var(--muted);font-size:var(--text-control)}
 .mk .mkgrp{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:14px 0 2px}
 .mk .mkrow{display:grid;grid-template-columns:40px 140px 1fr;gap:10px;align-items:start;padding:9px 0;border-top:1px solid var(--line)}
@@ -885,13 +877,13 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .mk .mkusual{font-size:var(--text-small);margin-top:3px}
 @media (max-width:560px){.mk .mkrow{grid-template-columns:36px 1fr}.mk .mkrow>div{grid-column:2}}
 .mk .mkpic canvas{background:#fff;border-radius:var(--corner-2)}
-/* removed files, at the bottom of a student's paper */
+
 .gonelist{display:flex;flex-direction:column;gap:8px;margin:18px 0 24px;padding:12px 16px;border:1px dashed var(--line-strong);border-radius:var(--r-sm);background:var(--surface);font-size:var(--text-body);color:var(--fg-2)}
 .gonelist b{color:var(--fg)}
 .gonerow{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:8px}
 .toast .tact{pointer-events:auto;margin-left:12px;background:none;border:0;padding:0;font:inherit;color:var(--accent-soft);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 
-/* paper scans: the strip above a page, and the tags on a page in the split */
+
 .scnote{display:flex;flex-direction:column;gap:2px;margin:0 0 6px;padding:5px 10px;border-radius:var(--corner-2);background:var(--accent-soft);color:var(--fg);font-size:var(--text-control);width:fit-content;max-width:100%}
 .scnote .link{font-size:var(--text-control);margin-left:10px}
 .spfl{position:absolute;top:4px;left:4px;right:34px;display:flex;flex-wrap:wrap;gap:3px;z-index:1;pointer-events:none}
@@ -908,13 +900,13 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .spbf{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:6px 8px;background:var(--surface);border-top:1px solid var(--line);font-size:var(--text-control)}
 .spbk.kept{border-color:var(--accent)}
 .spbk.kept img{opacity:.55}
-/* a page flagged for a rescan: in the split, and the strip above it once it's open */
+
 .spfl .spre{background:var(--warn-soft);color:var(--warn);border-color:var(--warn);font-weight:600}
 .scnote.re{background:var(--warn-soft)}
 .imptbl{width:100%;border-collapse:collapse;font-size:var(--text-control);margin:6px 0 4px}
 .imptbl td{padding:6px 0;border-top:1px solid var(--line)}
 .imptbl td:last-child{text-align:right;color:var(--muted)}
-/* Quick mark: quiz boxes and marking a question across the class */
+
 .qbdlg .bh,.qbwrap{user-select:none}
 .qbwrap{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:16px;flex:1;min-height:0;overflow:hidden !important;padding:0 !important}
 .qbpages{overflow:auto;padding:16px;background:var(--surface-2);display:flex;flex-direction:column;align-items:center;gap:14px}
@@ -1008,7 +1000,7 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .qmpkspot{position:absolute;width:24px;height:24px;transform:translate(-50%,-50%);border:2px dashed var(--bad);border-radius:var(--corner-round);pointer-events:none}
 .dlg .box.spbox{position:relative}
 @media (max-width:800px){.qbwrap{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;overflow:auto !important}.qbside{padding:16px}}
-/* A scale's buttons: the points, with what they mean underneath (0 Not shown, 1 Partial, 2 Full). */
+
 .qmb.w{display:inline-flex;flex-direction:column;align-items:center;gap:1px;padding:4px 10px;line-height:1.1}
 .qmb small{font-size:var(--text-caption);font-weight:500;opacity:.85;white-space:nowrap}
 .qbt .qkind{width:auto;max-width:130px;padding:5px 4px;border:1px solid var(--line-strong);border-radius:var(--corner-2);font:inherit;background:var(--surface);color:var(--fg)}
@@ -1017,7 +1009,7 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .qbwrow>.muted{min-width:48px}
 .qbw{display:inline-flex;align-items:center;gap:4px;font-size:var(--text-control)}
 .qbw input{width:96px;padding:4px 6px;border:1px solid var(--line-strong);border-radius:var(--corner-2);font:inherit;background:var(--surface);color:var(--fg)}
-/* With the Scored column the table needs to fit the side panel: narrower fields. */
+
 .qbt .qlab{width:46px}.qbt .qpts{width:50px}
 .qbt .qkind,.qbt .qhow{max-width:112px}
 .qbt .qkey{min-width:84px}
@@ -1055,7 +1047,7 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .qmcopynote p{margin:0;flex:1 1 320px}
 .qmcopynote [data-copyok]{align-self:center}
 
-/* ---------- rubric library: what each score means, under the score buttons and in Rubric setup ---------- */
+
 .lvrow{display:flex;gap:8px;align-items:flex-start;margin-top:6px}
 .lvtxt{flex:1;min-width:0;min-height:2.7em;font-size:12.5px;line-height:1.35;color:var(--fg-2);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .lvh{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
@@ -1075,7 +1067,7 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .rln{flex:1;min-width:0;display:flex;flex-direction:column;font-size:13.5px;overflow-wrap:anywhere}
 .rln .muted{font-size:12.5px}
 
-/* ---------- class overview ---------- */
+
 .ovleft{margin:0 0 14px;font-size:var(--text-body);color:var(--fg-2);line-height:1.45}
 .ovtiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:18px}
 .ovt{border:1px solid var(--line);border-radius:var(--corner-4);padding:9px 12px}
@@ -1126,7 +1118,7 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 #ovTip em{font-style:normal;color:var(--muted)}
 #ovTip em[hidden]{display:none}
 
-/* the bank in Rubric setup */
+
 .rbunit{align-self:flex-start;max-width:100%;border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:4px 6px;background:var(--surface);font-size:var(--text-control);margin-bottom:4px}
 .rlg{font-size:var(--text-small);font-weight:600;color:var(--muted);margin-top:6px;text-transform:none}
 .rlg:first-child{margin-top:0}
@@ -1134,7 +1126,7 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .rbscales select{border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface)}
 .rbask{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:13.5px;margin-bottom:10px}
 .rbask input,.rbask select{border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:6px 8px;background:var(--surface);font-weight:400}
-/* ---------- class overview: tabs, percents ---------- */
+
 .ovtabs{display:flex;gap:2px;background:var(--surface-2);border-radius:var(--corner-3);padding:3px;margin-left:16px}
 .ovtabs button{border:0;background:none;font:inherit;font-size:var(--text-control);font-weight:500;padding:4px 12px;border-radius:var(--corner-2);color:var(--fg-2);cursor:pointer}
 .ovtabs button[aria-selected=true]{background:var(--surface);color:var(--accent);font-weight:600;box-shadow:0 1px 2px rgba(20,25,35,.12)}
@@ -1187,7 +1179,7 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .ptab tr.lo td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .ptab .link{text-decoration:none;font-weight:500}
 @media (max-width:700px){.dlg .box .pbody{grid-template-columns:1fr}.pctl{border-right:0;border-bottom:1px solid var(--line)}}
-/* bring in a rubric (src/rubricup.js) */
+
 .rubup .rusays{font-size:var(--text-control);color:var(--fg-2)}
 .rubup .rurow{display:flex;gap:var(--space-2);align-items:center;flex-wrap:wrap;margin-top:var(--space-1)}
 .rubup .rurow .muted{font-size:var(--text-small)}
@@ -1197,7 +1189,7 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .rurows{margin:0;padding-left:20px;font-size:var(--text-small);display:flex;flex-direction:column;gap:2px}
 .rurows li span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rufound{display:inline-flex;gap:var(--space-2);align-items:center;font-size:var(--text-small);margin-top:var(--space-1)}
-/* ---------- gradebook ---------- */
+
 .dlg .box.bkbox{width:min(1400px,100%);height:calc(100vh - 32px)}
 .dlg .box .bkbody{padding:0;display:flex;flex-direction:column;min-height:0;overflow:auto;position:relative}
 .bkbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:3}
@@ -1297,7 +1289,7 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .pseg.sm button{font-size:var(--text-small);padding:3px 8px}
 .cls .card .bkpills{display:flex;gap:4px;flex-wrap:wrap;margin:2px 0 4px}
 @media (max-width:700px){.bktrow{grid-template-columns:1fr 1fr;}.bktrow [data-tf=name]{grid-column:1/-1}}
-/* ---------- feedback complete, for formative activities ---------- */
+
 .fbnote{background:var(--surface-2);border-radius:var(--corner-4);padding:10px 12px;font-size:var(--text-control);color:var(--fg-2);margin-bottom:12px}
 .fbnote b{display:block;color:var(--fg)}
 .fbtog{width:100%;display:flex;align-items:center;gap:12px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--fg);border-radius:var(--corner-5);padding:12px 14px;font:inherit;font-size:15px;font-weight:600;text-align:left;cursor:pointer;margin-bottom:12px}
@@ -1308,7 +1300,7 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .fbtog[aria-checked=true] .bx{background:var(--accent);border-color:var(--accent)}
 .fbck{color:var(--accent);font-weight:700}
 .bkstart{color:var(--muted);font-size:11.5px}
-/* extra credit: points on top, never a score of its own */
+
 .bkpill.xc{background:var(--surface);color:var(--accent);border:1px solid var(--accent)}
 .bkxc{color:var(--accent);font-weight:600}
 small.bkxc{font-weight:500}
@@ -1317,7 +1309,7 @@ small.bkxc{font-weight:500}
 .bkxcall .sp{flex:1}
 .bkaddgrid .bktypef{grid-column:span 2}
 @media (max-width:900px){.bkaddgrid .bktypef{grid-column:auto}.bkaddgrid .bktypef .pseg{flex-wrap:wrap}}
-/* each type's average and the grade, together at the right, kept in view while the assignments scroll */
+
 .bktab .bksum{position:sticky;min-width:100px;max-width:100px;box-sizing:border-box;z-index:1}
 .bktab .bkterm.bksum{min-width:120px;max-width:120px}
 .bktab thead th.bksum{z-index:2}
@@ -1327,13 +1319,13 @@ small.bkxc{font-weight:500}
 .bktab tr.bkfoot td.bkavg{background:var(--surface-2)}
 .bktab tr.bkg th.bkgsum{color:var(--accent);text-align:center;border-left:1px solid var(--line)}
 .bktab.bkyear .bkavg{background:var(--surface-2);color:var(--fg)}
-/* what if: students left out of the class averages */
+
 .bktab tr.bkleft td{color:var(--muted)}
 .bktab tr.bkleft td.bkterm,.bktab tr.bkleft td.bkavg{opacity:.75}
 .bkpick{vertical-align:-2px;margin:0 4px 0 0;accent-color:var(--accent)}
 .bkleftn{display:block;font-weight:400;color:var(--muted);font-size:var(--text-caption)}
 .bkleftn .linkbtn{border:0;background:none;padding:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:underline}
-/* a teacher's own types: one of five colours each, and their rows in Term setup */
+
 .k1{--kc:var(--bk-k1)}.k2{--kc:var(--bk-k2)}.k3{--kc:var(--bk-k3)}.k4{--kc:var(--bk-k4)}.k5{--kc:var(--bk-k5)}
 .bkpill.kc{background:var(--surface);color:var(--kc);border:1px solid var(--kc)}
 .bktab tr.bkg th.kc{color:var(--kc)}
@@ -1345,7 +1337,7 @@ small.bkxc{font-weight:500}
 .bkcnm{display:flex;flex-direction:column;gap:2px;min-width:0}.bkcnm .bkin{width:100%;max-width:280px}.bkcnm small{font-size:var(--text-caption)}
 .bkcadd{margin-top:8px;font-size:var(--text-small);color:var(--muted)}
 .bktypeseg,#aType{flex-wrap:wrap;max-width:100%}
-/* Import scores from a spreadsheet (bookimport.js) */
+
 .bkiv{max-width:1100px}
 .bkimeta{margin:calc(-1 * var(--space-1)) 0 var(--space-3);font-size:var(--text-control)}
 .bkidrop{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-4);border:1px dashed var(--line-strong);border-radius:var(--corner-4);margin-bottom:var(--space-2)}
@@ -1359,7 +1351,12 @@ small.bkxc{font-weight:500}
 .bkiscale{white-space:nowrap}
 .bkioff td:not(:first-child){opacity:.55}
 .bkiwhy{display:block;font-size:var(--text-small);margin-top:2px}
-.bkito{font-weight:600}
+.bkicats,.bkiclt{width:auto}
+.bkicats td,.bkiclt td{vertical-align:middle;padding-right:var(--space-4)}
+.bkigo.bkiask{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.bkigo + .stag{margin-left:var(--space-1)}
+.bkiinfo{margin-top:var(--space-3)}
+.bkiinfo small{display:block}
 .bkirow{display:flex;gap:var(--space-4);flex-wrap:wrap;align-items:flex-end}
 .bkiinl{display:flex;gap:var(--space-2);align-items:center}
 .bkiwho{width:auto;margin-top:var(--space-2)}
@@ -1369,8 +1366,8 @@ small.bkxc{font-weight:500}
 .bkiv .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .bkiv h4.ovh3{margin-top:var(--space-5)}
 
-/* the dots: the accent in light; a step deeper in dark, inside the range that reads as a mark on a dark surface */
-/* ---------- past work beside the paper ---------- */
+
+
 .hist{font-size:13.5px;border-top:1px solid var(--line);padding-top:10px}
 .hist summary{cursor:pointer;font-weight:600}
 .hist summary .muted{font-weight:400;font-size:12.5px}
@@ -1384,7 +1381,7 @@ small.bkxc{font-weight:500}
 .hask{margin-top:10px;padding:8px 10px;border-radius:var(--corner-3);background:var(--warn-soft);font-size:var(--text-control);line-height:1.4;overflow-wrap:anywhere}
 .hask .btn{margin-top:6px}
 
-/* ---------- consistency check ---------- */
+
 .chd{margin:18px 0 6px;font-size:15px}
 .chd:first-child{margin-top:0}
 .csay{margin:0 0 10px;line-height:1.5}
@@ -1411,7 +1408,7 @@ small.bkxc{font-weight:500}
 .sbsnav{display:flex;align-items:center;gap:8px;justify-content:center;font-size:var(--text-control)}
 .sbsp{min-height:240px}
 
-/* ---------- the Claude steps ---------- */
+
 .shsteps{margin:0 0 12px;padding-left:22px;line-height:1.5;display:flex;flex-direction:column;gap:10px}
 .shsteps textarea{display:block;width:100%;margin-top:6px;font:inherit;font-size:var(--text-control);padding:8px;border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);resize:vertical}
 .shrow{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
@@ -1430,7 +1427,7 @@ small.bkxc{font-weight:500}
 .mkopt input{margin-top:3px;accent-color:var(--accent)}
 .mkopt small{display:block;color:var(--muted);font-size:12.5px}
 
-/* ---------- student details: the ⓘ beside a name, and the card it opens ---------- */
+
 .stu{grid-template-columns:24px 1fr auto auto}
 .whob{display:inline-grid;place-items:center;width:18px;height:18px;flex:none;border:1px solid var(--line-strong);border-radius:var(--corner-pill);background:var(--surface);color:var(--accent)!important;font:italic 700 11px/1 Georgia,serif;cursor:pointer;opacity:0;transition:opacity .12s;vertical-align:middle}
 .stu:hover .whob,.stu.on .whob,.whob:focus-visible,tr:hover .whob,.who .whob,.ppl .whob{opacity:1}
@@ -1465,7 +1462,7 @@ small.bkxc{font-weight:500}
 .pc-ft{border-top:1px solid var(--line);padding:9px 16px 12px;font-size:12.5px}
 .ppl td{vertical-align:middle}.ppl td.nm .link{font-weight:600;text-decoration:none;text-align:left}
 .ppl .pc-in{font-weight:400}
-/* ---------- Check the covers: the list of papers on the side ---------- */
+
 .dlg .box.ccbox{width:min(1280px,100%);height:calc((100vh - 32px - var(--savebar,0px)) / var(--uz))}
 .ccmid{flex:1;min-height:0;display:grid;grid-template-columns:270px minmax(0,1fr)}
 .ccmid>.bb{background:var(--surface-2);min-height:0}
@@ -1495,7 +1492,7 @@ small.bkxc{font-weight:500}
 .whob::before{content:"i"}
 .bknm .whob,.bkstu .whob{margin-left:6px}
 
-/* ---------- the sidebar and Find anything: the same on the grading page and on the Planner (shared styles only; each page has its own code) ---------- */
+
 .rail{flex:none;width:232px;display:flex;flex-direction:column;gap:2px;padding:16px 12px 12px;background:var(--surface);border-right:1px solid var(--line);overflow:hidden auto}
 .rail a{text-decoration:none;color:inherit}
 .rail svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -1526,10 +1523,10 @@ small.bkxc{font-weight:500}
 .rsaved.bad b{color:var(--bad)}
 .rsaved .rl{display:block;flex:1;min-width:0;overflow-wrap:anywhere}
 
-/* the sample (src/samplemode.js): a notice at the top of the sidebar on both pages, with the way out */
+
 .rsample{display:flex;flex-direction:column;gap:8px;margin:0 0 10px;padding:10px;border:1px solid var(--accent);border-radius:var(--corner-3);background:var(--accent-soft);color:var(--fg-2);font-size:var(--text-small);line-height:1.35}
 .rsample>.rl{display:block}
-/* in the sample nothing is backed up and nothing needs to be: the line that says so for real work is put away */
+
 .gs-sample .rsaved,.gs-sample #safeAsk{display:none}
 .rsample b{display:block;color:var(--accent);font-weight:700;font-size:var(--text-caption);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
 .rsample .btn{justify-content:center;gap:6px;background:var(--surface)}
@@ -1541,7 +1538,7 @@ small.bkxc{font-weight:500}
 #sampleCover .smpspin{width:28px;height:28px;margin:0 auto;border-radius:var(--corner-round);border:3px solid var(--line);border-top-color:var(--accent);animation:smpspin 1s linear infinite}
 @keyframes smpspin{to{transform:rotate(360deg)}}
 
-/* while a paper is open the sidebar folds to a strip of icons, so the paper gets the room */
+
 :is(.shell.grading,.pfold,.gsfull) .rail{width:60px;padding:12px 8px;align-items:center;overflow:hidden auto}
 :is(.shell.grading,.pfold,.gsfull) .rail .rl{display:none}
 :is(.shell.grading,.pfold,.gsfull) .rbrand{padding:4px 0 12px}
@@ -1569,14 +1566,13 @@ small.bkxc{font-weight:500}
   .rsample{padding:0;border:0;background:none;margin:0 0 2px}
   .rsample .btn{width:40px;height:40px;padding:0;border-color:var(--accent);color:var(--accent)}
 }
-/* full screen (src/fullscreen.js): the sidebar folds to icons, and while a paper is open it goes, so the paper has the room.
-   On the marking screen the button is in the top bar instead. */
+
 [data-gsfull] .fs-out{display:none}
 .gsfull [data-gsfull] .fs-in{display:none}
 .gsfull [data-gsfull] .fs-out{display:inline}
 .shell.grading #railFull{display:none}
 .gsfull .shell.grading .rail{display:none}
-/* ---------- Find anything ---------- */
+
 .finddlg{align-items:flex-start;padding-top:12vh;z-index:34}
 .fbox{width:min(640px,100%);max-height:min(560px,76vh);display:flex;flex-direction:column;background:var(--surface);border-radius:14px;box-shadow:0 4px 12px rgba(20,25,40,.12),0 24px 60px rgba(20,25,40,.28);overflow:hidden}
 .fin{display:flex;align-items:center;gap:12px;height:56px;flex:none;padding:0 18px;border-bottom:1px solid var(--line)}
@@ -1592,7 +1588,7 @@ small.bkxc{font-weight:500}
 .fnone{padding:22px 18px;color:var(--muted)}
 .ffoot{display:flex;align-items:center;gap:14px;flex:none;height:40px;padding:0 18px;border-top:1px solid var(--line);background:var(--bg);font-size:12.5px;color:var(--muted)}
 .ffoot .sp{flex:1}
-/* the list of assistants that opens from the sidebar (src/beside.js) */
+
 .bsmenu{position:fixed;z-index:60;width:264px;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-4);box-shadow:0 2px 6px rgba(20,25,40,.12),0 14px 40px rgba(20,25,40,.18);font-size:var(--text-control)}
 .bshd{margin:6px 10px 4px;font-size:var(--text-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .bsrow{display:flex;align-items:center;gap:var(--space-2);padding:8px 10px;border-radius:var(--corner-2);color:var(--fg);text-decoration:none}
@@ -1603,20 +1599,20 @@ small.bkxc{font-weight:500}
 .bsrow[aria-current=true] b{font-weight:600}
 .bsrow small{margin-left:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--text-caption);color:var(--muted)}
 .bsset{margin-top:4px;border-top:1px solid var(--line);border-radius:var(--corner-2);color:var(--muted)}
-/* ---------- the frame: a sidebar that is always there, and one screen beside it (11/9) ---------- */
+
 .shell{display:flex;height:calc(100vh - var(--savebar,0px));min-width:0}
 .shellmain{flex:1;min-width:0;height:100%;overflow:auto;position:relative}
 .shell .app{height:100%}
 @media (max-width:760px){.shell{height:auto;min-height:100vh}.shellmain{height:auto;overflow:visible}.shell .app{height:auto}}
 
-/* the top bar while grading: the class, then the assignment */
+
 .shell .top .title{display:none}
 .crumb{flex:none;font-weight:600;font-size:var(--text-body);color:var(--fg-2);text-decoration:none;white-space:nowrap}
 .crumb:hover{color:var(--accent)}
 .crumb::after{content:"/";margin:0 0 0 8px;color:var(--faint);font-weight:400}
 .top .batch{color:var(--fg);font-weight:600}
 
-/* ---------- Home, a class, Settings ---------- */
+
 .start{max-width:1240px;padding:24px 28px 60px}
 .vhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 18px}
 .vhead h1,.clshead h1{font-size:var(--text-heading)}
@@ -1640,7 +1636,7 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
 .nrow .ns{display:block;font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
 .nrow svg{width:16px;height:16px;flex:none;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-/* a class page: its units down the page, one row per assignment */
+
 .cls{background:none;border:0;border-radius:0;padding:0;margin:0}
 .clshead{align-items:center;gap:8px;margin:0 0 16px}
 .clshead h1{margin-right:4px}
@@ -1673,7 +1669,7 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
 .board>.empty-note{background:var(--surface);border:1px dashed var(--line-strong);border-radius:var(--corner-5);padding:22px 18px}
 @media (max-width:1100px){.unit .card{grid-template-columns:minmax(0,1fr) auto}.cdue:empty{display:none}.unit .card .row{justify-content:flex-start;flex-wrap:wrap}}
 
-/* Settings: the subjects down the left, the chosen one's cards on the right */
+
 .setgrid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;align-items:start;max-width:1120px}
 .setnav{display:flex;flex-direction:column;gap:2px;position:sticky;top:0}
 .setlink{display:block;padding:9px 12px;border-radius:var(--corner-3);text-decoration:none;color:var(--fg-2)}
@@ -1698,7 +1694,7 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
 .setrow b{display:block;font-weight:600}
 .setrow .ns{display:block;font-size:12.5px;color:var(--muted)}
 @media (max-width:900px){.setgrid{grid-template-columns:minmax(0,1fr)}.setnav{position:static;flex-direction:row;flex-wrap:wrap}.setlink span{display:none}}
-/* ---------- Today: teaching, to mark, ready to hand back (stage 4). Every value is a token. ---------- */
+
 .thead{align-items:flex-start;margin:0 0 var(--space-5)}
 .tlead h1{font-size:var(--text-display)}
 .tlead p{margin:var(--space-1) 0 0;font-size:var(--text-lead)}
@@ -1715,7 +1711,7 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
 .tcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);overflow:hidden}
 .tcard:has(.km:not([hidden])){overflow:visible}
 
-/* teaching today: one row per class, in the order they meet */
+
 .trow{display:grid;grid-template-columns:52px minmax(0,1fr) auto;align-items:center;gap:var(--space-2);padding:var(--space-3) var(--space-4);border-top:1px solid var(--line);color:inherit;text-decoration:none}
 .trow:first-child{border-top:0}
 .trow.none{grid-template-columns:minmax(0,1fr) auto}
@@ -1728,7 +1724,7 @@ a.trow.now:hover{background:var(--accent-soft)}
 .trow .rdot{flex:none;width:8px;height:8px;border-radius:var(--corner-round)}
 .trow .ns{display:block;font-size:var(--text-control);color:var(--muted);overflow-wrap:anywhere}
 
-/* kept work: to mark, ready to hand back, earlier */
+
 .kept{display:block}
 .krow{display:grid;grid-template-columns:minmax(0,1fr) minmax(120px,170px) auto auto;align-items:center;gap:var(--space-4);padding:var(--space-3) var(--space-2) var(--space-3) var(--space-4);border-top:1px solid var(--line)}
 .krow:first-child{border-top:0}
@@ -1751,7 +1747,7 @@ a.btn.busy{opacity:.6;pointer-events:none}
 #keptAll{margin:var(--space-2) 0 0 2px;font-size:var(--text-control)}
 @media (max-width:820px){.krow{grid-template-columns:minmax(0,1fr) auto auto}.krow .kp{grid-column:1/-1;grid-row:2}}
 
-/* opening new work: one drop away */
+
 .drop{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:var(--space-3) var(--space-4);margin:0 0 var(--space-5);padding:var(--space-4);border:1.5px dashed var(--line-strong);border-radius:var(--corner-5);color:var(--muted);transition:.15s}
 .drop.over{border-color:var(--accent);background:var(--accent-soft)}
 .drop .dic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -1760,7 +1756,7 @@ a.btn.busy{opacity:.6;pointer-events:none}
 .drop .row{display:flex;gap:var(--space-2);flex-wrap:wrap}
 @media (max-width:820px){.drop{grid-template-columns:auto minmax(0,1fr)}.drop .row{grid-column:1/-1}}
 
-/* what the class needs next */
+
 .tneed{padding:var(--space-4)}
 .tbig{margin:0;font-weight:600;font-size:var(--text-body);line-height:1.4}
 .tbars{display:grid;grid-template-columns:minmax(0,auto) minmax(60px,1fr) auto;gap:var(--space-1) var(--space-2);align-items:center;margin:var(--space-3) 0;font-size:var(--text-control);color:var(--fg-2)}
@@ -1775,13 +1771,13 @@ a.btn.busy{opacity:.6;pointer-events:none}
 .tlink svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #needs .ncard{margin:0 0 var(--space-5)}
 .safeask{margin-bottom:var(--space-5)}
-/* ---------- a class page's tabs, and what each one shows (11/10) ---------- */
+
 .clshead{margin-bottom:10px}
 .ctabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line);margin:0 0 16px}
 .ctab,.ctmore{flex:none;padding:9px 14px;font-size:14.5px;font-weight:500;color:var(--fg-2);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;border-radius:6px 6px 0 0}
 .ctab:hover{color:var(--fg);background:var(--hover)}
 .ctab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
-/* More: the class's other pages, each with a pin that keeps it in the row (11/12) */
+
 .ctabs .kmw{margin-bottom:-1px}
 .ctmore{border-top:0;border-left:0;border-right:0;background:none;font-family:inherit;cursor:pointer}
 .ctmore:hover{color:var(--fg);background:var(--hover)}
@@ -1813,7 +1809,7 @@ a.btn.busy{opacity:.6;pointer-events:none}
 .cpanel .bktab thead th.bkterm:last-child{z-index:2;background:var(--accent-soft)}
 .bklink{color:inherit;text-decoration:none;font-weight:inherit}
 .bklink:hover{color:var(--accent);text-decoration:underline}
-/* Students */
+
 .pplbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--line);font-size:13.5px}
 .pplbar .sp{flex:1}
 .cpanel #peoplePaste{padding:14px 18px;border-bottom:1px solid var(--line);background:var(--bg)}
@@ -1824,7 +1820,7 @@ a.btn.busy{opacity:.6;pointer-events:none}
 .ppl .pgr{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap;width:84px}
 .pplcap{margin:10px 18px 14px;font-size:12.5px}
 
-/* ---------- charts: one blue from light to dark for a score's range, blue against amber for up and down ---------- */
+
 .chc{display:flex;align-items:center;justify-content:center;min-width:62px;height:28px;padding:0 6px;border-radius:var(--corner-1);font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap;color:var(--fg-2)}
 .chc sup{font-size:9px;margin-left:1px;position:relative;top:-4px;line-height:1}
 .chc.b1,.chsw.b1,.chseg.b1{background:var(--ch1);fill:var(--ch1)}.chc.b2,.chsw.b2,.chseg.b2{background:var(--ch2);fill:var(--ch2)}.chc.b3,.chsw.b3,.chseg.b3{background:var(--ch3);fill:var(--ch3)}
@@ -1889,7 +1885,7 @@ a.btn.busy{opacity:.6;pointer-events:none}
 .bkcmp.chrow:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:700px){.cpanel .ovcharts{grid-template-columns:minmax(0,1fr)}}
 .chc.xc{background:var(--surface);color:var(--accent);border:1px solid var(--accent)}
-/* learning goals (goals.js): the picker beside a rubric row or a quiz question, the list's own box, the class page's Goals tab */
+
 .goalsel{border:1px solid var(--line-strong);border-radius:var(--corner-2);padding:var(--space-1) 6px;background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control);max-width:180px;min-width:0}
 .critrow .goalsel{flex:0 1 170px}
 .qbt .qgrow td{padding:0 4px 8px}
@@ -1927,7 +1923,7 @@ p.goalline{display:block}
 #glFrom{margin-top:0}
 @media (max-width:700px){.glbar{grid-template-columns:minmax(0,1fr) 56px}.glbar .bkcmpt,.glbar small{grid-column:1 / -1}}
 #glView section{margin:0 0 var(--space-5)}
-/* IB classes: the MYP or DP pill beside a class's name, and the box that says how a class is graded (src/ib.js) */
+
 .ibpill{display:inline-flex;align-items:center;height:20px;padding:0 var(--space-2);border-radius:var(--corner-pill);background:var(--accent-soft);color:var(--accent);font-size:var(--text-caption);font-weight:600;letter-spacing:.02em}
 .ibways{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-2);margin-bottom:var(--space-4)}
 .ibcols{display:grid;grid-template-columns:1.3fr 1fr;gap:var(--space-5)}
@@ -1940,7 +1936,7 @@ p.goalline{display:block}
 .ibbound input{width:76px}
 .ibnote{font-size:var(--text-control);margin:var(--space-3) 0 0}
 @media (max-width:640px){.ibways,.ibcols{grid-template-columns:1fr}}
-/* an MYP class's gradebook */
+
 .iblv{display:inline-flex;align-items:baseline;gap:2px;margin:0 3px}
 .iblv i{font-style:normal;font-size:var(--text-caption);font-weight:600;color:var(--muted)}
 .ibtab .ibfm{color:var(--muted)}
@@ -1979,7 +1975,7 @@ p.goalline{display:block}
 .ibtab .bkch button,.ibtab .bkch>span{max-width:150px;min-width:96px}
 .ibtab .bkch>span{display:flex;flex-direction:column;align-items:center;gap:2px;white-space:normal;line-height:1.2;margin:0 auto}
 .ibg7{display:inline-block;min-width:20px;margin-left:var(--space-1);padding:0 var(--space-1);border-radius:var(--corner-1);background:var(--accent);color:var(--accent-fg);font-weight:700;text-align:center}
-/* an MYP class's Charts tab */
+
 .ibstacks{display:grid;gap:var(--space-2)}
 .ibstack{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr) 56px;gap:10px;align-items:center;font-size:var(--text-control)}
 .ibstack>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1995,7 +1991,7 @@ p.goalline{display:block}
 .iboften>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bkpad>.ibfit{margin-left:0;margin-right:0}
 @media (max-width:640px){.ibstack,.iboften{grid-template-columns:minmax(0,1fr)}}
-/* marking an MYP task */
+
 .ibask{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3);padding:var(--space-3);border-radius:var(--corner-3);background:var(--accent-soft);font-size:var(--text-control)}
 .ibtl{display:inline-flex;flex-wrap:wrap;gap:var(--space-2);align-items:baseline}
 .ibtl .iblv{margin:0;gap:3px}.ibtl .iblv i{font-size:var(--text-control)}
@@ -2003,22 +1999,22 @@ p.goalline{display:block}
 .ibtaskl{display:grid;gap:var(--space-2);margin:var(--space-3) 0}
 #ibTaskSet.link{margin-left:var(--space-2)}
 
-/* an MYP class's progress sheet */
+
 .ibpsscap { margin: 6px 0 0; font-size: var(--text-caption); color: var(--stage-ink-2); }
 .ibpss .psst span b { font-size: inherit; font-weight: 700; }
 
-/* a DP class: predicted grades and component weights */
+
 .ibpred { display: block; color: var(--stage-ink-2); font-weight: 500; white-space: nowrap; }
 .ibpredtab th small { display: block; font-weight: 400; }
 .ibpredtab td, .ibpredtab th { text-align: left; }
 .ibpredtab .iblvl { justify-content: flex-start; }
 .ibcomp { grid-template-columns: minmax(0, 1fr) 76px 16px; max-width: 340px; }
 .ibcomp span:first-child { overflow-wrap: anywhere; }
-/* a paper quiz in an MYP class: the points each level takes */
+
 .ibqlv .ibqrow{display:flex;flex-direction:column;gap:4px;margin-top:8px}
 .ibqlv .qbw input{width:54px}
 .qbt .qgrow select.qib{max-width:230px}
-/* ---------- an open assignment's tabs, and a tab's screen drawn on the page (11/10) ---------- */
+
 .atabs{display:flex;gap:2px;align-self:stretch;margin:-9px 0 -9px 8px;flex:none}
 .atab{display:flex;align-items:center;gap:6px;padding:0 13px;min-height:44px;font-size:var(--text-body);font-weight:500;color:var(--fg-2);text-decoration:none;border-bottom:2px solid transparent;border-top:2px solid transparent;white-space:nowrap}
 .atab:hover{color:var(--fg);background:var(--hover)}
@@ -2048,7 +2044,7 @@ p.goalline{display:block}
 .seg a:hover{color:var(--fg)}
 .seg a[aria-current]{background:var(--accent-soft);color:var(--accent)}
 
-/* Grades: the grade on the paper beside her score */
+
 .gl td.op{white-space:nowrap;font-variant-numeric:tabular-nums}
 .opv{font-weight:600;color:var(--fg-2)}
 .opchip{display:inline-flex;align-items:center;font-size:var(--text-small);font-weight:600;line-height:1.3;padding:2px 8px;border-radius:var(--corner-pill);text-decoration:none;white-space:nowrap}
@@ -2058,11 +2054,11 @@ a.opchip:hover{text-decoration:underline}
 #glChk b{color:var(--warn)}
 #glChk span{flex:1;min-width:200px}
 #glTable.only tbody tr:not(.chk){display:none}
-/* a row to check is still a table row: .chk is also the name of a tick-box label, which lays out as a line (11/12) */
+
 #glTable tr.chk{display:table-row;margin:0;cursor:auto}
 #glTable th:first-child,#glTable td.n{width:44px}
 
-/* Return */
+
 #dlg.aspage .bb.xp{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);gap:24px;align-content:start;align-items:start}
 .rtmain{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:20px 22px;min-width:0}
 .rtmain .xbig{margin-top:0}
@@ -2084,7 +2080,7 @@ a.opchip:hover{text-decoration:underline}
 .rtdone span{color:var(--ok);font-weight:600}
 @media (max-width:980px){#dlg.aspage .bb.xp{grid-template-columns:minmax(0,1fr)}}
 
-/* Insights: three more charts */
+
 #dlg.aspage #ovBody .ovcharts{grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:24px 28px}
 #dlg.aspage #ovBody:not(.pbody) section{background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:16px 18px}
 #dlg.aspage #ovBody:not(.pbody)>section{margin-bottom:18px}
@@ -2123,7 +2119,7 @@ a.opchip:hover{text-decoration:underline}
 .insxv small{color:var(--muted);font-size:11.5px;margin-left:2px}
 .insxax .insxt{height:14px}
 .insxax .insxt span{position:absolute;transform:translateX(-50%);font-size:var(--text-caption);color:var(--muted)}
-/* anchor papers on the Return tab */
+
 .anchlist{list-style:none;margin:0 0 10px;padding:0}
 .anchli{display:flex;align-items:baseline;gap:10px;padding:5px 0;border-top:1px solid var(--line);font-size:var(--text-control)}
 .anchli:first-child{border-top:0}
@@ -2132,8 +2128,8 @@ a.opchip:hover{text-decoration:underline}
 .anchli.none .muted{margin-left:0}
 .anchcov{display:flex;align-items:center;gap:6px;font-size:var(--text-control);margin:0 0 6px}
 .rtcard p.anchsay{font-size:var(--text-small)}
-/* ---------------- the marking screen ---------------- */
-/* The tools: one slim dock down the left edge of the paper, so the paper keeps the full height. Zoom is a pill at the paper's foot. */
+
+
 .main{position:relative}
 .tools{position:absolute;left:12px;top:12px;z-index:3;width:44px;margin:0;padding:5px;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:2px;max-height:calc(100% - 24px);overflow-x:hidden;overflow-y:auto;scrollbar-width:none;border-radius:var(--corner-5);box-shadow:var(--shadow)}
 .tools::-webkit-scrollbar{display:none}
@@ -2161,7 +2157,7 @@ a.opchip:hover{text-decoration:underline}
 .zlab:hover{color:var(--accent)}
 #openRep:not([hidden])~.zoompill{bottom:64px}
 
-/* Small menus: + Add, the ⋯ on a file, the ⋯ beside Missing, Excused, Late */
+
 .kmw{position:relative;display:inline-flex}
 .km{position:absolute;top:calc(100% + 4px);left:0;z-index:20;min-width:216px;max-width:300px;max-height:min(60vh,440px);overflow:auto;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--corner-4);box-shadow:0 10px 28px rgba(10,14,25,.2);padding:5px;display:flex;flex-direction:column;gap:1px;text-align:left;font-weight:400;white-space:normal}
 .km[hidden]{display:none}
@@ -2180,7 +2176,7 @@ a.opchip:hover{text-decoration:underline}
 .icon.kdots{width:28px;height:26px;font-size:var(--text-lead);border-color:var(--line)}
 [data-km][aria-expanded=true]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
 
-/* The student's bar above the paper: who it is, the file when there is just one, then Readings, Add and the paper's own menu */
+
 .who{align-items:center;gap:8px;margin:0 0 10px;min-height:34px}
 .who h2{margin-right:2px;font-size:var(--text-title);font-weight:650;letter-spacing:-.015em}
 .who .btn.sm .atn{margin-left:2px}
@@ -2188,9 +2184,7 @@ a.opchip:hover{text-decoration:underline}
 .fhead.inl{margin:0 0 0 6px;font-weight:500;min-width:0}
 .fhead.inl>span:first-child{color:var(--muted)!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:24ch}
 
-/* The student list. Folded, it is a strip beside the paper: a number and a score for each student. Pointed at, the whole list
-   opens over the paper's edge (.peek); kept open, it sits beside the paper (.open). The top of the list is the same height
-   either way, so a row never moves from under the pointer as the list opens. */
+
 .side{display:flex;flex-direction:column;padding:12px 10px 10px;overflow-x:hidden;scrollbar-width:thin}
 .side #stuList{flex:1 0 auto}
 .prog-s{padding:0 2px}
@@ -2222,7 +2216,7 @@ button.pavg:hover .v{text-decoration:underline}
 .sfoot{position:sticky;bottom:-10px;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px;padding:8px 6px 10px;background:var(--bg);border-top:1px solid var(--line)}
 .sfoot .anonsw{font-size:var(--text-small);letter-spacing:0;text-transform:none;font-weight:500;white-space:nowrap}
 .sfoot .btn.sm{padding:5px 8px}
-/* The arrow that keeps the list open: at the foot of the strip, and on the list's edge once it is open */
+
 #colL{top:auto;bottom:10px;left:calc((var(--lw) * var(--uz) - 22px) / 2)}
 .cols:is(.open,.peek) #colL{top:10px;bottom:auto;left:calc(232px * var(--uz) - 11px)}
 @media (max-width:1100px){.cols.open #colL{left:calc(204px * var(--uz) - 11px)}}
@@ -2255,7 +2249,7 @@ button.pavg:hover .v{text-decoration:underline}
   .cols:not(.open):not(.peek) .stu.is-late .num::after{content:"";display:inline-block;width:5px;height:5px;margin-left:2px;border-radius:var(--corner-round);background:var(--warn);vertical-align:1px}
 }
 
-/* The score panel: one line a row, the total, the comment, and Next at the foot */
+
 .grade{gap:10px;padding:14px 16px 0}
 .grade h3{font-size:var(--text-caption);letter-spacing:.07em}
 .grade h3 .link{font-size:var(--text-small);font-weight:500;letter-spacing:0;text-transform:none;text-decoration:none}
@@ -2287,7 +2281,7 @@ button.pavg:hover .v{text-decoration:underline}
 #lvBox{min-height:66px;padding:8px 10px 9px;border-radius:var(--corner-4);background:var(--surface-2)}
 .lvname{font-size:var(--text-caption);font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #lvBox .lvrow{margin-top:2px}
-/* the percent beside the total had picked up the student card's box (both were called .pc) */
+
 .total span.pc{width:auto;max-height:none;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;font-size:var(--text-title);font-weight:650;letter-spacing:-.02em}
 .total{padding:10px 2px 0;border-top:1px solid var(--line)}
 #stampScore{align-self:center;gap:5px;padding:3px 8px;color:var(--accent)}
@@ -2310,7 +2304,7 @@ button.pavg:hover .v{text-decoration:underline}
 .cchip:hover{color:var(--fg)}
 .cchip.cmore{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .cbank .km{min-width:244px}
-/* The foot of the panel stays in view: the keys, then Previous, the blue button and Next */
+
 .gfoot{margin-top:auto;position:sticky;bottom:0;z-index:1;padding:8px 0 12px;background:var(--surface)}
 .keysrow{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px;font-size:var(--text-small);color:var(--muted);white-space:nowrap}
 .keysrow .link{font-size:var(--text-small);font-weight:500;text-decoration:none;color:var(--muted)}
@@ -2319,7 +2313,7 @@ button.pavg:hover .v{text-decoration:underline}
 .gfoot .nav .primary{flex:1 1 0;min-width:0;white-space:normal;padding-left:8px;padding-right:8px}
 .gfoot .nav>:not(.btn){flex:0 0 100%}
 .rchip{white-space:nowrap}
-/* On a very wide window the page stops growing (fitScale), and it and its bar sit in the middle of the space */
+
 .paper>.pg,.paper>.who,.paper>.fhead{margin-left:auto;margin-right:auto}
 .paper>.who,.paper>.fhead{max-width:var(--pgw,none)}
 .nav .btn{height:38px}
@@ -2332,7 +2326,7 @@ button.pavg:hover .v{text-decoration:underline}
 .oneout-say:empty{display:none}
 .nextun{display:block;margin:8px auto 0;font-size:var(--text-control)}
 .nextun kbd,.hint kbd{font:500 var(--text-caption) var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:0 4px;background:var(--surface);color:var(--muted)}
-/* extra credit on one paper: its own line under the score */
+
 .xcnote{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin:7px 0 0;font-size:var(--text-small);color:var(--muted)}
 .xcnote label{display:flex;align-items:center;gap:var(--space-2);color:var(--fg-2);font-weight:600}
 .xcnote input{width:64px;font:inherit;padding:3px 6px;border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg)}
@@ -2340,7 +2334,7 @@ button.pavg:hover .v{text-decoration:underline}
 .xcnote .sp{flex:1}
 .xcnote label,.xcnote>span{white-space:nowrap}.xcnote input{width:52px}
 
-/* a retake under the score: the earlier tries, which one counts, and the way out */
+
 .trynote{grid-template-columns:minmax(0,1fr);min-width:0;margin:9px 0 0;padding:var(--space-3);border:1px solid var(--line);border-radius:var(--corner-3);background:var(--surface-2);font-size:var(--text-small);color:var(--fg-2);display:grid;gap:5px}
 .tryhd,.tryrow,.trycount{display:flex;align-items:baseline;gap:var(--space-2);flex-wrap:wrap}
 .tryhd b{color:var(--accent)}.tryhd .sp{flex:1}.tryhd .arm{color:var(--warn);font-weight:600}
@@ -2353,15 +2347,15 @@ button.pavg:hover .v{text-decoration:underline}
 .trytag{font-size:var(--text-small);font-weight:600;padding:2px 8px;border-radius:var(--corner-pill);background:var(--surface-2);color:var(--muted);border:1px solid var(--line);white-space:nowrap}
 .stag.retk{background:var(--accent-soft);color:var(--accent)}
 .tryown{color:var(--muted);font-size:var(--text-small)}
-/* a row with many steps (0 to 8 with half points, say): only the whole numbers are written under the slider */
+
 .scores.slide.many .sticks button.half{display:none}
 .scores.slide.many .sticks button{min-width:16px;padding:1px 0}
-/* Rubric setup: how every row is scored */
+
 .rowscale{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:var(--text-control)}
 .rowscale label{font-weight:600;margin:0}
 .rowscale .rowhalf{display:inline-flex;align-items:center;gap:5px;font-weight:500}
 .rowscale select{padding:4px 6px}
-/* anchor papers (src/anchors.js): High, Mid, Low under the score, and the tag in the student list */
+
 .anchrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 0}
 .anchlab{font-size:var(--text-small);color:var(--muted);white-space:nowrap}
 .anchseg{margin-left:0;flex:1 0 auto;gap:6px;border:0;overflow:visible}
@@ -2370,9 +2364,7 @@ button.pavg:hover .v{text-decoration:underline}
 .anchseg button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
 .stu .anch{font-size:var(--text-caption);font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:var(--corner-pill);padding:0 6px;white-space:nowrap}
 
-/* Full screen (11/13): the student list steps aside (html[data-fside] is the teacher's choice, gs.fullSide). Folded, the list slides
-   off the left edge and the paper takes its room; pointed at the edge (#fsEdge), or with [ or /, it opens over the paper as usual.
-   'all' hides the tool dock too until the pointer comes near it (.fstools); the paper keeps its place either way. */
+
 .fsedge,.fstab{display:none}
 @media (min-width:761px){
   .gsfull:not([data-fside=show]) .cols:not(.open){--lw:0px}
@@ -2383,17 +2375,17 @@ button.pavg:hover .v{text-decoration:underline}
   .gsfull[data-fside=all] .cols .tools{opacity:0;transform:translateX(-10px);pointer-events:none;transition:opacity .15s ease,transform .15s ease}
   .gsfull[data-fside=all] .cols.fstools .tools{opacity:1;transform:none;pointer-events:auto}
 }
-/* On a tablet there is no pointing at the edge: a small tab at the left edge opens the list, and a tap on the paper folds it. */
+
 @media (min-width:761px) and (any-pointer:coarse){
   .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek) .fsedge{width:16px}
   .gsfull:not([data-fside=show]) .cols:not(.open):not(.peek) .fstab{display:flex;align-items:center;justify-content:center;position:absolute;left:0;top:50%;z-index:7;width:22px;height:56px;margin-top:-28px;padding:0;border:1px solid var(--line-strong);border-left:0;border-top-right-radius:var(--corner-3);border-bottom-right-radius:var(--corner-3);background:var(--surface);color:var(--muted);font-size:var(--text-body);box-shadow:var(--shadow);cursor:pointer}
 }
 @media (prefers-reduced-motion:reduce){.gsfull .cols>.side,.gsfull .cols .tools{transition:none!important}}
-/* the side pane: a second column on the marking screen (src/sidepane.js) */
+
 .spbtn{display:inline-flex;align-items:center;gap:6px}
 .spbtn[aria-pressed=true] span{display:none}
 .spbtn[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
-/* held at the paper's inner corner however far the papers scroll; the pane hangs off it, in the paper's own padding */
+
 .spanchor{position:sticky;top:0;left:0;height:0;z-index:4;pointer-events:none}
 .sp2{position:absolute;pointer-events:auto;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
 .sph{flex:none;display:flex;align-items:center;gap:var(--space-1);min-height:42px;padding:6px 10px 4px 14px}
@@ -2418,7 +2410,7 @@ html.vidsized #paper .spb .media{max-width:none}
 .spgrip i{border-radius:var(--corner-1);background:var(--track)}
 .spgrip:hover i,.spgrip.on i,.spgrip:focus-visible i{background:var(--accent)}
 .spgrip:focus-visible{outline:none}
-/* on the right (the usual place) or the left: the pane takes its width out of the paper's padding */
+
 .main:is(.sp-right,.sp-left) .sp2{top:-10px;width:var(--sp-px);height:var(--sp-h)}
 .main:is(.sp-right,.sp-left) .spgrip{top:0;bottom:0;width:11px;cursor:col-resize}
 .main:is(.sp-right,.sp-left) .spgrip i{width:4px;height:44px}
@@ -2430,13 +2422,13 @@ html.vidsized #paper .spb .media{max-width:none}
 .main.sp-left .sp2{right:calc(100% + 24px + 44px * var(--uz));border-right:1px solid var(--line)}
 .main.sp-left .spgrip{right:-6px}
 .main.sp-left .tools{left:calc(var(--sp-px) + 12px)}
-/* across the top: the pane takes its height out of the paper's top padding */
+
 .main.sp-top .paper{padding-top:calc(var(--sp-px) + 10px)}
 .main.sp-top .sp2{top:calc(-1 * var(--sp-px) - 10px);left:calc(-24px - 44px * var(--uz));width:var(--sp-w);height:var(--sp-px);border-bottom:1px solid var(--line)}
 .main.sp-top .spgrip{left:0;right:0;bottom:-6px;height:11px;cursor:row-resize}
 .main.sp-top .spgrip i{width:44px;height:4px}
 .main.sp-top .tools{top:calc(var(--sp-px) + 12px);max-height:calc(100% - var(--sp-px) - 24px)}
-/* the rubric in full */
+
 .sprub{display:flex;flex-direction:column;gap:var(--space-3);padding-top:4px}
 .sprubnone{margin:0;font-size:var(--text-control);line-height:1.5}
 .sprubnone .link{font-size:inherit}
@@ -2454,9 +2446,9 @@ html.vidsized #paper .spb .media{max-width:none}
 .splvb.on.half{box-shadow:none;border-style:dashed}
 .splvb.on b{color:var(--accent)}
 .main:is(.sp-right,.sp-top) .sph{padding-right:26px}
-/* a video turned on its side (video.css .vrotbox.on): in the pane it takes the pane's height, since it is taller than wide */
+
 #paper .spb .vrotbox.on,html.vidsized #paper .spb .vrotbox.on{height:max(140px,calc(100cqh - 240px));min-height:0}
-/* the stopwatch */
+
 .sptimer{display:flex;flex-direction:column;align-items:center;gap:var(--space-3);padding:var(--space-5) var(--space-3)}
 .sptime{font-size:calc(var(--text-display) * 2.25);font-weight:600;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--fg)}
 .sptimer[data-how=in] .sptime{color:var(--accent)}
@@ -2465,7 +2457,7 @@ html.vidsized #paper .spb .media{max-width:none}
 .sptbtns{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--space-2)}
 .sptask{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;margin:var(--space-3) 0 0;font-size:var(--text-small);color:var(--muted)}
 .sptnum{width:64px;padding:4px 6px;border:1px solid var(--line);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control);text-align:center}
-/* ---------- safe by default: the folder ask on Home, Go back in time, About and updates ---------- */
+
 .safeask{display:flex;gap:var(--space-4);align-items:flex-start;padding:18px 20px;margin:0 0 var(--space-5);background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--corner-5)}
 .safeask .saic{flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--corner-4);background:var(--warn-soft);color:var(--warn)}
 .safeask .saic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -2492,8 +2484,8 @@ html.vidsized #paper .spb .media{max-width:none}
 .updmode input{margin-top:3px;accent-color:var(--accent)}
 .updmode b{display:block;font-weight:500}
 .updmode .ns{display:block;font-size:var(--text-small);color:var(--muted)}
-/* the welcome: three questions for a brand-new browser, over everything else */
-/* under every dialog (30 and up): choosing a folder that already holds work asks its questions on top of the welcome */
+
+
 .welcome{position:fixed;inset:0;z-index:29;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:var(--space-5);overflow:auto}
 .welcome[hidden]{display:none}
 html.welcoming .shell{visibility:hidden}
@@ -2545,10 +2537,10 @@ html.welcoming .shell{visibility:hidden}
 .wlpr b{display:block;font:600 var(--text-lead) var(--f-body);margin-bottom:2px}
 .wlpr span{color:var(--fg-2);font-size:var(--text-control);line-height:1.45}
 @media (max-width:860px){.wlsheet{grid-template-columns:1fr;min-height:0}.wlr{display:none}.wll{padding:28px 24px 24px}.welcome{padding:var(--space-3);align-items:flex-start}}
-/* the sample class card on Home: the folder card's shape, in blue instead of amber */
+
 .safeask.calm{border-left-color:var(--accent)}
 .safeask.calm .saic{background:var(--accent-soft);color:var(--accent)}
-/* Settings: where students hand in work, and how you usually grade */
+
 .merow{display:flex;flex-wrap:wrap;gap:var(--space-2)}
 .merow .meurl{flex:1 1 300px;max-width:440px}
 .merow>label,.merow>.muted{align-self:center}
@@ -2562,14 +2554,14 @@ html.welcoming .shell{visibility:hidden}
 
 .merow .mecheck{display:inline-flex;align-items:center;gap:6px;align-self:center;margin-right:var(--space-2)}
 .merow .mecheck input{width:16px;height:16px;padding:0;accent-color:var(--accent)}
-/* ---------- strong examples: the star in Quick mark, the Use as an example box, the Examples tab, Show to the class ---------- */
+
 .qmex[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
 .qmex[aria-pressed=true]:hover{background:var(--accent-hover)}
 .qmex span{color:var(--accent)}
 .qmex[aria-pressed=true] span{color:var(--accent-fg)}
 .atab[hidden]{display:none}
 
-/* the box */
+
 .dlg .box.exbox{width:min(1180px,100%);height:calc((100vh - 32px - var(--savebar,0px)) / var(--uz))}
 .bb.exuse{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:var(--space-5);min-height:0;overflow:hidden;padding-bottom:var(--space-3)}
 .expv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-4);align-content:start;overflow:auto;background:var(--surface-2);border-radius:var(--corner-5);padding:var(--space-4)}
@@ -2607,7 +2599,7 @@ html.welcoming .shell{visibility:hidden}
 .exlock svg{flex:none}
 @media (max-width:860px){.bb.exuse{grid-template-columns:minmax(0,1fr);overflow:auto}.expv{grid-template-columns:minmax(0,1fr)}}
 
-/* the tab */
+
 .exsub{font-size:var(--text-body)}
 .bb.exbb{max-width:1280px}
 .exsec{margin:var(--space-2) 0 var(--space-3);font-size:var(--text-small);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -2631,7 +2623,7 @@ html.welcoming .shell{visibility:hidden}
 .excard.exnone p{margin:0;line-height:1.6}
 .exempty{max-width:520px;margin:var(--space-7) auto;text-align:center}
 
-/* Show to the class */
+
 .exshow{position:fixed;inset:0;z-index:1000;background:var(--surface);color:var(--fg);display:flex;flex-direction:column;outline:0}
 .exshd{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-5) var(--space-6) var(--space-3)}
 .exshd h2{margin:0;font-size:var(--text-display)}
@@ -2649,7 +2641,7 @@ html.welcoming .shell{visibility:hidden}
 .exsft{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-6) var(--space-4);font-size:var(--text-lead)}
 .exsft .muted{font-size:var(--text-body)}
 
-/* the Examples page in the sidebar */
+
 .exbar{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);margin:0 0 var(--space-5)}
 .exbar .sp{flex:1}
 .exbar select{max-width:220px}
@@ -2659,7 +2651,7 @@ html.welcoming .shell{visibility:hidden}
 .exgh{margin:0 0 var(--space-3);font-size:var(--text-lead);font-weight:600}
 .exgh .muted{font-weight:500;font-size:var(--text-body)}
 
-/* tags, search, and a screenshot saved as an example (11/13) */
+
 .extags{display:flex;flex-wrap:wrap;gap:4px;margin:0}
 .extags:empty{display:none}
 .extag{border:0;border-radius:var(--corner-pill);padding:2px var(--space-2);background:var(--surface-2);color:var(--fg-2);font:inherit;font-size:var(--text-control);cursor:pointer}
@@ -2669,7 +2661,7 @@ html.welcoming .shell{visibility:hidden}
 .exknown .exrow{cursor:pointer}
 .exshotcls{max-width:100%}
 .snipex{margin-right:8px}
-/* ---------- Help: short answers on a page of their own ---------- */
+
 #vHelp{max-width:760px}
 .hlpfind{position:relative;margin:0 0 var(--space-5)}
 .hlpfind svg{position:absolute;left:var(--space-3);top:50%;width:18px;height:18px;margin-top:-9px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;pointer-events:none}
@@ -2696,7 +2688,7 @@ html.welcoming .shell{visibility:hidden}
 .hlpnone{padding:var(--space-5) var(--space-1)}
 .hlpfoot{color:var(--muted);margin:0 var(--space-1)}
 @media (prefers-reduced-motion:reduce){.hlph svg{transition:none}}
-/* ---------- School resources: links, files and notes on a page of their own (school.js) ---------- */
+
 #vSchool{max-width:900px}
 #vSchool.over{outline:2px dashed var(--accent);outline-offset:var(--space-2);border-radius:var(--corner-5)}
 .schbar{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin:0 0 var(--space-5)}
@@ -2754,7 +2746,7 @@ html.welcoming .shell{visibility:hidden}
 .schfiles{margin:0;padding-left:1.2em;font-size:var(--text-body);max-height:160px;overflow:auto}
 @media (max-width:640px){.schbar .btn{flex:1 1 auto}}
 
-/* people: spots for the roles at the school, filled in or not */
+
 .schppl .schhead .btn{margin-left:var(--space-1)}
 .schprow{display:flex;align-items:center;gap:var(--space-2);min-height:48px;padding:0 var(--space-2) 0 var(--space-4)}
 .schprow+.schprow{border-top:1px solid var(--line)}
@@ -2769,7 +2761,7 @@ html.welcoming .shell{visibility:hidden}
 .schpnone{margin:0;padding:var(--space-4)}
 .schppl .schsay{margin:var(--space-2) var(--space-1) 0;font-size:var(--text-small)}
 @media (max-width:640px){.schprow{flex-wrap:wrap}.schprow .schrole{flex-basis:100%;padding-top:var(--space-2)}}
-/* Bring a class over from Google Classroom: one box, two numbered steps. */
+
 .dlg .box.gcdlg{width:min(720px,100%)}
 .gcbox{display:flex;flex-direction:column;gap:var(--space-3)}
 .gcbox .gcin{margin:0;font-size:var(--text-body)}
@@ -2786,7 +2778,7 @@ html.welcoming .shell{visibility:hidden}
 .gcfields .bkin,.gcfields select{width:100%}
 .gcbox .gcnote{margin:8px 0 0;font-size:var(--text-control);line-height:1.5}
 .gcbox #gcErr{margin:10px 0 0}
-/* ---------- Report comments: a class page's tab (reports.js) ---------- */
+
 .rptopts{display:flex;align-items:center;gap:var(--space-3) var(--space-4);flex-wrap:wrap;margin:0 0 var(--space-2)}
 .rptopts label,.rptopts .rptlab,.rpthead label{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-control);color:var(--fg-2)}
 .rptopts .sp,.rpthead .sp,.rptfoot .sp{flex:1}
@@ -2824,8 +2816,8 @@ html.welcoming .shell{visibility:hidden}
 .rptcuts{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin:0 0 var(--space-4);font-size:var(--text-control)}
 .rptcuts input{width:64px;height:28px;margin:0 2px 0 var(--space-1);padding:0 var(--space-1);border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit}
 @media (max-width:900px){.rptgrid{grid-template-columns:minmax(0,1fr)}.rptlist{position:static;max-height:220px}}
-/* ---------- attendance: a class page's Attendance tab (11/11) ---------- */
-/* Present is quiet, late is amber, excused is gray, absent is the darkest blue. Red stays for marks on a paper. */
+
+
 .attbar{display:flex;align-items:center;gap:var(--space-2) var(--space-3);flex-wrap:wrap;padding:var(--space-3) 18px;border-bottom:1px solid var(--line);min-height:52px}
 .attbar .sp{flex:1}
 .attbar .bkterms{margin-left:0}
@@ -2852,7 +2844,7 @@ html.welcoming .shell{visibility:hidden}
 .attnote{flex:1 1 100%;font:inherit;font-size:var(--text-control);color:var(--fg);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--corner-3);padding:5px 8px}
 .attcap{margin:var(--space-3) 18px var(--space-4);font-size:var(--text-small)}
 .attopt{display:inline-flex;align-items:center;gap:var(--space-2);font-weight:500}
-/* looking back: students down, days across */
+
 .attwrap{overflow:auto;max-height:calc(100vh - 290px);min-height:160px;padding:0 18px}
 .atttab{border-collapse:separate;border-spacing:0;font-size:var(--text-control)}
 .atttab th,.atttab td{padding:3px 4px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
@@ -2877,12 +2869,12 @@ html.welcoming .shell{visibility:hidden}
 .attleg{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-4);padding:var(--space-3) 18px 0;font-size:var(--text-small);color:var(--fg-2)}
 .attleg span{display:inline-flex;align-items:center;gap:6px}
 .attstu{margin:4px 0;font-size:var(--text-control)}
-/* Today: a line under a class that is on the timetable */
+
 .tatt{display:block;margin:-6px 0 0;padding:0 var(--space-4) var(--space-3) calc(52px + var(--space-4) + var(--space-2));font-size:var(--text-small);font-weight:500;color:var(--accent);text-decoration:none}
 .tatt:hover{text-decoration:underline}
 .tatt.done{color:var(--muted)}
 @media (max-width:700px){.attseg button{min-width:0;padding:5px 8px}.attlist{column-width:auto}}
-/* ---------- Missing work: a class page's tab (missing.js) ---------- */
+
 .misopts{display:flex;align-items:center;gap:var(--space-3) var(--space-4);flex-wrap:wrap;margin:0 0 var(--space-2)}
 .misopts label{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-control);color:var(--fg-2)}
 #misCls{width:180px;height:30px;padding:0 var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
@@ -2902,7 +2894,7 @@ html.welcoming .shell{visibility:hidden}
 .miswords label{display:block;margin:0 0 var(--space-3)}
 .miswords label span{display:block;font-size:var(--text-control);font-weight:600;margin:0 0 var(--space-1)}
 .miswords input,.miswords textarea{display:block;width:100%;padding:var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control);line-height:1.5;resize:vertical}
-/* ---------- To do: the page, the card on Today, the count in the sidebar. Every value is a token. ---------- */
+
 .tdchips{display:flex;flex-wrap:wrap;gap:var(--space-2);margin:0 0 var(--space-4)}
 .tdchip{display:inline-flex;align-items:center;gap:var(--space-2);min-height:28px;padding:0 var(--space-3);border:0;border-radius:var(--corner-pill);background:var(--surface-2);color:var(--fg-2);font:inherit;font-size:var(--text-control);font-weight:500;white-space:nowrap;cursor:pointer}
 .tdchip:hover{background:var(--hover)}
@@ -2912,7 +2904,7 @@ html.welcoming .shell{visibility:hidden}
 @media (max-width:1080px){.tdgrid{grid-template-columns:minmax(0,1fr)}}
 .tdmainc{overflow:visible}
 
-/* adding one */
+
 .tdadd{display:flex;align-items:center;gap:var(--space-3);padding:0 var(--space-4);border-bottom:1px solid var(--line)}
 .tdadd svg{flex:none;width:18px;height:18px;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round}
 .tdadd input{flex:1;min-width:0;height:44px;border:0;outline:0;background:none;color:var(--fg);font:inherit;font-size:var(--text-body)}
@@ -2923,7 +2915,7 @@ html.welcoming .shell{visibility:hidden}
 .tdund[hidden]{display:none}
 .tdund .tdhint{margin-left:auto}
 
-/* one line */
+
 .tdgrp{display:flex;align-items:baseline;gap:var(--space-2);padding:var(--space-2) var(--space-4);border-top:1px solid var(--line);background:var(--bg);font-size:var(--text-small);font-weight:600;color:var(--fg-2)}
 .tdgrp:first-child{border-top:0}
 .tdgrp span{font-weight:500;color:var(--faint)}
@@ -2953,7 +2945,7 @@ html.welcoming .shell{visibility:hidden}
 #todoCard .tdrow{grid-template-columns:auto minmax(0,1fr) auto;padding:var(--space-2) var(--space-4)}
 #todoCard .tcard{overflow:hidden}
 
-/* the side: what the app adds, or the line that is open */
+
 .tdkinds{padding:var(--space-2) var(--space-4) var(--space-4)}
 .tdkinds p{margin:var(--space-3) 0 0;padding-top:var(--space-3);border-top:1px solid var(--line);font-size:var(--text-small);line-height:1.45}
 .tdsw{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);width:100%;padding:var(--space-2) 0;border:0;background:none;color:var(--fg);font:inherit;font-size:var(--text-control);text-align:left;cursor:pointer}
@@ -2981,7 +2973,7 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .tdacts .sp{flex:1}
 .tdacts .btn{padding-left:var(--space-3);padding-right:var(--space-3)}
 
-/* the week */
+
 #tdView{margin-left:var(--space-2)}
 .tdwbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin:0 0 var(--space-3)}
 .tdwbar b{margin:0 var(--space-1);font-weight:600}
@@ -3022,7 +3014,7 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .tdgrid.wk #tdSide{position:fixed;right:var(--space-5);top:120px;z-index:6;width:340px;max-width:calc(100vw - 2 * var(--space-4))}
 .tdgrid.wk #tdSide .tdpane{box-shadow:var(--shadow)}
 
-/* people from the School page on a line, in the side pane, and as filters */
+
 .tdp{display:inline-flex;align-items:center;gap:3px;min-width:0}
 .tdp svg{flex:none;width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
 .tdchip svg{flex:none;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
@@ -3036,8 +3028,8 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .tdpplbar .tdp svg{width:16px;height:16px}
 .tdpplbar .btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin-right:var(--space-1)}
 .tdpplbar .link{margin-left:auto;font-weight:500;text-decoration:none}
-/* ---------- Focus: the work timer, the daily goal and the card on Today (src/focus.js). Every value is a token. ---------- */
-/* the card on Today and the start view of the panel share one body */
+
+
 .fcbody{display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-4)}
 .fcgoal{display:flex;flex-direction:column;gap:var(--space-2);font-size:var(--text-control);color:var(--fg-2)}
 .fcgh{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3)}
@@ -3059,7 +3051,7 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .fcgoal.met .fcbar i{background:var(--ok)}
 .fcmet{display:inline-flex;align-items:center;gap:var(--space-1);color:var(--ok);font-weight:600}
 .fcmet svg,.fcok svg,.fcwc svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-/* this week */
+
 .fcweek .fcl{margin-bottom:var(--space-2)}
 .fcwk{display:flex;gap:var(--space-2);height:76px}
 .fcwd{flex:1;display:grid;grid-template-rows:14px minmax(0,1fr) 16px;justify-items:center;min-width:0}
@@ -3087,7 +3079,7 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .fclens button:hover{background:var(--hover)}
 .fclens button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
 
-/* the sidebar: Focus, with the time left while a session runs */
+
 .rnav .rcnt.fcrun{color:var(--accent);font-weight:600}
 .rnav.fcbrk .rcnt.fcrun{color:var(--muted)}
 .fcico{position:relative;display:grid;place-items:center;flex:none;width:18px;height:18px}
@@ -3102,7 +3094,7 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .rnav .rcnt.fcmetc{color:var(--ok);font-weight:600}
 #railFocus.fcgoalon .rcnt{font-variant-numeric:tabular-nums}
 
-/* the panel: bottom left, beside the sidebar, over every screen; a small pill when it is folded */
+
 .fcpanel{position:fixed;left:calc(var(--fc-left, 248px));bottom:var(--space-4);z-index:60;width:328px;max-width:calc(100vw - 2 * var(--space-4));background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);box-shadow:var(--shadow),0 10px 30px rgba(20,25,40,.12);color:var(--fg)}
 .fcpanel[hidden]{display:none}
 .fcpanel.fold{width:auto;border-radius:var(--corner-pill)}
@@ -3135,7 +3127,7 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .fcp{margin:0;font-size:var(--text-control);line-height:1.45;color:var(--fg-2)}
 .fcp.muted{color:var(--muted)}
 .fcbrkbox{padding:var(--space-3);border-radius:var(--corner-3);background:var(--accent-soft);font-size:var(--text-control);line-height:1.45;color:var(--fg-2)}
-/* folded: the pill */
+
 .fcpill{display:flex;align-items:center;gap:var(--space-2);height:40px;padding:0 var(--space-4) 0 var(--space-2);border:0;border-radius:var(--corner-pill);background:none;color:var(--fg);font:inherit;font-size:var(--text-control);cursor:pointer;max-width:320px}
 .fcpill svg{flex:none;width:26px;height:26px;transform:rotate(-90deg)}
 .fcpill circle{fill:none;stroke-width:3.4}
@@ -3147,11 +3139,11 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .fcpill .fcpg{flex:none;padding:1px var(--space-2);border-radius:var(--corner-pill);background:var(--accent-soft);color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
 .fcpill .fcpg.met{background:var(--ok-soft);color:var(--ok)}
 
-/* Settings, Focus */
+
 .fcset{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3)}
 .fcset input[type=number]{width:76px;height:32px;padding:0 var(--space-2);border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control)}
 .fcset .seg{display:inline-flex}
-/* ---------- Time tracker (src/tracker.js): grading and planning time, kept apart, day by day. Every value is a token. ---------- */
+
 #vTime .vhead{flex-wrap:wrap;row-gap:var(--space-2)}
 .tkrange{display:flex;align-items:center;gap:var(--space-2);margin:0 0 var(--space-4);flex-wrap:wrap}
 .tkrange .tkwhen{min-width:0;font-size:var(--text-body);font-weight:600;color:var(--fg)}
@@ -3166,7 +3158,7 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .tkkey.g{background:var(--accent)}
 .tkkey.l{background:var(--ch1)}
 .tkkey.f{background:none;box-shadow:inset 0 0 0 2px var(--accent)}
-/* day by day */
+
 .tkchart{padding:var(--space-4);margin:0 0 var(--space-4)}
 .tkch{display:flex;align-items:baseline;gap:var(--space-3);margin:0 0 var(--space-3);flex-wrap:wrap}
 .tkch h2{margin:0;font-size:var(--text-body);font-weight:600}
@@ -3187,7 +3179,7 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .tkgoal span{position:absolute;right:0;top:-18px;font-size:var(--text-caption);color:var(--muted);background:var(--surface);padding:0 var(--space-1)}
 .tkbars.many{gap:2px}
 .tkbars.many .tkday i{flex-basis:8px}
-/* by assignment, by lesson */
+
 .tkcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--space-4);margin:0 0 var(--space-4)}
 .tklist{padding:var(--space-4)}
 .tklist h2{margin:0 0 var(--space-3);font-size:var(--text-body);font-weight:600}
@@ -3200,7 +3192,7 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .tkrow .tkm .tkbar i{display:block;height:100%;border-radius:var(--corner-pill);background:var(--accent)}
 .tklist.l .tkrow .tkm .tkbar i{background:var(--ch1)}
 .tknone{margin:0;font-size:var(--text-control);color:var(--muted)}
-/* added by hand */
+
 .tkhand{padding:var(--space-4);margin:0 0 var(--space-4)}
 .tkhand h2{margin:0;font-size:var(--text-body);font-weight:600}
 .tkadd{display:flex;flex-wrap:wrap;align-items:flex-end;gap:var(--space-3);margin:var(--space-3) 0 0}
@@ -3216,7 +3208,7 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .tkent .icon{width:26px;height:26px}
 .tkfoot{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);margin:0 0 var(--space-5)}
 .tkfoot p{flex:1;min-width:240px;margin:0;font-size:var(--text-small);color:var(--muted)}
-/* the line on Today's Focus card */
+
 .fctk{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);font-size:var(--text-small);color:var(--muted)}
 .fctk span{display:inline-flex;align-items:center;gap:var(--space-2);min-width:0}
 .fctk b{font-weight:600;color:var(--fg-2);font-variant-numeric:tabular-nums}
@@ -3227,8 +3219,8 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .prog-s .ptk{margin:-4px 0 var(--space-2)}
 .prog-s .ptk:empty{display:none}
 @media (min-width:761px){.cols:not(.open):not(.peek) .ptk{display:none}}
-/* ---------- Planning your grading (src/gradeplan.js). Every value is a token. ---------- */
-/* the top of the Focus card: a free period going on now, and where she left off */
+
+
 .fcnote{display:flex;flex-direction:column;gap:var(--space-2);padding:var(--space-3);border-radius:var(--corner-3);background:var(--accent-soft)}
 .fcnote .fcnh{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2);font-size:var(--text-small);font-weight:600;color:var(--accent)}
 .fcnote .fcnh svg{flex:none;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
@@ -3241,9 +3233,9 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .fcback .t > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--text-control);color:var(--fg)}
 .fcback .t i{font-style:normal;font-size:var(--text-small);color:var(--muted)}
 .fcshort{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-small);color:var(--fg-2)}
-/* a free period in Today's list of classes */
+
 .trow.gpfree .nt b{font-weight:500;color:var(--fg-2)}
-/* the look back at the week */
+
 .lbk{padding:var(--space-4) var(--space-5)}
 .lbk h2{margin:0;font-size:var(--text-body);font-weight:600}
 .lbk .lbks{margin:2px 0 var(--space-3);font-size:var(--text-small);color:var(--muted)}
@@ -3260,20 +3252,20 @@ textarea.tdtitle:focus{border-color:var(--accent);outline:0}
 .lbkw li{margin:2px 0}
 .lbkw .m{color:var(--muted)}
 .lbkf{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3);margin:var(--space-3) 0 0}
-/* the grading due each day in To do's week */
+
 .tdest{display:flex;flex-direction:column;gap:2px;margin:0 0 var(--space-2);padding:var(--space-2);border-radius:var(--corner-2);background:var(--surface-2);font-size:var(--text-small);color:var(--fg-2)}
 .tdest b{font-weight:600;color:var(--fg)}
 .tdest.heavy{background:var(--accent-soft)}
 .tdwsum{margin-left:auto;font-size:var(--text-small);color:var(--fg-2)}
 .tdwbar .tdwsum b{margin:0;font-weight:600;color:var(--fg)}
-/* under the date in an assignment's box */
+
 .duehint{margin:var(--space-1) 0 0;font-size:var(--text-small);color:var(--muted)}
 .duehint:empty{display:none}
 .duehint b{font-weight:600;color:var(--fg-2)}
 .gpnote{margin-top:calc(-1 * var(--space-2))}
-/* quiet while focusing: the counts in the sidebar and in To do wait until the session ends */
+
 body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #tdSay{visibility:hidden}
-/* a goal for each session (src/focus.js) */
+
 .fcsgpick .fcsgrow{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2)}
 .fcsgpick .seg button{padding:5px 10px;font-size:var(--text-small)}
 .fcsgn{display:inline-flex;gap:var(--space-1)}
@@ -3297,7 +3289,7 @@ body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #td
 .fcby > span{color:var(--muted)}
 .fcdays{flex-wrap:wrap}
 .fcdays label{display:inline-flex;align-items:center;gap:var(--space-1)}
-/* ---------- progress sheets (sheet.js): the box that shows them, and the pages as they print ---------- */
+
 .dlg .box.pssbox{width:min(1000px,100%);height:calc(100vh - 32px)}
 .pssbody{display:flex;flex-direction:column;gap:var(--space-2);overflow:auto;background:var(--surface-2)}
 .pssbar{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap}
@@ -3305,7 +3297,7 @@ body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #td
 .pssnote{margin:0;font-size:var(--text-control)}
 .psswarn{color:var(--fg)}
 .psspages{display:flex;flex-direction:column;align-items:center;gap:var(--space-5);padding:var(--space-3) 0 var(--space-6)}
-/* one sheet: a sheet of paper on screen, the page itself in print */
+
 .pss{box-sizing:border-box;width:210mm;min-height:270mm;padding:12mm;background:var(--stage-paper);color:var(--stage-ink);box-shadow:var(--shadow);border-radius:var(--corner-1);font-size:var(--text-control)}
 .pssin{display:flex;flex-direction:column;gap:var(--space-3)}
 .pss h4{margin:0 0 6px;font-size:var(--text-small);text-transform:uppercase;letter-spacing:.06em;color:var(--stage-ink-2);font-weight:600}
@@ -3353,12 +3345,12 @@ body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #td
   #pssOut .pss:last-child{break-after:auto}
   #pssOut .pssgrid,#pssOut .psstiles,#pssOut .psschart,#pssOut tr{break-inside:avoid}
 }
-/* ---------- tablets: what a finger needs (touch.js). None of this applies with a mouse or a trackpad. ---------- */
+
 .settch{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
 .settch select{max-width:100%}
-/* nothing can be pointed at, so what shows on pointing shows always */
+
 @media (hover:none){.pg .rchip{opacity:.92}.crit .sticks{opacity:1}}
-/* a fingertip is wider than a mouse pointer: the tools, the student rows and the score ticks get more room to be hit */
+
 @media (pointer:coarse){
   .tools .tool{height:40px}
   .tools .tool svg{width:20px;height:20px}
@@ -3370,7 +3362,7 @@ body.fcquiet #rail .rcnt:not(.fcrun), body.fcquiet .tdgrp span, body.fcquiet #td
   .sticks{height:28px}
   .scores.slide .sticks button{min-width:28px;padding:4px 2px}
 }
-/* ---------- a class's Seating tab (src/seating.js) ---------- */
+
 .seatbar b{font-weight:600}
 .seatbar2{background:var(--bg)}
 .seatstep{display:inline-flex;align-items:center;gap:var(--space-1);color:var(--muted)}
@@ -3419,7 +3411,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 .seatghost{position:fixed;z-index:80;transform:translate(-50%,-50%);padding:var(--space-2) var(--space-3);border:1px solid var(--accent);border-radius:var(--corner-3);background:var(--surface);color:var(--fg);font-size:var(--text-control);font-weight:600;box-shadow:var(--shadow);pointer-events:none}
 @media (max-width:820px){.seatwrap{flex-direction:column}.seattray{width:auto;align-self:stretch}}
 
-/* the chart on its own, for the class: the same stage a lesson is presented on */
+
 .seatshow{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.4vh;padding:4vh 4vw;background:var(--stage);color:var(--stage-fg);outline:none}
 .seatshow h2{margin:0;font:600 3vh/1.2 var(--f-display);color:var(--stage-muted)}
 .seatshow .seatroom{flex:none;width:100%;gap:2.4vh}
@@ -3431,7 +3423,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 .seatshowx{position:absolute;right:var(--space-4);bottom:var(--space-4);border:1px solid var(--stage-line);border-radius:var(--corner-3);background:var(--stage-bar);color:var(--stage-fg);padding:var(--space-2) var(--space-3);font-size:var(--text-control);opacity:.7}
 .seatshowx:hover{opacity:1}
 
-/* on paper: only the chart */
+
 #seatPrint{display:none}
 @media print{
   body.seatprinting>*:not(#seatPrint){display:none!important}
@@ -3441,8 +3433,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
   #seatPrint .seat{box-shadow:none}
   #seatPrint .seatpin{display:none}
 }
-/* ---------- Pick a name, make groups: what the class reads (src/pickshare.js), built into both pages ----------
-   The same stage as a presented lesson: dark around, a light card for the words, sized by the height of the screen. */
+
 .pk{position:fixed;inset:0;z-index:70;background:var(--stage);color:var(--stage-fg);display:flex;flex-direction:column;outline:none;user-select:none;-webkit-user-select:none}
 .pk-main{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.4vh;padding:4vh 4vw 0;text-align:center;overflow:hidden}
 .pk-cls{font:600 2.6vh/1.2 var(--f-body);color:var(--stage-muted)}
@@ -3454,7 +3445,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 .pk-g{background:var(--stage-paper);color:var(--stage-ink);border-radius:var(--corner-5);padding:.7em 1em .8em;text-align:left;line-height:1.3;font-weight:500;overflow:hidden}
 .pk-g h3{margin:0 0 .25em;font-size:.72em;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--stage-blue)}
 .pk-g{position:relative;min-height:4.2em}
-/* a name in a group can be dragged to another, or clicked and then put where the next click says */
+
 .pk-s{margin:0 -.3em;padding:0 .3em;border-radius:var(--corner-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:grab;touch-action:none}
 .pk-s:hover{background:var(--stage-blue-soft)}
 .pk-s.sel{background:var(--stage-blue);color:var(--stage-paper)}
@@ -3465,7 +3456,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 .pk-empty{margin:0;font-size:.8em;color:var(--stage-ink-2)}
 .pk-gx{position:absolute;top:.3em;right:.4em;border:0;background:none;color:var(--stage-ink-2);font:inherit;font-size:.8em;line-height:1;padding:.2em .4em;border-radius:var(--corner-2)}
 .pk-gx:hover{background:var(--stage-blue-soft)}
-/* students not in a group yet, when the groups are made by hand */
+
 .pk-pool{width:100%;flex:none;background:var(--stage-bar);border:1px dashed var(--stage-line);border-radius:var(--corner-5);padding:.5em 1em;text-align:left;font-size:calc(var(--fs) * .8)}
 .pk-pool h3{margin:0 0 .3em;font-size:.72em;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--stage-muted)}
 .pk-pl{display:flex;flex-wrap:wrap;gap:.3em .5em}
@@ -3473,7 +3464,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 .pk-pool .pk-s.sel{background:var(--stage-blue);color:var(--stage-paper)}
 .pk-pool .pk-empty{color:var(--stage-muted)}
 
-/* the bar: for the teacher */
+
 .pk-bar{flex:none;align-self:center;display:flex;align-items:center;flex-wrap:wrap;justify-content:center;gap:var(--space-1);margin:var(--space-4);padding:var(--space-1) var(--space-2);max-width:calc(100vw - var(--space-5));
   background:var(--stage-bar);border:1px solid var(--stage-line);border-radius:var(--corner-5);font-size:var(--text-control)}
 .pk-bar>button,.pk-bar select{border-radius:var(--corner-3)}
@@ -3491,7 +3482,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 .pk :focus-visible{outline:2px solid var(--stage-fg);outline-offset:2px}
 .pk-say{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 
-/* who is here: a panel on the right */
+
 .pk-who{position:absolute;right:0;top:0;bottom:0;z-index:2;width:min(420px,92vw);padding:var(--space-5) var(--space-5) 96px;overflow:auto;background:var(--stage-bar);border-left:1px solid var(--stage-line);font-size:var(--text-body)}
 .pk-who h2{margin:0 0 var(--space-2);font-size:var(--text-title)}
 .pk-who p{margin:0 0 var(--space-4);color:var(--stage-muted)}
@@ -3500,7 +3491,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 .pk-wl button[aria-pressed="true"]{background:var(--stage-paper);color:var(--stage-ink);border-color:var(--stage-paper);text-decoration:none;font-weight:500}
 .pk-wx{float:right;border:1px solid var(--stage-line);background:none;color:var(--stage-fg);border-radius:var(--corner-3);padding:var(--space-1) var(--space-3);font:inherit;font-weight:600}
 .pk-wx:hover{background:var(--stage-hover)}
-/* Screenshot (src/snip.js): the layer she drags on, the bar along the top and the box being drawn */
+
 .sniplay{position:fixed;inset:0;z-index:2000;cursor:crosshair;background:rgba(20,25,40,.18);outline:0;touch-action:none;user-select:none}
 .sniplay:has(.snipbox:not([hidden])){background:transparent}
 .snipbox{position:fixed;border:2px solid var(--accent);border-radius:var(--corner-1);box-shadow:0 0 0 9999px rgba(20,25,40,.28);pointer-events:none}
@@ -3513,7 +3504,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 .snipmk{display:flex;align-items:center;gap:6px;font-size:var(--text-control);color:var(--fg-2);cursor:pointer;margin-right:4px}
 .snipmk input{accent-color:var(--accent);margin:0}
 .snipnote{flex:1 0 100%;margin:0;color:var(--muted);font-size:var(--text-small)}
-/* a video by its link, partners, and the notes page (src/video.js) */
+
 .vlink .vlslot{margin:0 0 10px}
 .vlink .vlslot iframe,.vlink .vlslot video{display:block;width:100%;height:38vh;min-height:220px;border:0;border-radius:var(--corner-3);background:var(--fg)}
 .vlink .vlslot audio{display:block;width:100%}
@@ -3571,7 +3562,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 .vdby{align-self:flex-start}
 .vdfile{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;padding:var(--space-3);border:1px dashed var(--line-strong);border-radius:var(--corner-3)}
 .vdfile #vdFileName{font-size:var(--text-small)}
-/* the bar that makes a video bigger or smaller */
+
 .vgrip{height:14px;margin:2px 0 2px;display:flex;align-items:center;justify-content:center;cursor:ns-resize;touch-action:none;border-radius:var(--corner-2)}
 .vgrip::before{content:"";width:48px;height:4px;border-radius:var(--corner-pill);background:var(--line-strong)}
 .vgrip:hover::before,.vgrip.on::before,.vgrip:focus-visible::before{background:var(--accent)}
@@ -3579,7 +3570,7 @@ button.seat[data-n]:hover{border-color:var(--accent)}
 html.vidsized #paper .media{max-width:max(900px,calc(var(--vid-h) * 16 / 9 + 30px))}
 html.vidsized #paper .media video,html.vidsized #paper .vlink .vlslot iframe,html.vidsized #paper .vlink .vlslot video{height:var(--vid-h);max-height:none;min-height:0}
 html.vidtall #paper .mstick{position:relative;top:auto}
-/* partners and videos for the whole class */
+
 .pvlist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--corner-3);max-height:46vh;overflow:auto}
 .pvrow{display:grid;grid-template-columns:minmax(120px,1fr) minmax(200px,2fr) auto;gap:var(--space-2);align-items:center;padding:var(--space-2) var(--space-3);border-top:1px solid var(--line)}
 .pvrow:first-child{border-top:0}
@@ -3598,12 +3589,12 @@ html.vidtall #paper .mstick{position:relative;top:auto}
 .pvchip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
 .pvchip:disabled{opacity:.7;cursor:default}
 @media (max-width:640px){.pvrow{grid-template-columns:1fr}.pvpbtn{justify-self:start}}
-/* a video turned the right way up: the box keeps the player's usual size and the player turns inside it */
+
 .vrotbox{position:relative}
 .vrotbox.on{overflow:hidden;height:38vh;min-height:220px;border-radius:var(--corner-3);background:var(--fg)}
 #paper .media:not(.vlink) .vrotbox.on{height:36vh}
 html.vidsized #paper .vrotbox.on{height:var(--vid-h);min-height:0}
-/* transcripts under a player: made here or pasted (src/app/media.js) */
+
 .trbox{padding:10px 14px 4px}
 .trbox .trrow{display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center}
 .trbox small{font-size:var(--text-small);line-height:1.45}
@@ -3629,7 +3620,7 @@ html.vidsized #paper .vrotbox.on{height:var(--vid-h);min-height:0}
 .trcap .icon:disabled{opacity:.35}
 .trbox .trl.cap{box-shadow:inset 3px 0 0 var(--accent)}
 .trhead .link[aria-pressed=true]{font-weight:600;text-decoration:none}
-/* Settings, My setup: the two numbered steps, and the preview of what a setup would change (src/setupin.js). */
+
 .stpsteps{list-style:none;counter-reset:stp;margin:var(--space-3) 0 0;padding:0;display:grid;gap:var(--space-4)}
 .stpsteps li{counter-increment:stp;display:grid;grid-template-columns:28px 1fr;gap:var(--space-3);align-items:start}
 .stpsteps li::before{content:counter(stp);width:28px;height:28px;border-radius:var(--corner-round);background:var(--accent-soft);color:var(--accent);font:600 var(--text-control) var(--f-body);display:grid;place-items:center}
@@ -10888,7 +10879,7 @@ const routeOf = hash => {
   if (p[0] === 'class' && p[1]) {
     const c = p[1] === '-' ? lib.loose : classById(p[1]);
     if (c) {
-      const tab = c !== lib.loose && c.names.length && classTabs().some(t => t[0] && t[0] === p[2]) ? p[2] : '';
+      const tab = c !== lib.loose && (c.names.length || p[2] === 'gradebook') && classTabs().some(t => t[0] && t[0] === p[2]) ? p[2] : '';
       const stu = tab === 'students' && /^\d+$/.test(p[3] || '') && +p[3] >= 1 && +p[3] <= c.names.length ? +p[3] - 1 : null;
       const att = tab !== 'attendance' ? null : p[3] === 'all' ? 'all' : attDayOk(p[3]) ? p[3] : '';
       return { v: 'class', c, tab, stu, att };
@@ -11020,6 +11011,7 @@ function renderLib() {
         '<p class="kmsay">The pin keeps a page in the tab row.</p>') : '') + '</nav>'; };
   const setup = (c, ci) => kmWrap('Class setup', 'class="btn sm" id="clsSetup"',
     '<button class="mitem" data-edit-class="' + ci + '">' + (c.names.length ? 'Edit roster' : 'Add roster') + '<small>Names, and the name of the class</small></button>' +
+    (c.names.length ? '' : '<a class="mitem" href="' + classHash(c, 'gradebook') + '" data-bkfirst>Import scores…<small>From your old gradebook: a CSV or Excel file, or cells pasted</small></a>') +   // its students can become the roster (bookimport.js)
     ibClassItem(c, ci) +
     '<button class="mitem" data-mbset="' + ci + '">' + (mbOf(c) ? 'Change the ' + esc(sysLink()) + ' link' : 'Add the ' + esc(sysLink()) + ' link…') + '</button>' +
     '<hr><button class="mitem" data-cmove="' + ci + ':-1"' + (ci ? '' : ' disabled') + '>Move up in the sidebar</button><button class="mitem" data-cmove="' + ci + ':1"' + (ci < lib.classes.length - 1 ? '' : ' disabled') + '>Move down in the sidebar</button>', 'right');
@@ -16672,7 +16664,7 @@ function bkDraw() {
         '<button class="mitem" data-bkimport>Import scores…<small>From your old gradebook: a CSV or Excel file, or cells pasted</small></button>' +
         (bk.tab === 'table' ? '<button class="mitem" data-bkcopy>Copy the table</button>' + (bk.pick ? '' : '<hr><button class="mitem" data-bkpickon aria-pressed="false">Leave students out…<small>See the class averages without them</small></button>') : ''), 'right') : '') + '</div>';
   let main;
-  if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p>';
+  if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p><p class="bkpad"><button class="btn sm" data-bkimport>Import scores…</button></p>';   // a gradebook file's students can become the roster (bookimport.js)
   else if (bk.tab === 'class') main = myp ? ibClassView(c, cols, all) : bkClassView(c, cols, all, conf);   // an MYP class has levels, not percents (ib.js)
   else if (bk.tab === 'one') main = myp ? ibOneView(c, cols, all) : bkOneView(c, cols, conf);
   else if (bk.tab === 'rep') main = rptView(c, cols, conf);
@@ -17157,7 +17149,11 @@ Object.assign(window.__gs, { openBook, bkLoad, bkClassCols, bkGrade, bkConf, bkT
    starts from zero. It is read in this browser and nothing leaves it. Nothing is saved until the teacher has seen the preview
    and pressed Import. Rows are matched to the class roster by name (rosterPairs, as everywhere else); a row it can't match is
    shown so the teacher can pick the student or leave it out. A column with the same name as an assignment already in the class
-   adds to it, and a score already there is only replaced when the teacher says so: "Keep what's there" is the default.
+   may be the same as one already in the class, spelled a little differently: a close name is suggested, and the teacher says
+   Same, New or Skip for each column before anything happens. A score already there is only replaced when the teacher says so,
+   score by score or all at once ("Keep what's there" is the default). Students are never added unless the teacher picks that
+   for a row, or the class has no students yet, when the file's rows become its roster. The file's categories are matched once
+   to the teacher's own types (or make a new type). Student IDs and emails fill in only where the class has none. One Undo.
    Each imported column is stored exactly as "+ Add scores" stores one: item.typed = { max, s: { roster name: { v, st } } }. */
 
 function bkiParse(text) {
@@ -17245,9 +17241,27 @@ const BKI_SKIP = /(^|\b)(id|student\s*(id|no|number|#)|e-?mail|homeroom|advis[eo
 const BKI_SUM = /(total|average|avg|overall|final grade|term grade|semester|quarter|grade to date|current grade|^grade$|^%$|percent)/i;
 const BKI_FIRST = /^(first|given|preferred)(\s*name)?$/i, BKI_LAST = /^(last|sur|family)(\s*name)?$|^surname$/i, BKI_NAME = /(name|student|pupil|learner)/i;
 const BKI_MAXROW = /^(points?(\s*possible)?|possible|max(imum)?(\s*(points|score))?|out\s*of|total\s*points|pts\s*possible|worth)$/i, BKI_DUEROW = /^(due(\s*date)?|date(\s*due)?|assigned)$/i;
-const BKI_AVGROW = /^(class\s*)?(average|avg|mean|median|high|low|count)$/i;
+const BKI_AVGROW = /^(class\s*)?(average|avg|mean|median|high|low|count)$/i, BKI_CATROW = /^(category|categories|type|assessment type|task type|grading category)$/i;
+const BKI_IDH = /^(student\s*(id|no\.?|number|#)|id(\s*(no\.?|number))?)$/i, BKI_MAILH = /e-?mail/i;
+function bkiWide(rows) {
+  const h = rows[0] || [], f = rx => h.findIndex(x => rx.test(String(x).trim()));
+  const ai = f(/^(assignment|task|assessment|activity|item|title)(\s*(name|title))?$/i), si = f(/^(score|points?(\s*earned)?|marks?|result)$/i);
+  if (ai < 0 || si < 0 || rows.length < 2) return rows;
+  const ci = f(BKI_CATROW), oi = f(/^(out of|max(imum)?(\s*(points|score))?|points possible|possible|total points|worth)$/i), di = f(/^(due(\s*date)?|date)$/i);
+  const keep = h.map((_, i) => i).filter(i => ![ai, si, ci, oi, di].includes(i)); if (!keep.length) return rows;
+  const tasks = [], who = new Map();
+  for (const r of rows.slice(1)) {
+    const t = r[ai]; if (!t) continue;
+    let k = tasks.findIndex(x => x[0] === t); if (k < 0) k = tasks.push([t, r[ci] || '', r[oi] || '', r[di] || '']) - 1;
+    const key = keep.map(i => r[i]).join('\u0001'); if (!who.has(key)) who.set(key, keep.map(i => r[i]));
+    who.get(key)[keep.length + k] = r[si];
+  }
+  const pad = Array(keep.length - 1).fill(''), meta = [['Category', 1], ['Points possible', 2], ['Due', 3]].filter(([, j]) => tasks.some(x => x[j])).map(([l, j]) => [l, ...pad, ...tasks.map(x => x[j])]);
+  return [keep.map(i => h[i]).concat(tasks.map(x => x[0])), ...meta, ...[...who.values()].map(r => [...r].map(x => x || ''))];
+}
 function bkiRead(rows) {
   if (!rows.length) return null;
+  rows = bkiWide(rows);
   const w = Math.max(...rows.map(r => r.length));
   rows = rows.map(r => { const x = r.slice(); while (x.length < w) x.push(''); return x; });
   const isNum = s => { const c = bkiCell(s); return !!c && !c.bad; };
@@ -17261,11 +17275,13 @@ function bkiRead(rows) {
   if (fi < 0 && ni < 0) return { err: 'none' };
   const nameOf = r => { let n = fi >= 0 ? (r[fi] + ' ' + r[li]).trim() : r[ni]; const m = n.match(/^([^,]+),\s*([^,]+)$/); return m ? m[2] + ' ' + m[1] : n; };   // "Testwell, Aria" is Aria Testwell
   const nameCols = new Set([fi, li, ni].filter(i => i >= 0));
-  const maxRow = body.find(r => BKI_MAXROW.test(nameOf(r)) || BKI_MAXROW.test(r[0])), dueRow = body.find(r => BKI_DUEROW.test(nameOf(r)) || BKI_DUEROW.test(r[0]));
-  body = body.filter(r => r !== maxRow && r !== dueRow && !BKI_AVGROW.test(nameOf(r)) && nameOf(r));
+  const row = rx => body.find(r => rx.test(nameOf(r)) || rx.test(r[0])), maxRow = row(BKI_MAXROW), dueRow = row(BKI_DUEROW), catRow = row(BKI_CATROW);
+  body = body.filter(r => r !== maxRow && r !== dueRow && r !== catRow && !BKI_AVGROW.test(nameOf(r)) && nameOf(r));
+  const idc = head.findIndex(x => BKI_IDH.test(x.trim())), mc = head.findIndex(x => BKI_MAILH.test(x));
   const cols = [];
-  head.forEach((h, i) => {
-    if (nameCols.has(i) || BKI_SKIP.test(h)) return;
+  head.forEach((h0, i) => {
+    if (nameCols.has(i) || BKI_SKIP.test(h0)) return;
+    const tag = h0.match(/\s*\[([^\]]+)\]\s*$/), h = tag ? h0.slice(0, tag.index).trim() || h0 : h0;   // "Essay [Summative]": the category in the heading
     const cells = body.map(r => bkiCell(r[i])), filled = cells.filter(Boolean), good = filled.filter(c => !c.bad);
     if (!good.length || good.length < filled.length / 2) return;
     let max = null, how = '';
@@ -17279,9 +17295,9 @@ function bkiRead(rows) {
     const name = h.replace(/\s*(?:\(\s*\d+(?:\.\d+)?\s*(?:pts?|points?|marks?)?\s*\)|\/\s*\d+(?:\.\d+)?|out of\s*\d+(?:\.\d+)?)\s*$/i, '').trim() || h;
     const due = bkiDate(dueRow ? dueRow[i] : '') || bkiDate(h);
     cols.push({ i, head: h, name, max, pct, how, due, on: !BKI_SUM.test(h), type: bkiGuess(h),
-      bad: filled.length - good.length });
+      bad: filled.length - good.length, cat: ((catRow && catRow[i]) || (tag && tag[1]) || '').trim() });
   });
-  return { students: body.map(r => ({ name: nameOf(r), cells: r })), cols };
+  return { students: body.map(r => ({ name: nameOf(r), cells: r, id: idc >= 0 ? r[idc] : '', email: mc >= 0 && EMAIL_RX.test(r[mc]) ? r[mc] : '' })), cols, ids: idc >= 0, mails: mc >= 0 };
 }
 
 function bkiGuess(h) {
@@ -17291,20 +17307,53 @@ function bkiGuess(h) {
   if (bkIsType('ic')) return 'ic';
   const sc = cats.find(([t]) => t !== 'fm'); return (sc || cats[0] || ['ic'])[0];
 }
+/* ---------- matching a file's column to an assignment already in the class ---------- */
+const bkiWords = s => String(s || '').toLowerCase().replace(/\[[^\]]*\]|\([^)]*\)/g, ' ').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().split(' ').filter(Boolean);
+const BKI_COMMON = /^(test|quiz|exam|essay|project|lab|report|homework|hw|assignment|task|unit|chapter|ch|assessment|summative|formative|worksheet|practice|review|final|midterm|presentation|the|a|an|of|on|and|in|to|for|part|week|term|semester|draft)$/;
+function bkiFit(a, b) {
+  const A = bkiWords(a), B = bkiWords(b); if (!A.length || !B.length) return 0;
+  const nums = W => W.filter(w => /^\d+$/.test(w)).sort().join(); if (nums(A) !== nums(B)) return 0;
+  if (A.join(' ') === B.join(' ')) return String(a).trim().toLowerCase() === String(b).trim().toLowerCase() ? 1 : 0.95;
+  const like = (x, y) => x === y || (x.length > 3 && y.length > 3 && (oneEdit(x, y) || x.startsWith(y) || y.startsWith(x)));
+  const used = new Set(); let hit = 0, own = 0;
+  for (const x of A) { const j = B.findIndex((y, k) => !used.has(k) && like(x, y)); if (j >= 0) { used.add(j); hit++; if (!BKI_COMMON.test(x) && !/^\d+$/.test(x)) own++; } }
+  return own ? Math.min(0.94, 2 * hit / (A.length + B.length)) : 0;   // "Map test" and "Poetry test" share only "test": not alike
+}
+function bkiMatch(cols, ex) {
+  const pairs = [];
+  for (const col of cols) for (const x of ex) {
+    let f = bkiFit(col.name, x.name); if (!f) continue;
+    if (f < 1 && col.due && x.due && Math.abs(Date.parse(col.due) - Date.parse(x.due)) < 4 * 864e5) f = Math.min(0.99, f + 0.1);
+    pairs.push([f, col, x.it.id]);
+  }
+  pairs.sort((a, b) => b[0] - a[0]);
+  for (const col of cols) { col.to = ''; col.sure = 0; col.opts = pairs.filter(p => p[1] === col && p[0] >= 0.5).map(p => p[2]); }
+  const took = new Set();
+  for (const [f, col, id] of pairs) {
+    if (f < 0.5 || col.sure || took.has(id)) continue;
+    took.add(id); col.sure = f >= 1 ? 2 : 1; col.to = f >= 0.75 ? id : null;
+  }
+}
+function bkiCatGuess(cat) {
+  const low = cat.toLowerCase(), cats = bkCats();
+  const t = cats.find(([, l, s]) => [l, s].some(x => x && x.toLowerCase() === low)) || cats.find(([, , s]) => s && s.length > 3 && (low.includes(s.toLowerCase()) || s.toLowerCase().includes(low)));
+  return t ? t[0] : '+:' + cat;
+}
 /* ---------- the screen ---------- */
 let bki = null;
 function bkImportView() {
   const c = bkClass(); if (!c) return;
-  bki = { data: null, pick: {}, keep: true, unit: '', all: '' };
+  bki = { data: null, pick: {}, keep: true, over: {}, unit: '', all: '', cats: {}, info: true };
   bkTabsOff();
-  $('#bkBody').innerHTML = '<div class="bkpad bkaddv bkiv" id="bkImp"><h3 class="bkh">Import scores from a spreadsheet · ' + esc(c.name) + '</h3>' +
-    '<p class="muted bkimeta">For work marked before you used this app: your old gradebook, one row per student and one column per assignment. Each column becomes a typed-in assignment. Nothing is saved until you check it and press Import, and nothing leaves this browser.</p>' +
+  $('#bkBody').innerHTML = '<div class="bkpad bkaddv bkiv" id="bkImp"><h3 class="bkh">Import a gradebook · ' + esc(c.name) + '</h3>' +
+    '<p class="muted bkimeta">A gradebook downloaded from your school’s system or a spreadsheet: one row per student and one column per assignment. Assignments you already have are matched by name, and you check each match. Nothing is saved until you press Import, and nothing leaves this browser.</p>' +
     '<div class="bkidrop" id="bkiDrop"><button class="btn primary" data-bkifile>Choose a file…</button><span class="muted">CSV, TSV or Excel (.xlsx). In Google Sheets: File, Download, CSV.</span><input type="file" id="bkiFile" accept=".csv,.tsv,.txt,.xlsx,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>' +
     '<textarea class="bkin bkpaste" id="bkiPaste" rows="3" placeholder="Or copy the cells in your spreadsheet, headings included, and paste them here."></textarea>' +
     '<p class="bkierr" id="bkiErr" role="alert" hidden></p><div id="bkiOut"></div>' +
     '<div class="bkfootbtns"><span class="muted" id="bkiCount"></span><span class="sp"></span><button class="btn" data-bkback>Cancel</button><button class="btn primary" data-bkisave disabled>Import</button></div></div>';
 }
 function bkiErr(msg) { const e = $('#bkiErr'); if (!e) return; e.hidden = !msg; e.textContent = msg || ''; }
+const bkiEx = () => { const c = bkClass(); return c.units.flatMap(u => u.items).filter(it => it.type !== 'xc').map(it => ({ it, name: it.name, due: it.due || '' })); };
 function bkiTake(rows) {
   const r = bkiRead(rows || []);
   if (!r || r.err) { bkiErr(r && r.err === 'none' ? 'There’s no column of student names in that. Keep the names in one column (or first and last names in two), with a heading row above.' : 'That looks empty.'); return; }
@@ -17313,12 +17362,17 @@ function bkiTake(rows) {
   const c = bkClass();
   const keys = r.students.map(s => s.name), pairs = rosterPairs(c.names, keys);
   r.match = new Map([...pairs].map(([n, k]) => [k, n]));
-  bki.data = r; bki.pick = {};
-  const ex = bkClassCols(c, bk.cols);
-  for (const col of r.cols) { const t = ex.find(x => x.it && x.type !== 'xc' && x.name.trim().toLowerCase() === col.name.trim().toLowerCase()); col.to = t ? t.it.id : ''; if (t && !col.due) col.due = t.due || ''; }
+  bki.data = r; bki.pick = {}; bki.over = {}; bki.cats = {};
+  bki.build = !c.names.length;
+  if (bki.build) { const seen = new Set(); r.students.forEach((s, i) => { const k = normName(s.name); bki.pick[i] = seen.has(k) ? '' : '+'; seen.add(k); }); }
+  const ex = bkiEx(); bkiMatch(r.cols, ex);
+  for (const col of r.cols) {
+    if (col.cat) { if (!(col.cat in bki.cats)) bki.cats[col.cat] = bkiCatGuess(col.cat); col.type = bki.cats[col.cat]; }
+    const t = col.to && ex.find(x => x.it.id === col.to); if (t && !col.due) col.due = t.due || '';
+  }
   bkiDraw();
 }
-function bkiWho(s, i) { return Object.prototype.hasOwnProperty.call(bki.pick, i) ? bki.pick[i] : bki.data.match.get(s.name) || ''; }
+function bkiWho(s, i) { const p = Object.prototype.hasOwnProperty.call(bki.pick, i) ? bki.pick[i] : bki.data.match.get(s.name) || ''; return p === '+' ? s.name : p; }
 function bkiVal(cell, max) {
   if (!cell || cell.bad) return null;
   if (cell.st === 'missing' || cell.st === 'excused') return { v: null, st: cell.st };
@@ -17336,12 +17390,13 @@ function bkiFixed(col) {
 }
 const bkiMax = col => { const f = bkiFixed(col); return f !== undefined ? f : col.pct ? null : col.max; };
 const bkiSame = (a, b) => (a.st || '') === (b.st || '') && (a.v == null ? null : +a.v) === (b.v == null ? null : +b.v);
+const bkiUse = (col, who) => { const o = bki.over[col.i + '|' + who]; return o ? o === 'file' : !bki.keep; };
 function bkiPlan() {
   const d = bki.data, out = [];
   for (const col of d.cols) {
     if (!col.on) continue;
     const max = bkiMax(col), t = col.to ? findItem(col.to) : null, old = (t && t.it.typed && t.it.typed.s) || {}, s = {}, clash = [];
-    const exCol = col.to ? bkClassCols(bkClass(), bk.cols).find(x => x.key === col.to) : null;
+    const exCol = col.to ? bkClassCols(bkClass(), bk.cols).find(x => x.key === col.to) : null, fb = (t ? t.it.type : col.type) === 'fm';
     let papers = 0;
     d.students.forEach((st, i) => {
       const who = bkiWho(st, i); if (!who) return;
@@ -17349,68 +17404,104 @@ function bkiPlan() {
       const gc = exCol && exCol.cells.get(who);
       if (gc && !gc.typed && (gc.pct != null || gc.st)) { papers++; return; }   // a graded paper's score always wins; it's changed in that paper
       if (old[who] && (old[who].v != null || old[who].st) && !bkiSame(old[who], v)) clash.push({ who, was: old[who], now: v });
-      s[who] = col.type === 'fm' ? { ...v, fb: true } : v;
+      s[who] = fb ? { ...v, fb: true } : v;
     });
     out.push({ col, max, t, s, old, clash, papers });
   }
   return out;
 }
 const bkiShow = (r, max) => r.st === 'missing' || r.st === 'excused' ? r.st : r.v == null ? '–' : fmtNum(r.v) + (max ? '/' + fmtNum(max) : '%') + (r.st === 'late' ? ' late' : '');
+function bkiInfo() {
+  const c = bkClass(), d = bki.data, add = [], differ = [];
+  d.students.forEach((s, i) => {
+    const who = bkiWho(s, i), had = (who && c.info && c.info[who]) || {}; if (!who) return;
+    for (const k of ['id', 'email']) if (s[k]) { if (!had[k]) add.push([who, k, s[k]]); else if (String(had[k]).toLowerCase() !== s[k].toLowerCase()) differ.push(who); }
+  });
+  return { add, differ };
+}
+const bkiTypeName = t => t.startsWith('+:') ? t.slice(2) + ' (new type)' : bkLabel(t);
 function bkiDraw() {
   const c = bkClass(), d = bki.data, out = $('#bkiOut'); if (!out || !d) return;
   $('#bkiDrop').hidden = $('#bkiPaste').hidden = true;
-  const units = c.units, plan = bkiPlan(), clashes = plan.reduce((a, p) => a + p.clash.length, 0);
-  const matched = d.students.map((s, i) => bkiWho(s, i)).filter(Boolean), unmatched = d.students.map((s, i) => [s, i]).filter(([s, i]) => !bkiWho(s, i));
-  const taken = new Set(matched), absent = c.names.filter(n => !taken.has(n));
-  const typeSel = col => '<select class="btn sm" data-bkitype="' + col.i + '" aria-label="Type">' + bkCats().map(([t, , s]) => '<option value="' + t + '"' + (col.type === t ? ' selected' : '') + '>' + s + '</option>').join('') + '</select>';
+  const units = c.units, plan = bkiPlan(), ex = bkiEx(), clash = plan.flatMap(p => p.clash.map(x => [p, x]));
+  const rows = d.students.map((s, i) => [s, i, bkiWho(s, i)]), matched = rows.filter(r => r[2]), unmatched = rows.filter(r => !r[2] || bki.pick[r[1]] === '+');
+  const added = rows.filter(r => bki.pick[r[1]] === '+'), taken = new Set(matched.map(r => r[2])), absent = c.names.filter(n => !taken.has(n));
+  const newTypes = [...new Set(Object.values(bki.cats).filter(t => t.startsWith('+:')))];
+  const typeOpts = sel => bkCats().map(([t, , s]) => [t, s]).concat(newTypes.map(t => [t, bkiTypeName(t)])).map(([t, s]) => '<option value="' + esc(t) + '"' + (sel === t ? ' selected' : '') + '>' + esc(s) + '</option>').join('');
+  const typeCell = col => { const t = col.to && findItem(col.to); return t && t.it.type ? '<span class="muted">' + esc(bkLabel(t.it.type)) + '</span>' : '<select class="btn sm" data-bkitype="' + col.i + '" aria-label="Type">' + typeOpts(col.type) + '</select>'; };
   const scale = col => {
     const f = bkiFixed(col);
-    if (f !== undefined) return '<span class="muted">' + (f ? 'Points out of ' + fmtNum(f) : 'Percent') + ', as it is now</span>';
+    if (f !== undefined) return '<span class="muted">' + (f ? 'Out of ' + fmtNum(f) : 'Percent') + ', as it is now</span>';
     return '<select class="btn sm" data-bkimode="' + col.i + '" aria-label="Scored as"><option value="pts"' + (col.pct ? '' : ' selected') + '>Points out of</option><option value="pct"' + (col.pct ? ' selected' : '') + '>Percent</option></select>' +
       (col.pct ? '' : ' <input type="number" class="bkin bksc" min="0.5" step="0.5" data-bkimax="' + col.i + '" value="' + esc(col.max || '') + '" aria-label="Out of">') + (col.how === 'guess' ? ' <span class="stag" title="Nothing in the file said what it’s out of, so this is a guess from the scores">check</span>' : '');
   };
   const found = col => { const cs = d.students.map(s => bkiCell(s.cells[col.i])).filter(Boolean), n = cs.filter(x => x.v != null || x.pct != null).length, m = cs.filter(x => x.st === 'missing').length, e = cs.filter(x => x.st === 'excused').length;
     return [people(n, 'score'), m ? m + ' missing' : '', e ? e + ' excused' : '', col.bad ? col.bad + ' not read' : ''].filter(Boolean).join(', '); };
-  const goes = col => { if (!col.to) return '<span class="muted">New assignment</span>'; const t = findItem(col.to); return '<span class="bkito">Adds to “' + esc(t ? t.it.name : col.name) + '”</span> <button class="link" data-bkinew="' + col.i + '">make it a new one</button>'; };
-  const n = d.cols.filter(x => x.on).length;
-  out.innerHTML = '<p class="bkisum">Found <b>' + people(d.cols.length, 'assignment') + '</b> and <b>' + people(d.students.length, 'student') + '</b>. ' + matched.length + ' of them match your roster.' + ' <button class="link" data-bkiagain>Use another file</button></p>' +
-    '<h4 class="ovh3">Assignments</h4><div class="bkiwrap"><table class="ptab bkitab"><thead><tr><th><span class="sr">Import</span></th><th>Assignment</th><th>Type</th><th>Due</th><th>Scored as</th><th>In the file</th><th>Goes to</th></tr></thead><tbody>' +
-    d.cols.map(col => '<tr class="' + (col.on ? '' : 'bkioff') + '"><td><input type="checkbox" data-bkion="' + col.i + '"' + (col.on ? ' checked' : '') + ' aria-label="' + esc('Import ' + col.name) + '"></td>' +
-      '<td><input type="text" class="bkin bkiname" data-bkiname="' + col.i + '" value="' + esc(col.name) + '" aria-label="Assignment name"' + (col.to ? ' disabled' : '') + '>' + (BKI_SUM.test(col.head) && !col.on ? '<small class="muted bkiwhy">Looks like a total, so it’s left out</small>' : '') + '</td>' +
-      '<td>' + typeSel(col) + '</td><td><input type="date" class="bkin" data-bkidue="' + col.i + '" value="' + esc(col.due) + '" aria-label="Due"></td><td class="bkiscale">' + scale(col) + '</td><td class="muted">' + found(col) + '</td><td>' + goes(col) + '</td></tr>').join('') + '</tbody></table></div>' +
+  const usedBy = new Map(d.cols.filter(x => x.on && x.to).map(x => [x.to, x.i]));
+  const goes = col => {
+    const v = !col.on ? 'skip' : col.to === null ? '' : col.to || 'new', opt = x => '<option value="' + x.it.id + '"' + (v === x.it.id ? ' selected' : '') + (usedBy.has(x.it.id) && usedBy.get(x.it.id) !== col.i ? ' disabled' : '') + '>Same as “' + esc(x.it.name) + '”</option>';
+    const sug = col.opts.map(id => ex.find(x => x.it.id === id)).filter(Boolean), rest = ex.filter(x => !col.opts.includes(x.it.id));
+    return '<select class="btn sm bkigo' + (v === '' ? ' bkiask' : '') + '" data-bkigo="' + col.i + '" aria-label="' + esc('Where “' + col.name + '” goes') + '">' + (v === '' ? '<option value="" selected>Choose…</option>' : '') +
+      sug.map(opt).join('') + '<option value="new"' + (v === 'new' ? ' selected' : '') + '>New assignment</option><option value="skip"' + (v === 'skip' ? ' selected' : '') + '>Skip: leave it out</option>' +
+      (rest.length ? '<optgroup label="Same as another assignment">' + rest.map(opt).join('') + '</optgroup>' : '') + '</select>' +
+      (col.on && col.to && col.sure === 1 ? ' <span class="stag" title="The names are close, not the same">check</span>' : '');
+  };
+  const order = d.cols.slice().sort((a, b) => (a.on && a.to === null ? 0 : a.on && a.sure === 1 && a.to ? 1 : 2) - (b.on && b.to === null ? 0 : b.on && b.sure === 1 && b.to ? 1 : 2));
+  const ask = d.cols.filter(x => x.on && x.to === null).length, n = d.cols.filter(x => x.on).length;
+  const cats = Object.keys(bki.cats), info = (d.ids || d.mails) ? bkiInfo() : null;
+  out.innerHTML = '<p class="bkisum">Found <b>' + people(d.cols.length, 'assignment') + '</b> and <b>' + people(d.students.length, 'student') + '</b>. ' +
+    (bki.build ? 'This class has no students yet, so they become its roster.' : matched.length - added.length + ' of them match your roster.') + ' <button class="link" data-bkiagain>Use another file</button></p>' +
+    (cats.length ? '<h4 class="ovh3">Categories in the file</h4><p class="muted bkhint">Each one goes into one of your gradebook types. You can still change a single assignment below.</p><table class="ptab bkitab bkicats"><tbody>' +
+      cats.map(k => '<tr><td>' + esc(k) + '</td><td><select class="btn sm" data-bkicat="' + esc(k) + '" aria-label="' + esc('Type for ' + k) + '">' + bkCats().map(([t, , s]) => '<option value="' + t + '"' + (bki.cats[k] === t ? ' selected' : '') + '>' + esc(s) + '</option>').join('') + '<option value="' + esc('+:' + k) + '"' + (bki.cats[k] === '+:' + k ? ' selected' : '') + '>New type: ' + esc(k) + '</option></select></td></tr>').join('') + '</tbody></table>' +
+      (newTypes.length ? '<p class="muted bkhint">A new type counts for nothing in the term grade until you give it a weight in the gradebook’s Term setup.</p>' : '') : '') +
+    '<h4 class="ovh3">Assignments</h4>' + (ask ? '<p class="bkhint"><b>' + (ask === 1 ? 'One name is' : ask + ' names are') + ' close to an assignment you have.</b> Say for each whether it is the same one, a new one, or to leave it out.</p>' : '') +
+    '<div class="bkiwrap"><table class="ptab bkitab"><thead><tr><th>In the file</th><th>Goes to</th><th>Type</th><th>Due</th><th>Scored as</th><th>Scores</th></tr></thead><tbody>' +
+    order.map(col => '<tr class="' + (col.on ? '' : 'bkioff') + '"><td><input type="text" class="bkin bkiname" data-bkiname="' + col.i + '" value="' + esc(col.name) + '" aria-label="Assignment name"' + (col.to || !col.on ? ' disabled' : '') + '>' + (BKI_SUM.test(col.head) && !col.on ? '<small class="muted bkiwhy">Looks like a total, so it’s left out</small>' : '') + '</td>' +
+      '<td>' + goes(col) + '</td><td>' + (col.on ? typeCell(col) : '') + '</td><td>' + (col.on ? '<input type="date" class="bkin" data-bkidue="' + col.i + '" value="' + esc(col.due) + '" aria-label="Due">' : '') + '</td><td class="bkiscale">' + (col.on ? scale(col) : '') + '</td><td class="muted">' + found(col) + '</td></tr>').join('') + '</tbody></table></div>' +
     '<div class="bkirow"><label class="bkpf">Date for every assignment without one<span class="bkiinl"><input type="date" class="bkin" id="bkiAll" value="' + esc(bki.all) + '"><button class="btn sm" data-bkiall>Use it</button></span></label>' +
     '<label class="bkpf">New assignments go in<select class="btn sm" id="bkiUnit">' + units.map(u => '<option value="' + u.id + '"' + (bki.unit === u.id ? ' selected' : '') + '>' + esc(u.name) + '</option>').join('') + '<option value=""' + (bki.unit ? '' : ' selected') + '>A new unit: Imported</option></select></label></div>' +
-    (d.cols.some(x => x.on && !x.due) ? '<p class="muted bkhint">An assignment with no date counts in no term until it has one. Set it here, or later from its column in the gradebook.</p>' : '') +
+    (d.cols.some(x => x.on && !x.to && !x.due) ? '<p class="muted bkhint">An assignment with no date counts in no term until it has one. Set it here, or later from its column in the gradebook.</p>' : '') +
     '<h4 class="ovh3">Students</h4>' +
-    (unmatched.length ? '<p class="bkhint">' + (unmatched.length === 1 ? 'This row doesn’t' : 'These rows don’t') + ' match anyone on your roster. Pick the student, or leave the row out.</p><table class="ptab bkitab bkiwho"><tbody>' +
-      unmatched.map(([s, i]) => '<tr><td>' + esc(s.name) + '</td><td><select class="btn sm" data-bkipick="' + i + '" aria-label="' + esc('Roster student for ' + s.name) + '"><option value="">Leave this row out</option>' + absent.map(nm => '<option value="' + esc(nm) + '">' + esc(nm) + '</option>').join('') + '</select></td></tr>').join('') + '</tbody></table>' : '<p class="bkhint">Every row matches a student on your roster.</p>') +
-    (absent.length ? '<p class="muted bkhint">Not in the file, so nothing changes for them: ' + esc(absent.join(', ')) + '.</p>' : '') +
-    (matched.length ? '<details class="bkidet"><summary>' + people(matched.length, 'row') + ' matched</summary><ul>' + d.students.map((s, i) => [s.name, bkiWho(s, i)]).filter(x => x[1]).map(([f, r]) => '<li>' + esc(f) + (f === r ? '' : ' → ' + esc(r)) + '</li>').join('') + '</ul></details>' : '') +
-    (clashes ? '<div class="bknote bkiclash" id="bkiClash"><div><b>' + (clashes === 1 ? '1 score is' : clashes + ' scores are') + ' already in the gradebook and ' + (clashes === 1 ? 'differs' : 'differ') + ' from the file.</b> Which should stay?</div><div class="pseg" role="group">' +
-      [['keep', 'Keep what’s there'], ['file', 'Use the file’s scores']].map(([v, l]) => '<button data-bkikeep="' + v + '" aria-pressed="' + ((v === 'keep') === bki.keep) + '">' + l + '</button>').join('') + '</div>' +
-      '<details class="bkidet"><summary>See them</summary><ul>' + plan.flatMap(p => p.clash.map(x => '<li>' + esc(p.col.name) + ', ' + esc(x.who) + ': ' + esc(bkiShow(x.was, p.max)) + ' now, ' + esc(bkiShow(x.now, p.max)) + ' in the file</li>')).join('') + '</ul></details></div>' : '') +
+    (unmatched.length ? '<p class="bkhint">' + (bki.build ? 'Each row becomes a student unless you leave it out.' : (unmatched.length === 1 ? 'This row doesn’t' : 'These rows don’t') + ' match anyone on your roster. Pick the student, or leave the row out. Nobody is added unless you choose that.') + '</p><table class="ptab bkitab bkiwho"><tbody>' +
+      unmatched.map(([s, i]) => { const p = bki.pick[i] || ''; return '<tr><td>' + esc(s.name) + '</td><td><select class="btn sm" data-bkipick="' + i + '" aria-label="' + esc('Roster student for ' + s.name) + '"><option value=""' + (p === '' ? ' selected' : '') + '>Leave this row out</option><option value="+"' + (p === '+' ? ' selected' : '') + '>Add as a new student</option>' + absent.map(nm => '<option value="' + esc(nm) + '">' + esc(nm) + '</option>').join('') + '</select></td></tr>'; }).join('') + '</tbody></table>' : '<p class="bkhint">Every row matches a student on your roster.</p>') +
+    (absent.length && !bki.build ? '<p class="muted bkhint">On your roster but not in the file, so nothing changes for them: ' + esc(absent.join(', ')) + '.</p>' : '') +
+    (matched.length - added.length > 0 ? '<details class="bkidet"><summary>' + people(matched.length - added.length, 'row') + ' matched</summary><ul>' + rows.filter(r => r[2] && bki.pick[r[1]] !== '+').map(([s, , r]) => '<li>' + esc(s.name) + (s.name === r ? '' : ' → ' + esc(r)) + '</li>').join('') + '</ul></details>' : '') +
+    (info && (info.add.length || info.differ.length) ? '<label class="bkpf bkiinfo"><span><input type="checkbox" id="bkiInfo"' + (bki.info ? ' checked' : '') + '> Fill in ' + [['id', 'student ID'], ['email', 'email']].map(([k, w]) => { const m = info.add.filter(x => x[1] === k).length; return m ? people(m, w) : ''; }).filter(Boolean).join(' and ') + ' where you have none</span>' +
+      (info.differ.length ? '<small class="muted">' + people(new Set(info.differ).size, 'student') + ' already ' + (new Set(info.differ).size === 1 ? 'has' : 'have') + ' a different one, which stays.</small>' : '') + '</label>' : '') +
+    (clash.length ? '<div class="bknote bkiclash" id="bkiClash"><div><b>' + (clash.length === 1 ? '1 score is' : clash.length + ' scores are') + ' already in the gradebook and ' + (clash.length === 1 ? 'differs' : 'differ') + ' from the file.</b> Which should stay?</div><div class="pseg" role="group">' +
+      [['keep', 'Keep all of mine'], ['file', 'Use all of the file’s']].map(([v, l]) => '<button data-bkikeep="' + v + '" aria-pressed="' + ((v === 'keep') === bki.keep && !Object.keys(bki.over).length) + '">' + l + '</button>').join('') + '</div>' +
+      '<table class="ptab bkitab bkiclt"><tbody>' + clash.map(([p, x]) => { const f = bkiUse(p.col, x.who), k = p.col.i + '|' + esc(x.who); return '<tr><td>' + esc(p.t ? p.t.it.name : p.col.name) + '</td><td>' + esc(x.who) + '</td><td><div class="pseg" role="group"><button data-bkiover="' + k + '" data-v="keep" aria-pressed="' + !f + '">Mine: ' + esc(bkiShow(x.was, p.max)) + '</button><button data-bkiover="' + k + '" data-v="file" aria-pressed="' + f + '">File: ' + esc(bkiShow(x.now, p.max)) + '</button></div></td></tr>'; }).join('') + '</tbody></table></div>' : '') +
     (plan.some(p => p.papers) ? '<p class="muted bkhint">' + people(plan.reduce((a, p) => a + p.papers, 0), 'score') + ' already come from graded papers. Those stay as they are; change them in the paper.</p>' : '');
-  const sv = $('[data-bkisave]'); sv.disabled = !n || !matched.length; sv.textContent = n ? 'Import ' + people(n, 'assignment') : 'Import';
-  $('#bkiCount').textContent = n ? people(plan.reduce((a, p) => a + Object.keys(p.s).length, 0), 'score') + ' for ' + people(matched.length, 'student') : '';
+  const sv = $('[data-bkisave]'); sv.disabled = !n || !matched.length || !!ask; sv.textContent = n ? 'Import ' + people(n, 'assignment') : 'Import';
+  $('#bkiCount').textContent = ask ? 'Choose where ' + (ask === 1 ? 'one assignment goes' : ask + ' assignments go') + ' first' : n ? people(plan.reduce((a, p) => a + Object.keys(p.s).length, 0), 'score') + ' for ' + people(matched.length, 'student') + (added.length ? ', ' + people(added.length, 'new student') : '') : '';
 }
 function bkiSave() {
-  const c = bkClass(), plan = bkiPlan(); if (!plan.length) return false;
+  const c = bkClass(), plan = bkiPlan(); if (!plan.length || plan.some(p => p.col.to === null)) return false;
   const bad = plan.find(p => bkiFixed(p.col) === undefined && !p.col.pct && !(p.col.max > 0));
   if (bad) { toast('Say what “' + bad.col.name + '” is out of.'); return false; }
+  const made = {}, want = [...new Set(plan.map(p => p.col.type).filter(t => t && t.startsWith('+:')))];
+  if (want.length) {
+    const b = lib.book || {}, list = (Array.isArray(b.cats) ? b.cats : BK_DEF.map(([id]) => ({ id }))).slice();
+    for (const t of want) { const id = 'c' + uid(); made[t] = id; list.push({ id, name: t.slice(2), k: list.filter(x => x.k).length % 5 + 1 }); }
+    lib.book = { ...b, cats: list };
+  }
+  const d = bki.data, added = d.students.filter((s, i) => bki.pick[i] === '+' && !c.names.includes(s.name)).map(s => s.name);
+  c.names.push(...new Set(added));
+  if (bki.info && (d.ids || d.mails)) for (const [who, k, v] of bkiInfo().add) setInfo(c, who, { [k]: v });
   let u = null, first = null;
   for (const p of plan) {
-    const col = p.col, name = col.name.trim() || col.head;
+    const col = p.col, name = col.name.trim() || col.head, type = made[col.type] || col.type;
     let it;
     if (p.t) {
       it = p.t.it;
       const s = { ...p.old };
-      for (const [who, v] of Object.entries(p.s)) { const was = p.old[who]; if (!bki.keep || !was || (was.v == null && !was.st) || bkiSame(was, v)) s[who] = v; }
+      for (const [who, v] of Object.entries(p.s)) { const was = p.old[who]; if (!was || (was.v == null && !was.st) || bkiSame(was, v) || bkiUse(col, who)) s[who] = v; }
       it.typed = { max: p.max, s };
-      if (!it.type) it.type = col.type;
+      if (!it.type) it.type = type;
       if (!it.due && col.due) it.due = col.due;
     } else {
       if (!u) { u = c.units.find(x => x.id === bki.unit); if (!u) c.units.push(u = { id: uid(), name: 'Imported', items: [] }); }
-      u.items.push(it = { id: uid(), name, classId: c.id, type: col.type, due: col.due, typed: { max: p.max, s: p.s } });
+      u.items.push(it = { id: uid(), name, classId: c.id, type, due: col.due, typed: { max: p.max, s: p.s } });
     }
     const bc = bk.cols.find(x => x.key === it.id);
     if (bc) Object.assign(bc, { typed: it.typed, type: it.type, due: it.due || bc.due });
@@ -17419,7 +17510,8 @@ function bkiSave() {
   }
   bkSaveLib(); if (!batch) renderLib();
   bk.term = bkTermOf({ due: first.due || '', term: first.term || '' }, bkConf().terms); bk.hi = first.id;
-  toast('Imported ' + people(plan.length, 'assignment') + '. Click a column’s name to change its type, date or term.');
+  const msg = 'Imported ' + people(plan.length, 'assignment') + (added.length ? ' and ' + people(added.length, 'student') : '') + '.';
+  if (batch) toast(msg); else toastDo(msg, 'Undo', libUndo);
   return true;
 }
 async function bkiFile(f) {
@@ -17442,9 +17534,9 @@ function bkiClick(e) {
   if (!bki || !$('#bkImp')) return;
   if (d.bkifile != null) return $('#bkiFile').click();
   if (d.bkiagain != null) return bkImportView();
-  if (d.bkinew != null) { const col = bkiCol(d.bkinew); col.to = ''; col.name = col.name + ' (imported)'; return bkiDraw(); }
   if (d.bkiall != null) { const v = $('#bkiAll').value; bki.all = v; if (v) for (const col of bki.data.cols) if (!col.due) col.due = v; return bkiDraw(); }
-  if (d.bkikeep) { bki.keep = d.bkikeep === 'keep'; for (const x of document.querySelectorAll('[data-bkikeep]')) x.setAttribute('aria-pressed', String(x === b)); return; }
+  if (d.bkikeep) { bki.keep = d.bkikeep === 'keep'; bki.over = {}; return bkiDraw(); }
+  if (d.bkiover) { bki.over[d.bkiover] = d.v; return bkiDraw(); }
   if (d.bkisave != null) { if (bkiSave()) { bki = null; bkAdd = null; bkDraw(); } }
 }
 function bkiChange(e) {
@@ -17452,8 +17544,14 @@ function bkiChange(e) {
   const t = e.target, d = t.dataset;
   if (t.id === 'bkiFile') { bkiFile(t.files && t.files[0]); t.value = ''; return; }
   if (!bki.data) return;
-  if (d.bkion != null) { bkiCol(d.bkion).on = t.checked; return bkiDraw(); }
-  if (d.bkitype != null) { bkiCol(d.bkitype).type = t.value; return bkiDraw(); }
+  if (d.bkigo != null) {   // Same as an assignment here, New, or Skip
+    const col = bkiCol(d.bkigo), v = t.value; col.on = v !== 'skip';
+    if (v !== 'skip') { col.to = v === 'new' ? '' : v; col.sure = 2; const x = col.to && findItem(col.to); if (x && x.it.due) col.due = x.it.due; }
+    return bkiDraw();
+  }
+  if (d.bkicat != null) { const k = d.bkicat; bki.cats[k] = t.value; for (const col of bki.data.cols) if (col.cat === k && !col.typeSet) col.type = t.value; return bkiDraw(); }
+  if (d.bkitype != null) { const col = bkiCol(d.bkitype); col.type = t.value; col.typeSet = true; return bkiDraw(); }
+  if (t.id === 'bkiInfo') { bki.info = t.checked; return; }
   if (d.bkidue != null) { bkiCol(d.bkidue).due = t.value; return; }
   if (d.bkimode != null) { const col = bkiCol(d.bkimode); col.pct = t.value === 'pct'; if (!col.pct && !col.max) col.max = 20; col.how = ''; return bkiDraw(); }
   if (d.bkimax != null) { const col = bkiCol(d.bkimax); col.max = Math.max(0.5, Math.round(+t.value * 2) / 2) || null; col.how = ''; return bkiDraw(); }
@@ -17467,7 +17565,7 @@ function bkiPasted(e) {
   bkiTake(bkiParse((e.clipboardData || window.clipboardData).getData('text')));
 }
 for (const host of [$('#dlgBox'), $('#vClass')]) { host.addEventListener('click', bkiClick); host.addEventListener('change', bkiChange); host.addEventListener('paste', bkiPasted); }
-Object.assign(window.__gs, { bkiParse, bkiRead, bkiCell, bkiDate });
+Object.assign(window.__gs, { bkiParse, bkiRead, bkiCell, bkiDate, bkiFit, bkiWide });
 
 /* ---------------- bringing files in: what a file really is, why one won't open and what to do next, late work, the opening report ---------------- */
 function realType(d) {
