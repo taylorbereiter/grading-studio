@@ -108,7 +108,7 @@ function batchSummary(it) {
   const d = new Date(it.opened || (data && data.t) || Date.now());
   let n = 0;
   const fm = it.type === 'fm';
-  if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (fm ? g.fb : (g.rubric || []).some(v => v != null) || g.points !== '')) n++; }
+  if (data) for (const k in data.s) { const g = data.s[k].g; if (g && (fm ? g.fb : (g.rubric || []).some(v => v != null) || g.points !== '' || (g.pk != null && g.pk !== ''))) n++; }
   const m = keptMeta.get(it.batchId);
   if (m) return keptSay(m) + (m.papers ? '' : ' · papers not kept');
   return 'Opened ' + d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (data ? ' · ' + n + (fm ? ' feedback complete' : ' scored') : '') + ' · drop the same ZIP to keep going';

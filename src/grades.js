@@ -4,7 +4,7 @@ const STATUS_LABEL = { missing: 'Missing', excused: 'Excused', late: 'Late' };
 function noScore(st) { const s = st.grade.status; return s === 'missing' || s === 'excused'; }
 const hasSheet = g => g.sheet != null && g.sheet !== '';
 // Anything she has put on this student besides files: a score, a comment or a status.
-const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || hasSheet(g) || !!g.comment || !!g.status || !!g.fb || !!+g.xc || tnHasG(g));
+const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || (g.pk != null && g.pk !== '') || hasSheet(g) || !!g.comment || !!g.status || !!g.fb || !!+g.xc || tnHasG(g));
 // A score she gave this student, here or typed on the Grade sheet. A highlighted Word rubric doesn't write over it.
 const hasOwnScore = st => ownGrade(st).total != null || hasSheet(st.grade);
 // The same, in words: 'a score of 10', 'a comment'…
@@ -100,13 +100,14 @@ function xcSet(st, raw, redraw) {
 // what it comes to on the assignment's own scale (pointsWith in start.js), and rubric rows moved later don't change it. pctOpen: the box is open before it has one.
 let pctOpen = null;
 function pctHtml(st) {
-  const g = st.grade; if (noScore(st) || setup.mode !== 'rubric' || (g.pk == null && pctOpen !== st)) return '';
+  const g = st.grade; if (noScore(st) || setup.mode !== 'rubric' || ibSetup() || (g.pk == null && pctOpen !== st)) return '';
   return '<p class="xcnote" id="pkNote"><label>Percent <input type="text" inputmode="decimal" id="pkIn" value="' + (g.pk != null ? g.pk : '') + '" aria-label="Percent"></label> <button class="link" data-pkoff>Remove</button><small style="flex-basis:100%">It stays as the score. Rubric rows don’t change it.</small></p>';
 }
 function pctStart(st) { pctOpen = st; const gs = $('#gstat'); if (gs) gs.outerHTML = statusHtml(st); const i = $('#pkIn'); if (i) { i.focus(); i.select(); } }
 // "73", "73%" or nothing. Whole percents, halves up.
 function pctSet(st, raw, redraw) {
   const t = String(raw == null ? '' : raw).replace('%', '').replace(',', '.').trim(), v = t === '' || isNaN(+t) || +t < 0 ? null : roundPct(+t);
+  if (t !== '' && v == null) return;   // half-typed or not a number: the percent stays as it was until it is one
   if (v === (st.grade.pk == null ? null : st.grade.pk)) { if (redraw) { if (v == null) pctOpen = null; renderGrade(); } return; }
   if (v == null) { delete st.grade.pk; if (redraw) pctOpen = null; } else st.grade.pk = v;
   scoreTouched(st); saveSoon(); renderList();

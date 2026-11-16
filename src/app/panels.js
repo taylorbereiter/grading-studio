@@ -381,7 +381,7 @@ $('#grade').addEventListener('input', e => {
   if (e.target.id === 'ptsIn') {
     if (ptsSnapFor !== e.target) { gradeSnap(st); ptsSnapFor = e.target; }   // one step for a visit to the box, not one a keystroke
     const raw = e.target.value.trim().replace(',', '.'), m = raw.match(/^(\d+(?:\.\d+)?)\s*%$/);   // "73%" is a percent that stays the score; a plain number is points
-    if (m) { st.grade.pk = roundPct(+m[1]); st.grade.points = String(pointsFor(st.grade.pk)); } else { delete st.grade.pk; st.grade.points = raw; }
+    if (m) { st.grade.pk = roundPct(+m[1]); const pp = pointsFor(st.grade.pk); st.grade.points = pp == null ? '' : String(pp); } else { delete st.grade.pk; st.grade.points = raw; }
     const was = st.grade.status; scoreTouched(st); saveSoon(); renderList();
     if (was !== st.grade.status) { $('#gstat').outerHTML = statusHtml(st); }
     $('#grade .total').innerHTML = totalHtml(st);
