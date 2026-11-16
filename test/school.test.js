@@ -12,7 +12,7 @@ before(async () => { browser = await launch(); });
 after(async () => { await closeOwn(); await browser.close(); });
 
 const names = page => page.$$eval('#schList .schrow b', els => els.map(e => e.textContent));
-const groups = page => page.$$eval('#schList .schhead h2', els => els.map(e => e.textContent));
+const groups = page => page.$$eval('#schList .schsec:not(.schppl) .schhead h2', els => els.map(e => e.textContent));
 const list = page => page.evaluate(() => window.__gs.schNow());
 const until = async (page, fn, arg, ms = 8000) => { for (const t0 = Date.now(); ;) { if (await page.evaluate(fn, arg)) return; if (Date.now() - t0 > ms) throw new Error('waited too long for ' + fn); await new Promise(r => setTimeout(r, 50)); } };
 const shown = (page, name) => until(page, n => [...document.querySelectorAll('#schList .schrow b')].some(b => b.textContent === n), name);
@@ -83,10 +83,10 @@ test('the School page: a link, a note and a file, in groups, kept after a reload
   await until(page, () => document.querySelectorAll('#schList .schpins .schchip').length === 1);
   assert.deepEqual((await names(page)).slice(0, 2), ['School calendar', 'Bell schedule']);
   await page.click('[data-schgroup="People and rooms"] .schhead [data-km]'); await page.click('[data-schgroup="People and rooms"] [data-schg="up"]');
-  await until(page, () => document.querySelectorAll('#schList .schhead h2')[1].textContent === 'People and rooms');
+  await until(page, () => document.querySelectorAll('#schList .schsec:not(.schppl) .schhead h2')[1].textContent === 'People and rooms');
   await page.click('[data-schgroup="People and rooms"] .schhead [data-km]'); await page.click('[data-schgroup="People and rooms"] [data-schg="rename"]');
   await answerDlg(page, { typed: 'People' });
-  await until(page, () => document.querySelectorAll('#schList .schhead h2')[1].textContent === 'People');
+  await until(page, () => document.querySelectorAll('#schList .schsec:not(.schppl) .schhead h2')[1].textContent === 'People');
 
   // changing one, deleting one, and Undo
   const hb = await idOf(page, 'Staff handbook');

@@ -40,6 +40,19 @@ function langFill(t, m, P) {
 }
 const LANG_ATT = { present: 'attp', late: 'attl', 'absent, reason unknown': 'atta', excused: 'atte' };
 const LANG_FILLS = [
+  // the focus timer and the daily goal (src/focus.js)
+  ['fcof', /^(?:(Focus|Today|This week): )?(\d+) of (\d+) (papers|minutes)( today| this week)?$/, (m, F, P) => { const x = langFill(m[4] === 'papers' ? F.fcofp : F.fcofm, [0, m[2], m[3]], P); return m[1] === 'Focus' ? langFill(m[5] === ' this week' ? F.fcrailw : F.fcrail, [0, x], P) : m[1] === 'Today' ? langFill(F.fctodayof, [0, x], P) : m[1] === 'This week' ? langFill(F.fcwkof, [0, x], P) : x; }],
+  ['fctime', /^(Focus|Paused|Break|Just one paper|Just 3 papers): (\d+:\d\d)( left)?$/, (m, F, P) => langFill(F[{ Focus: 'fctf', Paused: 'fctp', Break: 'fctb', 'Just one paper': 'fcto', 'Just 3 papers': 'fct3' }[m[1]]], [0, m[2]], P)],
+  ['fcleft', /^(\d+) papers? left$/], ['fcstart', /^Start (\d+) minutes$/], ['fcpace', /^about (\d+) minutes? at your pace$/], ['fcmin', /^(\d+) minutes?$/], ['fcpapers', /^(\d+) papers?$/],
+  ['fcaway', /^You were away for (\d+) minutes?, and the clock kept going\.$/], ['fcdone', /^(\d+) minutes? done$/], ['fcbrk', /^Take a (\d+)-minute break$/], ['fcmore', /^(\d+) more minutes$/],
+  ['fckeep', /^Keep going for (\d+) minutes$/], ['fcfin', /^You finished (\d+) papers?\.$/], ['fcsum', /^Today: (\d+) papers? in (\d+) minutes? of focus\.$/], ['fcsum0', /^Today: (\d+) papers?\.$/],
+  ['fcweek', /^This week: (\d+) papers?\.$/], ['fctoday', /^Today: (\d+) papers?$/], ['fcdn', /^(\d+) done$/],
+  ['gpsessn', /^Session (\d+)$/], ['gpsess', /^(\d+) sessions? today\.$/], ['gpaday', /^(\d+) papers? a day$/], ['tkweeks', /^(\d+) weeks? reached the goal$/],
+  // the time tracker (src/tracker.js)
+  ['tkpace', /^about (\d+) minutes? a paper$/], ['tkso', /^(\S.*) so far$/], ['tklessons', /^(\d+) lessons?$/], ['tkdays', /^(\d+) days? reached the goal$/],
+  // planning your grading (src/gradeplan.js)
+  ['gpfor', /^Grade for (\d+) minutes$/], ['gpleft', /^about (.+) left$/], ['gpsets', /^(\d+) sets?$/], ['gpdays', /^(\d+) days?$/],
+  ['tkcount', /^Time counts while the marking screen or the Planner is in front and you have done something there in the last (\d+) minutes?\.$/],
   // Find anything: the teacher's AI assistant, to open beside the app (src/beside.js)
   ['besideopen', /^Open (.+) beside Grading Studio$/],
   // the Gradebook tab
@@ -175,7 +188,7 @@ function trWith(s, P, ctx) {
 // For words that are drawn rather than put on the page, like the feedback page in a returned paper.
 const tr = (s, ctx) => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK, ctx) : s;
 // The parts of the page that are put into the language, and what inside them is never touched (what a teacher typed).
-const LANG_ROOTS = '#rail, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
+const LANG_ROOTS = '#rail, #fcPanel, #vTime, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
   // the marking screen: its top bar and menus, the student list, the tools, the bar above each paper and the chips beside each page, and the score panel (never a page itself)
   '#app .top, #side, #tools, #paper .who, #pane2 .sph, #spGrip, #pane2 .sptool, #bsMenu, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
 const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""]), #railClasses .rnav, #classSel option:not([value=""]), #crumbClass, #stuList .nm, #paper .who h2, #paper .fhead > span:first-child, #grade .cn > span';

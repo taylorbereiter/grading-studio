@@ -1,22 +1,23 @@
 {
- "version": "1.28.19",
- "build": "9a6e31121c7d",
+ "version": "1.28.27",
+ "build": "cdd4ec38e8d0",
  "notes": [
-  "A Timer tab in the side pane for presentations given live: a stopwatch beside the notes page, with the asked-for length and + Time to comment. It is offered to a student who has a notes page and no video.",
-  "A YouTube or Vimeo video played in the app has buttons to skip 10 seconds and change speed, and Space, J and L work on it. Video files have a Float button that keeps the video in a small window on top. Google Drive’s player can’t be driven from here."
+  "Planning your grading. Each set shows about how long its papers will take at your own pace: on the Focus card, on the assignment’s card, in the week in To do, and under the date when you set when work is due. The Focus card also offers a free period between your classes, picks up the set you were last on, and can start small with Just 3 papers or the shortest papers first.",
+  "A goal for each focus session: a few papers, the whole set, a to-do or a few words of your own, suggested from your pace. The timer shows how far along you are, the end of the session says whether you got there, and what is left goes into your next session on the same work. Today also counts your sessions.",
+  "Your grading goal can be for a day or a week, and a daily goal for some days only. A set can have a day to finish it by, with the papers a day that takes. On the day you choose, Today shows a look back at the week. Settings, Focus and goals switches each of these on or off."
  ],
  "files": {
-  "index.html": "7ac129217f7c891f651e58530f9b20f6a2f4021217024b9eb7657a4dd855a71b",
-  "planner.html": "6dc0cbfe085de5671e18801e8e4bac05bca28a4b29134d6c65fa81fb64f828cc"
+  "index.html": "1dd5bfa959882745b84484a78323851ce20c7f93427551e396f20c98d90efe2f",
+  "planner.html": "336cce553ae53dd9dede8f644efd6fab8c292e09be0ad60f6a8ffd2afe18869a"
  },
  "langs": {
-  "lang/zh-Hant.js": "dbcecc9957e30432923061c023a25dea49498478ab5715ece946d22794316350",
-  "lang/zh-Hans.js": "e9528f5261351549006ee1ccebe1926fc72181d56ca4b0617bfc09c2f000201c",
-  "lang/es.js": "cb2c02a354f1f275cd20744d27212de45df3ce16650a987f99bf01ab8a835830",
-  "lang/fr.js": "ed9a985eb28b373d840f85fb39ff17ce94be217a99708c0df5ce3ec5ebad5dd5",
-  "lang/de.js": "2adde21b72f1585a01114ac10a10283bc3718056ac91c82c7ed08b8f687d7fc6",
-  "lang/pt-BR.js": "646c7753ebcd9215a5f21dab84aafdeb8efb714bac936ef4124e855fd7f1660e",
-  "lang/ja.js": "e12b505e638b91f45d354110274fcdf399736429325f9edc6733c6d7ef647469",
-  "lang/ko.js": "b2a66913e4425a870c1a2caafd567570ee444b695c0f18769c3b47614f9b16e7"
+  "lang/zh-Hant.js": "99e0aef17d1fc2ca62d71f744406c0ad8e183a9277835ff772baed5bf23bf542",
+  "lang/zh-Hans.js": "23825ad27c9ced428284dfeaf218896a63aebc6bcd5f7544a8f6892f213f6a23",
+  "lang/es.js": "8084cd2a9cf151df452794c63b6b3644978d74f59160e28b025c36df67854350",
+  "lang/fr.js": "274e800047ba963e362c91fb3c28137110219b1787e268c6137b020dd14c909b",
+  "lang/de.js": "e02b0921779bb3e6b95173f3d1533ded182ca6524ec81e6313a8123330ae01fa",
+  "lang/pt-BR.js": "e690043ad1be9c2bab3c0c6d47a69281660f86f2f8e6d74c8e31a15594009ac2",
+  "lang/ja.js": "0b31e474d09a9e7ff45a28564e3d3810a4e9576d31c3a94d15cd116f305e9af9",
+  "lang/ko.js": "1c18c6af95bed042c140ec619f1f5f7e55ac64913488e0c613cd9839c45b74d0"
  }
 }

@@ -388,6 +388,7 @@ function scanNoteOut(pg, lines, re) {
 // ⚑ in a page's corner: flag it for a rescan, or take the flag off.
 function scanFlag(pg) {
   const f = pg.file; if (f.virtual) return;
+  fieldSnap(f, ['sc'], () => { for (const q of pages) if (q.file === f) scanNote(q); }, 'rescan flag');
   const r = (f.sc ||= {})[pg.idx] ||= { later: 1 };
   if (r.re) delete r.re; else r.re = 1;
   toast(r.re ? 'Flagged for a rescan. The Return tab lists everyone waiting.' : 'Rescan flag taken off');

@@ -86,7 +86,7 @@ const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', point
 // The Planner's slide layouts by name, for "newSlide" (the same names as LAYOUTS in src/planner/lessons.js; the title slide is never added this way).
 const STP_LAYOUTS = { agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Title and text', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', fullpic: 'Full picture', textpic: 'Text + picture', picprompt: 'Picture + questions', video: 'Video' };
 function stpRead(j) {
-  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking']);
+  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking', 'focus']);
   for (const k of Object.keys(j)) {
     if (STP_STUDENT.test(k)) { if (stpCount(j[k])) S.left.push('Something about students (“' + stpStr(k, 30) + '”).'); }
     else if (!known.has(k)) S.unknown.push(stpStr(k, 30));
@@ -103,7 +103,10 @@ function stpRead(j) {
     // the other assistants in the sidebar's list: a link of her own for some, and the known ones she doesn't want listed
     if (Array.isArray(sc.otherAssistants)) { o.aiUrls = {}; for (const x of sc.otherAssistants.slice(0, 12)) { const n = stpStr(stpObj(x) ? x.name : '', 30), u = stpObj(x) ? aiUrlClean(x.link) : ''; if (n && u) o.aiUrls[n] = u; } }
     if (Array.isArray(sc.assistantsNotListed)) o.aiOff = [...new Set(sc.assistantsNotListed.filter(x => typeof x === 'string').map(x => stpStr(x, 30)).filter(Boolean))].slice(0, 12);
-    if (Object.keys(o).length) S.school = o; }
+    if (Object.keys(o).length) S.school = o;
+    // the people at the school a teacher works with (the School page's spots, school.js), and the spots themselves
+    if (Array.isArray(sc.staff)) S.staff = sc.staff.slice(0, 40).map(stpObj).filter(Boolean).map(x => ({ role: stpStr(x.role, 80), name: stpStr(x.name, 80), email: typeof schMail === 'function' ? schMail(x.email) : '', note: stpStr(x.note, 200) })).filter(x => x.name);
+    if (Array.isArray(sc.staffRoles)) S.staffRoles = [...new Set(sc.staffRoles.filter(x => typeof x === 'string').map(x => stpStr(x, 80)).filter(Boolean))].slice(0, 30); }
   // how a new assignment is graded
   const g = stpObj(j.grading);
   if (g) {
@@ -191,6 +194,31 @@ function stpRead(j) {
     const fs = stpKey(mk.fullScreenSide); if (FS_SIDES.includes(fs)) m.fside = fs;
     if (Object.keys(m).length) S.mark = m;
   }
+  // the focus timer and the daily goal (src/focus.js): lengths from the lists the app offers, a goal in papers or in minutes
+  const fo = stpObj(j.focus);
+  if (fo) {
+    const f = {}, n = v => Math.round(+v);
+    if (FC_LENS.includes(n(fo.sessionMinutes))) f.len = n(fo.sessionMinutes);
+    if (FC_BRKS.includes(n(fo.breakMinutes))) f.brk = n(fo.breakMinutes);
+    if (fo.dailyGoal === null || fo.dailyGoal === false) f.goal = null;
+    else {
+      const g = stpObj(fo.dailyGoal), wk = g && stpKey(g.per) === 'week', m = wk ? 7 : 1;
+      if (g && n(g.papers) > 0) f.goal = { k: 'papers', n: Math.min(500 * m, n(g.papers)) }; else if (g && n(g.minutes) > 0) f.goal = { k: 'min', n: Math.min(600 * m, n(g.minutes)) };
+      if (f.goal && wk) f.goal.per = 'week';
+      else if (f.goal) { const ds = stpArr(g.days, 7).map(x => GP_DAYS.findIndex(d => stpKey(d) === stpKey(x))).filter(i => i >= 0); if (ds.length && ds.length < 7) f.goal.days = FC_DOWS.filter(d => ds.includes(d)); }
+    }
+    if (typeof fo.sessionGoals === 'boolean') f.sg = fo.sessionGoals;
+    if (typeof fo.chime === 'boolean') f.sound = fo.chime;
+    if (typeof fo.timeInTab === 'boolean') f.title = fo.timeInTab;
+    if (typeof fo.countTime === 'boolean') f.track = fo.countTime;
+    if (TK_IDLES.includes(n(fo.stopCountingAfterMinutes))) f.idle = n(fo.stopCountingAfterMinutes);
+    if (typeof fo.freePeriods === 'boolean') f.free = fo.freePeriods;
+    if (fo.weeklyLookBack === false || fo.weeklyLookBack === null) f.wk = false;
+    else if (typeof fo.weeklyLookBack === 'string' && GP_DAYS.some(d => d.toLowerCase() === fo.weeklyLookBack.trim().toLowerCase())) f.wk = GP_DAYS.findIndex(d => d.toLowerCase() === fo.weeklyLookBack.trim().toLowerCase());
+    if (typeof fo.quietWhileFocusing === 'boolean') f.quiet = fo.quietWhileFocusing;
+    if (typeof fo.shortestFirst === 'boolean') f.short = fo.shortestFirst;
+    if (Object.keys(f).length) S.focus = f;
+  }
   if (typeof j.attendance === 'boolean') S.att = j.attendance; else if (j.attendance != null && stpCount(j.attendance)) S.left.push('Attendance records.');
   // the class pages kept in the tab row, by name: ["Attendance", "Charts"]. The others stay under More.
   if (Array.isArray(j.classTabs)) S.tabs = [...new Set(j.classTabs.map(x => (CLASS_TABS.find(t => stpKey(t[1]) === stpKey(x) && !TABS_FIRST.includes(t[0])) || [])[0]).filter(Boolean))];
@@ -245,7 +273,7 @@ const stpTypeName = id => { const t = BK_TYPES.find(x => x[0] === id); return t 
 function stpDiff(S, planNow) {
   const parts = [], add = (key, title, lines, sub) => { if (lines.length) parts.push({ key, title, lines, sub: sub || '' }); };
   // school
-  if (S.school || S.prog) {
+  if (S.school || S.prog || S.staff || S.staffRoles) {
     const L = [], m = me(), s = S.school || {};
     if (s.sys != null && s.sys !== sysName()) L.push(s.sys ? 'Students hand work in on <b>' + esc(s.sys) + '</b>' + (sysName() ? ' (now ' + esc(sysName()) + ')' : '') : 'No school system named (now ' + esc(sysName()) + ')');
     if (s.unit != null && s.unit !== unitLinkName()) L.push(s.unit ? 'Unit plans are kept in <b>' + esc(s.unit) + '</b>' + (unitLinkName() ? ' (now ' + esc(unitLinkName()) + ')' : '') : 'No place named for unit plans (now ' + esc(unitLinkName()) + ')');
@@ -255,6 +283,9 @@ function stpDiff(S, planNow) {
     if (s.aiUrls != null && JSON.stringify(s.aiUrls) !== JSON.stringify(m.aiUrls || {})) L.push(Object.keys(s.aiUrls).length ? 'Other assistants with a link of your own: <b>' + Object.keys(s.aiUrls).map(esc).join(', ') + '</b>' : 'No other assistant has a link of your own');
     if (s.aiOff != null && JSON.stringify(s.aiOff) !== JSON.stringify(m.aiOff || [])) L.push(s.aiOff.length ? 'Not in the sidebar’s list of assistants: <b>' + s.aiOff.map(esc).join(', ') + '</b>' : 'Every assistant the app knows is in the sidebar’s list');
     if (S.prog && S.prog !== (m.prog || '')) L.push('Programme: <b>' + esc(S.prog) + '</b>');
+    if (S.staffRoles && JSON.stringify(S.staffRoles) !== JSON.stringify(schRoles())) L.push('Spots for people on the School page: <b>' + S.staffRoles.map(esc).join(', ') + '</b>');
+    const newPpl = (S.staff || []).filter(x => !stpPersonHere(x));
+    if (newPpl.length) L.push('People on the School page: <b>' + newPpl.map(x => esc(x.name) + (x.role ? ' (' + esc(x.role) + ')' : '')).join(', ') + '</b>');
     add('school', 'Your school', L, 'Only the words the app uses. Nothing is connected to these.');
   }
   // grading
@@ -340,6 +371,23 @@ function stpDiff(S, planNow) {
     if (m.fside != null && m.fside !== now.fside) L.push(m.fside === 'show' ? 'In full screen the student list and the tools stay beside the paper' : m.fside === 'all' ? 'In full screen the student list and the tools hide until you point at them' : 'In full screen the student list hides until you point at the left edge');
     add('mark', 'Marking and handing back', L, 'No paper, mark or score changes.');
   }
+  if (S.focus) {
+    const c = fcConf(), f = S.focus, L = [];
+    if (f.len != null && f.len !== c.len) L.push('A focus session lasts ' + f.len + ' minutes');
+    if (f.brk != null && f.brk !== c.brk) L.push('A break lasts ' + f.brk + ' minutes');
+    const gk = g => g ? JSON.stringify([g.k, g.n, g.per || 'day', g.days || null]) : '';
+    if ('goal' in f && gk(f.goal) !== gk(c.goal)) L.push(f.goal ? (f.goal.per === 'week' ? 'Weekly goal: ' : 'Daily goal: ') + people(f.goal.n, f.goal.k === 'min' ? 'minute' : 'paper') + (f.goal.days ? ' on ' + f.goal.days.map(d => GP_DAYS[d]).join(', ') : '') : 'No daily goal');
+    if (f.sg != null && f.sg !== c.sg) L.push(f.sg ? 'A goal is suggested for each session' : 'No goal is suggested for sessions');
+    if (f.sound != null && f.sound !== c.sound) L.push(f.sound ? 'A soft chime when a session or a break ends' : 'No chime when a session ends');
+    if (f.title != null && f.title !== c.title) L.push(f.title ? 'The time left shows in the browser tab’s name' : 'The time left stays out of the browser tab’s name');
+    if (f.track != null && f.track !== c.track) L.push(f.track ? 'Grading and planning time are counted' : 'Grading and planning time are not counted');
+    if (f.idle != null && f.idle !== c.idle) L.push('Time stops counting after ' + people(f.idle, 'minute') + ' with nothing done');
+    if (f.free != null && f.free !== c.free) L.push(f.free ? 'Free periods are offered for grading' : 'Free periods are not offered for grading');
+    if ('wk' in f && f.wk !== c.wk) L.push(f.wk === false ? 'No look back at the week' : 'A look back at the week from ' + GP_DAYS[f.wk]);
+    if (f.quiet != null && f.quiet !== c.quiet) L.push(f.quiet ? 'Counts are hidden during a focus session' : 'Counts stay on during a focus session');
+    if (f.short != null && f.short !== c.short) L.push(f.short ? 'Shortest papers first in a focus session' : 'Papers in their usual order in a focus session');
+    if (L.length) add('focus', 'Focus timer and daily goal', L, '');
+  }
   if (S.att != null && S.att !== attOn()) add('att', 'Attendance', [S.att ? 'Take attendance in Grading Studio' : 'Don’t take attendance in Grading Studio'], S.att ? '' : 'Days already saved are kept.');
   if (S.tabs && S.tabs.join() !== tabsKept().join()) add('tabs', 'Class tabs', [S.tabs.length ? 'Kept in the tab row: ' + S.tabs.map(k => CLASS_TABS.find(t => t[0] === k)[1]).join(', ') : 'Only Assignments, Gradebook and Students in the tab row'], 'The other pages stay under More.');
   return parts;
@@ -365,11 +413,13 @@ const stpIbChanges = (c, ib) => { const n = stpIbNext(c, ib); return c.way !== n
 // Whether this version lets a teacher add gradebook types of their own (the gradebook's own setup knows).
 const stpOwnTypes = () => typeof bkCats === 'function';
 
+// A person already on the School page: the same name (spaces and capitals don't count).
+const stpPersonHere = x => schPeople().find(p => stpKey(p.name) === stpKey(x.name)) || null;
 /* ---- bringing it in, and what to put back ---- */
 const stpClone = v => v == null ? v : JSON.parse(JSON.stringify(v));
 async function stpApply(S, pick) {
   const U = { t: Date.now(), parts: Object.keys(pick).filter(k => pick[k]) }, now = Date.now();
-  if (pick.school || pick.grading || pick.att || pick.tabs) { U.hadMe = !!lib.me; U.me = stpClone(lib.me || null); }
+  if (pick.school || pick.grading || pick.att || pick.tabs || pick.focus) { U.hadMe = !!lib.me; U.me = stpClone(lib.me || null); }
   if (pick.school) {
     const sc = { ...(S.school || {}) };
     if (sc.ai != null && sc.ai !== (me().ai || '') && sc.aiUrl == null) sc.aiUrl = '';   // another assistant: the last one's own link doesn't go with it
@@ -378,6 +428,19 @@ async function stpApply(S, pick) {
     if (lib.me.aiUrls) { delete lib.me.aiUrls[lib.me.ai || '']; if (!Object.keys(lib.me.aiUrls).length) delete lib.me.aiUrls; }
     if (lib.me.aiOff && !lib.me.aiOff.length) delete lib.me.aiOff;
     saveLib();
+    // people: someone new is added, someone already there gets the role, email and note that were given; nobody is taken away
+    if (S.staff || S.staffRoles) {
+      U.ppl = { added: [], was: [], roles: schNow().roles || null };
+      schChange(sc => {
+        sc.people = sc.people || [];
+        if (S.staffRoles) sc.roles = { list: S.staffRoles.length ? S.staffRoles.slice() : SCH_ROLES.slice(), at: now };
+        for (const x of S.staff || []) {
+          const had = sc.people.find(p => !p.gone && stpKey(p.name) === stpKey(x.name)), got = Object.fromEntries(Object.entries(x).filter(([, v]) => v));
+          if (had) { const nx = { ...had, ...got }; if (JSON.stringify(nx) !== JSON.stringify(had)) { U.ppl.was.push(stpClone(had)); Object.assign(had, got, { at: now }); } }
+          else { const id = 'sp' + uid(); sc.people.push({ id, at: now, ...got }); U.ppl.added.push(id); }
+        }
+      });
+    }
   }
   if (pick.grading) {
     U.setupLs = localStorage.getItem('gs.setup');
@@ -386,6 +449,7 @@ async function stpApply(S, pick) {
     if (!batch) setup = { ...DEFAULT_SETUP };
   }
   if (pick.att) meSet({ att: S.att });
+  if (pick.focus) fcConfSet(S.focus);
   if (pick.tabs) meSet({ tabs: S.tabs });
   if (pick.classes) {
     U.classes = []; U.links = []; U.units = []; U.ib = []; U.mbWas = localStorage.getItem(MB_KEY);
@@ -472,6 +536,12 @@ async function stpUndo() {
   if (U.goals && Array.isArray(lib.goals)) lib.goals = lib.goals.filter(g => !U.goals.includes(g.id));
   if (U.rubAdded || U.rubWas) { let all = savedRubrics().filter(r => !(U.rubAdded || []).includes(r.id)); for (const w of U.rubWas || []) { const i = all.findIndex(r => r.id === w.id); if (i >= 0) all[i] = { ...w, at: Date.now() }; } store.set('gs.rubrics', all); if ((U.rubAdded || []).length) { store.set('gs.rubricsGone', { ...store.get('gs.rubricsGone', {}), ...Object.fromEntries(U.rubAdded.map(id => [id, Date.now()])) }); bankJob(() => bankWrite(b => { b.rubrics = b.rubrics.filter(r => !U.rubAdded.includes(r.id)); for (const id of U.rubAdded) b.gone[id] = Date.now(); for (const w of U.rubWas || []) { const i = b.rubrics.findIndex(r => r.id === w.id); if (i >= 0) b.rubrics[i] = { ...w, at: Date.now() }; } })).catch(() => {}); } }
   if (U.mark) stpMarkSet(U.mark);
+  if (U.ppl) schChange(sc => {   // people the setup added go, unless changed since; ones it changed get their old details back
+    const t = Date.now(); sc.people = sc.people || [];
+    for (const id of U.ppl.added) { const i = sc.people.findIndex(p => p.id === id); if (i >= 0) { if ((sc.people[i].at || 0) <= U.t + 1000) sc.people[i] = { id, at: t, gone: 1 }; else kept.push('the person ' + sc.people[i].name); } }
+    for (const w of U.ppl.was) { const i = sc.people.findIndex(p => p.id === w.id); if (i >= 0) sc.people[i] = { ...w, at: t }; }
+    if (U.ppl.roles) sc.roles = { ...U.ppl.roles, at: t }; else if (sc.roles) sc.roles = { list: SCH_ROLES.slice(), at: t };
+  });
   if (U.comments) { bank = bank.filter(c => !U.comments.includes(c)); store.set('gs.bank', bank); }
   saveLib();
   if (U.plan) {
@@ -489,6 +559,8 @@ async function stpExport() {
   const out = { gradingStudioSetup: STP_V };
   if (me().prog) out.programme = me().prog;
   if (sysName() || unitLinkName() || me().ai) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}), ...(me().ai && aiUrlClean(me().aiUrl) ? { assistantLink: aiUrlClean(me().aiUrl) } : {}), ...(me().ai && me().aiOpen === 'tab' ? { assistantOpens: 'tab' } : {}), ...(me().ai && me().aiUrls && Object.keys(me().aiUrls).length ? { otherAssistants: Object.entries(me().aiUrls).map(([name, link]) => ({ name, link })) } : {}), ...(me().ai && Array.isArray(me().aiOff) && me().aiOff.length ? { assistantsNotListed: me().aiOff.slice() } : {}) };
+  const ppl = schPeople(), sr = schNow().roles;
+  if (ppl.length || sr) { out.school = out.school || {}; if (sr) out.school.staffRoles = sr.list.slice(); if (ppl.length) out.school.staff = ppl.map(p => ({ ...(p.role ? { role: p.role } : {}), name: p.name, ...(p.email ? { email: p.email } : {}), ...(p.note ? { note: p.note } : {}) })); }
   if (g) { const raw = (me().grade && me().grade.setup) || {}; out.grading = { way: g.way, score: g.setup.mode === 'rubric' ? 'rows' : 'total', ...(g.setup.mode === 'rubric' ? { criteria: g.setup.criteria } : { outOf: g.setup.outOf }), ...(raw.top ? { rowTop: raw.top } : {}), ...(typeof raw.half === 'boolean' ? { halfPoints: raw.half } : {}), ...(g.setup.scale ? { scale: g.setup.scale } : {}), ...(g.bands ? { bands: g.bands.map(b => ({ grade: b[1], from: b[0] })) } : {}) }; }
   const pc = p && Array.isArray(p.classes) ? p.classes.filter(c => c && c.name) : [], names = lib.classes.filter(c => !c.sample).map(c => c.name);
   for (const c of pc) if (!names.some(n => stpKey(n) === stpKey(c.name))) names.push(String(c.name));
@@ -506,6 +578,7 @@ async function stpExport() {
   if (bank.length) out.comments = bank.slice(0, 200);
   if (goalList().length) out.goals = goalList().map(x => x.name);
   if (lib.me && typeof lib.me.att === 'boolean') out.attendance = lib.me.att;
+  if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days ? { days: c.goal.days.map(d => GP_DAYS[d].toLowerCase()) } : {}) } : null, sessionGoals: c.sg, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle, freePeriods: c.free, weeklyLookBack: c.wk === false ? false : GP_DAYS[c.wk].toLowerCase(), quietWhileFocusing: c.quiet, shortestFirst: c.short }; }
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
   { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
@@ -582,6 +655,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "comments": ["Explain how your evidence supports your claim."],
   "goals": ["Uses evidence", "Designs a fair test"],
   "attendance": true,
+  "focus": { "sessionMinutes": 10, "breakMinutes": 5, "dailyGoal": { "papers": 10 }, "sessionGoals": true, "chime": true, "timeInTab": true, "countTime": true, "stopCountingAfterMinutes": 5, "freePeriods": true, "weeklyLookBack": "friday", "quietWhileFocusing": false, "shortestFirst": false },
   "classTabs": ["Missing work"],
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
   "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide" }
@@ -592,11 +666,13 @@ FIELD NOTES
 - "bands" are the grades a percent earns, highest first, each with the lowest percent that earns it. If my boundaries are in points, give them in points and add "bandsOutOf" with the total.
 - "scale" (optional, inside "grading" or a rubric) turns a score into a percent, like { "12": 100, "11": 95, "10": 91 }.
 - "assistant" (inside "school") is the AI assistant I use, by name. "assistantLink" is an https address of my own for it to open at (my school account, a Gem, a project or a custom GPT) and "assistantOpens" is "window" (beside the app) or "tab". Leave both out unless I ask. "otherAssistants" is a list of { "name", "link" } for other assistants I switch to that should open at an https address of my own, and "assistantsNotListed" is a list of names (of Gemini, Claude, ChatGPT, Copilot) I don't want offered in the sidebar. Leave these out too unless I ask.
+- "staff" (inside "school") is a list of { "role", "name", "email", "note" } for the people at my school I work with, like my principal, vice principal, department head or MYP coordinator. Only "name" is needed. "staffRoles" is the list of roles my school has, in order, for the spots on the app's School page, using my school's own words. Leave both out unless I give them. Never put students or parents here.
 - Days are "Sun" to "Sat". Times are 24-hour, like "13:05". Dates are YYYY-MM-DD.
 - "daysOff" and "events" take one day, or a first and last day with "to".
 - "emptyType" is "other" (when a type has nothing in it yet, the others are used) or "zero". "extraCredit.addsTo" is "term" or "inClass"; "cap" true keeps grades at 100% at most. "retakes" is "highest", "latest" or "average".
 - "classTabs" are the class pages I want kept in the tab row beside Assignments, Gradebook and Students: any of "Attendance", "Seating", "Missing work", "Charts", "Goals", "Report comments". Leave it out unless I ask.
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
+- "focus" is the work timer for grading: "sessionMinutes" is one of 5, 10, 15, 20, 25, 30, 45, 60 and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none; add "per": "week" for a goal for the whole week, or "days": ["monday", "wednesday"] for a daily goal on some days only. "sessionGoals" false stops the app suggesting a goal for each session. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. Leave it out if I have not said.
 - "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both.
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;

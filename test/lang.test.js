@@ -230,7 +230,7 @@ test('every word on the covered screens is in each language file (run in English
       await page.click('#classPanel [data-bkterm]:first-child'); await pause(300);
     }
     // every page of Settings
-    for (const k of ['saving', 'classes', 'terms', 'marking', 'setup', 'display', 'about']) { await goTo(page, '#/settings/' + k); await pause(500); await miss(page, 'Settings, ' + k, [...own, '{ "gradingStudioSetup": 1, … }']); }
+    for (const k of ['saving', 'classes', 'terms', 'marking', 'focus', 'setup', 'display', 'about']) { await goTo(page, '#/settings/' + k); await pause(500); await miss(page, 'Settings, ' + k, [...own, '{ "gradingStudioSetup": 1, … }']); }
     await goTo(page, '#/'); await openZip(page, zip); await score(page, [3]); await settle(page);
     await page.click('#closeBtn'); await page.waitForSelector('#toMark .krow');
     await miss(page, 'Today, with papers to mark', own);
@@ -238,6 +238,151 @@ test('every word on the covered screens is in each language file (run in English
     assert.deepEqual(page.errors, []);
     await close();
   }
+});
+
+// The focus timer (src/focus.js): the card on Today, Focus in the sidebar, its Settings, and the panel in each state a session goes through.
+test('the focus timer, its card on Today and its Settings leave nothing in English', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  const own = ['Grade 9 English', 'Grade 10 Literature', 'Poetry analysis', 'Narrative essay', 'Download', /^(Aria|Bram|Cleo|Dov|Esme|Finn|Gus|Hana) /, /^Unit \d/,
+    // the marking screen behind the panel has its own walk above; these lines are left to it
+    'Past work', /^\d+ earlier$/, /^last \d+%$/, /^Link .+ to its ManageBac page$/, 'Close this message', /files opened/, 'See the list'];
+  await openZip(page, zip); await score(page, [4, 3, 3]); await settle(page);
+  await page.click('#closeBtn'); await page.waitForSelector('#fcCard [data-fcstart]');
+  await miss(page, 'Today, the Focus card with no goal', own);
+  const at = async (where, f) => { await f(); await pause(400); await miss(page, where, own); };
+  await goTo(page, '#/settings/focus'); await page.waitForSelector('#fcGoalK');
+  await at('Settings, Focus, a goal in minutes', () => page.click('#fcGoalK [data-v="min"]'));
+  await at('Settings, Focus, a goal in papers', () => page.click('#fcGoalK [data-v="papers"]'));
+  await goTo(page, '#/'); await page.waitForSelector('#fcCard .fcdots'); await miss(page, 'Today, the Focus card with a goal', own);
+  await at('the panel, opened from the sidebar', () => page.click('#railFocus'));
+  await at('a session on a set of papers', async () => { await page.click('#fcPanel [data-fcstart]'); await page.waitForSelector('#fcPanel .fcclock'); });
+  const run = f => page.evaluate(f => { const G = window.__gs, r = G.fcRun(); new Function('r', f)(r); G.fcRunSet(r); G.fcTick(); }, f);
+  await at('paused', () => page.click('#fcPanel [data-fcpause]'));
+  await at('carrying on, folded', async () => { await page.click('#fcPanel [data-fcresume]'); await page.click('#fcPanel [data-fcfold]'); });
+  await at('back from another tab', () => run('r.fold = false; r.away = 6;'));
+  await at('the time is up', async () => { await page.click('#fcPanel [data-fcaway="keep"]'); await run('r.at -= r.len * 1000 + 2000;'); });
+  await at('a break', () => page.click('#fcPanel [data-fcbreak]'));
+  await at('the break is over', () => run('r.brkAt -= r.brkLen * 1000 + 2000;'));
+  await at('done for now', () => page.click('#fcPanel [data-fcstop]'));
+  await page.click('#fcPanel [data-fcclose]');
+  await at('just one paper', async () => { await goTo(page, '#/'); await page.waitForSelector('#fcCard [data-fcone]'); await page.click('#fcCard [data-fcone]'); await page.waitForSelector('#fcPanel .fcclock'); });
+  await at('one paper done', () => run('r.got = 1; r.st = "run";'));
+  await page.click('#fcPanel [data-fcstop]'); await page.click('#fcPanel [data-fcclose]');
+  // a to-do as the work, with nothing set, and the goal reached
+  await goTo(page, '#/'); await page.waitForSelector('#fcCard [data-fcwork]');
+  await at('Today, the Focus card on nothing in particular', () => page.select('#fcCard [data-fcwork]', ''));
+  await at('Settings, Focus, a goal already reached', async () => { await goTo(page, '#/settings/focus'); await page.waitForSelector('#fcGoalN'); await page.$eval('#fcGoalN', e => { e.value = 1; e.dispatchEvent(new Event('change', { bubbles: true })); }); });
+  await at('Today, the goal reached', async () => { await goTo(page, '#/'); await page.waitForSelector('#fcCard .fcmet'); });
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+// The time tracker (src/tracker.js): a week, a month and three months of made-up grading and planning time, time added by hand, and its Settings.
+function trackSeed() {
+  const s = gradingSeed(), lib = JSON.parse(s.ls['gs.lib']), ids = lib.classes.flatMap(c => c.units.flatMap(u => u.items.map(it => it.id)));
+  lib.me = { ...(lib.me || {}), focus: { goal: { k: 'papers', n: 4 } } };
+  const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const day = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return iso(d); };
+  const days = {}, pd = {};
+  for (let n = 0; n < 40; n += 3) { days[day(n)] = { p: 5, s: 1200, g: 3000, a: { [ids[0]]: 2400, '': 600 }, pa: { [ids[0]]: 5 } }; pd[day(n + 1)] = { l: 2400, a: { L1: 1800, '': 600 } }; }
+  days[day(50)] = { p: 2, s: 900 };   // from before time was counted: its focus time is its grading
+  const focus = { day: day(0), base: {}, days, pace: [], last: '', add: [{ id: 'h1', d: day(1), k: 'g', s: 1800, x: 'Quizzes on paper' }] };
+  return { ...s, ls: { ...s.ls, 'gs.lib': JSON.stringify(lib), 'gs.focus': JSON.stringify(focus), 'gsp.planTime': JSON.stringify({ days: pd, names: { L1: 'Reading a poem' } }) } };
+}
+test('the time tracker, its line on Today and its Settings leave nothing in English', async () => {
+  const { page, close } = await openApp(browser, { seed: trackSeed() });
+  const own = ['Grade 9 English', 'Grade 10 Literature', 'Reading a poem', 'Quizzes on paper', /^Reading check \d/, /^Unit \d/];
+  await page.waitForSelector('#fcCard .fctk'); await miss(page, 'Today, the Focus card with time counted', own);
+  await goTo(page, await page.$eval('#railClasses a', a => a.getAttribute('href'))); await page.waitForSelector('#classes .tkc'); await miss(page, 'a class page, an assignment with its grading time', own);
+  await goTo(page, '#/time'); await page.waitForSelector('#tkBody .tktile'); await pause(300);
+  await miss(page, 'the time tracker, a week', own);
+  for (const r of ['month', 'quarter']) { await page.click('[data-tkrange="' + r + '"]'); await pause(300); await miss(page, 'the time tracker, ' + r, own); }
+  await page.click('[data-tkoff="-1"]'); await pause(300); await miss(page, 'the time tracker, three months back', own);
+  for (let i = 0; i < 4; i++) { await page.click('[data-tkoff="-1"]'); await pause(100); }
+  await pause(300); await miss(page, 'the time tracker, a stretch with nothing in it', own);
+  await page.click('[data-tknow]'); await page.click('[data-tkrange="week"]'); await page.click('[data-tkadd]'); await page.waitForSelector('#tkAdd');
+  await miss(page, 'the time tracker, adding time by hand', own);
+  await goTo(page, '#/settings/focus'); await page.waitForSelector('#tkOn'); await miss(page, 'Settings, Focus, the time tracker', own);
+  await page.click('#tkOn'); await pause(300); await miss(page, 'Settings, Focus, time not counted', own);
+  await goTo(page, '#/time'); await page.waitForSelector('#tkBody .tkfoot'); await miss(page, 'the time tracker, time not counted', own);
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+// Planning your grading (src/gradeplan.js): the tracker's seed with a set half scored a few hours ago, work due today, the look back on
+// today's day of the week, and a timetable with a free period going on now (left out near midnight).
+function planSeed() {
+  const s = trackSeed(), lib = JSON.parse(s.ls['gs.lib']), d = new Date();
+  lib.me.focus = { ...lib.me.focus, wk: d.getDay() };
+  lib.classes[0].units[1].items.push({ id: 'i7', name: 'Short story', classId: 'c1', type: 'sum', due: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') });
+  const idb = JSON.parse(JSON.stringify(s.idb));
+  for (const m of idb['grading-studio-keep'].stores.meta) if (m[0] === 'gs.b.n2') Object.assign(m[1], { scored: 3, papers: true, t: Date.now() - 3 * 3600e3 });
+  return { ...s, ls: { ...s.ls, 'gs.lib': JSON.stringify(lib) }, idb };
+}
+test('planning your grading, on Today, the Focus card, a class page and Settings, leaves nothing in English', async () => {
+  const { page, close } = await openApp(browser, { seed: planSeed() });
+  const own = ['Grade 9 English', 'Grade 10 Literature', 'Reading a poem', 'Quizzes on paper', 'Poetry analysis', 'Narrative essay', 'Short story', /^Reading check \d/, /^Unit \d/];
+  const free = await page.evaluate(async () => {
+    const d = new Date(), now = d.getHours() * 60 + d.getMinutes(); if (now < 70 || now > 23 * 60) return false;
+    const hm = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+    const db = await new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onupgradeneeded = () => { r.result.createObjectStore('lessons', { keyPath: 'id' }); r.result.createObjectStore('kv'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    const cl = [{ id: 'A1', name: 'Grade 9 English', color: '#1F6FB2', meets: [{ dow: d.getDay(), start: hm(now - 60), end: hm(now - 10) }] }, { id: 'B1', name: 'Grade 10 Literature', color: '#0E7C86', meets: [{ dow: d.getDay(), start: hm(now + 40), end: hm(now + 90) }] }];
+    await new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put({ classes: cl, daysOff: [] }, 'setup'); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+    db.close(); return true;
+  });
+  if (free) { await page.reload(); await page.waitForSelector('#fcCard .fcnote'); }
+  await page.waitForSelector('#lbCard .lbk'); await page.waitForSelector('#fcCard .fcback'); await pause(300);
+  await miss(page, 'Today, the look back, a free period and where she left off', own);
+  await goTo(page, await page.$eval('#railClasses a', a => a.getAttribute('href'))); await page.waitForSelector('#classes .tkc'); await miss(page, 'a class page, the time left on an assignment', own);
+  await goTo(page, '#/settings/focus'); await page.waitForSelector('#gpFree'); await miss(page, 'Settings, Focus, planning your grading', own);
+  await goTo(page, '#/'); await page.waitForSelector('#fcCard .fcbody');
+  await page.evaluate(() => window.__gs.fcStart(10, '', 3)); await page.waitForSelector('#fcPanel .fcwhat'); await pause(300);
+  await miss(page, 'the focus panel, just 3 papers', own);
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+// A goal for each session, a set finished by a day, and goals a week or on some days (src/focus.js), on the same made-up class.
+test('session goals, from the Focus card through a session, a break and the end, and goals a week or on some days, leave nothing in English', async () => {
+  const s = planSeed(), lib = JSON.parse(s.ls['gs.lib']);
+  lib.me.focus = { len: 10 }; lib.todo = { items: [{ id: 't1', x: 'Write the parent letter', d: '', made: Date.now() }] };
+  const { page, close } = await openApp(browser, { seed: { ...s, ls: { ...s.ls, 'gs.lib': JSON.stringify(lib), 'gs.focus': JSON.stringify({ day: '', base: {}, days: { '2026-01-05': { p: 6, g: 1800, a: { i5: 1800 }, pa: { i5: 6 } } }, pace: [[1800, 6]], last: 'mark:gs.b.n2' }) } } });
+  const own = ['Grade 9 English', 'Grade 10 Literature', 'Poetry analysis', 'Narrative essay', 'Short story', 'Write the parent letter', 'Plan the lesson', /^Reading check \d/, /^Unit \d/];
+  const set = async (sel, v) => page.evaluate((sel, v) => { const i = document.querySelector(sel); i.value = v; i.dispatchEvent(new Event('change', { bubbles: true })); }, sel, v);
+  const later = new Date(Date.now() + 9 * 864e5), day = later.getFullYear() + '-' + String(later.getMonth() + 1).padStart(2, '0') + '-' + String(later.getDate()).padStart(2, '0');
+  await page.waitForFunction(() => window.__gs.kept().size > 0);
+  await page.waitForSelector('#fcCard .fcsgpick [data-fcsgn]');
+  await set('#fcCard [data-fcby]', day); await page.waitForSelector('#fcCard .fcby > span');
+  await miss(page, 'the Focus card, a goal in papers and a day to finish by', own);
+  await page.click('#fcCard [data-fcsg="set"]'); await miss(page, 'the Focus card, finish the set', own);
+  await page.select('#fcCard [data-fcwork]', 'td:t1'); await page.waitForSelector('#fcCard [data-fcsg="td"]'); await miss(page, 'the Focus card, a to-do as the goal', own);
+  await page.select('#fcCard [data-fcwork]', ''); await page.waitForSelector('#fcCard [data-fcsgx]'); await miss(page, 'the Focus card, a goal of her own words', own);
+  // a session with a goal in papers: running, time up, a break, the break over, and done
+  await page.evaluate(() => window.__gs.fcStart(10, 'mark:gs.b.n2', 0, { k: 'papers', n: 2 })); await pause(500);
+  await goTo(page, '#/'); await page.waitForSelector('#fcPanel .fcsg'); await miss(page, 'the focus panel, a session goal', own);
+  const up = () => page.evaluate(() => { const r = window.__gs.fcRun(); if (r.st === 'brk') r.brkAt -= r.brkLen * 1000 + 1000; else r.at -= r.len * 1000 + 1000; localStorage.setItem('gs.focusRun', JSON.stringify(r)); window.__gs.fcTick(); });
+  await up(); await page.waitForSelector('#fcPanel .fcsgr'); await miss(page, 'the focus panel, a session goal not reached', own);
+  await page.click('#fcPanel [data-fcbreak]'); await page.waitForSelector('#fcPanel .fcsgnext'); await miss(page, 'the focus panel, a break with the next goal', own);
+  await up(); await page.waitForSelector('#fcPanel [data-fcother]'); await miss(page, 'the focus panel, the break over', own);
+  await page.click('#fcPanel [data-fcstart]'); await page.evaluate(() => { const r = window.__gs.fcRun(); r.p0 -= 2; window.__gs.fcRunSet(r); });
+  await goTo(page, '#/'); await page.waitForSelector('#fcPanel .fcsg.met'); await miss(page, 'the focus panel, the second session, its goal reached', own);
+  await page.click('#fcPanel [data-fcstop]'); await page.waitForSelector('#fcPanel .fcsgr.met'); await miss(page, 'the focus panel, done, two sessions today', own);
+  await page.click('#fcPanel [data-fcclose]');
+  await page.evaluate(() => window.__gs.fcStart(10, '', 0, { k: 'note', x: 'Plan the lesson' })); await page.click('#fcPanel [data-fcstop]');
+  await page.waitForSelector('#fcPanel [data-fcsgdone]'); await miss(page, 'the focus panel, a goal of her own words at the end', own);
+  await page.click('#fcPanel [data-fcclose]');
+  // goals a week, and on some days
+  await goTo(page, '#/settings/focus'); await page.waitForSelector('#fcGoalK');
+  await page.click('#fcGoalK [data-v="papers"]'); await page.waitForSelector('[data-fcgday]'); await miss(page, 'Settings, Focus, a daily goal and its days', own);
+  await page.select('#fcGoalPer', 'week'); await pause(200); await miss(page, 'Settings, Focus, a goal for the week', own);
+  await goTo(page, '#/'); await page.waitForSelector('#fcCard .fcgoal'); await miss(page, 'Today, a goal for the week', own);
+  await goTo(page, '#/time'); await page.waitForSelector('#tkBody .tktile'); await pause(300); await miss(page, 'the time tracker, a goal for the week', own);
+  await goTo(page, '#/settings/focus'); await page.waitForSelector('#fcGoalPer'); await page.select('#fcGoalPer', 'day'); await page.waitForSelector('[data-fcgday]');
+  const tomorrow = (new Date().getDay() + 1) % 7;
+  for (let d = 0; d < 7; d++) if (d !== tomorrow) { await page.click('[data-fcgday="' + d + '"]'); await pause(50); }
+  await goTo(page, '#/'); await page.waitForSelector('#fcCard .fcnogoal'); await miss(page, 'Today, no goal today', own);
+  assert.deepEqual(page.errors, []);
+  await close();
 });
 
 // Learning goals on both rubrics, and two days of attendance, on the made-up class.

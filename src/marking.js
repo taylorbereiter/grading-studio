@@ -398,7 +398,21 @@ function noteLineAt(pg, x, y) {
   }
   return null;
 }
+// A quiz answer note under the pointer: its box in the margin, or the pill where its line starts.
+function ansNoteAt(pg, x, y) {
+  for (const b of pg.boxes || []) if (b.n.qza && !b.n.ro && (x >= b.x && x <= b.x + b.w && y >= b.y - 5 && y <= b.y + b.h)) return b.n;
+  return ansPillAt(pg, x, y);
+}
+// The pill where an answer note's line starts can be dragged with any tool but the eraser, to point the note somewhere else.
+function ansPillAt(pg, x, y) {
+  const tol = Math.max(7, 9 / (pg.s || 1));
+  for (const b of pg.boxes || []) if (b.n.qza && !b.n.ro && Math.abs(x - b.ax) <= tol + 4 && Math.abs(y - b.ay) <= tol) return b.n;
+  return null;
+}
 function hoverCursor(pg, x, y) {
+  const hot = ansNoteAt(pg, x, y);
+  if ((pg.noteOn || null) !== hot) { pg.noteOn = hot; draw(pg); }   // its question's box and its line light up, to show which answer is whose
+  if (tool !== 'erase' && !once && ansPillAt(pg, x, y)) return 'move';
   const ln = tool !== 'erase' && !once ? noteLineAt(pg, x, y) : null;
   if ((pg.lineOn || null) !== ln) { pg.lineOn = ln; draw(pg); }   // the line thickens under the pointer, to show it can be dragged
   if (ln) return 'ns-resize';

@@ -4,5 +4,7 @@ libs/node_modules
 out/
 .DS_Store
 *.png
-# the app icons are the only pictures kept in the repo (drawn by test/tools/make-icons.js)
+# the app icons and the README screenshots are the only pictures kept in the repo (drawn by test/tools/make-icons.js)
 !icons/*.png
+# and the README's screenshots, taken from the built-in sample class (made-up students only)
+!docs/images/*.png

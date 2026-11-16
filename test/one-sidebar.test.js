@@ -300,6 +300,7 @@ test('Today shows the day’s classes from the Planner’s timetable, and writes
     assert.deepEqual(await page.$$eval('#today .trow', r => r.map(x => [x.querySelector('.tt').textContent, x.querySelector('b').textContent, x.querySelector('.ns').textContent, (x.querySelector('.btn') || {}).textContent, x.getAttribute('href')])), [
       ['9:00', 'Course A 2', 'Annotating a sonnet · 3 slides · ready for you', ...go(0, 'Annotating a sonnet', 'A2')],
       ['10:45', 'Course B-1', 'No lesson planned yet', 'Plan it', 'planner.html#week'],
+      ['', 'Free period', '12:15 – 1:30', null, null],   // a gap of 20 minutes or more between two classes (src/gradeplan.js)
       ['1:30', 'Course A-1', 'Rhetorical appeals · 3 slides · draft', ...go(2, 'Rhetorical appeals', 'A1')],
     ]);
     assert.deepEqual(await page.$$eval('#today .rdot', d => d.map(x => x.style.background)), ['rgb(123, 63, 196)', 'rgb(14, 124, 134)', 'rgb(31, 111, 178)']);
@@ -332,7 +333,7 @@ test('Today shows the day’s classes from the Planner’s timetable, and writes
       await page.goto(srv.url); await appReady(page); await page.waitForSelector('#today .trow');
       return page.$eval('#today .trow', x => [x.querySelector('.ns').textContent, x.querySelector('.btn').textContent]);
     };
-    assert.deepEqual(await taught(2), ['Annotating a sonnet · 3 slides · taught to slide 2 of 3', cur === 0 ? 'Present' : 'Open']);
+    assert.deepEqual(await taught(2), ['Annotating a sonnet · 3 slides · taught to slide 2 of 3', 'Present']);   // any time of day: a lesson with slides left offers Present (#137)
     await page.goto(srv.url + 'planner.html'); await plannerReady(page);
     assert.deepEqual(await taught(3), ['Annotating a sonnet · 3 slides · taught', 'Open']);
     await page.goto(srv.url + 'planner.html'); await plannerReady(page);
@@ -350,7 +351,7 @@ test('Settings is one page per subject, each with its own address', async () => 
   const { page, close } = await openApp(browser, { seed: GRADING });
   const shown = () => page.$$eval('#setPane [data-sec]', els => els.filter(e => e.checkVisibility()).map(e => e.id));
   await goTo(page, '#/settings');
-  assert.deepEqual(await page.$$eval('#setNav .setlink b', b => b.map(x => x.textContent)), ['Saving and carrying', 'Classes and timetable', 'Grades', 'Marking', 'Working with AI', 'Display and keys', 'About and updates']);
+  assert.deepEqual(await page.$$eval('#setNav .setlink b', b => b.map(x => x.textContent)), ['Saving and carrying', 'Classes and timetable', 'Grades', 'Marking', 'Focus and goals', 'Working with AI', 'Display and keys', 'About and updates']);
   assert.deepEqual((await shown()).filter(x => x !== 'setMoving'), ['setSaving', 'setTake', 'setYear', 'setRemove', 'setHistory']);
   assert.equal(await page.$eval('#setNav .setlink.on', a => a.textContent), 'Saving and carryingFolder, take-home file, earlier days, new school year');
   assert.equal(await page.title(), 'Settings · Grading Studio');
