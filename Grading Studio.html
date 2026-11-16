@@ -2449,6 +2449,40 @@ html.vidsized #paper .spb .media{max-width:none}
 .sptbtns{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--space-2)}
 .sptask{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;margin:var(--space-3) 0 0;font-size:var(--text-small);color:var(--muted)}
 .sptnum{width:64px;padding:4px 6px;border:1px solid var(--line);border-radius:var(--corner-2);background:var(--surface);color:var(--fg);font:inherit;font-size:var(--text-control);text-align:center}
+/* typed notes: a tab of the side pane (src/typednotes.js). Plain typing first; the bar stays quiet. */
+.tn{display:flex;flex-direction:column;min-height:100%}
+.tnbar{position:sticky;top:0;z-index:1;display:flex;flex-wrap:wrap;align-items:center;gap:0 2px;padding:2px 0 6px;background:var(--bg);border-bottom:1px solid var(--line)}
+.tnb{display:inline-flex;align-items:center;gap:5px;border:0;background:none;font:inherit;font-size:var(--text-small);color:var(--muted);padding:3px 7px;border-radius:var(--corner-2);cursor:pointer;white-space:nowrap}
+.tnb:hover{background:var(--hover);color:var(--fg)}
+.tnb[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
+.tnb:disabled{opacity:.5;cursor:default;background:none;color:var(--muted)}
+.tnb i{font-style:normal;font-weight:700;font-size:var(--text-caption);color:var(--faint)}
+.tnb i[data-k=p],.tngut i{color:var(--ok)}
+.tnb i[data-k=n],.tnrow[data-k=n] .tngut i{color:var(--accent)}
+.tnb i[data-k=q],.tnrow[data-k=q] .tngut i{color:var(--muted)}
+.tnb[aria-pressed=true] i[data-k=h]{color:var(--accent)}
+.tnsep{width:1px;height:14px;background:var(--line);margin:0 4px}
+.tnclock{font-variant-numeric:tabular-nums}
+.tnbar .kmw{margin-left:auto}
+@container (max-width:430px){.tnb[data-tnk] span{display:none}}
+.tnlist{padding:10px 0 28px}
+.tnrow{display:grid;grid-template-columns:62px minmax(0,1fr);align-items:start}
+.tngut{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:5px;height:calc(var(--text-body) * 1.6 + 6px);padding-right:10px}
+.tngut i{font-style:normal;font-weight:700;font-size:var(--text-small);width:12px;text-align:center}
+.tnchip{border:0;background:none;font:inherit;font-size:var(--text-caption);color:var(--muted);font-variant-numeric:tabular-nums;padding:1px 3px;border-radius:var(--corner-1);cursor:pointer}
+.tnchip:hover{background:var(--hover);color:var(--accent)}
+.tnx{position:absolute;left:0;display:none;border:0;background:none;font:inherit;font-size:var(--text-small);line-height:1;color:var(--faint);padding:2px;cursor:pointer}
+.tnx:hover{color:var(--fg)}
+.tnrow:hover .tnx,.tnx:focus-visible{display:block}
+.tnin{display:block;width:100%;box-sizing:border-box;margin:0;border:0;outline:0;resize:none;overflow:hidden;background:none;color:var(--fg);font:inherit;font-size:var(--text-body);line-height:1.6;padding:3px 0;field-sizing:content;min-height:0}
+.tnin::placeholder{color:var(--faint)}
+.tnrow[data-k=h] .tnin{font-size:var(--text-lead);font-weight:650;padding-top:12px}
+.tnrow[data-k=h] .tngut{height:calc(var(--text-lead) * 1.6 + 15px)}
+.tnrow[data-k=h]:first-child .tnin{padding-top:3px}
+.tnrow[data-k=h]:first-child .tngut{height:calc(var(--text-lead) * 1.6 + 6px)}
+.tnmz{position:absolute;left:0;top:0;visibility:hidden;height:0;field-sizing:fixed;pointer-events:none}
+.tnhint{margin:0 0 0 62px;font-size:var(--text-small)}
+.tnhint .link{font-size:inherit}
 /* ---------- safe by default: the folder ask on Home, Go back in time, About and updates ---------- */
 .safeask{display:flex;gap:var(--space-4);align-items:flex-start;padding:18px 20px;margin:0 0 var(--space-5);background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:var(--corner-5)}
 .safeask .saic{flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:var(--corner-4);background:var(--warn-soft);color:var(--warn)}
@@ -7958,12 +7992,12 @@ function renderList() {
     let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.tries ? esc(triesSay(g)) : g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + (ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct)) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
       : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
       : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
-      : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : '';
+      : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : tnHas(st) ? '<span class="dot" title="Started: you have typed notes"></span>' : '';
     const sent = st.grade.sent ? '<span class="sent" title="You exported this paper on its own at ' + esc(sentWhen(st.grade.sent)) + '">↗ sent</span>' : '';
-    if (fmNow() && !noScore(st)) right = st.grade.fb ? '<span class="fbck" title="Feedback complete">✓</span>' : hasMarks(st) || (st.grade.comment || '').trim() ? '<span class="dot" title="Started, not complete yet"></span>' : '';
+    if (fmNow() && !noScore(st)) right = st.grade.fb ? '<span class="fbck" title="Feedback complete">✓</span>' : hasMarks(st) || (st.grade.comment || '').trim() || tnHas(st) ? '<span class="dot" title="Started, not complete yet"></span>' : '';
     const nAdd = st.files.filter(f => f.added && !f.from && !madeFromWord(f)).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
-    const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
-      : val != null ? [ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
+    const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
+      : val != null ? [ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
     return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
       '<span class="tail">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + right + '</span></button>';
   }).join('');
@@ -10199,7 +10233,7 @@ function mediaCard(st, f, kept) {
   if (vid) { vidGrip(el.querySelector('.mstick'), vidRot(m, f)); el.querySelector('[data-vrot]').onclick = () => vidTurn(st, f, el); }
   if (!curMedia) curMedia = m;
   clipStrip(el.querySelector('.mstick'), f, () => m, c => clipRun(m, c));
-  const pan = trPanel(el, f, { make: CAN_TRANSCRIBE, seek: t => { m.currentTime = t; if (m.paused) m.play().catch(() => {}); } });
+  const pan = trPanel(el, f, { make: CAN_TRANSCRIBE, seek: el.vseek = t => { m.currentTime = t; if (m.paused) m.play().catch(() => {}); } });
   el.querySelector('.mstick').after(el.querySelector('.trbox'));
   m.ontimeupdate = () => pan.tick(m.currentTime, !m.paused);
   el.onclick = e => {
@@ -14735,7 +14769,7 @@ Object.assign(window.__gs, { unpackExport, keyRows, drawKeyPage, openMarkKey, ma
 const STATUS_LABEL = { missing: 'Missing', excused: 'Excused', late: 'Late' };
 function noScore(st) { const s = st.grade.status; return s === 'missing' || s === 'excused'; }
 const hasSheet = g => g.sheet != null && g.sheet !== '';
-const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || hasSheet(g) || !!g.comment || !!g.status || !!g.fb || !!+g.xc);
+const gradeHasWork = g => !!g && ((g.rubric || []).some(v => v != null) || (g.points != null && g.points !== '') || hasSheet(g) || !!g.comment || !!g.status || !!g.fb || !!+g.xc || tnHasG(g));
 const hasOwnScore = st => ownGrade(st).total != null || hasSheet(st.grade);
 function gradeWords(st) {
   const g = st.grade, own = ownGrade(st).total, out = [];
@@ -16518,7 +16552,7 @@ const bkMean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
 
 function bkCellOf(p, g, d, k) {
   const marks = !!(d && d.s && d.s[k] && d.s[k].f && Object.values(d.s[k].f).some(pg => Object.values(pg || {}).some(a => a && a.length)));
-  const fb = !!(g && g.fb), started = marks || !!((g && g.comment) || '').trim();   // fb: she switched on Feedback complete
+  const fb = !!(g && g.fb), started = marks || !!((g && g.comment) || '').trim() || tnHasG(g);   // fb: she switched on Feedback complete
   if (p.status === 'missing' || p.status === 'excused') return { st: p.status, fb };
   if (p.total == null && p.pct == null) return fb || started ? { fb, started } : null;
   const cell = { pct: p.pct, total: p.total, max: p.max, st: p.status, partial: p.partial, out: !!(g && g.outAvg), fb, started };
@@ -22907,7 +22941,7 @@ function linkCard(st, f) {
     if (dr) { dr.hidden = false; if (!curPlay || !curPlay.ok()) curPlay = drive; const r = store.get('gs.rate', 1); if (r !== 1) { const m = slot.querySelector('video, audio'); if (m) m.playbackRate = r; else { const fr = slot.querySelector('iframe'); fr.addEventListener('load', () => setTimeout(() => { if (fr.isConnected) frameRate(fr, r); }, 1200)); } } }
   };
   clipStrip(el.querySelector('.mstick'), f, now, c => (play ? fill(c) : clipShow(c.id)), play && play.frame && !ticks ? 'drive' : '');
-  const pan = trPanel(el, f, { make: false, seek: t => {
+  const pan = trPanel(el, f, { make: false, seek: el.vseek = t => {
     const m = el.querySelector('.vlslot video, .vlslot audio');
     if (m) { try { m.currentTime = t; } catch {} m.play().catch(() => {}); return; }
     if (play) { fill({ a: t }); return; }
@@ -23005,6 +23039,12 @@ const frameRate = (fr, r) => { frameSay(fr, ['setPlaybackRate', [r]], { method: 
 function frameToggle(fr) { for (const k of clocks) if (k.fr === fr) { frameSay(fr, [k.on ? 'pauseVideo' : 'playVideo', []], { method: k.on ? 'pause' : 'play' }); if (k.on) { k.t = frameTime(fr); k.at = Date.now(); } k.on = !k.on; if (k.on) k.at = Date.now(); return; } }
 const PIP_BTN = '<button class="btn sm" data-pip title="Keeps the video in a small window on top of everything else, so the whole screen is free for the paper">Float</button>';
 function vidFloat(m) { if (!m) return; if (document.pictureInPictureElement === m) document.exitPictureInPicture().catch(() => {}); else m.requestPictureInPicture().catch(() => toast('This browser couldn’t float the video')); }
+function vidClock(root) {
+  for (const m of root.querySelectorAll('.media video, .media audio')) if (!m.paused || m.currentTime > 0) return m.currentTime;
+  for (const fr of root.querySelectorAll('.vlslot iframe')) { const t = frameTime(fr); if (t != null) return t; }
+  return null;
+}
+function vidSeek(root, t) { const c = [...root.querySelectorAll('.media')].find(c => c.vseek); if (c) c.vseek(t); return !!c; }
 let curPlay = null;   // a link's player that takes orders, for the keys (Space, J, L) when there is no video file on screen
 function frameTime(fr) { for (const k of clocks) if (k.fr === fr) return k.t == null ? null : k.t + (k.on ? (Date.now() - k.at) / 1000 : 0); return null; }
 
@@ -23709,10 +23749,14 @@ const spTalk = () => { const t = Array.isArray(setup.talk) ? setup.talk : []; re
 function spTalkSet(i, v) {
   const t = spTalk(); t[i] = v > 0 && isFinite(v) ? Math.min(600, Math.round(v * 2) / 2) : null;
   if (t[0] == null && t[1] == null) delete setup.talk; else setup.talk = t;
+  spSetupKeep();
+}
+function spSetupKeep() {
   store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined });
   if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); }
   saveSoon();
 }
+function spClockGo(c) { if (c.at) { c.ms += Date.now() - c.at; c.at = 0; } else { for (const o of spClocks.values()) if (o.at) { o.ms += Date.now() - o.at; o.at = 0; } c.at = Date.now(); } }
 let spTickIv = 0;
 function spTimerShow(host, st) {
   const box = host.querySelector('.sptimer'); if (!box) return;
@@ -23746,7 +23790,7 @@ SP_TOOLS.push({ key: 'timer', label: 'Timer', ok: st => st.files.some(f => !f.vi
 $('#paper').addEventListener('click', e => {
   const box = e.target.closest('.sptimer'); if (!box || !batch) return;
   const st = batch.students[cur], c = spClockOf(st);
-  if (e.target.closest('[data-sptgo]')) { if (c.at) { c.ms += Date.now() - c.at; c.at = 0; } else { for (const o of spClocks.values()) if (o.at) { o.ms += Date.now() - o.at; o.at = 0; } c.at = Date.now(); } }
+  if (e.target.closest('[data-sptgo]')) spClockGo(c);
   else if (e.target.closest('[data-sptreset]')) { c.ms = 0; c.at = 0; }
   else if (e.target.closest('[data-sptnote]')) { addStamp(st, spClockMs(c) / 1000); return; }
   else return;
@@ -23759,6 +23803,198 @@ $('#paper').addEventListener('change', e => {
   spTimerShow(inp.closest('.sptool'), batch.students[cur]);
 });
 Object.assign(window.__gs, { spClock: key => { const c = spClocks.get(key); return c ? { ms: spClockMs(c), on: !!c.at } : null; }, spClockSet: (key, ms) => { spClocks.set(key, { ms, at: 0 }); } });
+
+/* ---------------- typed notes (11/16): a tab of the side pane for notes typed line by line ----------------
+   Any notes on any assignment: plain typing comes first, and a line can also be a heading, a strength, a next step or a question
+   (from the bar, or Ctrl Alt 1 to 4). Beside a video or the Timer, each new line can carry the moment it was started.
+   setup.tnBack is kept free for a later switch: whether the notes go back to the student with the paper (absent: they do).
+   Kept on the student's grade, st.grade.tn = { l: [{ s: text, k: 'h' | 'p' | 'n' | 'q' (none for a plain note), t: seconds }] }, and gone
+   when empty. On the grade, it is saved, merged, carried in a take-home file and the folder, and shared by a group, the way the comment is.
+   The assignment can give every student the same headings to start with: setup.tnHead = [text]. A student with no notes shows them,
+   with an empty line under each, and nothing is stored until she types.
+   One line is a textarea of its own; the editing between lines (Enter, Backspace, the arrows, pasting several lines) is done here. */
+const TN_K = { h: ['Heading', 'H', 1], p: ['Strength', '✓', 2], n: ['Next step', '→', 3], q: ['Question', '?', 4] };
+const TN_KEY = navigator.platform && /Mac|iP/.test(navigator.platform) ? '⌘⌥' : 'Ctrl+Alt+';
+const TN_FS = !!(window.CSS && CSS.supports && CSS.supports('field-sizing', 'content'));
+let tnL = [], tnSt = null, tnAt = 0, tnLast = null, tnMz = null, tnIv = 0;
+function tnHasG(g) { return !!(g && g.tn && Array.isArray(g.tn.l) && g.tn.l.some(x => x && x.k !== 'h' && String(x.s || '').trim())); }
+function tnHas(st) { return !!st && tnHasG(st.grade); }
+const tnStored = st => (st.grade.tn && Array.isArray(st.grade.tn.l) && st.grade.tn.l.length ? st.grade.tn.l : null);
+const tnTimesOn = () => store.get('gs.tnTime', true) !== false;
+const tnHead = () => (Array.isArray(setup.tnHead) ? setup.tnHead.filter(s => typeof s === 'string' && s.trim()) : []);
+function tnView(st) {
+  const s = tnStored(st); if (s) return s.map(x => ({ ...x, s: String(x.s || '') }));
+  const h = tnHead(); return h.length ? h.flatMap(s => [{ s, k: 'h' }, { s: '' }]) : [{ s: '' }];
+}
+const tnHasVid = st => st.files.some(f => f.kind === 'media' || f.kind === 'link');
+const tnTimer = st => !tnHasVid(st) && (st.files.some(f => !f.virtual && f.data && isNotes(f.data)) || spClockMs(spClockOf(st)) > 0);
+function tnNow(st) {
+  const v = vidClock($('#paper')); if (v != null) return v;
+  const c = spClockOf(st); return c.at ? spClockMs(c) / 1000 : null;
+}
+
+/* ---------- keeping them, and taking a change back ---------- */
+function tnSnap(st, join) {
+  const top = undoStack[undoStack.length - 1];
+  if (join && top && top === tnLast && top.st === st && !redoStack.length && Date.now() - top.t < 1500) { top.t = Date.now(); return; }
+  const before = JSON.stringify(st.grade.tn || null); let after = before;
+  const put = v => { const x = JSON.parse(v); if (x) st.grade.tn = x; else delete st.grade.tn; touchGrade(st); saveSoon(); renderList(); tnBack(st); };
+  const u = actStep(() => { after = JSON.stringify(st.grade.tn || null); put(before); }, () => put(after), 'typed notes');
+  u.st = st; u.t = Date.now(); pushUndo(u); tnLast = u;
+}
+function tnPut(st, join) {
+  tnSnap(st, join);
+  const was = tnHas(st);
+  if (tnL.some(x => x.s.trim())) st.grade.tn = { l: tnL.map(x => { const o = { s: x.s }; if (x.k) o.k = x.k; if (x.t != null) o.t = x.t; return o; }) };
+  else delete st.grade.tn;
+  touchGrade(st); saveSoon();
+  if (was !== tnHas(st)) renderList();
+}
+function tnBack(st) {
+  const i = batch.students.indexOf(st); if (i < 0) return;
+  if (i !== cur) return openStudent(i);
+  const h = tnHost(); if (!h) return;
+  const a = document.activeElement, at = a && a.classList.contains('tnin') ? [tnAt, a.selectionStart] : null;
+  tnRows(h, st); if (at) tnFocus(Math.min(at[0], tnL.length - 1), at[1]);
+}
+
+/* ---------- drawing ---------- */
+const tnHost = () => $('#spBody > .sptool[data-tool="typed"]');
+const tnGut = (x, i) => (x.t != null ? '<button class="tnchip" data-tnt="' + i + '" title="' + (tnSt && tnHasVid(tnSt) ? 'Play the video from here' : 'The time on the Timer') + '">' + fmtTime(x.t) + '</button><button class="tnx" data-tnx="' + i + '" aria-label="Take the time off" title="Take the time off">×</button>' : '') + (x.k && x.k !== 'h' ? '<i aria-hidden="true">' + TN_K[x.k][1] + '</i>' : '');
+const tnRowHtml = (x, i) => '<div class="tnrow"' + (x.k ? ' data-k="' + x.k + '"' : '') + '><span class="tngut">' + tnGut(x, i) + '</span><textarea class="tnin" rows="1" data-tni="' + i + '" aria-label="' + (x.k ? TN_K[x.k][0] : 'Note') + ' ' + (i + 1) + '"' +
+  (tnL.length === 1 ? ' placeholder="Type your notes. Enter starts a new line."' : '') + '>' + esc(x.s) + '</textarea></div>';
+function tnFit(ta) { if (!TN_FS) { ta.style.height = '0'; ta.style.height = ta.scrollHeight + 'px'; } }
+function tnPaint() {
+  const h = tnHost(), list = h && h.querySelector('.tnlist'); if (!list) return;
+  list.innerHTML = tnL.map(tnRowHtml).join('');
+  if (!TN_FS) list.querySelectorAll('.tnin').forEach(tnFit);
+  const st = tnSt, hint = h.querySelector('.tnhint');
+  hint.hidden = !(st && !tnStored(st) && !tnHead().length && setup.mode === 'rubric' && setup.criteria.length);
+  tnBar(h, st);
+}
+function tnRows(h, st) { tnSt = st; tnL = tnView(st); tnAt = Math.min(tnAt, tnL.length - 1); tnPaint(); }
+function tnBar(h, st) {
+  const bar = h && h.querySelector('.tnbar'); if (!bar || !st) return;
+  const x = tnL[tnAt] || {}, vid = tnHasVid(st), live = tnTimer(st), can = vid || live;
+  for (const b of bar.querySelectorAll('[data-tnk]')) b.setAttribute('aria-pressed', String(x.k === b.dataset.tnk));
+  const tb = bar.querySelector('[data-tntime]');
+  tb.disabled = !can; tb.setAttribute('aria-pressed', String(can && tnTimesOn()));
+  tb.title = !can ? 'A video, or the Timer for a talk given live, gives the times' : vid ? 'Each new line starts with the time on the video. A click on a time plays the video from there.' : 'Each new line starts with the time on the Timer. Start it as the talk starts.';
+  const ck = bar.querySelector('.tnclock'); ck.hidden = !live;
+  if (live) { const c = spClockOf(st), say = (c.at ? '❚❚ ' : '▶ ') + fmtTime(spClockMs(c) / 1000); if (ck.dataset.say !== say) { ck.dataset.say = say; ck.textContent = say; ck.setAttribute('aria-pressed', String(!!c.at)); ck.title = c.at ? 'Pause the Timer' : 'Start the Timer'; } }
+  const any = tnL.some(y => y.s.trim()), heads = tnL.some(y => y.k === 'h' && y.s.trim());
+  const show = { head: heads, unhead: tnHead().length > 0, copy: any, clear: !!tnStored(st) };
+  for (const b of bar.querySelectorAll('[data-tnm]')) b.hidden = !show[b.dataset.tnm];
+}
+function tnDraw(host, st) {
+  if (host.dataset.st !== st.key || !host.querySelector('.tn')) {
+    host.dataset.st = st.key; tnSt = null;
+    host.innerHTML = '<div class="tn"><div class="tnbar" role="toolbar" aria-label="Notes">' +
+      Object.entries(TN_K).map(([k, [w, g, m]]) => '<button class="tnb" data-tnk="' + k + '" aria-pressed="false" title="' + w + ' for the line you are on (' + TN_KEY + m + ')"><i data-k="' + k + '">' + g + '</i><span>' + w + '</span></button>').join('') +
+      '<span class="tnsep" aria-hidden="true"></span><button class="tnb" data-tntime aria-pressed="true">Times</button><button class="tnb tnclock" data-tnclk hidden></button>' +
+      kmWrap('⋯', 'class="icon kdots" aria-label="More for these notes" title="More for these notes"',
+        '<button class="mitem" data-tnm="head">Use these headings for every student</button><button class="mitem" data-tnm="unhead">Clear the headings for every student</button>' +
+        '<button class="mitem" data-tnm="copy">Copy notes</button><button class="mitem" data-tnm="clear">Clear this student’s notes</button>', 'right') +
+      '</div><div class="tnlist"></div><p class="tnhint" hidden><button class="link" data-tnrub>Start with a heading for each rubric row</button></p></div>';
+  }
+  const a = document.activeElement, typing = !!(a && a.classList.contains('tnin') && host.contains(a));
+  if (tnSt !== st || (!typing && JSON.stringify(tnView(st)) !== JSON.stringify(tnL))) tnRows(host, st); else tnBar(host, st);
+  if (!tnIv) tnIv = setInterval(() => { const h = tnHost(); if (!h || !batch || !batch.students[cur]) { clearInterval(tnIv); tnIv = 0; return; } tnBar(h, batch.students[cur]); }, 500);
+}
+SP_TOOLS.push({ key: 'typed', label: 'Type notes', ok: () => true, draw: tnDraw });
+function tnFocus(i, c) {
+  const ta = document.querySelector('#spBody .tnin[data-tni="' + i + '"]'); if (!ta) return;
+  tnAt = i; ta.focus(); c = Math.min(c, ta.value.length); ta.setSelectionRange(c, c);
+}
+function tnRe(st, i, c) { tnPut(st, false); tnPaint(); tnFocus(i, c); }
+function tnH(ta, s) {
+  if (!tnMz) { tnMz = document.createElement('textarea'); tnMz.className = 'tnin tnmz'; tnMz.rows = 1; tnMz.tabIndex = -1; tnMz.setAttribute('aria-hidden', 'true'); }
+  if (tnMz.parentNode !== ta.parentNode) ta.parentNode.appendChild(tnMz);
+  tnMz.style.width = ta.clientWidth + 'px'; tnMz.value = s; return tnMz.scrollHeight;
+}
+const tnEdge = (ta, d) => ta.selectionStart === ta.selectionEnd && (d < 0 ? tnH(ta, ta.value.slice(0, ta.selectionStart)) <= tnH(ta, '') : tnH(ta, ta.value.slice(0, ta.selectionStart)) >= tnH(ta, ta.value));
+function tnParse(s) {
+  const o = {}; let m = /^\s*\[(\d+):([0-5]\d)\]\s*/.exec(s);
+  if (m) { o.t = +m[1] * 60 + +m[2]; s = s.slice(m[0].length); }
+  m = /^(Strength|Next step|Question): /i.exec(s); if (m) { o.k = 'pnq'['strength|next step|question'.split('|').indexOf(m[1].toLowerCase())]; s = s.slice(m[0].length); } else s = s.replace(/^\s*[-•*] /, '');
+  o.s = s.replace(/\s+$/, '').replace(/\t/g, ' '); return o;
+}
+const tnText = L => L.filter(x => x.s.trim()).map((x, i) => x.k === 'h' ? (i ? '\n' : '') + x.s : (x.t != null ? '[' + fmtTime(x.t) + '] ' : '') + (x.k ? TN_K[x.k][0] + ': ' : '') + x.s).join('\n');
+
+/* ---------- typing ---------- */
+const tnIn = e => { const ta = e.target.closest && e.target.closest('#spBody .tnin'); return ta && batch && tnSt === batch.students[cur] && tnL[+ta.dataset.tni] ? ta : null; };
+$('#paper').addEventListener('input', e => {
+  const ta = tnIn(e); if (!ta) return;
+  const st = tnSt, i = +ta.dataset.tni, x = tnL[i]; let v = ta.value.replace(/[\r\n]+/g, ' '), kind = false;
+  if (v !== ta.value) ta.value = v;
+  if (!x.s && v && x.t == null && tnTimesOn() && (tnHasVid(st) || tnTimer(st))) { const t = tnNow(st); if (t != null) { x.t = Math.floor(t); kind = true; } }
+  x.s = v; tnFit(ta);
+  if (kind) { const row = ta.parentNode; if (x.k) row.dataset.k = x.k; row.firstChild.innerHTML = tnGut(x, i); ta.setAttribute('aria-label', (x.k ? TN_K[x.k][0] : 'Note') + ' ' + (i + 1)); }
+  tnPut(st, !kind);
+  tnBar(tnHost(), st);
+});
+$('#paper').addEventListener('keydown', e => {
+  const ta = tnIn(e); if (!ta || e.isComposing) return;
+  const st = tnSt, i = +ta.dataset.tni, x = tnL[i], a = ta.selectionStart, b = ta.selectionEnd, k = e.key;
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && /^[zy]$/i.test(k)) { e.preventDefault(); e.stopPropagation(); return k.toLowerCase() === 'z' && !e.shiftKey ? undo() : redo(); }
+  const kk = /^Digit[1-4]$/.test(e.code) && e.altKey && (e.ctrlKey || e.metaKey) && !e.shiftKey && Object.keys(TN_K)[+e.code.slice(5) - 1];
+  if (kk) { e.preventDefault(); e.stopPropagation(); if (x.k === kk) delete x.k; else x.k = kk; return tnRe(st, i, a); }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (k === 'Escape') { e.preventDefault(); ta.blur(); return; }
+  if (k === 'Enter') {
+    e.preventDefault();
+    const rest = x.s.slice(b), n = { s: rest }; x.s = x.s.slice(0, a); if (rest && x.k) n.k = x.k;
+    tnL.splice(i + 1, 0, n); return tnRe(st, i + 1, 0);
+  }
+  if (k === 'Backspace' && !a && !b) {
+    if (x.k) { e.preventDefault(); delete x.k; return tnRe(st, i, 0); }
+    if (!i) return;
+    e.preventDefault();
+    const p = tnL[i - 1], at = p.s.length; if (!at && p.t == null && x.t != null) p.t = x.t;
+    p.s += x.s; if (!at && !p.k && x.k) p.k = x.k;
+    tnL.splice(i, 1); return tnRe(st, i - 1, at);
+  }
+  if (k === 'Delete' && a === b && a === x.s.length && i < tnL.length - 1) {
+    e.preventDefault(); const n = tnL[i + 1]; if (!a && x.t == null && n.t != null) x.t = n.t;
+    x.s += n.s; tnL.splice(i + 1, 1); return tnRe(st, i, a);
+  }
+  if (e.shiftKey) return;
+  if ((k === 'ArrowUp' && i > 0 && tnEdge(ta, -1)) || (k === 'ArrowDown' && i < tnL.length - 1 && tnEdge(ta, 1))) { e.preventDefault(); tnFocus(i + (k === 'ArrowUp' ? -1 : 1), a); }
+});
+$('#paper').addEventListener('paste', e => {
+  const ta = tnIn(e); if (!ta) return;
+  const txt = (e.clipboardData && e.clipboardData.getData('text/plain')) || ''; if (!/[\r\n]/.test(txt)) return;   // one line pastes as usual
+  e.preventDefault();
+  const st = tnSt, i = +ta.dataset.tni, x = tnL[i], a = ta.selectionStart, tail = x.s.slice(ta.selectionEnd), ls = txt.replace(/\r\n?/g, '\n').split('\n').map(tnParse);
+  if (!a) { if (ls[0].k) x.k = ls[0].k; if (ls[0].t != null) x.t = ls[0].t; }
+  x.s = x.s.slice(0, a) + ls[0].s;
+  const more = ls.slice(1), last = more.length ? more[more.length - 1] : x, at = last.s.length;
+  tnL.splice(i + 1, 0, ...more); last.s += tail;
+  tnRe(st, i + more.length, at);
+});
+$('#paper').addEventListener('focusin', e => { const ta = tnIn(e); if (ta) { tnAt = +ta.dataset.tni; tnBar(tnHost(), tnSt); } });
+$('#paper').addEventListener('mousedown', e => { if (e.target.closest('.tnbar .tnb, .tnchip, .tnx')) e.preventDefault(); });
+$('#paper').addEventListener('click', async e => {
+  const box = e.target.closest('.tn'); if (!box || !batch || tnSt !== batch.students[cur]) return;
+  const st = tnSt, el = e.target.closest('[data-tnk],[data-tntime],[data-tnclk],[data-tnt],[data-tnx],[data-tnrub],[data-tnm]'); if (!el) return;
+  const d = el.dataset, ta = box.querySelector('.tnin[data-tni="' + tnAt + '"]'), c = ta ? ta.selectionStart : 0;
+  if (d.tnk) { const x = tnL[tnAt]; if (!x) return; if (x.k === d.tnk) delete x.k; else x.k = d.tnk; return tnRe(st, tnAt, c); }
+  if (d.tntime != null) { if (tnTimesOn()) store.set('gs.tnTime', false); else store.del('gs.tnTime'); return tnBar(tnHost(), st); }
+  if (d.tnclk != null) { spClockGo(spClockOf(st)); return tnBar(tnHost(), st); }
+  if (d.tnt) { const x = tnL[+d.tnt]; if (x && x.t != null && !vidSeek($('#paper'), x.t)) toast('This time is from the Timer. There is no video to go to.'); return; }
+  if (d.tnx) { const x = tnL[+d.tnx]; if (x) delete x.t; return tnRe(st, +d.tnx, (tnL[+d.tnx] || { s: '' }).s.length); }
+  if (d.tnrub != null) { tnL = setup.criteria.flatMap(s => [{ s: String(s), k: 'h' }, { s: '' }]); return tnRe(st, 1, 0); }
+  const m = d.tnm;
+  if (m === 'head') { setup.tnHead = tnL.filter(x => x.k === 'h' && x.s.trim()).map(x => x.s.trim()); spSetupKeep(); tnBar(tnHost(), st); return toast('A student with no notes yet starts with these ' + setup.tnHead.length + (setup.tnHead.length === 1 ? ' heading' : ' headings')); }
+  if (m === 'unhead') { delete setup.tnHead; spSetupKeep(); tnRows(tnHost(), st); return toast('Students with no notes start with an empty page again'); }
+  if (m === 'copy') return navigator.clipboard.writeText(tnText(tnL)).then(() => toast('Notes copied'), () => toast('Copying didn’t work in this browser.'));
+  if (m === 'clear') {
+    if (!await askDlg('Clear the typed notes for this student?\n\nCtrl Z brings them back.', { ok: 'Clear', danger: true })) return;
+    if (batch.students[cur] !== st) return;
+    tnSnap(st); delete st.grade.tn; touchGrade(st); saveSoon(); renderList(); tnRows(tnHost(), st);
+  }
+});
+Object.assign(window.__gs, { tnText: () => tnText(tnL), tnLines: () => tnL.map(x => ({ ...x })) });
 
 /* ---------------- anchor papers: the high, middle and low paper of a summative (11/11) ---------------- */
 const ANCHORS = [['high', 'High'], ['mid', 'Mid'], ['low', 'Low']];

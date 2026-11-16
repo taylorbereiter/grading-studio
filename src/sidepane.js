@@ -226,10 +226,16 @@ const spTalk = () => { const t = Array.isArray(setup.talk) ? setup.talk : []; re
 function spTalkSet(i, v) {
   const t = spTalk(); t[i] = v > 0 && isFinite(v) ? Math.min(600, Math.round(v * 2) / 2) : null;
   if (t[0] == null && t[1] == null) delete setup.talk; else setup.talk = t;
+  spSetupKeep();
+}
+// The assignment's setup kept after a change made here (the asked-for length, the headings typed notes start with).
+function spSetupKeep() {
   store.set('gs.setup', { ...setup, spot: undefined, rubricPage: undefined });
   if (batch.assignment) { batch.assignment.setup = { ...setup, spot: undefined }; saveLib(); }
   saveSoon();
 }
+// Start or pause a student's clock. Only one runs at a time.
+function spClockGo(c) { if (c.at) { c.ms += Date.now() - c.at; c.at = 0; } else { for (const o of spClocks.values()) if (o.at) { o.ms += Date.now() - o.at; o.at = 0; } c.at = Date.now(); } }
 let spTickIv = 0;
 function spTimerShow(host, st) {
   const box = host.querySelector('.sptimer'); if (!box) return;
@@ -263,7 +269,7 @@ SP_TOOLS.push({ key: 'timer', label: 'Timer', ok: st => st.files.some(f => !f.vi
 $('#paper').addEventListener('click', e => {
   const box = e.target.closest('.sptimer'); if (!box || !batch) return;
   const st = batch.students[cur], c = spClockOf(st);
-  if (e.target.closest('[data-sptgo]')) { if (c.at) { c.ms += Date.now() - c.at; c.at = 0; } else { for (const o of spClocks.values()) if (o.at) { o.ms += Date.now() - o.at; o.at = 0; } c.at = Date.now(); } }
+  if (e.target.closest('[data-sptgo]')) spClockGo(c);
   else if (e.target.closest('[data-sptreset]')) { c.ms = 0; c.at = 0; }
   else if (e.target.closest('[data-sptnote]')) { addStamp(st, spClockMs(c) / 1000); return; }
   else return;

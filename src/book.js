@@ -76,7 +76,7 @@ const bkMean = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
 // One cell: what the gradebook knows about one student on one assignment.
 function bkCellOf(p, g, d, k) {
   const marks = !!(d && d.s && d.s[k] && d.s[k].f && Object.values(d.s[k].f).some(pg => Object.values(pg || {}).some(a => a && a.length)));
-  const fb = !!(g && g.fb), started = marks || !!((g && g.comment) || '').trim();   // fb: she switched on Feedback complete
+  const fb = !!(g && g.fb), started = marks || !!((g && g.comment) || '').trim() || tnHasG(g);   // fb: she switched on Feedback complete
   if (p.status === 'missing' || p.status === 'excused') return { st: p.status, fb };
   if (p.total == null && p.pct == null) return fb || started ? { fb, started } : null;
   const cell = { pct: p.pct, total: p.total, max: p.max, st: p.status, partial: p.partial, out: !!(g && g.outAvg), fb, started };
