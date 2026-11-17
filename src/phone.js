@@ -19,13 +19,16 @@ if (PHONE) {
   nav.className = 'phnav'; nav.id = 'phNav'; nav.setAttribute('aria-label', 'Main');
   const ic = d => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '"/></svg>';
   nav.innerHTML = [['#/', 'Today', 'M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8a4 4 0 1 0 0-8'],
-    ['#/plans', 'Plans', 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11M9 8h6'], ['#/scores', 'Scores', 'M4 5h16M4 12h16M4 19h10M17 17l2 2 3-4'], ['#/todo', 'To do', 'M5 12l4 4 10-10']]
-    .map(([h, l, d]) => '<a href="' + h + '" data-phnav="' + h + '">' + ic(d) + '<span>' + l + '</span></a>').join('');
+    ['#/plans', 'Plans', 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11M9 8h6'], ['#/scores', 'Scores', 'M4 5h16M4 12h16M4 19h10M17 17l2 2 3-4'], ['#/todo', 'To do', 'M5 12l4 4 10-10'], ['#/more', 'More', 'M4 6h16M4 12h16M4 18h16']]
+    .map(([h, l, d]) => '<a href="' + h + '" data-phnav="' + h + '">' + ic(d) + '<span>' + l + '</span>' + (h === '#/more' ? '<i class="phbadge" hidden></i>' : '') + '</a>').join('');
   document.body.appendChild(nav);
+  // A newer version: a bar just above the tabs on every screen, so Update now is one tap away (safe.js, updRender)
+  const bar = document.createElement('div'); bar.className = 'phupd'; bar.id = 'phUpd'; bar.hidden = true; bar.setAttribute('role', 'status');
+  document.body.appendChild(bar);
 }
 function phNavRender() {
   if (!PHONE) return;
-  const v = routeNow().v, on = v === 'scores' ? '#/scores' : v === 'plans' ? '#/plans' : v === 'todo' ? '#/todo' : '#/';
+  const v = routeNow().v, on = v === 'scores' ? '#/scores' : v === 'plans' ? '#/plans' : v === 'todo' ? '#/todo' : v === 'more' || v === 'settings' || v === 'help' ? '#/more' : '#/';
   for (const a of document.querySelectorAll('[data-phnav]')) { const me = a.dataset.phnav === on; a.classList.toggle('on', me); if (me) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }
 }
 window.addEventListener('hashchange', phNavRender);
@@ -184,7 +187,7 @@ function phoneHowTo() {
     '<p class="muted">Your classes, scores and to-dos then stay the same on both. You can type scores and look at papers on the phone; marking stays on the computer.</p>' +
     '</div><div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
 }
-window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), gAge: ms => { G.exp -= ms; }, syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)) });
+window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), gAge: ms => { G.exp -= ms; }, syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)), updAs: st => { upd.on = true; upd.st = st; updRender(); }, syncSay: t => setSyncState(t) });
 
 /* Plans: the lessons from the Planner on her computer, day by day, to read (the Planner itself is where they are written). They come
    through her Google Drive with the rest of her work (drive.js, planSync), into this browser's own copy of the Planner's store. */
@@ -216,3 +219,42 @@ async function phLessonRender(box, id) {
     (l.note ? '<p class="phln" data-raw>' + txt(l.note) + '</p>' : '') +
     (slides.length ? '<ol class="phslides">' + slides.map(s => '<li class="tcard"><b data-raw>' + txt(s.title) + '</b>' + (s.body ? '<p data-raw>' + txt(s.body) + '</p>' : '') + (s.img || (s.ctx && s.ctx.length) ? '<small class="muted">A picture, on your computer</small>' : '') + (s.notes ? '<p class="phsn" data-raw>' + txt(s.notes) + '</p>' : '') + '</li>').join('') + '</ol>' : '<p class="muted">No slides yet.</p>');
 }
+
+/* More: what isn't the day's work, in one place. Google and syncing, updates (the computer has these in its sidebar), help and settings. */
+const phRow = (title, sub, btn) => '<div class="phitem"><span class="phn"><b>' + title + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>' + (btn || '') + '</div>';
+const phLink = (href, title) => '<a class="phitem" href="' + href + '"><span class="phn"><b>' + title + '</b></span><span class="phc" aria-hidden="true">›</span></a>';
+function phMoreRender() {
+  const box = $('#phMore'); if (!box || routeNow().v !== 'more') return;
+  const next = updNext(), stale = updStale();
+  const g = !GOK || !gcid() ? '' : '<h2 class="tcap">Google</h2><div class="tcard phlist">' + (G.email
+    ? phRow('<span data-raw>' + esc(G.email) + '</span>', esc(syncState || 'synced'), syncPaused() ? '<button class="btn sm primary" data-gin>Sign in again</button>' : '<button class="btn sm" data-phsync>Sync now</button>') +
+      phRow('Use a different account', '', '<button class="btn sm" data-gout>Sign out</button>')
+    : phRow('Sign in with Google', 'Use the same Google account as on your computer, and your work comes here.', '<button class="btn sm primary" data-gin>Sign in</button>')) + '</div>';
+  const say = next || stale ? 'A new version is ready.' : !upd.on ? '' : upd.checking ? 'Checking…' : upd.err || upd.said || 'You have the newest version.';
+  const btn = next ? '<button class="btn sm primary" data-phupd>Update now</button>' : stale ? '<button class="btn sm primary" data-phupd>Reload to update</button>' : upd.on ? '<button class="btn sm" data-phcheck' + (upd.checking ? ' disabled' : '') + '>Check for updates</button>' : '';
+  const h = g + '<h2 class="tcap">Updates</h2><div class="tcard phlist">' + phRow('<span data-raw>Grading Studio ' + esc(gsData.APP_VERSION) + '</span>', esc(say), btn) + '</div>' +
+    '<div class="tcard phlist">' + phLink('#/help', 'Help') + phLink('#/settings', 'Settings') + '</div>';
+  if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
+}
+function phUpdRender() {
+  const next = updNext(), stale = updStale(), bar = $('#phUpd'), dot = document.querySelector('.phbadge'); if (!bar) return;
+  const h = next || stale ? '<span>A new version is ready.</span><button class="btn sm" data-phupd>' + (next ? 'Update now' : 'Reload to update') + '</button>' : '';
+  bar.hidden = !h; if (dot) dot.hidden = !h;
+  if (bar.dataset.h !== h) { bar.dataset.h = h; bar.innerHTML = h; }
+  phMoreRender();
+}
+// Today, when the phone isn't signed in (or Google wants her again): the one thing that brings her work here.
+function phSignRender() {
+  const el = $('#phSign'); if (!el || !PHONE) return;
+  const h = !GOK || !gcid() ? '' : !G.email ? '<div class="tcard phsign"><b>Bring your work from your computer</b><p>Sign in with the same Google account as on your computer. Your classes, scores, plans and to-dos then come here.</p><button class="btn primary" data-gin>Sign in with Google</button></div>'
+    : syncPaused() ? '<div class="tcard phsign"><b>Google wants you to sign in again</b><p>Your work here waits to sync until you do.</p><button class="btn primary" data-gin>Sign in again</button></div>' : '';
+  el.hidden = !h;
+  if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+}
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-phupd]')) return updNext() ? updApply() : location.reload();
+  if (e.target.closest('[data-phcheck]')) { upd.checking = true; upd.err = ''; upd.said = ''; updRender(); updSend({ type: 'gs-check' }); return; }
+  if (e.target.closest('[data-phsync]')) { setSyncState('syncing…'); syncNow(); }
+});
+// renderGoogle can run before this file has decided it's a phone: draw the Google card once now too.
+if (PHONE) phSignRender();

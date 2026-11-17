@@ -99,6 +99,7 @@ function renderGoogle() {
     : '<button class="btn sm" data-gin>Sign in with Google</button>';
   if (!PHONE) for (const el of document.querySelectorAll('.gAcct')) el.insertAdjacentHTML('beforeend', ' <button class="btn sm" data-gphone>Use on your phone</button>');
   for (const b of document.querySelectorAll('.needG')) b.hidden = !G.email;
+  if (typeof phSignRender === 'function') phSignRender();
   const gs = $('#setGoogle'); if (gs) { if (!G.email || G_REDIRECT) gs.hidden = true; $('#gAutoIn').checked = gAuto(); }   // shown on its settings page (settings.js)
 }
 document.addEventListener('change', e => { if (e.target.id === 'gAutoIn') { store.set('gs.gAuto', e.target.checked); if (e.target.checked && syncPaused()) syncNow(); } });
@@ -179,7 +180,7 @@ const SYNC_RX = /^gs\.(lib|setup|bank|rubrics|school|b\..+|rp\..+|rd\..+)$/;
   store.set = (k, v) => { const ok = raw(k, v); if (ok && SYNC_RX.test(k)) syncSoon(); return ok; };
 }
 function syncPaused() { return /sign in again/.test(syncState || ''); }
-function setSyncState(s) { const was = syncPaused(); syncState = s; if (syncPaused() !== was) return renderGoogle(); const el = document.getElementById('syncState'); if (el) el.textContent = s; }
+function setSyncState(s) { const was = syncPaused(); syncState = s; if (PHONE) phMoreRender(); if (syncPaused() !== was) return renderGoogle(); const el = document.getElementById('syncState'); if (el) el.textContent = s; }
 function syncSoon() { if (!G.email || sampleOn()) return; clearTimeout(syncT); setSyncState('saving…'); syncT = setTimeout(syncNow, 15000); }
 // The file and its version, so two devices saving at once can't write over each other. Drive counts every change to a file (version):
 // the count is read with the file, and read again just before writing. If another device saved in between, this one merges again first.

@@ -47,7 +47,7 @@ function nowRow(rows, now) {
 const T_ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 const numWord = n => ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'][n] || String(n);
 function todayHtml(prim) {
-  if (!plan) return '<h2 class="tcap">Teaching today</h2><div class="tcard"><div class="trow none"><span class="nt"><b>Your timetable isn’t here yet</b><span class="ns">Add your class times in the Planner, and each day’s classes and lessons show here.</span></span><a class="btn sm" href="' + esc(planUrl('#timetable')) + '">Open the Planner</a></div></div>';
+  if (!plan) return '<h2 class="tcap">Teaching today</h2><div class="tcard"><div class="trow none"><span class="nt"><b>Your timetable isn’t here yet</b><span class="ns">' + (PHONE ? 'Add your class times in the Planner on your computer, and each day’s classes and lessons show here.' : 'Add your class times in the Planner, and each day’s classes and lessons show here.') + '</span></span>' + (PHONE ? '' : '<a class="btn sm" href="' + esc(planUrl('#timetable')) + '">Open the Planner</a>') + '</div></div>';
   const t = todayRows(plan), cur = nowRow(t.rows), day = isoDay(Date.now());
   const say = l => l.done ? 'finished' : l.status === 'review' ? 'ready for you' : l.status === 'claude' ? 'with ' + aiSay() : 'draft';
   const row = r => {
