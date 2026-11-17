@@ -820,6 +820,51 @@ function schoolMerge(x, y) {
   if (ry && (!rx || (ry.at || 0) > (rx.at || 0))) { out.roles = ry; toA = true; }
   return { out, toA };
 }
+// Time logs from two devices (gs.focus, src/focus.js; gsp.planTime, src/planner/plantime.js): each device counts its own minutes into
+// the same days, so a day takes the larger of each count, never the sum, and merging twice changes nothing. What is this device's own
+// (today's starting point, the work picked last, a goal carried over, the pace) stays as it is here. Days past 400 are left out.
+// Keys in order, so both devices write the same text and the sync settles.
+const keysSorted = o => Object.fromEntries(Object.entries(o).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0));
+function dayMax(x, y) {
+  const out = { ...x }, isNum = v => typeof v === 'number' && isFinite(v);
+  for (const [k, v] of Object.entries(y || {})) {
+    if (isNum(v)) { if (!isNum(out[k]) || v > out[k]) out[k] = v; }
+    else if (v && typeof v === 'object' && !Array.isArray(v)) { const o = { ...(out[k] && typeof out[k] === 'object' ? out[k] : {}) }; for (const [j, n] of Object.entries(v)) if (isNum(n) && !(o[j] >= n)) o[j] = n; out[k] = o; }
+    else if (!(k in out)) out[k] = v;
+  }
+  for (const [k, v] of Object.entries(out)) if (v && typeof v === 'object' && !Array.isArray(v)) out[k] = keysSorted(v);
+  return keysSorted(out);
+}
+function daysMax(x, y, now = Date.now()) {
+  x = x && typeof x === 'object' ? x : {}; y = y && typeof y === 'object' ? y : {};
+  const out = {}, obj = v => v && typeof v === 'object' && !Array.isArray(v);
+  for (const d of [...new Set([...Object.keys(x), ...Object.keys(y)])].sort()) {
+    const b = /^\d{4}-\d\d-\d\d$/.test(d) && obj(y[d]) && now - new Date(d + 'T12:00:00') <= 400 * 864e5 ? y[d] : null;
+    if (obj(x[d]) || b) out[d] = dayMax(obj(x[d]) ? x[d] : {}, b || {});
+    else if (d in x) out[d] = x[d];
+  }
+  return out;
+}
+// What of the focus log goes to her other devices through the sync: the days and the time added by hand, not this device's own state.
+const focusShared = L => { const o = {}; for (const k of ['days', 'add', 'addGone', 'qd']) if (L && L[k] !== undefined) o[k] = L[k]; return o; };
+const idsJoin = (x, y, n) => [...new Set([...(Array.isArray(x) ? x : []), ...(Array.isArray(y) ? y : [])].filter(i => typeof i === 'string'))].slice(-n);
+function focusMerge(x, y) {
+  x = x && typeof x === 'object' ? x : {}; y = y && typeof y === 'object' ? y : {};
+  const out = { ...x, days: daysMax(x.days, y.days) };
+  // time added by hand: one list by id, and one taken off on either device stays off
+  const gone = idsJoin(x.addGone, y.addGone, 200), by = new Map();
+  for (const e of [...(Array.isArray(x.add) ? x.add : []), ...(Array.isArray(y.add) ? y.add : [])]) if (e && e.id && !gone.includes(e.id) && !by.has(e.id)) by.set(e.id, e);
+  if (by.size || Array.isArray(x.add)) out.add = [...by.values()];
+  if (gone.length) out.addGone = gone;
+  if (Array.isArray(x.qd) || Array.isArray(y.qd)) out.qd = idsJoin(x.qd, y.qd, 50);
+  return { out, toA: JSON.stringify(out) !== JSON.stringify(x) };
+}
+function planTimeMerge(x, y) {
+  x = x && typeof x === 'object' ? x : {}; y = y && typeof y === 'object' ? y : {};
+  const out = { ...x, days: daysMax(x.days, y.days), names: { ...(y.names && typeof y.names === 'object' ? y.names : {}), ...(x.names && typeof x.names === 'object' ? x.names : {}) } };
+  if (Array.isArray(x.ids) || Array.isArray(y.ids)) out.ids = idsJoin(x.ids, y.ids, 50);
+  return { out, toA: JSON.stringify(out) !== JSON.stringify(x) };
+}
 // Other saved things: comments saved for reuse are pooled, and anything else she hasn't got here comes in. Nothing she has here is replaced, unless she replaced it there later.
 function mergeLs(a, b, skip = () => false) {
   const set = {}, parse = (t, d) => { try { return JSON.parse(t) || d; } catch { return d; } };
@@ -850,6 +895,10 @@ function mergeLs(a, b, skip = () => false) {
       try { x = JSON.parse(a[k] || '{}'); y = JSON.parse(v); } catch {}
       const add = Object.keys(y).filter(n => !(n in x));
       if (add.length) set[k] = a[k] == null ? v : JSON.stringify({ ...x, ...Object.fromEntries(add.map(n => [n, y[n]])) });
+    // the focus and time log: day by day, the larger of each count
+    } else if (k === 'gs.focus') {
+      const m = focusMerge(parse((a || {})[k], null), parse(v, null));
+      if (m.toA) set[k] = JSON.stringify(m.out);
     // school resources: an item at a time, and the one changed later is kept
     } else if (k === 'gs.school') {
       const m = schoolMerge(parse((a || {})[k], null), parse(v, null));

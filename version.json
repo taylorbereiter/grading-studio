@@ -1,21 +1,24 @@
 {
- "version": "1.28.69",
- "build": "4e351c35be69",
+ "version": "1.28.70",
+ "build": "543373e96d51",
  "notes": [
-  "A late paper on an assignment whose scores you typed into the gradebook: its card now has Add papers… (before, it was only in the ⋯ menu). Mark and score that student’s paper as usual. Everyone else keeps the score you typed, and the card still says Typed in."
+  "Plan lessons has a Focus button on the lesson to pick up and on each class coming up without a lesson. A to-do to plan a lesson has Focus on this, and Plan it opens that class and day.",
+  "Lesson focus sessions leave out time you were away, and when one ends you see how long the lesson has taken so far.",
+  "Syncing sends changes as soon as you leave the page, checks for changes from your other devices every few minutes, and adds up focus and planning time from all of them. On the phone, a lesson shows its pictures and links.",
+  "More of the partner controls and Strengths and concerns are in your language, Today's times follow your language, and the Entry list window follows dark mode."
  ],
  "files": {
-  "index.html": "95d14327bb559ed778a1b52ce34f91c25f8262c30b71bb3da641b1c126e7eed5",
-  "planner.html": "b8dfde36e7b3d4c92e07b5f216c7b20c410d006c69c09b273bf9d91c173085d8"
+  "index.html": "1c01d1a9b9eafe63368b72272a58f18be5590969d86407b08948b66483343fd4",
+  "planner.html": "f9d429d6aa94150102be33be9669f3aaee0db71f55777d7823c35338f55654f7"
  },
  "langs": {
-  "lang/zh-Hant.js": "c409e5edf271a12dfec63a0fc997e5c0fe124adabc00488ec76e6d968df43652",
-  "lang/zh-Hans.js": "af8ecd0899440e76d00a8c30cec5f90f44a8fd46f97accea6a421e389bf2b864",
-  "lang/es.js": "95bd988a392e83eac319f03219f78b044738cac3d9b116f54d0c456e0b0c649a",
-  "lang/fr.js": "6d459fb20c83467a6bfc0a6b326336f63bf48107b175f2c06f6e244710121399",
-  "lang/de.js": "8757a1ad21122a92cff266ef4cb5863940b39c0c5a4ec19dc8d623c6d340ed86",
-  "lang/pt-BR.js": "2f45f9552a7b0348a207e895c11de90f79e77036cf2b2f6e63ac3e5048f07df6",
-  "lang/ja.js": "99909718c42a6548183b6e45afb90040c4c81048d6bc0aaf604353fe71c79875",
-  "lang/ko.js": "5610e0ff0ca683519f3c639bf69b7f2b5486c496248a3f3a42e98fcf4b3f664d"
+  "lang/zh-Hant.js": "0561aff164054b9e2626ea1a899efe50572bd8d5453d4acba6987e1e102c3f8b",
+  "lang/zh-Hans.js": "c10c93f7d53e4926406379d1d04cdb437bca22b73419dd1af4923b7ce80bb4da",
+  "lang/es.js": "729e03aebae55876e69b0112f65c38044a1dc7a0a01c3116d881ec76c336de6a",
+  "lang/fr.js": "3d4f1f0fa7b26d8cbe3964485ffbcb6e7b3a720cdc51ec993ec5e696ab10128b",
+  "lang/de.js": "2af6480f44c68a8e144caf754157a5ea37de5200c8a38c1b1db9dc90d1bf615a",
+  "lang/pt-BR.js": "869d4366496a6b130d61a802fefd719ae054f82a2d6515d27f315641979d856e",
+  "lang/ja.js": "663e14793bb93df9845f9ff4bc566e4f952e4884050b035144fd2d46689bb2d4",
+  "lang/ko.js": "508d1553b8a17b906f19c0c4c64b992025587ff73318ab1986ec4738072311dc"
  }
 }

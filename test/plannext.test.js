@@ -55,3 +55,41 @@ test('the Planner opens on Plan lessons: what to plan next, one blue button, and
     assert.deepEqual(errors, []);
   } finally { await ctx.close(); await srv.close(); }
 });
+
+test('Focus buttons on Plan lessons: a session on a new lesson for a class coming up, or on the lesson to pick up, and still one blue button', async () => {
+  const srv = await serve(), ctx = await browser.createBrowserContext();
+  try {
+    const page = await ctx.newPage(); const errors = []; page.on('pageerror', e => errors.push(String(e)));
+    await page.goto(srv.url);
+    await page.waitForFunction(() => window.__planner && window.__plfocus && document.querySelector('#lessons .ls-top'));
+    await page.evaluate(async s => { await window.__planner.applySetup(s); }, SETUP);
+    await page.reload(); await page.waitForFunction(() => window.__planner && window.__plfocus && document.querySelector('.pl-next'));
+    assert.equal(await page.$$eval('.pl-next .pn-row [data-pnfocus]', b => b.length), 4, 'one on each class coming up');
+    assert.match(await page.$eval('.pn-row [data-pnfocus]', b => b.textContent), /^Focus 45 min$/);
+    assert.equal(await page.$eval('.pn-row [data-pnfocus]', b => b.classList.contains('primary')), false);
+    assert.deepEqual(await page.$$eval('#lessons .btn.primary', b => b.map(x => x.textContent)), ['Plan it'], 'one blue button');
+    // Focus on a class with no lesson: the lesson is made on that class and day, opened, and the session is on it
+    const first = await page.$eval('.pn-row [data-pnfocus]', b => b.dataset.pnfocus.slice(2));
+    await page.click('.pn-row [data-pnfocus]');
+    await page.waitForFunction(() => window.__planner.L.view === 'edit' && window.__plfocus.run());
+    const l = await page.evaluate(() => ({ id: window.__planner.L.open.id, slots: window.__planner.L.open.slots.map(s => s.classId + '|' + s.date) }));
+    assert.deepEqual(l.slots, [first]);
+    let r = await page.evaluate(() => window.__plfocus.run());
+    assert.equal(r.k, 'l'); assert.equal(r.l, l.id); assert.equal(r.len, 45 * 60); assert.equal(r.st, 'run');
+    assert.equal(await page.$eval('[data-pfstart]', b => b.hidden), true, 'the editor’s own Focus button waits');
+    // back on Plan lessons, the lesson to pick up has its Focus button hidden while the session is on it
+    await page.click('[data-a="back"]'); await page.waitForSelector('.pn-rec');
+    assert.equal(await page.$eval('.pn-rec [data-pnfocus]', b => b.hidden), true);
+    assert.deepEqual(await page.$$eval('#lessons .btn.primary', b => b.map(x => x.textContent)), ['Continue'], 'still one blue button');
+    // ended, it shows again, and starts a new session on that lesson and opens it
+    await page.evaluate(() => { window.__plfocus.act('stop'); window.__plfocus.act('close'); });
+    await page.reload(); await page.waitForFunction(() => window.__planner && window.__plfocus && document.querySelector('.pn-rec [data-pnfocus]'));
+    assert.equal(await page.$eval('.pn-rec [data-pnfocus]', b => b.hidden), false);
+    await page.click('.pn-rec [data-pnfocus]');
+    await page.waitForFunction(() => window.__planner.L.view === 'edit');
+    r = await page.evaluate(() => window.__plfocus.run());
+    assert.equal(r.l, l.id); assert.equal(r.st, 'run');
+    assert.equal(await page.evaluate(() => window.__planner.L.open.id), l.id);
+    assert.deepEqual(errors, []);
+  } finally { await ctx.close(); await srv.close(); }
+});

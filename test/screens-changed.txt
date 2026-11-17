@@ -218,6 +218,7 @@ mark-add-menu
 # The Planner opens on Plan lessons (this week, the lesson worked on last and the classes coming up without a lesson), and the sidebar folds Units, Past lessons, Activities and Rubrics under Library. Every Planner screen's sidebar changed.
 *
 # Easier phone 1.28.66: a More tab (Google, updates, help, settings), an update bar above the tabs, a Google card on Today, no computer-only boxes on Today and To do. About lists what is new and the version line reads 1.28.66.
+# Focus on Plan lessons: the Planner's Plan lessons rows (the lesson to pick up, each class coming up without a lesson) have a Focus button.
 *
 # Drive everywhere: a student with nothing turned in has a From Google Drive… button, Readings and Rubric setup have one, the gradebook import and School resources have one, and the Planner's add buttons have Drive's mark beside them (only once Google is signed in). About lists what is new and the version line reads 1.28.67.
 *
@@ -225,4 +226,6 @@ mark-add-menu
 *
 # Late papers on typed-in scores: a typed-in assignment's card has Add papers… beside its ⋯ (it was only in the menu), and keeps its Typed in label after a paper is added. About lists what is new and the version line reads 1.28.69.
 class-assignments
+*
+# Review fixes 1.28.70: Plan lessons rows have a Focus button; To do lesson lines have Focus on this; partner controls and Strengths and concerns translated; Today times follow the language; Entry list follows dark mode. About lists what is new and the version line reads 1.28.70.
 *

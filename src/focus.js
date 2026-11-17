@@ -7,11 +7,12 @@
    What is kept:
      lib.me.focus  the teacher's own settings, only those that differ from the usual: { len: minutes, brk: minutes,
                    goal: { k: 'papers' | 'min', n }, sound: false, title: false }. It goes wherever lib goes, and My setup carries it.
-     gs.focus      this teacher's log, in this browser (it travels with the folder and the take-home file like other gs. keys):
+     gs.focus      this teacher's log (it travels with the folder, the take-home file and the sync, merged day by day, src/merge.js focusMerge):
                    { day, base: { <download id>: papers done when the day began }, days: { 'YYYY-MM-DD': { p: papers, s: seconds focused,
                      sm: seconds focused on papers, pa: { <assignment id>: papers }, g: seconds grading, a: { <assignment id>: seconds } } },
                      pace: [[seconds, papers], …] the last sessions that finished a paper, last: the work picked last,
                      add: [{ id, d: day, k: 'g' | 'l', s: seconds, x: a few words }] time added by hand (src/tracker.js),
+                     addGone: [id] the ones taken off since,
                      carry: a session goal not reached, by: { <download id>: the day to finish it by } }
                    A day also keeps n: the sessions of a minute or more. The goal can be { k, n, per: 'week' } or for some days { days: [1, 3] }.
                    A session's own goal (sg on gsp.focusRun) is a few papers, the whole set, the to-do, or a few words she typed.
@@ -74,6 +75,7 @@ function fcLog() {
     pace: Array.isArray(L.pace) ? L.pace.filter(x => Array.isArray(x) && x[0] > 0 && x[1] > 0) : [], last: typeof L.last === 'string' ? L.last : '',
     add: Array.isArray(L.add) ? L.add.filter(x => x && typeof x.d === 'string' && (x.k === 'g' || x.k === 'l') && x.s > 0) : [],
     ...(typeof L.lbHid === 'string' ? { lbHid: L.lbHid } : {}),
+    ...(Array.isArray(L.addGone) ? { addGone: L.addGone.filter(x => typeof x === 'string').slice(-200) } : {}),   // time added by hand and taken off, so another device's copy doesn't bring it back (src/merge.js)
     ...(Array.isArray(L.qd) ? { qd: L.qd.filter(x => typeof x === 'string').slice(-50) } : {}),   // sessions from the Planner written in already (fcDrain)   // the week whose look-back was put away (src/gradeplan.js)
     // carry: a session goal not reached, for the next session on the same work: { w, t: when, k: 'papers' | 'set' | 'td' | 'note', n, x }
     ...(L.carry && typeof L.carry.w === 'string' && L.carry.t > 0 ? { carry: L.carry } : {}),
@@ -159,7 +161,7 @@ const fcBoot = Date.now();
 const fcIdle = r => (r.idl || 0) + (r.ii ? Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.ii) / 1000)) : 0);
 const fcBusy = r => Math.max(0, fcElapsed(r) - fcIdle(r));
 function fcIdleSee(r) {
-  if (!/^mark:/.test(r.w || '')) return false;
+  if (!/^(mark|les):/.test(r.w || '')) return false;   // a lesson is planned at the screen too (fcLesSecs)
   // r.seen: the last time she did something, written every half minute, so another tab of the app doesn't take her for away
   const a = Math.max(fcBoot, r.at, r.seen || 0, tkReady ? tkLast : 0), lim = fcConf().idle * 60e3;
   if (tkReady && tkLast - (r.seen || 0) > 30e3 && !r.ii) { r.seen = tkLast; return true; }
@@ -224,6 +226,9 @@ function fcWork(key) {
   if (k === 'td') { const it = tdItem(id); return it ? { key, id, name: it.x, cls: it.c && classById(it.c) ? classById(it.c).name : '', done: !!it.done } : null; }
   if (k === 'les') {
     const w = fcLessons().find(x => x.key === key); if (w) return w;
+    // a meeting with nothing planned that the week's list left out (it keeps twelve): To do's plan lines can be further down
+    const m = /^\+(.+)\|(\d{4}-\d\d-\d\d)$/.exec(id), c = m && plan && plan.classes.find(x => String(x.id) === m[1]);
+    if (c) return { key, id: '', les: true, fresh: true, nw: { c: c.id, d: m[2] }, name: c.name, cls: '' };
     // a lesson session going on that isn't in the week's list (the timetable not read yet, or the lesson was just made)
     const r = fcRun(); return r && r.k === 'l' && r.w === key ? { key, id: r.l || '', les: true, name: r.t || 'Lesson', cls: '' } : null;
   }
@@ -380,11 +385,11 @@ function fcPlanAdd(r, secs) {
   for (const n of Object.keys(names)) if (!used.has(n)) delete names[n];
   store.set('gsp.planTime', { days, names, ...(r.id ? { ids: [...ids, r.id] } : {}) });
 }
-// A lesson session's seconds: what ran, without pauses, and no more than 20 minutes past the last thing she did in the app, so a laptop
-// closed for class, or the session forgotten, isn't planning.
+// A lesson session's seconds: what ran, without pauses or stretches with nothing done (fcIdleSee), and no more than 20 minutes past the
+// last thing she did in the app, so a laptop closed for class, or the session forgotten, isn't planning.
 function fcLesSecs(r) {
   const last = Math.max(r.at, r.seen || 0), cap = r.st === 'paused' ? Infinity : Math.round((last + FC_LES_IDLE - r.at) / 1000);
-  return Math.max(0, Math.min(r.len, fcElapsed(r), cap));
+  return Math.max(0, Math.min(r.len, fcElapsed(r) - fcIdle(r), cap));
 }
 const FC_LES_IDLE = 20 * 60e3;
 // Into the work: a set of papers opens at the next paper with nothing finished; one already on screen is left where it is.
@@ -754,7 +759,8 @@ document.addEventListener('keydown', e => {
   else if (!r && fcS.open) { fcS.open = false; fcRender(); }
 });
 // A to-do's own Focus button (src/todo.js) starts a session on it.
-function focusOn(key) { fcStart(fcConf().len, key, false); }
+// A lesson's gets a lesson's length.
+function focusOn(key) { const c = fcConf(); fcStart(/^les:/.test(key || '') ? c.llen : c.len, key, false); }
 
 /* ---------- Settings, Focus and goals ---------- */
 function fcSetRender(sec) {

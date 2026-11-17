@@ -362,6 +362,102 @@ test('the Planner on a second computer: Drive’s settings come first, a store e
   } finally { await a.close(); await b.close(); await srv.close(); }
 });
 
+const hide = (page, h) => page.evaluate(h => { Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => h ? 'hidden' : 'visible' }); document.dispatchEvent(new Event('visibilitychange')); }, h);
+test('a change still waiting for its sync goes when the tab is left, never with Google’s window, and a computer left in front takes the phone’s changes every few minutes', async () => {
+  const D = fakeDrive(), srv = await serve(builtHtml());
+  const mac = await openApp(browser, { server: srv, seed: seed(), beforeLoad: D.hook });
+  const ph = await openApp(browser, { server: srv, seed: seed({ 'gs.phone': '1' }), beforeLoad: D.hook });
+  try {
+    await sync(mac.page); await sync(ph.page);
+    await new Promise(r => setTimeout(r, 1500));   // the syncs each page starts as it opens, done
+    const asked = await mac.page.evaluate(() => window.__gReq || 0);
+    await mac.page.evaluate(() => { const l = window.__gs.state().lib; l.classes[0].units[0].items[0].typed.s['Cleo Fixture'] = { v: 7, t: Date.now() }; window.__gs.saveLib(); });
+    await new Promise(r => setTimeout(r, 400));
+    assert.notEqual((D.file().lib.classes[0].units[0].items[0].typed.s['Cleo Fixture'] || {}).v, 7, 'waiting its 15 seconds');
+    await hide(mac.page, true);
+    for (let i = 0; i < 50 && (D.file().lib.classes[0].units[0].items[0].typed.s['Cleo Fixture'] || {}).v !== 7; i++) await new Promise(r => setTimeout(r, 100));
+    assert.equal((D.file().lib.classes[0].units[0].items[0].typed.s['Cleo Fixture'] || {}).v, 7, 'sent as the tab was left');
+    assert.equal(D.file().lib.classes[0].units[0].items[0].typed.s['Cleo Fixture'].v, 7);
+    // out of sight with the key run out: nothing asks Google, and nothing is pulled
+    const at = await mac.page.evaluate(() => localStorage.getItem('gs.syncAt'));
+    await mac.page.evaluate(async () => { window.__gs.gAge(3 * 3600e3); window.__gs.syncPull(); await window.__gs.syncNow(); });
+    await new Promise(r => setTimeout(r, 300));
+    assert.equal(await mac.page.evaluate(() => localStorage.getItem('gs.syncAt')), at);
+    assert.equal(await mac.page.evaluate(() => window.__gReq || 0), asked, 'no Google window while away');
+    await hide(mac.page, false);
+    await mac.page.waitForFunction(at => localStorage.getItem('gs.syncAt') !== at, { timeout: 15000 }, at);   // back in front: a new key, then a sync
+    // the phone types a score; the computer, left in front, takes it on its next pull with no press
+    await ph.page.evaluate(() => { const l = window.__gs.state().lib; l.classes[0].units[0].items[0].typed.s['Bram Sample'] = { v: 5, t: Date.now() }; window.__gs.saveLib(); });
+    await sync(ph.page);
+    await mac.page.evaluate(() => window.__gs.syncPull());
+    await mac.page.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); const r = l.classes[0].units[0].items[0].typed.s['Bram Sample']; return r && r.v === 5; }, { timeout: 15000 });
+    assert.match(fs.readFileSync(path.join(__dirname, '..', 'src', 'app', 'drive.js'), 'utf8'), /setInterval\(syncPull, 5 \* 60000\)/, 'every five minutes');
+    assert.deepEqual(mac.page.errors, []); assert.deepEqual(ph.page.errors, []);
+  } finally { await mac.close(); await ph.close(); await srv.close(); }
+});
+
+test('focus and planning time reach the other device day by day: the larger of each count, never added twice, and each device keeps its own start of the day', async () => {
+  const D = fakeDrive(), srv = await serve(builtHtml());
+  const d = new Date(), day = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const focus = (x, t) => JSON.stringify({ day, base: {}, last: x, days: { [day]: t }, add: [], qd: [] });
+  const mac = await openApp(browser, { server: srv, seed: seed({ 'gs.focus': focus('mark:mac', { s: 1200, n: 1, g: 1500, a: { i1: 1500 } }), 'gsp.planTime': JSON.stringify({ days: { [day]: { l: 600, a: { L1: 600 } } }, names: { L1: 'Sonnets, day one' } }) }), beforeLoad: D.hook });
+  const ph = await openApp(browser, { server: srv, seed: seed({ 'gs.phone': '1', 'gs.focus': focus('mark:phone', { s: 1800, n: 2 }), 'gsp.planTime': JSON.stringify({ days: { [day]: { l: 300, f: 300, n: 1, a: { L2: 300 } } }, names: { L2: 'Volta' } }) }), beforeLoad: D.hook });
+  try {
+    await sync(mac.page); await sync(ph.page); await sync(mac.page); await sync(ph.page);
+    for (const [p, last] of [[mac.page, 'mark:mac'], [ph.page, 'mark:phone']]) {
+      const f = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.focus'))), t = await p.evaluate(() => JSON.parse(localStorage.getItem('gsp.planTime')));
+      assert.equal(f.days[day].s, 1800); assert.equal(f.days[day].n, 2); assert.equal(f.days[day].g, 1500); assert.equal(f.days[day].a.i1, 1500);
+      assert.equal(f.last, last, 'the work picked last stays each device’s own');
+      assert.deepEqual(t.days[day], { l: 600, f: 300, n: 1, a: { L1: 600, L2: 300 } });
+      assert.deepEqual(t.names, { L1: 'Sonnets, day one', L2: 'Volta' });
+    }
+    const w = D.writes; await sync(mac.page); await sync(ph.page); assert.equal(D.writes, w, 'settled: nothing counted again, nothing written again');
+    assert.deepEqual(mac.page.errors, []); assert.deepEqual(ph.page.errors, []);
+  } finally { await mac.close(); await ph.close(); await srv.close(); }
+});
+
+test('a lesson on the phone shows its pictures and opens its links and videos, and one too big to send says so', async () => {
+  const D = fakeDrive(), srv = await serve(builtHtml());
+  const d = new Date(), today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const setup = { classes: [{ id: 'k1', name: 'Grade 9 English', color: '#1F6FB2', meets: [{ dow: d.getDay(), start: '00:00', end: '23:59' }] }], daysOff: [] };
+  const dot = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  const L1 = { id: 'L1', title: 'Sonnets, day one', slots: [{ classId: 'k1', date: today }], atlas: 'https://plans.example.com/unit/sonnets', links: [{ id: 'k', name: 'Poem text', url: 'https://poems.example.com/sonnet-18' }],
+    slides: [{ id: 's1', title: 'What a volta does', body: 'The turn', img: { src: dot, w: 1, h: 1 } }, { id: 's2', title: 'Watch', body: '', video: { url: 'https://www.youtube.com/watch?v=abc', title: 'A reading' } }, { id: 's3', title: 'Folder picture', body: '', img: { src: 'images/a.png' } }], created: 1, updated: Date.now() };
+  const P2 = { id: 'P2', title: 'Pictures galore', slots: [{ classId: 'k1', date: today }], slides: [{ id: 's', title: 'x', body: '', img: { src: 'data:image/png;base64,' + 'A'.repeat(2100000), w: 1, h: 1 } }], created: 1, updated: Date.now() };
+  const mac = await openApp(browser, { server: srv, seed: seed(), beforeLoad: D.hook });
+  const ph = await openApp(browser, { server: srv, seed: seed({ 'gs.phone': '1' }), beforeLoad: D.hook });
+  try {
+    await planPut(mac.page, [L1, P2], { setup });
+    await sync(mac.page);
+    assert.ok(!D.planFile().lessons.P2, 'too big to send');
+    assert.deepEqual(D.planFile().big.P2.slots, [{ classId: 'k1', date: today }]);
+    assert.ok(!JSON.stringify(D.planFile().big).includes('AAAA'), 'only its title and days');
+    await sync(ph.page);
+    await ph.page.evaluate(() => { location.hash = '#/plans/L1'; });
+    await ph.page.waitForFunction(() => /What a volta does/.test((document.querySelector('#phPlans') || {}).innerText || ''), { timeout: 15000 });
+    const got = await ph.page.$eval('#phPlans', b => ({ imgs: [...b.querySelectorAll('img')].map(i => i.getAttribute('src').slice(0, 22)), w: [...b.querySelectorAll('img')].map(i => i.style.maxWidth),
+      links: [...b.querySelectorAll('a[target=_blank]')].map(a => [a.getAttribute('href'), a.rel, a.textContent]), text: b.innerText }));
+    assert.deepEqual(got.imgs, ['data:image/png;base64,']); assert.deepEqual(got.w, ['100%']);
+    assert.deepEqual(got.links.map(x => x[0]), ['https://plans.example.com/unit/sonnets', 'https://poems.example.com/sonnet-18', 'https://www.youtube.com/watch?v=abc']);
+    assert.ok(got.links.every(x => /noopener/.test(x[1])));
+    assert.match(got.links[2][2], /A reading/);
+    assert.match(got.text, /A picture, on your computer/, 'one kept only in the computer’s folder');
+    // the big one is on its day, and says why it isn't here
+    await ph.page.evaluate(() => { location.hash = '#/plans'; });
+    await ph.page.waitForFunction(() => /Pictures galore/.test((document.querySelector('#phPlans') || {}).innerText || ''), { timeout: 15000 });
+    await ph.page.click('#phPlans a[href="#/plans/P2"]');
+    await ph.page.waitForFunction(() => /too big to send to the phone yet/.test(document.querySelector('#phPlans').innerText), { timeout: 15000 });
+    assert.doesNotMatch(await ph.page.$eval('#phPlans', b => b.innerText), /next sync/);
+    // made small again on the computer: it goes, and the note goes with it
+    await planPut(mac.page, [{ ...P2, slides: [{ id: 's', title: 'Now small', body: '' }], updated: Date.now() }]);
+    await sync(mac.page); await sync(ph.page);
+    assert.ok(D.planFile().lessons.P2 && !D.planFile().big);
+    await ph.page.evaluate(() => { location.hash = '#/plans'; }); await ph.page.evaluate(() => { location.hash = '#/plans/P2'; });
+    await ph.page.waitForFunction(() => /Now small/.test(document.querySelector('#phPlans').innerText), { timeout: 15000 });
+    assert.deepEqual(mac.page.errors, []); assert.deepEqual(ph.page.errors, []);
+  } finally { await mac.close(); await ph.close(); await srv.close(); }
+});
+
 test('the phone: a Google card on Today until signed in, a More tab with syncing, updates, help and settings, and Update now one tap away on every screen', async () => {
   const srv = await serve(builtHtml());
   const ph = await openApp(browser, { server: srv, seed: { ls: { ...seed().ls, 'gs.gEmail': '""', 'gs.phone': '1' } } });

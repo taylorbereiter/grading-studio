@@ -16,6 +16,8 @@ async function planRead() {
   }
   // the Planner hasn't come through to this browser yet: the timetable the computer sent with the rest of her work (drive.js)
   if (!(setup && Array.isArray(setup.classes) && setup.classes.length)) setup = store.get('gs.planCopy', null);
+  // on a phone, a lesson too big to send still shows on its day, and opening it says why it isn't here (drive.js planSync, phone.js)
+  if (PHONE) for (const [id, b] of Object.entries(store.get('gs.planBig', null) || {})) if (b && Array.isArray(b.slots) && !lessons.some(l => l && l.id === id)) lessons = [...lessons, { id, title: b.title, slots: b.slots.filter(x => x && x.classId != null && x.date), slides: [] }];
   const hex = c => /^#[0-9a-f]{6}$/i.test(c) ? c : '#1F6FB2';
   const classes = (setup && Array.isArray(setup.classes) ? setup.classes : []).filter(c => c && c.id != null).map(c => ({ id: String(c.id), name: String(c.name || c.id), color: hex(c.color),
     meets: (Array.isArray(c.meets) ? c.meets : []).map(m => ({ dow: +m.dow, start: String(m.start || ''), end: String(m.end || '') })) }));
@@ -30,7 +32,10 @@ async function planRead() {
   return plan;
 }
 const planUrl = h => $('#lessonsBtn').getAttribute('href') + (h || '');
-const planTime = t => { const m = /^(\d{1,2}):(\d\d)$/.exec(t || ''); return m ? (+m[1] % 12 || 12) + ':' + m[2] : ''; };
+// A class time ("13:05") the way the teacher's language or browser writes the hour: "13:05" where the clock is 24-hour, "1:05" where it
+// is 12-hour. Morning and afternoon are left off, so a time still fits Today's narrow time column.
+let planTimeF = null;
+const planTime = t => { const m = /^(\d{1,2}):(\d\d)$/.exec(t || ''); if (!m) return ''; planTimeF = planTimeF || new Intl.DateTimeFormat(LANG_LOCALE, { hour: 'numeric', minute: '2-digit' }); return planTimeF.formatToParts(new Date(2000, 0, 1, +m[1], +m[2])).filter(p => p.type !== 'dayPeriod').map(p => p.value).join('').trim(); };
 // Today's meetings in the order they happen, each with the lesson planned for it, if there is one.
 function todayRows(p, now) {
   const d = isoDay(now || Date.now()), dow = new Date(now || Date.now()).getDay(), off = p.daysOff.find(x => x.date === d);

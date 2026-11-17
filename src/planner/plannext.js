@@ -27,17 +27,25 @@ function planNextBar() {
   if (rec) {
     const slot = rec.slots.filter(s => s.date >= ymd(new Date())).sort((a, b) => a.date < b.date ? -1 : 1)[0];
     h += '<div class="pn-row pn-rec"><span class="pn-k">Pick up where you left off</span><b>' + esc(rec.title) + '</b><span class="pn-w">' + (slot ? esc(className(slot.classId)) + ' · ' + planWhen(slot.date) : 'Not on the timetable') + '</span><span class="sp"></span>' +
-      '<button class="btn sm' + (keepOn ? ' primary' : '') + '" data-open="' + rec.id + '">Continue</button></div>';
+      (pfReady ? pfBtnTag('data-pnfocus="l:' + esc(rec.id) + '"', pfOnIt(rec)) : '') + '<button class="btn sm' + (keepOn ? ' primary' : '') + '" data-open="' + rec.id + '">Continue</button></div>';
   }
   h += '<div class="pn-head"><h2>Coming up without a lesson</h2><span class="pn-sub">' + (gaps.length ? gaps.length + ' class' + (gaps.length === 1 ? '' : 'es') + ' in the next two weeks' : 'Every class in the next two weeks has a lesson.') + '</span></div>';
   gaps.slice(0, PN_SHOW).forEach((g, i) => {
     const k = esc(g.c.id) + '|' + g.d;
     h += '<div class="pn-row" style="--cc:' + esc(g.c.color || '#1F6FB2') + '"><span class="pn-dot"></span><b>' + esc(g.c.name) + '</b><span class="pn-w">' + planWhen(g.d) + ' · ' + hm(g.m.start) + '–' + hm(g.m.end) + (g.m.label ? ' · ' + esc(g.m.label) : '') + '</span><span class="sp"></span>' +
-      '<button class="btn sm' + (!keepOn && i === 0 ? ' primary' : '') + '" data-new="' + k + '">Plan it</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + k + '">Use a lesson…</button>' : '') + '</div>';
+      '<button class="btn sm' + (!keepOn && i === 0 ? ' primary' : '') + '" data-new="' + k + '">Plan it</button>' + (pfReady ? pfBtnTag('data-pnfocus="n:' + k + '"') : '') + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + k + '">Use a lesson…</button>' : '') + '</div>';
   });
   if (gaps.length > PN_SHOW) h += '<p class="pn-more">' + (gaps.length - PN_SHOW) + ' more. The calendar below shows each week.</p>';
   return h + '</section>';
 }
+// Its Focus buttons: a focus session on the lesson to pick up, or on a new lesson made for that class and day (src/planner/plfocus.js).
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-pnfocus]'); if (!b) return;
+  const v = b.dataset.pnfocus, id = v.slice(2);
+  if (v[0] === 'l') { const l = L.lessons.find(x => x.id === id); if (l) { pfStart(l); openLesson(l); } return; }
+  const [c, d] = id.split('|');
+  createLesson([{ classId: c, date: d }, ...partnerSlots(c, d)]).then(() => { pfStart(L.open); renderEditor(); }).catch(err => console.error(err));
+});
 
 // Library in the sidebar (units, past lessons, activities, rubrics): open or closed as she left it, kept in this page's own gsp.railLib.
 function libFold(open, keep) {

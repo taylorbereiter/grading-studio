@@ -205,7 +205,7 @@ $('#vTime').addEventListener('click', e => {
   if (d.tkadd != null) { tkS.adding = true; tkPageRender(); const m = $('#tkMin'); if (m) { m.focus(); m.select(); } return; }
   if (d.tkcancel != null) { tkS.adding = false; return tkPageRender(); }
   if (d.tkkind) { tkS.kind = d.tkkind; $('#vTime').querySelectorAll('[data-tkkind]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.tkkind === tkS.kind))); return; }
-  if (d.tkdel) { const L = fcLog(); L.add = L.add.filter(x => x.id !== d.tkdel); fcLogSet(L); fcRender(); return tkPageRender(); }
+  if (d.tkdel) { const L = fcLog(); L.add = L.add.filter(x => x.id !== d.tkdel); L.addGone = [...(L.addGone || []), d.tkdel].slice(-200); fcLogSet(L); fcRender(); return tkPageRender(); }
   if (d.tkcsv != null) return tkCsv();
 });
 $('#vTime').addEventListener('submit', e => {

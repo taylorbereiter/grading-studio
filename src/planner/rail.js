@@ -185,7 +185,7 @@ function arriveAt() {
   else if (h.startsWith('plan/')) {
     const [c, d] = h.slice(5).split('/'), cl = ((L.setup && L.setup.classes) || []).find(x => String(x.id) === c), ok = !!cl && /^\d{4}-\d\d-\d\d$/.test(d || '');
     const l = ok ? lessonsAt(cl.id, d)[0] : null;
-    L.weekOf = ymd(mondayOf(new Date())); list('week');
+    L.weekOf = ymd(mondayOf(ok ? parseYmd(d) : new Date())); list('week');   // Back from the lesson shows that meeting's week
     if (l) { openLesson(l); pfLesson(l); }
     else if (ok) createLesson([{ classId: cl.id, date: d }]).then(() => pfLesson(L.open)).catch(e => console.error(e));
   }

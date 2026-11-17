@@ -1,5 +1,5 @@
 /* ---------------- Google sign-in: open from Drive, save to Drive, keep work the same on every computer ---------------- */
-// Everything happens between this browser and Taylor's own Google account. The sign-in is never stored or sent anywhere else.
+// Everything happens between this browser and the teacher's own Google account. The sign-in is never stored or sent anywhere else.
 const GOOGLE_CLIENT_ID = '/*@@GCID@@*/';
 const gcid = () => (/apps\.googleusercontent\.com$/.test(GOOGLE_CLIENT_ID) ? GOOGLE_CLIENT_ID : '') || store.get('gs.gcid', '');
 // Keeping two devices the same needs only Grading Studio's own hidden folder in her Drive (drive.appdata: it can't see her other files).
@@ -43,6 +43,7 @@ async function gToken(interactive, full) {
   // Google's key lasts an hour, and getting a new one in a browser opens Google's little window, even for a moment. With "Renew it by
   // itself" on (the default, Settings, Saving and carrying) that happens when it's needed; off, the sync waits for a tap on the Google line.
   if (!interactive && !gAuto()) throw new Error('Sign in again to sync');
+  if (!interactive && G.quiet) throw new Error('waits until the page is in front');   // a tab being left never opens Google's window or page
   if (G_REDIRECT) { gRedirect(scope); throw new Error('Sign in again to sync'); }
   await loadGis();
   if (!G.client || G.cscope !== scope) {
@@ -169,7 +170,7 @@ async function saveToDrive(name, files, onStep) {
 
 /* Sync: the same work on every device she signs in on (a phone and a computer), through one hidden file in her own Drive.
    It carries what folder.js carries to a folder, without the papers: classes, units, rosters, typed scores and to-dos (gs.lib), each
-   download's marks and scores and its row in the list, and the settings that travel (carryLs). Each side is merged the way a folder
+   download's marks and scores and its row in the list, the settings that travel (carryLs) and the Planner's planning time (pt). Each side is merged the way a folder
    or a take-home file is (merge.js), student by student and field by field, so a score typed on the phone and a comment written on
    the computer both stay. Nothing goes anywhere but her browser and her Drive. */
 const SYNC_NAME = 'grading-studio-sync.json';
@@ -217,7 +218,7 @@ function syncDecide(asks) {
 function syncNow() {
   if (!G.email || sampleOn()) return Promise.resolve();
   if (syncBusy) { syncAgain = true; return syncBusy; }
-  clearTimeout(syncT);
+  clearTimeout(syncT); syncT = null;
   syncBusy = (async () => {
     for (let tries = 1; ; tries++) {
       try { await syncOnce(); return; } catch (e) {
@@ -263,6 +264,8 @@ async function syncOnce() {
     store.set('gs.tomb', tomb);
     if (got.plan && JSON.stringify(got.plan) !== JSON.stringify(store.get('gs.planCopy', null))) { store.set('gs.planCopy', got.plan); if (typeof planRefresh === 'function') planRefresh(); }
     for (const [k, v] of Object.entries(mergeLs(carryLs(), B.ls, k => Object.keys(tomb).some(id => k.includes(id))))) lsPut(k, v);
+    // the Planner's planning time, kept outside gs.*: day by day, the larger of each count (merge.js)
+    if (got.pt) { const m = planTimeMerge(store.get('gsp.planTime', null), got.pt); if (m.toA) store.set('gsp.planTime', m.out); }
     if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); if (wl.on && lib.classes.length) { wlClose(); go('#/'); } }
     if (open && rows.some(r => r.id === open && r.toA)) syncAgain = false;   // nothing to push for it until it is closed and merged
   }
@@ -276,9 +279,11 @@ async function syncOnce() {
     if (m) { const { papers, size, ...rest } = m; out.meta[id] = rest; }
   }
   delete out.ls['gs.lib'];
+  if (out.ls['gs.focus']) try { out.ls['gs.focus'] = JSON.stringify(focusShared(JSON.parse(out.ls['gs.focus']))); } catch {}   // each device's own start of the day stays with it
   out.plan = (await syncPlan()) || (got && got.plan) || null;   // a device with no Planner passes on the one it was given
   out.planT = await planSync(got && got.planT);   // the Planner, in a file of its own (below)
   out.files = dvFiles(got && got.files, tomb);
+  const pt = store.get('gsp.planTime', null); if (pt && typeof pt === 'object') out.pt = pt;
   const body = JSON.stringify(out);
   if (!got || body !== JSON.stringify({ ...got, t: now })) await syncWrite(body);
   store.set('gs.syncAt', now);
@@ -293,7 +298,16 @@ function gBack2() {
   syncNow();
 }
 window.addEventListener('focus', gBack2);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') gBack2(); });
+// Leaving (another tab, the phone locked, the tab closed): a change still waiting for its sync goes now, with the key there is. Nothing
+// asks Google for a new one while the page is out of sight, and a sync that needs one waits until she's back.
+const gLive = () => !!G.token && Date.now() < G.exp - 60000;
+function syncLeave() { G.quiet = true; if (syncT && G.email && gLive() && !sampleOn()) syncNow(); }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { G.quiet = false; gBack2(); } else syncLeave(); });
+window.addEventListener('pagehide', syncLeave);
+window.addEventListener('pageshow', () => { if (document.visibilityState === 'visible') G.quiet = false; });
+// A computer left open in front: what the phone changed comes in every few minutes, with the key there is (focus renews it).
+function syncPull() { if (G.email && GOK && document.visibilityState === 'visible' && gLive() && !syncBusy && !sampleOn()) syncNow(); }
+setInterval(syncPull, 5 * 60000);
 // Signed in last time: reconnect quietly when the page opens. On an iPhone's home screen that's a quick trip to Google and back, once an hour at most.
 if (GOK && G.email && gcid() && !sampleOn()) setTimeout(() => {
   if (G_REDIRECT && !(G.token && Date.now() < G.exp - 60000)) {
@@ -503,24 +517,25 @@ async function planHere() {
   }
   // nothing here, though there were lessons at the last sync: the store was cleared, not every lesson deleted
   if (!lessons.length && !Object.keys(kv).length && (seen.ids || []).length) seen = { keys: {}, ids: [], gone: { ...(seen.gone || {}) }, t: {} };
-  const A = { lessons: {}, kv: {}, gone: { ...(seen.gone || {}) } }, ids = new Set(), big = new Set();
+  const A = { lessons: {}, kv: {}, gone: { ...(seen.gone || {}) } }, ids = new Set(), big = new Set(), bigInfo = {};
   for (const l of lessons) {
     if (!l || !l.id) continue;
     const { _file, _mod, _sync, ...x } = l; ids.add(x.id);
-    if (JSON.stringify(x).length > PLAN_BIG) { big.add(x.id); continue; }   // a lesson full of pictures stays on its own device for now
+    // a lesson full of pictures stays on its own device for now; its title and days go, so a phone can say why it isn't there
+    if (JSON.stringify(x).length > PLAN_BIG) { big.add(x.id); bigInfo[x.id] = { title: String(x.title || '').slice(0, 200), slots: Array.isArray(x.slots) ? x.slots.map(s => ({ classId: s && s.classId, date: s && s.date })) : [], updated: x.updated || 0 }; continue; }
     A.lessons[x.id] = x;
   }
   const lost = [];
   for (const id of seen.ids || []) if (!ids.has(id) && !A.gone['l:' + id]) lost.push(id);   // deleted here since the last sync (timed once the time is known)
   for (const [k, v] of Object.entries(kv)) { const h = shaLite(JSON.stringify(v)); A.kv[k] = { v, t: seen.keys[k] === h ? (seen.t[k] || 0) : seen.at ? -1 : null }; }   // -1: changed here; null: never synced from here
-  const mine = !seen.at ? !!(lessons.length || Object.keys(kv).length) : lost.length > 0 || Object.values(A.kv).some(x => x.t === -1) || [...ids].some(id => !(seen.ids || []).includes(id)) || Object.values(A.lessons).some(l => (l.updated || 0) > (seen.at || 0));
-  return { A, seen, big, lost, mine };
+  const mine = !seen.at ? !!(lessons.length || Object.keys(kv).length) : lost.length > 0 || JSON.stringify(bigInfo) !== JSON.stringify(seen.big || {}) || Object.values(A.kv).some(x => x.t === -1) || [...ids].some(id => !(seen.ids || []).includes(id)) || Object.values(A.lessons).some(l => (l.updated || 0) > (seen.at || 0));
+  return { A, seen, big, bigInfo, lost, mine };
 }
 const shaLite = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + s.length.toString(36); };
 async function planSync(remoteT) {
   if (sampleOn()) return remoteT;
   const here = await planHere(); if (!here) return remoteT;
-  const { A, seen, big, lost, mine } = here;
+  const { A, seen, big, bigInfo, lost, mine } = here;
   if (!mine && remoteT && remoteT === seen.planT) return remoteT;   // nothing new on either side
   const now = Date.now(), B = (await planFileRead()) || { lessons: {}, kv: {}, gone: {} };
   for (const id of lost) A.gone['l:' + id] = now;
@@ -528,10 +543,16 @@ async function planSync(remoteT) {
   for (const [k, x] of Object.entries(A.kv)) if (x.t === -1) x.t = now; else if (x.t === null) x.t = B.kv && B.kv[k] ? 0 : now;
   for (const id of big) { delete A.gone['l:' + id]; if (B.lessons && B.lessons[id]) A.lessons[id] = B.lessons[id]; }   // the copy in Drive stays as it was
   const M = mergePlan(A, B);
+  // the lessons too big to send, as each device last said: this device's own as they are now, and none that is deleted
+  const bigs = { ...(B.big && typeof B.big === 'object' ? B.big : {}) };
+  for (const id of Object.keys(bigs)) if (M.gone['l:' + id] || (A.lessons[id] && !big.has(id))) delete bigs[id];
+  Object.assign(bigs, bigInfo);
+  if (Object.keys(bigs).length) M.big = bigs;
+  if (JSON.stringify(store.get('gs.planBig', null) || {}) !== JSON.stringify(bigs)) store.set('gs.planBig', bigs);
   await planApply(A, M, big);
   const body = JSON.stringify(M), t = shaLite(body);
   // what this device now holds is what was merged, before it goes up: if sending fails, the next sync finds nothing changed here and tries again
-  const was = { keys: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, shaLite(JSON.stringify(x.v))])), t: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, x.t])), ids: [...new Set([...Object.keys(M.lessons), ...big])], gone: M.gone, at: now };
+  const was = { keys: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, shaLite(JSON.stringify(x.v))])), t: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, x.t])), ids: [...new Set([...Object.keys(M.lessons), ...big])], gone: M.gone, big: bigInfo, at: now };
   store.set('gs.planSeen', { ...was, planT: null });
   if (JSON.stringify(B) !== body) await planFileWrite(body);
   store.set('gs.planSeen', { ...was, planT: t });

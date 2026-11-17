@@ -213,7 +213,7 @@ test('a class on the timetable with nothing planned is a line, with a button to 
   await page.waitForSelector('#tdList [data-td^="auto:plan:A1:"]');
   const plan = await page.$$eval('#tdList [data-td^="auto:plan:"]', r => r.map(x => [x.querySelector('.tdx').textContent, x.querySelector('.tddue').textContent, x.querySelector('a.btn').textContent, x.querySelector('a.btn').getAttribute('href')]));
   assert.equal(plan.length, 4, 'today and the next three days');
-  assert.deepEqual(plan[0], ['Plan today’s grade-9 english lesson', 'Today', 'Plan it', 'planner.html#week']);
+  assert.deepEqual(plan[0], ['Plan today’s grade-9 english lesson', 'Today', 'Plan it', 'planner.html#plan/A1/' + day(0)], 'Plan it opens the lesson for that class and day');
   assert.deepEqual(plan[1].slice(0, 2), ['Plan tomorrow’s grade-9 english lesson', 'Tomorrow']);
   // the line is under its grading class of the same name, whatever the spaces and capitals
   await page.click('[data-tdf="c1"]');
@@ -224,7 +224,16 @@ test('a class on the timetable with nothing planned is a line, with a button to 
   await goTo(page, '#/');
   await page.waitForSelector('#today .trow .tdpre');
   assert.equal(await page.$eval('#today .trow .tdpre', e => e.textContent), '1 to do');
-  assert.deepEqual(page.errors, []);
+  // Focus on this, beside the line: a lesson session at the lesson length on that class and day, and off to the Planner
+  await goTo(page, '#/todo');
+  await page.click('#tdList [data-td^="auto:plan:A1:' + day(1) + '"] .tdmain'); await page.waitForSelector('#tdSide [data-tdfocus]');
+  assert.equal(await page.$eval('#tdSide [data-tdfocus]', b => b.dataset.tdfocus), 'les:+A1|' + day(1));
+  assert.equal(await page.$eval('#tdSide a.btn.primary', b => b.getAttribute('href')), 'planner.html#plan/A1/' + day(1));
+  const errs = [...page.errors];
+  await Promise.all([page.waitForNavigation(), page.click('#tdSide [data-tdfocus]')]);
+  const r = await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.focusRun')));
+  assert.equal(r.k, 'l'); assert.equal(r.len, 45 * 60); assert.equal(r.w, 'les:+A1|' + day(1)); assert.deepEqual(r.nw, { c: 'A1', d: day(1) });
+  assert.deepEqual(errs, []);
   await close();
 });
 

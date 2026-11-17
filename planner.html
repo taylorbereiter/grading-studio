@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"c409e5ed","zh-Hans":"af8ecd08","es":"95bd988a","fr":"6d459fb2","de":"8757a1ad","pt-BR":"2f45f955","ja":"99909718","ko":"5610e0ff"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"0561aff1","zh-Hans":"c10c93f7","es":"729e03ae","fr":"3d4f1f0f","de":"2af6480f","pt-BR":"869d4366","ja":"663e1479","ko":"508d1553"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -7277,6 +7277,7 @@ function langFill(t, m, P) {
   const s = Array.isArray(t) ? t[+m[1] === 1 ? 0 : 1] : t;
   return s.replace(/\{(t?)(\d)\}/g, (x, w, i) => { const v = m[+i] == null ? '' : m[+i]; if (!w) return v; const h = trPiece(v, P); return h != null ? h : (trPiece(langCap(v), P) || v); });
 }
+const langAnd = (s, F) => F.and == null ? s : s.replace(/ and (?!.* and )/, F.and);
 const LANG_ATT = { present: 'attp', late: 'attl', 'absent, reason unknown': 'atta', excused: 'atte' };
 const LANG_FILLS = [
   ['fcof', /^(?:(Focus|Today|This week): )?(\d+) of (\d+) (papers|minutes)( today| this week)?$/, (m, F, P) => { const x = langFill(m[4] === 'papers' ? F.fcofp : F.fcofm, [0, m[2], m[3]], P); return m[1] === 'Focus' ? langFill(m[5] === ' this week' ? F.fcrailw : F.fcrail, [0, x], P) : m[1] === 'Today' ? langFill(F.fctodayof, [0, x], P) : m[1] === 'This week' ? langFill(F.fcwkof, [0, x], P) : x; }],
@@ -7383,6 +7384,10 @@ const LANG_FILLS = [
   ['askai', /^Ask (.{1,30})$/], ['backai', /^Bring back (.{1,30})’s feedback$/], ['cmtfor', /^Comment for (.+?)( \(optional\)\. It shows on the Grades tab so you can copy it\.)?$/, (m, F, P) => langFill(m[2] ? F.cmtforL : F.cmtfor, [0, m[1] === 'the student' ? (trPiece('the student', P) || m[1]) : m[1]], P)],
   ['clickcp', /^Click any score or comment to copy it, then paste it into (.+)\. Click a name to open that paper\.( Pick a roster under Setup to see this list in roster order\.)?$/, (m, F, P) => langFill(F.clickcp, [0, m[1] === 'your gradebook' ? (trPiece('your gradebook', P) || m[1]) : m[1]], P) + (m[2] ? ' ' + (trPiece(m[2].trim(), P) || m[2]) : '')],
   ['rosterord', /^(.+) roster order$/], ['nscored', /^(\d+) of (\d+) scored$/],
+  ['grpwith', /^with (.+) ·$/, (m, F, P) => langFill(F.grpwith, [0, langAnd(m[1], F)], P)], ['grpsplit', /^pages shared with (.+), each graded on their own$/, (m, F, P) => langFill(F.grpsplit, [0, langAnd(m[1], F)], P)],
+  ['grplist', /^Group work: (.+), (shared notes and own scores|marked and graded once)$/, (m, F, P) => langFill(m[2] === 'marked and graded once' ? F.grplist : F.grplisto, [0, langAnd(m[1], F)], P)],
+  ['grpjust', /^Just (\S+)$/], ['grpfor', /^New (typed notes|marks and typed notes|scores and typed notes|marks, scores and typed notes) are just for (.+)\. Their comment is always their own\.$/, (m, F, P) => { const t = F['grpfor' + ['typed notes', 'marks and typed notes', 'scores and typed notes', 'marks, scores and typed notes'].indexOf(m[1])]; return t == null ? null : langFill(t, [0, m[2]], P); }],
+  ['sendto', /^Send to (.+)$/],
   ['ariaband', /^(?=.*(?:class middle \d|missing)).+ (?:\d+%|missing|–)(?:, class middle \d+%)?$/, (m, F, P) => m[0].replace(/ missing(?=, class middle |\. |$)/g, ' ' + (trPiece('missing', P) || 'missing')).replace(/, class middle (\d+%)(?=\. |$)/g, (x, v) => langFill(F.cmid, [0, v], P))],
   ['ariamove', /^.+ (?:up|down) [\d.]+$/, (m, F, P) => m[0].replace(/ (up|down) ([\d.]+)(?=, |$)/g, (x, w, v) => ' ' + langFill(w === 'up' ? F.mvup : F.mvdown, [0, v], P))],
   ['ariastack', /^.+: \d+ (?:below 60|\d+ to \d+)(?:[,.] .+)?$/, (m, F, P) => m[0].replace(/(\d+) below 60(?=[,.] |$)/g, (x, n) => langFill(F.below60, [0, n], P)).replace(/(\d+) (\d+) to (\d+)(?=[,.] |$)/g, (x, n, a, b) => langFill(F.rng, [0, n, a, b], P))],
@@ -7405,8 +7410,8 @@ function trWith(s, P, ctx) {
 }
 const tr = (s, ctx) => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK, ctx) : s;
 const LANG_ROOTS = '#rail, #fcPanel, #vTime, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .lkhead, #vClass .lkoffer, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
-  '#app .top, #side, #tools, #paper .who, #pane2 .sph, #spGrip, #pane2 .sptool, #bsMenu, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
-const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""]), #railClasses .rnav, #classSel option:not([value=""]), #crumbClass, #stuList .nm, #paper .who h2, #paper .fhead > span:first-child, #grade .cn > span';
+  '#app .top, #side, #tools, #paper .who, #pane2 .sph, #spGrip, #pane2 .sptool, #bsMenu, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, #grpBand, #pcWl, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
+const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""]), #railClasses .rnav, #classSel option:not([value=""]), #crumbClass, #stuList .nm, #paper .who h2, #paper .fhead > span:first-child, #grade .cn > span, #pcWl .wlhd, #pcWl .wltime p, #pcWl .extag';
 const LANG_ATTRS = ['title', 'aria-label', 'placeholder'];
 const langCtx = el => { const c = el.closest('[data-lc]'); return c ? c.dataset.lc : ''; };
 const LANG_DONE = new WeakMap();
@@ -7956,7 +7961,7 @@ function arriveAt() {
   else if (h.startsWith('plan/')) {
     const [c, d] = h.slice(5).split('/'), cl = ((L.setup && L.setup.classes) || []).find(x => String(x.id) === c), ok = !!cl && /^\d{4}-\d\d-\d\d$/.test(d || '');
     const l = ok ? lessonsAt(cl.id, d)[0] : null;
-    L.weekOf = ymd(mondayOf(new Date())); list('week');
+    L.weekOf = ymd(mondayOf(ok ? parseYmd(d) : new Date())); list('week');   // Back from the lesson shows that meeting's week
     if (l) { openLesson(l); pfLesson(l); }
     else if (ok) createLesson([{ classId: cl.id, date: d }]).then(() => pfLesson(L.open)).catch(e => console.error(e));
   }
@@ -8392,17 +8397,24 @@ function planNextBar() {
   if (rec) {
     const slot = rec.slots.filter(s => s.date >= ymd(new Date())).sort((a, b) => a.date < b.date ? -1 : 1)[0];
     h += '<div class="pn-row pn-rec"><span class="pn-k">Pick up where you left off</span><b>' + esc(rec.title) + '</b><span class="pn-w">' + (slot ? esc(className(slot.classId)) + ' · ' + planWhen(slot.date) : 'Not on the timetable') + '</span><span class="sp"></span>' +
-      '<button class="btn sm' + (keepOn ? ' primary' : '') + '" data-open="' + rec.id + '">Continue</button></div>';
+      (pfReady ? pfBtnTag('data-pnfocus="l:' + esc(rec.id) + '"', pfOnIt(rec)) : '') + '<button class="btn sm' + (keepOn ? ' primary' : '') + '" data-open="' + rec.id + '">Continue</button></div>';
   }
   h += '<div class="pn-head"><h2>Coming up without a lesson</h2><span class="pn-sub">' + (gaps.length ? gaps.length + ' class' + (gaps.length === 1 ? '' : 'es') + ' in the next two weeks' : 'Every class in the next two weeks has a lesson.') + '</span></div>';
   gaps.slice(0, PN_SHOW).forEach((g, i) => {
     const k = esc(g.c.id) + '|' + g.d;
     h += '<div class="pn-row" style="--cc:' + esc(g.c.color || '#1F6FB2') + '"><span class="pn-dot"></span><b>' + esc(g.c.name) + '</b><span class="pn-w">' + planWhen(g.d) + ' · ' + hm(g.m.start) + '–' + hm(g.m.end) + (g.m.label ? ' · ' + esc(g.m.label) : '') + '</span><span class="sp"></span>' +
-      '<button class="btn sm' + (!keepOn && i === 0 ? ' primary' : '') + '" data-new="' + k + '">Plan it</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + k + '">Use a lesson…</button>' : '') + '</div>';
+      '<button class="btn sm' + (!keepOn && i === 0 ? ' primary' : '') + '" data-new="' + k + '">Plan it</button>' + (pfReady ? pfBtnTag('data-pnfocus="n:' + k + '"') : '') + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + k + '">Use a lesson…</button>' : '') + '</div>';
   });
   if (gaps.length > PN_SHOW) h += '<p class="pn-more">' + (gaps.length - PN_SHOW) + ' more. The calendar below shows each week.</p>';
   return h + '</section>';
 }
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-pnfocus]'); if (!b) return;
+  const v = b.dataset.pnfocus, id = v.slice(2);
+  if (v[0] === 'l') { const l = L.lessons.find(x => x.id === id); if (l) { pfStart(l); openLesson(l); } return; }
+  const [c, d] = id.split('|');
+  createLesson([{ classId: c, date: d }, ...partnerSlots(c, d)]).then(() => { pfStart(L.open); renderEditor(); }).catch(err => console.error(err));
+});
 
 function libFold(open, keep) {
   $('#railLib').setAttribute('aria-expanded', String(open)); $('#railLibBox').hidden = !open;
@@ -8573,7 +8585,7 @@ function ptLessonSecs(id) {
   let s = ptPend.a[id] || 0;
   for (const d of Object.values(ptPlan().days || {})) if (d && d.a && d.a[id]) s += d.a[id];
   const r = pfReady ? pfRun() : null;   // src/planner/plfocus.js, which runs after this file
-  if (r && r.k === 'l' && r.l === id && (r.st === 'run' || r.st === 'paused')) s += Math.min(r.len, pfElapsed(r));
+  if (r && r.k === 'l' && r.l === id && (r.st === 'run' || r.st === 'paused')) s += pfLesSecs(r);
   return s;
 }
 function ptSay(secs) { const m = Math.round(secs / 60), h = Math.floor(m / 60); return h ? h + ' hr' + (m % 60 ? ' ' + (m % 60) + ' min' : '') : m + ' min'; }
@@ -8914,7 +8926,7 @@ function lofiRender(ctx, tr) {
    A session on papers ends here without being written into the grading log, which this page can't open: what it came to waits in
    gsp.focusQ ([{ d: day, s: seconds, m: on papers, x: extra minutes, got: papers }]) and the grading page writes it in when it next
    opens. Both keys stay in this browser (src/takehome.js PLAN_LS_SKIP). Every word here is one the grading page's panel already uses,
-   so the languages cover it as they are. */
+   so the languages cover it as they are, but for the lesson's time so far (pfSoFar), which only this page shows. */
 var pfReady = false;   // src/planner/plantime.js and the lesson editor can ask before this file has run
 const PF_KEY = 'gsp.focusRun', PF_Q = 'gsp.focusQ', PF_P0 = 1e9;
 const pfGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
@@ -8923,6 +8935,7 @@ const pfRun = () => { const r = pfGet(PF_KEY, null); return r && r.st ? r : null
 function pfConf() {
   const f = pfGet('gsp.timeCount', null) || {};
   return { len: +f.len > 0 ? +f.len : 10, llen: +f.llen > 0 ? +f.llen : 45, brk: +f.brk > 0 ? +f.brk : 5, sound: f.sound !== false, title: f.title !== false,
+    idle: [2, 5, 10, 15].includes(+f.idle) ? +f.idle : 5,
     music: f.music === true, mood: typeof f.mood === 'string' ? f.mood : 'mix', mvol: +f.mvol >= .05 && +f.mvol <= 1 ? +f.mvol : .5, mamb: f.mamb === true };
 }
 const pfDay = () => ymd(new Date());
@@ -8955,7 +8968,13 @@ function pfPlanAdd(r, secs) {
 }
 function pfLesSecs(r) {
   const last = Math.max(r.at, r.seen || 0), cap = r.st === 'paused' ? Infinity : Math.round((last + 20 * 60e3 - r.at) / 1000);
-  return Math.max(0, Math.min(r.len, pfElapsed(r), cap));
+  return Math.max(0, Math.min(r.len, pfElapsed(r) - pfIdle(r), cap));
+}
+function pfIdleSee(r) {
+  if (r.k !== 'l' || r.st !== 'run' || r.ii) return false;
+  const last = Math.max(r.at, r.seen || 0), lim = pfConf().idle * 60e3;
+  if (Date.now() - last <= lim) return false;
+  r.ii = last + lim; return true;
 }
 const pfRid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const pfLes = r => r && r.k === 'l' ? { k: 'l', id: pfRid(), l: r.l || '', ...(r.nw ? { nw: r.nw } : {}) } : {};
@@ -8970,10 +8989,8 @@ function pfLesson(l) {
   r.l = l.id; r.w = 'les:' + l.id; r.t = String(l.title || '').slice(0, 120); delete r.nw; pfSet(r);
 }
 const pfOnIt = l => { const r = pfRun(); return !!l && !!r && r.k === 'l' && r.l === l.id && r.st !== 'done'; };
-function pfBtn(l) {
-  if (!pfReady || !l) return '';
-  return '<button class="btn sm pfstart" data-pfstart title="Plan this lesson in a focus session"' + (pfOnIt(l) ? ' hidden' : '') + '>' + PF_CLOCK + 'Focus ' + pfConf().llen + ' min</button>';
-}
+function pfBtn(l) { return pfReady && l ? pfBtnTag('data-pfstart', pfOnIt(l)) : ''; }
+const pfBtnTag = (attr, hide) => '<button class="btn sm pfstart" ' + attr + ' title="Plan this lesson in a focus session"' + (hide ? ' hidden' : '') + '>' + PF_CLOCK + 'Focus ' + pfConf().llen + ' min</button>';
 function pfSet(r) { pfSetK(PF_KEY, r); pfTickOn(); pfRender(); }
 function pfStartAgain(min) {
   const r = pfRun(); if (!r) return;
@@ -9023,6 +9040,7 @@ function pfTick() {
   if (r.k === 'l' && r.st === 'run' && PR.on) return pfAct('pause');
   if (r.st === 'run' && !r.one && pfLeft(r) <= 0) { pfRecord(r); r.st = 'up'; r.fold = false; pfSet(r); pfChime(); return; }
   if (r.st === 'brk' && pfLeft(r) <= 0) { r.st = 'brkup'; r.fold = false; pfSet(r); pfChime(); return; }
+  if (pfIdleSee(r)) pfSetK(PF_KEY, r);
   pfRender(); pfTitle();   // the panel's Open the lesson follows what is open
 }
 let pfTitlePre = '';
@@ -9043,6 +9061,7 @@ const PF_SKIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6v12l9-
 const pfRing = (r, w, frac) => { const c = 2 * Math.PI * r, s = 2 * (r + w); return '<svg viewBox="0 0 ' + s + ' ' + s + '" aria-hidden="true"><circle class="tr" cx="' + (r + w) + '" cy="' + (r + w) + '" r="' + r + '"/><circle class="on" cx="' + (r + w) + '" cy="' + (r + w) + '" r="' + r + '" stroke-dasharray="' + c.toFixed(2) + '" stroke-dashoffset="' + (c * (1 - Math.max(0, Math.min(1, frac)))).toFixed(2) + '"/></svg>'; };
 const pfFrac = r => r.st === 'brk' ? pfLeft(r) / (r.brkLen || 1) : r.one ? 1 : pfLeft(r) / (r.len || 1);
 const pfHead = (cap, fold) => '<div class="fchead"><h2 class="tcap">' + cap + '</h2><span class="sp"></span>' + (fold ? '<button class="icon" data-pf="fold" title="Fold it away" aria-label="Fold it away">–</button>' : '<button class="icon" data-pf="close" title="Close" aria-label="Close">✕</button>') + '</div>';
+const pfSoFar = r => { const s = r.k === 'l' && r.l ? ptLessonSecs(r.l) : 0; return s >= 60 ? '<p class="fcp"><span class="fcl">This lesson so far</span><b>' + ptSay(s) + '</b></p>' : ''; };
 const pfName = r => r.t ? '<b data-raw>' + esc(r.t) + '</b>' : '<b>' + esc(tr('Focus')) + '</b>';
 function pfSub(r) {
   if (r.k === 'l') return '<span>A lesson to plan</span>' + (r.l && !(L.view === 'edit' && L.open && L.open.id === r.l) && r.st !== 'brk' ? '<button class="btn sm primary" data-pf="open">Open the lesson</button>' : '');
@@ -9063,7 +9082,7 @@ function pfPanelHtml(r) {
     return pfHead(r.st === 'paused' ? 'Paused' : 'Focusing', true) + '<div class="fcrunv"><div class="fctop"><div class="fcclock' + (r.st === 'paused' ? ' paused' : '') + '"><span class="fcpr"></span><span class="fctime fct"></span></div><div class="fcwhat">' + pfName(r) + pfSub(r) + '</div></div>' + pfMusicHtml(c) +
       '<div class="fcacts">' + (r.st === 'paused' ? '<button class="btn sm primary" data-pf="resume">Carry on</button>' : '<button class="btn sm" data-pf="pause">Pause</button>') + (r.one ? '' : '<button class="btn sm" data-pf="more" data-n="5">+5 minutes</button>') + '<span class="sp"></span><button class="btn sm ghost" data-pf="stop">End</button></div></div>';
   if (r.st === 'up')
-    return pfHead('Focus') + '<div class="fcrunv"><p class="fcbig ok"><span class="fcok">' + PF_TICK + '</span><span>' + esc(pfMins(len) + ' done') + '</span></p>' +
+    return pfHead('Focus') + '<div class="fcrunv"><p class="fcbig ok"><span class="fcok">' + PF_TICK + '</span><span>' + esc(pfMins(len) + ' done') + '</span></p>' + pfSoFar(r) +
       '<div class="fcacts"><button class="btn primary" data-pf="break">Take a ' + c.brk + '-minute break</button><button class="btn" data-pf="again" data-n="' + len + '">' + len + ' more minutes</button></div>' +
       '<div class="fcacts fcext" role="group" aria-label="A few more minutes"><span>A few more minutes</span>' + [2, 5, 10].map(n => '<button class="btn sm" data-pf="ext" data-n="' + n + '" data-raw>+' + n + '</button>').join('') + '</div>' +
       '<div class="fcacts"><button class="btn sm ghost" data-pf="stop">Stop for now</button></div></div>';
@@ -9074,7 +9093,7 @@ function pfPanelHtml(r) {
   if (r.st === 'brkup')
     return pfHead('Focus') + '<div class="fcrunv"><p class="fcbig">Break’s over</p>' + (r.t ? '<p class="fcp"><span class="fcl">Next</span><b data-raw>' + esc(r.t) + '</b></p>' : '') +
       '<div class="fcacts"><button class="btn primary" data-pf="again" data-n="' + c.len + '">' + PF_PLAY + '<span>Start ' + c.len + ' minutes</span></button><span class="sp"></span><button class="btn sm ghost" data-pf="stop">Stop for now</button></div></div>';
-  return pfHead('Focus') + '<div class="fcrunv"><p class="fcbig">Done for now</p><div class="fcacts"><button class="btn sm" data-pf="close">Close</button></div></div>';
+  return pfHead('Focus') + '<div class="fcrunv"><p class="fcbig">Done for now</p>' + pfSoFar(r) + '<div class="fcacts"><button class="btn sm" data-pf="close">Close</button></div></div>';
 }
 function pfClockDraw() {
   const r = pfRun(), el = document.getElementById('fcPanel'); if (!r || !el || el.hidden) return;
@@ -9137,7 +9156,7 @@ window.addEventListener('storage', e => { if (e.key === PF_KEY || e.key === 'gsp
 { const r = pfRun(); if (r && r.hid) { delete r.hid; pfSetK(PF_KEY, r); } }   // the grading page noted when it was left; here she is still working
 pfReady = true;
 pfTickOn(); pfRender();
-window.__plfocus = { run: pfRun, tick: pfTick, act: pfAct, conf: pfConf, start: pfStart };
+window.__plfocus = { run: pfRun, tick: pfTick, act: pfAct, conf: pfConf, start: pfStart, lesSecs: pfLesSecs };
 
 })();
 </script>
