@@ -1,12 +1,12 @@
 {
- "version": "1.28.67",
- "build": "b6ec1ef5c329",
+ "version": "1.28.68",
+ "build": "87dfd9ec0aeb",
  "notes": [
-  "From Google Drive… is now beside every place you add files: a student's Add menu, Readings, your rubric, Gradebook import and School resources, and in the Planner a lesson's materials, unit files, slide pictures, the finished PowerPoint, Import a lesson, your school template and books. Google Docs, Slides and Sheets come in as PDFs for grading, and as Word, PowerPoint and Excel files in the Planner."
+  "The lesson and unit prompts you copy from the Planner now say Claude shouldn't need anything from your computer, and ask it to tell you if anything is missing."
  ],
  "files": {
-  "index.html": "32aa3291d6fd23c62c694bd7e6ce16f5edfe9469f3b15b90e439aa74b62065a7",
-  "planner.html": "befa42ea28bc6d994c83ee4ccedcb673f2e32b2c9c8120007a9fa71529272e80"
+  "index.html": "6751ba27a95455b28df3216086a37b0113846c9c816122663a5bb7bc04263fc0",
+  "planner.html": "6cf7b4221b7365493a0f693cfeae12743afa9aad41f10c543a6b1104e9ae04dd"
  },
  "langs": {
   "lang/zh-Hant.js": "74f5b9dd6579b91ef1cf6a3431e79c560a454a6efd749f9c9a2a800a9b0b6348",
