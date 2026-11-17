@@ -129,7 +129,7 @@ async function flattenDoc(st, d, dpi, edit, key, fb, tn) {
     if (said && notes) await tnAddPages(out, st, W0, H0, dpi, true);
     for (const [path, p] of d.pages) {
       const { f, js, lib } = await src(path);
-      const marks = (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
+      const marks = marksMine(f.marks[p] || [], f, st).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
       const Lx = lightOpts().exp ? lightForPage(st, f, p) : null;
       // A locked (encrypted) PDF can't be copied page for page; its copies come out blank, so those pages are redrawn instead.
       if (!marks.length && !(f.kami && f.kami[p]) && !Lx && !lib.isEncrypted && !skewOf(f, p)) {
@@ -185,7 +185,7 @@ async function flattenDoc(st, d, dpi, edit, key, fb, tn) {
     // the original pages and her own marks go along, so bringing the file back in opens it ready to change
     if (edit && d.pages.length) {
       const paths = [...new Set(d.pages.map(([path]) => path))];
-      const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p), skewOf(f, p)]; }) };
+      const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, marksMine(f.marks[p] || [], f, st), rotOf(f, p), skewOf(f, p)]; }) };
       for (let k = 0; k < paths.length; k++) await out.attach(await viewBytes(fileByPath(st, paths[k])), 'gs-original-' + (k + 1) + '.pdf', { mimeType: 'application/pdf', description: 'Original pages, for reopening in Grading Studio' });
       await out.attach(new TextEncoder().encode(JSON.stringify(info)), 'grading-studio.json', { mimeType: 'application/json', description: 'Marks, for reopening in Grading Studio' });
     }

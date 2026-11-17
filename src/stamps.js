@@ -35,13 +35,16 @@ const isSticker = k => STICKERS.some(s => s[0] === k);
 // (an IB criterion's letter, with its level alone) over it. `of` is the row it follows, by name, so moving or removing rows never
 // gives it another row's score. Placed only when the teacher asks, row by row. Not a total, so the grade sheet never reads it as the score.
 const isScoreStamp = k => k === 'score' || k === 'crit';
-const scoreLines = m => String(m.text || '').split(' = ').map(t => t.replace('/', ' / '));
+// Extra credit follows the score after " + " ("17/20 = 85% + 5% extra credit") and is a third, smaller line; the grade sheet reads only the score before it.
+const stampScore = t => String(t || '').split(' + ')[0];
+const scoreLines = m => { const t = String(m.text || ''), i = t.indexOf(' + '), L = stampScore(t).split(' = ').map(x => x.replace('/', ' / ')); if (i >= 0) L.push(t.slice(i + 1)); return L; };   // with no percent line the extra credit is the second line
 function scoreSize(m) {
   if (m.k === 'crit') return critSize(m);
-  const s = m.size || 52, [a, b] = scoreLines(m);
+  const s = m.size || 52, [a, b, c] = scoreLines(m);
   measureCtx.font = '700 ' + (s * 0.34) + 'px ' + FONT; const wa = measureCtx.measureText(a || '').width;
   measureCtx.font = '600 ' + (s * 0.26) + 'px ' + FONT; const wb = b ? measureCtx.measureText(b).width : 0;
-  return { w: Math.max(s * 1.5, Math.max(wa, wb) + s * 0.4), h: b ? s : s * 0.6, two: !!b };
+  measureCtx.font = '600 ' + (s * 0.19) + 'px ' + FONT; const wc = c ? measureCtx.measureText(c).width : 0;
+  return { w: Math.max(s * 1.5, Math.max(wa, wb, wc) + s * 0.4), h: c ? s * 1.28 : b ? s : s * 0.6, two: b != null, xc: c };
 }
 // A long row name is cut to fit, by its measured width, so the sticker stays small in any language.
 function critName(m, s) {
@@ -218,6 +221,7 @@ function drawStamp(ctx, m) {
       ctx.lineWidth = Math.max(0.8, s * 0.022); ctx.beginPath(); ctx.moveTo(l, t + s * 0.6); ctx.lineTo(l + z.w, t + s * 0.6); ctx.stroke();
       ctx.font = '600 ' + (s * 0.26) + 'px ' + FONT; ctx.fillText(b, x, t + s * 0.8);
     }
+    if (z.xc) { ctx.font = '600 ' + (s * 0.19) + 'px ' + FONT; ctx.fillText(z.xc, x, t + s * 1.1); }
     ctx.restore(); return;
   }
   ctx.save(); ctx.strokeStyle = ctx.fillStyle = m.color; ctx.lineWidth = Math.max(1.1, s * 0.085); ctx.lineCap = 'round'; ctx.lineJoin = 'round';

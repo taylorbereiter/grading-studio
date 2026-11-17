@@ -208,7 +208,7 @@ function distToSeg(px, py, a, b) {
   return Math.hypot(px - (a[0] + t * dx), py - (a[1] + t * dy));
 }
 function hitMark(pg, x, y, slop) {
-  const marks = pg.marks();
+  const marks = marksMine(pg.marks(), pg.file, batch.students[cur]);
   for (const b of pg.boxes || []) if (!b.n.ro && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return b.n;
   for (let i = marks.length - 1; i >= 0; i--) {
     const m = marks[i];

@@ -39,7 +39,7 @@ test('a partial rubric score says so in the panel, the student list, the Grades 
   const s = await stu(page, 0);
   assert.deepEqual(s.computed, { total: 4, pct: 64, done: false, partial: true });
   assert.match(await page.$eval('#grade .total', e => e.textContent), /Partial: 1 of 3 rows scored/);
-  assert.match(await page.$eval('#stuList .stu[data-i="0"]', e => e.textContent), /4partial/);
+  assert.match(await page.$eval('#stuList .stu[data-i="0"]', e => e.textContent), /4partial/, 'a part score shows its points so far');
   await page.click('#gradesBtn');
   await page.waitForSelector('table.gl');
   assert.match(await page.$eval('.bh .muted', e => e.textContent), /0 of 4 scored · 1 partial/);
@@ -99,6 +99,26 @@ test('nothing partial, no question', async () => {
   noErrors(page); await close();
 });
 
+/* ---------------- percent or points in the list ---------------- */
+test('the student list shows percents, and one click switches it to points out of the total and back', async () => {
+  const { page, close } = await stack();
+  await score(page, [4, 3, 3]);
+  const g = await page.evaluate(() => window.__gs.gradeOf(window.__gs.state().batch.students[0]));
+  const cell = () => page.$eval('#stuList .stu[data-i="0"] .sc', e => e.textContent);
+  const sv = () => page.$eval('#stuList .stu[data-i="0"]', b => b.dataset.sv);
+  assert.equal(await cell(), g.pct + '%');
+  assert.equal(await sv(), g.pct + '%');
+  assert.equal(await page.$eval('[data-scway="pct"]', b => b.getAttribute('aria-pressed')), 'true');
+  await page.click('[data-scway="pts"]');
+  assert.match(await cell(), new RegExp('^' + g.total + '\u2009/\u2009\\d+$'));
+  assert.equal(await sv(), String(g.total), 'the folded strip has room for the points only');
+  assert.equal(await page.evaluate(() => localStorage.getItem('gs.listPts')), 'true', 'remembered');
+  await page.click('[data-scway="pct"]');
+  assert.equal(await cell(), g.pct + '%');
+  assert.equal(await page.evaluate(() => localStorage.getItem('gs.listPts')), null);
+  noErrors(page); await close();
+});
+
 /* ---------------- 0 ---------------- */
 test('0 on a rubric row is a real score everywhere', async () => {
   const { page, close } = await stack();
@@ -108,7 +128,7 @@ test('0 on a rubric row is a real score everywhere', async () => {
   assert.equal(await page.$eval('.scores[data-c="0"] button[data-v="0"]', b => b.getAttribute('aria-pressed')), 'true');
   assert.match(await page.$eval('.crit .cn em', e => e.textContent), /^0 \/ 4$/);
   assert.equal(await page.$eval('#grade .total b', e => e.textContent), '0');
-  assert.equal(await page.$eval('#stuList .stu[data-i="0"] .sc', e => e.textContent), '0');
+  assert.equal(await page.$eval('#stuList .stu[data-i="0"] .sc', e => e.textContent), '48%', 'the list shows the percent');
   await page.click('#gradesBtn'); await page.waitForSelector('table.gl');
   assert.deepEqual(await page.$$eval('tr.go[data-i="0"] td.c', a => a.map(c => c.dataset.copy)), ['0', '0', '0', '0', '48']);
   await page.click('[data-cp="total"]');

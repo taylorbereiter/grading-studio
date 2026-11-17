@@ -1,23 +1,24 @@
 {
- "version": "1.28.63",
- "build": "bda5a8c2850f",
+ "version": "1.28.64",
+ "build": "1647cb61e7b1",
  "notes": [
-  "A watch list for misconceptions and concerns. In the Screenshot bar, tick Add to the watch list, black out any names, and note what you see. Every screenshot you save, strong or on the watch list, is kept with the student whose work it is.",
-  "Each student's card (the ⓘ beside a name) shows their strengths and concerns as a timeline, with the tags you have seen most and Copy notes for report comments. The Examples page has Watch list and Whose work, which shows who your strong examples come from.",
-  "Send to your assistant makes one PDF of a student's or an assignment's pictures and notes, with each student as a random code and names in your notes as [name]. Which code is which student stays in this browser."
+  "The student list on the marking screen shows each score as a percent, with a % / pts switch beside the list's filter. Extra credit shows on its own after the score, like 93% +2%, in the list, the score panel and the score stamp.",
+  "Partners: a shared paper can have shared notes with each partner's own score, and Write for: just one partner puts marks on the paper for that partner alone. Partners sit together in a blue box in the student list, and the done count goes by group.",
+  "Entry list: open one task's scores in a small window beside your school's gradebook, in the gradebook's own order, so typing them in is quick. It's in the gradebook's More menu and in each column's box.",
+  "Email buttons open a new message in Gmail by default. Settings, Display has an Email section to use Outlook on the web or your computer's own mail app instead."
  ],
  "files": {
-  "index.html": "5390e18bf2d9d66bf75d9af7880be8562e0671018a52b03c1647492849b9f6c5",
-  "planner.html": "a5641fd92ceda0a02ac2917453faa229650be85046bec5e56713ed2717a5e7a5"
+  "index.html": "c45d6b1ad4f7619d73297b6d70ba1f07223ee9bef1bebfd81a1882f8a02ba707",
+  "planner.html": "98302979a79159b9ce0d435853da1995a32eaeae21971070cbf615021c42254f"
  },
  "langs": {
-  "lang/zh-Hant.js": "f0e87a69b4d88733ce010c265b8f95b5ee273c7c2552a17a22b57f3d5080b697",
-  "lang/zh-Hans.js": "8f8df879cf440638cdfee176c65967d6b35152a83932ff836b9f513028baa655",
-  "lang/es.js": "b49f186ceef2ee164b12a77cceb059d077f5e2ceafcceb292ba4b9b3991a9daf",
-  "lang/fr.js": "2fbe2f1a988cd612dd4e69e4c53cfe901fed3258f82816b86def4e53286f4a47",
-  "lang/de.js": "e85b99083fc17a7f9cd8c3571c7b1b17135f5f339cf52eb94a22dd51bb4ef1b1",
-  "lang/pt-BR.js": "8bb2c13d737321823ea0446979112753e3300e3f5d4b8477d911e476884b5aba",
-  "lang/ja.js": "871c11b70c3c26bf3f549631906745b910410b2621fb6b3c130125d6e92be9e7",
-  "lang/ko.js": "64d92d34629a6b0022c3a8e137bd34aa2e8024c494c6d7c85fb773db64c00f0f"
+  "lang/zh-Hant.js": "6cb38642dc9328433a53dff071477aa6dc0282c16c2dc1209bac9d130a5c6147",
+  "lang/zh-Hans.js": "25e8e7d9ce0d257fff11aa7242f7ac6899af345f332a232ed5709e632c85b91a",
+  "lang/es.js": "2d4b2f258f20958b79b7876740e4df125f145b07109365bfe963ed8b56518a72",
+  "lang/fr.js": "5ed5da9a69c91e45dab93018180bf79187049597f7356fa3d6c49ce53c5c5185",
+  "lang/de.js": "171c887e5a292cb705b85d410179b9c10a65b17c8accd42cd15d74a73bace286",
+  "lang/pt-BR.js": "631bbbcd2b454083bec2a9508bc6a74b8e13c873b3e078ba05daecb4015ded38",
+  "lang/ja.js": "25c8bb389fa52b1b436aadd775d2433a48ee04e0c00274eaba48f48f40a04be1",
+  "lang/ko.js": "c389ba78e17e9564f6cd2709ad2072b40cf831e0e09ff382bd65bcb814fbad35"
  }
 }

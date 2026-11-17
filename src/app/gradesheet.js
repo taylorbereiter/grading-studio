@@ -108,10 +108,10 @@ async function scanFile(f, spot) {
         found.push({ ...g, boxed: !!spot, page: p, rect: r, from, hover: !!hover, full: text, text: text.length > 140 ? text.slice(0, 140) + '…' : text });
       };
       for (const a of annots) { const t = annText(a); if (t && seen.length < 4) seen.push(t.length > 60 ? t.slice(0, 60) + '…' : t); if (t && !f.virtual) add(parseGrade(annText(a, true), false), vp.convertToViewportRectangle(a.rect), 'note', t, isPopupComment(a)); }
-      for (const m of (f.marks || {})[p] || []) {
+      for (const m of marksMine((f.marks || {})[p] || [], f)) {
         if (m.t === 'text') { const L = textLayout(m, vp.width); add(ofMark(m.text), [m.x, m.y, m.x + L.ink, m.y + L.h], 'note', m.text); }
         if (m.t === 'note' && !m.qza) add(ofMark(m.text), [m.ax - 4, m.ay - 4, m.ax + 4, m.ay + 4], 'note', m.text, true);
-        if (m.t === 'stamp' && m.k === 'score') { const b = stampBox(m); add(ofMark(m.text) && { ...ofMark(m.text), stamp: true }, [b.x, b.y, b.x + b.w, b.y + b.h], 'note', m.text); }   // her score sticker
+        if (m.t === 'stamp' && m.k === 'score') { const b = stampBox(m); const sg = ofMark(stampScore(m.text)); add(sg && { ...sg, stamp: true }, [b.x, b.y, b.x + b.w, b.y + b.h], 'note', m.text); }   // her score sticker
       }
       // text in the page itself (already flattened files): strict "9.5 = 88%" form only, so essay numbers don't count.
       // A student could type this, so it's only offered, unless she boxed this very paper by hand. A rubric page's own printing isn't anyone's grade.
@@ -156,7 +156,7 @@ async function scanFile(f, spot) {
       ctx.translate(-x * k, -y * k);
       await page.render({ canvasContext: ctx, ...vpDraw(f, g.page, page, k), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
       ctx.setTransform(k, 0, 0, k, -x * k, -y * k);
-      const mk = ((f.marks || {})[g.page] || []).filter(m => m.t !== 'note');
+      const mk = marksMine((f.marks || {})[g.page] || [], f).filter(m => m.t !== 'note');
       if (mk.length) drawMarks(ctx, mk, vp1.width, vp1.height, 0, null);
       if (g.hover) {   // a comment that only shows on hover: print its words next to the spot so the picture shows them
         ctx.font = '11px ' + FONT;
@@ -431,7 +431,7 @@ async function pickEach(start) {
       const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
       await page.render({ canvasContext: ctx, viewport: vp, transform: skewXf(f, p, vp), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
       if (my !== token) break;
-      const mk = ((f.marks || {})[p] || []).filter(m => m.t !== 'note');
+      const mk = marksMine((f.marks || {})[p] || [], f).filter(m => m.t !== 'note');
       if (mk.length) { ctx.save(); ctx.scale(k * dpr, k * dpr); drawMarks(ctx, mk, v1.width, v1.height, 0, null); ctx.restore(); }
       const base = ctx.getImageData(0, 0, c.width, c.height);
       const paint = sel => {
