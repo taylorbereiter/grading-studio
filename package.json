@@ -11,7 +11,11 @@
     "screens": "node test/tools/screens.js",
     "saved-work": "node test/tools/saved-work.js",
     "speed": "node test/tools/speed.js",
-    "preview": "npm run build && node test/preview.js"
+    "preview": "npm run build && node test/preview.js",
+    "next:build": "node next/build.js",
+    "next:test": "node --test next/test/*.test.js",
+    "next:check": "npm run next:build && npm run next:test",
+    "next:docs": "node next/tools/saved-work-doc.js"
   },
   "dependencies": {
     "fflate": "0.8.2",
@@ -22,6 +26,8 @@
     "pdfjs-dist": "3.11.174"
   },
   "devDependencies": {
+    "esbuild": "0.28.2",
+    "preact": "11.2.0",
     "puppeteer-core": "25.16.0"
   },
   "engines": {
