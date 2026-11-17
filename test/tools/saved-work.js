@@ -241,8 +241,15 @@ async function nextLegs(old) {
         N.stop(); return who;
       }, ids.L, ids.A);
       await p.close();
+      // main's marking screen, opened on that download, before anything else has opened it
+      const com = await (async () => {
+        const q = await newPage(ctx); await q.goto(place.url('index') + '#/a/' + ids.A); await appReady(q);
+        await q.waitForFunction(who => { const b = window.__gs.state().batch, s = b && b.students.find(x => x.key === who); return !!(s && s.grade && s.grade.comment); }, { timeout: 20000 }, who).catch(() => {});
+        const c = await q.evaluate(who => { const b = window.__gs.state().batch, s = b && b.students.find(x => x.key === who); return s ? s.grade.comment : '(no such student: ' + who + ')'; }, who);
+        await q.close(); return c;
+      })();
       const w = await walk(ctx, place, ids);
-      const title = (w.seen.planner.lessons.find(l => l.id === ids.L) || {}).title, com = await (async () => { const q = await newPage(ctx); await q.goto(place.url('index') + '#/a/' + ids.A); await appReady(q); await q.waitForFunction(() => !!window.__gs.state().batch, { timeout: 30000 }); const c = await q.evaluate(who => { const s = window.__gs.state().batch.students.find(x => x.key === who); return s && s.grade.comment; }, who); await q.close(); return c; })();
+      const title = (w.seen.planner.lessons.find(l => l.id === ids.L) || {}).title;
       if (title !== 'Reading a poem aloud, again' || com !== 'Changed through the new layer.') bad('A change made through the layer did not show in main’s pages: lesson "' + title + '", comment "' + com + '"');
       else out.push('  A lesson renamed and a comment changed through the layer show in main’s pages.');
     });

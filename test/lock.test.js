@@ -85,3 +85,13 @@ test('in the sample the lock has the sample’s own name, so real work and the s
   assert.deepEqual(await sx.evaluate(async () => (await navigator.locks.query()).held.map(l => l.name)), ['sample:gs-writer']);
   await ctx.close();
 });
+
+test('a browser with no Locks API: the current app works as before and the new app, asking on the channel, opens read-only beside it', async () => {
+  const ctx = await browser.createBrowserContext();
+  const bare = async where => { const p = await ctx.newPage(); await p.evaluateOnNewDocument(() => { Object.defineProperty(Navigator.prototype, 'locks', { get: () => undefined }); }); await p.goto(srv.url + where); return p; };
+  const old = await bare(''); assert.equal(await oldState(old), 'no-locks'); assert.equal(await covered(old), false);
+  const nx = await bare('next/'); assert.equal(await newState(nx), 'read-only');
+  await old.close();
+  const alone = await bare('next/'); assert.equal(await newState(alone), 'writer-no-locks');
+  await ctx.close();
+});

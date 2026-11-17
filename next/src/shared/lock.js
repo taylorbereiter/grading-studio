@@ -58,8 +58,8 @@ export async function takeOver() {
 // For tests and for closing cleanly: lets the lock go.
 export function stop() { if (release) { release(); release = null; } set('not-asked'); }
 
-// No Locks API: windows ask each other on a BroadcastChannel. Racy where two open in the same moment, which the merge between
-// windows covers for the current app; it is only for old browsers.
+// No Locks API: windows ask each other on a BroadcastChannel, and the current app's pages answer too (src/lock.js). Racy where
+// two open in the same moment, which the merge between windows covers for the current app; it is only for old browsers.
 function channelStart() {
   if (typeof BroadcastChannel === 'undefined') { set('writer-no-locks', 'This browser can’t tell windows apart.'); return state; }
   const ch = new BroadcastChannel(LOCK), me = Math.random().toString(36).slice(2);

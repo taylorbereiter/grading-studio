@@ -9,7 +9,10 @@
 (function () {
   var L = navigator.locks, NAME = 'gs-writer', blocked = false;
   window.__gsWriter = { state: 'asking' };
-  if (!L || typeof L.request !== 'function') { window.__gsWriter.state = 'no-locks'; return; }
+  // No Locks API (an old browser): this page is let through as before, and answers the new version when it asks on the channel
+  // whether another window is open, so the new version opens read-only beside it.
+  var answer = function () { try { var ch = new BroadcastChannel(NAME); ch.onmessage = function (e) { var d = e.data || {}; if (d.ask) ch.postMessage({ here: true, from: 'old' }); }; } catch (e) {} };
+  if (!L || typeof L.request !== 'function') { window.__gsWriter.state = 'no-locks'; answer(); return; }
   var hold = function () { window.__gsWriter.state = 'writer'; return new Promise(function () {}); };
   // The message over the whole page. It goes up as soon as there is a body to put it in.
   function cover() {
@@ -31,6 +34,6 @@
   }
   try {
     L.request(NAME, { mode: 'shared', ifAvailable: true }, function (lock) { if (!lock) { cover(); return null; } return hold(); })
-      .catch(function (e) { if (e && e.name === 'AbortError') cover(); else window.__gsWriter.state = 'lock-failed'; });   // AbortError: the new version took the lock over
-  } catch (e) { window.__gsWriter.state = 'lock-failed'; }
+      .catch(function (e) { if (e && e.name === 'AbortError') cover(); else { window.__gsWriter.state = 'lock-failed'; answer(); } });   // AbortError: the new version took the lock over
+  } catch (e) { window.__gsWriter.state = 'lock-failed'; answer(); }
 })();
