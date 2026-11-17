@@ -82,7 +82,7 @@ function restore() {
   if (data.quiz) batch.quiz = data.quiz;
   if (data.goal) batch.goal = data.goal;
   if (data.returned) batch.returned = data.returned;
-  batch.groups = [...(data.groups || []), ...(data.groupsOwn || []).map(g => ({ ...g, own: 1 }))];
+  batch.groups = [...(data.groups || []), ...(data.groupsOwn || []).map(g => ({ ...g, own: g.own || 1 }))];
   batch.clips = data.clips || [];
   if (data.vrot) batch.vrot = data.vrot; else delete batch.vrot;
   groupSync();

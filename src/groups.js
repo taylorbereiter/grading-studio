@@ -22,6 +22,52 @@ function groupGradeCopy(to, from) {
 }
 const GROUP_NOTES = ['tn'];   // typed notes; the comment branches off, one for each partner
 const groupOwn = g => !!(g && g.own);
+// g.own 2: "Group score, adjust a partner". The score is the group's, kept on each partner; a field one partner was given on
+// their own (Write for: Just <name>) is in their grade.adj and stays theirs. Fields: each rubric row by number, points, pk, xc, status.
+const groupAdj = g => !!(g && g.own === 2);
+const ADJ_KEYS = ['points', 'pk', 'xc', 'xcU', 'status'];
+const adjFields = sts => [...Array(Math.max(0, ...sts.map(s => (s.grade.rubric || []).length), setup && setup.criteria ? setup.criteria.length : 0)).keys(), ...ADJ_KEYS];
+const adjGet = (gr, f) => JSON.stringify(typeof f === 'number' ? (gr.rubric || [])[f] ?? null : gr[f] ?? null);
+function adjPut(gr, f, from) {
+  if (typeof f === 'number') { (gr.rubric ||= [])[f] = (from.rubric || [])[f] ?? null; }
+  else if (from[f] == null) delete gr[f]; else gr[f] = JSON.parse(JSON.stringify(from[f]));
+  const t = from.atR && from.atR[f]; if (t) (gr.atR ||= {})[f] = t;
+}
+const adjTime = (gr, f) => (gr.atR && gr.atR[f]) || gr.at || 0;
+// One pass for a group with a group score: Just edits become the partner's own, the rest goes to every partner not adjusted.
+function adjSync(sts) {
+  let changed = false;
+  for (const f of adjFields(sts)) {
+    const free = sts.filter(s => !(s.grade.adj && s.grade.adj[f])); if (!free.length) continue;
+    // a partner scored with Write for: Just them, whose value differs from the rest: it's theirs now
+    for (const s of free) if (groupJust === s.key && free.length > 1) { const rest = free.filter(x => x !== s), v = adjGet(rest[0].grade, f); if (rest.every(x => adjGet(x.grade, f) === v) && adjGet(s.grade, f) !== v) { (s.grade.adj ||= {})[f] = 1; changed = true; } }
+    const live = free.filter(s => !(s.grade.adj && s.grade.adj[f])); if (live.length < 2) continue;
+    const src = live.reduce((a, s) => (adjTime(s.grade, f) > adjTime(a.grade, f) ? s : a), live[0]), v = adjGet(src.grade, f);
+    for (const s of live) if (s !== src && adjGet(s.grade, f) !== v) { adjPut(s.grade, f, src.grade); changed = true; stampSoon(s); }
+  }
+  return changed;
+}
+// Back to the group's value on one field: taken from a partner who has it, with its time, so it doesn't push st's old value round.
+function adjReset(st, f) {
+  const g = groupOf(st); if (!g) return;
+  const mate = groupMates(st).find(s => !(s.grade.adj && s.grade.adj[f]));
+  gradeSnap(st);
+  if (mate) adjPut(st.grade, f, mate.grade);
+  if (st.grade.adj) { delete st.grade.adj[f]; if (!Object.keys(st.grade.adj).length) delete st.grade.adj; }
+  stampSoon(st); saveSoon(); renderList(); renderGrade(); groupBandRefresh();
+}
+const adjName = f => typeof f === 'number' ? (setup.criteria && setup.criteria[f]) || 'Row ' + (f + 1) : { points: 'Points', pk: 'Percent', xc: 'Extra credit', xcU: 'Extra credit', status: 'Status' }[f];
+const adjSay = (gr, f) => { const v = JSON.parse(adjGet(gr, f)); return v == null || v === '' ? '–' : f === 'status' ? (STATUS_LABEL[v] || v) : String(v); };
+// Above the score panel, for a group with a group score: who the scores you change go to, and what is adjusted for this partner.
+function groupScoreNote(st) {
+  const g = groupOf(st); if (!groupAdj(g)) return '';
+  const name = shownName(st, batch.students.indexOf(st)), mate = groupMates(st).find(Boolean);
+  const adj = Object.keys(st.grade.adj || {}).map(k => (/^\d+$/.test(k) ? +k : k)).filter(f => f !== 'xcU');
+  const rows = adj.map(f => { const m = groupMates(st).find(s => !(s.grade.adj && s.grade.adj[f])); return '<li><span>' + esc(adjName(f)) + '</span> <span class="muted">group ' + esc(m ? adjSay(m.grade, f) : '–') + ' → ' + esc(adjSay(st.grade, f)) + '</span> <button class="link" data-grpreset="' + f + '">Use group score</button></li>'; }).join('');
+  return '<div class="grpnote' + (groupJust === st.key ? ' just' : '') + '" id="grpNote">' + (groupJust === st.key ? '<b>Scores you change now are just for ' + esc(name) + '.</b>' : 'Scores you change go to the whole group. To change one for ' + esc(name) + ' only, pick <b>Just ' + esc(name.split(/[\s,]+/)[0] || name) + '</b> above the paper.') + (rows ? '<ul>' + rows + '</ul>' : '') + '</div>';
+}
+function groupNoteRefresh() { const old = $('#grpNote'), st = batch && batch.students[cur]; if (old && st) { const h = groupScoreNote(st); if (h) old.outerHTML = h; else old.remove(); } }
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-grpreset]'); if (b && batch) { const k = b.dataset.grpreset; adjReset(batch.students[cur], /^\d+$/.test(k) ? +k : k); } });
 const notesSig = gr => JSON.stringify(GROUP_NOTES.map(k => gr[k] ?? null));
 function groupNotesCopy(to, from) { for (const k of GROUP_NOTES) { if (from.grade[k] != null) to.grade[k] = JSON.parse(JSON.stringify(from.grade[k])); else delete to.grade[k]; } }
 // A new score stamp on a paper a group shares with its own scores is that student's alone.
@@ -76,6 +122,7 @@ function groupSync() {
       const moved = sts.filter(s => notesSig(s.grade) !== g.ns), src = moved.length ? newest(moved) : sts[0], sig = notesSig(src.grade);
       for (const s of sts) if (s !== src && notesSig(s.grade) !== sig) { groupNotesCopy(s, src); changed = true; }
       if (g.ns !== sig) { g.ns = sig; changed = true; }
+      if (groupAdj(g) && adjSync(sts)) { changed = true; setTimeout(groupNoteRefresh); }
     } else {
       const src = newest(sts), sig = gradeSig(src.grade);
       for (const s of sts) if (s !== src && gradeSig(s.grade) !== sig) { groupGradeCopy(s, src); changed = true; }
@@ -105,6 +152,7 @@ function groupAdd(st, f, to, toFile) {
     if (has(st.grade) || !has(to.grade)) groupNotesCopy(to, st); else { groupNotesCopy(st, to); touchGrade(st); }
     g.ns = notesSig(st.grade);
     if (toFile && toFile.marks) stampsSplit(toFile.marks, [to.key]);
+    if (groupAdj(g) && (gradeHasWork(st.grade) || !gradeHasWork(to.grade))) { const c = to.grade.comment; groupGradeCopy(to, st); to.grade.comment = c; delete to.grade.adj; delete to.grade.tn; groupNotesCopy(to, st); }
   } else if (gradeHasWork(st.grade) || !gradeHasWork(to.grade)) { groupGradeCopy(to, st); if (!st.grade.at) touchGrade(st); to.grade.at = st.grade.at; }
   else { groupGradeCopy(st, to); }
   groupSync();
@@ -122,18 +170,23 @@ function groupLeave(st, quiet) {
   if (!quiet) { saveSoon(); renderList(); openStudent(cur); toast(shownName(st, batch.students.indexOf(st)) + ' is graded on their own now'); }
 }
 
-// A group's way of grading: 'all' (marks, score and comment shared) or 'own' (notes shared, each partner's own score).
-// To 'all', st's score goes to everyone. Returns false when nothing changed.
+// A group's way of grading: 0 (marks, score and comment shared), 2 (a group score, adjusted for one partner where needed:
+// true means this) or 1 (separate scores). Notes are shared in 1 and 2. To 0, st's score goes to everyone. False when nothing changed.
 function groupSetOwn(st, own) {
-  const g = groupOf(st); if (!g || groupOwn(g) === !!own) return false;
+  const mode = own === true ? 1 : +own || 0, g = groupOf(st); if (!g || (g.own || 0) === mode) return false;
   const sts = g.k.map(k => batch.students.find(s => s.key === k)).filter(Boolean), files = [...new Set(sts.map(s => groupFileOf(g, s)).filter(Boolean).map(f => f.marks))];
-  if (own) {
-    g.own = 1; g.ns = notesSig(st.grade);
+  const clearAdj = () => { for (const s of sts) delete s.grade.adj; };
+  if (mode && groupOwn(g)) {   // between the two ways with shared notes
+    g.own = mode;
+    if (mode === 2) for (const s of sts) if (s !== st) for (const f of adjFields(sts)) if (adjGet(s.grade, f) !== adjGet(st.grade, f)) (s.grade.adj ||= {})[f] = 1;   // st's score is the group's; what differs stays each one's own
+    else clearAdj();
+  } else if (mode) {
+    g.own = mode; g.ns = notesSig(st.grade);
     for (const m of files) stampsSplit(m, sts.filter(s => groupFileOf(g, s)).map(s => s.key));
     for (const s of sts) if (s !== st && notesSig(s.grade) !== g.ns) groupNotesCopy(s, st);
     for (const s of sts) syncScoreStamps(s);
   } else {
-    delete g.own; delete g.ns;
+    delete g.own; delete g.ns; clearAdj();
     for (const m of files) stampsJoin(m, st.key);
     touchGrade(st);
   }
@@ -201,13 +254,15 @@ function groupFromSplit(st) {
 function groupBand(st) {
   const mates = groupMates(st);
   if (mates.length) {
-    const g = groupOf(st), marks = !!groupFileOf(g, st), own = groupOwn(g);
+    const g = groupOf(st), marks = !!groupFileOf(g, st), own = groupOwn(g), adj = groupAdj(g), mode = adj ? 'adj' : own ? 'own' : 'all';
     if (groupJust !== st.key) groupJust = null;   // a new student starts on Both
     const name = shownName(st, batch.students.indexOf(st)), first = name.split(/[\s,]+/)[0] || name;
-    const just = own && marks ? '<span class="seg grpjust" role="group" aria-label="New marks go on"><button type="button" data-grpjust="0" aria-pressed="' + !groupJust + '" title="Marks you make now show on every partner’s paper">Both</button><button type="button" data-grpjust="1" aria-pressed="' + !!groupJust + '" title="Marks you make now show only on ' + esc(name) + '’s paper. Their comment is always their own.">Just ' + esc(first) + '</button></span>' : '';
-    const opt = (v, t) => '<option value="' + v + '"' + ((v === 'own') === own ? ' selected' : '') + '>' + t + '</option>';
+    const both = adj ? (marks ? 'Marks and scores you give now go to every partner' : 'Scores you give now go to every partner') : 'Marks you make now show on every partner’s paper';
+    const one = adj ? (marks ? 'Marks and scores you give now are just for ' : 'Scores you give now are just for ') + esc(name) + '. Their comment is always their own.' : 'Marks you make now show only on ' + esc(name) + '’s paper. Their comment is always their own.';
+    const just = own && (marks || adj) ? '<span class="seg grpjust" role="group" aria-label="What you do now goes to"><button type="button" data-grpjust="0" aria-pressed="' + !groupJust + '" title="' + both + '">Both</button><button type="button" data-grpjust="1" aria-pressed="' + !!groupJust + '" title="' + one + '">Just ' + esc(first) + '</button></span>' : '';
+    const opt = (v, t) => '<option value="' + v + '"' + (v === mode ? ' selected' : '') + '>' + t + '</option>';
     return '<div class="grpband" id="grpBand"><b>Group work</b><span>with ' + esc(groupNames(mates)) + ' ·</span>' +
-      '<select class="grpmode" data-grpmode aria-label="What the group shares" title="Share everything, or share the notes and give each partner their own score">' + opt('all', marks ? 'Marks and grade shared' : 'Grade shared') + opt('own', marks ? 'Shared notes, own scores' : 'Own scores and comments') + '</select>' + (just ? '<span class="muted">Write for</span>' + just : '') + '<span style="flex:1"></span>' +
+      '<select class="grpmode" data-grpmode aria-label="What the group shares" title="Share everything, give the group one score you can change for one partner, or give each partner their own score">' + opt('all', marks ? 'Marks and grade shared' : 'Grade shared') + opt('adj', 'Group score, adjust a partner') + opt('own', marks ? 'Shared notes, own scores' : 'Own scores and comments') + '</select>' + (just ? '<span class="muted">Write for</span>' + just : '') + '<span style="flex:1"></span>' +
       '<button class="link" data-grpout title="Give this student their own grade and their own copy of the marks so far. The rest stay together.">Grade on their own…</button></div>';
   }
   const sm = splitMates(st);
@@ -226,7 +281,7 @@ function groupClick(e) {
   const st = batch.students[cur];
   if (e.target.closest('[data-grpjoin]')) { groupFromSplit(st); return true; }
   const j = e.target.closest('[data-grpjust]');
-  if (j) { groupJust = j.dataset.grpjust === '1' ? st.key : null; groupBandRefresh(); return true; }
+  if (j) { groupJust = j.dataset.grpjust === '1' ? st.key : null; groupBandRefresh(); groupNoteRefresh(); return true; }
   if (e.target.closest('[data-grpout]')) {
     askDlg(shownName(st, cur) + ' gets their own grade and their own copy of the marks so far. ' + groupNames(groupMates(st)) + (groupMates(st).length > 1 ? ' stay together.' : ' keeps theirs.'), { ok: 'Grade on their own', cancel: 'Keep the group' }).then(ok => { if (ok) groupLeave(st); });
     return true;
@@ -235,17 +290,17 @@ function groupClick(e) {
 }
 
 // The band's choice. Back to one grade, the student on screen's score goes to everyone, so it asks first. Undo puts it all back.
-async function groupModePick(own) {
-  const st = batch.students[cur], g = groupOf(st); if (!g || groupOwn(g) === own) return;
-  if (!own) {
+async function groupModePick(mode) {
+  const st = batch.students[cur], g = groupOf(st); if (!g || (g.own || 0) === mode) return;
+  if (!mode) {
     const t = gradeOf(st).total, ok = await askDlg('Everyone in the group gets ' + shownName(st, cur) + '’s score' + (t != null ? ' (' + fmtNum(t) + ')' : '') + ' and comment. The other partners’ own scores, comments and notes just for them are replaced.', { ok: 'Share this score', cancel: 'Keep own scores' });
     if (!ok) { groupBandRefresh(); return; }
   }
   const back = groupSnapOf(g);
-  groupSetOwn(st, own);
-  pushUndo(actStep(back, () => { groupSetOwn(st, own); groupRedraw(); }, own ? 'own scores' : 'one grade'));
+  groupSetOwn(st, mode);
+  pushUndo(actStep(back, () => { groupSetOwn(st, mode); groupRedraw(); }, mode === 2 ? 'group score' : mode ? 'own scores' : 'one grade'));
   groupRedraw();
-  toast(own ? 'Each partner has their own score and comment now. The notes page stays shared.' : 'One grade for the group now');
+  toast(mode === 2 ? 'One group score now. To change a score for one partner, pick Just them above the paper.' : mode ? 'Each partner has their own score and comment now. The notes page stays shared.' : 'One grade for the group now');
 }
 const groupRedraw = () => { saveSoon(); renderList(); openStudent(cur); };
 // Everything a change of a group's way of grading touches, to put back: the group, each partner's grade, the shared marks.
@@ -261,7 +316,7 @@ function groupSnapOf(g) {
     groupRedraw();
   };
 }
-document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('[data-grpmode]'); if (s && batch) groupModePick(s.value === 'own'); });
+document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('[data-grpmode]'); if (s && batch) groupModePick({ all: 0, adj: 2, own: 1 }[s.value] || 0); });
 
 /* ---------------- Group work… on a file ---------------- */
 // Each student picked gets their own copy of the file as it was turned in. With the switch on (the default), they're one group: marked and graded once.
