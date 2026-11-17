@@ -8,6 +8,7 @@
 const ASK_LATER = 7 * 864e5;
 const IC_FOLDER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
 function safeAskShown() {
+  if (PHONE) return false;   // a phone keeps its copy in her Google Drive: the Google card on Today asks for that (phone.js)
   if (fld.state !== 'none' || !fld.booted || G.email) return false;   // signed in with Google, her Drive holds a copy (drive.js)
   let later = 0; try { later = +localStorage.getItem('gsc.folderLater') || 0; } catch {}
   if (Date.now() - later < ASK_LATER) return false;
@@ -193,6 +194,7 @@ function updRender() {
   rail.hidden = !(next || stale);
   rail.title = next ? 'A newer version is ready. It waits until you say so.' : 'This tab is still on the older version. Reload it when you’re ready.';
   rail.querySelector('.rl').textContent = next ? 'Update ready' : 'Reload to update';
+  if (PHONE) phUpdRender();
   const el = $('#setAbout'), box = $('#setInstall'); if (!el || el.hidden) return;
   const notes = v => (WHATS_NEW[v] || []).map(n => '<li>' + esc(n) + '</li>').join('');
   let h = '<div class="lhead"><h2 data-raw>Grading Studio ' + esc(gsData.APP_VERSION) + '</h2><span class="muted">' + (upd.on ? 'Kept on this computer, so it opens with no internet.' : '') + '</span></div>';

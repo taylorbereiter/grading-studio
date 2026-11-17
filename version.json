@@ -1,24 +1,21 @@
 {
- "version": "1.28.65",
- "build": "243cdd3ec93a",
+ "version": "1.28.66",
+ "build": "581afc13c317",
  "notes": [
-  "Comments, text boxes and Quick mark comments can be yellow: a dark gold that is easy to read on white paper.",
-  "The Planner opens on Plan lessons: this week, the lesson you worked on last, and your classes coming up that don't have a lesson yet. Units, Past lessons, Activities and Rubrics are under Library in the sidebar.",
-  "A linked folder now keeps plain copies of the students' papers and their video files, so you have them on your computer too.",
-  "Focus and To do now open Today, side by side, so they are at the top on a laptop too. Each class in the sidebar has a gradebook button, and the number beside a class now says it is papers left to score."
+  "On a phone: a More tab with your Google account, Sync now, updates, Help and Settings, and a bar above the tabs with Update now whenever a new version is ready. Today asks you to sign in with Google instead of choosing a folder."
  ],
  "files": {
-  "index.html": "44c9c2fbb906b144265f518a10a463f5d2f8ac01609df787a05eada42b6e6753",
-  "planner.html": "e7017357ba6741dfcd0006a9032fccca2789b23bb8711084294e33d2cfd91978"
+  "index.html": "bed165c3eb2985a769094337e5680eb47bb259d50be90cf9dce42e5deea21d9b",
+  "planner.html": "b0d61be0eee819fdc77c4e998f58de3206571b2cf5524038bd2ee7771dfe27ef"
  },
  "langs": {
-  "lang/zh-Hant.js": "970b1106ecff218a81e07f46cbfd6c9b60a62637ec3e5d37134d665e31fd3c93",
-  "lang/zh-Hans.js": "f1ed5f46ca290c9fe392e60365edafcd6e3fda7cff42c675b8225f006be95515",
-  "lang/es.js": "239aa8879bb993bc5e67b3621bea4a1fd31b439f8f4fe85a0ed8935ffa390dbc",
-  "lang/fr.js": "3136d4dca6bfb3e8bf11f961e30d2e97636a1497d0a1a3f0fa13877d823f69f3",
-  "lang/de.js": "ae53732a47d117fdd62cd1cae596011122202e0b070c1319fa3b4546538cf74d",
-  "lang/pt-BR.js": "b9b67f36705d14df82fb913b42fee95a314a98a2c3fcdde19d50e87c991211a5",
-  "lang/ja.js": "916b2b90946f8b50b4cae69032419b376719b470aa80a8a54060ee43602d3da2",
-  "lang/ko.js": "30b19225a726f79c6ae19c424f000913f6735a0f7e158eff6bdb1f476718adcd"
+  "lang/zh-Hant.js": "74f5b9dd6579b91ef1cf6a3431e79c560a454a6efd749f9c9a2a800a9b0b6348",
+  "lang/zh-Hans.js": "c26fa6ca88731d0f27cfd6bfcae93d1b4145f5eaa7ebdbea38856f8c0d0159d4",
+  "lang/es.js": "65e561ba75865009ddfb9275239b8ee33b10cc50bda88e481a160b53607f1435",
+  "lang/fr.js": "693c777feb05fbcac1b2da51c4dc65620a0660175793ff166c6c18260cf1727a",
+  "lang/de.js": "e614653b4b00c31a5a97705322fa4259e3603354ce7ce61a8b39b5cf23bf4305",
+  "lang/pt-BR.js": "088233dc28f9e364b8a327ebc8aaf1604dcbe22e736702ed34624014f5812cfc",
+  "lang/ja.js": "913b6a050c3bd338df36c484c286bc3ae7d59dad090b662f362530d94dcde854",
+  "lang/ko.js": "c458cafdb522106522d348efd69092b586afbb875db0e78a4252d618159f0c34"
  }
 }

@@ -63,3 +63,14 @@
 .phslides li{padding:14px 16px}
 .phslides p{margin:6px 0 0;line-height:1.45}
 .phslides .phsn{color:var(--muted);font-size:var(--text-small);border-top:1px solid var(--line);padding-top:6px}
+/* More, the update bar, the Google card on Today */
+.phnav a{position:relative}
+.phbadge{position:absolute;top:4px;left:calc(50% + 8px);width:9px;height:9px;border-radius:var(--corner-round);background:var(--accent);box-shadow:0 0 0 2px var(--surface)}
+.phupd{position:fixed;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:41;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 16px;border-radius:var(--corner-5);background:var(--accent);color:var(--accent-fg);box-shadow:var(--shadow);font-weight:600}
+.phupd[hidden]{display:none}
+.phupd span{flex:1;min-width:0}
+.phupd .btn{background:var(--accent-fg);color:var(--accent);border-color:var(--accent-fg);font-weight:600}
+.gsphone body:has(.phupd:not([hidden])) .shellmain{padding-bottom:calc(140px + env(safe-area-inset-bottom))}
+.phsign{padding:16px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.phsign p{margin:0;color:var(--muted)}
+.gsphone #vHome .gAcct,.gsphone #tdView,.gsphone #tdAdd kbd{display:none!important}

@@ -361,3 +361,36 @@ test('the Planner on a second computer: Drive’s settings come first, a store e
     assert.deepEqual(a.page.errors, []); assert.deepEqual(b.page.errors, []);
   } finally { await a.close(); await b.close(); await srv.close(); }
 });
+
+test('the phone: a Google card on Today until signed in, a More tab with syncing, updates, help and settings, and Update now one tap away on every screen', async () => {
+  const srv = await serve(builtHtml());
+  const ph = await openApp(browser, { server: srv, seed: { ls: { ...seed().ls, 'gs.gEmail': '""', 'gs.phone': '1' } } });
+  try {
+    const p = ph.page;
+    // not signed in: the card asks for Google, and nothing on Today is for a computer
+    await p.waitForSelector('#phSign:not([hidden]) [data-gin]');
+    assert.equal(await p.$eval('#phSign', el => el.textContent.includes('same Google account')), true);
+    assert.equal(await p.$$eval('#vHome [data-gphone], #safeAsk:not([hidden])', l => l.filter(x => x.offsetParent).length), 0, 'no Use on your phone, no folder card');
+    assert.equal(await p.$$eval('#vHome a[href*="planner"]', l => l.filter(x => x.offsetParent).length), 0, 'no Open the Planner');
+    // the fifth tab
+    await p.click('[data-phnav="#/more"]');
+    await p.waitForSelector('#vMore:not([hidden]) #phMore [data-gin]');
+    assert.ok(await p.$eval('[data-phnav="#/more"]', a => a.classList.contains('on')));
+    assert.deepEqual(await p.$$eval('#phMore a.phitem', l => l.map(a => a.getAttribute('href'))), ['#/help', '#/settings']);
+    assert.match(await p.$eval('#phMore', el => el.textContent), /Grading Studio \d+\.\d+\.\d+/);
+    assert.equal(await p.$eval('#phUpd', el => el.hidden), true, 'no bar while there is nothing new');
+    // a newer version waiting: the bar on every tab, a dot on More, and Update now in More
+    await p.evaluate(() => window.__gs.updAs({ current: { build: 'a' }, next: { build: 'b', version: '9.9.9' }, mode: 'ask' }));
+    for (const tab of ['#/', '#/scores', '#/todo', '#/plans', '#/more']) {
+      await p.evaluate(h => { location.hash = h; }, tab);
+      await p.waitForFunction(() => { const b = document.querySelector('#phUpd'); return b && !b.hidden && b.getClientRects().length && /Update now/.test(b.textContent); });
+    }
+    assert.equal(await p.$eval('.phbadge', el => el.hidden), false);
+    await p.waitForSelector('#phMore [data-phupd].primary');
+    // To do keeps the list; the switches and categories are set on the computer
+    await p.evaluate(() => { location.hash = '#/todo'; });
+    await p.waitForSelector('#tdIn');
+    assert.equal(await p.$$eval('.tdkinds, #tdView', l => l.filter(x => x.offsetParent).length), 0);
+    assert.deepEqual(p.errors, []);
+  } finally { await ph.close(); await srv.close(); }
+});
