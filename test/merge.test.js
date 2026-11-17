@@ -3,7 +3,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const SCALE12 = { 12: 100, 11: 95, 10: 91, 9: 86, 8: 82, 7: 77, 6: 73, 5: 68, 4: 64, 3: 60 };   // the app's own, which is in app.js
-const M = vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'src', 'merge.js'), 'utf8') + ';({ mergeWork, mergeScan, mergeStates, mergeFiles, mergeEdits, mergeLib, mergeLs, stampData, revsOf, tabMerge, tabDiffers, stampLib, libPrev, recHash, decideRec, workVec, vJoin, snapKeep, canon, libLinked, libHold, libFollow, rubricsDiffer, workScored, focusMerge, planTimeMerge })', { SCALE12 });
+const M = vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'src', 'merge.js'), 'utf8') + ';({ mergeWork, mergeScan, mergeStates, mergeFiles, mergeEdits, mergeLib, mergeLs, stampData, revsOf, tabMerge, tabDiffers, stampLib, libPrev, recHash, decideRec, workVec, vJoin, snapKeep, canon, libLinked, libHold, libFollow, rubricsDiffer, workScored, focusMerge, planTimeMerge, taughtInMerge, mergePlan })', { SCALE12 });
 const plain = v => JSON.parse(JSON.stringify(v));
 const rec = (rubric, extra = {}) => ({ f: {}, g: { rubric, points: '', comment: '', ...(extra.g || {}) }, h: {}, ...extra.rec });
 // A save on one computer: only what changed gets moved on, as the app does it.
@@ -820,4 +820,39 @@ test('time logs from two devices: each day takes the larger of each count, never
   assert.deepEqual(pm.out.days, { [day(0)]: { l: 900, a: { L1: 600, L2: 600 }, f: 300, n: 1 }, [day(3)]: { l: 120, a: { '': 120 } } });
   assert.deepEqual(pm.out.names, { L1: 'Sonnets', L2: 'Volta' }); assert.deepEqual(pm.out.ids, ['r1', 'r2']);
   assert.equal(M.planTimeMerge(pm.out, pb).toA, false, 'twice is the same as once');
+});
+
+test('notes from the phone onto a lesson: each by its key, the later kept, put-on (f) kept from either side, old ones left out', () => {
+  const now = Date.UTC(2026, 10, 17), DAY = 864e5;
+  const a = { items: { 'L1|k1|2026-11-16': { slide: 3, of: 5, x: 'Phone first', t: now - 2 * DAY }, 'L1|k2|2026-11-16': { slide: 5, of: 5, x: '', t: now - DAY, f: 1 }, 'L9|k1|2026-08-01': { slide: 1, of: 2, x: 'Long ago', t: now - 70 * DAY } } };
+  const b = { items: { 'L1|k1|2026-11-16': { slide: 4, of: 5, x: 'Phone again', t: now - DAY }, 'L1|k2|2026-11-16': { slide: 5, of: 5, x: '', t: now - DAY }, 'L2|k1|2026-11-17': { slide: 2, of: 3, x: 'New', t: now } } };
+  const m = plain(M.taughtInMerge(a, b, now));
+  assert.equal(m.toA, true);
+  assert.deepEqual(m.out.items, {
+    'L1|k1|2026-11-16': { slide: 4, of: 5, x: 'Phone again', t: now - DAY },   // written later
+    'L1|k2|2026-11-16': { slide: 5, of: 5, x: '', t: now - DAY, f: 1 },   // the same note: put on the lesson on one side is put on
+    'L2|k1|2026-11-17': { slide: 2, of: 3, x: 'New', t: now },
+  });
+  assert.deepEqual(plain(M.taughtInMerge(b, a, now)).out.items, m.out.items, 'the same either way round');
+  assert.equal(M.taughtInMerge(m.out, b, now).toA, false, 'twice is the same as once');
+  assert.equal(M.taughtInMerge(null, null, now).toA, false, 'nothing on either side writes nothing');
+  assert.deepEqual(plain(M.taughtInMerge(null, b, now)).out, b);
+});
+
+test('the copies for the phone of lessons too big to send: each by its time, none older than the lesson, a deleted lesson takes its copy', () => {
+  const c = (id, updated, t = 'copy') => ({ id, title: t, updated, slides: [{ id: 's', img: { src: 'gsblob:' + 'a'.repeat(64) + ':5:image/png' } }] });
+  const A = { lessons: { l2: { id: 'l2', title: 'Small again', updated: 300 } }, kv: {}, gone: {}, lite: { l1: c('l1', 200, 'Newer here'), l2: c('l2', 250), l3: c('l3', 100) } };
+  const B = { lessons: { l1: { id: 'l1', title: 'Last that fit', updated: 50 } }, kv: {}, gone: { 'l:l3': 150 }, lite: { l1: c('l1', 120, 'Older there'), l4: c('l4', 90, 'Only there') }, big: { l5: { title: 'x' } } };
+  const m = plain(M.mergePlan(A, B));
+  assert.deepEqual(Object.keys(m.lite).sort(), ['l1', 'l4']);
+  assert.equal(m.lite.l1.title, 'Newer here');
+  assert.equal(m.lessons.l1.title, 'Last that fit', 'Drive keeps the last copy that fit beside it');
+  assert.ok(!m.lite.l2, 'the lesson itself is newer: its copy goes');
+  assert.deepEqual(m.gone, { 'l:l3': 150 }, 'deleted after its copy was made');
+  assert.ok(!('big' in m), 'the list of lessons too big to send is the sync’s own (drive.js)');
+  // made again after it was deleted elsewhere: the copy stays and the deletion is forgotten
+  const again = plain(M.mergePlan({ lessons: {}, kv: {}, gone: {}, lite: { l3: c('l3', 400) } }, B));
+  assert.ok(again.lite.l3); assert.ok(!again.gone['l:l3']);
+  // none on either side: no lite at all, as before
+  assert.ok(!('lite' in plain(M.mergePlan({ lessons: {}, kv: {}, gone: {} }, { lessons: {}, kv: {}, gone: {} }))));
 });

@@ -17,7 +17,7 @@ const shareName = l => (plainTitle(l.title) || 'Lesson').replace(/[\\/:*?"<>|\u0
 // The parts of a lesson that travel. Everything about one teacher's classes, or meant only for Claude, is left out.
 function shareLesson(l) {
   const c = JSON.parse(JSON.stringify(l));
-  for (const k of ['_file', '_mod', 'pending', 'slots', 'taught', 'talk', 'claudeNote', 'status', 'unit', 'library', 'variantOf', 'variant', 'files', 'final', 'finals']) delete c[k];
+  for (const k of ['_file', '_mod', 'pending', 'slots', 'taught', 'talk', 'claudeNote', 'status', 'unit', 'library', 'variantOf', 'variant', 'files', 'final', 'finals', 'ready']) delete c[k];
   c.slides = c.slides.map(s => { const { ask, talk, ctx, ...keep } = s; return keep; });
   return c;
 }

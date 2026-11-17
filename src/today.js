@@ -24,10 +24,12 @@ async function planRead() {
   plan = !classes.length ? null : {
     classes, semStart: String(setup.semStart || ''), semEnd: String(setup.semEnd || ''),
     daysOff: (Array.isArray(setup.daysOff) ? setup.daysOff : []).filter(d => d && d.date).map(d => ({ date: String(d.date), label: String(d.label || '') })),
-    lessons: (Array.isArray(lessons) ? lessons : []).filter(l => l && l.id && Array.isArray(l.slots) && l.slots.length).map(l => ({ id: String(l.id), title: String(l.title || 'Untitled lesson'), status: String(l.status || ''), done: !!l.final, n: Array.isArray(l.slides) ? l.slides.length : 0,
+    lessons: (Array.isArray(lessons) ? lessons : []).filter(l => l && l.id && Array.isArray(l.slots) && l.slots.length).map(l => ({ id: String(l.id), title: String(l.title || 'Untitled lesson'), status: String(l.status || ''), done: !!l.final, ready: !!(l.ready && +l.ready.at), n: Array.isArray(l.slides) ? l.slides.length : 0,
       // where each class got to, noted after presenting
       taught: (Array.isArray(l.taught) ? l.taught : []).filter(t => t && t.date).map(t => ({ classId: String(t.classId || ''), date: String(t.date), slide: +t.slide || 1, of: +t.of || 1 })),
       slots: l.slots.map(s => ({ classId: String(s.classId), date: String(s.date) })) })),
+    // the lessons she said are ready, and when, on the timetable or not: her planning pace comes from them (src/gradeplan.js gpLesPace)
+    ready: (Array.isArray(lessons) ? lessons : []).filter(l => l && l.id && l.ready && +l.ready.at > 0).map(l => ({ id: String(l.id), at: +l.ready.at })),
   };
   return plan;
 }

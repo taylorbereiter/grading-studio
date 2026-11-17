@@ -745,10 +745,17 @@ function mergePlan(A, B) {
     if (gone['l:' + id] >= (w.updated || 0)) continue;
     lessons[id] = w;
   }
-  for (const k of Object.keys(gone)) if (k.startsWith('l:') && lessons[k.slice(2)]) delete gone[k];   // written again after it was deleted
+  // the copies for the phone of lessons too big to send (lite, drive.js planLite): the same, and none older than the lesson itself
+  const lite = {}, ca = A.lite || {}, cb = B.lite || {};
+  for (const id of new Set([...Object.keys(ca), ...Object.keys(cb)])) {
+    const a = ca[id] && typeof ca[id] === 'object' ? ca[id] : null, b = cb[id] && typeof cb[id] === 'object' ? cb[id] : null, w = !a ? b : !b ? a : (b.updated || 0) >= (a.updated || 0) ? b : a;
+    if (!w || gone['l:' + id] >= (w.updated || 0) || (lessons[id] && (lessons[id].updated || 0) >= (w.updated || 0))) continue;
+    lite[id] = w;
+  }
+  for (const k of Object.keys(gone)) if (k.startsWith('l:') && (lessons[k.slice(2)] || lite[k.slice(2)])) delete gone[k];   // written again after it was deleted
   const kv = {}, ka = A.kv || {}, kb = B.kv || {};
   for (const k of new Set([...Object.keys(ka), ...Object.keys(kb)])) { const a = ka[k], b = kb[k]; kv[k] = !a ? b : !b ? a : (b.t || 0) >= (a.t || 0) ? b : a; }
-  return { lessons, kv, gone };
+  return Object.keys(lite).length ? { lessons, kv, gone, lite } : { lessons, kv, gone };
 }
 function mergeFields(x, y, win, dev, now, said) {
   const fx = nodeParts(x), fy = nodeParts(y), parts = {}, fv = {}, both = [], fromY = [];
@@ -864,6 +871,21 @@ function planTimeMerge(x, y) {
   const out = { ...x, days: daysMax(x.days, y.days), names: { ...(y.names && typeof y.names === 'object' ? y.names : {}), ...(x.names && typeof x.names === 'object' ? x.names : {}) } };
   if (Array.isArray(x.ids) || Array.isArray(y.ids)) out.ids = idsJoin(x.ids, y.ids, 50);
   return { out, toA: JSON.stringify(out) !== JSON.stringify(x) };
+}
+// Notes from the phone onto a lesson (gsp.taughtIn, src/phone.js), waiting for the Planner on a computer to put them on the lesson
+// (src/planner/present.js, taughtFold): { items: { '<lesson id>|<class id>|<date>': { slide, of, x: note, t, f: 1 once put on the lesson } } }.
+// Each note by its key, the one written later kept; the same note on both keeps f from either. Notes past 60 days are left out.
+function taughtInMerge(x, y, now = Date.now()) {
+  const obj = v => v && typeof v === 'object' && !Array.isArray(v), ix = obj(x) && obj(x.items) ? x.items : {}, iy = obj(y) && obj(y.items) ? y.items : {};
+  const ok = v => obj(v) && typeof v.t === 'number' && isFinite(v.t) && now - v.t <= 60 * 864e5, items = {};
+  for (const k of [...new Set([...Object.keys(ix), ...Object.keys(iy)])].sort()) {
+    const a = ok(ix[k]) ? ix[k] : null, b = ok(iy[k]) ? iy[k] : null;
+    let v = !a ? b : !b ? a : b.t > a.t ? b : a;
+    if (a && b && a.t === b.t && (a.f || b.f) && !v.f) v = { ...v, f: 1 };
+    if (v) items[k] = v;
+  }
+  const out = { ...(obj(x) ? x : {}), items };
+  return { out, toA: obj(x) ? JSON.stringify(out) !== JSON.stringify(x) : Object.keys(items).length > 0 };
 }
 // Other saved things: comments saved for reuse are pooled, and anything else she hasn't got here comes in. Nothing she has here is replaced, unless she replaced it there later.
 function mergeLs(a, b, skip = () => false) {

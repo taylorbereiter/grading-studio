@@ -199,7 +199,7 @@ function attTodayLine(planClass) {
   const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(planClass.name), c = k && lib.classes.find(x => nk(x.name) === k && x.names.length);
   if (!c) return '';
   const d = attToday(), r = attRec(c, d), o = r && attDayCount(c, d);
-  return '<a class="tatt' + (r ? ' done' : '') + '" href="' + attHash(c) + '" data-tatt>' + (r ? 'Attendance taken · ' + (o.l || o.e || o.a ? attSay({ ...o, p: 0 }) : 'everyone here') : 'Take attendance') + '</a>';
+  return '<a class="tatt' + (r ? ' done' : '') + '" href="' + (PHONE ? '#/att/' + encodeURIComponent(c.id) : attHash(c)) + '" data-tatt>' + (r ? 'Attendance taken · ' + (o.l || o.e || o.a ? attSay({ ...o, p: 0 }) : 'everyone here') : 'Take attendance') + '</a>';
 }
 
 /* ---------- Settings, Classes and rosters: whether attendance is taken here ---------- */

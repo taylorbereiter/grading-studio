@@ -162,3 +162,101 @@ test('a lesson session in the Planner: a stretch with nothing done for the idle 
     assert.deepEqual(errors, []);
   } finally { await ctx.close(); }
 });
+
+test('after a lesson session in the Planner: is this lesson ready? Ready is kept on the lesson with an Undo, the editor says so, and Not yet asks no more', async () => {
+  const ctx = await browser.createBrowserContext(), page = await ctx.newPage(), errors = [];
+  page.on('pageerror', e => errors.push(String(e)));
+  try {
+    await page.goto(srv.url + 'planner.html', { waitUntil: 'load' }); await plannerReady(page);
+    await page.evaluate(() => window.__planner.applySetup({ kind: 'grading-studio-lessons-setup', version: 1, semStart: '2026-01-05', semEnd: '2030-12-20',
+      classes: [{ id: 'A1', name: 'Course A-1', course: 'Course A', color: '#1F6FB2', meets: [0, 1, 2, 3, 4, 5, 6].map(dow => ({ dow, start: '23:58', end: '23:59' })) }], daysOff: [], events: [] }));
+    await page.evaluate(d => window.__planner.createLesson([{ classId: 'A1', date: d }]), iso(new Date()));
+    await page.waitForFunction(() => window.__planner.L.view === 'edit' && window.__planner.L.open);
+    const id = await page.evaluate(() => window.__planner.L.open.id);
+    const ready = () => page.evaluate(id => { const l = window.__planner.L.lessons.find(x => x.id === id); return l.ready ? l.ready.at : null; }, id);
+    const quiet = () => page.$eval('#lsReady', e => !e.hidden && e.matches('[data-pfready]:not(.primary)') && e.textContent);
+    assert.equal(await quiet(), 'Ready', 'not ready yet: a quiet Ready button, no chip');
+    // a session on it runs out: the panel asks
+    await page.click('[data-pfstart]');
+    await page.evaluate(() => { const r = JSON.parse(localStorage.getItem('gsp.focusRun')); r.at -= r.len * 1000 + 1000; r.seen = Date.now(); localStorage.setItem('gsp.focusRun', JSON.stringify(r)); window.__plfocus.tick(); });
+    await page.waitForSelector('#fcPanel .pfask');
+    assert.match(await page.$eval('#fcPanel .pfask', e => e.textContent), /^Is this lesson ready\?ReadyNot yet$/);
+    assert.equal(await page.$$eval('#fcPanel .pfask .btn.primary', b => b.length), 0, 'the panel keeps its one blue button');
+    // Ready: kept on the lesson, the chip in the editor's top bar, and an Undo
+    await page.click('#fcPanel [data-pf="ready"]');
+    await page.waitForSelector('#fcPanel .pfready');
+    assert.ok(await ready() > 0);
+    assert.equal(await page.$eval('#lsReady', e => e.hidden ? '' : e.textContent), 'Ready ✓');
+    assert.equal(await page.$('#fcPanel .pfpace'), null, 'one ready lesson: no pace yet');
+    await page.waitForSelector('.toast:not([hidden]) button.link');
+    assert.match(await page.$eval('.toast', e => e.textContent), /^Marked ready/);
+    await page.click('.toast button.link');
+    await page.waitForFunction(id => !window.__planner.L.lessons.find(x => x.id === id).ready, {}, id);
+    assert.equal(await quiet(), 'Ready');
+    await page.waitForSelector('#fcPanel .pfask');
+    // kept through a reload, as any change to a lesson is; the chip takes it back
+    await page.click('#fcPanel [data-pf="ready"]'); await page.waitForSelector('#fcPanel .pfready');
+    await page.evaluate(() => { window.__plfocus.act('stop'); window.__plfocus.act('close'); return new Promise(r => setTimeout(r, 400)); });
+    await page.reload(); await plannerReady(page);
+    await page.evaluate(id => window.__planner.openLessonForTest(window.__planner.L.lessons.find(x => x.id === id)), id);
+    await page.waitForSelector('#lsReady[data-pfunready]');
+    assert.ok(await ready() > 0);
+    await page.click('#lsReady');
+    await page.waitForFunction(id => !window.__planner.L.lessons.find(x => x.id === id).ready, {}, id);
+    assert.equal(await quiet(), 'Ready');
+    assert.match(await page.$eval('.toast', e => e.textContent), /^No longer marked ready/);
+    // Not yet: a session ended early asks too, and Not yet leaves the lesson as it is and asks no more
+    await page.click('[data-pfstart]');
+    await page.evaluate(() => window.__plfocus.act('stop'));
+    await page.waitForSelector('#fcPanel .pfask');
+    await page.click('#fcPanel [data-pf="notyet"]');
+    await page.waitForFunction(() => !document.querySelector('#fcPanel .pfask'));
+    assert.match(await page.$eval('#fcPanel', e => e.textContent), /Done for now/);
+    assert.equal(await ready(), null);
+    // with two more ready lessons that had planning time, Ready shows her pace: the middle of 20, 30 and 60 minutes
+    const yest = iso(new Date(Date.now() - 864e5));
+    await page.evaluate((id, y) => {
+      for (const [x, at] of [['O1', 100], ['O2', 200]]) window.__planner.L.lessons.push(window.__planner.normLesson({ id: x, title: 'Older ' + x, ready: { at } }));
+      localStorage.setItem('gsp.planTime', JSON.stringify({ days: { [y]: { l: 6600, a: { O1: 1200, O2: 3600, [id]: 1800 } } }, names: {} }));
+      window.__plfocus.act('close');
+    }, id, yest);
+    await page.click('[data-pfstart]');
+    await page.evaluate(() => window.__plfocus.act('stop'));
+    await page.click('#fcPanel [data-pf="ready"]'); await page.waitForSelector('#fcPanel .pfpace');
+    assert.match(await page.$eval('#fcPanel .pfpace', e => e.textContent), /^Your paceabout 30 minutes a lesson, from your last 3$/);
+    assert.deepEqual(errors, []);
+  } finally { await ctx.close(); }
+});
+
+test('a lesson can be marked ready from the editor’s top bar, with no focus session: a quiet Ready button, kept with an Undo', async () => {
+  const ctx = await browser.createBrowserContext(), page = await ctx.newPage(), errors = [];
+  page.on('pageerror', e => errors.push(String(e)));
+  try {
+    await page.goto(srv.url + 'planner.html', { waitUntil: 'load' }); await plannerReady(page);
+    await page.evaluate(() => window.__planner.applySetup({ kind: 'grading-studio-lessons-setup', version: 1, semStart: '2026-01-05', semEnd: '2030-12-20',
+      classes: [{ id: 'A1', name: 'Course A-1', course: 'Course A', color: '#1F6FB2', meets: [0, 1, 2, 3, 4, 5, 6].map(dow => ({ dow, start: '23:58', end: '23:59' })) }], daysOff: [], events: [] }));
+    await page.evaluate(d => window.__planner.createLesson([{ classId: 'A1', date: d }]), iso(new Date()));
+    await page.waitForFunction(() => window.__planner.L.view === 'edit' && window.__planner.L.open);
+    const id = await page.evaluate(() => window.__planner.L.open.id);
+    const ready = () => page.evaluate(id => { const l = window.__planner.L.lessons.find(x => x.id === id); return l.ready ? l.ready.at : null; }, id);
+    assert.equal(await page.$eval('#lsReady', e => e.textContent), 'Ready');
+    assert.equal(await page.$eval('#lsReady', e => e.classList.contains('primary')), false, 'quiet, not blue');
+    assert.ok(await page.$$eval('#lessons .ls-top .btn.primary', b => b.length) <= 1, 'the top bar keeps at most one blue button');
+    assert.equal(await page.$('#fcPanel .pfask'), null, 'no focus session');
+    await page.click('#lsReady');
+    await page.waitForSelector('#lsReady[data-pfunready]');
+    assert.ok(await ready() > 0);
+    assert.equal(await page.$eval('#lsReady', e => e.textContent), 'Ready ✓');
+    await page.waitForSelector('.toast:not([hidden]) button.link');
+    assert.match(await page.$eval('.toast', e => e.textContent), /^Marked ready/);
+    await page.click('.toast button.link');
+    await page.waitForFunction(id => !window.__planner.L.lessons.find(x => x.id === id).ready, {}, id);
+    await page.waitForSelector('#lsReady[data-pfready]');
+    // kept through a reload
+    await page.click('#lsReady'); await page.waitForSelector('#lsReady[data-pfunready]');
+    await new Promise(r => setTimeout(r, 400));
+    await page.reload(); await plannerReady(page);
+    assert.ok(await ready() > 0);
+    assert.deepEqual(errors, []);
+  } finally { await ctx.close(); }
+});

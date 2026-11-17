@@ -20,6 +20,7 @@ const routeOf = hash => {
   if (p[0] === 'plans' && PHONE) return { v: 'plans', id: p[1] || '' };
   if (p[0] === 'more' && PHONE) return { v: 'more' };
   if (p[0] === 'scores' && PHONE) return { v: 'scores', cls: p[1] || '', key: p[2] || '' };
+  if (p[0] === 'att' && PHONE) return { v: 'att', cls: p[1] || '' };   // attendance on the phone, today's (phone.js)
   if (p[0] === 'todo') return { v: 'todo', week: p[1] === 'week' };
   if (p[0] === 'time') return { v: 'time' };
   if (p[0] === 'examples') return { v: 'examples' };
@@ -112,7 +113,7 @@ function showScreen(r) {
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
   if (grading && $('#soloBar') && soloOn() && $('#soloBar').dataset.b !== batch.id) soloBar();   // src/solo.js
-  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening'], ['vScores', 'scores'], ['vPlans', 'plans'], ['vMore', 'more']]) $('#' + id).hidden = grading || r.v !== v;
+  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening'], ['vScores', 'scores'], ['vPlans', 'plans'], ['vMore', 'more'], ['vAtt', 'att']]) $('#' + id).hidden = grading || r.v !== v;
   if (r.v !== 'class') classLeave();
   // moving from one student to the next keeps her place on the page
   const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');
@@ -123,6 +124,7 @@ function showScreen(r) {
   if (!grading && r.v === 'scores') phScoresRender(r);
   if (!grading && r.v === 'plans') phPlansRender(r);
   if (!grading && r.v === 'more') phMoreRender();
+  if (!grading && r.v === 'att') phAttRender(r);
   phNavRender();
   if (grading) tabShow(r); else if (dlgPage) dlgShut();
 }

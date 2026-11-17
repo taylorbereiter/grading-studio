@@ -154,6 +154,37 @@ const pfFrac = r => r.st === 'brk' ? pfLeft(r) / (r.brkLen || 1) : r.one ? 1 : p
 const pfHead = (cap, fold) => '<div class="fchead"><h2 class="tcap">' + cap + '</h2><span class="sp"></span>' + (fold ? '<button class="icon" data-pf="fold" title="Fold it away" aria-label="Fold it away">–</button>' : '<button class="icon" data-pf="close" title="Close" aria-label="Close">✕</button>') + '</div>';
 // After a lesson session, what this lesson has had in all (src/planner/plantime.js).
 const pfSoFar = r => { const s = r.k === 'l' && r.l ? ptLessonSecs(r.l) : 0; return s >= 60 ? '<p class="fcp"><span class="fcl">This lesson so far</span><b>' + ptSay(s) + '</b></p>' : ''; };
+// After a lesson session, on this page only: is the lesson ready to teach? Ready keeps it on the lesson (l.ready), with an Undo, and
+// then her planning pace shows, once there are 3 ready lessons to work it out from (src/planner/plantime.js ptPace). Not yet asks no more
+// for this session. Nothing here is a guess: the pace is her own time on her own lessons.
+const pfLesOf = r => r && r.k === 'l' && r.l ? L.lessons.find(x => x.id === r.l) || null : null;
+function pfAsk(r) {
+  const l = pfLesOf(r); if (!l) return '';
+  if (l.ready) { const p = ptPace(); return '<p class="fcp pfready"><span class="fcok">' + PF_TICK + '</span><b>Ready to teach</b></p>' + (p ? '<p class="fcp pfpace"><span class="fcl">Your pace</span><span>' + esc(ptPaceSay(p)) + '</span></p>' : ''); }
+  if (r.rq) return '';
+  return '<div class="fcacts pfask" role="group" aria-label="Is this lesson ready?"><span>Is this lesson ready?</span><button class="btn sm" data-pf="ready">Ready</button><button class="btn sm ghost" data-pf="notyet">Not yet</button></div>';
+}
+// Ready, or not after all: saved on the lesson as any change to it is, with an Undo to put it back.
+async function pfReadySet(l, on, quiet) {
+  if (!l) return;
+  const was = l.ready ? { ...l.ready } : null;
+  if (on) l.ready = { at: Date.now() }; else delete l.ready;
+  pfReadyDraw();
+  if (!quiet) undoToast(on ? 'Marked ready' : 'No longer marked ready', () => { if (was) l.ready = was; else delete l.ready; pfReadyDraw(); lPut(l).catch(err => console.error(err)); });
+  await lPut(l);
+}
+// In the lesson editor's top bar, beside its planning time: a ready lesson says so, and a click takes it back. One not ready yet has a
+// quiet Ready button, so it can be marked ready without a focus session (To do keeps a begun lesson's line until it is).
+function pfChip(l) {
+  if (!pfReady || !l) return '<span id="lsReady" hidden></span>';
+  if (!l.ready) return '<button class="btn sm ghost" id="lsReady" data-pfready title="Mark this lesson ready to teach">Ready</button>';
+  return '<button class="pl-done pfchip" id="lsReady" data-pfunready title="Ready to teach. Click if it is not ready after all">Ready ✓</button>';
+}
+function pfReadyDraw() {
+  const el = document.getElementById('lsReady'); if (el && L.open) { const t = document.createElement('div'); t.innerHTML = pfChip(L.open); el.replaceWith(t.firstChild); }
+  if (L.view === 'week' && !L.open) renderWeek();
+  pfRender();
+}
 const pfName = r => r.t ? '<b data-raw>' + esc(r.t) + '</b>' : '<b>' + esc(tr('Focus')) + '</b>';
 function pfSub(r) {
   if (r.k === 'l') return '<span>A lesson to plan</span>' + (r.l && !(L.view === 'edit' && L.open && L.open.id === r.l) && r.st !== 'brk' ? '<button class="btn sm primary" data-pf="open">Open the lesson</button>' : '');
@@ -174,7 +205,7 @@ function pfPanelHtml(r) {
     return pfHead(r.st === 'paused' ? 'Paused' : 'Focusing', true) + '<div class="fcrunv"><div class="fctop"><div class="fcclock' + (r.st === 'paused' ? ' paused' : '') + '"><span class="fcpr"></span><span class="fctime fct"></span></div><div class="fcwhat">' + pfName(r) + pfSub(r) + '</div></div>' + pfMusicHtml(c) +
       '<div class="fcacts">' + (r.st === 'paused' ? '<button class="btn sm primary" data-pf="resume">Carry on</button>' : '<button class="btn sm" data-pf="pause">Pause</button>') + (r.one ? '' : '<button class="btn sm" data-pf="more" data-n="5">+5 minutes</button>') + '<span class="sp"></span><button class="btn sm ghost" data-pf="stop">End</button></div></div>';
   if (r.st === 'up')
-    return pfHead('Focus') + '<div class="fcrunv"><p class="fcbig ok"><span class="fcok">' + PF_TICK + '</span><span>' + esc(pfMins(len) + ' done') + '</span></p>' + pfSoFar(r) +
+    return pfHead('Focus') + '<div class="fcrunv"><p class="fcbig ok"><span class="fcok">' + PF_TICK + '</span><span>' + esc(pfMins(len) + ' done') + '</span></p>' + pfSoFar(r) + pfAsk(r) +
       '<div class="fcacts"><button class="btn primary" data-pf="break">Take a ' + c.brk + '-minute break</button><button class="btn" data-pf="again" data-n="' + len + '">' + len + ' more minutes</button></div>' +
       '<div class="fcacts fcext" role="group" aria-label="A few more minutes"><span>A few more minutes</span>' + [2, 5, 10].map(n => '<button class="btn sm" data-pf="ext" data-n="' + n + '" data-raw>+' + n + '</button>').join('') + '</div>' +
       '<div class="fcacts"><button class="btn sm ghost" data-pf="stop">Stop for now</button></div></div>';
@@ -185,7 +216,7 @@ function pfPanelHtml(r) {
   if (r.st === 'brkup')
     return pfHead('Focus') + '<div class="fcrunv"><p class="fcbig">Break’s over</p>' + (r.t ? '<p class="fcp"><span class="fcl">Next</span><b data-raw>' + esc(r.t) + '</b></p>' : '') +
       '<div class="fcacts"><button class="btn primary" data-pf="again" data-n="' + c.len + '">' + PF_PLAY + '<span>Start ' + c.len + ' minutes</span></button><span class="sp"></span><button class="btn sm ghost" data-pf="stop">Stop for now</button></div></div>';
-  return pfHead('Focus') + '<div class="fcrunv"><p class="fcbig">Done for now</p>' + pfSoFar(r) + '<div class="fcacts"><button class="btn sm" data-pf="close">Close</button></div></div>';
+  return pfHead('Focus') + '<div class="fcrunv"><p class="fcbig">Done for now</p>' + pfSoFar(r) + pfAsk(r) + '<div class="fcacts"><button class="btn sm" data-pf="close">Close</button></div></div>';
 }
 function pfClockDraw() {
   const r = pfRun(), el = document.getElementById('fcPanel'); if (!r || !el || el.hidden) return;
@@ -241,9 +272,15 @@ document.addEventListener('click', e => {
   if (a === 'next') { pfSetK('gsp.focusGo', Date.now()); location.href = GS_PAGE; return; }
   if (a === 'mus') { pfS.mute = !pfS.mute; return pfRender(); }
   if (a === 'skip') return typeof lofiNext === 'function' && lofiNext();
+  if (a === 'ready') return pfReadySet(pfLesOf(pfRun()), true).catch(err => console.error(err));
+  if (a === 'notyet') { const r = pfRun(); if (r) { r.rq = 1; pfSet(r); } return; }
   pfAct(a, n);
 });
 document.addEventListener('click', e => { if (e.target.closest('[data-pfstart]') && L.open) { pfStart(L.open); renderEditor(); } });
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-pfunready]') && L.open) pfReadySet(L.open, false).catch(err => console.error(err));
+  else if (e.target.closest('[data-pfready]') && L.open) pfReadySet(L.open, true).catch(err => console.error(err));
+});
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   const r = pfRun(), el = document.getElementById('fcPanel');
@@ -254,4 +291,4 @@ window.addEventListener('storage', e => { if (e.key === PF_KEY || e.key === 'gsp
 { const r = pfRun(); if (r && r.hid) { delete r.hid; pfSetK(PF_KEY, r); } }   // the grading page noted when it was left; here she is still working
 pfReady = true;
 pfTickOn(); pfRender();
-window.__plfocus = { run: pfRun, tick: pfTick, act: pfAct, conf: pfConf, start: pfStart, lesSecs: pfLesSecs };
+window.__plfocus = { run: pfRun, tick: pfTick, act: pfAct, conf: pfConf, start: pfStart, lesSecs: pfLesSecs, ready: (l, on) => pfReadySet(l, on, true) };

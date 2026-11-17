@@ -332,7 +332,7 @@ test('planning your grading, on Today, the Focus card, a class page and Settings
     await new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put({ classes: cl, daysOff: [] }, 'setup'); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
     db.close(); return true;
   });
-  if (free) { await page.reload(); await page.waitForSelector('#fcCard .sugwhy .free'); }
+  if (free) { await page.reload(); await page.waitForSelector('#fcCard .sugwhy .free'); await page.waitForSelector('#fcCard .gpwk'); }   // and next week's lessons under the goal
   await page.waitForSelector('#lbCard .lbk'); await page.waitForSelector('#fcCard .sugwhy'); await pause(300);
   await miss(page, 'Today, the look back, a free period and where she left off', own);
   await goTo(page, await page.$eval('#railClasses a', a => a.getAttribute('href'))); await page.waitForSelector('#classes .tkc'); await miss(page, 'a class page, the time left on an assignment', own);
