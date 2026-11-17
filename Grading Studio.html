@@ -10347,6 +10347,7 @@ const scope = full ? PICK_SCOPE : SYNC_SCOPE;
 if (G.token && Date.now() < G.exp - 60000 && gHas(scope)) return G.token;
 if (!gcid()) throw new Error('setup');
 if (!interactive && !gAuto()) throw new Error('Sign in again to sync');
+if (!interactive && G.quiet) throw new Error('waits until the page is in front');
 if (G_REDIRECT) { gRedirect(scope); throw new Error('Sign in again to sync'); }
 await loadGis();
 if (!G.client || G.cscope !== scope) {
@@ -10463,7 +10464,7 @@ return top;
 
 /* Sync: the same work on every device she signs in on (a phone and a computer), through one hidden file in her own Drive.
 It carries what folder.js carries to a folder, without the papers: classes, units, rosters, typed scores and to-dos (gs.lib), each
-download's marks and scores and its row in the list, and the settings that travel (carryLs). Each side is merged the way a folder
+download's marks and scores and its row in the list, the settings that travel (carryLs) and the Planner's planning time (pt). Each side is merged the way a folder
 or a take-home file is (merge.js), student by student and field by field, so a score typed on the phone and a comment written on
 the computer both stay. Nothing goes anywhere but her browser and her Drive. */
 const SYNC_NAME = 'grading-studio-sync.json';
@@ -10506,7 +10507,7 @@ return out;
 function syncNow() {
 if (!G.email || sampleOn()) return Promise.resolve();
 if (syncBusy) { syncAgain = true; return syncBusy; }
-clearTimeout(syncT);
+clearTimeout(syncT); syncT = null;
 syncBusy = (async () => {
 for (let tries = 1; ; tries++) {
 try { await syncOnce(); return; } catch (e) {
@@ -10548,6 +10549,7 @@ if (libm.toA) { lib = migrateLib(libm.lib); libUndoForget(); if (!setLibFrom(lib
 store.set('gs.tomb', tomb);
 if (got.plan && JSON.stringify(got.plan) !== JSON.stringify(store.get('gs.planCopy', null))) { store.set('gs.planCopy', got.plan); if (typeof planRefresh === 'function') planRefresh(); }
 for (const [k, v] of Object.entries(mergeLs(carryLs(), B.ls, k => Object.keys(tomb).some(id => k.includes(id))))) lsPut(k, v);
+if (got.pt) { const m = planTimeMerge(store.get('gsp.planTime', null), got.pt); if (m.toA) store.set('gsp.planTime', m.out); }
 if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); if (wl.on && lib.classes.length) { wlClose(); go('#/'); } }
 if (open && rows.some(r => r.id === open && r.toA)) syncAgain = false;
 }
@@ -10560,9 +10562,11 @@ if (w) out.work[id] = w;
 if (m) { const { papers, size, ...rest } = m; out.meta[id] = rest; }
 }
 delete out.ls['gs.lib'];
+if (out.ls['gs.focus']) try { out.ls['gs.focus'] = JSON.stringify(focusShared(JSON.parse(out.ls['gs.focus']))); } catch {}
 out.plan = (await syncPlan()) || (got && got.plan) || null;
 out.planT = await planSync(got && got.planT);
 out.files = dvFiles(got && got.files, tomb);
+const pt = store.get('gsp.planTime', null); if (pt && typeof pt === 'object') out.pt = pt;
 const body = JSON.stringify(out);
 if (!got || body !== JSON.stringify({ ...got, t: now })) await syncWrite(body);
 store.set('gs.syncAt', now);
@@ -10576,7 +10580,13 @@ if (gAuto() && !G_REDIRECT && G.token && G.exp - Date.now() < 15 * 60000 && !gBa
 syncNow();
 }
 window.addEventListener('focus', gBack2);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') gBack2(); });
+const gLive = () => !!G.token && Date.now() < G.exp - 60000;
+function syncLeave() { G.quiet = true; if (syncT && G.email && gLive() && !sampleOn()) syncNow(); }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { G.quiet = false; gBack2(); } else syncLeave(); });
+window.addEventListener('pagehide', syncLeave);
+window.addEventListener('pageshow', () => { if (document.visibilityState === 'visible') G.quiet = false; });
+function syncPull() { if (G.email && GOK && document.visibilityState === 'visible' && gLive() && !syncBusy && !sampleOn()) syncNow(); }
+setInterval(syncPull, 5 * 60000);
 if (GOK && G.email && gcid() && !sampleOn()) setTimeout(() => {
 if (G_REDIRECT && !(G.token && Date.now() < G.exp - 60000)) {
 if (navigator.onLine === false) return setSyncState('offline: syncs when you are back online');
@@ -10795,33 +10805,38 @@ for (const k of PLAN_KEYS) { const v = await idbP(t.objectStore('kv').get(k)); i
 db.close();
 }
 if (!lessons.length && !Object.keys(kv).length && (seen.ids || []).length) seen = { keys: {}, ids: [], gone: { ...(seen.gone || {}) }, t: {} };
-const A = { lessons: {}, kv: {}, gone: { ...(seen.gone || {}) } }, ids = new Set(), big = new Set();
+const A = { lessons: {}, kv: {}, gone: { ...(seen.gone || {}) } }, ids = new Set(), big = new Set(), bigInfo = {};
 for (const l of lessons) {
 if (!l || !l.id) continue;
 const { _file, _mod, _sync, ...x } = l; ids.add(x.id);
-if (JSON.stringify(x).length > PLAN_BIG) { big.add(x.id); continue; }
+if (JSON.stringify(x).length > PLAN_BIG) { big.add(x.id); bigInfo[x.id] = { title: String(x.title || '').slice(0, 200), slots: Array.isArray(x.slots) ? x.slots.map(s => ({ classId: s && s.classId, date: s && s.date })) : [], updated: x.updated || 0 }; continue; }
 A.lessons[x.id] = x;
 }
 const lost = [];
 for (const id of seen.ids || []) if (!ids.has(id) && !A.gone['l:' + id]) lost.push(id);
 for (const [k, v] of Object.entries(kv)) { const h = shaLite(JSON.stringify(v)); A.kv[k] = { v, t: seen.keys[k] === h ? (seen.t[k] || 0) : seen.at ? -1 : null }; }
-const mine = !seen.at ? !!(lessons.length || Object.keys(kv).length) : lost.length > 0 || Object.values(A.kv).some(x => x.t === -1) || [...ids].some(id => !(seen.ids || []).includes(id)) || Object.values(A.lessons).some(l => (l.updated || 0) > (seen.at || 0));
-return { A, seen, big, lost, mine };
+const mine = !seen.at ? !!(lessons.length || Object.keys(kv).length) : lost.length > 0 || JSON.stringify(bigInfo) !== JSON.stringify(seen.big || {}) || Object.values(A.kv).some(x => x.t === -1) || [...ids].some(id => !(seen.ids || []).includes(id)) || Object.values(A.lessons).some(l => (l.updated || 0) > (seen.at || 0));
+return { A, seen, big, bigInfo, lost, mine };
 }
 const shaLite = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + s.length.toString(36); };
 async function planSync(remoteT) {
 if (sampleOn()) return remoteT;
 const here = await planHere(); if (!here) return remoteT;
-const { A, seen, big, lost, mine } = here;
+const { A, seen, big, bigInfo, lost, mine } = here;
 if (!mine && remoteT && remoteT === seen.planT) return remoteT;
 const now = Date.now(), B = (await planFileRead()) || { lessons: {}, kv: {}, gone: {} };
 for (const id of lost) A.gone['l:' + id] = now;
 for (const [k, x] of Object.entries(A.kv)) if (x.t === -1) x.t = now; else if (x.t === null) x.t = B.kv && B.kv[k] ? 0 : now;
 for (const id of big) { delete A.gone['l:' + id]; if (B.lessons && B.lessons[id]) A.lessons[id] = B.lessons[id]; }
 const M = mergePlan(A, B);
+const bigs = { ...(B.big && typeof B.big === 'object' ? B.big : {}) };
+for (const id of Object.keys(bigs)) if (M.gone['l:' + id] || (A.lessons[id] && !big.has(id))) delete bigs[id];
+Object.assign(bigs, bigInfo);
+if (Object.keys(bigs).length) M.big = bigs;
+if (JSON.stringify(store.get('gs.planBig', null) || {}) !== JSON.stringify(bigs)) store.set('gs.planBig', bigs);
 await planApply(A, M, big);
 const body = JSON.stringify(M), t = shaLite(body);
-const was = { keys: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, shaLite(JSON.stringify(x.v))])), t: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, x.t])), ids: [...new Set([...Object.keys(M.lessons), ...big])], gone: M.gone, at: now };
+const was = { keys: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, shaLite(JSON.stringify(x.v))])), t: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, x.t])), ids: [...new Set([...Object.keys(M.lessons), ...big])], gone: M.gone, big: bigInfo, at: now };
 store.set('gs.planSeen', { ...was, planT: null });
 if (JSON.stringify(B) !== body) await planFileWrite(body);
 store.set('gs.planSeen', { ...was, planT: t });
@@ -20988,6 +21003,45 @@ if (rx) out.roles = rx;
 if (ry && (!rx || (ry.at || 0) > (rx.at || 0))) { out.roles = ry; toA = true; }
 return { out, toA };
 }
+const keysSorted = o => Object.fromEntries(Object.entries(o).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0));
+function dayMax(x, y) {
+const out = { ...x }, isNum = v => typeof v === 'number' && isFinite(v);
+for (const [k, v] of Object.entries(y || {})) {
+if (isNum(v)) { if (!isNum(out[k]) || v > out[k]) out[k] = v; }
+else if (v && typeof v === 'object' && !Array.isArray(v)) { const o = { ...(out[k] && typeof out[k] === 'object' ? out[k] : {}) }; for (const [j, n] of Object.entries(v)) if (isNum(n) && !(o[j] >= n)) o[j] = n; out[k] = o; }
+else if (!(k in out)) out[k] = v;
+}
+for (const [k, v] of Object.entries(out)) if (v && typeof v === 'object' && !Array.isArray(v)) out[k] = keysSorted(v);
+return keysSorted(out);
+}
+function daysMax(x, y, now = Date.now()) {
+x = x && typeof x === 'object' ? x : {}; y = y && typeof y === 'object' ? y : {};
+const out = {}, obj = v => v && typeof v === 'object' && !Array.isArray(v);
+for (const d of [...new Set([...Object.keys(x), ...Object.keys(y)])].sort()) {
+const b = /^\d{4}-\d\d-\d\d$/.test(d) && obj(y[d]) && now - new Date(d + 'T12:00:00') <= 400 * 864e5 ? y[d] : null;
+if (obj(x[d]) || b) out[d] = dayMax(obj(x[d]) ? x[d] : {}, b || {});
+else if (d in x) out[d] = x[d];
+}
+return out;
+}
+const focusShared = L => { const o = {}; for (const k of ['days', 'add', 'addGone', 'qd']) if (L && L[k] !== undefined) o[k] = L[k]; return o; };
+const idsJoin = (x, y, n) => [...new Set([...(Array.isArray(x) ? x : []), ...(Array.isArray(y) ? y : [])].filter(i => typeof i === 'string'))].slice(-n);
+function focusMerge(x, y) {
+x = x && typeof x === 'object' ? x : {}; y = y && typeof y === 'object' ? y : {};
+const out = { ...x, days: daysMax(x.days, y.days) };
+const gone = idsJoin(x.addGone, y.addGone, 200), by = new Map();
+for (const e of [...(Array.isArray(x.add) ? x.add : []), ...(Array.isArray(y.add) ? y.add : [])]) if (e && e.id && !gone.includes(e.id) && !by.has(e.id)) by.set(e.id, e);
+if (by.size || Array.isArray(x.add)) out.add = [...by.values()];
+if (gone.length) out.addGone = gone;
+if (Array.isArray(x.qd) || Array.isArray(y.qd)) out.qd = idsJoin(x.qd, y.qd, 50);
+return { out, toA: JSON.stringify(out) !== JSON.stringify(x) };
+}
+function planTimeMerge(x, y) {
+x = x && typeof x === 'object' ? x : {}; y = y && typeof y === 'object' ? y : {};
+const out = { ...x, days: daysMax(x.days, y.days), names: { ...(y.names && typeof y.names === 'object' ? y.names : {}), ...(x.names && typeof x.names === 'object' ? x.names : {}) } };
+if (Array.isArray(x.ids) || Array.isArray(y.ids)) out.ids = idsJoin(x.ids, y.ids, 50);
+return { out, toA: JSON.stringify(out) !== JSON.stringify(x) };
+}
 function mergeLs(a, b, skip = () => false) {
 const set = {}, parse = (t, d) => { try { return JSON.parse(t) || d; } catch { return d; } };
 const ga = parse((a || {})['gs.rubricsGone'], {}), gb = parse((b || {})['gs.rubricsGone'], {}), gone = { ...ga };
@@ -21014,6 +21068,9 @@ let x = {}, y = {};
 try { x = JSON.parse(a[k] || '{}'); y = JSON.parse(v); } catch {}
 const add = Object.keys(y).filter(n => !(n in x));
 if (add.length) set[k] = a[k] == null ? v : JSON.stringify({ ...x, ...Object.fromEntries(add.map(n => [n, y[n]])) });
+} else if (k === 'gs.focus') {
+const m = focusMerge(parse((a || {})[k], null), parse(v, null));
+if (m.toA) set[k] = JSON.stringify(m.out);
 } else if (k === 'gs.school') {
 const m = schoolMerge(parse((a || {})[k], null), parse(v, null));
 if (m.toA) set[k] = JSON.stringify(m.out);
@@ -21104,7 +21161,7 @@ let setLibFrom, libNews;
   };
 }
 const browserFull = () => Object.assign(new DOMException('The small store is full', 'QuotaExceededError'), { small: true });
-const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|planSeen|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|wlCodes|refOpen\..*)$/;
+const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|planSeen|planBig|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|wlCodes|refOpen\..*)$/;
 function carryLs() {
   const o = {};
   for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && !LS_LOCAL.test(k)) o[k] = localStorage.getItem(k); }
@@ -30512,6 +30569,7 @@ try { const t = db.transaction(['kv', 'lessons']); [setup, lessons] = await Prom
 db.close();
 }
 if (!(setup && Array.isArray(setup.classes) && setup.classes.length)) setup = store.get('gs.planCopy', null);
+if (PHONE) for (const [id, b] of Object.entries(store.get('gs.planBig', null) || {})) if (b && Array.isArray(b.slots) && !lessons.some(l => l && l.id === id)) lessons = [...lessons, { id, title: b.title, slots: b.slots.filter(x => x && x.classId != null && x.date), slides: [] }];
 const hex = c => /^#[0-9a-f]{6}$/i.test(c) ? c : '#1F6FB2';
 const classes = (setup && Array.isArray(setup.classes) ? setup.classes : []).filter(c => c && c.id != null).map(c => ({ id: String(c.id), name: String(c.name || c.id), color: hex(c.color),
 meets: (Array.isArray(c.meets) ? c.meets : []).map(m => ({ dow: +m.dow, start: String(m.start || ''), end: String(m.end || '') })) }));
@@ -31601,11 +31659,12 @@ and the panel in the bottom left (#fcPanel), over every screen, which folds down
 What is kept:
 lib.me.focus  the teacher's own settings, only those that differ from the usual: { len: minutes, brk: minutes,
 goal: { k: 'papers' | 'min', n }, sound: false, title: false }. It goes wherever lib goes, and My setup carries it.
-gs.focus      this teacher's log, in this browser (it travels with the folder and the take-home file like other gs. keys):
+gs.focus      this teacher's log (it travels with the folder, the take-home file and the sync, merged day by day, src/merge.js focusMerge):
 { day, base: { <download id>: papers done when the day began }, days: { 'YYYY-MM-DD': { p: papers, s: seconds focused,
 sm: seconds focused on papers, pa: { <assignment id>: papers }, g: seconds grading, a: { <assignment id>: seconds } } },
 pace: [[seconds, papers], …] the last sessions that finished a paper, last: the work picked last,
 add: [{ id, d: day, k: 'g' | 'l', s: seconds, x: a few words }] time added by hand (src/tracker.js),
+addGone: [id] the ones taken off since,
 carry: a session goal not reached, by: { <download id>: the day to finish it by } }
 A day also keeps n: the sessions of a minute or more. The goal can be { k, n, per: 'week' } or for some days { days: [1, 3] }.
 A session's own goal (sg on gsp.focusRun) is a few papers, the whole set, the to-do, or a few words she typed.
@@ -31666,6 +31725,7 @@ return { day: typeof L.day === 'string' ? L.day : '', base: L.base && typeof L.b
 pace: Array.isArray(L.pace) ? L.pace.filter(x => Array.isArray(x) && x[0] > 0 && x[1] > 0) : [], last: typeof L.last === 'string' ? L.last : '',
 add: Array.isArray(L.add) ? L.add.filter(x => x && typeof x.d === 'string' && (x.k === 'g' || x.k === 'l') && x.s > 0) : [],
 ...(typeof L.lbHid === 'string' ? { lbHid: L.lbHid } : {}),
+...(Array.isArray(L.addGone) ? { addGone: L.addGone.filter(x => typeof x === 'string').slice(-200) } : {}),
 ...(Array.isArray(L.qd) ? { qd: L.qd.filter(x => typeof x === 'string').slice(-50) } : {}),
 ...(L.carry && typeof L.carry.w === 'string' && L.carry.t > 0 ? { carry: L.carry } : {}),
 ...(L.by && typeof L.by === 'object' ? { by: L.by } : {}) };
@@ -32526,7 +32586,7 @@ if (d.tknow != null) { tkS.off = 0; return tkPageRender(); }
 if (d.tkadd != null) { tkS.adding = true; tkPageRender(); const m = $('#tkMin'); if (m) { m.focus(); m.select(); } return; }
 if (d.tkcancel != null) { tkS.adding = false; return tkPageRender(); }
 if (d.tkkind) { tkS.kind = d.tkkind; $('#vTime').querySelectorAll('[data-tkkind]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.tkkind === tkS.kind))); return; }
-if (d.tkdel) { const L = fcLog(); L.add = L.add.filter(x => x.id !== d.tkdel); fcLogSet(L); fcRender(); return tkPageRender(); }
+if (d.tkdel) { const L = fcLog(); L.add = L.add.filter(x => x.id !== d.tkdel); L.addGone = [...(L.addGone || []), d.tkdel].slice(-200); fcLogSet(L); fcRender(); return tkPageRender(); }
 if (d.tkcsv != null) return tkCsv();
 });
 $('#vTime').addEventListener('submit', e => {
@@ -35243,7 +35303,7 @@ openDlg('<div class="bh"><h2>Use on your phone</h2></div><div class="bb phhow">'
 '<p class="muted">Your classes, scores and to-dos then stay the same on both. You can type scores and look at papers on the phone; marking stays on the computer.</p>' +
 '</div><div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
 }
-window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), gAge: ms => { G.exp -= ms; }, syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)), updAs: st => { upd.on = true; upd.st = st; updRender(); }, syncSay: t => setSyncState(t) });
+window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), gAge: ms => { G.exp -= ms; }, syncNow: () => syncNow(), syncPull: () => syncPull(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)), updAs: st => { upd.on = true; upd.st = st; updRender(); }, syncSay: t => setSyncState(t) });
 
 /* Plans: the lessons from the Planner on her computer, day by day, to read (the Planner itself is where they are written). They come
 through her Google Drive with the rest of her work (drive.js, planSync), into this browser's own copy of the Planner's store. */
@@ -35266,13 +35326,27 @@ async function phLessonRender(box, id) {
 const db = await planDb(false); let l = null;
 if (db) { try { l = await idbP(db.transaction('lessons').objectStore('lessons').get(id)); } catch {} db.close(); }
 if (!$('#phPlans') || routeNow().id !== id) return;
-const back = '<p><a class="btn sm" href="#/plans">‹ Plans</a></p>';
-if (!l) { box.innerHTML = back + '<p class="muted">This lesson isn’t here yet. It comes with the next sync.</p>'; return; }
+const back = '<p><a class="btn sm" href="#/plans">‹ Plans</a></p>', big = (store.get('gs.planBig', null) || {})[id];
+const tooBig = 'too big to send to the phone yet: its pictures and files come to more than 2 MB. Open it in the Planner on your computer.';
+if (!l) { box.innerHTML = back + (big ? '<h2 class="phlt" data-raw>' + esc(big.title || 'Untitled lesson') + '</h2><p class="muted">This lesson is ' + tooBig + '</p>' : '<p class="muted">This lesson isn’t on this phone. If it is still in the Planner on your computer, it comes with the next sync.</p>'); return; }
 const txt = s => esc(String(s || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim()).replace(/\n/g, '<br>');
+const pic = src => typeof src === 'string' && /^(data:image\/|https:\/\/)/.test(src) ? '<img class="phimg" src="' + esc(src) + '" alt="" style="max-width:100%;height:auto;display:block;margin:8px 0">' : '';
+const web = u => typeof u === 'string' && /^https?:\/\//.test(u);
+const out = (u, t) => '<a class="phitem" href="' + esc(u) + '" target="_blank" rel="noopener noreferrer"><span class="phn"><b data-raw>' + esc(t || u) + '</b><small data-raw>' + esc(u.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]) + '</small></span><span class="phc" aria-hidden="true">↗</span></a>';
 const slides = Array.isArray(l.slides) ? l.slides : [];
+const slide = s => {
+const shots = (Array.isArray(s.ctx) ? s.ctx : []).filter(c => c && pic(c.src)), img = s.img && pic(s.img.src), away = (s.img && !img) || (Array.isArray(s.ctx) && s.ctx.length > shots.length);
+return '<li class="tcard"><b data-raw>' + txt(s.title) + '</b>' + (s.body ? '<p data-raw>' + txt(s.body) + '</p>' : '') + (img || '') + shots.map(c => pic(c.src)).join('') +
+(away ? '<small class="muted">A picture, on your computer</small>' : '') +
+(s.video && web(s.video.url) ? '<div class="phlist">' + out(s.video.url, s.video.title || 'Video') + '</div>' : '') +
+(s.notes ? '<p class="phsn" data-raw>' + txt(s.notes) + '</p>' : '') + '</li>';
+};
+const links = [...(web(l.atlas) ? [{ url: l.atlas, name: 'Unit plan page' }] : []), ...(Array.isArray(l.links) ? l.links : []).filter(x => x && web(x.url))];
 box.innerHTML = back + '<h2 class="phlt" data-raw>' + esc(l.title || 'Untitled lesson') + '</h2>' +
+(big && (big.updated || 0) > (l.updated || 0) ? '<p class="muted">The newest version of this lesson is ' + tooBig + ' This is the last copy that fit.</p>' : '') +
 (l.note ? '<p class="phln" data-raw>' + txt(l.note) + '</p>' : '') +
-(slides.length ? '<ol class="phslides">' + slides.map(s => '<li class="tcard"><b data-raw>' + txt(s.title) + '</b>' + (s.body ? '<p data-raw>' + txt(s.body) + '</p>' : '') + (s.img || (s.ctx && s.ctx.length) ? '<small class="muted">A picture, on your computer</small>' : '') + (s.notes ? '<p class="phsn" data-raw>' + txt(s.notes) + '</p>' : '') + '</li>').join('') + '</ol>' : '<p class="muted">No slides yet.</p>');
+(links.length ? '<div class="tcard phlist">' + links.map(x => out(x.url, x.name)).join('') + '</div>' : '') +
+(slides.length ? '<ol class="phslides">' + slides.map(slide).join('') + '</ol>' : '<p class="muted">No slides yet.</p>');
 }
 
 /* More: what isn't the day's work, in one place. Google and syncing, updates (the computer has these in its sidebar), help and settings. */

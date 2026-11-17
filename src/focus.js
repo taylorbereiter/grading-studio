@@ -7,11 +7,12 @@
    What is kept:
      lib.me.focus  the teacher's own settings, only those that differ from the usual: { len: minutes, brk: minutes,
                    goal: { k: 'papers' | 'min', n }, sound: false, title: false }. It goes wherever lib goes, and My setup carries it.
-     gs.focus      this teacher's log, in this browser (it travels with the folder and the take-home file like other gs. keys):
+     gs.focus      this teacher's log (it travels with the folder, the take-home file and the sync, merged day by day, src/merge.js focusMerge):
                    { day, base: { <download id>: papers done when the day began }, days: { 'YYYY-MM-DD': { p: papers, s: seconds focused,
                      sm: seconds focused on papers, pa: { <assignment id>: papers }, g: seconds grading, a: { <assignment id>: seconds } } },
                      pace: [[seconds, papers], …] the last sessions that finished a paper, last: the work picked last,
                      add: [{ id, d: day, k: 'g' | 'l', s: seconds, x: a few words }] time added by hand (src/tracker.js),
+                     addGone: [id] the ones taken off since,
                      carry: a session goal not reached, by: { <download id>: the day to finish it by } }
                    A day also keeps n: the sessions of a minute or more. The goal can be { k, n, per: 'week' } or for some days { days: [1, 3] }.
                    A session's own goal (sg on gsp.focusRun) is a few papers, the whole set, the to-do, or a few words she typed.
@@ -74,6 +75,7 @@ function fcLog() {
     pace: Array.isArray(L.pace) ? L.pace.filter(x => Array.isArray(x) && x[0] > 0 && x[1] > 0) : [], last: typeof L.last === 'string' ? L.last : '',
     add: Array.isArray(L.add) ? L.add.filter(x => x && typeof x.d === 'string' && (x.k === 'g' || x.k === 'l') && x.s > 0) : [],
     ...(typeof L.lbHid === 'string' ? { lbHid: L.lbHid } : {}),
+    ...(Array.isArray(L.addGone) ? { addGone: L.addGone.filter(x => typeof x === 'string').slice(-200) } : {}),   // time added by hand and taken off, so another device's copy doesn't bring it back (src/merge.js)
     ...(Array.isArray(L.qd) ? { qd: L.qd.filter(x => typeof x === 'string').slice(-50) } : {}),   // sessions from the Planner written in already (fcDrain)   // the week whose look-back was put away (src/gradeplan.js)
     // carry: a session goal not reached, for the next session on the same work: { w, t: when, k: 'papers' | 'set' | 'td' | 'note', n, x }
     ...(L.carry && typeof L.carry.w === 'string' && L.carry.t > 0 ? { carry: L.carry } : {}),
