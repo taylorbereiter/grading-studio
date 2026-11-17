@@ -30931,8 +30931,8 @@ const t = todayRows(plan, tdAt(day).getTime()), live = i ? null : nowRow(t.rows)
 for (const r of t.rows) {
 if (r.lessons.length || (!i && (!live || t.rows.indexOf(r) < t.rows.indexOf(live)))) continue;
 const when = i === 0 ? 'today’s' : i === 1 ? 'tomorrow’s' : tdAt(day).toLocaleDateString(LANG_LOCALE, { weekday: 'long' }) + '’s';
-const row = add('plan', 'plan:' + r.c.id + ':' + day + ':' + r.m.start, 'Plan ' + when + ' ' + r.c.name + ' lesson', [planTime(r.m.start), 'nothing planned yet'].filter(Boolean).join(' · '), tdGradeClass(r.c), day, { label: 'Plan it', href: planUrl('#week') }, 'x', r.c.color);
-if (row) row.pid = r.c.id;
+const row = add('plan', 'plan:' + r.c.id + ':' + day + ':' + r.m.start, 'Plan ' + when + ' ' + r.c.name + ' lesson', [planTime(r.m.start), 'nothing planned yet'].filter(Boolean).join(' · '), tdGradeClass(r.c), day, { label: 'Plan it', href: planUrl('#plan/' + encodeURIComponent(r.c.id) + '/' + day) }, 'x', r.c.color);
+if (row) { row.pid = r.c.id; row.day = day; }
 }
 }
 if (!d.off.miss) for (const c of lib.classes) {
@@ -31053,6 +31053,7 @@ const ck = tdCatOf(r), catF = '<div class="tdf"><label class="tdl" for="tdCat">C
 if (r.auto) return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<h2 class="tdtitle" data-raw>' + esc(r.x) + '</h2><p class="tdm"><span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '') + '</p>' + when + catF +
 '<p class="muted tdsay">The app noticed this from your saved work. It goes by itself when the work is done.</p><div class="tdacts">' + (r.btn.open ? '<button class="btn primary" data-tdopen="' + esc(r.btn.open) + '">' + r.btn.label + '</button>' : '<a class="btn primary" href="' + esc(r.btn.href) + '">' + r.btn.label + '</a>') +
 (r.kind === 'mark' ? '<button class="btn" data-tdfocus="' + esc('mark:' + r.key.slice(5)) + '" title="Start a focus session on these papers">Focus on this</button>' : '') +
+(r.kind === 'plan' && r.day ? '<button class="btn" data-tdfocus="' + esc('les:+' + r.pid + '|' + r.day) + '" title="Plan this lesson in a focus session">Focus on this</button>' : '') +
 '<span class="sp"></span><button class="btn" data-tdhide>Hide this</button></div></div>';
 const it = r.it, c = r.c, pc = tdPlanClass(c);
 const cls = '<div class="tdf"><label class="tdl" for="tdCls">Class</label><div class="tdv"><select id="tdCls" class="btn sm"><option value="">No class</option>' + lib.classes.map(k => '<option value="' + esc(k.id) + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></div></div>';
@@ -31725,7 +31726,7 @@ const fcBoot = Date.now();
 const fcIdle = r => (r.idl || 0) + (r.ii ? Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.ii) / 1000)) : 0);
 const fcBusy = r => Math.max(0, fcElapsed(r) - fcIdle(r));
 function fcIdleSee(r) {
-if (!/^mark:/.test(r.w || '')) return false;
+if (!/^(mark|les):/.test(r.w || '')) return false;
 const a = Math.max(fcBoot, r.at, r.seen || 0, tkReady ? tkLast : 0), lim = fcConf().idle * 60e3;
 if (tkReady && tkLast - (r.seen || 0) > 30e3 && !r.ii) { r.seen = tkLast; return true; }
 if (r.ii && a > r.ii) { r.idl = (r.idl || 0) + Math.round((a - r.ii) / 1000); delete r.ii; return true; }
@@ -31778,6 +31779,8 @@ if (k === 'mark') { const m = keptMeta.get(id); if (!m) return null; const st = 
 if (k === 'td') { const it = tdItem(id); return it ? { key, id, name: it.x, cls: it.c && classById(it.c) ? classById(it.c).name : '', done: !!it.done } : null; }
 if (k === 'les') {
 const w = fcLessons().find(x => x.key === key); if (w) return w;
+const m = /^\+(.+)\|(\d{4}-\d\d-\d\d)$/.exec(id), c = m && plan && plan.classes.find(x => String(x.id) === m[1]);
+if (c) return { key, id: '', les: true, fresh: true, nw: { c: c.id, d: m[2] }, name: c.name, cls: '' };
 const r = fcRun(); return r && r.k === 'l' && r.w === key ? { key, id: r.l || '', les: true, name: r.t || 'Lesson', cls: '' } : null;
 }
 return null;
@@ -31920,7 +31923,7 @@ store.set('gsp.planTime', { days, names, ...(r.id ? { ids: [...ids, r.id] } : {}
 }
 function fcLesSecs(r) {
 const last = Math.max(r.at, r.seen || 0), cap = r.st === 'paused' ? Infinity : Math.round((last + FC_LES_IDLE - r.at) / 1000);
-return Math.max(0, Math.min(r.len, fcElapsed(r), cap));
+return Math.max(0, Math.min(r.len, fcElapsed(r) - fcIdle(r), cap));
 }
 const FC_LES_IDLE = 20 * 60e3;
 function fcGoTo(next) {
@@ -32258,7 +32261,7 @@ const r = fcRun();
 if (r && (r.st === 'run' || r.st === 'paused' || r.st === 'brk')) { if (!r.fold) { r.fold = true; fcRunSet(r); } }
 else if (!r && fcS.open) { fcS.open = false; fcRender(); }
 });
-function focusOn(key) { fcStart(fcConf().len, key, false); }
+function focusOn(key) { const c = fcConf(); fcStart(/^les:/.test(key || '') ? c.llen : c.len, key, false); }
 
 /* ---------- Settings, Focus and goals ---------- */
 function fcSetRender(sec) {

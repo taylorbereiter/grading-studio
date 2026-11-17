@@ -70,7 +70,7 @@ function ptLessonSecs(id) {
   let s = ptPend.a[id] || 0;
   for (const d of Object.values(ptPlan().days || {})) if (d && d.a && d.a[id]) s += d.a[id];
   const r = pfReady ? pfRun() : null;   // src/planner/plfocus.js, which runs after this file
-  if (r && r.k === 'l' && r.l === id && (r.st === 'run' || r.st === 'paused')) s += Math.min(r.len, pfElapsed(r));
+  if (r && r.k === 'l' && r.l === id && (r.st === 'run' || r.st === 'paused')) s += pfLesSecs(r);
   return s;
 }
 function ptSay(secs) { const m = Math.round(secs / 60), h = Math.floor(m / 60); return h ? h + ' hr' + (m % 60 ? ' ' + (m % 60) + ' min' : '') : m + ' min'; }

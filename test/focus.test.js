@@ -314,3 +314,16 @@ test('a session started in a window not updated yet is counted by papers saved, 
   assert.deepEqual(await page.evaluate(() => { const r = window.__gs.fcRun(); return [r.st, r.p0, r.pg]; }), ['run', 1e9, 0]);
   await close();
 });
+
+test('a lesson session: a stretch with nothing done is not counted as planning', async () => {
+  const { page, close } = await openApp(browser, { seed: gradingSeed() });
+  // began 40 minutes ago; nothing done for the last 30, then she is back
+  await page.evaluate(() => { const now = Date.now(); window.__gs.fcRunSet({ k: 'l', id: 'r1', st: 'run', len: 2700, at: now - 40 * 60e3, seen: now - 35 * 60e3, ii: now - 30 * 60e3, w: 'les:x1', l: 'x1', t: 'Made-up lesson', one: 0, fold: false, no: 1 }); window.__gs.fcTick(); });
+  const r = await page.evaluate(() => window.__gs.fcRun());
+  assert.equal(r.ii, undefined, 'the stretch ends'); assert.ok(r.idl >= 29 * 60 && r.idl <= 30 * 60 + 5);
+  await page.click('#fcPanel [data-fcstop]');
+  const secs = await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.planTime')).days[window.__gs.fcToday()].a.x1);
+  assert.ok(secs >= 595 && secs <= 660, 'about ten minutes, not the 25 the old rule gave: ' + secs);
+  assert.deepEqual(page.errors, []);
+  await close();
+});

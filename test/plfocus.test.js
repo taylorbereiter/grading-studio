@@ -133,3 +133,32 @@ test('a lesson session: picked on the grading page, 45 minutes, the lesson made 
     assert.deepEqual(errors, []);
   } finally { await ctx.close(); }
 });
+
+test('a lesson session in the Planner: a stretch with nothing done for the idle minutes is not counted, and the end says what the lesson has had', async () => {
+  const ctx = await browser.createBrowserContext(), page = await ctx.newPage(), errors = [];
+  page.on('pageerror', e => errors.push(String(e)));
+  try {
+    await page.goto(srv.url + 'planner.html', { waitUntil: 'load' }); await plannerReady(page);
+    // an hour of planning on this lesson yesterday, and a session that began 40 minutes ago with the last thing done 35 minutes ago
+    const yest = iso(new Date(Date.now() - 864e5));
+    await page.evaluate(y => {
+      localStorage.setItem('gsp.planTime', JSON.stringify({ days: { [y]: { l: 3600, a: { x1: 3600 }, f: 3600, n: 1 } }, names: { x1: 'Made-up lesson' } }));
+      const now = Date.now();
+      localStorage.setItem('gsp.focusRun', JSON.stringify({ k: 'l', id: 'r1', st: 'run', len: 2700, at: now - 40 * 60e3, seen: now - 35 * 60e3, w: 'les:x1', l: 'x1', t: 'Made-up lesson', one: 0, fold: false, no: 1 }));
+      window.__plfocus.tick();
+    }, yest);
+    let r = await run(page);
+    assert.ok(Math.abs(r.ii - (r.seen + 5 * 60e3)) < 1000, 'the idle stretch began five minutes after the last thing done');
+    // she comes back and clicks: the stretch ends, and none of it counts
+    await page.evaluate(() => document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })));
+    r = await run(page);
+    assert.equal(r.ii, undefined); assert.ok(r.idl >= 30 * 60 - 5 && r.idl <= 30 * 60 + 5, 'thirty minutes away');
+    await page.click('#fcPanel [data-pf="stop"]');
+    r = await run(page);
+    assert.ok(r.secs >= 595 && r.secs <= 610, 'ten minutes, not the 25 the old rule gave');
+    const P = await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.planTime')));
+    assert.equal(P.days[iso(new Date())].a.x1, r.secs);
+    assert.match(await page.$eval('#fcPanel', e => e.textContent), /Done for now\s*This lesson so far\s*1 hr 10 min/);
+    assert.deepEqual(errors, []);
+  } finally { await ctx.close(); }
+});

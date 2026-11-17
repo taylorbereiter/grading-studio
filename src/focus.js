@@ -159,7 +159,7 @@ const fcBoot = Date.now();
 const fcIdle = r => (r.idl || 0) + (r.ii ? Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.ii) / 1000)) : 0);
 const fcBusy = r => Math.max(0, fcElapsed(r) - fcIdle(r));
 function fcIdleSee(r) {
-  if (!/^mark:/.test(r.w || '')) return false;
+  if (!/^(mark|les):/.test(r.w || '')) return false;   // a lesson is planned at the screen too (fcLesSecs)
   // r.seen: the last time she did something, written every half minute, so another tab of the app doesn't take her for away
   const a = Math.max(fcBoot, r.at, r.seen || 0, tkReady ? tkLast : 0), lim = fcConf().idle * 60e3;
   if (tkReady && tkLast - (r.seen || 0) > 30e3 && !r.ii) { r.seen = tkLast; return true; }
@@ -224,6 +224,9 @@ function fcWork(key) {
   if (k === 'td') { const it = tdItem(id); return it ? { key, id, name: it.x, cls: it.c && classById(it.c) ? classById(it.c).name : '', done: !!it.done } : null; }
   if (k === 'les') {
     const w = fcLessons().find(x => x.key === key); if (w) return w;
+    // a meeting with nothing planned that the week's list left out (it keeps twelve): To do's plan lines can be further down
+    const m = /^\+(.+)\|(\d{4}-\d\d-\d\d)$/.exec(id), c = m && plan && plan.classes.find(x => String(x.id) === m[1]);
+    if (c) return { key, id: '', les: true, fresh: true, nw: { c: c.id, d: m[2] }, name: c.name, cls: '' };
     // a lesson session going on that isn't in the week's list (the timetable not read yet, or the lesson was just made)
     const r = fcRun(); return r && r.k === 'l' && r.w === key ? { key, id: r.l || '', les: true, name: r.t || 'Lesson', cls: '' } : null;
   }
@@ -380,11 +383,11 @@ function fcPlanAdd(r, secs) {
   for (const n of Object.keys(names)) if (!used.has(n)) delete names[n];
   store.set('gsp.planTime', { days, names, ...(r.id ? { ids: [...ids, r.id] } : {}) });
 }
-// A lesson session's seconds: what ran, without pauses, and no more than 20 minutes past the last thing she did in the app, so a laptop
-// closed for class, or the session forgotten, isn't planning.
+// A lesson session's seconds: what ran, without pauses or stretches with nothing done (fcIdleSee), and no more than 20 minutes past the
+// last thing she did in the app, so a laptop closed for class, or the session forgotten, isn't planning.
 function fcLesSecs(r) {
   const last = Math.max(r.at, r.seen || 0), cap = r.st === 'paused' ? Infinity : Math.round((last + FC_LES_IDLE - r.at) / 1000);
-  return Math.max(0, Math.min(r.len, fcElapsed(r), cap));
+  return Math.max(0, Math.min(r.len, fcElapsed(r) - fcIdle(r), cap));
 }
 const FC_LES_IDLE = 20 * 60e3;
 // Into the work: a set of papers opens at the next paper with nothing finished; one already on screen is left where it is.
@@ -754,7 +757,8 @@ document.addEventListener('keydown', e => {
   else if (!r && fcS.open) { fcS.open = false; fcRender(); }
 });
 // A to-do's own Focus button (src/todo.js) starts a session on it.
-function focusOn(key) { fcStart(fcConf().len, key, false); }
+// A lesson's gets a lesson's length.
+function focusOn(key) { const c = fcConf(); fcStart(/^les:/.test(key || '') ? c.llen : c.len, key, false); }
 
 /* ---------- Settings, Focus and goals ---------- */
 function fcSetRender(sec) {
