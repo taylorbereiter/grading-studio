@@ -15,8 +15,22 @@ const TN_K = { h: ['Heading', 'H'], p: ['Strength', '✓'], n: ['Next step', '�
 const TN_TAG = [[1, 'B'], [2, 'I'], [4, 'U'], [8, 'MARK']];
 let tnL = [], tnSt = null, tnLast = null, tnIv = 0, tnRng = null, tnRO = null, tnQuiet = false;
 // Started: words in a paragraph that isn't a heading (headings alone are only the shape of the notes).
+const tnWho = k => { const i = batch ? batch.students.findIndex(s => s.key === k) : -1; return i < 0 ? '' : shownName(batch.students[i], i); };
 function tnHasG(g) { return !!(g && g.tn && Array.isArray(g.tn.l) && g.tn.l.some(x => x && x.k !== 'h' && x.y !== 'h2' && String(x.s || '').trim())); }
-function tnHas(st) { return !!st && tnHasG(st.grade); }
+function tnHas(st) { return !!st && tnHasG({ tn: { l: tnMine(st, (st.grade.tn && st.grade.tn.l) || []) } }); }
+// Partners on "own scores" share their notes; a paragraph written with Write for: Just <name> carries o: their key and only they see it.
+const tnHidden = (x, st) => !!(x && x.o && x.o !== st.key && batch && batch.students.some(s => s.key === x.o));
+const tnMine = (st, L) => (Array.isArray(L) ? L.filter(x => !tnHidden(x, st)) : []);
+// The key a new paragraph is written for: the partner on screen while Just them is picked above the paper, else nobody (shared).
+const tnOwnNew = st => (st && typeof groupJust !== 'undefined' && groupJust === st.key && groupOwn(groupOf(st)) ? st.key : null);
+// The notes to keep for st: what she sees, with the other partners' own paragraphs put back where they were.
+function tnWithHidden(st, L) {
+  const old = tnStored(st) || [], keep = []; let vis = 0;
+  for (const x of old) { if (tnHidden(x, st)) keep.push([vis, x]); else vis++; }
+  const out = L.slice();
+  for (let j = keep.length - 1; j >= 0; j--) out.splice(Math.min(keep[j][0], out.length), 0, tnClean(keep[j][1]));
+  return out;
+}
 const tnStored = st => (st.grade.tn && Array.isArray(st.grade.tn.l) && st.grade.tn.l.length ? st.grade.tn.l : null);
 const tnTimesOn = () => store.get('gs.tnTime', true) !== false;
 // Whether the notes go back to the student as a page of the returned paper: the assignment's choice (setup.tnBack), on unless she turns it off.
@@ -36,6 +50,7 @@ function tnClean(x) {
   const o = { s: String(x.s || '').replace(/[\r\n\t ]/g, ' ') };
   if (TN_K[x.k]) o.k = x.k;
   if (/^(h2|ul|ol)$/.test(x.y) && o.k !== 'h') o.y = x.y;
+  if (typeof x.o === 'string' && x.o) o.o = x.o;
   if (o.y === 'h2' && o.k) delete o.k;
   if (tnListOf(o) && +x.d === 2) o.d = 2;
   if (typeof x.t === 'number' && isFinite(x.t) && x.t >= 0) { o.t = Math.floor(x.t); if (x.h && +x.h) o.h = 1; }
@@ -44,7 +59,7 @@ function tnClean(x) {
 }
 // What she sees for a student: their notes, or the headings for everyone with a paragraph under each, or one empty paragraph.
 function tnView(st) {
-  const s = tnStored(st); if (s) return s.map(tnClean);
+  const s = tnStored(st) && tnMine(st, tnStored(st)); if (s && s.length) return s.map(tnClean);
   const h = tnHead(); return h.length ? h.flatMap(s => [{ s, k: 'h' }, { s: '' }]) : [{ s: '' }];
 }
 const tnHasVid = st => st.files.some(f => f.kind === 'media' || f.kind === 'link');
@@ -67,7 +82,7 @@ function tnSnap(st, join) {
 }
 function tnPut(st, join) {
   tnSnap(st, join);
-  const was = tnHas(st), L = tnL.map(tnClean);
+  const was = tnHas(st), L = tnWithHidden(st, tnL.map(tnClean));
   if (L.some(x => x.s.trim())) st.grade.tn = { l: L }; else delete st.grade.tn;
   touchGrade(st); saveSoon();
   if (was !== tnHas(st)) renderList();
@@ -86,7 +101,8 @@ const tnHost = () => $('#spBody > .sptool[data-tool="typed"]');
 const tnEd = () => document.querySelector('#spBody .tned');
 function tnEl(x) {
   const el = document.createElement('div'); el.className = 'tnp'; el.tnWas = x.s;
-  for (const k of ['k', 'y', 'd', 't', 'h']) if (x[k] != null) el.dataset[k] = x[k];
+  for (const k of ['k', 'y', 'd', 't', 'h', 'o']) if (x[k] != null) el.dataset[k] = x[k];
+  if (x.o) el.title = 'Just for ' + tnWho(x.o);
   if (tnHeadOf(x)) { el.setAttribute('role', 'heading'); el.setAttribute('aria-level', x.k === 'h' ? '3' : '4'); }
   const a = tnBits(x);
   for (let i = 0; i < x.s.length;) {
@@ -121,7 +137,7 @@ function tnRead(el) {
     }
   })(el, 0);
   const d = el.dataset || {};
-  return tnClean({ s: s.join(''), k: d.k, y: d.y, d: d.d, t: d.t != null && d.t !== '' ? +d.t : null, h: d.h, f: tnRuns(a) });
+  return tnClean({ s: s.join(''), k: d.k, y: d.y, d: d.d, t: d.t != null && d.t !== '' ? +d.t : null, h: d.h, o: d.o, f: tnRuns(a) });
 }
 // Anything the browser left outside a paragraph (after everything was deleted, say) goes into one.
 function tnFix(ed) {
@@ -316,8 +332,8 @@ function tnEnter() {
   const i = p.a[0], o = p.a[1], x = tnL[i], list = tnListOf(x) ? { y: x.y, ...(x.d ? { d: x.d } : {}) } : {};
   let at = i + 1;
   if (tnListOf(x) && !x.s) { if (x.d) delete x.d; else delete x.y; at = i; }   // Enter on an empty item: up a level, then out of the list
-  else if (!o && x.s) tnL.splice(i, 0, { s: '', ...list });
-  else { const a = tnBits(x); tnL.splice(i + 1, 0, { s: x.s.slice(o), f: tnRuns(a.slice(o)), ...list }); x.s = x.s.slice(0, o); x.f = tnRuns(a.slice(0, o)); }
+  else if (!o && x.s) tnL.splice(i, 0, { s: '', ...list, ...(x.o ? { o: x.o } : {}) });
+  else { const a = tnBits(x), who = (o < x.s.length && x.o) || tnOwnNew(st); tnL.splice(i + 1, 0, { s: x.s.slice(o), f: tnRuns(a.slice(o)), ...list, ...(who ? { o: who } : {}) }); x.s = x.s.slice(0, o); x.f = tnRuns(a.slice(0, o)); }
   tnL = tnL.map(tnClean); tnPaint(); tnSetPos({ a: [at, 0], z: [at, 0] }); tnPut(st, false);
 }
 // Pasted or dropped blocks, at the caret: the first joins the paragraph there, the last takes what was after the caret.
@@ -330,6 +346,7 @@ function tnInsert(P) {
   const join = (u, v) => ({ s: u.s + v.s, f: tnRuns([...tnBits(u), ...tnBits(v)]) }), kind = b => ({ k: b.k, y: b.y, d: b.d, t: b.t, h: b.h });
   const last = P[P.length - 1], out = P.length === 1 ? [{ ...kind(x.s ? x : P[0]), ...join(join(head, P[0]), tail) }]
     : [{ ...kind(head.s ? x : P[0]), ...join(head, P[0]) }, ...P.slice(1, -1), { ...kind(last), ...join(last, tail) }];
+  const who = x.o || tnOwnNew(st); for (const b of out) if (who) b.o = who;   // pasted into one partner's paragraph, or on Just them: theirs
   tnL.splice(i, 1, ...out.map(tnClean));
   const c = P.length === 1 ? [i, o + P[0].s.length] : [i + P.length - 1, last.s.length];
   tnPaint(); tnSetPos({ a: c, z: c.slice() }); tnPut(st, false);
@@ -406,6 +423,8 @@ function tnSync(type) {
       x.y = /^1/.test(m[0]) ? 'ol' : 'ul'; x.f = tnRuns(tnBits(x).slice(m[0].length)); x.s = x.s.slice(m[0].length);
       tnL = L.map(tnClean); tnPaint(); tnSetPos({ a: [i, 0], z: [i, 0] }); return tnPut(st, false);
     }
+    // a paragraph started now is for whoever Write for points at: Just the partner on screen, or everyone
+    if (/^insert/.test(type) && el && !el.tnWas && x.s && !tnHeadOf(x)) { const o = tnOwnNew(st); if (o) { x.o = o; el.dataset.o = o; el.title = 'Just for ' + tnWho(o); } else if (x.o) { delete x.o; delete el.dataset.o; el.removeAttribute('title'); } }
     if (/^insert/.test(type) && el && !el.tnWas && x.s && x.t == null && !tnHeadOf(x) && tnTimesOn()) { const t = tnNow(st); if (t != null) { const hid = tnAllHid(); x.t = Math.floor(t); el.dataset.t = x.t; if (hid) { x.h = 1; el.dataset.h = 1; } } }
   }
   [...ed.children].forEach((el, j) => { el.tnWas = L[j].s; });
@@ -482,7 +501,7 @@ $('#paper').addEventListener('click', async e => {
   if (m === 'clear') {
     if (!await askDlg('Clear the typed notes for this student?\n\nUndo brings them back.', { ok: 'Clear', danger: true, lg: 1 })) return;
     if (batch.students[cur] !== st) return;
-    tnSnap(st); delete st.grade.tn; touchGrade(st); saveSoon(); renderList(); tnLoad(tnHost(), st);
+    tnSnap(st); const left = (tnStored(st) || []).filter(x => tnHidden(x, st)); if (left.length) st.grade.tn = { l: left }; else delete st.grade.tn; touchGrade(st); saveSoon(); renderList(); tnLoad(tnHost(), st);
   }
 });
 // A notes page on a student's paper: one quiet link on its bar opens the pane on Type notes. Nothing else changes; the page stays.
@@ -520,7 +539,7 @@ function tnWrapRuns(ctx, x, face, w) {
 function tnBlocks(ctx, st, W, M) {
   // everything on the page is drawn to the body size: Standard 12 pt, and the headings, indents, spacing and marks with it
   const z = TN_SIZE[tnSizeOf()][0] / 12, zz = n => Math.round(n * z * 10) / 10;
-  const UI = 'Inter, ' + FONT, cw = W - 2 * M, L = (st.grade.tn.l || []).map(tnClean), out = [];
+  const UI = 'Inter, ' + FONT, cw = W - 2 * M, L = tnMine(st, st.grade.tn.l || []).map(tnClean), out = [];
   const words = { p: tr('Strength'), n: tr('Next step'), q: tr('Question') };
   ctx.font = '600 ' + zz(11) + 'px ' + UI;
   const kinds = L.filter(x => words[x.k] && x.s.trim()), labW = kinds.length ? Math.min(Math.round(cw * 0.3), Math.max(...kinds.map(x => ctx.measureText(TN_K[x.k][1] + ' ' + words[x.k]).width)) + 14) : 0;

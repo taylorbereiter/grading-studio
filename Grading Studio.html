@@ -309,7 +309,7 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .outsw i{flex:none;width:30px;height:17px;border-radius:var(--corner-pill);background:var(--line-strong);position:relative;margin-top:1px;transition:background .15s}
 .outsw i::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:var(--corner-round);background:var(--surface);transition:left .15s}
 .outsw[aria-checked=true] i{background:var(--accent)}.outsw[aria-checked=true] i::after{left:15px}
-.grpband{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border:1px solid #B9D3EC;border-radius:9px;background:var(--accent-soft);font-size:13.5px;color:var(--fg-2)}.grpband b{color:var(--fg);font-weight:600}.grpband .link{font-size:var(--text-control)}.grpmode{font:inherit;font-size:var(--text-control);color:var(--accent);background:transparent;border:1px solid transparent;border-radius:var(--r-sm);padding:2px 4px;cursor:pointer}.grpmode:hover,.grpmode:focus-visible{border-color:var(--accent);background:var(--surface)}
+.grpband{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border:1px solid #B9D3EC;border-radius:9px;background:var(--accent-soft);font-size:13.5px;color:var(--fg-2)}.grpband b{color:var(--fg);font-weight:600}.grpband .link{font-size:var(--text-control)}.grpmode{font:inherit;font-size:var(--text-control);color:var(--accent);background:transparent;border:1px solid transparent;border-radius:var(--r-sm);padding:2px 4px;cursor:pointer}.grpmode:hover,.grpmode:focus-visible{border-color:var(--accent);background:var(--surface)}.grpnote{margin:0 0 10px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--corner-3);background:var(--bg);font-size:var(--text-control);color:var(--fg-2)}.grpnote.just{border-color:var(--accent);background:var(--accent-soft);color:var(--fg)}.grpnote ul{margin:6px 0 0;padding:0;list-style:none}.grpnote li{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;padding:2px 0}.grpnote li>span:first-child{color:var(--fg);font-weight:600}.grpnote .link{font-size:var(--text-control)}
 .outsw b{font-weight:600;font-size:13.5px;display:block}.outsw small{font-size:var(--text-small);color:var(--muted);display:block;line-height:1.4;margin-top:1px}
 .prog-s kbd,.hint kbd{font:500 10.5px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:0 4px;background:var(--surface);color:var(--muted)}
 .stu .dot{width:8px;height:8px;border-radius:var(--corner-round);background:var(--accent);display:inline-block}
@@ -2539,6 +2539,7 @@ html.vidsized #paper .spb .media{max-width:none}
 .tnpage{position:relative;margin:10px 0 18px;padding:28px 26px 40px 26px;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-2);box-shadow:var(--shadow)}
 .tned{outline:0;min-height:12em;white-space:pre-wrap;overflow-wrap:anywhere;font-family:Inter,var(--f-body);font-size:var(--text-body);line-height:1.55;color:var(--fg);counter-reset:tn1 tn2}
 .tnp{margin:0 0 6px}
+.tnp[data-o]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent);padding-left:9px}
 .tnp[data-k=h]{font-size:var(--text-heading);font-weight:650;line-height:1.3;margin:16px 0 6px}
 .tnp[data-y=h2]{font-size:var(--text-lead);font-weight:650;line-height:1.35;margin:12px 0 4px}
 .tnp:first-child{margin-top:0}
@@ -4045,7 +4046,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
   <section class="view" id="vSchool" hidden>
     <header class="vhead"><h1>School resources</h1><span class="muted">Links, files and notes about your school, kept with your work on this computer.</span></header>
     <div class="schbar">
-      <button class="btn primary" data-schadd="link">Add a link</button><button class="btn" data-schadd="file">Add files…</button><button class="btn" data-schadd="note">Add a note</button>
+      <button class="btn primary" data-schadd="link">Add a link</button><button class="btn" data-schadd="file">Add files…</button><button class="btn gpOnly" data-schadd="drive" hidden>From Google Drive…</button><button class="btn" data-schadd="note">Add a note</button>
       <span class="sp"></span>
       <div class="hlpfind" id="schFind" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg><input type="search" id="schQ" autocomplete="off" spellcheck="false" placeholder="Search your school resources" aria-label="Search your school resources"></div>
     </div>
@@ -5188,7 +5189,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.66";
+  const APP_VERSION = "1.28.68";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -6373,6 +6374,105 @@ rows[(i + (e.key === 'ArrowDown' ? 1 : -1) + n) % n].focus();
 window.addEventListener('storage', e => { if (!e.key || e.key === 'gs.words') { try { besidePaint(); } catch { } } });
 window.__gsBeside = { who: besideWho, place: besidePlace, open: besideOpen, paint: besidePaint, clean: aiUrlClean, list: besideList, use: besideUse };
 
+/* ---------------- Google Drive's own chooser, for both pages ----------------
+Built into Grading Studio and into the Planner. Each page says how it signs in (gpHost(), its own): Grading Studio through its
+Google line (src/app/drive.js), the Planner through src/planner/pldrive.js. The app gets only the files picked in Google's chooser
+(drive.file), never a look at the rest of the Drive.
+Any place that takes files from the computer through a file input can take them from Drive too: gpOn(input) fills the input with
+the picked files and tells it they changed, so what happens next is what happens with a file from the computer. A button with
+data-gdrive="<selector of the input>" does that by itself; gpBtn() draws one, only where Google is set up. */
+const GP_FOLDER = 'application/vnd.google-apps.folder';
+const GP_W = 'application/vnd.openxmlformats-officedocument.', GP_GA = 'application/vnd.google-apps.';
+const GP_EXT = { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', heic: 'image/heic', heif: 'image/heif', svg: 'image/svg+xml',
+docx: GP_W + 'wordprocessingml.document', dotx: GP_W + 'wordprocessingml.template', docm: 'application/vnd.ms-word.document.macroEnabled.12', dotm: 'application/vnd.ms-word.template.macroEnabled.12',
+pptx: GP_W + 'presentationml.presentation', potx: GP_W + 'presentationml.template', xlsx: GP_W + 'spreadsheetml.sheet', csv: 'text/csv', tsv: 'text/tab-separated-values', txt: 'text/plain', md: 'text/markdown', json: 'application/json', zip: 'application/zip' };
+const GP_IMG = ['png', 'jpg', 'gif', 'webp', 'heic', 'heif', 'svg'].map(x => GP_EXT[x]);
+const gpWays = office => ({ document: office ? ['docx', 'pdf'] : ['pdf', 'docx'], presentation: office ? ['pptx', 'pdf'] : ['pdf', 'pptx'], spreadsheet: office ? ['xlsx', 'csv', 'pdf'] : ['pdf', 'xlsx', 'csv'], drawing: ['png', 'pdf'] });
+function gpKinds(accept, office) {
+let mimes = [];
+for (const t of String(accept || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean)) {
+if (t === 'image/*') mimes.push(...GP_IMG);
+else if (t[0] === '.' && GP_EXT[t.slice(1)]) mimes.push(GP_EXT[t.slice(1)]);
+else if (t[0] !== '.' && !t.endsWith('/*')) mimes.push(t);
+else { mimes = null; break; }
+}
+if (mimes && !mimes.length) mimes = null;
+if (mimes && mimes.includes('application/zip')) mimes.push('application/x-zip-compressed');
+const ok = m => !mimes || mimes.includes(m), want = {};
+for (const [k, ways] of Object.entries(gpWays(office))) { const w = ways.find(x => ok(GP_EXT[x])); if (w) want[k] = w; }
+return { mimes: mimes && [...new Set(mimes.concat(Object.keys(want).map(k => GP_GA + k)))], want };
+}
+let gpP = null;
+function gpLoadPicker() {
+if (window.google && google.picker) return Promise.resolve();
+return gpP || (gpP = new Promise((res, rej) => {
+const fail = () => { gpP = null; rej(new Error('Couldn’t reach Google. Check the internet connection.')); };
+const go = () => gapi.load('picker', { callback: res, onerror: fail });
+if (window.gapi && gapi.load) return go();
+const s = document.createElement('script'); s.src = 'https://apis.google.com/js/api.js'; s.async = true; s.onload = go; s.onerror = fail; document.head.appendChild(s);
+}));
+}
+async function gpPick(token, cid, key, o = {}) {
+await gpLoadPicker();
+const P = google.picker;
+return new Promise(res => {
+const mk = (label, set) => {
+const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
+if (o.folder) v.setSelectFolderEnabled(true);
+if (o.mimes) v.setMimeTypes(o.mimes.concat(GP_FOLDER).join(','));
+if (v.setLabel) v.setLabel(label);
+set(v); return v;
+};
+const views = [];
+if (o.parent && !o.folder) views.push(mk(o.parentName || 'Last folder', v => v.setParent(o.parent)));
+views.push(mk('My Drive', v => v.setParent('root')));
+views.push(mk('Shared with me', v => v.setOwnedByMe && v.setOwnedByMe(false)));
+views.push(mk('Shared drives', v => v.setEnableDrives && v.setEnableDrives(true)));
+const b = new P.PickerBuilder().setOAuthToken(token).setAppId(cid.split('-')[0]).setOrigin(location.origin);
+views.forEach(v => b.addView(v));
+b.enableFeature(P.Feature.SUPPORT_DRIVES).setCallback(d => {
+if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).map(x => o.folder && x.mimeType !== GP_FOLDER ? (x.parentId ? { id: x.parentId, name: 'Folder with ' + x.name, mimeType: GP_FOLDER } : null) : x).filter(x => x && (o.folder || x.mimeType !== GP_FOLDER)).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '', ...(x.parentId ? { parent: x.parentId } : {}) })));
+else if (d[P.Response.ACTION] === P.Action.CANCEL) res([]);
+});
+if (o.title) b.setTitle(o.title);
+if (key && !/@@/.test(key)) b.setDeveloperKey(key);
+if (o.multi) b.enableFeature(P.Feature.MULTISELECT_ENABLED);
+b.build().setVisible(true);
+});
+}
+function gpUrl(d, want) {
+const k = d.mime.startsWith(GP_GA) ? d.mime.slice(GP_GA.length) : '';
+if (!k) return { url: 'files/' + encodeURIComponent(d.id) + '?alt=media&supportsAllDrives=true', name: d.name, type: d.mime };
+const w = (want || {})[k] || 'pdf', type = GP_EXT[w];
+return { url: 'files/' + encodeURIComponent(d.id) + '/export?mimeType=' + encodeURIComponent(type), name: d.name.toLowerCase().endsWith('.' + w) ? d.name : d.name + '.' + w, type };
+}
+async function gpOn(inp) {
+const h = typeof gpHost === 'function' && gpHost(); if (!h) return inp.click();
+try {
+const k = gpKinds(inp.accept, h.office || !!inp.dataset.office);
+const picked = await h.pick({ multi: inp.multiple, mimes: k.mimes, title: inp.multiple ? 'Choose files' : 'Choose a file' });
+if (!picked.length) return;
+h.say('Getting it from Drive…');
+const files = [];
+for (const d of picked) { const u = gpUrl(d, k.want), r = await h.get(u.url); files.push(new File([await r.blob()], u.name.replace(/[\\/]+/g, '-'), { type: u.type || r.headers.get('content-type') || '' })); }
+const dt = new DataTransfer(); files.forEach(f => dt.items.add(f));
+inp.files = dt.files;
+inp.dispatchEvent(new Event('change', { bubbles: true }));
+} catch (e) { console.error(e); h.say((e && e.message) || String(e)); }
+}
+const gpBtn = (sel = '', cls) => typeof gpHost === 'function' && gpHost() ? '<button type="button" class="' + (cls || 'btn sm ghost') + '" data-gdrive="' + sel + '">From Google Drive…</button>' : '';
+let gpArm = 0;
+const gpClick = inp => { const d = Date.now() - gpArm < 1500; gpArm = 0; return d ? gpOn(inp) : inp.click(); };
+const GP_ICO = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-3px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round"><path d="M8.5 3.5h7l6 10.5-3.5 6h-12L2.5 14z M8.5 3.5l6 10.5h7 M15.5 3.5l-9.5 16.5 M2.5 14h12"/></svg>';
+const gpDrv = (attrs, cls, small) => typeof gpHost === 'function' && gpHost() ? '<button type="button" class="' + (cls || 'btn sm ghost') + '" data-drv ' + attrs + (small ? ' title="From Google Drive…" aria-label="From Google Drive…">' + GP_ICO : '>From Google Drive…') + '</button>' : '';
+document.addEventListener('click', e => {
+if (e.target.closest && e.target.closest('[data-drv]')) gpArm = Date.now();
+const b = e.target.closest && e.target.closest('[data-gdrive]'); if (!b) return;
+const inp = b.dataset.gdrive ? document.querySelector(b.dataset.gdrive) : b.parentElement.querySelector('input[type=file]'); if (!inp) return;
+e.preventDefault();
+gpOn(inp);
+}, true);
+
 'use strict';
 /* Grading Studio: open a class's papers (a download from the school's system, a folder, scans), mark PDFs, score with a rubric, list grades in folder order,
 and export the marked files back into their student folders.
@@ -6916,7 +7016,7 @@ if (data.refSkip) batch.refSkip = data.refSkip;
 if (data.quiz) batch.quiz = data.quiz;
 if (data.goal) batch.goal = data.goal;
 if (data.returned) batch.returned = data.returned;
-batch.groups = [...(data.groups || []), ...(data.groupsOwn || []).map(g => ({ ...g, own: 1 }))];
+batch.groups = [...(data.groups || []), ...(data.groupsOwn || []).map(g => ({ ...g, own: g.own || 1 }))];
 batch.clips = data.clips || [];
 if (data.vrot) batch.vrot = data.vrot; else delete batch.vrot;
 groupSync();
@@ -7279,6 +7379,7 @@ paper.innerHTML = '<div class="who"><h2>' + esc(shownName(st, cur)) + '</h2>' + 
 '<button class="btn sm" id="readBtn" title="A reading, prompt or other file shown above the papers: for everyone, or a different one for this student">Readings' + (nRef ? ' <span class="atn">' + nRef + '</span>' : '') + '</button>' +
 kmWrap('<span aria-hidden="true">+</span> Add', 'id="addMenuBtn" class="btn sm" title="Add late or forgotten work to this student. You can also drop files on the paper or on a name."',
 '<button class="mitem" id="addFileBtn">A file…<small>A late or forgotten paper</small></button>' +
+(gpHost() ? '<button class="mitem" id="addDriveBtn">From Google Drive…<small>A late or forgotten paper</small></button>' : '') +
 '<button class="mitem" id="pasteTextBtn">Pasted text…<small>Work sent in an email or a message</small></button>' +
 '<button class="mitem" id="addVideoBtn">A video…<small>A link to a recording, and who is in it</small></button>' +
 '<button class="mitem" id="addNotesBtn">A notes page…<small>To write on while you watch or listen</small></button>' +
@@ -7295,8 +7396,9 @@ if (lastSheet && st.files.length === 1 && viewable(st.files[0]) && !refsFor(st).
 const sheetOff = () => { const g = $('#sheet0'); if (g) g.remove(); };
 if (!st.files.length) {
 paper.insertAdjacentHTML('beforeend', '<div class="nofile"><b>Nothing turned in yet.</b> Add their paper here, or drop the file on the page or on their name. You can still give a score without one.' +
-'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button><button class="btn sm" id="gapPaste">Paste text…</button><button class="btn sm" id="gapVideo">A video…</button><button class="btn sm" id="gapNotes">A notes page…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm primary" id="gapFile">Add their file…</button>' + (gpHost() ? '<button class="btn sm" id="gapDrive">From Google Drive…</button>' : '') + '<button class="btn sm" id="gapPaste">Paste text…</button><button class="btn sm" id="gapVideo">A video…</button><button class="btn sm" id="gapNotes">A notes page…</button>' + (st.gap || batch.students.some(x => x.files.length) ? '<button class="btn sm" id="gapScan">From a scan…</button>' : '') + '</div></div>');
 $('#gapFile').onclick = () => pickAdd(st);
+const gd = $('#gapDrive'); if (gd) gd.onclick = () => pickAdd(st, true);
 $('#gapPaste').onclick = () => openPasteText(st);
 $('#gapVideo').onclick = () => openAddVideo(st);
 $('#gapNotes').onclick = () => openAddNotes(st);
@@ -7409,6 +7511,7 @@ return;
 }
 const mvf = e.target.closest('[data-mvfile]'); if (mvf) return openMoveFile(batch.students[cur], mvf.dataset.mvfile);
 if (e.target.closest('#addFileBtn')) return pickAdd(batch.students[cur]);
+if (e.target.closest('#addDriveBtn')) return pickAdd(batch.students[cur], true);
 if (e.target.closest('#pasteTextBtn')) return openPasteText(batch.students[cur]);
 if (e.target.closest('#addVideoBtn')) return openAddVideo(batch.students[cur]);
 if (e.target.closest('#addNotesBtn')) return openAddNotes(batch.students[cur]);
@@ -8362,6 +8465,7 @@ const st = batch.students[cur], g = st.grade, gr = gradeOf(st);
 let h = '';
 if (rowOnOf !== st) rowStart();
 if (fmNow()) return renderFeedback(st);
+h += groupScoreNote(st);
 if (setup.mode === 'rubric') {
 if (rowOn >= setup.criteria.length) rowOn = -1;
 h += ibPanelAsk() + '<h3>Score <button class="link" id="editRubric">Edit rubric</button>' + ibPanelHead() + '</h3><div class="crits">';
@@ -8691,9 +8795,9 @@ h += goalsSetupHtml(draft);
 h += '<div class="field"><label>Grading scale</label><span style="display:flex;gap:6px;flex-wrap:wrap">' + (me().scale12 ? '<button class="btn sm" data-preset="usual">12 = 100, 11 = 95, 10 = 91…</button>' : '') + '<button class="btn sm" data-preset="fives">Steps of 5 (9 = 85%)</button><button class="btn sm" data-preset="none">No scale</button>' + scaleBankHtml(draft, draftMax(draft)) + '</span>' + scaleRows() + '</div>';
 const rp = newPage === undefined ? draft.rubricPage : newPage;
 h += '<div class="field"><label>Your rubric, for every student</label><span class="muted" style="font-size:13px">Bring in your rubric once and every student gets their own copy to grade on. A Word rubric (.docx or .docm) stays a Word file: type in it, check its boxes and shade its cells. A PDF or picture is added as a page you can mark up. Each copy goes back with that student’s work.</span>' +
-'<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="btn sm" data-rpup>' + (rp ? 'Replace…' : 'Bring in my rubric…') + '</button>' +
+'<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px"><button class="btn sm" data-rpup>' + (rp ? 'Replace…' : 'Bring in my rubric…') + '</button>' + gpBtn('#rpIn') +
 (rp ? '<span style="font-size:13px;font-weight:600">' + esc(rp.name || 'Rubric page') + '</span><span class="seg"><button data-pos="end" aria-pressed="' + ((draft.rubricPos || 'end') === 'end') + '">After their work</button><button data-pos="start" aria-pressed="' + (draft.rubricPos === 'start') + '">Before</button></span><button class="link" data-rprm>Remove</button>' : '') +
-'</span>' + (found ? '<span class="rufound"><span>Rows were found in it.</span> <button class="btn sm" data-rpuse>Use these rows</button></span>' : '') + '<input type="file" id="rpIn" hidden></div>';
+'</span>' + (found ? '<span class="rufound"><span>Rows were found in it.</span> <button class="btn sm" data-rpuse>Use these rows</button></span>' : '') + '<input type="file" id="rpIn" data-office="1" hidden></div>';
 h += '<p class="muted" style="font-size:13px;margin:0">Scores you already gave stay put if you rename rows.' + (batch && batch.assignment ? ' This setup is remembered for “' + esc(batch.assignment.name) + '”.' : '') + '</p>';
 return h;
 };
@@ -10398,7 +10502,7 @@ G.token = null; G.scope = ''; G.email = ''; store.del('gs.gEmail'); try { sessio
 }
 const GOK = /^https?:$/.test(location.protocol) && window.self === window.top;
 function renderGoogle() {
-for (const el of document.querySelectorAll('.gAcct, #pickDrive')) el.hidden = !GOK || !gcid();
+for (const el of document.querySelectorAll('.gAcct, #pickDrive, .gpOnly')) el.hidden = !GOK || !gcid();
 if (!GOK || !gcid()) return;
 for (const el of document.querySelectorAll('.gAcct')) el.innerHTML = G.email
 ? '<span class="muted" style="font-size:13px">Google: ' + esc(G.email) + ' · ' + (syncPaused() ? '<button class="link" data-gin id="syncState">' + syncState + '</button>' : '<span id="syncState">' + (syncState || 'synced') + '</span>') + '</span> <button class="link" data-gout>Sign out</button>'
@@ -10693,47 +10797,14 @@ return out;
 /* ---------- videos from Drive: Google's own chooser, and only what she picks ---------- */
 const driveCan = () => GOK && !!gcid();
 const VID_MIMES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/x-matroska', 'video/3gpp', 'video/ogg'];
-let gpP = null;
-function loadPicker() {
-if (window.google && google.picker) return Promise.resolve();
-return gpP || (gpP = new Promise((res, rej) => {
-const fail = () => { gpP = null; rej(new Error('Couldn’t reach Google. Check the internet connection.')); };
-const go = () => gapi.load('picker', { callback: res, onerror: fail });
-if (window.gapi && gapi.load) return go();
-const s = document.createElement('script'); s.src = 'https://apis.google.com/js/api.js'; s.async = true; s.onload = go; s.onerror = fail; document.head.appendChild(s);
-}));
-}
 async function drivePick(o = {}) {
 if (sampleStops('Google Drive')) return [];
 if (!gcid()) { driveSetup(); return []; }
-const t = await gToken(true, 'pick'); await loadPicker();
+const t = await gToken(true, 'pick');
 if (!G.email) gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); syncNow(); }).catch(() => {});
-const P = google.picker;
-return new Promise(res => {
-const mk = (label, set) => {
-const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
-if (o.folder) v.setSelectFolderEnabled(true); v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(','));
-if (v.setLabel) v.setLabel(label);
-set(v); return v;
-};
-const views = [];
-if (o.parent && !o.folder) views.push(mk(o.parentName || 'Videos folder', v => v.setParent(o.parent)));
-views.push(mk('My Drive', v => v.setParent('root')));
-views.push(mk('Shared with me', v => v.setOwnedByMe && v.setOwnedByMe(false)));
-views.push(mk('Shared drives', v => v.setEnableDrives && v.setEnableDrives(true)));
-const b = new P.PickerBuilder().setOAuthToken(t).setAppId(gcid().split('-')[0]).setOrigin(location.origin);
-views.forEach(v => b.addView(v));
-b
-.enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Click your videos folder once (or any video in it), then Select' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
-.setCallback(d => {
-if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).map(x => o.folder && x.mimeType !== FOLDER ? (x.parentId ? { id: x.parentId, name: 'Folder with ' + x.name, mimeType: FOLDER } : null) : x).filter(x => x && (o.folder || x.mimeType !== FOLDER)).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '', ...(x.parentId ? { parent: x.parentId } : {}) })));
-else if (d[P.Response.ACTION] === P.Action.CANCEL) res([]);
-});
-if (GOOGLE_API_KEY && !/@@/.test(GOOGLE_API_KEY)) b.setDeveloperKey(GOOGLE_API_KEY);
-if (o.multi) b.enableFeature(P.Feature.MULTISELECT_ENABLED);
-b.build().setVisible(true);
-});
+return gpPick(t, gcid(), GOOGLE_API_KEY, { ...o, mimes: o.mimes === null ? null : o.mimes || VID_MIMES, title: o.title || (o.folder ? 'Click your videos folder once (or any video in it), then Select' : 'Choose ' + (o.multi ? 'videos' : 'a video')), parentName: o.parentName || 'Videos folder' });
 }
+const gpHost = () => driveCan() && (!G_REDIRECT || drivePickReady()) ? { office: false, pick: drivePick, get: u => gfetch(u, {}, true, 'pick'), say: m => toast(m, 6000) } : null;
 const vidDir = () => store.get('gs.gVidDir', null);
 async function pickVidDir() { const [d] = await drivePick({ folder: true }); if (d) store.set('gs.gVidDir', { id: d.id, name: d.name }); return d || null; }
 async function driveVideos(multi) {
@@ -11109,10 +11180,10 @@ let recs = [];
 try { recs = (await idbDo('readonly', o => o.getAll(underId(batch.id)))) || []; } catch { return; }
 for (const r of recs.filter(r => r.bid === batch.id && r.key === REF_KEY).sort((a, b) => a.added - b.added)) refFiles.push({ path: r.path, name: r.name, data: r.data, for: r.for || '' });
 }
-function pickRefs(st) {
+function pickRefs(st, drive) {
 const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true;
 inp.onchange = () => addRefs([...inp.files], st);
-inp.click();
+if (drive) gpOn(inp); else inp.click();
 }
 async function addRefs(files, st) {
 let n = 0;
@@ -11145,18 +11216,18 @@ openDlg('<div class="bh"><h2>Readings</h2><button class="icon" data-close aria-l
 (all.length || rd ? '<div class="rdl">' + (rd ? '<div class="rdrow"><b>' + esc(rd.name) + '</b><span class="sp"></span><button class="btn sm" data-refdel>Remove</button></div>' : '') +
 all.map(r => '<div class="rdrow"><b>' + esc(r.name) + '</b><span class="sp"></span><button class="btn sm" data-refrm="' + esc(r.path) + '">Remove for everyone</button></div>').join('') + '</div>'
 : '<p class="muted" style="font-size:14px">None yet.</p>') +
-'<button class="btn sm primary" data-refadd>+ Add a file for everyone…</button>' +
+'<button class="btn sm primary" data-refadd>+ Add a file for everyone…</button>' + (gpHost() ? ' <button class="btn sm" data-refadd="d">From Google Drive…</button>' : '') +
 '<h3 style="margin:22px 0 6px">For ' + nm + '</h3>' +
 (all.length ? '<div class="rdl">' + all.map(r => '<label class="chk rdrow" style="margin:0"><input type="checkbox" data-refon="' + esc(r.path) + '"' + (refSkipped(st, r) ? '' : ' checked') + '> Show ' + esc(r.name) + '</label>').join('') + '</div>' : '') +
 (own.length ? '<div class="rdl">' + own.map(r => '<div class="rdrow"><b>' + esc(r.name) + '</b> <span class="muted" style="font-size:13px">only for ' + nm + '</span><span class="sp"></span><button class="btn sm" data-refrm="' + esc(r.path) + '">Remove</button></div>').join('') + '</div>' : '') +
-'<button class="btn sm" data-refmine>+ Add a file just for ' + nm + '…</button>' +
+'<button class="btn sm" data-refmine>+ Add a file just for ' + nm + '…</button>' + (gpHost() ? ' <button class="btn sm" data-refmine="d">From Google Drive…</button>' : '') +
 (all.length ? '<p class="muted" style="font-size:13px;margin-bottom:0">For a student with a different reading: untick the everyone file above, then add theirs.</p>' : '') +
 '</div><div class="bf"><button class="btn primary" data-close>Done</button></div>', true);
 const box = $('#dlgBox');
 box.onclick = e => {
 if (e.target.closest('[data-close]')) return closeDlg();
-if (e.target.closest('[data-refadd]')) return pickRefs();
-if (e.target.closest('[data-refmine]')) return pickRefs(st);
+const ra = e.target.closest('[data-refadd]'); if (ra) return pickRefs(undefined, !!ra.dataset.refadd);
+const rm = e.target.closest('[data-refmine]'); if (rm) return pickRefs(st, !!rm.dataset.refmine);
 const rr = e.target.closest('[data-refrm]'); if (rr) return dropRef(rr.dataset.refrm);
 if (e.target.closest('[data-refdel]')) { store.del(refKey()); openStudent(cur); return refreshReadings(); }
 };
@@ -12288,11 +12359,11 @@ if (st.files.some(f => f.path === r.path)) continue;
 const f = await makeFile(r.path, r.data); f.added = r.added; f.akey = r.key; if (r.from) f.from = r.from; st.files.push(f);
 }
 }
-function pickAdd(st) {
+function pickAdd(st, drive) {
 const inp = document.createElement('input');
 inp.type = 'file'; inp.multiple = true;
 inp.onchange = () => addFiles(st, [...inp.files].map(f => ({ path: f.name, file: f })));
-inp.click();
+if (drive) gpOn(inp); else inp.click();
 }
 async function addFiles(st, list, quiet) {
 list = list.filter(e => e.file && !junk(e.path) && !houseFile(e.path));
@@ -17319,7 +17390,7 @@ return (su.mode === 'rubric' ? '<span>Rubric rows:</span> <span data-raw>' + esc
 }
 function ruHtml(su, o) {
 return '<div class="field rubup" id="rubUp"><label>Rubric</label><span class="rusays" id="ruSays">' + rubricSays(su) + '</span>' +
-'<span class="rurow"><button type="button" class="btn sm" id="ruPick">Bring in a rubric…</button><span class="muted">Word, PDF or a picture. Rows are read from a table where they can be.</span></span><div id="ruGot"' + (o && o.now ? ' data-now' : '') + ' hidden></div></div>';
+'<span class="rurow"><button type="button" class="btn sm" id="ruPick">Bring in a rubric…</button>' + (gpHost() ? '<button type="button" class="btn sm ghost" id="ruDrive">From Google Drive…</button>' : '') + '<span class="muted">Word, PDF or a picture. Rows are read from a table where they can be.</span></span><div id="ruGot"' + (o && o.now ? ' data-now' : '') + ' hidden></div></div>';
 }
 function ruWire(box, it, onUse) {
 let got = null;
@@ -17339,14 +17410,15 @@ const live = { signal: dlgOff.signal };
 box.addEventListener('change', e => { if (!got) return; if (e.target.id === 'ruRows') got.rows = e.target.checked; if (e.target.id === 'ruCopy') got.copy = e.target.checked; }, live);
 box.addEventListener('click', async e => {
 if (e.target.closest('#ruUse')) { if (!got || (!got.rows && !got.copy)) return toast('Tick what to do with it first'); const ok = ruPut(it, got); if (ok) { $('#ruSays').innerHTML = rubricSays(it.setup); got = null; show(); if (onUse) onUse(); } return; }
-if (!e.target.closest('#ruPick')) return;
+const rp = e.target.closest('#ruPick, #ruDrive'); if (!rp) return;
 const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.docx,.docm,.pdf,.png,.jpg,.jpeg,.heic,.heif,.webp,image/*,application/pdf';
 inp.onchange = async () => {
 const f = inp.files[0]; if (!f) return;
 try { const r = await rubricRead(f); got = { r, rows: !!r.rows.length, copy: !r.rows.length }; show(); }
 catch (err) { console.error(err); toast('That file couldn’t be opened as a Word file, PDF or picture'); }
 };
-inp.click();
+inp.dataset.office = 1;
+if (rp.id === 'ruDrive') gpOn(inp); else inp.click();
 }, live);
 return { got: () => got };
 }
@@ -18330,7 +18402,7 @@ bki = { data: null, pick: {}, keep: true, over: {}, unit: '', all: '', cats: {},
 bkTabsOff();
 $('#bkBody').innerHTML = '<div class="bkpad bkaddv bkiv" id="bkImp"><h3 class="bkh">Import a gradebook · ' + esc(c.name) + '</h3>' +
 '<p class="muted bkimeta">A gradebook downloaded from your school’s system or a spreadsheet: one row per student and one column per assignment. Assignments you already have are matched by name, and you check each match. Nothing is saved until you press Import, and nothing leaves this browser.</p>' +
-'<div class="bkidrop" id="bkiDrop"><button class="btn primary" data-bkifile>Choose a file…</button><span class="muted">CSV, TSV or Excel (.xlsx). In Google Sheets: File, Download, CSV.</span><input type="file" id="bkiFile" accept=".csv,.tsv,.txt,.xlsx,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>' +
+'<div class="bkidrop" id="bkiDrop"><button class="btn primary" data-bkifile>Choose a file…</button>' + gpBtn('#bkiFile', 'btn') + '<span class="muted">CSV, TSV or Excel (.xlsx). In Google Sheets: File, Download, CSV.</span><input type="file" id="bkiFile" accept=".csv,.tsv,.txt,.xlsx,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>' +
 '<textarea class="bkin bkpaste" id="bkiPaste" rows="3" placeholder="Or copy the cells in your spreadsheet, headings included, and paste them here."></textarea>' +
 '<p class="bkierr" id="bkiErr" role="alert" hidden></p><div id="bkiOut"></div>' +
 '<div class="bkfootbtns"><span class="muted" id="bkiCount"></span><span class="sp"></span><button class="btn" data-bkback>Cancel</button><button class="btn primary" data-bkisave disabled>Import</button></div></div>';
@@ -23924,6 +23996,46 @@ if (!a.rubric) a.rubric = [];
 }
 const GROUP_NOTES = ['tn'];
 const groupOwn = g => !!(g && g.own);
+const groupAdj = g => !!(g && g.own === 2);
+const ADJ_KEYS = ['points', 'pk', 'xc', 'xcU', 'status'];
+const adjFields = sts => [...Array(Math.max(0, ...sts.map(s => (s.grade.rubric || []).length), setup && setup.criteria ? setup.criteria.length : 0)).keys(), ...ADJ_KEYS];
+const adjGet = (gr, f) => JSON.stringify(typeof f === 'number' ? (gr.rubric || [])[f] ?? null : gr[f] ?? null);
+function adjPut(gr, f, from) {
+if (typeof f === 'number') { (gr.rubric ||= [])[f] = (from.rubric || [])[f] ?? null; }
+else if (from[f] == null) delete gr[f]; else gr[f] = JSON.parse(JSON.stringify(from[f]));
+const t = from.atR && from.atR[f]; if (t) (gr.atR ||= {})[f] = t;
+}
+const adjTime = (gr, f) => (gr.atR && gr.atR[f]) || gr.at || 0;
+function adjSync(sts) {
+let changed = false;
+for (const f of adjFields(sts)) {
+const free = sts.filter(s => !(s.grade.adj && s.grade.adj[f])); if (!free.length) continue;
+for (const s of free) if (groupJust === s.key && free.length > 1) { const rest = free.filter(x => x !== s), v = adjGet(rest[0].grade, f); if (rest.every(x => adjGet(x.grade, f) === v) && adjGet(s.grade, f) !== v) { (s.grade.adj ||= {})[f] = 1; changed = true; } }
+const live = free.filter(s => !(s.grade.adj && s.grade.adj[f])); if (live.length < 2) continue;
+const src = live.reduce((a, s) => (adjTime(s.grade, f) > adjTime(a.grade, f) ? s : a), live[0]), v = adjGet(src.grade, f);
+for (const s of live) if (s !== src && adjGet(s.grade, f) !== v) { adjPut(s.grade, f, src.grade); changed = true; stampSoon(s); }
+}
+return changed;
+}
+function adjReset(st, f) {
+const g = groupOf(st); if (!g) return;
+const mate = groupMates(st).find(s => !(s.grade.adj && s.grade.adj[f]));
+gradeSnap(st);
+if (mate) adjPut(st.grade, f, mate.grade);
+if (st.grade.adj) { delete st.grade.adj[f]; if (!Object.keys(st.grade.adj).length) delete st.grade.adj; }
+stampSoon(st); saveSoon(); renderList(); renderGrade(); groupBandRefresh();
+}
+const adjName = f => typeof f === 'number' ? (setup.criteria && setup.criteria[f]) || 'Row ' + (f + 1) : { points: 'Points', pk: 'Percent', xc: 'Extra credit', xcU: 'Extra credit', status: 'Status' }[f];
+const adjSay = (gr, f) => { const v = JSON.parse(adjGet(gr, f)); return v == null || v === '' ? '–' : f === 'status' ? (STATUS_LABEL[v] || v) : String(v); };
+function groupScoreNote(st) {
+const g = groupOf(st); if (!groupAdj(g)) return '';
+const name = shownName(st, batch.students.indexOf(st)), mate = groupMates(st).find(Boolean);
+const adj = Object.keys(st.grade.adj || {}).map(k => (/^\d+$/.test(k) ? +k : k)).filter(f => f !== 'xcU');
+const rows = adj.map(f => { const m = groupMates(st).find(s => !(s.grade.adj && s.grade.adj[f])); return '<li><span>' + esc(adjName(f)) + '</span> <span class="muted">group ' + esc(m ? adjSay(m.grade, f) : '–') + ' → ' + esc(adjSay(st.grade, f)) + '</span> <button class="link" data-grpreset="' + f + '">Use group score</button></li>'; }).join('');
+return '<div class="grpnote' + (groupJust === st.key ? ' just' : '') + '" id="grpNote">' + (groupJust === st.key ? '<b>Scores you change now are just for ' + esc(name) + '.</b>' : 'Scores you change go to the whole group. To change one for ' + esc(name) + ' only, pick <b>Just ' + esc(name.split(/[\s,]+/)[0] || name) + '</b> above the paper.') + (rows ? '<ul>' + rows + '</ul>' : '') + '</div>';
+}
+function groupNoteRefresh() { const old = $('#grpNote'), st = batch && batch.students[cur]; if (old && st) { const h = groupScoreNote(st); if (h) old.outerHTML = h; else old.remove(); } }
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-grpreset]'); if (b && batch) { const k = b.dataset.grpreset; adjReset(batch.students[cur], /^\d+$/.test(k) ? +k : k); } });
 const notesSig = gr => JSON.stringify(GROUP_NOTES.map(k => gr[k] ?? null));
 function groupNotesCopy(to, from) { for (const k of GROUP_NOTES) { if (from.grade[k] != null) to.grade[k] = JSON.parse(JSON.stringify(from.grade[k])); else delete to.grade[k]; } }
 function stampOwner(m, st) { const g = groupOf(st); if (groupOwn(g) && groupFileOf(g, st)) m.o = st.key; return m; }
@@ -23970,6 +24082,7 @@ if (groupOwn(g)) {
 const moved = sts.filter(s => notesSig(s.grade) !== g.ns), src = moved.length ? newest(moved) : sts[0], sig = notesSig(src.grade);
 for (const s of sts) if (s !== src && notesSig(s.grade) !== sig) { groupNotesCopy(s, src); changed = true; }
 if (g.ns !== sig) { g.ns = sig; changed = true; }
+if (groupAdj(g) && adjSync(sts)) { changed = true; setTimeout(groupNoteRefresh); }
 } else {
 const src = newest(sts), sig = gradeSig(src.grade);
 for (const s of sts) if (s !== src && gradeSig(s.grade) !== sig) { groupGradeCopy(s, src); changed = true; }
@@ -23998,6 +24111,7 @@ const has = gr => GROUP_NOTES.some(k => k === 'tn' ? !!(gr.tn && gr.tn.l && gr.t
 if (has(st.grade) || !has(to.grade)) groupNotesCopy(to, st); else { groupNotesCopy(st, to); touchGrade(st); }
 g.ns = notesSig(st.grade);
 if (toFile && toFile.marks) stampsSplit(toFile.marks, [to.key]);
+if (groupAdj(g) && (gradeHasWork(st.grade) || !gradeHasWork(to.grade))) { const c = to.grade.comment; groupGradeCopy(to, st); to.grade.comment = c; delete to.grade.adj; delete to.grade.tn; groupNotesCopy(to, st); }
 } else if (gradeHasWork(st.grade) || !gradeHasWork(to.grade)) { groupGradeCopy(to, st); if (!st.grade.at) touchGrade(st); to.grade.at = st.grade.at; }
 else { groupGradeCopy(st, to); }
 groupSync();
@@ -24015,16 +24129,22 @@ if (!quiet) { saveSoon(); renderList(); openStudent(cur); toast(shownName(st, ba
 }
 
 function groupSetOwn(st, own) {
-const g = groupOf(st); if (!g || groupOwn(g) === !!own) return false;
+const mode = own === true ? 1 : +own || 0, g = groupOf(st); if (!g || (g.own || 0) === mode) return false;
 const sts = g.k.map(k => batch.students.find(s => s.key === k)).filter(Boolean), files = [...new Set(sts.map(s => groupFileOf(g, s)).filter(Boolean).map(f => f.marks))];
-if (own) {
-g.own = 1; g.ns = notesSig(st.grade);
+const clearAdj = () => { for (const s of sts) delete s.grade.adj; };
+if (mode && groupOwn(g)) {
+g.own = mode;
+if (mode === 2) { for (const s of sts) if (s !== st) for (const f of adjFields(sts)) if (adjGet(s.grade, f) !== adjGet(st.grade, f)) (s.grade.adj ||= {})[f] = 1; }
+else clearAdj();
+} else if (mode) {
+g.own = mode; g.ns = notesSig(st.grade);
 for (const m of files) stampsSplit(m, sts.filter(s => groupFileOf(g, s)).map(s => s.key));
 for (const s of sts) if (s !== st && notesSig(s.grade) !== g.ns) groupNotesCopy(s, st);
 for (const s of sts) syncScoreStamps(s);
 } else {
-delete g.own; delete g.ns;
+delete g.own; delete g.ns; clearAdj();
 for (const m of files) stampsJoin(m, st.key);
+if (st.grade.tn && Array.isArray(st.grade.tn.l)) { const l = tnMine(st, st.grade.tn.l).map(x => { const y = { ...x }; delete y.o; return y; }); if (l.length) st.grade.tn = { l }; else delete st.grade.tn; }
 touchGrade(st);
 }
 groupSync();
@@ -24084,13 +24204,16 @@ toast('Marked and graded once with ' + groupNames(groupMates(st)));
 function groupBand(st) {
 const mates = groupMates(st);
 if (mates.length) {
-const g = groupOf(st), marks = !!groupFileOf(g, st), own = groupOwn(g);
+const g = groupOf(st), marks = !!groupFileOf(g, st), own = groupOwn(g), adj = groupAdj(g), mode = adj ? 'adj' : own ? 'own' : 'all';
 if (groupJust !== st.key) groupJust = null;
 const name = shownName(st, batch.students.indexOf(st)), first = name.split(/[\s,]+/)[0] || name;
-const just = own && marks ? '<span class="seg grpjust" role="group" aria-label="New marks go on"><button type="button" data-grpjust="0" aria-pressed="' + !groupJust + '" title="Marks you make now show on every partner’s paper">Both</button><button type="button" data-grpjust="1" aria-pressed="' + !!groupJust + '" title="Marks you make now show only on ' + esc(name) + '’s paper. Their comment is always their own.">Just ' + esc(first) + '</button></span>' : '';
-const opt = (v, t) => '<option value="' + v + '"' + ((v === 'own') === own ? ' selected' : '') + '>' + t + '</option>';
+const what = [marks && 'marks', adj && 'scores', 'typed notes'].filter(Boolean), list = what.length > 2 ? what.slice(0, -1).join(', ') + ' and ' + what[what.length - 1] : what.join(' and ');
+const both = 'New ' + list + ' go to every partner';
+const one = 'New ' + list + ' are just for ' + esc(name) + '. Their comment is always their own.';
+const just = own ? '<span class="seg grpjust" role="group" aria-label="What you do now goes to"><button type="button" data-grpjust="0" aria-pressed="' + !groupJust + '" title="' + both + '">Both</button><button type="button" data-grpjust="1" aria-pressed="' + !!groupJust + '" title="' + one + '">Just ' + esc(first) + '</button></span>' : '';
+const opt = (v, t) => '<option value="' + v + '"' + (v === mode ? ' selected' : '') + '>' + t + '</option>';
 return '<div class="grpband" id="grpBand"><b>Group work</b><span>with ' + esc(groupNames(mates)) + ' ·</span>' +
-'<select class="grpmode" data-grpmode aria-label="What the group shares" title="Share everything, or share the notes and give each partner their own score">' + opt('all', marks ? 'Marks and grade shared' : 'Grade shared') + opt('own', marks ? 'Shared notes, own scores' : 'Own scores and comments') + '</select>' + (just ? '<span class="muted">Write for</span>' + just : '') + '<span style="flex:1"></span>' +
+'<select class="grpmode" data-grpmode aria-label="What the group shares" title="Share everything, give the group one score you can change for one partner, or give each partner their own score">' + opt('all', marks ? 'Marks and grade shared' : 'Grade shared') + opt('adj', 'Group score, adjust a partner') + opt('own', marks ? 'Shared notes, own scores' : 'Own scores and comments') + '</select>' + (just ? '<span class="muted">Write for</span>' + just : '') + '<span style="flex:1"></span>' +
 '<button class="link" data-grpout title="Give this student their own grade and their own copy of the marks so far. The rest stay together.">Grade on their own…</button></div>';
 }
 const sm = splitMates(st);
@@ -24108,7 +24231,7 @@ function groupClick(e) {
 const st = batch.students[cur];
 if (e.target.closest('[data-grpjoin]')) { groupFromSplit(st); return true; }
 const j = e.target.closest('[data-grpjust]');
-if (j) { groupJust = j.dataset.grpjust === '1' ? st.key : null; groupBandRefresh(); return true; }
+if (j) { groupJust = j.dataset.grpjust === '1' ? st.key : null; groupBandRefresh(); groupNoteRefresh(); return true; }
 if (e.target.closest('[data-grpout]')) {
 askDlg(shownName(st, cur) + ' gets their own grade and their own copy of the marks so far. ' + groupNames(groupMates(st)) + (groupMates(st).length > 1 ? ' stay together.' : ' keeps theirs.'), { ok: 'Grade on their own', cancel: 'Keep the group' }).then(ok => { if (ok) groupLeave(st); });
 return true;
@@ -24116,17 +24239,17 @@ return true;
 return false;
 }
 
-async function groupModePick(own) {
-const st = batch.students[cur], g = groupOf(st); if (!g || groupOwn(g) === own) return;
-if (!own) {
+async function groupModePick(mode) {
+const st = batch.students[cur], g = groupOf(st); if (!g || (g.own || 0) === mode) return;
+if (!mode) {
 const t = gradeOf(st).total, ok = await askDlg('Everyone in the group gets ' + shownName(st, cur) + '’s score' + (t != null ? ' (' + fmtNum(t) + ')' : '') + ' and comment. The other partners’ own scores, comments and notes just for them are replaced.', { ok: 'Share this score', cancel: 'Keep own scores' });
 if (!ok) { groupBandRefresh(); return; }
 }
 const back = groupSnapOf(g);
-groupSetOwn(st, own);
-pushUndo(actStep(back, () => { groupSetOwn(st, own); groupRedraw(); }, own ? 'own scores' : 'one grade'));
+groupSetOwn(st, mode);
+pushUndo(actStep(back, () => { groupSetOwn(st, mode); groupRedraw(); }, mode === 2 ? 'group score' : mode ? 'own scores' : 'one grade'));
 groupRedraw();
-toast(own ? 'Each partner has their own score and comment now. The notes page stays shared.' : 'One grade for the group now');
+toast(mode === 2 ? 'One group score now. To change a score for one partner, pick Just them above the paper.' : mode ? 'Each partner has their own score and comment now. The notes page stays shared.' : 'One grade for the group now');
 }
 const groupRedraw = () => { saveSoon(); renderList(); openStudent(cur); };
 function groupSnapOf(g) {
@@ -24141,7 +24264,7 @@ if (marks) { const m = JSON.parse(marks); for (const f of files) f.marks = m; }
 groupRedraw();
 };
 }
-document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('[data-grpmode]'); if (s && batch) groupModePick(s.value === 'own'); });
+document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('[data-grpmode]'); if (s && batch) groupModePick({ all: 0, adj: 2, own: 1 }[s.value] || 0); });
 
 /* ---------------- Group work… on a file ---------------- */
 const shareCopies = (st, f) => batch.students.filter(s => s !== st && s.files.some(x => x.from === st.key && x.name === f.name));
@@ -25360,8 +25483,19 @@ so nothing pasted or saved is ever set as HTML. Every change is one of the app's
 const TN_K = { h: ['Heading', 'H'], p: ['Strength', '✓'], n: ['Next step', '→'], q: ['Question', '?'] };
 const TN_TAG = [[1, 'B'], [2, 'I'], [4, 'U'], [8, 'MARK']];
 let tnL = [], tnSt = null, tnLast = null, tnIv = 0, tnRng = null, tnRO = null, tnQuiet = false;
+const tnWho = k => { const i = batch ? batch.students.findIndex(s => s.key === k) : -1; return i < 0 ? '' : shownName(batch.students[i], i); };
 function tnHasG(g) { return !!(g && g.tn && Array.isArray(g.tn.l) && g.tn.l.some(x => x && x.k !== 'h' && x.y !== 'h2' && String(x.s || '').trim())); }
-function tnHas(st) { return !!st && tnHasG(st.grade); }
+function tnHas(st) { return !!st && tnHasG({ tn: { l: tnMine(st, (st.grade.tn && st.grade.tn.l) || []) } }); }
+const tnHidden = (x, st) => !!(x && x.o && x.o !== st.key && batch && batch.students.some(s => s.key === x.o));
+const tnMine = (st, L) => (Array.isArray(L) ? L.filter(x => !tnHidden(x, st)) : []);
+const tnOwnNew = st => (st && typeof groupJust !== 'undefined' && groupJust === st.key && groupOwn(groupOf(st)) ? st.key : null);
+function tnWithHidden(st, L) {
+const old = tnStored(st) || [], keep = []; let vis = 0;
+for (const x of old) { if (tnHidden(x, st)) keep.push([vis, x]); else vis++; }
+const out = L.slice();
+for (let j = keep.length - 1; j >= 0; j--) out.splice(Math.min(keep[j][0], out.length), 0, tnClean(keep[j][1]));
+return out;
+}
 const tnStored = st => (st.grade.tn && Array.isArray(st.grade.tn.l) && st.grade.tn.l.length ? st.grade.tn.l : null);
 const tnTimesOn = () => store.get('gs.tnTime', true) !== false;
 const tnBackOn = () => setup.tnBack !== false;
@@ -25377,6 +25511,7 @@ function tnClean(x) {
 const o = { s: String(x.s || '').replace(/[\r\n\t ]/g, ' ') };
 if (TN_K[x.k]) o.k = x.k;
 if (/^(h2|ul|ol)$/.test(x.y) && o.k !== 'h') o.y = x.y;
+if (typeof x.o === 'string' && x.o) o.o = x.o;
 if (o.y === 'h2' && o.k) delete o.k;
 if (tnListOf(o) && +x.d === 2) o.d = 2;
 if (typeof x.t === 'number' && isFinite(x.t) && x.t >= 0) { o.t = Math.floor(x.t); if (x.h && +x.h) o.h = 1; }
@@ -25384,7 +25519,7 @@ const f = tnRuns(tnBits({ s: o.s, f: x.f })); if (f.length) o.f = f;
 return o;
 }
 function tnView(st) {
-const s = tnStored(st); if (s) return s.map(tnClean);
+const s = tnStored(st) && tnMine(st, tnStored(st)); if (s && s.length) return s.map(tnClean);
 const h = tnHead(); return h.length ? h.flatMap(s => [{ s, k: 'h' }, { s: '' }]) : [{ s: '' }];
 }
 const tnHasVid = st => st.files.some(f => f.kind === 'media' || f.kind === 'link');
@@ -25405,7 +25540,7 @@ u.st = st; u.t = Date.now(); pushUndo(u); tnLast = u;
 }
 function tnPut(st, join) {
 tnSnap(st, join);
-const was = tnHas(st), L = tnL.map(tnClean);
+const was = tnHas(st), L = tnWithHidden(st, tnL.map(tnClean));
 if (L.some(x => x.s.trim())) st.grade.tn = { l: L }; else delete st.grade.tn;
 touchGrade(st); saveSoon();
 if (was !== tnHas(st)) renderList();
@@ -25423,7 +25558,8 @@ const tnHost = () => $('#spBody > .sptool[data-tool="typed"]');
 const tnEd = () => document.querySelector('#spBody .tned');
 function tnEl(x) {
 const el = document.createElement('div'); el.className = 'tnp'; el.tnWas = x.s;
-for (const k of ['k', 'y', 'd', 't', 'h']) if (x[k] != null) el.dataset[k] = x[k];
+for (const k of ['k', 'y', 'd', 't', 'h', 'o']) if (x[k] != null) el.dataset[k] = x[k];
+if (x.o) el.title = 'Just for ' + tnWho(x.o);
 if (tnHeadOf(x)) { el.setAttribute('role', 'heading'); el.setAttribute('aria-level', x.k === 'h' ? '3' : '4'); }
 const a = tnBits(x);
 for (let i = 0; i < x.s.length;) {
@@ -25457,7 +25593,7 @@ else if (c.nodeType === 1) walk(c, tnFx(c, b));
 }
 })(el, 0);
 const d = el.dataset || {};
-return tnClean({ s: s.join(''), k: d.k, y: d.y, d: d.d, t: d.t != null && d.t !== '' ? +d.t : null, h: d.h, f: tnRuns(a) });
+return tnClean({ s: s.join(''), k: d.k, y: d.y, d: d.d, t: d.t != null && d.t !== '' ? +d.t : null, h: d.h, o: d.o, f: tnRuns(a) });
 }
 function tnFix(ed) {
 let box = null, moved = null;
@@ -25639,8 +25775,8 @@ const p = tnPos(); if (!p) return;
 const i = p.a[0], o = p.a[1], x = tnL[i], list = tnListOf(x) ? { y: x.y, ...(x.d ? { d: x.d } : {}) } : {};
 let at = i + 1;
 if (tnListOf(x) && !x.s) { if (x.d) delete x.d; else delete x.y; at = i; }
-else if (!o && x.s) tnL.splice(i, 0, { s: '', ...list });
-else { const a = tnBits(x); tnL.splice(i + 1, 0, { s: x.s.slice(o), f: tnRuns(a.slice(o)), ...list }); x.s = x.s.slice(0, o); x.f = tnRuns(a.slice(0, o)); }
+else if (!o && x.s) tnL.splice(i, 0, { s: '', ...list, ...(x.o ? { o: x.o } : {}) });
+else { const a = tnBits(x), who = (o < x.s.length && x.o) || tnOwnNew(st); tnL.splice(i + 1, 0, { s: x.s.slice(o), f: tnRuns(a.slice(o)), ...list, ...(who ? { o: who } : {}) }); x.s = x.s.slice(0, o); x.f = tnRuns(a.slice(0, o)); }
 tnL = tnL.map(tnClean); tnPaint(); tnSetPos({ a: [at, 0], z: [at, 0] }); tnPut(st, false);
 }
 function tnInsert(P) {
@@ -25652,6 +25788,7 @@ const head = { s: x.s.slice(0, o), f: tnRuns(a.slice(0, o)) }, tail = { s: x.s.s
 const join = (u, v) => ({ s: u.s + v.s, f: tnRuns([...tnBits(u), ...tnBits(v)]) }), kind = b => ({ k: b.k, y: b.y, d: b.d, t: b.t, h: b.h });
 const last = P[P.length - 1], out = P.length === 1 ? [{ ...kind(x.s ? x : P[0]), ...join(join(head, P[0]), tail) }]
 : [{ ...kind(head.s ? x : P[0]), ...join(head, P[0]) }, ...P.slice(1, -1), { ...kind(last), ...join(last, tail) }];
+const who = x.o || tnOwnNew(st); for (const b of out) if (who) b.o = who;
 tnL.splice(i, 1, ...out.map(tnClean));
 const c = P.length === 1 ? [i, o + P[0].s.length] : [i + P.length - 1, last.s.length];
 tnPaint(); tnSetPos({ a: c, z: c.slice() }); tnPut(st, false);
@@ -25721,6 +25858,7 @@ if (m && p.a[1] === m[0].length) {
 x.y = /^1/.test(m[0]) ? 'ol' : 'ul'; x.f = tnRuns(tnBits(x).slice(m[0].length)); x.s = x.s.slice(m[0].length);
 tnL = L.map(tnClean); tnPaint(); tnSetPos({ a: [i, 0], z: [i, 0] }); return tnPut(st, false);
 }
+if (/^insert/.test(type) && el && !el.tnWas && x.s && !tnHeadOf(x)) { const o = tnOwnNew(st); if (o) { x.o = o; el.dataset.o = o; el.title = 'Just for ' + tnWho(o); } else if (x.o) { delete x.o; delete el.dataset.o; el.removeAttribute('title'); } }
 if (/^insert/.test(type) && el && !el.tnWas && x.s && x.t == null && !tnHeadOf(x) && tnTimesOn()) { const t = tnNow(st); if (t != null) { const hid = tnAllHid(); x.t = Math.floor(t); el.dataset.t = x.t; if (hid) { x.h = 1; el.dataset.h = 1; } } }
 }
 [...ed.children].forEach((el, j) => { el.tnWas = L[j].s; });
@@ -25794,7 +25932,7 @@ if (m === 'copy') return navigator.clipboard.writeText(tnText(tnL)).then(() => t
 if (m === 'clear') {
 if (!await askDlg('Clear the typed notes for this student?\n\nUndo brings them back.', { ok: 'Clear', danger: true, lg: 1 })) return;
 if (batch.students[cur] !== st) return;
-tnSnap(st); delete st.grade.tn; touchGrade(st); saveSoon(); renderList(); tnLoad(tnHost(), st);
+tnSnap(st); const left = (tnStored(st) || []).filter(x => tnHidden(x, st)); if (left.length) st.grade.tn = { l: left }; else delete st.grade.tn; touchGrade(st); saveSoon(); renderList(); tnLoad(tnHost(), st);
 }
 });
 $('#paper').addEventListener('click', e => { if (e.target.closest('[data-tntry]')) spOpen('typed'); });
@@ -25825,7 +25963,7 @@ return lines.filter((l, i) => l.length || !i);
 }
 function tnBlocks(ctx, st, W, M) {
 const z = TN_SIZE[tnSizeOf()][0] / 12, zz = n => Math.round(n * z * 10) / 10;
-const UI = 'Inter, ' + FONT, cw = W - 2 * M, L = (st.grade.tn.l || []).map(tnClean), out = [];
+const UI = 'Inter, ' + FONT, cw = W - 2 * M, L = tnMine(st, st.grade.tn.l || []).map(tnClean), out = [];
 const words = { p: tr('Strength'), n: tr('Next step'), q: tr('Question') };
 ctx.font = '600 ' + zz(11) + 'px ' + UI;
 const kinds = L.filter(x => words[x.k] && x.s.trim()), labW = kinds.length ? Math.min(Math.round(cw * 0.3), Math.max(...kinds.map(x => ctx.measureText(TN_K[x.k][1] + ' ' + words[x.k]).width)) + 14) : 0;
@@ -33077,7 +33215,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.66":["On a phone: a More tab with your Google account, Sync now, updates, Help and Settings, and a bar above the tabs with Update now whenever a new version is ready. Today asks you to sign in with Google instead of choosing a folder."]};
+const WHATS_NEW = {"1.28.68":["Group work has a third way: Group score, adjust a partner. You score the group once, and with Just and a partner’s name above the paper you can change one criterion for that partner only. The rest keeps following the group score, and Use group score puts it back.","Partners with their own scores can have typed notes just for one of them: pick Just and their name above the paper, and the paragraphs you write then are theirs alone, with a blue bar. The rest of the notes stay shared."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -34897,7 +35035,7 @@ async function schGroupDo(g, what) {
 }
 $('#vSchool').addEventListener('click', e => {
   const add = e.target.closest('[data-schadd]');
-  if (add) { if (add.dataset.schadd === 'file') { schAgain = ''; return $('#schIn').click(); } return schClsLoad().then(() => schForm({ kind: add.dataset.schadd, cls: schForNames() })); }
+  if (add) { if (add.dataset.schadd === 'file' || add.dataset.schadd === 'drive') { schAgain = ''; return add.dataset.schadd === 'drive' ? gpOn($('#schIn')) : $('#schIn').click(); } return schClsLoad().then(() => schForm({ kind: add.dataset.schadd, cls: schForNames() })); }
   const padd = e.target.closest('[data-schpadd]'); if (padd) return schPersonForm({ role: padd.dataset.schpadd });
   if (e.target.closest('[data-schroles]')) return schRolesEdit();
   const ptd = e.target.closest('[data-schptd]'); if (ptd) { e.preventDefault(); return todoShowPerson(ptd.dataset.schptd); }

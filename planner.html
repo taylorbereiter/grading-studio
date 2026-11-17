@@ -1966,7 +1966,7 @@ function slideTalkHtml(s) {
 function ctxHtml(s) {
   const c = s.ctx || [];
   return '<div class="pl-cs"><div class="pl-cs-h"><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;ask&quot;]" title="Say it instead of typing">🎤 Dictate</button>' +
-    '<button class="btn sm ghost" data-a="ctxadd" title="A screenshot for context, not put on the slide. You can also paste one (Ctrl+V or ⌘V) or drop one here.">+ Screenshot</button><input type="file" id="ctxIn" accept="image/*" multiple hidden>' +
+    '<button class="btn sm ghost" data-a="ctxadd" title="A screenshot for context, not put on the slide. You can also paste one (Ctrl+V or ⌘V) or drop one here.">+ Screenshot</button>' + gpDrv('data-a="ctxadd"', '', 1) + '<input type="file" id="ctxIn" accept="image/*" multiple hidden>' +
     '<span class="muted pl-cs-tip">Screenshots are for context, not on the slide. Crop out student names and faces first.</span></div>' +
     (c.length ? '<div class="pl-cs-list">' + c.map((x, i) => '<div class="pl-csi"><button class="pl-csi-img" data-ctxview="' + i + '" title="See it bigger"><img src="' + esc(imgSrc(x.src)) + '" alt="' + esc(x.note || 'Screenshot') + '"></button>' +
       '<input class="btn sm" data-f="ctxnote" data-i="' + i + '" value="' + esc(x.note) + '" placeholder="What is it? (like: the task sheet)" aria-label="What this screenshot is">' +
@@ -1981,7 +1981,7 @@ async function addCtxShots(files) {
   const ins = document.querySelectorAll('[data-f="ctxnote"]'); if (ins.length) ins[ins.length - 1].focus();
   toast(n === 1 ? 'Screenshot added for context. Say what it is in the box under it.' : n + ' screenshots added for context');
 }
-function ctxPick() { const i = $('#ctxIn'); if (!i) return; i.onchange = () => { const fs = [...i.files]; i.value = ''; if (fs.length) addCtxShots(fs); }; i.click(); }
+function ctxPick() { const i = $('#ctxIn'); if (!i) return; i.onchange = () => { const fs = [...i.files]; i.value = ''; if (fs.length) addCtxShots(fs); }; gpClick(i); }
 async function ctxCopy(x) {
   try {
     const im = new Image(); im.src = x.src; await im.decode();
@@ -2410,6 +2410,7 @@ function renderLessons() {
 }
 
 function renderWeek() {
+  if (!L.weekOf || isNaN(parseYmd(L.weekOf))) L.weekOf = ymd(mondayOf(new Date()));   // drawn before the Planner has finished opening (a setup brought in at once)
   const el = $('#lessons'), mon = parseYmd(L.weekOf);
   const offs = plWeekOffs(), days = offs.map(i => ymd(addDays(mon, i)));
   const fri = addDays(mon, offs[offs.length - 1]), first = addDays(mon, offs[0]);
@@ -2466,7 +2467,7 @@ function renderEditor() {
     '<button class="btn sm" data-a="layout" title="Pick a layout for this slide">Layout: ' + esc(LAYOUTS[s.layout]) + ' ▾</button>' +
     '<button class="btn sm" data-a="look" title="Colors and background for this lesson">Look: ' + esc(LOOKS[lookOf(l)].name) + '</button>' + rtToolHtml() +
     '<span id="lsSize"></span>' +   // the text size of the box last clicked (boxes.js), filled in once the slide is drawn
-    (hasPic(s) ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
+    (hasPic(s) ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' + gpDrv('data-a="pic"', 'btn sm', 1) : '') +
     (s.layout === 'video' ? '<button class="btn sm" data-a="vid">' + (s.video ? 'Change video' : 'Add video link') + '</button>' + (s.video ? '<a class="btn sm ghost" href="' + esc(videoLink(s.video)) + '" target="_blank" rel="noopener">Watch</a>' : '') : '') +
     '<span class="sp"></span><button class="btn sm ghost" data-a="up" title="Move earlier">↑</button><button class="btn sm ghost" data-a="down" title="Move later">↓</button><button class="btn sm ghost" data-a="dup" title="Make a copy of this slide">Duplicate</button><button class="btn sm ghost" data-a="del" title="Delete this slide">Delete</button></div>' +
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
@@ -2848,7 +2849,7 @@ function splitOverflow() {
 }
 
 /* ---------- pictures ---------- */
-function pickPicture() { const i = $('#lsPicIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) setPicture(f); }; i.click(); }
+function pickPicture() { const i = $('#lsPicIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) setPicture(f); }; gpClick(i); }
 async function shrinkPic(file) {
   const url = URL.createObjectURL(file);
   try {
@@ -3020,7 +3021,7 @@ async function askClaude(l) {
 /* ---------- import ---------- */
 function importLesson() {
   openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a lesson file (.gslesson, from another computer or another teacher), a .lesson.json from ' + plAi() + ', or a lesson pack (.zip) of past lessons with their files. You can also paste a lesson below. A .lesson.json with the same id replaces the one here; a lesson file or a pack never replaces a lesson you have.</p>' +
-    '<button class="btn" id="imF">Choose a file…</button><input type="file" id="imIn" accept=".gslesson,.json,application/json,.zip,application/zip" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
+    '<button class="btn" id="imF">Choose a file…</button>' + gpBtn('#imIn', 'btn') + '<input type="file" id="imIn" accept=".gslesson,.json,application/json,.zip,application/zip" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
     '<div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Import pasted text</button></div>', true);
   $('#imF').onclick = () => $('#imIn').click();
   $('#imIn').onchange = async () => { const f = $('#imIn').files[0]; if (!f) return; closeDlg(); if (isShareFile(f)) return shareOpen(f); if (/\.zip$/i.test(f.name)) return packImport(f); importLessonText(await f.text(), f.name); };
@@ -3104,7 +3105,7 @@ function openTimetable() {
       '<h3 style="margin:18px 0 6px;font-size:15px">Days off</h3><textarea id="ttOff" rows="4" style="width:100%" placeholder="One per line: 2026-12-25 Christmas">' + esc(draft.daysOff.map(d => d.date + ' ' + d.label).join('\n')) + '</textarea>' +
       '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' +
       '<h3 style="margin:18px 0 6px;font-size:15px">Slide template</h3><div class="ls-mrow" id="ttTpl"><span class="' + (draft.template ? '' : 'muted') + '">' +
-      (draft.template ? 'Your own: ' + esc(draft.tplName) : 'The plain one built in: white, 16:9.') + '</span><button class="btn sm" data-tpl>' + (draft.template ? 'Pick another…' : 'Use my school’s template…') + '</button>' +
+      (draft.template ? 'Your own: ' + esc(draft.tplName) : 'The plain one built in: white, 16:9.') + '</span><button class="btn sm" data-tpl>' + (draft.template ? 'Pick another…' : 'Use my school’s template…') + '</button>' + gpDrv('data-tpl', '', 1) +
       (draft.template ? '<button class="btn sm ghost" data-tplplain>Use the plain one</button>' : '') + '</div>' +
       '<p class="muted" style="margin:4px 0 0;font-size:13px">A PowerPoint file (.pptx or .potx) with a Title Slide and a Title and Content layout. Downloads keep its masters and layouts.</p>' +
       '<h3 style="margin:18px 0 6px;font-size:15px">Slides</h3><label class="ls-mrow"><input type="checkbox" id="ttAgenda"' + (draft.deck.agenda !== false ? ' checked' : '') + '> A new lesson starts with an agenda on slide 2</label>' +
@@ -3132,7 +3133,7 @@ function openTimetable() {
       collect();
       const i = document.createElement('input'); i.type = 'file'; i.accept = '.pptx,.potx,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.presentationml.template';
       i.onchange = async () => { const t = await readTemplate(i.files[0]); if (!t || $('#ttTpl') == null) return; collect(); draft.template = t.b64; draft.tplName = t.name; draw(); };
-      return i.click();
+      return gpClick(i);
     }
     if (e.target.closest('[data-saveprof]')) {
       collect();
@@ -4467,7 +4468,7 @@ async function ownerSave(ref, o) { if (ref.t === 'lesson') { await lPut(o); if (
 function materialsHtml(o, t) {
   const files = o.files || [];
   return '<div class="pl-mats" data-owner="' + t + '|' + o.id + '"><div class="pl-mats-h"><h3>Materials</h3><span class="muted sp-small">Handouts, readings, task sheets and documents for this ' + t + '. Drag files here.</span><span class="sp"></span>' +
-    '<button class="btn sm" data-ma="newdoc">+ New document</button><button class="btn sm ghost" data-ma="add">+ Add files…</button>' + (t === 'lesson' && plxHas() ? '<button class="btn sm ghost" data-ma="ex" title="A strong example saved while marking, with names covered">+ Strong example…</button>' : '') + '<input type="file" multiple hidden data-mf="in"></div>' +
+    '<button class="btn sm" data-ma="newdoc">+ New document</button><button class="btn sm ghost" data-ma="add">+ Add files…</button>' + gpDrv('data-ma="add"', '', 1) + (t === 'lesson' && plxHas() ? '<button class="btn sm ghost" data-ma="ex" title="A strong example saved while marking, with names covered">+ Strong example…</button>' : '') + '<input type="file" multiple hidden data-mf="in"></div>' +
     (files.length ? '<div class="pl-files">' + files.map(f => '<div class="pl-file" draggable="true" data-chip=\'' + esc(JSON.stringify({ kind: 'file', t, owner: o.id, id: f.id })) + '\'><span class="pl-ft">' + fileIcon(f) + '</span><span class="pl-fn"><b>' + esc(f.name) + '</b><span>' + (f.kind === 'doc' ? 'Document' : (f.size / 1024 < 1024 ? Math.max(1, Math.round(f.size / 1024)) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB')) + '</span></span>' +
       '<button class="btn sm" data-ma="open" data-id="' + f.id + '">' + (f.kind === 'doc' ? 'Edit' : 'Open') + '</button>' + (isDocx(f) ? '<button class="btn sm ghost" data-ma="editdocx" data-id="' + f.id + '" title="Make an editable copy here">Edit a copy</button>' : '') +
       (f.kind === 'doc' ? '' : '<button class="btn sm ghost" data-ma="rpl" data-id="' + f.id + '" title="' + RPL_TIP + '">Replace…</button>') + '<button class="btn sm ghost" data-ma="dl" data-id="' + f.id + '" title="Download">↓</button><button class="btn sm ghost" data-ma="rm" data-id="' + f.id + '" title="Remove" aria-label="Remove">×</button></div>').join('') + '</div>'
@@ -4528,7 +4529,7 @@ async function matEditDocx(ref, id) {
 async function matClick(t) {
   const box = t.closest('[data-owner]'); if (!box) return false;
   const [tt, oid] = box.dataset.owner.split('|'), ref = { t: tt, id: oid }, a = t.dataset.ma, id = t.dataset.id;
-  if (a === 'add') { const i = box.querySelector('[data-mf="in"]'); i.onchange = () => matAdd(ref, [...i.files]); i.click(); return true; }
+  if (a === 'add') { const i = box.querySelector('[data-mf="in"]'); i.onchange = () => matAdd(ref, [...i.files]); gpClick(i); return true; }
   if (a === 'newdoc') { const o = ownerOf(ref); await matNewDoc(ref, (o.title || 'Untitled') + ' handout'); return true; }
   if (a === 'open') { await matOpen(ref, id); return true; }
   if (a === 'ex') { plxPick('mats'); return true; }
@@ -4965,14 +4966,14 @@ function finishedHtml(l) {
   const f = l.final, old = l.finals || [];
   return '<div class="pl-fin" id="plFin"><div class="pl-fin-h"><h3>Finished PowerPoint</h3><span class="muted sp-small">' +
     (f ? 'The deck you’ll teach from. Uploading a new one replaces it; the old one is kept below.' : 'Upload the deck when it’s done. Its slides replace the ones here, and this version is kept under Versions.') +
-    '</span><span class="sp"></span><button class="btn sm" data-a="finup" title="A finished .pptx, or a lesson .zip with the PowerPoint and its handouts">' + (f ? 'Upload a newer one…' : 'Upload .pptx or .zip…') + '</button><input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
+    '</span><span class="sp"></span><button class="btn sm" data-a="finup" title="A finished .pptx, or a lesson .zip with the PowerPoint and its handouts">' + (f ? 'Upload a newer one…' : 'Upload .pptx or .zip…') + '</button>' + gpDrv('data-a="finup"', '', 1) + '<input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
     (f ? '<div class="pl-files"><div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(f.name) + '</b><span>' + finSize(f.size) + ' · uploaded ' + finWhen(f.at) + (finFresh(l) ? '' : ' · slides changed here since') + '</span></span>' +
       '<button class="btn sm" data-a="findl" data-id="' + f.id + '">Download</button></div></div>' : '') +
     (old.length ? '<details class="pl-fin-old"><summary>Older finished decks (' + old.length + ')</summary><div class="pl-files">' + old.map(o => '<div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(o.name) + '</b><span>' + finSize(o.size) + ' · uploaded ' + finWhen(o.at) + '</span></span>' +
       '<button class="btn sm ghost" data-a="findl" data-id="' + o.id + '">Download</button><button class="btn sm ghost" data-a="finback" data-id="' + o.id + '" title="Make this the finished deck again, and its slides the lesson’s slides">Use this one again</button></div>').join('') + '</div></details>' : '') +
     '</div>';
 }
-function finPick() { const i = $('#finIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) (/\.zip$/i.test(f.name) ? lessonZip(L.open, f) : finUpload(L.open, f)); }; i.click(); }
+function finPick() { const i = $('#finIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) (/\.zip$/i.test(f.name) ? lessonZip(L.open, f) : finUpload(L.open, f)); }; gpClick(i); }
 
 /* ---------- a lesson .zip: the finished deck plus the lesson's materials, in one upload ----------
    Layout (folders inside are fine; they're ignored):
@@ -5749,7 +5750,7 @@ function pdfLib() {   // pdf.js and its worker load only when a book is opened
 async function booksHtml() {
   const list = await booksList();
   if (!SP.book) return '<div class="sp-pad"><h3>Your books</h3>' + (list.length ? list.map(x => '<div class="sp-book"><button class="sp-link" data-sbook="' + x.id + '">' + esc(x.name) + '</button><span class="muted">' + (x.pages ? x.pages + ' pages' : '') + '</span><button class="btn sm ghost" data-sdel="' + x.id + '" title="Remove from this computer">×</button></div>').join('') : '<p class="muted">Add a PDF you use for planning, like your routines book or a textbook. It stays in this browser on this computer; nothing is uploaded.</p>') +
-    '<button class="btn sm" data-sa="addbook">+ Add a PDF…</button><input type="file" id="spPdfIn" accept="application/pdf,.pdf" hidden></div>';
+    '<button class="btn sm" data-sa="addbook">+ Add a PDF…</button>' + gpDrv('data-sa="addbook"', '', 1) + '<input type="file" id="spPdfIn" accept="application/pdf,.pdf" hidden></div>';
   const bk = list.find(x => x.id === SP.book) || {};
   return '<div class="sp-bar"><button class="btn sm ghost" data-sa="books">‹ Books</button><b class="sp-title">' + esc(bk.name || '') + '</b></div>' +
     '<div class="sp-bar"><input class="btn sm sp-find" data-sf="find" placeholder="Search this book" value="' + esc(SP.find) + '"><button class="btn sm' + (SP.view === 'toc' ? ' on' : ' ghost') + '" data-sa="toc">Contents</button></div>' +
@@ -5958,7 +5959,7 @@ async function panelClick(e) {
   const a = t.dataset.sa;
   if (a === 'close') return panelToggle(false);
   if (a === 'books') { SP.book = null; SP.pdf = null; return panelRender(); }
-  if (a === 'addbook') { const i = $('#spPdfIn'); i.onchange = () => bookAdd(i.files[0]); return i.click(); }
+  if (a === 'addbook') { const i = $('#spPdfIn'); i.onchange = () => bookAdd(i.files[0]); return gpClick(i); }
   if (a === 'prev') return bookPage(SP.page - 1);
   if (a === 'next') return bookPage(SP.page + 1);
   if (a === 'toc') { if (SP.view === 'toc' && !SP.hits) return spShow('page'); SP.hits = null; SP.find = ''; const f = document.querySelector('[data-sf="find"]'); if (f) f.value = ''; const tc = $('#spToc'); if (tc) tc.innerHTML = tocHtml(); return spShow('toc'); }
@@ -6177,7 +6178,7 @@ function notebookClick(e) {
   const c = t.dataset.nb;
   if (/^(bold|italic|underline|ul|ol)$/.test(c)) nbCmd(c);
   else if (c === 'link' || c === 'video') nbAsk(c);
-  else if (c === 'pic') { NB.range = nbSel($('#nbPage')) || NB.range; const i = $('#nbPicIn'); i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) nbPic(f); }; i.click(); }
+  else if (c === 'pic') { NB.range = nbSel($('#nbPage')) || NB.range; const i = $('#nbPicIn'); i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) nbPic(f); }; gpClick(i); }
   else if (c === 'askok') { const v = $('#nbAskIn').value; $('#nbAsk').hidden = true; nbAddUrl(v, NB.ask); }
   else if (c === 'askx') $('#nbAsk').hidden = true;
   return true;
@@ -6483,6 +6484,138 @@ function pkDragEnd() {
 }
 function pkKeyOwn(e) { if (!PK.on) return; e.stopPropagation(); pkKey(e); }
 window.__pick = { PK, mem: () => pkMem(PK.cls), open: pkOpen, close: pkClose, groups: pkGroups, count: pkCount, short: pkShort, nice: pkNice, rolls: pkRolls };
+
+/* ---------------- Google Drive's own chooser, for both pages ----------------
+   Built into Grading Studio and into the Planner. Each page says how it signs in (gpHost(), its own): Grading Studio through its
+   Google line (src/app/drive.js), the Planner through src/planner/pldrive.js. The app gets only the files picked in Google's chooser
+   (drive.file), never a look at the rest of the Drive.
+   Any place that takes files from the computer through a file input can take them from Drive too: gpOn(input) fills the input with
+   the picked files and tells it they changed, so what happens next is what happens with a file from the computer. A button with
+   data-gdrive="<selector of the input>" does that by itself; gpBtn() draws one, only where Google is set up. */
+const GP_FOLDER = 'application/vnd.google-apps.folder';
+const GP_W = 'application/vnd.openxmlformats-officedocument.', GP_GA = 'application/vnd.google-apps.';
+const GP_EXT = { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', heic: 'image/heic', heif: 'image/heif', svg: 'image/svg+xml',
+  docx: GP_W + 'wordprocessingml.document', dotx: GP_W + 'wordprocessingml.template', docm: 'application/vnd.ms-word.document.macroEnabled.12', dotm: 'application/vnd.ms-word.template.macroEnabled.12',
+  pptx: GP_W + 'presentationml.presentation', potx: GP_W + 'presentationml.template', xlsx: GP_W + 'spreadsheetml.sheet', csv: 'text/csv', tsv: 'text/tab-separated-values', txt: 'text/plain', md: 'text/markdown', json: 'application/json', zip: 'application/zip' };
+const GP_IMG = ['png', 'jpg', 'gif', 'webp', 'heic', 'heif', 'svg'].map(x => GP_EXT[x]);
+const gpWays = office => ({ document: office ? ['docx', 'pdf'] : ['pdf', 'docx'], presentation: office ? ['pptx', 'pdf'] : ['pdf', 'pptx'], spreadsheet: office ? ['xlsx', 'csv', 'pdf'] : ['pdf', 'xlsx', 'csv'], drawing: ['png', 'pdf'] });
+function gpKinds(accept, office) {
+  let mimes = [];
+  for (const t of String(accept || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean)) {
+    if (t === 'image/*') mimes.push(...GP_IMG);
+    else if (t[0] === '.' && GP_EXT[t.slice(1)]) mimes.push(GP_EXT[t.slice(1)]);
+    else if (t[0] !== '.' && !t.endsWith('/*')) mimes.push(t);
+    else { mimes = null; break; }   // a kind of file Drive has no name for (.gslesson, video/*): show everything
+  }
+  if (mimes && !mimes.length) mimes = null;
+  if (mimes && mimes.includes('application/zip')) mimes.push('application/x-zip-compressed');
+  const ok = m => !mimes || mimes.includes(m), want = {};
+  for (const [k, ways] of Object.entries(gpWays(office))) { const w = ways.find(x => ok(GP_EXT[x])); if (w) want[k] = w; }
+  return { mimes: mimes && [...new Set(mimes.concat(Object.keys(want).map(k => GP_GA + k)))], want };
+}
+let gpP = null;
+function gpLoadPicker() {
+  if (window.google && google.picker) return Promise.resolve();
+  return gpP || (gpP = new Promise((res, rej) => {
+    const fail = () => { gpP = null; rej(new Error('Couldn’t reach Google. Check the internet connection.')); };
+    const go = () => gapi.load('picker', { callback: res, onerror: fail });
+    if (window.gapi && gapi.load) return go();
+    const s = document.createElement('script'); s.src = 'https://apis.google.com/js/api.js'; s.async = true; s.onload = go; s.onerror = fail; document.head.appendChild(s);
+  }));
+}
+async function gpPick(token, cid, key, o = {}) {
+  await gpLoadPicker();
+  const P = google.picker;
+  return new Promise(res => {
+    const mk = (label, set) => {
+      const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
+      if (o.folder) v.setSelectFolderEnabled(true);
+      if (o.mimes) v.setMimeTypes(o.mimes.concat(GP_FOLDER).join(','));
+      if (v.setLabel) v.setLabel(label);
+      set(v); return v;
+    };
+    const views = [];
+    if (o.parent && !o.folder) views.push(mk(o.parentName || 'Last folder', v => v.setParent(o.parent)));
+    views.push(mk('My Drive', v => v.setParent('root')));
+    views.push(mk('Shared with me', v => v.setOwnedByMe && v.setOwnedByMe(false)));
+    views.push(mk('Shared drives', v => v.setEnableDrives && v.setEnableDrives(true)));
+    const b = new P.PickerBuilder().setOAuthToken(token).setAppId(cid.split('-')[0]).setOrigin(location.origin);
+    views.forEach(v => b.addView(v));
+    b.enableFeature(P.Feature.SUPPORT_DRIVES).setCallback(d => {
+      if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).map(x => o.folder && x.mimeType !== GP_FOLDER ? (x.parentId ? { id: x.parentId, name: 'Folder with ' + x.name, mimeType: GP_FOLDER } : null) : x).filter(x => x && (o.folder || x.mimeType !== GP_FOLDER)).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '', ...(x.parentId ? { parent: x.parentId } : {}) })));
+      else if (d[P.Response.ACTION] === P.Action.CANCEL) res([]);
+    });
+    if (o.title) b.setTitle(o.title);
+    if (key && !/@@/.test(key)) b.setDeveloperKey(key);
+    if (o.multi) b.enableFeature(P.Feature.MULTISELECT_ENABLED);
+    b.build().setVisible(true);
+  });
+}
+function gpUrl(d, want) {
+  const k = d.mime.startsWith(GP_GA) ? d.mime.slice(GP_GA.length) : '';
+  if (!k) return { url: 'files/' + encodeURIComponent(d.id) + '?alt=media&supportsAllDrives=true', name: d.name, type: d.mime };
+  const w = (want || {})[k] || 'pdf', type = GP_EXT[w];
+  return { url: 'files/' + encodeURIComponent(d.id) + '/export?mimeType=' + encodeURIComponent(type), name: d.name.toLowerCase().endsWith('.' + w) ? d.name : d.name + '.' + w, type };
+}
+async function gpOn(inp) {
+  const h = typeof gpHost === 'function' && gpHost(); if (!h) return inp.click();
+  try {
+    const k = gpKinds(inp.accept, h.office || !!inp.dataset.office);
+    const picked = await h.pick({ multi: inp.multiple, mimes: k.mimes, title: inp.multiple ? 'Choose files' : 'Choose a file' });
+    if (!picked.length) return;
+    h.say('Getting it from Drive…');
+    const files = [];
+    for (const d of picked) { const u = gpUrl(d, k.want), r = await h.get(u.url); files.push(new File([await r.blob()], u.name.replace(/[\\/]+/g, '-'), { type: u.type || r.headers.get('content-type') || '' })); }
+    const dt = new DataTransfer(); files.forEach(f => dt.items.add(f));
+    inp.files = dt.files;
+    inp.dispatchEvent(new Event('change', { bubbles: true }));
+  } catch (e) { console.error(e); h.say((e && e.message) || String(e)); }
+}
+const gpBtn = (sel = '', cls) => typeof gpHost === 'function' && gpHost() ? '<button type="button" class="' + (cls || 'btn sm ghost') + '" data-gdrive="' + sel + '">From Google Drive…</button>' : '';
+let gpArm = 0;
+const gpClick = inp => { const d = Date.now() - gpArm < 1500; gpArm = 0; return d ? gpOn(inp) : inp.click(); };
+const GP_ICO = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="vertical-align:-3px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round"><path d="M8.5 3.5h7l6 10.5-3.5 6h-12L2.5 14z M8.5 3.5l6 10.5h7 M15.5 3.5l-9.5 16.5 M2.5 14h12"/></svg>';
+const gpDrv = (attrs, cls, small) => typeof gpHost === 'function' && gpHost() ? '<button type="button" class="' + (cls || 'btn sm ghost') + '" data-drv ' + attrs + (small ? ' title="From Google Drive…" aria-label="From Google Drive…">' + GP_ICO : '>From Google Drive…') + '</button>' : '';
+document.addEventListener('click', e => {
+  if (e.target.closest && e.target.closest('[data-drv]')) gpArm = Date.now();
+  const b = e.target.closest && e.target.closest('[data-gdrive]'); if (!b) return;
+  const inp = b.dataset.gdrive ? document.querySelector(b.dataset.gdrive) : b.parentElement.querySelector('input[type=file]'); if (!inp) return;
+  e.preventDefault();
+  gpOn(inp);
+}, true);
+
+/* ================= Planner: files from Google Drive =================
+   The Planner signs in to Google on its own (it has none of Grading Studio's code), only for the files picked in Google's chooser
+   (drive.file). It uses the key Grading Studio got in this tab when there is one (the two pages share a tab), else asks Google with
+   the account Grading Studio signed in with. Shown only once Google is set up in Grading Studio, and not on an iPhone or iPad (there
+   Google's sign-in leaves the page). The chooser and the downloads are src/gpick.js. */
+const PL_GCID = "652182763861-oq7s0d52n6uhq1b2q5rvfdts126v989r.apps.googleusercontent.com", PL_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const plLs = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+const plGcid = () => (/apps\.googleusercontent\.com$/.test(PL_GCID) ? PL_GCID : '') || plLs('gs.gcid') || '';
+const PL_IOS = navigator.standalone === true || /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+const plTok = () => { try { const k = JSON.parse(sessionStorage.getItem('gs.gTok')); return k && k.exp > Date.now() + 60000 && (k.scope || '').split(' ').includes(PL_SCOPE) ? k : null; } catch { return null; } };
+let plGis = null;
+const plLoadGis = () => plGis || (plGis = new Promise((res, rej) => { if (window.google && google.accounts && google.accounts.oauth2) return res(); const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onload = res; s.onerror = () => { plGis = null; rej(new Error('Couldn’t reach Google. Check the internet connection.')); }; document.head.appendChild(s); }));
+function plToken() {
+  const k = plTok(); if (k) return Promise.resolve(k.t);
+  return plLoadGis()
+    .then(() => new Promise((res, rej) => {
+      google.accounts.oauth2.initTokenClient({
+        client_id: plGcid(), scope: PL_SCOPE + ' https://www.googleapis.com/auth/drive.appdata', hint: plLs('gs.gEmail') || undefined, include_granted_scopes: true,
+        callback: r => { if (r.error) return rej(new Error(r.error)); try { sessionStorage.setItem('gs.gTok', JSON.stringify({ t: r.access_token, exp: Date.now() + (r.expires_in || 3600) * 1000, scope: r.scope || PL_SCOPE })); } catch { } res(r.access_token); },
+        error_callback: e => rej(new Error(e && e.type === 'popup_closed' ? 'Sign-in was closed' : 'Sign-in didn’t finish')),
+      }).requestAccessToken({ prompt: '' });
+    }));
+}
+async function plGet(u) {
+  const r = await fetch('https://www.googleapis.com/drive/v3/' + u, { headers: { Authorization: 'Bearer ' + await plToken() } });
+  if (r.status === 401) try { sessionStorage.removeItem('gs.gTok'); } catch { }
+  if (!r.ok) throw new Error('Google Drive said ' + r.status + ': ' + ((await r.text()).match(/"message":\s*"([^"]+)/) || [, ''])[1]);
+  return r;
+}
+const gpHost = () => /^https?:$/.test(location.protocol) && window.self === window.top && plGcid() && plLs('gs.gEmail') && (!PL_IOS || plTok())
+  ? { office: true, pick: async o => gpPick(await plToken(), plGcid(), '', o), get: plGet, say: m => toast(m, 6000) } : null;
+if (gpHost() && !plTok()) setTimeout(() => plLoadGis().catch(() => { }), 3000);
 
 /* ================= Present: teach from the lesson =================
    The lesson's slides fill the screen. One key away: the agenda (tick items off as the class goes), a countdown the
@@ -8026,7 +8159,7 @@ function renderUnit() {
     '<label>Starts <select class="btn sm" data-uf="start">' + mons.map(m => '<option value="' + m + '"' + (m === u.start ? ' selected' : '') + '>' + (schoolWeek(m) ? 'Week ' + schoolWeek(m) + ' · ' : '') + rangeLabel(m) + '</option>').join('') + '</select></label>' +
     '<label>Weeks <span class="pl-step"><button class="btn sm" data-a="wkminus" aria-label="One week fewer">−</button><b>' + u.weeks.length + '</b><button class="btn sm" data-a="wkplus" aria-label="One week more">+</button></span></label>' +
     '<label class="pl-atl">' + (plCur() ? esc(plCur()) + ' page' : 'Unit plan link') + ' <input class="btn sm" data-uf="atlas" placeholder="Paste ' + (plCur() ? 'the unit’s ' + esc(plCur()) + ' link' : 'a link to the unit plan') + '" value="' + esc(u.atlas) + '">' + (u.atlas ? '<a class="btn sm" href="' + esc(u.atlas) + '" target="_blank" rel="noopener">Open</a>' : '') + '</label></section>';
-  h += '<section class="pl-card"><div class="lhead"><h2>' + (plCur() ? 'From ' + esc(plCur()) : 'From your unit plan') + '</h2><span class="sp"></span><button class="btn sm" data-a="addshot">Add screenshot…</button><button class="btn sm" data-a="pasteweeks">Type or paste the weeks…</button>' +
+  h += '<section class="pl-card"><div class="lhead"><h2>' + (plCur() ? 'From ' + esc(plCur()) : 'From your unit plan') + '</h2><span class="sp"></span><button class="btn sm" data-a="addshot">Add screenshot…</button>' + gpDrv('data-a="addshot"', '', 1) + '<button class="btn sm" data-a="pasteweeks">Type or paste the weeks…</button>' +
     '<button class="btn sm primary" data-a="askweeks"' + (atlas.length ? '' : ' disabled title="Add a screenshot first"') + '>Ask ' + plAi() + ' to fill the weeks</button></div>' +
     '<div class="pl-drop" id="plShotDrop" tabindex="0">' + (atlas.length ? '<div class="pl-shots">' + atlas.map(f => '<figure class="pl-shot"><button class="pl-shotimg" data-a="viewfile" data-fid="' + f.id + '" aria-label="Look at ' + esc(f.name) + '"><img data-fimg="' + f.id + '" alt=""></button><figcaption>' + esc(f.name) + '<button class="btn sm ghost" data-a="rplshot" data-fid="' + f.id + '" title="' + RPL_TIP + '">Replace…</button><button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></figcaption></figure>').join('') + '</div>' : '') +
     '<p class="muted">' + (atlas.length ? 'Paste or drop more screenshots here.' : 'Take a screenshot of the unit ' + (plCur() ? 'in ' + esc(plCur()) : 'plan, wherever your school keeps it') + ', then paste it here (Ctrl+V or ⌘V) or drop the picture in.') + '</p></div></section>';
@@ -8046,7 +8179,7 @@ function renderUnit() {
       }).join('') || '<span class="muted">No classes this week</span>' : '') + '</div></div>';
   });
   h += '</div></section>';
-  h += '<section class="pl-card" data-owner="unit|' + esc(u.id) + '"><div class="lhead"><h2>Summative and unit files</h2><span class="sp"></span><button class="btn sm" data-ma="newdoc">+ New document</button><button class="btn sm" data-a="addfile">Add files…</button></div>' +
+  h += '<section class="pl-card" data-owner="unit|' + esc(u.id) + '"><div class="lhead"><h2>Summative and unit files</h2><span class="sp"></span><button class="btn sm" data-ma="newdoc">+ New document</button><button class="btn sm" data-a="addfile">Add files…</button>' + gpDrv('data-a="addfile"', '', 1) + '</div>' +
     '<div class="pl-drop" id="plFileDrop">' + (other.length ? '<div class="pl-files">' + other.map(f => '<div class="pl-file"><span class="pl-ft">' + (f.kind === 'doc' ? 'DOC' : esc((f.name.split('.').pop() || '').slice(0, 4).toUpperCase())) + '</span><div class="pl-fn"><b>' + esc(f.name) + '</b><span>' + (f.kind === 'doc' ? 'Document' : (f.kind === 'summative' ? 'Summative' : 'Unit file') + ' · ' + kb(f.size)) + '</span></div>' +
       (f.kind === 'doc' ? '<button class="btn sm ghost" data-ma="claude" data-id="' + f.id + '" title="Put this in the ' + plAiTag() + ' box">+ ' + plAiTag() + ' box</button>' : '<select class="btn sm" data-fkind="' + f.id + '" aria-label="Kind"><option value="summative"' + (f.kind === 'summative' ? ' selected' : '') + '>Summative</option><option value="other"' + (f.kind === 'other' ? ' selected' : '') + '>Unit file</option></select>') +
       '<button class="btn sm" data-a="viewfile" data-fid="' + f.id + '">Open</button>' + (f.kind === 'doc' ? '' : '<button class="btn sm ghost" data-ma="rpl" data-id="' + f.id + '" title="' + RPL_TIP + '">Replace…</button>') + '<button class="btn sm ghost" data-a="dlfile" data-fid="' + f.id + '">Download</button><button class="btn sm ghost" data-a="rmfile" data-fid="' + f.id + '">Remove</button></div>').join('') + '</div>' : '') +
@@ -8136,8 +8269,8 @@ async function unitsClick(e) {
     if ((last.focus || last.notes || last.standards) && t.dataset.sure !== '1') { t.dataset.sure = '1'; toast('The last week has writing in it. Click − again to remove it.'); return true; }
     u.weeks.pop(); await unitPut(u); renderUnit(); return true;
   }
-  if (a === 'addshot') { const i = $('#plShotIn'); i.onchange = () => { const fs = [...i.files]; i.value = ''; addUnitFiles(u, fs, 'atlas'); }; i.click(); return true; }
-  if (a === 'addfile') { const i = $('#plFileIn'); i.onchange = () => { const fs = [...i.files]; i.value = ''; addUnitFiles(u, fs, null); }; i.click(); return true; }
+  if (a === 'addshot') { const i = $('#plShotIn'); i.onchange = () => { const fs = [...i.files]; i.value = ''; addUnitFiles(u, fs, 'atlas'); }; gpClick(i); return true; }
+  if (a === 'addfile') { const i = $('#plFileIn'); i.onchange = () => { const fs = [...i.files]; i.value = ''; addUnitFiles(u, fs, null); }; gpClick(i); return true; }
   if (a === 'viewfile') { await viewFile(u, t.dataset.fid); return true; }
   if (a === 'rplshot') { matPickReplace({ t: 'unit', id: u.id }, t.dataset.fid); return true; }
   if (a === 'dlfile') { const f = u.files.find(x => x.id === t.dataset.fid), b = await fileBlob(t.dataset.fid); if (f && b) { if (f.kind === 'doc') saveBlob(f.name + '.docx', await docxOf(await b.text(), f.name)); else saveBlob(f.name, b); } return true; }

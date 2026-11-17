@@ -18,10 +18,10 @@ async function loadRefs() {
   try { recs = (await idbDo('readonly', o => o.getAll(underId(batch.id)))) || []; } catch { return; }
   for (const r of recs.filter(r => r.bid === batch.id && r.key === REF_KEY).sort((a, b) => a.added - b.added)) refFiles.push({ path: r.path, name: r.name, data: r.data, for: r.for || '' });
 }
-function pickRefs(st) {
+function pickRefs(st, drive) {
   const inp = document.createElement('input'); inp.type = 'file'; inp.multiple = true;   // any kind of file
   inp.onchange = () => addRefs([...inp.files], st);
-  inp.click();
+  if (drive) gpOn(inp); else inp.click();
 }
 async function addRefs(files, st) {
   let n = 0;
@@ -55,18 +55,18 @@ function openReadings() {
     (all.length || rd ? '<div class="rdl">' + (rd ? '<div class="rdrow"><b>' + esc(rd.name) + '</b><span class="sp"></span><button class="btn sm" data-refdel>Remove</button></div>' : '') +
       all.map(r => '<div class="rdrow"><b>' + esc(r.name) + '</b><span class="sp"></span><button class="btn sm" data-refrm="' + esc(r.path) + '">Remove for everyone</button></div>').join('') + '</div>'
       : '<p class="muted" style="font-size:14px">None yet.</p>') +
-    '<button class="btn sm primary" data-refadd>+ Add a file for everyone…</button>' +
+    '<button class="btn sm primary" data-refadd>+ Add a file for everyone…</button>' + (gpHost() ? ' <button class="btn sm" data-refadd="d">From Google Drive…</button>' : '') +
     '<h3 style="margin:22px 0 6px">For ' + nm + '</h3>' +
     (all.length ? '<div class="rdl">' + all.map(r => '<label class="chk rdrow" style="margin:0"><input type="checkbox" data-refon="' + esc(r.path) + '"' + (refSkipped(st, r) ? '' : ' checked') + '> Show ' + esc(r.name) + '</label>').join('') + '</div>' : '') +
     (own.length ? '<div class="rdl">' + own.map(r => '<div class="rdrow"><b>' + esc(r.name) + '</b> <span class="muted" style="font-size:13px">only for ' + nm + '</span><span class="sp"></span><button class="btn sm" data-refrm="' + esc(r.path) + '">Remove</button></div>').join('') + '</div>' : '') +
-    '<button class="btn sm" data-refmine>+ Add a file just for ' + nm + '…</button>' +
+    '<button class="btn sm" data-refmine>+ Add a file just for ' + nm + '…</button>' + (gpHost() ? ' <button class="btn sm" data-refmine="d">From Google Drive…</button>' : '') +
     (all.length ? '<p class="muted" style="font-size:13px;margin-bottom:0">For a student with a different reading: untick the everyone file above, then add theirs.</p>' : '') +
     '</div><div class="bf"><button class="btn primary" data-close>Done</button></div>', true);
   const box = $('#dlgBox');
   box.onclick = e => {
     if (e.target.closest('[data-close]')) return closeDlg();
-    if (e.target.closest('[data-refadd]')) return pickRefs();
-    if (e.target.closest('[data-refmine]')) return pickRefs(st);
+    const ra = e.target.closest('[data-refadd]'); if (ra) return pickRefs(undefined, !!ra.dataset.refadd);
+    const rm = e.target.closest('[data-refmine]'); if (rm) return pickRefs(st, !!rm.dataset.refmine);
     const rr = e.target.closest('[data-refrm]'); if (rr) return dropRef(rr.dataset.refrm);
     if (e.target.closest('[data-refdel]')) { store.del(refKey()); openStudent(cur); return refreshReadings(); }
   };

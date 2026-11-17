@@ -1,12 +1,13 @@
 {
- "version": "1.28.66",
- "build": "b24d14e1c437",
+ "version": "1.28.68",
+ "build": "999bc0232a68",
  "notes": [
-  "On a phone: a More tab with your Google account, Sync now, updates, Help and Settings, and a bar above the tabs with Update now whenever a new version is ready. Today asks you to sign in with Google instead of choosing a folder."
+  "Group work has a third way: Group score, adjust a partner. You score the group once, and with Just and a partner’s name above the paper you can change one criterion for that partner only. The rest keeps following the group score, and Use group score puts it back.",
+  "Partners with their own scores can have typed notes just for one of them: pick Just and their name above the paper, and the paragraphs you write then are theirs alone, with a blue bar. The rest of the notes stay shared."
  ],
  "files": {
-  "index.html": "3ee888f54a4c4a55c061c6e3f0da8ab702f6410fa58385c043dd9ac052f01608",
-  "planner.html": "85bf9e07fbea8009d81cd82d0689887e25a02d357cf54fa40b02b7a0832d827d"
+  "index.html": "48e230768d4e42d68a0b87b4fcf1110f58926a71bd2cc126386af842120241e5",
+  "planner.html": "c62bb78edb1014ff5813acf15cf8cb279a92d19fd4fe1662753c2249a56b695b"
  },
  "langs": {
   "lang/zh-Hant.js": "71dc958f8dd6dea4c1150a73a8f0d21339b6b57d8e4a4b75122ce33dda69cae1",

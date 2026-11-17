@@ -209,12 +209,12 @@ async function loadAdded() {
     const f = await makeFile(r.path, r.data); f.added = r.added; f.akey = r.key; if (r.from) f.from = r.from; st.files.push(f);
   }
 }
-function pickAdd(st) {
+function pickAdd(st, drive) {
   const inp = document.createElement('input');
   // any kind of file
   inp.type = 'file'; inp.multiple = true;
   inp.onchange = () => addFiles(st, [...inp.files].map(f => ({ path: f.name, file: f })));
-  inp.click();
+  if (drive) gpOn(inp); else inp.click();
 }
 async function addFiles(st, list, quiet) {
   list = list.filter(e => e.file && !junk(e.path) && !houseFile(e.path));
