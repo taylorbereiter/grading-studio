@@ -55,6 +55,7 @@ export const LOCAL = [
   // used by both, holding no student data
   ['gs.words', 'shared', 'work', 'json', 'the teacher’s own words: assistant names and links, terms'],
   ['gs.theme', 'shared', 'pref', 'json', 'light or dark (kept apart from the sample on purpose)'],
+  ['gs.look', 'shared', 'pref', 'json', 'the new app’s theme: graphite, porcelain, ocean, ink, plum or midnight (written by the new app only)'],
   ['gs.lang', 'shared', 'pref', 'json', 'the language (kept apart from the sample on purpose)'],
   ['gs.gEmail', 'shared', 'pref', 'text', 'the Google account signed in'],
   ['gs.gcid', 'shared', 'pref', 'text', 'a Google Client ID of the teacher’s own'],

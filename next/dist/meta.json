@@ -10,29 +10,17 @@
    "imports": [],
    "format": "esm"
   },
-  "next/src/main.js": {
-   "bytes": 1150,
-   "imports": [
-    {
-     "path": "node_modules/preact/dist/preact.mjs",
-     "kind": "import-statement",
-     "original": "preact"
-    },
-    {
-     "path": "next/src/shared/lock.js",
-     "kind": "import-statement",
-     "original": "./shared/lock.js"
-    }
-   ],
-   "format": "esm"
+  "next/lang/en.json": {
+   "bytes": 3120,
+   "imports": []
   },
-  "next/src/shared/idb.js": {
-   "bytes": 3558,
+  "next/src/i18n/t.js": {
+   "bytes": 1712,
    "imports": [
     {
-     "path": "next/src/shared/lock.js",
+     "path": "next/lang/en.json",
      "kind": "import-statement",
-     "original": "./lock.js"
+     "original": "../../lang/en.json"
     }
    ],
    "format": "esm"
@@ -48,8 +36,66 @@
    ],
    "format": "esm"
   },
+  "next/src/ui/tokens.js": {
+   "bytes": 9527,
+   "imports": [],
+   "format": "esm"
+  },
+  "next/src/services/theme.js": {
+   "bytes": 1505,
+   "imports": [
+    {
+     "path": "next/src/shared/ls.js",
+     "kind": "import-statement",
+     "original": "../shared/ls.js"
+    },
+    {
+     "path": "next/src/ui/tokens.js",
+     "kind": "import-statement",
+     "original": "../ui/tokens.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/main.js": {
+   "bytes": 980,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "next/src/shared/lock.js",
+     "kind": "import-statement",
+     "original": "./shared/lock.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "./i18n/t.js"
+    },
+    {
+     "path": "next/src/services/theme.js",
+     "kind": "import-statement",
+     "original": "./services/theme.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/shared/idb.js": {
+   "bytes": 3558,
+   "imports": [
+    {
+     "path": "next/src/shared/lock.js",
+     "kind": "import-statement",
+     "original": "./lock.js"
+    }
+   ],
+   "format": "esm"
+  },
   "next/src/shared/keys.js": {
-   "bytes": 12292,
+   "bytes": 12439,
    "imports": [],
    "format": "esm"
   },
@@ -189,32 +235,411 @@
     }
    ],
    "format": "esm"
+  },
+  "node_modules/preact/hooks/dist/hooks.mjs": {
+   "bytes": 3628,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/ui/icons.js": {
+   "bytes": 9302,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    }
+   ],
+   "format": "esm"
+  },
+  "node_modules/preact/compat/dist/compat.mjs": {
+   "bytes": 9673,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/ui/popups.jsx": {
+   "bytes": 5355,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "node_modules/preact/compat/dist/compat.mjs",
+     "kind": "import-statement",
+     "original": "preact/compat"
+    },
+    {
+     "path": "next/src/ui/icons.js",
+     "kind": "import-statement",
+     "original": "./icons.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/ui/controls.jsx": {
+   "bytes": 10395,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "next/src/ui/icons.js",
+     "kind": "import-statement",
+     "original": "./icons.js"
+    },
+    {
+     "path": "next/src/ui/popups.jsx",
+     "kind": "import-statement",
+     "original": "./popups.jsx"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/ui/overlay.jsx": {
+   "bytes": 4690,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "next/src/ui/controls.jsx",
+     "kind": "import-statement",
+     "original": "./controls.jsx"
+    },
+    {
+     "path": "next/src/ui/icons.js",
+     "kind": "import-statement",
+     "original": "./icons.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../i18n/t.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/services/commands.js": {
+   "bytes": 1434,
+   "imports": [],
+   "format": "esm"
+  },
+  "next/src/services/shortcuts.js": {
+   "bytes": 2869,
+   "imports": [],
+   "format": "esm"
+  },
+  "next/src/services/speech.js": {
+   "bytes": 1200,
+   "imports": [],
+   "format": "esm"
+  },
+  "next/src/services/files.js": {
+   "bytes": 2201,
+   "imports": [],
+   "format": "esm"
+  },
+  "next/src/services/undo.js": {
+   "bytes": 2778,
+   "imports": [],
+   "format": "esm"
+  },
+  "next/src/ui/services.jsx": {
+   "bytes": 16589,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "next/src/ui/icons.js",
+     "kind": "import-statement",
+     "original": "./icons.js"
+    },
+    {
+     "path": "next/src/ui/controls.jsx",
+     "kind": "import-statement",
+     "original": "./controls.jsx"
+    },
+    {
+     "path": "next/src/ui/popups.jsx",
+     "kind": "import-statement",
+     "original": "./popups.jsx"
+    },
+    {
+     "path": "next/src/ui/overlay.jsx",
+     "kind": "import-statement",
+     "original": "./overlay.jsx"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../i18n/t.js"
+    },
+    {
+     "path": "next/src/services/commands.js",
+     "kind": "import-statement",
+     "original": "../services/commands.js"
+    },
+    {
+     "path": "next/src/services/shortcuts.js",
+     "kind": "import-statement",
+     "original": "../services/shortcuts.js"
+    },
+    {
+     "path": "next/src/services/speech.js",
+     "kind": "import-statement",
+     "original": "../services/speech.js"
+    },
+    {
+     "path": "next/src/services/files.js",
+     "kind": "import-statement",
+     "original": "../services/files.js"
+    },
+    {
+     "path": "next/src/services/undo.js",
+     "kind": "import-statement",
+     "original": "../services/undo.js"
+    },
+    {
+     "path": "next/src/ui/tokens.js",
+     "kind": "import-statement",
+     "original": "./tokens.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/ui/index.js": {
+   "bytes": 357,
+   "imports": [
+    {
+     "path": "next/src/ui/controls.jsx",
+     "kind": "import-statement",
+     "original": "./controls.jsx"
+    },
+    {
+     "path": "next/src/ui/popups.jsx",
+     "kind": "import-statement",
+     "original": "./popups.jsx"
+    },
+    {
+     "path": "next/src/ui/overlay.jsx",
+     "kind": "import-statement",
+     "original": "./overlay.jsx"
+    },
+    {
+     "path": "next/src/ui/services.jsx",
+     "kind": "import-statement",
+     "original": "./services.jsx"
+    },
+    {
+     "path": "next/src/ui/icons.js",
+     "kind": "import-statement",
+     "original": "./icons.js"
+    },
+    {
+     "path": "next/src/ui/tokens.js",
+     "kind": "import-statement",
+     "original": "./tokens.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/lang/gallery.en.json": {
+   "bytes": 6793,
+   "imports": []
+  },
+  "next/src/services/assistant.js": {
+   "bytes": 1632,
+   "imports": [
+    {
+     "path": "next/src/shared/ls.js",
+     "kind": "import-statement",
+     "original": "../shared/ls.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/gallery/main.jsx": {
+   "bytes": 24176,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "next/src/ui/index.js",
+     "kind": "import-statement",
+     "original": "../ui/index.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../i18n/t.js"
+    },
+    {
+     "path": "next/lang/gallery.en.json",
+     "kind": "import-statement",
+     "original": "../../lang/gallery.en.json"
+    },
+    {
+     "path": "next/src/services/theme.js",
+     "kind": "import-statement",
+     "original": "../services/theme.js"
+    },
+    {
+     "path": "next/src/services/assistant.js",
+     "kind": "import-statement",
+     "original": "../services/assistant.js"
+    },
+    {
+     "path": "next/src/services/commands.js",
+     "kind": "import-statement",
+     "original": "../services/commands.js"
+    },
+    {
+     "path": "next/src/services/shortcuts.js",
+     "kind": "import-statement",
+     "original": "../services/shortcuts.js"
+    },
+    {
+     "path": "next/src/services/undo.js",
+     "kind": "import-statement",
+     "original": "../services/undo.js"
+    },
+    {
+     "path": "next/src/services/files.js",
+     "kind": "import-statement",
+     "original": "../services/files.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "src/fonts/inter-latin-wght-normal.woff2": {
+   "bytes": 48256,
+   "imports": []
+  },
+  "src/fonts/inter-latin-ext-wght-normal.woff2": {
+   "bytes": 85068,
+   "imports": []
+  },
+  "next/src/ui/parts.css": {
+   "bytes": 23795,
+   "imports": [
+    {
+     "path": "src/fonts/inter-latin-wght-normal.woff2",
+     "kind": "url-token",
+     "original": "../../../src/fonts/inter-latin-wght-normal.woff2"
+    },
+    {
+     "path": "src/fonts/inter-latin-ext-wght-normal.woff2",
+     "kind": "url-token",
+     "original": "../../../src/fonts/inter-latin-ext-wght-normal.woff2"
+    }
+   ]
+  },
+  "next/src/gallery/gallery.css": {
+   "bytes": 3211,
+   "imports": []
   }
  },
  "outputs": {
   "next/dist/main.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-GC4UPBAJ.js",
+     "path": "next/dist/chunk-MGR5KL3P.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-QVGUJPL4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MZSJGBZT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-WOT6VMZA.js",
      "kind": "import-statement"
     }
    ],
    "exports": [],
    "entryPoint": "next/src/main.js",
    "inputs": {
-    "node_modules/preact/dist/preact.mjs": {
-     "bytesInOutput": 10761
-    },
     "next/src/main.js": {
-     "bytesInOutput": 710
+     "bytesInOutput": 410
     }
    },
-   "bytes": 11529
+   "bytes": 594
   },
   "next/dist/proof.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-GC4UPBAJ.js",
+     "path": "next/dist/chunk-QVGUJPL4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-WOT6VMZA.js",
      "kind": "import-statement"
     }
    ],
@@ -227,14 +652,11 @@
     "next/src/shared/idb.js": {
      "bytesInOutput": 1429
     },
-    "next/src/shared/ls.js": {
-     "bytesInOutput": 494
-    },
     "next/src/shared/keys.js": {
-     "bytesInOutput": 8669
+     "bytesInOutput": 8812
     },
     "next/src/shared/records.js": {
-     "bytesInOutput": 797
+     "bytesInOutput": 796
     },
     "next/src/planning/index.js": {
      "bytesInOutput": 631
@@ -252,9 +674,137 @@
      "bytesInOutput": 1286
     }
    },
-   "bytes": 16272
+   "bytes": 16002
   },
-  "next/dist/chunk-GC4UPBAJ.js": {
+  "next/dist/parts.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-UDEVBMTD.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MZSJGBZT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-WOT6VMZA.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "AddFile",
+    "Avatar",
+    "Button",
+    "Card",
+    "Checkbox",
+    "Chip",
+    "ClassDot",
+    "CommandBar",
+    "Comments",
+    "Dialog",
+    "EmptyState",
+    "Field",
+    "FileTile",
+    "ICONS",
+    "Icon",
+    "IconButton",
+    "Kbd",
+    "LOOKS",
+    "LOOK_LINES",
+    "List",
+    "ListRow",
+    "Menu",
+    "Mic",
+    "NavItem",
+    "NavSection",
+    "Progress",
+    "SCALE",
+    "Segmented",
+    "Select",
+    "Sheet",
+    "ShortcutList",
+    "Slider",
+    "Spinner",
+    "Switch",
+    "THEMES",
+    "Table",
+    "Tabs",
+    "TextBox",
+    "TextInput",
+    "ThemePicker",
+    "ToastHost",
+    "Tooltip",
+    "iconNames",
+    "toast",
+    "trapTab",
+    "useModal"
+   ],
+   "entryPoint": "next/src/ui/index.js",
+   "inputs": {},
+   "bytes": 1021
+  },
+  "next/dist/gallery.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-MGR5KL3P.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-QVGUJPL4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UDEVBMTD.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MZSJGBZT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-WOT6VMZA.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [],
+   "entryPoint": "next/src/gallery/main.jsx",
+   "inputs": {
+    "next/lang/gallery.en.json": {
+     "bytesInOutput": 6324
+    },
+    "next/src/services/assistant.js": {
+     "bytesInOutput": 638
+    },
+    "next/src/gallery/main.jsx": {
+     "bytesInOutput": 16994
+    }
+   },
+   "bytes": 24633
+  },
+  "next/dist/chunk-MGR5KL3P.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-QVGUJPL4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MZSJGBZT.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c"
+   ],
+   "inputs": {
+    "next/src/services/theme.js": {
+     "bytesInOutput": 254
+    }
+   },
+   "bytes": 366
+  },
+  "next/dist/chunk-QVGUJPL4.js": {
    "imports": [],
    "exports": [
     "a",
@@ -263,14 +813,235 @@
     "d",
     "e",
     "f",
-    "g"
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m"
    ],
    "inputs": {
     "next/src/shared/lock.js": {
      "bytesInOutput": 1763
+    },
+    "next/src/shared/ls.js": {
+     "bytesInOutput": 493
     }
    },
-   "bytes": 1911
+   "bytes": 2356
+  },
+  "next/dist/chunk-UDEVBMTD.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-MZSJGBZT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-WOT6VMZA.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "$",
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    "U",
+    "V",
+    "W",
+    "X",
+    "Y",
+    "Z",
+    "_",
+    "a",
+    "aa",
+    "b",
+    "ba",
+    "c",
+    "ca",
+    "d",
+    "da",
+    "e",
+    "ea",
+    "f",
+    "fa",
+    "g",
+    "ga",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "x",
+    "y",
+    "z"
+   ],
+   "inputs": {
+    "node_modules/preact/hooks/dist/hooks.mjs": {
+     "bytesInOutput": 2816
+    },
+    "next/src/ui/icons.js": {
+     "bytesInOutput": 7750
+    },
+    "node_modules/preact/compat/dist/compat.mjs": {
+     "bytesInOutput": 2853
+    },
+    "next/src/ui/popups.jsx": {
+     "bytesInOutput": 3031
+    },
+    "next/src/ui/controls.jsx": {
+     "bytesInOutput": 6397
+    },
+    "next/src/ui/index.js": {
+     "bytesInOutput": 0
+    },
+    "next/src/ui/overlay.jsx": {
+     "bytesInOutput": 2626
+    },
+    "next/src/services/commands.js": {
+     "bytesInOutput": 714
+    },
+    "next/src/services/shortcuts.js": {
+     "bytesInOutput": 1839
+    },
+    "next/src/services/speech.js": {
+     "bytesInOutput": 559
+    },
+    "next/src/services/files.js": {
+     "bytesInOutput": 862
+    },
+    "next/src/services/undo.js": {
+     "bytesInOutput": 1149
+    },
+    "next/src/ui/services.jsx": {
+     "bytesInOutput": 9658
+    }
+   },
+   "bytes": 40920
+  },
+  "next/dist/chunk-MZSJGBZT.js": {
+   "imports": [],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r"
+   ],
+   "inputs": {
+    "node_modules/preact/dist/preact.mjs": {
+     "bytesInOutput": 11210
+    },
+    "next/lang/en.json": {
+     "bytesInOutput": 2903
+    },
+    "next/src/i18n/t.js": {
+     "bytesInOutput": 560
+    },
+    "next/src/ui/tokens.js": {
+     "bytesInOutput": 5236
+    }
+   },
+   "bytes": 20059
+  },
+  "next/dist/chunk-WOT6VMZA.js": {
+   "imports": [],
+   "exports": [
+    "a"
+   ],
+   "inputs": {},
+   "bytes": 106
+  },
+  "next/dist/inter-latin-wght-normal-NRMW37G5.woff2": {
+   "imports": [],
+   "exports": [],
+   "inputs": {
+    "src/fonts/inter-latin-wght-normal.woff2": {
+     "bytesInOutput": 48256
+    }
+   },
+   "bytes": 48256
+  },
+  "next/dist/inter-latin-ext-wght-normal-HA22NDSG.woff2": {
+   "imports": [],
+   "exports": [],
+   "inputs": {
+    "src/fonts/inter-latin-ext-wght-normal.woff2": {
+     "bytesInOutput": 85068
+    }
+   },
+   "bytes": 85068
+  },
+  "next/dist/parts-css.css": {
+   "imports": [
+    {
+     "path": "next/dist/inter-latin-wght-normal-NRMW37G5.woff2",
+     "kind": "url-token"
+    },
+    {
+     "path": "next/dist/inter-latin-ext-wght-normal-HA22NDSG.woff2",
+     "kind": "url-token"
+    }
+   ],
+   "entryPoint": "next/src/ui/parts.css",
+   "inputs": {
+    "next/src/ui/parts.css": {
+     "bytesInOutput": 22533
+    }
+   },
+   "bytes": 22534
+  },
+  "next/dist/gallery-css.css": {
+   "imports": [],
+   "entryPoint": "next/src/gallery/gallery.css",
+   "inputs": {
+    "next/src/gallery/gallery.css": {
+     "bytesInOutput": 3067
+    }
+   },
+   "bytes": 3068
   }
  }
 }

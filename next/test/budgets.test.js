@@ -9,10 +9,13 @@ test('the new app keeps to its size budgets', () => {
   const meta = JSON.parse(fs.readFileSync(path.join(NEXT, 'dist', 'meta.json'), 'utf8'));
   const outs = Object.entries(meta.outputs).filter(([f]) => f.endsWith('.js')).map(([f, o]) => ({ f: path.basename(f), o }));
   // What the first page load needs: main.js and the chunks it imports straight away (not the ones it loads later).
-  const main = outs.find(x => x.f === 'main.js'), first = new Set(['main.js']);
-  const add = o => { for (const i of o.imports || []) if (i.kind === 'import-statement') { const b = path.basename(i.path); if (!first.has(b)) { first.add(b); add(outs.find(x => x.f === b).o); } } };
-  add(main.o);
+  const loads = entry => { const s = new Set([entry]); const add = o => { for (const i of o.imports || []) if (i.kind === 'import-statement') { const b = path.basename(i.path); if (!s.has(b)) { s.add(b); add(outs.find(x => x.f === b).o); } } }; add(outs.find(x => x.f === entry).o); return s; };
+  const first = loads('main.js');
   const firstLoad = [...first].reduce((n, f) => n + gz(f), 0), total = outs.reduce((n, x) => n + gz(x.f), 0);
+  // Every shared part (next/src/ui/index.js) with everything it imports; and the two stylesheets every page with parts loads.
+  const parts = [...loads('parts.js')].reduce((n, f) => n + gz(f), 0), css = gz('tokens.css') + gz('parts-css.css');
+  assert.ok(parts <= B.parts, 'parts ' + parts + ' > ' + B.parts);
+  assert.ok(css <= B.css, 'css ' + css + ' > ' + B.css);
   assert.ok(firstLoad <= B.firstLoad, 'first load ' + firstLoad + ' > ' + B.firstLoad);
   for (const x of outs) assert.ok(gz(x.f) <= B.anyChunk, x.f + ' ' + gz(x.f) + ' > ' + B.anyChunk);
   assert.ok(total <= B.total, 'total ' + total + ' > ' + B.total);

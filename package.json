@@ -15,7 +15,9 @@
     "next:build": "node next/build.js",
     "next:test": "node --test next/test/*.test.js",
     "next:check": "npm run next:build && npm run next:test",
-    "next:docs": "node next/tools/saved-work-doc.js"
+    "next:docs": "node next/tools/saved-work-doc.js",
+    "next:browser": "node --test --test-concurrency=1 next/test/browser/*.test.js",
+    "next:shots": "node next/tools/gallery-shots.js"
   },
   "dependencies": {
     "fflate": "0.8.2",
