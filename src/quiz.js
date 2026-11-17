@@ -1116,7 +1116,9 @@ function qmBindDrag(body) {
 /* the button */
 function quizBtn() {
   const b = $('#quizTop'); if (b) b.hidden = !quizOn();
+  const r = $('#qrBtn'); if (r) r.hidden = !(quizOn() && batch.quiz.made);
 }
 $('#quizBtn').onclick = () => openQuiz();
 $('#quizTop').onclick = () => openQuiz();
+$('#qrBtn').onclick = () => batch && batch.quiz && batch.quiz.lastRead ? openQuizLook() : qrReadAll();
 Object.assign(window.__gs, { qzAnsOf, openQuiz, openQuizBoxes, quizSet, quizSum, quizCount, quizPart, quizMax, quizOn, qzCrop, qzRect, qzSpot, quizBtn });

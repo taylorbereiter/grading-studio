@@ -1,0 +1,32 @@
+/* Make a quiz (src/quizmake.js): the editor on the left, the printed page on the right. The printed page's own look is QMK_CSS in src/quizmake.js: paper stays black on white in dark mode, and the print window takes it whole. */
+.qfwrap{display:grid;grid-template-columns:minmax(380px,1fr) minmax(0,620px);gap:0;flex:1;min-height:0;overflow:hidden !important;padding:0 !important}
+.qfed{overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px;border-right:1px solid var(--line)}
+.qfc{border:1px solid var(--line);border-radius:var(--corner-2);padding:10px 12px;background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.qfc.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.qfch{display:flex;align-items:center;gap:8px}
+.qfch>b{width:24px;height:24px;border-radius:var(--corner-round);background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:var(--text-small)}
+.qfc textarea{width:100%;font:inherit;padding:6px 8px;border:1px solid var(--line-strong);border-radius:var(--corner-2);resize:vertical;background:var(--surface);color:var(--fg);box-sizing:border-box}
+.qfopts{display:flex;flex-direction:column;gap:5px}
+.qfo{display:flex;align-items:center;gap:6px}
+.qfo input{flex:1;font:inherit;padding:4px 8px;border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);color:var(--fg)}
+.qfkey{width:28px;height:28px;border-radius:var(--corner-round);border:1.5px solid var(--line-strong);background:var(--surface);color:var(--fg);font-family:var(--f-body);font-weight:600;font-size:var(--text-small);cursor:pointer}
+.qfkey.on{background:var(--ok);border-color:var(--ok);color:var(--accent-fg)}
+.qfopts .link{align-self:flex-start;margin-left:40px}.qfopts p{margin:2px 0 0}.qfwarn{color:var(--accent)}
+.qfadd{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:4px 0 8px}
+.qfprev{display:flex;flex-direction:column;min-height:0;background:var(--bg)}
+.qfpbar{display:flex;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.qfpages{overflow:auto;padding:16px;display:flex;flex-direction:column;gap:14px;align-items:center}
+.qfscale{width:571px;height:739px;flex:none}
+.qfscale>.qfpage{transform:scale(.7);transform-origin:0 0}
+.qfprobe{position:absolute;left:-9999px;top:0;visibility:hidden}
+/* the scan, read */
+.qftiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.qftiles>div{border:1px solid var(--line);border-radius:var(--corner-2);padding:10px 12px;display:flex;flex-direction:column}
+.qftiles b{font-size:var(--text-title)}.qftiles span{font-size:var(--text-small);color:var(--muted)}
+.qftiles .need{border-color:var(--accent);background:var(--accent-soft)}
+.qfrr{display:grid;grid-template-columns:200px auto 1fr;gap:14px;align-items:center;border-top:1px solid var(--line);padding:10px 0}
+.qfrr.done{opacity:.7}
+.qfrw{display:flex;flex-direction:column}
+.qfcrop{background:var(--paper-chip);border:1px solid var(--line);border-radius:var(--corner-2);padding:4px 8px}
+.qfpick{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.qfcrop img{display:block;max-width:100%;max-height:120px}
