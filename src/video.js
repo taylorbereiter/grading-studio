@@ -682,7 +682,8 @@ function pvList(host, rows) {
   return { draw, drop, fromDrive, out, bad };
 }
 // Puts the groups pvList gave on the open assignment. stOf(k): the student for a row.
-async function pvApply(groups, stOf) {
+// own: the groups made get their own scores (notes shared).
+async function pvApply(groups, stOf, own) {
   let n = 0;
   for (const g of groups) {
     const all = g.k.map(stOf).filter(Boolean); if (!all.length) continue;
@@ -692,6 +693,7 @@ async function pvApply(groups, stOf) {
     const partners = all.filter(s => s !== st && !groupMates(st).includes(s));
     if (g.url || g.file || g.drive) await videoAdd(st, { url: g.url, file: g.file, drive: g.drive, name: 'Presentation video', kind: '', partners }, true);
     else if (partners.length) { const gg = groupOf(st), anchor = (gg && groupFileOf(gg, st)) || notesFileOf(st) || groupPaper(st) || st.files.find(f => f.kind === 'link'); if (!anchor) continue; await partnersJoin(st, anchor, partners, st.files.filter(f => f.kind === 'link' && f !== anchor)); }
+    if (own && partners.length) groupSetOwn(st, true);
     n++;
   }
   groupSync(); saveSoon(); renderList();
@@ -701,6 +703,10 @@ async function pvApply(groups, stOf) {
 const DRV_ONLY = 'Only the videos you pick can be opened, nothing else in your Drive.';
 // The videos folder the chooser opens in, and a way to change it. Nothing until one is chosen (the chooser asks for it the first time).
 const vdDirLine = k => vidDir() ? '<span class="muted vddir"><span data-raw title="Google Drive">📁 ' + esc(vidDir().name) + '</span> <button class="link" data-' + k + '>Change folder</button></span>' : '';
+// Which way the groups made are graded: one grade, or the notes shared and each partner's own score.
+const pvOwnRow = () => '<div class="pvown"><span>Partners get</span><span class="seg" role="group" aria-label="Partners get"><button type="button" data-pvown="0" aria-pressed="true">One grade</button><button type="button" data-pvown="1" aria-pressed="false">Their own scores</button></span><span class="muted">The notes are shared either way.</span></div>';
+const pvOwnOf = box => { const b = box.querySelector('[data-pvown][aria-pressed=true]'); return !!b && b.dataset.pvown === '1'; };
+const pvOwnClick = (box, e) => { const b = e.target.closest('[data-pvown]'); if (!b) return false; for (const x of box.querySelectorAll('[data-pvown]')) x.setAttribute('aria-pressed', x === b); return true; };
 const pvDriveRow = () => driveCan() ? '<div class="pvdrvrow"><button class="btn sm" data-pvmany>Choose from Drive…</button>' + vdDirLine('pvdir') + '<span class="muted">' + DRV_ONLY + '</span></div>' : '';
 function pvDriveWire(box, pv) {   // box: the list's own holder, made new with each dialog
   box.addEventListener('click', async e => {
@@ -718,7 +724,7 @@ function openPartners() {
   if (anon) list.sort((a, b) => anonPos(a.i) - anonPos(b.i));
   const rows = list.map(({ st, i }) => ({ k: st.key, label: shownName(st, i), has: pvHas(st), mates: groupMates(st).map(s => s.key) }));
   openDlg('<div class="bh"><h2>Partners and videos</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb vdbox"><p class="muted" style="margin:0;font-size:14px">Pick each group’s partners: one grade covers the group, and a group with no video shares the first one’s paper and marks. Paste a link to a video, or choose a video file. You can also drop video files here, and each goes to the student named in its file name.</p>' + pvDriveRow() + '<div id="pvList" class="pvlist"></div></div>' +
+    '<div class="bb vdbox"><p class="muted" style="margin:0;font-size:14px">Pick each group’s partners: one grade covers the group, and a group with no video shares the first one’s paper and marks. Paste a link to a video, or choose a video file. You can also drop video files here, and each goes to the student named in its file name.</p>' + pvOwnRow() + pvDriveRow() + '<div id="pvList" class="pvlist"></div></div>' +
     '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="pvGo" disabled>Save</button></div>', false, 'lg');
   const box = $('#dlgBox'), host = $('#pvList'), pv = pvList(host, rows), go = $('#pvGo'); pvDriveWire(host.parentElement, pv);
   host.addEventListener('pvchange', () => { go.disabled = !pv.out().length || pv.bad(); });
@@ -726,9 +732,10 @@ function openPartners() {
   box.ondrop = e => { e.preventDefault(); pv.drop([...e.dataTransfer.files]); };
   box.onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (pvOwnClick(box, e)) return;
     if (e.target !== go || go.disabled) return;
     go.disabled = true; go.textContent = 'Saving…';
-    try { const n = await pvApply(pv.out(), k => batch.students.find(s => s.key === k)); closeDlg(); toast(n === 1 ? 'Saved 1 group or video' : 'Saved ' + n + ' groups and videos'); openStudent(cur); }
+    try { const n = await pvApply(pv.out(), k => batch.students.find(s => s.key === k), pvOwnOf(box)); closeDlg(); toast(n === 1 ? 'Saved 1 group or video' : 'Saved ' + n + ' groups and videos'); openStudent(cur); }
     catch (err) { console.error(err); go.disabled = false; go.textContent = 'Save'; sayDlg((err && err.message) || String(err)); }
   };
 }
@@ -742,7 +749,7 @@ function openStartNotes(it) {
   openDlg('<div class="bh"><h2>“' + esc(it.name) + '” with no papers</h2></div>' +
     '<div class="bb vdbox"><p style="margin:0 0 4px">For presentations, speeches, performances and videos. Each of the ' + names.length + ' students in ' + esc(c.name) + ' gets a notes page to write on while you watch. Mark it, score it and return it like a paper.</p>' + npTiles(np, rows, false) +
     (rows.length ? '' : '<p class="muted" style="margin:8px 0 0;font-size:13px">Rubric rows can be picked once this assignment has a rubric.</p>') +
-    '<div class="vdlab">Videos and partners<small>Optional, and you can add them later too. Paste a link or choose a file for each video, or drop video files here and each goes to the student named in its file name. Partners share one notes page, one set of marks and one grade.</small></div>' + pvDriveRow() + '<div id="pvList" class="pvlist"></div></div>' +
+    '<div class="vdlab">Videos and partners<small>Optional, and you can add them later too. Paste a link or choose a file for each video, or drop video files here and each goes to the student named in its file name. Partners share one notes page, one set of marks and one grade.</small></div>' + pvOwnRow() + pvDriveRow() + '<div id="pvList" class="pvlist"></div></div>' +
     '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="snGo">Make the pages and open</button></div>', false, 'lg');
   const box = $('#dlgBox'), folder = n => String(n).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').trim();
   const pv = pvList($('#pvList'), names.map(n => ({ k: folder(n), label: n, has: '', mates: [] })));
@@ -753,9 +760,10 @@ function openStartNotes(it) {
   box.onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick(box, np); return; }
+    if (pvOwnClick(box, e)) return;
     if (e.target.id !== 'snGo') return;
     e.target.disabled = true; npLast = np;
-    const groups = pv.out();
+    const groups = pv.out(), own = pvOwnOf(box);
     try {
       const bytes = await notesPdf(np, it.name, rows);
       const make = k => names.map(n => ({ path: folder(n) + '/' + npFileName(it.name) + ' notes' + (k > 1 ? ' (' + k + ')' : '') + '.pdf', data: bytes.slice() }));
@@ -767,7 +775,7 @@ function openStartNotes(it) {
       await intake(list, it.name, it);
       if (groups.length && batch && batch.id === id) {
         const stOf = key => batch.students.find(s => s.key === key);
-        await pvApply(groups, stOf);
+        await pvApply(groups, stOf, own);
         toast(groups.length === 1 ? 'Added 1 group or video' : 'Added ' + groups.length + ' groups and videos');
         openStudent(cur);
       }

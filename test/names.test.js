@@ -692,7 +692,7 @@ test('file names give nobody away during anonymous grading: run together, shorte
     // the headings are tidied in the frame they're drawn in: give that frame time to come, then read what is on screen
     await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
     const text = await shown(page);
-    assert.ok(!/theo|banks|ruby|walsh|kai|novak/i.test(text), who + ': ' + text);
+    assert.ok(!/theo|banks|ruby|walsh|kai|novak/i.test(text), who + ': ' + ((text.match(/.{0,120}(theo|banks|ruby|walsh|kai|novak).{0,60}/i) || [''])[0]));   // the words around the name, so a failure says where it showed
     assert.match(text, /\.pdf/i, 'what kind of file it is stays');
   }
   // Arrange pages: file box, captions and the pictures.

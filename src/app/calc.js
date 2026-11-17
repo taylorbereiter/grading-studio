@@ -163,7 +163,7 @@ function startScorePlace(text, extra) {
 function stopScorePlace() { if (scorePlacing) { scorePlacing.stop(); scorePlacing = null; } }
 function placeScore(pg, x, y) {
   const { text, extra } = scorePlacing; stopScorePlace();
-  const m = { t: 'stamp', k: 'score', x: r1(x), y: r1(y), color: totalInk(), text, ...extra }; m.size = newStampSize(m.k);
+  const m = stampOwner({ t: 'stamp', k: 'score', x: r1(x), y: r1(y), color: totalInk(), text, ...extra }, batch.students[cur]); m.size = newStampSize(m.k);
   const bb = stampBox(m);   // keep it on the page
   m.x = r1(m.x + Math.max(0, -bb.x) - Math.max(0, bb.x + bb.w - pg.W)); m.y = r1(m.y + Math.max(0, -bb.y) - Math.max(0, bb.y + bb.h - pg.H));
   snap(pg); pg.marks().push(m); selected = { page: pg, mark: m, fresh: true }; changed(pg); redrawAll();

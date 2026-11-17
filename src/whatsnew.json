@@ -1,4 +1,15 @@
 {
+  "1.28.64": [
+    "The student list on the marking screen shows each score as a percent, with a % / pts switch beside the list's filter. Extra credit shows on its own after the score, like 93% +2%, in the list, the score panel and the score stamp.",
+    "Partners: a shared paper can have shared notes with each partner's own score, and Write for: just one partner puts marks on the paper for that partner alone. Partners sit together in a blue box in the student list, and the done count goes by group.",
+    "Entry list: open one task's scores in a small window beside your school's gradebook, in the gradebook's own order, so typing them in is quick. It's in the gradebook's More menu and in each column's box.",
+    "Email buttons open a new message in Gmail by default. Settings, Display has an Email section to use Outlook on the web or your computer's own mail app instead."
+  ],
+  "1.28.63": [
+    "A watch list for misconceptions and concerns. In the Screenshot bar, tick Add to the watch list, black out any names, and note what you see. Every screenshot you save, strong or on the watch list, is kept with the student whose work it is.",
+    "Each student's card (the ⓘ beside a name) shows their strengths and concerns as a timeline, with the tags you have seen most and Copy notes for report comments. The Examples page has Watch list and Whose work, which shows who your strong examples come from.",
+    "Send to your assistant makes one PDF of a student's or an assignment's pictures and notes, with each student as a random code and names in your notes as [name]. Which code is which student stays in this browser."
+  ],
   "1.28.62": [
     "On the marking screen, the + Add menu now opens fully on screen instead of sliding under the Score panel."
   ],

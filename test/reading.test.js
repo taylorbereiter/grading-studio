@@ -288,7 +288,7 @@ test('deleting a text box that held the grade takes the grade away at once, ever
   await typeBox(page, 100, 500, 'Total 10/12');
   // counted without any Grade sheet or export
   await page.waitForFunction(() => window.__gs.gradeOf(window.__gs.state().batch.students[0]).total === 10, { timeout: 30000 });
-  await page.waitForFunction(() => { const e = document.querySelector('#stuList .stu[data-i="0"] .sc'); return e && e.textContent === '10'; }, { timeout: 5000 });
+  await page.waitForFunction(() => { const e = document.querySelector('#stuList .stu[data-i="0"] .sc'); return e && e.textContent === window.__gs.gradeOf(window.__gs.state().batch.students[0]).pct + '%'; }, { timeout: 5000 });
   // select the box and delete it
   await clickAt(page, 0, 300, 700);
   await clickAt(page, 0, 105, 508);

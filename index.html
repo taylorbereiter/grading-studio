@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"a6197dc0","zh-Hans":"025d97f9","es":"67492f9b","fr":"c0012f1a","de":"7fd735a5","pt-BR":"f020a80c","ja":"2c6f75e3","ko":"a2542ec9"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"4c34fd49","zh-Hans":"c2bf1b6b","es":"b08ec1fe","fr":"68265669","de":"11921d5b","pt-BR":"aa5ed05e","ja":"6426ea8d","ko":"510e3a8b"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -299,6 +299,7 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .stu.drop-on{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent)}
 .stu:hover{background:var(--hover)}
 .stu.on{background:var(--surface);color:var(--fg);font-weight:600;box-shadow:0 1px 2px rgba(20,25,35,.08),0 0 0 1px var(--line)}
+.stugrp{margin:3px 0 5px;padding:2px 2px 2px 4px;border-left:3px solid var(--accent);border-radius:var(--corner-3);background:var(--accent-soft)}.stugrp .stu{margin-bottom:0}
 .stu.on .num{color:var(--accent)}
 .stu .num{color:var(--faint);font-size:var(--text-small);font-variant-numeric:tabular-nums}
 .stu .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -319,12 +320,12 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .po{display:flex;width:100%;justify-content:space-between;gap:8px;border:0;background:none;font:inherit;font-size:var(--text-control);color:var(--fg);padding:5px 6px;border-radius:var(--corner-2);cursor:pointer;text-align:left}
 .po:hover{background:var(--hover)}.po span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.po span:last-child{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .stag.out{background:var(--surface-2);color:var(--muted)}
-.outsw{display:flex;align-items:flex-start;gap:9px;width:100%;margin:10px 0 2px;padding:9px 11px;border:1px solid var(--line);border-radius:var(--corner-3);background:var(--bg);font:inherit;color:var(--fg);text-align:left;cursor:pointer}
+.outsw[hidden]{display:none}.grpjust button{padding:3px 10px;font-size:var(--text-control)}.outsw{display:flex;align-items:flex-start;gap:9px;width:100%;margin:10px 0 2px;padding:9px 11px;border:1px solid var(--line);border-radius:var(--corner-3);background:var(--bg);font:inherit;color:var(--fg);text-align:left;cursor:pointer}
 .outsw[aria-checked=true]{border-color:var(--accent);background:var(--accent-soft)}
 .outsw i{flex:none;width:30px;height:17px;border-radius:var(--corner-pill);background:var(--line-strong);position:relative;margin-top:1px;transition:background .15s}
 .outsw i::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:var(--corner-round);background:var(--surface);transition:left .15s}
 .outsw[aria-checked=true] i{background:var(--accent)}.outsw[aria-checked=true] i::after{left:15px}
-.grpband{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border:1px solid #B9D3EC;border-radius:9px;background:var(--accent-soft);font-size:13.5px;color:var(--fg-2)}.grpband b{color:var(--fg);font-weight:600}.grpband .link{font-size:var(--text-control)}
+.grpband{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border:1px solid #B9D3EC;border-radius:9px;background:var(--accent-soft);font-size:13.5px;color:var(--fg-2)}.grpband b{color:var(--fg);font-weight:600}.grpband .link{font-size:var(--text-control)}.grpmode{font:inherit;font-size:var(--text-control);color:var(--accent);background:transparent;border:1px solid transparent;border-radius:var(--r-sm);padding:2px 4px;cursor:pointer}.grpmode:hover,.grpmode:focus-visible{border-color:var(--accent);background:var(--surface)}
 .outsw b{font-weight:600;font-size:13.5px;display:block}.outsw small{font-size:var(--text-small);color:var(--muted);display:block;line-height:1.4;margin-top:1px}
 .prog-s kbd,.hint kbd{font:500 10.5px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:0 4px;background:var(--surface);color:var(--muted)}
 .stu .dot{width:8px;height:8px;border-radius:var(--corner-round);background:var(--accent);display:inline-block}
@@ -2223,9 +2224,14 @@ button.pavg:hover .v{text-decoration:underline}
 .sfind:focus-within{outline:2px solid var(--accent);outline-offset:1px}
 .sfind svg{flex:none}
 .sfind .stufind{flex:1;min-width:0;width:auto;margin:0;padding:0;border:0;background:none;outline:0;font-size:var(--text-control);color:var(--fg)}
+#lfSlot{display:flex;gap:6px;flex:none}
 .lfilt{display:flex;margin:0}
 .lfnow{height:30px;display:inline-flex;align-items:center;gap:5px;padding:0 8px;border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);font-size:var(--text-small);font-weight:500;color:var(--fg-2);white-space:nowrap}
 .lfnow:hover{color:var(--fg)}
+.scway{display:inline-flex;flex:none;height:30px;border:1px solid var(--line-strong);border-radius:var(--corner-3);background:var(--surface);overflow:hidden}
+.scway button{min-width:30px;padding:0 6px;border:0;background:none;font-size:var(--text-small);font-weight:500;color:var(--fg-2);cursor:pointer}
+.scway button:hover{color:var(--fg)}
+.scway button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
 .lfnow.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
 .km .lf{display:flex;justify-content:space-between;gap:12px}
 .km .lf[aria-pressed=true]{background:var(--accent-soft);color:var(--accent);font-weight:600}
@@ -2256,7 +2262,7 @@ button.pavg:hover .v{text-decoration:underline}
   .cols.peek>.side{width:232px;border-right-color:var(--line-strong);box-shadow:var(--shadow),8px 0 24px -12px color-mix(in srgb,var(--fg) 30%,transparent)}
   .cols:not(.open):not(.peek)>.side{padding-left:5px;padding-right:5px;padding-bottom:40px;scrollbar-width:none}
   .cols:not(.open):not(.peek)>.side::-webkit-scrollbar{display:none}
-  .cols:not(.open):not(.peek) :is(.ph span,.pavg,.lfnow .t,.stu .nm,.stu .whob,.stu .tail,.stu .pills,#sideHd,.sfoot,.lfnone){display:none}
+  .cols:not(.open):not(.peek) :is(.ph span,.pavg,.lfnow .t,.scway,.stu .nm,.stu .whob,.stu .tail,.stu .pills,#sideHd,.sfoot,.lfnone){display:none}
   .cols:not(.open):not(.peek) .phrow{justify-content:center}
   .cols:not(.open):not(.peek) .prog-s .ph{font-size:var(--text-small)}
   .cols:not(.open):not(.peek) .lbar{justify-content:center;gap:2px}
@@ -2312,6 +2318,7 @@ button.pavg:hover .v{text-decoration:underline}
 #lvBox .lvrow{margin-top:2px}
 
 .total span.pc{width:auto;max-height:none;overflow:visible;background:none;border:0;border-radius:0;box-shadow:none;font-size:var(--text-title);font-weight:650;letter-spacing:-.02em}
+.total span.pc .xcplus{font-size:.6em;font-weight:600;letter-spacing:0}
 .total{padding:10px 2px 0;border-top:1px solid var(--line)}
 #stampScore{align-self:center;gap:5px;padding:3px 8px;color:var(--accent)}
 #stampScore svg{flex:none}
@@ -2792,6 +2799,31 @@ html.welcoming .shell{visibility:hidden}
 .exknown .exrow{cursor:pointer}
 .exshotcls{max-width:100%}
 .snipex{margin-right:8px}
+
+.excard.exw .exstar{color:var(--accent)}
+.wltabs{margin:0 0 14px}
+.pc.pc-w{width:min(580px,100%)}
+.wlbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0 8px}
+.wltrend{font-size:var(--text-small);color:var(--muted);margin:0 0 8px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.wltime{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow:auto}
+.wltime li{display:grid;grid-template-columns:92px 1fr;gap:10px;padding:6px 8px 6px 6px;border:1px solid var(--line);border-left:3px solid var(--ok);border-radius:var(--corner-3);font-size:var(--text-control)}
+.wltime li.w{border-left-color:var(--accent)}
+.wltime li.pc-sm{display:block;border:0}
+.wltime p{margin:3px 0 0;color:var(--fg-2)}
+.wlth{padding:0;border:1px solid var(--line);border-radius:var(--corner-2);background:var(--surface);cursor:zoom-in;height:64px;overflow:hidden}
+.wlth img{width:100%;height:100%;object-fit:cover;object-position:top left;display:block}
+.wlwho{width:100%;border-collapse:collapse;font-size:var(--text-control);max-width:720px}
+.wlwho th{text-align:left;font-size:var(--text-small);color:var(--muted);font-weight:600;padding:4px 8px;border-bottom:1px solid var(--line)}
+.wlwho td{padding:5px 8px;border-bottom:1px solid var(--line)}
+.wlbarg{display:inline-block;width:90px;height:7px;background:var(--surface-2);border-radius:var(--corner-1);margin-right:8px;vertical-align:middle;overflow:hidden}
+.wlbarg i{display:block;height:100%;background:var(--ok)}
+.wlnone{font-size:var(--text-control);margin:8px 0 0}
+.wlbox{width:min(760px,96vw)}
+.wlsend textarea{width:100%;font:inherit;font-size:var(--text-control);padding:8px;border:1px solid var(--line-strong);border-radius:var(--corner-3)}
+.wlstrip{display:flex;gap:10px;overflow-x:auto;padding:4px 0 10px}
+.wlstrip figure{margin:0;flex:0 0 130px;font-size:var(--text-small)}
+.wlstrip img{width:130px;height:90px;object-fit:cover;object-position:top left;border:1px solid var(--line);border-radius:var(--corner-2);background:var(--surface);display:block}
+.wlkey{font-size:var(--text-control);margin-top:10px}.wlkey ul{margin:6px 0 0;padding-left:18px}
 
 #vHelp{max-width:760px}
 .hlpfind{position:relative;margin:0 0 var(--space-5)}
@@ -3875,6 +3907,7 @@ html.vidsized #paper .vrotbox.on{height:var(--vid-h);min-height:0}
 
 .pvdrvrow{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-2) 0 var(--space-1);font-size:var(--text-control)}
 .pvdrvrow .link{font-size:var(--text-control)}
+.pvown{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin:var(--space-2) 0 var(--space-1);font-size:var(--text-control)}.pvown>span:first-child{font-weight:600}
 .pvdrv{font-size:var(--text-caption);font-weight:600;color:var(--accent);border:1px solid currentColor;border-radius:var(--corner-1);padding:0 var(--space-1)}
 .vdrv .prog{margin:var(--space-2) 0 0}
 
@@ -4103,6 +4136,9 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
         <section class="lib setsec" id="setLang" data-sec="display" hidden>
           <div class="lhead"><h2>App language</h2><span class="muted">The language the app speaks in this browser.</span><span class="sp"></span><span id="setLangBox"></span></div>
           <p class="muted setp">A language other than English covers these screens so far: the sidebar, Today, the welcome, Settings, a class page with all its tabs and most boxes it opens, the marking screen with its Grades, Insights and Return tabs, Help and the feedback page students get. The other screens are still in English. The translations have not yet been checked by fluent speakers, so a line may read oddly.</p>
+        </section>
+        <section class="lib setsec" id="setMail" data-sec="display" hidden>
+          <div class="lhead"><h2>Email</h2><span class="muted">Where an Email button starts a new message, already addressed. Nothing is sent until you send it. On a phone, the phone’s own mail app opens.</span><span class="sp"></span><span class="seg" id="setMailApp" aria-label="Email buttons open in"><button data-v="gmail" aria-pressed="true">Gmail</button><button data-v="outlook" aria-pressed="false">Outlook on the web</button><button data-v="app" aria-pressed="false">This computer’s mail app</button></span></div>
         </section>
         <section class="lib setsec" id="setClaude" data-sec="claude" hidden>
           <div class="lhead"><h2>Working with AI</h2><span class="muted">Optional. Nothing reaches an AI assistant unless you give it a file yourself.</span></div>
@@ -5156,7 +5192,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.62";
+  const APP_VERSION = "1.28.64";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -6463,15 +6499,16 @@ c = { pct: roundPct(all.reduce((a, t) => a + t.pct, 0) / all.length), max: same 
 if (c.total == null && max) c.total = Math.round(c.pct * max) / 100;
 } else c = all.reduce((a, t) => t.pct >= a.pct ? t : a);
 const out = { ...r, total: c.total, pct: c.pct, tries: was, tryNow: now, tryRule: rule, tryOwn: { total: r.total, pct: r.pct } };
-if (c !== now) { for (const k of ['xc', 'xcU', 'base', 'paper', 'outOf']) delete out[k]; if (c.max != null && c.max !== max) out.outOf = c.max; }
+if (c !== now) { for (const k of ['xc', 'xcU', 'base', 'bpct', 'paper', 'outOf']) delete out[k]; if (c.max != null && c.max !== max) out.outOf = c.max; }
 if (!now) { out.done = false; out.wait = true; delete out.partial; }
 return out;
 }
 function addXc(r, xc, max, unit) {
 xc = +xc; if (!xc || isNaN(xc) || r.total == null) return r;
-if (unit === 'pct') return { ...r, total: max ? r.total + Math.round(xc * max) / 100 : r.total, base: r.total, xc, xcU: 'pct', pct: r.pct == null ? r.pct : roundPct(r.pct + xc) };
-return { ...r, total: r.total + xc, base: r.total, xc, pct: r.pct == null || !max ? r.pct : roundPct(r.pct + xc / max * 100) };
+if (unit === 'pct') return { ...r, total: max ? r.total + Math.round(xc * max) / 100 : r.total, base: r.total, bpct: r.pct, xc, xcU: 'pct', pct: r.pct == null ? r.pct : roundPct(r.pct + xc) };
+return { ...r, total: r.total + xc, base: r.total, bpct: r.pct, xc, pct: r.pct == null || !max ? r.pct : roundPct(r.pct + xc / max * 100) };
 }
+const xcSay = g => g.bpct != null && g.pct != null && g.pct - g.bpct > 0 ? fmtNum(g.pct - g.bpct) + '%' : fmtNum(g.xc) + (g.xcU === 'pct' ? '%' : '');
 function scoreOf(st) {
 const own = ownGrade(st);
 if (own.total != null) return own;
@@ -6804,7 +6841,7 @@ function saveNow(leaving) {
 if (!batch || !tabLive()) return;
 clearTimeout(saveT); saveDue = false;
 if (batch.revs && tabForgot(batch)) return tabLetGo();
-const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: batch.groups && batch.groups.length ? batch.groups : undefined, returned: batch.returned || undefined, read: (batch.read = paperReads()), s: {} };
+const data = { t: Date.now(), carry: batch.carry, cur, ck: batch.students[cur] && batch.students[cur].key, setup, cls: batch.classId, share: batch.share, drive: batch.drive, light: batch.light, lightOpt: batch.lightOpt, lightPg: batch.lightPg, lightPgL: batch.lightPgL, anon: batch.anon, moved: batch.moved, removed: batch.removed, refSkip: batch.refSkip, quiz: batch.quiz, groups: groupsSave(false), ...(groupsSave(true) ? { groupsOwn: groupsSave(true) } : {}), returned: batch.returned || undefined, read: (batch.read = paperReads()), s: {} };
 if (batch.vrot) data.vrot = batch.vrot;
 if (batch.clips && batch.clips.length) data.clips = batch.clips;
 if (batch.goal) data.goal = batch.goal;
@@ -6876,7 +6913,7 @@ if (data.refSkip) batch.refSkip = data.refSkip;
 if (data.quiz) batch.quiz = data.quiz;
 if (data.goal) batch.goal = data.goal;
 if (data.returned) batch.returned = data.returned;
-batch.groups = data.groups || [];
+batch.groups = [...(data.groups || []), ...(data.groupsOwn || []).map(g => ({ ...g, own: 1 }))];
 batch.clips = data.clips || [];
 if (data.vrot) batch.vrot = data.vrot; else delete batch.vrot;
 groupSync();
@@ -7080,7 +7117,7 @@ let t = L ? ((px - a[0]) * dx + (py - a[1]) * dy) / L : 0; t = Math.max(0, Math.
 return Math.hypot(px - (a[0] + t * dx), py - (a[1] + t * dy));
 }
 function hitMark(pg, x, y, slop) {
-const marks = pg.marks();
+const marks = marksMine(pg.marks(), pg.file, batch.students[cur]);
 for (const b of pg.boxes || []) if (!b.n.ro && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return b.n;
 for (let i = marks.length - 1; i >= 0; i--) {
 const m = marks[i];
@@ -7663,7 +7700,7 @@ ctx.drawImage(src, 0, 0, src.width, src.height, 0, 0, pg.W * k, pg.H * k);
 ctx.setTransform(k, 0, 0, k, 0, 0);
 const anon = anonOn() && batch.students[cur];
 if (anon && pg.covers) { ctx.fillStyle = '#111'; for (const r of pg.covers) ctx.fillRect(r.x, r.y, r.w, r.h); }
-const marks = pg.marks().concat(anon ? scrubMarks(pg.extra || [], anonRx(anon)) : pg.extra || [], live || [], pg.pending ? [pg.pending] : []);
+const marks = marksMine(pg.marks(), pg.file, batch.students[cur]).concat(anon ? scrubMarks(pg.extra || [], anonRx(anon)) : pg.extra || [], live || [], pg.pending ? [pg.pending] : []);
 pg.boxes = drawMarks(ctx, marks, pg.W, pg.H, pg.side, { sel: selected && selected.page === pg && selected.mark !== pg.editing ? selected.mark : null, editing: pg.editing, s: pg.s, line: pg.lineOn || null, hot: pg.noteOn || null });
 if (pg.ghost) { const b = pg.ghost; ctx.save(); ctx.strokeStyle = '#1F6FB2'; ctx.setLineDash([4, 3]); ctx.lineWidth = 1; ctx.strokeRect(b.x, b.y, b.w, b.h); ctx.restore(); }
 if (part) ctx.restore();
@@ -7692,7 +7729,7 @@ saveSoon(); renderList();
 }
 const actStep = (back, again, what) => ({ act: { back, again }, what });
 const groupStep = (steps, what) => ({ group: steps, what });
-function snap(pg) { pushUndo(stepOf(pg.file, pg.idx)); }
+function snap(pg) { pushUndo(stepOf(pg.file, pg.idx)); justSeen(pg); }
 const gradeStep = st => ({ grade: st, before: JSON.stringify(st.grade) });
 function gradeSnap(st) { pushUndo(gradeStep(st)); }
 function gradeBack(u, to) {
@@ -7708,7 +7745,7 @@ rowKeyed = -1;
 if (si !== cur) openStudent(si); else renderGrade();
 saveSoon(); renderList(); renderTools();
 }
-function changed(pg) { scanned = false; draw(pg); gradeMarksChanged(pg.file); saveSoon(); renderList(); }
+function changed(pg) { justTag(pg); scanned = false; draw(pg); gradeMarksChanged(pg.file); saveSoon(); renderList(); }
 function undo() { swapStep(undoStack, redoStack, 'Undone'); }
 function redo() { swapStep(redoStack, undoStack, 'Redone'); }
 function swapStep(from, to, said) {
@@ -7790,7 +7827,7 @@ refound(st); renderList(); gradeShown(st);
 for (const pg of pages) if (pg.file === f) { pg.extra = (f.kami && f.kami[pg.idx] && f.kami[pg.idx].notes) || []; draw(pg); if (pg.impFirst) impNote(pg); }
 }
 function gradeShown(st) { const t = $('#grade .total'); if (t && st === batch.students[cur]) t.innerHTML = totalHtml(st); }
-const gradeMarks = f => Object.entries(f.marks || {}).flatMap(([p, a]) => a.filter(m => !m.qza && (m.t === 'text' || m.t === 'note' || (m.t === 'stamp' && m.k === 'score')) && m.text && parseGrade(m.text, false)).map(m => p + '|' + m.text)).sort();
+const gradeMarks = f => Object.entries(f.marks || {}).flatMap(([p, a]) => marksMine(a, f).filter(m => !m.qza && (m.t === 'text' || m.t === 'note' || (m.t === 'stamp' && m.k === 'score')) && m.text && parseGrade(m.t === 'stamp' ? stampScore(m.text) : m.text, false)).map(m => p + '|' + m.text)).sort();
 const rereadTimers = new Map();
 let rereadQ = Promise.resolve(), rereadsLeft = 0;
 function gradeMarksChanged(f) {
@@ -8231,20 +8268,32 @@ const fileMarked = f => viewable(f) && (Object.values(f.marks).some(a => a.lengt
 function fmNow() { const a = batch && batch.assignment, f = a && findItem(a.id); return ((f && f.it) || a || {}).type === 'fm'; }
 function setFb(st, on) { if (on) st.grade.fb = true; else delete st.grade.fb; touchGrade(st); saveSoon(); }
 function hasMarks(st) { return st.files.some(f => fileMarked(f) || f.edited); }
+let listPts = !!store.get('gs.listPts', false);
+function setListPts(on) { listPts = !!on; if (listPts) store.set('gs.listPts', true); else store.del('gs.listPts'); }
+function listScore(g, strip) {
+const x = !!g.xc && g.base != null, pc = x ? g.bpct : g.pct, t = x ? g.base : g.total;
+const more = !x ? '' : strip ? '+' : '<small>+' + (!listPts && !g.partial ? xcSay(g) : fmtNum(g.xc) + (g.xcU === 'pct' ? '%' : '')) + '</small>';
+if (g.total == null) return fmtNum(g.pct) + '%';
+if (!listPts && !g.partial && pc != null) return fmtNum(pc) + '%' + more;
+const of = g.outOf != null ? g.outOf : maxPoints();
+return (strip || !of || g.partial ? fmtNum(t) : fmtNum(t) + '\u2009/\u2009' + fmtNum(of)) + more;
+}
+const listWayBtns = () => ibSetup() || fmNow() ? '' : '<span class="scway" role="group"><button data-scway="pct" aria-pressed="' + !listPts + '" title="Percent">%</button><button data-scway="pts" aria-pressed="' + listPts + '" title="Points">pts</button></span>';
+document.addEventListener('click', e => { const b = e.target.closest('[data-scway]'); if (!b || !batch) return; setListPts(b.dataset.scway === 'pts'); renderList(); });
 function renderList() {
 if (!batch) return;
 renderAnonHead();
-const order = anonOn() ? anonOrder() : batch.students.map((_, i) => i);
+const order = groupOrder(anonOn() ? anonOrder() : batch.students.map((_, i) => i));
 const q = ($('#stuFind').value || '').trim().toLowerCase();
 lfCheck();
 const rn = anonOn() ? null : rosterNames();
-$('#stuList').innerHTML = order.map((i, pos) => { const st = batch.students[i];
+$('#stuList').innerHTML = groupRuns(order, order.map((i, pos) => { const st = batch.students[i];
 const nm = rn && rn.get(st) || shownName(st, i), full = rn && rn.has(st) && st.key !== nm ? nm + ' (' + st.key + ')' : nm;
 if (q && !full.toLowerCase().includes(q)) return '';
 if (!lfShows(i)) return '';
 const g = gradeOf(st);
 const val = g.total != null ? g.total : g.pct != null ? g.pct + '%' : null;
-let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.tries ? esc(triesSay(g)) : g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + (ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct)) + (g.total == null ? '%' : g.outOf != null ? '/' + fmtNum(g.outOf) : '') + (g.partial ? '<small>partial</small>' : '') + '</span>'
+let right = noScore(st) ? '<span class="stag" title="You marked this student ' + g.status + '. No score counts.">' + STATUS_LABEL[g.status] + '</span>' : val != null ? '<span class="sc" title="' + (g.tries ? esc(triesSay(g)) : g.paper ? 'Read from the paper' : g.done ? 'Scored' : 'Partly scored') + '"' + (g.paper || g.out ? ' style="color:var(--muted);font-weight:600"' : g.done ? '' : ' style="color:var(--warn)"') + '>' + (ibSetup() ? ibListSay(st) : listScore(g)) + (g.partial ? '<small>partial</small>' : '') + '</span>'
 : manyReads(st) ? '<span class="sc" style="color:var(--warn)" title="More than one grade found on the paper. Check the Grade sheet.">?</span>'
 : st.doubts && st.doubts.length ? '<span class="sc" style="color:var(--warn)" title="A reading on the paper may not be a grade. Confirm it on the Grade sheet.">?</span>'
 : hasMarks(st) ? '<span class="dot" title="Marked"></span>' : tnHas(st) ? '<span class="dot" title="Started: you have typed notes"></span>' : '';
@@ -8252,10 +8301,10 @@ const sent = st.grade.sent ? '<span class="sent" title="You exported this paper 
 if (fmNow() && !noScore(st)) right = st.grade.fb ? '<span class="fbck" title="Feedback complete">✓</span>' : hasMarks(st) || (st.grade.comment || '').trim() || tnHas(st) ? '<span class="dot" title="Started, not complete yet"></span>' : '';
 const nAdd = st.files.filter(f => f.added && !f.from && !madeFromWord(f)).length, re = st.files.some(f => Object.values(f.sc || {}).some(r => r.re)), grp = st.files.some(f => f.from || Object.values(f.sc || {}).some(r => r.w)) || st.files.some(f => !f.added && shareCopies(st, f).length);
 const fm = fmNow(), sv = noScore(st) ? ['–', 'none'] : fm ? (st.grade.fb ? ['✓', 'ok'] : hasMarks(st) || (st.grade.comment || '').trim() || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'])
-: val != null ? [ibSetup() ? ibListSay(st) : fmtNum(g.total != null ? g.total : g.pct) + (g.total == null ? '%' : ''), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
+: val != null ? [ibSetup() ? ibListSay(st) : listScore(g, true), g.paper || g.out ? 'quiet' : g.done ? '' : 'part'] : manyReads(st) || (st.doubts && st.doubts.length) ? ['?', 'part'] : hasMarks(st) || tnHas(st) ? ['', 'dot'] : st.files.length ? ['', 'ring'] : ['–', 'none'];
 return '<button class="stu' + (i === cur ? ' on' : '') + (st.files.length ? '' : ' empty') + (sv[1] ? ' sv-' + sv[1] : '') + (g.status === 'late' ? ' is-late' : '') + '" data-i="' + i + '" data-sv="' + sv[0] + '"' + (i === cur ? ' aria-current="true"' : '') + '><span class="num">' + (pos + 1) + '</span><span class="nm" title="' + esc(full) + '">' + esc(nm) + '</span>' + (anonOn() ? '' : whoBtn('data-wi="' + i + '"', st.key)) +
-'<span class="pills">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '<span class="add grp" title="Group work: marked and graded once with ' + esc(groupNames(groupMates(st))) + '">group</span>' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + '</span><span class="tail">' + right + '</span></button>';
-}).join('');
+'<span class="pills">' + (st.files.length || noScore(st) ? '' : '<span class="muted" style="font-size:11px">no paper</span>') + (g.status === 'late' ? '<span class="stag" title="You marked this student late">late</span>' : '') + (g.out ? '<span class="stag out" title="Left out of the average">left out</span>' : '') + (g.tries ? '<span class="stag retk" title="' + esc(triesSay(g)) + '">retake</span>' : '') + (nAdd ? '<span class="add" title="' + nAdd + (nAdd === 1 ? ' file' : ' files') + ' added by you">+' + nAdd + '</span>' : '') + (re ? '<span class="add" title="A page needs a rescan">⚑</span>' : '') + (groupOf(st) ? '' : grp ? '<span class="add grp" title="Group work: shares pages or a file with another student">shared</span>' : '') + carryPill(st) + anchorTag(st) + sent + '</span><span class="tail">' + right + '</span></button>';
+}));
 if (listFilter !== 'all' && !q && !order.some(i => lfMatch(batch.students[i]))) $('#stuList').insertAdjacentHTML('beforeend', '<div class="muted lfnone">No one else here. <button class="link" data-lf="all">Show everyone</button></div>');
 listToCur();
 const nExp = exportPlan(true).length;
@@ -8270,7 +8319,8 @@ else if (r.bottom > b.bottom - fh - 4) box.scrollTop += (r.bottom - (b.bottom - 
 }
 function renderProg() {
 const fm = fmNow();
-const on = batch.students.filter(s => !noScore(s)), N = on.length, n = on.filter(s => fm ? s.grade.fb : gradeOf(s).done).length, nOff = batch.students.length - N;
+const units = groupUnits().map(u => u.filter(s => !noScore(s))), live = units.filter(u => u.length);
+const N = live.length, n = live.filter(u => u.every(s => fm ? s.grade.fb : gradeOf(s).done)).length, nOff = units.length - N;
 const cs = fm ? null : classStats();
 const avg = fm ? '' : cs.n ? '<button class="pavg" id="pAvg" title="Average of ' + people(cs.n, 'finished score') + '’s percents: ' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '. Partial, missing, excused and left-out papers don’t count. Click for Insights."><span class="k">Avg</span> <span class="v">' + (cs.meanPct != null ? pctAvgText(cs.meanPct) : oneDp(cs.mean)) + '</span><span class="s">' + oneDp(cs.mean) + ' / ' + fmtNum(cs.max) + '</span></button>'
 : '<span class="pavg none" id="pAvg" title="No finished scores yet"><span class="k">Avg</span> <span class="v">–</span></span>';
@@ -8353,7 +8403,8 @@ function totalHtml(st) {
 const gr = noScore(st) ? gradeOf(st) : tryGrade(st), own = ownGrade(st);
 if (noScore(st)) return '<b>' + STATUS_LABEL[gr.status] + '</b><span style="width:100%;font-size:12.5px">No score counts. Giving a score takes this off.</span>';
 if (ibSetup()) return ibTotalHtml(st);
-let h = '<b>' + (gr.total == null ? '–' : fmtNum(gr.total)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? '' : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
+const x = !!gr.xc && gr.base != null, t = x ? gr.base : gr.total, plus = x ? '<small class="xcplus"> +' + xcSay(gr) + '</small>' : '';
+let h = '<b>' + (t == null ? '–' : fmtNum(t)) + '</b><span>/ ' + (gr.outOf != null ? fmtNum(gr.outOf) : maxPoints()) + '</span><span class="pc">' + (gr.pct == null ? plus : x && gr.bpct != null ? fmtPct(gr.bpct) + plus + bandSay(gr.pct) : fmtPct(gr.pct) + bandSay(gr.pct)) + '</span>';
 if (gr.total != null) h += '<button class="btn sm ghost" id="stampScore" title="Put the score on the paper: ' + esc(scoreStampText(gr)) + '">' + STAMP_ICON + 'Stamp</button>';
 if (gr.xc) h += '<span class="xcsay" style="width:100%">' + fmtNum(gr.base) + ' earned + ' + fmtNum(gr.xc) + (gr.xcU === 'pct' ? '%' : '') + ' extra credit</span>';
 if (gr.partial) h += '<span class="sc-warn" style="width:100%">Partial: ' + partNote(st) + '. This total isn’t final.</span>';
@@ -8372,6 +8423,7 @@ const critRowOf = m => setup.mode !== 'rubric' ? -1 : ibSetup() ? setup.ib.index
 function scoreStampText(gr, st) {
 if (ibSetup()) return ibStampText(st || batch.students[cur]);
 const max = gr.outOf != null ? gr.outOf : maxPoints();
+if (gr.xc && gr.base != null) return fmtNum(gr.base) + (max ? '/' + fmtNum(max) : '') + (gr.bpct != null ? ' = ' + gr.bpct + '%' : '') + ' + ' + xcSay(gr) + ' extra credit';
 return fmtNum(gr.total) + (max ? '/' + fmtNum(max) : '') + (gr.pct != null ? ' = ' + gr.pct + '%' : '');
 }
 function syncScoreStamps(st) {
@@ -8382,7 +8434,7 @@ let changed = false;
 for (const f of st.files) {
 if (!f.marks || tryOfFile(st, f)) continue;
 for (const l of Object.values(f.marks)) for (const m of l || []) {
-if (m.t !== 'stamp') continue;
+if (m.t !== 'stamp' || stampHidden(m, st.key)) continue;
 if (m.k === 'score' && text != null && m.text !== text) { m.text = text; changed = true; }
 if (m.k === 'crit') { const c = critStampOf(st, critRowOf(m)); if (c && (m.text !== c.text || m.name !== c.name)) { m.text = c.text; m.name = c.name; changed = true; } }
 }
@@ -8927,7 +8979,7 @@ if (said) await fbAddPages(out, said, W0, H0, dpi, notes);
 if (said && notes) await tnAddPages(out, st, W0, H0, dpi, true);
 for (const [path, p] of d.pages) {
 const { f, js, lib } = await src(path);
-const marks = (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
+const marks = marksMine(f.marks[p] || [], f, st).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
 const Lx = lightOpts().exp ? lightForPage(st, f, p) : null;
 if (!marks.length && !(f.kami && f.kami[p]) && !Lx && !lib.isEncrypted && !skewOf(f, p)) {
 const [cp] = await out.copyPages(lib, [p]);
@@ -8976,7 +9028,7 @@ c.width = c.height = 0;
 if (notes && !said) await tnAddPages(out, st, W0, H0, dpi, false);
 if (edit && d.pages.length) {
 const paths = [...new Set(d.pages.map(([path]) => path))];
-const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, f.marks[p] || [], rotOf(f, p), skewOf(f, p)]; }) };
+const info = { v: 1, pages: d.pages.map(([path, p]) => { const f = fileByPath(st, path); return [paths.indexOf(path), p, marksMine(f.marks[p] || [], f, st), rotOf(f, p), skewOf(f, p)]; }) };
 for (let k = 0; k < paths.length; k++) await out.attach(await viewBytes(fileByPath(st, paths[k])), 'gs-original-' + (k + 1) + '.pdf', { mimeType: 'application/pdf', description: 'Original pages, for reopening in Grading Studio' });
 await out.attach(new TextEncoder().encode(JSON.stringify(info)), 'grading-studio.json', { mimeType: 'application/json', description: 'Marks, for reopening in Grading Studio' });
 }
@@ -9284,10 +9336,10 @@ if (found.some(o => o.page === p && o.score === g.score && o.pct === g.pct && Ma
 found.push({ ...g, boxed: !!spot, page: p, rect: r, from, hover: !!hover, full: text, text: text.length > 140 ? text.slice(0, 140) + '…' : text });
 };
 for (const a of annots) { const t = annText(a); if (t && seen.length < 4) seen.push(t.length > 60 ? t.slice(0, 60) + '…' : t); if (t && !f.virtual) add(parseGrade(annText(a, true), false), vp.convertToViewportRectangle(a.rect), 'note', t, isPopupComment(a)); }
-for (const m of (f.marks || {})[p] || []) {
+for (const m of marksMine((f.marks || {})[p] || [], f)) {
 if (m.t === 'text') { const L = textLayout(m, vp.width); add(ofMark(m.text), [m.x, m.y, m.x + L.ink, m.y + L.h], 'note', m.text); }
 if (m.t === 'note' && !m.qza) add(ofMark(m.text), [m.ax - 4, m.ay - 4, m.ax + 4, m.ay + 4], 'note', m.text, true);
-if (m.t === 'stamp' && m.k === 'score') { const b = stampBox(m); add(ofMark(m.text) && { ...ofMark(m.text), stamp: true }, [b.x, b.y, b.x + b.w, b.y + b.h], 'note', m.text); }
+if (m.t === 'stamp' && m.k === 'score') { const b = stampBox(m); const sg = ofMark(stampScore(m.text)); add(sg && { ...sg, stamp: true }, [b.x, b.y, b.x + b.w, b.y + b.h], 'note', m.text); }
 }
 const tc = await page.getTextContent();
 let str = '';
@@ -9329,7 +9381,7 @@ const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.wid
 ctx.translate(-x * k, -y * k);
 await page.render({ canvasContext: ctx, ...vpDraw(f, g.page, page, k), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
 ctx.setTransform(k, 0, 0, k, -x * k, -y * k);
-const mk = ((f.marks || {})[g.page] || []).filter(m => m.t !== 'note');
+const mk = marksMine((f.marks || {})[g.page] || [], f).filter(m => m.t !== 'note');
 if (mk.length) drawMarks(ctx, mk, vp1.width, vp1.height, 0, null);
 if (g.hover) {
 ctx.font = '11px ' + FONT;
@@ -9593,7 +9645,7 @@ Object.assign(c.style, { width: v1.width * k + 'px', height: v1.height * k + 'px
 const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
 await page.render({ canvasContext: ctx, viewport: vp, transform: skewXf(f, p, vp), annotationMode: pdfjsLib.AnnotationMode.ENABLE }).promise;
 if (my !== token) break;
-const mk = ((f.marks || {})[p] || []).filter(m => m.t !== 'note');
+const mk = marksMine((f.marks || {})[p] || [], f).filter(m => m.t !== 'note');
 if (mk.length) { ctx.save(); ctx.scale(k * dpr, k * dpr); drawMarks(ctx, mk, v1.width, v1.height, 0, null); ctx.restore(); }
 const base = ctx.getImageData(0, 0, c.width, c.height);
 const paint = sel => {
@@ -9877,7 +9929,7 @@ const scoreOffHides = m => isScoreMark(m) || (m.t === 'stamp' && m.k === 'crit')
 async function sharePage(st, f, js, p, scale, rx, opts, look) {
 const page = await js.getPage(p + 1);
 const vp = vpRot(f, p, page, 1), W = vp.width, H = vp.height;
-let marks = look && look.bare ? [] : scrubMarks((f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
+let marks = look && look.bare ? [] : scrubMarks(marksMine(f.marks[p] || [], f, st).concat((f.kami && f.kami[p] && f.kami[p].notes) || []), rx);
 if (look && look.noScore) marks = marks.filter(m => !scoreOffHides(m));
 const side = marks.some(m => m.t === 'note') ? sideFor(W) : 0;
 const c = document.createElement('canvas');
@@ -10148,7 +10200,7 @@ out.addPage([r.W + r.side, r.H]).drawImage(await out.embedJpg(jpg), { x: 0, y: 0
 r.c.width = r.c.height = 0;
 const list = (notes[code] = notes[code] || []);
 const pageNo = d.pages.findIndex(x => x[0] === path && x[1] === p) + 1;
-for (const m of (f.marks[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []))
+for (const m of marksMine(f.marks[p] || [], f, st).concat((f.kami && f.kami[p] && f.kami[p].notes) || []))
 if (m.text) list.push({ paper: code + (k ? '-' + (k + 1) : ''), page: pageNo, kind: m.t === 'note' ? (m.ro ? 'Kami comment' : 'margin comment') : 'text on page', text: scrub(m.text, rx) });
 onStep && onStep(++done, total);
 }
@@ -12155,7 +12207,8 @@ let keepT = null;
 function keepWork(b, data) {
 const m0 = keptMeta.get(b.id), m = { ...(m0 || { id: b.id, name: b.name }), n: b.students.length, t: data.t };
 if (typeof fcSeen === 'function') fcSeen(b.id);
-delete m.fb; delete m.sent; delete m.sentT; Object.assign(m, workCounts(data));
+delete m.fb; delete m.sent; delete m.sentT; delete m.joined; Object.assign(m, workCounts(data));
+if (m.joined) m.n = b.students.length - m.joined;
 delete m.ret; if (!(data.returned && data.returned.ok)) delete m.back;
 if (typeof fcGain === 'function') fcGain(m0, m);
 keptMeta.set(b.id, m);
@@ -12799,7 +12852,7 @@ scorePlacing = { text, extra, stop: () => { document.removeEventListener('pointe
 function stopScorePlace() { if (scorePlacing) { scorePlacing.stop(); scorePlacing = null; } }
 function placeScore(pg, x, y) {
 const { text, extra } = scorePlacing; stopScorePlace();
-const m = { t: 'stamp', k: 'score', x: r1(x), y: r1(y), color: totalInk(), text, ...extra }; m.size = newStampSize(m.k);
+const m = stampOwner({ t: 'stamp', k: 'score', x: r1(x), y: r1(y), color: totalInk(), text, ...extra }, batch.students[cur]); m.size = newStampSize(m.k);
 const bb = stampBox(m);
 m.x = r1(m.x + Math.max(0, -bb.x) - Math.max(0, bb.x + bb.w - pg.W)); m.y = r1(m.y + Math.max(0, -bb.y) - Math.max(0, bb.y + bb.h - pg.H));
 snap(pg); pg.marks().push(m); selected = { page: pg, mark: m, fresh: true }; changed(pg); redrawAll();
@@ -14429,7 +14482,7 @@ for (const el of document.querySelectorAll('.gsVer')) el.textContent = versionLa
 if (gsData.info.note) { const el = $('#bootNote'); el.textContent = gsData.info.note; el.hidden = false; toast(gsData.info.note, 15000); }
 
 window.__gs_pickMany = pickMany;
-window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, askReplace, replaceDo, openReplace, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, pointsWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, libTrack, libu: () => LIBU, gsData, gradeOf, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool, redrawAll };
+window.__gs = { aiName, aiSay, aiTag, aiLink, DEFAULT_SETUP, rowTop, rowSteps, rowsMax, setupMax, setupOver, rowScaleOf, pastScore, removeFile, bringBack, replaceFile, askReplace, replaceDo, openReplace, stickerText, startScorePlace, stopScorePlace, saveTrouble, batchIdOf, wordScore, wordScoresAll, restoreBackup, fileSeq, moveFile, openMoveFile, calcEval, openCalc, pageLit, setPageLit, lightMenuDo, lightChips, pageOwnL, setPageOwnL, lightForPage, ensureCounts, addRefs, refs: () => refFiles, matchToRoster, guessAmong, expandPicked, lightOpts, isRubricPage, openAnon, setAnon, anonOrder, anonOn, openLight, lightFor, lightAuto, openSplit, sp: () => SP, bringIn, sortGuess, openWord, wordBytes, reopenKept, forgetKept, kept: () => keptMeta, addFiles, removeAdded, nextUnscored, openDisplay, trimToInk, intake, parseGrade, scanFile, scanAll, state: () => ({ batch, cur, setup, pages, zoom, lib }), SCALE12, SCALE_FIVES, RUBRIC_STEPS, percentWith, pointsWith, ownGrade, roundPct, fmtNum, fmtPct, saveNow, undo, redo, libTrack, libu: () => LIBU, gsData, gradeOf, scoreStampText, percentFor, flattenDoc, exportPlan, nameOut, layoutOf, docIn, openStudent, setTool, redrawAll };
 
 /* ---------------- names: finding a student's name in text, in any alphabet, for the Claude ZIP and anonymous grading ---------------- */
 const NAME_PLAIN = new Set(('al am an art as at august autumn ban bay be best bill bin black brown by can case chase chin dawn day de dean do don dung da ed faith far frank gay go grace gray green grey ha hang he hope ho hung if in is it ivy jade joy june king la lane le little long love major man mark may me min my new no nice on or page pan park pat pearl pen penny price rich rose ruby sandy sang short sing small so son song star stone su sue summer sun sung tan tang ten tin to tu up us van violet von we white will win wing won wood wu ye young april').split(' '));
@@ -15115,13 +15168,15 @@ const stickersReady = Promise.all(STICKERS.map(([k]) => new Promise(done => {
 })));
 const isSticker = k => STICKERS.some(s => s[0] === k);
 const isScoreStamp = k => k === 'score' || k === 'crit';
-const scoreLines = m => String(m.text || '').split(' = ').map(t => t.replace('/', ' / '));
+const stampScore = t => String(t || '').split(' + ')[0];
+const scoreLines = m => { const t = String(m.text || ''), i = t.indexOf(' + '), L = stampScore(t).split(' = ').map(x => x.replace('/', ' / ')); if (i >= 0) L.push(t.slice(i + 1)); return L; };
 function scoreSize(m) {
   if (m.k === 'crit') return critSize(m);
-  const s = m.size || 52, [a, b] = scoreLines(m);
+  const s = m.size || 52, [a, b, c] = scoreLines(m);
   measureCtx.font = '700 ' + (s * 0.34) + 'px ' + FONT; const wa = measureCtx.measureText(a || '').width;
   measureCtx.font = '600 ' + (s * 0.26) + 'px ' + FONT; const wb = b ? measureCtx.measureText(b).width : 0;
-  return { w: Math.max(s * 1.5, Math.max(wa, wb) + s * 0.4), h: b ? s : s * 0.6, two: !!b };
+  measureCtx.font = '600 ' + (s * 0.19) + 'px ' + FONT; const wc = c ? measureCtx.measureText(c).width : 0;
+  return { w: Math.max(s * 1.5, Math.max(wa, wb, wc) + s * 0.4), h: c ? s * 1.28 : b ? s : s * 0.6, two: b != null, xc: c };
 }
 function critName(m, s) {
   let t = String(m.name || '').trim(); if (!t) return '';
@@ -15291,6 +15346,7 @@ function drawStamp(ctx, m) {
       ctx.lineWidth = Math.max(0.8, s * 0.022); ctx.beginPath(); ctx.moveTo(l, t + s * 0.6); ctx.lineTo(l + z.w, t + s * 0.6); ctx.stroke();
       ctx.font = '600 ' + (s * 0.26) + 'px ' + FONT; ctx.fillText(b, x, t + s * 0.8);
     }
+    if (z.xc) { ctx.font = '600 ' + (s * 0.19) + 'px ' + FONT; ctx.fillText(z.xc, x, t + s * 1.1); }
     ctx.restore(); return;
   }
   ctx.save(); ctx.strokeStyle = ctx.fillStyle = m.color; ctx.lineWidth = Math.max(1.1, s * 0.085); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -16189,10 +16245,11 @@ const moved = d.moved ? Object.fromEntries(Object.entries(d.moved).filter(([p]) 
 const removed = d.removed ? Object.fromEntries(Object.entries(d.removed).filter(([p]) => c.map[p]).map(([p, r]) => [c.map[p], r.by && c.map[r.by] ? { ...r, by: c.map[r.by] } : r])) : undefined;
 const share = d.share && { ...d.share, boxes: mapBoxes(d.share.boxes, c.map), checked: mapBoxes(d.share.checked, c.map) };
 const scan = c.unchecked || !d.scan ? undefined : mapPaths(d.scan, Object.fromEntries(Object.entries(c.map).filter(([, to]) => !c.flags[to])));
-const groups = d.groups && d.groups.map(g => ({ k: g.k.map(k => keyOf.get(nfc(k)) || k), p: Object.fromEntries(Object.entries(g.p || {}).map(([k, p]) => [keyOf.get(nfc(k)) || k, c.map[p] || p])) }));
+const grpMap = l => l && l.map(g => ({ ...g, k: g.k.map(k => keyOf.get(nfc(k)) || k), p: Object.fromEntries(Object.entries(g.p || {}).map(([k, p]) => [keyOf.get(nfc(k)) || k, c.map[p] || p])) }));
+const groups = grpMap(d.groups), groupsOwn = grpMap(d.groupsOwn);
 const clips = d.clips && d.clips.map(x => (x.p ? { ...x, p: c.map[x.p] || x.p } : x));
 const vrot = d.vrot && Object.fromEntries(Object.entries(d.vrot).map(([k, v]) => [c.map[k] || k, v]));
-batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, clips, vrot, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
+batch.keptWork = { ...d, t: Date.now(), s, moved, removed, carry, scan, share, groups, groupsOwn, clips, vrot, lightPg: mapLit(d.lightPg, c.map), lightPgL: mapLit(d.lightPgL, c.map) };
 batch.carry = carry;
 await carryExtras(from, carry);
 const m = keptMeta.get(from);
@@ -17499,7 +17556,7 @@ kmWrap('More <span aria-hidden="true">▾</span>', 'class="btn sm" id="bkMore"',
 '<button class="mitem" data-bksetup>Term setup<small>Terms, types and weights</small></button><hr>' +
 '<button class="mitem" data-bkaddxc>Add extra credit…</button>' +
 '<button class="mitem" data-bkimport>Import scores…<small>From your old gradebook: a CSV or Excel file, or cells pasted</small></button>' +
-(bk.tab === 'table' ? '<button class="mitem" data-bkcopy>Copy the table</button>' + (bk.pick ? '' : '<hr><button class="mitem" data-bkpickon aria-pressed="false">Leave students out…<small>See the class averages without them</small></button>') : ''), 'right') : '') + '</div>';
+(bk.tab === 'table' ? '<button class="mitem" data-mbopen="">Entry list</button><button class="mitem" data-bkcopy>Copy the table</button>' + (bk.pick ? '' : '<hr><button class="mitem" data-bkpickon aria-pressed="false">Leave students out…<small>See the class averages without them</small></button>') : ''), 'right') : '') + '</div>';
 let main;
 if (!c.names.length) main = '<p class="muted bkpad">The gradebook lists the students on a class’s roster. Add a roster to ' + esc(c.name) + ' on its class page first.</p><p class="bkpad"><button class="btn sm" data-bkimport>Import scores…</button></p>';
 else if (bk.tab === 'class') main = myp ? ibClassView(c, cols, all) : bkClassView(c, cols, all, conf);
@@ -17673,7 +17730,7 @@ p.innerHTML = '<b>' + esc(col.name) + '</b>' + (col.type === 'xc' ? '<div class=
 : '<div class="bkpf">Type</div><div class="pseg bktypeseg" role="group">' + bkCats().map(([t, , s]) => '<button data-bksettype="' + esc(t) + '" aria-pressed="' + (col.type === t) + '">' + esc(s) + '</button>').join('') + '</div>') +
 '<label class="bkpf">Due <input type="date" id="bkDue" value="' + esc(col.due || '') + '"></label>' +
 (terms.length ? '<label class="bkpf">Term <select id="bkTerm" class="btn sm"><option value="">By the date (' + esc((terms.find(t => t.id === bkTermOf({ ...col, term: '' }, terms)) || { name: 'none' }).name) + ')</option>' + terms.map(t => '<option value="' + t.id + '"' + (col.term === t.id ? ' selected' : '') + '>' + esc(t.name) + '</option>').join('') + '</select></label>' : '') +
-(col.typed && col.it && !col.d ? '<button class="btn sm" data-bkedittyped="' + esc(col.it.id) + '">' + (col.type === 'xc' ? 'Edit the extra credit' : 'Edit the typed-in scores') + '</button>' : '') + '<button class="btn sm" data-bkpopclose>Done</button>';
+(col.typed && col.it && !col.d ? '<button class="btn sm" data-bkedittyped="' + esc(col.it.id) + '">' + (col.type === 'xc' ? 'Edit the extra credit' : 'Edit the typed-in scores') + '</button>' : '') + (col.type === 'xc' ? '' : '<button class="btn sm" data-mbopen="' + esc(col.key) + '">Entry list</button>') + '<button class="btn sm" data-bkpopclose>Done</button>';
 p.dataset.key = key;
 const host = bkHost();
 host.appendChild(p);
@@ -19315,7 +19372,7 @@ await workerReady;
 let js;
 try {
 js = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
-const pg = await js.getPage(p + 1), v1 = vpRot(f, p, pg, 1), dpr = window.devicePixelRatio || 1, marks = f.marks[p] || [];
+const pg = await js.getPage(p + 1), v1 = vpRot(f, p, pg, 1), dpr = window.devicePixelRatio || 1, marks = marksMine(f.marks[p] || [], f);
 const wide = v1.width + (marks.some(m => m.t === 'note') ? sideFor(v1.width) : 0), k = Math.min(1.6, (spot.clientWidth || 380) / wide);
 const r = await sharePage(c.st, f, js, p, k * dpr, anonOn() ? anonRx(c.st) : null);
 if (my !== c.tok || !spot.isConnected) return;
@@ -19539,9 +19596,10 @@ el.innerHTML = '<div class="pc" role="dialog" aria-modal="true" aria-label="Stud
 '<div class="pc-f"><span class="pc-k">Also called</span><span class="pc-chips">' + (i.other || []).map((o, k) => '<span class="pc-chip">' + esc(o) + '<button data-pdrop="' + k + '" aria-label="Remove ' + esc(o) + '" title="Remove this spelling">×</button></span>').join('') +
 '<button class="pc-chip pc-add" data-padd>+ add</button></span><span></span></div>' +
 '<label class="pc-f pc-top"><span class="pc-k">Note</span><textarea class="pc-in" data-pf="note" rows="2" placeholder="Anything you want to remember">' + esc(i.note || '') + '</textarea><span></span></label></div>' +
-'<div class="pc-sec"><h3 id="pcWorkH">' + workHead(c, []) + '</h3><div id="pcWork"><div class="muted pc-sm">Looking through saved work…</div></div></div>' +
+'<div class="pc-sec"><h3 id="pcWorkH">' + workHead(c, []) + '</h3><div id="pcWork"><div class="muted pc-sm">Looking through saved work…</div></div></div><div class="pc-sec" id="pcWl"></div>' +
 '<div class="pc-ft muted">Kept in this browser with the roster. Other spellings and the student ID match folders to this student.</div></div>';
 const me = pcOpen;
+exReady.then(wlCardFill);
 classWork(c, name).then(rows => { if (pcOpen !== me || !$('#pcWork')) return; $('#pcWorkH').innerHTML = workHead(c, rows); $('#pcWork').innerHTML = workRows(rows); }).catch(e => console.error(e));
 }
 function renderStranger(el, c, folder) {
@@ -19566,6 +19624,7 @@ toast('“' + folder + '” is now linked to ' + name);
 document.addEventListener('click', async e => {
 const el = $('#pcard'); if (!el || !pcOpen) return;
 if (e.target === el || e.target.closest('.pc-x')) return closeCard();
+if (wlCardClick(e)) return;
 const c = classById(pcOpen.cid), n = pcOpen.name;
 if (e.target.closest('[data-psolo]')) { const k = soloHere(c, n); closeCard(); return soloStart(k); }
 const cp = e.target.closest('[data-pcopy]'); if (cp) return copy(infoOf(c, n)[cp.dataset.pcopy] || '', 'Copied');
@@ -20266,7 +20325,7 @@ const x = recTime(a, ta), y = recTime(b, tb);
 return x === y ? { pick: 'ask' } : { pick: x > y ? 'a' : 'b', by: 'date' };
 }
 const BLANK_REC = () => ({ f: {}, g: { rubric: [], points: '', comment: '' }, h: {} });
-const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned', 'goal', 'clips', 'vrot'];
+const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'groupsOwn', 'returned', 'goal', 'clips', 'vrot'];
 const setOf = w => { const o = {}; if (w) for (const k of WORK_SET) if (w[k] !== undefined) o[k] = w[k]; return o; };
 const setV = w => w && w.sv ? w.sv : (h => h ? { ['~' + h]: 1 } : {})(hashOf(setOf(w)));
 const partV = (w, k) => (w.pv && w.pv[k]) || (h => h ? { ['~' + h]: 1 } : {})(hashOf(w[k]));
@@ -20556,20 +20615,39 @@ else out['from' + other].push(path);
 }
 return out;
 }
+function workUnits(keys, groups) {
+const seen = new Set(), out = [];
+for (const g of groups || []) { const k = (g.k || []).filter(x => keys.has(x) && !seen.has(x)); if (k.length) { k.forEach(x => seen.add(x)); out.push(k); } }
+for (const k of keys) if (!seen.has(k)) out.push([k]);
+return out;
+}
 function workCounts(work) {
 const su = work.setup || {}, s = work.s || {}, read = work.read || {}, blank = v => v == null || v === '';
 const out = { scored: 0, marked: 0, partial: 0, off: 0, fb: 0 };
-for (const k of new Set([...Object.keys(s), ...Object.keys(read)])) {
+const one = k => {
 const g = (s[k] && s[k].g) || {}, r = g.rubric || [], rows = su.criteria ? su.criteria.map((_, i) => r[i]) : r, on = rows.filter(v => v != null).length;
 const worked = !!(s[k] && s[k].f && Object.keys(s[k].f).length) || !blank(g.comment);
-if (g.status !== 'missing' && g.status !== 'excused' && g.fb) out.fb++;
-if (g.status !== 'missing' && g.status !== 'excused' && g.sent) { out.sent = (out.sent || 0) + 1; out.sentT = Math.max(out.sentT || 0, g.sent); }
-if (g.status === 'missing' || g.status === 'excused') out.off++;
-else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : (!blank(g.pk) && !Array.isArray(su.ib)) || (on === rows.length && on)) { out.scored++; if ((su.mode !== 'points' && on === rows.length && on) || worked) out.marked++; }
-else if (su.mode !== 'points' && on) out.partial++;
-else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) { out.scored++; if (worked) out.marked++; }
+const o = { off: g.status === 'missing' || g.status === 'excused' };
+if (!o.off && g.fb) o.fb = 1;
+if (!o.off && g.sent) o.sent = g.sent;
+if (o.off) return o;
+if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : (!blank(g.pk) && !Array.isArray(su.ib)) || (on === rows.length && on)) { o.scored = 1; if ((su.mode !== 'points' && on === rows.length && on) || worked) o.marked = 1; }
+else if (su.mode !== 'points' && on) o.partial = 1;
+else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) { o.scored = 1; if (worked) o.marked = 1; }
+return o;
+};
+const units = workUnits(new Set([...Object.keys(s), ...Object.keys(read)]), [...(work.groups || []), ...(work.groupsOwn || [])]);
+for (const u of units) {
+const all = u.map(one), on = all.filter(o => !o.off), every = f => on.length > 0 && on.every(o => o[f]);
+if (u.length > 1) out.joined = (out.joined || 0) + u.length - 1;
+if (every('fb')) out.fb++;
+if (every('sent')) { out.sent = (out.sent || 0) + 1; out.sentT = Math.max(out.sentT || 0, ...on.map(o => o.sent)); }
+if (!on.length) out.off++;
+else if (every('scored')) { out.scored++; if (on.some(o => o.marked)) out.marked++; }
+else if (on.some(o => o.scored || o.partial)) out.partial++;
 }
 if (!out.fb) delete out.fb;
+if (!out.joined) delete out.joined;
 if (work.returned && work.returned.ok) out.back = work.returned.ok;
 return out;
 }
@@ -20578,10 +20656,10 @@ const m = { ...(mb || {}), ...(ma || {}), id };
 if (!m.name) m.name = 'A download';
 if (work) {
 m.t = work.t || m.t;
-delete m.fb; delete m.sent; delete m.sentT;
+delete m.fb; delete m.sent; delete m.sentT; delete m.joined;
 Object.assign(m, workCounts(work));
 delete m.ret; if (!(work.returned && work.returned.ok)) delete m.back;
-m.n = Math.max(m.n || 0, Object.keys(work.s || {}).length);
+m.n = m.joined ? Object.keys(work.s || {}).length - m.joined : Math.max(m.n || 0, Object.keys(work.s || {}).length);
 }
 return m;
 }
@@ -21028,7 +21106,7 @@ let setLibFrom, libNews;
   };
 }
 const browserFull = () => Object.assign(new DOMException('The small store is full', 'QuotaExceededError'), { small: true });
-const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|planSeen|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|refOpen\..*)$/;
+const LS_LOCAL = /^gs\.(b\..+|batches|syncT|syncAt|cloudP|planCopy|planSeen|phone|phCls|dataV|lastBackup|gcid|gEmail|tomb|rolls|setupUndo|focusRun|wlCodes|refOpen\..*)$/;
 function carryLs() {
   const o = {};
   for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gs.') && !LS_LOCAL.test(k)) o[k] = localStorage.getItem(k); }
@@ -21670,8 +21748,8 @@ else if (f.k === 'dl') { if (f.work) B.work[f.id] = f.work; if (f.meta) B.meta[f
 else if (f.k === 'paper') { const p = B.papers[f.id] ||= { label: f.label, entries: [], size: 0 }; p.entries.push({ path: f.path, off: pos, n, none: f.none }); p.size += n; }
 else if (f.k === 'added') { (B.addedAt[f.id] ||= {})[f.lk] = { rec: f.rec, off: pos, n }; (B.added[f.id] ||= {})[f.lk] = f.rec.added || 0; }
 else if (f.k === 'edit') { (B.editAt[f.id] ||= {})[f.path] = { t: f.t, off: pos, n, nd: f.nd, hasOrig: f.hasOrig }; (B.edits[f.id] ||= {})[f.path] = f.t; }
-else if (f.k === 'ex') { if (f.rec && f.rec.id) B.ex[f.rec.id] = f.rec; }
-else if (f.k === 'expix') B.exAt[f.id + '|' + f.i] = { off: pos, n };
+else if (f.k === 'ex' || f.k === 'exw') { if (f.rec && f.rec.id) B.ex[f.rec.id] = f.rec; }
+else if (f.k === 'expix' || f.k === 'exwpix') B.exAt[f.id + '|' + f.i] = { off: pos, n };
 else if (f.k === 'school') B.school[f.hash] = { off: pos, n };
 else if (f.k === 'plan') (B.plan ||= []).push({ f, off: pos, n });
 else if (f.k === 'planls') B.planLs = f.ls || {};
@@ -21807,7 +21885,7 @@ out.push('<div>' + (anon ? 'A file' : esc(p.split('/').pop())) + ': ' + n + (n =
 if (out.length === 1) out.push('<div class="muted">No score, comment or marks</div>');
 return out.join('');
 }
-const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and share codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', clips: 'Video clips', vrot: 'Videos turned the right way up', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
+const PART_SAY = { setup: 'Rubric setup', cls: 'Class', share: 'Cover boxes and share codes', drive: 'Google Drive link', light: 'Lighting', lightOpt: 'Lighting', lightPg: 'Lighting', lightPgL: 'Lighting', anon: 'Anonymous grading', moved: 'Moved files', removed: 'Removed and replaced files', refSkip: 'Which readings each student sees', quiz: 'Quick mark boxes', groups: 'Group work', groupsOwn: 'Group work', clips: 'Video clips', vrot: 'Videos turned the right way up', returned: 'Returned to students', carry: 'Flags on new and changed files', scan: 'Your answers about scanned pages' };
 const partNames = list => [...new Set(list.map(k => PART_SAY[k] || k))].join(', ');
 const scaleSay = su => !rubricsDiffer(su, { ...su, scale: null }) ? 'No scale: percent is the plain share of points' : !rubricsDiffer(su, { ...su, scale: SCALE12 }) ? 'The usual grading scale' : 'A grading scale of its own';
 function partSide(part, v, other, t, anon) {
@@ -22303,14 +22381,14 @@ return (l && l.find(m => m.qza === q.id)) || null;
 }
 async function qzTotal(st) {
 const t = batch.quiz.total;
-for (const [path, p] of quizPages(st)) { const f = fileByPath(st, path), l = f && f.marks[p]; if (l) for (let i = l.length - 1; i >= 0; i--) if (l[i].qz === 'total') l.splice(i, 1); }
+for (const [path, p] of quizPages(st)) { const f = fileByPath(st, path), l = f && f.marks[p]; if (l) for (let i = l.length - 1; i >= 0; i--) if (l[i].qz === 'total' && !stampHidden(l[i], st.key)) l.splice(i, 1); }
 if (!t || quizCount(st) < batch.quiz.qs.length) return;
 const text = ibQzOn() ? ibStampText(st) : stickerText(quizSum(st));
 if (!text) return;
 const [path, p] = quizPages(st)[t.n] || [], f = path && fileByPath(st, path), sz = await qzPageSize(st, t.n);
 if (!f || !sz) return;
 const [dx, dy] = qzShift(st, t.n);
-(f.marks[p] ||= []).push({ t: 'stamp', k: 'score', text, x: r1((t.x + dx) * sz.W), y: r1((t.y + dy) * sz.H), size: 52, color: totalInk(), qz: 'total' });
+(f.marks[p] ||= []).push(stampOwner({ t: 'stamp', k: 'score', text, x: r1((t.x + dx) * sz.W), y: r1((t.y + dy) * sz.H), size: 52, color: totalInk(), qz: 'total' }, st));
 }
 async function qzRedoPaper(st) {
 const m = quizMarks(st);
@@ -23414,7 +23492,7 @@ const MARKS_OPTS = [
 const MARKS_ASK = 'The attached file has my marks for one assignment: rubric scores, my comments and every mark I made, with each student as a code instead of a name. Please read it all first.\n\nThen help me spot patterns across the class: what most students did well, the mistakes that came up again and again, which rubric rows were hardest and why, and anything in my own marking that looks inconsistent. Refer to students only by their code.';
 function marksOpts() { const sh = shareState(); return (sh.marksOpt ||= Object.fromEntries(MARKS_OPTS.map(([k]) => [k, true]))); }
 const marksFiles = st => st.files.filter(f => viewable(f) && (Object.values(f.marks || {}).some(l => l && l.length) || (f.kami && Object.values(f.kami).some(k => k && k.notes && k.notes.length))));
-const marksOnPage = (f, p) => ((f.marks || {})[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
+const marksOnPage = (f, p) => marksMine((f.marks || {})[p] || [], f).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
 const marksPages = f => [...new Set(Object.keys(f.marks || {}).concat(Object.keys(f.kami || {})))].map(Number).filter(p => marksOnPage(f, p).length).sort((a, b) => a - b);
 const marksEmpty = st => !marksFiles(st).length && gradeOf(st).total == null && !noScore(st) && !String(st.grade.comment || '').trim();
 async function pageWords(js, f, p) {
@@ -23727,6 +23805,33 @@ for (const k of Object.keys(a)) if (!GROUP_SKIP.has(k) && !(k in b)) delete a[k]
 for (const [k, v] of Object.entries(b)) if (!GROUP_SKIP.has(k)) a[k] = v && typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : v;
 if (!a.rubric) a.rubric = [];
 }
+const GROUP_NOTES = ['tn'];
+const groupOwn = g => !!(g && g.own);
+const notesSig = gr => JSON.stringify(GROUP_NOTES.map(k => gr[k] ?? null));
+function groupNotesCopy(to, from) { for (const k of GROUP_NOTES) { if (from.grade[k] != null) to.grade[k] = JSON.parse(JSON.stringify(from.grade[k])); else delete to.grade[k]; } }
+function stampOwner(m, st) { const g = groupOf(st); if (groupOwn(g) && groupFileOf(g, st)) m.o = st.key; return m; }
+const stampHidden = (m, key) => !!(m && m.o && m.o !== key && batch.students.some(s => s.key === m.o));
+let groupJust = null;
+const groupJustOn = st => !!(st && groupJust === st.key && groupOwn(groupOf(st)) && groupFileOf(groupOf(st), st));
+function justSeen(pg) { pg.seen = groupJustOn(batch.students[cur]) ? new Set(pg.marks()) : null; }
+function justTag(pg) { if (!pg.seen || !groupJustOn(batch.students[cur])) return; for (const m of pg.marks()) if (!pg.seen.has(m) && !m.o) m.o = groupJust; pg.seen = null; }
+function marksMine(list, f, st) {
+if (!list || !list.some(m => m && m.o)) return list;
+st = st || (batch && batch.students.find(s => s.files.includes(f)));
+return st ? list.filter(m => !stampHidden(m, st.key)) : list;
+}
+function stampsSplit(marks, keys) {
+for (const l of Object.values(marks || {})) for (let i = l.length - 1; i >= 0; i--) {
+const m = l[i]; if (m.t !== 'stamp' || m.k !== 'score' || m.o) continue;
+l.splice(i, 1, ...keys.map(k => ({ ...m, o: k })));
+}
+}
+function stampsJoin(marks, keep) {
+for (const l of Object.values(marks || {})) for (let i = l.length - 1; i >= 0; i--) {
+const m = l[i]; if (!m.o) continue;
+if (m.o === keep) delete m.o; else l.splice(i, 1);
+}
+}
 const gradeSig = g => JSON.stringify(Object.fromEntries(Object.entries(g).filter(([k]) => !GROUP_SKIP.has(k)).sort()));
 
 function groupMergeMarks(into, from) {
@@ -23739,11 +23844,19 @@ for (const m of list) if (!have.has(JSON.stringify(m))) into[p].push(m);
 function groupSync() {
 if (!batch || !batch.groups || !batch.groups.length) return false;
 let changed = false;
-batch.groups = batch.groups.filter(g => g.k.filter(k => batch.students.some(s => s.key === k)).length > 1);
+const seen = new Set();
+batch.groups = batch.groups.filter(g => g.k.filter(k => batch.students.some(s => s.key === k)).length > 1 && !g.k.some(k => seen.has(k)) && (g.k.forEach(k => seen.add(k)), true));
 for (const g of batch.groups) {
 const sts = g.k.map(k => batch.students.find(s => s.key === k)).filter(Boolean);
-const src = sts.reduce((a, s) => ((s.grade.at || 0) > (a.grade.at || 0) ? s : a), sts[0]), sig = gradeSig(src.grade);
+const newest = l => l.reduce((a, s) => ((s.grade.at || 0) > (a.grade.at || 0) ? s : a), l[0]);
+if (groupOwn(g)) {
+const moved = sts.filter(s => notesSig(s.grade) !== g.ns), src = moved.length ? newest(moved) : sts[0], sig = notesSig(src.grade);
+for (const s of sts) if (s !== src && notesSig(s.grade) !== sig) { groupNotesCopy(s, src); changed = true; }
+if (g.ns !== sig) { g.ns = sig; changed = true; }
+} else {
+const src = newest(sts), sig = gradeSig(src.grade);
 for (const s of sts) if (s !== src && gradeSig(s.grade) !== sig) { groupGradeCopy(s, src); changed = true; }
+}
 const files = sts.map(s => groupFileOf(g, s)).filter(Boolean);
 if (files.length < 2) continue;
 const base = files[0];
@@ -23763,19 +23876,74 @@ if (!g.p[st.key]) g.p[st.key] = f.path;
 const old = groupOf(to); if (old && old !== g) groupLeave(to, true);
 if (!g.k.includes(to.key)) g.k.push(to.key);
 if (toFile) g.p[to.key] = toFile.path; else delete g.p[to.key];
-if (gradeHasWork(st.grade) || !gradeHasWork(to.grade)) { groupGradeCopy(to, st); if (!st.grade.at) touchGrade(st); to.grade.at = st.grade.at; }
+if (groupOwn(g)) {
+const has = gr => GROUP_NOTES.some(k => k === 'tn' ? !!(gr.tn && gr.tn.l && gr.tn.l.length) : String(gr[k] || '').trim());
+if (has(st.grade) || !has(to.grade)) groupNotesCopy(to, st); else { groupNotesCopy(st, to); touchGrade(st); }
+g.ns = notesSig(st.grade);
+if (toFile && toFile.marks) stampsSplit(toFile.marks, [to.key]);
+} else if (gradeHasWork(st.grade) || !gradeHasWork(to.grade)) { groupGradeCopy(to, st); if (!st.grade.at) touchGrade(st); to.grade.at = st.grade.at; }
 else { groupGradeCopy(st, to); }
 groupSync();
 }
 function groupLeave(st, quiet) {
 const g = groupOf(st); if (!g) return;
 const f = groupFileOf(g, st);
-if (f) { f.marks = JSON.parse(JSON.stringify(f.marks || {})); for (const k of ['rot', 'skew']) if (f[k]) f[k] = { ...f[k] }; }
+const shared = f && f.marks;
+if (f) { f.marks = JSON.parse(JSON.stringify(f.marks || {})); stampsJoin(f.marks, st.key); for (const k of ['rot', 'skew']) if (f[k]) f[k] = { ...f[k] }; }
+if (shared) for (const l of Object.values(shared)) for (let i = l.length - 1; i >= 0; i--) if (l[i].o === st.key) l.splice(i, 1);
 g.k = g.k.filter(k => k !== st.key); delete g.p[st.key];
-if (g.k.length < 2) { batch.groups = batch.groups.filter(x => x !== g); const last = g.k[0] && batch.students.find(s => s.key === g.k[0]), lf = last && groupFileOf(g, last); if (lf) lf.marks = JSON.parse(JSON.stringify(lf.marks || {})); }
+if (g.k.length < 2) { batch.groups = batch.groups.filter(x => x !== g); const last = g.k[0] && batch.students.find(s => s.key === g.k[0]), lf = last && groupFileOf(g, last); if (lf) { lf.marks = JSON.parse(JSON.stringify(lf.marks || {})); stampsJoin(lf.marks, last.key); } }
 touchGrade(st);
 if (!quiet) { saveSoon(); renderList(); openStudent(cur); toast(shownName(st, batch.students.indexOf(st)) + ' is graded on their own now'); }
 }
+
+function groupSetOwn(st, own) {
+const g = groupOf(st); if (!g || groupOwn(g) === !!own) return false;
+const sts = g.k.map(k => batch.students.find(s => s.key === k)).filter(Boolean), files = [...new Set(sts.map(s => groupFileOf(g, s)).filter(Boolean).map(f => f.marks))];
+if (own) {
+g.own = 1; g.ns = notesSig(st.grade);
+for (const m of files) stampsSplit(m, sts.filter(s => groupFileOf(g, s)).map(s => s.key));
+for (const s of sts) if (s !== st && notesSig(s.grade) !== g.ns) groupNotesCopy(s, st);
+for (const s of sts) syncScoreStamps(s);
+} else {
+delete g.own; delete g.ns;
+for (const m of files) stampsJoin(m, st.key);
+touchGrade(st);
+}
+groupSync();
+return true;
+}
+function groupUnits() {
+const seen = new Set(), out = [];
+for (const st of batch.students) {
+if (seen.has(st)) continue;
+const u = [st, ...groupMates(st)]; u.forEach(s => seen.add(s)); out.push(u);
+}
+return out;
+}
+function groupOrder(order) {
+if (!(batch.groups || []).length) return order;
+const out = [], put = new Set();
+for (const i of order) {
+if (put.has(i)) continue;
+const mates = groupMates(batch.students[i]).map(s => batch.students.indexOf(s)).filter(j => j >= 0 && !put.has(j)).sort((a, b) => order.indexOf(a) - order.indexOf(b));
+for (const j of [i, ...mates]) { put.add(j); out.push(j); }
+}
+return out;
+}
+function groupRuns(order, rows) {
+let html = '';
+for (let p = 0; p < order.length;) {
+const g = groupOf(batch.students[order[p]]);
+let q = p + 1;
+if (g) while (q < order.length && groupOf(batch.students[order[q]]) === g) q++;
+const shown = rows.slice(p, q).filter(Boolean);
+html += g && shown.length > 1 ? '<div class="stugrp' + (groupOwn(g) ? ' own' : '') + '" title="' + esc('Group work: ' + groupNames(g.k.map(k => batch.students.find(s => s.key === k)).filter(Boolean)) + (groupOwn(g) ? ', shared notes and own scores' : ', marked and graded once')) + '">' + shown.join('') + '</div>' : shown.join('');
+p = q;
+}
+return html;
+}
+const groupsSave = own => { const l = (batch.groups || []).filter(g => groupOwn(g) === own); return l.length ? l : undefined; };
 
 function splitMates(st) {
 const out = [];
@@ -23799,8 +23967,13 @@ toast('Marked and graded once with ' + groupNames(groupMates(st)));
 function groupBand(st) {
 const mates = groupMates(st);
 if (mates.length) {
-const g = groupOf(st), marks = !!groupFileOf(g, st);
-return '<div class="grpband" id="grpBand"><b>Group work</b><span>with ' + esc(groupNames(mates)) + ' · ' + (marks ? 'marks and grade shared' : 'grade shared') + '</span><span style="flex:1"></span>' +
+const g = groupOf(st), marks = !!groupFileOf(g, st), own = groupOwn(g);
+if (groupJust !== st.key) groupJust = null;
+const name = shownName(st, batch.students.indexOf(st)), first = name.split(/[\s,]+/)[0] || name;
+const just = own && marks ? '<span class="seg grpjust" role="group" aria-label="New marks go on"><button type="button" data-grpjust="0" aria-pressed="' + !groupJust + '" title="Marks you make now show on every partner’s paper">Both</button><button type="button" data-grpjust="1" aria-pressed="' + !!groupJust + '" title="Marks you make now show only on ' + esc(name) + '’s paper. Their comment is always their own.">Just ' + esc(first) + '</button></span>' : '';
+const opt = (v, t) => '<option value="' + v + '"' + ((v === 'own') === own ? ' selected' : '') + '>' + t + '</option>';
+return '<div class="grpband" id="grpBand"><b>Group work</b><span>with ' + esc(groupNames(mates)) + ' ·</span>' +
+'<select class="grpmode" data-grpmode aria-label="What the group shares" title="Share everything, or share the notes and give each partner their own score">' + opt('all', marks ? 'Marks and grade shared' : 'Grade shared') + opt('own', marks ? 'Shared notes, own scores' : 'Own scores and comments') + '</select>' + (just ? '<span class="muted">Write for</span>' + just : '') + '<span style="flex:1"></span>' +
 '<button class="link" data-grpout title="Give this student their own grade and their own copy of the marks so far. The rest stay together.">Grade on their own…</button></div>';
 }
 const sm = splitMates(st);
@@ -23817,12 +23990,41 @@ else if (html) $('#paper .who').insertAdjacentHTML('afterend', html);
 function groupClick(e) {
 const st = batch.students[cur];
 if (e.target.closest('[data-grpjoin]')) { groupFromSplit(st); return true; }
+const j = e.target.closest('[data-grpjust]');
+if (j) { groupJust = j.dataset.grpjust === '1' ? st.key : null; groupBandRefresh(); return true; }
 if (e.target.closest('[data-grpout]')) {
 askDlg(shownName(st, cur) + ' gets their own grade and their own copy of the marks so far. ' + groupNames(groupMates(st)) + (groupMates(st).length > 1 ? ' stay together.' : ' keeps theirs.'), { ok: 'Grade on their own', cancel: 'Keep the group' }).then(ok => { if (ok) groupLeave(st); });
 return true;
 }
 return false;
 }
+
+async function groupModePick(own) {
+const st = batch.students[cur], g = groupOf(st); if (!g || groupOwn(g) === own) return;
+if (!own) {
+const t = gradeOf(st).total, ok = await askDlg('Everyone in the group gets ' + shownName(st, cur) + '’s score' + (t != null ? ' (' + fmtNum(t) + ')' : '') + ' and comment. The other partners’ own scores, comments and notes just for them are replaced.', { ok: 'Share this score', cancel: 'Keep own scores' });
+if (!ok) { groupBandRefresh(); return; }
+}
+const back = groupSnapOf(g);
+groupSetOwn(st, own);
+pushUndo(actStep(back, () => { groupSetOwn(st, own); groupRedraw(); }, own ? 'own scores' : 'one grade'));
+groupRedraw();
+toast(own ? 'Each partner has their own score and comment now. The notes page stays shared.' : 'One grade for the group now');
+}
+const groupRedraw = () => { saveSoon(); renderList(); openStudent(cur); };
+function groupSnapOf(g) {
+const was = JSON.parse(JSON.stringify(g)), sts = g.k.map(k => batch.students.find(s => s.key === k)).filter(Boolean);
+const grades = sts.map(s => [s, JSON.stringify(s.grade)]), files = sts.map(s => groupFileOf(g, s)).filter(Boolean), marks = files.length ? JSON.stringify(files[0].marks || {}) : null;
+return () => {
+const live = (batch.groups || []).find(x => x === g || x.k.some(k => was.k.includes(k))); if (!live) return;
+for (const k of Object.keys(live)) delete live[k]; Object.assign(live, JSON.parse(JSON.stringify(was)));
+const t = Date.now();
+for (const [s, gr] of grades) { s.grade = JSON.parse(gr); s.grade.at = t; }
+if (marks) { const m = JSON.parse(marks); for (const f of files) f.marks = m; }
+groupRedraw();
+};
+}
+document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('[data-grpmode]'); if (s && batch) groupModePick(s.value === 'own'); });
 
 /* ---------------- Group work… on a file ---------------- */
 const shareCopies = (st, f) => batch.students.filter(s => s !== st && s.files.some(x => x.from === st.key && x.name === f.name));
@@ -23832,9 +24034,10 @@ const f = fileByPath(st, path); if (!f || !f.data) return;
 const anon = anonOn(), others = batch.students.map((s, i) => ({ s, i, label: shownName(s, i) })).filter(x => x.s !== st);
 if (anon) others.sort((a, b) => anonPos(a.i) - anonPos(b.i));
 const copyOf = s => s.files.find(x => x.from === st.key && x.name === f.name);
-let once = !(shareCopies(st, f).length && !groupOf(st));
+let once = !(shareCopies(st, f).length && !groupOf(st)), own = groupOwn(groupOf(st));
 openDlg('<div class="bh"><h2>Group work: ' + esc(fileShown(st, f.name)) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
 '<div class="bb"><button class="outsw" id="grpOnce" role="switch" aria-checked="' + once + '" style="margin:0 0 12px"><i></i><span><b>Mark and grade once for the group</b><small>Your marks, score and comment show on every partner’s paper. Turn off to mark each copy on its own.</small></span></button>' +
+'<button class="outsw" id="grpOwn" role="switch" aria-checked="' + groupOwn(groupOf(st)) + '" style="margin:0 0 12px"' + (once ? '' : ' hidden') + '><i></i><span><b>Own score for each partner</b><small>The notes page, its marks and typed notes stay shared. Each partner gets their own score and comment, and you can write on the paper just for one of them.</small></span></button>' +
 '<p class="muted" style="margin:0 0 10px;font-size:14px">Click each student who worked on it with ' + esc(shownName(st, batch.students.indexOf(st))) + '. They get their own copy of the file, so the export gives each of them the marked paper. Remove on a copy takes it back.</p>' +
 '<input class="btn" id="mvFind" placeholder="' + (anon ? 'Type a paper number' : 'Type a name') + '" autocomplete="off" style="width:100%;margin-bottom:8px"><div id="mvList" class="mvlist"></div></div>' +
 '<div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
@@ -23851,20 +24054,27 @@ $('#mvFind').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); con
 $('#dlgBox').onclick = async e => {
 if (e.target.closest('[data-cancel]')) { closeDlg(); return openStudent(cur); }
 if (e.target.closest('#grpOnce')) {
-once = !once; $('#grpOnce').setAttribute('aria-checked', once);
-if (once) { for (const s of shareCopies(st, f)) groupAdd(st, f, s, copyOf(s)); }
+once = !once; $('#grpOnce').setAttribute('aria-checked', once); $('#grpOwn').hidden = !once;
+if (once) { for (const s of shareCopies(st, f)) groupAdd(st, f, s, copyOf(s)); if (own && groupOf(st)) groupSetOwn(st, true); }
 else if (groupOf(st)) { for (const s of groupMates(st)) groupLeave(s, true); }
 saveSoon(); renderList(); draw(); return;
+}
+if (e.target.closest('#grpOwn')) {
+if (own && groupOf(st) && groupMates(st).length && !(await askDlg('Everyone in the group gets ' + shownName(st, batch.students.indexOf(st)) + '’s score and comment. The other partners’ own scores, comments and notes just for them are replaced.', { ok: 'Share this score', cancel: 'Keep own scores' }))) return;
+own = !own; $('#grpOwn').setAttribute('aria-checked', own);
+if (groupOf(st)) { const back = groupSnapOf(groupOf(st)); if (groupSetOwn(st, own)) pushUndo(actStep(back, () => groupSetOwn(st, own), own ? 'own scores' : 'one grade')); }
+saveSoon(); renderList(); return;
 }
 const b = e.target.closest('[data-shto]'); if (!b || b.disabled) return;
 const to = batch.students[+b.dataset.shto]; b.disabled = true;
 if (!copyOf(to)) await addFiles(to, [{ path: f.name, file: new File([f.data], f.name), from: st.key }], true);
-if (once) { groupAdd(st, f, to, copyOf(to)); for (const lf of st.files.filter(x => x.kind === 'link')) await partnerCopy(st, lf, to); }
+if (once) { groupAdd(st, f, to, copyOf(to)); if (own) groupSetOwn(st, true); for (const lf of st.files.filter(x => x.kind === 'link')) await partnerCopy(st, lf, to); }
 saveSoon(); renderList();
 toast((once ? 'In the group: ' : 'Shared with ') + shownName(to, +b.dataset.shto)); draw(); $('#mvFind').focus();
 };
 $('#mvFind').focus();
 }
+Object.assign(window.__gs, { groupSync, groupSetOwn, marksMine, saveSoon });
 
 /* ---------------- work with no paper: a video by its link, the partners in it, and a page for notes ---------------- */
 const LINK_RX = /\.(url|webloc)$/i;
@@ -24492,7 +24702,7 @@ const bad = () => rows.some(r => { const v = vid.get(r.k); return v && v.url && 
 draw();
 return { draw, drop, fromDrive, out, bad };
 }
-async function pvApply(groups, stOf) {
+async function pvApply(groups, stOf, own) {
 let n = 0;
 for (const g of groups) {
 const all = g.k.map(stOf).filter(Boolean); if (!all.length) continue;
@@ -24501,6 +24711,7 @@ if (!g.url && !g.file && !g.drive && !(notesFileOf(st) || groupPaper(st))) st = 
 const partners = all.filter(s => s !== st && !groupMates(st).includes(s));
 if (g.url || g.file || g.drive) await videoAdd(st, { url: g.url, file: g.file, drive: g.drive, name: 'Presentation video', kind: '', partners }, true);
 else if (partners.length) { const gg = groupOf(st), anchor = (gg && groupFileOf(gg, st)) || notesFileOf(st) || groupPaper(st) || st.files.find(f => f.kind === 'link'); if (!anchor) continue; await partnersJoin(st, anchor, partners, st.files.filter(f => f.kind === 'link' && f !== anchor)); }
+if (own && partners.length) groupSetOwn(st, true);
 n++;
 }
 groupSync(); saveSoon(); renderList();
@@ -24508,6 +24719,9 @@ return n;
 }
 const DRV_ONLY = 'Only the videos you pick can be opened, nothing else in your Drive.';
 const vdDirLine = k => vidDir() ? '<span class="muted vddir"><span data-raw title="Google Drive">📁 ' + esc(vidDir().name) + '</span> <button class="link" data-' + k + '>Change folder</button></span>' : '';
+const pvOwnRow = () => '<div class="pvown"><span>Partners get</span><span class="seg" role="group" aria-label="Partners get"><button type="button" data-pvown="0" aria-pressed="true">One grade</button><button type="button" data-pvown="1" aria-pressed="false">Their own scores</button></span><span class="muted">The notes are shared either way.</span></div>';
+const pvOwnOf = box => { const b = box.querySelector('[data-pvown][aria-pressed=true]'); return !!b && b.dataset.pvown === '1'; };
+const pvOwnClick = (box, e) => { const b = e.target.closest('[data-pvown]'); if (!b) return false; for (const x of box.querySelectorAll('[data-pvown]')) x.setAttribute('aria-pressed', x === b); return true; };
 const pvDriveRow = () => driveCan() ? '<div class="pvdrvrow"><button class="btn sm" data-pvmany>Choose from Drive…</button>' + vdDirLine('pvdir') + '<span class="muted">' + DRV_ONLY + '</span></div>' : '';
 function pvDriveWire(box, pv) {
 box.addEventListener('click', async e => {
@@ -24525,7 +24739,7 @@ const anon = anonOn(), list = batch.students.map((st, i) => ({ st, i })).filter(
 if (anon) list.sort((a, b) => anonPos(a.i) - anonPos(b.i));
 const rows = list.map(({ st, i }) => ({ k: st.key, label: shownName(st, i), has: pvHas(st), mates: groupMates(st).map(s => s.key) }));
 openDlg('<div class="bh"><h2>Partners and videos</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
-'<div class="bb vdbox"><p class="muted" style="margin:0;font-size:14px">Pick each group’s partners: one grade covers the group, and a group with no video shares the first one’s paper and marks. Paste a link to a video, or choose a video file. You can also drop video files here, and each goes to the student named in its file name.</p>' + pvDriveRow() + '<div id="pvList" class="pvlist"></div></div>' +
+'<div class="bb vdbox"><p class="muted" style="margin:0;font-size:14px">Pick each group’s partners: one grade covers the group, and a group with no video shares the first one’s paper and marks. Paste a link to a video, or choose a video file. You can also drop video files here, and each goes to the student named in its file name.</p>' + pvOwnRow() + pvDriveRow() + '<div id="pvList" class="pvlist"></div></div>' +
 '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="pvGo" disabled>Save</button></div>', false, 'lg');
 const box = $('#dlgBox'), host = $('#pvList'), pv = pvList(host, rows), go = $('#pvGo'); pvDriveWire(host.parentElement, pv);
 host.addEventListener('pvchange', () => { go.disabled = !pv.out().length || pv.bad(); });
@@ -24533,9 +24747,10 @@ box.ondragover = e => e.preventDefault();
 box.ondrop = e => { e.preventDefault(); pv.drop([...e.dataTransfer.files]); };
 box.onclick = async e => {
 if (e.target.closest('[data-cancel]')) return closeDlg();
+if (pvOwnClick(box, e)) return;
 if (e.target !== go || go.disabled) return;
 go.disabled = true; go.textContent = 'Saving…';
-try { const n = await pvApply(pv.out(), k => batch.students.find(s => s.key === k)); closeDlg(); toast(n === 1 ? 'Saved 1 group or video' : 'Saved ' + n + ' groups and videos'); openStudent(cur); }
+try { const n = await pvApply(pv.out(), k => batch.students.find(s => s.key === k), pvOwnOf(box)); closeDlg(); toast(n === 1 ? 'Saved 1 group or video' : 'Saved ' + n + ' groups and videos'); openStudent(cur); }
 catch (err) { console.error(err); go.disabled = false; go.textContent = 'Save'; sayDlg((err && err.message) || String(err)); }
 };
 }
@@ -24549,7 +24764,7 @@ let np = npLast === 'rubric' && !rows.length ? 'lined' : npLast;
 openDlg('<div class="bh"><h2>“' + esc(it.name) + '” with no papers</h2></div>' +
 '<div class="bb vdbox"><p style="margin:0 0 4px">For presentations, speeches, performances and videos. Each of the ' + names.length + ' students in ' + esc(c.name) + ' gets a notes page to write on while you watch. Mark it, score it and return it like a paper.</p>' + npTiles(np, rows, false) +
 (rows.length ? '' : '<p class="muted" style="margin:8px 0 0;font-size:13px">Rubric rows can be picked once this assignment has a rubric.</p>') +
-'<div class="vdlab">Videos and partners<small>Optional, and you can add them later too. Paste a link or choose a file for each video, or drop video files here and each goes to the student named in its file name. Partners share one notes page, one set of marks and one grade.</small></div>' + pvDriveRow() + '<div id="pvList" class="pvlist"></div></div>' +
+'<div class="vdlab">Videos and partners<small>Optional, and you can add them later too. Paste a link or choose a file for each video, or drop video files here and each goes to the student named in its file name. Partners share one notes page, one set of marks and one grade.</small></div>' + pvOwnRow() + pvDriveRow() + '<div id="pvList" class="pvlist"></div></div>' +
 '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="snGo">Make the pages and open</button></div>', false, 'lg');
 const box = $('#dlgBox'), folder = n => String(n).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').trim();
 const pv = pvList($('#pvList'), names.map(n => ({ k: folder(n), label: n, has: '', mates: [] })));
@@ -24560,9 +24775,10 @@ box.ondrop = e => { e.preventDefault(); pv.drop([...e.dataTransfer.files]); };
 box.onclick = async e => {
 if (e.target.closest('[data-cancel]')) return closeDlg();
 const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick(box, np); return; }
+if (pvOwnClick(box, e)) return;
 if (e.target.id !== 'snGo') return;
 e.target.disabled = true; npLast = np;
-const groups = pv.out();
+const groups = pv.out(), own = pvOwnOf(box);
 try {
 const bytes = await notesPdf(np, it.name, rows);
 const make = k => names.map(n => ({ path: folder(n) + '/' + npFileName(it.name) + ' notes' + (k > 1 ? ' (' + k + ')' : '') + '.pdf', data: bytes.slice() }));
@@ -24573,7 +24789,7 @@ closeDlg();
 await intake(list, it.name, it);
 if (groups.length && batch && batch.id === id) {
 const stOf = key => batch.students.find(s => s.key === key);
-await pvApply(groups, stOf);
+await pvApply(groups, stOf, own);
 toast(groups.length === 1 ? 'Added 1 group or video' : 'Added ' + groups.length + ' groups and videos');
 openStudent(cur);
 }
@@ -27278,7 +27494,7 @@ function ibBookView(c, cols, all, tabs) {
 if (ibk.view === 'add' && ibk.add) return ibAddView(c);
 const crit = ibCrit(c), bounds = ibBounds(c), icols = ibCols(c, cols), top = crit.length * IB_TOP, termName = (tabs.find(t => t[0] === bk.term) || [, 'This year'])[1];
 if (ibk.view === 'fit') return ibFitView(c, crit, bounds, icols, tabs, termName);
-const bar = ibBar(c, tabs, '<button class="btn sm" data-bksetup>Term setup</button><button class="btn sm" data-ib-class="' + lib.classes.indexOf(c) + '">Criteria and boundaries</button><button class="btn sm" data-ibcopy>Copy levels</button><button class="btn sm primary" data-ibadd-lv>+ Add levels</button>');
+const bar = ibBar(c, tabs, '<button class="btn sm" data-bksetup>Term setup</button><button class="btn sm" data-ib-class="' + lib.classes.indexOf(c) + '">Criteria and boundaries</button><button class="btn sm" data-mbopen="">Entry list</button><button class="btn sm" data-ibcopy>Copy levels</button><button class="btn sm primary" data-ibadd-lv>+ Add levels</button>');
 let h = '<div class="bkwrap"><table class="bktab ibtab" id="ibTab"><thead><tr class="bkg"><th></th>' + (icols.length ? '<th colspan="' + icols.length + '">Evidence</th>' : '') + '<th colspan="' + (crit.length + 2) + '" class="bkgsum">' + esc(termName) + ' · your judgment</th></tr>' +
 '<tr><th class="bknm">Student</th>' + icols.map(x => '<th class="bkch' + (x.fm ? ' ibfm' : '') + '">' + (x.typed ? '<button data-ibedit="' + esc(x.key) + '" title="Change these levels">' : '<span>') + '<span data-raw>' + esc(x.name) + '</span><small>' + esc(bkDay(x.due)) + ' · ' + esc(x.crit.join(' ') || 'no criteria') + (x.fm ? ' · formative' : '') + '</small>' + (x.typed ? '</button>' : '</span>') + '</th>').join('') +
 crit.map(x => '<th class="bkavg bksum" data-rawa title="' + esc(x.name) + '">' + esc(x.k) + '</th>').join('') + '<th class="bkavg bksum">Total<small>of ' + top + '</small></th><th class="bkterm bksum">Grade<small>1 to 7</small></th></tr></thead><tbody>';
@@ -27633,6 +27849,149 @@ return true;
 document.addEventListener('click', e => { if (e.target.closest('#ibTaskSet')) ibTaskDlg(); });
 Object.assign(window.__gs, { classWay, ibCrit, ibBounds, ibBoundsFor, ibGradeOf, ibTerm, ibEvidence, ibLevel, ibDlg, IB_GROUPS, ibCols, ibMid, ibSetup, ibTaskDlg, ibQzLevel, ibQzEven, ibQzParts, classNewWay, GRADE_WAYS, ibConf, ibPredOf, ibk: () => ibk });
 
+/* ---------------- The entry list (11/16): one task's scores, short and in order, beside the school's own gradebook ----------------
+Built into the grading page. Many schools' systems (ManageBac among them) take no file of scores from a teacher, so every score is
+typed or picked by hand. This puts one task's scores in a narrow window the teacher keeps beside that page: each student's score,
+or the level for each criterion (A 7  B 4  C 6  D 5) in an MYP class, in the order the school's page lists them. A click on a student
+greys the row and moves on, so the place is never lost. Nothing is connected and nothing is sent; the school's page knows nothing
+of this one. Opened from a column's box or More in the gradebook, and from the MYP gradebook's bar.
+The order (roster, last name or first name) is a setting of the teacher's own: lib.me.mbOrder ('' is the roster), in setup import as
+school.entryOrder. What is ticked is kept only while the window is open. */
+const mbe = { cls: '', key: '', cur: 0, done: new Set(), win: null };
+const MB_ORDERS = [['', 'Roster order'], ['last', 'Last name'], ['first', 'First name']];
+const mbOrder = () => ['last', 'first'].includes(me().mbOrder) ? me().mbOrder : '';
+function mbParts(n) {
+const s = String(n).trim(), c = s.indexOf(',');
+if (c > 0) return { first: s.slice(c + 1).trim(), last: s.slice(0, c).trim() };
+const w = s.split(/\s+/); return { first: w[0], last: w.length > 1 ? w[w.length - 1] : '' };
+}
+function mbSorted(names, how) {
+const idx = names.map((n, i) => i);
+if (!how || anonOn()) return idx;
+const key = i => { const p = mbParts(names[i]); return how === 'last' ? [p.last, p.first] : [p.first, p.last]; };
+return idx.sort((a, b) => { const x = key(a), y = key(b); return x[0].localeCompare(y[0], undefined, { sensitivity: 'base' }) || x[1].localeCompare(y[1], undefined, { sensitivity: 'base' }) || a - b; });
+}
+function mbTasks(c) {
+if (classWay(c) === 'myp') return ibCols(c, bk.cols.filter(x => x.cls === c.id)).sort((a, b) => b.t - a.t).map(x => ({ key: x.key, name: x.name })).concat({ key: '*lv', name: tr('Term levels') });
+return bkClassCols(c, bk.cols).filter(x => x.type !== 'xc').reverse().map(x => ({ key: x.key, name: x.name }));
+}
+function mbRows(c, key) {
+const names = c.names, rows = [];
+let max = null, get;
+if (classWay(c) === 'myp') {
+const crit = ibCrit(c).map(x => x.k);
+if (key === '*lv') get = n => { const lv = ibLvOf(c, n); return { vals: crit.map(k => [k, ibLevel(lv[k])]) }; };
+else { const col = ibCols(c, bk.cols.filter(x => x.cls === c.id && x.key === key))[0]; if (!col) return { rows, max };
+get = n => { const cell = col.cells.get(n); return { st: cell && cell.st, vals: col.crit.map(k => [k, cell && cell.lv[k] != null ? cell.lv[k] : null]) }; }; }
+} else {
+const col = bkClassCols(c, bk.cols.filter(x => x.key === key))[0]; if (!col) return { rows, max };
+for (const x of col.cells.values()) if (x.max) { max = x.max; break; }
+get = n => { const x = col.cells.get(n); if (!x) return { vals: [['', null]] }; if (x.st === 'missing' || x.st === 'excused') return { st: x.st, vals: [['', null]] };
+return { vals: [['', x.total != null ? fmtNum(x.total) : x.pct != null ? x.pct + '%' : null]] }; };
+}
+for (const i of mbSorted(names, mbOrder())) { const r = get(names[i]); rows.push({ i, name: bkWho(names[i], i), vals: r.vals, st: r.st || '' }); }
+return { rows, max };
+}
+const MB_CSS = '.mbx{font:14px/1.35 Inter,system-ui,sans-serif;color:#1d2330;display:flex;flex-direction:column;gap:10px;height:100%;box-sizing:border-box;padding:14px}' +
+'.mbx *{box-sizing:border-box}.mbx header{display:flex;align-items:center;gap:8px}.mbx header b{font-size:16px}.mbx header span{color:#5c6475;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+'.mbx select,.mbx button{font:inherit;border:1px solid #d5d9e0;background:#fff;border-radius:8px;padding:6px 10px;color:inherit;cursor:pointer}.mbx select{width:100%}' +
+'.mbx .mbseg{display:flex;border:1px solid #d5d9e0;border-radius:8px;overflow:hidden}.mbx .mbseg button{flex:1;border:0;border-radius:0;padding:5px 4px;font-size:13px}.mbx .mbseg button+button{border-left:1px solid #d5d9e0}' +
+'.mbx .mbseg [aria-pressed=true]{background:#1F6FB2;color:#fff}.mbx .mbcount{display:flex;align-items:center;gap:8px;color:#5c6475;font-size:13px}.mbx .mbcount span{flex:1}.mbx .mbcount button{padding:3px 8px;font-size:12px}' +
+'.mbx ol{list-style:none;margin:0;padding:0;overflow:auto;flex:1;border:1px solid #e4e6ea;border-radius:10px}' +
+'.mbx li{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid #eef0f3;cursor:pointer}.mbx li:last-child{border-bottom:0}.mbx li:hover{background:#f4f5f7}' +
+'.mbx li .mbn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mbx li .mbv{display:flex;gap:6px;font-variant-numeric:tabular-nums;font-weight:600}' +
+'.mbx li .mbv{gap:14px}.mbx li .mbv i{font-style:normal;font-weight:500;color:#5c6475;margin-right:4px;font-size:.85em}.mbx li .mbc{min-width:2.4em;text-align:right;white-space:nowrap}.mbx li .mbv .mbst,.mbx li .mbv .mbno{color:#8a91a0;font-weight:500}' +
+'.mbx li.cur{background:#e8f1fa;box-shadow:inset 3px 0 0 #1F6FB2;font-size:17px;padding:11px 12px}.mbx li.done{color:#9aa1ae}.mbx li.done .mbv{color:#9aa1ae}.mbx li .mbok{width:16px;color:#1f9d55;font-weight:700}' +
+'.mbx .mbhint{margin:0;color:#5c6475;font-size:12px}';
+const mbClass = () => lib.classes.find(c => c.id === mbe.cls);
+function mbHtml() {
+const c = mbClass(); if (!c) return '';
+const tasks = mbTasks(c); if (!tasks.some(t => t.key === mbe.key)) mbe.key = tasks.length ? tasks[0].key : '';
+const { rows, max } = mbRows(c, mbe.key), myp = classWay(c) === 'myp';
+mbe.cur = Math.max(0, Math.min(rows.length - 1, mbe.cur));
+const val = ([k, v]) => '<span class="mbc">' + (k ? '<i>' + esc(k) + '</i>' : '') + (v == null ? '<span class="mbno">–</span>' : esc(String(v))) + '</span>';
+return '<div class="mbx"><header><b>' + esc(tr('Entry list')) + '</b><span>' + esc(c.name) + '</span><button data-mbclose>' + esc(tr('Close')) + '</button></header>' +
+'<select data-mbtask aria-label="' + esc(tr('Task')) + '">' + tasks.map(t => '<option value="' + esc(t.key) + '"' + (t.key === mbe.key ? ' selected' : '') + '>' + esc(t.name) + '</option>').join('') + '</select>' +
+(anonOn() ? '' : '<div class="mbseg" role="group" aria-label="' + esc(tr('Order')) + '">' + MB_ORDERS.map(([v, l]) => '<button data-mborder="' + v + '" aria-pressed="' + (mbOrder() === v) + '">' + esc(tr(l)) + '</button>').join('') + '</div>') +
+'<div class="mbcount"><span>' + esc(tr(mbe.done.size + ' of ' + rows.length + ' done')) + (max ? ' · ' + esc(tr('out of ' + fmtNum(max))) : '') + '</span>' +
+(mbe.done.size ? '<button data-mbreset>' + esc(tr('Start over')) + '</button>' : '') + (myp ? '' : '<button data-mbcopy>' + esc(tr('Copy scores')) + '</button>') + '</div>' +
+'<ol>' + rows.map((r, j) => '<li data-mbrow="' + j + '" class="' + (j === mbe.cur ? 'cur' : '') + (mbe.done.has(r.i) ? ' done' : '') + '"><span class="mbok">' + (mbe.done.has(r.i) ? '✓' : '') + '</span><span class="mbn">' + esc(r.name) + '</span><span class="mbv">' +
+(r.st ? '<span class="mbst">' + esc(tr(r.st)) + '</span>' : r.vals.map(val).join('')) + '</span></li>').join('') + '</ol>' +
+'<p class="mbhint">' + esc(tr('Click a student once their score is in. Arrow keys work too.')) + '</p></div>';
+}
+const mbRoot = () => mbe.win && !mbe.win.closed ? mbe.win.document.getElementById('mbRoot') : document.getElementById('mbPanel');
+function mbDraw() {
+const r = mbRoot(); if (!r) return;
+r.innerHTML = mbHtml();
+const cur = r.querySelector('li.cur'); if (cur) cur.scrollIntoView({ block: 'nearest' });
+}
+function mbStep(by) {
+const c = mbClass(); if (!c) return;
+const rows = mbRows(c, mbe.key).rows, r = rows[mbe.cur]; if (!r) return;
+if (by > 0) { mbe.done.add(r.i); mbe.cur = Math.min(rows.length - 1, mbe.cur + 1); }
+else { mbe.cur = Math.max(0, mbe.cur - 1); mbe.done.delete(rows[mbe.cur].i); }
+mbDraw();
+}
+function mbCopy() {
+const c = mbClass(); if (!c) return;
+const text = mbRows(c, mbe.key).rows.map(r => r.st ? '' : r.vals.map(v => v[1] == null ? '' : String(v[1]).replace('%', '')).join('\t')).join('\n');
+const w = mbe.win && !mbe.win.closed ? mbe.win : window;
+const b = mbRoot() && mbRoot().querySelector('[data-mbcopy]');
+w.navigator.clipboard.writeText(text).then(() => { toast('Copied: one line per student, in this order.'); if (b) b.textContent = '✓ ' + b.textContent; }, () => toast('Copying didn’t work in this browser.'));
+}
+function mbClick(e) {
+const b = e.target.closest('[data-mbclose], [data-mbreset], [data-mbcopy], [data-mborder], [data-mbrow]'); if (!b) return;
+const d = b.dataset, c = mbClass(); if (!c) return;
+if (d.mbclose != null) return mbClose();
+if (d.mbreset != null) { mbe.done.clear(); mbe.cur = 0; return mbDraw(); }
+if (d.mbcopy != null) return mbCopy();
+if (d.mborder != null) { meSet({ mbOrder: d.mborder }); if (!d.mborder) delete lib.me.mbOrder; mbe.cur = 0; return mbDraw(); }
+if (d.mbrow != null) {
+const rows = mbRows(c, mbe.key).rows, j = +d.mbrow, r = rows[j]; if (!r) return;
+if (mbe.done.has(r.i)) { mbe.done.delete(r.i); mbe.cur = j; }
+else { mbe.done.add(r.i); const next = rows.findIndex((x, k) => k > j && !mbe.done.has(x.i)); mbe.cur = next >= 0 ? next : j; }
+return mbDraw();
+}
+}
+function mbChange(e) { if (e.target.matches('[data-mbtask]')) { mbe.key = e.target.value; mbe.done.clear(); mbe.cur = 0; mbDraw(); } }
+function mbKey(e) {
+if (e.target.closest && e.target.closest('select, button')) return;
+if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); mbStep(1); }
+else if (e.key === 'ArrowUp') { e.preventDefault(); mbStep(-1); }
+else if (e.key === 'Escape' && !mbe.win) mbClose();
+}
+function mbClose() {
+if (mbe.win && !mbe.win.closed) mbe.win.close();
+mbe.win = null; const p = document.getElementById('mbPanel'); if (p) p.remove();
+}
+function mbOpen(c, key) {
+if (!c) return;
+if (mbe.cls !== c.id || mbe.key !== key) { mbe.done.clear(); mbe.cur = 0; }
+mbe.cls = c.id; mbe.key = key || '';
+if (!(mbe.win && !mbe.win.closed) && !document.getElementById('mbPanel')) {
+const W = 400, H = Math.min(900, (screen.availHeight || 800) - 60), L = Math.max(0, (screen.availLeft || 0) + (screen.availWidth || 1200) - W - 16);
+let w = null; try { w = window.open('about:blank', 'gsEntryList', 'popup,width=' + W + ',height=' + H + ',left=' + L + ',top=' + ((screen.availTop || 0) + 30)); } catch { }
+if (w && w.document) {
+mbe.win = w;
+w.document.open(); w.document.write('<!doctype html><html lang="' + esc(LANG) + '"><head><meta charset="utf-8"><title>' + esc(tr('Entry list') + ' · ' + c.name) + '</title><style>html,body{margin:0;height:100%;background:#fff}' + MB_CSS + '</style></head><body><div id="mbRoot" style="height:100%"></div><\/body></html>'); w.document.close();
+w.document.addEventListener('click', mbClick); w.document.addEventListener('change', mbChange); w.document.addEventListener('keydown', mbKey);
+w.addEventListener('pagehide', () => { if (mbe.win === w) mbe.win = null; });
+} else {
+if (!document.getElementById('mbCss')) { const s = document.createElement('style'); s.id = 'mbCss'; s.textContent = MB_CSS + '#mbPanel{position:fixed;right:16px;top:16px;bottom:16px;width:380px;z-index:60;background:#fff;border:1px solid #e4e6ea;border-radius:14px;box-shadow:0 12px 32px rgba(20,30,50,.18);outline:none}'; document.head.appendChild(s); }
+const p = document.createElement('div'); p.id = 'mbPanel'; p.tabIndex = -1; document.body.appendChild(p);
+p.addEventListener('click', mbClick); p.addEventListener('change', mbChange); p.addEventListener('keydown', mbKey);
+}
+}
+mbDraw();
+if (mbe.win) mbe.win.focus(); else { const p = document.getElementById('mbPanel'); if (p) p.focus(); }
+}
+document.addEventListener('click', e => {
+const b = e.target.closest('#bkBody [data-mbopen], #bkPop [data-mbopen]'); if (!b) return;
+const c = bkClass(); if (!c) return;
+if (typeof bkPopClose === 'function') bkPopClose();
+mbOpen(c, b.dataset.mbopen);
+});
+
 /* ---------------- Report comments: a draft for each student, from her own scores and comments (Stage 6) ----------------
 A class page's Report comments tab (#/class/<id>/reports). The draft is put together here, in the browser, from the
 gradebook's own numbers and from sentences she can rewrite: no AI writes it and nothing is sent anywhere.
@@ -27935,8 +28294,7 @@ const misPlain = m => (m.to ? 'To: ' + m.to.replace(/,/g, ', ') + '\n' : '') + (
 function misOpen(m) {
 let href = misHref(m), cut = false;
 if (href.length > 1900) { href = misHref(m, true); cut = true; navigator.clipboard.writeText(m.body).catch(() => {}); }
-if (window.__gsMailTest) window.__gsMailTest(href);
-else { const a = document.createElement('a'); a.href = href; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); }
+mailGo(href);
 return cut;
 }
 function misMark(c, pairs, t) {
@@ -28441,7 +28799,7 @@ const n = batch.students.filter(fn).length, id = k === 'todo' ? ' id="pLeft"' : 
 const quiet = n === 0 && listFilter !== k && k !== 'all' && k !== 'todo' && k !== 'flag';
 return '<button class="mitem lf" data-lf="' + k + '"' + id + ' aria-pressed="' + (listFilter === k) + '" title="' + tip + '"' + (quiet ? ' hidden' : '') + '>' + name(k) + ' <span class="v">' + n + '</span></button>';
 }).join('');
-return '<div class="lfilt" role="group" aria-label="Show in the list">' + kmWrap(LF_ICON + '<span class="t">' + name(listFilter) + '</span>', 'class="lfnow' + (listFilter === 'all' ? '' : ' on') + '" id="lfBtn" aria-label="Show in the list: ' + name(listFilter) + '" title="Which papers the list shows: ' + name(listFilter) + '. Previous and Next follow it."', items, 'right') + '</div>';
+return '<div class="lfilt" role="group" aria-label="Show in the list">' + kmWrap(LF_ICON + '<span class="t">' + name(listFilter) + '</span>', 'class="lfnow' + (listFilter === 'all' ? '' : ' on') + '" id="lfBtn" aria-label="Show in the list: ' + name(listFilter) + '" title="Which papers the list shows: ' + name(listFilter) + '. Previous and Next follow it."', items, 'right') + '</div>' + listWayBtns();
 }
 function lfDraw() { const el = $('#lfSlot'); if (el && batch) el.innerHTML = lfChips(); }
 function lfSet(k) {
@@ -28484,7 +28842,7 @@ Object.assign(window.__gs, { flagsOf, lfSet, navOrder, kmClose, setList, listPee
 
 /* ---------------- strong examples: a strong answer, paper or part of a page, kept as pictures with the names blacked out (11/11) ---------------- */
 const EX_DB = 'grading-studio-examples';
-let exDbP = null, exList = [], exReady = null;
+let exDbP = null, exList = [], exWatch = [], exReady = null;
 const exDb = () => exDbP ||= new Promise((res, rej) => {
 const r = indexedDB.open(EX_DB, 1);
 r.onupgradeneeded = () => { const db = r.result; if (!db.objectStoreNames.contains('ex')) db.createObjectStore('ex'); if (!db.objectStoreNames.contains('pix')) db.createObjectStore('pix'); };
@@ -28501,9 +28859,9 @@ const exHave = async () => !indexedDB.databases || (await indexedDB.databases())
 exReady = (async () => {
 try {
 if (!await exHave()) return;
-exList = ((await exTx('ex', 'readonly', tx => tx.objectStore('ex').getAll())) || []).filter(r => !r.gone);
-exList.sort((a, b) => a.t - b.t);
-} catch (e) { console.error(e); exList = []; }
+const all = ((await exTx('ex', 'readonly', tx => tx.objectStore('ex').getAll())) || []).filter(r => !r.gone).sort((a, b) => a.t - b.t);
+exList = all.filter(r => !r.watch); exWatch = all.filter(r => r.watch);
+} catch (e) { console.error(e); exList = []; exWatch = []; }
 exTabSay();
 if (batch && dlgPage === 'examples') openExamples();
 })();
@@ -28516,16 +28874,17 @@ if (rec.gone) tx.objectStore('pix').delete(IDBKeyRange.bound(rec.id + '|', rec.i
 if (blobs) { tx.objectStore('pix').delete(IDBKeyRange.bound(rec.id + '|', rec.id + '|\uffff')); blobs.forEach((b, n) => tx.objectStore('pix').put(b, rec.id + '|' + n)); }
 });
 if (blobs) exUrlsDrop(rec.id);
-const k = exList.findIndex(r => r.id === rec.id);
-if (rec.gone) { if (k >= 0) exList.splice(k, 1); exUrlsDrop(rec.id); }
-else if (k >= 0) exList[k] = rec; else { exList.push(rec); exList.sort((a, b) => a.t - b.t); }
-exTabSay(); exRailSay();
+for (const L of [exList, exWatch]) { const k = L.findIndex(r => r.id === rec.id); if (k >= 0) L.splice(k, 1); }
+if (rec.gone) exUrlsDrop(rec.id);
+else { const L = rec.watch ? exWatch : exList; L.push(rec); L.sort((a, b) => a.t - b.t); }
+exTabSay(); exRailSay(); wlChanged();
 if (!raw) exFolderSoon();
 return rec;
 }
+const exById = id => exList.find(r => r.id === id) || exWatch.find(r => r.id === id);
 async function exDelete(id) {
-if (!exList.some(r => r.id === id)) return;
-await exPut({ id, t: Date.now(), gone: true });
+const r = exById(id); if (!r) return;
+await exPut({ id, t: Date.now(), gone: true, ...(r.watch ? { watch: 1 } : {}) });
 }
 const exUrlsDrop = id => { for (const [k, u] of exUrls) if (k.startsWith(id + '|')) { u.then(x => x && URL.revokeObjectURL(x)); exUrls.delete(k); } };
 const exAll = async () => await exHave() ? (await exTx('ex', 'readonly', tx => tx.objectStore('ex').getAll())) || [] : [];
@@ -28535,11 +28894,11 @@ const exUrls = new Map();
 const exUrl = (id, n) => { const k = id + '|' + n; if (!exUrls.has(k)) exUrls.set(k, exPic(id, n).then(b => b ? URL.createObjectURL(b) : null, () => null)); return exUrls.get(k); };
 async function exForgetWork(id) {
 try { await exReady; } catch {}
-for (const r of exOfWork(id)) if (r.from) { try { await exPut({ ...r, from: null }); } catch (e) { console.error(e); } }
+for (const r of exList.concat(exWatch).filter(r => r.work === id)) if (r.from) { try { await exPut({ ...r, from: null }); } catch (e) { console.error(e); } }
 }
 
 /* how an example is named: never after the student */
-const exLabel = r => r.kind === 'answer' ? 'Question ' + ((r.q && r.q.lab) || '?') : r.kind === 'paper' ? 'Example ' + (r.letter || 'A') : r.kind === 'shot' ? 'Screenshot ' + (r.letter || '1') : 'Part of a page';
+const exLabel = r => r.kind === 'answer' ? 'Question ' + ((r.q && r.q.lab) || '?') : r.kind === 'paper' ? 'Example ' + (r.letter || 'A') : r.kind === 'shot' ? (r.watch ? 'Watch ' : 'Screenshot ') + (r.letter || '1') : 'Part of a page';
 const exFileLabel = r => r.kind === 'part' ? 'Part ' + (r.letter || 'A') : exLabel(r);
 const exTitleNow = () => nameFreeText((batch.assignment && batch.assignment.name) || batch.name || 'Assignment');
 const exFileName = (r, ext) => (nameFreeText(r.title || 'Assignment') + ' - ' + exFileLabel(r) + '.' + ext).replace(/[\\/:*?"<>|]+/g, '-');
@@ -28549,7 +28908,8 @@ const used = exOfWork(work).filter(r => r.kind === kind).map(r => LETTERS.indexO
 return LETTERS[Math.min(25, Math.max(-1, ...used) + 1)];
 }
 const exFrom = st => ({ key: st.key });
-const exBase = (kind, st) => ({ id: uid() + uid(), t: Date.now(), kind, work: batch.id, asg: (batch.assignment && batch.assignment.id) || null, cls: (batchClass() || {}).id || null, title: exTitleNow(), q: null, row: null, why: '', letter: null, pages: [], marks: false, score: false, from: exFrom(st) });
+const exWho = st => { try { const p = st && personOf(st); return p && p.c && p.name ? { c: p.c.id, n: p.name } : null; } catch { return null; } };
+const exBase = (kind, st) => ({ id: uid() + uid(), t: Date.now(), kind, work: batch.id, asg: (batch.assignment && batch.assignment.id) || null, cls: (batchClass() || {}).id || null, title: exTitleNow(), q: null, row: null, why: '', letter: null, pages: [], marks: false, score: false, from: exFrom(st), who: exWho(st) });
 const exJpg = c => new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('picture too big')), 'image/jpeg', 0.88));
 async function exCovers(st, f, page, p) {
 const vp = vpRot(f, p, page, 1);
@@ -28848,7 +29208,7 @@ toast('The example couldn’t be kept: ' + (e.message || e), 6000);
 /* tags: short words she types on an example, to find it again in the bank (11/13) */
 const EX_TAG_MAX = 8, EX_TAG_LEN = 30;
 const exTags = r => Array.isArray(r && r.tags) ? r.tags : [];
-const exAllTags = () => [...new Set(exList.flatMap(exTags))].sort(natural);
+const exAllTags = (L = exList.concat(exWatch)) => [...new Set(L.flatMap(exTags))].sort(natural);
 function exTagsOf(text) {
 const known = new Map(exAllTags().map(t => [t.toLowerCase(), t])), out = [];
 for (let t of String(text || '').split(/[,;\n]/)) {
@@ -28869,7 +29229,7 @@ const save = async keep => {
 if (done) return; done = true;
 const tags = keep ? exTagsOf(inp.value) : exTags(r);
 if (tags.join('\n') !== exTags(r).join('\n')) { try { await exPut({ ...r, tags }); } catch (e) { console.error(e); toast('That didn’t work. Try again.'); } }
-const now = exList.find(x => x.id === r.id) || r;
+const now = exById(r.id) || r;
 p.innerHTML = exTagChips(now);
 const m = card.querySelector('[data-extags].mitem'); if (m) m.textContent = exTags(now).length ? 'Change tags' : 'Add tags';
 if (!batch && routeNow().v === 'examples') exPageRender();
@@ -28881,36 +29241,40 @@ inp.onblur = () => save(true);
 /* a screenshot kept as a strong example: from the Screenshot tool, of any paper or anything on screen (11/13) */
 function exShotWhere() {
 try {
-if (batch) { const st = snipPaper() ? batch.students[cur] : null; return { work: batch.id, asg: (batch.assignment && batch.assignment.id) || null, cls: (batchClass() || {}).id || null, title: exTitleNow(), from: st ? exFrom(st) : null, paper: !!st }; }
+if (batch) { const st = snipPaper() ? batch.students[cur] : null; return { work: batch.id, asg: (batch.assignment && batch.assignment.id) || null, cls: (batchClass() || {}).id || null, title: exTitleNow(), from: st ? exFrom(st) : null, who: st ? exWho(st) : null, paper: !!st }; }
 const r = routeNow();
-return { work: null, asg: null, cls: r.v === 'class' && r.c && r.c !== lib.loose ? r.c.id : null, title: 'Screenshots', from: null, paper: false };
+return { work: null, asg: null, cls: r.v === 'class' && r.c && r.c !== lib.loose ? r.c.id : null, title: 'Screenshots', from: null, who: null, paper: false };
 } catch (e) { console.error(e); return { work: null, asg: null, cls: null, title: 'Screenshots', from: null, paper: false }; }
 }
 const exShotKey = w => w.asg || (w.work ? 'w:' + w.work : 'loose:' + (w.cls || '-'));
-const exShotNext = w => String(1 + Math.max(0, ...exList.filter(r => r.kind === 'shot' && exAsgKey(r) === exShotKey(w)).map(r => parseInt(r.letter, 10) || 0)));
+const exShotNext = (w, watch) => String(1 + Math.max(0, ...(watch ? exWatch : exList).filter(r => r.kind === 'shot' && exAsgKey(r) === exShotKey(w)).map(r => parseInt(r.letter, 10) || 0)));
 let EXS = null;
-async function exSaveShot(blob, where) {
+async function exSaveShot(blob, where, watch) {
 await exReady;
 let im; try { im = await createImageBitmap(blob); } catch (e) { console.error(e); return toast('That picture couldn’t be read.'); }
-EXS = { im, where, covers: [] };
-const known = exAllTags();
+EXS = { im, where, covers: [], watch: !!watch };
+const nm = (watch ? 'Watch ' : 'Screenshot ') + exShotNext(where, watch);
+const known = exAllTags(watch ? exWatch : exList);
 const classes = lib.classes.slice().sort((a, b) => natural(a.name, b.name));
 const place = where.work ? '<p class="exnames">From <b>' + esc(where.title) + '</b>' + (where.cls ? ' · ' + esc(exClassName(where.cls)) : '') + '</p>'
 : '<select class="btn sm exshotcls" id="exShotCls" aria-label="Class"><option value="">No class</option>' + classes.map(c => '<option value="' + esc(c.id) + '"' + (c.id === where.cls ? ' selected' : '') + '>' + esc(c.name) + '</option>').join('') + '</select>';
-openDlg('<div class="bh"><h2>Save as a strong example</h2><span class="sp"></span><button class="icon" data-close aria-label="Close">✕</button></div>' +
+const why = watch ? 'What you see' : 'Why it’s strong';
+openDlg('<div class="bh"><h2>' + (watch ? 'Add to the watch list' : 'Save as a strong example') + '</h2><span class="sp"></span><button class="icon" data-close aria-label="Close">✕</button></div>' +
 '<div class="bb exuse"><div class="expv one" id="exShotPv"><div class="expg"><div class="excv"><canvas class="exc"></canvas><div class="exdrag" hidden></div></div></div></div>' +
 '<aside class="exside">' +
 '<h3 class="exh">Names</h3><p class="exnames" id="exShotNames"></p>' +
-'<h3 class="exh">Why it’s strong <span class="muted">(optional)</span></h3><input type="text" id="exWhy" class="exwhyin" maxlength="160" placeholder="Every claim is tied to a moment in the story." aria-label="Why it’s strong">' +
-'<h3 class="exh">Tags <span class="muted">(optional)</span></h3><input type="text" id="exTagsIn" class="exwhyin" maxlength="200" placeholder="thesis, evidence, Unit 2" aria-label="Tags, with commas between">' +
+'<h3 class="exh">' + why + ' <span class="muted">(optional)</span></h3><input type="text" id="exWhy" class="exwhyin" maxlength="160" placeholder="' + (watch ? 'Mixes up mean and median.' : 'Every claim is tied to a moment in the story.') + '" aria-label="' + why + '">' +
+'<h3 class="exh">Tags <span class="muted">(optional)</span></h3><input type="text" id="exTagsIn" class="exwhyin" maxlength="200" placeholder="' + (watch ? 'misconception, fractions' : 'thesis, evidence, Unit 2') + '" aria-label="Tags, with commas between">' +
 (known.length ? '<div class="exrows exknown" role="group" aria-label="Tags you have used">' + known.slice(0, 12).map(t => '<button class="exrow" data-exaddtag="' + esc(t) + '">' + esc(t) + '</button>').join('') + '</div>' : '') +
-'<h3 class="exh">Kept with</h3>' + place +
+'<h3 class="exh">Kept with</h3>' + place + '<h3 class="exh">Whose work <span class="muted">(only you see this)</span></h3><div id="exWhoBox"></div>' +
 '</aside></div>' +
-'<div class="bf"><span class="exlock"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Kept in this browser only, with what you blacked out gone for good. It’s called “Screenshot ' + exShotNext(where) + '”, never by name.</span></span><span class="sp"></span><button class="btn" data-close>Cancel</button><button class="btn primary" data-exsave>Save example</button></div>');
+'<div class="bf"><span class="exlock"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Kept in this browser only, with what you blacked out gone for good. It’s called “' + esc(nm) + '”, never by name.</span></span><span class="sp"></span><button class="btn" data-close>Cancel</button><button class="btn primary" data-exsave>' + (redo ? 'Save' : watch ? 'Add to the watch list' : 'Save example') + '</button></div>');
 const box = $('#dlgBox');
 box.classList.add('exbox');
-dlgGone = () => { if (EXS) { try { EXS.im.close(); } catch {} EXS = null; } };
+dlgGone = () => { if (EXS) { try { EXS.im.close(); } catch {} const b = EXS.where.back; EXS = null; if (b) setTimeout(b, 0); } };
 exsDraw(); exsNames();
+if (where.who && anonOn()) { EXS.who = where.who; const b = $('#exWhoBox'); if (b) b.innerHTML = '<p class="exnames">This paper’s student. Hidden while you mark anonymously.</p>'; } else wlWhoPick(where.who, where.cls);
+box.onchange = e => { if (e.target.id === 'exShotCls') wlWhoPick(null, e.target.value); };
 box.onclick = e => {
 if (e.target.closest('[data-close]')) return closeDlg();
 const t = e.target.closest('[data-exaddtag]');
@@ -28920,6 +29284,13 @@ if (e.target.closest('[data-exsave]')) return exsSave();
 box.onkeydown = e => { if (e.key === 'Enter' && (e.target.id === 'exWhy' || e.target.id === 'exTagsIn')) { e.preventDefault(); exsSave(); } };
 exsBind($('#exShotPv .excv'));
 const w = $('#exWhy'); if (w) w.focus({ preventScroll: true });
+}
+function wlWhoPick(who, cid) {
+const el = $('#exWhoBox'), c = cid && classById(cid); if (!el) return;
+const names = c ? c.names || [] : [];
+el.innerHTML = !names.length ? '<p class="exnames">' + (c ? 'This class has no roster yet.' : 'Pick a class to choose a student.') + '</p>'
+: '<select class="btn sm exshotcls" id="exWho" aria-label="Whose work" data-raw><option value="">No one in particular</option>' + names.map(n => '<option' + (who && who.c === c.id && who.n === n ? ' selected' : '') + '>' + esc(n) + '</option>').join('') + '</select>';
+if (EXS) EXS.whoC = c ? c.id : null;
 }
 const exsNames = () => { const el = $('#exShotNames'); if (!el || !EXS) return; const n = EXS.covers.length;
 el.innerHTML = (EXS.where.paper ? 'Name covers on the paper are already painted in. ' : '') + (n ? '<b>' + (n === 1 ? '1 area blacked out.' : n + ' areas blacked out.') + '</b> ' : '') + 'Drag over anything ' + (n || EXS.where.paper ? 'else ' : '') + 'that shows a name to black it out. Click a black box to take it off.'; };
@@ -28965,18 +29336,19 @@ if (btn) { if (btn.disabled) return; btn.disabled = true; btn.textContent = 'Sav
 try {
 const c = document.createElement('canvas'); exsPaint(c, Math.min(S.im.width, 2400));
 const size = { w: c.width, h: c.height }, jpg = await exJpg(c); c.width = c.height = 0;
-const w = S.where, sel = $('#exShotCls'), cls = w.work ? w.cls : sel ? sel.value || null : w.cls;
+const w = S.where;
+const sel = $('#exShotCls'), cls = w.work ? w.cls : sel ? sel.value || null : w.cls, ws = $('#exWho');
 const at = { ...w, cls };
 const rec = { id: uid() + uid(), t: Date.now(), kind: 'shot', work: w.work, asg: w.asg, cls, title: w.title, q: null, row: null,
 why: ($('#exWhy') ? $('#exWhy').value : '').trim().slice(0, 160), tags: exTagsOf($('#exTagsIn') ? $('#exTagsIn').value : ''),
-letter: exShotNext(at), pages: [size], marks: true, score: false, from: w.from };
+letter: exShotNext(at, S.watch), pages: [size], marks: true, score: false, from: w.from, who: S.who || (ws && ws.value && S.whoC ? { c: S.whoC, n: ws.value } : null), ...(S.watch ? { watch: 1 } : {}) };
 await exPut(rec, [jpg]);
 closeDlg();
-const see = () => { if (batch && rec.work === batch.id) exGo(); else go('#/examples'); };
-exToast('Saved as Screenshot ' + rec.letter + ' in your strong examples.', [['See examples', see]]);
+const see = () => { if (rec.watch) { exPageF.view = 'watch'; go('#/examples'); } else if (batch && rec.work === batch.id) exGo(); else go('#/examples'); };
+exToast(rec.watch ? 'Added to the watch list' + (rec.who && !anonOn() ? ' for ' + rec.who.n : '') + '.' : 'Saved as Screenshot ' + rec.letter + ' in your strong examples.', [[rec.watch ? 'See the watch list' : 'See examples', see], ['Undo', () => exDelete(rec.id)]]);
 } catch (e) {
 console.error(e);
-if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = 'Save example'; }
+if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = S.watch ? 'Add to the watch list' : 'Save example'; }
 toast('The example couldn’t be kept: ' + (e.message || e), 6000);
 }
 }
@@ -28987,6 +29359,7 @@ const a = $('#examplesTab'); if (!a) return;
 let n = 0, tw = 0; try { n = batch ? exOfWork(batch.id).length : 0; tw = batch ? lkExamples().length : 0; } catch { return; }
 const here = batch && routeNow().v === 'a' && routeNow().tab === 'examples';
 a.hidden = !n && !tw && !here;
+wlBackfill();
 const c = a.querySelector('.atn'); if (c) { c.textContent = n || ''; c.hidden = !n; }
 }
 function exSorted(list) {
@@ -28997,14 +29370,15 @@ return [...ans, ...rest];
 }
 const exCanCopy = () => !!(navigator.clipboard && navigator.clipboard.write && window.ClipboardItem);
 function exCard(r, from) {
+const W = !!r.watch, sw = W ? 'Add a note' : 'Add why it’s strong', cw = W ? 'Change the note' : 'Change why it’s strong';
 const chip = r.kind === 'answer' && r.q && r.q.v != null ? fmtNum(r.q.v) + ' of ' + fmtNum(r.q.pts) : r.kind === 'paper' ? r.pages.length + (r.pages.length === 1 ? ' page' : ' pages') : '';
-const who = r.from && !anonOn() ? '<p class="exwho"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Only you see this: ' + esc(r.from.key) + '</p>' : '';
-return '<div class="excard ' + r.kind + '" data-exid="' + esc(r.id) + '"><button class="exthumb" data-exopen title="Show to the class"><img alt="' + esc(exLabel(r)) + '" data-expic="' + esc(r.id) + '"></button>' +
-'<div class="exct"><span class="exstar" aria-hidden="true">★</span><b>' + esc(exLabel(r)) + '</b>' + (r.row ? '<span class="exrowtag">' + esc(r.row) + '</span>' : chip ? '<span class="exchip">' + esc(chip) + '</span>' : '') + '</div>' + (from ? '<p class="exfrom">' + lkSvg() + '<span>From</span> <b data-raw>' + esc(from) + '</b></p>' : '') +
-'<p class="exwhy">' + (r.why ? esc(r.why) : '<button class="link exadd" data-exwhy>Add why it’s strong</button>') + '</p>' +
+const who = (r.who || r.from) && !anonOn() ? '<p class="exwho"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Only you see this: ' + (r.who ? wlHere(r) ? '<button class="link" data-exwhoc>' + esc(r.who.n) + '</button>' : esc(r.who.n) : esc(r.from.key)) + '</p>' : '';
+return '<div class="excard ' + r.kind + (W ? ' exw' : '') + '" data-exid="' + esc(r.id) + '"><button class="exthumb" data-exopen title="' + (W ? 'Look closer' : 'Show to the class') + '"><img alt="' + esc(exLabel(r)) + '" data-expic="' + esc(r.id) + '"></button>' +
+'<div class="exct"><span class="exstar" aria-hidden="true">' + (W ? '⚑' : '★') + '</span><b>' + esc(exLabel(r)) + '</b>' + (r.row ? '<span class="exrowtag">' + esc(r.row) + '</span>' : chip ? '<span class="exchip">' + esc(chip) + '</span>' : '') + '</div>' + (from ? '<p class="exfrom">' + lkSvg() + '<span>From</span> <b data-raw>' + esc(from) + '</b></p>' : '') +
+'<p class="exwhy">' + (r.why ? esc(r.why) : '<button class="link exadd" data-exwhy>' + sw + '</button>') + '</p>' +
 '<p class="extags">' + exTagChips(r) + '</p>' +
 '<div class="exacts">' + (r.kind !== 'paper' && exCanCopy() ? '<button class="btn sm" data-excopy>Copy picture</button>' : '') + '<button class="btn sm" data-exdl>Download</button>' +
-kmWrap('⋯', 'class="icon kdots" aria-label="More for this example" title="More for this example"', '<button class="mitem" data-exopen>Show to the class</button><button class="mitem" data-exwhy>' + (r.why ? 'Change why it’s strong' : 'Add why it’s strong') + '</button><button class="mitem" data-extags>' + (exTags(r).length ? 'Change tags' : 'Add tags') + '</button><button class="mitem" data-excover>Cover part of it</button>' + (exRedoAt(r) >= 0 ? '<button class="mitem" data-exredo>Make again from the paper</button>' : '') + '<button class="mitem" data-exdel>Delete</button>') + '</div>' + who + '</div>';
+kmWrap('⋯', 'class="icon kdots" aria-label="More for this example" title="More for this example"', (W ? '' : '<button class="mitem" data-exopen>Show to the class</button>') + '<button class="mitem" data-exwhy>' + (r.why ? cw : sw) + '</button><button class="mitem" data-extags>' + (exTags(r).length ? 'Change tags' : 'Add tags') + '</button><button class="mitem" data-excover>Cover part of it</button>' + (exRedoAt(r) >= 0 ? '<button class="mitem" data-exredo>Make again from the paper</button>' : '') + '<button class="mitem" data-exdel>Delete</button>') + '</div>' + who + '</div>';
 }
 let exLkOn = '';
 const exTw = () => exLkOn === batch.id ? exSorted(lkExamples()) : [];
@@ -29038,8 +29412,9 @@ exCardAct(e, () => exSorted(exOfWork(batch.id)).concat(exTw()), () => { if (dlgP
 }
 function exCardAct(e, list, after) {
 const card = e.target.closest('[data-exid]'); if (!card) return;
-const r = exList.find(x => x.id === card.dataset.exid); if (!r) return;
+const r = exById(card.dataset.exid); if (!r) return;
 if (e.target.closest('[data-exopen]')) { const all = list(); return exShow(all, Math.max(0, all.findIndex(x => x.id === r.id))); }
+if (e.target.closest('[data-exwhoc]')) return wlHere(r) && personCard(r.who.c, r.who.n);
 if (e.target.closest('[data-excopy]')) return exCopy(r);
 if (e.target.closest('[data-exdl]')) return exDownload(r);
 if (e.target.closest('[data-exwhy]')) return exWhyEdit(card, r);
@@ -29053,7 +29428,7 @@ const del = e.target.closest('[data-exdel]');
 if (del) {
 if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = 'Click again to delete'; del.style.color = 'var(--bad)'; setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = 'Delete'; del.style.color = ''; } }, 4000); return; }
 kmClose();
-exDelete(r.id).then(() => { toast('Example deleted'); after(); }, er => { console.error(er); toast('That didn’t work. Try again.'); });
+exDelete(r.id).then(() => { toast(r.watch ? 'Deleted' : 'Example deleted'); after(); }, er => { console.error(er); toast('That didn’t work. Try again.'); });
 }
 }
 const exRedoAt = r => (r.kind === 'paper' || r.kind === 'part') && r.from && batch && r.work === batch.id ? batch.students.findIndex(s => s.key === r.from.key && exCanUse(s)) : -1;
@@ -29121,16 +29496,17 @@ L.push({ x, y, w, h }); done();
 function exWhyEdit(card, r) {
 kmClose();
 const p = card.querySelector('.exwhy'); if (!p || p.querySelector('input')) return;
-p.innerHTML = '<input type="text" class="exwhyin" maxlength="160" aria-label="Why it’s strong" placeholder="Why it’s strong">';
+const sw = r.watch ? 'Add a note' : 'Add why it’s strong', cw = r.watch ? 'Change the note' : 'Change why it’s strong', ph = r.watch ? 'What you see' : 'Why it’s strong';
+p.innerHTML = '<input type="text" class="exwhyin" maxlength="160" aria-label="' + ph + '" placeholder="' + ph + '">';
 const inp = p.firstChild; inp.value = r.why || ''; inp.focus();
 let done = false;
 const save = async keep => {
 if (done) return; done = true;
 const why = keep ? inp.value.trim().slice(0, 160) : r.why || '';
 if (why !== (r.why || '')) { try { await exPut({ ...r, why }); } catch (e) { console.error(e); toast('That didn’t work. Try again.'); } }
-const now = exList.find(x => x.id === r.id) || r;
-p.innerHTML = now.why ? esc(now.why) : '<button class="link exadd" data-exwhy>Add why it’s strong</button>';
-const m = card.querySelector('[data-exwhy].mitem'); if (m) m.textContent = now.why ? 'Change why it’s strong' : 'Add why it’s strong';
+const now = exById(r.id) || r;
+p.innerHTML = now.why ? esc(now.why) : '<button class="link exadd" data-exwhy>' + sw + '</button>';
+const m = card.querySelector('[data-exwhy].mitem'); if (m) m.textContent = now.why ? cw : sw;
 };
 inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); save(true); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); save(false); } };
 inp.onblur = () => save(true);
@@ -29216,10 +29592,10 @@ exShowClose();
 const S = { list, at: clamp(start || 0, 0, list.length - 1), zoom: 1, note: true, full: false };
 const el = document.createElement('div'); el.id = 'exShow'; el.className = 'exshow'; el.tabIndex = -1; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Show to the class');
 document.body.appendChild(el);
-const note = r => '<p class="exsnote' + (r.kind === 'paper' ? ' top' : '') + '"><span aria-hidden="true">★</span>' + esc(r.why) + '</p>';
+const note = r => '<p class="exsnote' + (r.kind === 'paper' ? ' top' : '') + '"><span aria-hidden="true">' + (r.watch ? '⚑' : '★') + '</span>' + esc(r.why) + '</p>';
 const draw = () => {
 const r = S.list[S.at];
-el.innerHTML = '<div class="exshd"><h2>' + esc(exLabel(r)) + '</h2><span class="exsbadge">' + (r.kind === 'answer' ? 'A strong answer' : r.kind === 'paper' ? 'A strong paper' : 'Strong work') + '</span><span class="sp"></span>' +
+el.innerHTML = '<div class="exshd"><h2>' + esc(exLabel(r)) + '</h2><span class="exsbadge">' + (r.watch ? 'Watch list' : r.kind === 'answer' ? 'A strong answer' : r.kind === 'paper' ? 'A strong paper' : 'Strong work') + '</span><span class="sp"></span>' +
 (r.why ? '<button class="exslink" data-exsnote>' + (S.note ? 'Hide the note' : 'Show the note') + '</button>' : '') + '<button class="exslink" data-exsx>Esc to close</button></div>' +
 '<div class="exsbody">' + (r.why && S.note && r.kind === 'paper' ? note(r) : '') + '<div class="exspics ' + r.kind + '" style="--exz:' + S.zoom + '">' + r.pages.map((_, n) => '<img alt="" data-n="' + n + '">').join('') + '</div>' +
 (r.why && S.note && r.kind !== 'paper' ? note(r) : '') + '</div>' +
@@ -29290,7 +29666,7 @@ return exSyncP;
 async function exFolderRun() {
 const dir = await fld.root.getDirectoryHandle('examples', { create: true }), ids = new Set(), B = new Map();
 for await (const [nm, h] of dir.entries()) { const m = h.kind === 'file' && /^(.+)\.json(?:\.new)?$/.exec(nm); if (m) ids.add(m[1]); }
-for (const id of ids) { const o = await readJson(dir, id + '.json'); if (o && o.rec && o.rec.id === id) B.set(id, o); }
+for (const id of ids) { const o = await readJson(dir, id + '.json'), rid = id.replace(/\.w$/, ''); if (o && o.rec && o.rec.id === rid && !(B.has(rid) && exU(B.get(rid).rec) >= exU(o.rec))) B.set(rid, o); }
 const A = await exAll();
 if (!A.length && !B.size) return;
 const { toA, toB } = exMergePlan(A, [...B.values()].map(o => o.rec));
@@ -29300,10 +29676,11 @@ for (const ref of B.get(r.id).pix || []) { try { out.push(new Blob([await getBlo
 return out;
 });
 for (const r of toB) {
-if (r.gone) { await writeJson(dir, r.id + '.json', { rec: r, pix: [] }); continue; }
+const fn = r.id + (r.watch ? '.w' : '') + '.json';
+if (r.gone) { await writeJson(dir, fn, { rec: r, pix: [] }); continue; }
 const blobs = await exPics(r); if (!blobs) continue;
 const pix = []; for (const b of blobs) pix.push(await putBlob(new Uint8Array(await b.arrayBuffer())));
-await writeJson(dir, r.id + '.json', { rec: r, pix });
+await writeJson(dir, fn, { rec: r, pix });
 }
 if (got) exRefreshViews();
 }
@@ -29325,10 +29702,11 @@ rec.stores[EX_DB + '/' + name] = got;
 }
 async function exTakeFrames(frame) {
 for (const r of await exAll()) {
-if (r.gone) { await frame({ k: 'ex', rec: r }); continue; }
+const w = r.watch ? 'exw' : 'ex';
+if (r.gone) { await frame({ k: w, rec: r }); continue; }
 const blobs = await exPics(r); if (!blobs) continue;
-await frame({ k: 'ex', rec: r });
-for (let i = 0; i < blobs.length; i++) await frame({ k: 'expix', id: r.id, i }, new Uint8Array(await blobs[i].arrayBuffer()));
+await frame({ k: w, rec: r });
+for (let i = 0; i < blobs.length; i++) await frame({ k: w + 'pix', id: r.id, i }, new Uint8Array(await blobs[i].arrayBuffer()));
 }
 }
 async function exBringPlan(B) {
@@ -29339,22 +29717,23 @@ async function exRemoveAll() {
 clearTimeout(exSyncT);
 if (exDbP) { try { (await exDbP).close(); } catch {} exDbP = null; }
 await new Promise(res => { const r = indexedDB.deleteDatabase(EX_DB); r.onsuccess = r.onerror = r.onblocked = () => res(); });
-exList = [];
+exList = []; exWatch = [];
 }
 
 /* the Examples page in the sidebar: every example, from every class and year (part 2) */
 function exRailSay() {
 const a = $('#railExamples'); if (!a) return;
 let here = false; try { here = !batch && routeNow().v === 'examples'; } catch {}
-a.hidden = !exList.length && !here;
+a.hidden = !exList.length && !exWatch.length && !here;
 }
-const exPageF = { cls: '', asg: '', kind: '', row: '', tag: '', q: '' };
+const exPageF = { cls: '', asg: '', kind: '', row: '', tag: '', q: '', view: '' };
+const exSrc = () => exPageF.view === 'watch' ? exWatch : exList;
 const EX_KINDS = [['answer', 'Answers'], ['paper', 'Whole papers'], ['part', 'Parts of pages'], ['shot', 'Screenshots']];
 const exAsgKey = r => r.asg || (r.work ? 'w:' + r.work : 'loose:' + (r.cls || '-'));
 const exClassName = id => { const c = id && classById(id); return c ? c.name : id ? 'A class no longer here' : 'No class'; };
 function exPageList() {
 const q = exPageF.q.trim().toLowerCase();
-return exList.filter(r => (!exPageF.cls || (r.cls || '-') === exPageF.cls) && (!exPageF.asg || exAsgKey(r) === exPageF.asg) && (!exPageF.kind || r.kind === exPageF.kind) && (!exPageF.row || r.row === exPageF.row) &&
+return exSrc().filter(r => (!exPageF.cls || (r.cls || '-') === exPageF.cls) && (!exPageF.asg || exAsgKey(r) === exPageF.asg) && (!exPageF.kind || r.kind === exPageF.kind) && (!exPageF.row || r.row === exPageF.row) &&
 (!exPageF.tag || exTags(r).includes(exPageF.tag)) && (!q || [r.title, r.why, r.row, exLabel(r), ...exTags(r)].some(x => String(x || '').toLowerCase().includes(q))));
 }
 const exPageSort = list => list.slice().sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'answer' ? -1 : b.kind === 'answer' ? 1 : a.kind === 'paper' ? -1 : 1) || (a.kind === 'answer' ? natural(String(a.q && a.q.lab), String(b.q && b.q.lab)) : 0) || a.t - b.t);
@@ -29368,19 +29747,23 @@ const el = $('#exPage'); if (!el) return;
 exRailSay();
 const opts = (key, list, all) => '<select class="btn sm" data-exf="' + key + '" aria-label="' + all + '"><option value="">' + all + '</option>' + list.map(([v, l]) => '<option value="' + esc(v) + '"' + (exPageF[key] === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select>';
 const uniq = pairs => [...new Map(pairs).entries()];
-const classes = uniq(exList.map(r => [r.cls || '-', exClassName(r.cls)])).sort((a, b) => natural(a[1], b[1]));
-const asgs = uniq(exList.filter(r => !exPageF.cls || (r.cls || '-') === exPageF.cls).map(r => [exAsgKey(r), r.title || 'Assignment'])).sort((a, b) => natural(a[1], b[1]));
-const rows = uniq(exList.filter(r => r.row).map(r => [r.row, r.row])).sort((a, b) => natural(a[1], b[1]));
-const tags = exAllTags().map(t => [t, t]);
-const list = exPageList(), groups = exPageGroups(list), filtered = Object.values(exPageF).some(x => String(x).trim());
+const W = exPageF.view === 'watch', S = exSrc(), tabs = wlTabs(), sub = $('#vExamples .vhead .muted');
+if (sub) sub.textContent = W ? 'Misconceptions and concerns, kept with each student. Only you see whose they are.' : exPageF.view === 'who' ? 'Who your strong examples come from, class by class.' : 'Strong work from every class, with no names on it.';
+if (exPageF.view === 'who') { el.innerHTML = tabs + wlWhoHtml(); return; }
+const classes = uniq(S.map(r => [r.cls || '-', exClassName(r.cls)])).sort((a, b) => natural(a[1], b[1]));
+const asgs = uniq(S.filter(r => !exPageF.cls || (r.cls || '-') === exPageF.cls).map(r => [exAsgKey(r), r.title || 'Assignment'])).sort((a, b) => natural(a[1], b[1]));
+const rows = uniq(S.filter(r => r.row).map(r => [r.row, r.row])).sort((a, b) => natural(a[1], b[1]));
+const tags = exAllTags(S).map(t => [t, t]);
+const list = exPageList(), groups = exPageGroups(list), filtered = Object.entries(exPageF).some(([k, x]) => k !== 'view' && String(x).trim());
 const typing = document.activeElement && document.activeElement.id === 'exFind', at = typing ? document.activeElement.selectionStart : 0;
-el.innerHTML = !exList.length ? '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, pick <b>Use as an example</b> in a paper’s ⋯ menu, or take a screenshot (S on a paper, ⌥S anywhere) and save it as a strong example. Every example from every class shows here.</p></div>'
-: '<div class="exbar">' + opts('cls', classes, 'Every class') + opts('asg', asgs, 'Every assignment') + opts('kind', EX_KINDS.filter(k => exList.some(r => r.kind === k[0])), 'Every kind') + (rows.length ? opts('row', rows, 'Every rubric row') : '') + (tags.length ? opts('tag', tags, 'Every tag') : '') +
-'<input type="search" id="exFind" class="exfind" placeholder="Search examples" aria-label="Search the examples" value="' + esc(exPageF.q) + '">' +
-(filtered ? '<button class="link" data-exfclear>Clear</button>' : '') + '<span class="sp"></span><span class="muted exn">' + list.length + (list.length === 1 ? ' example' : ' examples') + '</span>' +
-(list.length ? '<button class="btn sm" data-exsheet>Download as a sheet</button>' : '') + (list.length ? '<button class="btn sm primary" data-exshow>Show to the class</button>' : '') + '</div>' +
+el.innerHTML = tabs + (!S.length ? W ? '<div class="exempty"><p><b>Nothing on the watch list yet.</b></p><p class="muted">Take a screenshot of a misconception or something to keep an eye on (S on a paper, ⌥S anywhere) and tick <b>Add to the watch list</b>. It’s kept with the student, for trends and report comments.</p></div>'
+: '<div class="exempty"><p><b>No examples yet.</b></p><p class="muted">Press ☆ Example on an answer in Quick mark, pick <b>Use as an example</b> in a paper’s ⋯ menu, or take a screenshot (S on a paper, ⌥S anywhere) and save it as a strong example. Every example from every class shows here.</p></div>'
+: '<div class="exbar">' + opts('cls', classes, 'Every class') + opts('asg', asgs, 'Every assignment') + (W ? '' : opts('kind', EX_KINDS.filter(k => S.some(r => r.kind === k[0])), 'Every kind')) + (rows.length ? opts('row', rows, 'Every rubric row') : '') + (tags.length ? opts('tag', tags, 'Every tag') : '') +
+'<input type="search" id="exFind" class="exfind" placeholder="' + (W ? 'Search' : 'Search examples') + '" aria-label="Search" value="' + esc(exPageF.q) + '">' +
+(filtered ? '<button class="link" data-exfclear>Clear</button>' : '') + '<span class="sp"></span><span class="muted exn">' + list.length + (W ? ' on the list' : list.length === 1 ? ' example' : ' examples') + '</span>' +
+(list.length && W ? '<button class="btn sm primary" data-wlsend>Send to ' + esc(aiSay()) + '</button>' : '') + (list.length && !W ? '<button class="btn sm" data-exsheet>Download as a sheet</button><button class="btn sm primary" data-exshow>Show to the class</button>' : '') + '</div>' +
 (!list.length ? '<p class="muted exnone2">None match. <button class="link" data-exfclear>Clear the filters</button></p>' : '') +
-groups.map(g => '<section class="exgroup"><h2 class="exgh">' + esc(g[0].title || 'Assignment') + ' <span class="muted">· ' + esc(exClassName(g[0].cls)) + ' · ' + esc(new Date(Math.max(...g.map(r => r.t))).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })) + '</span></h2><div class="exgrid">' + g.map(r => exCard(r)).join('') + '</div></section>').join('');
+groups.map(g => '<section class="exgroup"><h2 class="exgh">' + esc(g[0].title || 'Assignment') + ' <span class="muted">· ' + esc(exClassName(g[0].cls)) + ' · ' + esc(new Date(Math.max(...g.map(r => r.t))).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })) + '</span></h2><div class="exgrid">' + g.map(r => exCard(r)).join('') + '</div></section>').join(''));
 for (const im of el.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
 if (typing) { const f = $('#exFind'); if (f) { f.focus(); try { f.setSelectionRange(at, at); } catch {} } }
 }
@@ -29391,7 +29774,8 @@ if (el) {
 el.addEventListener('input', e => { if (e.target.id === 'exFind') { exPageF.q = e.target.value; exPageRender(); } });
 el.addEventListener('change', e => { const f = e.target.closest('[data-exf]'); if (!f) return; exPageF[f.dataset.exf] = f.value; if (f.dataset.exf === 'cls') exPageF.asg = ''; exPageRender(); });
 el.addEventListener('click', e => {
-if (e.target.closest('[data-exfclear]')) { for (const k of Object.keys(exPageF)) exPageF[k] = ''; return exPageRender(); }
+if (e.target.closest('[data-exfclear]')) { for (const k of Object.keys(exPageF)) if (k !== 'view') exPageF[k] = ''; return exPageRender(); }
+if (wlPageClick(e, page)) return;
 if (e.target.closest('[data-exshow]')) return exShow(page(), 0);
 if (e.target.closest('[data-exsheet]')) { const l = page(); return exSheet(l, new Set(l.map(exAsgKey)).size > 1 ? 'Strong examples' : null); }
 exCardAct(e, page, exPageRender);
@@ -29588,6 +29972,205 @@ return ids.size ? exList.filter(r => ids.has(r.asg) && r.work !== batch.id) : []
 }
 Object.assign(window.__gs, { lkSuggest: id => lkSuggest(classById(id)).map(p => [p.a.id, p.b.id, p.k]), lkSibs: id => lkSibs(classById(id)).map(c => c.id), lkTwins: id => lkTwins((findItem(id) || {}).it).map(x => x.it.id), lkPlanSet: p => { lkPlan = p.map(c => ({ k: lkKey(c.name), course: c.course })); lkPlanAt = Date.now() + 1e9; renderLib(); } });
 
+/* ---------------- strengths and concerns per student: the watch list, whose work an example is, and sending them to the teacher's own assistant (11/16) ---------------- */
+
+const wlKey = (c, n) => c + '\n' + n;
+function wlOf(cid, name) {
+const other = new Set((infoOf(classById(cid), name).other || []).concat(name));
+return exList.concat(exWatch).filter(r => r.who && r.who.c === cid && other.has(r.who.n)).sort((a, b) => a.t - b.t);
+}
+const wlHere = r => { const c = r.who && classById(r.who.c); return !!c && (c.names || []).includes(r.who.n); };
+const wlDay = t => new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+function wlChanged() {
+if (pcOpen && $('#pcWl')) wlCardFill();
+if (!batch && exPageF.view && routeNow().v === 'examples') exPageRender();
+}
+function wlRedraw() { exRefreshViews(); wlChanged(); }
+
+const wlTied = new Set();
+function wlBackfill() {
+if (!batch || wlTied.has(batch.id)) return;
+const id = batch.id;
+wlTied.add(id);
+setTimeout(async () => {
+try { await exReady; } catch {}
+for (const r of exList.concat(exWatch).filter(r => batch && r.work === batch.id && r.from && !r.who)) {
+const st = batch.students.find(s => s.key === r.from.key), who = st && exWho(st);
+if (who) try { await exPut({ ...r, who }); } catch (e) { console.error(e); }
+}
+}, 0);
+}
+
+/* the student card: a timeline of what was saved from their work */
+let wlCardF = '';
+function wlCardFill() {
+const el = $('#pcWl'); if (!el || !pcOpen || !pcOpen.name) return;
+const { cid, name } = pcOpen, all = wlOf(cid, name), good = all.filter(r => !r.watch), bad = all.filter(r => r.watch);
+const list = (wlCardF === 'watch' ? bad : wlCardF === 'good' ? good : all).slice().reverse();
+const tags = {}; for (const r of bad) for (const t of exTags(r)) tags[t] = (tags[t] || 0) + 1;
+const top = Object.entries(tags).sort((a, b) => b[1] - a[1]).slice(0, 6);
+$('#pcard .pc').classList.toggle('pc-w', all.length > 0);
+if (!all.length) { el.innerHTML = '<h3>Strengths and concerns</h3><div class="muted pc-sm">Nothing saved from their work yet. A screenshot saved as a strong example or added to the watch list shows here, with the date.</div>'; return; }
+const seg = [['', 'All'], ['good', '★ Strong · ' + good.length], ['watch', '⚑ Watch · ' + bad.length]];
+el.innerHTML = '<h3>Strengths and concerns</h3>' +
+'<div class="wlbar"><span class="pseg sm" role="group">' + seg.map(([k, l]) => '<button data-wlcf="' + k + '" aria-pressed="' + (wlCardF === k) + '">' + l + '</button>').join('') + '</span><span class="sp"></span>' +
+'<button class="btn sm" data-wlcopy title="Every date, assignment and note as text, for report comments">Copy notes</button><button class="btn sm primary" data-wlsend>Send to ' + esc(aiSay()) + '</button></div>' +
+(top.length ? '<p class="wltrend">Seen most: ' + top.map(([t, n]) => '<span class="extag">' + esc(t) + (n > 1 ? ' ×' + n : '') + '</span>').join(' ') + '</p>' : '') +
+'<ol class="wltime">' + (list.length ? list.map(r => '<li class="' + (r.watch ? 'w' : 'g') + '" data-exid="' + esc(r.id) + '"><button class="wlth" data-wlopen title="Look closer"><img alt="" data-expic="' + esc(r.id) + '"></button><div><div class="wlhd"><b>' + (r.watch ? '⚑ ' : '★ ') + esc(exLabel(r)) + '</b> · ' + esc(r.title || '') + ' <span class="muted">· ' + wlDay(r.t) + '</span></div>' +
+(r.why ? '<p>' + esc(r.why) + '</p>' : '') + (exTags(r).length ? '<p class="extags">' + exTags(r).map(t => '<span class="extag">' + esc(t) + '</span>').join('') + '</p>' : '') + '</div></li>').join('') : '<li class="muted pc-sm">None of this kind yet.</li>') + '</ol>';
+for (const im of el.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
+}
+function wlCardClick(e) {
+const el = $('#pcWl'); if (!el || !el.contains(e.target) || !pcOpen) return false;
+const f = e.target.closest('[data-wlcf]'); if (f) { wlCardF = f.dataset.wlcf; wlCardFill(); return true; }
+const { cid, name } = pcOpen, all = wlOf(cid, name);
+if (e.target.closest('[data-wlcopy]')) { wlCopyNotes(classById(cid), name, all); return true; }
+if (e.target.closest('[data-wlsend]')) { closeCard(); wlSend(all, { c: cid, n: name }); return true; }
+const o = e.target.closest('[data-wlopen]');
+if (o) { const id = o.closest('[data-exid]').dataset.exid, l = all.slice().reverse(); closeCard(); exShow(l, l.findIndex(r => r.id === id)); return true; }
+return false;
+}
+function wlCopyNotes(c, name, all) {
+const line = r => '- ' + wlDay(r.t) + ' · ' + (r.title || 'Assignment') + ' · ' + (r.watch ? 'To watch' : 'Strong') + (r.why ? ': ' + r.why : '') + (exTags(r).length ? ' (' + exTags(r).join(', ') + ')' : '');
+const text = name + (c ? ', ' + c.name : '') + '\n' + all.map(line).join('\n') + '\n';
+navigator.clipboard.writeText(text).then(() => toast('Copied ' + people(all.length, 'note')), () => toast('Copying didn’t work here.'));
+}
+
+/* the Examples page: Strong examples, Watch list, Whose work */
+function wlTabs() {
+if (!exWatch.length && !exList.some(r => r.who) && !exPageF.view) return '';
+const v = [['', 'Strong examples · ' + exList.length], ['watch', 'Watch list · ' + exWatch.length], ['who', 'Whose work']];
+return '<div class="wltabs"><span class="pseg" role="group" aria-label="Show">' + v.map(([k, l]) => '<button data-wlview="' + k + '" aria-pressed="' + (exPageF.view === k) + '">' + l + '</button>').join('') + '</span></div>';
+}
+function wlWhoHtml() {
+const all = exList.concat(exWatch), loose = exList.filter(r => !r.who).length;
+const out = lib.classes.filter(c => (c.names || []).length && all.some(r => r.who && r.who.c === c.id)).map(c => {
+const rows = c.names.map(n => { const l = wlOf(c.id, n); return { n, g: l.filter(r => !r.watch).length, w: l.filter(r => r.watch).length, t: l.length ? l[l.length - 1].t : 0 }; });
+const has = rows.filter(r => r.g || r.w).sort((a, b) => b.g - a.g || b.w - a.w || natural(a.n, b.n)), none = rows.filter(r => !r.g).map(r => r.n), most = Math.max(1, ...has.map(r => r.g));
+const sum = has.reduce((a, r) => a + r.g, 0);
+return '<section class="exgroup"><h2 class="exgh">' + esc(c.name) + ' <span class="muted">· ' + people(sum, 'strong example') + ' from ' + people(has.filter(r => r.g).length, 'student') + '</span></h2>' +
+'<table class="wlwho"><thead><tr><th>Student</th><th>Strong examples</th><th>Watch list</th><th>Last saved</th></tr></thead><tbody>' +
+has.map(r => '<tr><td><button class="link" data-wlwho="' + esc(c.id) + '" data-n="' + esc(r.n) + '" data-raw>' + esc(r.n) + '</button></td><td><span class="wlbarg"><i style="width:' + Math.round(r.g / most * 100) + '%"></i></span><b>' + r.g + '</b></td><td>' + (r.w ? '⚑ ' + r.w : '<span class="muted">–</span>') + '</td><td class="muted">' + wlDay(r.t) + '</td></tr>').join('') + '</tbody></table>' +
+(none.length ? '<p class="muted wlnone">No strong example yet from ' + esc(none.join(', ')) + '.</p>' : '') + '</section>';
+}).join('');
+return (out || '<div class="exempty"><p><b>No examples are tied to a student yet.</b></p><p class="muted">From now on, a strong example or a watch-list picture taken on a paper is tied to that student. In the Save box you can also pick whose work it is.</p></div>') +
+(loose ? '<p class="muted wlnone">' + people(loose, 'strong example') + ' aren’t tied to a student (saved before this, or with No one in particular).</p>' : '');
+}
+function wlPageClick(e, page) {
+const v = e.target.closest('[data-wlview]'); if (v) { exPageF.view = v.dataset.wlview; for (const k of ['cls', 'asg', 'kind', 'row', 'tag']) exPageF[k] = ''; exPageRender(); return true; }
+const w = e.target.closest('[data-wlwho]'); if (w) { personCard(w.dataset.wlwho, w.dataset.n); return true; }
+if (e.target.closest('[data-wlsend]')) { wlSend(page(), null); return true; }
+return false;
+}
+
+/* sending to the teacher's own assistant */
+function wlCodes(list) {
+const key = store.get('gs.wlCodes', {}) || {}, used = new Set(Object.values(key)), out = new Map();
+for (const r of list) {
+if (!r.who) continue;
+const k = wlKey(r.who.c, r.who.n);
+if (!key[k]) { let c; do { c = 'S-' + Array.from(crypto.getRandomValues(new Uint8Array(4)), b => CODE_ABC[b % CODE_ABC.length]).join(''); } while (used.has(c)); used.add(c); key[k] = c; }
+out.set(k, key[k]);
+}
+store.set('gs.wlCodes', key);
+return out;
+}
+function wlScrub(list) {
+const words = new Set();
+for (const id of new Set(list.map(r => r.who ? r.who.c : r.cls).filter(Boolean))) { const c = classById(id); if (!c) continue; for (const n of c.names || []) for (const s of [n, ...(infoOf(c, n).other || [])]) for (const w of String(s).split(/[\s,'’-]+/)) if (w.length > 1) words.add(w); }
+const rx = words.size ? new RegExp('(?<![\\p{L}])(' + [...words].sort((a, b) => b.length - a.length).map(rxEsc).join('|') + ')(?![\\p{L}])', 'giu') : null;
+return s => rx ? String(s || '').replace(rx, '[name]') : String(s || '');
+}
+function wlAsk(one, code, title) {
+return one ? 'These are pictures from the work of one student, ' + code + ', saved by me, their teacher, over the term. Each is marked Strength (strong work) or Concern (a misconception or something I am watching), with the date, the assignment and my note.\n\n1. What patterns do you see across them, and is anything getting better or worse over time?\n2. Suggest two or three next steps for this student.\n3. Draft a short, warm, professional report comment I can edit.\n\nCall the student ' + code + ' only.'
+: 'These are pictures of students’ work' + (title ? ' on ' + title : '') + ', saved by me, their teacher. Each student is a random code (S-XXXX). Each picture is marked Strength or Concern, with the assignment and my note.\n\n1. Group the concerns into the misconceptions behind them, with the codes that show each.\n2. Suggest how I could reteach the most common ones.\n3. Give one or two lines of feedback for each code.\n\nUse the codes only.';
+}
+let WLS = null;
+function wlSend(list, one, keep) {
+list = list.filter(Boolean);
+if (!list.length) return toast('Nothing to send yet.');
+const codes = wlCodes(one ? [{ who: one }].concat(list) : list), scrub = wlScrub(list), title = one ? '' : [...new Set(list.map(r => r.title))].length === 1 ? list[0].title : '';
+const code = r => one ? codes.get(wlKey(one.c, one.n)) : r.who ? codes.get(wlKey(r.who.c, r.who.n)) : 'No student';
+WLS = { list, one, codes, scrub, code, good: keep ? keep.good : !!one || list.every(r => !r.watch), bad: keep ? keep.bad : true };
+const n1 = list.filter(r => r.watch).length, n2 = list.length - n1;
+const key = [...codes.entries()].map(([k, c]) => '<li><b>' + esc(c) + '</b> is <span data-raw>' + esc(k.split('\n')[1]) + '</span></li>').join('');
+openDlg('<div class="bh"><h2>Send to ' + esc(aiSay()) + '</h2><span class="sp"></span><button class="icon" data-close aria-label="Close">✕</button></div>' +
+'<div class="bb wlsend"><p class="muted">One PDF with the pictures and your notes, made on this computer. Each student is a random code, and names in your notes become [name]. The pictures were blacked out when you saved them: look them over and black out more if you need to.</p>' +
+(n1 && n2 ? '<p><label><input type="checkbox" id="wlBad"' + (WLS.bad ? ' checked' : '') + '> Concerns (' + n1 + ')</label> <label><input type="checkbox" id="wlGood"' + (WLS.good ? ' checked' : '') + '> Strengths (' + n2 + ')</label></p>' : '') +
+'<div class="wlstrip" id="wlStrip"></div>' +
+'<h3 class="exh">What to ask</h3><textarea id="wlAsk" rows="7" spellcheck="true">' + esc(keep ? keep.ask : wlAsk(!!one, one ? code(list[0]) : '', title)) + '</textarea>' +
+(key ? '<details class="wlkey"><summary>Which code is which student (only on this computer)</summary><ul>' + key + '</ul></details>' : '') + '</div>' +
+'<div class="bf"><span class="sp"></span><button class="btn" data-wlcopyask>Copy what to ask</button>' + (aiLink() ? '<a class="btn" href="' + esc(aiLink()) + '" target="_blank" rel="noopener">Open ' + esc(aiSay()) + '</a>' : '') + '<button class="btn primary" data-wlpdf>Download the PDF</button></div>');
+const box = $('#dlgBox'); box.classList.add('wlbox');
+dlgGone = () => { WLS = null; };
+wlStrip();
+box.onchange = e => { if (!WLS) return; if (e.target.id === 'wlBad') WLS.bad = e.target.checked; if (e.target.id === 'wlGood') WLS.good = e.target.checked; wlStrip(); };
+box.onclick = e => {
+if (e.target.closest('[data-close]')) return closeDlg();
+if (e.target.closest('[data-wlcopyask]')) return navigator.clipboard.writeText($('#wlAsk').value).then(() => toast('Copied. Paste it into ' + aiSay() + ' with the PDF.'), () => toast('Copying didn’t work here.'));
+if (e.target.closest('[data-wlpdf]')) return wlPdf();
+const m = e.target.closest('[data-wlmore]');
+if (m) { const r = exById(m.dataset.wlmore), S = WLS, k = { ask: $('#wlAsk').value, good: S.good, bad: S.bad }; if (r) exCoverEdit(r, () => wlSend(S.list.map(x => exById(x.id)), S.one, k)); }
+};
+}
+const wlPicked = () => WLS ? WLS.list.filter(r => r.watch ? WLS.bad : WLS.good) : [];
+function wlStrip() {
+const el = $('#wlStrip'); if (!el || !WLS) return;
+const l = wlPicked();
+el.innerHTML = l.length ? l.map(r => '<figure><img alt="" data-expic="' + esc(r.id) + '"><figcaption><b>' + esc(WLS.code(r)) + '</b> · ' + (r.watch ? 'Concern' : 'Strength') + '<br><button class="link" data-wlmore="' + esc(r.id) + '">Black out more</button></figcaption></figure>').join('') : '<p class="muted">Nothing picked.</p>';
+for (const im of el.querySelectorAll('img[data-expic]')) exUrl(im.dataset.expic, 0).then(u => { if (u && im.isConnected) im.src = u; });
+const b = $('#dlgBox [data-wlpdf]'); if (b) b.disabled = !l.length;
+}
+async function wlPdf() {
+if (!WLS || sampleStops('making a file for your assistant')) return;
+const l = wlPicked(); if (!l.length) return;
+const S = WLS, btn = $('#dlgBox [data-wlpdf]'); if (btn) btn.disabled = true;
+try {
+const pdf = await PDFLib.PDFDocument.create(), F = await pdf.embedFont(PDFLib.StandardFonts.Helvetica), B = await pdf.embedFont(PDFLib.StandardFonts.HelveticaBold);
+const PW = 612, PH = 792, M = 48, CW = PW - 2 * M, ink = PDFLib.rgb(0.12, 0.13, 0.15), soft = PDFLib.rgb(0.36, 0.38, 0.42);
+pdf.setTitle('Student work'); pdf.setAuthor(''); pdf.setCreator('Grading Studio'); pdf.setProducer('');
+let pg = null, y = 0;
+const page = () => { pg = pdf.addPage([PW, PH]); y = PH - M; }, room = h => { if (!pg || y - h < M) page(); };
+const wlPict = async (s, size, bold) => {
+const k = 3, c = document.createElement('canvas'), x = c.getContext('2d'), f = (bold ? '600 ' : '') + size * k + 'px Inter, sans-serif', lines = []; x.font = f;
+let line = ''; for (const ch of [...s]) { const t = line + ch; if (line && x.measureText(t).width > CW * k) { lines.push(line); line = ch; } else line = t; } lines.push(line);
+c.width = CW * k; c.height = Math.ceil(lines.length * (size + 5) * k); x.font = f; x.fillStyle = '#1f2125'; x.textBaseline = 'top';
+lines.forEach((l, i) => x.fillText(l, 0, i * (size + 5) * k));
+const img = await pdf.embedPng(await (await canvasPng(c)).arrayBuffer()), h = lines.length * (size + 5);
+room(h); pg.drawImage(img, { x: M, y: y - h, width: CW, height: h }); y -= h;
+};
+const text = async (s, font, size, color) => { let line = ''; const put = () => { room(size + 5); pg.drawText(line, { x: M, y: y - size, size, font, color }); y -= size + 5; };
+for (const p0 of String(s).split('\n')) { const para = exPdfText(p0); if (/[^\x00-\xFF‘’“”–—…]/.test(p0)) { await wlPict(p0, size, font === B); continue; } line = ''; for (const w of para.split(/\s+/).filter(Boolean)) { const t = line ? line + ' ' + w : w; if (line && font.widthOfTextAtSize(t, size) > CW) { put(); line = w; } else line = t; } put(); } };
+await text('What I need', B, 15, ink); await text($('#wlAsk') ? $('#wlAsk').value : wlAsk(!!S.one, '', ''), F, 11, ink); y -= 10;
+for (const r of l) {
+room(120);
+await text(S.code(r) + ' - ' + (r.watch ? 'Concern' : 'Strength') + ' - ' + S.scrub(r.title || 'Assignment') + ' - ' + new Date(r.t).toISOString().slice(0, 10), B, 12, ink);
+if (r.why) await text('Note: ' + S.scrub(r.why), F, 11, ink);
+if (exTags(r).length) await text('Tags: ' + S.scrub(exTags(r).join(', ')), F, 9.5, soft);
+for (let n = 0; n < r.pages.length; n++) {
+const b = await exPic(r.id, n); if (!b) continue;
+const img = await pdf.embedJpg(new Uint8Array(await b.arrayBuffer())), k = Math.min(CW / img.width, (r.kind === 'paper' ? PH - 2 * M : 380) / img.height), w = img.width * k, h = img.height * k;
+room(h + 4); pg.drawImage(img, { x: M, y: y - h, width: w, height: h }); y -= h + 8;
+}
+y -= 14;
+}
+const nm = S.one ? S.code(l[0]) : (l.length === 1 || new Set(l.map(r => r.title)).size === 1) ? S.scrub(l[0].title || 'Watch list') : 'Watch list';
+saveBlob(('For ' + aiTag() + ' - ' + nm + '.pdf').replace(/[\\/:*?"<>|]+/g, '-'), new Blob([await pdf.save()], { type: 'application/pdf' }));
+toast('Downloaded. Give it to ' + aiSay() + ' with what to ask.', 6000);
+} catch (e) { console.error(e); toast('The PDF couldn’t be made: ' + (e.message || e), 6000); }
+finally { if (btn && btn.isConnected) btn.disabled = false; }
+}
+
+async function wlNewYear(keepRoster) {
+if (keepRoster) return;
+try { await exReady; } catch {}
+for (const r of exWatch.slice()) await exDelete(r.id);
+for (const r of exList.filter(r => r.who)) await exPut({ ...r, who: null });
+store.del('gs.wlCodes');
+}
+
+Object.assign(window.__gs, { personCard, exWatch: () => exWatch, wlOf, wlSend, wlPicked, wlNewYear, wlCodes, wlScrub, wlWhoHtml });
+
 /* ---------------- Screenshot: drag over part of the screen and a picture of it goes on the clipboard ---------------- */
 
 async function copyPicture(blobP, name) {
@@ -29615,7 +30198,7 @@ const el = document.createElement('div');
 el.id = 'snipLayer'; el.className = 'sniplay'; el.tabIndex = -1;
 el.innerHTML = '<div class="snipbar" role="dialog" aria-label="Screenshot"><div class="snipt"><b>Screenshot</b><span>Drag over what you want to copy' + (paper ? ', or click a page for all of it' : '') + '.</span></div>' +
 '<div class="snipacts">' + (paper ? '<label class="snipmk"><input type="checkbox" id="snipMk"' + (snipMarks() ? ' checked' : '') + '> With my marks</label>' : '') +
-'<label class="snipmk snipex"><input type="checkbox" id="snipEx"> Save as a strong example</label>' +
+'<label class="snipmk snipex"><input type="checkbox" id="snipEx"> Save as a strong example</label><label class="snipmk snipex"><input type="checkbox" id="snipWl"> Add to the watch list</label>' +
 '<button class="btn sm" data-snipall title="Everything on screen (Enter)">Whole screen</button><button class="btn sm" data-snipx title="Esc">Cancel</button></div>' +
 '<p class="snipnote">' + (paper ? 'On the paper, name covers are painted in and the student’s name and file name are left off. ' : '') + 'Anything else shows as it is on screen.</p></div><div class="snipbox" hidden></div>';
 document.body.appendChild(el);
@@ -29648,7 +30231,7 @@ el.addEventListener('click', e => {
 if (e.target.closest('[data-snipx]')) return snipStop();
 if (e.target.closest('[data-snipall]')) return snipTake({ x: 0, y: 0, w: innerWidth, h: innerHeight });
 });
-el.addEventListener('change', e => { if (e.target.id === 'snipMk') { if (e.target.checked) store.del('gs.snipMarks'); else store.set('gs.snipMarks', 0); } });
+el.addEventListener('change', e => { const o = { snipEx: '#snipWl', snipWl: '#snipEx' }[e.target.id]; if (o && e.target.checked) el.querySelector(o).checked = false; if (e.target.id === 'snipMk') { if (e.target.checked) store.del('gs.snipMarks'); else store.set('gs.snipMarks', 0); } });
 el.addEventListener('keydown', snipKey);
 }
 function snipKey(e) {
@@ -29665,17 +30248,17 @@ if (!snipOn) return;
 snipOn.remove(); snipOn = null;
 }
 async function snipTake(R, pg) {
-const marks = snipPaper() ? snipMarks() : true, ex = !!(snipOn && snipOn.querySelector('#snipEx:checked')), where = exShotWhere();
+const marks = snipPaper() ? snipMarks() : true, ex = !!(snipOn && snipOn.querySelector('#snipEx:checked')), wl = !!(snipOn && snipOn.querySelector('#snipWl:checked')), where = exShotWhere();
 snipStop();
 const blobP = (R ? snipArea(R, marks) : snipWhole(pg, marks)).then(canvasPng);
-if (ex) {
+if (ex || wl) {
 let blob = null; try { blob = await blobP; } catch (e) { console.error(e); }
-return blob ? exSaveShot(blob, where) : toast('That picture couldn’t be made. Try a smaller area.');
+return blob ? exSaveShot(blob, where, wl) : toast('That picture couldn’t be made. Try a smaller area.');
 }
 const how = await copyPicture(blobP, 'Screenshot.png');
 if (how === 'none') return toast('That picture couldn’t be made. Try a smaller area.');
-const save = async () => { let b = null; try { b = await blobP; } catch {} if (b) exSaveShot(b, where); };
-toastDo(how === 'copied' ? 'Picture copied. Paste it wherever you need it.' : 'This browser can’t copy pictures, so it was saved as Screenshot.png.', 'Save as a strong example', save);
+const save = wl => async () => { let b = null; try { b = await blobP; } catch {} if (b) exSaveShot(b, where, wl); };
+exToast(how === 'copied' ? 'Picture copied. Paste it wherever you need it.' : 'This browser can’t copy pictures, so it was saved as Screenshot.png.', [['Save as a strong example', save(false)], ['Add to the watch list', save(true)]]);
 }
 async function snipPage(pg, k, marks) {
 const st = batch.students[cur], f = pg.file, p = pg.idx, page = pg.page, W = pg.W, H = pg.H, side = pg.side, rx = anonRx(st);
@@ -29687,7 +30270,7 @@ await page.render({ canvasContext: ctx, ...vpDraw(f, p, page, k), annotationMode
 const L = lightForPage(st, f, p); if (L) lightCanvas(ctx, Math.ceil(W * k), c.height, L);
 scanClip(ctx, f, p, W * k, Math.ceil(W * k), c.height);
 ctx.setTransform(k, 0, 0, k, 0, 0);
-if (marks) drawMarks(ctx, scrubMarks(pg.marks().concat(pg.extra || []), rx), W, H, side, null);
+if (marks) drawMarks(ctx, scrubMarks(marksMine(pg.marks(), pg.file).concat(pg.extra || []), rx), W, H, side, null);
 ctx.fillStyle = '#111';
 for (const r of await anonCovers(st, pg)) ctx.fillRect(r.x, r.y, r.w, r.h);
 ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -32330,7 +32913,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.62":["On the marking screen, the + Add menu now opens fully on screen instead of sliding under the Score panel."]};
+const WHATS_NEW = {"1.28.64":["The student list on the marking screen shows each score as a percent, with a % / pts switch beside the list's filter. Extra credit shows on its own after the score, like 93% +2%, in the list, the score panel and the score stamp.","Partners: a shared paper can have shared notes with each partner's own score, and Write for: just one partner puts marks on the paper for that partner alone. Partners sit together in a blue box in the student list, and the done count goes by group.","Entry list: open one task's scores in a small window beside your school's gradebook, in the gradebook's own order, so typing them in is quick. It's in the gradebook's More menu and in each column's box.","Email buttons open a new message in Gmail by default. Settings, Display has an Email section to use Outlook on the web or your computer's own mail app instead."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -32565,6 +33148,7 @@ let x; try { x = JSON.parse(v); } catch { continue; }
 if (nyAbout(x, names)) localStorage.removeItem(k);
 }
 lib = migrateLib(next); libUndoForget(); saveLib();
+try { await wlNewYear(o.roster); } catch (e) { console.error(e); }
 if (o.planner) try { localStorage.setItem('gsp.newYear', JSON.stringify({ id: Date.now().toString(36), from: o.from, dates: !!o.dates })); } catch {}
 renderLib(); railRender(); renderNeeds();
 }
@@ -32585,7 +33169,7 @@ const box = nyBox(
 '<label class="nyck"><input type="checkbox" checked disabled> <span><b>' + nCls + (nCls === 1 ? ' class' : ' classes') + ', with their units and assignment cards</b><small>Each card keeps its rubric and its Quick mark boxes. No papers, scores or comments.</small></span></label>' +
 '<label class="nyck"><input type="checkbox" id="nyDates" checked> <span><b>Due dates and term dates, a year later</b><small>Change any of them afterwards in Term setup or on the card.</small></span></label>' +
 (planner ? '<label class="nyck"><input type="checkbox" id="nyPlan" checked> <span><b>Planner units and the semester, a year later</b><small>This year’s lessons move to Past lessons, under “' + '<span id="nyFromSay">' + esc(from) + '</span>' + '”, ready to reuse.</small></span></label>' : '') +
-'<label class="nyck"><input type="checkbox" id="nyRoster"> <span><b>Class lists</b><small>Only for classes that keep the same students. Left empty otherwise.</small></span></label>' +
+'<label class="nyck"><input type="checkbox" id="nyRoster"> <span><b>Class lists</b><small>Only for classes that keep the same students. Left empty otherwise, and the watch list is cleared.</small></span></label>' +
 '<p class="muted" style="font-size:14px;margin:10px 0 0">Your settings, grading scale, saved rubrics and comment bank stay as they are. ' + (nDl ? nDl + (nDl === 1 ? ' set of papers goes' : ' sets of papers go') + ' into the file and leave this browser.' : '') + '</p>' +
 '<h3 class="nyh">Protect the file</h3>' +
 '<p class="muted" style="font-size:14px;margin:0 0 8px">Choose a passphrase of a few words. Nobody can open the file without it, you included, so write it down somewhere safe.</p>' +
@@ -33098,6 +33682,7 @@ function stpRead(j) {
     if (typeof sc.assistantLink === 'string') o.aiUrl = aiUrlClean(sc.assistantLink);
     if (typeof sc.assistantOpens === 'string') o.aiOpen = /^tab$/i.test(sc.assistantOpens.trim()) ? 'tab' : '';
     if (Array.isArray(sc.otherAssistants)) { o.aiUrls = {}; for (const x of sc.otherAssistants.slice(0, 12)) { const n = stpStr(stpObj(x) ? x.name : '', 30), u = stpObj(x) ? aiUrlClean(x.link) : ''; if (n && u) o.aiUrls[n] = u; } }
+    if (typeof sc.entryOrder === 'string') { const v = sc.entryOrder.trim().toLowerCase(); o.mbOrder = /^last/.test(v) ? 'last' : /^first/.test(v) ? 'first' : ''; }
     if (Array.isArray(sc.assistantsNotListed)) o.aiOff = [...new Set(sc.assistantsNotListed.filter(x => typeof x === 'string').map(x => stpStr(x, 30)).filter(Boolean))].slice(0, 12);
     if (Object.keys(o).length) S.school = o;
     if (Array.isArray(sc.staff)) S.staff = sc.staff.slice(0, 40).map(stpObj).filter(Boolean).map(x => ({ role: stpStr(x.role, 80), name: stpStr(x.name, 80), email: typeof schMail === 'function' ? schMail(x.email) : '', note: stpStr(x.note, 200) })).filter(x => x.name);
@@ -33176,6 +33761,8 @@ function stpRead(j) {
     const m = {}; for (const [k, to] of [['studentFileNames', 'xnames'], ['onePdfPerStudent', 'xone'], ['coverNamesOnAnchors', 'anchorCover'], ['findTypedNames', 'nameFind'], ['gradeSheetFromPapers', 'sheetfound']]) if (typeof mk[k] === 'boolean') m[to] = mk[k];
     const pc = stpKey(mk.pointsColor); if (pc === 'pen') m.ptsInk = ''; else if (pc === 'credit' || COLORS[pc]) m.ptsInk = pc;
     const fs = stpKey(mk.fullScreenSide); if (FS_SIDES.includes(fs)) m.fside = fs;
+    const ls = stpKey(mk.listScores); if (ls === 'percent' || ls === 'points') m.listPts = ls === 'points';
+    const ma = stpKey(mk.emailsOpenIn); if (/^(gmail|outlook)/.test(ma)) m.mail = ma.slice(0, ma[0] === 'g' ? 5 : 7); else if (/^(app|mail|computer|default)/.test(ma)) m.mail = 'app';
     if (Object.keys(m).length) S.mark = m;
   }
   const fo = stpObj(j.focus);
@@ -33269,6 +33856,7 @@ function stpDiff(S, planNow) {
   if (S.school || S.prog || S.staff || S.staffRoles) {
     const L = [], m = me(), s = S.school || {};
     if (s.sys != null && s.sys !== sysName()) L.push(s.sys ? 'Students hand work in on <b>' + esc(s.sys) + '</b>' + (sysName() ? ' (now ' + esc(sysName()) + ')' : '') : 'No school system named (now ' + esc(sysName()) + ')');
+    if (s.mbOrder != null && s.mbOrder !== mbOrder()) L.push('The entry list goes by ' + (s.mbOrder === 'last' ? 'last name' : s.mbOrder === 'first' ? 'first name' : 'the roster') + ' (now ' + (mbOrder() === 'last' ? 'last name' : mbOrder() === 'first' ? 'first name' : 'the roster') + ')');
     if (s.unit != null && s.unit !== unitLinkName()) L.push(s.unit ? 'Unit plans are kept in <b>' + esc(s.unit) + '</b>' + (unitLinkName() ? ' (now ' + esc(unitLinkName()) + ')' : '') : 'No place named for unit plans (now ' + esc(unitLinkName()) + ')');
     if (s.ai != null && s.ai !== (m.ai || '')) L.push(s.ai ? 'Your AI assistant is <b>' + esc(s.ai) + '</b>' : 'No AI assistant named');
     if (s.aiUrl != null && s.aiUrl !== aiUrlClean(m.aiUrl)) L.push(s.aiUrl ? 'Your AI assistant opens at <b>' + esc(s.aiUrl) + '</b>' : 'Your AI assistant opens at its usual page');
@@ -33357,6 +33945,8 @@ function stpDiff(S, planNow) {
     if (m.ptsInk != null && m.ptsInk !== now.ptsInk) L.push(m.ptsInk === 'credit' ? 'Points are colored by credit: full, part or none' : m.ptsInk ? 'Points are written in ' + m.ptsInk : 'Points are written in the pen’s color');
     if (m.sheetfound != null && m.sheetfound !== now.sheetfound) L.push(m.sheetfound ? 'The grade sheet also shows grades found on the papers' : 'The grade sheet shows only the scores given in the app');
     if (m.fside != null && m.fside !== now.fside) L.push(m.fside === 'show' ? 'In full screen the student list and the tools stay beside the paper' : m.fside === 'all' ? 'In full screen the student list and the tools hide until you point at them' : 'In full screen the student list hides until you point at the left edge');
+    if (m.listPts != null && m.listPts !== now.listPts) L.push(m.listPts ? 'The student list shows points out of the total' : 'The student list shows percents');
+    if (m.mail != null && m.mail !== now.mail) L.push(m.mail === 'outlook' ? 'Email buttons open a new message in Outlook on the web' : m.mail === 'app' ? 'Email buttons open the computer’s own mail app' : 'Email buttons open a new message in Gmail');
     add('mark', 'Marking and handing back', L, 'No paper, mark or score changes.');
   }
   if (S.focus) {
@@ -33392,14 +33982,16 @@ function stpDiff(S, planNow) {
   if (S.tabs && S.tabs.join() !== tabsKept().join()) add('tabs', 'Class tabs', [S.tabs.length ? 'Kept in the tab row: ' + S.tabs.map(k => CLASS_TABS.find(t => t[0] === k)[1]).join(', ') : 'Only Assignments, Gradebook and Students in the tab row'], 'The other pages stay under More.');
   return parts;
 }
-const stpMarkNow = () => ({ xnames: xNames(), xone: xOne(), anchorCover: anchorCoverOn(), nameFind: nameFindOn(), ptsInk, sheetfound: !!store.get('gs.sheetfound', false), fside: fsSide() });
+const stpMarkNow = () => ({ xnames: xNames(), xone: xOne(), anchorCover: anchorCoverOn(), nameFind: nameFindOn(), ptsInk, sheetfound: !!store.get('gs.sheetfound', false), fside: fsSide(), listPts, mail: mailApp() });
 function stpMarkSet(m) {
   if (m.fside != null) fullSideSet(m.fside);
+  if (m.mail != null) mailAppSet(m.mail);
   if (m.xnames != null) store.set('gs.xnames', m.xnames);
   if (m.xone != null) store.set('gs.xone', m.xone);
   if (m.anchorCover != null) store.set('gs.anchorCover', m.anchorCover);
   if (m.nameFind != null) { if (m.nameFind) store.set('gs.nameFind', true); else store.del('gs.nameFind'); }
   if (m.ptsInk != null) setPtsInk(m.ptsInk);
+  if (m.listPts != null) setListPts(m.listPts);
   if (m.sheetfound != null) { sheetFound = m.sheetfound; store.set('gs.sheetfound', sheetFound); }
 }
 const stpIbNext = (c, ib) => ({ way: ib.way, ib: { ...(stpObj(c.ib) || {}), ...(ib.group ? { group: ib.group } : {}), ...(ib.crit ? { crit: ib.crit } : {}), ...(ib.bounds ? { bounds: ib.bounds } : {}) } });
@@ -33435,7 +34027,7 @@ async function stpApply(S, pick) {
     const sc = { ...(S.school || {}) };
     if (sc.ai != null && sc.ai !== (me().ai || '') && sc.aiUrl == null) sc.aiUrl = '';
     meSet({ ...sc, ...(S.prog ? { prog: S.prog } : {}) });
-    for (const k of ['aiUrl', 'aiOpen']) if (lib.me[k] === '') delete lib.me[k];
+    for (const k of ['aiUrl', 'aiOpen', 'mbOrder']) if (lib.me[k] === '') delete lib.me[k];
     if (lib.me.aiUrls) { delete lib.me.aiUrls[lib.me.ai || '']; if (!Object.keys(lib.me.aiUrls).length) delete lib.me.aiUrls; }
     if (lib.me.aiOff && !lib.me.aiOff.length) delete lib.me.aiOff;
     saveLib();
@@ -33570,7 +34162,7 @@ async function stpExport() {
   const p = await stpPlanGet(), g = meGrade(), conf = bkConf(), day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const out = { gradingStudioSetup: STP_V };
   if (me().prog) out.programme = me().prog;
-  if (sysName() || unitLinkName() || me().ai) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}), ...(me().ai && aiUrlClean(me().aiUrl) ? { assistantLink: aiUrlClean(me().aiUrl) } : {}), ...(me().ai && me().aiOpen === 'tab' ? { assistantOpens: 'tab' } : {}), ...(me().ai && me().aiUrls && Object.keys(me().aiUrls).length ? { otherAssistants: Object.entries(me().aiUrls).map(([name, link]) => ({ name, link })) } : {}), ...(me().ai && Array.isArray(me().aiOff) && me().aiOff.length ? { assistantsNotListed: me().aiOff.slice() } : {}) };
+  if (sysName() || unitLinkName() || me().ai || mbOrder()) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(mbOrder() ? { entryOrder: mbOrder() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}), ...(me().ai && aiUrlClean(me().aiUrl) ? { assistantLink: aiUrlClean(me().aiUrl) } : {}), ...(me().ai && me().aiOpen === 'tab' ? { assistantOpens: 'tab' } : {}), ...(me().ai && me().aiUrls && Object.keys(me().aiUrls).length ? { otherAssistants: Object.entries(me().aiUrls).map(([name, link]) => ({ name, link })) } : {}), ...(me().ai && Array.isArray(me().aiOff) && me().aiOff.length ? { assistantsNotListed: me().aiOff.slice() } : {}) };
   const ppl = schPeople(), sr = schNow().roles;
   if (ppl.length || sr) { out.school = out.school || {}; if (sr) out.school.staffRoles = sr.list.slice(); if (ppl.length) out.school.staff = ppl.map(p => ({ ...(p.role ? { role: p.role } : {}), name: p.name, ...(p.email ? { email: p.email } : {}), ...(p.note ? { note: p.note } : {}) })); }
   if (g) { const raw = (me().grade && me().grade.setup) || {}; out.grading = { way: g.way, score: g.setup.mode === 'rubric' ? 'rows' : 'total', ...(g.setup.mode === 'rubric' ? { criteria: g.setup.criteria } : { outOf: g.setup.outOf }), ...(raw.top ? { rowTop: raw.top } : {}), ...(typeof raw.half === 'boolean' ? { halfPoints: raw.half } : {}), ...(g.setup.scale ? { scale: g.setup.scale } : {}), ...(g.bands ? { bands: g.bands.map(b => ({ grade: b[1], from: b[0] })) } : {}) }; }
@@ -33593,7 +34185,7 @@ async function stpExport() {
   if (lib.me && lib.me.focus) { const c = fcConf(); out.focus = { sessionMinutes: c.len, lessonMinutes: c.llen, breakMinutes: c.brk, dailyGoal: c.goal ? { [c.goal.k === 'min' ? 'minutes' : 'papers']: c.goal.n, ...(c.goal.per === 'week' ? { per: 'week' } : {}), ...(c.goal.days ? { days: c.goal.days.map(d => GP_DAYS[d].toLowerCase()) } : {}) } : null, sessionGoals: c.sg, chime: c.sound, timeInTab: c.title, countTime: c.track, stopCountingAfterMinutes: c.idle, planningAfterMinutes: c.pe, freePeriods: c.free, weeklyLookBack: c.wk === false ? false : GP_DAYS[c.wk].toLowerCase(), quietWhileFocusing: c.quiet, shortestFirst: c.short, music: c.music, musicMood: c.mood, musicVolume: Math.round(c.mvol * 100), musicBackground: c.mamb }; }
   if (lib.todo && (lib.todo.cats || lib.todo.corder)) out.todo = { categories: tdCats().map(c => ({ name: c.name, ...(c.w ? { words: c.w.split(/\s*,\s*/).filter(Boolean) } : {}), ...(c.id === 'role' ? { role: true } : {}) })) };
   if (tabsKept().length) out.classTabs = tabsKept().map(k => CLASS_TABS.find(t => t[0] === k)[1]);
-  { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}) }; if (Object.keys(o).length) out.marking = o; }
+  { const m = stpMarkNow(), o = { ...(m.xnames ? {} : { studentFileNames: false }), ...(m.xone ? {} : { onePdfPerStudent: false }), ...(m.anchorCover ? {} : { coverNamesOnAnchors: false }), ...(m.nameFind ? { findTypedNames: true } : {}), ...(m.ptsInk ? { pointsColor: m.ptsInk } : {}), ...(m.sheetfound ? { gradeSheetFromPapers: true } : {}), ...(m.fside !== 'hide' ? { fullScreenSide: m.fside } : {}), ...(m.listPts ? { listScores: 'points' } : {}), ...(m.mail !== 'gmail' ? { emailsOpenIn: m.mail } : {}) }; if (Object.keys(o).length) out.marking = o; }
   return JSON.stringify(out, null, 1);
 }
 
@@ -33609,7 +34201,7 @@ RULES
 
 WHAT TO FIND OUT
 - My classes: each one's name as I want to see it, the days and times it meets, and its page in my school's system if I have the link. Give two sections of the same course the same "course" (like "English 12"): they share a lesson deck and are linked, so an assignment and its strong examples can be shared between them.
-- My school: the system students hand work in on (ManageBac, Google Classroom, Canvas and so on), and where unit plans are kept, if anywhere.
+- My school: the system students hand work in on (ManageBac, Google Classroom, Canvas and so on), and where unit plans are kept, if anywhere, and whether that system lists students by last name or first name ("entryOrder": "last" or "first"; leave it out for my roster's order).
 - The calendar: the first and last day of this semester, days with no school, and dates I want to see (exams, reports due).
 - Terms: each term's name with its first and last day.
 - How I grade a new assignment: rubric rows, points, percent, letter grades, or IB 1 to 7. For rubric rows, the names of the rows I usually use.
@@ -33672,7 +34264,7 @@ Every part except the first line is optional. Leave a part out rather than leavi
   "classTabs": ["Missing work"],
   "todo": { "categories": [{ "name": "Grading and feedback" }, { "name": "Lesson planning", "words": ["labs"] }, { "name": "Administrative" }, { "name": "Grade-level lead", "role": true, "words": ["team meeting"] }] },
   "slides": { "agenda": true, "textSizes": "usual", "newSlide": "Title and text" },
-  "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide" }
+  "marking": { "pointsColor": "credit", "studentFileNames": true, "onePdfPerStudent": true, "coverNamesOnAnchors": true, "findTypedNames": false, "gradeSheetFromPapers": false, "fullScreenSide": "hide", "listScores": "percent", "emailsOpenIn": "gmail" }
 }
 
 FIELD NOTES
@@ -33688,7 +34280,7 @@ FIELD NOTES
 - "slides" is for the lesson planner: "agenda" false stops an agenda being added as slide 2, "textSizes" is "usual" (28 to 36 pt) or "any" (18 to 44 pt), and "newSlide" is the layout the Add slide button adds: "Title and text", "Plain text", "Two columns", "Text + picture", "Picture" or another layout the planner has. Leave it out unless I ask.
 - "focus" is the work timer for grading and for planning lessons: "sessionMinutes" (a grading session) and "lessonMinutes" (a session planning one lesson) are each one of 5, 10, 15, 20, 25, 30, 45, 60, and "breakMinutes" one of 3, 5, 10, 15. "dailyGoal" is how much I want to grade in a day, as { "papers": 10 } or { "minutes": 60 }, or null for none; add "per": "week" for a goal for the whole week, or "days": ["monday", "wednesday"] for a daily goal on some days only. "sessionGoals" false stops the app suggesting a goal for each session. "chime" false turns off the sound at the end of a session, and "timeInTab" false keeps the time left out of the browser tab's name. "countTime" false stops the app counting how long I spend grading and planning, and "stopCountingAfterMinutes" (2, 5, 10 or 15) is how long with nothing pressed or typed before it stops counting. "planningAfterMinutes" (2, 3, 5 or 10, or 0 for never) is how many minutes of steady work in the Planner, outside a focus session, before it counts as planning; time during my classes never counts. "freePeriods" false stops the app offering the gaps between my classes for grading. "weeklyLookBack" is the day a look back at my week shows on Today ("friday" and so on), or false for none. "quietWhileFocusing" true hides counts during a focus session, and "shortestFirst" true takes the shortest papers first. "music" true plays lo-fi music while a session runs; "musicMood" is "mix" or one of "rain", "library", "coffee", "night", "tape", "garden", "blue", "quiet" (quiet has no drums), "musicVolume" is 5 to 100, and "musicBackground" true adds a soft record crackle or rain behind it. Leave it out if I have not said.
 - "todo" is how my to-do list is sorted. "categories" are its groups in my order (the app starts with "Grading and feedback", "Lesson planning", "Administrative" and "Leadership role"). Mark the one for a role I hold beside teaching (a coach, a coordinator, a head of department) with "role": true and name it with my role's title. "words" are words that put a to-do in that category. A category I don't list is deleted. Leave it out unless I ask.
-- "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both.
+- "marking" holds small choices; leave out any I have not asked for. "pointsColor" is "pen", "credit" (full points green, part amber, none red) or one of red, blue, green, purple, black. "studentFileNames" names each file I hand back for the student and assignment. "onePdfPerStudent" puts all of a student's papers in one PDF (false sends each paper as its own file). "coverNamesOnAnchors" covers names on example papers I export. "findTypedNames" lets the app look for typed names to cover. "gradeSheetFromPapers" also shows grades the app finds written on papers. "fullScreenSide" is what happens beside the paper while I mark in full screen: "hide" hides the student list until I point at the left edge, "all" hides the tools as well, "show" keeps both. "listScores" is how scores show in the student list while I mark: "percent" or "points" (out of the total). "emailsOpenIn" is where Email buttons start a message: "gmail", "outlook" (Outlook on the web) or "app" (the computer's own mail app).
 - A rubric row is a name, or a name with "levels" keyed "4" down to "0". A rubric whose rows go higher takes "rowTop" (up to 10), and "halfPoints": false when only whole points are given.
 - Use straight quotes and no comments inside the block.`;
 
@@ -34841,7 +35433,7 @@ add('Go to', 'Time tracker', 'How much time went to grading and to planning, day
 add('Go to', 'To do, by week', 'Your list laid out on the days of the week, under the classes that meet', () => go('#/todo/week'));
 add('Go to', 'Planner', 'Units and lessons, on its own page', () => { location.href = $('#lessonsBtn').href; });
 add('Go to', 'School resources', 'Links, files and notes about your school', () => go('#/school'));
-if (exList.length) add('Go to', 'Examples', 'Strong work from every class, with no names on it', () => go('#/examples'), '', 'strong example exemplar model answer show class');
+if (exList.length || exWatch.length) add('Go to', 'Examples', 'Strong work from every class, with no names on it', () => go('#/examples'), '', 'strong example exemplar model answer show class');
 add('Go to', 'Settings', 'Saving, classes, terms, marking, display and keys', () => go('#/settings'));
 add('Go to', 'Help', 'Short answers to common questions', () => go('#/help'));
 for (const c of lib.classes) {
@@ -35030,6 +35622,55 @@ e.preventDefault(); gsFull.toggle();
 });
 gsFull.paint();
 window.__gsFull = gsFull;
+
+/* ---------------- Email buttons (11/16): Gmail, Outlook on the web, or the computer's mail app ----------------
+Every Email button in the app is a mailto: link (the School page, a to-do's people, a student's card, Missing work reminders, links in
+Planner notes). gs.mailApp, a per-teacher choice in Settings, Display (and in My setup), decides where it opens: 'gmail' (the usual)
+opens a new Gmail message in a new tab, 'outlook' a new Outlook on the web message, 'app' leaves the link to the computer's own mail
+app. To, Cc, Bcc, subject and body carry over. Gmail opens the Google account the teacher signed in with for saving (gs.gEmail),
+so a school message doesn't start in a personal inbox. On a phone a web compose page is unreliable, so the phone's own mail app
+opens (a teacher who wants Gmail there makes it the phone's default mail app). Nothing is sent by the app. */
+const MAIL_APPS = ['gmail', 'outlook', 'app'];
+const mailGet = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+const mailApp = () => { const v = mailGet('gs.mailApp'); return MAIL_APPS.includes(v) ? v : 'gmail'; };
+const mailPhone = () => { try { const k = localStorage.getItem('gs.phone'); if (k === '1' || k === '0') return k === '1'; return Math.min(screen.width, screen.height) < 600 && matchMedia('(pointer: coarse)').matches; } catch { return false; } };
+function mailParts(href) {
+const m = /^mailto:([^?#]*)(?:\?([^#]*))?/i.exec(String(href || '').trim()); if (!m) return null;
+const dec = s => { try { return decodeURIComponent(s); } catch { return s; } }, p = { to: dec(m[1]), cc: '', bcc: '', subject: '', body: '' };
+for (const kv of (m[2] || '').split('&')) {
+const i = kv.indexOf('='), k = (i < 0 ? kv : kv.slice(0, i)).toLowerCase(), v = i < 0 ? '' : dec(kv.slice(i + 1));
+if (k === 'to') p.to = p.to ? p.to + ',' + v : v; else if (k in p) p[k] = v;
+}
+return p;
+}
+function mailWeb(href, app) {
+app = app || mailApp(); if (app === 'app') return '';
+const p = mailParts(href); if (!p) return '';
+const e = encodeURIComponent, q = (k, v) => v ? '&' + k + '=' + e(v) : '', who = String(mailGet('gs.gEmail') || '');
+if (app === 'outlook') return ('https://outlook.office.com/mail/deeplink/compose?' + q('to', p.to) + q('cc', p.cc) + q('bcc', p.bcc) + q('subject', p.subject) + q('body', p.body)).replace('?&', '?');
+return 'https://mail.google.com/mail/?view=cm&fs=1' + (/@/.test(who) ? q('authuser', who) : '') + q('to', p.to) + q('cc', p.cc) + q('bcc', p.bcc) + q('su', p.subject) + q('body', p.body);
+}
+function mailGo(href) {
+const url = mailPhone() ? '' : mailWeb(href);
+if (window.__gsMailTest) return window.__gsMailTest(href, url);
+if (url) { window.open(url, '_blank', 'noopener'); return; }
+const a = document.createElement('a'); a.href = href; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+}
+document.addEventListener('click', e => {
+if (e.defaultPrevented || e.button || mailPhone() || mailApp() === 'app') return;
+const a = e.target.closest && e.target.closest('a[href]'); if (!a || !/^mailto:/i.test(a.getAttribute('href').trim())) return;
+const url = mailWeb(a.getAttribute('href')); if (!url) return;
+e.preventDefault();
+if (window.__gsMailTest) window.__gsMailTest(a.getAttribute('href'), url); else window.open(url, '_blank', 'noopener');
+}, true);
+function mailAppSet(v) {
+if (!MAIL_APPS.includes(v)) return;
+try { if (v === 'gmail') localStorage.removeItem('gs.mailApp'); else localStorage.setItem('gs.mailApp', JSON.stringify(v)); } catch { }
+mailAppShow();
+}
+function mailAppShow() { const v = mailApp(); for (const b of document.querySelectorAll('#setMailApp button')) b.setAttribute('aria-pressed', String(b.dataset.v === v)); }
+if (document.getElementById('setMailApp')) { document.getElementById('setMailApp').addEventListener('click', e => { const b = e.target.closest('button[data-v]'); if (b) mailAppSet(b.dataset.v); }); mailAppShow(); }
+if (window.__gs) Object.assign(window.__gs, { mailParts, mailWeb, mailApp, mailAppSet });
 
 /* ---------------- the sample: opening it, building it once, and leaving it ----------------
 src/samplemode.js keeps the sample apart: while it is open, this page's storage is another set of names, and the teacher's own

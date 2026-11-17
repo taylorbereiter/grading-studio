@@ -1,21 +1,24 @@
 {
- "version": "1.28.62",
- "build": "ce89a4d09e3f",
+ "version": "1.28.64",
+ "build": "744eac7e29af",
  "notes": [
-  "On the marking screen, the + Add menu now opens fully on screen instead of sliding under the Score panel."
+  "The student list on the marking screen shows each score as a percent, with a % / pts switch beside the list's filter. Extra credit shows on its own after the score, like 93% +2%, in the list, the score panel and the score stamp.",
+  "Partners: a shared paper can have shared notes with each partner's own score, and Write for: just one partner puts marks on the paper for that partner alone. Partners sit together in a blue box in the student list, and the done count goes by group.",
+  "Entry list: open one task's scores in a small window beside your school's gradebook, in the gradebook's own order, so typing them in is quick. It's in the gradebook's More menu and in each column's box.",
+  "Email buttons open a new message in Gmail by default. Settings, Display has an Email section to use Outlook on the web or your computer's own mail app instead."
  ],
  "files": {
-  "index.html": "d81b1279be6abf2594ea1ff298c0ab01487e98ec87c21f5eaa561290ed2c5a6b",
-  "planner.html": "6768af1f19ea577650f5729683ec184ca8278e459d29a5ebc4fb88b4460c83eb"
+  "index.html": "77e73add8d62c7c31e1b2e0167185332411b62cb97935ebf1376184e2590c098",
+  "planner.html": "42feae20672e1ada3f5c9983c809c681ae7686932093f703c9f7dbfdff4d8dbe"
  },
  "langs": {
-  "lang/zh-Hant.js": "a6197dc08d5c18b278a1b0efc0f5d303e2786ffae9bef4fbb9595b92c3be9f12",
-  "lang/zh-Hans.js": "025d97f93a4a3faf66d0b57f600d0715f68973317f2906c2f8d8baf35a2c0219",
-  "lang/es.js": "67492f9b992cb652c08ad3b1eba1df9aad3ca2c54554d9e16f16d30c1f28efcb",
-  "lang/fr.js": "c0012f1a82bbf3456a84089d52c3330a5e9b0624a26ba7ad3f10cf5ac7e7aed7",
-  "lang/de.js": "7fd735a517b7163b099d724ee979477d066afa0d00854b3fc25cbc6caa253523",
-  "lang/pt-BR.js": "f020a80c95dbf12980ac379da01fa008cc020e91d6bec9ec6d5bfe6693bcccf9",
-  "lang/ja.js": "2c6f75e3a34c1c0b435972a494d3a31e15f78a8b585ef8ebac5ddc3008a5f1c7",
-  "lang/ko.js": "a2542ec9bbea7c363cb3cbf6db08b5158b7079d75c4201c55e3906a6627a68f1"
+  "lang/zh-Hant.js": "4c34fd492ff3bd9560dc6bec40f2069561ae269548c9b15e9be33bee76909296",
+  "lang/zh-Hans.js": "c2bf1b6b082e7d1fb4b2042b726d5461d9cdbb879948ff40bb829bcc349b4e87",
+  "lang/es.js": "b08ec1fe50873875c3de86f22f43dd19e309f447c11d8a4a0b96325899ef001a",
+  "lang/fr.js": "6826566951941947e1e2c640c49f0726c91fc575706ccecfacee21745b50c2c8",
+  "lang/de.js": "11921d5b875e4a89fcc864c50ffe76862cb17d6a75bd1a4be0b430f1f36cff93",
+  "lang/pt-BR.js": "aa5ed05e54e5295313a69d119ee8d36487b00fd95dd984057f24a6c41925f1fe",
+  "lang/ja.js": "6426ea8d8f454bff6c0970fea5bd17c16dc1d64b73c5f1b6fd9be99e35609c0a",
+  "lang/ko.js": "510e3a8b0dd9dcc95e0f819e98d345194ccde3ef3997abd00ed210e27e235ac4"
  }
 }

@@ -95,7 +95,7 @@ test('the gradebook has one blue button and one More menu', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
   await goTo(page, '#/class/c1/gradebook'); await page.waitForSelector('#bkTab');
   assert.deepEqual(await page.$$eval('.bkbar > button, .bkbar > .kmw > button', xs => xs.filter(x => x.checkVisibility()).map(x => x.textContent.trim())), ['+ Add scores', 'More ▾']);
-  assert.deepEqual(await page.$$eval('#bkMore + .km .mitem', xs => xs.map(x => x.firstChild.textContent)), ['Show points', 'Term setup', 'Add extra credit…', 'Import scores…', 'Copy the table', 'Leave students out…']);
+  assert.deepEqual(await page.$$eval('#bkMore + .km .mitem', xs => xs.map(x => x.firstChild.textContent)), ['Show points', 'Term setup', 'Add extra credit…', 'Import scores…', 'Entry list', 'Copy the table', 'Leave students out…']);
   await pick(page, '[data-bkshow="pts"]');
   await page.waitForFunction(() => document.querySelector('#bkMore + .km [data-bkshow]').dataset.bkshow === 'pct');
   assert.equal(await page.$eval('#bkMore + .km [data-bkshow]', b => b.firstChild.textContent), 'Show percent');

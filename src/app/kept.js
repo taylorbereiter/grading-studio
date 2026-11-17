@@ -133,7 +133,8 @@ function keepWork(b, data) {
   // the day's count of finished papers starts from where this download stood (src/focus.js)
   if (typeof fcSeen === 'function') fcSeen(b.id);
   // fb is there only while some feedback is complete
-  delete m.fb; delete m.sent; delete m.sentT; Object.assign(m, workCounts(data));
+  delete m.fb; delete m.sent; delete m.sentT; delete m.joined; Object.assign(m, workCounts(data));
+  if (m.joined) m.n = b.students.length - m.joined;   // partners count once
   // ret was set by any export alone: never read again
   delete m.ret; if (!(data.returned && data.returned.ok)) delete m.back;
   // the papers this save finished go into a Focus session that is running (src/focus.js)
