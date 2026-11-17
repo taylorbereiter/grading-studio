@@ -4835,7 +4835,7 @@ const plxLabel = r => r.kind === 'answer' ? 'Question ' + (r.q || '?') : r.kind 
 const plxKinds = { answer: 1, paper: 1, part: 1, shot: 1 };
 async function plxLoad() {
   const all = await plxRead(tx => tx.objectStore('ex').getAll());
-  PLX.list = (all || []).filter(r => r && !r.gone && plxKinds[r.kind] && Array.isArray(r.pages) && r.pages.length).map(r => ({
+  PLX.list = (all || []).filter(r => r && !r.gone && !r.watch && plxKinds[r.kind] && Array.isArray(r.pages) && r.pages.length).map(r => ({
     id: String(r.id), t: +r.t || 0, kind: r.kind, title: String(r.title || 'Assignment'), letter: String(r.letter || ''), q: r.q && r.q.lab ? String(r.q.lab) : '',
     why: String(r.why || ''), tags: Array.isArray(r.tags) ? r.tags.map(String) : [], pages: r.pages.length })).sort((a, b) => b.t - a.t);
   return PLX.list;

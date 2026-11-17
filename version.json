@@ -1,12 +1,14 @@
 {
- "version": "1.28.62",
- "build": "df53d02ba93c",
+ "version": "1.28.63",
+ "build": "bda5a8c2850f",
  "notes": [
-  "On the marking screen, the + Add menu now opens fully on screen instead of sliding under the Score panel."
+  "A watch list for misconceptions and concerns. In the Screenshot bar, tick Add to the watch list, black out any names, and note what you see. Every screenshot you save, strong or on the watch list, is kept with the student whose work it is.",
+  "Each student's card (the ⓘ beside a name) shows their strengths and concerns as a timeline, with the tags you have seen most and Copy notes for report comments. The Examples page has Watch list and Whose work, which shows who your strong examples come from.",
+  "Send to your assistant makes one PDF of a student's or an assignment's pictures and notes, with each student as a random code and names in your notes as [name]. Which code is which student stays in this browser."
  ],
  "files": {
-  "index.html": "048d53dc2f62e23683a7394ce401e6c411e16f0e484d81a67257c877c6215d39",
-  "planner.html": "bd3c227815a1235e223d25e3d4a7213d3bbecbfa6ba160590822f02099673a7f"
+  "index.html": "5390e18bf2d9d66bf75d9af7880be8562e0671018a52b03c1647492849b9f6c5",
+  "planner.html": "a5641fd92ceda0a02ac2917453faa229650be85046bec5e56713ed2717a5e7a5"
  },
  "langs": {
   "lang/zh-Hant.js": "f0e87a69b4d88733ce010c265b8f95b5ee273c7c2552a17a22b57f3d5080b697",
