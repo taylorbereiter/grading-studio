@@ -12,7 +12,9 @@ const fontCss = ('/*\n' + fs.readFileSync('src/fonts/OFL.txt', 'utf8') + '*/\n' 
 // The sample is kept apart from real work by a few lines that run before anything else, on both pages (src/samplemode.js).
 // A file with no template literal in it can't hold a line whose leading spaces mean anything, so they don't ship either (about 65 KB).
 const dent = js => js.includes('`') ? js : js.replace(/^[ \t]+/gm, '');
-const sampleMode = fs.readFileSync('src/samplemode.js', 'utf8').replace(/^[ \t]*\/\/.*\r?\n/gm, '');
+const sampleMode = fs.readFileSync('src/samplemode.js', 'utf8').replace(/^[ \t]*\/\/.*\r?\n/gm, '')
+  // and straight after it, one writer at a time between this version and the new one (src/lock.js)
+  + '\n' + fs.readFileSync('src/lock.js', 'utf8').replace(/^\/\*[\s\S]*?\*\/\s*/, '').replace(/^[ \t]*\/\/.*\r?\n/gm, '');
 rep('/*@@SAMPLEMODE@@*/', sampleMode);
 rep('/*@@FONT@@*/', fontCss);
 const tokensCss = css('src/tokens.css'), partsCss = css('src/parts.css');   // the same tokens and shared parts in both pages

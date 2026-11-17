@@ -1,0 +1,6 @@
+{
+ "note": "Sizes of the new app's code in next/dist, squeezed (gzip), in bytes. next/test/budgets.test.js holds the build to them. Stage 0 sets them; a stage that needs more raises them in its own pull request with a reason. The current app's budgets (6.5 MB index.html, 800 KB languages) are separate and unchanged.",
+ "firstLoad": 60000,
+ "anyChunk": 400000,
+ "total": 3000000
+}

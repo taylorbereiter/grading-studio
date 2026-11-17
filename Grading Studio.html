@@ -74,6 +74,32 @@
   window.removeEventListener = function (type, fn, opt) { return rm0.call(this, type, type === 'storage' && wraps.get(fn) || fn, opt); };
   document.documentElement.classList.add('gs-sample');
 })();
+
+(function () {
+  var L = navigator.locks, NAME = 'gs-writer', blocked = false;
+  window.__gsWriter = { state: 'asking' };
+  if (!L || typeof L.request !== 'function') { window.__gsWriter.state = 'no-locks'; return; }
+  var hold = function () { window.__gsWriter.state = 'writer'; return new Promise(function () {}); };
+  function cover() {
+    if (blocked) return; blocked = true; window.__gsWriter.state = 'blocked';
+    var put = function () {
+      if (document.getElementById('gsWriterBlock')) return;
+      var el = document.createElement('div');
+      el.id = 'gsWriterBlock'; el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-modal', 'true'); el.tabIndex = -1;
+      el.textContent = 'Grading Studio is open in the new version in another window. Close that window to work here.';
+      el.style.cssText = 'position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:40px;text-align:center;font:500 18px/1.5 Inter,system-ui,sans-serif;color:#fff;background:rgba(20,24,31,.86)';
+      document.body.appendChild(el); try { el.focus(); } catch (e) {}
+    };
+    if (document.body) put(); else document.addEventListener('DOMContentLoaded', put);
+    var stop = function (e) { if (blocked) { e.stopImmediatePropagation(); e.preventDefault(); } };
+    ['keydown', 'keypress', 'keyup', 'pointerdown', 'mousedown', 'click', 'dblclick', 'contextmenu', 'wheel', 'touchstart', 'dragover', 'drop', 'paste'].forEach(function (t) { window.addEventListener(t, stop, { capture: true, passive: false }); });
+    try { L.request(NAME, { mode: 'shared' }, function () { location.reload(); return new Promise(function () {}); }).catch(function () {}); } catch (e) {}
+  }
+  try {
+    L.request(NAME, { mode: 'shared', ifAvailable: true }, function (lock) { if (!lock) { cover(); return null; } return hold(); })
+      .catch(function (e) { if (e && e.name === 'AbortError') cover(); else window.__gsWriter.state = 'lock-failed'; });   // AbortError: the new version took the lock over
+  } catch (e) { window.__gsWriter.state = 'lock-failed'; }
+})();
 </script>
 <script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem('gs.theme'))||'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
 <style>

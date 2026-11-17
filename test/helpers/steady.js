@@ -69,6 +69,11 @@ function serveBuild(pages, port) {
       const js = pages.lang ? pages.lang(p.slice(1)) : fs.existsSync(path.join(ROOT, p)) ? fs.readFileSync(path.join(ROOT, p), 'utf8') : null;
       if (js != null) { res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' }); return res.end(js); }
     }
+    // The new app (next/), as it is on disk: its pages and their code, at the same address so it shares the saved work.
+    if (body == null && /^\/next\/(?:[\w-]+\.html|dist\/[\w-]+\.js)?$/.test(p)) {
+      const f = path.join(ROOT, p === '/next/' ? 'next/index.html' : p.slice(1));
+      if (fs.existsSync(f)) { res.writeHead(200, { 'Content-Type': (f.endsWith('.js') ? 'text/javascript' : 'text/html') + '; charset=utf-8', 'Cache-Control': 'no-store' }); return res.end(fs.readFileSync(f)); }
+    }
     if (body == null) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(body);

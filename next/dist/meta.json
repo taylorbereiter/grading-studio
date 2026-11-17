@@ -1,0 +1,276 @@
+{
+ "inputs": {
+  "node_modules/preact/dist/preact.mjs": {
+   "bytes": 11970,
+   "imports": [],
+   "format": "esm"
+  },
+  "next/src/shared/lock.js": {
+   "bytes": 4402,
+   "imports": [],
+   "format": "esm"
+  },
+  "next/src/main.js": {
+   "bytes": 1150,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "next/src/shared/lock.js",
+     "kind": "import-statement",
+     "original": "./shared/lock.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/shared/idb.js": {
+   "bytes": 3558,
+   "imports": [
+    {
+     "path": "next/src/shared/lock.js",
+     "kind": "import-statement",
+     "original": "./lock.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/shared/ls.js": {
+   "bytes": 1373,
+   "imports": [
+    {
+     "path": "next/src/shared/lock.js",
+     "kind": "import-statement",
+     "original": "./lock.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/shared/keys.js": {
+   "bytes": 12292,
+   "imports": [],
+   "format": "esm"
+  },
+  "next/src/shared/records.js": {
+   "bytes": 1886,
+   "imports": [
+    {
+     "path": "next/src/shared/idb.js",
+     "kind": "import-statement",
+     "original": "./idb.js"
+    },
+    {
+     "path": "next/src/shared/ls.js",
+     "kind": "import-statement",
+     "original": "./ls.js"
+    },
+    {
+     "path": "next/src/shared/keys.js",
+     "kind": "import-statement",
+     "original": "./keys.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/students/index.js": {
+   "bytes": 2918,
+   "imports": [
+    {
+     "path": "next/src/shared/records.js",
+     "kind": "import-statement",
+     "original": "../shared/records.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/planning/index.js": {
+   "bytes": 1350,
+   "imports": [
+    {
+     "path": "next/src/shared/records.js",
+     "kind": "import-statement",
+     "original": "../shared/records.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/shared/device.js": {
+   "bytes": 452,
+   "imports": [
+    {
+     "path": "next/src/shared/records.js",
+     "kind": "import-statement",
+     "original": "./records.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/shared/dump.js": {
+   "bytes": 1251,
+   "imports": [
+    {
+     "path": "next/src/shared/keys.js",
+     "kind": "import-statement",
+     "original": "./keys.js"
+    },
+    {
+     "path": "next/src/shared/idb.js",
+     "kind": "import-statement",
+     "original": "./idb.js"
+    },
+    {
+     "path": "next/src/shared/ls.js",
+     "kind": "import-statement",
+     "original": "./ls.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/crossings.js": {
+   "bytes": 1751,
+   "imports": [
+    {
+     "path": "next/src/students/index.js",
+     "kind": "import-statement",
+     "original": "./students/index.js"
+    },
+    {
+     "path": "next/src/planning/index.js",
+     "kind": "import-statement",
+     "original": "./planning/index.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/proof.js": {
+   "bytes": 2934,
+   "imports": [
+    {
+     "path": "next/src/students/index.js",
+     "kind": "import-statement",
+     "original": "./students/index.js"
+    },
+    {
+     "path": "next/src/planning/index.js",
+     "kind": "import-statement",
+     "original": "./planning/index.js"
+    },
+    {
+     "path": "next/src/shared/device.js",
+     "kind": "import-statement",
+     "original": "./shared/device.js"
+    },
+    {
+     "path": "next/src/shared/keys.js",
+     "kind": "import-statement",
+     "original": "./shared/keys.js"
+    },
+    {
+     "path": "next/src/shared/dump.js",
+     "kind": "import-statement",
+     "original": "./shared/dump.js"
+    },
+    {
+     "path": "next/src/shared/ls.js",
+     "kind": "import-statement",
+     "original": "./shared/ls.js"
+    },
+    {
+     "path": "next/src/shared/lock.js",
+     "kind": "import-statement",
+     "original": "./shared/lock.js"
+    },
+    {
+     "path": "next/src/crossings.js",
+     "kind": "import-statement",
+     "original": "./crossings.js"
+    }
+   ],
+   "format": "esm"
+  }
+ },
+ "outputs": {
+  "next/dist/main.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-GC4UPBAJ.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [],
+   "entryPoint": "next/src/main.js",
+   "inputs": {
+    "node_modules/preact/dist/preact.mjs": {
+     "bytesInOutput": 10761
+    },
+    "next/src/main.js": {
+     "bytesInOutput": 710
+    }
+   },
+   "bytes": 11529
+  },
+  "next/dist/proof.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-GC4UPBAJ.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [],
+   "entryPoint": "next/src/proof.js",
+   "inputs": {
+    "next/src/students/index.js": {
+     "bytesInOutput": 1677
+    },
+    "next/src/shared/idb.js": {
+     "bytesInOutput": 1429
+    },
+    "next/src/shared/ls.js": {
+     "bytesInOutput": 494
+    },
+    "next/src/shared/keys.js": {
+     "bytesInOutput": 8669
+    },
+    "next/src/shared/records.js": {
+     "bytesInOutput": 797
+    },
+    "next/src/planning/index.js": {
+     "bytesInOutput": 631
+    },
+    "next/src/shared/device.js": {
+     "bytesInOutput": 178
+    },
+    "next/src/shared/dump.js": {
+     "bytesInOutput": 516
+    },
+    "next/src/crossings.js": {
+     "bytesInOutput": 519
+    },
+    "next/src/proof.js": {
+     "bytesInOutput": 1286
+    }
+   },
+   "bytes": 16272
+  },
+  "next/dist/chunk-GC4UPBAJ.js": {
+   "imports": [],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g"
+   ],
+   "inputs": {
+    "next/src/shared/lock.js": {
+     "bytesInOutput": 1763
+    }
+   },
+   "bytes": 1911
+  }
+ }
+}

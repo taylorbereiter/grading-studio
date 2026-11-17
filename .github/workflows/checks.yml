@@ -159,13 +159,36 @@ jobs:
       - name: Pen, next student, opening 30 papers
         run: node test/tools/speed.js
 
+  next:
+    name: New app (next/)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build the new app
+        run: npm run next:build
+      - name: The new app in this change is the one next/src builds
+        run: |
+          git diff --exit-code --stat -- next/index.html next/proof.html next/dist next/docs/saved-work.md || {
+            echo "::error::next/index.html, next/proof.html, next/dist or next/docs/saved-work.md is not what next/src builds. Run npm run next:build and npm run next:docs and commit them."
+            exit 1
+          }
+          test -z "$(git status --porcelain -- next/dist)" || { echo "::error::next/dist has files the build does not make, or is missing some."; git status --short -- next/dist; exit 1; }
+      - name: Wall, registry, budgets
+        run: npm run next:test
+
   all:
     name: All checks
     if: always()
-    needs: [tests, screens, saved-work, speed]
+    needs: [tests, screens, saved-work, speed, next]
     runs-on: ubuntu-24.04
     steps:
       - name: Every check passed
         run: |
-          echo "tests=${{ needs.tests.result }} screens=${{ needs.screens.result }} saved-work=${{ needs.saved-work.result }} speed=${{ needs.speed.result }}"
-          [ "${{ needs.tests.result }}" = success ] && [ "${{ needs.screens.result }}" = success ] && [ "${{ needs.saved-work.result }}" = success ] && [ "${{ needs.speed.result }}" = success ]
+          echo "tests=${{ needs.tests.result }} screens=${{ needs.screens.result }} saved-work=${{ needs.saved-work.result }} speed=${{ needs.speed.result }} next=${{ needs.next.result }}"
+          [ "${{ needs.tests.result }}" = success ] && [ "${{ needs.screens.result }}" = success ] && [ "${{ needs.saved-work.result }}" = success ] && [ "${{ needs.speed.result }}" = success ] && [ "${{ needs.next.result }}" = success ]

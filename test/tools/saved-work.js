@@ -27,6 +27,7 @@ const ROOT = path.join(__dirname, '..', '..');
 const { launch } = require('../helpers/chrome');
 const { plant, appReady, openZip, goToStudent, score, markPage, settle, goTo, builtHtml } = require('../helpers/app');
 const { standardFiles, zipOf } = require('../helpers/fixtures');
+const { loadLegacy } = require('../helpers/legacy');
 const { STEADY, serveBuild, gradingSeed, PLAN_SETUP, makeLesson, pagesAt, changedList, matches } = require('../helpers/steady');
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -40,9 +41,9 @@ const savedAll = page => page.waitForFunction(async () => {
 }, { timeout: 20000, polling: 100 });
 
 // Everything this address keeps, as { 'localStorage:key': text, 'db/store/key': json }. Bytes are shown as their length and SHA-256.
-const snapshot = page => page.evaluate(async () => {
+// viaNext: read it all through the new app's saved-work layer instead (next/proof.html must be open), in the same form.
+const snapshot = (page, viaNext) => page.evaluate(async viaNext => {
   const out = {}, hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
-  for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); out['localStorage:' + k] = localStorage.getItem(k); }
   const flat = async v => {
     if (v instanceof ArrayBuffer || ArrayBuffer.isView(v)) { const u = v instanceof ArrayBuffer ? new Uint8Array(v) : new Uint8Array(v.buffer, v.byteOffset, v.byteLength); return { bytes: u.length, sha256: hex(await crypto.subtle.digest('SHA-256', u)) }; }
     if (v instanceof Blob) { const u = await v.arrayBuffer(); return { blob: v.type, bytes: u.byteLength, sha256: hex(await crypto.subtle.digest('SHA-256', u)) }; }
@@ -53,6 +54,15 @@ const snapshot = page => page.evaluate(async () => {
     if (v && typeof v === 'object') { if (typeof FileSystemHandle !== 'undefined' && v instanceof FileSystemHandle) return { handle: v.kind + ':' + v.name }; const o = {}; for (const k of Object.keys(v).sort()) o[k] = await flat(v[k]); return o; }
     return v === undefined ? { undefined: true } : v;
   };
+  if (viaNext) {
+    const d = await window.__next.dumpRaw();
+    for (const [k, v] of Object.entries(d.ls)) out['localStorage:' + k] = v;
+    for (const [n, x] of Object.entries(d.dbs)) out['(database) ' + n] = 'version ' + x.version + ', stores ' + x.stores.join(' ');
+    for (const [k, v] of Object.entries(d.idb)) out[k] = JSON.stringify(await flat(v));
+    for (const u of d.unknown) out['(not in the registry) ' + u] = 'unknown';
+    return out;
+  }
+  for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); out['localStorage:' + k] = localStorage.getItem(k); }
   for (const d of await indexedDB.databases()) {
     const db = await new Promise((res, rej) => { const r = indexedDB.open(d.name); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
     out['(database) ' + d.name] = 'version ' + db.version + ', stores ' + [...db.objectStoreNames].sort().join(' ');
@@ -63,11 +73,11 @@ const snapshot = page => page.evaluate(async () => {
     db.close();
   }
   return out;
-});
+}, !!viaNext);
 
 // One place the two pages live: a web address, or a folder they are double-clicked from.
 async function placeFor(kind, pages) {
-  if (kind === 'web') { const srv = await serveBuild(pages); return { url: n => srv.url + (n === 'index' ? '' : n === 'planner' ? 'planner.html' : 'blank'), show: () => {}, close: () => srv.close() }; }
+  if (kind === 'web') { const srv = await serveBuild(pages); return { url: n => srv.url + (n === 'index' ? '' : n === 'planner' ? 'planner.html' : n.startsWith('next/') ? n : 'blank'), show: () => {}, close: () => srv.close() }; }
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gs-test-copy-')), u = f => 'file://' + path.join(dir, f).split(path.sep).map(encodeURIComponent).join('/').replace(/%3A/g, ':');
   const show = () => { fs.writeFileSync(path.join(dir, 'Grading Studio.html'), pages.index); fs.writeFileSync(path.join(dir, 'Planner.html'), pages.planner); fs.writeFileSync(path.join(dir, 'blank.html'), '<!doctype html><title>blank</title>'); };
   show();
@@ -173,6 +183,83 @@ async function runs(kind, old, thens) {
     return out;
   } finally { await place.close(); fs.rmSync(workDir, { recursive: true, force: true }); }
 }
+// The new app (next/): its saved-work layer reads every record main's pages left exactly as they are, and every record written back
+// through it opens in main's pages unchanged. Web address only: the new app has no double-clicked copy. Always run, since the
+// layer can change even when the current app's pages don't.
+const proofOpen = async (ctx, place) => { const p = await newPage(ctx); await p.goto(place.url('next/proof.html')); await p.waitForFunction(() => !!window.__next, { timeout: 20000 }); return p; };
+const copyProfile = from => { const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gs-saved-work-')); fs.cpSync(from, dir, { recursive: true, filter: f => !/Singleton/.test(path.basename(f)) }); return dir; };
+async function inProfile(dir, fn) { const browser = await launch({ userDataDir: dir }); try { return await fn(browser.defaultBrowserContext()); } finally { await browser.close(); fs.rmSync(dir, { recursive: true, force: true }); } }
+async function nextLegs(old) {
+  const out = [], bad = m => { out.push('  ' + m); failed = true; }; let failed = false;
+  const pages = { ...old }, place = await placeFor('web', pages), workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gs-saved-work-'));
+  try {
+    // A browser with nothing saved: the layer reads nothing, and makes no database (that would stop the current app making its own).
+    await inProfile(fs.mkdtempSync(path.join(os.tmpdir(), 'gs-saved-work-')), async ctx => {
+      const p = await proofOpen(ctx, place);
+      const got = await p.evaluate(async () => { const d = await window.__next.dumpRaw(); for (const s of window.__next.students ? Object.values(window.__next.students) : []) if (s && s.entries) await s.entries(); return { d, dbs: (await indexedDB.databases()).map(x => x.name), gaps: window.__next.coverage() }; });
+      if (got.dbs.length) bad('Reading an empty browser through the layer made databases: ' + got.dbs.join(', '));
+      if (Object.keys(got.d.ls).length || Object.keys(got.d.idb).length) bad('The layer read work from an empty browser.');
+      if (got.gaps.length) bad('No typed accessor for: ' + got.gaps.join(', '));
+      if (!failed) out.push('  An empty browser: the layer reads nothing and makes no database, and every store and work key has a typed accessor.');
+    });
+    // The work, made by main's pages, as the other checks make it.
+    let browser = await launch({ userDataDir: workDir, keepProfile: true }), ids, made;
+    try { ids = await makeWork(browser.defaultBrowserContext(), place); const p = await newPage(browser.defaultBrowserContext()); await p.goto(place.url('blank')); made = await snapshot(p); await p.close(); } finally { await browser.close(); }
+    const n = Object.keys(made).filter(k => !k.startsWith('(database)')).length;
+    // Read through the layer: the same records, and nothing written by reading.
+    await inProfile(copyProfile(workDir), async ctx => {
+      const p = await proofOpen(ctx, place), via = await snapshot(p, true); await p.goto(place.url('blank'));
+      const d = differ(made, via), after = differ(made, await snapshot(p));
+      if (d.length) bad('Read through the layer, ' + d.length + ' records differ:\n' + d.slice(0, 12).map(x => '    ' + x.key + '\n      kept: ' + short(x.was) + '\n      layer: ' + short(x.now)).join('\n'));
+      else out.push('  Read through the layer: all ' + n + ' records main’s pages made are the same, and every name is in the registry.');
+      if (after.length) bad('Reading through the layer changed: ' + after.map(x => x.key).join(', '));
+    });
+    // Written back through the layer: every record the same, and main's pages show and keep the same work as from an untouched copy.
+    const base = await inProfile(copyProfile(workDir), ctx => walk(ctx, place, ids));
+    await inProfile(copyProfile(workDir), async ctx => {
+      const p = await proofOpen(ctx, place);
+      const r = await p.evaluate(async () => { const s = await window.__next.start(); if (s !== 'writer') return { s }; const r = await window.__next.rewriteAll(); window.__next.stop(); return { s, ...r }; });
+      if (r.s !== 'writer') { bad('The proof page could not get the lock to write (' + r.s + ').'); return; }
+      if (r.missing.length) bad('Work written back without a typed accessor: ' + r.missing.join(', '));
+      await p.goto(place.url('blank'));
+      const d = differ(made, await snapshot(p)); await p.close();
+      if (d.length) bad('Written back through the layer, ' + d.length + ' records differ:\n' + d.slice(0, 12).map(x => '    ' + x.key + '\n      was: ' + short(x.was) + '\n      now: ' + short(x.now)).join('\n'));
+      else out.push('  Written back through the typed accessors (' + r.records + ' records): every one is the same.');
+      const w = await walk(ctx, place, ids), kd = differ(base.kept, w.kept), same = JSON.stringify(base.seen) === JSON.stringify(w.seen);
+      if (kd.length || !same || w.errors.length) bad('Opened in main’s pages after that: ' + (same ? '' : 'THE APP SHOWS DIFFERENT WORK; ') + kd.length + ' records differ from an untouched copy' + (kd.length ? ' (' + kd.slice(0, 8).map(x => x.key).join(', ') + ')' : '') + (w.errors.length ? '; errors: ' + w.errors.join(' | ') : ''));
+      else out.push('  Opened in main’s pages after that: the same scores, marks, comments, files and lesson as an untouched copy, and the same records.');
+    });
+    // A change made through the layer shows in main's pages: a lesson renamed, and a comment changed.
+    await inProfile(copyProfile(workDir), async ctx => {
+      const p = await proofOpen(ctx, place);
+      const who = await p.evaluate(async (L, A) => {
+        await window.__next.start(); const N = window.__next;
+        const l = (await N.planning.lessons.entries()).map(e => e[1]).find(x => x.id === L); await N.planning.lessons.put({ ...l, title: 'Reading a poem aloud, again' });
+        const id = 'gs.b.' + A, w = await N.students.work.get(id); w.t = (w.t || 0) + 1; const who = Object.keys(w.s).find(k => w.s[k] && w.s[k].g); if (!who) throw new Error('no scored student in ' + JSON.stringify(Object.keys(w))); w.s[who].g.comment = 'Changed through the new layer.'; await N.students.work.put(w, id);
+        const q = N.students.quick.json(A); if (q) { q.t = w.t; q.s[who].g.comment = w.s[who].g.comment; N.students.quick.setJson(A, q); }
+        const ix = N.students.quickList.json({}); if (ix[id] != null) { ix[id] = w.t; N.students.quickList.setJson(ix); }
+        N.stop(); return who;
+      }, ids.L, ids.A);
+      await p.close();
+      const w = await walk(ctx, place, ids);
+      const title = (w.seen.planner.lessons.find(l => l.id === ids.L) || {}).title, com = await (async () => { const q = await newPage(ctx); await q.goto(place.url('index') + '#/a/' + ids.A); await appReady(q); await q.waitForFunction(() => !!window.__gs.state().batch, { timeout: 30000 }); const c = await q.evaluate(who => { const s = window.__gs.state().batch.students.find(x => x.key === who); return s && s.grade.comment; }, who); await q.close(); return c; })();
+      if (title !== 'Reading a poem aloud, again' || com !== 'Changed through the new layer.') bad('A change made through the layer did not show in main’s pages: lesson "' + title + '", comment "' + com + '"');
+      else out.push('  A lesson renamed and a comment changed through the layer show in main’s pages.');
+    });
+  } finally { await place.close(); fs.rmSync(workDir, { recursive: true, force: true }); }
+  // Work saved by the old format (test/fixtures/legacy-v1) reads through the layer the same.
+  const leg = await loadLegacy(), pl = await placeFor('web', { ...old });
+  try {
+    await inProfile(fs.mkdtempSync(path.join(os.tmpdir(), 'gs-saved-work-')), async ctx => {
+      const p = await newPage(ctx); await p.goto(pl.url('blank')); await plant(p, leg.seed());
+      const raw = await snapshot(p); await p.goto(pl.url('next/proof.html')); await p.waitForFunction(() => !!window.__next);
+      const d = differ(raw, await snapshot(p, true));
+      if (d.length) bad('Old-format work (legacy-v1) read through the layer, ' + d.length + ' records differ: ' + d.slice(0, 8).map(x => x.key).join(', '));
+      else out.push('  Old-format work (test/fixtures/legacy-v1, ' + Object.keys(raw).length + ' records) reads through the layer the same.');
+    });
+  } finally { await pl.close(); }
+  return { failed, text: 'Through the new app’s saved-work layer (next/):\n' + out.join('\n') + '\n' };
+}
 const short = v => v == null ? '(nothing)' : v.length > 300 ? v.slice(0, 300) + '… (' + v.length + ' characters)' : v;
 // The records that differ between two readings.
 function differ(a, b) {
@@ -209,6 +296,7 @@ function differ(a, b) {
     else { if (!backShown || back.some(d => !listed(d))) failed = true; report += '  Opened in ' + ref + '’s pages again afterwards, ' + (backShown ? '' : 'THE APP SHOWS DIFFERENT WORK and ') + back.length + ' record' + (back.length === 1 ? ' differs' : 's differ') + ':\n' + back.map(d => '    ' + d.key + (listed(d) ? '  (listed)' : '  NOT LISTED')).join('\n') + '\n'; }
     if (errs.length) { failed = true; report += '  The pages reported errors ' + errs.map(e => e[0] + ':\n' + e[1].map(x => '    ' + x).join('\n')).join('\n  and ') + '\n'; }
   }
+  { const nx = await nextLegs(old); report += nx.text; if (nx.failed) failed = true; }
   report += '\n' + (failed ? 'FAILED: saved work would not survive this change as it stands.' : 'Saved work survives this change.') + ' ' + ((Date.now() - t0) / 1000).toFixed(0) + ' s.';
   console.log('\n' + report);
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, '### Saved work\n```\n' + report.trim() + '\n```\n');

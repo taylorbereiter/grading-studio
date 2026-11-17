@@ -1,14 +1,14 @@
 {
  "version": "1.28.72",
- "build": "42abccaea265",
+ "build": "5d77ef197558",
  "notes": [
   "Make a quiz: on an assignment’s card, choose ⋯ then Make a quiz. Type multiple choice, true or false, pick all that apply and short answer questions, and print a copy for each student with their name on it.",
   "Scan the whole stack in any order and choose Bring in the scanned quiz. Each page finds its student by the code at the top, and the bubbles are scored. Answers that aren’t clear are shown to you to pick, and Ctrl Z takes the scan’s scores back.",
   "Short answers get a Teacher box: fill the score bubble while you mark and the scan reads it, or mark them in Quick mark."
  ],
  "files": {
-  "index.html": "bc24a7697fc2fcffc61aca0f43d2a82191b4573613c0d52ffab2fcf36ffdfb56",
-  "planner.html": "5ba9718c132d7ce6843ef2eec858ee94f2e17baf982dd014e6d979765022d057"
+  "index.html": "7ff361965be5094c29017faaf90933b424f46c0f182f702844ade02f0f77691a",
+  "planner.html": "25159b462879b795a1b9224d1da8895a882c683ab2e8afb7681bb3331b4b854c"
  },
  "langs": {
   "lang/zh-Hant.js": "1f6c72319366bc2cb027a2ad8ca790bdf3982ac2b2c8cf5958525f87ec6ee574",
