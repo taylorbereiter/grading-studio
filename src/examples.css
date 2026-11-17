@@ -105,3 +105,28 @@
 .exknown .exrow{cursor:pointer}
 .exshotcls{max-width:100%}
 .snipex{margin-right:8px}
+/* the watch list and strengths and concerns per student (src/watch.js) */
+.excard.exw .exstar{color:var(--accent)}
+.wltabs{margin:0 0 14px}
+.pc.pc-w{width:min(580px,100%)}
+.wlbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0 8px}
+.wltrend{font-size:var(--text-small);color:var(--muted);margin:0 0 8px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.wltime{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow:auto}
+.wltime li{display:grid;grid-template-columns:92px 1fr;gap:10px;padding:6px 8px 6px 6px;border:1px solid var(--line);border-left:3px solid var(--ok);border-radius:var(--corner-3);font-size:var(--text-control)}
+.wltime li.w{border-left-color:var(--accent)}
+.wltime li.pc-sm{display:block;border:0}
+.wltime p{margin:3px 0 0;color:var(--fg-2)}
+.wlth{padding:0;border:1px solid var(--line);border-radius:var(--corner-2);background:var(--surface);cursor:zoom-in;height:64px;overflow:hidden}
+.wlth img{width:100%;height:100%;object-fit:cover;object-position:top left;display:block}
+.wlwho{width:100%;border-collapse:collapse;font-size:var(--text-control);max-width:720px}
+.wlwho th{text-align:left;font-size:var(--text-small);color:var(--muted);font-weight:600;padding:4px 8px;border-bottom:1px solid var(--line)}
+.wlwho td{padding:5px 8px;border-bottom:1px solid var(--line)}
+.wlbarg{display:inline-block;width:90px;height:7px;background:var(--surface-2);border-radius:var(--corner-1);margin-right:8px;vertical-align:middle;overflow:hidden}
+.wlbarg i{display:block;height:100%;background:var(--ok)}
+.wlnone{font-size:var(--text-control);margin:8px 0 0}
+.wlbox{width:min(760px,96vw)}
+.wlsend textarea{width:100%;font:inherit;font-size:var(--text-control);padding:8px;border:1px solid var(--line-strong);border-radius:var(--corner-3)}
+.wlstrip{display:flex;gap:10px;overflow-x:auto;padding:4px 0 10px}
+.wlstrip figure{margin:0;flex:0 0 130px;font-size:var(--text-small)}
+.wlstrip img{width:130px;height:90px;object-fit:cover;object-position:top left;border:1px solid var(--line);border-radius:var(--corner-2);background:var(--surface);display:block}
+.wlkey{font-size:var(--text-control);margin-top:10px}.wlkey ul{margin:6px 0 0;padding-left:18px}

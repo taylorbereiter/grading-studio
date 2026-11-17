@@ -112,9 +112,10 @@ function renderCard() {
     '<div class="pc-f"><span class="pc-k">Also called</span><span class="pc-chips">' + (i.other || []).map((o, k) => '<span class="pc-chip">' + esc(o) + '<button data-pdrop="' + k + '" aria-label="Remove ' + esc(o) + '" title="Remove this spelling">×</button></span>').join('') +
     '<button class="pc-chip pc-add" data-padd>+ add</button></span><span></span></div>' +
     '<label class="pc-f pc-top"><span class="pc-k">Note</span><textarea class="pc-in" data-pf="note" rows="2" placeholder="Anything you want to remember">' + esc(i.note || '') + '</textarea><span></span></label></div>' +
-    '<div class="pc-sec"><h3 id="pcWorkH">' + workHead(c, []) + '</h3><div id="pcWork"><div class="muted pc-sm">Looking through saved work…</div></div></div>' +
+    '<div class="pc-sec"><h3 id="pcWorkH">' + workHead(c, []) + '</h3><div id="pcWork"><div class="muted pc-sm">Looking through saved work…</div></div></div><div class="pc-sec" id="pcWl"></div>' +
     '<div class="pc-ft muted">Kept in this browser with the roster. Other spellings and the student ID match folders to this student.</div></div>';
   const me = pcOpen;
+  exReady.then(wlCardFill);
   classWork(c, name).then(rows => { if (pcOpen !== me || !$('#pcWork')) return; $('#pcWorkH').innerHTML = workHead(c, rows); $('#pcWork').innerHTML = workRows(rows); }).catch(e => console.error(e));
 }
 function renderStranger(el, c, folder) {
@@ -140,6 +141,7 @@ function linkFolder(c, name, folder) {
 document.addEventListener('click', async e => {
   const el = $('#pcard'); if (!el || !pcOpen) return;
   if (e.target === el || e.target.closest('.pc-x')) return closeCard();
+  if (wlCardClick(e)) return;
   const c = classById(pcOpen.cid), n = pcOpen.name;
   if (e.target.closest('[data-psolo]')) { const k = soloHere(c, n); closeCard(); return soloStart(k); }
   const cp = e.target.closest('[data-pcopy]'); if (cp) return copy(infoOf(c, n)[cp.dataset.pcopy] || '', 'Copied');
