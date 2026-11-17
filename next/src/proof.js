@@ -8,6 +8,12 @@ import { dumpRaw } from './shared/dump.js';
 import * as ls from './shared/ls.js';
 import { start, stop, lockState, takeOver } from './shared/lock.js';
 import * as crossings from './crossings.js';
+import * as studentWrites from './students/write.js';
+import * as planningWrites from './planning/write.js';
+import * as studentUndo from './students/undo.js';
+import * as undo from './services/undo.js';
+import * as whole from './whole/index.js';
+import { carryLs, LS_LOCAL } from './whole/folder.js';
 
 // Every typed accessor, found by what it names.
 const all = [students, planning, device].flatMap(m => Object.values(m)).filter(a => a && typeof a === 'object');
@@ -38,4 +44,5 @@ async function rewriteAll() {
 const coverage = () => Object.entries(DATABASES).flatMap(([db, x]) => Object.keys(x.stores).filter(s => !storeAcc(db, s)).map(s => db + '/' + s))
   .concat(LOCAL.filter(e => e[2] === 'work' && !keyAcc(e[0].endsWith('.') ? e[0] + 'x' : e[0])).map(e => 'localStorage:' + e[0]));
 
-window.__next = { dumpRaw, rewriteAll, coverage, start, stop, lockState, takeOver, students, planning, crossings };
+whole.startWhole();
+window.__next = { dumpRaw, rewriteAll, coverage, start, stop, lockState, takeOver, students, planning, crossings, write: { ...studentWrites, ...planningWrites }, studentUndo, undo, whole, carryLs, LS_LOCAL: LS_LOCAL.source };

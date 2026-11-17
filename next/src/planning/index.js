@@ -22,3 +22,16 @@ export const manageBacLinks = localKey(P, 'gs.mblinks');
 export const taughtIn = localKey(P, 'gsp.taughtIn');
 export const planTime = localKey(P, 'gsp.planTime');
 export const newYear = localKey(P, 'gsp.newYear');
+
+// Teacher-wide settings with no student content (stage 2 put them on this side, whichever page writes them).
+export const words = localKey(P, 'gs.words');   // the teacher's own words: assistant name and link, terms
+export const look = localKey(P, 'gs.look');
+export const theme = localKey(P, 'gs.theme');
+export const language = localKey(P, 'gs.lang');
+export const mailApp = localKey(P, 'gs.mailApp');
+export const planCopy = localKey(P, 'gs.planCopy');   // the timetable sent along with the rest of the work, for a phone
+export const googleEmail = localKey(P, 'gs.gEmail');
+export const googleClientId = localKey(P, 'gs.gcid');
+// After-class notes (gsp.taughtIn) are free text: a teacher may put a student's name in one. They stay where they are, but they
+// MAY HOLD NAMES, so nothing sends them to an assistant unless the teacher puts them in herself.
+export const taughtInMayHoldNames = true;

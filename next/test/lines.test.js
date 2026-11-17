@@ -6,7 +6,7 @@ const fs = require('fs'), path = require('path');
 const SRC = path.join(__dirname, '..', 'src');
 // en.json: the app's lines. gallery.en.json: the gallery page's own, never shipped with the app (only gallery/ may use them).
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lang', f), 'utf8'));
-const APP = read('en.json'), GAL = read('gallery.en.json'), EN = { ...APP, ...GAL };
+const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), EN = { ...APP, ...GAL, ...BLD };
 const noComments = s => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(x => x.isDirectory() ? walk(path.join(d, x.name)) : /\.jsx?$/.test(x.name) ? [path.join(d, x.name)] : []);
 const files = walk(SRC);
@@ -24,6 +24,9 @@ test('every line in en.json is used (named in full somewhere in next/src)', () =
 test('gallery lines stay in the gallery, app lines in the app file', () => {
   assert.ok(Object.keys(GAL).every(k => k.startsWith('gallery.')) && !Object.keys(APP).some(k => k.startsWith('gallery.')));
   for (const [f, s] of Object.entries(text)) if (!f.startsWith('gallery/')) assert.ok(!/'gallery\./.test(noComments(s)), f + ' uses a gallery line');
+  // the "not built yet" screen's own lines (next/lang/building.en.json): only that screen uses them, and they go when it goes
+  assert.ok(Object.keys(BLD).every(k => k.startsWith('building.')) && !Object.keys(APP).some(k => k.startsWith('building.')));
+  for (const [f, s] of Object.entries(text)) if (f !== 'app/screens/later.jsx') assert.ok(!/'building\./.test(noComments(s)), f + ' uses a building line');
 });
 test('lines are well formed: area.name keys, plural lines have one and other, no stray braces', () => {
   for (const [k, v] of Object.entries(EN)) {
@@ -37,7 +40,7 @@ test('lines are well formed: area.name keys, plural lines have one and other, no
 test('no part types words of its own', () => {
   const bad = [];
   for (const [f, s] of Object.entries(text)) {
-    if (!/^(ui|services|gallery)\/|^main\.js$/.test(f)) continue;
+    if (!/^(ui|services|gallery|app)\/|^main\.js$/.test(f)) continue;
     s.split('\n').forEach((line, i) => {
       if (/\/\/ not-words\s*$/.test(line)) return;
       const l = noComments(line);
@@ -51,6 +54,6 @@ test('no part types words of its own', () => {
 });
 test('no assistant is named in a part: the name comes from services/assistant.js', () => {
   const names = /\b(Claude|Gemini|ChatGPT|Copilot)\b/;
-  for (const [f, s] of Object.entries(text)) if (f !== 'services/assistant.js') assert.ok(!names.test(noComments(s)), f + ' names an assistant');
+  for (const [f, s] of Object.entries(text)) if (f !== 'services/assistant.js' && !f.startsWith('engines/')) assert.ok(!names.test(noComments(s)), f + ' names an assistant');
   for (const [k, v] of Object.entries(EN)) assert.ok(!names.test(JSON.stringify(v)), 'en.json ' + k + ' names an assistant');
 });

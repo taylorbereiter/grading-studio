@@ -32,9 +32,9 @@ test('theme: saved only by a window that may write, through the lock', async () 
   assert.equal(store.get('gs.theme'), undefined, 'the current app’s own theme key is left alone');
   lock.stop();
 });
-test('the theme key is in the registry, on the shared side', async () => {
+test('the theme key is in the registry, on the planning side (teacher-wide settings, stage 2)', async () => {
   const { LOCAL, entryFor } = await import('../src/shared/keys.js');
-  const e = entryFor('gs.look', LOCAL); assert.ok(e); assert.equal(e[1], 'shared'); assert.equal(e[2], 'pref');
+  const e = entryFor('gs.look', LOCAL); assert.ok(e); assert.equal(e[1], 'planning'); assert.equal(e[2], 'pref');
 });
 test('assistant: name and link from the teacher’s words; none named means none', async () => {
   const { assistant, KNOWN } = await import('../src/services/assistant.js');

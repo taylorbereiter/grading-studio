@@ -171,28 +171,28 @@ The current app's own legs (web address and double-clicked copy, main against th
 | `gsp.presentTimer` | planning | pref | json | Present: timer length | planner/present.js |
 | `gsp.railLib` | planning | pref | json | the Planner sidebar’s Library group open | planner/plannext.js |
 | `gsp.view` | planning | pref | json | the Planner’s last view | planner/lessons.js |
+| `gs.words` | planning | work | json | the teacher’s own words: assistant names and links, terms | app/library.js, beside.js, planner/lessons.js |
+| `gs.theme` | planning | pref | json | light or dark (kept apart from the sample on purpose) | app.html, app/start.js, planner/base.js, planner/planner.html, samplemode.js |
+| `gs.look` | planning | pref | json | the new app’s theme: graphite, porcelain, ocean, ink, plum or midnight (written by the new app only) | (no longer in the source) |
+| `gs.lang` | planning | pref | json | the language (kept apart from the sample on purpose) | lang.js, samplemode.js |
+| `gs.gEmail` | planning | pref | text | the Google account signed in | app/drive.js, mail.js, planner/pldrive.js |
+| `gs.gcid` | planning | pref | text | a Google Client ID of the teacher’s own | app/drive.js, planner/pldrive.js |
+| `gs.gAuto` | planning | pref | json | Google sign-in: renew by itself | app/drive.js |
+| `gs.gPaperDir` | planning | pref | json | Drive folder papers come from | app/drive.js |
+| `gs.gVidDir` | planning | pref | json | Drive folder videos come from | app/drive.js |
+| `gs.planBig` | planning | pref | json | Today: lesson plans shown large | app/drive.js, phone.js, today.js |
+| `gs.planCopy` | planning | cache | json | Today: a copy of the week’s plans for the phone | app/drive.js, today.js |
+| `gs.planSeen` | planning | pref | json | Today: plans seen | app/drive.js |
+| `gs.mailApp` | planning | pref | json | which mail app the email buttons open | mail.js |
 
 ### Neither side (shared)
 
 | Key | Side | Kind | Format | What it holds | Named in (src/) |
 |---|---|---|---|---|---|
-| `gs.words` | shared | work | json | the teacher’s own words: assistant names and links, terms | app/library.js, beside.js, planner/lessons.js |
-| `gs.theme` | shared | pref | json | light or dark (kept apart from the sample on purpose) | app.html, app/start.js, planner/base.js, planner/planner.html, samplemode.js |
-| `gs.look` | shared | pref | json | the new app’s theme: graphite, porcelain, ocean, ink, plum or midnight (written by the new app only) | (no longer in the source) |
-| `gs.lang` | shared | pref | json | the language (kept apart from the sample on purpose) | lang.js, samplemode.js |
-| `gs.gEmail` | shared | pref | text | the Google account signed in | app/drive.js, mail.js, planner/pldrive.js |
-| `gs.gcid` | shared | pref | text | a Google Client ID of the teacher’s own | app/drive.js, planner/pldrive.js |
-| `gs.gAuto` | shared | pref | json | Google sign-in: renew by itself | app/drive.js |
-| `gs.gPaperDir` | shared | pref | json | Drive folder papers come from | app/drive.js |
-| `gs.gVidDir` | shared | pref | json | Drive folder videos come from | app/drive.js |
 | `gs.cloudP` | shared | coord | json | Drive sync: what is waiting to go up | app/drive.js |
 | `gs.syncAt` | shared | coord | json | Drive sync: when it last ran | app/drive.js |
-| `gs.planBig` | shared | pref | json | Today: lesson plans shown large | app/drive.js, phone.js, today.js |
-| `gs.planCopy` | shared | cache | json | Today: a copy of the week’s plans for the phone | app/drive.js, today.js |
-| `gs.planSeen` | shared | pref | json | Today: plans seen | app/drive.js |
 | `gs.phone` | shared | pref | json | phone layout chosen | mail.js, phone.js |
 | `gs.phCls` | shared | pref | json | phone: last class | phone.js |
-| `gs.mailApp` | shared | pref | json | which mail app the email buttons open | mail.js |
 | `gs.sampleOn` | shared | coord | text | the sample is open (src/samplemode.js) | samplemode.js, visits.js |
 | `gs.sampleLeft` | shared | coord | text | the sample was left and is being cleared | samplemode.js |
 | `gs.sampleBuilt` | shared | coord | text | the sample has been filled in | sample.js, samplemode.js |
@@ -213,7 +213,7 @@ The current app's own legs (web address and double-clicked copy, main against th
 
 | Key | Side | Kind | Format | What it holds | Named in (src/) |
 |---|---|---|---|---|---|
-| `gs.gTok` | shared | coord | json | the Google sign-in token | app/drive.js, planner/pldrive.js |
+| `gs.gTok` | planning | coord | json | the Google sign-in token | app/drive.js, planner/pldrive.js |
 | `gs.gState` | shared | coord | json | the Google sign-in step under way | app/drive.js |
 | `gs.gQuiet` | shared | coord | json | Google sign-in: renew without asking | app/drive.js |
 | `gs.goHome` | shared | coord | json | open Home after the reload | app/screens.js |
@@ -371,3 +371,69 @@ Written by one page and read by the other: `gs.words`, `gs.rolls`, `gs.school`, 
 | attendance | nothing found on the Planner side | |
 
 For the wall in stage 2: the example pictures (E, row 3) are the one place student work is stored on the planning side today, by the teacher's choice. `gs.rolls` is the one place roster names are read there. Both become named crossings (next/src/crossings.js `examplesForPlanning`, `rosterNamesForPresent`); whether a picture copied into a lesson may stay in planning storage is a decision for the planning thread.
+
+## The wall by kind of data (stage 2)
+
+Decided in stage 2 (2026-11-17). The new app is one app, so the wall no longer runs between two pages. It runs between two kinds
+of data, and next/test/wall.test.js holds every file to it.
+
+**students/** owns what is about students: names and rosters (`gs.lib`), papers, scores, comments, attendance, the Planner's name
+picker copy (`gs.rolls`), strong examples, the watch list, and the Focus log `gs.focus` (it holds download names).
+**planning/** owns what is not: `gs-lessons`, every `gsp.*` key, and the teacher-wide settings (look and theme, language,
+`gs.words`, mail app, class-page links, School resources, the Google sign-in keys, planning time and focus records).
+**shared/** and **engines/** hold no data of their own and import neither side.
+
+- students/ may import planning/. planning/ never imports students/, `whole/` or crossings.js.
+- A top-level file (the shell, a screen) reaches students/ only through crossings.js, which names each read-only crossing:
+  `classListsForPlanning`, `classesForHome`, `countsForHome`, `examplesForPlanning`, `rosterNamesForPresent`.
+- **whole/** is the work that has to see everything at once: the linked folder, the Drive sync file, and later the year file,
+  take-home and the sample. It imports both sides; only main.js and the proof page import it.
+
+`gsp.taughtIn` (after-class notes) **may hold names**: it is the teacher's own words about a class. It stays on the planning side
+but is marked `taughtInMayHoldNames` in planning/index.js and is never put into an assistant brief unless the teacher puts it there.
+
+### The 13 rows that were one page writing the other's storage
+
+Each is now a call to the owning side's function (next/src/planning/write.js and next/src/students/write.js), whoever calls it.
+
+| # | Was | Now |
+|---|---|---|
+| 3 | grading writes kv `bank` | `saveKv('bank', v)` (also tells `gs-bank`) |
+| 8 | My setup import writes kv `setup` | `saveKv('setup', v)` |
+| 14 | Bring work in writes `lessons` and kv | `saveLesson`, `saveKv` (whole/ calls them when take-home moves, stage 6) |
+| 15 | the sample writes `lessons` and kv | the same functions, inside the sample (stage 6; until then the current app builds the sample) |
+| 18 | Drive sync writes `lessons` and kv | `saveLesson`, `saveKv` from whole/sync.js (taking in from Drive, stage 6) |
+| 22 | Focus adds planning time | `addPlanTime(r, secs)` |
+| 29 | the phone saves an after-class note | `saveTaughtNote(key, note)` |
+| 30 | Drive sync merges planning time and notes | whole/sync.js with engines/merge.js `planTimeMerge`, `taughtInMerge`, then the planning side's write (stage 6) |
+| 32 | New year tells the Planner | `startNewYear(v)` |
+| 34 | take-home writes `gsp.*` | the planning side's writes, from whole/ (stage 6) |
+| 38 | the Planner writes `gs.theme` | `savePref('gs.theme', v)`; the look is `savePref('gs.look', v)` |
+| 41 | the Planner writes `gs.mblinks` | `savePref('gs.mblinks', v)` |
+| 49 | the Planner writes the Google token | `setGoogleToken(v)` |
+
+### One save path
+
+A save goes through one function per kind of record, and that function does everything the current app does for the same save:
+
+- `saveWork(id, change)`: stamps (engines/merge.js `stampData`, the current app's own code), the full copy and its row with the
+  counts, the quick copy and its list (with the same eviction), the window stamps (`gsc.saved.<id>`), then tells whole/: the
+  linked folder's `work.json` and `info.json`, and the Drive sync marked due.
+- `saveLibrary(change)`: the library read into the current app's shape first (`migrateLib`), stamped (`stampLib`), then the
+  Planner's name picker copy and the teacher's words; whole/ writes `library.json` and `tombstones.json` to the folder.
+- `saveSetting(key, value)` for the other grading records that travel; `saveLesson`, `saveKv`, `savePref` and the rest on the
+  planning side.
+- Undo (students/undo.js) records each the way the current app does: `scoreChange` as gradeSnap/gradeBack, `fieldChange` as
+  fieldSnap, `libraryChange` as libTrack (saves joined within a second, up to three seconds), and `libraryForget`.
+
+Every write first checks that this window holds the one writing lock (shared/lock.js), that the saved work's format is the one
+this build knows, that no other window has started replacing everything, and that a forgotten download stays forgotten.
+
+`npm run saved-work` proves it: the same change (a comment on a student, a class renamed) made once in the current app's pages
+and once through these functions leaves the same records, the same files in a linked folder, and the same Drive sync file. The
+only difference allowed is that the current app keeps empty fields as fields holding `undefined` in the full copy, which read,
+send and merge the same.
+
+**Not yet.** Sending the sync file to Drive and taking in what comes back, reading a folder changed elsewhere, the paper and
+reading files in the folder, and a lesson's file in a linked Planner folder (until then `saveLesson` refuses while one is linked)
+come before the switch, in stage 6. Until then the current app does them as soon as it is opened, so nothing is lost.

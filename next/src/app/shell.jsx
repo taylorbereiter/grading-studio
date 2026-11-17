@@ -1,0 +1,168 @@
+// The frame every screen lives in: the sidebar (a computer), the tabs along the bottom (a phone), the command bar, notices, and
+// the strip that says when this window may not save. A screen is a chunk the router loads; the shell hands it the route.
+//
+// The class list comes from the teacher's saved work through the layer (crossings.js classesForHome), in the order the current
+// app shows them, with the same colour by place and the same "left to score" count.
+import { h, Fragment } from 'preact';
+import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
+import { NavItem, NavSection, IconButton, Icon, CommandBar, ToastHost, toast, LOOK_LINES } from '../ui/index.js';
+import { t } from '../i18n/t.js';
+import * as router from './router.js';
+import { addCommand, openCommandBar } from '../services/commands.js';
+import { register, start as keysStart, pieces } from '../services/shortcuts.js';
+import * as undo from '../services/undo.js';
+import { assistant } from '../services/assistant.js';
+import { lockState, onLockChange, takeOver } from '../shared/lock.js';
+import { onLook, currentLook, saveLook } from '../services/theme.js';
+import { LOOKS, THEMES } from '../ui/tokens.js';
+import { classesForHome } from '../crossings.js';
+import { sampleOn, leaveSample } from './sample.js';
+import { useUpdate } from './update.js';
+
+const TOP = [['home', 'home', 'nav.home'], ['calendar', 'cal', 'nav.calendar'], ['todo', 'todo', 'nav.todo']];
+const FOOT = [['library', 'library', 'nav.library'], ['school', 'school', 'nav.school'], ['settings', 'settings', 'nav.settings'], ['help', 'help', 'nav.help']];
+const TABS = [['home', 'home', 'nav.home'], ['todo', 'todo', 'nav.todo'], ['classes', 'people', 'nav.classes'], ['find', 'search', 'nav.find_short'], ['more', 'menu', 'nav.more']];
+export const classColor = i => (i < 0 ? 'var(--g500)' : 'var(--c' + ((i % 8) + 1) + ')');
+
+// The classes, read again whenever the teacher comes back to this window (another window may have changed them).
+export function useClasses() {
+  const [list, setList] = useState(null);
+  useEffect(() => {
+    let live = true;
+    const read = () => classesForHome().then(l => live && setList(l), e => { console.error(e); live && setList([]); });
+    read();
+    const vis = () => { if (!document.hidden) read(); };
+    document.addEventListener('visibilitychange', vis);
+    window.addEventListener('storage', read);
+    return () => { live = false; document.removeEventListener('visibilitychange', vis); window.removeEventListener('storage', read); };
+  }, []);
+  return list;
+}
+
+function useLock() {
+  const [s, set] = useState(lockState().state);
+  useEffect(() => onLockChange(set), []);
+  return s;
+}
+
+function Sidebar({ route, classes, folded, onFold }) {
+  const ai = assistant(), look = useLookValue();
+  const on = id => route.nav === id;
+  const cls = route.nav === 'class' ? route.params.id : null;
+  return <nav class={'side' + (folded ? ' folded' : '')} aria-label={t('nav.main')} data-shell-nav>
+    <div class="brand"><span class="logo"><Icon name="line" /></span><span class="bn">{t('app.name')}</span>
+      <IconButton icon="chl" size="sm" label={t('nav.collapse')} onClick={onFold} data-focus="fold" /></div>
+    <button type="button" class="find" onClick={openCommandBar}><Icon name="search" /><span>{t('nav.find')}</span><span class="fk">{pieces('mod+k').map(k => <kbd>{k}</kbd>)}</span></button>
+    {TOP.map(([id, icon, line]) => <NavItem icon={icon} label={t(line)} href={router.href(id)} current={on(id)} />)}
+    <NavSection>{t('nav.classes')}</NavSection>
+    <div class="sclasses">
+      {(classes || []).map((c, i) => <NavItem color={classColor(c.loose ? -1 : i)} label={c.loose ? t('nav.no_class') : <span data-raw>{c.name}</span>} count={c.left || null} href={router.href('class', c.id || '-')} current={cls === (c.id || '-')} />)}
+    </div>
+    <div class="grow" />
+    {FOOT.map(([id, icon, line]) => <NavItem icon={icon} label={t(line)} href={router.href(id)} current={on(id)} />)}
+    {ai.link && <a class="nav" href={ai.link} target="_blank" rel="noopener"><Icon name="assist" /><span>{ai.name ? t('assistant.open_named', { name: ai.name }) : t('assistant.open_generic')}</span></a>}
+    <div class="sfoot">
+      <div class="swatches" role="radiogroup" aria-label={t('look.title')}>
+        {LOOKS.map(n => <button type="button" role="radio" class="swt" aria-checked={String(n === look)} aria-label={t(LOOK_LINES[n][0])} style={{ '--sa': THEMES[n].acc, '--sb2': THEMES[n].bg }} onClick={() => pickLook(n)} />)}
+      </div>
+      <UpdateLine />
+    </div>
+  </nav>;
+}
+function pickLook(n) { if (!saveLook(n)) toast(t('look.not_kept')); }
+function useLookValue() {
+  const [v, set] = useState(currentLook());
+  useEffect(() => onLook(set), []);
+  return v;
+}
+// The update line at the foot of the sidebar, and on More on a phone.
+export function UpdateLine({ big }) {
+  const u = useUpdate();
+  if (!u.waiting) return big ? <p class="mute upd-none">{u.current ? t('update.current', { v: u.current }) : t('update.not_kept')}</p> : null;
+  return <div class={'upd' + (big ? ' big' : '')} role="status"><Icon name="download" /><span>{t('update.ready')}</span>
+    <button type="button" class="btn sm pri" onClick={u.apply} data-focus="update-now">{t('update.now')}</button></div>;
+}
+
+function Tabs({ route }) {
+  const cur = route.nav === 'class' ? 'classes' : route.path === 'classes' ? 'classes' : route.nav;
+  return <nav class="tabbar" aria-label={t('nav.tabs')}>
+    {TABS.map(([id, icon, line]) => id === 'find'
+      ? <button type="button" class="tb" onClick={openCommandBar}><Icon name={icon} /><span>{t(line)}</span></button>
+      : <a class="tb" href={router.href(id)} aria-current={cur === id ? 'page' : undefined}><Icon name={icon} /><span>{t(line)}</span></a>)}
+  </nav>;
+}
+
+function Strip({ lock }) {
+  if (lock === 'read-only' || lock === 'taken') return <div class="strip" role="alert"><Icon name="info" /><span>{t(lock === 'taken' ? 'lock.taken' : 'lock.read_only')}</span>
+    <button type="button" class="btn sm" onClick={() => takeOver()}>{t('lock.take_over')}</button></div>;
+  return null;
+}
+function SampleStrip() {
+  if (!sampleOn()) return null;
+  return <div class="strip sample" role="note"><span><b>{t('sample.title')}</b> {t('sample.text')}</span>
+    <button type="button" class="btn sm" onClick={leaveSample}>{t('sample.leave')}</button></div>;
+}
+
+// The screen for a route: its chunk, loaded once. Until it arrives the old screen stays, so nothing flashes.
+const loaded = {};
+function Screen({ route, classes }) {
+  const [, bump] = useState(0);
+  const mod = loaded[route.chunk];
+  useEffect(() => {
+    if (mod) return;
+    let live = true;
+    router.CHUNKS[route.chunk]().then(m => { loaded[route.chunk] = m; if (live) bump(n => n + 1); }, e => { console.error(e); toast(t('app.chunk_failed')); });
+    return () => { live = false; };
+  }, [route.chunk]);
+  if (!mod) return <div class="loading" aria-busy="true" />;
+  const S = mod.default;
+  return <S route={route} classes={classes} />;
+}
+
+export function Shell() {
+  const [route, setRoute] = useState(router.current());
+  const [folded, setFolded] = useState(() => { try { return sessionStorage.getItem('gsn.fold') === '1'; } catch { return false; } });
+  const classes = useClasses(), lock = useLock(), main = useRef(null), first = useRef(true);
+  useEffect(() => { router.setMain(main.current); router.start(); return router.onRoute(setRoute); }, []);
+  // After the screen is drawn: scroll and focus back where they were on this route, or the heading on a new one.
+  useEffect(() => {
+    const fresh = !first.current; first.current = false;
+    const id = setTimeout(() => router.restore(route.path, fresh), 30);
+    document.title = t('app.title');
+    return () => clearTimeout(id);
+  }, [route.path, loaded[route.chunk]]);
+  const fold = useCallback(() => setFolded(f => { const n = !f; try { sessionStorage.setItem('gsn.fold', n ? '1' : '0'); } catch {} return n; }), []);
+  useEffect(() => {
+    keysStart();
+    const offs = [
+      register({ id: 'undo', keys: 'mod+z', label: 'keys.undo', run: () => { const e = undo.undo(); if (e) toast(t('undo.undone', { what: e.label })); } }),
+      register({ id: 'redo', keys: ['mod+shift+z', 'mod+y'], label: 'keys.redo', run: () => undo.redo() }),
+      register({ id: 'fold', keys: 'mod+\\', label: 'keys.fold', run: fold }),
+      register({ id: 'keys', keys: '?', label: 'keys.show_list', run: () => router.go('help', 'keys') }),
+      ...[['home', 'nav.home', 'home'], ['calendar', 'nav.calendar', 'cal'], ['todo', 'nav.todo', 'todo'], ['library', 'nav.library', 'library'], ['school', 'nav.school', 'school'], ['settings', 'nav.settings', 'settings'], ['help', 'nav.help', 'help']]
+        .map(([id, line, icon]) => addCommand({ id: 'go-' + id, label: () => t(line), group: t('cmd.group_go'), icon, run: () => router.go(id) })),
+      addCommand({ id: 'go-keys', label: () => t('keys.title'), group: t('cmd.group_go'), icon: 'keyboard', run: () => router.go('help', 'keys') }),
+      addCommand({ id: 'theme', label: () => t('cmd.change_theme'), group: t('cmd.group_do'), icon: 'sun', run: () => router.go('settings', 'display') }),
+      addCommand({ id: 'fold', label: () => t('keys.fold'), group: t('cmd.group_do'), icon: 'menu', keys: 'mod+\\', run: fold }),
+    ];
+    return () => offs.forEach(f => f());
+  }, []);
+  // The classes as commands, so typing a class's name opens it.
+  useEffect(() => {
+    const offs = (classes || []).map(c => addCommand({ id: 'class-' + (c.id || '-'), label: c.loose ? t('nav.no_class') : c.name, also: t('nav.classes'), group: t('nav.classes'), icon: 'people', run: () => router.go('class', c.id || '-') }));
+    return () => offs.forEach(f => f());
+  }, [classes]);
+  return <div class={'shell' + (folded ? ' folded' : '')} data-lock={lock}>
+    <a class="skip" href="#main" onClick={e => { e.preventDefault(); const hd = main.current && main.current.querySelector('h1'); if (hd) { hd.setAttribute('tabindex', '-1'); hd.focus(); } }}>{t('nav.skip')}</a>
+    <Sidebar route={route} classes={classes} folded={folded} onFold={fold} />
+    {folded && <IconButton class="unfold" icon="menu" label={t('nav.expand')} onClick={fold} />}
+    <div class="mainwrap">
+      <SampleStrip />
+      <Strip lock={lock} />
+      <main id="main" ref={main} class="main" data-route={route.path}><Screen route={route} classes={classes} /></main>
+    </div>
+    <Tabs route={route} />
+    <CommandBar />
+    <ToastHost />
+  </div>;
+}
