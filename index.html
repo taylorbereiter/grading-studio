@@ -5239,7 +5239,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.70";
+  const APP_VERSION = "1.28.71";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -33391,7 +33391,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.70":["Plan lessons has a Focus button on the lesson to pick up and on each class coming up without a lesson. A to-do to plan a lesson has Focus on this, and Plan it opens that class and day.","Lesson focus sessions leave out time you were away, and when one ends you see how long the lesson has taken so far.","Syncing sends changes as soon as you leave the page, checks for changes from your other devices every few minutes, and adds up focus and planning time from all of them. On the phone, a lesson shows its pictures and links.","More of the partner controls and Strengths and concerns are in your language, Today's times follow your language, and the Entry list window follows dark mode."]};
+const WHATS_NEW = {"1.28.71":["Take attendance on your phone: one tap per student cycles present, absent and late, and Everyone is here takes the rest.","After class, a lesson on your phone has Got to slide n of N and a note. It lands on the lesson in your Planner.","Lessons with lots of pictures now reach your phone too. The pictures load the first time you open the lesson while online.","When a lesson focus session ends, the Planner asks Is this lesson ready? The editor has a Ready button too. After three ready lessons you see about how long a lesson takes you.","Today's Focus card and Plan lessons show next week's lessons planned as dots. In a free period with nothing to mark, the Focus card suggests the next lesson to plan."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };

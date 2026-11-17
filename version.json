@@ -1,14 +1,15 @@
 {
- "version": "1.28.70",
- "build": "41f8e5a8962a",
+ "version": "1.28.71",
+ "build": "3798ab4516f0",
  "notes": [
-  "Plan lessons has a Focus button on the lesson to pick up and on each class coming up without a lesson. A to-do to plan a lesson has Focus on this, and Plan it opens that class and day.",
-  "Lesson focus sessions leave out time you were away, and when one ends you see how long the lesson has taken so far.",
-  "Syncing sends changes as soon as you leave the page, checks for changes from your other devices every few minutes, and adds up focus and planning time from all of them. On the phone, a lesson shows its pictures and links.",
-  "More of the partner controls and Strengths and concerns are in your language, Today's times follow your language, and the Entry list window follows dark mode."
+  "Take attendance on your phone: one tap per student cycles present, absent and late, and Everyone is here takes the rest.",
+  "After class, a lesson on your phone has Got to slide n of N and a note. It lands on the lesson in your Planner.",
+  "Lessons with lots of pictures now reach your phone too. The pictures load the first time you open the lesson while online.",
+  "When a lesson focus session ends, the Planner asks Is this lesson ready? The editor has a Ready button too. After three ready lessons you see about how long a lesson takes you.",
+  "Today's Focus card and Plan lessons show next week's lessons planned as dots. In a free period with nothing to mark, the Focus card suggests the next lesson to plan."
  ],
  "files": {
-  "index.html": "1e3b63424a3f934481b33b95bdd884f811f88ec4993755771f739f6ab0dae0ed",
+  "index.html": "4d657a30a342b152aae7b5edbfae3f126a32276d3c963797db73942a23a093e0",
   "planner.html": "195437c18035f3ce4b14799983d2a1a4fe0e6e2e52ceb7fdc29e900b21bd135c"
  },
  "langs": {
