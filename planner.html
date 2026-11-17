@@ -2410,6 +2410,7 @@ function renderLessons() {
 }
 
 function renderWeek() {
+  if (!L.weekOf) L.weekOf = ymd(mondayOf(new Date()));   // drawn before the Planner has finished opening (a setup applied at once)
   const el = $('#lessons'), mon = parseYmd(L.weekOf);
   const offs = plWeekOffs(), days = offs.map(i => ymd(addDays(mon, i)));
   const fri = addDays(mon, offs[offs.length - 1]), first = addDays(mon, offs[0]);
