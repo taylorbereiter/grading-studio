@@ -246,7 +246,7 @@ async function pushLibrary() {
 // All of what's in the folder, except the bytes.
 async function folderState() {
   const B = { work: {}, meta: {}, tomb: await readJson(fld.root, 'tombstones.json') || {}, added: {}, edits: {}, info: {}, ls: null, lib: null, have: new Set(), missing: new Set() };
-  fld.info.clear(); fld.seen.clear();   // the folder may have changed or gone away and come back, so nothing remembered about it counts
+  fld.info.clear(); fld.seen.clear(); papersIdx = null;   // the folder may have changed or gone away and come back, so nothing remembered about it counts
   for await (const [n] of (await fld.root.getDirectoryHandle('files', { create: true })).entries()) B.have.add(n);
   fld.have = B.have;
   const l = await readJson(fld.root, 'library.json');
@@ -347,6 +347,7 @@ async function folderGoBack(name) {
 function carryAfterPutBack() { if (fld.state !== 'none') try { localStorage.setItem('gsc.win', '1'); } catch {} }
 // Forget means gone: out of the folder, out of its snapshots, and its bytes go unless something else still uses them.
 async function folderRemove(id) {
+  await papersForget(id);
   const dls = await fld.root.getDirectoryHandle('downloads', { create: true });
   await dls.removeEntry(dlDirName(id), { recursive: true }).catch(e => { if (e.name !== 'NotFoundError') throw e; });
   fld.info.delete(id); fld.seen.delete(id); delete fld.hold[id]; delete fld.holdSet[id];
@@ -374,6 +375,59 @@ async function folderRemove(id) {
   for (const n of drop) await files.removeEntry(n).catch(() => {});
 }
 
+/* Papers/: plain copies she can open from Finder or Explorer */
+// Papers/<class>/<assignment>/<the file's own path>, copied from files/. Only ever written, never read back: files/ and downloads/ are what bring work back.
+// papers-index.json says what's there, so only what changed is copied. A file she deletes from Papers/ comes back at the next full pass.
+const PAPERS = 'Papers', seg = s => String(s).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').replace(/[. ]+$/, '').trim().slice(0, 60) || '-';
+async function dirAt(root, parts, make) { let d = root; for (const p of parts) d = await d.getDirectoryHandle(p, { create: make }); return d; }
+async function rmAt(root, parts) {   // the file or folder, then whichever folders above it are left empty
+  for (let i = parts.length; i > 0; i--) {
+    try { await (await dirAt(root, parts.slice(0, i - 1), false)).removeEntry(parts[i - 1], { recursive: i === parts.length }); }
+    catch { return; }
+  }
+}
+function papersDir(id, info, idx) {
+  const f = findItem((keptMeta.get(id) || info.meta || {}).asg) || (() => { const it = cardOfKept(id); return it && findItem(it.id); })();
+  const base = seg(f ? (f.c === lib.loose ? 'No class' : f.c.name) : 'No class') + '/' + seg(f ? f.it.name : info.label || (info.meta && info.meta.name) || 'A download');
+  const taken = new Set(Object.entries(idx).filter(([k]) => k !== id).map(([, v]) => v.dir.toLowerCase()));
+  let dir = base, n = 1; while (taken.has(dir.toLowerCase())) dir = base + ' (' + ++n + ')';
+  return dir;
+}
+let papersIdx = null;
+async function papersMirror(ids, check) {
+  const idx = papersIdx ||= await readJson(fld.root, 'papers-index.json') || {}, before = JSON.stringify(idx), files = await fld.root.getDirectoryHandle('files', { create: true }), top = await fld.root.getDirectoryHandle(PAPERS, { create: true });
+  for (const id of ids) {
+    const info = fld.info.get(id); if (!info) continue;
+    const want = {};
+    for (const e of info.papers || []) if (e.hash) want[e.path] = e.hash;
+    for (const r of Object.values(info.added || {})) if (r.hash && r.path) want[r.path] = r.hash;
+    let had = idx[id] || { dir: '', files: {} };
+    const dir = papersDir(id, info, idx);
+    if (had.dir && had.dir !== dir) { await rmAt(top, had.dir.split('/')); had = { dir, files: {} }; }
+    had.dir = dir;
+    const at = p => [...dir.split('/'), ...p.split('/').map(seg)];
+    for (const p of Object.keys(had.files)) if (!(p in want)) { const a = at(p); await rmAt(top, a); delete had.files[p]; }
+    for (const [p, h] of Object.entries(want)) {
+      const a = at(p), name = a.pop();
+      if (had.files[p] === h && !check) continue;
+      const d = await dirAt(top, a, true);
+      if (had.files[p] === h) { try { await d.getFileHandle(name); continue; } catch {} }
+      let src; try { src = await (await files.getFileHandle(h + '.dat')).getFile(); } catch { continue; }
+      const w = await (await d.getFileHandle(name, { create: true })).createWritable();
+      try { await src.stream().pipeTo(w); } catch (e) { e.onFolder = true; throw e; }
+      had.files[p] = h;
+    }
+    idx[id] = had;
+  }
+  if (JSON.stringify(idx) !== before) await writeJson(fld.root, 'papers-index.json', idx);
+}
+async function papersForget(id) {
+  const idx = papersIdx ||= await readJson(fld.root, 'papers-index.json') || {};
+  if (!idx[id]) return;
+  await rmAt(await fld.root.getDirectoryHandle(PAPERS, { create: true }), idx[id].dir.split('/'));
+  delete idx[id]; await writeJson(fld.root, 'papers-index.json', idx);
+}
+
 /* the write queue */
 function folderKick() {
   if (!tabLive()) return;
@@ -393,6 +447,8 @@ async function folderRun() {
     }
     if (fld.lib) { fld.lib = false; try { await pushLibrary(); await schFolderSync(); } catch (e) { fld.lib = true; throw e; } }
     await dailySnapshot();
+    await papersMirror([...fld.info.keys()]).catch(e => console.error(e));
+    vkFolderSoon();
     fld.at = Date.now(); setWhere(fld.asks.length ? 'decide' : 'ok');
   } catch (e) { await folderTrouble(e); }
 }
@@ -426,6 +482,7 @@ const FOLDER_README = `This folder is where Grading Studio keeps a copy of your 
 It's saved here by itself every time you work, so there's nothing to do. Please leave these files as they are. They hold student work, so keep the folder private.
 
 files/ holds the papers and other files, under coded names. downloads/ holds your work on each download. snapshots/ holds dated copies you can go back to.
+Papers/ has plain copies of the papers, by class and assignment, to open from here. Videos/ has the students' video files. Deleting a copy in Papers/ loses nothing: it comes back.
 If this browser is ever cleared, open Grading Studio, link this folder again, and everything comes back.
 `;
 // The browser and the folder compared, per student, and each brought up to date with the other.
@@ -482,6 +539,8 @@ async function reconcileNow() {
   await pushLibrary();
   await schFolderSync();   // the files of the school resources, either way
   try { await exFolderSync(true); } catch (e) { console.error(e); }   // examples merge on their own, by id, and never hold up the rest
+  try { await papersMirror([...fld.info.keys()], true); } catch (e) { console.error(e); }
+  vkFolderSoon(true);
   fld.lib = false; fld.answers = {};
   try { localStorage.removeItem('gsc.win'); } catch {}
   await dailySnapshot();

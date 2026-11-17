@@ -52,13 +52,13 @@ test('the Planner has the same sidebar: its own classes, no grading counts, and 
   const srv = await serveBoth(), ctx = await browser.createBrowserContext();
   try {
     const g = await openApp(browser, { server: srv, context: ctx, seed: GRADING });
-    assert.equal(await g.page.$eval('#railClasses .rcnt', e => e.textContent), '3', 'grading’s own sidebar counts what is left');
+    assert.equal(await g.page.$eval('#railClasses .rcnt', e => e.textContent), '3 left to score', 'grading’s own sidebar says what is left');
     const page = await planner(ctx, srv);
     await page.evaluate(async s => { await window.__planner.applySetup(s); }, setupFor(2));
     await page.waitForSelector('#railClasses a');
     // the same rows in the same order as on the grading page, with the Planner's own sections where its one row is, and Timetable where Add a class is
     assert.deepEqual(await page.$$eval('#rail > *', els => els.filter(e => e.checkVisibility() && e.innerText.trim()).map(e => e.innerText.replace(/\s+/g, ' ').trim().replace(/(Ctrl K|⌘K)$/, '').trim())),
-      ['Grading Studio', 'Find anything', 'Today', 'To do', 'School', 'PLANNER', 'Calendar', 'Units', 'Past lessons', 'Activities', 'Rubrics', 'CLASSES', 'Course A-1 Course A 2 Course B-1', 'Timetable', 'Not backed up This browser', 'Claude', 'Full screen', 'Help', 'Settings']);   // Claude: the assistant a browser from before has, to open beside the page (src/beside.js)
+      ['Grading Studio', 'Find anything', 'Today', 'To do', 'School', 'PLANNER', 'Plan lessons', 'Library', 'CLASSES', 'Course A-1 Course A 2 Course B-1', 'Timetable', 'Not backed up This browser', 'Claude', 'Full screen', 'Help', 'Settings']);   // Claude: the assistant a browser from before has, to open beside the page (src/beside.js)
     assert.equal(await page.$eval('#railPlanner', a => a.getAttribute('aria-current')), 'page');
     assert.equal(await page.$('#rail .rcnt'), null, 'no counts');
     assert.ok(!/\d+ left|to score/.test(await page.$eval('#rail', e => e.textContent + [...e.querySelectorAll('[title]')].map(x => x.title).join(' '))), 'nothing about grading in the Planner’s sidebar');
@@ -69,8 +69,9 @@ test('the Planner has the same sidebar: its own classes, no grading counts, and 
     assert.equal(await page.$('.ls-top [data-a="setup"]'), null);
     // going between the Planner's sections is the sidebar's job: the page's head is its name and what the page itself does
     assert.equal(await page.$('.ls-top nav'), null);
-    assert.equal(await page.$eval('.ls-top h1', e => e.textContent), 'Calendar');
-    assert.deepEqual(await page.$$eval('#rail [data-v]', t => t.map(x => x.textContent.trim())), ['Calendar', 'Units', 'Past lessons', 'Activities', 'Rubrics']);
+    assert.equal(await page.$eval('.ls-top h1', e => e.textContent), 'Plan lessons');
+    assert.deepEqual(await page.$$eval('#rail [data-v]', t => t.map(x => x.textContent.trim())), ['Plan lessons', 'Units', 'Past lessons', 'Activities', 'Rubrics']);
+    assert.equal(await page.$eval('#railLibBox', e => e.hidden), true, 'units, past lessons, activities and rubrics fold under Library');
     assert.equal(await page.$('.ls-top [data-a="link"], .ls-top [data-a="sync"], .ls-top [data-a="reconnect"]'), null, 'the Planner folder is the sidebar’s Saved line');
 
     // a class goes to its page in grading, matched by name
@@ -169,15 +170,17 @@ test('the Planner’s sections are in the sidebar, and the calendar is one of th
     const page = await planner(ctx, srv);
     await page.evaluate(async s => { const P = window.__planner; await P.applySetup(s); P.L.view = 'week'; P.renderLessons(); }, setupFor(2));
     const on = () => page.$$eval('#rail [data-v].on, .ls-top h1, .ls-top .pl-tab.on', t => t.map(x => x.textContent.trim()));
-    assert.deepEqual(await on(), ['Calendar', 'Calendar', 'Week']);
+    assert.deepEqual(await on(), ['Plan lessons', 'Plan lessons', 'Week']);
     await page.click('.pl-tabs.cal [data-v="semester"]'); await page.waitForSelector('.pl-row[data-wk]');
-    assert.deepEqual(await on(), ['Calendar', 'Calendar', 'Semester']);
+    assert.deepEqual(await on(), ['Plan lessons', 'Plan lessons', 'Semester']);
+    await page.click('#railLib'); await page.waitForSelector('#railLibBox:not([hidden])');
+    assert.equal(await page.$eval('#railLib', b => b.getAttribute('aria-expanded')), 'true');
     await page.click('#rail [data-v="units"]'); await page.waitForFunction(() => window.__planner.L.view === 'units');
     assert.deepEqual(await on(), ['Units', 'Units']);
     assert.equal(await page.$eval('#rail [data-v="units"]', b => b.getAttribute('aria-current')), 'page');
     assert.equal(await page.$eval('#railPlanner', b => b.getAttribute('aria-current')), null);
     assert.equal(await page.$('.pl-tabs.cal'), null, 'Semester | Week only shows on the calendar');
-    await page.click('#railPlanner');   // Calendar: the view she used last
+    await page.click('#railPlanner');   // Plan lessons: the week or semester she used last
     await page.waitForFunction(() => window.__planner.L.view === 'semester');
     for (const [v, name] of [['library', 'Past lessons'], ['activities', 'Activities'], ['bank', 'Rubrics']]) {
       await page.click('#rail [data-v="' + v + '"]'); await page.waitForFunction((v, name) => window.__planner.L.view === v && document.querySelector('.ls-top h1').textContent === name && document.querySelector('#rail [data-v].on').dataset.v === v, {}, v, name);   // some pages read their list before they draw
@@ -201,7 +204,7 @@ test('Find anything in the Planner reaches lessons, units, views, classes and th
     const rows = () => page.$$eval('#findList .frow', r => r.map(x => x.closest('#findList').querySelectorAll('.fcap').length && x.querySelector('b').textContent));
     await find('');
     const first = await rows();
-    for (const want of ['Today', 'This week', 'Semester', 'Units', 'Past lessons', 'Activities', 'Rubrics', 'Settings', 'Course A-1', 'Make a new lesson', 'Import a lesson', 'Timetable', 'Side panel', 'Dark mode']) assert.ok(first.includes(want), want + ' is offered');
+    for (const want of ['Today', 'Plan lessons', 'Semester', 'Units', 'Past lessons', 'Activities', 'Rubrics', 'Settings', 'Course A-1', 'Make a new lesson', 'Import a lesson', 'Timetable', 'Side panel', 'Dark mode']) assert.ok(first.includes(want), want + ' is offered');
     assert.ok(!first.includes('Counterclaims'), 'lessons wait until she types');
     assert.equal(await page.$eval('#findKey', e => e.textContent), 'Ctrl K');
     await page.keyboard.press('Escape'); assert.equal(await page.$('#findDlg'), null);

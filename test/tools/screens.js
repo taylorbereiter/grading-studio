@@ -65,7 +65,7 @@ const SCREENS = [
   { name: 'return', where: 'g', hash: '#/a/{A}/return', ready: '#dlg.aspage' },
   ...['saving', 'history', 'setup', 'classes', 'terms', 'grading', 'marking', 'timetable', 'display', 'claude', 'keys', 'about'].map(k => ({ name: 'settings-' + k, where: 'g', hash: '#/settings/' + k, ready: '#vSettings:not([hidden]), [data-sec]' })),
   { name: 'planner-week', where: 'p', hash: '#week' },
-  { name: 'planner-semester', where: 'p', hash: '' },
+  { name: 'planner-semester', where: 'p', hash: '', then: async page => { await page.click('.pl-tabs.cal [data-v="semester"]'); await page.waitForSelector('.pl-row[data-wk]'); } },
   { name: 'planner-units', where: 'p', hash: '', then: tabNamed('Units') },
   { name: 'planner-past-lessons', where: 'p', hash: '', then: tabNamed('Past lessons') },
   { name: 'planner-activities', where: 'p', hash: '', then: tabNamed('Activities') },

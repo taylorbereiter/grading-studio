@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"6cb38642","zh-Hans":"25e8e7d9","es":"2d4b2f25","fr":"5ed5da9a","de":"171c887e","pt-BR":"631bbbcd","ja":"25c8bb38","ko":"c389ba78"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"970b1106","zh-Hans":"f1ed5f46","es":"239aa887","fr":"3136d4dc","de":"ae53732a","pt-BR":"b9b67f36","ja":"916b2b90","ko":"30b19225"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -1510,8 +1510,15 @@ small.bkxc{font-weight:500}
 .rcap{font-size:var(--text-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:16px 10px 6px}
 .rdot{width:8px;height:8px;border-radius:var(--corner-round);flex:none}
 .rname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rcnt{flex:none;font-size:var(--text-small);font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.rcnt{flex:none;font-size:var(--text-caption);font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
 .rnav.on .rcnt{color:var(--accent)}
+#railClasses{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:2px;align-items:center}
+#railClasses>.rnav:not(:has(+.rgb)){grid-column:1/-1}
+.rgb{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:var(--corner-3);color:var(--muted)}
+.rgb:hover,.rgb:focus-visible{background:var(--hover);color:var(--accent)}
+.rgb.on{background:var(--accent-soft);color:var(--accent)}
+.rgb svg{width:17px;height:17px}
+:is(.shell.grading,.pfold,.gsfull) .rgb{display:none}
 .radd{color:var(--muted)}
 .rail .sp{flex:1;min-height:12px}
 .rsaved{display:flex;gap:10px;align-items:flex-start;width:100%;padding:10px;border:0;border-radius:var(--corner-3);background:none;color:var(--muted);font-size:12.5px;line-height:1.35;text-align:left}
@@ -1554,6 +1561,7 @@ small.bkxc{font-weight:500}
 :is(.shell.grading,.pfold,.gsfull) .rsample{padding:0;border:0;background:none;margin:0 0 2px}
 :is(.shell.grading,.pfold,.gsfull) .rsample .btn{width:40px;height:40px;padding:0;border-color:var(--accent);color:var(--accent)}
 @media (max-width:1100px){
+  .rgb{display:none}
   .rail{width:60px;padding:12px 8px;align-items:center}
   .rail .rl{display:none}
   .rbrand{padding:4px 0 12px}
@@ -1703,6 +1711,9 @@ button.nrow:hover,a.nrow:hover{background:var(--hover)}
 .hgrid:has(.hside:not([hidden])){grid-template-columns:minmax(0,1fr) 348px}
 @media (max-width:1180px){.hgrid:has(.hside:not([hidden])){grid-template-columns:minmax(0,1fr)}}
 .hmain{min-width:0}
+
+.hstart{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));column-gap:var(--space-4);align-items:start}
+.hstart>.tsec{min-width:0}
 .hside{display:flex;flex-direction:column;min-width:0}
 .tsec{margin:0 0 var(--space-5)}
 .thd{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3)}
@@ -3962,6 +3973,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
       <div class="hmain">
         <section class="safeask" id="sampleNote" hidden></section>
         <section class="safeask" id="safeAsk" hidden></section>
+        <div class="hstart"><section class="tsec" id="fcCard"><div class="thd"><h2 class="tcap">Focus</h2><a class="link" href="#/settings/focus">Goal and timer</a></div><div class="tcard" id="fcCardBody"></div></section><section class="tsec" id="todoCard"><div class="thd"><h2 class="tcap">To do</h2><a class="link" href="#/todo">Open To do</a></div><div class="tcard"><form class="tdadd" id="tdCardAdd" autocomplete="off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><input type="text" id="tdCardIn" maxlength="300" placeholder="Add a to-do…" aria-label="Add a to-do"></form><div id="tdCardList"></div></div></section></div>
         <section class="tsec" id="lbCard" hidden></section>
         <section class="tsec" id="today" hidden></section>
         <section class="tsec today" id="toMark" hidden>
@@ -3990,7 +4002,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
           <button class="link" id="keptAll" hidden></button>
         </section>
       </div>
-      <aside class="hside" id="hside"><section class="tsec" id="fcCard"><div class="thd"><h2 class="tcap">Focus</h2><a class="link" href="#/settings/focus">Goal and timer</a></div><div class="tcard" id="fcCardBody"></div></section><section class="tsec" id="todoCard"><div class="thd"><h2 class="tcap">To do</h2><a class="link" href="#/todo">Open To do</a></div><div class="tcard"><form class="tdadd" id="tdCardAdd" autocomplete="off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><input type="text" id="tdCardIn" maxlength="300" placeholder="Add a to-do…" aria-label="Add a to-do"></form><div id="tdCardList"></div></div></section><section class="tsec" id="handBack" hidden></section><section class="tsec" id="needNext" hidden></section><div id="needs" hidden></div></aside>
+      <aside class="hside" id="hside" hidden><section class="tsec" id="handBack" hidden></section><section class="tsec" id="needNext" hidden></section><div id="needs" hidden></div></aside>
     </div>
     <p class="foot">Your marks, scores, units and rosters are kept in this browser, so you can close the tab and come back to pick up where you left off. <button class="link" id="sample">Try it with a sample class</button></p>
     <p class="foot gsVer"></p>
@@ -5176,7 +5188,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.64";
+  const APP_VERSION = "1.28.65";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -6532,6 +6544,8 @@ let CHECK_INK = COLORS[checkInk];
 function setCheckInk(k) { if (!COLORS[k]) return; checkInk = k; CHECK_INK = COLORS[k]; store.set('gs.checkInk', k); }
 const PTS_AMBER = '#A86400';
 const QZ_GOLD = '#C08C00';
+const NOTE_COLORS = { red: COLORS.red, yellow: '#D08A00', blue: COLORS.blue, green: COLORS.green, purple: COLORS.purple, black: COLORS.black };
+const TEXT_COLORS = { ...NOTE_COLORS, yellow: PTS_AMBER };
 let ptsInk = (k => k === 'credit' || COLORS[k] ? k : '')(store.get('gs.ptsInk', ''));
 function setPtsInk(k) { ptsInk = k === 'credit' || COLORS[k] ? k : ''; if (ptsInk) store.set('gs.ptsInk', ptsInk); else store.del('gs.ptsInk'); }
 function ptsColor(v, top) {
@@ -8062,7 +8076,7 @@ Object.assign(hd.style, { left: (m.x + L.maxW) * s + 'px', top: m.y * s + Math.m
 Object.assign(bar.style, { left: m.x * s + 'px', top: m.y * s + 'px' });
 bar.innerHTML = '<span class="edgrip" data-grip title="Drag to move this box">⠿ Move</span><button data-sz="-1" title="Smaller text">A−</button><b>' + m.size + '</b><button data-sz="1" title="Bigger text">A+</button>' +
 '<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span><button data-full class="' + (m.bw ? '' : 'on') + '" title="Wrap at the edge of the page">Page width</button>' +
-'<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span>' + Object.entries(COLORS).map(([k, v]) => '<button data-tc="' + k + '" class="edsw' + (v === m.color ? ' on' : '') + '" style="--c:' + v + '" title="' + k + '" aria-label="Text in ' + k + '" aria-pressed="' + (v === m.color) + '"></button>').join('');
+'<span style="width:1px;height:16px;background:rgba(255,255,255,.25);margin:0 3px"></span>' + Object.entries(TEXT_COLORS).map(([k, v]) => '<button data-tc="' + k + '" class="edsw' + (v === m.color ? ' on' : '') + '" style="--c:' + v + '" title="' + k + '" aria-label="Text in ' + k + '" aria-pressed="' + (v === m.color) + '"></button>').join('');
 };
 pg.wrap.append(ta, hd, bar); fit(); ta.focus();
 if (!isNew) snap(pg);
@@ -8079,7 +8093,7 @@ bar.addEventListener('click', e => {
 const z = e.target.closest('[data-sz]');
 if (z) { m.size = clamp(m.size + 2 * z.dataset.sz, 8, 40); disp.tsize = m.size; store.set('gs.disp', disp); }
 if (e.target.closest('[data-full]')) delete m.bw;
-const tc = e.target.closest('[data-tc]'); if (tc) m.color = COLORS[tc.dataset.tc];
+const tc = e.target.closest('[data-tc]'); if (tc) m.color = TEXT_COLORS[tc.dataset.tc];
 fit(); ta.focus();
 });
 ta.addEventListener('keydown', e => {
@@ -8149,8 +8163,8 @@ if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e
 pop.addEventListener('click', e => {
 const nc = e.target.closest('[data-nc]'), nh = e.target.closest('[data-nh]');
 if (nc || nh) {
-if (nc) m.color = COLORS[nc.dataset.nc]; else m.hc = HL[nh.dataset.nh];
-for (const b of pop.querySelectorAll('[data-nc]')) b.setAttribute('aria-pressed', COLORS[b.dataset.nc] === m.color);
+if (nc) m.color = NOTE_COLORS[nc.dataset.nc]; else m.hc = HL[nh.dataset.nh];
+for (const b of pop.querySelectorAll('[data-nc]')) b.setAttribute('aria-pressed', NOTE_COLORS[b.dataset.nc] === m.color);
 for (const b of pop.querySelectorAll('[data-nh]')) b.setAttribute('aria-pressed', HL[b.dataset.nh] === (m.hc || HL.yellow));
 draw(pg); ta.focus({ preventScroll: true }); return;
 }
@@ -8168,7 +8182,7 @@ if (b.dataset.a === 'del') { ta.value = ''; close(true); }
 });
 }
 function noteSwatches(m) {
-const inks = Object.entries(COLORS).map(([k, v]) => '<button type="button" class="nsw" data-nc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === m.color) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('');
+const inks = Object.entries(NOTE_COLORS).map(([k, v]) => '<button type="button" class="nsw" data-nc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === m.color) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('');
 const hls = m.hl ? '<div class="row ncol"><span class="lbl">Highlight</span>' + Object.entries(HL).map(([k, v]) => '<button type="button" class="nsw sq" data-nh="' + k + '" style="background:' + v + '" aria-pressed="' + (v === (m.hc || HL.yellow)) + '" title="' + k + ' highlight" aria-label="Highlight in ' + k + '"></button>').join('') + '</div>' : '';
 return '<div class="row ncol"><span class="lbl">Color</span>' + inks + '</div>' + hls;
 }
@@ -21240,7 +21254,7 @@ async function pushLibrary() {
 }
 async function folderState() {
   const B = { work: {}, meta: {}, tomb: await readJson(fld.root, 'tombstones.json') || {}, added: {}, edits: {}, info: {}, ls: null, lib: null, have: new Set(), missing: new Set() };
-  fld.info.clear(); fld.seen.clear();
+  fld.info.clear(); fld.seen.clear(); papersIdx = null;
   for await (const [n] of (await fld.root.getDirectoryHandle('files', { create: true })).entries()) B.have.add(n);
   fld.have = B.have;
   const l = await readJson(fld.root, 'library.json');
@@ -21335,6 +21349,7 @@ async function folderGoBack(name) {
 }
 function carryAfterPutBack() { if (fld.state !== 'none') try { localStorage.setItem('gsc.win', '1'); } catch {} }
 async function folderRemove(id) {
+  await papersForget(id);
   const dls = await fld.root.getDirectoryHandle('downloads', { create: true });
   await dls.removeEntry(dlDirName(id), { recursive: true }).catch(e => { if (e.name !== 'NotFoundError') throw e; });
   fld.info.delete(id); fld.seen.delete(id); delete fld.hold[id]; delete fld.holdSet[id];
@@ -21362,6 +21377,57 @@ async function folderRemove(id) {
   for (const n of drop) await files.removeEntry(n).catch(() => {});
 }
 
+/* Papers/: plain copies she can open from Finder or Explorer */
+const PAPERS = 'Papers', seg = s => String(s).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').replace(/[. ]+$/, '').trim().slice(0, 60) || '-';
+async function dirAt(root, parts, make) { let d = root; for (const p of parts) d = await d.getDirectoryHandle(p, { create: make }); return d; }
+async function rmAt(root, parts) {
+  for (let i = parts.length; i > 0; i--) {
+    try { await (await dirAt(root, parts.slice(0, i - 1), false)).removeEntry(parts[i - 1], { recursive: i === parts.length }); }
+    catch { return; }
+  }
+}
+function papersDir(id, info, idx) {
+  const f = findItem((keptMeta.get(id) || info.meta || {}).asg) || (() => { const it = cardOfKept(id); return it && findItem(it.id); })();
+  const base = seg(f ? (f.c === lib.loose ? 'No class' : f.c.name) : 'No class') + '/' + seg(f ? f.it.name : info.label || (info.meta && info.meta.name) || 'A download');
+  const taken = new Set(Object.entries(idx).filter(([k]) => k !== id).map(([, v]) => v.dir.toLowerCase()));
+  let dir = base, n = 1; while (taken.has(dir.toLowerCase())) dir = base + ' (' + ++n + ')';
+  return dir;
+}
+let papersIdx = null;
+async function papersMirror(ids, check) {
+  const idx = papersIdx ||= await readJson(fld.root, 'papers-index.json') || {}, before = JSON.stringify(idx), files = await fld.root.getDirectoryHandle('files', { create: true }), top = await fld.root.getDirectoryHandle(PAPERS, { create: true });
+  for (const id of ids) {
+    const info = fld.info.get(id); if (!info) continue;
+    const want = {};
+    for (const e of info.papers || []) if (e.hash) want[e.path] = e.hash;
+    for (const r of Object.values(info.added || {})) if (r.hash && r.path) want[r.path] = r.hash;
+    let had = idx[id] || { dir: '', files: {} };
+    const dir = papersDir(id, info, idx);
+    if (had.dir && had.dir !== dir) { await rmAt(top, had.dir.split('/')); had = { dir, files: {} }; }
+    had.dir = dir;
+    const at = p => [...dir.split('/'), ...p.split('/').map(seg)];
+    for (const p of Object.keys(had.files)) if (!(p in want)) { const a = at(p); await rmAt(top, a); delete had.files[p]; }
+    for (const [p, h] of Object.entries(want)) {
+      const a = at(p), name = a.pop();
+      if (had.files[p] === h && !check) continue;
+      const d = await dirAt(top, a, true);
+      if (had.files[p] === h) { try { await d.getFileHandle(name); continue; } catch {} }
+      let src; try { src = await (await files.getFileHandle(h + '.dat')).getFile(); } catch { continue; }
+      const w = await (await d.getFileHandle(name, { create: true })).createWritable();
+      try { await src.stream().pipeTo(w); } catch (e) { e.onFolder = true; throw e; }
+      had.files[p] = h;
+    }
+    idx[id] = had;
+  }
+  if (JSON.stringify(idx) !== before) await writeJson(fld.root, 'papers-index.json', idx);
+}
+async function papersForget(id) {
+  const idx = papersIdx ||= await readJson(fld.root, 'papers-index.json') || {};
+  if (!idx[id]) return;
+  await rmAt(await fld.root.getDirectoryHandle(PAPERS, { create: true }), idx[id].dir.split('/'));
+  delete idx[id]; await writeJson(fld.root, 'papers-index.json', idx);
+}
+
 /* the write queue */
 function folderKick() {
   if (!tabLive()) return;
@@ -21381,6 +21447,8 @@ async function folderRun() {
     }
     if (fld.lib) { fld.lib = false; try { await pushLibrary(); await schFolderSync(); } catch (e) { fld.lib = true; throw e; } }
     await dailySnapshot();
+    await papersMirror([...fld.info.keys()]).catch(e => console.error(e));
+    vkFolderSoon();
     fld.at = Date.now(); setWhere(fld.asks.length ? 'decide' : 'ok');
   } catch (e) { await folderTrouble(e); }
 }
@@ -21413,6 +21481,7 @@ const FOLDER_README = `This folder is where Grading Studio keeps a copy of your 
 It's saved here by itself every time you work, so there's nothing to do. Please leave these files as they are. They hold student work, so keep the folder private.
 
 files/ holds the papers and other files, under coded names. downloads/ holds your work on each download. snapshots/ holds dated copies you can go back to.
+Papers/ has plain copies of the papers, by class and assignment, to open from here. Videos/ has the students' video files. Deleting a copy in Papers/ loses nothing: it comes back.
 If this browser is ever cleared, open Grading Studio, link this folder again, and everything comes back.
 `;
 function folderReconcile() {
@@ -21468,6 +21537,8 @@ async function reconcileNow() {
   await pushLibrary();
   await schFolderSync();
   try { await exFolderSync(true); } catch (e) { console.error(e); }
+  try { await papersMirror([...fld.info.keys()], true); } catch (e) { console.error(e); }
+  vkFolderSoon(true);
   fld.lib = false; fld.answers = {};
   try { localStorage.removeItem('gsc.win'); } catch {}
   await dailySnapshot();
@@ -22738,7 +22809,7 @@ const rs = e.target.closest('[data-reset]'); if (rs) return qmSpotSet(rs.closest
 if (e.target.closest('[data-rest]')) return qmRest();
 const as = e.target.closest('.qmned [data-as]'); if (as) { for (const b of as.parentNode.children) b.setAttribute('aria-pressed', String(b === as)); as.closest('.qmned').querySelector('textarea').focus(); return; }
 const nc = e.target.closest('.qmned [data-qnc]');
-if (nc) { const ed = nc.closest('.qmned'), v = COLORS[nc.dataset.qnc]; ed.dataset.col = v; ed.querySelector('textarea').style.color = v; for (const b of ed.querySelectorAll('[data-qnc]')) b.setAttribute('aria-pressed', String(b === nc)); ed.querySelector('textarea').focus(); return; }
+if (nc) { const ed = nc.closest('.qmned'), v = NOTE_COLORS[nc.dataset.qnc]; ed.dataset.col = v; ed.querySelector('textarea').style.color = v; for (const b of ed.querySelectorAll('[data-qnc]')) b.setAttribute('aria-pressed', String(b === nc)); ed.querySelector('textarea').focus(); return; }
 if (e.target.closest('[data-nsave]')) return qmNoteDone(e.target.closest('.qmc'), true);
 if (e.target.closest('.qmned')) return;
 const qn = e.target.closest('[data-qnote]'); if (qn) return qmNoteOpen(qn.closest('.qmc'));
@@ -22838,7 +22909,7 @@ const as = m ? (m.t === 'note' ? 'note' : 'text') : store.get('gs.qmNoteAs', 'no
 const ln = el.querySelector('.qmnote'); if (ln) ln.hidden = true;
 const col = (m && m.color) || COLORS[inkColor] || COLORS.red;
 el.insertAdjacentHTML('beforeend', '<div class="qmned" data-col="' + col + '"><textarea rows="2" placeholder="Type what to write on their paper…" aria-label="Comment" style="color:' + col + '">' + esc(m ? m.text : '') + '</textarea>' +
-'<div class="qmnedc"><span class="muted hsm">Color</span>' + Object.entries(COLORS).map(([k, v]) => '<button type="button" class="sw" data-qnc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === col) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('') + '</div>' +
+'<div class="qmnedc"><span class="muted hsm">Color</span>' + Object.entries(NOTE_COLORS).map(([k, v]) => '<button type="button" class="sw" data-qnc="' + k + '" style="background:' + v + '" aria-pressed="' + (v === col || (k === 'yellow' && col === PTS_AMBER)) + '" title="' + k + '" aria-label="Comment in ' + k + '"></button>').join('') + '</div>' +
 '<div class="qmnedb"><span class="seg sm"><button data-as="note" aria-pressed="' + (as === 'note') + '" title="In the margin, with a line to the answer">Margin comment</button><button data-as="text" aria-pressed="' + (as === 'text') + '" title="Written on the page under the answer">Text on page</button></span>' +
 '<span class="muted hsm">Enter to save, Esc to cancel</span><button class="btn sm primary" data-nsave>Save</button></div></div>');
 const ta = el.querySelector('.qmned textarea'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
@@ -22858,7 +22929,7 @@ if (i >= 0) list.splice(i, 1);
 if (text) {
 const sz = await qzPageSize(st, q.n); if (!sz) return;
 store.set('gs.qmNoteAs', as);
-const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = col || COLORS[inkColor] || COLORS.red;
+const [dx, dy] = qzShift(st, q.n), W = sz.W, H = sz.H, color = as === 'text' && col === NOTE_COLORS.yellow ? PTS_AMBER : as === 'note' && col === PTS_AMBER ? NOTE_COLORS.yellow : col || COLORS[inkColor] || COLORS.red;
 let m;
 if (as === 'note') m = old && old.t === 'note' ? { ...old, text, color } : { t: 'note', color, ax: r1(clamp((q.x + q.w + dx) * W, 4, W - 4)), ay: r1(clamp((q.y + q.h / 2 + dy) * H, 4, H - 4)), text, qzn: q.id };
 else {
@@ -24192,24 +24263,61 @@ askToKeep();
 try { await vkDo('readwrite', o => o.put({ id, name: file.name, type: file.type || MIME[extOf(file.name)] || '', size: file.size, at: Date.now(), blob: file }, id)); }
 catch (err) { console.error(err); throw new Error('This browser couldn’t keep that video, usually because the computer is out of room. A link to the video works at any size.'); }
 const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id);
+vkFolderSoon();
 return id;
 }
 async function vkGet(id) {
 if (vkSeen.has(id)) return vkSeen.get(id);
 let r = null; try { r = await vkDo('readonly', o => o.get(id)); } catch (e) { console.error(e); }
-const out = r && r.blob ? { name: r.name, size: r.size, blob: r.blob, url: URL.createObjectURL(r.blob.type ? r.blob : new Blob([r.blob], { type: r.type || MIME[extOf(r.name)] || '' })) } : null;
+const out = r && r.blob ? { name: r.name, size: r.size, blob: r.blob, url: URL.createObjectURL(r.blob.type ? r.blob : new Blob([r.blob], { type: r.type || MIME[extOf(r.name)] || '' })) } : await vkFromFolder(id);
 vkSeen.set(id, out); return out;
+}
+async function vkUsed() {
+const used = new Set();
+for (const r of (await idbDo('readonly', o => o.getAll())) || []) { const v = r && /\.url$/i.test(r.path || '') && keptId({ kind: 'link', data: r.data }); if (v) used.add(v); }
+if (batch) for (const st of batch.students) for (const f of st.files.concat(st.gone || [])) { const v = keptId(f); if (v) used.add(v); }
+return used;
 }
 async function vkSweep() {
 try {
 if (!vkDbP && indexedDB.databases && !(await indexedDB.databases()).some(d => d.name === 'grading-studio-videos')) return;
 const ids = await vkDo('readonly', o => o.getAllKeys()); if (!ids || !ids.length) return;
-const used = new Set();
-for (const r of (await idbDo('readonly', o => o.getAll())) || []) { const v = r && /\.url$/i.test(r.path || '') && keptId({ kind: 'link', data: r.data }); if (v) used.add(v); }
-if (batch) for (const st of batch.students) for (const f of st.files.concat(st.gone || [])) { const v = keptId(f); if (v) used.add(v); }
+const used = await vkUsed();
 const old = Date.now() - 15 * 60e3;
 for (const id of ids) { if (used.has(id)) continue; const r = await vkDo('readonly', o => o.get(id)); if (r && r.at > old) continue; await vkDo('readwrite', o => o.delete(id)); const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id); }
 } catch (e) { console.error(e); }
+}
+/* video files in the linked folder: Videos/<name> [<id>].<ext>, playable from there */
+const vkFolderName = r => { const m = /^(.*?)(\.[\w]{1,6})?$/.exec(r.name || 'video'); return seg(m[1]) + ' [' + r.id + ']' + (m[2] || ''); };
+async function vkFolderList() {
+const dir = await fld.root.getDirectoryHandle('Videos', { create: true }), out = new Map();
+for await (const [n, h] of dir.entries()) { const m = h.kind === 'file' && / \[([\w-]{6,40})\](\.\w+)?$/.exec(n); if (m) out.set(m[1], h); }
+return { dir, out };
+}
+let vkFolderP = null, vkFolderT = 0, vkFolderFull = false;
+function vkFolderSoon(full) { vkFolderFull ||= !!full; clearTimeout(vkFolderT); vkFolderT = setTimeout(() => { vkFolderP = (vkFolderP || Promise.resolve()).then(vkFolderSync); }, 1500); }
+async function vkFolderSync() {
+const full = vkFolderFull; vkFolderFull = false;
+if (!fld.root || !(fld.state === 'ok' || fld.state === 'saving' || fld.state === 'decide') || sampleOn()) return;
+try {
+if (!vkDbP && indexedDB.databases && !(await indexedDB.databases()).some(d => d.name === 'grading-studio-videos') && !full) return;
+const used = await vkUsed(); if (!used.size) return;
+const { dir, out } = await vkFolderList(), have = new Set((await vkDo('readonly', o => o.getAllKeys())) || []);
+for (const id of used) {
+if (have.has(id)) {
+const r = await vkDo('readonly', o => o.get(id)), h = out.get(id); if (!r || !r.blob) continue;
+if (h && (await h.getFile()).size === r.size) continue;
+await r.blob.stream().pipeTo(await (await dir.getFileHandle(h ? h.name : vkFolderName(r), { create: true })).createWritable());
+} else if (full && out.has(id)) {
+try { await vkPut(await out.get(id).getFile(), id); } catch (e) { console.error(e); }
+}
+}
+} catch (e) { console.error(e); }
+}
+async function vkFromFolder(id) {
+if (!fld.root || fld.state === 'none' || fld.state === 'ask' || fld.state === 'lost') return null;
+try { const h = (await vkFolderList()).out.get(id); if (!h) return null; const f = await h.getFile(); return { name: f.name.replace(/ \[[\w-]+\](?=\.\w+$|$)/, ''), size: f.size, blob: f, url: URL.createObjectURL(f.type ? f : new Blob([f], { type: MIME[extOf(f.name)] || '' })) }; }
+catch (e) { console.error(e); return null; }
 }
 const vkClear = () => vkDo('readwrite', o => o.clear()).catch(e => console.error(e)).then(() => { for (const v of vkSeen.values()) if (v) URL.revokeObjectURL(v.url); vkSeen.clear(); });
 const vidPick = () => new Promise(res => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*,audio/*,' + Object.keys(MIME).map(x => '.' + x).join(','); inp.onchange = () => res(inp.files[0] || null); inp.click(); });
@@ -24220,7 +24328,7 @@ vkGet(id).then(k => {
 if (!hold.isConnected && !hold.parentNode) return;
 if (k) { hold.replaceWith(mediaCard(st, f, k)); return; }
 hold.querySelector('.mhead .muted').textContent = 'video file';
-hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<p class="vlnote">This video isn’t in this browser. A video file stays in the browser it was added in: it doesn’t go in take-home files or the linked folder.</p><div class="mctl"><button class="btn sm primary" data-vkback>Choose the video file…</button></div>');
+hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<p class="vlnote">This video isn’t in this browser or your folder. A video file doesn’t go in take-home files.</p><div class="mctl"><button class="btn sm primary" data-vkback>Choose the video file…</button></div>');
 hold.querySelector('[data-vkback]').onclick = async () => {
 const file = await vidPick(); if (!file) return;
 try { await vkPut(file, id); toast('The video is back'); openStudent(cur, f.path); } catch (err) { sayDlg(err.message); }
@@ -30516,7 +30624,7 @@ return '<h2 class="tcap">What the class needs next</h2><div class="tcard tneed">
 '<div class="tbars" role="img" aria-label="' + esc(s.rows.map(r => r.name + ' ' + fmtNum(Math.round(r.avg * 10) / 10) + ' of ' + r.top).join(', ')) + '">' + s.rows.map(r => '<span class="tbn">' + esc(r.name) + '</span><span class="tbt"><i class="' + (r === low && !flat ? 'low' : '') + '" style="width:' + Math.round(r.avg / r.top * 100) + '%"></i></span><span class="tbv">' + (Math.round(r.avg * 10) / 10).toFixed(1) + '</span>').join('') + '</div>' +
 (flat ? '' : '<p class="tsay">' + who + '</p>') + (canOpen(m) ? '<a class="tlink" href="' + batchHash(m.id, 'insights') + '">' + (low.low && !flat ? 'See who' : 'Open Insights') + T_ARROW + '</a>' : '') + '</div>';
 }
-function hsideShow() { $('#hside').hidden = false; }
+function hsideShow() { const h = $('#hside'); h.hidden = ![...h.children].some(e => !e.hidden); }
 const OLD_SHOWN = 3;
 let oldAll = false;
 function homeRender() {
@@ -32892,7 +33000,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.64":["The student list on the marking screen shows each score as a percent, with a % / pts switch beside the list's filter. Extra credit shows on its own after the score, like 93% +2%, in the list, the score panel and the score stamp.","Partners: a shared paper can have shared notes with each partner's own score, and Write for: just one partner puts marks on the paper for that partner alone. Partners sit together in a blue box in the student list, and the done count goes by group.","Entry list: open one task's scores in a small window beside your school's gradebook, in the gradebook's own order, so typing them in is quick. It's in the gradebook's More menu and in each column's box.","Email buttons open a new message in Gmail by default. Settings, Display has an Email section to use Outlook on the web or your computer's own mail app instead."]};
+const WHATS_NEW = {"1.28.65":["Comments, text boxes and Quick mark comments can be yellow: a dark gold that is easy to read on white paper.","The Planner opens on Plan lessons: this week, the lesson you worked on last, and your classes coming up that don't have a lesson yet. Units, Past lessons, Activities and Rubrics are under Library in the sidebar.","A linked folder now keeps plain copies of the students' papers and their video files, so you have them on your computer too.","Focus and To do now open Today, side by side, so they are at the top on a laptop too. Each class in the sidebar has a gradebook button, and the number beside a class now says it is papers left to score."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -35284,7 +35392,8 @@ const r = routeNow(), open = batch ? batchClass() : null, cur = batch ? open : r
 const row = c => {
 const n = classLeft(c), name = c === lib.loose ? 'No class' : c.name, on = cur === c;
 return '<a class="rnav' + (on ? ' on' : '') + '" href="' + classHash(c) + '" data-railcls="' + esc(c.id) + '" title="' + esc(name) + (n ? ' · ' + n + ' left to score' : '') + '"' + (on ? ' aria-current="page"' : '') + '>' +
-'<span class="rdot" style="background:' + classColor(c) + '"></span><span class="rl rname">' + esc(name) + '</span>' + (n ? '<span class="rl rcnt">' + n + '</span>' : '') + '</a>';
+'<span class="rdot" style="background:' + classColor(c) + '"></span><span class="rl rname">' + esc(name) + '</span>' + (n ? '<span class="rl rcnt">' + n + ' left to score</span>' : '') + '</a>' +
+(c === lib.loose ? '' : '<a class="rgb' + (on && r.tab === 'gradebook' ? ' on' : '') + '" href="' + classHash(c, 'gradebook') + '" title="' + esc(name) + ' gradebook" aria-label="' + esc(name) + ' gradebook"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5v10"/></svg></a>');
 };
 const h = lib.classes.map(row).join('') + (lib.loose.units.some(u => u.items.length) ? row(lib.loose) : '');
 const box = $('#railClasses'); if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
