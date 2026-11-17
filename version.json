@@ -1,22 +1,21 @@
 {
- "version": "1.28.68",
- "build": "b2f2dbc45314",
+ "version": "1.28.69",
+ "build": "4e351c35be69",
  "notes": [
-  "Group work has a third way: Group score, adjust a partner. You score the group once, and with Just and a partner’s name above the paper you can change one criterion for that partner only. The rest keeps following the group score, and Use group score puts it back.",
-  "Partners with their own scores can have typed notes just for one of them: pick Just and their name above the paper, and the paragraphs you write then are theirs alone, with a blue bar. The rest of the notes stay shared."
+  "A late paper on an assignment whose scores you typed into the gradebook: its card now has Add papers… (before, it was only in the ⋯ menu). Mark and score that student’s paper as usual. Everyone else keeps the score you typed, and the card still says Typed in."
  ],
  "files": {
-  "index.html": "d317fe4ee276e7e931c5ba2b56b83ee0069d61e1b5d632a1bfa02eb06dd0cc6b",
-  "planner.html": "befa42ea28bc6d994c83ee4ccedcb673f2e32b2c9c8120007a9fa71529272e80"
+  "index.html": "95d14327bb559ed778a1b52ce34f91c25f8262c30b71bb3da641b1c126e7eed5",
+  "planner.html": "b8dfde36e7b3d4c92e07b5f216c7b20c410d006c69c09b273bf9d91c173085d8"
  },
  "langs": {
-  "lang/zh-Hant.js": "74f5b9dd6579b91ef1cf6a3431e79c560a454a6efd749f9c9a2a800a9b0b6348",
-  "lang/zh-Hans.js": "c26fa6ca88731d0f27cfd6bfcae93d1b4145f5eaa7ebdbea38856f8c0d0159d4",
-  "lang/es.js": "65e561ba75865009ddfb9275239b8ee33b10cc50bda88e481a160b53607f1435",
-  "lang/fr.js": "693c777feb05fbcac1b2da51c4dc65620a0660175793ff166c6c18260cf1727a",
-  "lang/de.js": "e614653b4b00c31a5a97705322fa4259e3603354ce7ce61a8b39b5cf23bf4305",
-  "lang/pt-BR.js": "088233dc28f9e364b8a327ebc8aaf1604dcbe22e736702ed34624014f5812cfc",
-  "lang/ja.js": "913b6a050c3bd338df36c484c286bc3ae7d59dad090b662f362530d94dcde854",
-  "lang/ko.js": "c458cafdb522106522d348efd69092b586afbb875db0e78a4252d618159f0c34"
+  "lang/zh-Hant.js": "c409e5edf271a12dfec63a0fc997e5c0fe124adabc00488ec76e6d968df43652",
+  "lang/zh-Hans.js": "af8ecd0899440e76d00a8c30cec5f90f44a8fd46f97accea6a421e389bf2b864",
+  "lang/es.js": "95bd988a392e83eac319f03219f78b044738cac3d9b116f54d0c456e0b0c649a",
+  "lang/fr.js": "6d459fb20c83467a6bfc0a6b326336f63bf48107b175f2c06f6e244710121399",
+  "lang/de.js": "8757a1ad21122a92cff266ef4cb5863940b39c0c5a4ec19dc8d623c6d340ed86",
+  "lang/pt-BR.js": "2f45f9552a7b0348a207e895c11de90f79e77036cf2b2f6e63ac3e5048f07df6",
+  "lang/ja.js": "99909718c42a6548183b6e45afb90040c4c81048d6bc0aaf604353fe71c79875",
+  "lang/ko.js": "5610e0ff0ca683519f3c639bf69b7f2b5486c496248a3f3a42e98fcf4b3f664d"
  }
 }
