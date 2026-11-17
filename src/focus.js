@@ -202,7 +202,7 @@ function fcWorks() {
   return out.concat(fcLessons());
 }
 // Lessons to plan, from the Planner's timetable (src/today.js plan): each class meeting in the next week with its lesson, if it isn't
-// finished, or with nothing planned for it yet. Not on a phone, where the Planner isn't.
+// finished or ready (she said so in the Planner, src/planner/plfocus.js), or with nothing planned for it yet. Not on a phone, where the Planner isn't.
 // les:<lesson id>, or les:+<class id>|<day> for a meeting with nothing planned: the Planner makes its lesson when the session starts.
 function fcLessons() {
   if (!plan || document.documentElement.classList.contains('gsphone')) return [];
@@ -214,7 +214,7 @@ function fcLessons() {
     for (const r of t.rows) {
       if (!i && (!live || t.rows.indexOf(r) < t.rows.indexOf(live))) continue;   // over already today
       if (!r.lessons.length) out.push({ key: 'les:+' + r.c.id + '|' + day, id: '', les: true, fresh: true, nw: { c: r.c.id, d: day }, name: r.c.name, cls: when });
-      for (const l of r.lessons) if (!l.done && !seen.has(l.id)) { seen.add(l.id); out.push({ key: 'les:' + l.id, id: l.id, les: true, name: l.title, cls: r.c.name + ' · ' + when }); }
+      for (const l of r.lessons) if (!l.done && !l.ready && !seen.has(l.id)) { seen.add(l.id); out.push({ key: 'les:' + l.id, id: l.id, les: true, name: l.title, cls: r.c.name + ' · ' + when }); }
     }
   }
   return out.slice(0, 12);
@@ -235,8 +235,14 @@ function fcWork(key) {
   return null;
 }
 // The work the card suggests: one picked by hand, else the set she left off on, else the work picked last, else the first.
+// Lessons are never suggested on their own, with one exception: in a free period with no papers left to mark, the card offers the next
+// class with nothing planned, else the next lesson not ready yet (src/gradeplan.js gpFreeNow; off with free periods, and on a phone).
 function fcPicked(works) {
   if (fcS.pick === '') return '';
+  if (fcS.pick == null && gpReady && gpFreeNow() && !works.some(w => w.mark && w.left > 0)) {
+    const les = works.filter(w => w.les), l = les.find(w => w.fresh) || les[0];
+    if (l) return l.key;
+  }
   const b = gpReady && fcS.pick == null && gpBack(), want = fcS.pick != null ? fcS.pick : b ? 'mark:' + b.id : fcLog().last;
   return works.some(w => w.key === want) ? want : works.length && !works[0].les ? works[0].key : '';
 }
@@ -520,7 +526,8 @@ function fcWeekHtml(c) {
 function fcWorkSay(w) {
   const sp = x => '<span>' + esc(x) + '</span>';
   if (!w) return sp('A session with nothing set: the timer only.');
-  if (w.les) return sp(w.fresh ? 'A new lesson to plan' : 'A lesson to plan');
+  // a lesson, and once 3 lessons she called ready say how long one takes her, how long that is (src/gradeplan.js gpLesPace)
+  if (w.les) { const lp = gpReady ? gpLesPace() : 0; return sp(w.fresh ? 'A new lesson to plan' : 'A lesson to plan') + (lp ? ' · ' + sp('about ' + people(Math.max(1, Math.round(lp / 60)), 'minute') + ' at your pace') : ''); }
   if (!w.mark) return sp('A to-do');
   if (!w.left) return sp(w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score');
   const it = cardOfKept(w.id), id = it ? it.id : '', pace = gpReady ? gpPaces()(id) : 0, n = pace ? gpPaceN(id) : 0;
@@ -533,10 +540,10 @@ const FC_CHEV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6
 // fcS.chg: the list is open; fcS.more: More is open; fcS.hand: the work was picked by hand on this visit.
 function fcStartHtml(card) {
   const c = fcConf(), works = fcWorks(), key = fcPicked(works), w = works.find(x => x.key === key) || null, f = gpReady ? gpFreeNow() : null;
-  const len = fcS.len || (w && w.les ? c.llen : f ? gpFreeLen(f) : c.len), g = fcSgNow(w, len), open = w && w.mark && w.left, why = [];
+  const len = fcS.len || (w && w.les ? (f ? Math.min(c.llen, gpFreeLen(f)) : c.llen) : f ? gpFreeLen(f) : c.len), g = fcSgNow(w, len), open = w && w.mark && w.left, why = [];
   const opt = x => '<option value="' + esc(x.key) + '"' + (x.key === key ? ' selected' : '') + ' data-raw>' + esc(x.name + (x.cls ? ' · ' + x.cls : '')) + '</option>';
   const marks = works.filter(x => x.mark), tds = works.filter(x => !x.mark && !x.les), les = works.filter(x => x.les), sep = '<option disabled data-raw>──────────</option>';
-  let h = '<div class="fcbody">' + fcGoalHtml(c, true) + '<div class="fcline"></div><div class="sug">';
+  let h = '<div class="fcbody">' + fcGoalHtml(c, true) + (card && gpReady ? gpPlanRow() : '') + '<div class="fcline"></div><div class="sug">';
   if (fcS.chg) h += '<div class="sugpick"><div class="fcgh"><label class="fcl">Work on</label><button class="link" data-fckeep>Done</button></div><select class="fcwork" data-fcwork aria-label="Work on">' + marks.map(opt).join('') +
     (marks.length && tds.length ? sep : '') + tds.map(opt).join('') + ((marks.length || tds.length) && les.length ? sep : '') + les.map(opt).join('') + '<option value=""' + (key === '' ? ' selected' : '') + '>' + esc(tr('Nothing in particular')) + '</option></select></div>';
   else h += '<div class="sugh"><span class="t"><b data-raw>' + esc(w ? w.name : tr('Nothing in particular')) + '</b>' + (w && w.cls ? ' <span data-raw>· ' + esc(w.cls) + '</span>' : '') + '</span><button class="link" data-fcchg>Change</button></div>';
@@ -558,7 +565,7 @@ function fcCardRender() {
   const box = $('#fcCardBody'); if (!box) return;
   const r = fcRun(), on = r && r.st !== 'done';
   if (box.contains(document.activeElement) && document.activeElement.matches('[data-fcsgx], [data-fcby]')) return;   // not under her typing
-  const h = on ? '<div class="fcbody">' + fcGoalHtml(fcConf(), true) + (tkReady ? tkWeekHtml() : '') + '<div class="fcline"></div><div class="fcnogoal"><span>' + (r.st === 'brk' || r.st === 'brkup' ? 'You are on a break' : 'A session is on') + '</span><button class="btn sm" data-fcshow>Show the timer</button></div></div>' : fcStartHtml(true);
+  const h = on ? '<div class="fcbody">' + fcGoalHtml(fcConf(), true) + (gpReady ? gpPlanRow() : '') + (tkReady ? tkWeekHtml() : '') + '<div class="fcline"></div><div class="fcnogoal"><span>' + (r.st === 'brk' || r.st === 'brkup' ? 'You are on a break' : 'A session is on') + '</span><button class="btn sm" data-fcshow>Show the timer</button></div></div>' : fcStartHtml(true);
   if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
 }
 const fcHead = (cap, fold) => '<div class="fchead"><h2 class="tcap">' + cap + '</h2><span class="sp"></span>' + (fold ? '<button class="icon" data-fcfold title="Fold it away" aria-label="Fold it away">–</button>' : '<button class="icon" data-fcclose title="Close" aria-label="Close">✕</button>') + '</div>';

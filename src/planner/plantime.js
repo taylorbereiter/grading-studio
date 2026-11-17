@@ -73,6 +73,17 @@ function ptLessonSecs(id) {
   if (r && r.k === 'l' && r.l === id && (r.st === 'run' || r.st === 'paused')) s += pfLesSecs(r);
   return s;
 }
+// Her planning pace: the middle of the planning times of the last 10 lessons she called ready (plfocus.js) that had a minute or more.
+// Worked out from her own time only, never stored, and nothing until there are 3 of them. src/gradeplan.js gpLesPace says the same.
+function ptPace() {
+  const days = Object.values(ptPlan().days || {});
+  const tot = id => { let s = ptPend.a[id] || 0; for (const d of days) if (d && d.a && d.a[id]) s += d.a[id]; return s; };
+  const xs = L.lessons.filter(l => l.ready && l.ready.at).sort((a, b) => b.ready.at - a.ready.at).map(l => tot(l.id)).filter(s => s >= 60).slice(0, 10);
+  if (xs.length < 3) return null;
+  const o = xs.slice().sort((a, b) => a - b), h = o.length >> 1;
+  return { s: o.length % 2 ? o[h] : (o[h - 1] + o[h]) / 2, n: xs.length };
+}
+const ptPaceSay = p => { const m = Math.max(1, Math.round(p.s / 60)); return 'about ' + (m < 60 ? m + ' minute' + (m === 1 ? '' : 's') : ptSay(p.s)) + ' a lesson, from your last ' + p.n; };
 function ptSay(secs) { const m = Math.round(secs / 60), h = Math.floor(m / 60); return h ? h + ' hr' + (m % 60 ? ' ' + (m % 60) + ' min' : '') : m + ' min'; }
 function ptBadge(l) {
   const s = l && l.id ? ptLessonSecs(l.id) : 0;
@@ -83,5 +94,5 @@ setInterval(ptTick, PT_STEP * 1000);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') ptFlush(); });
 window.addEventListener('pagehide', ptFlush);
 window.addEventListener('blur', ptFlush);
-window.__plantime = { tick: ptTick, flush: ptFlush, lessonSecs: ptLessonSecs, active: ago => { ptLast = Date.now() - (ago || 0); }, pend: () => ptPend, run: () => ptRun, inClass: ptInClass };
+window.__plantime = { tick: ptTick, flush: ptFlush, lessonSecs: ptLessonSecs, pace: () => ptPace(), active: ago => { ptLast = Date.now() - (ago || 0); }, pend: () => ptPend, run: () => ptRun, inClass: ptInClass };
 ptReady = true;

@@ -590,3 +590,59 @@ test('Pop out shows the slides in a window of their own, kept in step, and the k
     assert.deepEqual(a.errors, []);
   } finally { await a.done(); }
 });
+
+// The phone's "After class" note (src/phone.js) waits in gsp.taughtIn until the Planner puts it on the lesson (taughtFold).
+test('a note from the phone goes onto its lesson when the Planner opens or hears of it: once, never over a later note here, and a removed one stays removed', async () => {
+  const a = await open();
+  try {
+    const { page } = a;
+    const { id, today } = await seed(page);
+    const taught = () => page.evaluate(id => window.__planner.L.lessons.find(l => l.id === id).taught || [], id);
+    const tin = () => page.evaluate(() => JSON.parse(localStorage.getItem('gsp.taughtIn')));
+    const t0 = Date.now();
+    // A2 was noted here after the phone's note for it was written
+    await page.evaluate(async (id, today, t0) => {
+      const P = window.__planner, l = P.L.lessons.find(l => l.id === id);
+      l.taught = window.__present.normTaught([{ classId: 'A2', date: today, slide: 5, of: 5, note: 'Noted on the Mac', at: t0 + 1000 }]);
+      document.querySelector('[data-f="ltitle"]').dispatchEvent(new Event('input', { bubbles: true }));   // a save, as typing makes one
+      await new Promise(r => setTimeout(r, 700));
+      localStorage.setItem('gsp.taughtIn', JSON.stringify({ items: {
+        [id + '|A1|' + today]: { slide: 3, of: 5, x: 'Start with the exit ticket', t: t0 },
+        [id + '|A2|' + today]: { slide: 2, of: 5, x: 'From the phone, earlier', t: t0 },
+        ['gone|A1|' + today]: { slide: 1, of: 2, x: 'A lesson not here', t: t0 } } }));
+    }, id, today, t0);
+    await page.reload({ waitUntil: 'load' });
+    await page.waitForFunction(() => window.__planner && document.querySelector('#lessons .ls-top'));
+    await until(page, k => (JSON.parse(localStorage.getItem('gsp.taughtIn')).items[k] || {}).f === 1, id + '|A1|' + today);
+    let got = await taught();
+    assert.deepEqual(got.map(t => [t.classId, t.slide, t.of, t.note, t.at]), [['A1', 3, 5, 'Start with the exit ticket', t0], ['A2', 5, 5, 'Noted on the Mac', t0 + 1000]]);
+    let T = await tin();
+    assert.equal(T.items[id + '|A2|' + today].f, 1, 'passed over, and marked so');
+    assert.equal(T.items['gone|A1|' + today].f, undefined, 'a lesson not here yet: it waits');
+    // saved in the Planner's own store, as a note made here is
+    const kept = await page.evaluate(id => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('lessons').objectStore('lessons').get(id); q.onsuccess = () => res(q.result.taught); }; }), id);
+    assert.equal(kept.length, 2);
+    // again: nothing changes
+    await page.evaluate(() => window.__present.taughtFold());
+    assert.deepEqual(await taught(), got);
+    // removed here: it stays removed when the Planner opens again
+    await page.evaluate(id => window.__planner.openLessonForTest(window.__planner.L.lessons.find(l => l.id === id), 0), id);
+    await until(page, s => !!document.querySelector(s), '[data-pr="tdel"][data-i="0"]');
+    await page.$eval('[data-pr="tdel"][data-i="0"]', b => b.click());
+    const stored = () => page.evaluate(id => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('lessons').objectStore('lessons').get(id); q.onsuccess = () => res((q.result.taught || []).map(t => t.classId)); }; }), id);
+    for (let i = 0; i < 100 && (await stored()).length !== 1; i++) await wait(50);
+    await page.reload({ waitUntil: 'load' });
+    await page.waitForFunction(() => window.__planner && document.querySelector('#lessons .ls-top'));
+    await page.evaluate(() => window.__present.taughtFold());
+    assert.deepEqual((await taught()).map(t => t.classId), ['A2']);
+    // a newer note from the phone, while the Planner is open in another tab: it goes on, over the older one here
+    const other = await a.browser.newPage();
+    await other.goto(a.server.url + 'blank');
+    await other.evaluate((k, t) => { const T = JSON.parse(localStorage.getItem('gsp.taughtIn')); T.items[k] = { slide: 4, of: 5, x: 'Phone, later', t }; localStorage.setItem('gsp.taughtIn', JSON.stringify(T)); }, id + '|A2|' + today, t0 + 5000);
+    await until(page, id => (window.__planner.L.lessons.find(l => l.id === id).taught || []).some(t => t.note === 'Phone, later'), id);
+    got = await taught();
+    assert.deepEqual(got.map(t => [t.classId, t.slide, t.note]), [['A2', 4, 'Phone, later']]);
+    await other.close();
+    assert.deepEqual(a.errors, []);
+  } finally { await a.done(); }
+});

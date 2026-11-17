@@ -283,15 +283,18 @@ function todoAuto() {
     const st = keptState(m), w = keptWhere(m);
     add('back', 'back:' + m.id, 'Hand back ' + (m.name || 'Student work'), [w.cls ? w.cls.name : '', (st.of === 1 ? 'the one paper' : 'all ' + st.of) + ' ' + st.word].filter(Boolean).join(' · '), w.cls, today, { label: 'Return papers', href: batchHash(m.id, 'return') }, 'x');
   }
-  // A class in the next few days with nothing planned for it, on the day it meets.
+  // A class in the next few days with nothing planned for it, on the day it meets. A lesson she has begun (planning time on it in the
+  // last 14 days, src/gradeplan.js gpLesWorked) keeps the line, under its own name, until she says it is ready or its finished deck is in.
   if (!d.off.plan && plan) for (let i = 0; i < 4; i++) {
     const day = tdAdd(today, i); if ((plan.semStart && day < plan.semStart) || (plan.semEnd && day > plan.semEnd)) continue;
     const t = todayRows(plan, tdAt(day).getTime()), live = i ? null : nowRow(t.rows);
     for (const r of t.rows) {
-      if (r.lessons.length || (!i && (!live || t.rows.indexOf(r) < t.rows.indexOf(live)))) continue;   // planned, or over already today
+      if (!i && (!live || t.rows.indexOf(r) < t.rows.indexOf(live))) continue;   // over already today
+      let on = null;
+      if (r.lessons.length) { if (!gpReady || r.lessons.some(l => l.ready || l.done)) continue; on = r.lessons.find(l => gpLesWorked(l.id) > 0); if (!on) continue; }   // planned
       const when = i === 0 ? 'today’s' : i === 1 ? 'tomorrow’s' : tdAt(day).toLocaleDateString(LANG_LOCALE, { weekday: 'long' }) + '’s';
-      const row = add('plan', 'plan:' + r.c.id + ':' + day + ':' + r.m.start, 'Plan ' + when + ' ' + r.c.name + ' lesson', [planTime(r.m.start), 'nothing planned yet'].filter(Boolean).join(' · '), tdGradeClass(r.c), day, { label: 'Plan it', href: planUrl('#plan/' + encodeURIComponent(r.c.id) + '/' + day) }, 'x', r.c.color);
-      if (row) { row.pid = r.c.id; row.day = day; }
+      const row = add('plan', 'plan:' + r.c.id + ':' + day + ':' + r.m.start, 'Plan ' + when + ' ' + r.c.name + ' lesson', [planTime(r.m.start), on ? on.title : 'nothing planned yet'].filter(Boolean).join(' · '), tdGradeClass(r.c), day, { label: 'Plan it', href: planUrl('#plan/' + encodeURIComponent(r.c.id) + '/' + day) }, on ? 'w' : 'x', r.c.color);
+      if (row) { row.pid = r.c.id; row.day = day; if (on) row.lid = on.id; }
     }
   }
   if (!d.off.miss) for (const c of lib.classes) {
@@ -419,7 +422,7 @@ function tdSideHtml(rows, today) {
   if (r.auto) return '<div class="tcard tdpane" data-tdpane="' + esc(r.id) + '">' + x + '<h2 class="tdtitle" data-raw>' + esc(r.x) + '</h2><p class="tdm"><span class="tdtag">From your work</span>' + (r.sub ? '<span data-raw>' + esc(r.sub) + '</span>' : '') + '</p>' + when + catF +
     '<p class="muted tdsay">The app noticed this from your saved work. It goes by itself when the work is done.</p><div class="tdacts">' + (r.btn.open ? '<button class="btn primary" data-tdopen="' + esc(r.btn.open) + '">' + r.btn.label + '</button>' : '<a class="btn primary" href="' + esc(r.btn.href) + '">' + r.btn.label + '</a>') +
     (r.kind === 'mark' ? '<button class="btn" data-tdfocus="' + esc('mark:' + r.key.slice(5)) + '" title="Start a focus session on these papers">Focus on this</button>' : '') +
-    (r.kind === 'plan' && r.day ? '<button class="btn" data-tdfocus="' + esc('les:+' + r.pid + '|' + r.day) + '" title="Plan this lesson in a focus session">Focus on this</button>' : '') +
+    (r.kind === 'plan' && r.day ? '<button class="btn" data-tdfocus="' + esc(r.lid ? 'les:' + r.lid : 'les:+' + r.pid + '|' + r.day) + '" title="Plan this lesson in a focus session">Focus on this</button>' : '') +
     '<span class="sp"></span><button class="btn" data-tdhide>Hide this</button></div></div>';
   const it = r.it, c = r.c, pc = tdPlanClass(c);
   const cls = '<div class="tdf"><label class="tdl" for="tdCls">Class</label><div class="tdv"><select id="tdCls" class="btn sm"><option value="">No class</option>' + lib.classes.map(k => '<option value="' + esc(k.id) + '"' + (k === c ? ' selected' : '') + '>' + esc(k.name) + '</option>').join('') + '</select></div></div>';

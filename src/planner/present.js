@@ -127,6 +127,37 @@ function taughtDlg(l, pre) {
   box.onclick = e => { if (e.target.closest('[data-x]')) return closeDlg(); if (e.target.closest('[data-ok]')) save(); };
 }
 
+/* ---------- notes from the phone (gsp.taughtIn) ---------- */
+// The phone never writes a lesson. Its "After class" note waits in gsp.taughtIn ({ items: { '<lesson>|<class>|<date>': { slide, of, x, t, f } } }),
+// comes here with the grading page's sync (src/app/drive.js, tn), and is put on the lesson here, as if noted in taughtDlg: unless a note
+// for that class and day was written here later. Once put on (or passed over), it is marked f: 1, so a note removed here stays removed.
+const TAUGHT_IN = 'gsp.taughtIn';
+let taughtFolding = null;
+function taughtFold() { if (!taughtFolding) taughtFolding = taughtFoldNow().catch(() => { }).finally(() => { taughtFolding = null; }); return taughtFolding; }
+async function taughtFoldNow() {
+  const read = () => { try { const T = JSON.parse(localStorage.getItem(TAUGHT_IN) || 'null'); return T && typeof T === 'object' && T.items && typeof T.items === 'object' ? T : null; } catch { return null; } };
+  const T = read(); if (!T || !L.db) return;
+  const done = [], put = new Set();
+  for (const [k, v] of Object.entries(T.items)) {
+    if (!v || typeof v !== 'object' || v.f || !(+v.t > 0)) continue;
+    const i = k.indexOf('|'), j = k.lastIndexOf('|'); if (i < 0 || j <= i) continue;
+    const l = L.lessons.find(x => x.id === k.slice(0, i)); if (!l) continue;   // not here (yet): it waits
+    const classId = k.slice(i + 1, j), date = k.slice(j + 1), had = taughtAt(l, classId, date);
+    if (!had || (had.at || 0) < +v.t) {
+      const t = { classId, date, slide: v.slide, of: v.of, note: v.x, at: +v.t }; if (had && had.agenda) t.agenda = had.agenda;
+      l.taught = normTaught([...(l.taught || []).filter(x => x !== had), t]); put.add(l);
+    }
+    done.push([k, v.t]);
+  }
+  if (!done.length) return;
+  for (const l of put) await lPut(l);
+  const now = read() || { items: {} };   // read again: the sync may have brought more while the lessons were saved
+  for (const [k, t] of done) if (now.items[k] && now.items[k].t === t) now.items[k] = { ...now.items[k], f: 1 };
+  try { localStorage.setItem(TAUGHT_IN, JSON.stringify(now)); } catch { }
+  for (const l of put) taughtRedraw(l);
+}
+window.addEventListener('storage', e => { if (e.key === TAUGHT_IN && e.newValue) taughtFold(); });
+
 /* ---------- starting ---------- */
 // Where to begin: the slide asked for; or, from slide 1, the slide this class stopped on last time if it stopped partway.
 function prResume(l, slot) {
@@ -652,4 +683,4 @@ document.addEventListener('click', e => {
     return undoToast('Note removed', () => { l.taught = normTaught([...(l.taught || []), t]); lPut(l); taughtRedraw(l); });
   }
 });
-window.__present = { PR, start: presentStart, end: presentEnd, timer: prTimerStart, normTaught, taughtDlg, out: prOut };
+window.__present = { PR, start: presentStart, end: presentEnd, timer: prTimerStart, normTaught, taughtDlg, taughtFold, out: prOut };

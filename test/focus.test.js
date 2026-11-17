@@ -327,3 +327,38 @@ test('a lesson session: a stretch with nothing done is not counted as planning',
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('a lesson she said is ready is not offered to plan, and once 3 ready lessons have planning time the card says how long one takes her', async () => {
+  const { page, close } = await openApp(browser, {});
+  const at = n => { const x = new Date(); x.setHours(12, 0, 0, 0); x.setDate(x.getDate() + n); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); };
+  // a made-up class that meets late every day; R1 tomorrow is ready, N1 the day after is not, and past lessons she said were ready
+  // had 20, 40 and 60 minutes of planning: the middle one is her pace
+  const put = n => page.evaluate(async (d, n) => {
+    const db = await new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onupgradeneeded = () => { r.result.createObjectStore('lessons', { keyPath: 'id' }); r.result.createObjectStore('kv'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    const l = (id, date, x) => ({ id, title: 'Made-up lesson ' + id, slots: date ? [{ classId: 'A1', date }] : [], slides: [{}], updated: 1, ...x });
+    await new Promise((res, rej) => {
+      const tx = db.transaction(['kv', 'lessons'], 'readwrite');
+      tx.objectStore('kv').put({ classes: [{ id: 'A1', name: 'Course A', color: '#0E7C86', meets: [0, 1, 2, 3, 4, 5, 6].map(dow => ({ dow, start: '23:58', end: '23:59' })) }], daysOff: [] }, 'setup');
+      const o = tx.objectStore('lessons'); o.clear(); o.put(l('R1', d.d1, { ready: { at: 10 } })); o.put(l('N1', d.d2));
+      ['P1', 'P2', 'P3'].slice(0, n).forEach((id, i) => o.put(l(id, '', { ready: { at: 100 + i } })));
+      tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+    });
+    db.close();
+    localStorage.setItem('gsp.planTime', JSON.stringify({ days: { [d.y]: { l: 7200, a: { P1: 1200, P2: 2400, P3: 3600 } } }, names: {} }));
+  }, { y: at(-1), d1: at(1), d2: at(2) }, n);
+  const say = async n => {
+    await put(n);
+    await page.reload(); await page.waitForFunction(() => window.__gs.fcWorks().some(w => w.les));
+    const keys = await page.evaluate(() => window.__gs.fcWorks().filter(w => w.les).map(w => w.key));
+    assert.ok(!keys.includes('les:R1'), 'a ready lesson is not offered');
+    assert.ok(keys.includes('les:N1'));
+    await page.click('#fcCard [data-fcchg]'); await page.select('#fcCard [data-fcwork]', 'les:N1');
+    return page.$eval('#fcCard .fcsay', e => e.textContent);
+  };
+  assert.equal(await say(2), 'A lesson to plan', 'two ready lessons: no pace yet');
+  assert.equal(await page.evaluate(() => window.__gs.gpLesPace()), 0);
+  assert.equal(await say(3), 'A lesson to plan · about 40 minutes at your pace');
+  assert.equal(await page.evaluate(() => window.__gs.gpLesPace()), 2400);
+  assert.deepEqual(page.errors, []);
+  await close();
+});

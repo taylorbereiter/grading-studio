@@ -1,6 +1,6 @@
 {
  "version": "1.28.70",
- "build": "543373e96d51",
+ "build": "41f8e5a8962a",
  "notes": [
   "Plan lessons has a Focus button on the lesson to pick up and on each class coming up without a lesson. A to-do to plan a lesson has Focus on this, and Plan it opens that class and day.",
   "Lesson focus sessions leave out time you were away, and when one ends you see how long the lesson has taken so far.",
@@ -8,17 +8,17 @@
   "More of the partner controls and Strengths and concerns are in your language, Today's times follow your language, and the Entry list window follows dark mode."
  ],
  "files": {
-  "index.html": "1c01d1a9b9eafe63368b72272a58f18be5590969d86407b08948b66483343fd4",
-  "planner.html": "f9d429d6aa94150102be33be9669f3aaee0db71f55777d7823c35338f55654f7"
+  "index.html": "1e3b63424a3f934481b33b95bdd884f811f88ec4993755771f739f6ab0dae0ed",
+  "planner.html": "195437c18035f3ce4b14799983d2a1a4fe0e6e2e52ceb7fdc29e900b21bd135c"
  },
  "langs": {
-  "lang/zh-Hant.js": "0561aff164054b9e2626ea1a899efe50572bd8d5453d4acba6987e1e102c3f8b",
-  "lang/zh-Hans.js": "c10c93f7d53e4926406379d1d04cdb437bca22b73419dd1af4923b7ce80bb4da",
-  "lang/es.js": "729e03aebae55876e69b0112f65c38044a1dc7a0a01c3116d881ec76c336de6a",
-  "lang/fr.js": "3d4f1f0fa7b26d8cbe3964485ffbcb6e7b3a720cdc51ec993ec5e696ab10128b",
-  "lang/de.js": "2af6480f44c68a8e144caf754157a5ea37de5200c8a38c1b1db9dc90d1bf615a",
-  "lang/pt-BR.js": "869d4366496a6b130d61a802fefd719ae054f82a2d6515d27f315641979d856e",
-  "lang/ja.js": "663e14793bb93df9845f9ff4bc566e4f952e4884050b035144fd2d46689bb2d4",
-  "lang/ko.js": "508d1553b8a17b906f19c0c4c64b992025587ff73318ab1986ec4738072311dc"
+  "lang/zh-Hant.js": "2cdb8f598144fc17878319a5d00dacef153131cac99c775dd19750b698b5f46a",
+  "lang/zh-Hans.js": "b57ae1b020f2c4fa409d1650d3d04d24356a3e0ad82b2f0deafdde94c385b05b",
+  "lang/es.js": "b79ba812b5332e1f2706979747033bd6733f544b441b7c399ef9781c2f1f564e",
+  "lang/fr.js": "3bea80209c07a4d71e1f47f2ca37a63ec4f00f5f13fbe7a05d1ee7ae969a5d67",
+  "lang/de.js": "337f7d422ccc5465bcf7f462e838cd9db0790b63be83157110955f103f15d748",
+  "lang/pt-BR.js": "b6c3ad5e8807ce0e5ef413f092c4d9bf2db5cbe387b2cfd0546ceeef00468e01",
+  "lang/ja.js": "08c90bfb0af73bbe661aad542ff9233940e624177579270caf3c2b949dc52e69",
+  "lang/ko.js": "c0feed628158b734ebe6fd7019edaed513033c2aeade2944959767a7e62f97fc"
  }
 }

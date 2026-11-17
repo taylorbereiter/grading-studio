@@ -3,7 +3,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, appReady, goTo, classPage, pick, catchDownloads } = require('./helpers/app');
+const { openApp, appReady, goTo, classPage, pick, catchDownloads, answerDlg } = require('./helpers/app');
 
 let browser;
 before(async () => { browser = await launch(); });
@@ -181,6 +181,88 @@ test('a student renamed on the roster keeps their days when their ID says who th
   await page.$eval('#cNames', (t, v) => { t.value = v; t.dispatchEvent(new Event('input', { bubbles: true })); }, NAMES.map(n => n === 'Dov Madeup' ? 'Dov Renamed\t900104' : n).join('\n'));
   await page.click('#dlg .btn.primary'); await page.waitForFunction(() => window.__gs.state().lib.classes[0].names.includes('Dov Renamed'));
   assert.deepEqual((await att(page, '2026-09-01')).m, { 'Dov Renamed': 'a', 'Esme Placeholder': 'l' });
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+// On a phone (?phone=1, src/phone.js): today's attendance for one class, one large row per student. A tap goes Present, Absent, Late and
+// back; ⋯ has Absent, excused, a note and Clear. Saved through the same attSet, attTake and attClear as the Attendance tab.
+const phoneSeed = more => {
+  const s = seed(more), d = new Date();
+  s.ls['gs.phone'] = '1';
+  s.ls['gs.planCopy'] = JSON.stringify({ classes: [{ id: 'k1', name: 'Grade 9 English', color: '#1F6FB2', meets: [{ dow: d.getDay(), start: '00:00', end: '23:59' }] }], semStart: '', semEnd: '', daysOff: [] });
+  return s;
+};
+test('on the phone: Today’s line opens attendance, a tap cycles each student, Everyone is here takes the day, and ⋯ excuses or notes', async () => {
+  const { page, close } = await openApp(browser, { seed: phoneSeed() });
+  const today = await page.evaluate(() => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); });
+  const states = () => page.$$eval('#phAtt .phattrow', rs => rs.map(r => (r.className.match(/\bs([plae])\b/) || [])[1]).join(''));
+  // Today: the line under the class opens the phone's own attendance screen
+  await page.waitForSelector('#today .tatt');
+  assert.equal(await page.$eval('#today .tatt', a => a.getAttribute('href')), '#/att/c1');
+  await page.click('#today .tatt');
+  await page.waitForSelector('#vAtt:not([hidden]) #phAtt .phattrow');
+  assert.equal(await hash(page), '#/att/c1');
+  assert.equal(await text(page, '#phAttSum'), 'Not taken yet');
+  assert.equal(await states(), 'pppppp');
+  assert.deepEqual(await page.$$eval('#vAtt .btn.primary', b => b.map(x => x.textContent)), ['Everyone is here'], 'one blue button');
+  assert.equal(await stored(page, today), null, 'looking saves nothing');
+  // a tap: Absent; again: Late; again: Present, which isn't written down
+  await page.click('[data-phatt="3"]');
+  assert.deepEqual((await stored(page, today)).m, { 'Dov Madeup': 'a' });
+  await page.click('[data-phatt="3"]');
+  assert.deepEqual((await stored(page, today)).m, { 'Dov Madeup': 'l' });
+  assert.equal(await states(), 'ppplpp');
+  await page.click('[data-phatt="3"]');
+  assert.deepEqual((await stored(page, today)).m, {});
+  assert.equal(await text(page, '#phAttSum'), '6 present');
+  assert.equal(await page.$('[data-phattall]'), null, 'the day is taken');
+  // ⋯: Absent, excused, and a note
+  await page.click('[data-phattrow="0"] [data-km]'); await page.click('[data-phattrow="0"] [data-phattset="e"]');
+  assert.deepEqual((await stored(page, today)).m, { 'Aria Testwell': 'e' });
+  assert.equal(await states(), 'eppppp');
+  await page.click('[data-phattrow="0"] [data-km]'); await page.click('[data-phattrow="0"] [data-phattnote]');
+  await answerDlg(page, { typed: 'Dentist' });
+  await page.waitForFunction(() => /Dentist/.test(document.querySelector('[data-phattrow="0"]').textContent));
+  assert.deepEqual((await stored(page, today)).n, { 'Aria Testwell': 'Dentist' });
+  // Clear puts the student back to present, with no note
+  await page.click('[data-phattrow="0"] [data-km]'); await page.click('[data-phattrow="0"] [data-phattset="p"]');
+  const r = await stored(page, today); assert.deepEqual(r.m, {}); assert.equal(r.n, undefined);
+  // another class, from its chip: Everyone is here
+  await page.click('#phAtt .phchip:not(.on)');
+  await page.waitForFunction(() => location.hash === '#/att/c2');
+  await page.waitForSelector('[data-phattall]');
+  await page.click('[data-phattall]');
+  await page.waitForFunction(() => !document.querySelector('[data-phattall]'));
+  assert.deepEqual(await page.evaluate(d => JSON.parse(localStorage.getItem('gs.lib')).classes[1].att[d].m, today), {});
+  assert.equal(await text(page, '#phAttSum'), '1 present');
+  // Scores: an Attendance line for the class picked, above its assignments
+  await goTo(page, '#/scores/c1'); await page.waitForSelector('#phScores [data-phattgo]');
+  assert.equal(await page.$eval('#phScores [data-phattgo]', a => a.getAttribute('href')), '#/att/c1');
+  assert.match(await text(page, '#phScores [data-phattgo]'), /Attendance ?6 present/);
+  // the screen left open past midnight: a tap draws it again for the new day and writes nothing
+  await goTo(page, '#/att/c1'); await page.waitForSelector('#phAtt .phattbar');
+  assert.equal(await page.$eval('#phAtt .phattbar', b => b.dataset.day), today);
+  await page.$eval('#phAtt .phattbar', b => { b.dataset.day = '2000-01-01'; });
+  const was = JSON.stringify(await stored(page, today));
+  await page.click('[data-phatt="2"]');
+  assert.equal(await page.$eval('#phAtt .phattbar', b => b.dataset.day), today, 'drawn again for today');
+  assert.equal(JSON.stringify(await stored(page, today)), was, 'the tap wrote nothing');
+  await page.click('[data-phatt="2"]');
+  assert.deepEqual((await stored(page, today)).m, { 'Cleo Fixture': 'a' });
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('on the phone, with attendance turned off: no line on Today or Scores, and its address goes to Today', async () => {
+  const { page, close } = await openApp(browser, { seed: phoneSeed({ me: { att: false } }) });
+  await page.waitForSelector('#today .trow');
+  assert.equal(await page.$('#today .tatt'), null);
+  await goTo(page, '#/scores/c1'); await page.waitForSelector('#phScores .tcap');
+  assert.equal(await page.$('#phScores [data-phattgo]'), null);
+  await goTo(page, '#/att/c1');
+  await page.waitForFunction(() => location.hash === '#/' || location.hash === '');
+  assert.equal(await page.$eval('#vAtt', v => v.hidden), true);
   assert.deepEqual(page.errors, []);
   await close();
 });

@@ -104,6 +104,51 @@ function gpBack() {
   return m && Date.now() - m.t > 20 * 60e3 && Date.now() - m.t < 7 * 864e5 && !(batch && batch.id === m.id && !$('#app').hidden) ? m : null;
 }
 
+/* ---------- planning lessons: next week's lessons, and how long a lesson takes her ---------- */
+// Next week (Monday to Sunday after this one) on the Planner's timetable: each class meeting on a school day inside the semester, how
+// many have a lesson, and how many of those she said are ready (or have their finished deck). The semester's first and last weeks are
+// weeks, as the Planner keeps them. src/planner/plannext.js counts the same for its own page. Not on a phone, where the Planner isn't.
+function gpPlanWeek() {
+  if (!gpReady || typeof plan === 'undefined' || !plan || document.documentElement.classList.contains('gsphone')) return null;
+  const mon = gpAdd(gpMon(fcToday()), 7), out = { of: 0, planned: 0, ready: 0, dots: [] };
+  if ((plan.semStart && gpAdd(mon, 6) < plan.semStart) || (plan.semEnd && mon > gpMon(plan.semEnd))) return out;
+  for (let i = 0; i < 7; i++) {
+    const day = gpAdd(mon, i); if (plan.semStart && day < plan.semStart) continue;
+    for (const r of todayRows(plan, new Date(day + 'T12:00:00').getTime()).rows) {
+      const p = r.lessons.length > 0, ok = r.lessons.some(l => l.ready || l.done);
+      out.of++; if (p) out.planned++; if (ok) out.ready++;
+      out.dots.push(ok ? 2 : p ? 1 : 0);
+    }
+  }
+  return out;
+}
+// Under today's goal on the Focus card: "Next week 6 / 9 lessons planned", a dot for each meeting, filled for a ready lesson and lighter
+// for one planned but not ready yet, in the order they meet. A bar when there are more than the card's dots. Hidden with nothing to plan.
+function gpPlanRow() {
+  const w = gpPlanWeek(); if (!w || !w.of) return '';
+  const all = w.planned >= w.of, n = '<span data-raw>' + w.planned + ' / ' + w.of + '</span>';
+  const viz = w.of <= FC_DOTS ? '<span class="fcdots gpdots" aria-hidden="true">' + w.dots.map(d => '<i' + (d === 2 ? ' class="fon"' : d === 1 ? ' class="fpl"' : '') + '></i>').join('') + '</span>'
+    : '<span class="fcbar" aria-hidden="true"><i style="width:' + Math.round(w.planned / w.of * 100) + '%"></i></span>';
+  return '<div class="fcgoal gpwk' + (all ? ' met' : '') + '"><div class="fcgh"><b>Next week</b><span class="fcnum">' + (all ? '<span class="fcmet">' + FC_TICK + n + '</span>' : n) + '<span>lessons planned</span></span></div>' + viz + '</div>';
+}
+// The planning time a lesson has had in the last 14 days, from the Planner's own count (src/planner/plantime.js), in seconds.
+function gpLesWorked(id) {
+  if (!id || typeof tkPlan !== 'function') return 0;
+  const from = gpAdd(fcToday(), -13); let s = 0;
+  for (const [day, d] of Object.entries(tkPlan().days)) if (day >= from && d && d.a && d.a[id]) s += +d.a[id] || 0;
+  return s;
+}
+// How long a lesson takes her to plan: the middle of the planning times of her last 10 ready lessons that had a minute or more, from
+// her own time only, and nothing before there are 3 (src/planner/plantime.js ptPace says the same in the Planner).
+function gpLesPace() {
+  if (typeof plan === 'undefined' || !plan || typeof tkPlan !== 'function') return 0;
+  const days = Object.values(tkPlan().days), tot = id => days.reduce((s, d) => s + (d && d.a && +d.a[id] || 0), 0);
+  const xs = (plan.ready || []).slice().sort((a, b) => b.at - a.at).map(x => tot(x.id)).filter(s => s >= 60).slice(0, 10);
+  if (xs.length < 3) return 0;
+  const o = xs.sort((a, b) => a - b), h = o.length >> 1;
+  return o.length % 2 ? o[h] : (o[h - 1] + o[h]) / 2;
+}
+
 /* ---------- shortest papers first ---------- */
 // How long a paper is: its pages, from the PDF once it is open or by counting its pages, else a guess from its size.
 const gpLens = new WeakMap();
@@ -188,5 +233,5 @@ document.addEventListener('change', e => { if (e.target.matches('[data-fcshort]'
 // A free period starts or ends as the clock goes on, so the card is looked at again each minute.
 setInterval(() => { if (shellReady && !document.hidden) fcRender(); }, 60e3);
 
-window.__gs = Object.assign(window.__gs || {}, { gpPaces: () => gpPaces(), gpPaceN, gpDue, gpLeft, gpFreeNow, gpGaps, gpLen, gpShortNext, gpLookHtml, gpDueHint });
+window.__gs = Object.assign(window.__gs || {}, { gpPaces: () => gpPaces(), gpPaceN, gpPlanWeek, gpLesPace, gpLesWorked, gpDue, gpLeft, gpFreeNow, gpGaps, gpLen, gpShortNext, gpLookHtml, gpDueHint });
 gpReady = true;

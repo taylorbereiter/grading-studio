@@ -486,7 +486,7 @@ async function bringApply(B0, src, shown, answers) {
 /* the Planner's records, from a file */
 // A year's archive is left alone: the Planner moved itself on when that year ended, and last year's lessons are in Past lessons.
 // A Planner with nothing in it takes everything. One in use only takes what it hasn't got, by lesson and by record, so nothing made here is ever replaced.
-const PLAN_LS_SKIP = /^gsp\.(presentTimer|focusRun|focusQ|focusGo)$/;   // the focus session going on stays in this browser
+const PLAN_LS_SKIP = /^gsp\.(presentTimer|focusRun|focusQ|focusGo|taughtIn)$/;   // the focus session going on stays in this browser, and the phone's notes waiting for the Planner come by sync
 function planLs() {
   const o = {};
   try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('gsp.') && !PLAN_LS_SKIP.test(k)) o[k] = localStorage.getItem(k); } } catch {}

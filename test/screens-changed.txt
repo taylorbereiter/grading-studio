@@ -219,6 +219,11 @@ mark-add-menu
 *
 # Easier phone 1.28.66: a More tab (Google, updates, help, settings), an update bar above the tabs, a Google card on Today, no computer-only boxes on Today and To do. About lists what is new and the version line reads 1.28.66.
 # Focus on Plan lessons: the Planner's Plan lessons rows (the lesson to pick up, each class coming up without a lesson) have a Focus button.
+# Planning goal and ready lessons: Today's Focus card has a Next week row under the goal (lessons planned, a dot for each class meeting); the Planner's Plan lessons says how next week is going (and the planning pace once there are 3 ready lessons); a lesson session's end in the Planner asks whether the lesson is ready, and a ready lesson has a Ready chip in the editor and on its card.
+home
+home-spanish
+home-chinese
+planner-week
 *
 # Drive everywhere: a student with nothing turned in has a From Google Drive… button, Readings and Rubric setup have one, the gradebook import and School resources have one, and the Planner's add buttons have Drive's mark beside them (only once Google is signed in). About lists what is new and the version line reads 1.28.67.
 *
