@@ -325,7 +325,7 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .outsw i{flex:none;width:30px;height:17px;border-radius:var(--corner-pill);background:var(--line-strong);position:relative;margin-top:1px;transition:background .15s}
 .outsw i::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:var(--corner-round);background:var(--surface);transition:left .15s}
 .outsw[aria-checked=true] i{background:var(--accent)}.outsw[aria-checked=true] i::after{left:15px}
-.grpband{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border:1px solid #B9D3EC;border-radius:9px;background:var(--accent-soft);font-size:13.5px;color:var(--fg-2)}.grpband b{color:var(--fg);font-weight:600}.grpband .link{font-size:var(--text-control)}.grpmode{font:inherit;font-size:var(--text-control);color:var(--accent);background:transparent;border:1px solid transparent;border-radius:var(--r-sm);padding:2px 4px;cursor:pointer}.grpmode:hover,.grpmode:focus-visible{border-color:var(--accent);background:var(--surface)}
+.grpband{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border:1px solid #B9D3EC;border-radius:9px;background:var(--accent-soft);font-size:13.5px;color:var(--fg-2)}.grpband b{color:var(--fg);font-weight:600}.grpband .link{font-size:var(--text-control)}.grpmode{font:inherit;font-size:var(--text-control);color:var(--accent);background:transparent;border:1px solid transparent;border-radius:var(--r-sm);padding:2px 4px;cursor:pointer}.grpmode:hover,.grpmode:focus-visible{border-color:var(--accent);background:var(--surface)}.grpnote{margin:0 0 10px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--corner-3);background:var(--bg);font-size:var(--text-control);color:var(--fg-2)}.grpnote.just{border-color:var(--accent);background:var(--accent-soft);color:var(--fg)}.grpnote ul{margin:6px 0 0;padding:0;list-style:none}.grpnote li{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;padding:2px 0}.grpnote li>span:first-child{color:var(--fg);font-weight:600}.grpnote .link{font-size:var(--text-control)}
 .outsw b{font-weight:600;font-size:13.5px;display:block}.outsw small{font-size:var(--text-small);color:var(--muted);display:block;line-height:1.4;margin-top:1px}
 .prog-s kbd,.hint kbd{font:500 10.5px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:0 4px;background:var(--surface);color:var(--muted)}
 .stu .dot{width:8px;height:8px;border-radius:var(--corner-round);background:var(--accent);display:inline-block}
@@ -2555,6 +2555,7 @@ html.vidsized #paper .spb .media{max-width:none}
 .tnpage{position:relative;margin:10px 0 18px;padding:28px 26px 40px 26px;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-2);box-shadow:var(--shadow)}
 .tned{outline:0;min-height:12em;white-space:pre-wrap;overflow-wrap:anywhere;font-family:Inter,var(--f-body);font-size:var(--text-body);line-height:1.55;color:var(--fg);counter-reset:tn1 tn2}
 .tnp{margin:0 0 6px}
+.tnp[data-o]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent);padding-left:9px}
 .tnp[data-k=h]{font-size:var(--text-heading);font-weight:650;line-height:1.3;margin:16px 0 6px}
 .tnp[data-y=h2]{font-size:var(--text-lead);font-weight:650;line-height:1.35;margin:12px 0 4px}
 .tnp:first-child{margin-top:0}
@@ -5204,7 +5205,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.67";
+  const APP_VERSION = "1.28.68";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -7026,7 +7027,7 @@ if (data.refSkip) batch.refSkip = data.refSkip;
 if (data.quiz) batch.quiz = data.quiz;
 if (data.goal) batch.goal = data.goal;
 if (data.returned) batch.returned = data.returned;
-batch.groups = [...(data.groups || []), ...(data.groupsOwn || []).map(g => ({ ...g, own: 1 }))];
+batch.groups = [...(data.groups || []), ...(data.groupsOwn || []).map(g => ({ ...g, own: g.own || 1 }))];
 batch.clips = data.clips || [];
 if (data.vrot) batch.vrot = data.vrot; else delete batch.vrot;
 groupSync();
@@ -8475,6 +8476,7 @@ const st = batch.students[cur], g = st.grade, gr = gradeOf(st);
 let h = '';
 if (rowOnOf !== st) rowStart();
 if (fmNow()) return renderFeedback(st);
+h += groupScoreNote(st);
 if (setup.mode === 'rubric') {
 if (rowOn >= setup.criteria.length) rowOn = -1;
 h += ibPanelAsk() + '<h3>Score <button class="link" id="editRubric">Edit rubric</button>' + ibPanelHead() + '</h3><div class="crits">';
@@ -23948,6 +23950,46 @@ if (!a.rubric) a.rubric = [];
 }
 const GROUP_NOTES = ['tn'];
 const groupOwn = g => !!(g && g.own);
+const groupAdj = g => !!(g && g.own === 2);
+const ADJ_KEYS = ['points', 'pk', 'xc', 'xcU', 'status'];
+const adjFields = sts => [...Array(Math.max(0, ...sts.map(s => (s.grade.rubric || []).length), setup && setup.criteria ? setup.criteria.length : 0)).keys(), ...ADJ_KEYS];
+const adjGet = (gr, f) => JSON.stringify(typeof f === 'number' ? (gr.rubric || [])[f] ?? null : gr[f] ?? null);
+function adjPut(gr, f, from) {
+if (typeof f === 'number') { (gr.rubric ||= [])[f] = (from.rubric || [])[f] ?? null; }
+else if (from[f] == null) delete gr[f]; else gr[f] = JSON.parse(JSON.stringify(from[f]));
+const t = from.atR && from.atR[f]; if (t) (gr.atR ||= {})[f] = t;
+}
+const adjTime = (gr, f) => (gr.atR && gr.atR[f]) || gr.at || 0;
+function adjSync(sts) {
+let changed = false;
+for (const f of adjFields(sts)) {
+const free = sts.filter(s => !(s.grade.adj && s.grade.adj[f])); if (!free.length) continue;
+for (const s of free) if (groupJust === s.key && free.length > 1) { const rest = free.filter(x => x !== s), v = adjGet(rest[0].grade, f); if (rest.every(x => adjGet(x.grade, f) === v) && adjGet(s.grade, f) !== v) { (s.grade.adj ||= {})[f] = 1; changed = true; } }
+const live = free.filter(s => !(s.grade.adj && s.grade.adj[f])); if (live.length < 2) continue;
+const src = live.reduce((a, s) => (adjTime(s.grade, f) > adjTime(a.grade, f) ? s : a), live[0]), v = adjGet(src.grade, f);
+for (const s of live) if (s !== src && adjGet(s.grade, f) !== v) { adjPut(s.grade, f, src.grade); changed = true; stampSoon(s); }
+}
+return changed;
+}
+function adjReset(st, f) {
+const g = groupOf(st); if (!g) return;
+const mate = groupMates(st).find(s => !(s.grade.adj && s.grade.adj[f]));
+gradeSnap(st);
+if (mate) adjPut(st.grade, f, mate.grade);
+if (st.grade.adj) { delete st.grade.adj[f]; if (!Object.keys(st.grade.adj).length) delete st.grade.adj; }
+stampSoon(st); saveSoon(); renderList(); renderGrade(); groupBandRefresh();
+}
+const adjName = f => typeof f === 'number' ? (setup.criteria && setup.criteria[f]) || 'Row ' + (f + 1) : { points: 'Points', pk: 'Percent', xc: 'Extra credit', xcU: 'Extra credit', status: 'Status' }[f];
+const adjSay = (gr, f) => { const v = JSON.parse(adjGet(gr, f)); return v == null || v === '' ? '–' : f === 'status' ? (STATUS_LABEL[v] || v) : String(v); };
+function groupScoreNote(st) {
+const g = groupOf(st); if (!groupAdj(g)) return '';
+const name = shownName(st, batch.students.indexOf(st)), mate = groupMates(st).find(Boolean);
+const adj = Object.keys(st.grade.adj || {}).map(k => (/^\d+$/.test(k) ? +k : k)).filter(f => f !== 'xcU');
+const rows = adj.map(f => { const m = groupMates(st).find(s => !(s.grade.adj && s.grade.adj[f])); return '<li><span>' + esc(adjName(f)) + '</span> <span class="muted">group ' + esc(m ? adjSay(m.grade, f) : '–') + ' → ' + esc(adjSay(st.grade, f)) + '</span> <button class="link" data-grpreset="' + f + '">Use group score</button></li>'; }).join('');
+return '<div class="grpnote' + (groupJust === st.key ? ' just' : '') + '" id="grpNote">' + (groupJust === st.key ? '<b>Scores you change now are just for ' + esc(name) + '.</b>' : 'Scores you change go to the whole group. To change one for ' + esc(name) + ' only, pick <b>Just ' + esc(name.split(/[\s,]+/)[0] || name) + '</b> above the paper.') + (rows ? '<ul>' + rows + '</ul>' : '') + '</div>';
+}
+function groupNoteRefresh() { const old = $('#grpNote'), st = batch && batch.students[cur]; if (old && st) { const h = groupScoreNote(st); if (h) old.outerHTML = h; else old.remove(); } }
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-grpreset]'); if (b && batch) { const k = b.dataset.grpreset; adjReset(batch.students[cur], /^\d+$/.test(k) ? +k : k); } });
 const notesSig = gr => JSON.stringify(GROUP_NOTES.map(k => gr[k] ?? null));
 function groupNotesCopy(to, from) { for (const k of GROUP_NOTES) { if (from.grade[k] != null) to.grade[k] = JSON.parse(JSON.stringify(from.grade[k])); else delete to.grade[k]; } }
 function stampOwner(m, st) { const g = groupOf(st); if (groupOwn(g) && groupFileOf(g, st)) m.o = st.key; return m; }
@@ -23994,6 +24036,7 @@ if (groupOwn(g)) {
 const moved = sts.filter(s => notesSig(s.grade) !== g.ns), src = moved.length ? newest(moved) : sts[0], sig = notesSig(src.grade);
 for (const s of sts) if (s !== src && notesSig(s.grade) !== sig) { groupNotesCopy(s, src); changed = true; }
 if (g.ns !== sig) { g.ns = sig; changed = true; }
+if (groupAdj(g) && adjSync(sts)) { changed = true; setTimeout(groupNoteRefresh); }
 } else {
 const src = newest(sts), sig = gradeSig(src.grade);
 for (const s of sts) if (s !== src && gradeSig(s.grade) !== sig) { groupGradeCopy(s, src); changed = true; }
@@ -24022,6 +24065,7 @@ const has = gr => GROUP_NOTES.some(k => k === 'tn' ? !!(gr.tn && gr.tn.l && gr.t
 if (has(st.grade) || !has(to.grade)) groupNotesCopy(to, st); else { groupNotesCopy(st, to); touchGrade(st); }
 g.ns = notesSig(st.grade);
 if (toFile && toFile.marks) stampsSplit(toFile.marks, [to.key]);
+if (groupAdj(g) && (gradeHasWork(st.grade) || !gradeHasWork(to.grade))) { const c = to.grade.comment; groupGradeCopy(to, st); to.grade.comment = c; delete to.grade.adj; delete to.grade.tn; groupNotesCopy(to, st); }
 } else if (gradeHasWork(st.grade) || !gradeHasWork(to.grade)) { groupGradeCopy(to, st); if (!st.grade.at) touchGrade(st); to.grade.at = st.grade.at; }
 else { groupGradeCopy(st, to); }
 groupSync();
@@ -24039,16 +24083,22 @@ if (!quiet) { saveSoon(); renderList(); openStudent(cur); toast(shownName(st, ba
 }
 
 function groupSetOwn(st, own) {
-const g = groupOf(st); if (!g || groupOwn(g) === !!own) return false;
+const mode = own === true ? 1 : +own || 0, g = groupOf(st); if (!g || (g.own || 0) === mode) return false;
 const sts = g.k.map(k => batch.students.find(s => s.key === k)).filter(Boolean), files = [...new Set(sts.map(s => groupFileOf(g, s)).filter(Boolean).map(f => f.marks))];
-if (own) {
-g.own = 1; g.ns = notesSig(st.grade);
+const clearAdj = () => { for (const s of sts) delete s.grade.adj; };
+if (mode && groupOwn(g)) {
+g.own = mode;
+if (mode === 2) { for (const s of sts) if (s !== st) for (const f of adjFields(sts)) if (adjGet(s.grade, f) !== adjGet(st.grade, f)) (s.grade.adj ||= {})[f] = 1; }
+else clearAdj();
+} else if (mode) {
+g.own = mode; g.ns = notesSig(st.grade);
 for (const m of files) stampsSplit(m, sts.filter(s => groupFileOf(g, s)).map(s => s.key));
 for (const s of sts) if (s !== st && notesSig(s.grade) !== g.ns) groupNotesCopy(s, st);
 for (const s of sts) syncScoreStamps(s);
 } else {
-delete g.own; delete g.ns;
+delete g.own; delete g.ns; clearAdj();
 for (const m of files) stampsJoin(m, st.key);
+if (st.grade.tn && Array.isArray(st.grade.tn.l)) { const l = tnMine(st, st.grade.tn.l).map(x => { const y = { ...x }; delete y.o; return y; }); if (l.length) st.grade.tn = { l }; else delete st.grade.tn; }
 touchGrade(st);
 }
 groupSync();
@@ -24108,13 +24158,16 @@ toast('Marked and graded once with ' + groupNames(groupMates(st)));
 function groupBand(st) {
 const mates = groupMates(st);
 if (mates.length) {
-const g = groupOf(st), marks = !!groupFileOf(g, st), own = groupOwn(g);
+const g = groupOf(st), marks = !!groupFileOf(g, st), own = groupOwn(g), adj = groupAdj(g), mode = adj ? 'adj' : own ? 'own' : 'all';
 if (groupJust !== st.key) groupJust = null;
 const name = shownName(st, batch.students.indexOf(st)), first = name.split(/[\s,]+/)[0] || name;
-const just = own && marks ? '<span class="seg grpjust" role="group" aria-label="New marks go on"><button type="button" data-grpjust="0" aria-pressed="' + !groupJust + '" title="Marks you make now show on every partner’s paper">Both</button><button type="button" data-grpjust="1" aria-pressed="' + !!groupJust + '" title="Marks you make now show only on ' + esc(name) + '’s paper. Their comment is always their own.">Just ' + esc(first) + '</button></span>' : '';
-const opt = (v, t) => '<option value="' + v + '"' + ((v === 'own') === own ? ' selected' : '') + '>' + t + '</option>';
+const what = [marks && 'marks', adj && 'scores', 'typed notes'].filter(Boolean), list = what.length > 2 ? what.slice(0, -1).join(', ') + ' and ' + what[what.length - 1] : what.join(' and ');
+const both = 'New ' + list + ' go to every partner';
+const one = 'New ' + list + ' are just for ' + esc(name) + '. Their comment is always their own.';
+const just = own ? '<span class="seg grpjust" role="group" aria-label="What you do now goes to"><button type="button" data-grpjust="0" aria-pressed="' + !groupJust + '" title="' + both + '">Both</button><button type="button" data-grpjust="1" aria-pressed="' + !!groupJust + '" title="' + one + '">Just ' + esc(first) + '</button></span>' : '';
+const opt = (v, t) => '<option value="' + v + '"' + (v === mode ? ' selected' : '') + '>' + t + '</option>';
 return '<div class="grpband" id="grpBand"><b>Group work</b><span>with ' + esc(groupNames(mates)) + ' ·</span>' +
-'<select class="grpmode" data-grpmode aria-label="What the group shares" title="Share everything, or share the notes and give each partner their own score">' + opt('all', marks ? 'Marks and grade shared' : 'Grade shared') + opt('own', marks ? 'Shared notes, own scores' : 'Own scores and comments') + '</select>' + (just ? '<span class="muted">Write for</span>' + just : '') + '<span style="flex:1"></span>' +
+'<select class="grpmode" data-grpmode aria-label="What the group shares" title="Share everything, give the group one score you can change for one partner, or give each partner their own score">' + opt('all', marks ? 'Marks and grade shared' : 'Grade shared') + opt('adj', 'Group score, adjust a partner') + opt('own', marks ? 'Shared notes, own scores' : 'Own scores and comments') + '</select>' + (just ? '<span class="muted">Write for</span>' + just : '') + '<span style="flex:1"></span>' +
 '<button class="link" data-grpout title="Give this student their own grade and their own copy of the marks so far. The rest stay together.">Grade on their own…</button></div>';
 }
 const sm = splitMates(st);
@@ -24132,7 +24185,7 @@ function groupClick(e) {
 const st = batch.students[cur];
 if (e.target.closest('[data-grpjoin]')) { groupFromSplit(st); return true; }
 const j = e.target.closest('[data-grpjust]');
-if (j) { groupJust = j.dataset.grpjust === '1' ? st.key : null; groupBandRefresh(); return true; }
+if (j) { groupJust = j.dataset.grpjust === '1' ? st.key : null; groupBandRefresh(); groupNoteRefresh(); return true; }
 if (e.target.closest('[data-grpout]')) {
 askDlg(shownName(st, cur) + ' gets their own grade and their own copy of the marks so far. ' + groupNames(groupMates(st)) + (groupMates(st).length > 1 ? ' stay together.' : ' keeps theirs.'), { ok: 'Grade on their own', cancel: 'Keep the group' }).then(ok => { if (ok) groupLeave(st); });
 return true;
@@ -24140,17 +24193,17 @@ return true;
 return false;
 }
 
-async function groupModePick(own) {
-const st = batch.students[cur], g = groupOf(st); if (!g || groupOwn(g) === own) return;
-if (!own) {
+async function groupModePick(mode) {
+const st = batch.students[cur], g = groupOf(st); if (!g || (g.own || 0) === mode) return;
+if (!mode) {
 const t = gradeOf(st).total, ok = await askDlg('Everyone in the group gets ' + shownName(st, cur) + '’s score' + (t != null ? ' (' + fmtNum(t) + ')' : '') + ' and comment. The other partners’ own scores, comments and notes just for them are replaced.', { ok: 'Share this score', cancel: 'Keep own scores' });
 if (!ok) { groupBandRefresh(); return; }
 }
 const back = groupSnapOf(g);
-groupSetOwn(st, own);
-pushUndo(actStep(back, () => { groupSetOwn(st, own); groupRedraw(); }, own ? 'own scores' : 'one grade'));
+groupSetOwn(st, mode);
+pushUndo(actStep(back, () => { groupSetOwn(st, mode); groupRedraw(); }, mode === 2 ? 'group score' : mode ? 'own scores' : 'one grade'));
 groupRedraw();
-toast(own ? 'Each partner has their own score and comment now. The notes page stays shared.' : 'One grade for the group now');
+toast(mode === 2 ? 'One group score now. To change a score for one partner, pick Just them above the paper.' : mode ? 'Each partner has their own score and comment now. The notes page stays shared.' : 'One grade for the group now');
 }
 const groupRedraw = () => { saveSoon(); renderList(); openStudent(cur); };
 function groupSnapOf(g) {
@@ -24165,7 +24218,7 @@ if (marks) { const m = JSON.parse(marks); for (const f of files) f.marks = m; }
 groupRedraw();
 };
 }
-document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('[data-grpmode]'); if (s && batch) groupModePick(s.value === 'own'); });
+document.addEventListener('change', e => { const s = e.target.closest && e.target.closest('[data-grpmode]'); if (s && batch) groupModePick({ all: 0, adj: 2, own: 1 }[s.value] || 0); });
 
 /* ---------------- Group work… on a file ---------------- */
 const shareCopies = (st, f) => batch.students.filter(s => s !== st && s.files.some(x => x.from === st.key && x.name === f.name));
@@ -25384,8 +25437,19 @@ so nothing pasted or saved is ever set as HTML. Every change is one of the app's
 const TN_K = { h: ['Heading', 'H'], p: ['Strength', '✓'], n: ['Next step', '→'], q: ['Question', '?'] };
 const TN_TAG = [[1, 'B'], [2, 'I'], [4, 'U'], [8, 'MARK']];
 let tnL = [], tnSt = null, tnLast = null, tnIv = 0, tnRng = null, tnRO = null, tnQuiet = false;
+const tnWho = k => { const i = batch ? batch.students.findIndex(s => s.key === k) : -1; return i < 0 ? '' : shownName(batch.students[i], i); };
 function tnHasG(g) { return !!(g && g.tn && Array.isArray(g.tn.l) && g.tn.l.some(x => x && x.k !== 'h' && x.y !== 'h2' && String(x.s || '').trim())); }
-function tnHas(st) { return !!st && tnHasG(st.grade); }
+function tnHas(st) { return !!st && tnHasG({ tn: { l: tnMine(st, (st.grade.tn && st.grade.tn.l) || []) } }); }
+const tnHidden = (x, st) => !!(x && x.o && x.o !== st.key && batch && batch.students.some(s => s.key === x.o));
+const tnMine = (st, L) => (Array.isArray(L) ? L.filter(x => !tnHidden(x, st)) : []);
+const tnOwnNew = st => (st && typeof groupJust !== 'undefined' && groupJust === st.key && groupOwn(groupOf(st)) ? st.key : null);
+function tnWithHidden(st, L) {
+const old = tnStored(st) || [], keep = []; let vis = 0;
+for (const x of old) { if (tnHidden(x, st)) keep.push([vis, x]); else vis++; }
+const out = L.slice();
+for (let j = keep.length - 1; j >= 0; j--) out.splice(Math.min(keep[j][0], out.length), 0, tnClean(keep[j][1]));
+return out;
+}
 const tnStored = st => (st.grade.tn && Array.isArray(st.grade.tn.l) && st.grade.tn.l.length ? st.grade.tn.l : null);
 const tnTimesOn = () => store.get('gs.tnTime', true) !== false;
 const tnBackOn = () => setup.tnBack !== false;
@@ -25401,6 +25465,7 @@ function tnClean(x) {
 const o = { s: String(x.s || '').replace(/[\r\n\t ]/g, ' ') };
 if (TN_K[x.k]) o.k = x.k;
 if (/^(h2|ul|ol)$/.test(x.y) && o.k !== 'h') o.y = x.y;
+if (typeof x.o === 'string' && x.o) o.o = x.o;
 if (o.y === 'h2' && o.k) delete o.k;
 if (tnListOf(o) && +x.d === 2) o.d = 2;
 if (typeof x.t === 'number' && isFinite(x.t) && x.t >= 0) { o.t = Math.floor(x.t); if (x.h && +x.h) o.h = 1; }
@@ -25408,7 +25473,7 @@ const f = tnRuns(tnBits({ s: o.s, f: x.f })); if (f.length) o.f = f;
 return o;
 }
 function tnView(st) {
-const s = tnStored(st); if (s) return s.map(tnClean);
+const s = tnStored(st) && tnMine(st, tnStored(st)); if (s && s.length) return s.map(tnClean);
 const h = tnHead(); return h.length ? h.flatMap(s => [{ s, k: 'h' }, { s: '' }]) : [{ s: '' }];
 }
 const tnHasVid = st => st.files.some(f => f.kind === 'media' || f.kind === 'link');
@@ -25429,7 +25494,7 @@ u.st = st; u.t = Date.now(); pushUndo(u); tnLast = u;
 }
 function tnPut(st, join) {
 tnSnap(st, join);
-const was = tnHas(st), L = tnL.map(tnClean);
+const was = tnHas(st), L = tnWithHidden(st, tnL.map(tnClean));
 if (L.some(x => x.s.trim())) st.grade.tn = { l: L }; else delete st.grade.tn;
 touchGrade(st); saveSoon();
 if (was !== tnHas(st)) renderList();
@@ -25447,7 +25512,8 @@ const tnHost = () => $('#spBody > .sptool[data-tool="typed"]');
 const tnEd = () => document.querySelector('#spBody .tned');
 function tnEl(x) {
 const el = document.createElement('div'); el.className = 'tnp'; el.tnWas = x.s;
-for (const k of ['k', 'y', 'd', 't', 'h']) if (x[k] != null) el.dataset[k] = x[k];
+for (const k of ['k', 'y', 'd', 't', 'h', 'o']) if (x[k] != null) el.dataset[k] = x[k];
+if (x.o) el.title = 'Just for ' + tnWho(x.o);
 if (tnHeadOf(x)) { el.setAttribute('role', 'heading'); el.setAttribute('aria-level', x.k === 'h' ? '3' : '4'); }
 const a = tnBits(x);
 for (let i = 0; i < x.s.length;) {
@@ -25481,7 +25547,7 @@ else if (c.nodeType === 1) walk(c, tnFx(c, b));
 }
 })(el, 0);
 const d = el.dataset || {};
-return tnClean({ s: s.join(''), k: d.k, y: d.y, d: d.d, t: d.t != null && d.t !== '' ? +d.t : null, h: d.h, f: tnRuns(a) });
+return tnClean({ s: s.join(''), k: d.k, y: d.y, d: d.d, t: d.t != null && d.t !== '' ? +d.t : null, h: d.h, o: d.o, f: tnRuns(a) });
 }
 function tnFix(ed) {
 let box = null, moved = null;
@@ -25663,8 +25729,8 @@ const p = tnPos(); if (!p) return;
 const i = p.a[0], o = p.a[1], x = tnL[i], list = tnListOf(x) ? { y: x.y, ...(x.d ? { d: x.d } : {}) } : {};
 let at = i + 1;
 if (tnListOf(x) && !x.s) { if (x.d) delete x.d; else delete x.y; at = i; }
-else if (!o && x.s) tnL.splice(i, 0, { s: '', ...list });
-else { const a = tnBits(x); tnL.splice(i + 1, 0, { s: x.s.slice(o), f: tnRuns(a.slice(o)), ...list }); x.s = x.s.slice(0, o); x.f = tnRuns(a.slice(0, o)); }
+else if (!o && x.s) tnL.splice(i, 0, { s: '', ...list, ...(x.o ? { o: x.o } : {}) });
+else { const a = tnBits(x), who = (o < x.s.length && x.o) || tnOwnNew(st); tnL.splice(i + 1, 0, { s: x.s.slice(o), f: tnRuns(a.slice(o)), ...list, ...(who ? { o: who } : {}) }); x.s = x.s.slice(0, o); x.f = tnRuns(a.slice(0, o)); }
 tnL = tnL.map(tnClean); tnPaint(); tnSetPos({ a: [at, 0], z: [at, 0] }); tnPut(st, false);
 }
 function tnInsert(P) {
@@ -25676,6 +25742,7 @@ const head = { s: x.s.slice(0, o), f: tnRuns(a.slice(0, o)) }, tail = { s: x.s.s
 const join = (u, v) => ({ s: u.s + v.s, f: tnRuns([...tnBits(u), ...tnBits(v)]) }), kind = b => ({ k: b.k, y: b.y, d: b.d, t: b.t, h: b.h });
 const last = P[P.length - 1], out = P.length === 1 ? [{ ...kind(x.s ? x : P[0]), ...join(join(head, P[0]), tail) }]
 : [{ ...kind(head.s ? x : P[0]), ...join(head, P[0]) }, ...P.slice(1, -1), { ...kind(last), ...join(last, tail) }];
+const who = x.o || tnOwnNew(st); for (const b of out) if (who) b.o = who;
 tnL.splice(i, 1, ...out.map(tnClean));
 const c = P.length === 1 ? [i, o + P[0].s.length] : [i + P.length - 1, last.s.length];
 tnPaint(); tnSetPos({ a: c, z: c.slice() }); tnPut(st, false);
@@ -25745,6 +25812,7 @@ if (m && p.a[1] === m[0].length) {
 x.y = /^1/.test(m[0]) ? 'ol' : 'ul'; x.f = tnRuns(tnBits(x).slice(m[0].length)); x.s = x.s.slice(m[0].length);
 tnL = L.map(tnClean); tnPaint(); tnSetPos({ a: [i, 0], z: [i, 0] }); return tnPut(st, false);
 }
+if (/^insert/.test(type) && el && !el.tnWas && x.s && !tnHeadOf(x)) { const o = tnOwnNew(st); if (o) { x.o = o; el.dataset.o = o; el.title = 'Just for ' + tnWho(o); } else if (x.o) { delete x.o; delete el.dataset.o; el.removeAttribute('title'); } }
 if (/^insert/.test(type) && el && !el.tnWas && x.s && x.t == null && !tnHeadOf(x) && tnTimesOn()) { const t = tnNow(st); if (t != null) { const hid = tnAllHid(); x.t = Math.floor(t); el.dataset.t = x.t; if (hid) { x.h = 1; el.dataset.h = 1; } } }
 }
 [...ed.children].forEach((el, j) => { el.tnWas = L[j].s; });
@@ -25818,7 +25886,7 @@ if (m === 'copy') return navigator.clipboard.writeText(tnText(tnL)).then(() => t
 if (m === 'clear') {
 if (!await askDlg('Clear the typed notes for this student?\n\nUndo brings them back.', { ok: 'Clear', danger: true, lg: 1 })) return;
 if (batch.students[cur] !== st) return;
-tnSnap(st); delete st.grade.tn; touchGrade(st); saveSoon(); renderList(); tnLoad(tnHost(), st);
+tnSnap(st); const left = (tnStored(st) || []).filter(x => tnHidden(x, st)); if (left.length) st.grade.tn = { l: left }; else delete st.grade.tn; touchGrade(st); saveSoon(); renderList(); tnLoad(tnHost(), st);
 }
 });
 $('#paper').addEventListener('click', e => { if (e.target.closest('[data-tntry]')) spOpen('typed'); });
@@ -25849,7 +25917,7 @@ return lines.filter((l, i) => l.length || !i);
 }
 function tnBlocks(ctx, st, W, M) {
 const z = TN_SIZE[tnSizeOf()][0] / 12, zz = n => Math.round(n * z * 10) / 10;
-const UI = 'Inter, ' + FONT, cw = W - 2 * M, L = (st.grade.tn.l || []).map(tnClean), out = [];
+const UI = 'Inter, ' + FONT, cw = W - 2 * M, L = tnMine(st, st.grade.tn.l || []).map(tnClean), out = [];
 const words = { p: tr('Strength'), n: tr('Next step'), q: tr('Question') };
 ctx.font = '600 ' + zz(11) + 'px ' + UI;
 const kinds = L.filter(x => words[x.k] && x.s.trim()), labW = kinds.length ? Math.min(Math.round(cw * 0.3), Math.max(...kinds.map(x => ctx.measureText(TN_K[x.k][1] + ' ' + words[x.k]).width)) + 14) : 0;
@@ -33091,7 +33159,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.67":["From Google Drive… is now beside every place you add files: a student's Add menu, Readings, your rubric, Gradebook import and School resources, and in the Planner a lesson's materials, unit files, slide pictures, the finished PowerPoint, Import a lesson, your school template and books. Google Docs, Slides and Sheets come in as PDFs for grading, and as Word, PowerPoint and Excel files in the Planner."]};
+const WHATS_NEW = {"1.28.68":["Group work has a third way: Group score, adjust a partner. You score the group once, and with Just and a partner’s name above the paper you can change one criterion for that partner only. The rest keeps following the group score, and Use group score puts it back.","Partners with their own scores can have typed notes just for one of them: pick Just and their name above the paper, and the paragraphs you write then are theirs alone, with a blue bar. The rest of the notes stay shared."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };

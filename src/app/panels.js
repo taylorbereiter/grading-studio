@@ -184,6 +184,7 @@ function renderGrade() {
   let h = '';
   if (rowOnOf !== st) rowStart();
   if (fmNow()) return renderFeedback(st);
+  h += groupScoreNote(st);   // a group score: who the scores go to, and what is this partner's own (groups.js)
   if (setup.mode === 'rubric') {
     if (rowOn >= setup.criteria.length) rowOn = -1;
     h += ibPanelAsk() + '<h3>Score <button class="link" id="editRubric">Edit rubric</button>' + ibPanelHead() + '</h3><div class="crits">';   // an MYP class's task is marked against its criteria (ib.js)
