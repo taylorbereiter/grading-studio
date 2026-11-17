@@ -15,14 +15,14 @@ function finishedHtml(l) {
   return '<div class="pl-fin" id="plFin"><div class="pl-fin-h"><h3>Finished PowerPoint</h3><span class="muted sp-small">' +
     (f ? 'The deck you’ll teach from. Uploading a new one replaces it; the old one is kept below.' : 'Upload the deck when it’s done. Its slides replace the ones here, and this version is kept under Versions.') +
     // One upload button: the file box takes a finished .pptx or a lesson .zip. Present is the lesson's one blue button.
-    '</span><span class="sp"></span><button class="btn sm" data-a="finup" title="A finished .pptx, or a lesson .zip with the PowerPoint and its handouts">' + (f ? 'Upload a newer one…' : 'Upload .pptx or .zip…') + '</button><input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
+    '</span><span class="sp"></span><button class="btn sm" data-a="finup" title="A finished .pptx, or a lesson .zip with the PowerPoint and its handouts">' + (f ? 'Upload a newer one…' : 'Upload .pptx or .zip…') + '</button>' + gpDrv('data-a="finup"', '', 1) + '<input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
     (f ? '<div class="pl-files"><div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(f.name) + '</b><span>' + finSize(f.size) + ' · uploaded ' + finWhen(f.at) + (finFresh(l) ? '' : ' · slides changed here since') + '</span></span>' +
       '<button class="btn sm" data-a="findl" data-id="' + f.id + '">Download</button></div></div>' : '') +
     (old.length ? '<details class="pl-fin-old"><summary>Older finished decks (' + old.length + ')</summary><div class="pl-files">' + old.map(o => '<div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(o.name) + '</b><span>' + finSize(o.size) + ' · uploaded ' + finWhen(o.at) + '</span></span>' +
       '<button class="btn sm ghost" data-a="findl" data-id="' + o.id + '">Download</button><button class="btn sm ghost" data-a="finback" data-id="' + o.id + '" title="Make this the finished deck again, and its slides the lesson’s slides">Use this one again</button></div>').join('') + '</div></details>' : '') +
     '</div>';
 }
-function finPick() { const i = $('#finIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) (/\.zip$/i.test(f.name) ? lessonZip(L.open, f) : finUpload(L.open, f)); }; i.click(); }
+function finPick() { const i = $('#finIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) (/\.zip$/i.test(f.name) ? lessonZip(L.open, f) : finUpload(L.open, f)); }; gpClick(i); }
 
 /* ---------- a lesson .zip: the finished deck plus the lesson's materials, in one upload ----------
    Layout (folders inside are fine; they're ignored):

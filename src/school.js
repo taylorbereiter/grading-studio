@@ -377,7 +377,7 @@ async function schGroupDo(g, what) {
 }
 $('#vSchool').addEventListener('click', e => {
   const add = e.target.closest('[data-schadd]');
-  if (add) { if (add.dataset.schadd === 'file') { schAgain = ''; return $('#schIn').click(); } return schClsLoad().then(() => schForm({ kind: add.dataset.schadd, cls: schForNames() })); }
+  if (add) { if (add.dataset.schadd === 'file' || add.dataset.schadd === 'drive') { schAgain = ''; return add.dataset.schadd === 'drive' ? gpOn($('#schIn')) : $('#schIn').click(); } return schClsLoad().then(() => schForm({ kind: add.dataset.schadd, cls: schForNames() })); }
   const padd = e.target.closest('[data-schpadd]'); if (padd) return schPersonForm({ role: padd.dataset.schpadd });
   if (e.target.closest('[data-schroles]')) return schRolesEdit();
   const ptd = e.target.closest('[data-schptd]'); if (ptd) { e.preventDefault(); return todoShowPerson(ptd.dataset.schptd); }
