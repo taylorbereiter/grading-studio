@@ -321,7 +321,7 @@ $('#start').addEventListener('click', async e => {
   if (b.dataset.additem != null) return editAssignment(null, b.dataset.additem);
   if (b.dataset.editAsg) return editAssignment(b.dataset.editAsg);
   if (b.dataset.qmake) return openQuizMaker(b.dataset.qmake);
-  if (b.dataset.qread) return openQuizRead(b.dataset.qread);
+  if (b.dataset.qread) return qrScanIn(b.dataset.qread);
   // a button that is the assignment's own name keeps saying it
   if (b.dataset.kopen) { const f = b.dataset.kasg ? findItem(b.dataset.kasg) : null; const was = b.textContent, named = b.classList.contains('kname'); b.disabled = true; if (!named) b.textContent = 'Opening…'; return reopenKept(b.dataset.kopen, f ? f.it : null).finally(() => { b.disabled = false; if (!named) b.textContent = was; }); }
   // two clicks, so a stray click can't throw work away

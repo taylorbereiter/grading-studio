@@ -1,17 +1,17 @@
 /* ---------------- Make a quiz: questions typed in, printed with bubbles, read back from the scan ---------------- */
-// MOCKUP (thread "Build a quiz creator with scannable printouts"): the editor and the printed page are real; reading a scan is shown with made-up answers.
 // it.quiz.made = { id, items: [{ t: 'mc' | 'tf' | 'ms' | 'sa', text, opts: [..], key: 'B' | 'AC' | 'T', pts }], sheet: 0 | 1, blank }
 // t: mc one answer, tf true or false, ms every answer that applies, sa a short answer she marks by filling a score bubble.
 // sheet 1: answer sheet only (the questions are on the board or her own paper), the same bubbles without the words.
 const QMK_T = { mc: 'Multiple choice', tf: 'True or false', ms: 'Pick all that apply', sa: 'Short answer' };
 const QMK_L = 'ABCDEFGH';
-const qmkNew = t => t === 'tf' ? { t, text: '', opts: ['True', 'False'], key: '', pts: 1 } : t === 'sa' ? { t, text: '', opts: [], key: '', pts: 2, lines: 3 } : { t, text: '', opts: ['', '', '', ''], key: '', pts: 1 };
+const qmkNew = t => ({ id: 'mq' + uid(), ...qmkNew0(t) });
+const qmkNew0 = t => t === 'tf' ? { t, text: '', opts: ['True', 'False'], key: '', pts: 1 } : t === 'sa' ? { t, text: '', opts: [], key: '', pts: 2, lines: 3 } : { t, text: '', opts: ['', '', '', ''], key: '', pts: 1 };
 const qmkPts = m => m.items.reduce((a, q) => a + (+q.pts || 0), 0);
 const qmkLetters = q => q.t === 'tf' ? ['T', 'F'] : q.t === 'sa' ? qzSteps(+q.pts || 1).map(fmtNum) : q.opts.map((_, k) => QMK_L[k]);
 // The code across the top of each page: quiz, student and page, and a check, as black and white squares.
-function qmkBits(id, who, pg) {
+function qmkBits(id, who, pg, ver = 0) {
   const b = [], put = (v, n) => { for (let k = n - 1; k >= 0; k--) b.push((v >> k) & 1); };
-  put(id, 8); put(who, 8); put(pg, 3); put(0, 2); put((id + who + pg) % 31, 5);
+  put(id, 8); put(who, 8); put(pg, 3); put(ver % 4, 2); put((id + who + pg + ver % 4) % 31, 5);
   return [1, 0, ...b];
 }
 function qmkQ(q, i, m) {
@@ -25,8 +25,8 @@ function qmkQ(q, i, m) {
     '<div class="qfbs' + (q.t === 'sa' ? ' sa' : '') + '">' + (q.t === 'sa' ? '<span class="qffor">Teacher</span>' : '') + bub + '</div></div>';
 }
 // One printed page, 8.5 by 11 inches at 96 to the inch. Registration squares sit well in from the edges, where scanners keep them.
-function qmkPageHtml(m, title, name, pg, of, qs, from) {
-  const bits = qmkBits(m.id || 1, name ? 3 : 0, pg).map(b => '<i' + (b ? ' class="on"' : '') + '></i>').join('');
+function qmkPageHtml(m, title, name, pg, of, qs, from, who = 0) {
+  const bits = qmkBits(m.id || 1, who, pg, m.ver || 0).map(b => '<i' + (b ? ' class="on"' : '') + '></i>').join('');
   return '<div class="qfpage"><i class="qfreg tl"></i><i class="qfreg tr"></i><i class="qfreg bl"></i><i class="qfreg br"></i><div class="qfcode">' + bits + '</div>' +
     (pg === 0 ? '<div class="qfhead"><div><div class="qftitle" data-raw>' + esc(title) + '</div><div class="qfsub">' + m.items.length + ' questions · ' + fmtNum(qmkPts(m)) + ' points</div></div>' +
       '<div class="qfname"><span>Name</span><b data-raw>' + esc(name || '') + '</b></div></div>' +
@@ -35,7 +35,7 @@ function qmkPageHtml(m, title, name, pg, of, qs, from) {
     '<div class="qfbody">' + qs.map((q, k) => qmkQ(q, from + k, m)).join('') + '</div><div class="qffoot">Page ' + (pg + 1) + ' of ' + of + '</div></div>';
 }
 // The questions spread over pages: measured in a hidden page, so long questions push onto the next one.
-function qmkPages(m, title, name) {
+function qmkPages(m, title, name, who = 0) {
   const probe = document.createElement('div'); probe.className = 'qfprobe'; document.body.appendChild(probe);
   probe.innerHTML = qmkPageHtml(m, title, name, 0, 1, m.items, 0);
   const body = probe.querySelector('.qfbody'), room0 = 1056 - 64 - body.offsetTop, room = room0 + (body.offsetTop - 120);
@@ -44,7 +44,42 @@ function qmkPages(m, title, name) {
   const pages = []; let cur = [], used = 0, at = 0;
   hs.forEach((h, i) => { const lim = pages.length ? room : room0; if (cur.length && used + h > lim) { pages.push([at, cur]); at = i; cur = []; used = 0; } cur.push(m.items[i]); used += h; });
   pages.push([at, cur]);
-  return pages.map(([from, qs], pg) => qmkPageHtml(m, title, name, pg, pages.length, qs, from));
+  return pages.map(([from, qs], pg) => qmkPageHtml(m, title, name, pg, pages.length, qs, from, who));
+}
+// Where everything sits on the printed pages, as shares of the page, measured from the pages themselves: each question's box,
+// the centre of each of its bubbles and their size. These become the quiz's Quick mark boxes, so marking, answer notes and
+// the gradebook work as for a quiz she drew boxes on.
+function qmkLayout(m, title) {
+  const probe = document.createElement('div'); probe.className = 'qfprobe'; document.body.appendChild(probe);
+  probe.innerHTML = qmkPages(m, title, 'Name').join('');
+  const out = [], R = v => Math.round(v * 10000) / 10000;
+  [...probe.querySelectorAll('.qfpage')].forEach((pg, n) => {
+    const P = pg.getBoundingClientRect(), sx = v => R((v - P.left) / P.width), sy = v => R((v - P.top) / P.height);
+    for (const el of pg.querySelectorAll('.qfq')) {
+      const r = el.getBoundingClientRect(), bs = [...el.querySelectorAll('.qfb')].map(b => b.getBoundingClientRect());
+      out[+el.dataset.i] = { n, x: sx(r.left), y: sy(r.top), w: R(r.width / P.width), h: R(r.height / P.height), b: bs.map(b => [sx(b.left + b.width / 2), sy(b.top + b.height / 2)]), r: R(bs[0].width / 2 / P.width) };
+    }
+  });
+  probe.remove();
+  return out;
+}
+// The quiz's Quick mark boxes from the questions and where they print. A multiple choice key carries its words, for the answer notes.
+function qmkBoxes(m, title, was) {
+  const L = qmkLayout(m, title), Q = JSON.parse(JSON.stringify(was || {}));
+  // Copies already printed keep their bubbles where they were: a change that moves any gives the next printing a new number,
+  // and pages from the old one are left for her to mark.
+  const lay = JSON.stringify(L.map(a => [a.n, a.b]));
+  m.ver = m.lay == null || m.lay === lay ? m.pv || 0 : (m.pv || 0) + 1;
+  const old = new Map((Q.qs || []).map(q => [q.id, q]));
+  Q.qs = m.items.map((it, i) => {
+    const o = old.get(it.id) || {}, at = L[i], letters = qmkLetters(it);
+    const key = it.t === 'sa' ? (o.key || '') : it.t === 'ms' ? it.key.split('').join(', ') : it.t === 'tf' ? (it.key === 'T' ? 'True' : it.key === 'F' ? 'False' : '') : it.key ? it.key + ': ' + (it.opts[letters.indexOf(it.key)] || '') : '';
+    const q = { ...o, id: it.id, lab: String(i + 1), n: at.n, x: at.x, y: at.y, w: at.w, h: at.h, pts: +it.pts || 1, key: key.replace(/: $/, ''), kind: it.t === 'sa' ? 'scale' : 'rw', how: o.how || 'cx', auto: { t: it.t, b: at.b, r: at.r, key: it.t === 'sa' ? '' : it.key || '' } };
+    if (o.n !== at.n || Math.abs((o.x || 0) - at.x) > .002 || Math.abs((o.y || 0) - at.y) > .002) { delete q.mx; delete q.my; delete q.nx; delete q.ny; }
+    return q;
+  });
+  Q.how ||= 'cx'; Q.side ||= 'right'; Q.ans ||= 'miss'; Q.at ||= 'right'; Q.shift ||= {};
+  return Q;
 }
 function openQuizMaker(itId) {
   const f = findItem(itId); if (!f) return;
@@ -99,41 +134,26 @@ function openQuizMaker(itId) {
     if (b.dataset.sheet != null) { m.sheet = +b.dataset.sheet; return draw(); }
     if (b.dataset.qfsave != null || b.dataset.qfprint != null) {
       m.blank = Math.max(0, +$('#qfBlank').value || 0);
-      it.quiz = { ...(it.quiz || {}), made: m }; saveLib(); renderLib();
+      for (const q of m.items) q.id ||= 'mq' + uid();
+      if (b.dataset.qfprint != null) m.names = names.slice();   // who each printed copy is for, by its number in the code, whatever the roster becomes
+      const Q = qmkBoxes(m, it.name, it.quiz), moved = m.lay != null && m.ver !== (m.pv || 0);
+      if (b.dataset.qfprint != null) { m.pv = m.ver; m.lay = JSON.stringify(Q.qs.map(q => [q.n, q.auto.b])); }
+      it.quiz = { ...Q, made: m }; saveLib(); renderLib();
+      if (batch && batch.id === it.batchId) { batch.quiz = qmkFor(batch.quiz, it.quiz); quizBtn(); saveSoon(); }
       if (b.dataset.qfprint != null) return qmkPrint(it, m, names);
-      closeDlg(); toast('Quiz saved');
+      closeDlg(); toast(moved ? 'Quiz saved. This change moves bubbles, so print it again: copies printed before can’t be read by the scan.' : 'Quiz saved');
     }
   };
   $('#qfShow').onchange = () => draw(true);
 }
+// A download's quiz from its card's: the boxes as the quiz now prints, with what was set on this download's papers kept.
+const qmkFor = (had, q) => ({ ...JSON.parse(JSON.stringify(q)), shift: (had && had.shift) || {}, spot: (had && had.spot) || {} });
 // Every student's copy with their name on it, in roster order, then the blank copies. The browser's print box saves it as a PDF too.
 function qmkPrint(it, m, names) {
-  const all = [...names, ...Array(m.blank || 0).fill('')].flatMap(n => qmkPages(m, it.name, n));
+  const all = [...names, ...Array(m.blank || 0).fill('')].flatMap((n, k) => qmkPages(m, it.name, n, n ? k + 1 : 0));
   const w = window.open('', '_blank'); if (!w) return toast('Your browser blocked the print window');
-  w.document.write('<!doctype html><title>' + esc(it.name) + '</title><style>' + [...document.styleSheets].map(s => { try { return [...s.cssRules].filter(r => /\.qf/.test(r.cssText)).map(r => r.cssText).join('\n'); } catch { return ''; } }).join('\n') +
+  // the same font as the page it was measured on, so every line breaks where the bubbles were measured
+  w.document.write('<!doctype html><title>' + esc(it.name) + '</title><style>' + [...document.styleSheets].map(s => { try { return [...s.cssRules].filter(r => r instanceof CSSFontFaceRule || /\.qf/.test(r.cssText)).map(r => r.cssText).join('\n'); } catch { return ''; } }).join('\n') +
     '@page{size:letter;margin:0}body{margin:0;font-family:Inter,Arial,sans-serif}.qfpage{break-after:page;box-shadow:none}</style>' + all.join(''));
-  w.document.close(); setTimeout(() => w.print(), 300);
-}
-// MOCKUP: what she sees after bringing in the scan of the whole stack. The answers here are made up.
-function openQuizRead(itId) {
-  const f = findItem(itId); if (!f || !f.it.quiz || !f.it.quiz.made) return toast('Make the quiz first');
-  const it = f.it, m = it.quiz.made, c = holderById(it.classId), names = (c && c.names) || [];
-  const auto = m.items.map((q, i) => [q, i]).filter(([q]) => q.t !== 'sa');
-  const look = [
-    { who: 1, i: auto[0][1], fill: { 0: 'f', 2: 'f' }, why: 'Two bubbles filled' },
-    { who: 4, i: auto[1 % auto.length][1], fill: { 1: 'faint' }, why: 'Very light' },
-    { who: 6, i: auto[2 % auto.length][1], fill: { 0: 'x', 1: 'f' }, why: 'One crossed out' },
-  ];
-  const pages = names.length * qmkPages(m, it.name, 'x').length;
-  const n = names.length * auto.length;
-  const row = (r, k) => { const q = m.items[r.i], L = qmkLetters(q);
-    return '<div class="qfrr" data-k="' + k + '"><div class="qfrw"><b data-raw>' + esc(names[r.who] || 'Student') + '</b><span class="muted hsm">Question ' + (r.i + 1) + ' · ' + r.why + '</span></div>' +
-      '<div class="qfcrop">' + qmkQ(q, r.i, { ...m, sheet: 1, fill: { [r.i]: r.fill } }) + '</div>' +
-      '<div class="qfpick"><span class="hsm muted">Their answer</span>' + L.map(l => '<button class="btn sm" data-ans="' + l + '">' + l + '</button>').join('') + '<button class="btn sm" data-ans="-">None</button></div></div>'; };
-  openDlg('<div class="bh"><h2>Quiz scan read <span class="muted" data-raw>' + esc(it.name) + '</span></h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
-    '<div class="qftiles"><div><b>' + pages + '</b><span>pages scanned</span></div><div><b>' + names.length + ' of ' + names.length + '</b><span>students found by the code on each page</span></div><div><b>' + (n - look.length) + ' of ' + n + '</b><span>answers read and scored</span></div><div class="need"><b>' + look.length + '</b><span>need you</span></div></div>' +
-    '<p class="hsm">These answers weren’t clear enough to score on their own. Pick what each student meant. Short answers wait for you in Quick mark, unless you filled their score bubbles before scanning.</p>' +
-    look.map(row).join('') + '</div><div class="bf"><span class="muted hsm" style="margin-right:auto">Every score can be changed later in Quick mark. One Undo takes the whole scan back.</span><button class="btn" data-close>Later</button><button class="btn primary" data-close>Save scores</button></div>', false);
-  $('#dlgBox').classList.add('qfread');
-  $('#dlgBox').addEventListener('click', e => { const b = e.target.closest('[data-ans]'); if (!b) return; const r = b.closest('.qfrr'); for (const x of r.querySelectorAll('[data-ans]')) x.classList.toggle('primary', x === b); r.classList.add('done'); });
+  w.document.close(); w.document.fonts.ready.then(() => setTimeout(() => w.print(), 200));
 }

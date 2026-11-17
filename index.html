@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"2cdb8f59","zh-Hans":"b57ae1b0","es":"b79ba812","fr":"3bea8020","de":"337f7d42","pt-BR":"b6c3ad5e","ja":"08c90bfb","ko":"c0feed62"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"1f6c7231","zh-Hans":"6427d65f","es":"bc4fc38c","fr":"2ff7f977","de":"2beeeb86","pt-BR":"92549f2b","ja":"2d660575","ko":"f26c9c74"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -1069,6 +1069,8 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .qfscale>.qfpage{transform:scale(.7);transform-origin:0 0}
 .qfprobe{position:absolute;left:-9999px;top:0;visibility:hidden}
 
+
+.qfpage,.qfpage *{box-sizing:border-box}.qfpage :where(ol,ul,li,p,div,span,b,i){margin:0;padding:0;letter-spacing:normal;text-transform:none}
 .qfpage{position:relative;width:816px;height:1056px;background:#fff;color:#111;font:14px/1.4 Inter,Arial,sans-serif;box-sizing:border-box;padding:96px 76px 64px;box-shadow:0 1px 3px rgba(0,0,0,.18);overflow:hidden}
 .qfreg{position:absolute;width:19px;height:19px;background:#000}
 .qfreg.tl{left:53px;top:53px}.qfreg.tr{right:53px;top:53px}.qfreg.bl{left:53px;bottom:53px}.qfreg.br{right:53px;bottom:53px}
@@ -1110,6 +1112,8 @@ body:has(#openRep:not([hidden])) .toast{bottom:calc(76px + var(--savebar,0px))}
 .qfcrop{background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:#111}
 .qfpick{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .qfq.sheet .qfbs{justify-self:start}
+.qfname b{white-space:nowrap;overflow:hidden;text-overflow:clip}
+.qfcrop img{display:block;max-width:100%;max-height:120px}
 
 
 .lvrow{display:flex;gap:8px;align-items:flex-start;margin-top:6px}
@@ -4295,6 +4299,7 @@ textarea.stptext{min-height:132px;margin-top:var(--space-2);font:var(--text-cont
           <button class="mitem" id="partnersBtn" title="Everyone’s partners and videos in one list: who works together, and a link or video file for each">Partners and videos…</button>
           <button class="mitem" id="clipsBtn" hidden title="The parts of videos you saved, one after another, with their labels and no names">Clips to show the class</button>
           <button class="mitem" id="quizBtn" title="For a scanned paper quiz: box each question once, then mark the same question for everyone at once">Quick mark (paper quiz)</button>
+          <button class="mitem" id="qrBtn" hidden title="For a quiz made in Make a quiz: the answers the scan read, and any it needs you to check">Quiz scan…</button>
           <button class="mitem" id="impBtn" title="Comments and marks made in Kami, Acrobat or Preview, made into your own so you can change them">Marks from other apps</button>
           <span class="mlink" id="topAtlas"></span>
         </div>
@@ -5302,7 +5307,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.71";
+  const APP_VERSION = "1.28.72";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -5842,6 +5847,11 @@ a: ['Open **Quick mark** under Setup. Draw a box around each question once, on a
 'The total goes into the student’s score. Not sure about an answer? Press **P** or **⧉ Copy** on it to copy a picture of just that answer, with the question and your answer key on top, to paste into an AI assistant. The name, score and your mark are left off, but the picture still shows the student’s handwriting and words.',
 'In an IB MYP class, each question counts for one criterion. Under **Points to levels** on the boxes screen, type the lowest points that earn each level. The quiz then gives a level for each criterion, with no total and no percent.'],
 words: 'myp levels criterion quiz test questions boxes right wrong points multiple copy picture screenshot ai assistant claude chatgpt' },
+{ id: 'make-quiz', sec: 'mark', q: 'Can I make a quiz that scores itself from a scan?',
+a: ['Yes, for multiple choice, true or false and pick all that apply. On the assignment’s card, open **⋯** and choose **Make a quiz**. Type each question, click the letter of the right answer, and **Print**. Each copy has a student’s name and a code at the top.',
+'Scan the whole stack into one PDF, in any order, and choose **Bring in the scanned quiz** on the card. Each page goes to its student by the code, and the bubbles are scored. Answers that aren’t clear, like two bubbles filled or very light pencil, are shown to you to pick.',
+'A short answer gets a Teacher box: fill the score bubble as you mark and the scan reads your score too, or mark it in **Quick mark**. If you change the quiz after printing so the bubbles move, print it again.'],
+words: 'bubble sheet scantron multiple choice true false scan print answer sheet automatic omr' },
 { id: 'screenshot', sec: 'mark', q: 'How do I take a screenshot?',
 a: ['Press **S** on a paper, **Alt S** (⌥S on a Mac) anywhere in the app, or the screenshot button at the foot of the marking tools. Drag over what you want, click a page for the whole page, or press Enter for everything on screen. The picture goes on the clipboard, ready to paste.',
 'On a paper, the page is drawn fresh from the file: name covers are painted in, and the student’s name and file name above the paper are left off. Untick **With my marks** for the page without your marks. Anything else, like the student list, shows as it is on screen. Nothing is sent anywhere.'],
@@ -6870,7 +6880,8 @@ if (earlier) carryRoster(earlier);
 if (batch.restoredKey) { const k = batch.students.findIndex(st => st.key === batch.restoredKey); if (k >= 0) batch.restoredCur = k; }
 renderClassSel();
 if (assignment && assignment.goal && !batch.goal && !assignment.batchId) batch.goal = assignment.goal;
-if (assignment && assignment.quiz && !batch.quiz && !assignment.batchId) { batch.quiz = JSON.parse(JSON.stringify(assignment.quiz)); setTimeout(saveSoon, 0); }
+if (assignment && assignment.quiz && assignment.quiz.made && (!batch.quiz || JSON.stringify(batch.quiz.made) !== JSON.stringify(assignment.quiz.made))) { batch.quiz = qmkFor(batch.quiz, assignment.quiz); setTimeout(saveSoon, 0); }
+else if (assignment && assignment.quiz && !batch.quiz && !assignment.batchId) { batch.quiz = JSON.parse(JSON.stringify(assignment.quiz)); setTimeout(saveSoon, 0); }
 if (assignment) { assignment.batchId = id; assignment.opened = Date.now(); if (!assignment.setup || rub.toCard) assignment.setup = { ...setup, spot: undefined }; shareRubric(assignment); saveLib(); }
 keepWait = keepPapers(batch, label, fromKeep ? null : keepList, sameSize.length > 0);
 cur = 0; undoStack = []; redoStack = []; selected = null;
@@ -12113,7 +12124,7 @@ return;
 if (b.dataset.additem != null) return editAssignment(null, b.dataset.additem);
 if (b.dataset.editAsg) return editAssignment(b.dataset.editAsg);
 if (b.dataset.qmake) return openQuizMaker(b.dataset.qmake);
-if (b.dataset.qread) return openQuizRead(b.dataset.qread);
+if (b.dataset.qread) return qrScanIn(b.dataset.qread);
 if (b.dataset.kopen) { const f = b.dataset.kasg ? findItem(b.dataset.kasg) : null; const was = b.textContent, named = b.classList.contains('kname'); b.disabled = true; if (!named) b.textContent = 'Opening…'; return reopenKept(b.dataset.kopen, f ? f.it : null).finally(() => { b.disabled = false; if (!named) b.textContent = was; }); }
 if (b.dataset.kforget) {
 if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Click again to forget it'; setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = 'Forget'; } }, 4000); return; }
@@ -13968,6 +13979,7 @@ for (let i = 0; i < me.n && SP === me; i++) {
 if (me.thumbs[i]) continue;
 const page = await me.doc.getPage(i + 1);
 await scanSplitLook(me, i, page);
+await qrSplitPage(me, i, page);
 if (SP !== me) return;
 const vp0 = spView(me, i, page, 1), vp = spView(me, i, page, 520 / vp0.width);
 const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
@@ -13981,7 +13993,8 @@ if (SP !== me) return;
 const im = document.querySelector('#spPages img[data-th="' + i + '"]'); if (im) im.src = me.thumbs[i];
 const st = $('#spStat'); if (st) st.textContent = i + 1 < me.n ? 'Reading pages… ' + (i + 1) + ' of ' + me.n : '';
 }
-if (SP === me && $('#spStat')) $('#spStat').textContent = scanSplitSays(me);
+if (SP === me && me.qnew) { me.qnew = 0; splitPick(me.owner.findIndex((o, i) => spFree(i)), 1); splitDraw(); }
+if (SP === me && $('#spStat')) $('#spStat').textContent = [qrSplitSays(me), scanSplitSays(me)].filter(Boolean).join(' · ');
 }
 function splitInk(ctx, w, h) {
 const m = Math.round(w * .06), d = ctx.getImageData(m, m, w - 2 * m, h - 2 * m).data; let dark = 0;
@@ -14235,7 +14248,7 @@ const file = ((me.asg && me.asg.name) || me.name).replace(/[\\/:*?"<>|]+/g, ' ')
 const entries = [], t0 = Date.now(), all = spAll(me), pagesOf = nm => me.owner.map((_, i) => spWho(me, i).includes(nm) ? i : -1).filter(i => i >= 0);
 const wide = me.keepL && me.L && !Object.keys(me.Lp).length && !me.into;
 for (const [k, nm] of all.entries()) {
-const out = await PDFLib.PDFDocument.create(), mine = pagesOf(nm);
+const out = await PDFLib.PDFDocument.create(), mine = pagesOf(nm).sort((a, b) => ((me.qpg || {})[a] ?? 99) - ((me.qpg || {})[b] ?? 99) || a - b);
 out.setModificationDate(new Date(t0 + k * 1000));
 if (!src.isEncrypted) { for (const pg of await out.copyPages(src, mine)) out.addPage(pg); }
 else for (const i of mine) await rasterInto(out, me.doc, i, 200);
@@ -14258,7 +14271,9 @@ rosterSort(); cur = Math.max(0, batch.students.indexOf(keep));
 setBatchName();
 saveNow(); renderList();
 if (first) openStudent(batch.students.indexOf(first));
-return toast('Added pages for ' + entries.length + (entries.length === 1 ? ' student' : ' students'));
+toast('Added pages for ' + entries.length + (entries.length === 1 ? ' student' : ' students'));
+if (batch.quiz && batch.quiz.made) qrReadAll();
+return;
 }
 await intake(entries, me.name, me.asg);
 if (wide && batch) { batch.light = { ...(batch.light || {}), '*': { ...me.L } }; batch.lightOpt = { ...lightOpts(), on: true }; }
@@ -14266,6 +14281,7 @@ scanHintsAll();
 if (batch && me.keepL && (me.L || Object.keys(me.Lp).length)) lightPagesChanged();
 if (batch) renderList();
 if (me.classId && batch) { batch.classId = me.classId; renderClassSel(); saveNow(); renderList(); }
+if (batch && batch.quiz && batch.quiz.made) qrReadAll();
 }
 
 /* ---------------- other files: kept with the student, downloadable, returned in the export if you added them ---------------- */
@@ -23596,20 +23612,23 @@ for (const el of body.querySelectorAll('.qmc[data-st="' + g.el.dataset.st + '"]'
 /* the button */
 function quizBtn() {
 const b = $('#quizTop'); if (b) b.hidden = !quizOn();
+const r = $('#qrBtn'); if (r) r.hidden = !(quizOn() && batch.quiz.made);
 }
 $('#quizBtn').onclick = () => openQuiz();
 $('#quizTop').onclick = () => openQuiz();
+$('#qrBtn').onclick = () => batch && batch.quiz && batch.quiz.lastRead ? openQuizLook() : qrReadAll();
 Object.assign(window.__gs, { qzAnsOf, openQuiz, openQuizBoxes, quizSet, quizSum, quizCount, quizPart, quizMax, quizOn, qzCrop, qzRect, qzSpot, quizBtn });
 
 /* ---------------- Make a quiz: questions typed in, printed with bubbles, read back from the scan ---------------- */
 const QMK_T = { mc: 'Multiple choice', tf: 'True or false', ms: 'Pick all that apply', sa: 'Short answer' };
 const QMK_L = 'ABCDEFGH';
-const qmkNew = t => t === 'tf' ? { t, text: '', opts: ['True', 'False'], key: '', pts: 1 } : t === 'sa' ? { t, text: '', opts: [], key: '', pts: 2, lines: 3 } : { t, text: '', opts: ['', '', '', ''], key: '', pts: 1 };
+const qmkNew = t => ({ id: 'mq' + uid(), ...qmkNew0(t) });
+const qmkNew0 = t => t === 'tf' ? { t, text: '', opts: ['True', 'False'], key: '', pts: 1 } : t === 'sa' ? { t, text: '', opts: [], key: '', pts: 2, lines: 3 } : { t, text: '', opts: ['', '', '', ''], key: '', pts: 1 };
 const qmkPts = m => m.items.reduce((a, q) => a + (+q.pts || 0), 0);
 const qmkLetters = q => q.t === 'tf' ? ['T', 'F'] : q.t === 'sa' ? qzSteps(+q.pts || 1).map(fmtNum) : q.opts.map((_, k) => QMK_L[k]);
-function qmkBits(id, who, pg) {
+function qmkBits(id, who, pg, ver = 0) {
 const b = [], put = (v, n) => { for (let k = n - 1; k >= 0; k--) b.push((v >> k) & 1); };
-put(id, 8); put(who, 8); put(pg, 3); put(0, 2); put((id + who + pg) % 31, 5);
+put(id, 8); put(who, 8); put(pg, 3); put(ver % 4, 2); put((id + who + pg + ver % 4) % 31, 5);
 return [1, 0, ...b];
 }
 function qmkQ(q, i, m) {
@@ -23622,8 +23641,8 @@ const words = m.sheet ? '' : '<div class="qftx">' + esc(q.text || (q.t === 'sa' 
 return '<div class="qfq' + (m.sheet ? ' sheet' : '') + '" data-i="' + i + '"><span class="qfn">' + (i + 1) + '</span>' + words +
 '<div class="qfbs' + (q.t === 'sa' ? ' sa' : '') + '">' + (q.t === 'sa' ? '<span class="qffor">Teacher</span>' : '') + bub + '</div></div>';
 }
-function qmkPageHtml(m, title, name, pg, of, qs, from) {
-const bits = qmkBits(m.id || 1, name ? 3 : 0, pg).map(b => '<i' + (b ? ' class="on"' : '') + '></i>').join('');
+function qmkPageHtml(m, title, name, pg, of, qs, from, who = 0) {
+const bits = qmkBits(m.id || 1, who, pg, m.ver || 0).map(b => '<i' + (b ? ' class="on"' : '') + '></i>').join('');
 return '<div class="qfpage"><i class="qfreg tl"></i><i class="qfreg tr"></i><i class="qfreg bl"></i><i class="qfreg br"></i><div class="qfcode">' + bits + '</div>' +
 (pg === 0 ? '<div class="qfhead"><div><div class="qftitle" data-raw>' + esc(title) + '</div><div class="qfsub">' + m.items.length + ' questions · ' + fmtNum(qmkPts(m)) + ' points</div></div>' +
 '<div class="qfname"><span>Name</span><b data-raw>' + esc(name || '') + '</b></div></div>' +
@@ -23631,7 +23650,7 @@ return '<div class="qfpage"><i class="qfreg tl"></i><i class="qfreg tr"></i><i c
 : '<div class="qfhead sm"><span data-raw>' + esc(title) + '</span><span data-raw>' + esc(name || '') + '</span></div>') +
 '<div class="qfbody">' + qs.map((q, k) => qmkQ(q, from + k, m)).join('') + '</div><div class="qffoot">Page ' + (pg + 1) + ' of ' + of + '</div></div>';
 }
-function qmkPages(m, title, name) {
+function qmkPages(m, title, name, who = 0) {
 const probe = document.createElement('div'); probe.className = 'qfprobe'; document.body.appendChild(probe);
 probe.innerHTML = qmkPageHtml(m, title, name, 0, 1, m.items, 0);
 const body = probe.querySelector('.qfbody'), room0 = 1056 - 64 - body.offsetTop, room = room0 + (body.offsetTop - 120);
@@ -23640,7 +23659,36 @@ probe.remove();
 const pages = []; let cur = [], used = 0, at = 0;
 hs.forEach((h, i) => { const lim = pages.length ? room : room0; if (cur.length && used + h > lim) { pages.push([at, cur]); at = i; cur = []; used = 0; } cur.push(m.items[i]); used += h; });
 pages.push([at, cur]);
-return pages.map(([from, qs], pg) => qmkPageHtml(m, title, name, pg, pages.length, qs, from));
+return pages.map(([from, qs], pg) => qmkPageHtml(m, title, name, pg, pages.length, qs, from, who));
+}
+function qmkLayout(m, title) {
+const probe = document.createElement('div'); probe.className = 'qfprobe'; document.body.appendChild(probe);
+probe.innerHTML = qmkPages(m, title, 'Name').join('');
+const out = [], R = v => Math.round(v * 10000) / 10000;
+[...probe.querySelectorAll('.qfpage')].forEach((pg, n) => {
+const P = pg.getBoundingClientRect(), sx = v => R((v - P.left) / P.width), sy = v => R((v - P.top) / P.height);
+for (const el of pg.querySelectorAll('.qfq')) {
+const r = el.getBoundingClientRect(), bs = [...el.querySelectorAll('.qfb')].map(b => b.getBoundingClientRect());
+out[+el.dataset.i] = { n, x: sx(r.left), y: sy(r.top), w: R(r.width / P.width), h: R(r.height / P.height), b: bs.map(b => [sx(b.left + b.width / 2), sy(b.top + b.height / 2)]), r: R(bs[0].width / 2 / P.width) };
+}
+});
+probe.remove();
+return out;
+}
+function qmkBoxes(m, title, was) {
+const L = qmkLayout(m, title), Q = JSON.parse(JSON.stringify(was || {}));
+const lay = JSON.stringify(L.map(a => [a.n, a.b]));
+m.ver = m.lay == null || m.lay === lay ? m.pv || 0 : (m.pv || 0) + 1;
+const old = new Map((Q.qs || []).map(q => [q.id, q]));
+Q.qs = m.items.map((it, i) => {
+const o = old.get(it.id) || {}, at = L[i], letters = qmkLetters(it);
+const key = it.t === 'sa' ? (o.key || '') : it.t === 'ms' ? it.key.split('').join(', ') : it.t === 'tf' ? (it.key === 'T' ? 'True' : it.key === 'F' ? 'False' : '') : it.key ? it.key + ': ' + (it.opts[letters.indexOf(it.key)] || '') : '';
+const q = { ...o, id: it.id, lab: String(i + 1), n: at.n, x: at.x, y: at.y, w: at.w, h: at.h, pts: +it.pts || 1, key: key.replace(/: $/, ''), kind: it.t === 'sa' ? 'scale' : 'rw', how: o.how || 'cx', auto: { t: it.t, b: at.b, r: at.r, key: it.t === 'sa' ? '' : it.key || '' } };
+if (o.n !== at.n || Math.abs((o.x || 0) - at.x) > .002 || Math.abs((o.y || 0) - at.y) > .002) { delete q.mx; delete q.my; delete q.nx; delete q.ny; }
+return q;
+});
+Q.how ||= 'cx'; Q.side ||= 'right'; Q.ans ||= 'miss'; Q.at ||= 'right'; Q.shift ||= {};
+return Q;
 }
 function openQuizMaker(itId) {
 const f = findItem(itId); if (!f) return;
@@ -23695,42 +23743,273 @@ if (b.dataset.qnew) { m.items.push(qmkNew(b.dataset.qnew)); sel = m.items.length
 if (b.dataset.sheet != null) { m.sheet = +b.dataset.sheet; return draw(); }
 if (b.dataset.qfsave != null || b.dataset.qfprint != null) {
 m.blank = Math.max(0, +$('#qfBlank').value || 0);
-it.quiz = { ...(it.quiz || {}), made: m }; saveLib(); renderLib();
+for (const q of m.items) q.id ||= 'mq' + uid();
+if (b.dataset.qfprint != null) m.names = names.slice();
+const Q = qmkBoxes(m, it.name, it.quiz), moved = m.lay != null && m.ver !== (m.pv || 0);
+if (b.dataset.qfprint != null) { m.pv = m.ver; m.lay = JSON.stringify(Q.qs.map(q => [q.n, q.auto.b])); }
+it.quiz = { ...Q, made: m }; saveLib(); renderLib();
+if (batch && batch.id === it.batchId) { batch.quiz = qmkFor(batch.quiz, it.quiz); quizBtn(); saveSoon(); }
 if (b.dataset.qfprint != null) return qmkPrint(it, m, names);
-closeDlg(); toast('Quiz saved');
+closeDlg(); toast(moved ? 'Quiz saved. This change moves bubbles, so print it again: copies printed before can’t be read by the scan.' : 'Quiz saved');
 }
 };
 $('#qfShow').onchange = () => draw(true);
 }
+const qmkFor = (had, q) => ({ ...JSON.parse(JSON.stringify(q)), shift: (had && had.shift) || {}, spot: (had && had.spot) || {} });
 function qmkPrint(it, m, names) {
-const all = [...names, ...Array(m.blank || 0).fill('')].flatMap(n => qmkPages(m, it.name, n));
+const all = [...names, ...Array(m.blank || 0).fill('')].flatMap((n, k) => qmkPages(m, it.name, n, n ? k + 1 : 0));
 const w = window.open('', '_blank'); if (!w) return toast('Your browser blocked the print window');
-w.document.write('<!doctype html><title>' + esc(it.name) + '</title><style>' + [...document.styleSheets].map(s => { try { return [...s.cssRules].filter(r => /\.qf/.test(r.cssText)).map(r => r.cssText).join('\n'); } catch { return ''; } }).join('\n') +
+w.document.write('<!doctype html><title>' + esc(it.name) + '</title><style>' + [...document.styleSheets].map(s => { try { return [...s.cssRules].filter(r => r instanceof CSSFontFaceRule || /\.qf/.test(r.cssText)).map(r => r.cssText).join('\n'); } catch { return ''; } }).join('\n') +
 '@page{size:letter;margin:0}body{margin:0;font-family:Inter,Arial,sans-serif}.qfpage{break-after:page;box-shadow:none}</style>' + all.join(''));
-w.document.close(); setTimeout(() => w.print(), 300);
+w.document.close(); w.document.fonts.ready.then(() => setTimeout(() => w.print(), 200));
 }
-function openQuizRead(itId) {
-const f = findItem(itId); if (!f || !f.it.quiz || !f.it.quiz.made) return toast('Make the quiz first');
-const it = f.it, m = it.quiz.made, c = holderById(it.classId), names = (c && c.names) || [];
-const auto = m.items.map((q, i) => [q, i]).filter(([q]) => q.t !== 'sa');
-const look = [
-{ who: 1, i: auto[0][1], fill: { 0: 'f', 2: 'f' }, why: 'Two bubbles filled' },
-{ who: 4, i: auto[1 % auto.length][1], fill: { 1: 'faint' }, why: 'Very light' },
-{ who: 6, i: auto[2 % auto.length][1], fill: { 0: 'x', 1: 'f' }, why: 'One crossed out' },
-];
-const pages = names.length * qmkPages(m, it.name, 'x').length;
-const n = names.length * auto.length;
-const row = (r, k) => { const q = m.items[r.i], L = qmkLetters(q);
-return '<div class="qfrr" data-k="' + k + '"><div class="qfrw"><b data-raw>' + esc(names[r.who] || 'Student') + '</b><span class="muted hsm">Question ' + (r.i + 1) + ' · ' + r.why + '</span></div>' +
-'<div class="qfcrop">' + qmkQ(q, r.i, { ...m, sheet: 1, fill: { [r.i]: r.fill } }) + '</div>' +
-'<div class="qfpick"><span class="hsm muted">Their answer</span>' + L.map(l => '<button class="btn sm" data-ans="' + l + '">' + l + '</button>').join('') + '<button class="btn sm" data-ans="-">None</button></div></div>'; };
-openDlg('<div class="bh"><h2>Quiz scan read <span class="muted" data-raw>' + esc(it.name) + '</span></h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
-'<div class="qftiles"><div><b>' + pages + '</b><span>pages scanned</span></div><div><b>' + names.length + ' of ' + names.length + '</b><span>students found by the code on each page</span></div><div><b>' + (n - look.length) + ' of ' + n + '</b><span>answers read and scored</span></div><div class="need"><b>' + look.length + '</b><span>need you</span></div></div>' +
-'<p class="hsm">These answers weren’t clear enough to score on their own. Pick what each student meant. Short answers wait for you in Quick mark, unless you filled their score bubbles before scanning.</p>' +
-look.map(row).join('') + '</div><div class="bf"><span class="muted hsm" style="margin-right:auto">Every score can be changed later in Quick mark. One Undo takes the whole scan back.</span><button class="btn" data-close>Later</button><button class="btn primary" data-close>Save scores</button></div>', false);
+
+/* ---------------- Make a quiz, read back: the code on each page and the bubbles filled in ---------------- */
+const QR_REG = [[62.5, 62.5], [753.5, 62.5], [753.5, 993.5], [62.5, 993.5]];
+function qrGrey(c) {
+const W = c.width, H = c.height, d = c.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, W, H).data, g = new Uint8Array(W * H), hist = new Uint32Array(256);
+for (let i = 0; i < W * H; i++) { const v = (d[4 * i] * 77 + d[4 * i + 1] * 150 + d[4 * i + 2] * 29) >> 8; g[i] = v; hist[v]++; }
+let k = 0, P = 255; for (let v = 0; v < 256; v++) { k += hist[v]; if (k >= W * H * .9) { P = v; break; } }
+return { g, W, H, P: Math.max(P, 60) };
+}
+function qrFind(im) {
+const { g, W, H, P } = im, cut = Math.min(140, P * .6), I = new Int32Array((W + 1) * (H + 1));
+for (let y = 0; y < H; y++) { let row = 0; for (let x = 0; x < W; x++) { row += g[y * W + x] < cut ? 1 : 0; I[(y + 1) * (W + 1) + x + 1] = I[y * (W + 1) + x + 1] + row; } }
+const sum = (x0, y0, x1, y1) => { x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(W, x1); y1 = Math.min(H, y1); return x1 <= x0 || y1 <= y0 ? 0 : I[y1 * (W + 1) + x1] - I[y0 * (W + 1) + x1] - I[y1 * (W + 1) + x0] + I[y0 * (W + 1) + x0]; };
+const s = Math.min(W, H) / 816, a = 19 * s, reach = Math.round(.2 * Math.min(W, H));
+const corner = (cx, cy) => {
+let best = null;
+for (const k of [.88, 1, 1.12]) {
+const b = Math.max(4, Math.round(a * k)), m = Math.max(2, Math.round(b / 3)), ringA = (b + 2 * m) ** 2 - b * b;
+const xs = cx ? W - reach : 0, ys = cy ? H - reach : 0;
+for (let y = ys; y + b <= ys + reach; y++) for (let x = xs; x + b <= xs + reach; x++) {
+const inn = sum(x, y, x + b, y + b); if (inn < b * b * .8) continue;
+const ring = sum(x - m, y - m, x + b + m, y + b + m) - inn; if (ring > ringA * .2) continue;
+const score = inn / (b * b) - 2 * ring / ringA;
+if (!best || score > best.score) best = { score, x, y, b };
+}
+}
+if (!best) return null;
+let n = 0, sx = 0, sy = 0; const { x, y, b } = best;
+for (let v = Math.max(0, y - 3); v < Math.min(H, y + b + 3); v++) for (let u = Math.max(0, x - 3); u < Math.min(W, x + b + 3); u++) if (g[v * W + u] < cut) { n++; sx += u; sy += v; }
+return n ? [sx / n + .5, sy / n + .5] : null;
+};
+const p = [corner(0, 0), corner(1, 0), corner(1, 1), corner(0, 1)], miss = p.filter(x => !x).length;
+if (miss > 1) return null;
+if (miss === 1) { const k = p.findIndex(x => !x), A = p[(k + 3) % 4], B = p[(k + 1) % 4], C = p[(k + 2) % 4]; p[k] = [A[0] + B[0] - C[0], A[1] + B[1] - C[1]]; }
+const d = (u, v) => Math.hypot(u[0] - v[0], u[1] - v[1]), top = d(p[0], p[1]), bot = d(p[3], p[2]), lef = d(p[0], p[3]), rig = d(p[1], p[2]);
+if (Math.abs(top - bot) > .04 * top || Math.abs(lef - rig) > .04 * lef) return null;
+const ar = top / lef, want = 691 / 931;
+if (Math.abs(ar - want) > .06 * want && Math.abs(ar - 1 / want) > .06 / want) return null;
+return { p, weak: miss === 1 };
+}
+function qrH(src, dst) {
+const A = [];
+for (let k = 0; k < 4; k++) { const [x, y] = src[k], [u, v] = dst[k]; A.push([x, y, 1, 0, 0, 0, -u * x, -u * y, u], [0, 0, 0, x, y, 1, -v * x, -v * y, v]); }
+for (let c = 0; c < 8; c++) {
+let r = c; for (let i = c + 1; i < 8; i++) if (Math.abs(A[i][c]) > Math.abs(A[r][c])) r = i;
+[A[c], A[r]] = [A[r], A[c]]; const pv = A[c][c]; if (Math.abs(pv) < 1e-12) return null;
+for (let j = c; j < 9; j++) A[c][j] /= pv;
+for (let i = 0; i < 8; i++) if (i !== c && A[i][c]) { const f = A[i][c]; for (let j = c; j < 9; j++) A[i][j] -= f * A[c][j]; }
+}
+const h = A.map(r => r[8]);
+return (x, y) => { const w = h[6] * x + h[7] * y + 1; return [(h[0] * x + h[1] * y + h[2]) / w, (h[3] * x + h[4] * y + h[5]) / w]; };
+}
+function qrMean(im, x, y, r) {
+const { g, W, H } = im; let n = 0, t = 0, r2 = r * r;
+for (let v = Math.max(0, Math.floor(y - r)); v <= Math.min(H - 1, Math.ceil(y + r)); v++) for (let u = Math.max(0, Math.floor(x - r)); u <= Math.min(W - 1, Math.ceil(x + r)); u++) if ((u - x) ** 2 + (v - y) ** 2 <= r2) { n++; t += g[v * W + u]; }
+return n ? t / n : 255;
+}
+function qrRing(im, x, y, r0, r1) {
+const { g, W, H, P } = im, cut = P * .6; let n = 0, k = 0;
+for (let v = Math.max(0, Math.floor(y - r1)); v <= Math.min(H - 1, Math.ceil(y + r1)); v++) for (let u = Math.max(0, Math.floor(x - r1)); u <= Math.min(W - 1, Math.ceil(x + r1)); u++) { const d2 = (u - x) ** 2 + (v - y) ** 2; if (d2 < r0 * r0 || d2 > r1 * r1) continue; n++; if (g[v * W + u] < cut) k++; }
+return n ? k / n : 0;
+}
+function qrCode(im, found) {
+for (const t of [0, 2, 1, 3]) {
+const dst = [0, 1, 2, 3].map(k => found.p[(k + t) % 4]), map = qrH(QR_REG, dst); if (!map) continue;
+const a = map(...QR_REG[0]), b = map(...QR_REG[1]), s = Math.hypot(a[0] - b[0], a[1] - b[1]) / 691;
+const cell = k => qrMean(im, ...map(192 + 16 * k, 62), 3 * s), B = cell(0), Wt = cell(1);
+if (Wt - B < 40) continue;
+const bits = []; for (let k = 2; k < 28; k++) bits.push(cell(k) < (B + Wt) / 2 ? 1 : 0);
+const num = (i, n) => bits.slice(i, i + n).reduce((v, x) => v * 2 + x, 0);
+const id = num(0, 8), who = num(8, 8), pg = num(16, 3), ver = num(19, 2), chk = num(21, 5);
+if ((id + who + pg + ver) % 31 === chk) return { id, who, pg, ver, map, s, turn: t };
+}
+return null;
+}
+async function qrPageCode(page, wide = 900) {
+const v1 = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: wide / Math.min(v1.width, v1.height) });
+const c = document.createElement('canvas'); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+const ctx = c.getContext('2d', { willReadFrequently: true }); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+await page.render({ canvasContext: ctx, viewport: vp }).promise;
+const im = qrGrey(c), f = qrFind(im), code = f && qrCode(im, f);
+c.width = c.height = 0;
+return code;
+}
+async function qrSplitPage(me, i, page) {
+const made = (me.asg && me.asg.quiz && me.asg.quiz.made) || (me.into && batch && batch.quiz && batch.quiz.made); if (!made || !made.names) return;
+let code = null; try { code = await qrPageCode(page); } catch { }
+if (!code || code.id !== made.id) return;
+(me.qpg ||= {})[i] = code.pg;
+me.qnew ||= 0;
+if (code.turn === 2) { me.rot[i] = 180; if (me.sc[i]) me.sc[i].didTurn = 180; } else if (!code.turn && me.sc[i] && me.sc[i].didTurn) { delete me.rot[i]; me.sc[i].didTurn = 0; }
+const nm = code.who ? made.names[code.who - 1] : '';
+if (nm && !me.owner[i] && !me.skip.has(i)) {
+const own = me.names.find(x => x === nm) || me.names.find(x => normName(x) === normName(nm));
+if (own) { me.owner[i] = own; me.qnew++; }
+}
+}
+function qrSplitSays(me) {
+if (!me.qpg) return '';
+const got = Object.keys(me.qpg).length, who = new Set(Object.keys(me.qpg).map(i => me.owner[i]).filter(Boolean)).size, left = Object.keys(me.qpg).filter(i => !me.owner[i]).length;
+return got + (got === 1 ? ' page' : ' pages') + ' of this quiz: ' + who + (who === 1 ? ' student' : ' students') + ' found by the code' + (left ? ', ' + left + (left === 1 ? ' page needs a name' : ' pages need a name') : '');
+}
+
+/* reading the bubbles once the papers are open */
+async function qrStudent(st, Q, made) {
+const out = { b: [], pages: 0, old: 0 };
+const pages = quizPages(st);
+for (let n = 0; n < pages.length; n++) {
+let r; try { r = await qzPage(st, n, 1224); } catch { r = null; }
+if (!r) continue;
+const im = qrGrey(r.c), f = qrFind(im), code = f && qrCode(im, f);
+r.c.width = r.c.height = 0;
+if (!code || code.id !== made.id) continue;
+if (code.ver !== (made.ver || 0) % 4) { out.old++; continue; }
+out.pages++;
+const [cx, cy] = code.map(408, 528), dx = Math.round((cx / im.W - .5) * 1e4) / 1e4, dy = Math.round((cy / im.H - .5) * 1e4) / 1e4;
+if (!code.turn && (Math.abs(dx) > .003 || Math.abs(dy) > .003)) ((Q.shift ||= {})[st.key] ||= {})[n] = [dx, dy];
+for (const q of Q.qs) {
+if (!q.auto || q.n !== code.pg) continue;
+const r0 = 13 * code.s;
+q.auto.b.forEach(([x, y], k) => {
+const [u, v] = code.map(x * 816, y * 1056);
+out.b.push({ q, k, d: (im.P - qrMean(im, u, v, r0 * .62)) / im.P, spill: qrRing(im, u, v, r0 * 1.2, r0 * 1.55) });
+});
+}
+}
+return out;
+}
+function qrDecide(bs) {
+if (!bs.length) return [];
+const ds = bs.map(b => b.d).sort((a, b) => a - b), base = ds[Math.floor(ds.length * .25)], top = Math.max(ds[ds.length - 1], base + .35);
+for (const b of bs) { b.n = (b.d - base) / (top - base); b.on = b.n >= .6 && b.d - base >= .18; b.mid = !b.on && b.n > .3; b.faint = !b.on && !b.mid && b.d - base >= .05; }
+const byQ = new Map(); for (const b of bs) { if (!byQ.has(b.q)) byQ.set(b.q, []); byQ.get(b.q).push(b); }
+const out = [];
+for (const [q, list] of byQ) {
+const L = qzAutoLetters(q), F = list.filter(b => b.on && b.spill <= .06), X = list.filter(b => b.on && b.spill > .06), U = list.filter(b => b.mid), Wk = list.filter(b => b.faint);
+const s = list.slice().sort((a, b) => b.d - a.d), lead = s[0].d - (s[1] ? s[1].d : base) >= .04 ? L[s[0].k] : '';
+const pts = +q.pts || 1, none = !F.length && !X.length && !U.length;
+if (q.auto.t === 'sa') {
+if (none && !Wk.length) continue;
+if (F.length === 1 && !X.length && !U.length) { out.push({ q, ans: L[F[0].k], v: qzSteps(pts)[F[0].k] }); continue; }
+out.push({ q, why: 'Score unclear', guess: lead }); continue;
+}
+if (none) { if (Wk.length) out.push({ q, why: 'Very light', guess: Wk.length === 1 ? L[Wk[0].k] : lead }); else out.push({ q, ans: '', v: 0, blank: 1 }); continue; }
+if (q.auto.t === 'ms') {
+if (U.length || X.length) { out.push({ q, why: 'Not clear', guess: F.map(b => L[b.k]).join('') }); continue; }
+const ans = F.map(b => L[b.k]).join(''); out.push({ q, ans, v: qrScoreOf(q, ans) }); continue;
+}
+if (F.length === 1 && !X.length && !U.length) { out.push({ q, ans: L[F[0].k], v: qrScoreOf(q, L[F[0].k]) }); continue; }
+if (F.length === 1) { out.push({ q, why: 'Another bubble marked', guess: L[F[0].k] }); continue; }
+out.push({ q, why: F.length + X.length > 1 ? 'Two bubbles filled' : 'Not clear', guess: F.length + X.length > 1 ? '' : lead });
+}
+return out;
+}
+const qzAutoLetters = q => q.auto.t === 'tf' ? ['T', 'F'] : q.auto.t === 'sa' ? qzSteps(+q.pts || 1).map(fmtNum) : q.auto.b.map((_, k) => QMK_L[k]);
+function qrScoreOf(q, ans) {
+if (q.auto.t === 'sa') { const k = qzAutoLetters(q).indexOf(ans); return k < 0 ? null : qzSteps(+q.pts || 1)[k]; }
+const key = q.auto.key || ''; if (!key) return null;
+return ans === key ? +q.pts || 1 : 0;
+}
+async function qrApply(list, what) {
+if (!list.length) return;
+const put = async (st, q, v) => { const g = st.grade, m = g.q ? { ...g.q } : {}; if (v == null) delete m[q.id]; else m[q.id] = v; g.q = m; await qzPaper(st, q, v); };
+const run = async to => { const sts = new Set(); for (const x of list) { await put(x.st, x.q, to(x)); sts.add(x.st); } for (const st of sts) { quizScore(st); await qzTotal(st); } saveSoon(); renderList(); renderGrade(); redrawAll(); };
+for (const x of list) x.was = quizMarks(x.st)[x.q.id];
+await run(x => x.v);
+pushUndo(actStep(() => run(x => x.was), () => run(x => x.v), what));
+}
+async function qrReadAll(again) {
+const Q = batch && batch.quiz, made = Q && Q.made; if (!made || !Q.qs.some(q => q.auto)) return;
+const b0 = batch;
+for (let k = 0; k < 100 && batch === b0 && b0.students.some(st => st.files.some(f => viewable(f) && !f.virtual) && !quizPages(st).length); k++) await new Promise(r => setTimeout(r, 200));
+const who = quizWho(), list = [], look = [];
+let pages = 0, old = 0, read = 0, blank = 0, seen = 0;
+toast('Reading the bubbles…');
+for (const i of who) {
+const st = b0.students[i]; if (batch !== b0) return;
+const r = await qrStudent(st, Q, made); pages += r.pages; old += r.old;
+if (r.pages) seen++;
+const qa = { ...(st.grade.qa || {}) };
+for (const a of qrDecide(r.b)) {
+if (a.why) { if (again || quizMarks(st)[a.q.id] == null) look.push({ s: st.key, q: a.q.id, why: a.why, guess: a.guess || '' }); continue; }
+qa[a.q.id] = a.ans; read++; if (a.blank) blank++;
+if (a.v != null && (again || quizMarks(st)[a.q.id] == null)) list.push({ st, q: a.q, v: a.v });
+}
+if (Object.keys(qa).length) st.grade.qa = qa;
+}
+if (batch !== b0) return;
+Q.look = look.length ? look : undefined;
+Q.lastRead = { pages, seen, read, blank, old, t: Date.now() };
+await qrApply(list, 'quiz scan');
+saveSoon();
+if (look.length || old) openQuizLook();
+else toast(seen ? 'Scored ' + read + ' answers on ' + seen + (seen === 1 ? ' student’s quiz' : ' students’ quizzes') : 'No pages of this quiz were found in the papers');
+}
+async function openQuizLook() {
+const Q = batch && batch.quiz; if (!Q) return;
+const look = (Q.look || []).map(l => ({ ...l, st: batch.students.find(s => s.key === l.s), q: Q.qs.find(q => q.id === l.q) })).filter(l => l.st && l.q);
+const R = Q.lastRead || {}, n = R.read || 0;
+const row = (l, k) => { const L = qzAutoLetters(l.q), sa = l.q.auto.t === 'sa', ms = l.q.auto.t === 'ms';
+return '<div class="qfrr" data-k="' + k + '"><div class="qfrw"><b data-raw>' + esc(shownName(l.st, batch.students.indexOf(l.st))) + '</b><span class="muted hsm">Question ' + esc(l.q.lab) + ' · ' + esc(l.why) + '</span></div>' +
+'<div class="qfcrop"><span class="muted hsm">Drawing…</span></div>' +
+'<div class="qfpick"><span class="hsm muted">' + (sa ? 'Your score' : ms ? 'Their answers' : 'Their answer') + '</span>' + L.map(x => '<button class="btn sm' + (l.guess.includes(x) && (ms || l.guess === x) ? ' primary' : '') + '" data-ans="' + esc(x) + '">' + esc(x) + '</button>').join('') +
+(sa ? '<button class="btn sm" data-ans="-">Later</button>' : '<button class="btn sm' + (!l.guess && !ms ? '' : '') + '" data-ans="-">None</button>') + '</div></div>'; };
+openDlg('<div class="bh"><h2>Quiz scan read</h2><button class="icon" data-close aria-label="Close">✕</button></div><div class="bb">' +
+'<div class="qftiles"><div><b>' + (R.pages || 0) + '</b><span>pages read</span></div><div><b>' + (R.seen || 0) + '</b><span>students found by the code on their pages</span></div><div><b>' + n + '</b><span>answers read' + (R.blank ? ', ' + R.blank + ' left blank' : '') + '</span></div><div class="need"><b>' + look.length + '</b><span>need you</span></div></div>' +
+(R.old ? '<p class="hsm qfwarn">' + R.old + (R.old === 1 ? ' page was' : ' pages were') + ' printed before the quiz was last changed, so ' + (R.old === 1 ? 'it wasn’t' : 'they weren’t') + ' read. Mark ' + (R.old === 1 ? 'it' : 'them') + ' in Quick mark.</p>' : '') +
+(look.length ? '<p class="hsm">These weren’t clear enough to score on their own. Pick what each student meant. A highlighted button is the scan’s best guess.</p>' + look.map(row).join('') : '<p class="hsm">Nothing needs you.</p>') +
+'</div><div class="bf"><span class="muted hsm" style="margin-right:auto">Every score can be changed in Quick mark. Ctrl Z takes the scan’s scores back.</span><button class="btn" data-qfagain title="Read every page again. Answers you already have stay as they are.">Read again</button><button class="btn" data-close>Later</button><button class="btn primary" data-qfdone>Save scores</button></div>');
 $('#dlgBox').classList.add('qfread');
-$('#dlgBox').addEventListener('click', e => { const b = e.target.closest('[data-ans]'); if (!b) return; const r = b.closest('.qfrr'); for (const x of r.querySelectorAll('[data-ans]')) x.classList.toggle('primary', x === b); r.classList.add('done'); });
+const box = $('#dlgBox');
+box.addEventListener('click', async e => {
+const b = e.target.closest('[data-ans]');
+if (b) { const r = b.closest('.qfrr'), l = look[+r.dataset.k], ms = l.q.auto.t === 'ms';
+if (ms && b.dataset.ans !== '-') { b.classList.toggle('primary'); r.querySelector('[data-ans="-"]').classList.remove('primary'); }
+else for (const x of r.querySelectorAll('[data-ans]')) x.classList.toggle('primary', x === b);
+r.classList.add('done'); return; }
+if (e.target.closest('[data-qfagain]')) { closeDlg(); return qrReadAll(); }
+if (!e.target.closest('[data-qfdone]')) return;
+const list = [], keep = [];
+look.forEach((l, k) => {
+const r = box.querySelector('.qfrr[data-k="' + k + '"]'), on = [...r.querySelectorAll('[data-ans].primary')].map(x => x.dataset.ans);
+if (!on.length || (l.q.auto.t === 'sa' && on[0] === '-')) return keep.push(Q.look.find(x => x.s === l.s && x.q === l.q.id));
+const ans = on[0] === '-' ? '' : on.sort().join('');
+(l.st.grade.qa ||= {})[l.q.id] = ans;
+const v = ans ? qrScoreOf(l.q, ans) : 0; if (v != null) list.push({ st: l.st, q: l.q, v });
+});
+Q.look = keep.filter(Boolean); if (!Q.look.length) delete Q.look;
+closeDlg(); await qrApply(list, 'answers picked from the quiz scan');
+toast(list.length ? 'Saved ' + list.length + (list.length === 1 ? ' score' : ' scores') : 'Nothing changed');
+});
+for (const [k, l] of look.entries()) {
+const el = box.querySelector('.qfrr[data-k="' + k + '"] .qfcrop'); if (!el) continue;
+try { const c = await qzCrop(l.st, l.q); if (c && el.isConnected) el.innerHTML = '<img alt="Question ' + esc(l.q.lab) + ' on ' + esc(shownName(l.st, batch.students.indexOf(l.st))) + '’s paper" src="' + c.url + '">'; } catch { }
 }
+}
+function qrScanIn(itId) {
+const f = findItem(itId); if (!f) return;
+const it = f.it, inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/pdf,.pdf';
+inp.onchange = async () => {
+const file = inp.files[0]; if (!file) return;
+if (it.batchId && keptMeta.get(it.batchId) && keptMeta.get(it.batchId).papers) { await reopenKept(it.batchId, it); if (batch && batch.id === it.batchId) return openSplit(file, null, true); }
+openSplit(file, it, false);
+};
+inp.click();
+}
+Object.assign(window.__gs, { findItem, qrGrey, qrFind, qrH, qrCode, qrDecide, qrReadAll, openQuizLook, qrScanIn, qmkBits, qmkPages, qmkBoxes, qmkLayout, openQuizMaker });
 
 /* ---------------- marks from other apps: Kami, Acrobat or Preview marks made into her own ---------------- */
 const IMP_ID = /^\d+R\d*$/;
@@ -33588,7 +33867,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.71":["Take attendance on your phone: one tap per student cycles present, absent and late, and Everyone is here takes the rest.","After class, a lesson on your phone has Got to slide n of N and a note. It lands on the lesson in your Planner.","Lessons with lots of pictures now reach your phone too. The pictures load the first time you open the lesson while online.","When a lesson focus session ends, the Planner asks Is this lesson ready? The editor has a Ready button too. After three ready lessons you see about how long a lesson takes you.","Today's Focus card and Plan lessons show next week's lessons planned as dots. In a free period with nothing to mark, the Focus card suggests the next lesson to plan."]};
+const WHATS_NEW = {"1.28.72":["Make a quiz: on an assignment’s card, choose ⋯ then Make a quiz. Type multiple choice, true or false, pick all that apply and short answer questions, and print a copy for each student with their name on it.","Scan the whole stack in any order and choose Bring in the scanned quiz. Each page finds its student by the code at the top, and the bubbles are scored. Answers that aren’t clear are shown to you to pick, and Ctrl Z takes the scan’s scores back.","Short answers get a Teacher box: fill the score bubble while you mark and the scan reads it, or mark them in Quick mark."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
@@ -33712,7 +33991,7 @@ const w = it.batchId ? works[it.batchId] : null, n = { ...it };
 delete n.batchId; delete n.opened;
 if (n.typed && typeof n.typed === 'object') n.typed = { max: n.typed.max == null ? null : n.typed.max, ...(n.typed.lv ? { lv: true } : {}), s: {} };
 if (!n.setup && w && w.setup) { n.setup = { ...w.setup }; delete n.setup.spot; delete n.setup.rubricPage; }
-if (!n.quiz && w && w.quiz && Array.isArray(w.quiz.qs) && w.quiz.qs.length) { const q = nyClone(w.quiz); delete q.shift; delete q.spot; n.quiz = q; }
+if (!n.quiz && w && w.quiz && Array.isArray(w.quiz.qs) && w.quiz.qs.length) { const q = nyClone(w.quiz); delete q.shift; delete q.spot; delete q.look; delete q.lastRead; if (q.made) delete q.made.names; n.quiz = q; }
 if (!n.goal && w && typeof w.goal === 'string' && w.goal) n.goal = w.goal;
 if (o.dates && n.due) n.due = nyDay(n.due);
 return nyStrip(n, names, ['id', 'name', 'setup', 'quiz', 'typed', 'classId', 'goal', 'crit']);

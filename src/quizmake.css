@@ -20,6 +20,8 @@
 .qfscale>.qfpage{transform:scale(.7);transform-origin:0 0}
 .qfprobe{position:absolute;left:-9999px;top:0;visibility:hidden}
 /* the printed page: kept in plain black and white, whatever the app's look */
+/* and laid out by its own rules only, so it measures the same in the app as in the print window, where none of the app's rules are */
+.qfpage,.qfpage *{box-sizing:border-box}.qfpage :where(ol,ul,li,p,div,span,b,i){margin:0;padding:0;letter-spacing:normal;text-transform:none}
 .qfpage{position:relative;width:816px;height:1056px;background:#fff;color:#111;font:14px/1.4 Inter,Arial,sans-serif;box-sizing:border-box;padding:96px 76px 64px;box-shadow:0 1px 3px rgba(0,0,0,.18);overflow:hidden}
 .qfreg{position:absolute;width:19px;height:19px;background:#000}
 .qfreg.tl{left:53px;top:53px}.qfreg.tr{right:53px;top:53px}.qfreg.bl{left:53px;bottom:53px}.qfreg.br{right:53px;bottom:53px}
@@ -61,3 +63,5 @@
 .qfcrop{background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:#111}
 .qfpick{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .qfq.sheet .qfbs{justify-self:start}
+.qfname b{white-space:nowrap;overflow:hidden;text-overflow:clip}
+.qfcrop img{display:block;max-width:100%;max-height:120px}

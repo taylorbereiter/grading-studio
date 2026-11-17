@@ -1,25 +1,23 @@
 {
- "version": "1.28.71",
- "build": "01321fd69c9d",
+ "version": "1.28.72",
+ "build": "6ade18c89316",
  "notes": [
-  "Take attendance on your phone: one tap per student cycles present, absent and late, and Everyone is here takes the rest.",
-  "After class, a lesson on your phone has Got to slide n of N and a note. It lands on the lesson in your Planner.",
-  "Lessons with lots of pictures now reach your phone too. The pictures load the first time you open the lesson while online.",
-  "When a lesson focus session ends, the Planner asks Is this lesson ready? The editor has a Ready button too. After three ready lessons you see about how long a lesson takes you.",
-  "Today's Focus card and Plan lessons show next week's lessons planned as dots. In a free period with nothing to mark, the Focus card suggests the next lesson to plan."
+  "Make a quiz: on an assignment’s card, choose ⋯ then Make a quiz. Type multiple choice, true or false, pick all that apply and short answer questions, and print a copy for each student with their name on it.",
+  "Scan the whole stack in any order and choose Bring in the scanned quiz. Each page finds its student by the code at the top, and the bubbles are scored. Answers that aren’t clear are shown to you to pick, and Ctrl Z takes the scan’s scores back.",
+  "Short answers get a Teacher box: fill the score bubble while you mark and the scan reads it, or mark them in Quick mark."
  ],
  "files": {
-  "index.html": "fa19d35dfb180f121b575266366a3fbdfa693fdcd051772e3faf0e0f15c41a45",
-  "planner.html": "195437c18035f3ce4b14799983d2a1a4fe0e6e2e52ceb7fdc29e900b21bd135c"
+  "index.html": "caa32143d8d9e7d7025cdfdaa41f138ec2b63755432779af1d80255957090d61",
+  "planner.html": "5ba9718c132d7ce6843ef2eec858ee94f2e17baf982dd014e6d979765022d057"
  },
  "langs": {
-  "lang/zh-Hant.js": "2cdb8f598144fc17878319a5d00dacef153131cac99c775dd19750b698b5f46a",
-  "lang/zh-Hans.js": "b57ae1b020f2c4fa409d1650d3d04d24356a3e0ad82b2f0deafdde94c385b05b",
-  "lang/es.js": "b79ba812b5332e1f2706979747033bd6733f544b441b7c399ef9781c2f1f564e",
-  "lang/fr.js": "3bea80209c07a4d71e1f47f2ca37a63ec4f00f5f13fbe7a05d1ee7ae969a5d67",
-  "lang/de.js": "337f7d422ccc5465bcf7f462e838cd9db0790b63be83157110955f103f15d748",
-  "lang/pt-BR.js": "b6c3ad5e8807ce0e5ef413f092c4d9bf2db5cbe387b2cfd0546ceeef00468e01",
-  "lang/ja.js": "08c90bfb0af73bbe661aad542ff9233940e624177579270caf3c2b949dc52e69",
-  "lang/ko.js": "c0feed628158b734ebe6fd7019edaed513033c2aeade2944959767a7e62f97fc"
+  "lang/zh-Hant.js": "1f6c72319366bc2cb027a2ad8ca790bdf3982ac2b2c8cf5958525f87ec6ee574",
+  "lang/zh-Hans.js": "6427d65fce82fe3af7957b497f1243b64034515f55e873902b4692f4a9460468",
+  "lang/es.js": "bc4fc38cca9a088fcc34637578d0cfcc021f710d99d7f7084da7751de1c290a6",
+  "lang/fr.js": "2ff7f9775da31259cd86d2f34426fbac0bb78266be1a82643ec919052b6148b2",
+  "lang/de.js": "2beeeb86f58dc38cd2a84e70a2063a41ab622f3adfbb8d2579204a5206ac9f95",
+  "lang/pt-BR.js": "92549f2b8b3dceb6edd1f4575051a0e49dea5be11a033f70684703bb9add8014",
+  "lang/ja.js": "2d660575deaf9655f6504971be96b788eaeb1575116f84588a8133c3f1306d49",
+  "lang/ko.js": "f26c9c74d16094960c256149124c38c944c6c17989728e292b09bc6f490d213d"
  }
 }
