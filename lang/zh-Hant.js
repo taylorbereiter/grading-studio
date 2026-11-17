@@ -20,7 +20,7 @@ return teach + work;
 const LANG_ZH = {
 name: '繁體中文', locale: 'zh-Hant',
 words: {
-"Group work":"小組作業","What the group shares":"小組共享的內容","Share everything, or share the notes and give each partner their own score":"全部共享，或共享筆記並給每位組員各自的分數","Marks and grade shared":"批註和成績共享","Grade shared":"成績共享","Shared notes, own scores":"共享筆記，各自評分","Own scores and comments":"各自的分數和評語","Write for":"寫給","New marks go on":"新批註加在","Marks you make now show on every partner’s paper":"現在做的批註會顯示在每位組員的作業上","Both":"全部","Grade on their own…":"單獨評分…","Give this student their own grade and their own copy of the marks so far. The rest stay together.":"給這位學生自己的成績和到目前為止的批註副本，其他人仍在同一組。","One set of marks and one grade for all of them":"所有人共用一套批註和一個成績","Mark and grade once for the group":"為整組批改和評分一次",
+"Group work":"小組作業","What the group shares":"小組共享的內容","Share everything, give the group one score you can change for one partner, or give each partner their own score":"全部共享、給小組一個分數並可為某位組員調整，或給每位組員各自的分數","Marks and grade shared":"批註和成績共享","Grade shared":"成績共享","Shared notes, own scores":"共享筆記，各自評分","Own scores and comments":"各自的分數和評語","Write for":"寫給","Group score, adjust a partner":"小組分數，調整某位組員","What you do now goes to":"現在的操作套用到","New typed notes go to every partner":"新輸入的筆記會套用到每位組員","New marks and typed notes go to every partner":"新的批註和輸入的筆記會套用到每位組員","New scores and typed notes go to every partner":"新的分數和輸入的筆記會套用到每位組員","New marks, scores and typed notes go to every partner":"新的批註、分數和輸入的筆記會套用到每位組員","Both":"全部","Grade on their own…":"單獨評分…","Give this student their own grade and their own copy of the marks so far. The rest stay together.":"給這位學生自己的成績和到目前為止的批註副本，其他人仍在同一組。","One set of marks and one grade for all of them":"所有人共用一套批註和一個成績","Mark and grade once for the group":"為整組批改和評分一次",
 "No marks, left out":"沒有批註，不計入","Left out":"不計入","Bring back":"放回來",
 "Strengths and concerns":"優點與需要關注之處","Nothing saved from their work yet. A screenshot saved as a strong example or added to the watch list shows here, with the date.":"還沒有保存這位學生的作業。保存為優秀範例或加入關注清單的截圖會連同日期顯示在這裡。","★ Strong":"★ 優秀","⚑ Watch":"⚑ 關注","Every date, assignment and note as text, for report comments":"把每個日期、作業和筆記複製成文字，方便寫成績單評語","Seen most:":"最常見：","Look closer":"仔細看","None of this kind yet.":"還沒有這一類。","your AI assistant":"你的 AI 助理",
 "Names, students, class links":"名稱、學生與學校系統的連結",
@@ -454,7 +454,7 @@ rules: [
 [/^([\d.,½]+) of (\d+)$/, '$1 / $2'], [/^p\. (\d+)$/, '第 $1 頁'],
 ],
 fill: {
-and: "、", grplist: "小組作業：{1}，批改和評分一次", grplisto: "小組作業：{1}，共享筆記、各自評分", grpwith: "與 {1} ·", grpsplit: "與 {1} 共用頁面，各自評分", grpjust: "只給 {1}", grponly: "現在做的批註只會顯示在 {1} 的作業上。評語一律是各自的。", sendto: "傳送到 {t1}",
+and: "、", grplist: "小組作業：{1}，批改和評分一次", grplisto: "小組作業：{1}，共享筆記、各自評分", grpwith: "與 {1} ·", grpsplit: "與 {1} 共用頁面，各自評分", grpjust: "只給 {1}", grpfor0: "新輸入的筆記只給 {1}。評語一律是各自的。", grpfor1: "新的批註和輸入的筆記只給 {1}。評語一律是各自的。", grpfor2: "新的分數和輸入的筆記只給 {1}。評語一律是各自的。", grpfor3: "新的批註、分數和輸入的筆記只給 {1}。評語一律是各自的。", sendto: "傳送到 {t1}",
 fcwkof: "本週：{1}", fcrailw: "專注：本週 {1}", gpsessn: "第 {1} 段", gpsess: ["今天 {1} 段。","今天 {1} 段。"], gpaday: ["每天 {1} 份","每天 {1} 份"], tkweeks: ["{1} 週達成目標","{1} 週達成目標"],
 fct3: "只改 3 份：{1}", gpleft: "約剩 {1}", gpsets: "{1} 批", gpdays: "{1} 天",
 fcsofar: ["目前根據 {1} 份","目前根據 {1} 份"], tkso: "目前 {1}",

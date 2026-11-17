@@ -177,7 +177,7 @@ const LANG_FILLS = [
   // group work, in the band above the paper and the student list (src/groups.js): the partners' names stay, joined with the language's "and"
   ['grpwith', /^with (.+) ·$/, (m, F, P) => langFill(F.grpwith, [0, langAnd(m[1], F)], P)], ['grpsplit', /^pages shared with (.+), each graded on their own$/, (m, F, P) => langFill(F.grpsplit, [0, langAnd(m[1], F)], P)],
   ['grplist', /^Group work: (.+), (shared notes and own scores|marked and graded once)$/, (m, F, P) => langFill(m[2] === 'marked and graded once' ? F.grplist : F.grplisto, [0, langAnd(m[1], F)], P)],
-  ['grpjust', /^Just (\S+)$/], ['grponly', /^Marks you make now show only on (.+)’s paper\. Their comment is always their own\.$/],
+  ['grpjust', /^Just (\S+)$/], ['grpfor', /^New (typed notes|marks and typed notes|scores and typed notes|marks, scores and typed notes) are just for (.+)\. Their comment is always their own\.$/, (m, F, P) => { const t = F['grpfor' + ['typed notes', 'marks and typed notes', 'scores and typed notes', 'marks, scores and typed notes'].indexOf(m[1])]; return t == null ? null : langFill(t, [0, m[2]], P); }],
   // a student's strengths and concerns, on their card (src/watch.js)
   ['sendto', /^Send to (.+)$/],
   // what a chart says of itself to a screen reader: the names in it stay, the words between them are put into the language
