@@ -16,6 +16,8 @@ async function planRead() {
   }
   // the Planner hasn't come through to this browser yet: the timetable the computer sent with the rest of her work (drive.js)
   if (!(setup && Array.isArray(setup.classes) && setup.classes.length)) setup = store.get('gs.planCopy', null);
+  // on a phone, a lesson too big to send still shows on its day, and opening it says why it isn't here (drive.js planSync, phone.js)
+  if (PHONE) for (const [id, b] of Object.entries(store.get('gs.planBig', null) || {})) if (b && Array.isArray(b.slots) && !lessons.some(l => l && l.id === id)) lessons = [...lessons, { id, title: b.title, slots: b.slots.filter(x => x && x.classId != null && x.date), slides: [] }];
   const hex = c => /^#[0-9a-f]{6}$/i.test(c) ? c : '#1F6FB2';
   const classes = (setup && Array.isArray(setup.classes) ? setup.classes : []).filter(c => c && c.id != null).map(c => ({ id: String(c.id), name: String(c.name || c.id), color: hex(c.color),
     meets: (Array.isArray(c.meets) ? c.meets : []).map(m => ({ dow: +m.dow, start: String(m.start || ''), end: String(m.end || '') })) }));

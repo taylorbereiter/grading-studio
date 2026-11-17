@@ -187,7 +187,7 @@ function phoneHowTo() {
     '<p class="muted">Your classes, scores and to-dos then stay the same on both. You can type scores and look at papers on the phone; marking stays on the computer.</p>' +
     '</div><div class="bf"><button class="btn primary" data-cancel>Done</button></div>', true);
 }
-window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), gAge: ms => { G.exp -= ms; }, syncNow: () => syncNow(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)), updAs: st => { upd.on = true; upd.st = st; updRender(); }, syncSay: t => setSyncState(t) });
+window.__gs = Object.assign(window.__gs || {}, { saveLib: () => saveLib(), gIn: s => gToken(true, s), gAge: ms => { G.exp -= ms; }, syncNow: () => syncNow(), syncPull: () => syncPull(), phone: () => PHONE, dvUp: async () => { while (DV.up) await DV.up; DV.up = dvUp().finally(() => { DV.up = null; }); return DV.up; }, dvPull: id => dvPull(id), phoneHowTo: () => phoneHowTo(), canOpen: id => canOpen(keptMeta.get(id)), updAs: st => { upd.on = true; upd.st = st; updRender(); }, syncSay: t => setSyncState(t) });
 
 /* Plans: the lessons from the Planner on her computer, day by day, to read (the Planner itself is where they are written). They come
    through her Google Drive with the rest of her work (drive.js, planSync), into this browser's own copy of the Planner's store. */
@@ -206,18 +206,33 @@ async function phPlansRender(r) {
       '<div class="phitem"><span class="phn"><b data-raw>' + esc(c.name) + '</b><small>' + esc((m.start ? planTime(m.start) + ' · ' : '') + 'No lesson planned') + '</small></span></div>').join('') + '</div>')).join('')
     : '<p class="muted">No classes in the next four weeks.</p>';
 }
-// One lesson to read: each slide's title and words, the teacher's notes under them. Pictures and files stay on the computer for now.
+// One lesson to read: each slide's title and words, its picture, the teacher's notes under them, and the lesson's links. A picture kept
+// in the lesson comes with it; one kept only in the computer's Planner folder stays there.
 async function phLessonRender(box, id) {
   const db = await planDb(false); let l = null;
   if (db) { try { l = await idbP(db.transaction('lessons').objectStore('lessons').get(id)); } catch {} db.close(); }
   if (!$('#phPlans') || routeNow().id !== id) return;
-  const back = '<p><a class="btn sm" href="#/plans">‹ Plans</a></p>';
-  if (!l) { box.innerHTML = back + '<p class="muted">This lesson isn’t here yet. It comes with the next sync.</p>'; return; }
+  const back = '<p><a class="btn sm" href="#/plans">‹ Plans</a></p>', big = (store.get('gs.planBig', null) || {})[id];
+  const tooBig = 'too big to send to the phone yet: its pictures and files come to more than 2 MB. Open it in the Planner on your computer.';
+  if (!l) { box.innerHTML = back + (big ? '<h2 class="phlt" data-raw>' + esc(big.title || 'Untitled lesson') + '</h2><p class="muted">This lesson is ' + tooBig + '</p>' : '<p class="muted">This lesson isn’t on this phone. If it is still in the Planner on your computer, it comes with the next sync.</p>'); return; }
   const txt = s => esc(String(s || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim()).replace(/\n/g, '<br>');
+  const pic = src => typeof src === 'string' && /^(data:image\/|https:\/\/)/.test(src) ? '<img class="phimg" src="' + esc(src) + '" alt="" style="max-width:100%;height:auto;display:block;margin:8px 0">' : '';
+  const web = u => typeof u === 'string' && /^https?:\/\//.test(u);
+  const out = (u, t) => '<a class="phitem" href="' + esc(u) + '" target="_blank" rel="noopener noreferrer"><span class="phn"><b data-raw>' + esc(t || u) + '</b><small data-raw>' + esc(u.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]) + '</small></span><span class="phc" aria-hidden="true">↗</span></a>';
   const slides = Array.isArray(l.slides) ? l.slides : [];
+  const slide = s => {
+    const shots = (Array.isArray(s.ctx) ? s.ctx : []).filter(c => c && pic(c.src)), img = s.img && pic(s.img.src), away = (s.img && !img) || (Array.isArray(s.ctx) && s.ctx.length > shots.length);
+    return '<li class="tcard"><b data-raw>' + txt(s.title) + '</b>' + (s.body ? '<p data-raw>' + txt(s.body) + '</p>' : '') + (img || '') + shots.map(c => pic(c.src)).join('') +
+      (away ? '<small class="muted">A picture, on your computer</small>' : '') +
+      (s.video && web(s.video.url) ? '<div class="phlist">' + out(s.video.url, s.video.title || 'Video') + '</div>' : '') +
+      (s.notes ? '<p class="phsn" data-raw>' + txt(s.notes) + '</p>' : '') + '</li>';
+  };
+  const links = [...(web(l.atlas) ? [{ url: l.atlas, name: 'Unit plan page' }] : []), ...(Array.isArray(l.links) ? l.links : []).filter(x => x && web(x.url))];
   box.innerHTML = back + '<h2 class="phlt" data-raw>' + esc(l.title || 'Untitled lesson') + '</h2>' +
+    (big && (big.updated || 0) > (l.updated || 0) ? '<p class="muted">The newest version of this lesson is ' + tooBig + ' This is the last copy that fit.</p>' : '') +
     (l.note ? '<p class="phln" data-raw>' + txt(l.note) + '</p>' : '') +
-    (slides.length ? '<ol class="phslides">' + slides.map(s => '<li class="tcard"><b data-raw>' + txt(s.title) + '</b>' + (s.body ? '<p data-raw>' + txt(s.body) + '</p>' : '') + (s.img || (s.ctx && s.ctx.length) ? '<small class="muted">A picture, on your computer</small>' : '') + (s.notes ? '<p class="phsn" data-raw>' + txt(s.notes) + '</p>' : '') + '</li>').join('') + '</ol>' : '<p class="muted">No slides yet.</p>');
+    (links.length ? '<div class="tcard phlist">' + links.map(x => out(x.url, x.name)).join('') + '</div>' : '') +
+    (slides.length ? '<ol class="phslides">' + slides.map(slide).join('') + '</ol>' : '<p class="muted">No slides yet.</p>');
 }
 
 /* More: what isn't the day's work, in one place. Google and syncing, updates (the computer has these in its sidebar), help and settings. */
