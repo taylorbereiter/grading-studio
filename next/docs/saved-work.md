@@ -178,6 +178,7 @@ The current app's own legs (web address and double-clicked copy, main against th
 |---|---|---|---|---|---|
 | `gs.words` | shared | work | json | the teacher’s own words: assistant names and links, terms | app/library.js, beside.js, planner/lessons.js |
 | `gs.theme` | shared | pref | json | light or dark (kept apart from the sample on purpose) | app.html, app/start.js, planner/base.js, planner/planner.html, samplemode.js |
+| `gs.look` | shared | pref | json | the new app’s theme: graphite, porcelain, ocean, ink, plum or midnight (written by the new app only) | (no longer in the source) |
 | `gs.lang` | shared | pref | json | the language (kept apart from the sample on purpose) | lang.js, samplemode.js |
 | `gs.gEmail` | shared | pref | text | the Google account signed in | app/drive.js, mail.js, planner/pldrive.js |
 | `gs.gcid` | shared | pref | text | a Google Client ID of the teacher’s own | app/drive.js, planner/pldrive.js |

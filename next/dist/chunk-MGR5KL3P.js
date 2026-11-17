@@ -1,0 +1,1 @@
+import{h as e}from"./chunk-QVGUJPL4.js";import{o,p as n}from"./chunk-MZSJGBZT.js";var r=new Set;function i(){let t=e("gs.look");return o.includes(t)?t:e("gs.theme")==="dark"?"midnight":n}function a(t){return o.includes(t)||(t=n),document.documentElement.dataset.look=t,r.forEach(s=>s(t)),t}function m(t){return r.add(t),()=>r.delete(t)}export{i as a,a as b,m as c};
