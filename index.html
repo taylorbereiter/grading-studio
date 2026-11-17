@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"74f5b9dd","zh-Hans":"c26fa6ca","es":"65e561ba","fr":"693c777f","de":"e614653b","pt-BR":"088233dc","ja":"913b6a05","ko":"c458cafd"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"71dc958f","zh-Hans":"010649fc","es":"e22ed584","fr":"34b1c556","de":"8cbb8429","pt-BR":"c5923171","ja":"895aa656","ko":"b6438666"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -5463,6 +5463,7 @@ function langFill(t, m, P) {
 const s = Array.isArray(t) ? t[+m[1] === 1 ? 0 : 1] : t;
 return s.replace(/\{(t?)(\d)\}/g, (x, w, i) => { const v = m[+i] == null ? '' : m[+i]; if (!w) return v; const h = trPiece(v, P); return h != null ? h : (trPiece(langCap(v), P) || v); });
 }
+const langAnd = (s, F) => F.and == null ? s : s.replace(/ and (?!.* and )/, F.and);
 const LANG_ATT = { present: 'attp', late: 'attl', 'absent, reason unknown': 'atta', excused: 'atte' };
 const LANG_FILLS = [
 ['fcof', /^(?:(Focus|Today|This week): )?(\d+) of (\d+) (papers|minutes)( today| this week)?$/, (m, F, P) => { const x = langFill(m[4] === 'papers' ? F.fcofp : F.fcofm, [0, m[2], m[3]], P); return m[1] === 'Focus' ? langFill(m[5] === ' this week' ? F.fcrailw : F.fcrail, [0, x], P) : m[1] === 'Today' ? langFill(F.fctodayof, [0, x], P) : m[1] === 'This week' ? langFill(F.fcwkof, [0, x], P) : x; }],
@@ -5569,6 +5570,10 @@ return [/^\d+$/.test(m[1]) ? langFill(F.rowavg, m, P) : F.rowavgE, ...(m[2] ? [l
 ['askai', /^Ask (.{1,30})$/], ['backai', /^Bring back (.{1,30})’s feedback$/], ['cmtfor', /^Comment for (.+?)( \(optional\)\. It shows on the Grades tab so you can copy it\.)?$/, (m, F, P) => langFill(m[2] ? F.cmtforL : F.cmtfor, [0, m[1] === 'the student' ? (trPiece('the student', P) || m[1]) : m[1]], P)],
 ['clickcp', /^Click any score or comment to copy it, then paste it into (.+)\. Click a name to open that paper\.( Pick a roster under Setup to see this list in roster order\.)?$/, (m, F, P) => langFill(F.clickcp, [0, m[1] === 'your gradebook' ? (trPiece('your gradebook', P) || m[1]) : m[1]], P) + (m[2] ? ' ' + (trPiece(m[2].trim(), P) || m[2]) : '')],
 ['rosterord', /^(.+) roster order$/], ['nscored', /^(\d+) of (\d+) scored$/],
+['grpwith', /^with (.+) ·$/, (m, F, P) => langFill(F.grpwith, [0, langAnd(m[1], F)], P)], ['grpsplit', /^pages shared with (.+), each graded on their own$/, (m, F, P) => langFill(F.grpsplit, [0, langAnd(m[1], F)], P)],
+['grplist', /^Group work: (.+), (shared notes and own scores|marked and graded once)$/, (m, F, P) => langFill(m[2] === 'marked and graded once' ? F.grplist : F.grplisto, [0, langAnd(m[1], F)], P)],
+['grpjust', /^Just (\S+)$/], ['grponly', /^Marks you make now show only on (.+)’s paper\. Their comment is always their own\.$/],
+['sendto', /^Send to (.+)$/],
 ['ariaband', /^(?=.*(?:class middle \d|missing)).+ (?:\d+%|missing|–)(?:, class middle \d+%)?$/, (m, F, P) => m[0].replace(/ missing(?=, class middle |\. |$)/g, ' ' + (trPiece('missing', P) || 'missing')).replace(/, class middle (\d+%)(?=\. |$)/g, (x, v) => langFill(F.cmid, [0, v], P))],
 ['ariamove', /^.+ (?:up|down) [\d.]+$/, (m, F, P) => m[0].replace(/ (up|down) ([\d.]+)(?=, |$)/g, (x, w, v) => ' ' + langFill(w === 'up' ? F.mvup : F.mvdown, [0, v], P))],
 ['ariastack', /^.+: \d+ (?:below 60|\d+ to \d+)(?:[,.] .+)?$/, (m, F, P) => m[0].replace(/(\d+) below 60(?=[,.] |$)/g, (x, n) => langFill(F.below60, [0, n], P)).replace(/(\d+) (\d+) to (\d+)(?=[,.] |$)/g, (x, n, a, b) => langFill(F.rng, [0, n, a, b], P))],
@@ -5591,8 +5596,8 @@ return hit == null ? s : s.replace(k, () => hit);
 }
 const tr = (s, ctx) => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK, ctx) : s;
 const LANG_ROOTS = '#rail, #fcPanel, #vTime, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .lkhead, #vClass .lkoffer, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
-'#app .top, #side, #tools, #paper .who, #pane2 .sph, #spGrip, #pane2 .sptool, #bsMenu, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
-const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""]), #railClasses .rnav, #classSel option:not([value=""]), #crumbClass, #stuList .nm, #paper .who h2, #paper .fhead > span:first-child, #grade .cn > span';
+'#app .top, #side, #tools, #paper .who, #pane2 .sph, #spGrip, #pane2 .sptool, #bsMenu, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, #grpBand, #pcWl, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
+const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""]), #railClasses .rnav, #classSel option:not([value=""]), #crumbClass, #stuList .nm, #paper .who h2, #paper .fhead > span:first-child, #grade .cn > span, #pcWl .wlhd, #pcWl .wltime p, #pcWl .extag';
 const LANG_ATTRS = ['title', 'aria-label', 'placeholder'];
 const langCtx = el => { const c = el.closest('[data-lc]'); return c ? c.dataset.lc : ''; };
 const LANG_DONE = new WeakMap();
@@ -28057,17 +28062,19 @@ return { vals: [['', x.total != null ? fmtNum(x.total) : x.pct != null ? x.pct +
 for (const i of mbSorted(names, mbOrder())) { const r = get(names[i]); rows.push({ i, name: bkWho(names[i], i), vals: r.vals, st: r.st || '' }); }
 return { rows, max };
 }
-const MB_CSS = '.mbx{font:14px/1.35 Inter,system-ui,sans-serif;color:#1d2330;display:flex;flex-direction:column;gap:10px;height:100%;box-sizing:border-box;padding:14px}' +
-'.mbx *{box-sizing:border-box}.mbx header{display:flex;align-items:center;gap:8px}.mbx header b{font-size:16px}.mbx header span{color:#5c6475;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-'.mbx select,.mbx button{font:inherit;border:1px solid #d5d9e0;background:#fff;border-radius:8px;padding:6px 10px;color:inherit;cursor:pointer}.mbx select{width:100%}' +
-'.mbx .mbseg{display:flex;border:1px solid #d5d9e0;border-radius:8px;overflow:hidden}.mbx .mbseg button{flex:1;border:0;border-radius:0;padding:5px 4px;font-size:13px}.mbx .mbseg button+button{border-left:1px solid #d5d9e0}' +
-'.mbx .mbseg [aria-pressed=true]{background:#1F6FB2;color:#fff}.mbx .mbcount{display:flex;align-items:center;gap:8px;color:#5c6475;font-size:13px}.mbx .mbcount span{flex:1}.mbx .mbcount button{padding:3px 8px;font-size:12px}' +
-'.mbx ol{list-style:none;margin:0;padding:0;overflow:auto;flex:1;border:1px solid #e4e6ea;border-radius:10px}' +
-'.mbx li{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid #eef0f3;cursor:pointer}.mbx li:last-child{border-bottom:0}.mbx li:hover{background:#f4f5f7}' +
+const MB_CSS = '.mbx{font:14px/1.35 Inter,system-ui,sans-serif;color:var(--fg);display:flex;flex-direction:column;gap:10px;height:100%;box-sizing:border-box;padding:14px}' +
+'.mbx *{box-sizing:border-box}.mbx header{display:flex;align-items:center;gap:8px}.mbx header b{font-size:16px}.mbx header span{color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+'.mbx select,.mbx button{font:inherit;border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:6px 10px;color:inherit;cursor:pointer}.mbx select{width:100%}' +
+'.mbx .mbseg{display:flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}.mbx .mbseg button{flex:1;border:0;border-radius:0;padding:5px 4px;font-size:13px}.mbx .mbseg button+button{border-left:1px solid var(--line-strong)}' +
+'.mbx .mbseg [aria-pressed=true]{background:var(--accent);color:var(--accent-fg)}.mbx .mbcount{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}.mbx .mbcount span{flex:1}.mbx .mbcount button{padding:3px 8px;font-size:12px}' +
+'.mbx ol{list-style:none;margin:0;padding:0;overflow:auto;flex:1;border:1px solid var(--line);border-radius:10px}' +
+'.mbx li{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid var(--line);cursor:pointer}.mbx li:last-child{border-bottom:0}.mbx li:hover{background:var(--hover)}' +
 '.mbx li .mbn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mbx li .mbv{display:flex;gap:6px;font-variant-numeric:tabular-nums;font-weight:600}' +
-'.mbx li .mbv{gap:14px}.mbx li .mbv i{font-style:normal;font-weight:500;color:#5c6475;margin-right:4px;font-size:.85em}.mbx li .mbc{min-width:2.4em;text-align:right;white-space:nowrap}.mbx li .mbv .mbst,.mbx li .mbv .mbno{color:#8a91a0;font-weight:500}' +
-'.mbx li.cur{background:#e8f1fa;box-shadow:inset 3px 0 0 #1F6FB2;font-size:17px;padding:11px 12px}.mbx li.done{color:#9aa1ae}.mbx li.done .mbv{color:#9aa1ae}.mbx li .mbok{width:16px;color:#1f9d55;font-weight:700}' +
-'.mbx .mbhint{margin:0;color:#5c6475;font-size:12px}';
+'.mbx li .mbv{gap:14px}.mbx li .mbv i{font-style:normal;font-weight:500;color:var(--muted);margin-right:4px;font-size:.85em}.mbx li .mbc{min-width:2.4em;text-align:right;white-space:nowrap}.mbx li .mbv .mbst,.mbx li .mbv .mbno{color:var(--faint);font-weight:500}' +
+'.mbx li.cur{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent);font-size:17px;padding:11px 12px}.mbx li.done{color:var(--faint)}.mbx li.done .mbv{color:var(--faint)}.mbx li .mbok{width:16px;color:var(--ok);font-weight:700}' +
+'.mbx .mbhint{margin:0;color:var(--muted);font-size:12px}';
+const MB_TOKENS = ['--fg', '--muted', '--faint', '--surface', '--hover', '--line', '--line-strong', '--accent', '--accent-fg', '--accent-soft', '--ok'];
+const mbTokens = () => { const cs = getComputedStyle(document.documentElement); return ':root{' + MB_TOKENS.map(k => k + ':' + cs.getPropertyValue(k).trim()).join(';') + (document.documentElement.dataset.theme === 'dark' ? ';color-scheme:dark' : '') + '}'; };
 const mbClass = () => lib.classes.find(c => c.id === mbe.cls);
 function mbHtml() {
 const c = mbClass(); if (!c) return '';
@@ -28087,6 +28094,7 @@ return '<div class="mbx"><header><b>' + esc(tr('Entry list')) + '</b><span>' + e
 const mbRoot = () => mbe.win && !mbe.win.closed ? mbe.win.document.getElementById('mbRoot') : document.getElementById('mbPanel');
 function mbDraw() {
 const r = mbRoot(); if (!r) return;
+if (mbe.win && !mbe.win.closed) { const t = mbe.win.document.getElementById('mbTok'); if (t && t.textContent !== mbTokens()) t.textContent = mbTokens(); }
 r.innerHTML = mbHtml();
 const cur = r.querySelector('li.cur'); if (cur) cur.scrollIntoView({ block: 'nearest' });
 }
@@ -28138,11 +28146,11 @@ const W = 400, H = Math.min(900, (screen.availHeight || 800) - 60), L = Math.max
 let w = null; try { w = window.open('about:blank', 'gsEntryList', 'popup,width=' + W + ',height=' + H + ',left=' + L + ',top=' + ((screen.availTop || 0) + 30)); } catch { }
 if (w && w.document) {
 mbe.win = w;
-w.document.open(); w.document.write('<!doctype html><html lang="' + esc(LANG) + '"><head><meta charset="utf-8"><title>' + esc(tr('Entry list') + ' · ' + c.name) + '</title><style>html,body{margin:0;height:100%;background:#fff}' + MB_CSS + '</style></head><body><div id="mbRoot" style="height:100%"></div><\/body></html>'); w.document.close();
+w.document.open(); w.document.write('<!doctype html><html lang="' + esc(LANG) + '"><head><meta charset="utf-8"><title>' + esc(tr('Entry list') + ' · ' + c.name) + '</title><style id="mbTok">' + mbTokens() + '</style><style>html,body{margin:0;height:100%;background:var(--surface)}' + MB_CSS + '</style></head><body><div id="mbRoot" style="height:100%"></div><\/body></html>'); w.document.close();
 w.document.addEventListener('click', mbClick); w.document.addEventListener('change', mbChange); w.document.addEventListener('keydown', mbKey);
 w.addEventListener('pagehide', () => { if (mbe.win === w) mbe.win = null; });
 } else {
-if (!document.getElementById('mbCss')) { const s = document.createElement('style'); s.id = 'mbCss'; s.textContent = MB_CSS + '#mbPanel{position:fixed;right:16px;top:16px;bottom:16px;width:380px;z-index:60;background:#fff;border:1px solid #e4e6ea;border-radius:14px;box-shadow:0 12px 32px rgba(20,30,50,.18);outline:none}'; document.head.appendChild(s); }
+if (!document.getElementById('mbCss')) { const s = document.createElement('style'); s.id = 'mbCss'; s.textContent = MB_CSS + '#mbPanel{position:fixed;right:16px;top:16px;bottom:16px;width:380px;z-index:60;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px rgba(20,30,50,.18);outline:none}'; document.head.appendChild(s); }
 const p = document.createElement('div'); p.id = 'mbPanel'; p.tabIndex = -1; document.body.appendChild(p);
 p.addEventListener('click', mbClick); p.addEventListener('change', mbChange); p.addEventListener('keydown', mbKey);
 }
@@ -30599,7 +30607,8 @@ slots: l.slots.map(s => ({ classId: String(s.classId), date: String(s.date) })) 
 return plan;
 }
 const planUrl = h => $('#lessonsBtn').getAttribute('href') + (h || '');
-const planTime = t => { const m = /^(\d{1,2}):(\d\d)$/.exec(t || ''); return m ? (+m[1] % 12 || 12) + ':' + m[2] : ''; };
+let planTimeF = null;
+const planTime = t => { const m = /^(\d{1,2}):(\d\d)$/.exec(t || ''); if (!m) return ''; planTimeF = planTimeF || new Intl.DateTimeFormat(LANG_LOCALE, { hour: 'numeric', minute: '2-digit' }); return planTimeF.formatToParts(new Date(2000, 0, 1, +m[1], +m[2])).filter(p => p.type !== 'dayPeriod').map(p => p.value).join('').trim(); };
 function todayRows(p, now) {
 const d = isoDay(now || Date.now()), dow = new Date(now || Date.now()).getDay(), off = p.daysOff.find(x => x.date === d);
 if (off) return { off: off.label || 'No school', rows: [] };

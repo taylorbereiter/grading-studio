@@ -32,7 +32,10 @@ async function planRead() {
   return plan;
 }
 const planUrl = h => $('#lessonsBtn').getAttribute('href') + (h || '');
-const planTime = t => { const m = /^(\d{1,2}):(\d\d)$/.exec(t || ''); return m ? (+m[1] % 12 || 12) + ':' + m[2] : ''; };
+// A class time ("13:05") the way the teacher's language or browser writes the hour: "13:05" where the clock is 24-hour, "1:05" where it
+// is 12-hour. Morning and afternoon are left off, so a time still fits Today's narrow time column.
+let planTimeF = null;
+const planTime = t => { const m = /^(\d{1,2}):(\d\d)$/.exec(t || ''); if (!m) return ''; planTimeF = planTimeF || new Intl.DateTimeFormat(LANG_LOCALE, { hour: 'numeric', minute: '2-digit' }); return planTimeF.formatToParts(new Date(2000, 0, 1, +m[1], +m[2])).filter(p => p.type !== 'dayPeriod').map(p => p.value).join('').trim(); };
 // Today's meetings in the order they happen, each with the lesson planned for it, if there is one.
 function todayRows(p, now) {
   const d = isoDay(now || Date.now()), dow = new Date(now || Date.now()).getDay(), off = p.daysOff.find(x => x.date === d);

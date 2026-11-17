@@ -1,21 +1,21 @@
 {
  "version": "1.28.66",
- "build": "40c32e0b0301",
+ "build": "b24d14e1c437",
  "notes": [
   "On a phone: a More tab with your Google account, Sync now, updates, Help and Settings, and a bar above the tabs with Update now whenever a new version is ready. Today asks you to sign in with Google instead of choosing a folder."
  ],
  "files": {
-  "index.html": "c6f6dcf1735023c1c8f02209c0089806e6b6a5eeb1d00bb411f56b396c7c40e3",
-  "planner.html": "17c93db9444be058fbedda4bae678f9ec4efc0de1f9df9fb146aafb11aa654c0"
+  "index.html": "3ee888f54a4c4a55c061c6e3f0da8ab702f6410fa58385c043dd9ac052f01608",
+  "planner.html": "85bf9e07fbea8009d81cd82d0689887e25a02d357cf54fa40b02b7a0832d827d"
  },
  "langs": {
-  "lang/zh-Hant.js": "74f5b9dd6579b91ef1cf6a3431e79c560a454a6efd749f9c9a2a800a9b0b6348",
-  "lang/zh-Hans.js": "c26fa6ca88731d0f27cfd6bfcae93d1b4145f5eaa7ebdbea38856f8c0d0159d4",
-  "lang/es.js": "65e561ba75865009ddfb9275239b8ee33b10cc50bda88e481a160b53607f1435",
-  "lang/fr.js": "693c777feb05fbcac1b2da51c4dc65620a0660175793ff166c6c18260cf1727a",
-  "lang/de.js": "e614653b4b00c31a5a97705322fa4259e3603354ce7ce61a8b39b5cf23bf4305",
-  "lang/pt-BR.js": "088233dc28f9e364b8a327ebc8aaf1604dcbe22e736702ed34624014f5812cfc",
-  "lang/ja.js": "913b6a050c3bd338df36c484c286bc3ae7d59dad090b662f362530d94dcde854",
-  "lang/ko.js": "c458cafdb522106522d348efd69092b586afbb875db0e78a4252d618159f0c34"
+  "lang/zh-Hant.js": "71dc958f8dd6dea4c1150a73a8f0d21339b6b57d8e4a4b75122ce33dda69cae1",
+  "lang/zh-Hans.js": "010649fc1912dca248c62f2f085d6f969600aaf3bbf2293115a614ff019aab9d",
+  "lang/es.js": "e22ed584136d4a5ee2b538927284c0a6d710af32b000757309c097a6612f352b",
+  "lang/fr.js": "34b1c5560e9fc548b65c541380fe9a2896ae208a10ad9cce099ff823bd3ed215",
+  "lang/de.js": "8cbb84297f7f452a2075d8ff018f7413982795a7838ea8c35bc0f9a1edb7a764",
+  "lang/pt-BR.js": "c592317145cd20530af83ffdfcedb08e1271072b42857e3d8256b0d868d39915",
+  "lang/ja.js": "895aa65601b4a0007add38a2d2887a9c7e66210dd9b89d7ecca8fd028fb11889",
+  "lang/ko.js": "b6438666c78e23fa89204f4b06a87fa34553da731161ef0f208adaf07425b025"
  }
 }

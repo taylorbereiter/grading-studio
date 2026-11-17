@@ -848,6 +848,37 @@ test('in Spanish the marking screen is in Spanish, and names, rubric rows, comme
   await close();
 });
 
+// Group work's band above the paper (src/groups.js) and a student's strengths and concerns on their card (src/watch.js).
+test('group work’s band on the marking screen and a student’s strengths and concerns leave nothing in English', async () => {
+  const own = [];
+  {
+    const { page, close } = await openApp(browser, {});
+    await openZip(page, zip);
+    await pick(page, '#paper [data-shfile]'); await page.waitForSelector('#grpOwn'); await page.click('#grpOwn');
+    await page.click('#dlgBox [data-shto="1"]'); await page.waitForFunction(() => /In the group/.test(document.querySelector('#dlgBox [data-shto="1"]').textContent));
+    await page.click('#dlgBox .bf [data-cancel]'); await page.waitForSelector('#grpBand [data-grpjust]'); await pause(300);
+    await page.$$eval('#openRep [data-repx]', b => b.forEach(x => x.click()));   // the opening report's bar is not what this walk is about
+    await miss(page, 'group work, own scores', own);
+    await page.click('#grpBand [data-grpjust="1"]'); await pause(300); await miss(page, 'group work, marks just for one', own);
+    // in Spanish the partners' names stay, joined the Spanish way
+    assert.equal(await page.evaluate(async () => { await window.__gsLang.load('es'); return window.__gsLang.tr('with Bram Sample and Cleo Fixture ·', 'es'); }), 'con Bram Sample y Cleo Fixture ·');
+    assert.deepEqual(page.errors, []);
+    await close();
+  }
+  {
+    const { page, close } = await openApp(browser, { seed: gradingSeed() });
+    const own = ['Grade 9 English', 'Grade 10 Literature', 'Poetry analysis', 'Narrative essay', 'Download', /^(Aria|Bram|Cleo|Dov|Esme|Finn|Gus|Hana) /, /^Unit \d/];   // Today, behind the card
+    await page.waitForSelector('#railClasses a'); await pause(500);
+    await page.evaluate(() => window.__gs.personCard('c1', 'Bram Sample')); await page.waitForSelector('#pcWl h3'); await miss(page, 'strengths and concerns, none yet', own);
+    await page.keyboard.press('Escape');
+    await page.evaluate(() => { window.__gs.exWatch().push({ id: 'langw1', watch: 1, kind: 'shot', letter: '1', who: { c: 'c1', n: 'Aria Testwell' }, t: Date.parse('2026-10-21T10:00:00'), title: 'Poetry analysis', why: 'Mixes up simile and metaphor.', tags: ['figurative language'], pages: [] }); window.__gs.personCard('c1', 'Aria Testwell'); });
+    await page.waitForSelector('#pcWl .wltime li.w'); await miss(page, 'strengths and concerns', own);
+    await page.click('#pcWl [data-wlcf="good"]'); await pause(200); await miss(page, 'strengths and concerns, none of a kind', own);
+    assert.deepEqual(page.errors, []);
+    await close();
+  }
+});
+
 // The Focus card's rough estimate and its reasons, in every language (they show only on some days, so the walks above can miss them).
 test('the Focus card’s rough estimate and reasons are in every language', async () => {
   const { page, close } = await openApp(browser);
