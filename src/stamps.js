@@ -31,16 +31,38 @@ const stickersReady = Promise.all(STICKERS.map(([k]) => new Promise(done => {
 const isSticker = k => STICKERS.some(s => s[0] === k);
 // A score sticker from the calculator: { k: 'score', text: '12.5/15 = 83%', color }. A boxed stamp, the score over the percent,
 // in her ink color. Its text reads like a typed grade, so the grade sheet finds it on the paper by itself.
-const isScoreStamp = k => k === 'score';
-const scoreLines = m => String(m.text || '').split(' = ').map(t => t.replace('/', ' / '));
+// A criterion sticker: { k: 'crit', of: 'Thesis', name: 'Thesis', text: '3/4' }, one rubric row's score, smaller, with the row's name
+// (an IB criterion's letter, with its level alone) over it. `of` is the row it follows, by name, so moving or removing rows never
+// gives it another row's score. Placed only when the teacher asks, row by row. Not a total, so the grade sheet never reads it as the score.
+const isScoreStamp = k => k === 'score' || k === 'crit';
+// Extra credit follows the score after " + " ("17/20 = 85% + 5% extra credit") and is a third, smaller line; the grade sheet reads only the score before it.
+const stampScore = t => String(t || '').split(' + ')[0];
+const scoreLines = m => { const t = String(m.text || ''), i = t.indexOf(' + '), L = stampScore(t).split(' = ').map(x => x.replace('/', ' / ')); if (i >= 0) L.push(t.slice(i + 1)); return L; };   // with no percent line the extra credit is the second line
 function scoreSize(m) {
-  const s = m.size || 52, [a, b] = scoreLines(m);
+  if (m.k === 'crit') return critSize(m);
+  const s = m.size || 52, [a, b, c] = scoreLines(m);
   measureCtx.font = '700 ' + (s * 0.34) + 'px ' + FONT; const wa = measureCtx.measureText(a || '').width;
   measureCtx.font = '600 ' + (s * 0.26) + 'px ' + FONT; const wb = b ? measureCtx.measureText(b).width : 0;
-  return { w: Math.max(s * 1.5, Math.max(wa, wb) + s * 0.4), h: b ? s : s * 0.6, two: !!b };
+  measureCtx.font = '600 ' + (s * 0.19) + 'px ' + FONT; const wc = c ? measureCtx.measureText(c).width : 0;
+  return { w: Math.max(s * 1.5, Math.max(wa, wb, wc) + s * 0.4), h: c ? s * 1.28 : b ? s : s * 0.6, two: b != null, xc: c };
+}
+// A long row name is cut to fit, by its measured width, so the sticker stays small in any language.
+function critName(m, s) {
+  let t = String(m.name || '').trim(); if (!t) return '';
+  measureCtx.font = '600 ' + (s * 0.24) + 'px ' + FONT;
+  const room = s * 3.4;
+  if (measureCtx.measureText(t).width <= room) return t;
+  while (t.length > 1 && measureCtx.measureText(t + '…').width > room) t = t.slice(0, -1);
+  return t.trimEnd() + '…';
+}
+function critSize(m) {
+  const s = m.size || 40, nm = critName(m, s);
+  measureCtx.font = '700 ' + (s * 0.4) + 'px ' + FONT; const wa = measureCtx.measureText(String(m.text || '').replace('/', ' / ')).width;
+  measureCtx.font = '600 ' + (s * 0.24) + 'px ' + FONT; const wb = nm ? measureCtx.measureText(nm).width : 0;
+  return { w: Math.max(s * 1.1, Math.max(wa, wb) + s * 0.36), h: nm ? s : s * 0.62, two: !!nm, nm };
 }
 const stickerAspect = k => (STICKERS.find(s => s[0] === k) || [0, 0, 1])[2];
-const stampName = k => isProof(k) ? markLabel(k) : ((STICKERS.find(p => p[0] === k)) || [k, k])[1];
+const stampName = k => k === 'crit' ? 'Criterion score' : isProof(k) ? markLabel(k) : ((STICKERS.find(p => p[0] === k)) || [k, k])[1];
 
 /* ---------------- the mark key: a page at the end of a returned file saying what each mark on it means ---------------- */
 // Each teacher writes the words in More > Mark key; until then these are used. Kept as gs.markKey = { on, names: { k }, means: { k } }.
@@ -137,9 +159,9 @@ function openMarkKey(back) {
 }
 // How big a new one is: the size she last gave that kind (each sticker, each mark, the check) in this download.
 // A new download starts back at the usual sizes. Kept on this computer, for the dozen most recent downloads.
-const MARK_SIZES = 'gs.markSizes', SIZE0 = { proof: 16, sticker: 44, score: 52 };
-const sizeKind = k => isSticker(k) ? 'sticker' : isScoreStamp(k) ? 'score' : 'proof';
-const SIZE_LIMITS = { proof: [8, 80], sticker: [16, 240], check: [8, 120], score: [20, 160] };
+const MARK_SIZES = 'gs.markSizes', SIZE0 = { proof: 16, sticker: 44, score: 52, crit: 40 };
+const sizeKind = k => isSticker(k) ? 'sticker' : k === 'crit' ? 'crit' : isScoreStamp(k) ? 'score' : 'proof';
+const SIZE_LIMITS = { proof: [8, 80], sticker: [16, 240], check: [8, 120], score: [20, 160], crit: [16, 160] };
 const sizesHere = () => { const all = store.get(MARK_SIZES, {}) || {}; return (batch && all[batch.id]) || {}; };
 function lastSize(key, lim, dflt) { const v = +sizesHere()[key]; return v >= lim[0] && v <= lim[1] ? v : dflt; }
 const newStampSize = k => lastSize(k, SIZE_LIMITS[sizeKind(k)], SIZE0[sizeKind(k)]);
@@ -180,6 +202,15 @@ function drawStamp(ctx, m) {
     ctx.restore();
     return;
   }
+  if (m.k === 'crit') {
+    const z = critSize(m), l = x - z.w / 2, t = y - z.h / 2;
+    ctx.save(); ctx.lineWidth = Math.max(1, s * 0.045);
+    ctx.beginPath(); ctx.roundRect(l, t, z.w, z.h, s * 0.14); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = m.color; ctx.stroke();
+    ctx.fillStyle = m.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (z.two) { ctx.font = '600 ' + (s * 0.24) + 'px ' + FONT; ctx.fillText(z.nm, x, t + s * 0.25); }
+    ctx.font = '700 ' + (s * 0.4) + 'px ' + FONT; ctx.fillText(String(m.text || '').replace('/', ' / '), x, z.two ? t + s * 0.66 : y + s * 0.01);
+    ctx.restore(); return;
+  }
   if (isScoreStamp(m.k)) {
     const z = scoreSize(m), [a, b] = scoreLines(m), l = x - z.w / 2, t = y - z.h / 2, r = s * 0.14;
     ctx.save(); ctx.lineWidth = Math.max(1, s * 0.04);
@@ -190,6 +221,7 @@ function drawStamp(ctx, m) {
       ctx.lineWidth = Math.max(0.8, s * 0.022); ctx.beginPath(); ctx.moveTo(l, t + s * 0.6); ctx.lineTo(l + z.w, t + s * 0.6); ctx.stroke();
       ctx.font = '600 ' + (s * 0.26) + 'px ' + FONT; ctx.fillText(b, x, t + s * 0.8);
     }
+    if (z.xc) { ctx.font = '600 ' + (s * 0.19) + 'px ' + FONT; ctx.fillText(z.xc, x, t + s * 1.1); }
     ctx.restore(); return;
   }
   ctx.save(); ctx.strokeStyle = ctx.fillStyle = m.color; ctx.lineWidth = Math.max(1.1, s * 0.085); ctx.lineCap = 'round'; ctx.lineJoin = 'round';

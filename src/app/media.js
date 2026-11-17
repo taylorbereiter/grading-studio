@@ -22,11 +22,11 @@ function mediaCard(st, f, kept) {
   const m = el.querySelector('audio,video');
   m.src = kept ? kept.url : mediaUrl(f); m.playbackRate = store.get('gs.rate', 1);
   m.onratechange = () => {};
-  mediaWatch(el, m, kept ? { name: kept.name, data: kept.blob, kind: 'media', size: kept.blob.size } : f);
+  mediaWatch(el, m, kept ? { name: kept.name, data: kept.blob, kind: 'media', size: kept.blob ? kept.blob.size : kept.size || 0 } : f);
   if (vid) { vidGrip(el.querySelector('.mstick'), vidRot(m, f)); el.querySelector('[data-vrot]').onclick = () => vidTurn(st, f, el); }
   if (!curMedia) curMedia = m;
   clipStrip(el.querySelector('.mstick'), f, () => m, c => clipRun(m, c));
-  const pan = trPanel(el, f, { make: CAN_TRANSCRIBE, seek: t => { m.currentTime = t; if (m.paused) m.play().catch(() => {}); } });
+  const pan = trPanel(el, f, { make: CAN_TRANSCRIBE, seek: el.vseek = t => { m.currentTime = t; if (m.paused) m.play().catch(() => {}); } });
   el.querySelector('.mstick').after(el.querySelector('.trbox'));
   m.ontimeupdate = () => pan.tick(m.currentTime, !m.paused);
   el.onclick = e => {
@@ -44,7 +44,7 @@ function mediaCard(st, f, kept) {
 //   { w: [[word, seconds]] }  made in this browser by the speech engine (readings.js), or
 //   { l: [[line, seconds or null]] }  pasted or typed by the teacher, for any video: a link (Google Drive won't hand its captions to this page) or a file.
 // It is the student's words, so it never leaves this browser: not in the export, a take-home file or the linked folder.
-const trMakeable = f => f.kind === 'media' || (f.kind === 'link' && !!vidRef(f.data));
+const trMakeable = f => f.kind === 'media' || !!keptId(f);
 // The lines to show: pasted ones as they are, made ones cut after a sentence once a line is long enough.
 function trLines(tr) {
   if (!tr) return [];
@@ -150,7 +150,7 @@ function trPanel(card, f, o) {
     const me = stop = { on: false };
     const say = (t, p) => { if (stop !== me) return; const s = box.querySelector('.trmsg'), b = box.querySelector('.prog i'); if (s) s.textContent = t; if (b && p != null) b.style.width = Math.round(p * 100) + '%'; };
     let lock = null; try { lock = await navigator.wakeLock.request('screen'); } catch {}
-    try { await transcribeFile(f, say, me); if (stop === me) toast('The transcript is ready. Click a line to play from there.'); }
+    try { await transcribeFile(f, say, me, true); if (stop === me) toast('The transcript is ready. Click a line to play from there.'); }
     catch (er) { if (!me.on) { console.error(er); err = (er && er.message) || String(er); } }
     try { lock && lock.release(); } catch {}
     if (stop === me) { stop = null; mode = ''; if (box.isConnected) draw(); }

@@ -41,20 +41,58 @@ async function versionsDlg(l) {
 }
 
 /* ---------- sending to Claude, approving ---------- */
+// What to hand back: one .zip the teacher uploads on the lesson (finished.js lessonZip takes exactly this). The slides come back
+// as data in lesson.json, so the app makes the PowerPoint from the teacher's own template; the assistant's .pptx is a preview.
+const lessonZipAsk = () => 'When you are done, give me ONE downloadable .zip file. In it:\n' +
+  '- lesson.json: { "kind": "grading-studio-lesson-zip", "lesson": { "title": "…", "slides": [ … ] }, "preview": "<the .pptx file name>", "materials": ["<each handout file name>"] }.\n' +
+  '  "slides" is every slide of the lesson, in order. My Planner makes the real PowerPoint from these with my school template, so they matter most. Each slide is one of:\n' +
+  '  { "layout": "title", "title": "…", "body": "" }   { "layout": "agenda", "title": "…", "body": "1. …\\n2. …" }\n' +
+  '  { "layout": "content", "title": "…", "body": "• Point\\n\\t• Smaller point", "notes": "speaker notes" }   { "layout": "text", "title": "…", "body": "plain paragraphs" }\n' +
+  '  { "layout": "warmup", "title": "Warm-up", "tag": "Journal", "body": "the prompt" }   { "layout": "objectives", "title": "Today we will", "body": "1. …" }\n' +
+  '  { "layout": "steps", "title": "…", "body": "1. …\\n2. …", "foot": "When you’re done: …" }   { "layout": "discuss", "title": "…", "body": "the question", "foot": "Think · Pair · Share" }\n' +
+  '  { "layout": "twocol", "title": "…", "h1": "left heading", "body": "left", "h2": "right heading", "body2": "right" }   { "layout": "passage", "title": "…", "body": "“the passage”", "cite": "source", "foot": "the question" }\n' +
+  '  { "layout": "vocab", "title": "Word of the day", "word": "…", "pos": "noun", "body": "meaning", "foot": "example" }   { "layout": "video", "title": "…", "video": { "url": "https://…", "start": 30 } }\n' +
+  '  { "layout": "exit", "title": "Exit ticket", "tag": "On a sticky note", "body": "the question" }   { "layout": "picture", "title": "…" } (keeps the picture already on that slide)\n' +
+  '  Any slide may have "notes" and "size" (' + deckSizeSay() + '). Lines are separated by \\n and show exactly as written. Reply to my comments with "talk": [{ "by": "claude", "text": "…" }] on that slide.\n' +
+  '- a preview PowerPoint (.pptx) of the same slides, so I can look before I upload;\n' +
+  '- any handouts or other files the lesson needs (.docx, .pdf and so on).\n' +
+  'Also give me each piece (the preview PowerPoint and every handout) as its own downloadable file, so I can open or use one without the .zip.\n' +
+  'Put nothing about any student in any of them. Then tell me in a few lines what you changed. I will upload the .zip on this lesson in my Planner.';
+// What the folder used to give the assistant, written into the message instead: when each class meets, the unit plan and the
+// teacher's own activities. Planning only: nothing here is about a student.
+async function lessonContext(l) {
+  let t = '';
+  const when = (l.slots || []).map(sl => { const c = classById(sl.classId); if (!c) return ''; const d = parseYmd(sl.date).getDay(), m = (c.meets || []).find(x => +x.dow === d);
+    return '- ' + c.name + (c.course && c.course !== c.name ? ' (' + c.course + ')' : '') + ', ' + longDate(sl.date) + (m && m.start ? ', ' + hm(m.start) + (m.end ? '–' + hm(m.end) + ' (' + (minsOf(m.end) - minsOf(m.start)) + ' minutes)' : '') : ''); }).filter(Boolean);
+  if (when.length) t += '## When I teach it\n' + when.join('\n') + '\n\n';
+  const hit = lessonUnit(l);
+  if (hit) {
+    const { u, n } = hit;
+    t += '## The unit: ' + u.title + (u.course ? ' (' + u.course + ')' : '') + '\nThis lesson is in week ' + (n + 1) + ' of ' + u.weeks.length + '.' + (u.atlas ? ' Unit plan page: ' + u.atlas : '') + '\n' +
+      u.weeks.map((w, i) => '- Week ' + (i + 1) + (i === n ? ' (this week)' : '') + ': ' + (w.focus || '…') + (w.standards ? ' [' + w.standards + ']' : '') + (w.notes ? ' My notes: ' + w.notes : '')).join('\n') + '\n\n';
+  }
+  const acts = (await myActivities()).slice(0, 25);
+  if (acts.length) t += '## Activities I like to use (use one where it fits)\n' + acts.map(a => '- ' + a.name + (a.what ? ': ' + a.what : '')).join('\n') + '\n\n';
+  return t;
+}
+const minsOf = s => { const m = /^(\d+):(\d\d)/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : 0; };
+// What the teacher should attach by hand: pictures and screenshots don't travel as text.
+const lessonAttach = l => { const p = l.slides.filter(s => s.img).length, c = l.slides.reduce((n, s) => n + (s.ctx || []).length, 0);
+  return [p ? p + ' slide picture' + (p === 1 ? '' : 's') : '', c ? c + ' screenshot' + (c === 1 ? '' : 's') + ' for context' : ''].filter(Boolean).join(' and '); };
 async function sendToClaude(l) {
   editorCommit(); boxNotesToSlides(l);
   await saveVersion(l, 'Sent to ' + plAi());
   l.status = 'claude'; await lPut(l);
   const asks = l.slides.filter(s => s.ask.trim()).length, talks = l.slides.filter(s => s.talk.some(t => t.by === 'you' && !t.done)).length;
-  const file = fileBase(l) + '.lesson.json';
-  const msg = L.dir && L.dirOk
-    ? 'Please work on my lesson "' + l.title + '" in my Planner folder ("' + L.dir.name + '"), file "' + file + '". Read "README - for ' + plAi() + '.md" there first.\n\n' +
-      (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' an "ask" saying what I want on it. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me in "talk". ' : '') + (lessonNotes(l).length ? 'My comments on the whole lesson are in the lesson\'s own "talk". ' : '') +
-      lessonNotes(l).map(x => 'My comment on the whole lesson: ' + x + '\n').join('') +
-      'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. When you\'re done, reply to my comments in "talk", put a short summary in "claudeNote", and set "status" to "review". Don\'t change "id" or "slots". I\'ll look at your version slide by slide in the Planner.'
-    : 'Here is a lesson from my Planner. Each slide may have "What I want here" notes and comments for you. Build it out, keep my wording where I wrote it, slide 1 stays the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + ', and slide text stays ' + deckSizeSay() + ' pt.\n\n' + lessonText(l);
+  // Self-contained on purpose: the text never names a folder, a path or a file on this computer, so the assistant
+  // never goes looking on the teacher's computer. It hands back one .zip, which the teacher uploads on the lesson (lessonZip).
+  const msg = 'Here is a lesson from my Planner. Everything you need is in this message. Don\'t look for, open or ask for any folder or file on my computer.\n\n' +
+    (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' a "What I want on this slide" note. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me. ' : '') +
+    'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. Slide 1 stays the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + ', and slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style.\n\n' +
+    lessonZipAsk() + '\n\n' + await lessonContext(l) + lessonText(l);
   await copyText(msg);
-  toast(L.dir && L.dirOk ? 'Copied. Paste it into ' + plAi() + '. ' + PlAi() + '’s changes show up here when it saves.' : 'Lesson copied. Paste it into ' + plAi() + '. Link the Planner folder so ' + plAi() + ' can save straight back.', 7000);
+  const att = lessonAttach(l);
+  toast('Lesson copied. Paste it into ' + plAi() + (att ? ' and attach the ' + att + ' (Copy on each one, then paste)' : '') + '. When it gives you a .zip, upload it on this lesson and check its changes slide by slide.', 9000);
   renderEditor();
 }
 
@@ -135,7 +173,7 @@ function slideTalkHtml(s) {
 function ctxHtml(s) {
   const c = s.ctx || [];
   return '<div class="pl-cs"><div class="pl-cs-h"><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;ask&quot;]" title="Say it instead of typing">🎤 Dictate</button>' +
-    '<button class="btn sm ghost" data-a="ctxadd" title="A screenshot for context, not put on the slide. You can also paste one (Ctrl+V or ⌘V) or drop one here.">+ Screenshot</button><input type="file" id="ctxIn" accept="image/*" multiple hidden>' +
+    '<button class="btn sm ghost" data-a="ctxadd" title="A screenshot for context, not put on the slide. You can also paste one (Ctrl+V or ⌘V) or drop one here.">+ Screenshot</button>' + gpDrv('data-a="ctxadd"', '', 1) + '<input type="file" id="ctxIn" accept="image/*" multiple hidden>' +
     '<span class="muted pl-cs-tip">Screenshots are for context, not on the slide. Crop out student names and faces first.</span></div>' +
     (c.length ? '<div class="pl-cs-list">' + c.map((x, i) => '<div class="pl-csi"><button class="pl-csi-img" data-ctxview="' + i + '" title="See it bigger"><img src="' + esc(imgSrc(x.src)) + '" alt="' + esc(x.note || 'Screenshot') + '"></button>' +
       '<input class="btn sm" data-f="ctxnote" data-i="' + i + '" value="' + esc(x.note) + '" placeholder="What is it? (like: the task sheet)" aria-label="What this screenshot is">' +
@@ -150,7 +188,7 @@ async function addCtxShots(files) {
   const ins = document.querySelectorAll('[data-f="ctxnote"]'); if (ins.length) ins[ins.length - 1].focus();
   toast(n === 1 ? 'Screenshot added for context. Say what it is in the box under it.' : n + ' screenshots added for context');
 }
-function ctxPick() { const i = $('#ctxIn'); if (!i) return; i.onchange = () => { const fs = [...i.files]; i.value = ''; if (fs.length) addCtxShots(fs); }; i.click(); }
+function ctxPick() { const i = $('#ctxIn'); if (!i) return; i.onchange = () => { const fs = [...i.files]; i.value = ''; if (fs.length) addCtxShots(fs); }; gpClick(i); }
 async function ctxCopy(x) {
   try {
     const im = new Image(); im.src = x.src; await im.decode();

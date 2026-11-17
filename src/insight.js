@@ -74,6 +74,7 @@ function pastScore(su, g) {
   else if (g.points !== '' && g.points != null && !isNaN(+g.points)) total = +g.points;
   if (total == null && hasSheet(g) && !isNaN(+g.sheet)) { total = +g.sheet; paper = true; }
   let pct = percentWith(total, max, s.scale);
+  if (g.pk != null && g.pk !== '' && !Array.isArray(s.ib)) { pct = +g.pk; total = pointsWith(pct, max, s.scale); partial = paper = false; }   // a percent she typed stays the score
   if (total == null && g.read && !(g.tries && g.tries.length)) { const d = g.read; paper = true; total = d.score; if (d.outOf != null) max = d.outOf; pct = d.pct != null ? d.pct : percentWith(total, max, s.scale); }
   const one = addXc({ total, max, pct, partial, paper, status: g.status || '', rows: rub ? s.criteria.map((c, i) => rowTop(s, i) === ROW_TOP ? [c, r[i]] : [c, r[i], rowTop(s, i)]).filter(x => x[1] != null) : [] }, g.xc, max, g.xcU);
   if (!g.tries || !g.tries.length) return one;
@@ -356,7 +357,7 @@ async function sbsDraw(c) {
   let js;
   try {
     js = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
-    const pg = await js.getPage(p + 1), v1 = vpRot(f, p, pg, 1), dpr = window.devicePixelRatio || 1, marks = f.marks[p] || [];
+    const pg = await js.getPage(p + 1), v1 = vpRot(f, p, pg, 1), dpr = window.devicePixelRatio || 1, marks = marksMine(f.marks[p] || [], f);
     const wide = v1.width + (marks.some(m => m.t === 'note') ? sideFor(v1.width) : 0), k = Math.min(1.6, (spot.clientWidth || 380) / wide);
     const r = await sharePage(c.st, f, js, p, k * dpr, anonOn() ? anonRx(c.st) : null);
     if (my !== c.tok || !spot.isConnected) return;

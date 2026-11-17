@@ -58,7 +58,7 @@ function decideRec(a, b, ta, tb) {
 const BLANK_REC = () => ({ f: {}, g: { rubric: [], points: '', comment: '' }, h: {} });
 // Settings of the download itself rather than of a student. Each goes on its own, stamped in w.pv = { setting: v } the way a student's record is, so a change to one is never undone by a change to another.
 // w.sv is all of them together, and an old copy has only that, or nothing.
-const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'returned', 'goal', 'clips', 'vrot'];
+const WORK_SET = ['carry', 'setup', 'cls', 'share', 'drive', 'light', 'lightOpt', 'lightPg', 'lightPgL', 'anon', 'moved', 'removed', 'refSkip', 'quiz', 'groups', 'groupsOwn', 'returned', 'goal', 'clips', 'vrot'];
 const setOf = w => { const o = {}; if (w) for (const k of WORK_SET) if (w[k] !== undefined) o[k] = w[k]; return o; };
 const setV = w => w && w.sv ? w.sv : (h => h ? { ['~' + h]: 1 } : {})(hashOf(setOf(w)));
 const partV = (w, k) => (w.pv && w.pv[k]) || (h => h ? { ['~' + h]: 1 } : {})(hashOf(w[k]));
@@ -135,7 +135,7 @@ const rubricsDiffer = (x, y) => rubricKey(x) !== rubricKey(y);
 function workScored(w) {
   const blank = v => v == null || v === '';
   if (w && Object.keys(w.read || {}).length) return true;
-  return !!w && Object.values(w.s || {}).some(r => { const g = (r && r.g) || {}; return g.status !== 'missing' && g.status !== 'excused' && ((g.rubric || []).some(v => v != null) || !blank(g.points) || !blank(g.sheet)); });
+  return !!w && Object.values(w.s || {}).some(r => { const g = (r && r.g) || {}; return g.status !== 'missing' && g.status !== 'excused' && ((g.rubric || []).some(v => v != null) || !blank(g.points) || !blank(g.pk) || !blank(g.sheet)); });
 }
 const noSpot = s => { const { spot, ...o } = s || {}; return o; };
 // Which of two copies of a rubric is the card's: by what it says, and then by what it would score.
@@ -392,6 +392,13 @@ function mergeEdits(aEd = {}, bEd = {}, work, rows, prefer) {
   }
   return out;
 }
+// The units a download is counted in, each a list of student keys: partners in a group are one.
+function workUnits(keys, groups) {
+  const seen = new Set(), out = [];
+  for (const g of groups || []) { const k = (g.k || []).filter(x => keys.has(x) && !seen.has(x)); if (k.length) { k.forEach(x => seen.add(x)); out.push(k); } }
+  for (const k of keys) if (!seen.has(k)) out.push([k]);
+  return out;
+}
 // How a saved download's scores stand, counted the way the Grades list counts them. Missing and excused have no number, and a partial isn't finished.
 function workCounts(work) {
   const su = work.setup || {}, s = work.s || {}, read = work.read || {}, blank = v => v == null || v === '';
@@ -399,19 +406,32 @@ function workCounts(work) {
   // marked: scored papers she worked on here (rubric rows, ink or a comment), what Focus counts as papers marked. A grade only typed in
   // (points, the Grade sheet) or read off the paper is scored, but not marked.
   const out = { scored: 0, marked: 0, partial: 0, off: 0, fb: 0 };
-  for (const k of new Set([...Object.keys(s), ...Object.keys(read)])) {
+  const one = k => {
     const g = (s[k] && s[k].g) || {}, r = g.rubric || [], rows = su.criteria ? su.criteria.map((_, i) => r[i]) : r, on = rows.filter(v => v != null).length;
     const worked = !!(s[k] && s[k].f && Object.keys(s[k].f).length) || !blank(g.comment);
-    if (g.status !== 'missing' && g.status !== 'excused' && g.fb) out.fb++;
-    // given back early, one student at a time
-    if (g.status !== 'missing' && g.status !== 'excused' && g.sent) { out.sent = (out.sent || 0) + 1; out.sentT = Math.max(out.sentT || 0, g.sent); }
-    if (g.status === 'missing' || g.status === 'excused') out.off++;
-    else if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : on === rows.length && on) { out.scored++; if (su.mode !== 'points' || worked) out.marked++; }
-    else if (su.mode !== 'points' && on) out.partial++;
-    else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) { out.scored++; if (worked) out.marked++; }
+    const o = { off: g.status === 'missing' || g.status === 'excused' };
+    if (!o.off && g.fb) o.fb = 1;
+    if (!o.off && g.sent) o.sent = g.sent;   // given back early, one student at a time
+    if (o.off) return o;
+    if (su.mode === 'points' ? !blank(g.points) && !isNaN(+g.points) : (!blank(g.pk) && !Array.isArray(su.ib)) || (on === rows.length && on)) { o.scored = 1; if ((su.mode !== 'points' && on === rows.length && on) || worked) o.marked = 1; }   // a percent typed as the score is a finished score, though not a paper marked
+    else if (su.mode !== 'points' && on) o.partial = 1;
+    else if ((!blank(g.sheet) && !isNaN(+g.sheet)) || read[k]) { o.scored = 1; if (worked) o.marked = 1; }
+    return o;
+  };
+  // Partners (Group work) count once, as one paper: finished when every partner is, missing or excused only when all of them are.
+  const units = workUnits(new Set([...Object.keys(s), ...Object.keys(read)]), [...(work.groups || []), ...(work.groupsOwn || [])]);
+  for (const u of units) {
+    const all = u.map(one), on = all.filter(o => !o.off), every = f => on.length > 0 && on.every(o => o[f]);
+    if (u.length > 1) out.joined = (out.joined || 0) + u.length - 1;
+    if (every('fb')) out.fb++;
+    if (every('sent')) { out.sent = (out.sent || 0) + 1; out.sentT = Math.max(out.sentT || 0, ...on.map(o => o.sent)); }
+    if (!on.length) out.off++;
+    else if (every('scored')) { out.scored++; if (on.some(o => o.marked)) out.marked++; }
+    else if (on.some(o => o.scored || o.partial)) out.partial++;
   }
   // kept only when there is some, so work with no Feedback complete is stored as before
   if (!out.fb) delete out.fb;
+  if (!out.joined) delete out.joined;
   // she said the marked work went back to the students (an export alone isn't that)
   if (work.returned && work.returned.ok) out.back = work.returned.ok;
   return out;
@@ -423,11 +443,11 @@ function metaFor(ma, mb, work, id) {
   if (!m.name) m.name = 'A download';
   if (work) {
     m.t = work.t || m.t;
-    delete m.fb; delete m.sent; delete m.sentT;
+    delete m.fb; delete m.sent; delete m.sentT; delete m.joined;
     Object.assign(m, workCounts(work));
     // ret was set by any export: never read again
     delete m.ret; if (!(work.returned && work.returned.ok)) delete m.back;
-    m.n = Math.max(m.n || 0, Object.keys(work.s || {}).length);
+    m.n = m.joined ? Object.keys(work.s || {}).length - m.joined : Math.max(m.n || 0, Object.keys(work.s || {}).length);   // partners count once
   }
   return m;
 }
@@ -691,7 +711,51 @@ function todoMerge(a, b) {
   const auto = { ...(b.auto || {}) };
   for (const [k, v] of Object.entries(a.auto || {})) if (!auto[k] || (v.t || 0) >= (auto[k].t || 0)) auto[k] = v;
   const offB = (b.offT || 0) > (a.offT || 0);
-  return { ...b, ...a, items: order.map(id => by.get(id)), auto, off: (offB ? b.off : a.off) || {}, offT: Math.max(a.offT || 0, b.offT || 0) };
+  const out = { ...b, ...a, items: order.map(id => by.get(id)), auto, off: (offB ? b.off : a.off) || {}, offT: Math.max(a.offT || 0, b.offT || 0) };
+  // categories one by one, as the lines are (a deleted one stays deleted); her order goes with whichever copy set it last
+  const cats = new Map();
+  for (const c of [...(Array.isArray(a.cats) ? a.cats : []), ...(Array.isArray(b.cats) ? b.cats : [])]) if (c && c.id && (!cats.has(c.id) || (c.t || 0) > (cats.get(c.id).t || 0))) cats.set(c.id, c);
+  if (cats.size) out.cats = [...cats.values()]; else delete out.cats;
+  const oa = a.corder && Array.isArray(a.corder.ids) ? a.corder : null, ob = b.corder && Array.isArray(b.corder.ids) ? b.corder : null;
+  const corder = oa && ob ? ((ob.t || 0) > (oa.t || 0) ? ob : oa) : oa || ob;
+  if (corder) out.corder = corder; else delete out.corder;
+  return out;
+}
+// Two copies of an assignment's typed-in scores (src/book.js, bkPut) made one: for each student, whichever copy changed theirs last
+// (each score has its time, t; a score taken out leaves its time in gone). Out of, and the rest, go with the copy changed later.
+function typedMerge(a, b, bLater) {
+  const sa = a.s || {}, sb = b.s || {}, ga = a.gone || {}, gb = b.gone || {}, s = {}, gone = {};
+  for (const n of new Set([...Object.keys(sa), ...Object.keys(sb), ...Object.keys(ga), ...Object.keys(gb)])) {
+    const ta = Math.max(sa[n] ? sa[n].t || 0 : -1, ga[n] || -1), tb = Math.max(sb[n] ? sb[n].t || 0 : -1, gb[n] || -1);
+    const fromB = tb > ta || (tb === ta && bLater), r = fromB ? sb[n] : sa[n], g = fromB ? gb[n] : ga[n];
+    if (r && !(g > (r.t || 0))) s[n] = r; else if (g) gone[n] = g;
+  }
+  const out = { ...(bLater ? { ...a, ...b } : { ...b, ...a }), s };
+  if (Object.keys(gone).length) out.gone = gone; else delete out.gone;
+  return out;
+}
+// The Planner on two devices (src/app/drive.js, planSync): each lesson by its own time (updated), each kept setting by its time; a lesson
+// deleted on either side after its last change stays deleted (gone: { 'l:<id>': time }).
+function mergePlan(A, B) {
+  const gone = { ...(B.gone || {}) };
+  for (const [k, t] of Object.entries(A.gone || {})) if (!(gone[k] >= t)) gone[k] = t;
+  const lessons = {}, la = A.lessons || {}, lb = B.lessons || {};
+  for (const id of new Set([...Object.keys(la), ...Object.keys(lb)])) {
+    const a = la[id], b = lb[id], w = !a ? b : !b ? a : (b.updated || 0) >= (a.updated || 0) ? b : a;   // the same time: Drive's, so both devices settle on one
+    if (gone['l:' + id] >= (w.updated || 0)) continue;
+    lessons[id] = w;
+  }
+  // the copies for the phone of lessons too big to send (lite, drive.js planLite): the same, and none older than the lesson itself
+  const lite = {}, ca = A.lite || {}, cb = B.lite || {};
+  for (const id of new Set([...Object.keys(ca), ...Object.keys(cb)])) {
+    const a = ca[id] && typeof ca[id] === 'object' ? ca[id] : null, b = cb[id] && typeof cb[id] === 'object' ? cb[id] : null, w = !a ? b : !b ? a : (b.updated || 0) >= (a.updated || 0) ? b : a;
+    if (!w || gone['l:' + id] >= (w.updated || 0) || (lessons[id] && (lessons[id].updated || 0) >= (w.updated || 0))) continue;
+    lite[id] = w;
+  }
+  for (const k of Object.keys(gone)) if (k.startsWith('l:') && (lessons[k.slice(2)] || lite[k.slice(2)])) delete gone[k];   // written again after it was deleted
+  const kv = {}, ka = A.kv || {}, kb = B.kv || {};
+  for (const k of new Set([...Object.keys(ka), ...Object.keys(kb)])) { const a = ka[k], b = kb[k]; kv[k] = !a ? b : !b ? a : (b.t || 0) >= (a.t || 0) ? b : a; }
+  return Object.keys(lite).length ? { lessons, kv, gone, lite } : { lessons, kv, gone };
 }
 function mergeFields(x, y, win, dev, now, said) {
   const fx = nodeParts(x), fy = nodeParts(y), parts = {}, fv = {}, both = [], fromY = [];
@@ -707,6 +771,8 @@ function mergeFields(x, y, win, dev, now, said) {
       if (said) { parts[k] = (said === 'b' ? fy : fx)[k]; fv[k] = vBump(vJoin(vx, vy), dev, now); chose = true; if (said === 'b') fromY.push(k); }
       else { parts[k] = fx[k]; fv[k] = vx; ask = true; }
     }
+    // scores typed in on two devices (a phone and a computer): student by student, so both sets of scores stay
+    else if (k === 'typed' && fx[k] && fy[k] && typeof fx[k] === 'object' && typeof fy[k] === 'object') { parts[k] = typedMerge(fx[k], fy[k], win === y); fv[k] = vBump(vJoin(vx, vy), dev, now); if (hashOf(parts[k]) !== hx) fromY.push(k); }
     else { parts[k] = (win === y ? fy : fx)[k]; fv[k] = vBump(vJoin(vx, vy), dev, now); both.push(k); if (win === y) fromY.push(k); }
   }
   return { parts, fv, both, fromY, ask, chose };
@@ -761,6 +827,66 @@ function schoolMerge(x, y) {
   if (ry && (!rx || (ry.at || 0) > (rx.at || 0))) { out.roles = ry; toA = true; }
   return { out, toA };
 }
+// Time logs from two devices (gs.focus, src/focus.js; gsp.planTime, src/planner/plantime.js): each device counts its own minutes into
+// the same days, so a day takes the larger of each count, never the sum, and merging twice changes nothing. What is this device's own
+// (today's starting point, the work picked last, a goal carried over, the pace) stays as it is here. Days past 400 are left out.
+// Keys in order, so both devices write the same text and the sync settles.
+const keysSorted = o => Object.fromEntries(Object.entries(o).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0));
+function dayMax(x, y) {
+  const out = { ...x }, isNum = v => typeof v === 'number' && isFinite(v);
+  for (const [k, v] of Object.entries(y || {})) {
+    if (isNum(v)) { if (!isNum(out[k]) || v > out[k]) out[k] = v; }
+    else if (v && typeof v === 'object' && !Array.isArray(v)) { const o = { ...(out[k] && typeof out[k] === 'object' ? out[k] : {}) }; for (const [j, n] of Object.entries(v)) if (isNum(n) && !(o[j] >= n)) o[j] = n; out[k] = o; }
+    else if (!(k in out)) out[k] = v;
+  }
+  for (const [k, v] of Object.entries(out)) if (v && typeof v === 'object' && !Array.isArray(v)) out[k] = keysSorted(v);
+  return keysSorted(out);
+}
+function daysMax(x, y, now = Date.now()) {
+  x = x && typeof x === 'object' ? x : {}; y = y && typeof y === 'object' ? y : {};
+  const out = {}, obj = v => v && typeof v === 'object' && !Array.isArray(v);
+  for (const d of [...new Set([...Object.keys(x), ...Object.keys(y)])].sort()) {
+    const b = /^\d{4}-\d\d-\d\d$/.test(d) && obj(y[d]) && now - new Date(d + 'T12:00:00') <= 400 * 864e5 ? y[d] : null;
+    if (obj(x[d]) || b) out[d] = dayMax(obj(x[d]) ? x[d] : {}, b || {});
+    else if (d in x) out[d] = x[d];
+  }
+  return out;
+}
+// What of the focus log goes to her other devices through the sync: the days and the time added by hand, not this device's own state.
+const focusShared = L => { const o = {}; for (const k of ['days', 'add', 'addGone', 'qd']) if (L && L[k] !== undefined) o[k] = L[k]; return o; };
+const idsJoin = (x, y, n) => [...new Set([...(Array.isArray(x) ? x : []), ...(Array.isArray(y) ? y : [])].filter(i => typeof i === 'string'))].slice(-n);
+function focusMerge(x, y) {
+  x = x && typeof x === 'object' ? x : {}; y = y && typeof y === 'object' ? y : {};
+  const out = { ...x, days: daysMax(x.days, y.days) };
+  // time added by hand: one list by id, and one taken off on either device stays off
+  const gone = idsJoin(x.addGone, y.addGone, 200), by = new Map();
+  for (const e of [...(Array.isArray(x.add) ? x.add : []), ...(Array.isArray(y.add) ? y.add : [])]) if (e && e.id && !gone.includes(e.id) && !by.has(e.id)) by.set(e.id, e);
+  if (by.size || Array.isArray(x.add)) out.add = [...by.values()];
+  if (gone.length) out.addGone = gone;
+  if (Array.isArray(x.qd) || Array.isArray(y.qd)) out.qd = idsJoin(x.qd, y.qd, 50);
+  return { out, toA: JSON.stringify(out) !== JSON.stringify(x) };
+}
+function planTimeMerge(x, y) {
+  x = x && typeof x === 'object' ? x : {}; y = y && typeof y === 'object' ? y : {};
+  const out = { ...x, days: daysMax(x.days, y.days), names: { ...(y.names && typeof y.names === 'object' ? y.names : {}), ...(x.names && typeof x.names === 'object' ? x.names : {}) } };
+  if (Array.isArray(x.ids) || Array.isArray(y.ids)) out.ids = idsJoin(x.ids, y.ids, 50);
+  return { out, toA: JSON.stringify(out) !== JSON.stringify(x) };
+}
+// Notes from the phone onto a lesson (gsp.taughtIn, src/phone.js), waiting for the Planner on a computer to put them on the lesson
+// (src/planner/present.js, taughtFold): { items: { '<lesson id>|<class id>|<date>': { slide, of, x: note, t, f: 1 once put on the lesson } } }.
+// Each note by its key, the one written later kept; the same note on both keeps f from either. Notes past 60 days are left out.
+function taughtInMerge(x, y, now = Date.now()) {
+  const obj = v => v && typeof v === 'object' && !Array.isArray(v), ix = obj(x) && obj(x.items) ? x.items : {}, iy = obj(y) && obj(y.items) ? y.items : {};
+  const ok = v => obj(v) && typeof v.t === 'number' && isFinite(v.t) && now - v.t <= 60 * 864e5, items = {};
+  for (const k of [...new Set([...Object.keys(ix), ...Object.keys(iy)])].sort()) {
+    const a = ok(ix[k]) ? ix[k] : null, b = ok(iy[k]) ? iy[k] : null;
+    let v = !a ? b : !b ? a : b.t > a.t ? b : a;
+    if (a && b && a.t === b.t && (a.f || b.f) && !v.f) v = { ...v, f: 1 };
+    if (v) items[k] = v;
+  }
+  const out = { ...(obj(x) ? x : {}), items };
+  return { out, toA: obj(x) ? JSON.stringify(out) !== JSON.stringify(x) : Object.keys(items).length > 0 };
+}
 // Other saved things: comments saved for reuse are pooled, and anything else she hasn't got here comes in. Nothing she has here is replaced, unless she replaced it there later.
 function mergeLs(a, b, skip = () => false) {
   const set = {}, parse = (t, d) => { try { return JSON.parse(t) || d; } catch { return d; } };
@@ -791,6 +917,10 @@ function mergeLs(a, b, skip = () => false) {
       try { x = JSON.parse(a[k] || '{}'); y = JSON.parse(v); } catch {}
       const add = Object.keys(y).filter(n => !(n in x));
       if (add.length) set[k] = a[k] == null ? v : JSON.stringify({ ...x, ...Object.fromEntries(add.map(n => [n, y[n]])) });
+    // the focus and time log: day by day, the larger of each count
+    } else if (k === 'gs.focus') {
+      const m = focusMerge(parse((a || {})[k], null), parse(v, null));
+      if (m.toA) set[k] = JSON.stringify(m.out);
     // school resources: an item at a time, and the one changed later is kept
     } else if (k === 'gs.school') {
       const m = schoolMerge(parse((a || {})[k], null), parse(v, null));

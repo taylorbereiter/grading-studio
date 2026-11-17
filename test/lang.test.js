@@ -257,6 +257,7 @@ test('the focus timer, its card on Today and its Settings leave nothing in Engli
   await at('the panel, opened from the sidebar', () => page.click('#railFocus'));
   await at('a session on a set of papers', async () => { await page.click('#fcPanel [data-fcstart]'); await page.waitForSelector('#fcPanel .fcclock'); });
   const run = f => page.evaluate(f => { const G = window.__gs, r = G.fcRun(); new Function('r', f)(r); G.fcRunSet(r); G.fcTick(); }, f);
+  await at('lo-fi music turned on in the panel', async () => { await page.click('#fcPanel [data-fcmus]'); await page.waitForSelector('#fcPanel [data-fcmood]'); });
   await at('paused', () => page.click('#fcPanel [data-fcpause]'));
   await at('carrying on, folded', async () => { await page.click('#fcPanel [data-fcresume]'); await page.click('#fcPanel [data-fcfold]'); });
   await at('back from another tab', () => run('r.fold = false; r.away = 6;'));
@@ -331,7 +332,7 @@ test('planning your grading, on Today, the Focus card, a class page and Settings
     await new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put({ classes: cl, daysOff: [] }, 'setup'); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
     db.close(); return true;
   });
-  if (free) { await page.reload(); await page.waitForSelector('#fcCard .sugwhy .free'); }
+  if (free) { await page.reload(); await page.waitForSelector('#fcCard .sugwhy .free'); await page.waitForSelector('#fcCard .gpwk'); }   // and next week's lessons under the goal
   await page.waitForSelector('#lbCard .lbk'); await page.waitForSelector('#fcCard .sugwhy'); await pause(300);
   await miss(page, 'Today, the look back, a free period and where she left off', own);
   await goTo(page, await page.$eval('#railClasses a', a => a.getAttribute('href'))); await page.waitForSelector('#classes .tkc'); await miss(page, 'a class page, the time left on an assignment', own);
@@ -363,11 +364,11 @@ test('session goals, from the Focus card through a session, a break and the end,
   // a session with a goal in papers: running, time up, a break, the break over, and done
   await page.evaluate(() => window.__gs.fcStart(10, 'mark:gs.b.n2', 0, { k: 'papers', n: 2 })); await pause(500);
   await goTo(page, '#/'); await page.waitForSelector('#fcPanel .fcsg'); await miss(page, 'the focus panel, a session goal', own);
-  const up = () => page.evaluate(() => { const r = window.__gs.fcRun(); if (r.st === 'brk') r.brkAt -= r.brkLen * 1000 + 1000; else r.at -= r.len * 1000 + 1000; localStorage.setItem('gs.focusRun', JSON.stringify(r)); window.__gs.fcTick(); });
+  const up = () => page.evaluate(() => { const r = window.__gs.fcRun(); if (r.st === 'brk') r.brkAt -= r.brkLen * 1000 + 1000; else r.at -= r.len * 1000 + 1000; localStorage.setItem('gsp.focusRun', JSON.stringify(r)); window.__gs.fcTick(); });
   await up(); await page.waitForSelector('#fcPanel .fcsgr'); await miss(page, 'the focus panel, a session goal not reached', own);
   await page.click('#fcPanel [data-fcbreak]'); await page.waitForSelector('#fcPanel .fcsgnext'); await miss(page, 'the focus panel, a break with the next goal', own);
   await up(); await page.waitForSelector('#fcPanel [data-fcother]'); await miss(page, 'the focus panel, the break over', own);
-  await page.click('#fcPanel [data-fcstart]'); await page.evaluate(() => { const r = window.__gs.fcRun(); r.p0 -= 2; window.__gs.fcRunSet(r); });
+  await page.click('#fcPanel [data-fcstart]'); await page.evaluate(() => { const r = window.__gs.fcRun(); r.pg = 2; window.__gs.fcRunSet(r); });
   await goTo(page, '#/'); await page.waitForSelector('#fcPanel .fcsg.met'); await miss(page, 'the focus panel, the second session, its goal reached', own);
   await page.click('#fcPanel [data-fcstop]'); await page.waitForSelector('#fcPanel .fcsgr.met'); await miss(page, 'the focus panel, done, two sessions today', own);
   await page.click('#fcPanel [data-fcclose]');
@@ -417,7 +418,7 @@ test('a class with learning goals and attendance, an MYP class and a DP class le
   {
     const { page, close } = await openApp(browser, { seed: ibBoth() });
     await page.waitForSelector('#railClasses a');
-    const [myp, dp] = await page.$$eval('#railClasses a', as => as.map(a => a.getAttribute('href')));
+    const [myp, dp] = await page.$$eval('#railClasses a[data-railcls]', as => as.map(a => a.getAttribute('href')));
     for (const [t, sel] of [['gradebook', '#ibTab'], ['students', '#peopleTbl table'], ['students/1', '#ibFit'], ['students/5', '#ibFit'], ['charts', '#ibTiles'], ['reports', '#rpt'], ['missing', '#mis']]) { await goTo(page, myp + '/' + t); await page.waitForSelector(sel); await pause(400); await miss(page, 'MYP, ' + t, own); }
     await goTo(page, myp + '/gradebook'); await page.waitForSelector('#ibTab');
     await page.click('#classPanel [data-ibfit]'); await page.waitForSelector('#ibFit'); await miss(page, 'MYP, best fit', own);
@@ -566,7 +567,7 @@ test('the Planner’s sidebar and its Find anything follow the same setting, and
     await page.waitForFunction(() => window.__planner && document.querySelector('#lessons .ls-top'));
     assert.equal(await page.evaluate(() => window.__gsLang.lang), 'es');
     assert.deepEqual(await page.$$eval('#rail .rnav .rl, #rail .rcap .rl', els => els.filter(e => e.checkVisibility()).map(e => e.textContent.trim())),
-      ['Hoy', 'Pendientes', 'Centro', 'Planificador', 'Calendario', 'Unidades', 'Lecciones anteriores', 'Actividades', 'Rúbricas', 'Clases', 'Configura tu horario', 'Pantalla completa', 'Ayuda', 'Ajustes']);
+      ['Hoy', 'Pendientes', 'Centro', 'Planificador', 'Planificar lecciones', 'Biblioteca', 'Clases', 'Configura tu horario', 'Pantalla completa', 'Ayuda', 'Ajustes']);
     assert.match(await text(page, '#railSaved'), /^Sin copia de seguridad\s*Este navegador$/);
     await page.click('#findBtn'); await page.waitForSelector('#findIn'); await page.type('#findIn', 'copia de seg');
     await page.waitForFunction(() => [...document.querySelectorAll('#findDlg .frow b')].some(b => b.textContent === '¿Dónde se guarda mi trabajo?'));
@@ -748,7 +749,7 @@ test('the boxes a class page opens leave nothing in English', async () => {
   }
   {
     const { page, close } = await openApp(browser, { seed: ibBoth() });
-    for (const base of await page.$$eval('#railClasses a', a => a.map(x => x.getAttribute('href')))) {
+    for (const base of await page.$$eval('#railClasses a[data-railcls]', a => a.map(x => x.getAttribute('href')))) {
       await goTo(page, base + '/students'); await page.waitForSelector('[data-pssall]'); await page.click('[data-pssall]'); await pause(500); await miss(page, 'IB progress sheets, ' + base, own); await esc(page);
       await goTo(page, base); await page.waitForSelector('#clsSetup'); await page.click('#clsSetup'); await pause(200); await page.click('[data-ib-class]'); await pause(400); await miss(page, 'IB grading box, ' + base, own); await esc(page);
     }
@@ -805,6 +806,12 @@ test('the marking screen and its tabs leave nothing in English', async () => {
   await at('Return, every option flipped', async () => { for (const id of await page.$$eval('#dlgBox details input[type=checkbox]', x => x.map(y => y.id))) { await page.$eval('#' + id, b => b.click()); await pause(150); } });
   await tab('#markTab')(); await pause(300);
   await at('Rubric setup', tab('#setupBtn')); await press('Escape');
+  // the side pane's Type notes tab: empty, its ⋯ menu, kept by her, and lines with a kind and a time
+  await at('Type notes', () => page.evaluate(() => window.__gs.spOpen('typed')));
+  await at('Type notes, its menu', () => page.$eval('#pane2 .tn .kdots', b => b.click())); await press('Escape');
+  await at('Type notes, kept by her', () => page.$eval('#pane2 .tn [data-tnback]', b => b.click()));
+  await at('Type notes, lines', () => page.evaluate(() => { const st = window.__gs.state().batch.students[0]; st.grade.tn = { l: [{ s: 'Delivery', k: 'h' }, { s: 'Steady pace', t: 75 }, { s: 'Strong opening', k: 'p' }, { s: 'Cite a source', k: 'n' }, { s: 'Why this book?', k: 'q' }] }; window.__gs.spPick('typed'); }));
+  await at('Type notes, given back again', () => page.$eval('#pane2 .tn [data-tnback]', b => b.click()));
   assert.deepEqual(page.errors, []);
   await close();
   // a rubric that says what each score means: pointing at a score, the whole row open, and closed again
@@ -839,6 +846,37 @@ test('in Spanish the marking screen is in Spanish, and names, rubric rows, comme
   assert.ok((await page.$$eval('#dlgBox th', t => t.map(x => x.textContent))).some(x => /Thesis/.test(x)), 'a rubric row is as typed');
   assert.deepEqual(page.errors, []);
   await close();
+});
+
+// Group work's band above the paper (src/groups.js) and a student's strengths and concerns on their card (src/watch.js).
+test('group work’s band on the marking screen and a student’s strengths and concerns leave nothing in English', async () => {
+  const own = [];
+  {
+    const { page, close } = await openApp(browser, {});
+    await openZip(page, zip);
+    await pick(page, '#paper [data-shfile]'); await page.waitForSelector('#grpOwn'); await page.click('#grpOwn');
+    await page.click('#dlgBox [data-shto="1"]'); await page.waitForFunction(() => /In the group/.test(document.querySelector('#dlgBox [data-shto="1"]').textContent));
+    await page.click('#dlgBox .bf [data-cancel]'); await page.waitForSelector('#grpBand [data-grpjust]'); await pause(300);
+    await page.$$eval('#openRep [data-repx]', b => b.forEach(x => x.click()));   // the opening report's bar is not what this walk is about
+    await miss(page, 'group work, own scores', own);
+    await page.click('#grpBand [data-grpjust="1"]'); await pause(300); await miss(page, 'group work, marks just for one', own);
+    // in Spanish the partners' names stay, joined the Spanish way
+    assert.equal(await page.evaluate(async () => { await window.__gsLang.load('es'); return window.__gsLang.tr('with Bram Sample and Cleo Fixture ·', 'es'); }), 'con Bram Sample y Cleo Fixture ·');
+    assert.deepEqual(page.errors, []);
+    await close();
+  }
+  {
+    const { page, close } = await openApp(browser, { seed: gradingSeed() });
+    const own = ['Grade 9 English', 'Grade 10 Literature', 'Poetry analysis', 'Narrative essay', 'Download', /^(Aria|Bram|Cleo|Dov|Esme|Finn|Gus|Hana) /, /^Unit \d/];   // Today, behind the card
+    await page.waitForSelector('#railClasses a'); await pause(500);
+    await page.evaluate(() => window.__gs.personCard('c1', 'Bram Sample')); await page.waitForSelector('#pcWl h3'); await miss(page, 'strengths and concerns, none yet', own);
+    await page.keyboard.press('Escape');
+    await page.evaluate(() => { window.__gs.exWatch().push({ id: 'langw1', watch: 1, kind: 'shot', letter: '1', who: { c: 'c1', n: 'Aria Testwell' }, t: Date.parse('2026-10-21T10:00:00'), title: 'Poetry analysis', why: 'Mixes up simile and metaphor.', tags: ['figurative language'], pages: [] }); window.__gs.personCard('c1', 'Aria Testwell'); });
+    await page.waitForSelector('#pcWl .wltime li.w'); await miss(page, 'strengths and concerns', own);
+    await page.click('#pcWl [data-wlcf="good"]'); await pause(200); await miss(page, 'strengths and concerns, none of a kind', own);
+    assert.deepEqual(page.errors, []);
+    await close();
+  }
 });
 
 // The Focus card's rough estimate and its reasons, in every language (they show only on some days, so the walks above can miss them).

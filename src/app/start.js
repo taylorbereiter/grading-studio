@@ -16,7 +16,7 @@ const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensiti
 
 /* ---------------- pdf.js worker (inlined, works from file://) ---------------- */
 const workerReady = (async () => {
-  const src = $('#pdfWorkerSrc').textContent;
+  const el = $('#pdfWorkerSrc'), src = el.dataset.z ? fflate.strFromU8(fflate.inflateSync(unpack85(el.textContent))) : el.textContent;   // packed by the build (pack85)
   let url = null;
   try {
     url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
@@ -92,6 +92,15 @@ function maxPoints() { return setupMax(setup); }
 // Uses the grading scale when its top score matches the total possible; half points fall between two rows.
 // Percents are whole numbers, with halves rounded up (10.5 between 95 and 90 is 92.5, so 93%), the way a teacher rounds by hand.
 const roundPct = v => Math.max(0, Math.round(v + 1e-9));
+// The points a percent comes to on a scale: the half point whose percent is nearest, the lower on a tie; above the scale's top, by plain share.
+// A percent she typed stays the score (grade.pk); this is only what it shows as in points.
+function pointsWith(pct, max, sc) {
+  if (pct == null || pct === '' || isNaN(pct) || !max) return null;
+  pct = +pct; if (pct >= (percentWith(max, max, sc) || 100)) return Math.round(pct * max / 50) / 2;
+  let best = 0; for (let t = 0.5; t <= max; t += 0.5) if (Math.abs(percentWith(t, max, sc) - pct) < Math.abs(percentWith(best, max, sc) - pct)) best = t;
+  return best;
+}
+const pointsFor = pct => pointsWith(pct, maxPoints(), setup.scale);
 function percentFor(total) { return ibSetup() ? null : percentWith(total, maxPoints(), setup.scale); }   // levels on MYP criteria are never a percent (ib.js)
 function percentWith(total, max, sc) {
   if (total == null || total === '' || isNaN(total)) return null;
@@ -137,7 +146,7 @@ function withTries(r, tries, max, full) {
     if (c.total == null && max) c.total = Math.round(c.pct * max) / 100;
   } else c = all.reduce((a, t) => t.pct >= a.pct ? t : a);
   const out = { ...r, total: c.total, pct: c.pct, tries: was, tryNow: now, tryRule: rule, tryOwn: { total: r.total, pct: r.pct } };
-  if (c !== now) { for (const k of ['xc', 'xcU', 'base', 'paper', 'outOf']) delete out[k]; if (c.max != null && c.max !== max) out.outOf = c.max; }
+  if (c !== now) { for (const k of ['xc', 'xcU', 'base', 'bpct', 'paper', 'outOf']) delete out[k]; if (c.max != null && c.max !== max) out.outOf = c.max; }
   if (!now) { out.done = false; out.wait = true; delete out.partial; }   // the retake has no full score yet: the earlier tries stand
   return out;
 }
@@ -147,9 +156,11 @@ function withTries(r, tries, max, full) {
 // unit 'pct' (grade.xcU): the extra credit is percentage points on the paper's percent instead, and the total grows by that share of the points.
 function addXc(r, xc, max, unit) {
   xc = +xc; if (!xc || isNaN(xc) || r.total == null) return r;
-  if (unit === 'pct') return { ...r, total: max ? r.total + Math.round(xc * max) / 100 : r.total, base: r.total, xc, xcU: 'pct', pct: r.pct == null ? r.pct : roundPct(r.pct + xc) };
-  return { ...r, total: r.total + xc, base: r.total, xc, pct: r.pct == null || !max ? r.pct : roundPct(r.pct + xc / max * 100) };
+  if (unit === 'pct') return { ...r, total: max ? r.total + Math.round(xc * max) / 100 : r.total, base: r.total, bpct: r.pct, xc, xcU: 'pct', pct: r.pct == null ? r.pct : roundPct(r.pct + xc) };
+  return { ...r, total: r.total + xc, base: r.total, bpct: r.pct, xc, pct: r.pct == null || !max ? r.pct : roundPct(r.pct + xc / max * 100) };
 }
+// Extra credit said on its own: the percent it adds, or in its own unit when that rounds to nothing or there is no percent.
+const xcSay = g => g.bpct != null && g.pct != null && g.pct - g.bpct > 0 ? fmtNum(g.pct - g.bpct) + '%' : fmtNum(g.xc) + (g.xcU === 'pct' ? '%' : '');
 function scoreOf(st) {
   const own = ownGrade(st);
   if (own.total != null) return own;
@@ -163,6 +174,7 @@ function scoreOf(st) {
 }
 function ownGrade(st) {
   const g = st.grade;
+  if (g.pk != null && g.pk !== '' && !ibSetup()) return { total: pointsFor(g.pk), pct: +g.pk, done: true, pk: true };   // a percent she typed: it stays the score, whatever the rows say
   if (setup.mode === 'rubric') {
     const sc = setup.criteria.map((_, i) => g.rubric[i]);
     if (sc.every(v => v == null)) return { total: null, pct: null, done: false };
@@ -194,6 +206,11 @@ function setCheckInk(k) { if (!COLORS[k]) return; checkInk = k; CHECK_INK = COLO
 const PTS_AMBER = '#A86400';
 // A quiz answer note (quiz.js) is a comment in gold, drawn a shade darker (#8A6500), which reads on white paper and in black-and-white print.
 const QZ_GOLD = '#C08C00';
+// Comments and typed text boxes add yellow ("think about this") after red. A comment draws its box and line a shade darker
+// (#966300, 5 to 1 on white); a text box draws its words in the color itself, so it takes the darker points amber. The pen,
+// check and points colors stay as COLORS.
+const NOTE_COLORS = { red: COLORS.red, yellow: '#D08A00', blue: COLORS.blue, green: COLORS.green, purple: COLORS.purple, black: COLORS.black };
+const TEXT_COLORS = { ...NOTE_COLORS, yellow: PTS_AMBER };
 let ptsInk = (k => k === 'credit' || COLORS[k] ? k : '')(store.get('gs.ptsInk', ''));
 function setPtsInk(k) { ptsInk = k === 'credit' || COLORS[k] ? k : ''; if (ptsInk) store.set('gs.ptsInk', ptsInk); else store.del('gs.ptsInk'); }
 // The color of v points out of top. A total or a score stamp is a sum, not one answer, so with 'credit' it stays in the pen's ink.

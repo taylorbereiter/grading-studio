@@ -2,7 +2,7 @@
    The bank is the Planner's own: kv 'bank' in the Planner database = { rubrics, scales, gone: { id: time } }.
    It holds only a rubric's wording and a scale's percents: never a score, a name or anything about a
    student. Grading's Rubric setup opens this one record (and the unit list) to use and save rubrics,
-   and the Planner never opens anything of grading's. A rubric or scale names its unit as
+   and the Planner never opens anything of grading's but the strong examples, read only (plexamples.js). A rubric or scale names its unit as
    { id, course, title }, so it still sorts if that unit isn't here. They also go to the Planner folder,
    under Rubrics/, for Claude. Tabs tell each other about changes on the 'gs-bank' channel. */
 // A row's scale, as in grading (src/app/start.js): 0 to its top. x.top is every row's top, x.tops[i] one row's own, x.half === false

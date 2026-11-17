@@ -179,7 +179,7 @@ function notebookClick(e) {
   const c = t.dataset.nb;
   if (/^(bold|italic|underline|ul|ol)$/.test(c)) nbCmd(c);
   else if (c === 'link' || c === 'video') nbAsk(c);
-  else if (c === 'pic') { NB.range = nbSel($('#nbPage')) || NB.range; const i = $('#nbPicIn'); i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) nbPic(f); }; i.click(); }
+  else if (c === 'pic') { NB.range = nbSel($('#nbPage')) || NB.range; const i = $('#nbPicIn'); i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) nbPic(f); }; gpClick(i); }
   else if (c === 'askok') { const v = $('#nbAskIn').value; $('#nbAsk').hidden = true; nbAddUrl(v, NB.ask); }
   else if (c === 'askx') $('#nbAsk').hidden = true;
   return true;

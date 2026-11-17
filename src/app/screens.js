@@ -17,6 +17,10 @@ const routeOf = hash => {
   }
   // from the Planner's sidebar, which knows a class only by the name on its timetable (spaces, dashes and capitals don’t count: “Course A 2” there is “CourseA2” here)
   if (p[0] === 'class-named' && p[1]) { const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(p.slice(1).join('/')), c = k && lib.classes.find(c => nk(c.name) === k); return c ? { v: 'class', c, tab: '', stu: null, named: true } : { v: 'home', noClass: p.slice(1).join('/').slice(0, 60) }; }
+  if (p[0] === 'plans' && PHONE) return { v: 'plans', id: p[1] || '' };
+  if (p[0] === 'more' && PHONE) return { v: 'more' };
+  if (p[0] === 'scores' && PHONE) return { v: 'scores', cls: p[1] || '', key: p[2] || '' };
+  if (p[0] === 'att' && PHONE) return { v: 'att', cls: p[1] || '' };   // attendance on the phone, today's (phone.js)
   if (p[0] === 'todo') return { v: 'todo', week: p[1] === 'week' };
   if (p[0] === 'time') return { v: 'time' };
   if (p[0] === 'examples') return { v: 'examples' };
@@ -61,6 +65,7 @@ function go(hash, replace) {
 let routeTok = 0, routeOpening = '', routeTab = null;
 function applyRoute() {
   const r = routeNow();
+  if (soloRoute(r)) return;   // only this student on screen (src/solo.js)
   // its own address from here on
   if (r.named) { go(classHash(r.c), true); return; }
   if (r.noClass) { toast('There is no class called “' + r.noClass + '” in grading yet. “Add a class” in the sidebar makes one.', 7000); go('#/', true); return; }
@@ -89,7 +94,7 @@ async function openRoute(id) {
   const stale = () => tok !== routeTok;
   if (stale()) return;
   const m = keptMeta.get(id);
-  if (!m || !m.papers) { routeOpening = ''; if (m) toast('The papers for this one aren’t kept in this browser. Drop the download in again.', 6000); return go('#/', true); }
+  if (!m || !canOpen(m)) { routeOpening = ''; if (m) toast('The papers for this one aren’t kept in this browser. Drop the download in again.', 6000); return go('#/', true); }
   try { await reopenKept(id); } catch (e) { console.error(e); }
   if (stale()) return;
   routeOpening = '';
@@ -107,7 +112,8 @@ function showScreen(r) {
   if (grading && !$('#welcome').hidden) wlClose();
   $('#shell').classList.toggle('grading', grading);
   $('#app').hidden = !grading; $('#start').hidden = grading;
-  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening']]) $('#' + id).hidden = grading || r.v !== v;
+  if (grading && $('#soloBar') && soloOn() && $('#soloBar').dataset.b !== batch.id) soloBar();   // src/solo.js
+  for (const [id, v] of [['vHome', 'home'], ['vClass', 'class'], ['vSettings', 'settings'], ['vHelp', 'help'], ['vTodo', 'todo'], ['vTime', 'time'], ['vSchool', 'school'], ['vExamples', 'examples'], ['vOpening', 'opening'], ['vScores', 'scores'], ['vPlans', 'plans'], ['vMore', 'more'], ['vAtt', 'att']]) $('#' + id).hidden = grading || r.v !== v;
   if (r.v !== 'class') classLeave();
   // moving from one student to the next keeps her place on the page
   const key = grading ? 'a' : r.v + (r.c ? ':' + r.c.id + ':' + r.tab + (r.stu != null ? ':one' : '') : '');
@@ -115,6 +121,11 @@ function showScreen(r) {
   screenKey = key;
   railRender();
   if (!grading && r.v === 'examples') exPageRender();
+  if (!grading && r.v === 'scores') phScoresRender(r);
+  if (!grading && r.v === 'plans') phPlansRender(r);
+  if (!grading && r.v === 'more') phMoreRender();
+  if (!grading && r.v === 'att') phAttRender(r);
+  phNavRender();
   if (grading) tabShow(r); else if (dlgPage) dlgShut();
 }
 // How far along a kept download is, in the same words everywhere: on Home, on a class page and in the sidebar's counts.
@@ -141,16 +152,16 @@ const stateBar = st => st.of ? '<span class="sbar" role="img" aria-label="' + st
 function renderLib() {
   renderKept();
   const card = it => {
-    const m = it.batchId ? keptMeta.get(it.batchId) : null, st = m ? keptState(m) : null, typedOnly = !!it.typed && !it.batchId;
-    return '<div class="card" draggable="true" data-card="' + it.id + '" title="' + (m && m.papers ? 'Open the papers' : it.typed && !it.batchId ? 'Scores typed in: open the gradebook' : 'Add this assignment’s papers') + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
-      (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (typedOnly ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + lkCard(it) + '</div>' +
+    const m = it.batchId ? keptMeta.get(it.batchId) : null, st = m ? keptState(m) : null;
+    return '<div class="card" draggable="true" data-card="' + it.id + '" title="' + (m && canOpen(m) ? 'Open the papers' : it.typed && !it.batchId ? 'Scores typed in: open the gradebook' : 'Add this assignment’s papers') + '"><div class="cmain"><div class="t">' + esc(it.name) + '</div>' +
+      (it.type || it.typed ? '<div class="bkpills">' + bkPill(it.type) + (it.typed && it.type !== 'xc' ? '<span class="bkpill typed">Typed in</span>' : '') + '</div>' : '') + lkCard(it) + '</div>' +
       '<div class="cdue">' + (it.due ? 'Due ' + bkDay(it.due) : '') + '</div>' +
       '<div class="cstate">' + (st ? stateBar(st) : '') + '<div class="m">' + esc(it.typed && !it.batchId ? 'Scores typed in' : batchSummary(it)) + '</div>' + (h => h ? '<div class="m">' + h + '</div>' : '')(tkAsgHtml(it.id)) + (st ? stateChip(st) : '') + '</div>' +
-      '<div class="row">' + (m && m.papers ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
-        : typedOnly ? '' : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') +
+      '<div class="row">' + (m && canOpen(m) ? '<button class="btn sm" data-kopen="' + esc(it.batchId) + '" data-kasg="' + it.id + '">Open</button>'
+        : '<button class="btn sm" data-open-asg="' + it.id + '">Add papers…</button>') +   // typed-in scores too: a late paper is marked here and the rest keep theirs
         kmWrap('⋯', 'class="icon kdots" aria-label="More for ' + esc(it.name) + '" title="More"', '<button class="mitem" data-edit-asg="' + it.id + '">Edit<small>Name, type, due date, unit, rubric</small></button>' +
           '<button class="mitem" data-qmake="' + it.id + '">' + (it.quiz && it.quiz.made ? 'Edit the quiz…' : 'Make a quiz…') + '<small>Questions with bubbles, printed and scored from the scan</small></button>' + (it.quiz && it.quiz.made ? '<button class="mitem" data-qread="' + it.id + '">Bring in the scanned quiz…<small>One scan of the whole stack</small></button>' : '') +
-          (m && m.papers || typedOnly ? '<button class="mitem" data-open-asg="' + it.id + '">' + (typedOnly ? 'Add papers…<small>Mark this one’s papers here as well</small>' : 'Open other papers…<small>A newer download, or a different set of files</small>') + '</button>' : '') + lkMenu(it, holderById(it.classId) || lib.loose), 'right') + '</div></div>';
+          (m && canOpen(m) ? '<button class="mitem" data-open-asg="' + it.id + '">Open other papers…<small>A newer download, or a different set of files</small></button>' : '') + lkMenu(it, holderById(it.classId) || lib.loose), 'right') + '</div></div>';
   };
   const unit = u => '<div class="unit" draggable="true" data-unit="' + u.id + '">' +
     '<div class="uhead" title="Drag to move this unit"><span class="nm">' + esc(u.name) + '</span><span class="ucount">' + u.items.length + (u.items.length === 1 ? ' assignment' : ' assignments') + '</span><span class="sp"></span>' +
@@ -320,10 +331,10 @@ $('#start').addEventListener('click', async e => {
   }
   if (b.dataset.openAsg) {
     asgTarget = findItem(b.dataset.openAsg).it;
-    openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">' + (sysName() ? 'Where is the ' + esc(sysName()) + ' download?' : 'Where are the papers?') + ' You can also drop the ZIP or the folder straight onto this assignment’s card.</p>' + ruHtml(asgTarget.setup, { now: 1 }) + '</div>' +
-      '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button>' + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true, 'lg');
+    openDlg('<div class="bh"><h2>Open “' + esc(asgTarget.name) + '”</h2></div><div class="bb"><p style="margin-top:0">' + (sysName() ? 'Where is the ' + esc(sysName()) + ' download?' : 'Where are the papers?') + ' You can also drop the ZIP or the folder straight onto this assignment’s card.</p>' + (asgTarget.typed && asgTarget.type !== 'xc' ? '<p class="typednote muted" style="font-size:13px">Scores you typed in stay. A paper’s score takes the place of the typed one for that student only.</p>' : '') + ruHtml(asgTarget.setup, { now: 1 }) + '</div>' +
+      '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn" data-pc>The ZIP or files…</button><button class="btn" data-dir>A whole folder…</button><button class="btn" data-scan>A scan of everyone’s papers…</button><button class="btn" data-match>Files to match to a roster…</button><button class="btn" data-nopaper title="For presentations, speeches and videos: a notes page for each student instead of a paper">No papers: presentations or videos…</button>' + (asgTarget.batchId ? '' : '<button class="btn" data-typeonly title="No papers at all: an empty column in the class gradebook to type each score into">No papers: just type the scores…</button>') + (gcid() ? '<button class="btn primary" data-dv>From Google Drive…</button>' : '') + '</div>', true, 'lg');
     ruWire($('#dlgBox'), asgTarget);
-    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a), 'lg'); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
+    $('#dlgBox').onclick = ev => { if (ev.target.closest('[data-cancel]')) return closeDlg(); if (ev.target.closest('[data-nopaper]')) { closeDlg(); return openStartNotes(asgTarget); } if (ev.target.closest('[data-typeonly]')) { closeDlg(); return bkTypeOnly(asgTarget); } if (ev.target.closest('[data-pc]')) { closeDlg(); $('#asgIn').click(); } if (ev.target.closest('[data-dir]')) { closeDlg(); pickDir('#asgDirIn'); } if (ev.target.closest('[data-scan]')) { closeDlg(); scanFor = asgTarget; $('#scanIn').click(); } if (ev.target.closest('[data-match]')) { const a = asgTarget; askFilesOrFolder('Match files to a roster', 'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.', list => matchToRoster(list, a), 'lg'); } if (ev.target.closest('[data-dv]')) { closeDlg(); openFromDrive(asgTarget); } };
     return;
   }
   if (b.dataset.editClass != null) return editClass(+b.dataset.editClass);

@@ -15,8 +15,15 @@
 .rcap{font-size:var(--text-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:16px 10px 6px}
 .rdot{width:8px;height:8px;border-radius:var(--corner-round);flex:none}
 .rname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rcnt{flex:none;font-size:var(--text-small);font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.rcnt{flex:none;font-size:var(--text-caption);font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
 .rnav.on .rcnt{color:var(--accent)}
+#railClasses{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:2px;align-items:center}
+#railClasses>.rnav:not(:has(+.rgb)){grid-column:1/-1}
+.rgb{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:var(--corner-3);color:var(--muted)}
+.rgb:hover,.rgb:focus-visible{background:var(--hover);color:var(--accent)}
+.rgb.on{background:var(--accent-soft);color:var(--accent)}
+.rgb svg{width:17px;height:17px}
+:is(.shell.grading,.pfold,.gsfull) .rgb{display:none}
 .radd{color:var(--muted)}
 .rail .sp{flex:1;min-height:12px}
 .rsaved{display:flex;gap:10px;align-items:flex-start;width:100%;padding:10px;border:0;border-radius:var(--corner-3);background:none;color:var(--muted);font-size:12.5px;line-height:1.35;text-align:left}
@@ -59,6 +66,7 @@
 :is(.shell.grading,.pfold,.gsfull) .rsample{padding:0;border:0;background:none;margin:0 0 2px}
 :is(.shell.grading,.pfold,.gsfull) .rsample .btn{width:40px;height:40px;padding:0;border-color:var(--accent);color:var(--accent)}
 @media (max-width:1100px){
+  .rgb{display:none}
   .rail{width:60px;padding:12px 8px;align-items:center}
   .rail .rl{display:none}
   .rbrand{padding:4px 0 12px}

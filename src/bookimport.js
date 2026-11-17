@@ -221,7 +221,7 @@ function bkImportView() {
   bkTabsOff();
   $('#bkBody').innerHTML = '<div class="bkpad bkaddv bkiv" id="bkImp"><h3 class="bkh">Import a gradebook · ' + esc(c.name) + '</h3>' +
     '<p class="muted bkimeta">A gradebook downloaded from your school’s system or a spreadsheet: one row per student and one column per assignment. Assignments you already have are matched by name, and you check each match. Nothing is saved until you press Import, and nothing leaves this browser.</p>' +
-    '<div class="bkidrop" id="bkiDrop"><button class="btn primary" data-bkifile>Choose a file…</button><span class="muted">CSV, TSV or Excel (.xlsx). In Google Sheets: File, Download, CSV.</span><input type="file" id="bkiFile" accept=".csv,.tsv,.txt,.xlsx,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>' +
+    '<div class="bkidrop" id="bkiDrop"><button class="btn primary" data-bkifile>Choose a file…</button>' + gpBtn('#bkiFile', 'btn') + '<span class="muted">CSV, TSV or Excel (.xlsx). In Google Sheets: File, Download, CSV.</span><input type="file" id="bkiFile" accept=".csv,.tsv,.txt,.xlsx,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></div>' +
     '<textarea class="bkin bkpaste" id="bkiPaste" rows="3" placeholder="Or copy the cells in your spreadsheet, headings included, and paste them here."></textarea>' +
     '<p class="bkierr" id="bkiErr" role="alert" hidden></p><div id="bkiOut"></div>' +
     '<div class="bkfootbtns"><span class="muted" id="bkiCount"></span><span class="sp"></span><button class="btn" data-bkback>Cancel</button><button class="btn primary" data-bkisave disabled>Import</button></div></div>';
@@ -384,12 +384,12 @@ function bkiSave() {
       it = p.t.it;
       const s = { ...p.old };
       for (const [who, v] of Object.entries(p.s)) { const was = p.old[who]; if (!was || (was.v == null && !was.st) || bkiSame(was, v) || bkiUse(col, who)) s[who] = v; }
-      it.typed = { max: p.max, s };
+      it.typed = typedStamp(it.typed, { max: p.max, s });
       if (!it.type) it.type = type;
       if (!it.due && col.due) it.due = col.due;
     } else {
       if (!u) { u = c.units.find(x => x.id === bki.unit); if (!u) c.units.push(u = { id: uid(), name: 'Imported', items: [] }); }
-      u.items.push(it = { id: uid(), name, classId: c.id, type, due: col.due, typed: { max: p.max, s: p.s } });
+      u.items.push(it = { id: uid(), name, classId: c.id, type, due: col.due, typed: typedStamp(null, { max: p.max, s: p.s }) });
     }
     const bc = bk.cols.find(x => x.key === it.id);
     if (bc) Object.assign(bc, { typed: it.typed, type: it.type, due: it.due || bc.due });

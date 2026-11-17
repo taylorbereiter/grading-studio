@@ -1,21 +1,25 @@
 {
- "version": "1.28.34",
- "build": "2d2164e73916",
+ "version": "1.28.71",
+ "build": "01321fd69c9d",
  "notes": [
-  "Focus counts only papers you marked: rubric scores, marks on the page or a comment. A grade only typed in still counts as scored, and its time still counts as grading time, but it no longer counts as a paper marked today."
+  "Take attendance on your phone: one tap per student cycles present, absent and late, and Everyone is here takes the rest.",
+  "After class, a lesson on your phone has Got to slide n of N and a note. It lands on the lesson in your Planner.",
+  "Lessons with lots of pictures now reach your phone too. The pictures load the first time you open the lesson while online.",
+  "When a lesson focus session ends, the Planner asks Is this lesson ready? The editor has a Ready button too. After three ready lessons you see about how long a lesson takes you.",
+  "Today's Focus card and Plan lessons show next week's lessons planned as dots. In a free period with nothing to mark, the Focus card suggests the next lesson to plan."
  ],
  "files": {
-  "index.html": "82c9ac94f32ddaf746a0ae059abdb37f3989bf748c06a0353a2c127f209413a1",
-  "planner.html": "5a5fbc30fcff26017fefd9cd5a6d6234d72f05dc5f1a68096b8fe15f440e5bc9"
+  "index.html": "fa19d35dfb180f121b575266366a3fbdfa693fdcd051772e3faf0e0f15c41a45",
+  "planner.html": "195437c18035f3ce4b14799983d2a1a4fe0e6e2e52ceb7fdc29e900b21bd135c"
  },
  "langs": {
-  "lang/zh-Hant.js": "a9b41e39c9bb0ae2bf191d963f25a21c7a744e77ac48ab58eb7838f187dbcbbd",
-  "lang/zh-Hans.js": "05397ffc10c0d79e587ef0a9b9256923c7dd321cc5dceaba86f7f14429600800",
-  "lang/es.js": "c2afb26b2fe4e3b2a50e99433ab2653e58ceb5c4f63e1a148d6a5dd169b9fe35",
-  "lang/fr.js": "db877d6bbe83435dd2929446e5a9a830767ef38d08d492c6fc5e21e9c9558c39",
-  "lang/de.js": "b46fae18c3293d95e1eff6e018143e26b204f0a2fb49e4ae1aae4ab5dd31a027",
-  "lang/pt-BR.js": "25f928976c2cd9f66eb0f747c573cc738c58997b096904779e8ee208835d650c",
-  "lang/ja.js": "ed31a72d57267bec6103b2ac64ccb6e557cd0d6ebc39c8aa0d3538e28e2fa03c",
-  "lang/ko.js": "52a6691f5746bdffa9d77a4bfdf2f44c26ce8745d3497737d2d63241731a2d0c"
+  "lang/zh-Hant.js": "2cdb8f598144fc17878319a5d00dacef153131cac99c775dd19750b698b5f46a",
+  "lang/zh-Hans.js": "b57ae1b020f2c4fa409d1650d3d04d24356a3e0ad82b2f0deafdde94c385b05b",
+  "lang/es.js": "b79ba812b5332e1f2706979747033bd6733f544b441b7c399ef9781c2f1f564e",
+  "lang/fr.js": "3bea80209c07a4d71e1f47f2ca37a63ec4f00f5f13fbe7a05d1ee7ae969a5d67",
+  "lang/de.js": "337f7d422ccc5465bcf7f462e838cd9db0790b63be83157110955f103f15d748",
+  "lang/pt-BR.js": "b6c3ad5e8807ce0e5ef413f092c4d9bf2db5cbe387b2cfd0546ceeef00468e01",
+  "lang/ja.js": "08c90bfb0af73bbe661aad542ff9233940e624177579270caf3c2b949dc52e69",
+  "lang/ko.js": "c0feed628158b734ebe6fd7019edaed513033c2aeade2944959767a7e62f97fc"
  }
 }

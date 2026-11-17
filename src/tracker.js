@@ -1,6 +1,8 @@
 /* ---------------- The time tracker: how much time goes to grading, and how much to planning, kept apart ----------------
-   Time counts by itself while the teacher works: grading while the marking screen is open in a tab that is in front, planning
-   while the Planner is (src/planner/plantime.js, but not while a lesson is presented). It stops when nothing has been pressed,
+   Grading time counts by itself while the teacher works: while the marking screen is open in a tab that is in front. Planning time
+   counts in a focus session on a lesson (src/focus.js fcPlanAdd, src/planner/plfocus.js), and after a few minutes of steady work in
+   the Planner (src/planner/plantime.js), never during the teacher's classes: a quick change before class, or presenting, isn't
+   planning. Grading time stops when nothing has been pressed,
    typed or scrolled for a few minutes (Settings, Focus and goals: 2, 5, 10 or 15), and it can be switched off there.
    Time spent away from the app (marking on paper, planning in a notebook) can be added by hand.
    What is kept, beside the focus timer's own log (src/focus.js):
@@ -44,9 +46,9 @@ function tkFlush() {
   if (batch) renderProg();
 }
 function tkOn() { if (!tkTimer) tkTimer = setInterval(tkTick, TK_STEP * 1000); tkShare(); }
-// The Planner reads only its own keys, so the two settings it needs are copied into one of them.
+// The Planner reads only its own keys, so the settings it needs (counting time, and the focus timer's) are copied into one of them.
 function tkShare() {
-  const c = fcConf(), v = JSON.stringify({ on: !!c.track, idle: c.idle });
+  const c = fcConf(), v = JSON.stringify({ on: !!c.track, idle: c.idle, pe: c.pe, len: c.len, llen: c.llen, brk: c.brk, sound: c.sound, title: c.title, music: c.music, mood: c.mood, mvol: c.mvol, mamb: c.mamb });
   try { if (localStorage.getItem('gsp.timeCount') !== v) localStorage.setItem('gsp.timeCount', v); } catch { }
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') tkFlush(); });
@@ -65,7 +67,7 @@ function tkDay(k, L, P) {
   const auto = d.g != null ? Math.max(d.g, d.sm || 0) : (d.s || 0);
   const ga = d.g != null ? { ...(d.a || {}) } : d.s ? { '': d.s } : {};
   if (d.g != null && auto > d.g) ga[''] = (ga[''] || 0) + auto - d.g;
-  return { k, g: auto + hg, l: (pd.l || 0) + hl, hg, hl, p: d.p || 0, pa: d.pa || {}, s: d.s || 0, ga, la: pd.a || {}, hand };
+  return { k, g: auto + hg, l: (pd.l || 0) + hl, hg, hl, p: d.p || 0, pa: d.pa || {}, s: (d.s || 0) + (pd.f || 0), ga, la: pd.a || {}, hand };   // s: focus time, grading sessions and sessions on a lesson
 }
 const tkYmd = d => isoDay(d.getTime());
 const tkDate = (k, o) => new Date(k + 'T12:00:00').toLocaleDateString(LANG_LOCALE, o);
@@ -164,7 +166,7 @@ function tkPageRender() {
   const gRows = ga.map(([id, v]) => { const n = tkAsgName(id), p = t.pa[id] || 0; return row(n.name, n.cls, v, gmax, p ? '<span>' + esc(people(p, 'paper')) + '</span>' : ''); }).join('') + (hg >= 60 ? row(tr('Added by hand'), '', hg, gmax) : '');
   const lRows = la.map(([id, v]) => row(id ? P.names[id] || tr('A lesson') : tr('The week, units and the bank'), '', v, lmax)).join('') + (hl >= 60 ? row(tr('Added by hand'), '', hl, lmax) : '');
   const lists = '<div class="tkcols"><div class="tcard tklist g"><h2>Grading, by assignment</h2>' + (gRows || '<p class="tknone">No grading time in this stretch.</p>') + '</div>' +
-    '<div class="tcard tklist l"><h2>Planning, by lesson</h2>' + (lRows || '<p class="tknone">No planning time in this stretch. Time in the Planner counts here, except while a lesson is presented.</p>') + '</div></div>';
+    '<div class="tcard tklist l"><h2>Planning, by lesson</h2>' + (lRows || '<p class="tknone">No planning time in this stretch. Focus sessions on a lesson and steady work in the Planner count here.</p>') + '</div></div>';
   // added by hand
   const ents = L.add.filter(x => x.d >= per.from && x.d <= per.to).sort((a, b) => b.d.localeCompare(a.d));
   const form = tkS.adding ? '<form class="tkadd" id="tkAdd" autocomplete="off"><label>Day<input type="date" id="tkDay" value="' + today + '" max="' + today + '"></label>' +
@@ -173,7 +175,7 @@ function tkPageRender() {
     '<button class="btn primary" type="submit">Add</button><button class="btn" type="button" data-tkcancel>Cancel</button></form>' : '';
   const hand = '<div class="tcard tkhand"><div class="tkch"><h2>Added by hand</h2><span class="muted">For time away from the app, like marking on paper</span><span class="sp"></span>' + (tkS.adding ? '' : '<button class="btn sm" data-tkadd>Add time</button>') + '</div>' + form +
     ents.map(x => '<div class="tkent"><b data-raw>' + esc(tkDate(x.d, { weekday: 'short', month: 'short', day: 'numeric' })) + '</b><span>' + (x.k === 'g' ? 'Grading time' : 'Planning time') + '</span>' + tkD(x.s) + '<span class="sp" data-raw>' + esc(x.x || '') + '</span><button class="icon" data-tkdel="' + esc(x.id) + '" title="Remove" aria-label="Remove">' + TK_X + '</button></div>').join('') + '</div>';
-  const foot = '<div class="tkfoot"><p>' + (c.track ? esc('Time counts while the marking screen or the Planner is in front and you have done something there in the last ' + people(c.idle, 'minute') + '.') : 'Time isn’t being counted. Turn it on in Settings, Focus and goals.') + ' <a class="link" href="#/settings/focus">Settings</a></p><button class="btn sm" data-tkcsv>Download as a spreadsheet</button></div>';
+  const foot = '<div class="tkfoot"><p>' + (c.track ? esc('Grading time counts while the marking screen is in front and you have done something there in the last ' + people(c.idle, 'minute') + '.') + ' <span>' + esc(c.pe ? 'Planning time counts in focus sessions on a lesson, and after ' + people(c.pe, 'minute') + ' of steady work in the Planner, but not during your classes.' : 'Planning time counts in focus sessions on a lesson.') + '</span>' : 'Time isn’t being counted. Turn it on in Settings, Focus and goals.') + ' <a class="link" href="#/settings/focus">Settings</a></p><button class="btn sm" data-tkcsv>Download as a spreadsheet</button></div>';
   const h = head + tiles + chart + lists + hand + foot;
   if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
 }
@@ -203,7 +205,7 @@ $('#vTime').addEventListener('click', e => {
   if (d.tkadd != null) { tkS.adding = true; tkPageRender(); const m = $('#tkMin'); if (m) { m.focus(); m.select(); } return; }
   if (d.tkcancel != null) { tkS.adding = false; return tkPageRender(); }
   if (d.tkkind) { tkS.kind = d.tkkind; $('#vTime').querySelectorAll('[data-tkkind]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.tkkind === tkS.kind))); return; }
-  if (d.tkdel) { const L = fcLog(); L.add = L.add.filter(x => x.id !== d.tkdel); fcLogSet(L); fcRender(); return tkPageRender(); }
+  if (d.tkdel) { const L = fcLog(); L.add = L.add.filter(x => x.id !== d.tkdel); L.addGone = [...(L.addGone || []), d.tkdel].slice(-200); fcLogSet(L); fcRender(); return tkPageRender(); }
   if (d.tkcsv != null) return tkCsv();
 });
 $('#vTime').addEventListener('submit', e => {
@@ -243,8 +245,8 @@ function tkWeekHtml() {
   if (!tkReady) return '';
   const today = fcToday(), days = [], d = new Date(fcMon(today) + 'T12:00:00');
   for (; isoDay(d) <= today; d.setDate(d.getDate() + 1)) days.push(isoDay(d));
-  const g = tkSum(days, fcLog(), tkPlan()).g + (tkPend.g || 0);
-  return '<div class="fctk"><span><span>This week</span><b>' + esc(people(fcWeekPapersNow(), 'paper')) + '</b><span>·</span><span>Grading time</span><b>' + tkD(g) + '</b></span><a class="link" href="#/time">Time tracker</a></div>';
+  const t = tkSum(days, fcLog(), tkPlan()), g = t.g + (tkPend.g || 0);
+  return '<div class="fctk"><span><span>This week</span><b>' + esc(people(fcWeekPapersNow(), 'paper')) + '</b><span>·</span><span>Grading time</span><b>' + tkD(g) + '</b>' + (t.l ? '<span>·</span><span>Planning time</span><b>' + tkD(t.l) + '</b>' : '') + '</span><a class="link" href="#/time">Time tracker</a></div>';
 }
 
 /* ---------- Settings, Focus and goals: counting time ---------- */
@@ -253,13 +255,15 @@ function tkSetRender(sec) {
   const el = $('#setTrack'); if (!el) return;
   const c = fcConf();
   const h = '<div class="lhead"><h2>Time tracker</h2><span class="muted">How much time goes to grading and to planning, kept apart. <a class="link" href="#/time">Open the time tracker</a></span></div>' +
-    '<p class="setp"><label><input type="checkbox" id="tkOn"' + (c.track ? ' checked' : '') + '> Count grading time on the marking screen and planning time in the Planner</label></p>' +
-    '<p class="setp fcset"><label for="tkIdle"><b>Stop counting after</b></label><select id="tkIdle" class="btn sm" aria-label="Stop counting after"' + (c.track ? '' : ' disabled') + '>' + TK_IDLES.map(n => '<option value="' + n + '"' + (n === c.idle ? ' selected' : '') + '>' + n + ' minutes</option>').join('') + '</select><span class="muted">with nothing pressed, typed or scrolled</span></p>';
+    '<p class="setp"><label><input type="checkbox" id="tkOn"' + (c.track ? ' checked' : '') + '> Count grading time on the marking screen</label></p>' +
+    '<p class="setp fcset"><label for="tkIdle"><b>Stop counting after</b></label><select id="tkIdle" class="btn sm" aria-label="Stop counting after"' + (c.track ? '' : ' disabled') + '>' + TK_IDLES.map(n => '<option value="' + n + '"' + (n === c.idle ? ' selected' : '') + '>' + n + ' minutes</option>').join('') + '</select><span class="muted">with nothing pressed, typed or scrolled</span></p>' +
+    '<p class="setp fcset"><label for="tkPe"><b>Count planning outside focus sessions</b></label><select id="tkPe" class="btn sm" aria-label="Count planning outside focus sessions">' + TK_PES.map(n => '<option value="' + n + '"' + (n === c.pe ? ' selected' : '') + '>' + (n ? 'After ' + n + ' minutes of steady work' : 'Never') + '</option>').join('') + '</select><span class="muted">in the Planner, never during your classes</span></p>';
   if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
 }
 $('#setPane').addEventListener('change', e => {
   if (e.target.id === 'tkOn') { tkFlush(); fcConfSet({ track: e.target.checked }); tkSetRender('focus'); }
   else if (e.target.id === 'tkIdle') fcConfSet({ idle: +e.target.value });
+  else if (e.target.id === 'tkPe') fcConfSet({ pe: +e.target.value });
 });
 tkOn();
 Object.assign(window.__gs, { tkCsvText, tkFlush, tkTick, tkDay: k => tkDay(k, fcLog(), tkPlan()), tkPeriod, tkAddTime, tkDur, tkPend: () => tkPend, tkActive: () => { tkLast = Date.now(); }, tkHold: () => { clearInterval(tkTimer); tkTimer = 0; } });   // tkHold: tests move the clock themselves

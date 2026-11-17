@@ -3,7 +3,7 @@
    lessons live in their own IndexedDB ('gs-lessons'), and nothing here reads grading data.
    The Planner folder link writes only planning (lessons, units, the timetable) to a folder the teacher picks,
    so Claude can read and edit planning there and nothing else. */
-const L = { db: null, lessons: [], units: [], setup: null, view: 'semester', weekOf: null, open: null, cur: 0, dir: null, dirOk: false, tplImg: null, unit: null };
+const L = { db: null, lessons: [], units: [], setup: null, view: 'week', weekOf: null, open: null, cur: 0, dir: null, dirOk: false, tplImg: null, unit: null };
 const LDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const LDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const LMONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -50,9 +50,11 @@ async function lTx(store, mode, fn) {
   return new Promise((res, rej) => {
     const t = db.transaction(store, mode), s = t.objectStore(store); let out;
     Promise.resolve(fn(s)).then(v => { out = v; });
-    t.oncomplete = () => res(out); t.onerror = () => rej(t.error);
+    t.oncomplete = () => { res(out); if (mode === 'readwrite') planOut(); }; t.onerror = () => rej(t.error);
   });
 }
+// A change here: the grading page, open in another tab or the next time it opens, sends it to her Google Drive (src/app/drive.js, planSync).
+function planOut() { try { const ch = new BroadcastChannel('gs-plan-out'); ch.postMessage('saved'); ch.close(); } catch { } }
 const reqP = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 const kvGet = k => lTx('kv', 'readonly', s => reqP(s.get(k)));
 const kvSet = (k, v) => lTx('kv', 'readwrite', s => { s.put(v, k); });
@@ -115,6 +117,7 @@ function normLesson(x) {
   const links = normLinks(x.links); if (links.length) out.links = links;   // web pages for this lesson (links.js)
   const fin = f => f && typeof f.id === 'string' && typeof f.name === 'string' ? { id: f.id, name: f.name, size: +f.size || 0, at: +f.at || 0, sig: String(f.sig || '') } : null;
   if (fin(x.final)) out.final = fin(x.final);
+  if (x.ready && typeof x.ready === 'object' && +x.ready.at > 0) out.ready = { at: +x.ready.at };   // she said it is ready to teach (plfocus.js)
   const finals = (Array.isArray(x.finals) ? x.finals : []).map(fin).filter(Boolean);
   if (finals.length) out.finals = finals;
   if (x.pending && Array.isArray(x.pending.before)) out.pending = { at: +x.pending.at || Date.now(), before: x.pending.before.map(ns), title: String(x.pending.title || '') };
@@ -342,9 +345,11 @@ async function openLessons() {
   await panelInit();
   await tplPreview();
   if (!L.weekOf) L.weekOf = ymd(mondayOf(new Date()));
-  try { const v = localStorage.getItem('gsp.view'); if (v === 'week' || v === 'semester' || v === 'units' || v === 'activities' || v === 'bank' || v === 'library') L.view = v; } catch { }
+  // The Planner always opens on Plan lessons: this week, with what to plan next. Units, past lessons, activities and rubrics are one click away in Library.
+  L.view = 'week';
   renderLessons();
   arriveAt();
+  await taughtFold();   // notes from the phone, onto their lessons (present.js)
   await folderReconnect(false);
   await yearMoveOn();
 }
@@ -364,6 +369,7 @@ function renderLessons() {
 }
 
 function renderWeek() {
+  if (!L.weekOf || isNaN(parseYmd(L.weekOf))) L.weekOf = ymd(mondayOf(new Date()));   // drawn before the Planner has finished opening (a setup brought in at once)
   const el = $('#lessons'), mon = parseYmd(L.weekOf);
   const offs = plWeekOffs(), days = offs.map(i => ymd(addDays(mon, i)));
   const fri = addDays(mon, offs[offs.length - 1]), first = addDays(mon, offs[0]);
@@ -376,7 +382,7 @@ function renderWeek() {
     h += '<div class="ls-empty"><h2>Tell the Planner when your classes meet</h2><p>Lessons line up with your classes once the Planner knows when they meet. Type your classes and their times in, which takes a few minutes and is done once. If you already have a setup file from another computer, load it or drop it on this page.</p>' +
       '<div class="row"><button class="btn primary" data-a="setup">Type in my classes</button><button class="btn" data-a="loadsetup">Load a setup file…</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
   } else {
-    h += weekUnitsBar(L.weekOf) + '<div class="ls-grid"' + (days.length !== 5 ? ' style="--days:' + days.length + '"' : '') + '>';
+    h += planNextBar() + weekUnitsBar(L.weekOf) + '<div class="ls-grid"' + (days.length !== 5 ? ' style="--days:' + days.length + '"' : '') + '>';
     for (const d of days) {
       const off = dayOff(d), ev = eventsOn(d), today = d === ymd(new Date());
       h += '<div class="ls-day' + (off ? ' off' : '') + (today ? ' today' : '') + '"><div class="ls-dh"><b>' + LDAYS[parseYmd(d).getDay()] + '</b> ' + plMd(d) + '</div>';
@@ -387,7 +393,7 @@ function renderWeek() {
       for (const { c, m } of ms) {
         const ls = lessonsAt(c.id, d);
         h += '<div class="ls-slot" style="--cc:' + esc(c.color || '#1F6FB2') + '"><div class="ls-sh"><b>' + esc(c.name) + '</b><span>' + hm(m.start) + '–' + hm(m.end) + (m.label ? ' · ' + esc(m.label) : '') + '</span>' + mbBtn(c) + '</div>';
-        for (const l of ls) h += '<div class="ls-cardw"><button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + statusChip(l) + (l.final ? '<span class="pl-done" title="' + esc(l.final.name) + '">Finished ✓</span>' : '') + taughtChip(l, c.id, d) + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>' +
+        for (const l of ls) h += '<div class="ls-cardw"><button class="ls-card" data-open="' + l.id + '"><b>' + esc(l.title) + '</b>' + varTag(l) + statusChip(l) + (l.final ? '<span class="pl-done" title="' + esc(l.final.name) + '">Finished ✓</span>' : '') + (l.ready && !l.final ? '<span class="pl-done">Ready ✓</span>' : '') + taughtChip(l, c.id, d) + '<span>' + l.slides.length + ' slide' + (l.slides.length === 1 ? '' : 's') + (l.slots.length > 1 ? ' · also ' + esc(l.slots.filter(s => !(s.classId === c.id && s.date === d)).map(s => className(s.classId) + ' ' + shortDate(s.date)).join(', ')) : '') + '</span></button>' +
           presentCardBtn(l, c.id, d) + '<button class="ls-dl" data-dl="' + l.id + '" title="' + (l.final ? 'Download ' + esc(l.final.name) : 'Download a PowerPoint made from these slides') + '" aria-label="Download">↓</button></div>';
         h += '<div class="ls-add' + (ls.length ? ' has' : '') + '"><button class="btn sm ghost" data-new="' + esc(c.id) + '|' + d + '">+ New lesson</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + esc(c.id) + '|' + d + '">Use a lesson…</button>' : '') + '</div></div>';
       }
@@ -411,7 +417,7 @@ function renderEditor() {
   let h = '<div class="ls-top"><button class="btn sm ghost" data-a="back">‹ ' + ({ semester: 'Semester', units: 'Units', unit: 'Unit', activities: 'Activities', library: 'Past lessons' }[L.backTo] || 'Week') + '</button>' +
     '<input class="ls-title-in" data-f="ltitle" value="' + esc(l.title) + '" aria-label="Lesson name">' +
     '<span class="ls-slots">' + l.slots.map((t, i) => '<span class="ls-chip" style="--cc:' + esc((classById(t.classId) || {}).color || '#1F6FB2') + '">' + esc(className(t.classId)) + ' · ' + shortDate(t.date) + mbBtn(classById(t.classId)) + '<button data-unslot="' + i + '" title="Take it off this class" aria-label="Remove">×</button></span>').join('') + '<button class="btn sm ghost" data-a="addslot">+ Class</button></span>' +
-    '<span class="sp"></span>' + ptBadge(l) + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
+    '<span class="sp"></span>' + pfBtn(l) + ptBadge(l) + pfChip(l) + statusChip(l) + '<span class="savest" id="lsSaved">Saved</span>' +
     // Above the slide: the lesson's name, where it is taught, its status, the download and Present. The rest is one click away, in More.
     (lessonTalk(l) ? commentsBtn(l) : '') + panelBtn() + moreHtml(l) +
     '<button class="btn sm" data-a="pptx">Download .pptx</button><button class="btn sm primary" data-pr="present" title="Show this lesson full screen, from this slide">' + prIcon('play') + 'Present</button></div>' + pendingBar(l) + variantBar(l);
@@ -421,7 +427,7 @@ function renderEditor() {
     '<button class="btn sm" data-a="layout" title="Pick a layout for this slide">Layout: ' + esc(LAYOUTS[s.layout]) + ' ▾</button>' +
     '<button class="btn sm" data-a="look" title="Colors and background for this lesson">Look: ' + esc(LOOKS[lookOf(l)].name) + '</button>' + rtToolHtml() +
     '<span id="lsSize"></span>' +   // the text size of the box last clicked (boxes.js), filled in once the slide is drawn
-    (hasPic(s) ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
+    (hasPic(s) ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' + gpDrv('data-a="pic"', 'btn sm', 1) : '') +
     (s.layout === 'video' ? '<button class="btn sm" data-a="vid">' + (s.video ? 'Change video' : 'Add video link') + '</button>' + (s.video ? '<a class="btn sm ghost" href="' + esc(videoLink(s.video)) + '" target="_blank" rel="noopener">Watch</a>' : '') : '') +
     '<span class="sp"></span><button class="btn sm ghost" data-a="up" title="Move earlier">↑</button><button class="btn sm ghost" data-a="down" title="Move later">↓</button><button class="btn sm ghost" data-a="dup" title="Make a copy of this slide">Duplicate</button><button class="btn sm ghost" data-a="del" title="Delete this slide">Delete</button></div>' +
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
@@ -472,7 +478,7 @@ function atlasDlg(l) {
   };
 }
 function thumbHtml(x, l, i) {
-  return '<div class="ls-th' + (i === L.cur ? ' on' : '') + '" data-go="' + i + '" draggable="true"><span class="n">' + (i + 1) + '</span><div class="ls-mini"><div class="ls-slide">' + slideHtml(x, l, false) + '</div>' + ((k => k ? '<span class="ls-thc" title="' + k + ' open comment' + (k === 1 ? '' : 's') + '">💬 ' + k + '</span>' : '')(openTalk(x))) + '</div></div>';
+  return '<div class="ls-th' + (i === L.cur ? ' on' : '') + '" data-go="' + i + '" draggable="true" tabindex="-1"><span class="n">' + (i + 1) + '</span><div class="ls-mini"><div class="ls-slide">' + slideHtml(x, l, false) + '</div>' + ((k => k ? '<span class="ls-thc" title="' + k + ' open comment' + (k === 1 ? '' : 's') + '">💬 ' + k + '</span>' : '')(openTalk(x))) + '</div></div>';
 }
 function fitStage() {
   const w = $('#lsWrap'), st = $('#lsStage'); if (!w || !st) return;
@@ -568,7 +574,13 @@ function onLessonsKey(e) {
     else if (e.key === 'Enter' && e.target.classList.contains('ls-ed')) { e.preventDefault(); startEdit(e.target); }
   }
 }
-function goSlide(i) { editorCommit(); if (!L.open) return; if (i !== L.cur) L.box = ''; L.cur = Math.max(0, Math.min(L.open.slides.length - 1, i)); renderEditor(); }
+// Drawing the editor again takes the focus away from what was clicked, so the keys would go to the page and scroll it.
+// The slide picked takes the focus instead, so Up and Down keep moving through the slides.
+function goSlide(i) {
+  editorCommit(); if (!L.open) return; if (i !== L.cur) L.box = ''; L.cur = Math.max(0, Math.min(L.open.slides.length - 1, i)); renderEditor();
+  const a = document.activeElement, th = $('#lsThumbs .ls-th.on');
+  if (th && (!a || a === document.body || !a.isConnected)) th.focus({ preventScroll: true });
+}
 function newSlide(layout) {
   const first = (L.open.slots[0] || {}).date, d = first ? plMd(first) + ' ' : '';
   const s = normSlide({ layout, fmt: 2, size: (TEACH[layout] || {}).size });
@@ -706,7 +718,7 @@ document.addEventListener('keydown', e => {
 function undoToast(msg, fn) {
   toast(msg, 6000);
   const t = $('.toast'); if (!t) return;
-  const b = document.createElement('button'); b.className = 'link'; b.style.cssText = 'color:inherit;margin-left:12px'; b.textContent = 'Undo';
+  const b = document.createElement('button'); b.className = 'link'; b.style.cssText = 'color:inherit;margin-left:12px;pointer-events:auto'; b.textContent = 'Undo';   // the note itself lets clicks through; its Undo doesn't
   b.onclick = () => { t.hidden = true; fn(); }; t.appendChild(b);
 }
 // Thumbnails drag to reorder.
@@ -819,7 +831,7 @@ function splitOverflow() {
 }
 
 /* ---------- pictures ---------- */
-function pickPicture() { const i = $('#lsPicIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) setPicture(f); }; i.click(); }
+function pickPicture() { const i = $('#lsPicIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) setPicture(f); }; gpClick(i); }
 // A picture file made small enough to keep in a lesson: 1600 px is plenty for a slide.
 async function shrinkPic(file) {
   const url = URL.createObjectURL(file);
@@ -986,7 +998,7 @@ function lessonText(l) {
     if (s.video) t += '[Video: ' + s.video.url + (s.video.title ? ' (' + videoSource(s.video) + ')' : '') + ']\n';
     if (s.notes) t += 'Notes: ' + s.notes + '\n';
     if (s.ask) t += 'What I want on this slide: ' + s.ask + '\n';
-    for (const c of s.ctx || []) t += '[Screenshot for context, not on the slide' + (c.note ? ': ' + c.note : '') + (L.dir && L.dirOk && ctxFile(s, c) ? ' (in my Planner folder: ' + ctxFile(s, c) + ')' : '') + ']\n';
+    for (const c of s.ctx || []) t += '[Screenshot for context, not on the slide' + (c.note ? ': ' + c.note : '') + ']\n';
     for (const m of s.talk) if (!m.done) t += (m.by === 'claude' ? PlAi() + ': ' : 'My comment: ') + m.text + '\n';
   });
   if (l.notebook) t += '\n## My notebook for this lesson\n' + nbText(l.notebook) + '\n';
@@ -994,16 +1006,16 @@ function lessonText(l) {
 }
 // Ask Claude: copies this lesson only (nothing from grading), to paste where the teacher is working with Claude.
 async function askClaude(l) {
-  const where = L.dir && L.dirOk ? 'It is saved in my Planner folder as "' + fileBase(l) + '.lesson.json". Edit that file directly (keep the same id), and I will pick up your changes in the Planner.\n\n' : '';
-  await copyText('Here is a lesson from my Planner. ' + where + 'Slide 1 is the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + '. Slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + lessonText(l));
+  // Self-contained: never a folder, path or file on this computer (see sendToClaude).
+  await copyText('Here is a lesson from my Planner. Everything you need is in this message. Don\'t look for, open or ask for any folder or file on my computer. Slide 1 is the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + '. Slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + await lessonContext(l) + lessonText(l));
   const shots = l.slides.reduce((n, s) => n + (s.ctx || []).length, 0);
-  toast('Lesson copied. Paste it into ' + plAi() + ' and say what you want.' + (shots && !(L.dir && L.dirOk) ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
+  toast('Lesson copied. Paste it into ' + plAi() + ' and say what you want.' + (shots ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
 }
 
 /* ---------- import ---------- */
 function importLesson() {
   openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a lesson file (.gslesson, from another computer or another teacher), a .lesson.json from ' + plAi() + ', or a lesson pack (.zip) of past lessons with their files. You can also paste a lesson below. A .lesson.json with the same id replaces the one here; a lesson file or a pack never replaces a lesson you have.</p>' +
-    '<button class="btn" id="imF">Choose a file…</button><input type="file" id="imIn" accept=".gslesson,.json,application/json,.zip,application/zip" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
+    '<button class="btn" id="imF">Choose a file…</button>' + gpBtn('#imIn', 'btn') + '<input type="file" id="imIn" accept=".gslesson,.json,application/json,.zip,application/zip" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
     '<div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Import pasted text</button></div>', true);
   $('#imF').onclick = () => $('#imIn').click();
   $('#imIn').onchange = async () => { const f = $('#imIn').files[0]; if (!f) return; closeDlg(); if (isShareFile(f)) return shareOpen(f); if (/\.zip$/i.test(f.name)) return packImport(f); importLessonText(await f.text(), f.name); };
@@ -1094,7 +1106,7 @@ function openTimetable() {
       '<h3 style="margin:18px 0 6px;font-size:15px">Days off</h3><textarea id="ttOff" rows="4" style="width:100%" placeholder="One per line: 2026-12-25 Christmas">' + esc(draft.daysOff.map(d => d.date + ' ' + d.label).join('\n')) + '</textarea>' +
       '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' +
       '<h3 style="margin:18px 0 6px;font-size:15px">Slide template</h3><div class="ls-mrow" id="ttTpl"><span class="' + (draft.template ? '' : 'muted') + '">' +
-      (draft.template ? 'Your own: ' + esc(draft.tplName) : 'The plain one built in: white, 16:9.') + '</span><button class="btn sm" data-tpl>' + (draft.template ? 'Pick another…' : 'Use my school’s template…') + '</button>' +
+      (draft.template ? 'Your own: ' + esc(draft.tplName) : 'The plain one built in: white, 16:9.') + '</span><button class="btn sm" data-tpl>' + (draft.template ? 'Pick another…' : 'Use my school’s template…') + '</button>' + gpDrv('data-tpl', '', 1) +
       (draft.template ? '<button class="btn sm ghost" data-tplplain>Use the plain one</button>' : '') + '</div>' +
       '<p class="muted" style="margin:4px 0 0;font-size:13px">A PowerPoint file (.pptx or .potx) with a Title Slide and a Title and Content layout. Downloads keep its masters and layouts.</p>' +
       '<h3 style="margin:18px 0 6px;font-size:15px">Slides</h3><label class="ls-mrow"><input type="checkbox" id="ttAgenda"' + (draft.deck.agenda !== false ? ' checked' : '') + '> A new lesson starts with an agenda on slide 2</label>' +
@@ -1123,7 +1135,7 @@ function openTimetable() {
       collect();
       const i = document.createElement('input'); i.type = 'file'; i.accept = '.pptx,.potx,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.presentationml.template';
       i.onchange = async () => { const t = await readTemplate(i.files[0]); if (!t || $('#ttTpl') == null) return; collect(); draft.template = t.b64; draft.tplName = t.name; draw(); };
-      return i.click();
+      return gpClick(i);
     }
     if (e.target.closest('[data-saveprof]')) {
       collect();
@@ -1334,6 +1346,7 @@ stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher'
 - "variantOf" and "variant" (on a lesson) mark an alternative version of another lesson ("variantOf" is that lesson's id,
   "variant" its name, like "Shorter Friday"). It is a full lesson of its own; edit only the one you were asked about.
 - "final" and "finals" (on a lesson) are the teacher's finished PowerPoint and older ones (the files stay in the app). Leave them as they are.
+- "ready" (on a lesson) is { "at" }, set when the teacher said the lesson is ready to teach. Leave it as it is.
 - "notebook" (on a lesson or unit) is the teacher's own jotted thoughts, as simple HTML. Read it for ideas; don't edit it.
 - "taught" (on a lesson) is where each class got to when the lesson was taught: [{ "classId", "date", "slide" (the slide
   they reached, counting from 1), "of" (how many slides there were), "note" (the teacher's line for next time) }].
@@ -1410,7 +1423,7 @@ function lessonForFile(l, imgs) {   // imgs: Map to collect pictures as separate
     const m = /^data:image\/(png|jpeg);base64,/.exec(x.src); if (!m) continue;
     const name = ctxFile(s, x); imgs.set(name, x.src); x.src = name;
   }
-  delete c._file; delete c._mod; delete c.pending;
+  delete c._file; delete c._mod; delete c._sync; delete c.pending;
   return c;
 }
 const wTimers = new Map();
@@ -1447,9 +1460,18 @@ async function profileFolderRead() {
   await kvSet('profMod', f.lastModified); await applySetup(j);
 }
 // Picks up lessons Claude added or changed in the folder. A file changed since the app last wrote it wins.
+// After a sync from her other device (src/app/drive.js, planApply): a lesson that changed there is written to its file here, and a lesson
+// deleted there has its file taken away, or reading the folder would bring the old copy back.
+async function planFolderCatchUp() {
+  const gone = (await kvGet('syncGoneFiles')) || [];
+  for (const name of gone) { if (!L.lessons.some(l => l._file === name)) { try { await L.dir.removeEntry(name); } catch { } } }
+  if (gone.length) await kvDel('syncGoneFiles');
+  for (const l of L.lessons.filter(l => l._sync)) { delete l._sync; await folderWrite(l); }
+}
 async function folderRead(say) {
   if (!L.dir || !L.dirOk) return;
   let added = 0, changed = 0;
+  try { await planFolderCatchUp(); } catch (e) { console.warn(e); }
   try {
     for await (const [name, h] of L.dir.entries()) {
       if (h.kind !== 'file' || !/\.lesson\.json$/i.test(name)) continue;

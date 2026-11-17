@@ -138,7 +138,8 @@ function stickerText(v) {
 }
 // Placing a score sticker: it follows the pointer over the paper until she clicks; Esc or a click off the paper lets go.
 let scorePlacing = null;
-function startScorePlace(text) {
+// extra: more about the stamp, for a criterion sticker { k: 'crit', row, name }.
+function startScorePlace(text, extra) {
   stopScorePlace();
   const gh = document.createElement('canvas'); gh.id = 'scoreGhost'; gh.hidden = true;
   const bar = document.createElement('div'); bar.className = 'toast'; bar.id = 'scoreBar'; bar.textContent = 'Click where the score goes · Esc to cancel';
@@ -147,7 +148,7 @@ function startScorePlace(text) {
   const move = e => {
     const pg = pages.find(q => q.canvas === e.target);
     if (!pg) { gh.hidden = true; return; }
-    const m = { t: 'stamp', k: 'score', x: 0, y: 0, size: newStampSize('score'), color: totalInk(), text }, b = stampBox(m), dpr = window.devicePixelRatio || 1, k = pg.s;
+    const m = { t: 'stamp', k: 'score', x: 0, y: 0, color: totalInk(), text, ...extra }; m.size = newStampSize(m.k); const b = stampBox(m), dpr = window.devicePixelRatio || 1, k = pg.s;
     gh.width = Math.ceil(b.w * k * dpr) + 2; gh.height = Math.ceil(b.h * k * dpr) + 2;
     gh.style.width = gh.width / dpr + 'px'; gh.style.height = gh.height / dpr + 'px';
     gh.style.left = (e.clientX - gh.width / dpr / 2) + 'px'; gh.style.top = (e.clientY - gh.height / dpr / 2) + 'px';
@@ -157,12 +158,12 @@ function startScorePlace(text) {
   const key = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); stopScorePlace(); } };
   const away = e => { if (!pages.some(q => q.canvas === e.target)) stopScorePlace(); };
   document.addEventListener('pointermove', move, true); document.addEventListener('keydown', key, true); document.addEventListener('pointerdown', away, true);
-  scorePlacing = { text, stop: () => { document.removeEventListener('pointermove', move, true); document.removeEventListener('keydown', key, true); document.removeEventListener('pointerdown', away, true); gh.remove(); bar.remove(); if (panel) panel.classList.remove('placing'); } };
+  scorePlacing = { text, extra, stop: () => { document.removeEventListener('pointermove', move, true); document.removeEventListener('keydown', key, true); document.removeEventListener('pointerdown', away, true); gh.remove(); bar.remove(); if (panel) panel.classList.remove('placing'); } };
 }
 function stopScorePlace() { if (scorePlacing) { scorePlacing.stop(); scorePlacing = null; } }
 function placeScore(pg, x, y) {
-  const text = scorePlacing.text; stopScorePlace();
-  const m = { t: 'stamp', k: 'score', x: r1(x), y: r1(y), size: newStampSize('score'), color: totalInk(), text };
+  const { text, extra } = scorePlacing; stopScorePlace();
+  const m = stampOwner({ t: 'stamp', k: 'score', x: r1(x), y: r1(y), color: totalInk(), text, ...extra }, batch.students[cur]); m.size = newStampSize(m.k);
   const bb = stampBox(m);   // keep it on the page
   m.x = r1(m.x + Math.max(0, -bb.x) - Math.max(0, bb.x + bb.w - pg.W)); m.y = r1(m.y + Math.max(0, -bb.y) - Math.max(0, bb.y + bb.h - pg.H));
   snap(pg); pg.marks().push(m); selected = { page: pg, mark: m, fresh: true }; changed(pg); redrawAll();

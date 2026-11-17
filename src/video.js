@@ -37,6 +37,13 @@ const linkTitle = f => f.name.replace(LINK_RX, '').replace(/ \(added \d+\)$/, ''
 // A video file kept in this browser (not a web link): the student's shortcut file names it as "gs-video:<id>", and the video itself is in its own database.
 const vidRef = data => { if (!data || !data.length || data.length > 4000) return ''; let s = ''; try { s = new TextDecoder().decode(data); } catch { return ''; } const m = /^\s*URL\s*=\s*gs-video:([\w-]{6,40})\s*$/mi.exec(s); return m ? m[1] : ''; };
 const vidBytes = (id, name, size) => new TextEncoder().encode('[InternetShortcut]\r\nURL=gs-video:' + id + '\r\nName=' + String(name || '').replace(/[\r\n]+/g, ' ').slice(0, 120) + '\r\nSize=' + (size || 0) + '\r\n');
+// A video she picked from her Google Drive: the shortcut is an ordinary Drive link (so anything that reads links still can) with the
+// file's id on a line of its own. The app copies the video into this browser to play it (kept under "d-<id>", like a video file), so the
+// transcript, clips and Turn work as they do for a file. Only the link is kept in her work.
+const drvRef = data => { if (!data || !data.length || data.length > 4000) return ''; let s = ''; try { s = new TextDecoder().decode(data); } catch { return ''; } const m = /^\s*GsDrive\s*=\s*([\w-]{10,120})\s*$/mi.exec(s); return m ? m[1] : ''; };
+const drvBytes = d => new TextEncoder().encode('[InternetShortcut]\r\nURL=https://drive.google.com/file/d/' + d.id + '/view\r\nGsDrive=' + d.id + '\r\nName=' + String(d.name || '').replace(/[\r\n]+/g, ' ').slice(0, 120) + '\r\nSize=' + (d.size || 0) + '\r\n');
+// Where a link's video is kept in this browser, if it is one that can be: a video file, or a video from Drive.
+const keptId = f => { if (!f || f.kind !== 'link') return ''; const v = vidRef(f.data); if (v) return v; const d = drvRef(f.data); return d ? 'd-' + d : ''; };
 // What a link or kept video is known by, the same for every partner who has it.
 const linkKey = f => { const v = vidRef(f.data); return v ? 'gs-video:' + v : linkOf(f.data); };
 
@@ -75,6 +82,7 @@ function vidTurn(st, f, card) {
 // The card above the paper. The player stays at the top while the notes page scrolls under it.
 function linkCard(st, f) {
   if (vidRef(f.data)) return vfileCard(st, f);
+  if (drvRef(f.data) && !drvWebOn.has(linkKey(f)) && driveCan() && !sampleOn()) return driveCard(st, f);
   const url = linkOf(f.data), play = linkPlayer(url), ticks = !!play && (!play.frame || frameTicks(play.frame));
   const el = document.createElement('div'); el.className = 'media vlink';
   el.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">' + esc(linkHost(url)) + '</span></div><div class="vlslot" hidden></div>' +
@@ -121,7 +129,7 @@ function linkCard(st, f) {
   };
   clipStrip(el.querySelector('.mstick'), f, now, c => (play ? fill(c) : clipShow(c.id)), play && play.frame && !ticks ? 'drive' : '');
   // a pasted transcript: a line with a time plays the video from there (a site's player starts again at that time)
-  const pan = trPanel(el, f, { make: false, seek: t => {
+  const pan = trPanel(el, f, { make: false, seek: el.vseek = t => {
     const m = el.querySelector('.vlslot video, .vlslot audio');
     if (m) { try { m.currentTime = t; } catch {} m.play().catch(() => {}); return; }
     if (play) { fill({ a: t }); return; }
@@ -134,7 +142,7 @@ function linkCard(st, f) {
 /* ---------- video files kept in this browser ---------- */
 // The video goes in a database of its own (grading-studio-videos), stored as the file itself, so a long video fits as long as the computer has room
 // and it is only read when it plays. The student gets a tiny shortcut file naming it ("gs-video:<id>"), so saving, partners, Remove and merging
-// treat it like a link. Partners share one stored copy. It never leaves this browser: not in take-home files, the linked folder or the export.
+// treat it like a link. Partners share one stored copy. It goes to the linked folder's Videos/ (below), and never in take-home files or the export.
 let vkDbP = null;
 const vkDb = () => vkDbP ||= new Promise((res, rej) => { const r = indexedDB.open('grading-studio-videos', 1); r.onupgradeneeded = () => r.result.createObjectStore('v'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 async function vkDo(mode, fn) {
@@ -150,25 +158,64 @@ async function vkPut(file, id) {
   try { await vkDo('readwrite', o => o.put({ id, name: file.name, type: file.type || MIME[extOf(file.name)] || '', size: file.size, at: Date.now(), blob: file }, id)); }
   catch (err) { console.error(err); throw new Error('This browser couldn’t keep that video, usually because the computer is out of room. A link to the video works at any size.'); }
   const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id);
+  vkFolderSoon();
   return id;
 }
 async function vkGet(id) {
   if (vkSeen.has(id)) return vkSeen.get(id);
   let r = null; try { r = await vkDo('readonly', o => o.get(id)); } catch (e) { console.error(e); }
-  const out = r && r.blob ? { name: r.name, size: r.size, blob: r.blob, url: URL.createObjectURL(r.blob.type ? r.blob : new Blob([r.blob], { type: r.type || MIME[extOf(r.name)] || '' })) } : null;
+  const out = r && r.blob ? { name: r.name, size: r.size, blob: r.blob, url: URL.createObjectURL(r.blob.type ? r.blob : new Blob([r.blob], { type: r.type || MIME[extOf(r.name)] || '' })) } : await vkFromFolder(id);
   vkSeen.set(id, out); return out;
+}
+async function vkUsed() {
+  const used = new Set();
+  for (const r of (await idbDo('readonly', o => o.getAll())) || []) { const v = r && /\.url$/i.test(r.path || '') && keptId({ kind: 'link', data: r.data }); if (v) used.add(v); }
+  if (batch) for (const st of batch.students) for (const f of st.files.concat(st.gone || [])) { const v = keptId(f); if (v) used.add(v); }
+  return used;
 }
 // Videos no shortcut names any more go, a while after the last one went (so one being added right now is never caught).
 async function vkSweep() {
   try {
     if (!vkDbP && indexedDB.databases && !(await indexedDB.databases()).some(d => d.name === 'grading-studio-videos')) return;   // never made here: nothing to sweep, and no database made for it
     const ids = await vkDo('readonly', o => o.getAllKeys()); if (!ids || !ids.length) return;
-    const used = new Set();
-    for (const r of (await idbDo('readonly', o => o.getAll())) || []) { const v = r && /\.url$/i.test(r.path || '') && vidRef(r.data); if (v) used.add(v); }
-    if (batch) for (const st of batch.students) for (const f of st.files.concat(st.gone || [])) { const v = f.kind === 'link' && vidRef(f.data); if (v) used.add(v); }
+    const used = await vkUsed();
     const old = Date.now() - 15 * 60e3;
     for (const id of ids) { if (used.has(id)) continue; const r = await vkDo('readonly', o => o.get(id)); if (r && r.at > old) continue; await vkDo('readwrite', o => o.delete(id)); const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id); }
   } catch (e) { console.error(e); }
+}
+/* video files in the linked folder: Videos/<name> [<id>].<ext>, playable from there */
+// Copied as they are, straight from the stored file to the disk, so a long video is never all in memory. With full (the folder just linked or back),
+// a video the browser lacks comes in from the folder. One the browser can't take still plays from the folder (vkGet). Nothing in Videos/ is ever deleted here.
+const vkFolderName = r => { const m = /^(.*?)(\.[\w]{1,6})?$/.exec(r.name || 'video'); return seg(m[1]) + ' [' + r.id + ']' + (m[2] || ''); };
+async function vkFolderList() {
+  const dir = await fld.root.getDirectoryHandle('Videos', { create: true }), out = new Map();
+  for await (const [n, h] of dir.entries()) { const m = h.kind === 'file' && / \[([\w-]{6,40})\](\.\w+)?$/.exec(n); if (m) out.set(m[1], h); }
+  return { dir, out };
+}
+let vkFolderP = null, vkFolderT = 0, vkFolderFull = false;
+function vkFolderSoon(full) { vkFolderFull ||= !!full; clearTimeout(vkFolderT); vkFolderT = setTimeout(() => { vkFolderP = (vkFolderP || Promise.resolve()).then(vkFolderSync); }, 1500); }
+async function vkFolderSync() {
+  const full = vkFolderFull; vkFolderFull = false;
+  if (!fld.root || !(fld.state === 'ok' || fld.state === 'saving' || fld.state === 'decide') || sampleOn()) return;
+  try {
+    if (!vkDbP && indexedDB.databases && !(await indexedDB.databases()).some(d => d.name === 'grading-studio-videos') && !full) return;
+    const used = await vkUsed(); if (!used.size) return;
+    const { dir, out } = await vkFolderList(), have = new Set((await vkDo('readonly', o => o.getAllKeys())) || []);
+    for (const id of used) {
+      if (have.has(id)) {
+        const r = await vkDo('readonly', o => o.get(id)), h = out.get(id); if (!r || !r.blob) continue;
+        if (h && (await h.getFile()).size === r.size) continue;
+        await r.blob.stream().pipeTo(await (await dir.getFileHandle(h ? h.name : vkFolderName(r), { create: true })).createWritable());
+      } else if (full && out.has(id)) {
+        try { await vkPut(await out.get(id).getFile(), id); } catch (e) { console.error(e); }   // no room here: it plays from the folder
+      }
+    }
+  } catch (e) { console.error(e); }
+}
+async function vkFromFolder(id) {
+  if (!fld.root || fld.state === 'none' || fld.state === 'ask' || fld.state === 'lost') return null;
+  try { const h = (await vkFolderList()).out.get(id); if (!h) return null; const f = await h.getFile(); return { name: f.name.replace(/ \[[\w-]+\](?=\.\w+$|$)/, ''), size: f.size, blob: f, url: URL.createObjectURL(f.type ? f : new Blob([f], { type: MIME[extOf(f.name)] || '' })) }; }
+  catch (e) { console.error(e); return null; }
 }
 const vkClear = () => vkDo('readwrite', o => o.clear()).catch(e => console.error(e)).then(() => { for (const v of vkSeen.values()) if (v) URL.revokeObjectURL(v.url); vkSeen.clear(); });
 const vidPick = () => new Promise(res => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*,audio/*,' + Object.keys(MIME).map(x => '.' + x).join(','); inp.onchange = () => res(inp.files[0] || null); inp.click(); });
@@ -179,11 +226,118 @@ function vfileCard(st, f) {
     if (!hold.isConnected && !hold.parentNode) return;
     if (k) { hold.replaceWith(mediaCard(st, f, k)); return; }
     hold.querySelector('.mhead .muted').textContent = 'video file';
-    hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<p class="vlnote">This video isn’t in this browser. A video file stays in the browser it was added in: it doesn’t go in take-home files or the linked folder.</p><div class="mctl"><button class="btn sm primary" data-vkback>Choose the video file…</button></div>');
+    hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<p class="vlnote">This video isn’t in this browser or your folder. A video file doesn’t go in take-home files.</p><div class="mctl"><button class="btn sm primary" data-vkback>Choose the video file…</button></div>');
     hold.querySelector('[data-vkback]').onclick = async () => {
       const file = await vidPick(); if (!file) return;
       try { await vkPut(file, id); toast('The video is back'); openStudent(cur, f.path); } catch (err) { sayDlg(err.message); }
     };
+  });
+  return hold;
+}
+
+// Gets a Drive video into this browser. onStep(text). Throws with plain words.
+const drvGetting = new Map();   // id -> the download under way, so two cards (or the transcript) share one
+const drvWebOn = new Set();   // Drive videos she chose to watch in Drive's own player, while this page is open
+const drvMeta = (f, k) => (new RegExp('^\\s*' + k + '\\s*=\\s*(.+)$', 'mi').exec(new TextDecoder().decode(f.data)) || [, ''])[1].trim();
+const VID_EXT = { 'video/mp4': 'mp4', 'video/quicktime': 'mov', 'video/webm': 'webm', 'video/x-m4v': 'm4v', 'video/x-matroska': 'mkv', 'video/3gpp': '3gp' };
+// interactive: only from a press, since it may open Google's sign-in.
+function drvGet(f, onStep, interactive) {
+  const id = drvRef(f.data), key = 'd-' + id;
+  if (!drvGetting.has(id)) drvGetting.set(id, (async () => {
+    let name = drvMeta(f, 'Name') || linkTitle(f);
+    const size = +drvMeta(f, 'Size') || 0;
+    // room first, so a big video doesn't come all the way down only to find the computer full
+    try { const e = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; if (size && e && e.quota && e.quota - (e.usage || 0) < size * 1.05) throw new Error('room'); } catch (err) { if (err.message === 'room') throw new Error('There isn’t room on this computer for this video (' + fmtSize(size) + '). Watch it without downloading instead.'); }
+    const blob = await driveBytes(id, (n, t) => { for (const cb of drvSteps.get(id) || []) cb(n, t || size); }, interactive);
+    const type = blob.type && blob.type !== 'application/octet-stream' ? blob.type : MIME[extOf(name)] || 'video/mp4';
+    if (!VIDEO_RX.test(name)) name += '.' + (VID_EXT[type.split(';')[0]] || 'mp4');   // the player is chosen by the name: keep it a video
+    await vkPut(new File([blob], name, { type }), key);
+    return vkGet(key);
+  })().finally(() => { drvGetting.delete(id); drvSteps.delete(id); }));
+  if (onStep) { if (!drvSteps.has(id)) drvSteps.set(id, new Set()); drvSteps.get(id).add(onStep); }
+  return drvGetting.get(id);
+}
+const drvSteps = new Map();
+const drvSay = err => {
+  const m = (err && err.message) || String(err);
+  if (m === 'setup') return 'This copy of Grading Studio isn’t connected to Google.';
+  if (/\b404\b/.test(m)) return 'Drive says this video isn’t there for you now. It may have been moved to the bin, or picked with another Google account. Pick it again with + Add > A video….';
+  if (/\b401\b|sign.?in|popup/i.test(m)) return 'Sign in with Google to play this video, then press the button again.';
+  if (/\b403\b/.test(m)) return m + '. Drive won’t hand this video over right now. Watch it in Drive’s player instead.';
+  return m;
+};
+const drvStreamBad = new Set();   // Drive videos that wouldn't play straight from Drive, while this page is open
+const drvKeep = f => { let name = drvMeta(f, 'Name') || linkTitle(f); if (!VIDEO_RX.test(name)) name += '.mp4'; return { name, url: driveStreamUrl(drvRef(f.data)), stream: true, size: +drvMeta(f, 'Size') || 0 }; };
+async function vkDrop(id) {
+  await vkDo('readwrite', o => o.delete(id));
+  const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id);
+}
+// A Drive video on screen: played straight from Drive (nothing kept), or from its download in this browser.
+function drvPlayer(st, f, k, at) {
+  const el = mediaCard(st, f, k), id = drvRef(f.data), size = +drvMeta(f, 'Size') || 0, m = el.querySelector('video,audio');
+  el.classList.add('vdrv');
+  el.querySelector('.mhead .muted').textContent = k.stream ? 'playing from Google Drive' : 'Google Drive · downloaded';
+  el.querySelector('.mstick').insertAdjacentHTML('beforeend', '<div class="mctl">' + (k.stream
+    ? '<button class="btn sm" data-drvget>Download for offline' + (size ? ' (' + fmtSize(size) + ')' : '') + '</button>'
+    : '<button class="btn sm" data-drvdrop>Remove download</button>') + '</div><div class="prog" hidden><i style="width:0%"></i></div><p class="muted vlnote">' + (k.stream
+    ? 'Plays from your Drive, a little at a time. Nothing is copied into this browser.'
+    : 'Kept in this browser so it plays without internet. Remove download frees the space. The video in your Drive isn’t touched.') + '</p>');
+  if (at) m.addEventListener('loadedmetadata', () => { m.currentTime = at; }, { once: true });
+  const say = el.querySelector('.vlnote'), bar = el.querySelector('.prog');
+  if (k.stream) {
+    m.onerror = async () => {   // Drive wouldn't hand it over this way: say why, and offer the other ways
+      if (!drivePickReady()) { if (el.isConnected) el.replaceWith(driveCard(st, f, '', m.currentTime)); return; }   // Google's key ran out: Play from Drive gets a new one with her press
+      drvStreamBad.add(id);
+      let why = ''; try { await gjson('files/' + encodeURIComponent(id) + '?fields=id&supportsAllDrives=true'); } catch (err) { why = drvSay(err); }
+      if (el.isConnected) { const c = driveCard(st, f, why || 'This video wouldn’t play straight from Drive. Download it for offline, or watch it in Drive’s player.'); el.replaceWith(c); }
+    };
+    el.querySelector('[data-drvget]').onclick = async e => {
+      const b = e.target; b.disabled = true; bar.hidden = false; say.textContent = 'Downloading from Drive…';
+      try {
+        const k2 = await drvGet(f, (n, t) => { if (t) { const p = Math.min(100, Math.round(n / t * 100)); bar.firstChild.style.width = p + '%'; say.textContent = 'Downloading from Drive… ' + p + '%'; } }, true);
+        if (el.isConnected) el.replaceWith(drvPlayer(st, f, k2, m.currentTime));
+      } catch (err) { console.error(err); b.disabled = false; bar.hidden = true; say.textContent = drvSay(err); }
+    };
+  } else el.querySelector('[data-drvdrop]').onclick = async () => {
+    const t = m.currentTime; m.pause();
+    try { await vkDrop(keptId(f)); } catch (err) { console.error(err); }
+    toast('Download removed. The video is still in your Drive.');
+    if (el.isConnected) { const c = driveCard(st, f, '', t); el.replaceWith(c); }
+  };
+  return el;
+}
+// why: what went wrong last time, shown above the choices. at: where to carry on from.
+function driveCard(st, f, why, at) {
+  const key = keptId(f), id = drvRef(f.data), hold = document.createElement('div'); hold.className = 'media vfile vdrv';
+  hold.innerHTML = '<div class="mstick"><div class="mhead"><b>' + esc(linkTitle(f)) + '</b><span class="muted">Google Drive</span></div></div>';
+  vkGet(key).then(async k => {
+    if (!hold.isConnected && !hold.parentNode) return;
+    if (k) { hold.replaceWith(drvPlayer(st, f, k, at)); return; }
+    vkSeen.delete(key);   // not here yet: look again once it is
+    const stream = await driveStreamOk() && !drvStreamBad.has(id);
+    if (!hold.isConnected && !hold.parentNode) return;
+    if (stream && drivePickReady() && !why) { hold.replaceWith(drvPlayer(st, f, drvKeep(f), at)); return; }
+    const size = +drvMeta(f, 'Size') || 0;
+    hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<div class="mctl">' + (stream ? '<button class="btn sm primary" data-drvplay>Play from Drive</button>' : '') +
+      '<button class="btn sm' + (stream ? '' : ' primary') + '" data-drvget>Download for offline' + (size ? ' (' + fmtSize(size) + ')' : '') + '</button><button class="btn sm" data-drvweb>Watch in Drive’s player</button></div>' +
+      '<div class="prog" hidden><i style="width:0%"></i></div><p class="muted vlnote">' + esc(why || (stream ? 'Plays from your Drive, a little at a time, with the transcript following along. Only the link is kept in your work.'
+        : 'Download it to play here with the transcript following along, or watch it in Drive’s player. Only the link is kept in your work, and the video stays in your Drive.')) + '</p>');
+    const bar = hold.querySelector('.prog'), say = hold.querySelector('.vlnote'), btn = hold.querySelector('[data-drvget]'), play = hold.querySelector('[data-drvplay]');
+    if (play) play.onclick = async () => {
+      play.disabled = true; say.textContent = 'Opening the video from Drive…';
+      try { await gToken(true, 'pick'); drvStreamBad.delete(id); if (hold.isConnected) hold.replaceWith(drvPlayer(st, f, drvKeep(f), at)); }
+      catch (err) { console.error(err); play.disabled = false; say.textContent = drvSay(err); }
+    };
+    btn.onclick = async () => {
+      btn.disabled = true; bar.hidden = false; say.textContent = 'Downloading from Drive…';
+      try {
+        const k2 = await drvGet(f, (n, t) => { if (t) { const p = Math.min(100, Math.round(n / t * 100)); bar.firstChild.style.width = p + '%'; say.textContent = 'Downloading from Drive… ' + p + '%'; } }, true);
+        if (hold.isConnected) hold.replaceWith(drvPlayer(st, f, k2, at));
+      } catch (err) { console.error(err); btn.disabled = false; bar.hidden = true; say.textContent = drvSay(err); }
+    };
+    hold.querySelector('[data-drvweb]').onclick = () => { drvWebOn.add(linkKey(f)); hold.replaceWith(linkCard(st, f)); };
+    // signed in already: check it's still there, so a video gone from Drive says so straight away
+    if (!why && drivePickReady()) gjson('files/' + encodeURIComponent(id) + '?fields=id&supportsAllDrives=true').catch(err => { if (hold.isConnected && err.status !== 401) say.textContent = drvSay(err); });
   });
   return hold;
 }
@@ -228,6 +382,14 @@ function frameToggle(fr) { for (const k of clocks) if (k.fr === fr) { frameSay(f
 // A video of the page's own in a small window that stays on top of every other (the browser's picture in picture).
 const PIP_BTN = '<button class="btn sm" data-pip title="Keeps the video in a small window on top of everything else, so the whole screen is free for the paper">Float</button>';
 function vidFloat(m) { if (!m) return; if (document.pictureInPictureElement === m) document.exitPictureInPicture().catch(() => {}); else m.requestPictureInPicture().catch(() => toast('This browser couldn’t float the video')); }
+// Where the video on screen is, in seconds: a video file that is playing or has been played, or a YouTube or Vimeo player that says. null if none.
+// Typed notes take a line's time from here (typednotes.js). A card's vseek(t) plays it from t, the way a line of its transcript does.
+function vidClock(root) {
+  for (const m of root.querySelectorAll('.media video, .media audio')) if (!m.paused || m.currentTime > 0) return m.currentTime;
+  for (const fr of root.querySelectorAll('.vlslot iframe')) { const t = frameTime(fr); if (t != null) return t; }
+  return null;
+}
+function vidSeek(root, t) { const c = [...root.querySelectorAll('.media')].find(c => c.vseek); if (c) c.vseek(t); return !!c; }
 let curPlay = null;   // a link's player that takes orders, for the keys (Space, J, L) when there is no video file on screen
 function frameTime(fr) { for (const k of clocks) if (k.fr === fr) return k.t == null ? null : k.t + (k.on ? (Date.now() - k.at) / 1000 : 0); return null; }
 
@@ -348,7 +510,7 @@ async function addAndFind(st, list) {
 const copyFor = (st, f) => ({ path: f.name, file: new File([f.data], f.name), from: st.key });
 // A partner's own copy of one of st's files: the one they have, or a new one.
 async function partnerCopy(st, f, to) {
-  if (f.kind === 'link') { const have = to.files.find(x => x.kind === 'link' && linkKey(x) === linkKey(f)); if (have) return have; }
+  if (f.kind === 'link') { const d = linkSame(f), have = to.files.find(x => x.kind === 'link' && (linkKey(x) === linkKey(f) || (!!d && linkSame(x) === d))); if (have) return have; }
   const have = to.files.find(x => x.from === st.key && x.name === f.name); if (have) return have;
   return (await addAndFind(to, [copyFor(st, f)]))[0] || null;
 }
@@ -383,26 +545,33 @@ const VID_HINT = 'Paste the link: Google Drive, YouTube or anywhere else';
 function openAddVideo(st, asFile) {
   if (!st) return;
   const who = shownName(st, batch.students.indexOf(st)), rows = npRows(setup), picked = new Set(), locked = new Set(groupMates(st));
-  let np = notesFileOf(st) ? '' : (npLast === 'rubric' && !rows.length ? 'lined' : npLast), file = null, by = asFile ? 'file' : 'link';
+  let np = notesFileOf(st) ? '' : (npLast === 'rubric' && !rows.length ? 'lined' : npLast), file = null, drive = null, by = asFile ? 'file' : 'link';
   const pl = partnerList(st, picked, locked);
   openDlg('<div class="bh"><h2>Video for ' + esc(who) + '</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb vdbox"><span class="seg vdby" role="group" aria-label="The video"><button data-vdby="link" aria-pressed="true">A link</button><button data-vdby="file" aria-pressed="false">A video file</button></span>' +
+    '<div class="bb vdbox"><span class="seg vdby" role="group" aria-label="The video"><button data-vdby="link" aria-pressed="true">A link</button><button data-vdby="file" aria-pressed="false">A video file</button>' + (driveCan() ? '<button data-vdby="drive" aria-pressed="false">Google Drive</button>' : '') + '</span>' +
     '<div id="vdLinkBox"><input class="btn" id="vdLink" placeholder="' + VID_HINT + '" aria-label="Link to the video" autocomplete="off" spellcheck="false">' +
     '<p class="muted vdsay">Only the link is kept here, so the video stays where it is and nothing slows down.</p></div>' +
     '<div id="vdFileBox" hidden><div class="vdfile"><button class="btn" id="vdFile">Choose a video file…</button><span id="vdFileName" class="muted">or drop it here</span></div>' +
     '<p class="muted vdsay">Kept in this browser on this computer, at any length, as long as there is room. It doesn’t go in take-home files.</p></div>' +
+    (driveCan() ? '<div id="vdDriveBox" hidden><div class="vdfile"><button class="btn" id="vdDrive">Choose from Drive…</button><span id="vdDriveName" class="muted"></span>' + vdDirLine('vddir') + '</div>' +
+    '<p class="muted vdsay">' + DRV_ONLY + '</p></div>' : '') +
     '<label class="vdlab" for="vdName">Name it</label><input class="btn" id="vdName" value="Presentation video" autocomplete="off">' +
     '<div class="vdlab">Notes page<small>A page to write on while you watch. It is marked, scored and returned like a paper.</small></div>' + npTiles(np, rows, true) +
     '<div class="vdlab">Partners<small>Tick everyone else in the video. They get the video and the notes page, and one set of marks and one grade covers the group.</small></div>' + pl.html + '</div>' +
     '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="vdAdd" disabled>Add to ' + esc(who) + '</button></div>');
   const link = $('#vdLink'), add = $('#vdAdd'), box = $('#dlgBox');
   const ready = () => {
-    const v = link.value.trim(), ok = by === 'file' ? !!file : !!linkClean(v);
+    const v = link.value.trim(), ok = by === 'file' ? !!file : by === 'drive' ? !!drive : !!linkClean(v);
     add.disabled = !ok; link.classList.toggle('bad', by === 'link' && !!v && !ok);
     add.textContent = 'Add to ' + who + (picked.size ? ' and ' + picked.size + (picked.size === 1 ? ' partner' : ' partners') : '');
   };
-  const setBy = k => { by = k; for (const b of box.querySelectorAll('[data-vdby]')) b.setAttribute('aria-pressed', b.dataset.vdby === k); $('#vdLinkBox').hidden = k !== 'link'; $('#vdFileBox').hidden = k !== 'file'; ready(); if (k === 'link') link.focus(); };
+  const setBy = k => { by = k; for (const b of box.querySelectorAll('[data-vdby]')) b.setAttribute('aria-pressed', b.dataset.vdby === k); $('#vdLinkBox').hidden = k !== 'link'; $('#vdFileBox').hidden = k !== 'file'; if ($('#vdDriveBox')) $('#vdDriveBox').hidden = k !== 'drive'; ready(); if (k === 'link') link.focus(); };
   const useFile = f => { if (!f) return; if (!MEDIA_RX.test(f.name) && !/^(video|audio)\//.test(f.type)) return toast('That isn’t a video or sound file'); file = f; $('#vdFileName').innerHTML = '<b>' + esc(f.name) + '</b> · ' + fmtSize(f.size); setBy('file'); };
+  const useDrive = async again => {
+    try { if (again) { if (!(await pickVidDir())) return; } const [d] = await driveVideos(false); const dl = $('#vdDriveBox .vddir'); if (dl) dl.outerHTML = vdDirLine('vddir'); else $('#vdDriveBox .vdfile').insertAdjacentHTML('beforeend', vdDirLine('vddir'));
+      if (!d) return; drive = d; $('#vdDriveName').innerHTML = '<b data-raw>' + esc(d.name) + '</b>' + (d.size ? ' · ' + fmtSize(d.size) : ''); setBy('drive'); }
+    catch (err) { console.error(err); sayDlg(drvSay(err)); }
+  };
   pl.draw(); link.oninput = ready; $('#vdFind').oninput = pl.draw;
   box.ondragover = e => { if (by === 'file') e.preventDefault(); };
   box.ondrop = e => { if (by !== 'file') return; e.preventDefault(); useFile(e.dataTransfer.files[0]); };
@@ -410,31 +579,46 @@ function openAddVideo(st, asFile) {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick(box, np); return; }
     const row = e.target.closest('[data-vdto]'); if (row && !row.disabled) { const s = batch.students[+row.dataset.vdto]; if (picked.has(s)) picked.delete(s); else picked.add(s); pl.draw(); ready(); return; }
-    const sb = e.target.closest('[data-vdby]'); if (sb) { setBy(sb.dataset.vdby); if (sb.dataset.vdby === 'file' && !file) useFile(await vidPick()); return; }
+    const sb = e.target.closest('[data-vdby]'); if (sb) { setBy(sb.dataset.vdby); if (sb.dataset.vdby === 'file' && !file) useFile(await vidPick()); if (sb.dataset.vdby === 'drive' && !drive) useDrive(); return; }
     if (e.target.closest('#vdFile')) { useFile(await vidPick()); return; }
+    if (e.target.closest('#vdDrive')) return useDrive();
+    if (e.target.closest('[data-vddir]')) return useDrive(true);
     if (e.target !== add || add.disabled) return;
-    const url = by === 'file' ? '' : linkClean(link.value), name = npFileName($('#vdName').value || 'Presentation video'), partners = [...picked], kind = np;
+    const url = by === 'link' ? linkClean(link.value) : '', name = npFileName($('#vdName').value || 'Presentation video'), partners = [...picked], kind = np;
     add.disabled = true; add.textContent = 'Adding…';
-    try { await videoAdd(st, { url, file: by === 'file' ? file : null, name, kind, partners }); closeDlg(); }
+    try { await videoAdd(st, { url, file: by === 'file' ? file : null, drive: by === 'drive' ? drive : null, name, kind, partners }); closeDlg(); }
     catch (err) { console.error(err); add.disabled = false; ready(); sayDlg((err && err.message) || String(err)); }
   };
   if (asFile) setBy('file'); else link.focus();
 }
 // The student's shortcut for a link or a kept video file, ready for addFiles.
 async function videoEntry(o) {
+  if (o.drive) return { path: o.name + '.url', file: new File([drvBytes(o.drive)], o.name + '.url') };
   if (o.file) { const id = await vkPut(o.file); return { path: o.name + '.url', file: new File([vidBytes(id, o.file.name, o.file.size)], o.name + '.url') }; }
   return { path: o.name + '.url', file: new File([linkBytes(o.url)], o.name + '.url') };
 }
-// o: { url | file, name, kind: a notes page or '', partners: [students] }. quiet: no toast and the student isn't opened (many at once).
+// Where a link's video plays, the same however its link was written (youtu.be/… or youtube.com/watch?v=…, a Drive link ending
+// /view?usp=sharing or open?id=…), or ''. A video picked from Drive gives its Drive player too.
+const linkSpot = url => { const p = url && linkPlayer(url); return p && p.frame ? p.frame : ''; };
+const linkSame = f => linkSpot(linkOf(f.data));
+// The video st already has that o names: the same link, or the same video however its link was written, pasted or picked from Drive.
+// Adding it again would show the same video twice on the paper. A file from the computer is a new copy each time, so it never matches.
+function sameVideo(st, o) {
+  if (o.file) return null;
+  const url = o.drive ? 'https://drive.google.com/file/d/' + o.drive.id + '/view' : linkClean(o.url), spot = linkSpot(url);
+  if (!url) return null;
+  return st.files.find(f => f.kind === 'link' && !vidRef(f.data) && (linkOf(f.data) === url || (!!spot && linkSame(f) === spot))) || null;
+}
+// o: { url | file | drive: { id, name, size } picked from Drive, name, kind: a notes page or '', partners: [students] }. quiet: no toast and the student isn't opened (many at once).
 async function videoAdd(st, o, quiet) {
-  const list = [await videoEntry(o)];
+  const had = sameVideo(st, o), list = had ? [] : [await videoEntry(o)];
   if (o.kind) { npLast = o.kind; const n = npFileName(o.name.replace(/\s*video$/i, '') + ' notes') + '.pdf'; list.push({ path: n, file: new File([await notesPdf(o.kind, batch.name, npRows(setup))], n, { type: 'application/pdf' }) }); }
-  const made = await addAndFind(st, list), vid = made.find(f => f.kind === 'link' || f.kind === 'media') || made[0], page = made.find(f => f.kind === 'pdf') || notesFileOf(st);
+  const made = list.length ? await addAndFind(st, list) : [], vid = had || made.find(f => f.kind === 'link' || f.kind === 'media') || made[0], page = made.find(f => f.kind === 'pdf') || notesFileOf(st);
   const all = [...new Set([...groupMates(st), ...(o.partners || [])])];
-  if (all.length) await partnersJoin(st, page || vid, all, made.filter(f => f.kind !== 'media'));
+  if (all.length) await partnersJoin(st, page || vid, all, (had ? [had] : []).concat(made).filter(f => f.kind !== 'media'));
   if (quiet) return made;
   saveSoon(); renderList();
-  toast('Added the video to ' + groupNames([st, ...all]));
+  toast(had && !made.length && !all.length ? shownName(st, batch.students.indexOf(st)) + ' already has this video' : 'Added the video to ' + groupNames([st, ...all]));
   await openStudent(batch.students.indexOf(st), vid && vid.path);
   return made;
 }
@@ -471,12 +655,13 @@ function openAddNotes(st) {
 // opened (the roster) and after (Setup > Partners and videos…). Returns { draw(), drop(files), out() }: out() gives the groups to make,
 // [{ k: [keys, the first is the one whose video and paper the group shares], url, file }], only where something is new.
 function pvList(host, rows) {
-  const vid = new Map(), grp = new Map();   // k -> { url, file } ; k -> a Set shared by everyone in one new group
+  const vid = new Map(), grp = new Map();   // k -> { url, file, drive } ; k -> a Set shared by everyone in one new group
+  const got = v => !!v && !!(v.url || v.file || v.drive);
   let open = null;   // the row whose partners are being picked
   const R = k => rows.find(r => r.k === k), mine = k => grp.get(k) || new Set([k]);
   const old = k => new Set([k, ...((R(k) || {}).mates || [])]);
   const team = k => { const s = new Set(); for (const x of mine(k)) for (const y of old(x)) s.add(y); for (const x of [...s]) for (const y of mine(x)) s.add(y); return [...s].sort((a, b) => rows.findIndex(r => r.k === a) - rows.findIndex(r => r.k === b)); };
-  const leadOf = k => { const t = team(k); return t.find(x => R(x) && R(x).has) || t.find(x => vid.get(x) && (vid.get(x).url || vid.get(x).file)) || t[0]; };
+  const leadOf = k => { const t = team(k); return t.find(x => R(x) && R(x).has) || t.find(x => got(vid.get(x))) || t[0]; };
   const tog = (k, o) => {
     const g = mine(k);
     if (g.has(o)) { g.delete(o); grp.delete(o); if (g.size < 2) for (const x of g) grp.delete(x); }
@@ -487,10 +672,10 @@ function pvList(host, rows) {
     host.innerHTML = rows.map((r, i) => {
       const t = team(r.k), lead = leadOf(r.k), v = vid.get(r.k) || {}, others = t.filter(x => x !== r.k);
       let what;
-      if (lead !== r.k && (R(lead).has || (vid.get(lead) && (vid.get(lead).url || vid.get(lead).file)))) what = '<span class="muted"><span>Same video as:</span> <b data-raw>' + esc(label(lead)) + '</b></span>';
+      if (lead !== r.k && (R(lead).has || got(vid.get(lead)))) what = '<span class="muted"><span>Same video as:</span> <b data-raw>' + esc(label(lead)) + '</b></span>';
       else if (r.has) what = '<span class="pvhas" data-raw title="' + esc(r.has) + '">' + esc(r.has) + '</span>';
-      else if (v.file) what = '<span class="pvfile"><b data-raw>' + esc(v.file.name) + '</b> <span data-raw>' + fmtSize(v.file.size) + '</span><button class="icon" data-pvunfile="' + i + '" aria-label="Take the file off">✕</button></span>';
-      else what = '<input class="btn pvlink' + (v.url && !linkClean(v.url) ? ' bad' : '') + '" data-pvlink="' + i + '" value="' + esc(v.url || '') + '" placeholder="Paste a link to their video" aria-label="Link to the video" autocomplete="off" spellcheck="false"><button class="btn sm" data-pvfile="' + i + '" title="A video file on this computer">File…</button>';
+      else if (v.file || v.drive) { const x = v.file || v.drive; what = '<span class="pvfile">' + (v.drive ? '<span class="pvdrv" data-raw title="Google Drive">Drive</span> ' : '') + '<b data-raw>' + esc(x.name) + '</b> <span data-raw>' + (x.size ? fmtSize(x.size) : '') + '</span><button class="icon" data-pvunfile="' + i + '" aria-label="Take the file off">✕</button></span>'; }
+      else what = '<input class="btn pvlink' + (v.url && !linkClean(v.url) ? ' bad' : '') + '" data-pvlink="' + i + '" value="' + esc(v.url || '') + '" placeholder="Paste a link to their video" aria-label="Link to the video" autocomplete="off" spellcheck="false"><button class="btn sm" data-pvfile="' + i + '" title="A video file on this computer">File…</button>' + (driveCan() ? '<button class="btn sm" data-pvdrive="' + i + '">Drive…</button>' : '');
       return '<div class="pvrow' + (open === r.k ? ' on' : '') + '"><span class="pvname" data-raw>' + esc(r.label) + '</span><span class="pvvid">' + what + '</span>' +
         '<button class="btn sm pvpbtn" data-pvp="' + i + '" aria-expanded="' + (open === r.k) + '">' + (others.length ? '<span>With:</span> <span data-raw>' + esc(others.map(label).join(', ')) + '</span>' : '+ Partners') + '</button>' +
         (open === r.k ? '<div class="pvpick" role="group" aria-label="Partners">' + rows.filter(x => x.k !== r.k).map(x => { const lock = old(r.k).has(x.k), on = lock || t.includes(x.k);
@@ -500,54 +685,74 @@ function pvList(host, rows) {
   host.addEventListener('input', e => { const l = e.target.closest('[data-pvlink]'); if (!l) return; const k = rows[+l.dataset.pvlink].k; vid.set(k, { url: l.value }); l.classList.toggle('bad', !!l.value.trim() && !linkClean(l.value)); host.dispatchEvent(new Event('pvchange')); });
   host.addEventListener('change', e => { if (e.target.closest('[data-pvlink]')) draw(); });   // the group's other rows follow once the link is in
   host.addEventListener('click', async e => {
-    const b = e.target.closest('[data-pvp],[data-pvto],[data-pvdone],[data-pvfile],[data-pvunfile]'); if (!b) return;
+    const b = e.target.closest('[data-pvp],[data-pvto],[data-pvdone],[data-pvfile],[data-pvdrive],[data-pvunfile]'); if (!b) return;
     e.stopPropagation();
     if (b.dataset.pvp != null) { const k = rows[+b.dataset.pvp].k; open = open === k ? null : k; }
     else if (b.dataset.pvdone != null) open = null;
     else if (b.dataset.pvto != null && open) tog(open, rows[+b.dataset.pvto].k);
     else if (b.dataset.pvfile != null) { const f = await vidPick(); if (!f) return; vid.set(rows[+b.dataset.pvfile].k, { file: f }); }
+    else if (b.dataset.pvdrive != null) { let d; try { [d] = await driveVideos(false); } catch (err) { console.error(err); return sayDlg(drvSay(err)); } if (!d) return; vid.set(rows[+b.dataset.pvdrive].k, { drive: d }); }
     else if (b.dataset.pvunfile != null) vid.delete(rows[+b.dataset.pvunfile].k);
     draw(); host.dispatchEvent(new Event('pvchange'));
     if (b.dataset.pvp != null || b.dataset.pvto != null) { const again = host.querySelector(b.dataset.pvp != null ? '[data-pvp="' + b.dataset.pvp + '"]' : '[data-pvto="' + b.dataset.pvto + '"]'); if (again) again.focus(); }
   });
-  // files dropped on the list: each goes to the student named in its file name
-  const drop = files => {
+  // files dropped on the list, or videos picked from Drive (fromDrive): each goes to the student named in its file name
+  const drop = (files, drv) => {
     const people = rows.map(r => [nameWords(r.label)]), miss = [];
-    for (const f of files) { if (!MEDIA_RX.test(f.name)) { miss.push(f.name); continue; } const g = guessAmong(f.name, people); if (g.i < 0 || rows[g.i].has) { miss.push(f.name); continue; } vid.set(leadOf(rows[g.i].k), { file: f }); }
+    for (const f of files) { if (!drv && !MEDIA_RX.test(f.name)) { miss.push(f.name); continue; } const g = guessAmong(f.name, people); if (g.i < 0 || rows[g.i].has) { miss.push(f.name); continue; } vid.set(leadOf(rows[g.i].k), drv ? { drive: f } : { file: f }); }
     draw(); host.dispatchEvent(new Event('pvchange'));
-    if (miss.length) toast((miss.length === 1 ? 'This file didn’t match a name: ' : 'These files didn’t match a name: ') + wordsJoin(miss.slice(0, 4)) + (miss.length > 4 ? '…' : '') + '. Use File… on the right row.', 8000);
+    if (miss.length) toast((miss.length === 1 ? 'This file didn’t match a name: ' : 'These files didn’t match a name: ') + wordsJoin(miss.slice(0, 4)) + (miss.length > 4 ? '…' : '') + (drv ? '. Use Drive… on the right row.' : '. Use File… on the right row.'), 8000);
   };
+  const fromDrive = async () => { try { const list = await driveVideos(true); if (list.length) drop(list, true); } catch (err) { console.error(err); sayDlg(drvSay(err)); } };
   const out = () => {
     const done = new Set(), list = [];
     for (const r of rows) {
       if (done.has(r.k)) continue;
       const t = team(r.k); t.forEach(x => done.add(x));
-      const lead = leadOf(r.k), v = R(lead).has ? null : (t.map(x => vid.get(x)).find(x => x && (x.file || linkClean(x.url || ''))) || null);
+      const lead = leadOf(r.k), v = R(lead).has ? null : (t.map(x => vid.get(x)).find(x => x && (x.file || x.drive || linkClean(x.url || ''))) || null);
       const fresh = t.filter(x => !old(lead).has(x));
       if (!v && !fresh.length) continue;
-      list.push({ k: [lead, ...t.filter(x => x !== lead)], url: v && !v.file ? linkClean(v.url) : '', file: v && v.file || null });
+      list.push({ k: [lead, ...t.filter(x => x !== lead)], url: v && !v.file && !v.drive ? linkClean(v.url) : '', file: v && v.file || null, drive: v && v.drive || null });
     }
     return list;
   };
   const bad = () => rows.some(r => { const v = vid.get(r.k); return v && v.url && v.url.trim() && !linkClean(v.url); });
   draw();
-  return { draw, drop, out, bad };
+  return { draw, drop, fromDrive, out, bad };
 }
 // Puts the groups pvList gave on the open assignment. stOf(k): the student for a row.
-async function pvApply(groups, stOf) {
+// own: the groups made get their own scores (notes shared).
+async function pvApply(groups, stOf, own) {
   let n = 0;
   for (const g of groups) {
     const all = g.k.map(stOf).filter(Boolean); if (!all.length) continue;
     // the group shares the paper of whoever has one: the one with the video first, else the first with a notes page or a paper
     let st = all[0];
-    if (!g.url && !g.file && !(notesFileOf(st) || groupPaper(st))) st = all.find(s => notesFileOf(s) || groupPaper(s)) || st;
+    if (!g.url && !g.file && !g.drive && !(notesFileOf(st) || groupPaper(st))) st = all.find(s => notesFileOf(s) || groupPaper(s)) || st;
     const partners = all.filter(s => s !== st && !groupMates(st).includes(s));
-    if (g.url || g.file) await videoAdd(st, { url: g.url, file: g.file, name: 'Presentation video', kind: '', partners }, true);
+    if (g.url || g.file || g.drive) await videoAdd(st, { url: g.url, file: g.file, drive: g.drive, name: 'Presentation video', kind: '', partners }, true);
     else if (partners.length) { const gg = groupOf(st), anchor = (gg && groupFileOf(gg, st)) || notesFileOf(st) || groupPaper(st) || st.files.find(f => f.kind === 'link'); if (!anchor) continue; await partnersJoin(st, anchor, partners, st.files.filter(f => f.kind === 'link' && f !== anchor)); }
+    if (own && partners.length) groupSetOwn(st, true);
     n++;
   }
   groupSync(); saveSoon(); renderList();
   return n;
+}
+// Above the list: many videos from Drive at once, matched to names. The folder line says where the chooser opens.
+const DRV_ONLY = 'Only the videos you pick can be opened, nothing else in your Drive.';
+// The videos folder the chooser opens in, and a way to change it. Nothing until one is chosen (the chooser asks for it the first time).
+const vdDirLine = k => vidDir() ? '<span class="muted vddir"><span data-raw title="Google Drive">📁 ' + esc(vidDir().name) + '</span> <button class="link" data-' + k + '>Change folder</button></span>' : '';
+// Which way the groups made are graded: one grade, or the notes shared and each partner's own score.
+const pvOwnRow = () => '<div class="pvown"><span>Partners get</span><span class="seg" role="group" aria-label="Partners get"><button type="button" data-pvown="0" aria-pressed="true">One grade</button><button type="button" data-pvown="1" aria-pressed="false">Their own scores</button></span><span class="muted">The notes are shared either way.</span></div>';
+const pvOwnOf = box => { const b = box.querySelector('[data-pvown][aria-pressed=true]'); return !!b && b.dataset.pvown === '1'; };
+const pvOwnClick = (box, e) => { const b = e.target.closest('[data-pvown]'); if (!b) return false; for (const x of box.querySelectorAll('[data-pvown]')) x.setAttribute('aria-pressed', x === b); return true; };
+const pvDriveRow = () => driveCan() ? '<div class="pvdrvrow"><button class="btn sm" data-pvmany>Choose from Drive…</button>' + vdDirLine('pvdir') + '<span class="muted">' + DRV_ONLY + '</span></div>' : '';
+function pvDriveWire(box, pv) {   // box: the list's own holder, made new with each dialog
+  box.addEventListener('click', async e => {
+    if (e.target.closest('[data-pvmany]')) pv.fromDrive().then(redraw);
+    if (e.target.closest('[data-pvdir]')) { try { if (await pickVidDir()) redraw(); } catch (err) { sayDlg(drvSay(err)); } }
+  });
+  const redraw = () => { const r = box.querySelector('.pvdrvrow'); if (r) r.outerHTML = pvDriveRow(); };
 }
 const pvHas = st => { const f = st.files.find(x => x.kind === 'link') || st.files.find(x => x.kind === 'media'); return f ? (f.kind === 'link' ? linkTitle(f) + (vidRef(f.data) ? '' : ' · ' + linkHost(linkOf(f.data))) : f.name) : ''; };
 
@@ -558,17 +763,18 @@ function openPartners() {
   if (anon) list.sort((a, b) => anonPos(a.i) - anonPos(b.i));
   const rows = list.map(({ st, i }) => ({ k: st.key, label: shownName(st, i), has: pvHas(st), mates: groupMates(st).map(s => s.key) }));
   openDlg('<div class="bh"><h2>Partners and videos</h2><button class="icon" data-cancel aria-label="Close" style="margin-left:auto">✕</button></div>' +
-    '<div class="bb vdbox"><p class="muted" style="margin:0;font-size:14px">Pick each group’s partners: one grade covers the group, and a group with no video shares the first one’s paper and marks. Paste a link to a video, or choose a video file. You can also drop video files here, and each goes to the student named in its file name.</p><div id="pvList" class="pvlist"></div></div>' +
+    '<div class="bb vdbox"><p class="muted" style="margin:0;font-size:14px">Pick each group’s partners: one grade covers the group, and a group with no video shares the first one’s paper and marks. Paste a link to a video, or choose a video file. You can also drop video files here, and each goes to the student named in its file name.</p>' + pvOwnRow() + pvDriveRow() + '<div id="pvList" class="pvlist"></div></div>' +
     '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="pvGo" disabled>Save</button></div>', false, 'lg');
-  const box = $('#dlgBox'), host = $('#pvList'), pv = pvList(host, rows), go = $('#pvGo');
+  const box = $('#dlgBox'), host = $('#pvList'), pv = pvList(host, rows), go = $('#pvGo'); pvDriveWire(host.parentElement, pv);
   host.addEventListener('pvchange', () => { go.disabled = !pv.out().length || pv.bad(); });
   box.ondragover = e => e.preventDefault();
   box.ondrop = e => { e.preventDefault(); pv.drop([...e.dataTransfer.files]); };
   box.onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
+    if (pvOwnClick(box, e)) return;
     if (e.target !== go || go.disabled) return;
     go.disabled = true; go.textContent = 'Saving…';
-    try { const n = await pvApply(pv.out(), k => batch.students.find(s => s.key === k)); closeDlg(); toast(n === 1 ? 'Saved 1 group or video' : 'Saved ' + n + ' groups and videos'); openStudent(cur); }
+    try { const n = await pvApply(pv.out(), k => batch.students.find(s => s.key === k), pvOwnOf(box)); closeDlg(); toast(n === 1 ? 'Saved 1 group or video' : 'Saved ' + n + ' groups and videos'); openStudent(cur); }
     catch (err) { console.error(err); go.disabled = false; go.textContent = 'Save'; sayDlg((err && err.message) || String(err)); }
   };
 }
@@ -582,19 +788,21 @@ function openStartNotes(it) {
   openDlg('<div class="bh"><h2>“' + esc(it.name) + '” with no papers</h2></div>' +
     '<div class="bb vdbox"><p style="margin:0 0 4px">For presentations, speeches, performances and videos. Each of the ' + names.length + ' students in ' + esc(c.name) + ' gets a notes page to write on while you watch. Mark it, score it and return it like a paper.</p>' + npTiles(np, rows, false) +
     (rows.length ? '' : '<p class="muted" style="margin:8px 0 0;font-size:13px">Rubric rows can be picked once this assignment has a rubric.</p>') +
-    '<div class="vdlab">Videos and partners<small>Optional, and you can add them later too. Paste a link or choose a file for each video, or drop video files here and each goes to the student named in its file name. Partners share one notes page, one set of marks and one grade.</small></div><div id="pvList" class="pvlist"></div></div>' +
+    '<div class="vdlab">Videos and partners<small>Optional, and you can add them later too. Paste a link or choose a file for each video, or drop video files here and each goes to the student named in its file name. Partners share one notes page, one set of marks and one grade.</small></div>' + pvOwnRow() + pvDriveRow() + '<div id="pvList" class="pvlist"></div></div>' +
     '<div class="bf"><button class="btn" data-cancel>Cancel</button><button class="btn primary" id="snGo">Make the pages and open</button></div>', false, 'lg');
   const box = $('#dlgBox'), folder = n => String(n).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').trim();
   const pv = pvList($('#pvList'), names.map(n => ({ k: folder(n), label: n, has: '', mates: [] })));
+  pvDriveWire($('#pvList').parentElement, pv);
   $('#pvList').addEventListener('pvchange', () => { $('#snGo').disabled = pv.bad(); });
   box.ondragover = e => e.preventDefault();
   box.ondrop = e => { e.preventDefault(); pv.drop([...e.dataTransfer.files]); };
   box.onclick = async e => {
     if (e.target.closest('[data-cancel]')) return closeDlg();
     const t = e.target.closest('.nptile'); if (t && !t.disabled) { np = t.dataset.np; npPick(box, np); return; }
+    if (pvOwnClick(box, e)) return;
     if (e.target.id !== 'snGo') return;
     e.target.disabled = true; npLast = np;
-    const groups = pv.out();
+    const groups = pv.out(), own = pvOwnOf(box);
     try {
       const bytes = await notesPdf(np, it.name, rows);
       const make = k => names.map(n => ({ path: folder(n) + '/' + npFileName(it.name) + ' notes' + (k > 1 ? ' (' + k + ')' : '') + '.pdf', data: bytes.slice() }));
@@ -606,14 +814,14 @@ function openStartNotes(it) {
       await intake(list, it.name, it);
       if (groups.length && batch && batch.id === id) {
         const stOf = key => batch.students.find(s => s.key === key);
-        await pvApply(groups, stOf);
+        await pvApply(groups, stOf, own);
         toast(groups.length === 1 ? 'Added 1 group or video' : 'Added ' + groups.length + ' groups and videos');
         openStudent(cur);
       }
     } catch (err) { console.error(err); closeDlg(); toast('The pages couldn’t be made: ' + ((err && err.message) || err)); }
   };
 }
-Object.assign(window.__gs, { linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes, openPartners, pvApply });
+Object.assign(window.__gs, { gScope: () => G.scope, drvRef, openFromDrive, pickVidDir, driveStreamOk, saveToDrive, linkOf, linkClean, linkPlayer, notesPdf, isNotes, videoAdd, openAddVideo, openAddNotes, openStartNotes, openPartners, pvApply });
 
 /* ---------------- clips: a part of a video worth showing the class ---------------- */
 // batch.clips: [{ id, u: the link | p: the path of a video file, a: where it starts (seconds), b: where it ends (or none), t: what it shows }]
@@ -707,10 +915,10 @@ function clipShow(id) {
   document.body.appendChild(el);
   const draw = () => {
     const all = list(), c = all[at]; if (!c) return clipClose();
-    const f = clipFile(c), vr = f.kind === 'link' && vidRef(f.data);
+    const f = clipFile(c), vr = keptId(f);
     if (vr && !vkSeen.has(vr)) { vkGet(vr).then(() => { if (clipStage && clipStage.el === el) draw(); }); return; }   // a kept video is read first
     const kv = vr && vkSeen.get(vr), url = f.kind === 'link' && !vr ? linkOf(f.data) : '';
-    const pl = vr ? (kv ? { [VIDEO_RX.test(kv.name) ? 'video' : 'audio']: kv.url } : null) : url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
+    const pl = vr ? (kv ? { [VIDEO_RX.test(kv.name) ? 'video' : 'audio']: kv.url } : drvRef(f.data) ? (dsOn && drivePickReady() ? { video: driveStreamUrl(drvRef(f.data)) } : linkPlayer(linkOf(f.data))) : null) : url ? linkPlayer(url) : { [VIDEO_RX.test(f.name) ? 'video' : 'audio']: mediaUrl(f) };
     const fr = pl && pl.frame ? clipFrame(pl.frame, c) : null;
     el.innerHTML = '<div class="clipbar"><b>' + esc(c.t) + '</b><span>' + (c.b != null ? fmtTime(c.a) + ' to ' + fmtTime(c.b) : 'from ' + fmtTime(c.a)) + (fr && !fr.stops && c.b != null ? ' · stop it at ' + fmtTime(c.b) : '') + '</span><span class="sp"></span>' +
       (all.length > 1 ? '<button data-cs="prev" aria-label="The clip before"' + (at ? '' : ' disabled') + '>‹</button><span>' + (at + 1) + ' of ' + all.length + '</span><button data-cs="next" aria-label="The next clip"' + (at < all.length - 1 ? '' : ' disabled') + '>›</button>' : '') +

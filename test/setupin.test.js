@@ -30,7 +30,7 @@ const MYP = {
   goals: ['Uses evidence', 'Designs a fair test'],
   attendance: false,
   slides: { agenda: false, textSizes: 'any', newSlide: 'two columns' },
-  marking: { pointsColor: 'credit', studentFileNames: false, onePdfPerStudent: false, coverNamesOnAnchors: false, findTypedNames: true, gradeSheetFromPapers: true, fullScreenSide: 'all' },
+  marking: { pointsColor: 'credit', studentFileNames: false, onePdfPerStudent: false, coverNamesOnAnchors: false, findTypedNames: true, gradeSheetFromPapers: true, fullScreenSide: 'all', listScores: 'points' },
 };
 const NAMES = ['Aria Testwell', 'Bram Sample', 'Cleo Fixture'];
 // A browser with work in it already: one class with students, a unit with an assignment, a term, a saved comment.
@@ -246,7 +246,7 @@ test('Copy my setup gives the same block back, with no student in it, and it set
   assert.equal(j.grading.rowTop, 8); assert.equal(j.programme, 'MYP');
   assert.deepEqual([j.classes[1].programme, j.classes[1].subjectGroup, j.classes[1].criteria[1], j.classes[1].boundaries.outOf, j.classes[1].boundaries.grades[0], j.classes[2].programme, j.classes[2].boundaries.grades[1]], ['MYP', 'sci', { letter: 'B', name: 'Inquiring and designing' }, 32, { grade: 7, from: 28 }, 'DP', { grade: 6, from: 68 }]);
   assert.deepEqual(j.slides, { agenda: false, textSizes: 'any', newSlide: 'Two columns' });
-  assert.deepEqual(j.marking, { studentFileNames: false, onePdfPerStudent: false, coverNamesOnAnchors: false, findTypedNames: true, pointsColor: 'credit', gradeSheetFromPapers: true, fullScreenSide: 'all' });
+  assert.deepEqual(j.marking, { studentFileNames: false, onePdfPerStudent: false, coverNamesOnAnchors: false, findTypedNames: true, pointsColor: 'credit', gradeSheetFromPapers: true, fullScreenSide: 'all', listScores: 'points' });
   assert.deepEqual(j.gradebook, { weights: { summative: 70, inClass: 30 }, emptyType: 'zero', extraCredit: { addsTo: 'inClass', cap: false }, retakes: 'latest' });
   const la = await lib(a.page), pa = await plan(a.page);
   await a.close();
@@ -335,5 +335,26 @@ test('people at the school and the spots for them come in, show in the preview, 
   assert.deepEqual(u.people.filter(p => !p.gone).map(p => p.name), ['Mr. Already Here']);
   assert.deepEqual(await page.evaluate(() => window.__gs.schNow().roles ? window.__gs.schNow().roles.list : null), await page.evaluate(() => window.__gs.SCH_ROLES));
   assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('to-do categories come in by name, in her order, with the role beside teaching renamed, go out again, and are undone', async () => {
+  const { page, close } = await openApp(browser, {});
+  const r = await page.evaluate(async () => {
+    const G = window.__gs, cats = () => G.tdCats().map(c => [c.id.startsWith('tc') ? 'new' : c.id, c.name, c.w]);
+    const S = G.stpRead({ gradingStudioSetup: 1, todo: { categories: ['Lesson planning', { name: 'Grading and feedback', words: ['conferences', 'labs'] }, { name: 'Grade-level lead', role: true }, { name: 'Clubs' }, { name: 'clubs' }, { name: '' }] } });
+    const diff = G.stpDiff(S, null).find(p => p.key === 'todo');
+    await G.stpApply(S, { todo: true });
+    const after = cats(), ex = JSON.parse(await G.stpExport()).todo;
+    await G.stpUndo();
+    return { read: S.todo, diff, after, ex, back: cats(), unknown: S.unknown };
+  });
+  assert.deepEqual(r.unknown, []);
+  assert.deepEqual(r.read.map(x => x.name), ['Lesson planning', 'Grading and feedback', 'Grade-level lead', 'Clubs'], 'the same name twice, and no name, are left out');
+  assert.match(r.diff.lines.join(' '), /To-do categories: <b>Lesson planning, Grading and feedback, Grade-level lead, Clubs<\/b>/);
+  assert.match(r.diff.sub, /Deleted: Administrative/);
+  assert.deepEqual(r.after, [['plan', 'Lesson planning', ''], ['grade', 'Grading and feedback', 'conferences, labs'], ['role', 'Grade-level lead', ''], ['new', 'Clubs', '']]);
+  assert.deepEqual(r.ex.categories, [{ name: 'Lesson planning' }, { name: 'Grading and feedback', words: ['conferences', 'labs'] }, { name: 'Grade-level lead', role: true }, { name: 'Clubs' }]);
+  assert.deepEqual(r.back, [['grade', 'Grading and feedback', ''], ['plan', 'Lesson planning', ''], ['admin', 'Administrative', ''], ['role', 'Leadership role', '']], 'undo puts the app’s own back');
   await close();
 });

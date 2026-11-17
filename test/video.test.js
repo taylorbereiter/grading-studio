@@ -92,7 +92,7 @@ test('A video…: the link, a notes page and a partner; marks and the grade are 
     'Bram Sample': ['Outline.pdf [pdf]', 'Presentation video.url [link] from Aria Testwell', 'Presentation notes.pdf [pdf] from Aria Testwell'],
     'Cleo Fixture': ['Outline.pdf [pdf]'],
   });
-  assert.match(await page.$eval('#grpBand', e => e.textContent), /with Bram Sample · marks and grade shared/);
+  assert.match(await page.$eval('#grpBand', e => e.textContent), /with Bram Sample ·/); assert.equal(await page.$eval('#grpBand [data-grpmode]', e => e.selectedOptions[0].textContent), 'Marks and grade shared');
   assert.match(await page.$eval('#paper .vlink .mhead', e => e.textContent), /Presentation video\s*drive\.google\.com/);
   assert.deepEqual(page.asked, [], 'only the link is kept: nothing is asked of the site');
   assert.equal(await page.$('#paper .vlink iframe'), null);
@@ -169,7 +169,7 @@ test('an assignment with no papers: a notes page for everyone on the roster, and
   await page.waitForSelector('#paper .vlink');
   assert.equal(await page.$('#paper .vlink [data-vplay]'), null, 'a site with no player of its own opens in its own window');
   assert.deepEqual((await files(page))['Bram Sample'], ['Persuasive speech notes.pdf [pdf]', 'Presentation video.url [link] from Aria Testwell']);
-  assert.match(await page.$eval('#grpBand', e => e.textContent), /with Bram Sample · marks and grade shared/);
+  assert.match(await page.$eval('#grpBand', e => e.textContent), /with Bram Sample ·/); assert.equal(await page.$eval('#grpBand [data-grpmode]', e => e.selectedOptions[0].textContent), 'Marks and grade shared');
   await settle(page);
   // the same name again in the same class is its own assignment
   await page.reload();

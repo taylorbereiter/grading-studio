@@ -83,7 +83,7 @@ function pdfLib() {   // pdf.js and its worker load only when a book is opened
 async function booksHtml() {
   const list = await booksList();
   if (!SP.book) return '<div class="sp-pad"><h3>Your books</h3>' + (list.length ? list.map(x => '<div class="sp-book"><button class="sp-link" data-sbook="' + x.id + '">' + esc(x.name) + '</button><span class="muted">' + (x.pages ? x.pages + ' pages' : '') + '</span><button class="btn sm ghost" data-sdel="' + x.id + '" title="Remove from this computer">×</button></div>').join('') : '<p class="muted">Add a PDF you use for planning, like your routines book or a textbook. It stays in this browser on this computer; nothing is uploaded.</p>') +
-    '<button class="btn sm" data-sa="addbook">+ Add a PDF…</button><input type="file" id="spPdfIn" accept="application/pdf,.pdf" hidden></div>';
+    '<button class="btn sm" data-sa="addbook">+ Add a PDF…</button>' + gpDrv('data-sa="addbook"', '', 1) + '<input type="file" id="spPdfIn" accept="application/pdf,.pdf" hidden></div>';
   const bk = list.find(x => x.id === SP.book) || {};
   return '<div class="sp-bar"><button class="btn sm ghost" data-sa="books">‹ Books</button><b class="sp-title">' + esc(bk.name || '') + '</b></div>' +
     '<div class="sp-bar"><input class="btn sm sp-find" data-sf="find" placeholder="Search this book" value="' + esc(SP.find) + '"><button class="btn sm' + (SP.view === 'toc' ? ' on' : ' ghost') + '" data-sa="toc">Contents</button></div>' +
@@ -294,7 +294,7 @@ async function panelClick(e) {
   const a = t.dataset.sa;
   if (a === 'close') return panelToggle(false);
   if (a === 'books') { SP.book = null; SP.pdf = null; return panelRender(); }
-  if (a === 'addbook') { const i = $('#spPdfIn'); i.onchange = () => bookAdd(i.files[0]); return i.click(); }
+  if (a === 'addbook') { const i = $('#spPdfIn'); i.onchange = () => bookAdd(i.files[0]); return gpClick(i); }
   if (a === 'prev') return bookPage(SP.page - 1);
   if (a === 'next') return bookPage(SP.page + 1);
   if (a === 'toc') { if (SP.view === 'toc' && !SP.hits) return spShow('page'); SP.hits = null; SP.find = ''; const f = document.querySelector('[data-sf="find"]'); if (f) f.value = ''; const tc = $('#spToc'); if (tc) tc.innerHTML = tocHtml(); return spShow('toc'); }

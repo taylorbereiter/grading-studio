@@ -81,6 +81,7 @@
 .pl-cmts{display:flex;flex-direction:column;gap:14px}.pl-cmt-s{display:flex;flex-direction:column;gap:6px}.pl-cmt-s>.link{text-align:left}
 .ls-mini{width:150px;height:84.4px;overflow:hidden;border-radius:var(--corner-1);border:2px solid transparent;flex:none}
 .ls-th.on .ls-mini{border-color:var(--accent)}
+.ls-th:focus{outline:none}
 .ls-mini .ls-slide{transform:scale(calc(146/1280));transform-origin:0 0}
 .ls-addslide{display:flex;gap:4px;margin-top:10px}.ls-addslide [data-a="addslide"]{flex:1}.ls-addslide [data-a="addpick"]{padding-left:8px;padding-right:8px}
 .ls-main{padding:12px 18px 30px;min-width:0}
@@ -218,6 +219,8 @@
 .ls-dl{position:absolute;top:5px;right:5px;width:26px;height:26px;border:1px solid var(--line-strong);border-radius:var(--corner-2);background:var(--surface);cursor:pointer;font-size:var(--text-body);line-height:1;color:var(--fg)}
 .ls-dl:hover{background:var(--accent-soft)}
 .pl-done{font-size:11.5px;font-weight:600;color:#2B8A3E}
+button.pfchip{border:1px solid currentColor;border-radius:var(--corner-pill);background:none;padding:2px 9px;font-family:inherit;cursor:pointer}
+button.pfchip:hover{background:var(--ok-soft)}
 .sp-acts{display:flex;flex-direction:column;gap:8px}.sp-acts .pl-chips{display:flex;flex-wrap:wrap;gap:4px}
 .sp-act{border:1px solid var(--line);border-radius:var(--corner-3);background:var(--surface)}
 .sp-act-h{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;width:100%;padding:8px 10px;cursor:pointer}
@@ -376,6 +379,13 @@
 .pl-looks{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:10px}
 .pl-look{display:flex;flex-direction:column;gap:5px;align-items:flex-start;border:2px solid var(--line);border-radius:9px;background:var(--surface);padding:6px;font-size:var(--text-control);color:var(--text);text-align:left}
 .pl-look:hover{border-color:var(--accent)}.pl-look.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.plx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px;margin-bottom:6px}
+.plx-card{display:flex;flex-direction:column;gap:4px;align-items:flex-start;border:2px solid var(--line);border-radius:var(--r-sm);background:var(--surface);padding:6px;font-size:var(--text-control);color:var(--text);text-align:left;min-width:0}
+.plx-card:hover{border-color:var(--accent)}.plx-card.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.plx-card .muted{font-size:var(--text-small);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.plx-th{display:flex;align-items:center;justify-content:center;width:100%;height:120px;background:var(--bg);border-radius:var(--r-sm);overflow:hidden}.plx-th img{max-width:100%;max-height:120px;object-fit:contain}
+.plx-tags{display:flex;flex-wrap:wrap;gap:4px}.plx-tags i{font-style:normal;font-size:var(--text-caption);padding:1px 7px;border-radius:var(--corner-pill);background:var(--accent-soft);color:var(--accent)}
+.plx-pages{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:var(--text-control)}.plx-pages label{display:flex;gap:4px;align-items:center}
 .pl-lmini{overflow:hidden;border-radius:var(--corner-1);border:1px solid var(--line);max-width:100%}.pl-lmini .ls-slide{transform-origin:0 0}
 .pl-lmine{display:flex;gap:8px;align-items:center;margin-top:14px;font-size:var(--text-body)}
 #dlgBox.box:has(.pl-looks){width:min(980px,96vw)}
@@ -450,6 +460,39 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .ls-top.head{min-height:52px}
 /* on a narrow screen the head stays one line: Find anything in the sidebar searches inside lessons too */
 @media (max-width:1100px){.ls-top.head .pl-find{display:none}}
+.lsn .ls-top .title{white-space:nowrap}
+/* Library: units, past lessons, activities and rubrics fold under one line, so Plan lessons is the Planner's main place */
+.rlib .rchev{width:14px;height:14px;margin-left:auto;transition:transform .15s}
+.rlib[aria-expanded="true"] .rchev{transform:rotate(90deg)}
+.rsub{display:flex;flex-direction:column;width:100%}
+.rsub .rnav{padding-left:22px;min-height:32px;font-size:var(--text-control)}
+.rsub .rnav svg{width:16px;height:16px}
+.pfold .rsub .rnav,.gsfull .rsub .rnav{padding:0}
+@media (max-width:1100px){.rsub .rnav{padding:0}.rlib .rchev{display:none}}
+.pfold .rlib .rchev,.gsfull .rlib .rchev{display:none}
+/* Plan next, at the top of Plan lessons */
+.pl-next{margin:14px 14px 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.pn-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:2px}
+.pn-head h2{font-size:var(--text-lead);margin:0}
+.pn-sub,.pn-more{color:var(--muted);font-size:var(--text-control)}
+.pn-more{margin:2px 0 0}
+.pn-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:38px;padding:4px 8px;border-radius:var(--corner-3);background:var(--bg);font-size:var(--text-body)}
+.pn-row .sp{flex:1}
+.pn-dot{width:10px;height:10px;border-radius:var(--corner-round);background:var(--cc)}
+.pn-w{color:var(--fg-2)}
+.pn-rec{background:var(--accent-soft);margin-bottom:6px}
+.pn-k{color:var(--accent);font-weight:600;font-size:var(--text-control)}
+.pn-pace{color:var(--fg-2);font-size:var(--text-control)}
+.pn-wk{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:var(--text-control);color:var(--fg-2)}
+.pn-ok{color:var(--ok);font-weight:700;margin-right:4px}
+.pn-dots{display:flex;flex-wrap:wrap;gap:4px}
+.pn-dots i{width:10px;height:10px;border-radius:var(--corner-round);background:var(--track)}
+.pn-dots i.pl{background:var(--bk-ic)}
+.pn-dots i.on{background:var(--accent)}
+.pn-wk.all .pn-dots i{background:var(--ok)}
+.pn-bar{position:relative;width:160px;height:8px;border-radius:var(--corner-pill);background:var(--track);overflow:hidden}
+.pn-bar i{position:absolute;inset:0 auto 0 0;background:var(--accent)}
+.pn-wk.all .pn-bar i{background:var(--ok)}
 </style>
 <nav class="rail" id="rail" aria-label="Main">
   <a class="rbrand" data-gs="#/" href="./#/" aria-label="Grading Studio, Today"><span class="rl">Grading <i>Studio</i></span><span class="rs" aria-hidden="true">G<i>S</i></span></a>
@@ -458,11 +501,14 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
   <a class="rnav" data-gs="#/todo" href="./#/todo" title="To do: your own list, with what the app noticed from your work"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="rl">To do</span></a>
   <a class="rnav" data-gs="#/school" href="./#/school" title="School resources: links, files and notes about your school"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5h17M5.5 20.5v-9M18.5 20.5v-9M3.5 11.5L12 5l8.5 6.5M10 20.5v-5h4v5M12 5V3h3"/></svg><span class="rl">School</span></a>
   <div class="rcap"><span class="rl">Planner</span></div>
-  <a class="rnav on" id="railPlanner" data-v="cal" href="#week" aria-current="page" title="Calendar: your lessons by week, or the whole semester"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Calendar</span></a>
+  <a class="rnav on" id="railPlanner" data-v="cal" href="#week" aria-current="page" title="Plan lessons: this week’s classes, and what to plan next"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg><span class="rl">Plan lessons</span></a>
+  <button class="rnav rlib" id="railLib" aria-expanded="false" aria-controls="railLibBox" title="Library: units, past lessons, activities and rubrics"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4v16H5zM10 4h4v16h-4zM15.5 4.6l3.8-1 3.7 15.6-3.8.9z"/></svg><span class="rl">Library</span><svg class="rchev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+  <div class="rsub" id="railLibBox" hidden>
   <button class="rnav" data-v="units" title="Units: each unit, its weeks and its files"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l8 4-8 4-8-4 8-4zM4 12l8 4 8-4M4 16l8 4 8-4"/></svg><span class="rl">Units</span></button>
   <button class="rnav" data-v="library" title="Past lessons: old decks and their handouts, to use again"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v4H4zM6 10v9h12v-9M10 14h4"/></svg><span class="rl">Past lessons</span></button>
   <button class="rnav" data-v="activities" title="Activities: the activity bank"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L5 13h6l-1 8 8-10h-6l1-8z"/></svg><span class="rl">Activities</span></button>
   <button class="rnav" data-v="bank" title="Rubrics: saved rubrics and grading scales"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16M4 14.5h16M10 5v14"/></svg><span class="rl">Rubrics</span></button>
+  </div>
   <div class="rcap"><span class="rl">Classes</span></div>
   <div id="railClasses"></div>
   <button class="rnav rtt" id="railTimetable" title="Your classes, when they meet, and the school calendar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg><span class="rl">Timetable</span></button>

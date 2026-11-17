@@ -15,14 +15,14 @@ function finishedHtml(l) {
   return '<div class="pl-fin" id="plFin"><div class="pl-fin-h"><h3>Finished PowerPoint</h3><span class="muted sp-small">' +
     (f ? 'The deck you’ll teach from. Uploading a new one replaces it; the old one is kept below.' : 'Upload the deck when it’s done. Its slides replace the ones here, and this version is kept under Versions.') +
     // One upload button: the file box takes a finished .pptx or a lesson .zip. Present is the lesson's one blue button.
-    '</span><span class="sp"></span><button class="btn sm" data-a="finup" title="A finished .pptx, or a lesson .zip with the PowerPoint and its handouts">' + (f ? 'Upload a newer one…' : 'Upload .pptx or .zip…') + '</button><input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
+    '</span><span class="sp"></span><button class="btn sm" data-a="finup" title="A finished .pptx, or a lesson .zip with the PowerPoint and its handouts">' + (f ? 'Upload a newer one…' : 'Upload .pptx or .zip…') + '</button>' + gpDrv('data-a="finup"', '', 1) + '<input type="file" id="finIn" accept=".pptx,.zip,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/zip" hidden></div>' +
     (f ? '<div class="pl-files"><div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(f.name) + '</b><span>' + finSize(f.size) + ' · uploaded ' + finWhen(f.at) + (finFresh(l) ? '' : ' · slides changed here since') + '</span></span>' +
       '<button class="btn sm" data-a="findl" data-id="' + f.id + '">Download</button></div></div>' : '') +
     (old.length ? '<details class="pl-fin-old"><summary>Older finished decks (' + old.length + ')</summary><div class="pl-files">' + old.map(o => '<div class="pl-file"><span class="pl-ft">PPT</span><span class="pl-fn"><b>' + esc(o.name) + '</b><span>' + finSize(o.size) + ' · uploaded ' + finWhen(o.at) + '</span></span>' +
       '<button class="btn sm ghost" data-a="findl" data-id="' + o.id + '">Download</button><button class="btn sm ghost" data-a="finback" data-id="' + o.id + '" title="Make this the finished deck again, and its slides the lesson’s slides">Use this one again</button></div>').join('') + '</div></details>' : '') +
     '</div>';
 }
-function finPick() { const i = $('#finIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) (/\.zip$/i.test(f.name) ? lessonZip(L.open, f) : finUpload(L.open, f)); }; i.click(); }
+function finPick() { const i = $('#finIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) (/\.zip$/i.test(f.name) ? lessonZip(L.open, f) : finUpload(L.open, f)); }; gpClick(i); }
 
 /* ---------- a lesson .zip: the finished deck plus the lesson's materials, in one upload ----------
    Layout (folders inside are fine; they're ignored):
@@ -45,11 +45,15 @@ async function lessonZip(l, file) {
   const files = names.filter(n => n !== mf);
   const byBase = b => files.find(n => baseName(n).toLowerCase() === baseName(b || '').toLowerCase());
   const decks = files.filter(n => /\.pptx$/i.test(n));
-  const deck = byBase(man.finished) || (decks.length === 1 ? decks[0] : decks.find(n => !n.includes('/')) || decks[0]);
-  let mats = Array.isArray(man.materials) ? man.materials.map(byBase).filter(Boolean) : files.filter(n => n !== deck);
+  // The assistant's answer: lesson.json carries the slides themselves, so the app makes the PowerPoint from the teacher's own
+  // template and the assistant's .pptx is only a preview (kept in Materials).
+  const back = man.lesson && Array.isArray(man.lesson.slides) && man.lesson.slides.length ? man.lesson : null;
+  const deck = back ? null : byBase(man.finished) || (decks.length === 1 ? decks[0] : decks.find(n => !n.includes('/')) || decks[0]);
+  let mats = Array.isArray(man.materials) ? [...(back && man.preview ? [man.preview] : []), ...man.materials].map(byBase).filter(Boolean) : files.filter(n => n !== deck);
   mats = mats.filter((n, i) => mats.indexOf(n) === i && n !== deck);
   const big = mats.filter(n => z[n].length > MAX_FILE); mats = mats.filter(n => z[n].length <= MAX_FILE);
-  if (!deck && !mats.length) return toast('Nothing to add in that .zip');
+  if (!deck && !mats.length && !back) return toast('Nothing to add in that .zip');
+  if (back) { editorCommit(); await saveVersion(l, 'Before ' + plAi() + '’s changes'); }
   // Materials first, so the deck's redraw shows them. A file with the same name is the newer copy.
   if (mats.length) {
     l.files = l.files || [];
@@ -62,14 +66,47 @@ async function lessonZip(l, file) {
     }
     await lPut(l);
   }
-  if (deck) await finUpload(l, new File([z[deck]], baseName(deck), { type: MIME.pptx }));
+  if (back) {
+    lessonBack(l, back);
+    for (const s of l.slides) if (s.video && ytId(s.video.url) && !s.video.thumb) { try { const v = await videoFrom(s.video.url); s.video = { ...v, start: s.video.start || v.start, title: s.video.title || v.title }; } catch { } }   // the assistant gives just the link
+    await lPut(l); L.cur = 0; lessonChanged(false); renderEditor();
+    return toast(PlAi() + '’s ' + l.slides.length + ' slides came in' + (mats.length ? ', with ' + mats.length + ' file' + (mats.length === 1 ? '' : 's') + ' in Materials' : '') + '. Check the changes slide by slide above the slides. Download .pptx makes the PowerPoint from your template.' +
+      (big.length ? ' Too big to keep (over 40 MB): ' + big.map(baseName).join(', ') + '.' : ''), 9000);
+  }
+  // A lesson sent to the assistant comes back as a .zip: its slides are offered slide by slide (Keep mine / Keep theirs).
+  if (deck) await finUpload(l, new File([z[deck]], baseName(deck), { type: MIME.pptx }), null, l.status === 'claude');
   else renderEditor();
   toast((deck ? 'Finished deck “' + baseName(deck) + '”' : 'No PowerPoint') + ' and ' + mats.length + ' material' + (mats.length === 1 ? '' : 's') + ' added from ' + file.name + '.' +
-    (big.length ? ' Too big to keep (over 40 MB): ' + big.map(baseName).join(', ') + '.' : '') + (deck ? ' The lesson before is under Versions.' : ''), 8000);
+    (big.length ? ' Too big to keep (over 40 MB): ' + big.map(baseName).join(', ') + '.' : '') + (deck ? (l.pending ? ' Check ' + plAi() + '’s changes slide by slide above the slides.' : ' The lesson before is under Versions.') : ''), 8000);
 }
 
-// Puts a finished deck on the lesson. file: a File or Blob with a name; keepId: reuse stored bytes (going back to an older one).
-async function finUpload(l, file, keepId) {
+// The slides from an assistant's lesson.json take the place of the lesson's, with the ones before kept on offer slide by slide.
+// A slide keeps its place's id (so the changes line up), and what can't travel as text stays: its picture, video picture,
+// screenshots for context, what the teacher asked for and the teacher's comments.
+function lessonBack(l, back) {
+  const was = l.slides, old = JSON.parse(JSON.stringify(was));
+  const slides = back.slides.slice(0, 80).map((x, i) => {
+    const o = was[i], y = x && typeof x === 'object' ? { ...x } : {};
+    delete y.id; delete y.img; delete y.ctx; delete y.box; delete y.fs;
+    const s = normSlide({ ...y, fmt: 2 });
+    if (o) {
+      s.id = o.id; s.ask = o.ask; if (o.ctx) s.ctx = o.ctx; if (o.box) s.box = o.box; if (o.fs) s.fs = o.fs;
+      if (o.img && (s.layout === 'picture' || s.layout === 'fullpic' || s.layout === 'textpic' || s.layout === 'picprompt')) s.img = o.img;
+      if (o.video && s.layout === 'video' && (!s.video || s.video.url === o.video.url)) s.video = o.video;
+      if (!(x && x.size)) s.size = o.size;
+      s.talk = [...o.talk, ...s.talk.filter(t => t.by === 'claude')];
+    }
+    return s;
+  });
+  if (!l.pending) l.pending = { at: Date.now(), before: old, title: l.title };
+  l.slides = slides; l.status = 'review';
+  if (typeof back.title === 'string' && back.title.trim() && !l.titleApart) l.title = back.title.trim().slice(0, 200);
+  if (typeof back.claudeNote === 'string') l.claudeNote = back.claudeNote.slice(0, 2000);
+}
+
+// Puts a finished deck on the lesson. file: a File or Blob with a name; keepId: reuse stored bytes (going back to an older one);
+// review: the deck is the assistant's answer, so the slides before it stay on offer slide by slide (review.js changesOf).
+async function finUpload(l, file, keepId, review) {
   if (!/\.pptx$/i.test(file.name || '')) return toast('That isn’t a .pptx file');
   if (file.size > MAX_FILE) return toast('That file is too big (over 40 MB)');
   let slides;
@@ -81,12 +118,13 @@ async function finUpload(l, file, keepId) {
   const finals = (l.finals || []).filter(o => o.id !== id);
   if (l.final && l.final.id !== id) finals.unshift(l.final);
   // Comments and notes for Claude stay with the slide they were on, matched by position.
-  slides.forEach((s, i) => { const was = l.slides[i]; if (was) { s.ask = was.ask; s.talk = was.talk; if (was.ctx) s.ctx = was.ctx; } });
+  slides.forEach((s, i) => { const was = l.slides[i]; if (was) { s.ask = was.ask; s.talk = was.talk; if (was.ctx) s.ctx = was.ctx; if (review) s.id = was.id; } });
+  if (review) { l.pending = l.pending || { at: Date.now(), before: JSON.parse(JSON.stringify(l.slides)), title: l.title }; l.status = 'review'; }
   l.slides = slides.map(s => normSlide({ ...s, fmt: 2 }));
   l.finals = finals;
   l.final = { id, name: file.name, size: file.size, at: Date.now(), sig: finSig(l) };
   L.cur = 0; await lPut(l); lessonChanged(false); renderEditor();
-  toast('Finished deck saved: ' + slides.length + ' slides. The lesson before it is under Versions.', 6000);
+  if (!review) toast('Finished deck saved: ' + slides.length + ' slides. The lesson before it is under Versions.', 6000);
 }
 async function finBack(l, id) {
   const o = (l.finals || []).find(x => x.id === id), b = o && await fileBlob(id); if (!b) return toast('That file is missing');

@@ -16,8 +16,21 @@ function langPack(k) {
   if (!Object.prototype.hasOwnProperty.call(LANG_NAMES, k)) return null;
   if (window.__gsLangs && window.__gsLangs[k]) return window.__gsLangs[k];
   if (!Object.prototype.hasOwnProperty.call(LANG_PACKED, k)) return null;
-  if (!LANG_OPEN[k]) { try { const b = atob(LANG_PACKED[k]), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); LANG_OPEN[k] = new Function(fflate.strFromU8(fflate.inflateSync(u)))(); } catch (e) { console.error(e); return null; } }
+  if (!LANG_OPEN[k]) { try { LANG_OPEN[k] = new Function(fflate.strFromU8(fflate.inflateSync(unpack85(LANG_PACKED[k]))))(); } catch (e) { console.error(e); return null; } }
   return LANG_OPEN[k];
+}
+// What the build packs (the languages and the sample in a double-click copy, pdf.js's worker) is written in 85 characters, 5 for every
+// 4 bytes, rather than base64's 64: a sixteenth smaller. The characters are the printable ones but " \ and <, so the text can sit in a
+// script's string. build.js (pack85) writes it; a last group of 1 to 3 bytes is written with one character more than its bytes.
+function unpack85(s) {
+  let A = unpack85.a;
+  if (!A) { A = unpack85.a = new Uint8Array(128); let d = 0; for (let c = 33; c < 127 && d < 85; c++) if (c !== 34 && c !== 92 && c !== 60) A[c] = d++; }
+  const n = s.length, full = Math.floor(n / 5), rest = n % 5, out = new Uint8Array(full * 4 + (rest ? rest - 1 : 0));
+  for (let g = 0, o = 0; g * 5 < n; g++) {
+    let v = 0; for (let j = 0; j < 5; j++) { const i = g * 5 + j; v = v * 85 + (i < n ? A[s.charCodeAt(i)] : 84); }
+    for (let j = 0; j < 4 && o < out.length; j++) out[o++] = Math.floor(v / 2 ** (24 - 8 * j)) & 255;
+  }
+  return out;
 }
 // Fetches a language that isn't here yet. The app itself never needs this (the page fetched the chosen one as it opened); the tests do.
 const langLoad = k => langPack(k) || !Object.prototype.hasOwnProperty.call(LANG_NAMES, k) ? Promise.resolve(!!langPack(k)) : new Promise(done => {
@@ -38,6 +51,7 @@ function langFill(t, m, P) {
   const s = Array.isArray(t) ? t[+m[1] === 1 ? 0 : 1] : t;
   return s.replace(/\{(t?)(\d)\}/g, (x, w, i) => { const v = m[+i] == null ? '' : m[+i]; if (!w) return v; const h = trPiece(v, P); return h != null ? h : (trPiece(langCap(v), P) || v); });
 }
+const langAnd = (s, F) => F.and == null ? s : s.replace(/ and (?!.* and )/, F.and);
 const LANG_ATT = { present: 'attp', late: 'attl', 'absent, reason unknown': 'atta', excused: 'atte' };
 const LANG_FILLS = [
   // the focus timer and the daily goal (src/focus.js)
@@ -52,7 +66,8 @@ const LANG_FILLS = [
   ['tkpace', /^about (\d+) minutes? a paper$/], ['fcsofar', /^from (\d+) papers? so far$/], ['tkso', /^(\S.*) so far$/], ['tklessons', /^(\d+) lessons?$/], ['tkdays', /^(\d+) days? reached the goal$/],
   // planning your grading (src/gradeplan.js)
   ['gpleft', /^about (.+) left$/], ['gpsets', /^(\d+) sets?$/], ['gpdays', /^(\d+) days?$/],
-  ['tkcount', /^Time counts while the marking screen or the Planner is in front and you have done something there in the last (\d+) minutes?\.$/],
+  ['tkcount', /^Grading time counts while the marking screen is in front and you have done something there in the last (\d+) minutes?\.$/],
+  ['tkplan', /^Planning time counts in focus sessions on a lesson, and after (\d+) minutes? of steady work in the Planner, but not during your classes\.$/], ['tkpe', /^After (\d+) minutes of steady work$/],
   // Find anything: the teacher's AI assistant, to open beside the app (src/beside.js)
   ['besideopen', /^Open (.+) beside Grading Studio$/],
   // the Gradebook tab
@@ -159,6 +174,12 @@ const LANG_FILLS = [
   ['askai', /^Ask (.{1,30})$/], ['backai', /^Bring back (.{1,30})’s feedback$/], ['cmtfor', /^Comment for (.+?)( \(optional\)\. It shows on the Grades tab so you can copy it\.)?$/, (m, F, P) => langFill(m[2] ? F.cmtforL : F.cmtfor, [0, m[1] === 'the student' ? (trPiece('the student', P) || m[1]) : m[1]], P)],
   ['clickcp', /^Click any score or comment to copy it, then paste it into (.+)\. Click a name to open that paper\.( Pick a roster under Setup to see this list in roster order\.)?$/, (m, F, P) => langFill(F.clickcp, [0, m[1] === 'your gradebook' ? (trPiece('your gradebook', P) || m[1]) : m[1]], P) + (m[2] ? ' ' + (trPiece(m[2].trim(), P) || m[2]) : '')],
   ['rosterord', /^(.+) roster order$/], ['nscored', /^(\d+) of (\d+) scored$/],
+  // group work, in the band above the paper and the student list (src/groups.js): the partners' names stay, joined with the language's "and"
+  ['grpwith', /^with (.+) ·$/, (m, F, P) => langFill(F.grpwith, [0, langAnd(m[1], F)], P)], ['grpsplit', /^pages shared with (.+), each graded on their own$/, (m, F, P) => langFill(F.grpsplit, [0, langAnd(m[1], F)], P)],
+  ['grplist', /^Group work: (.+), (shared notes and own scores|marked and graded once)$/, (m, F, P) => langFill(m[2] === 'marked and graded once' ? F.grplist : F.grplisto, [0, langAnd(m[1], F)], P)],
+  ['grpjust', /^Just (\S+)$/], ['grpfor', /^New (typed notes|marks and typed notes|scores and typed notes|marks, scores and typed notes) are just for (.+)\. Their comment is always their own\.$/, (m, F, P) => { const t = F['grpfor' + ['typed notes', 'marks and typed notes', 'scores and typed notes', 'marks, scores and typed notes'].indexOf(m[1])]; return t == null ? null : langFill(t, [0, m[2]], P); }],
+  // a student's strengths and concerns, on their card (src/watch.js)
+  ['sendto', /^Send to (.+)$/],
   // what a chart says of itself to a screen reader: the names in it stay, the words between them are put into the language
   ['ariaband', /^(?=.*(?:class middle \d|missing)).+ (?:\d+%|missing|–)(?:, class middle \d+%)?$/, (m, F, P) => m[0].replace(/ missing(?=, class middle |\. |$)/g, ' ' + (trPiece('missing', P) || 'missing')).replace(/, class middle (\d+%)(?=\. |$)/g, (x, v) => langFill(F.cmid, [0, v], P))],
   ['ariamove', /^.+ (?:up|down) [\d.]+$/, (m, F, P) => m[0].replace(/ (up|down) ([\d.]+)(?=, |$)/g, (x, w, v) => ' ' + langFill(w === 'up' ? F.mvup : F.mvdown, [0, v], P))],
@@ -189,9 +210,9 @@ function trWith(s, P, ctx) {
 const tr = (s, ctx) => LANG_PACK && typeof s === 'string' ? trWith(s, LANG_PACK, ctx) : s;
 // The parts of the page that are put into the language, and what inside them is never touched (what a teacher typed).
 const LANG_ROOTS = '#rail, #fcPanel, #vTime, #vHome, #vHelp, #welcome, #findDlg, #setLang, #vSettings, #vClass .clshead, #vClass .lkhead, #vClass .lkoffer, #vClass .ctabs, #vClass .ctools, #vClass .board, #classHint, #dlgBox[data-lg], #askDlg[data-lg], ' +
-  // the marking screen: its top bar and menus, the student list, the tools, the bar above each paper and the chips beside each page, and the score panel (never a page itself)
-  '#app .top, #side, #tools, #paper .who, #pane2 .sph, #spGrip, #pane2 .sptool, #bsMenu, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
-const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""]), #railClasses .rnav, #classSel option:not([value=""]), #crumbClass, #stuList .nm, #paper .who h2, #paper .fhead > span:first-child, #grade .cn > span';
+  // the marking screen: its top bar and menus, the student list, the tools, the bar above each paper and its group work band, the chips beside each page, and the score panel (never a page itself); and on a student’s card, their strengths and concerns
+  '#app .top, #side, #tools, #paper .who, #pane2 .sph, #spGrip, #pane2 .sptool, #bsMenu, #paper .lchip, #paper .rchip, #grade, #zoomPill, #colL, #colR, #openRep, #grpBand, #pcWl, ' + ['gradebook', 'students', 'attendance', 'seating', 'missing', 'student', 'charts', 'goals', 'reports'].map(t => '#classPanel[data-tab="' + t + '"]').join(', ');
+const LANG_RAW = 'script, style, textarea, [contenteditable], [data-raw], .kname, #railClasses .rl, .wllang, .tbn, .trow:not(.none) b, .hlpa p:not(.hlpgo), .hlpa ol, kbd, .rbrand, .wlbrand, #homeDate, .aiWord, .updnotes, #vSettings .nt b, #meSys option:not([value]), #meAi option:not([value]), #wlSys option:not([value]), #vClass .clshead h1, #vClass .uhead .nm, #vClass .card .t, #classPanel .bklink, #classPanel .bkpop > b, #bkaRows td:first-child, #bkaUnit option:not([value=""]), #peopleTbl td.nm a, .attname, #attDate, .attunk a, .misw, .mishead h3, .misaddr, .seat span, .seatchip, #seatSel b, .tsvg .tlb, #aClass option:not([value=""]), #aUnit option:not([value=""]), #railClasses .rnav, #classSel option:not([value=""]), #crumbClass, #stuList .nm, #paper .who h2, #paper .fhead > span:first-child, #grade .cn > span, #pcWl .wlhd, #pcWl .wltime p, #pcWl .extag';
 const LANG_ATTRS = ['title', 'aria-label', 'placeholder'];
 const langCtx = el => { const c = el.closest('[data-lc]'); return c ? c.dataset.lc : ''; };
 // What has been put into the language is not looked at again: a word in the language can be an English word too (German "Note" is "Grade", and "Note" in English is something else).

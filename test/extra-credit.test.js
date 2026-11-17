@@ -3,7 +3,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./helpers/chrome');
-const { openApp, openZip, goToStudent, score, classPage, pick } = require('./helpers/app');
+const { noStamps, openApp, openZip, goToStudent, score, classPage, pick } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 
 let browser, zip;
@@ -19,12 +19,21 @@ test('extra credit on one paper goes on top of the score, read on the scale firs
   await pick(page, '[data-gxc]');
   await page.waitForSelector('#xcIn');
   await page.type('#xcIn', '1');
-  await page.waitForFunction(() => /11\.5/.test(document.querySelector('#grade .total').textContent));
-  assert.match(await page.$eval('#grade .total', e => e.textContent), /11\.5\/ 12101%/);
+  await page.waitForFunction(() => /\+8%/.test(document.querySelector('#grade .total').textContent));
+  assert.match(await page.$eval('#grade .total', e => e.textContent), /^10\.5\/ 1293% \+8%/, 'the score she gave, then the extra credit on its own');
   assert.match(await page.$eval('#grade .total', e => e.textContent), /10\.5 earned \+ 1 extra credit/);
   const g = await page.evaluate(() => { const G = window.__gs, s = G.state().batch.students[0]; return { g: G.gradeOf(s), xc: s.grade.xc }; });
   assert.equal(g.xc, 1);
   assert.equal(g.g.total, 11.5); assert.equal(g.g.pct, 101, '93% + 1/12 of 100'); assert.equal(g.g.base, 10.5);
+  // The list and the score stamp show the score she gave and the extra credit on its own, never an odd total.
+  const sc = () => page.$eval('#stuList .stu[data-i="0"] .sc', e => e.textContent);
+  const stampSays = () => page.evaluate(() => window.__gs.scoreStampText(window.__gs.gradeOf(window.__gs.state().batch.students[0])));
+  assert.equal(await sc(), '93%+8%');
+  assert.equal(await page.$eval('#stuList .stu[data-i="0"]', b => b.dataset.sv), '93%+');
+  assert.equal(await stampSays(), '10.5/12 = 93% + 8% extra credit');
+  await page.click('[data-scway="pts"]');
+  assert.equal(await sc(), '10.5\u2009/\u200912+1');
+  await page.click('[data-scway="pct"]');
   // It stays with the paper: away and back, then Remove takes it off.
   await goToStudent(page, 1); await goToStudent(page, 0);
   assert.equal(await page.$eval('#xcIn', i => i.value), '1');
@@ -36,10 +45,12 @@ test('extra credit on one paper goes on top of the score, read on the scale firs
   await pick(page, '[data-gxc]'); await page.waitForSelector('#xcIn');
   await page.click('[data-xcu="pct"]');
   await page.type('#xcIn', '5');
-  await page.waitForFunction(() => /98%/.test(document.querySelector('#grade .total').textContent));
+  await page.waitForFunction(() => /93% \+5%/.test(document.querySelector('#grade .total').textContent));
   const pc = await page.evaluate(() => { const G = window.__gs, s = G.state().batch.students[0]; return { g: G.gradeOf(s), xc: s.grade.xc, u: s.grade.xcU }; });
   assert.deepEqual([pc.xc, pc.u, pc.g.pct, pc.g.total], [5, 'pct', 98, 11.1]);
   assert.match(await page.$eval('#grade .total', e => e.textContent), /10\.5 earned \+ 5% extra credit/);
+  assert.equal(await sc(), '93%+5%');
+  assert.equal(await stampSays(), '10.5/12 = 93% + 5% extra credit');
   // Back to points: the 5 now means 5 points.
   await page.click('[data-xcu="pts"]');
   assert.equal(await page.evaluate(() => window.__gs.gradeOf(window.__gs.state().batch.students[0]).total), 15.5);
@@ -98,7 +109,7 @@ test('an extra credit entry gives points to some or all students, adds them to t
   assert.match(await page.$eval('#bkTab tbody tr:nth-child(3) td.bkterm', t => t.dataset.tn), /Extra credit \+2 on the grade · kept at 100%/);
   // The assignments' own percents and averages don't move.
   assert.deepEqual(await page.$$eval('#bkTab tbody tr:first-child td', t => t.map(x => x.textContent.trim()).slice(1, 6)), ['80%', '80%', '+2', '80.00%', '80.00%']);
-  const stored = await page.evaluate(() => window.__gs.state().lib.classes[0].units[0].items.find(x => x.type === 'xc'));
+  const stored = noStamps(await page.evaluate(() => window.__gs.state().lib)).classes[0].units[0].items.find(x => x.type === 'xc');
   assert.deepEqual(stored.typed, { max: null, s: { 'Aria Testwell': { v: 2 }, 'Cleo Fixture': { v: 2 }, 'Dov Madeup': { v: 3 } } });
   assert.equal(stored.xcTo, 'term');
   // A cell changes in place, like any typed-in score.

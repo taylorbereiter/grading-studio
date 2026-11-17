@@ -17,17 +17,21 @@ function kmClose(focus) {
 function kmOpen(b) {
   kmClose();
   const m = b.nextElementSibling; if (!m || !m.classList.contains('km')) return;
-  m.hidden = false; m.classList.remove('flip'); b.setAttribute('aria-expanded', 'true'); kmOn = b;
-  // near the bottom of its panel it opens upward, so it is never cut off
+  m.hidden = false; m.classList.remove('flip', 'kxr', 'kxl'); b.setAttribute('aria-expanded', 'true'); kmOn = b;
+  // near the bottom of its panel it opens upward, and near a side it lines up with the other edge of its button, so it is never cut off
   const host = b.closest('#paper, #grade, .side'), r = m.getBoundingClientRect(), hr = host && host.getBoundingClientRect();
   if (hr && r.bottom > hr.bottom - 6 && b.getBoundingClientRect().top - hr.top > r.height + 8) m.classList.add('flip');
+  const lo = Math.max(hr ? hr.left : 0, 0) + 6, hi = Math.min(hr ? hr.left + host.clientWidth : innerWidth, innerWidth) - 6;
+  const br = b.getBoundingClientRect();   // only when the other side has more room, so a narrow window doesn't just move the cut to the left
+  if (r.right > hi && !m.classList.contains('right') && br.right - lo > hi - br.left) m.classList.add('kxr');
+  else if (r.left < lo && m.classList.contains('right') && hi - br.left > br.right - lo) m.classList.add('kxl');
   const first = kmItems(m)[0]; if (first) first.focus({ preventScroll: true });
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-km]');
   if (b) return b === kmOn ? kmClose() : kmOpen(b);
   if (!kmOn) return;
-  if (e.target.closest('.km [data-armed]')) return;   // Remove asks for a second click: the menu waits for it
+  if (e.target.closest('.km [data-armed], .km [data-kmstay]')) return;   // Remove asks for a second click, and an item that opens more choices under it: the menu waits
   kmClose();
 });
 // A press on the page only closes the menu. It mustn't also mark the paper underneath.
@@ -85,7 +89,7 @@ function lfChips() {
     const quiet = n === 0 && listFilter !== k && k !== 'all' && k !== 'todo' && k !== 'flag';   // No paper, Late and Left out show only when there are some
     return '<button class="mitem lf" data-lf="' + k + '"' + id + ' aria-pressed="' + (listFilter === k) + '" title="' + tip + '"' + (quiet ? ' hidden' : '') + '>' + name(k) + ' <span class="v">' + n + '</span></button>';
   }).join('');
-  return '<div class="lfilt" role="group" aria-label="Show in the list">' + kmWrap(LF_ICON + '<span class="t">' + name(listFilter) + '</span>', 'class="lfnow' + (listFilter === 'all' ? '' : ' on') + '" id="lfBtn" aria-label="Show in the list: ' + name(listFilter) + '" title="Which papers the list shows: ' + name(listFilter) + '. Previous and Next follow it."', items, 'right') + '</div>';
+  return '<div class="lfilt" role="group" aria-label="Show in the list">' + kmWrap(LF_ICON + '<span class="t">' + name(listFilter) + '</span>', 'class="lfnow' + (listFilter === 'all' ? '' : ' on') + '" id="lfBtn" aria-label="Show in the list: ' + name(listFilter) + '" title="Which papers the list shows: ' + name(listFilter) + '. Previous and Next follow it."', items, 'right') + '</div>' + listWayBtns();
 }
 function lfDraw() { const el = $('#lfSlot'); if (el && batch) el.innerHTML = lfChips(); }
 function lfSet(k) {

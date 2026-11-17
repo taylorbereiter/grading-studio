@@ -81,7 +81,7 @@ test('Class setup holds the roster, grading, the school link and the class’s p
   await pick(page, '[data-urename="u1"]'); await answerDlg(page, { typed: 'Stories' });
   await page.waitForFunction(() => document.querySelector('.uhead .nm').textContent === 'Stories');
   // an assignment: at most one button, and one ⋯ that holds Edit
-  assert.equal(await shown(page, '[data-card="i1"] .row button'), 1);
+  assert.equal(await shown(page, '[data-card="i1"] .row button'), 2, 'Add papers… (a late paper on typed-in scores) and the ⋯');
   await pick(page, '[data-edit-asg="i1"]'); await page.waitForSelector('#aClass');
   await page.keyboard.press('Escape');
   // + Unit sits under the units
@@ -95,7 +95,7 @@ test('the gradebook has one blue button and one More menu', async () => {
   const { page, close } = await openApp(browser, { seed: seed() });
   await goTo(page, '#/class/c1/gradebook'); await page.waitForSelector('#bkTab');
   assert.deepEqual(await page.$$eval('.bkbar > button, .bkbar > .kmw > button', xs => xs.filter(x => x.checkVisibility()).map(x => x.textContent.trim())), ['+ Add scores', 'More ▾']);
-  assert.deepEqual(await page.$$eval('#bkMore + .km .mitem', xs => xs.map(x => x.firstChild.textContent)), ['Show points', 'Term setup', 'Add extra credit…', 'Import scores…', 'Copy the table', 'Leave students out…']);
+  assert.deepEqual(await page.$$eval('#bkMore + .km .mitem', xs => xs.map(x => x.firstChild.textContent)), ['Show points', 'Term setup', 'Add extra credit…', 'Import scores…', 'Entry list', 'Copy the table', 'Leave students out…']);
   await pick(page, '[data-bkshow="pts"]');
   await page.waitForFunction(() => document.querySelector('#bkMore + .km [data-bkshow]').dataset.bkshow === 'pct');
   assert.equal(await page.$eval('#bkMore + .km [data-bkshow]', b => b.firstChild.textContent), 'Show percent');

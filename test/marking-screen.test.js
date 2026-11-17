@@ -75,13 +75,13 @@ test('the dock fits a short window', async () => {
 test('+ Add is one menu: a file, pasted text, a video, a notes page, or pages from a scan', async () => {
   const { page, close } = await standard();
   for (const s of ['#addFileBtn', '#pasteTextBtn', '#addScanBtn']) assert.equal(await shown(page, s), false, s + ' waits in the menu');
-  assert.deepEqual(await page.evaluate(() => window.__gs.findRows().filter(r => r.group === 'This paper').map(r => r.label)), ['Add a file…', 'Add pasted text…', 'Add a video…', 'Add a notes page…', 'Add pages from a scan…', 'Arrange pages'], 'Find anything reaches them too');
+  assert.deepEqual(await page.evaluate(() => window.__gs.findRows().filter(r => r.group === 'This paper').map(r => r.label)), ['Add a file…', 'Add pages from Google Drive…', 'Add pasted text…', 'Add a video…', 'Add a notes page…', 'Add pages from a scan…', 'Arrange pages'], 'Find anything reaches them too');
   await page.click('#addMenuBtn');
   assert.equal(await page.$eval('#addMenuBtn', b => b.getAttribute('aria-expanded')), 'true');
-  assert.deepEqual(await texts(page, '#addMenuBtn + .km .mitem'), ['A file…', 'Pasted text…', 'A video…', 'A notes page…', 'From a scan…']);
+  assert.deepEqual(await texts(page, '#addMenuBtn + .km .mitem'), ['A file…', 'From Google Drive…', 'Pasted text…', 'A video…', 'A notes page…', 'From a scan…']);
   assert.equal(await page.evaluate(() => document.activeElement.id), 'addFileBtn', 'the first choice has the keyboard');
   await page.keyboard.press('ArrowDown');
-  assert.equal(await page.evaluate(() => document.activeElement.id), 'pasteTextBtn');
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'addDriveBtn');
   await page.keyboard.press('ArrowUp'); await page.keyboard.press('ArrowUp');
   assert.equal(await page.evaluate(() => document.activeElement.id), 'addScanBtn', 'the arrows wrap');
   // a key meant for the menu never reaches the paper: → would have opened the next student
@@ -90,10 +90,30 @@ test('+ Add is one menu: a file, pasted text, a video, a notes page, or pages fr
   await page.keyboard.press('Escape');
   assert.equal(await shown(page, '#addFileBtn'), false);
   assert.equal(await page.evaluate(() => document.activeElement.id), 'addMenuBtn', 'Escape hands the keyboard back to the button');
-  await page.click('#addMenuBtn'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('Enter');
+  await page.click('#addMenuBtn'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('Enter');
   await page.waitForSelector('#dlg:not([hidden]) #dlgBox');
   assert.match(await page.$eval('#dlgBox h2', h => h.textContent), /Paste/);
   assert.equal(await shown(page, '#addFileBtn'), false, 'picking something closes the menu');
+  await close();
+});
+
+test('+ Add and the paper’s ⋯ open fully inside the paper, whatever its width (they used to slide under Score)', async () => {
+  const { page, close } = await standard();
+  for (const w of [1440, 1180, 980]) {
+    await page.setViewport({ width: w, height: 900 }); await settle(page);
+    for (const sel of ['#addMenuBtn', '#whoMore']) {
+      await page.click(sel);
+      const m = await box(page, sel + ' + .km'), p = await page.$eval('#paper', e => { const r = e.getBoundingClientRect(); return { l: r.left, r: r.left + e.clientWidth }; });
+      assert.ok(m.l >= p.l && m.r <= p.r, sel + ' menu at ' + w + 'px wide sits inside the paper: menu ' + m.l + '–' + m.r + ', paper ' + p.l + '–' + p.r);
+      await page.keyboard.press('Escape');
+    }
+  }
+  // with room to spare it still opens under the button, starting at its left edge
+  await page.setViewport({ width: 1440, height: 900 }); await settle(page);
+  await page.$eval('#addMenuBtn', b => { b.closest('.kmw').style.marginRight = '400px'; });
+  await page.click('#addMenuBtn');
+  const b = await box(page, '#addMenuBtn'), m = await box(page, '#addMenuBtn + .km');
+  assert.ok(Math.abs(m.l - b.l) < 1, 'left-aligned when it fits: button ' + b.l + ', menu ' + m.l);
   await close();
 });
 

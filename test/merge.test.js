@@ -3,7 +3,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const SCALE12 = { 12: 100, 11: 95, 10: 91, 9: 86, 8: 82, 7: 77, 6: 73, 5: 68, 4: 64, 3: 60 };   // the app's own, which is in app.js
-const M = vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'src', 'merge.js'), 'utf8') + ';({ mergeWork, mergeScan, mergeStates, mergeFiles, mergeEdits, mergeLib, mergeLs, stampData, revsOf, tabMerge, tabDiffers, stampLib, libPrev, recHash, decideRec, workVec, vJoin, snapKeep, canon, libLinked, libHold, libFollow, rubricsDiffer, workScored })', { SCALE12 });
+const M = vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'src', 'merge.js'), 'utf8') + ';({ mergeWork, mergeScan, mergeStates, mergeFiles, mergeEdits, mergeLib, mergeLs, stampData, revsOf, tabMerge, tabDiffers, stampLib, libPrev, recHash, decideRec, workVec, vJoin, snapKeep, canon, libLinked, libHold, libFollow, rubricsDiffer, workScored, focusMerge, planTimeMerge, taughtInMerge, mergePlan })', { SCALE12 });
 const plain = v => JSON.parse(JSON.stringify(v));
 const rec = (rubric, extra = {}) => ({ f: {}, g: { rubric, points: '', comment: '', ...(extra.g || {}) }, h: {}, ...extra.rec });
 // A save on one computer: only what changed gets moved on, as the app does it.
@@ -784,4 +784,75 @@ test('attendance: taken on two computers, every day is kept, and a day both chan
   const d = plain(a); cls(d).att['2026-09-05'] = { t: 8000, m: {} };
   const m = M.mergeLib(stamped(c, 'lap', 9000, a), stamped(d, 'home', 8000, a));
   assert.equal(cls(m.lib).att['2026-09-01'].off, 1); assert.ok(cls(m.lib).att['2026-09-05']);
+});
+
+test('time logs from two devices: each day takes the larger of each count, never the sum, and what is the device’s own stays', () => {
+  const d0 = new Date(); d0.setHours(12, 0, 0, 0);
+  const day = n => { const d = new Date(d0); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const mac = { day: day(0), base: { b1: 3 }, last: 'mark:b1', carry: { w: 'mark:b1', t: 5, k: 'set' }, pace: [[600, 2]],
+    days: { [day(0)]: { p: 4, s: 1200, sm: 1200, g: 1500, n: 2, a: { i1: 1500 }, pa: { i1: 4 } }, [day(1)]: { g: 300, a: { '': 300 } } },
+    add: [{ id: 'h1', d: day(1), k: 'g', s: 600, x: '' }, { id: 'h2', d: day(1), k: 'l', s: 900, x: '' }], qd: ['q1'] };
+  const phone = { day: day(0), base: { b9: 1 }, last: 'mark:b9',
+    days: { [day(0)]: { p: 2, s: 1800, g: 900, n: 1, a: { i1: 600, i2: 300 }, pa: { i2: 2 } }, [day(2)]: { s: 600, n: 1 }, [day(500)]: { s: 60 } },
+    add: [{ id: 'h3', d: day(2), k: 'g', s: 300, x: '' }], addGone: ['h2'], qd: ['q2'] };
+  const set = M.mergeLs({ 'gs.focus': JSON.stringify(mac) }, { 'gs.focus': JSON.stringify(phone) });
+  const m = JSON.parse(set['gs.focus']);
+  assert.deepEqual(m.days[day(0)], { p: 4, s: 1800, sm: 1200, g: 1500, n: 2, a: { i1: 1500, i2: 300 }, pa: { i1: 4, i2: 2 } });
+  assert.deepEqual(m.days[day(1)], mac.days[day(1)]);
+  assert.deepEqual(m.days[day(2)], { s: 600, n: 1 });
+  assert.equal(m.days[day(500)], undefined, 'past the 400 days kept');
+  assert.deepEqual(m.add.map(x => x.id), ['h1', 'h3'], 'joined by id; one taken off on the phone stays off');
+  assert.deepEqual(m.addGone, ['h2']); assert.deepEqual(m.qd, ['q1', 'q2']);
+  for (const k of ['day', 'base', 'last', 'carry', 'pace']) assert.deepEqual(m[k], mac[k], k + ' stays this device’s own');
+  // merging again, either way round, counts nothing twice and changes nothing
+  assert.deepEqual(plain(M.mergeLs({ 'gs.focus': set['gs.focus'] }, { 'gs.focus': JSON.stringify(phone) })), {});
+  const back = JSON.parse(M.mergeLs({ 'gs.focus': JSON.stringify(phone) }, { 'gs.focus': set['gs.focus'] })['gs.focus']);
+  delete back.days[day(500)];   // its own old day is the phone's to clear
+  assert.deepEqual(back.days, m.days); assert.deepEqual(back.base, phone.base);
+  // a browser with no log yet takes the days, not the other device's own state
+  const fresh = JSON.parse(M.mergeLs({}, { 'gs.focus': JSON.stringify(mac) })['gs.focus']);
+  assert.deepEqual(fresh.days, mac.days); assert.equal(fresh.base, undefined); assert.equal(fresh.carry, undefined);
+  // the Planner's planning time: by day and by lesson, the larger; titles kept here first
+  const pa = { days: { [day(0)]: { l: 600, a: { L1: 600 }, f: 300, n: 1 } }, names: { L1: 'Sonnets' }, ids: ['r1'] };
+  const pb = { days: { [day(0)]: { l: 900, a: { L1: 300, L2: 600 } }, [day(3)]: { l: 120, a: { '': 120 } } }, names: { L1: 'Old title', L2: 'Volta' }, ids: ['r2'] };
+  const pm = plain(M.planTimeMerge(pa, pb));
+  assert.equal(pm.toA, true);
+  assert.deepEqual(pm.out.days, { [day(0)]: { l: 900, a: { L1: 600, L2: 600 }, f: 300, n: 1 }, [day(3)]: { l: 120, a: { '': 120 } } });
+  assert.deepEqual(pm.out.names, { L1: 'Sonnets', L2: 'Volta' }); assert.deepEqual(pm.out.ids, ['r1', 'r2']);
+  assert.equal(M.planTimeMerge(pm.out, pb).toA, false, 'twice is the same as once');
+});
+
+test('notes from the phone onto a lesson: each by its key, the later kept, put-on (f) kept from either side, old ones left out', () => {
+  const now = Date.UTC(2026, 10, 17), DAY = 864e5;
+  const a = { items: { 'L1|k1|2026-11-16': { slide: 3, of: 5, x: 'Phone first', t: now - 2 * DAY }, 'L1|k2|2026-11-16': { slide: 5, of: 5, x: '', t: now - DAY, f: 1 }, 'L9|k1|2026-08-01': { slide: 1, of: 2, x: 'Long ago', t: now - 70 * DAY } } };
+  const b = { items: { 'L1|k1|2026-11-16': { slide: 4, of: 5, x: 'Phone again', t: now - DAY }, 'L1|k2|2026-11-16': { slide: 5, of: 5, x: '', t: now - DAY }, 'L2|k1|2026-11-17': { slide: 2, of: 3, x: 'New', t: now } } };
+  const m = plain(M.taughtInMerge(a, b, now));
+  assert.equal(m.toA, true);
+  assert.deepEqual(m.out.items, {
+    'L1|k1|2026-11-16': { slide: 4, of: 5, x: 'Phone again', t: now - DAY },   // written later
+    'L1|k2|2026-11-16': { slide: 5, of: 5, x: '', t: now - DAY, f: 1 },   // the same note: put on the lesson on one side is put on
+    'L2|k1|2026-11-17': { slide: 2, of: 3, x: 'New', t: now },
+  });
+  assert.deepEqual(plain(M.taughtInMerge(b, a, now)).out.items, m.out.items, 'the same either way round');
+  assert.equal(M.taughtInMerge(m.out, b, now).toA, false, 'twice is the same as once');
+  assert.equal(M.taughtInMerge(null, null, now).toA, false, 'nothing on either side writes nothing');
+  assert.deepEqual(plain(M.taughtInMerge(null, b, now)).out, b);
+});
+
+test('the copies for the phone of lessons too big to send: each by its time, none older than the lesson, a deleted lesson takes its copy', () => {
+  const c = (id, updated, t = 'copy') => ({ id, title: t, updated, slides: [{ id: 's', img: { src: 'gsblob:' + 'a'.repeat(64) + ':5:image/png' } }] });
+  const A = { lessons: { l2: { id: 'l2', title: 'Small again', updated: 300 } }, kv: {}, gone: {}, lite: { l1: c('l1', 200, 'Newer here'), l2: c('l2', 250), l3: c('l3', 100) } };
+  const B = { lessons: { l1: { id: 'l1', title: 'Last that fit', updated: 50 } }, kv: {}, gone: { 'l:l3': 150 }, lite: { l1: c('l1', 120, 'Older there'), l4: c('l4', 90, 'Only there') }, big: { l5: { title: 'x' } } };
+  const m = plain(M.mergePlan(A, B));
+  assert.deepEqual(Object.keys(m.lite).sort(), ['l1', 'l4']);
+  assert.equal(m.lite.l1.title, 'Newer here');
+  assert.equal(m.lessons.l1.title, 'Last that fit', 'Drive keeps the last copy that fit beside it');
+  assert.ok(!m.lite.l2, 'the lesson itself is newer: its copy goes');
+  assert.deepEqual(m.gone, { 'l:l3': 150 }, 'deleted after its copy was made');
+  assert.ok(!('big' in m), 'the list of lessons too big to send is the sync’s own (drive.js)');
+  // made again after it was deleted elsewhere: the copy stays and the deletion is forgotten
+  const again = plain(M.mergePlan({ lessons: {}, kv: {}, gone: {}, lite: { l3: c('l3', 400) } }, B));
+  assert.ok(again.lite.l3); assert.ok(!again.gone['l:l3']);
+  // none on either side: no lite at all, as before
+  assert.ok(!('lite' in plain(M.mergePlan({ lessons: {}, kv: {}, gone: {} }, { lessons: {}, kv: {}, gone: {} }))));
 });

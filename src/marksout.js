@@ -11,7 +11,7 @@ const MARKS_OPTS = [
 const MARKS_ASK = 'The attached file has my marks for one assignment: rubric scores, my comments and every mark I made, with each student as a code instead of a name. Please read it all first.\n\nThen help me spot patterns across the class: what most students did well, the mistakes that came up again and again, which rubric rows were hardest and why, and anything in my own marking that looks inconsistent. Refer to students only by their code.';
 function marksOpts() { const sh = shareState(); return (sh.marksOpt ||= Object.fromEntries(MARKS_OPTS.map(([k]) => [k, true]))); }
 const marksFiles = st => st.files.filter(f => viewable(f) && (Object.values(f.marks || {}).some(l => l && l.length) || (f.kami && Object.values(f.kami).some(k => k && k.notes && k.notes.length))));
-const marksOnPage = (f, p) => ((f.marks || {})[p] || []).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
+const marksOnPage = (f, p) => marksMine((f.marks || {})[p] || [], f).concat((f.kami && f.kami[p] && f.kami[p].notes) || []);
 const marksPages = f => [...new Set(Object.keys(f.marks || {}).concat(Object.keys(f.kami || {})))].map(Number).filter(p => marksOnPage(f, p).length).sort((a, b) => a - b);
 // What the file says about a student who has nothing in it: no marks, no score, no comment.
 const marksEmpty = st => !marksFiles(st).length && gradeOf(st).total == null && !noScore(st) && !String(st.grade.comment || '').trim();
@@ -75,6 +75,7 @@ async function marksOf(st, o) {
           else if (m.t === 'stamp') {
             const name = stampName(m.k);
             if (m.k === 'score') { if (o.comments) lines.push('score sticker: ' + mdq(m.text)); continue; }
+            if (m.k === 'crit') { if (o.comments) lines.push('criterion score sticker: ' + mdq((m.name ? m.name + ' ' : '') + m.text)); continue; }
             count(name);
             if (o.stamps) lines.push(isSticker(m.k) ? 'sticker: ' + name : name + (o.words ? on(quoteOf(lineNear(words, m.x, m.y, 60), rx)) : ''));
           } else if (m.t === 'hl') { ink.hl++; count('Highlight'); if (o.words) { const q = quoteOf(wordsIn(words, markRects(m)), rx); if (q) lines.push('highlighted: ' + mdq(q)); } }

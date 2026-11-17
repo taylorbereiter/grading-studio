@@ -19,9 +19,14 @@ async function kdo(name, mode, fn) {
 const kget = (name, k) => kdo(name, 'readonly', o => o.get(k)).catch(() => null);
 // keptRead: the list has been read from the browser, so a download missing from it is really gone
 let keptMeta = new Map(), keptRead = false;
+// The last save of work and its row (keepWork). Reading the list waits for it: a row read while its save is still going is the one
+// from before, and would put the list a paper behind (src/focus.js fcGain counts from it).
+let keepBusy = Promise.resolve();
 async function loadKept() {
+  await keepBusy;
   try { const all = await kdo('meta', 'readonly', o => o.getAll()); keepOk = true; keptMeta = new Map((all || []).map(m => [m.id, m])); keptRead = true; } catch { keptMeta = new Map(); }
   await keptFbCounts();
+  await keptMarkCounts();
   if (typeof fcRender === 'function') fcRender();
   if (!batch) renderLib();
   renderBackup();
@@ -36,6 +41,20 @@ async function keptFbCounts() {
       // none complete: nothing to store
       const work = await kget('work', m.id), fb = work && workCounts(work).fb; if (!fb) continue;
       const n = { ...m, fb };
+      await kdo('meta', 'readwrite', o => o.put(n, m.id)); keptMeta.set(m.id, n);
+    } catch (e) { console.error(e); }
+  }
+}
+// Work saved before papers marked were counted (or by a tab not updated yet) has no count of them: worked out from the saved work,
+// so Focus never falls back on scores, which count grades only typed in.
+async function keptMarkCounts() {
+  for (const m of keptMeta.values()) {
+    if (m.marked != null || !m.n) continue;
+    try {
+      const work = await kget('work', m.id); if (!work) continue;
+      // a save while the work was read has counted it already
+      const now = keptMeta.get(m.id); if (!now || now.marked != null) continue;
+      const n = { ...now, marked: workCounts(work).marked };
       await kdo('meta', 'readwrite', o => o.put(n, m.id)); keptMeta.set(m.id, n);
     } catch (e) { console.error(e); }
   }
@@ -101,6 +120,8 @@ async function keepPapers(b, label, list, again) {
     const m = { ...(keptMeta.get(b.id) || {}), id: b.id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (keptMeta.get(b.id) || {}).asg, ...more };
     await kdo('meta', 'readwrite', o => o.put(m, b.id)); keepOk = true; keptMeta.set(b.id, m);
     folderPapers(b);
+    // signed in with Google: new papers go up to her Drive straight away (drive.js, dvUp after the sync), so her phone has them on the way home
+    if (more.papers && G.email && !sampleOn()) setTimeout(() => syncNow(), 1500);
   } catch (e) {
     console.error(e);
     if (list) toast('This browser couldn’t keep these papers, usually because it’s out of room. Your marks are still saved, but the papers won’t reopen by themselves or go in a take-home file: drop the download in again to reopen it.', 12000);
@@ -108,16 +129,19 @@ async function keepPapers(b, label, list, again) {
 }
 let keepT = null;
 function keepWork(b, data) {
-  const m = { ...(keptMeta.get(b.id) || { id: b.id, name: b.name }), n: b.students.length, t: data.t };
+  const m0 = keptMeta.get(b.id), m = { ...(m0 || { id: b.id, name: b.name }), n: b.students.length, t: data.t };
   // the day's count of finished papers starts from where this download stood (src/focus.js)
   if (typeof fcSeen === 'function') fcSeen(b.id);
   // fb is there only while some feedback is complete
-  delete m.fb; delete m.sent; delete m.sentT; Object.assign(m, workCounts(data));
+  delete m.fb; delete m.sent; delete m.sentT; delete m.joined; Object.assign(m, workCounts(data));
+  if (m.joined) m.n = b.students.length - m.joined;   // partners count once
   // ret was set by any export alone: never read again
   delete m.ret; if (!(data.returned && data.returned.ok)) delete m.back;
+  // the papers this save finished go into a Focus session that is running (src/focus.js)
+  if (typeof fcGain === 'function') fcGain(m0, m);
   keptMeta.set(b.id, m);
   if (typeof fcRender === 'function') fcRender();
-  return kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })
+  return keepBusy = kdo('work', 'readwrite', o => o.put(data, b.id)).then(() => kdo('meta', 'readwrite', o => o.put(m, b.id))).then(() => { keepOk = true; return true; })
     // so Try again reopens a store that went away
     .catch(e => { keepOk = false; console.error(e); if (e && e.name === 'InvalidStateError') keepDbP = null; keepDb().catch(() => { keepDbP = null; }); return false; });
 }
@@ -129,7 +153,9 @@ function cardOfKept(id) {
   return null;
 }
 async function reopenKept(id, assignment) {
-  const rec = await paperGet(id);
+  let rec = await paperGet(id);
+  // waiting in her Google Drive (drive.js): fetched once, kept here from then on
+  if (!rec && DV.files[id] && G.email) { try { toast('Getting the papers from your Google Drive…', 60000); rec = await dvPull(id, (n, t) => toast('Getting the papers from your Google Drive: ' + n + ' of ' + t + '…', 60000)); toast('The papers are here now.'); } catch (e) { toast(e.message, 8000); return; } }
   if (!rec) { toast('The papers for this one aren’t kept in this browser. Drop the download in again.'); return; }
   await intake(rec.entries, rec.label, assignment || cardOfKept(id), true);
 }
@@ -183,12 +209,12 @@ async function loadAdded() {
     const f = await makeFile(r.path, r.data); f.added = r.added; f.akey = r.key; if (r.from) f.from = r.from; st.files.push(f);
   }
 }
-function pickAdd(st) {
+function pickAdd(st, drive) {
   const inp = document.createElement('input');
   // any kind of file
   inp.type = 'file'; inp.multiple = true;
   inp.onchange = () => addFiles(st, [...inp.files].map(f => ({ path: f.name, file: f })));
-  inp.click();
+  if (drive) gpOn(inp); else inp.click();
 }
 async function addFiles(st, list, quiet) {
   list = list.filter(e => e.file && !junk(e.path) && !houseFile(e.path));

@@ -139,7 +139,8 @@ test('group work in a download: Group work… gives another student their own co
   const bram = await studentNamed(page, 'Bram Sample');
   assert.deepEqual(bram.files.map(f => [f.name, f.from]), [['Other.pdf', null], ['Poster.pdf', 'Aria Testwell']]);
   await page.waitForFunction(() => /Group work… \(1\)/.test((document.querySelector('#paper [data-shfile]') || {}).textContent || ''));
-  assert.deepEqual((await listChips(page))['Bram Sample'], ['group']);
+  assert.deepEqual((await listChips(page))['Bram Sample'], []);
+  assert.ok(await page.$eval('#stuList', e => [...e.querySelectorAll('.stugrp .stu .nm')].some(n => /Bram Sample/.test(n.textContent))), 'Bram sits with Aria in a group box');
   await settle(page);
   await page.reload(); await appReady(page);
   await openZip(page, zip);

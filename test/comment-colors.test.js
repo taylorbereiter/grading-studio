@@ -180,3 +180,31 @@ test('Enter finishes a text box too; Shift Enter is a new line', async () => {
   assert.deepEqual(page.errors, []);
   await close();
 });
+
+test('comments and text boxes can be yellow (a dark amber that reads on white); the pen colors stay as they were', async () => {
+  const { page, close } = await openApp(browser);
+  await open(page);
+  await page.evaluate(() => window.__gs.setTool('note'));
+  await clickAt(page, 0, 300, 120);
+  await page.waitForSelector('.pop [data-nc="yellow"]');
+  assert.deepEqual(await page.$$eval('.pop [data-nc]', bs => bs.map(b => b.dataset.nc)), ['red', 'yellow', 'blue', 'green', 'purple', 'black'], 'yellow comes after red');
+  await page.keyboard.type('Think about this.');
+  await page.click('.pop [data-nc="yellow"]');
+  await page.click('.pop [data-a="ok"]');
+  assert.equal((await marks(page))[0].color, '#D08A00', 'stored on the mark, so exports and returned papers show it too');
+  assert.equal(await page.evaluate(() => window.__gs.state().pages[0].boxes.length), 1);
+  await page.evaluate(() => window.__gs.undo());
+  assert.equal((await marks(page)).length, 0, 'one undo takes the comment away');
+  await setTool(page, 'text');
+  await clickAt(page, 0, 100, 400);
+  await page.waitForSelector('.pg .edbar [data-tc="yellow"]');
+  await page.keyboard.type('Check this');
+  await page.click('.pg .edbar [data-tc="yellow"]');
+  await page.keyboard.press('Escape');
+  assert.equal((await marks(page))[0].color, '#A86400', 'a text box takes the darker amber, since its words are drawn in the color itself');
+  await setTool(page, 'pen');
+  assert.equal(await page.$('#tools [data-ink="yellow"]'), null, 'no yellow pen');
+  assert.equal(await page.evaluate(() => localStorage.getItem('gs.ink')), null, 'the pen keeps its own color');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
