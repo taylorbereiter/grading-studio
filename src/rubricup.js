@@ -87,7 +87,7 @@ function rubricSays(su) {
 // The part of a box that brings in a rubric. o.now: a Use it button puts it on the card straight away (else the box's own Save does, with ruPut).
 function ruHtml(su, o) {
   return '<div class="field rubup" id="rubUp"><label>Rubric</label><span class="rusays" id="ruSays">' + rubricSays(su) + '</span>' +
-    '<span class="rurow"><button type="button" class="btn sm" id="ruPick">Bring in a rubric…</button><span class="muted">Word, PDF or a picture. Rows are read from a table where they can be.</span></span><div id="ruGot"' + (o && o.now ? ' data-now' : '') + ' hidden></div></div>';
+    '<span class="rurow"><button type="button" class="btn sm" id="ruPick">Bring in a rubric…</button>' + (gpHost() ? '<button type="button" class="btn sm ghost" id="ruDrive">From Google Drive…</button>' : '') + '<span class="muted">Word, PDF or a picture. Rows are read from a table where they can be.</span></span><div id="ruGot"' + (o && o.now ? ' data-now' : '') + ' hidden></div></div>';
 }
 // Wires it up. Returns { got(): what was read and picked, or null }.
 function ruWire(box, it, onUse) {
@@ -108,14 +108,15 @@ function ruWire(box, it, onUse) {
   box.addEventListener('change', e => { if (!got) return; if (e.target.id === 'ruRows') got.rows = e.target.checked; if (e.target.id === 'ruCopy') got.copy = e.target.checked; }, live);
   box.addEventListener('click', async e => {
     if (e.target.closest('#ruUse')) { if (!got || (!got.rows && !got.copy)) return toast('Tick what to do with it first'); const ok = ruPut(it, got); if (ok) { $('#ruSays').innerHTML = rubricSays(it.setup); got = null; show(); if (onUse) onUse(); } return; }
-    if (!e.target.closest('#ruPick')) return;
+    const rp = e.target.closest('#ruPick, #ruDrive'); if (!rp) return;
     const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.docx,.docm,.pdf,.png,.jpg,.jpeg,.heic,.heif,.webp,image/*,application/pdf';
     inp.onchange = async () => {
       const f = inp.files[0]; if (!f) return;
       try { const r = await rubricRead(f); got = { r, rows: !!r.rows.length, copy: !r.rows.length }; show(); }
       catch (err) { console.error(err); toast('That file couldn’t be opened as a Word file, PDF or picture'); }
     };
-    inp.click();
+    inp.dataset.office = 1;   // a Google Doc comes down as a Word file, so its table's rows can be read
+    if (rp.id === 'ruDrive') gpOn(inp); else inp.click();
   }, live);
   return { got: () => got };
 }
