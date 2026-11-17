@@ -178,7 +178,7 @@ function groupSetOwn(st, own) {
   const clearAdj = () => { for (const s of sts) delete s.grade.adj; };
   if (mode && groupOwn(g)) {   // between the two ways with shared notes
     g.own = mode;
-    if (mode === 2) for (const s of sts) if (s !== st) for (const f of adjFields(sts)) if (adjGet(s.grade, f) !== adjGet(st.grade, f)) (s.grade.adj ||= {})[f] = 1;   // st's score is the group's; what differs stays each one's own
+    if (mode === 2) { for (const s of sts) if (s !== st) for (const f of adjFields(sts)) if (adjGet(s.grade, f) !== adjGet(st.grade, f)) (s.grade.adj ||= {})[f] = 1; }   // st's score is the group's; what differs stays each one's own
     else clearAdj();
   } else if (mode) {
     g.own = mode; g.ns = notesSig(st.grade);
@@ -188,6 +188,8 @@ function groupSetOwn(st, own) {
   } else {
     delete g.own; delete g.ns; clearAdj();
     for (const m of files) stampsJoin(m, st.key);
+    // typed notes: the others' paragraphs just for them go, st's own become everyone's
+    if (st.grade.tn && Array.isArray(st.grade.tn.l)) { const l = tnMine(st, st.grade.tn.l).map(x => { const y = { ...x }; delete y.o; return y; }); if (l.length) st.grade.tn = { l }; else delete st.grade.tn; }
     touchGrade(st);
   }
   groupSync();
@@ -257,9 +259,10 @@ function groupBand(st) {
     const g = groupOf(st), marks = !!groupFileOf(g, st), own = groupOwn(g), adj = groupAdj(g), mode = adj ? 'adj' : own ? 'own' : 'all';
     if (groupJust !== st.key) groupJust = null;   // a new student starts on Both
     const name = shownName(st, batch.students.indexOf(st)), first = name.split(/[\s,]+/)[0] || name;
-    const both = adj ? (marks ? 'Marks and scores you give now go to every partner' : 'Scores you give now go to every partner') : 'Marks you make now show on every partner’s paper';
-    const one = adj ? (marks ? 'Marks and scores you give now are just for ' : 'Scores you give now are just for ') + esc(name) + '. Their comment is always their own.' : 'Marks you make now show only on ' + esc(name) + '’s paper. Their comment is always their own.';
-    const just = own && (marks || adj) ? '<span class="seg grpjust" role="group" aria-label="What you do now goes to"><button type="button" data-grpjust="0" aria-pressed="' + !groupJust + '" title="' + both + '">Both</button><button type="button" data-grpjust="1" aria-pressed="' + !!groupJust + '" title="' + one + '">Just ' + esc(first) + '</button></span>' : '';
+    const what = [marks && 'marks', adj && 'scores', 'typed notes'].filter(Boolean), list = what.length > 2 ? what.slice(0, -1).join(', ') + ' and ' + what[what.length - 1] : what.join(' and ');
+    const both = 'New ' + list + ' go to every partner';
+    const one = 'New ' + list + ' are just for ' + esc(name) + '. Their comment is always their own.';
+    const just = own ? '<span class="seg grpjust" role="group" aria-label="What you do now goes to"><button type="button" data-grpjust="0" aria-pressed="' + !groupJust + '" title="' + both + '">Both</button><button type="button" data-grpjust="1" aria-pressed="' + !!groupJust + '" title="' + one + '">Just ' + esc(first) + '</button></span>' : '';
     const opt = (v, t) => '<option value="' + v + '"' + (v === mode ? ' selected' : '') + '>' + t + '</option>';
     return '<div class="grpband" id="grpBand"><b>Group work</b><span>with ' + esc(groupNames(mates)) + ' ·</span>' +
       '<select class="grpmode" data-grpmode aria-label="What the group shares" title="Share everything, give the group one score you can change for one partner, or give each partner their own score">' + opt('all', marks ? 'Marks and grade shared' : 'Grade shared') + opt('adj', 'Group score, adjust a partner') + opt('own', marks ? 'Shared notes, own scores' : 'Own scores and comments') + '</select>' + (just ? '<span class="muted">Write for</span>' + just : '') + '<span style="flex:1"></span>' +

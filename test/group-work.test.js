@@ -229,6 +229,62 @@ test('Group score, adjust a partner: one score for the group, a row changed just
   await close();
 });
 
+test('Shared notes, own scores: typed notes written with Just one partner are theirs alone, the rest stays shared; back to one grade', async () => {
+  const { page, close } = await openApp(browser);
+  await page.setViewport({ width: 1440, height: 900 });
+  const zip = zipOf({
+    'Aria Testwell/Talk.pdf': await makePaper({ title: 'Our talk' }),
+    'Bram Sample/Other.pdf': await makePaper({ title: 'Something else' }),
+  });
+  await openZip(page, zip);
+  await waitPaper(page);
+  await pick(page, '#paper [data-shfile]');
+  await page.waitForSelector('#grpOwn');
+  await page.click('#grpOwn');
+  await shareTo(page, 'Bram Sample');
+  await page.click('#dlgBox .bf [data-cancel]');
+  await waitPaper(page);
+  const calm = () => page.evaluate(() => new Promise(r => setTimeout(r, 350)));
+  const notes = async () => { await page.evaluate(() => window.__gs.spOpen('typed')); await page.waitForSelector('#spBody .tn .tned'); await calm(); };
+  const seen = () => page.evaluate(() => window.__gs.tnLines().map(x => x.s));
+  const end = async () => { await page.click('#spBody .tned > .tnp:last-child'); await page.keyboard.press('End'); };
+
+  await notes();
+  await page.click('#spBody .tned'); await page.keyboard.type('Both: good hook');
+  await calm(); await settle(page);
+  await goToStudent(page, await idx(page, 'Bram Sample'));
+  await notes();
+  assert.deepEqual(await seen(), ['Both: good hook'], 'shared notes reach Bram');
+  await page.click('#grpBand [data-grpjust="1"]');
+  await page.waitForFunction(() => document.querySelector('#grpBand [data-grpjust="1"]').getAttribute('aria-pressed') === 'true');
+  await end(); await page.keyboard.press('Enter'); await page.keyboard.type('Bram: speak up');
+  await calm();
+  assert.deepEqual(await seen(), ['Both: good hook', 'Bram: speak up']);
+  assert.equal(await page.$$eval('#spBody .tned > .tnp[data-o]', l => l.length), 1, 'his own paragraph is marked');
+  await settle(page);
+
+  // Aria doesn't see it; what she writes on Both still reaches Bram, and his paragraph stays his.
+  await goToStudent(page, await idx(page, 'Aria Testwell'));
+  await notes();
+  assert.deepEqual(await seen(), ['Both: good hook']);
+  await end(); await page.keyboard.press('Enter'); await page.keyboard.type('Both: strong ending');
+  await calm(); await settle(page);
+  const kept = await page.evaluate(() => window.__gs.state().batch.students.find(s => s.key === 'Bram Sample').grade.tn.l.map(x => (x.o ? 'just:' : '') + x.s));
+  assert.deepEqual(kept, ['Both: good hook', 'just:Bram: speak up', 'Both: strong ending']);
+  await goToStudent(page, await idx(page, 'Bram Sample'));
+  await notes();
+  assert.deepEqual(await seen(), ['Both: good hook', 'Bram: speak up', 'Both: strong ending']);
+
+  // Back to one grade from Aria's paper: Bram's own paragraph goes.
+  await goToStudent(page, await idx(page, 'Aria Testwell'));
+  await page.waitForSelector('#grpBand [data-grpmode]');
+  await page.select('#grpBand [data-grpmode]', 'all');
+  await answerDlg(page);
+  await page.waitForFunction(() => window.__gs.state().batch.students.every(s => s.grade.tn && s.grade.tn.l.length === 2 && s.grade.tn.l.every(x => !x.o)));
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
 test('pages given to several in a scan split: Mark and grade once for the group joins them', async () => {
   const { page, close } = await openApp(browser);
   await pickFile(page, '#scanIn', await makePaper({ title: 'Posters', pages: 2 }), 'Posters.pdf');
