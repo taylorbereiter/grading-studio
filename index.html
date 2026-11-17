@@ -5204,7 +5204,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.66";
+  const APP_VERSION = "1.28.67";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -33071,7 +33071,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.66":["On a phone: a More tab with your Google account, Sync now, updates, Help and Settings, and a bar above the tabs with Update now whenever a new version is ready. Today asks you to sign in with Google instead of choosing a folder."]};
+const WHATS_NEW = {"1.28.67":["Group work has a third way: Group score, adjust a partner. You score the group once, and with Just and a partner’s name above the paper you can change one criterion for that partner only. The rest keeps following the group score, and Use group score puts it back."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
