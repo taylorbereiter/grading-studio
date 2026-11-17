@@ -424,7 +424,7 @@ function renderEditor() {
     '<button class="btn sm" data-a="layout" title="Pick a layout for this slide">Layout: ' + esc(LAYOUTS[s.layout]) + ' ▾</button>' +
     '<button class="btn sm" data-a="look" title="Colors and background for this lesson">Look: ' + esc(LOOKS[lookOf(l)].name) + '</button>' + rtToolHtml() +
     '<span id="lsSize"></span>' +   // the text size of the box last clicked (boxes.js), filled in once the slide is drawn
-    (hasPic(s) ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' : '') +
+    (hasPic(s) ? '<button class="btn sm" data-a="pic">' + (s.img ? 'Change picture' : 'Add picture') + '</button>' + gpDrv('data-a="pic"', 'btn sm', 1) : '') +
     (s.layout === 'video' ? '<button class="btn sm" data-a="vid">' + (s.video ? 'Change video' : 'Add video link') + '</button>' + (s.video ? '<a class="btn sm ghost" href="' + esc(videoLink(s.video)) + '" target="_blank" rel="noopener">Watch</a>' : '') : '') +
     '<span class="sp"></span><button class="btn sm ghost" data-a="up" title="Move earlier">↑</button><button class="btn sm ghost" data-a="down" title="Move later">↓</button><button class="btn sm ghost" data-a="dup" title="Make a copy of this slide">Duplicate</button><button class="btn sm ghost" data-a="del" title="Delete this slide">Delete</button></div>' +
     '<div class="ls-stagewrap" id="lsWrap"><div class="ls-stage" id="lsStage"><div class="ls-slide">' + slideHtml(s, l, true) + '</div></div></div>' +
@@ -828,7 +828,7 @@ function splitOverflow() {
 }
 
 /* ---------- pictures ---------- */
-function pickPicture() { const i = $('#lsPicIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) setPicture(f); }; i.click(); }
+function pickPicture() { const i = $('#lsPicIn'); if (!i) return; i.onchange = () => { const f = i.files[0]; i.value = ''; if (f) setPicture(f); }; gpClick(i); }
 // A picture file made small enough to keep in a lesson: 1600 px is plenty for a slide.
 async function shrinkPic(file) {
   const url = URL.createObjectURL(file);
@@ -1012,7 +1012,7 @@ async function askClaude(l) {
 /* ---------- import ---------- */
 function importLesson() {
   openDlg('<div class="bh"><h2>Import a lesson</h2></div><div class="bb"><p class="muted" style="margin-top:0">Choose a lesson file (.gslesson, from another computer or another teacher), a .lesson.json from ' + plAi() + ', or a lesson pack (.zip) of past lessons with their files. You can also paste a lesson below. A .lesson.json with the same id replaces the one here; a lesson file or a pack never replaces a lesson you have.</p>' +
-    '<button class="btn" id="imF">Choose a file…</button><input type="file" id="imIn" accept=".gslesson,.json,application/json,.zip,application/zip" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
+    '<button class="btn" id="imF">Choose a file…</button>' + gpBtn('#imIn', 'btn') + '<input type="file" id="imIn" accept=".gslesson,.json,application/json,.zip,application/zip" hidden><textarea id="imT" rows="8" style="width:100%;margin-top:10px" placeholder="Or paste the lesson here"></textarea></div>' +
     '<div class="bf"><button class="btn" data-x>Cancel</button><button class="btn primary" data-ok>Import pasted text</button></div>', true);
   $('#imF').onclick = () => $('#imIn').click();
   $('#imIn').onchange = async () => { const f = $('#imIn').files[0]; if (!f) return; closeDlg(); if (isShareFile(f)) return shareOpen(f); if (/\.zip$/i.test(f.name)) return packImport(f); importLessonText(await f.text(), f.name); };
@@ -1103,7 +1103,7 @@ function openTimetable() {
       '<h3 style="margin:18px 0 6px;font-size:15px">Days off</h3><textarea id="ttOff" rows="4" style="width:100%" placeholder="One per line: 2026-12-25 Christmas">' + esc(draft.daysOff.map(d => d.date + ' ' + d.label).join('\n')) + '</textarea>' +
       '<h3 style="margin:14px 0 6px;font-size:15px">Dates to show (not days off)</h3><textarea id="ttEv" rows="4" style="width:100%" placeholder="One per line: 2026-11-09 to 2026-11-13 Midterms">' + esc(draft.events.map(e => e.date + (e.to ? ' to ' + e.to : '') + ' ' + e.label).join('\n')) + '</textarea>' +
       '<h3 style="margin:18px 0 6px;font-size:15px">Slide template</h3><div class="ls-mrow" id="ttTpl"><span class="' + (draft.template ? '' : 'muted') + '">' +
-      (draft.template ? 'Your own: ' + esc(draft.tplName) : 'The plain one built in: white, 16:9.') + '</span><button class="btn sm" data-tpl>' + (draft.template ? 'Pick another…' : 'Use my school’s template…') + '</button>' +
+      (draft.template ? 'Your own: ' + esc(draft.tplName) : 'The plain one built in: white, 16:9.') + '</span><button class="btn sm" data-tpl>' + (draft.template ? 'Pick another…' : 'Use my school’s template…') + '</button>' + gpDrv('data-tpl', '', 1) +
       (draft.template ? '<button class="btn sm ghost" data-tplplain>Use the plain one</button>' : '') + '</div>' +
       '<p class="muted" style="margin:4px 0 0;font-size:13px">A PowerPoint file (.pptx or .potx) with a Title Slide and a Title and Content layout. Downloads keep its masters and layouts.</p>' +
       '<h3 style="margin:18px 0 6px;font-size:15px">Slides</h3><label class="ls-mrow"><input type="checkbox" id="ttAgenda"' + (draft.deck.agenda !== false ? ' checked' : '') + '> A new lesson starts with an agenda on slide 2</label>' +
@@ -1132,7 +1132,7 @@ function openTimetable() {
       collect();
       const i = document.createElement('input'); i.type = 'file'; i.accept = '.pptx,.potx,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.presentationml.template';
       i.onchange = async () => { const t = await readTemplate(i.files[0]); if (!t || $('#ttTpl') == null) return; collect(); draft.template = t.b64; draft.tplName = t.name; draw(); };
-      return i.click();
+      return gpClick(i);
     }
     if (e.target.closest('[data-saveprof]')) {
       collect();

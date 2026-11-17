@@ -92,7 +92,7 @@ function signOut() {
 // Google sign-in only works on the hosted copy (not a downloaded file or a preview frame).
 const GOK = /^https?:$/.test(location.protocol) && window.self === window.top;
 function renderGoogle() {
-  for (const el of document.querySelectorAll('.gAcct, #pickDrive')) el.hidden = !GOK || !gcid();   // no key built in: nothing to sign in to
+  for (const el of document.querySelectorAll('.gAcct, #pickDrive, .gpOnly')) el.hidden = !GOK || !gcid();   // no key built in: nothing to sign in to
   if (!GOK || !gcid()) return;
   for (const el of document.querySelectorAll('.gAcct')) el.innerHTML = G.email
     ? '<span class="muted" style="font-size:13px">Google: ' + esc(G.email) + ' · ' + (syncPaused() ? '<button class="link" data-gin id="syncState">' + syncState + '</button>' : '<span id="syncState">' + (syncState || 'synced') + '</span>') + '</span> <button class="link" data-gout>Sign out</button>'
@@ -406,50 +406,18 @@ async function dvPullOne(id, key) {
 // gs.gVidDir = { id, name }: kept in this browser, like the Google account.
 const driveCan = () => GOK && !!gcid();
 const VID_MIMES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/x-matroska', 'video/3gpp', 'video/ogg'];   // the kinds a browser can play here
-let gpP = null;
-function loadPicker() {
-  if (window.google && google.picker) return Promise.resolve();
-  return gpP || (gpP = new Promise((res, rej) => {
-    const fail = () => { gpP = null; rej(new Error('Couldn’t reach Google. Check the internet connection.')); };
-    const go = () => gapi.load('picker', { callback: res, onerror: fail });
-    if (window.gapi && gapi.load) return go();
-    const s = document.createElement('script'); s.src = 'https://apis.google.com/js/api.js'; s.async = true; s.onload = go; s.onerror = fail; document.head.appendChild(s);
-  }));
-}
-// o: { folder: true to pick the videos folder; else videos, opening in o.parent; multi }. Gives [{ id, name, size, mime }], or [] if she closes it.
+// o: { folder: true to pick the videos folder; else videos (or o.mimes; null: any file), opening in o.parent; multi }. Gives [{ id, name, size, mime }], or [] if she closes it.
+// Google's chooser itself is shared with the Planner (src/gpick.js).
 async function drivePick(o = {}) {
   if (sampleStops('Google Drive')) return [];
   if (!gcid()) { driveSetup(); return []; }
-  const t = await gToken(true, 'pick'); await loadPicker();
+  const t = await gToken(true, 'pick');
   if (!G.email) gsync('about?fields=user(emailAddress)').then(r => r.json()).then(me => { G.email = me.user.emailAddress; store.set('gs.gEmail', G.email); renderGoogle(); syncNow(); }).catch(() => {});
-  const P = google.picker;
-  return new Promise(res => {
-    // Tabs: her chosen folder first (if any), then My Drive from the top, Shared with me, and shared drives. Each one can be opened folder by folder.
-    const mk = (label, set) => {
-      const v = new P.DocsView(P.ViewId.DOCS).setIncludeFolders(true).setMode(P.DocsViewMode.LIST);
-      // Choosing the folder still lists the videos inside, so a folder of videos doesn't look empty; picking one of them chooses its folder.
-      if (o.folder) v.setSelectFolderEnabled(true); v.setMimeTypes((o.mimes || VID_MIMES).concat(FOLDER).join(','));
-      if (v.setLabel) v.setLabel(label);
-      set(v); return v;
-    };
-    const views = [];
-    if (o.parent && !o.folder) views.push(mk(o.parentName || 'Videos folder', v => v.setParent(o.parent)));
-    views.push(mk('My Drive', v => v.setParent('root')));
-    views.push(mk('Shared with me', v => v.setOwnedByMe && v.setOwnedByMe(false)));
-    views.push(mk('Shared drives', v => v.setEnableDrives && v.setEnableDrives(true)));
-    const b = new P.PickerBuilder().setOAuthToken(t).setAppId(gcid().split('-')[0]).setOrigin(location.origin);
-    views.forEach(v => b.addView(v));
-    b
-      .enableFeature(P.Feature.SUPPORT_DRIVES).setTitle(o.title || (o.folder ? 'Click your videos folder once (or any video in it), then Select' : 'Choose ' + (o.multi ? 'videos' : 'a video')))
-      .setCallback(d => {
-        if (d[P.Response.ACTION] === P.Action.PICKED) res((d[P.Response.DOCUMENTS] || []).map(x => o.folder && x.mimeType !== FOLDER ? (x.parentId ? { id: x.parentId, name: 'Folder with ' + x.name, mimeType: FOLDER } : null) : x).filter(x => x && (o.folder || x.mimeType !== FOLDER)).map(x => ({ id: x.id, name: x.name, size: +x.sizeBytes || 0, mime: x.mimeType || '', ...(x.parentId ? { parent: x.parentId } : {}) })));
-        else if (d[P.Response.ACTION] === P.Action.CANCEL) res([]);
-      });
-    if (GOOGLE_API_KEY && !/@@/.test(GOOGLE_API_KEY)) b.setDeveloperKey(GOOGLE_API_KEY);
-    if (o.multi) b.enableFeature(P.Feature.MULTISELECT_ENABLED);
-    b.build().setVisible(true);
-  });
+  return gpPick(t, gcid(), GOOGLE_API_KEY, { ...o, mimes: o.mimes === null ? null : o.mimes || VID_MIMES, title: o.title || (o.folder ? 'Click your videos folder once (or any video in it), then Select' : 'Choose ' + (o.multi ? 'videos' : 'a video')), parentName: o.parentName || 'Videos folder' });
 }
+// "From Google Drive…" beside the places that take files (src/gpick.js): wherever Google is set up here. An iPhone signs in by leaving
+// the page, so there it shows only while Google's key is fresh.
+const gpHost = () => driveCan() && (!G_REDIRECT || drivePickReady()) ? { office: false, pick: drivePick, get: u => gfetch(u, {}, true, 'pick'), say: m => toast(m, 6000) } : null;
 const vidDir = () => store.get('gs.gVidDir', null);
 async function pickVidDir() { const [d] = await drivePick({ folder: true }); if (d) store.set('gs.gVidDir', { id: d.id, name: d.name }); return d || null; }
 // Videos she picks, opening in her videos folder (asking for the folder first, once).
