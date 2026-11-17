@@ -691,7 +691,7 @@ test('file names give nobody away during anonymous grading: run together, shorte
     await page.waitForFunction(() => document.querySelectorAll('#paper .fhead').length > 0);
     await new Promise(r => setTimeout(r, 200));   // the headings are tidied just after they're drawn
     const text = await shown(page);
-    assert.ok(!/theo|banks|ruby|walsh|kai|novak/i.test(text), who + ': ' + text);
+    assert.ok(!/theo|banks|ruby|walsh|kai|novak/i.test(text), who + ': ' + ((text.match(/.{0,120}(theo|banks|ruby|walsh|kai|novak).{0,60}/i) || [''])[0]));   // the words around the name, so a failure says where it showed
     assert.match(text, /\.pdf/i, 'what kind of file it is stays');
   }
   // Arrange pages: file box, captions and the pictures.
