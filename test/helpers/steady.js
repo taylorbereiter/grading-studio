@@ -55,7 +55,9 @@ const STEADY = `(() => {
   const rnd = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   Math.random = rnd;
   Crypto.prototype.getRandomValues = function (a) { const b = new Uint8Array(a.buffer, a.byteOffset, a.byteLength); for (let i = 0; i < b.length; i++) b[i] = Math.floor(rnd() * 256); return a; };
-  const still = () => { const st = document.createElement('style'); st.textContent = '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important;scroll-behavior:auto!important}.toast{display:none!important}'; (document.head || document.documentElement).appendChild(st); };
+  // The grades sheet's paper crop is a white picture with rounded corners at a fractional place: on a dark page Chrome shades those
+  // corners a little differently from one load to the next (about 36 pixels), so the pictures are taken with square corners.
+  const still = () => { const st = document.createElement('style'); st.textContent = '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important;scroll-behavior:auto!important}.toast{display:none!important}#shBody img{border-radius:0!important}'; (document.head || document.documentElement).appendChild(st); };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', still); else still();
 })();`;
 
