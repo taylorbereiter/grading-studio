@@ -111,7 +111,7 @@ async function walk(ctx, place, { A, L }) {
   const at = async (hash, ready) => { await goTo(page, hash); if (ready) await page.waitForSelector(ready, { timeout: 20000 }); await sleep(150); };
   await page.goto(place.url('index')); await appReady(page);
   await at('#/', '#railClasses a');
-  seen.sidebar = await page.$$eval('#railClasses a', xs => xs.map(a => a.textContent.replace(/\s+/g, ' ').trim()));
+  seen.sidebar = await page.$$eval('#railClasses a[data-railcls]', xs => xs.map(a => a.textContent.replace(/\s+/g, ' ').trim()));
   await at('#/class/c1', '#vClass:not([hidden]) .cls');
   await at('#/class/c1/gradebook', '#bkTab');
   // Each student's row: their name, then every figure in the row in sorted order, so the gradebook's columns can move

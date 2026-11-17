@@ -9,7 +9,7 @@ const MAX_FILE = 40 * 1024 * 1024;
 // The head of a Planner page: its name, what the page itself can do, the search, the side panel and Import. Going between
 // the Planner's sections is the sidebar's job. The calendar's two views sit beside its name. What a page does now and
 // then (more: menu items) goes in a More menu with Import, so the head stays one line.
-const VIEW_NAMES = { week: 'Calendar', semester: 'Calendar', units: 'Units', library: 'Past lessons', activities: 'Activities', bank: 'Rubrics' };
+const VIEW_NAMES = { week: 'Plan lessons', semester: 'Plan lessons', units: 'Units', library: 'Past lessons', activities: 'Activities', bank: 'Rubrics' };
 function topBar(view, extra, more) {
   const cal = view === 'week' || view === 'semester';
   const tab = (v, t, on) => '<button class="pl-tab' + (on ? ' on' : '') + '" data-a="tab" data-v="' + v + '" aria-pressed="' + !!on + '">' + t + '</button>';

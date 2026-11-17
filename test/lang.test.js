@@ -418,7 +418,7 @@ test('a class with learning goals and attendance, an MYP class and a DP class le
   {
     const { page, close } = await openApp(browser, { seed: ibBoth() });
     await page.waitForSelector('#railClasses a');
-    const [myp, dp] = await page.$$eval('#railClasses a', as => as.map(a => a.getAttribute('href')));
+    const [myp, dp] = await page.$$eval('#railClasses a[data-railcls]', as => as.map(a => a.getAttribute('href')));
     for (const [t, sel] of [['gradebook', '#ibTab'], ['students', '#peopleTbl table'], ['students/1', '#ibFit'], ['students/5', '#ibFit'], ['charts', '#ibTiles'], ['reports', '#rpt'], ['missing', '#mis']]) { await goTo(page, myp + '/' + t); await page.waitForSelector(sel); await pause(400); await miss(page, 'MYP, ' + t, own); }
     await goTo(page, myp + '/gradebook'); await page.waitForSelector('#ibTab');
     await page.click('#classPanel [data-ibfit]'); await page.waitForSelector('#ibFit'); await miss(page, 'MYP, best fit', own);
@@ -567,7 +567,7 @@ test('the Planner’s sidebar and its Find anything follow the same setting, and
     await page.waitForFunction(() => window.__planner && document.querySelector('#lessons .ls-top'));
     assert.equal(await page.evaluate(() => window.__gsLang.lang), 'es');
     assert.deepEqual(await page.$$eval('#rail .rnav .rl, #rail .rcap .rl', els => els.filter(e => e.checkVisibility()).map(e => e.textContent.trim())),
-      ['Hoy', 'Pendientes', 'Centro', 'Planificador', 'Calendario', 'Unidades', 'Lecciones anteriores', 'Actividades', 'Rúbricas', 'Clases', 'Configura tu horario', 'Pantalla completa', 'Ayuda', 'Ajustes']);
+      ['Hoy', 'Pendientes', 'Centro', 'Planificador', 'Planificar lecciones', 'Biblioteca', 'Clases', 'Configura tu horario', 'Pantalla completa', 'Ayuda', 'Ajustes']);
     assert.match(await text(page, '#railSaved'), /^Sin copia de seguridad\s*Este navegador$/);
     await page.click('#findBtn'); await page.waitForSelector('#findIn'); await page.type('#findIn', 'copia de seg');
     await page.waitForFunction(() => [...document.querySelectorAll('#findDlg .frow b')].some(b => b.textContent === '¿Dónde se guarda mi trabajo?'));
@@ -749,7 +749,7 @@ test('the boxes a class page opens leave nothing in English', async () => {
   }
   {
     const { page, close } = await openApp(browser, { seed: ibBoth() });
-    for (const base of await page.$$eval('#railClasses a', a => a.map(x => x.getAttribute('href')))) {
+    for (const base of await page.$$eval('#railClasses a[data-railcls]', a => a.map(x => x.getAttribute('href')))) {
       await goTo(page, base + '/students'); await page.waitForSelector('[data-pssall]'); await page.click('[data-pssall]'); await pause(500); await miss(page, 'IB progress sheets, ' + base, own); await esc(page);
       await goTo(page, base); await page.waitForSelector('#clsSetup'); await page.click('#clsSetup'); await pause(200); await page.click('[data-ib-class]'); await pause(400); await miss(page, 'IB grading box, ' + base, own); await esc(page);
     }

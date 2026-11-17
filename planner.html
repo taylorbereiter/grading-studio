@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"6cb38642","zh-Hans":"25e8e7d9","es":"2d4b2f25","fr":"5ed5da9a","de":"171c887e","pt-BR":"631bbbcd","ja":"25c8bb38","ko":"c389ba78"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"970b1106","zh-Hans":"f1ed5f46","es":"239aa887","fr":"3136d4dc","de":"ae53732a","pt-BR":"b9b67f36","ja":"916b2b90","ko":"30b19225"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -716,8 +716,15 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .rcap{font-size:var(--text-caption);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:16px 10px 6px}
 .rdot{width:8px;height:8px;border-radius:var(--corner-round);flex:none}
 .rname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rcnt{flex:none;font-size:var(--text-small);font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.rcnt{flex:none;font-size:var(--text-caption);font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
 .rnav.on .rcnt{color:var(--accent)}
+#railClasses{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:2px;align-items:center}
+#railClasses>.rnav:not(:has(+.rgb)){grid-column:1/-1}
+.rgb{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:var(--corner-3);color:var(--muted)}
+.rgb:hover,.rgb:focus-visible{background:var(--hover);color:var(--accent)}
+.rgb.on{background:var(--accent-soft);color:var(--accent)}
+.rgb svg{width:17px;height:17px}
+:is(.shell.grading,.pfold,.gsfull) .rgb{display:none}
 .radd{color:var(--muted)}
 .rail .sp{flex:1;min-height:12px}
 .rsaved{display:flex;gap:10px;align-items:flex-start;width:100%;padding:10px;border:0;border-radius:var(--corner-3);background:none;color:var(--muted);font-size:12.5px;line-height:1.35;text-align:left}
@@ -760,6 +767,7 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 :is(.shell.grading,.pfold,.gsfull) .rsample{padding:0;border:0;background:none;margin:0 0 2px}
 :is(.shell.grading,.pfold,.gsfull) .rsample .btn{width:40px;height:40px;padding:0;border-color:var(--accent);color:var(--accent)}
 @media (max-width:1100px){
+  .rgb{display:none}
   .rail{width:60px;padding:12px 8px;align-items:center}
   .rail .rl{display:none}
   .rbrand{padding:4px 0 12px}
@@ -1126,6 +1134,28 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
 .ls-top.head{min-height:52px}
 /* on a narrow screen the head stays one line: Find anything in the sidebar searches inside lessons too */
 @media (max-width:1100px){.ls-top.head .pl-find{display:none}}
+.lsn .ls-top .title{white-space:nowrap}
+/* Library: units, past lessons, activities and rubrics fold under one line, so Plan lessons is the Planner's main place */
+.rlib .rchev{width:14px;height:14px;margin-left:auto;transition:transform .15s}
+.rlib[aria-expanded="true"] .rchev{transform:rotate(90deg)}
+.rsub{display:flex;flex-direction:column;width:100%}
+.rsub .rnav{padding-left:22px;min-height:32px;font-size:var(--text-control)}
+.rsub .rnav svg{width:16px;height:16px}
+.pfold .rsub .rnav,.gsfull .rsub .rnav{padding:0}
+@media (max-width:1100px){.rsub .rnav{padding:0}.rlib .rchev{display:none}}
+.pfold .rlib .rchev,.gsfull .rlib .rchev{display:none}
+/* Plan next, at the top of Plan lessons */
+.pl-next{margin:14px 14px 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--corner-5);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.pn-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:2px}
+.pn-head h2{font-size:var(--text-lead);margin:0}
+.pn-sub,.pn-more{color:var(--muted);font-size:var(--text-control)}
+.pn-more{margin:2px 0 0}
+.pn-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:38px;padding:4px 8px;border-radius:var(--corner-3);background:var(--bg);font-size:var(--text-body)}
+.pn-row .sp{flex:1}
+.pn-dot{width:10px;height:10px;border-radius:var(--corner-round);background:var(--cc)}
+.pn-w{color:var(--fg-2)}
+.pn-rec{background:var(--accent-soft);margin-bottom:6px}
+.pn-k{color:var(--accent);font-weight:600;font-size:var(--text-control)}
 </style>
 <nav class="rail" id="rail" aria-label="Main">
   <a class="rbrand" data-gs="#/" href="./#/" aria-label="Grading Studio, Today"><span class="rl">Grading <i>Studio</i></span><span class="rs" aria-hidden="true">G<i>S</i></span></a>
@@ -1134,11 +1164,14 @@ body.has-side .lsn{margin-right:var(--sidew,420px)}
   <a class="rnav" data-gs="#/todo" href="./#/todo" title="To do: your own list, with what the app noticed from your work"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span class="rl">To do</span></a>
   <a class="rnav" data-gs="#/school" href="./#/school" title="School resources: links, files and notes about your school"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5h17M5.5 20.5v-9M18.5 20.5v-9M3.5 11.5L12 5l8.5 6.5M10 20.5v-5h4v5M12 5V3h3"/></svg><span class="rl">School</span></a>
   <div class="rcap"><span class="rl">Planner</span></div>
-  <a class="rnav on" id="railPlanner" data-v="cal" href="#week" aria-current="page" title="Calendar: your lessons by week, or the whole semester"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg><span class="rl">Calendar</span></a>
+  <a class="rnav on" id="railPlanner" data-v="cal" href="#week" aria-current="page" title="Plan lessons: this week’s classes, and what to plan next"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg><span class="rl">Plan lessons</span></a>
+  <button class="rnav rlib" id="railLib" aria-expanded="false" aria-controls="railLibBox" title="Library: units, past lessons, activities and rubrics"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4v16H5zM10 4h4v16h-4zM15.5 4.6l3.8-1 3.7 15.6-3.8.9z"/></svg><span class="rl">Library</span><svg class="rchev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+  <div class="rsub" id="railLibBox" hidden>
   <button class="rnav" data-v="units" title="Units: each unit, its weeks and its files"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l8 4-8 4-8-4 8-4zM4 12l8 4 8-4M4 16l8 4 8-4"/></svg><span class="rl">Units</span></button>
   <button class="rnav" data-v="library" title="Past lessons: old decks and their handouts, to use again"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v4H4zM6 10v9h12v-9M10 14h4"/></svg><span class="rl">Past lessons</span></button>
   <button class="rnav" data-v="activities" title="Activities: the activity bank"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L5 13h6l-1 8 8-10h-6l1-8z"/></svg><span class="rl">Activities</span></button>
   <button class="rnav" data-v="bank" title="Rubrics: saved rubrics and grading scales"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16M4 14.5h16M10 5v14"/></svg><span class="rl">Rubrics</span></button>
+  </div>
   <div class="rcap"><span class="rl">Classes</span></div>
   <div id="railClasses"></div>
   <button class="rnav rtt" id="railTimetable" title="Your classes, when they meet, and the school calendar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg><span class="rl">Timetable</span></button>
@@ -2036,7 +2069,7 @@ async function reviewClick(t) {
    lessons live in their own IndexedDB ('gs-lessons'), and nothing here reads grading data.
    The Planner folder link writes only planning (lessons, units, the timetable) to a folder the teacher picks,
    so Claude can read and edit planning there and nothing else. */
-const L = { db: null, lessons: [], units: [], setup: null, view: 'semester', weekOf: null, open: null, cur: 0, dir: null, dirOk: false, tplImg: null, unit: null };
+const L = { db: null, lessons: [], units: [], setup: null, view: 'week', weekOf: null, open: null, cur: 0, dir: null, dirOk: false, tplImg: null, unit: null };
 const LDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const LDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const LMONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -2355,7 +2388,7 @@ async function openLessons() {
   await panelInit();
   await tplPreview();
   if (!L.weekOf) L.weekOf = ymd(mondayOf(new Date()));
-  try { const v = localStorage.getItem('gsp.view'); if (v === 'week' || v === 'semester' || v === 'units' || v === 'activities' || v === 'bank' || v === 'library') L.view = v; } catch { }
+  L.view = 'week';
   renderLessons();
   arriveAt();
   await folderReconnect(false);
@@ -2389,7 +2422,7 @@ function renderWeek() {
     h += '<div class="ls-empty"><h2>Tell the Planner when your classes meet</h2><p>Lessons line up with your classes once the Planner knows when they meet. Type your classes and their times in, which takes a few minutes and is done once. If you already have a setup file from another computer, load it or drop it on this page.</p>' +
       '<div class="row"><button class="btn primary" data-a="setup">Type in my classes</button><button class="btn" data-a="loadsetup">Load a setup file…</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
   } else {
-    h += weekUnitsBar(L.weekOf) + '<div class="ls-grid"' + (days.length !== 5 ? ' style="--days:' + days.length + '"' : '') + '>';
+    h += planNextBar() + weekUnitsBar(L.weekOf) + '<div class="ls-grid"' + (days.length !== 5 ? ' style="--days:' + days.length + '"' : '') + '>';
     for (const d of days) {
       const off = dayOff(d), ev = eventsOn(d), today = d === ymd(new Date());
       h += '<div class="ls-day' + (off ? ' off' : '') + (today ? ' today' : '') + '"><div class="ls-dh"><b>' + LDAYS[parseYmd(d).getDay()] + '</b> ' + plMd(d) + '</div>';
@@ -7624,12 +7657,13 @@ if (LANG_PACK) {
 
 /* ================= The sidebar =================
    The same sidebar as on the grading page, drawn by the Planner's own code. Its classes are the ones on the Planner's
-   timetable, and the Planner's own sections (Calendar, Units, Past lessons, Activities, Rubrics) are in it. It shows no grading counts and reads nothing of grading's: Today, a class and Settings are plain links
+   timetable, and the Planner's own sections are in it: Plan lessons, then Library (Units, Past lessons, Activities, Rubrics). It shows no grading counts and reads nothing of grading's: Today, a class and Settings are plain links
    to the grading page, which looks the class up by its name when it opens. */
 const GS_PAGE = location.protocol === 'file:' || /Planner\.html$/.test(decodeURIComponent(location.pathname)) ? 'Grading Studio.html' : './';
 const gsUrl = hash => GS_PAGE + (hash || '#/');
 const classUrl = c => gsUrl('#/class-named/' + encodeURIComponent(c.name));
 let calView = 'week';
+let libAt = '';
 
 async function settleAll() {
   try { editorCommit(); clearTimeout(lSaveT); if (L.open) await lPut(L.open); } catch { }
@@ -7669,6 +7703,7 @@ function railRender() {
   document.body.classList.toggle('pfold', L.view === 'edit' || L.view === 'doc' || L.view === 'unit');
   if (L.view === 'week' || L.view === 'semester') calView = L.view;
   const at = { week: 'cal', semester: 'cal', units: 'units', unit: 'units', library: 'library', activities: 'activities', bank: 'bank' }[L.view === 'edit' || L.view === 'doc' ? L.backTo || 'week' : L.view] || 'cal';
+  if (at !== libAt) { libAt = at; if (at !== 'cal') libFold(true); }
   for (const x of document.querySelectorAll('#rail [data-v]')) { const on = x.dataset.v === at; x.classList.toggle('on', on); if (on) x.setAttribute('aria-current', 'page'); else x.removeAttribute('aria-current'); }
   const t = (L.view === 'edit' && L.open ? L.open.title + ' · ' : L.view === 'unit' && L.unit ? L.unit.title + ' · ' : '') + 'Planner · Grading Studio';
   if (document.title !== t) document.title = t;
@@ -7682,6 +7717,7 @@ $('#rail').addEventListener('click', async e => {
     e.preventDefault(); return leaveTo(a.href);
   }
   const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'railLib') return libFold(b.getAttribute('aria-expanded') !== 'true', true);
   if (b.dataset.v) return toView(b.dataset.v);
   if (b.id === 'findBtn') return openFind();
   if (b.id === 'railTimetable') return openTimetable();
@@ -7693,7 +7729,7 @@ new MutationObserver(railRender).observe($('#lessons'), { childList: true });
 function findRows() {
   const out = [], add = (group, label, sub, run) => { if (label) out.push({ group, label: String(label), sub: sub || '', run }); };
   add('Go to', 'Today', 'What you teach today, what is waiting to be marked, what is ready to hand back', () => leaveTo(gsUrl('#/')));
-  add('Go to', 'This week', 'The calendar, a week at a time', async () => { L.weekOf = ymd(mondayOf(new Date())); await toView('week'); });
+  add('Go to', 'Plan lessons', 'This week, and the classes coming up without a lesson', async () => { L.weekOf = ymd(mondayOf(new Date())); await toView('week'); });
   add('Go to', 'Semester', 'The calendar, every week and its units', () => toView('semester'));
   add('Go to', 'Units', 'Each unit, its weeks and its files', () => toView('units'));
   add('Go to', 'Past lessons', 'Old decks and their handouts, to use again', () => toView('library'));
@@ -7802,7 +7838,7 @@ function arriveAt() {
 const UNIT_COLORS = ['#1F6FB2', '#7B3FC4', '#B71E42', '#0E7C66', '#B35C00', '#3D5A80', '#8E3B8A', '#2F6B2F'];
 const MAX_FILE = 40 * 1024 * 1024;
 
-const VIEW_NAMES = { week: 'Calendar', semester: 'Calendar', units: 'Units', library: 'Past lessons', activities: 'Activities', bank: 'Rubrics' };
+const VIEW_NAMES = { week: 'Plan lessons', semester: 'Plan lessons', units: 'Units', library: 'Past lessons', activities: 'Activities', bank: 'Rubrics' };
 function topBar(view, extra, more) {
   const cal = view === 'week' || view === 'semester';
   const tab = (v, t, on) => '<button class="pl-tab' + (on ? ' on' : '') + '" data-a="tab" data-v="' + v + '" aria-pressed="' + !!on + '">' + t + '</button>';
@@ -8196,6 +8232,50 @@ async function unitsFolderRead() {
 
 window.__planner = { matReplace, arriveAt, plxLoad, PLX, ACTIVITIES, VIDEOS, actVideo, readTemplate, openTimetable, bankPut, normRubric, slideHtml, LOOKS, TEACH, TEACH_SAMPLE, versions: versionsOf, ytIds: us => us.map(u => [ytId(u), ytStart(u)]), openLessonForTest: (l, i) => { openLesson(l); goSlide(i || 0); }, L, applySetup, folderReadme, plWeekOffs, renderLessons, setPicture, folderWriteAll, folderRead, buildPptx, shareBuild, shareOpen, matAdd, normLesson, deckStart, normUnit, unitPut, unitAt, addUnitFiles, notGradingFolder, unitsFolderRead, semesterMondays, openUnit, docxOf, findAll, copyLesson, packImport, createLesson, lessonText, lessonForFile, pptxToSlides, finUpload, versionsOf, SP, lessonZip, variantsOf, lessonEntries, dlWeek, lessonContext };
 openLessons();
+
+/* ================= Plan next =================
+   The top of the Plan lessons page: the lesson she was working on, and the classes coming up that have no lesson yet,
+   so opening the Planner lands her on planning and not on finding a day in the calendar.
+   It reads the timetable and the lessons, and stores nothing. */
+const PN_DAYS = 14, PN_SHOW = 4, PN_RECENT = 3 * 864e5;
+function planGaps(now = new Date()) {
+  const out = [], today = ymd(now), hhmm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  for (let i = 0; i < PN_DAYS; i++) {
+    const d = ymd(addDays(now, i)); if (dayOff(d)) continue;
+    for (const { c, m } of meetingsOn(d)) {
+      if (d === today && m.end && m.end <= hhmm) continue;
+      if (!lessonsAt(c.id, d).length) out.push({ c, m, d });
+    }
+  }
+  return out;
+}
+const planRecent = () => L.lessons.filter(l => !l.library && Date.now() - l.updated < PN_RECENT).sort((a, b) => b.updated - a.updated)[0] || null;
+function planWhen(d) { const t = ymd(new Date()), n = ymd(addDays(new Date(), 1)); return d === t ? 'Today' : d === n ? 'Tomorrow' : shortDate(d); }
+function planNextBar() {
+  if (!L.setup) return '';
+  const gaps = planGaps(), rec = planRecent();
+  const keepOn = rec && Date.now() - rec.updated < 864e5;
+  let h = '<section class="pl-next" aria-label="Plan next">';
+  if (rec) {
+    const slot = rec.slots.filter(s => s.date >= ymd(new Date())).sort((a, b) => a.date < b.date ? -1 : 1)[0];
+    h += '<div class="pn-row pn-rec"><span class="pn-k">Pick up where you left off</span><b>' + esc(rec.title) + '</b><span class="pn-w">' + (slot ? esc(className(slot.classId)) + ' · ' + planWhen(slot.date) : 'Not on the timetable') + '</span><span class="sp"></span>' +
+      '<button class="btn sm' + (keepOn ? ' primary' : '') + '" data-open="' + rec.id + '">Continue</button></div>';
+  }
+  h += '<div class="pn-head"><h2>Coming up without a lesson</h2><span class="pn-sub">' + (gaps.length ? gaps.length + ' class' + (gaps.length === 1 ? '' : 'es') + ' in the next two weeks' : 'Every class in the next two weeks has a lesson.') + '</span></div>';
+  gaps.slice(0, PN_SHOW).forEach((g, i) => {
+    const k = esc(g.c.id) + '|' + g.d;
+    h += '<div class="pn-row" style="--cc:' + esc(g.c.color || '#1F6FB2') + '"><span class="pn-dot"></span><b>' + esc(g.c.name) + '</b><span class="pn-w">' + planWhen(g.d) + ' · ' + hm(g.m.start) + '–' + hm(g.m.end) + (g.m.label ? ' · ' + esc(g.m.label) : '') + '</span><span class="sp"></span>' +
+      '<button class="btn sm' + (!keepOn && i === 0 ? ' primary' : '') + '" data-new="' + k + '">Plan it</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + k + '">Use a lesson…</button>' : '') + '</div>';
+  });
+  if (gaps.length > PN_SHOW) h += '<p class="pn-more">' + (gaps.length - PN_SHOW) + ' more. The calendar below shows each week.</p>';
+  return h + '</section>';
+}
+
+function libFold(open, keep) {
+  $('#railLib').setAttribute('aria-expanded', String(open)); $('#railLibBox').hidden = !open;
+  if (keep) try { localStorage.setItem('gsp.railLib', open ? '1' : '0'); } catch { }
+}
+try { if (localStorage.getItem('gsp.railLib') === '1') libFold(true); } catch { }
 
 /* ---------------- Full screen (11/12): the whole page fills the screen, on both pages and every screen ----------------
    The Full screen button (in the sidebar, and in the top bar while a paper is open), F, or Find anything puts the page in the browser's

@@ -206,6 +206,11 @@ function setCheckInk(k) { if (!COLORS[k]) return; checkInk = k; CHECK_INK = COLO
 const PTS_AMBER = '#A86400';
 // A quiz answer note (quiz.js) is a comment in gold, drawn a shade darker (#8A6500), which reads on white paper and in black-and-white print.
 const QZ_GOLD = '#C08C00';
+// Comments and typed text boxes add yellow ("think about this") after red. A comment draws its box and line a shade darker
+// (#966300, 5 to 1 on white); a text box draws its words in the color itself, so it takes the darker points amber. The pen,
+// check and points colors stay as COLORS.
+const NOTE_COLORS = { red: COLORS.red, yellow: '#D08A00', blue: COLORS.blue, green: COLORS.green, purple: COLORS.purple, black: COLORS.black };
+const TEXT_COLORS = { ...NOTE_COLORS, yellow: PTS_AMBER };
 let ptsInk = (k => k === 'credit' || COLORS[k] ? k : '')(store.get('gs.ptsInk', ''));
 function setPtsInk(k) { ptsInk = k === 'credit' || COLORS[k] ? k : ''; if (ptsInk) store.set('gs.ptsInk', ptsInk); else store.del('gs.ptsInk'); }
 // The color of v points out of top. A total or a score stamp is a sum, not one answer, so with 'credit' it stays in the pen's ink.

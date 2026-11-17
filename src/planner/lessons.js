@@ -3,7 +3,7 @@
    lessons live in their own IndexedDB ('gs-lessons'), and nothing here reads grading data.
    The Planner folder link writes only planning (lessons, units, the timetable) to a folder the teacher picks,
    so Claude can read and edit planning there and nothing else. */
-const L = { db: null, lessons: [], units: [], setup: null, view: 'semester', weekOf: null, open: null, cur: 0, dir: null, dirOk: false, tplImg: null, unit: null };
+const L = { db: null, lessons: [], units: [], setup: null, view: 'week', weekOf: null, open: null, cur: 0, dir: null, dirOk: false, tplImg: null, unit: null };
 const LDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const LDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const LMONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -344,7 +344,8 @@ async function openLessons() {
   await panelInit();
   await tplPreview();
   if (!L.weekOf) L.weekOf = ymd(mondayOf(new Date()));
-  try { const v = localStorage.getItem('gsp.view'); if (v === 'week' || v === 'semester' || v === 'units' || v === 'activities' || v === 'bank' || v === 'library') L.view = v; } catch { }
+  // The Planner always opens on Plan lessons: this week, with what to plan next. Units, past lessons, activities and rubrics are one click away in Library.
+  L.view = 'week';
   renderLessons();
   arriveAt();
   await folderReconnect(false);
@@ -378,7 +379,7 @@ function renderWeek() {
     h += '<div class="ls-empty"><h2>Tell the Planner when your classes meet</h2><p>Lessons line up with your classes once the Planner knows when they meet. Type your classes and their times in, which takes a few minutes and is done once. If you already have a setup file from another computer, load it or drop it on this page.</p>' +
       '<div class="row"><button class="btn primary" data-a="setup">Type in my classes</button><button class="btn" data-a="loadsetup">Load a setup file…</button><button class="btn" data-a="newfree">Make a lesson without a class</button></div></div>';
   } else {
-    h += weekUnitsBar(L.weekOf) + '<div class="ls-grid"' + (days.length !== 5 ? ' style="--days:' + days.length + '"' : '') + '>';
+    h += planNextBar() + weekUnitsBar(L.weekOf) + '<div class="ls-grid"' + (days.length !== 5 ? ' style="--days:' + days.length + '"' : '') + '>';
     for (const d of days) {
       const off = dayOff(d), ev = eventsOn(d), today = d === ymd(new Date());
       h += '<div class="ls-day' + (off ? ' off' : '') + (today ? ' today' : '') + '"><div class="ls-dh"><b>' + LDAYS[parseYmd(d).getDay()] + '</b> ' + plMd(d) + '</div>';

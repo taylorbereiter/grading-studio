@@ -1,6 +1,6 @@
 /* ================= The sidebar =================
    The same sidebar as on the grading page, drawn by the Planner's own code. Its classes are the ones on the Planner's
-   timetable, and the Planner's own sections (Calendar, Units, Past lessons, Activities, Rubrics) are in it. It shows no grading counts and reads nothing of grading's: Today, a class and Settings are plain links
+   timetable, and the Planner's own sections are in it: Plan lessons, then Library (Units, Past lessons, Activities, Rubrics). It shows no grading counts and reads nothing of grading's: Today, a class and Settings are plain links
    to the grading page, which looks the class up by its name when it opens. */
 // Grading Studio sits next to this page: index.html online, "Grading Studio.html" for the double-click copy.
 const GS_PAGE = location.protocol === 'file:' || /Planner\.html$/.test(decodeURIComponent(location.pathname)) ? 'Grading Studio.html' : './';
@@ -8,6 +8,9 @@ const gsUrl = hash => GS_PAGE + (hash || '#/');
 const classUrl = c => gsUrl('#/class-named/' + encodeURIComponent(c.name));
 // The calendar is two views, the week and the semester: Calendar in the sidebar opens the one she used last.
 let calView = 'week';
+// Library (units, past lessons, activities, rubrics) stays open or closed as she left it, and opens by itself when one of them is on screen.
+let libAt = '';
+// libFold, which keeps that, is in plannext.js: this file opens no storage.
 
 // Everything typed is saved before the screen changes or the page is left.
 async function settleAll() {
@@ -54,6 +57,7 @@ function railRender() {
   if (L.view === 'week' || L.view === 'semester') calView = L.view;
   // The Planner's own sections are in the sidebar: the one on the screen is marked. A lesson or a unit marks where it was opened from.
   const at = { week: 'cal', semester: 'cal', units: 'units', unit: 'units', library: 'library', activities: 'activities', bank: 'bank' }[L.view === 'edit' || L.view === 'doc' ? L.backTo || 'week' : L.view] || 'cal';
+  if (at !== libAt) { libAt = at; if (at !== 'cal') libFold(true); }
   for (const x of document.querySelectorAll('#rail [data-v]')) { const on = x.dataset.v === at; x.classList.toggle('on', on); if (on) x.setAttribute('aria-current', 'page'); else x.removeAttribute('aria-current'); }
   const t = (L.view === 'edit' && L.open ? L.open.title + ' · ' : L.view === 'unit' && L.unit ? L.unit.title + ' · ' : '') + 'Planner · Grading Studio';
   if (document.title !== t) document.title = t;
@@ -67,6 +71,7 @@ $('#rail').addEventListener('click', async e => {
     e.preventDefault(); return leaveTo(a.href);
   }
   const b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'railLib') return libFold(b.getAttribute('aria-expanded') !== 'true', true);
   if (b.dataset.v) return toView(b.dataset.v);
   if (b.id === 'findBtn') return openFind();
   if (b.id === 'railTimetable') return openTimetable();
@@ -79,7 +84,7 @@ new MutationObserver(railRender).observe($('#lessons'), { childList: true });
 function findRows() {
   const out = [], add = (group, label, sub, run) => { if (label) out.push({ group, label: String(label), sub: sub || '', run }); };
   add('Go to', 'Today', 'What you teach today, what is waiting to be marked, what is ready to hand back', () => leaveTo(gsUrl('#/')));
-  add('Go to', 'This week', 'The calendar, a week at a time', async () => { L.weekOf = ymd(mondayOf(new Date())); await toView('week'); });
+  add('Go to', 'Plan lessons', 'This week, and the classes coming up without a lesson', async () => { L.weekOf = ymd(mondayOf(new Date())); await toView('week'); });
   add('Go to', 'Semester', 'The calendar, every week and its units', () => toView('semester'));
   add('Go to', 'Units', 'Each unit, its weeks and its files', () => toView('units'));
   add('Go to', 'Past lessons', 'Old decks and their handouts, to use again', () => toView('library'));

@@ -20,7 +20,9 @@ function railRender() {
   const row = c => {
     const n = classLeft(c), name = c === lib.loose ? 'No class' : c.name, on = cur === c;
     return '<a class="rnav' + (on ? ' on' : '') + '" href="' + classHash(c) + '" data-railcls="' + esc(c.id) + '" title="' + esc(name) + (n ? ' · ' + n + ' left to score' : '') + '"' + (on ? ' aria-current="page"' : '') + '>' +
-      '<span class="rdot" style="background:' + classColor(c) + '"></span><span class="rl rname">' + esc(name) + '</span>' + (n ? '<span class="rl rcnt">' + n + '</span>' : '') + '</a>';
+      '<span class="rdot" style="background:' + classColor(c) + '"></span><span class="rl rname">' + esc(name) + '</span>' + (n ? '<span class="rl rcnt">' + n + ' left to score</span>' : '') + '</a>' +
+      // the class's gradebook, one click from any screen
+      (c === lib.loose ? '' : '<a class="rgb' + (on && r.tab === 'gradebook' ? ' on' : '') + '" href="' + classHash(c, 'gradebook') + '" title="' + esc(name) + ' gradebook" aria-label="' + esc(name) + ' gradebook"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5v10"/></svg></a>');
   };
   const h = lib.classes.map(row).join('') + (lib.loose.units.some(u => u.items.length) ? row(lib.loose) : '');
   const box = $('#railClasses'); if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }   // a link shouldn't be swapped out from under her click

@@ -142,7 +142,7 @@ function linkCard(st, f) {
 /* ---------- video files kept in this browser ---------- */
 // The video goes in a database of its own (grading-studio-videos), stored as the file itself, so a long video fits as long as the computer has room
 // and it is only read when it plays. The student gets a tiny shortcut file naming it ("gs-video:<id>"), so saving, partners, Remove and merging
-// treat it like a link. Partners share one stored copy. It never leaves this browser: not in take-home files, the linked folder or the export.
+// treat it like a link. Partners share one stored copy. It goes to the linked folder's Videos/ (below), and never in take-home files or the export.
 let vkDbP = null;
 const vkDb = () => vkDbP ||= new Promise((res, rej) => { const r = indexedDB.open('grading-studio-videos', 1); r.onupgradeneeded = () => r.result.createObjectStore('v'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 async function vkDo(mode, fn) {
@@ -158,25 +158,64 @@ async function vkPut(file, id) {
   try { await vkDo('readwrite', o => o.put({ id, name: file.name, type: file.type || MIME[extOf(file.name)] || '', size: file.size, at: Date.now(), blob: file }, id)); }
   catch (err) { console.error(err); throw new Error('This browser couldn’t keep that video, usually because the computer is out of room. A link to the video works at any size.'); }
   const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id);
+  vkFolderSoon();
   return id;
 }
 async function vkGet(id) {
   if (vkSeen.has(id)) return vkSeen.get(id);
   let r = null; try { r = await vkDo('readonly', o => o.get(id)); } catch (e) { console.error(e); }
-  const out = r && r.blob ? { name: r.name, size: r.size, blob: r.blob, url: URL.createObjectURL(r.blob.type ? r.blob : new Blob([r.blob], { type: r.type || MIME[extOf(r.name)] || '' })) } : null;
+  const out = r && r.blob ? { name: r.name, size: r.size, blob: r.blob, url: URL.createObjectURL(r.blob.type ? r.blob : new Blob([r.blob], { type: r.type || MIME[extOf(r.name)] || '' })) } : await vkFromFolder(id);
   vkSeen.set(id, out); return out;
+}
+async function vkUsed() {
+  const used = new Set();
+  for (const r of (await idbDo('readonly', o => o.getAll())) || []) { const v = r && /\.url$/i.test(r.path || '') && keptId({ kind: 'link', data: r.data }); if (v) used.add(v); }
+  if (batch) for (const st of batch.students) for (const f of st.files.concat(st.gone || [])) { const v = keptId(f); if (v) used.add(v); }
+  return used;
 }
 // Videos no shortcut names any more go, a while after the last one went (so one being added right now is never caught).
 async function vkSweep() {
   try {
     if (!vkDbP && indexedDB.databases && !(await indexedDB.databases()).some(d => d.name === 'grading-studio-videos')) return;   // never made here: nothing to sweep, and no database made for it
     const ids = await vkDo('readonly', o => o.getAllKeys()); if (!ids || !ids.length) return;
-    const used = new Set();
-    for (const r of (await idbDo('readonly', o => o.getAll())) || []) { const v = r && /\.url$/i.test(r.path || '') && keptId({ kind: 'link', data: r.data }); if (v) used.add(v); }
-    if (batch) for (const st of batch.students) for (const f of st.files.concat(st.gone || [])) { const v = keptId(f); if (v) used.add(v); }
+    const used = await vkUsed();
     const old = Date.now() - 15 * 60e3;
     for (const id of ids) { if (used.has(id)) continue; const r = await vkDo('readonly', o => o.get(id)); if (r && r.at > old) continue; await vkDo('readwrite', o => o.delete(id)); const was = vkSeen.get(id); if (was) URL.revokeObjectURL(was.url); vkSeen.delete(id); }
   } catch (e) { console.error(e); }
+}
+/* video files in the linked folder: Videos/<name> [<id>].<ext>, playable from there */
+// Copied as they are, straight from the stored file to the disk, so a long video is never all in memory. With full (the folder just linked or back),
+// a video the browser lacks comes in from the folder. One the browser can't take still plays from the folder (vkGet). Nothing in Videos/ is ever deleted here.
+const vkFolderName = r => { const m = /^(.*?)(\.[\w]{1,6})?$/.exec(r.name || 'video'); return seg(m[1]) + ' [' + r.id + ']' + (m[2] || ''); };
+async function vkFolderList() {
+  const dir = await fld.root.getDirectoryHandle('Videos', { create: true }), out = new Map();
+  for await (const [n, h] of dir.entries()) { const m = h.kind === 'file' && / \[([\w-]{6,40})\](\.\w+)?$/.exec(n); if (m) out.set(m[1], h); }
+  return { dir, out };
+}
+let vkFolderP = null, vkFolderT = 0, vkFolderFull = false;
+function vkFolderSoon(full) { vkFolderFull ||= !!full; clearTimeout(vkFolderT); vkFolderT = setTimeout(() => { vkFolderP = (vkFolderP || Promise.resolve()).then(vkFolderSync); }, 1500); }
+async function vkFolderSync() {
+  const full = vkFolderFull; vkFolderFull = false;
+  if (!fld.root || !(fld.state === 'ok' || fld.state === 'saving' || fld.state === 'decide') || sampleOn()) return;
+  try {
+    if (!vkDbP && indexedDB.databases && !(await indexedDB.databases()).some(d => d.name === 'grading-studio-videos') && !full) return;
+    const used = await vkUsed(); if (!used.size) return;
+    const { dir, out } = await vkFolderList(), have = new Set((await vkDo('readonly', o => o.getAllKeys())) || []);
+    for (const id of used) {
+      if (have.has(id)) {
+        const r = await vkDo('readonly', o => o.get(id)), h = out.get(id); if (!r || !r.blob) continue;
+        if (h && (await h.getFile()).size === r.size) continue;
+        await r.blob.stream().pipeTo(await (await dir.getFileHandle(h ? h.name : vkFolderName(r), { create: true })).createWritable());
+      } else if (full && out.has(id)) {
+        try { await vkPut(await out.get(id).getFile(), id); } catch (e) { console.error(e); }   // no room here: it plays from the folder
+      }
+    }
+  } catch (e) { console.error(e); }
+}
+async function vkFromFolder(id) {
+  if (!fld.root || fld.state === 'none' || fld.state === 'ask' || fld.state === 'lost') return null;
+  try { const h = (await vkFolderList()).out.get(id); if (!h) return null; const f = await h.getFile(); return { name: f.name.replace(/ \[[\w-]+\](?=\.\w+$|$)/, ''), size: f.size, blob: f, url: URL.createObjectURL(f.type ? f : new Blob([f], { type: MIME[extOf(f.name)] || '' })) }; }
+  catch (e) { console.error(e); return null; }
 }
 const vkClear = () => vkDo('readwrite', o => o.clear()).catch(e => console.error(e)).then(() => { for (const v of vkSeen.values()) if (v) URL.revokeObjectURL(v.url); vkSeen.clear(); });
 const vidPick = () => new Promise(res => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*,audio/*,' + Object.keys(MIME).map(x => '.' + x).join(','); inp.onchange = () => res(inp.files[0] || null); inp.click(); });
@@ -187,7 +226,7 @@ function vfileCard(st, f) {
     if (!hold.isConnected && !hold.parentNode) return;
     if (k) { hold.replaceWith(mediaCard(st, f, k)); return; }
     hold.querySelector('.mhead .muted').textContent = 'video file';
-    hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<p class="vlnote">This video isn’t in this browser. A video file stays in the browser it was added in: it doesn’t go in take-home files or the linked folder.</p><div class="mctl"><button class="btn sm primary" data-vkback>Choose the video file…</button></div>');
+    hold.querySelector('.mstick').insertAdjacentHTML('beforeend', '<p class="vlnote">This video isn’t in this browser or your folder. A video file doesn’t go in take-home files.</p><div class="mctl"><button class="btn sm primary" data-vkback>Choose the video file…</button></div>');
     hold.querySelector('[data-vkback]').onclick = async () => {
       const file = await vidPick(); if (!file) return;
       try { await vkPut(file, id); toast('The video is back'); openStudent(cur, f.path); } catch (err) { sayDlg(err.message); }
