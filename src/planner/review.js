@@ -173,7 +173,7 @@ function slideTalkHtml(s) {
 function ctxHtml(s) {
   const c = s.ctx || [];
   return '<div class="pl-cs"><div class="pl-cs-h"><button class="btn sm ghost pl-mic" data-dict="[data-f=&quot;ask&quot;]" title="Say it instead of typing">🎤 Dictate</button>' +
-    '<button class="btn sm ghost" data-a="ctxadd" title="A screenshot for context, not put on the slide. You can also paste one (Ctrl+V or ⌘V) or drop one here.">+ Screenshot</button><input type="file" id="ctxIn" accept="image/*" multiple hidden>' +
+    '<button class="btn sm ghost" data-a="ctxadd" title="A screenshot for context, not put on the slide. You can also paste one (Ctrl+V or ⌘V) or drop one here.">+ Screenshot</button>' + gpDrv('data-a="ctxadd"', '', 1) + '<input type="file" id="ctxIn" accept="image/*" multiple hidden>' +
     '<span class="muted pl-cs-tip">Screenshots are for context, not on the slide. Crop out student names and faces first.</span></div>' +
     (c.length ? '<div class="pl-cs-list">' + c.map((x, i) => '<div class="pl-csi"><button class="pl-csi-img" data-ctxview="' + i + '" title="See it bigger"><img src="' + esc(imgSrc(x.src)) + '" alt="' + esc(x.note || 'Screenshot') + '"></button>' +
       '<input class="btn sm" data-f="ctxnote" data-i="' + i + '" value="' + esc(x.note) + '" placeholder="What is it? (like: the task sheet)" aria-label="What this screenshot is">' +
@@ -188,7 +188,7 @@ async function addCtxShots(files) {
   const ins = document.querySelectorAll('[data-f="ctxnote"]'); if (ins.length) ins[ins.length - 1].focus();
   toast(n === 1 ? 'Screenshot added for context. Say what it is in the box under it.' : n + ' screenshots added for context');
 }
-function ctxPick() { const i = $('#ctxIn'); if (!i) return; i.onchange = () => { const fs = [...i.files]; i.value = ''; if (fs.length) addCtxShots(fs); }; i.click(); }
+function ctxPick() { const i = $('#ctxIn'); if (!i) return; i.onchange = () => { const fs = [...i.files]; i.value = ''; if (fs.length) addCtxShots(fs); }; gpClick(i); }
 async function ctxCopy(x) {
   try {
     const im = new Image(); im.src = x.src; await im.decode();

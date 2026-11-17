@@ -1,12 +1,12 @@
 {
- "version": "1.28.66",
- "build": "581afc13c317",
+ "version": "1.28.67",
+ "build": "b6ec1ef5c329",
  "notes": [
-  "On a phone: a More tab with your Google account, Sync now, updates, Help and Settings, and a bar above the tabs with Update now whenever a new version is ready. Today asks you to sign in with Google instead of choosing a folder."
+  "From Google Drive… is now beside every place you add files: a student's Add menu, Readings, your rubric, Gradebook import and School resources, and in the Planner a lesson's materials, unit files, slide pictures, the finished PowerPoint, Import a lesson, your school template and books. Google Docs, Slides and Sheets come in as PDFs for grading, and as Word, PowerPoint and Excel files in the Planner."
  ],
  "files": {
-  "index.html": "bed165c3eb2985a769094337e5680eb47bb259d50be90cf9dce42e5deea21d9b",
-  "planner.html": "b0d61be0eee819fdc77c4e998f58de3206571b2cf5524038bd2ee7771dfe27ef"
+  "index.html": "32aa3291d6fd23c62c694bd7e6ce16f5edfe9469f3b15b90e439aa74b62065a7",
+  "planner.html": "befa42ea28bc6d994c83ee4ccedcb673f2e32b2c9c8120007a9fa71529272e80"
  },
  "langs": {
   "lang/zh-Hant.js": "74f5b9dd6579b91ef1cf6a3431e79c560a454a6efd749f9c9a2a800a9b0b6348",
