@@ -689,7 +689,8 @@ test('file names give nobody away during anonymous grading: run together, shorte
   for (const who of ['Theo Banks', 'Ruby Walsh', 'Kai Novak']) {
     await goToStudent(page, st.indexOf(who));
     await page.waitForFunction(() => document.querySelectorAll('#paper .fhead').length > 0);
-    await new Promise(r => setTimeout(r, 200));   // the headings are tidied just after they're drawn
+    // the headings are tidied in the frame they're drawn in: give that frame time to come, then read what is on screen
+    await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
     const text = await shown(page);
     assert.ok(!/theo|banks|ruby|walsh|kai|novak/i.test(text), who + ': ' + text);
     assert.match(text, /\.pdf/i, 'what kind of file it is stays');

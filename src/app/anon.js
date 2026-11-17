@@ -62,8 +62,9 @@ function anonScrub() {
   for (const el of document.querySelectorAll('#paper .docx')) if (el.wordF && el.querySelector('.fhead') && !el.querySelector('.anonnote') && wordNoName(st, el.wordF)) el.querySelector('.fhead').insertAdjacentHTML('afterend', '<p class="muted anonnote" style="margin:6px 0;font-size:13px">This student’s name wasn’t found in this file, so a nickname or initials could still show here.</p>');
 }
 let anonT = 0;
-// a throttle, not a debounce: a page that keeps drawing for a while must not keep names on screen until it stops
-new MutationObserver(() => { if (anonOn() && !anonT) anonT = setTimeout(() => { anonT = 0; anonScrub(); }, 30); }).observe($('#paper'), { childList: true, subtree: true });
+// once a frame, before it is painted: a heading with a name in it never reaches the screen, even on a busy computer (a timer could
+// let one show for a moment), and a page that keeps drawing for a while is scrubbed as it goes, not only when it stops
+new MutationObserver(() => { if (anonOn() && !anonT) anonT = requestAnimationFrame(() => { anonT = 0; anonScrub(); }); }).observe($('#paper'), { childList: true, subtree: true });
 function setAnon(on) {
   if (on && !(batch.anon && batch.anon.order && batch.anon.order.length)) anonShuffle();
   batch.anon.on = on; saveNow();
