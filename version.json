@@ -1,11 +1,11 @@
 {
- "version": "1.28.67",
- "build": "95fd7eb848b5",
+ "version": "1.28.69",
+ "build": "4e351c35be69",
  "notes": [
-  "From Google Drive… is now beside every place you add files: a student's Add menu, Readings, your rubric, Gradebook import and School resources, and in the Planner a lesson's materials, unit files, slide pictures, the finished PowerPoint, Import a lesson, your school template and books. Google Docs, Slides and Sheets come in as PDFs for grading, and as Word, PowerPoint and Excel files in the Planner."
+  "A late paper on an assignment whose scores you typed into the gradebook: its card now has Add papers… (before, it was only in the ⋯ menu). Mark and score that student’s paper as usual. Everyone else keeps the score you typed, and the card still says Typed in."
  ],
  "files": {
-  "index.html": "9623a1892f9e11d75dd43bdccacb73ce0fba0fc082a4a6d14d613805c70d0aa3",
+  "index.html": "95d14327bb559ed778a1b52ce34f91c25f8262c30b71bb3da641b1c126e7eed5",
   "planner.html": "b8dfde36e7b3d4c92e07b5f216c7b20c410d006c69c09b273bf9d91c173085d8"
  },
  "langs": {
