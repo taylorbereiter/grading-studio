@@ -1,22 +1,24 @@
 {
- "version": "1.28.68",
- "build": "999bc0232a68",
+ "version": "1.28.70",
+ "build": "451c10a6d55b",
  "notes": [
-  "Group work has a third way: Group score, adjust a partner. You score the group once, and with Just and a partner’s name above the paper you can change one criterion for that partner only. The rest keeps following the group score, and Use group score puts it back.",
-  "Partners with their own scores can have typed notes just for one of them: pick Just and their name above the paper, and the paragraphs you write then are theirs alone, with a blue bar. The rest of the notes stay shared."
+  "Plan lessons has a Focus button on the lesson to pick up and on each class coming up without a lesson. A to-do to plan a lesson has Focus on this, and Plan it opens that class and day.",
+  "Lesson focus sessions leave out time you were away, and when one ends you see how long the lesson has taken so far.",
+  "Syncing sends changes as soon as you leave the page, checks for changes from your other devices every few minutes, and adds up focus and planning time from all of them. On the phone, a lesson shows its pictures and links.",
+  "More of the partner controls and Strengths and concerns are in your language, Today's times follow your language, and the Entry list window follows dark mode."
  ],
  "files": {
-  "index.html": "48e230768d4e42d68a0b87b4fcf1110f58926a71bd2cc126386af842120241e5",
-  "planner.html": "c62bb78edb1014ff5813acf15cf8cb279a92d19fd4fe1662753c2249a56b695b"
+  "index.html": "332ea119e43c1e39d4785631b0f7b7f08fac92bbec70689f8a4a8dead82817e0",
+  "planner.html": "9ef845fef9ff177ac0d6c7355673973bad829b50e0a5c57b7a1db3d051b4cfa9"
  },
  "langs": {
-  "lang/zh-Hant.js": "71dc958f8dd6dea4c1150a73a8f0d21339b6b57d8e4a4b75122ce33dda69cae1",
-  "lang/zh-Hans.js": "010649fc1912dca248c62f2f085d6f969600aaf3bbf2293115a614ff019aab9d",
-  "lang/es.js": "e22ed584136d4a5ee2b538927284c0a6d710af32b000757309c097a6612f352b",
-  "lang/fr.js": "34b1c5560e9fc548b65c541380fe9a2896ae208a10ad9cce099ff823bd3ed215",
-  "lang/de.js": "8cbb84297f7f452a2075d8ff018f7413982795a7838ea8c35bc0f9a1edb7a764",
-  "lang/pt-BR.js": "c592317145cd20530af83ffdfcedb08e1271072b42857e3d8256b0d868d39915",
-  "lang/ja.js": "895aa65601b4a0007add38a2d2887a9c7e66210dd9b89d7ecca8fd028fb11889",
-  "lang/ko.js": "b6438666c78e23fa89204f4b06a87fa34553da731161ef0f208adaf07425b025"
+  "lang/zh-Hant.js": "320cb6bc08506e36cc3c7af0ebb96439fd8f82c9c0169258c9b3c1adf12007ec",
+  "lang/zh-Hans.js": "2e1e2b2375eaf0277325a859b9100486a6aa93247cfec7d0129e8f574bd5e70f",
+  "lang/es.js": "bd1a8f5303e34ad54d03637f841343084d5d32121959ef03b8c76228c27f6cb8",
+  "lang/fr.js": "e7d55e1f6ca9329e2f0398f9461efdbda5d0f8d7effff0d09ee8eac0cc8e328d",
+  "lang/de.js": "0c8ae507125a46bd0a65582f2702216074073de026cc5c580f0980864907a7e6",
+  "lang/pt-BR.js": "a952b5ade21ad0d426b1696866a9ca630e38c2008014f7e1a16f754d6cede1b6",
+  "lang/ja.js": "430daa6bb95faa2e7143eac080fe7fdb440f2f1fd685bc02d8e8c5949db3edf3",
+  "lang/ko.js": "862dcb1065d41bb7425ff5b83aa5d71f58c4199893e0f9d25645400ea26b9218"
  }
 }

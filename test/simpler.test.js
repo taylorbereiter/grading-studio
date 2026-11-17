@@ -81,7 +81,7 @@ test('Class setup holds the roster, grading, the school link and the class’s p
   await pick(page, '[data-urename="u1"]'); await answerDlg(page, { typed: 'Stories' });
   await page.waitForFunction(() => document.querySelector('.uhead .nm').textContent === 'Stories');
   // an assignment: at most one button, and one ⋯ that holds Edit
-  assert.equal(await shown(page, '[data-card="i1"] .row button'), 1);
+  assert.equal(await shown(page, '[data-card="i1"] .row button'), 2, 'Add papers… (a late paper on typed-in scores) and the ⋯');
   await pick(page, '[data-edit-asg="i1"]'); await page.waitForSelector('#aClass');
   await page.keyboard.press('Escape');
   // + Unit sits under the units
