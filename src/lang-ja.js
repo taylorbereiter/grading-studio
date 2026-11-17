@@ -27,6 +27,13 @@ function jaHomeSay(k) {
 const LANG_JA = {
   name: '日本語', locale: 'ja',
   words: {
+    // group work, in the band above the paper (src/groups.js)
+    "Group work": "グループ課題", "What the group shares": "グループで共有するもの", "Share everything, or share the notes and give each partner their own score": "すべて共有するか、メモを共有して各メンバーに個別の点数をつけるか", "Marks and grade shared": "マークと成績を共有", "Grade shared": "成績を共有", "Shared notes, own scores": "メモは共有、点数は個別", "Own scores and comments": "点数と所見は個別", "Write for": "書き込み先", "New marks go on": "新しいマークの書き込み先", "Marks you make now show on every partner’s paper": "今つけるマークは全メンバーの答案に表示されます", "Both": "全員", "Grade on their own…": "個別に採点…", "Give this student their own grade and their own copy of the marks so far. The rest stay together.": "この生徒に個別の成績と、これまでのマークのコピーを渡します。ほかのメンバーはグループのままです。", "One set of marks and one grade for all of them": "全員で1組のマークと1つの成績", "Mark and grade once for the group": "グループで1回だけ採点する",
+    "No marks, left out": "マークなし・対象外", "Left out": "対象外", "Bring back": "元に戻す",
+    // a student’s strengths and concerns, on their card (src/watch.js)
+    "Strengths and concerns": "強みと気になる点", "Nothing saved from their work yet. A screenshot saved as a strong example or added to the watch list shows here, with the date.": "まだこの生徒の課題から保存したものはありません。優れた例として保存したスクリーンショットや、要観察リストに追加したものが日付とともにここに表示されます。", "★ Strong": "★ 優れた例", "⚑ Watch": "⚑ 要観察", "Every date, assignment and note as text, for report comments": "日付・課題・メモをすべてテキストで（通知表の所見用）", "Seen most:": "よく見られる点：", "Look closer": "拡大して見る", "None of this kind yet.": "この種類はまだありません。", "your AI assistant": "AI アシスタント",
+    // Settings, Classes and rosters, when no school system is named
+    "Names, students, class links": "名前、生徒、学校のシステムへのリンク",
     // only this student (src/solo.js)
     "Only this student": "この生徒だけ", "Hold to show everyone": "長押しで全員を表示", "Other work": "ほかの課題",
     // linked classes (src/linked.js)
@@ -48,7 +55,7 @@ const LANG_JA = {
     // the AI assistant beside the app (src/beside.js)
     'Opens beside Grading Studio. In Chrome, right-click it and choose Open link in split view to keep both in one window.': 'Grading Studio の横に開きます。Chrome では右クリックして Open link in split view を選ぶと、両方が 1 つのウィンドウに並びます。', 'Opens at': '開く場所', 'Empty for its usual page. A link of your own can go to your school account, a Gem, a project or a custom GPT.': '空欄ならいつものページを開きます。学校のアカウント、Gem、プロジェクト、カスタム GPT など、自分のリンクも指定できます。', 'A click on its name opens it': '名前をクリックしたときの開き方', 'in a window on the right of the screen': '画面右側のウィンドウ', 'in a new tab': '新しいタブ', 'Open it now': '今すぐ開く', 'Side by side.': '並べて使う。', 'is in the sidebar on every screen, so you can go between the two without hunting for a tab. In Chrome, right-click it there and choose': 'はすべての画面のサイドバーにあるので、タブを探さずに行き来できます。Chrome では、そこで右クリックして次を選びます:', 'Open link in split view': 'Open link in split view', ': both are then in one window, with a divider you can drag.': ' 両方が 1 つのウィンドウに並び、境目はドラッグで動かせます。', 'Give it an address above and it is in the sidebar on every screen.': '上にアドレスを入れると、すべての画面のサイドバーに表示されます。', 'Grading Studio sends nothing to it. It sees only what you paste or attach.': 'Grading Studio からは何も送信しません。アシスタントに見えるのは、あなたが貼り付けたり添付したりしたものだけです。', 'In a new tab': '新しいタブ', 'In a window on the right of the screen': '画面右側のウィンドウ', 'Your AI assistant opens at': 'あなたの AI アシスタントを開く場所:', 'Your AI assistant opens at its usual page': 'あなたの AI アシスタントはいつものページで開きます', 'Your AI assistant opens in a new tab': 'あなたの AI アシスタントは新しいタブで開きます', 'Your AI assistant opens in a window on the right of the screen': 'あなたの AI アシスタントは画面右側のウィンドウで開きます',
     // video files, partners and videos, bringing in a rubric (video.js, rubricup.js)
-    '⟳ Turn': '⟳ 回転', 'Turn the video a quarter turn, for one filmed sideways': '横向きに撮影された動画を90度回転します', 'Turn the video': '動画を回転', 'Captions are drawn by the video’s own site, so they turn with the video and can’t be put the right way up here.': '字幕は動画のサイト側で表示されるため、動画と一緒に回転し、ここで正しい向きに直すことはできません。',
+    '⟳ Turn': '⟳ 回転', 'Turn the video a quarter turn, for one filmed sideways': '横向きに撮影された動画を90度回転します', 'Turn the video': '動画を回転',
     'Rubric': 'ルーブリック', 'Not set yet': '未設定', 'Rubric rows:': 'ルーブリックの観点:', 'Just the total, out of': '合計点のみ、満点', 'A copy for every student:': '全員に配るコピー:', 'Bring in a rubric…': 'ルーブリックを取り込む…', 'Word, PDF or a picture. Rows are read from a table where they can be.': 'Word、PDF、または画像。できる場合は表から観点を読み取ります。', 'Rows found in it:': '見つかった観点:', 'Score with these rows': 'この観点で採点する', 'Give every student a copy to mark on': '全員に書き込み用のコピーを配る', 'No rubric table could be read from this file, so its rows aren’t filled in. You can type them in Rubric setup.': 'このファイルからルーブリックの表を読み取れなかったため、観点は入力されていません。ルーブリック設定で入力できます。', 'Use this rubric': 'このルーブリックを使う', 'Rows were found in it.': '観点が見つかりました。', 'Use these rows': 'この観点を使う', 'Videos and partners': '動画とパートナー', 'Optional, and you can add them later too. Paste a link or choose a file for each video, or drop video files here and each goes to the student named in its file name. Partners share one notes page, one set of marks and one grade.': '任意です。あとから追加することもできます。動画ごとにリンクを貼り付けるかファイルを選ぶか、ここに動画ファイルをドロップしてください。ファイル名にある名前の生徒に入ります。パートナーはメモページ、書き込み、成績を1つずつ共有します。', 'Same video as:': '同じ動画:', 'Paste a link to their video': '動画のリンクを貼り付け', 'Link to the video': '動画へのリンク', 'File…': 'ファイル…', 'Google Drive': 'Google ドライブ', 'Choose from Drive…': 'ドライブから選ぶ…', 'Drive…': 'ドライブ…', 'Change folder': 'フォルダを変更', 'Only the videos you pick can be opened, nothing else in your Drive.': '選んだ動画だけを開けます。ドライブのほかのものは開けません。', 'A video file on this computer': 'このコンピュータの動画ファイル', 'Take the file off': 'ファイルを外す', 'With:': 'パートナー:', '+ Partners': '+ パートナー', 'Partners': 'パートナー', 'Already in the group': 'すでにグループにいます', 'Partners and videos': 'パートナーと動画', 'Pick each group’s partners: one grade covers the group, and a group with no video shares the first one’s paper and marks. Paste a link to a video, or choose a video file. You can also drop video files here, and each goes to the student named in its file name.': 'グループごとにパートナーを選びます。成績はグループで1つです。動画のないグループは最初の人の用紙と書き込みを共有します。動画のリンクを貼り付けるか、動画ファイルを選んでください。ここに動画ファイルをドロップすることもでき、ファイル名にある名前の生徒に入ります。', 'Partners and videos…': 'パートナーと動画…', 'Everyone’s partners and videos in one list: who works together, and a link or video file for each': '全員のパートナーと動画を1つの一覧に:誰が一緒に取り組むか、それぞれのリンクや動画ファイル', 'Partners get': 'パートナーの成績', 'One grade': '成績は1つ', 'Their own scores': 'それぞれの点数', 'The notes are shared either way.': 'メモはどちらの場合も共有されます。',
     /* the marking screen: the top bar, the tools, the student list, the score panel, and its Grades, Insights, Return and Rubric setup screens */
     'This assignment': 'この課題', 'Every score and comment, beside the grade written on each paper': 'すべての点数とコメントを、各答案に書かれた成績と並べて表示', 'How the class did, row by row, and whether your scoring stayed even': 'クラスの結果を行ごとに、そして採点が一定だったか', 'Strong work from this assignment, with no names on it': 'この課題の優れた作品(名前なし)',
@@ -93,7 +100,7 @@ const LANG_JA = {
     'Too few papers to say.': '答案が少なすぎて判断できません。', 'First scored': '最初に採点', 'Last scored': '最後に採点', 'Rubric rows aren’t read one by one with fewer than 20 papers: each row is too noisy on its own.': '答案が20枚未満のときは、ルーブリックの行を1つずつは見ません。1行だけではばらつきが大きすぎるためです。',
     'This goes by when each score last changed, so a paper you came back to counts as late. Finished scores only.': '各点数が最後に変更された時刻で判断するので、あとから戻った答案は遅い扱いになります。確定した点数のみ。', 'See these as a list': 'リストで見る', 'The same score, side by side': '同じ点数を並べて',
     'No two papers share a finished score yet.': '確定した点数が同じ答案はまだありません。', 'Other ways to give work back': '課題を返す他の方法', 'Return marked files': '採点済みファイルを返却', '(you can still download)': '(ダウンロードは可能です)', 'Download ZIP': 'ZIPをダウンロード', 'or': 'または',
-    'save into a folder…': 'フォルダに保存…', 'Options:': 'オプション:', 'student folders, grade sheet, marks stay editable, mark key': '生徒ごとのフォルダ、成績シート、マークは編集可能、記号の凡例', 'Your original files don’t change. A file you marked anywhere goes back whole, every page in order. Word rubrics you scored go back as Word files. Files with no marks stay out. Comments go in a right-hand margin.': '元のファイルは変わりません。どこかにマークしたファイルは全ページ順番どおりに丸ごと返ります。採点したWordのルーブリックはWordファイルで返ります。マークのないファイルは含まれません。コメントは右側の余白に入ります。',
+    'save into a folder…': 'フォルダに保存…', 'Options:': 'オプション:', 'Your original files don’t change. A file you marked anywhere goes back whole, every page in order. Word rubrics you scored go back as Word files. Files with no marks stay out. Comments go in a right-hand margin.': '元のファイルは変わりません。どこかにマークしたファイルは全ページ順番どおりに丸ごと返ります。採点したWordのルーブリックはWordファイルで返ります。マークのないファイルは含まれません。コメントは右側の余白に入ります。',
     'Anchor papers': '基準答案', 'Pick a high, middle and low paper while you mark: under the score, click High, Mid or Low.': '採点中に上・中・下の答案を選んでください:点数の下で「上」「中」「下」をクリック。', 'Not picked yet': 'まだ選んでいません', 'One student at a time': '1人ずつ', 'Mark as returned': '返却済みにする', 'Give one student their marked paper now, without waiting for the rest.': '他の生徒を待たずに、1人に採点済みの答案を今すぐ返します。',
     'Papers with names covered': '名前を隠した答案', 'A ZIP of every page as a picture': '各ページを画像にしたZIP', 'Check the covers': '目隠しを確認', 'Marks only': 'マークのみ', 'One file: scores, rubric and your marks': '1つのファイル:点数、ルーブリック、あなたのマーク', 'Make the file': 'ファイルを作成',
     'Paste a reply, and it goes to each student': '返信を貼り付けると、各生徒に振り分けられます', 'Paste a reply': '返信を貼り付け', 'Remove row': '行を削除', 'How do you score this one?': 'この課題はどう採点しますか?', 'Just the total': '合計のみ', 'Grading right on your own rubric? Use Just the total: one score box, and the Grades tab and percents still work.': '自分のルーブリックに直接採点しますか?「合計のみ」を使えば点数欄は1つで、「成績」タブとパーセントもそのまま使えます。',
@@ -118,13 +125,12 @@ const LANG_JA = {
     '✓ All clear: everyone is scored, scores match the papers, and every file is marked.': '✓ 問題なし:全員に点数があり、点数は答案と一致し、すべてのファイルにマークがあります。',
     /* boxes opened from a class page: an assignment, a roster, a unit, how the class is graded, the wording boxes, notes pages and progress sheets */
     'New assignment': '新しい課題', 'Edit assignment': '課題を編集', 'e.g. Ch 3 Analysis Paragraph': '例：第3章 分析パラグラフ', 'Class': 'クラス', 'Summatives and in-class assessments count toward the term grade in the Gradebook. Formative activities are feedback only.': '成績簿では、総括的課題と授業内評価が学期の成績に入ります。形成的活動はフィードバックのみです。',
-    'The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment.': 'ルーブリックは、この課題のダウンロードを初めて開いたときに「Rubric setup」で設定し、この課題用に保存されます。', 'The rubric is set the first time you open a download for it, with Rubric setup, and it’s remembered for this assignment. Copies in other classes get the same rubric.': 'ルーブリックは、この課題のダウンロードを初めて開いたときに「Rubric setup」で設定し、この課題用に保存されます。ほかのクラスのコピーにも同じルーブリックが使われます。',
     'Delete': '削除', 'Unit name': '単元名', 'Add unit': '単元を追加', 'New roster': '新しい名簿', 'e.g. Period 2 Biology': '例：2時間目 生物', 'Class name': 'クラス名', '(optional)': '（任意）', 'Class page link': 'クラスページのリンク', 'Paste this class’s page address in your school’s system': '学校のシステムにあるこのクラスのページのアドレスを貼り付け',
     'Students, one per line, in the order you want': '生徒を1行に1人ずつ、並べたい順に', 'Paste from a spreadsheet, or upload a file. Student ID and email columns are kept as each student’s details.': 'スプレッドシートから貼り付けるか、ファイルをアップロードします。生徒番号とメールの列は、各生徒の情報として保存されます。',
     'Upload a list (.csv or .txt)…': 'リストをアップロード（.csv または .txt）…', 'Kept in this browser.': 'このブラウザに保存されます。', 'Coming from Google Classroom? Bring the class over…': 'Google Classroom から移りますか？ クラスを取り込む…', 'Where are the papers? You can also drop the ZIP or the folder straight onto this assignment’s card.': '提出物はどこにありますか？ ZIP やフォルダをこの課題のカードに直接ドロップすることもできます。',
     'The ZIP or files…': 'ZIP またはファイル…', 'A whole folder…': 'フォルダごと…', 'No papers: presentations or videos…': '提出物なし：発表や動画…', 'For presentations, speeches and videos: a notes page for each student instead of a paper': '発表、スピーチ、動画用：提出物の代わりに生徒ごとのメモページ', 'No papers: just type the scores…': '提出物なし：点数だけ入力…', 'No papers at all: an empty column in the class gradebook to type each score into': '提出物がまったくない場合：クラスの成績簿に点数を入力する空の列',
-    'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.': '各ファイルは、ファイル名やフォルダ名にある名前で生徒と照合されます。照合はどれでも直せます。', 'Files or a ZIP…': 'ファイルまたは ZIP…', 'Close': '閉じる', 'Once it is open,': '課題を開いたら、生徒のページの',
-    '+ Add': '+ 追加', 'on a student’s page takes a link to their video, and that is where you say who their partners are.': 'で動画のリンクを入れられます。パートナーが誰かもそこで指定します。', 'Notes page': 'メモページ', 'Lined': '罫線', 'Ruled lines, with a margin for the time': '罫線と、時間を書く余白',
+    'Each file is matched to a student by the name in its file name or folder name, and you can fix any match.': '各ファイルは、ファイル名やフォルダ名にある名前で生徒と照合されます。照合はどれでも直せます。', 'Files or a ZIP…': 'ファイルまたは ZIP…', 'Close': '閉じる',
+    '+ Add': '+ 追加', 'Notes page': 'メモページ', 'Lined': '罫線', 'Ruled lines, with a margin for the time': '罫線と、時間を書く余白',
     'A box for each row of the rubric': 'ルーブリックの観点ごとの枠', 'Two columns': '2列', 'Went well, and to work on': 'よかった点と、取り組む点', 'Blank': '白紙', 'Only the title': 'タイトルのみ', 'This assignment has no rubric rows': 'この課題にはルーブリックの観点がありません', 'Rubric rows can be picked once this assignment has a rubric.': 'この課題にルーブリックができると、観点を選べるようになります。',
     'Make the pages and open': 'ページを作って開く', 'This needs the class’s roster, so there is a page for each student. Add the students to the class first, then come back to this assignment.': '生徒ごとにページを作るため、クラスの名簿が必要です。先にクラスに生徒を追加してから、この課題に戻ってください。',
     'How this class is graded': 'このクラスの評価方法', 'Points and percent': '点数とパーセント', 'Rubrics, points, a percent and a term average.': 'ルーブリック、点数、パーセント、学期平均。', 'IB MYP': 'IB MYP', 'Criteria marked 0 to 8, a best-fit level each term, a 1 to 7 grade.': '規準を 0〜8 で評価し、学期ごとにベストフィットのレベルを決め、1〜7 の成績を出します。',
@@ -317,7 +323,7 @@ const LANG_JA = {
     'Continue': '続ける', 'Start': '開始', 'Return papers': '提出物を返却', 'More': 'その他', 'Forget': '取り除く', 'Open the papers': '提出物を開く',
     'Removes the papers, your marks and scores for this assignment from this browser and any linked folder': 'この課題の提出物、書き込み、点数を、このブラウザとリンクされたフォルダから取り除きます',
     'Formative': '形成的評価', 'feedback only': 'フィードバックのみ', 'papers not kept, drop the download again': '提出物は保存されていません。ダウンロードをもう一度ドロップしてください',
-    'an older copy: your work went on in a newer one': '古いコピーです。作業は新しいコピーで続いています', 'the one paper scored': '1 件のみで、採点済み',
+    'an older copy: your work went on in a newer one': '古いコピーです。作業は新しいコピーで続いています',
     'See who': '対象者を見る', 'Open Insights': '分析を開く', 'Show only the newest': '最新のものだけ表示',
     'Papers not kept in this browser': '提出物はこのブラウザに保存されていません', 'A download': 'ダウンロード', 'Your work is not backed up': '作業のバックアップがありません',
     'Choose a folder or make a take-home file, in Settings': '設定でフォルダを選ぶか、持ち出しファイルを作成してください',
@@ -349,7 +355,6 @@ const LANG_JA = {
     'Points': '点数', 'Type a total, like 17 out of 20. Each assignment has its own “out of”.': '20 点中 17 点のように合計を入力します。満点は課題ごとに設定できます。',
     'Percent': 'パーセント', 'Type a percent for each paper.': '提出物ごとにパーセントを入力します。',
     'Letter grades': '段階評価（A〜F）', 'A to F, worked out from the percent. You set where each letter starts.': 'パーセントから A〜F を求めます。各段階の下限は自分で設定します。',
-    
     'This is only what a new assignment starts with. Any assignment can be scored another way.': 'これは新しい課題の初期設定にすぎません。課題ごとに別の方法で採点できます。',
     'Where should your work be kept?': '作業をどこに保存しますか？',
     'Your classes, papers, marks and scores are kept in this browser. Choose a folder on this computer and every save goes there too, with a copy of each day to go back to. Nothing is uploaded.': 'クラス、提出物、書き込み、点数はこのブラウザに保存されます。このパソコンのフォルダを選ぶと、保存のたびにそこにも保存され、日ごとのコピーに戻ることもできます。何もアップロードされません。',
@@ -386,11 +391,10 @@ const LANG_JA = {
     'All keys': 'すべてのキー', 'Every keyboard shortcut': 'すべてのキーボードショートカット',
     'Classes and rosters': 'クラスと名簿', 'Terms and weights': '学期と配分', 'Your terms and how each type counts': '学期と、種類ごとの配分',
     'Grading scale and rubrics': '評価基準とルーブリック', 'Your saved scales and rubrics': '保存した評価基準とルーブリック',
-    'Marking': '採点', 
+    'Marking': '採点',
     'Timetable and calendar': '時間割とカレンダー', 'Class times and days off, in the Planner': '授業の時間と休日（授業計画）',
-    
     'This week in the Planner': '授業計画の今週', 'Today’s classes and the lessons planned for them': '今日のクラスと計画済みの授業',
-    'This week': '今週', 'The calendar, a week at a time': 'カレンダー（1 週間ずつ）', 'Semester': '学期', 'The calendar, every week and its units': 'カレンダー（すべての週と単元）',
+    'This week': '今週', 'Semester': '学期', 'The calendar, every week and its units': 'カレンダー（すべての週と単元）',
     'Each unit, its weeks and its files': '各単元とその週、ファイル', 'Old decks and their handouts, to use again': '以前のスライドと配布資料を再利用', 'The activity bank': '活動バンク', 'Saved rubrics and grading scales': '保存したルーブリックと評価基準',
     'Make a new lesson': '新しい授業を作成', 'Not on a class yet': 'クラス未設定', 'Import a lesson': '授業を取り込む', 'A lesson file, a lesson pack, or pasted text': '授業ファイル、授業パック、貼り付けたテキスト',
     'Look in the Planner folder': '授業計画フォルダを確認', 'Reconnect the Planner folder': '授業計画フォルダを再接続', 'Link the Planner folder': '授業計画フォルダをリンク', 'For lessons added or changed there': 'そこで追加・変更された授業を確認',
@@ -449,7 +453,7 @@ const LANG_JA = {
     [/^Open a (.+) download$/, '$1 のダウンロードを開く'],
     [/^(\d+) students?$/, '生徒 $1 人'],
     [/^(.+) (gradebook|students|attendance|missing work|charts|goals|report comments)$/, m => m[1] + '：' + { gradebook: '成績簿', students: '生徒', charts: 'グラフ', 'report comments': '通知表の所見', attendance: '出欠', goals: '学習目標', 'missing work': '未提出の課題' }[m[2]]],
-    [/^Names, students, (.+) links$/, '名前、生徒、$1 のリンク'], [/^Names, students, links to your school’s system$/, '名前、生徒、学校のシステムへのリンク'],
+    [/^Names, students, (.+) links$/, '名前、生徒、$1 のリンク'],
     [/^Nothing matches “(.*)”\.$/, '「$1」に一致するものはありません。'],
     [/^(\d+) match(?:es)?$/, '$1 件の結果'],
     [/^Books, video, (.+)$/, '本、動画、$1'],
@@ -475,6 +479,7 @@ const LANG_JA = {
   // The lines with a number or a name in them that src/lang.js matches for every language (LANG_FILLS): {1} {2} are the parts found
   // in the English, {t1} is that part in this language when it is known, and a pair is one / many.
   fill: {
+    and: "、", grplist: "グループ課題：{1}、1回で採点", grplisto: "グループ課題：{1}、メモは共有・点数は個別", grpwith: "{1} と共同 ·", grpsplit: "{1} とページを共有、採点は個別", grpjust: "{1} だけ", grponly: "今つけるマークは {1} の答案にだけ表示されます。所見は常に個別です。", sendto: "{t1} に送る",
     fcwkof: "今週：{1}", fcrailw: "集中：今週 {1}", gpsessn: "セッション {1}", gpsess: ["今日 {1} セッション。", "今日 {1} セッション。"], gpaday: ["1日 {1} 枚", "1日 {1} 枚"], tkweeks: ["{1} 週が目標を達成", "{1} 週が目標を達成"],
     fct3: "3枚だけ：{1}", gpleft: "残り約{1}", gpsets: "{1}セット", gpdays: "{1}日",
     fcsofar: ["これまでの {1} 枚から", "これまでの {1} 枚から"], tkso: "これまで{1}",
