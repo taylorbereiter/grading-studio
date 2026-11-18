@@ -323,7 +323,10 @@ test('Library: an activity found and filtered, one of my own saved, an activity 
   // One of my own
   await p.click('main [data-focus="new-activity"]');
   await p.waitForSelector('[data-act="name"]');
-  await p.focus('[data-act="name"]'); await p.keyboard.type('Silent debate');
+  // The sheet puts focus in itself first; type only once it has, so no key lands on another control.
+  await p.waitForFunction(() => document.activeElement && document.activeElement.closest('.sheet'));
+  await new Promise(r => setTimeout(r, 200));
+  await p.click('[data-act="name"]'); await p.keyboard.type('Silent debate');
   await p.waitForFunction(() => document.querySelectorAll('.actedit textarea').length === 3);
   const areas = await p.$$('.actedit textarea');
   await areas[1].type('Write a claim\nPass it on'); await areas[2].type('Write one claim\nAnswer the one you get');
