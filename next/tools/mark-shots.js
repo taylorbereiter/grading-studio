@@ -3,7 +3,7 @@
 // node next/tools/mark-shots.js [--out dir]. Fails on any error on the page. Nothing is compared with a kept picture. Made-up students only.
 const fs = require('fs'), path = require('path'), http = require('http');
 const { launch } = require('../../test/helpers/chrome.js');
-const { plant, appReady, openZip } = require('../../test/helpers/app.js');
+const { plant, appReady, openZip, markPage, settle, goToStudent } = require('../../test/helpers/app.js');
 const { zipOf, makePaper } = require('../../test/helpers/fixtures.js');
 const { gradingSeed, STEADY } = require('../../test/helpers/steady.js');
 const ROOT = path.join(__dirname, '..', '..');
@@ -60,6 +60,26 @@ const FINGER = '--blink-settings=primaryHoverType=1,availableHoverTypes=1,primar
     const m = await page(1440, 900);
     await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
     await m.goto(srv.url); await appReady(m); await openZip(m, zip);
+    // the screen in use: the rubric's rows named with a line for each level, every kind of mark and two stamps on the first paper,
+    // two students scored, a comment, and three saved comments (all made up)
+    await m.evaluate(() => {
+      localStorage.setItem('gs.bank', JSON.stringify(['Explain each quotation', 'Theme as a full sentence', 'Strong ending']));
+      const su = window.__gs.state().setup;
+      su.criteria = ['Understanding', 'Evidence', 'Language'];
+      su.levels = [{ 1: 'Retells the story', 2: 'Names a theme', 3: 'Explains how the author builds a theme', 4: 'Traces the theme across the story' },
+        { 1: 'Little evidence', 2: 'Quotations, not explained', 3: 'Quotations, each explained', 4: 'Well-chosen quotations, closely read' },
+        { 1: 'Hard to follow', 2: 'Many errors', 3: 'Clear, a few errors', 4: 'Precise and varied' }];
+    });
+    await markPage(m, 0);
+    await m.evaluate(() => {
+      const G = window.__gs, s = G.state(), [a, b] = s.batch.students, f = a.files[0], add = m => (f.marks[0] ||= []).push(m);
+      add({ t: 'stamp', k: 'score', x: 470, y: 90, size: 44, text: '8/12 = 67%', color: '#D7263D' });
+      add({ t: 'stamp', k: 'star', x: 500, y: 640, size: 36 });
+      a.grade.rubric = [3, 2, 3]; a.grade.comment = 'Your reading of the ending is the strongest part. Next time, explain every quotation the way you did the first one.';
+      b.grade.rubric = [4, 3, 3];
+      G.saveNow();
+    });
+    await goToStudent(m, 1); await goToStudent(m, 0); await settle(m);
     const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
     for (const look of ['graphite', 'midnight']) {
       const p = await page(w, h);

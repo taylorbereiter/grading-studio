@@ -17,7 +17,7 @@ import { PARTS } from '../router.js';
 const copy = text => copyText(text);
 const cut = s => (s.length > 40 ? s.slice(0, 40) + '…' : s);
 const copyCell = v => copy(v).then(() => toast(v ? t('setup.copied', { text: cut(v) }) : t('setup.copied_empty')));
-const Cell = ({ v, children, cls = '' }) => <td class={cls}><button type="button" class="cp" data-copy={v} onClick={() => copyCell(v)}>{children == null ? v : children}</button></td>;
+const Cell = ({ v, children, cls = '' }) => <td class={cls}><button type="button" class="cp" data-copy={v} title={cls === "cm" ? v : undefined} onClick={() => copyCell(v)}>{children == null ? v : children}</button></td>;
 
 /* ---------------- Grades ---------------- */
 export function Grades({ E, onOpen }) {

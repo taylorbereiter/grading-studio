@@ -5,7 +5,7 @@
 import { h, Fragment } from 'preact';
 import { useRove } from '../mark/rove.js';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'preact/hooks';
-import { Tabs, Button, IconButton, Icon, EmptyState, Dialog, Progress, Avatar, TextInput, Menu } from '../../ui/index.js';
+import { Tabs, Button, IconButton, Icon, EmptyState, Dialog, Progress, Avatar, TextInput, Menu, Mic } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { go, href, PARTS } from '../router.js';
 import { register } from '../../services/shortcuts.js';
@@ -33,6 +33,7 @@ function rowScore(st, pts, fm) {
   const g = gradeOf(st), s = st.grade.status;
   if (s === 'missing') return { text: t('mark.missing'), tone: 'warn' };
   if (s === 'excused') return { text: t('mark.excused'), tone: 'mute' };
+  if (!st.files.length && g.total == null && g.pct == null) return { text: t('mark.missing'), tone: 'warn' };
   if (fm) return st.grade.fb ? { text: t('mark.fb_done_short'), done: true } : null;
   // an MYP task: each criterion's level in turn, as the current app's list has them (src/ib.js ibListSay)
   if (ibSetup() && g.total != null) { const su = state().setup; return { text: su.ib.map((k, i) => (k ? (st.grade.rubric[i] == null ? '–' : fmtNum(st.grade.rubric[i])) : null)).filter(x => x !== null).join(' '), done: !!g.done }; }
@@ -76,7 +77,7 @@ function StudentList({ batch, cur, onPick, onReport, lf, setLf, fold, setFold, f
   const findKey = e => { if (e.key === 'Enter' && rows[0]) { e.preventDefault(); onPick(rows[0].i); e.currentTarget.blur(); } if (e.key === 'Escape') { e.preventDefault(); setQ(''); e.currentTarget.blur(); } };
   return <aside class={'mk-list' + (fold ? ' fold' : '')} aria-label={t('mark.students')}>
     <div class="mk-lhead mute"><span>{anonOn() ? t('mark.hn_head') : t('mark.papers', { n: batch.students.filter(st => st.files.length).length })}</span>{missing > 0 && <span>{t('mark.missing_n', { n: missing })}</span>}</div>
-    <div ref={box} class="mk-find" onKeyDown={findKey}><TextInput icon="search" label={t('mark.find')} value={q} onInput={setQ} /></div>
+    <div ref={box} class="mk-find" onKeyDown={findKey}><TextInput icon="search" label={t('mark.find')} placeholder={t('mark.find')} value={q} onInput={setQ} /></div>
     <div class="mk-lbar">
       <span class="mk-lf"><button type="button" class={'chip' + (lf !== 'all' ? ' on' : '')} aria-haspopup="menu" aria-expanded={menu ? 'true' : 'false'} onClick={() => setMenu(v => !v)} data-lf-open><Icon name="menu" size="xs" />{LF_LINE[lf](fm)}</button>
         {menu && <div class="mk-lfmenu" role="menu" aria-label={t('mark.lf_show')} onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); setMenu(false); } }}>{LF.map(k => { const n = count(k);
@@ -290,39 +291,49 @@ function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onC
   const stamp = r => { if (!state().pages.length) return toast(t('mark.stamp_open')); if (M.scoreStamp(r)) toast(t('mark.stamp_where')); };
   // the points box: up and down go to the last or next student, not half a point; Enter leaves the box
   const ptsKey = e => { if (e.key === 'Enter') e.currentTarget.blur(); if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); e.currentTarget.blur(); (e.key === 'ArrowDown' ? onNext : onPrev)(); } };
-  return <aside class="mk-side" aria-label={t('mark.score')}>
+  const lvl = (i, v) => (v == null ? '' : String((su.levels && su.levels[i] && su.levels[i][v]) || ''));
+  return <aside class="mk-side" aria-label={t('mark.score')}><div class="mk-sbody">
     <div class="who"><Avatar name={name} /><div><h2 class="t4" data-raw>{name}</h2>
       <p class="mute">{t('mark.n_of', { n: cur + 1, of: batch.students.length })}{file ? <>, <span data-raw>{file.name}</span></> : ''}</p></div></div>
     {fm ? <><h3 class="mk-h">{t('mark.fb_head')}</h3>
       <p class="mute">{t('mark.fb_text')}</p>
       <div class="mk-fb"><Button aria-pressed={gr.fb ? 'true' : 'false'} icon={gr.fb ? 'check' : undefined} disabled={off} onClick={() => M.setFb(!gr.fb)} kbd="F" data-fb>{t(gr.fb ? 'mark.fb_done' : 'mark.fb_mark')}</Button>
         {!gr.fb && !last && <Button variant="primary" disabled={off} onClick={() => { M.setFb(true); onNext(); }} kbd="Shift F" data-fbnext>{t('mark.fb_next')}</Button>}</div></>
-    : <>{FU && M && <FU.IbAsk />}<h3 class="mk-h">{t('mark.score')}</h3>
+    : <>{FU && M && <FU.IbAsk />}<h3 class="mk-h vh">{t('mark.score')}</h3>
     {su.mode === 'rubric' ? <div class="mk-crits">{su.criteria.map((c, i) => { const v = gr.rubric[i], steps = rowSteps(su, i), top = rowTop(su, i), k = steps.indexOf(v);
-      return <div class={'mk-crit' + (i === row ? ' on' : '')} data-row={i}>
-        <div class="cn"><button type="button" class="nm" tabindex="-1" onClick={() => M && M.pickRow(i)} data-raw>{c}</button><em>{v == null ? '' : fmtNum(v)}{v == null ? '' : <small>{' / ' + top}</small>}</em>{v != null && M && <IconButton icon="stamp" size="sm" label={t('mark.stamp_row', { c })} onClick={() => stamp(i)} data-critstamp={i} />}</div>
-        <input type="range" class={'srange' + (v == null ? ' unset' : '')} min="0" max={steps.length - 1} step="1" value={Math.max(0, k)} disabled={off}
-          aria-label={t('mark.row_score', { c })} aria-valuetext={v == null ? t('mark.not_scored') : t('mark.v_of', { v: fmtNum(v), of: top })}
+      const pct = k < 0 ? 0 : steps.length > 1 ? (k / (steps.length - 1)) * 100 : 100, say = lvl(i, v);
+      return <div class={'mk-crit' + (i === row ? ' on' : '') + (v == null ? ' unset' : '')} data-row={i} style={{ '--f': pct / 100 }}>
+        <div class="cn"><button type="button" class="nm" tabindex="-1" onClick={() => M && M.pickRow(i)} data-raw>{c}</button>{v != null && M && <IconButton icon="stamp" size="sm" label={t('mark.stamp_row', { c })} tabindex="-1" onClick={() => stamp(i)} data-critstamp={i} />}<em>{v == null ? <small>{'– / ' + top}</small> : <>{fmtNum(v)}<small>{' / ' + top}</small></>}</em></div>
+        <div class="strack"><input type="range" class={'srange' + (v == null ? ' unset' : '')} min="0" max={steps.length - 1} step="1" value={Math.max(0, k)} disabled={off}
+          aria-label={t('mark.row_score', { c })} aria-valuetext={v == null ? t('mark.not_scored') : t('mark.v_of', { v: fmtNum(v), of: top }) + (say ? ', ' + say : '')}
           onInput={e => M.setRow(i, steps[+e.currentTarget.value], { toggle: false })} />
-        <div class="sticks" role="group" aria-label={t('mark.row_score', { c })}>{steps.map(w => <button type="button" class={w % 1 ? 'half' : ''} data-v={w} tabindex="-1" aria-pressed={v === w ? 'true' : 'false'} disabled={off} onClick={() => M.setRow(i, w)}>{fmtNum(w)}</button>)}</div>
+        <div class="sticks" role="group" aria-label={t('mark.row_score', { c })}>{steps.map((w, j) => <button type="button" class={w % 1 ? 'half' : ''} style={{ '--at': steps.length > 1 ? j / (steps.length - 1) : 0 }} data-v={w} tabindex="-1" aria-pressed={v === w ? 'true' : 'false'} disabled={off} onClick={() => M.setRow(i, w)}>{fmtNum(w)}</button>)}</div></div>
+        {say && <p class="lvl mute" title={say} data-raw>{say}</p>}
       </div>; })}</div>
       : <div class="mk-pts"><input type="text" inputmode="decimal" aria-label={t('mark.points')} value={gr.pk != null && gr.pk !== '' ? gr.pk + '%' : gr.points} disabled={off}
           onInput={e => M.setPoints(e.currentTarget.value, e.currentTarget)} onBlur={() => M && M.leftPoints()} onKeyDown={ptsKey} /><span class="mute">{t('mark.out_of_pts', { n: su.outOf })}</span></div>}
-    {FU && M && ibSetup() ? <FU.IbTotal st={st} onStamp={() => stamp(null)} /> : <div class="total"><b>{g.total != null ? fmtNum(g.total) : '–'}</b><span class="mute">{max ? t('mark.out_of', { n: fmtNum(max) }) : ''}</span>
-      <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span>{M && <IconButton icon="grades" size="sm" label={t('mark.calc')} kbd="=" onClick={onCalc} data-calcopen />}{g.total != null && M && <Button size="sm" icon="stamp" onClick={() => stamp(null)} title={t('mark.stamp_tip')} data-stampscore>{t('mark.stamp')}</Button>}</div>}
-    {g.total == null && <p class="mute">{t('mark.no_score')}</p>}</>}
+    {FU && M && ibSetup() ? <FU.IbTotal st={st} onStamp={() => stamp(null)} /> : <div class={'total' + (g.total == null ? ' none' : '')}><b>{g.total != null ? fmtNum(g.total) : '–'}</b><span class="mute">{max ? t('mark.out_of', { n: fmtNum(max) }) : ''}</span>
+      <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span>{g.total != null && M && <Button size="sm" icon="stamp" onClick={() => stamp(null)} title={t('mark.stamp_tip')} data-stampscore>{t('mark.stamp')}</Button>}</div>}
+    {g.total == null && <p class="mute nosc">{t('mark.no_score')}</p>}</>}
+    <CommentBox value={gr.comment || ''} off={off} onInput={v => M.setComment(v)} />
+    {M && <CommentChips text={gr.comment || ''} onAdd={c => M.setComment((gr.comment || '').trim() ? (gr.comment || '').replace(/\s+$/, '') + ' ' + c : c)} />}
     <Rove class="mk-stat" role="group" aria-label={t('mark.mark_as')}>{STATUS.map(([k, l]) => <button type="button" class="chip" aria-pressed={gr.status === k ? 'true' : 'false'} disabled={off} data-status={k} onClick={() => M.setStatus(k)}>{l()}</button>)}{FU && M && <FU.ScoreMore st={st} />}</Rove>
     {FU && M && <FU.Anchors st={st} />}
-    <textarea class="mk-cmt" aria-label={t('mark.comment_for')} placeholder={t('mark.comment_for_ph')} value={gr.comment || ''} disabled={off} data-raw onInput={e => M.setComment(e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.blur(); }} />
-    {M && <CommentChips text={gr.comment || ''} onAdd={c => M.setComment((gr.comment || '').trim() ? (gr.comment || '').replace(/\s+$/, '') + ' ' + c : c)} />}
     {FU && M && <FU.PastWork st={st} />}
-    {TN && M && <TN.NotesPart st={st} />}
-    {!solo && <div class="foot"><IconButton icon="chl" label={t('mark.prev')} onClick={onPrev} disabled={first} />
-      {fm ? <span class="grow" /> : <Button variant="primary" kbd="Enter" onClick={next} data-next>{t('mark.next_score')}</Button>}
-      <IconButton icon="chr" label={t('mark.next')} onClick={onNext} disabled={last} data-next-plain /></div>}
+    {TN && M && <TN.NotesPart st={st} />}</div>
+    {!solo && <div class="foot"><IconButton icon="chl" variant="plain" label={t('mark.prev')} onClick={onPrev} disabled={first} data-prev />
+      {fm ? <IconButton icon="chr" variant="plain" label={t('mark.next')} onClick={onNext} disabled={last} data-next-plain /> : <Button variant="primary" kbd="Enter" onClick={next} data-next>{t('mark.next_score')}</Button>}</div>}
   </aside>;
 }
 
+// The comment for the student: a long text box, so it has dictation like every other (ui Mic); words go in where the cursor is.
+function CommentBox({ value, off, onInput }) {
+  const ta = useRef(null), [on, setOn] = useState(false);
+  const put = words => { const el = ta.current; if (!el) return; const v = el.value, a = el.selectionStart ?? v.length, b = el.selectionEnd ?? v.length, before = v.slice(0, a), sp = before && !/\s$/.test(before) ? ' ' : '';
+    onInput(before + sp + words.trim() + v.slice(b)); };
+  return <span class={'dfield mk-cbox' + (on ? ' listening' : '')}><textarea ref={ta} class="mk-cmt" aria-label={t('mark.comment_for')} placeholder={t('mark.comment_for_ph')} value={value} disabled={off} data-raw
+    onInput={e => onInput(e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.blur(); }} />{!off && <Mic onText={put} onListening={setOn} />}</span>;
+}
 // Her saved comments, one click from the comment box (src/markscreen.js cmtChips): the first three as chips, the rest and saving this
 // one under Saved comments. They are the comment bank the current app keeps (gs.bank), changed through students/write.js.
 let BANK = null;
@@ -461,6 +472,8 @@ export default function MarkScreen({ route, classes }) {
   const setupItems = [{ label: t('mark.su_menu'), icon: 'settings', onSelect: openSetup }, { label: t('mark.bf_menu'), icon: 'upload', onSelect: bringMany },
     { label: t('mark.pv_menu'), icon: 'people', onSelect: () => PARTS.partners().then(P => setSetupDlg({ k: 'pv', P }), e => console.error(e)) },
     { label: t('mark.qm_menu'), icon: 'check', onSelect: () => quick() },
+    { label: t('mark.calc'), icon: 'grades', kbd: '=', onSelect: openCalc },
+    { label: t('mark.solo_start'), sub: t('mark.solo_tip'), icon: 'user', kbd: 'I', onSelect: soloStart },
     ...(w && w.batch.quiz && w.batch.quiz.made ? [{ label: t('mark.qr_menu'), icon: 'image', onSelect: () => quizScan() }] : [])];
   // a quiz made here (mark/quizread.jsx): Quiz scan shows what the scan read; before the first reading, it reads the papers first
   const quizScan = async again => { const R = await PARTS.quizread(); if ((again || !state().batch.quiz.lastRead) && !await R.readAll(!!again)) return; setSetupDlg({ k: 'qr', R }); };
@@ -479,7 +492,6 @@ export default function MarkScreen({ route, classes }) {
       {w && <span class="mk-save mute" role="status" data-save={MK ? MK.M.saveLabel() : 'saved'}>{saveLine(MK ? MK.M.saveLabel() : 'saved')}</span>}
       {w && <span class="mk-prog mute">{t('mark.marked_of', { n: marked, of: n })}<Progress value={marked} max={Math.max(1, n)} label={t('mark.marked_of', { n: marked, of: n })} /></span>}
       {w && MK && !solo && quizOn() && <Button size="sm" icon="check" onClick={() => quick()} data-quicktop>{t('mark.qm_open')}</Button>}
-      {w && MK && !solo && <Button size="sm" icon="user" onClick={soloStart} title={t('mark.solo_tip')} kbd="I" data-solostart>{t('mark.solo_start')}</Button>}
       {!solo && (w && MK ? <Menu label={t('mark.setup_tip')} trigger={b => <Button {...b} icon="settings" size="sm" title={t('mark.setup_tip')} data-setupopen>{t('mark.setup')}</Button>} items={setupItems} />
         : <Button icon="settings" size="sm" disabled data-setupopen>{t('mark.setup')}</Button>)}
     </header>
