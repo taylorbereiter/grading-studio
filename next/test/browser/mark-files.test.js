@@ -38,7 +38,13 @@ async function page(ctx, errors) {
   return p;
 }
 const KEY = 'Bram Sample';
-const menuDo = async (p, file, label) => { await p.click('[data-fmenu="' + file + '"]'); await p.waitForSelector('.pop [role="menuitem"]'); const items = await p.$$('.pop [role="menuitem"]'); for (const it of items) if ((await it.evaluate(e => e.textContent)).includes(label)) return it.click(); throw new Error('no ' + label); };
+// the paper is drawn again after each change, so the ⋯ is found and pressed in one step once it is ready, then the item by its words
+const menuDo = async (p, file, label) => {
+  await p.waitForFunction(f => { const b = window.__mark.ready && document.querySelector('[data-fmenu="' + f + '"]'); if (b) b.click(); return !!b; }, { timeout: 30000 }, file);
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const ok = await p.evaluate(l => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.includes(l)); if (it) it.click(); return !!it; }, label);
+  if (!ok) throw new Error('no ' + label);
+};
 const has = (p, where, file) => p.waitForFunction((k, where, file) => (window.__mark.state().batch.students.find(s => s.key === k)[where] || []).some(f => f.path === file), { timeout: 30000 }, KEY, where, file);
 
 test('a file added, replaced, removed and brought back in the new app is where the current app finds it', async () => {
