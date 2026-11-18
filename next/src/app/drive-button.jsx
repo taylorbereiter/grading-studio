@@ -10,6 +10,17 @@ import { t } from '../i18n/t.js';
 import { useSaving } from '../services/saving.js';
 
 const FAIL = { closed: 'drive.closed', offline: 'drive.offline', setup: 'drive.offline' };
+// For a place that offers Drive as one line of a menu rather than a button of its own: null where Drive can't be used here, else
+// a function that opens Google's chooser and puts what is picked into the file input.
+export function useDrivePick(input, office) {
+  const S = useSaving();
+  if (!S || !S.google().pickNow) return null;
+  return async () => {
+    const inp = input && input.current; if (!inp) return;
+    try { await S.driveFill(inp, { office, title: t(inp.multiple ? 'drive.pick_many' : 'drive.pick_one'), say: (n, of) => n === 1 && toast(t('drive.getting', { n: of })) }); }
+    catch (e) { console.error(e); toast(t(FAIL[e && e.why] || 'drive.failed')); }
+  };
+}
 export function DriveButton({ input, small, office, size = 'sm', variant = 'quiet', onClick: before, ...rest }) {
   const S = useSaving(), me = useRef(null), [busy, setBusy] = useState(false);
   if (!S || !S.google().pickNow) return null;

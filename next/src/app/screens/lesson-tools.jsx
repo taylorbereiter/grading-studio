@@ -15,7 +15,7 @@
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import * as fflate from 'fflate';
-import { Sheet, Dialog, Button, IconButton, Icon, TextInput, Checkbox, Segmented, toast } from '../../ui/index.js';
+import { Sheet, Dialog, Button, IconButton, Icon, TextInput, Checkbox, Segmented, Menu, toast } from '../../ui/index.js';
 import { Mic } from '../../ui/services.jsx';
 import { t, date } from '../../i18n/t.js';
 import { go, PARTS } from '../router.js';
@@ -28,7 +28,7 @@ import { isExample } from '../plan/examples.js';
 import { assistant } from '../../services/assistant.js';
 import { saveFailed } from '../plan/save.js';
 import '../plan/tool-lines.js';
-import { DriveButton } from '../drive-button.jsx';
+import { DriveButton, useDrivePick } from '../drive-button.jsx';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 const DOC_TYPE = 'text/html';
@@ -294,6 +294,8 @@ export function Shots({ p, l, i, save, setCur }) {
     for (const f of files) { if (!/^image\//.test(f.type)) continue; try { got.push({ id: E.lid(), ...(await T.shrinkPic(f)), note: '' }); } catch { toast(t('tool.pic_unread')); } }
     if (got.length) put(x => { x.ctx = [...(x.ctx || []), ...got]; });
   };
+  const shotIn = useRef(), drive = useDrivePick(shotIn);
+  const shotInput = <input type="file" class="vh" accept="image/*" multiple ref={shotIn} tabIndex={drive ? -1 : undefined} onChange={e => { const fs = [...e.currentTarget.files]; e.currentTarget.value = ''; add(fs); }} data-shot />;
   const toSlide = x => { const n = copy(l); n.slides.splice(i + 1, 0, E.normSlide({ layout: 'picture', title: x.note || '', img: { src: x.src, w: x.w, h: x.h, source: '' }, fmt: 2 })); save(n); setCur(i + 1); toast(t('tool.shot_on_slide')); };
   const copyPic = async x => {
     try { const im = new Image(); im.src = x.src; await im.decode(); const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0);
@@ -307,7 +309,10 @@ export function Shots({ p, l, i, save, setCur }) {
     onDragOver={e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { e.preventDefault(); setOver(true); } }} onDragLeave={() => setOver(false)}
     onDrop={e => { if (!e.dataTransfer || !e.dataTransfer.files.length) return; e.preventDefault(); setOver(false); add([...e.dataTransfer.files]); }}>
     <div class="row"><h2 class="sub grow" id="h-shots">{t('tool.shots', { name })}</h2>
-      <label class="btn sm"><Icon name="image" />{t('tool.add_shot')}<input type="file" class="vh" accept="image/*" multiple onChange={e => { const fs = [...e.currentTarget.files]; e.currentTarget.value = ''; add(fs); }} data-shot /></label><DriveButton /></div>
+      {/* with Drive, one button opens a short menu: this computer or Drive (the slide screen stays under its presses at rest) */}
+      {drive ? <><Menu label={t('tool.add_shot')} trigger={b => <Button {...b} size="sm" icon="image" data-shotmenu>{t('tool.add_shot')}</Button>}
+        items={[{ label: t('file.from_computer'), icon: 'upload', onSelect: () => shotIn.current.click() }, { label: t('file.from_drive_pick'), icon: 'drive', onSelect: drive }]} />{shotInput}</>
+        : <label class="btn sm"><Icon name="image" />{t('tool.add_shot')}{shotInput}</label>}</div>
     {!list.length && <p class="mute small">{t('tool.shots_help')}</p>}
     <ul class="shotlist">{list.map((x, k) => <li>
       <button type="button" class="shotimg" onClick={() => setBig(x)} aria-label={t('tool.shot_bigger')}><img src={x.src} alt={x.note || ''} data-raw /></button>

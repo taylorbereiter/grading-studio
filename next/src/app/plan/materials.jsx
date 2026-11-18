@@ -4,7 +4,7 @@
 // does. Taking a file or link off can be undone from the toast. Planning material only, never student work.
 import { h, Fragment } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
-import { Button, IconButton, Icon, TextInput, toast } from '../../ui/index.js';
+import { Button, IconButton, Icon, TextInput, Menu, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { engine } from '../../planning/engine.js';
 import { saveLessonFile, dropLessonFile } from '../../planning/write.js';
@@ -15,7 +15,7 @@ import { classOf } from './lessons.js';
 import { href } from '../router.js';
 import { saveFailed } from './save.js';
 import './lines.js';
-import { DriveButton } from '../drive-button.jsx';
+import { useDrivePick } from '../drive-button.jsx';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 const ICON = f => f.kind === 'doc' ? 'note' : /^image\//.test(f.type || '') ? 'image' : 'file';
@@ -41,7 +41,7 @@ function classGroups(p, l, E) {
 
 export function Materials({ p, l, onSave, onTool = () => {} }) {
   const E = engine(p), files = l.files || [], links = l.links || [];
-  const pick = useRef(), form = useRef(), swap = useRef(''), [over, setOver] = useState(false), [adding, setAdding] = useState(false), [url, setUrl] = useState(''), [name, setName] = useState('');
+  const pick = useRef(), drive = useDrivePick(pick, true), form = useRef(), swap = useRef(''), [over, setOver] = useState(false), [adding, setAdding] = useState(false), [url, setUrl] = useState(''), [name, setName] = useState('');
   // The address box takes the keys as soon as Add a link opens it.
   useEffect(() => { const b = adding && form.current && form.current.querySelector('input'); if (b) b.focus(); }, [adding]);
   const put = async n => { try { await onSave(n); } catch (e) { saveFailed(e); } };
@@ -106,7 +106,9 @@ export function Materials({ p, l, onSave, onTool = () => {} }) {
       <TextInput label={t('plan.link_address')} type="url" value={url} onInput={setUrl} onKeyDown={e => { if (e.key === 'Enter') addLink(); }} data-focus="link-url" />
       <TextInput label={t('plan.link_name')} value={name} onInput={setName} onKeyDown={e => { if (e.key === 'Enter') addLink(); }} />
       <div class="row"><Button size="sm" variant="quiet" onClick={() => setAdding(false)}>{t('common.cancel')}</Button><Button size="sm" variant="primary" onClick={addLink} data-focus="link-add">{t('plan.add_link')}</Button></div></div>
-      : <div class="row"><Button size="sm" icon="upload" onClick={() => { swap.current = ''; pick.current.click(); }} data-focus="add-files">{t('plan.add_files')}</Button><DriveButton input={pick} office onClick={() => { swap.current = ''; }} />
+      : <div class="row">{drive ? <Menu label={t('plan.add_files')} trigger={b => <Button {...b} size="sm" icon="upload" data-focus="add-files">{t('plan.add_files')}</Button>}
+          items={[{ label: t('file.from_computer'), icon: 'upload', onSelect: () => { swap.current = ''; pick.current.click(); } }, { label: t('file.from_drive_pick'), icon: 'drive', onSelect: () => { swap.current = ''; drive(); } }]} />
+          : <Button size="sm" icon="upload" onClick={() => { swap.current = ''; pick.current.click(); }} data-focus="add-files">{t('plan.add_files')}</Button>}
         <Button size="sm" icon="link" onClick={() => setAdding(true)} data-focus="add-link">{t('plan.add_link')}</Button>
         <Button size="sm" icon="note" onClick={() => onTool('newdoc')} data-focus="new-doc">{t('plan.new_document')}</Button>
         <Button size="sm" icon="image" onClick={() => onTool('example')} data-focus="add-example-mat">{t('plan.add_example')}</Button></div>}

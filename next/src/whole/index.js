@@ -9,7 +9,7 @@ import { G, gAuto, setAuto, signOut, googleCan, onGoogle, G_REDIRECT, gHas, gLiv
 import { provideSaving, changedSaving } from '../services/saving.js';
 import { json as lsJson } from '../shared/ls.js';
 
-let queue = Promise.resolve(), started = false;
+let queue = Promise.resolve(), started = false, booting = Promise.resolve();
 const fr = (k, ...p) => async (...a) => (await folderRun())[k](...p, ...a);
 // The keys a save makes the current app sync for (src/app/drive.js SYNC_RX: gs.lib, setup, bank, rubrics, school, a download's quick
 // copy). Lessons and planning time go up with the next sync of anything else, as they do today. What a sync or a folder took in
@@ -23,7 +23,7 @@ export function startWhole() {
   onSaved(e => { if (SYNCS(e)) { markSyncDue(); if (G.email) drive().then(m => m.syncSoon()); } queue = queue.then(() => folderSaved(e)).catch(err => console.error(err)); });
   if (G.email || G.token) setTimeout(drive, 0);
   onGoogle(changedSaving); onFolder(changedSaving);
-  folderBoot().catch(e => console.error(e));
+  booting = folderBoot().catch(e => console.error(e));
   if (typeof navigator !== 'undefined' && navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'gs-drive-token') import('./stream.js').then(m => m.answer(e)); });
   const V = () => import('./stream.js');
   provideSaving({
@@ -54,7 +54,8 @@ export function startWhole() {
     putBack: async id => { await (await import('./safety.js')).putBack(id); if (F.mod) F.mod.carryAfterPutBack(); },
   });
 }
-// Resolves when every folder write so far has finished.
-export const settled = () => queue;
+// Resolves when every save so far has reached the linked folder: the folder found again, the queue gone through, and the folder's own
+// writes (which wait a moment to gather changes) finished.
+export const settled = async () => { await booting; await queue; if (F.mod && F.state !== 'none') await F.mod.wait(); };
 export const syncPayload = async o => (await import('./sync.js')).syncPayload(o);
 export { folderState, onFolder, syncDue };
