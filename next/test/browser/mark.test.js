@@ -157,3 +157,89 @@ test('work saved before saved-data versions (the legacy fixture) opens in the ne
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// The new app's page k of the open student: PDF points to screen pixels, scrolled into view first.
+const nextAt = async (p, k, x, y) => {
+  await p.evaluate(k => window.__mark.state().pages[k].canvas.scrollIntoView({ block: 'center' }), k);
+  return p.evaluate((k, x, y) => { const pg = window.__mark.state().pages[k], r = pg.canvas.getBoundingClientRect(); return { x: r.left + x * pg.s, y: r.top + y * pg.s }; }, k, x, y);
+};
+async function nextDrag(p, k, pts) {
+  const a = await nextAt(p, k, ...pts[0]); await p.mouse.move(a.x, a.y); await p.mouse.down();
+  for (const q of pts.slice(1)) { const b = await p.evaluate((k, x, y) => { const pg = window.__mark.state().pages[k], r = pg.canvas.getBoundingClientRect(); return { x: r.left + x * pg.s, y: r.top + y * pg.s }; }, k, ...q); await p.mouse.move(b.x, b.y, { steps: 4 }); }
+  await p.mouse.up();
+}
+const marksOf = (p, k) => p.evaluate(k => { const pg = window.__mark.state().pages[k]; return JSON.parse(JSON.stringify(pg.marks())); }, k);
+const press = async (p, sel) => { await p.waitForSelector(sel); await p.click(sel); };
+
+test('marks made in the new app (pen, highlight, circle, check, text, comment, eraser, undo and redo) open in the current app as the same marks, drawn to the same pixels', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  // A download kept by main, with nothing on it yet.
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(await standardFiles()));
+  await made.evaluate(() => window.__gs.saveNow()); await settle(made);
+  const id = await made.evaluate(() => window.__gs.state().batch.id);
+  await made.close();
+
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await nextReady(p, await p.evaluate(() => 0).then(() => p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 }).then(() => p.evaluate(() => window.__mark.state().cur))));
+  // the keys choose the tools, as in the current app
+  await p.keyboard.press('p');
+  assert.equal(await p.evaluate(() => window.__mark.state().tool), 'pen');
+  await press(p, '.mk-sw [data-sw="blue"]');
+  await nextDrag(p, 0, [[100, 120], [140, 150], [180, 120], [220, 150]]);
+  await nextDrag(p, 0, [[100, 220], [200, 260]]);
+  assert.equal((await marksOf(p, 0)).length, 2, 'two pen strokes');
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  assert.equal((await marksOf(p, 0)).length, 1, 'Ctrl+Z takes the last stroke back');
+  await p.keyboard.down('Control'); await p.keyboard.press('y'); await p.keyboard.up('Control');
+  assert.equal((await marksOf(p, 0)).length, 2, 'Ctrl+Y puts it back');
+  await press(p, '[data-undo]');
+  assert.equal((await marksOf(p, 0)).length, 1, 'the undo button too');
+  await p.keyboard.press('h'); await nextDrag(p, 0, [[80, 330], [300, 336]]);
+  await p.keyboard.press('o'); await nextDrag(p, 0, [[320, 400], [420, 460]]);
+  await p.keyboard.press('k'); { const q = await nextAt(p, 0, 200, 500); await p.mouse.click(q.x, q.y); }
+  // a text box: click, type, Enter
+  await p.keyboard.press('t'); { const q = await nextAt(p, 0, 100, 560); await p.mouse.click(q.x, q.y); }
+  await p.waitForSelector('.mk-paper textarea.ed'); await p.keyboard.type('Nice start'); await p.keyboard.press('Enter');
+  // a comment: click a spot, type, Enter
+  await p.keyboard.press('c'); { const q = await nextAt(p, 0, 300, 620); await p.mouse.click(q.x, q.y); }
+  await p.waitForSelector('.mk-paper .pop textarea'); await p.keyboard.type('See rubric row 2'); await p.keyboard.press('Enter');
+  // the right-click menu: a sticker and a proofreading mark
+  { const q = await nextAt(p, 0, 450, 700); await p.mouse.click(q.x, q.y, { button: 'right' }); }
+  await press(p, '.mk-menu [data-sub="stick"]'); await press(p, '.mk-fly [data-mark="star"]');
+  { const q = await nextAt(p, 0, 120, 700); await p.mouse.click(q.x, q.y, { button: 'right' }); }
+  await press(p, '.mk-menu [data-sub="proof"]'); await press(p, '.mk-fly [data-mark="sp"]');
+  assert.equal(await p.$('.mk-menu'), null, 'the menu closes once a mark is placed');
+  // the eraser takes one mark off
+  await p.keyboard.press('k'); { const q = await nextAt(p, 0, 400, 520); await p.mouse.click(q.x, q.y); }
+  await p.keyboard.press('e'); { const q = await nextAt(p, 0, 400, 520); await p.mouse.click(q.x, q.y); }
+  const mine = await marksOf(p, 0);
+  assert.deepEqual(mine.map(m => m.t + (m.k ? ':' + m.k : '')), ['pen', 'hl', 'oval', 'check', 'text', 'note', 'stamp:star', 'stamp:sp'], 'one of each, the second check erased');
+  assert.equal(mine[0].color, '#1F5FD1', 'the pen in the blue she chose');
+  assert.equal(mine[4].text, 'Nice start'); assert.equal(mine[5].text, 'See rubric row 2');
+  await p.evaluate(() => window.__mark.saved());
+  assert.equal(await p.$eval('.mk-save', e => e.dataset.save), 'saved');
+  const nowShape = await p.evaluate(shape => eval(shape)(window.__mark.state().batch), shape);
+  await p.close();
+
+  // Main opens the work and has the same marks, and draws the page to the same pixels as the new app does.
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  await old.evaluate(id => window.__gs.reopenKept(id), id);
+  await old.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id && s.pages.length; }, { timeout: 60000 }, id);
+  assert.deepEqual(await old.evaluate(shape => eval(shape)(window.__gs.state().batch), shape), nowShape, 'main has the same students, files and marks');
+  await goToStudent(old, 0); await mainDrawn(old);
+  const pages = (await mainPages(old, png)).slice(0, 1);
+  await old.close();
+  const again = await page(ctx, errors);
+  await again.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await again.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await nextReady(again, 0);
+  const r = await compare(again, pages);
+  assert.deepEqual(r.now, r.was, 'the marked page draws to the same pixels in both');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

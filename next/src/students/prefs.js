@@ -9,7 +9,7 @@ import { mayWrite } from '../shared/lock.js';
 const known = k => { const e = toEntry(entryFor(k)); return e && e.side !== 'planning' ? e : null; };
 export const prefs = {
   kdo: (...a) => kdo(...a), idbDo: (...a) => idbDo(...a),
-  get(k, d) { if (!known(k)) return d; const v = ls.json(k, undefined); return v === undefined ? d : v; },
+  get(k, d) { if (!known(k)) return d; const none = {}, v = ls.json(k, none); return v === none || v === undefined ? d : v; },
   set(k, v) { const e = known(k); if (!e || e.kind !== 'pref') return false; try { ls.setJson(k, v); return true; } catch { return false; } },
   del(k) { const e = known(k); if (e && e.kind === 'pref') try { ls.remove(k); } catch {} },
 };
