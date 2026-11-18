@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import { readBook, classCols, classIn, conf, termNow, fullLibrary } from '../../students/book.js';
 import { onSaved } from '../../shared/saved.js';
+import { engine as B } from '../../students/book.js';
 
 export function useBook() {
   const [v, set] = useState(null);
@@ -21,9 +22,8 @@ export function useBook() {
 export function classBook(b, id) {
   if (!b || b.error) return null;
   const c = classIn(b.lib, id); if (!c) return null;
-  return { c, lib: b.lib, cols: classCols(b.lib, c, b.cols), conf: conf(b.lib), now: termNow(b.lib) };
+  return { c, lib: b.lib, cols: classCols(b.lib, c, b.cols), conf: B.ibConf(c, conf(b.lib)), now: termNow(b.lib), way: B.classWay(c) };   // a DP class can weigh its components its own way (src/ib.js ibConf)
 }
 export { fullLibrary };
 // The test seam (next/test/browser/class-book.test.js): the same table of terms and scores is run through main's functions and these.
-import { engine as B } from '../../students/book.js';
 if (typeof window !== 'undefined') window.__class = { readBook, B };

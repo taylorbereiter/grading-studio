@@ -149,7 +149,9 @@ const GRADING_STATE = {
   saveSoon: '() => {}',
   // the libraries, loaded by the screen when a paper needs them (each has its own budget) and handed in
   pdfjsLib: 'null', PDFLib: 'null', fflate: 'null', mammoth: 'null', html2canvas: 'null', workerReady: 'Promise.resolve()',
-  heicLoad: "() => { throw new Error('no decoder in this copy'); }",
+  // the iPhone photo decoder (libheif-js, src/engines/heic.js): its own chunk, fetched only when an HEIC picture is read
+  // (with pdf-lib, which the photo's page is made with, when the screen hasn't loaded it yet)
+  heicLoad: "() => import('./heic.js').then(async m => { if (!PDFLib) PDFLib = await m.pdflib(); return m.heic(); })",
   // Hooks: what the lifted marking code calls that belongs to the screen. The marking screen hands in its own with use({ ... });
   // until it does, each is quiet. writeWork is where a lifted saveNow hands the work it built: the screen saves it through
   // students/write.js saveWork. The window checks (tabLive and the rest) are students/write.js's, so here they let the save through.
@@ -356,7 +358,9 @@ export const useKept = (l, k) => { lib = l; keptMeta = k; };
     // the gradebook (src/book.js): its columns read from saved work and typed scores, each cell, each term, the weighted term grade
     // with extra credit, and a typed score parsed and put the way the current app puts it; the table and its keys are the new app's
     'BK_TYPES', 'bkConf', 'bkCats', 'bkType', 'bkIsType', 'bkIsDef', 'bkLabel', 'bkTermOf', 'bkMean', 'bkCellOf', 'bkTypedCell', 'bkLoad', 'bkClassCols', 'bkCounts', 'bkGrade', 'bkXcTo',
-    'bkTabs', 'bkTermNow', 'bkClassAvg', 'bkBands', 'bkGroups', 'bkCountTypes', 'pctAvgText', 'bkParse', 'bkCellVal', 'bkColMax', 'bkPut', 'typedStamp', 'isoDay', 'bkDay',
+    'bkTabs', 'bkTermNow', 'bkClassAvg', 'bkBands', 'bkGroups', 'bkCountTypes', 'pctAvgText', 'bkParse', 'bkCellVal', 'bkColMax', 'bkPut', 'typedStamp', 'isoDay', 'bkDay', 'BK_DEF', 'rosterPairs', 'bkTypeUse',
+    // IB classes (src/ib.js): an MYP class's criteria, boundaries, evidence and the level she sets; a DP class's 1 to 7 and predicted grades
+    'IB_TOP', 'IB_BANDS', 'IB_GROUPS', 'IB_WAYS', 'IB_BOUNDS_DP', 'ibLetter', 'classWay', 'ibGroup', 'ibGroupCrit', 'ibBoundsFor', 'ibBoundsClean', 'ibCrit', 'ibBounds', 'ibGradeOf', 'ibLevel', 'ibBandName', 'ibTerm', 'ibEvidence', 'ibConf', 'ibCols', 'ibEvFor', 'ibMid',
     // missing work (src/missing.js): who owes what, and who was reminded
     'MIS_WORDS', 'misConf', 'misCols', 'misOwes', 'misByStu', 'misByCol', 'misNudge', 'misLate', 'misDue',
     // the roster (src/app/screens.js, src/people.js, src/attend.js): a pasted list read, and a student's details and days kept through an edit
@@ -372,6 +376,13 @@ import { withTries as coreTries, state as coreState, set as coreSet } from './gc
 const withTries = (...a) => { const was = coreState().lib; coreSet.lib(lib); try { return coreTries(...a); } finally { coreSet.lib(was); } };
 const saveLib = () => {}, bkSaveLib = () => {}, renderLib = () => {};
 `, ['lib', 'setup', 'keptMeta', 'withTries', 'saveLib', 'bkSaveLib', 'renderLib'], ['gcore']],
+  ['gbki', [
+    // a gradebook imported from a spreadsheet (src/bookimport.js): the file read (CSV, TSV, Excel or pasted cells), its rows and
+    // columns found, each column matched to an assignment already in the class, a category to a type; the screen is the new app's
+    'bkiParse', 'bkiXlsx', 'bkiCell', 'bkiDate', 'bkiWide', 'bkiRead', 'bkiGuess', 'bkiFit', 'bkiMatch', 'bkiCatGuess', 'BKI_SUM', 'normName',
+  ], "// the teacher's types as the class page's gradebook reads them (gbook's own library), not a copy reading the marking screen's\nimport { bkCats } from './gbook.js';\n",
+  // given: bkCats from gbook; mis, te and td only look used (a local td, the word "mis" in a pattern)
+  ['bkCats', 'mis', 'te', 'td'], ['gcore', 'gbook']],
 ];
 function writeGrading() {
   const { lift } = require('./tools/lift.js');
@@ -386,6 +397,9 @@ function writeGrading() {
     'export const set = { ' + names.map(n => n + ': v => (' + n + ' = v)').join(', ') + ' };\n';
   const declared = [...names, 'store', 'kdo', 'kget', 'idbDo', ...Object.keys(GRADING_STUBS)], made = {}, texts = {}, needs = {};
   const sticker = Object.fromEntries(fs.readdirSync(path.join(ROOT, 'src/stickers')).filter(f => f.endsWith('.webp')).sort().map(f => [f.slice(0, -5), f]));
+  // The decoder's licence (LGPL) travels with it, as it does in the current app's page.
+  const heif = path.join(ROOT, 'node_modules', 'libheif-js');
+  writeIf('src/engines/heic-license.js', '// MADE BY next/build.js FROM node_modules/libheif-js. Loaded with the decoder, never on its own.\nexport default ' + JSON.stringify('libheif-js ' + require(path.join(heif, 'package.json')).version + ': libheif (https://github.com/strukturag/libheif), libde265 (https://github.com/strukturag/libde265), built by https://github.com/catdad-experiments/libheif-js\n' + fs.readFileSync(path.join(heif, 'libheif-wasm', 'LICENSE'), 'utf8')) + ';\n');
   writeIf('src/engines/stickers.js', '// MADE BY next/build.js FROM src/stickers/. Each sticker is its own file, fetched when a page with stickers is drawn.\n' +
     Object.entries(sticker).map(([k, f], i) => 'import s' + i + " from '../../../src/stickers/" + f + "';").join('\n') + '\n// The bundler gives each file a name next to this chunk; the page is a folder up, so each is read from where this module is.\nconst at = f => new URL(f, import.meta.url).href;\nexport default { ' + Object.keys(sticker).map((k, i) => JSON.stringify(k) + ': at(s' + i + ')').join(', ') + ' };\n');
   for (const [file, roots, preamble = '', given = [], uses = null, real = []] of GRADING) {
@@ -406,6 +420,9 @@ function writeGrading() {
     if (file === 'gcore') pre += 'export { ' + names.join(', ') + ', store, kdo, kget, idbDo, ' + Object.keys(GRADING_STUBS).join(', ') + ' };\n';
     else if (/(?<![.\w$])set\./.test(out)) pre = pre.replace(/^import \{ ([^}]*) \} from '\.\/gcore\.js';/m, (m, l) => "import { " + l + ", set } from './gcore.js';") || pre;
     if (file !== 'gcore' && /(?<![.\w$])set\./.test(out) && !/import \{[^}]*\bset\b[^}]*\} from '\.\/gcore\.js'/.test(pre)) pre = "import { set } from './gcore.js';\n" + pre;
+    // The one change to what is lifted: the current app has the decoder in its page, so heicToPdf reads it at once; here it is
+    // fetched when the first iPhone photo arrives, so heicToPdf waits for it (an await on the same call, in an async function).
+    if (file === 'gopen') { const n = out.split('const lib = heicLoad(),').length - 1; if (n !== 1) throw new Error('lift: heicToPdf changed'); out = out.replace('const lib = heicLoad(),', 'const lib = await heicLoad(),'); }
     out = head + preamble + pre + out;
     for (const n of own) { if (made[n]) continue; made[n] = file; declared.push(n); }
     texts[file] = { out, roots };

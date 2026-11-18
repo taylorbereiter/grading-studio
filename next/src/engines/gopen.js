@@ -615,7 +615,7 @@ let heicLib = null, heicDec = null;
 async function heicToPdf(bytes) {
   toast('Reading an iPhone photo…', 4000);
   await new Promise(r => setTimeout(r, 0));
-  const lib = heicLoad(), imgs = (heicDec ||= new lib.HeifDecoder()).decode(bytes);   // the next decode frees this one's memory
+  const lib = await heicLoad(), imgs = (heicDec ||= new lib.HeifDecoder()).decode(bytes);   // the next decode frees this one's memory
   if (!imgs || !imgs.length) throw new Error('no picture in it');
   const im = imgs[0], W = im.get_width(), H = im.get_height(), c = document.createElement('canvas');
   c.width = W; c.height = H;

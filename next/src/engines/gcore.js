@@ -35,7 +35,7 @@ let fflate = null;
 let mammoth = null;
 let html2canvas = null;
 let workerReady = Promise.resolve();
-let heicLoad = () => { throw new Error('no decoder in this copy'); };
+let heicLoad = () => import('./heic.js').then(async m => { if (!PDFLib) PDFLib = await m.pdflib(); return m.heic(); });
 let toast = () => {};
 let renderList = () => {};
 let renderTools = () => {};

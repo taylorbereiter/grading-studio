@@ -113,10 +113,21 @@ test('Grades tab: the table as drawn has main\'s term grades; Whole year; Copy s
   assert.ok(await p.$('th[data-col="i7"]') && !(await p.$('th[data-col="i10"]')));
   // Copy scores: the table as text, one row per student
   await p.evaluate(() => { window.__copied = null; navigator.clipboard.writeText = s => { window.__copied = s; return Promise.resolve(); }; });
-  await p.click('[data-book-copy]');
+  await p.click('[data-book-more]');
+  await p.waitForSelector('.pop [role^="menuitem"]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role^="menuitem"]')].find(b => /Copy scores/.test(b.textContent)).click());
   await p.waitForFunction(() => window.__copied);
   const copied = await p.evaluate(() => window.__copied);
   assert.ok(copied.split('\n').length >= 8 && /Aria Testwell/.test(copied) && /\t/.test(copied));
+  // Charts: the term average is the average of main's term grades; every student has a row of shaded cells
+  await p.click('[data-open-charts]');
+  await p.waitForSelector('dialog[open] [data-charts] [data-heat]');
+  const tile = await p.$eval('[data-tile="avg"] b', e => parseFloat(e.textContent));
+  const ms = main.filter(Boolean).map(Number);
+  assert.ok(Math.abs(tile - ms.reduce((a, v) => a + v, 0) / ms.length) < 0.01, 'term average ' + tile);
+  assert.equal(await p.$$eval('[data-heat] tbody tr', r => r.length), main.length);
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('dialog[open] [data-charts]'));
   // Whole year
   await p.evaluate(() => [...document.querySelectorAll('.bookbar [role="radio"]')].find(b => /Whole year/.test(b.textContent)).click());
   await p.waitForSelector('table.book[data-term="*"]');
@@ -200,6 +211,193 @@ test('Add a class: a name and a pasted roster make a class the current app opens
   const old = await page(ctx, errors);
   await old.goto(srv.url); await appReady(old);
   assert.ok(await old.evaluate(() => window.__gs.state().lib.classes.some(k => k.name === 'Grade 11 Drama' && k.names.length === 2)));
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// The keyboard run (brief: "a keyboard run through the gradebook"): scores typed, moved through, marked missing, cleared, taken back
+// with Escape and pasted from a spreadsheet, all from the keys; the column box, Term setup, Add scores and extra credit; then the
+// current app opens the same scores and works out the same term grades the new app draws.
+const strip = o => JSON.parse(JSON.stringify(o, (k, v) => (k === 't' ? undefined : v)));
+const itemOf = (l, id) => l.classes.flatMap(c => c.units).flatMap(u => u.items).find(i => i.id === id) || null;
+const sOf = (id, n) => { const it = JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.flatMap(u => u.items).find(i => i.id === id); return ((it && it.typed && it.typed.s) || {})[n]; };
+const focusCell = (p, key, n) => p.evaluate((k, nm) => document.querySelector('td[data-bked="' + k + '"][data-bkn="' + nm + '"]').focus(), key, n);
+const active = p => p.evaluate(() => { const a = document.activeElement; return a && a.dataset ? [a.dataset.bked || '', a.dataset.bkn || '', a.tagName] : null; });
+const menuItem = async (p, re) => { await p.click('[data-book-more]'); await p.waitForSelector('.pop [role^="menuitem"]'); await p.evaluate(s => [...document.querySelectorAll('.pop [role^="menuitem"]')].find(b => new RegExp(s).test(b.textContent)).click(), re); };
+const waitS = (p, id, n, test) => p.waitForFunction(new Function('id', 'n', 'const sOf = ' + sOf.toString() + '; const s = sOf(id, n); return (' + test + ')(s);'), {}, id, n);
+test('Grades tab keyboard run: typing, moving, missing, clearing, Escape and pasting; the column box, Term setup and Add scores; the current app reads the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('table.book[data-term="t1"] td[data-bked]', { timeout: 60000 });
+  const N = (await libOf(p)).classes[0].names;
+  // a digit opens the cell with it; Enter keeps it and goes down
+  await focusCell(p, 'i4', N[0]);
+  await p.keyboard.type('19'); await p.keyboard.press('Enter');
+  await waitS(p, 'i4', N[0], 's => s && s.v === 19');
+  assert.deepEqual(await active(p), ['i4', N[1], 'TD']);
+  // m for missing, then Enter
+  await p.keyboard.type('m'); await p.keyboard.press('Enter');
+  await waitS(p, 'i4', N[1], "s => s && s.st === 'missing'");
+  assert.deepEqual(await active(p), ['i4', N[2], 'TD']);
+  // Escape leaves the cell as it was
+  await p.keyboard.type('3'); await p.keyboard.press('Escape');
+  assert.equal(itemOf(await libOf(p), 'i4').typed.s[N[2]].v, 14);
+  assert.deepEqual(await active(p), ['i4', N[2], 'TD']);
+  // arrows move: down, up, across to the next cell that takes keys, and back
+  await p.keyboard.press('ArrowDown'); assert.deepEqual(await active(p), ['i4', N[3], 'TD']);
+  await p.keyboard.press('ArrowUp'); assert.deepEqual(await active(p), ['i4', N[2], 'TD']);
+  await p.keyboard.press('ArrowRight'); const right = await active(p); assert.ok(right[0] && right[0] !== 'i4' && right[1] === N[2], 'moved across: ' + right);
+  await p.keyboard.press('ArrowLeft'); assert.deepEqual(await active(p), ['i4', N[2], 'TD']);
+  // Enter opens with the score in it; a retake typed as "14 > 16"; Tab keeps it and goes across
+  await p.keyboard.press('Enter'); await p.waitForSelector('td[data-bked="i4"] input[data-cin]');
+  await p.keyboard.down('Control'); await p.keyboard.press('a'); await p.keyboard.up('Control');
+  await p.keyboard.type('14 > 16'); await p.keyboard.press('Tab');
+  await waitS(p, 'i4', N[2], 's => s && s.v === 16 && s.tries && s.tries[0] === 14');
+  assert.equal((await active(p))[1], N[2]);
+  // Delete empties a cell
+  await focusCell(p, 'i4', N[5]); await p.keyboard.press('Delete');
+  await waitS(p, 'i4', N[5], 's => !s');
+  // cells pasted from a spreadsheet: down the column from the fourth student
+  await focusCell(p, 'i4', N[3]);
+  await p.evaluate(() => { const dt = new DataTransfer(); dt.setData('text/plain', '10\n11\n12\n13\n'); document.activeElement.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); });
+  await waitS(p, 'i4', N[5], 's => s && s.v === 12');
+  const i4 = strip(itemOf(await libOf(p), 'i4').typed);
+  assert.deepEqual([0, 1, 2, 3, 4, 5].map(i => i4.s[N[i]]), [{ v: 19, st: '' }, { v: null, st: 'missing' }, { v: 16, st: '', tries: [14] }, { v: 10, st: '' }, { v: 11, st: '' }, { v: 12, st: '' }]);
+  assert.equal(i4.max, 20);
+  // the column box: its type
+  await p.click('th[data-col="i6"] .colbtn');
+  await p.waitForSelector('dialog[open] [data-col-box="i6"]');
+  await p.evaluate(() => [...document.querySelectorAll('dialog[open] [role="radio"]')].find(b => /Summative/.test(b.textContent)).click());
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.flatMap(u => u.items).find(i => i.id === 'i6').type === 'sum');
+  await p.click('dialog[open] [data-col-done]');
+  // Term setup: the in-class weight and the retake rule
+  await menuItem(p, 'Term setup');
+  await p.waitForSelector('dialog[open] [data-setup]');
+  await p.$eval('dialog[open] [data-wt="ic"]', e => { e.value = '30'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.evaluate(() => [...document.querySelectorAll('dialog[open] [role="radio"]')].find(b => /Latest counts/.test(b.textContent)).click());
+  await p.click('dialog[open] [data-setup-save]');
+  await p.waitForFunction(() => { const b = JSON.parse(localStorage.getItem('gs.lib')).book; return b.w.ic === 30 && b.retake === 'last'; });
+  // Add scores: a new column, points out of 10
+  await p.click('[data-book-add]');
+  await p.waitForSelector('dialog[open] [data-add]');
+  await p.type('dialog[open] [data-add-name] input, dialog[open] input[data-add-name]', 'Spelling test');
+  await p.$eval('dialog[open] [data-add-max]', e => { e.value = '10'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  const vs = await p.$$('dialog[open] [data-add-v]');
+  await vs[0].type('8'); await vs[1].type('9.5');
+  await p.click('dialog[open] [data-add-save]');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.flatMap(u => u.items).some(i => i.name === 'Spelling test'));
+  const sp = strip((await libOf(p)).classes[0].units.flatMap(u => u.items).find(i => i.name === 'Spelling test'));
+  assert.equal(sp.typed.max, 10); assert.deepEqual(sp.typed.s[N[0]], { v: 8, st: '' }); assert.deepEqual(sp.typed.s[N[1]], { v: 9.5, st: '' }); assert.equal(sp.type, 'ic');
+  // extra credit for everyone
+  await menuItem(p, 'Add extra credit');
+  await p.waitForSelector('dialog[open] [data-add]');
+  await p.type('dialog[open] input[data-add-name]', 'Book fair');
+  await p.evaluate(() => [...document.querySelectorAll('dialog[open] button')].find(b => b.textContent.trim() === 'Everyone').click());
+  await p.click('dialog[open] [data-add-save]');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.flatMap(u => u.items).some(i => i.name === 'Book fair'));
+  const bf = strip((await libOf(p)).classes[0].units.flatMap(u => u.items).find(i => i.name === 'Book fair'));
+  assert.equal(bf.type, 'xc'); assert.equal(Object.keys(bf.typed.s).length, N.length); assert.deepEqual(bf.typed.s[N[0]], { v: 1 });
+  // the drawn term grades, once the table has caught up with the saves
+  await p.waitForFunction(() => [...document.querySelectorAll('th[data-col]')].some(th => /Book fair/.test(th.textContent)) && [...document.querySelectorAll('th[data-col]')].some(th => /Spelling test/.test(th.textContent)), { timeout: 30000 });
+  const drawn = await p.$$eval('table.book tbody tr td.term', tds => tds.map(td => td.dataset.grade));
+  // Leave out and Averages only: the foot says who is left out; Averages only is kept the current app's way
+  await menuItem(p, 'Leave students out');
+  await p.waitForSelector('[data-pick="0"]'); await p.click('[data-pick="0"]');
+  await p.waitForSelector('[data-count-all]');
+  await menuItem(p, 'Averages only');
+  await p.waitForFunction(() => localStorage.getItem('gs.bkOnly') === '1' && !document.querySelector('td[data-bked]'));
+  const lib = await libOf(p);
+  await p.close();
+  // the current app: same scores, same grades
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const main = await old.evaluate(async () => {
+    const g = window.__gs, cols = await g.bkLoad(), lib = g.state().lib, conf = g.bkConf(), c = lib.classes[0], all = g.bkClassCols(c, cols).filter(x => x.termId === 't1');
+    return { grades: c.names.map(n => { const r = g.bkGrade(n, all, conf); return r.grade == null ? '' : String(Math.round(r.grade * 100) / 100); }), i4: c.units.flatMap(u => u.items).find(i => i.id === 'i4').typed, book: lib.book };
+  });
+  assert.deepEqual(strip(main.i4), i4);
+  assert.deepEqual(main.book.w, lib.book.w); assert.equal(main.book.retake, 'last');
+  assert.deepEqual(drawn, main.grades);
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// IB classes (brief: MYP/DP and the class Grading dialog): the class turned to MYP in How this class is graded, a task's levels
+// typed in, the best-fit levels set from the keys of the fit box, and the current app works out the same total and grade; then the
+// class turned to DP with its own component weight, a predicted grade set, and the current app reads the same 1 to 7 and prediction.
+const libNow = () => JSON.parse(localStorage.getItem('gs.lib'));
+const waitLib = (p, fn) => p.waitForFunction('(' + fn + ')(JSON.parse(localStorage.getItem("gs.lib")).classes[0])');
+test('IB classes: MYP levels and grades, DP boundaries, weights and a predicted grade, read the same by the current app', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  let p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('table.book[data-term="t1"]', { timeout: 60000 });
+  const N = (await libOf(p)).classes[0].names;
+  // MYP, with the sciences' criteria
+  await menuItem(p, 'How this class is graded');
+  await p.waitForSelector('dialog[open] [data-way="myp"]'); await p.click('dialog[open] [data-way="myp"]');
+  await p.waitForSelector('dialog[open] [data-bound]');
+  await p.click('dialog[open] [data-grading-save]');
+  await waitLib(p, c => c.way === 'myp' && c.ib && c.ib.crit.length === 4);
+  await p.waitForSelector('table.book[data-myp]');
+  // a task's levels typed in: A and B for the first two students
+  await p.click('[data-ib-add]');
+  await p.waitForSelector('dialog[open] [data-ib-addbox]');
+  await p.type('dialog[open] [data-ib-name] input, dialog[open] input[data-ib-name]', 'Cells lab');
+  const lv = await p.$$('dialog[open] input[data-ib-lv]');
+  await lv[0].type('5'); await lv[1].type('6'); await lv[2].type('3'); await lv[3].type('4');
+  await p.click('dialog[open] [data-ib-save]');
+  await waitLib(p, c => c.units.flatMap(u => u.items).some(i => i.name === 'Cells lab' && i.typed && i.typed.lv));
+  const cells = (await libOf(p)).classes[0].units.flatMap(u => u.items).find(i => i.name === 'Cells lab');
+  assert.deepEqual(cells.crit, ['A', 'B']); assert.deepEqual(strip(cells.typed.s[N[0]]), { l: { A: 5, B: 6 } }); assert.deepEqual(strip(cells.typed.s[N[1]]), { l: { A: 3, B: 4 } });
+  // the best-fit levels for the first student, from the fit box; the outlined hint is the most recent level
+  await p.click('[data-fit="0:A"]');
+  await p.waitForSelector('dialog[open] [data-fit-box="0"]');
+  assert.equal(await p.$eval('dialog[open] [data-lv="A:5"]', b => b.className), 'hint');
+  for (const k of ['A:5', 'B:6', 'C:7', 'D:4']) await p.click('dialog[open] [data-lv="' + k + '"]');
+  await waitLib(p, c => { const r = ((c.lv || {}).t1 || {})[c.names[0]]; return r && r.A === 5 && r.B === 6 && r.C === 7 && r.D === 4; });
+  await p.waitForFunction(() => document.querySelector('dialog[open] [data-fit-grade]').textContent !== '–');
+  const fitGrade = await p.$eval('dialog[open] [data-fit-grade]', b => b.textContent);
+  await p.click('dialog[open] [data-fit-next]'); await p.waitForSelector('dialog[open] [data-fit-box="1"]');
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open]'));
+  const drawn = await p.$eval('table.book[data-myp] tbody tr[data-stu="0"] td.term', td => td.dataset.grade);
+  assert.equal(drawn, fitGrade);
+  // the current app: same levels, same total and grade
+  let old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const myp = await old.evaluate(() => { const g = window.__gs, c = g.state().lib.classes[0], r = g.ibTerm(c.lv.t1[c.names[0]], g.ibCrit(c), g.ibBounds(c)); return { way: g.classWay(c), grade: r.grade, total: r.total }; });
+  assert.equal(myp.way, 'myp'); assert.equal(String(myp.grade), drawn); assert.equal(myp.total, 22);
+  await old.close();
+  // DP: the in-class component counts 40 in this class only; a predicted grade for the first student
+  await menuItem(p, 'How this class is graded');
+  await p.waitForSelector('dialog[open] [data-way="dp"]'); await p.click('dialog[open] [data-way="dp"]');
+  await p.waitForSelector('dialog[open] [data-dpw="ic"]');
+  await p.$eval('dialog[open] [data-dpw="ic"]', e => { e.value = '40'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.click('dialog[open] [data-grading-save]');
+  await waitLib(p, c => c.way === 'dp' && c.ib.w && c.ib.w.ic === 40);
+  await p.waitForSelector('table.book:not([data-myp]) tbody tr td.term .ibg7');
+  await menuItem(p, 'Predicted grades');
+  await p.waitForSelector('dialog[open] [data-pred]');
+  await p.click('dialog[open] tbody tr:first-child [data-pred="6"]');
+  await waitLib(p, c => ((c.pred || {}).t1 || {})[c.names[0]] && c.pred.t1[c.names[0]].g === 6);
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open]'));
+  await p.waitForFunction(() => /predicted 6/.test(document.querySelector('table.book tbody tr[data-stu="0"] td.term').textContent));
+  const dpDrawn = await p.$$eval('table.book tbody tr td.term', tds => tds.map(td => [td.dataset.grade, (td.querySelector('.ibg7') || {}).textContent || '']));
+  const book = (await libOf(p)).book;
+  await p.close();
+  old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const dp = await old.evaluate(async () => {
+    const g = window.__gs, cols = await g.bkLoad(), c = g.state().lib.classes[0], conf = g.ibConf(c, g.bkConf()), all = g.bkClassCols(c, cols).filter(x => x.termId === 't1');
+    return { pred: g.ibPredOf(c, c.names[0], 't1'), w: conf.w, rows: c.names.map(n => { const r = g.bkGrade(n, all, conf); return [r.grade == null ? '' : String(Math.round(r.grade * 100) / 100), r.grade == null ? '' : String(g.ibGradeOf(g.roundPct(r.grade), g.ibBounds(c)))]; }) };
+  });
+  assert.equal(dp.pred, 6); assert.equal(dp.w.ic, 40); assert.notEqual(book.w && book.w.ic, 40);
+  assert.deepEqual(dpDrawn.map(r => [r[0], r[1].trim()]), dp.rows);
   await old.close();
   assert.deepEqual(errors, []);
   await ctx.close();

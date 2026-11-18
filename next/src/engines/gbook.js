@@ -269,6 +269,13 @@ function bkBands(list) {
   return '<div class="pbands" id="bkBands">' + BK_BANDS.map(([, , l], i) => { const k = cnt[i].length; return '<div class="pband"' + (k ? ' tabindex="0"' : '') + ' data-tv="' + esc(people(k, 'student')) + '" data-tl="' + esc(l + '%') + '" data-tn="' + esc(cnt[i].map(p => p.name).join(', ')) + '" data-tnraw><span>' + l + '</span><div class="pbt"><i style="width:' + k / most * 100 + '%"></i></div><span class="pbn"><b>' + k + '</b>' + (n ? ' · ' + Math.round(k / n * 100) + '%' : '') + '</span></div>'; }).join('') + '</div>';
 }
 // src/book.js
+function bkTypeUse() {
+  const n = new Map(), add = t => { if (t) n.set(t, (n.get(t) || 0) + 1); };
+  for (const c of lib.classes) for (const u of c.units) for (const it of u.items) add(it.type);
+  for (const o of Object.values(bkConf().dl)) add(o && o.type);
+  return n;
+}
+// src/book.js
 function bkParse(t, r, col) {
   t = String(t).trim().toLowerCase(); if (!t) return null;
   const hp = x => Math.round(+x * 2) / 2, ok = x => x !== '' && !isNaN(+x) && +x >= 0, st = /^m(issing)?$/.test(t) ? 'missing' : /^e(xcused)?$/.test(t) ? 'excused' : '';
@@ -458,9 +465,106 @@ function goalCell(d, g, p) {
 // src/ib.js
 const IB_TOP = 8;
 // src/ib.js
+const IB_BANDS = [[1, 2, 'limited'], [3, 4, 'adequate'], [5, 6, 'substantial'], [7, 8, 'excellent']];
+// src/ib.js
+const IB_GROUPS = [
+  ['langlit', 'Language and literature', ['Analysing', 'Organizing', 'Producing text', 'Using language']],
+  ['langacq', 'Language acquisition', ['Listening', 'Reading', 'Speaking', 'Writing']],
+  ['indsoc', 'Individuals and societies', ['Knowing and understanding', 'Investigating', 'Communicating', 'Thinking critically']],
+  ['sci', 'Sciences', ['Knowing and understanding', 'Inquiring and designing', 'Processing and evaluating', 'Reflecting on the impacts of science']],
+  ['math', 'Mathematics', ['Knowing and understanding', 'Investigating patterns', 'Communicating', 'Applying mathematics in real-life contexts']],
+  ['arts', 'Arts', ['Investigating', 'Developing', 'Creating or performing', 'Evaluating']],
+  ['phe', 'Physical and health education', ['Knowing and understanding', 'Planning for performance', 'Applying and performing', 'Reflecting and improving performance']],
+  ['design', 'Design', ['Inquiring and analysing', 'Developing ideas', 'Creating the solution', 'Evaluating']],
+  ['idu', 'Interdisciplinary', ['Evaluating', 'Synthesizing', 'Reflecting']],
+  ['pp', 'Personal project', ['Planning', 'Applying skills', 'Reflecting']],
+  ['own', 'Another subject', ['Criterion A', 'Criterion B', 'Criterion C', 'Criterion D']],
+];
+// src/ib.js
+const IB_BOUNDS_32 = [[28, 7], [24, 6], [19, 5], [15, 4], [10, 3], [6, 2], [1, 1]];
+// src/ib.js
+const IB_BOUNDS_DP = [[80, 7], [68, 6], [56, 5], [44, 4], [32, 3], [18, 2], [0, 1]];
+// src/ib.js
+const IB_WAYS = [
+  ['', 'Points and percent', 'Rubrics, points, a percent and a term average.'],
+  ['myp', 'IB MYP', 'Criteria marked 0 to 8, a best-fit level each term, a 1 to 7 grade.'],
+  ['dp', 'IB DP', 'Marks for each component, turned into 1 to 7 by your boundaries.'],
+];
+// src/ib.js
+const ibLetter = i => String.fromCharCode(65 + i);
+// src/ib.js
+function classWay(c) { return c && (c.way === 'myp' || c.way === 'dp') ? c.way : ''; }
+// src/ib.js
+const ibGroup = k => IB_GROUPS.find(g => g[0] === k) || null;
+// src/ib.js
+const ibGroupCrit = k => (ibGroup(k) || IB_GROUPS[IB_GROUPS.length - 1])[2].map((name, i) => ({ k: ibLetter(i), name }));
+// src/ib.js
+function ibBoundsFor(n) {
+  if (n === 4) return IB_BOUNDS_32.map(b => b.slice());
+  const top = n * IB_TOP; let last = top + 1;
+  return IB_BOUNDS_32.map(([lo, g]) => { const v = Math.max(g === 1 ? 1 : 2, Math.min(last - 1, Math.round(lo * top / 32))); last = v; return [v, g]; });
+}
+// src/ib.js
+function ibBoundsClean(b, def) {
+  const rows = Array.isArray(b) ? b.filter(r => Array.isArray(r) && isFinite(+r[0]) && r[0] !== '' && r[0] != null && isFinite(+r[1])).map(r => [+r[0], +r[1]]) : [];
+  const seen = new Set(), out = rows.sort((a, c) => c[1] - a[1]).filter(r => !seen.has(r[1]) && seen.add(r[1]));
+  for (let i = 1; i < out.length; i++) if (out[i][0] >= out[i - 1][0]) return def.map(r => r.slice());
+  return out.length >= 2 ? out : def.map(r => r.slice());
+}
+// src/ib.js
+function ibCrit(c) {
+  const ib = c && c.ib || {}, own = Array.isArray(ib.crit) ? ib.crit.filter(x => x && String(x.k || '').trim()).map(x => ({ k: String(x.k).trim().slice(0, 2), name: String(x.name || '').trim().slice(0, 80) })) : [];
+  return own.length ? own : ibGroupCrit(ib.group);
+}
+// src/ib.js
+function ibBounds(c) {
+  if (classWay(c) === 'dp') return ibBoundsClean(c.ib && c.ib.bounds, IB_BOUNDS_DP);
+  return ibBoundsClean(c && c.ib && c.ib.bounds, ibBoundsFor(ibCrit(c).length));
+}
+// src/ib.js
+function ibGradeOf(v, bounds) { if (v == null || v === '' || isNaN(v)) return null; const b = bounds.find(r => +v >= r[0]); return b ? b[1] : null; }
+// src/ib.js
 const ibLevel = v => v === '' || v == null || isNaN(v) || +v < 0 || +v > IB_TOP || Math.round(+v) !== +v ? null : +v;
 // src/ib.js
+const ibBandName = v => { const b = IB_BANDS.find(b => v >= b[0] && v <= b[1]); return b ? b[2] : ''; };
+// src/ib.js
+function ibTerm(levels, crit, bounds) {
+  const lv = crit.map(x => ibLevel((levels || {})[x.k])), need = crit.filter((x, i) => lv[i] == null).map(x => x.k);
+  if (need.length) return { total: null, grade: null, need, set: crit.length - need.length };
+  const total = lv.reduce((a, b) => a + b, 0);
+  return { total, grade: ibGradeOf(total, bounds), need, set: crit.length };
+}
+// src/ib.js
+function ibEvidence(list) {
+  const ev = (list || []).filter(e => e && ibLevel(e.v) != null).sort((a, b) => (a.t || 0) - (b.t || 0));
+  if (!ev.length) return { n: 0, hint: null, last: null, high: null };
+  return { n: ev.length, hint: ev[ev.length - 1].v, last: ev[ev.length - 1].v, high: Math.max(...ev.map(e => e.v)) };
+}
+// src/ib.js
 function classNewWay() { const g = meGrade(); return (g && g.way === 'myp') || /^\s*(ib\s*)?myp\b/i.test(me().prog || '') ? { way: 'myp' } : {}; }   // me().prog: the programme My setup brought in (setupin.js)
+// src/ib.js
+function ibConf(c, conf) { const w = classWay(c) === 'dp' && c.ib && c.ib.w && typeof c.ib.w === 'object' ? c.ib.w : null; return w ? { ...conf, w: { ...conf.w, ...w } } : conf; }
+// src/ib.js
+function ibCols(c, cols) {
+  const keys = new Set(ibCrit(c).map(x => x.k));
+  return cols.map(col => {
+    const cells = new Map(); let crit = [];
+    if (col.typed && col.typed.lv) {
+      crit = ((col.it && col.it.crit) || []).filter(k => keys.has(k));
+      for (const n of c.names) { const r = col.typed.s && col.typed.s[n]; if (!r) continue; const lv = {}; for (const k of crit) { const v = ibLevel((r.l || {})[k]); if (v != null) lv[k] = v; } if (Object.keys(lv).length || r.st) cells.set(n, { lv, st: r.st || '' }); }
+    } else if (col.d && col.d.setup && Array.isArray(col.d.setup.ib)) {
+      const d = col.d, rows = d.setup.ib, pairs = rosterPairs(c.names, Object.keys(d.s || {}));
+      crit = rows.filter(k => keys.has(k));
+      for (const n of c.names) { const k = pairs.get(n), g = k && d.s[k] && d.s[k].g; if (!g) continue; const lv = {}; rows.forEach((ck, i) => { const v = ibLevel((g.rubric || [])[i]); if (keys.has(ck) && v != null) lv[ck] = v; });
+        const st = g.status === 'missing' || g.status === 'excused' ? g.status : ''; if (Object.keys(lv).length || st) cells.set(n, { lv, st }); }
+    } else return null;
+    return { key: col.key, name: col.name, due: col.due, fm: col.type === 'fm', crit, cells, typed: !!(col.typed && col.typed.lv), t: Date.parse((col.due || '1970-01-01') + 'T12:00:00') || 0 };
+  }).filter(Boolean);
+}
+// src/ib.js
+const ibEvFor = (icols, name, k) => icols.filter(x => x.cells.has(name) && x.cells.get(name).lv[k] != null).map(x => ({ v: x.cells.get(name).lv[k], t: x.t, name: x.name, fm: x.fm }));
+// src/ib.js
+function ibMid(list) { const v = list.filter(x => x != null).sort((a, b) => a - b), n = v.length; if (!n) return null; const a = v[Math.floor((n - 1) / 2)], b = v[Math.ceil((n - 1) / 2)]; return a === b ? String(a) : a + ' to ' + b; }
 // src/missing.js
 const MIS_WORDS = {
   subj: 'Missing work for {class}',
@@ -494,4 +598,5 @@ function misLate(due) {
 }
 // src/missing.js
 const misDue = col => col.due ? 'Due ' + bkDay(col.due) + (misLate(col.due) ? ' · ' + people(misLate(col.due), 'day') + ' ago' : '') : '';
-export { BK_TYPES, bkConf, bkCats, bkType, bkIsType, bkIsDef, bkLabel, bkTermOf, bkMean, bkCellOf, bkTypedCell, bkLoad, bkClassCols, bkCounts, bkGrade, bkXcTo, bkTabs, bkTermNow, bkClassAvg, bkBands, bkGroups, bkCountTypes, pctAvgText, bkParse, bkCellVal, bkColMax, bkPut, typedStamp, isoDay, bkDay, MIS_WORDS, misConf, misCols, misOwes, misByStu, misByCol, misNudge, misLate, misDue, parseRosterRows, keepInfo, keepAtt, infoOf, setInfo, blankInfo, attDays, attCount, attOf, attNote, classNewWay };
+export { BK_TYPES, bkConf, bkCats, bkType, bkIsType, bkIsDef, bkLabel, bkTermOf, bkMean, bkCellOf, bkTypedCell, bkLoad, bkClassCols, bkCounts, bkGrade, bkXcTo, bkTabs, bkTermNow, bkClassAvg, bkBands, bkGroups, bkCountTypes, pctAvgText, bkParse, bkCellVal, bkColMax, bkPut, typedStamp, isoDay, bkDay, BK_DEF, rosterPairs, bkTypeUse, IB_TOP, IB_BANDS, IB_GROUPS, IB_WAYS, IB_BOUNDS_DP, ibLetter, classWay, ibGroup, ibGroupCrit, ibBoundsFor, ibBoundsClean, ibCrit, ibBounds, ibGradeOf, ibLevel, ibBandName, ibTerm, ibEvidence, ibConf, ibCols, ibEvFor, ibMid, MIS_WORDS, misConf, misCols, misOwes, misByStu, misByCol, misNudge, misLate, misDue, parseRosterRows, keepInfo, keepAtt, infoOf, setInfo, blankInfo, attDays, attCount, attOf, attNote, classNewWay };
+export { EMAIL_RX };
