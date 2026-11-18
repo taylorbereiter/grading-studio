@@ -100,6 +100,7 @@ The current app's own legs (web address and double-clicked copy, main against th
 | `gs.checkInk` | students | pref | json | a grading screen setting | app/start.js |
 | `gs.cmAuthor` | students | pref | json | a grading screen setting | wordnotes.js |
 | `gs.disp` | students | pref | json | a grading screen setting | app/display.js, app/gradesheet.js, app/paper.js, app/start.js, marking.js |
+| `gs.enterNext` | students | pref | json | a grading screen setting | (no longer in the source) |
 | `gs.exCopied` | students | pref | json | a grading screen setting | examples.js |
 | `gs.focusRun` | students | pref | json | a grading screen setting | focus.js |
 | `gs.fullSide` | students | pref | json | a grading screen setting | app/wiring.js |

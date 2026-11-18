@@ -209,7 +209,7 @@ const GRADING = [
     // the highlighter's snap, the score and a row's score put on the paper
     'canResize', 'setHlMode', 'hlMode', 'critStampOf', 'scoreStampText', 'stampOwner', 'newStampSize', 'fmNow',
     // the mark key's wording, for Settings > Marking (src/stamps.js openMarkKey)
-    'markLabel0', 'markMean', 'keySet', 'MARK_KEY',
+    'markLabel0', 'MARK_MEAN', 'MARK_KEY',
   ], '', [], ['gcore', 'gdraw']],
   ['gexport', [
     // what goes back to students (src/app/export.js, src/feedback.js, src/exportreport.js, src/anchors.js): which files, their names,

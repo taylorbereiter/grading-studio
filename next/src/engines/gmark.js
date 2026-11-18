@@ -785,8 +785,6 @@ const markLabel0 = k => ((PROOF.find(p => p[0] === k) || PUNCT.find(p => p[0] ==
 // src/stamps.js
 const markLabel = k => { const v = (keySet().names || {})[k]; return typeof v === 'string' && v.trim() ? v.trim() : markLabel0(k); };
 // src/stamps.js
-const markMean = k => { const m = keySet().means || {}; return typeof m[k] === 'string' ? m[k].trim() : (MARK_MEAN[k] || ''); };
-// src/stamps.js
 const MARK_SIZES = 'gs.markSizes', SIZE0 = { proof: 16, sticker: 44, score: 52, crit: 40 };
 // src/stamps.js
 const sizeKind = k => isSticker(k) ? 'sticker' : k === 'crit' ? 'crit' : isScoreStamp(k) ? 'score' : 'proof';
@@ -1039,5 +1037,5 @@ function gpShortNext(left) {
   batch.students.forEach((st, i) => { if (i === cur || !left(st)) return; const l = gpLen(st) || 1e9; if (l < bl) { bl = l; best = i; } });
   return best;
 }
-export { bindPage, undo, redo, snap, changed, pushUndo, gradeSnap, fieldSnap, commitEditors, stepSize, saveNow, placeStamp, redrawAll, hitMark, moveMark, keepOnPage, deleteSelected, gripDrag, r1, clamp, turnMarks, stepOf, reshape, thumbCache, setRot, circleWord, highlightWord, textBoxHere, scoreTouched, setStatus, touchGrade, nextUnscored, stampName, isSticker, isProof, PROOF, PUNCT, BRAINROT, wordUnder, newCheckSize, stickerAspect, RECENT_STAMPS, canResize, setHlMode, hlMode, critStampOf, scoreStampText, stampOwner, newStampSize, fmNow, markLabel0, markMean, keySet, MARK_KEY };
+export { bindPage, undo, redo, snap, changed, pushUndo, gradeSnap, fieldSnap, commitEditors, stepSize, saveNow, placeStamp, redrawAll, hitMark, moveMark, keepOnPage, deleteSelected, gripDrag, r1, clamp, turnMarks, stepOf, reshape, thumbCache, setRot, circleWord, highlightWord, textBoxHere, scoreTouched, setStatus, touchGrade, nextUnscored, stampName, isSticker, isProof, PROOF, PUNCT, BRAINROT, wordUnder, newCheckSize, stickerAspect, RECENT_STAMPS, canResize, setHlMode, hlMode, critStampOf, scoreStampText, stampOwner, newStampSize, fmNow, markLabel0, MARK_MEAN, MARK_KEY };
 export { actStep, groupOf };

@@ -635,3 +635,15 @@ dialog.dlg:has(.mk-su)>.body{max-height:calc(88vh - 120px);overflow:auto}
 .mk-hold.holding .fill{transform:scaleX(1);transition:transform 1.5s linear}
 .mk-hold span:last-child{position:relative}
 @media (prefers-reduced-motion:reduce){.mk-hold.holding .fill{transition:none;transform:scaleX(.5)}}
+/* Settings > Marking: while marking, saved comments, the mark key */
+.sg-while{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.sg-cb{list-style:none;margin:8px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.sg-cb li{display:flex;align-items:flex-end;gap:6px}
+.sg-cb li .field{flex:1;min-width:0}
+.sg-cbadd{display:flex;align-items:flex-end;gap:8px}
+.sg-cbadd .field{flex:1;min-width:0}
+.sg-mkh{margin:14px 0 4px;font-size:var(--t2);font-weight:600;color:var(--mute)}
+.sg-mk{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,2fr) auto;gap:8px;align-items:end;padding:3px 0}
+.sg-mk+.sg-mk .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.sg-mkpic{align-self:end;margin-bottom:4px;background:var(--sf);border-radius:var(--r2);box-shadow:inset 0 0 0 1px var(--line)}
+@media (max-width:760px){.sg-mk{grid-template-columns:34px 1fr}.sg-mk>.field:last-of-type{grid-column:2}}

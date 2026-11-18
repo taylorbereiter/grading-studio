@@ -320,7 +320,7 @@ export default function MarkScreen({ route, classes }) {
         const r = MK.M.scoreKey(e.key);
         if (r === 'none') toast(t('mark.every_row')); else if (r === 'over') toast(t('mark.row_top', { n: rowTop(state().setup, MK.M.rowInHand()) })); else if (r === 'nohalf') toast(t('mark.no_half'));
       } }),
-      register({ id: 'mark-enter', keys: 'enter', label: 'mark.next_score', group: 'mark.score', when: () => !!MK && free(), run: () => { if (!MK.M.nextUnscored()) toast(t('mark.everyone_scored')); } }),
+      register({ id: 'mark-enter', keys: 'enter', label: 'mark.next_score', group: 'mark.score', when: () => !!MK && free() && prefs.get('gs.enterNext', null) !== false, run: () => { if (!MK.M.nextUnscored()) toast(t('mark.everyone_scored')); } }),
     ];
     // with Only this student on, nothing that could show someone else answers: finding, the list, the command bar
     const shut = e => { if (solo && (e.key === '/' || e.key === '[' || e.key === '?' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'))) e.preventDefault(); };

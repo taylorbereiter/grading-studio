@@ -76,7 +76,7 @@ export const LOCAL = [
   // grading screens' settings and remembered choices
   ...[
     'gs.anchorCover', 'gs.arrsize', 'gs.asrHave', 'gs.avgDp', 'gs.bkOnly', 'gs.calchist', 'gs.calcpos', 'gs.checkInk', 'gs.cmAuthor', 'gs.disp',
-    'gs.exCopied', 'gs.focusRun', 'gs.fullSide', 'gs.histOpen', 'gs.hl', 'gs.hlMode', 'gs.hlW', 'gs.impAuto', 'gs.ink', 'gs.listOpen', 'gs.listPts',
+    'gs.enterNext', 'gs.exCopied', 'gs.focusRun', 'gs.fullSide', 'gs.histOpen', 'gs.hl', 'gs.hlMode', 'gs.hlW', 'gs.impAuto', 'gs.ink', 'gs.listOpen', 'gs.listPts',
     'gs.markKey', 'gs.markSizes', 'gs.nameFind', 'gs.openSeen', 'gs.panels', 'gs.pctView', 'gs.penSeen', 'gs.penW', 'gs.press', 'gs.ptsInk',
     'gs.qmCopySeen', 'gs.qmNoteAs', 'gs.qmSize', 'gs.qmWords', 'gs.rate', 'gs.rdOpen', 'gs.recentStamps', 'gs.refH.', 'gs.refOpen.', 'gs.refZoom.',
     'gs.sheetall', 'gs.solo', 'gs.sp', 'gs.spsize', 'gs.tdBy', 'gs.tnTime', 'gs.touch', 'gs.trCap', 'gs.vidH', 'gs.wordPdf', 'gs.xall', 'gs.xcU',

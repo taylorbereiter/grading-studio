@@ -119,3 +119,42 @@ test('mark colours, points colour, paper and text, and the unit plan tool name: 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('while marking, saved comments and the mark key: the list kept or folded, Enter, a comment added, changed, moved and removed with Undo, a mark renamed and its meaning changed and put back; kept under the current app\'s keys', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, gradingSeed());
+  await p.goto(srv.url + 'next/#/settings/marking');
+  await p.waitForSelector('[data-sglist] [role="switch"]', { timeout: 60000 });
+  await p.click('[data-sglist] [role="switch"]'); assert.equal(await ls(p, 'gs.listOpen'), false);
+  await p.click('[data-sglist] [role="switch"]'); assert.equal(await ls(p, 'gs.listOpen'), true);
+  await p.click('[data-sgenter] [role="switch"]'); assert.equal(await ls(p, 'gs.enterNext'), false);
+  await p.click('[data-sgenter] [role="switch"]'); assert.equal(await ls(p, 'gs.enterNext'), null);
+  // saved comments: two added (newest first), the second moved up, one changed, one taken out with Undo
+  await p.waitForSelector('[data-sgcbnew]');
+  for (const c of ['Good evidence.', 'Check your spelling.']) { await p.type('[data-sgcbnew]', c); await p.click('[data-sgcbadd]'); await until(async () => ((await ls(p, 'gs.bank')) || []).includes(c)); }
+  assert.deepEqual(await ls(p, 'gs.bank'), ['Check your spelling.', 'Good evidence.']);
+  await p.click('[data-sgcbup="1"]');
+  assert.ok(await until(async () => (await ls(p, 'gs.bank'))[0] === 'Good evidence.'));
+  await p.$eval('[data-sgcb="1"] input', e => { e.focus(); e.select(); }); await p.keyboard.type('Check spelling and capitals.'); await p.keyboard.press('Enter');
+  assert.ok(await until(async () => (await ls(p, 'gs.bank'))[1] === 'Check spelling and capitals.'));
+  await p.click('[data-sgcbrm="0"]');
+  assert.ok(await until(async () => (await ls(p, 'gs.bank')).length === 1));
+  await undoToast(p);
+  assert.ok(await until(async () => JSON.stringify(await ls(p, 'gs.bank')) === JSON.stringify(['Good evidence.', 'Check spelling and capitals.'])), 'Undo puts the comment back where it was');
+  // the mark key: the key page off, a mark renamed and its meaning changed, then put back to the usual wording
+  await p.click('[data-sgmkon] [role="switch"]'); assert.equal((await ls(p, 'gs.markKey')).on, false);
+  await p.$eval('[data-sgmk="sp"] input', e => { e.focus(); e.select(); }); await p.keyboard.type('Spell check'); await p.keyboard.press('Enter');
+  assert.ok(await until(async () => ((await ls(p, 'gs.markKey')).names || {}).sp === 'Spell check'));
+  await p.$$eval('[data-sgmk="sp"] input', l => { l[1].focus(); l[1].select(); }); await p.keyboard.type('Look this word up.'); await p.keyboard.press('Enter');
+  assert.ok(await until(async () => ((await ls(p, 'gs.markKey')).means || {}).sp === 'Look this word up.'));
+  await p.click('[data-sgmkusual="sp"]');
+  const k = await ls(p, 'gs.markKey'); assert.ok(!(k.names || {}).sp && !('sp' in (k.means || {})), 'back to the usual wording');
+  // the current app reads the same saved comments and mark key
+  const q = await ctx.newPage(); await q.evaluateOnNewDocument(STEADY);
+  await q.goto(srv.url); await q.waitForFunction(() => window.__gs && window.__gs.state, { timeout: 60000 });
+  assert.deepEqual(await q.evaluate(() => JSON.parse(localStorage.getItem('gs.bank'))), ['Good evidence.', 'Check spelling and capitals.']);
+  await q.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
