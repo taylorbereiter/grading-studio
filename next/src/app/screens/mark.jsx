@@ -100,7 +100,7 @@ function Paper({ batch, cur, zoom, ver, FU }) {
   useEffect(() => {
     // the same student opened again after a change keeps showing until the pages are ready, so the paper doesn't flash and a dialog
     // open under it (Add, A video…) isn't lost
-    let live = true; if (!was.current || was.current[0] !== batch || was.current[1] !== cur) setGot(null); was.current = [batch, cur];
+    let live = true; if (!was.current || was.current[0] !== batch || was.current[1] !== cur) setGot(null); was.current = [batch, cur, ver];
     use({ cur });
     seam.ready = false;
     if (st) openPages(st, () => live, FU && FU.impAuto).then(r => { if (live) { setGot(r); seam.ready = true; } });
@@ -113,7 +113,7 @@ function Paper({ batch, cur, zoom, ver, FU }) {
   }, []);
   // until the effect above has run for a newly opened student, what was got is the last student's
   const fresh = !!was.current && was.current[0] === batch && was.current[1] === cur, gotNow = fresh ? got : null;
-  if (!fresh) seam.ready = false;
+  if (!fresh || was.current[2] !== ver) seam.ready = false;   // the pages are opening again: not ready until they have
   return <div class="mk-paper" ref={area} tabindex="-1">
     {!st ? null : !st.files.length ? <><EmptyState icon="inbox" title={t('mark.nothing_in')} />{FU && <FU.FilesFoot key={st.key} st={st} name={shownName(st, cur)} />}</>
       : !gotNow ? <div class="loading" aria-busy="true" />
