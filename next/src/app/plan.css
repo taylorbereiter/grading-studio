@@ -220,3 +220,18 @@
 .review li{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:var(--r2);box-shadow:0 0 0 1px var(--line)}
 .review li.ch{box-shadow:0 0 0 1.5px var(--acc)}
 .review .pair{display:flex;gap:10px;flex-wrap:wrap}
+/* pictures and strong examples */
+.picfield{display:flex;flex-direction:column;gap:8px}
+.picfield .lab{font-size:var(--t2);font-weight:500}
+.picfield .row{display:flex;gap:6px;flex-wrap:wrap}
+.picfield label.btn{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.picfield label.btn:focus-within{outline:2px solid var(--acc);outline-offset:2px}
+.picfield p{margin:0;font-size:var(--t1)}
+.expick{display:flex;flex-direction:column;gap:12px}
+.exgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:6px}
+.excard{display:flex;flex-direction:column;gap:4px;padding:8px;border-radius:var(--r2);box-shadow:0 0 0 1px var(--line);text-align:left}
+.excard.on,.expages button.on{box-shadow:0 0 0 2px var(--acc)}
+.exth{display:grid;place-items:center;aspect-ratio:4/3;background:var(--g100);border-radius:var(--r1);overflow:hidden;color:var(--g500)}
+.exth img{width:100%;height:100%;object-fit:cover}
+.expages{display:flex;gap:8px;flex-wrap:wrap}
+.expages button{width:100px;display:flex;flex-direction:column;gap:2px;padding:4px;border-radius:var(--r2);box-shadow:0 0 0 1px var(--line)}

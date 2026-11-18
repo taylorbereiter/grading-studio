@@ -12,10 +12,20 @@ export async function classListsForPlanning() {
   const s = await planning.setupRecord.get();
   return ((s && s.classes) || []).map(c => { const { names: _n, students: _s, ...rest } = c; return rest; });
 }
-// The strong examples, as the Planner shows them: what they are and their pictures. Read only.
+// The strong examples, as the Planner lists them (src/planner/plexamples.js plxLoad): what each one is and how many pages, never
+// whose it was, its work or its class, and never the watch list. Read only; a browser that never kept one gets [] and no database.
+const EX_KINDS = { answer: 1, paper: 1, part: 1, shot: 1 };
 export async function examplesForPlanning() {
   const ex = (await students.examples.entries()).filter(([k]) => !String(k).startsWith('watch:')).map(([, v]) => v);
-  return ex;
+  return ex.filter(r => r && !r.gone && !r.watch && EX_KINDS[r.kind] && Array.isArray(r.pages) && r.pages.length).map(r => ({
+    id: String(r.id), t: +r.t || 0, kind: r.kind, title: String(r.title || ''), letter: String(r.letter || ''), q: r.q && r.q.lab ? String(r.q.lab) : '',
+    why: String(r.why || ''), tags: Array.isArray(r.tags) ? r.tags.map(String) : [], pages: r.pages.length })).sort((a, b) => b.t - a.t);
+}
+// One page of a strong example (a JPEG, every cover painted in), to draw on a slide that refers to it (gsex:<id>|<page>). The
+// picture stays in the examples database: the caller shows it and keeps nothing.
+export async function examplePictureForSlide(id, page = 0) {
+  const b = await students.examplePictures.get(String(id) + '|' + (+page || 0));
+  return b instanceof Blob ? b : null;
 }
 // The names on each class's roster, to show while presenting (pick a name, groups), as the Planner reads them today from gs.rolls
 // (src/pickshare.js pkRolls, written by the grading page's src/seating.js rollsShare). Shown, never stored by the caller.

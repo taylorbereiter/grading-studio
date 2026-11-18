@@ -13,6 +13,35 @@ import { t, date } from '../../i18n/t.js';
 import { register } from '../../services/shortcuts.js';
 import { engine } from '../../planning/engine.js';
 import { Slide } from '../plan/slide.jsx';
+import { ExamplePicker } from '../plan/example-pick.jsx';
+import { isExample, exampleSize } from '../plan/examples.js';
+
+const PIC = ['picture', 'fullpic', 'textpic', 'picprompt'];
+// A picture from this computer, made small enough to keep in a lesson as the current Planner does (src/planner/lessons.js shrinkPic):
+// 1600 px is plenty for a slide.
+async function shrinkPic(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const im = await new Promise((res, rej) => { const x = new Image(); x.onload = () => res(x); x.onerror = rej; x.src = url; });
+    const k = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight));
+    const c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
+    return { src: c.toDataURL('image/jpeg', 0.85), w: c.width, h: c.height };
+  } finally { URL.revokeObjectURL(url); }
+}
+function PictureField({ s, setSlide }) {
+  const [picking, setPicking] = useState(false);
+  const file = async e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; if (!f) return; try { setSlide({ img: { ...(await shrinkPic(f)), source: s.img ? s.img.source : '' } }, true); } catch { } };
+  const ex = s.img && isExample(s.img.src);
+  return <div class="picfield"><span class="lab">{t('plan.picture')}</span>
+    {ex && <p class="mute">{t('plan.example_ref')}</p>}
+    <div class="row"><label class="btn sm"><Icon name="upload" />{s.img ? t('plan.replace_picture') : t('plan.choose_picture')}<input type="file" accept="image/*" class="vh" onChange={file} /></label>
+      <Button size="sm" icon="image" onClick={() => setPicking(true)} data-focus="add-example">{t('plan.add_example')}</Button>
+      {s.img && <Button size="sm" variant="quiet" icon="trash" onClick={() => setSlide({ img: undefined }, true)}>{t('plan.remove_picture')}</Button>}</div>
+    {s.img && !ex && <TextInput label={t('plan.picture_source')} value={s.img.source || ''} onInput={v => setSlide({ img: { ...s.img, source: v.replace(/\n+/g, ' ') } })} />}
+    <ExamplePicker open={picking} onClose={() => setPicking(false)} onPick={async ref => { setPicking(false); const z = await exampleSize(ref); setSlide({ img: { src: ref, w: z.w, h: z.h, source: '' } }, true); }} />
+  </div>;
+}
 
 // The boxes each layout has beyond its title and text (src/planner/looks.js teachBoxes).
 const MORE = { warmup: ['tag'], exit: ['tag'], steps: ['foot'], discuss: ['foot'], twocol: ['h1', 'h2', 'body2'], passage: ['cite', 'foot'], vocab: ['word', 'pos', 'foot'] };
@@ -51,7 +80,7 @@ export default function Editor({ p, l, cur, setCur, save, ai }) {
     if (now) go(); else timer.current = setTimeout(go, 400);
   };
   const n = d.slides.length, i = Math.max(0, Math.min(cur, n - 1)), s = d.slides[i];
-  const setSlide = (patch, now) => { const next = copy(d); next.slides[i] = { ...next.slides[i], ...patch }; put(next, now); };
+  const setSlide = (patch, now) => { const next = copy(d); next.slides[i] = { ...next.slides[i], ...patch }; for (const k in patch) if (patch[k] === undefined) delete next.slides[i][k]; put(next, now); };
   const at = (k, j) => { const next = copy(d); k(next.slides, next); put(next, true); if (typeof j === 'number') setCur(j); };
   const add = () => at(sl => sl.splice(i + 1, 0, E.normSlide({ layout: E.deckAdd(), fmt: 2 })), i + 1);
   const dup = () => at(sl => sl.splice(i + 1, 0, { ...copy(sl[i]), id: E.lid(), talk: [] }), i + 1);
@@ -98,6 +127,7 @@ export default function Editor({ p, l, cur, setCur, save, ai }) {
         <TextInput label={t('plan.slide_title')} value={s.title} onInput={v => setSlide({ title: v })} />
         {(MORE[s.layout] || []).map(k => k === 'body2' ? <TextBox label={t(BOX_LINE[k])} value={s[k] || ''} onInput={v => setSlide({ [k]: v })} rows={4} />
           : <TextInput label={t(BOX_LINE[k])} value={s[k] || ''} onInput={v => setSlide({ [k]: v })} />)}
+        {PIC.includes(s.layout) && <PictureField s={s} setSlide={setSlide} />}
         {!NO_BODY.includes(s.layout) && <TextBox label={t(s.layout === 'title' ? 'plan.box_sub' : 'plan.box_body')} hint={t(s.layout === 'title' ? 'plan.sub_hint' : 'plan.body_hint')} value={s.body} onInput={v => setSlide({ body: v })} rows={7} />}
         {s.layout !== 'title' && <Select label={t('plan.text_size')} value={String(s.size)} options={sizes.map(z => ({ value: String(z), label: t('plan.pt', { n: z }) }))} onChange={v => setSlide({ size: +v }, true)} />}
         <TextBox label={t('plan.speaker_notes')} value={s.notes} onInput={v => setSlide({ notes: v })} rows={3} />

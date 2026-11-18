@@ -21,7 +21,8 @@ export function AssistantSheet({ p, l, open, onClose, save }) {
   const ai = assistant(), name = ai.name || t('assistant.generic');
   const [got, setGot] = useState(null), [keep, setKeep] = useState({}), [busy, setBusy] = useState(false), [over, setOver] = useState(false);
   const E = engine(p);
-  const pics = l.slides.filter(s => s.img).length;
+  // Strong examples stay on the student side: only the teacher's own pictures are offered for attaching.
+  const pics = l.slides.filter(s => s.img && !String(s.img.src || '').startsWith('gsex:')).length;
   const doCopy = async () => {
     try { await navigator.clipboard.writeText(await briefFor(p, l)); toast(pics ? t('plan.brief_copied_pics', { n: pics, name }) : t('plan.brief_copied', { name })); }
     catch (e) { console.error(e); toast(t('plan.copy_failed')); }

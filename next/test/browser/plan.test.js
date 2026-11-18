@@ -207,3 +207,36 @@ test('the assistant: the lesson copied as one self-contained message, the .zip b
   await p.waitForFunction(() => { const P = window.__planner; return P && P.L.lessons.some(l => l.id === 'L2' && l.slides.length === 6); }, { timeout: 20000 });
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
+
+test('a strong example goes on a slide by reference: drawn from the marking side here, never copied, and the current Planner opens the lesson', async () => {
+  const p = await fresh();
+  // A made-up example kept while marking: a drawn picture, no student in it.
+  await p.evaluate(async () => {
+    const c = document.createElement('canvas'); c.width = 400; c.height = 300; const g = c.getContext('2d'); g.fillStyle = '#ddeeff'; g.fillRect(0, 0, 400, 300); g.fillStyle = '#123'; g.fillRect(40, 40, 320, 20);
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg'));
+    const db = await new Promise((res, rej) => { const r = indexedDB.open('grading-studio-examples', 1); r.onupgradeneeded = () => { r.result.createObjectStore('ex'); r.result.createObjectStore('pix'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    await new Promise(res => { const tx = db.transaction(['ex', 'pix'], 'readwrite');
+      tx.objectStore('ex').put({ id: 'EX1', t: 1792000000000, kind: 'paper', title: 'Poetry analysis', letter: 'A', from: 'made-up', why: 'Clear claim', tags: [], pages: [{}] }, 'EX1');
+      tx.objectStore('pix').put(blob, 'EX1|0'); tx.oncomplete = res; });
+    db.close();
+  });
+  await open(p, 'lesson/L5/edit');
+  await p.click('main .ed-list li:nth-child(5) button'); // the exit ticket, made a picture slide
+  await p.select('main .ed-form select', 'picture');
+  await p.waitForSelector('main [data-focus="add-example"]');
+  await p.click('main [data-focus="add-example"]');
+  await p.waitForSelector('.excard');
+  const card = await p.$eval('.excard', x => x.textContent);
+  assert.ok(card.includes('Example A') && !card.includes('made-up'), 'named as grading names it, never whose it was');
+  await p.click('.excard'); await p.click('[data-focus="use-example"]');
+  const l = await (async () => { for (let k = 0; k < 40; k++) { const x = await lessonInDb(p, 'L5'); if (x.slides[4].img) return x; await new Promise(r => setTimeout(r, 150)); } return null; })();
+  assert.deepEqual(l.slides[4].img, { src: 'gsex:EX1|0', w: 400, h: 300, source: '' }, 'the lesson keeps only the reference');
+  await p.waitForFunction(() => [...document.querySelectorAll('main .ed-stage .ls-pic img')].some(i => i.src.startsWith('blob:') && i.naturalWidth === 400), { timeout: 5000 });
+  // The current Planner opens it, draws the slide with an empty picture, and keeps the reference.
+  await p.goto(srv.url + 'planner.html');
+  await p.waitForFunction(() => { const P = window.__planner; return P && P.L.lessons.some(l => l.id === 'L5'); }, { timeout: 20000 });
+  const there = await p.evaluate(() => { const P = window.__planner, l = P.L.lessons.find(x => x.id === 'L5'); P.openLessonForTest(l, 4); return { src: l.slides[4].img.src, pic: !!document.querySelector('.ls-pic') }; });
+  assert.deepEqual(there, { src: 'gsex:EX1|0', pic: true });
+  await new Promise(r => setTimeout(r, 500));
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});

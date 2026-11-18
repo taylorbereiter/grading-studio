@@ -418,5 +418,27 @@
  "plan.too_big": "Too big to keep (over 40 MB):",
  "plan.keep_new_n": "Slide {n}: keep the new one",
  "plan.same_n": "Slide {n}: no change",
- "plan.add_new_n": "Slide {n}: add this new slide"
+ "plan.add_new_n": "Slide {n}: add this new slide",
+ "plan.ex_question": "Question {q}",
+ "plan.ex_example": "Example {x}",
+ "plan.ex_shot": "Screenshot {x}",
+ "plan.ex_part": "Part of a page",
+ "plan.add_example": "Strong example",
+ "plan.use_example": "Use this example",
+ "plan.no_examples": "No strong examples yet",
+ "plan.no_examples_text": "Keep one while marking (Use as an example), then come back.",
+ "plan.example_stays": "The picture stays with your marking. The lesson keeps only which example it is, so it never leaves this browser with the lesson.",
+ "plan.find_example": "Find an example",
+ "plan.n_pages": {
+  "one": "1 page",
+  "other": "{n} pages"
+ },
+ "plan.which_page": "Which page",
+ "plan.page_n": "Page {n}",
+ "plan.picture": "Picture",
+ "plan.example_ref": "A strong example: shown here from your marking, and left out of files, shared lessons and the message for your assistant.",
+ "plan.replace_picture": "Replace picture",
+ "plan.choose_picture": "Choose a picture",
+ "plan.remove_picture": "Remove",
+ "plan.picture_source": "Source line"
 }
