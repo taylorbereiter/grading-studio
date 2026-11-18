@@ -1,21 +1,21 @@
 {
- "version": "1.28.68",
- "build": "87dfd9ec0aeb",
+ "version": "1.28.74",
+ "build": "95c979d5bdde",
  "notes": [
   "The lesson and unit prompts you copy from the Planner now say Claude shouldn't need anything from your computer, and ask it to tell you if anything is missing."
  ],
  "files": {
-  "index.html": "6751ba27a95455b28df3216086a37b0113846c9c816122663a5bb7bc04263fc0",
-  "planner.html": "6cf7b4221b7365493a0f693cfeae12743afa9aad41f10c543a6b1104e9ae04dd"
+  "index.html": "b69ce2e0d4d4c6a0628aed2cb52422c61f409eecc265209aaa3e17efccddb348",
+  "planner.html": "1b4898396c7452206cd726e98c616b1c001963358afd88060837904bbc239434"
  },
  "langs": {
-  "lang/zh-Hant.js": "74f5b9dd6579b91ef1cf6a3431e79c560a454a6efd749f9c9a2a800a9b0b6348",
-  "lang/zh-Hans.js": "c26fa6ca88731d0f27cfd6bfcae93d1b4145f5eaa7ebdbea38856f8c0d0159d4",
-  "lang/es.js": "65e561ba75865009ddfb9275239b8ee33b10cc50bda88e481a160b53607f1435",
-  "lang/fr.js": "693c777feb05fbcac1b2da51c4dc65620a0660175793ff166c6c18260cf1727a",
-  "lang/de.js": "e614653b4b00c31a5a97705322fa4259e3603354ce7ce61a8b39b5cf23bf4305",
-  "lang/pt-BR.js": "088233dc28f9e364b8a327ebc8aaf1604dcbe22e736702ed34624014f5812cfc",
-  "lang/ja.js": "913b6a050c3bd338df36c484c286bc3ae7d59dad090b662f362530d94dcde854",
-  "lang/ko.js": "c458cafdb522106522d348efd69092b586afbb875db0e78a4252d618159f0c34"
+  "lang/zh-Hant.js": "1f6c72319366bc2cb027a2ad8ca790bdf3982ac2b2c8cf5958525f87ec6ee574",
+  "lang/zh-Hans.js": "6427d65fce82fe3af7957b497f1243b64034515f55e873902b4692f4a9460468",
+  "lang/es.js": "bc4fc38cca9a088fcc34637578d0cfcc021f710d99d7f7084da7751de1c290a6",
+  "lang/fr.js": "2ff7f9775da31259cd86d2f34426fbac0bb78266be1a82643ec919052b6148b2",
+  "lang/de.js": "2beeeb86f58dc38cd2a84e70a2063a41ab622f3adfbb8d2579204a5206ac9f95",
+  "lang/pt-BR.js": "92549f2b8b3dceb6edd1f4575051a0e49dea5be11a033f70684703bb9add8014",
+  "lang/ja.js": "2d660575deaf9655f6504971be96b788eaeb1575116f84588a8133c3f1306d49",
+  "lang/ko.js": "f26c9c74d16094960c256149124c38c944c6c17989728e292b09bc6f490d213d"
  }
 }

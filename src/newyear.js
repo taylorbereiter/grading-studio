@@ -69,7 +69,7 @@ function nyLib(old, works, o) {
     delete n.batchId; delete n.opened;
     if (n.typed && typeof n.typed === 'object') n.typed = { max: n.typed.max == null ? null : n.typed.max, ...(n.typed.lv ? { lv: true } : {}), s: {} };
     if (!n.setup && w && w.setup) { n.setup = { ...w.setup }; delete n.setup.spot; delete n.setup.rubricPage; }
-    if (!n.quiz && w && w.quiz && Array.isArray(w.quiz.qs) && w.quiz.qs.length) { const q = nyClone(w.quiz); delete q.shift; delete q.spot; n.quiz = q; }
+    if (!n.quiz && w && w.quiz && Array.isArray(w.quiz.qs) && w.quiz.qs.length) { const q = nyClone(w.quiz); delete q.shift; delete q.spot; delete q.look; delete q.lastRead; if (q.made) delete q.made.names; n.quiz = q; }   // a quiz made here prints with the new roster
     if (!n.goal && w && typeof w.goal === 'string' && w.goal) n.goal = w.goal;   // a learning goal for the whole score (goals.js)
     if (o.dates && n.due) n.due = nyDay(n.due);
     return nyStrip(n, names, ['id', 'name', 'setup', 'quiz', 'typed', 'classId', 'goal', 'crit']);

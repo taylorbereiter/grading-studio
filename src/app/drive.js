@@ -1,5 +1,5 @@
 /* ---------------- Google sign-in: open from Drive, save to Drive, keep work the same on every computer ---------------- */
-// Everything happens between this browser and Taylor's own Google account. The sign-in is never stored or sent anywhere else.
+// Everything happens between this browser and the teacher's own Google account. The sign-in is never stored or sent anywhere else.
 const GOOGLE_CLIENT_ID = '/*@@GCID@@*/';
 const gcid = () => (/apps\.googleusercontent\.com$/.test(GOOGLE_CLIENT_ID) ? GOOGLE_CLIENT_ID : '') || store.get('gs.gcid', '');
 // Keeping two devices the same needs only Grading Studio's own hidden folder in her Drive (drive.appdata: it can't see her other files).
@@ -43,6 +43,7 @@ async function gToken(interactive, full) {
   // Google's key lasts an hour, and getting a new one in a browser opens Google's little window, even for a moment. With "Renew it by
   // itself" on (the default, Settings, Saving and carrying) that happens when it's needed; off, the sync waits for a tap on the Google line.
   if (!interactive && !gAuto()) throw new Error('Sign in again to sync');
+  if (!interactive && G.quiet) throw new Error('waits until the page is in front');   // a tab being left never opens Google's window or page
   if (G_REDIRECT) { gRedirect(scope); throw new Error('Sign in again to sync'); }
   await loadGis();
   if (!G.client || G.cscope !== scope) {
@@ -169,7 +170,7 @@ async function saveToDrive(name, files, onStep) {
 
 /* Sync: the same work on every device she signs in on (a phone and a computer), through one hidden file in her own Drive.
    It carries what folder.js carries to a folder, without the papers: classes, units, rosters, typed scores and to-dos (gs.lib), each
-   download's marks and scores and its row in the list, and the settings that travel (carryLs). Each side is merged the way a folder
+   download's marks and scores and its row in the list, the settings that travel (carryLs), the Planner's planning time (pt) and notes from the phone for a lesson (tn). Each side is merged the way a folder
    or a take-home file is (merge.js), student by student and field by field, so a score typed on the phone and a comment written on
    the computer both stay. Nothing goes anywhere but her browser and her Drive. */
 const SYNC_NAME = 'grading-studio-sync.json';
@@ -195,7 +196,11 @@ async function syncRead() {
 async function syncWrite(body) {
   if (syncFile) {
     if (syncFile.ver && await syncVer() !== syncFile.ver) { const e = new Error('changed on another device'); e.status = 412; throw e; }
-    return gsync('https://www.googleapis.com/upload/drive/v3/files/' + syncFile.id + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+    const r = await gsync('https://www.googleapis.com/upload/drive/v3/files/' + syncFile.id + '?uploadType=media&fields=id,version', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+    // the version this write made, so a second write in the same sync (planLiteMake, below) isn't taken for another device's
+    let v = ''; try { v = String((await r.clone().json()).version || ''); } catch {}
+    syncFile.ver = v || await syncVer();
+    return r;
   }
   const fd = new FormData();
   fd.append('metadata', new Blob([JSON.stringify({ name: SYNC_NAME, parents: ['appDataFolder'] })], { type: 'application/json' }));
@@ -217,7 +222,7 @@ function syncDecide(asks) {
 function syncNow() {
   if (!G.email || sampleOn()) return Promise.resolve();
   if (syncBusy) { syncAgain = true; return syncBusy; }
-  clearTimeout(syncT);
+  clearTimeout(syncT); syncT = null;
   syncBusy = (async () => {
     for (let tries = 1; ; tries++) {
       try { await syncOnce(); return; } catch (e) {
@@ -263,6 +268,10 @@ async function syncOnce() {
     store.set('gs.tomb', tomb);
     if (got.plan && JSON.stringify(got.plan) !== JSON.stringify(store.get('gs.planCopy', null))) { store.set('gs.planCopy', got.plan); if (typeof planRefresh === 'function') planRefresh(); }
     for (const [k, v] of Object.entries(mergeLs(carryLs(), B.ls, k => Object.keys(tomb).some(id => k.includes(id))))) lsPut(k, v);
+    // the Planner's planning time, kept outside gs.*: day by day, the larger of each count (merge.js)
+    if (got.pt) { const m = planTimeMerge(store.get('gsp.planTime', null), got.pt); if (m.toA) store.set('gsp.planTime', m.out); }
+    // notes made on the phone for a lesson, waiting for the Planner to put them on it: each note by its key, the later one kept (merge.js)
+    if (got.tn) { const m = taughtInMerge(store.get('gsp.taughtIn', null), got.tn); if (m.toA) { store.set('gsp.taughtIn', m.out); if (PHONE) phAfterSynced(); } }
     if (came.length || libm.toA) { bank = store.get('gs.bank', bank); if (!batch) { const su = store.get('gs.setup', null); if (su) setup = setupOver(su); } await loadKept(); renderLib(); if (typeof homeRender === 'function') homeRender(); if (PHONE) phSynced(); if (wl.on && lib.classes.length) { wlClose(); go('#/'); } }
     if (open && rows.some(r => r.id === open && r.toA)) syncAgain = false;   // nothing to push for it until it is closed and merged
   }
@@ -276,13 +285,21 @@ async function syncOnce() {
     if (m) { const { papers, size, ...rest } = m; out.meta[id] = rest; }
   }
   delete out.ls['gs.lib'];
+  if (out.ls['gs.focus']) try { out.ls['gs.focus'] = JSON.stringify(focusShared(JSON.parse(out.ls['gs.focus']))); } catch {}   // each device's own start of the day stays with it
   out.plan = (await syncPlan()) || (got && got.plan) || null;   // a device with no Planner passes on the one it was given
   out.planT = await planSync(got && got.planT);   // the Planner, in a file of its own (below)
   out.files = dvFiles(got && got.files, tomb);
+  const pt = store.get('gsp.planTime', null); if (pt && typeof pt === 'object') out.pt = pt;
+  const tn = taughtInMerge(store.get('gsp.taughtIn', null), null).out; if (Object.keys(tn.items).length) out.tn = tn;
   const body = JSON.stringify(out);
   if (!got || body !== JSON.stringify({ ...got, t: now })) await syncWrite(body);
   store.set('gs.syncAt', now);
   dvCloud(out.files);
+  // the pictures of the phone's copies of lessons too big to send go up after the marks (a few seconds' worth each sync), and the copies made go in now
+  if (await planLiteMake()) {
+    const t = await planSync(out.planT);
+    if (t !== out.planT) { out.planT = t; await syncWrite(JSON.stringify(out)); }
+  }
   setSyncState('synced');
   dvUpSoon();
 }
@@ -293,7 +310,16 @@ function gBack2() {
   syncNow();
 }
 window.addEventListener('focus', gBack2);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') gBack2(); });
+// Leaving (another tab, the phone locked, the tab closed): a change still waiting for its sync goes now, with the key there is. Nothing
+// asks Google for a new one while the page is out of sight, and a sync that needs one waits until she's back.
+const gLive = () => !!G.token && Date.now() < G.exp - 60000;
+function syncLeave() { G.quiet = true; if (syncT && G.email && gLive() && !sampleOn()) syncNow(); }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { G.quiet = false; gBack2(); } else syncLeave(); });
+window.addEventListener('pagehide', syncLeave);
+window.addEventListener('pageshow', () => { if (document.visibilityState === 'visible') G.quiet = false; });
+// A computer left open in front: what the phone changed comes in every few minutes, with the key there is (focus renews it).
+function syncPull() { if (G.email && GOK && document.visibilityState === 'visible' && gLive() && !syncBusy && !sampleOn()) syncNow(); }
+setInterval(syncPull, 5 * 60000);
 // Signed in last time: reconnect quietly when the page opens. On an iPhone's home screen that's a quick trip to Google and back, once an hour at most.
 if (GOK && G.email && gcid() && !sampleOn()) setTimeout(() => {
   if (G_REDIRECT && !(G.token && Date.now() < G.exp - 60000)) {
@@ -503,35 +529,99 @@ async function planHere() {
   }
   // nothing here, though there were lessons at the last sync: the store was cleared, not every lesson deleted
   if (!lessons.length && !Object.keys(kv).length && (seen.ids || []).length) seen = { keys: {}, ids: [], gone: { ...(seen.gone || {}) }, t: {} };
-  const A = { lessons: {}, kv: {}, gone: { ...(seen.gone || {}) } }, ids = new Set(), big = new Set();
+  const A = { lessons: {}, kv: {}, gone: { ...(seen.gone || {}) } }, ids = new Set(), big = new Set(), bigInfo = {}, bigL = {}, liteL = {};
   for (const l of lessons) {
     if (!l || !l.id) continue;
-    const { _file, _mod, _sync, ...x } = l; ids.add(x.id);
-    if (JSON.stringify(x).length > PLAN_BIG) { big.add(x.id); continue; }   // a lesson full of pictures stays on its own device for now
+    const { _file, _mod, _sync, ...x } = l, j = JSON.stringify(x); ids.add(x.id);
+    // a phone's copy of a lesson too big to send, made for the phone (planApply, _lite), never goes back: its pictures are only in Drive.
+    // One whose mark was lost (saved again by a page that doesn't know it) is known by those pictures.
+    if (x._lite || j.includes('"src":"gsblob:')) { liteL[x.id] = x; continue; }
+    // a lesson full of pictures stays on its own device; its title and days go, so a phone can say why it isn't there, and a computer
+    // sends a copy for the phone with its pictures in Drive (planLite)
+    if (j.length > PLAN_BIG) { big.add(x.id); bigL[x.id] = x; bigInfo[x.id] = { title: String(x.title || '').slice(0, 200), slots: Array.isArray(x.slots) ? x.slots.map(s => ({ classId: s && s.classId, date: s && s.date })) : [], updated: x.updated || 0 }; continue; }
     A.lessons[x.id] = x;
   }
   const lost = [];
-  for (const id of seen.ids || []) if (!ids.has(id) && !A.gone['l:' + id]) lost.push(id);   // deleted here since the last sync (timed once the time is known)
+  for (const id of seen.ids || []) if (!ids.has(id) && !A.gone['l:' + id] && !(PHONE && (seen.lite || []).includes(id))) lost.push(id);   // deleted here since the last sync (timed once the time is known); a phone's copies are never its own to delete
   for (const [k, v] of Object.entries(kv)) { const h = shaLite(JSON.stringify(v)); A.kv[k] = { v, t: seen.keys[k] === h ? (seen.t[k] || 0) : seen.at ? -1 : null }; }   // -1: changed here; null: never synced from here
-  const mine = !seen.at ? !!(lessons.length || Object.keys(kv).length) : lost.length > 0 || Object.values(A.kv).some(x => x.t === -1) || [...ids].some(id => !(seen.ids || []).includes(id)) || Object.values(A.lessons).some(l => (l.updated || 0) > (seen.at || 0));
-  return { A, seen, big, lost, mine };
+  const mine = !seen.at ? !!(lessons.length || Object.keys(kv).length) : lost.length > 0 || JSON.stringify(bigInfo) !== JSON.stringify(seen.big || {}) || Object.values(A.kv).some(x => x.t === -1) || [...ids].some(id => !(seen.ids || []).includes(id) && !liteL[id]) || Object.values(A.lessons).some(l => (l.updated || 0) > (seen.at || 0))
+    || (!PHONE && [...big].some(id => !(seen.liteDone || []).includes(id)));   // a copy for the phone not made yet (its pictures didn't all go up)
+  return { A, seen, big, bigInfo, bigL, liteL, lost, mine };
+}
+// The copy for the phone of a lesson too big to send: each picture over 20 KB goes to Drive's hidden folder once (named by what is in it,
+// like the papers, dvPut) and the copy names it (gsblob:<sha-256>:<bytes>:<type>); the phone fetches it when the lesson is opened
+// (phone.js). The lesson here isn't touched. null: too big even so. A picture that doesn't go up throws, and no copy is made.
+const LITE_PIC = 20000;
+// Each copy made is kept here by lesson (id -> { updated, lite }) and used again while the lesson is unchanged, so a sync doesn't decode
+// and hash every picture again. planSync only uses copies already made (here, or the one in Drive for the same version); a lesson
+// with none waits in planLiteDue ("on its way" on the phone) until planLiteMake, after the marks have gone up, makes its copy:
+// next week's lessons first, and only for a few seconds each sync, the rest the next time.
+const PLAN_LITE = new Map(), PLAN_LITE_T = { ms: 8000, n: 0 };
+let planLiteDue = [];
+async function planLiteMake() {
+  if (PHONE || !planLiteDue.length) return false;
+  const today = isoDay(Date.now()), next = x => (Array.isArray(x.slots) ? x.slots : []).map(s => s && typeof s.date === 'string' ? s.date : '').filter(d => d >= today).sort()[0] || '~';
+  const due = planLiteDue.map(x => [next(x), x]).sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : (b[1].updated || 0) - (a[1].updated || 0)).map(a => a[1]);
+  planLiteDue = [];
+  const t0 = Date.now(); let made = 0;
+  for (const x of due) {
+    if (made && Date.now() - t0 > PLAN_LITE_T.ms) break;   // the rest go with the next sync
+    try { PLAN_LITE_T.n++; PLAN_LITE.set(x.id, { updated: x.updated || 0, lite: await planLite(x) }); made++; } catch (e) { console.warn(e); }
+  }
+  return made > 0;
+}
+async function planLite(x) {
+  const l = JSON.parse(JSON.stringify(x));
+  const up = async src => {
+    const m = src.length > LITE_PIC && /^data:(image\/[\w.+-]+);base64,([A-Za-z0-9+/=]+)$/.exec(src); if (!m) return src;
+    const bin = atob(m[2]), bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const r = await dvPut(bytes);
+    return 'gsblob:' + r.hash + ':' + r.size + ':' + m[1];
+  };
+  for (const s of Array.isArray(l.slides) ? l.slides : []) {
+    if (!s || typeof s !== 'object') continue;
+    if (s.img && typeof s.img.src === 'string') s.img.src = await up(s.img.src);
+    if (Array.isArray(s.ctx)) for (const c of s.ctx) if (c && typeof c.src === 'string') c.src = await up(c.src);
+    if (s.video && typeof s.video === 'object') delete s.video.thumb;   // the phone shows a video as its link
+  }
+  return JSON.stringify(l).length > PLAN_BIG ? null : l;
 }
 const shaLite = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + s.length.toString(36); };
 async function planSync(remoteT) {
+  planLiteDue = [];
   if (sampleOn()) return remoteT;
   const here = await planHere(); if (!here) return remoteT;
-  const { A, seen, big, lost, mine } = here;
+  const { A, seen, big, bigInfo, bigL, liteL, lost, mine } = here;
   if (!mine && remoteT && remoteT === seen.planT) return remoteT;   // nothing new on either side
   const now = Date.now(), B = (await planFileRead()) || { lessons: {}, kv: {}, gone: {} };
   for (const id of lost) A.gone['l:' + id] = now;
   // a key changed here goes in now; on this device's first sync, what is already in Drive comes first
   for (const [k, x] of Object.entries(A.kv)) if (x.t === -1) x.t = now; else if (x.t === null) x.t = B.kv && B.kv[k] ? 0 : now;
   for (const id of big) { delete A.gone['l:' + id]; if (B.lessons && B.lessons[id]) A.lessons[id] = B.lessons[id]; }   // the copy in Drive stays as it was
+  for (const id of Object.keys(liteL)) delete A.gone['l:' + id];   // a phone never deletes what it holds only to read
+  // a computer: a copy for the phone of each lesson too big to send, its pictures in Drive. Only once every picture is there; until
+  // then it stays on the list of lessons too big to send, saying its pictures are on their way.
+  const lite = {}, liteDone = [], waits = new Set();
+  if (!PHONE) for (const id of big) {
+    const u = bigL[id].updated || 0, m = PLAN_LITE.get(id), d = B.lite && B.lite[id] && typeof B.lite[id] === 'object' && B.lite[id].id === id && (B.lite[id].updated || 0) === u ? B.lite[id] : null;
+    if (m && m.updated === u) { if (m.lite) lite[id] = m.lite; liteDone.push(id); }
+    else if (d && (seen.liteDone || []).includes(id)) { PLAN_LITE.set(id, { updated: u, lite: d }); lite[id] = d; liteDone.push(id); }   // made before this page was opened
+    else { waits.add(id); planLiteDue.push(bigL[id]); }
+  }
+  for (const id of PLAN_LITE.keys()) if (!big.has(id)) PLAN_LITE.delete(id);
+  A.lite = lite;
   const M = mergePlan(A, B);
-  await planApply(A, M, big);
+  // the lessons too big to send, as each device last said: this device's own as they are now, and none that is deleted or has its copy for the phone
+  const bigs = { ...(B.big && typeof B.big === 'object' ? B.big : {}) };
+  for (const id of Object.keys(bigs)) if (M.gone['l:' + id] || (A.lessons[id] && !big.has(id))) delete bigs[id];
+  for (const [id, b] of Object.entries(bigInfo)) bigs[id] = waits.has(id) ? { ...b, why: 'up' } : b;
+  for (const id of Object.keys(bigs)) if (M.lite && M.lite[id] && (M.lite[id].updated || 0) >= ((bigs[id] && bigs[id].updated) || 0)) delete bigs[id];
+  if (Object.keys(bigs).length) M.big = bigs;
+  if (JSON.stringify(store.get('gs.planBig', null) || {}) !== JSON.stringify(bigs)) store.set('gs.planBig', bigs);
+  await planApply(A, M, big, liteL);
   const body = JSON.stringify(M), t = shaLite(body);
   // what this device now holds is what was merged, before it goes up: if sending fails, the next sync finds nothing changed here and tries again
-  const was = { keys: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, shaLite(JSON.stringify(x.v))])), t: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, x.t])), ids: [...new Set([...Object.keys(M.lessons), ...big])], gone: M.gone, at: now };
+  const was = { keys: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, shaLite(JSON.stringify(x.v))])), t: Object.fromEntries(Object.entries(M.kv).map(([k, x]) => [k, x.t])), ids: [...new Set([...Object.keys(M.lessons), ...big])], gone: M.gone, big: bigInfo, lite: Object.keys(M.lite || {}), liteDone, at: now };
   store.set('gs.planSeen', { ...was, planT: null });
   if (JSON.stringify(B) !== body) await planFileWrite(body);
   store.set('gs.planSeen', { ...was, planT: t });
@@ -541,16 +631,26 @@ async function planSync(remoteT) {
 // as she left it (it goes up next time). Lessons kept in the Planner folder: a changed one is written to its file again, a deleted one's
 // file is taken away (src/planner/lessons.js, planFolderCatchUp), or the folder would bring it back. A Planner open in another tab picks
 // it all up (gs-plan-in, src/planner/base.js).
-async function planApply(A, M, big) {
-  const put = Object.values(M.lessons).filter(l => !big.has(l.id) && JSON.stringify(A.lessons[l.id]) !== JSON.stringify(l));
-  const del = Object.keys(M.gone).filter(k => k.startsWith('l:')).map(k => k.slice(2)).filter(id => A.lessons[id] && !big.has(id));
+async function planApply(A, M, big, liteL = {}) {
+  // A phone also takes the copies made for it (M.lite), marked _lite, where one is newer than Drive's lesson; a computer never does.
+  // A copy held here is only replaced by something newer (an older version's sync leaves the copies out).
+  const lite = PHONE && M.lite && typeof M.lite === 'object' ? M.lite : {}, had = {}, put = [];
+  for (const id of new Set([...Object.keys(M.lessons), ...Object.keys(lite)])) {
+    if (big.has(id)) continue;
+    const f = M.lessons[id], c = lite[id] && typeof lite[id] === 'object' && lite[id].id === id ? lite[id] : null;
+    const w = c && (!f || (c.updated || 0) > (f.updated || 0)) ? { ...c, _lite: 1 } : f, here = liteL[id] || A.lessons[id];
+    if (!w || (liteL[id] && (w.updated || 0) < (liteL[id].updated || 0)) || JSON.stringify(here) === JSON.stringify(w)) continue;
+    had[id] = here; put.push(w);
+  }
+  const del = Object.keys(M.gone).filter(k => k.startsWith('l:')).map(k => k.slice(2)).filter(id => (A.lessons[id] || liteL[id]) && !big.has(id));
+  for (const id of del) had[id] = liteL[id] || A.lessons[id];
   const keys = Object.entries(M.kv).filter(([k, x]) => !A.kv[k] || JSON.stringify(A.kv[k].v) !== JSON.stringify(x.v));
   if (!put.length && !del.length && !keys.length) return;
   const db = await planDb(true); if (!db) return;
   try {
     await new Promise((res, rej) => {
       const t = db.transaction(['lessons', 'kv'], 'readwrite'), ls = t.objectStore('lessons'), kv = t.objectStore('kv'), goneFiles = [];
-      const same = (was, id) => (was ? was.updated || 0 : null) === (A.lessons[id] ? A.lessons[id].updated || 0 : null);
+      const same = (was, id) => (was ? was.updated || 0 : null) === (had[id] ? had[id].updated || 0 : null);
       for (const l of put) { const r = ls.get(l.id); r.onsuccess = () => { const was = r.result; if (!same(was, l.id)) return; ls.put(was && was._file ? { ...l, _file: was._file, _mod: was._mod, _sync: 1 } : l); }; }
       for (const id of del) { const r = ls.get(id); r.onsuccess = () => { const was = r.result; if (!was || !same(was, id)) return; if (was._file) goneFiles.push(was._file); ls.delete(id); }; }
       for (const [k, x] of keys) {

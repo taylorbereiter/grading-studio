@@ -681,7 +681,7 @@ function inkRows(p) {
     '<div class="qmirow qmipts"><span class="hsm">Points</span><button class="chip" data-' + p + 'pts="" aria-pressed="' + (ptsInk === '') + '" title="Points in the ✗ color">Same as ✗</button>' +
     Object.entries(COLORS).map(([k, v]) => sw('pts', k, v, k === ptsInk, 'Points')).join('') + '</div>' +
     '<div class="qmirow qmipts"><span class="hsm"></span><button class="chip" data-' + p + 'pts="credit" aria-pressed="' + (ptsInk === 'credit') + '" title="Full points in the ✓ color, part in amber, none in the ✗ color">By credit <i class="qmcr" style="background:' + CHECK_INK + '"></i><i class="qmcr" style="background:' + PTS_AMBER + '"></i><i class="qmcr" style="background:' + x + '"></i></button></div>' +
-    (ptsInk === 'credit' ? '<p class="muted hsm">Full: 2/2 · part: 1/2 · none: 0/2. Totals and score stamps stay in the ✗ color.</p>' : '');
+    (ptsInk === 'credit' ? '<p class="muted hsm">Full: 2/2 · part: 1/2 · none: 0/2. Totals and score stamps stay red.</p>' : '');
 }
 function qmInkMenu(open) {
   const pop = $('#qmInkPop'), btn = $('#qmInkBtn'); if (!pop) return;
@@ -1116,7 +1116,9 @@ function qmBindDrag(body) {
 /* the button */
 function quizBtn() {
   const b = $('#quizTop'); if (b) b.hidden = !quizOn();
+  const r = $('#qrBtn'); if (r) r.hidden = !(quizOn() && batch.quiz.made);
 }
 $('#quizBtn').onclick = () => openQuiz();
 $('#quizTop').onclick = () => openQuiz();
+$('#qrBtn').onclick = () => batch && batch.quiz && batch.quiz.lastRead ? openQuizLook() : qrReadAll();
 Object.assign(window.__gs, { qzAnsOf, openQuiz, openQuizBoxes, quizSet, quizSum, quizCount, quizPart, quizMax, quizOn, qzCrop, qzRect, qzSpot, quizBtn });

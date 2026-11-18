@@ -213,7 +213,7 @@ test('a class on the timetable with nothing planned is a line, with a button to 
   await page.waitForSelector('#tdList [data-td^="auto:plan:A1:"]');
   const plan = await page.$$eval('#tdList [data-td^="auto:plan:"]', r => r.map(x => [x.querySelector('.tdx').textContent, x.querySelector('.tddue').textContent, x.querySelector('a.btn').textContent, x.querySelector('a.btn').getAttribute('href')]));
   assert.equal(plan.length, 4, 'today and the next three days');
-  assert.deepEqual(plan[0], ['Plan today’s grade-9 english lesson', 'Today', 'Plan it', 'planner.html#week']);
+  assert.deepEqual(plan[0], ['Plan today’s grade-9 english lesson', 'Today', 'Plan it', 'planner.html#plan/A1/' + day(0)], 'Plan it opens the lesson for that class and day');
   assert.deepEqual(plan[1].slice(0, 2), ['Plan tomorrow’s grade-9 english lesson', 'Tomorrow']);
   // the line is under its grading class of the same name, whatever the spaces and capitals
   await page.click('[data-tdf="c1"]');
@@ -224,7 +224,16 @@ test('a class on the timetable with nothing planned is a line, with a button to 
   await goTo(page, '#/');
   await page.waitForSelector('#today .trow .tdpre');
   assert.equal(await page.$eval('#today .trow .tdpre', e => e.textContent), '1 to do');
-  assert.deepEqual(page.errors, []);
+  // Focus on this, beside the line: a lesson session at the lesson length on that class and day, and off to the Planner
+  await goTo(page, '#/todo');
+  await page.click('#tdList [data-td^="auto:plan:A1:' + day(1) + '"] .tdmain'); await page.waitForSelector('#tdSide [data-tdfocus]');
+  assert.equal(await page.$eval('#tdSide [data-tdfocus]', b => b.dataset.tdfocus), 'les:+A1|' + day(1));
+  assert.equal(await page.$eval('#tdSide a.btn.primary', b => b.getAttribute('href')), 'planner.html#plan/A1/' + day(1));
+  const errs = [...page.errors];
+  await Promise.all([page.waitForNavigation(), page.click('#tdSide [data-tdfocus]')]);
+  const r = await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.focusRun')));
+  assert.equal(r.k, 'l'); assert.equal(r.len, 45 * 60); assert.equal(r.w, 'les:+A1|' + day(1)); assert.deepEqual(r.nw, { c: 'A1', d: day(1) });
+  assert.deepEqual(errs, []);
   await close();
 });
 
@@ -434,4 +443,44 @@ test('categories from two copies are joined one by one, and carry into a new sch
   const m = ctx.todoMerge(a, b);
   assert.deepEqual(JSON.parse(JSON.stringify(m.cats)).sort((x, y) => x.id.localeCompare(y.id)), [{ id: 'role', name: 'Coach', t: 5 }, { id: 'tc1', gone: 1, t: 4 }, { id: 'tc2', name: 'Yearbook', t: 1 }]);
   assert.deepEqual(JSON.parse(JSON.stringify(m.corder)), { ids: ['role', 'grade'], t: 9 });
+});
+
+test('a lesson begun but not ready keeps its plan line, under its own name, until she says it is ready', async () => {
+  const { page, close } = await open(null, null);
+  // one made-up class that meets late every day; a lesson tomorrow with planning time on it yesterday, one the day after with none,
+  // and one in three days that has had time and is ready
+  const put = ready => page.evaluate(async (d, ready) => {
+    const db = await new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onupgradeneeded = () => { r.result.createObjectStore('lessons', { keyPath: 'id' }); r.result.createObjectStore('kv'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    const l = (id, date, more) => ({ id, title: 'Made-up lesson ' + id, slots: [{ classId: 'A1', date }], slides: [{}], updated: 1, ...more });
+    await new Promise((res, rej) => {
+      const tx = db.transaction(['kv', 'lessons'], 'readwrite');
+      tx.objectStore('kv').put({ classes: [{ id: 'A1', name: 'grade-9 english', color: '#0E7C86', meets: [0, 1, 2, 3, 4, 5, 6].map(dow => ({ dow, start: '23:58', end: '23:59' })) }], daysOff: [] }, 'setup');
+      const o = tx.objectStore('lessons'); o.put(l('L1', d.d1, ready ? { ready: { at: Date.now() } } : {})); o.put(l('L2', d.d2)); o.put(l('L3', d.d3, { ready: { at: 5 } }));
+      tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+    });
+    db.close();
+    localStorage.setItem('gsp.planTime', JSON.stringify({ days: { [d.y]: { l: 1500, a: { L1: 600, L3: 900 } } }, names: {} }));
+  }, { y: day(-1), d1: day(1), d2: day(2), d3: day(3) }, ready);
+  await put(false);
+  await page.reload(); await page.waitForSelector('#today .trow');
+  await goTo(page, '#/todo');
+  await page.waitForSelector('#tdList [data-td^="auto:plan:A1:' + day(1) + '"]');
+  const keys = await page.$$eval('#tdList [data-td^="auto:plan:"]', r => r.map(x => x.dataset.td.split(':')[3]));
+  assert.ok(keys.includes(day(1)), 'tomorrow, begun and not ready');
+  assert.ok(!keys.includes(day(2)), 'planned, with no time on it yet');
+  assert.ok(!keys.includes(day(3)), 'ready');
+  const row = '#tdList [data-td^="auto:plan:A1:' + day(1) + '"]';
+  assert.equal(await page.$eval(row + ' .tdx', e => e.textContent), 'Plan tomorrow’s grade-9 english lesson');
+  assert.match(await page.$eval(row, e => e.textContent), /Made-up lesson L1/);
+  // Focus on this goes to that lesson, not a new one
+  await page.click(row + ' .tdmain'); await page.waitForSelector('#tdSide [data-tdfocus]');
+  assert.equal(await page.$eval('#tdSide [data-tdfocus]', b => b.dataset.tdfocus), 'les:L1');
+  // said ready in the Planner: the line goes
+  await put(true);
+  await page.reload(); await page.waitForSelector('#today .trow');
+  await goTo(page, '#/todo'); await page.waitForSelector('#tdList .tdrow');
+  await settle();
+  assert.equal(await page.$(row), null);
+  assert.deepEqual(page.errors, []);
+  await close();
 });

@@ -40,6 +40,7 @@ async function splitRender() {
     if (me.thumbs[i]) continue;
     const page = await me.doc.getPage(i + 1);
     await scanSplitLook(me, i, page);
+    await qrSplitPage(me, i, page);   // a page of a quiz made here goes to its student by its code
     if (SP !== me) return;
     const vp0 = spView(me, i, page, 1), vp = spView(me, i, page, 520 / vp0.width);
     const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
@@ -53,7 +54,8 @@ async function splitRender() {
     const im = document.querySelector('#spPages img[data-th="' + i + '"]'); if (im) im.src = me.thumbs[i];
     const st = $('#spStat'); if (st) st.textContent = i + 1 < me.n ? 'Reading pages… ' + (i + 1) + ' of ' + me.n : '';
   }
-  if (SP === me && $('#spStat')) $('#spStat').textContent = scanSplitSays(me);
+  if (SP === me && me.qnew) { me.qnew = 0; splitPick(me.owner.findIndex((o, i) => spFree(i)), 1); splitDraw(); }
+  if (SP === me && $('#spStat')) $('#spStat').textContent = [qrSplitSays(me), scanSplitSays(me)].filter(Boolean).join(' · ');
 }
 // Share of dark pixels, ignoring a margin where scanners leave edge shadows.
 function splitInk(ctx, w, h) {
@@ -315,7 +317,7 @@ async function splitGo(btn) {
   // Lighting set for the whole scan is the download's own; set page by page, it goes to each student who got one of those pages.
   const wide = me.keepL && me.L && !Object.keys(me.Lp).length && !me.into;
   for (const [k, nm] of all.entries()) {
-    const out = await PDFLib.PDFDocument.create(), mine = pagesOf(nm);
+    const out = await PDFLib.PDFDocument.create(), mine = pagesOf(nm).sort((a, b) => ((me.qpg || {})[a] ?? 99) - ((me.qpg || {})[b] ?? 99) || a - b);   // a quiz's pages in printed order
     out.setModificationDate(new Date(t0 + k * 1000));   // group work: two students' copies of the same pages are still two files, each found again by its own bytes (the date is kept to the second)
     if (!src.isEncrypted) { for (const pg of await out.copyPages(src, mine)) out.addPage(pg); }
     else for (const i of mine) await rasterInto(out, me.doc, i, 200);   // a locked PDF copies as blank pages
@@ -338,7 +340,9 @@ async function splitGo(btn) {
     setBatchName();
     saveNow(); renderList();
     if (first) openStudent(batch.students.indexOf(first));
-    return toast('Added pages for ' + entries.length + (entries.length === 1 ? ' student' : ' students'));
+    toast('Added pages for ' + entries.length + (entries.length === 1 ? ' student' : ' students'));
+    if (batch.quiz && batch.quiz.made) qrReadAll();
+    return;
   }
   await intake(entries, me.name, me.asg);
   if (wide && batch) { batch.light = { ...(batch.light || {}), '*': { ...me.L } }; batch.lightOpt = { ...lightOpts(), on: true }; }
@@ -346,5 +350,6 @@ async function splitGo(btn) {
   if (batch && me.keepL && (me.L || Object.keys(me.Lp).length)) lightPagesChanged();
   if (batch) renderList();   // the ⚑ and shared tags
   if (me.classId && batch) { batch.classId = me.classId; renderClassSel(); saveNow(); renderList(); }
+  if (batch && batch.quiz && batch.quiz.made) qrReadAll();   // a quiz made here: its bubbles are read and scored
 }
 

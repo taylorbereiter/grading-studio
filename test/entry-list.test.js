@@ -63,6 +63,26 @@ test('a column’s box opens its scores in a small window: in order, missing as 
   await close();
 });
 
+test('in dark mode the list is dark too, in its own window and when it comes up as a panel', async () => {
+  const s = seed(); s.ls['gs.theme'] = '"dark"';
+  const { page, close } = await openApp(browser, { seed: s });
+  const surface = await page.evaluate(() => { const d = document.createElement('div'); d.style.background = 'var(--surface)'; document.body.appendChild(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; });
+  assert.notEqual(surface, 'rgb(255, 255, 255)');
+  await openBook(page, '#bkTab');
+  await page.click('[data-bkcol="i1"]'); await page.waitForSelector('#bkPop [data-mbopen="i1"]');
+  await page.click('#bkPop [data-mbopen="i1"]');
+  assert.ok(await list(page));
+  assert.equal(await page.evaluate(() => { const w = window.open('', 'gsEntryList'); return w.getComputedStyle(w.document.body).backgroundColor; }), surface, 'its own window');
+  await page.evaluate(() => { const w = window.open('', 'gsEntryList'); if (w) w.close(); });
+  // a browser that blocks the window: the panel on the page
+  await page.evaluate(() => { window.open = () => null; });
+  await page.click('[data-bkcol="i1"]'); await page.waitForSelector('#bkPop [data-mbopen="i1"]');
+  await page.click('#bkPop [data-mbopen="i1"]'); await page.waitForSelector('#mbPanel .mbx');
+  assert.equal(await page.$eval('#mbPanel', e => getComputedStyle(e).backgroundColor), surface, 'the panel');
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
 test('an MYP class lists each student’s level for every criterion the task assessed, and a browser that blocks the window gets a panel', async () => {
   const { page, close } = await openApp(browser, { seed: ibSeed() });
   await page.evaluate(() => { window.open = () => null; });

@@ -16,21 +16,28 @@ async function planRead() {
   }
   // the Planner hasn't come through to this browser yet: the timetable the computer sent with the rest of her work (drive.js)
   if (!(setup && Array.isArray(setup.classes) && setup.classes.length)) setup = store.get('gs.planCopy', null);
+  // on a phone, a lesson too big to send still shows on its day, and opening it says why it isn't here (drive.js planSync, phone.js)
+  if (PHONE) for (const [id, b] of Object.entries(store.get('gs.planBig', null) || {})) if (b && Array.isArray(b.slots) && !lessons.some(l => l && l.id === id)) lessons = [...lessons, { id, title: b.title, slots: b.slots.filter(x => x && x.classId != null && x.date), slides: [] }];
   const hex = c => /^#[0-9a-f]{6}$/i.test(c) ? c : '#1F6FB2';
   const classes = (setup && Array.isArray(setup.classes) ? setup.classes : []).filter(c => c && c.id != null).map(c => ({ id: String(c.id), name: String(c.name || c.id), color: hex(c.color),
     meets: (Array.isArray(c.meets) ? c.meets : []).map(m => ({ dow: +m.dow, start: String(m.start || ''), end: String(m.end || '') })) }));
   plan = !classes.length ? null : {
     classes, semStart: String(setup.semStart || ''), semEnd: String(setup.semEnd || ''),
     daysOff: (Array.isArray(setup.daysOff) ? setup.daysOff : []).filter(d => d && d.date).map(d => ({ date: String(d.date), label: String(d.label || '') })),
-    lessons: (Array.isArray(lessons) ? lessons : []).filter(l => l && l.id && Array.isArray(l.slots) && l.slots.length).map(l => ({ id: String(l.id), title: String(l.title || 'Untitled lesson'), status: String(l.status || ''), done: !!l.final, n: Array.isArray(l.slides) ? l.slides.length : 0,
+    lessons: (Array.isArray(lessons) ? lessons : []).filter(l => l && l.id && Array.isArray(l.slots) && l.slots.length).map(l => ({ id: String(l.id), title: String(l.title || 'Untitled lesson'), status: String(l.status || ''), done: !!l.final, ready: !!(l.ready && +l.ready.at), n: Array.isArray(l.slides) ? l.slides.length : 0,
       // where each class got to, noted after presenting
       taught: (Array.isArray(l.taught) ? l.taught : []).filter(t => t && t.date).map(t => ({ classId: String(t.classId || ''), date: String(t.date), slide: +t.slide || 1, of: +t.of || 1 })),
       slots: l.slots.map(s => ({ classId: String(s.classId), date: String(s.date) })) })),
+    // the lessons she said are ready, and when, on the timetable or not: her planning pace comes from them (src/gradeplan.js gpLesPace)
+    ready: (Array.isArray(lessons) ? lessons : []).filter(l => l && l.id && l.ready && +l.ready.at > 0).map(l => ({ id: String(l.id), at: +l.ready.at })),
   };
   return plan;
 }
 const planUrl = h => $('#lessonsBtn').getAttribute('href') + (h || '');
-const planTime = t => { const m = /^(\d{1,2}):(\d\d)$/.exec(t || ''); return m ? (+m[1] % 12 || 12) + ':' + m[2] : ''; };
+// A class time ("13:05") the way the teacher's language or browser writes the hour: "13:05" where the clock is 24-hour, "1:05" where it
+// is 12-hour. Morning and afternoon are left off, so a time still fits Today's narrow time column.
+let planTimeF = null;
+const planTime = t => { const m = /^(\d{1,2}):(\d\d)$/.exec(t || ''); if (!m) return ''; planTimeF = planTimeF || new Intl.DateTimeFormat(LANG_LOCALE, { hour: 'numeric', minute: '2-digit' }); return planTimeF.formatToParts(new Date(2000, 0, 1, +m[1], +m[2])).filter(p => p.type !== 'dayPeriod').map(p => p.value).join('').trim(); };
 // Today's meetings in the order they happen, each with the lesson planned for it, if there is one.
 function todayRows(p, now) {
   const d = isoDay(now || Date.now()), dow = new Date(now || Date.now()).getDay(), off = p.daysOff.find(x => x.date === d);

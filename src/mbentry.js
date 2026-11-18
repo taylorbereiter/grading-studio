@@ -44,17 +44,20 @@ function mbRows(c, key) {
   for (const i of mbSorted(names, mbOrder())) { const r = get(names[i]); rows.push({ i, name: bkWho(names[i], i), vals: r.vals, st: r.st || '' }); }
   return { rows, max };
 }
-const MB_CSS = '.mbx{font:14px/1.35 Inter,system-ui,sans-serif;color:#1d2330;display:flex;flex-direction:column;gap:10px;height:100%;box-sizing:border-box;padding:14px}' +
-  '.mbx *{box-sizing:border-box}.mbx header{display:flex;align-items:center;gap:8px}.mbx header b{font-size:16px}.mbx header span{color:#5c6475;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
-  '.mbx select,.mbx button{font:inherit;border:1px solid #d5d9e0;background:#fff;border-radius:8px;padding:6px 10px;color:inherit;cursor:pointer}.mbx select{width:100%}' +
-  '.mbx .mbseg{display:flex;border:1px solid #d5d9e0;border-radius:8px;overflow:hidden}.mbx .mbseg button{flex:1;border:0;border-radius:0;padding:5px 4px;font-size:13px}.mbx .mbseg button+button{border-left:1px solid #d5d9e0}' +
-  '.mbx .mbseg [aria-pressed=true]{background:#1F6FB2;color:#fff}.mbx .mbcount{display:flex;align-items:center;gap:8px;color:#5c6475;font-size:13px}.mbx .mbcount span{flex:1}.mbx .mbcount button{padding:3px 8px;font-size:12px}' +
-  '.mbx ol{list-style:none;margin:0;padding:0;overflow:auto;flex:1;border:1px solid #e4e6ea;border-radius:10px}' +
-  '.mbx li{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid #eef0f3;cursor:pointer}.mbx li:last-child{border-bottom:0}.mbx li:hover{background:#f4f5f7}' +
+// Drawn from the app's tokens, so the list follows light or dark. Its own window has no tokens, so it is given the page's own values (mbTokens).
+const MB_CSS = '.mbx{font:14px/1.35 Inter,system-ui,sans-serif;color:var(--fg);display:flex;flex-direction:column;gap:10px;height:100%;box-sizing:border-box;padding:14px}' +
+  '.mbx *{box-sizing:border-box}.mbx header{display:flex;align-items:center;gap:8px}.mbx header b{font-size:16px}.mbx header span{color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+  '.mbx select,.mbx button{font:inherit;border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:6px 10px;color:inherit;cursor:pointer}.mbx select{width:100%}' +
+  '.mbx .mbseg{display:flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}.mbx .mbseg button{flex:1;border:0;border-radius:0;padding:5px 4px;font-size:13px}.mbx .mbseg button+button{border-left:1px solid var(--line-strong)}' +
+  '.mbx .mbseg [aria-pressed=true]{background:var(--accent);color:var(--accent-fg)}.mbx .mbcount{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}.mbx .mbcount span{flex:1}.mbx .mbcount button{padding:3px 8px;font-size:12px}' +
+  '.mbx ol{list-style:none;margin:0;padding:0;overflow:auto;flex:1;border:1px solid var(--line);border-radius:10px}' +
+  '.mbx li{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid var(--line);cursor:pointer}.mbx li:last-child{border-bottom:0}.mbx li:hover{background:var(--hover)}' +
   '.mbx li .mbn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mbx li .mbv{display:flex;gap:6px;font-variant-numeric:tabular-nums;font-weight:600}' +
-  '.mbx li .mbv{gap:14px}.mbx li .mbv i{font-style:normal;font-weight:500;color:#5c6475;margin-right:4px;font-size:.85em}.mbx li .mbc{min-width:2.4em;text-align:right;white-space:nowrap}.mbx li .mbv .mbst,.mbx li .mbv .mbno{color:#8a91a0;font-weight:500}' +
-  '.mbx li.cur{background:#e8f1fa;box-shadow:inset 3px 0 0 #1F6FB2;font-size:17px;padding:11px 12px}.mbx li.done{color:#9aa1ae}.mbx li.done .mbv{color:#9aa1ae}.mbx li .mbok{width:16px;color:#1f9d55;font-weight:700}' +
-  '.mbx .mbhint{margin:0;color:#5c6475;font-size:12px}';
+  '.mbx li .mbv{gap:14px}.mbx li .mbv i{font-style:normal;font-weight:500;color:var(--muted);margin-right:4px;font-size:.85em}.mbx li .mbc{min-width:2.4em;text-align:right;white-space:nowrap}.mbx li .mbv .mbst,.mbx li .mbv .mbno{color:var(--faint);font-weight:500}' +
+  '.mbx li.cur{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent);font-size:17px;padding:11px 12px}.mbx li.done{color:var(--faint)}.mbx li.done .mbv{color:var(--faint)}.mbx li .mbok{width:16px;color:var(--ok);font-weight:700}' +
+  '.mbx .mbhint{margin:0;color:var(--muted);font-size:12px}';
+const MB_TOKENS = ['--fg', '--muted', '--faint', '--surface', '--hover', '--line', '--line-strong', '--accent', '--accent-fg', '--accent-soft', '--ok'];
+const mbTokens = () => { const cs = getComputedStyle(document.documentElement); return ':root{' + MB_TOKENS.map(k => k + ':' + cs.getPropertyValue(k).trim()).join(';') + (document.documentElement.dataset.theme === 'dark' ? ';color-scheme:dark' : '') + '}'; };
 const mbClass = () => lib.classes.find(c => c.id === mbe.cls);
 function mbHtml() {
   const c = mbClass(); if (!c) return '';
@@ -75,6 +78,7 @@ function mbHtml() {
 const mbRoot = () => mbe.win && !mbe.win.closed ? mbe.win.document.getElementById('mbRoot') : document.getElementById('mbPanel');
 function mbDraw() {
   const r = mbRoot(); if (!r) return;
+  if (mbe.win && !mbe.win.closed) { const t = mbe.win.document.getElementById('mbTok'); if (t && t.textContent !== mbTokens()) t.textContent = mbTokens(); }   // the theme may have changed since it opened
   r.innerHTML = mbHtml();
   const cur = r.querySelector('li.cur'); if (cur) cur.scrollIntoView({ block: 'nearest' });
 }
@@ -127,11 +131,11 @@ function mbOpen(c, key) {
     let w = null; try { w = window.open('about:blank', 'gsEntryList', 'popup,width=' + W + ',height=' + H + ',left=' + L + ',top=' + ((screen.availTop || 0) + 30)); } catch { }
     if (w && w.document) {
       mbe.win = w;
-      w.document.open(); w.document.write('<!doctype html><html lang="' + esc(LANG) + '"><head><meta charset="utf-8"><title>' + esc(tr('Entry list') + ' · ' + c.name) + '</title><style>html,body{margin:0;height:100%;background:#fff}' + MB_CSS + '</style></head><body><div id="mbRoot" style="height:100%"></div><\/body></html>'); w.document.close();
+      w.document.open(); w.document.write('<!doctype html><html lang="' + esc(LANG) + '"><head><meta charset="utf-8"><title>' + esc(tr('Entry list') + ' · ' + c.name) + '</title><style id="mbTok">' + mbTokens() + '</style><style>html,body{margin:0;height:100%;background:var(--surface)}' + MB_CSS + '</style></head><body><div id="mbRoot" style="height:100%"></div><\/body></html>'); w.document.close();
       w.document.addEventListener('click', mbClick); w.document.addEventListener('change', mbChange); w.document.addEventListener('keydown', mbKey);
       w.addEventListener('pagehide', () => { if (mbe.win === w) mbe.win = null; });
     } else {
-      if (!document.getElementById('mbCss')) { const s = document.createElement('style'); s.id = 'mbCss'; s.textContent = MB_CSS + '#mbPanel{position:fixed;right:16px;top:16px;bottom:16px;width:380px;z-index:60;background:#fff;border:1px solid #e4e6ea;border-radius:14px;box-shadow:0 12px 32px rgba(20,30,50,.18);outline:none}'; document.head.appendChild(s); }
+      if (!document.getElementById('mbCss')) { const s = document.createElement('style'); s.id = 'mbCss'; s.textContent = MB_CSS + '#mbPanel{position:fixed;right:16px;top:16px;bottom:16px;width:380px;z-index:60;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px rgba(20,30,50,.18);outline:none}'; document.head.appendChild(s); }
       const p = document.createElement('div'); p.id = 'mbPanel'; p.tabIndex = -1; document.body.appendChild(p);
       p.addEventListener('click', mbClick); p.addEventListener('change', mbChange); p.addEventListener('keydown', mbKey);
     }

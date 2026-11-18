@@ -15,6 +15,30 @@ function planGaps(now = new Date()) {
   }
   return out;
 }
+// Next week, Monday to Sunday after this one: each class meeting on a school day inside the semester (its first and last weeks are
+// whole weeks), how many have a lesson, and how many she said are ready or have their finished deck. src/gradeplan.js gpPlanWeek
+// counts the same for the Focus card on Today.
+function planNextWeek(now = new Date()) {
+  const mon = addDays(new Date(now.getFullYear(), now.getMonth(), now.getDate()), 7 - (now.getDay() + 6) % 7), m = ymd(mon), s = L.setup || {}, out = { of: 0, planned: 0, ready: 0, dots: [] };
+  const lastMon = s.semEnd ? ymd(addDays(parseYmd(s.semEnd), -((parseYmd(s.semEnd).getDay() + 6) % 7))) : '';
+  if (lastMon && m > lastMon) return out;
+  for (let i = 0; i < 7; i++) {
+    const d = ymd(addDays(mon, i)); if (s.semStart && d < s.semStart) continue;
+    for (const { c } of meetingsOn(d)) {
+      const ls = lessonsAt(c.id, d), ok = ls.some(l => l.ready || l.final);
+      out.of++; if (ls.length) out.planned++; if (ok) out.ready++;
+      out.dots.push(ok ? 2 : ls.length ? 1 : 0);
+    }
+  }
+  return out;
+}
+// The head's line for next week: "Next week: 6 of 9 lessons planned", a dot for each meeting (filled when ready, lighter when planned).
+function planWeekHtml() {
+  const w = planNextWeek(); if (!w.of) return '';
+  const all = w.planned >= w.of;
+  return '<div class="pn-wk' + (all ? ' all' : '') + '"><span class="pn-wkt">' + (all ? '<span class="pn-ok" aria-hidden="true">✓</span>' : '') + 'Next week: ' + w.planned + ' of ' + w.of + ' lessons planned' + (w.ready ? ', ' + w.ready + ' ready' : '') + '</span>' +
+    (w.of <= 30 ? '<span class="pn-dots" aria-hidden="true">' + w.dots.map(d => '<i' + (d === 2 ? ' class="on"' : d === 1 ? ' class="pl"' : '') + '></i>').join('') + '</span>' : '<span class="pn-bar" aria-hidden="true"><i style="width:' + Math.round(w.planned / w.of * 100) + '%"></i></span>') + '</div>';
+}
 // The lesson she touched last, if it was in the last few days.
 const planRecent = () => L.lessons.filter(l => !l.library && Date.now() - l.updated < PN_RECENT).sort((a, b) => b.updated - a.updated)[0] || null;
 function planWhen(d) { const t = ymd(new Date()), n = ymd(addDays(new Date(), 1)); return d === t ? 'Today' : d === n ? 'Tomorrow' : shortDate(d); }
@@ -27,17 +51,28 @@ function planNextBar() {
   if (rec) {
     const slot = rec.slots.filter(s => s.date >= ymd(new Date())).sort((a, b) => a.date < b.date ? -1 : 1)[0];
     h += '<div class="pn-row pn-rec"><span class="pn-k">Pick up where you left off</span><b>' + esc(rec.title) + '</b><span class="pn-w">' + (slot ? esc(className(slot.classId)) + ' · ' + planWhen(slot.date) : 'Not on the timetable') + '</span><span class="sp"></span>' +
-      '<button class="btn sm' + (keepOn ? ' primary' : '') + '" data-open="' + rec.id + '">Continue</button></div>';
+      (pfReady ? pfBtnTag('data-pnfocus="l:' + esc(rec.id) + '"', pfOnIt(rec)) : '') + '<button class="btn sm' + (keepOn ? ' primary' : '') + '" data-open="' + rec.id + '">Continue</button></div>';
   }
-  h += '<div class="pn-head"><h2>Coming up without a lesson</h2><span class="pn-sub">' + (gaps.length ? gaps.length + ' class' + (gaps.length === 1 ? '' : 'es') + ' in the next two weeks' : 'Every class in the next two weeks has a lesson.') + '</span></div>';
+  // her planning pace, once 3 ready lessons give it (src/planner/plantime.js ptPace), and next week's lessons
+  const pace = ptReady ? ptPace() : null;
+  h += '<div class="pn-head"><h2>Coming up without a lesson</h2><span class="pn-sub">' + (gaps.length ? gaps.length + ' class' + (gaps.length === 1 ? '' : 'es') + ' in the next two weeks' : 'Every class in the next two weeks has a lesson.') + '</span>' +
+    (pace ? '<span class="pn-pace" title="The middle of your planning times, from the lessons you said were ready">' + esc(ptPaceSay(pace)) + '</span>' : '') + '</div>' + planWeekHtml();
   gaps.slice(0, PN_SHOW).forEach((g, i) => {
     const k = esc(g.c.id) + '|' + g.d;
     h += '<div class="pn-row" style="--cc:' + esc(g.c.color || '#1F6FB2') + '"><span class="pn-dot"></span><b>' + esc(g.c.name) + '</b><span class="pn-w">' + planWhen(g.d) + ' · ' + hm(g.m.start) + '–' + hm(g.m.end) + (g.m.label ? ' · ' + esc(g.m.label) : '') + '</span><span class="sp"></span>' +
-      '<button class="btn sm' + (!keepOn && i === 0 ? ' primary' : '') + '" data-new="' + k + '">Plan it</button>' + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + k + '">Use a lesson…</button>' : '') + '</div>';
+      '<button class="btn sm' + (!keepOn && i === 0 ? ' primary' : '') + '" data-new="' + k + '">Plan it</button>' + (pfReady ? pfBtnTag('data-pnfocus="n:' + k + '"') : '') + (L.lessons.length ? '<button class="btn sm ghost" data-attach="' + k + '">Use a lesson…</button>' : '') + '</div>';
   });
   if (gaps.length > PN_SHOW) h += '<p class="pn-more">' + (gaps.length - PN_SHOW) + ' more. The calendar below shows each week.</p>';
   return h + '</section>';
 }
+// Its Focus buttons: a focus session on the lesson to pick up, or on a new lesson made for that class and day (src/planner/plfocus.js).
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-pnfocus]'); if (!b) return;
+  const v = b.dataset.pnfocus, id = v.slice(2);
+  if (v[0] === 'l') { const l = L.lessons.find(x => x.id === id); if (l) { pfStart(l); openLesson(l); } return; }
+  const [c, d] = id.split('|');
+  createLesson([{ classId: c, date: d }, ...partnerSlots(c, d)]).then(() => { pfStart(L.open); renderEditor(); }).catch(err => console.error(err));
+});
 
 // Library in the sidebar (units, past lessons, activities, rubrics): open or closed as she left it, kept in this page's own gsp.railLib.
 function libFold(open, keep) {

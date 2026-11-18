@@ -26,6 +26,8 @@ function paceSeed() {
   for (const m of meta) if (m[0] === 'gs.b.n2') Object.assign(m[1], { scored: 3, t: Date.now() - 3 * 3600e3 });
   return { ls: { ...s.ls, 'gs.lib': JSON.stringify(lib), 'gs.focus': JSON.stringify(focus) }, idb };
 }
+// The same, with Poetry analysis's papers kept here to open (the Focus card offers only papers it can open).
+const withPapers = s => { for (const m of s.idb['grading-studio-keep'].stores.meta) if (m[0] === 'gs.b.n2') m[1].papers = true; return s; };
 // The Planner's timetable with today's two classes either side of now: one ended ten minutes ago, the next starts in forty.
 // Near midnight there is no room for that, and the caller skips.
 async function freeNow(page) {
@@ -70,7 +72,7 @@ test('how long papers will take comes from her own pace: on the assignment, in t
 });
 
 test('a free period offers itself on the Focus card with the next papers, and starts a session that fits; Settings can stop it', async t => {
-  const { page, close } = await openApp(browser, { seed: paceSeed() });
+  const { page, close } = await openApp(browser, { seed: withPapers(paceSeed()) });
   if (!await freeNow(page)) { await close(); return t.skip('too close to midnight for a free period'); }
   await page.waitForSelector('#fcCard .sugwhy .free');
   assert.match(await page.$eval('#fcCard .sugwhy .free', e => e.textContent), /^Free period until \d/);
@@ -145,4 +147,69 @@ test('the look back at the week shows on the day she picks, says what happened a
   assert.equal((await me(page)).wk, 1);
   assert.deepEqual(page.errors, []);
   await close();
+});
+
+// The Planner's database, written as the Planner leaves it: its setup and its lessons.
+const planPut = (page, setup, lessons) => page.evaluate(async (setup, lessons) => {
+  const db = await new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onupgradeneeded = () => { r.result.createObjectStore('lessons', { keyPath: 'id' }); r.result.createObjectStore('kv'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  await new Promise((res, rej) => { const tx = db.transaction(['kv', 'lessons'], 'readwrite'); tx.objectStore('kv').put(setup, 'setup'); const o = tx.objectStore('lessons'); o.clear(); for (const l of lessons) o.put(l); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+  db.close();
+}, setup, lessons);
+const monNext = () => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7 + 7); return d; };
+const nextDay = n => { const d = monNext(); d.setDate(d.getDate() + n); return iso(d); };
+
+test('next week’s lessons on the Focus card: a dot for each class meeting, filled when ready, lighter when planned; days off and the semester count', async () => {
+  const { page, close } = await openApp(browser, {});
+  assert.equal(await page.evaluate(() => window.__gs.gpPlanWeek()), null, 'no timetable, nothing to count');
+  assert.equal(await page.$('#fcCard .gpwk'), null);
+  // two made-up classes: one Monday, Wednesday and Friday, one Tuesday and Thursday; next Wednesday is a day off
+  const setup = { classes: [{ id: 'A1', name: 'Course A', color: '#1F6FB2', meets: [1, 3, 5].map(dow => ({ dow, start: '09:00', end: '09:50' })) }, { id: 'B1', name: 'Course B', color: '#0E7C86', meets: [2, 4].map(dow => ({ dow, start: '10:00', end: '10:50' })) }],
+    daysOff: [{ date: nextDay(2), label: 'Made-up holiday' }] };
+  const les = (id, classId, date, more) => ({ id, title: 'Lesson ' + id, slots: [{ classId, date }], slides: [{}], updated: 1, ...more });
+  await planPut(page, setup, [les('L1', 'A1', nextDay(0), { ready: { at: Date.now() } }), les('L2', 'B1', nextDay(1)), les('L3', 'A1', nextDay(4), { final: { id: 'f', name: 'Deck.pptx' } })]);
+  await page.reload(); await page.waitForSelector('#fcCard .gpwk');
+  const w = await page.evaluate(() => window.__gs.gpPlanWeek());
+  assert.deepEqual([w.of, w.planned, w.ready, w.dots], [4, 3, 2, [2, 1, 0, 2]], 'Monday ready, Tuesday planned, Thursday not, Friday finished');
+  assert.equal(await page.$eval('#fcCard .gpwk .fcgh', e => e.textContent), 'Next week3 / 4lessons planned');
+  assert.deepEqual(await page.$$eval('#fcCard .gpwk .fcdots i', l => l.map(i => i.className)), ['fon', 'fpl', '', 'fon']);
+  assert.equal(await page.$$eval('#fcCard .btn.primary', b => b.length), 1, 'still one blue button on the card');
+  // every meeting planned: the tick
+  await planPut(page, setup, [les('L1', 'A1', nextDay(0)), les('L2', 'B1', nextDay(1)), les('L4', 'B1', nextDay(3)), les('L3', 'A1', nextDay(4))]);
+  await page.reload(); await page.waitForSelector('#fcCard .gpwk.met .fcmet');
+  // the semester ends this week: nothing to plan next week, and no row
+  const mon = new Date(monNext()); mon.setDate(mon.getDate() - 7);
+  await planPut(page, { ...setup, semStart: '2026-01-05', semEnd: iso(mon) }, []);
+  await page.reload(); await page.waitForSelector('#fcCard .fcbody');
+  assert.equal((await page.evaluate(() => window.__gs.gpPlanWeek())).of, 0);
+  assert.equal(await page.$('#fcCard .gpwk'), null);
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
+test('a free period with no papers to mark suggests the next lesson to plan, at a length that fits; papers left keep the suggestion on marking, and a hand pick stays', async t => {
+  const { page, close } = await openApp(browser, {});
+  if (!await freeNow(page)) { await close(); return t.skip('too close to midnight for a free period'); }
+  await page.waitForSelector('#fcCard .sugwhy .free');
+  // Grade 10 Literature meets in forty minutes with nothing planned: it is the suggestion, at the free period's 35 minutes, not the lesson's 45
+  assert.equal(await page.$eval('#fcCard .sugh .t', e => e.textContent), 'Grade 10 Literature · ' + await page.evaluate(() => new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })));
+  assert.equal(await page.$eval('#fcCard .fcsay', e => e.textContent), 'A new lesson to plan');
+  assert.equal(await page.$eval('#fcCard .fcgo [data-fcstart]', e => e.textContent), 'Start 35 minutes');
+  // picked by hand, the pick stays
+  await page.click('#fcCard [data-fcchg]'); await page.select('#fcCard [data-fcwork]', '');
+  assert.equal(await page.$eval('#fcCard .sugh .t', e => e.textContent), 'Nothing in particular');
+  // the lesson starts as a lesson session
+  await page.click('#fcCard [data-fcchg]'); await page.select('#fcCard [data-fcwork]', 'les:+B1|' + today());
+  const errs = [...page.errors];
+  await Promise.all([page.waitForNavigation(), page.click('#fcCard .fcgo [data-fcstart]')]);
+  const r = await page.evaluate(() => JSON.parse(localStorage.getItem('gsp.focusRun')));
+  assert.equal(r.k, 'l'); assert.equal(r.len, 35 * 60); assert.deepEqual(r.nw, { c: 'B1', d: today() });
+  assert.deepEqual(errs, []);
+  await close();
+  // with papers left to mark, the free period goes to the papers
+  const o = await openApp(browser, { seed: withPapers(paceSeed()) });
+  if (!await freeNow(o.page)) { await o.close(); return; }
+  await o.page.waitForSelector('#fcCard .sugwhy .free');
+  assert.equal(await o.page.$eval('#fcCard .sugh .t', e => e.textContent), 'Poetry analysis · Grade 9 English');
+  assert.deepEqual(o.page.errors, []);
+  await o.close();
 });

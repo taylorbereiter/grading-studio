@@ -112,6 +112,7 @@ test('the tracker shows grading and planning apart, by week, month and three mon
   await page.click('#tkBody [data-tkdel]'); await pause(200);
   assert.equal(await page.$('#tkBody .tkent'), null);
   assert.deepEqual((await log(page)).add, []);
+  assert.equal((await log(page)).addGone.length, 1, 'remembered as taken off, so another device’s copy doesn’t bring it back');
   assert.ok(!JSON.stringify(await log(page)).match(/Aria|Bram|Cleo|Dov|Testwell/), 'no names in the log');
   assert.deepEqual(page.errors, []);
   await close();

@@ -7,11 +7,12 @@
    What is kept:
      lib.me.focus  the teacher's own settings, only those that differ from the usual: { len: minutes, brk: minutes,
                    goal: { k: 'papers' | 'min', n }, sound: false, title: false }. It goes wherever lib goes, and My setup carries it.
-     gs.focus      this teacher's log, in this browser (it travels with the folder and the take-home file like other gs. keys):
+     gs.focus      this teacher's log (it travels with the folder, the take-home file and the sync, merged day by day, src/merge.js focusMerge):
                    { day, base: { <download id>: papers done when the day began }, days: { 'YYYY-MM-DD': { p: papers, s: seconds focused,
                      sm: seconds focused on papers, pa: { <assignment id>: papers }, g: seconds grading, a: { <assignment id>: seconds } } },
                      pace: [[seconds, papers], …] the last sessions that finished a paper, last: the work picked last,
                      add: [{ id, d: day, k: 'g' | 'l', s: seconds, x: a few words }] time added by hand (src/tracker.js),
+                     addGone: [id] the ones taken off since,
                      carry: a session goal not reached, by: { <download id>: the day to finish it by } }
                    A day also keeps n: the sessions of a minute or more. The goal can be { k, n, per: 'week' } or for some days { days: [1, 3] }.
                    A session's own goal (sg on gsp.focusRun) is a few papers, the whole set, the to-do, or a few words she typed.
@@ -74,6 +75,7 @@ function fcLog() {
     pace: Array.isArray(L.pace) ? L.pace.filter(x => Array.isArray(x) && x[0] > 0 && x[1] > 0) : [], last: typeof L.last === 'string' ? L.last : '',
     add: Array.isArray(L.add) ? L.add.filter(x => x && typeof x.d === 'string' && (x.k === 'g' || x.k === 'l') && x.s > 0) : [],
     ...(typeof L.lbHid === 'string' ? { lbHid: L.lbHid } : {}),
+    ...(Array.isArray(L.addGone) ? { addGone: L.addGone.filter(x => typeof x === 'string').slice(-200) } : {}),   // time added by hand and taken off, so another device's copy doesn't bring it back (src/merge.js)
     ...(Array.isArray(L.qd) ? { qd: L.qd.filter(x => typeof x === 'string').slice(-50) } : {}),   // sessions from the Planner written in already (fcDrain)   // the week whose look-back was put away (src/gradeplan.js)
     // carry: a session goal not reached, for the next session on the same work: { w, t: when, k: 'papers' | 'set' | 'td' | 'note', n, x }
     ...(L.carry && typeof L.carry.w === 'string' && L.carry.t > 0 ? { carry: L.carry } : {}),
@@ -159,7 +161,7 @@ const fcBoot = Date.now();
 const fcIdle = r => (r.idl || 0) + (r.ii ? Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.ii) / 1000)) : 0);
 const fcBusy = r => Math.max(0, fcElapsed(r) - fcIdle(r));
 function fcIdleSee(r) {
-  if (!/^mark:/.test(r.w || '')) return false;
+  if (!/^(mark|les):/.test(r.w || '')) return false;   // a lesson is planned at the screen too (fcLesSecs)
   // r.seen: the last time she did something, written every half minute, so another tab of the app doesn't take her for away
   const a = Math.max(fcBoot, r.at, r.seen || 0, tkReady ? tkLast : 0), lim = fcConf().idle * 60e3;
   if (tkReady && tkLast - (r.seen || 0) > 30e3 && !r.ii) { r.seen = tkLast; return true; }
@@ -200,7 +202,7 @@ function fcWorks() {
   return out.concat(fcLessons());
 }
 // Lessons to plan, from the Planner's timetable (src/today.js plan): each class meeting in the next week with its lesson, if it isn't
-// finished, or with nothing planned for it yet. Not on a phone, where the Planner isn't.
+// finished or ready (she said so in the Planner, src/planner/plfocus.js), or with nothing planned for it yet. Not on a phone, where the Planner isn't.
 // les:<lesson id>, or les:+<class id>|<day> for a meeting with nothing planned: the Planner makes its lesson when the session starts.
 function fcLessons() {
   if (!plan || document.documentElement.classList.contains('gsphone')) return [];
@@ -212,7 +214,7 @@ function fcLessons() {
     for (const r of t.rows) {
       if (!i && (!live || t.rows.indexOf(r) < t.rows.indexOf(live))) continue;   // over already today
       if (!r.lessons.length) out.push({ key: 'les:+' + r.c.id + '|' + day, id: '', les: true, fresh: true, nw: { c: r.c.id, d: day }, name: r.c.name, cls: when });
-      for (const l of r.lessons) if (!l.done && !seen.has(l.id)) { seen.add(l.id); out.push({ key: 'les:' + l.id, id: l.id, les: true, name: l.title, cls: r.c.name + ' · ' + when }); }
+      for (const l of r.lessons) if (!l.done && !l.ready && !seen.has(l.id)) { seen.add(l.id); out.push({ key: 'les:' + l.id, id: l.id, les: true, name: l.title, cls: r.c.name + ' · ' + when }); }
     }
   }
   return out.slice(0, 12);
@@ -224,14 +226,23 @@ function fcWork(key) {
   if (k === 'td') { const it = tdItem(id); return it ? { key, id, name: it.x, cls: it.c && classById(it.c) ? classById(it.c).name : '', done: !!it.done } : null; }
   if (k === 'les') {
     const w = fcLessons().find(x => x.key === key); if (w) return w;
+    // a meeting with nothing planned that the week's list left out (it keeps twelve): To do's plan lines can be further down
+    const m = /^\+(.+)\|(\d{4}-\d\d-\d\d)$/.exec(id), c = m && plan && plan.classes.find(x => String(x.id) === m[1]);
+    if (c) return { key, id: '', les: true, fresh: true, nw: { c: c.id, d: m[2] }, name: c.name, cls: '' };
     // a lesson session going on that isn't in the week's list (the timetable not read yet, or the lesson was just made)
     const r = fcRun(); return r && r.k === 'l' && r.w === key ? { key, id: r.l || '', les: true, name: r.t || 'Lesson', cls: '' } : null;
   }
   return null;
 }
 // The work the card suggests: one picked by hand, else the set she left off on, else the work picked last, else the first.
+// Lessons are never suggested on their own, with one exception: in a free period with no papers left to mark, the card offers the next
+// class with nothing planned, else the next lesson not ready yet (src/gradeplan.js gpFreeNow; off with free periods, and on a phone).
 function fcPicked(works) {
   if (fcS.pick === '') return '';
+  if (fcS.pick == null && gpReady && gpFreeNow() && !works.some(w => w.mark && w.left > 0)) {
+    const les = works.filter(w => w.les), l = les.find(w => w.fresh) || les[0];
+    if (l) return l.key;
+  }
   const b = gpReady && fcS.pick == null && gpBack(), want = fcS.pick != null ? fcS.pick : b ? 'mark:' + b.id : fcLog().last;
   return works.some(w => w.key === want) ? want : works.length && !works[0].les ? works[0].key : '';
 }
@@ -380,11 +391,11 @@ function fcPlanAdd(r, secs) {
   for (const n of Object.keys(names)) if (!used.has(n)) delete names[n];
   store.set('gsp.planTime', { days, names, ...(r.id ? { ids: [...ids, r.id] } : {}) });
 }
-// A lesson session's seconds: what ran, without pauses, and no more than 20 minutes past the last thing she did in the app, so a laptop
-// closed for class, or the session forgotten, isn't planning.
+// A lesson session's seconds: what ran, without pauses or stretches with nothing done (fcIdleSee), and no more than 20 minutes past the
+// last thing she did in the app, so a laptop closed for class, or the session forgotten, isn't planning.
 function fcLesSecs(r) {
   const last = Math.max(r.at, r.seen || 0), cap = r.st === 'paused' ? Infinity : Math.round((last + FC_LES_IDLE - r.at) / 1000);
-  return Math.max(0, Math.min(r.len, fcElapsed(r), cap));
+  return Math.max(0, Math.min(r.len, fcElapsed(r) - fcIdle(r), cap));
 }
 const FC_LES_IDLE = 20 * 60e3;
 // Into the work: a set of papers opens at the next paper with nothing finished; one already on screen is left where it is.
@@ -515,7 +526,8 @@ function fcWeekHtml(c) {
 function fcWorkSay(w) {
   const sp = x => '<span>' + esc(x) + '</span>';
   if (!w) return sp('A session with nothing set: the timer only.');
-  if (w.les) return sp(w.fresh ? 'A new lesson to plan' : 'A lesson to plan');
+  // a lesson, and once 3 lessons she called ready say how long one takes her, how long that is (src/gradeplan.js gpLesPace)
+  if (w.les) { const lp = gpReady ? gpLesPace() : 0; return sp(w.fresh ? 'A new lesson to plan' : 'A lesson to plan') + (lp ? ' · ' + sp('about ' + people(Math.max(1, Math.round(lp / 60)), 'minute') + ' at your pace') : ''); }
   if (!w.mark) return sp('A to-do');
   if (!w.left) return sp(w.fm ? 'Feedback is complete for everyone' : 'Everyone has a score');
   const it = cardOfKept(w.id), id = it ? it.id : '', pace = gpReady ? gpPaces()(id) : 0, n = pace ? gpPaceN(id) : 0;
@@ -528,10 +540,10 @@ const FC_CHEV = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6
 // fcS.chg: the list is open; fcS.more: More is open; fcS.hand: the work was picked by hand on this visit.
 function fcStartHtml(card) {
   const c = fcConf(), works = fcWorks(), key = fcPicked(works), w = works.find(x => x.key === key) || null, f = gpReady ? gpFreeNow() : null;
-  const len = fcS.len || (w && w.les ? c.llen : f ? gpFreeLen(f) : c.len), g = fcSgNow(w, len), open = w && w.mark && w.left, why = [];
+  const len = fcS.len || (w && w.les ? (f ? Math.min(c.llen, gpFreeLen(f)) : c.llen) : f ? gpFreeLen(f) : c.len), g = fcSgNow(w, len), open = w && w.mark && w.left, why = [];
   const opt = x => '<option value="' + esc(x.key) + '"' + (x.key === key ? ' selected' : '') + ' data-raw>' + esc(x.name + (x.cls ? ' · ' + x.cls : '')) + '</option>';
   const marks = works.filter(x => x.mark), tds = works.filter(x => !x.mark && !x.les), les = works.filter(x => x.les), sep = '<option disabled data-raw>──────────</option>';
-  let h = '<div class="fcbody">' + fcGoalHtml(c, true) + '<div class="fcline"></div><div class="sug">';
+  let h = '<div class="fcbody">' + fcGoalHtml(c, true) + (card && gpReady ? gpPlanRow() : '') + '<div class="fcline"></div><div class="sug">';
   if (fcS.chg) h += '<div class="sugpick"><div class="fcgh"><label class="fcl">Work on</label><button class="link" data-fckeep>Done</button></div><select class="fcwork" data-fcwork aria-label="Work on">' + marks.map(opt).join('') +
     (marks.length && tds.length ? sep : '') + tds.map(opt).join('') + ((marks.length || tds.length) && les.length ? sep : '') + les.map(opt).join('') + '<option value=""' + (key === '' ? ' selected' : '') + '>' + esc(tr('Nothing in particular')) + '</option></select></div>';
   else h += '<div class="sugh"><span class="t"><b data-raw>' + esc(w ? w.name : tr('Nothing in particular')) + '</b>' + (w && w.cls ? ' <span data-raw>· ' + esc(w.cls) + '</span>' : '') + '</span><button class="link" data-fcchg>Change</button></div>';
@@ -553,7 +565,7 @@ function fcCardRender() {
   const box = $('#fcCardBody'); if (!box) return;
   const r = fcRun(), on = r && r.st !== 'done';
   if (box.contains(document.activeElement) && document.activeElement.matches('[data-fcsgx], [data-fcby]')) return;   // not under her typing
-  const h = on ? '<div class="fcbody">' + fcGoalHtml(fcConf(), true) + (tkReady ? tkWeekHtml() : '') + '<div class="fcline"></div><div class="fcnogoal"><span>' + (r.st === 'brk' || r.st === 'brkup' ? 'You are on a break' : 'A session is on') + '</span><button class="btn sm" data-fcshow>Show the timer</button></div></div>' : fcStartHtml(true);
+  const h = on ? '<div class="fcbody">' + fcGoalHtml(fcConf(), true) + (gpReady ? gpPlanRow() : '') + (tkReady ? tkWeekHtml() : '') + '<div class="fcline"></div><div class="fcnogoal"><span>' + (r.st === 'brk' || r.st === 'brkup' ? 'You are on a break' : 'A session is on') + '</span><button class="btn sm" data-fcshow>Show the timer</button></div></div>' : fcStartHtml(true);
   if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
 }
 const fcHead = (cap, fold) => '<div class="fchead"><h2 class="tcap">' + cap + '</h2><span class="sp"></span>' + (fold ? '<button class="icon" data-fcfold title="Fold it away" aria-label="Fold it away">–</button>' : '<button class="icon" data-fcclose title="Close" aria-label="Close">✕</button>') + '</div>';
@@ -754,7 +766,8 @@ document.addEventListener('keydown', e => {
   else if (!r && fcS.open) { fcS.open = false; fcRender(); }
 });
 // A to-do's own Focus button (src/todo.js) starts a session on it.
-function focusOn(key) { fcStart(fcConf().len, key, false); }
+// A lesson's gets a lesson's length.
+function focusOn(key) { const c = fcConf(); fcStart(/^les:/.test(key || '') ? c.llen : c.len, key, false); }
 
 /* ---------- Settings, Focus and goals ---------- */
 function fcSetRender(sec) {

@@ -71,7 +71,7 @@ body{padding-bottom:var(--savebar,0px)}.app{height:calc(100vh - var(--savebar,0p
 .outsw i{flex:none;width:30px;height:17px;border-radius:var(--corner-pill);background:var(--line-strong);position:relative;margin-top:1px;transition:background .15s}
 .outsw i::after{content:"";position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:var(--corner-round);background:var(--surface);transition:left .15s}
 .outsw[aria-checked=true] i{background:var(--accent)}.outsw[aria-checked=true] i::after{left:15px}
-.grpband{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border:1px solid #B9D3EC;border-radius:9px;background:var(--accent-soft);font-size:13.5px;color:var(--fg-2)}.grpband b{color:var(--fg);font-weight:600}.grpband .link{font-size:var(--text-control)}.grpmode{font:inherit;font-size:var(--text-control);color:var(--accent);background:transparent;border:1px solid transparent;border-radius:var(--r-sm);padding:2px 4px;cursor:pointer}.grpmode:hover,.grpmode:focus-visible{border-color:var(--accent);background:var(--surface)}
+.grpband{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border:1px solid #B9D3EC;border-radius:9px;background:var(--accent-soft);font-size:13.5px;color:var(--fg-2)}.grpband b{color:var(--fg);font-weight:600}.grpband .link{font-size:var(--text-control)}.grpmode{font:inherit;font-size:var(--text-control);color:var(--accent);background:transparent;border:1px solid transparent;border-radius:var(--r-sm);padding:2px 4px;cursor:pointer}.grpmode:hover,.grpmode:focus-visible{border-color:var(--accent);background:var(--surface)}.grpnote{margin:0 0 10px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--corner-3);background:var(--bg);font-size:var(--text-control);color:var(--fg-2)}.grpnote.just{border-color:var(--accent);background:var(--accent-soft);color:var(--fg)}.grpnote ul{margin:6px 0 0;padding:0;list-style:none}.grpnote li{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;padding:2px 0}.grpnote li>span:first-child{color:var(--fg);font-weight:600}.grpnote .link{font-size:var(--text-control)}
 .outsw b{font-weight:600;font-size:13.5px;display:block}.outsw small{font-size:var(--text-small);color:var(--muted);display:block;line-height:1.4;margin-top:1px}
 .prog-s kbd,.hint kbd{font:500 10.5px var(--f-body);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--corner-1);padding:0 4px;background:var(--surface);color:var(--muted)}
 .stu .dot{width:8px;height:8px;border-radius:var(--corner-round);background:var(--accent);display:inline-block}
@@ -602,6 +602,10 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
     <header class="vhead"><h1>Scores</h1><span class="muted">Type in scores for a class.</span></header>
     <div id="phScores"></div>
   </section>
+  <section class="view" id="vAtt" hidden>
+    <header class="vhead"><h1>Attendance</h1><span class="muted" id="phAttDay"></span></header>
+    <div id="phAtt"></div>
+  </section>
   <section class="view" id="vMore" hidden>
     <header class="vhead"><h1>More</h1></header>
     <div id="phMore"></div>
@@ -764,6 +768,7 @@ textarea.big{width:100%;min-height:240px;border:1px solid var(--line-strong);bor
           <button class="mitem" id="partnersBtn" title="Everyone’s partners and videos in one list: who works together, and a link or video file for each">Partners and videos…</button>
           <button class="mitem" id="clipsBtn" hidden title="The parts of videos you saved, one after another, with their labels and no names">Clips to show the class</button>
           <button class="mitem" id="quizBtn" title="For a scanned paper quiz: box each question once, then mark the same question for everyone at once">Quick mark (paper quiz)</button>
+          <button class="mitem" id="qrBtn" hidden title="For a quiz made in Make a quiz: the answers the scan read, and any it needs you to check">Quiz scan…</button>
           <button class="mitem" id="impBtn" title="Comments and marks made in Kami, Acrobat or Preview, made into your own so you can change them">Marks from other apps</button>
           <span class="mlink" id="topAtlas"></span>
         </div>

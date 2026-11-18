@@ -1,11 +1,39 @@
 {
+  "1.28.74": [
+    "The lesson and unit prompts you copy from the Planner now say Claude shouldn't need anything from your computer, and ask it to tell you if anything is missing."
+  ],
+  "1.28.73": [
+    "Score stamps and criterion stamps are red again. They no longer take the pen or comment color, so purple comments don’t make purple grades. Stamps already on papers show red too. To use another color for grades, pick a points color in Settings, Marking."
+  ],
+  "1.28.72": [
+    "Make a quiz: on an assignment’s card, choose ⋯ then Make a quiz. Type multiple choice, true or false, pick all that apply and short answer questions, and print a copy for each student with their name on it.",
+    "Scan the whole stack in any order and choose Bring in the scanned quiz. Each page finds its student by the code at the top, and the bubbles are scored. Answers that aren’t clear are shown to you to pick, and Ctrl Z takes the scan’s scores back.",
+    "Short answers get a Teacher box: fill the score bubble while you mark and the scan reads it, or mark them in Quick mark."
+  ],
+  "1.28.71": [
+    "Take attendance on your phone: one tap per student cycles present, absent and late, and Everyone is here takes the rest.",
+    "After class, a lesson on your phone has Got to slide n of N and a note. It lands on the lesson in your Planner.",
+    "Lessons with lots of pictures now reach your phone too. The pictures load the first time you open the lesson while online.",
+    "When a lesson focus session ends, the Planner asks Is this lesson ready? The editor has a Ready button too. After three ready lessons you see about how long a lesson takes you.",
+    "Today's Focus card and Plan lessons show next week's lessons planned as dots. In a free period with nothing to mark, the Focus card suggests the next lesson to plan."
+  ],
+  "1.28.70": [
+    "Plan lessons has a Focus button on the lesson to pick up and on each class coming up without a lesson. A to-do to plan a lesson has Focus on this, and Plan it opens that class and day.",
+    "Lesson focus sessions leave out time you were away, and when one ends you see how long the lesson has taken so far.",
+    "Syncing sends changes as soon as you leave the page, checks for changes from your other devices every few minutes, and adds up focus and planning time from all of them. On the phone, a lesson shows its pictures and links.",
+    "More of the partner controls and Strengths and concerns are in your language, Today's times follow your language, and the Entry list window follows dark mode."
+  ],
+  "1.28.69": [
+    "A late paper on an assignment whose scores you typed into the gradebook: its card now has Add papers… (before, it was only in the ⋯ menu). Mark and score that student’s paper as usual. Everyone else keeps the score you typed, and the card still says Typed in."
+  ],
   "1.28.68": [
-  "The lesson and unit prompts you copy from the Planner now say Claude shouldn't need anything from your computer, and ask it to tell you if anything is missing."
- ],
+    "Group work has a third way: Group score, adjust a partner. You score the group once, and with Just and a partner’s name above the paper you can change one criterion for that partner only. The rest keeps following the group score, and Use group score puts it back.",
+    "Partners with their own scores can have typed notes just for one of them: pick Just and their name above the paper, and the paragraphs you write then are theirs alone, with a blue bar. The rest of the notes stay shared."
+  ],
   "1.28.67": [
-  "From Google Drive… is now beside every place you add files: a student's Add menu, Readings, your rubric, Gradebook import and School resources, and in the Planner a lesson's materials, unit files, slide pictures, the finished PowerPoint, Import a lesson, your school template and books. Google Docs, Slides and Sheets come in as PDFs for grading, and as Word, PowerPoint and Excel files in the Planner."
- ],
- "1.28.66": [
+    "From Google Drive… is now beside every place you add files: a student's Add menu, Readings, your rubric, Gradebook import and School resources, and in the Planner a lesson's materials, unit files, slide pictures, the finished PowerPoint, Import a lesson, your school template and books. Google Docs, Slides and Sheets come in as PDFs for grading, and as Word, PowerPoint and Excel files in the Planner."
+  ],
+  "1.28.66": [
     "On a phone: a More tab with your Google account, Sync now, updates, Help and Settings, and a bar above the tabs with Update now whenever a new version is ready. Today asks you to sign in with Google instead of choosing a folder."
   ],
   "1.28.65": [

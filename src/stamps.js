@@ -202,11 +202,12 @@ function drawStamp(ctx, m) {
     ctx.restore();
     return;
   }
+  const ink = isScoreStamp(m.k) ? totalInk() : m.color;   // grade stamps, old ones too, draw in the grade color (red), never the pen's
   if (m.k === 'crit') {
     const z = critSize(m), l = x - z.w / 2, t = y - z.h / 2;
     ctx.save(); ctx.lineWidth = Math.max(1, s * 0.045);
-    ctx.beginPath(); ctx.roundRect(l, t, z.w, z.h, s * 0.14); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = m.color; ctx.stroke();
-    ctx.fillStyle = m.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.beginPath(); ctx.roundRect(l, t, z.w, z.h, s * 0.14); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = ink; ctx.stroke();
+    ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     if (z.two) { ctx.font = '600 ' + (s * 0.24) + 'px ' + FONT; ctx.fillText(z.nm, x, t + s * 0.25); }
     ctx.font = '700 ' + (s * 0.4) + 'px ' + FONT; ctx.fillText(String(m.text || '').replace('/', ' / '), x, z.two ? t + s * 0.66 : y + s * 0.01);
     ctx.restore(); return;
@@ -214,8 +215,8 @@ function drawStamp(ctx, m) {
   if (isScoreStamp(m.k)) {
     const z = scoreSize(m), [a, b] = scoreLines(m), l = x - z.w / 2, t = y - z.h / 2, r = s * 0.14;
     ctx.save(); ctx.lineWidth = Math.max(1, s * 0.04);
-    ctx.beginPath(); ctx.roundRect(l, t, z.w, z.h, r); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = m.color; ctx.stroke();
-    ctx.fillStyle = m.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.beginPath(); ctx.roundRect(l, t, z.w, z.h, r); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = ink; ctx.stroke();
+    ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.font = '700 ' + (s * 0.34) + 'px ' + FONT; ctx.fillText(a || '', x, z.two ? t + s * 0.31 : y + s * 0.01);
     if (z.two) {
       ctx.lineWidth = Math.max(0.8, s * 0.022); ctx.beginPath(); ctx.moveTo(l, t + s * 0.6); ctx.lineTo(l + z.w, t + s * 0.6); ctx.stroke();

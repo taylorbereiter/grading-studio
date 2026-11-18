@@ -213,12 +213,15 @@ const NOTE_COLORS = { red: COLORS.red, yellow: '#D08A00', blue: COLORS.blue, gre
 const TEXT_COLORS = { ...NOTE_COLORS, yellow: PTS_AMBER };
 let ptsInk = (k => k === 'credit' || COLORS[k] ? k : '')(store.get('gs.ptsInk', ''));
 function setPtsInk(k) { ptsInk = k === 'credit' || COLORS[k] ? k : ''; if (ptsInk) store.set('gs.ptsInk', ptsInk); else store.del('gs.ptsInk'); }
-// The color of v points out of top. A total or a score stamp is a sum, not one answer, so with 'credit' it stays in the pen's ink.
+// The color of v points out of top.
 function ptsColor(v, top) {
   if (ptsInk === 'credit' && v != null && top != null) return +v <= 0 ? COLORS[inkColor] || COLORS.red : +v >= +top ? CHECK_INK : PTS_AMBER;
   return COLORS[ptsInk] || COLORS[inkColor] || COLORS.red;
 }
-const totalInk = () => ptsColor();
+// A total or a score stamp (and a criterion stamp) is a grade, so it is red unless the teacher picks a points color. It never
+// follows the pen, which is also the color of new comments: a purple comment pen must not turn every grade purple. With
+// 'credit' it stays red too, since a sum isn't one answer. Drawn in this color whatever color was stored (src/stamps.js drawStamp).
+const totalInk = () => COLORS[ptsInk] || COLORS.red;
 const HL = { yellow: '#FFE45C', green: '#B4F0A8', pink: '#FFB8D6', blue: '#B0E0FF' };
 let inkColor = store.get('gs.ink', 'red'), hlColor = store.get('gs.hl', 'yellow'), penW = store.get('gs.penW', 2);
 const DISP0 = { ui: 1, tsize: 14, fit: 'width', dfs: 15, dlh: 1.45, trim: true };

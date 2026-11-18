@@ -1225,10 +1225,10 @@ test('comments on the whole lesson: a box in the editor, kept on the lesson, sha
     await page.click('#dlgBox [data-x]');
     // a right-click comment on the lesson's card in the week lands in the same place
     await page.evaluate(() => { const P = window.__planner; P.L.open = null; P.L.view = 'week'; P.renderLessons(); });
-    await page.waitForSelector('[data-open="wl"]');
+    await page.waitForSelector('.ls-card[data-open="wl"]');
     // The week can still be settling into place when the card is measured, so a right-click that misses it is made again.
     for (let i = 0; i < 5 && !(await page.$('.pl-ctx [data-cx="note"]')); i++) {
-      const bx = await (await page.$('[data-open="wl"]')).boundingBox();
+      const bx = await (await page.$('.ls-card[data-open="wl"]')).boundingBox();
       await page.mouse.click(bx.x + 10, bx.y + 10, { button: 'right' });
       await page.waitForSelector('.pl-ctx [data-cx="note"]', { timeout: 3000 }).catch(() => page.keyboard.press('Escape'));
     }
