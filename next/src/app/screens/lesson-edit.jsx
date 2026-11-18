@@ -7,6 +7,7 @@
 // body, size, notes, talk, and the layout's extra boxes), and saved 400 ms after the last key, as the current Planner does.
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef, useLayoutEffect } from 'preact/hooks';
+import * as undo from '../../services/undo.js';
 import { Button, IconButton, Icon, Select, TextInput, Menu, Checkbox } from '../../ui/index.js';
 import { TextBox } from '../../ui/services.jsx';
 import { t, date } from '../../i18n/t.js';
@@ -74,13 +75,19 @@ export default function Editor({ p, l, cur, setCur, save, ai }) {
   useEffect(() => { if (l.updated !== last.current && !timer.current) { setD(copy(l)); last.current = l.updated; } }, [l.updated]);
   useEffect(() => () => { if (timer.current) { clearTimeout(timer.current); save(dRef.current); } }, []);
   const dRef = useRef(d); dRef.current = d;
-  const put = (next, now) => {
+  // Each change is one step back with Ctrl+Z (src/planner/lessons.js slide editing undo); typing in one box is one step.
+  const put = (next, now, group) => {
+    const before = dRef.current;
+    if (JSON.stringify(before.slides) !== JSON.stringify(next.slides)) undo.record({ label: t('plan.slide_change'), group, undo: () => keep(copy(before)), redo: () => keep(copy(next)) });
+    keep(next, now);
+  };
+  const keep = (next, now) => {
     setD(next); clearTimeout(timer.current);
     const go = async () => { timer.current = 0; const s = await save(next); if (s) last.current = s.updated; };
     if (now) go(); else timer.current = setTimeout(go, 400);
   };
   const n = d.slides.length, i = Math.max(0, Math.min(cur, n - 1)), s = d.slides[i];
-  const setSlide = (patch, now) => { const next = copy(d); next.slides[i] = { ...next.slides[i], ...patch }; for (const k in patch) if (patch[k] === undefined) delete next.slides[i][k]; put(next, now); };
+  const setSlide = (patch, now) => { const next = copy(d); next.slides[i] = { ...next.slides[i], ...patch }; for (const k in patch) if (patch[k] === undefined) delete next.slides[i][k]; put(next, now, 'slide:' + (next.slides[i].id || i) + ':' + Object.keys(patch).join(',')); };
   const at = (k, j) => { const next = copy(d); k(next.slides, next); put(next, true); if (typeof j === 'number') setCur(j); };
   const add = () => at(sl => sl.splice(i + 1, 0, E.normSlide({ layout: E.deckAdd(), fmt: 2 })), i + 1);
   const dup = () => at(sl => sl.splice(i + 1, 0, { ...copy(sl[i]), id: E.lid(), talk: [] }), i + 1);

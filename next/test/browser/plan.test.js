@@ -536,6 +536,25 @@ test('a lesson on no class or day shows beside the Course line and goes on the c
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
+test('slide editing undo: a deleted slide comes back with Ctrl+Z, and Ctrl+Y does it again', async () => {
+  const p = await fresh();
+  await open(p, 'lesson/L5/edit');
+  const count = async () => { for (let k = 0; k < 30; k++) { const l = await lessonInDb(p, 'L5'); if (l) return l.slides.length; } return 0; };
+  const before = await count();
+  await p.click('main button[aria-label="Slide actions"]'); await p.waitForSelector('.pop [role=menuitem]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role=menuitem]')].find(b => b.textContent.includes('Delete')).click());
+  for (let k = 0; k < 30 && await count() === before; k++) await new Promise(r => setTimeout(r, 150));
+  assert.equal(await count(), before - 1);
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  for (let k = 0; k < 30 && await count() !== before; k++) await new Promise(r => setTimeout(r, 150));
+  assert.equal(await count(), before, 'the slide is back');
+  await p.keyboard.down('Control'); await p.keyboard.press('y'); await p.keyboard.up('Control');
+  for (let k = 0; k < 30 && await count() !== before - 1; k++) await new Promise(r => setTimeout(r, 150));
+  assert.equal(await count(), before - 1, 'redo deletes it again');
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
 test('on a phone: the lesson reads, and an after-class note waits for the computer without the lesson being written', async () => {
   const p = await fresh(390);
   await open(p, 'lesson/L2');

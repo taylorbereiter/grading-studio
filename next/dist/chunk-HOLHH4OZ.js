@@ -1,4 +1,4 @@
-import{a as y}from"./chunk-HI7XHVDC.js";import{b as v}from"./chunk-FE3PNB3N.js";import{a as d,h as x,j as f,k}from"./chunk-EUUYPS2I.js";var z=`.ls-slide{--text-heading:24px;--text-display:28px}
+import{a as y}from"./chunk-HI7XHVDC.js";import{b as v}from"./chunk-FE3PNB3N.js";import{a as d,h as x,j as f,k}from"./chunk-VJZB2Z3G.js";var z=`.ls-slide{--text-heading:24px;--text-display:28px}
 .ls-slide{position:relative;width:1280px;height:720px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#000;background:#DFDBD5}
 .ls-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,#ECEAE6 0%,#E2DED9 45%,#B9B6B1 100%)}
 .ls-fade{position:absolute;left:0;right:0;top:212px;height:431px;background:linear-gradient(to bottom,rgba(223,219,213,0),#DFDBD5)}
