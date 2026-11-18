@@ -84,6 +84,7 @@ function Sidebar({ route, classes, folded, onFold }) {
     <NavSection>{t('nav.classes')}</NavSection>
     <div class="sclasses">
       {(classes || []).map((c, i) => <NavItem color={classTone(plan, c.name, c.loose ? -1 : i)} label={c.loose ? t('nav.no_class') : <span data-raw>{c.name}</span>} count={c.left || null} href={router.href('class', c.id || '-')} current={cls === (c.id || '-')} />)}
+      <NavItem icon="plus" label={t('nav.add_class')} href={router.href('class', 'new')} current={cls === 'new'} />
     </div>
     <div class="grow" />
     {FOOT.map(([id, icon, line]) => <NavItem icon={icon} label={t(line)} href={router.href(id)} current={on(id)} />)}

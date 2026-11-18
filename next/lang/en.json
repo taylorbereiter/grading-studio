@@ -83,6 +83,7 @@
  "nav.calendar": "Calendar",
  "nav.todo": "To do",
  "nav.classes": "Classes",
+ "nav.add_class": "Add a class",
  "nav.library": "Library",
  "nav.school": "School",
  "nav.settings": "Settings",
@@ -184,6 +185,10 @@
   "one": "One lesson to plan.",
   "other": "{n} lessons to plan."
  },
+ "home.say_missing": {
+  "one": "One student to remind about missing work.",
+  "other": "{n} students to remind about missing work."
+ },
  "home.say_none": "Nothing waiting on you.",
  "home.col_class": "Class",
  "home.col_today": "Today",
@@ -210,6 +215,10 @@
  "home.plan_lesson": "Plan {day}’s {cls} lesson",
  "home.all_clear": "Nothing to mark, hand back or plan.",
  "home.plan_today": "Plan today’s {cls} lesson",
+ "home.remind": {
+  "one": "Remind one student about missing work",
+  "other": "Remind {n} students about missing work"
+ },
  "home.plan_tomorrow": "Plan tomorrow’s {cls} lesson",
  "saved.all": "Your work is saved",
  "saved.now": "Saved just now",

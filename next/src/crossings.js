@@ -43,7 +43,8 @@ export async function classesForHome() {
 // Home: what the app worked out, the same as the current app's Today (src/today.js homeRender) for the same saved work. Today's
 // classes and lessons (planning), the sets of papers to mark and to hand back (assignment and class names, counts), and the
 // lessons still to plan in the next four days (src/todo.js "plan" lines, minus the ones the teacher hid or switched off).
-// Missing work is not worked out yet: it needs the gradebook's engine, which comes with the class pages (null until then).
+// Missing work: the classes with students who owe work this term and haven't been reminded (src/todo.js tdMissLoad, its "miss" lines),
+// through the gradebook's engine (students/book.js), less the lines she hid.
 export async function countsForHome(now = Date.now()) {
   const C = await import('./students/counts.js'), T = await import('./planning/today.js');
   const lib = C.readLibrary(), kept = await C.readKept(), plan = await T.readPlan();
@@ -57,12 +58,18 @@ export async function countsForHome(now = Date.now()) {
   }
   const ch = C.todoChoices(lib);
   const toPlan = ch.off.plan ? [] : T.toPlan(plan, now).filter(x => { const a = ch.auto[x.key] || {}; return !(a.h != null && a.h === (x.lesson ? 'w' : 'x')); });
-  const mark = sets(g.mark), back = sets(g.back);
-  return { teach, mark, back, toPlan, missing: null, counts: { classesToday: teach ? teach.rows.length : 0, mark: mark.length, back: back.length, toPlan: toPlan.length } };
+  const mark = sets(g.mark), back = sets(g.back), missing = await missingLines(lib, ch);
+  return { teach, mark, back, toPlan, missing, counts: { classesToday: teach ? teach.rows.length : 0, mark: mark.length, back: back.length, toPlan: toPlan.length, missing: missing.length } };
+}
+// The missing-work lines: one for each class with students to remind, { classId, name, n }, unless the teacher hid that line at that count.
+async function missingLines(lib, ch) {
+  if (ch.off.miss) return [];
+  const by = await (await import('./students/book.js')).missingByClass();
+  return lib.classes.filter(c => by[c.id] && !((ch.auto['miss:' + c.id] || {}).h === by[c.id])).map(c => ({ classId: String(c.id), name: String(c.name || ''), n: by[c.id] }));
 }
 // The sidebar's To do count, the way the current app counts it (src/todo.js todoCount): every line not done that is overdue or for
 // today, her own lines and the ones the app noticed (papers to mark and to hand back, today's classes still to plan), less the ones
-// she hid or moved to a later day. Missing-work reminders join it with the gradebook's engine (a later stage).
+// she hid or moved to a later day, and the missing-work reminders (one for each class with students to remind).
 export async function todoCountForSidebar(now = Date.now()) {
   const C = await import('./students/counts.js'), T = await import('./planning/today.js');
   const lib = C.readLibrary(), kept = await C.readKept(), plan = await T.readPlan(), today = T.isoDay(now);
@@ -73,6 +80,7 @@ export async function todoCountForSidebar(now = Date.now()) {
   if (!ch.off.mark) for (const m of g.mark) if (C.canOpen(m)) n += counts('mark:' + m.id, today, 'x');
   if (!ch.off.back) for (const m of g.back) if (C.canOpen(m)) n += counts('back:' + m.id, today, 'x');
   if (!ch.off.plan) for (const x of T.toPlan(plan, now)) n += counts(x.key, x.day, x.lesson ? 'w' : 'x');
+  if (!ch.off.miss) { const by = await (await import('./students/book.js')).missingByClass(); for (const c of lib.classes) if (by[c.id]) n += counts('miss:' + c.id, today, by[c.id]); }
   return n;
 }
 // The calendar's "Work due" and "To-dos": each assignment with a due date (its name, its class's name, the day) and the teacher's own

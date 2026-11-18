@@ -352,6 +352,26 @@ export const useLib = l => { lib = l || { me: null }; };
   ], `let lib = { classes: [], loose: { units: [] } }, keptMeta = new Map();
 export const useKept = (l, k) => { lib = l; keptMeta = k; };
 `, ['lib', 'keptMeta'], ['gcore']],
+  ['gbook', [
+    // the gradebook (src/book.js): its columns read from saved work and typed scores, each cell, each term, the weighted term grade
+    // with extra credit, and a typed score parsed and put the way the current app puts it; the table and its keys are the new app's
+    'BK_TYPES', 'bkConf', 'bkCats', 'bkType', 'bkIsType', 'bkIsDef', 'bkLabel', 'bkTermOf', 'bkMean', 'bkCellOf', 'bkTypedCell', 'bkLoad', 'bkClassCols', 'bkCounts', 'bkGrade', 'bkXcTo',
+    'bkTabs', 'bkTermNow', 'bkClassAvg', 'bkBands', 'bkGroups', 'bkCountTypes', 'pctAvgText', 'bkParse', 'bkCellVal', 'bkColMax', 'bkPut', 'typedStamp', 'isoDay', 'bkDay',
+    // missing work (src/missing.js): who owes what, and who was reminded
+    'MIS_WORDS', 'misConf', 'misCols', 'misOwes', 'misByStu', 'misByCol', 'misNudge', 'misLate', 'misDue',
+    // the roster (src/app/screens.js, src/people.js, src/attend.js): a pasted list read, and a student's details and days kept through an edit
+    'parseRosterRows', 'keepInfo', 'keepAtt', 'infoOf', 'setInfo', 'blankInfo', 'attDays', 'attCount', 'attOf', 'attNote', 'classNewWay',
+  ], `// The class page hands in which class the gradebook is on (src/book.js keeps it in bk.cls); saving is the screen's, through
+// students/write.js: what the lifted code changes is the library it was handed inside saveLibrary.
+export const bkUse = o => Object.assign(bk, o);
+// Its own library, setup and kept rows (bookUse), so a class page or Home reading the book never changes the marking screen's.
+let lib = { classes: [], loose: { id: '', units: [] } }, setup = null, keptMeta = new Map();
+export const bookUse = o => { if ('lib' in o) lib = o.lib; if ('setup' in o) setup = o.setup; if ('keptMeta' in o) keptMeta = o.keptMeta; };
+// A retake's counting rule (gcore retakeRule) is read from the library: this one, for just the moment of the call.
+import { withTries as coreTries, state as coreState, set as coreSet } from './gcore.js';
+const withTries = (...a) => { const was = coreState().lib; coreSet.lib(lib); try { return coreTries(...a); } finally { coreSet.lib(was); } };
+const saveLib = () => {}, bkSaveLib = () => {}, renderLib = () => {};
+`, ['lib', 'setup', 'keptMeta', 'withTries', 'saveLib', 'bkSaveLib', 'renderLib'], ['gcore']],
 ];
 function writeGrading() {
   const { lift } = require('./tools/lift.js');
@@ -436,7 +456,7 @@ async function build() {
   fs.rmSync(DIST, { recursive: true, force: true });
   const r = await esbuild.build({
     entryPoints: { main: path.join(NEXT, 'src/main.js'), proof: path.join(NEXT, 'src/proof.js'), parts: path.join(NEXT, 'src/ui/index.js'), gallery: path.join(NEXT, 'src/gallery/main.jsx'),
-      'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css'), 'mark-css': path.join(NEXT, 'src/app/mark.css') },
+      'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css'), 'mark-css': path.join(NEXT, 'src/app/mark.css'), 'class-css': path.join(NEXT, 'src/app/class.css') },
     // pdf.js's worker, as text, so the Beside drawer's Books can start it from a blob: address (it loads only when a book is opened).
     plugins: [{ name: 'pdf-worker', setup(b) {
       // The path is kept relative to the repository so the build is the same on every machine.
@@ -464,7 +484,7 @@ async function build() {
     '<script>' + sample + '</script>\n' + look +
     '<link rel="stylesheet" href="dist/tokens.css"><link rel="stylesheet" href="dist/parts-css.css">' + css.map(c => '<link rel="stylesheet" href="dist/' + c + '.css">').join('') + (style ? '<style>' + style + '</style>' : '') + '\n' +
     '<script type="module" src="dist/' + entry + '.js"></script></head><body>' + body + '</body></html>\n';
-  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css', 'mark-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}.wrap p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
+  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css', 'mark-css', 'class-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}.wrap p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'gallery.html'), partsPage('Parts gallery', 'gallery', ['gallery-css'], '', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'proof.html'), page('Saved-work proof', 'proof', '<p>Saved-work proof page. Used by the checks, not by teachers.</p>'));
   writeVersion();

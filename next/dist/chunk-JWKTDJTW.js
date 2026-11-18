@@ -1,1 +1,0 @@
-import{da as o}from"./chunk-DDKYA7NU.js";import{b as r,s as t}from"./chunk-JVTVGKFZ.js";import"./chunk-ACJFC2LT.js";import{e}from"./chunk-GLVRXFZR.js";e();function a(){return r("div",{class:"page narrow"},r("header",{class:"ph"},r("h1",null,t("keys.title")),r("p",null,t("keys.about"))),r(o,null))}export{a as default};

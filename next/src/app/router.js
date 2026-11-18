@@ -15,7 +15,7 @@ export const ROUTES = [
   ['todo', 'later', 'todo'],
   ['class/:id', 'class', 'class'],
   ['class/:id/:tab', 'class', 'class'],
-  ['class/:id/:tab/:sub', 'later', 'class'],
+  ['class/:id/:tab/:sub', 'class', 'class'],
   ['lesson/:id', 'lesson', 'class'],
   ['lesson/:id/:view', 'lesson', 'class'],
   ['mark/:id', 'mark', 'class'],
@@ -68,6 +68,9 @@ export const PARTS = {
   write: () => import('../students/write.js'),
   // a class's assignments, and bringing papers in for one (the opening engine loads only when papers come in)
   work: () => import('./screens/class-work.jsx'),
+  // a class's People and Grades tabs (app/class/), each with the gradebook's engine
+  people: () => import('./class/people.jsx'),
+  grades: () => import('./class/grades.jsx'),
   bring: () => import('./mark/open.js'),
   word: () => import('./mark/word.js'),
   report: () => import('./mark/report.jsx'),
@@ -137,7 +140,8 @@ export function restore(path, fresh) {
   const find = key => key && (document.getElementById(key) || main.querySelector('[data-focus="' + CSS.escape(key) + '"]') || document.querySelector('[data-shell-nav] [href="' + CSS.escape(key) + '"]'));
   const el = k && find(k.focus);
   if (el) el.focus({ preventScroll: true });
-  else if (fresh) { const h = main.querySelector('h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } }
+  // A field she has already started typing in keeps the focus.
+  else if (fresh && !(document.activeElement && main.contains(document.activeElement) && document.activeElement.matches('input,textarea,select,[contenteditable]'))) { const h = main.querySelector('h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } }
 }
 let started = false;
 export function start() {
