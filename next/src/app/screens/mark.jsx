@@ -8,7 +8,6 @@ import { Tabs, Button, IconButton, Icon, EmptyState, Dialog, Progress, Avatar, T
 import { t } from '../../i18n/t.js';
 import { go, href, PARTS } from '../router.js';
 import { register } from '../../services/shortcuts.js';
-import { openKept, NotKept } from '../mark/open.js';
 import { openPages, renderPage, fitScale } from '../mark/paper.js';
 import { use, gradeOf, maxPoints, fmtNum, state, rowSteps, rowTop, setupOver, DEFAULT_SETUP, SCALE12, SCALE_FIVES } from '../../engines/gcore.js';
 import { shownName } from '../../engines/gdraw.js';
@@ -33,13 +32,13 @@ function rowScore(st) {
 }
 const isMarked = st => { const g = gradeOf(st); return !!g.done && !st.gap; };
 
-function StudentList({ batch, cur, onPick }) {
+function StudentList({ batch, cur, onPick, onReport }) {
   const [q, setQ] = useState(''), box = useRef(null);
   useEffect(() => register({ id: 'mark-find', keys: '/', label: 'mark.find', run: () => { const i = box.current && box.current.querySelector('input'); if (i) i.focus(); } }), []);
   const missing = batch.students.filter(st => st.grade.status === 'missing' || !st.files.length).length;
   const rows = batch.students.map((st, i) => ({ st, i, name: shownName(st, i) })).filter(r => !q || r.name.toLowerCase().includes(q.toLowerCase()));
   return <aside class="mk-list" aria-label={t('mark.students')}>
-    <div class="mk-lhead mute"><span>{t('mark.papers', { n: batch.students.filter(st => st.files.length).length })}</span>{missing > 0 && <span>{t('mark.missing_n', { n: missing })}</span>}</div>
+    <div class="mk-lhead mute"><span>{t('mark.papers', { n: batch.students.filter(st => st.files.length).length })}</span>{missing > 0 && <span>{t('mark.missing_n', { n: missing })}</span>}{onReport && <button type="button" class="link" onClick={onReport} data-report>{t('mark.op_title')}</button>}</div>
     <div ref={box} class="mk-find"><TextInput icon="search" label={t('mark.find')} value={q} onInput={e => setQ(e.target.value)} /></div>
     <ol class="mk-rows">{rows.map(({ st, i, name }) => { const sc = rowScore(st);
       return <li><button type="button" class={'mk-row' + (i === cur ? ' on' : '')} aria-current={i === cur ? 'true' : undefined} onClick={() => onPick(i)} data-st={i}>
@@ -50,7 +49,7 @@ function StudentList({ batch, cur, onPick }) {
 }
 
 // One page: a canvas drawn by the current app's code at the scale the paper area allows.
-function Page({ pg, room, tall, zoom }) {
+function Page({ pg, room, tall, zoom, FU }) {
   const ref = useRef(null), wrap = useRef(null);
   useEffect(() => {
     if (!ref.current || !room) return;
@@ -58,7 +57,7 @@ function Page({ pg, room, tall, zoom }) {
     pg.wrapEl = wrap.current; if (MK) MK.M.bind(pg, wrap.current);
     renderPage(pg, fitScale(pg, room, tall, (state().disp || {}).fit, zoom));
   }, [pg, room, zoom]);
-  return <div ref={wrap} class={'pg' + (pg.out ? ' out' : '')} data-tool={state().tool}><canvas ref={ref} data-page={pg.file.path + '|' + pg.idx} /></div>;
+  return <div ref={wrap} class={'pg' + (pg.out ? ' out' : '')} data-tool={state().tool}><canvas ref={ref} data-page={pg.file.path + '|' + pg.idx} />{FU && <FU.TurnChip pg={pg} />}</div>;
 }
 
 // The marking tools load as a part of their own (router.js PARTS.marking, screens/mark-tools.jsx) once the paper is open, so
@@ -67,7 +66,29 @@ let MK = null;
 const SAVE_LINE = { saving: () => t('mark.saving'), saved: () => t('mark.saved'), partly: () => t('mark.partly'), not: () => t('mark.not_saved') };
 const saveLine = k => (SAVE_LINE[k] ? SAVE_LINE[k]() : t('mark.cannot'));
 
-function Paper({ batch, cur, zoom }) {
+// A Word paper: the current app's Word card (mark/word.js, a part of its own), changeable once the marking tools are there.
+function WordPaper({ st, f, FU }) {
+  const box = useRef(null), [n, setN] = useState(0), [pdf, setPdf] = useState(false), M = MK && MK.M;
+  useEffect(() => {
+    let live = true, card = null;
+    PARTS.word().then(m => { if (!live || !box.current) return; card = m.wordCard(st, f, M); box.current.replaceChildren(card.el); });
+    const again = () => setN(k => k + 1), host = box.current;
+    const ask = () => setPdf(true);
+    host.addEventListener('wordreopen', again); host.addEventListener('wordpdf', ask);
+    return () => { live = false; host.removeEventListener('wordreopen', again); host.removeEventListener('wordpdf', ask); if (card) card.close(); };
+  }, [st, f, M, n]);
+  return <><div ref={box} class="wordwrap"><div class="loading" aria-busy="true" /></div>{pdf && FU && <FU.PdfAsk st={st} f={f} onClose={() => setPdf(false)} />}</>;
+}
+
+// A text file or any other file (mark/files.jsx, a part of its own); its name until the part is there.
+let FILES = null;
+function OtherFile({ f }) {
+  const [, again] = useState(0);
+  useEffect(() => { if (!FILES) PARTS.files().then(m => { FILES = m; again(1); }, e => console.error(e)); }, []);
+  return FILES ? <FILES.FileCard f={f} /> : <div class="fcard"><Icon name="file" /><span data-raw>{f.name}</span></div>;
+}
+
+function Paper({ batch, cur, zoom, ver, FU }) {
   const st = batch.students[cur], [got, setGot] = useState(null), area = useRef(null), [size, setSize] = useState([0, 0]);
   useEffect(() => {
     let live = true; setGot(null);
@@ -75,7 +96,7 @@ function Paper({ batch, cur, zoom }) {
     seam.ready = false;
     if (st) openPages(st, () => live).then(r => { if (live) { setGot(r); seam.ready = true; } });
     return () => { live = false; };
-  }, [batch, cur]);
+  }, [batch, cur, ver]);
   useEffect(() => {
     const el = area.current; if (!el) return;
     const measure = () => { const cs = getComputedStyle(el); setSize([el.clientWidth - (parseFloat(cs.paddingLeft) || 18) - (parseFloat(cs.paddingRight) || 18), el.clientHeight]); };
@@ -84,11 +105,11 @@ function Paper({ batch, cur, zoom }) {
   return <div class="mk-paper" ref={area} tabindex="-1">
     {!st ? null : !st.files.length ? <EmptyState icon="inbox" title={t('mark.nothing_in')} />
       : !got ? <div class="loading" aria-busy="true" />
-      : got.cards.map(c => c.kind === 'file' ? <div class="fcard"><Icon name="file" /><span data-raw>{c.f.name}</span></div>
+      : <>{got.cards.map(c => c.kind === 'file' ? <div class="fwrap">{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
         : <section class="doc">
-          <header class="fhead"><span data-raw>{c.d.name}</span>{!c.on && <span class="pill">{t(c.auto ? 'mark.left_out_auto' : 'mark.left_out')}</span>}</header>
-          {c.pages.map(pg => <Page key={pg.file.path + '|' + pg.idx} pg={pg} room={size[0]} tall={size[1]} zoom={zoom} />)}
-        </section>)}
+          <header class="fhead"><span data-raw>{c.d.name}</span>{FU && <FU.AddTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}{!c.on && <span class="pill">{t(c.auto ? 'mark.left_out_auto' : 'mark.left_out')}</span>}<span class="grow" />{FU && !c.on && <FU.BackIn st={st} d={c.d} />}{FU && <FU.FileMenu st={st} path={c.d.file || c.d.pages[0][0]} name={c.d.name} d={c.d} on={c.on} auto={c.auto} />}</header>
+          {c.pages.map(pg => <Page key={pg.file.path + '|' + pg.idx} pg={pg} room={size[0]} tall={size[1]} zoom={zoom} FU={FU} />)}
+        </section>)}{FU && <FU.FilesFoot key={st.key + ver} st={st} name={shownName(st, cur)} />}</>}
   </div>;
 }
 
@@ -146,7 +167,8 @@ export default function MarkScreen({ route, classes }) {
     return () => { live = false; if (off) off(); }; }, [w]);
   useEffect(() => {
     let live = true; setW(null); setErr(null);
-    openKept(id, { question: q => new Promise(done => setAsk({ q, done: v => { setAsk(null); done(v); } })) })
+    // the opener (mark/open.js, with the lifted opening code) loads as a part of its own, so it isn't in this screen's own load
+    PARTS.bring().then(O => O.openKept(id, { question: q => new Promise(done => setAsk({ q, done: v => { setAsk(null); done(v); } })) }))
       .then(r => { if (!live) return; if (!r) return history.back(); setW(r); setCur(Math.min(r.cur || 0, r.batch.students.length - 1)); }, e => { console.error(e); if (live) setErr(e); });
     return () => { live = false; if (MK) MK.M.saveNowDone(); };
   }, [id]);
@@ -158,6 +180,14 @@ export default function MarkScreen({ route, classes }) {
     Promise.all([PARTS.out(), PARTS.outEngine(), PARTS.marking()]).then(([p, E, m]) => { E.withMarking(m.M); seam.out = E; if (live) setOut({ Out: p.default, E }); }, e => console.error(e));
     return () => { live = false; }; }, [w, tab]);
   const openOn = i => { pick(i); go('mark', id, ''); };
+  // A student's files changed (mark/change.js through mark/fileui.jsx, loaded with the tools): the paper opens again.
+  const [FU, setFU] = useState(null), [ver, setVer] = useState(0);
+  useEffect(() => { if (!w || !MK) return; let live = true;
+    PARTS.fileui().then(m => { if (!live) return; m.wire(MK.M, i => { if (i >= 0) pickRef.current(i); setVer(v => v + 1); }); setFU(m); m.pdfAuto(); }, e => console.error(e));
+    return () => { live = false; }; }, [w, !!MK]);
+  // What opened: a line after the papers open when there's something new to say, and the whole report from the student list.
+  const [rep, setRep] = useState(null), [repList, setRepList] = useState(false);
+  useEffect(() => { if (!w) return; let live = true; setRep(null); PARTS.report().then(m => { if (live) setRep(m); }, e => console.error(e)); return () => { live = false; }; }, [w]);
   useEffect(() => {
     if (!w) return;
     const offs = [
@@ -186,19 +216,21 @@ export default function MarkScreen({ route, classes }) {
       <Button icon="settings" size="sm" disabled title={t('mark.later')}>{t('mark.setup')}</Button>
     </header>
     <RubricAsk ask={ask} />
-    {err ? <EmptyState icon="inbox" title={t(err instanceof NotKept ? 'mark.not_kept' : 'mark.page_bad')} text={err instanceof NotKept ? t('mark.not_kept_text') : ''} />
+    {err ? <EmptyState icon="inbox" title={t(err.name === 'NotKept' ? 'mark.not_kept' : 'mark.page_bad')} text={err.name === 'NotKept' ? t('mark.not_kept_text') : ''} />
       : !w ? <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />
       : tab !== 'mark' ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} E={out.E} cur={cur} onOpen={openOn} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
-      : <div class="mk-body">
-        <StudentList batch={w.batch} cur={cur} onPick={pick} />
+      : <><div class="mk-body">
+        <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} />
         <div class="mk-mid">
           {MK && <MK.Tools />}
-          <Paper batch={w.batch} cur={cur} zoom={zoom} />
+          <Paper batch={w.batch} cur={cur} zoom={zoom} ver={ver} FU={FU} />
           <div class="mk-zoom"><IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => { const z = Math.max(0.5, Math.round((zoom - 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} />
             <span>{t('mark.zoom', { n: Math.round(zoom * 100) })}</span>
             <IconButton icon="plus" label={t('mark.zoom_in')} onClick={() => { const z = Math.min(3, Math.round((zoom + 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} /></div>
         </div>
         <ScorePanel batch={w.batch} cur={cur} onNext={() => pick(cur + 1)} onPrev={() => pick(cur - 1)} />
-      </div>}
+      </div>
+      {rep && <rep.OpenedBar key={w.batch.id} onList={() => setRepList(true)} />}
+      {rep && repList && <rep.OpenedList onClose={() => setRepList(false)} onGo={pick} />}</>}
   </div>;
 }

@@ -49,6 +49,16 @@ export const PARTS = {
   outEngine: () => import('./mark/out.js'),
   pdflib: () => import('pdf-lib'),
   zip: () => import('fflate'),
+  h2c: () => import('html2canvas'),
+  // the save layer for marking (students/write.js), loaded with the first save
+  write: () => import('../students/write.js'),
+  // a class's assignments, and bringing papers in for one (the opening engine loads only when papers come in)
+  work: () => import('./screens/class-work.jsx'),
+  bring: () => import('./mark/open.js'),
+  word: () => import('./mark/word.js'),
+  report: () => import('./mark/report.jsx'),
+  files: () => import('./mark/files.jsx'),
+  fileui: () => import('./mark/fileui.jsx'),
 };
 export const CHUNKS = {
   home: () => import('./screens/home.jsx'),

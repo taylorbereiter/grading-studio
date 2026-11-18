@@ -18,7 +18,7 @@ import { UnitSheet } from '../plan/unit-edit.jsx';
 import { usePart } from '../parts.js';
 import '../plan/lines.js';
 
-const TABS = ['course', 'people', 'grades', 'todo'];
+const TABS = ['course', 'work', 'people', 'grades', 'todo'];
 const keep = (k, v) => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem('gsn.class.' + k)); sessionStorage.setItem('gsn.class.' + k, JSON.stringify(v)); } catch {} return null; };
 
 // The class's periods from one Monday for n weeks: [{ day, m, lesson }].
@@ -115,6 +115,7 @@ export default function ClassPage({ route, classes }) {
   const lib = (classes || []).filter(x => !x.loose);
   const x = (classes || []).find(k => (k.id || '-') === route.params.id);
   const tab = TABS.includes(route.params.tab) ? route.params.tab : 'course';
+  const Work = usePart('work', tab === 'work');
   if (!x) return <Later route={route} classes={classes} />;
   const c = p && timetableClass(p, x.name);
   const days = c ? [...new Set((c.meets || []).map(m => +m.dow))].sort().map(d => date(new Date(2024, 0, 7 + d), { weekday: 'short' })) : [];
@@ -125,8 +126,9 @@ export default function ClassPage({ route, classes }) {
       <p class="mute meta">{x.students > 0 && <span>{t('home.students', { n: x.students })}</span>}{days.length > 0 && <span data-raw>{days.join(', ')}</span>}
         {partners.length > 0 && <span><Icon name="link" size="xs" />{t('plan.shares_lessons', { names: partners.map(k => k.name).join(', ') })}</span>}</p></div></header>
     <Tabs label={t('plan.class_tabs')} value={tab} onChange={v => go('class', route.params.id, v === 'course' ? '' : v)}
-      tabs={[{ id: 'course', label: t('plan.course_line') }, { id: 'people', label: t('plan.people'), count: x.students || null }, { id: 'grades', label: t('plan.grades') }, { id: 'todo', label: t('nav.todo') }]} />
-    {tab !== 'course' ? <Later route={{ ...route, path: 'class', known: true }} classes={classes} embedded />
+      tabs={[{ id: 'course', label: t('plan.course_line') }, { id: 'work', label: t('plan.assignments') }, { id: 'people', label: t('plan.people'), count: x.students || null }, { id: 'grades', label: t('plan.grades') }, { id: 'todo', label: t('nav.todo') }]} />
+    {tab === 'work' ? (Work ? <Work.default classId={route.params.id} /> : <div class="loading" aria-busy="true" />)
+      : tab !== 'course' ? <Later route={{ ...route, path: 'class', known: true }} classes={classes} embedded />
       : !p ? <div class="loading" aria-busy="true" />
       : !c ? <EmptyState icon="cal" title={t('plan.not_on_timetable')} text={t('plan.not_on_timetable_text')} action={<a class="btn" href={href('settings', 'timetable')}>{t('plan.set_up_timetable')}</a>} />
       : <CourseLine p={p} c={c} lib={lib} />}

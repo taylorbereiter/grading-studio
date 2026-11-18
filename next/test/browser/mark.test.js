@@ -185,6 +185,8 @@ test('marks made in the new app (pen, highlight, circle, check, text, comment, e
   const p = await page(ctx, errors);
   await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
   await nextReady(p, await p.evaluate(() => 0).then(() => p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 }).then(() => p.evaluate(() => window.__mark.state().cur))));
+  // What opened sits over the foot of the paper, as the current app's does; it is closed first, as a teacher would
+  await p.waitForSelector('[data-repx]', { timeout: 15000 }).then(() => p.click('[data-repx]'), () => {});
   // the keys choose the tools, as in the current app
   await p.keyboard.press('p');
   assert.equal(await p.evaluate(() => window.__mark.state().tool), 'pen');

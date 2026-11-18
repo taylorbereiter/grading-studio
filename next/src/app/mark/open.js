@@ -7,6 +7,7 @@ import { use, setupOver, state, kget } from '../../engines/gcore.js';
 import { useStore } from '../../engines/gstore.js';
 import { prefs } from '../../students/prefs.js';
 import { library, gradingSetup, meta } from '../../students/index.js';
+import { keepPapers, saveLibrary } from '../../students/write.js';
 import { PARTS } from '../router.js';
 
 export class NotKept extends Error { constructor(id) { super('The papers for this one aren’t kept in this browser.'); this.name = 'NotKept'; this.id = id; } }
@@ -14,39 +15,86 @@ export class NotKept extends Error { constructor(id) { super('The papers for thi
 // The kept downloads' rows (keptMeta), as loadKept reads them.
 async function keptRows() { const m = new Map(); for (const [k, v] of await meta.entries()) m.set(k, v); return m; }
 
-// question(q): how the screen asks which rubric to use when the card and the saved work disagree (returns 'a', 'b' or null).
-export async function openKept(id, { question } = {}) {
+async function begin() {
   useStore(prefs);
   const lib = library.json(null) || { classes: [], loose: { id: '', units: [] } };
   for (const c of lib.classes || []) { c.units ||= []; c.names ||= []; }
   lib.loose ||= { id: '', units: [] }; lib.loose.units ||= [];
   // fflate: a download kept as a ZIP is unzipped, and a .doc is told from a Word file, as the current app does
   use({ lib, keptMeta: await keptRows(), setup: setupOver(gradingSetup.json(null)), batch: null, cur: 0, fflate: state().fflate || await PARTS.zip() });
-  const rec = await E.paperGet(id);
-  if (!rec) throw new NotKept(id);
-  let label = rec.label, assignment = E.cardOfKept(id);
-  // intake(rec.entries, rec.label, assignment, true)
+  return lib;
+}
+// The files of a download as intake reads them: ZIPs opened (a ZIP inside a student's folder opens inside that folder), junk left out.
+async function rawOf(entries, label) {
   const raw = [];
-  for (const e of rec.entries) {
+  for (const e of entries) {
     if (E.junk(e.path)) continue;
     if (/\.zip$/i.test(e.path)) {
+      const data = e.data || new Uint8Array(await e.file.arrayBuffer());
       const dir = e.path.includes('/') ? e.path.slice(0, e.path.lastIndexOf('/') + 1) : '';
-      try { E.unzipInto(e.data, dir, raw, dir ? 1 : 0); } catch { if (dir) raw.push({ path: e.path, data: e.data }); continue; }
+      try { E.unzipInto(data, dir, raw, dir ? 1 : 0); } catch { if (dir) raw.push({ path: e.path, data }); continue; }
       if (!label && !dir) label = e.path.split('/').pop().replace(/\.zip$/i, '');
       continue;
     }
     raw.push({ path: e.path, file: e.file, data: e.data });
   }
-  if (!raw.length) throw new NotKept(id);
+  return { raw, label };
+}
+// Each student's files, and the list of what is kept in this browser (every file, the house files too).
+async function studentsOf(raw) {
   await E.srcRead(raw);
   await E.spellLikeSaved(raw);
-  const map = E.groupRaw(raw), keys = [...map.keys()].sort(E.natural), students = [];
+  const map = E.groupRaw(raw), keys = [...map.keys()].sort(E.natural), students = [], keepList = [];
   for (const key of keys) {
     const files = [];
-    for (const r of map.get(key).sort((a, b) => E.natural(a.path, b.path))) if (!E.houseFile(r.path)) files.push(await E.makeFile(r.path, r.data));
+    for (const r of map.get(key).sort((a, b) => E.natural(a.path, b.path))) {
+      const data = r.data || (r.file ? new Uint8Array(await r.file.arrayBuffer()) : null);
+      keepList.push({ path: r.path, data });
+      if (!E.houseFile(r.path)) files.push(await E.makeFile(r.path, data));
+    }
     if (!files.length && map.get(key).every(r => E.houseFile(r.path))) continue;
     students.push({ key, files, grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} });
   }
+  return { students, keepList };
+}
+
+// question(q): how the screen asks which rubric to use when the card and the saved work disagree (returns 'a', 'b' or null).
+export async function openKept(id, { question } = {}) {
+  const lib = await begin();
+  const rec = await E.paperGet(id);
+  if (!rec) throw new NotKept(id);
+  let { raw, label } = await rawOf(rec.entries, rec.label);
+  if (!raw.length) throw new NotKept(id);
+  const { students } = await studentsOf(raw);
+  return assemble({ raw, label, students, lib, assignment: E.cardOfKept(id), question });
+}
+
+export class NothingIn extends Error { constructor() { super('Nothing found in what you dropped'); this.name = 'NothingIn'; } }
+// Papers brought in (src/app/open.js intake, not from the kept list): the same steps, then the papers are kept in this browser and,
+// for an assignment card, the card is linked to them (assignment.batchId), each through students/write.js. entries: [{ path, file|data }].
+export async function bringIn(entries, { label, assignment, question } = {}) {
+  const lib = await begin();
+  if (entries.length === 1 && /\.gswork$/i.test(entries[0].path)) throw new NothingIn();
+  const got = await rawOf(entries, label);
+  if (!got.raw.length) throw new NothingIn();
+  const { students, keepList } = await studentsOf(got.raw);
+  if (!students.length) throw new NothingIn();
+  const id = E.batchIdOf(got.raw);
+  if (assignment) assignment = (E.findItem(assignment.id) || {}).it || assignment;
+  if (!assignment) assignment = E.cardOfKept(id);
+  const r = await assemble({ raw: got.raw, label: got.label, students, lib, assignment, question, fresh: true });
+  if (!r) return null;
+  const b = r.batch;
+  await keepPapers(b, got.label, keepList);
+  if (assignment) {
+    const aid = assignment.id, su = { ...state().setup, spot: undefined };
+    await saveLibrary(l => { const f = findIn(l, aid); if (f) { f.batchId = id; f.opened = Date.now(); if (!f.setup || r.toCard) f.setup = su; } });
+  }
+  return r;
+}
+export const findIn = (l, id) => { for (const c of [...(l.classes || []), l.loose].filter(Boolean)) for (const u of c.units || []) for (const it of u.items || []) if (it.id === id) return it; return null; };
+
+async function assemble({ raw, label, students, lib, assignment, question }) {
   const bid = E.batchIdOf(raw);
   const keptWork = await kget('work', bid);
   const work0 = E.newestWork(prefs.get(bid, null), keptWork);
@@ -58,6 +106,8 @@ export async function openKept(id, { question } = {}) {
   delete setup.spot;
   use({ batch, setup });
   batch.keptWork = keptWork;
+  // no work saved for it yet (papers just brought in): its first save makes the record (students/write.js saveWork fresh)
+  if (!keptWork && !prefs.get(bid, null)) batch.fresh = true;
   const saved = E.newestWork(prefs.get(bid, null), batch.keptWork);
   await E.applyRubricPage();
   await E.loadAdded();
@@ -77,7 +127,7 @@ export async function openKept(id, { question } = {}) {
   else if (assignment && assignment.quiz && !batch.quiz && !assignment.batchId) batch.quiz = JSON.parse(JSON.stringify(assignment.quiz));
   const cur = Math.max(0, batch.restoredCur || 0);
   use({ cur });
-  return { batch, setup: state().setup, lib, cur };
+  return { batch, setup: state().setup, lib, cur, toCard: !!rub.toCard };
 }
 // Which rubric the papers open with (src/app/open.js rubricAtOpen): the card's, or what the work was scored with, or the last one
 // saved. When the two disagree and would change a score, the screen asks (question returns 'a' for the card's, 'b' for the work's).

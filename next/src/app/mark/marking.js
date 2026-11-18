@@ -6,7 +6,7 @@
 import * as K from '../../engines/gmark.js';
 import { use, state, COLORS, setCheckInk, rowSteps, rowTop, roundPct, pointsFor } from '../../engines/gcore.js';
 import { prefs } from '../../students/prefs.js';
-import { saveWork, CannotSave } from '../../students/write.js';
+import { PARTS } from '../router.js';
 import { editText, openNote } from './editors.js';
 import { renderPage } from './paper.js';
 import * as undoList from '../../services/undo.js';
@@ -160,16 +160,21 @@ function saveSoon() { clearTimeout(saveT); saveT = setTimeout(() => K.saveNow(),
 async function writeWork(b, data) {
   const seq = ++saveSeq;
   try {
-    const r = await saveWork(b.id, d => { for (const k of Object.keys(d)) delete d[k]; Object.assign(d, JSON.parse(JSON.stringify(data))); });
+    // the save layer (students/write.js) loads with the first save, so it isn't part of the tools' first load
+    const W = await PARTS.write();
+    const r = await W.saveWork(b.id, d => { for (const k of Object.keys(d)) delete d[k]; Object.assign(d, JSON.parse(JSON.stringify(data))); }, { fresh: !!b.fresh });
+    if (r.full || r.quick) delete b.fresh;
     if (seq === saveSeq) saveState = r.full ? 'saved' : r.quick ? 'partly' : 'not';
   } catch (e) {
     console.error(e);
-    if (seq === saveSeq) saveState = e instanceof CannotSave ? 'cannot:' + e.why : 'not';
+    if (seq === saveSeq) saveState = e && e.name === 'CannotSave' ? 'cannot:' + e.why : 'not';
   }
   tell();
 }
 // Waits for a save that is due and any under way (for leaving the screen, and for the checks).
-export async function saveNowDone() { if (saveT) { clearTimeout(saveT); saveT = null; K.saveNow(); } while (saveState === 'saving') await new Promise(r => setTimeout(r, 30)); }
+// Word edits waiting out their pause (mark/word.js) are written first.
+export const flushers = new Set();
+export async function saveNowDone() { await Promise.all([...flushers].map(f => f())); if (saveT) { clearTimeout(saveT); saveT = null; K.saveNow(); } while (saveState === 'saving') await new Promise(r => setTimeout(r, 30)); }
 
 // Every page on screen gets the current app's pointer handling once its canvas is there.
 export function bind(pg, wrap) { pg.wrap = wrap; if (pg.bound) return; pg.bound = true; K.bindPage(pg); }
@@ -189,3 +194,16 @@ export function startMarking({ toast, openStudent }) {
     setTool: chooseTool, openStampMenu: openMenu, endOnce,
   });
 }
+
+// The class's setup changed from the marking screen (a Word rubric's Out of or grading scale, src/app/wordrubric.js setClassOutOf and
+// setClassScale): kept as her last setup (gs.setup) and on the assignment's card, through students/write.js, as the current app does.
+export async function keepSetup() {
+  const s = state(), su = { ...s.setup, spot: undefined, rubricPage: undefined }, b = s.batch;
+  const W = await PARTS.write();
+  await W.saveSetting('gs.setup', su);
+  if (b && b.assignment) { const { findIn } = await PARTS.bring(); const id = b.assignment.id; await W.saveLibrary(l => { const f = findIn(l, id); if (f) f.setup = { ...s.setup, spot: undefined }; }); b.assignment.setup = { ...s.setup, spot: undefined }; }
+  tell();
+}
+// A score the Word rubric gave (the lifted rubricToGrade / wordScoreGone), as one undo step, saved and shown.
+export function wordGrade(st, fn) { K.gradeSnap(st); fn(); saveSoon(); tell(); }
+export const changedNow = () => { saveSoon(); tell(); };

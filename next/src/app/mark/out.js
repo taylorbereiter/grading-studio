@@ -25,7 +25,9 @@ export function load() {
 }
 
 // A grade written on a paper counts, so the papers are read first, as the current app reads them before Grades, Insights and Return.
-export async function readPapers(onStep) { await load(); M.commit(); await X.scanAll(onStep); }
+// Word rubrics already highlighted give their scores first (mark/word.js scoresAll), as the current app runs wordScoresAll here.
+export async function readPapers(onStep) { await load(); M.commit(); if (hasWord()) await (await PARTS.word()).scoresAll(M); await X.scanAll(onStep); }
+const hasWord = () => state().batch.students.some(st => st.files.some(f => f.kind === 'docx'));
 
 /* ---------- Grades ---------- */
 export const order = () => state().gradesOrder;
@@ -101,7 +103,7 @@ export async function exportAll({ keep = true, dpi = 150, sheet = true, dir = nu
   if (busy) throw new Error('busy');
   busy = true;
   try {
-    await M.saveNowDone();   // the current app reads Word rubrics' scores here too (wordScoresAll): that comes with Word papers, part (d)
+    await M.saveNowDone();
     const b = state().batch;
     if (b.lineBusy) await b.lineRun;
     const o = opts(), files = {}, failed = [], fbGiven = new Set(), tnGiven = new Set();
@@ -138,7 +140,7 @@ export async function exportOne(st) {
   if (busy) throw new Error('busy');
   busy = true;
   try {
-    await M.saveNowDone();   // the current app reads Word rubrics' scores here too (wordScoresAll): that comes with Word papers, part (d)
+    await M.saveNowDone(); if (hasWord()) await (await PARTS.word()).scoresAll(M);
     const b = state().batch, o = opts(), mine = () => X.nameOut(X.exportPlan(false, true).filter(x => x.st === st));
     let items = mine();
     if (!items.length) { await readPapers(); items = mine(); }

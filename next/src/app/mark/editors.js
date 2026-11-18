@@ -4,9 +4,9 @@
 import { use, state, TEXT_COLORS, NOTE_COLORS, HL } from '../../engines/gcore.js';
 import { textLayout } from '../../engines/gdraw.js';
 import * as K from '../../engines/gmark.js';
-import { saveSetting } from '../../students/write.js';
 import { prefs } from '../../students/prefs.js';
 import { t } from '../../i18n/t.js';
+import { PARTS } from '../router.js';
 import './lines.js';
 import { toast } from '../../ui/index.js';
 
@@ -156,6 +156,6 @@ export function openNote(pg, m, isNew) {
   });
 }
 // The saved comments go where the current app keeps them (gs.bank), through students/write.js.
-function keepBank(b) { use({ bank: b }); try { saveSetting('gs.bank', b); } catch (e) { console.error(e); } }
+export function keepBank(b) { use({ bank: b }); PARTS.write().then(W => W.saveSetting('gs.bank', b)).catch(e => console.error(e)); }
 
 export const editMark = (pg, m) => { if (m.t === 'text') editText(pg, m); else if (m.t === 'note') openNote(pg, m); };
