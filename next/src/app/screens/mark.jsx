@@ -10,13 +10,13 @@ import { go, href, PARTS } from '../router.js';
 import { register } from '../../services/shortcuts.js';
 import { openKept, NotKept } from '../mark/open.js';
 import { openPages, renderPage, fitScale } from '../mark/paper.js';
-import { use, gradeOf, maxPoints, fmtNum, state } from '../../engines/gcore.js';
+import { use, gradeOf, maxPoints, fmtNum, state, rowSteps, rowTop, setupOver, DEFAULT_SETUP, SCALE12, SCALE_FIVES } from '../../engines/gcore.js';
 import { shownName } from '../../engines/gdraw.js';
 import { toast } from '../../ui/index.js';
 import '../mark/lines.js';
 
 // The checks' way in (next/test/browser/mark.test.js): the open work, drawing one page at a given scale, and waiting for a save.
-const seam = { state, gradeOf, renderPage, ready: false, saved: () => (MK ? MK.M.saveNowDone() : Promise.resolve()) };
+const seam = { state, gradeOf, renderPage, ready: false, maths: { state, gradeOf, setupOver, DEFAULT_SETUP, SCALE12, SCALE_FIVES, fmtNum }, saved: () => (MK ? MK.M.saveNowDone() : Promise.resolve()) };
 if (typeof window !== 'undefined') window.__mark = seam;
 
 const TABS = ['mark', 'grades', 'insights', 'return'];
@@ -92,19 +92,38 @@ function Paper({ batch, cur, zoom }) {
   </div>;
 }
 
+// The score, as the current app's panel has it: a row for each criterion with its steps (or points), the total and percent,
+// Missing / Excused / Late, the comment, and Next to score. Until the marking tools have loaded it shows the score and can't change it.
+// Enter presses Next to score only from nowhere in particular (or a score slider), never over a button she has focused.
+const free = () => { const a = document.activeElement; return !a || a === document.body || (a.classList && (a.classList.contains('srange') || a.classList.contains('mk-paper'))); };
+const STATUS = [['missing', () => t('mark.missing')], ['excused', () => t('mark.excused')], ['late', () => t('mark.late')]];
 function ScorePanel({ batch, cur, onNext, onPrev }) {
   const st = batch.students[cur]; if (!st) return null;
-  const g = gradeOf(st), max = maxPoints(), name = shownName(st, cur);
-  const file = st.files[0];
+  const g = gradeOf(st), max = maxPoints(), name = shownName(st, cur), su = state().setup, M = MK && MK.M, off = !M;
+  const file = st.files[0], row = M ? M.rowInHand() : -1, gr = st.grade;
+  const next = () => { if (!M) return onNext(); if (!M.nextUnscored()) toast(t('mark.everyone_scored')); };
   return <aside class="mk-side" aria-label={t('mark.score')}>
     <div class="who"><Avatar name={name} /><div><h2 class="t4" data-raw>{name}</h2>
       <p class="mute">{t('mark.n_of', { n: cur + 1, of: batch.students.length })}{file ? <>, <span data-raw>{file.name}</span></> : ''}</p></div></div>
+    <h3 class="mk-h">{t('mark.score')}</h3>
+    {su.mode === 'rubric' ? <div class="mk-crits">{su.criteria.map((c, i) => { const v = gr.rubric[i], steps = rowSteps(su, i), top = rowTop(su, i), k = steps.indexOf(v);
+      return <div class={'mk-crit' + (i === row ? ' on' : '')} data-row={i}>
+        <div class="cn"><button type="button" class="nm" onClick={() => M && M.pickRow(i)} data-raw>{c}</button><em>{v == null ? '' : fmtNum(v)}{v == null ? '' : <small>{' / ' + top}</small>}</em></div>
+        <input type="range" class={'srange' + (v == null ? ' unset' : '')} min="0" max={steps.length - 1} step="1" value={Math.max(0, k)} disabled={off}
+          aria-label={t('mark.row_score', { c })} aria-valuetext={v == null ? t('mark.not_scored') : t('mark.v_of', { v: fmtNum(v), of: top })}
+          onInput={e => M.setRow(i, steps[+e.currentTarget.value], { toggle: false })} />
+        <div class="sticks" role="group" aria-label={t('mark.row_score', { c })}>{steps.map(w => <button type="button" class={w % 1 ? 'half' : ''} data-v={w} tabindex="-1" aria-pressed={v === w ? 'true' : 'false'} disabled={off} onClick={() => M.setRow(i, w)}>{fmtNum(w)}</button>)}</div>
+      </div>; })}</div>
+      : <div class="mk-pts"><input type="text" inputmode="decimal" aria-label={t('mark.points')} value={gr.pk != null && gr.pk !== '' ? gr.pk + '%' : gr.points} disabled={off}
+          onInput={e => M.setPoints(e.currentTarget.value, e.currentTarget)} onBlur={() => M && M.leftPoints()} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} /><span class="mute">{t('mark.out_of_pts', { n: su.outOf })}</span></div>}
     <div class="total"><b>{g.total != null ? fmtNum(g.total) : '–'}</b><span class="mute">{max ? t('mark.out_of', { n: fmtNum(max) }) : ''}</span>
       <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span></div>
     {g.total == null && <p class="mute">{t('mark.no_score')}</p>}
-    {st.grade.comment && <p class="comment" data-raw>{st.grade.comment}</p>}
+    <div class="mk-stat" role="group" aria-label={t('mark.mark_as')}>{STATUS.map(([k, l]) => <button type="button" class="chip" aria-pressed={gr.status === k ? 'true' : 'false'} disabled={off} data-status={k} onClick={() => M.setStatus(k)}>{l()}</button>)}</div>
+    <textarea class="mk-cmt" aria-label={t('mark.comment_for')} placeholder={t('mark.comment_for_ph')} value={gr.comment || ''} disabled={off} data-raw onInput={e => M.setComment(e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.blur(); }} />
     <div class="foot"><IconButton icon="chl" label={t('mark.prev')} onClick={onPrev} disabled={cur === 0} />
-      <Button variant="primary" kbd="Enter" onClick={onNext} disabled={cur >= batch.students.length - 1} data-next>{t('mark.next')}</Button></div>
+      <Button variant="primary" kbd="Enter" onClick={next} data-next>{t('mark.next_score')}</Button>
+      <IconButton icon="chr" label={t('mark.next')} onClick={onNext} disabled={cur >= batch.students.length - 1} data-next-plain /></div>
   </aside>;
 }
 
@@ -138,6 +157,11 @@ export default function MarkScreen({ route, classes }) {
     const offs = [
       register({ id: 'mark-next', keys: ['arrowdown', 'arrowright'], label: 'mark.next', run: () => pick(cur + 1) }),
       register({ id: 'mark-prev', keys: ['arrowup', 'arrowleft'], label: 'mark.prev', run: () => pick(cur - 1) }),
+      register({ id: 'mark-score', keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.'], label: 'mark.key_score', group: 'mark.score', when: () => !!MK && state().setup.mode === 'rubric', run: e => {
+        const r = MK.M.scoreKey(e.key);
+        if (r === 'none') toast(t('mark.every_row')); else if (r === 'over') toast(t('mark.row_top', { n: rowTop(state().setup, MK.M.rowInHand()) })); else if (r === 'nohalf') toast(t('mark.no_half'));
+      } }),
+      register({ id: 'mark-enter', keys: 'enter', label: 'mark.next_score', group: 'mark.score', when: () => !!MK && free(), run: () => { if (!MK.M.nextUnscored()) toast(t('mark.everyone_scored')); } }),
     ];
     return () => offs.forEach(f => f());
   }, [w, cur]);

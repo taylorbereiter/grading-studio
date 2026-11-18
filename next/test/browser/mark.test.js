@@ -243,3 +243,96 @@ test('marks made in the new app (pen, highlight, circle, check, text, comment, e
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// The grade maths, one table run through both apps: the current app's gradeOf (window.__gs) and the lifted one (window.__mark),
+// each with the same setup, for scores of every kind. Every row must come out the same: total, percent, done, and the rest.
+function gradeTable() {
+  const setups = [
+    null,   // the app's default rubric
+    { mode: 'rubric', criteria: ['Ideas', 'Organization', 'Language'], outOf: 10, scale: 'SCALE12' },
+    { mode: 'rubric', criteria: ['Ideas', 'Organization', 'Language', 'Evidence'], outOf: 10, scale: 'SCALE_FIVES' },
+    { mode: 'rubric', criteria: ['Only row'], outOf: 10, scale: null },
+    { mode: 'points', criteria: [], outOf: 20, scale: null },
+    { mode: 'points', criteria: [], outOf: 37.5, scale: null },
+  ];
+  const rubrics = [[], [null, null, null], [4, 4, 4], [3.5, 3.5, 3.5], [1, 1.5, 2.5], [0, 0, 0], [4, null, 2], [3, 3, 3, 3], [2.5, 4, 1, 3.5], [4]];
+  const grades = [];
+  for (const rubric of rubrics) for (const points of ['', '17', '17.5', '0', '20', '41']) grades.push({ rubric, points, comment: '' });
+  grades.push({ rubric: [3, 3, 3], points: '', comment: '', status: 'missing' }, { rubric: [], points: '', comment: '', status: 'excused' }, { rubric: [3, 3, 3], points: '15', comment: '', status: 'late' });
+  grades.push({ rubric: [3, 3, 3], points: '15', comment: '', xc: 2 }, { rubric: [3, 3, 3], points: '15', comment: '', xc: 5, xcU: 'pct' }, { rubric: [3.5, 3, 3], points: '', comment: '', pk: 73, outAvg: true });
+  return { setups, grades };
+}
+const runTable = `(api, table) => {
+  const s = api.state(), base = JSON.parse(JSON.stringify(s.setup)), out = [];
+  for (const su of table.setups) {
+    const want = su ? { ...su, scale: typeof su.scale === 'string' ? api[su.scale] : su.scale } : api.DEFAULT_SETUP;
+    const full = api.setupOver(JSON.parse(JSON.stringify(want)));
+    for (const k of Object.keys(s.setup)) delete s.setup[k]; Object.assign(s.setup, full);
+    for (const g of table.grades) out.push(JSON.stringify(api.gradeOf({ key: 'x', files: [], grade: JSON.parse(JSON.stringify(g)) })));
+  }
+  for (const k of Object.keys(s.setup)) delete s.setup[k]; Object.assign(s.setup, base);
+  return out;
+}`;
+
+test('the grade maths: one table of scores comes out the same in both apps', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [], table = gradeTable();
+  const old = await page(ctx, errors);
+  await old.goto(srv.url + 'blank'); await plant(old, gradingSeed());
+  await old.goto(srv.url); await appReady(old);
+  await openZip(old, zipOf(await standardFiles()));
+  await old.evaluate(() => window.__gs.saveNow()); await settle(old);
+  const id = await old.evaluate(() => window.__gs.state().batch.id);
+  const was = await old.evaluate((fn, table) => eval(fn)(window.__gs, table), runTable, table);
+  await old.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  const now = await p.evaluate((fn, table) => eval(fn)(window.__mark.maths, table), runTable, table);
+  assert.equal(now.length, table.setups.length * table.grades.length);
+  assert.ok(now.some(r => /"pct":\d/.test(r)) && now.some(r => /"done":true/.test(r)), 'the table has scored rows');
+  for (let i = 0; i < was.length; i++) assert.equal(now[i], was[i], 'row ' + i);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('scoring in the new app: rows by click and by key, the half, a status, the comment and undo, opened in the current app as the same score', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(await standardFiles()));
+  await made.evaluate(() => window.__gs.saveNow()); await settle(made);
+  const id = await made.evaluate(() => window.__gs.state().batch.id);
+  await made.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForSelector('.mk-crit .sticks button:not([disabled])');
+  const grade = () => p.evaluate(() => { const s = window.__mark.state(); return JSON.parse(JSON.stringify(s.batch.students[s.cur].grade)); });
+  // a click on a step, then the number keys for the next rows and a full stop for the half
+  await p.click('.mk-crit[data-row="0"] .sticks button[data-v="3"]');
+  await p.click('.mk-crit[data-row="1"] .nm');   // as in the current app, a click keeps that row in hand; picking the next row moves on
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.press('4'); await p.keyboard.press('2'); await p.keyboard.press('.');
+  assert.deepEqual((await grade()).rubric, [3, 4, 2.5]);
+  // Ctrl+Z takes back the half, Ctrl+Y puts it back
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  assert.deepEqual((await grade()).rubric, [3, 4, 2]);
+  await p.keyboard.down('Control'); await p.keyboard.press('y'); await p.keyboard.up('Control');
+  assert.deepEqual((await grade()).rubric, [3, 4, 2.5]);
+  await p.click('.mk-stat [data-status="late"]');
+  await p.click('.mk-cmt'); await p.keyboard.type('Strong ideas.');
+  const g = await grade();
+  assert.equal(g.status, 'late'); assert.equal(g.comment, 'Strong ideas.');
+  assert.equal(await p.$eval('.mk-side .total b', e => e.textContent), await p.evaluate(() => { const s = window.__mark.state(); return window.__mark.maths.fmtNum(window.__mark.gradeOf(s.batch.students[s.cur]).total); }));
+  await p.evaluate(() => window.__mark.saved());
+  const nowShape = await p.evaluate(shape => eval(shape)(window.__mark.state().batch), shape);
+  await p.close();
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  await old.evaluate(id => window.__gs.reopenKept(id), id);
+  await old.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id && s.pages.length; }, { timeout: 60000 }, id);
+  assert.deepEqual(await old.evaluate(shape => eval(shape)(window.__gs.state().batch), shape), nowShape, 'main has the same scores, status and comment');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

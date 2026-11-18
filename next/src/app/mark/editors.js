@@ -8,6 +8,7 @@ import { saveSetting } from '../../students/write.js';
 import { prefs } from '../../students/prefs.js';
 import { t } from '../../i18n/t.js';
 import './lines.js';
+import { toast } from '../../ui/index.js';
 
 const el = (tag, cls, attrs = {}) => { const e = document.createElement(tag); if (cls) e.className = cls; for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
 const button = (cls, attrs, text) => { const b = el('button', cls, { type: 'button', ...attrs }); if (text != null) b.textContent = text; return b; };
@@ -148,7 +149,7 @@ export function openNote(pg, m, isNew) {
     const b = e.target.closest('[data-a]'); if (!b) return;
     if (b.dataset.a === 'star') {
       const txt = ta.value.trim(); if (!txt) return;
-      if (!bank().includes(txt)) { keepBank([txt, ...bank()]); drawChips(); state().toast(t('mark.bank_saved')); }
+      if (!bank().includes(txt)) { keepBank([txt, ...bank()]); drawChips(); toast(t('mark.bank_saved')); }
     }
     if (b.dataset.a === 'ok') close(true);
     if (b.dataset.a === 'del') { ta.value = ''; close(true); }
