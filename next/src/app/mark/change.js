@@ -417,3 +417,6 @@ export async function impAuto(f) {
   return true;
 }
 export const gsFlat = (f, doc) => F.gsFlatCheck(f, doc);
+// For the other file tools (mark/light.jsx): the download changed (saved soon), and the paper opened again.
+export const changed = () => tell();
+export const reopen = (i = -1) => show(i);

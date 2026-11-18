@@ -315,3 +315,53 @@ test('marks from another app made editable in the new app are the marks the curr
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('lighting set in the new app, for the download, one student and one page, is what the current app opens', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zip);
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  const i = await p.evaluate(k => window.__mark.state().batch.students.findIndex(s => s.key === k), KEY);
+  await p.click('[data-st="' + i + '"]');
+  await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready && window.__mark.read, { timeout: 60000 }, i);
+  const ESSAY = KEY + '/Essay.pdf', PG = KEY + '|' + ESSAY + '|0';
+  const L = pg => pg.evaluate(() => { const b = (window.__mark || window.__gs).state().batch; return JSON.parse(JSON.stringify({ light: b.light || null, lightOpt: b.lightOpt || null, lightPg: b.lightPg || null, lightPgL: b.lightPgL || null })); });
+  const slide = (sel, v) => p.evaluate((sel, v) => { const r = document.querySelector(sel); r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); }, sel, v);
+  await p.waitForFunction(() => { const b = document.querySelector('[data-light]'); if (b) b.click(); return !!b; }, { timeout: 30000 });
+  await p.waitForSelector('.mk-light');
+  // contrast for everyone, then darker writing for this student only
+  await slide('.mk-light [data-l="c"]', 40);
+  await p.waitForFunction(() => (window.__mark.state().batch.light || {})['*'] && window.__mark.state().batch.light['*'].c === 40);
+  await p.evaluate(() => { const b = [...document.querySelectorAll('.mk-light button')].find(x => /^Only /.test(x.textContent.trim())); b.click(); });
+  await p.waitForFunction(k => !!(window.__mark.state().batch.light || {})[k], {}, KEY);
+  await slide('.mk-light [data-l="d"]', 25);
+  await p.waitForFunction(k => window.__mark.state().batch.light[k].d === 25, {}, KEY);
+  assert.equal((await L(p)).light['*'].d || 0, 0, 'the others keep theirs');
+  // the ☀ on the essay's page turns lighting off there; Undo turns it back on
+  await p.waitForFunction(f => { const c = window.__mark.ready && document.querySelector('canvas[data-page="' + f + '|0"]'), b = c && c.parentNode.querySelector('[data-lpg]'); if (b) b.click(); return !!b; }, { timeout: 30000 }, ESSAY);
+  await p.waitForFunction(k => (window.__mark.state().batch.lightPg || {})[k] === false, {}, PG);
+  await p.click('[data-undo]');
+  await p.waitForFunction(k => (window.__mark.state().batch.lightPg || {})[k] === undefined, {}, PG);
+  // ▾: this page's own lighting
+  await p.waitForFunction(f => { const c = document.querySelector('canvas[data-page="' + f + '|0"]'), b = c && c.parentNode.querySelector('[data-lmenu]'); if (b) b.click(); return !!b; }, { timeout: 30000 }, ESSAY);
+  await p.waitForSelector('.mk-lmenu');
+  await slide('.mk-lmenu [data-l="b"]', 12);
+  await p.waitForFunction(k => ((window.__mark.state().batch.lightPgL || {})[k] || {}).b === 12, {}, PG);
+  assert.match(await p.$eval('[data-lpg]', e => e.closest('.mk-lchip').className), /own/);
+  await p.keyboard.press('Escape');
+  const now = await L(p);
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m2 = await page(ctx, errors);
+  await m2.goto(srv.url); await appReady(m2);
+  await m2.evaluate(id => window.__gs.reopenKept(id), id);
+  await m2.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  assert.deepEqual(await L(m2), now, 'the current app opens the same lighting');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

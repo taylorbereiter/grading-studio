@@ -12,6 +12,7 @@ import { Checkbox, Segmented } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import * as C from './change.js';
 import { Arrange } from './arrange.jsx';
+export { LightPanel, LightChip } from './light.jsx';
 import { viewable, fileSeq } from '../../engines/gdraw.js';
 import './lines.js';
 

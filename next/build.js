@@ -171,6 +171,8 @@ const GRADING = [
     'stickersReady', 'STICKERS', 'lightLut', 'lightCanvas', 'draw', 'marksMine', 'loadLines', 'anonOn', 'shownName', 'viewBytes', 'impHas', 'fileSeq', 'layoutOf', 'docIn', 'docAuto', 'fileByPath', 'viewable', 'vpRot', 'vpDraw', 'skewXf', 'rotOf', 'skewOf',
     // Arrange pages (src/app/arrange.js, files.js, lighting.js): the paper as turned in, how files line up, which pages lighting touches
     'defaultLayout', 'seqSig', 'pageLit', 'setPageLit', 'lightLive',
+    // Lighting (src/app/lighting.js): the download's and each page's own, and Auto fix
+    'lightAuto', 'lightFor', 'lightOpts', 'lightKey', 'pageOwnL', 'setPageOwnL', 'LIGHT0', 'lightOn',
   ], "import STICKER_SRC from './stickers.js';\n", ['STICKER_SRC']],
   ['gopen', [
     // opening a kept download as the current app does (src/app/open.js intake, with fromKeep): its files, students and saved work
