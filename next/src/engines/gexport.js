@@ -1,8 +1,8 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
-import { batch, cur, setup, lib, selected, pages, undoStack, redoStack, disp, once, LANG_LOCALE, tr, gradesOrder, saveSoon, pdfjsLib, PDFLib, fflate, mammoth, html2canvas, workerReady, toast, renderList, renderTools, renderGrade, openStudent, gradeMarksChanged, openImported, rescanFile, refound, store, ROW_TOP, rowTop, rowScaleOf, maxPoints, roundPct, percentWith, gradeOf, tryGrade, ownGrade, fmtNum, fmtPct, COLORS, HL, noScore, wordPart, quizCount, quizPart, ibSetup, set } from './gcore.js';
+import { batch, cur, setup, lib, selected, pages, undoStack, redoStack, disp, once, LANG_LOCALE, tr, gradesOrder, saveSoon, pdfjsLib, PDFLib, fflate, mammoth, html2canvas, workerReady, toast, renderList, renderTools, renderGrade, openStudent, gradeMarksChanged, openImported, rescanFile, refound, groupJust, store, ROW_TOP, rowTop, rowScaleOf, maxPoints, roundPct, percentWith, gradeOf, tryGrade, ownGrade, fmtNum, fmtPct, COLORS, HL, noScore, wordPart, quizCount, quizPart, ibSetup, set } from './gcore.js';
 import { FONT, measureCtx, sideFor, wrapText, rgb, textLayout, drawMarks, rotOf, vpRot, skewOf, skewXf, vpDraw, viewable, fileByPath, layoutOf, docMarked, docIn, docAuto, draw, docAdded, scrub, scrubMarks, nameFold, rosterMatch, batchClass, anonOn, shownName, lightOpts, lightForPage, lightCanvas, WORD_RX, isLatin, rawWords, namesNow, ownNames, coverRx, stampScore, stampBox, drawStamp, viewBytes, one, marksMine, tnMine, tnOut } from './gdraw.js';
-import { natural, GS_TAIL, syncScoreStamps, boxKey, findItem, hasSheet, stampSoon, tryOfFile, canvasJpg, groupFileOf, groupOwn, groupJust } from './gopen.js';
+import { natural, GS_TAIL, syncScoreStamps, boxKey, findItem, hasSheet, stampSoon, tryOfFile, canvasJpg, groupFileOf, groupOwn } from './gopen.js';
 
 // src/app/start.js
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

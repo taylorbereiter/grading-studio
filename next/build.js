@@ -147,6 +147,8 @@ const GRADING_STATE = {
   gradeMarksChanged: '() => {}', gradeShown: '() => {}', openImported: '() => {}', rescanFile: '() => {}', editText: '() => {}', openNote: '() => {}',
   openStampMenu: '() => {}', placeScore: '() => {}', stopScorePlace: '() => {}', scanNote: '() => {}', refound: '() => {}', endOnce: '() => {}', setTool: '() => {}',
   lightPagesChanged: '() => {}',
+  // group work: the partner new marks and notes are just for (src/groups.js groupJust), one for every module that reads it
+  groupJust: 'null',
   scorePlacing: 'null', activeEditor: 'null',
   writeWork: '() => {}', tabLive: '() => true', tabForgot: '() => false', tabLetGo: '() => {}', tabsBehind: '() => false', saveBehind: '() => {}', stampWork: '() => {}',
 };
@@ -250,6 +252,12 @@ export const tnQuietSet = v => { tnQuiet = v; };
 export const tnIsQuiet = () => tnQuiet;
 export const tnRngSet = r => { tnRng = r; };
 `, ['tnHost', 'tnEd', 'tnNow'], ['gcore', 'gdraw', 'gmark', 'gmedia']],
+  ['ggroup', [
+    // group work (src/groups.js): partners put together on one paper, left again, the way a group is graded (one grade, a group score
+    // adjusted for one partner, or own scores with shared notes), each change put back whole by its snapshot; and a scan's shared pages
+    'groupAdd', 'groupSync', 'groupLeave', 'groupSetOwn', 'groupSnapOf', 'groupMates', 'groupNames', 'groupFromSplit', 'splitMates', 'shareCopies', 'groupPaper',
+    'adjReset', 'adjName', 'adjSay',
+  ], '', [], ['gcore', 'gdraw', 'gmark']],
   ['gword', [
     // a Word paper on the marking screen (src/app/word.js, src/wordnotes.js): drawn from its own XML, typed in, cells shaded, boxes
     // ticked, comments named Teacher added and taken off, and the file written back; the screen around it is the new app's

@@ -10,6 +10,8 @@ import * as E from '../../engines/gopen.js';
 import * as F from '../../engines/gfiles.js';
 import * as K from '../../engines/gmark.js';
 import * as V from '../../engines/gmedia.js';
+import * as G from '../../engines/ggroup.js';
+import { set as setState } from '../../engines/gcore.js';
 import { PARTS } from '../router.js';
 import { libs } from './paper.js';
 import { prefs } from '../../students/prefs.js';
@@ -528,4 +530,47 @@ export async function videoAdd(st, o) {
   }
   const made = list.length ? await addFiles(st, list) : [];
   return { had, made };
+}
+
+// Group work (src/groups.js): partners put together on one paper, a partner graded on their own, the way the group is graded, and a
+// scan's shared pages made one group. Each is one undo step that puts back the groups, the partners' grades and the shared marks
+// whole (the current app asks first before some of these; here they happen at once, with Undo).
+function groupKeep(sts) {
+  const bb = b(), groups = J(bb.groups || null), grades = sts.map(s => [s, J(s.grade)]), files = sts.flatMap(s => s.files);
+  const uniq = [...new Set(files.map(f => f.marks).filter(Boolean))], marks = uniq.map(J), fm = files.map(f => [f, f.marks ? uniq.indexOf(f.marks) : -1]);
+  return () => {
+    if (groups) bb.groups = J(groups); else delete bb.groups;
+    for (const [st, g] of grades) st.grade = J(g);
+    const fresh = marks.map(J); for (const [f, i] of fm) { if (i >= 0) f.marks = fresh[i]; else delete f.marks; }
+  };
+}
+const groupWho = (...sts) => [...new Set(sts.flatMap(st => [st, ...G.groupMates(st), ...G.splitMates(st).map(o => o.s)]).filter(Boolean))];
+function groupDo(sts, fn, what) {
+  const back = groupKeep(sts); fn(); const after = groupKeep(sts);
+  const done = () => { K.thumbCache.clear(); tell(); show(-1); };
+  step(() => { back(); done(); }, () => { after(); done(); }, what);
+  done();
+}
+// mode: 0 one grade for everyone, 2 a group score adjusted for one partner, 1 own scores with the notes shared
+export function groupMode(st, mode) { groupDo(groupWho(st), () => G.groupSetOwn(st, mode), 'group'); }
+export function groupOut(st) { groupDo(groupWho(st), () => G.groupLeave(st, true), 'group'); }
+export function groupJoinSplit(st) { groupDo(groupWho(st), () => G.groupFromSplit(st), 'group'); }
+// Both, or Just them: what is done now goes to every partner, or only to this one (their comment is always their own)
+export function groupJustSet(key) { setState.groupJust(key); tell(); }
+export const groupJustNow = () => state().groupJust;
+// Group work… on a file: the partner gets their own copy of it (and of the group's video), and, marked once, joins the group.
+const copyOf = (st, f, to) => to.files.find(x => x.from === st.key && x.name === f.name);
+export async function groupGive(st, f, to, once, own) {
+  if (!copyOf(st, f, to)) await addFiles(to, [{ path: f.name, file: new File([f.data], f.name), from: st.key }]);
+  if (once) for (const lf of st.files.filter(x => x.kind === 'link')) if (!to.files.some(x => x.kind === 'link' && V.linkKey(x) === V.linkKey(lf))) await addFiles(to, [{ path: lf.name, file: new File([lf.data], lf.name), from: st.key }]);
+  if (once) groupDo(groupWho(st, to), () => { G.groupAdd(st, f, to, copyOf(st, f, to)); if (own) G.groupSetOwn(st, true); }, 'group');
+  else tell();
+}
+// The switch Mark and grade once for the group: on, everyone with a copy joins; off, everyone is graded on their own again.
+export function groupOnce(st, f, on, own) {
+  const has = G.shareCopies(st, f);
+  groupDo(groupWho(st, ...has), () => {
+    if (on) { for (const s of has) G.groupAdd(st, f, s, copyOf(st, f, s)); if (own && G.groupMates(st).length) G.groupSetOwn(st, true); }
+    else for (const s of G.groupMates(st)) G.groupLeave(s, true);
+  }, 'group');
 }

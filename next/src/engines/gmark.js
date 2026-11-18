@@ -1,6 +1,6 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
-import { batch, cur, setup, lib, tool, selected, pages, undoStack, redoStack, disp, inkColor, hlColor, penW, CHECK_INK, once, tr, saveSoon, toast, renderList, renderTools, renderGrade, openStudent, renderPage, gradeMarksChanged, rescanFile, editText, openNote, openStampMenu, placeScore, stopScorePlace, scanNote, refound, endOnce, setTool, scorePlacing, activeEditor, writeWork, tabLive, tabForgot, tabLetGo, tabsBehind, saveBehind, stampWork, store, rowTop, maxPoints, gradeOf, xcSay, fmtNum, COLORS, HL, noScore, ibSetup, set } from './gcore.js';
+import { batch, cur, setup, lib, tool, selected, pages, undoStack, redoStack, disp, inkColor, hlColor, penW, CHECK_INK, once, tr, saveSoon, toast, renderList, renderTools, renderGrade, openStudent, renderPage, gradeMarksChanged, rescanFile, editText, openNote, openStampMenu, placeScore, stopScorePlace, scanNote, refound, endOnce, setTool, groupJust, scorePlacing, activeEditor, writeWork, tabLive, tabForgot, tabLetGo, tabsBehind, saveBehind, stampWork, store, rowTop, maxPoints, gradeOf, xcSay, fmtNum, COLORS, HL, noScore, ibSetup, set } from './gcore.js';
 import { sideScreen, textLayout, noteRunY, bboxOf, rotOf, vpRot, skewOf, draw, anonOn, anonOrder, hasPress, PRESS_MAX, textGrips, canResize, cornerPt, STICKERS, isSticker, isScoreStamp, stickerAspect, stampBox, impHas, one, stampHidden, marksMine } from './gdraw.js';
 
 // src/app/keep.js
@@ -947,8 +947,6 @@ function groupOf(st) { return (st && batch && (batch.groups || []).find(g => g.k
 function groupFileOf(g, st) { const p = g.p && g.p[st.key]; return p ? st.files.find(f => f.path === p) || null : null; }
 // src/groups.js
 const groupOwn = g => !!(g && g.own);
-// src/groups.js
-let groupJust = null;
 // src/groups.js
 const groupJustOn = st => !!(st && groupJust === st.key && groupOwn(groupOf(st)) && groupFileOf(groupOf(st), st));
 // src/groups.js

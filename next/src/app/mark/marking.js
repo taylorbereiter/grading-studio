@@ -155,8 +155,11 @@ function startOnce(k) {
 }
 export function endOnce() { const o = state().once; if (!o) return; use({ once: null }); chooseTool(o.prev); }
 
-// Saving: the same half-second wait as the current app, then the record saveNow builds goes to saveWork in place of the saved one.
-function saveSoon() { clearTimeout(saveT); saveT = setTimeout(() => K.saveNow(), 500); saveState = 'saving'; tell(); }
+// Saving: partners kept in step first (src/app/keep.js saveSoon), the same half-second wait as the current app, then the record saveNow builds goes to saveWork in place of the saved one.
+// groupSync comes with the group engine (mark/group.jsx), loaded with the file tools; until then there are no group changes to share
+let groupSync = () => {};
+export const useGroupSync = f => { groupSync = f; };
+function saveSoon() { groupSync(); clearTimeout(saveT); saveT = setTimeout(() => K.saveNow(), 500); saveState = 'saving'; tell(); }
 async function writeWork(b, data) {
   const seq = ++saveSeq;
   try {

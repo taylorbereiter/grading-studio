@@ -1,6 +1,6 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
-import { batch, cur, setup, pages, tr, saveSoon, fflate, toast, renderList, gradeMarksChanged, store, SCALE12, rowTop, rowsMax, rowScaleOf, maxPoints, percentWith, gradeOf, xcSay, ownGrade, fmtNum, noScore, ibSetup } from './gcore.js';
+import { batch, cur, setup, pages, tr, saveSoon, fflate, toast, renderList, gradeMarksChanged, groupJust, store, SCALE12, rowTop, rowsMax, rowScaleOf, maxPoints, percentWith, gradeOf, xcSay, ownGrade, fmtNum, noScore, ibSetup } from './gcore.js';
 import { rgb, draw, one, stampHidden } from './gdraw.js';
 
 // src/app/start.js
@@ -560,8 +560,6 @@ function groupOf(st) { return (st && batch && (batch.groups || []).find(g => g.k
 function groupFileOf(g, st) { const p = g.p && g.p[st.key]; return p ? st.files.find(f => f.path === p) || null : null; }
 // src/groups.js
 const groupOwn = g => !!(g && g.own);
-// src/groups.js
-let groupJust = null;
 // src/groups.js
 const groupJustOn = st => !!(st && groupJust === st.key && groupOwn(groupOf(st)) && groupFileOf(groupOf(st), st));
 // src/groups.js

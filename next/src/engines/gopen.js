@@ -1,6 +1,6 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
-import { batch, cur, setup, lib, pages, tr, keptMeta, saveSoon, pdfjsLib, PDFLib, fflate, workerReady, heicLoad, toast, store, kdo, kget, idbDo, pickedUpNew, groupNoteRefresh, SCALE12, rowTop, rowsMax, rowScaleOf, setupOver, maxPoints, gradeOf, xcSay, fmtNum, noScore, ibSetup } from './gcore.js';
+import { batch, cur, setup, lib, pages, tr, keptMeta, saveSoon, pdfjsLib, PDFLib, fflate, workerReady, heicLoad, toast, groupJust, store, kdo, kget, idbDo, pickedUpNew, groupNoteRefresh, SCALE12, rowTop, rowsMax, rowScaleOf, setupOver, maxPoints, gradeOf, xcSay, fmtNum, noScore, ibSetup } from './gcore.js';
 import { rotOf, skewOf, viewable, fileByPath, draw, nameFold, rosterMatch, batchClass, WORD_RX, lostPages, one, stampHidden, tnHasG } from './gdraw.js';
 
 // src/app/start.js
@@ -766,8 +766,6 @@ const notesSig = gr => JSON.stringify(GROUP_NOTES.map(k => gr[k] ?? null));
 // src/groups.js
 function groupNotesCopy(to, from) { for (const k of GROUP_NOTES) { if (from.grade[k] != null) to.grade[k] = JSON.parse(JSON.stringify(from.grade[k])); else delete to.grade[k]; } }
 // src/groups.js
-let groupJust = null;
-// src/groups.js
 const gradeSig = g => JSON.stringify(Object.fromEntries(Object.entries(g).filter(([k]) => !GROUP_SKIP.has(k)).sort()));
 // src/groups.js
 function groupMergeMarks(into, from) {
@@ -833,4 +831,4 @@ function ibStampText(st) { return ibTaskLevels(st).filter(x => x[1] != null).map
 // src/phone.js
 const ph = { cols: null, ver: -1, busy: null, lib: null, later: false };
 export { paperGet, srcRead, spellLikeSaved, groupRaw, houseFile, makeFile, batchIdOf, revsBase, restore, rosterSort, loadAdded, loadEdits, applyRubricPage, loadRefs, photoTurns, natural, newestWork, cardOfKept, findItem, holders, rubricsDiffer, workScored, rubricFitting, junk, unzipInto, qmkFor, revsOf, partHashes, batchClass, compareFiles, compareNames, matchLevel, mapBoxes, mapLit, mapPaths, rubricNamed, sameBytes, nfc, carryRoster, lostPages, studentOf, hasGsTail, underId, REF_KEY, isNotes };
-export { GS_TAIL, syncScoreStamps, boxKey, hasSheet, stampSoon, tryOfFile, canvasJpg, groupFileOf, groupOwn, groupJust, hash, realType, moveFileNow, setRot, setSkew, goneNow, gradeHasWork, pv };
+export { GS_TAIL, syncScoreStamps, boxKey, hasSheet, stampSoon, tryOfFile, canvasJpg, groupFileOf, groupOwn, hash, realType, moveFileNow, setRot, setSkew, goneNow, gradeHasWork, pv };
