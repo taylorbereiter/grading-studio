@@ -42,7 +42,7 @@ function StudentList({ batch, cur, onPick, onReport }) {
     <div ref={box} class="mk-find"><TextInput icon="search" label={t('mark.find')} value={q} onInput={setQ} /></div>
     <ol class="mk-rows">{rows.map(({ st, i, name }) => { const sc = rowScore(st);
       return <li><button type="button" class={'mk-row' + (i === cur ? ' on' : '')} aria-current={i === cur ? 'true' : undefined} onClick={() => onPick(i)} data-st={i}>
-        <Avatar name={name} size="sm" /><span class="nm" data-raw>{name}</span>
+        <Avatar name={name} size="sm" /><span class="nm" data-raw>{name}</span>{batch.carry && st.files.some(f => batch.carry.flags[f.path]) && <span class="bang" title={t('mark.c_pill')} aria-label={t('mark.c_pill')}>!</span>}
         {sc && <span class={'sc ' + (sc.tone || '')}>{sc.done && <Icon name="check" size="xs" />}{sc.text}</span>}
       </button></li>; })}</ol>
   </aside>;
@@ -105,9 +105,9 @@ function Paper({ batch, cur, zoom, ver, FU }) {
   return <div class="mk-paper" ref={area} tabindex="-1">
     {!st ? null : !st.files.length ? <><EmptyState icon="inbox" title={t('mark.nothing_in')} />{FU && <FU.FilesFoot key={st.key + ver} st={st} name={shownName(st, cur)} />}</>
       : !got ? <div class="loading" aria-busy="true" />
-      : <>{got.cards.map(c => c.kind === 'file' ? <div class="fwrap">{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
+      : <>{got.cards.map(c => c.kind === 'file' ? <div class="fwrap">{FU && <FU.CarryTag st={st} f={c.f} />}{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
         : <section class="doc">
-          <header class="fhead"><span data-raw>{c.d.name}</span>{FU && <FU.AddTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}{!c.on && <span class="pill">{t(c.auto ? 'mark.left_out_auto' : 'mark.left_out')}</span>}<span class="grow" />{FU && !c.on && <FU.BackIn st={st} d={c.d} />}{FU && <FU.FileMenu st={st} path={c.d.file || c.d.pages[0][0]} name={c.d.name} d={c.d} on={c.on} auto={c.auto} />}</header>
+          <header class="fhead"><span data-raw>{c.d.name}</span>{FU && <FU.AddTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}{!c.on && <span class="pill">{t(c.auto ? 'mark.left_out_auto' : 'mark.left_out')}</span>}{FU && <FU.CarryTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}<span class="grow" />{FU && !c.on && <FU.BackIn st={st} d={c.d} />}{FU && <FU.FileMenu st={st} path={c.d.file || c.d.pages[0][0]} name={c.d.name} d={c.d} on={c.on} auto={c.auto} />}</header>
           {c.pages.map(pg => <Page key={pg.file.path + '|' + pg.idx} pg={pg} room={size[0]} tall={size[1]} zoom={zoom} FU={FU} />)}
         </section>)}{FU && <FU.FilesFoot key={st.key + ver} st={st} name={shownName(st, cur)} />}</>}
   </div>;
@@ -181,7 +181,8 @@ export default function MarkScreen({ route, classes }) {
     return () => { live = false; }; }, [w, tab]);
   const openOn = i => { pick(i); go('mark', id, ''); };
   // A student's files changed (mark/change.js through mark/fileui.jsx, loaded with the tools): the paper opens again.
-  const [FU, setFU] = useState(null), [ver, setVer] = useState(0);
+  const [FU, setFU] = useState(null), [ver, setVer] = useState(0), [carried, setCarried] = useState(false);
+  useEffect(() => setCarried(!!(w && w.carried)), [w]);
   useEffect(() => { if (!w || !MK) return; let live = true;
     PARTS.fileui().then(m => { if (!live) return; m.wire(MK.M, i => { if (i >= 0) pickRef.current(i); setVer(v => v + 1); }); setFU(m); m.pdfAuto(); }, e => console.error(e));
     return () => { live = false; }; }, [w, !!MK]);
@@ -231,6 +232,7 @@ export default function MarkScreen({ route, classes }) {
         <ScorePanel batch={w.batch} cur={cur} onNext={() => pick(cur + 1)} onPrev={() => pick(cur - 1)} />
       </div>
       {rep && <rep.OpenedBar key={w.batch.id} onList={() => setRepList(true)} />}
+      {FU && carried && <FU.CarryBox onClose={() => setCarried(false)} />}
       {rep && repList && <rep.OpenedList onClose={() => setRepList(false)} onGo={pick} />}</>}
   </div>;
 }

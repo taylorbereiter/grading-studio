@@ -7,7 +7,8 @@ import { use, setupOver, state, kget } from '../../engines/gcore.js';
 import { useStore } from '../../engines/gstore.js';
 import { prefs } from '../../students/prefs.js';
 import { library, gradingSetup, meta } from '../../students/index.js';
-import { keepPapers, saveLibrary } from '../../students/write.js';
+import { keepPapers, saveLibrary, saveWork } from '../../students/write.js';
+import * as K from './carry.js';
 import { PARTS } from '../router.js';
 
 export class NotKept extends Error { constructor(id) { super('The papers for this one aren’t kept in this browser.'); this.name = 'NotKept'; this.id = id; } }
@@ -66,13 +67,18 @@ export async function openKept(id, { question } = {}) {
   let { raw, label } = await rawOf(rec.entries, rec.label);
   if (!raw.length) throw new NotKept(id);
   const { students } = await studentsOf(raw);
-  return assemble({ raw, label, students, lib, assignment: E.cardOfKept(id), question });
+  const r = await assemble({ raw, label, students, lib, assignment: E.cardOfKept(id), question });
+  // work just carried over from an older copy says so once, as the download opens (carrySay)
+  if (r && carriedNow === id) { r.carried = true; carriedNow = null; }
+  return r;
 }
+let carriedNow = null;
 
 export class NothingIn extends Error { constructor() { super('Nothing found in what you dropped'); this.name = 'NothingIn'; } }
 // Papers brought in (src/app/open.js intake, not from the kept list): the same steps, then the papers are kept in this browser and,
 // for an assignment card, the card is linked to them (assignment.batchId), each through students/write.js. entries: [{ path, file|data }].
-export async function bringIn(entries, { label, assignment, question } = {}) {
+// A newer copy of a download already worked on brings that work over (mark/carry.js); carry(e) asks when it isn't plainly the same one.
+export async function bringIn(entries, { label, assignment, question, carry } = {}) {
   const lib = await begin();
   if (entries.length === 1 && /\.gswork$/i.test(entries[0].path)) throw new NothingIn();
   const got = await rawOf(entries, label);
@@ -81,11 +87,19 @@ export async function bringIn(entries, { label, assignment, question } = {}) {
   if (!students.length) throw new NothingIn();
   const id = E.batchIdOf(got.raw);
   if (assignment) assignment = (E.findItem(assignment.id) || {}).it || assignment;
+  const paperList = keepList.filter(e => !E.houseFile(e.path));
+  const sameSize = await K.changedInPlace(id, paperList).catch(e => { console.error(e); return []; });   // same names and sizes, different bytes
+  const earlier = paperList.every(e => E.isNotes(e.data)) ? null : await K.findEarlier(id, paperList, assignment, carry).catch(e => { console.error(e); return null; });
+  if (earlier && earlier.asg) assignment = earlier.asg;
   if (!assignment) assignment = E.cardOfKept(id);
-  const r = await assemble({ raw: got.raw, label: got.label, students, lib, assignment, question, fresh: true });
+  const r = await assemble({ raw: got.raw, label: got.label, students, lib, assignment, question, earlier, paperList });
   if (!r) return null;
   const b = r.batch;
   await keepPapers(b, got.label, keepList);
+  // the carried work is this download's first saved work, so it is there when the papers open for marking
+  if (earlier) { const kw = b.keptWork; await saveWork(id, d => { for (const k of Object.keys(kw)) if (k !== 't' && kw[k] !== undefined) d[k] = kw[k]; }, { fresh: true }); carriedNow = id; }
+  else if (b.fresh && b.keptWork && b.keptWork.scan) await saveWork(id, d => { d.s = {}; d.scan = b.keptWork.scan; }, { fresh: true });
+  if (sameSize.length) { K.flagInPlace(sameSize); const c = b.carry; await saveWork(id, d => { d.carry = c; }, { fresh: true }); r.changed = sameSize.length; }
   if (assignment) {
     const aid = assignment.id, su = { ...state().setup, spot: undefined };
     await saveLibrary(l => { const f = findIn(l, aid); if (f) { f.batchId = id; f.opened = Date.now(); if (!f.setup || r.toCard) f.setup = su; } });
@@ -94,7 +108,7 @@ export async function bringIn(entries, { label, assignment, question } = {}) {
 }
 export const findIn = (l, id) => { for (const c of [...(l.classes || []), l.loose].filter(Boolean)) for (const u of c.units || []) for (const it of u.items || []) if (it.id === id) return it; return null; };
 
-async function assemble({ raw, label, students, lib, assignment, question }) {
+async function assemble({ raw, label, students, lib, assignment, question, earlier, paperList }) {
   const bid = E.batchIdOf(raw);
   const keptWork = await kget('work', bid);
   const work0 = E.newestWork(prefs.get(bid, null), keptWork);
@@ -108,8 +122,11 @@ async function assemble({ raw, label, students, lib, assignment, question }) {
   batch.keptWork = keptWork;
   // no work saved for it yet (papers just brought in): its first save makes the record (students/write.js saveWork fresh)
   if (!keptWork && !prefs.get(bid, null)) batch.fresh = true;
+  if (earlier) await K.carryInto(earlier, paperList);   // or the work from the older copy of this download
+  else if (paperList && !keptWork && !prefs.get(bid, null)) { const scan = await K.carryScan(bid, paperList).catch(e => { console.error(e); return null; }); if (scan) batch.keptWork = { t: Date.now(), s: {}, scan }; }
   const saved = E.newestWork(prefs.get(bid, null), batch.keptWork);
   await E.applyRubricPage();
+  if (earlier) await K.carryRubric(earlier);
   await E.loadAdded();
   if (setup.rubricPage) await E.applyRubricPage(batch.students.filter(st => !st.files.some(f => f.virtual)));
   await E.loadRefs();
@@ -120,6 +137,7 @@ async function assemble({ raw, label, students, lib, assignment, question }) {
   await E.photoTurns();
   if (saved && saved.cls != null) batch.classId = saved.cls;
   E.rosterSort();
+  if (earlier) K.carryRoster(earlier);
   if (batch.classId && (!saved || saved.cls == null)) Object.assign(batch.revs.ph, E.partHashes({ cls: batch.classId }));
   if (batch.restoredKey) { const k = batch.students.findIndex(st => st.key === batch.restoredKey); if (k >= 0) batch.restoredCur = k; }
   if (assignment && assignment.goal && !batch.goal && !assignment.batchId) batch.goal = assignment.goal;

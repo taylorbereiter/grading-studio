@@ -2,7 +2,7 @@
 /* eslint-disable */
 import { batch, pages, tr, pdfjsLib, fflate, workerReady, noScore } from './gcore.js';
 import { viewable, nameWords, rosterMatch, batchClass, anonOn, shownName, SORT_STOP, one } from './gdraw.js';
-import { hash, realType } from './gopen.js';
+import { hash, sameBytes, realType, isNotes } from './gopen.js';
 
 // src/app/media.js
 const VIDEO_RX = /\.(mp4|mov|m4v|webm|mkv|3gp)$/i;
@@ -35,8 +35,6 @@ function guessAmong(path, people) {
   if (best.length !== 1 || !bestScore) return { i: -1, sure: false };
   return { i: best[0], sure: bestScore >= 2 };
 }
-// src/carryover.js
-const sameBytes = (a, b) => { if (!a || !b || a.length !== b.length) return false; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false; return true; };
 // src/intake.js
 function textOf(f) {
   const d = f.data;
@@ -231,9 +229,4 @@ function zipSay(z) {
 }
 // src/polish.js
 function isMac() { return /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent); }
-// src/video.js
-const NP_W = 595.28, NP_H = 841.89, NP_M = 48, NP_TAIL = '%GradingStudio-notes';
-// src/video.js
-const isNotes = d => !!d && d.length > 64 && new TextDecoder('latin1').decode(d.subarray(d.length - 64)).includes(NP_TAIL);
 export { openingFacts, checkStack, checkFile, repHead, zipSay, troubleOf, troubleText, hash, textOf };
-export { sameBytes };

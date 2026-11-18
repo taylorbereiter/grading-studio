@@ -10,7 +10,7 @@
 .mk-prog .progress{width:130px}
 .mk-body{flex:1;min-height:0;display:grid;grid-template-columns:280px minmax(0,1fr) 380px}
 .mk-list{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--s2,var(--bg))}
-.mk-lhead{display:flex;justify-content:space-between;padding:14px 18px 6px;font-size:var(--t2)}
+.mk-lhead{display:flex;justify-content:space-between;gap:10px;padding:14px 18px 6px;font-size:var(--t2)}
 .mk-find{padding:4px 12px 8px}
 .mk-rows{list-style:none;margin:0;padding:0 8px 12px;overflow:auto;flex:1}
 .mk-row{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border:0;border-radius:var(--r2);background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
@@ -264,3 +264,5 @@
 .mk-pdfwhich{display:grid;gap:6px;margin:0 0 12px}
 .pg .rchip{position:absolute;top:6px;right:6px;z-index:3;display:flex;gap:2px;padding:2px;border-radius:var(--rf);background:var(--surface);box-shadow:var(--sh-1);opacity:0;transition:opacity var(--d)}.pg:hover .rchip,.pg .rchip:focus-within{opacity:.95}@media (hover:none){.pg .rchip{opacity:.92}}
 .mk-pttext{width:100%;box-sizing:border-box;height:220px;margin:10px 0 0}
+.carrytag{font-size:var(--t1);font-weight:600;color:var(--warn);background:var(--warn-soft);border-radius:var(--rf);padding:2px 8px}.mk-carry ul{margin:0;padding-left:18px}.mk-carry li{overflow-wrap:anywhere}.mk-carry h3{font-size:var(--t2);margin:12px 0 2px}.mk-row .bang{color:var(--warn);font-weight:700;margin-left:4px}
+.classwork .wopen{display:inline-flex;gap:4px;align-items:center}

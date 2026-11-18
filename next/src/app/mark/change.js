@@ -261,3 +261,8 @@ export async function pasteAdd(st, title, text) {
   await addFiles(st, [{ path: name, file: new File([bytes], name, { type: 'application/pdf' }) }]);
   return { name, typed };
 }
+
+// Mark late (intake.js markLate): nothing is taken off; each is one step on the undo list.
+export function markLate(list) { for (const st of list) if (st.grade.status !== 'late') { K.gradeSnap(st); K.setStatus(st, 'late'); } tell(); }
+// A file flagged new or changed since the older copy of this download (carryover.js): Looks fine takes the flag off.
+export function carryOk(path) { const c = b().carry; if (!c || !c.flags[path]) return; const was = c.flags[path]; delete c.flags[path]; step(() => { c.flags[path] = was; tell(); show(-1); }, () => { delete c.flags[path]; tell(); show(-1); }, 'looks fine'); tell(); show(-1); }

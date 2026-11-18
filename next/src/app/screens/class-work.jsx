@@ -4,7 +4,7 @@
 // on it (mark/open.js bringIn), keeps them, links the card to them and opens them for marking.
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { Button, Icon, EmptyState, Menu, toast } from '../../ui/index.js';
+import { Button, IconButton, Icon, EmptyState, Menu, Dialog, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { href, go, PARTS } from '../router.js';
 import { readLibrary, readKept, stateOf, backOf, canOpen } from '../../students/counts.js';
@@ -25,7 +25,7 @@ const entriesOf = files => [...files].map(f => ({ path: f.webkitRelativePath || 
 
 export default function ClassWork({ classId }) {
   const [lib, setLib] = useState(null), [kept, setKept] = useState(null), [busy, setBusy] = useState(null);
-  const files = useRef(null), folder = useRef(null), want = useRef(null);
+  const files = useRef(null), folder = useRef(null), want = useRef(null), [ask, setAsk] = useState(null);
   const load = () => { setLib(readLibrary()); readKept().then(setKept); };
   useEffect(load, [classId]);
   if (!lib || !kept) return <div class="loading" aria-busy="true" />;
@@ -36,7 +36,10 @@ export default function ClassWork({ classId }) {
     setBusy(it.id);
     try {
       const O = await PARTS.bring();
-      const r = await O.bringIn(entriesOf(list), { assignment: it, label: it.name });
+      // a newer copy of a download she has worked on: asked whether her marks and scores come over, when it isn't plainly the same one
+      const carry = e => new Promise(done => setAsk({ e, done: v => { setAsk(null); done(v); } }));
+      const r = await O.bringIn(entriesOf(list), { assignment: it, label: it.name, carry });
+      if (r && r.changed) toast(t('mark.c_changed_toast', { n: r.changed }), { ms: 7000 });
       if (r) go('mark', r.batch.id);
     } catch (e) { console.error(e); toast(e && e.name === 'NothingIn' ? t('mark.w_nothing') : e && e.name === 'CannotSave' ? t('mark.cannot') : t('mark.w_failed')); }
     finally { setBusy(null); load(); }
@@ -45,6 +48,11 @@ export default function ClassWork({ classId }) {
   const units = c.units.filter(u => u.items.length);
   return <section class="classwork" aria-labelledby="h-work">
     <h2 id="h-work" class="sr">{t('mark.w_title')}</h2>
+    {ask && <Dialog open title={t('mark.c_ask_t')} onClose={() => ask.done(false)}
+      actions={<><Button onClick={() => ask.done(false)} data-fresh>{t('mark.c_fresh')}</Button><Button variant="primary" onClick={() => ask.done(true)} data-carry>{t('mark.c_bring')}</Button></>}>
+      <p data-raw>{t('mark.c_ask', { name: ask.e.name || t('mark.c_noname') })}</p>
+      <p>{ask.e.unchecked ? t('mark.c_ask_unchecked') : t('mark.c_ask_same', { named: ask.e.named, all: ask.e.nOld, n: ask.e.same })}</p>
+      <p>{t('mark.c_ask_q')}</p></Dialog>}
     <input ref={files} type="file" multiple hidden accept=".zip,.pdf,.docx,.docm,.doc,.png,.jpg,.jpeg,.heic,.heif,.gif,.webp,.mp4,.mov,.m4v,.webm,.mp3,.m4a,.wav,.txt,.md"
       onChange={e => bring(want.current, e.currentTarget.files)} data-bring="files" />
     <input ref={folder} type="file" multiple hidden webkitdirectory="" onChange={e => bring(want.current, e.currentTarget.files)} data-bring="folder" />
@@ -52,12 +60,15 @@ export default function ClassWork({ classId }) {
       : units.map(u => <div class="wunit"><h3 class="t5" data-raw>{u.name}</h3>
         <ul class="wlist">{u.items.map(it => { const st = standing(lib, kept, it), open = st.m && canOpen(st.m);
           return <li class="wrow" data-item={it.id}
-            onDragOver={e => { if (!open) { e.preventDefault(); e.currentTarget.classList.add('over'); } }} onDragLeave={e => e.currentTarget.classList.remove('over')}
-            onDrop={e => { e.currentTarget.classList.remove('over'); if (open) return; e.preventDefault(); bring(it, e.dataTransfer.files); }}>
+            onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add('over'); }} onDragLeave={e => e.currentTarget.classList.remove('over')}
+            onDrop={e => { e.currentTarget.classList.remove('over'); e.preventDefault(); bring(it, e.dataTransfer.files); }}>
             <div class="wn"><b data-raw>{it.name}</b>
               <small class="mute">{[KIND[it.type] && t(KIND[it.type]), it.due && t('mark.w_due', { d: date(new Date(it.due + 'T12:00'), { day: 'numeric', month: 'short' }) })].filter(Boolean).join(' · ')}</small></div>
             <span class={'wst ' + st.cls}>{t(st.key)}{st.s && st.s.left ? ' · ' + t('home.left_of', { left: st.s.left, of: st.s.of }) : ''}</span>
-            {open ? <a class="btn sm" href={href('mark', st.m.id)}>{t('mark.w_open')}</a>
+            {open ? <span class="wopen"><a class="btn sm" href={href('mark', st.m.id)}>{t('mark.w_open')}</a>
+              {/* a newer copy of the papers: her work comes over (mark/carry.js) */}
+              <Menu label={t('mark.w_again')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('mark.w_again')} disabled={busy === it.id} data-again-for={it.id} />}
+                items={[{ label: t('mark.w_again_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('mark.w_again_folder'), icon: 'folder', onSelect: () => pick(it, folder) }]} /></span>
               : <Menu label={t('mark.w_bring')} trigger={b => <Button {...b} size="sm" icon="upload" disabled={busy === it.id} data-bring-for={it.id}>{t('mark.w_bring')}</Button>}
                 items={[{ label: t('mark.w_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('mark.w_folder'), icon: 'folder', onSelect: () => pick(it, folder) }]} />}
           </li>; })}</ul></div>)}

@@ -2,8 +2,7 @@
 /* eslint-disable */
 import { batch, cur, pages, saveSoon, PDFLib, store, idbDo, ownGrade, fmtNum } from './gcore.js';
 import { madeFromWord, scrub, nameFold, anonOn, SORT_STOP, AT_START, ID_RX, latinRx, isLatin, anyRx, wordOk, bounded, alt, runAlts, latinParts, initialAlts, altsRx, namesNow, ownNames, AT_END, FILE_SEP } from './gdraw.js';
-import { moveFileNow, REF_KEY, underId, paperGet, goneNow, hasSheet, gradeHasWork } from './gopen.js';
-import { sameBytes } from './greport.js';
+import { moveFileNow, REF_KEY, underId, paperGet, goneNow, hasSheet, gradeHasWork, nfc, sameBytes } from './gopen.js';
 
 // src/app/files.js
 function setDocIn(st, d, on) {
@@ -54,8 +53,6 @@ function gradeWords(st) {
 }
 // src/grades.js
 const wordsJoin = a => a.length > 1 ? a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1] : a.join('');
-// src/carryover.js
-const nfc = s => String(s).normalize('NFC');
 // src/intake.js
 async function freshRows(rows) {
   const here = batch.students.flatMap(st => st.files.filter(f => f.kind !== 'img' && !f.virtual && f.data).map(f => ({ path: f.path, data: f.data })));

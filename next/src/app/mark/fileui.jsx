@@ -5,7 +5,8 @@ import { h, Fragment } from 'preact';
 import { useState, useRef } from 'preact/hooks';
 import { Button, IconButton, Menu, Dialog, TextInput, toast } from '../../ui/index.js';
 import { state } from '../../engines/gcore.js';
-import { shownName } from '../../engines/gdraw.js';
+import { shownName, anonOn } from '../../engines/gdraw.js';
+import { lostPages } from '../../engines/gopen.js';
 import { prefs } from '../../students/prefs.js';
 import { Checkbox, Segmented } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
@@ -162,4 +163,41 @@ export async function pdfAuto() { if (!pdfAlways() || C.pdfBusyNow()) return; co
 export function TurnChip({ pg }) {
   return <span class="rchip"><IconButton icon="turnl" size="sm" label={t('mark.f_turn_l')} onClick={() => C.turnPages(pg.file, [pg.idx], -1)} data-rot="-1" />
     <IconButton icon="turnr" size="sm" label={t('mark.f_turn_r')} onClick={() => C.turnPages(pg.file, [pg.idx], 1)} data-rot="1" /></span>;
+}
+
+// A newer copy of a download (src/carryover.js carryTag): the file's flag, Looks fine, the pages its marks no longer have, Mark late.
+export function CarryTag({ st, f }) {
+  const c = state().batch.carry, flag = c && f && c.flags[f.path]; if (!flag) return null;
+  const lost = lostPages(f);
+  return <span class="mk-carrytag"><span class="carrytag" title={t(flag === 'new' ? 'mark.c_tip_new' : 'mark.c_tip_changed')}>{t(flag === 'new' ? 'mark.c_tag_new' : 'mark.c_tag_changed')}</span>
+    <Button size="sm" variant="quiet" onClick={() => C.carryOk(f.path)} title={t('mark.c_ok_tip')} data-carryok={f.path}>{t('mark.c_ok')}</Button>
+    {lost.length > 0 && <small class="warn">{t('mark.c_lost', { n: lost.length, pages: lost.map(p => p + 1).join(', ') })}</small>}
+    {flag === 'new' && st.grade.status !== 'late' && <Button size="sm" variant="quiet" onClick={() => { C.markLate([st]); toast(t('mark.c_marked_late')); }} data-marklate>{t('mark.c_mark_late')}</Button>}</span>;
+}
+// Your work came over (carrySay): what happened, in one box, as the download opens. Short lists are written out, long ones counted;
+// while names are hidden it only counts.
+export function CarryBox({ onClose }) {
+  const bb = state().batch, c = bb.carry; if (!c) return null;
+  const changed = bb.students.flatMap(st => st.files.filter(f => c.flags[f.path] === 'changed' && Object.keys(f.marks || {}).length));
+  const n = Object.keys((bb.keptWork && bb.keptWork.s) || {}).length, paths = k => Object.keys(c.flags).filter(p => c.flags[p] === k), anon = anonOn();
+  const names = (items, key) => anon ? (items.length ? [t(key, { n: items.length })] : []) : items;
+  const late = bb.students.filter(st => st.grade.status !== 'late' && st.grade.status !== 'excused' && st.files.some(f => c.flags[f.path] === 'new'));
+  const [lateDone, setLateDone] = useState(false);
+  const list = (title, items) => items.length > 0 && <><h3>{t(title)}</h3><ul>{items.slice(0, 12).map(x => <li data-raw>{x}</li>)}{items.length > 12 && <li>{t('mark.c_more', { n: items.length - 12 })}</li>}</ul></>;
+  const status = st => t(st.grade.status === 'missing' ? 'mark.missing' : 'mark.excused');
+  return <Dialog open title={t('mark.c_title')} onClose={onClose} actions={<>{late.length > 0 && !lateDone && <Button onClick={() => { C.markLate(late); toast(t('mark.c_late_t', { n: late.length })); setLateDone(true); }} data-carrylate>{t('mark.c_late', { n: late.length })}</Button>}<Button variant="primary" onClick={onClose} data-ok>{t('mark.ok')}</Button></>}>
+    <div class="mk-carry" id="carryBox">
+      <p>{t('mark.c_intro', { n, name: c.name || t('mark.c_noname') })}</p>
+      {c.unchecked && <p>{t('mark.c_unchecked')}</p>}
+      {list('mark.c_l_changed', names(paths('changed'), 'mark.c_n_files'))}
+      {list('mark.c_l_lost', names(changed.filter(f => lostPages(f).length).map(f => t('mark.c_page', { name: f.name, pages: lostPages(f).map(p => p + 1).join(', ') })), 'mark.c_n_files'))}
+      {list('mark.c_l_new', names(paths('new'), 'mark.c_n_files'))}
+      {list('mark.c_l_status', names(bb.students.filter(st => (st.grade.status === 'missing' || st.grade.status === 'excused') && st.files.some(f => c.flags[f.path])).map(st => t('mark.c_marked', { name: st.key, status: status(st) })), 'mark.c_n_students'))}
+      {list('mark.c_l_gone', names(c.goneFiles, 'mark.c_n_files').concat(anon ? (c.goneStudents.length ? [t('mark.c_n_whole', { n: c.goneStudents.length })] : []) : c.goneStudents.map(k => t('mark.c_whole', { name: k }))))}
+      {list('mark.c_l_layouts', names(c.layouts, 'mark.c_n_students'))}
+      {list('mark.c_l_edits', names(c.edits, 'mark.c_n_files'))}
+      {c.extrasFailed && <p>{t('mark.c_failed')}</p>}
+      <p class="mute">{t('mark.c_foot')}</p>
+    </div>
+  </Dialog>;
 }

@@ -473,5 +473,75 @@
  },
  "mark.f_paste_pic": "Some letters can’t be typed into the page, so it comes in as a picture of the text. Pen, highlighter and comments still work.",
  "mark.f_paste_add": "Add to {name}",
- "mark.f_paste_fail": "That text couldn’t be added: {why}"
+ "mark.f_paste_fail": "That text couldn’t be added: {why}",
+ "mark.c_ask_t": "Is this a newer copy?",
+ "mark.c_ask": "“{name}”, which you’ve already worked on, may be an older copy of this download.",
+ "mark.c_noname": "A download you’ve worked on",
+ "mark.c_ask_unchecked": "The student and file names match, but the older papers aren’t kept here to compare.",
+ "mark.c_ask_same": {
+  "one": "{named} of {all} files have the same names, and {n} is exactly the same.",
+  "other": "{named} of {all} files have the same names, and {n} are exactly the same."
+ },
+ "mark.c_ask_q": "Bring them over copies your marks and scores into this one. Start fresh leaves this one empty. The older copy stays either way.",
+ "mark.c_bring": "Bring them over",
+ "mark.c_fresh": "Start fresh",
+ "mark.c_changed_toast": {
+  "one": "One file is different from the copy you opened before. Look for the ! in the list of students.",
+  "other": "{n} files are different from the copy you opened before. Look for the ! in the list of students."
+ },
+ "mark.c_pill": "New or changed since the older copy",
+ "mark.c_title": "Your work came over",
+ "mark.c_intro": {
+  "one": "This looks like a newer copy of {name}. Marks and scores for {n} student came over. The older copy hasn’t changed: it’s still on Home.",
+  "other": "This looks like a newer copy of {name}. Marks and scores for {n} students came over. The older copy hasn’t changed: it’s still on Home."
+ },
+ "mark.c_unchecked": "The older papers aren’t kept in this browser, so which files changed couldn’t be checked. Have a look through them.",
+ "mark.c_l_changed": "Changed, so check your marks still sit in the right places:",
+ "mark.c_l_lost": "These have marks on pages they no longer have. The older copy still has them:",
+ "mark.c_l_new": "New in this download:",
+ "mark.c_l_status": "Marked missing or excused, and has a new or changed file here. Check that still holds:",
+ "mark.c_l_gone": "Not in this download (your work on them stays in the older copy):",
+ "mark.c_l_layouts": "Pages back in their plain order, because these students’ files changed:",
+ "mark.c_l_edits": "Word edits left in the older copy, because the file changed or isn’t in this download:",
+ "mark.c_more": "and {n} more",
+ "mark.c_page": "{name}, page {pages}",
+ "mark.c_marked": "{name} (marked {status})",
+ "mark.c_whole": "{name} (the whole student)",
+ "mark.c_n_files": {
+  "one": "{n} file",
+  "other": "{n} files"
+ },
+ "mark.c_n_students": {
+  "one": "{n} student",
+  "other": "{n} students"
+ },
+ "mark.c_n_whole": {
+  "one": "{n} whole student",
+  "other": "{n} whole students"
+ },
+ "mark.c_failed": "Some late files, readings or Word edits couldn’t be copied over. They’re still in the older copy.",
+ "mark.c_foot": "Changed and new files are flagged at the top of the file and with ! in the list of students.",
+ "mark.c_late": {
+  "one": "Mark {n} student with new files late",
+  "other": "Mark {n} students with new files late"
+ },
+ "mark.c_late_t": {
+  "one": "Marked {n} student late",
+  "other": "Marked {n} students late"
+ },
+ "mark.c_tag_new": "New in this download",
+ "mark.c_tag_changed": "Changed in this download",
+ "mark.c_tip_new": "This file wasn’t in the older copy of this download.",
+ "mark.c_tip_changed": "This file is different from the one in the older copy. Your marks came over: check they still sit in the right places.",
+ "mark.c_ok": "Looks fine",
+ "mark.c_ok_tip": "Take this flag off",
+ "mark.c_lost": {
+  "one": "A mark on page {pages} has no page in this file now. The older copy still has it.",
+  "other": "Marks on pages {pages} have no page in this file now. The older copy still has them."
+ },
+ "mark.c_mark_late": "Mark late",
+ "mark.c_marked_late": "Marked late. Late, on the right, takes it off.",
+ "mark.w_again": "Bring in a newer copy",
+ "mark.w_again_files": "A newer copy, as files or a ZIP…",
+ "mark.w_again_folder": "A newer copy, as a folder…"
 }

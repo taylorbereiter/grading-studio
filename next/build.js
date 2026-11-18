@@ -175,6 +175,8 @@ const GRADING = [
     'paperGet', 'srcRead', 'spellLikeSaved', 'groupRaw', 'houseFile', 'makeFile', 'batchIdOf', 'revsBase', 'restore', 'rosterSort', 'loadAdded', 'loadEdits',
     'applyRubricPage', 'loadRefs', 'photoTurns', 'natural', 'newestWork', 'cardOfKept', 'findItem', 'holders', 'rubricsDiffer', 'workScored', 'rubricFitting',
     'junk', 'unzipInto', 'qmkFor', 'revsOf', 'partHashes', 'batchClass',
+    // a newer copy of a download (src/carryover.js): the comparing and mapping; what writes is in app/mark/carry.js through students/write.js
+    'compareFiles', 'compareNames', 'matchLevel', 'mapBoxes', 'mapLit', 'mapPaths', 'rubricNamed', 'sameBytes', 'nfc', 'carryRoster', 'lostPages', 'studentOf', 'hasGsTail', 'underId', 'REF_KEY', 'isNotes',
   ]],
   ['gmark', [
     // marking a page as the current app does (src/app/paper.js bindPage, src/marking.js, src/stamps.js): the pen, highlighter,
