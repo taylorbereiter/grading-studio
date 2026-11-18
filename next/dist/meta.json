@@ -6127,7 +6127,7 @@
    "format": "esm"
   },
   "next/src/engines/gbook.js": {
-   "bytes": 40274,
+   "bytes": 50389,
    "imports": [
     {
      "path": "next/src/engines/gcore.js",
@@ -6283,7 +6283,7 @@
    "format": "esm"
   },
   "next/src/students/book.js": {
-   "bytes": 4242,
+   "bytes": 4830,
    "imports": [
     {
      "path": "next/src/engines/gbook.js",
@@ -6314,6 +6314,11 @@
      "path": "next/src/students/undo.js",
      "kind": "import-statement",
      "original": "./undo.js"
+    },
+    {
+     "path": "next/src/planning/index.js",
+     "kind": "import-statement",
+     "original": "../planning/index.js"
     },
     {
      "path": "<define:__GS_LANGS__>",
@@ -9529,7 +9534,7 @@
    "format": "esm"
   },
   "next/src/app/class/data.js": {
-   "bytes": 1811,
+   "bytes": 2021,
    "imports": [
     {
      "path": "node_modules/preact/hooks/dist/hooks.mjs",
@@ -9560,7 +9565,7 @@
    "format": "esm"
   },
   "next/lang/class.en.json": {
-   "bytes": 16472,
+   "bytes": 34061,
    "imports": []
   },
   "next/src/app/class/lines.js": {
@@ -9686,6 +9691,108 @@
    ],
    "format": "esm"
   },
+  "next/src/app/class/entry.jsx": {
+   "bytes": 7995,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../../i18n/t.js"
+    },
+    {
+     "path": "next/src/students/book.js",
+     "kind": "import-statement",
+     "original": "../../students/book.js"
+    },
+    {
+     "path": "next/src/engines/gcore.js",
+     "kind": "import-statement",
+     "original": "../../engines/gcore.js"
+    },
+    {
+     "path": "next/src/services/clipboard.js",
+     "kind": "import-statement",
+     "original": "../../services/clipboard.js"
+    },
+    {
+     "path": "next/src/app/class/lines.js",
+     "kind": "import-statement",
+     "original": "./lines.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/app/class/phscores.jsx": {
+   "bytes": 7907,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "next/src/ui/index.js",
+     "kind": "import-statement",
+     "original": "../../ui/index.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../../i18n/t.js"
+    },
+    {
+     "path": "next/src/students/book.js",
+     "kind": "import-statement",
+     "original": "../../students/book.js"
+    },
+    {
+     "path": "next/src/engines/gcore.js",
+     "kind": "import-statement",
+     "original": "../../engines/gcore.js"
+    },
+    {
+     "path": "next/src/app/class/bookedit.jsx",
+     "kind": "import-statement",
+     "original": "./bookedit.jsx"
+    },
+    {
+     "path": "next/src/app/class/grades.jsx",
+     "kind": "import-statement",
+     "original": "./grades.jsx"
+    },
+    {
+     "path": "next/src/app/class/lines.js",
+     "kind": "import-statement",
+     "original": "./lines.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
   "next/src/app/class/ib.jsx": {
    "bytes": 21559,
    "imports": [
@@ -9758,7 +9865,7 @@
    "format": "esm"
   },
   "next/src/app/class/grades.jsx": {
-   "bytes": 23758,
+   "bytes": 24725,
    "imports": [
     {
      "path": "node_modules/preact/dist/preact.mjs",
@@ -9821,6 +9928,16 @@
      "original": "./charts.jsx"
     },
     {
+     "path": "next/src/app/class/entry.jsx",
+     "kind": "import-statement",
+     "original": "./entry.jsx"
+    },
+    {
+     "path": "next/src/app/class/phscores.jsx",
+     "kind": "import-statement",
+     "original": "./phscores.jsx"
+    },
+    {
      "path": "next/src/app/class/ib.jsx",
      "kind": "import-statement",
      "original": "./ib.jsx"
@@ -9838,8 +9955,156 @@
    ],
    "format": "esm"
   },
+  "next/src/app/class/attend.jsx": {
+   "bytes": 12492,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "next/src/ui/index.js",
+     "kind": "import-statement",
+     "original": "../../ui/index.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../../i18n/t.js"
+    },
+    {
+     "path": "next/src/app/router.js",
+     "kind": "import-statement",
+     "original": "../router.js"
+    },
+    {
+     "path": "next/src/students/book.js",
+     "kind": "import-statement",
+     "original": "../../students/book.js"
+    },
+    {
+     "path": "next/src/services/clipboard.js",
+     "kind": "import-statement",
+     "original": "../../services/clipboard.js"
+    },
+    {
+     "path": "next/src/app/class/lines.js",
+     "kind": "import-statement",
+     "original": "./lines.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/app/class/picker.jsx": {
+   "bytes": 15441,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../../i18n/t.js"
+    },
+    {
+     "path": "next/src/students/book.js",
+     "kind": "import-statement",
+     "original": "../../students/book.js"
+    },
+    {
+     "path": "next/src/services/clipboard.js",
+     "kind": "import-statement",
+     "original": "../../services/clipboard.js"
+    },
+    {
+     "path": "next/src/app/class/lines.js",
+     "kind": "import-statement",
+     "original": "./lines.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/app/class/seating.jsx": {
+   "bytes": 14572,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "next/src/ui/index.js",
+     "kind": "import-statement",
+     "original": "../../ui/index.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../../i18n/t.js"
+    },
+    {
+     "path": "next/src/services/undo.js",
+     "kind": "import-statement",
+     "original": "../../services/undo.js"
+    },
+    {
+     "path": "next/src/students/book.js",
+     "kind": "import-statement",
+     "original": "../../students/book.js"
+    },
+    {
+     "path": "next/src/app/class/picker.jsx",
+     "kind": "import-statement",
+     "original": "./picker.jsx"
+    },
+    {
+     "path": "next/src/app/class/lines.js",
+     "kind": "import-statement",
+     "original": "./lines.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    },
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "dynamic-import",
+     "original": "preact"
+    }
+   ],
+   "format": "esm"
+  },
   "next/src/app/class/people.jsx": {
-   "bytes": 11533,
+   "bytes": 12608,
    "imports": [
     {
      "path": "node_modules/preact/dist/preact.mjs",
@@ -9885,6 +10150,169 @@
      "path": "next/src/app/class/grades.jsx",
      "kind": "import-statement",
      "original": "./grades.jsx"
+    },
+    {
+     "path": "next/src/app/class/attend.jsx",
+     "kind": "import-statement",
+     "original": "./attend.jsx"
+    },
+    {
+     "path": "next/src/app/class/seating.jsx",
+     "kind": "import-statement",
+     "original": "./seating.jsx"
+    },
+    {
+     "path": "next/src/app/class/lines.js",
+     "kind": "import-statement",
+     "original": "./lines.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/engines/gbki.js": {
+   "bytes": 16936,
+   "imports": [
+    {
+     "path": "next/src/engines/gbook.js",
+     "kind": "import-statement",
+     "original": "./gbook.js"
+    },
+    {
+     "path": "next/src/engines/gcore.js",
+     "kind": "import-statement",
+     "original": "./gcore.js"
+    },
+    {
+     "path": "next/src/engines/gbook.js",
+     "kind": "import-statement",
+     "original": "./gbook.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/app/class/bookimport.jsx": {
+   "bytes": 20271,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "next/src/ui/index.js",
+     "kind": "import-statement",
+     "original": "../../ui/index.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../../i18n/t.js"
+    },
+    {
+     "path": "next/src/students/book.js",
+     "kind": "import-statement",
+     "original": "../../students/book.js"
+    },
+    {
+     "path": "next/src/engines/gbki.js",
+     "kind": "import-statement",
+     "original": "../../engines/gbki.js"
+    },
+    {
+     "path": "next/src/engines/gcore.js",
+     "kind": "import-statement",
+     "original": "../../engines/gcore.js"
+    },
+    {
+     "path": "next/src/services/undo.js",
+     "kind": "import-statement",
+     "original": "../../services/undo.js"
+    },
+    {
+     "path": "next/src/app/router.js",
+     "kind": "import-statement",
+     "original": "../router.js"
+    },
+    {
+     "path": "next/src/app/class/grades.jsx",
+     "kind": "import-statement",
+     "original": "./grades.jsx"
+    },
+    {
+     "path": "next/src/app/class/lines.js",
+     "kind": "import-statement",
+     "original": "./lines.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/app/class/classroom.jsx": {
+   "bytes": 6203,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "next/src/ui/index.js",
+     "kind": "import-statement",
+     "original": "../../ui/index.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../../i18n/t.js"
+    },
+    {
+     "path": "next/src/students/book.js",
+     "kind": "import-statement",
+     "original": "../../students/book.js"
+    },
+    {
+     "path": "next/src/engines/gbki.js",
+     "kind": "import-statement",
+     "original": "../../engines/gbki.js"
+    },
+    {
+     "path": "next/src/engines/gcore.js",
+     "kind": "import-statement",
+     "original": "../../engines/gcore.js"
+    },
+    {
+     "path": "next/src/app/router.js",
+     "kind": "import-statement",
+     "original": "../router.js"
+    },
+    {
+     "path": "next/src/app/class/data.js",
+     "kind": "import-statement",
+     "original": "./data.js"
     },
     {
      "path": "next/src/app/class/lines.js",
@@ -11825,7 +12253,7 @@
    "format": "esm"
   },
   "next/src/app/screens/class.jsx": {
-   "bytes": 13238,
+   "bytes": 13527,
    "imports": [
     {
      "path": "node_modules/preact/dist/preact.mjs",
@@ -12433,7 +12861,7 @@
    "format": "esm"
   },
   "next/src/app/router.js": {
-   "bytes": 8190,
+   "bytes": 8520,
    "imports": [
     {
      "path": "<define:__GS_LANGS__>",
@@ -12581,6 +13009,21 @@
      "original": "./class/grades.jsx"
     },
     {
+     "path": "next/src/app/class/bookimport.jsx",
+     "kind": "dynamic-import",
+     "original": "./class/bookimport.jsx"
+    },
+    {
+     "path": "next/src/app/class/classroom.jsx",
+     "kind": "dynamic-import",
+     "original": "./class/classroom.jsx"
+    },
+    {
+     "path": "next/src/app/class/picker.jsx",
+     "kind": "dynamic-import",
+     "original": "./class/picker.jsx"
+    },
+    {
      "path": "next/src/app/mark/open.js",
      "kind": "dynamic-import",
      "original": "./mark/open.js"
@@ -12699,7 +13142,7 @@
    "format": "esm"
   },
   "next/src/app/shell.jsx": {
-   "bytes": 14336,
+   "bytes": 14753,
    "imports": [
     {
      "path": "node_modules/preact/dist/preact.mjs",
@@ -13171,27 +13614,556 @@
    "imports": []
   },
   "next/src/app/class.css": {
-   "bytes": 14291,
+   "bytes": 30516,
    "imports": []
   }
  },
  "outputs": {
-  "next/dist/chunk-MJNKK7K5.js": {
+  "next/dist/chunk-S55SUPSC.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-B367NUPN.js",
+     "path": "next/dist/chunk-5NO4RGK7.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-ZWNZQKUS.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-QZAWFT7D.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-7O67W626.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-IFBT5ETB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UZSFCGII.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-W2JCHFZG.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G2F2O4N.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-Z2J2ZZYB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-6AXVQQXX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-42LR4U3F.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ULWHXMPT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLWYS3J2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-7GQ3KQIC.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-S5EI2LR4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "default"
+   ],
+   "entryPoint": "next/src/app/screens/library.jsx",
+   "inputs": {
+    "next/src/app/screens/library.jsx": {
+     "bytesInOutput": 9432
+    }
+   },
+   "bytes": 10382
+  },
+  "next/dist/chunk-OWT2EHYP.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-4O7ZQ5LV.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GL4QZ444.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-PKNBCN6T.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B3AUATZZ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-74JQK5QJ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ULWHXMPT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-S5EI2LR4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "default"
+   ],
+   "entryPoint": "next/src/app/screens/mark.jsx",
+   "inputs": {
+    "next/src/app/screens/mark.jsx": {
+     "bytesInOutput": 33455
+    }
+   },
+   "bytes": 34339
+  },
+  "next/dist/chunk-N3ZWL2EE.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-IQ2OAHJB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5C2NXDGT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-7O67W626.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UZSFCGII.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-W2JCHFZG.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-AUQ5QDND.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G2F2O4N.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-Z2J2ZZYB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-PFYYKKTR.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-VI6YCH3C.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ULWHXMPT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLWYS3J2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-7GQ3KQIC.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-S5EI2LR4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "default"
+   ],
+   "entryPoint": "next/src/app/screens/home.jsx",
+   "inputs": {
+    "next/src/app/screens/home.jsx": {
+     "bytesInOutput": 6688
+    }
+   },
+   "bytes": 7462
+  },
+  "next/dist/chunk-PAA2UGY3.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-QZAWFT7D.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-IFBT5ETB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YDQJEVBL.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-M35A62Q3.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G2F2O4N.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-Z2J2ZZYB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YKMSC2GP.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-6AXVQQXX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-42LR4U3F.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ULWHXMPT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLWYS3J2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-7GQ3KQIC.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-S5EI2LR4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-OAXM34XE.js",
+     "kind": "dynamic-import"
+    },
+    {
+     "path": "next/dist/chunk-XRJ3Q4PK.js",
+     "kind": "dynamic-import"
+    }
+   ],
+   "exports": [
+    "GROUPS",
+    "default"
+   ],
+   "entryPoint": "next/src/app/screens/settings.jsx",
+   "inputs": {
+    "next/src/app/screens/settings.jsx": {
+     "bytesInOutput": 2444
+    },
+    "next/src/app/screens/settings-plan.jsx": {
+     "bytesInOutput": 6680
+    }
+   },
+   "bytes": 10013
+  },
+  "next/dist/chunk-AIWWZV5H.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "default"
+   ],
+   "entryPoint": "next/src/app/screens/keys.jsx",
+   "inputs": {
+    "next/src/app/screens/keys.jsx": {
+     "bytesInOutput": 147
+    }
+   },
+   "bytes": 381
+  },
+  "next/dist/chunk-F4M5WET5.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-SQU6IWA4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-M35A62Q3.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-AUQ5QDND.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G2F2O4N.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-Z2J2ZZYB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-PFYYKKTR.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-VI6YCH3C.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YKMSC2GP.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-XVAGO6GX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-6AXVQQXX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-42LR4U3F.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ULWHXMPT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLWYS3J2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-7GQ3KQIC.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-S5EI2LR4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "ClassList",
+    "default"
+   ],
+   "entryPoint": "next/src/app/screens/more.jsx",
+   "inputs": {
+    "next/src/app/screens/more.jsx": {
+     "bytesInOutput": 1157
+    }
+   },
+   "bytes": 1932
+  },
+  "next/dist/chunk-IQ6XEJ2C.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-6SS5HZVM.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -13208,24 +14180,24 @@
    ],
    "entryPoint": "next/src/app/screens/later.jsx",
    "inputs": {},
-   "bytes": 197
+   "bytes": 253
   },
-  "next/dist/chunk-EHJCBI4O.js": {
+  "next/dist/chunk-43KXIPJH.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-55YYZBWN.js",
+     "path": "next/dist/chunk-QZPN74FJ.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-A32YTSYF.js",
+     "path": "next/dist/chunk-UI3HPPN4.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-RRGQ2SSR.js",
+     "path": "next/dist/chunk-ZWNZQKUS.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-PP2MAELT.js",
+     "path": "next/dist/chunk-QZAWFT7D.js",
      "kind": "import-statement"
     },
     {
@@ -13233,7 +14205,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2J4UFKTC.js",
+     "path": "next/dist/chunk-IFBT5ETB.js",
      "kind": "import-statement"
     },
     {
@@ -13245,15 +14217,15 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-KHQGOHBO.js",
+     "path": "next/dist/chunk-AUQ5QDND.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-TUP3WEYT.js",
+     "path": "next/dist/chunk-5G2F2O4N.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -13261,7 +14233,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-SQG32K7X.js",
+     "path": "next/dist/chunk-PFYYKKTR.js",
      "kind": "import-statement"
     },
     {
@@ -13297,11 +14269,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -13323,24 +14303,24 @@
      "bytesInOutput": 13506
     }
    },
-   "bytes": 14637
+   "bytes": 14698
   },
-  "next/dist/chunk-LIWFYOVH.js": {
+  "next/dist/chunk-EMMOJOOD.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-B367NUPN.js",
+     "path": "next/dist/chunk-6SS5HZVM.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-A32YTSYF.js",
+     "path": "next/dist/chunk-UI3HPPN4.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-RRGQ2SSR.js",
+     "path": "next/dist/chunk-ZWNZQKUS.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-PP2MAELT.js",
+     "path": "next/dist/chunk-QZAWFT7D.js",
      "kind": "import-statement"
     },
     {
@@ -13348,7 +14328,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2J4UFKTC.js",
+     "path": "next/dist/chunk-IFBT5ETB.js",
      "kind": "import-statement"
     },
     {
@@ -13360,15 +14340,15 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-KHQGOHBO.js",
+     "path": "next/dist/chunk-AUQ5QDND.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-TUP3WEYT.js",
+     "path": "next/dist/chunk-5G2F2O4N.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -13400,11 +14380,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -13422,26 +14410,30 @@
    "entryPoint": "next/src/app/screens/class.jsx",
    "inputs": {
     "next/src/app/screens/class.jsx": {
-     "bytesInOutput": 8310
+     "bytesInOutput": 8504
     },
     "next/src/app/plan/unit-edit.jsx": {
      "bytesInOutput": 3507
     }
    },
-   "bytes": 12830
+   "bytes": 13085
   },
-  "next/dist/chunk-B367NUPN.js": {
+  "next/dist/chunk-6SS5HZVM.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -13460,36 +14452,36 @@
      "bytesInOutput": 582
     }
    },
-   "bytes": 1586
+   "bytes": 1619
   },
-  "next/dist/chunk-YK35BJMP.js": {
+  "next/dist/chunk-MDEBW3QC.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-55YYZBWN.js",
+     "path": "next/dist/chunk-QZPN74FJ.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-A32YTSYF.js",
+     "path": "next/dist/chunk-UI3HPPN4.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-WN37WEVN.js",
+     "path": "next/dist/chunk-ZWNZQKUS.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-QVNHCFZ3.js",
+     "path": "next/dist/chunk-QZAWFT7D.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-RRGQ2SSR.js",
+     "path": "next/dist/chunk-VU2N7MTW.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-PP2MAELT.js",
+     "path": "next/dist/chunk-IQ2OAHJB.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-4WSWNCPZ.js",
+     "path": "next/dist/chunk-5C2NXDGT.js",
      "kind": "import-statement"
     },
     {
@@ -13497,7 +14489,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2J4UFKTC.js",
+     "path": "next/dist/chunk-IFBT5ETB.js",
      "kind": "import-statement"
     },
     {
@@ -13509,15 +14501,15 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-KHQGOHBO.js",
+     "path": "next/dist/chunk-AUQ5QDND.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-TUP3WEYT.js",
+     "path": "next/dist/chunk-5G2F2O4N.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -13525,7 +14517,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-SQG32K7X.js",
+     "path": "next/dist/chunk-PFYYKKTR.js",
      "kind": "import-statement"
     },
     {
@@ -13561,11 +14553,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -13607,12 +14607,12 @@
      "bytesInOutput": 2701
     }
    },
-   "bytes": 36401
+   "bytes": 36462
   },
-  "next/dist/chunk-55YYZBWN.js": {
+  "next/dist/chunk-QZPN74FJ.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-RRGQ2SSR.js",
+     "path": "next/dist/chunk-ZWNZQKUS.js",
      "kind": "import-statement"
     },
     {
@@ -13620,11 +14620,11 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
      "kind": "import-statement"
     },
     {
@@ -13643,50 +14643,86 @@
    },
    "bytes": 3440
   },
-  "next/dist/chunk-QJ4FOBTB.js": {
+  "next/dist/chunk-XK2HSU2E.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-5NO4RGK7.js",
+     "path": "next/dist/chunk-RDAT6H3T.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-RRGQ2SSR.js",
+     "path": "next/dist/chunk-35ZKWN7W.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-PP2MAELT.js",
+     "path": "next/dist/chunk-ISP3V4BK.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-7O67W626.js",
+     "path": "next/dist/chunk-VGOJALOW.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2J4UFKTC.js",
+     "path": "next/dist/chunk-MD2UFO7R.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UZSFCGII.js",
+     "path": "next/dist/chunk-KEBJO4EE.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-W2JCHFZG.js",
+     "path": "next/dist/chunk-RQ7NLO7L.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-TUP3WEYT.js",
+     "path": "next/dist/chunk-NY6D7DQI.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-4O7ZQ5LV.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-Z2J2ZZYB.js",
+     "path": "next/dist/chunk-FGFTXMLK.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-6AXVQQXX.js",
+     "path": "next/dist/chunk-GL4QZ444.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-35R6K5QX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-PKNBCN6T.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B3AUATZZ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-74JQK5QJ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-6JUUTDSM.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-VI6YCH3C.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-XVAGO6GX.js",
      "kind": "import-statement"
     },
     {
@@ -13710,11 +14746,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -13727,28 +14771,108 @@
     }
    ],
    "exports": [
-    "default"
+    "AddTag",
+    "Anchors",
+    "BackIn",
+    "CarryBox",
+    "CarryTag",
+    "FileMenu",
+    "FilesFoot",
+    "GroupBand",
+    "IbAsk",
+    "IbTotal",
+    "ImpNote",
+    "Imported",
+    "LightChip",
+    "LightPanel",
+    "PastWork",
+    "PdfAsk",
+    "Rescans",
+    "ScanNote",
+    "ScoreMore",
+    "TurnChip",
+    "Unskew",
+    "impAuto",
+    "impAutoNow",
+    "pdfAuto",
+    "rescanCount",
+    "takeSplit",
+    "wire"
    ],
-   "entryPoint": "next/src/app/screens/library.jsx",
+   "entryPoint": "next/src/app/mark/fileui.jsx",
    "inputs": {
-    "next/src/app/screens/library.jsx": {
-     "bytesInOutput": 9432
+    "next/src/app/mark/fileui.jsx": {
+     "bytesInOutput": 18421
+    },
+    "next/src/app/mark/group.jsx": {
+     "bytesInOutput": 3375
+    },
+    "next/src/app/mark/score-more.jsx": {
+     "bytesInOutput": 4696
+    },
+    "next/src/app/mark/past.jsx": {
+     "bytesInOutput": 3275
+    },
+    "next/src/app/mark/ib.jsx": {
+     "bytesInOutput": 2203
+    },
+    "next/src/app/mark/arrange.jsx": {
+     "bytesInOutput": 9878
+    },
+    "next/src/app/mark/light.jsx": {
+     "bytesInOutput": 7357
     }
    },
-   "bytes": 10321
+   "bytes": 51693
   },
-  "next/dist/chunk-SCYAQBJX.js": {
+  "next/dist/chunk-QI2YJO6Q.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-INZYYEEL.js",
+     "path": "next/dist/chunk-NL4WVSXG.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-CNSW57GM.js",
+     "path": "next/dist/chunk-ERZXEKCT.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-VRLYRROD.js",
+     "path": "next/dist/chunk-RDAT6H3T.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-U2UMCRX2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-WJW4IHKF.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-VGOJALOW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MD2UFO7R.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-KEBJO4EE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RQ7NLO7L.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GL4QZ444.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-35R6K5QX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-PKNBCN6T.js",
      "kind": "import-statement"
     },
     {
@@ -13764,11 +14888,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ULWHXMPT.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -13776,11 +14896,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -13793,24 +14921,124 @@
     }
    ],
    "exports": [
-    "default"
+    "Split"
    ],
-   "entryPoint": "next/src/app/screens/mark.jsx",
+   "entryPoint": "next/src/app/mark/split.jsx",
    "inputs": {
-    "next/src/app/screens/mark.jsx": {
-     "bytesInOutput": 33455
+    "next/src/app/mark/split.jsx": {
+     "bytesInOutput": 20244
     }
    },
-   "bytes": 34278
+   "bytes": 21302
   },
-  "next/dist/chunk-LEY3RLOM.js": {
+  "next/dist/chunk-JEV6V2FE.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-RDAT6H3T.js",
+     "path": "next/dist/chunk-VGOJALOW.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-AUKYP7FZ.js",
+     "path": "next/dist/chunk-MD2UFO7R.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-KEBJO4EE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RQ7NLO7L.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GL4QZ444.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-35R6K5QX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-PKNBCN6T.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B3AUATZZ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-74JQK5QJ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-VI6YCH3C.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-7GQ3KQIC.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-S5EI2LR4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "MediaCard",
+    "NotesAdd",
+    "VideoAdd"
+   ],
+   "entryPoint": "next/src/app/mark/media.jsx",
+   "inputs": {
+    "next/src/app/mark/media.jsx": {
+     "bytesInOutput": 14064
+    }
+   },
+   "bytes": 15077
+  },
+  "next/dist/chunk-V5BIH4VA.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-ISP3V4BK.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-VGOJALOW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MD2UFO7R.js",
      "kind": "import-statement"
     },
     {
@@ -13826,15 +15054,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-CNSW57GM.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-HO6BTQUS.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VRLYRROD.js",
+     "path": "next/dist/chunk-PKNBCN6T.js",
      "kind": "import-statement"
     },
     {
@@ -13850,7 +15070,107 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-S5EI2LR4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-SGC5LP5J.js",
+     "kind": "dynamic-import"
+    }
+   ],
+   "exports": [
+    "NotesPart",
+    "Timer",
+    "TypedNotes",
+    "useKeep"
+   ],
+   "entryPoint": "next/src/app/mark/typed.jsx",
+   "inputs": {
+    "next/src/app/mark/typed.jsx": {
+     "bytesInOutput": 8667
+    },
+    "next/src/engines/gnotes.js": {
+     "bytesInOutput": 19929
+    }
+   },
+   "bytes": 29543
+  },
+  "next/dist/chunk-VAMACEUH.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-RDAT6H3T.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-VGOJALOW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MD2UFO7R.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-KEBJO4EE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RQ7NLO7L.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GL4QZ444.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-35R6K5QX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-PKNBCN6T.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B3AUATZZ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-74JQK5QJ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -13890,11 +15210,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -13918,20 +15246,20 @@
      "bytesInOutput": 2248
     }
    },
-   "bytes": 16337
+   "bytes": 16398
   },
-  "next/dist/chunk-YCWGC3X3.js": {
+  "next/dist/chunk-XPU2UDOA.js": {
    "imports": [
     {
      "path": "next/dist/chunk-YBP7O2ZZ.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-35R6K5QX.js",
+     "path": "next/dist/chunk-VGOJALOW.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-HO6BTQUS.js",
+     "path": "next/dist/chunk-35R6K5QX.js",
      "kind": "import-statement"
     },
     {
@@ -13947,7 +15275,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -13967,11 +15295,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -13994,7 +15330,7 @@
      "bytesInOutput": 10744
     }
    },
-   "bytes": 11601
+   "bytes": 11662
   },
   "next/dist/chunk-SFK2SZWJ.js": {
    "imports": [
@@ -14052,18 +15388,18 @@
    },
    "bytes": 714
   },
-  "next/dist/chunk-GQVSD346.js": {
+  "next/dist/chunk-5AYIZKXR.js": {
    "imports": [
     {
      "path": "next/dist/chunk-U2UMCRX2.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-VKYC5QSX.js",
+     "path": "next/dist/chunk-ISP3V4BK.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-VRLYRROD.js",
+     "path": "next/dist/chunk-GL4QZ444.js",
      "kind": "import-statement"
     },
     {
@@ -14079,11 +15415,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -14104,262 +15448,40 @@
      "bytesInOutput": 5340
     }
    },
-   "bytes": 5806
+   "bytes": 5867
   },
-  "next/dist/chunk-IMNSYXEL.js": {
+  "next/dist/chunk-DINWG7VS.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-QVNHCFZ3.js",
+     "path": "next/dist/chunk-P72PUWTT.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-4WSWNCPZ.js",
+     "path": "next/dist/chunk-OXHJ3IE7.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-7O67W626.js",
+     "path": "next/dist/chunk-JWEYBZRQ.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UZSFCGII.js",
+     "path": "next/dist/chunk-UYREZBWT.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-W2JCHFZG.js",
+     "path": "next/dist/chunk-74JQK5QJ.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-KHQGOHBO.js",
+     "path": "next/dist/chunk-2U2FXYB4.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-TUP3WEYT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2EYTYBN4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-Z2J2ZZYB.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-SQG32K7X.js",
+     "path": "next/dist/chunk-6JUUTDSM.js",
      "kind": "import-statement"
     },
     {
      "path": "next/dist/chunk-VI6YCH3C.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ULWHXMPT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-LLWYS3J2.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-7GQ3KQIC.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-S5EI2LR4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ACJFC2LT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "default"
-   ],
-   "entryPoint": "next/src/app/screens/home.jsx",
-   "inputs": {
-    "next/src/app/screens/home.jsx": {
-     "bytesInOutput": 6688
-    }
-   },
-   "bytes": 7396
-  },
-  "next/dist/chunk-ZKLSMJLJ.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-PP2MAELT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2J4UFKTC.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-YDQJEVBL.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-4PUIVLUG.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-TUP3WEYT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2EYTYBN4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-Z2J2ZZYB.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-3XI7XJJZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-6AXVQQXX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-42LR4U3F.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ULWHXMPT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-LLWYS3J2.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-7GQ3KQIC.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-S5EI2LR4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ACJFC2LT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-OAXM34XE.js",
-     "kind": "dynamic-import"
-    },
-    {
-     "path": "next/dist/chunk-XRJ3Q4PK.js",
-     "kind": "dynamic-import"
-    }
-   ],
-   "exports": [
-    "GROUPS",
-    "default"
-   ],
-   "entryPoint": "next/src/app/screens/settings.jsx",
-   "inputs": {
-    "next/src/app/screens/settings.jsx": {
-     "bytesInOutput": 2444
-    },
-    "next/src/app/screens/settings-plan.jsx": {
-     "bytesInOutput": 6680
-    }
-   },
-   "bytes": 9952
-  },
-  "next/dist/chunk-IQQSQQPP.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ACJFC2LT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "default"
-   ],
-   "entryPoint": "next/src/app/screens/keys.jsx",
-   "inputs": {
-    "next/src/app/screens/keys.jsx": {
-     "bytesInOutput": 147
-    }
-   },
-   "bytes": 320
-  },
-  "next/dist/chunk-O6DMV4EN.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-VEFIDH4W.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-KHQGOHBO.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-4PUIVLUG.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-TUP3WEYT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2EYTYBN4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-Z2J2ZZYB.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-SQG32K7X.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VI6YCH3C.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-3XI7XJJZ.js",
      "kind": "import-statement"
     },
     {
@@ -14367,7 +15489,102 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-6AXVQQXX.js",
+     "path": "next/dist/chunk-42LR4U3F.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ULWHXMPT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLWYS3J2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-7GQ3KQIC.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-S5EI2LR4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "Picker",
+    "PickerFor"
+   ],
+   "entryPoint": "next/src/app/class/picker.jsx",
+   "inputs": {},
+   "bytes": 577
+  },
+  "next/dist/chunk-ZZXOXX3C.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-P72PUWTT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-KDEXFRIM.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-QA2K5PEQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-OXHJ3IE7.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-JWEYBZRQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-74JQK5QJ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-2U2FXYB4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-6JUUTDSM.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-VI6YCH3C.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-XVAGO6GX.js",
      "kind": "import-statement"
     },
     {
@@ -14391,11 +15608,170 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEUG3D6V.js",
+     "kind": "dynamic-import"
+    }
+   ],
+   "exports": [
+    "RosterDialog",
+    "default"
+   ],
+   "entryPoint": "next/src/app/class/people.jsx",
+   "inputs": {
+    "next/src/app/class/people.jsx": {
+     "bytesInOutput": 8010
+    },
+    "next/src/app/class/attend.jsx": {
+     "bytesInOutput": 8777
+    },
+    "next/src/app/class/seating.jsx": {
+     "bytesInOutput": 9925
+    }
+   },
+   "bytes": 27693
+  },
+  "next/dist/chunk-P72PUWTT.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-JWEYBZRQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b"
+   ],
+   "inputs": {
+    "next/src/app/class/picker.jsx": {
+     "bytesInOutput": 10237
+    }
+   },
+   "bytes": 10500
+  },
+  "next/dist/chunk-HM3FB4PF.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-54P3W7KP.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-KDEXFRIM.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-QA2K5PEQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-OXHJ3IE7.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-JWEYBZRQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-74JQK5QJ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-2U2FXYB4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-6JUUTDSM.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-VI6YCH3C.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-XVAGO6GX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-42LR4U3F.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ULWHXMPT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLWYS3J2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-7GQ3KQIC.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-S5EI2LR4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -14408,18 +15784,153 @@
     }
    ],
    "exports": [
-    "ClassList",
-    "default"
+    "ImportSheet"
    ],
-   "entryPoint": "next/src/app/screens/more.jsx",
+   "entryPoint": "next/src/app/class/bookimport.jsx",
    "inputs": {
-    "next/src/app/screens/more.jsx": {
-     "bytesInOutput": 1157
+    "next/src/app/class/bookimport.jsx": {
+     "bytesInOutput": 13675
     }
    },
-   "bytes": 1871
+   "bytes": 14627
   },
-  "next/dist/chunk-L4CVWDIP.js": {
+  "next/dist/chunk-J2YXRRML.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-54P3W7KP.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-QA2K5PEQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-OXHJ3IE7.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-JWEYBZRQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-74JQK5QJ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-2U2FXYB4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-6JUUTDSM.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-VI6YCH3C.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-XVAGO6GX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-42LR4U3F.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ULWHXMPT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLWYS3J2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-7GQ3KQIC.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-S5EI2LR4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "ClassroomSheet"
+   ],
+   "entryPoint": "next/src/app/class/classroom.jsx",
+   "inputs": {
+    "next/src/app/class/classroom.jsx": {
+     "bytesInOutput": 3704
+    }
+   },
+   "bytes": 4558
+  },
+  "next/dist/chunk-54P3W7KP.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-JWEYBZRQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j"
+   ],
+   "inputs": {
+    "next/src/engines/gbki.js": {
+     "bytesInOutput": 10480
+    }
+   },
+   "bytes": 10702
+  },
+  "next/dist/chunk-IDMKFOA7.js": {
    "imports": [
     {
      "path": "next/dist/chunk-YBP7O2ZZ.js",
@@ -14442,7 +15953,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -14525,26 +16036,26 @@
    },
    "bytes": 2187
   },
-  "next/dist/chunk-MCA47VGP.js": {
+  "next/dist/chunk-VDB4TQGO.js": {
    "imports": [
     {
      "path": "next/dist/chunk-GERH4TQB.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-DWUL2INF.js",
+     "path": "next/dist/chunk-VGOJALOW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-FGFTXMLK.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GL4QZ444.js",
      "kind": "import-statement"
     },
     {
      "path": "next/dist/chunk-35R6K5QX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-HO6BTQUS.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VRLYRROD.js",
      "kind": "import-statement"
     },
     {
@@ -14560,7 +16071,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -14568,11 +16079,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -14594,10 +16113,14 @@
      "bytesInOutput": 12596
     }
    },
-   "bytes": 13422
+   "bytes": 13478
   },
-  "next/dist/chunk-RBRH2YWG.js": {
+  "next/dist/chunk-WN6EVPEG.js": {
    "imports": [
+    {
+     "path": "next/dist/chunk-VGOJALOW.js",
+     "kind": "import-statement"
+    },
     {
      "path": "next/dist/chunk-IFWX53NG.js",
      "kind": "import-statement"
@@ -14607,15 +16130,11 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-CNSW57GM.js",
+     "path": "next/dist/chunk-GL4QZ444.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-HO6BTQUS.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VRLYRROD.js",
+     "path": "next/dist/chunk-PKNBCN6T.js",
      "kind": "import-statement"
     },
     {
@@ -14631,7 +16150,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -14639,11 +16158,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -14665,20 +16192,20 @@
      "bytesInOutput": 2274
     }
    },
-   "bytes": 2861
+   "bytes": 2927
   },
-  "next/dist/chunk-ABGNA7BU.js": {
+  "next/dist/chunk-WI2KJ3FZ.js": {
    "imports": [
+    {
+     "path": "next/dist/chunk-VGOJALOW.js",
+     "kind": "import-statement"
+    },
     {
      "path": "next/dist/chunk-IFWX53NG.js",
      "kind": "import-statement"
     },
     {
      "path": "next/dist/chunk-RQ7NLO7L.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-HO6BTQUS.js",
      "kind": "import-statement"
     },
     {
@@ -14690,15 +16217,23 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -14719,12 +16254,12 @@
      "bytesInOutput": 694
     }
    },
-   "bytes": 1085
+   "bytes": 1146
   },
-  "next/dist/chunk-D3KLIEZP.js": {
+  "next/dist/chunk-64PUISL2.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-35ZKWN7W.js",
+     "path": "next/dist/chunk-ERZXEKCT.js",
      "kind": "import-statement"
     },
     {
@@ -14732,7 +16267,23 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-AUKYP7FZ.js",
+     "path": "next/dist/chunk-U2UMCRX2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-6H4OVTLU.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-WJW4IHKF.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ISP3V4BK.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MD2UFO7R.js",
      "kind": "import-statement"
     },
     {
@@ -14744,15 +16295,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-FO4WVA5B.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-INZYYEEL.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-DWUL2INF.js",
+     "path": "next/dist/chunk-GL4QZ444.js",
      "kind": "import-statement"
     },
     {
@@ -14760,19 +16303,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-CNSW57GM.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-HO6BTQUS.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VKYC5QSX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VRLYRROD.js",
+     "path": "next/dist/chunk-PKNBCN6T.js",
      "kind": "import-statement"
     },
     {
@@ -14788,15 +16319,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-6JUUTDSM.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VI6YCH3C.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -14804,31 +16327,23 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-42LR4U3F.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ULWHXMPT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-LLWYS3J2.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-7GQ3KQIC.js",
-     "kind": "import-statement"
-    },
-    {
      "path": "next/dist/chunk-S5EI2LR4.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -14841,72 +16356,21 @@
     }
    ],
    "exports": [
-    "AddTag",
-    "Anchors",
-    "BackIn",
-    "CarryBox",
-    "CarryTag",
-    "FileMenu",
-    "FilesFoot",
-    "GroupBand",
-    "IbAsk",
-    "IbTotal",
-    "ImpNote",
-    "Imported",
-    "LightChip",
-    "LightPanel",
-    "PastWork",
-    "PdfAsk",
-    "Rescans",
-    "ScanNote",
-    "ScoreMore",
-    "TurnChip",
-    "Unskew",
-    "impAuto",
-    "impAutoNow",
-    "pdfAuto",
-    "rescanCount",
-    "takeSplit",
-    "wire"
+    "QuickMark",
+    "SIZES"
    ],
-   "entryPoint": "next/src/app/mark/fileui.jsx",
+   "entryPoint": "next/src/app/mark/quick.jsx",
    "inputs": {
-    "next/src/app/mark/fileui.jsx": {
-     "bytesInOutput": 18421
-    },
-    "next/src/app/mark/group.jsx": {
-     "bytesInOutput": 3375
-    },
-    "next/src/app/mark/score-more.jsx": {
-     "bytesInOutput": 4696
-    },
-    "next/src/app/mark/past.jsx": {
-     "bytesInOutput": 3275
-    },
-    "next/src/app/mark/ib.jsx": {
-     "bytesInOutput": 2203
-    },
-    "next/src/app/mark/arrange.jsx": {
-     "bytesInOutput": 9878
-    },
-    "next/src/app/mark/light.jsx": {
-     "bytesInOutput": 7357
+    "next/src/app/mark/quick.jsx": {
+     "bytesInOutput": 17698
     }
    },
-   "bytes": 51627
+   "bytes": 18973
   },
-  "next/dist/chunk-25NLCISP.js": {
+  "next/dist/chunk-IYV65UHH.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-DEV3MBYJ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-4I3BIAP6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-U2UMCRX2.js",
+     "path": "next/dist/chunk-ERZXEKCT.js",
      "kind": "import-statement"
     },
     {
@@ -14914,281 +16378,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-WJW4IHKF.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-AUKYP7FZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-KEBJO4EE.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-RQ7NLO7L.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-35R6K5QX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-CNSW57GM.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-HO6BTQUS.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VRLYRROD.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-B3AUATZZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UYREZBWT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-74JQK5QJ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2EYTYBN4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-S5EI2LR4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ACJFC2LT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "Split"
-   ],
-   "entryPoint": "next/src/app/mark/split.jsx",
-   "inputs": {
-    "next/src/app/mark/split.jsx": {
-     "bytesInOutput": 20244
-    }
-   },
-   "bytes": 21241
-  },
-  "next/dist/chunk-R2DLLVWF.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-AUKYP7FZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-KEBJO4EE.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-RQ7NLO7L.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-35R6K5QX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-CNSW57GM.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-HO6BTQUS.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VRLYRROD.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-B3AUATZZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UYREZBWT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-74JQK5QJ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2EYTYBN4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VI6YCH3C.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-7GQ3KQIC.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-S5EI2LR4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ACJFC2LT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "MediaCard",
-    "NotesAdd",
-    "VideoAdd"
-   ],
-   "entryPoint": "next/src/app/mark/media.jsx",
-   "inputs": {
-    "next/src/app/mark/media.jsx": {
-     "bytesInOutput": 14064
-    }
-   },
-   "bytes": 15016
-  },
-  "next/dist/chunk-KGP3DZRG.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-AUKYP7FZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-KEBJO4EE.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-RQ7NLO7L.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-35R6K5QX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-CNSW57GM.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-HO6BTQUS.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VKYC5QSX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-B3AUATZZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UYREZBWT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-74JQK5QJ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2EYTYBN4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-S5EI2LR4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ACJFC2LT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-SGC5LP5J.js",
-     "kind": "dynamic-import"
-    }
-   ],
-   "exports": [
-    "NotesPart",
-    "Timer",
-    "TypedNotes",
-    "useKeep"
-   ],
-   "entryPoint": "next/src/app/mark/typed.jsx",
-   "inputs": {
-    "next/src/app/mark/typed.jsx": {
-     "bytesInOutput": 8667
-    },
-    "next/src/engines/gnotes.js": {
-     "bytesInOutput": 19929
-    }
-   },
-   "bytes": 29477
-  },
-  "next/dist/chunk-UISVEFGU.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-4I3BIAP6.js",
-     "kind": "import-statement"
-    },
-    {
      "path": "next/dist/chunk-U2UMCRX2.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-RDAT6H3T.js",
-     "kind": "import-statement"
-    },
-    {
      "path": "next/dist/chunk-WJW4IHKF.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-AUKYP7FZ.js",
+     "path": "next/dist/chunk-ISP3V4BK.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MD2UFO7R.js",
      "kind": "import-statement"
     },
     {
@@ -15200,19 +16402,15 @@
      "kind": "import-statement"
     },
     {
+     "path": "next/dist/chunk-GL4QZ444.js",
+     "kind": "import-statement"
+    },
+    {
      "path": "next/dist/chunk-35R6K5QX.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-CNSW57GM.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VKYC5QSX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VRLYRROD.js",
+     "path": "next/dist/chunk-PKNBCN6T.js",
      "kind": "import-statement"
     },
     {
@@ -15228,7 +16426,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -15236,11 +16434,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -15261,20 +16467,16 @@
      "bytesInOutput": 15266
     }
    },
-   "bytes": 16217
+   "bytes": 16283
   },
-  "next/dist/chunk-I67NC33E.js": {
+  "next/dist/chunk-D3WXCPZD.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-DEV3MBYJ.js",
+     "path": "next/dist/chunk-NL4WVSXG.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-4I3BIAP6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-U2UMCRX2.js",
+     "path": "next/dist/chunk-ERZXEKCT.js",
      "kind": "import-statement"
     },
     {
@@ -15282,7 +16484,15 @@
      "kind": "import-statement"
     },
     {
+     "path": "next/dist/chunk-U2UMCRX2.js",
+     "kind": "import-statement"
+    },
+    {
      "path": "next/dist/chunk-WJW4IHKF.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ISP3V4BK.js",
      "kind": "import-statement"
     },
     {
@@ -15294,15 +16504,11 @@
      "kind": "import-statement"
     },
     {
+     "path": "next/dist/chunk-GL4QZ444.js",
+     "kind": "import-statement"
+    },
+    {
      "path": "next/dist/chunk-35R6K5QX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VKYC5QSX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VRLYRROD.js",
      "kind": "import-statement"
     },
     {
@@ -15350,11 +16556,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -15376,20 +16590,16 @@
      "bytesInOutput": 6769
     }
    },
-   "bytes": 7687
+   "bytes": 7748
   },
-  "next/dist/chunk-FHZ3YVLC.js": {
+  "next/dist/chunk-43SDSMU7.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-DEV3MBYJ.js",
+     "path": "next/dist/chunk-NL4WVSXG.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-4I3BIAP6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-U2UMCRX2.js",
+     "path": "next/dist/chunk-ERZXEKCT.js",
      "kind": "import-statement"
     },
     {
@@ -15397,11 +16607,19 @@
      "kind": "import-statement"
     },
     {
+     "path": "next/dist/chunk-U2UMCRX2.js",
+     "kind": "import-statement"
+    },
+    {
      "path": "next/dist/chunk-WJW4IHKF.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-AUKYP7FZ.js",
+     "path": "next/dist/chunk-ISP3V4BK.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MD2UFO7R.js",
      "kind": "import-statement"
     },
     {
@@ -15413,19 +16631,15 @@
      "kind": "import-statement"
     },
     {
+     "path": "next/dist/chunk-GL4QZ444.js",
+     "kind": "import-statement"
+    },
+    {
      "path": "next/dist/chunk-35R6K5QX.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-CNSW57GM.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VKYC5QSX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VRLYRROD.js",
+     "path": "next/dist/chunk-PKNBCN6T.js",
      "kind": "import-statement"
     },
     {
@@ -15441,7 +16655,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -15449,11 +16663,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -15476,12 +16698,12 @@
      "bytesInOutput": 4807
     }
    },
-   "bytes": 5669
+   "bytes": 5735
   },
-  "next/dist/chunk-DEV3MBYJ.js": {
+  "next/dist/chunk-NL4WVSXG.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-4I3BIAP6.js",
+     "path": "next/dist/chunk-ERZXEKCT.js",
      "kind": "import-statement"
     },
     {
@@ -15522,6 +16744,151 @@
    },
    "bytes": 14056
   },
+  "next/dist/chunk-ERZXEKCT.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-RDAT6H3T.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-U2UMCRX2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-WJW4IHKF.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RQ7NLO7L.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-35R6K5QX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B3AUATZZ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J",
+    "K",
+    "L",
+    "M",
+    "N",
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "x",
+    "y",
+    "z"
+   ],
+   "inputs": {
+    "next/src/engines/gquiz.js": {
+     "bytesInOutput": 13391
+    }
+   },
+   "bytes": 14519
+  },
+  "next/dist/chunk-RDAT6H3T.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-B3AUATZZ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m"
+   ],
+   "inputs": {
+    "next/src/engines/gsetup.js": {
+     "bytesInOutput": 12928
+    }
+   },
+   "bytes": 13238
+  },
+  "next/dist/chunk-U2UMCRX2.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d"
+   ],
+   "inputs": {
+    "next/src/engines/gcalc.js": {
+     "bytesInOutput": 1505
+    }
+   },
+   "bytes": 1631
+  },
   "next/dist/chunk-RTXYJWNZ.js": {
    "imports": [
     {
@@ -15540,18 +16907,18 @@
    },
    "bytes": 202859
   },
-  "next/dist/chunk-G2NRQILT.js": {
+  "next/dist/chunk-FWH7D6N6.js": {
    "imports": [
     {
      "path": "next/dist/chunk-6H4OVTLU.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-35R6K5QX.js",
+     "path": "next/dist/chunk-ISP3V4BK.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-VKYC5QSX.js",
+     "path": "next/dist/chunk-35R6K5QX.js",
      "kind": "import-statement"
     },
     {
@@ -15567,7 +16934,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -15575,7 +16942,11 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -15594,16 +16965,46 @@
      "bytesInOutput": 5528
     }
    },
-   "bytes": 6045
+   "bytes": 6078
   },
-  "next/dist/chunk-LR6FOINP.js": {
+  "next/dist/chunk-6H4OVTLU.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-HO6BTQUS.js",
+     "path": "next/dist/chunk-B3AUATZZ.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-VRLYRROD.js",
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f"
+   ],
+   "inputs": {
+    "next/src/engines/gsnip.js": {
+     "bytesInOutput": 8997
+    }
+   },
+   "bytes": 9440
+  },
+  "next/dist/chunk-F5VXATHJ.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-VGOJALOW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GL4QZ444.js",
      "kind": "import-statement"
     },
     {
@@ -15611,7 +17012,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -15651,11 +17052,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -15676,16 +17085,24 @@
      "bytesInOutput": 9753
     }
    },
-   "bytes": 10481
+   "bytes": 10542
   },
-  "next/dist/chunk-Y43DPCHK.js": {
+  "next/dist/chunk-TSDY7I2D.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-UNSZLHKN.js",
+     "path": "next/dist/chunk-KDEXFRIM.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-JP4EOLS7.js",
+     "path": "next/dist/chunk-QA2K5PEQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-OXHJ3IE7.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-JWEYBZRQ.js",
      "kind": "import-statement"
     },
     {
@@ -15697,7 +17114,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -15737,11 +17154,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -15761,16 +17186,16 @@
    ],
    "entryPoint": "next/src/app/class/grades.jsx",
    "inputs": {},
-   "bytes": 596
+   "bytes": 688
   },
-  "next/dist/chunk-MDVWMLNJ.js": {
+  "next/dist/chunk-KDEXFRIM.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-UNSZLHKN.js",
+     "path": "next/dist/chunk-QA2K5PEQ.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-JP4EOLS7.js",
+     "path": "next/dist/chunk-JWEYBZRQ.js",
      "kind": "import-statement"
     },
     {
@@ -15782,102 +17207,23 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2U2FXYB4.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-6JUUTDSM.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-VI6YCH3C.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-XVAGO6GX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-42LR4U3F.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ULWHXMPT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-LLWYS3J2.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-7GQ3KQIC.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-S5EI2LR4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ACJFC2LT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "RosterDialog",
-    "default"
-   ],
-   "entryPoint": "next/src/app/class/people.jsx",
-   "inputs": {
-    "next/src/app/class/people.jsx": {
-     "bytesInOutput": 7319
-    }
-   },
-   "bytes": 8073
-  },
-  "next/dist/chunk-UNSZLHKN.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-JP4EOLS7.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UYREZBWT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-74JQK5QJ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2EYTYBN4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ULWHXMPT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -15893,47 +17239,95 @@
     "a",
     "b",
     "c",
-    "d",
-    "e",
-    "f"
+    "d"
    ],
    "inputs": {
     "next/src/app/class/grades.jsx": {
-     "bytesInOutput": 15466
-    },
-    "next/src/app/class/data.js": {
-     "bytesInOutput": 599
+     "bytesInOutput": 16031
     },
     "next/src/app/class/bookedit.jsx": {
-     "bytesInOutput": 15697
-    },
-    "next/src/app/class/lines.js": {
-     "bytesInOutput": 12
-    },
-    "next/lang/class.en.json": {
-     "bytesInOutput": 15505
+     "bytesInOutput": 15704
     },
     "next/src/app/class/charts.jsx": {
      "bytesInOutput": 5757
     },
+    "next/src/app/class/entry.jsx": {
+     "bytesInOutput": 4950
+    },
+    "next/src/app/class/phscores.jsx": {
+     "bytesInOutput": 5217
+    },
     "next/src/app/class/ib.jsx": {
-     "bytesInOutput": 15792
+     "bytesInOutput": 15787
     }
    },
-   "bytes": 69455
+   "bytes": 64123
   },
-  "next/dist/chunk-IOK6KTAK.js": {
+  "next/dist/chunk-QA2K5PEQ.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-WJW4IHKF.js",
+     "path": "next/dist/chunk-JWEYBZRQ.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-RQ7NLO7L.js",
+     "path": "next/dist/chunk-ULWHXMPT.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-CNSW57GM.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c"
+   ],
+   "inputs": {
+    "next/src/app/class/data.js": {
+     "bytesInOutput": 613
+    }
+   },
+   "bytes": 845
+  },
+  "next/dist/chunk-OXHJ3IE7.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [],
+   "inputs": {
+    "next/src/app/class/lines.js": {
+     "bytesInOutput": 9
+    },
+    "next/lang/class.en.json": {
+     "bytesInOutput": 31999
+    }
+   },
+   "bytes": 32089
+  },
+  "next/dist/chunk-OMTZV6AU.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-ISP3V4BK.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-VGOJALOW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GL4QZ444.js",
      "kind": "import-statement"
     },
     {
@@ -15945,7 +17339,72 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "Grades",
+    "Insights",
+    "Return",
+    "default"
+   ],
+   "entryPoint": "next/src/app/screens/mark-out.jsx",
+   "inputs": {
+    "next/src/app/screens/mark-out.jsx": {
+     "bytesInOutput": 14584
+    }
+   },
+   "bytes": 15205
+  },
+  "next/dist/chunk-OYZUL6Y4.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-WJW4IHKF.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RQ7NLO7L.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-PKNBCN6T.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B3AUATZZ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -16052,14 +17511,18 @@
    "inputs": {},
    "bytes": 1032
   },
-  "next/dist/chunk-FFQHODFR.js": {
+  "next/dist/chunk-FNOB32XH.js": {
    "imports": [
     {
      "path": "next/dist/chunk-GERH4TQB.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-AUKYP7FZ.js",
+     "path": "next/dist/chunk-ISP3V4BK.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MD2UFO7R.js",
      "kind": "import-statement"
     },
     {
@@ -16075,11 +17538,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-CNSW57GM.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VKYC5QSX.js",
+     "path": "next/dist/chunk-PKNBCN6T.js",
      "kind": "import-statement"
     },
     {
@@ -16095,7 +17554,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -16103,11 +17562,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -16128,7 +17595,7 @@
      "bytesInOutput": 14906
     }
    },
-   "bytes": 15725
+   "bytes": 15791
   },
   "next/dist/chunk-GERH4TQB.js": {
    "imports": [
@@ -16192,18 +17659,18 @@
    },
    "bytes": 29880
   },
-  "next/dist/chunk-5ODTDRVT.js": {
+  "next/dist/chunk-BGNW3TTX.js": {
    "imports": [
     {
      "path": "next/dist/chunk-35ZKWN7W.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-RQ7NLO7L.js",
+     "path": "next/dist/chunk-ISP3V4BK.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-VKYC5QSX.js",
+     "path": "next/dist/chunk-RQ7NLO7L.js",
      "kind": "import-statement"
     },
     {
@@ -16215,11 +17682,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -16240,7 +17715,7 @@
      "bytesInOutput": 6745
     }
    },
-   "bytes": 7229
+   "bytes": 7295
   },
   "next/dist/chunk-35ZKWN7W.js": {
    "imports": [
@@ -16281,14 +17756,18 @@
    },
    "bytes": 7314
   },
-  "next/dist/chunk-NTEMX2FX.js": {
+  "next/dist/chunk-YRB5WTGD.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-IFWX53NG.js",
+     "path": "next/dist/chunk-WJW4IHKF.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-WJW4IHKF.js",
+     "path": "next/dist/chunk-ISP3V4BK.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-IFWX53NG.js",
      "kind": "import-statement"
     },
     {
@@ -16296,11 +17775,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-CNSW57GM.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VKYC5QSX.js",
+     "path": "next/dist/chunk-PKNBCN6T.js",
      "kind": "import-statement"
     },
     {
@@ -16312,15 +17787,23 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -16348,486 +17831,7 @@
      "bytesInOutput": 3989
     }
    },
-   "bytes": 15132
-  },
-  "next/dist/chunk-774CHR3I.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-IFWX53NG.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-AUKYP7FZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-KEBJO4EE.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-RQ7NLO7L.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-35R6K5QX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-CNSW57GM.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-HO6BTQUS.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VRLYRROD.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-B3AUATZZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UYREZBWT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-74JQK5QJ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2EYTYBN4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-S5EI2LR4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ACJFC2LT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "BringFiles",
-    "MatchRoster",
-    "bringFiles",
-    "classAfter",
-    "expand"
-   ],
-   "entryPoint": "next/src/app/mark/bringin.jsx",
-   "inputs": {
-    "next/src/app/mark/bringin.jsx": {
-     "bytesInOutput": 6921
-    }
-   },
-   "bytes": 7739
-  },
-  "next/dist/chunk-G7LRRLNA.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-IFWX53NG.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-AUKYP7FZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-KEBJO4EE.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-RQ7NLO7L.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-35R6K5QX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-CNSW57GM.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-HO6BTQUS.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-B3AUATZZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UYREZBWT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-74JQK5QJ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2EYTYBN4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-S5EI2LR4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ACJFC2LT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "Partners"
-   ],
-   "entryPoint": "next/src/app/mark/partners.jsx",
-   "inputs": {
-    "next/src/app/mark/partners.jsx": {
-     "bytesInOutput": 4853
-    }
-   },
-   "bytes": 5558
-  },
-  "next/dist/chunk-IFWX53NG.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-RQ7NLO7L.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-B3AUATZZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UYREZBWT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "a",
-    "b",
-    "c",
-    "d",
-    "e",
-    "f",
-    "g",
-    "h",
-    "i"
-   ],
-   "inputs": {
-    "next/src/engines/greport.js": {
-     "bytesInOutput": 11305
-    }
-   },
-   "bytes": 11624
-  },
-  "next/dist/chunk-T36EHFSM.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-4I3BIAP6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-U2UMCRX2.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-RDAT6H3T.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-6H4OVTLU.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-WJW4IHKF.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-AUKYP7FZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-KEBJO4EE.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-RQ7NLO7L.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-35R6K5QX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-CNSW57GM.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VKYC5QSX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VRLYRROD.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-B3AUATZZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UYREZBWT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-74JQK5QJ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2EYTYBN4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-XVAGO6GX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-S5EI2LR4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ACJFC2LT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "QuickMark",
-    "SIZES"
-   ],
-   "entryPoint": "next/src/app/mark/quick.jsx",
-   "inputs": {
-    "next/src/app/mark/quick.jsx": {
-     "bytesInOutput": 17698
-    }
-   },
-   "bytes": 18912
-  },
-  "next/dist/chunk-4I3BIAP6.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-U2UMCRX2.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-RDAT6H3T.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-WJW4IHKF.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-RQ7NLO7L.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-35R6K5QX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-B3AUATZZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UYREZBWT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "A",
-    "B",
-    "C",
-    "D",
-    "E",
-    "F",
-    "G",
-    "H",
-    "I",
-    "J",
-    "K",
-    "L",
-    "M",
-    "N",
-    "a",
-    "b",
-    "c",
-    "d",
-    "e",
-    "f",
-    "g",
-    "h",
-    "i",
-    "j",
-    "k",
-    "l",
-    "m",
-    "n",
-    "o",
-    "p",
-    "q",
-    "r",
-    "s",
-    "t",
-    "u",
-    "v",
-    "w",
-    "x",
-    "y",
-    "z"
-   ],
-   "inputs": {
-    "next/src/engines/gquiz.js": {
-     "bytesInOutput": 13391
-    }
-   },
-   "bytes": 14519
-  },
-  "next/dist/chunk-U2UMCRX2.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-UYREZBWT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "a",
-    "b",
-    "c",
-    "d"
-   ],
-   "inputs": {
-    "next/src/engines/gcalc.js": {
-     "bytesInOutput": 1505
-    }
-   },
-   "bytes": 1631
-  },
-  "next/dist/chunk-RDAT6H3T.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-B3AUATZZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UYREZBWT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "a",
-    "b",
-    "c",
-    "d",
-    "e",
-    "f",
-    "g",
-    "h",
-    "i",
-    "j",
-    "k",
-    "l",
-    "m"
-   ],
-   "inputs": {
-    "next/src/engines/gsetup.js": {
-     "bytesInOutput": 12928
-    }
-   },
-   "bytes": 13238
-  },
-  "next/dist/chunk-6H4OVTLU.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-B3AUATZZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UYREZBWT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "a",
-    "b",
-    "c",
-    "d",
-    "e",
-    "f"
-   ],
-   "inputs": {
-    "next/src/engines/gsnip.js": {
-     "bytesInOutput": 8997
-    }
-   },
-   "bytes": 9440
+   "bytes": 15193
   },
   "next/dist/chunk-WJW4IHKF.js": {
    "imports": [
@@ -16919,10 +17923,44 @@
    },
    "bytes": 101443
   },
-  "next/dist/chunk-AUKYP7FZ.js": {
+  "next/dist/chunk-ISP3V4BK.js": {
    "imports": [
     {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [],
+   "inputs": {
+    "next/src/app/mark/paper-lines.js": {
+     "bytesInOutput": 9
+    },
+    "next/lang/paper.en.json": {
+     "bytesInOutput": 29172
+    }
+   },
+   "bytes": 29257
+  },
+  "next/dist/chunk-A6HXXFAM.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-VGOJALOW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MD2UFO7R.js",
+     "kind": "import-statement"
+    },
+    {
      "path": "next/dist/chunk-KEBJO4EE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-IFWX53NG.js",
      "kind": "import-statement"
     },
     {
@@ -16930,11 +17968,15 @@
      "kind": "import-statement"
     },
     {
+     "path": "next/dist/chunk-GL4QZ444.js",
+     "kind": "import-statement"
+    },
+    {
      "path": "next/dist/chunk-35R6K5QX.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-CNSW57GM.js",
+     "path": "next/dist/chunk-PKNBCN6T.js",
      "kind": "import-statement"
     },
     {
@@ -16950,7 +17992,193 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-S5EI2LR4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "BringFiles",
+    "MatchRoster",
+    "bringFiles",
+    "classAfter",
+    "expand"
+   ],
+   "entryPoint": "next/src/app/mark/bringin.jsx",
+   "inputs": {
+    "next/src/app/mark/bringin.jsx": {
+     "bytesInOutput": 6921
+    }
+   },
+   "bytes": 7800
+  },
+  "next/dist/chunk-WJSB3W54.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-VGOJALOW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MD2UFO7R.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-KEBJO4EE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-IFWX53NG.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RQ7NLO7L.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-35R6K5QX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-PKNBCN6T.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B3AUATZZ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-74JQK5QJ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-S5EI2LR4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "Partners"
+   ],
+   "entryPoint": "next/src/app/mark/partners.jsx",
+   "inputs": {
+    "next/src/app/mark/partners.jsx": {
+     "bytesInOutput": 4853
+    }
+   },
+   "bytes": 5619
+  },
+  "next/dist/chunk-VGOJALOW.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [],
+   "inputs": {
+    "next/src/app/mark/setup-lines.js": {
+     "bytesInOutput": 9
+    },
+    "next/lang/setup.en.json": {
+     "bytesInOutput": 60749
+    }
+   },
+   "bytes": 60834
+  },
+  "next/dist/chunk-MD2UFO7R.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-KEBJO4EE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RQ7NLO7L.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-35R6K5QX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-PKNBCN6T.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B3AUATZZ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-74JQK5QJ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -17136,6 +18364,43 @@
    },
    "bytes": 13488
   },
+  "next/dist/chunk-IFWX53NG.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-RQ7NLO7L.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B3AUATZZ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UYREZBWT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i"
+   ],
+   "inputs": {
+    "next/src/engines/greport.js": {
+     "bytesInOutput": 11305
+    }
+   },
+   "bytes": 11624
+  },
   "next/dist/chunk-RQ7NLO7L.js": {
    "imports": [
     {
@@ -17217,14 +18482,18 @@
    },
    "bytes": 29386
   },
-  "next/dist/chunk-ATSMDURJ.js": {
+  "next/dist/chunk-THHNMM2C.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-AQP4LP33.js",
+     "path": "next/dist/chunk-KG6UCDJX.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-PP2MAELT.js",
+     "path": "next/dist/chunk-ZWNZQKUS.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-QZAWFT7D.js",
      "kind": "import-statement"
     },
     {
@@ -17232,11 +18501,15 @@
      "kind": "import-statement"
     },
     {
+     "path": "next/dist/chunk-5C2NXDGT.js",
+     "kind": "import-statement"
+    },
+    {
      "path": "next/dist/chunk-7O67W626.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2J4UFKTC.js",
+     "path": "next/dist/chunk-IFBT5ETB.js",
      "kind": "import-statement"
     },
     {
@@ -17248,7 +18521,137 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-Z2J2ZZYB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-PFYYKKTR.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-VI6YCH3C.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-XVAGO6GX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-6AXVQQXX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-42LR4U3F.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ULWHXMPT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLWYS3J2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-7GQ3KQIC.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-S5EI2LR4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "Finished",
+    "ImportSheet",
+    "MakeVariant",
+    "NotePop",
+    "PPTX",
+    "Shots",
+    "VariantBar",
+    "WhichDeck",
+    "default",
+    "downloadAll",
+    "downloadFinal",
+    "downloadWeek",
+    "finFresh",
+    "newDoc",
+    "saveAs",
+    "shareSave",
+    "varName",
+    "variantsOf"
+   ],
+   "entryPoint": "next/src/app/screens/lesson-tools.jsx",
+   "inputs": {
+    "next/src/app/screens/lesson-tools.jsx": {
+     "bytesInOutput": 18015
+    },
+    "next/src/app/plan/note-pop.jsx": {
+     "bytesInOutput": 1723
+    }
+   },
+   "bytes": 21147
+  },
+  "next/dist/chunk-RMYA5SWH.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-KG6UCDJX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-QZAWFT7D.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-IKB6LPCK.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-7O67W626.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-IFBT5ETB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UZSFCGII.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-W2JCHFZG.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -17284,11 +18687,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -17310,20 +18721,20 @@
      "bytesInOutput": 14156
     }
    },
-   "bytes": 15030
+   "bytes": 15091
   },
-  "next/dist/chunk-2TVFOYXO.js": {
+  "next/dist/chunk-G3MNWPSN.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-HALRMD5Y.js",
+     "path": "next/dist/chunk-KG6UCDJX.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-AQP4LP33.js",
+     "path": "next/dist/chunk-QZAWFT7D.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-PP2MAELT.js",
+     "path": "next/dist/chunk-MYT7YCSM.js",
      "kind": "import-statement"
     },
     {
@@ -17331,11 +18742,11 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-4WSWNCPZ.js",
+     "path": "next/dist/chunk-5C2NXDGT.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2J4UFKTC.js",
+     "path": "next/dist/chunk-IFBT5ETB.js",
      "kind": "import-statement"
     },
     {
@@ -17351,7 +18762,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-SQG32K7X.js",
+     "path": "next/dist/chunk-PFYYKKTR.js",
      "kind": "import-statement"
     },
     {
@@ -17383,11 +18794,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -17409,7 +18828,29 @@
      "bytesInOutput": 4886
     }
    },
-   "bytes": 5706
+   "bytes": 5767
+  },
+  "next/dist/chunk-KG6UCDJX.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [],
+   "inputs": {
+    "next/src/app/plan/tool-lines.js": {
+     "bytesInOutput": 9
+    },
+    "next/lang/tools.en.json": {
+     "bytesInOutput": 7688
+    }
+   },
+   "bytes": 7778
   },
   "next/dist/chunk-ZDFTJMNG.js": {
    "imports": [
@@ -17453,30 +18894,30 @@
    },
    "bytes": 1392678
   },
-  "next/dist/chunk-T7FILZ4V.js": {
+  "next/dist/chunk-7XMOB4OY.js": {
    "imports": [
     {
      "path": "next/dist/chunk-5NO4RGK7.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-HYLNAVJZ.js",
+     "path": "next/dist/chunk-ZWNZQKUS.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-QVNHCFZ3.js",
+     "path": "next/dist/chunk-FEVH4GNK.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-RRGQ2SSR.js",
+     "path": "next/dist/chunk-QZAWFT7D.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-PP2MAELT.js",
+     "path": "next/dist/chunk-IQ2OAHJB.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-4WSWNCPZ.js",
+     "path": "next/dist/chunk-5C2NXDGT.js",
      "kind": "import-statement"
     },
     {
@@ -17484,7 +18925,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2J4UFKTC.js",
+     "path": "next/dist/chunk-IFBT5ETB.js",
      "kind": "import-statement"
     },
     {
@@ -17496,7 +18937,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -17504,7 +18945,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-SQG32K7X.js",
+     "path": "next/dist/chunk-PFYYKKTR.js",
      "kind": "import-statement"
     },
     {
@@ -17540,11 +18981,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -17573,7 +19022,7 @@
      "bytesInOutput": 11745
     }
    },
-   "bytes": 12801
+   "bytes": 12867
   },
   "next/dist/chunk-5NO4RGK7.js": {
    "imports": [
@@ -17600,22 +19049,22 @@
    },
    "bytes": 22675
   },
-  "next/dist/chunk-BD5GZUVZ.js": {
+  "next/dist/chunk-LOMUVX2V.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-DBBBLJPY.js",
+     "path": "next/dist/chunk-7ES6QDIG.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-HYLNAVJZ.js",
+     "path": "next/dist/chunk-FEVH4GNK.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-PP2MAELT.js",
+     "path": "next/dist/chunk-QZAWFT7D.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2J4UFKTC.js",
+     "path": "next/dist/chunk-IFBT5ETB.js",
      "kind": "import-statement"
     },
     {
@@ -17651,11 +19100,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -17679,28 +19136,28 @@
    ],
    "entryPoint": "next/src/app/plan/bank-edit.jsx",
    "inputs": {},
-   "bytes": 592
+   "bytes": 648
   },
-  "next/dist/chunk-242VDNY6.js": {
+  "next/dist/chunk-JYWOR365.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-A32YTSYF.js",
+     "path": "next/dist/chunk-UI3HPPN4.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-DBBBLJPY.js",
+     "path": "next/dist/chunk-ZWNZQKUS.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-HYLNAVJZ.js",
+     "path": "next/dist/chunk-7ES6QDIG.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-RRGQ2SSR.js",
+     "path": "next/dist/chunk-FEVH4GNK.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-PP2MAELT.js",
+     "path": "next/dist/chunk-QZAWFT7D.js",
      "kind": "import-statement"
     },
     {
@@ -17708,7 +19165,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2J4UFKTC.js",
+     "path": "next/dist/chunk-IFBT5ETB.js",
      "kind": "import-statement"
     },
     {
@@ -17720,7 +19177,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -17756,11 +19213,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -17794,20 +19259,20 @@
      "bytesInOutput": 11986
     }
    },
-   "bytes": 12955
+   "bytes": 13016
   },
-  "next/dist/chunk-A32YTSYF.js": {
+  "next/dist/chunk-UI3HPPN4.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
      "kind": "import-statement"
     },
     {
@@ -17825,10 +19290,54 @@
    },
    "bytes": 360
   },
-  "next/dist/chunk-DBBBLJPY.js": {
+  "next/dist/chunk-ZWNZQKUS.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-PP2MAELT.js",
+     "path": "next/dist/chunk-7O67W626.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-6AXVQQXX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p"
+   ],
+   "inputs": {
+    "next/src/app/plan/lessons.js": {
+     "bytesInOutput": 1564
+    }
+   },
+   "bytes": 1840
+  },
+  "next/dist/chunk-7ES6QDIG.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-QZAWFT7D.js",
      "kind": "import-statement"
     },
     {
@@ -17844,11 +19353,15 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -17878,12 +19391,12 @@
      "bytesInOutput": 2606
     }
    },
-   "bytes": 15095
+   "bytes": 15133
   },
-  "next/dist/chunk-HYLNAVJZ.js": {
+  "next/dist/chunk-FEVH4GNK.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
      "kind": "import-statement"
     },
     {
@@ -17902,18 +19415,51 @@
    },
    "bytes": 7023
   },
-  "next/dist/chunk-DHGHBUSP.js": {
+  "next/dist/chunk-QZAWFT7D.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-FO4WVA5B.js",
+     "path": "next/dist/chunk-S5EI2LR4.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-INZYYEEL.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-DWUL2INF.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a"
+   ],
+   "inputs": {
+    "next/src/app/plan/save.js": {
+     "bytesInOutput": 117
+    }
+   },
+   "bytes": 288
+  },
+  "next/dist/chunk-JCASWOG4.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-NY6D7DQI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-4O7ZQ5LV.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-FGFTXMLK.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GL4QZ444.js",
      "kind": "import-statement"
     },
     {
@@ -17921,11 +19467,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-CNSW57GM.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VRLYRROD.js",
+     "path": "next/dist/chunk-PKNBCN6T.js",
      "kind": "import-statement"
     },
     {
@@ -17941,7 +19483,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -17949,11 +19491,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -17976,12 +19526,12 @@
      "bytesInOutput": 9251
     }
    },
-   "bytes": 10174
+   "bytes": 10235
   },
-  "next/dist/chunk-FO4WVA5B.js": {
+  "next/dist/chunk-NY6D7DQI.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-DWUL2INF.js",
+     "path": "next/dist/chunk-FGFTXMLK.js",
      "kind": "import-statement"
     },
     {
@@ -17989,7 +19539,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-CNSW57GM.js",
+     "path": "next/dist/chunk-PKNBCN6T.js",
      "kind": "import-statement"
     },
     {
@@ -18005,11 +19555,11 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
      "kind": "import-statement"
     },
     {
@@ -18060,10 +19610,10 @@
    },
    "bytes": 12039
   },
-  "next/dist/chunk-INZYYEEL.js": {
+  "next/dist/chunk-4O7ZQ5LV.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
      "kind": "import-statement"
     },
     {
@@ -18079,9 +19629,9 @@
      "bytesInOutput": 892
     }
    },
-   "bytes": 995
+   "bytes": 990
   },
-  "next/dist/chunk-DWUL2INF.js": {
+  "next/dist/chunk-FGFTXMLK.js": {
    "imports": [
     {
      "path": "next/dist/chunk-35R6K5QX.js",
@@ -18100,15 +19650,15 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
      "kind": "import-statement"
     },
     {
@@ -18127,6 +19677,28 @@
     }
    },
    "bytes": 7728
+  },
+  "next/dist/chunk-GL4QZ444.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [],
+   "inputs": {
+    "next/src/app/mark/lines.js": {
+     "bytesInOutput": 9
+    },
+    "next/lang/mark.en.json": {
+     "bytesInOutput": 9121
+    }
+   },
+   "bytes": 9206
   },
   "next/dist/chunk-35R6K5QX.js": {
    "imports": [
@@ -18206,7 +19778,7 @@
    },
    "bytes": 35131
   },
-  "next/dist/chunk-CNSW57GM.js": {
+  "next/dist/chunk-PKNBCN6T.js": {
    "imports": [
     {
      "path": "next/dist/chunk-B3AUATZZ.js",
@@ -18217,7 +19789,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -18237,129 +19809,6 @@
     }
    },
    "bytes": 2729
-  },
-  "next/dist/chunk-RKFKZVCL.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-HO6BTQUS.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VKYC5QSX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VRLYRROD.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-B3AUATZZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UYREZBWT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2EYTYBN4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ACJFC2LT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "Grades",
-    "Insights",
-    "Return",
-    "default"
-   ],
-   "entryPoint": "next/src/app/screens/mark-out.jsx",
-   "inputs": {
-    "next/src/app/screens/mark-out.jsx": {
-     "bytesInOutput": 14584
-    }
-   },
-   "bytes": 15139
-  },
-  "next/dist/chunk-HO6BTQUS.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [],
-   "inputs": {
-    "next/src/app/mark/setup-lines.js": {
-     "bytesInOutput": 9
-    },
-    "next/lang/setup.en.json": {
-     "bytesInOutput": 60749
-    }
-   },
-   "bytes": 60834
-  },
-  "next/dist/chunk-VKYC5QSX.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [],
-   "inputs": {
-    "next/src/app/mark/paper-lines.js": {
-     "bytesInOutput": 9
-    },
-    "next/lang/paper.en.json": {
-     "bytesInOutput": 29172
-    }
-   },
-   "bytes": 29257
-  },
-  "next/dist/chunk-VRLYRROD.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [],
-   "inputs": {
-    "next/src/app/mark/lines.js": {
-     "bytesInOutput": 9
-    },
-    "next/lang/mark.en.json": {
-     "bytesInOutput": 9121
-    }
-   },
-   "bytes": 9201
   },
   "next/dist/cat-2JSRQ2SS.webp": {
    "imports": [],
@@ -18740,6 +20189,36 @@
    },
    "bytes": 39103
   },
+  "next/dist/chunk-AO244HSB.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-OJSSBIPD.js",
+     "kind": "dynamic-import"
+    }
+   ],
+   "exports": [
+    "LICENSE",
+    "heic",
+    "pdflib"
+   ],
+   "entryPoint": "next/src/engines/heic.js",
+   "inputs": {
+    "next/src/engines/heic.js": {
+     "bytesInOutput": 75
+    },
+    "node_modules/libheif-js/libheif-wasm/libheif-bundle.mjs": {
+     "bytesInOutput": 2043472
+    },
+    "next/src/engines/heic-license.js": {
+     "bytesInOutput": 44566
+    }
+   },
+   "bytes": 2088209
+  },
   "next/dist/chunk-SGC5LP5J.js": {
    "imports": [
     {
@@ -18864,10 +20343,10 @@
    "inputs": {},
    "bytes": 607
   },
-  "next/dist/chunk-5CZUUSGY.js": {
+  "next/dist/chunk-DWFBVLGA.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-JP4EOLS7.js",
+     "path": "next/dist/chunk-JWEYBZRQ.js",
      "kind": "import-statement"
     },
     {
@@ -18924,6 +20403,7 @@
     }
    ],
    "exports": [
+    "attPlan",
     "change",
     "classCols",
     "classIn",
@@ -18938,9 +20418,9 @@
    ],
    "entryPoint": "next/src/students/book.js",
    "inputs": {},
-   "bytes": 575
+   "bytes": 650
   },
-  "next/dist/chunk-JP4EOLS7.js": {
+  "next/dist/chunk-JWEYBZRQ.js": {
    "imports": [
     {
      "path": "next/dist/chunk-UYREZBWT.js",
@@ -18959,6 +20439,10 @@
      "kind": "import-statement"
     },
     {
+     "path": "next/dist/chunk-LLWYS3J2.js",
+     "kind": "import-statement"
+    },
+    {
      "path": "next/dist/chunk-GLVRXFZR.js",
      "kind": "import-statement"
     }
@@ -18974,17 +20458,21 @@
     "h",
     "i",
     "j",
-    "k"
+    "k",
+    "l",
+    "m",
+    "n",
+    "o"
    ],
    "inputs": {
     "next/src/students/book.js": {
-     "bytesInOutput": 1431
+     "bytesInOutput": 1658
     },
     "next/src/engines/gbook.js": {
-     "bytesInOutput": 25746
+     "bytesInOutput": 32309
     }
    },
-   "bytes": 27641
+   "bytes": 34509
   },
   "next/dist/chunk-UYREZBWT.js": {
    "imports": [
@@ -19207,18 +20695,14 @@
    "inputs": {},
    "bytes": 805
   },
-  "next/dist/chunk-QKDOUBEC.js": {
+  "next/dist/chunk-7FWYCZ5G.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-WN37WEVN.js",
+     "path": "next/dist/chunk-VU2N7MTW.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-HALRMD5Y.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-QVNHCFZ3.js",
+     "path": "next/dist/chunk-MYT7YCSM.js",
      "kind": "import-statement"
     },
     {
@@ -19226,7 +20710,11 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-4WSWNCPZ.js",
+     "path": "next/dist/chunk-IQ2OAHJB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5C2NXDGT.js",
      "kind": "import-statement"
     },
     {
@@ -19234,7 +20722,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2J4UFKTC.js",
+     "path": "next/dist/chunk-IFBT5ETB.js",
      "kind": "import-statement"
     },
     {
@@ -19246,7 +20734,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-SQG32K7X.js",
+     "path": "next/dist/chunk-PFYYKKTR.js",
      "kind": "import-statement"
     },
     {
@@ -19278,11 +20766,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -19312,16 +20808,20 @@
      "bytesInOutput": 3183
     }
    },
-   "bytes": 22412
+   "bytes": 22473
   },
-  "next/dist/chunk-WN37WEVN.js": {
+  "next/dist/chunk-VU2N7MTW.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -19337,24 +20837,28 @@
      "bytesInOutput": 1100
     }
    },
-   "bytes": 1278
+   "bytes": 1311
   },
-  "next/dist/chunk-HALRMD5Y.js": {
+  "next/dist/chunk-MYT7YCSM.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-4WSWNCPZ.js",
+     "path": "next/dist/chunk-5C2NXDGT.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-SQG32K7X.js",
+     "path": "next/dist/chunk-PFYYKKTR.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -19371,347 +20875,7 @@
      "bytesInOutput": 1920
     }
    },
-   "bytes": 2206
-  },
-  "next/dist/chunk-OTMUWHOG.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-QVNHCFZ3.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-4WSWNCPZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-7O67W626.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2J4UFKTC.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UZSFCGII.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-W2JCHFZG.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-Z2J2ZZYB.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-SQG32K7X.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VI6YCH3C.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ULWHXMPT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-LLWYS3J2.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-7GQ3KQIC.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-S5EI2LR4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ACJFC2LT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "Present"
-   ],
-   "entryPoint": "next/src/app/screens/present.jsx",
-   "inputs": {
-    "next/src/app/screens/present.jsx": {
-     "bytesInOutput": 7111
-    }
-   },
-   "bytes": 7758
-  },
-  "next/dist/chunk-QVNHCFZ3.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-4WSWNCPZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-7O67W626.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "a",
-    "b"
-   ],
-   "inputs": {
-    "next/src/app/plan/slide.jsx": {
-     "bytesInOutput": 1029
-    },
-    "next/src/engines/slidecss.js": {
-     "bytesInOutput": 4079
-    }
-   },
-   "bytes": 5326
-  },
-  "next/dist/chunk-JQBEYJWD.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-AQP4LP33.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-RRGQ2SSR.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-PP2MAELT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-IKB6LPCK.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-4WSWNCPZ.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-7O67W626.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2J4UFKTC.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UZSFCGII.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-W2JCHFZG.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-2EYTYBN4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-Z2J2ZZYB.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-SQG32K7X.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-VI6YCH3C.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-XVAGO6GX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-6AXVQQXX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-42LR4U3F.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ULWHXMPT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-LLWYS3J2.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-7GQ3KQIC.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-S5EI2LR4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-ACJFC2LT.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "Finished",
-    "ImportSheet",
-    "MakeVariant",
-    "NotePop",
-    "PPTX",
-    "Shots",
-    "VariantBar",
-    "WhichDeck",
-    "default",
-    "downloadAll",
-    "downloadFinal",
-    "downloadWeek",
-    "finFresh",
-    "newDoc",
-    "saveAs",
-    "shareSave",
-    "varName",
-    "variantsOf"
-   ],
-   "entryPoint": "next/src/app/screens/lesson-tools.jsx",
-   "inputs": {
-    "next/src/app/screens/lesson-tools.jsx": {
-     "bytesInOutput": 18015
-    },
-    "next/src/app/plan/note-pop.jsx": {
-     "bytesInOutput": 1723
-    }
-   },
-   "bytes": 21086
-  },
-  "next/dist/chunk-AQP4LP33.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [],
-   "inputs": {
-    "next/src/app/plan/tool-lines.js": {
-     "bytesInOutput": 9
-    },
-    "next/lang/tools.en.json": {
-     "bytesInOutput": 7688
-    }
-   },
-   "bytes": 7778
-  },
-  "next/dist/chunk-RRGQ2SSR.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-7O67W626.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-6AXVQQXX.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "a",
-    "b",
-    "c",
-    "d",
-    "e",
-    "f",
-    "g",
-    "h",
-    "i",
-    "j",
-    "k",
-    "l",
-    "m",
-    "n",
-    "o",
-    "p"
-   ],
-   "inputs": {
-    "next/src/app/plan/lessons.js": {
-     "bytesInOutput": 1564
-    }
-   },
-   "bytes": 1840
-  },
-  "next/dist/chunk-PP2MAELT.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-S5EI2LR4.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-E4OSLXS6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "a"
-   ],
-   "inputs": {
-    "next/src/app/plan/save.js": {
-     "bytesInOutput": 117
-    }
-   },
-   "bytes": 288
+   "bytes": 2239
   },
   "next/dist/chunk-IKB6LPCK.js": {
    "imports": [
@@ -19758,10 +20922,137 @@
    },
    "bytes": 17815
   },
-  "next/dist/chunk-4WSWNCPZ.js": {
+  "next/dist/chunk-TQ7ZYRPY.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-SQG32K7X.js",
+     "path": "next/dist/chunk-IQ2OAHJB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5C2NXDGT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-7O67W626.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-IFBT5ETB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-UZSFCGII.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-W2JCHFZG.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-Z2J2ZZYB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-PFYYKKTR.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-VI6YCH3C.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ULWHXMPT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLWYS3J2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-7GQ3KQIC.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-S5EI2LR4.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ACJFC2LT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "Present"
+   ],
+   "entryPoint": "next/src/app/screens/present.jsx",
+   "inputs": {
+    "next/src/app/screens/present.jsx": {
+     "bytesInOutput": 7111
+    }
+   },
+   "bytes": 7824
+  },
+  "next/dist/chunk-IQ2OAHJB.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-5C2NXDGT.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-7O67W626.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b"
+   ],
+   "inputs": {
+    "next/src/app/plan/slide.jsx": {
+     "bytesInOutput": 1029
+    },
+    "next/src/engines/slidecss.js": {
+     "bytesInOutput": 4079
+    }
+   },
+   "bytes": 5359
+  },
+  "next/dist/chunk-5C2NXDGT.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-PFYYKKTR.js",
      "kind": "import-statement"
     },
     {
@@ -19804,10 +21095,10 @@
    },
    "bytes": 308
   },
-  "next/dist/chunk-2J4UFKTC.js": {
+  "next/dist/chunk-IFBT5ETB.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
      "kind": "import-statement"
     },
     {
@@ -19825,6 +21116,36 @@
     }
    },
    "bytes": 18136
+  },
+  "next/dist/chunk-NEUG3D6V.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "Component",
+    "Fragment",
+    "cloneElement",
+    "createContext",
+    "createElement",
+    "createPortal",
+    "createRef",
+    "h",
+    "hydrate",
+    "isValidElement",
+    "options",
+    "render",
+    "toChildArray"
+   ],
+   "entryPoint": "node_modules/preact/dist/preact.mjs",
+   "inputs": {},
+   "bytes": 295
   },
   "next/dist/chunk-OAXM34XE.js": {
    "imports": [
@@ -21073,36 +22394,6 @@
    },
    "bytes": 439287
   },
-  "next/dist/chunk-AO244HSB.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-OJSSBIPD.js",
-     "kind": "dynamic-import"
-    }
-   ],
-   "exports": [
-    "LICENSE",
-    "heic",
-    "pdflib"
-   ],
-   "entryPoint": "next/src/engines/heic.js",
-   "inputs": {
-    "next/src/engines/heic.js": {
-     "bytesInOutput": 75
-    },
-    "node_modules/libheif-js/libheif-wasm/libheif-bundle.mjs": {
-     "bytesInOutput": 2043472
-    },
-    "next/src/engines/heic-license.js": {
-     "bytesInOutput": 44566
-    }
-   },
-   "bytes": 2088209
-  },
   "next/dist/main.js": {
    "imports": [
     {
@@ -21110,23 +22401,23 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-VEFIDH4W.js",
+     "path": "next/dist/chunk-SQU6IWA4.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-KHQGOHBO.js",
+     "path": "next/dist/chunk-M35A62Q3.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-4PUIVLUG.js",
+     "path": "next/dist/chunk-AUQ5QDND.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-TUP3WEYT.js",
+     "path": "next/dist/chunk-5G2F2O4N.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
@@ -21138,7 +22429,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-SQG32K7X.js",
+     "path": "next/dist/chunk-PFYYKKTR.js",
      "kind": "import-statement"
     },
     {
@@ -21146,7 +22437,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-3XI7XJJZ.js",
+     "path": "next/dist/chunk-YKMSC2GP.js",
      "kind": "import-statement"
     },
     {
@@ -21178,11 +22469,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -21201,7 +22500,7 @@
      "bytesInOutput": 444
     }
    },
-   "bytes": 1213
+   "bytes": 1274
   },
   "next/dist/chunk-YDQJEVBL.js": {
    "imports": [
@@ -21232,30 +22531,30 @@
    },
    "bytes": 421
   },
-  "next/dist/chunk-VEFIDH4W.js": {
+  "next/dist/chunk-SQU6IWA4.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-KHQGOHBO.js",
+     "path": "next/dist/chunk-M35A62Q3.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-4PUIVLUG.js",
+     "path": "next/dist/chunk-AUQ5QDND.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-TUP3WEYT.js",
+     "path": "next/dist/chunk-5G2F2O4N.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-2EYTYBN4.js",
+     "path": "next/dist/chunk-5GY4Y66S.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-SQG32K7X.js",
+     "path": "next/dist/chunk-PFYYKKTR.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-3XI7XJJZ.js",
+     "path": "next/dist/chunk-YKMSC2GP.js",
      "kind": "import-statement"
     },
     {
@@ -21271,11 +22570,15 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -21293,45 +22596,19 @@
    ],
    "inputs": {
     "next/src/app/shell.jsx": {
-     "bytesInOutput": 8263
+     "bytesInOutput": 8370
     }
    },
-   "bytes": 9048
+   "bytes": 9188
   },
-  "next/dist/chunk-KHQGOHBO.js": {
-   "imports": [
-    {
-     "path": "next/dist/chunk-Z2J2ZZYB.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-UQDDTUO6.js",
-     "kind": "import-statement"
-    },
-    {
-     "path": "next/dist/chunk-GLVRXFZR.js",
-     "kind": "import-statement"
-    }
-   ],
-   "exports": [
-    "a",
-    "b"
-   ],
-   "inputs": {
-    "next/src/app/colors.js": {
-     "bytesInOutput": 474
-    }
-   },
-   "bytes": 617
-  },
-  "next/dist/chunk-4PUIVLUG.js": {
+  "next/dist/chunk-M35A62Q3.js": {
    "imports": [
     {
      "path": "next/dist/chunk-S5EI2LR4.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-NEWZBERB.js",
      "kind": "import-statement"
     },
     {
@@ -21359,14 +22636,40 @@
    },
    "bytes": 2056
   },
-  "next/dist/chunk-TUP3WEYT.js": {
+  "next/dist/chunk-AUQ5QDND.js": {
    "imports": [
     {
      "path": "next/dist/chunk-Z2J2ZZYB.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b"
+   ],
+   "inputs": {
+    "next/src/app/colors.js": {
+     "bytesInOutput": 474
+    }
+   },
+   "bytes": 617
+  },
+  "next/dist/chunk-5G2F2O4N.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-Z2J2ZZYB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
      "kind": "import-statement"
     },
     {
@@ -21382,32 +22685,32 @@
      "bytesInOutput": 266
     }
    },
-   "bytes": 420
+   "bytes": 425
   },
-  "next/dist/chunk-2EYTYBN4.js": {
+  "next/dist/chunk-5GY4Y66S.js": {
    "imports": [
     {
      "path": "next/dist/chunk-GLVRXFZR.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-QKDOUBEC.js",
+     "path": "next/dist/chunk-7FWYCZ5G.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-OTMUWHOG.js",
+     "path": "next/dist/chunk-TQ7ZYRPY.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-JQBEYJWD.js",
+     "path": "next/dist/chunk-THHNMM2C.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-ATSMDURJ.js",
+     "path": "next/dist/chunk-RMYA5SWH.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-2TVFOYXO.js",
+     "path": "next/dist/chunk-G3MNWPSN.js",
      "kind": "dynamic-import"
     },
     {
@@ -21415,59 +22718,59 @@
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-T7FILZ4V.js",
+     "path": "next/dist/chunk-7XMOB4OY.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-242VDNY6.js",
+     "path": "next/dist/chunk-JYWOR365.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-DHGHBUSP.js",
+     "path": "next/dist/chunk-JCASWOG4.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-RKFKZVCL.js",
+     "path": "next/dist/chunk-OMTZV6AU.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-IOK6KTAK.js",
+     "path": "next/dist/chunk-OYZUL6Y4.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-FFQHODFR.js",
+     "path": "next/dist/chunk-FNOB32XH.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-5ODTDRVT.js",
+     "path": "next/dist/chunk-BGNW3TTX.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-NTEMX2FX.js",
+     "path": "next/dist/chunk-YRB5WTGD.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-774CHR3I.js",
+     "path": "next/dist/chunk-A6HXXFAM.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-G7LRRLNA.js",
+     "path": "next/dist/chunk-WJSB3W54.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-T36EHFSM.js",
+     "path": "next/dist/chunk-64PUISL2.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-UISVEFGU.js",
+     "path": "next/dist/chunk-IYV65UHH.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-I67NC33E.js",
+     "path": "next/dist/chunk-D3WXCPZD.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-FHZ3YVLC.js",
+     "path": "next/dist/chunk-43SDSMU7.js",
      "kind": "dynamic-import"
     },
     {
@@ -21483,7 +22786,7 @@
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-G2NRQILT.js",
+     "path": "next/dist/chunk-FWH7D6N6.js",
      "kind": "dynamic-import"
     },
     {
@@ -21491,59 +22794,71 @@
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-LR6FOINP.js",
+     "path": "next/dist/chunk-F5VXATHJ.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-MDVWMLNJ.js",
+     "path": "next/dist/chunk-ZZXOXX3C.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-Y43DPCHK.js",
+     "path": "next/dist/chunk-TSDY7I2D.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-L4CVWDIP.js",
+     "path": "next/dist/chunk-HM3FB4PF.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-MCA47VGP.js",
+     "path": "next/dist/chunk-J2YXRRML.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-RBRH2YWG.js",
+     "path": "next/dist/chunk-DINWG7VS.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-ABGNA7BU.js",
+     "path": "next/dist/chunk-IDMKFOA7.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-D3KLIEZP.js",
+     "path": "next/dist/chunk-VDB4TQGO.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-25NLCISP.js",
+     "path": "next/dist/chunk-WN6EVPEG.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-R2DLLVWF.js",
+     "path": "next/dist/chunk-WI2KJ3FZ.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-KGP3DZRG.js",
+     "path": "next/dist/chunk-XK2HSU2E.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-LEY3RLOM.js",
+     "path": "next/dist/chunk-QI2YJO6Q.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-YCWGC3X3.js",
+     "path": "next/dist/chunk-JEV6V2FE.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-BD5GZUVZ.js",
+     "path": "next/dist/chunk-V5BIH4VA.js",
+     "kind": "dynamic-import"
+    },
+    {
+     "path": "next/dist/chunk-VAMACEUH.js",
+     "kind": "dynamic-import"
+    },
+    {
+     "path": "next/dist/chunk-XPU2UDOA.js",
+     "kind": "dynamic-import"
+    },
+    {
+     "path": "next/dist/chunk-LOMUVX2V.js",
      "kind": "dynamic-import"
     },
     {
@@ -21551,47 +22866,47 @@
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-GQVSD346.js",
+     "path": "next/dist/chunk-5AYIZKXR.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-IMNSYXEL.js",
+     "path": "next/dist/chunk-N3ZWL2EE.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-ZKLSMJLJ.js",
+     "path": "next/dist/chunk-PAA2UGY3.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-IQQSQQPP.js",
+     "path": "next/dist/chunk-AIWWZV5H.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-O6DMV4EN.js",
+     "path": "next/dist/chunk-F4M5WET5.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-MJNKK7K5.js",
+     "path": "next/dist/chunk-IQ6XEJ2C.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-EHJCBI4O.js",
+     "path": "next/dist/chunk-43KXIPJH.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-LIWFYOVH.js",
+     "path": "next/dist/chunk-EMMOJOOD.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-YK35BJMP.js",
+     "path": "next/dist/chunk-MDEBW3QC.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-QJ4FOBTB.js",
+     "path": "next/dist/chunk-S55SUPSC.js",
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-SCYAQBJX.js",
+     "path": "next/dist/chunk-OWT2EHYP.js",
      "kind": "dynamic-import"
     }
    ],
@@ -21608,10 +22923,10 @@
    ],
    "inputs": {
     "next/src/app/router.js": {
-     "bytesInOutput": 4478
+     "bytesInOutput": 4594
     }
    },
-   "bytes": 4590
+   "bytes": 4706
   },
   "next/dist/chunk-Z2J2ZZYB.js": {
    "imports": [
@@ -21661,7 +22976,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-SQG32K7X.js",
+     "path": "next/dist/chunk-PFYYKKTR.js",
      "kind": "import-statement"
     },
     {
@@ -21861,7 +23176,7 @@
    },
    "bytes": 4463
   },
-  "next/dist/chunk-SQG32K7X.js": {
+  "next/dist/chunk-PFYYKKTR.js": {
    "imports": [
     {
      "path": "next/dist/chunk-VI6YCH3C.js",
@@ -21888,7 +23203,7 @@
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-5CZUUSGY.js",
+     "path": "next/dist/chunk-DWFBVLGA.js",
      "kind": "dynamic-import"
     },
     {
@@ -21900,7 +23215,7 @@
      "kind": "dynamic-import"
     },
     {
-     "path": "next/dist/chunk-5CZUUSGY.js",
+     "path": "next/dist/chunk-DWFBVLGA.js",
      "kind": "dynamic-import"
     }
    ],
@@ -21967,11 +23282,19 @@
   "next/dist/parts.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -22035,12 +23358,12 @@
    ],
    "entryPoint": "next/src/ui/index.js",
    "inputs": {},
-   "bytes": 1084
+   "bytes": 1139
   },
   "next/dist/gallery.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-3XI7XJJZ.js",
+     "path": "next/dist/chunk-YKMSC2GP.js",
      "kind": "import-statement"
     },
     {
@@ -22072,11 +23395,19 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -22098,9 +23429,9 @@
      "bytesInOutput": 6324
     }
    },
-   "bytes": 24254
+   "bytes": 24309
   },
-  "next/dist/chunk-3XI7XJJZ.js": {
+  "next/dist/chunk-YKMSC2GP.js": {
    "imports": [
     {
      "path": "next/dist/chunk-6AXVQQXX.js",
@@ -22111,7 +23442,7 @@
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UQDDTUO6.js",
+     "path": "next/dist/chunk-TFR36U7G.js",
      "kind": "import-statement"
     },
     {
@@ -22359,10 +23690,18 @@
    },
    "bytes": 12890
   },
-  "next/dist/chunk-UQDDTUO6.js": {
+  "next/dist/chunk-TFR36U7G.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-E4OSLXS6.js",
+     "path": "next/dist/chunk-B77VNSSI.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-NEWZBERB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
      "kind": "import-statement"
     },
     {
@@ -22414,7 +23753,6 @@
     "e",
     "ea",
     "f",
-    "fa",
     "g",
     "h",
     "i",
@@ -22467,9 +23805,6 @@
     "next/src/services/speech.js": {
      "bytesInOutput": 563
     },
-    "next/src/services/clipboard.js": {
-     "bytesInOutput": 359
-    },
     "next/src/services/files.js": {
      "bytesInOutput": 866
     },
@@ -22477,10 +23812,31 @@
      "bytesInOutput": 5239
     }
    },
-   "bytes": 43803
+   "bytes": 43509
   },
-  "next/dist/chunk-E4OSLXS6.js": {
+  "next/dist/chunk-B77VNSSI.js": {
    "imports": [
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a"
+   ],
+   "inputs": {
+    "next/src/services/clipboard.js": {
+     "bytesInOutput": 358
+    }
+   },
+   "bytes": 414
+  },
+  "next/dist/chunk-NEWZBERB.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-RUUO5DUQ.js",
+     "kind": "import-statement"
+    },
     {
      "path": "next/dist/chunk-GLVRXFZR.js",
      "kind": "import-statement"
@@ -22500,31 +23856,48 @@
     "k",
     "l",
     "m",
-    "n",
-    "o",
-    "p",
-    "q",
-    "r",
-    "s",
-    "t",
-    "u",
-    "v"
+    "n"
+   ],
+   "inputs": {
+    "node_modules/preact/hooks/dist/hooks.mjs": {
+     "bytesInOutput": 2808
+    },
+    "next/src/i18n/t.js": {
+     "bytesInOutput": 610
+    },
+    "next/lang/en.json": {
+     "bytesInOutput": 8635
+    }
+   },
+   "bytes": 12249
+  },
+  "next/dist/chunk-RUUO5DUQ.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-GLVRXFZR.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l"
    ],
    "inputs": {
     "node_modules/preact/dist/preact.mjs": {
-     "bytesInOutput": 11234
-    },
-    "node_modules/preact/hooks/dist/hooks.mjs": {
-     "bytesInOutput": 2874
-    },
-    "next/src/i18n/t.js": {
-     "bytesInOutput": 624
-    },
-    "next/lang/en.json": {
-     "bytesInOutput": 8636
+     "bytesInOutput": 11784
     }
    },
-   "bytes": 23590
+   "bytes": 11927
   },
   "next/dist/chunk-ACJFC2LT.js": {
    "imports": [
@@ -22582,10 +23955,10 @@
    "entryPoint": "next/src/app/class.css",
    "inputs": {
     "next/src/app/class.css": {
-     "bytesInOutput": 13694
+     "bytesInOutput": 29297
     }
    },
-   "bytes": 13695
+   "bytes": 29298
   },
   "next/dist/inter-latin-wght-normal-NRMW37G5.woff2": {
    "imports": [],

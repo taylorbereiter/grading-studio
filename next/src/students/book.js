@@ -8,6 +8,7 @@ import { useStore } from '../engines/gstore.js';
 import { prefs } from './prefs.js';
 import { library, meta, gradingSetup } from './index.js';
 import { libraryChange } from './undo.js';
+import { setupRecord } from '../planning/index.js';
 
 // The library as the current app holds it once loaded (src/app/library.js migrateLib): every class with units and a roster.
 export function fullLibrary() {
@@ -55,6 +56,12 @@ export async function missingByClass() {
 // the save hands in, found again there by id, as one undo step.
 export function change(label, fn, alone) {
   return libraryChange(label, l => { hand(l); fn(l); }, alone);
+}
+// The Planner's timetable as attendance reads it (src/today.js plan, src/attend.js attMeets): each class's name and meeting days,
+// and the days off. The grading side may read the planning side; nothing about students goes the other way.
+export async function attPlan() {
+  const p = await setupRecord.get().catch(() => null); if (!p) return null;
+  return { classes: (p.classes || []).filter(Boolean).map(k => ({ name: String(k.name || ''), meets: (k.meets || []).filter(Boolean) })), daysOff: (p.daysOff || []).filter(Boolean) };
 }
 export const classIn = (l, id) => l.classes.find(c => String(c.id) === String(id)) || null;
 export { B as engine };

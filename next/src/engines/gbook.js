@@ -9,9 +9,44 @@ export const bookUse = o => { if ('lib' in o) lib = o.lib; if ('setup' in o) set
 // A retake's counting rule (gcore retakeRule) is read from the library: this one, for just the moment of the call.
 import { withTries as coreTries, state as coreState, set as coreSet } from './gcore.js';
 const withTries = (...a) => { const was = coreState().lib; coreSet.lib(lib); try { return coreTries(...a); } finally { coreSet.lib(was); } };
-const saveLib = () => {}, bkSaveLib = () => {}, renderLib = () => {};
-import { LANG_LOCALE, store, kdo, ROW_TOP, rowTop, setupMax, rowScaleOf, setupOver, roundPct, pointsWith, percentWith, addXc, fmtNum, fmtPct } from './gcore.js';
+const saveLib = () => {}, bkSaveLib = () => {}, renderLib = () => {}, seatDraw = () => {};
+// The Planner's timetable as attendance reads it (src/today.js plan: { classes: [{ name, meets: [{ dow }] }], daysOff: [{ date }] }), handed in by the page.
+let plan = null;
+export const planUse = p => { plan = p; };
+import { batch, LANG_LOCALE, store, kdo, ROW_TOP, rowTop, setupMax, rowScaleOf, setupOver, roundPct, pointsWith, percentWith, addXc, fmtNum, fmtPct } from './gcore.js';
 
+// src/pickshare.js
+const pkNice = n => { const s = String(n || '').trim(), m = /^([^,]+),\s*(.+)$/.exec(s); return m ? m[2].trim() + ' ' + m[1].trim() : s; };
+// src/pickshare.js
+function pkShort(names) {
+  const parts = names.map(n => pkNice(n).split(/\s+/).filter(Boolean)), first = parts.map(p => p[0] || '?'), count = new Map();
+  for (const f of first) count.set(f.toLowerCase(), (count.get(f.toLowerCase()) || 0) + 1);
+  return parts.map((p, i) => count.get(first[i].toLowerCase()) > 1 && p.length > 1 ? first[i] + ' ' + [...p[p.length - 1]][0].toUpperCase() + '.' : first[i]);
+}
+// src/pickshare.js
+function pkShuffle(list) {
+  const a = list.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+// src/pickshare.js
+function pkCount(len, by, n) {
+  if (len < 1) return 0;
+  if (by === 'count') return Math.max(1, Math.min(len, n));
+  const up = Math.ceil(len / n), least = Math.floor(len / up);
+  return least >= Math.max(2, n - 1) || up === 1 ? up : Math.max(1, Math.floor(len / n));
+}
+// src/pickshare.js
+function pkGroups(names, by, n, prev) {
+  const k = pkCount(names.length, by, n);
+  const deal = () => { const out = Array.from({ length: k }, () => []); pkShuffle(names).forEach((nm, i) => out[i % k].push(nm)); return out; };
+  if (k < 2 || !Array.isArray(prev) || !prev.length) return deal();
+  const was = new Map(); prev.forEach((g, i) => g.forEach(nm => was.set(nm, i)));
+  const again = gs => { let s = 0; for (const g of gs) for (let a = 0; a < g.length; a++) for (let b = a + 1; b < g.length; b++) if (was.has(g[a]) && was.get(g[a]) === was.get(g[b])) s++; return s; };
+  let best = null, least = Infinity;
+  for (let t = 0; t < 60 && least > 0; t++) { const g = deal(), s = again(g); if (s < least) { best = g; least = s; } }
+  return best;
+}
 // src/app/start.js
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // src/app/start.js
@@ -26,6 +61,8 @@ const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensiti
 const ME_OLD = { sys: 'ManageBac', unit: 'Atlas', scale12: true, ai: 'Claude' };   // scale12: Rubric setup offers the 12-point scale (12 = 100, 11 = 95…) as a preset
 // src/app/library.js
 const me = () => lib.me || ME_OLD;
+// src/app/library.js
+const attDayOk = d => { if (!/^\d{4}-\d\d-\d\d$/.test(d || '')) return false; const t = new Date(d + 'T12:00:00'); return !isNaN(t) && t.getMonth() + 1 === +d.slice(5, 7) && t.getDate() === +d.slice(8); };
 // src/app/library.js
 const GRADE_WAYS = [
   ['rubric', 'Rubric rows', 'Score each row 0 to 4, half points too. The total and percent add up by themselves.', { mode: 'rubric', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 10, scale: null }, null],
@@ -79,6 +116,8 @@ function cardOfKept(id) {
   for (const c of holders()) for (const u of c.units) { const it = u.items.find(x => x.batchId === id); if (it) return it; }
   return null;
 }
+// src/app/anon.js
+const anonOn = () => !!(batch && batch.anon && batch.anon.on);
 // src/grades.js
 const hasSheet = g => g.sheet != null && g.sheet !== '';
 // src/grades.js
@@ -87,6 +126,11 @@ const tryRuleSay = (rule, n) => rule === 'last' ? 'the latest try' : rule === 'a
 function triesSay(g) {
   const all = g.tries.concat(g.tryNow ? [g.tryNow] : []);
   return all.map((t, i) => (i ? (all.length === 2 ? 'retake ' : 'try ' + (i + 1) + ' ') : 'First try ') + fmtPct(t.pct)).join(', ') + (g.tryNow ? '' : ', retake not scored yet') + '. Counts: ' + (g.tryNow ? tryRuleSay(g.tryRule, all.length) : 'the ' + (g.tries.length > 1 ? 'earlier tries' : 'first try')) + '.';
+}
+// src/grades.js
+function csvSafe(v) {
+  const t = String(v);
+  return /^[\s 　]*[=+\-@＝＋－＠]/.test(t) || /^[\t\r\n]/.test(t) ? "'" + t : t;
 }
 // src/saving.js
 const newestWork = (a, b) => !a ? b || null : !b ? a : (b.t || 0) > (a.t || 0) ? b : a;
@@ -430,6 +474,84 @@ function keepInfo(c, was, rows) {
 const one = t => String(t || '').replace(/\s*\n\s*/g, ' ').trim();
 // src/typednotes.js
 function tnHasG(g) { return !!(g && g.tn && Array.isArray(g.tn.l) && g.tn.l.some(x => x && x.k !== 'h' && x.y !== 'h2' && String(x.s || '').trim())); }
+// src/seating.js
+const SEAT_MAX_W = 14, SEAT_MAX_H = 12;
+// src/seating.js
+const SEAT_ROOMS = [['rows', 'Rows', 'Single desks in rows'], ['pairs', 'Pairs', 'Desks side by side in twos'], ['tables', 'Tables of four', 'Four desks pushed together'], ['horseshoe', 'Horseshoe', 'Desks around three sides, open to the front']];
+// src/seating.js
+const seatXY = k => k.split(',').map(Number);
+// src/seating.js
+const seatKeys = s => Object.keys(s.desks).sort((a, b) => { const [ax, ay] = seatXY(a), [bx, by] = seatXY(b); return ay - by || ax - bx; });
+// src/seating.js
+function seatRoom(kind, n) {
+  n = Math.max(1, Math.min(60, n));
+  const cells = [];
+  if (kind === 'pairs') {
+    const across = n <= 16 ? 2 : 3, per = across * 2, rows = Math.ceil(n / per);
+    for (let y = 0; y < rows; y++) for (let p = 0; p < across; p++) cells.push([3 * p, y], [3 * p + 1, y]);
+  } else if (kind === 'tables') {
+    const tables = Math.ceil(n / 4), across = tables <= 4 ? 2 : tables <= 9 ? 3 : 4;
+    for (let t = 0; t < tables; t++) { const x = 3 * (t % across), y = 3 * Math.floor(t / across); cells.push([x, y], [x + 1, y], [x, y + 1], [x + 1, y + 1]); }
+  } else if (kind === 'horseshoe') {
+    const w = Math.min(SEAT_MAX_W, Math.max(4, Math.ceil(n * .4))), h = Math.min(SEAT_MAX_H, Math.max(2, Math.ceil((n - w) / 2) + 1));
+    for (let y = 0; y < h - 1; y++) cells.push([0, y]);
+    for (let x = 0; x < w; x++) cells.push([x, h - 1]);
+    for (let y = h - 2; y >= 0; y--) cells.push([w - 1, y]);
+    for (let y = h - 3; y >= 0 && cells.length < n; y -= 2) for (let x = 2; x < w - 2 && cells.length < n; x++) cells.push([x, y]);   // a very big class: rows inside the horseshoe
+  } else {
+    const per = n <= 12 ? 4 : n <= 20 ? 5 : n <= 36 ? 6 : 7, rows = Math.ceil(n / per);
+    for (let y = 0; y < rows; y++) for (let x = 0; x < per; x++) cells.push([x, y]);
+  }
+  if (kind !== 'horseshoe') cells.length = Math.min(cells.length, n);   // no more desks than students; a horseshoe keeps its shape
+  return { w: Math.max(...cells.map(c => c[0])) + 1, h: Math.max(...cells.map(c => c[1])) + 1, cells: cells.map(c => c.join(',')) };
+}
+// src/seating.js
+function seatOf(c) {
+  const s = c && c.seats; if (!s || typeof s !== 'object' || !s.desks || typeof s.desks !== 'object') return null;
+  const w = Math.max(1, Math.min(SEAT_MAX_W, Math.round(+s.w) || 1)), h = Math.max(1, Math.min(SEAT_MAX_H, Math.round(+s.h) || 1)), desks = {}, used = new Set();
+  for (const [k, v] of Object.entries(s.desks)) {
+    if (!/^\d+,\d+$/.test(k)) continue;
+    const [x, y] = seatXY(k); if (x >= w || y >= h) continue;
+    const n = typeof v === 'string' && v && c.names.includes(v) && !used.has(v) ? v : '';
+    if (n) used.add(n); desks[k] = n;
+  }
+  return { w, h, desks, flip: !!s.flip, pins: (Array.isArray(s.pins) ? s.pins : []).filter(n => used.has(n)) };
+}
+// src/seating.js
+const seatList = c => { const s = seatOf(c); return s ? seatKeys(s).filter(k => s.desks[k]).map(k => ({ name: s.desks[k], x: seatXY(k)[0], y: seatXY(k)[1] })) : []; };
+// src/seating.js
+function seatSave(c, s) {
+  if (!s) delete c.seats;
+  else c.seats = { w: s.w, h: s.h, desks: s.desks, ...(s.flip ? { flip: true } : {}), ...(s.pins && s.pins.length ? { pins: s.pins } : {}) };
+  saveLib(); seatDraw();
+}
+// src/seating.js
+function seatFill(c, shuffle) {
+  const s = seatOf(c), pinned = new Set(s.pins), keys = seatKeys(s).filter(k => !pinned.has(s.desks[k]));
+  let who = c.names.filter(n => !pinned.has(n)); if (shuffle) who = pkShuffle(who);
+  keys.forEach((k, i) => { s.desks[k] = who[i] || ''; });
+  seatSave(c, s);
+  return Math.max(0, who.length - keys.length);
+}
+// src/seating.js
+function seatPut(c, name, key) {
+  const s = seatOf(c), from = Object.keys(s.desks).find(k => s.desks[k] === name) || null;
+  if (key === from || (key && !(key in s.desks))) return;
+  const other = key ? s.desks[key] : '';
+  if (key) s.desks[key] = name;
+  if (from) s.desks[from] = other || '';
+  s.pins = s.pins.filter(n => n !== name && n !== other);
+  seatSave(c, s);
+}
+// src/seating.js
+function seatSetRoom(c, kind) {
+  const was = seatOf(c), who = was ? seatKeys(was).map(k => was.desks[k]).filter(Boolean) : [], r = seatRoom(kind, c.names.length), desks = {};
+  r.cells.forEach(k => { desks[k] = ''; });
+  const order = seatKeys({ desks }); who.forEach((n, i) => { if (order[i]) desks[order[i]] = n; });
+  seatSave(c, { w: r.w, h: r.h, desks, flip: was ? was.flip : false, pins: [] });
+}
+// src/attend.js
+const ATT_WAYS = [['p', 'Present'], ['l', 'Late'], ['a', 'Absent, reason unknown'], ['e', 'Absent, excused']], ATT_WORD = Object.fromEntries(ATT_WAYS);
 // src/attend.js
 const attRec = (c, d) => { const r = c && c.att && c.att[d]; return r && !r.off ? r : null; };
 // src/attend.js
@@ -441,6 +563,21 @@ const attDays = (c, from, to) => Object.keys((c && c.att) || {}).filter(d => att
 // src/attend.js
 function attCount(c, n, days) { const o = { p: 0, l: 0, e: 0, a: 0 }; for (const d of days) o[attOf(c, d, n)]++; return o; }
 // src/attend.js
+function attDayCount(c, d) { const o = { p: 0, l: 0, e: 0, a: 0 }; for (const n of c.names) o[attOf(c, d, n) || 'p']++; return o; }
+// src/attend.js
+function attSet(c, d, n, way, note) {
+  if (!c || !attDayOk(d) || !c.names.includes(n)) return false;
+  const was = attRec(c, d), r = { t: Date.now(), m: { ...((was && was.m) || {}) }, n: { ...((was && was.n) || {}) } };
+  if (way) { if (way === 'p' || !ATT_WORD[way]) delete r.m[n]; else r.m[n] = way; }
+  if (note !== undefined) { const s = String(note || '').trim().slice(0, 120); if (s) r.n[n] = s; else delete r.n[n]; }
+  if (!Object.keys(r.n).length) delete r.n;
+  (c.att ||= {})[d] = r; saveLib(); return true;
+}
+// src/attend.js
+function attTake(c, d) { if (!c || !attDayOk(d) || attRec(c, d)) return; (c.att ||= {})[d] = { t: Date.now(), m: {} }; saveLib(); }
+// src/attend.js
+function attClear(c, d) { if (!c || !c.att || !c.att[d]) return; c.att[d] = { t: Date.now(), off: 1 }; saveLib(); }
+// src/attend.js
 function keepAtt(c, was, oldInfo) {
   if (!c.att) return;
   for (const n of (was || []).filter(n => !c.names.includes(n))) {
@@ -449,6 +586,20 @@ function keepAtt(c, was, oldInfo) {
     for (const r of Object.values(c.att)) for (const k of ['m', 'n']) if (r[k] && r[k][n] != null) { if (r[k][to] == null) r[k][to] = r[k][n]; delete r[k][n]; }
   }
 }
+// src/attend.js
+function attMeets(c) {
+  if (!plan) return null;
+  const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(c.name), pc = k && plan.classes.find(x => nk(x.name) === k);
+  return pc && pc.meets.length ? { dows: new Set(pc.meets.map(m => m.dow)), off: new Set(plan.daysOff.map(x => x.date)) } : null;
+}
+// src/attend.js
+function attStep(c, d, dir) {
+  const m = attMeets(c), t = new Date(d + 'T12:00:00');
+  for (let i = 0; i < 90; i++) { t.setDate(t.getDate() + dir); const x = isoDay(t); if (!m || (m.dows.has(t.getDay()) && !m.off.has(x)) || attRec(c, x)) return x; }
+  return isoDay(new Date(new Date(d + 'T12:00:00').getTime() + dir * 864e5));
+}
+// src/attend.js
+const attUnknown = (c, days) => days.flatMap(d => c.names.filter(n => attOf(c, d, n) === 'a').map(n => ({ d, n }))).reverse();
 // src/goals.js
 function goalCell(d, g, p) {
   if (!g || !p || p.status === 'missing' || p.status === 'excused' || g.outAvg) return null;
@@ -565,6 +716,21 @@ function ibCols(c, cols) {
 const ibEvFor = (icols, name, k) => icols.filter(x => x.cells.has(name) && x.cells.get(name).lv[k] != null).map(x => ({ v: x.cells.get(name).lv[k], t: x.t, name: x.name, fm: x.fm }));
 // src/ib.js
 function ibMid(list) { const v = list.filter(x => x != null).sort((a, b) => a - b), n = v.length; if (!n) return null; const a = v[Math.floor((n - 1) / 2)], b = v[Math.ceil((n - 1) / 2)]; return a === b ? String(a) : a + ' to ' + b; }
+// src/mbentry.js
+const MB_ORDERS = [['', 'Roster order'], ['last', 'Last name'], ['first', 'First name']];
+// src/mbentry.js
+function mbParts(n) {
+  const s = String(n).trim(), c = s.indexOf(',');
+  if (c > 0) return { first: s.slice(c + 1).trim(), last: s.slice(0, c).trim() };
+  const w = s.split(/\s+/); return { first: w[0], last: w.length > 1 ? w[w.length - 1] : '' };
+}
+// src/mbentry.js
+function mbSorted(names, how) {
+  const idx = names.map((n, i) => i);
+  if (!how || anonOn()) return idx;
+  const key = i => { const p = mbParts(names[i]); return how === 'last' ? [p.last, p.first] : [p.first, p.last]; };
+  return idx.sort((a, b) => { const x = key(a), y = key(b); return x[0].localeCompare(y[0], undefined, { sensitivity: 'base' }) || x[1].localeCompare(y[1], undefined, { sensitivity: 'base' }) || a - b; });
+}
 // src/missing.js
 const MIS_WORDS = {
   subj: 'Missing work for {class}',
@@ -598,5 +764,5 @@ function misLate(due) {
 }
 // src/missing.js
 const misDue = col => col.due ? 'Due ' + bkDay(col.due) + (misLate(col.due) ? ' · ' + people(misLate(col.due), 'day') + ' ago' : '') : '';
-export { BK_TYPES, bkConf, bkCats, bkType, bkIsType, bkIsDef, bkLabel, bkTermOf, bkMean, bkCellOf, bkTypedCell, bkLoad, bkClassCols, bkCounts, bkGrade, bkXcTo, bkTabs, bkTermNow, bkClassAvg, bkBands, bkGroups, bkCountTypes, pctAvgText, bkParse, bkCellVal, bkColMax, bkPut, typedStamp, isoDay, bkDay, BK_DEF, rosterPairs, bkTypeUse, IB_TOP, IB_BANDS, IB_GROUPS, IB_WAYS, IB_BOUNDS_DP, ibLetter, classWay, ibGroup, ibGroupCrit, ibBoundsFor, ibBoundsClean, ibCrit, ibBounds, ibGradeOf, ibLevel, ibBandName, ibTerm, ibEvidence, ibConf, ibCols, ibEvFor, ibMid, MIS_WORDS, misConf, misCols, misOwes, misByStu, misByCol, misNudge, misLate, misDue, parseRosterRows, keepInfo, keepAtt, infoOf, setInfo, blankInfo, attDays, attCount, attOf, attNote, classNewWay };
+export { BK_TYPES, bkConf, bkCats, bkType, bkIsType, bkIsDef, bkLabel, bkTermOf, bkMean, bkCellOf, bkTypedCell, bkLoad, bkClassCols, bkCounts, bkGrade, bkXcTo, bkTabs, bkTermNow, bkClassAvg, bkBands, bkGroups, bkCountTypes, pctAvgText, bkParse, bkCellVal, bkColMax, bkPut, typedStamp, isoDay, bkDay, BK_DEF, rosterPairs, bkTypeUse, IB_TOP, IB_BANDS, IB_GROUPS, IB_WAYS, IB_BOUNDS_DP, ibLetter, classWay, ibGroup, ibGroupCrit, ibBoundsFor, ibBoundsClean, ibCrit, ibBounds, ibGradeOf, ibLevel, ibBandName, ibTerm, ibEvidence, ibConf, ibCols, ibEvFor, ibMid, MIS_WORDS, misConf, misCols, misOwes, misByStu, misByCol, misNudge, misLate, misDue, mbParts, mbSorted, MB_ORDERS, parseRosterRows, keepInfo, keepAtt, infoOf, setInfo, blankInfo, attDays, attCount, attOf, attNote, classNewWay, ATT_WAYS, attRec, attDayOk, attSet, attTake, attClear, attDayCount, attUnknown, attMeets, attStep, csvSafe, SEAT_ROOMS, SEAT_MAX_W, SEAT_MAX_H, seatXY, seatKeys, seatRoom, seatOf, seatSave, seatList, seatFill, seatPut, seatSetRoom, pkNice, pkShort, pkShuffle, pkCount, pkGroups };
 export { EMAIL_RX };

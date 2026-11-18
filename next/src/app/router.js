@@ -71,6 +71,12 @@ export const PARTS = {
   // a class's People and Grades tabs (app/class/), each with the gradebook's engine
   people: () => import('./class/people.jsx'),
   grades: () => import('./class/grades.jsx'),
+  // a gradebook imported from a spreadsheet, with its reading engine (gbki)
+  bki: () => import('./class/bookimport.jsx'),
+  // a class brought over from Google Classroom's grades file
+  gc: () => import('./class/classroom.jsx'),
+  // Pick a name, make groups, from the class header
+  picker: () => import('./class/picker.jsx'),
   bring: () => import('./mark/open.js'),
   word: () => import('./mark/word.js'),
   report: () => import('./mark/report.jsx'),

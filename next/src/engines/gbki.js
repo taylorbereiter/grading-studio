@@ -223,4 +223,22 @@ function oneEdit(a, b) {
 }
 // src/merge.js
 const normName = s => String(s || '').replace(/\s+/g, '').toLowerCase();
-export { bkiParse, bkiXlsx, bkiCell, bkiDate, bkiWide, bkiRead, bkiGuess, bkiFit, bkiMatch, bkiCatGuess, BKI_SUM, normName };
+// src/classroom.js
+function gcNameOf(file) {
+  return String(file || '').replace(/\.[a-z0-9]+$/i, '').replace(/[_]+/g, ' ').replace(/\s*\(\d+\)\s*$/, '')
+    .replace(/\s*[-–]?\s*\d{4}-\d{1,2}-\d{1,2}.*$/, '').replace(/\s*[-–]?\s*\b(all\s+)?grades?\b\s*$/i, '').replace(/\s+/g, ' ').trim();
+}
+// src/classroom.js
+function gcRead(rows) {
+  const d = bkiRead(rows || []);
+  if (!d || d.err || !d.students.length) return null;
+  const head = rows[0] || [], ei = head.findIndex(h => /e-?mail/i.test(h)), seen = new Set(), students = [];
+  for (const s of d.students) {
+    const k = normName(s.name); if (!k || seen.has(k)) continue;
+    seen.add(k);
+    const email = ei >= 0 && EMAIL_RX.test(s.cells[ei] || '') ? s.cells[ei] : '';
+    students.push({ name: s.name, email });
+  }
+  return { rows, students, cols: d.cols.length };
+}
+export { bkiParse, bkiXlsx, bkiCell, bkiDate, bkiWide, bkiRead, bkiGuess, bkiFit, bkiMatch, bkiCatGuess, BKI_SUM, normName, gcRead, gcNameOf };

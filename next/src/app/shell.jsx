@@ -33,12 +33,17 @@ export function useClasses() {
   const [list, setList] = useState(null);
   useEffect(() => {
     let live = true;
-    const read = () => classesForHome().then(l => live && setList(l), e => { console.error(e); live && setList([]); });
+    // a list that reads the same is kept as it was, so a save that changes nothing here draws nothing again
+    let was = '';
+    const keep = l => { const k = JSON.stringify(l); if (live && k !== was) { was = k; setList(l); } };
+    const read = () => classesForHome().then(keep, e => { console.error(e); keep([]); });
     read();
     const vis = () => { if (!document.hidden) read(); };
     document.addEventListener('visibilitychange', vis);
     window.addEventListener('storage', read);
-    return () => { live = false; document.removeEventListener('visibilitychange', vis); window.removeEventListener('storage', read); };
+    // and after a save on the students' side here (a class added, a roster changed), so a new class opens at once
+    const off = onSaved(e => { if (e.side === 'students' && e.kind === 'library') read(); });
+    return () => { live = false; off(); document.removeEventListener('visibilitychange', vis); window.removeEventListener('storage', read); };
   }, []);
   return list;
 }

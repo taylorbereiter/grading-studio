@@ -7,11 +7,13 @@ import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Button, IconButton, Icon, EmptyState, Dialog, TextInput, Menu, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
-import { href, go } from '../router.js';
+import { href, go, PARTS } from '../router.js';
 import * as undoList from '../../services/undo.js';
 import { useBook, classBook } from './data.js';
 import { engine as B, change, classIn } from '../../students/book.js';
 import { initials, pct, typeName } from './grades.jsx';
+import { AttendSheet, AttStudent, attOn } from './attend.jsx';
+import { SeatingSheet } from './seating.jsx';
 import './lines.js';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -20,7 +22,7 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 // .csv or .txt list read the same way, with any student ID and email kept as that student's details. Saved as one undo step.
 export function RosterDialog({ c, onClose }) {
   const [name, setName] = useState(c ? c.name : ''), [names, setNames] = useState(c ? c.names.join('\n') : ''), up = useRef([]), file = useRef(null);
-  const [err, setErr] = useState('');
+  const [err, setErr] = useState(''), [Gc, setGc] = useState(null);
   const read = async e => { const f = e.currentTarget.files[0]; if (!f) return; const rows = B.parseRosterRows(await f.text()); up.current = rows; setNames(rows.map(r => r.name).join('\n')); e.currentTarget.value = ''; };
   const save = async () => {
     const nm = name.trim(); if (!nm) { setErr(t('class.name_needed')); return; }
@@ -42,6 +44,8 @@ export function RosterDialog({ c, onClose }) {
     <p class="mute small">{t('class.roster_note')}</p>
     <Button size="sm" icon="upload" onClick={() => file.current.click()} data-roster-file>{t('class.upload_list')}</Button>
     <input type="file" ref={file} accept=".csv,.txt,text/csv,text/plain" hidden onChange={read} data-roster-input />
+    {!c && <Button size="sm" icon="school" onClick={() => PARTS.gc().then(m => setGc(() => m.ClassroomSheet))} data-roster-gc>{t('class.gc_open')}</Button>}
+    {Gc && <Gc onClose={(id, cols) => { setGc(null); if (id) go('class', id, cols ? 'grades' : 'people'); }} />}
   </Dialog>;
 }
 
@@ -64,7 +68,7 @@ function MoveDialog({ lib, c, n, onClose }) {
 }
 
 export default function People({ classId, sub }) {
-  const b = useBook(), [find, setFind] = useState(''), [editing, setEditing] = useState(false), [moving, setMoving] = useState(null);
+  const b = useBook(), [find, setFind] = useState(''), [editing, setEditing] = useState(false), [moving, setMoving] = useState(null), [tool, setTool] = useState(null);
   if (!b) return <div class="loading" aria-busy="true" />;
   const x = classBook(b, classId);
   if (!x) return <EmptyState icon="warn" title={t('class.read_failed')} />;
@@ -87,14 +91,16 @@ export default function People({ classId, sub }) {
       <ul class="stus">{shown.map(r => <li><a class={'stu' + (r.j === i ? ' on' : '')} href={href('class', classId, 'people', r.j + 1)} aria-current={r.j === i ? 'page' : undefined} data-stu={r.j}>
         <span class="cav" aria-hidden="true" data-raw>{initials(r.m)}</span><span class="nm" data-raw>{r.m}</span><span class="sc num">{grades[r.j].grade != null ? pct(grades[r.j].grade) : ''}</span></a></li>)}</ul>
     </div>
-    <Student key={c.id + '|' + n} x={x} n={n} i={i} cols={cols} r={grades[i]} onMove={() => setMoving(n)} onRemove={remove} />
+    <Student key={c.id + '|' + n} x={x} n={n} i={i} cols={cols} r={grades[i]} onMove={() => setMoving(n)} onRemove={remove} onTool={setTool} />
+    {tool && tool.k === 'att' && <AttendSheet x={x} day={tool.d} onClose={() => setTool(null)} />}
+    {tool && tool.k === 'seat' && <SeatingSheet x={x} onClose={() => setTool(null)} />}
     {dlg}
     {moving && <MoveDialog lib={x.lib} c={c} n={moving} onClose={ok => { setMoving(null); if (ok) go('class', classId, 'people'); }} />}
   </div>;
 }
 
 // One student's page: what the current app's one-student view and details card say, laid out as the design draws it.
-function Student({ x, n, i, cols, r, onMove, onRemove }) {
+function Student({ x, n, i, cols, r, onMove, onRemove, onTool }) {
   const { c } = x, miss = cols.filter(col => col.type !== 'xc' && (col.cells.get(n) || {}).st === 'missing');
   const days = B.attDays(c), att = days.length ? B.attCount(c, n, days) : null, here = att ? Math.round((att.p + att.l) / days.length * 100) : null;
   const recent = cols.filter(col => col.type !== 'xc').slice(-6).reverse();
@@ -105,7 +111,9 @@ function Student({ x, n, i, cols, r, onMove, onRemove }) {
   return <article class="card cp-sp" aria-labelledby="h-stu" data-student={i}>
     <div class="sp-head"><span class="cav lg" aria-hidden="true" data-raw>{initials(n)}</span>
       <div><h2 id="h-stu" data-raw>{n}</h2><div class="sub"><span data-raw>{c.name}</span>{(B.infoOf(c, n).id || '') && <span data-raw>{B.infoOf(c, n).id}</span>}</div></div>
-      <div class="acts"><Menu label={t('class.student_menu', { name: n })} trigger={m => <IconButton {...m} icon="dots" label={t('class.student_menu', { name: n })} data-stu-menu />}
+      <div class="acts"><Button size="sm" icon="seat" onClick={() => onTool({ k: 'seat' })} data-seat-open>{t('class.seat_groups')}</Button>
+        {attOn(x.lib) && <Button size="sm" icon="check" onClick={() => onTool({ k: 'att' })} data-att-open>{t('class.attendance')}</Button>}
+        <Menu label={t('class.student_menu', { name: n })} trigger={m => <IconButton {...m} icon="dots" label={t('class.student_menu', { name: n })} data-stu-menu />}
         items={[{ label: t('class.move_to'), icon: 'arrow', onSelect: onMove }, { label: t('class.remove'), icon: 'trash', onSelect: onRemove }]} /></div></div>
     <div class="kpis">
       <div class="kpi" data-kpi="avg"><b>{r.grade != null ? pct(r.grade) : '–'}</b><span>{t('class.avg_term')}</span></div>
@@ -118,6 +126,7 @@ function Student({ x, n, i, cols, r, onMove, onRemove }) {
         <td class={'s' + (cell && cell.st === 'missing' ? ' warn' : '')}>{!cell ? '–' : cell.st === 'missing' ? t('class.missing') : cell.st === 'excused' ? t('class.excused') : cell.pct != null ? (cell.total != null ? fmtPts(cell) : cell.pct + '%') : cell.fb ? t('class.fb_given') : '–'}</td></tr>; })}</table>
         : <p class="mute">{t('class.no_work_yet')}</p>}
     </section>
+    {attOn(x.lib) && <AttStudent c={c} n={n} term={x.now ? x.conf.terms.find(k => k.id === x.now) : null} onDay={d => onTool({ k: 'att', d })} />}
     <section class="sp-sec"><h3><label for="stu-note">{t('class.notes')}</label></h3>
       <textarea id="stu-note" class="input" rows="3" value={note} placeholder={t('class.notes_ph')} onInput={e => typeNote(e.currentTarget.value)} data-stu-note /></section>
   </article>;

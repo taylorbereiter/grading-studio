@@ -116,6 +116,7 @@ export default function ClassPage({ route, classes }) {
   const lib = (classes || []).filter(x => !x.loose);
   const x = (classes || []).find(k => (k.id || '-') === route.params.id);
   const tab = TABS.includes(route.params.tab) ? route.params.tab : 'course';
+  const [pk, setPk] = useState(false), Pk = usePart('picker', pk);
   const Work = usePart('work', tab === 'work'), People = usePart('people', tab === 'people' || route.params.id === 'new'), Grades = usePart('grades', tab === 'grades');
   if (route.params.id === 'new') return <div class="page classpage"><header class="ph"><h1>{t('nav.add_class')}</h1></header>
     {People ? <People.RosterDialog c={null} onClose={id => (id ? go('class', id, 'people') : history.length > 1 ? history.back() : go('home'))} /> : <div class="loading" aria-busy="true" />}</div>;
@@ -127,7 +128,9 @@ export default function ClassPage({ route, classes }) {
     <header class="ph clh"><div>
       <h1><span class="dot big" style={{ '--cc': classTone(p, x.name, x.loose ? -1 : lib.indexOf(x)) }} />{x.loose ? t('nav.no_class') : <span data-raw>{x.name}</span>}</h1>
       <p class="mute meta">{x.students > 0 && <span>{t('home.students', { n: x.students })}</span>}{days.length > 0 && <span data-raw>{days.join(', ')}</span>}
-        {partners.length > 0 && <span><Icon name="link" size="xs" />{t('plan.shares_lessons', { names: partners.map(k => k.name).join(', ') })}</span>}</p></div></header>
+        {partners.length > 0 && <span><Icon name="link" size="xs" />{t('plan.shares_lessons', { names: partners.map(k => k.name).join(', ') })}</span>}</p></div>
+      {!x.loose && x.students > 0 && <Button size="sm" icon="shuffle" onClick={() => setPk(true)} data-pick-name>{t('plan.pr_pick')}</Button>}</header>
+    {pk && Pk && <Pk.PickerFor classId={x.id} onClose={() => setPk(false)} />}
     <Tabs label={t('plan.class_tabs')} value={tab} onChange={v => go('class', route.params.id, v === 'course' ? '' : v)}
       tabs={[{ id: 'course', label: t('plan.course_line') }, { id: 'work', label: t('plan.assignments') }, { id: 'people', label: t('plan.people'), count: x.students || null }, { id: 'grades', label: t('plan.grades') }, { id: 'todo', label: t('nav.todo') }]} />
     {tab === 'work' ? (Work ? <Work.default classId={route.params.id} /> : <div class="loading" aria-busy="true" />)
