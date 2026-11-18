@@ -25,7 +25,7 @@ export const ROUTES = [
   ['library', 'library', 'library'],
   ['library/:tab', 'library', 'library'],
   ['library/:tab/:sub', 'library', 'library'],   // Library > Examples > Watch list
-  ['school', 'later', 'school'],
+  ['school', 'school', 'school'],
   ['settings', 'settings', 'settings'],
   ['settings/:group', 'settings', 'settings'],
   ['help', 'later', 'help'],
@@ -120,6 +120,7 @@ export const CHUNKS = {
   later: () => import('./screens/later.jsx'),
   todo: () => import('./screens/todo.jsx'),
   time: () => import('./screens/time.jsx'),
+  school: () => import('./screens/school.jsx'),
   calendar: () => import('./screens/calendar.jsx'),
   class: () => import('./screens/class.jsx'),
   lesson: () => import('./screens/lesson.jsx'),

@@ -12,7 +12,7 @@ import { onSaved } from '../../shared/saved.js';
 import { readTodo, todoChange, engine as E } from '../../students/todo.js';
 import { appLinesForTodo } from '../../crossings.js';
 import { toneOf } from '../tone.js';
-import { takeAdd, onAdd } from '../todo-add.js';
+import { takeAdd, onAdd, takePerson } from '../todo-add.js';
 import { startFocus } from '../focus/bus.js';
 import { FocusAside } from '../focus/aside.jsx';
 import LINES from '../../../lang/todo.en.json';
@@ -53,7 +53,7 @@ function useTodo() {
 
 export default function Todo({ route, classes }) {
   const v = useTodo(), week = route.params && route.params.view === 'week';
-  const [sel, setSel] = useState(''), [filter, setFilter] = useState('all'), [showDone, setShowDone] = useState(false), [by, setBy] = useState(() => pref('gs.tdBy') === 'cat' ? 'cat' : 'day');
+  const [sel, setSel] = useState(''), [filter, setFilter] = useState(() => { const p = takePerson(); return p ? 'p:' + p : 'all'; }), [showDone, setShowDone] = useState(false), [by, setBy] = useState(() => pref('gs.tdBy') === 'cat' ? 'cat' : 'day');
   if (!v) return <div class="loading" aria-busy="true" />;
   if (v.error) return <p class="mute">{t('home.read_failed')}</p>;
   const today = E.tdToday(), { lib, plan, people } = v;
