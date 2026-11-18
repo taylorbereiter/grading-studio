@@ -10,7 +10,7 @@ const { plant } = require('../../../test/helpers/app.js');
 const { gradingSeed, PLAN_SETUP } = require('../../../test/helpers/steady.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
-const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', png: 'image/png', webmanifest: 'application/manifest+json' };
+const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp', png: 'image/png', webmanifest: 'application/manifest+json' };
 // What the site serves, and nothing else. nextBuild, when set, stands in for next/version.json's build: a newer version going up.
 const site = { nextBuild: null };
 function serveSite() {
@@ -18,7 +18,7 @@ function serveSite() {
     let p = decodeURIComponent(req.url.split('?')[0]);
     if (p === '/blank') { res.writeHead(200, { 'Content-Type': TYPES.html }); return res.end('<!doctype html><title>blank</title>'); }
     if (p === '/') p = '/index.html'; if (p === '/next/') p = '/next/index.html';
-    const ok = /^\/(index|planner)\.html$|^\/(sw\.js|version\.json|manifest\.webmanifest)$|^\/icons\/[\w-]+\.png$|^\/lang\/[\w-]+\.js$|^\/next\/(index\.html|sw\.js|version\.json|dist\/[\w-]+\.(js|css|woff2))$/.test(p);
+    const ok = /^\/(index|planner)\.html$|^\/(sw\.js|version\.json|manifest\.webmanifest)$|^\/icons\/[\w-]+\.png$|^\/lang\/[\w-]+\.js$|^\/next\/(index\.html|sw\.js|version\.json|dist\/[\w-]+\.(js|css|woff2|webp))$/.test(p);
     const f = path.join(ROOT, p);
     if (!ok || !fs.existsSync(f)) { res.writeHead(404); return res.end(); }
     let body = fs.readFileSync(f);
@@ -70,7 +70,8 @@ test('on a phone, a newer version shows Update now on More, and pressing it take
   const p = await fresh(390);
   await p.goto(srv.url + 'next/#/more'); await shellUp(p);
   const kept = () => p.evaluate(async () => { const r = await (await caches.open('gsn-app-1')).match(new URL('version.json', location.href).href); return r ? (await r.json()).build : null; });
-  await p.waitForFunction(async () => (await caches.keys()).includes('gsn-app-1'), { timeout: 30000, polling: 300 });
+  // The worker writes version.json last, so a cache without it is still being filled.
+  await p.waitForFunction(async () => (await caches.keys()).includes('gsn-app-1') && !!(await (await caches.open('gsn-app-1')).match(new URL('version.json', location.href).href)), { timeout: 30000, polling: 300 });
   const first = await kept(); assert.ok(first);
   site.nextBuild = 'newer-build-for-the-test';
   try {

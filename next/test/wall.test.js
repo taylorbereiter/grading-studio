@@ -12,7 +12,7 @@ function all(dir) { return fs.readdirSync(dir, { withFileTypes: true }).flatMap(
 function importsOf(f) {
   const text = fs.readFileSync(f, 'utf8'), out = [];
   for (const m of text.matchAll(/(?:^|[\s;])(?:import|export)\s[^'"`]*?from\s*['"]([^'"]+)['"]|import\s*\(\s*['"]([^'"]+)['"]\s*\)|^\s*import\s*['"]([^'"]+)['"]/gm)) {
-    const spec = m[1] || m[2] || m[3]; if (!spec.startsWith('.')) continue;
+    const spec = m[1] || m[2] || m[3]; if (!spec.startsWith('.') || /\.(webp|png|woff2|css)$/.test(spec)) continue;   // pictures and fonts hold no data
     let p = path.resolve(path.dirname(f), spec); if (!fs.existsSync(p) && fs.existsSync(p + '.js')) p += '.js';
     if (fs.existsSync(p) && fs.statSync(p).isDirectory()) p = path.join(p, 'index.js');
     out.push(p);
@@ -43,8 +43,10 @@ test('whole/ is used only by main.js, the proof page and itself', () => {
   assert.ok(all(SRC).some(f => side(f) === 'whole'), 'whole/ exists');
 });
 test('a screen or service holds both sides only through crossings.js (or main.js through whole/)', () => {
-  const stop = p => isBoth(p) || side(p) === 'whole' || side(p) === 'students';
-  for (const f of all(SRC).filter(f => side(f) === 'top' && !BOTH.has(rel(f)))) {
+  // router.js is the address book: the screens it loads by address are each checked on their own (stage 4: the marking screen
+  // holds the students side and reaches the router for its links, as every screen does).
+  const stop = p => isBoth(p) || side(p) === 'whole' || side(p) === 'students' || rel(p) === 'app/router.js';
+  for (const f of all(SRC).filter(f => side(f) === 'top' && !BOTH.has(rel(f)) && rel(f) !== 'app/router.js')) {
     const r = [...reach(f, stop)].map(side);
     assert.ok(!(r.includes('students') && r.includes('planning')), rel(f) + ' reaches both sides: go through crossings.js');
     assert.ok(![...reach(f, stop)].some(p => isBoth(p) && rel(p) !== 'crossings.js'), rel(f) + ' imports the proof page');

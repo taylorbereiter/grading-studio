@@ -14,11 +14,20 @@ const FILES = ['base', 'bank', 'review', 'lessons', 'plain', 'looks', 'boxes', '
 
 // Top-level declarations: "function x", "async function x", "const|let|var x". A declaration runs to the next line that starts at
 // the left edge with something other than a closing bracket or a comment.
-function declarations() {
-  const out = new Map();
-  for (const f of FILES) {
+// The grading page's files in the order build.js joins them inside gsData.boot (src/app/* in src/app/order.json at "APP").
+function gradingFiles() {
+  const b = fs.readFileSync(path.join(ROOT, 'build.js'), 'utf8'), m = /\['@langs', '@sample', (.*?)\]\.map\(n => n === APP/.exec(b);
+  if (!m) throw new Error('lift: the grading file list was not found in build.js');
+  const app = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/app/order.json'), 'utf8'));
+  return m[1].split(',').map(s => s.trim().replace(/'/g, '')).flatMap(n => n === 'APP' ? app.map(a => 'src/app/' + a + '.js') : ['src/' + n + '.js']);
+}
+const cache = new Map();
+function declarations(files = FILES.map(f => 'src/planner/' + f + '.js')) {
+  const key = files.join('|'); if (cache.has(key)) return cache.get(key);
+  const out = new Map(); cache.set(key, out);
+  for (const f of files) {
     // Block comments that start at the left edge are dropped first (their lines would read as part of a declaration).
-    const lines = fs.readFileSync(path.join(ROOT, 'src/planner', f + '.js'), 'utf8').replace(/^\/\*[\s\S]*?\*\//gm, m => m.replace(/[^\n]/g, '')).split('\n');
+    const lines = fs.readFileSync(path.join(ROOT, f), 'utf8').replace(/^\/\*[\s\S]*?\*\//gm, m => m.replace(/[^\n]/g, '')).split('\n');
     let cur = null, tpl = false;   // tpl: inside a template string that runs over several lines
     for (const ln of lines) {
       if (tpl) { cur.lines.push(ln); if (ticks(ln) % 2) tpl = false; continue; }
@@ -42,21 +51,37 @@ const strip = s => s.replace(/^\s*\/\/.*$/gm, '').replace(/'(?:[^'\\\n]|\\.)*'/g
 const names = text => { const t = strip(text), n = new Set(t.match(/(?<![.\w$])[A-Za-z_$][\w$]*/g) || []); if (!/(?<![\w$.])\$\(/.test(t)) n.delete('$'); return n; };
 
 // roots: the names to export. deny: names that must not be reached. given: names the preamble provides instead of the source.
-function lift({ roots, deny = [], given = [], preamble = '', header = '' }) {
-  const D = declarations(), seen = new Set(), q = [...roots], from = new Map();
-  const giv = new Set(given), den = new Set(deny);
+// Names a declaration declares for itself inside (const/let/var, function and arrow parameters, catch): with scoped, these are not
+// looked for at the top level. Only for whole names; a name used both ways in one declaration still counts (see below).
+function locals(text) {
+  const t = strip(text), out = new Set(), add = l => { for (const x of l.split(',')) { const m = /^\s*(?:\.\.\.)?([A-Za-z_$][\w$]*)\s*(?:=|$)/.exec(x); if (m) out.add(m[1]); } };
+  for (const m of t.matchAll(/\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)/g)) out.add(m[1]);
+  for (const m of t.matchAll(/\b(?:const|let|var)\s+[[{]([^\]}]*)[\]}]/g)) add(m[1].replace(/[\w$]+\s*:/g, ''));
+  for (const m of t.matchAll(/\bfunction\s*\*?\s*[\w$]*\s*\(([^()]*)\)/g)) add(m[1]);
+  for (const m of t.matchAll(/\(([^()]*)\)\s*=>/g)) add(m[1].replace(/[[\]{}]/g, ''));
+  for (const m of t.matchAll(/(?<![\w$.])([A-Za-z_$][\w$]*)\s*=>/g)) out.add(m[1]);
+  for (const m of t.matchAll(/\bcatch\s*\(\s*([A-Za-z_$][\w$]*)/g)) out.add(m[1]);
+  for (const m of t.matchAll(/\bfor\s*\(\s*(?:const|let|var)\s+[[{]?([^;)]*?)\s+(?:of|in)\b/g)) add(m[1].replace(/[[\]{}]/g, ''));
+  return out;
+}
+// files: the source files and their order (default: the Planner's); 'grading' is the grading page's.
+// ignore: names that are only ever local variables in what is lifted (they share a name with an unrelated top-level declaration).
+function lift({ roots, deny = [], given = [], ignore = [], preamble = '', header = '', files, scoped = false }) {
+  const D = declarations(files === 'grading' ? gradingFiles() : files), seen = new Set(), q = [...roots], from = new Map();
+  const giv = new Set([...given, ...ignore]), den = new Set(deny);
   while (q.length) {
     const n = q.shift(); if (seen.has(n) || giv.has(n)) continue;
-    const d = D.get(n); if (!d) throw new Error('lift: ' + n + ' is not a top-level name in src/planner');
-    if (den.has(n)) throw new Error('lift: ' + n + ' would be lifted (reached from ' + (from.get(n) || 'the roots') + '), but it holds UI or saving');
+    const d = D.get(n); if (!d) throw new Error('lift: ' + n + ' is not a top-level name in ' + (files === 'grading' ? 'the grading page' : 'src/planner'));
+    if (den.has(n)) { const chain = [n]; for (let x = n; from.has(x); ) chain.push(x = from.get(x)); throw new Error('lift: ' + n + ' would be lifted (' + chain.reverse().join(' > ') + '), but it holds UI or saving'); }
     seen.add(n);
-    for (const id of names(d.lines.join('\n'))) if (id !== n && D.has(id) && !seen.has(id) && !giv.has(id)) { if (!from.has(id)) from.set(id, n); q.push(id); }
+    const text = d.lines.join('\n'), own = scoped ? locals(text) : new Set();
+    for (const id of names(text)) if (!own.has(id) && id !== n && D.has(id) && !seen.has(id) && !giv.has(id)) { if (!from.has(id)) from.set(id, n); q.push(id); }
   }
   // Keep the source order (file by file, line by line), so a const is declared before anything at load reads it.
   const decls = [...new Set([...seen].map(n => D.get(n)))];
   const order = new Map(); let i = 0; for (const d of D.values()) if (!order.has(d)) order.set(d, i++);
   decls.sort((a, b) => order.get(a) - order.get(b));
-  const body = decls.map(d => '// src/planner/' + d.file + '.js\n' + d.lines.join('\n').replace(/\s+$/, '')).join('\n');
+  const body = decls.map(d => '// ' + d.file + '\n' + d.lines.join('\n').replace(/\s+$/, '')).join('\n');
   return header + preamble + '\n' + body + '\nexport { ' + roots.join(', ') + ' };\n';
 }
-module.exports = { lift, declarations };
+module.exports = { lift, declarations, gradingFiles };
