@@ -12,6 +12,7 @@ import { addCommand, openCommandBar, loadWhenOpened } from '../services/commands
 import { register, start as keysStart, pieces } from '../services/shortcuts.js';
 import * as undo from '../services/undo.js';
 import { assistant } from '../services/assistant.js';
+import { fullCan, fullToggle } from '../services/size.js';
 import { lockState, onLockChange } from '../shared/lock.js';
 import { stopped as tabsStopped, onStopped } from '../shared/tabs.js';
 import { onLook, currentLook, saveLook } from '../services/theme.js';
@@ -182,6 +183,7 @@ export function Shell() {
       register({ id: 'redo', keys: ['mod+shift+z', 'mod+y'], label: 'keys.redo', run: () => undo.redo() }),
       register({ id: 'fold', keys: 'mod+\\', label: 'keys.fold', run: fold }),
       register({ id: 'todo-add', keys: 'n', label: 'nav.todo_add', when: () => router.current().chunk !== 'mark', run: () => { askAdd(); router.go('todo'); } }),
+      register({ id: 'full', keys: 'f', label: 'keys.full', when: () => { const r = router.current(); return fullCan() && r.chunk !== 'mark' && r.params.view !== 'present' && (!document.fullscreenElement || document.fullscreenElement === document.documentElement); }, run: fullToggle }),
       register({ id: 'keys', keys: '?', label: 'keys.show_list', run: () => router.go('help', 'keys') }),
       ...[['home', 'nav.home', 'home'], ['calendar', 'nav.calendar', 'cal'], ['todo', 'nav.todo', 'todo'], ['library', 'nav.library', 'library'], ['school', 'nav.school', 'school'], ['settings', 'nav.settings', 'settings'], ['help', 'nav.help', 'help']]
         .map(([id, line, icon]) => addCommand({ id: 'go-' + id, label: () => t(line), group: t('cmd.group_go'), icon, run: () => router.go(id) })),

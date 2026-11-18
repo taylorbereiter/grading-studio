@@ -3,6 +3,7 @@
 import { h, render } from 'preact';
 import { start } from './shared/lock.js';
 import { applyLook, savedLook } from './services/theme.js';
+import { applySize } from './services/size.js';
 import { Shell } from './app/shell.jsx';
 import { sampleReady, buildSample, restartApp, leaveSample } from './app/sample.js';
 import { startUpdates } from './app/update.js';
@@ -12,7 +13,7 @@ import { setLanguage } from './app/language.js';
 
 // ?keys=1 shows every line as its key, so a check can find words that did not come through t() (next/test/browser/shell.test.js).
 if (/[?&]keys=1(&|$)/.test(location.search)) setMode('keys');
-applyLook(savedLook());
+applyLook(savedLook()); applySize();
 setLanguage();
 const root = document.getElementById('app');
 if (sampleReady()) { startWhole(); render(h(Shell), root); start(); startUpdates(); }

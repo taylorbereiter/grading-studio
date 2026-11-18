@@ -103,6 +103,8 @@ export const PARTS = {
   typed: () => import('./mark/typed.jsx'),
   setup: () => import('./mark/setup.jsx'),
   setgrade: () => import('./screens/settings-grading.jsx'),
+  // the rest of Settings: the assistant, programme, averages, goals, handing back, text size (screens/settings-more.jsx)
+  setmore: () => import('./screens/settings-more.jsx'),
   // Settings > Focus and goals, with the timer's engine (app/focus/settings.jsx)
   setfocus: () => import('./focus/settings.jsx'),
   // the focus timer's runner and panel (app/focus/bus.js loads it)
