@@ -280,6 +280,8 @@ export function scoreStamp(row) {
   const g = gradeOf(st); if (g.total == null) return false;
   startPlace(K.scoreStampText(g, st)); return true;
 }
+// any words as a score sticker (the calculator's Score sticker)
+export function stampText(text) { if (!state().pages.length) return false; startPlace(text); return true; }
 function startPlace(text, extra = {}) {
   stopPlace();
   const gh = document.createElement('canvas'); gh.className = 'mk-ghost'; gh.hidden = true; document.body.append(gh);

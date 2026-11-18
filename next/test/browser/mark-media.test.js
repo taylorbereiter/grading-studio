@@ -107,6 +107,14 @@ test('a recording and a link added to students: played, the time put in the comm
   await p.waitForFunction(() => document.querySelector('.media audio, .media video').currentTime > 1.5);
   await p.click('.media [data-stamp]');
   await p.waitForFunction(() => /\[0:01\]/.test(window.__mark.state().batch.students.find(s => s.key === 'Aria Testwell').grade.comment || ''));
+  // J goes back 5 seconds (not before the start), Space plays and pauses
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.press('j');
+  await p.waitForFunction(() => document.querySelector('.media audio, .media video').currentTime === 0);
+  await p.keyboard.press(' ');
+  await p.waitForFunction(() => !document.querySelector('.media audio, .media video').paused);
+  await p.keyboard.press(' ');
+  await p.waitForFunction(() => document.querySelector('.media audio, .media video').paused);
   // a transcript pasted; a line plays from its time
   await p.click('.media [data-trpaste]');
   await p.type('.media [data-trta]', '[0:00] Good morning, everyone.\n[0:02] Today, the tides.');

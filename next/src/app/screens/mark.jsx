@@ -172,7 +172,7 @@ function Paper({ batch, cur, zoom, ver, FU }) {
 // Enter presses Next to score only from nowhere in particular (or a score slider), never over a button she has focused.
 const free = () => { const a = document.activeElement; return !a || a === document.body || (a.classList && (a.classList.contains('srange') || a.classList.contains('mk-paper'))); };
 const STATUS = [['missing', () => t('mark.missing')], ['excused', () => t('mark.excused')], ['late', () => t('mark.late')]];
-function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo }) {
+function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onCalc }) {
   const st = batch.students[cur]; if (!st) return null;
   const g = gradeOf(st), max = maxPoints(), name = shownName(st, cur), su = state().setup, M = MK && MK.M, off = !M;
   const file = st.files[0], row = M ? M.rowInHand() : -1, gr = st.grade;
@@ -199,7 +199,7 @@ function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo }) {
       : <div class="mk-pts"><input type="text" inputmode="decimal" aria-label={t('mark.points')} value={gr.pk != null && gr.pk !== '' ? gr.pk + '%' : gr.points} disabled={off}
           onInput={e => M.setPoints(e.currentTarget.value, e.currentTarget)} onBlur={() => M && M.leftPoints()} onKeyDown={ptsKey} /><span class="mute">{t('mark.out_of_pts', { n: su.outOf })}</span></div>}
     <div class="total"><b>{g.total != null ? fmtNum(g.total) : '–'}</b><span class="mute">{max ? t('mark.out_of', { n: fmtNum(max) }) : ''}</span>
-      <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span>{g.total != null && M && <Button size="sm" icon="stamp" onClick={() => stamp(null)} title={t('mark.stamp_tip')} data-stampscore>{t('mark.stamp')}</Button>}</div>
+      <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span>{M && <IconButton icon="grades" size="sm" label={t('mark.calc')} kbd="=" onClick={onCalc} data-calcopen />}{g.total != null && M && <Button size="sm" icon="stamp" onClick={() => stamp(null)} title={t('mark.stamp_tip')} data-stampscore>{t('mark.stamp')}</Button>}</div>
     {g.total == null && <p class="mute">{t('mark.no_score')}</p>}</>}
     <div class="mk-stat" role="group" aria-label={t('mark.mark_as')}>{STATUS.map(([k, l]) => <button type="button" class="chip" aria-pressed={gr.status === k ? 'true' : 'false'} disabled={off} data-status={k} onClick={() => M.setStatus(k)}>{l()}</button>)}{FU && M && <FU.ScoreMore st={st} />}</div>
     <textarea class="mk-cmt" aria-label={t('mark.comment_for')} placeholder={t('mark.comment_for_ph')} value={gr.comment || ''} disabled={off} data-raw onInput={e => M.setComment(e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.blur(); }} />
@@ -261,6 +261,8 @@ export default function MarkScreen({ route, classes }) {
   const [zoom, setZoom] = useState(() => keep('zoom') || 1), [, tick] = useState(0);
   // the list's filter (this visit to this assignment only), the list folded to a strip ([, gs.listOpen), the score panel folded away
   // (], gs.panels.R), and Only this student (gs.solo)
+  const [Calc, setCalc] = useState(null);
+  const openCalc = () => { if (Calc) return setCalc(null); PARTS.calc().then(m => setCalc(() => m.Calculator), e => console.error(e)); };
   const [lf, setLf] = useState('all'), [fold, setFoldS] = useState(() => prefs.get('gs.listOpen', null) === false), [noR, setNoR] = useState(() => !!(prefs.get('gs.panels', {}) || {}).R), [soloK, setSoloK] = useState(0);
   useEffect(() => setLf('all'), [id]);
   const setFold = v => { setFoldS(v); prefs.set('gs.listOpen', !v); };
@@ -310,6 +312,7 @@ export default function MarkScreen({ route, classes }) {
     const offs = [
       register({ id: 'mark-next', keys: ['arrowdown', 'arrowright'], label: 'mark.next', when: () => !solo && !(MK && MK.M.pickedNow()), run: () => step(1) }),
       register({ id: 'mark-prev', keys: ['arrowup', 'arrowleft'], label: 'mark.prev', when: () => !solo && !(MK && MK.M.pickedNow()), run: () => step(-1) }),
+      register({ id: 'mark-calc', keys: '=', label: 'mark.calc', when: () => !!MK && !Calc && !MK.M.resizable(), run: openCalc }),
       register({ id: 'mark-unscored', keys: 'n', label: 'mark.next_score', when: () => !!MK && !solo, run: () => { if (!MK.M.nextUnscored()) toast(t('mark.everyone_scored')); } }),
       register({ id: 'mark-list', keys: '[', label: 'mark.list_keep', when: () => !solo, run: () => setFold(!fold) }),
       register({ id: 'mark-panel', keys: ']', label: 'mark.panel_fold', run: () => setPanel(!noR) }),
@@ -326,7 +329,7 @@ export default function MarkScreen({ route, classes }) {
     const shut = e => { if (solo && (e.key === '/' || e.key === '[' || e.key === '?' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'))) e.preventDefault(); };
     addEventListener('keydown', shut, true);
     return () => { removeEventListener('keydown', shut, true); offs.forEach(f => f()); };
-  }, [w, cur, lf, fold, noR, solo, fm, tab]);
+  }, [w, cur, lf, fold, noR, solo, fm, tab, Calc]);
   const cls = w && w.batch.classId != null ? (w.lib.classes || []).find(c => c.id === w.batch.classId) : null;
   const marked = w ? w.batch.students.filter(isMarked).length : 0, n = w ? w.batch.students.filter(st => !st.gap || st.files.length).length : 0;
   const close = () => (cls ? go('class', cls.id) : go('home'));
@@ -359,8 +362,9 @@ export default function MarkScreen({ route, classes }) {
             <span>{t('mark.zoom', { n: Math.round(zoom * 100) })}</span>
             <IconButton icon="plus" label={t('mark.zoom_in')} onClick={() => { const z = Math.min(3, Math.round((zoom + 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} /></div>
         </div>
-        {!noR && <ScorePanel batch={w.batch} cur={cur} FU={FU} fm={fm} solo={!!solo} first={at <= 0} last={at < 0 || at >= order.length - 1} onNext={() => step(1)} onPrev={() => step(-1)} />}
+        {!noR && <ScorePanel batch={w.batch} cur={cur} FU={FU} fm={fm} solo={!!solo} first={at <= 0} last={at < 0 || at >= order.length - 1} onCalc={openCalc} onNext={() => step(1)} onPrev={() => step(-1)} />}
       </div>
+      {Calc && MK && <Calc M={MK.M} onClose={() => setCalc(null)} />}
       {rep && <rep.OpenedBar key={w.batch.id} onList={() => setRepList(true)} />}
       {FU && carried && <FU.CarryBox onClose={() => setCarried(false)} />}
       {FU && rescans && <FU.Rescans onClose={() => setRescans(false)} onGo={pick} />}

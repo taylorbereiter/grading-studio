@@ -70,6 +70,8 @@ export const PARTS = {
   bank: () => import('./plan/bank-edit.jsx'),
   // her saved comments (students/comments.js), for the chips under the comment box
   cbank: () => import('../students/comments.js'),
+  // the calculator (mark/calc.jsx)
+  calc: () => import('./mark/calc.jsx'),
 };
 export const CHUNKS = {
   home: () => import('./screens/home.jsx'),

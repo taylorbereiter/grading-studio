@@ -420,6 +420,19 @@ test('the marking screen around the paper: a picked mark moved, resized, copied 
   await p.click('[data-cbank]');
   assert.equal(await p.evaluate(() => window.__mark.state().batch.students[2].grade.comment), 'Clear and careful.');
 
+  // the calculator: = opens it, numbers and signs type into it from anywhere, Enter answers and keeps it in History, Score sticker
+  // puts the answer on the paper, Esc closes it
+  await blur(); await p.keyboard.press('=');
+  await p.waitForSelector('[data-calc]');
+  await p.click('.mk-paper'); for (const k of ['3', '.', '5', '+', '4']) await p.keyboard.press(k);
+  await p.keyboard.press('Enter');
+  assert.equal(await p.$eval('[data-calcout] b', e => e.textContent), '7.5');
+  assert.deepEqual(await p.evaluate(() => JSON.parse(localStorage.getItem('gs.calchist'))), [{ e: '3.5+4', v: '7.5' }]);
+  await p.click('[data-calcstick]'); { const q = await nextAt(p, 0, 450, 320); await p.mouse.click(q.x, q.y); }
+  assert.match((await marksOf(p, 0)).filter(m => m.t === 'stamp').pop().text, /^7\.5\/12 = \d+%$/);
+  await p.keyboard.press('Escape'); await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('[data-calc]'));
+
   // Only this student: I, then no list, tabs or other students; it stays through a reload and ends only by holding the button
   await blur(); await p.keyboard.press('i');
   await p.waitForSelector('.mk-solo');

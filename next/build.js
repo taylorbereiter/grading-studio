@@ -273,6 +273,10 @@ export const tnRngSet = r => { tnRng = r; };
     'groupAdd', 'groupSync', 'groupLeave', 'groupSetOwn', 'groupSnapOf', 'groupMates', 'groupNames', 'groupFromSplit', 'splitMates', 'shareCopies', 'groupPaper',
     'adjReset', 'adjName', 'adjSay',
   ], '', [], ['gcore', 'gdraw', 'gmark']],
+  ['gcalc', [
+    // the calculator (src/app/calc.js): its own small reader of sums (no eval), the keys it takes, and the words on a score sticker
+    'calcEval', 'calcFmt', 'calcKeyOf', 'stickerText',
+  ], '', [], ['gcore']],
   ['gword', [
     // a Word paper on the marking screen (src/app/word.js, src/wordnotes.js): drawn from its own XML, typed in, cells shaded, boxes
     // ticked, comments named Teacher added and taken off, and the file written back; the screen around it is the new app's
