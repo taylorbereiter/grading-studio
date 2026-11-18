@@ -44,7 +44,7 @@ function writeEngines() {
   const f = path.join(NEXT, 'src/engines/merge.js');
   if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
   writePlanner();
-  writeActivities();
+  writeActivities(); writePbank();
   writeGrading();
   return out;
 }
@@ -83,6 +83,16 @@ function writeActivities() {
     header: '// MADE BY next/build.js FROM src/planner/activities.js (next/tools/lift.js). Do not edit: change the source and build again.\n/* eslint-disable */\n',
     given: ['normSlide', 'lid'], preamble: "import { normSlide, lid } from './planner.js';\n" });
   const f = path.join(NEXT, 'src/engines/activities.js');
+  if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
+}
+// next/src/engines/pbank.js: the rubric bank's rules (src/planner/bank.js): tidying a rubric or a scale as the Planner saves it, presets and
+// rescaling. L and lid come from the planner engine; the new app puts the bank in L.bank before calling, as the Planner does.
+function writePbank() {
+  const { lift } = require('./tools/lift.js');
+  const out = lift({ roots: ['tidyBank', 'normScale', 'scaleTop', 'normRef', 'normRubric', 'normBankScale', 'presetScale', 'rescale', 'bTop', 'bMax', 'bLevels', 'bOneTop', 'bRowScale', 'B_TOP', 'B_TOP_MAX', 'bankNatural', 'bankRubrics', 'bankScales'], deny: PLANNER_DENY,
+    header: '// MADE BY next/build.js FROM src/planner/bank.js (next/tools/lift.js). Do not edit: change the source and build again.\n/* eslint-disable */\n',
+    given: ['L', 'lid'], preamble: "import { L, lid } from './planner.js';\n" });
+  const f = path.join(NEXT, 'src/engines/pbank.js');
   if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
 }
 function writePlanner() {
@@ -147,6 +157,8 @@ const GRADING_STATE = {
   gradeMarksChanged: '() => {}', gradeShown: '() => {}', openImported: '() => {}', rescanFile: '() => {}', editText: '() => {}', openNote: '() => {}',
   openStampMenu: '() => {}', placeScore: '() => {}', stopScorePlace: '() => {}', scanNote: '() => {}', refound: '() => {}', endOnce: '() => {}', setTool: '() => {}',
   lightPagesChanged: '() => {}',
+  // group work: the partner new marks and notes are just for (src/groups.js groupJust), one for every module that reads it
+  groupJust: 'null',
   scorePlacing: 'null', activeEditor: 'null',
   writeWork: '() => {}', tabLive: '() => true', tabForgot: '() => false', tabLetGo: '() => {}', tabsBehind: '() => false', saveBehind: '() => {}', stampWork: '() => {}',
 };
@@ -250,6 +262,12 @@ export const tnQuietSet = v => { tnQuiet = v; };
 export const tnIsQuiet = () => tnQuiet;
 export const tnRngSet = r => { tnRng = r; };
 `, ['tnHost', 'tnEd', 'tnNow'], ['gcore', 'gdraw', 'gmark', 'gmedia']],
+  ['ggroup', [
+    // group work (src/groups.js): partners put together on one paper, left again, the way a group is graded (one grade, a group score
+    // adjusted for one partner, or own scores with shared notes), each change put back whole by its snapshot; and a scan's shared pages
+    'groupAdd', 'groupSync', 'groupLeave', 'groupSetOwn', 'groupSnapOf', 'groupMates', 'groupNames', 'groupFromSplit', 'splitMates', 'shareCopies', 'groupPaper',
+    'adjReset', 'adjName', 'adjSay',
+  ], '', [], ['gcore', 'gdraw', 'gmark']],
   ['gword', [
     // a Word paper on the marking screen (src/app/word.js, src/wordnotes.js): drawn from its own XML, typed in, cells shaded, boxes
     // ticked, comments named Teacher added and taken off, and the file written back; the screen around it is the new app's
@@ -260,6 +278,18 @@ export const tnRngSet = r => { tnRng = r; };
     'rubricModel', 'rubricScore', 'isShaded', 'RUB_HL', 'fillTotalBlank', 'wordLineHers', 'rubricToGrade', 'wordScoreGone', 'scaleDiffers',
     'wordTabOn', 'tryOfFile', 'liftStatus', 'ownGrade', 'hasOwnScore', 'wordFound', 'wordTableRead', 'readKey', 'rubricKey',
   ], '', [], ['gcore', 'gdraw'], ['num', 'inside']],
+  ['gsetup', [
+    // Rubric setup (src/rubrics.js, src/goals.js, src/rubricup.js): what each score means kept tidy, the learning goals a row can be
+    // tagged with, and rows read out of a rubric she brings in (Word or PDF); the dialog and its one undo step are the new app's
+    'tidyLevels', 'levelIn', 'goalList', 'goalById', 'goalName', 'goalsTidy', 'ruFromWord', 'ruFromPdf', 'rubricRowsInto',
+  ], '', [], ['gcore', 'gdraw', 'gword']],
+  ['gways', [
+    // the teacher's usual way of grading (src/app/library.js GRADE_WAYS, meGrade): what a new assignment starts with, read from the
+    // library the settings screen has in hand (useLib), not the marking screen's
+    'GRADE_WAYS', 'gradeWay', 'meGrade', 'ME_OLD',
+  ], `let lib = { me: null };
+export const useLib = l => { lib = l || { me: null }; };
+`, ['lib'], ['gcore']],
 ];
 function writeGrading() {
   const { lift } = require('./tools/lift.js');
@@ -286,7 +316,7 @@ function writeGrading() {
     const { depthOf } = require('./tools/lift.js');
     for (const ln of out.split('\n')) if (/^(?:const|let|var) /.test(ln)) for (const x of ln.matchAll(/,\s*([A-Za-z_$][\w$]*)\s*=(?!=|>)/g)) if (depthOf(ln.slice(0, x.index)) === 0 && !own.includes(x[1])) own.push(x[1]);
     // a name right after a dot is a property, except after a spread (...vpDraw(…))
-    const used = may.filter(n => new RegExp('(?<![\\w$])(?<![^.]\\.)' + n.replace(/\$/g, '\\$') + '(?![\\w$])').test(out));
+    const used = may.filter(n => !given.includes(n) && new RegExp('(?<![\\w$])(?<![^.]\\.)' + n.replace(/\$/g, '\\$') + '(?![\\w$])').test(out));
     const imports = {};
     for (const n of used) { const from = file === 'gcore' ? null : (made[n] || 'gcore'); if (from && from !== file) { (imports[from] ||= []).push(n); (needs[from] ||= new Set()).add(n); } }
     if (file !== 'gcore') out = setters(out, names);

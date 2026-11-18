@@ -10,11 +10,15 @@ import { lostPages } from '../../engines/gopen.js';
 import { prefs } from '../../students/prefs.js';
 import { Checkbox, Segmented } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
+import { GroupBand, GroupDialog } from './group.jsx';
+export { GroupBand };
+export { ScoreMore } from './score-more.jsx';
 import * as C from './change.js';
 import { Arrange } from './arrange.jsx';
 export { LightPanel, LightChip } from './light.jsx';
 import { viewable, fileSeq } from '../../engines/gdraw.js';
 import './lines.js';
+import './setup-lines.js';
 
 import { PARTS } from '../router.js';
 import { lightApply } from './light.jsx';
@@ -48,10 +52,12 @@ export function FileMenu({ st, path, name, d, on, auto }) {
   if (d && (on || auto)) items.push({ label: t('mark.f_turn_all'), icon: 'turnr', onSelect: () => C.turnDoc(st, d) });
   if (one) items.push({ label: t('mark.f_move'), icon: 'arrow', onSelect: () => setAsk({ kind: 'mv' }) }, { label: t('mark.f_replace'), icon: 'replace', onSelect: replace });
   if (d && on && mine) items.push({ label: t('mark.f_leave'), icon: 'minus', onSelect: leave });
+  if (one && f.data && !f.virtual) items.push({ label: t('setup.gw_menu'), icon: 'people', onSelect: () => setAsk({ kind: 'grp' }) });
   if (one) items.push({ label: t('mark.f_remove'), icon: 'trash', onSelect: remove });
   if (!items.length) return null;
   return <span class="mk-fmenu">
     <Menu label={t('mark.f_more', { name })} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('mark.f_more', { name })} disabled={busy} data-fmenu={path} />} items={items} />
+    {ask && ask.kind === 'grp' && <GroupDialog st={st} path={path} onClose={() => setAsk(null)} />}
     {ask && ask.kind === 'rpl' && <Dialog open title={t('mark.f_rpl_q')} onClose={() => setAsk(null)}
       actions={<><Button onClick={() => setAsk(null)}>{t('mark.cancel')}</Button><Button variant="primary" onClick={doReplace} data-ok>{t('mark.f_replace_do')}</Button></>}>
       <div class="mk-rpl"><div><b data-raw>{ask.a.oldName}</b><small class="mute">{[pages(ask.a.oldPages), ask.a.marks ? t('mark.f_marks', { n: ask.a.marks }) : t('mark.f_no_marks')].filter(Boolean).join(' · ')}</small></div>

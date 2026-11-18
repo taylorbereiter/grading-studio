@@ -13,7 +13,7 @@ export const tnGetSt = () => tnSt;
 export const tnQuietSet = v => { tnQuiet = v; };
 export const tnIsQuiet = () => tnQuiet;
 export const tnRngSet = r => { tnRng = r; };
-import { batch, cur, setup, undoStack, redoStack, saveSoon, toast, renderList, openStudent, store } from './gcore.js';
+import { batch, cur, setup, undoStack, redoStack, saveSoon, toast, renderList, openStudent, groupJust, store } from './gcore.js';
 import { shownName, one, tnHas, tnHidden, tnMine, tnBackOn } from './gdraw.js';
 import { pushUndo, actStep, touchGrade, groupOf } from './gmark.js';
 import { fmtTime } from './gmedia.js';
@@ -29,8 +29,6 @@ async function copy(text, msg) {
 }
 // src/groups.js
 const groupOwn = g => !!(g && g.own);
-// src/groups.js
-let groupJust = null;
 // src/sidepane.js
 const spClocks = new Map();
 // src/sidepane.js

@@ -11,7 +11,7 @@
 // Every write first checks: this window holds the lock; the saved work is at the format this build knows (the new app never
 // changes the format); no other window has started replacing everything; and a download that was forgotten stays forgotten.
 // The merge engine is the current app's own (engines/merge.js), loaded on the first write so it is not in the first load.
-import { papers, edits, added, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame, readings, videos } from './index.js';
+import { papers, edits, added, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame, readings, videos, rubricPages } from './index.js';
 import { words } from '../planning/index.js';
 import { mayWrite } from '../shared/lock.js';
 import { json, text, setText, remove } from '../shared/ls.js';
@@ -176,6 +176,14 @@ export function saveSetting(key, value) {
   acc.setJson(value);
   saved({ kind: 'setting', id: key, side: 'students' });
 }
+/* her rubric file for every student (src/app/dialogs.js openSetup: store.set('gs.rp.' + id, base64)), under a new id each time it's
+   brought in; the setup names it (setup.rubricPage). Throws CannotSave('room') when this browser has no room for it. */
+export function keepRubricPage(id, b64) {
+  check('gs.rp.');
+  try { rubricPages.setJson(id, b64); } catch (e) { if (e && e.name === 'ReadOnly') throw e; throw new CannotSave('room', 'gs.rp.'); }
+  saved({ kind: 'setting', id: 'gs.rp.' + id, side: 'students' });
+}
+export function dropRubricPage(id) { check('gs.rp.'); rubricPages.remove(id); saved({ kind: 'setting', id: 'gs.rp.' + id, side: 'students' }); }
 export const forgotten = () => deleted.json({}) || {};
 
 /* a video file kept in this browser (src/video.js vkPut): the file itself in grading-studio-videos, under an id the student's

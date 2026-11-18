@@ -4,12 +4,14 @@
 // list is the current app's; a file she added is kept in this browser through students/write.js keepAdded. Each change is one
 // step on the one undo list. Loaded as a part of its own (router.js PARTS.change).
 // Not here yet: a group's shared paper and a partner's video changing with it (sameCopies) comes with group work.
-import { state, noScore, use } from '../../engines/gcore.js';
+import { state, noScore, use, tryGrade, roundPct, maxPoints } from '../../engines/gcore.js';
 import * as D from '../../engines/gdraw.js';
 import * as E from '../../engines/gopen.js';
 import * as F from '../../engines/gfiles.js';
 import * as K from '../../engines/gmark.js';
 import * as V from '../../engines/gmedia.js';
+import * as G from '../../engines/ggroup.js';
+import { set as setState } from '../../engines/gcore.js';
 import { PARTS } from '../router.js';
 import { libs } from './paper.js';
 import { prefs } from '../../students/prefs.js';
@@ -528,4 +530,165 @@ export async function videoAdd(st, o) {
   }
   const made = list.length ? await addFiles(st, list) : [];
   return { had, made };
+}
+
+// Group work (src/groups.js): partners put together on one paper, a partner graded on their own, the way the group is graded, and a
+// scan's shared pages made one group. Each is one undo step that puts back the groups, the partners' grades and the shared marks
+// whole (the current app asks first before some of these; here they happen at once, with Undo).
+function groupKeep(sts) {
+  const bb = b(), groups = J(bb.groups || null), grades = sts.map(s => [s, J(s.grade)]), files = sts.flatMap(s => s.files);
+  const uniq = [...new Set(files.map(f => f.marks).filter(Boolean))], marks = uniq.map(J), fm = files.map(f => [f, f.marks ? uniq.indexOf(f.marks) : -1]);
+  return () => {
+    if (groups) bb.groups = J(groups); else delete bb.groups;
+    for (const [st, g] of grades) st.grade = J(g);
+    const fresh = marks.map(J); for (const [f, i] of fm) { if (i >= 0) f.marks = fresh[i]; else delete f.marks; }
+  };
+}
+const groupWho = (...sts) => [...new Set(sts.flatMap(st => [st, ...G.groupMates(st), ...G.splitMates(st).map(o => o.s)]).filter(Boolean))];
+function groupDo(sts, fn, what) {
+  const back = groupKeep(sts); fn(); const after = groupKeep(sts);
+  const done = () => { K.thumbCache.clear(); tell(); show(-1); };
+  step(() => { back(); done(); }, () => { after(); done(); }, what);
+  done();
+}
+// mode: 0 one grade for everyone, 2 a group score adjusted for one partner, 1 own scores with the notes shared
+export function groupMode(st, mode) { groupDo(groupWho(st), () => G.groupSetOwn(st, mode), 'group'); }
+export function groupOut(st) { groupDo(groupWho(st), () => G.groupLeave(st, true), 'group'); }
+export function groupJoinSplit(st) { groupDo(groupWho(st), () => G.groupFromSplit(st), 'group'); }
+// Both, or Just them: what is done now goes to every partner, or only to this one (their comment is always their own)
+export function groupJustSet(key) { setState.groupJust(key); tell(); }
+export const groupJustNow = () => state().groupJust;
+// Group work… on a file: the partner gets their own copy of it (and of the group's video), and, marked once, joins the group.
+const copyOf = (st, f, to) => to.files.find(x => x.from === st.key && x.name === f.name);
+export async function groupGive(st, f, to, once, own) {
+  if (!copyOf(st, f, to)) await addFiles(to, [{ path: f.name, file: new File([f.data], f.name), from: st.key }]);
+  if (once) for (const lf of st.files.filter(x => x.kind === 'link')) if (!to.files.some(x => x.kind === 'link' && V.linkKey(x) === V.linkKey(lf))) await addFiles(to, [{ path: lf.name, file: new File([lf.data], lf.name), from: st.key }]);
+  if (once) groupDo(groupWho(st, to), () => { G.groupAdd(st, f, to, copyOf(st, f, to)); if (own) G.groupSetOwn(st, true); }, 'group');
+  else tell();
+}
+// The switch Mark and grade once for the group: on, everyone with a copy joins; off, everyone is graded on their own again.
+export function groupOnce(st, f, on, own) {
+  const has = G.shareCopies(st, f);
+  groupDo(groupWho(st, ...has), () => {
+    if (on) { for (const s of has) G.groupAdd(st, f, s, copyOf(st, f, s)); if (own && G.groupMates(st).length) G.groupSetOwn(st, true); }
+    else for (const s of G.groupMates(st)) G.groupLeave(s, true);
+  }, 'group');
+}
+
+// Rubric setup's Save (src/app/dialogs.js openSetup), as one undo step: the setup, the whole score's goal, and every score that sits on
+// a row by its place (rowsTakenOut: when a row goes, the scores after it move up with their rows, each keeping its time). page: the new
+// rubric file { bytes, name }, null when it comes off, undefined when it stays. from: where each draft row came from (null: new), n0:
+// how many rows there were. Her rubric file is kept under a new id before the step; the one before stays, so Undo can bring it back.
+export async function setupSave(draft, { page, from, n0, goal }) {
+  const s = state(), bb = b(), W = await PARTS.write();
+  const J0 = { setup: J(s.setup), goal: bb ? bb.goal : undefined, g: bb ? bb.students.map(st => J({ rubric: st.grade.rubric, atR: st.grade.atR })) : [] };
+  const d = J(draft);
+  if (page === null) d.rubricPage = null;
+  else if (page) {
+    const id = Math.random().toString(36).slice(2, 10);
+    let bin = ''; for (let i = 0; i < page.bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, page.bytes.subarray(i, i + 0x8000));
+    W.keepRubricPage(id, btoa(bin));   // throws CannotSave('room'): nothing has changed yet
+    d.rubricPage = { id, name: page.name };
+  }
+  const gone = [...Array(n0).keys()].filter(i => !from.includes(i));
+  const pageChanged = JSON.stringify(d.rubricPage) !== JSON.stringify(s.setup.rubricPage) || d.rubricPos !== s.setup.rubricPos;
+  const apply = async (su, gl, grades) => {
+    use({ setup: su });
+    if (bb) {
+      if (gl) bb.goal = gl; else delete bb.goal;
+      bb.students.forEach((st, k) => { if (grades) { st.grade.rubric = J(grades[k].rubric) || []; if (grades[k].atR) st.grade.atR = J(grades[k].atR); else delete st.grade.atR; K.touchGrade(st); } });
+      if (pageChanged) { await libs(); await E.applyRubricPage(); }
+      bb.students.forEach(st => s.refound(st));
+    }
+    await M.keepSetup();
+    tell(); if (bb) show(state().cur);
+  };
+  // the scores that move up when rows go, as rowsTakenOut moves them
+  let after = null;
+  if (bb && gone.length) {
+    const low = gone[0], left = k => k - gone.filter(x => k > x).length;
+    after = bb.students.map(st => {
+      const g = st.grade, keys = Object.keys(g.atR || {}).filter(k => k !== 'points').map(Number);
+      if (g.rubric.length <= low && !keys.some(k => k >= low)) return { rubric: g.rubric, atR: g.atR };
+      return { rubric: Array.from(g.rubric, v => (v == null ? null : v)).filter((_, k) => !gone.includes(k)), atR: g.atR ? Object.fromEntries(keys.filter(k => !gone.includes(k)).map(k => [left(k), g.atR[k]]).concat(g.atR.points ? [['points', g.atR.points]] : [])) : undefined };
+    });
+  }
+  const goalNow = goal === undefined ? J0.goal : goal;
+  await apply(d, goalNow, after);
+  step(() => apply(J(J0.setup), J0.goal, J0.g), () => apply(J(d), goalNow, after), 'setup');
+  return d;
+}
+
+/* The ⋯ under the score (src/grades.js): leave out of the average, extra credit, a percent as the score, and retakes. Each one undo step. */
+// Left out of the average: the score stays and still copies (setOutAvg).
+export function outAvg(st) { K.gradeSnap(st); if (st.grade.outAvg) delete st.grade.outAvg; else st.grade.outAvg = true; K.touchGrade(st); tell(); }
+// Extra credit (xcSet): half points on top of the score, or percentage points with xcU 'pct'. u: the unit showing, for a new one.
+export function setXc(st, raw, u) {
+  const v = raw === '' || raw == null || isNaN(+raw) ? 0 : Math.max(0, Math.round(+raw * 2) / 2);
+  if ((+st.grade.xc || 0) === v) return;
+  K.gradeSnap(st);
+  if (v) { if (!(+st.grade.xc > 0)) { if (u === 'pct') st.grade.xcU = 'pct'; else delete st.grade.xcU; } st.grade.xc = v; }
+  else { delete st.grade.xc; delete st.grade.xcU; }
+  K.touchGrade(st); tell();
+}
+// Points or %: the number stays, what it means changes (xcUnitSet); the unit picked is kept on this computer for the next paper.
+export function setXcUnit(st, u) {
+  prefs.set('gs.xcU', u);
+  if (st.grade.xc) { K.gradeSnap(st); if (u === 'pct') st.grade.xcU = 'pct'; else delete st.grade.xcU; K.touchGrade(st); }
+  tell();
+}
+export const xcUnitNow = () => (prefs.get('gs.xcU', 'pts') === 'pct' ? 'pct' : 'pts');
+// A percent as the score (pctSet): "73", "73%" or nothing; whole percents, halves up. It stays the score; rubric rows don't change it.
+export function setPk(st, raw) {
+  const s = String(raw == null ? '' : raw).replace('%', '').replace(',', '.').trim(), v = s === '' || isNaN(+s) || +s < 0 ? null : roundPct(+s);
+  if (s !== '' && v == null) return false;
+  if (v === (st.grade.pk == null ? null : st.grade.pk)) return true;
+  K.gradeSnap(st);
+  if (v == null) delete st.grade.pk; else st.grade.pk = v;
+  K.scoreTouched(st); tell();
+  return true;
+}
+// Retakes (retakeStart, retakeOff): a second try keeps the first, its score, comment and papers; which try counts is retakeRule.
+const TRY_KEEP = ['rubric', 'points', 'pk', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'comment'];
+function triesStep(st, fn, what) {
+  const was = J(st.grade); fn(); const now = J(st.grade), i = b().students.indexOf(st);
+  const put = g => { st.grade = J(g); K.touchGrade(st); if (st.found !== undefined) state().refound(st); tell(); show(i); };
+  step(() => put(was), () => put(now), what);
+  K.touchGrade(st); if (st.found !== undefined) state().refound(st); tell(); show(i);
+}
+// Returns null when the paper has no full score yet (nothing to keep), else the try kept.
+export function retakeStart(st) {
+  const g = st.grade, r = tryGrade(st);
+  if (noScore(st) || r.pct == null || !r.done || r.partial) return null;
+  const was = { t: Date.now(), total: r.total, max: r.outOf != null ? r.outOf : maxPoints(), pct: r.pct };
+  if (g.status === 'late') was.late = 1;
+  for (const k of TRY_KEEP) if (g[k] != null && g[k] !== '' && !(Array.isArray(g[k]) && !g[k].length)) was[k] = J(g[k]);
+  // the papers here now were the earlier try's; a file a newer download brought ("New in this download") is taken to be the retake itself
+  const bb = b(), tryOf = f => { const ts = g.tries; if (!ts || !ts.length) return 0; const k = ts.findIndex(x => (x.files || []).includes(f.path)); return k < 0 ? 0 : k + 1; };
+  was.files = st.files.filter(f => !tryOf(f) && !(bb.carry && bb.carry.flags && bb.carry.flags[f.path] === 'new') && (!f.virtual || (f.kind === 'docx' && (f.edited || (f.wscore && f.wscore.total != null))))).map(f => f.path);
+  triesStep(st, () => {
+    (g.tries ||= []).push(was);
+    g.rubric = []; g.points = ''; g.comment = '';
+    for (const k of ['pk', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'atR']) delete g[k];
+    if (g.status === 'late') g.status = '';
+  }, 'retake');
+  return was;
+}
+// Taken off at once: the try before it is the score again, and Undo brings the retake back (the current app asks with a second click).
+export function retakeOff(st) {
+  const g = st.grade, ts = g.tries; if (!ts || !ts.length) return;
+  triesStep(st, () => {
+    const was = ts.pop(); if (!ts.length) delete g.tries;
+    g.rubric = []; g.points = ''; g.comment = '';
+    for (const k of ['pk', 'sheet', 'xc', 'xcU', 'q', 'qAuto', 'qAutoL', 'atR']) delete g[k];
+    for (const k of TRY_KEEP) if (was[k] != null) g[k] = was[k];
+    if (was.late && !g.status) g.status = 'late';
+  }, 'retake off');
+}
+// Which try counts, for every class and assignment (retakeRuleSet): kept on the library (lib.book.retake), one undo step.
+export async function retakeRuleSet(k) {
+  const L = state().lib, was = (L.book && L.book.retake) || null, W = await PARTS.write();
+  const put = async v => { L.book = { ...(L.book || {}) }; if (v) L.book.retake = v; else delete L.book.retake; await W.saveLibrary(l => { l.book = { ...(l.book || {}) }; if (v) l.book.retake = v; else delete l.book.retake; }); tell(); show(state().cur); };
+  await put(k);
+  step(() => put(was), () => put(k), 'retake rule');
 }

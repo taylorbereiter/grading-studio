@@ -12,6 +12,7 @@ import { fmtTime } from '../../engines/gmedia.js';
 import { t } from '../../i18n/t.js';
 import * as C from './change.js';
 import './lines.js';
+import './setup-lines.js';
 
 const b = () => state().batch;
 const st0 = () => { const s = state(); return s.batch ? s.batch.students[s.cur] : null; };
@@ -24,7 +25,7 @@ const setupKept = () => (keep ? keep() : Promise.resolve());
 
 // the menus on the notes' bar (src/markscreen.js kmOpen, kmClose): one open at a time, Esc and a click elsewhere close it
 let kmOn = null;
-const SIZES = { s: 'mark.tn_size_s', '': 'mark.tn_size_m', l: 'mark.tn_size_l' }, HOW = { under: 'mark.tm_under', in: 'mark.tm_in', over: 'mark.tm_over' };
+const SIZES = { s: 'setup.tn_size_s', '': 'setup.tn_size_m', l: 'setup.tn_size_l' }, HOW = { under: 'setup.tm_under', in: 'setup.tm_in', over: 'setup.tm_over' };
 function kmClose(focus) { const x = kmOn; if (!x) return; kmOn = null; if (!x.isConnected) return; x.setAttribute('aria-expanded', 'false'); const m = x.nextElementSibling; if (m) m.hidden = true; if (focus) x.focus({ preventScroll: true }); }
 function kmOpen(x) {
   kmClose(); const m = x.nextElementSibling; if (!m || !m.classList.contains('km')) return;
@@ -103,26 +104,26 @@ async function click(e, box) {
   if (d.tntm != null) return N.tnTime();
   if (d.tnclk != null) { N.spClockGo(N.spClockOf(st)); return N.tnBar(box, st); }
   if (d.tnts != null) return N.tnShowTime(+d.tnts);
-  if (d.tnt) { const x = N.tnGetL()[+d.tnt], m = player(); if (x && x.t != null) { if (m) { m.currentTime = x.t; m.play().catch(() => {}); } else toast(t('mark.tn_no_video')); } return; }
+  if (d.tnt) { const x = N.tnGetL()[+d.tnt], m = player(); if (x && x.t != null) { if (m) { m.currentTime = x.t; m.play().catch(() => {}); } else toast(t('setup.tn_no_video')); } return; }
   if (d.tnrub != null) { N.tnSetL(setup.criteria.flatMap(s => [{ s: String(s), k: 'h' }, { s: '' }])); N.tnPaint(); N.tnSetPos({ a: [1, 0], z: [1, 0] }); return N.tnPut(st, false); }
-  if (d.tnback != null || d.tnm === 'back') { if (N.tnBackOn()) setup.tnBack = false; else delete setup.tnBack; await setupKept(); N.tnBar(box, st); return toast(t(N.tnBackOn() ? 'mark.tn_back_on' : 'mark.tn_back_off')); }
+  if (d.tnback != null || d.tnm === 'back') { if (N.tnBackOn()) setup.tnBack = false; else delete setup.tnBack; await setupKept(); N.tnBar(box, st); return toast(t(N.tnBackOn() ? 'setup.tn_back_on' : 'setup.tn_back_off')); }
   if (d.tnsz != null) {
     if (!N.tnBackOn() || d.tnsz === N.tnSizeOf()) return;
     C.setupStep(['tnSize'], () => { if (d.tnsz) setup.tnSize = d.tnsz; else delete setup.tnSize; }, () => { setupKept(); if (N.tnGetSt()) N.tnBar(box, N.tnGetSt()); });
-    return toast(t('mark.tn_size_now', { size: t(SIZES[d.tnsz] || 'mark.tn_size_m') }));
+    return toast(t('setup.tn_size_now', { size: t(SIZES[d.tnsz] || 'setup.tn_size_m') }));
   }
   const m = d.tnm;
   if (m === 'size') { const sub = el.nextElementSibling, open = sub.hidden; sub.hidden = !open; el.setAttribute('aria-expanded', String(open)); if (open) { const c = sub.querySelector('[aria-checked=true]') || sub.querySelector('button'); if (c) c.focus(); } return; }
-  if (m === 'alltimes') { const hid = N.tnAllHid(); N.tnShowTime(null); return toast(t(hid ? 'mark.tn_times_shown' : 'mark.tn_times_hidden')); }
+  if (m === 'alltimes') { const hid = N.tnAllHid(); N.tnShowTime(null); return toast(t(hid ? 'setup.tn_times_shown' : 'setup.tn_times_hidden')); }
   if (m === 'times') { const { prefs } = await import('../../students/prefs.js'); if (N.tnTimesOn()) prefs.set('gs.tnTime', false); else prefs.del('gs.tnTime'); return N.tnMore(); }
-  if (m === 'head') { setup.tnHead = N.tnGetL().filter(x => x.k === 'h' && x.s.trim()).map(x => x.s.trim()); await setupKept(); N.tnBar(box, st); return toast(t('mark.tn_heads_set', { n: setup.tnHead.length })); }
-  if (m === 'unhead') { delete setup.tnHead; await setupKept(); N.tnLoad(box, st); return toast(t('mark.tn_heads_off')); }
-  if (m === 'copy') return navigator.clipboard.writeText(N.tnText(N.tnGetL())).then(() => toast(t('mark.tn_copied')), () => toast(t('mark.tn_not_copied')));
+  if (m === 'head') { setup.tnHead = N.tnGetL().filter(x => x.k === 'h' && x.s.trim()).map(x => x.s.trim()); await setupKept(); N.tnBar(box, st); return toast(t('setup.tn_heads_set', { n: setup.tnHead.length })); }
+  if (m === 'unhead') { delete setup.tnHead; await setupKept(); N.tnLoad(box, st); return toast(t('setup.tn_heads_off')); }
+  if (m === 'copy') return navigator.clipboard.writeText(N.tnText(N.tnGetL())).then(() => toast(t('setup.tn_copied')), () => toast(t('setup.tn_not_copied')));
   if (m === 'clear') {
     N.tnSnap(st); const left = (N.tnStored(st) || []).filter(x => N.tnHidden(x, st));
     if (left.length) st.grade.tn = { l: left }; else delete st.grade.tn;
     C.touched(st); N.tnLoad(box, st);
-    return toast(t('mark.tn_cleared'), { undo: C.undo });
+    return toast(t('setup.tn_cleared'), { undo: C.undo });
   }
 }
 
@@ -143,10 +144,10 @@ export function Timer({ st }) {
   const num = (i, v, label) => <input type="number" class="input mk-tmnum" min="0" max="600" step="0.5" inputmode="decimal" aria-label={label} value={v == null ? '' : v} onChange={e => talk(i, parseFloat(e.currentTarget.value))} data-tmtalk={i} />;
   return <div class="mk-timer" data-how={how}>
     <div class="mk-tmrow"><b class="mk-tmclock num" role="timer" data-tmclock>{fmtTime(s)}</b>
-      <Button size="sm" variant={c.at ? undefined : 'primary'} aria-pressed={c.at ? 'true' : 'false'} onClick={() => { N.spClockGo(c); tick(n => n + 1); }} data-tmgo>{t(c.at ? 'mark.tm_pause' : c.ms ? 'mark.tm_carry' : 'mark.tm_start')}</Button>
-      <Button size="sm" disabled={!c.at && !c.ms} onClick={() => { c.ms = 0; c.at = 0; tick(n => n + 1); }} data-tmreset>{t('mark.tm_reset')}</Button>
-      <Button size="sm" variant="quiet" title={t('mark.tm_stamp_tip')} onClick={() => { C.addStamp(st, N.spClockMs(c) / 1000); toast(t('mark.v_stamped')); }} data-tmstamp>{t('mark.v_stamp')}</Button></div>
-    <div class="mk-tmrow"><span class="mute">{t('mark.tm_asked')}</span>{num(0, lo, t('mark.tm_least'))}<span aria-hidden="true">–</span>{num(1, hi, t('mark.tm_most'))}</div>
+      <Button size="sm" variant={c.at ? undefined : 'primary'} aria-pressed={c.at ? 'true' : 'false'} onClick={() => { N.spClockGo(c); tick(n => n + 1); }} data-tmgo>{t(c.at ? 'setup.tm_pause' : c.ms ? 'setup.tm_carry' : 'setup.tm_start')}</Button>
+      <Button size="sm" disabled={!c.at && !c.ms} onClick={() => { c.ms = 0; c.at = 0; tick(n => n + 1); }} data-tmreset>{t('setup.tm_reset')}</Button>
+      <Button size="sm" variant="quiet" title={t('setup.tm_stamp_tip')} onClick={() => { C.addStamp(st, N.spClockMs(c) / 1000); toast(t('mark.v_stamped')); }} data-tmstamp>{t('mark.v_stamp')}</Button></div>
+    <div class="mk-tmrow"><span class="mute">{t('setup.tm_asked')}</span>{num(0, lo, t('setup.tm_least'))}<span aria-hidden="true">–</span>{num(1, hi, t('setup.tm_most'))}</div>
     {how && <p class={'mk-tmhow ' + how} data-tmhow={how}>{t(HOW[how])}</p>}
   </div>;
 }
@@ -157,9 +158,9 @@ export function NotesPart({ st }) {
   const [, again] = useState(0), hasVid = st.files.some(f => f.kind === 'media' || f.kind === 'link');
   const nOn = openN || tnHas(st), tOn = !hasVid && (openT || N.spClockMs(N.spClockOf(st)) > 0);
   return <div class="mk-notes">
-    <button type="button" class="mk-disc" aria-expanded={nOn ? 'true' : 'false'} onClick={() => { openN = !nOn; again(n => n + 1); }} data-tnopen>{t('mark.tn_title')}</button>
+    <button type="button" class="mk-disc" aria-expanded={nOn ? 'true' : 'false'} onClick={() => { openN = !nOn; again(n => n + 1); }} data-tnopen>{t('setup.tn_title')}</button>
     {nOn && <TypedNotes st={st} />}
-    {!hasVid && <><button type="button" class="mk-disc" aria-expanded={tOn ? 'true' : 'false'} onClick={() => { openT = !tOn; again(n => n + 1); }} data-tmopen>{t('mark.tm_title')}</button>
+    {!hasVid && <><button type="button" class="mk-disc" aria-expanded={tOn ? 'true' : 'false'} onClick={() => { openT = !tOn; again(n => n + 1); }} data-tmopen>{t('setup.tm_title')}</button>
       {tOn && <Timer st={st} />}</>}
   </div>;
 }

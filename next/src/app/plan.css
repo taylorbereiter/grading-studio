@@ -381,3 +381,19 @@
 .planit.compact>.lc{padding-right:8px}
 .planit.compact>.lc b.one{padding-right:24px}
 .lc.open .lm>span{white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+/* the rubric bank (app/plan/bank-edit.jsx) */
+.bk-new{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px}
+.bk-unit{margin-top:10px}.bk-unit h3{margin:0 0 4px;color:var(--mute)}
+.bk-row{display:flex;align-items:center;gap:6px}
+.bk-open{flex:1;display:flex;align-items:center;gap:12px;text-align:left;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer;min-width:0}
+.bk-open .main{display:flex;flex-direction:column;min-width:0}.bk-open small{color:var(--mute)}
+.bk-ed{display:flex;flex-direction:column;gap:12px}
+.bk-top{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.bk-rowed{border-top:1px solid var(--line);padding-top:8px}
+.bk-rowh{display:flex;gap:8px;align-items:center}.bk-rowh .input{flex:1}
+.bk-rowed summary{cursor:pointer;font-size:var(--t2);color:var(--mute);margin-top:6px}
+.bk-lv{display:flex;gap:8px;align-items:flex-start;margin-top:6px}.bk-lv b{width:22px;text-align:right;padding-top:6px}.bk-lv textarea{flex:1}
+.bk-scale{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px 12px}
+.bk-scale label{display:flex;align-items:center;gap:6px;font-size:var(--t2)}.bk-scale label span{width:22px;text-align:right;font-weight:600}.bk-scale input{width:76px}
+.bk-pre{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ubank .list{margin-bottom:8px}

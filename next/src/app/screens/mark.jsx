@@ -117,7 +117,7 @@ function Paper({ batch, cur, zoom, ver, FU }) {
   return <div class="mk-paper" ref={area} tabindex="-1">
     {!st ? null : !st.files.length ? <><EmptyState icon="inbox" title={t('mark.nothing_in')} />{FU && <FU.FilesFoot key={st.key} st={st} name={shownName(st, cur)} />}</>
       : !gotNow ? <div class="loading" aria-busy="true" />
-      : <>{st.files.filter(f => f.kind === 'link').concat(st.files.filter(f => f.kind === 'media')).map(f => <div class="fwrap"><header class="fhead"><span data-raw>{f.kind === 'link' ? f.name.replace(/\.(url|webloc)$/i, '').replace(/ \(added \d+\)$/, '') : f.name}</span><span class="mute">{t(f.kind === 'media' ? 'mark.v_recording' : 'mark.v_link_kind')}</span>{FU && <FU.AddTag st={st} f={f} />}{FU && <FU.CarryTag st={st} f={f} />}<span class="grow" />{FU && <FU.FileMenu st={st} path={f.path} name={f.name} />}</header><MediaFile key={f.path} st={st} f={f} /></div>)}
+      : <>{FU && <FU.GroupBand st={st} />}{st.files.filter(f => f.kind === 'link').concat(st.files.filter(f => f.kind === 'media')).map(f => <div class="fwrap"><header class="fhead"><span data-raw>{f.kind === 'link' ? f.name.replace(/\.(url|webloc)$/i, '').replace(/ \(added \d+\)$/, '') : f.name}</span><span class="mute">{t(f.kind === 'media' ? 'mark.v_recording' : 'mark.v_link_kind')}</span>{FU && <FU.AddTag st={st} f={f} />}{FU && <FU.CarryTag st={st} f={f} />}<span class="grow" />{FU && <FU.FileMenu st={st} path={f.path} name={f.name} />}</header><MediaFile key={f.path} st={st} f={f} /></div>)}
         {gotNow.cards.map(c => c.kind === 'file' ? <div class="fwrap">{FU && <FU.CarryTag st={st} f={c.f} />}{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
         : <section class="doc">
           <header class="fhead"><span data-raw>{c.d.name}</span>{FU && <FU.AddTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}{!c.on && <span class="pill">{t(c.auto ? 'mark.left_out_auto' : 'mark.left_out')}</span>}{FU && <FU.CarryTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}<span class="grow" />{FU && !c.on && <FU.BackIn st={st} d={c.d} />}{FU && <FU.FileMenu st={st} path={c.d.file || c.d.pages[0][0]} name={c.d.name} d={c.d} on={c.on} auto={c.auto} />}</header>
@@ -131,7 +131,7 @@ function Paper({ batch, cur, zoom, ver, FU }) {
 // Enter presses Next to score only from nowhere in particular (or a score slider), never over a button she has focused.
 const free = () => { const a = document.activeElement; return !a || a === document.body || (a.classList && (a.classList.contains('srange') || a.classList.contains('mk-paper'))); };
 const STATUS = [['missing', () => t('mark.missing')], ['excused', () => t('mark.excused')], ['late', () => t('mark.late')]];
-function ScorePanel({ batch, cur, onNext, onPrev }) {
+function ScorePanel({ batch, cur, onNext, onPrev, FU }) {
   const st = batch.students[cur]; if (!st) return null;
   const g = gradeOf(st), max = maxPoints(), name = shownName(st, cur), su = state().setup, M = MK && MK.M, off = !M;
   const file = st.files[0], row = M ? M.rowInHand() : -1, gr = st.grade;
@@ -153,7 +153,7 @@ function ScorePanel({ batch, cur, onNext, onPrev }) {
     <div class="total"><b>{g.total != null ? fmtNum(g.total) : '–'}</b><span class="mute">{max ? t('mark.out_of', { n: fmtNum(max) }) : ''}</span>
       <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span></div>
     {g.total == null && <p class="mute">{t('mark.no_score')}</p>}
-    <div class="mk-stat" role="group" aria-label={t('mark.mark_as')}>{STATUS.map(([k, l]) => <button type="button" class="chip" aria-pressed={gr.status === k ? 'true' : 'false'} disabled={off} data-status={k} onClick={() => M.setStatus(k)}>{l()}</button>)}</div>
+    <div class="mk-stat" role="group" aria-label={t('mark.mark_as')}>{STATUS.map(([k, l]) => <button type="button" class="chip" aria-pressed={gr.status === k ? 'true' : 'false'} disabled={off} data-status={k} onClick={() => M.setStatus(k)}>{l()}</button>)}{FU && M && <FU.ScoreMore st={st} />}</div>
     <textarea class="mk-cmt" aria-label={t('mark.comment_for')} placeholder={t('mark.comment_for_ph')} value={gr.comment || ''} disabled={off} data-raw onInput={e => M.setComment(e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.blur(); }} />
     {TN && M && <TN.NotesPart st={st} />}
     <div class="foot"><IconButton icon="chl" label={t('mark.prev')} onClick={onPrev} disabled={cur === 0} />
@@ -206,6 +206,7 @@ export default function MarkScreen({ route, classes }) {
     return () => { live = false; }; }, [w, !!MK]);
   // What opened: a line after the papers open when there's something new to say, and the whole report from the student list.
   const [rep, setRep] = useState(null), [repList, setRepList] = useState(false);
+  const [su, setSu] = useState(null);
   useEffect(() => { if (!w) return; let live = true; setRep(null); PARTS.report().then(m => { if (live) setRep(m); }, e => console.error(e)); return () => { live = false; }; }, [w]);
   useEffect(() => {
     if (!w) return;
@@ -223,6 +224,7 @@ export default function MarkScreen({ route, classes }) {
   const cls = w && w.batch.classId != null ? (w.lib.classes || []).find(c => c.id === w.batch.classId) : null;
   const marked = w ? w.batch.students.filter(isMarked).length : 0, n = w ? w.batch.students.filter(st => !st.gap || st.files.length).length : 0;
   const close = () => (cls ? go('class', cls.id) : go('home'));
+  const openSetup = () => PARTS.setup().then(m => setSu(m), e => console.error(e));
   return <div class="markscreen" data-tab={tab}>
     <header class="mk-top">
       <IconButton icon="x" label={t('mark.close')} onClick={close} />
@@ -232,8 +234,9 @@ export default function MarkScreen({ route, classes }) {
       <span class="grow" />
       {w && <span class="mk-save mute" role="status" data-save={MK ? MK.M.saveLabel() : 'saved'}>{saveLine(MK ? MK.M.saveLabel() : 'saved')}</span>}
       {w && <span class="mk-prog mute">{t('mark.marked_of', { n: marked, of: n })}<Progress value={marked} max={Math.max(1, n)} label={t('mark.marked_of', { n: marked, of: n })} /></span>}
-      <Button icon="settings" size="sm" disabled title={t('mark.later')}>{t('mark.setup')}</Button>
+      <Button icon="settings" size="sm" disabled={!w || !MK} onClick={openSetup} data-setupopen>{t('mark.setup')}</Button>
     </header>
+    {su && <su.SetupDialog onClose={() => setSu(null)} />}
     <RubricAsk ask={ask} />
     {err ? <EmptyState icon="inbox" title={t(err.name === 'NotKept' ? 'mark.not_kept' : 'mark.page_bad')} text={err.name === 'NotKept' ? t('mark.not_kept_text') : ''} />
       : !w ? <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />
@@ -248,7 +251,7 @@ export default function MarkScreen({ route, classes }) {
             <span>{t('mark.zoom', { n: Math.round(zoom * 100) })}</span>
             <IconButton icon="plus" label={t('mark.zoom_in')} onClick={() => { const z = Math.min(3, Math.round((zoom + 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} /></div>
         </div>
-        <ScorePanel batch={w.batch} cur={cur} onNext={() => pick(cur + 1)} onPrev={() => pick(cur - 1)} />
+        <ScorePanel batch={w.batch} cur={cur} FU={FU} onNext={() => pick(cur + 1)} onPrev={() => pick(cur - 1)} />
       </div>
       {rep && <rep.OpenedBar key={w.batch.id} onList={() => setRepList(true)} />}
       {FU && carried && <FU.CarryBox onClose={() => setCarried(false)} />}

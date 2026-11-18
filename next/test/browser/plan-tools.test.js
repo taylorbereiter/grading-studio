@@ -126,11 +126,11 @@ test('an empty period’s menu: last year’s lesson as a copy of its own, a les
   assert.equal(mine.title, 'Sound and sense, last year'); assert.deepEqual(mine.slots, [{ classId: 'A2', date: '2026-10-28' }]); assert.ok(!mine.taught, 'the copy has no taught record');
   assert.deepEqual((await lessonInDb(p, 'LY')).slots, [{ classId: 'A2', date: '2025-10-29' }], 'last year’s stays as it was');
   await open(p, 'calendar/class');
-  await p.click('main [data-slotmenu="A2|2026-10-29"]'); await p.waitForSelector('[role^="menuitem"]'); await item(p, 'Use a lesson I have');
+  await p.waitForSelector('main [data-slotmenu="A2|2026-10-29"]'); await p.click('main [data-slotmenu="A2|2026-10-29"]'); await p.waitForSelector('[role^="menuitem"]'); await item(p, 'Use a lesson I have');
   await p.waitForSelector('[data-use="L5"]'); await p.click('[data-use="L5"]');
   assert.ok(await until(async () => (await lessonInDb(p, 'L5')).slots.some(s => s.classId === 'A2' && s.date === '2026-10-29')), 'the same lesson goes on this period too');
   await open(p, 'calendar/class');
-  await p.click('main [data-slotmenu="B1|2026-10-30"]'); await p.waitForSelector('[role^="menuitem"]'); await item(p, 'Start from the Library');
+  await p.waitForSelector('main [data-slotmenu="B1|2026-10-30"]'); await p.click('main [data-slotmenu="B1|2026-10-30"]'); await p.waitForSelector('[role^="menuitem"]'); await item(p, 'Start from the Library');
   await p.waitForSelector('[data-act="my-poem"]'); await p.click('[data-act="my-poem"]');
   await p.waitForFunction(() => /\/edit$/.test(location.hash), { timeout: 8000 });
   const libId = await p.evaluate(() => location.hash.split('/')[2]), lib = await until(() => lessonInDb(p, libId));
