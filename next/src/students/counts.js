@@ -4,6 +4,7 @@
 // (src/shell.js classLeft). Read only; nothing is stored.
 import { meta, library } from './index.js';
 import { json } from '../shared/ls.js';
+import * as K from '../engines/gkept.js';
 
 // The library as saved (gs.lib), with the shape the current app gives it on load: classes with units with items, and the loose holder.
 export function readLibrary() {
@@ -14,28 +15,14 @@ export function readLibrary() {
 }
 export async function readKept() { return new Map((await meta.entries()).map(([k, v]) => [k, v])); }
 
-const holders = lib => lib.classes.concat([lib.loose]);
-function findItem(lib, id) {
-  for (const c of holders(lib)) for (const u of c.units) { const it = u.items.find(x => x && x.id === id); if (it) return { c, u, it }; }
-  return null;
-}
-export function cardOf(lib, kept, id) {
-  const m = kept.get(id), f = m && m.asg ? findItem(lib, m.asg) : null;
-  if (f) return f.it;
-  for (const c of holders(lib)) for (const u of c.units) { const it = u.items.find(x => x && x.batchId === id); if (it) return it; }
-  return null;
-}
+// Where each download stands, through the lifted engine (engines/gkept.js, from the current app's own functions), handed this
+// library and these kept rows.
+const on = (lib, kept) => K.useKept(lib, kept);
+const findItem = (lib, id) => { for (const c of lib.classes.concat([lib.loose])) for (const u of c.units) { const it = u.items.find(x => x && x.id === id); if (it) return { c, u, it }; } return null; };
+export function cardOf(lib, kept, id) { on(lib, kept); return K.cardOfKept(id); }
 export function whereOf(lib, kept, id) { const it = cardOf(lib, kept, id), f = it && findItem(lib, it.id); return { it, cls: f && f.c !== lib.loose ? f.c : null }; }
-export function backOf(m) {
-  if (m.back) return m.back;
-  const of = Math.max(0, (m.n || 0) - (m.off || 0));
-  return of && (m.sent || 0) >= of ? m.sentT || m.t : 0;
-}
-export function stateOf(lib, kept, m) {
-  const it = cardOf(lib, kept, m.id), fm = !!it && it.type === 'fm';
-  const of = Math.max(0, (m.n || 0) - (m.off || 0)), done = Math.min(of, (fm ? m.fb : m.scored) || 0), left = of - done;
-  return { of, done, left, fm };
-}
+export const backOf = m => K.keptBack(m);
+export function stateOf(lib, kept, m) { on(lib, kept); const s = K.keptState(m); return { of: s.of, done: s.done, left: s.left, fm: s.fm }; }
 // Its papers are here, or waiting in the teacher's Drive while she is signed in (not in the sample, and not in a frame).
 export function canOpen(m) {
   if (!m) return false; if (m.papers) return true;
@@ -44,23 +31,9 @@ export function canOpen(m) {
   return !!cloud[m.id] && !!email && ok;
 }
 // Today's groups: to mark, ready to hand back, and earlier work.
-export function groups(lib, kept) {
-  const mark = [], back = [], old = [];
-  for (const m of [...kept.values()].sort((a, b) => b.t - a.t)) {
-    const st = stateOf(lib, kept, m), it = cardOf(lib, kept, m.id);
-    if ((m.newer && kept.has(m.newer)) || backOf(m) || !st.of) old.push(m);
-    else if (it && it.type === 'fm') mark.push(m);
-    else if (st.left) mark.push(m);
-    else back.push(m);
-  }
-  return { mark, back, old };
-}
+export function groups(lib, kept) { on(lib, kept); return K.homeGroups(); }
 // Papers left to score in a class: its kept downloads; formative work has no score to wait for.
-export function classLeft(lib, kept, c) {
-  let n = 0;
-  for (const u of c.units) for (const it of u.items) { const m = it && it.batchId && it.type !== 'fm' ? kept.get(it.batchId) : null; if (m) n += stateOf(lib, kept, m).left; }
-  return n;
-}
+export function classLeft(lib, kept, c) { on(lib, kept); return K.classLeft(c); }
 // The sidebar's classes, in the current app's order: every class, then "No class" when it holds anything.
 export function sidebarClasses(lib, kept) {
   const out = lib.classes.map(c => ({ id: String(c.id), name: String(c.name || ''), left: classLeft(lib, kept, c), students: c.names.length, linked: c.link || c.linked || null }));

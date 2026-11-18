@@ -2,7 +2,7 @@
 // and the shortcut list. Each is built once and used everywhere.
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef, useId, useMemo } from 'preact/hooks';
-import { Icon } from './icons.js';
+import { Icon, ICONS } from './icons.js';
 import { Button, IconButton, Field, Avatar } from './controls.jsx';
 import { Menu } from './popups.jsx';
 import { useModal, toast } from './overlay.jsx';
@@ -10,6 +10,7 @@ import { t, num, date, getLocale } from '../i18n/t.js';
 import { findCommands, onCommandsChange, setCommandOpener } from '../services/commands.js';
 import { register, list as shortcutList, onShortcutsChange, pieces } from '../services/shortcuts.js';
 import { hasSpeech, listen } from '../services/speech.js';
+import { copyText } from '../services/clipboard.js';
 import { fileValue, filesFrom, accepts, isImage, isValue } from '../services/files.js';
 import * as undo from '../services/undo.js';
 import { LOOKS, THEMES } from './tokens.js';
@@ -201,4 +202,25 @@ export function ShortcutList() {
     <span class="kg">{t(g.group)}</span>
     {g.items.map(s => <><span>{t(s.label)}</span><span class="k">{s.keys.map((k, i) => <>{i > 0 && <span class="mute">{t('keys.or')}</span>}{k.map(p => <kbd>{p}</kbd>)}</>)}</span></>)}
   </>)}</div>;
+}
+
+// Copy text: one press puts a piece of text on the clipboard, ready to paste into an assistant, an email or a document, and says so.
+// text: the text, or a function that gives it (read at the press, so it is always the latest). The same press for a card that is
+// built without Preact (a Word paper, the typed notes' bar) comes from copyButton(), which makes the same button.
+async function copyNow(text) {
+  let s = ''; try { s = typeof text === 'function' ? await text() : text; } catch (e) { console.error(e); }
+  if (!String(s || '').trim()) return toast(t('copy.empty'));
+  toast(t(await copyText(s) ? 'copy.done' : 'copy.failed'));
+}
+export function CopyButton({ text, label, size = 'sm', variant = 'quiet', ...rest }) {
+  return <Button variant={variant} size={size} icon="copy" title={t('copy.tip')} onClick={() => copyNow(text)} data-copytext {...rest}>{label || t('copy.text')}</Button>;
+}
+export function copyButton(text, { label, cls = 'btn sm quiet' } = {}) {
+  const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.title = t('copy.tip'); b.dataset.copytext = '';
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'i'); svg.setAttribute('viewBox', '0 0 16 16'); svg.setAttribute('aria-hidden', 'true'); svg.innerHTML = ICONS.copy;
+  b.append(svg);
+  b.append(label || t('copy.text'));
+  b.addEventListener('click', e => { e.stopPropagation(); copyNow(text); });
+  return b;
 }

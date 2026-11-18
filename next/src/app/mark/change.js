@@ -652,6 +652,37 @@ export async function setupSave(draft, { page, from, n0, goal }) {
   return d;
 }
 
+// An IB MYP class's task (src/ib.js ibTaskApply): its rows become the criteria ticked, in the class's order, each scored 0 to 8. Levels
+// given for a criterion that stays are kept, with what each level means and its goal; the rest go (the current app asks first; here
+// it goes at once, one undo step, with Undo). Before, a task scored as a total loses that total.
+export async function ibTaskApply(c, keys, S) {
+  const s = state(), bb = b(), su0 = s.setup, crit = S.ibCrit(c).filter(x => keys.includes(x.k));
+  if (!crit.length || !bb) return false;
+  const had = !!(su0.mode === 'rubric' && Array.isArray(su0.ib) && su0.ib.some(Boolean)), old = had ? su0.ib : [], from = crit.map(x => old.indexOf(x.k));
+  const pick = a => (Array.isArray(a) ? from.map(i => (i >= 0 && a[i] != null ? a[i] : null)) : null);
+  const su = { ...J(su0), mode: 'rubric', criteria: crit.map((x, n) => (from[n] >= 0 ? su0.criteria[from[n]] : x.k + ' ' + x.name)), ib: crit.map(x => x.k), top: S.IB_TOP, half: false, scale: null };
+  delete su.tops;
+  const lv = pick(su0.levels), gl = pick(su0.goals);
+  if (lv && lv.some(Boolean)) su.levels = lv.map(x => x || []); else delete su.levels;
+  if (gl && gl.some(Boolean)) su.goals = gl.map(x => x || ''); else delete su.goals;
+  const keep = st => J({ rubric: st.grade.rubric, atR: st.grade.atR, points: st.grade.points, qAuto: st.grade.qAuto });
+  const before = bb.students.map(keep), now = Date.now();
+  const after = bb.students.map(st => {
+    const g = st.grade, r = g.rubric || [], at = g.atR || {}, nat = {};
+    from.forEach((i, n) => { nat[n] = i >= 0 && at[i] ? at[i] : now; }); if (at.points) nat.points = now;
+    return { rubric: from.map(i => (i >= 0 && r[i] != null ? r[i] : null)), atR: nat, points: had ? g.points : '', qAuto: had ? g.qAuto : undefined };
+  });
+  const apply = async (setup, grades) => {
+    use({ setup });
+    bb.students.forEach((st, k) => { const x = grades[k]; st.grade.rubric = J(x.rubric) || []; if (x.atR) st.grade.atR = J(x.atR); else delete st.grade.atR; st.grade.points = x.points ?? ''; if (x.qAuto != null) st.grade.qAuto = x.qAuto; else delete st.grade.qAuto; K.touchGrade(st); s.refound(st); });
+    await M.keepSetup();
+    tell(); show(state().cur);
+  };
+  await apply(su, after);
+  step(() => apply(J(su0), before), () => apply(J(su), after), 'setup');
+  return true;
+}
+
 /* Anchor papers (src/anchors.js): the high, middle and low paper a school keeps from a summative. One paper each: tagging a second
    paper High takes High off the first, and one undo step puts both back. Stored on the paper's grade as grade.anchor. */
 export const ANCHOR_LV = ['high', 'mid', 'low'];
@@ -739,4 +770,46 @@ export async function retakeRuleSet(k) {
   const put = async v => { L.book = { ...(L.book || {}) }; if (v) L.book.retake = v; else delete L.book.retake; await W.saveLibrary(l => { l.book = { ...(l.book || {}) }; if (v) l.book.retake = v; else delete l.book.retake; }); tell(); show(state().cur); };
   await put(k);
   step(() => put(was), () => put(k), 'retake rule');
+}
+
+/* Quick mark (src/quiz.js): a paper quiz marked answer by answer. Each mark, comment, moved mark or lined-up page is one undo step for
+   the papers it touched and the quiz's own spots and shifts; Give the rest is one step for all of them. Saving the boxes is one step
+   too: the quiz, the score out of its points (a rubric download changes to points at once, with Undo, where the current app asks
+   first), and every paper's marks redrawn for the boxes as they are now. */
+const quickKeep = sts => {
+  const bb = b(), q = J(bb.quiz), su = J(state().setup), gs = sts.map(st => [st, J(st.grade), st.files.map(f => [f, J(f.marks)])]);
+  return () => { if (q) bb.quiz = J(q); else delete bb.quiz; use({ setup: J(su) }); for (const [st, g, fs] of gs) { st.grade = J(g); for (const [f, m] of fs) { if (m) f.marks = J(m); else delete f.marks; } } };
+};
+// fn changes the papers of sts (async). after: what the screen redraws once the step is done or taken back.
+export async function quickDo(sts, fn, after) {
+  const back = quickKeep(sts); await fn(); const again = quickKeep(sts);
+  const done = () => { K.thumbCache.clear(); tell(); if (after) after(); };
+  step(() => { back(); done(); }, () => { again(); done(); }, 'marks');
+  done();
+}
+// Q: the quiz as the boxes editor left it. Z: the lifted quiz engine (engines/gquiz.js). S: engines/gsetup.js, for an MYP class.
+// Returns what changed about the score: 'points' (it is out of the quiz's points now), 'rubric' (and rubric scores stopped counting).
+export async function quickBoxesSave(Q, ansBack, Z, S) {
+  const s = state(), bb = b(), all = bb.students, back = quickKeep(all), su0 = s.setup;
+  let say = '';
+  bb.quiz = Q;
+  const max = Z.quizMax(), c = S.ibTaskClass();
+  if (max && c) {
+    for (const q of Q.qs) q.ib = Z.ibQzOf(q, c);
+    const used = Z.ibQzUsed(Q, c), now = su0.mode === 'rubric' && Array.isArray(su0.ib) ? su0.ib.filter(Boolean) : [];
+    if (!used.every(k => now.includes(k))) await ibTaskApply(c, [...now, ...used], S);   // its own step, before this one
+  } else if (max && !(su0.mode === 'points' && +su0.outOf === max)) {
+    say = su0.mode === 'rubric' && all.some(st => (st.grade.rubric || []).some(v => v != null)) ? 'rubric' : 'points';
+    use({ setup: { ...J(su0), mode: 'points', outOf: max } });
+    all.forEach(st => s.refound(st));
+  }
+  Z.qzDropGone(new Set(Q.qs.map(q => q.id)));
+  if (ansBack) for (const st of all) for (const f of st.files) for (const l of Object.values(f.marks || {})) for (const m of l) if (Z.qzMoved(m)) { delete m.qzm; m.qzp = [m.ax, m.ay]; }
+  Z.qzForget();
+  for (const st of all) if (st.grade.q && Object.keys(st.grade.q).length) { await Z.qzRedoPaper(st); Z.quizScore(st); }
+  const again = quickKeep(all);
+  const done = async () => { K.thumbCache.clear(); await M.keepSetup(); Z.qzForget(); tell(); show(state().cur); };
+  step(async () => { back(); await done(); }, async () => { again(); await done(); }, 'setup');
+  await done();
+  return say;
 }

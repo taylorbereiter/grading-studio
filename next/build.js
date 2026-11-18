@@ -304,6 +304,8 @@ export const tnRngSet = r => { tnRng = r; };
     // Rubric setup (src/rubrics.js, src/goals.js, src/rubricup.js): what each score means kept tidy, the learning goals a row can be
     // tagged with, and rows read out of a rubric she brings in (Word or PDF); the dialog and its one undo step are the new app's
     'tidyLevels', 'levelIn', 'goalList', 'goalById', 'goalName', 'goalsTidy', 'ruFromWord', 'ruFromPdf', 'rubricRowsInto',
+    // an IB MYP class's task (src/ib.js): the class's criteria, the ones this task assesses, and its levels in the list and on a stamp
+    'classWay', 'ibCrit', 'IB_TOP', 'ibTaskClass', 'ibTaskLevels', 'ibListSay', 'ibStampText',
   ], '', [], ['gcore', 'gdraw', 'gword']],
   ['ginsight', [
     // Insights > Consistency (src/insight.js): whether her scores drifted as she went, read the same way, rubric row by row, and
@@ -319,6 +321,22 @@ export const tnRngSet = r => { tnRng = r; };
     'anonShuffle', 'coverList', 'coverOk', 'coverMark', 'coverAgain', 'coverName', 'coverFirst', 'coverLine', 'boxKey', 'shareState', 'sameSpot',
     'findNames', 'nameFlag', 'nameFlagged', 'namesLooking', 'wordNoName', 'stillCounting', 'ensureCounts', 'anonCovers',
   ], '', [], ['gcore', 'gdraw', 'gopen', 'greport', 'gexport']],
+  ['gquiz', [
+    // Quick mark (src/quiz.js, src/ib.js ibQz*): a paper quiz's boxes, each answer cut from its page, the marks given on the paper
+    // and the total stamped; the boxes editor, the cards and their keys are the new app's
+    'QZ_PAD', 'QZ_HOW', 'QZ_KIND', 'QZ_ANS', 'QZ_AT', 'quizOn', 'quizMax', 'quizLabel', 'qzHow', 'qzByPts', 'qzSteps', 'qzWordsOk', 'qzWordsMine', 'qzWordsAll', 'qzStepWords', 'qzWord',
+    'quizPages', 'quizMarks', 'quizCount', 'quizPart', 'quizSum', 'quizWho', 'qzDoc', 'qzClose', 'qzForget', 'qzShift', 'qzSz', 'qzOwn', 'qzSpot', 'qzCropKey',
+    'qzPage', 'qzRect', 'qzCut', 'qzCrop', 'qzPageSize', 'quizSet', 'quizScore', 'qzLook', 'qzPaper', 'qzAnsMode', 'qzAnsText', 'qzAnsWant', 'qzAnsAt', 'qzAnsSpot',
+    'qzAnsOld', 'qzMoved', 'qzAnsLab', 'qzAns', 'qzAnsOf', 'qzTotal', 'qzRedoPaper', 'qzDropGone', 'qzNoteOf', 'qzNoteSet', 'qzMarkInk', 'qzAnswerPic',
+    'ibQzOn', 'ibQzOf', 'ibQzUsed', 'ibQzMax', 'ibQzRaw', 'ibQzTable', 'ibQzLevel', 'ibQzEven', 'ibQzParts', 'ibQzScore', 'ibQzSay',
+  ], "// the papers' documents are let go once the answers being cut from them are done, so a cut under way isn't cancelled\nexport const qzLetGo = () => qzQueue.then(() => qzClose());\n", [], null],
+  ['gqmake', [
+    // A quiz made here (src/quizmake.js, src/quizread.js): typed questions printed with bubbles and a code on each page, the code
+    // read back to send each scanned page to its student, and the bubbles read and scored; the maker, the print window and the
+    // answers to check are the new app's
+    'QMK_T', 'QMK_L', 'qmkNew', 'qmkNew0', 'qmkPts', 'qmkLetters', 'QMK_CSS', 'qmkBits', 'qmkQ', 'qmkPageHtml', 'qmkPages', 'qmkLayout', 'qmkBoxes',
+    'QR_REG', 'qrGrey', 'qrFind', 'qrH', 'qrMean', 'qrRing', 'qrCode', 'qrPageCode', 'qrSplitPage', 'qrSplitSays', 'qrStudent', 'qrDecide', 'qzAutoLetters', 'qrScoreOf',
+  ], '', [], null],
   ['gways', [
     // the teacher's usual way of grading (src/app/library.js GRADE_WAYS, meGrade): what a new assignment starts with, read from the
     // library the settings screen has in hand (useLib), not the marking screen's
@@ -326,6 +344,14 @@ export const tnRngSet = r => { tnRng = r; };
   ], `let lib = { me: null };
 export const useLib = l => { lib = l || { me: null }; };
 `, ['lib'], ['gcore']],
+  ['gkept', [
+    // where each kept download stands and Today's groups (src/app/screens.js keptState, keptBack; src/app/kept.js cardOfKept;
+    // src/today.js homeGroups; src/shell.js classLeft), for Home and the sidebar, read from the library and kept rows they are
+    // handed (useKept), not the marking screen's
+    'keptState', 'keptBack', 'cardOfKept', 'homeGroups', 'classLeft',
+  ], `let lib = { classes: [], loose: { units: [] } }, keptMeta = new Map();
+export const useKept = (l, k) => { lib = l; keptMeta = k; };
+`, ['lib', 'keptMeta'], ['gcore']],
 ];
 function writeGrading() {
   const { lift } = require('./tools/lift.js');

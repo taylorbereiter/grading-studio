@@ -7,6 +7,7 @@ import { useState } from 'preact/hooks';
 import { Button, IconButton, Menu, Segmented, toast } from '../../ui/index.js';
 import { state, gradeOf, noScore, ibSetup, fmtNum, fmtPct, retakeRule, RETAKE_RULES } from '../../engines/gcore.js';
 import { t } from '../../i18n/t.js';
+import { useRove } from './rove.js';
 import * as C from './change.js';
 import './lines.js';
 import './setup-lines.js';
@@ -67,7 +68,9 @@ export function Anchors({ st }) {
   if (!st || !st.files.length || noScore(st) || !C.anchorsHere()) return null;
   const on = st.grade.anchor || '';
   const tip = lv => { const j = C.anchorOf(lv), nm = anchorName(lv).toLowerCase(); return on === lv ? t('paper.an_on', { lv: nm }) : j >= 0 && b.students[j] !== st ? (anonOn() ? t('paper.an_move_anon', { lv: nm }) : t('paper.an_move', { lv: nm, who: b.students[j].key })) : t('paper.an_make', { lv: nm }); };
-  return <div class="mk-anch" data-anchrow><span class="lab" title={t('paper.an_tip')}>{t('paper.an_label')}</span>
-    <span class="seg" role="group" aria-label={t('paper.an_label')}>{C.ANCHOR_LV.map(lv => <button type="button" class="chip" aria-pressed={on === lv ? 'true' : 'false'} title={tip(lv)}
-      onClick={() => { const now = C.setAnchor(st, lv); again(n => n + 1); if (now) toast(t('paper.an_set', { lv: anchorName(lv) })); }} data-anchor={lv}>{anchorName(lv)}</button>)}</span></div>;
+  return <AnchorRow><span class="lab" title={t('paper.an_tip')}>{t('paper.an_label')}</span>
+    <AnchorSet>{C.ANCHOR_LV.map(lv => <button type="button" class="chip" aria-pressed={on === lv ? 'true' : 'false'} title={tip(lv)}
+      onClick={() => { const now = C.setAnchor(st, lv); again(n => n + 1); if (now) toast(t('paper.an_set', { lv: anchorName(lv) })); }} data-anchor={lv}>{anchorName(lv)}</button>)}</AnchorSet></AnchorRow>;
 }
+const AnchorRow = ({ children }) => <div class="mk-anch" data-anchrow>{children}</div>;
+function AnchorSet({ children }) { const rv = useRove(); return <span class="seg" role="group" aria-label={t('paper.an_label')} {...rv}>{children}</span>; }

@@ -10,10 +10,13 @@ import { lostPages } from '../../engines/gopen.js';
 import { prefs } from '../../students/prefs.js';
 import { Checkbox, Segmented } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
+import { useRove } from './rove.js';
+import { copyText } from '../../services/clipboard.js';
 import { GroupBand, GroupDialog } from './group.jsx';
 export { GroupBand };
 export { ScoreMore, Anchors } from './score-more.jsx';
 export { PastWork } from './past.jsx';
+export { IbAsk, IbTotal } from './ib.jsx';
 import * as C from './change.js';
 import { Arrange } from './arrange.jsx';
 export { LightPanel, LightChip } from './light.jsx';
@@ -194,7 +197,8 @@ export async function pdfAuto() { if (!pdfAlways() || C.pdfBusyNow()) return; co
 // The turn buttons in the top corner of each page, shown when the mouse is over it (rotChip).
 export function TurnChip({ pg }) {
   const re = !!(pg.file.sc && pg.file.sc[pg.idx] && pg.file.sc[pg.idx].re);
-  return <span class="rchip"><IconButton icon="turnl" size="sm" label={t('setup.f_turn_l')} onClick={() => C.turnPages(pg.file, [pg.idx], -1)} data-rot="-1" />
+  const rv = useRove();
+  return <span class="rchip" role="toolbar" aria-label={t('mark.pg_tools', { n: pg.idx + 1 })} {...rv}><IconButton icon="turnl" size="sm" label={t('setup.f_turn_l')} onClick={() => C.turnPages(pg.file, [pg.idx], -1)} data-rot="-1" />
     <IconButton icon="turnr" size="sm" label={t('setup.f_turn_r')} onClick={() => C.turnPages(pg.file, [pg.idx], 1)} data-rot="1" />
     {!pg.file.virtual && <IconButton icon="flag" size="sm" label={t(re ? 'setup.rs_flag_off' : 'setup.rs_flag')} title={t(re ? 'setup.rs_flag_off' : 'setup.rs_flag')} aria-pressed={re ? 'true' : 'false'} class={re ? 'on' : ''}
       onClick={() => toast(t(C.scanFlag(pg) ? 'setup.rs_flagged' : 'setup.rs_unflagged'))} data-pgre />}
@@ -317,7 +321,7 @@ export function Rescans({ onClose, onGo }) {
   for (const x of all) { if (!by.has(x.i)) by.set(x.i, []); by.get(x.i).push(x); }
   const order = [...by.keys()].sort((a, b) => a - b);
   const line = i => shownName(bb.students[i], i) + ': ' + by.get(i).map(x => t('setup.rs_line', { n: x.p + 1, file: C.shown(x.st, x.f.name) })).join(', ');
-  const copy = () => { try { navigator.clipboard.writeText(order.map(line).join('\n')); toast(t('setup.rs_copied')); } catch (e) { console.error(e); } };
+  const copy = () => copyText(order.map(line).join('\n')).then(ok => toast(t(ok ? 'setup.rs_copied' : 'copy.failed')));
   return <Dialog open title={all.length ? t('mark.rs_title_n', { n: by.size }) : t('setup.rs_title')} onClose={onClose}
     actions={<>{all.length > 0 && <Button onClick={copy} data-rscopy>{t('setup.rs_copy')}</Button>}<Button onClick={onClose}>{t('setup.s_close')}</Button></>}>
     {all.length ? <><p class="mute">{t('setup.rs_text')}</p>

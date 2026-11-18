@@ -7,7 +7,7 @@
 // come with Drive (part d6); clips to show the class, and partners sharing a video, come with group work.
 import { h, Fragment } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
-import { Button, IconButton, Segmented, Dialog, TextInput, toast } from '../../ui/index.js';
+import { Button, IconButton, Segmented, Dialog, TextInput, CopyButton, toast } from '../../ui/index.js';
 import { state } from '../../engines/gcore.js';
 import * as V from '../../engines/gmedia.js';
 import { videos } from '../../students/index.js';
@@ -155,6 +155,7 @@ function Transcript({ f, seek, now, bytes }) {
   const lines = V.trLines(tr); let at = -1; lines.forEach((x, i) => { if (x.t != null && x.t <= now + 0.05) at = i; });
   const cap = !!prefs.get('gs.trCap', 0);
   return <div class="trbox"><div class="trhead"><b>{t('setup.v_tr')}</b><span class="mute">{t(tr.w ? 'setup.v_tr_made' : 'setup.v_tr_pasted')}</span><span class="grow" />
+    <CopyButton text={() => V.trText(f.tr)} data-trcopy />
     <Button size="sm" variant="quiet" aria-pressed={cap ? 'true' : 'false'} onClick={() => { if (cap) prefs.del('gs.trCap'); else prefs.set('gs.trCap', 1); dispatchEvent(new Event('gs-trcap')); tick(n => n + 1); }} title={t('setup.v_caps_tip')} data-trcap>{t('setup.v_caps')}</Button>
     <Button size="sm" variant="quiet" onClick={() => { setText(V.trText(tr)); setMode('edit'); }} data-trpaste>{t('setup.v_edit')}</Button>
     {canMake && <Button size="sm" variant="quiet" onClick={make} data-trmake>{t('setup.v_tr_again')}</Button>}

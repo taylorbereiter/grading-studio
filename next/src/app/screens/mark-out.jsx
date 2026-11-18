@@ -5,6 +5,7 @@
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useMemo } from 'preact/hooks';
 import { Button, Checkbox, Segmented, Icon, Progress, Card, EmptyState, toast } from '../../ui/index.js';
+import { copyText } from '../../services/clipboard.js';
 import { t } from '../../i18n/t.js';
 import { state, fmtNum, fmtPct, rowsTop, maxPoints, gradeOf } from '../../engines/gcore.js';
 import { shownName, anonOn } from '../../engines/gdraw.js';
@@ -13,10 +14,7 @@ import '../mark/setup-lines.js';
 import '../mark/paper-lines.js';
 import { PARTS } from '../router.js';
 
-async function copy(text) {
-  try { await navigator.clipboard.writeText(text); return true; }
-  catch { const a = document.createElement('textarea'); a.value = text; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); } catch {} a.remove(); return true; }
-}
+const copy = text => copyText(text);
 const cut = s => (s.length > 40 ? s.slice(0, 40) + '…' : s);
 const copyCell = v => copy(v).then(() => toast(v ? t('setup.copied', { text: cut(v) }) : t('setup.copied_empty')));
 const Cell = ({ v, children, cls = '' }) => <td class={cls}><button type="button" class="cp" data-copy={v} onClick={() => copyCell(v)}>{children == null ? v : children}</button></td>;

@@ -1258,5 +1258,16 @@
  "setup.pv_miss": {
   "one": "This file didn’t match a name: {names}. Use File… on the right row.",
   "other": "These files didn’t match a name: {names}. Use File… on the right row."
+ },
+ "setup.qf_make": "Make a quiz…",
+ "setup.qf_edit": "Edit the quiz…",
+ "setup.qf_scan": "Bring in the scanned quiz…",
+ "setup.s_quiz": {
+  "one": "{n} page of this quiz: {who} found by the code.",
+  "other": "{n} pages of this quiz: {who} found by the code."
+ },
+ "setup.s_quiz_left": {
+  "one": "{n} page needs a name.",
+  "other": "{n} pages need a name."
  }
 }
