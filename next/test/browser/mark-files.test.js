@@ -40,8 +40,8 @@ async function page(ctx, errors) {
 const KEY = 'Bram Sample';
 // the paper is drawn again after each change, so the ⋯ is found and pressed in one step once it is ready, then the item by its words
 const menuDo = async (p, file, label) => {
-  await p.waitForFunction(f => { const b = window.__mark.ready && document.querySelector('[data-fmenu="' + f + '"]'); if (b) b.click(); return !!b; }, { timeout: 30000 }, file);
-  await p.waitForSelector('.pop [role="menuitem"]');
+  // pressed again until its menu shows: a redraw as the papers are read in the background can close a menu just opened
+  await p.waitForFunction(f => { if (document.querySelector('.pop [role="menuitem"]')) return true; const b = window.__mark.ready && document.querySelector('[data-fmenu="' + f + '"]'); if (b) b.click(); return false; }, { timeout: 30000, polling: 400 }, file);
   const ok = await p.evaluate(l => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.includes(l)); if (it) it.click(); return !!it; }, label);
   if (!ok) throw new Error('no ' + label);
 };
@@ -65,7 +65,7 @@ test('a file added, replaced, removed and brought back in the new app is where t
   await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready && window.__mark.read, { timeout: 60000 }, i);
   await p.waitForSelector('[data-addmenu]', { timeout: 60000 });
   // Add > A file…
-  const addDo = async label => { await p.click('[data-addmenu]'); await p.waitForSelector('.pop [role="menuitem"]'); for (const it of await p.$$('.pop [role="menuitem"]')) if ((await it.evaluate(e => e.textContent)).includes(label)) return it.click(); throw new Error('no ' + label); };
+  const addDo = async label => { await p.waitForFunction(() => { if (document.querySelector('.pop [role="menuitem"]')) return true; const b = document.querySelector('[data-addmenu]'); if (b) b.click(); return false; }, { timeout: 30000, polling: 400 }); const ok = await p.evaluate(l => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.includes(l)); if (it) it.click(); return !!it; }, label); if (!ok) throw new Error('no ' + label); };
   const [c1] = await Promise.all([p.waitForFileChooser(), addDo('Add a file')]);
   await c1.accept([late]);
   await has(p, 'files', KEY + '/Late page.pdf');
@@ -159,7 +159,7 @@ test('text pasted for a student with nothing turned in is the same page the curr
   const who = await p.evaluate(() => { const b = window.__mark.state().batch, i = b.students.findIndex(s => !s.files.length); return { i, key: b.students[i].key }; });
   await p.click('[data-st="' + who.i + '"]');
   await p.waitForSelector('[data-addmenu]', { timeout: 60000 });
-  await p.click('[data-addmenu]'); await p.waitForSelector('.pop [role="menuitem"]');
+  await p.waitForFunction(() => { if (document.querySelector('.pop [role="menuitem"]')) return true; const b = document.querySelector('[data-addmenu]'); if (b) b.click(); return false; }, { timeout: 30000, polling: 400 });
   for (const it of await p.$$('.pop [role="menuitem"]')) if ((await it.evaluate(e => e.textContent)).includes('Pasted text')) { await it.click(); break; }
   await p.waitForSelector('[data-pttext]');
   const TEXT = 'My answer to question one.\n\nThe second part, sent late by email.';
