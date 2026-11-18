@@ -25,6 +25,7 @@ import { classTone } from './colors.js';
 import { onSaved } from '../shared/saved.js';
 import { sampleOn, leaveSample } from './sample.js';
 import { useUpdate } from './update.js';
+import { useSaving } from '../services/saving.js';
 
 const TOP = [['home', 'home', 'nav.home'], ['calendar', 'cal', 'nav.calendar'], ['todo', 'todo', 'nav.todo']];
 const FOOT = [['library', 'library', 'nav.library'], ['school', 'school', 'nav.school'], ['settings', 'settings', 'nav.settings'], ['help', 'help', 'nav.help']];
@@ -71,7 +72,11 @@ function SavedLine() {
   const [at, setAt] = useState(0), [, tick] = useState(0);
   useEffect(() => { const off = onSaved(() => setAt(Date.now())), iv = setInterval(() => tick(n => n + 1), 30000); return () => { off(); clearInterval(iv); }; }, []);
   const mins = at ? Math.floor((Date.now() - at) / 60000) : -1;
-  return <div class="saved" role="status" data-saved={at || ''}><Icon name="check" size="xs" /><span>{mins < 0 ? t('saved.all') : mins < 1 ? t('saved.now') : t('saved.ago', { n: mins })}</span></div>;
+  // Until a folder or Drive holds a second copy, or when the folder needs her, it says so in amber (src/folder.js whereSay, railSaved).
+  const S = useSaving(), f = S && S.folder ? S.folder() : null, g = S ? S.google() : {};
+  const warn = !f || sampleOn() ? '' : f.state === 'ask' ? 'saved.f_ask' : f.state === 'lost' ? 'saved.f_lost' : f.state === 'decide' ? 'saved.f_decide' : f.state === 'none' && f.booted && !g.email ? 'saved.not_backed' : '';
+  return <div class="saved" role="status" data-saved={at || ''}><Icon name="check" size="xs" /><span>{mins < 0 ? t('saved.all') : mins < 1 ? t('saved.now') : t('saved.ago', { n: mins })}</span>
+    {warn && <span class="sv-w" data-savewarn={f.state}>{t(warn)}</span>}</div>;
 }
 
 function useLock() {

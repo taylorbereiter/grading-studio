@@ -28,6 +28,7 @@ import { isExample } from '../plan/examples.js';
 import { assistant } from '../../services/assistant.js';
 import { saveFailed } from '../plan/save.js';
 import '../plan/tool-lines.js';
+import { DriveButton } from '../drive-button.jsx';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 const DOC_TYPE = 'text/html';
@@ -123,7 +124,7 @@ export function ImportSheet({ p, slot, onClose }) {
     footer={<><span class="grow" /><Button variant="quiet" onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" disabled={busy || !text.trim()} onClick={pasted} data-focus="import-paste">{t('tool.import_pasted')}</Button></>}>
     <div class="actedit" ref={box}>
       <p class="mute">{t('tool.import_text')}</p>
-      <label class="btn"><Icon name="upload" />{t('tool.choose_file')}<input type="file" class="vh" accept=".gslesson,.json,application/json" onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; file(f); }} data-import /></label>
+      <label class="btn"><Icon name="upload" />{t('tool.choose_file')}<input type="file" class="vh" accept=".gslesson,.json,application/json" onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; file(f); }} data-import /></label><DriveButton />
       <label class="fld"><span class="lab">{t('tool.or_paste')}</span><textarea rows={8} value={text} onInput={e => setText(e.currentTarget.value)} data-focus="import-text" /></label>
     </div>
   </Sheet>;
@@ -233,7 +234,7 @@ export function Finished({ p, l, save, onClose }) {
   return <Sheet open title={t('tool.final_title')} icon={<Icon name="slides" />} onClose={onClose} footer={<><span class="grow" /><Button variant="quiet" onClick={onClose}>{t('common.close')}</Button></>}>
     <div class="fin">
       <p class="mute">{f ? t('tool.final_has') : t('tool.final_none')}</p>
-      <label class={'btn' + (busy ? ' busy' : '')}><Icon name="upload" />{f ? t('tool.final_newer') : t('tool.final_upload')}<input type="file" class="vh" disabled={busy} accept=".pptx,.zip,application/zip" onChange={e => { const x = e.currentTarget.files[0]; e.currentTarget.value = ''; pick(x); }} data-final /></label>
+      <label class={'btn' + (busy ? ' busy' : '')}><Icon name="upload" />{f ? t('tool.final_newer') : t('tool.final_upload')}<input type="file" class="vh" disabled={busy} accept=".pptx,.zip,application/zip" onChange={e => { const x = e.currentTarget.files[0]; e.currentTarget.value = ''; pick(x); }} data-final /></label><DriveButton />
       {f && <div class="frow"><Icon name="slides" /><span class="main"><b data-raw>{f.name}</b><small class="mute">{size(f.size)} · {t('tool.uploaded', { when: when(f.at) })}{finFresh(l) ? '' : ' · ' + t('tool.changed_since')}</small></span>
         <Button size="sm" icon="download" onClick={() => dl(f)} data-focus="final-dl">{t('tool.download')}</Button></div>}
       {old.length > 0 && <details class="finold"><summary>{t('tool.older_finals', { n: old.length })}</summary>
@@ -306,7 +307,7 @@ export function Shots({ p, l, i, save, setCur }) {
     onDragOver={e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { e.preventDefault(); setOver(true); } }} onDragLeave={() => setOver(false)}
     onDrop={e => { if (!e.dataTransfer || !e.dataTransfer.files.length) return; e.preventDefault(); setOver(false); add([...e.dataTransfer.files]); }}>
     <div class="row"><h2 class="sub grow" id="h-shots">{t('tool.shots', { name })}</h2>
-      <label class="btn sm"><Icon name="image" />{t('tool.add_shot')}<input type="file" class="vh" accept="image/*" multiple onChange={e => { const fs = [...e.currentTarget.files]; e.currentTarget.value = ''; add(fs); }} data-shot /></label></div>
+      <label class="btn sm"><Icon name="image" />{t('tool.add_shot')}<input type="file" class="vh" accept="image/*" multiple onChange={e => { const fs = [...e.currentTarget.files]; e.currentTarget.value = ''; add(fs); }} data-shot /></label><DriveButton /></div>
     {!list.length && <p class="mute small">{t('tool.shots_help')}</p>}
     <ul class="shotlist">{list.map((x, k) => <li>
       <button type="button" class="shotimg" onClick={() => setBig(x)} aria-label={t('tool.shot_bigger')}><img src={x.src} alt={x.note || ''} data-raw /></button>

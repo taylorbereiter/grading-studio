@@ -15,6 +15,7 @@ import { classOf } from './lessons.js';
 import { href } from '../router.js';
 import { saveFailed } from './save.js';
 import './lines.js';
+import { DriveButton } from '../drive-button.jsx';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 const ICON = f => f.kind === 'doc' ? 'note' : /^image\//.test(f.type || '') ? 'image' : 'file';
@@ -105,7 +106,7 @@ export function Materials({ p, l, onSave, onTool = () => {} }) {
       <TextInput label={t('plan.link_address')} type="url" value={url} onInput={setUrl} onKeyDown={e => { if (e.key === 'Enter') addLink(); }} data-focus="link-url" />
       <TextInput label={t('plan.link_name')} value={name} onInput={setName} onKeyDown={e => { if (e.key === 'Enter') addLink(); }} />
       <div class="row"><Button size="sm" variant="quiet" onClick={() => setAdding(false)}>{t('common.cancel')}</Button><Button size="sm" variant="primary" onClick={addLink} data-focus="link-add">{t('plan.add_link')}</Button></div></div>
-      : <div class="row"><Button size="sm" icon="upload" onClick={() => { swap.current = ''; pick.current.click(); }} data-focus="add-files">{t('plan.add_files')}</Button>
+      : <div class="row"><Button size="sm" icon="upload" onClick={() => { swap.current = ''; pick.current.click(); }} data-focus="add-files">{t('plan.add_files')}</Button><DriveButton input={pick} office onClick={() => { swap.current = ''; }} />
         <Button size="sm" icon="link" onClick={() => setAdding(true)} data-focus="add-link">{t('plan.add_link')}</Button>
         <Button size="sm" icon="note" onClick={() => onTool('newdoc')} data-focus="new-doc">{t('plan.new_document')}</Button>
         <Button size="sm" icon="image" onClick={() => onTool('example')} data-focus="add-example-mat">{t('plan.add_example')}</Button></div>}

@@ -225,6 +225,10 @@
   "one": "Saved {n} min ago",
   "other": "Saved {n} min ago"
  },
+ "saved.not_backed": "Not backed up",
+ "saved.f_ask": "Folder needs a click",
+ "saved.f_lost": "Can’t reach your folder",
+ "saved.f_decide": "Things to decide",
  "plan.untitled": "Untitled lesson",
  "plan.by_class": "By class",
  "plan.by_time": "By time",
@@ -247,5 +251,14 @@
  "settings.install_h": "Install as an app",
  "settings.install_about": "Opens like a program, in its own window, with the same work as this tab. In Chrome or Edge, use Install in the address bar or the browser’s menu.",
  "settings.install_done": "Installed: it opens in its own window, with the same work as the browser tab.",
- "settings.install": "Install"
+ "settings.install": "Install",
+ "drive.pick_one": "Choose a file",
+ "drive.pick_many": "Choose files",
+ "drive.getting": {
+  "one": "Getting it from Google Drive…",
+  "other": "Getting {n} files from Google Drive…"
+ },
+ "drive.closed": "Google’s window was closed.",
+ "drive.offline": "Couldn’t reach Google. Check the internet connection.",
+ "drive.failed": "That didn’t come from Google Drive. Try again."
 }

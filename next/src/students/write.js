@@ -11,7 +11,7 @@
 // Every write first checks: this window holds the lock; the saved work is at the format this build knows (the new app never
 // changes the format); no other window has started replacing everything; and a download that was forgotten stays forgotten.
 // The merge engine is the current app's own (engines/merge.js), loaded on the first write so it is not in the first load.
-import { papers, edits, added, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame, readings, videos, rubricPages, watchCodes, workTimer, setupUndo } from './index.js';
+import { papers, edits, added, examples, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame, readings, videos, rubricPages, watchCodes, workTimer, setupUndo } from './index.js';
 import { words } from '../planning/index.js';
 import { mayWrite } from '../shared/lock.js';
 import { json, text, setText, remove } from '../shared/ls.js';
@@ -136,7 +136,18 @@ const PAPER_ONE = 100e6, PAPER_PIECE = 64e6;
 export async function keepPapers(b, label, list) {
   check(b.id);
   if ((json('gs.tomb', {}) || {})[b.id]) throw new CannotSave('forgotten', b.id);
-  const id = b.id, rec = { id, label: label || '', entries: list }, under = IDBKeyRange.bound(id + '|', id + '|\uffff');
+  const id = b.id, rec = { id, label: label || '', entries: list };
+  await putPapers(id, rec);
+  const m0 = await meta.get(id);
+  const m = { ...(m0 || {}), id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (m0 || {}).asg, papers: true, size: list.reduce((a, e) => a + (e.data ? e.data.length : 0), 0) };
+  await meta.put(m, id);
+  saved({ kind: 'papers', id, side: 'students' });
+  return m;
+}
+
+// The papers record itself, whole or in pieces (src/app/kept.js paperPut).
+async function putPapers(id, rec) {
+  const under = IDBKeyRange.bound(id + '|', id + '|\uffff');
   const held = e => (e.data ? e.data.buffer.byteLength : 0);
   if (rec.entries.reduce((a, e) => a + held(e), 0) <= PAPER_ONE) { await papers.del(under); await papers.put(rec, id); }
   else {
@@ -152,11 +163,6 @@ export async function keepPapers(b, label, list) {
       await papers.put({ ...rec, entries }, id);
     } catch (e) { await papers.del(id).catch(() => {}); await papers.del(under).catch(() => {}); throw e; }
   }
-  const m0 = await meta.get(id);
-  const m = { ...(m0 || {}), id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (m0 || {}).asg, papers: true, size: list.reduce((a, e) => a + (e.data ? e.data.length : 0), 0) };
-  await meta.put(m, id);
-  saved({ kind: 'papers', id, side: 'students' });
-  return m;
 }
 
 /* a Word paper edited in the app (src/app/word.js keepEdit, dropEdit) */
@@ -253,6 +259,13 @@ export async function keepVideo(file, id) {
   return id;
 }
 
+// A kept video taken out of this browser (src/video.js vkDrop): a Drive video's download, Remove download. Drive's copy isn't touched.
+export async function dropVideo(id) {
+  check('videos');
+  await videos.del(id);
+  saved({ kind: 'video', id, side: 'students' });
+}
+
 /* strong examples and the watch list (grading-studio-examples: ex and pix; src/examples.js exPut, exDelete) */
 // A record and its pictures in one transaction, as exPut writes them: u stamps the change (the newer one wins a merge), new
 // pictures replace the old ones. A browser that never kept one gets the database made as the current app makes it (shared/idb.js ensure).
@@ -269,6 +282,61 @@ export async function keepExample(rec, blobs) {
   return rec;
 }
 // Deleting leaves { id, t, gone: true } (watch: 1 kept for a watch-list one), so a copy elsewhere doesn't bring it back.
+// An example as it came from elsewhere (a linked folder or a take-home file: src/examples.js exTake, exPut raw), its stamp kept.
+export async function takeExample(rec, blobs, from = 'folder') {
+  check('grading-studio-examples');
+  const lo = rec.id + '|', hi = rec.id + '|\uffff';
+  await writeMany('grading-studio-examples', ['ex', 'pix'], o => {
+    o.ex.put(rec, rec.id);
+    if (rec.gone || blobs) o.pix.delete(IDBKeyRange.bound(lo, hi));
+    if (blobs) blobs.forEach((b, n) => o.pix.put(b, rec.id + '|' + n));
+  });
+  saved({ kind: 'example', id: rec.id, side: 'students', from });
+}
 export const dropExample = r => keepExample({ id: r.id, t: Date.now(), gone: true, ...(r.watch ? { watch: 1 } : {}) });
 // The watch list's codes for students (gs.wlCodes): kept in this browser only, never in the folder, Drive or a take-home file.
 export function saveWatchCodes(map) { check('gs.wlCodes'); watchCodes.setJson(map); }
+
+/* what a merge takes in from elsewhere: the Drive sync file or a linked folder (src/folder.js applyRow, forgetKept; src/app/drive.js
+   syncOnce). Each write is what the current app writes for the same row, and says so with from: 'sync' (or 'folder'), so the copy
+   it came from isn't sent the same thing straight back as news. */
+// A download's merged marks and scores: the full copy, the other windows told (this one too: hold.seen), the quick copy dropped.
+export async function takeWork(id, data, from = 'sync') {
+  check(id);
+  await work.put(data, id);
+  const st = tabs.stamp(id, data.t);
+  quick.remove(id.replace(/^gs\.b\./, ''));
+  const idx = quickList.json({}) || {}; if (id in idx) { delete idx[id]; quickList.setJson(idx); }
+  saved({ kind: 'work', id, side: 'students', from, data });
+  return st;
+}
+export async function takeMeta(id, m, from = 'sync') { check(id); await meta.put(m, id); saved({ kind: 'papers', id, side: 'students', from }); }
+export async function takePapers(id, rec, from = 'sync') { check(id); await putPapers(id, rec); saved({ kind: 'papers', id, side: 'students', from }); }
+export async function takeAdded(key, rec, from = 'sync') { const id = key.split('|')[0]; check(id); if (rec) await added.put(rec, key); else await added.del(key); saved({ kind: 'added', id, side: 'students', from }); }
+export async function takeEdit(key, rec, from = 'sync') { const id = key.split('|')[0]; check(id); if (rec) await edits.put(rec, key); else await edits.del(key); saved({ kind: 'edit', id, side: 'students', from }); }
+// The library as a merge left it (already stamped): put in whole, with the copies made from it.
+export function takeLibrary(l, from = 'sync') {
+  check('gs.lib');
+  l = migrateLib(l);
+  library.setJson(l); shareRolls(l); shareWords(l);
+  saved({ kind: 'library', id: 'gs.lib', side: 'students', from });
+  return l;
+}
+export function takeTombs(tb, from = 'sync') { check('gs.tomb'); deleted.setJson(tb); saved({ kind: 'setting', id: 'gs.tomb', side: 'students', from }); }
+// A download forgotten elsewhere: everything of it in this browser goes (src/app/kept.js forgetKept), its strong examples stay
+// without saying whose they were, and any window with it open lets go.
+export async function dropDownload(id, from = 'sync') {
+  check(id);
+  tabs.forget(id);
+  try { for (const [, r] of await examples.entries()) if (r && r.work === id && r.from) await writeMany('grading-studio-examples', ['ex'], o => o.ex.put({ ...r, from: null }, r.id)); } catch (e) { console.error(e); }
+  try {
+    await papers.del(id); await papers.del(IDBKeyRange.bound(id + '|', id + '|￿'));
+    await work.del(id); await meta.del(id);
+    await edits.del(IDBKeyRange.bound(id + '|', id + '|￿'));
+    for (const [k, r] of await added.entries()) if (r && r.bid === id) await added.del(k);
+  } catch (e) { console.error(e); }
+  quick.remove(id.replace(/^gs\.b\./, '')); readings.remove(id);
+  const idx = quickList.json({}) || {}; if (id in idx) { delete idx[id]; quickList.setJson(idx); }
+  try { remove('gsc.saved.' + id); } catch {}
+  saved({ kind: 'papers', id, side: 'students', from, gone: true });
+}

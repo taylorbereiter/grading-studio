@@ -38,6 +38,11 @@ export const mailApp = localKey(P, 'gs.mailApp');
 export const planCopy = localKey(P, 'gs.planCopy');   // the timetable sent along with the rest of the work, for a phone
 export const googleEmail = localKey(P, 'gs.gEmail');
 export const googleClientId = localKey(P, 'gs.gcid');
+export const googleAuto = localKey(P, 'gs.gAuto');
+export const drivePaperDir = localKey(P, 'gs.gPaperDir');
+export const driveVideoDir = localKey(P, 'gs.gVidDir');
+export const planSeen = localKey(P, 'gs.planSeen');
+export const planBig = localKey(P, 'gs.planBig');
 // After-class notes (gsp.taughtIn) are free text: a teacher may put a student's name in one. They stay where they are, but they
 // MAY HOLD NAMES, so nothing sends them to an assistant unless the teacher puts them in herself.
 export const taughtInMayHoldNames = true;

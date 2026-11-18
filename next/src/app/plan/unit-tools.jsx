@@ -24,6 +24,7 @@ import { usePart } from '../parts.js';
 import './lines.js';
 import './more-lines.js';
 import { UnitBank } from './bank-edit.jsx';
+import { DriveButton } from '../drive-button.jsx';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 const aiName = () => assistant().name || t('assistant.generic');
@@ -167,7 +168,7 @@ export function UnitAssist({ p, u, onClose }) {
       <li><b>{t('plan.step_zip')}</b><p class="mute">{t('more.unit_zip_text', { name })}</p>
         <label class={'drop' + (over ? ' over' : '')} onDragOver={e => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={e => { e.preventDefault(); setOver(false); take(e.dataTransfer.files[0]); }}>
           <Icon name="upload" /><span>{busy ? t('plan.reading') : t('more.unit_drop')}</span>
-          <input type="file" accept=".zip,.json,application/zip,application/json" class="vh" onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; if (f) take(f); }} data-unitzip /></label>
+          <input type="file" accept=".zip,.json,application/zip,application/json" class="vh" onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; if (f) take(f); }} data-unitzip /></label><DriveButton />
         <TextBox label={t('more.unit_paste')} value={pasted} onInput={setPasted} rows={4} data-focus="unit-paste" />
         <div class="row"><span class="grow" /><Button size="sm" disabled={!pasted.trim()} onClick={() => take(null, pasted)} data-focus="unit-paste-use">{t('more.unit_paste_use')}</Button></div></li>
       <li><b>{t('plan.step_review')}</b><p class="mute">{t('more.unit_review_text')}</p></li>

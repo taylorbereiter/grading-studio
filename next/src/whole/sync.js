@@ -33,8 +33,3 @@ export async function syncPayload({ now = Date.now(), planT = null, files = {}, 
   const tn = M.taughtInMerge(taughtIn.json(null), null).out; if (Object.keys(tn.items).length) out.tn = tn;
   return out;
 }
-let due = false;
-const told = new Set();
-export const syncDue = () => due;
-export function markSyncDue() { if (!due) { due = true; told.forEach(f => f(true)); } }
-export function onSyncDue(f) { told.add(f); return () => told.delete(f); }

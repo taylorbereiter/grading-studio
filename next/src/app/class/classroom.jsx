@@ -12,6 +12,7 @@ import { use as coreUse, state as coreState } from '../../engines/gcore.js';
 import { PARTS } from '../router.js';
 import { useBook, handoff } from './data.js';
 import './lines.js';
+import { DriveButton } from '../drive-button.jsx';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -60,7 +61,7 @@ export function ClassroomSheet({ onClose }) {
       <p class="mute small">{t('class.gc_say')}</p>
       <section class="cp-gccard"><span class="n" aria-hidden="true">1</span><div><h3>{t('class.gc_1')}</h3>
         <ol class="small"><li>{t('class.gc_1a')}</li><li>{t('class.gc_1b')}</li><li>{t('class.gc_1c')}</li></ol>
-        <div class="cp-bkidrop"><Button variant="primary" icon="upload" onClick={() => file.current.click()} data-gc-file>{t('class.gc_choose')}</Button><span class="mute small" data-raw={d ? '' : undefined}>{d ? d.file : t('class.gc_kinds')}</span>
+        <div class="cp-bkidrop"><Button variant="primary" icon="upload" onClick={() => file.current.click()} data-gc-file>{t('class.gc_choose')}</Button><DriveButton input={file} /><span class="mute small" data-raw={d ? '' : undefined}>{d ? d.file : t('class.gc_kinds')}</span>
           <input ref={file} type="file" hidden accept=".csv,.tsv,.txt,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={e => { read(e.currentTarget.files[0]); e.currentTarget.value = ''; }} data-gc-input /></div>
         {err && <p class="cp-err" role="alert">{err}</p>}
         {d && <div class="cp-gcfound" data-gc-found>

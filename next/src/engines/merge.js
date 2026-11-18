@@ -949,4 +949,4 @@ function snapKeep(list, now) {
   return keep;
 }
 
-export { hashOf, recHash, revsOf, stampData, workCounts, workVec, libPrev, stampLib, mergeLib, mergeWork, mergeStates, mergeLs, focusShared, planTimeMerge, taughtInMerge, vJoin, tabDiffers, tabMerge };
+export { hashOf, recHash, revsOf, stampData, workCounts, workVec, libPrev, stampLib, mergeLib, mergeWork, mergeStates, mergeLs, focusShared, planTimeMerge, taughtInMerge, vJoin, tabDiffers, tabMerge, mergePlan, libLinked, libFollow, libHold, snapKeep };

@@ -105,6 +105,8 @@ export const PARTS = {
   setgrade: () => import('./screens/settings-grading.jsx'),
   // the rest of Settings: the assistant, programme, averages, goals, handing back, text size (screens/settings-more.jsx)
   setmore: () => import('./screens/settings-more.jsx'),
+  setsave: () => import('./screens/settings-saving.jsx'),
+  drive: () => import('./drive-button.jsx'),
   // My setup, with the current app's reading and bringing in (app/setup/mysetup.jsx, engines/gstp.js)
   mysetup: () => import('./setup/mysetup.jsx'),
   // Settings > Focus and goals, with the timer's engine (app/focus/settings.jsx)

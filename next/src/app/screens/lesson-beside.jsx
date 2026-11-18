@@ -24,6 +24,7 @@ import { plannerKv, lessonBlob } from '../../planning/plan.js';
 import { saveFailed } from '../plan/save.js';
 import '../plan/lines.js';
 import '../plan/tool-lines.js';
+import { DriveButton } from '../drive-button.jsx';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 const TABS = ['books', 'video', 'unit', 'notes'];
@@ -74,7 +75,7 @@ function Books({ l, save }) {
     {list && !list.length && <p class="mute">{t('tool.no_books')}</p>}
     <ul class="mlist">{(list || []).map(x => <li><button type="button" class="link mopen" onClick={() => setOpen(x)} data-book={x.id}><Icon name="file" size="sm" /><span data-raw>{x.name}</span></button>
       {x.pages > 0 && <small class="mute">{t('tool.n_pages', { n: x.pages })}</small>}<IconButton icon="trash" size="sm" label={t('common.remove')} onClick={() => remove(x)} /></li>)}</ul>
-    <label class="btn sm"><Icon name="upload" />{t('tool.add_pdf')}<input type="file" class="vh" accept="application/pdf,.pdf" onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; add(f); }} data-addpdf /></label>
+    <label class="btn sm"><Icon name="upload" />{t('tool.add_pdf')}<input type="file" class="vh" accept="application/pdf,.pdf" onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; add(f); }} data-addpdf /></label><DriveButton />
     <p class="mute small">{t('tool.books_here')}</p>
   </div>;
 }
@@ -216,7 +217,7 @@ function Notebook({ p, l, save }) {
     <div class="doctools" role="toolbar" aria-label={t('tool.notebook')}>
       {B('bold', 'tool.doc_b', 'dt-bold')}{B('italic', 'tool.doc_i', 'dt-italic')}{B('underline', 'tool.doc_u', 'dt-underline')}{B('ul', 'tool.doc_ul')}{B('ol', 'tool.doc_ol')}
       <button type="button" class="btn sm quiet" onMouseDown={e => { e.preventDefault(); range.current = sel(); setAsk('link'); }}>{t('tool.nb_link')}</button>
-      <label class="btn sm quiet">{t('tool.nb_pic')}<input type="file" class="vh" accept="image/*" onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; pic(f); }} /></label>
+      <label class="btn sm quiet">{t('tool.nb_pic')}<input type="file" class="vh" accept="image/*" onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; pic(f); }} /></label><DriveButton small />
       <button type="button" class="btn sm quiet" onMouseDown={e => { e.preventDefault(); range.current = sel(); setAsk('video'); }}>{t('tool.nb_video')}</button>
       <Mic onText={w => { focus(); document.execCommand('insertText', false, (w.match(/^\s/) ? '' : ' ') + w); range.current = sel(); changed(); }} />
     </div>

@@ -13,6 +13,7 @@ import '../mark/lines.js';
 import '../mark/setup-lines.js';
 import '../mark/paper-lines.js';
 import { PARTS } from '../router.js';
+import { saving } from '../../services/saving.js';
 
 const copy = text => copyText(text);
 const cut = s => (s.length > 40 ? s.slice(0, 40) + '…' : s);
@@ -153,15 +154,32 @@ export function Return({ E, cur, onOpen }) {
   const s = state(), b = s.batch, p = E.plan(), o = E.opts(), redo = () => tick(n => n + 1);
   const r = b.returned || {}, canDir = !!(window.showDirectoryPicker && window.self === window.top);
   const opt = (k, v) => { E.setOpt(k, v); redo(); };
+  const S = saving(), toDrive = !!(S && S.google().email);
   const go = async toDir => {
     if (E.exporting()) return toast(t('setup.r_busy'));
     let dir = null;
+    if (toDir === 'drive') return goDrive();
     if (toDir) { try { dir = await window.showDirectoryPicker({ mode: 'readwrite', id: 'grading-studio' }); } catch (er) { if (er && er.name !== 'AbortError') toast(t('setup.r_dir_no')); return; } }
     setBar(0);
     try {
       const out = await E.exportAll({ keep, dpi, sheet, dir, onStep: (k, n, of) => { if (k === 'read') { setSay(t('setup.r_reading')); setBar(of ? 0.3 * n / of : 0); } else { setSay(t('setup.r_baking', { n: Math.min(n + 1, of), of })); setBar(0.3 + 0.7 * (of ? n / of : 1)); } } });
       if (!out.nOut && !out.zip) setSay(t('setup.r_none'));
       else { if (out.zip) E.saveFile(out.name, out.zip); setSay((dir ? t('setup.r_done_dir', { n: out.nOut, dir: dir.name }) : t('setup.r_done_zip', { n: out.nOut })) + (r.ok ? '' : ' ' + t('setup.r_once'))); }
+      if (out.failed.length) toast(t('setup.r_failed', { n: out.failed.length, list: out.failed.map(f => f.path.split('/').pop() + ' (' + f.why + ')').join(', ') }), { ms: 8000 });
+    } catch (er) { console.error(er); setSay(t('setup.r_wrong', { why: er.message || String(er) })); }
+    setBar(null); redo();
+  };
+  // Save to Google Drive (src/app/export.js data-go="drive"): the same files, in a new folder next to the papers opened from Drive, or in My Drive
+  const goDrive = async () => {
+    setBar(0);
+    try {
+      const out = await E.exportAll({ keep, dpi, sheet, onStep: (k, n, of) => { if (k === 'read') { setSay(t('setup.r_reading')); setBar(of ? 0.25 * n / of : 0); } else { setSay(t('setup.r_baking', { n: Math.min(n + 1, of), of })); setBar(0.25 + 0.5 * (of ? n / of : 1)); } } });
+      if (!out.nOut && !out.zip) setSay(t('setup.r_none'));
+      else {
+        const name = 'Marked - ' + b.name, from = b.drive || null;
+        const where = await S.driveSave(name, out.files, from, (n, of) => { setSay(t('setup.r_drive_saving', { n, of })); setBar(0.75 + 0.25 * n / of); });
+        setSay(t(where !== 'next' ? 'setup.r_drive_root' : from.kind === 'folder' ? 'setup.r_drive_in' : from.kind === 'zip' ? 'setup.r_drive_zip' : 'setup.r_drive_next', { name }) + (r.ok ? '' : ' ' + t('setup.r_once')));
+      }
       if (out.failed.length) toast(t('setup.r_failed', { n: out.failed.length, list: out.failed.map(f => f.path.split('/').pop() + ' (' + f.why + ')').join(', ') }), { ms: 8000 });
     } catch (er) { console.error(er); setSay(t('setup.r_wrong', { why: er.message || String(er) })); }
     setBar(null); redo();
@@ -189,7 +207,8 @@ export function Return({ E, cur, onOpen }) {
         <p class="mute">{t('setup.r_from', { n: p.students })}{p.skipped > 0 && ' ' + t('setup.r_skipped', { n: p.skipped })}{p.left > 0 && ' ' + t('setup.r_left', { n: p.left })}</p>
         {earlyBox}
         <div class="go"><Button variant="primary" icon="download" data-go="zip" disabled={bar != null} onClick={() => go(false)}>{t('setup.r_zip')}</Button>
-          {canDir && <Button data-go="dir" disabled={bar != null} onClick={() => go(true)}>{t('setup.r_dir')}</Button>}</div>
+          {canDir && <Button data-go="dir" disabled={bar != null} onClick={() => go(true)}>{t('setup.r_dir')}</Button>}
+          {toDrive && <Button icon="drive" data-go="drive" disabled={bar != null} onClick={() => go('drive')}>{t('setup.r_drive')}</Button>}</div>
         {bar != null && <Progress value={bar} max={1} label={say} />}
         <p class="mute" role="status" id="xStatus">{say}</p>
         {state1}
