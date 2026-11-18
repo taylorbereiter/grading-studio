@@ -7,6 +7,7 @@ import { use, setupOver, state, kget } from '../../engines/gcore.js';
 import { useStore } from '../../engines/gstore.js';
 import { prefs } from '../../students/prefs.js';
 import { library, gradingSetup, meta } from '../../students/index.js';
+import { PARTS } from '../router.js';
 
 export class NotKept extends Error { constructor(id) { super('The papers for this one aren’t kept in this browser.'); this.name = 'NotKept'; this.id = id; } }
 
@@ -19,7 +20,8 @@ export async function openKept(id, { question } = {}) {
   const lib = library.json(null) || { classes: [], loose: { id: '', units: [] } };
   for (const c of lib.classes || []) { c.units ||= []; c.names ||= []; }
   lib.loose ||= { id: '', units: [] }; lib.loose.units ||= [];
-  use({ lib, keptMeta: await keptRows(), setup: setupOver(gradingSetup.json(null)), batch: null, cur: 0 });
+  // fflate: a download kept as a ZIP is unzipped, and a .doc is told from a Word file, as the current app does
+  use({ lib, keptMeta: await keptRows(), setup: setupOver(gradingSetup.json(null)), batch: null, cur: 0, fflate: state().fflate || await PARTS.zip() });
   const rec = await E.paperGet(id);
   if (!rec) throw new NotKept(id);
   let label = rec.label, assignment = E.cardOfKept(id);

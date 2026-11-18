@@ -43,6 +43,12 @@ export const PARTS = {
   cal: () => import('./plan/cal-tools.jsx'),
   unit: () => import('./plan/unit-tools.jsx'),
   marking: () => import('./screens/mark-tools.jsx'),
+  // Grades, Insights and Return (the screen part), and what they run: the export engine with pdf-lib and fflate, loaded on their
+  // own like pdf.js (each library is its own chunk, under the any-chunk budget)
+  out: () => import('./screens/mark-out.jsx'),
+  outEngine: () => import('./mark/out.js'),
+  pdflib: () => import('pdf-lib'),
+  zip: () => import('fflate'),
 };
 export const CHUNKS = {
   home: () => import('./screens/home.jsx'),

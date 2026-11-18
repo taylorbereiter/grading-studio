@@ -133,6 +133,8 @@ const GRADING_STATE = {
   pages: '[]', docs: '[]', docMap: 'new Map()', undoStack: '[]', redoStack: '[]', bank: '[]', disp: 'null',
   inkColor: "'red'", hlColor: "'yellow'", penW: '2', checkInk: "'green'", CHECK_INK: "'#1E8A4C'", ptsInk: "''", once: 'null', onceEl: 'null',
   LANG_LOCALE: 'undefined', tr: '(s) => s', libVer: '0', keptMeta: 'new Map()',
+  // the Grades tab's order (src/app/dialogs.js gradesOrder): roster or folder
+  gradesOrder: "'roster'",
   // the screen's own: a change was made (the screen saves it through students/write.js), and what to redraw
   saveSoon: '() => {}',
   // the libraries, loaded by the screen when a paper needs them (each has its own budget) and handed in
@@ -152,7 +154,8 @@ const GRADING_STUBS = { pickedUpNew: '() => false', renderKept: '() => {}', grou
 const GRADING_DENY = ['$', 'openDlg', 'closeDlg', 'sayDlg', 'saveLib', 'keepWork', 'go', 'routeNow', 'paperPut', 'folderSaved', 'syncSoon', 'homeRender'];
 // Names that are only local variables in what is lifted (an unrelated top-level declaration has the same name).
 const GRADING_LOCAL = ['inside', 'num', 'average'];
-// Each module: [file, roots, preamble]. Later modules may use anything the earlier ones declare.
+// Each module: [file, roots, preamble, given, uses, real]. Later modules may use anything the earlier ones declare. real: names on
+// GRADING_LOCAL that this module's code does use as top-level declarations (the grade sheet's num).
 const GRADING = [
   ['gcore', [
     // grade maths (src/app/start.js, grades.js, ib.js, quiz.js)
@@ -183,6 +186,16 @@ const GRADING = [
     // scoring (src/grades.js, src/app/panels.js): the score changes as the current app makes them
     'scoreTouched', 'setStatus', 'touchGrade', 'nextUnscored', 'stampName', 'isSticker', 'isProof', 'PROOF', 'PUNCT', 'BRAINROT', 'wordUnder', 'newCheckSize', 'stickerAspect', 'RECENT_STAMPS',
   ], '', [], ['gcore', 'gdraw']],
+  ['gexport', [
+    // what goes back to students (src/app/export.js, src/feedback.js, src/exportreport.js, src/anchors.js): which files, their names,
+    // each paper with its marks baked in, the feedback page; the grades read off the papers and the grade sheet (src/app/gradesheet.js);
+    // the Grades tab's rows (src/app/dialogs.js) and Returned (src/tabs.js)
+    'exportPlan', 'nameOut', 'outStem', 'flattenDoc', 'oneLeftOver', 'xOne', 'xNames', 'xEdit', 'xAll', 'xEarly', 'gotEarly', 'canvasJpg', 'exportWhy', 'fbOn', 'keyOn', 'asgName', 'fileSafe', 'outWord',
+    'scanAll', 'buildSheetPdf', 'parseGrade', 'foundLabel', 'manyReads', 'readsCount', 'disagreeNote',
+    'gradeRows', 'tableHead', 'tableRow', 'gradesSummary', 'cellCopy', 'totalText', 'statusText', 'rowShown', 'scoreText', 'cellOut', 'csvCell', 'tsvLine', 'bandOf', 'ibSetup',
+    'meGrade', 'pctAvgText', 'setKey', 'keyRows', 'classStats', 'leftOutText', 'spreadBins', 'onThisScale', 'partNote', 'STATUS_LABEL', 'triesSay',
+    'anchorDocs', 'anchorDocPdf', 'anchorFile', 'anchorsHere', 'ANCHORS', 'anchorOf', 'anchorLabel', 'setAnchor', 'anchorCoverOn',
+  ], '', [], ['gcore', 'gdraw', 'gopen'], ['num', 'inside']],
 ];
 function writeGrading() {
   const { lift } = require('./tools/lift.js');
@@ -199,13 +212,14 @@ function writeGrading() {
   const sticker = Object.fromEntries(fs.readdirSync(path.join(ROOT, 'src/stickers')).filter(f => f.endsWith('.webp')).sort().map(f => [f.slice(0, -5), f]));
   writeIf('src/engines/stickers.js', '// MADE BY next/build.js FROM src/stickers/. Each sticker is its own file, fetched when a page with stickers is drawn.\n' +
     Object.entries(sticker).map(([k, f], i) => 'import s' + i + " from '../../../src/stickers/" + f + "';").join('\n') + '\n// The bundler gives each file a name next to this chunk; the page is a folder up, so each is read from where this module is.\nconst at = f => new URL(f, import.meta.url).href;\nexport default { ' + Object.keys(sticker).map((k, i) => JSON.stringify(k) + ': at(s' + i + ')').join(', ') + ' };\n');
-  for (const [file, roots, preamble = '', given = [], uses = null] of GRADING) {
+  for (const [file, roots, preamble = '', given = [], uses = null, real = []] of GRADING) {
     // uses: the earlier modules this one may import from (all of them when not given). Anything else it needs it lifts for itself,
     // so a part loaded on its own (the marking tools) doesn't bring a module it barely uses (opening a download).
     const may = uses ? declared.filter(n => !made[n] || uses.includes(made[n])) : declared;
-    let out = lift({ files: 'grading', scoped: true, roots, deny: GRADING_DENY, ignore: GRADING_LOCAL, given: [...may, ...given], header: '', preamble: '' });
+    let out = lift({ files: 'grading', scoped: true, roots, deny: GRADING_DENY, ignore: GRADING_LOCAL.filter(n => !real.includes(n)), given: [...may, ...given], header: '', preamble: '' });
     const own = [...out.matchAll(/^(?:async )?function\*? ?(\w+)|^(?:const|let|var) (\w+)/gm)].map(m => m[1] || m[2]);
-    const used = may.filter(n => new RegExp('(?<![.\\w$])' + n.replace(/\$/g, '\\$') + '(?![\\w$])').test(out));
+    // a name right after a dot is a property, except after a spread (...vpDraw(…))
+    const used = may.filter(n => new RegExp('(?<![\\w$])(?<![^.]\\.)' + n.replace(/\$/g, '\\$') + '(?![\\w$])').test(out));
     const imports = {};
     for (const n of used) { const from = file === 'gcore' ? null : (made[n] || 'gcore'); if (from && from !== file) { (imports[from] ||= []).push(n); (needs[from] ||= new Set()).add(n); } }
     if (file !== 'gcore') out = setters(out, names);
@@ -232,6 +246,10 @@ function setters(text, names) {
   while ((m = rx.exec(text))) {
     const before = text.slice(Math.max(0, m.index - 12), m.index);
     if (/\b(let|const|var)\s+$/.test(before)) continue;   // a declaration of its own (never in what is lifted now, but not an assignment)
+    // the top-level declaration it is in declares a variable of that name for itself (let n = 1, pages;) or takes it as a parameter
+    const top = (() => { const head = text.slice(0, m.index), all = [...head.matchAll(/^(?:async )?function |^(?:const|let|var) /gm)], st = all.length ? all[all.length - 1].index : 0; const nx = text.slice(m.index).search(/\n(?:async )?function |\n(?:const|let|var) /); return text.slice(st, nx < 0 ? text.length : m.index + nx); })();
+    const n = m[1].replace(/\$/g, '\\$');
+    if (new RegExp('\\b(?:let|const|var)\\s+(?:[\\w$]+(?:\\s*=\\s*[^,;]*)?\\s*,\\s*)*' + n + '\\s*(?:[,;=]|$)', 'm').test(top) || [...top.matchAll(/function\s*[\w$]*\s*\(([^)]*)\)/g)].some(f => new RegExp('(?<![\\w$])' + n + '(?![\\w$])').test(f[1]))) continue;
     let i = m.index + m[0].length, depth = 0, q = null;
     for (; i < text.length; i++) {
       const c = text[i];

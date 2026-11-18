@@ -46,9 +46,11 @@ function declarations(files = FILES.map(f => 'src/planner/' + f + '.js')) {
 }
 const ticks = s => (s.replace(/\\./g, '').match(/`/g) || []).length;
 function depth(s) { let d = 0; for (const c of s.replace(/'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`/g, '')) { if ('([{'.includes(c)) d++; else if (')]}'.includes(c)) d--; } return d; }
-const strip = s => s.replace(/^\s*\/\/.*$/gm, '').replace(/'(?:[^'\\\n]|\\.)*'/g, "''");
+// A comment at the end of a line counts too when it starts after a space (" // "), so a word in it isn't taken for a name.
+const strip = s => s.replace(/^\s*\/\/.*$/gm, '').replace(/'(?:[^'\\\n]|\\.)*'/g, "''").replace(/(?<=[;,{}()\]\s])\s+\/\/\s.*$/gm, '');
 // A lone "$" counts only when it is called ($(...)): otherwise it is the end of a regular expression.
-const names = text => { const t = strip(text), n = new Set(t.match(/(?<![.\w$])[A-Za-z_$][\w$]*/g) || []); if (!/(?<![\w$.])\$\(/.test(t)) n.delete('$'); return n; };
+// After a spread (...x) a word is a name; after a lone dot it is a property.
+const names = text => { const t = strip(text), n = new Set(t.match(/(?<![\w$])(?<![^.]\.)[A-Za-z_$][\w$]*/g) || []); if (!/(?<![\w$.])\$\(/.test(t)) n.delete('$'); return n; };
 
 // roots: the names to export. deny: names that must not be reached. given: names the preamble provides instead of the source.
 // Names a declaration declares for itself inside (const/let/var, function and arrow parameters, catch): with scoped, these are not

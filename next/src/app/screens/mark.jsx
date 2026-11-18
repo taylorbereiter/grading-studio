@@ -152,6 +152,12 @@ export default function MarkScreen({ route, classes }) {
   }, [id]);
   const pick = useCallback(i => { if (!w) return; const n = Math.max(0, Math.min(w.batch.students.length - 1, i)); if (MK) MK.M.commit(); if (n !== state().cur) seam.ready = false; setCur(n); use({ cur: n }); }, [w]);
   const pickRef = useRef(pick); pickRef.current = pick;
+  // Grades, Insights and Return load as a part of their own, with the export engine and its libraries, the first time one opens.
+  const [out, setOut] = useState(null);
+  useEffect(() => { if (!w || tab === 'mark' || out) return; let live = true;
+    Promise.all([PARTS.out(), PARTS.outEngine(), PARTS.marking()]).then(([p, E, m]) => { E.withMarking(m.M); seam.out = E; if (live) setOut({ Out: p.default, E }); }, e => console.error(e));
+    return () => { live = false; }; }, [w, tab]);
+  const openOn = i => { pick(i); go('mark', id, ''); };
   useEffect(() => {
     if (!w) return;
     const offs = [
@@ -182,7 +188,7 @@ export default function MarkScreen({ route, classes }) {
     <RubricAsk ask={ask} />
     {err ? <EmptyState icon="inbox" title={t(err instanceof NotKept ? 'mark.not_kept' : 'mark.page_bad')} text={err instanceof NotKept ? t('mark.not_kept_text') : ''} />
       : !w ? <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />
-      : tab !== 'mark' ? <EmptyState icon="grades" title={TAB_LINE[tab]()} text={t('mark.later')} />
+      : tab !== 'mark' ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} E={out.E} cur={cur} onOpen={openOn} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
       : <div class="mk-body">
         <StudentList batch={w.batch} cur={cur} onPick={pick} />
         <div class="mk-mid">

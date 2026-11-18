@@ -954,8 +954,6 @@ const LOFI_STYLES = [
   { id: 'blue', name: 'Blue hour', bpm: [80, 88], modes: ['dor', 'min', 'dor'], keys: ['rhodes', 'piano'], mel: ['vibes', 'lead'], kit: ['snare', 'brush'], amb: 'vinyl', swing: [.6, .64], cut: 3400, wow: 1, comp: ['push', 'two'], pad: 0, dens: 1, walk: 1 },
   { id: 'quiet', name: 'Quiet desk', bpm: [60, 70], modes: ['maj', 'min', 'dor', 'maj'], keys: ['piano', 'rhodes', 'guitar'], mel: ['bell', 'vibes'], kit: [], amb: 'rain', swing: [.5, .5], cut: 2600, wow: 1.2, comp: ['arp', 'hold'], pad: 1, dens: .6, nodrums: 1 }
 ];
-// src/lofi.js
-const lofi = { E: null, on: false, vol: .5, amb: false, style: 'mix', cur: null, old: [], timer: 0, last: '', seed: 0, onTrack: null };
 // src/focus.js
 const FC_LENS = [5, 10, 15, 20, 25, 30, 45, 60], FC_BRKS = [3, 5, 10, 15], FC_AWAY = 180e3, FC_DAY = 864e5, FC_KEEP = 400, TK_IDLES = [2, 5, 10, 15], TK_PES = [0, 2, 3, 5, 10];
 // src/focus.js
