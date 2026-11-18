@@ -19,6 +19,7 @@ import { PhoneScores } from './phscores.jsx';
 
 const onPhone = () => typeof matchMedia === 'function' && matchMedia('(max-width: 640px)').matches;
 import { MypBook, PredSheet, DpSay, GradingDialog } from './ib.jsx';
+import { usePart } from '../parts.js';
 import './lines.js';
 
 // What-if: students left out of the class averages, per class, for this visit only and never saved (src/book.js bkLeftAll).
@@ -52,6 +53,7 @@ const low = (cell, col) => col.type !== 'xc' && col.type !== 'fm' && cell && cel
 export default function Grades({ classId }) {
   const b = useBook(), [show, setShow] = useState(() => keep('show') || 'pct'), [term, setTerm] = useState(() => keep('term:' + classId)), tab = useRef(null);
   const [box, setBox] = useState(null), [whole, setWhole] = useState(false), [Imp, setImp] = useState(null), [only, setOnly] = useState(onlyOn), [pick, setPick] = useState(false), [, redraw] = useState(0);
+  const Gl = usePart('goals', !!(box && box.goals)), Rp = usePart('reports', !!(box && box.reports));
   if (!b) return <div class="loading" aria-busy="true" />;
   const x = classBook(b, classId);
   if (x && handoff.rows && handoff.cls === classId && !box) { const rows = handoff.rows; handoff.rows = null; PARTS.bki().then(m => { setImp(() => m.ImportSheet); setBox({ imp: true, rows }); }); }
@@ -100,8 +102,14 @@ export default function Grades({ classId }) {
       : table && myp ? <MypBook x={x} cols={cols} all={x.cols} term={on} termName={termName} tab={tab} />
       : !table ? <Year x={x} ct={ct} labelOf={labelOf} tab={tab} /> : !cols.length ? <EmptyState icon="grades" title={t('class.nothing_graded', { name: c.name })} text={t('class.nothing_graded_text')} />
       : <Table x={x} cols={cols} show={show} ct={ct} labelOf={labelOf} term={on} tab={tab} only={only} pick={pick} left={left} onLeft={() => redraw(k => k + 1)} onCol={col => setBox({ col })} />}
-    {table && !myp && c.names.length > 0 && <div class="gfoot"><button type="button" class="gl2" onClick={() => setBox({ charts: true })} data-open-charts><span class="ic"><Icon name="chart" /></span>
-      <span><b>{t('class.charts')} <Icon name="chr" size="xs" /></b><p>{t('class.charts_say')}</p></span></button></div>}
+    {c.names.length > 0 && <div class="gfoot">{table && !myp && <button type="button" class="gl2" onClick={() => setBox({ charts: true })} data-open-charts><span class="ic"><Icon name="chart" /></span>
+      <span><b>{t('class.charts')} <Icon name="chr" size="xs" /></b><p>{t('class.charts_say')}</p></span></button>}
+      <button type="button" class="gl2" onClick={() => setBox({ goals: true })} data-open-goals><span class="ic"><Icon name="target" /></span>
+      <span><b>{t('class.gl_title')} <Icon name="chr" size="xs" /></b><p>{t('class.gl_card_say')}</p></span></button>
+      <button type="button" class="gl2" onClick={() => setBox({ reports: true })} data-open-reports><span class="ic"><Icon name="edit" /></span>
+      <span><b>{t('class.rp_title')} <Icon name="chr" size="xs" /></b><p>{t('class.rp_card_say')}</p></span></button></div>}
+    {box && box.goals && Gl && <Gl.GoalsSheet x={x} cols={table ? cols : x.cols} term={on} left={left} onClose={() => setBox(null)} />}
+    {box && box.reports && Rp && <Rp.ReportsSheet x={x} cols={table ? cols : x.cols} term={on} onClose={() => setBox(null)} />}
     {box && box.charts && <ChartsSheet x={x} cols={cols} all={b.cols} term={on} left={left} labelOf={labelOf} onClose={() => setBox(null)} />}
     {box && box.col && <ColDialog col={box.col} conf={conf} labelOf={labelOf} onClose={() => setBox(null)} onEditTyped={id => setBox({ add: true, itId: id })} />}
     {box && box.types && <TypesDialog cols={untyped} onClose={() => setBox(null)} />}

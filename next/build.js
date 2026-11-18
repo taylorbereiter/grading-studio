@@ -372,6 +372,10 @@ export const useKept = (l, k) => { lib = l; keptMeta = k; };
     'pkNice', 'pkShort', 'pkShuffle', 'pkCount', 'pkGroups',
     // missing-work reminders (src/missing.js): one student's email, one to everyone who owes an assignment, the link, reminded today
     'misDraft', 'misGroup', 'misHref', 'misPlain', 'misEmail', 'misLine', 'misFill', 'misClassName', 'rptCall',
+    // learning goals (src/goals.js): each goal's percent for each student and the class, from the rows and questions tagged with it
+    'goalList', 'goalData', 'GOAL_LOW',
+    // report comments (src/reports.js): what the gradebook knows about a student this term, and a draft from her own sentences
+    'RPT_WORDS', 'RPT_SLOTS', 'RPT_PROS', 'RPT_LEN', 'rptConf', 'rptEntry', 'rptPut', 'rptPro', 'rptFacts', 'rptDraft', 'rptText',
   ], `// The class page hands in which class the gradebook is on (src/book.js keeps it in bk.cls); saving is the screen's, through
 // students/write.js: what the lifted code changes is the library it was handed inside saveLibrary.
 export const bkUse = o => Object.assign(bk, o);

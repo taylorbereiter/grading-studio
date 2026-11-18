@@ -14,6 +14,7 @@ import { engine as B, change, classIn } from '../../students/book.js';
 import { initials, pct, typeName } from './grades.jsx';
 import { AttendSheet, AttStudent, attOn } from './attend.jsx';
 import { SeatingSheet } from './seating.jsx';
+import { GoalsStudent } from './goals.jsx';
 import './lines.js';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -126,6 +127,7 @@ function Student({ x, n, i, cols, r, onMove, onRemove, onTool }) {
         <td class={'s' + (cell && cell.st === 'missing' ? ' warn' : '')}>{!cell ? '–' : cell.st === 'missing' ? t('class.missing') : cell.st === 'excused' ? t('class.excused') : cell.pct != null ? (cell.total != null ? fmtPts(cell) : cell.pct + '%') : cell.fb ? t('class.fb_given') : '–'}</td></tr>; })}</table>
         : <p class="mute">{t('class.no_work_yet')}</p>}
     </section>
+    <GoalsStudent x={x} cols={cols} n={n} />
     {attOn(x.lib) && <AttStudent c={c} n={n} term={x.now ? x.conf.terms.find(k => k.id === x.now) : null} onDay={d => onTool({ k: 'att', d })} />}
     <section class="sp-sec"><h3><label for="stu-note">{t('class.notes')}</label></h3>
       <textarea id="stu-note" class="input" rows="3" value={note} placeholder={t('class.notes_ph')} onInput={e => typeNote(e.currentTarget.value)} data-stu-note /></section>

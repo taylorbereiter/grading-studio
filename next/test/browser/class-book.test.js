@@ -711,7 +711,7 @@ test('To do tab: a reminder drafted as the current app drafts it, opened in Gmai
   // a to-do for this class, then ticked
   await p.type('[data-ctd-new]', 'Book the library for the essay'); await p.keyboard.press('Enter');
   await p.waitForFunction(() => ((JSON.parse(localStorage.getItem('gs.lib')).todo || {}).items || []).some(x => x.x === 'Book the library for the essay' && x.c === 'c1'));
-  await p.click('[data-ctd-item] input');
+  await p.waitForSelector('[data-ctd-item] input'); await p.click('[data-ctd-item] input');
   await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).todo.items.find(x => x.c === 'c1').done > 0);
   // the current app drafts the same email, reads the reminder and the to-do
   const old = await page(ctx, errors);
@@ -727,6 +727,92 @@ test('To do tab: a reminder drafted as the current app drafts it, opened in Gmai
   assert.equal(mine.to, theirs.to); assert.equal(mine.subject, theirs.subject);
   for (const w of owed) assert.ok(mine.body.includes('- ' + w));
   await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Learning goals on the made-up class: two goals, the rubric rows of both essays tagged with them.
+const goalSeed = () => { const seed = bookSeed(), l = JSON.parse(seed.ls['gs.lib']); l.goals = [{ id: 'ga', name: 'Argument', at: 1 }, { id: 'gb', name: 'Style', at: 1 }]; seed.ls['gs.lib'] = JSON.stringify(l);
+  for (const k of ['gs.b.n1', 'gs.b.n2']) { const b = JSON.parse(seed.ls[k]); b.setup = { ...b.setup, goals: ['ga', 'gb', 'gb'] }; seed.ls[k] = JSON.stringify(b); } return seed; };
+const goalRows = `(G, c, cols) => G.goalData(c, cols).map(d => [d.g.id, d.g.name, Math.round(d.avg * 10) / 10, d.n, d.low.slice(), d.from.map(f => [f.col.key, f.parts, f.n]), [...d.stu.entries()].map(([n, v]) => [n, Math.round(v * 10) / 10])])`;
+test('Learning goals: the class average on each goal and every student on every goal as the current app works them out; the list edited and read back', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const old = await page(ctx, errors);
+  await old.goto(srv.url + 'blank'); await plant(old, goalSeed());
+  await old.goto(srv.url); await appReady(old);
+  const was = await old.evaluate(async fn => { const G = window.__gs, c = G.state().lib.classes[0], cols = G.bkClassCols(c, await G.bkLoad()); return eval(fn)(G, c, cols); }, goalRows);
+  await old.close();
+  assert.equal(was.length, 2, 'both goals have scores');
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForFunction(() => window.__class && document.querySelector('table.book'), { timeout: 60000 });
+  const now = await p.evaluate(async fn => { const k = window.__class, b = await k.readBook(), B = k.B, c = b.lib.classes[0]; B.bookUse({ lib: b.lib }); B.bkUse({ cls: c.id }); return eval(fn)(B, c, B.bkClassCols(c, b.cols)); }, goalRows);
+  assert.deepEqual(now, was);
+  // the sheet, on the whole year
+  await p.evaluate(() => [...document.querySelectorAll('.bookbar [role="radio"]')].find(b => /Whole year/.test(b.textContent)).click());
+  await p.click('[data-open-goals]');
+  await p.waitForSelector('[data-goal-bars] .cp-band');
+  const bars = await p.$$eval('[data-goal-bars] .cp-band [data-raw]', e => e.map(x => x.textContent));
+  assert.deepEqual([...bars].sort(), ['Argument', 'Style']);
+  const heads = await p.$$eval('[data-goal-heat] thead th', e => e.length);
+  assert.equal(heads, 3);
+  // rename one, take one off, add one
+  await p.click('[data-goals-edit]');
+  await p.waitForSelector('[data-goal-row]');
+  await p.evaluate(() => { const i = document.querySelector('[data-goal-row="0"]'); i.value = 'Argument and claims'; i.dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.click('.goalrow:nth-child(2) button');
+  await p.click('[data-goal-add]'); await p.waitForSelector('[data-goal-row="1"]');
+  await p.focus('[data-goal-row="1"]'); await p.keyboard.type('Evidence');
+  await p.click('[data-goals-done]');
+  await p.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); return l.goals && l.goals.length === 2 && l.goals[1].name === 'Evidence' && (l.goalsGone || {}).gb; });
+  const old2 = await page(ctx, errors);
+  await old2.goto(srv.url); await appReady(old2);
+  const list = await old2.evaluate(() => window.__gs.goalList().map(g => [g.id, g.name]));
+  assert.deepEqual(list.map(x => x[1]), ['Argument and claims', 'Evidence']); assert.equal(list[0][0], 'ga');
+  await old2.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Report comments: each draft is the current app\'s draft, edited and marked done, the length and wording saved where the current app reads them', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const old = await page(ctx, errors);
+  await old.goto(srv.url + 'blank'); await plant(old, bookSeed());
+  await old.goto(srv.url); await appReady(old);
+  const draft = `async (G, len) => { const c = G.state().lib.classes[0], cols = G.bkClassCols(c, await G.bkLoad()), rc = G.rptConf(); if (len) rc.len = len; return c.names.map(n => G.rptDraft(c, n, G.rptFacts(c, cols, G.bkConf(), n), rc, 0)); }`;
+  const was = await old.evaluate((fn) => eval(fn)(window.__gs), draft);
+  await old.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForFunction(() => window.__class && document.querySelector('table.book'), { timeout: 60000 });
+  await p.evaluate(() => [...document.querySelectorAll('.bookbar [role="radio"]')].find(b => /Whole year/.test(b.textContent)).click());
+  await p.click('[data-open-reports]');
+  await p.waitForSelector('[data-rp-text]');
+  const N = (await libOf(p)).classes[0].names;
+  for (let i = 0; i < N.length; i++) {
+    await p.click('[data-rp-stu="' + i + '"]');
+    await p.waitForFunction(n => document.querySelector('[data-rp-name]').textContent === n, {}, N[i]);
+    assert.equal(await p.$eval('[data-rp-text]', e => e.value), was[i], 'draft for student ' + (i + 1));
+  }
+  // the first student's comment edited, then Done, next student
+  await p.click('[data-rp-stu="0"]');
+  await p.waitForFunction(n => document.querySelector('[data-rp-name]').textContent === n, {}, N[0]);
+  await p.focus('[data-rp-text]'); await p.keyboard.press('End'); await p.keyboard.type(' A pleasure to teach.');
+  await p.click('[data-rp-done]');
+  await p.waitForFunction(n => document.querySelector('[data-rp-name]').textContent === n, {}, N[1]);
+  await p.waitForFunction(n => { const r = ((JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}).rep; return r && r.year && r.year.done && /A pleasure to teach\.$/.test(r.year.text); }, {}, N[0]);
+  assert.match(await p.$eval('[data-rp-donecount]', e => e.textContent), /^1 of /);
+  // short comments
+  await p.evaluate(() => [...document.querySelectorAll('.rptopts [role="radio"]')].find(b => b.dataset.v === 'short').click());
+  await p.waitForFunction(() => ((JSON.parse(localStorage.getItem('gs.lib')).book || {}).rep || {}).len === 'short');
+  const short = await p.$eval('[data-rp-text]', e => e.value);
+  // the current app reads all of it back
+  const old2 = await page(ctx, errors);
+  await old2.goto(srv.url); await appReady(old2);
+  const back = await old2.evaluate(async (fn, n) => { const G = window.__gs, c = G.state().lib.classes[0]; return { rep: c.info[n].rep, len: G.rptConf().len, drafts: await eval(fn)(G) }; }, draft, N[0]);
+  assert.equal(back.len, 'short'); assert.equal(back.rep.year.done, true); assert.match(back.rep.year.text, /A pleasure to teach\.$/);
+  assert.equal(short, back.drafts[1]);
+  await old2.close();
   assert.deepEqual(errors, []);
   await ctx.close();
 });

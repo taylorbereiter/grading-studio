@@ -147,6 +147,8 @@ async function earlierWork(id, keep = hasWork) {
   return [...all].filter(([, d]) => keep(d)).sort((a, b) => (b[1].t || 0) - (a[1].t || 0));
 }
 // src/rubrics.js
+const levelIn = (d, i, v) => { const r = d.levels && d.levels[i]; return (r && r[v]) || ''; };
+// src/rubrics.js
 const people = (n, one, many) => n + ' ' + (n === 1 ? one : many || one + 's');
 // src/rubrics.js
 const avgDp = () => { const d = +store.get('gs.avgDp', 2); return d === 0 || d === 1 ? d : 2; };
@@ -302,6 +304,12 @@ function bkGroups(cols) {
   return g;
 }
 // src/book.js
+const bkLeftAll = {};
+// src/book.js
+const bkLeft = () => bkLeftAll[bk.cls] || (bkLeftAll[bk.cls] = new Set());
+// src/book.js
+const bkIn = n => !bkLeft().has(n);
+// src/book.js
 const bkCountTypes = conf => bkCats().filter(([t]) => +conf.w[t] > 0);
 // src/book.js
 const bkClassAvg = (grades, t) => { const ps = grades.map(r => t ? r.by[t] : r.grade).filter(v => v != null); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
@@ -312,6 +320,8 @@ function bkBands(list) {
   const n = list.length, cnt = BK_BANDS.map(([lo, hi]) => list.filter(p => roundPct(p.v) >= lo && (roundPct(p.v) <= hi || (lo === 90 && p.v > 100)))), most = Math.max(1, ...cnt.map(x => x.length));
   return '<div class="pbands" id="bkBands">' + BK_BANDS.map(([, , l], i) => { const k = cnt[i].length; return '<div class="pband"' + (k ? ' tabindex="0"' : '') + ' data-tv="' + esc(people(k, 'student')) + '" data-tl="' + esc(l + '%') + '" data-tn="' + esc(cnt[i].map(p => p.name).join(', ')) + '" data-tnraw><span>' + l + '</span><div class="pbt"><i style="width:' + k / most * 100 + '%"></i></div><span class="pbn"><b>' + k + '</b>' + (n ? ' · ' + Math.round(k / n * 100) + '%' : '') + '</span></div>'; }).join('') + '</div>';
 }
+// src/book.js
+function bkScored(cols) { return cols.filter(x => x.type !== 'fm' && bkIsType(x.type)); }
 // src/book.js
 function bkTypeUse() {
   const n = new Map(), add = t => { if (t) n.set(t, (n.get(t) || 0) + 1); };
@@ -474,6 +484,14 @@ function keepInfo(c, was, rows) {
 const one = t => String(t || '').replace(/\s*\n\s*/g, ' ').trim();
 // src/typednotes.js
 function tnHasG(g) { return !!(g && g.tn && Array.isArray(g.tn.l) && g.tn.l.some(x => x && x.k !== 'h' && x.y !== 'h2' && String(x.s || '').trim())); }
+// src/classpage.js
+const chRowName = x => typeof x === 'string' ? x.trim() : String((x && x.name) || '').trim();
+// src/classpage.js
+function chRowTop(cols) {
+  const n = new Map(); for (const col of cols) for (const cell of col.cells.values()) for (const r of (cell && cell.rows) || []) { const t = r[2] || ROW_TOP; n.set(t, (n.get(t) || 0) + 1); }
+  let best = ROW_TOP, most = 0; for (const [t, k] of n) if (k > most) { best = t; most = k; }
+  return best;
+}
 // src/seating.js
 const SEAT_MAX_W = 14, SEAT_MAX_H = 12;
 // src/seating.js
@@ -601,6 +619,8 @@ function attStep(c, d, dir) {
 // src/attend.js
 const attUnknown = (c, days) => days.flatMap(d => c.names.filter(n => attOf(c, d, n) === 'a').map(n => ({ d, n }))).reverse();
 // src/goals.js
+function goalList() { return Array.isArray(lib.goals) ? lib.goals.filter(g => g && g.id && String(g.name || '').trim()) : []; }
+// src/goals.js
 function goalCell(d, g, p) {
   if (!g || !p || p.status === 'missing' || p.status === 'excused' || g.outAvg) return null;
   const s = setupOver(d.setup), rub = s.mode === 'rubric', out = {};
@@ -612,6 +632,27 @@ function goalCell(d, g, p) {
   else if (d.goal && p.pct != null && !p.partial) out[d.goal] = { got: p.total != null ? p.total : p.pct, of: p.total != null && p.max ? p.max : 100, pct: p.pct, parts: ['The whole score'] };
   for (const e of Object.values(out)) if (e.pct == null) { const share = Math.max(0, Math.min(1, e.got / e.of)), v = max ? percentWith(share * max, max, s.scale) : null; e.pct = v == null ? share * 100 : Math.max(0, v); }
   return Object.keys(out).length ? out : null;
+}
+// src/goals.js
+const GOAL_LOW = 70;
+// src/goals.js
+function goalData(c, cols) {
+  const use = cols.filter(x => x.type !== 'fm' && x.type !== 'xc');
+  return goalList().map(g => {
+    const per = new Map(), from = [];
+    for (const col of use) {
+      const parts = []; let n = 0;
+      for (const nm of c.names) {
+        const cell = col.cells.get(nm), e = cell && cell.goals && cell.goals[g.id]; if (!e) continue;
+        n++; for (const p of e.parts) if (!parts.includes(p)) parts.push(p);
+        if (!per.has(nm)) per.set(nm, []); per.get(nm).push({ col, pct: e.pct, got: e.got, of: e.of });
+      }
+      if (n) from.push({ col, parts, n });
+    }
+    const stu = new Map(); for (const [nm, list] of per) stu.set(nm, bkMean(list.map(x => x.pct)));
+    const inAvg = c.names.filter(nm => stu.has(nm) && bkIn(nm)), low = inAvg.filter(nm => roundPct(stu.get(nm)) < GOAL_LOW);
+    return { g, per, stu, from, avg: inAvg.length ? bkMean(inAvg.map(nm => stu.get(nm))) : null, n: inAvg.length, low };
+  }).filter(x => x.from.length);
 }
 // src/ib.js
 const IB_TOP = 8;
@@ -696,6 +737,8 @@ function classNewWay() { const g = meGrade(); return (g && g.way === 'myp') || /
 // src/ib.js
 function ibConf(c, conf) { const w = classWay(c) === 'dp' && c.ib && c.ib.w && typeof c.ib.w === 'object' ? c.ib.w : null; return w ? { ...conf, w: { ...conf.w, ...w } } : conf; }
 // src/ib.js
+const ibTermKey = () => bk.term == null ? '' : bk.term;
+// src/ib.js
 function ibCols(c, cols) {
   const keys = new Set(ibCrit(c).map(x => x.k));
   return cols.map(col => {
@@ -716,6 +759,18 @@ function ibCols(c, cols) {
 const ibEvFor = (icols, name, k) => icols.filter(x => x.cells.has(name) && x.cells.get(name).lv[k] != null).map(x => ({ v: x.cells.get(name).lv[k], t: x.t, name: x.name, fm: x.fm }));
 // src/ib.js
 function ibMid(list) { const v = list.filter(x => x != null).sort((a, b) => a - b), n = v.length; if (!n) return null; const a = v[Math.floor((n - 1) / 2)], b = v[Math.ceil((n - 1) / 2)]; return a === b ? String(a) : a + ' to ' + b; }
+// src/ib.js
+const ibLvAt = (c, term, name) => ((c.lv || {})[term == null ? ibTermKey() : term] || {})[name] || {};
+// src/ib.js
+function ibRptFacts(c, cols, n, term, said) {
+  const crit = ibCrit(c), icols = ibCols(c, cols), lv = ibLvAt(c, term, n), r = ibTerm(lv, crit, ibBounds(c)), g = r.grade;
+  const at = crit.map(x => { const v = ibLevel(lv[x.k]); return { name: x.name, avg: v != null ? v : ibEvidence(ibEvFor(icols, n, x.k)).last }; }).filter(x => x.avg != null).sort((a, b) => b.avg - a.avg);
+  const apart = at.length >= 2 && at[0].avg - at[at.length - 1].avg >= 1;
+  return { grade: g, soFar: false, band: g == null ? 'None' : g >= 6 ? 'High' : g === 5 ? 'Good' : g >= 3 ? 'Mid' : 'Low', gradeText: g != null ? g + ' out of 7' : '',
+    chip: g != null ? 'Grade ' + g + ' · total ' + r.total + ' of ' + crit.length * IB_TOP : r.set ? r.set + ' of ' + crit.length + ' criteria set' : 'No levels set yet',
+    strong: apart ? at[0] : null, weak: apart ? at[at.length - 1] : null, words: '', move: 0, best: '', said,
+    missing: icols.filter(x => (x.cells.get(n) || {}).st === 'missing').map(x => x.name), scored: icols.filter(x => x.cells.has(n) && Object.keys(x.cells.get(n).lv).length).length };
+}
 // src/mbentry.js
 const MB_ORDERS = [['', 'Roster order'], ['last', 'Last name'], ['first', 'First name']];
 // src/mbentry.js
@@ -732,11 +787,132 @@ function mbSorted(names, how) {
   return idx.sort((a, b) => { const x = key(a), y = key(b); return x[0].localeCompare(y[0], undefined, { sensitivity: 'base' }) || x[1].localeCompare(y[1], undefined, { sensitivity: 'base' }) || a - b; });
 }
 // src/reports.js
+const RPT_LEN = [['short', 'Short'], ['medium', 'Medium'], ['long', 'Long']];
+// src/reports.js
+const RPT_WORDS = {
+  openHigh: ['{name} has had an excellent term{in}.', '{name} has worked to a very high standard{in} this term.', 'This has been a very strong term{in} for {name}.'],
+  openGood: ['{name} has had a good term{in}.', '{name} has made solid progress{in} this term.', 'This has been a positive term{in} for {name}.'],
+  openMid: ['{name} has had a mixed term{in}.', '{name} has shown what {they} can do at times{in} this term.', 'This has been an uneven term{in} for {name}.'],
+  openLow: ['{name} has found this term{in} difficult.', 'This has been a challenging term{in} for {name}.'],
+  openNone: ['{name} has not yet finished enough work{in} this term for a grade.'],
+  grade: ['{Their} term grade is {grade}.'],
+  strong: ['{Their} strongest area is {row}.', '{They} {is} at {their} best in {row}.', '{row} has been a real strength.'],
+  best: ['{Their} best piece of work was {work}.', '{work} showed what {they} can do.'],
+  up: ['{Their} recent work shows clear improvement.', '{They} {has} improved steadily over the term.'],
+  down: ['{Their} most recent scores have been lower than earlier in the term.', 'Recent work has not matched what {they} did earlier in the term.'],
+  next: ['The next step is to work on {row}.', '{They} should now focus on {row}.', 'More attention to {row} will lift {their} work.'],
+  level: ['To move up in {row}, the aim is: {words}.'],
+  missing1: ['{They} still {has} one piece of work to hand in: {list}.'],
+  missing: ['{They} still {has} {n} pieces of work to hand in: {list}.'],
+  closeHigh: ['Well done, {name}.', '{They} should be proud of this term.'],
+  closeGood: ['With the same effort next term, {they} can go further.', 'Keep it up, {name}.'],
+  closeMid: ['Steady effort on this next term will make a real difference.', 'A consistent routine next term will help {them} show {their} best work more often.'],
+  closeLow: ['Regular practice, and asking for help early, will make a difference next term.', 'I would like {name} to ask for help as soon as something is unclear.'],
+};
+// src/reports.js
+const RPT_SLOTS = [['openHigh', 'Opening, for the highest grades'], ['openGood', 'Opening, for good grades'], ['openMid', 'Opening, for middling grades'], ['openLow', 'Opening, for the lowest grades'], ['openNone', 'Opening, when there is no grade yet'],
+  ['grade', 'The grade'], ['strong', 'Strongest rubric row'], ['best', 'Best piece of work'], ['up', 'Scores going up'], ['down', 'Scores going down'], ['next', 'Rubric row to work on'], ['level', 'What the next level asks for'],
+  ['missing1', 'One piece of work missing'], ['missing', 'Several pieces missing'], ['closeHigh', 'Closing, for the highest grades'], ['closeGood', 'Closing, for good grades'], ['closeMid', 'Closing, for middling grades'], ['closeLow', 'Closing, for the lowest grades']];
+// src/reports.js
+const RPT_PRO = { they: ['they', 'them', 'their', 'are', 'have', ''], she: ['she', 'her', 'her', 'is', 'has', 's'], he: ['he', 'him', 'his', 'is', 'has', 's'] };
+// src/reports.js
+const RPT_PROS = [['they', 'they / their'], ['she', 'she / her'], ['he', 'he / his'], ['name', 'No pronoun: use the name']];
+// src/reports.js
+function rptConf() {
+  const r = (lib.book && lib.book.rep) || {}, cut = Array.isArray(r.cut) && r.cut.length === 3 && r.cut.every(v => isFinite(+v)) ? r.cut.map(Number) : [85, 70, 55];
+  return { len: RPT_LEN.some(x => x[0] === r.len) ? r.len : 'medium', grade: !!r.grade, limit: +r.limit > 0 ? Math.round(+r.limit) : 0, cut, words: r.words || {}, subj: r.subj || {} };
+}
+// src/reports.js
+const rptTerm = () => bk.term === '*' ? 'year' : bk.term || 'all';
+// src/reports.js
 function rptCall(c, n) {
   const own = (infoOf(c, n).call || '').trim(); if (own) return own;
   const t = String(n), part = /,/.test(t) ? t.split(',').slice(1).join(' ') : t;
   return (part.trim().split(/\s+/)[0] || t).trim();
 }
+// src/reports.js
+const rptPro = (c, n) => { const p = infoOf(c, n).pro; return RPT_PROS.some(x => x[0] === p) ? p : 'they'; };
+// src/reports.js
+const rptEntry = (c, n) => ((infoOf(c, n).rep || {})[rptTerm()]) || {};
+// src/reports.js
+function rptPut(c, n, patch, term) {
+  const key = term || rptTerm(), rep = { ...(infoOf(c, n).rep || {}) }, e = { ...(rep[key] || {}), ...patch };
+  for (const k of Object.keys(e)) if (e[k] == null || e[k] === false || e[k] === 0) delete e[k];
+  if (Object.keys(e).some(k => k !== 't')) rep[key] = e; else delete rep[key];
+  setInfo(c, n, { rep: Object.keys(rep).length ? rep : '' });
+  bkSaveLib();
+}
+// src/reports.js
+const rptPairs = new WeakMap();
+// src/reports.js
+function rptSaid(c, cols, n) {
+  const said = [];
+  for (const col of cols) {
+    if (!col.d || !col.d.s) continue;
+    let pairs = rptPairs.get(col); if (!pairs) rptPairs.set(col, pairs = rosterPairs(c.names, Object.keys({ ...col.d.s, ...col.d.read })));
+    const k = pairs.get(n), t = k && col.d.s[k] && col.d.s[k].g ? String(col.d.s[k].g.comment || '').trim() : '';
+    if (t) said.push({ work: col.name, text: t });
+  }
+  return said;
+}
+// src/reports.js
+function rptFacts(c, cols, conf, n, term) {
+  // an MYP class has levels and a 1 to 7, never a percent (ib.js)
+  if (classWay(c) === 'myp') return ibRptFacts(c, cols, n, term, rptSaid(c, cols, n));
+  const g = bkGrade(n, cols, conf), scored = bkScored(cols).map(col => ({ col, cell: col.cells.get(n) })).filter(x => bkCounts(x.cell));
+  const rows = new Map(), T = chRowTop(scored.map(x => x.col));   // rows on different scales are put on the one most of them use
+  for (const { col, cell } of scored) for (const [nm, v0, t] of cell.rows || []) {
+    const v = (t || ROW_TOP) !== T && v0 != null ? +v0 * T / (t || ROW_TOP) : v0;
+    const name = chRowName(nm), k = name.toLowerCase(); if (!k || v == null || isNaN(+v)) continue;
+    if (!rows.has(k)) rows.set(k, { name, v: [] });
+    const e = rows.get(k); e.v.push(+v); e.col = col; e.raw = nm;
+  }
+  const avg = [...rows.values()].map(e => ({ ...e, avg: bkMean(e.v) })).sort((a, b) => b.avg - a.avg);
+  // A strongest and a weakest row only when they really differ: a quarter of a point across the term.
+  const apart = avg.length >= 2 && avg[0].avg - avg[avg.length - 1].avg >= 0.25 * T / ROW_TOP, strong = apart ? avg[0] : null, weak = apart ? avg[avg.length - 1] : null;
+  let words = '';
+  if (weak && weak.col.d) {   // her own words for the level above where the student is now, from the newest rubric with that row
+    const s = weak.col.d.setup || {}, i = (s.criteria || []).findIndex(x => chRowName(x).toLowerCase() === weak.name.toLowerCase());
+    if (i >= 0) words = String(levelIn(s, i, Math.min(rowTop(s, i), Math.floor(weak.avg * rowTop(s, i) / T + 1e-9) + 1)) || '').trim().replace(/[.。]+$/, '');
+  }
+  const v = scored.map(x => x.cell.pct), move = v.length >= 4 ? bkMean(v.slice(-3)) - bkMean(v.slice(0, -3)) : 0;
+  const missing = cols.filter(x => x.type !== 'xc' && (x.cells.get(n) || {}).st === 'missing').map(x => x.name);
+  const best = scored.length >= 2 ? scored.reduce((a, b) => b.cell.pct > a.cell.pct ? b : a) : null;
+  const said = rptSaid(c, cols, n);
+  return { grade: g.grade, soFar: g.soFar, strong, weak, words, move, missing, best: best && best.cell.pct >= 70 ? best.col.name : '', said, scored: scored.length };
+}
+// src/reports.js
+const rptHash = s => { let h = 7; for (const ch of String(s)) h = (h * 31 + ch.codePointAt(0)) >>> 0; return h; };
+// src/reports.js
+const rptList = a => a.length <= 1 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+// src/reports.js
+function rptFill(t, c, n, f, rc) {
+  const call = rptCall(c, n), pro = rptPro(c, n), P = RPT_PRO[pro] || [call, call, call + '’s', 'is', 'has', 's'], subj = (rc.subj[c.id] || '').trim();
+  const map = { name: call, they: P[0], them: P[1], their: P[2], is: P[3], has: P[4], s: P[5], in: subj ? ' in ' + subj : '', subject: subj, grade: f.gradeText != null ? f.gradeText : f.grade != null ? roundPct(f.grade) + '%' : '',
+    row: '', work: f.best, n: String(f.missing.length), list: rptList(f.missing), words: f.words };
+  const out = t.replace(/\{(\w+)\}/g, (m, k) => {
+    const low = k[0].toLowerCase() + k.slice(1); if (!(low in map)) return m;
+    const v = String(map[low]); return k !== low && v ? v[0].toUpperCase() + v.slice(1) : v;
+  });
+  return out.replace(/\s+([.,;:!?])/g, '$1').replace(/\s{2,}/g, ' ').trim().replace(/^./, ch => ch.toUpperCase());
+}
+// src/reports.js
+function rptDraft(c, n, f, rc, v) {
+  const band = f.band ? f.band : f.grade == null ? 'None' : f.grade >= rc.cut[0] ? 'High' : f.grade >= rc.cut[1] ? 'Good' : f.grade >= rc.cut[2] ? 'Mid' : 'Low';
+  const say = (k, row) => { const own = (rc.words[k] || []).filter(Boolean), list = own.length ? own : RPT_WORDS[k]; return rptFill(list[(rptHash(n + k) + (v || 0)) % list.length].replace(/\{row\}/g, row || ''), c, n, f, rc); };
+  const long = rc.len === 'long', short = rc.len === 'short', out = [say('open' + band)];
+  if (rc.grade && f.grade != null) out.push(say('grade'));
+  if (!short && f.strong) out.push(say('strong', f.strong.name));
+  if (long && f.best) out.push(say('best'));
+  if (!short && Math.abs(f.move) >= 5) out.push(say(f.move > 0 ? 'up' : 'down'));
+  if (f.weak) out.push(say('next', f.weak.name));
+  if (long && f.weak && f.words) out.push(say('level', f.weak.name));
+  if (f.missing.length) out.push(say(f.missing.length === 1 ? 'missing1' : 'missing'));
+  if (!short && band !== 'None') out.push(say('close' + band));
+  return out.join(' ');
+}
+// src/reports.js
+function rptText(c, cols, conf, n, rc) { const e = rptEntry(c, n); return e.text != null ? e.text : rptDraft(c, n, rptFacts(c, cols, conf, n), rc, e.v); }
 // src/missing.js
 const MIS_WORDS = {
   subj: 'Missing work for {class}',
@@ -799,5 +975,5 @@ function misHref(m, noBody) {
 }
 // src/missing.js
 const misPlain = m => (m.to ? 'To: ' + m.to.replace(/,/g, ', ') + '\n' : '') + (m.bcc ? 'Bcc: ' + m.bcc.replace(/,/g, ', ') + '\n' : '') + 'Subject: ' + m.subject + '\n\n' + m.body;
-export { BK_TYPES, bkConf, bkCats, bkType, bkIsType, bkIsDef, bkLabel, bkTermOf, bkMean, bkCellOf, bkTypedCell, bkLoad, bkClassCols, bkCounts, bkGrade, bkXcTo, bkTabs, bkTermNow, bkClassAvg, bkBands, bkGroups, bkCountTypes, pctAvgText, bkParse, bkCellVal, bkColMax, bkPut, typedStamp, isoDay, bkDay, BK_DEF, rosterPairs, bkTypeUse, IB_TOP, IB_BANDS, IB_GROUPS, IB_WAYS, IB_BOUNDS_DP, ibLetter, classWay, ibGroup, ibGroupCrit, ibBoundsFor, ibBoundsClean, ibCrit, ibBounds, ibGradeOf, ibLevel, ibBandName, ibTerm, ibEvidence, ibConf, ibCols, ibEvFor, ibMid, MIS_WORDS, misConf, misCols, misOwes, misByStu, misByCol, misNudge, misLate, misDue, mbParts, mbSorted, MB_ORDERS, parseRosterRows, keepInfo, keepAtt, infoOf, setInfo, blankInfo, attDays, attCount, attOf, attNote, classNewWay, ATT_WAYS, attRec, attDayOk, attSet, attTake, attClear, attDayCount, attUnknown, attMeets, attStep, csvSafe, SEAT_ROOMS, SEAT_MAX_W, SEAT_MAX_H, seatXY, seatKeys, seatRoom, seatOf, seatSave, seatList, seatFill, seatPut, seatSetRoom, pkNice, pkShort, pkShuffle, pkCount, pkGroups, misDraft, misGroup, misHref, misPlain, misEmail, misLine, misFill, misClassName, rptCall };
+export { BK_TYPES, bkConf, bkCats, bkType, bkIsType, bkIsDef, bkLabel, bkTermOf, bkMean, bkCellOf, bkTypedCell, bkLoad, bkClassCols, bkCounts, bkGrade, bkXcTo, bkTabs, bkTermNow, bkClassAvg, bkBands, bkGroups, bkCountTypes, pctAvgText, bkParse, bkCellVal, bkColMax, bkPut, typedStamp, isoDay, bkDay, BK_DEF, rosterPairs, bkTypeUse, IB_TOP, IB_BANDS, IB_GROUPS, IB_WAYS, IB_BOUNDS_DP, ibLetter, classWay, ibGroup, ibGroupCrit, ibBoundsFor, ibBoundsClean, ibCrit, ibBounds, ibGradeOf, ibLevel, ibBandName, ibTerm, ibEvidence, ibConf, ibCols, ibEvFor, ibMid, MIS_WORDS, misConf, misCols, misOwes, misByStu, misByCol, misNudge, misLate, misDue, mbParts, mbSorted, MB_ORDERS, parseRosterRows, keepInfo, keepAtt, infoOf, setInfo, blankInfo, attDays, attCount, attOf, attNote, classNewWay, ATT_WAYS, attRec, attDayOk, attSet, attTake, attClear, attDayCount, attUnknown, attMeets, attStep, csvSafe, SEAT_ROOMS, SEAT_MAX_W, SEAT_MAX_H, seatXY, seatKeys, seatRoom, seatOf, seatSave, seatList, seatFill, seatPut, seatSetRoom, pkNice, pkShort, pkShuffle, pkCount, pkGroups, misDraft, misGroup, misHref, misPlain, misEmail, misLine, misFill, misClassName, rptCall, goalList, goalData, GOAL_LOW, RPT_WORDS, RPT_SLOTS, RPT_PROS, RPT_LEN, rptConf, rptEntry, rptPut, rptPro, rptFacts, rptDraft, rptText };
 export { EMAIL_RX };

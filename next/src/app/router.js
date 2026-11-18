@@ -79,6 +79,8 @@ export const PARTS = {
   picker: () => import('./class/picker.jsx'),
   // a class's To do tab: its to-dos and missing work
   ctodo: () => import('./class/todo.jsx'),
+  goals: () => import('./class/goals.jsx'),
+  reports: () => import('./class/reports.jsx'),
   bring: () => import('./mark/open.js'),
   word: () => import('./mark/word.js'),
   report: () => import('./mark/report.jsx'),
