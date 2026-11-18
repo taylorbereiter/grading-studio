@@ -363,8 +363,10 @@ export default function MarkScreen({ route, classes }) {
   const openCalc = () => { if (Calc) return setCalc(null); PARTS.calc().then(m => setCalc(() => m.Calculator), e => console.error(e)); };
   const [lf, setLf] = useState('all'), [fold, setFoldS] = useState(() => prefs.get('gs.listOpen', null) === false), [noR, setNoR] = useState(() => !!(prefs.get('gs.panels', {}) || {}).R), [soloK, setSoloK] = useState(0);
   useEffect(() => setLf('all'), [id]);
-  const setFold = v => { setFoldS(v); prefs.set('gs.listOpen', !v); };
-  const setPanel = v => { setNoR(v); prefs.set('gs.panels', { ...(prefs.get('gs.panels', {}) || {}), R: v }); };
+  // the keys read these, not the render's own values, so a key pressed again before the keys are set up anew still turns it back
+  const foldR = useRef(fold), noRR = useRef(noR); foldR.current = fold; noRR.current = noR;
+  const setFold = v => { foldR.current = v; setFoldS(v); prefs.set('gs.listOpen', !v); };
+  const setPanel = v => { noRR.current = v; setNoR(v); prefs.set('gs.panels', { ...(prefs.get('gs.panels', {}) || {}), R: v }); };
   useEffect(() => { if (!w) return; let off = null, live = true;
     PARTS.marking().then(m => { if (!live) return; MK = m; off = m.start({ toast: text => toast(text), openStudent: i => pickRef.current(i), changed: () => tick(n => n + 1) }); tick(n => n + 1); });
     return () => { live = false; if (off) off(); }; }, [w]);
@@ -413,8 +415,8 @@ export default function MarkScreen({ route, classes }) {
       register({ id: 'mark-side', keys: 'b', label: 'mark.sp_key', group: 'mark.score', when: () => !solo && !!spCtl.current, run: () => spCtl.current.toggle() }),
       register({ id: 'mark-calc', keys: '=', label: 'mark.calc', when: () => !!MK && !Calc && !MK.M.resizable(), run: openCalc }),
       register({ id: 'mark-unscored', keys: 'n', label: 'mark.next_score', when: () => !!MK && !solo, run: () => { if (!MK.M.nextUnscored()) toast(t('mark.everyone_scored')); } }),
-      register({ id: 'mark-list', keys: '[', label: 'mark.list_keep', when: () => !solo, run: () => setFold(!fold) }),
-      register({ id: 'mark-panel', keys: ']', label: 'mark.panel_fold', run: () => setPanel(!noR) }),
+      register({ id: 'mark-list', keys: '[', label: 'mark.list_keep', when: () => !solo, run: () => setFold(!foldR.current) }),
+      register({ id: 'mark-panel', keys: ']', label: 'mark.panel_fold', run: () => setPanel(!noRR.current) }),
       register({ id: 'mark-solo', keys: 'i', label: 'mark.solo_start', when: () => !solo && tab === 'mark', run: soloStart }),
       // F turns Feedback complete on or off; Shift F sets it on and goes to the next student
       register({ id: 'mark-fb', keys: 'f', label: 'mark.fb_key', group: 'mark.score', when: () => !!MK && MK.M.fmNow() && !noScore(w.batch.students[cur]), run: e => { if (!e.shiftKey) return MK.M.setFb(!w.batch.students[cur].grade.fb); MK.M.setFb(true); if (!solo) step(1); } }),

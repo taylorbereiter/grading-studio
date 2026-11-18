@@ -221,6 +221,9 @@ test('the rubric bank in Rubric setup: a saved rubric used (its rows by place), 
   await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
   const kvBank = () => p.evaluate(() => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('bank'); q.onsuccess = () => { r.result.close(); res(q.result); }; }; }));
   const names = async () => { const b = await kvBank(); return [...b.rubrics.map(r => r.name), ...b.scales.map(s => s.name)]; };
+  // the bank is written a moment after the screen shows it: wait for the write
+  const until = async (f, why) => { for (let k = 0; k < 50; k++) { if (await f()) return; await new Promise(r => setTimeout(r, 200)); } assert.fail(why); };
+  const bankHas = async name => { for (let k = 0; k < 50; k++) { const b = await kvBank(); if (b && b.rubrics.some(x => x.name === name)) return b; await new Promise(r => setTimeout(r, 200)); } return kvBank(); };
   // Use the saved one: its rows, by place
   await p.click('[data-setupopen]');
   await p.waitForSelector('dialog[open] [data-subuse="R1"]', { timeout: 10000 });
@@ -240,21 +243,22 @@ test('the rubric bank in Rubric setup: a saved rubric used (its rows by place), 
   await p.select('dialog[open] [data-subunit]', 'U2');
   await tap(p, 'dialog[open] [data-subok]');
   await p.waitForSelector('dialog[open] [data-subitem]');
-  let b = await kvBank(); const r = b.rubrics.find(x => x.name === 'Speech rubric');
+  let b = await bankHas('Speech rubric'); const r = b.rubrics.find(x => x.name === 'Speech rubric');
   assert.ok(r, 'in the Planner\'s bank'); assert.deepEqual(r.criteria, ['Understanding', 'Evidence', 'Voice']); assert.deepEqual(r.unit, { id: 'U2', course: 'Grade 9', title: 'Unit 2: Poetry' });
   assert.ok((await p.evaluate(() => JSON.parse(localStorage.getItem('gs.rubrics')))).some(x => x.name === 'Speech rubric'), 'and in grading\'s own list');
   // Delete it, then Undo
   await p.waitForSelector(`dialog[open] [data-subdel="${r.id}"]`); await tap(p, `dialog[open] [data-subdel="${r.id}"]`);
   await p.waitForFunction(id => !document.querySelector(`dialog[open] [data-subdel="${id}"]`), {}, r.id);
-  assert.ok(!(await names()).includes('Speech rubric'));
+  await until(async () => !(await names()).includes('Speech rubric'), 'gone from the bank');
   await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(x => x.textContent.trim() === 'Undo').click());
   await p.waitForSelector(`dialog[open] [data-subdel="${r.id}"]`, { timeout: 8000 });
-  assert.ok((await names()).includes('Speech rubric'), 'Undo brings it back');
+  await until(async () => (await names()).includes('Speech rubric'), 'Undo brings it back');
   // a grading scale, steps of 5, saved
   await tap(p, 'dialog[open] [data-supreset="fives"]');
   await p.waitForSelector('dialog[open] [data-suscsave]'); await tap(p, 'dialog[open] [data-suscsave]');
   await p.waitForSelector('dialog[open] [data-subname]'); await tap(p, 'dialog[open] [data-subok]');
   await p.waitForFunction(() => !document.querySelector('dialog[open] [data-suask]'));
+  await until(async () => (await kvBank()).scales.some(x => x.name === 'Out of 12'), 'the scale in the bank');
   b = await kvBank(); const sc = b.scales.find(x => x.name === 'Out of 12');
   assert.ok(sc); assert.equal(sc.scale[12], 100); assert.equal(sc.scale[11], 95);
   await tap(p, 'dialog[open] [data-sucancel]');
