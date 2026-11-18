@@ -1,26 +1,27 @@
 {
  "inputs": {
+  "<define:__GS_LANGS__>": {
+   "bytes": 179,
+   "imports": []
+  },
   "node_modules/preact/dist/preact.mjs": {
    "bytes": 11970,
-   "imports": [],
+   "imports": [
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
    "format": "esm"
   },
   "next/src/shared/lock.js": {
    "bytes": 4456,
-   "imports": [],
-   "format": "esm"
-  },
-  "next/lang/en.json": {
-   "bytes": 3120,
-   "imports": []
-  },
-  "next/src/i18n/t.js": {
-   "bytes": 1712,
    "imports": [
     {
-     "path": "next/lang/en.json",
+     "path": "<define:__GS_LANGS__>",
      "kind": "import-statement",
-     "original": "../../lang/en.json"
+     "external": true
     }
    ],
    "format": "esm"
@@ -32,53 +33,11 @@
      "path": "next/src/shared/lock.js",
      "kind": "import-statement",
      "original": "./lock.js"
-    }
-   ],
-   "format": "esm"
-  },
-  "next/src/ui/tokens.js": {
-   "bytes": 9527,
-   "imports": [],
-   "format": "esm"
-  },
-  "next/src/services/theme.js": {
-   "bytes": 1505,
-   "imports": [
-    {
-     "path": "next/src/shared/ls.js",
-     "kind": "import-statement",
-     "original": "../shared/ls.js"
     },
     {
-     "path": "next/src/ui/tokens.js",
+     "path": "<define:__GS_LANGS__>",
      "kind": "import-statement",
-     "original": "../ui/tokens.js"
-    }
-   ],
-   "format": "esm"
-  },
-  "next/src/main.js": {
-   "bytes": 980,
-   "imports": [
-    {
-     "path": "node_modules/preact/dist/preact.mjs",
-     "kind": "import-statement",
-     "original": "preact"
-    },
-    {
-     "path": "next/src/shared/lock.js",
-     "kind": "import-statement",
-     "original": "./shared/lock.js"
-    },
-    {
-     "path": "next/src/i18n/t.js",
-     "kind": "import-statement",
-     "original": "./i18n/t.js"
-    },
-    {
-     "path": "next/src/services/theme.js",
-     "kind": "import-statement",
-     "original": "./services/theme.js"
+     "external": true
     }
    ],
    "format": "esm"
@@ -90,13 +49,24 @@
      "path": "next/src/shared/lock.js",
      "kind": "import-statement",
      "original": "./lock.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
     }
    ],
    "format": "esm"
   },
   "next/src/shared/keys.js": {
-   "bytes": 12439,
-   "imports": [],
+   "bytes": 12535,
+   "imports": [
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
    "format": "esm"
   },
   "next/src/shared/records.js": {
@@ -116,122 +86,122 @@
      "path": "next/src/shared/keys.js",
      "kind": "import-statement",
      "original": "./keys.js"
-    }
-   ],
-   "format": "esm"
-  },
-  "next/src/students/index.js": {
-   "bytes": 2918,
-   "imports": [
+    },
     {
-     "path": "next/src/shared/records.js",
+     "path": "<define:__GS_LANGS__>",
      "kind": "import-statement",
-     "original": "../shared/records.js"
+     "external": true
     }
    ],
    "format": "esm"
   },
   "next/src/planning/index.js": {
-   "bytes": 1350,
+   "bytes": 2253,
    "imports": [
     {
      "path": "next/src/shared/records.js",
      "kind": "import-statement",
      "original": "../shared/records.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
     }
    ],
    "format": "esm"
   },
-  "next/src/shared/device.js": {
-   "bytes": 452,
+  "next/src/shared/tabs.js": {
+   "bytes": 1553,
    "imports": [
-    {
-     "path": "next/src/shared/records.js",
-     "kind": "import-statement",
-     "original": "./records.js"
-    }
-   ],
-   "format": "esm"
-  },
-  "next/src/shared/dump.js": {
-   "bytes": 1251,
-   "imports": [
-    {
-     "path": "next/src/shared/keys.js",
-     "kind": "import-statement",
-     "original": "./keys.js"
-    },
-    {
-     "path": "next/src/shared/idb.js",
-     "kind": "import-statement",
-     "original": "./idb.js"
-    },
     {
      "path": "next/src/shared/ls.js",
      "kind": "import-statement",
      "original": "./ls.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
     }
    ],
    "format": "esm"
   },
-  "next/src/crossings.js": {
-   "bytes": 1751,
+  "next/src/shared/saved.js": {
+   "bytes": 574,
    "imports": [
     {
-     "path": "next/src/students/index.js",
+     "path": "<define:__GS_LANGS__>",
      "kind": "import-statement",
-     "original": "./students/index.js"
-    },
-    {
-     "path": "next/src/planning/index.js",
-     "kind": "import-statement",
-     "original": "./planning/index.js"
+     "external": true
     }
    ],
    "format": "esm"
   },
-  "next/src/proof.js": {
-   "bytes": 2934,
+  "next/src/planning/write.js": {
+   "bytes": 5375,
    "imports": [
-    {
-     "path": "next/src/students/index.js",
-     "kind": "import-statement",
-     "original": "./students/index.js"
-    },
     {
      "path": "next/src/planning/index.js",
      "kind": "import-statement",
-     "original": "./planning/index.js"
-    },
-    {
-     "path": "next/src/shared/device.js",
-     "kind": "import-statement",
-     "original": "./shared/device.js"
-    },
-    {
-     "path": "next/src/shared/keys.js",
-     "kind": "import-statement",
-     "original": "./shared/keys.js"
-    },
-    {
-     "path": "next/src/shared/dump.js",
-     "kind": "import-statement",
-     "original": "./shared/dump.js"
-    },
-    {
-     "path": "next/src/shared/ls.js",
-     "kind": "import-statement",
-     "original": "./shared/ls.js"
+     "original": "./index.js"
     },
     {
      "path": "next/src/shared/lock.js",
      "kind": "import-statement",
-     "original": "./shared/lock.js"
+     "original": "../shared/lock.js"
     },
     {
-     "path": "next/src/crossings.js",
+     "path": "next/src/shared/tabs.js",
      "kind": "import-statement",
-     "original": "./crossings.js"
+     "original": "../shared/tabs.js"
+    },
+    {
+     "path": "next/src/shared/saved.js",
+     "kind": "import-statement",
+     "original": "../shared/saved.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/ui/tokens.js": {
+   "bytes": 9527,
+   "imports": [
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/services/theme.js": {
+   "bytes": 1572,
+   "imports": [
+    {
+     "path": "next/src/shared/ls.js",
+     "kind": "import-statement",
+     "original": "../shared/ls.js"
+    },
+    {
+     "path": "next/src/planning/write.js",
+     "kind": "import-statement",
+     "original": "../planning/write.js"
+    },
+    {
+     "path": "next/src/ui/tokens.js",
+     "kind": "import-statement",
+     "original": "../ui/tokens.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
     }
    ],
    "format": "esm"
@@ -243,6 +213,11 @@
      "path": "node_modules/preact/dist/preact.mjs",
      "kind": "import-statement",
      "original": "preact"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
     }
    ],
    "format": "esm"
@@ -254,6 +229,11 @@
      "path": "node_modules/preact/dist/preact.mjs",
      "kind": "import-statement",
      "original": "preact"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
     }
    ],
    "format": "esm"
@@ -280,6 +260,11 @@
      "path": "node_modules/preact/hooks/dist/hooks.mjs",
      "kind": "import-statement",
      "original": "preact/hooks"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
     }
    ],
    "format": "esm"
@@ -306,6 +291,11 @@
      "path": "next/src/ui/icons.js",
      "kind": "import-statement",
      "original": "./icons.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
     }
    ],
    "format": "esm"
@@ -332,6 +322,31 @@
      "path": "next/src/ui/popups.jsx",
      "kind": "import-statement",
      "original": "./popups.jsx"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/lang/en.json": {
+   "bytes": 8318,
+   "imports": []
+  },
+  "next/src/i18n/t.js": {
+   "bytes": 1712,
+   "imports": [
+    {
+     "path": "next/lang/en.json",
+     "kind": "import-statement",
+     "original": "../../lang/en.json"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
     }
    ],
    "format": "esm"
@@ -363,33 +378,68 @@
      "path": "next/src/i18n/t.js",
      "kind": "import-statement",
      "original": "../i18n/t.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
     }
    ],
    "format": "esm"
   },
   "next/src/services/commands.js": {
    "bytes": 1434,
-   "imports": [],
+   "imports": [
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
    "format": "esm"
   },
   "next/src/services/shortcuts.js": {
    "bytes": 2869,
-   "imports": [],
+   "imports": [
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
    "format": "esm"
   },
   "next/src/services/speech.js": {
    "bytes": 1200,
-   "imports": [],
+   "imports": [
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
    "format": "esm"
   },
   "next/src/services/files.js": {
    "bytes": 2201,
-   "imports": [],
+   "imports": [
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
    "format": "esm"
   },
   "next/src/services/undo.js": {
    "bytes": 2778,
-   "imports": [],
+   "imports": [
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
    "format": "esm"
   },
   "next/src/ui/services.jsx": {
@@ -459,6 +509,11 @@
      "path": "next/src/ui/tokens.js",
      "kind": "import-statement",
      "original": "./tokens.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
     }
    ],
    "format": "esm"
@@ -495,13 +550,289 @@
      "path": "next/src/ui/tokens.js",
      "kind": "import-statement",
      "original": "./tokens.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
     }
    ],
    "format": "esm"
   },
-  "next/lang/gallery.en.json": {
-   "bytes": 6793,
-   "imports": []
+  "next/src/students/index.js": {
+   "bytes": 2918,
+   "imports": [
+    {
+     "path": "next/src/shared/records.js",
+     "kind": "import-statement",
+     "original": "../shared/records.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/students/counts.js": {
+   "bytes": 4604,
+   "imports": [
+    {
+     "path": "next/src/students/index.js",
+     "kind": "import-statement",
+     "original": "./index.js"
+    },
+    {
+     "path": "next/src/shared/ls.js",
+     "kind": "import-statement",
+     "original": "../shared/ls.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/planning/today.js": {
+   "bytes": 5688,
+   "imports": [
+    {
+     "path": "next/src/planning/index.js",
+     "kind": "import-statement",
+     "original": "./index.js"
+    },
+    {
+     "path": "next/src/shared/ls.js",
+     "kind": "import-statement",
+     "original": "../shared/ls.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/crossings.js": {
+   "bytes": 4084,
+   "imports": [
+    {
+     "path": "next/src/students/index.js",
+     "kind": "import-statement",
+     "original": "./students/index.js"
+    },
+    {
+     "path": "next/src/planning/index.js",
+     "kind": "import-statement",
+     "original": "./planning/index.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    },
+    {
+     "path": "next/src/students/counts.js",
+     "kind": "dynamic-import",
+     "original": "./students/counts.js"
+    },
+    {
+     "path": "next/src/students/counts.js",
+     "kind": "dynamic-import",
+     "original": "./students/counts.js"
+    },
+    {
+     "path": "next/src/planning/today.js",
+     "kind": "dynamic-import",
+     "original": "./planning/today.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/app/screens/home.jsx": {
+   "bytes": 8430,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "next/src/ui/index.js",
+     "kind": "import-statement",
+     "original": "../../ui/index.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../../i18n/t.js"
+    },
+    {
+     "path": "next/src/app/router.js",
+     "kind": "import-statement",
+     "original": "../router.js"
+    },
+    {
+     "path": "next/src/crossings.js",
+     "kind": "import-statement",
+     "original": "../../crossings.js"
+    },
+    {
+     "path": "next/src/app/shell.jsx",
+     "kind": "import-statement",
+     "original": "../shell.jsx"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/app/language.js": {
+   "bytes": 1134,
+   "imports": [
+    {
+     "path": "next/src/shared/ls.js",
+     "kind": "import-statement",
+     "original": "../shared/ls.js"
+    },
+    {
+     "path": "next/src/planning/write.js",
+     "kind": "import-statement",
+     "original": "../planning/write.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/app/sample.js": {
+   "bytes": 2311,
+   "imports": [
+    {
+     "path": "next/src/shared/lock.js",
+     "kind": "import-statement",
+     "original": "../shared/lock.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/app/update.js": {
+   "bytes": 1966,
+   "imports": [
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/app/screens/settings.jsx": {
+   "bytes": 3672,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "next/src/ui/index.js",
+     "kind": "import-statement",
+     "original": "../../ui/index.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../../i18n/t.js"
+    },
+    {
+     "path": "next/src/app/router.js",
+     "kind": "import-statement",
+     "original": "../router.js"
+    },
+    {
+     "path": "next/src/services/theme.js",
+     "kind": "import-statement",
+     "original": "../../services/theme.js"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "next/src/app/language.js",
+     "kind": "import-statement",
+     "original": "../language.js"
+    },
+    {
+     "path": "next/src/app/sample.js",
+     "kind": "import-statement",
+     "original": "../sample.js"
+    },
+    {
+     "path": "next/src/app/update.js",
+     "kind": "import-statement",
+     "original": "../update.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/app/screens/keys.jsx": {
+   "bytes": 434,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "next/src/ui/index.js",
+     "kind": "import-statement",
+     "original": "../../ui/index.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../../i18n/t.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
   },
   "next/src/services/assistant.js": {
    "bytes": 1632,
@@ -510,9 +841,566 @@
      "path": "next/src/shared/ls.js",
      "kind": "import-statement",
      "original": "../shared/ls.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
     }
    ],
    "format": "esm"
+  },
+  "next/src/app/screens/more.jsx": {
+   "bytes": 1845,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "next/src/ui/index.js",
+     "kind": "import-statement",
+     "original": "../../ui/index.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../../i18n/t.js"
+    },
+    {
+     "path": "next/src/app/router.js",
+     "kind": "import-statement",
+     "original": "../router.js"
+    },
+    {
+     "path": "next/src/app/shell.jsx",
+     "kind": "import-statement",
+     "original": "../shell.jsx"
+    },
+    {
+     "path": "next/src/services/assistant.js",
+     "kind": "import-statement",
+     "original": "../../services/assistant.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/lang/building.en.json": {
+   "bytes": 619,
+   "imports": []
+  },
+  "next/src/app/screens/later.jsx": {
+   "bytes": 1411,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "next/src/ui/index.js",
+     "kind": "import-statement",
+     "original": "../../ui/index.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../../i18n/t.js"
+    },
+    {
+     "path": "next/lang/building.en.json",
+     "kind": "import-statement",
+     "original": "../../../lang/building.en.json"
+    },
+    {
+     "path": "next/src/app/router.js",
+     "kind": "import-statement",
+     "original": "../router.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/app/router.js": {
+   "bytes": 4395,
+   "imports": [
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    },
+    {
+     "path": "next/src/app/screens/home.jsx",
+     "kind": "dynamic-import",
+     "original": "./screens/home.jsx"
+    },
+    {
+     "path": "next/src/app/screens/settings.jsx",
+     "kind": "dynamic-import",
+     "original": "./screens/settings.jsx"
+    },
+    {
+     "path": "next/src/app/screens/keys.jsx",
+     "kind": "dynamic-import",
+     "original": "./screens/keys.jsx"
+    },
+    {
+     "path": "next/src/app/screens/more.jsx",
+     "kind": "dynamic-import",
+     "original": "./screens/more.jsx"
+    },
+    {
+     "path": "next/src/app/screens/later.jsx",
+     "kind": "dynamic-import",
+     "original": "./screens/later.jsx"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/app/shell.jsx": {
+   "bytes": 10721,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "node_modules/preact/hooks/dist/hooks.mjs",
+     "kind": "import-statement",
+     "original": "preact/hooks"
+    },
+    {
+     "path": "next/src/ui/index.js",
+     "kind": "import-statement",
+     "original": "../ui/index.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "../i18n/t.js"
+    },
+    {
+     "path": "next/src/app/router.js",
+     "kind": "import-statement",
+     "original": "./router.js"
+    },
+    {
+     "path": "next/src/services/commands.js",
+     "kind": "import-statement",
+     "original": "../services/commands.js"
+    },
+    {
+     "path": "next/src/services/shortcuts.js",
+     "kind": "import-statement",
+     "original": "../services/shortcuts.js"
+    },
+    {
+     "path": "next/src/services/undo.js",
+     "kind": "import-statement",
+     "original": "../services/undo.js"
+    },
+    {
+     "path": "next/src/services/assistant.js",
+     "kind": "import-statement",
+     "original": "../services/assistant.js"
+    },
+    {
+     "path": "next/src/shared/lock.js",
+     "kind": "import-statement",
+     "original": "../shared/lock.js"
+    },
+    {
+     "path": "next/src/services/theme.js",
+     "kind": "import-statement",
+     "original": "../services/theme.js"
+    },
+    {
+     "path": "next/src/ui/tokens.js",
+     "kind": "import-statement",
+     "original": "../ui/tokens.js"
+    },
+    {
+     "path": "next/src/crossings.js",
+     "kind": "import-statement",
+     "original": "../crossings.js"
+    },
+    {
+     "path": "next/src/app/sample.js",
+     "kind": "import-statement",
+     "original": "./sample.js"
+    },
+    {
+     "path": "next/src/app/update.js",
+     "kind": "import-statement",
+     "original": "./update.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/shared/device.js": {
+   "bytes": 475,
+   "imports": [
+    {
+     "path": "next/src/shared/records.js",
+     "kind": "import-statement",
+     "original": "./records.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/whole/folder.js": {
+   "bytes": 4952,
+   "imports": [
+    {
+     "path": "next/src/shared/device.js",
+     "kind": "import-statement",
+     "original": "../shared/device.js"
+    },
+    {
+     "path": "next/src/students/index.js",
+     "kind": "import-statement",
+     "original": "../students/index.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/engines/merge.js": {
+   "bytes": 67557,
+   "imports": [
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/whole/sync.js": {
+   "bytes": 2939,
+   "imports": [
+    {
+     "path": "next/src/students/index.js",
+     "kind": "import-statement",
+     "original": "../students/index.js"
+    },
+    {
+     "path": "next/src/planning/index.js",
+     "kind": "import-statement",
+     "original": "../planning/index.js"
+    },
+    {
+     "path": "next/src/whole/folder.js",
+     "kind": "import-statement",
+     "original": "./folder.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    },
+    {
+     "path": "next/src/engines/merge.js",
+     "kind": "dynamic-import",
+     "original": "../engines/merge.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/whole/index.js": {
+   "bytes": 1350,
+   "imports": [
+    {
+     "path": "next/src/shared/saved.js",
+     "kind": "import-statement",
+     "original": "../shared/saved.js"
+    },
+    {
+     "path": "next/src/whole/folder.js",
+     "kind": "import-statement",
+     "original": "./folder.js"
+    },
+    {
+     "path": "next/src/whole/sync.js",
+     "kind": "import-statement",
+     "original": "./sync.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/main.js": {
+   "bytes": 1487,
+   "imports": [
+    {
+     "path": "node_modules/preact/dist/preact.mjs",
+     "kind": "import-statement",
+     "original": "preact"
+    },
+    {
+     "path": "next/src/shared/lock.js",
+     "kind": "import-statement",
+     "original": "./shared/lock.js"
+    },
+    {
+     "path": "next/src/services/theme.js",
+     "kind": "import-statement",
+     "original": "./services/theme.js"
+    },
+    {
+     "path": "next/src/app/shell.jsx",
+     "kind": "import-statement",
+     "original": "./app/shell.jsx"
+    },
+    {
+     "path": "next/src/app/sample.js",
+     "kind": "import-statement",
+     "original": "./app/sample.js"
+    },
+    {
+     "path": "next/src/app/update.js",
+     "kind": "import-statement",
+     "original": "./app/update.js"
+    },
+    {
+     "path": "next/src/whole/index.js",
+     "kind": "import-statement",
+     "original": "./whole/index.js"
+    },
+    {
+     "path": "next/src/i18n/t.js",
+     "kind": "import-statement",
+     "original": "./i18n/t.js"
+    },
+    {
+     "path": "next/src/app/language.js",
+     "kind": "import-statement",
+     "original": "./app/language.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/shared/dump.js": {
+   "bytes": 1251,
+   "imports": [
+    {
+     "path": "next/src/shared/keys.js",
+     "kind": "import-statement",
+     "original": "./keys.js"
+    },
+    {
+     "path": "next/src/shared/idb.js",
+     "kind": "import-statement",
+     "original": "./idb.js"
+    },
+    {
+     "path": "next/src/shared/ls.js",
+     "kind": "import-statement",
+     "original": "./ls.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/students/write.js": {
+   "bytes": 7771,
+   "imports": [
+    {
+     "path": "next/src/students/index.js",
+     "kind": "import-statement",
+     "original": "./index.js"
+    },
+    {
+     "path": "next/src/planning/index.js",
+     "kind": "import-statement",
+     "original": "../planning/index.js"
+    },
+    {
+     "path": "next/src/shared/lock.js",
+     "kind": "import-statement",
+     "original": "../shared/lock.js"
+    },
+    {
+     "path": "next/src/shared/ls.js",
+     "kind": "import-statement",
+     "original": "../shared/ls.js"
+    },
+    {
+     "path": "next/src/shared/tabs.js",
+     "kind": "import-statement",
+     "original": "../shared/tabs.js"
+    },
+    {
+     "path": "next/src/shared/saved.js",
+     "kind": "import-statement",
+     "original": "../shared/saved.js"
+    },
+    {
+     "path": "next/src/services/assistant.js",
+     "kind": "import-statement",
+     "original": "../services/assistant.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    },
+    {
+     "path": "next/src/engines/merge.js",
+     "kind": "dynamic-import",
+     "original": "../engines/merge.js"
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/students/undo.js": {
+   "bytes": 3426,
+   "imports": [
+    {
+     "path": "next/src/services/undo.js",
+     "kind": "import-statement",
+     "original": "../services/undo.js"
+    },
+    {
+     "path": "next/src/students/write.js",
+     "kind": "import-statement",
+     "original": "./write.js"
+    },
+    {
+     "path": "next/src/students/index.js",
+     "kind": "import-statement",
+     "original": "./index.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/src/proof.js": {
+   "bytes": 3366,
+   "imports": [
+    {
+     "path": "next/src/students/index.js",
+     "kind": "import-statement",
+     "original": "./students/index.js"
+    },
+    {
+     "path": "next/src/planning/index.js",
+     "kind": "import-statement",
+     "original": "./planning/index.js"
+    },
+    {
+     "path": "next/src/shared/device.js",
+     "kind": "import-statement",
+     "original": "./shared/device.js"
+    },
+    {
+     "path": "next/src/shared/keys.js",
+     "kind": "import-statement",
+     "original": "./shared/keys.js"
+    },
+    {
+     "path": "next/src/shared/dump.js",
+     "kind": "import-statement",
+     "original": "./shared/dump.js"
+    },
+    {
+     "path": "next/src/shared/ls.js",
+     "kind": "import-statement",
+     "original": "./shared/ls.js"
+    },
+    {
+     "path": "next/src/shared/lock.js",
+     "kind": "import-statement",
+     "original": "./shared/lock.js"
+    },
+    {
+     "path": "next/src/crossings.js",
+     "kind": "import-statement",
+     "original": "./crossings.js"
+    },
+    {
+     "path": "next/src/students/write.js",
+     "kind": "import-statement",
+     "original": "./students/write.js"
+    },
+    {
+     "path": "next/src/planning/write.js",
+     "kind": "import-statement",
+     "original": "./planning/write.js"
+    },
+    {
+     "path": "next/src/students/undo.js",
+     "kind": "import-statement",
+     "original": "./students/undo.js"
+    },
+    {
+     "path": "next/src/services/undo.js",
+     "kind": "import-statement",
+     "original": "./services/undo.js"
+    },
+    {
+     "path": "next/src/whole/index.js",
+     "kind": "import-statement",
+     "original": "./whole/index.js"
+    },
+    {
+     "path": "next/src/whole/folder.js",
+     "kind": "import-statement",
+     "original": "./whole/folder.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
+    }
+   ],
+   "format": "esm"
+  },
+  "next/lang/gallery.en.json": {
+   "bytes": 6793,
+   "imports": []
   },
   "next/src/gallery/main.jsx": {
    "bytes": 24176,
@@ -571,6 +1459,11 @@
      "path": "next/src/services/files.js",
      "kind": "import-statement",
      "original": "../services/files.js"
+    },
+    {
+     "path": "<define:__GS_LANGS__>",
+     "kind": "import-statement",
+     "external": true
     }
    ],
    "format": "esm"
@@ -601,25 +1494,389 @@
   "next/src/gallery/gallery.css": {
    "bytes": 3211,
    "imports": []
+  },
+  "next/src/app/shell.css": {
+   "bytes": 8086,
+   "imports": []
   }
  },
  "outputs": {
+  "next/dist/chunk-6MS7Q4PE.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-I2SVD4MH.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "addDays",
+    "dayAt",
+    "dayRows",
+    "isoDay",
+    "lessonWorked",
+    "nowRow",
+    "onPhone",
+    "readPlan",
+    "toPlan"
+   ],
+   "entryPoint": "next/src/planning/today.js",
+   "inputs": {
+    "next/src/planning/today.js": {
+     "bytesInOutput": 3192
+    }
+   },
+   "bytes": 3443
+  },
+  "next/dist/chunk-TTMEJ3MH.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-USMIQGRO.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MHKCYSJX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5XSDSCYA.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LSW6IKL6.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-62CLI6SX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-G47UQECB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-J6CMPBYB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-I2SVD4MH.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-65GIRAL2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLH5FQM3.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-FJM3A5SW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "default"
+   ],
+   "entryPoint": "next/src/app/screens/home.jsx",
+   "inputs": {
+    "next/src/app/screens/home.jsx": {
+     "bytesInOutput": 6173
+    }
+   },
+   "bytes": 6670
+  },
+  "next/dist/chunk-RJE4MBXU.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-2R4N4NPO.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MHKCYSJX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5XSDSCYA.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-62CLI6SX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-J6CMPBYB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-I2SVD4MH.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-65GIRAL2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLH5FQM3.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "GROUPS",
+    "default"
+   ],
+   "entryPoint": "next/src/app/screens/settings.jsx",
+   "inputs": {
+    "next/src/app/screens/settings.jsx": {
+     "bytesInOutput": 2147
+    }
+   },
+   "bytes": 2662
+  },
+  "next/dist/chunk-O7X4ABPZ.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-65GIRAL2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLH5FQM3.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "default"
+   ],
+   "entryPoint": "next/src/app/screens/keys.jsx",
+   "inputs": {
+    "next/src/app/screens/keys.jsx": {
+     "bytesInOutput": 143
+    }
+   },
+   "bytes": 276
+  },
+  "next/dist/chunk-OZYREWLA.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-USMIQGRO.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-MHKCYSJX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5XSDSCYA.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LSW6IKL6.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-62CLI6SX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-G47UQECB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-J6CMPBYB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-I2SVD4MH.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-65GIRAL2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLH5FQM3.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-FJM3A5SW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "ClassList",
+    "default"
+   ],
+   "entryPoint": "next/src/app/screens/more.jsx",
+   "inputs": {
+    "next/src/app/screens/more.jsx": {
+     "bytesInOutput": 1134
+    }
+   },
+   "bytes": 1613
+  },
+  "next/dist/chunk-ZLN37TZV.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-5XSDSCYA.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-65GIRAL2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLH5FQM3.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "default"
+   ],
+   "entryPoint": "next/src/app/screens/later.jsx",
+   "inputs": {
+    "next/lang/building.en.json": {
+     "bytesInOutput": 582
+    },
+    "next/src/app/screens/later.jsx": {
+     "bytesInOutput": 710
+    }
+   },
+   "bytes": 1478
+  },
+  "next/dist/chunk-X33RDHYI.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "focusShared",
+    "hashOf",
+    "libPrev",
+    "mergeLib",
+    "mergeLs",
+    "mergeStates",
+    "mergeWork",
+    "planTimeMerge",
+    "recHash",
+    "revsOf",
+    "stampData",
+    "stampLib",
+    "tabDiffers",
+    "tabMerge",
+    "taughtInMerge",
+    "vJoin",
+    "workCounts",
+    "workVec"
+   ],
+   "entryPoint": "next/src/engines/merge.js",
+   "inputs": {
+    "next/src/engines/merge.js": {
+     "bytesInOutput": 31333
+    }
+   },
+   "bytes": 31648
+  },
   "next/dist/main.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-MGR5KL3P.js",
+     "path": "next/dist/chunk-2R4N4NPO.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-QVGUJPL4.js",
+     "path": "next/dist/chunk-USMIQGRO.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-MZSJGBZT.js",
+     "path": "next/dist/chunk-MHKCYSJX.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-WOT6VMZA.js",
+     "path": "next/dist/chunk-5XSDSCYA.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-XNZ7IJXE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LSW6IKL6.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-62CLI6SX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-G47UQECB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-J6CMPBYB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-I2SVD4MH.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-65GIRAL2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLH5FQM3.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-FJM3A5SW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
      "kind": "import-statement"
     }
    ],
@@ -627,67 +1884,320 @@
    "entryPoint": "next/src/main.js",
    "inputs": {
     "next/src/main.js": {
-     "bytesInOutput": 410
+     "bytesInOutput": 440
     }
    },
-   "bytes": 594
+   "bytes": 996
+  },
+  "next/dist/chunk-2R4N4NPO.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-J6CMPBYB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e"
+   ],
+   "inputs": {
+    "next/src/app/language.js": {
+     "bytesInOutput": 251
+    }
+   },
+   "bytes": 415
+  },
+  "next/dist/chunk-USMIQGRO.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-MHKCYSJX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5XSDSCYA.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LSW6IKL6.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-62CLI6SX.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-G47UQECB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-65GIRAL2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLH5FQM3.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c"
+   ],
+   "inputs": {
+    "next/src/app/shell.jsx": {
+     "bytesInOutput": 6092
+    }
+   },
+   "bytes": 6685
+  },
+  "next/dist/chunk-MHKCYSJX.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-65GIRAL2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h"
+   ],
+   "inputs": {
+    "next/src/app/sample.js": {
+     "bytesInOutput": 888
+    },
+    "next/src/app/update.js": {
+     "bytesInOutput": 968
+    }
+   },
+   "bytes": 2008
+  },
+  "next/dist/chunk-5XSDSCYA.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-TTMEJ3MH.js",
+     "kind": "dynamic-import"
+    },
+    {
+     "path": "next/dist/chunk-RJE4MBXU.js",
+     "kind": "dynamic-import"
+    },
+    {
+     "path": "next/dist/chunk-O7X4ABPZ.js",
+     "kind": "dynamic-import"
+    },
+    {
+     "path": "next/dist/chunk-OZYREWLA.js",
+     "kind": "dynamic-import"
+    },
+    {
+     "path": "next/dist/chunk-ZLN37TZV.js",
+     "kind": "dynamic-import"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h"
+   ],
+   "inputs": {
+    "next/src/app/router.js": {
+     "bytesInOutput": 2422
+    }
+   },
+   "bytes": 2487
   },
   "next/dist/proof.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-QVGUJPL4.js",
+     "path": "next/dist/chunk-XNZ7IJXE.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-WOT6VMZA.js",
+     "path": "next/dist/chunk-LSW6IKL6.js",
      "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-G47UQECB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-J6CMPBYB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-I2SVD4MH.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLH5FQM3.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-FJM3A5SW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-X33RDHYI.js",
+     "kind": "dynamic-import"
     }
    ],
    "exports": [],
    "entryPoint": "next/src/proof.js",
    "inputs": {
-    "next/src/students/index.js": {
-     "bytesInOutput": 1677
-    },
-    "next/src/shared/idb.js": {
-     "bytesInOutput": 1429
-    },
-    "next/src/shared/keys.js": {
-     "bytesInOutput": 8812
-    },
-    "next/src/shared/records.js": {
-     "bytesInOutput": 796
-    },
-    "next/src/planning/index.js": {
-     "bytesInOutput": 631
-    },
-    "next/src/shared/device.js": {
-     "bytesInOutput": 178
-    },
     "next/src/shared/dump.js": {
      "bytesInOutput": 516
     },
-    "next/src/crossings.js": {
-     "bytesInOutput": 519
+    "next/src/students/write.js": {
+     "bytesInOutput": 3459
+    },
+    "next/src/students/undo.js": {
+     "bytesInOutput": 1498
     },
     "next/src/proof.js": {
-     "bytesInOutput": 1286
+     "bytesInOutput": 1370
     }
    },
-   "bytes": 16002
+   "bytes": 7495
+  },
+  "next/dist/chunk-XNZ7IJXE.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-J6CMPBYB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-I2SVD4MH.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-FJM3A5SW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-X33RDHYI.js",
+     "kind": "dynamic-import"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e"
+   ],
+   "inputs": {
+    "next/src/shared/device.js": {
+     "bytesInOutput": 142
+    },
+    "next/src/whole/folder.js": {
+     "bytesInOutput": 2311
+    },
+    "next/src/whole/index.js": {
+     "bytesInOutput": 385
+    },
+    "next/src/whole/sync.js": {
+     "bytesInOutput": 1312
+    }
+   },
+   "bytes": 4438
+  },
+  "next/dist/chunk-LSW6IKL6.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-I2SVD4MH.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-FJM3A5SW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-ZVVNBZWN.js",
+     "kind": "dynamic-import"
+    },
+    {
+     "path": "next/dist/chunk-ZVVNBZWN.js",
+     "kind": "dynamic-import"
+    },
+    {
+     "path": "next/dist/chunk-6MS7Q4PE.js",
+     "kind": "dynamic-import"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c"
+   ],
+   "inputs": {
+    "next/src/crossings.js": {
+     "bytesInOutput": 1738
+    }
+   },
+   "bytes": 1895
   },
   "next/dist/parts.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-UDEVBMTD.js",
+     "path": "next/dist/chunk-65GIRAL2.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-MZSJGBZT.js",
+     "path": "next/dist/chunk-LLH5FQM3.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-WOT6VMZA.js",
+     "path": "next/dist/chunk-5G6X45LB.js",
      "kind": "import-statement"
     }
    ],
@@ -741,28 +2251,40 @@
    ],
    "entryPoint": "next/src/ui/index.js",
    "inputs": {},
-   "bytes": 1021
+   "bytes": 1018
   },
   "next/dist/gallery.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-MGR5KL3P.js",
+     "path": "next/dist/chunk-62CLI6SX.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-QVGUJPL4.js",
+     "path": "next/dist/chunk-G47UQECB.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-UDEVBMTD.js",
+     "path": "next/dist/chunk-J6CMPBYB.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-MZSJGBZT.js",
+     "path": "next/dist/chunk-I2SVD4MH.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-WOT6VMZA.js",
+     "path": "next/dist/chunk-65GIRAL2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-LLH5FQM3.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
      "kind": "import-statement"
     }
    ],
@@ -772,40 +2294,108 @@
     "next/lang/gallery.en.json": {
      "bytesInOutput": 6324
     },
-    "next/src/services/assistant.js": {
-     "bytesInOutput": 638
-    },
     "next/src/gallery/main.jsx": {
      "bytesInOutput": 16994
     }
    },
-   "bytes": 24633
+   "bytes": 24085
   },
-  "next/dist/chunk-MGR5KL3P.js": {
+  "next/dist/chunk-62CLI6SX.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-QVGUJPL4.js",
+     "path": "next/dist/chunk-J6CMPBYB.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-MZSJGBZT.js",
+     "path": "next/dist/chunk-65GIRAL2.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
      "kind": "import-statement"
     }
    ],
    "exports": [
     "a",
     "b",
-    "c"
+    "c",
+    "d",
+    "e"
    ],
    "inputs": {
     "next/src/services/theme.js": {
-     "bytesInOutput": 254
+     "bytesInOutput": 371
     }
    },
-   "bytes": 366
+   "bytes": 542
   },
-  "next/dist/chunk-QVGUJPL4.js": {
-   "imports": [],
+  "next/dist/chunk-G47UQECB.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b"
+   ],
+   "inputs": {
+    "next/src/services/assistant.js": {
+     "bytesInOutput": 628
+    }
+   },
+   "bytes": 691
+  },
+  "next/dist/chunk-J6CMPBYB.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-I2SVD4MH.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h"
+   ],
+   "inputs": {
+    "next/src/planning/write.js": {
+     "bytesInOutput": 2512
+    },
+    "next/src/shared/tabs.js": {
+     "bytesInOutput": 418
+    },
+    "next/src/shared/saved.js": {
+     "bytesInOutput": 125
+    }
+   },
+   "bytes": 3331
+  },
+  "next/dist/chunk-I2SVD4MH.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    }
+   ],
    "exports": [
     "a",
     "b",
@@ -819,26 +2409,25 @@
     "j",
     "k",
     "l",
-    "m"
+    "m",
+    "n",
+    "o"
    ],
    "inputs": {
-    "next/src/shared/lock.js": {
-     "bytesInOutput": 1763
-    },
-    "next/src/shared/ls.js": {
-     "bytesInOutput": 493
+    "next/src/planning/index.js": {
+     "bytesInOutput": 902
     }
    },
-   "bytes": 2356
+   "bytes": 1103
   },
-  "next/dist/chunk-UDEVBMTD.js": {
+  "next/dist/chunk-65GIRAL2.js": {
    "imports": [
     {
-     "path": "next/dist/chunk-MZSJGBZT.js",
+     "path": "next/dist/chunk-LLH5FQM3.js",
      "kind": "import-statement"
     },
     {
-     "path": "next/dist/chunk-WOT6VMZA.js",
+     "path": "next/dist/chunk-5G6X45LB.js",
      "kind": "import-statement"
     }
    ],
@@ -886,12 +2475,19 @@
     "g",
     "ga",
     "h",
+    "ha",
     "i",
+    "ia",
     "j",
+    "ja",
     "k",
+    "ka",
     "l",
+    "la",
     "m",
+    "ma",
     "n",
+    "na",
     "o",
     "p",
     "q",
@@ -906,32 +2502,41 @@
     "z"
    ],
    "inputs": {
+    "node_modules/preact/dist/preact.mjs": {
+     "bytesInOutput": 11273
+    },
     "node_modules/preact/hooks/dist/hooks.mjs": {
-     "bytesInOutput": 2816
+     "bytesInOutput": 2884
     },
     "next/src/ui/icons.js": {
      "bytesInOutput": 7750
     },
     "node_modules/preact/compat/dist/compat.mjs": {
-     "bytesInOutput": 2853
+     "bytesInOutput": 2854
     },
     "next/src/ui/popups.jsx": {
-     "bytesInOutput": 3031
+     "bytesInOutput": 3032
     },
     "next/src/ui/controls.jsx": {
-     "bytesInOutput": 6397
+     "bytesInOutput": 6401
     },
     "next/src/ui/index.js": {
      "bytesInOutput": 0
     },
+    "next/lang/en.json": {
+     "bytesInOutput": 7685
+    },
+    "next/src/i18n/t.js": {
+     "bytesInOutput": 566
+    },
     "next/src/ui/overlay.jsx": {
-     "bytesInOutput": 2626
+     "bytesInOutput": 2633
     },
     "next/src/services/commands.js": {
      "bytesInOutput": 714
     },
     "next/src/services/shortcuts.js": {
-     "bytesInOutput": 1839
+     "bytesInOutput": 1842
     },
     "next/src/services/speech.js": {
      "bytesInOutput": 559
@@ -939,16 +2544,111 @@
     "next/src/services/files.js": {
      "bytesInOutput": 862
     },
-    "next/src/services/undo.js": {
-     "bytesInOutput": 1149
+    "next/src/ui/tokens.js": {
+     "bytesInOutput": 5241
     },
     "next/src/ui/services.jsx": {
-     "bytesInOutput": 9658
+     "bytesInOutput": 9663
     }
    },
-   "bytes": 40920
+   "bytes": 64592
   },
-  "next/dist/chunk-MZSJGBZT.js": {
+  "next/dist/chunk-LLH5FQM3.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g"
+   ],
+   "inputs": {
+    "next/src/services/undo.js": {
+     "bytesInOutput": 1119
+    }
+   },
+   "bytes": 1217
+  },
+  "next/dist/chunk-ZVVNBZWN.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-FJM3A5SW.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "backOf",
+    "canOpen",
+    "cardOf",
+    "classLeft",
+    "groups",
+    "readKept",
+    "readLibrary",
+    "sidebarClasses",
+    "stateOf",
+    "todoChoices",
+    "whereOf"
+   ],
+   "entryPoint": "next/src/students/counts.js",
+   "inputs": {
+    "next/src/students/counts.js": {
+     "bytesInOutput": 2290
+    }
+   },
+   "bytes": 2572
+  },
+  "next/dist/chunk-FJM3A5SW.js": {
+   "imports": [
+    {
+     "path": "next/dist/chunk-YHRYZ5XE.js",
+     "kind": "import-statement"
+    },
+    {
+     "path": "next/dist/chunk-5G6X45LB.js",
+     "kind": "import-statement"
+    }
+   ],
+   "exports": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "j",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p"
+   ],
+   "inputs": {
+    "next/src/students/index.js": {
+     "bytesInOutput": 1617
+    }
+   },
+   "bytes": 1832
+  },
+  "next/dist/chunk-YHRYZ5XE.js": {
    "imports": [],
    "exports": [
     "a",
@@ -971,28 +2671,36 @@
     "r"
    ],
    "inputs": {
-    "node_modules/preact/dist/preact.mjs": {
-     "bytesInOutput": 11210
+    "next/src/shared/lock.js": {
+     "bytesInOutput": 1763
     },
-    "next/lang/en.json": {
-     "bytesInOutput": 2903
+    "next/src/shared/ls.js": {
+     "bytesInOutput": 493
     },
-    "next/src/i18n/t.js": {
-     "bytesInOutput": 560
+    "next/src/shared/keys.js": {
+     "bytesInOutput": 8838
     },
-    "next/src/ui/tokens.js": {
-     "bytesInOutput": 5236
+    "next/src/shared/idb.js": {
+     "bytesInOutput": 1428
+    },
+    "next/src/shared/records.js": {
+     "bytesInOutput": 799
     }
    },
-   "bytes": 20059
+   "bytes": 13460
   },
-  "next/dist/chunk-WOT6VMZA.js": {
+  "next/dist/chunk-5G6X45LB.js": {
    "imports": [],
    "exports": [
-    "a"
+    "a",
+    "b"
    ],
-   "inputs": {},
-   "bytes": 106
+   "inputs": {
+    "<define:__GS_LANGS__>": {
+     "bytesInOutput": 234
+    }
+   },
+   "bytes": 347
   },
   "next/dist/inter-latin-wght-normal-NRMW37G5.woff2": {
    "imports": [],
@@ -1042,6 +2750,16 @@
     }
    },
    "bytes": 3068
+  },
+  "next/dist/shell-css.css": {
+   "imports": [],
+   "entryPoint": "next/src/app/shell.css",
+   "inputs": {
+    "next/src/app/shell.css": {
+     "bytesInOutput": 7720
+    }
+   },
+   "bytes": 7721
   }
  }
 }

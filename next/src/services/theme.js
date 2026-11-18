@@ -1,7 +1,8 @@
-// The teacher's theme (look). Saved as gs.look through the saved-work layer (ls.js, which asks the lock first). With nothing saved
+// The teacher's theme (look). Saved as gs.look through the planning side's write (planning/write.js savePref, which asks the lock first). With nothing saved
 // yet, a teacher who chose dark in the current app (gs.theme) gets Midnight and everyone else Graphite; that is only read, never
 // written back. The current app's gs.theme is left alone. Never follows the computer's light or dark setting.
-import { json, setJson } from '../shared/ls.js';
+import { json } from '../shared/ls.js';
+import { savePref } from '../planning/write.js';
 import { LOOKS, DEFAULT_LOOK } from '../ui/tokens.js';
 
 const listeners = new Set();
@@ -23,6 +24,6 @@ export function applyLook(look) {
 // still shown here for now, and the caller tells the teacher it was not kept.
 export function saveLook(look) {
   applyLook(look);
-  try { setJson('gs.look', look); return true; } catch { return false; }
+  try { savePref('gs.look', look); return true; } catch { return false; }
 }
 export function onLook(f) { listeners.add(f); return () => listeners.delete(f); }

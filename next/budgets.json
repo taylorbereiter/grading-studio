@@ -1,8 +1,9 @@
 {
- "note": "Sizes of the new app's code in next/dist, squeezed (gzip), in bytes. next/test/budgets.test.js holds the build to them. Stage 0 set firstLoad, anyChunk and total. Stage 1 added parts (every shared part with what it imports, about 25 KB at stage 1, room left for the lines later screens add) and css (tokens plus parts, about 7 KB). A stage that needs more raises them in its own pull request with a reason. The current app's budgets (6.5 MB index.html, 800 KB languages) are separate and unchanged.",
+ "note": "Sizes of the new app's code in next/dist, squeezed (gzip), in bytes. next/test/budgets.test.js holds the build to them. Stage 0 set firstLoad, anyChunk and total. Stage 1 added parts (every shared part with what it imports, about 25 KB at stage 1, room left for the lines later screens add) and css (tokens plus parts, about 7 KB). Stage 2 added route (each screen the shell loads by its address, with what it loads that the first load hasn't, about 3 KB for Home at stage 2; the marking and lesson screens will be the large ones). A stage that needs more raises them in its own pull request with a reason. The current app's budgets (6.5 MB index.html, 800 KB languages) are separate and unchanged.",
  "firstLoad": 60000,
  "anyChunk": 400000,
  "total": 3000000,
  "parts": 32000,
- "css": 10000
+ "css": 10000,
+ "route": 60000
 }

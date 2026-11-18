@@ -188,7 +188,41 @@ async function runs(kind, old, thens) {
 // layer can change even when the current app's pages don't.
 const proofOpen = async (ctx, place) => { const p = await newPage(ctx); await p.goto(place.url('next/proof.html')); await p.waitForFunction(() => !!window.__next, { timeout: 20000 }); return p; };
 const copyProfile = from => { const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gs-saved-work-')); fs.cpSync(from, dir, { recursive: true, filter: f => !/Singleton/.test(path.basename(f)) }); return dir; };
+// The browser's private folder, every file under the linked folder's data directory, as { path: sha256 of its text }.
+const folderTree = page => page.evaluate(async () => {
+  const out = {}, hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+  let root; try { root = await (await navigator.storage.getDirectory()).getDirectoryHandle('Linked'); } catch { return out; }
+  try { root = await root.getDirectoryHandle('Grading Studio'); } catch {}
+  const walk = async (d, pre) => { for await (const [n, h] of d.entries()) { if (h.kind === 'directory') await walk(h, pre + n + '/'); else { const t = await (await h.getFile()).text(); out[pre + n] = t.length > 400 ? 'sha256 ' + hex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t))) : t; } } };
+  await walk(root, ''); return out;
+});
+// Like inProfile, but keeps the profile afterwards.
+async function inProfile2(dir, fn) { const browser = await launch({ userDataDir: dir, keepProfile: true }); try { return await fn(browser.defaultBrowserContext()); } finally { await browser.close(); } }
 async function inProfile(dir, fn) { const browser = await launch({ userDataDir: dir }); try { return await fn(browser.defaultBrowserContext()); } finally { await browser.close(); fs.rmSync(dir, { recursive: true, force: true }); } }
+// Google, as far as main's sync uses it, played in the page: a sign-in that answers at once, Drive's hidden folder always empty,
+// and every upload kept. Nothing leaves the computer. D.body is the last sync file sent.
+async function fakeDrive(page) {
+  const D = { body: null };
+  await page.evaluateOnNewDocument(() => {
+    window.google = { accounts: { oauth2: { initTokenClient: o => ({ requestAccessToken: () => setTimeout(() => o.callback({ access_token: 'tok', expires_in: 3600, scope: o.scope }), 10) }), revoke: () => {} } } };
+  });
+  await page.setRequestInterception(true);
+  page.on('request', r => (async () => {
+    const u = r.url(); if (process.env.SW_DEBUG_DRIVE && /google/.test(u)) console.log('drive:', r.method(), u.slice(0, 160)); if (!/googleapis\.com|accounts\.google\.com/.test(u)) return r.continue();
+    const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Authorization, Content-Type, If-Match', 'Access-Control-Allow-Methods': 'GET, POST, PATCH', 'Access-Control-Expose-Headers': 'ETag' };
+    const json = o => r.respond({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify(o) });
+    if (r.method() === 'OPTIONS') return r.respond({ status: 204, headers: cors, body: '' });
+    if (/\/about\?/.test(u)) return json({ user: { emailAddress: 'teacher@example.com' } });
+    if (/drive\/v3\/files\?/.test(u) && r.method() === 'GET') return json({ files: [] });
+    if (/upload\/drive\/v3\/files/.test(u)) {   // a new file (multipart) or a file sent again (media): keep the sync file
+      const t = r.postData() || await r.fetchPostData() || '', i = t.indexOf('{"app":"Grading Studio sync"');
+      if (i >= 0) D.body = /uploadType=multipart/.test(u) ? t.slice(i, t.lastIndexOf('}') + 1) : t.slice(i);
+      return json({ id: 'f' + Math.random().toString(36).slice(2), version: '1' });
+    }
+    return json({});
+  })().catch(e => r.respond({ status: 500, body: String(e) }).catch(() => {})));
+  return D;
+}
 async function nextLegs(old) {
   const out = [], bad = m => { out.push('  ' + m); failed = true; }; let failed = false;
   const pages = { ...old }, place = await placeFor('web', pages), workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gs-saved-work-'));
@@ -253,6 +287,104 @@ async function nextLegs(old) {
       if (title !== 'Reading a poem aloud, again' || com !== 'Changed through the new layer.') bad('A change made through the layer did not show in main’s pages: lesson "' + title + '", comment "' + com + '"');
       else out.push('  A lesson renamed and a comment changed through the layer show in main’s pages.');
     });
+    // Home's counts (stage 2): the new app's Home works out the same numbers as main's Today for the same saved work: today's
+    // classes, sets of papers to mark and to hand back, and lessons still to plan. Main's own functions give its side.
+    await inProfile(copyProfile(workDir), async ctx => {
+      const q = await newPage(ctx); await q.goto(place.url('index') + '#/'); await appReady(q);
+      // Main keeps these functions to itself, so its side is read off Today as drawn: a class row is a link, a set to mark a row
+      // in "To mark", a set to hand back a row in "Ready to hand back"; lessons to plan are its to-do list's own rows of that kind.
+      await q.waitForFunction(() => /Teaching today|timetable/.test((document.querySelector('#today') || {}).textContent || ''), { timeout: 30000 });
+      await sleep(1500);
+      const mainSide = await q.evaluate(() => ({ classesToday: document.querySelectorAll('#today a.trow').length, mark: document.querySelectorAll('#toMark .krow').length,
+        back: document.querySelectorAll('#handBack .krow.back').length, toPlan: window.__gs.todoRows().filter(r => !r.own && r.kind === 'plan' && !r.done).length }));
+      await q.close();
+      const p = await proofOpen(ctx, place), nextSide = (await p.evaluate(() => window.__next.crossings.countsForHome())).counts; await p.close();
+      if (JSON.stringify(mainSide) !== JSON.stringify(nextSide)) bad('Home’s counts differ from main’s Today: main ' + JSON.stringify(mainSide) + ', new app ' + JSON.stringify(nextSide));
+      else out.push('  Home’s counts are main’s Today’s: ' + JSON.stringify(nextSide) + '.');
+    });
+    // The write path (stage 2): the same change, made once in main's pages and once through the layer's save functions, leaves the
+    // same records, the same files in the linked folder, and the same Drive sync file. A folder (the browser's private one) is
+    // linked first by main's pages, as a teacher would. The change: a comment typed on a student, and a class renamed.
+    {
+      const linked = copyProfile(workDir);
+      await inProfile2(linked, async ctx => {
+        const q = await newPage(ctx); await q.goto(place.url('index') + '#/'); await appReady(q);
+        await q.evaluate(() => { localStorage.setItem('gs.gcid', JSON.stringify('1234-test.apps.googleusercontent.com')); localStorage.setItem('gs.gEmail', JSON.stringify('teacher@example.com')); });
+        await q.evaluate(async () => { const h = await (await navigator.storage.getDirectory()).getDirectoryHandle('Linked', { create: true }); await window.__gs.folderUse(h); await window.__gs.folderWait(); });
+        // The download opened and saved once with nothing changed, as a teacher who has worked on it before: main's pages fill in what
+        // an open download always carries (an empty "moved" list and the like), so both changes below start from the same records.
+        await q.goto(place.url('index') + '#/a/' + ids.A); await appReady(q);
+        await q.waitForFunction(() => { const b = window.__gs.state().batch; return !!(b && b.revs); }, { timeout: 30000 }); await sleep(1000);
+        await q.evaluate(async () => { await window.__gs.saveNow(); await window.__gs.folderWait(); });
+        await sleep(500); await q.evaluate(() => window.__gs.folderWait());
+        await q.close();
+      });
+      // And opened once more in a new browser session, so what main's pages do on opening with a folder linked (the whole folder
+      // compared again, each download's row filled in) is done before either change.
+      await inProfile2(linked, async ctx => {
+        const q = await newPage(ctx); await q.goto(place.url('index') + '#/a/' + ids.A); await appReady(q);
+        await q.waitForFunction(() => { const b = window.__gs.state().batch, f = window.__gs.folderState(); return !!(b && b.revs && f.at && f.state === 'ok'); }, { timeout: 30000 });
+        await sleep(2000); await q.evaluate(() => window.__gs.folderWait());
+        await q.close();
+      });
+      const TOUCHED = k => /^localStorage:gs\.(b\..+|batches|lib|rolls|words)$/.test(k) || /^grading-studio-keep\/(work|meta)\//.test(k);
+      const FOLDER = f => /^(library|tombstones)\.json$/.test(f) || /^downloads\/[^/]+\/(work|info)\.json$/.test(f);
+      const COMMENT = 'Changed through one save path.', NAME = 'Grade 9 English (renamed)';
+      const viaMain = await inProfile(copyProfile(linked), async ctx => {
+        const q = await newPage(ctx), D = await fakeDrive(q); await q.goto(place.url('index') + '#/a/' + ids.A); await appReady(q);
+        await q.waitForFunction(() => { const b = window.__gs.state().batch; return !!(b && b.revs); }, { timeout: 30000 }); await sleep(1000);
+        const who = await q.evaluate(async (C, N) => {
+          try {
+            const b = window.__gs.state().batch, st = b.students.find(s => s.grade && (s.grade.rubric || []).some(v => v != null)) || b.students[0];
+            st.grade.comment = C; await window.__gs.saveNow();
+            window.__gs.state().lib.classes[0].name = N; window.__gs.saveLib();
+            await window.__gs.folderWait(); return st.key;
+          } catch (e) { throw new Error('main’s pages could not save: ' + e.stack); }
+        }, COMMENT, NAME);
+        await sleep(500); await q.evaluate(() => window.__gs.folderWait());
+        const folder = await folderTree(q);
+        // Main's own sync, Drive played here with nothing in it yet, so what goes up is built from this browser's storage alone.
+        D.body = null; await q.evaluate(async () => { await window.__gs.gIn(); await window.__gs.syncNow(); });
+        if (!D.body) throw new Error('main’s pages sent no sync file: ' + await q.evaluate(() => JSON.stringify({ say: (document.querySelector('[data-sync], #syncState, .gline') || {}).textContent, at: localStorage.getItem('gs.syncAt'), em: localStorage.getItem('gs.gEmail') })));
+        const pay = D.body;
+        await q.goto(place.url('blank'));
+        return { who, kept: await snapshot(q), folder, pay };
+      });
+      const viaNext = await inProfile(copyProfile(linked), async ctx => {
+        const p = await proofOpen(ctx, place);
+        const r = await p.evaluate(async (A, who, C, N) => {
+          const X = window.__next; if (await X.start() !== 'writer') return { err: 'no lock' };
+          await X.write.saveWork('gs.b.' + A, d => { d.s[who].g.comment = C; });
+          await X.write.saveLibrary(l => { l.classes[0].name = N; });
+          await X.whole.settled();
+          const pay = JSON.stringify(await X.whole.syncPayload());
+          X.stop(); return { pay, folderState: X.whole.folderState(), carry: X.LS_LOCAL };
+        }, ids.A, viaMain.who, COMMENT, NAME);
+        if (r.err) return r;
+        await p.goto(place.url('blank'));
+        return { ...r, kept: await snapshot(p), folder: await folderTree(p) };
+      });
+      const base = process.env.SW_DUMP ? await inProfile(copyProfile(linked), async ctx => { const q = await newPage(ctx); await q.goto(place.url('blank')); return { kept: await snapshot(q), folder: await folderTree(q) }; }) : null;
+      if (process.env.SW_DUMP) fs.writeFileSync(process.env.SW_DUMP, JSON.stringify({ base, viaMain, viaNext }));
+      if (viaNext.err) bad('The write-path proof could not write through the layer: ' + viaNext.err);
+      else {
+        // A record main's pages save from the download on screen keeps its empty fields as fields holding undefined (the snapshot
+        // writes those as {"undefined":true}); the layer leaves them out. Read back, sent to the folder or to Drive, they are the same.
+        const noUndef = v => JSON.stringify(JSON.parse(v), (k, x) => (x && typeof x === 'object' && !Array.isArray(x) && Object.keys(x).length === 1 && x.undefined === true ? undefined : x));
+        const pick = (o, f) => Object.fromEntries(Object.entries(o).filter(([k]) => f(k)).map(([k, v]) => [k, /^grading-studio-keep\//.test(k) && typeof v === 'string' ? noUndef(v) : v]));
+        const dk = differ(pick(viaMain.kept, TOUCHED), pick(viaNext.kept, TOUCHED)), df = differ(pick(viaMain.folder, FOLDER), pick(viaNext.folder, FOLDER));
+        const strip = o => { delete o.t; delete o.planT; delete o.files; return o; }, pm = strip(JSON.parse(viaMain.pay)), pn = strip(JSON.parse(viaNext.pay)), dp = Object.keys({ ...pm, ...pn }).filter(k => canon(pm[k]) !== canon(pn[k]));
+        const src = fs.readFileSync(path.join(ROOT, 'src/folder.js'), 'utf8'), lsLocal = /const LS_LOCAL = \/(.+)\/;/.exec(src)[1];
+        if (lsLocal !== viaNext.carry) bad('What travels with the work differs from src/folder.js LS_LOCAL: ' + viaNext.carry);
+        if (dk.length) bad('The same change through the layer left ' + dk.length + ' records different from main’s pages:\n' + dk.slice(0, 10).map(x => '    ' + x.key + '\n      main: ' + short(x.was) + '\n      layer: ' + short(x.now)).join('\n'));
+        else out.push('  The same change (a comment, a class renamed) saved through the layer leaves the same ' + Object.keys(pick(viaNext.kept, TOUCHED)).length + ' work, quick-copy, library, roster and words records as main’s pages.');
+        if (df.length || viaNext.folderState !== 'ok') bad('The linked folder after a layer save (' + viaNext.folderState + ') differs from main’s pages in ' + df.length + ' files:\n' + df.slice(0, 10).map(x => '    ' + x.key + '\n      main: ' + short(x.was) + '\n      layer: ' + short(x.now)).join('\n'));
+        else out.push('  The linked folder: library.json, tombstones.json and each download’s work.json and info.json are the same as main’s pages write.');
+        if (dp.length) bad('The Drive sync file built after a layer save differs from main’s in: ' + dp.join(', ') + dp.slice(0, 3).map(k => '\n    ' + k + '\n      main: ' + short(JSON.stringify(pm[k])) + '\n      layer: ' + short(JSON.stringify(pn[k]))).join(''));
+        else out.push('  The Drive sync file built from storage after the save is the same as main’s, part for part (Drive’s own answers, planT and files, left out of both).');
+      }
+      fs.rmSync(linked, { recursive: true, force: true });
+    }
   } finally { await place.close(); fs.rmSync(workDir, { recursive: true, force: true }); }
   // Work saved by the old format (test/fixtures/legacy-v1) reads through the layer the same.
   const leg = await loadLegacy(), pl = await placeFor('web', { ...old });
@@ -269,6 +401,8 @@ async function nextLegs(old) {
 }
 const short = v => v == null ? '(nothing)' : v.length > 300 ? v.slice(0, 300) + '… (' + v.length + ' characters)' : v;
 // The records that differ between two readings.
+// JSON with every object's keys in order: two files that say the same thing in a different key order read the same.
+const canon = v => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map(n => [n, x[n]])) : x));
 function differ(a, b) {
   const out = [];
   for (const k of [...new Set([...Object.keys(a), ...Object.keys(b)])].sort()) if (a[k] !== b[k]) out.push({ key: k, was: a[k], now: b[k] });

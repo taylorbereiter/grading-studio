@@ -11,7 +11,13 @@ fetch handler answers only the pages it keeps (`''`, `index.html`, `planner.html
 network. Nothing it does can touch the caches `gs-app-1`, `gs-next-1` or `gs-kept-1`, which hold the current app's pages (not
 work).
 
-**Later stages, while both versions live side by side.** `next/sw.js` registered with scope `/next/` (a narrower scope wins for
+**Stage 2 (built).** next/sw.js is registered by the shell (next/src/app/update.js) with the scope next/. It answers only
+next/index.html and next/dist/*; the gallery and the proof page always come from the web. Each open asks it for a check, and a
+newer version waits in `gsn-next-1` until Update now (the sidebar's foot, Settings > About, or More on a phone), or until the app
+is next opened if the teacher chose to update by itself. next/version.json is made by next/build.js. next/test/browser/shell.test.js
+checks that the current app's worker keeps its scope and its `gs-*` caches untouched beside it, and the whole update on a phone.
+
+**While both versions live side by side.** `next/sw.js` registered with scope `/next/` (a narrower scope wins for
 its own pages, so the root worker keeps answering the current app). Its caches are named `gsn-*` and it never opens, deletes or
 renames a `gs-*` cache. It keeps a version whole the same way the root worker does (a version file with a hash per file, the
 pages checked against it, written last) and holds an update back until the teacher says so, with the same Update now / update

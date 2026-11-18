@@ -19,32 +19,43 @@ function importsOf(f) {
   }
   return out;
 }
-function reach(f, seen = new Set()) { for (const p of importsOf(f)) if (!seen.has(p)) { seen.add(p); reach(p, seen); } return seen; }
-const side = f => { const r = rel(f); return r.startsWith('students/') ? 'students' : r.startsWith('planning/') ? 'planning' : r.startsWith('shared/') ? 'shared' : 'top'; };
+// Everything f reaches by its imports. Traversal stops at the files in `stop` (they are reached, but not gone through).
+function reach(f, stop = () => false, seen = new Set()) { for (const p of importsOf(f)) if (!seen.has(p)) { seen.add(p); if (!stop(p)) reach(p, stop, seen); } return seen; }
+const side = f => { const r = rel(f); const d = r.split('/')[0]; return ['students', 'planning', 'shared', 'whole', 'engines'].includes(d) && r.includes('/') ? d : 'top'; };
+const isBoth = p => BOTH.has(rel(p));
 
-test('planning code never reaches the grading side, not even through another file', () => {
+// The wall (stage 2): by kind of data. students/ may use planning/; planning/ never uses students/. whole/ (year file, take-home,
+// sample, Drive sync, the folder copy) spans both by nature: it may use both sides and is used by neither. shared/ uses neither.
+test('planning code never reaches the grading side, whole/, or the crossings, not even through another file', () => {
   for (const f of all(SRC).filter(f => side(f) === 'planning')) {
-    const bad = [...reach(f)].filter(p => side(p) === 'students' || BOTH.has(rel(p)));
+    const bad = [...reach(f)].filter(p => side(p) === 'students' || side(p) === 'whole' || isBoth(p));
     assert.deepEqual(bad.map(rel), [], rel(f) + ' reaches the grading side');
   }
 });
-test('the grading side does not reach planning code either', () => {
-  for (const f of all(SRC).filter(f => side(f) === 'students')) assert.deepEqual([...reach(f)].filter(p => side(p) === 'planning').map(rel), [], rel(f));
+test('the grading side may use planning, but never whole/ or the crossings', () => {
+  for (const f of all(SRC).filter(f => side(f) === 'students')) assert.deepEqual([...reach(f)].filter(p => side(p) === 'whole' || isBoth(p)).map(rel), [], rel(f));
 });
 test('shared code reaches neither side', () => {
-  for (const f of all(SRC).filter(f => side(f) === 'shared')) assert.deepEqual([...reach(f)].filter(p => side(p) !== 'shared').map(rel), [], rel(f));
+  for (const f of all(SRC).filter(f => side(f) === 'shared' || side(f) === 'engines')) assert.deepEqual([...reach(f)].filter(p => side(p) !== 'shared' && side(p) !== 'engines').map(rel), [], rel(f));
 });
-test('only crossings.js and the proof page hold both sides', () => {
+test('whole/ is used only by main.js, the proof page and itself', () => {
+  for (const f of all(SRC).filter(f => side(f) !== 'whole' && !['main.js', 'proof.js'].includes(rel(f)))) assert.deepEqual(importsOf(f).filter(p => side(p) === 'whole').map(rel), [], rel(f) + ' imports whole/');
+  assert.ok(all(SRC).some(f => side(f) === 'whole'), 'whole/ exists');
+});
+test('a screen or service holds both sides only through crossings.js (or main.js through whole/)', () => {
+  const stop = p => isBoth(p) || side(p) === 'whole' || side(p) === 'students';
   for (const f of all(SRC).filter(f => side(f) === 'top' && !BOTH.has(rel(f)))) {
-    const r = [...reach(f)].map(side);
+    const r = [...reach(f, stop)].map(side);
     assert.ok(!(r.includes('students') && r.includes('planning')), rel(f) + ' reaches both sides: go through crossings.js');
-    assert.ok(![...reach(f)].some(p => BOTH.has(rel(p)) && rel(p) !== 'crossings.js'), rel(f) + ' imports the proof page');
+    assert.ok(![...reach(f, stop)].some(p => isBoth(p) && rel(p) !== 'crossings.js'), rel(f) + ' imports the proof page');
   }
 });
 test('every crossing is a named function that only reads', () => {
   const text = fs.readFileSync(path.join(SRC, 'crossings.js'), 'utf8');
   const named = [...text.matchAll(/^export (?:async )?function (\w+)/gm)].map(m => m[1]);
   assert.ok(named.length >= 3);
+  // the named crossings, and no others (stage 2 brief, item 7)
+  assert.deepEqual(named.sort(), ['classListsForPlanning', 'classesForHome', 'countsForHome', 'examplesForPlanning', 'rosterNamesForPresent'].sort());
   assert.ok(named.every(n => /For[A-Z]\w*$/.test(n)), 'a crossing says who it is for: ' + named.join(', '));
   assert.ok(!/\.(put|del|setText|setJson|remove)\(/.test(text), 'a crossing writes');
   assert.ok(!/^export (?!(async )?function)/m.test(text), 'crossings.js exports only functions');
