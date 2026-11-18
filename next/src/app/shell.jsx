@@ -8,16 +8,18 @@ import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { NavItem, NavSection, IconButton, Icon, CommandBar, ToastHost, toast, LOOK_LINES } from '../ui/index.js';
 import { t } from '../i18n/t.js';
 import * as router from './router.js';
-import { addCommand, openCommandBar } from '../services/commands.js';
+import { addCommand, openCommandBar, loadWhenOpened } from '../services/commands.js';
 import { register, start as keysStart, pieces } from '../services/shortcuts.js';
 import * as undo from '../services/undo.js';
 import { assistant } from '../services/assistant.js';
+import { fullCan, fullToggle } from '../services/size.js';
 import { lockState, onLockChange } from '../shared/lock.js';
 import { stopped as tabsStopped, onStopped } from '../shared/tabs.js';
 import { onLook, currentLook, saveLook } from '../services/theme.js';
 import { LOOKS, THEMES } from '../ui/tokens.js';
 import { classesForHome, todoCountForSidebar } from '../crossings.js';
 import { askAdd } from './todo-add.js';
+import { runner, openFocus } from './focus/bus.js';
 import { usePlan } from './plan.js';
 import { classTone } from './colors.js';
 import { onSaved } from '../shared/saved.js';
@@ -181,14 +183,20 @@ export function Shell() {
       register({ id: 'redo', keys: ['mod+shift+z', 'mod+y'], label: 'keys.redo', run: () => undo.redo() }),
       register({ id: 'fold', keys: 'mod+\\', label: 'keys.fold', run: fold }),
       register({ id: 'todo-add', keys: 'n', label: 'nav.todo_add', when: () => router.current().chunk !== 'mark', run: () => { askAdd(); router.go('todo'); } }),
+      register({ id: 'full', keys: 'f', label: 'keys.full', when: () => { const r = router.current(); return fullCan() && r.chunk !== 'mark' && r.params.view !== 'present' && (!document.fullscreenElement || document.fullscreenElement === document.documentElement); }, run: fullToggle }),
       register({ id: 'keys', keys: '?', label: 'keys.show_list', run: () => router.go('help', 'keys') }),
       ...[['home', 'nav.home', 'home'], ['calendar', 'nav.calendar', 'cal'], ['todo', 'nav.todo', 'todo'], ['library', 'nav.library', 'library'], ['school', 'nav.school', 'school'], ['settings', 'nav.settings', 'settings'], ['help', 'nav.help', 'help']]
         .map(([id, line, icon]) => addCommand({ id: 'go-' + id, label: () => t(line), group: t('cmd.group_go'), icon, run: () => router.go(id) })),
+      addCommand({ id: 'go-time', label: () => t('nav.time'), group: t('cmd.group_go'), icon: 'clock', run: () => router.go('time') }),
+      addCommand({ id: 'focus', label: () => t('nav.focus'), group: t('cmd.group_do'), icon: 'timer', run: openFocus }),
+      (loadWhenOpened(() => import('./help/find.js').then(m => m.addHelpCommands(), e => console.error(e))), () => {}),
       addCommand({ id: 'go-keys', label: () => t('keys.title'), group: t('cmd.group_go'), icon: 'keyboard', run: () => router.go('help', 'keys') }),
       addCommand({ id: 'theme', label: () => t('cmd.change_theme'), group: t('cmd.group_do'), icon: 'sun', run: () => router.go('settings', 'display') }),
       addCommand({ id: 'fold', label: () => t('keys.fold'), group: t('cmd.group_do'), icon: 'menu', keys: 'mod+\\', run: fold }),
     ];
-    return () => offs.forEach(f => f());
+    // the focus timer's runner and panel (app/focus/run.js): a session going on shows on every screen, and time is counted
+    const fc = setTimeout(runner, 600);
+    return () => { offs.forEach(f => f()); clearTimeout(fc); };
   }, []);
   // Planning destinations, and every lesson by its title (with its class and day), so typing finds a lesson (the Planner's Search).
   const plan = usePlan();

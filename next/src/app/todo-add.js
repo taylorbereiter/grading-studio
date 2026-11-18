@@ -5,3 +5,7 @@ const told = new Set();
 export function askAdd() { want = true; told.forEach(f => f()); }
 export function takeAdd() { const w = want; want = false; return w; }
 export function onAdd(f) { const g = () => { want = false; f(); }; told.add(g); return () => told.delete(g); }
+// A School person's to-dos (src/school.js todoShowPerson, todoForPerson): To do opens showing only the lines that name them.
+let person = '';
+export function askPerson(id) { person = String(id || ''); }
+export function takePerson() { const p = person; person = ''; return p; }

@@ -2,13 +2,19 @@
 // the phone's More screen show. Nothing here talks to the current app's worker or its messages (gs-state); ours are gsn-*.
 import { useState, useEffect } from 'preact/hooks';
 
-let st = { current: '', waiting: '', mode: 'ask', checked: '' };
+let st = { current: '', waiting: '', mode: 'ask', checked: '', install: null, installed: false };
 const told = new Set();
 const set = s => { st = { ...st, ...s }; told.forEach(f => f(st)); };
 const sw = () => navigator.serviceWorker;
 const post = msg => { const c = sw() && sw().controller; if (c) c.postMessage(msg); else if (sw()) sw().ready.then(r => r.active && r.active.postMessage(msg)); };
 const ver = v => (v ? v.version + (v.build ? ' (' + v.build.slice(0, 7) + ')' : '') : '');
 let started = false;
+// Install as an app (src/safe.js): the browser offers it once the page can be installed; Install in About asks it.
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); set({ install: e }); });
+  window.addEventListener('appinstalled', () => set({ install: null, installed: true }));
+}
+export async function installApp() { const e = st.install; if (!e) return false; e.prompt(); try { await e.userChoice; } catch {} set({ install: null }); return true; }
 export function startUpdates() {
   if (started || !sw() || !/^https?:$/.test(location.protocol)) return; started = true;
   sw().addEventListener('message', e => {
@@ -26,5 +32,5 @@ export const setUpdateMode = m => post({ type: 'gsn-mode', mode: m });
 export function useUpdate() {
   const [s, setS] = useState(st);
   useEffect(() => { told.add(setS); setS(st); return () => told.delete(setS); }, []);
-  return { ...s, apply: applyUpdate, check: checkUpdate, setMode: setUpdateMode };
+  return { ...s, apply: applyUpdate, check: checkUpdate, setMode: setUpdateMode, installApp };
 }

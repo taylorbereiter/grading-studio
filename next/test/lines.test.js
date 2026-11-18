@@ -6,7 +6,7 @@ const fs = require('fs'), path = require('path');
 const SRC = path.join(__dirname, '..', 'src');
 // en.json: the app's lines. gallery.en.json: the gallery page's own, never shipped with the app (only gallery/ may use them).
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lang', f), 'utf8'));
-const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), CLASS = read('class.en.json'), TODO = read('todo.en.json'), EN = { ...APP, ...TODO, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...CLASS };
+const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), CLASS = read('class.en.json'), TODO = read('todo.en.json'), FOCUS = read('focus.en.json'), SCHOOL = read('school.en.json'), HELP = read('help.en.json'), PREFS = read('prefs.en.json'), EN = { ...APP, ...TODO, ...FOCUS, ...SCHOOL, ...HELP, ...PREFS, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...CLASS };
 const noComments = s => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(x => x.isDirectory() ? walk(path.join(d, x.name)) : /\.jsx?$/.test(x.name) ? [path.join(d, x.name)] : []);
 const files = walk(SRC);
@@ -56,6 +56,22 @@ test('planning lines live in plan.en.json and load where they are used', () => {
   // and the class page's tabs' (next/lang/class.en.json), through app/class/lines.js
   assert.ok(Object.keys(CLASS).every(k => k.startsWith('class.')) && !Object.keys(APP).some(k => k.startsWith('class.')));
   for (const [f, s] of Object.entries(text)) if (/'class\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '(\.\.\/)+class\/lines\.js';|import '\.\/lines\.js';/.test(s), f + ' uses a class line without importing class/lines.js');
+});
+test('focus lines live in focus.en.json and load where they are used', () => {
+  assert.ok(Object.keys(FOCUS).every(k => k.startsWith('focus.')) && !Object.keys(APP).some(k => k.startsWith('focus.')));
+  for (const [f, s] of Object.entries(text)) if (/'focus\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '(\.\.\/)+focus\/lines\.js';|import '\.\/lines\.js';/.test(s), f + ' uses a focus line without importing focus/lines.js');
+});
+test('School lines live in school.en.json and are used only by the School screen', () => {
+  assert.ok(Object.keys(SCHOOL).every(k => k.startsWith('school.')) && !Object.keys(APP).some(k => k.startsWith('school.')));
+  for (const [f, s] of Object.entries(text)) if (f !== 'app/screens/school.jsx') assert.ok(!/'school\.[a-z0-9_]+'/.test(noComments(s)), f + ' uses a School line');
+});
+test('Help lines live in help.en.json and load where they are used', () => {
+  assert.ok(Object.keys(HELP).every(k => k.startsWith('help.')) && !Object.keys(APP).some(k => k.startsWith('help.')));
+  for (const [f, s] of Object.entries(text)) if (/'help\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '(\.\.\/)+help\/lines\.js';|import '\.\/lines\.js';/.test(s) || f === 'app/help/topics.js', f + ' uses a Help line without importing help/lines.js');
+});
+test('the rest of Settings has its lines in prefs.en.json and loads them where they are used', () => {
+  assert.ok(Object.keys(PREFS).every(k => k.startsWith('prefs.')) && !Object.keys(APP).some(k => k.startsWith('prefs.')));
+  for (const [f, s] of Object.entries(text)) if (/'prefs\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '(\.\.\/)+screens\/prefs-lines\.js';|import '\.\/prefs-lines\.js';/.test(s), f + ' uses a Settings line without importing screens/prefs-lines.js');
 });
 test('To do lines live in todo.en.json and are used only by the To do screen', () => {
   assert.ok(Object.keys(TODO).every(k => k.startsWith('todo.')) && !Object.keys(APP).some(k => k.startsWith('todo.')));

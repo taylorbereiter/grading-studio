@@ -1,1 +1,0 @@
-import{A as n,f as e,fa as l}from"./chunk-UZSFCGII.js";import{e as i}from"./chunk-GLVRXFZR.js";i();var o=null;function E(t){if(t){e.setup=t.setup,e.lessons=t.lessons,e.units=t.units,e.defLook=t.deflook,e.activities=t.activities;let s=t.setup&&t.setup.template||null;s!==o&&(o=s,n())}return l}export{E as a};

@@ -18,3 +18,7 @@ export function findCommands(q) {
 let opener = null;
 export const setCommandOpener = f => { opener = f; };
 export const openCommandBar = () => opener && opener();
+// Commands too many to load with the page (every Help answer): each loader runs once, the first time the bar opens.
+const loaders = [];
+export const loadWhenOpened = f => { loaders.push(f); };
+export function commandsOpened() { while (loaders.length) { try { loaders.shift()(); } catch (e) { console.error(e); } } }

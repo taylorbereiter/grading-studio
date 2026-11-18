@@ -2,7 +2,7 @@
 html,body{height:100%}
 a.btn{text-decoration:none}
 body{margin:0;background:var(--bg);color:var(--ink);font:var(--t3)/1.5 var(--f);-webkit-font-smoothing:antialiased}
-.shell{display:grid;grid-template-columns:248px minmax(0,1fr);height:100vh;height:100dvh}
+.shell{display:grid;grid-template-columns:calc(248px * var(--uz,1)) minmax(0,1fr);height:100vh;height:100dvh}
 .shell.folded{grid-template-columns:0 minmax(0,1fr)}
 .skip{position:absolute;left:8px;top:-60px;z-index:50;background:var(--s);padding:8px 12px;border-radius:var(--r2);box-shadow:var(--sh-f)}
 .skip:focus{top:8px}
@@ -121,3 +121,6 @@ section.now .empty{padding-bottom:22px}
   .setnav .nav{width:auto;white-space:nowrap}
   .strip{padding:8px 16px;flex-wrap:wrap}
 }
+
+/* her app text size (Settings > Display, gs.disp ui): the sidebar, pages, tabs and boxes; the paper being marked keeps its own zoom */
+.side,.page,.tabbar,dialog.dlg{zoom:var(--uz,1)}

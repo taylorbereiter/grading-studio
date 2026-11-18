@@ -90,3 +90,11 @@ test('add-a-file values: a student-side item is a reference, never a copy', asyn
   assert.ok(!f.accepts({ kind: 'file', name: 'a.exe', type: 'application/x' }, 'image/*,.pdf'));
   assert.ok(f.accepts(r, 'image/*'));
 });
+
+// Settings' own copy of the first teacher's words (app/screens/settings-me.js) is the grading engines' (engines/gways.js ME_OLD).
+test('Settings reads a library with no settings of hers the way the grading engines do', () => {
+  const fs = require('fs'), path = require('path'), src = f => fs.readFileSync(path.join(__dirname, '..', 'src', f), 'utf8');
+  const g = /const ME_OLD = (\{[^}]*\})/.exec(src('engines/gways.js'))[1], s = /export const ME_OLD = (\{[^}]*\})/.exec(src('app/screens/settings-me.js'))[1];
+  const KNOWN = [['', ''], ['K1', '']];
+  assert.deepEqual(Function('KNOWN', 'return ' + s)(KNOWN), Function('return ' + g)().ai === undefined ? null : { ...Function('return ' + g)(), ai: 'K1' });
+});
