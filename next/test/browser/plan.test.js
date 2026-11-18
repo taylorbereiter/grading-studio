@@ -324,6 +324,7 @@ test('Library: an activity found and filtered, one of my own saved, an activity 
   await p.click('main [data-focus="new-activity"]');
   await p.waitForSelector('[data-act="name"]');
   await p.focus('[data-act="name"]'); await p.keyboard.type('Silent debate');
+  await p.waitForFunction(() => document.querySelectorAll('.actedit textarea').length === 3);
   const areas = await p.$$('.actedit textarea');
   await areas[1].type('Write a claim\nPass it on'); await areas[2].type('Write one claim\nAnswer the one you get');
   await p.click('[data-focus="save-activity"]');
