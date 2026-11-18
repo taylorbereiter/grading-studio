@@ -265,7 +265,7 @@
 .library .libpanel{display:flex;flex-direction:column;gap:12px;margin-top:16px}
 .libtools{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}.libtools .field{flex:1 1 240px;margin:0}
 .library .chips{display:flex;flex-wrap:wrap;gap:6px}
-.acts{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:var(--r2);background:var(--s)}
+.actlist{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:var(--r2);background:var(--s)}
 .act+.act{border-top:1px solid var(--line)}
 .acth{display:grid;grid-template-columns:1fr auto;gap:2px 12px;width:100%;text-align:left;padding:12px 14px;background:none;border:0;cursor:pointer;align-items:center}
 .acth b{grid-column:1}.acth .mute{grid-column:1;font-size:var(--t1)}.acth svg{grid-column:2;grid-row:1/span 2}

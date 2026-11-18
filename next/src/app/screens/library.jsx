@@ -113,7 +113,7 @@ function Activities({ p }) {
     <div class="chips" role="group" aria-label={t('plan.act_parts')}><Chip on={!part} onClick={() => setPart('')}>{t('plan.any_part')}</Chip>{PARTS.map(k => <Chip on={part === k} onClick={() => setPart(part === k ? '' : k)}>{t(PART_LINE[k])}</Chip>)}</div>
     <div class="chips" role="group" aria-label={t('plan.act_kind')}><Chip on={!kind} onClick={() => setKind('')}>{t('plan.any_kind')}</Chip>{KINDS.map(k => <Chip on={kind === k} onClick={() => setKind(kind === k ? '' : k)}>{t(KIND_LINE[k])}</Chip>)}</div>
     <p class="mute" role="status">{t('plan.n_activities', { n: list.length })}</p>
-    {list.length ? <ul class="acts">{list.map(a => <ActivityRow a={a} open={open === a.id} onOpen={() => setOpen(open === a.id ? '' : a.id)} onUse={() => setUse(a)} onEdit={() => setEdit(a)} />)}</ul>
+    {list.length ? <ul class="actlist">{list.map(a => <ActivityRow a={a} open={open === a.id} onOpen={() => setOpen(open === a.id ? '' : a.id)} onUse={() => setUse(a)} onEdit={() => setEdit(a)} />)}</ul>
       : <EmptyState icon="search" title={t('plan.nothing_matches')} text={t('plan.try_another')} />}
     <p class="mute credit">{t('plan.act_credit')} {raw(BOOK)}</p>
     {edit && <EditActivity p={p} a={edit.id ? edit : { ...edit, id: 'my-' + engine(p).lid() }} onClose={ok => { setEdit(null); if (ok) { setQ(''); setPart(''); setKind(''); } }} />}

@@ -311,13 +311,13 @@ test('Library: an activity found and filtered, one of my own saved, an activity 
   const all = await n();
   await p.$eval('main [data-focus="find-activity"]', el => el.focus());
   await p.keyboard.type('jigsaw');
-  await p.waitForFunction(() => document.querySelectorAll('main .acts > li').length === 1);
+  await p.waitForFunction(() => document.querySelectorAll('main .actlist > li').length === 1);
   await p.$eval('main [data-focus="find-activity"]', el => { el.focus(); el.select(); });
   await p.keyboard.press('Backspace');
   await p.waitForFunction(a => document.querySelector('main .libpanel [role=status]').textContent === a, {}, all);
   const chip = async (group, i) => { const g = (await p.$$('main .chips'))[group]; await (await g.$$('button'))[i].click(); };
   await chip(0, 1); await chip(1, 1);   // Warm-up, Discussion
-  const names = await p.$$eval('main .acts .acth b', b => b.map(x => x.textContent));
+  const names = await p.$$eval('main .actlist .acth b', b => b.map(x => x.textContent));
   assert.ok(names.length > 0 && names.length < 40 && names.includes('Think, pair, share'), 'filters by part and kind');
   await chip(0, 0); await chip(1, 0);
   // One of my own
