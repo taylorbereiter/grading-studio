@@ -256,6 +256,8 @@ function fileSeq(st) {
   const rank = (it, k) => { const i = o.indexOf(it.id); return i >= 0 ? i : o.length + k; };
   return def.map((it, k) => [rank(it, k), k, it]).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(x => x[2]);
 }
+// src/app/files.js
+const seqSig = (st, it) => it.f ? it.f.kind + (it.f.rubric ? 'R' : '') + (it.f.added ? 'A' : '') : 'doc' + (it.d.pages.length && (fileByPath(st, it.d.pages[0][0]) || {}).added ? 'A' : '') + ((fileByPath(st, (it.d.pages[0] || [])[0]) || {}).virtual ? 'R' : '');
 // src/app/arrange.js
 function draw(pg, live, part) {
   if (!pg.bmp) return;
@@ -366,6 +368,12 @@ const pageLitDefault = f => lightOpts().rub || !isRubricPage(f);
 function pageLit(st, f, p, map) {
   const v = (map || (batch && batch.lightPg) || {})[lightPgKey(st, f, p)];
   return v != null ? v : pageLitDefault(f);
+}
+// src/app/lighting.js
+function setPageLit(st, f, p, on, map) {
+  if (!map) map = batch.lightPg || (batch.lightPg = {});
+  const k = lightPgKey(st, f, p);
+  if (on === pageLitDefault(f)) delete map[k]; else map[k] = on;
 }
 // src/app/lighting.js
 const pageOwnL = (st, f, p) => (batch && batch.lightPgL && batch.lightPgL[lightPgKey(st, f, p)]) || null;
@@ -910,5 +918,5 @@ const tnMine = (st, L) => (Array.isArray(L) ? L.filter(x => !tnHidden(x, st)) : 
 const tnBackOn = () => setup.tnBack !== false;
 // src/typednotes.js
 function tnOut(st) { return tnBackOn() && tnHas(st); }
-export { FONT, AT_END, drawMarks, layoutNotes, textLayout, wrapText, bboxOf, sideFor, sideScreen, drawStamp, stampBox, strokePath, drawHls, stickersReady, STICKERS, lightLut, lightCanvas, draw, marksMine, loadLines, anonOn, shownName, viewBytes, impHas, fileSeq, layoutOf, docIn, docAuto, fileByPath, viewable, vpRot, vpDraw, skewXf, rotOf, skewOf };
+export { FONT, AT_END, drawMarks, layoutNotes, textLayout, wrapText, bboxOf, sideFor, sideScreen, drawStamp, stampBox, strokePath, drawHls, stickersReady, STICKERS, lightLut, lightCanvas, draw, marksMine, loadLines, anonOn, shownName, viewBytes, impHas, fileSeq, layoutOf, docIn, docAuto, fileByPath, viewable, vpRot, vpDraw, skewXf, rotOf, skewOf, defaultLayout, seqSig, pageLit, setPageLit, lightLive };
 export { nameFold, rosterMatch, batchClass, WORD_RX, lostPages, one, stampHidden, tnHasG, noteRunY, anonOrder, hasPress, PRESS_MAX, textGrips, canResize, cornerPt, isSticker, isScoreStamp, stickerAspect, measureCtx, rgb, docMarked, docAdded, scrub, scrubMarks, lightOpts, lightForPage, isLatin, rawWords, namesNow, ownNames, coverRx, stampScore, tnMine, tnOut, nameWords, SORT_STOP, madeFromWord, AT_START, ID_RX, latinRx, anyRx, wordOk, bounded, alt, runAlts, latinParts, initialAlts, altsRx, FILE_SEP };

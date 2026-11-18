@@ -189,7 +189,7 @@ export function startMarking({ toast, openStudent }) {
     renderTools: tell, renderList: tell, renderGrade: tell,
     toast: () => {},   // the lifted code's own words are the current app's; the screen says what it needs in its own lines
     openStudent: i => openStudent && openStudent(i),
-    renderPage: pg => renderPage(pg, pg.s),
+    renderPage: pg => pg.canvas && renderPage(pg, pg.s),
     editText, openNote,
     setTool: chooseTool, openStampMenu: openMenu, endOnce,
   });

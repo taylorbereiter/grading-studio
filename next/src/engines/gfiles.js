@@ -1,7 +1,7 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
 import { batch, cur, pages, saveSoon, PDFLib, store, idbDo, ownGrade, fmtNum } from './gcore.js';
-import { madeFromWord, scrub, nameFold, anonOn, SORT_STOP, AT_START, ID_RX, latinRx, isLatin, anyRx, wordOk, bounded, alt, runAlts, latinParts, initialAlts, altsRx, namesNow, ownNames, AT_END, FILE_SEP } from './gdraw.js';
+import { viewable, madeFromWord, scrub, nameFold, anonOn, SORT_STOP, AT_START, ID_RX, latinRx, isLatin, anyRx, wordOk, bounded, alt, runAlts, latinParts, initialAlts, altsRx, namesNow, ownNames, AT_END, FILE_SEP } from './gdraw.js';
 import { moveFileNow, REF_KEY, underId, paperGet, goneNow, hasSheet, gradeHasWork, nfc, sameBytes } from './gopen.js';
 
 // src/app/files.js
@@ -16,6 +16,13 @@ let fresh = store.get('gs.lib', null) == null;   // a browser nobody has used ye
 const markCount = f => Object.values(f.marks || {}).reduce((n, a) => n + a.length, 0);
 // src/app/replace.js
 const replacedOf = f => { const st = batch && batch.students[cur]; if (!st || !batch.removed) return null; const p = Object.keys(batch.removed).find(k => batch.removed[k].by === f.path && !batch.removed[k].back); return p ? ((st.gone || []).find(g => g.path === p) || { name: p.slice(p.lastIndexOf('/') + 1) }) : null; };
+// src/app/replace.js
+function outPages(st) {
+  if (!st.layout) return [];
+  const has = new Set(st.layout.flatMap(d => d.pages.map(([q, p]) => q + '|' + p))), out = [];
+  for (const f of st.files) if (viewable(f) && f.numPages) for (let p = 0; p < f.numPages; p++) if (!has.has(f.path + '|' + p)) out.push([f.path, p]);
+  return out;
+}
 // src/app/bringin.js
 const sortTag = r => r.i === -2 ? '<span class="muted">Skipped</span>' : r.i < 0 ? '<span class="pill" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">Choose</span>'
   : r.set ? '<span class="muted">Chosen by you</span>' : r.sure ? '<span style="color:var(--ok);font-size:13px;font-weight:600">Matched by name</span>' : '<span class="pill" style="font-size:12px;padding:2px 8px;border-radius:999px;background:var(--warn-soft);color:var(--warn)">Check</span>';
@@ -164,4 +171,4 @@ async function pasteTextPdf(title, text, when) {
   }
   return { bytes: await doc.save(), typed: false };
 }
-export { goneNow, markCount, replacedOf, freshRows, guessNewName, fileShown, sortTag, madeFromWord, setDocIn, gradeWords, wordsJoin, moveFileNow, gradeHasWork, pasteTextPdf, pasteClean, pasteName };
+export { goneNow, markCount, replacedOf, freshRows, guessNewName, fileShown, sortTag, madeFromWord, setDocIn, gradeWords, wordsJoin, moveFileNow, gradeHasWork, pasteTextPdf, pasteClean, pasteName, outPages };

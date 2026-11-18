@@ -266,3 +266,86 @@ export async function pasteAdd(st, title, text) {
 export function markLate(list) { for (const st of list) if (st.grade.status !== 'late') { K.gradeSnap(st); K.setStatus(st, 'late'); } tell(); }
 // A file flagged new or changed since the older copy of this download (carryover.js): Looks fine takes the flag off.
 export function carryOk(path) { const c = b().carry; if (!c || !c.flags[path]) return; const was = c.flags[path]; delete c.flags[path]; step(() => { c.flags[path] = was; tell(); show(-1); }, () => { delete c.flags[path]; tell(); show(-1); }, 'looks fine'); tell(); show(-1); }
+
+// Arrange pages (src/app/arrange.js openArrange): the student's papers as files of pages, with the pages taken out waiting in a tray,
+// and the order of whole files when Word or other files sit among them. What the dialog changes stays in it until Save.
+export function arrangeStart(st) {
+  const L = D.layoutOf(st).map(d => ({ name: d.name, file: d.file, pages: d.pages.map(x => x.slice()), out: D.docAuto(st, d) ? null : !D.docIn(st, d) }));
+  const strip = D.fileSeq(st).map(it => it.f ? 'f:' + it.f.path : L[it.di]);
+  return { L, tray: F.outPages(st).map(x => x.slice()), strip, lp: { ...(b().lightPg || {}) }, lit: D.lightLive(st), many: st.files.filter(D.viewable).length > 1 };
+}
+// Back to how it was turned in (data-reset): the paper as the files came, and the files in their own order.
+export function arrangeReset(st) {
+  const L = D.defaultLayout(st).map(d => ({ ...d, pages: d.pages.map(x => x.slice()), out: null }));
+  const keep = st.forder; st.forder = null;
+  const strip = D.fileSeq(st).map(it => it.f ? 'f:' + it.f.path : L[it.di]); st.forder = keep;
+  return { L, strip };
+}
+// The strip of whole files, with files of pages that came or went since it was drawn (drawStrip).
+export const stripNow = (L, strip) => { const s = strip.filter(x => typeof x === 'string' || L.includes(x)); for (const d of L) if (!s.includes(d)) s.push(d); return s; };
+// Save (data-save): one undo step puts every student's pages and file order, and the page lighting, back as they were. Pages turned in
+// the dialog are turned after, each a step of its own, as in the current app. Returns how many students got the same order.
+export async function arrangeSave(st, { L, strip, everyone, lp, turns }) {
+  K.commitEditors();
+  const bb = b(), was = { lp: J(bb.lightPg), s: bb.students.map(o => ({ layout: J(o.layout), forder: J(o.forder) })) };
+  strip = stripNow(L, strip);
+  const inStrip = strip.filter(x => typeof x !== 'string' && x.pages.length);
+  L = inStrip.concat(L.filter(d => !inStrip.includes(d) && d.pages.length));
+  const ord = strip.filter(x => typeof x === 'string' || L.includes(x)).map(x => typeof x === 'string' ? x : 'd' + L.indexOf(x));
+  L = L.filter(d => d.pages.length).map(d => ({ name: (d.name.trim() || 'File').replace(/(\.pdf)?$/i, '.pdf'), file: d.file, pages: d.pages, out: d.out }));
+  const def = D.defaultLayout(st);
+  const same = L.length === def.length && L.every((d, k) => d.file === def[k].file && d.name === def[k].name && JSON.stringify(d.pages) === JSON.stringify(def[k].pages) && d.out == null);
+  st.layout = same ? null : L.map(d => ({ ...d, out: d.out == null ? undefined : d.out }));
+  if (st.layout) for (const d of st.layout) if (d.out === undefined) delete d.out;
+  const plain = D.fileSeq({ ...st, forder: null }).map(it => it.id);
+  st.forder = JSON.stringify(ord) === JSON.stringify(plain) ? null : ord;
+  let n = 0;
+  if (everyone) {   // line the others up the same way, matching files by kind
+    const tmpl = D.fileSeq(st).map(it => D.seqSig(st, it));
+    for (const o of bb.students) {
+      if (o === st) continue;
+      const used = new Set(), sq = D.fileSeq({ ...o, forder: null });
+      const at = it => { const sig = D.seqSig(o, it); for (let k = 0; k < tmpl.length; k++) if (tmpl[k] === sig && !used.has(k)) { used.add(k); return k; } return tmpl.length; };
+      const ranked = sq.map((it, k) => [at(it), k, it]).sort((x, y) => x[0] - y[0] || x[1] - y[1]).map(x => x[2].id);
+      o.forder = JSON.stringify(ranked) === JSON.stringify(sq.map(it => it.id)) ? null : ranked; n++;
+    }
+  }
+  bb.lightPg = lp;
+  const now = { lp: J(bb.lightPg), s: bb.students.map(o => ({ layout: J(o.layout), forder: J(o.forder) })) };
+  const put = v => { bb.lightPg = J(v.lp); bb.students.forEach((o, k) => { o.layout = J(v.s[k].layout); o.forder = J(v.s[k].forder); }); tell(); show(-1); };
+  step(() => put(was), () => put(now), 'arranged pages');
+  tell(); show(-1);
+  for (const [key, q] of [...(turns || new Map())].filter(([, x]) => x)) {
+    const i = key.lastIndexOf('|'), f = D.fileByPath(st, key.slice(0, i));
+    for (let k = 0; k < q; k++) await turnPages(f, [+key.slice(i + 1)], 1);
+  }
+  return everyone ? n + 1 : 0;
+}
+// The × on a page (takePageOut): the page leaves the paper and the export, and waits in Arrange pages' tray. One undo step.
+export function takePageOut(st, path, p) {
+  K.commitEditors();
+  const was = J(st.layout);
+  const now = J(D.layoutOf(st)).map(d => ({ ...d, pages: d.pages.filter(([q, k]) => !(q === path && k === p)) })).filter(d => d.pages.length);
+  const put = v => { st.layout = J(v); tell(); show(-1); };
+  step(() => put(was), () => put(now), 'page taken out');
+  put(now);
+}
+// Bring back a page taken out (bringPageBack): among the same file's pages in page order, or a file of its own if none are left.
+export function bringPageBack(st, path, p) {
+  const f = D.fileByPath(st, path); if (!f || !st.layout) return;
+  K.commitEditors();
+  const was = J(st.layout), L = J(st.layout), su = state().setup;
+  let d = L.find(x => x.file === path) || L.find(x => x.pages.some(([q]) => q === path));
+  if (!d && f.virtual && L.length) d = L[su.rubricPos === 'start' ? 0 : L.length - 1];
+  if (!d) L.push({ name: f.name, file: path, pages: [[path, p]] });
+  else {
+    const k = d.pages.findIndex(([q, n]) => q === path && n > p), last = d.pages.map(([q]) => q).lastIndexOf(path);
+    d.pages.splice(k >= 0 ? k : last >= 0 ? last + 1 : (f.virtual && su.rubricPos === 'start' ? 0 : d.pages.length), 0, [path, p]);
+  }
+  const def = D.defaultLayout(st);
+  const now = L.length === def.length && L.every((x, k) => x.file === def[k].file && x.name === def[k].name && x.out == null && JSON.stringify(x.pages) === JSON.stringify(def[k].pages)) ? null : L;
+  const put = v => { st.layout = J(v); tell(); show(-1); };
+  step(() => put(was), () => put(now), 'page brought back');
+  put(now);
+}
+export const outPages = st => F.outPages(st);

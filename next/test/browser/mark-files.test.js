@@ -179,3 +179,71 @@ test('text pasted for a student with nothing turned in is the same page the curr
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('pages arranged in the new app, and a page taken out, are where the current app finds them', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zip);
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  const i = await p.evaluate(k => window.__mark.state().batch.students.findIndex(s => s.key === k), KEY);
+  await p.click('[data-st="' + i + '"]');
+  await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready, { timeout: 60000 }, i);
+  const ESSAY = KEY + '/Essay.pdf', NOTES = KEY + '/Extra notes.pdf';
+  const st = () => p.evaluate(k => { const s = window.__mark.state().batch.students.find(x => x.key === k); return JSON.parse(JSON.stringify({ layout: s.layout || null, rot: Object.fromEntries(s.files.map(f => [f.path, f.rot || {}])) })); }, KEY);
+  const mine = L => L && L.map(d => ({ name: d.name, pages: d.pages.filter(([q]) => q === ESSAY || q === NOTES) }));
+  await p.waitForFunction(() => { const b = window.__mark.ready && document.querySelector('[data-arrange]'); if (b) b.click(); return !!b; }, { timeout: 30000 });
+  await p.waitForSelector('.mk-arr [data-apg="' + NOTES + '|0"]');
+  // both files into one, the notes first (picked, then the ← key), the essay turned (R), and the file named
+  await p.click('.mk-arr [data-acombine]');
+  await p.click('.mk-arr [data-apg="' + NOTES + '|0"]');
+  assert.match(await p.$eval('.mk-arr .arrbar [role=status]', e => e.textContent), /1 page picked/);
+  await p.keyboard.press('ArrowLeft');
+  await p.click('.mk-arr [data-apg="' + ESSAY + '|0"]');
+  await p.keyboard.press('r');
+  const nm = await p.$('.mk-arr [data-aname="0"]'); await nm.click(); await p.keyboard.down('Control'); await p.keyboard.press('a'); await p.keyboard.up('Control'); await nm.type('Both');
+  await p.click('.mk-arr [data-asave]');
+  await p.waitForFunction((k, f) => { const s = window.__mark.state().batch.students.find(x => x.key === k); return s.layout && (s.files.find(x => x.path === f).rot || {})[0] === 90; }, { timeout: 30000 }, KEY, ESSAY);
+  const saved = await st();
+  assert.deepEqual(mine(saved.layout), [{ name: 'Both.pdf', pages: [[NOTES, 0], [ESSAY, 0]] }], 'one file, the notes first');
+  // the turn is a step of its own after the arranging, as in the current app: two undos put it all back, two redos make it again
+  await p.click('[data-undo]');
+  await p.waitForFunction((k, f) => !(window.__mark.state().batch.students.find(x => x.key === k).files.find(x => x.path === f).rot || {})[0], { timeout: 30000 }, KEY, ESSAY);
+  await p.click('[data-undo]');
+  await p.waitForFunction(k => !window.__mark.state().batch.students.find(x => x.key === k).layout, { timeout: 30000 }, KEY);
+  const redo = async () => { await p.evaluate(() => document.querySelector('.mk-paper').focus()); await p.keyboard.down('Control'); await p.keyboard.press('y'); await p.keyboard.up('Control'); };
+  await redo(); await p.waitForFunction(k => !!window.__mark.state().batch.students.find(x => x.key === k).layout, { timeout: 30000 }, KEY);
+  await redo();
+  await p.waitForFunction((k, f) => { const s = window.__mark.state().batch.students.find(x => x.key === k); return s.layout && (s.files.find(x => x.path === f).rot || {})[0] === 90; }, { timeout: 30000 }, KEY, ESSAY);
+  assert.deepEqual(await st(), saved, 'redo makes the same paper');
+  // the × on the notes page takes it out; it waits below the paper, with Bring back
+  await p.waitForFunction(f => { const c = window.__mark.ready && document.querySelector('canvas[data-page="' + f + '|0"]'), b = c && c.parentNode.querySelector('[data-pgout]'); if (b) b.click(); return !!b; }, { timeout: 30000 }, NOTES);
+  await p.waitForFunction((k, f) => !window.__mark.state().batch.students.find(x => x.key === k).layout.some(d => d.pages.some(([q]) => q === f)), { timeout: 30000 }, KEY, NOTES);
+  await p.waitForFunction(f => { const b = window.__mark.ready && document.querySelector('[data-backpg="' + f + '|0"]'); if (b) b.click(); return !!b; }, { timeout: 30000 }, NOTES);
+  await p.waitForFunction((k, f) => window.__mark.state().batch.students.find(x => x.key === k).layout.some(d => d.pages.some(([q]) => q === f)), { timeout: 30000 }, KEY, NOTES);
+  // no file left holds a page of the notes, so it comes back as a file of its own, as in the current app (bringPageBack)
+  assert.deepEqual(mine((await st()).layout), [{ name: 'Both.pdf', pages: [[ESSAY, 0]] }, { name: 'Extra notes.pdf', pages: [[NOTES, 0]] }]);
+  // out again, and kept that way; Arrange pages shows it in the tray
+  await p.waitForFunction(f => { const c = window.__mark.ready && document.querySelector('canvas[data-page="' + f + '|0"]'), b = c && c.parentNode.querySelector('[data-pgout]'); if (b) b.click(); return !!b; }, { timeout: 30000 }, NOTES);
+  await p.waitForFunction(f => window.__mark.ready && !!document.querySelector('[data-backpg="' + f + '|0"]'), { timeout: 30000 }, NOTES);
+  await p.click('[data-arrange]');
+  await p.waitForSelector('.mk-arr .acol[data-where="tray"] [data-apg="' + NOTES + '|0"]');
+  await p.click('.mk-arr .arrfoot .grp:last-child button');   // Cancel
+  await p.waitForFunction(() => !document.querySelector('.mk-arr'));
+  const now = await st();
+  assert.deepEqual(mine(now.layout), [{ name: 'Both.pdf', pages: [[ESSAY, 0]] }]);
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m2 = await page(ctx, errors);
+  await m2.goto(srv.url); await appReady(m2);
+  await m2.evaluate(id => window.__gs.reopenKept(id), id);
+  await m2.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  const was = await m2.evaluate(k => { const s = window.__gs.state().batch.students.find(x => x.key === k); return JSON.parse(JSON.stringify({ layout: s.layout || null, rot: Object.fromEntries(s.files.map(f => [f.path, f.rot || {}])) })); }, KEY);
+  assert.deepEqual(was, now, 'the current app finds the same paper, turned the same');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

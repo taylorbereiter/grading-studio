@@ -169,6 +169,8 @@ const GRADING = [
     // drawing marks on a page, shared by the screen and the export (src/app/draw.js, marking.js, stamps.js, lighting.js)
     'FONT', 'AT_END', 'drawMarks', 'layoutNotes', 'textLayout', 'wrapText', 'bboxOf', 'sideFor', 'sideScreen', 'drawStamp', 'stampBox', 'strokePath', 'drawHls',
     'stickersReady', 'STICKERS', 'lightLut', 'lightCanvas', 'draw', 'marksMine', 'loadLines', 'anonOn', 'shownName', 'viewBytes', 'impHas', 'fileSeq', 'layoutOf', 'docIn', 'docAuto', 'fileByPath', 'viewable', 'vpRot', 'vpDraw', 'skewXf', 'rotOf', 'skewOf',
+    // Arrange pages (src/app/arrange.js, files.js, lighting.js): the paper as turned in, how files line up, which pages lighting touches
+    'defaultLayout', 'seqSig', 'pageLit', 'setPageLit', 'lightLive',
   ], "import STICKER_SRC from './stickers.js';\n", ['STICKER_SRC']],
   ['gopen', [
     // opening a kept download as the current app does (src/app/open.js intake, with fromKeep): its files, students and saved work
@@ -207,7 +209,7 @@ const GRADING = [
   ['gfiles', [
     // a student's files changed on the marking screen (src/app/kept.js addFiles, src/app/replace.js, src/app/bringin.js bringIn):
     // what a file added, removed, brought back or replaced does to the student, and how files are sorted to students by name
-    'goneNow', 'markCount', 'replacedOf', 'freshRows', 'guessNewName', 'fileShown', 'sortTag', 'madeFromWord', 'setDocIn', 'gradeWords', 'wordsJoin', 'moveFileNow', 'gradeHasWork', 'pasteTextPdf', 'pasteClean', 'pasteName',
+    'goneNow', 'markCount', 'replacedOf', 'freshRows', 'guessNewName', 'fileShown', 'sortTag', 'madeFromWord', 'setDocIn', 'gradeWords', 'wordsJoin', 'moveFileNow', 'gradeHasWork', 'pasteTextPdf', 'pasteClean', 'pasteName', 'outPages',
   ], '', [], ['gcore', 'gdraw', 'gopen', 'greport'], ['num', 'inside']],
   ['gword', [
     // a Word paper on the marking screen (src/app/word.js, src/wordnotes.js): drawn from its own XML, typed in, cells shaded, boxes

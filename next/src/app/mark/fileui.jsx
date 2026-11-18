@@ -11,6 +11,8 @@ import { prefs } from '../../students/prefs.js';
 import { Checkbox, Segmented } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import * as C from './change.js';
+import { Arrange } from './arrange.jsx';
+import { viewable, fileSeq } from '../../engines/gdraw.js';
 import './lines.js';
 
 export const wire = C.wire;
@@ -83,7 +85,7 @@ export function BackIn({ st, d }) { return <Button size="sm" variant="quiet" onC
 
 // Under the paper: Add a file…, and the files taken off this student, each with Bring back.
 export function FilesFoot({ st, name }) {
-  const [, again] = useState(0), [paste, setPaste] = useState(false), gone = (st.gone || []).filter(g => !g.virtual);
+  const [, again] = useState(0), [paste, setPaste] = useState(false), [arr, setArr] = useState(false), gone = (st.gone || []).filter(g => !g.virtual), op = C.outPages(st);
   const add = () => pickFile(true, async files => {
     if (!files.length) return;
     const made = await C.addFiles(st, files.map(file => ({ path: file.name, file })));
@@ -95,9 +97,13 @@ export function FilesFoot({ st, name }) {
   const items = [{ label: t('mark.f_add'), icon: 'file', onSelect: add }, { label: t('mark.f_paste'), icon: 'paste', onSelect: () => setPaste(true) }];
   return <div class="mk-ffoot">
     <Menu label={t('mark.f_add_for', { name })} trigger={b => <Button {...b} size="sm" icon="plus" data-addmenu>{t('mark.f_add_menu')}</Button>} items={items} />
+    {(st.files.some(viewable) || fileSeq(st).length > 1) && <Button size="sm" icon="grip" onClick={() => setArr(true)} title={t('mark.a_open_tip')} data-arrange>{t('mark.a_open')}</Button>}
     {paste && <PasteText st={st} name={name} onClose={() => { setPaste(false); again(n => n + 1); }} />}
-    {gone.length > 0 && <details class="mk-gone"><summary>{t('mark.f_gone', { n: gone.length })}</summary>
-      <ul>{gone.map(g => <li><span data-raw>{C.shown(st, g.name)}</span><Button size="sm" variant="quiet" onClick={() => { C.bringBack(st, g.path); toast(t('mark.f_back_t', { name: C.shown(st, g.name) })); again(n => n + 1); }} data-back={g.path}>{t('mark.f_back')}</Button></li>)}</ul></details>}
+    {arr && <Arrange st={st} onClose={() => { setArr(false); again(n => n + 1); }} />}
+    {(gone.length > 0 || op.length > 0) && <details class="mk-gone" open={op.length > 0}><summary>{t(op.length ? (gone.length ? 'mark.a_gone_both' : 'mark.a_gone_pages') : 'mark.f_gone', { n: gone.length + op.length })}</summary>
+      <ul>{op.map(([path, p]) => { const f = st.files.find(x => x.path === path), n = ((f.marks || {})[p] || []).length;
+        return <li><span><span data-raw>{C.shown(st, f.name)}</span>{', ' + [t('mark.a_page_n', { n: p + 1 }), f.virtual ? t('mark.a_your_rubric') : '', n ? t('mark.f_marks', { n }) : ''].filter(Boolean).join(' · ')}</span>
+          <Button size="sm" variant="quiet" onClick={() => { C.bringPageBack(st, path, p); toast(t('mark.a_page_back', { name: C.shown(st, f.name), n: p + 1 }), { undo: C.undo }); again(n => n + 1); }} data-backpg={path + '|' + p}>{t('mark.f_back')}</Button></li>; })}{gone.map(g => <li><span data-raw>{C.shown(st, g.name)}</span><Button size="sm" variant="quiet" onClick={() => { C.bringBack(st, g.path); toast(t('mark.f_back_t', { name: C.shown(st, g.name) })); again(n => n + 1); }} data-back={g.path}>{t('mark.f_back')}</Button></li>)}</ul></details>}
   </div>;
 }
 // Pasted text (src/pastetext.js openPasteText): work a student sent in an email or a message becomes a page added to them.
@@ -162,7 +168,8 @@ export async function pdfAuto() { if (!pdfAlways() || C.pdfBusyNow()) return; co
 // The turn buttons in the top corner of each page, shown when the mouse is over it (rotChip).
 export function TurnChip({ pg }) {
   return <span class="rchip"><IconButton icon="turnl" size="sm" label={t('mark.f_turn_l')} onClick={() => C.turnPages(pg.file, [pg.idx], -1)} data-rot="-1" />
-    <IconButton icon="turnr" size="sm" label={t('mark.f_turn_r')} onClick={() => C.turnPages(pg.file, [pg.idx], 1)} data-rot="1" /></span>;
+    <IconButton icon="turnr" size="sm" label={t('mark.f_turn_r')} onClick={() => C.turnPages(pg.file, [pg.idx], 1)} data-rot="1" />
+    {!pg.out && <IconButton icon="x" size="sm" label={t('mark.a_take_tip')} title={t('mark.a_take_tip')} onClick={() => { const st = state().batch.students[state().cur]; C.takePageOut(st, pg.file.path, pg.idx); toast(t('mark.a_took', { name: C.shown(st, pg.file.name), n: pg.idx + 1 }), { undo: C.undo }); }} data-pgout />}</span>;
 }
 
 // A newer copy of a download (src/carryover.js carryTag): the file's flag, Looks fine, the pages its marks no longer have, Mark late.
