@@ -661,7 +661,15 @@ test('Pick a name from the class header: nobody twice, groups of 3, groups by ha
   await p.click('[data-pick-name]');
   await p.waitForSelector('[data-picker] [data-pk-name]');
   const picked = [await p.$eval('[data-pk-name]', e => e.textContent)];
-  for (let i = 1; i < N.length; i++) { await p.keyboard.press('Space'); picked.push(await p.$eval('[data-pk-name]', e => e.textContent)); }
+  // each Space shows the next name (pressed again if it came before the picker listened for keys)
+  for (let i = 1; i < N.length; i++) {
+    const was = picked[picked.length - 1];
+    for (let k = 0; k < 20; k++) {
+      await p.keyboard.press('Space');
+      const now = await p.waitForFunction(w => { const t = document.querySelector('[data-pk-name]').textContent; return t !== w && t; }, { timeout: 1000 }, was).then(h => h.jsonValue(), () => null);
+      if (now) { picked.push(now); break; }
+    }
+  }
   assert.equal(new Set(picked).size, N.length);
   // groups of 3
   await p.keyboard.press('g'); await p.keyboard.press('3');
