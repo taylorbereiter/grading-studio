@@ -990,4 +990,4 @@ function uniqueName(u, name) {
   return m[1] + ' (' + i + ')' + (m[2] || '');
 }
 export { L, plWeekOffs, mondayOf, meetingsOn, partnerSlots, unitAt, unitEnd, lid, LAYOUTS, deckAgenda, deckSizes, deckAdd, deckSizeSay, normSlide, normLesson, deckStart, slideHtml, slideFit, tplPreview, lessonForFile, fileBase, b64ToU8, buildPptx, mimeOf, lessonText, lessonZipAsk, lessonContext, lessonBack, ZIP_SKIP, baseName, MAX_FILE, snap, MAX_VERSIONS, uniqueName, normLinks, lkUrl, lkHost, normUnit, tplLayouts };
-export { hash, RT_COLORS };
+export { hash, className, PT, imgSrc, ytId, ownTpl, LOOKS, lookOf, teachBoxes, BOX_KEYS, boxOver, RT_LVL, rtEsc, RT_COLORS, rtNumber, rtLineHtml, rtHtml, lessonUnit, nbClean, nbText };

@@ -37,6 +37,11 @@ export const PARTS = {
   edit: () => import('./screens/lesson-edit.jsx'),
   present: () => import('./screens/present.jsx'),
   tools: () => import('./screens/lesson-tools.jsx'),
+  beside: () => import('./screens/lesson-beside.jsx'),
+  doc: () => import('./screens/lesson-doc.jsx'),
+  pdf: () => import('./plan/pdf.js'),
+  cal: () => import('./plan/cal-tools.jsx'),
+  unit: () => import('./plan/unit-tools.jsx'),
 };
 export const CHUNKS = {
   home: () => import('./screens/home.jsx'),

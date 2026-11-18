@@ -4,9 +4,9 @@
 // To do keep the shared "not built yet" state until their stages.
 import { h, Fragment } from 'preact';
 import { useState } from 'preact/hooks';
-import { Tabs, Icon, EmptyState, Progress, Button } from '../../ui/index.js';
+import { Tabs, Icon, EmptyState, Progress, Button, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
-import { href, go } from '../router.js';
+import { href, go, PARTS } from '../router.js';
 import { usePlan } from '../plan.js';
 import { toneOf, classTone } from '../colors.js';
 import { timetableClass } from '../../planning/plan.js';
@@ -15,6 +15,7 @@ import { lessonsOn, stateOf, STATE_LINE, periods, dayOff, today, plus, at, monda
 import { saveFailed } from '../plan/save.js';
 import Later from './later.jsx';
 import { UnitSheet } from '../plan/unit-edit.jsx';
+import { usePart } from '../parts.js';
 import '../plan/lines.js';
 
 const TABS = ['course', 'people', 'grades', 'todo'];
@@ -44,8 +45,17 @@ function CourseLine({ p, c, lib }) {
   const u = units.find(x => x.id === pick) || (here && here.u) || units.find(x => x.start > now) || units[units.length - 1] || null;
   const [fold, setFold] = useState(() => keep('fold') !== false);
   const [busy, setBusy] = useState(false), [editing, setEditing] = useState(null);
+  const Unit = usePart('unit', !!u);
   const courses = [...new Set((p.setup.classes || []).map(x => x.course || x.name).filter(Boolean))];
   const newUnit = () => setEditing(E.normUnit({ course, start: plus(units.length ? E.unitEnd(units[units.length - 1]) : mon, 7), title: t('plan.new_unit'), weeks: Array.from({ length: 6 }, () => ({})) }));
+  // A unit from its unit plan's screenshots (src/planner/units.js: new unit, screenshots, the assistant fills the weeks): made at once,
+  // then the screenshots are added and the assistant asked from beside its weeks.
+  const fromShots = async () => {
+    if (busy) return; setBusy(true);
+    try { const n = E.normUnit({ course, start: plus(units.length ? E.unitEnd(units[units.length - 1]) : mon, 7), title: t('plan.new_unit'), weeks: Array.from({ length: 6 }, () => ({})) });
+      const M = await PARTS.unit(); await M.saveUnit(p, n); setPick(n.id); keep('unit:' + c.id, n.id); toast(t('plan.unit_made_shots')); }
+    catch (e) { saveFailed(e); } finally { setBusy(false); }
+  };
   const partners = (p.setup.classes || []).filter(x => x.id !== c.id && (x.course || x.name) === course && x.course);
   // Lessons kept without a class or day (src/planner Not scheduled): newest first.
   const loose = (p.lessons || []).filter(l => !(l.slots || []).length).sort((a, b) => (b.updated || 0) - (a.updated || 0));
@@ -66,7 +76,8 @@ function CourseLine({ p, c, lib }) {
           {u && here && here.u === u && <span class="mute">{t('plan.unit_week', { n: here.n + 1, of: u.weeks.length })}</span>}
           <span class="grow" /><button type="button" class="link" onClick={() => { setFold(!fold); keep('fold', !fold); }}>{t(fold ? 'plan.show_past' : 'plan.fold_past')}</button>
           {u && <Button size="sm" icon="pen" onClick={() => setEditing(u)} data-focus="edit-unit">{t('plan.edit_unit')}</Button>}
-          <Button size="sm" icon="plus" onClick={newUnit} data-focus="new-unit">{t('plan.new_unit')}</Button></div>
+          <Button size="sm" icon="plus" onClick={newUnit} data-focus="new-unit">{t('plan.new_unit')}</Button>
+          <Button size="sm" icon="image" onClick={fromShots} data-focus="unit-from-shots">{t('plan.unit_from_shots')}</Button></div>
         <ol class="weeks">{weeks.map(w => {
           const rows = weekRows(p, c, w.mon), past = plus(w.mon, 6) < now, cur = w.mon === mon;
           const taught = rows.filter(r => r.lessons.some(l => stateOf(l, c.id, r.day) === 'taught')).length, ready = rows.filter(r => r.lessons.some(l => stateOf(l, c.id, r.day) === 'ready')).length;
@@ -86,6 +97,7 @@ function CourseLine({ p, c, lib }) {
       </section>
       <aside class="cl-side">
         <Pace p={p} c={c} />
+        {u && Unit && <Unit.UnitSide key={u.id} p={p} u={u} />}
         {loose.length > 0 && <section class="side-sec" aria-labelledby="h-loose"><h2 id="h-loose" class="sub">{t('plan.not_on_calendar')}</h2>
           <ul class="loose">{loose.slice(0, 8).map(l => <li><a class="link" href={href('lesson', l.id)} data-raw>{l.title || t('plan.untitled')}</a></li>)}</ul>
           {loose.length > 8 && <a class="link" href={href('library', 'past')}>{t('plan.n_more', { n: loose.length - 8 })}</a>}</section>}

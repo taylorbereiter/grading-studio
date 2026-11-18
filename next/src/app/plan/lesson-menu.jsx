@@ -69,7 +69,7 @@ function CopyTo({ p, l, onClose }) {
   </Sheet>;
 }
 
-export function LessonMenu({ p, l, save }) {
+export function LessonMenu({ p, l, save, onTool = () => {} }) {
   const E = engine(p), [vers, setVers] = useState(false), [copying, setCopying] = useState(false);
   const items = [
     { id: 'copy', label: t('plan.copy_text'), icon: 'copy', onSelect: async () => toast(await copyText(E.lessonText(copy(l))) ? t('plan.copied') : t('plan.copy_failed')) },
@@ -77,6 +77,13 @@ export function LessonMenu({ p, l, save }) {
     { id: 'print', label: t('plan.print_plan'), icon: 'file', onSelect: () => printLesson(p, l) },
     { id: 'copyto', label: t('plan.copy_to'), icon: 'copy', onSelect: () => setCopying(true) },
     { id: 'versions', label: t('plan.versions'), icon: 'copy', onSelect: () => setVers(true) },
+    { id: 'variant', label: t('plan.make_variant'), icon: 'copy', onSelect: () => onTool('variant') },
+    { sep: true },
+    { id: 'share', label: t('plan.share_file'), icon: 'mail', onSelect: () => onTool('share') },
+    { id: 'import', label: t('plan.import_lesson'), icon: 'upload', onSelect: () => onTool('import') },
+    { id: 'final', label: t('plan.finished_pptx'), icon: 'slides', onSelect: () => onTool('finished') },
+    { id: 'zip', label: t('plan.download_all'), icon: 'download', onSelect: () => onTool('zip') },
+    { id: 'beside', label: t('plan.beside'), icon: 'book', onSelect: () => onTool('beside') },
     { sep: true },
     { id: 'delete', label: t('plan.delete_lesson'), icon: 'trash', onSelect: async () => {
       const was = copy(l);

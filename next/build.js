@@ -65,7 +65,12 @@ const PLANNER_ROOTS = [
   // units
   'normUnit', 'tplLayouts',
 ];
-const TOOLS_ROOTS = ['pptxToSlides', 'docxOf', 'shareLesson', 'finSig'];
+const TOOLS_ROOTS = ['pptxToSlides', 'docxOf', 'shareLesson', 'finSig', 'docClean', 'DOC_CSS', 'shrinkPic', 'imgSrc',
+  // slide looks and the editor's text tools: per-box sizes, biggest that fits, moving a box, lists and formatting (src/planner/boxes.js, rich.js)
+  'LOOKS', 'lookOf', 'ownTpl', 'PT', 'BOX_KEYS', 'boxSizes', 'boxUsual', 'boxSize', 'boxOver',
+  'rtHtml', 'rtLineHtml', 'rtRead', 'rtTidy', 'rtRenumber', 'rtCurLines', 'rtLvl', 'rtSetKind', 'rtSetLvl', 'RT_NOCOLOR',
+  // notebook and the unit a lesson is in
+  'nbClean', 'nbText', 'lessonUnit', 'videoFrom', 'ytId', 'ytStart'];
 const PLANNER_DENY = ['$', 'toast', 'openDlg', 'closeDlg', 'lTx', 'kvGet', 'kvSet', 'kvDel', 'lPut', 'lDelete', 'lOpenDb', 'saveBlob', 'renderLessons', 'renderWeek',
   'renderEditor', 'renderStage', 'renderUnits', 'renderUnit', 'renderSemester', 'renderBank', 'renderLibrary', 'renderActivities', 'openLesson', 'folderWriteSoon',
   'unitWriteSoon', 'bankWriteSoon', 'copyText', 'refreshThumb'];
@@ -117,6 +122,11 @@ async function build() {
   const r = await esbuild.build({
     entryPoints: { main: path.join(NEXT, 'src/main.js'), proof: path.join(NEXT, 'src/proof.js'), parts: path.join(NEXT, 'src/ui/index.js'), gallery: path.join(NEXT, 'src/gallery/main.jsx'),
       'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css') },
+    // pdf.js's worker, as text, so the Beside drawer's Books can start it from a blob: address (it loads only when a book is opened).
+    plugins: [{ name: 'pdf-worker', setup(b) {
+      b.onResolve({ filter: /^pdfjs-worker-text$/ }, () => ({ path: require.resolve('pdfjs-dist/build/pdf.worker.min.js', { paths: [ROOT] }), namespace: 'pdfw' }));
+      b.onLoad({ filter: /.*/, namespace: 'pdfw' }, a => ({ contents: fs.readFileSync(a.path, 'utf8'), loader: 'text' }));
+    } }],
     loader: { '.woff2': 'file', '.json': 'json' }, assetNames: '[name]-[hash]',
     outdir: DIST, bundle: true, splitting: true, format: 'esm', target: ['chrome109', 'safari16'], minify: true,
     chunkNames: 'chunk-[hash]', entryNames: '[name]', metafile: true, absWorkingDir: ROOT, legalComments: 'none', logLevel: 'warning',

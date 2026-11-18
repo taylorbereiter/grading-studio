@@ -10,22 +10,28 @@
 import { h, Fragment } from 'preact';
 import { useState } from 'preact/hooks';
 import { Sheet, Button, Checkbox, Icon, toast } from '../../ui/index.js';
+import { TextBox } from '../../ui/services.jsx';
 import { t } from '../../i18n/t.js';
 import { assistant } from '../../services/assistant.js';
 import { engine } from '../../planning/engine.js';
 import { saveVersion, saveLessonFile } from '../../planning/write.js';
 import { Slide } from './slide.jsx';
-import { briefFor, readZip, copy, same } from './brief.js';
+import { briefFor, readZip, copy, same, BRIEF_PARTS } from './brief.js';
 import './lines.js';
 
-export function AssistantSheet({ p, l, open, onClose, save }) {
+// What can be left out of the message (src/planner/review.js lessonContext, lessonText), each line named in full.
+const PART_LINE = { when: 'plan.brief_when', unit: 'plan.brief_unit', acts: 'plan.brief_acts', notes: 'plan.brief_notes', talk: 'plan.brief_talk', taught: 'plan.brief_taught', notebook: 'plan.brief_notebook' };
+// slide: a slide to redo (its place), with what should change on it; the rest of the lesson goes along unchanged.
+export function AssistantSheet({ p, l, open, onClose, save, slide }) {
   const ai = assistant(), name = ai.name || t('assistant.generic');
   const [got, setGot] = useState(null), [keep, setKeep] = useState({}), [busy, setBusy] = useState(false), [over, setOver] = useState(false);
+  const [skip, setSkip] = useState(() => new Set()), [extra, setExtra] = useState(''), [change, setChange] = useState('');
+  const one = typeof slide === 'number' && slide >= 0 && slide < l.slides.length;
   const E = engine(p);
   // Strong examples stay on the student side: only the teacher's own pictures are offered for attaching.
   const pics = l.slides.filter(s => s.img && !String(s.img.src || '').startsWith('gsex:')).length;
   const doCopy = async () => {
-    try { await navigator.clipboard.writeText(await briefFor(p, l)); toast(pics ? t('plan.brief_copied_pics', { n: pics, name }) : t('plan.brief_copied', { name })); }
+    try { await navigator.clipboard.writeText(await briefFor(p, l, { skip, extra, slide: one ? slide : null, change })); toast(pics ? t('plan.brief_copied_pics', { n: pics, name }) : t('plan.brief_copied', { name })); }
     catch (e) { console.error(e); toast(t('plan.copy_failed')); }
   };
   const take = async f => {
@@ -61,11 +67,15 @@ export function AssistantSheet({ p, l, open, onClose, save }) {
   };
   const rows = got && got.lesson ? got.lesson.slides.map((s, i) => ({ s, i, was: l.slides[i], changed: !same(s, l.slides[i]) })) : [];
   const changed = rows.filter(r => r.changed);
-  return <Sheet open={open} wide title={t('plan.work_with', { name })} icon={<Icon name="assist" />} onClose={() => { setGot(null); onClose(); }}
+  return <Sheet open={open} wide title={one ? t('plan.redo_slide_title', { n: slide + 1, name }) : t('plan.work_with', { name })} icon={<Icon name="assist" />} onClose={() => { setGot(null); onClose(); }}
     footer={got ? <><Button variant="quiet" onClick={() => setGot(null)}>{t('common.cancel')}</Button><Button variant="primary" disabled={busy} onClick={keepIt} data-focus="keep-changes">{t('plan.keep_these')}</Button></> : null}>
     {!got ? <div class="asst">
       <ol class="asteps">
+        {one && <li class="redo"><b>{t('plan.redo_what')}</b><div class="pair"><Slide slide={l.slides[slide]} lesson={l} plan={p} width={220} /></div>
+          <TextBox label={t('plan.redo_change')} value={change} onInput={setChange} rows={3} data-focus="redo-change" /></li>}
         <li><b>{t('plan.step_copy')}</b><p class="mute">{t('plan.step_copy_text', { name })}</p>
+          <fieldset class="ticks"><legend class="lab">{t('plan.brief_has')}</legend>{BRIEF_PARTS.map(k => <Checkbox label={t(PART_LINE[k])} checked={!skip.has(k)} onChange={v => { const n = new Set(skip); if (v) n.delete(k); else n.add(k); setSkip(n); }} />)}</fieldset>
+          <TextBox label={t('plan.anything_to_add')} hint={t('plan.anything_hint', { name })} value={extra} onInput={setExtra} rows={3} data-focus="brief-extra" />
           <div class="row"><Button variant="primary" icon="copy" onClick={doCopy} data-focus="copy-brief">{t('plan.copy_brief')}</Button>
             {ai.link && <a class="btn" href={ai.link} target="_blank" rel="noopener">{t('plan.open_name', { name })}<Icon name="arrow" size="xs" /></a>}</div>
           {pics > 0 && <p class="mute">{t('plan.attach_pics', { n: pics })}</p>}</li>

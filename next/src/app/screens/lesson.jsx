@@ -7,7 +7,7 @@
 // place to "taught" (src/planner/plfocus.js pfReady, src/planner/present.js). Every change saves through planning/write.js.
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
-import { Segmented, Button, IconButton, Icon, EmptyState, Switch, Select, TextInput, toast } from '../../ui/index.js';
+import { Segmented, Button, IconButton, Icon, EmptyState, Switch, Select, TextInput, Menu, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { href, go } from '../router.js';
 import { usePlan } from '../plan.js';
@@ -28,15 +28,11 @@ import { LessonMenu } from '../plan/lesson-menu.jsx';
 import { AssistantSheet } from '../plan/assistant.jsx';
 import { TextBox } from '../../ui/services.jsx';
 import '../plan/lines.js';
+import { usePart } from '../parts.js';
 
 const VIEWS = ['lesson', 'slides', 'edit'];
 // The editor, Present and the lesson's tools come in their own files when first wanted (router.js PARTS).
-const got = {};
-export function usePart(name, want = true) {
-  const [, bump] = useState(0);
-  useEffect(() => { if (want && !got[name]) PARTS[name]().then(m => { got[name] = m; bump(n => n + 1); }, e => { console.error(e); toast(t('app.chunk_failed')); }); }, [name, want]);
-  return got[name] || null;
-}
+export { usePart };
 const clock = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? date(new Date(2000, 0, 1, +m[1], +m[2]), { hour: 'numeric', minute: '2-digit' }) : ''; };
 const lines = body => String(body || '').split('\n').map(x => x.replace(/^\s*(?:[•\-*]|\d+[.)])\s*/, '').trim()).filter(Boolean);
 // Plain words of a slide line, without the Planner's **bold** and {red} marks.
@@ -93,7 +89,7 @@ function download(p, l) {
   } catch (e) { console.error(e); toast(t('plan.pptx_failed')); }
 }
 
-function LessonView({ p, l, slot, per, onOpenSlide }) {
+function LessonView({ p, l, slot, per, onOpenSlide, onStep }) {
   const obj = l.slides.find(s => s.layout === 'objectives'), ag = l.slides.find((s, i) => i > 0 && s.layout === 'agenda');
   const rest = l.slides.map((s, i) => ({ s, i })).filter(x => x.s.layout !== 'title' && x.s !== ag);
   // Last time you taught it: the latest class it was taught to, where that class got to, and the note kept then.
@@ -108,10 +104,13 @@ function LessonView({ p, l, slot, per, onOpenSlide }) {
       {last.note && <p class="mute" data-raw>{last.note}</p>}</section>}
     <section class="lsec" aria-labelledby="h-steps"><h2 id="h-steps" class="t3">{t('plan.slides_n', { n: l.slides.length })}</h2>
       <ol class="steps">{rest.map(({ s, i }) => <li class="step">
-        <div class="stx"><h3 data-raw>{plain(s.title) || t('plan.slide_n', { n: i + 1 })}</h3>
+        <div class="stx"><div class="sth"><h3 data-raw>{plain(s.title) || t('plan.slide_n', { n: i + 1 })}</h3>
+          <Menu label={t('plan.step_menu', { n: i + 1 })} items={[{ id: 'edit', label: t('common.edit'), icon: 'pen', onSelect: () => onStep('edit', i) }, { id: 'dup', label: t('plan.duplicate'), icon: 'copy', onSelect: () => onStep('dup', i) },
+            { id: 'ask', label: t('plan.redo_with', { name: assistant().name || t('assistant.generic') }), icon: 'assist', onSelect: () => onStep('ask', i) }, { id: 'del', label: t('common.remove'), icon: 'trash', disabled: l.slides.length < 2, onSelect: () => onStep('del', i) }]}
+            trigger={q => <IconButton icon="dots" size="sm" label={t('plan.step_menu', { n: i + 1 })} {...q} data-step={i} />} /></div>
           {s.notes && <p class="notes" data-raw>{s.notes}</p>}
           {!s.notes && s.body && <p class="mute body" data-raw>{lines(s.body).slice(0, 3).map(plain).join(' · ')}</p>}</div>
-        <button type="button" class="thumb" onClick={() => onOpenSlide(i)} aria-label={t('plan.open_slide', { n: i + 1 })}>
+        <button type="button" class="thumb" onClick={() => onOpenSlide(i)} aria-label={t('plan.open_slide', { n: i + 1 })} data-slide-i={i}>
           <Slide slide={s} lesson={l} plan={p} width={300} />
           {(s.talk || []).length > 0 && <span class="talkn"><Icon name="comment" size="xs" />{s.talk.length}</span>}
         </button>
@@ -120,21 +119,25 @@ function LessonView({ p, l, slot, per, onOpenSlide }) {
   </div>;
 }
 
-function SlidesView({ p, l, cur, setCur, onPresent }) {
+function SlidesView({ p, l, cur, setCur, onPresent, onAsk, onTool, Tools, save }) {
   const s = l.slides[cur] || l.slides[0];
   return <div class="sv">
     <div class="stage"><Slide slide={s} lesson={l} plan={p} width={960} fill label={t('plan.slide_of', { n: cur + 1, of: l.slides.length })} /></div>
     <div class="svbar"><IconButton icon="chl" label={t('plan.prev_slide')} onClick={() => setCur(Math.max(0, cur - 1))} disabled={cur === 0} kbd="←" />
       <span class="num">{t('plan.slide_of', { n: cur + 1, of: l.slides.length })}</span>
       <IconButton icon="chr" label={t('plan.next_slide')} onClick={() => setCur(Math.min(l.slides.length - 1, cur + 1))} disabled={cur >= l.slides.length - 1} kbd="→" />
-      <span class="grow" /><Button icon="play" onClick={onPresent}>{t('plan.present')}</Button></div>
+      <span class="grow" /><Button icon="assist" onClick={() => onAsk(cur)} data-focus="redo-slide">{t('plan.redo_with', { name: assistant().name || t('assistant.generic') })}</Button>
+      <Menu label={t('plan.slides_menu')} items={[{ id: 'final', label: t('plan.finished_pptx'), icon: 'slides', onSelect: () => onTool('finished') }, { id: 'zip', label: t('plan.download_all'), icon: 'download', onSelect: () => onTool('zip') }]}
+        trigger={q => <IconButton icon="dots" label={t('plan.slides_menu')} {...q} data-focus="slides-menu" />} />
+      <Button icon="play" onClick={onPresent}>{t('plan.present')}</Button></div>
     {s.notes && <p class="notes"><Icon name="note" size="sm" /><span data-raw>{s.notes}</span></p>}
-    <ol class="strip" aria-label={t('plan.all_slides')}>{l.slides.map((x, i) => <li><button type="button" class={i === cur ? 'on' : ''} aria-current={i === cur ? 'true' : undefined} onClick={() => setCur(i)} aria-label={t('plan.slide_n', { n: i + 1 })}>
+    {Tools && <Tools.Shots p={p} l={l} i={cur} save={save} setCur={setCur} />}
+    <ol class="strip" aria-label={t('plan.all_slides')}>{l.slides.map((x, i) => <li><button type="button" class={i === cur ? 'on' : ''} aria-current={i === cur ? 'true' : undefined} onClick={() => setCur(i)} aria-label={t('plan.slide_n', { n: i + 1 })} data-slide-i={i}>
       <Slide slide={x} lesson={l} plan={p} width={150} /></button></li>)}</ol>
   </div>;
 }
 
-function Side({ p, l, slot, per, onSave, onDownload, onAssistant }) {
+function Side({ p, l, slot, per, onSave, onDownload, onAssistant, onTool }) {
   const ai = assistant(), E = engine(p);
   const shared = (l.slots || []).filter(x => !slot || x.classId !== slot.classId || x.date !== slot.date);
   const partners = slot ? E.partnerSlots(slot.classId, slot.date) : [];
@@ -153,7 +156,7 @@ function Side({ p, l, slot, per, onSave, onDownload, onAssistant }) {
       {shared.map(x => { const c = classOf(p, x.classId); return <p class="mute"><span class="dot" style={{ '--cc': c ? toneOf(c.color) : 'var(--g500)' }} /><span data-raw>{c ? c.name : ''}, {date(at(x.date), { weekday: 'short', day: 'numeric', month: 'short' })}</span></p>; })}
       {(partners.length > 0 || shared.length > 0) && <Switch label={shared.length ? t('plan.shared_on') : t('plan.also_give', { names: partners.map(x => (classOf(p, x.classId) || {}).name || '').join(', ') })} checked={shared.length > 0} onChange={share} />}
     </section>}
-    <Materials p={p} l={l} onSave={onSave} />
+    <Materials p={p} l={l} slot={slot} onSave={onSave} onTool={onTool} />
     {slot && slot.date <= today() && <AfterClass l={l} slot={slot} onSave={onSave} />}
     <section><h2 class="sub">{t('plan.comments_for', { name: ai.name || t('assistant.generic') })}</h2>
       <p class="mute">{t('plan.n_lesson_comments', { n: (l.talk || []).length })} · {t('plan.n_slide_comments', { n: talk })}</p>
@@ -227,11 +230,43 @@ function gotTo(l, slot, far, secs, save) {
 export default function LessonPage({ route }) {
   const p = usePlan();
   const [l, save] = useLesson(p, route.params.id);
-  const [cur, setCur] = useState(0), [presenting, setPresenting] = useState(false), [asking, setAsking] = useState(false);
+  const [cur, setCur] = useState(0), [presenting, setPresenting] = useState(false), [asking, setAsking] = useState(false), [redo, setRedo] = useState(null);
+  const [tool, setTool] = useState(null), [beside, setBeside] = useState(false), [note, setNote] = useState(null);
   const view = VIEWS.includes(route.params.view) ? route.params.view : 'lesson';
   const setView = v => go('lesson', route.params.id, v === 'lesson' ? '' : v);
-  // Present is fetched with the page, so F5 shows it at once; the editor when the Edit view opens.
-  const PresentMod = usePart('present'), EditMod = usePart('edit', view === 'edit');
+  // Present is fetched with the page, so F5 shows it at once; the lesson's tools too; the editor when the Edit view opens; Beside when opened.
+  const PresentMod = usePart('present'), Tools = usePart('tools'), EditMod = usePart('edit', view === 'edit'), Side2 = usePart('beside', beside);
+  const ask = i => { setRedo(typeof i === 'number' ? i : null); setAsking(true); };
+  // Planned from the Calendar "with your assistant": the assistant sheet opens on arrival, once.
+  useEffect(() => { try { if (l && sessionStorage.getItem('gsn.ask') === l.id) { sessionStorage.removeItem('gsn.ask'); ask(); } } catch { } }, [l && l.id]);
+  const dl = () => (l.final && Tools ? (Tools.finFresh(l) ? Tools.downloadFinal(l) : setTool({ name: 'which' })) : download(p, l));
+  // A tool from a menu: the ones that are only a download run at once, the others open their sheet.
+  const onTool = (name, arg) => {
+    if (!Tools) return;
+    if (name === 'share') return Tools.shareSave(p, l);
+    if (name === 'zip') return Tools.downloadAll(p, l);
+    if (name === 'beside') return setBeside(b => !b);
+    if (name === 'newdoc') return Tools.newDoc(p, l, save).then(id => setTool({ name: 'doc', arg: id }), saveFailed);
+    setTool({ name, arg });
+  };
+  // A slide made elsewhere (a video from Beside) goes after the one she is on.
+  const addSlide = sl => { const n = JSON.parse(JSON.stringify(l)), at2 = Math.min(cur, n.slides.length - 1) + 1; n.slides.splice(at2, 0, sl); save(n); setCur(at2); toast(t('plan.slide_added')); };
+  const onStep = (what, i) => {
+    if (what === 'edit') { setCur(i); return setView('edit'); }
+    if (what === 'ask') return ask(i);
+    const n = JSON.parse(JSON.stringify(l)), E = engine(p);
+    if (what === 'dup') { n.slides.splice(i + 1, 0, { ...JSON.parse(JSON.stringify(l.slides[i])), id: E.lid(), talk: [] }); save(n); return toast(t('plan.slide_duplicated')); }
+    if (what === 'del' && n.slides.length > 1) { n.slides.splice(i, 1); save(n); toast(t('plan.slide_removed'), { undo: () => save(JSON.parse(JSON.stringify(l))) }); }
+  };
+  // Right-click on the lesson page: a comment for the assistant on that slide, or on the lesson with the words selected or clicked
+  // (src/planner/extras.js ctxOpen, noteOpen). Shift + right-click, or in a text box, keeps the browser's own menu.
+  const onContext = e => {
+    if (!Tools || e.shiftKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable || (e.target.closest && e.target.closest('.beside'))) return;
+    e.preventDefault();
+    const th = e.target.closest('[data-slide-i]'), sel = getSelection(), quote = sel && !sel.isCollapsed ? sel.toString().trim() : '';
+    const i = th ? +th.dataset.slideI : e.target.closest('.stage,.ed-stage') ? cur : null;
+    setNote({ x: e.clientX, y: e.clientY, i: quote ? null : i, quote: quote || (i == null ? ((e.target.closest('p,li,h2,h3,td,section') || e.target).innerText || '').trim().slice(0, 1500) : '') });
+  };
   useEffect(() => {
     if (!l) return;
     const n = l.slides.length, step = d => setCur(c => Math.max(0, Math.min(n - 1, c + d)));
@@ -240,34 +275,40 @@ export default function LessonPage({ route }) {
       register({ id: 'slide-prev', keys: ['arrowleft', 'pageup'], label: 'plan.prev_slide', when: () => view === 'slides' && !presenting, run: () => step(-1) }),
       register({ id: 'present', keys: 'f5', label: 'plan.present', run: () => setPresenting(true) }),
       addCommand({ id: 'lesson-present', label: () => t('plan.present_this'), group: t('cmd.group_do'), icon: 'play', run: () => setPresenting(true) }),
-      addCommand({ id: 'lesson-assistant', label: () => t('plan.work_with', { name: assistant().name || t('assistant.generic') }), group: t('cmd.group_do'), icon: 'assist', run: () => setAsking(true) }),
-      addCommand({ id: 'lesson-download', label: () => t('plan.download_slides'), group: t('cmd.group_do'), icon: 'download', run: () => download(p, l) }),
+      addCommand({ id: 'lesson-assistant', label: () => t('plan.work_with', { name: assistant().name || t('assistant.generic') }), group: t('cmd.group_do'), icon: 'assist', run: () => ask() }),
+      addCommand({ id: 'lesson-download', label: () => t('plan.download_slides'), group: t('cmd.group_do'), icon: 'download', run: dl }),
+      addCommand({ id: 'lesson-beside', label: () => t('plan.beside'), group: t('cmd.group_do'), icon: 'book', run: () => setBeside(b => !b) }),
     ];
     return () => offs.forEach(f => f());
-  }, [l && l.id, l && l.slides.length, view, presenting]);
+  }, [l && l.id, l && l.slides.length, l && l.final && l.final.id, view, presenting, !!Tools]);
   if (!p) return <div class="page"><div class="loading" aria-busy="true" /></div>;
   if (!l) return <div class="page"><header class="ph"><h1>{t('plan.lesson')}</h1></header><EmptyState icon="warn" title={t('plan.lesson_gone')} action={<a class="btn" href={href('calendar')}>{t('nav.calendar')}</a>} /></div>;
   const slot = slotOf(p, l), per = periodOf(p, slot);
   const n = l.slides.length;
-  return <div class="page lessonpage" data-view={view}>
+  return <div class={'page lessonpage' + (beside ? ' with-beside' : '')} data-view={view} onContextMenu={onContext}>
     <header class="lh">
       <div class="crumbs">{per && <a class="link" href={href('calendar')}><Icon name="back" size="sm" /><span class="dot" style={{ '--cc': toneOf(per.c.color) }} /><span data-raw>{per.c.name}</span></a>}</div>
       <Segmented label={t('plan.lesson_view')} value={view} onChange={setView} options={[{ value: 'lesson', label: t('plan.lesson') }, { value: 'slides', label: t('plan.slides') }, { value: 'edit', label: t('common.edit') }]} />
-      <LessonMenu p={p} l={l} save={save} />
+      <IconButton icon="book" label={t('plan.beside')} state={beside ? 'on' : undefined} aria-pressed={String(beside)} onClick={() => setBeside(!beside)} data-focus="beside" />
+      <LessonMenu p={p} l={l} save={save} onTool={onTool} />
     </header>
     {per && slot && <p class="mute when"><span class="dot" style={{ '--cc': toneOf(per.c.color) }} /><span data-raw>{per.c.name}</span> <span data-raw>{date(at(slot.date), { weekday: 'short', day: 'numeric', month: 'short' })}{per.m ? ', ' + (per.m.label ? per.m.label + ', ' : '') + clock(per.m.start) : ''}</span></p>}
     <h1 class="lt" data-raw>{l.title || t('plan.untitled')}</h1>
+    {Tools && <Tools.VariantBar p={p} l={l} save={save} />}
     <div class="lbar"><StateSeg l={l} slot={slot} onSave={save} /><span class="mute">{t('plan.n_slides', { n })}</span><span class="grow" />
       <Button variant="primary" icon="play" onClick={() => setPresenting(true)} data-focus="present">{t('plan.present')}</Button></div>
     <div class={'lgrid' + (view === 'edit' ? ' edit' : '')}>
       <div class="lmain">
-        {view === 'lesson' && <LessonView p={p} l={l} slot={slot} per={per} onOpenSlide={i => { setCur(i); setView('slides'); }} />}
-        {view === 'slides' && <SlidesView p={p} l={l} cur={Math.min(cur, n - 1)} setCur={setCur} onPresent={() => setPresenting(true)} />}
-        {view === 'edit' && (EditMod ? <EditMod.default key={l.id} p={p} l={l} cur={cur} setCur={setCur} save={save} ai={assistant().name || t('assistant.generic')} /> : <div class="loading" aria-busy="true" />)}
+        {view === 'lesson' && <LessonView p={p} l={l} slot={slot} per={per} onOpenSlide={i => { setCur(i); setView('slides'); }} onStep={onStep} />}
+        {view === 'slides' && <SlidesView p={p} l={l} cur={Math.min(cur, n - 1)} setCur={setCur} onPresent={() => setPresenting(true)} onAsk={ask} onTool={onTool} Tools={Tools} save={save} />}
+        {view === 'edit' && (EditMod ? <EditMod.default key={l.id} p={p} l={l} cur={cur} setCur={setCur} save={save} ai={assistant().name || t('assistant.generic')} onAsk={ask} /> : <div class="loading" aria-busy="true" />)}
       </div>
-      {view !== 'edit' && <Side p={p} l={l} slot={slot} per={per} onSave={save} onDownload={() => download(p, l)} onAssistant={() => setAsking(true)} />}
+      {view !== 'edit' && <Side p={p} l={l} slot={slot} per={per} onSave={save} onDownload={dl} onAssistant={() => ask()} onTool={onTool} />}
     </div>
-    <AssistantSheet p={p} l={l} open={asking} onClose={() => setAsking(false)} save={save} />
+    {beside && Side2 && <Side2.default p={p} l={l} save={save} onClose={() => setBeside(false)} onSlide={addSlide} />}
+    <AssistantSheet key={asking ? 'a' + redo : 'x'} p={p} l={l} open={asking} slide={redo} onClose={() => { setAsking(false); setRedo(null); }} save={save} />
+    {Tools && tool && <Tools.default name={tool.name} arg={tool.arg} p={p} l={l} slot={slot} save={save} onClose={() => setTool(null)} />}
+    {Tools && note && <Tools.NotePop p={p} l={l} at={note} save={save} onClose={() => setNote(null)} />}
     {presenting && PresentMod && <PresentMod.Present p={p} l={l} className={per ? per.c.name : ''} start={view === 'slides' ? cur : resumeAt(l, slot)} onClose={(i, far, secs) => { setPresenting(false); if (typeof i === 'number') setCur(i); gotTo(l, slot, far, secs, save); }} />}
   </div>;
 }

@@ -38,4 +38,4 @@ async function plantPlan(page, { setup = SETUP, lessons = LESSONS, units = UNITS
     db.close();
   }, setup, lessons, units, bank, acts);
 }
-module.exports = { SETUP, LESSONS, UNITS, BANK, ACTS, plantPlan };
+module.exports = { SETUP, LESSONS, UNITS, BANK, ACTS, plantPlan, lesson };

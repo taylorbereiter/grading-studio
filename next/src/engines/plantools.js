@@ -1,10 +1,24 @@
 // MADE BY next/build.js FROM src/planner/*.js (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
 import * as fflate from 'fflate';
-import { hash, deckSizes, RT_COLORS } from './planner.js';
+import { hash, deckSizes, className, PT, imgSrc, ytId, ownTpl, LOOKS, lookOf, teachBoxes, BOX_KEYS, boxOver, RT_LVL, rtEsc, RT_COLORS, rtNumber, rtLineHtml, rtHtml, lessonUnit, nbClean, nbText } from './planner.js';
 
 // src/planner/review.js
 const slideKey = s => JSON.stringify({ l: s.layout, t: s.title, b: s.body, z: s.size, n: s.notes, i: s.img && s.img.src.length + ':' + s.img.source, v: s.video && s.video.url + s.video.start });
+// src/planner/lessons.js
+function ytStart(u) { try { const t = new URL(u).searchParams.get('t') || ''; const m = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/.exec(t); return m ? (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0) : 0; } catch { return 0; } }
+// src/planner/lessons.js
+async function videoFrom(url) {
+  const v = { url, title: '', by: '', start: ytStart(url) }, id = ytId(url);
+  if (!id) return v;
+  try { const j = await (await fetch('https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id))).json(); v.title = String(j.title || ''); v.by = String(j.author_name || ''); } catch { }
+  try {
+    const b = await (await fetch('https://i.ytimg.com/vi/' + id + '/hqdefault.jpg')).blob();
+    v.thumb = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); });
+    if (!/^data:image\/jpeg;base64,/.test(v.thumb)) delete v.thumb;
+  } catch { }
+  return v;
+}
 // src/planner/lessons.js
 async function shrinkPic(file) {
   const url = URL.createObjectURL(file);
@@ -17,6 +31,106 @@ async function shrinkPic(file) {
     return { src: c.toDataURL(png ? 'image/png' : 'image/jpeg', 0.86), w: c.width, h: c.height };
   } finally { URL.revokeObjectURL(url); }
 }
+// src/planner/boxes.js
+const TTL_SIZES = [40, 44, 48, 54, 60, 66, 72];   // a title slide's title is bigger than any other text
+// src/planner/boxes.js
+function boxSizes(s, k) { return s.layout === 'title' && k === 'title' ? TTL_SIZES : deckSizes(); }
+// src/planner/boxes.js
+function boxUsual(s, k) {
+  if (k === 'body') return s.size;
+  if (s.layout === 'title') return k === 'title' ? 58.5 : 0;   // 0: the subtitle keeps the template's own size
+  if (k === 'title') return 32;
+  const b = teachBoxes({ ...s, fs: null, box: null }).find(x => x.k === k); return b ? b.sz : 0;
+}
+// src/planner/boxes.js
+const boxSize = (s, k) => k === 'body' ? s.size : (s.fs && s.fs[k]) || boxUsual(s, k);
+// src/planner/rich.js
+const RT_NOCOLOR = '#010203';   // what "Automatic" paints with for a moment, before it is taken off
+// src/planner/rich.js
+function rtLineText(x) { return '\t'.repeat(x.lvl) + (x.kind === 'b' ? '• ' : x.kind === 'n' ? (x.n || 1) + '. ' : '') + x.text; }
+// src/planner/rich.js
+const rtToText = lines => { const a = rtNumber(lines).map(rtLineText); while (a.length && !a[a.length - 1].trim()) a.pop(); return a.join('\n'); };
+// src/planner/rich.js
+function rtColorName(v) {
+  v = String(v || '').trim().toLowerCase(); let h = '';
+  const m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(v);
+  if (m) h = '#' + [m[1], m[2], m[3]].map(x => (+x).toString(16).padStart(2, '0')).join(''); else if (/^#[0-9a-f]{6}$/.test(v)) h = v;
+  return Object.keys(RT_COLORS).find(k => RT_COLORS[k].toLowerCase() === h) || '';
+}
+// src/planner/rich.js
+function rtRead(el) {
+  const lines = [];
+  const lineOf = n => {
+    const cl = n.classList || { contains: () => false };
+    const kind = cl.contains('rt-b') ? 'b' : cl.contains('rt-n') ? 'n' : 'p', lvl = cl.contains('l2') ? 2 : cl.contains('l1') ? 1 : 0;
+    return { kind, lvl, text: rtFromNodes(n.nodeType === 1 && !/^(B|I|U|STRONG|EM|SPAN|FONT)$/.test(n.tagName) ? n.childNodes : [n]) };
+  };
+  for (const n of el.childNodes) {
+    if (n.nodeType === 3 && !n.nodeValue.trim()) continue;
+    if (n.nodeType === 1 && n.tagName === 'BR') continue;
+    lines.push(lineOf(n));
+  }
+  return rtToText(lines);
+}
+// src/planner/rich.js
+function rtFromNodes(nodes) {
+  const segs = [];
+  (function walk(ns, f) {
+    for (const n of ns) {
+      if (n.nodeType === 3) { if (n.nodeValue) segs.push({ t: n.nodeValue.replace(/\u00a0/g, ' ').replace(/\n/g, ' '), ...f }); continue; }
+      if (n.nodeType !== 1 || n.tagName === 'BR') continue;
+      const st = n.getAttribute('style') || '', cm = /(?:^|;)\s*color:\s*([^;]+)/.exec(st);
+      const c = n.dataset && (n.dataset.c === '' || RT_COLORS[n.dataset.c]) ? n.dataset.c : n.tagName === 'FONT' && n.getAttribute('color') ? rtColorName(n.getAttribute('color')) : cm ? rtColorName(cm[1]) : null;
+      walk(n.childNodes, { c: c == null ? f.c : c, b: f.b || /^(B|STRONG)$/.test(n.tagName) || /font-weight:\s*(bold|[6-9]00)/.test(st) ? 1 : 0, i: f.i || /^(I|EM)$/.test(n.tagName) || /font-style:\s*italic/.test(st) ? 1 : 0, u: f.u || n.tagName === 'U' || /underline/.test(st) ? 1 : 0 });
+    }
+  })(nodes, { b: 0, i: 0, u: 0, c: '' });
+  let out = '', cur = { b: 0, i: 0, u: 0, c: '' };
+  const shut = () => (cur.u ? '__' : '') + (cur.i ? '*' : '') + (cur.b ? '**' : ''), close = () => shut() + (cur.c ? '{/}' : '');
+  for (const s of segs) {
+    if (s.b !== cur.b || s.i !== cur.i || s.u !== cur.u || s.c !== cur.c) {   // a color stays open while only bold, italic or underline change
+      out += s.c === cur.c ? shut() : close() + (s.c ? '{' + s.c + '}' : '');
+      cur = s; out += (s.b ? '**' : '') + (s.i ? '*' : '') + (s.u ? '__' : '');
+    }
+    out += rtEsc(s.t);
+  }
+  return out + close();
+}
+// src/planner/rich.js
+function rtTidy(el) {
+  let wrap = null;
+  for (const n of [...el.childNodes]) {
+    const isLine = n.nodeType === 1 && n.classList.contains('rt');
+    if (isLine) { wrap = null; continue; }
+    if (n.nodeType === 1 && /^(DIV|P)$/.test(n.tagName)) { n.className = 'rt rt-p l0'; wrap = null; continue; }
+    if (!wrap) { wrap = document.createElement('div'); wrap.className = 'rt rt-p l0'; n.before(wrap); }
+    wrap.appendChild(n);
+  }
+  if (!el.firstChild) el.innerHTML = rtLineHtml({ lvl: 0, kind: 'p', text: '' }, true);
+}
+// src/planner/rich.js
+function rtRenumber(el) {
+  const cnt = [0, 0, 0];
+  for (const d of el.querySelectorAll(':scope > .rt')) {
+    const lvl = d.classList.contains('l2') ? 2 : d.classList.contains('l1') ? 1 : 0;
+    if (d.classList.contains('rt-n')) { d.dataset.n = ++cnt[lvl]; for (let k = lvl + 1; k <= RT_LVL; k++) cnt[k] = 0; }
+    else { delete d.dataset.n; for (let k = lvl; k <= RT_LVL; k++) cnt[k] = 0; }
+  }
+}
+// src/planner/rich.js
+function rtCurLines(el) {
+  const sel = getSelection(); if (!sel.rangeCount) return [];
+  const r = sel.getRangeAt(0), ls = [...el.querySelectorAll(':scope > .rt')];
+  const hit = ls.filter(d => r.intersectsNode(d));
+  if (hit.length) return hit;
+  let n = r.startContainer; while (n && n.parentNode !== el) n = n.parentNode;
+  return n && n.classList && n.classList.contains('rt') ? [n] : ls.slice(-1);
+}
+// src/planner/rich.js
+const rtLvl = d => d.classList.contains('l2') ? 2 : d.classList.contains('l1') ? 1 : 0;
+// src/planner/rich.js
+function rtSetKind(d, k) { d.classList.remove('rt-p', 'rt-b', 'rt-n'); d.classList.add('rt-' + k); }
+// src/planner/rich.js
+function rtSetLvl(d, v) { d.classList.remove('l0', 'l1', 'l2'); d.classList.add('l' + Math.max(0, Math.min(RT_LVL, v))); }
 // src/planner/materials.js
 function docClean(html) {
   // a template is inert, so nothing in pasted or imported HTML runs or loads while it is cleaned
@@ -32,6 +146,8 @@ function docClean(html) {
   })(d);
   return tp.innerHTML || '<p></p>';
 }
+// src/planner/materials.js
+const DOC_CSS = 'h1{font-size:20pt;margin:0 0 8pt}h2{font-size:15pt;margin:12pt 0 6pt}p{margin:0 0 6pt}table{border-collapse:collapse;width:100%;margin:6pt 0}td,th{border:1px solid #000;padding:6pt;vertical-align:top}table.box td{padding:8pt 10pt}p.lines{border-bottom:1px solid #000;min-height:22pt;margin:0}';
 // src/planner/materials.js
 async function docxOf(html, title) {
   const d = document.createElement('div'); d.innerHTML = docClean(html);
@@ -216,4 +332,4 @@ function shareLesson(l) {
   c.slides = c.slides.map(s => { const { ask, talk, ctx, ...keep } = s; return keep; });
   return c;
 }
-export { pptxToSlides, docxOf, shareLesson, finSig };
+export { pptxToSlides, docxOf, shareLesson, finSig, docClean, DOC_CSS, shrinkPic, imgSrc, LOOKS, lookOf, ownTpl, PT, BOX_KEYS, boxSizes, boxUsual, boxSize, boxOver, rtHtml, rtLineHtml, rtRead, rtTidy, rtRenumber, rtCurLines, rtLvl, rtSetKind, rtSetLvl, RT_NOCOLOR, nbClean, nbText, lessonUnit, videoFrom, ytId, ytStart };

@@ -1,1 +1,0 @@
-import{P as t,oa as e}from"./chunk-NEGGI3JV.js";import{b as r}from"./chunk-IE3NK3JC.js";import"./chunk-LLH5FQM3.js";import"./chunk-5G6X45LB.js";function o(){return r("div",{class:"page narrow"},r("header",{class:"ph"},r("h1",null,t("keys.title")),r("p",null,t("keys.about"))),r(e,null))}export{o as default};
