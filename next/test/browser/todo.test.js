@@ -187,8 +187,9 @@ test('To do: the week, a line typed into a day and one dragged to another, the k
   await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).todo.items.find(x => x.id === 'tdB').d === '2026-10-30');
   // the list again: the kinds the app adds, one switched off
   await p.click('[data-td-view]'); await todoUp(p);
-  const before = (await p.$$('[data-td-list] .tdck.app')).length;
   await p.waitForSelector('[data-td-kind="back"] [role="switch"]', { timeout: 20000 });
+  // counted once the list has finished drawing (the same count twice, a moment apart)
+  const before = await p.evaluate(async () => { let n = -1; for (;;) { const m = document.querySelectorAll('[data-td-list] .tdck.app').length; if (m === n) return m; n = m; await new Promise(r => setTimeout(r, 400)); } });
   // pressed until it is kept: a press that lands while the list is still drawing is lost
   for (let i = 0; i < 5; i++) {
     await p.$eval('[data-td-kind="back"] [role="switch"]', e => e.click());
