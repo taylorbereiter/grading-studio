@@ -592,6 +592,11 @@ function hlEnd(pg, g) {
   Object.assign(m, { x, y, w: r1(Math.max(...xs) + m.sw / 2 - x), h: r1(Math.max(...ys) + m.sw / 2 - y) });
 }
 // src/marking.js
+function setHlMode(mode, say) {
+  hlMode = mode; store.set('gs.hlMode', mode); renderTools();
+  if (say) toast(mode === 'free' ? 'Highlight: freehand' : 'Highlight: snaps to typed lines. Freehand where there are none.');
+}
+// src/marking.js
 function noteHlBegin(pg, g) {
   const a = lineAt(pg, g.x0, g.y0);
   if (a >= 0) { g.snapA = a; g.m = setRects({ t: 'hl', color: HL[hlColor] }, snapRects(pg.tl, a, g.x0, a, g.x0)); }
@@ -756,6 +761,21 @@ const isProof = k => PROOF.some(p => p[0] === k) || PUNCT.some(p => p[0] === k);
 const BRAINROT = new Set(['cat', 'skull', 'frog']);
 // src/stamps.js
 const stampName = k => k === 'crit' ? 'Criterion score' : isProof(k) ? markLabel(k) : ((STICKERS.find(p => p[0] === k)) || [k, k])[1];
+// src/stamps.js
+const MARK_MEAN = {
+  gr: 'A grammar mistake here, such as a verb that doesn’t match its subject.',
+  cap: 'Make this letter a capital.', lower: 'Make this letter lowercase.',
+  insert: 'Something is missing here. Add the word or letter written above it.',
+  para: 'Start a new paragraph here.', delete: 'Take this out.', swap: 'Switch the order of these words or letters.',
+  space: 'Put a space here.', close: 'Take out the space and join these together.',
+  sp: 'This word is spelled wrong.', ro: 'Two sentences run together. Split them, or join them with the right punctuation.',
+  frag: 'This isn’t a full sentence. It’s missing a subject or a verb, or the thought isn’t finished.',
+  wc: 'A different word would fit better here.', awk: 'This is hard to read. Try saying it out loud and rewording it.',
+  vt: 'The verb is in the wrong tense. Keep the tense the same.', unclear: 'I’m not sure what you mean here.',
+  period: 'Add a period where the mark points.', comma: 'Add a comma where the mark points.', apos: 'Add an apostrophe here.',
+  quote: 'Add quotation marks here.', semi: 'Add a semicolon here.', colon: 'Add a colon here.', qmark: 'Add a question mark here.',
+  excl: 'Add an exclamation mark here.', hyphen: 'Add a hyphen here.', dash: 'Add a dash here.',
+};
 // src/stamps.js
 const MARK_KEY = 'gs.markKey';
 // src/stamps.js
@@ -948,6 +968,8 @@ function groupFileOf(g, st) { const p = g.p && g.p[st.key]; return p ? st.files.
 // src/groups.js
 const groupOwn = g => !!(g && g.own);
 // src/groups.js
+function stampOwner(m, st) { const g = groupOf(st); if (groupOwn(g) && groupFileOf(g, st)) m.o = st.key; return m; }
+// src/groups.js
 const groupJustOn = st => !!(st && groupJust === st.key && groupOwn(groupOf(st)) && groupFileOf(groupOf(st), st));
 // src/groups.js
 function justSeen(pg) { pg.seen = groupJustOn(batch.students[cur]) ? new Set(pg.marks()) : null; }
@@ -1015,5 +1037,5 @@ function gpShortNext(left) {
   batch.students.forEach((st, i) => { if (i === cur || !left(st)) return; const l = gpLen(st) || 1e9; if (l < bl) { bl = l; best = i; } });
   return best;
 }
-export { bindPage, undo, redo, snap, changed, pushUndo, gradeSnap, fieldSnap, commitEditors, stepSize, saveNow, placeStamp, redrawAll, hitMark, moveMark, keepOnPage, deleteSelected, gripDrag, r1, clamp, turnMarks, stepOf, reshape, thumbCache, setRot, circleWord, highlightWord, textBoxHere, scoreTouched, setStatus, touchGrade, nextUnscored, stampName, isSticker, isProof, PROOF, PUNCT, BRAINROT, wordUnder, newCheckSize, stickerAspect, RECENT_STAMPS };
+export { bindPage, undo, redo, snap, changed, pushUndo, gradeSnap, fieldSnap, commitEditors, stepSize, saveNow, placeStamp, redrawAll, hitMark, moveMark, keepOnPage, deleteSelected, gripDrag, r1, clamp, turnMarks, stepOf, reshape, thumbCache, setRot, circleWord, highlightWord, textBoxHere, scoreTouched, setStatus, touchGrade, nextUnscored, stampName, isSticker, isProof, PROOF, PUNCT, BRAINROT, wordUnder, newCheckSize, stickerAspect, RECENT_STAMPS, canResize, setHlMode, hlMode, critStampOf, scoreStampText, stampOwner, newStampSize, fmNow, markLabel0, MARK_MEAN, MARK_KEY };
 export { actStep, groupOf };

@@ -11,12 +11,13 @@ import { toast } from '../../ui/index.js';
 import { PARTS } from '../router.js';
 import { keepBank } from './editors.js';
 import './lines.js';
+import './setup-lines.js';
 
 const el = (tag, cls, attrs = {}) => { const e = document.createElement(tag); if (cls) e.className = cls; for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
 const button = (cls, attrs, text) => { const b = el('button', cls, { type: 'button', ...attrs }); if (text != null) b.textContent = text; return b; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const EDIT_OFF = '~edit|';
-const COLOR_LINE = { '#FFF59D': 'mark.c_yellow', '#C8E6C9': 'mark.c_green', '#BBDEFB': 'mark.c_blue', '#F8BBD0': 'mark.c_pink', '': 'mark.wd_nocolor' };
+const COLOR_LINE = { '#FFF59D': 'mark.c_yellow', '#C8E6C9': 'mark.c_green', '#BBDEFB': 'mark.c_blue', '#F8BBD0': 'mark.c_pink', '': 'setup.wd_nocolor' };
 const saves = new Set();   // Word edits waiting out their short pause (the marking code's saveNowDone writes them first)
 
 // One Word file. M: the marking code once its tools are there (until then the card shows the file and changes nothing).
@@ -28,19 +29,19 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
   root.style.setProperty('--dfs', (+disp.dfs || 15) + 'px'); root.style.setProperty('--dlh', +disp.dlh || 1.45);
   const head = el('div', 'fhead');
   const nm = el('span', 'nm', { 'data-raw': '' }); nm.textContent = f.name;
-  const kind = el('span', 'mute'); kind.textContent = t(/\.(docm|dotm)$/i.test(f.name) ? 'mark.wd_macros' : 'mark.wd_file');
+  const kind = el('span', 'mute'); kind.textContent = t(/\.(docm|dotm)$/i.test(f.name) ? 'setup.wd_macros' : 'setup.wd_file');
   head.append(nm, kind);
-  if (f.rubric) { const p = el('span', 'pill'); p.textContent = t('mark.wd_rubric'); head.append(p); }
-  const editedPill = el('span', 'pill', { 'data-wedited': '' }); editedPill.textContent = t('mark.wd_edited'); editedPill.hidden = !f.edited; head.append(editedPill);
+  if (f.rubric) { const p = el('span', 'pill'); p.textContent = t('setup.wd_rubric'); head.append(p); }
+  const editedPill = el('span', 'pill', { 'data-wedited': '' }); editedPill.textContent = t('setup.wd_edited'); editedPill.hidden = !f.edited; head.append(editedPill);
   head.append(el('span', 'grow'));
   const can = !readOnly && !!M;
-  const bNote = can ? button('btn sm', { 'data-wnote': '', title: t('mark.wd_comment_tip') }, t('mark.wd_comment')) : null;
-  const bEdit = can ? button('btn sm', { 'data-wedit': '' }, t('mark.wd_edit')) : null;
-  const bPdf = can && !f.virtual && !f.rubric && !f.from && f.data ? button('btn sm', { 'data-wpdf': '', title: t('mark.wd_pdf_tip') }, t('mark.wd_pdf')) : null;
-  const bDl = button('btn sm ghost', { 'data-wdl': '' }, t('mark.wd_download'));
+  const bNote = can ? button('btn sm', { 'data-wnote': '', title: t('setup.wd_comment_tip') }, t('setup.wd_comment')) : null;
+  const bEdit = can ? button('btn sm', { 'data-wedit': '' }, t('setup.wd_edit')) : null;
+  const bPdf = can && !f.virtual && !f.rubric && !f.from && f.data ? button('btn sm', { 'data-wpdf': '', title: t('setup.wd_pdf_tip') }, t('setup.wd_pdf')) : null;
+  const bDl = button('btn sm ghost', { 'data-wdl': '' }, t('setup.wd_download'));
   head.append(...[bNote, bEdit, bPdf, bDl].filter(Boolean));
-  const bar = el('div', 'wbar', { role: 'toolbar', 'aria-label': t('mark.wd_editing') }); bar.hidden = true;
-  const wdoc = el('div', 'wdoc'), page = el('div', 'dpage'), aside = el('aside', 'wnotes', { 'aria-label': t('mark.wd_comments') }); aside.hidden = true;
+  const bar = el('div', 'wbar', { role: 'toolbar', 'aria-label': t('setup.wd_editing') }); bar.hidden = true;
+  const wdoc = el('div', 'wdoc'), page = el('div', 'dpage'), aside = el('aside', 'wnotes', { 'aria-label': t('setup.wd_comments') }); aside.hidden = true;
   wdoc.append(page, aside);
   root.append(head, bar, wdoc);
 
@@ -48,7 +49,7 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
   try { w = W.openWord(f.data); w.pRuns = []; W.renderWord(w, page); }
   catch (e) {
     console.error(e);
-    const p = el('p'); p.textContent = t('mark.wd_cannot'); page.replaceChildren(p);
+    const p = el('p'); p.textContent = t('setup.wd_cannot'); page.replaceChildren(p);
     for (const x of [bNote, bEdit]) if (x) x.remove();
   }
   if (w) w.pRuns = w.paras.map((_, i) => [...page.querySelectorAll('p[data-pi="' + i + '"] [data-ri]')].map(s => w.runs[+s.dataset.ri]));
@@ -67,22 +68,22 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
     W.wordScore(f);
     editedPill.hidden = false;
     try { const Wr = await PARTS.write(); await Wr.keepEdit(b0.id, f.path, { data: f.data, orig: f.orig, t: f.edited }); M && M.changedNow(); }
-    catch (e) { console.error(e); toast(t('mark.wd_not_kept')); }
+    catch (e) { console.error(e); toast(t('setup.wd_not_kept')); }
   };
   const soon = () => { clearTimeout(saveT); saveT = setTimeout(saveNow, 700); saves.add(saveNow); if (M) M.flushers.add(saveNow); };
 
   const drawBar = () => {
-    const hint = el('span'); hint.textContent = t('mark.wd_bar');
-    const sws = W.CELL_COLORS.map(([c]) => { const s = button('sw', { 'data-cell': c, title: t(COLOR_LINE[c] || 'mark.wd_nocolor'), 'aria-label': t('mark.wd_shade', { c: t(COLOR_LINE[c] || 'mark.wd_nocolor') }), style: 'background:' + (c || '#fff') }); if (!c) s.textContent = '⦸'; return s; });
+    const hint = el('span'); hint.textContent = t('setup.wd_bar');
+    const sws = W.CELL_COLORS.map(([c]) => { const s = button('sw', { 'data-cell': c, title: t(COLOR_LINE[c] || 'setup.wd_nocolor'), 'aria-label': t('setup.wd_shade', { c: t(COLOR_LINE[c] || 'setup.wd_nocolor') }), style: 'background:' + (c || '#fff') }); if (!c) s.textContent = '⦸'; return s; });
     bar.replaceChildren(hint, ...sws);
-    if (f.orig || f.edited) { bar.append(el('span', 'grow'), button('link', { 'data-wreset': '' }, t('mark.wd_original'))); }
-    if (w && w.macros) { const m = el('div', 'mute wfull'); m.textContent = t('mark.wd_macros_note'); bar.append(m); }
+    if (f.orig || f.edited) { bar.append(el('span', 'grow'), button('link', { 'data-wreset': '' }, t('setup.wd_original'))); }
+    if (w && w.macros) { const m = el('div', 'mute wfull'); m.textContent = t('setup.wd_macros_note'); bar.append(m); }
   };
   const setEditing = on => {
     editing = on;
     page.classList.toggle('editing', on);
     for (const p of page.querySelectorAll('p.wp')) p.contentEditable = on ? 'true' : 'false';
-    if (bEdit) { bEdit.textContent = t(on ? 'mark.wd_done' : 'mark.wd_edit'); bEdit.setAttribute('aria-pressed', on); }
+    if (bEdit) { bEdit.textContent = t(on ? 'setup.wd_done' : 'setup.wd_edit'); bEdit.setAttribute('aria-pressed', on); }
     bar.hidden = !on; if (on) drawBar();
     if (!on && (dirty.size || saveT)) saveNow();
   };
@@ -92,7 +93,7 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
   const wireRubric = () => {
     const m = W.rubricModel(page); if (!m) return;
     const su = () => state().setup;
-    for (const c of m.cells) { c.td.classList.add('rcell'); c.td.title = t('mark.wd_box_tip'); }
+    for (const c of m.cells) { c.td.classList.add('rcell'); c.td.title = t('setup.wd_box_tip'); }
     const info = el('div', 'rinfo', { role: 'status' });
     root.insertBefore(info, wdoc);
     const show = s => {
@@ -101,8 +102,8 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
       if (s.pct != null) { const p = el('b', 'pc'); p.textContent = fmtNum(s.pct) + '%'; info.append(' ', p); }
       const per = el('span', 'mute', { 'data-raw': '' }); per.textContent = m.crits.map((c, i) => (c.length > 24 ? c.slice(0, 24) + '…' : c) + ' ' + (s.per[i] == null ? '–' : fmtNum(s.per[i]))).join(' · ');
       info.append(per);
-      if (!s.done) { const n = el('span', 'mute'); n.textContent = t('mark.wd_each'); info.append(n); }
-      if (su().mode === 'rubric' && m.max !== maxPoints()) { const n = el('span', 'warn wfull'); n.textContent = t('mark.wd_max_differs', { a: m.max, b: maxPoints() }); info.append(n); }
+      if (!s.done) { const n = el('span', 'mute'); n.textContent = t('setup.wd_each'); info.append(n); }
+      if (su().mode === 'rubric' && m.max !== maxPoints()) { const n = el('span', 'warn wfull'); n.textContent = t('setup.wd_max_differs', { a: m.max, b: maxPoints() }); info.append(n); }
     };
     let last = W.rubricScore(m);
     const push = (s, write) => {
@@ -135,8 +136,8 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
       asked = true;
       const outOf = +su().outOf !== m.max, scale = W.scaleDiffers(m.scale);
       if (!outOf && !scale) return done();
-      const box = el('div', 'rinfo rask', { role: 'group' }), q = el('span'), yes = button('btn sm primary', { 'data-wyes': '' }, t('mark.wd_class_yes')), no = button('btn sm', { 'data-wno': '' }, t('mark.wd_class_no'));
-      q.textContent = outOf ? t(scale ? 'mark.wd_class_both' : 'mark.wd_class_outof', { a: m.max, b: su().outOf }) : t('mark.wd_class_scale');
+      const box = el('div', 'rinfo rask', { role: 'group' }), q = el('span'), yes = button('btn sm primary', { 'data-wyes': '' }, t('setup.wd_class_yes')), no = button('btn sm', { 'data-wno': '' }, t('setup.wd_class_no'));
+      q.textContent = outOf ? t(scale ? 'setup.wd_class_both' : 'setup.wd_class_outof', { a: m.max, b: su().outOf }) : t('setup.wd_class_scale');
       box.append(q, el('span', 'grow'), no, yes); root.insertBefore(box, wdoc); yes.focus();
       const end = async ok => { box.remove(); if (ok) await classSetup(outOf ? m.max : null, scale ? m.scale : null); done(); };
       yes.onclick = () => end(true); no.onclick = () => end(false);
@@ -157,8 +158,8 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
     W.wordScore(f);
     if (f.wscore || !f.wtab) wireRubric();
     else {
-      const off = el('div', 'rinfo roff'), s = el('span', 'mute'); s.textContent = t('mark.wd_table');
-      const on = button('link', { 'data-wtabon': '' }, t('mark.wd_score_with'));
+      const off = el('div', 'rinfo roff'), s = el('span', 'mute'); s.textContent = t('setup.wd_table');
+      const on = button('link', { 'data-wtabon': '' }, t('setup.wd_score_with'));
       off.append(s, on); root.insertBefore(off, wdoc);
       // for this assignment, until the page closes: every student's table is read again as a rubric (the current app's wordTabOn)
       on.onclick = () => { const b = state().batch; W.wordTabOn.add(b.id); for (const x of b.students) for (const g of x.files) if (g.kind === 'docx') g.wsOf = null; off.remove(); W.wordScore(f); wireRubric(); };
@@ -233,7 +234,7 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
     pop(near, '', true, async v => {
       for (const s of lit) s.classList.remove('wpend');
       if (!v) return;
-      if (!W.wCommentAdd(w, at, v)) return toast(t('mark.wd_no_comments'));
+      if (!W.wCommentAdd(w, at, v)) return toast(t('setup.wd_no_comments'));
       paint(); await saveNow();
     });
   };
@@ -256,11 +257,11 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
         const sel = window.getSelection(), hit = sel.isCollapsed && e.target.closest('[data-cm]');
         if (hit) return openComment(hit.dataset.cm.split(' ')[0]);
         const at = W.wPickWords(w, page, e);
-        if (at) addComment(at); else toast(t('mark.wd_right_click'));
+        if (at) addComment(at); else toast(t('setup.wd_right_click'));
       });
       aside.addEventListener('click', e => { const c = e.target.closest('[data-cm]'); if (c) openComment(c.dataset.cm); });
       bNote.addEventListener('mousedown', e => e.preventDefault());   // keeps her selection
-      bNote.addEventListener('click', () => { const at = W.wPickWords(w, page, null); if (at) addComment(at); else toast(t('mark.wd_select')); });
+      bNote.addEventListener('click', () => { const at = W.wPickWords(w, page, null); if (at) addComment(at); else toast(t('setup.wd_select')); });
     }
   }
 
@@ -275,20 +276,20 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
     if (e.target.closest('[data-wpdf]')) { if (editing) setEditing(false); if (saveT || dirty.size) await saveNow(); return root.dispatchEvent(new CustomEvent('wordpdf', { bubbles: true })); }
     if (e.target.closest('[data-wreset]')) {
       if (saveT) await saveNow();
-      const orig = f.orig; if (!orig) return toast(t('mark.wd_no_orig'));
+      const orig = f.orig; if (!orig) return toast(t('setup.wd_no_orig'));
       const was = W.wordScore(f), b = state().batch;
       f.data = orig; f.orig = null; f.edited = 0;
       try { const Wr = await PARTS.write(); await Wr.dropEdit(b.id, f.path); } catch (er) { console.error(er); }
       b.goneNow = { ...(b.goneNow || (b.revs || {}).gone || {}), [EDIT_OFF + f.path]: Date.now() };   // noteGone: a copy elsewhere doesn't bring the edit back
       if (M) M.wordGrade(st, () => W.wordScoreGone(st, was));
       W.wordScore(f);
-      toast(t('mark.wd_back'));
+      toast(t('setup.wd_back'));
       return root.dispatchEvent(new CustomEvent('wordreopen', { bubbles: true }));
     }
     const k = e.target.closest('.wchk');
-    if (k && w) { if (!editing) return toast(t('mark.wd_edit_first')); const on = W.wToggle(w, w.boxes[+k.dataset.ki]); k.textContent = on ? '☒' : '☐'; k.setAttribute('aria-pressed', on); soon(); return; }
+    if (k && w) { if (!editing) return toast(t('setup.wd_edit_first')); const on = W.wToggle(w, w.boxes[+k.dataset.ki]); k.textContent = on ? '☒' : '☐'; k.setAttribute('aria-pressed', on); soon(); return; }
     const sw = e.target.closest('[data-cell]');
-    if (sw && w) { if (!cell) return toast(t('mark.wd_cell_first')); W.wShadeCell(w, w.cells[+cell.dataset.ci], sw.dataset.cell); cell.style.background = sw.dataset.cell || ''; if (rub) rub.push(); soon(); return; }
+    if (sw && w) { if (!cell) return toast(t('setup.wd_cell_first')); W.wShadeCell(w, w.cells[+cell.dataset.ci], sw.dataset.cell); cell.style.background = sw.dataset.cell || ''; if (rub) rub.push(); soon(); return; }
     const td = e.target.closest('td[data-ci]');
     if (td && editing) { if (cell) cell.classList.remove('wsel'); cell = td; td.classList.add('wsel'); }
   });

@@ -26,6 +26,7 @@ function Tools() {
     {TOOLS.map(([k, icon, key]) => <IconButton icon={icon} label={TOOL_LINE[k]()} kbd={key.toUpperCase()} aria-pressed={bar === k ? 'true' : 'false'} data-tool={k} onClick={() => M.chooseTool(k)} />)}
     {bar !== 'select' && bar !== 'erase' && <span class="sep" />}
     {bar === 'hl' ? sw(HL, s.hlColor, M.chooseHl, t('mark.hl_color')) : bar === 'check' ? sw(COLORS, s.checkInk, M.chooseCheck, t('mark.check_color')) : bar !== 'select' && bar !== 'erase' ? sw(COLORS, s.inkColor, M.chooseInk, t('mark.ink')) : null}
+    {bar === 'hl' && <span class="mk-hlm" role="group" aria-label={t('mark.hl_how')}><button type="button" aria-pressed={M.hlFree() ? 'false' : 'true'} title={t('mark.hl_snap_tip')} data-hlm="auto" onClick={() => M.setHlFree(false)}>{t('mark.hl_snap')}</button><button type="button" aria-pressed={M.hlFree() ? 'true' : 'false'} title={t('mark.hl_free_tip')} data-hlm="free" onClick={() => M.setHlFree(true)}>{t('mark.hl_free')}</button></span>}
     {bar === 'pen' && <span class="mk-w" role="group" aria-label={t('mark.width')}>{WIDTHS.map(([w, l]) => <button type="button" aria-pressed={s.penW === w ? 'true' : 'false'} title={l()} aria-label={l()} data-w={w} onClick={() => M.chooseWidth(w)}><i style={'--w:' + w} /></button>)}</span>}
     <span class="sep" />
     <IconButton icon="undo" label={t('mark.undo')} kbd="mod+z" disabled={!s.undoStack.length} onClick={M.undo} data-undo />
@@ -102,15 +103,28 @@ const flyAt = el => { if (!el) return ''; const r = el.getBoundingClientRect(); 
 function Marking() { return <><Tools /><StampMenu /></>; }
 export { Marking as Tools };
 // Starts marking on the open paper: the hooks, the keys, and the pages already on screen. Returns what stops it again.
+let say = () => {};
+const hlSwitch = () => { const free = !M.hlFree(); M.setHlFree(free); say(t(free ? 'mark.hl_free_on' : 'mark.hl_snap_on')); };
 export function start({ toast, openStudent, changed }) {
-  M.startMarking({ toast, openStudent });
+  say = toast; M.startMarking({ toast, openStudent });
+  const up = e => { if (/^Arrow/.test(e.key)) M.nudgeDone(); }; addEventListener('keyup', up);
   for (const pg of state().pages) if (pg.wrapEl && pg.canvas) M.bind(pg, pg.wrapEl);
   const offs = [
     M.onMarking(changed),
-    ...TOOLS.map(([k, , key]) => register({ id: 'mark-tool-' + k, keys: key, label: TOOL_KEY[k], group: 'mark.tools', run: () => M.chooseTool(k) })),
+    ...TOOLS.map(([k, , key]) => register({ id: 'mark-tool-' + k, keys: key, label: TOOL_KEY[k], group: 'mark.tools', run: () => (k === 'hl' && state().tool === 'hl' ? hlSwitch() : M.chooseTool(k)) })),
+    // a picked mark: the arrow keys move it, + and − resize it, copy, paste and a copy beside it, Esc lets go (src/app/wiring.js keydown)
+    ...[['arrowleft', -1, 0], ['arrowright', 1, 0], ['arrowup', 0, -1], ['arrowdown', 0, 1]].flatMap(([a, x, y]) => [
+      register({ id: 'mark-nudge-' + a, keys: a, label: 'mark.k_nudge', group: 'mark.tools', hidden: a !== 'arrowleft', when: M.pickedNow, run: e => M.nudge(x, y, e.repeat) }),
+      register({ id: 'mark-nudge10-' + a, keys: 'shift+' + a, label: 'mark.k_nudge10', group: 'mark.tools', hidden: a !== 'arrowleft', when: M.pickedNow, run: e => M.nudge(10 * x, 10 * y, e.repeat) })]),
+    register({ id: 'mark-bigger', keys: ['+', '='], label: 'mark.k_bigger', group: 'mark.tools', when: M.resizable, run: () => M.resize(1) }),
+    register({ id: 'mark-smaller', keys: ['-', '_'], label: 'mark.k_smaller', group: 'mark.tools', when: M.resizable, run: () => M.resize(-1) }),
+    register({ id: 'mark-copy', keys: 'mod+c', label: 'mark.k_copy', group: 'mark.tools', when: () => !!state().selected && !String(getSelection()), run: () => { if (M.copyMark()) say(t('mark.k_copied')); } }),
+    register({ id: 'mark-paste', keys: 'mod+v', label: 'mark.k_paste', group: 'mark.tools', when: M.hasClip, run: () => M.pasteMark() }),
+    register({ id: 'mark-dup', keys: 'mod+d', label: 'mark.k_dup', group: 'mark.tools', when: () => !!state().selected, run: () => { if (M.copyMark()) M.pasteMark(); } }),
+    register({ id: 'mark-letgo', keys: 'escape', label: 'mark.k_letgo', group: 'mark.tools', when: () => !!state().selected && !state().once, run: () => M.letGo() }),
     register({ id: 'mark-once-end', keys: 'escape', label: 'mark.once_esc', group: 'mark.tools', when: () => !!state().once, run: () => M.endOnce() }),
     register({ id: 'mark-del', keys: ['delete', 'backspace'], label: 'mark.delete_mark', group: 'mark.tools', when: () => !!state().selected, run: () => M.deleteSelected() }),
   ];
-  return () => offs.forEach(f => f());
+  return () => { removeEventListener('keyup', up); offs.forEach(f => f()); };
 }
 const TOOL_KEY = { select: 'mark.t_select', pen: 'mark.t_pen', hl: 'mark.t_hl', oval: 'mark.t_oval', text: 'mark.t_text', note: 'mark.t_note', check: 'mark.t_check', erase: 'mark.t_erase' };

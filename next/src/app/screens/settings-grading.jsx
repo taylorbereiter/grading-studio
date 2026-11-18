@@ -4,8 +4,8 @@
 // next new assignment starts from it; both change as one undo step. Choosing a way for the first time happens at once with Undo, where
 // the current app asks first. Boxes save when she leaves them (preact/compat turns onChange into every key). Loaded only on those settings pages (PARTS.setgrade).
 import { h, Fragment } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
-import { Card, Select, Switch, TextInput, Slider, Segmented, toast } from '../../ui/index.js';
+import { useState, useEffect, useRef } from 'preact/hooks';
+import { Card, Select, Switch, TextInput, Slider, Segmented, Button, IconButton, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { PARTS } from '../router.js';
 import { library, gradingSetup } from '../../students/index.js';
@@ -14,6 +14,8 @@ import { onSaved } from '../../shared/saved.js';
 import * as undoList from '../../services/undo.js';
 import { GRADE_WAYS, gradeWay, meGrade, ME_OLD, useLib } from '../../engines/gways.js';
 import { rowScaleOf, rowsTop, rowHalf, rowsSay, ROW_TOP, COLORS, PTS_AMBER } from '../../engines/gcore.js';
+import { PROOF, PUNCT, markLabel0, MARK_MEAN, MARK_KEY } from '../../engines/gmark.js';
+import { drawStamp } from '../../engines/gdraw.js';
 import '../mark/setup-lines.js';
 import '../mark/lines.js';
 
@@ -125,7 +127,67 @@ export function MarkingSettings() {
       <div class="sg-line"><span>{t('setup.sg_dlh')}</span><Segmented label={t('setup.sg_dlh')} value={String(+disp.dlh || 1.45)} onChange={v => setDisp('dlh', +v)} options={[{ value: '1.3', label: t('setup.sg_dlh_tight') }, { value: '1.45', label: t('setup.sg_dlh_normal') }, { value: '1.8', label: t('setup.sg_dlh_roomy') }]} /></div>
       <p class="hint">{t('setup.sg_disp_about')}</p>
     </div></Card>
+    <Card title={t('setup.sg_while_h')}><div class="sg-while">
+      <span data-sglist><Switch label={t('setup.sg_list_kept')} checked={prefs.get('gs.listOpen', null) !== false} onChange={v => { prefs.set('gs.listOpen', !!v); re(); }} /></span>
+      <span data-sgenter><Switch label={t('setup.sg_enter_next')} checked={prefs.get('gs.enterNext', null) !== false} onChange={v => { if (v) prefs.del('gs.enterNext'); else prefs.set('gs.enterNext', false); re(); }} /></span>
+      <p class="hint">{t('setup.sg_while_about')}</p>
+    </div></Card>
+    <SavedComments />
+    <MarkKey />
   </>;
+}
+
+// Her saved comments (gs.bank, students/comments.js): changed in place, moved up, or removed with Undo. The comment box offers the same list.
+function SavedComments() {
+  const [bank, setBank] = useState(null), [add, setAdd] = useState('');
+  useEffect(() => { let live = true; const read = () => PARTS.cbank().then(m => m.readBank()).then(b => { if (live) setBank(b); });
+    read(); const off = onSaved(e => { if (e.kind === 'setting' && e.id === 'gs.bank') read(); }); return () => { live = false; off(); }; }, []);
+  if (!bank) return null;
+  const change = (label, fn, said) => PARTS.cbank().then(m => { m.changeBank(label, fn); if (said) toast(said, { undo: () => undoList.undo() }); });
+  const edit = (i, v) => { v = String(v || '').trim(); if (v === bank[i]) return; if (!v) return remove(i); change(t('setup.sg_cb_step_edit'), l => { l[i] = v; return l.filter((c, k) => k === i || c !== v); }); };
+  const remove = i => change(t('setup.sg_cb_step_remove'), l => { l.splice(i, 1); return l; }, t('setup.sg_cb_removed'));
+  const up = i => change(t('setup.sg_cb_step_move'), l => { [l[i - 1], l[i]] = [l[i], l[i - 1]]; return l; });
+  const plus = () => { const v = add.trim(); if (!v) return; setAdd(''); change(t('setup.sg_cb_step_add'), l => (l.includes(v) ? l : [v, ...l])); };
+  return <Card title={t('setup.sg_cb_h')}>
+    <p class="mute">{t('setup.sg_cb_about')}</p>
+    <ol class="sg-cb">{bank.map((c, i) => <li key={c + i} data-sgcb={i}>
+      <TextInput label={t('setup.sg_cb_n', { n: i + 1 })} value={c} maxLength={600} data-raw onBlur={e => edit(i, e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} />
+      <IconButton icon="chu" label={t('setup.sg_cb_up')} disabled={i === 0} onClick={() => up(i)} data-sgcbup={i} />
+      <IconButton icon="trash" label={t('setup.sg_cb_remove')} onClick={() => remove(i)} data-sgcbrm={i} /></li>)}</ol>
+    {!bank.length && <p class="mute">{t('setup.sg_cb_none')}</p>}
+    <div class="sg-cbadd"><TextInput label={t('setup.sg_cb_add')} value={add} maxLength={600} onInput={setAdd} onKeyDown={e => { if (e.key === 'Enter') plus(); }} data-raw data-sgcbnew /><Button onClick={plus} data-sgcbadd>{t('setup.sg_cb_add_btn')}</Button></div>
+  </Card>;
+}
+
+// A mark as it looks on the paper (src/stamps.js stampPicture), in her pen colour
+function MarkPic({ k }) {
+  const ref = useRef(null);
+  useEffect(() => { const c = ref.current, dpr = window.devicePixelRatio || 1, sz = 30; c.width = c.height = Math.round(sz * dpr); c.style.width = c.style.height = sz + 'px';
+    const x = c.getContext('2d'); x.scale(dpr, dpr); drawStamp(x, { t: 'stamp', k, x: sz / 2, y: sz / 2, size: 16, color: COLORS[okInk(prefs.get('gs.ink', 'red'), 'red')] }); }, [k]);
+  return <canvas ref={ref} class="sg-mkpic" aria-hidden="true" />;
+}
+// The mark key (src/stamps.js openMarkKey, gs.markKey): her own name and meaning for each proofreading and punctuation mark, and
+// whether returned papers get a key page listing the ones used. Each box saves when she leaves it.
+function MarkKey() {
+  const [, again] = useState(0), re = () => again(n => n + 1);
+  const set0 = () => { const v = prefs.get(MARK_KEY, null); return v && typeof v === 'object' ? v : {}; };
+  const setKey = change => { const v = { ...set0() }; change(v); prefs.set(MARK_KEY, v); re(); };
+  const s = set0(), name = k => { const v = (s.names || {})[k]; return typeof v === 'string' && v.trim() ? v.trim() : markLabel0(k); };
+  const mean = k => { const m = s.means || {}; return typeof m[k] === 'string' ? m[k].trim() : (MARK_MEAN[k] || ''); };
+  const setName = (k, v) => setKey(o => { o.names = { ...(o.names || {}) }; if (v.trim() && v.trim() !== markLabel0(k)) o.names[k] = v; else delete o.names[k]; });
+  const setMean = (k, v) => setKey(o => { o.means = { ...(o.means || {}) }; if (v.trim() !== (MARK_MEAN[k] || '')) o.means[k] = v; else delete o.means[k]; });
+  const usual = k => setKey(o => { o.names = { ...(o.names || {}) }; o.means = { ...(o.means || {}) }; delete o.names[k]; delete o.means[k]; });
+  const row = ([k]) => { const own = typeof (s.names || {})[k] === 'string' && s.names[k].trim() || typeof (s.means || {})[k] === 'string';
+    return <div class="sg-mk" key={k + JSON.stringify(s)} data-sgmk={k}><MarkPic k={k} />
+      <TextInput label={t('setup.sg_mk_name')} value={name(k)} maxLength={40} data-raw onBlur={e => { if (e.currentTarget.value !== name(k)) setName(k, e.currentTarget.value); }} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} />
+      <TextInput label={t('setup.sg_mk_mean')} value={mean(k)} maxLength={300} data-raw onBlur={e => { if (e.currentTarget.value.trim() !== mean(k)) setMean(k, e.currentTarget.value); }} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} />
+      {own && <button type="button" class="link" onClick={() => usual(k)} data-sgmkusual={k}>{t('setup.sg_mk_usual')}</button>}</div>; };
+  return <Card title={t('setup.sg_mk_h')}>
+    <span data-sgmkon><Switch label={t('setup.sg_mk_on')} checked={s.on !== false} onChange={v => setKey(o => { o.on = v; })} /></span>
+    <p class="hint">{t('setup.sg_mk_about')}</p>
+    <h4 class="sg-mkh">{t('setup.sg_mk_proof')}</h4>{PROOF.map(row)}
+    <h4 class="sg-mkh">{t('setup.sg_mk_punct')}</h4>{PUNCT.map(row)}
+  </Card>;
 }
 
 // The word on unit plan links, for example the name of the school's unit planner (src/app/library.js unitLinkName). Only words on screen.

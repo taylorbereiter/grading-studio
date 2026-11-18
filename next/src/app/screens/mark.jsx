@@ -9,7 +9,9 @@ import { t } from '../../i18n/t.js';
 import { go, href, PARTS } from '../router.js';
 import { register } from '../../services/shortcuts.js';
 import { openPages, renderPage, fitScale } from '../mark/paper.js';
-import { use, gradeOf, maxPoints, fmtNum, state, rowSteps, rowTop, setupOver, DEFAULT_SETUP, SCALE12, SCALE_FIVES } from '../../engines/gcore.js';
+import { use, gradeOf, maxPoints, fmtNum, state, rowSteps, rowTop, setupOver, DEFAULT_SETUP, SCALE12, SCALE_FIVES, noScore, xcSay } from '../../engines/gcore.js';
+import { prefs } from '../../students/prefs.js';
+import { onSaved } from '../../shared/saved.js';
 import { shownName } from '../../engines/gdraw.js';
 import { toast } from '../../ui/index.js';
 import '../mark/lines.js';
@@ -23,28 +25,67 @@ const TAB_LINE = { mark: () => t('mark.mark'), grades: () => t('mark.grades'), i
 const keep = (k, v) => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem('gsn.mark.' + k)); sessionStorage.setItem('gsn.mark.' + k, JSON.stringify(v)); } catch {} return null; };
 
 // What a student's row says: their score as a percent, or missing / excused / late.
-function rowScore(st) {
+// A percent unless she switched the list to points (gs.listPts); a part score is its points so far, and extra credit follows ("85% +2%").
+function rowScore(st, pts, fm) {
   const g = gradeOf(st), s = st.grade.status;
   if (s === 'missing') return { text: t('mark.missing'), tone: 'warn' };
   if (s === 'excused') return { text: t('mark.excused'), tone: 'mute' };
-  if (g.total == null) return null;
-  return { text: g.pct != null ? fmtNum(g.pct) + '%' : fmtNum(g.total), done: !!g.done };
+  if (fm) return st.grade.fb ? { text: t('mark.fb_done_short'), done: true } : null;
+  if (g.total == null) return g.pct != null ? { text: fmtNum(g.pct) + '%', done: !!g.done } : null;
+  const x = !!g.xc && g.base != null, pc = x ? g.bpct : g.pct, tot = x ? g.base : g.total, of = g.outOf != null ? g.outOf : maxPoints();
+  const more = x ? ' +' + (!pts && !g.partial ? xcSay(g) : fmtNum(g.xc) + (g.xcU === 'pct' ? '%' : '')) : '';
+  if (!pts && !g.partial && pc != null) return { text: fmtNum(pc) + '%' + more, done: !!g.done };
+  return { text: (!of || g.partial ? fmtNum(tot) : fmtNum(tot) + '\u2009/\u2009' + fmtNum(of)) + more, done: !!g.done };
 }
+// The list's filters (src/markscreen.js LIST_FILTERS), for this visit to this assignment only. A paper is flagged when something on it
+// needs a look: a page to rescan, a grade on the paper to confirm or pick, a score that differs from the paper, a new or changed file.
+// The grade-on-the-paper checks come with the export engine, which loads as the papers are read.
+let OE = null;
+const flagged = (st, b) => st.files.some(f => Object.values(f.sc || {}).some(r => r.re)) || (b.carry && st.files.some(f => b.carry.flags[f.path]))
+  || (OE && (OE.manyReads(st) || (st.doubts && st.doubts.length) || (!noScore(st) && OE.disagreeNote(st))));
+const LF = ['all', 'todo', 'flag', 'nopaper', 'late', 'out'];
+const LF_MATCH = {
+  all: () => true,
+  todo: (st, b, fm) => !noScore(st) && (fm ? !st.grade.fb : !gradeOf(st).done),
+  flag: (st, b) => !!flagged(st, b),
+  nopaper: st => !st.files.length && !noScore(st),
+  late: st => st.grade.status === 'late',
+  out: st => !!st.grade.outAvg && !noScore(st),
+};
+const LF_LINE = { all: () => t('mark.lf_all'), todo: fm => t(fm ? 'mark.lf_finish' : 'mark.lf_todo'), flag: () => t('mark.lf_flag'), nopaper: () => t('mark.lf_nopaper'), late: () => t('mark.lf_late'), out: () => t('mark.lf_out') };
+// The students the list shows, in order: Previous, Next and the arrow keys walk these. The open one always stays.
+const shownOrder = (b, lf, cur, fm) => b.students.map((st, i) => i).filter(i => lf === 'all' || i === cur || LF_MATCH[lf](b.students[i], b, fm));
 const isMarked = st => { const g = gradeOf(st); return !!g.done && !st.gap; };
 
-function StudentList({ batch, cur, onPick, onReport }) {
-  const [q, setQ] = useState(''), box = useRef(null);
-  useEffect(() => register({ id: 'mark-find', keys: '/', label: 'mark.find', run: () => { const i = box.current && box.current.querySelector('input'); if (i) i.focus(); } }), []);
+function StudentList({ batch, cur, onPick, onReport, lf, setLf, fold, setFold, fm }) {
+  const [q, setQ] = useState(''), box = useRef(null), [pts, setPts] = useState(() => !!prefs.get('gs.listPts', false)), [menu, setMenu] = useState(false);
+  const findNow = () => { if (fold) setFold(false); setTimeout(() => { const i = box.current && box.current.querySelector('input'); if (i) i.focus(); }); };
+  useEffect(() => register({ id: 'mark-find', keys: '/', label: 'mark.find', run: findNow }), [fold]);
   const missing = batch.students.filter(st => st.grade.status === 'missing' || !st.files.length).length;
-  const rows = batch.students.map((st, i) => ({ st, i, name: shownName(st, i) })).filter(r => !q || r.name.toLowerCase().includes(q.toLowerCase()));
-  return <aside class="mk-list" aria-label={t('mark.students')}>
+  const order = shownOrder(batch, lf, cur, fm);
+  const rows = order.map(i => ({ st: batch.students[i], i, name: shownName(batch.students[i], i) })).filter(r => !q || r.name.toLowerCase().includes(q.toLowerCase()));
+  const way = v => { setPts(v); if (v) prefs.set('gs.listPts', true); else prefs.del('gs.listPts'); };
+  const count = k => batch.students.filter(st => LF_MATCH[k](st, batch, fm)).length;
+  // Enter in the find box opens the first match; Esc clears it
+  const findKey = e => { if (e.key === 'Enter' && rows[0]) { e.preventDefault(); onPick(rows[0].i); e.currentTarget.blur(); } if (e.key === 'Escape') { e.preventDefault(); setQ(''); e.currentTarget.blur(); } };
+  return <aside class={'mk-list' + (fold ? ' fold' : '')} aria-label={t('mark.students')}>
     <div class="mk-lhead mute"><span>{t('mark.papers', { n: batch.students.filter(st => st.files.length).length })}</span>{missing > 0 && <span>{t('mark.missing_n', { n: missing })}</span>}{onReport && <button type="button" class="link" onClick={onReport} data-report>{t('mark.op_title')}</button>}</div>
-    <div ref={box} class="mk-find"><TextInput icon="search" label={t('mark.find')} value={q} onInput={setQ} /></div>
-    <ol class="mk-rows">{rows.map(({ st, i, name }) => { const sc = rowScore(st);
-      return <li><button type="button" class={'mk-row' + (i === cur ? ' on' : '')} aria-current={i === cur ? 'true' : undefined} onClick={() => onPick(i)} data-st={i}>
-        <Avatar name={name} size="sm" /><span class="nm" data-raw>{name}</span>{batch.carry && st.files.some(f => batch.carry.flags[f.path]) && <span class="bang" title={t('mark.c_pill')} aria-label={t('mark.c_pill')}>!</span>}
+    <div ref={box} class="mk-find" onKeyDown={findKey}><TextInput icon="search" label={t('mark.find')} value={q} onInput={setQ} /></div>
+    <div class="mk-lbar">
+      <span class="mk-lf"><button type="button" class={'chip' + (lf !== 'all' ? ' on' : '')} aria-haspopup="menu" aria-expanded={menu ? 'true' : 'false'} onClick={() => setMenu(v => !v)} data-lf-open><Icon name="menu" size="xs" />{LF_LINE[lf](fm)}</button>
+        {menu && <div class="mk-lfmenu" role="menu" aria-label={t('mark.lf_show')} onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); setMenu(false); } }}>{LF.map(k => { const n = count(k);
+          return (k === 'all' || k === 'todo' || k === 'flag' || n > 0 || lf === k) && <button type="button" role="menuitemradio" aria-checked={lf === k ? 'true' : 'false'} data-lf={k} onClick={() => { setLf(k); setMenu(false); }}><span>{LF_LINE[k](fm)}</span><span class="mute">{n}</span></button>; })}</div>}</span>
+      <span class="grow" />
+      {!fm && <span class="mk-way" role="group" aria-label={t('mark.lf_way')}><button type="button" aria-pressed={pts ? 'false' : 'true'} title={t('mark.lf_pct')} onClick={() => way(false)} data-way="pct">%</button><button type="button" aria-pressed={pts ? 'true' : 'false'} title={t('mark.lf_pts')} onClick={() => way(true)} data-way="pts">{t('mark.lf_pts_short')}</button></span>}
+      <IconButton icon={fold ? 'chr' : 'chl'} size="sm" label={t(fold ? 'mark.list_keep' : 'mark.list_fold')} kbd="[" onClick={() => setFold(!fold)} data-listfold />
+    </div>
+    <ol class="mk-rows">{rows.map(({ st, i, name }) => { const sc = rowScore(st, pts, fm), fl = flagged(st, batch);
+      return <li><button type="button" class={'mk-row' + (i === cur ? ' on' : '')} aria-current={i === cur ? 'true' : undefined} onClick={() => onPick(i)} data-st={i} title={fold ? name : undefined}>
+        <Avatar name={name} size="sm" /><span class="nm" data-raw>{name}</span>{fl && <span class="bang" title={t('mark.lf_flagged')} aria-label={t('mark.lf_flagged')}>!</span>}
+        {st.grade.status === 'late' && <span class="pill">{t('mark.late')}</span>}
         {sc && <span class={'sc ' + (sc.tone || '')}>{sc.done && <Icon name="check" size="xs" />}{sc.text}</span>}
-      </button></li>; })}</ol>
+      </button></li>; })}
+      {lf !== 'all' && !q && rows.length <= 1 && <li class="mute mk-lfnone">{t('mark.lf_none')} <button type="button" class="link" onClick={() => setLf('all')}>{t('mark.lf_everyone')}</button></li>}</ol>
   </aside>;
 }
 
@@ -131,35 +172,77 @@ function Paper({ batch, cur, zoom, ver, FU }) {
 // Enter presses Next to score only from nowhere in particular (or a score slider), never over a button she has focused.
 const free = () => { const a = document.activeElement; return !a || a === document.body || (a.classList && (a.classList.contains('srange') || a.classList.contains('mk-paper'))); };
 const STATUS = [['missing', () => t('mark.missing')], ['excused', () => t('mark.excused')], ['late', () => t('mark.late')]];
-function ScorePanel({ batch, cur, onNext, onPrev, FU }) {
+function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo }) {
   const st = batch.students[cur]; if (!st) return null;
   const g = gradeOf(st), max = maxPoints(), name = shownName(st, cur), su = state().setup, M = MK && MK.M, off = !M;
   const file = st.files[0], row = M ? M.rowInHand() : -1, gr = st.grade;
   const next = () => { if (!M) return onNext(); if (!M.nextUnscored()) toast(t('mark.everyone_scored')); };
+  const stamp = r => { if (!state().pages.length) return toast(t('mark.stamp_open')); if (M.scoreStamp(r)) toast(t('mark.stamp_where')); };
+  // the points box: up and down go to the last or next student, not half a point; Enter leaves the box
+  const ptsKey = e => { if (e.key === 'Enter') e.currentTarget.blur(); if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); e.currentTarget.blur(); (e.key === 'ArrowDown' ? onNext : onPrev)(); } };
   return <aside class="mk-side" aria-label={t('mark.score')}>
     <div class="who"><Avatar name={name} /><div><h2 class="t4" data-raw>{name}</h2>
       <p class="mute">{t('mark.n_of', { n: cur + 1, of: batch.students.length })}{file ? <>, <span data-raw>{file.name}</span></> : ''}</p></div></div>
-    <h3 class="mk-h">{t('mark.score')}</h3>
+    {fm ? <><h3 class="mk-h">{t('mark.fb_head')}</h3>
+      <p class="mute">{t('mark.fb_text')}</p>
+      <div class="mk-fb"><Button aria-pressed={gr.fb ? 'true' : 'false'} icon={gr.fb ? 'check' : undefined} disabled={off} onClick={() => M.setFb(!gr.fb)} kbd="F" data-fb>{t(gr.fb ? 'mark.fb_done' : 'mark.fb_mark')}</Button>
+        {!gr.fb && !last && <Button variant="primary" disabled={off} onClick={() => { M.setFb(true); onNext(); }} kbd="Shift F" data-fbnext>{t('mark.fb_next')}</Button>}</div></>
+    : <><h3 class="mk-h">{t('mark.score')}</h3>
     {su.mode === 'rubric' ? <div class="mk-crits">{su.criteria.map((c, i) => { const v = gr.rubric[i], steps = rowSteps(su, i), top = rowTop(su, i), k = steps.indexOf(v);
       return <div class={'mk-crit' + (i === row ? ' on' : '')} data-row={i}>
-        <div class="cn"><button type="button" class="nm" onClick={() => M && M.pickRow(i)} data-raw>{c}</button><em>{v == null ? '' : fmtNum(v)}{v == null ? '' : <small>{' / ' + top}</small>}</em></div>
+        <div class="cn"><button type="button" class="nm" onClick={() => M && M.pickRow(i)} data-raw>{c}</button><em>{v == null ? '' : fmtNum(v)}{v == null ? '' : <small>{' / ' + top}</small>}</em>{v != null && M && <IconButton icon="stamp" size="sm" label={t('mark.stamp_row', { c })} onClick={() => stamp(i)} data-critstamp={i} />}</div>
         <input type="range" class={'srange' + (v == null ? ' unset' : '')} min="0" max={steps.length - 1} step="1" value={Math.max(0, k)} disabled={off}
           aria-label={t('mark.row_score', { c })} aria-valuetext={v == null ? t('mark.not_scored') : t('mark.v_of', { v: fmtNum(v), of: top })}
           onInput={e => M.setRow(i, steps[+e.currentTarget.value], { toggle: false })} />
         <div class="sticks" role="group" aria-label={t('mark.row_score', { c })}>{steps.map(w => <button type="button" class={w % 1 ? 'half' : ''} data-v={w} tabindex="-1" aria-pressed={v === w ? 'true' : 'false'} disabled={off} onClick={() => M.setRow(i, w)}>{fmtNum(w)}</button>)}</div>
       </div>; })}</div>
       : <div class="mk-pts"><input type="text" inputmode="decimal" aria-label={t('mark.points')} value={gr.pk != null && gr.pk !== '' ? gr.pk + '%' : gr.points} disabled={off}
-          onInput={e => M.setPoints(e.currentTarget.value, e.currentTarget)} onBlur={() => M && M.leftPoints()} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} /><span class="mute">{t('mark.out_of_pts', { n: su.outOf })}</span></div>}
+          onInput={e => M.setPoints(e.currentTarget.value, e.currentTarget)} onBlur={() => M && M.leftPoints()} onKeyDown={ptsKey} /><span class="mute">{t('mark.out_of_pts', { n: su.outOf })}</span></div>}
     <div class="total"><b>{g.total != null ? fmtNum(g.total) : '–'}</b><span class="mute">{max ? t('mark.out_of', { n: fmtNum(max) }) : ''}</span>
-      <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span></div>
-    {g.total == null && <p class="mute">{t('mark.no_score')}</p>}
+      <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span>{g.total != null && M && <Button size="sm" icon="stamp" onClick={() => stamp(null)} title={t('mark.stamp_tip')} data-stampscore>{t('mark.stamp')}</Button>}</div>
+    {g.total == null && <p class="mute">{t('mark.no_score')}</p>}</>}
     <div class="mk-stat" role="group" aria-label={t('mark.mark_as')}>{STATUS.map(([k, l]) => <button type="button" class="chip" aria-pressed={gr.status === k ? 'true' : 'false'} disabled={off} data-status={k} onClick={() => M.setStatus(k)}>{l()}</button>)}{FU && M && <FU.ScoreMore st={st} />}</div>
     <textarea class="mk-cmt" aria-label={t('mark.comment_for')} placeholder={t('mark.comment_for_ph')} value={gr.comment || ''} disabled={off} data-raw onInput={e => M.setComment(e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.blur(); }} />
+    {M && <CommentChips text={gr.comment || ''} onAdd={c => M.setComment((gr.comment || '').trim() ? (gr.comment || '').replace(/\s+$/, '') + ' ' + c : c)} />}
     {TN && M && <TN.NotesPart st={st} />}
-    <div class="foot"><IconButton icon="chl" label={t('mark.prev')} onClick={onPrev} disabled={cur === 0} />
-      <Button variant="primary" kbd="Enter" onClick={next} data-next>{t('mark.next_score')}</Button>
-      <IconButton icon="chr" label={t('mark.next')} onClick={onNext} disabled={cur >= batch.students.length - 1} data-next-plain /></div>
+    {!solo && <div class="foot"><IconButton icon="chl" label={t('mark.prev')} onClick={onPrev} disabled={first} />
+      {fm ? <span class="grow" /> : <Button variant="primary" kbd="Enter" onClick={next} data-next>{t('mark.next_score')}</Button>}
+      <IconButton icon="chr" label={t('mark.next')} onClick={onNext} disabled={last} data-next-plain /></div>}
   </aside>;
+}
+
+// Her saved comments, one click from the comment box (src/markscreen.js cmtChips): the first three as chips, the rest and saving this
+// one under Saved comments. They are the comment bank the current app keeps (gs.bank), changed through students/write.js.
+let BANK = null;
+function CommentChips({ text, onAdd }) {
+  const [bank, setBank] = useState(BANK), [open, setOpen] = useState(false);
+  useEffect(() => { let live = true; const read = () => PARTS.cbank().then(m => m.readBank()).then(b => { BANK = b; if (live) setBank(b); }, e => console.error(e));
+    read(); const off = onSaved(e => { if (e.kind === 'setting' && e.id === 'gs.bank') read(); }); return () => { live = false; off(); }; }, []);
+  if (!bank) return null;
+  const short = c => { c = String(c).replace(/\s+/g, ' ').trim(); return c.length > 26 ? c.slice(0, 25).trimEnd() + '…' : c; };
+  const save = () => { const c = text.trim(); if (!c) return toast(t('mark.cb_type_first')); if (bank.includes(c)) return toast(t('mark.cb_already'));
+    PARTS.cbank().then(m => m.addToBank(c, t('mark.cb_saved_step'))).then(b => { BANK = b; setBank(b); toast(t('mark.cb_saved')); }, e => console.error(e)); };
+  return <div class="mk-cbank">{bank.slice(0, 3).map(c => <button type="button" class="chip" title={c} data-raw onClick={() => onAdd(c)} data-cbank>{short(c)}</button>)}
+    <span class="mk-cbm"><button type="button" class="chip" aria-haspopup="menu" aria-expanded={open ? 'true' : 'false'} onClick={() => setOpen(v => !v)} data-cbmore>{t('mark.cb_saved_comments')}</button>
+      {open && <div class="mk-lfmenu up" role="menu" aria-label={t('mark.cb_saved_comments')} onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); } }}>
+        <button type="button" role="menuitem" onClick={() => { setOpen(false); save(); }} data-cbsave><span>{t('mark.cb_save')}</span></button>
+        {bank.length ? bank.map(c => <button type="button" role="menuitem" title={c} data-raw onClick={() => { setOpen(false); onAdd(c); }}><span>{c.length > 90 ? c.slice(0, 89) + '…' : c}</span></button>) : <p class="mute">{t('mark.cb_none')}</p>}
+        <a class="link" href={href('settings', 'marking')} data-cbedit>{t('mark.cb_edit')}</a></div>}</span></div>;
+}
+
+// Only this student (src/solo.js): when a student comes to the desk, the screen shows them and nobody else. Only a flag in this
+// browser (gs.solo); the list, the tabs and the way to anyone else step aside, and it ends only by holding the button for 1.5 s.
+const soloOf = b => { const s = prefs.get('gs.solo', null); return s && b && s.id === b.id && s.key != null ? s : null; };
+function SoloBar({ name, asg, onEnd }) {
+  const [hold, setHold] = useState(false), tm = useRef(0);
+  const down = on => { clearTimeout(tm.current); setHold(on); if (on) tm.current = setTimeout(() => { setHold(false); onEnd(); }, 1500); };
+  useEffect(() => () => clearTimeout(tm.current), []);
+  return <div class="mk-solo" role="region" aria-label={t('mark.solo')}>
+    <Icon name="user" /><b>{t('mark.solo')}</b><span data-raw>{name}</span><span class="mute" data-raw>{asg}</span><span class="grow" />
+    <button type="button" class={'btn sm mk-hold' + (hold ? ' holding' : '')} data-soloend onPointerDown={e => { if (e.button === 0) { e.preventDefault(); down(true); } }} onPointerUp={() => down(false)} onPointerLeave={() => hold && down(false)} onPointerCancel={() => down(false)}
+      onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (!e.repeat) down(true); } }} onKeyUp={e => { if (e.key === ' ' || e.key === 'Enter') down(false); }} onContextMenu={e => e.preventDefault()}>
+      <span class="fill" aria-hidden="true" /><span>{t('mark.solo_hold')}</span></button>
+  </div>;
 }
 
 function RubricAsk({ ask }) {
@@ -176,6 +259,12 @@ export default function MarkScreen({ route, classes }) {
   const id = route.params.id, tab = TABS.includes(route.params.tab) ? route.params.tab : 'mark';
   const [w, setW] = useState(null), [err, setErr] = useState(null), [cur, setCur] = useState(0), [ask, setAsk] = useState(null);
   const [zoom, setZoom] = useState(() => keep('zoom') || 1), [, tick] = useState(0);
+  // the list's filter (this visit to this assignment only), the list folded to a strip ([, gs.listOpen), the score panel folded away
+  // (], gs.panels.R), and Only this student (gs.solo)
+  const [lf, setLf] = useState('all'), [fold, setFoldS] = useState(() => prefs.get('gs.listOpen', null) === false), [noR, setNoR] = useState(() => !!(prefs.get('gs.panels', {}) || {}).R), [soloK, setSoloK] = useState(0);
+  useEffect(() => setLf('all'), [id]);
+  const setFold = v => { setFoldS(v); prefs.set('gs.listOpen', !v); };
+  const setPanel = v => { setNoR(v); prefs.set('gs.panels', { ...(prefs.get('gs.panels', {}) || {}), R: v }); };
   useEffect(() => { if (!w) return; let off = null, live = true;
     PARTS.marking().then(m => { if (!live) return; MK = m; off = m.start({ toast: text => toast(text), openStudent: i => pickRef.current(i), changed: () => tick(n => n + 1) }); tick(n => n + 1); });
     return () => { live = false; if (off) off(); }; }, [w]);
@@ -186,8 +275,16 @@ export default function MarkScreen({ route, classes }) {
       .then(r => { if (!live) return; if (!r) return history.back(); setW(r); setCur(Math.min(r.cur || 0, r.batch.students.length - 1)); }, e => { console.error(e); if (live) setErr(e); });
     return () => { live = false; seam.ready = false; if (MK) MK.M.saveNowDone(); };
   }, [id]);
-  const pick = useCallback(i => { if (!w) return; const n = Math.max(0, Math.min(w.batch.students.length - 1, i)); if (MK) MK.M.commit(); if (n !== state().cur) seam.ready = false; setCur(n); use({ cur: n }); }, [w]);
+  const solo = w ? soloOf(w.batch) : null, soloI = solo ? w.batch.students.findIndex(st => st.key === solo.key) : -1;
+  const pick = useCallback(i => { if (!w) return; if (soloOf(w.batch)) return; const n = Math.max(0, Math.min(w.batch.students.length - 1, i)); if (MK) MK.M.commit(); if (n !== state().cur) seam.ready = false; setCur(n); use({ cur: n }); }, [w]);
   const pickRef = useRef(pick); pickRef.current = pick;
+  // Only this student opens straight on them, after a reload too
+  useEffect(() => { if (w && soloI >= 0 && cur !== soloI) { if (MK) MK.M.commit(); seam.ready = false; setCur(soloI); use({ cur: soloI }); } }, [w, soloI]);
+  const fm = !!(MK && MK.M.fmNow());
+  const order = w ? shownOrder(w.batch, lf, cur, fm) : [], at = order.indexOf(cur);
+  const step = d => { const n = order[at + d]; if (n != null) pick(n); };
+  const soloStart = () => { if (!w || !w.batch.students[cur]) return; if (MK) MK.M.commit(); prefs.set('gs.solo', { id: w.batch.id, key: w.batch.students[cur].key }); setSoloK(k => k + 1); };
+  const soloEnd = () => { prefs.del('gs.solo'); setSoloK(k => k + 1); };
   // Grades, Insights and Return load as a part of their own, with the export engine and its libraries, the first time one opens.
   const [out, setOut] = useState(null);
   useEffect(() => { if (!w || tab === 'mark' || out) return; let live = true;
@@ -202,7 +299,7 @@ export default function MarkScreen({ route, classes }) {
       PARTS.typed().then(x => { x.useKeep(MK.M.keepSetup); TN = x; if (live) tick(n => n + 1); }, e => console.error(e));
       // the papers are read in the background as they open, as the current app reads them (src/app/open.js scanAll): a grade written on
       // a paper, notes made in other apps, and marks from other apps that could be hers
-      PARTS.outEngine().then(E => { E.withMarking(MK.M); return E.readPapers(); }).then(() => { seam.read = true; if (live) tick(n => n + 1); }, e => console.error(e)); }, e => console.error(e));
+      PARTS.outEngine().then(E => { E.withMarking(MK.M); OE = E.X; return E.readPapers(); }).then(() => { seam.read = true; if (live) tick(n => n + 1); }, e => console.error(e)); }, e => console.error(e));
     return () => { live = false; }; }, [w, !!MK]);
   // What opened: a line after the papers open when there's something new to say, and the whole report from the student list.
   const [rep, setRep] = useState(null), [repList, setRepList] = useState(false);
@@ -211,47 +308,58 @@ export default function MarkScreen({ route, classes }) {
   useEffect(() => {
     if (!w) return;
     const offs = [
-      register({ id: 'mark-next', keys: ['arrowdown', 'arrowright'], label: 'mark.next', run: () => pick(cur + 1) }),
-      register({ id: 'mark-prev', keys: ['arrowup', 'arrowleft'], label: 'mark.prev', run: () => pick(cur - 1) }),
+      register({ id: 'mark-next', keys: ['arrowdown', 'arrowright'], label: 'mark.next', when: () => !solo && !(MK && MK.M.pickedNow()), run: () => step(1) }),
+      register({ id: 'mark-prev', keys: ['arrowup', 'arrowleft'], label: 'mark.prev', when: () => !solo && !(MK && MK.M.pickedNow()), run: () => step(-1) }),
+      register({ id: 'mark-unscored', keys: 'n', label: 'mark.next_score', when: () => !!MK && !solo, run: () => { if (!MK.M.nextUnscored()) toast(t('mark.everyone_scored')); } }),
+      register({ id: 'mark-list', keys: '[', label: 'mark.list_keep', when: () => !solo, run: () => setFold(!fold) }),
+      register({ id: 'mark-panel', keys: ']', label: 'mark.panel_fold', run: () => setPanel(!noR) }),
+      register({ id: 'mark-solo', keys: 'i', label: 'mark.solo_start', when: () => !solo && tab === 'mark', run: soloStart }),
+      // F turns Feedback complete on or off; Shift F sets it on and goes to the next student
+      register({ id: 'mark-fb', keys: 'f', label: 'mark.fb_key', group: 'mark.score', when: () => !!MK && MK.M.fmNow() && !noScore(w.batch.students[cur]), run: e => { if (!e.shiftKey) return MK.M.setFb(!w.batch.students[cur].grade.fb); MK.M.setFb(true); if (!solo) step(1); } }),
       register({ id: 'mark-score', keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '.'], label: 'mark.key_score', group: 'mark.score', when: () => !!MK && state().setup.mode === 'rubric', run: e => {
         const r = MK.M.scoreKey(e.key);
         if (r === 'none') toast(t('mark.every_row')); else if (r === 'over') toast(t('mark.row_top', { n: rowTop(state().setup, MK.M.rowInHand()) })); else if (r === 'nohalf') toast(t('mark.no_half'));
       } }),
-      register({ id: 'mark-enter', keys: 'enter', label: 'mark.next_score', group: 'mark.score', when: () => !!MK && free(), run: () => { if (!MK.M.nextUnscored()) toast(t('mark.everyone_scored')); } }),
+      register({ id: 'mark-enter', keys: 'enter', label: 'mark.next_score', group: 'mark.score', when: () => !!MK && free() && prefs.get('gs.enterNext', null) !== false, run: () => { if (!MK.M.nextUnscored()) toast(t('mark.everyone_scored')); } }),
     ];
-    return () => offs.forEach(f => f());
-  }, [w, cur]);
+    // with Only this student on, nothing that could show someone else answers: finding, the list, the command bar
+    const shut = e => { if (solo && (e.key === '/' || e.key === '[' || e.key === '?' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'))) e.preventDefault(); };
+    addEventListener('keydown', shut, true);
+    return () => { removeEventListener('keydown', shut, true); offs.forEach(f => f()); };
+  }, [w, cur, lf, fold, noR, solo, fm, tab]);
   const cls = w && w.batch.classId != null ? (w.lib.classes || []).find(c => c.id === w.batch.classId) : null;
   const marked = w ? w.batch.students.filter(isMarked).length : 0, n = w ? w.batch.students.filter(st => !st.gap || st.files.length).length : 0;
   const close = () => (cls ? go('class', cls.id) : go('home'));
   const openSetup = () => PARTS.setup().then(m => setSu(m), e => console.error(e));
-  return <div class="markscreen" data-tab={tab}>
+  return <div class={'markscreen' + (solo ? ' solo' : '') + (noR ? ' nor' : '')} data-tab={tab}>
+    {solo && w && w.batch.students[cur] && <SoloBar name={shownName(w.batch.students[cur], cur)} asg={w.batch.name} onEnd={soloEnd} />}
     <header class="mk-top">
-      <IconButton icon="x" label={t('mark.close')} onClick={close} />
+      {!solo && <IconButton icon="x" label={t('mark.close')} onClick={close} />}
       <h1 class="mk-title">{cls && <span class="dot" />}{cls && <b data-raw>{cls.name}</b>}<span data-raw class="asg">{w ? w.batch.name : ''}</span></h1>
-      <Tabs label={t('mark.tabs')} value={tab} onChange={v => go('mark', id, v === 'mark' ? '' : v)}
-        tabs={TABS.map(k => ({ id: k, label: TAB_LINE[k]() }))} />
+      {!solo && <Tabs label={t('mark.tabs')} value={tab} onChange={v => go('mark', id, v === 'mark' ? '' : v)}
+        tabs={TABS.map(k => ({ id: k, label: TAB_LINE[k]() }))} />}
       <span class="grow" />
       {w && <span class="mk-save mute" role="status" data-save={MK ? MK.M.saveLabel() : 'saved'}>{saveLine(MK ? MK.M.saveLabel() : 'saved')}</span>}
       {w && <span class="mk-prog mute">{t('mark.marked_of', { n: marked, of: n })}<Progress value={marked} max={Math.max(1, n)} label={t('mark.marked_of', { n: marked, of: n })} /></span>}
-      <Button icon="settings" size="sm" disabled={!w || !MK} onClick={openSetup} data-setupopen>{t('mark.setup')}</Button>
+      {w && MK && !solo && <Button size="sm" icon="user" onClick={soloStart} title={t('mark.solo_tip')} kbd="I" data-solostart>{t('mark.solo_start')}</Button>}
+      {!solo && <Button icon="settings" size="sm" disabled={!w || !MK} onClick={openSetup} data-setupopen>{t('mark.setup')}</Button>}
     </header>
     {su && <su.SetupDialog onClose={() => setSu(null)} />}
     <RubricAsk ask={ask} />
     {err ? <EmptyState icon="inbox" title={t(err.name === 'NotKept' ? 'mark.not_kept' : 'mark.page_bad')} text={err.name === 'NotKept' ? t('mark.not_kept_text') : ''} />
       : !w ? <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />
-      : tab !== 'mark' ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} E={out.E} cur={cur} onOpen={openOn} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
+      : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} E={out.E} cur={cur} onOpen={openOn} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
       : <><div class="mk-body">
-        <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} />
+        {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} />}
         <div class="mk-mid">
           {MK && <MK.Tools />}
           <Paper batch={w.batch} cur={cur} zoom={zoom} ver={ver} FU={FU} />
           {FU && light && <FU.LightPanel onClose={() => setLight(false)} />}
-          <div class="mk-zoom">{FU && FU.rescanCount() > 0 && <IconButton icon="flag" label={t('mark.rs_title_n', { n: FU.rescanCount() })} title={t('mark.rs_title_n', { n: FU.rescanCount() })} onClick={() => setRescans(true)} data-rescans />}{FU && <IconButton icon="sun" label={t('mark.l_title')} aria-pressed={light ? 'true' : 'false'} onClick={() => setLight(v => !v)} data-light />}<IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => { const z = Math.max(0.5, Math.round((zoom - 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} />
+          <div class="mk-zoom">{noR && <IconButton icon="chl" label={t('mark.panel_show')} kbd="]" onClick={() => setPanel(false)} data-panelshow />}{FU && FU.rescanCount() > 0 && <IconButton icon="flag" label={t('mark.rs_title_n', { n: FU.rescanCount() })} title={t('mark.rs_title_n', { n: FU.rescanCount() })} onClick={() => setRescans(true)} data-rescans />}{FU && <IconButton icon="sun" label={t('mark.l_title')} aria-pressed={light ? 'true' : 'false'} onClick={() => setLight(v => !v)} data-light />}<IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => { const z = Math.max(0.5, Math.round((zoom - 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} />
             <span>{t('mark.zoom', { n: Math.round(zoom * 100) })}</span>
             <IconButton icon="plus" label={t('mark.zoom_in')} onClick={() => { const z = Math.min(3, Math.round((zoom + 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} /></div>
         </div>
-        <ScorePanel batch={w.batch} cur={cur} FU={FU} onNext={() => pick(cur + 1)} onPrev={() => pick(cur - 1)} />
+        {!noR && <ScorePanel batch={w.batch} cur={cur} FU={FU} fm={fm} solo={!!solo} first={at <= 0} last={at < 0 || at >= order.length - 1} onNext={() => step(1)} onPrev={() => step(-1)} />}
       </div>
       {rep && <rep.OpenedBar key={w.batch.id} onList={() => setRepList(true)} />}
       {FU && carried && <FU.CarryBox onClose={() => setCarried(false)} />}

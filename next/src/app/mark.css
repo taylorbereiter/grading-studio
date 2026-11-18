@@ -592,3 +592,58 @@ dialog.dlg:has(.mk-su)>.body{max-height:calc(88vh - 120px);overflow:auto}
 .mk-su .su-blist li{display:flex;align-items:center;gap:8px}.mk-su .su-blist li>span{flex:1;display:flex;flex-direction:column;min-width:0}
 .mk-su .su-blist small{color:var(--mute)}
 .mk-su .su-ask{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:var(--r2);background:var(--s2)}
+/* the student list's bar: which papers it shows, percent or points, folding it to a strip */
+.mk-lbar{display:flex;align-items:center;gap:6px;padding:0 12px 8px}
+.mk-lf,.mk-cbm{position:relative}
+.mk-lf .chip.on{color:var(--acc-ink);box-shadow:inset 0 0 0 1px var(--acc)}
+.mk-lfmenu{position:absolute;left:0;top:calc(100% + 4px);z-index:30;min-width:200px;max-width:320px;max-height:60vh;overflow:auto;display:flex;flex-direction:column;padding:6px;background:var(--sf);border-radius:var(--r3);box-shadow:var(--sh-f)}
+.mk-lfmenu.up{top:auto;bottom:calc(100% + 4px)}
+.mk-lfmenu button{display:flex;justify-content:space-between;gap:12px;border:0;background:none;padding:7px 10px;border-radius:var(--r2);font:inherit;font-size:var(--t2);color:var(--ink);text-align:left;cursor:pointer}
+.mk-lfmenu button:hover,.mk-lfmenu button:focus-visible{background:var(--g100)}
+.mk-lfmenu button[aria-checked=true]{color:var(--acc-ink);font-weight:600}
+.mk-lfmenu p,.mk-lfmenu .link{padding:7px 10px;font-size:var(--t2)}
+.mk-way{display:inline-flex;border-radius:var(--rf);box-shadow:inset 0 0 0 1px var(--line-2);overflow:hidden}
+.mk-way button{border:0;background:none;padding:3px 9px;font:inherit;font-size:var(--t1);color:var(--mute);cursor:pointer}
+.mk-way button[aria-pressed=true]{background:var(--acc-soft);color:var(--acc-ink);font-weight:600}
+.mk-row .pill{font-size:var(--t1);padding:1px 7px;border-radius:var(--rf);background:var(--g100);color:var(--mute)}
+.mk-lfnone{padding:10px;font-size:var(--t2)}
+.mk-body:has(.mk-list.fold){grid-template-columns:76px minmax(0,1fr) 380px}
+.mk-list.fold .mk-lhead,.mk-list.fold .mk-find,.mk-list.fold .mk-lf,.mk-list.fold .mk-way,.mk-list.fold .grow,.mk-list.fold .mk-row .nm,.mk-list.fold .mk-row .pill,.mk-list.fold .mk-lfnone{display:none}
+.mk-list.fold .mk-lbar{justify-content:center;padding-top:10px}
+.mk-list.fold .mk-row{flex-direction:column;gap:2px;padding:6px 2px}
+.markscreen.nor .mk-body{grid-template-columns:280px minmax(0,1fr)}
+.markscreen.nor .mk-body:has(.mk-list.fold){grid-template-columns:76px minmax(0,1fr)}
+.markscreen.solo .mk-body,.markscreen.solo.nor .mk-body{grid-template-columns:minmax(0,1fr) 380px}
+.markscreen.solo.nor .mk-body{grid-template-columns:minmax(0,1fr)}
+/* the highlighter's snap or freehand */
+.mk-hlm{display:flex;flex-direction:column;gap:2px;padding:4px 0}
+.mk-hlm button{border:0;background:none;border-radius:var(--r2);padding:3px 2px;font:inherit;font-size:var(--t1);color:var(--mute);cursor:pointer}
+.mk-hlm button[aria-pressed=true]{background:var(--acc-soft);color:var(--acc-ink);font-weight:600}
+/* the score stamp following the pointer */
+.mk-ghost{position:fixed;z-index:60;pointer-events:none;opacity:.85}
+.mk-crit .cn .ib,.mk-crit .cn [data-critstamp]{align-self:center}
+/* formative work: feedback complete */
+.mk-fb{display:flex;flex-wrap:wrap;gap:8px}
+/* saved comments under the comment box */
+.mk-cbank{display:flex;flex-wrap:wrap;gap:6px;margin-top:-8px}
+.mk-cbank .chip{height:26px;padding:0 9px;font-size:var(--t1);max-width:100%}
+/* Only this student */
+.mk-solo{display:flex;align-items:center;gap:10px;padding:8px 18px;background:var(--acc-soft);color:var(--acc-ink);border-bottom:1px solid var(--line);flex:none}
+.mk-solo .mute{color:var(--mute)}
+.mk-hold{position:relative;overflow:hidden;border:1px solid var(--line-2);background:var(--sf);color:var(--ink);border-radius:var(--rf);padding:5px 12px;font:inherit;font-size:var(--t2);cursor:pointer;user-select:none;touch-action:none}
+.mk-hold .fill{position:absolute;inset:0;transform:scaleX(0);transform-origin:left;background:var(--acc-soft)}
+.mk-hold.holding .fill{transform:scaleX(1);transition:transform 1.5s linear}
+.mk-hold span:last-child{position:relative}
+@media (prefers-reduced-motion:reduce){.mk-hold.holding .fill{transition:none;transform:scaleX(.5)}}
+/* Settings > Marking: while marking, saved comments, the mark key */
+.sg-while{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.sg-cb{list-style:none;margin:8px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.sg-cb li{display:flex;align-items:flex-end;gap:6px}
+.sg-cb li .field{flex:1;min-width:0}
+.sg-cbadd{display:flex;align-items:flex-end;gap:8px}
+.sg-cbadd .field{flex:1;min-width:0}
+.sg-mkh{margin:14px 0 4px;font-size:var(--t2);font-weight:600;color:var(--mute)}
+.sg-mk{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,2fr) auto;gap:8px;align-items:end;padding:3px 0}
+.sg-mk+.sg-mk .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.sg-mkpic{align-self:end;margin-bottom:4px;background:var(--sf);border-radius:var(--r2);box-shadow:inset 0 0 0 1px var(--line)}
+@media (max-width:760px){.sg-mk{grid-template-columns:34px 1fr}.sg-mk>.field:last-of-type{grid-column:2}}
