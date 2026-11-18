@@ -1,16 +1,17 @@
 // IndexedDB the way the new app may touch the current app's databases.
 //
 // The rules, each of which protects saved work:
-// - Open with no version, and abort any upgrade. A database that isn't there yet stays not there: making it here (at version 1,
-//   with no stores) would stop the current app's own upgrade code from ever making its stores, and opening at a higher version
-//   would make the current app's open(name, n) fail. So a database that is missing reads as empty, and a write to it refuses.
+// - Open with no version, and abort any upgrade. A database that isn't there yet reads as empty, and is never made by a read.
+// - The first write to a database this browser doesn't have makes it exactly as the current app would (ensure below): the same
+//   version and the same stores, so the current app opens it later with no upgrade. A database that is there at an older version is
+//   never upgraded here: that is the current app's to do, and a write to a store it hasn't got yet refuses.
 // - Never hold a connection: the current app deletes and upgrades databases (src/school.js, src/examples.js, src/takehome.js), and
 //   an open connection would block it. Each call opens, does one transaction, and closes; and a request to upgrade closes at once.
 // - Values pass through untouched: what is read is what the current app wrote, and what is written is stored as given.
 // No DOM is used here.
 import { mayWrite } from './lock.js';
 
-export class NotThere extends Error { constructor(what) { super(what + ' is not in this browser yet. The current app makes it the first time it needs it.'); this.name = 'NotThere'; } }
+export class NotThere extends Error { constructor(what) { super(what + ' could not be made in this browser.'); this.name = 'NotThere'; } }
 
 export function openExisting(name) {
   return new Promise(res => {
@@ -22,10 +23,41 @@ export function openExisting(name) {
     r.onblocked = () => res(null);
   });
 }
+// The current app's databases as it makes them (src/app/kept.js keepDb and addDb, src/examples.js, src/video.js vkDb, src/migrate.js,
+// src/school.js schDb, src/planner/lessons.js, src/folder.js folderKv, src/app/readings.js): version, and each store with its keyPath
+// (null: keys given with each record). next/test/keys.test.js checks this against shared/keys.js DATABASES and the current app's source.
+export const SHAPES = {
+  'grading-studio-keep': [2, { papers: null, work: null, meta: null, edits: null }],
+  'grading-studio-added': [1, { files: null }],
+  'grading-studio-examples': [1, { ex: null, pix: null }],
+  'grading-studio-videos': [1, { v: null }],
+  'grading-studio-safety': [1, { meta: null, data: null }],
+  'grading-studio-school': [1, { files: null }],
+  'gs-lessons': [1, { lessons: 'id', kv: null }],
+  'grading-studio-folder': [1, { kv: null }],
+  'grading-studio-models': [1, { files: null }],
+};
+// Makes a database this browser doesn't have yet, as the current app would. Resolves true when it is there now (made here, or
+// already there), false when it can't be (an older version is there: the current app moves it on).
+export function ensure(name) {
+  const shape = SHAPES[name]; if (!shape) return Promise.resolve(false);
+  return new Promise(res => {
+    let r; try { r = indexedDB.open(name, shape[0]); } catch { return res(false); }
+    let aborted = false;
+    r.onupgradeneeded = e => {
+      if (e.oldVersion !== 0) { aborted = true; r.transaction.abort(); return; }   // there at an older version: never upgraded here
+      for (const [st, keyPath] of Object.entries(shape[1])) r.result.createObjectStore(st, keyPath ? { keyPath } : undefined);
+    };
+    r.onsuccess = () => { r.result.close(); res(true); };
+    r.onerror = e => { if (aborted) e.preventDefault(); res(false); };
+    r.onblocked = () => res(false);
+  });
+}
 const done = tx => new Promise((res, rej) => { tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error || new Error('aborted')); });
 
 async function withStore(dbName, store, mode, fn) {
-  const db = await openExisting(dbName);
+  let db = await openExisting(dbName);
+  if (!db && mode === 'readwrite' && await ensure(dbName)) db = await openExisting(dbName);
   if (!db) { if (mode === 'readwrite') throw new NotThere(dbName); return undefined; }
   try {
     if (!db.objectStoreNames.contains(store)) { if (mode === 'readwrite') throw new NotThere(dbName + '/' + store); return undefined; }
@@ -61,7 +93,9 @@ export async function del(dbName, store, key) {
 // together): fn gets { store name: object store }.
 export async function writeMany(dbName, stores, fn) {
   for (const st of stores) mayWrite(dbName + '/' + st);
-  const db = await openExisting(dbName); if (!db) throw new NotThere(dbName);
+  let db = await openExisting(dbName);
+  if (!db && await ensure(dbName)) db = await openExisting(dbName);
+  if (!db) throw new NotThere(dbName);
   try {
     for (const st of stores) if (!db.objectStoreNames.contains(st)) throw new NotThere(dbName + '/' + st);
     const tx = db.transaction(stores, 'readwrite'), o = Object.fromEntries(stores.map(st => [st, tx.objectStore(st)]));

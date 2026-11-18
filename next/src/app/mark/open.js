@@ -12,6 +12,7 @@ import { keepPapers, saveLibrary, saveWork } from '../../students/write.js';
 import * as K from './carry.js';
 import { PARTS } from '../router.js';
 import { setOpenWork } from '../openwork.js';
+import { savedStamp } from '../../shared/tabs.js';
 
 export class NotKept extends Error { constructor(id) { super('The papers for this one aren’t kept in this browser.'); this.name = 'NotKept'; this.id = id; } }
 
@@ -144,6 +145,7 @@ async function assemble({ raw, label, students, lib, assignment, question, earli
   await E.loadRefs();
   await E.loadEdits();
   batch.revs = E.revsOf(E.revsBase(saved));
+  batch.seen = savedStamp(bid);   // whose save this window opened (src/saving.js b.seen): a newer stamp means another window saved since
   batch.lastS = saved && saved.s;
   E.restore();
   await E.photoTurns();

@@ -12,7 +12,8 @@ import { addCommand, openCommandBar } from '../services/commands.js';
 import { register, start as keysStart, pieces } from '../services/shortcuts.js';
 import * as undo from '../services/undo.js';
 import { assistant } from '../services/assistant.js';
-import { lockState, onLockChange, takeOver } from '../shared/lock.js';
+import { lockState, onLockChange } from '../shared/lock.js';
+import { stopped as tabsStopped, onStopped } from '../shared/tabs.js';
 import { onLook, currentLook, saveLook } from '../services/theme.js';
 import { LOOKS, THEMES } from '../ui/tokens.js';
 import { classesForHome, todoCountForSidebar } from '../crossings.js';
@@ -127,9 +128,15 @@ function Tabs({ route }) {
 }
 
 function Strip({ lock }) {
-  if (lock === 'read-only' || lock === 'taken') return <div class="strip" role="alert"><Icon name="info" /><span>{t(lock === 'taken' ? 'lock.taken' : 'lock.read_only')}</span>
-    <button type="button" class="btn sm" onClick={() => takeOver()}>{t('lock.take_over')}</button></div>;
+  if (lock === 'read-only') return <div class="strip" role="alert"><Icon name="info" /><span>{t('lock.read_only')}</span></div>;
   return null;
+}
+// Another window is replacing everything (Bring work in, Put back, Remove): this one stops writing and says so over the whole
+// page, and reloads by itself when that is done (shared/tabs.js, as the current app's src/saving.js tabLive).
+function OverCover() {
+  const [on, set] = useState(tabsStopped());
+  useEffect(() => { const off = onStopped(() => set(true)); set(tabsStopped()); return off; }, []);
+  return on ? <div class="tabover" role="alert" data-tabover>{t('lock.over')}</div> : null;
 }
 function SampleStrip() {
   if (!sampleOn()) return null;
@@ -212,6 +219,7 @@ export function Shell() {
     <div class="mainwrap">
       <SampleStrip />
       <Strip lock={lock} />
+      <OverCover />
       <main id="main" ref={main} class="main" data-route={route.path}><Screen route={route} classes={classes} /></main>
     </div>
     <Tabs route={route} />

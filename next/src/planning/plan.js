@@ -7,6 +7,7 @@
 // Read again when another window saves (gs-plan-out), when this window saves (shared/saved.js), and when she comes back to it.
 import { lessons as lessonStore, kv, units as unitRec, bank as bankRec, activities as actRec, setupRecord, lessonLook, planCopy } from './index.js';
 import { onSaved } from '../shared/saved.js';
+import * as tabs from '../shared/tabs.js';
 
 let cur = null, reading = null, stamp = 0;
 const told = new Set();
@@ -36,6 +37,10 @@ export function listenPlan() {
   if (listening) return; listening = true;
   const again = () => loadPlan(true).catch(e => console.error(e));
   try { const ch = new BroadcastChannel('gs-plan-out'); ch.onmessage = again; } catch {}
+  // the whole Planner replaced in another window (Drive, Bring work in: src/takehome.js, src/app/drive.js tell gs-plan-in), and the
+  // Planner's keys in localStorage changed there (shared/tabs.js)
+  try { const ch = new BroadcastChannel('gs-plan-in'); ch.onmessage = again; } catch {}
+  tabs.on('planning', again);
   onSaved(e => { if (e.side === 'planning' && (e.kind === 'lesson' || e.kind === 'plan')) again(); });
 }
 

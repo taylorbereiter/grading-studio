@@ -1,6 +1,5 @@
 {
  "lock.read_only": "Grading Studio is open in another window, so this window only shows your work. Close the other window to work here.",
- "lock.taken": "Another window took over, so this window only shows your work.",
  "common.cancel": "Cancel",
  "common.close": "Close",
  "common.delete": "Delete",
@@ -99,7 +98,6 @@
   "one": "{n} paper left to score",
   "other": "{n} papers left to score"
  },
- "lock.take_over": "Work here instead",
  "look.not_kept": "The theme is shown here but not kept, because another window is working with your saved work.",
  "keys.fold": "Hide or show the sidebar",
  "keys.title": "Keyboard shortcuts",
@@ -240,5 +238,6 @@
  "copy.tip": "Copy all of this text, to paste into an assistant, an email or a document",
  "copy.done": "Copied. Paste it wherever you like.",
  "copy.empty": "There is no text here to copy yet.",
- "copy.failed": "Couldn't copy. Select the text and copy it instead."
+ "copy.failed": "Couldn't copy. Select the text and copy it instead.",
+ "lock.over": "Your saved work is being changed in another window. This window will reload by itself when that’s done."
 }
