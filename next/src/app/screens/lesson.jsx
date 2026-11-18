@@ -16,7 +16,8 @@ import { assistant } from '../../services/assistant.js';
 import { register } from '../../services/shortcuts.js';
 import { addCommand } from '../../services/commands.js';
 import { engine } from '../../planning/engine.js';
-import { saveLesson } from '../../planning/write.js';
+import { saveLesson, saveTaughtNote } from '../../planning/write.js';
+import { taughtIn } from '../../planning/index.js';
 import { Slide } from '../plan/slide.jsx';
 import { stateOf, classOf, today, at, mins, lessonsOn } from '../plan/lessons.js';
 import { saveFailed } from '../plan/save.js';
@@ -146,13 +147,20 @@ function Side({ p, l, slot, per, onSave, onDownload, onAssistant }) {
 
 // What happened in class, kept on the class's place in "taught" as the current Planner's After class note keeps it
 // (src/planner/present.js taughtDlg). Writing one for a class not yet marked taught marks it taught at the last slide.
+// On a phone the lesson is never written, as today (src/phone.js phAfter): the note waits in gsp.taughtIn and the Planner on the
+// computer puts it on the lesson (present.js taughtFold). Whichever is newer is shown.
+const onPhone = () => typeof matchMedia === 'function' && matchMedia('(max-width: 640px)').matches;
 export function AfterClass({ l, slot, onSave }) {
-  const had = (l.taught || []).find(x => x.classId === slot.classId && x.date === slot.date);
-  const [v, setV] = useState(had ? had.note || '' : '');
-  useEffect(() => { setV(had ? had.note || '' : ''); }, [l.id, slot.classId, slot.date, had && had.at]);
+  const had = (l.taught || []).find(x => x.classId === slot.classId && x.date === slot.date), key = l.id + '|' + slot.classId + '|' + slot.date;
+  const waiting = () => { const T = taughtIn.json(null), it = T && T.items && T.items[key]; return it && +it.t > ((had && had.at) || 0) ? it : null; };
+  const shown = () => { const w = waiting(); return w ? w.x || '' : had ? had.note || '' : ''; };
+  const [v, setV] = useState(shown);
+  useEffect(() => { setV(shown()); }, [l.id, slot.classId, slot.date, had && had.at]);
   const keep = () => {
-    if ((had ? had.note || '' : '') === v.trim()) return;
-    const n = JSON.parse(JSON.stringify(l)), of = n.slides.length;
+    if (shown() === v.trim()) return;
+    const of = l.slides.length;
+    if (onPhone()) { try { saveTaughtNote(key, { slide: had ? had.slide : of, of, x: v.replace(/\s+/g, ' ').trim().slice(0, 300), t: Date.now() }); toast(t('plan.note_waits')); } catch (e) { saveFailed(e); } return; }
+    const n = JSON.parse(JSON.stringify(l));
     const t0 = had ? { ...had, note: v.trim(), at: Date.now() } : { classId: slot.classId, date: slot.date, slide: of, of, note: v.trim(), at: Date.now() };
     n.taught = [...(n.taught || []).filter(x => !(x.classId === slot.classId && x.date === slot.date)), t0];
     onSave(n);

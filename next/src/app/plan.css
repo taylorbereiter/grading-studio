@@ -246,3 +246,8 @@
 .swatches button[aria-checked="true"]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--cc)}
 .dlist{display:flex;flex-direction:column;gap:8px}
 .savebar{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;padding:10px 0;background:var(--bg);border-top:1px solid var(--line)}
+@media (max-width:640px){
+  .cal{overflow-x:auto}
+  .cal .cr,.bytime .tgrid{grid-template-columns:92px repeat(var(--days),minmax(118px,1fr))}
+  .month .cr{grid-template-columns:repeat(var(--days),minmax(64px,1fr))}
+}

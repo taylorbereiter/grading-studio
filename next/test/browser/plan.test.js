@@ -267,3 +267,21 @@ test('Settings > Timetable: a class renamed and recoloured, a meeting and a day 
   await p.waitForFunction(() => { const P = window.__planner; return P && P.L.setup && P.L.setup.classes[0].name === 'Grade 9 English A'; }, { timeout: 20000 });
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
+
+test('on a phone: the lesson reads, and an after-class note waits for the computer without the lesson being written', async () => {
+  const p = await fresh(390);
+  await open(p, 'lesson/L2');
+  assert.equal(await p.$eval('main h1', h => h.textContent), 'Reading a poem aloud');
+  const wide = await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
+  assert.ok(wide, 'no sideways scrolling on a phone');
+  const before = await lessonInDb(p, 'L2');
+  await p.$eval('main .after textarea', el => el.focus());
+  await p.keyboard.type('Stopped at slide 3');
+  await p.$eval('main .after textarea', el => el.blur());
+  await p.waitForFunction(() => { try { const T = JSON.parse(localStorage.getItem('gsp.taughtIn')); return !!(T && T.items && T.items['L2|A1|2026-10-27']); } catch { return false; } }, { timeout: 5000 });
+  const item = await p.evaluate(() => JSON.parse(localStorage.getItem('gsp.taughtIn')).items['L2|A1|2026-10-27']);
+  assert.equal(item.x, 'Stopped at slide 3'); assert.equal(item.of, 5); assert.ok(item.t > 0);
+  const after = await lessonInDb(p, 'L2');
+  assert.equal(after.updated, before.updated, 'the phone never writes the lesson');
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
