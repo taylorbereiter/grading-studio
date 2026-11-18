@@ -1018,3 +1018,4 @@ function gpShortNext(left) {
   return best;
 }
 export { bindPage, undo, redo, snap, changed, pushUndo, gradeSnap, fieldSnap, commitEditors, stepSize, saveNow, placeStamp, redrawAll, hitMark, moveMark, keepOnPage, deleteSelected, gripDrag, r1, clamp, turnMarks, stepOf, reshape, thumbCache, setRot, circleWord, highlightWord, textBoxHere, scoreTouched, setStatus, touchGrade, nextUnscored, stampName, isSticker, isProof, PROOF, PUNCT, BRAINROT, wordUnder, newCheckSize, stickerAspect, RECENT_STAMPS };
+export { actStep, groupOf };

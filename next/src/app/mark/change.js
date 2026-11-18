@@ -130,6 +130,11 @@ export function tagOf(st, f) {
   return { replaced: was ? F.fileShown(st, was.name) : null, word: !!was && F.madeFromWord(f), from: f.from || null, t: f.added };
 }
 export const undo = () => M && M.undo();
+export const redo = () => M && M.redo();
+// Typed notes (mark/typed.jsx): a student's grade changed by the notes, saved and shown; a setting of the assignment's setup changed as
+// one undo step, after() run each way (the setup kept and the bar drawn again).
+export function touched(st) { K.touchGrade(st); tell(); }
+export function setupStep(keys, fn, after) { K.fieldSnap(state().setup, keys, () => { after(); tell(); }, 'setup'); fn(); after(); tell(); }
 
 // Leave out: the file stays with the student but off the screen and out of what goes back; Bring back undoes it (setDocIn).
 export function setIn(st, d, on) { const was = D.docIn(st, d); F.setDocIn(st, d, on); step(() => { F.setDocIn(st, d, was); tell(); show(b().students.indexOf(st)); }, () => { F.setDocIn(st, d, on); tell(); show(b().students.indexOf(st)); }, on ? 'brought back' : 'left out'); tell(); show(b().students.indexOf(st)); }

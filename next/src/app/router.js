@@ -63,6 +63,8 @@ export const PARTS = {
   split: () => import('./mark/split.jsx'),
   // video and audio papers, their transcripts, and notes pages (mark/media.jsx)
   media: () => import('./mark/media.jsx'),
+  // typed notes and the Timer under the comment (mark/typed.jsx)
+  typed: () => import('./mark/typed.jsx'),
 };
 export const CHUNKS = {
   home: () => import('./screens/home.jsx'),

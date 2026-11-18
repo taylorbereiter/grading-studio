@@ -62,7 +62,7 @@ function Page({ pg, room, tall, zoom, FU }) {
 
 // The marking tools load as a part of their own (router.js PARTS.marking, screens/mark-tools.jsx) once the paper is open, so
 // the read-only paper shows as soon as it can. Until they are there, the paper is drawn and nothing on it can be changed.
-let MK = null;
+let MK = null, TN = null;   // the marking tools, and typed notes with the Timer (each its own part)
 const SAVE_LINE = { saving: () => t('mark.saving'), saved: () => t('mark.saved'), partly: () => t('mark.partly'), not: () => t('mark.not_saved') };
 const saveLine = k => (SAVE_LINE[k] ? SAVE_LINE[k]() : t('mark.cannot'));
 
@@ -155,6 +155,7 @@ function ScorePanel({ batch, cur, onNext, onPrev }) {
     {g.total == null && <p class="mute">{t('mark.no_score')}</p>}
     <div class="mk-stat" role="group" aria-label={t('mark.mark_as')}>{STATUS.map(([k, l]) => <button type="button" class="chip" aria-pressed={gr.status === k ? 'true' : 'false'} disabled={off} data-status={k} onClick={() => M.setStatus(k)}>{l()}</button>)}</div>
     <textarea class="mk-cmt" aria-label={t('mark.comment_for')} placeholder={t('mark.comment_for_ph')} value={gr.comment || ''} disabled={off} data-raw onInput={e => M.setComment(e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.blur(); }} />
+    {TN && M && <TN.NotesPart st={st} />}
     <div class="foot"><IconButton icon="chl" label={t('mark.prev')} onClick={onPrev} disabled={cur === 0} />
       <Button variant="primary" kbd="Enter" onClick={next} data-next>{t('mark.next_score')}</Button>
       <IconButton icon="chr" label={t('mark.next')} onClick={onNext} disabled={cur >= batch.students.length - 1} data-next-plain /></div>
@@ -198,6 +199,7 @@ export default function MarkScreen({ route, classes }) {
   useEffect(() => setCarried(!!(w && w.carried)), [w]);
   useEffect(() => { if (!w || !MK) return; let live = true;
     PARTS.fileui().then(m => { if (!live) return; m.wire(MK.M, i => { if (i >= 0) pickRef.current(i); setVer(v => v + 1); }); setFU(m); m.takeSplit(); m.pdfAuto(); m.impAutoNow();
+      PARTS.typed().then(x => { x.useKeep(MK.M.keepSetup); TN = x; if (live) tick(n => n + 1); }, e => console.error(e));
       // the papers are read in the background as they open, as the current app reads them (src/app/open.js scanAll): a grade written on
       // a paper, notes made in other apps, and marks from other apps that could be hers
       PARTS.outEngine().then(E => { E.withMarking(MK.M); return E.readPapers(); }).then(() => { seam.read = true; if (live) tick(n => n + 1); }, e => console.error(e)); }, e => console.error(e));
