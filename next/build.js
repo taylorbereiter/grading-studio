@@ -356,7 +356,9 @@ export const useKept = (l, k) => { lib = l; keptMeta = k; };
     // the gradebook (src/book.js): its columns read from saved work and typed scores, each cell, each term, the weighted term grade
     // with extra credit, and a typed score parsed and put the way the current app puts it; the table and its keys are the new app's
     'BK_TYPES', 'bkConf', 'bkCats', 'bkType', 'bkIsType', 'bkIsDef', 'bkLabel', 'bkTermOf', 'bkMean', 'bkCellOf', 'bkTypedCell', 'bkLoad', 'bkClassCols', 'bkCounts', 'bkGrade', 'bkXcTo',
-    'bkTabs', 'bkTermNow', 'bkClassAvg', 'bkBands', 'bkGroups', 'bkCountTypes', 'pctAvgText', 'bkParse', 'bkCellVal', 'bkColMax', 'bkPut', 'typedStamp', 'isoDay', 'bkDay',
+    'bkTabs', 'bkTermNow', 'bkClassAvg', 'bkBands', 'bkGroups', 'bkCountTypes', 'pctAvgText', 'bkParse', 'bkCellVal', 'bkColMax', 'bkPut', 'typedStamp', 'isoDay', 'bkDay', 'BK_DEF', 'rosterPairs', 'bkTypeUse',
+    // IB classes (src/ib.js): an MYP class's criteria, boundaries, evidence and the level she sets; a DP class's 1 to 7 and predicted grades
+    'IB_TOP', 'IB_BANDS', 'IB_GROUPS', 'IB_WAYS', 'IB_BOUNDS_DP', 'ibLetter', 'classWay', 'ibGroup', 'ibGroupCrit', 'ibBoundsFor', 'ibBoundsClean', 'ibCrit', 'ibBounds', 'ibGradeOf', 'ibLevel', 'ibBandName', 'ibTerm', 'ibEvidence', 'ibConf', 'ibCols', 'ibEvFor', 'ibMid',
     // missing work (src/missing.js): who owes what, and who was reminded
     'MIS_WORDS', 'misConf', 'misCols', 'misOwes', 'misByStu', 'misByCol', 'misNudge', 'misLate', 'misDue',
     // the roster (src/app/screens.js, src/people.js, src/attend.js): a pasted list read, and a student's details and days kept through an edit

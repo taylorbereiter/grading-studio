@@ -45,7 +45,8 @@ const SIZES = [['1440', 1440, 900, false], ['390', 390, 844, true]];
 const FLAGS = ['--font-render-hinting=none', '--disable-lcd-text', '--force-color-profile=srgb'];
 const MOUSE = '--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4';
 const FINGER = '--blink-settings=primaryHoverType=1,availableHoverTypes=1,primaryPointerType=2,availablePointerTypes=2';
-const TABS = [['grades', 'class/c1/grades', 'table.book'], ['people', 'class/c1/people/2', '[data-student]']];
+// [name, address, ready, what to press first]: a sheet is pictured open over its tab, and not counted (it is not the screen at rest)
+const TABS = [['grades', 'class/c1/grades', 'table.book'], ['charts', 'class/c1/grades', 'table.book', '[data-open-charts]'], ['people', 'class/c1/people/2', '[data-student]']];
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
   const srv = await serveSite(), errors = [], counts = {};
@@ -57,13 +58,14 @@ const TABS = [['grades', 'class/c1/grades', 'table.book'], ['people', 'class/c1/
       await p.evaluateOnNewDocument(STEADY);
       await p.setViewport(phone ? { width: w, height: h, deviceScaleFactor: 2, isMobile: true, hasTouch: true } : { width: w, height: h, deviceScaleFactor: 2 });
       await p.goto(srv.url + 'blank'); await plant(p, bookSeed()); await p.evaluate(l => localStorage.setItem('gs.look', JSON.stringify(l)), look);
-      for (const [name, at, ready] of TABS) {
+      for (const [name, at, ready, open] of TABS) {
         if (ONLY && !ONLY.includes(name)) continue;
         await p.goto(srv.url + 'next/#/' + at);
         await p.waitForSelector(ready, { timeout: 60000 });
+        if (open) { await p.click(open); await p.waitForSelector('dialog[open]'); }
         await p.evaluate(() => document.fonts.ready); await new Promise(r => setTimeout(r, 400));
         await p.screenshot({ path: path.join(OUT, look + '-' + wn + '-' + name + '.png') });
-        if (look === 'graphite') (counts[name] ||= {})[wn] = await pressable(p);
+        if (look === 'graphite' && !open) (counts[name] ||= {})[wn] = await pressable(p);
       }
       await p.close();
     }
