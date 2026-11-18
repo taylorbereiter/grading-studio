@@ -302,8 +302,11 @@ async function nextLegs(old) {
       // in "To mark", a set to hand back a row in "Ready to hand back"; lessons to plan are its to-do list's own rows of that kind.
       await q.waitForFunction(() => /Teaching today|timetable/.test((document.querySelector('#today') || {}).textContent || ''), { timeout: 30000 });
       await sleep(1500);
+      // missing work (stage 5): main's To do lines that remind about missing work, once main has read the gradebook for them
+      await q.waitForFunction(() => !window.__gs.bgBusy(), { timeout: 30000 });
       const mainSide = await q.evaluate(() => ({ classesToday: document.querySelectorAll('#today a.trow').length, mark: document.querySelectorAll('#toMark .krow').length,
-        back: document.querySelectorAll('#handBack .krow.back').length, toPlan: window.__gs.todoRows().filter(r => !r.own && r.kind === 'plan' && !r.done).length }));
+        back: document.querySelectorAll('#handBack .krow.back').length, toPlan: window.__gs.todoRows().filter(r => !r.own && r.kind === 'plan' && !r.done).length,
+        missing: window.__gs.todoRows().filter(r => !r.own && r.kind === 'miss' && !r.done).length }));
       await q.close();
       const p = await proofOpen(ctx, place), nextSide = (await p.evaluate(() => window.__next.crossings.countsForHome())).counts; await p.close();
       if (JSON.stringify(mainSide) !== JSON.stringify(nextSide)) bad('Home’s counts differ from main’s Today: main ' + JSON.stringify(mainSide) + ', new app ' + JSON.stringify(nextSide));
