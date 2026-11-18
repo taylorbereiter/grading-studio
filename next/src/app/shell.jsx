@@ -17,6 +17,7 @@ import { stopped as tabsStopped, onStopped } from '../shared/tabs.js';
 import { onLook, currentLook, saveLook } from '../services/theme.js';
 import { LOOKS, THEMES } from '../ui/tokens.js';
 import { classesForHome, todoCountForSidebar } from '../crossings.js';
+import { askAdd } from './todo-add.js';
 import { usePlan } from './plan.js';
 import { classTone } from './colors.js';
 import { onSaved } from '../shared/saved.js';
@@ -179,6 +180,7 @@ export function Shell() {
       register({ id: 'undo', keys: 'mod+z', label: 'keys.undo', run: () => { const e = undo.undo(); if (e) toast(t('undo.undone', { what: e.label })); } }),
       register({ id: 'redo', keys: ['mod+shift+z', 'mod+y'], label: 'keys.redo', run: () => undo.redo() }),
       register({ id: 'fold', keys: 'mod+\\', label: 'keys.fold', run: fold }),
+      register({ id: 'todo-add', keys: 'n', label: 'nav.todo_add', when: () => router.current().chunk !== 'mark', run: () => { askAdd(); router.go('todo'); } }),
       register({ id: 'keys', keys: '?', label: 'keys.show_list', run: () => router.go('help', 'keys') }),
       ...[['home', 'nav.home', 'home'], ['calendar', 'nav.calendar', 'cal'], ['todo', 'nav.todo', 'todo'], ['library', 'nav.library', 'library'], ['school', 'nav.school', 'school'], ['settings', 'nav.settings', 'settings'], ['help', 'nav.help', 'help']]
         .map(([id, line, icon]) => addCommand({ id: 'go-' + id, label: () => t(line), group: t('cmd.group_go'), icon, run: () => router.go(id) })),

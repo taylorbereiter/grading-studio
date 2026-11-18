@@ -397,6 +397,18 @@ const saveLib = () => {}, bkSaveLib = () => {}, renderLib = () => {}, seatDraw =
 let plan = null;
 export const planUse = p => { plan = p; };
 `, ['lib', 'setup', 'keptMeta', 'withTries', 'saveLib', 'bkSaveLib', 'renderLib', 'seatDraw', 'plan'], ['gcore']],
+  ['gtodo', [
+    // To do (src/todo.js): her lines and their categories, a typed line read for its day, class, student and School people, a
+    // repeating line's next day, the groups by day, and each change saved the way the current app saves it (tdSave keeps lib.todo
+    // tidy); the page, the week and the lines the app adds from saved work are the new app's (app/todo/, crossings.js)
+    'TD_CAT0', 'TD_DAY', 'tdData', 'tdSave', 'tdItems', 'tdItem', 'tdPut', 'tdAutoPut', 'tdCats', 'tdCat', 'tdGuess', 'tdCatOf', 'tdCatSave', 'tdCatPut', 'todoCatAdd', 'todoCatMove',
+    'tdToday', 'tdAt', 'tdAdd', 'tdGap', 'tdNextMon', 'tdWordDay', 'tdReadDay', 'tdKey', 'tdReadWho', 'tdReadPpl', 'todoRead', 'todoAdd', 'tdNext', 'todoTick', 'tdGroups', 'tdSort', 'tdDoneToday',
+  ], `// The library she is changing (inside students/write.js saveLibrary), the timetable for "each time this class meets", and the
+// people on the School page, handed in by the page. Saving is the page's: tdSave changes lib.todo of the library handed in.
+let lib = { classes: [], loose: { id: '', units: [] } }, plan = null, people = [];
+export const todoUse = o => { if ('lib' in o) lib = o.lib; if ('plan' in o) plan = o.plan; if ('people' in o) people = o.people || []; };
+const saveLib = () => {}, todoRender = () => {}, schPeople = () => people;
+`, ['lib', 'plan', 'saveLib', 'todoRender', 'schPeople', 'setup'], []],
   ['gbki', [
     // a gradebook imported from a spreadsheet (src/bookimport.js): the file read (CSV, TSV, Excel or pasted cells), its rows and
     // columns found, each column matched to an assignment already in the class, a category to a type; the screen is the new app's
@@ -494,7 +506,7 @@ async function build() {
   fs.rmSync(DIST, { recursive: true, force: true });
   const r = await esbuild.build({
     entryPoints: { main: path.join(NEXT, 'src/main.js'), proof: path.join(NEXT, 'src/proof.js'), parts: path.join(NEXT, 'src/ui/index.js'), gallery: path.join(NEXT, 'src/gallery/main.jsx'),
-      'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css'), 'mark-css': path.join(NEXT, 'src/app/mark.css'), 'class-css': path.join(NEXT, 'src/app/class.css') },
+      'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css'), 'mark-css': path.join(NEXT, 'src/app/mark.css'), 'class-css': path.join(NEXT, 'src/app/class.css'), 'todo-css': path.join(NEXT, 'src/app/todo.css') },
     // pdf.js's worker, as text, so the Beside drawer's Books can start it from a blob: address (it loads only when a book is opened).
     plugins: [{ name: 'pdf-worker', setup(b) {
       // The path is kept relative to the repository so the build is the same on every machine.
@@ -522,7 +534,7 @@ async function build() {
     '<script>' + sample + '</script>\n' + look +
     '<link rel="stylesheet" href="dist/tokens.css"><link rel="stylesheet" href="dist/parts-css.css">' + css.map(c => '<link rel="stylesheet" href="dist/' + c + '.css">').join('') + (style ? '<style>' + style + '</style>' : '') + '\n' +
     '<script type="module" src="dist/' + entry + '.js"></script></head><body>' + body + '</body></html>\n';
-  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css', 'mark-css', 'class-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}.wrap p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
+  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css', 'mark-css', 'class-css', 'todo-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}.wrap p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'gallery.html'), partsPage('Parts gallery', 'gallery', ['gallery-css'], '', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'proof.html'), page('Saved-work proof', 'proof', '<p>Saved-work proof page. Used by the checks, not by teachers.</p>'));
   writeVersion();

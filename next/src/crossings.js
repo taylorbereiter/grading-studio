@@ -56,32 +56,22 @@ export async function countsForHome(now = Date.now()) {
     teach = { off: t.off, rows: t.rows.map(r => ({ classId: r.c.id, name: r.c.name, color: r.c.color, start: r.m.start, end: r.m.end, now: r === cur,
       lesson: r.lessons[0] ? { id: r.lessons[0].id, title: r.lessons[0].title, n: r.lessons[0].n, ready: r.lessons[0].ready, done: r.lessons[0].done } : null, more: Math.max(0, r.lessons.length - 1) })) };
   }
-  const ch = C.todoChoices(lib);
-  const toPlan = ch.off.plan ? [] : T.toPlan(plan, now).filter(x => { const a = ch.auto[x.key] || {}; return !(a.h != null && a.h === (x.lesson ? 'w' : 'x')); });
-  const mark = sets(g.mark), back = sets(g.back), missing = await missingLines(lib, ch);
+  // the lines To do works out (students/todo.js autoLines), so Home, To do and the sidebar count the same
+  const auto = await (await import('./students/todo-auto.js')).autoLines(now, { lib, kept, plan }), cname = id => String((lib.classes.find(c => String(c.id) === id) || {}).name || '');
+  const toPlan = auto.filter(a => a.kind === 'plan').map(a => ({ in: a.in, key: a.key, classId: a.pid, className: a.pname, color: a.color, day: a.day, start: a.start, lesson: a.lesson }));
+  const mark = sets(g.mark), back = sets(g.back), missing = auto.filter(a => a.kind === 'miss').map(a => ({ classId: a.classId, name: cname(a.classId), n: a.n }));
   return { teach, mark, back, toPlan, missing, counts: { classesToday: teach ? teach.rows.length : 0, mark: mark.length, back: back.length, toPlan: toPlan.length, missing: missing.length } };
-}
-// The missing-work lines: one for each class with students to remind, { classId, name, n }, unless the teacher hid that line at that count.
-async function missingLines(lib, ch) {
-  if (ch.off.miss) return [];
-  const by = await (await import('./students/book.js')).missingByClass();
-  return lib.classes.filter(c => by[c.id] && !((ch.auto['miss:' + c.id] || {}).h === by[c.id])).map(c => ({ classId: String(c.id), name: String(c.name || ''), n: by[c.id] }));
 }
 // The sidebar's To do count, the way the current app counts it (src/todo.js todoCount): every line not done that is overdue or for
 // today, her own lines and the ones the app noticed (papers to mark and to hand back, today's classes still to plan), less the ones
 // she hid or moved to a later day, and the missing-work reminders (one for each class with students to remind).
 export async function todoCountForSidebar(now = Date.now()) {
-  const C = await import('./students/counts.js'), T = await import('./planning/today.js');
-  const lib = C.readLibrary(), kept = await C.readKept(), plan = await T.readPlan(), today = T.isoDay(now);
-  const t = lib.todo || {}, ch = C.todoChoices(lib), items = Array.isArray(t.items) ? t.items : [];
-  let n = items.filter(it => it && it.id && !it.gone && !it.done && it.d && it.d <= today).length;
-  const counts = (key, day, sig) => { const a = ch.auto[key] || {}; if (a.h != null && a.h === sig) return 0; const d = a.d && a.d > day && a.d > today ? a.d : day < today ? today : day; return d <= today ? 1 : 0; };
-  const g = C.groups(lib, kept);
-  if (!ch.off.mark) for (const m of g.mark) if (C.canOpen(m)) n += counts('mark:' + m.id, today, 'x');
-  if (!ch.off.back) for (const m of g.back) if (C.canOpen(m)) n += counts('back:' + m.id, today, 'x');
-  if (!ch.off.plan) for (const x of T.toPlan(plan, now)) n += counts(x.key, x.day, x.lesson ? 'w' : 'x');
-  if (!ch.off.miss) { const by = await (await import('./students/book.js')).missingByClass(); for (const c of lib.classes) if (by[c.id]) n += counts('miss:' + c.id, today, by[c.id]); }
-  return n;
+  return (await import('./students/todo-auto.js')).countDue(now);
+}
+// To do: the lines the app adds from saved work (students/todo-auto.js), the same ones Home and the sidebar count. Assignment and
+// class names, keys and numbers only: no student is named.
+export async function appLinesForTodo(now = Date.now()) {
+  return (await import('./students/todo-auto.js')).autoLines(now);
 }
 // The calendar's "Work due" and "To-dos": each assignment with a due date (its name, its class's name, the day) and the teacher's own
 // to-do lines with a day. No student is in either. Shown, never stored by the calendar.

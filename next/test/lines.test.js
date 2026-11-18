@@ -6,7 +6,7 @@ const fs = require('fs'), path = require('path');
 const SRC = path.join(__dirname, '..', 'src');
 // en.json: the app's lines. gallery.en.json: the gallery page's own, never shipped with the app (only gallery/ may use them).
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lang', f), 'utf8'));
-const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), CLASS = read('class.en.json'), EN = { ...APP, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...CLASS };
+const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), CLASS = read('class.en.json'), TODO = read('todo.en.json'), EN = { ...APP, ...TODO, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...CLASS };
 const noComments = s => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(x => x.isDirectory() ? walk(path.join(d, x.name)) : /\.jsx?$/.test(x.name) ? [path.join(d, x.name)] : []);
 const files = walk(SRC);
@@ -56,6 +56,10 @@ test('planning lines live in plan.en.json and load where they are used', () => {
   // and the class page's tabs' (next/lang/class.en.json), through app/class/lines.js
   assert.ok(Object.keys(CLASS).every(k => k.startsWith('class.')) && !Object.keys(APP).some(k => k.startsWith('class.')));
   for (const [f, s] of Object.entries(text)) if (/'class\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '(\.\.\/)+class\/lines\.js';|import '\.\/lines\.js';/.test(s), f + ' uses a class line without importing class/lines.js');
+});
+test('To do lines live in todo.en.json and are used only by the To do screen', () => {
+  assert.ok(Object.keys(TODO).every(k => k.startsWith('todo.')) && !Object.keys(APP).some(k => k.startsWith('todo.')));
+  for (const [f, s] of Object.entries(text)) if (f !== 'app/screens/todo.jsx') assert.ok(!/'todo\.[a-z0-9_]+'/.test(noComments(s)), f + ' uses a To do line');
 });
 test('lines are well formed: area.name keys, plural lines have one and other, no stray braces', () => {
   for (const [k, v] of Object.entries(EN)) {
