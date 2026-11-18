@@ -332,6 +332,11 @@ export const tnRngSet = r => { tnRng = r; };
     'qzAnsOld', 'qzMoved', 'qzAnsLab', 'qzAns', 'qzAnsOf', 'qzTotal', 'qzRedoPaper', 'qzDropGone', 'qzNoteOf', 'qzNoteSet', 'qzMarkInk', 'qzAnswerPic',
     'ibQzOn', 'ibQzOf', 'ibQzUsed', 'ibQzMax', 'ibQzRaw', 'ibQzTable', 'ibQzLevel', 'ibQzEven', 'ibQzParts', 'ibQzScore', 'ibQzSay',
   ], "// the papers' documents are let go once the answers being cut from them are done, so a cut under way isn't cancelled\nexport const qzLetGo = () => qzQueue.then(() => qzClose());\n", [], null],
+  ['gex', [
+    // strong examples from a paper (src/examples.js): one Quick mark answer cut from the clean page with every cover painted in, the
+    // pages of a paper that can be kept, the score written on a picture; the boxes, the dialog and the saving are the new app's
+    'exAnswerPic', 'exItems', 'exScoreText', 'exScoreMarks', 'exScoreOn', 'exScoreTop', 'exJpg', 'coverRx', 'exWho', 'exFrom', 'exTitleNow',
+  ], '', [], null],
   ['gqmake', [
     // A quiz made here (src/quizmake.js, src/quizread.js): typed questions printed with bubbles and a code on each page, the code
     // read back to send each scanned page to its student, and the bubbles read and scored; the maker, the print window and the
@@ -375,7 +380,9 @@ export const useKept = (l, k) => { lib = l; keptMeta = k; };
     // learning goals (src/goals.js): each goal's percent for each student and the class, from the rows and questions tagged with it
     'goalList', 'goalData', 'GOAL_LOW',
     // report comments (src/reports.js): what the gradebook knows about a student this term, and a draft from her own sentences
-    'RPT_WORDS', 'RPT_SLOTS', 'RPT_PROS', 'RPT_LEN', 'rptConf', 'rptEntry', 'rptPut', 'rptPro', 'rptFacts', 'rptDraft', 'rptText',
+    'RPT_WORDS', 'RPT_SLOTS', 'RPT_PROS', 'RPT_LEN', 'rptConf', 'rptEntry', 'rptPut', 'rptPro', 'rptFacts', 'rptDraft', 'rptText', 'bkScored', 'bkIn', 'ibLvAt', 'ibPredOf',
+    // linked classes (src/linked.js): sections of one course, copies of one assignment, and the cards made twice that look alike
+    'lkKey', 'lkSibs', 'lkTwins', 'lkCopy', 'lkJoin1', 'lkLev', 'lkLike', 'lkSuggest',
   ], `// The class page hands in which class the gradebook is on (src/book.js keeps it in bk.cls); saving is the screen's, through
 // students/write.js: what the lifted code changes is the library it was handed inside saveLibrary.
 export const bkUse = o => Object.assign(bk, o);

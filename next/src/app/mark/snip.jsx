@@ -2,8 +2,8 @@
 // click a page for the whole page, or Enter for everything on screen. Pages of the paper are drawn fresh from the file
 // (engines/gsnip.js snipPage), so name covers are painted in even off screen, and the marks come only with "With my marks"
 // (gs.snipMarks). The student's name and the file names are left off. Anything else shows as it is on screen. The picture goes on
-// the clipboard, or is saved as a file where the browser can't copy pictures; nothing is sent anywhere. Saving it as a strong example
-// or to the watch list goes with the class page (stage 5). Loaded on its own (router.js PARTS.snip).
+// the clipboard, or is saved as a file where the browser can't copy pictures; nothing is sent anywhere. Or it is kept as a strong
+// example or on the watch list (class/exsave.jsx saveShot). Loaded on its own (router.js PARTS.snip).
 import { h, render } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { t } from '../../i18n/t.js';
@@ -44,7 +44,8 @@ function key(e) {
 function Layer({ paper }) {
   const box = useRef(null), me = useRef(null), [mk, setMk] = useState(withMarks), [r, setR] = useState(null), d = useRef(null);
   useEffect(() => { if (me.current) me.current.focus({ preventScroll: true }); }, []);
-  const take = (R, pg) => { const marks = paper ? mk : true; stopSnip(); shoot(R, pg, marks, paper); };
+  const [then, setThen] = useState('copy');
+  const take = (R, pg) => { const marks = paper ? mk : true; stopSnip(); shoot(R, pg, marks, paper, then); };
   whole = () => take({ x: 0, y: 0, w: innerWidth, h: innerHeight });
   const down = e => { if (e.button !== 0 || e.target.closest('.snipbar')) return; e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); d.current = { x: e.clientX, y: e.clientY, id: e.pointerId }; };
   const move = e => { const a = d.current; if (!a || e.pointerId !== a.id) return; const q = snipRect(a, e); if (q.w < 4 && q.h < 4) return; setR(q); };
@@ -61,6 +62,7 @@ function Layer({ paper }) {
     <div class="snipbar" role="dialog" aria-label={t('paper.snip_title')}>
       <div class="snipt"><b>{t('paper.snip_title')}</b><span>{t(paper ? 'paper.snip_drag_page' : 'paper.snip_drag')}</span></div>
       <div class="snipacts">
+        <span class="snipthen" role="radiogroup" aria-label={t('paper.snip_then')}>{[['copy', 'paper.snip_copy'], ['ex', 'paper.snip_ex'], ['wl', 'paper.snip_wl']].map(([k, l]) => <button type="button" role="radio" class={'btn sm' + (then === k ? ' on' : '')} aria-checked={String(then === k)} onClick={() => setThen(k)} data-snipthen={k}>{t(l)}</button>)}</span>
         {paper && <label class="snipmk"><input type="checkbox" checked={mk} onChange={marks} data-snipmk />{t('paper.snip_marks')}</label>}
         <button type="button" class="btn sm" title={t('paper.snip_whole_tip')} onClick={() => whole()} data-snipall>{t('paper.snip_whole')}</button>
         <button type="button" class="btn sm" title={t('paper.snip_esc')} onClick={stopSnip} data-snipx>{t('paper.snip_cancel')}</button>
@@ -71,8 +73,9 @@ function Layer({ paper }) {
   </div>;
 }
 
-async function shoot(R, pg, marks, paper) {
+async function shoot(R, pg, marks, paper, then) {
   const blobP = (R ? area(R, marks, paper) : wholePage(pg, marks)).then(canvasPng);
+  if (then && then !== 'copy') { const [blob, m] = await Promise.all([blobP, PARTS.exsave()]); return m.saveShot(blob, then === 'wl', paper ? batch.students[cur] : null); }
   const how = await copyPicture(blobP, 'Screenshot.png');
   if (how === 'none') return say(t('paper.snip_fail'));
   say(t(how === 'copied' ? 'paper.snip_copied' : 'paper.snip_saved'));

@@ -10,6 +10,7 @@ import { t } from '../../i18n/t.js';
 import { PARTS } from '../router.js';
 import { library, gradingSetup } from '../../students/index.js';
 import { prefs } from '../../students/prefs.js';
+import { mailGet, mailSet, MAIL_APPS } from '../../students/mailpref.js';
 import { onSaved } from '../../shared/saved.js';
 import * as undoList from '../../services/undo.js';
 import { GRADE_WAYS, gradeWay, meGrade, ME_OLD, useLib } from '../../engines/gways.js';
@@ -196,7 +197,21 @@ function MarkKey() {
 export function ClassesSettings() {
   const L = useLibrary(), now = String((L.me || ME_OLD).unit || '').trim();
   const save = v => { v = String(v || '').trim().slice(0, 40); if (v === now) return; change(t('setup.sg_step_unit'), me => { me.unit = v; }, v ? t('setup.sg_unit_done', { name: v }) : t('setup.sg_unit_none')); };
-  return <Card title={t('setup.sg_unit_h')}>
-    <TextInput label={t('setup.sg_unit_label')} hint={t('setup.sg_unit_about')} value={now} maxLength={40} onBlur={e => save(e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-raw data-sgunit />
-  </Card>;
+  const att = !(L.me && L.me.att === false), kept = (L.classes || []).reduce((a, c) => a + Object.keys(c.att || {}).filter(d => /^\d{4}-\d\d-\d\d$/.test(d)).length, 0);
+  const [mail, setMail] = useState(mailGet);
+  return <>
+    <Card title={t('setup.sg_unit_h')}>
+      <TextInput label={t('setup.sg_unit_label')} hint={t('setup.sg_unit_about')} value={now} maxLength={40} onBlur={e => save(e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-raw data-sgunit />
+    </Card>
+    <Card title={t('setup.sg_att_h')}>
+      <p class="mute small">{t('setup.sg_att_say')}</p>
+      <span data-sgatt><Switch label={t('setup.sg_att_on')} checked={att} onChange={v => change(t('setup.sg_att_step'), me => { if (v) delete me.att; else me.att = false; })} /></span>
+      {!att && kept > 0 && <p class="mute small" data-sgatt-kept>{t('setup.sg_att_kept', { n: kept })}</p>}
+    </Card>
+    <Card title={t('setup.sg_mail_h')}>
+      <p class="mute small">{t('setup.sg_mail_say')}</p>
+      <span data-sgmail><Segmented label={t('setup.sg_mail_h')} value={mail} onChange={v => { mailSet(v); setMail(v); }} options={MAIL_APPS.map(k => ({ value: k, label: t(MAILS[k]) }))} /></span>
+    </Card>
+  </>;
 }
+const MAILS = { gmail: 'setup.sg_mail_gmail', outlook: 'setup.sg_mail_outlook', app: 'setup.sg_mail_app' };

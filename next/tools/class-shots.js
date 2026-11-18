@@ -1,5 +1,5 @@
-// Pictures of the class page's tabs (stage 5) on a made-up class with marked work, typed scores, a note and attendance: Grades and
-// People (and the tabs that come later), in Graphite and Midnight, at computer (1440) and phone (390) width, and the count of things
+// Pictures of the class page's tabs (stage 5) on a made-up class with marked work, typed scores, a note and attendance: Grades, its
+// charts, goals, report comments and progress sheets, People, Assignments, To do, and Library > Examples with the watch list, in Graphite and Midnight, at computer (1440) and phone (390) width, and the count of things
 // to press at rest on each. node next/tools/class-shots.js [--out dir] [--only grades,people]. Fails on any error on the page.
 // Made-up students only.
 const fs = require('fs'), path = require('path'), http = require('http');
@@ -46,7 +46,24 @@ const FLAGS = ['--font-render-hinting=none', '--disable-lcd-text', '--force-colo
 const MOUSE = '--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4';
 const FINGER = '--blink-settings=primaryHoverType=1,availableHoverTypes=1,primaryPointerType=2,availablePointerTypes=2';
 // [name, address, ready, what to press first]: a sheet is pictured open over its tab, and not counted (it is not the screen at rest)
-const TABS = [['grades', 'class/c1/grades', 'table.book'], ['charts', 'class/c1/grades', 'table.book', '[data-open-charts]'], ['people', 'class/c1/people/2', '[data-student]']];
+const TABS = [['grades', 'class/c1/grades', 'table.book'], ['charts', 'class/c1/grades', 'table.book', '[data-open-charts]'], ['goals', 'class/c1/grades', 'table.book', '[data-open-goals]'],
+  ['reports', 'class/c1/grades', 'table.book', '[data-open-reports]'], ['sheets', 'class/c1/grades', 'table.book', '[data-open-sheets]'], ['people', 'class/c1/people/2', '[data-student]'],
+  ['assignments', 'class/c1/work', '[data-lkhead]'], ['todo', 'class/c1/todo', '[data-ctd]'], ['examples', 'library/examples', '[data-exid]'], ['watch', 'library/examples/watch', '[data-exid]']];
+// Strong examples and one watch-list item in the current app's own database, with plain made-up pictures (no student work).
+const exSeed = async names => {
+  const pic = async (shade, lines) => { const c = document.createElement('canvas'); c.width = 600; c.height = 420; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 600, 420); x.fillStyle = shade; x.fillRect(0, 0, 600, 56); x.fillStyle = '#9aa3ad'; for (let i = 0; i < lines; i++) x.fillRect(40, 90 + i * 30, 520 - (i % 3) * 60, 10); return new Promise(r => c.toBlob(r, 'image/jpeg', 0.85)); };
+  const now = Date.now(), base = { work: null, asg: 'i3', cls: 'c1', title: 'Narrative essay', q: null, row: null, marks: true, score: false, from: null, pages: [{ w: 600, h: 420 }] };
+  const recs = [
+    { ...base, id: 'exa', t: now - 4000, kind: 'paper', letter: 'A', why: 'Every claim is tied to a moment in the story', tags: ['evidence', 'Unit 1'], who: { c: 'c1', n: names[0] } },
+    { ...base, id: 'exb', t: now - 3000, kind: 'part', letter: null, why: 'A clear turning point', tags: ['structure'], who: { c: 'c1', n: names[2] } },
+    { ...base, id: 'exc', t: now - 2000, asg: 'i5', title: 'Poetry analysis', kind: 'shot', letter: '1', why: '', tags: ['imagery'], who: { c: 'c1', n: names[1] } },
+    { ...base, id: 'wla', t: now - 1000, kind: 'shot', letter: '1', why: 'Mixes up theme and plot', tags: [], who: { c: 'c1', n: names[1] }, watch: 1 },
+  ];
+  const blobs = await Promise.all(recs.map((r, i) => pic(['#cfe0f1', '#e4e6ea', '#dfe9d8', '#f1e3cf'][i], 6 + i)));
+  const db = await new Promise((res, rej) => { const r = indexedDB.open('grading-studio-examples', 1); r.onupgradeneeded = () => { r.result.createObjectStore('ex'); r.result.createObjectStore('pix'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  await new Promise((res, rej) => { const tx = db.transaction(['ex', 'pix'], 'readwrite'); recs.forEach((r, i) => { tx.objectStore('ex').put(r, r.id); tx.objectStore('pix').put(blobs[i], r.id + '|0'); }); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+  db.close();
+};
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
   const srv = await serveSite(), errors = [], counts = {};
@@ -58,6 +75,7 @@ const TABS = [['grades', 'class/c1/grades', 'table.book'], ['charts', 'class/c1/
       await p.evaluateOnNewDocument(STEADY);
       await p.setViewport(phone ? { width: w, height: h, deviceScaleFactor: 2, isMobile: true, hasTouch: true } : { width: w, height: h, deviceScaleFactor: 2 });
       await p.goto(srv.url + 'blank'); await plant(p, bookSeed()); await p.evaluate(l => localStorage.setItem('gs.look', JSON.stringify(l)), look);
+      await p.evaluate(exSeed, JSON.parse(bookSeed().ls['gs.lib']).classes[0].names);
       for (const [name, at, ready, open] of TABS) {
         if (ONLY && !ONLY.includes(name)) continue;
         await p.goto(srv.url + 'next/#/' + at);

@@ -234,11 +234,13 @@ export function startMarking({ toast, openStudent }) {
 
 // The class's setup changed from the marking screen (a Word rubric's Out of or grading scale, src/app/wordrubric.js setClassOutOf and
 // setClassScale): kept as her last setup (gs.setup) and on the assignment's card, through students/write.js, as the current app does.
-export async function keepSetup() {
+// share: the first rubric set up for an assignment added to several linked classes goes to the copies with none yet (src/app/screens.js shareRubric).
+export async function keepSetup(share) {
   const s = state(), su = { ...s.setup, spot: undefined, rubricPage: undefined }, b = s.batch;
   const W = await PARTS.write();
   await W.saveSetting('gs.setup', su);
-  if (b && b.assignment) { const { findIn } = await PARTS.bring(); const id = b.assignment.id; await W.saveLibrary(l => { const f = findIn(l, id); if (f) f.setup = { ...s.setup, spot: undefined }; }); b.assignment.setup = { ...s.setup, spot: undefined }; }
+  if (b && b.assignment) { const { findIn } = await PARTS.bring(); const id = b.assignment.id; await W.saveLibrary(l => { const f = findIn(l, id); if (f) f.setup = { ...s.setup, spot: undefined };
+    if (f && share && f.group) for (const c of (l.classes || []).concat([l.loose]).filter(Boolean)) for (const u of c.units || []) for (const x of u.items) if (x !== f && x.group === f.group && !x.setup) x.setup = JSON.parse(JSON.stringify(f.setup)); }); b.assignment.setup = { ...s.setup, spot: undefined }; }
   tell();
 }
 // A score the Word rubric gave (the lifted rubricToGrade / wordScoreGone), as one undo step, saved and shown.
