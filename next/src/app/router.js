@@ -77,6 +77,8 @@ export const PARTS = {
   gc: () => import('./class/classroom.jsx'),
   // Pick a name, make groups, from the class header
   picker: () => import('./class/picker.jsx'),
+  // a class's To do tab: its to-dos and missing work
+  ctodo: () => import('./class/todo.jsx'),
   bring: () => import('./mark/open.js'),
   word: () => import('./mark/word.js'),
   report: () => import('./mark/report.jsx'),

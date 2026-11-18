@@ -117,7 +117,7 @@ export default function ClassPage({ route, classes }) {
   const x = (classes || []).find(k => (k.id || '-') === route.params.id);
   const tab = TABS.includes(route.params.tab) ? route.params.tab : 'course';
   const [pk, setPk] = useState(false), Pk = usePart('picker', pk);
-  const Work = usePart('work', tab === 'work'), People = usePart('people', tab === 'people' || route.params.id === 'new'), Grades = usePart('grades', tab === 'grades');
+  const Work = usePart('work', tab === 'work'), People = usePart('people', tab === 'people' || route.params.id === 'new'), Grades = usePart('grades', tab === 'grades'), Todo = usePart('ctodo', tab === 'todo');
   if (route.params.id === 'new') return <div class="page classpage"><header class="ph"><h1>{t('nav.add_class')}</h1></header>
     {People ? <People.RosterDialog c={null} onClose={id => (id ? go('class', id, 'people') : history.length > 1 ? history.back() : go('home'))} /> : <div class="loading" aria-busy="true" />}</div>;
   if (!x) return <Later route={route} classes={classes} />;
@@ -136,6 +136,7 @@ export default function ClassPage({ route, classes }) {
     {tab === 'work' ? (Work ? <Work.default classId={route.params.id} /> : <div class="loading" aria-busy="true" />)
       : tab === 'people' && !x.loose ? (People ? <People.default classId={route.params.id} sub={route.params.sub} /> : <div class="loading" aria-busy="true" />)
       : tab === 'grades' && !x.loose ? (Grades ? <Grades.default classId={route.params.id} /> : <div class="loading" aria-busy="true" />)
+      : tab === 'todo' && !x.loose ? (Todo ? <Todo.default classId={route.params.id} /> : <div class="loading" aria-busy="true" />)
       : tab !== 'course' ? <Later route={{ ...route, path: 'class', known: true }} classes={classes} embedded />
       : !p ? <div class="loading" aria-busy="true" />
       : !c ? <EmptyState icon="cal" title={t('plan.not_on_timetable')} text={t('plan.not_on_timetable_text')} action={<a class="btn" href={href('settings', 'timetable')}>{t('plan.set_up_timetable')}</a>} />

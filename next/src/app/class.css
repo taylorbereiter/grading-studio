@@ -405,3 +405,24 @@ button.seat[data-n]:hover{border-color:var(--acc)}
 .pk-wl button{border:1px solid #3a4350;background:none;color:#a3abb8;border-radius:999px;padding:4px 12px;font:inherit;text-decoration:line-through;cursor:pointer}
 .pk-wl button[aria-pressed="true"]{background:#fff;color:#1a1f27;border-color:#fff;text-decoration:none;font-weight:500}
 .pk-wx{float:right;border:1px solid #3a4350;background:none;color:#e8ebf0;border-radius:8px;padding:4px 12px;font:inherit;font-weight:600;cursor:pointer}
+
+/* A class's To do tab (class/todo.jsx): its to-dos, and missing work (src/missing.js) */
+.ctodo{display:grid;gap:18px}
+.ctd,.mis{padding:18px 20px}
+.ctdlist{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:6px}
+.ctdlist li{display:flex;align-items:center;gap:10px}
+.ctdlist li.done{color:var(--mute);text-decoration:line-through}
+.ctdadd{display:flex;gap:8px}
+.ctdadd .input{flex:1}
+.misopts{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.misopts .fld{min-width:200px}
+.missum{margin:12px 0 8px;font-weight:600}
+.misnone{padding:18px 0}
+.miscard{border-top:1px solid var(--line);padding:12px 0}
+.mishead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mishead h3{margin:0;font-size:var(--t3)}
+.mishead .grow,.mislist .grow{flex:1}
+.mislist{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.mislist li{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:var(--t2)}
+.ctodo .tag,.att .tag{font-size:10.5px;color:var(--mute);background:var(--g100);border-radius:var(--rf);padding:1px 6px}
+.ctodo .tag.ok{color:var(--ok)}

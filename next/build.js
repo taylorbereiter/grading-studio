@@ -370,6 +370,8 @@ export const useKept = (l, k) => { lib = l; keptMeta = k; };
     'ATT_WAYS', 'attRec', 'attDayOk', 'attSet', 'attTake', 'attClear', 'attDayCount', 'attUnknown', 'attMeets', 'attStep', 'csvSafe',
     'SEAT_ROOMS', 'SEAT_MAX_W', 'SEAT_MAX_H', 'seatXY', 'seatKeys', 'seatRoom', 'seatOf', 'seatSave', 'seatList', 'seatFill', 'seatPut', 'seatSetRoom',
     'pkNice', 'pkShort', 'pkShuffle', 'pkCount', 'pkGroups',
+    // missing-work reminders (src/missing.js): one student's email, one to everyone who owes an assignment, the link, reminded today
+    'misDraft', 'misGroup', 'misHref', 'misPlain', 'misEmail', 'misLine', 'misFill', 'misClassName', 'rptCall',
   ], `// The class page hands in which class the gradebook is on (src/book.js keeps it in bk.cls); saving is the screen's, through
 // students/write.js: what the lifted code changes is the library it was handed inside saveLibrary.
 export const bkUse = o => Object.assign(bk, o);

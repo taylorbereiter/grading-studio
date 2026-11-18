@@ -689,3 +689,44 @@ test('Pick a name from the class header: nobody twice, groups of 3, groups by ha
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('To do tab: a reminder drafted as the current app drafts it, opened in Gmail and marked reminded; a to-do for the class added and ticked', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  await p.evaluate(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); for (const c of l.classes) for (const n of c.names) { c.info ||= {}; c.info[n] = { ...(c.info[n] || {}), email: n.toLowerCase().replace(/[^a-z]+/g, '.') + '@example.org' }; } localStorage.setItem('gs.lib', JSON.stringify(l)); });
+  await p.goto(srv.url + 'next/#/class/c1/todo');
+  await p.waitForSelector('[data-mis] [data-mis-sum], [data-mis] [data-mis-none]', { timeout: 60000 });
+  // every term, so all the missing work shows
+  await p.evaluate(() => { const b = document.querySelector('[data-mis] .misopts [data-v="*"]'); if (b) b.click(); });
+  await p.waitForSelector('[data-mis-stu]');
+  const i = await p.$eval('[data-mis-stu]', e => +e.dataset.misStu);
+  await p.evaluate(() => { window.__mails = []; window.__gsMailTest = (h, u) => window.__mails.push([h, u]); });
+  await p.click('[data-mis-stu="' + i + '"] [data-mis-mail]');
+  await p.waitForFunction(() => window.__mails.length === 1);
+  const [mailto, url] = await p.evaluate(() => window.__mails[0]);
+  assert.match(url, /^https:\/\/mail\.google\.com\/mail\/\?view=cm&fs=1&to=/);
+  const N = (await libOf(p)).classes[0].names, n = N[i];
+  await p.waitForFunction(n => Object.keys(((JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}).nudge || {}).length > 0, {}, n);
+  // a to-do for this class, then ticked
+  await p.type('[data-ctd-new]', 'Book the library for the essay'); await p.keyboard.press('Enter');
+  await p.waitForFunction(() => ((JSON.parse(localStorage.getItem('gs.lib')).todo || {}).items || []).some(x => x.x === 'Book the library for the essay' && x.c === 'c1'));
+  await p.click('[data-ctd-item] input');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).todo.items.find(x => x.c === 'c1').done > 0);
+  // the current app drafts the same email, reads the reminder and the to-do
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const main = await old.evaluate(n => { const l = window.__gs.state().lib, c = l.classes[0]; return { nudge: (c.info[n] || {}).nudge, todo: l.todo.items.find(x => x.c === 'c1') }; }, n);
+  assert.ok(Object.keys(main.nudge || {}).length > 0);
+  assert.equal(main.todo.x, 'Book the library for the essay');
+  assert.ok(main.todo.done > 0);
+  // the email's words are main's misDraft for the work the page lists
+  const owed = await p.$$eval('[data-mis-stu="' + i + '"] .mislist .misw', e => e.map(x => x.textContent));
+  const mine = await p.evaluate(h => { const m = /^mailto:([^?]*)\?(.*)$/.exec(h), q = Object.fromEntries(m[2].split('&').map(kv => kv.split('=').map(decodeURIComponent))); return { to: decodeURIComponent(m[1]), subject: q.subject, body: q.body.replace(/\r\n/g, '\n') }; }, mailto);
+  const theirs = await old.evaluate((n, owed) => { const G = window.__gs, c = G.state().lib.classes[0]; const m = G.misDraft(c, n, owed.map(name => ({ name, due: '' }))); return { to: m.to, subject: m.subject }; }, n, owed);
+  assert.equal(mine.to, theirs.to); assert.equal(mine.subject, theirs.subject);
+  for (const w of owed) assert.ok(mine.body.includes('- ' + w));
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

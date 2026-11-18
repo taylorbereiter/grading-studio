@@ -8,7 +8,7 @@ import { useStore } from '../engines/gstore.js';
 import { prefs } from './prefs.js';
 import { library, meta, gradingSetup } from './index.js';
 import { libraryChange } from './undo.js';
-import { setupRecord } from '../planning/index.js';
+import { setupRecord, mailApp, googleEmail } from '../planning/index.js';
 
 // The library as the current app holds it once loaded (src/app/library.js migrateLib): every class with units and a roster.
 export function fullLibrary() {
@@ -62,6 +62,14 @@ export function change(label, fn, alone) {
 export async function attPlan() {
   const p = await setupRecord.get().catch(() => null); if (!p) return null;
   return { classes: (p.classes || []).filter(Boolean).map(k => ({ name: String(k.name || ''), meets: (k.meets || []).filter(Boolean) })), daysOff: (p.daysOff || []).filter(Boolean) };
+}
+// The teacher's mail app (src/mail.js mailApp, Settings): Gmail unless she chose Outlook on the web or the computer's own app, and the
+// Google account to open Gmail in.
+export function mailWay() {
+  let app = 'gmail', who = '';
+  try { const v = mailApp.json('gmail'); if (['gmail', 'outlook', 'app'].includes(v)) app = v; } catch {}
+  try { who = String(googleEmail.text('') || ''); } catch {}
+  return { app, who };
 }
 export const classIn = (l, id) => l.classes.find(c => String(c.id) === String(id)) || null;
 export { B as engine };

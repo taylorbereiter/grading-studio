@@ -717,5 +717,82 @@
  "class.pk_undo": "Undo",
  "class.pk_copy": "Copy",
  "class.pk_full": "Full screen",
- "class.pk_key_undo": "Ctrl Z"
+ "class.pk_key_undo": "Ctrl Z",
+ "class.mis_title": "Missing work",
+ "class.mis_due": "Due {day}",
+ "class.mis_days_ago": {
+  "one": "{n} day ago",
+  "other": "{n} days ago"
+ },
+ "class.mis_cut": "The email was too long for a link, so its words are on the clipboard: paste them in.",
+ "class.mis_opened": "Your mail app should open with the email ready to send.",
+ "class.mis_opened_bcc": {
+  "one": "Your mail app should open with one email to {n} student in Bcc.",
+  "other": "Your mail app should open with one email to {n} students in Bcc."
+ },
+ "class.mis_no_to": "There is no email for {name} yet, so add who it goes to.",
+ "class.mis_left_out": {
+  "one": "{n} student with no email is left out.",
+  "other": "{n} students with no email are left out."
+ },
+ "class.mis_marked": "Marked as reminded today.",
+ "class.mis_email": "Email",
+ "class.mis_work": "Missing work",
+ "class.mis_due_h": "Due",
+ "class.mis_reminded_h": "Reminded",
+ "class.mis_no_email": "No email yet",
+ "class.mis_reminded": "Reminded {day}",
+ "class.mis_wording": "Email wording…",
+ "class.mis_copy": "Copy list",
+ "class.mis_copied": {
+  "one": "Copied {n} row. Paste it into a spreadsheet.",
+  "other": "Copied {n} rows. Paste them into a spreadsheet."
+ },
+ "class.mis_download": "Download",
+ "class.mis_file": "{name} missing work",
+ "class.mis_show": "Show",
+ "class.mis_by_stu": "By student",
+ "class.mis_by_col": "By assignment",
+ "class.mis_called": "Class called",
+ "class.mis_say": "Each reminder opens in your own mail app, ready for you to read and send. Grading Studio sends nothing itself.",
+ "class.mis_none_year": "Nobody owes any work this year.",
+ "class.mis_none_term": "Nobody owes any work in this term.",
+ "class.mis_none_say": "When you mark a paper Missing, on the marking screen or in the gradebook, it shows here.",
+ "class.mis_sum": {
+  "one": "{n} student owes {work}",
+  "other": "{n} students owe {work}"
+ },
+ "class.mis_pieces": {
+  "one": "{n} piece of work",
+  "other": "{n} pieces of work"
+ },
+ "class.mis_n_students": {
+  "one": "{n} student",
+  "other": "{n} students"
+ },
+ "class.mis_all": "Email all",
+ "class.mis_all_say": "One email to all of them, each address hidden from the others (Bcc)",
+ "class.mis_email_one": "Email",
+ "class.mis_copy_one": "Copy",
+ "class.mis_copied_one": "Copied the email to {name}.",
+ "class.mis_remind": "Email reminder",
+ "class.mis_open": "Open",
+ "class.mis_wording_t": "Email wording",
+ "class.mis_builtin": "Use the built-in wording",
+ "class.mis_words_say": "Every reminder is written from these words. Your mail app adds your signature as usual.",
+ "class.mis_fills": "Words that are filled in: {name} what the student is called · {class} the class · {list} the missing work, one on a line · {n} how many",
+ "class.mis_subject": "Subject",
+ "class.mis_body": "Email",
+ "class.mis_words_saved": "Saved. Every reminder uses the new wording.",
+ "class.u_reminded": "Reminded",
+ "class.u_mis_words": "Email wording",
+ "class.u_todo": "To-do",
+ "class.td_title": "To-dos for this class",
+ "class.td_n": {
+  "one": "{n} open",
+  "other": "{n} open"
+ },
+ "class.td_none": "Nothing yet. Add what you need to do for this class.",
+ "class.td_add": "Add",
+ "class.td_add_ph": "Add a to-do for this class"
 }

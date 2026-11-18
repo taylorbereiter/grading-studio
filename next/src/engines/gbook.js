@@ -731,6 +731,12 @@ function mbSorted(names, how) {
   const key = i => { const p = mbParts(names[i]); return how === 'last' ? [p.last, p.first] : [p.first, p.last]; };
   return idx.sort((a, b) => { const x = key(a), y = key(b); return x[0].localeCompare(y[0], undefined, { sensitivity: 'base' }) || x[1].localeCompare(y[1], undefined, { sensitivity: 'base' }) || a - b; });
 }
+// src/reports.js
+function rptCall(c, n) {
+  const own = (infoOf(c, n).call || '').trim(); if (own) return own;
+  const t = String(n), part = /,/.test(t) ? t.split(',').slice(1).join(' ') : t;
+  return (part.trim().split(/\s+/)[0] || t).trim();
+}
 // src/missing.js
 const MIS_WORDS = {
   subj: 'Missing work for {class}',
@@ -741,6 +747,8 @@ function misConf() {
   const m = (lib.book && lib.book.miss) || {};
   return { subj: String(m.subj || '').trim() || MIS_WORDS.subj, body: String(m.body || '').trim() ? m.body : MIS_WORDS.body, cls: m.cls || {} };
 }
+// src/missing.js
+const misClassName = (c, mc) => String(mc.cls[c.id] || '').trim() || c.name;
 // src/missing.js
 const misCols = cols => cols.filter(x => x.type !== 'xc');
 // src/missing.js
@@ -757,6 +765,8 @@ function misByCol(c, cols) {
 // src/missing.js
 const misNudge = (c, n, col) => ((infoOf(c, n).nudge || {})[col.key]) || 0;
 // src/missing.js
+const misEmail = (c, n) => String(infoOf(c, n).email || '').split(/[;,\s]+/).filter(s => /@/.test(s)).join(',');
+// src/missing.js
 function misLate(due) {
   if (!due) return 0;
   const d = new Date(due + 'T12:00:00'), now = new Date(isoDay(Date.now()) + 'T12:00:00');
@@ -764,5 +774,30 @@ function misLate(due) {
 }
 // src/missing.js
 const misDue = col => col.due ? 'Due ' + bkDay(col.due) + (misLate(col.due) ? ' · ' + people(misLate(col.due), 'day') + ' ago' : '') : '';
-export { BK_TYPES, bkConf, bkCats, bkType, bkIsType, bkIsDef, bkLabel, bkTermOf, bkMean, bkCellOf, bkTypedCell, bkLoad, bkClassCols, bkCounts, bkGrade, bkXcTo, bkTabs, bkTermNow, bkClassAvg, bkBands, bkGroups, bkCountTypes, pctAvgText, bkParse, bkCellVal, bkColMax, bkPut, typedStamp, isoDay, bkDay, BK_DEF, rosterPairs, bkTypeUse, IB_TOP, IB_BANDS, IB_GROUPS, IB_WAYS, IB_BOUNDS_DP, ibLetter, classWay, ibGroup, ibGroupCrit, ibBoundsFor, ibBoundsClean, ibCrit, ibBounds, ibGradeOf, ibLevel, ibBandName, ibTerm, ibEvidence, ibConf, ibCols, ibEvFor, ibMid, MIS_WORDS, misConf, misCols, misOwes, misByStu, misByCol, misNudge, misLate, misDue, mbParts, mbSorted, MB_ORDERS, parseRosterRows, keepInfo, keepAtt, infoOf, setInfo, blankInfo, attDays, attCount, attOf, attNote, classNewWay, ATT_WAYS, attRec, attDayOk, attSet, attTake, attClear, attDayCount, attUnknown, attMeets, attStep, csvSafe, SEAT_ROOMS, SEAT_MAX_W, SEAT_MAX_H, seatXY, seatKeys, seatRoom, seatOf, seatSave, seatList, seatFill, seatPut, seatSetRoom, pkNice, pkShort, pkShuffle, pkCount, pkGroups };
+// src/missing.js
+const misLine = col => '- ' + col.name + (col.due ? ' (due ' + bkDay(col.due) + ')' : '');
+// src/missing.js
+function misFill(t, map) { return String(t).replace(/\{(\w+)\}/g, (m, k) => k in map ? map[k] : m); }
+// src/missing.js
+function misDraft(c, n, cols, mc) {
+  mc = mc || misConf();
+  const map = { name: rptCall(c, n), class: misClassName(c, mc), list: cols.map(misLine).join('\n'), n: String(cols.length) };
+  return { to: misEmail(c, n), bcc: '', subject: misFill(mc.subj, map), body: misFill(mc.body, map) };
+}
+// src/missing.js
+function misGroup(c, col, who, mc) {
+  mc = mc || misConf();
+  const map = { name: 'everyone', class: misClassName(c, mc), list: misLine(col), n: '1' };
+  return { to: '', bcc: who.map(x => misEmail(c, x.n)).filter(Boolean).join(','), subject: misFill(mc.subj, map), body: misFill(mc.body, map) };
+}
+// src/missing.js
+const misEnc = s => encodeURIComponent(s).replace(/%40/g, '@').replace(/%2C/g, ',');
+// src/missing.js
+function misHref(m, noBody) {
+  const q = [m.bcc ? 'bcc=' + misEnc(m.bcc) : '', 'subject=' + encodeURIComponent(m.subject), noBody ? '' : 'body=' + encodeURIComponent(m.body.replace(/\r?\n/g, '\r\n'))].filter(Boolean).join('&');
+  return 'mailto:' + misEnc(m.to) + '?' + q;
+}
+// src/missing.js
+const misPlain = m => (m.to ? 'To: ' + m.to.replace(/,/g, ', ') + '\n' : '') + (m.bcc ? 'Bcc: ' + m.bcc.replace(/,/g, ', ') + '\n' : '') + 'Subject: ' + m.subject + '\n\n' + m.body;
+export { BK_TYPES, bkConf, bkCats, bkType, bkIsType, bkIsDef, bkLabel, bkTermOf, bkMean, bkCellOf, bkTypedCell, bkLoad, bkClassCols, bkCounts, bkGrade, bkXcTo, bkTabs, bkTermNow, bkClassAvg, bkBands, bkGroups, bkCountTypes, pctAvgText, bkParse, bkCellVal, bkColMax, bkPut, typedStamp, isoDay, bkDay, BK_DEF, rosterPairs, bkTypeUse, IB_TOP, IB_BANDS, IB_GROUPS, IB_WAYS, IB_BOUNDS_DP, ibLetter, classWay, ibGroup, ibGroupCrit, ibBoundsFor, ibBoundsClean, ibCrit, ibBounds, ibGradeOf, ibLevel, ibBandName, ibTerm, ibEvidence, ibConf, ibCols, ibEvFor, ibMid, MIS_WORDS, misConf, misCols, misOwes, misByStu, misByCol, misNudge, misLate, misDue, mbParts, mbSorted, MB_ORDERS, parseRosterRows, keepInfo, keepAtt, infoOf, setInfo, blankInfo, attDays, attCount, attOf, attNote, classNewWay, ATT_WAYS, attRec, attDayOk, attSet, attTake, attClear, attDayCount, attUnknown, attMeets, attStep, csvSafe, SEAT_ROOMS, SEAT_MAX_W, SEAT_MAX_H, seatXY, seatKeys, seatRoom, seatOf, seatSave, seatList, seatFill, seatPut, seatSetRoom, pkNice, pkShort, pkShuffle, pkCount, pkGroups, misDraft, misGroup, misHref, misPlain, misEmail, misLine, misFill, misClassName, rptCall };
 export { EMAIL_RX };
