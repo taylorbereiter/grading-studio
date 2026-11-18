@@ -4,7 +4,8 @@
 // no confirm: it goes at once, with Undo. The Timer is a stopwatch for a talk given live, with the length the assignment asks for.
 import { h, Fragment } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Button, Menu, toast } from '../../ui/index.js';
+import { Button, Menu, toast, copyButton } from '../../ui/index.js';
+import { copyText } from '../../services/clipboard.js';
 import { state, use } from '../../engines/gcore.js';
 import * as N from '../../engines/gnotes.js';
 import { tnHas } from '../../engines/gdraw.js';
@@ -119,7 +120,7 @@ async function click(e, box) {
   if (m === 'times') { const { prefs } = await import('../../students/prefs.js'); if (N.tnTimesOn()) prefs.set('gs.tnTime', false); else prefs.del('gs.tnTime'); return N.tnMore(); }
   if (m === 'head') { setup.tnHead = N.tnGetL().filter(x => x.k === 'h' && x.s.trim()).map(x => x.s.trim()); await setupKept(); N.tnBar(box, st); return toast(t('setup.tn_heads_set', { n: setup.tnHead.length })); }
   if (m === 'unhead') { delete setup.tnHead; await setupKept(); N.tnLoad(box, st); return toast(t('setup.tn_heads_off')); }
-  if (m === 'copy') return navigator.clipboard.writeText(N.tnText(N.tnGetL())).then(() => toast(t('setup.tn_copied')), () => toast(t('setup.tn_not_copied')));
+  if (m === 'copy') return copyText(N.tnText(N.tnGetL())).then(ok => toast(t(ok ? 'setup.tn_copied' : 'setup.tn_not_copied')));
   if (m === 'clear') {
     N.tnSnap(st); const left = (N.tnStored(st) || []).filter(x => N.tnHidden(x, st));
     if (left.length) st.grade.tn = { l: left }; else delete st.grade.tn;
@@ -128,11 +129,19 @@ async function click(e, box) {
   }
 }
 
+// Copy text in the notes' bar, beside its More menu: the same press as a transcript's (ui copyButton). The bar is drawn again for
+// each student, so the button goes back in after each drawing.
+function copyIn(host) {
+  const bar = host.querySelector('.tnbar'); if (!bar || bar.querySelector('[data-copytext]')) return;
+  const b = copyButton(() => N.tnText(N.tnGetL())); b.dataset.tncopy = '';
+  const more = [...bar.children].filter(x => x.classList.contains('kmw')).pop();
+  bar.insertBefore(b, more || null);
+}
 // The notes for the student on screen: drawn again after any change from outside (Undo, a merge), never while she is typing.
 export function TypedNotes({ st }) {
   const box = useRef(null);
   useEffect(() => { N.tnUse({ host: box.current, now: nowOf }); const off = wire(box.current); return () => { off(); N.tnUse({ host: null }); }; }, []);
-  useEffect(() => { if (box.current && st) N.tnDraw(box.current, st); });
+  useEffect(() => { if (box.current && st) { N.tnDraw(box.current, st); copyIn(box.current); } });
   return <><div ref={box} class="mk-tn" data-raw /><BankMenu /></>;
 }
 // Saved comments (gs.bank, Settings > Marking) into the notes where the caret was (inventory 312).

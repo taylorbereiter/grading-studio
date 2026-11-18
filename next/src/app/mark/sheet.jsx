@@ -7,6 +7,7 @@
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Button, Checkbox, Dialog, Progress, Segmented, toast } from '../../ui/index.js';
+import { copyText } from '../../services/clipboard.js';
 import { t } from '../../i18n/t.js';
 import { state, use, gradeOf, maxPoints, fmtNum, noScore, ownGrade, refound, pdfjsLib } from '../../engines/gcore.js';
 import { shownName, viewable, layoutOf, vpRot, skewXf, drawMarks, marksMine } from '../../engines/gdraw.js';
@@ -20,8 +21,7 @@ import './paper-lines.js';
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const r4 = v => Math.round(v * 10000) / 10000;
 async function copy(text, say) {
-  try { await navigator.clipboard.writeText(text); } catch { const a = document.createElement('textarea'); a.value = text; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); } catch {} a.remove(); }
-  toast(say);
+  toast(await copyText(text) ? say : t('copy.failed'));
 }
 
 // What she says about a grade read off a paper (src/grades.js setReading): 1 use it, 0 not a grade, '' asks again. Picking one says

@@ -108,6 +108,11 @@ test('typed notes: the same keys make the same notes as the current app, each ch
   assert.deepEqual(await tnOf(c, 'gs', 0), mine, 'the same notes from the same keys in both apps');
   await ctx2.close();
 
+  // Copy text in the notes' bar: the notes on the clipboard in one press
+  await p.evaluate(() => { window.__copied = []; navigator.clipboard.writeText = async s => { window.__copied.push(s); }; });
+  await p.click('.mk-tn [data-tncopy]');
+  await p.waitForFunction(() => window.__copied.length === 1);
+  assert.match(await p.evaluate(() => window.__copied[0]), /Clear thesis/, 'the notes copied');
   // Use these headings for every student: Bram, with no notes, starts with them
   await fromMenu(p, '.mk-tn', '.nothere', '[data-tnm="head"]');
   await p.waitForFunction(() => JSON.stringify(window.__mark.state().setup.tnHead) === '["Clear thesis"]');

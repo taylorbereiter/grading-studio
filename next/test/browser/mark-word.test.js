@@ -126,6 +126,11 @@ test('typing in a Word paper and commenting on its words in the new app is what 
   await p.evaluate(() => { const el = document.querySelector('.docx p.wp'), r = document.createRange(); r.selectNodeContents(el); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); el.focus(); });
   await p.keyboard.type(' Edited here.');
   await p.click('.docx [data-wedit]');
+  // Copy text: the paper's words, the typing included
+  await p.evaluate(() => { window.__copied = []; navigator.clipboard.writeText = async s => { window.__copied.push(s); }; });
+  await p.click('.docx [data-wcopy]');
+  await p.waitForFunction(() => window.__copied.length === 1);
+  assert.match(await p.evaluate(() => window.__copied[0]), /Edited here\./, 'the Word paper\'s words copied');
   // select "short" and press Comment
   await p.evaluate(() => { const sp = [...document.querySelectorAll('.docx [data-ri]')].find(s => s.textContent.includes('short')), n = sp.firstChild, k = n.textContent.indexOf('short'), r = document.createRange(); r.setStart(n, k); r.setEnd(n, k + 5); const s = getSelection(); s.removeAllRanges(); s.addRange(r); });
   await p.click('.docx [data-wnote]');

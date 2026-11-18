@@ -7,7 +7,7 @@
 import * as W from '../../engines/gword.js';
 import { state, maxPoints, fmtNum } from '../../engines/gcore.js';
 import { t } from '../../i18n/t.js';
-import { toast } from '../../ui/index.js';
+import { toast, copyButton } from '../../ui/index.js';
 import { PARTS } from '../router.js';
 import { keepBank } from './editors.js';
 import './lines.js';
@@ -39,7 +39,9 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
   const bEdit = can ? button('btn sm', { 'data-wedit': '' }, t('setup.wd_edit')) : null;
   const bPdf = can && !f.virtual && !f.rubric && !f.from && f.data ? button('btn sm', { 'data-wpdf': '', title: t('setup.wd_pdf_tip') }, t('setup.wd_pdf')) : null;
   const bDl = button('btn sm ghost', { 'data-wdl': '' }, t('setup.wd_download'));
-  head.append(...[bNote, bEdit, bPdf, bDl].filter(Boolean));
+  // Copy text: the paper's words as plain lines (table cells apart by tabs), to paste into an assistant or a document
+  const bCopy = copyButton(() => page.innerText, { cls: 'btn sm ghost' }); bCopy.dataset.wcopy = '';
+  head.append(...[bNote, bEdit, bPdf, bCopy, bDl].filter(Boolean));
   const bar = el('div', 'wbar', { role: 'toolbar', 'aria-label': t('setup.wd_editing') }); bar.hidden = true;
   const wdoc = el('div', 'wdoc'), page = el('div', 'dpage'), aside = el('aside', 'wnotes', { 'aria-label': t('setup.wd_comments') }); aside.hidden = true;
   wdoc.append(page, aside);

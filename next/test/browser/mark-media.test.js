@@ -120,6 +120,11 @@ test('a recording and a link added to students: played, the time put in the comm
   await p.type('.media [data-trta]', '[0:00] Good morning, everyone.\n[0:02] Today, the tides.');
   await p.click('.media [data-trsave]');
   await p.waitForFunction(() => document.querySelectorAll('.media .trl').length === 2);
+  // Copy text: the whole transcript, with its times, on the clipboard in one press
+  await p.evaluate(() => { window.__copied = []; navigator.clipboard.writeText = async s => { window.__copied.push(s); }; });
+  await p.click('.media [data-trcopy]');
+  await p.waitForFunction(() => window.__copied.length === 1);
+  assert.match(await p.evaluate(() => window.__copied[0]), /0:00\]? ?Good morning, everyone\.[\s\S]*0:02\]? ?Today, the tides\./, 'the transcript copied');
   await p.click('.media .trl[data-t="2"]');
   await p.waitForFunction(() => Math.abs(document.querySelector('.media audio, .media video').currentTime - 2) < 0.3, { timeout: 10000 });
   // taken off, with an Undo; then made in this browser, the speech engine stood in for

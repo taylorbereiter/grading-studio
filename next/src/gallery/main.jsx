@@ -200,7 +200,7 @@ function Gallery() {
     </main>
     <P.Sheet open={sheet} onClose={() => setSheet(false)} title={ai.name ? t('assistant.plan_with_named', { name: ai.name }) : t('assistant.plan_with_generic')} icon={<P.Icon name="assist" />}
       footer={<><P.Button variant="quiet" onClick={() => setSheet(false)}>{t('common.cancel')}</P.Button><P.Button variant="primary" onClick={() => setSheet(false)} data-test="sheet-ok">{t('gallery.sheet_done')}</P.Button></>}>
-      <div class="gstack"><p class="mute" style={{ margin: 0 }}>{t('gallery.sheet_text')}</p><P.TextInput label={t('gallery.lesson_title')} value={txt} onInput={setTxt} /><P.TextBox label={t('gallery.notes')} value={long} onInput={setLong} /><P.AddFile label={t('gallery.file_one')} value={one} onChange={setOne} drivePick={drivePick} compact /></div>
+      <div class="gstack"><p class="mute" style={{ margin: 0 }}>{t('gallery.sheet_text')}</p><P.TextInput label={t('gallery.lesson_title')} value={txt} onInput={setTxt} /><P.TextBox label={t('gallery.notes')} value={long} onInput={setLong} /><div><P.CopyButton text={long} /></div><P.AddFile label={t('gallery.file_one')} value={one} onChange={setOne} drivePick={drivePick} compact /></div>
     </P.Sheet>
     <P.Dialog open={dlg} onClose={() => setDlg(false)} title={t('gallery.dialog_title')} actions={<><P.Button variant="quiet" onClick={() => setDlg(false)} data-test="dlg-cancel">{t('common.cancel')}</P.Button><P.Button variant="primary" onClick={() => { setDlg(false); P.toast(t('gallery.toast_moved'), { undo: () => {} }); }}>{t('gallery.dialog_ok')}</P.Button></>}>{t('gallery.dialog_text')}</P.Dialog>
     <P.CommandBar /><P.ToastHost />
