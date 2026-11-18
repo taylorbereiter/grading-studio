@@ -989,4 +989,4 @@ function uniqueName(u, name) {
   while (u.files.some(f => f.name === m[1] + ' (' + i + ')' + (m[2] || ''))) i++;
   return m[1] + ' (' + i + ')' + (m[2] || '');
 }
-export { L, plWeekOffs, mondayOf, meetingsOn, partnerSlots, unitAt, unitEnd, lid, LAYOUTS, deckAgenda, deckSizes, deckAdd, deckSizeSay, normSlide, normLesson, deckStart, slideHtml, slideFit, tplPreview, lessonForFile, fileBase, b64ToU8, buildPptx, mimeOf, lessonText, lessonZipAsk, lessonContext, lessonBack, ZIP_SKIP, baseName, MAX_FILE, snap, MAX_VERSIONS, uniqueName, normLinks, lkUrl, lkHost, normUnit };
+export { L, plWeekOffs, mondayOf, meetingsOn, partnerSlots, unitAt, unitEnd, lid, LAYOUTS, deckAgenda, deckSizes, deckAdd, deckSizeSay, normSlide, normLesson, deckStart, slideHtml, slideFit, tplPreview, lessonForFile, fileBase, b64ToU8, buildPptx, mimeOf, lessonText, lessonZipAsk, lessonContext, lessonBack, ZIP_SKIP, baseName, MAX_FILE, snap, MAX_VERSIONS, uniqueName, normLinks, lkUrl, lkHost, normUnit, tplLayouts };

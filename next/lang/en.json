@@ -612,5 +612,15 @@
  "plan.got_to_n": "got to slide {n} of {of}",
  "plan.print_blocked": "Your browser blocked the print window. Allow pop-ups for this page.",
  "plan.print_week": "Print week",
- "plan.print_plan": "Print the plan"
+ "plan.print_plan": "Print the plan",
+ "plan.slide_template": "Slide template",
+ "plan.tpl_yours": "Your own:",
+ "plan.tpl_plain": "The plain one built in: white, 16:9.",
+ "plan.tpl_pick": "Use my school’s template…",
+ "plan.tpl_pick_another": "Pick another…",
+ "plan.tpl_use_plain": "Use the plain one",
+ "plan.tpl_not_pptx": "Pick a PowerPoint file (.pptx or .potx)",
+ "plan.tpl_too_big": "That template is over 40 MB. Save a copy without its slides and pick that one.",
+ "plan.tpl_cant_open": "That file can’t be opened as a PowerPoint",
+ "plan.tpl_needs_layouts": "That template needs a “Title Slide” and a “Title and Content” layout, which is where the slides go. PowerPoint’s own templates have both."
 }

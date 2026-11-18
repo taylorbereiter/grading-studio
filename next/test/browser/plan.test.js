@@ -290,6 +290,13 @@ test('Settings > Timetable: a class renamed and recoloured, a meeting and a day 
   const rows = await dayOff.$$('.drow');
   const inputs = await rows[1].$$('input');
   await inputs[0].type('12252026'); await inputs[1].type('Winter break');
+  // A made-up school template: only the two layouts the slides go in
+  const fflate = require('fflate'), L = n => fflate.strToU8('<p:sldLayout><p:cSld name="' + n + '"></p:cSld></p:sldLayout>');
+  const tpl = path.join(require('os').tmpdir(), 'gs-plan-tpl-' + process.pid + '.pptx');
+  fs.writeFileSync(tpl, fflate.zipSync({ 'ppt/presentation.xml': fflate.strToU8('<p:presentation/>'), 'ppt/slideLayouts/slideLayout1.xml': L('Title Slide'), 'ppt/slideLayouts/slideLayout2.xml': L('Title and Content') }));
+  await (await p.$('main input[data-tpl]')).uploadFile(tpl);
+  await p.waitForFunction(() => /Your own/.test(document.querySelector('main .ttset [role=status]').textContent));
+  fs.unlinkSync(tpl);
   await p.click('main [data-focus="save-timetable"]');
   const readSetup = () => p.evaluate(() => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('setup'); q.onsuccess = () => { r.result.close(); res(q.result); }; }; }));
   let setup = null;
@@ -299,6 +306,7 @@ test('Settings > Timetable: a class renamed and recoloured, a meeting and a day 
   assert.equal(setup.classes[0].meets.length, 4);
   assert.deepEqual(setup.daysOff.map(x => x.label), ['Staff training day', 'Winter break']);
   assert.equal(setup.classes[0].id, 'A1', 'the class keeps its id, so its lessons stay its own');
+  assert.ok(setup.template.length > 100 && /^gs-plan-tpl-/.test(setup.tplName), 'the template is kept as base64 with its name');
   await p.goto(srv.url + 'planner.html');
   await p.waitForFunction(() => { const P = window.__planner; return P && P.L.setup && P.L.setup.classes[0].name === 'Grade 9 English A'; }, { timeout: 20000 });
   assert.deepEqual(p.errors, []); await p.ctx.close();
