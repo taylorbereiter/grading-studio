@@ -1,7 +1,9 @@
-// One writer between the current app and the new one (src/lock.js, next/src/shared/lock.js). Any number of the current app's
-// windows still work side by side, as they always have. A window of the new app is the only writer: opened beside the current
-// app it only shows work, and a page of the current app opened beside it is covered and takes no input. Whoever waited takes over
-// when the other closes, the current app's page by reloading, so it starts again from what is saved.
+// Windows side by side (src/lock.js, next/src/shared/lock.js). Since stage 6 the new app speaks the current app's own multi-window
+// protocol (src/saving.js; next/src/shared/tabs.js), so it takes the lock "gs-writer" in shared mode like every page of the current
+// app: any number of windows of either version are open and write together, and none is covered. (Until stage 6 the new app held
+// the lock alone; this file tested that interim rule and was rewritten with it. The merging itself is proved in
+// next/test/browser/two-windows.test.js.) src/lock.js still covers a page whose share is refused, which only a window holding the
+// lock alone can do.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path');
@@ -30,48 +32,24 @@ test('windows of the current app, grading and Planner, all keep working together
   await ctx.close();
 });
 
-test('the new app opened beside the current one only shows work, and becomes the writer once the other window closes', async () => {
+test('the new app opened beside the current one writes too, and neither is covered', async () => {
   const ctx = await browser.createBrowserContext();
   const old = await open(ctx, ''); assert.equal(await oldState(old), 'writer');
   const nx = await open(ctx, 'next/');
-  assert.equal(await newState(nx), 'read-only');
-  assert.match(await nx.$eval('[data-lock]', e => e.textContent), /open in another window/);
-  // the layer refuses to write while it is read-only
+  assert.equal(await newState(nx), 'writer');
   const pr = await open(ctx, 'next/proof.html'); await pr.waitForFunction(() => !!window.__next);
-  assert.equal(await pr.evaluate(async () => { await window.__next.start(); try { window.__next.students.library.setText('{}'); return 'wrote'; } catch (e) { return e.name; } }), 'ReadOnly');
-  await pr.close();
-  assert.equal(await covered(old), false, 'the current app is not covered by a window that only reads');
-  await old.close();
-  await nx.waitForFunction(() => document.querySelector('[data-lock]').dataset.lock === 'writer', { timeout: 20000 });
+  assert.equal(await pr.evaluate(async () => { await window.__next.start(); try { window.__next.students.library.setText(localStorage.getItem('gs.lib') || '{"classes":[]}'); return 'wrote'; } catch (e) { return e.name; } }), 'wrote');
+  assert.equal(await covered(old), false);
+  const planner = await open(ctx, 'planner.html'); assert.equal(await oldState(planner), 'writer'); assert.equal(await covered(planner), false);
   await ctx.close();
 });
 
-test('the current app opened beside the new one is covered and takes no input, and reloads to work once the new one closes', async () => {
+test('the current app opened beside the new one is not covered, and two windows of the new app both write', async () => {
   const ctx = await browser.createBrowserContext();
   const nx = await open(ctx, 'next/'); assert.equal(await newState(nx), 'writer');
-  const old = await open(ctx, '');
-  assert.equal(await oldState(old), 'blocked');
-  await old.waitForSelector('#gsWriterBlock');
-  assert.match(await old.$eval('#gsWriterBlock', e => e.textContent), /open in the new version in another window/);
-  // a key press and a click don't reach the page underneath
-  const reached = await old.evaluate(() => { let n = 0; const f = () => n++; document.addEventListener('keydown', f); document.addEventListener('click', f); document.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true })); document.body.click(); return n; });
-  assert.equal(reached, 0);
-  const planner = await open(ctx, 'planner.html'); assert.equal(await oldState(planner), 'blocked');
-  await nx.close();
-  // both reload and work again, uncovered
-  for (const p of [old, planner]) {
-    await p.waitForFunction(() => window.__gsWriter && window.__gsWriter.state === 'writer' && !document.getElementById('gsWriterBlock'), { timeout: 30000 });
-  }
-  await ctx.close();
-});
-
-test('the new app can take over: the current app’s windows are covered at once', async () => {
-  const ctx = await browser.createBrowserContext();
-  const old = await open(ctx, ''); assert.equal(await oldState(old), 'writer');
-  const pr = await open(ctx, 'next/proof.html'); await pr.waitForFunction(() => !!window.__next);
-  assert.equal(await pr.evaluate(() => window.__next.start()), 'read-only');
-  assert.equal(await pr.evaluate(() => window.__next.takeOver()), 'writer');
-  await old.waitForSelector('#gsWriterBlock', { timeout: 20000 });
+  const old = await open(ctx, ''); assert.equal(await oldState(old), 'writer'); assert.equal(await covered(old), false);
+  const nx2 = await open(ctx, 'next/'); assert.equal(await newState(nx2), 'writer');
+  assert.deepEqual(await nx.evaluate(async () => (await navigator.locks.query()).held.map(l => l.mode)), ['shared', 'shared', 'shared']);
   await ctx.close();
 });
 
@@ -86,12 +64,10 @@ test('in the sample the lock has the sample’s own name, so real work and the s
   await ctx.close();
 });
 
-test('a browser with no Locks API: the current app works as before and the new app, asking on the channel, opens read-only beside it', async () => {
+test('a browser with no Locks API: both versions work as before', async () => {
   const ctx = await browser.createBrowserContext();
   const bare = async where => { const p = await ctx.newPage(); await p.evaluateOnNewDocument(() => { Object.defineProperty(Navigator.prototype, 'locks', { get: () => undefined }); }); await p.goto(srv.url + where); return p; };
   const old = await bare(''); assert.equal(await oldState(old), 'no-locks'); assert.equal(await covered(old), false);
-  const nx = await bare('next/'); assert.equal(await newState(nx), 'read-only');
-  await old.close();
-  const alone = await bare('next/'); assert.equal(await newState(alone), 'writer-no-locks');
+  const nx = await bare('next/'); assert.equal(await newState(nx), 'writer-no-locks');
   await ctx.close();
 });

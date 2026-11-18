@@ -44,3 +44,17 @@ test('next/docs/saved-work.md is what the registry makes (npm run next:docs)', a
   const { make } = require('../tools/saved-work-doc');
   assert.equal(fs.readFileSync(path.join(__dirname, '..', 'docs', 'saved-work.md'), 'utf8'), await make(), 'run npm run next:docs');
 });
+// The new app makes a database the current app hasn't made yet (shared/idb.js ensure): with the same version and stores, and a
+// keyPath only where the current app gives one (gs-lessons/lessons). The browser proof (two-windows.test.js) compares the result.
+test('the databases the new app can make have the registry’s versions and stores', async () => {
+  const { DATABASES } = await import('../src/shared/keys.js');
+  const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'shared', 'idb.js'), 'utf8');
+  const SHAPES = (0, eval)('(' + /export const SHAPES = (\{[\s\S]*?\n\});/.exec(src)[1] + ')');
+  assert.deepEqual(Object.keys(SHAPES).sort(), Object.keys(DATABASES).sort());
+  for (const [name, d] of Object.entries(DATABASES)) {
+    assert.equal(SHAPES[name][0], d.version, name);
+    assert.deepEqual(Object.keys(SHAPES[name][1]).sort(), Object.keys(d.stores).sort(), name);
+  }
+  const all = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'planner', 'lessons.js'), 'utf8');
+  assert.match(all, /createObjectStore\('lessons', \{ keyPath: 'id' \}\)/);
+});

@@ -14,6 +14,8 @@ import * as studentUndo from './students/undo.js';
 import * as undo from './services/undo.js';
 import * as whole from './whole/index.js';
 import { carryLs, LS_LOCAL } from './whole/folder.js';
+import * as idb from './shared/idb.js';
+import * as tabs from './shared/tabs.js';
 
 // Every typed accessor, found by what it names.
 const all = [students, planning, device].flatMap(m => Object.values(m)).filter(a => a && typeof a === 'object');
@@ -45,4 +47,4 @@ const coverage = () => Object.entries(DATABASES).flatMap(([db, x]) => Object.key
   .concat(LOCAL.filter(e => e[2] === 'work' && !keyAcc(e[0].endsWith('.') ? e[0] + 'x' : e[0])).map(e => 'localStorage:' + e[0]));
 
 whole.startWhole();
-window.__next = { dumpRaw, rewriteAll, coverage, start, stop, lockState, takeOver, students, planning, crossings, write: { ...studentWrites, ...planningWrites }, studentUndo, undo, whole, carryLs, LS_LOCAL: LS_LOCAL.source };
+window.__next = { dumpRaw, rewriteAll, coverage, start, stop, lockState, takeOver, students, planning, crossings, write: { ...studentWrites, ...planningWrites }, studentUndo, undo, whole, carryLs, LS_LOCAL: LS_LOCAL.source, idb, tabs };

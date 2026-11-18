@@ -36,29 +36,63 @@ export function check(what) {
 /* one download's marks and scores */
 // change(data) changes a copy of the newest saved work in place. Returns { quick, full } as the current app's save label reads them.
 // fresh: a download brought in just now, with no work saved yet (its papers were kept first, keepPapers below).
-export async function saveWork(id, change, { fresh = false } = {}) {
-  check(id);
-  if ((json('gs.tomb', {}) || {})[id]) throw new CannotSave('forgotten', id);
-  const prev = await newestWork(id); if (!prev && !fresh) throw new CannotSave('missing', id);
-  const M = await merge(), data = prev ? copy(prev) : {};
-  change(data);
-  data.t = Date.now();
-  M.stampData(M.revsOf(prev), data, tabs.devId(), Date.now(), null);
-  const r = await writeWork(id, data, M);
-  saved({ kind: 'work', id, side: 'students', data, before: prev });
-  return r;
+// hold: the marking screen's own note of what it opened and saw (src/app/open.js batch.revs, src/saving.js b.seen, b.behind): the
+// record change makes replaces the saved one, stamped against what the screen opened, and when another window has saved this
+// download since, only what changed here goes in (src/saving.js saveBehind, tabMerge). Without a hold, change works on the newest copy.
+// A write and the read before it are one step for every window of the new app (the "gs-save" lock), so two never interleave.
+export async function saveWork(id, change, { fresh = false, hold = null } = {}) {
+  return oneAtATime(async () => {
+    check(id);
+    if ((json('gs.tomb', {}) || {})[id]) throw new CannotSave('forgotten', id);
+    const prev = await newestWork(id); if (!prev && !fresh) throw new CannotSave('missing', id);
+    const M = await merge(), data = hold ? {} : prev ? copy(prev) : {};
+    change(data);
+    data.t = Date.now();
+    let out = data;
+    if (hold) {
+      if (!hold.revs) hold.revs = M.revsOf(prev);
+      if (!hold.bad) hold.wasOk = hold.revs;   // a change whose save failed still counts as this window's own, until one works
+      const was = hold.wasOk, st = tabs.savedStamp(id);
+      hold.revs = M.stampData(hold.revs, data, tabs.devId(), Date.now(), null);
+      if (prev && (hold.behind || (st && st !== hold.seen))) {
+        if (!hold.behind && !M.tabDiffers(was, prev)) hold.seen = st;   // it saved nothing new
+        else {
+          hold.behind = true;
+          const m = M.tabMerge(data, was, prev);
+          if (!m.changed) return { quick: true, full: true, merged: true };
+          out = m.data;
+        }
+      }
+    } else M.stampData(M.revsOf(prev), data, tabs.devId(), Date.now(), null);
+    const r = await writeWork(id, out, M);
+    if (hold) { hold.bad = !r.full; hold.seen = tabs.savedStamp(id); }
+    saved({ kind: 'work', id, side: 'students', data: out, before: prev });
+    return r;
+  });
 }
+// The read and write of a save as one step across this browser's windows of the new app. Windows of the current app don't ask;
+// the stamps and the merge above keep their work, as they always have between two of its own windows.
+const oneAtATime = fn => (typeof navigator !== 'undefined' && navigator.locks && navigator.locks.request) ? navigator.locks.request('gs-save', fn) : fn();
 // Leaving the page (the tab closing or reloading), as the current app's saveNow(true) on beforeunload: there is no time to wait, so
 // only the quick copy is written, at once, over the quick copy already there. The next open reads the newer of the two copies
 // (index.js newestWork), and its first save writes the full copy. False when it could not (no save yet this visit, or no quick copy).
+// With a hold that is behind another window, only what changed here goes in, from the quick copy (there is no time to read more).
 export const leavingReady = () => merge();
-export function saveWorkLeaving(id, change) {
+export function saveWorkLeaving(id, change, { hold = null } = {}) {
   if (!engineNow) return false;
   check(id);
   if ((json('gs.tomb', {}) || {})[id]) return false;
   const qid = id.replace(/^gs\.b\./, ''), prev = quick.json(qid); if (!prev) return false;
-  const data = copy(prev); change(data); data.t = Date.now();
-  engineNow.stampData(engineNow.revsOf(prev), data, tabs.devId(), Date.now(), null);
+  const M = engineNow;
+  let data = hold ? {} : copy(prev); change(data); data.t = Date.now();
+  if (hold && hold.revs) {
+    if (!hold.bad) hold.wasOk = hold.revs;
+    const was = hold.wasOk, st = tabs.savedStamp(id);
+    hold.revs = M.stampData(hold.revs, data, tabs.devId(), Date.now(), null);
+    if (hold.behind || (st && st !== hold.seen)) {
+      if (hold.behind || M.tabDiffers(was, prev)) { const m = M.tabMerge(data, was, prev); if (!m.changed) return true; data = m.data; }
+    }
+  } else M.stampData(M.revsOf(prev), data, tabs.devId(), Date.now(), null);
   quick.setText(qid, JSON.stringify(data));
   const idx = quickList.json({}) || {}; idx[id] = data.t; quickList.setJson(idx);
   tabs.stamp(id, data.t);
@@ -217,8 +251,7 @@ export async function keepVideo(file, id) {
 
 /* strong examples and the watch list (grading-studio-examples: ex and pix; src/examples.js exPut, exDelete) */
 // A record and its pictures in one transaction, as exPut writes them: u stamps the change (the newer one wins a merge), new
-// pictures replace the old ones. The database is the current app's to make: a browser that never kept one in the current app
-// refuses here with NotThere, and the screen says so.
+// pictures replace the old ones. A browser that never kept one gets the database made as the current app makes it (shared/idb.js ensure).
 export async function keepExample(rec, blobs) {
   check('grading-studio-examples');
   rec = { ...rec, u: Date.now() };
