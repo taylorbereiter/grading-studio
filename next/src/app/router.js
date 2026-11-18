@@ -47,6 +47,8 @@ export const PARTS = {
   // own like pdf.js (each library is its own chunk, under the any-chunk budget)
   out: () => import('./screens/mark-out.jsx'),
   outEngine: () => import('./mark/out.js'),
+  // the Grade sheet on the Grades tab
+  sheet: () => import('./mark/sheet.jsx'),
   pdflib: () => import('pdf-lib'),
   zip: () => import('fflate'),
   h2c: () => import('html2canvas'),

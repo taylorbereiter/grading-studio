@@ -10,6 +10,8 @@ import { state, fmtNum, fmtPct, rowsTop, maxPoints } from '../../engines/gcore.j
 import { shownName, anonOn } from '../../engines/gdraw.js';
 import '../mark/lines.js';
 import '../mark/setup-lines.js';
+import '../mark/paper-lines.js';
+import { PARTS } from '../router.js';
 
 async function copy(text) {
   try { await navigator.clipboard.writeText(text); return true; }
@@ -26,8 +28,16 @@ export function Grades({ E, onOpen }) {
   const banded = !ib && !!(E.X.meGrade() || {}).bands, rows = E.rows();
   const save = (name, blob) => E.saveFile(name, blob);
   const copyAll = async k => { const r = E.copyText(k); await copy(r.text); toast(t('setup.copied_rows', { n: r.n })); };
+  const [view, setView] = useState('table'), [SH, setSH] = useState(null);
+  useEffect(() => { if (view === 'sheet' && !SH) PARTS.sheet().then(setSH, e => console.error(e)); }, [view]);
+  const views = <Segmented label={t('paper.gs_view')} size="sm" value={view} onChange={setView} options={[{ value: 'table', label: t('paper.gs_table') }, { value: 'sheet', label: t('paper.gs_sheet') }]} />;
+  if (view === 'sheet') return <section class="mk-out mk-grades" aria-labelledby="mk-g-h">
+    <header class="oh"><h2 id="mk-g-h" class="t3">{t('paper.gs_sheet')}</h2>{views}</header>
+    {SH ? <SH.Sheet E={E} onOpen={onOpen} /> : <div class="loading" aria-busy="true" />}
+    <footer class="of"><Button variant="primary" icon="download" onClick={async () => save('Grade sheet - ' + b.name + '.pdf', await E.sheetPdf())} data-sheetpdf>{t('setup.g_sheet')}</Button></footer>
+  </section>;
   return <section class="mk-out mk-grades" aria-labelledby="mk-g-h">
-    <header class="oh"><h2 id="mk-g-h" class="t3">{t('mark.grades')}</h2><span class="mute" id="glSum">{E.summary()}</span>
+    <header class="oh"><h2 id="mk-g-h" class="t3">{t('mark.grades')}</h2>{views}<span class="mute" id="glSum">{E.summary()}</span>
       {cls && <Segmented label={t('setup.g_order')} size="sm" value={E.order()} onChange={v => { E.setOrder(v); tick(n => n + 1); }}
         options={[{ value: 'folder', label: t('setup.g_folder') }, { value: 'roster', label: t('setup.g_roster', { name: cls.name }) }]} />}</header>
     <p class="mute help">{t('setup.g_help')}</p>

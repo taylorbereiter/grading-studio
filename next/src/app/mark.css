@@ -707,3 +707,25 @@ dialog.dlg:has(.mk-su)>.body{max-height:calc(88vh - 120px);overflow:auto}
 .mk-sprub .splvb:hover{border-color:var(--acc)}
 .mk-sprub .splvb.on{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-ink)}
 .mk-tnbank{display:flex;justify-content:flex-end;margin-top:4px}
+/* The Grade sheet (mark/sheet.jsx) */
+.mk-sheet .gs-opts{display:flex;flex-direction:column;gap:6px;margin:0 0 10px}
+.mk-sheet .gs-note{background:var(--warn-soft);padding:8px 10px;border-radius:var(--r2)}
+.mk-sheet .gs-tbl td{vertical-align:top}
+.mk-sheet .gs-who{font-weight:600}
+.mk-sheet .gs-path{overflow-wrap:anywhere}
+.mk-sheet .gs-sm,.mk-bx .gs-sm{font-size:var(--t1)}
+.mk-sheet .gs-pic{margin-bottom:6px}
+.mk-sheet .gs-pic img{display:block;max-width:360px;max-height:150px;border:1px solid var(--line);border-radius:4px;cursor:pointer;background:#fff}
+.mk-sheet .gs-many .gs-pic img{border-color:var(--warn)}
+.mk-sheet .gs-acts{display:flex;gap:14px;margin-top:4px}
+.mk-sheet .gs-outrow{opacity:.7}
+.mk-sheet .big-sc{display:block;border:0;background:none;padding:0;font:inherit;font-size:22px;font-weight:700;color:var(--ink);cursor:copy;text-align:left}
+.mk-sheet .big-sc small{font-size:var(--t2);font-weight:500;color:var(--mute);margin-left:3px}
+.mk-sheet .gs-pct{font-size:var(--t2);margin-top:4px}
+.mk-sheet .gs-warn{display:block;margin-top:6px;color:var(--warn);font-size:var(--t1);font-weight:600}
+.mk-sheet .sc-in{width:90px}
+.mk-sheet .rd-ask{margin-top:8px;padding:8px;border-radius:var(--r2);background:var(--s2);font-weight:400;font-size:var(--t2);display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.mk-sheet .rd-no{margin-top:6px;font-weight:400;font-size:var(--t1);color:var(--mute)}
+dialog.dlg:has(.mk-bx){width:min(980px,calc(100vw - 32px))}
+.mk-bx .bxpages{max-height:calc(88vh - 180px);overflow:auto;background:var(--s2);padding:12px;border-radius:var(--r2)}
+.mk-bx .bxpages canvas{display:block;margin:0 auto 14px;background:#fff;box-shadow:var(--sh-r);cursor:crosshair;touch-action:none}

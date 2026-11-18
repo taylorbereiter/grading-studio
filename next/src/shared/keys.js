@@ -32,7 +32,7 @@ export const LOCAL = [
   ['gs.wlCodes', 'students', 'work', 'json', 'the watch list’s private codes for students'],
   ['gs.focus', 'students', 'work', 'json', 'the work timer’s log of marking sessions'],
   ['gs.lastBackup', 'students', 'work', 'json', 'when the last take-home file or backup was made'],
-  ['gs.sheetfound', 'students', 'work', 'json', 'a gradebook sheet column found for a class'],
+  ['gs.sheetfound', 'students', 'pref', 'json', 'grade sheet: also show grades found on the papers'],
   ['gs.snipMarks', 'students', 'pref', 'json', 'snip tool: keep marks in the picture'],
   ['gs.syncT', 'students', 'legacy', 'json', 'old sync times per key (before 1.27)'],
   // the Planner side's work and settings

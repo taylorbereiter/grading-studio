@@ -1,5 +1,8 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
+// the Grade sheet's choices, which the current app keeps in module variables: read and set from the Grades tab
+export function sheetSet(o) { if ('all' in o) sheetAll = !!o.all; if ('found' in o) sheetFound = !!o.found; if ('out' in o) sheetShowOut = !!o.out; }
+export const sheetNow = () => ({ all: sheetAll, found: sheetFound, out: sheetShowOut });
 import { batch, cur, setup, lib, selected, pages, undoStack, redoStack, disp, once, LANG_LOCALE, tr, gradesOrder, saveSoon, pdfjsLib, PDFLib, fflate, mammoth, html2canvas, workerReady, toast, renderList, renderTools, renderGrade, openStudent, gradeMarksChanged, openImported, rescanFile, refound, groupJust, store, ROW_TOP, rowTop, rowScaleOf, maxPoints, roundPct, percentWith, gradeOf, tryGrade, ownGrade, fmtNum, fmtPct, COLORS, HL, noScore, wordPart, quizCount, quizPart, ibSetup, set } from './gcore.js';
 import { FONT, measureCtx, sideFor, wrapText, rgb, textLayout, drawMarks, rotOf, vpRot, skewOf, skewXf, vpDraw, viewable, fileByPath, layoutOf, docMarked, docIn, docAuto, draw, docAdded, scrub, scrubMarks, nameFold, rosterMatch, batchClass, anonOn, shownName, lightOpts, lightForPage, lightCanvas, WORD_RX, isLatin, rawWords, namesNow, ownNames, coverRx, stampScore, stampBox, drawStamp, viewBytes, one, marksMine, tnMine, tnOut } from './gdraw.js';
 import { natural, GS_TAIL, syncScoreStamps, boxKey, findItem, hasSheet, stampSoon, tryOfFile, canvasJpg, groupFileOf, groupOwn } from './gopen.js';
@@ -505,6 +508,8 @@ let sheetFound = !!store.get('gs.sheetfound', false);
 const appScored = st => { if (noScore(st)) return true; const g = gradeOf(st); return g.total != null && !g.paper; };
 // src/app/gradesheet.js
 const appShots = (st, f, shots) => !appScored(st) || sheetFound ? shots : shots.filter(g => g.stamp || g.boxed || g.none || f.hand);
+// src/app/gradesheet.js
+const quietReads = r => ({ ok: [], ask: [], mine: [], yes: r.yes, no: r.no });
 // src/app/gradesheet.js
 let sheetShowOut = false;
 // src/app/gradesheet.js
@@ -2316,4 +2321,4 @@ function ibBounds(c) {
 }
 // src/ib.js
 function ibGradeOf(v, bounds) { if (v == null || v === '' || isNaN(v)) return null; const b = bounds.find(r => +v >= r[0]); return b ? b[1] : null; }
-export { exportPlan, nameOut, outStem, flattenDoc, oneLeftOver, xOne, xNames, xEdit, xAll, xEarly, gotEarly, canvasJpg, exportWhy, fbOn, keyOn, asgName, fileSafe, outWord, scanAll, buildSheetPdf, parseGrade, foundLabel, manyReads, readsCount, disagreeNote, gradeRows, tableHead, tableRow, gradesSummary, cellCopy, totalText, statusText, rowShown, scoreText, cellOut, csvCell, tsvLine, bandOf, ibSetup, meGrade, pctAvgText, setKey, keyRows, classStats, leftOutText, spreadBins, onThisScale, partNote, STATUS_LABEL, triesSay, anchorDocs, anchorDocPdf, anchorFile, anchorsHere, ANCHORS, anchorOf, anchorLabel, setAnchor, anchorCoverOn, wordPagesPdf, WP_MAX, scanFile };
+export { exportPlan, nameOut, outStem, flattenDoc, oneLeftOver, xOne, xNames, xEdit, xAll, xEarly, gotEarly, canvasJpg, exportWhy, fbOn, keyOn, asgName, fileSafe, outWord, scanAll, buildSheetPdf, parseGrade, foundLabel, manyReads, readsCount, disagreeNote, gradeRows, tableHead, tableRow, gradesSummary, cellCopy, totalText, statusText, rowShown, scoreText, cellOut, csvCell, tsvLine, bandOf, ibSetup, meGrade, pctAvgText, setKey, keyRows, classStats, leftOutText, spreadBins, onThisScale, partNote, STATUS_LABEL, triesSay, anchorDocs, anchorDocPdf, anchorFile, anchorsHere, ANCHORS, anchorOf, anchorLabel, setAnchor, anchorCoverOn, wordPagesPdf, WP_MAX, scanFile, sheetRows, appScored, appShots, rowGraded, splitReads, readKey, readingDoubt, quietReads, paperScore, rivalReads, paperBytes, fileIn };

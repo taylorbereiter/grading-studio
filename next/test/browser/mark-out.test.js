@@ -146,3 +146,55 @@ test('Insights counts the class the way the current app does', async () => {
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('the Grade sheet: a grade typed on a paper read as the score, also the grades found kept, a grade boxed by hand with the arrows, and the same spot on every paper; the current app reads the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zipOf(await standardFiles()));
+  await m.evaluate(() => window.__gs.saveNow()); await settle(m);
+  const id = await m.evaluate(() => window.__gs.state().batch.id);
+  await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id) + '/grades');
+  await p.waitForSelector('#glTable', { timeout: 60000 });
+  await p.evaluate(() => [...document.querySelectorAll('.mk-grades [role="radio"], .mk-grades .seg button, .mk-grades [aria-pressed]')].find(b => /Grade sheet/.test(b.textContent)).click());
+  await p.waitForSelector('[data-sheet] .gs-tbl', { timeout: 60000 });
+  // Cleo's paper says 9.5/12 = 88% and she has no score: the sheet reads it
+  const cleo = await p.evaluate(() => window.__mark.state().batch.students.findIndex(st => /Cleo/.test(st.key)));
+  const rowOf = i => p.evaluate(i => { const tr = [...document.querySelectorAll('.gs-tbl tbody tr')].find(r => r.querySelector('td.n') && r.querySelector('td.n').textContent === String(i + 1)); return tr ? tr.querySelector('.gs-r').textContent : null; }, i);
+  assert.match(await rowOf(cleo), /9\.5/);
+  // also the grades found: kept for the next time, as the current app keeps it
+  await p.evaluate(() => [...document.querySelectorAll('[data-sheet] .gs-opts label')][0].click());
+  assert.equal(await p.evaluate(() => localStorage.getItem('gs.sheetfound')), 'true');
+  // a grade boxed by hand on the first paper: the box saves and goes on; the arrows go back and on; Esc finishes
+  await p.click('[data-each]'); await p.waitForSelector('.mk-bx canvas[data-boxpage]', { timeout: 30000 });
+  const first = await p.evaluate(() => document.querySelector('dialog[open] h2').textContent);
+  const c = await (await p.$('.mk-bx canvas[data-boxpage="0"]')).boundingBox();
+  await p.mouse.move(c.x + c.width * 0.6, c.y + c.height * 0.05); await p.mouse.down(); await p.mouse.move(c.x + c.width * 0.8, c.y + c.height * 0.1); await p.mouse.move(c.x + c.width * 0.9, c.y + c.height * 0.12); await p.mouse.up();
+  await p.waitForFunction(f => document.querySelector('dialog[open] h2').textContent !== f, {}, first);
+  const boxed = await p.evaluate(() => window.__mark.state().batch.students.flatMap(st => st.files).filter(f => f.hand).map(f => f.hand));
+  assert.equal(boxed.length, 1); assert.ok(boxed[0].w > 0.25 && boxed[0].w < 0.35, 'the box is where she dragged');
+  await p.keyboard.press('ArrowLeft'); await p.waitForFunction(f => document.querySelector('dialog[open] h2').textContent === f, {}, first);
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('.mk-bx'));
+  await p.waitForSelector('[data-sheet] [data-rebox]', { timeout: 60000 });
+  assert.ok(await p.evaluate(() => [...document.querySelectorAll('[data-rebox]')].some(b => /redo/.test(b.textContent))), 'the row says it was boxed by hand');
+  // the same spot on every paper
+  await p.click('[data-spot]'); await p.waitForSelector('[data-spotpage]', { timeout: 30000 });
+  const s = await (await p.$('[data-spotpage]')).boundingBox();
+  await p.mouse.move(s.x + s.width * 0.7, s.y + s.height * 0.02); await p.mouse.down(); await p.mouse.move(s.x + s.width * 0.85, s.y + s.height * 0.06); await p.mouse.move(s.x + s.width * 0.95, s.y + s.height * 0.08); await p.mouse.up();
+  await p.click('[data-spotuse]');
+  await p.waitForSelector('[data-spotoff]', { timeout: 60000 });
+  const spot = await p.evaluate(() => window.__mark.state().setup.spot);
+  assert.equal(spot.page, 'first'); assert.ok(spot.w > 0.2 && spot.w < 0.3);
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  await old.evaluate(id => window.__gs.reopenKept(id), id);
+  await old.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  assert.deepEqual(await old.evaluate(() => window.__gs.state().batch.students.flatMap(st => st.files).filter(f => f.hand).map(f => f.hand)), boxed, 'the current app has the same box');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

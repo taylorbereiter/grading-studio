@@ -221,7 +221,9 @@ const GRADING = [
     'meGrade', 'pctAvgText', 'setKey', 'keyRows', 'classStats', 'leftOutText', 'spreadBins', 'onThisScale', 'partNote', 'STATUS_LABEL', 'triesSay',
     'anchorDocs', 'anchorDocPdf', 'anchorFile', 'anchorsHere', 'ANCHORS', 'anchorOf', 'anchorLabel', 'setAnchor', 'anchorCoverOn',
     'wordPagesPdf', 'WP_MAX', 'scanFile',
-  ], '', [], ['gcore', 'gdraw', 'gopen'], ['num', 'inside']],
+    // the Grade sheet's rows and what she says about a grade read off a paper (src/app/gradesheet.js, src/grades.js)
+    'sheetRows', 'appScored', 'appShots', 'rowGraded', 'splitReads', 'readKey', 'readingDoubt', 'quietReads', 'paperScore', 'rivalReads', 'paperBytes', 'fileIn',
+  ], "// the Grade sheet's choices, which the current app keeps in module variables: read and set from the Grades tab\nexport function sheetSet(o) { if ('all' in o) sheetAll = !!o.all; if ('found' in o) sheetFound = !!o.found; if ('out' in o) sheetShowOut = !!o.out; }\nexport const sheetNow = () => ({ all: sheetAll, found: sheetFound, out: sheetShowOut });\n", [], ['gcore', 'gdraw', 'gopen'], ['num', 'inside']],
   ['greport', [
     // the opening report (src/intake.js openingFacts, checkStack): what opened, what didn't and why, who has nothing, and anything odd
     'openingFacts', 'checkStack', 'checkFile', 'repHead', 'zipSay', 'troubleOf', 'troubleText', 'hash', 'textOf',
