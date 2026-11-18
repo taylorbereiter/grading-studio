@@ -45,6 +45,7 @@ function writeEngines() {
   if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
   writePlanner();
   writeActivities();
+  writeGrading();
   return out;
 }
 // next/src/engines/planner.js: the Planner's engines (next/docs/engines.md, "Planning engines"), cut by name out of src/planner by
@@ -116,20 +117,103 @@ function writePlanner() {
   if (!fs.existsSync(g) || fs.readFileSync(g, 'utf8') !== js) fs.writeFileSync(g, js);
 }
 
+// The grading engines (stage 4, next/docs/engines.md "Grading engines, as lifted"): cut by name out of the grading page's source (the
+// files build.js joins inside gsData.boot, in its order) by next/tools/lift.js, the same way as the Planner's. Never edited by hand.
+//
+// The grading page keeps its open work in top-level variables (batch, cur, setup, lib…). Here they are the engine's own state: they
+// are declared once, in gcore.js, and the marking screen hands them in with use({ batch, setup, lib, … }) before it calls an engine,
+// so the lifted text stays the current app's text, and a mark is drawn, scored and exported by the very same lines in both apps.
+// Each later module imports what it uses from the modules before it; esbuild refuses a module that assigns to one of those, so
+// only gcore.js can change the state.
+//
+// store: the current app's get/set over localStorage. Here it is engines/gstore.js, which goes through whatever the screen gives it
+// (students/prefs.js: registered keys only, writes only with the lock), and reads nothing before that.
+const GRADING_STATE = {
+  batch: 'null', cur: '0', setup: 'null', lib: '{ classes: [], loose: { id: "", units: [] } }', tool: "'pen'", selected: 'null', zoom: '1',
+  pages: '[]', docs: '[]', docMap: 'new Map()', undoStack: '[]', redoStack: '[]', bank: '[]', disp: 'null',
+  inkColor: "'red'", hlColor: "'yellow'", penW: '2', checkInk: "'green'", CHECK_INK: "'#1E8A4C'", ptsInk: "''", once: 'null', onceEl: 'null',
+  LANG_LOCALE: 'undefined', tr: '(s) => s', libVer: '0', keptMeta: 'new Map()',
+  // the screen's own: a change was made (the screen saves it through students/write.js), and what to redraw
+  saveSoon: '() => {}',
+  // the libraries, loaded by the screen when a paper needs them (each has its own budget) and handed in
+  pdfjsLib: 'null', PDFLib: 'null', fflate: 'null', mammoth: 'null', html2canvas: 'null', workerReady: 'Promise.resolve()',
+  heicLoad: "() => { throw new Error('no decoder in this copy'); }",
+};
+// What the lifted code calls that belongs to the screen (a toast, a redraw): quiet here, the new screen says and draws things itself.
+const GRADING_STUBS = { toast: '() => {}', pickedUpNew: '() => false', renderKept: '() => {}', groupNoteRefresh: '() => {}' };
+const GRADING_DENY = ['$', 'toast', 'openDlg', 'closeDlg', 'sayDlg', 'saveNow', 'saveLib', 'writeWork', 'keepWork', 'renderList', 'renderTools',
+  'renderGrade', 'openStudent', 'redrawAll', 'go', 'routeNow', 'paperPut', 'folderSaved', 'syncSoon', 'homeRender'];
+// Names that are only local variables in what is lifted (an unrelated top-level declaration has the same name).
+const GRADING_LOCAL = ['inside', 'num', 'average'];
+// Each module: [file, roots, preamble]. Later modules may use anything the earlier ones declare.
+const GRADING = [
+  ['gcore', [
+    // grade maths (src/app/start.js, grades.js, ib.js, quiz.js)
+    'setupOver', 'DEFAULT_SETUP', 'setupMax', 'rowsMax', 'rowTop', 'rowHalf', 'rowSteps', 'rowLevels', 'rowsTop', 'rowsSay', 'rowScaleOf', 'SCALE12', 'SCALE_FIVES',
+    'RUBRIC_STEPS', 'maxPoints', 'roundPct', 'pointsWith', 'pointsFor', 'percentFor', 'percentWith', 'gradeOf', 'tryGrade', 'scoreOf', 'ownGrade', 'withTries',
+    'retakeRule', 'RETAKE_RULES', 'addXc', 'xcSay', 'fmtNum', 'fmtPct', 'noScore',
+    // the marks' colours
+    'COLORS', 'HL', 'NOTE_COLORS', 'TEXT_COLORS', 'PTS_AMBER', 'QZ_GOLD', 'ptsColor', 'totalInk', 'setCheckInk',
+  ]],
+  ['gdraw', [
+    // drawing marks on a page, shared by the screen and the export (src/app/draw.js, marking.js, stamps.js, lighting.js)
+    'FONT', 'drawMarks', 'layoutNotes', 'textLayout', 'wrapText', 'bboxOf', 'sideFor', 'sideScreen', 'drawStamp', 'stampBox', 'strokePath', 'drawHls',
+    'stickersReady', 'STICKERS', 'lightLut', 'lightCanvas', 'draw', 'marksMine', 'loadLines', 'anonOn', 'shownName', 'viewBytes', 'impHas', 'fileSeq', 'layoutOf', 'docIn', 'docAuto', 'fileByPath', 'viewable', 'vpRot', 'vpDraw', 'skewXf', 'rotOf', 'skewOf',
+  ], "import STICKER_SRC from './stickers.js';\n", ['STICKER_SRC']],
+  ['gopen', [
+    // opening a kept download as the current app does (src/app/open.js intake, with fromKeep): its files, students and saved work
+    'paperGet', 'srcRead', 'spellLikeSaved', 'groupRaw', 'houseFile', 'makeFile', 'batchIdOf', 'revsBase', 'restore', 'rosterSort', 'loadAdded', 'loadEdits',
+    'applyRubricPage', 'loadRefs', 'photoTurns', 'natural', 'newestWork', 'cardOfKept', 'findItem', 'holders', 'rubricsDiffer', 'workScored', 'rubricFitting',
+    'junk', 'unzipInto', 'qmkFor', 'revsOf', 'partHashes', 'batchClass',
+  ]],
+];
+function writeGrading() {
+  const { lift } = require('./tools/lift.js');
+  const head = '// MADE BY next/build.js FROM the grading page\'s source (next/tools/lift.js). Do not edit: change the source and build again.\n/* eslint-disable */\n';
+  const names = Object.keys(GRADING_STATE);
+  const core = "import { store, kdo, kget, idbDo } from './gstore.js';\n" + names.map(n => 'let ' + n + ' = ' + GRADING_STATE[n] + ';').join('\n') + '\n' +
+    Object.entries(GRADING_STUBS).map(([n, v]) => 'const ' + n + ' = ' + v + ';').join('\n') + '\n' +
+    '// The open work, handed in by the marking screen: use({ batch, setup, lib, … }). Only the names above.\n' +
+    'export function use(o) {\n' + names.map(n => "  if ('" + n + "' in o) " + n + ' = o.' + n + ';').join('\n') + '\n}\n' +
+    'export const state = () => ({ ' + names.join(', ') + ' });\n';
+  const declared = [...names, 'store', 'kdo', 'kget', 'idbDo', ...Object.keys(GRADING_STUBS)], made = {}, texts = {}, needs = {};
+  const sticker = Object.fromEntries(fs.readdirSync(path.join(ROOT, 'src/stickers')).filter(f => f.endsWith('.webp')).sort().map(f => [f.slice(0, -5), f]));
+  writeIf('src/engines/stickers.js', '// MADE BY next/build.js FROM src/stickers/. Each sticker is its own file, fetched when a page with stickers is drawn.\n' +
+    Object.entries(sticker).map(([k, f], i) => 'import s' + i + " from '../../../src/stickers/" + f + "';").join('\n') + '\n// The bundler gives each file a name next to this chunk; the page is a folder up, so each is read from where this module is.\nconst at = f => new URL(f, import.meta.url).href;\nexport default { ' + Object.keys(sticker).map((k, i) => JSON.stringify(k) + ': at(s' + i + ')').join(', ') + ' };\n');
+  for (const [file, roots, preamble = '', given = []] of GRADING) {
+    let out = lift({ files: 'grading', scoped: true, roots, deny: GRADING_DENY, ignore: GRADING_LOCAL, given: [...declared, ...given], header: '', preamble: '' });
+    const own = [...out.matchAll(/^(?:async )?function\*? ?(\w+)|^(?:const|let|var) (\w+)/gm)].map(m => m[1] || m[2]);
+    const used = declared.filter(n => new RegExp('(?<![.\\w$])' + n.replace(/\$/g, '\\$') + '(?![\\w$])').test(out));
+    const imports = {};
+    for (const n of used) { const from = file === 'gcore' ? null : (made[n] || 'gcore'); if (from && from !== file) { (imports[from] ||= []).push(n); (needs[from] ||= new Set()).add(n); } }
+    let pre = file === 'gcore' ? core : Object.entries(imports).map(([f, l]) => 'import { ' + l.join(', ') + " } from './" + f + ".js';").join('\n') + '\n';
+    if (file === 'gcore') pre += 'export { ' + names.join(', ') + ', store, kdo, kget, idbDo, ' + Object.keys(GRADING_STUBS).join(', ') + ' };\n';
+    out = head + preamble + pre + out;
+    for (const n of own) { made[n] = file; declared.push(n); }
+    texts[file] = { out, roots };
+  }
+  for (const [file, { out, roots }] of Object.entries(texts)) {
+    const coreOut = [...names, 'store', 'kdo', 'kget', 'idbDo', ...Object.keys(GRADING_STUBS)];
+    const extra = [...(needs[file] || [])].filter(n => !roots.includes(n) && !(file === 'gcore' && coreOut.includes(n)));
+    writeIf('src/engines/' + file + '.js', extra.length ? out + 'export { ' + extra.join(', ') + ' };\n' : out);
+  }
+}
+function writeIf(rel, text) { const f = path.join(NEXT, rel); if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== text) fs.writeFileSync(f, text); }
+
 async function build() {
   writeEngines();
   fs.rmSync(DIST, { recursive: true, force: true });
   const r = await esbuild.build({
     entryPoints: { main: path.join(NEXT, 'src/main.js'), proof: path.join(NEXT, 'src/proof.js'), parts: path.join(NEXT, 'src/ui/index.js'), gallery: path.join(NEXT, 'src/gallery/main.jsx'),
-      'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css') },
+      'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css'), 'mark-css': path.join(NEXT, 'src/app/mark.css') },
     // pdf.js's worker, as text, so the Beside drawer's Books can start it from a blob: address (it loads only when a book is opened).
     plugins: [{ name: 'pdf-worker', setup(b) {
       // The path is kept relative to the repository so the build is the same on every machine.
       b.onResolve({ filter: /^pdfjs-worker-text$/ }, () => ({ path: 'node_modules/pdfjs-dist/build/pdf.worker.min.js', namespace: 'pdfw' }));
       b.onLoad({ filter: /.*/, namespace: 'pdfw' }, a => ({ contents: fs.readFileSync(path.join(ROOT, a.path), 'utf8'), loader: 'text' }));
     } }],
-    loader: { '.woff2': 'file', '.json': 'json' }, assetNames: '[name]-[hash]',
-    outdir: DIST, bundle: true, splitting: true, format: 'esm', target: ['chrome109', 'safari16'], minify: true,
+    loader: { '.woff2': 'file', '.json': 'json', '.webp': 'file' }, assetNames: '[name]-[hash]',
+    outdir: DIST, bundle: true, splitting: true, format: 'esm', target: ['chrome109', 'safari16'], minify: !process.env.GS_NEXT_DEBUG,
     chunkNames: 'chunk-[hash]', entryNames: '[name]', metafile: true, absWorkingDir: ROOT, legalComments: 'none', logLevel: 'warning',
     jsxFactory: 'h', jsxFragment: 'Fragment', define: { __GS_LANGS__: JSON.stringify(langList()), __GS_DATA_V__: String(dataVersion()) },
   });
@@ -149,7 +233,7 @@ async function build() {
     '<script>' + sample + '</script>\n' + look +
     '<link rel="stylesheet" href="dist/tokens.css"><link rel="stylesheet" href="dist/parts-css.css">' + css.map(c => '<link rel="stylesheet" href="dist/' + c + '.css">').join('') + (style ? '<style>' + style + '</style>' : '') + '\n' +
     '<script type="module" src="dist/' + entry + '.js"></script></head><body>' + body + '</body></html>\n';
-  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
+  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css', 'mark-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'gallery.html'), partsPage('Parts gallery', 'gallery', ['gallery-css'], '', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'proof.html'), page('Saved-work proof', 'proof', '<p>Saved-work proof page. Used by the checks, not by teachers.</p>'));
   writeVersion();

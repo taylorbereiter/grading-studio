@@ -18,8 +18,8 @@ export const ROUTES = [
   ['class/:id/:tab/:sub', 'later', 'class'],
   ['lesson/:id', 'lesson', 'class'],
   ['lesson/:id/:view', 'lesson', 'class'],
-  ['mark/:id', 'later', 'class'],
-  ['mark/:id/:tab', 'later', 'class'],
+  ['mark/:id', 'mark', 'class'],
+  ['mark/:id/:tab', 'mark', 'class'],
   ['library', 'library', 'library'],
   ['library/:tab', 'library', 'library'],
   ['school', 'later', 'school'],
@@ -53,6 +53,7 @@ export const CHUNKS = {
   class: () => import('./screens/class.jsx'),
   lesson: () => import('./screens/lesson.jsx'),
   library: () => import('./screens/library.jsx'),
+  mark: () => import('./screens/mark.jsx'),
 };
 
 export function parse(hash) {

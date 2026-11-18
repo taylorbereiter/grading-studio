@@ -13,7 +13,7 @@ const versionIn = async name => { try { const r = await caches.has(name) && awai
 const mode = async () => { try { const r = await caches.has(KEPT) && await (await caches.open(KEPT)).match(at('mode')); return r && (await r.text()) === 'auto' ? 'auto' : 'ask'; } catch { return 'ask'; } };
 let queue = Promise.resolve();
 const inTurn = fn => { const p = queue.then(fn, fn); queue = p.catch(() => {}); return p; };
-const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2' };
+const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp' };
 const typeOf = p => TYPES[p.split('.').pop()] || 'application/octet-stream';
 
 async function download(name, v) {

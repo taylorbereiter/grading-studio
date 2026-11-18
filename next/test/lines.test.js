@@ -6,7 +6,7 @@ const fs = require('fs'), path = require('path');
 const SRC = path.join(__dirname, '..', 'src');
 // en.json: the app's lines. gallery.en.json: the gallery page's own, never shipped with the app (only gallery/ may use them).
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lang', f), 'utf8'));
-const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), EN = { ...APP, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE };
+const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), EN = { ...APP, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK };
 const noComments = s => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(x => x.isDirectory() ? walk(path.join(d, x.name)) : /\.jsx?$/.test(x.name) ? [path.join(d, x.name)] : []);
 const files = walk(SRC);
@@ -44,6 +44,9 @@ test('planning lines live in plan.en.json and load where they are used', () => {
   // and the Calendar's and units' occasional tools (next/lang/more.en.json), through app/plan/more-lines.js
   assert.ok(Object.keys(MORE).every(k => k.startsWith('more.')) && !Object.keys(APP).some(k => k.startsWith('more.')));
   for (const [f, s] of Object.entries(text)) if (/'more\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '\.\.?\/(plan\/)?more-lines\.js';/.test(s), f + ' uses a tools line without importing plan/more-lines.js');
+  // and the marking screens' (next/lang/mark.en.json), through app/mark/lines.js
+  assert.ok(Object.keys(MARK).every(k => k.startsWith('mark.')) && !Object.keys(APP).some(k => k.startsWith('mark.')));
+  for (const [f, s] of Object.entries(text)) if (/'mark\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '(\.\.\/)+mark\/lines\.js';|import '\.\/lines\.js';/.test(s), f + ' uses a marking line without importing mark/lines.js');
 });
 test('lines are well formed: area.name keys, plural lines have one and other, no stray braces', () => {
   for (const [k, v] of Object.entries(EN)) {

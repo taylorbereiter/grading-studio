@@ -199,7 +199,7 @@ export function Shell() {
     const offs = (classes || []).map(c => addCommand({ id: 'class-' + (c.id || '-'), label: c.loose ? t('nav.no_class') : c.name, also: t('nav.classes'), group: t('nav.classes'), icon: 'people', run: () => router.go('class', c.id || '-') }));
     return () => offs.forEach(f => f());
   }, [classes]);
-  return <div class={'shell' + (folded ? ' folded' : '')} data-lock={lock}>
+  return <div class={'shell' + (folded ? ' folded' : '') + (route.chunk === 'mark' ? ' marking' : '')} data-lock={lock}>
     <a class="skip" href="#main" onClick={e => { e.preventDefault(); const hd = main.current && main.current.querySelector('h1'); if (hd) { hd.setAttribute('tabindex', '-1'); hd.focus(); } }}>{t('nav.skip')}</a>
     <Sidebar route={route} classes={classes} folded={folded} onFold={fold} />
     {folded && <IconButton class="unfold" icon="menu" label={t('nav.expand')} onClick={fold} />}

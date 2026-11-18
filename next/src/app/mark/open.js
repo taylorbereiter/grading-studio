@@ -1,0 +1,95 @@
+// Opening an assignment's papers in the new app, the way the current app reopens a download kept in this browser
+// (src/app/open.js intake with fromKeep, from src/app/kept.js reopenKept): the same lifted steps in the same order, so the same
+// students, files, pages and marks come out. Nothing here writes: what the current app saves on opening (a card's batchId, a
+// quiz from the card) is left for the first change the teacher makes, which saves through students/write.js.
+import * as E from '../../engines/gopen.js';
+import { use, setupOver, state, kget } from '../../engines/gcore.js';
+import { useStore } from '../../engines/gstore.js';
+import { prefs } from '../../students/prefs.js';
+import { library, gradingSetup, meta } from '../../students/index.js';
+
+export class NotKept extends Error { constructor(id) { super('The papers for this one aren’t kept in this browser.'); this.name = 'NotKept'; this.id = id; } }
+
+// The kept downloads' rows (keptMeta), as loadKept reads them.
+async function keptRows() { const m = new Map(); for (const [k, v] of await meta.entries()) m.set(k, v); return m; }
+
+// question(q): how the screen asks which rubric to use when the card and the saved work disagree (returns 'a', 'b' or null).
+export async function openKept(id, { question } = {}) {
+  useStore(prefs);
+  const lib = library.json(null) || { classes: [], loose: { id: '', units: [] } };
+  for (const c of lib.classes || []) { c.units ||= []; c.names ||= []; }
+  lib.loose ||= { id: '', units: [] }; lib.loose.units ||= [];
+  use({ lib, keptMeta: await keptRows(), setup: setupOver(gradingSetup.json(null)), batch: null, cur: 0 });
+  const rec = await E.paperGet(id);
+  if (!rec) throw new NotKept(id);
+  let label = rec.label, assignment = E.cardOfKept(id);
+  // intake(rec.entries, rec.label, assignment, true)
+  const raw = [];
+  for (const e of rec.entries) {
+    if (E.junk(e.path)) continue;
+    if (/\.zip$/i.test(e.path)) {
+      const dir = e.path.includes('/') ? e.path.slice(0, e.path.lastIndexOf('/') + 1) : '';
+      try { E.unzipInto(e.data, dir, raw, dir ? 1 : 0); } catch { if (dir) raw.push({ path: e.path, data: e.data }); continue; }
+      if (!label && !dir) label = e.path.split('/').pop().replace(/\.zip$/i, '');
+      continue;
+    }
+    raw.push({ path: e.path, file: e.file, data: e.data });
+  }
+  if (!raw.length) throw new NotKept(id);
+  await E.srcRead(raw);
+  await E.spellLikeSaved(raw);
+  const map = E.groupRaw(raw), keys = [...map.keys()].sort(E.natural), students = [];
+  for (const key of keys) {
+    const files = [];
+    for (const r of map.get(key).sort((a, b) => E.natural(a.path, b.path))) if (!E.houseFile(r.path)) files.push(await E.makeFile(r.path, r.data));
+    if (!files.length && map.get(key).every(r => E.houseFile(r.path))) continue;
+    students.push({ key, files, grade: { rubric: [], points: '', comment: '' }, layout: null, inc: {} });
+  }
+  const bid = E.batchIdOf(raw);
+  const keptWork = await kget('work', bid);
+  const work0 = E.newestWork(prefs.get(bid, null), keptWork);
+  const rub = await rubricAt(assignment, work0, (assignment && assignment.name) || label || 'This download', question);
+  if (!rub) return null;
+  const batch = { id: bid, name: (assignment && assignment.name) || label || 'Your download', students, assignment: assignment || null, opened: Date.now() };
+  let setup = state().setup;
+  if (rub.su) setup = setupOver(rub.su);
+  delete setup.spot;
+  use({ batch, setup });
+  batch.keptWork = keptWork;
+  const saved = E.newestWork(prefs.get(bid, null), batch.keptWork);
+  await E.applyRubricPage();
+  await E.loadAdded();
+  if (setup.rubricPage) await E.applyRubricPage(batch.students.filter(st => !st.files.some(f => f.virtual)));
+  await E.loadRefs();
+  await E.loadEdits();
+  batch.revs = E.revsOf(E.revsBase(saved));
+  batch.lastS = saved && saved.s;
+  E.restore();
+  await E.photoTurns();
+  if (saved && saved.cls != null) batch.classId = saved.cls;
+  E.rosterSort();
+  if (batch.classId && (!saved || saved.cls == null)) Object.assign(batch.revs.ph, E.partHashes({ cls: batch.classId }));
+  if (batch.restoredKey) { const k = batch.students.findIndex(st => st.key === batch.restoredKey); if (k >= 0) batch.restoredCur = k; }
+  if (assignment && assignment.goal && !batch.goal && !assignment.batchId) batch.goal = assignment.goal;
+  if (assignment && assignment.quiz && assignment.quiz.made && (!batch.quiz || JSON.stringify(batch.quiz.made) !== JSON.stringify(assignment.quiz.made))) batch.quiz = E.qmkFor(batch.quiz, assignment.quiz);
+  else if (assignment && assignment.quiz && !batch.quiz && !assignment.batchId) batch.quiz = JSON.parse(JSON.stringify(assignment.quiz));
+  const cur = Math.max(0, batch.restoredCur || 0);
+  use({ cur });
+  return { batch, setup: state().setup, lib, cur };
+}
+// Which rubric the papers open with (src/app/open.js rubricAtOpen): the card's, or what the work was scored with, or the last one
+// saved. When the two disagree and would change a score, the screen asks (question returns 'a' for the card's, 'b' for the work's).
+async function rubricAt(card, work, name, question) {
+  const mine = card && card.setup, own = work && work.setup;
+  if (mine && own && E.rubricsDiffer(mine, own) && E.workScored(work)) {
+    const said = question ? await question({ a: mine, b: own, name }) : 'b';
+    return said && (said === 'a' ? { su: mine, said } : { su: own, said, toCard: true });
+  }
+  if (mine || own) return { su: mine || own };
+  const last = setupOver(card ? gradingSetup.json(null) : state().setup), fit = E.workScored(work) ? E.rubricFitting(work, last) : null;
+  if (fit) {
+    const said = question ? await question({ a: last, b: fit, name, fit: true }) : 'b';
+    return said && { su: said === 'a' ? last : fit, said };
+  }
+  return { su: card ? last : null };
+}

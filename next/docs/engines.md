@@ -362,3 +362,42 @@ The activity bank is lifted the same way into its own module, `engines/activitie
 `engines/planner.js`, so a slide made from an activity is the Planner's own. Library > Rubrics reads the bank record as it is and
 needs no engine. Not lifted yet, with the stage that adds them: rubric bank editing (`bankEdRender` and the rest, with the scoring
 screens in stage 4), reading a .pptx back into slides (`pptxToSlides`), the focus timer's pace (`ptPace`, with the lesson timer).
+
+## Grading engines, as lifted (stage 4)
+
+The grading page's engines are lifted by name the same way. `lift({ files: 'grading' })` reads the grading page's source in the
+order the page is built (build.js's list for `gsData.boot`, then `src/app/*.js` in `src/app/order.json`), and `scoped: true` makes
+the lift skip any name a declaration declares for itself (a local `changed` or `one` no longer pulls in a top-level one of the same
+name). The Planner lift stays unscoped, so its output is unchanged.
+
+`next/build.js` `writeGrading()` writes a chain of modules, each from its own list of roots (`GRADING`):
+
+- `engines/gcore.js`: grade maths and mark colours, and the state every grading engine reads. The current app keeps `batch`, `cur`,
+  `setup`, `lib`, `pages` and the rest as shared globals; here they are `let`s in gcore, changed only through `use({ ... })` and
+  read through `state()`. Later modules import them as live bindings. esbuild refuses an assignment to an import, so an engine
+  that tries to change state anywhere but gcore stops the build (a second DENY besides `GRADING_DENY`).
+- `engines/gdraw.js`: drawing a page and its marks (`draw`, `drawMarks`, `drawStamp`, `layoutNotes`, stickers, lighting, page turns).
+  Stickers come from `engines/stickers.js`, which imports `src/stickers/*.webp` as files.
+- `engines/gopen.js`: reopening a kept download (`paperGet`, `groupRaw`, `makeFile`, `batchIdOf`, `restore`, `rosterSort`,
+  `loadAdded`, `loadEdits`, `loadRefs`, `newestWork`, the rubric choice). `intake` itself mixes screens and steps, so it is not
+  lifted whole: `app/mark/open.js` `openKept(id)` runs the lifted steps in intake's order for a kept download.
+
+`GRADING_DENY` names the screen, dialog, saving and sync code an engine must never reach (`saveNow`, `writeWork`, `keepWork`,
+`saveLib`, `folderSaved`, `syncSoon`, `openDlg`, `renderList` and the rest); `GRADING_STUBS` quiet the few screen calls the lifted
+code makes on its way (`toast`, `renderKept`, `groupNoteRefresh`, `pickedUpNew`).
+
+**No lifted engine writes.** The current app's `store`, `kdo`, `kget` and `idbDo` are, in the lifted code, the four delegates in
+`engines/gstore.js`, which reach only what `useStore()` hands them. The marking screen hands them `students/prefs.js`: registered
+keys on the students' side only, writes only to keys of kind `pref`, IndexedDB opened read-only (`kdo` refuses any other mode, and
+`idbDo` reads only the added-files store). Marks, scores and comments are saved through `students/write.js` (`saveWork`), from
+part (b) of stage 4 on.
+
+**Proof.** `next/test/browser/mark.test.js` (in `npm run next:browser`, so in CI): work made with main's pages in this repository
+opens in the new marking screen as the same students, files, marks and scores, and every page draws to the same pixels at the same
+scale; and the legacy-v1 fixture (work saved before saved-data versions) does the same for every student of both its downloads.
+The engines' own checks are this equivalence: the lifted code is the current app's code, rebuilt on every build, and CI fails when
+`next/src/engines` is not what the build makes from main's source.
+
+One thing the page around a canvas changes: Chrome applies the page's `letter-spacing` to text drawn on a canvas in the page. The
+new app's body has a slight negative letter spacing, so `.mk-paper canvas` resets it (`next/src/app/mark.css`); without that, every
+drawn comment, stamp and note was a few pixels off.

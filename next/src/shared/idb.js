@@ -57,3 +57,6 @@ export async function del(dbName, store, key) {
   mayWrite(dbName + '/' + store);
   await withStore(dbName, store, 'readwrite', o => o.delete(key));
 }
+// One read-only transaction on a store, for engines lifted from the current app that read a store their own way (kept.js kdo):
+// fn gets the object store and returns a request (its result is returned) or a value.
+export const readStore = (dbName, store, fn) => withStore(dbName, store, 'readonly', fn);
