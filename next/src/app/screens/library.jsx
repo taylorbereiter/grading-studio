@@ -5,10 +5,10 @@
 // one on its class's Course line. Rubrics shows the bank (kv "bank": rubrics and grading scales, wording only), sorted by unit.
 // The built-in activities are the app's own English text, as in the current Planner; they are shown as written.
 import { h, Fragment } from 'preact';
-import { useState, useId } from 'preact/hooks';
+import { useState, useId, useEffect } from 'preact/hooks';
 import { Tabs, Chip, Button, Checkbox, Select, TextInput, Field, Sheet, EmptyState, Icon, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
-import { href, go } from '../router.js';
+import { href, go, PARTS as PART } from '../router.js';
 import { usePlan } from '../plan.js';
 import { engine } from '../../planning/engine.js';
 import { saveKv, saveLesson } from '../../planning/write.js';
@@ -156,23 +156,11 @@ function Units({ p, classes }) {
 }
 
 // ---------- Rubrics ----------
-const top = (x, i) => { const ok = v => { v = Math.round(+v); return v >= 1 && v <= 10 ? v : 0; }; return (Array.isArray(x.tops) && ok(x.tops[i])) || ok(x.top) || 4; };
+// The bank, edited (app/plan/bank-edit.jsx), loaded with this tab.
 function Rubrics({ p }) {
-  const b = p.bank || {};
-  const items = [...(b.rubrics || []).filter(r => r && r.id && r.name && Array.isArray(r.criteria) && r.criteria.length).map(x => ['r', x]),
-    ...(b.scales || []).filter(s => s && s.id && s.name && s.scale && typeof s.scale === 'object').map(x => ['s', x])];
-  if (!items.length) return <EmptyState icon="grades" title={t('plan.no_bank')} text={t('plan.no_bank_text')} />;
-  const groups = new Map();
-  for (const it of items) { const u = it[1].unit, k = u && u.title ? u.title : ''; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(it); }
-  const keys = [...groups.keys()].sort((a, b) => !a ? 1 : !b ? -1 : a.localeCompare(b, undefined, { numeric: true }));
-  return <>
-    <p class="mute">{t('plan.bank_note')}</p>
-    {keys.map(k => <section class="libsec"><h2 class="t4">{k ? raw(k) : t('plan.no_unit')}</h2>
-      <ul class="list">{groups.get(k).map(([kind, x]) => <li><div class="lrow"><span class="lead"><Icon name="grades" /></span><span class="main"><b data-raw>{x.name}</b>
-        <small>{kind === 's' ? t('plan.scale_top', { n: Math.max(...Object.keys(x.scale).map(Number).filter(n => n >= 0)) })
-          : <>{t('plan.rubric_rows', { n: x.criteria.length, max: x.criteria.reduce((m, _, i) => m + top(x, i), 0) })} · {raw(x.criteria.map(c => typeof c === 'string' ? c : c && c.name).filter(Boolean).join(', '))}</>}</small></span></div></li>)}</ul>
-    </section>)}
-  </>;
+  const [B, setB] = useState(null);
+  useEffect(() => { PART.bank().then(setB); }, []);
+  return B ? <B.BankList p={p} /> : <div class="loading" aria-busy="true" />;
 }
 
 export default function Library({ route, classes }) {

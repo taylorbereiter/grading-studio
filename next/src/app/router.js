@@ -67,6 +67,7 @@ export const PARTS = {
   typed: () => import('./mark/typed.jsx'),
   setup: () => import('./mark/setup.jsx'),
   setgrade: () => import('./screens/settings-grading.jsx'),
+  bank: () => import('./plan/bank-edit.jsx'),
 };
 export const CHUNKS = {
   home: () => import('./screens/home.jsx'),

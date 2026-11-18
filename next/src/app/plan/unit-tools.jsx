@@ -23,6 +23,7 @@ import { saveFailed } from './save.js';
 import { usePart } from '../parts.js';
 import './lines.js';
 import './more-lines.js';
+import { UnitBank } from './bank-edit.jsx';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 const aiName = () => assistant().name || t('assistant.generic');
@@ -113,6 +114,7 @@ export function UnitSide({ p, u }) {
       <div class="row"><Button size="sm" icon="image" onClick={() => pickFiles('atlas', 'image/*')} data-focus="unit-add-shot">{t('more.add_shot')}</Button>
         <Button size="sm" icon="assist" onClick={() => setAsking(true)} data-focus="unit-ask">{t('more.fill_with', { name })}</Button></div>
     </section>
+    <UnitBank p={p} u={u} />
     {asking && <UnitAssist p={p} u={u} onClose={() => setAsking(false)} />}
     <Dialog open={!!big} title={big ? big.f.name : ''} onClose={() => { URL.revokeObjectURL(big.url); setBig(null); }} actions={<Button onClick={() => { URL.revokeObjectURL(big.url); setBig(null); }}>{t('common.close')}</Button>}>{big && <img class="shotbig" src={big.url} alt="" />}</Dialog>
     {doc && Doc && <Doc.DocEditor p={p} l={u} id={doc} save={n => saveUnit(p, n)} onClose={() => setDoc(null)} />}

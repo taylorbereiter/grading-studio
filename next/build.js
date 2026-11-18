@@ -44,7 +44,7 @@ function writeEngines() {
   const f = path.join(NEXT, 'src/engines/merge.js');
   if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
   writePlanner();
-  writeActivities();
+  writeActivities(); writePbank();
   writeGrading();
   return out;
 }
@@ -83,6 +83,16 @@ function writeActivities() {
     header: '// MADE BY next/build.js FROM src/planner/activities.js (next/tools/lift.js). Do not edit: change the source and build again.\n/* eslint-disable */\n',
     given: ['normSlide', 'lid'], preamble: "import { normSlide, lid } from './planner.js';\n" });
   const f = path.join(NEXT, 'src/engines/activities.js');
+  if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
+}
+// next/src/engines/pbank.js: the rubric bank's rules (src/planner/bank.js): tidying a rubric or a scale as the Planner saves it, presets and
+// rescaling. L and lid come from the planner engine; the new app puts the bank in L.bank before calling, as the Planner does.
+function writePbank() {
+  const { lift } = require('./tools/lift.js');
+  const out = lift({ roots: ['tidyBank', 'normScale', 'scaleTop', 'normRef', 'normRubric', 'normBankScale', 'presetScale', 'rescale', 'bTop', 'bMax', 'bLevels', 'bOneTop', 'bRowScale', 'B_TOP', 'B_TOP_MAX', 'bankNatural', 'bankRubrics', 'bankScales'], deny: PLANNER_DENY,
+    header: '// MADE BY next/build.js FROM src/planner/bank.js (next/tools/lift.js). Do not edit: change the source and build again.\n/* eslint-disable */\n',
+    given: ['L', 'lid'], preamble: "import { L, lid } from './planner.js';\n" });
+  const f = path.join(NEXT, 'src/engines/pbank.js');
   if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
 }
 function writePlanner() {
