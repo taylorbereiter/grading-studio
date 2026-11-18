@@ -1,0 +1,1 @@
+import{a}from"./chunk-XOY76RR4.js";import{S as n,Z as r}from"./chunk-6O5742S4.js";function i(o){console.error(o),r(o instanceof a||o&&o.name==="ReadOnly"?n("plan.read_only"):n("plan.not_saved"))}export{i as a};

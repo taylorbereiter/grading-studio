@@ -4,7 +4,7 @@
 // To do keep the shared "not built yet" state until their stages.
 import { h, Fragment } from 'preact';
 import { useState } from 'preact/hooks';
-import { Tabs, Icon, EmptyState, Progress } from '../../ui/index.js';
+import { Tabs, Icon, EmptyState, Progress, Button } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { href, go } from '../router.js';
 import { usePlan } from '../plan.js';
@@ -14,6 +14,7 @@ import { engine } from '../../planning/engine.js';
 import { lessonsOn, stateOf, STATE_LINE, periods, dayOff, today, plus, at, mondayOf, weekDays, newLesson } from '../plan/lessons.js';
 import { saveFailed } from '../plan/save.js';
 import Later from './later.jsx';
+import { UnitSheet } from '../plan/unit-edit.jsx';
 
 const TABS = ['course', 'people', 'grades', 'todo'];
 const keep = (k, v) => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem('gsn.class.' + k)); sessionStorage.setItem('gsn.class.' + k, JSON.stringify(v)); } catch {} return null; };
@@ -41,7 +42,9 @@ function CourseLine({ p, c, lib }) {
   const [pick, setPick] = useState(() => keep('unit:' + c.id));
   const u = units.find(x => x.id === pick) || (here && here.u) || units.find(x => x.start > now) || units[units.length - 1] || null;
   const [fold, setFold] = useState(() => keep('fold') !== false);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false), [editing, setEditing] = useState(null);
+  const courses = [...new Set((p.setup.classes || []).map(x => x.course || x.name).filter(Boolean))];
+  const newUnit = () => setEditing(E.normUnit({ course, start: plus(units.length ? E.unitEnd(units[units.length - 1]) : mon, 7), title: t('plan.new_unit'), weeks: Array.from({ length: 6 }, () => ({})) }));
   const partners = (p.setup.classes || []).filter(x => x.id !== c.id && (x.course || x.name) === course && x.course);
   // The weeks to show: the unit's, or without units the four weeks around today.
   const weeks = u ? u.weeks.map((w, i) => ({ mon: plus(u.start, i * 7), focus: w && w.focus, n: i + 1 })) : [-1, 0, 1, 2].map(i => ({ mon: plus(mon, i * 7), focus: '', n: 0 }));
@@ -58,7 +61,9 @@ function CourseLine({ p, c, lib }) {
       <section class="cl-main" aria-labelledby="h-unit">
         <div class="hrow"><h2 id="h-unit" class="t4">{u ? <span data-raw>{u.title}</span> : t('plan.these_weeks')}</h2>
           {u && here && here.u === u && <span class="mute">{t('plan.unit_week', { n: here.n + 1, of: u.weeks.length })}</span>}
-          <span class="grow" /><button type="button" class="link" onClick={() => { setFold(!fold); keep('fold', !fold); }}>{t(fold ? 'plan.show_past' : 'plan.fold_past')}</button></div>
+          <span class="grow" /><button type="button" class="link" onClick={() => { setFold(!fold); keep('fold', !fold); }}>{t(fold ? 'plan.show_past' : 'plan.fold_past')}</button>
+          {u && <Button size="sm" icon="pen" onClick={() => setEditing(u)} data-focus="edit-unit">{t('plan.edit_unit')}</Button>}
+          <Button size="sm" icon="plus" onClick={newUnit} data-focus="new-unit">{t('plan.new_unit')}</Button></div>
         <ol class="weeks">{weeks.map(w => {
           const rows = weekRows(p, c, w.mon), past = plus(w.mon, 6) < now, cur = w.mon === mon;
           const taught = rows.filter(r => r.lessons.some(l => stateOf(l, c.id, r.day) === 'taught')).length, ready = rows.filter(r => r.lessons.some(l => stateOf(l, c.id, r.day) === 'ready')).length;
@@ -83,6 +88,7 @@ function CourseLine({ p, c, lib }) {
         </section>}
       </aside>
     </div>
+    {editing && <UnitSheet p={p} unit={editing} courses={courses} onClose={ok => { if (ok && editing && !(p.units || []).some(x => x.id === editing.id)) { setPick(editing.id); keep('unit:' + c.id, editing.id); } setEditing(null); }} />}
   </div>;
 }
 

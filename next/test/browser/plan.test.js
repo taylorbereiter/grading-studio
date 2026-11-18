@@ -441,6 +441,46 @@ test('a lesson’s materials and links, its versions, and deleting it with undo,
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
+test('Course line: a unit renamed with its weeks pasted, a new unit made and then deleted, kept as the current Planner keeps units', async () => {
+  const p = await fresh();
+  await open(p, 'class/c1');
+  const units = () => p.evaluate(() => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('units'); q.onsuccess = () => { r.result.close(); res(q.result); }; }; }));
+  const sheetReady = async sel => { await p.waitForSelector(sel); await p.waitForFunction(() => document.activeElement && document.activeElement.closest('.sheet')); await new Promise(r => setTimeout(r, 200)); };
+  await p.click('main [data-focus="edit-unit"]');
+  await sheetReady('[data-focus="unit-name"]');
+  await p.$eval('[data-focus="unit-name"]', el => { el.focus(); el.select(); });
+  await p.keyboard.type('Unit 2: Poems aloud');
+  await p.click('[data-focus="paste-weeks"]');
+  await p.waitForSelector('[data-paste]');
+  await p.$eval('[data-paste]', el => { el.focus(); el.select(); });
+  await p.keyboard.type('Week 1: Sound\nWeek 2: Images\nWeek 3: Voice\nWeek 4: Form');
+  await p.click('[data-focus="use-weeks"]');
+  await p.waitForFunction(() => document.querySelectorAll('.uweeks > li').length === 4);
+  await p.click('[data-focus="save-unit"]');
+  let us = null; for (let k = 0; k < 40; k++) { us = await units(); if (us.find(u => u.id === 'U2').title === 'Unit 2: Poems aloud') break; await new Promise(r => setTimeout(r, 150)); }
+  const u2 = us.find(u => u.id === 'U2');
+  assert.equal(u2.title, 'Unit 2: Poems aloud'); assert.deepEqual(u2.weeks.map(w => w.focus), ['Sound', 'Images', 'Voice', 'Form']); assert.equal(u2.start, '2026-10-12'); assert.equal(us.length, 3);
+  await p.waitForFunction(() => document.querySelector('main #h-unit').textContent === 'Unit 2: Poems aloud');
+  // A new unit, then deleted
+  await p.click('main [data-focus="new-unit"]');
+  await sheetReady('[data-focus="unit-name"]');
+  await p.$eval('[data-focus="unit-name"]', el => { el.focus(); el.select(); });
+  await p.keyboard.type('Unit 3: Drama');
+  await p.click('[data-focus="save-unit"]');
+  for (let k = 0; k < 40 && (await units()).length < 4; k++) await new Promise(r => setTimeout(r, 150));
+  us = await units(); const u3 = us.find(u => u.title === 'Unit 3: Drama');
+  assert.ok(u3, 'the new unit is saved'); assert.equal(u3.course, 'Grade 9'); assert.equal(u3.weeks.length, 6); assert.equal(new Date(u3.start + 'T12:00').getDay(), 1, 'starts on a Monday');
+  await p.waitForFunction(() => document.querySelector('main #h-unit').textContent === 'Unit 3: Drama');
+  await p.click('main [data-focus="edit-unit"]');
+  await sheetReady('[data-focus="delete-unit"]');
+  await p.click('[data-focus="delete-unit"]'); await p.click('[data-focus="delete-unit"]');
+  for (let k = 0; k < 40 && (await units()).length > 3; k++) await new Promise(r => setTimeout(r, 150));
+  assert.equal((await units()).length, 3);
+  await p.goto(srv.url + 'planner.html');
+  await p.waitForFunction(() => { const P = window.__planner; return P && P.L && P.L.units && P.L.units.some(u => u.id === 'U2' && u.title === 'Unit 2: Poems aloud' && u.weeks.length === 4); }, { timeout: 20000 });
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
 test('on a phone: the lesson reads, and an after-class note waits for the computer without the lesson being written', async () => {
   const p = await fresh(390);
   await open(p, 'lesson/L2');

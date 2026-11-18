@@ -62,6 +62,8 @@ const PLANNER_ROOTS = [
   'lessonText', 'lessonZipAsk', 'lessonContext', 'lessonBack', 'ZIP_SKIP', 'baseName', 'MAX_FILE', 'snap', 'MAX_VERSIONS',
   // a lesson's materials and links
   'uniqueName', 'normLinks', 'lkUrl', 'lkHost',
+  // units
+  'normUnit',
 ];
 const PLANNER_DENY = ['$', 'toast', 'openDlg', 'closeDlg', 'lTx', 'kvGet', 'kvSet', 'kvDel', 'lPut', 'lDelete', 'lOpenDb', 'saveBlob', 'renderLessons', 'renderWeek',
   'renderEditor', 'renderStage', 'renderUnits', 'renderUnit', 'renderSemester', 'renderBank', 'renderLibrary', 'renderActivities', 'openLesson', 'folderWriteSoon',

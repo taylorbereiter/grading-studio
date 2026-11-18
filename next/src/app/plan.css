@@ -282,3 +282,7 @@
 .mlist .mopen{display:inline-flex;align-items:center;gap:6px;min-width:0;flex:1;text-align:left;background:none;border:0;padding:4px 0;cursor:pointer}
 .mlist .mopen span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mats .row{display:flex;gap:8px;flex-wrap:wrap}.mlink{display:flex;flex-direction:column;gap:8px}
+/* Unit sheet */
+.unitedit{display:flex;flex-direction:column;gap:12px}.unitedit .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}.unitedit .row>.field{flex:1 1 180px}
+.unitedit .step{display:inline-flex;align-items:center;gap:8px}.uweeks{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:16px}.uweeks li>.field{margin-top:6px}
+.courseline .hrow{flex-wrap:wrap;gap:8px}
