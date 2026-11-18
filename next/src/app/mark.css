@@ -674,3 +674,35 @@ dialog.dlg:has(.mk-su)>.body{max-height:calc(88vh - 120px);overflow:auto}
 .mk-snip .snipmk{display:flex;align-items:center;gap:6px;font-size:var(--t2);color:var(--ink2);cursor:pointer;margin-right:4px}
 .mk-snip .snipmk input{accent-color:var(--acc);margin:0}
 .mk-snip .snipnote{flex:1 0 100%;margin:0;font-size:var(--t3)}
+/* The side pane (screens/mark.jsx SideBar): the paper becomes a grid and the file shown beside keeps its place in the page */
+.mk-paper.sp-right,.mk-paper.sp-left{display:grid;grid-template-columns:minmax(0,1fr) var(--sp-px);column-gap:16px;align-content:start;align-items:start}
+.mk-paper.sp-left{grid-template-columns:var(--sp-px) minmax(0,1fr)}
+.mk-paper.sp-right>*{grid-column:1}.mk-paper.sp-left>*{grid-column:2}
+.mk-paper.sp-right>.mk-sph,.mk-paper.sp-right>.in-sp{grid-column:2}
+.mk-paper.sp-left>.mk-sph,.mk-paper.sp-left>.in-sp{grid-column:1}
+.mk-paper.sp-top{display:grid;grid-template-columns:minmax(0,1fr);align-content:start}
+.mk-paper>.mk-sph{grid-row:1;position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:4px;height:36px;margin-bottom:8px;padding:0 4px 0 8px;background:var(--s);border-radius:var(--r2);box-shadow:var(--sh-r)}
+.mk-paper.sp-right>.mk-sph,.mk-paper.sp-left>.mk-sph{grid-row:1/-1;align-self:start}
+.mk-paper.sp-right>.in-sp,.mk-paper.sp-left>.in-sp{grid-row:1/-1;position:sticky;top:44px;align-self:start;max-height:calc(var(--sp-h) - 52px);overflow:auto;margin:44px 0 0;max-width:none}
+.mk-paper.sp-top>.in-sp{grid-row:2;position:sticky;top:44px;z-index:5;height:var(--sp-px);overflow:auto;margin:0 0 14px;max-width:none;background:var(--g100);box-shadow:0 8px 10px -8px rgba(0,0,0,.25)}
+.mk-paper .in-sp.doc{padding:0 4px}
+.mk-sph .sptabs{display:flex;gap:2px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+.mk-sph .sptab{border:0;background:none;color:var(--ink2);font:inherit;font-size:var(--t2);padding:5px 10px;border-radius:var(--r1);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.mk-sph .sptab:hover{background:var(--hv)}
+.mk-sph .sptab[aria-selected=true]{background:var(--acc-soft);color:var(--acc-ink);font-weight:600}
+.mk-sph .spgrip{position:absolute;touch-action:none;outline-offset:-2px;display:flex;align-items:center;justify-content:center;z-index:2}
+.mk-sph .spgrip i{display:block;border-radius:2px;background:var(--line-2)}
+.mk-sph .spgrip:hover i,.mk-sph .spgrip.on i,.mk-sph .spgrip:focus-visible i{background:var(--acc)}
+.sp-right>.mk-sph .spgrip,.sp-left>.mk-sph .spgrip{top:0;width:12px;height:calc(var(--sp-h) - 32px);cursor:col-resize}
+.sp-right>.mk-sph .spgrip{left:-14px}.sp-left>.mk-sph .spgrip{right:-14px}
+.sp-right>.mk-sph .spgrip i,.sp-left>.mk-sph .spgrip i{width:4px;height:36px}
+.sp-top>.mk-sph .spgrip{left:0;right:0;top:calc(var(--sp-px) + 40px);height:12px;cursor:row-resize}
+.sp-top>.mk-sph .spgrip i{width:36px;height:4px}
+.mk-sprub{display:flex;flex-direction:column;gap:12px;padding:12px;background:var(--s);border-radius:var(--r3);box-shadow:var(--sh-r)}
+.mk-sprub .sprow h4{display:flex;gap:8px;margin:0 0 6px;font-size:var(--t2)}
+.mk-sprub .sprow h4 span{flex:1}.mk-sprub .sprow h4 em{font-style:normal;color:var(--mute)}
+.mk-sprub .splv{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}
+.mk-sprub .splvb{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;border:1px solid var(--line);background:var(--s);color:var(--ink);border-radius:var(--r2);padding:6px 8px;font:inherit;font-size:var(--t1);line-height:1.35}
+.mk-sprub .splvb b{font-size:var(--t2)}
+.mk-sprub .splvb:hover{border-color:var(--acc)}
+.mk-sprub .splvb.on{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-ink)}

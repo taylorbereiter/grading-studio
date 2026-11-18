@@ -503,3 +503,58 @@ test('the screenshot: S opens it and Esc closes it, a page clicked for all of it
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('the side pane: B opens it with the rubric in full, a file beside the other, its edge by the arrows, across the top, kept for the next student; B closes it', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(await standardFiles()));
+  await made.evaluate(() => window.__gs.saveNow()); await settle(made);
+  const id = await made.evaluate(() => window.__gs.state().batch.id);
+  await made.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForSelector('.mk-crit .sticks button:not([disabled])');
+  await p.waitForSelector('[data-repx]', { timeout: 15000 }).then(() => p.click('[data-repx]'), () => {});
+  const blur = () => p.evaluate(() => document.activeElement && document.activeElement.blur());
+  const ls = () => p.evaluate(() => JSON.parse(localStorage.getItem('gs.sp')));
+  const two = await p.evaluate(() => window.__mark.state().batch.students.findIndex(st => st.files.filter(f => /\.pdf$/.test(f.name)).length === 2));
+  assert.ok(two >= 0);
+
+  // B: the rubric in full, and a click on a score in it gives that score
+  await blur(); await p.keyboard.press('b');
+  await p.waitForSelector('.mk-paper.sp-right .mk-sph [data-sptab="rubric"][aria-selected="true"]');
+  assert.deepEqual(await ls(), { on: true });
+  await p.click('.mk-sprub [data-sprow="0"][data-spv="3"]');
+  await p.waitForFunction(() => window.__mark.state().batch.students[window.__mark.state().cur].grade.rubric[0] === 3);
+  // a student with two files: the second beside the first, narrower than the main column
+  await p.click('[data-st="' + two + '"]'); await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready, {}, two);
+  await p.waitForSelector('.mk-sph [data-sptab^="doc:"]');
+  const tab = await p.$$eval('.mk-sph [data-sptab^="doc:"]', l => l[1].dataset.sptab);
+  await p.click('.mk-sph [data-sptab="' + tab + '"]');
+  await p.waitForFunction(() => { const s = window.__mark.state(); return document.querySelector('.mk-paper > section.doc.in-sp') && s.pages.every(pg => pg.canvas && pg.canvas.isConnected); });
+  await p.waitForFunction(() => { const side = document.querySelector('.in-sp canvas'), main = document.querySelector('.mk-paper > section.doc:not(.in-sp) canvas'); return side && main && side.getBoundingClientRect().width < main.getBoundingClientRect().width && side.getBoundingClientRect().left > main.getBoundingClientRect().right; });
+  assert.equal((await ls()).tab, 'f:' + (await p.$eval('.mk-sph [aria-selected="true"]', e => e.textContent)) + '.pdf');
+  // its edge: the left arrow makes it bigger, kept as a share of the width
+  await p.focus('[data-spgrip]'); await p.keyboard.press('ArrowLeft');
+  assert.ok(Math.abs((await ls()).w - 0.5) < 0.001);
+  // across the top, then back on the right
+  await p.click('[data-spwhere]'); await p.waitForSelector('.pop [role="menuitemradio"]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitemradio"]')][2].click());
+  await p.waitForSelector('.mk-paper.sp-top .in-sp'); assert.equal((await ls()).at, 'top');
+  await p.click('[data-spwhere]'); await p.waitForSelector('.pop [role="menuitemradio"]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitemradio"]')][0].click());
+  await p.waitForSelector('.mk-paper.sp-right'); assert.equal((await ls()).at, undefined);
+  // the next student: still open; B closes it and the next student opens without it
+  await blur(); await p.keyboard.press('ArrowDown');
+  await p.waitForFunction(i => window.__mark.state().cur !== i, {}, two);
+  await p.waitForSelector('.mk-paper.sp-right');
+  await blur(); await p.keyboard.press('b');
+  await p.waitForFunction(() => !document.querySelector('.mk-sph'));
+  assert.equal((await ls()).on, undefined);
+  await p.click('[data-spbtn]'); await p.waitForSelector('.mk-sph'); await p.click('[data-spclose]'); await p.waitForFunction(() => !document.querySelector('.mk-sph'));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
