@@ -67,8 +67,8 @@ export async function renderPage(pg, s, dpr = window.devicePixelRatio || 1) {
   bmp.width = Math.ceil(vp.width); bmp.height = Math.ceil(vp.height);
   const bctx = bmp.getContext('2d'); bctx.fillStyle = '#fff'; bctx.fillRect(0, 0, bmp.width, bmp.height);
   try { await pg.page.render({ canvasContext: bctx, viewport: vp, transform: D.skewXf(pg.file, pg.idx, vp), annotationMode: pdfjs.AnnotationMode.ENABLE }).promise; }
-  catch (e) { if (e && e.name === 'RenderingCancelledException') return; console.error(e); }
-  if (job !== pg.job) return;
+  catch (e) { if ((e && e.name === 'RenderingCancelledException') || !state().pages.includes(pg)) return; console.error(e); }   // a paper opened again meanwhile: its old documents are gone
+  if (job !== pg.job || !state().pages.includes(pg)) return;
   D.loadLines(pg);
   pg.bmp = bmp;
   await D.stickersReady;
