@@ -53,6 +53,9 @@ export const PARTS = {
   covers: () => import('./mark/covers.jsx'),
   bringin: () => import('./mark/bringin.jsx'),
   partners: () => import('./mark/partners.jsx'),
+  // Quick mark: the cards (mark/quick.jsx) and the boxes (mark/quickboxes.jsx), each with the quiz engine
+  quick: () => import('./mark/quick.jsx'),
+  quickboxes: () => import('./mark/quickboxes.jsx'),
   pdflib: () => import('pdf-lib'),
   zip: () => import('fflate'),
   h2c: () => import('html2canvas'),

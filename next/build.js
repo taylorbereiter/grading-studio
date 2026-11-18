@@ -321,6 +321,15 @@ export const tnRngSet = r => { tnRng = r; };
     'anonShuffle', 'coverList', 'coverOk', 'coverMark', 'coverAgain', 'coverName', 'coverFirst', 'coverLine', 'boxKey', 'shareState', 'sameSpot',
     'findNames', 'nameFlag', 'nameFlagged', 'namesLooking', 'wordNoName', 'stillCounting', 'ensureCounts', 'anonCovers',
   ], '', [], ['gcore', 'gdraw', 'gopen', 'greport', 'gexport']],
+  ['gquiz', [
+    // Quick mark (src/quiz.js, src/ib.js ibQz*): a paper quiz's boxes, each answer cut from its page, the marks given on the paper
+    // and the total stamped; the boxes editor, the cards and their keys are the new app's
+    'QZ_PAD', 'QZ_HOW', 'QZ_KIND', 'QZ_ANS', 'QZ_AT', 'quizOn', 'quizMax', 'quizLabel', 'qzHow', 'qzByPts', 'qzSteps', 'qzWordsOk', 'qzWordsMine', 'qzWordsAll', 'qzStepWords', 'qzWord',
+    'quizPages', 'quizMarks', 'quizCount', 'quizPart', 'quizSum', 'quizWho', 'qzDoc', 'qzClose', 'qzForget', 'qzShift', 'qzSz', 'qzOwn', 'qzSpot', 'qzCropKey',
+    'qzPage', 'qzRect', 'qzCut', 'qzCrop', 'qzPageSize', 'quizSet', 'quizScore', 'qzLook', 'qzPaper', 'qzAnsMode', 'qzAnsText', 'qzAnsWant', 'qzAnsAt', 'qzAnsSpot',
+    'qzAnsOld', 'qzMoved', 'qzAnsLab', 'qzAns', 'qzAnsOf', 'qzTotal', 'qzRedoPaper', 'qzDropGone', 'qzNoteOf', 'qzNoteSet', 'qzMarkInk', 'qzAnswerPic',
+    'ibQzOn', 'ibQzOf', 'ibQzUsed', 'ibQzMax', 'ibQzRaw', 'ibQzTable', 'ibQzLevel', 'ibQzEven', 'ibQzParts', 'ibQzScore', 'ibQzSay',
+  ], "// the papers' documents are let go once the answers being cut from them are done, so a cut under way isn't cancelled\nexport const qzLetGo = () => qzQueue.then(() => qzClose());\n", [], null],
   ['gways', [
     // the teacher's usual way of grading (src/app/library.js GRADE_WAYS, meGrade): what a new assignment starts with, read from the
     // library the settings screen has in hand (useLib), not the marking screen's

@@ -771,3 +771,45 @@ export async function retakeRuleSet(k) {
   await put(k);
   step(() => put(was), () => put(k), 'retake rule');
 }
+
+/* Quick mark (src/quiz.js): a paper quiz marked answer by answer. Each mark, comment, moved mark or lined-up page is one undo step for
+   the papers it touched and the quiz's own spots and shifts; Give the rest is one step for all of them. Saving the boxes is one step
+   too: the quiz, the score out of its points (a rubric download changes to points at once, with Undo, where the current app asks
+   first), and every paper's marks redrawn for the boxes as they are now. */
+const quickKeep = sts => {
+  const bb = b(), q = J(bb.quiz), su = J(state().setup), gs = sts.map(st => [st, J(st.grade), st.files.map(f => [f, J(f.marks)])]);
+  return () => { if (q) bb.quiz = J(q); else delete bb.quiz; use({ setup: J(su) }); for (const [st, g, fs] of gs) { st.grade = J(g); for (const [f, m] of fs) { if (m) f.marks = J(m); else delete f.marks; } } };
+};
+// fn changes the papers of sts (async). after: what the screen redraws once the step is done or taken back.
+export async function quickDo(sts, fn, after) {
+  const back = quickKeep(sts); await fn(); const again = quickKeep(sts);
+  const done = () => { K.thumbCache.clear(); tell(); if (after) after(); };
+  step(() => { back(); done(); }, () => { again(); done(); }, 'marks');
+  done();
+}
+// Q: the quiz as the boxes editor left it. Z: the lifted quiz engine (engines/gquiz.js). S: engines/gsetup.js, for an MYP class.
+// Returns what changed about the score: 'points' (it is out of the quiz's points now), 'rubric' (and rubric scores stopped counting).
+export async function quickBoxesSave(Q, ansBack, Z, S) {
+  const s = state(), bb = b(), all = bb.students, back = quickKeep(all), su0 = s.setup;
+  let say = '';
+  bb.quiz = Q;
+  const max = Z.quizMax(), c = S.ibTaskClass();
+  if (max && c) {
+    for (const q of Q.qs) q.ib = Z.ibQzOf(q, c);
+    const used = Z.ibQzUsed(Q, c), now = su0.mode === 'rubric' && Array.isArray(su0.ib) ? su0.ib.filter(Boolean) : [];
+    if (!used.every(k => now.includes(k))) await ibTaskApply(c, [...now, ...used], S);   // its own step, before this one
+  } else if (max && !(su0.mode === 'points' && +su0.outOf === max)) {
+    say = su0.mode === 'rubric' && all.some(st => (st.grade.rubric || []).some(v => v != null)) ? 'rubric' : 'points';
+    use({ setup: { ...J(su0), mode: 'points', outOf: max } });
+    all.forEach(st => s.refound(st));
+  }
+  Z.qzDropGone(new Set(Q.qs.map(q => q.id)));
+  if (ansBack) for (const st of all) for (const f of st.files) for (const l of Object.values(f.marks || {})) for (const m of l) if (Z.qzMoved(m)) { delete m.qzm; m.qzp = [m.ax, m.ay]; }
+  Z.qzForget();
+  for (const st of all) if (st.grade.q && Object.keys(st.grade.q).length) { await Z.qzRedoPaper(st); Z.quizScore(st); }
+  const again = quickKeep(all);
+  const done = async () => { K.thumbCache.clear(); await M.keepSetup(); Z.qzForget(); tell(); show(state().cur); };
+  step(async () => { back(); await done(); }, async () => { again(); await done(); }, 'setup');
+  await done();
+  return say;
+}

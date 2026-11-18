@@ -831,4 +831,4 @@ function ibStampText(st) { return ibTaskLevels(st).filter(x => x[1] != null).map
 // src/phone.js
 const ph = { cols: null, ver: -1, busy: null, lib: null, later: false };
 export { paperGet, srcRead, spellLikeSaved, groupRaw, houseFile, makeFile, batchIdOf, revsBase, restore, rosterSort, loadAdded, loadEdits, applyRubricPage, loadRefs, photoTurns, natural, newestWork, cardOfKept, findItem, holders, rubricsDiffer, workScored, rubricFitting, junk, unzipInto, qmkFor, revsOf, partHashes, batchClass, compareFiles, compareNames, matchLevel, mapBoxes, mapLit, mapPaths, rubricNamed, sameBytes, nfc, carryRoster, lostPages, studentOf, hasGsTail, underId, REF_KEY, isNotes };
-export { GS_TAIL, syncScoreStamps, boxKey, hasSheet, stampSoon, tryOfFile, canvasJpg, groupFileOf, groupOwn, hash, realType, moveFileNow, setRot, setSkew, goneNow, gradeHasWork, pv };
+export { GS_TAIL, syncScoreStamps, boxKey, hasSheet, stampSoon, tryOfFile, canvasJpg, groupFileOf, groupOwn, hash, realType, moveFileNow, setRot, setSkew, goneNow, gradeHasWork, pv, ibStampText };
