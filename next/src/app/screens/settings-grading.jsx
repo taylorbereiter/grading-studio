@@ -17,7 +17,6 @@ import { rowScaleOf, rowsTop, rowHalf, rowsSay, ROW_TOP, COLORS, PTS_AMBER } fro
 import { PROOF, PUNCT, markLabel0, MARK_MEAN, MARK_KEY } from '../../engines/gmark.js';
 import { drawStamp } from '../../engines/gdraw.js';
 import '../mark/setup-lines.js';
-import '../mark/lines.js';
 
 const readLibrary = () => library.json(null) || {};
 const J = o => (o == null ? o : JSON.parse(JSON.stringify(o)));
@@ -44,7 +43,7 @@ async function change(label, f, said) {
 }
 const WAYS = { rubric: ['setup.sg_way_rubric', 'setup.sg_way_rubric_say'], points: ['setup.sg_way_points', 'setup.sg_way_points_say'], percent: ['setup.sg_way_percent', 'setup.sg_way_percent_say'], letters: ['setup.sg_way_letters', 'setup.sg_way_letters_say'], myp: ['setup.sg_way_myp', 'setup.sg_way_myp_say'], ib7: ['setup.sg_way_ib7', 'setup.sg_way_ib7_say'] };
 const wayName = k => t(WAYS[k][0]), waySay = k => t(WAYS[k][1]);
-const INKS = { red: 'mark.c_red', blue: 'mark.c_blue', green: 'mark.c_green', purple: 'mark.c_purple', black: 'mark.c_black' };
+const INKS = { red: 'setup.sg_c_red', blue: 'setup.sg_c_blue', green: 'setup.sg_c_green', purple: 'setup.sg_c_purple', black: 'setup.sg_c_black' };
 
 export function GradingSettings() {
   const L = useLibrary(), g = meGrade(), way = g ? g.way : '';
@@ -127,6 +126,9 @@ export function MarkingSettings() {
       <div class="sg-line"><span>{t('setup.sg_dlh')}</span><Segmented label={t('setup.sg_dlh')} value={String(+disp.dlh || 1.45)} onChange={v => setDisp('dlh', +v)} options={[{ value: '1.3', label: t('setup.sg_dlh_tight') }, { value: '1.45', label: t('setup.sg_dlh_normal') }, { value: '1.8', label: t('setup.sg_dlh_roomy') }]} /></div>
       <p class="hint">{t('setup.sg_disp_about')}</p>
     </div></Card>
+    <Card title={t('setup.sg_names_h')}><p class="mute">{t('setup.sg_names_about')}</p>
+      <span data-sgnames><Segmented label={t('setup.sg_names_h')} value={prefs.get('gs.nameFind', false) ? 'find' : 'mine'} onChange={v => { if (v === 'find') prefs.set('gs.nameFind', true); else prefs.del('gs.nameFind'); re(); }}
+        options={[{ value: 'mine', label: t('setup.sg_names_mine') }, { value: 'find', label: t('setup.sg_names_find') }]} /></span></Card>
     <Card title={t('setup.sg_while_h')}><div class="sg-while">
       <span data-sglist><Switch label={t('setup.sg_list_kept')} checked={prefs.get('gs.listOpen', null) !== false} onChange={v => { prefs.set('gs.listOpen', !!v); re(); }} /></span>
       <span data-sgenter><Switch label={t('setup.sg_enter_next')} checked={prefs.get('gs.enterNext', null) !== false} onChange={v => { if (v) prefs.del('gs.enterNext'); else prefs.set('gs.enterNext', false); re(); }} /></span>

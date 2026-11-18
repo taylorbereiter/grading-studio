@@ -10,6 +10,7 @@ import { drawStamp, STICKERS } from '../../engines/gdraw.js';
 import * as K from '../../engines/gmark.js';
 import { prefs } from '../../students/prefs.js';
 import * as M from '../mark/marking.js';
+import { PARTS } from '../router.js';
 import '../mark/lines.js';
 
 export { M };
@@ -19,18 +20,21 @@ const TOOL_LINE = { select: () => t('mark.t_select'), pen: () => t('mark.t_pen')
 const COLOR_LINE = { red: () => t('mark.c_red'), blue: () => t('mark.c_blue'), green: () => t('mark.c_green'), purple: () => t('mark.c_purple'), black: () => t('mark.c_black'), yellow: () => t('mark.c_yellow'), pink: () => t('mark.c_pink') };
 const WIDTHS = [[1.2, () => t('mark.w_fine')], [2, () => t('mark.w_medium')], [3.5, () => t('mark.w_bold')]];
 function Tools() {
-  const s = state(), bar = s.once ? s.once.prev : s.tool;
+  const s = state(), bar = M.stampTool() ? 'stamp' : s.once ? s.once.prev : s.tool;
   const sw = (list, on, pick, label) => <span class="mk-sw" role="group" aria-label={label}>{Object.entries(list).map(([k, v]) =>
     <button type="button" class="sw" style={'background:' + v} aria-pressed={k === on ? 'true' : 'false'} title={COLOR_LINE[k] ? COLOR_LINE[k]() : k} aria-label={COLOR_LINE[k] ? COLOR_LINE[k]() : k} data-sw={k} onClick={() => pick(k)} />)}</span>;
   return <div class="mk-tools" role="toolbar" aria-label={t('mark.tools')} aria-orientation="vertical">
     {TOOLS.map(([k, icon, key]) => <IconButton icon={icon} label={TOOL_LINE[k]()} kbd={key.toUpperCase()} aria-pressed={bar === k ? 'true' : 'false'} data-tool={k} onClick={() => M.chooseTool(k)} />)}
-    {bar !== 'select' && bar !== 'erase' && <span class="sep" />}
-    {bar === 'hl' ? sw(HL, s.hlColor, M.chooseHl, t('mark.hl_color')) : bar === 'check' ? sw(COLORS, s.checkInk, M.chooseCheck, t('mark.check_color')) : bar !== 'select' && bar !== 'erase' ? sw(COLORS, s.inkColor, M.chooseInk, t('mark.ink')) : null}
+    <IconButton icon="stamp" label={t('mark.t_stamp')} aria-pressed={bar === 'stamp' ? 'true' : 'false'} onClick={() => M.setStampTool(bar !== 'stamp')} data-tool="stamp" />
+    {bar !== 'select' && bar !== 'erase' && bar !== 'stamp' && <span class="sep" />}
+    {bar === 'hl' ? sw(HL, s.hlColor, M.chooseHl, t('mark.hl_color')) : bar === 'check' ? sw(COLORS, s.checkInk, M.chooseCheck, t('mark.check_color')) : bar !== 'select' && bar !== 'erase' && bar !== 'stamp' ? sw(COLORS, s.inkColor, M.chooseInk, t('mark.ink')) : null}
     {bar === 'hl' && <span class="mk-hlm" role="group" aria-label={t('mark.hl_how')}><button type="button" aria-pressed={M.hlFree() ? 'false' : 'true'} title={t('mark.hl_snap_tip')} data-hlm="auto" onClick={() => M.setHlFree(false)}>{t('mark.hl_snap')}</button><button type="button" aria-pressed={M.hlFree() ? 'true' : 'false'} title={t('mark.hl_free_tip')} data-hlm="free" onClick={() => M.setHlFree(true)}>{t('mark.hl_free')}</button></span>}
     {bar === 'pen' && <span class="mk-w" role="group" aria-label={t('mark.width')}>{WIDTHS.map(([w, l]) => <button type="button" aria-pressed={s.penW === w ? 'true' : 'false'} title={l()} aria-label={l()} data-w={w} onClick={() => M.chooseWidth(w)}><i style={'--w:' + w} /></button>)}</span>}
     <span class="sep" />
     <IconButton icon="undo" label={t('mark.undo')} kbd="mod+z" disabled={!s.undoStack.length} onClick={M.undo} data-undo />
     <IconButton icon="redo" label={t('mark.redo')} kbd="mod+y" disabled={!s.redoStack.length} onClick={M.redo} data-redo />
+    <span class="sep" />
+    <IconButton icon="crop" label={t('mark.t_snip')} kbd="S" onClick={snip} data-snip />
   </div>;
 }
 
@@ -104,6 +108,7 @@ function Marking() { return <><Tools /><StampMenu /></>; }
 export { Marking as Tools };
 // Starts marking on the open paper: the hooks, the keys, and the pages already on screen. Returns what stops it again.
 let say = () => {};
+const snip = () => PARTS.snip().then(m => m.startSnip({ toast: say })).catch(e => console.error(e));
 const hlSwitch = () => { const free = !M.hlFree(); M.setHlFree(free); say(t(free ? 'mark.hl_free_on' : 'mark.hl_snap_on')); };
 export function start({ toast, openStudent, changed }) {
   say = toast; M.startMarking({ toast, openStudent });
@@ -123,6 +128,8 @@ export function start({ toast, openStudent, changed }) {
     register({ id: 'mark-dup', keys: 'mod+d', label: 'mark.k_dup', group: 'mark.tools', when: () => !!state().selected, run: () => { if (M.copyMark()) M.pasteMark(); } }),
     register({ id: 'mark-letgo', keys: 'escape', label: 'mark.k_letgo', group: 'mark.tools', when: () => !!state().selected && !state().once, run: () => M.letGo() }),
     register({ id: 'mark-once-end', keys: 'escape', label: 'mark.once_esc', group: 'mark.tools', when: () => !!state().once, run: () => M.endOnce() }),
+    // the screenshot: S on the paper, Alt S (on a Mac Alt S types ß)
+    register({ id: 'mark-snip', keys: ['s', 'alt+s', 'alt+ß'], label: 'mark.k_snip', group: 'mark.tools', when: () => !document.querySelector('[data-sniplayer]'), run: snip }),
     register({ id: 'mark-del', keys: ['delete', 'backspace'], label: 'mark.delete_mark', group: 'mark.tools', when: () => !!state().selected, run: () => M.deleteSelected() }),
   ];
   return () => { removeEventListener('keyup', up); offs.forEach(f => f()); };

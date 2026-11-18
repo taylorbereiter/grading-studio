@@ -10,6 +10,8 @@ import { t } from '../../i18n/t.js';
 import * as C from './change.js';
 import './lines.js';
 import './setup-lines.js';
+import './paper-lines.js';
+import { shownName, anonOn } from '../../engines/gdraw.js';
 
 const RULE = { high: ['setup.sm_r_high', 'setup.sm_r_high_say', 'setup.sm_c_high'], last: ['setup.sm_r_last', 'setup.sm_r_last_say', 'setup.sm_c_last'], avg: ['setup.sm_r_avg', 'setup.sm_r_avg_say', 'setup.sm_c_avg'] };
 const tryName = n => (n === 1 ? t('setup.sm_try1') : t('setup.sm_try_n', { n }));
@@ -56,4 +58,16 @@ export function ScoreMore({ st }) {
           items={RETAKE_RULES.map(([k]) => ({ label: t(RULE[k][0]), icon: k === rule ? 'check' : undefined, onSelect: () => { C.retakeRuleSet(k).then(() => { re(); toast(t('setup.sm_rule_done', { how: t(RULE[k][1]) }), { undo: C.undo }); }); } }))} /></div>
     </div>}
   </div>;
+}
+
+// Under the score: Anchor paper, High Mid Low (src/anchors.js anchorHtml). Shown where anchors belong, once the paper has something in it.
+export const anchorName = lv => t(lv === 'high' ? 'mark.an_high' : lv === 'mid' ? 'mark.an_mid' : 'mark.an_low');
+export function Anchors({ st }) {
+  const [, again] = useState(0), b = state().batch;
+  if (!st || !st.files.length || noScore(st) || !C.anchorsHere()) return null;
+  const on = st.grade.anchor || '';
+  const tip = lv => { const j = C.anchorOf(lv), nm = anchorName(lv).toLowerCase(); return on === lv ? t('paper.an_on', { lv: nm }) : j >= 0 && b.students[j] !== st ? (anonOn() ? t('paper.an_move_anon', { lv: nm }) : t('paper.an_move', { lv: nm, who: b.students[j].key })) : t('paper.an_make', { lv: nm }); };
+  return <div class="mk-anch" data-anchrow><span class="lab" title={t('paper.an_tip')}>{t('paper.an_label')}</span>
+    <span class="seg" role="group" aria-label={t('paper.an_label')}>{C.ANCHOR_LV.map(lv => <button type="button" class="chip" aria-pressed={on === lv ? 'true' : 'false'} title={tip(lv)}
+      onClick={() => { const now = C.setAnchor(st, lv); again(n => n + 1); if (now) toast(t('paper.an_set', { lv: anchorName(lv) })); }} data-anchor={lv}>{anchorName(lv)}</button>)}</span></div>;
 }

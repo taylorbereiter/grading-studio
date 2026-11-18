@@ -162,7 +162,8 @@ test('Convert to PDF in the new app makes the pages the current app makes, in th
   const PDF = ESSAY_PATH.replace(/\.docx$/, '.pdf');
   const files = k => window.__mark.state().batch.students.find(s => s.key === k);
   await p.waitForFunction((k, f) => window.__mark.state().batch.students.find(s => s.key === k).files.some(x => x.path === f), { timeout: 60000 }, ESSAY_KEY, PDF);
-  assert.ok(await p.evaluate((k, f) => window.__mark.state().batch.students.find(s => s.key === k).gone.some(x => x.path === f), ESSAY_KEY, ESSAY_PATH), 'the Word file waits under Removed files');
+  // the Word file waits under Removed files (it is moved there just after the pages go in)
+  await p.waitForFunction((k, f) => (window.__mark.state().batch.students.find(s => s.key === k).gone || []).some(x => x.path === f), { timeout: 30000 }, ESSAY_KEY, ESSAY_PATH);
   // Undo puts the Word file back; Redo makes the pages again
   await p.click('[data-undo]');
   await p.waitForFunction((k, f) => window.__mark.state().batch.students.find(s => s.key === k).files.some(x => x.path === f), { timeout: 30000 }, ESSAY_KEY, ESSAY_PATH);

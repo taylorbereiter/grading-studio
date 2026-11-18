@@ -4,7 +4,7 @@
 // no confirm: it goes at once, with Undo. The Timer is a stopwatch for a talk given live, with the length the assignment asks for.
 import { h, Fragment } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Button, toast } from '../../ui/index.js';
+import { Button, Menu, toast } from '../../ui/index.js';
 import { state, use } from '../../engines/gcore.js';
 import * as N from '../../engines/gnotes.js';
 import { tnHas } from '../../engines/gdraw.js';
@@ -12,6 +12,8 @@ import { fmtTime } from '../../engines/gmedia.js';
 import { t } from '../../i18n/t.js';
 import * as C from './change.js';
 import './setup-lines.js';
+import './paper-lines.js';
+import { PARTS } from '../router.js';
 
 const b = () => state().batch;
 const st0 = () => { const s = state(); return s.batch ? s.batch.students[s.cur] : null; };
@@ -131,7 +133,15 @@ export function TypedNotes({ st }) {
   const box = useRef(null);
   useEffect(() => { N.tnUse({ host: box.current, now: nowOf }); const off = wire(box.current); return () => { off(); N.tnUse({ host: null }); }; }, []);
   useEffect(() => { if (box.current && st) N.tnDraw(box.current, st); });
-  return <div ref={box} class="mk-tn" data-raw />;
+  return <><div ref={box} class="mk-tn" data-raw /><BankMenu /></>;
+}
+// Saved comments (gs.bank, Settings > Marking) into the notes where the caret was (inventory 312).
+function BankMenu() {
+  const [bank, setBank] = useState(null);
+  useEffect(() => { PARTS.cbank().then(m => m.readBank()).then(setBank, () => setBank([])); }, []);
+  const put = c => { N.tnRestore(); document.execCommand('insertText', false, c); };
+  const items = !bank ? [] : bank.length ? bank.map(c => ({ label: c, onSelect: () => put(c) })) : [{ label: t('paper.tn_bank_none'), disabled: true }];
+  return <div class="mk-tnbank"><Menu label={t('paper.tn_bank')} trigger={b => <Button {...b} size="sm" variant="quiet" icon="comment" onMouseDown={e => e.preventDefault()} data-tnbank>{t('paper.tn_bank')}</Button>} items={items} /></div>;
 }
 
 // The Timer: start, pause, carry on, reset, + Time to comment, and the length the assignment asks for (setup.talk, minutes).

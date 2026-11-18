@@ -420,6 +420,19 @@ test('the marking screen around the paper: a picked mark moved, resized, copied 
   await p.click('[data-cbank]');
   assert.equal(await p.evaluate(() => window.__mark.state().batch.students[2].grade.comment), 'Clear and careful.');
 
+  // the calculator: = opens it, numbers and signs type into it from anywhere, Enter answers and keeps it in History, Score sticker
+  // puts the answer on the paper, Esc closes it
+  await blur(); await p.keyboard.press('=');
+  await p.waitForSelector('[data-calc]');
+  await p.click('.mk-paper'); for (const k of ['3', '.', '5', '+', '4']) await p.keyboard.press(k);
+  await p.keyboard.press('Enter');
+  assert.equal(await p.$eval('[data-calcout] b', e => e.textContent), '7.5');
+  assert.deepEqual(await p.evaluate(() => JSON.parse(localStorage.getItem('gs.calchist'))), [{ e: '3.5+4', v: '7.5' }]);
+  await p.click('[data-calcstick]'); { const q = await nextAt(p, 0, 450, 320); await p.mouse.click(q.x, q.y); }
+  assert.match((await marksOf(p, 0)).filter(m => m.t === 'stamp').pop().text, /^7\.5\/12 = \d+%$/);
+  await p.keyboard.press('Escape'); await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('[data-calc]'));
+
   // Only this student: I, then no list, tabs or other students; it stays through a reload and ends only by holding the button
   await blur(); await p.keyboard.press('i');
   await p.waitForSelector('.mk-solo');
@@ -442,6 +455,140 @@ test('the marking screen around the paper: a picked mark moved, resized, copied 
   await old.evaluate(id => window.__gs.reopenKept(id), id);
   await old.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id && s.pages.length; }, { timeout: 60000 }, id);
   assert.deepEqual(await old.evaluate(shape => eval(shape)(window.__gs.state().batch), shape), nowShape, 'main has the same marks, stamps, scores and comments');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('the screenshot: S opens it and Esc closes it, a page clicked for all of it with or without the marks, Alt S and an area dragged; the picture goes on the clipboard', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(await standardFiles()));
+  await made.evaluate(() => window.__gs.saveNow()); await settle(made);
+  const id = await made.evaluate(() => window.__gs.state().batch.id);
+  await made.close();
+  const p = await page(ctx, errors);
+  // what goes on the clipboard, kept to look at
+  await p.evaluateOnNewDocument(() => { const cb = navigator.clipboard; Object.defineProperty(cb, 'write', { value: async items => { const b = await items[0].getType('image/png'); const im = await createImageBitmap(b); window.__shots = (window.__shots || []).concat([{ w: im.width, h: im.height, type: b.type }]); } }); });
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForSelector('[data-repx]', { timeout: 15000 }).then(() => p.click('[data-repx]'), () => {});
+  const blur = () => p.evaluate(() => document.activeElement && document.activeElement.blur());
+  const shots = () => p.evaluate(() => window.__shots || []);
+  const ls = k => p.evaluate(k => JSON.parse(localStorage.getItem(k)), k);
+
+  await blur(); await p.keyboard.press('s');
+  await p.waitForSelector('[data-sniplayer] .snipbar');
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('[data-sniplayer]'));
+  // the button, then "With my marks" off (kept), and a page clicked: all of it, about 1700 pixels across
+  await p.click('[data-snip]'); await p.waitForSelector('[data-snipmk]');
+  await p.click('[data-snipmk]'); assert.equal(await ls('gs.snipMarks'), 0);
+  { const q = await nextAt(p, 0, 200, 300); await p.mouse.click(q.x, q.y); }
+  await p.waitForFunction(() => (window.__shots || []).length === 1, { timeout: 30000 });
+  const one = (await shots())[0];
+  assert.equal(one.type, 'image/png'); assert.ok(one.w >= 1650 && one.w <= 1750, 'the whole page about 1700 across, ' + one.w);
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast')].some(e => /Picture copied/.test(e.textContent)));
+  // Alt S, the marks back on, and an area dragged over the paper: that area, at two or three pixels a point
+  await blur(); await p.keyboard.down('Alt'); await p.keyboard.press('KeyS'); await p.keyboard.up('Alt');
+  await p.waitForSelector('[data-snipmk]');
+  assert.equal(await p.$eval('[data-snipmk]', e => e.checked), false, 'it remembers the marks were off');
+  await p.click('[data-snipmk]'); assert.equal(await ls('gs.snipMarks'), null);
+  const a = await nextAt(p, 0, 100, 120), b = await nextAt(p, 0, 400, 320);
+  await p.mouse.move(a.x, a.y); await p.mouse.down(); await p.mouse.move((a.x + b.x) / 2, (a.y + b.y) / 2); await p.mouse.move(b.x, b.y); await p.mouse.up();
+  await p.waitForFunction(() => (window.__shots || []).length === 2, { timeout: 30000 });
+  const two = (await shots())[1], k = two.w / Math.round(b.x - a.x);
+  assert.ok(k >= 1.9 && k <= 3.1, 'the area at two or three pixels a point, ' + k);
+  assert.equal(await p.$('[data-sniplayer]'), null);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('the side pane: B opens it with the rubric in full, a file beside the other, its edge by the arrows, across the top, kept for the next student; B closes it', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(await standardFiles()));
+  await made.evaluate(() => window.__gs.saveNow()); await settle(made);
+  const id = await made.evaluate(() => window.__gs.state().batch.id);
+  await made.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForSelector('.mk-crit .sticks button:not([disabled])');
+  await p.waitForSelector('[data-repx]', { timeout: 15000 }).then(() => p.click('[data-repx]'), () => {});
+  const blur = () => p.evaluate(() => document.activeElement && document.activeElement.blur());
+  const ls = () => p.evaluate(() => JSON.parse(localStorage.getItem('gs.sp')));
+  const two = await p.evaluate(() => window.__mark.state().batch.students.findIndex(st => st.files.filter(f => /\.pdf$/.test(f.name)).length === 2));
+  assert.ok(two >= 0);
+
+  // B: the rubric in full, and a click on a score in it gives that score
+  await blur(); await p.keyboard.press('b');
+  await p.waitForSelector('.mk-paper.sp-right .mk-sph [data-sptab="rubric"][aria-selected="true"]');
+  assert.deepEqual(await ls(), { on: true });
+  await p.click('.mk-sprub [data-sprow="0"][data-spv="3"]');
+  await p.waitForFunction(() => window.__mark.state().batch.students[window.__mark.state().cur].grade.rubric[0] === 3);
+  // a student with two files: the second beside the first, narrower than the main column
+  await p.click('[data-st="' + two + '"]'); await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready, {}, two);
+  await p.waitForSelector('.mk-sph [data-sptab^="doc:"]');
+  const tab = await p.$$eval('.mk-sph [data-sptab^="doc:"]', l => l[1].dataset.sptab);
+  await p.click('.mk-sph [data-sptab="' + tab + '"]');
+  await p.waitForFunction(() => { const s = window.__mark.state(); return document.querySelector('.mk-paper > section.doc.in-sp') && s.pages.every(pg => pg.canvas && pg.canvas.isConnected); });
+  await p.waitForFunction(() => { const side = document.querySelector('.in-sp canvas'), main = document.querySelector('.mk-paper > section.doc:not(.in-sp) canvas'); return side && main && side.getBoundingClientRect().width < main.getBoundingClientRect().width && side.getBoundingClientRect().left > main.getBoundingClientRect().right; });
+  assert.equal((await ls()).tab, 'f:' + (await p.$eval('.mk-sph [aria-selected="true"]', e => e.textContent)) + '.pdf');
+  // its edge: the left arrow makes it bigger, kept as a share of the width
+  await p.focus('[data-spgrip]'); await p.keyboard.press('ArrowLeft');
+  assert.ok(Math.abs((await ls()).w - 0.5) < 0.001);
+  // across the top, then back on the right
+  await p.click('[data-spwhere]'); await p.waitForSelector('.pop [role="menuitemradio"]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitemradio"]')][2].click());
+  await p.waitForSelector('.mk-paper.sp-top .in-sp'); assert.equal((await ls()).at, 'top');
+  await p.click('[data-spwhere]'); await p.waitForSelector('.pop [role="menuitemradio"]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitemradio"]')][0].click());
+  await p.waitForSelector('.mk-paper.sp-right'); assert.equal((await ls()).at, undefined);
+  // the next student: still open; B closes it and the next student opens without it
+  await blur(); await p.keyboard.press('ArrowDown');
+  await p.waitForFunction(i => window.__mark.state().cur !== i, {}, two);
+  await p.waitForSelector('.mk-paper.sp-right');
+  await blur(); await p.keyboard.press('b');
+  await p.waitForFunction(() => !document.querySelector('.mk-sph'));
+  assert.equal((await ls()).on, undefined);
+  await p.click('[data-spbtn]'); await p.waitForSelector('.mk-sph'); await p.click('[data-spclose]'); await p.waitForFunction(() => !document.querySelector('.mk-sph'));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('a tablet reaches the marks: the Stamp tool opens the menu where she taps, and a finger held still opens it too; a quick touch does not', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(await standardFiles()));
+  await made.evaluate(() => window.__gs.saveNow()); await settle(made);
+  const id = await made.evaluate(() => window.__gs.state().batch.id);
+  await made.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForSelector('[data-tool="stamp"]');
+  await p.waitForSelector('[data-repx]', { timeout: 15000 }).then(() => p.click('[data-repx]'), () => {});
+  // the Stamp tool: a tap opens the menu there and starts no mark; a sticker from it goes where she tapped
+  await p.click('[data-tool="stamp"]'); assert.equal(await p.$eval('[data-tool="stamp"]', e => e.getAttribute('aria-pressed')), 'true');
+  { const q = await nextAt(p, 0, 220, 260); await p.mouse.click(q.x, q.y); }
+  await p.waitForSelector('.mk-menu'); assert.equal((await marksOf(p, 0)).length, 0);
+  await press(p, '.mk-menu [data-sub="stick"]'); await press(p, '.mk-fly [data-mark="star"]');
+  const st = (await marksOf(p, 0)).find(m => m.k === 'star'); assert.ok(st && Math.abs(st.x - 220) < 2 && Math.abs(st.y - 260) < 2, 'the sticker is where she tapped');
+  assert.equal(await p.$eval('[data-tool="stamp"]', e => e.getAttribute('aria-pressed')), 'true', 'the Stamp tool stays in hand');
+  // the pen: a quick touch makes a dot and no menu; a finger held still opens the menu and leaves no mark
+  await p.keyboard.press('Escape'); await p.click('[data-tool="pen"]');
+  const n0 = (await marksOf(p, 0)).length;
+  { const q = await nextAt(p, 0, 300, 400); await p.touchscreen.touchStart(q.x, q.y); await p.touchscreen.touchEnd(); }
+  await new Promise(r => setTimeout(r, 800)); assert.equal(await p.$('.mk-menu'), null, 'a quick touch opens nothing');
+  const n1 = (await marksOf(p, 0)).length;
+  { const q = await nextAt(p, 0, 320, 420); await p.touchscreen.touchStart(q.x, q.y); await p.waitForSelector('.mk-menu', { timeout: 3000 }); await p.touchscreen.touchEnd(); }
+  assert.equal((await marksOf(p, 0)).length, n1, 'held still: the menu, and no mark');
+  assert.ok(n1 >= n0);
   assert.deepEqual(errors, []);
   await ctx.close();
 });

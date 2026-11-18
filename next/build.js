@@ -163,7 +163,7 @@ const GRADING_STATE = {
   writeWork: '() => {}', tabLive: '() => true', tabForgot: '() => false', tabLetGo: '() => {}', tabsBehind: '() => false', saveBehind: '() => {}', stampWork: '() => {}',
 };
 // What the lifted code calls that belongs to the screen (a toast, a redraw): quiet here, the new screen says and draws things itself.
-const GRADING_STUBS = { pickedUpNew: '() => false', renderKept: '() => {}', groupNoteRefresh: '() => {}', groupBandRefresh: '() => {}' };
+const GRADING_STUBS = { pickedUpNew: '() => false', nameFlagsShow: '() => {}', renderKept: '() => {}', groupNoteRefresh: '() => {}', groupBandRefresh: '() => {}' };
 const GRADING_DENY = ['$', 'openDlg', 'closeDlg', 'sayDlg', 'saveLib', 'keepWork', 'go', 'routeNow', 'paperPut', 'folderSaved', 'syncSoon', 'homeRender'];
 // Names that are only local variables in what is lifted (an unrelated top-level declaration has the same name).
 const GRADING_LOCAL = ['inside', 'num', 'average'];
@@ -210,6 +210,8 @@ const GRADING = [
     'canResize', 'setHlMode', 'hlMode', 'critStampOf', 'scoreStampText', 'stampOwner', 'newStampSize', 'fmNow',
     // the mark key's wording, for Settings > Marking (src/stamps.js openMarkKey)
     'markLabel0', 'MARK_MEAN', 'MARK_KEY',
+    // one undo step for several students' grades (src/anchors.js setAnchor: a level moved from one paper to another)
+    'groupStep', 'gradeStep',
   ], '', [], ['gcore', 'gdraw']],
   ['gexport', [
     // what goes back to students (src/app/export.js, src/feedback.js, src/exportreport.js, src/anchors.js): which files, their names,
@@ -221,7 +223,11 @@ const GRADING = [
     'meGrade', 'pctAvgText', 'setKey', 'keyRows', 'classStats', 'leftOutText', 'spreadBins', 'onThisScale', 'partNote', 'STATUS_LABEL', 'triesSay',
     'anchorDocs', 'anchorDocPdf', 'anchorFile', 'anchorsHere', 'ANCHORS', 'anchorOf', 'anchorLabel', 'setAnchor', 'anchorCoverOn',
     'wordPagesPdf', 'WP_MAX', 'scanFile',
-  ], '', [], ['gcore', 'gdraw', 'gopen'], ['num', 'inside']],
+    // the Grade sheet's rows and what she says about a grade read off a paper (src/app/gradesheet.js, src/grades.js)
+    'sheetRows', 'appScored', 'appShots', 'rowGraded', 'splitReads', 'readKey', 'readingDoubt', 'quietReads', 'paperScore', 'rivalReads', 'paperBytes', 'fileIn',
+    // a paper's pages drawn as an assistant or the same-score view sees them (src/app/claude.js sharePage, shareDocs)
+    'sharePage', 'shareDocs', 'classCommon', 'nameFreeText', 'shareOpts', 'nameFindOn',
+  ], "// the Grade sheet's choices, which the current app keeps in module variables: read and set from the Grades tab\nexport function sheetSet(o) { if ('all' in o) sheetAll = !!o.all; if ('found' in o) sheetFound = !!o.found; if ('out' in o) sheetShowOut = !!o.out; }\nexport const sheetNow = () => ({ all: sheetAll, found: sheetFound, out: sheetShowOut });\n", [], ['gcore', 'gdraw', 'gopen'], ['num', 'inside']],
   ['greport', [
     // the opening report (src/intake.js openingFacts, checkStack): what opened, what didn't and why, who has nothing, and anything odd
     'openingFacts', 'checkStack', 'checkFile', 'repHead', 'zipSay', 'troubleOf', 'troubleText', 'hash', 'textOf',
@@ -273,6 +279,15 @@ export const tnRngSet = r => { tnRng = r; };
     'groupAdd', 'groupSync', 'groupLeave', 'groupSetOwn', 'groupSnapOf', 'groupMates', 'groupNames', 'groupFromSplit', 'splitMates', 'shareCopies', 'groupPaper',
     'adjReset', 'adjName', 'adjSay',
   ], '', [], ['gcore', 'gdraw', 'gmark']],
+  ['gcalc', [
+    // the calculator (src/app/calc.js): its own small reader of sums (no eval), the keys it takes, and the words on a score sticker
+    'calcEval', 'calcFmt', 'calcKeyOf', 'stickerText',
+  ], '', [], ['gcore']],
+  ['gsnip', [
+    // a screenshot (src/snip.js): one page drawn fresh from its file with name covers painted in, the area's rectangle, and the
+    // picture put on the clipboard (or saved where the browser can't copy pictures); the layer and the area picture are the screen's
+    'snipPage', 'snipRect', 'copyPicture', 'canvasPng', 'nameFindOn', 'fileRx',
+  ], '', [], ['gcore', 'gdraw']],
   ['gword', [
     // a Word paper on the marking screen (src/app/word.js, src/wordnotes.js): drawn from its own XML, typed in, cells shaded, boxes
     // ticked, comments named Teacher added and taken off, and the file written back; the screen around it is the new app's
@@ -288,6 +303,18 @@ export const tnRngSet = r => { tnRng = r; };
     // tagged with, and rows read out of a rubric she brings in (Word or PDF); the dialog and its one undo step are the new app's
     'tidyLevels', 'levelIn', 'goalList', 'goalById', 'goalName', 'goalsTidy', 'ruFromWord', 'ruFromPdf', 'rubricRowsInto',
   ], '', [], ['gcore', 'gdraw', 'gword']],
+  ['ginsight', [
+    // Insights > Consistency (src/insight.js): whether her scores drifted as she went, read the same way, rubric row by row, and
+    // the papers that share a score; the chart, the list and the side-by-side pages are the new app's
+    'consData', 'driftRead', 'rowDrifts', 'roughly', 'roughGap', 'roughStep', 'DRIFT_MIN', 'DRIFT_SURE', 'sameLabel',
+  ], '', [], ['gcore', 'gdraw', 'gexport'], ['average']],
+  ['gnames', [
+    // hiding names while marking and Check the covers (src/app/anon.js, src/app/claude.js checkCovers, src/insight.js cover*, src/names.js):
+    // the shuffled order, which papers she has looked at, her own cover boxes and the ones she took off, and what the name search found;
+    // the switch, the dialog and the page she boxes on are the new app's, and saving goes through the marking screen
+    'anonShuffle', 'coverList', 'coverOk', 'coverMark', 'coverAgain', 'coverName', 'coverFirst', 'coverLine', 'boxKey', 'shareState', 'sameSpot',
+    'findNames', 'nameFlag', 'nameFlagged', 'namesLooking', 'wordNoName', 'stillCounting', 'ensureCounts', 'anonCovers',
+  ], '', [], ['gcore', 'gdraw', 'gopen', 'greport', 'gexport']],
   ['gways', [
     // the teacher's usual way of grading (src/app/library.js GRADE_WAYS, meGrade): what a new assignment starts with, read from the
     // library the settings screen has in hand (useLib), not the marking screen's

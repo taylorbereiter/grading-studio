@@ -619,6 +619,21 @@ export async function setupSave(draft, { page, from, n0, goal }) {
   return d;
 }
 
+/* Anchor papers (src/anchors.js): the high, middle and low paper a school keeps from a summative. One paper each: tagging a second
+   paper High takes High off the first, and one undo step puts both back. Stored on the paper's grade as grade.anchor. */
+export const ANCHOR_LV = ['high', 'mid', 'low'];
+// Shown on summatives, the teacher's own counted types and assignments with no type; not on in-class, formative or extra-credit work (anchorsHere).
+export function anchorsHere() { const a = b().assignment, f = a && E.findItem(a.id), ty = ((f && f.it) || a || {}).type || ''; return ty !== 'ic' && ty !== 'fm' && ty !== 'xc'; }
+export const anchorOf = lv => b().students.findIndex(s => s.grade.anchor === lv);
+export function setAnchor(st, lv) {
+  const others = b().students.filter(s => s !== st && s.grade.anchor === lv);
+  K.pushUndo(K.groupStep([K.gradeStep(st), ...others.map(K.gradeStep)], 'anchor paper'));
+  if (st.grade.anchor === lv) delete st.grade.anchor;
+  else { for (const s of others) { delete s.grade.anchor; K.touchGrade(s); } st.grade.anchor = lv; }
+  K.touchGrade(st); tell();
+  return st.grade.anchor || '';
+}
+
 /* The ⋯ under the score (src/grades.js): leave out of the average, extra credit, a percent as the score, and retakes. Each one undo step. */
 // Left out of the average: the score stays and still copies (setOutAvg).
 export function outAvg(st) { K.gradeSnap(st); if (st.grade.outAvg) delete st.grade.outAvg; else st.grade.outAvg = true; K.touchGrade(st); tell(); }

@@ -13,12 +13,22 @@ import * as V from '../../engines/gmedia.js';
 import { videos } from '../../students/index.js';
 import { prefs } from '../../students/prefs.js';
 import { t } from '../../i18n/t.js';
+import { register } from '../../services/shortcuts.js';
 import * as C from './change.js';
+import './lines.js';
 import './setup-lines.js';
 
 // the tests stand in for the speech engine here, so it is never downloaded
 if (typeof window !== 'undefined') window.__media = { asrStandIn: V.asrStandIn };
 const RATES = [1, 1.25, 1.5, 2];
+// The keys for the player on screen (src/app/wiring.js keydown, curMedia): Space plays or pauses, J and L go back or ahead 5 seconds.
+// The last player drawn is the one they drive, while it is on the page.
+let curMedia = null;
+const playing = () => !!(curMedia && curMedia.isConnected);
+register({ id: 'mark-media-play', keys: ' ', label: 'setup.v_key_play', group: 'mark.tools', when: playing, run: () => { if (curMedia.paused) curMedia.play().catch(() => {}); else curMedia.pause(); } });
+register({ id: 'mark-media-back', keys: 'j', label: 'setup.v_key_back', group: 'mark.tools', when: playing, run: () => { curMedia.currentTime = Math.max(0, curMedia.currentTime - 5); } });
+register({ id: 'mark-media-ahead', keys: 'l', label: 'setup.v_key_ahead', group: 'mark.tools', when: playing, run: () => { curMedia.currentTime += 5; } });
+const own = el => { if (el) curMedia = el; };
 const rate = () => +prefs.get('gs.rate', 1) || 1;
 const urls = new WeakMap();
 const urlOf = f => { if (!urls.has(f)) urls.set(f, URL.createObjectURL(new Blob([f.data], { type: V.MIME[V.extOf(f.name)] || '' }))); return urls.get(f); };
@@ -60,7 +70,7 @@ function Controls({ st, f, m, video }) {
 // A recording: the student's own file, or a video kept in this browser (k: { name, url }).
 function Recording({ st, f, k }) {
   const ref = useRef(null), [now, setNow] = useState(0), video = V.VIDEO_RX.test(k ? k.name : f.name);
-  useEffect(() => { if (ref.current) ref.current.playbackRate = rate(); }, []);
+  useEffect(() => { if (ref.current) { ref.current.playbackRate = rate(); own(ref.current); } }, []);
   const src = k ? k.url : urlOf(f), m = () => ref.current;
   const seek = s => { const x = m(); if (!x) return; x.currentTime = s; if (x.paused) x.play().catch(() => {}); };
   return <div class="media" data-media={f.path}>
@@ -75,6 +85,7 @@ function Recording({ st, f, k }) {
 // A link (linkCard): plays here where the site lets it, or opens in its own window.
 function Link({ st, f }) {
   const url = V.linkOf(f.data), play = V.linkPlayer(url), ticks = !!play && !play.frame, [on, setOn] = useState(false), ref = useRef(null), [now, setNow] = useState(0);
+  useEffect(() => { if (on && ref.current) own(ref.current); }, [on]);
   const m = () => ref.current, seek = s => { if (!on) setOn(true); requestAnimationFrame(() => { const x = m(); if (x) { x.currentTime = s; x.play().catch(() => {}); } }); };
   return <div class="media vlink" data-media={f.path}>
     <div class="mstick"><div class="mhead"><b data-raw>{V.linkTitle(f)}</b><span class="mute" data-raw>{V.linkHost(url)}</span></div>

@@ -4,7 +4,7 @@
 // current app's own drawing code (engines/gdraw.js), so what she sees is what she marked there, mark for mark.
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'preact/hooks';
-import { Tabs, Button, IconButton, Icon, EmptyState, Dialog, Progress, Avatar, TextInput } from '../../ui/index.js';
+import { Tabs, Button, IconButton, Icon, EmptyState, Dialog, Progress, Avatar, TextInput, Menu } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { go, href, PARTS } from '../router.js';
 import { register } from '../../services/shortcuts.js';
@@ -12,7 +12,7 @@ import { openPages, renderPage, fitScale } from '../mark/paper.js';
 import { use, gradeOf, maxPoints, fmtNum, state, rowSteps, rowTop, setupOver, DEFAULT_SETUP, SCALE12, SCALE_FIVES, noScore, xcSay } from '../../engines/gcore.js';
 import { prefs } from '../../students/prefs.js';
 import { onSaved } from '../../shared/saved.js';
-import { shownName } from '../../engines/gdraw.js';
+import { shownName, anonOn, anonOrder } from '../../engines/gdraw.js';
 import { toast } from '../../ui/index.js';
 import '../mark/lines.js';
 
@@ -54,10 +54,11 @@ const LF_MATCH = {
 };
 const LF_LINE = { all: () => t('mark.lf_all'), todo: fm => t(fm ? 'mark.lf_finish' : 'mark.lf_todo'), flag: () => t('mark.lf_flag'), nopaper: () => t('mark.lf_nopaper'), late: () => t('mark.lf_late'), out: () => t('mark.lf_out') };
 // The students the list shows, in order: Previous, Next and the arrow keys walk these. The open one always stays.
-const shownOrder = (b, lf, cur, fm) => b.students.map((st, i) => i).filter(i => lf === 'all' || i === cur || LF_MATCH[lf](b.students[i], b, fm));
+// With names hidden, the papers go in the shuffled order (src/app/anon.js anonOrder).
+const shownOrder = (b, lf, cur, fm) => (anonOn() ? anonOrder() : b.students.map((st, i) => i)).filter(i => lf === 'all' || i === cur || LF_MATCH[lf](b.students[i], b, fm));
 const isMarked = st => { const g = gradeOf(st); return !!g.done && !st.gap; };
 
-function StudentList({ batch, cur, onPick, onReport, lf, setLf, fold, setFold, fm }) {
+function StudentList({ batch, cur, onPick, onReport, lf, setLf, fold, setFold, fm, onHide, onShuffle }) {
   const [q, setQ] = useState(''), box = useRef(null), [pts, setPts] = useState(() => !!prefs.get('gs.listPts', false)), [menu, setMenu] = useState(false);
   const findNow = () => { if (fold) setFold(false); setTimeout(() => { const i = box.current && box.current.querySelector('input'); if (i) i.focus(); }); };
   useEffect(() => register({ id: 'mark-find', keys: '/', label: 'mark.find', run: findNow }), [fold]);
@@ -69,7 +70,7 @@ function StudentList({ batch, cur, onPick, onReport, lf, setLf, fold, setFold, f
   // Enter in the find box opens the first match; Esc clears it
   const findKey = e => { if (e.key === 'Enter' && rows[0]) { e.preventDefault(); onPick(rows[0].i); e.currentTarget.blur(); } if (e.key === 'Escape') { e.preventDefault(); setQ(''); e.currentTarget.blur(); } };
   return <aside class={'mk-list' + (fold ? ' fold' : '')} aria-label={t('mark.students')}>
-    <div class="mk-lhead mute"><span>{t('mark.papers', { n: batch.students.filter(st => st.files.length).length })}</span>{missing > 0 && <span>{t('mark.missing_n', { n: missing })}</span>}{onReport && <button type="button" class="link" onClick={onReport} data-report>{t('mark.op_title')}</button>}</div>
+    <div class="mk-lhead mute"><span>{anonOn() ? t('mark.hn_head') : t('mark.papers', { n: batch.students.filter(st => st.files.length).length })}</span>{missing > 0 && <span>{t('mark.missing_n', { n: missing })}</span>}{onReport && <button type="button" class="link" onClick={onReport} data-report>{t('mark.op_title')}</button>}</div>
     <div ref={box} class="mk-find" onKeyDown={findKey}><TextInput icon="search" label={t('mark.find')} value={q} onInput={setQ} /></div>
     <div class="mk-lbar">
       <span class="mk-lf"><button type="button" class={'chip' + (lf !== 'all' ? ' on' : '')} aria-haspopup="menu" aria-expanded={menu ? 'true' : 'false'} onClick={() => setMenu(v => !v)} data-lf-open><Icon name="menu" size="xs" />{LF_LINE[lf](fm)}</button>
@@ -83,9 +84,13 @@ function StudentList({ batch, cur, onPick, onReport, lf, setLf, fold, setFold, f
       return <li><button type="button" class={'mk-row' + (i === cur ? ' on' : '')} aria-current={i === cur ? 'true' : undefined} onClick={() => onPick(i)} data-st={i} title={fold ? name : undefined}>
         <Avatar name={name} size="sm" /><span class="nm" data-raw>{name}</span>{fl && <span class="bang" title={t('mark.lf_flagged')} aria-label={t('mark.lf_flagged')}>!</span>}
         {st.grade.status === 'late' && <span class="pill">{t('mark.late')}</span>}
+        {AN[st.grade.anchor] && <span class="pill anch" title={t('mark.an_tag', { lv: t(AN[st.grade.anchor]) })} data-anchtag>{t(AN[st.grade.anchor]).toLowerCase()}</span>}
         {sc && <span class={'sc ' + (sc.tone || '')}>{sc.done && <Icon name="check" size="xs" />}{sc.text}</span>}
       </button></li>; })}
       {lf !== 'all' && !q && rows.length <= 1 && <li class="mute mk-lfnone">{t('mark.lf_none')} <button type="button" class="link" onClick={() => setLf('all')}>{t('mark.lf_everyone')}</button></li>}</ol>
+    {onHide && <div class="mk-lfoot">
+      <button type="button" class="hn-sw" role="switch" aria-checked={anonOn() ? 'true' : 'false'} title={t('mark.hn_sw_tip')} onClick={onHide} data-anonsw>{t('mark.hn_sw')}<i /></button>
+      <span class="grow" />{anonOn() && <Button size="sm" variant="quiet" title={t('mark.hn_shuf_tip')} onClick={onShuffle} data-anonshuf>{t('mark.hn_shuf')}</Button>}</div>}
   </aside>;
 }
 
@@ -136,7 +141,75 @@ function OtherFile({ f }) {
   return FILES ? <FILES.FileCard f={f} /> : <div class="fcard"><Icon name="file" /><span data-raw>{f.name}</span></div>;
 }
 
-function Paper({ batch, cur, zoom, ver, FU }) {
+// The side pane (src/sidepane.js): a second column on the paper, on the right, the left or across the top, with a video beside the
+// notes page, the rubric's words beside an essay, or one file beside another. B opens and closes it. The file it shows isn't moved:
+// the paper turns into a grid and that file takes the pane's place, so a video in it keeps playing. gs.sp, in this browser, as the
+// current app keeps it: { on: she opened it, so it stays for every student; noVid: she closed it on a video, so a video doesn't open
+// it; tab: the kind of thing it last showed; at: 'left' | 'top' (right when missing); w, h: its share of the width or height }.
+const SP_SIDE = 260, SP_MAIN = 300, SP_TOP = 150, SP_HEAD = 44;
+const spConf = () => { const c = prefs.get('gs.sp', null); return c && typeof c === 'object' && !Array.isArray(c) ? c : {}; };
+function spSet(o) {
+  const c = { ...spConf(), ...o };
+  for (const k of Object.keys(c)) if (c[k] == null || c[k] === false) delete c[k];
+  if (Object.keys(c).length) prefs.set('gs.sp', c); else prefs.del('gs.sp');
+}
+const docKey = d => 'doc:' + (d.file || d.name);
+const linkName = f => f.name.replace(/\.(url|webloc)$/i, '').replace(/ \(added \d+\)$/, '');
+// What can go in the pane: the rubric in full, then the student's files when something else is left for the main column.
+function spTabs(st, got, su) {
+  const out = [], vids = st.files.filter(f => f.kind === 'link' || f.kind === 'media');
+  if (su.mode === 'rubric' && su.criteria.length) out.push({ key: 'rubric', kind: 'rubric', tool: true });
+  if (vids.length + got.cards.length > 1) {
+    for (const f of vids) out.push({ key: 'file:' + f.path, kind: 'video', label: f.kind === 'link' ? linkName(f) : f.name });
+    for (const c of got.cards) out.push(c.kind === 'file' ? { key: 'file:' + c.f.path, kind: 'f:' + c.f.name, label: c.f.name } : { key: docKey(c.d), kind: 'f:' + c.d.name, label: c.d.name });
+  }
+  return out;
+}
+const spHasVideo = tabs => tabs.some(x => x.kind === 'video') && tabs.some(x => x.kind !== 'video' && !x.tool);
+const spChoose = tabs => { const c = spConf(); return tabs.find(x => x.kind === c.tab) || tabs.find(x => x.kind === 'video') || tabs.find(x => x.kind === 'rubric') || tabs[0]; };
+const spWanted = tabs => { const c = spConf(); return tabs.length > 0 && (!!c.on || (!c.noVid && spHasVideo(tabs))); };
+const clampN = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// The pane's bar: its tabs, where it sits, close; and the edge that sizes it (drag, double-click for the usual size, or the arrows).
+function SideBar({ tabs, on, at, onPick, onClose, onAt, onSize }) {
+  const grip = useRef(null), last = useRef(0);
+  const down = e => {
+    e.preventDefault();
+    if (Date.now() - last.current < 400) { last.current = 0; onSize(null); return; }   // a double click: the usual size
+    const g = grip.current, paper = g.closest('.mk-paper'), x0 = e.clientX, y0 = e.clientY; g.setPointerCapture(e.pointerId); g.classList.add('on');
+    const share = ev => { const r = paper.getBoundingClientRect(), cs = getComputedStyle(paper), pl = parseFloat(cs.paddingLeft) || 0, pr = parseFloat(cs.paddingRight) || 0, W = paper.clientWidth - pl - pr;
+      return at === 'top' ? (ev.clientY - r.top - (parseFloat(cs.paddingTop) || 0) - SP_HEAD) / Math.max(1, paper.clientHeight) : (at === 'left' ? ev.clientX - r.left - pl : r.left + paper.clientWidth - pr - ev.clientX) / Math.max(1, W); };
+    const mv = ev => { const v = clampN(share(ev), 0.15, 0.85), r = paper.getBoundingClientRect(); paper.style.setProperty('--sp-px', Math.round(v * (at === 'top' ? paper.clientHeight : r.width)) + 'px'); };
+    g.onpointermove = mv;
+    g.onpointerup = g.onpointercancel = ev => { g.onpointermove = g.onpointerup = g.onpointercancel = null; g.classList.remove('on');
+      if (Math.hypot(ev.clientX - x0, ev.clientY - y0) < 3) last.current = Date.now(); else onSize(clampN(share(ev), 0.15, 0.85)); };
+  };
+  const key = e => {
+    const d = (at === 'top' ? { ArrowDown: 1, ArrowUp: -1 } : at === 'left' ? { ArrowRight: 1, ArrowLeft: -1 } : { ArrowLeft: 1, ArrowRight: -1 })[e.key]; if (!d) return;
+    e.preventDefault(); e.stopPropagation(); const c = spConf(); onSize(clampN((at === 'top' ? c.h || 0.44 : c.w || 0.46) + d * 0.04, 0.15, 0.85));
+  };
+  const AT = [['right', 'mark.sp_right'], ['left', 'mark.sp_left'], ['top', 'mark.sp_top']];
+  return <div class="mk-sph" data-sp>
+    <div ref={grip} class="spgrip" role="separator" tabindex="0" aria-orientation={at === 'top' ? 'horizontal' : 'vertical'} aria-label={t('mark.sp_size')} title={t('mark.sp_size_tip')} onPointerDown={down} onKeyDown={key} data-spgrip><i /></div>
+    <div class="sptabs" role="tablist" aria-label={t('mark.sp_tabs')}>{tabs.map(x => <button type="button" role="tab" class="sptab" aria-selected={x.key === on ? 'true' : 'false'} onClick={() => onPick(x.key)} data-sptab={x.key} data-raw={x.tool ? undefined : ''}>{x.tool ? t('mark.sp_rubric') : x.label.replace(/\.(pdf|docx?|docm|txt|rtf|jpe?g|png|heic|mp4|mov|m4a|mp3|webm)$/i, '')}</button>)}</div>
+    <Menu label={t('mark.sp_where')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('mark.sp_where')} data-spwhere />} items={AT.map(([k, l]) => ({ label: t(l), checked: at === k, onSelect: () => onAt(k) }))} />
+    <IconButton icon="x" size="sm" label={t('mark.sp_close')} kbd="B" onClick={onClose} data-spclose />
+  </div>;
+}
+// The rubric in full: every row with what each score means; a click gives that score, as in the score panel.
+function SideRubric({ st }) {
+  const su = state().setup, g = st.grade.rubric, M = MK && MK.M, words = (i, v) => ((su.levels && su.levels[i]) || {})[v] || '';
+  const any = su.criteria.some((_, i) => rowSteps(su, i).some(v => words(i, v)));
+  return <div class="in-sp mk-sprub">
+    {!any && <p class="mute">{t('mark.sp_no_words')}</p>}
+    {su.criteria.map((c, i) => { const v = g[i];
+      return <section class="sprow"><h4><span data-raw>{c}</span><em>{v == null ? '' : fmtNum(v) + ' / ' + rowTop(su, i)}</em></h4>
+        <div class="splv">{rowSteps(su, i).filter(w => w % 1 === 0 && (w > 0 || words(i, w))).map(w =>
+          <button type="button" class={'splvb' + (v === w ? ' on' : '')} aria-pressed={v === w ? 'true' : 'false'} disabled={!M} onClick={() => M.setRow(i, w)} data-sprow={i} data-spv={w}><b>{w}</b>{words(i, w) && <span data-raw>{words(i, w)}</span>}</button>)}</div></section>; })}
+  </div>;
+}
+
+function Paper({ batch, cur, zoom, ver, FU, ctl, onSp }) {
   const st = batch.students[cur], [got, setGot] = useState(null), area = useRef(null), [size, setSize] = useState([0, 0]), was = useRef(null);
   useEffect(() => {
     // the same student opened again after a change keeps showing until the pages are ready, so the paper doesn't flash and a dialog
@@ -155,15 +228,44 @@ function Paper({ batch, cur, zoom, ver, FU }) {
   // until the effect above has run for a newly opened student, what was got is the last student's
   const fresh = !!was.current && was.current[0] === batch && was.current[1] === cur, gotNow = fresh ? got : null;
   if (!fresh || was.current[2] !== ver) seam.ready = false;   // the pages are opening again: not ready until they have
-  return <div class="mk-paper" ref={area} tabindex="-1">
+  // the side pane: what it can show, whether it is open and on what, and where it sits
+  const [mine, setMine] = useState(null), [, spAgain] = useState(0);
+  const tabs = st && gotNow ? spTabs(st, gotNow, state().setup) : [];
+  const base = mine && st && mine.k === st.key ? mine : { k: st && st.key, shown: spWanted(tabs), key: (spChoose(tabs) || {}).key };
+  const sel = base.shown ? tabs.find(x => x.key === base.key) || spChoose(tabs) : null;
+  const spOpen = key => {
+    if (!tabs.length) { toast(t('mark.sp_nothing')); return; }
+    spSet({ on: true, noVid: null });
+    const k = key && tabs.some(x => x.key === key) ? key : (sel || spChoose(tabs)).key;
+    if (key) spSet({ tab: tabs.find(x => x.key === k).kind });
+    setMine({ k: st.key, shown: true, key: k });
+  };
+  const spClose = () => { spSet({ on: null, noVid: spHasVideo(tabs) ? true : spConf().noVid }); setMine({ ...base, shown: false }); };
+  const spPick = key => { const x = tabs.find(y => y.key === key); if (!x) return; spSet({ tab: x.kind }); setMine({ k: st.key, shown: true, key }); };
+  if (ctl) ctl.current = { toggle: () => (sel ? spClose() : spOpen()), open: spOpen };
+  useEffect(() => { if (onSp) onSp({ n: tabs.length, shown: !!sel }); }, [tabs.length, !!sel]);
+  const c = spConf(), W = size[0], H = size[1];
+  let at = sel ? (c.at === 'left' || c.at === 'top' ? c.at : 'right') : '';
+  if (at && at !== 'top' && W < SP_SIDE + SP_MAIN + 16) at = 'top';   // a narrow window: one above the other
+  const side = at && at !== 'top', px = !at ? 0 : at === 'top' ? Math.round(clampN((c.h || 0.44) * H, SP_TOP, Math.max(SP_TOP, H - 180))) : Math.round(clampN((c.w || 0.46) * W, SP_SIDE, W - 16 - SP_MAIN));
+  const inSp = k => !!at && sel.key === k;
+  const roomOf = k => !at ? W : inSp(k) ? (side ? px - 24 : W - 24) : side ? W - px - 16 : W;
+  const tallOf = k => at === 'top' && inSp(k) ? px - 24 : H;
+  const cl = k => inSp(k) ? ' in-sp' : '';
+  const spSize = v => { spSet(at === 'top' ? { h: v } : { w: v }); spAgain(n => n + 1); };
+  const spAt = k => { spSet({ at: k === 'right' ? null : k }); spAgain(n => n + 1); };
+  const n = st ? st.files.length + 4 : 0;
+  return <div class={'mk-paper' + (at ? ' sp-' + at : '')} ref={area} tabindex="-1" style={at ? { '--sp-px': px + 'px', '--sp-h': H + 'px', gridTemplateRows: side ? 'repeat(' + n + ', auto)' : undefined } : undefined}>
     {!st ? null : !st.files.length ? <><EmptyState icon="inbox" title={t('mark.nothing_in')} />{FU && <FU.FilesFoot key={st.key} st={st} name={shownName(st, cur)} />}</>
       : !gotNow ? <div class="loading" aria-busy="true" />
-      : <>{FU && <FU.GroupBand st={st} />}{st.files.filter(f => f.kind === 'link').concat(st.files.filter(f => f.kind === 'media')).map(f => <div class="fwrap"><header class="fhead"><span data-raw>{f.kind === 'link' ? f.name.replace(/\.(url|webloc)$/i, '').replace(/ \(added \d+\)$/, '') : f.name}</span><span class="mute">{t(f.kind === 'media' ? 'mark.v_recording' : 'mark.v_link_kind')}</span>{FU && <FU.AddTag st={st} f={f} />}{FU && <FU.CarryTag st={st} f={f} />}<span class="grow" />{FU && <FU.FileMenu st={st} path={f.path} name={f.name} />}</header><MediaFile key={f.path} st={st} f={f} /></div>)}
-        {gotNow.cards.map(c => c.kind === 'file' ? <div class="fwrap">{FU && <FU.CarryTag st={st} f={c.f} />}{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
-        : <section class="doc">
+      : <>{FU && <FU.GroupBand key="band" st={st} />}{st.files.filter(f => f.kind === 'link').concat(st.files.filter(f => f.kind === 'media')).map(f => <div key={'file:' + f.path} class={'fwrap' + cl('file:' + f.path)}><header class="fhead"><span data-raw>{f.kind === 'link' ? f.name.replace(/\.(url|webloc)$/i, '').replace(/ \(added \d+\)$/, '') : f.name}</span><span class="mute">{t(f.kind === 'media' ? 'mark.v_recording' : 'mark.v_link_kind')}</span>{FU && <FU.AddTag st={st} f={f} />}{FU && <FU.CarryTag st={st} f={f} />}<span class="grow" />{FU && <FU.FileMenu st={st} path={f.path} name={f.name} />}</header><MediaFile key={f.path} st={st} f={f} /></div>)}
+        {gotNow.cards.map(c => c.kind === 'file' ? <div key={'file:' + c.f.path} class={'fwrap' + cl('file:' + c.f.path)}>{FU && <FU.CarryTag st={st} f={c.f} />}{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
+        : <section key={docKey(c.d)} class={'doc' + cl(docKey(c.d))}>
           <header class="fhead"><span data-raw>{c.d.name}</span>{FU && <FU.AddTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}{!c.on && <span class="pill">{t(c.auto ? 'mark.left_out_auto' : 'mark.left_out')}</span>}{FU && <FU.CarryTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}<span class="grow" />{FU && !c.on && <FU.BackIn st={st} d={c.d} />}{FU && <FU.FileMenu st={st} path={c.d.file || c.d.pages[0][0]} name={c.d.name} d={c.d} on={c.on} auto={c.auto} />}</header>
-          {c.pages.map(pg => <Page key={pg.file.path + '|' + pg.idx} pg={pg} room={size[0]} tall={size[1]} zoom={zoom} FU={FU} />)}
-        </section>)}{FU && <FU.FilesFoot key={st.key} st={st} name={shownName(st, cur)} />}</>}
+          {c.pages.map(pg => <Page key={pg.file.path + '|' + pg.idx} pg={pg} room={roomOf(docKey(c.d))} tall={tallOf(docKey(c.d))} zoom={zoom} FU={FU} />)}
+        </section>)}{FU && <FU.FilesFoot key={st.key} st={st} name={shownName(st, cur)} />}
+        {at && <SideBar key="sp-bar" tabs={tabs} on={sel.key} at={at} onPick={spPick} onClose={spClose} onAt={spAt} onSize={spSize} />}
+        {at && sel.tool && <SideRubric key="sp-rubric" st={st} />}</>}
   </div>;
 }
 
@@ -171,8 +273,10 @@ function Paper({ batch, cur, zoom, ver, FU }) {
 // Missing / Excused / Late, the comment, and Next to score. Until the marking tools have loaded it shows the score and can't change it.
 // Enter presses Next to score only from nowhere in particular (or a score slider), never over a button she has focused.
 const free = () => { const a = document.activeElement; return !a || a === document.body || (a.classList && (a.classList.contains('srange') || a.classList.contains('mk-paper'))); };
+// an anchor paper's tag in the list (src/anchors.js anchorTag)
+const AN = { high: 'mark.an_high', mid: 'mark.an_mid', low: 'mark.an_low' };
 const STATUS = [['missing', () => t('mark.missing')], ['excused', () => t('mark.excused')], ['late', () => t('mark.late')]];
-function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo }) {
+function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onCalc }) {
   const st = batch.students[cur]; if (!st) return null;
   const g = gradeOf(st), max = maxPoints(), name = shownName(st, cur), su = state().setup, M = MK && MK.M, off = !M;
   const file = st.files[0], row = M ? M.rowInHand() : -1, gr = st.grade;
@@ -199,9 +303,10 @@ function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo }) {
       : <div class="mk-pts"><input type="text" inputmode="decimal" aria-label={t('mark.points')} value={gr.pk != null && gr.pk !== '' ? gr.pk + '%' : gr.points} disabled={off}
           onInput={e => M.setPoints(e.currentTarget.value, e.currentTarget)} onBlur={() => M && M.leftPoints()} onKeyDown={ptsKey} /><span class="mute">{t('mark.out_of_pts', { n: su.outOf })}</span></div>}
     <div class="total"><b>{g.total != null ? fmtNum(g.total) : '–'}</b><span class="mute">{max ? t('mark.out_of', { n: fmtNum(max) }) : ''}</span>
-      <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span>{g.total != null && M && <Button size="sm" icon="stamp" onClick={() => stamp(null)} title={t('mark.stamp_tip')} data-stampscore>{t('mark.stamp')}</Button>}</div>
+      <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span>{M && <IconButton icon="grades" size="sm" label={t('mark.calc')} kbd="=" onClick={onCalc} data-calcopen />}{g.total != null && M && <Button size="sm" icon="stamp" onClick={() => stamp(null)} title={t('mark.stamp_tip')} data-stampscore>{t('mark.stamp')}</Button>}</div>
     {g.total == null && <p class="mute">{t('mark.no_score')}</p>}</>}
     <div class="mk-stat" role="group" aria-label={t('mark.mark_as')}>{STATUS.map(([k, l]) => <button type="button" class="chip" aria-pressed={gr.status === k ? 'true' : 'false'} disabled={off} data-status={k} onClick={() => M.setStatus(k)}>{l()}</button>)}{FU && M && <FU.ScoreMore st={st} />}</div>
+    {FU && M && <FU.Anchors st={st} />}
     <textarea class="mk-cmt" aria-label={t('mark.comment_for')} placeholder={t('mark.comment_for_ph')} value={gr.comment || ''} disabled={off} data-raw onInput={e => M.setComment(e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.blur(); }} />
     {M && <CommentChips text={gr.comment || ''} onAdd={c => M.setComment((gr.comment || '').trim() ? (gr.comment || '').replace(/\s+$/, '') + ' ' + c : c)} />}
     {TN && M && <TN.NotesPart st={st} />}
@@ -261,10 +366,19 @@ export default function MarkScreen({ route, classes }) {
   const [zoom, setZoom] = useState(() => keep('zoom') || 1), [, tick] = useState(0);
   // the list's filter (this visit to this assignment only), the list folded to a strip ([, gs.listOpen), the score panel folded away
   // (], gs.panels.R), and Only this student (gs.solo)
+  const [Calc, setCalc] = useState(null);
+  // Hide names and Check the covers (mark/covers.jsx), loaded when first asked for
+  const [CV, setCV] = useState(null), [cvDlg, setCvDlg] = useState(null);
+  const cvCtx = { M: MK && MK.M, open: i => pickRef.current(i), cur: () => state().cur, reopen: () => setVer(v => v + 1) };
+  const hideNames = async again => { const m = CV || await PARTS.covers(); setCV(m); if (again) return m.shuffle(cvCtx); if (anonOn()) m.setAnon(false, cvCtx); else setCvDlg({ k: 'anon' }); };
+  const spCtl = useRef(null), [sp, setSp] = useState({ n: 0, shown: false });
+  const openCalc = () => { if (Calc) return setCalc(null); PARTS.calc().then(m => setCalc(() => m.Calculator), e => console.error(e)); };
   const [lf, setLf] = useState('all'), [fold, setFoldS] = useState(() => prefs.get('gs.listOpen', null) === false), [noR, setNoR] = useState(() => !!(prefs.get('gs.panels', {}) || {}).R), [soloK, setSoloK] = useState(0);
   useEffect(() => setLf('all'), [id]);
-  const setFold = v => { setFoldS(v); prefs.set('gs.listOpen', !v); };
-  const setPanel = v => { setNoR(v); prefs.set('gs.panels', { ...(prefs.get('gs.panels', {}) || {}), R: v }); };
+  // the keys read these, not the render's own values, so a key pressed again before the keys are set up anew still turns it back
+  const foldR = useRef(fold), noRR = useRef(noR); foldR.current = fold; noRR.current = noR;
+  const setFold = v => { foldR.current = v; setFoldS(v); prefs.set('gs.listOpen', !v); };
+  const setPanel = v => { noRR.current = v; setNoR(v); prefs.set('gs.panels', { ...(prefs.get('gs.panels', {}) || {}), R: v }); };
   useEffect(() => { if (!w) return; let off = null, live = true;
     PARTS.marking().then(m => { if (!live) return; MK = m; off = m.start({ toast: text => toast(text), openStudent: i => pickRef.current(i), changed: () => tick(n => n + 1) }); tick(n => n + 1); });
     return () => { live = false; if (off) off(); }; }, [w]);
@@ -310,9 +424,11 @@ export default function MarkScreen({ route, classes }) {
     const offs = [
       register({ id: 'mark-next', keys: ['arrowdown', 'arrowright'], label: 'mark.next', when: () => !solo && !(MK && MK.M.pickedNow()), run: () => step(1) }),
       register({ id: 'mark-prev', keys: ['arrowup', 'arrowleft'], label: 'mark.prev', when: () => !solo && !(MK && MK.M.pickedNow()), run: () => step(-1) }),
+      register({ id: 'mark-side', keys: 'b', label: 'mark.sp_key', group: 'mark.score', when: () => !solo && !!spCtl.current, run: () => spCtl.current.toggle() }),
+      register({ id: 'mark-calc', keys: '=', label: 'mark.calc', when: () => !!MK && !Calc && !MK.M.resizable(), run: openCalc }),
       register({ id: 'mark-unscored', keys: 'n', label: 'mark.next_score', when: () => !!MK && !solo, run: () => { if (!MK.M.nextUnscored()) toast(t('mark.everyone_scored')); } }),
-      register({ id: 'mark-list', keys: '[', label: 'mark.list_keep', when: () => !solo, run: () => setFold(!fold) }),
-      register({ id: 'mark-panel', keys: ']', label: 'mark.panel_fold', run: () => setPanel(!noR) }),
+      register({ id: 'mark-list', keys: '[', label: 'mark.list_keep', when: () => !solo, run: () => setFold(!foldR.current) }),
+      register({ id: 'mark-panel', keys: ']', label: 'mark.panel_fold', run: () => setPanel(!noRR.current) }),
       register({ id: 'mark-solo', keys: 'i', label: 'mark.solo_start', when: () => !solo && tab === 'mark', run: soloStart }),
       // F turns Feedback complete on or off; Shift F sets it on and goes to the next student
       register({ id: 'mark-fb', keys: 'f', label: 'mark.fb_key', group: 'mark.score', when: () => !!MK && MK.M.fmNow() && !noScore(w.batch.students[cur]), run: e => { if (!e.shiftKey) return MK.M.setFb(!w.batch.students[cur].grade.fb); MK.M.setFb(true); if (!solo) step(1); } }),
@@ -326,7 +442,7 @@ export default function MarkScreen({ route, classes }) {
     const shut = e => { if (solo && (e.key === '/' || e.key === '[' || e.key === '?' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'))) e.preventDefault(); };
     addEventListener('keydown', shut, true);
     return () => { removeEventListener('keydown', shut, true); offs.forEach(f => f()); };
-  }, [w, cur, lf, fold, noR, solo, fm, tab]);
+  }, [w, cur, lf, fold, noR, solo, fm, tab, Calc]);
   const cls = w && w.batch.classId != null ? (w.lib.classes || []).find(c => c.id === w.batch.classId) : null;
   const marked = w ? w.batch.students.filter(isMarked).length : 0, n = w ? w.batch.students.filter(st => !st.gap || st.files.length).length : 0;
   const close = () => (cls ? go('class', cls.id) : go('home'));
@@ -350,17 +466,20 @@ export default function MarkScreen({ route, classes }) {
       : !w ? <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />
       : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} E={out.E} cur={cur} onOpen={openOn} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
       : <><div class="mk-body">
-        {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} />}
+        {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} onHide={MK ? () => hideNames() : null} onShuffle={() => hideNames(true)} />}
         <div class="mk-mid">
           {MK && <MK.Tools />}
-          <Paper batch={w.batch} cur={cur} zoom={zoom} ver={ver} FU={FU} />
+          <Paper batch={w.batch} cur={cur} zoom={zoom} ver={ver} FU={FU} ctl={spCtl} onSp={setSp} />
           {FU && light && <FU.LightPanel onClose={() => setLight(false)} />}
-          <div class="mk-zoom">{noR && <IconButton icon="chl" label={t('mark.panel_show')} kbd="]" onClick={() => setPanel(false)} data-panelshow />}{FU && FU.rescanCount() > 0 && <IconButton icon="flag" label={t('mark.rs_title_n', { n: FU.rescanCount() })} title={t('mark.rs_title_n', { n: FU.rescanCount() })} onClick={() => setRescans(true)} data-rescans />}{FU && <IconButton icon="sun" label={t('mark.l_title')} aria-pressed={light ? 'true' : 'false'} onClick={() => setLight(v => !v)} data-light />}<IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => { const z = Math.max(0.5, Math.round((zoom - 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} />
+          <div class="mk-zoom">{sp.n > 0 && <IconButton icon="slides" label={t('mark.sp_open')} kbd="B" aria-pressed={sp.shown ? 'true' : 'false'} onClick={() => spCtl.current && spCtl.current.toggle()} data-spbtn />}{noR && <IconButton icon="chl" label={t('mark.panel_show')} kbd="]" onClick={() => setPanel(false)} data-panelshow />}{FU && FU.rescanCount() > 0 && <IconButton icon="flag" label={t('mark.rs_title_n', { n: FU.rescanCount() })} title={t('mark.rs_title_n', { n: FU.rescanCount() })} onClick={() => setRescans(true)} data-rescans />}{FU && <IconButton icon="sun" label={t('mark.l_title')} aria-pressed={light ? 'true' : 'false'} onClick={() => setLight(v => !v)} data-light />}<IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => { const z = Math.max(0.5, Math.round((zoom - 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} />
             <span>{t('mark.zoom', { n: Math.round(zoom * 100) })}</span>
             <IconButton icon="plus" label={t('mark.zoom_in')} onClick={() => { const z = Math.min(3, Math.round((zoom + 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} /></div>
         </div>
-        {!noR && <ScorePanel batch={w.batch} cur={cur} FU={FU} fm={fm} solo={!!solo} first={at <= 0} last={at < 0 || at >= order.length - 1} onNext={() => step(1)} onPrev={() => step(-1)} />}
+        {!noR && <ScorePanel batch={w.batch} cur={cur} FU={FU} fm={fm} solo={!!solo} first={at <= 0} last={at < 0 || at >= order.length - 1} onCalc={openCalc} onNext={() => step(1)} onPrev={() => step(-1)} />}
       </div>
+      {Calc && MK && <Calc M={MK.M} onClose={() => setCalc(null)} />}
+      {CV && cvDlg && cvDlg.k === 'anon' && <CV.AnonDialog ctx={cvCtx} onClose={() => setCvDlg(null)} onCheck={i => setCvDlg({ k: 'check', start: i, back: 'anon' })} />}
+      {CV && cvDlg && cvDlg.k === 'check' && <CV.CheckCovers ctx={cvCtx} start={cvDlg.start} onDone={() => { setCvDlg(cvDlg.back ? { k: cvDlg.back } : null); cvCtx.reopen(); }} />}
       {rep && <rep.OpenedBar key={w.batch.id} onList={() => setRepList(true)} />}
       {FU && carried && <FU.CarryBox onClose={() => setCarried(false)} />}
       {FU && rescans && <FU.Rescans onClose={() => setRescans(false)} onGo={pick} />}

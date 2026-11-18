@@ -31,7 +31,7 @@ export function loadTools() {
   const { checkInk } = state();
   if (checkInk) setCheckInk(checkInk);
 }
-export function chooseTool(t) { K.commitEditors(); const s = state(); if (s.once) use({ once: null }); use({ tool: t }); if (t !== 'select') { use({ selected: null }); K.redrawAll(); } tell(); }
+export function chooseTool(t) { K.commitEditors(); stampOn = false; const s = state(); if (s.once) use({ once: null }); use({ tool: t }); if (t !== 'select') { use({ selected: null }); K.redrawAll(); } tell(); }
 export function chooseInk(k) { use({ inkColor: k }); prefs.set('gs.ink', k); const s = state(); if (s.selected && !s.selected.fresh && s.selected.mark.t !== 'hl' && s.selected.mark.t !== 'check') { K.snap(s.selected.page); s.selected.mark.color = COLORS[k]; K.changed(s.selected.page); } tell(); }
 export function chooseHl(k) { use({ hlColor: k }); prefs.set('gs.hl', k); tell(); }
 export function chooseWidth(w) { use({ penW: w }); prefs.set('gs.penW', w); tell(); }
@@ -184,7 +184,30 @@ export const flushers = new Set();
 export async function saveNowDone() { await Promise.all([...flushers].map(f => f())); if (saveT) { clearTimeout(saveT); saveT = null; K.saveNow(); } while (saveState === 'saving') await new Promise(r => setTimeout(r, 30)); }
 
 // Every page on screen gets the current app's pointer handling once its canvas is there.
-export function bind(pg, wrap) { pg.wrap = wrap; if (pg.bound) return; pg.bound = true; K.bindPage(pg); }
+export function bind(pg, wrap) { pg.wrap = wrap; if (pg.bound) return; pg.bound = true; K.bindPage(pg); reach(pg); }
+// The marks a tablet can't right-click for (inventory 294): a finger or a pencil held still for half a second opens the same menu as a
+// right-click, and the Stamp tool in the strip opens it wherever she taps. A right-click still works.
+let stampOn = false;
+export const stampTool = () => stampOn;
+export function setStampTool(on) { K.commitEditors(); stampOn = !!on; if (on && state().once) endOnce(); tell(); }
+function menuHere(pg, cx, cy) {
+  const r = pg.canvas.getBoundingClientRect(), x = (cx - r.left) / pg.s, y = (cy - r.top) / pg.s;
+  if (x < 0 || y < 0 || x > pg.W || y > pg.H || pg.editing || state().activeEditor) return false;
+  K.commitEditors(); if (state().once) endOnce(); openMenu(pg, x, y, cx, cy); return true;
+}
+function reach(pg) {
+  const c = pg.canvas; let tm = 0, at = null;
+  const stop = () => { clearTimeout(tm); tm = 0; at = null; };
+  // the Stamp tool: before the current app's own handling, so no mark is started
+  pg.wrap.addEventListener('pointerdown', e => { if (!stampOn || e.target !== pg.canvas || e.button !== 0) return; e.preventDefault(); e.stopPropagation(); menuHere(pg, e.clientX, e.clientY); }, true);
+  c.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' || e.button !== 0) return; stop();
+    at = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    tm = setTimeout(() => { const a = at; stop(); if (!a) return; c.dispatchEvent(new Event('gsdrop')); menuHere(pg, a.x, a.y); }, 550);
+  });
+  c.addEventListener('pointermove', e => { if (at && e.pointerId === at.id && Math.hypot(e.clientX - at.x, e.clientY - at.y) > 8) stop(); });
+  for (const k of ['pointerup', 'pointercancel']) c.addEventListener(k, stop);
+}
 
 // The hooks: called by the lifted code when it would, in the current app, redraw a panel, open an editor or say something.
 // The page closing or reloading with a save still waiting (or a box still being typed in): saved at once, as the current app does.
@@ -280,6 +303,8 @@ export function scoreStamp(row) {
   const g = gradeOf(st); if (g.total == null) return false;
   startPlace(K.scoreStampText(g, st)); return true;
 }
+// any words as a score sticker (the calculator's Score sticker)
+export function stampText(text) { if (!state().pages.length) return false; startPlace(text); return true; }
 function startPlace(text, extra = {}) {
   stopPlace();
   const gh = document.createElement('canvas'); gh.className = 'mk-ghost'; gh.hidden = true; document.body.append(gh);

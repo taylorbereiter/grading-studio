@@ -155,3 +155,27 @@ test('typed notes: the same keys make the same notes as the current app, each ch
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('typed notes: a saved comment goes in where the caret was', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  await p.evaluate(() => localStorage.setItem('gs.bank', JSON.stringify(['Speak a little slower.', 'Good eye contact.'])));
+  const z = path.join(dir, 'Speech.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await p.waitForSelector('[data-tnopen]', { timeout: 60000 });
+  await p.click('[data-tnopen]'); await p.waitForSelector('.mk-tn .tn .tned');
+  await p.click('.mk-tn .tned'); await p.keyboard.type('Opening: '); await calm(p);
+  await p.click('[data-tnbank]'); await p.waitForSelector('.pop [role="menuitem"]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(b => /Good eye/.test(b.textContent)).click());
+  await calm(p);
+  assert.equal((await tnOf(p, 'next', 0)).l[0].s, 'Opening: Good eye contact.');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

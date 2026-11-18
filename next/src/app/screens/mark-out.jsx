@@ -6,10 +6,12 @@ import { h, Fragment } from 'preact';
 import { useState, useEffect, useMemo } from 'preact/hooks';
 import { Button, Checkbox, Segmented, Icon, Progress, Card, EmptyState, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
-import { state, fmtNum, fmtPct, rowsTop, maxPoints } from '../../engines/gcore.js';
+import { state, fmtNum, fmtPct, rowsTop, maxPoints, gradeOf } from '../../engines/gcore.js';
 import { shownName, anonOn } from '../../engines/gdraw.js';
 import '../mark/lines.js';
 import '../mark/setup-lines.js';
+import '../mark/paper-lines.js';
+import { PARTS } from '../router.js';
 
 async function copy(text) {
   try { await navigator.clipboard.writeText(text); return true; }
@@ -26,16 +28,27 @@ export function Grades({ E, onOpen }) {
   const banded = !ib && !!(E.X.meGrade() || {}).bands, rows = E.rows();
   const save = (name, blob) => E.saveFile(name, blob);
   const copyAll = async k => { const r = E.copyText(k); await copy(r.text); toast(t('setup.copied_rows', { n: r.n })); };
+  const [view, setView] = useState('table'), [SH, setSH] = useState(null), [only, setOnly] = useState(false);
+  // a paper whose own grade differs from hers, has more than one grade, or a doubtful one (src/tabs.js glPaperOf): how many, and just those
+  const check = r => !!(r.paper && (r.paper.ask || r.paper.differs)), nCheck = rows.filter(check).length;
+  useEffect(() => { if (view === 'sheet' && !SH) PARTS.sheet().then(setSH, e => console.error(e)); }, [view]);
+  const views = <Segmented label={t('paper.gs_view')} size="sm" value={view} onChange={setView} options={[{ value: 'table', label: t('paper.gs_table') }, { value: 'sheet', label: t('paper.gs_sheet') }]} />;
+  if (view === 'sheet') return <section class="mk-out mk-grades" aria-labelledby="mk-g-h">
+    <header class="oh"><h2 id="mk-g-h" class="t3">{t('paper.gs_sheet')}</h2>{views}</header>
+    {SH ? <SH.Sheet E={E} onOpen={onOpen} /> : <div class="loading" aria-busy="true" />}
+    <footer class="of"><Button variant="primary" icon="download" onClick={async () => save('Grade sheet - ' + b.name + '.pdf', await E.sheetPdf())} data-sheetpdf>{t('setup.g_sheet')}</Button></footer>
+  </section>;
   return <section class="mk-out mk-grades" aria-labelledby="mk-g-h">
-    <header class="oh"><h2 id="mk-g-h" class="t3">{t('mark.grades')}</h2><span class="mute" id="glSum">{E.summary()}</span>
+    <header class="oh"><h2 id="mk-g-h" class="t3">{t('mark.grades')}</h2>{views}<span class="mute" id="glSum">{E.summary()}</span>
       {cls && <Segmented label={t('setup.g_order')} size="sm" value={E.order()} onChange={v => { E.setOrder(v); tick(n => n + 1); }}
         options={[{ value: 'folder', label: t('setup.g_folder') }, { value: 'roster', label: t('setup.g_roster', { name: cls.name }) }]} />}</header>
     <p class="mute help">{t('setup.g_help')}</p>
+    {nCheck > 0 && <p class="gs-check" data-gcheck>{t('paper.g_check', { n: nCheck })} <button type="button" class="link" onClick={() => setOnly(!only)} data-gonly>{t(only ? 'paper.g_check_all' : 'paper.g_check_only')}</button></p>}
     <div class="tbl gl"><table id="glTable"><thead><tr><th>{t('setup.g_num')}</th><th>{t('setup.g_student')}</th>
       {rub && su.criteria.map(c => <th data-raw>{c}</th>)}
       {ib ? <th>{t('setup.g_status')}</th> : <><th>{t('setup.g_total', { n: maxPoints() })}</th><th>{t('setup.g_pct')}</th></>}
       {banded && <th>{t('setup.g_band')}</th>}<th title={t('setup.g_paper_tip')}>{t('setup.g_paper')}</th><th>{t('setup.g_comment')}</th></tr></thead>
-      <tbody>{rows.map(r => r.missing
+      <tbody>{rows.filter(r => !only || !nCheck || check(r)).map(r => r.missing
         ? <tr class="gap"><td class="n">{r.n}</td><td class="nm"><span data-raw>{r.missing}</span> <span class="mute">{t('setup.g_no_folder')}</span></td>
           {rub && su.criteria.map(() => <td />)}<td />{!ib && <td />}{banded && <td />}<td /><td /></tr>
         : <tr data-i={r.i}><td class="n">{r.n}</td>
@@ -67,12 +80,19 @@ function paperCell(p) {
 const oneDp = v => fmtNum(Math.round(v * 10) / 10);
 export function Insights({ E, onOpen }) {
   const s = useMemo(() => E.stats(), [E]), ib = E.X.ibSetup(), su = state().setup;
+  const [view, setView] = useState('overview'), [CS, setCS] = useState(null);
+  useEffect(() => { if (view === 'cons' && !CS) PARTS.cons().then(setCS, e => console.error(e)); }, [view]);
+  const views = <Segmented label={t('paper.i_view')} size="sm" value={view} onChange={setView} options={[{ value: 'overview', label: t('paper.i_overview') }, { value: 'cons', label: t('paper.i_cons') }]} />;
+  if (view === 'cons') return <section class="mk-out mk-ins" aria-labelledby="mk-i-h">
+    <header class="oh"><h2 id="mk-i-h" class="t3">{t('paper.i_cons')}</h2>{views}</header>
+    {CS ? <CS.Consistency E={E} onOpen={onOpen} /> : <div class="loading" aria-busy="true" />}
+  </section>;
   const tile = (l, v, sub, main) => <div class={'tile' + (main ? ' main' : '')}><div class="tl">{l}</div><div class="tv num">{v}</div>{sub && <div class="ts mute">{sub}</div>}</div>;
   const of = v => fmtNum(v) + ' / ' + fmtNum(s.max);
   const most = s.bins.length ? Math.max(1, ...s.bins.map(x => x.who.length)) : 1;
   const groups = [['setup.i_not_scored', s.notScored], ['setup.i_partial', s.partial], ['setup.i_missing', s.missing], ['setup.i_excused', s.excused], ['setup.i_off_scale', s.offScale], ['setup.i_own_off', s.ownOff], ['setup.i_left_out', s.leftOut], ['setup.i_late', s.counted.filter(x => x.late)]].filter(g => g[1].length);
   return <section class="mk-out mk-ins" aria-labelledby="mk-i-h">
-    <header class="oh"><h2 id="mk-i-h" class="t3">{t('mark.insights')}</h2></header>
+    <header class="oh"><h2 id="mk-i-h" class="t3">{t('mark.insights')}</h2>{views}</header>
     <p class="mute" id="ovLeft">{E.leftOut(s)}</p>
     {s.n > 0 && !ib && <div class="tiles" id="ovTiles">{s.meanPct != null
       ? <>{tile(t('setup.i_average'), E.X.pctAvgText(s.meanPct), oneDp(s.mean) + ' / ' + fmtNum(s.max), true)}{tile(t('setup.i_middle'), s.medPct + '%', of(s.median))}{tile(t('setup.i_lowest'), s.lowPct + '%', of(s.low))}{tile(t('setup.i_highest'), s.highPct + '%', of(s.high))}</>
@@ -100,6 +120,35 @@ export function Insights({ E, onOpen }) {
 }
 
 /* ---------------- Return ---------------- */
+// Anchor papers (src/anchors.js anchorCardHtml, anchorExport): the high, middle and low paper, and one button for all three.
+function AnchorCard({ E, onOpen }) {
+  const X = E.X, b = state().batch, [, tick] = useState(0), [busy, setBusy] = useState(false);
+  if (!X.anchorsHere() && !b.students.some(s => s.grade.anchor)) return null;
+  const n = X.ANCHORS.filter(([k]) => X.anchorOf(k) >= 0).length, cover = X.anchorCoverOn();
+  const first = X.ANCHORS.find(([k]) => X.anchorOf(k) >= 0);
+  const out = async () => {
+    setBusy(true);
+    try {
+      const r = await E.anchorsOut();
+      if (r.none) return toast(t('paper.an_first'));
+      E.saveFile(r.name, r.blob);
+      toast(r.n === 1 ? t('paper.an_saved_one', { name: r.name }) : t('paper.an_saved_n', { n: r.n }));
+      if (r.failed.length) toast(t('paper.an_failed', { list: r.failed.map(f => f.why ? f.lv + ' (' + f.why + ')' : t('paper.an_no_pages', { lv: f.lv })).join(', ') }));
+    } catch (e) { console.error(e); toast(t('paper.an_wrong', { e: e.message || String(e) })); }
+    finally { setBusy(false); }
+  };
+  return <Card title={t('paper.an_h')} id="rtAnchors">
+    {!n && <p class="mute">{t('paper.an_pick')}</p>}
+    <ul class="anchlist">{X.ANCHORS.map(([k, name]) => { const j = X.anchorOf(k), st = j >= 0 ? b.students[j] : null, g = st && gradeOf(st);
+      const sc = g && g.total != null ? fmtNum(g.total) + ' / ' + fmtNum(g.outOf != null ? g.outOf : maxPoints()) + (g.pct != null ? ' · ' + fmtPct(g.pct) : '') : g && g.pct != null ? fmtPct(g.pct) : '';
+      return <li class={st ? '' : 'none'} data-anchli={k}><b>{t(k === 'high' ? 'mark.an_high' : k === 'mid' ? 'mark.an_mid' : 'mark.an_low')}</b>
+        {st ? <><button type="button" class="link" onClick={() => onOpen(j)} data-raw>{shownName(st, j)}</button><span class="mute">{sc}</span></> : <span class="mute">{t('paper.an_none')}</span>}</li>; })}</ul>
+    {n > 0 && <>
+      <Checkbox checked={cover} onChange={v => { E.anchorCover(v); tick(x => x + 1); }} label={t('paper.an_cover')} />
+      <p class="mute">{t('paper.an_files', { name: X.anchorFile(first[0], 0, 1), n })} {t(cover ? 'paper.an_cover_say' : 'paper.an_plain')}</p>
+      <Button variant="primary" disabled={busy} onClick={out} data-anchout>{t(busy ? 'paper.an_making' : 'paper.an_out')}</Button></>}
+  </Card>;
+}
 const when = ms => { const d = new Date(ms); return d.toDateString() === new Date().toDateString() ? t('setup.r_today', { t: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) }) : t('setup.r_on', { d: d.toLocaleDateString([], { day: 'numeric', month: 'short' }) }); };
 export function Return({ E, cur, onOpen }) {
   const [, tick] = useState(0), [say, setSay] = useState(''), [bar, setBar] = useState(null), [keep, setKeep] = useState(true), [sheet, setSheet] = useState(true), [dpi, setDpi] = useState(150);
@@ -169,6 +218,7 @@ export function Return({ E, cur, onOpen }) {
         {sent.length > 0 && <ul class="sent">{sent.slice(0, 6).map(y => <li><button type="button" class="link" onClick={() => onOpen(y.i)} data-raw>{shownName(y.x, y.i)}</button> <span class="mute">{t('setup.r_sent', { when: when(y.x.grade.sent) })}</span></li>)}
           {sent.length > 6 && <li class="mute">{t('setup.r_more', { n: sent.length - 6 })}</li>}</ul>}
         {who ? <Button data-rtone onClick={one}>{t('setup.r_one_btn', { name: who })}</Button> : <p class="mute">{t('setup.r_one_none')}</p>}</Card>
+      <AnchorCard E={E} onOpen={onOpen} />
     </aside>
   </section>;
 }

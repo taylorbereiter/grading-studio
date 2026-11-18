@@ -87,7 +87,7 @@ The current app's own legs (web address and double-clicked copy, main against th
 | `gs.wlCodes` | students | work | json | the watch list’s private codes for students | watch.js |
 | `gs.focus` | students | work | json | the work timer’s log of marking sessions | app/drive.js, focus.js, merge.js |
 | `gs.lastBackup` | students | work | json | when the last take-home file or backup was made | app/wiring.js, newyear.js, shell.js, takehome.js |
-| `gs.sheetfound` | students | work | json | a gradebook sheet column found for a class | app/gradesheet.js, setupin.js |
+| `gs.sheetfound` | students | pref | json | grade sheet: also show grades found on the papers | app/gradesheet.js, setupin.js |
 | `gs.snipMarks` | students | pref | json | snip tool: keep marks in the picture | snip.js |
 | `gs.syncT` | students | legacy | json | old sync times per key (before 1.27) | (no longer in the source) |
 | `gs.anchorCover` | students | pref | json | a grading screen setting | anchors.js, setupin.js |

@@ -86,6 +86,7 @@ export const leftOut = s => X.leftOutText(s);
 // The options the current Return box keeps (the same keys), read fresh each time.
 export const opts = () => ({ one: X.xOne(), names: X.xNames(), edit: X.xEdit(), key: X.keyOn(), fb: X.fbOn(), all: X.xAll(), early: X.xEarly() });
 const KEYS = { one: 'gs.xone', names: 'gs.xnames', edit: 'gs.xedit', fb: 'gs.xfb', all: 'gs.xall', early: 'gs.xearly' };
+export const anchorCover = v => store.set('gs.anchorCover', !!v);
 export function setOpt(k, v) { if (k === 'key') X.setKey(o => { o.on = v; }); else if (KEYS[k]) store.set(KEYS[k], v); }
 // What would go back now: the files, from how many students, who is left out and why (the current Return box's counts).
 export function plan() {
@@ -161,6 +162,32 @@ export async function exportOne(st) {
     else { const z = {}; for (const n of names) z[n] = [files[n], { level: 0 }]; name = (o.names ? X.outStem(st) : st.key + ' - ' + b.name) + '.zip'; blob = new Blob([state().fflate.zipSync(z)], { type: 'application/zip' }); }
     if (state().batch === b) M.markSent(st);
     return { name, blob, n: names.length, failed };
+  } finally { busy = false; }
+}
+// Anchor papers (src/anchors.js anchorExport): every file of each picked paper, named for the assignment and its level ("Essay -
+// Summative High.pdf"), with names covered the way an assistant's copy covers them unless she turned that off; more than one in a ZIP.
+export async function anchorsOut() {
+  if (busy) throw new Error('busy');
+  const picked = X.ANCHORS.map(([k]) => ({ k, j: X.anchorOf(k) })).filter(x => x.j >= 0);
+  if (!picked.length) return { none: true };
+  busy = true;
+  try {
+    await M.saveNowDone(); await load();
+    const b = state().batch, cover = X.anchorCoverOn(), files = {}, failed = [];
+    if (cover) await X.classCommon();
+    for (const { k, j } of picked) {
+      const st = b.students[j], docs = X.anchorDocs(st);
+      if (!docs.length) { failed.push({ lv: X.anchorLabel(k), why: '' }); continue; }
+      for (let n = 0; n < docs.length; n++) {
+        try { files[X.anchorFile(k, n, docs.length)] = await X.anchorDocPdf(st, docs[n], cover); }
+        catch (er) { console.error(er); failed.push({ lv: X.anchorLabel(k), why: X.exportWhy(er, false) }); }
+      }
+    }
+    const names = Object.keys(files);
+    if (!names.length) throw new Error(failed.map(f => f.lv + (f.why ? ' (' + f.why + ')' : '')).join(', ') || 'nothing could be made');
+    if (names.length === 1) return { name: names[0], blob: new Blob([files[names[0]]], { type: 'application/pdf' }), n: 1, failed };
+    const z = {}; for (const nm of names) z[nm] = [files[nm], { level: 0 }];
+    return { name: 'Anchor papers - ' + X.nameFreeText(b.name) + '.zip', blob: new Blob([state().fflate.zipSync(z)], { type: 'application/zip' }), n: names.length, failed };
   } finally { busy = false; }
 }
 // A file to her computer, as the current app's saveBlob does in a browser tab.

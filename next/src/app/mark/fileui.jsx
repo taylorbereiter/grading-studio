@@ -12,7 +12,7 @@ import { Checkbox, Segmented } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { GroupBand, GroupDialog } from './group.jsx';
 export { GroupBand };
-export { ScoreMore } from './score-more.jsx';
+export { ScoreMore, Anchors } from './score-more.jsx';
 import * as C from './change.js';
 import { Arrange } from './arrange.jsx';
 export { LightPanel, LightChip } from './light.jsx';
