@@ -229,4 +229,4 @@ function zipSay(z) {
 }
 // src/polish.js
 function isMac() { return /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent); }
-export { openingFacts, checkStack, checkFile, repHead, zipSay, troubleOf, troubleText, hash, textOf };
+export { openingFacts, checkStack, checkFile, repHead, zipSay, troubleOf, troubleText, hash, textOf, sortGuess, guessAmong, nameWords };

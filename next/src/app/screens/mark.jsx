@@ -309,6 +309,7 @@ function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onC
     {FU && M && <FU.Anchors st={st} />}
     <textarea class="mk-cmt" aria-label={t('mark.comment_for')} placeholder={t('mark.comment_for_ph')} value={gr.comment || ''} disabled={off} data-raw onInput={e => M.setComment(e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.blur(); }} />
     {M && <CommentChips text={gr.comment || ''} onAdd={c => M.setComment((gr.comment || '').trim() ? (gr.comment || '').replace(/\s+$/, '') + ' ' + c : c)} />}
+    {FU && M && <FU.PastWork st={st} />}
     {TN && M && <TN.NotesPart st={st} />}
     {!solo && <div class="foot"><IconButton icon="chl" label={t('mark.prev')} onClick={onPrev} disabled={first} />
       {fm ? <span class="grow" /> : <Button variant="primary" kbd="Enter" onClick={next} data-next>{t('mark.next_score')}</Button>}
@@ -447,6 +448,12 @@ export default function MarkScreen({ route, classes }) {
   const marked = w ? w.batch.students.filter(isMarked).length : 0, n = w ? w.batch.students.filter(st => !st.gap || st.files.length).length : 0;
   const close = () => (cls ? go('class', cls.id) : go('home'));
   const openSetup = () => PARTS.setup().then(m => setSu(m), e => console.error(e));
+  // Setup (the current app's More menu, This assignment): Rubric setup, Bring in files (several late papers at once, each sorted to its
+  // student: mark/bringin.jsx) and Partners and videos (mark/partners.jsx)
+  const [setupDlg, setSetupDlg] = useState(null);
+  const bringMany = () => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true; i.onchange = async () => { const B = await PARTS.bringin(); await B.bringFiles(await B.expand([...i.files]), o => setSetupDlg({ k: 'bring', B, ...o })); }; i.click(); };
+  const setupItems = [{ label: t('mark.su_menu'), icon: 'settings', onSelect: openSetup }, { label: t('mark.bf_menu'), icon: 'upload', onSelect: bringMany },
+    { label: t('mark.pv_menu'), icon: 'people', onSelect: () => PARTS.partners().then(P => setSetupDlg({ k: 'pv', P }), e => console.error(e)) }];
   return <div class={'markscreen' + (solo ? ' solo' : '') + (noR ? ' nor' : '')} data-tab={tab}>
     {solo && w && w.batch.students[cur] && <SoloBar name={shownName(w.batch.students[cur], cur)} asg={w.batch.name} onEnd={soloEnd} />}
     <header class="mk-top">
@@ -458,9 +465,12 @@ export default function MarkScreen({ route, classes }) {
       {w && <span class="mk-save mute" role="status" data-save={MK ? MK.M.saveLabel() : 'saved'}>{saveLine(MK ? MK.M.saveLabel() : 'saved')}</span>}
       {w && <span class="mk-prog mute">{t('mark.marked_of', { n: marked, of: n })}<Progress value={marked} max={Math.max(1, n)} label={t('mark.marked_of', { n: marked, of: n })} /></span>}
       {w && MK && !solo && <Button size="sm" icon="user" onClick={soloStart} title={t('mark.solo_tip')} kbd="I" data-solostart>{t('mark.solo_start')}</Button>}
-      {!solo && <Button icon="settings" size="sm" disabled={!w || !MK} onClick={openSetup} data-setupopen>{t('mark.setup')}</Button>}
+      {!solo && (w && MK ? <Menu label={t('mark.setup_tip')} trigger={b => <Button {...b} icon="settings" size="sm" title={t('mark.setup_tip')} data-setupopen>{t('mark.setup')}</Button>} items={setupItems} />
+        : <Button icon="settings" size="sm" disabled data-setupopen>{t('mark.setup')}</Button>)}
     </header>
     {su && <su.SetupDialog onClose={() => setSu(null)} />}
+    {setupDlg && setupDlg.k === 'bring' && <setupDlg.B.BringFiles rows={setupDlg.rows} dups={setupDlg.dups} onClose={() => setSetupDlg(null)} />}
+    {setupDlg && setupDlg.k === 'pv' && <setupDlg.P.Partners onClose={() => setSetupDlg(null)} />}
     <RubricAsk ask={ask} />
     {err ? <EmptyState icon="inbox" title={t(err.name === 'NotKept' ? 'mark.not_kept' : 'mark.page_bad')} text={err.name === 'NotKept' ? t('mark.not_kept_text') : ''} />
       : !w ? <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />

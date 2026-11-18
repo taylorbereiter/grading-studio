@@ -1140,5 +1140,123 @@
  "setup.sg_names_h": "Name covers",
  "setup.sg_names_about": "You cover names yourself in Check the covers. Finding them on its own can cover words that aren't names.",
  "setup.sg_names_mine": "Cover names myself",
- "setup.sg_names_find": "Also find typed names"
+ "setup.sg_names_find": "Also find typed names",
+ "setup.w_more": "Details for {name}",
+ "setup.w_scored": "{done} of {of} scored",
+ "setup.w_fb": "{done} of {of} feedback complete",
+ "setup.w_partial": {
+  "one": "{n} partial",
+  "other": "{n} partial"
+ },
+ "setup.w_off": {
+  "one": "{n} missing or excused",
+  "other": "{n} missing or excused"
+ },
+ "setup.w_early": "Returned {sent}/{of}",
+ "setup.w_early_tip": "Students who got theirs early, one at a time",
+ "setup.w_early_n": {
+  "one": "{n} student got theirs early",
+  "other": "{n} students got theirs early"
+ },
+ "setup.w_back_on": "Returned {d}",
+ "setup.w_brought": "Papers brought in {d}",
+ "setup.w_kept_not": "The papers aren’t kept in this browser",
+ "setup.w_grades": "Grades",
+ "setup.w_insights": "Insights",
+ "setup.w_return": "Return",
+ "setup.bf_title": "Bring in files",
+ "setup.bf_sub": {
+  "one": "{n} file, sorted by the names in the file names",
+  "other": "{n} files, sorted by the names in the file names"
+ },
+ "setup.bf_about": "Each file goes into that student’s submission in this download, tagged “Added by you”. Check the ones marked “Check” or “Choose”. Tick Late beside anyone you want marked late; nothing is taken off.",
+ "setup.bf_dups": {
+  "one": "{n} file is already here, so it’s left out.",
+  "other": "{n} files are already here, so they’re left out."
+ },
+ "setup.bf_none": "Those files are already here, so there’s nothing new to add",
+ "setup.bf_nothing": "No files found there",
+ "setup.bf_file": "File",
+ "setup.bf_to": "Goes to",
+ "setup.bf_late": "Late",
+ "setup.bf_late_all": "Mark all late",
+ "setup.bf_late_one": "Mark {file} late",
+ "setup.bf_to_for": "Who {file} goes to",
+ "setup.bf_choose": "Choose a student…",
+ "setup.bf_new": "New student…",
+ "setup.bf_skip": "Skip this file",
+ "setup.bf_t_skip": "Skipped",
+ "setup.bf_t_choose": "Choose",
+ "setup.bf_t_set": "Chosen by you",
+ "setup.bf_t_sure": "Matched by name",
+ "setup.bf_t_check": "Check",
+ "setup.bf_new_name": "The new student’s name",
+ "setup.bf_new_ok": "Add",
+ "setup.bf_new_tag": "New: {name}",
+ "setup.bf_both": "They have a different file with this name. Both stay.",
+ "setup.bf_now_missing": "Now marked missing.",
+ "setup.bf_now_excused": "Now marked excused.",
+ "setup.bf_go": {
+  "one": "Add {n} file",
+  "other": "Add {n} files"
+ },
+ "setup.bf_cancel": "Cancel",
+ "setup.bf_pick_one": "Choose a student for at least one file",
+ "setup.bf_done": "Added {files} to {students}.",
+ "setup.bf_nf": {
+  "one": "{n} file",
+  "other": "{n} files"
+ },
+ "setup.bf_ns": {
+  "one": "{n} student",
+  "other": "{n} students"
+ },
+ "setup.bf_done_late": {
+  "one": "Added {files} to {students}. {n} marked late.",
+  "other": "Added {files} to {students}. {n} marked late."
+ },
+ "setup.bf_bad": {
+  "one": "{n} file came in but can’t be opened here. Its card says why.",
+  "other": "{n} files came in but can’t be opened here. Each card says why."
+ },
+ "setup.mr_menu": "Files to match to a roster…",
+ "setup.mr_title": "Match files to students",
+ "setup.mr_sub": {
+  "one": "{n} file",
+  "other": "{n} files"
+ },
+ "setup.mr_class": "Class",
+ "setup.mr_class_opt": "{name} ({n})",
+ "setup.mr_about": "Matched by the names in the file and folder names. Check the ones marked “Check” or “Choose”.",
+ "setup.mr_student": "Student",
+ "setup.mr_no_roster": "Add a roster for this class first, on the class’s own page, then try again.",
+ "setup.mr_no_file": "No file yet: {names}",
+ "setup.mr_go": "Open {files} for {students}",
+ "setup.pv_title": "Partners and videos",
+ "setup.pv_about": "Pick each group’s partners: one grade covers the group, and a group with no video shares the first one’s paper and marks. Paste a link to a video, or choose a video file. You can also drop video files here, and each goes to the student named in its file name.",
+ "setup.pv_get": "Partners get",
+ "setup.pv_one": "One grade",
+ "setup.pv_own": "Their own scores",
+ "setup.pv_own_say": "The notes are shared either way.",
+ "setup.pv_same": "Same video as:",
+ "setup.pv_link_ph": "Paste a link to their video",
+ "setup.pv_link": "Link to the video for {name}",
+ "setup.pv_file": "File…",
+ "setup.pv_file_tip": "A video file on this computer",
+ "setup.pv_unfile": "Take the file off",
+ "setup.pv_with": "With:",
+ "setup.pv_partners": "Partners",
+ "setup.pv_pick": "Partners for {name}",
+ "setup.pv_locked": "Already in the group",
+ "setup.pv_done": "Done",
+ "setup.pv_save": "Save",
+ "setup.pv_saving": "Saving…",
+ "setup.pv_saved": {
+  "one": "Saved {n} group or video",
+  "other": "Saved {n} groups and videos"
+ },
+ "setup.pv_miss": {
+  "one": "This file didn’t match a name: {names}. Use File… on the right row.",
+  "other": "These files didn’t match a name: {names}. Use File… on the right row."
+ }
 }

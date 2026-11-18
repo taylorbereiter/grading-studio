@@ -42,6 +42,7 @@ const twoZip = async () => zipOf({ 'Aria Testwell/Outline.pdf': await makePaper(
 const su = p => p.evaluate(() => JSON.parse(JSON.stringify(window.__mark.state().setup)));
 const rub = (p, i) => p.evaluate(i => window.__mark.state().batch.students[i].grade.rubric.slice(), i);
 const tap = (p, sel) => p.$eval(sel, e => { e.scrollIntoView({ block: 'center' }); e.click(); });
+const setupDo = async (p, label) => { await p.click('[data-setupopen]'); await p.waitForFunction(l => [...document.querySelectorAll('.pop [role="menuitem"]')].some(e => e.textContent.includes(l)), {}, label); await p.evaluate(l => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.includes(l)).click(), label); };
 const typeIn = async (p, sel, text) => { await p.$eval(sel, e => e.select()); await p.type(sel, text); };
 
 test('rubric setup: rows renamed, taken out (the scores after it move up), added, what a score means, a grading scale, Save as one step with Undo and Redo, her own rubric brought in for everyone; the current app opens the same', async () => {
@@ -65,7 +66,7 @@ test('rubric setup: rows renamed, taken out (the scores after it move up), added
   const before = await su(p);
 
   // Setup: Ideas becomes Thesis, Organization comes out (its score goes, Language's moves up), a row added, what 4 means on Thesis, steps of 5
-  await p.click('[data-setupopen]');
+  await setupDo(p, 'Rubric setup');
   await p.waitForSelector('dialog[open] [data-setup]');
   await typeIn(p, 'dialog[open] input[data-suname="0"]', 'Thesis');
   await tap(p, 'dialog[open] [data-surm="1"]');
@@ -98,7 +99,7 @@ test('rubric setup: rows renamed, taken out (the scores after it move up), added
 
   // her own rubric, a PDF, for every student: each gets a page of it after their work
   fs.writeFileSync(path.join(dir, 'My rubric.pdf'), await makePaper({ title: 'My rubric' }));
-  await p.click('[data-setupopen]');
+  await setupDo(p, 'Rubric setup');
   await p.waitForSelector('dialog[open] [data-suup]');
   const [ch2] = await Promise.all([p.waitForFileChooser(), tap(p, 'dialog[open] [data-suup]')]);
   await ch2.accept([path.join(dir, 'My rubric.pdf')]);
@@ -225,7 +226,7 @@ test('the rubric bank in Rubric setup: a saved rubric used (its rows by place), 
   const until = async (f, why) => { for (let k = 0; k < 50; k++) { if (await f()) return; await new Promise(r => setTimeout(r, 200)); } assert.fail(why); };
   const bankHas = async name => { for (let k = 0; k < 50; k++) { const b = await kvBank(); if (b && b.rubrics.some(x => x.name === name)) return b; await new Promise(r => setTimeout(r, 200)); } return kvBank(); };
   // Use the saved one: its rows, by place
-  await p.click('[data-setupopen]');
+  await setupDo(p, 'Rubric setup');
   await p.waitForSelector('dialog[open] [data-subuse="R1"]', { timeout: 10000 });
   await tap(p, 'dialog[open] [data-subuse="R1"]');
   await p.waitForFunction(() => document.querySelector('dialog[open] input[data-suname="0"]').value === 'Understanding');
@@ -234,7 +235,7 @@ test('the rubric bank in Rubric setup: a saved rubric used (its rows by place), 
   assert.deepEqual((await su(p)).criteria, ['Understanding', 'Evidence', 'Language']);
   assert.equal((await su(p)).rubricName, 'Story analysis');
   // Save to the bank… in Unit 2
-  await p.click('[data-setupopen]');
+  await setupDo(p, 'Rubric setup');
   await p.waitForSelector('dialog[open] [data-subsave]');
   await typeIn(p, 'dialog[open] input[data-suname="2"]', 'Voice');
   await tap(p, 'dialog[open] [data-subsave]');
@@ -262,6 +263,39 @@ test('the rubric bank in Rubric setup: a saved rubric used (its rows by place), 
   b = await kvBank(); const sc = b.scales.find(x => x.name === 'Out of 12');
   assert.ok(sc); assert.equal(sc.scale[12], 100); assert.equal(sc.scale[11], 95);
   await tap(p, 'dialog[open] [data-sucancel]');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('learning goals in Rubric setup: a goal picked beside two rows is kept with the setup, and the current app opens the same', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  const seed = withCard(), lib = JSON.parse(seed.ls['gs.lib']);
+  lib.goals = [{ id: 'g1', name: 'Uses evidence' }, { id: 'g2', name: 'Clear structure' }]; seed.ls['gs.lib'] = JSON.stringify(lib);
+  await p.goto(srv.url + 'blank'); await plant(p, seed);
+  const z = path.join(dir, 'Goals.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+  await setupDo(p, 'Rubric setup');
+  await p.waitForSelector('dialog[open] select[data-sugoal="0"]');
+  assert.deepEqual((await p.$$eval('dialog[open] select[data-sugoal="0"] option', os => os.map(o => o.textContent))).slice(1), ['Uses evidence', 'Clear structure'], 'her goals to pick from');
+  await p.select('dialog[open] select[data-sugoal="0"]', 'g1');
+  await p.select('dialog[open] select[data-sugoal="2"]', 'g2');
+  await tap(p, 'dialog[open] [data-susave]');
+  await p.waitForFunction(() => JSON.stringify(window.__mark.state().setup.goals) === '["g1",null,"g2"]');
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), id);
+  await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  assert.deepEqual(await m.evaluate(() => window.__gs.state().setup.goals), ['g1', null, 'g2']);
   assert.deepEqual(errors, []);
   await ctx.close();
 });
