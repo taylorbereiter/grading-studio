@@ -418,3 +418,26 @@ few pure functions it needs from gopen, so the marking tools (their own part, `r
 **Undo.** The app has one undo list (`services/undo.js`). The lifted stack stays the engine that knows how to put a page's marks, a
 score or a setting back; each step it pushes records one entry in the app's list whose undo and redo run the lifted ones, so
 Ctrl/Cmd+Z, Ctrl+Y, the toast and the toolbar all take back marks, and the two lists move together.
+
+**Grades, Insights and Return (stage 4 part e).** `engines/gexport.js` lifts what leaves the marking screen: `exportPlan`, `nameOut`,
+`flattenDoc` and the feedback page (src/app/export.js, src/feedback.js), the grades read off papers and the grade sheet
+(`scanAll`, `buildSheetPdf`, src/app/gradesheet.js), the Grades tab's rows and copies (`gradeRows`, `tableRow`, `csvCell`,
+src/app/dialogs.js and src/grades.js), Insights' numbers (`classStats`, src/rubrics.js) and anchor papers' files (src/anchors.js).
+`app/mark/out.js` runs them as the current Return box and Grades tab do; the screens are `screens/mark-out.jsx`, a part of their
+own (`router.js PARTS.out`). The engine is 43 KB squeezed (it brings the Word drawing that one-PDF-per-student needs, and the
+names engine the grade sheet uses), so it loads on its own like pdf.js (`PARTS.outEngine`, with `PARTS.pdflib` and `PARTS.zip`),
+under the any-chunk budget rather than the route budget. Saving "Returned", the export time and a student's own early export go
+through `app/mark/marking.js` (`markReturned`, `setReturned`, `markSent`), so through `students/write.js`.
+`wordScoresAll` (reading a Word rubric's score before an export) writes the library when a rubric page sets the class's scale, so it
+is not lifted here; it comes with Word papers (part d).
+
+**Proof.** `next/test/browser/mark-out.test.js`: the first student's paper, flattened by both apps with the same options, renders to
+the same pixels on every page (the PDFs' own creation dates differ, so bytes are compared through pdf.js); the Grades tab's
+spreadsheet is main's file byte for byte; the Return ZIP holds main's files under main's names; "Mark as returned" in the new app is
+what main reads; and Insights' counted line and tiles are main's.
+
+Three lift fixes came with it, each a real missing name or a wrong rewrite in what was already lifted: a comment at the end of a line
+no longer counts as a name (a word "go" in a comment had pulled in navigation); a name after a spread (`...vpDraw(...)`,
+`...ADJ_KEYS`, `...runAlts(...)`) now counts as a name, not a property; and a state assignment inside a function that declares its
+own variable of that name (`let n = 1, pages;`) is left alone. GRADING entries can name `real` top-level names that `GRADING_LOCAL`
+otherwise treats as locals (the grade sheet's `num` and `inside`).

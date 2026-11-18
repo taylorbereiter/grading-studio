@@ -134,6 +134,19 @@ export function scoreKey(key) {
   return null;
 }
 
+// Returned (src/tabs.js markReturned, setReturned): she says the work went back, one undo step; an export is kept as exported, with
+// when and how many files, and is never "returned" on its own. A student's paper sent on its own keeps when (grade.sent).
+export function markReturned(on) {
+  const b = state().batch; if (!b) return;
+  K.fieldSnap(b, ['returned'], tell, on ? 'marked as returned' : 'marked as not returned');
+  const r = { ...(b.returned || {}) };
+  if (on) r.ok = Date.now(); else delete r.ok;
+  if (Object.keys(r).length) b.returned = r; else delete b.returned;
+  saveSoon(); tell();
+}
+export function setReturned(n) { const b = state().batch; if (!b) return; b.returned = { ...(b.returned || {}), t: Date.now(), n }; saveSoon(); tell(); }
+export function markSent(st) { st.grade.sent = Date.now(); saveSoon(); tell(); }
+
 // One go with a tool from the menu (src/stamps.js startOnce): a circle or highlight once, the pen until Done or Esc.
 function startOnce(k) {
   const s = state(), prev = s.once ? s.once.prev : s.tool;

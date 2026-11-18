@@ -484,6 +484,8 @@ const plainForms = raw => { const rx = new RegExp('^' + spelledRx(raw), 'u'); re
 // src/names.js
 const notPlain = raw => { const f = plainForms(raw); return f.length ? '(?!(?:' + f.map(w => eitherWay(w, rxEsc)).join('|') + ')' + (NO_SPACES.test(raw) ? '' : AT_END) + ')' : ''; };
 // src/names.js
+const isEveryday = raw => isLatin(raw) ? isPlainWord(nameFold(raw)) || shortBare(raw) : plainForms(raw).length > 0;
+// src/names.js
 const anyRx = raw => isLatin(raw) ? latinRx(nameFold(raw)) : spelledRx(raw);
 // src/names.js
 const rawWords = name => String(name).normalize('NFKC').match(/[\p{L}\p{M}\p{N}]+/gu) || [];
@@ -525,6 +527,25 @@ function wordAlts(raw, whose) {
       out.push(alt(w.length, mostly ? caps : ALONE[0] + caps + ALONE[1]), label, ...marked);
     }
   }
+  return out;
+}
+// src/names.js
+function runAlts(parts) {
+  const out = [], use = p => wordOk(p) && !isEveryday(p);
+  if (parts.length < 2) return out;
+  const sep = parts.every(use) ? '' : NAME_SEP, orders = [parts, [...parts].reverse()];
+  // Everyday words or single letters, all of them (Tô Mỹ, or the Tô and Mỹ of Tô Thị Mỹ): only written like a name, or "to my" would be one.
+  const everyday = p => isLatin(p) ? nameFold(p).length < 2 || isPlainWord(nameFold(p)) : isEveryday(p), named = p => isLatin(p) ? '(?:' + latinRx(nameFold(p), true) + '|' + latinRx(nameFold(p), 'caps') + ')' : notPlain(p) + anyRx(p);
+  if (parts.length > 2) orders.push([parts[0], parts[parts.length - 1]], [parts[parts.length - 1], parts[0]]);
+  for (const o of orders) out.push(alt(o.join('').length + 1, bounded(o[0] + o[o.length - 1], o.map(o.every(everyday) ? named : anyRx).join(sep))));
+  return out;
+}
+// src/names.js
+const latinParts = parts => parts.filter(p => isLatin(p) && !/^\d+$/.test(nameFold(p)));
+// src/names.js
+function initialAlts(parts) {
+  const out = [], L = latinParts(parts);
+  for (const a of L) for (const b of L) { const fb = nameFold(b); if (a !== b && fb.length >= 3 && !NAME_PLAIN.has(nameFold(a)[0] + fb)) out.push(alt(fb.length + 1, AT_START + latinRx(nameFold(a)[0]) + FILE_SEP + latinRx(fb) + AT_END)); }
   return out;
 }
 // src/names.js
@@ -812,34 +833,6 @@ function drawStamp(ctx, m) {
 }
 // src/carryover.js
 const lostPages = f => f && f.numPages ? Object.keys(f.marks).map(Number).filter(p => p >= f.numPages && f.marks[p].length) : [];
-// src/insight.js
-const wordsMemo = new Map();
-// src/insight.js
-const wordSet = s => { let w = wordsMemo.get(s); if (!w) wordsMemo.set(s, w = new Set(nameWords(s))); return w; };
-// src/insight.js
-function nameFit(a, b) {
-  const A = wordSet(a), B = wordSet(b);
-  if (!A.size || !B.size) return 0;
-  const aInB = [...A].every(w => B.has(w)), bInA = [...B].every(w => A.has(w));
-  if (aInB && bInA) return 2;
-  return (aInB && A.size > 1) || (bInA && B.size > 1) ? 1 : 0;
-}
-// src/insight.js
-function rosterPairs(names, keys) {
-  const sure = new Map(), c = classOfNames(names);
-  if (c && c.info) {   // a spelling she linked, or the student's ID in the name, first
-    for (const k of keys) { const h = infoHits(c, k); if (h.length === 1 && !sure.has(h[0])) sure.set(h[0], k); }
-    const took = new Set(sure.values()); names = names.filter(n => !sure.has(n)); keys = keys.filter(k => !took.has(k));
-  }
-  const fits = names.map(n => keys.map(k => nameFit(n, k)));
-  names.forEach((n, i) => {
-    const top = Math.max(0, ...fits[i]); if (!top) return;
-    const hits = keys.filter((_, j) => fits[i][j] === top); if (hits.length !== 1) return;
-    const j = keys.indexOf(hits[0]), col = fits.map(r => r[j]);
-    if (Math.max(...col) === top && col.filter(v => v === top).length === 1) sure.set(n, hits[0]);
-  });
-  return sure;
-}
 // src/people.js
 const classOfNames = names => (names && lib.classes.find(k => k.names === names)) || null;   // rosterMatch and rosterPairs are handed c.names itself
 // src/people.js
@@ -918,4 +911,4 @@ const tnBackOn = () => setup.tnBack !== false;
 // src/typednotes.js
 function tnOut(st) { return tnBackOn() && tnHas(st); }
 export { FONT, drawMarks, layoutNotes, textLayout, wrapText, bboxOf, sideFor, sideScreen, drawStamp, stampBox, strokePath, drawHls, stickersReady, STICKERS, lightLut, lightCanvas, draw, marksMine, loadLines, anonOn, shownName, viewBytes, impHas, fileSeq, layoutOf, docIn, docAuto, fileByPath, viewable, vpRot, vpDraw, skewXf, rotOf, skewOf };
-export { nameFold, rosterMatch, batchClass, WORD_RX, one, stampHidden, tnHasG, noteRunY, anonOrder, hasPress, PRESS_MAX, textGrips, canResize, cornerPt, isSticker, isScoreStamp, stickerAspect };
+export { nameFold, rosterMatch, batchClass, WORD_RX, one, stampHidden, tnHasG, noteRunY, anonOrder, hasPress, PRESS_MAX, textGrips, canResize, cornerPt, isSticker, isScoreStamp, stickerAspect, measureCtx, rgb, docMarked, docAdded, scrub, scrubMarks, lightOpts, lightForPage, isLatin, rawWords, namesNow, ownNames, coverRx, stampScore, tnMine, tnOut };

@@ -320,15 +320,6 @@ async function applyRubricPage(only) {
     }
   }
 }
-// src/app/dialogs.js
-async function copy(text, msg) {
-  try { await navigator.clipboard.writeText(text); }
-  catch {
-    const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select();
-    try { document.execCommand('copy'); } catch {} t.remove();
-  }
-  toast(msg);
-}
 // src/app/claude.js
 const boxKey = (path, p) => path + '|' + p;
 // src/app/media.js
@@ -684,6 +675,8 @@ const groupOwn = g => !!(g && g.own);
 // src/groups.js
 const groupAdj = g => !!(g && g.own === 2);
 // src/groups.js
+const ADJ_KEYS = ['points', 'pk', 'xc', 'xcU', 'status'];
+// src/groups.js
 const adjFields = sts => [...Array(Math.max(0, ...sts.map(s => (s.grade.rubric || []).length), setup && setup.criteria ? setup.criteria.length : 0)).keys(), ...ADJ_KEYS];
 // src/groups.js
 const adjGet = (gr, f) => JSON.stringify(typeof f === 'number' ? (gr.rubric || [])[f] ?? null : gr[f] ?? null);
@@ -776,3 +769,4 @@ function ibStampText(st) { return ibTaskLevels(st).filter(x => x[1] != null).map
 // src/phone.js
 const ph = { cols: null, ver: -1, busy: null, lib: null, later: false };
 export { paperGet, srcRead, spellLikeSaved, groupRaw, houseFile, makeFile, batchIdOf, revsBase, restore, rosterSort, loadAdded, loadEdits, applyRubricPage, loadRefs, photoTurns, natural, newestWork, cardOfKept, findItem, holders, rubricsDiffer, workScored, rubricFitting, junk, unzipInto, qmkFor, revsOf, partHashes, batchClass };
+export { GS_TAIL, syncScoreStamps, boxKey, hasSheet, stampSoon, tryOfFile, canvasJpg, groupFileOf, groupOwn, groupJust };

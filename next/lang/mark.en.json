@@ -133,5 +133,154 @@
  "mark.key_score": "Score the row in hand (a full stop for the half)",
  "mark.every_row": "Every row has a score. To change one, click the row first.",
  "mark.row_top": "This row goes up to {n}.",
- "mark.no_half": "There’s no half on this scale."
+ "mark.no_half": "There’s no half on this scale.",
+ "mark.reading": "Reading the papers first…",
+ "mark.g_order": "Order",
+ "mark.g_roster": "{name} roster order",
+ "mark.g_folder": "Folder order",
+ "mark.g_help": "Click any score or comment to copy it, then paste it into your gradebook. Click a name to open that paper.",
+ "mark.g_num": "#",
+ "mark.g_student": "Student",
+ "mark.g_total": "Total /{n}",
+ "mark.g_pct": "%",
+ "mark.g_status": "Status",
+ "mark.g_band": "Grade",
+ "mark.g_paper": "On the paper",
+ "mark.g_paper_tip": "The grade written on the paper itself, read from the file",
+ "mark.g_comment": "Comment",
+ "mark.g_none_in": "(nothing turned in)",
+ "mark.g_no_folder": "(no folder: nothing turned in)",
+ "mark.g_off": "not on roster",
+ "mark.g_pick": {
+  "one": "{n} grade · pick one",
+  "other": "{n} grades · pick one"
+ },
+ "mark.g_confirm": "“{said}”? confirm",
+ "mark.g_differs": "differs",
+ "mark.g_copy_totals": "Copy all totals",
+ "mark.g_copy_pcts": "Copy all percents",
+ "mark.g_copy_levels": "Copy all levels",
+ "mark.g_copy_table": "Copy as a table",
+ "mark.g_sheet": "Grade sheet (PDF)",
+ "mark.g_csv": "Download spreadsheet (CSV)",
+ "mark.copied": "Copied “{text}”",
+ "mark.copied_empty": "That cell is empty",
+ "mark.copied_rows": {
+  "one": "Copied {n} row",
+  "other": "Copied {n} rows"
+ },
+ "mark.i_average": "Average",
+ "mark.i_middle": "Middle score",
+ "mark.i_lowest": "Lowest",
+ "mark.i_highest": "Highest",
+ "mark.i_spread": "Score spread",
+ "mark.i_spread_cap": "Points, out of {n}.",
+ "mark.i_no_spread": "No finished scores yet, so there’s nothing to chart.",
+ "mark.i_rows": "Rows the class found hardest",
+ "mark.i_rows_cap": "Average out of each row’s top, lowest first.",
+ "mark.i_no_rows": "No rubric rows scored yet.",
+ "mark.i_total_only": "This assignment is scored with just a total, so there are no rows to compare.",
+ "mark.i_lowest_tag": "lowest",
+ "mark.i_who": "Who’s missing or unfinished",
+ "mark.i_all_done": "Everyone has a finished score or a mark saying why not.",
+ "mark.i_not_scored": "Not scored yet",
+ "mark.i_partial": "Partial: some rows scored",
+ "mark.i_missing": "Marked missing",
+ "mark.i_excused": "Excused",
+ "mark.i_off_scale": "Read from the paper, not on this scale",
+ "mark.i_own_off": "Your score is above the total or below 0",
+ "mark.i_left_out": "Left out of the average by you",
+ "mark.i_late": "Late, and counted",
+ "mark.i_roster_only": "On the roster, nothing here",
+ "mark.i_students": {
+  "one": "{n} student",
+  "other": "{n} students"
+ },
+ "mark.r_ready": {
+  "one": "{n} file ready",
+  "other": "{n} files ready"
+ },
+ "mark.r_from": {
+  "one": "From {n} student, in their own folders, ready to hand back.",
+  "other": "From {n} students, in their own folders, ready to hand back."
+ },
+ "mark.r_skipped": {
+  "one": "{n} student has nothing marked, so they’re left out.",
+  "other": "{n} students have nothing marked, so they’re left out."
+ },
+ "mark.r_left": {
+  "one": "{n} file you left out isn’t in it.",
+  "other": "{n} files you left out aren’t in it."
+ },
+ "mark.r_nothing": "Nothing is marked yet. Mark a paper and it will show up here.",
+ "mark.r_all_early": "Everyone with marked work got theirs early.",
+ "mark.r_early": {
+  "one": "Leave out the student who got theirs early",
+  "other": "Leave out the {n} students who got theirs early"
+ },
+ "mark.r_zip": "Download ZIP",
+ "mark.r_dir": "Save into a folder…",
+ "mark.r_dir_no": "This browser didn’t allow saving to a folder. Use Download ZIP.",
+ "mark.r_reading": "Reading the grades…",
+ "mark.r_baking": "Baking in marks {n} of {of}…",
+ "mark.r_done_zip": {
+  "one": "Done. {n} file in the ZIP.",
+  "other": "Done. {n} files in the ZIP."
+ },
+ "mark.r_done_dir": {
+  "one": "Done. {n} file saved into “{dir}”.",
+  "other": "Done. {n} files saved into “{dir}”."
+ },
+ "mark.r_none": "Nothing could be exported.",
+ "mark.r_failed": {
+  "one": "{n} file couldn’t be made: {list}.",
+  "other": "{n} files couldn’t be made: {list}."
+ },
+ "mark.r_busy": "The last export is still going. It will say when it’s done.",
+ "mark.r_wrong": "Something went wrong: {why}",
+ "mark.r_returned": "Returned {when}.",
+ "mark.r_exported": {
+  "one": "Exported {when} · {n} file.",
+  "other": "Exported {when} · {n} files."
+ },
+ "mark.r_mark": "Mark as returned",
+ "mark.r_unmark": "Mark as not returned",
+ "mark.r_marked": "Marked as returned",
+ "mark.r_unmarked": "Marked as not returned",
+ "mark.r_once": "Once the students have it, mark it as returned.",
+ "mark.r_today": "today at {t}",
+ "mark.r_on": "on {d}",
+ "mark.r_options": "Options",
+ "mark.r_keep": "Keep student folders",
+ "mark.r_one": "One PDF for each student",
+ "mark.r_one_hint": "All their papers in one file, the feedback page first. Word papers become pages too. A Word rubric you scored still goes as a Word file.",
+ "mark.r_names": "Name each file by student and assignment",
+ "mark.r_names_like": "Like “{name}”. Graded when it has a score, Feedback when it doesn’t.",
+ "mark.r_names_off": "Files keep the names they were turned in with.",
+ "mark.r_sheet": "Add the grade sheet (a crop of each typed grade)",
+ "mark.r_edit": "Keep marks editable",
+ "mark.r_edit_hint": "Bring a file back in later and change its marks. Files are about twice as big.",
+ "mark.r_key": "Add a key to the marks used on each paper",
+ "mark.r_fb": "Put a feedback page in front of each paper",
+ "mark.r_fb_hint": "The score, each rubric row with what its level means, your comment, and the comments on the paper with their page numbers.",
+ "mark.r_all": "Also send back files with no marks (Word files, other files and unmarked pages)",
+ "mark.r_sharp": "Sharpness",
+ "mark.r_standard": "Standard",
+ "mark.r_extra": "Extra sharp",
+ "mark.r_foot": "Your original files don’t change. A file you marked anywhere goes back whole, every page in order. Comments go in a right-hand margin.",
+ "mark.r_one_title": "One student at a time",
+ "mark.r_one_text": "Give one student their marked paper now, without waiting for the rest.",
+ "mark.r_one_btn": "Export {name}’s paper",
+ "mark.r_one_none": "Open a student’s paper on the Mark tab first.",
+ "mark.r_one_nothing": "Nothing on {name}’s paper is marked yet. Mark it, then export.",
+ "mark.r_one_saved": "Saved “{name}”.",
+ "mark.r_one_zip": {
+  "one": "Saved {n} file for this student in one ZIP.",
+  "other": "Saved {n} files for this student in one ZIP."
+ },
+ "mark.r_sent": "exported {when}",
+ "mark.r_more": {
+  "one": "and {n} more",
+  "other": "and {n} more"
+ }
 }
