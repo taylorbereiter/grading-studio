@@ -344,6 +344,14 @@ export const tnRngSet = r => { tnRng = r; };
   ], `let lib = { me: null };
 export const useLib = l => { lib = l || { me: null }; };
 `, ['lib'], ['gcore']],
+  ['gkept', [
+    // where each kept download stands and Today's groups (src/app/screens.js keptState, keptBack; src/app/kept.js cardOfKept;
+    // src/today.js homeGroups; src/shell.js classLeft), for Home and the sidebar, read from the library and kept rows they are
+    // handed (useKept), not the marking screen's
+    'keptState', 'keptBack', 'cardOfKept', 'homeGroups', 'classLeft',
+  ], `let lib = { classes: [], loose: { units: [] } }, keptMeta = new Map();
+export const useKept = (l, k) => { lib = l; keptMeta = k; };
+`, ['lib', 'keptMeta'], ['gcore']],
 ];
 function writeGrading() {
   const { lift } = require('./tools/lift.js');

@@ -10,6 +10,7 @@ import { drawStamp, STICKERS } from '../../engines/gdraw.js';
 import * as K from '../../engines/gmark.js';
 import { prefs } from '../../students/prefs.js';
 import * as M from '../mark/marking.js';
+import { useRove } from '../mark/rove.js';
 import { PARTS } from '../router.js';
 import '../mark/lines.js';
 
@@ -19,17 +20,22 @@ const TOOLS = [['select', 'cursor', 'v'], ['pen', 'pen', 'p'], ['hl', 'hl', 'h']
 const TOOL_LINE = { select: () => t('mark.t_select'), pen: () => t('mark.t_pen'), hl: () => t('mark.t_hl'), oval: () => t('mark.t_oval'), text: () => t('mark.t_text'), note: () => t('mark.t_note'), check: () => t('mark.t_check'), erase: () => t('mark.t_erase') };
 const COLOR_LINE = { red: () => t('mark.c_red'), blue: () => t('mark.c_blue'), green: () => t('mark.c_green'), purple: () => t('mark.c_purple'), black: () => t('mark.c_black'), yellow: () => t('mark.c_yellow'), pink: () => t('mark.c_pink') };
 const WIDTHS = [[1.2, () => t('mark.w_fine')], [2, () => t('mark.w_medium')], [3.5, () => t('mark.w_bold')]];
+// a set of choices inside the tools: one stop in the Tab order, up and down move among them
+function ToolSet({ class: c, label, children }) { const rv = useRove(true); return <span class={c} role="group" aria-label={label} {...rv}>{children}</span>; }
 function Tools() {
   const s = state(), bar = M.stampTool() ? 'stamp' : s.once ? s.once.prev : s.tool;
-  const sw = (list, on, pick, label) => <span class="mk-sw" role="group" aria-label={label}>{Object.entries(list).map(([k, v]) =>
-    <button type="button" class="sw" style={'background:' + v} aria-pressed={k === on ? 'true' : 'false'} title={COLOR_LINE[k] ? COLOR_LINE[k]() : k} aria-label={COLOR_LINE[k] ? COLOR_LINE[k]() : k} data-sw={k} onClick={() => pick(k)} />)}</span>;
-  return <div class="mk-tools" role="toolbar" aria-label={t('mark.tools')} aria-orientation="vertical">
+  const sw = (list, on, pick, label) => <ToolSet class="mk-sw" label={label}>{Object.entries(list).map(([k, v]) =>
+    <button type="button" class="sw" style={'background:' + v} aria-pressed={k === on ? 'true' : 'false'} title={COLOR_LINE[k] ? COLOR_LINE[k]() : k} aria-label={COLOR_LINE[k] ? COLOR_LINE[k]() : k} data-sw={k} onClick={() => pick(k)} />)}</ToolSet>;
+  const rv = useRove(true);
+  // a phone shows the papers and the scores, as the current phone layout does: a finger moves the page and never draws
+  useEffect(() => { if (matchMedia('(max-width:760px) and (pointer:coarse)').matches && state().tool !== 'select') M.chooseTool('select'); }, []);
+  return <div class="mk-tools" role="toolbar" aria-label={t('mark.tools')} aria-orientation="vertical" {...rv}>
     {TOOLS.map(([k, icon, key]) => <IconButton icon={icon} label={TOOL_LINE[k]()} kbd={key.toUpperCase()} aria-pressed={bar === k ? 'true' : 'false'} data-tool={k} onClick={() => M.chooseTool(k)} />)}
     <IconButton icon="stamp" label={t('mark.t_stamp')} aria-pressed={bar === 'stamp' ? 'true' : 'false'} onClick={() => M.setStampTool(bar !== 'stamp')} data-tool="stamp" />
     {bar !== 'select' && bar !== 'erase' && bar !== 'stamp' && <span class="sep" />}
     {bar === 'hl' ? sw(HL, s.hlColor, M.chooseHl, t('mark.hl_color')) : bar === 'check' ? sw(COLORS, s.checkInk, M.chooseCheck, t('mark.check_color')) : bar !== 'select' && bar !== 'erase' && bar !== 'stamp' ? sw(COLORS, s.inkColor, M.chooseInk, t('mark.ink')) : null}
-    {bar === 'hl' && <span class="mk-hlm" role="group" aria-label={t('mark.hl_how')}><button type="button" aria-pressed={M.hlFree() ? 'false' : 'true'} title={t('mark.hl_snap_tip')} data-hlm="auto" onClick={() => M.setHlFree(false)}>{t('mark.hl_snap')}</button><button type="button" aria-pressed={M.hlFree() ? 'true' : 'false'} title={t('mark.hl_free_tip')} data-hlm="free" onClick={() => M.setHlFree(true)}>{t('mark.hl_free')}</button></span>}
-    {bar === 'pen' && <span class="mk-w" role="group" aria-label={t('mark.width')}>{WIDTHS.map(([w, l]) => <button type="button" aria-pressed={s.penW === w ? 'true' : 'false'} title={l()} aria-label={l()} data-w={w} onClick={() => M.chooseWidth(w)}><i style={'--w:' + w} /></button>)}</span>}
+    {bar === 'hl' && <ToolSet class="mk-hlm" label={t('mark.hl_how')}><button type="button" aria-pressed={M.hlFree() ? 'false' : 'true'} title={t('mark.hl_snap_tip')} data-hlm="auto" onClick={() => M.setHlFree(false)}>{t('mark.hl_snap')}</button><button type="button" aria-pressed={M.hlFree() ? 'true' : 'false'} title={t('mark.hl_free_tip')} data-hlm="free" onClick={() => M.setHlFree(true)}>{t('mark.hl_free')}</button></ToolSet>}
+    {bar === 'pen' && <ToolSet class="mk-w" label={t('mark.width')}>{WIDTHS.map(([w, l]) => <button type="button" aria-pressed={s.penW === w ? 'true' : 'false'} title={l()} aria-label={l()} data-w={w} onClick={() => M.chooseWidth(w)}><i style={'--w:' + w} /></button>)}</ToolSet>}
     <span class="sep" />
     <IconButton icon="undo" label={t('mark.undo')} kbd="mod+z" disabled={!s.undoStack.length} onClick={M.undo} data-undo />
     <IconButton icon="redo" label={t('mark.redo')} kbd="mod+y" disabled={!s.redoStack.length} onClick={M.redo} data-redo />

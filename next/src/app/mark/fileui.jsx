@@ -10,6 +10,7 @@ import { lostPages } from '../../engines/gopen.js';
 import { prefs } from '../../students/prefs.js';
 import { Checkbox, Segmented } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
+import { useRove } from './rove.js';
 import { GroupBand, GroupDialog } from './group.jsx';
 export { GroupBand };
 export { ScoreMore, Anchors } from './score-more.jsx';
@@ -195,7 +196,8 @@ export async function pdfAuto() { if (!pdfAlways() || C.pdfBusyNow()) return; co
 // The turn buttons in the top corner of each page, shown when the mouse is over it (rotChip).
 export function TurnChip({ pg }) {
   const re = !!(pg.file.sc && pg.file.sc[pg.idx] && pg.file.sc[pg.idx].re);
-  return <span class="rchip"><IconButton icon="turnl" size="sm" label={t('setup.f_turn_l')} onClick={() => C.turnPages(pg.file, [pg.idx], -1)} data-rot="-1" />
+  const rv = useRove();
+  return <span class="rchip" role="toolbar" aria-label={t('mark.pg_tools', { n: pg.idx + 1 })} {...rv}><IconButton icon="turnl" size="sm" label={t('setup.f_turn_l')} onClick={() => C.turnPages(pg.file, [pg.idx], -1)} data-rot="-1" />
     <IconButton icon="turnr" size="sm" label={t('setup.f_turn_r')} onClick={() => C.turnPages(pg.file, [pg.idx], 1)} data-rot="1" />
     {!pg.file.virtual && <IconButton icon="flag" size="sm" label={t(re ? 'setup.rs_flag_off' : 'setup.rs_flag')} title={t(re ? 'setup.rs_flag_off' : 'setup.rs_flag')} aria-pressed={re ? 'true' : 'false'} class={re ? 'on' : ''}
       onClick={() => toast(t(C.scanFlag(pg) ? 'setup.rs_flagged' : 'setup.rs_unflagged'))} data-pgre />}

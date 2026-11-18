@@ -47,6 +47,8 @@
   .mk-side{border-left:0;border-top:1px solid var(--line)}
   .mk-paper{padding:12px 8px 64px}
 }
+/* On a phone, as in the current phone layout: the papers to look at and the scores to give, no pens (mark-tools.jsx picks Select). */
+@media (max-width:760px) and (pointer:coarse){.markscreen .mk-tools{display:none}}
 /* Marks are drawn as text on the canvas, and Chrome lets the page's letter spacing reach it; the current app has none, so neither do the pages. */
 .mk-paper canvas{letter-spacing:normal;font-feature-settings:normal}
 /* The tools down the left of the paper (src/app/panels.js renderTools in the current app). */
@@ -996,3 +998,5 @@ dialog.dlg.mk-qr{width:min(880px,calc(100vw - 32px))}
 .mk-qr .qfcrop img{max-width:100%;display:block}
 .mk-qr .qfpick{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 @media (max-width:620px){.mk-qr .qftiles{grid-template-columns:repeat(2,minmax(0,1fr))}.mk-qr .qfrr{grid-template-columns:1fr}.mk-qr .qfcrop{grid-column:1;grid-row:auto}}
+.mk-lfmenu [role="menuitem"].sep{border-top:1px solid var(--line);margin-top:4px;padding-top:8px}
+@media (max-width:760px){.mk-opened{left:16px;right:16px;transform:none;max-width:none}}
