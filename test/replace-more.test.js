@@ -74,7 +74,8 @@ test('a video link: Replace… takes a new link, partners get it too, and clips 
   // the video is what the two share (no notes page), so it changes for both without asking
   assert.match(await page.$eval('#dlgBox', d => d.textContent), /Presentation video.*youtu\.be.*Bram Sample shares this/s);
   await page.click('#dlgBox [data-ok]');
-  await page.waitForFunction(() => window.__gs.state().batch.students.slice(0, 2).every(s => s.files.some(f => f.kind === 'link' && window.__gs.linkKey(f) === 'https://youtu.be/xyzXYZ98765')));
+  // the new link is added to each student before the old one is taken off: waited for until both steps are done for both
+  await page.waitForFunction(() => window.__gs.state().batch.students.slice(0, 2).every(s => { const l = s.files.filter(f => f.kind === 'link').map(f => window.__gs.linkKey(f)); return l.length === 1 && l[0] === 'https://youtu.be/xyzXYZ98765'; }));
   const keys = await page.evaluate(() => window.__gs.state().batch.students.map(s => s.files.filter(f => f.kind === 'link').map(f => window.__gs.linkKey(f))));
   assert.deepEqual(keys, [['https://youtu.be/xyzXYZ98765'], ['https://youtu.be/xyzXYZ98765'], []]);
   assert.equal(await page.evaluate(() => window.__gs.state().batch.clips[0].u), 'https://youtu.be/xyzXYZ98765', 'the clip follows the new link');
