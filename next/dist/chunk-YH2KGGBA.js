@@ -1,1 +1,0 @@
-import{a}from"./chunk-PNAMOZZO.js";import{K as t}from"./chunk-CYY33M5K.js";import{d as n}from"./chunk-DGDOBO2D.js";import{a as r}from"./chunk-7FGDWSVQ.js";r();function d(o){console.error(o),t(o instanceof a||o&&o.name==="ReadOnly"?n("plan.read_only"):n("plan.not_saved"))}export{d as a};

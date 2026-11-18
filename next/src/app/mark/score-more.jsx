@@ -4,7 +4,7 @@
 // second click). Loaded with the file tools (mark/fileui.jsx).
 import { h, Fragment } from 'preact';
 import { useState } from 'preact/hooks';
-import { Button, IconButton, Menu, Segmented, toast } from '../../ui/index.js';
+import { Button, IconButton, Menu, Segmented, toast, HeldInput } from '../../ui/index.js';
 import { state, gradeOf, noScore, ibSetup, fmtNum, fmtPct, retakeRule, RETAKE_RULES } from '../../engines/gcore.js';
 import { t } from '../../i18n/t.js';
 import { useRove } from './rove.js';
@@ -42,11 +42,11 @@ export function ScoreMore({ st }) {
   return <div class="mk-more" data-smore>
     <Menu label={t('setup.sm_more')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.sm_more')} data-smmenu />} items={items} />
     {g.outAvg && <p class="mk-note" data-smout>{t('setup.sm_out_note')} <Button size="sm" variant="quiet" onClick={() => { C.outAvg(st); re(); }}>{t('setup.sm_out_back')}</Button></p>}
-    {showXc && <p class="mk-note mk-xc"><label>{t('setup.sm_xc_label')} <input class="input" type="number" step="0.5" min="0" value={+g.xc ? fmtNum(+g.xc) : ''}
+    {showXc && <p class="mk-note mk-xc"><label>{t('setup.sm_xc_label')} <HeldInput class="input" type="number" step="0.5" min="0" value={+g.xc ? fmtNum(+g.xc) : ''}
         aria-label={t(u === 'pct' ? 'setup.sm_xc_pct' : 'setup.sm_xc_pts')} onChange={e => { C.setXc(st, e.currentTarget.value, u); if (!(+st.grade.xc > 0)) xcOpenFor = null; re(); }}
         onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-smxc /></label>
       <Segmented size="sm" label={t('setup.sm_xc_in')} value={u} onChange={v => { C.setXcUnit(st, v); re(); }} options={[{ value: 'pts', label: t('setup.sm_pts') }, { value: 'pct', label: '%' }]} /></p>}
-    {showPk && <p class="mk-note mk-xc"><label>{t('setup.sm_pk_label')} <input class="input" type="text" inputmode="decimal" value={g.pk != null ? String(g.pk) : ''} aria-label={t('setup.sm_pk_label')}
+    {showPk && <p class="mk-note mk-xc"><label>{t('setup.sm_pk_label')} <HeldInput class="input" type="text" inputmode="decimal" value={g.pk != null ? String(g.pk) : ''} aria-label={t('setup.sm_pk_label')}
         onChange={e => { C.setPk(st, e.currentTarget.value); if (st.grade.pk == null) pkOpenFor = null; re(); }} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-smpk /></label>
       <Button size="sm" variant="quiet" onClick={() => { C.setPk(st, ''); pkOpenFor = null; re(); }} data-smpkoff>{t('setup.sm_remove')}</Button>
       <small>{t('setup.sm_pk_say')}</small></p>}

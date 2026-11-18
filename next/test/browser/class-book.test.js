@@ -809,7 +809,7 @@ test('Report comments: each draft is the current app\'s draft, edited and marked
   await p.click('[data-rp-done]');
   await p.waitForFunction(n => document.querySelector('[data-rp-name]').textContent === n, {}, N[1]);
   await p.waitForFunction(n => { const r = ((JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}).rep; return r && r.year && r.year.done && /A pleasure to teach\.$/.test(r.year.text); }, {}, N[0]);
-  assert.match(await p.$eval('[data-rp-donecount]', e => e.textContent), /^1 of /);
+  await p.waitForFunction(() => /^1 of /.test((document.querySelector('[data-rp-donecount]') || {}).textContent || ''));
   // short comments
   await p.evaluate(() => [...document.querySelectorAll('.rptopts [role="radio"]')].find(b => b.dataset.v === 'short').click());
   await p.waitForFunction(() => ((JSON.parse(localStorage.getItem('gs.lib')).book || {}).rep || {}).len === 'short');
@@ -948,7 +948,7 @@ test('Library > Examples and the watch list: the current app\'s examples shown, 
   await p.click('[data-exid="exb"] [data-exmenu]');
   await p.waitForSelector('.pop [role^="menuitem"]');
   await p.evaluate(() => [...document.querySelectorAll('.pop [role^="menuitem"]')].find(b => /why it/.test(b.textContent)).click());
-  await p.waitForSelector('[data-exedit]'); await p.type('[data-exedit]', 'Labels every part');
+  await p.waitForSelector('[data-exedit]'); await p.waitForFunction(() => document.activeElement && document.activeElement.matches('[data-exedit]')); await p.type('[data-exedit]', 'Labels every part');
   await p.click('[data-exedit-save]');
   await p.waitForFunction(() => /Labels every part/.test((document.querySelector('[data-exid="exb"] .exwhy') || {}).textContent || ''));
   // Show to the class: no names, arrows move, Esc closes

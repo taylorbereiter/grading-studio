@@ -5,7 +5,7 @@
 // the current app asks first. Boxes save when she leaves them (preact/compat turns onChange into every key). Loaded only on those settings pages (PARTS.setgrade).
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { Card, Select, Switch, TextInput, Slider, Segmented, Button, IconButton, toast } from '../../ui/index.js';
+import { Card, Select, Switch, TextInput, HeldInput, Slider, Segmented, Button, IconButton, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { PARTS } from '../router.js';
 import { library, gradingSetup } from '../../students/index.js';
@@ -64,9 +64,9 @@ export function GradingSettings() {
     {g && g.bands && <Card title={t(g.way === 'ib7' ? 'setup.sg_bands_ib' : 'setup.sg_bands')}>
       <p class="mute">{t('setup.sg_bands_about')}</p>
       <div class="sg-bands">{g.bands.map((b, i) => <div class="sg-band" data-sgband={i}>
-        <input class="input" type="text" maxLength={12} value={b[1]} aria-label={t('setup.sg_band_name', { n: i + 1 })} onBlur={e => band(i, 'l', e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-raw data-sgbl={i} />
+        <HeldInput class="input" type="text" maxLength={12} value={b[1]} aria-label={t('setup.sg_band_name', { n: i + 1 })} onBlur={e => band(i, 'l', e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-raw data-sgbl={i} />
         <span>{t('setup.sg_from')}</span>
-        <input class="input" type="number" min="0" max="100" step="1" value={b[0]} disabled={i === g.bands.length - 1} aria-label={t('setup.sg_band_from', { name: b[1] })} onBlur={e => band(i, 'p', e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-sgbp={i} />
+        <HeldInput class="input" type="number" min="0" max="100" step="1" value={b[0]} disabled={i === g.bands.length - 1} aria-label={t('setup.sg_band_from', { name: b[1] })} onBlur={e => band(i, 'p', e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-sgbp={i} />
         <span>%</span></div>)}</div>
     </Card>}
     <span hidden data-sglib={L.me ? 1 : 0} />
@@ -161,7 +161,7 @@ function MarkKey() {
   const setMean = (k, v) => setKey(o => { o.means = { ...(o.means || {}) }; if (v.trim() !== (MARK_MEAN[k] || '')) o.means[k] = v; else delete o.means[k]; });
   const usual = k => setKey(o => { o.names = { ...(o.names || {}) }; o.means = { ...(o.means || {}) }; delete o.names[k]; delete o.means[k]; });
   const row = ([k]) => { const own = typeof (s.names || {})[k] === 'string' && s.names[k].trim() || typeof (s.means || {})[k] === 'string';
-    return <div class="sg-mk" key={k + JSON.stringify(s)} data-sgmk={k}><MarkPic k={k} />
+    return <div class="sg-mk" key={k} data-sgmk={k}><MarkPic k={k} />
       <TextInput label={t('setup.sg_mk_name')} value={name(k)} maxLength={40} data-raw onBlur={e => { if (e.currentTarget.value !== name(k)) setName(k, e.currentTarget.value); }} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} />
       <TextInput label={t('setup.sg_mk_mean')} value={mean(k)} maxLength={300} data-raw onBlur={e => { if (e.currentTarget.value.trim() !== mean(k)) setMean(k, e.currentTarget.value); }} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} />
       {own && <button type="button" class="link" onClick={() => usual(k)} data-sgmkusual={k}>{t('setup.sg_mk_usual')}</button>}</div>; };

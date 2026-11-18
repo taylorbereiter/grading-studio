@@ -1,0 +1,1 @@
+import{a as r}from"./chunk-LLFBAITB.js";import{a as n}from"./chunk-7FGDWSVQ.js";n();var e=new Set,p=null,l=o=>(e.add(o),()=>e.delete(o)),d=()=>e.forEach(o=>{try{o()}catch(t){console.error(t)}}),c=()=>p||=r.focus().then(o=>(o.boot(),o)),x=(o,t,s)=>c().then(u=>u.start(o,t,s)),f=()=>c().then(o=>o.open());export{l as a,d as b,c,x as d,f as e};

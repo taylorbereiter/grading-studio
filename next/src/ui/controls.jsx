@@ -1,7 +1,7 @@
 // The simple controls. Every one: hover, press, a focus ring from :focus-visible, a disabled look, and the keyboard behaviour its
 // ARIA role promises. No part takes words of its own: labels arrive already translated (t()), or as a teacher's own text.
 import { h, Fragment } from 'preact';
-import { useRef, useId } from 'preact/hooks';
+import { useRef, useId, useState } from 'preact/hooks';
 import { Icon } from './icons.js';
 import { Tooltip } from './popups.jsx';
 
@@ -49,11 +49,23 @@ export function Tabs({ tabs, value, onChange, label }) {
 export function Field({ label, hint, error, id, children }) {
   return <div class="field">{label && <label class="lbl" for={id}>{label}</label>}{children}{error ? <span class="err" id={id + '-e'}>{error}</span> : hint ? <span class="hint" id={id + '-h'}>{hint}</span> : null}</div>;
 }
+// A box that saves when she leaves it (no onInput) keeps what she types while she is in it: a save elsewhere that draws the screen
+// again (another box she just left, Undo, another window) never puts the old words back under her cursor.
+export function useHeld(value, onInput, rest) {
+  const [held, setHeld] = useState(null);
+  if (onInput) return { value, onInput: e => onInput(e.currentTarget.value) };
+  return { value: held != null ? held : value, onInput: e => setHeld(e.currentTarget.value),
+    onBlur: e => { try { rest.onBlur && rest.onBlur(e); } finally { setHeld(null); } } };
+}
+// A plain input with the same hold, for boxes that carry their own label (aria-label).
+export function HeldInput({ value, onInput, ...rest }) {
+  return <input {...rest} {...useHeld(value, onInput, rest)} />;
+}
 export function TextInput({ label, hint, error, icon, value, onInput, state, ...rest }) {
-  const id = useId();
+  const id = useId(), held = useHeld(value, onInput, rest);
   return <Field label={label} hint={hint} error={error} id={id}>
     <div class="inwrap">{icon && <Icon name={icon} />}
-      <input id={id} class={cx('input', icon && 'withi', state === 'focus' && 'focus')} value={value} onInput={e => onInput && onInput(e.currentTarget.value)} aria-invalid={error ? 'true' : undefined} aria-describedby={error ? id + '-e' : hint ? id + '-h' : undefined} {...rest} /></div>
+      <input id={id} class={cx('input', icon && 'withi', state === 'focus' && 'focus')} aria-invalid={error ? 'true' : undefined} aria-describedby={error ? id + '-e' : hint ? id + '-h' : undefined} {...rest} {...held} /></div>
   </Field>;
 }
 // options: [{ value, label }]. The browser's own list: right on phones, and read out properly everywhere.

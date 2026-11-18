@@ -3,7 +3,7 @@
 // lib.me.focus with only what differs from the usual (fcConfSet), so it goes wherever the classes go and My setup carries it.
 import { h, Fragment } from 'preact';
 import { useState } from 'preact/hooks';
-import { Card, Select, Segmented, Checkbox } from '../../ui/index.js';
+import { Card, Select, Segmented, Checkbox, HeldInput } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { engine as E, focusConf } from '../../students/focus.js';
 import { useFocusData } from './aside.jsx';
@@ -41,7 +41,7 @@ export function FocusSettings() {
     <Card title={t('focus.s_goal')}><p class="mute">{t('focus.s_goal_say')}</p>
       <Segmented label={t('focus.s_goal')} value={k} onChange={kind} options={[{ value: '', label: t('focus.g_none') }, { value: 'papers', label: t('focus.g_papers') }, { value: 'min', label: t('focus.g_min') }]} />
       {g && <div class="setrow">
-        <label class="field"><span class="lab">{t('focus.g_n')}</span><input class="input" type="number" min="1" max={E.fcGoalMax(k, g.per)} step="1" value={g.n} data-fc-goaln onChange={e => { const n = Math.round(+e.currentTarget.value); if (n > 0) set({ goal: { ...g, n } }); }} /></label>
+        <label class="field"><span class="lab">{t('focus.g_n')}</span><HeldInput class="input" type="number" min="1" max={E.fcGoalMax(k, g.per)} step="1" value={g.n} data-fc-goaln onChange={e => { const n = Math.round(+e.currentTarget.value); if (n > 0) set({ goal: { ...g, n } }); }} /></label>
         <Select label={t('focus.g_per')} value={g.per} options={[{ value: 'day', label: t('focus.g_day') }, { value: 'week', label: t('focus.g_week') }]} onChange={per} />
       </div>}
       {g && g.per === 'day' && <fieldset class="setdays"><legend>{t('focus.g_days')}</legend>{DOWS.map(d => <Checkbox label={<span data-raw>{dayName(d)}</span>} checked={!g.days || g.days.includes(d)} onChange={x => day(d, x)} />)}</fieldset>}

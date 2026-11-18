@@ -55,7 +55,7 @@ export function TypesDialog({ cols, onClose }) {
   return <Dialog open title={t('class.types_title')} onClose={onClose} actions={<Button variant="primary" onClick={onClose}>{t('class.done')}</Button>}>
     <p class="mute small">{t('class.types_hint')}</p>
     <div class="cp-types">{left.map(col => <div class="cp-tyrow" data-type-row={col.key}><span><b data-raw>{col.name}</b> <span class="mute" data-raw>{col.due ? B.bkDay(col.due) : ''}</span></span>
-      <Segmented size="sm" label={t('class.col_type')} value={picked[col.key] || ''} onChange={x => { setPicked({ ...picked, [col.key]: x }); setCol(col, { type: x }); }}
+      <Segmented size="sm" label={t('class.col_type')} value={picked[col.key] || ''} onChange={x => { setPicked(picked => ({ ...picked, [col.key]: x })); setCol(col, { type: x }); }}
         options={B.BK_TYPES.map(k => ({ value: k[0], label: catName(k) }))} /></div>)}</div>
   </Dialog>;
 }
@@ -115,12 +115,12 @@ export function SetupSheet({ conf, book, onClose }) {
         <p class="mute small" data-wsum>{sum === 100 ? t('class.w_100') : t('class.w_sum', { n: sum })}</p>
         <p class="mute small">{t('class.types_hint2')}</p>
         <h4>{t('class.empty_t')}</h4>
-        <Segmented size="sm" label={t('class.empty_t')} value={o.empty} onChange={x => setO({ ...o, empty: x })} options={[{ value: 'other', label: t('class.empty_other') }, { value: 'zero', label: t('class.empty_zero') }]} />
+        <Segmented size="sm" label={t('class.empty_t')} value={o.empty} onChange={x => setO(o => ({ ...o, empty: x }))} options={[{ value: 'other', label: t('class.empty_other') }, { value: 'zero', label: t('class.empty_zero') }]} />
         <h4>{t('class.xc_t')}</h4>
-        <Segmented size="sm" label={t('class.xc_new')} value={o.xcTo} onChange={x => setO({ ...o, xcTo: x })} options={xcChoices(labelOf)} />
-        <Segmented size="sm" label={t('class.above_100')} value={o.xcCap ? 'cap' : 'over'} onChange={x => setO({ ...o, xcCap: x === 'cap' })} options={[{ value: 'cap', label: t('class.cap') }, { value: 'over', label: t('class.over') }]} />
+        <Segmented size="sm" label={t('class.xc_new')} value={o.xcTo} onChange={x => setO(o => ({ ...o, xcTo: x }))} options={xcChoices(labelOf)} />
+        <Segmented size="sm" label={t('class.above_100')} value={o.xcCap ? 'cap' : 'over'} onChange={x => setO(o => ({ ...o, xcCap: x === 'cap' }))} options={[{ value: 'cap', label: t('class.cap') }, { value: 'over', label: t('class.over') }]} />
         <h4>{t('class.retakes')}</h4>
-        <Segmented size="sm" label={t('class.retake_rule')} value={o.retake} onChange={x => setO({ ...o, retake: x })} options={[{ value: 'high', label: t('class.rk_high') }, { value: 'last', label: t('class.rk_last') }, { value: 'avg', label: t('class.rk_avg') }]} />
+        <Segmented size="sm" label={t('class.retake_rule')} value={o.retake} onChange={x => setO(o => ({ ...o, retake: x }))} options={[{ value: 'high', label: t('class.rk_high') }, { value: 'last', label: t('class.rk_last') }, { value: 'avg', label: t('class.rk_avg') }]} />
       </section>
     </div>
   </Sheet>;
@@ -139,8 +139,8 @@ export function AddSheet({ c, cols, conf, labelOf, itId, xc: wantXc, onClose }) 
   const tw = it && it.group ? B.lkTwins(it) : [], [also, setAlso] = useState(true);
   const xc = a.type === 'xc', fm = a.type === 'fm', max = a.mode === 'pct' ? null : Math.max(0.5, +a.max || 0) || null;
   const empty = c.units.flatMap(u => u.items).filter(x => !x.typed && !x.batchId && x.type !== 'xc' && x.name && !cols.some(k => k.key === x.id));
-  const setOne = (n, part) => setS({ ...s, [n]: { ...(s[n] || {}), ...part } });
-  const stBtn = (n, st) => { const r = s[n] || {}; setS({ ...s, [n]: { ...r, st: r.st === st ? '' : st, v: st === 'late' || r.st === st ? r.v : null } }); };
+  const setOne = (n, part) => setS(s => ({ ...s, [n]: { ...(s[n] || {}), ...part } }));
+  const stBtn = (n, st) => setS(s => { const r = s[n] || {}; return { ...s, [n]: { ...r, st: r.st === st ? '' : st, v: st === 'late' || r.st === st ? r.v : null } }; });
   const paste = text => {
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean), num = x => { const m = String(x).replace(',', '.').match(/^-?\d+(\.\d+)?/); return m ? +m[0] : null; };
     const named = lines.map(l => { const cells = l.split(/\t|,(?!\d)|;/).map(x => x.trim()).filter(Boolean), last = cells[cells.length - 1]; return cells.length > 1 && num(last) != null && isNaN(+cells[0]) ? { name: cells.slice(0, -1).join(' '), v: num(last) } : null; });
@@ -187,18 +187,18 @@ export function AddSheet({ c, cols, conf, labelOf, itId, xc: wantXc, onClose }) 
       <Button onClick={() => onClose(false)}>{t('common.cancel')}</Button><Button variant="primary" onClick={save} data-add-save>{t(it ? 'class.save_scores' : 'class.add_to_book')}</Button></>}>
     <div class="cp-add" data-add>
       <div class="cp-addgrid">
-        <TextInput label={t('class.asg')} value={a.name} onInput={x => setA({ ...a, name: x })} error={err} placeholder={t('class.asg_ph')} list="cp-cards" autofocus={!it} data-add-name
+        <TextInput label={t('class.asg')} value={a.name} onInput={x => setA(a => ({ ...a, name: x }))} error={err} placeholder={t('class.asg_ph')} list="cp-cards" autofocus={!it} data-add-name
           onKeyDown={e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); save(); } }} />
         <datalist id="cp-cards">{!it && empty.map(x => <option value={x.name} />)}</datalist>
-        <div class="cp-fld"><span class="lab">{t('class.col_type')}</span><Segmented size="sm" label={t('class.col_type')} value={a.type} onChange={x => setA({ ...a, type: x })} options={B.bkCats().concat([['xc']]).map(k => ({ value: k[0], label: k[0] === 'xc' ? t('class.type_xc') : catName(k) }))} /></div>
-        <TextInput type="date" label={t('class.due')} value={a.due} onInput={x => setA({ ...a, due: x })} data-add-due />
-        {!it && <Select label={t('class.unit')} value={a.unit} onChange={x => setA({ ...a, unit: x })} options={c.units.map(u => ({ value: u.id, label: u.name })).concat({ value: '', label: t(c.units.length ? 'class.new_unit_typed' : 'class.new_unit_1') })} />}
-        {!xc && !fm && <div class="cp-fld"><span class="lab">{t('class.scored_as')}</span><div class="cp-so"><Segmented size="sm" label={t('class.scored_as')} value={a.mode} onChange={x => setA({ ...a, mode: x })} options={[{ value: 'pts', label: t('class.pts_out_of') }, { value: 'pct', label: t('class.percent') }]} />
-          {a.mode === 'pts' && <input class="input cp-max" type="number" min="0.5" step="0.5" value={a.max} aria-label={t('class.out_of_l')} onInput={e => setA({ ...a, max: e.currentTarget.value })} data-add-max />}</div></div>}
-        {xc && <div class="cp-fld"><span class="lab">{t('class.adds_to')}</span><Segmented size="sm" label={t('class.adds_to')} value={a.xcTo} onChange={x => setA({ ...a, xcTo: x })} options={xcChoices(labelOf)} /></div>}
+        <div class="cp-fld"><span class="lab">{t('class.col_type')}</span><Segmented size="sm" label={t('class.col_type')} value={a.type} onChange={x => setA(a => ({ ...a, type: x }))} options={B.bkCats().concat([['xc']]).map(k => ({ value: k[0], label: k[0] === 'xc' ? t('class.type_xc') : catName(k) }))} /></div>
+        <TextInput type="date" label={t('class.due')} value={a.due} onInput={x => setA(a => ({ ...a, due: x }))} data-add-due />
+        {!it && <Select label={t('class.unit')} value={a.unit} onChange={x => setA(a => ({ ...a, unit: x }))} options={c.units.map(u => ({ value: u.id, label: u.name })).concat({ value: '', label: t(c.units.length ? 'class.new_unit_typed' : 'class.new_unit_1') })} />}
+        {!xc && !fm && <div class="cp-fld"><span class="lab">{t('class.scored_as')}</span><div class="cp-so"><Segmented size="sm" label={t('class.scored_as')} value={a.mode} onChange={x => setA(a => ({ ...a, mode: x }))} options={[{ value: 'pts', label: t('class.pts_out_of') }, { value: 'pct', label: t('class.percent') }]} />
+          {a.mode === 'pts' && <input class="input cp-max" type="number" min="0.5" step="0.5" value={a.max} aria-label={t('class.out_of_l')} onInput={e => { const max = e.currentTarget.value; setA(a => ({ ...a, max })); }} data-add-max />}</div></div>}
+        {xc && <div class="cp-fld"><span class="lab">{t('class.adds_to')}</span><Segmented size="sm" label={t('class.adds_to')} value={a.xcTo} onChange={x => setA(a => ({ ...a, xcTo: x }))} options={xcChoices(labelOf)} /></div>}
       </div>
       {tw.length > 0 && <span data-add-also><Checkbox label={t('class.lk_also_do', { names: tw.map(x => x.c.name || t('nav.no_class')).join(', ') })} checked={also} onChange={setAlso} /></span>}
-      {xc && <><div class="cp-xcall"><span>{t('class.give')}</span><input class="input cp-sc" type="number" step="0.5" min="0" value={a.give} aria-label={t('class.give_pts')} onInput={e => setA({ ...a, give: e.currentTarget.value })} /><span>{t('class.points_to')}</span>
+      {xc && <><div class="cp-xcall"><span>{t('class.give')}</span><input class="input cp-sc" type="number" step="0.5" min="0" value={a.give} aria-label={t('class.give_pts')} onInput={e => { const give = e.currentTarget.value; setA(a => ({ ...a, give })); }} /><span>{t('class.points_to')}</span>
         <Button size="sm" onClick={() => { const v = Math.max(0, hp(a.give)) || 0, o = { ...s }; for (const n of c.names) o[n] = { v }; setS(o); }}>{t('class.give_all')}</Button>
         <Button size="sm" onClick={() => { const v = Math.max(0, hp(a.give)) || 0, o = { ...s }; for (const n of c.names) if (!(+((o[n] || {}).v) > 0)) o[n] = { v }; setS(o); }}>{t('class.give_none')}</Button>
         <Button size="sm" variant="quiet" onClick={() => setS({})}>{t('class.clear_all')}</Button></div>

@@ -52,7 +52,7 @@ export function ImportSheet({ x, rows: given, onClose }) {
       if (col.cat) { if (!(col.cat in cats)) cats[col.cat] = G.bkiCatGuess(col.cat); col.type = cats[col.cat]; }
       const to = col.to && ex.find(y => y.it.id === col.to); if (to && !col.due) col.due = to.due || '';
     }
-    setS({ ...s, data: r, pick, over: {}, cats, build, err: '' });
+    setS(s => ({ ...s, data: r, pick, over: {}, cats, build, err: '' }));
   };
   useEffect(() => { if (given) take(given); }, []);   // a Google Classroom file read on the way in
   const readFile = async f => {
@@ -98,7 +98,7 @@ export function ImportSheet({ x, rows: given, onClose }) {
     return { add, differ };
   };
   const show = (r, max) => (r.st === 'missing' ? t('class.missing') : r.st === 'excused' ? t('class.excused') : r.v == null ? '–' : fmtNum(r.v) + (max ? '/' + fmtNum(max) : '%') + (r.st === 'late' ? ' · ' + t('class.late') : ''));
-  const colSet = (col, part) => { Object.assign(col, part); setS({ ...s }); };
+  const colSet = (col, part) => { Object.assign(col, part); setS(s => ({ ...s })); };
 
   const save = () => {
     const p = plan(); if (!p.length || p.some(q => q.col.to === null)) return;
@@ -190,7 +190,7 @@ export function ImportSheet({ x, rows: given, onClose }) {
             <td>{col.on ? it && it.type ? <span class="mute">{labelOf(it.type)}</span> : <Select value={col.type} options={typeOpts} aria-label={t('class.bki_type')} onChange={v => colSet(col, { type: v, typeSet: true })} /> : null}</td>
             <td>{col.on && <input class="input" type="date" value={col.due} aria-label={t('class.due')} onInput={e => { col.due = e.currentTarget.value; }} />}</td>
             <td>{col.on && scale(col)}</td><td class="mute small">{found(col)}</td></tr>; })}</tbody></table></div>
-      <div class="cp-addgrid"><label class="cp-bkiall"><span>{t('class.bki_all_date')}</span><input class="input" type="date" value={s.all} onInput={e => set({ all: e.currentTarget.value })} /><Button size="sm" onClick={() => { if (s.all) for (const col of d.cols) if (!col.due) col.due = s.all; setS({ ...s }); }}>{t('class.bki_use_it')}</Button></label>
+      <div class="cp-addgrid"><label class="cp-bkiall"><span>{t('class.bki_all_date')}</span><input class="input" type="date" value={s.all} onInput={e => set({ all: e.currentTarget.value })} /><Button size="sm" onClick={() => { if (s.all) for (const col of d.cols) if (!col.due) col.due = s.all; setS(s => ({ ...s })); }}>{t('class.bki_use_it')}</Button></label>
         <Select label={t('class.bki_unit_go')} value={s.unit} options={c.units.map(u => ({ value: u.id, label: u.name })).concat({ value: '', label: t('class.bki_unit_new') })} onChange={v => set({ unit: v })} /></div>
       {d.cols.some(y => y.on && !y.to && !y.due) && <p class="mute small">{t('class.bki_no_date')}</p>}
       <h3>{t('class.students')}</h3>
