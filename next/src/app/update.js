@@ -25,6 +25,6 @@ export const checkUpdate = () => post({ type: 'gsn-check' });
 export const setUpdateMode = m => post({ type: 'gsn-mode', mode: m });
 export function useUpdate() {
   const [s, setS] = useState(st);
-  useEffect(() => { told.add(setS); return () => told.delete(setS); }, []);
+  useEffect(() => { told.add(setS); setS(st); return () => told.delete(setS); }, []);
   return { ...s, apply: applyUpdate, check: checkUpdate, setMode: setUpdateMode };
 }

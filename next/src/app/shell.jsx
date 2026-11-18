@@ -41,7 +41,8 @@ export function useClasses() {
 
 function useLock() {
   const [s, set] = useState(lockState().state);
-  useEffect(() => onLockChange(set), []);
+  // The lock is asked for as soon as the shell is drawn, so it can answer before this effect runs: read it again once listening.
+  useEffect(() => { const off = onLockChange(set); set(lockState().state); return off; }, []);
   return s;
 }
 
