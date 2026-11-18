@@ -532,3 +532,7 @@ dialog.dlg.mk-split[open]{display:flex}
 .mk-grp b{color:var(--acc-ink)}
 .mk-grpmode{width:auto;min-width:0;height:30px;padding:0 8px;font-size:var(--t2)}
 .mk-swsay{margin:-4px 0 10px;font-size:var(--t1)}
+.classwork .whead{display:flex;align-items:center;gap:6px;margin:0 0 8px}
+.classwork .whead h3{margin:0}
+.classwork .wempty{margin:0;font-size:var(--t2)}
+.wmove h4{margin:10px 0 4px}

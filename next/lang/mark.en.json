@@ -1036,5 +1036,25 @@
   "one": "{n} file",
   "other": "{n} files"
  },
- "mark.gw_nothing": "Nothing turned in"
+ "mark.gw_nothing": "Nothing turned in",
+ "mark.u_add_t": "New unit",
+ "mark.u_rename_t": "Rename the unit",
+ "mark.u_add": "Add unit",
+ "mark.u_rename": "Rename",
+ "mark.u_cancel": "Cancel",
+ "mark.u_name": "Unit name",
+ "mark.u_new": "Unit {n}",
+ "mark.u_more": "More for {name}",
+ "mark.u_item_more": "More for {name}",
+ "mark.u_del": "Delete unit",
+ "mark.u_gone": "Deleted “{name}”",
+ "mark.u_gone_n": {
+  "one": "Deleted “{name}” and its assignment",
+  "other": "Deleted “{name}” and its {n} assignments"
+ },
+ "mark.u_empty": "No assignments in this unit yet.",
+ "mark.u_move": "Move to…",
+ "mark.u_move_t": "Move “{name}” to",
+ "mark.u_moved": "Moved to {name}",
+ "mark.u_noclass": "No class"
 }
