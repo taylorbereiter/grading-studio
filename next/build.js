@@ -364,7 +364,18 @@ export const useKept = (l, k) => { lib = l; keptMeta = k; };
     // missing work (src/missing.js): who owes what, and who was reminded
     'MIS_WORDS', 'misConf', 'misCols', 'misOwes', 'misByStu', 'misByCol', 'misNudge', 'misLate', 'misDue',
     // the roster (src/app/screens.js, src/people.js, src/attend.js): a pasted list read, and a student's details and days kept through an edit
-    'parseRosterRows', 'keepInfo', 'keepAtt', 'infoOf', 'setInfo', 'blankInfo', 'attDays', 'attCount', 'attOf', 'attNote', 'classNewWay',
+    'mbParts', 'mbSorted', 'MB_ORDERS', 'parseRosterRows', 'keepInfo', 'keepAtt', 'infoOf', 'setInfo', 'blankInfo', 'attDays', 'attCount', 'attOf', 'attNote', 'classNewWay',
+    // attendance (src/attend.js): a day taken, one student set, a day cleared, the day before or after on the class's timetable;
+    // seating (src/seating.js): the room, who sits where, kept in a seat; the name picker's groups (src/pickshare.js)
+    'ATT_WAYS', 'attRec', 'attDayOk', 'attSet', 'attTake', 'attClear', 'attDayCount', 'attUnknown', 'attMeets', 'attStep', 'csvSafe',
+    'SEAT_ROOMS', 'SEAT_MAX_W', 'SEAT_MAX_H', 'seatXY', 'seatKeys', 'seatRoom', 'seatOf', 'seatSave', 'seatList', 'seatFill', 'seatPut', 'seatSetRoom',
+    'pkNice', 'pkShort', 'pkShuffle', 'pkCount', 'pkGroups',
+    // missing-work reminders (src/missing.js): one student's email, one to everyone who owes an assignment, the link, reminded today
+    'misDraft', 'misGroup', 'misHref', 'misPlain', 'misEmail', 'misLine', 'misFill', 'misClassName', 'rptCall',
+    // learning goals (src/goals.js): each goal's percent for each student and the class, from the rows and questions tagged with it
+    'goalList', 'goalData', 'GOAL_LOW',
+    // report comments (src/reports.js): what the gradebook knows about a student this term, and a draft from her own sentences
+    'RPT_WORDS', 'RPT_SLOTS', 'RPT_PROS', 'RPT_LEN', 'rptConf', 'rptEntry', 'rptPut', 'rptPro', 'rptFacts', 'rptDraft', 'rptText',
   ], `// The class page hands in which class the gradebook is on (src/book.js keeps it in bk.cls); saving is the screen's, through
 // students/write.js: what the lifted code changes is the library it was handed inside saveLibrary.
 export const bkUse = o => Object.assign(bk, o);
@@ -374,12 +385,15 @@ export const bookUse = o => { if ('lib' in o) lib = o.lib; if ('setup' in o) set
 // A retake's counting rule (gcore retakeRule) is read from the library: this one, for just the moment of the call.
 import { withTries as coreTries, state as coreState, set as coreSet } from './gcore.js';
 const withTries = (...a) => { const was = coreState().lib; coreSet.lib(lib); try { return coreTries(...a); } finally { coreSet.lib(was); } };
-const saveLib = () => {}, bkSaveLib = () => {}, renderLib = () => {};
-`, ['lib', 'setup', 'keptMeta', 'withTries', 'saveLib', 'bkSaveLib', 'renderLib'], ['gcore']],
+const saveLib = () => {}, bkSaveLib = () => {}, renderLib = () => {}, seatDraw = () => {};
+// The Planner's timetable as attendance reads it (src/today.js plan: { classes: [{ name, meets: [{ dow }] }], daysOff: [{ date }] }), handed in by the page.
+let plan = null;
+export const planUse = p => { plan = p; };
+`, ['lib', 'setup', 'keptMeta', 'withTries', 'saveLib', 'bkSaveLib', 'renderLib', 'seatDraw', 'plan'], ['gcore']],
   ['gbki', [
     // a gradebook imported from a spreadsheet (src/bookimport.js): the file read (CSV, TSV, Excel or pasted cells), its rows and
     // columns found, each column matched to an assignment already in the class, a category to a type; the screen is the new app's
-    'bkiParse', 'bkiXlsx', 'bkiCell', 'bkiDate', 'bkiWide', 'bkiRead', 'bkiGuess', 'bkiFit', 'bkiMatch', 'bkiCatGuess', 'BKI_SUM', 'normName',
+    'bkiParse', 'bkiXlsx', 'bkiCell', 'bkiDate', 'bkiWide', 'bkiRead', 'bkiGuess', 'bkiFit', 'bkiMatch', 'bkiCatGuess', 'BKI_SUM', 'normName', 'gcRead', 'gcNameOf',
   ], "// the teacher's types as the class page's gradebook reads them (gbook's own library), not a copy reading the marking screen's\nimport { bkCats } from './gbook.js';\n",
   // given: bkCats from gbook; mis, te and td only look used (a local td, the word "mis" in a pattern)
   ['bkCats', 'mis', 'te', 'td'], ['gcore', 'gbook']],

@@ -208,6 +208,7 @@ test('Add a class: a name and a pasted roster make a class the current app opens
   assert.deepEqual(c.names, ['Hal Pretend', 'Ivy Notreal']);
   assert.equal(c.info['Ivy Notreal'].email, 'ivy@example.com');
   await p.waitForFunction(id => location.hash === '#/class/' + id + '/people', {}, c.id);
+  await p.waitForSelector('[data-roster-edit], .stus, table.roster, [data-stu]', { timeout: 30000 });
   const old = await page(ctx, errors);
   await old.goto(srv.url); await appReady(old);
   assert.ok(await old.evaluate(() => window.__gs.state().lib.classes.some(k => k.name === 'Grade 11 Drama' && k.names.length === 2)));
@@ -399,6 +400,419 @@ test('IB classes: MYP levels and grades, DP boundaries, weights and a predicted 
   assert.equal(dp.pred, 6); assert.equal(dp.w.ic, 40); assert.notEqual(book.w && book.w.ic, 40);
   assert.deepEqual(dpDrawn.map(r => [r[0], r[1].trim()]), dp.rows);
   await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Import a gradebook (src/bookimport.js): cells pasted from a spreadsheet, a column matched to an assignment already there by its
+// name, a new one out of 10 from its heading, a total left out, a row that matches nobody left out, a score already there kept;
+// one undo step, and the current app reads the new card and the kept score.
+test('Import a gradebook: pasted cells matched to the roster and the assignments, read the same by the current app', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('table.book[data-term="t1"]', { timeout: 60000 });
+  const before = await libOf(p), N = before.classes[0].names, was = itemOf(before, 'i4').typed.s;
+  await menuItem(p, 'Import a gradebook');
+  await p.waitForSelector('dialog[open] [data-bki-paste]');
+  const tsv = ['Student\tVocabulary quiz\tMap test (10)\tTotal', 'Testwell, Aria\t16\t9\t90', N[1] + '\t' + (was[N[1]] && was[N[1]].v != null ? was[N[1]].v : 11) + '\t7\t80', 'Zed Nobody\t5\t5\t50'].join('\n');
+  await p.evaluate(text => { const dt = new DataTransfer(); dt.setData('text/plain', text); document.querySelector('dialog[open] [data-bki-paste]').dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); }, tsv);
+  await p.waitForSelector('dialog[open] [data-bki-cols]');
+  assert.ok(await p.$('dialog[open] [data-bki-clash]'), 'a score already there that differs is shown');
+  assert.equal(await p.$eval('dialog[open] [data-bki-go="1"]', s => s.value), 'i4');
+  // "Map test" is close to "Story map": the teacher says it is a new one before Import can be pressed
+  assert.equal(await p.$eval('dialog[open] [data-bki-go="2"]', s => s.value), '');
+  assert.ok(await p.$eval('dialog[open] [data-bki-save]', b => b.disabled));
+  await p.select('dialog[open] [data-bki-go="2"]', 'new');
+  await p.waitForFunction(() => document.querySelector('dialog[open] [data-bki-go="2"]').value === 'new' && !document.querySelector('dialog[open] [data-bki-save]').disabled);
+  assert.equal(await p.$eval('dialog[open] [data-bki-go="3"]', s => s.value), 'skip');
+  assert.equal(await p.$eval('dialog[open] [data-bki-max="2"]', e => e.value), '10');
+  assert.equal(await p.$eval('dialog[open] [data-bki-pick="2"]', s => s.value), '');
+  await p.click('dialog[open] [data-bki-save]');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.flatMap(u => u.items).some(i => i.name === 'Map test'));
+  const after = await libOf(p), map = after.classes[0].units.flatMap(u => u.items).find(i => i.name === 'Map test');
+  assert.equal(map.typed.max, 10); assert.deepEqual(strip(map.typed.s), { [N[0]]: { v: 9, st: '' }, [N[1]]: { v: 7, st: '' } });
+  assert.equal(map.type, 'sum', 'a test-like heading is a summative');
+  const i4 = itemOf(after, 'i4').typed.s;
+  const vs = r => r && [r.v, r.st || ''];
+  assert.deepEqual(vs(i4[N[0]]), was[N[0]] && (was[N[0]].v != null || was[N[0]].st) ? vs(was[N[0]]) : [16, ''], 'a score already there is kept');
+  assert.deepEqual(after.classes[0].names, N, 'nobody added');
+  await p.close();
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const main = await old.evaluate(() => { const c = window.__gs.state().lib.classes[0], it = c.units.flatMap(u => u.items).find(i => i.name === 'Map test'); return { typed: it.typed, type: it.type, i4: c.units.flatMap(u => u.items).find(i => i.id === 'i4').typed.s }; });
+  assert.deepEqual(strip(main.typed), strip(map.typed)); assert.equal(main.type, 'sum'); assert.deepEqual(strip(main.i4), strip(i4));
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// The entry list (src/mbentry.js): a task's scores in the school's order, a press on a student greys the row and moves on, the order
+// kept as the teacher's own setting (lib.me.mbOrder), which the current app reads.
+test('Entry list: one task in last-name order, ticked through, the order kept for the current app', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('table.book[data-term="t1"]', { timeout: 60000 });
+  const N = (await libOf(p)).classes[0].names;
+  const popup = new Promise(r => ctx.once('targetcreated', async tg => r(await tg.page())));
+  await menuItem(p, 'Entry list');
+  const w = await popup;
+  await w.waitForSelector('[data-mb] [data-mb-task]');
+  await w.select('[data-mb-task]', 'i4');
+  await w.click('[data-mb-order="last"]');
+  await p.waitForFunction(() => (JSON.parse(localStorage.getItem('gs.lib')).me || {}).mbOrder === 'last');
+  const names = await w.$$eval('[data-mb] li .mbn', l => l.map(e => e.textContent));
+  const last = n => n.split(' ').pop();
+  assert.deepEqual(names, N.slice().sort((a, b) => last(a).localeCompare(last(b))));
+  const vals = await w.$$eval('[data-mb] li .mbv', l => l.map(e => e.textContent));
+  const i4 = itemOf(await libOf(p), 'i4').typed.s;
+  assert.deepEqual(vals, names.map(n => String(i4[n].v)));
+  await w.click('[data-mb-row="0"]'); await w.click('[data-mb-row="1"]');
+  assert.equal(await w.$eval('[data-mb] li.cur', e => e.dataset.mbRow), '2');
+  assert.equal(await w.$$eval('[data-mb] li.done', l => l.length), 2);
+  await w.click('[data-mb-close]');
+  await p.close();
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  assert.equal(await old.evaluate(() => (window.__gs.state().lib.me || {}).mbOrder), 'last');
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Google Classroom (src/classroom.js): the grades file makes the class (its name from the file's, the emails kept as details), then
+// its Grades tab opens Import a gradebook with the scores, and the current app reads the class and its scores.
+test('Google Classroom: a grades file makes a class and its scores come in through the import', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  const dir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'gs-gc-')), f = path.join(dir, 'Biology 9 - grades.csv');
+  fs.writeFileSync(f, ['Last Name,First Name,Email Address,Map quiz,Lab write-up', 'Points,,,10,20', 'Sample,Nova,nova@example.org,8,15', 'Madeup,Ivo,ivo@example.org,9.5,Missing'].join('\n'));
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  await p.goto(srv.url + 'next/#/class/new');
+  await p.waitForSelector('[data-roster-gc]', { timeout: 60000 });
+  await p.click('[data-roster-gc]');
+  await p.waitForSelector('[data-gc] [data-gc-file]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('[data-gc] [data-gc-file]')]);
+  await chooser.accept([f]);
+  await p.waitForSelector('[data-gc-found]');
+  assert.equal(await p.$eval('[data-gc-name] input, input[data-gc-name]', e => e.value), 'Biology 9');
+  await p.click('[data-gc-go]');
+  await p.waitForSelector('dialog[open] [data-bki-cols]', { timeout: 60000 });
+  await p.click('dialog[open] [data-bki-save]');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes.some(c => c.name === 'Biology 9' && c.units.flatMap(u => u.items).length === 2));
+  const c = (await libOf(p)).classes.find(k => k.name === 'Biology 9'), items = c.units.flatMap(u => u.items);
+  assert.deepEqual(c.names, ['Nova Sample', 'Ivo Madeup']);
+  assert.equal(c.info['Nova Sample'].email, 'nova@example.org');
+  const mq = items.find(i => i.name === 'Map quiz'), lab = items.find(i => i.name === 'Lab write-up');
+  assert.equal(mq.typed.max, 10); assert.deepEqual(strip(mq.typed.s['Ivo Madeup']), { v: 9.5, st: '' });
+  assert.equal(lab.typed.max, 20); assert.deepEqual(strip(lab.typed.s['Ivo Madeup']), { v: null, st: 'missing' });
+  await p.close();
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const main = await old.evaluate(() => { const c = window.__gs.state().lib.classes.find(k => k.name === 'Biology 9'); return { names: c.names, n: c.units.flatMap(u => u.items).length }; });
+  assert.deepEqual(main, { names: ['Nova Sample', 'Ivo Madeup'], n: 2 });
+  await old.close();
+  fs.rmSync(dir, { recursive: true, force: true });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Scores on a phone (src/phone.js): at phone width the Grades tab lists the assignments; one opened has a box per student, a score
+// typed and Missing from its menu save the gradebook's way, and the current app reads them.
+test('Phone Scores: an assignment opened at phone width, a score typed and one marked missing, read the same by the current app', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('[data-phone-scores] [data-ph-col="i9"]', { timeout: 60000 });
+  const N = (await libOf(p)).classes[0].names;
+  await p.click('[data-ph-col="i9"]');
+  await p.waitForSelector('[data-ph-one="i9"]');
+  const box = await p.$('[data-ph-stu="' + N[2] + '"] [data-ph-in]');
+  await box.click({ clickCount: 3 }); await box.type('8.5'); await p.keyboard.press('Enter');
+  await p.waitForFunction(n => { const it = JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.flatMap(u => u.items).find(i => i.id === 'i9'); return it.typed.s[n] && it.typed.s[n].v === 8.5; }, {}, N[2]);
+  await p.click('[data-ph-stu="' + N[3] + '"] [data-ph-more]');
+  await p.waitForSelector('.pop [role^="menuitem"]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role^="menuitem"]')].find(b => /Missing/.test(b.textContent)).click());
+  await p.waitForFunction(n => { const it = JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.flatMap(u => u.items).find(i => i.id === 'i9'); return it.typed.s[n] && it.typed.s[n].st === 'missing'; }, {}, N[3]);
+  const s = strip(itemOf(await libOf(p), 'i9').typed.s);
+  await p.close();
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const main = await old.evaluate(() => window.__gs.state().lib.classes[0].units.flatMap(u => u.items).find(i => i.id === 'i9').typed.s);
+  assert.deepEqual(strip(main), s);
+  assert.deepEqual([s[N[2]].v, s[N[3]].st], [8.5, 'missing']);
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Attendance (src/attend.js): a day made in main's way is read here; a day taken here (a press, the keys, a note, Everyone is here)
+// is read the same by the current app's attOf and attNote.
+test('Attendance: a day taken with presses, the keys and a note, Everyone is here, Look back; read both ways with the current app', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  const N = await p.evaluate(() => { const l = JSON.parse(localStorage.getItem('gs.lib')), c = l.classes[0]; c.att = { '2026-09-14': { t: 1, m: { [c.names[3]]: 'e' }, n: { [c.names[3]]: 'Dentist' } } }; localStorage.setItem('gs.lib', JSON.stringify(l)); return c.names; });
+  await p.goto(srv.url + 'next/#/class/c1/people');
+  await p.waitForSelector('[data-att-open]', { timeout: 60000 });
+  await p.click('[data-att-open]');
+  await p.waitForSelector('dialog[open] [data-att-row="0"]');
+  const day = await p.$eval('[data-att-day]', e => e.dataset.attDay);
+  assert.match(await p.$eval('[data-att-sum]', e => e.textContent), /Not taken/);
+  // a press: the third student absent
+  await p.click('[data-att-row="2"] [data-att-s="a"]');
+  await p.waitForFunction((d, n) => ((JSON.parse(localStorage.getItem('gs.lib')).classes[0].att || {})[d] || { m: {} }).m[n] === 'a', {}, day, N[2]);
+  // the keys: L on the first student moves to the second
+  await p.waitForSelector('[data-att-row="0"] [data-att-s="p"][aria-checked="true"]');
+  await p.focus('[data-att-row="0"] [data-att-s="p"]');
+  await p.keyboard.press('l');
+  await p.waitForFunction((d, n) => JSON.parse(localStorage.getItem('gs.lib')).classes[0].att[d].m[n] === 'l', {}, day, N[0]);
+  await p.waitForFunction(() => document.activeElement && document.activeElement.closest('[data-att-row="1"]'));
+  // a note on the absence
+  await p.waitForSelector('[data-att-row="2"] [data-att-note]');
+  await p.type('[data-att-row="2"] [data-att-note]', 'Called home'); await p.keyboard.press('Tab');
+  await p.waitForFunction((d, n) => (JSON.parse(localStorage.getItem('gs.lib')).classes[0].att[d].n || {})[n] === 'Called home', {}, day, N[2]);
+  // the day before: Everyone is here
+  await p.click('[data-att-prev]');
+  await p.waitForFunction(d => document.querySelector('[data-att-day]').dataset.attDay !== d, {}, day);
+  const before = await p.$eval('[data-att-day]', e => e.dataset.attDay);
+  await p.click('[data-att-all]');
+  await p.waitForFunction(d => { const r = JSON.parse(localStorage.getItem('gs.lib')).classes[0].att[d]; return r && !r.off && !Object.keys(r.m).length; }, {}, before);
+  // Look back, every date: main's day reads E with its note, the unknown absence is listed
+  await p.click('dialog[open] .attbar [data-v="all"]');
+  await p.waitForSelector('[data-att-tab], [data-att-none]');
+  await p.evaluate(() => { const b = document.querySelector('dialog[open] .attnav [data-v="*"]'); if (b) b.click(); });
+  await p.waitForSelector('[data-att-tab] [data-att-open="2026-09-14"]');
+  const back = await p.evaluate(n => { const row = [...document.querySelectorAll('[data-att-tab] tbody tr')].find(r => r.querySelector('th').textContent === n); return [...row.querySelectorAll('.attc')].map(c => c.textContent + (c.querySelector('i') ? '*' : '')); }, N[3]);
+  assert.deepEqual(back, ['E*', '', '']);
+  assert.match(await p.$eval('[data-att-unk]', e => e.textContent), /1 absence still has no reason/);
+  // the current app reads the days the same
+  const mine = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].att);
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const seen = await old.evaluate((days, N) => { const G = window.__gs, c = G.state().lib.classes[0]; return days.map(d => N.map(n => G.attOf(c, d, n) + (G.attNote ? '' : ''))); }, [day, before, '2026-09-14'], N);
+  assert.deepEqual(seen[0].slice(0, 4), ['l', 'p', 'a', 'p']);
+  assert.ok(seen[1].every(s => s === 'p'));
+  assert.equal(seen[2][3], 'e');
+  assert.deepEqual(await old.evaluate(() => window.__gs.state().lib.classes[0].att), mine);
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Seating: a room laid out, seated in roster order, a student kept in a seat through a shuffle, a desk added; read the same by the current app', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  await p.goto(srv.url + 'next/#/class/c1/people');
+  await p.waitForSelector('[data-seat-open]', { timeout: 60000 });
+  const N = (await libOf(p)).classes[0].names;
+  await p.click('[data-seat-open]');
+  await p.waitForSelector('dialog[open] [data-seat-room="pairs"]');
+  await p.click('[data-seat-room="pairs"]');
+  await p.waitForFunction(() => (JSON.parse(localStorage.getItem('gs.lib')).classes[0].seats || {}).desks);
+  await p.waitForSelector('dialog[open] [data-seat-menu]');
+  const menu = async re => { await p.click('[data-seat-menu]'); await p.waitForSelector('.pop [role^="menuitem"]'); await p.evaluate(r => [...document.querySelectorAll('.pop [role^="menuitem"]')].find(b => new RegExp(r).test(b.textContent)).click(), re); };
+  await menu('roster order');
+  await p.waitForFunction(n => Object.values(JSON.parse(localStorage.getItem('gs.lib')).classes[0].seats.desks).includes(n), {}, N[N.length - 1]);
+  const first = await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('gs.lib')).classes[0].seats; return s.desks['0,0']; });
+  assert.equal(first, N[0]);
+  // keep the first student in their seat, then shuffle
+  await p.click('[data-desk="0,0"]');
+  await p.waitForSelector('[data-seat-pin]');
+  await p.click('[data-seat-pin]');
+  await p.waitForFunction(n => (JSON.parse(localStorage.getItem('gs.lib')).classes[0].seats.pins || []).includes(n), {}, N[0]);
+  await p.click('[data-seat-shuffle]');
+  await p.waitForSelector('.toast');
+  const s1 = (await libOf(p)).classes[0].seats;
+  assert.equal(s1.desks['0,0'], N[0]);
+  assert.equal(Object.values(s1.desks).filter(Boolean).length, N.length);
+  // a desk added where there was none
+  await menu('Arrange');
+  await p.waitForSelector('[data-cell].gap');
+  const gap = await p.$eval('[data-cell].gap', e => e.dataset.cell);
+  await p.click('[data-cell="' + gap + '"]');
+  await p.waitForFunction(k => k in JSON.parse(localStorage.getItem('gs.lib')).classes[0].seats.desks, {}, gap);
+  await p.click('[data-seat-done]');
+  const mine = (await libOf(p)).classes[0].seats;
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const main = await old.evaluate(() => { const G = window.__gs, c = G.state().lib.classes[0]; return { raw: c.seats, list: G.seatList(c).map(x => x.name) }; });
+  assert.deepEqual(main.raw, mine);
+  assert.equal(main.list.length, N.length);
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Pick a name from the class header: nobody twice, groups of 3, groups by hand with Undo, who is here; nothing saved', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  await p.goto(srv.url + 'next/#/class/c1');
+  await p.waitForSelector('[data-pick-name]', { timeout: 60000 });
+  const lib0 = JSON.stringify(await libOf(p)), N = JSON.parse(lib0).classes[0].names;
+  await p.evaluate(() => { window.__pkFast = true; });
+  await p.click('[data-pick-name]');
+  await p.waitForSelector('[data-picker] [data-pk-name]');
+  const picked = [await p.$eval('[data-pk-name]', e => e.textContent)];
+  for (let i = 1; i < N.length; i++) { await p.keyboard.press('Space'); picked.push(await p.$eval('[data-pk-name]', e => e.textContent)); }
+  assert.equal(new Set(picked).size, N.length);
+  // groups of 3
+  await p.keyboard.press('g'); await p.keyboard.press('3');
+  await p.waitForSelector('[data-pk-groups] [data-pk-g]');
+  const sizes = await p.$$eval('[data-pk-groups] [data-pk-g]', g => g.map(x => x.querySelectorAll('[data-pk-s]').length));
+  assert.equal(sizes.reduce((a, b) => a + b, 0), N.length);
+  assert.ok(Math.max(...sizes) - Math.min(...sizes) <= 1);
+  // by hand: everyone waits, one name put in group 1, Ctrl Z puts it back
+  await p.click('[data-pk="hand"]');
+  await p.waitForSelector('.pk-pool [data-pk-s]');
+  await p.click('.pk-pool [data-pk-s="' + N[0] + '"]');
+  await p.click('[data-pk-groups] [data-pk-g="0"] h3');
+  await p.waitForSelector('[data-pk-g="0"] [data-pk-s="' + N[0] + '"]');
+  await p.focus('[data-picker]');
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForSelector('.pk-pool [data-pk-s="' + N[0] + '"]');
+  // who is here: one away leaves the pool
+  await p.keyboard.press('w');
+  await p.waitForSelector('[data-pk-w="1"]');
+  await p.click('[data-pk-w="1"]');
+  assert.equal(await p.$('.pk-pool [data-pk-s="' + N[1] + '"]'), null);
+  await p.keyboard.press('Escape'); await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('[data-picker]'));
+  assert.equal(JSON.stringify(await libOf(p)), lib0);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('To do tab: a reminder drafted as the current app drafts it, opened in Gmail and marked reminded; a to-do for the class added and ticked', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  await p.evaluate(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); for (const c of l.classes) for (const n of c.names) { c.info ||= {}; c.info[n] = { ...(c.info[n] || {}), email: n.toLowerCase().replace(/[^a-z]+/g, '.') + '@example.org' }; } localStorage.setItem('gs.lib', JSON.stringify(l)); });
+  await p.goto(srv.url + 'next/#/class/c1/todo');
+  await p.waitForSelector('[data-mis] [data-mis-sum], [data-mis] [data-mis-none]', { timeout: 60000 });
+  // every term, so all the missing work shows
+  await p.evaluate(() => { const b = document.querySelector('[data-mis] .misopts [data-v="*"]'); if (b) b.click(); });
+  await p.waitForSelector('[data-mis-stu]');
+  const i = await p.$eval('[data-mis-stu]', e => +e.dataset.misStu);
+  await p.evaluate(() => { window.__mails = []; window.__gsMailTest = (h, u) => window.__mails.push([h, u]); });
+  await p.click('[data-mis-stu="' + i + '"] [data-mis-mail]');
+  await p.waitForFunction(() => window.__mails.length === 1);
+  const [mailto, url] = await p.evaluate(() => window.__mails[0]);
+  assert.match(url, /^https:\/\/mail\.google\.com\/mail\/\?view=cm&fs=1&to=/);
+  const N = (await libOf(p)).classes[0].names, n = N[i];
+  await p.waitForFunction(n => Object.keys(((JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}).nudge || {}).length > 0, {}, n);
+  // a to-do for this class, then ticked
+  await p.type('[data-ctd-new]', 'Book the library for the essay'); await p.keyboard.press('Enter');
+  await p.waitForFunction(() => ((JSON.parse(localStorage.getItem('gs.lib')).todo || {}).items || []).some(x => x.x === 'Book the library for the essay' && x.c === 'c1'));
+  await p.waitForSelector('[data-ctd-item] input'); await p.click('[data-ctd-item] input');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).todo.items.find(x => x.c === 'c1').done > 0);
+  // the current app drafts the same email, reads the reminder and the to-do
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const main = await old.evaluate(n => { const l = window.__gs.state().lib, c = l.classes[0]; return { nudge: (c.info[n] || {}).nudge, todo: l.todo.items.find(x => x.c === 'c1') }; }, n);
+  assert.ok(Object.keys(main.nudge || {}).length > 0);
+  assert.equal(main.todo.x, 'Book the library for the essay');
+  assert.ok(main.todo.done > 0);
+  // the email's words are main's misDraft for the work the page lists
+  const owed = await p.$$eval('[data-mis-stu="' + i + '"] .mislist .misw', e => e.map(x => x.textContent));
+  const mine = await p.evaluate(h => { const m = /^mailto:([^?]*)\?(.*)$/.exec(h), q = Object.fromEntries(m[2].split('&').map(kv => kv.split('=').map(decodeURIComponent))); return { to: decodeURIComponent(m[1]), subject: q.subject, body: q.body.replace(/\r\n/g, '\n') }; }, mailto);
+  const theirs = await old.evaluate((n, owed) => { const G = window.__gs, c = G.state().lib.classes[0]; const m = G.misDraft(c, n, owed.map(name => ({ name, due: '' }))); return { to: m.to, subject: m.subject }; }, n, owed);
+  assert.equal(mine.to, theirs.to); assert.equal(mine.subject, theirs.subject);
+  for (const w of owed) assert.ok(mine.body.includes('- ' + w));
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Learning goals on the made-up class: two goals, the rubric rows of both essays tagged with them.
+const goalSeed = () => { const seed = bookSeed(), l = JSON.parse(seed.ls['gs.lib']); l.goals = [{ id: 'ga', name: 'Argument', at: 1 }, { id: 'gb', name: 'Style', at: 1 }]; seed.ls['gs.lib'] = JSON.stringify(l);
+  for (const k of ['gs.b.n1', 'gs.b.n2']) { const b = JSON.parse(seed.ls[k]); b.setup = { ...b.setup, goals: ['ga', 'gb', 'gb'] }; seed.ls[k] = JSON.stringify(b); } return seed; };
+const goalRows = `(G, c, cols) => G.goalData(c, cols).map(d => [d.g.id, d.g.name, Math.round(d.avg * 10) / 10, d.n, d.low.slice(), d.from.map(f => [f.col.key, f.parts, f.n]), [...d.stu.entries()].map(([n, v]) => [n, Math.round(v * 10) / 10])])`;
+test('Learning goals: the class average on each goal and every student on every goal as the current app works them out; the list edited and read back', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const old = await page(ctx, errors);
+  await old.goto(srv.url + 'blank'); await plant(old, goalSeed());
+  await old.goto(srv.url); await appReady(old);
+  const was = await old.evaluate(async fn => { const G = window.__gs, c = G.state().lib.classes[0], cols = G.bkClassCols(c, await G.bkLoad()); return eval(fn)(G, c, cols); }, goalRows);
+  await old.close();
+  assert.equal(was.length, 2, 'both goals have scores');
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForFunction(() => window.__class && document.querySelector('table.book'), { timeout: 60000 });
+  const now = await p.evaluate(async fn => { const k = window.__class, b = await k.readBook(), B = k.B, c = b.lib.classes[0]; B.bookUse({ lib: b.lib }); B.bkUse({ cls: c.id }); return eval(fn)(B, c, B.bkClassCols(c, b.cols)); }, goalRows);
+  assert.deepEqual(now, was);
+  // the sheet, on the whole year
+  await p.evaluate(() => [...document.querySelectorAll('.bookbar [role="radio"]')].find(b => /Whole year/.test(b.textContent)).click());
+  await p.click('[data-open-goals]');
+  await p.waitForSelector('[data-goal-bars] .cp-band');
+  const bars = await p.$$eval('[data-goal-bars] .cp-band [data-raw]', e => e.map(x => x.textContent));
+  assert.deepEqual([...bars].sort(), ['Argument', 'Style']);
+  const heads = await p.$$eval('[data-goal-heat] thead th', e => e.length);
+  assert.equal(heads, 3);
+  // rename one, take one off, add one
+  await p.click('[data-goals-edit]');
+  await p.waitForSelector('[data-goal-row]');
+  await p.evaluate(() => { const i = document.querySelector('[data-goal-row="0"]'); i.value = 'Argument and claims'; i.dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.click('.goalrow:nth-child(2) button');
+  await p.click('[data-goal-add]'); await p.waitForSelector('[data-goal-row="1"]');
+  await p.focus('[data-goal-row="1"]'); await p.keyboard.type('Evidence');
+  await p.click('[data-goals-done]');
+  await p.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); return l.goals && l.goals.length === 2 && l.goals[1].name === 'Evidence' && (l.goalsGone || {}).gb; });
+  const old2 = await page(ctx, errors);
+  await old2.goto(srv.url); await appReady(old2);
+  const list = await old2.evaluate(() => window.__gs.goalList().map(g => [g.id, g.name]));
+  assert.deepEqual(list.map(x => x[1]), ['Argument and claims', 'Evidence']); assert.equal(list[0][0], 'ga');
+  await old2.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Report comments: each draft is the current app\'s draft, edited and marked done, the length and wording saved where the current app reads them', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const old = await page(ctx, errors);
+  await old.goto(srv.url + 'blank'); await plant(old, bookSeed());
+  await old.goto(srv.url); await appReady(old);
+  const draft = `async (G, len) => { const c = G.state().lib.classes[0], cols = G.bkClassCols(c, await G.bkLoad()), rc = G.rptConf(); if (len) rc.len = len; return c.names.map(n => G.rptDraft(c, n, G.rptFacts(c, cols, G.bkConf(), n), rc, 0)); }`;
+  const was = await old.evaluate((fn) => eval(fn)(window.__gs), draft);
+  await old.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForFunction(() => window.__class && document.querySelector('table.book'), { timeout: 60000 });
+  await p.evaluate(() => [...document.querySelectorAll('.bookbar [role="radio"]')].find(b => /Whole year/.test(b.textContent)).click());
+  await p.click('[data-open-reports]');
+  await p.waitForSelector('[data-rp-text]');
+  const N = (await libOf(p)).classes[0].names;
+  for (let i = 0; i < N.length; i++) {
+    await p.click('[data-rp-stu="' + i + '"]');
+    await p.waitForFunction(n => document.querySelector('[data-rp-name]').textContent === n, {}, N[i]);
+    assert.equal(await p.$eval('[data-rp-text]', e => e.value), was[i], 'draft for student ' + (i + 1));
+  }
+  // the first student's comment edited, then Done, next student
+  await p.click('[data-rp-stu="0"]');
+  await p.waitForFunction(n => document.querySelector('[data-rp-name]').textContent === n, {}, N[0]);
+  await p.focus('[data-rp-text]'); await p.keyboard.press('End'); await p.keyboard.type(' A pleasure to teach.');
+  await p.click('[data-rp-done]');
+  await p.waitForFunction(n => document.querySelector('[data-rp-name]').textContent === n, {}, N[1]);
+  await p.waitForFunction(n => { const r = ((JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}).rep; return r && r.year && r.year.done && /A pleasure to teach\.$/.test(r.year.text); }, {}, N[0]);
+  assert.match(await p.$eval('[data-rp-donecount]', e => e.textContent), /^1 of /);
+  // short comments
+  await p.evaluate(() => [...document.querySelectorAll('.rptopts [role="radio"]')].find(b => b.dataset.v === 'short').click());
+  await p.waitForFunction(() => ((JSON.parse(localStorage.getItem('gs.lib')).book || {}).rep || {}).len === 'short');
+  const short = await p.$eval('[data-rp-text]', e => e.value);
+  // the current app reads all of it back
+  const old2 = await page(ctx, errors);
+  await old2.goto(srv.url); await appReady(old2);
+  const back = await old2.evaluate(async (fn, n) => { const G = window.__gs, c = G.state().lib.classes[0]; return { rep: c.info[n].rep, len: G.rptConf().len, drafts: await eval(fn)(G) }; }, draft, N[0]);
+  assert.equal(back.len, 'short'); assert.equal(back.rep.year.done, true); assert.match(back.rep.year.text, /A pleasure to teach\.$/);
+  assert.equal(short, back.drafts[1]);
+  await old2.close();
   assert.deepEqual(errors, []);
   await ctx.close();
 });

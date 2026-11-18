@@ -9,9 +9,44 @@ export const bookUse = o => { if ('lib' in o) lib = o.lib; if ('setup' in o) set
 // A retake's counting rule (gcore retakeRule) is read from the library: this one, for just the moment of the call.
 import { withTries as coreTries, state as coreState, set as coreSet } from './gcore.js';
 const withTries = (...a) => { const was = coreState().lib; coreSet.lib(lib); try { return coreTries(...a); } finally { coreSet.lib(was); } };
-const saveLib = () => {}, bkSaveLib = () => {}, renderLib = () => {};
-import { LANG_LOCALE, store, kdo, ROW_TOP, rowTop, setupMax, rowScaleOf, setupOver, roundPct, pointsWith, percentWith, addXc, fmtNum, fmtPct } from './gcore.js';
+const saveLib = () => {}, bkSaveLib = () => {}, renderLib = () => {}, seatDraw = () => {};
+// The Planner's timetable as attendance reads it (src/today.js plan: { classes: [{ name, meets: [{ dow }] }], daysOff: [{ date }] }), handed in by the page.
+let plan = null;
+export const planUse = p => { plan = p; };
+import { batch, LANG_LOCALE, store, kdo, ROW_TOP, rowTop, setupMax, rowScaleOf, setupOver, roundPct, pointsWith, percentWith, addXc, fmtNum, fmtPct } from './gcore.js';
 
+// src/pickshare.js
+const pkNice = n => { const s = String(n || '').trim(), m = /^([^,]+),\s*(.+)$/.exec(s); return m ? m[2].trim() + ' ' + m[1].trim() : s; };
+// src/pickshare.js
+function pkShort(names) {
+  const parts = names.map(n => pkNice(n).split(/\s+/).filter(Boolean)), first = parts.map(p => p[0] || '?'), count = new Map();
+  for (const f of first) count.set(f.toLowerCase(), (count.get(f.toLowerCase()) || 0) + 1);
+  return parts.map((p, i) => count.get(first[i].toLowerCase()) > 1 && p.length > 1 ? first[i] + ' ' + [...p[p.length - 1]][0].toUpperCase() + '.' : first[i]);
+}
+// src/pickshare.js
+function pkShuffle(list) {
+  const a = list.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+// src/pickshare.js
+function pkCount(len, by, n) {
+  if (len < 1) return 0;
+  if (by === 'count') return Math.max(1, Math.min(len, n));
+  const up = Math.ceil(len / n), least = Math.floor(len / up);
+  return least >= Math.max(2, n - 1) || up === 1 ? up : Math.max(1, Math.floor(len / n));
+}
+// src/pickshare.js
+function pkGroups(names, by, n, prev) {
+  const k = pkCount(names.length, by, n);
+  const deal = () => { const out = Array.from({ length: k }, () => []); pkShuffle(names).forEach((nm, i) => out[i % k].push(nm)); return out; };
+  if (k < 2 || !Array.isArray(prev) || !prev.length) return deal();
+  const was = new Map(); prev.forEach((g, i) => g.forEach(nm => was.set(nm, i)));
+  const again = gs => { let s = 0; for (const g of gs) for (let a = 0; a < g.length; a++) for (let b = a + 1; b < g.length; b++) if (was.has(g[a]) && was.get(g[a]) === was.get(g[b])) s++; return s; };
+  let best = null, least = Infinity;
+  for (let t = 0; t < 60 && least > 0; t++) { const g = deal(), s = again(g); if (s < least) { best = g; least = s; } }
+  return best;
+}
 // src/app/start.js
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // src/app/start.js
@@ -26,6 +61,8 @@ const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensiti
 const ME_OLD = { sys: 'ManageBac', unit: 'Atlas', scale12: true, ai: 'Claude' };   // scale12: Rubric setup offers the 12-point scale (12 = 100, 11 = 95…) as a preset
 // src/app/library.js
 const me = () => lib.me || ME_OLD;
+// src/app/library.js
+const attDayOk = d => { if (!/^\d{4}-\d\d-\d\d$/.test(d || '')) return false; const t = new Date(d + 'T12:00:00'); return !isNaN(t) && t.getMonth() + 1 === +d.slice(5, 7) && t.getDate() === +d.slice(8); };
 // src/app/library.js
 const GRADE_WAYS = [
   ['rubric', 'Rubric rows', 'Score each row 0 to 4, half points too. The total and percent add up by themselves.', { mode: 'rubric', criteria: ['Criterion 1', 'Criterion 2', 'Criterion 3'], outOf: 10, scale: null }, null],
@@ -79,6 +116,8 @@ function cardOfKept(id) {
   for (const c of holders()) for (const u of c.units) { const it = u.items.find(x => x.batchId === id); if (it) return it; }
   return null;
 }
+// src/app/anon.js
+const anonOn = () => !!(batch && batch.anon && batch.anon.on);
 // src/grades.js
 const hasSheet = g => g.sheet != null && g.sheet !== '';
 // src/grades.js
@@ -87,6 +126,11 @@ const tryRuleSay = (rule, n) => rule === 'last' ? 'the latest try' : rule === 'a
 function triesSay(g) {
   const all = g.tries.concat(g.tryNow ? [g.tryNow] : []);
   return all.map((t, i) => (i ? (all.length === 2 ? 'retake ' : 'try ' + (i + 1) + ' ') : 'First try ') + fmtPct(t.pct)).join(', ') + (g.tryNow ? '' : ', retake not scored yet') + '. Counts: ' + (g.tryNow ? tryRuleSay(g.tryRule, all.length) : 'the ' + (g.tries.length > 1 ? 'earlier tries' : 'first try')) + '.';
+}
+// src/grades.js
+function csvSafe(v) {
+  const t = String(v);
+  return /^[\s 　]*[=+\-@＝＋－＠]/.test(t) || /^[\t\r\n]/.test(t) ? "'" + t : t;
 }
 // src/saving.js
 const newestWork = (a, b) => !a ? b || null : !b ? a : (b.t || 0) > (a.t || 0) ? b : a;
@@ -102,6 +146,8 @@ async function earlierWork(id, keep = hasWork) {
   } catch (e) { console.error(e); }
   return [...all].filter(([, d]) => keep(d)).sort((a, b) => (b[1].t || 0) - (a[1].t || 0));
 }
+// src/rubrics.js
+const levelIn = (d, i, v) => { const r = d.levels && d.levels[i]; return (r && r[v]) || ''; };
 // src/rubrics.js
 const people = (n, one, many) => n + ' ' + (n === 1 ? one : many || one + 's');
 // src/rubrics.js
@@ -258,6 +304,12 @@ function bkGroups(cols) {
   return g;
 }
 // src/book.js
+const bkLeftAll = {};
+// src/book.js
+const bkLeft = () => bkLeftAll[bk.cls] || (bkLeftAll[bk.cls] = new Set());
+// src/book.js
+const bkIn = n => !bkLeft().has(n);
+// src/book.js
 const bkCountTypes = conf => bkCats().filter(([t]) => +conf.w[t] > 0);
 // src/book.js
 const bkClassAvg = (grades, t) => { const ps = grades.map(r => t ? r.by[t] : r.grade).filter(v => v != null); return ps.length ? pctAvgText(bkMean(ps)) : '–'; };
@@ -268,6 +320,8 @@ function bkBands(list) {
   const n = list.length, cnt = BK_BANDS.map(([lo, hi]) => list.filter(p => roundPct(p.v) >= lo && (roundPct(p.v) <= hi || (lo === 90 && p.v > 100)))), most = Math.max(1, ...cnt.map(x => x.length));
   return '<div class="pbands" id="bkBands">' + BK_BANDS.map(([, , l], i) => { const k = cnt[i].length; return '<div class="pband"' + (k ? ' tabindex="0"' : '') + ' data-tv="' + esc(people(k, 'student')) + '" data-tl="' + esc(l + '%') + '" data-tn="' + esc(cnt[i].map(p => p.name).join(', ')) + '" data-tnraw><span>' + l + '</span><div class="pbt"><i style="width:' + k / most * 100 + '%"></i></div><span class="pbn"><b>' + k + '</b>' + (n ? ' · ' + Math.round(k / n * 100) + '%' : '') + '</span></div>'; }).join('') + '</div>';
 }
+// src/book.js
+function bkScored(cols) { return cols.filter(x => x.type !== 'fm' && bkIsType(x.type)); }
 // src/book.js
 function bkTypeUse() {
   const n = new Map(), add = t => { if (t) n.set(t, (n.get(t) || 0) + 1); };
@@ -430,6 +484,92 @@ function keepInfo(c, was, rows) {
 const one = t => String(t || '').replace(/\s*\n\s*/g, ' ').trim();
 // src/typednotes.js
 function tnHasG(g) { return !!(g && g.tn && Array.isArray(g.tn.l) && g.tn.l.some(x => x && x.k !== 'h' && x.y !== 'h2' && String(x.s || '').trim())); }
+// src/classpage.js
+const chRowName = x => typeof x === 'string' ? x.trim() : String((x && x.name) || '').trim();
+// src/classpage.js
+function chRowTop(cols) {
+  const n = new Map(); for (const col of cols) for (const cell of col.cells.values()) for (const r of (cell && cell.rows) || []) { const t = r[2] || ROW_TOP; n.set(t, (n.get(t) || 0) + 1); }
+  let best = ROW_TOP, most = 0; for (const [t, k] of n) if (k > most) { best = t; most = k; }
+  return best;
+}
+// src/seating.js
+const SEAT_MAX_W = 14, SEAT_MAX_H = 12;
+// src/seating.js
+const SEAT_ROOMS = [['rows', 'Rows', 'Single desks in rows'], ['pairs', 'Pairs', 'Desks side by side in twos'], ['tables', 'Tables of four', 'Four desks pushed together'], ['horseshoe', 'Horseshoe', 'Desks around three sides, open to the front']];
+// src/seating.js
+const seatXY = k => k.split(',').map(Number);
+// src/seating.js
+const seatKeys = s => Object.keys(s.desks).sort((a, b) => { const [ax, ay] = seatXY(a), [bx, by] = seatXY(b); return ay - by || ax - bx; });
+// src/seating.js
+function seatRoom(kind, n) {
+  n = Math.max(1, Math.min(60, n));
+  const cells = [];
+  if (kind === 'pairs') {
+    const across = n <= 16 ? 2 : 3, per = across * 2, rows = Math.ceil(n / per);
+    for (let y = 0; y < rows; y++) for (let p = 0; p < across; p++) cells.push([3 * p, y], [3 * p + 1, y]);
+  } else if (kind === 'tables') {
+    const tables = Math.ceil(n / 4), across = tables <= 4 ? 2 : tables <= 9 ? 3 : 4;
+    for (let t = 0; t < tables; t++) { const x = 3 * (t % across), y = 3 * Math.floor(t / across); cells.push([x, y], [x + 1, y], [x, y + 1], [x + 1, y + 1]); }
+  } else if (kind === 'horseshoe') {
+    const w = Math.min(SEAT_MAX_W, Math.max(4, Math.ceil(n * .4))), h = Math.min(SEAT_MAX_H, Math.max(2, Math.ceil((n - w) / 2) + 1));
+    for (let y = 0; y < h - 1; y++) cells.push([0, y]);
+    for (let x = 0; x < w; x++) cells.push([x, h - 1]);
+    for (let y = h - 2; y >= 0; y--) cells.push([w - 1, y]);
+    for (let y = h - 3; y >= 0 && cells.length < n; y -= 2) for (let x = 2; x < w - 2 && cells.length < n; x++) cells.push([x, y]);   // a very big class: rows inside the horseshoe
+  } else {
+    const per = n <= 12 ? 4 : n <= 20 ? 5 : n <= 36 ? 6 : 7, rows = Math.ceil(n / per);
+    for (let y = 0; y < rows; y++) for (let x = 0; x < per; x++) cells.push([x, y]);
+  }
+  if (kind !== 'horseshoe') cells.length = Math.min(cells.length, n);   // no more desks than students; a horseshoe keeps its shape
+  return { w: Math.max(...cells.map(c => c[0])) + 1, h: Math.max(...cells.map(c => c[1])) + 1, cells: cells.map(c => c.join(',')) };
+}
+// src/seating.js
+function seatOf(c) {
+  const s = c && c.seats; if (!s || typeof s !== 'object' || !s.desks || typeof s.desks !== 'object') return null;
+  const w = Math.max(1, Math.min(SEAT_MAX_W, Math.round(+s.w) || 1)), h = Math.max(1, Math.min(SEAT_MAX_H, Math.round(+s.h) || 1)), desks = {}, used = new Set();
+  for (const [k, v] of Object.entries(s.desks)) {
+    if (!/^\d+,\d+$/.test(k)) continue;
+    const [x, y] = seatXY(k); if (x >= w || y >= h) continue;
+    const n = typeof v === 'string' && v && c.names.includes(v) && !used.has(v) ? v : '';
+    if (n) used.add(n); desks[k] = n;
+  }
+  return { w, h, desks, flip: !!s.flip, pins: (Array.isArray(s.pins) ? s.pins : []).filter(n => used.has(n)) };
+}
+// src/seating.js
+const seatList = c => { const s = seatOf(c); return s ? seatKeys(s).filter(k => s.desks[k]).map(k => ({ name: s.desks[k], x: seatXY(k)[0], y: seatXY(k)[1] })) : []; };
+// src/seating.js
+function seatSave(c, s) {
+  if (!s) delete c.seats;
+  else c.seats = { w: s.w, h: s.h, desks: s.desks, ...(s.flip ? { flip: true } : {}), ...(s.pins && s.pins.length ? { pins: s.pins } : {}) };
+  saveLib(); seatDraw();
+}
+// src/seating.js
+function seatFill(c, shuffle) {
+  const s = seatOf(c), pinned = new Set(s.pins), keys = seatKeys(s).filter(k => !pinned.has(s.desks[k]));
+  let who = c.names.filter(n => !pinned.has(n)); if (shuffle) who = pkShuffle(who);
+  keys.forEach((k, i) => { s.desks[k] = who[i] || ''; });
+  seatSave(c, s);
+  return Math.max(0, who.length - keys.length);
+}
+// src/seating.js
+function seatPut(c, name, key) {
+  const s = seatOf(c), from = Object.keys(s.desks).find(k => s.desks[k] === name) || null;
+  if (key === from || (key && !(key in s.desks))) return;
+  const other = key ? s.desks[key] : '';
+  if (key) s.desks[key] = name;
+  if (from) s.desks[from] = other || '';
+  s.pins = s.pins.filter(n => n !== name && n !== other);
+  seatSave(c, s);
+}
+// src/seating.js
+function seatSetRoom(c, kind) {
+  const was = seatOf(c), who = was ? seatKeys(was).map(k => was.desks[k]).filter(Boolean) : [], r = seatRoom(kind, c.names.length), desks = {};
+  r.cells.forEach(k => { desks[k] = ''; });
+  const order = seatKeys({ desks }); who.forEach((n, i) => { if (order[i]) desks[order[i]] = n; });
+  seatSave(c, { w: r.w, h: r.h, desks, flip: was ? was.flip : false, pins: [] });
+}
+// src/attend.js
+const ATT_WAYS = [['p', 'Present'], ['l', 'Late'], ['a', 'Absent, reason unknown'], ['e', 'Absent, excused']], ATT_WORD = Object.fromEntries(ATT_WAYS);
 // src/attend.js
 const attRec = (c, d) => { const r = c && c.att && c.att[d]; return r && !r.off ? r : null; };
 // src/attend.js
@@ -441,6 +581,21 @@ const attDays = (c, from, to) => Object.keys((c && c.att) || {}).filter(d => att
 // src/attend.js
 function attCount(c, n, days) { const o = { p: 0, l: 0, e: 0, a: 0 }; for (const d of days) o[attOf(c, d, n)]++; return o; }
 // src/attend.js
+function attDayCount(c, d) { const o = { p: 0, l: 0, e: 0, a: 0 }; for (const n of c.names) o[attOf(c, d, n) || 'p']++; return o; }
+// src/attend.js
+function attSet(c, d, n, way, note) {
+  if (!c || !attDayOk(d) || !c.names.includes(n)) return false;
+  const was = attRec(c, d), r = { t: Date.now(), m: { ...((was && was.m) || {}) }, n: { ...((was && was.n) || {}) } };
+  if (way) { if (way === 'p' || !ATT_WORD[way]) delete r.m[n]; else r.m[n] = way; }
+  if (note !== undefined) { const s = String(note || '').trim().slice(0, 120); if (s) r.n[n] = s; else delete r.n[n]; }
+  if (!Object.keys(r.n).length) delete r.n;
+  (c.att ||= {})[d] = r; saveLib(); return true;
+}
+// src/attend.js
+function attTake(c, d) { if (!c || !attDayOk(d) || attRec(c, d)) return; (c.att ||= {})[d] = { t: Date.now(), m: {} }; saveLib(); }
+// src/attend.js
+function attClear(c, d) { if (!c || !c.att || !c.att[d]) return; c.att[d] = { t: Date.now(), off: 1 }; saveLib(); }
+// src/attend.js
 function keepAtt(c, was, oldInfo) {
   if (!c.att) return;
   for (const n of (was || []).filter(n => !c.names.includes(n))) {
@@ -449,6 +604,22 @@ function keepAtt(c, was, oldInfo) {
     for (const r of Object.values(c.att)) for (const k of ['m', 'n']) if (r[k] && r[k][n] != null) { if (r[k][to] == null) r[k][to] = r[k][n]; delete r[k][n]; }
   }
 }
+// src/attend.js
+function attMeets(c) {
+  if (!plan) return null;
+  const nk = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''), k = nk(c.name), pc = k && plan.classes.find(x => nk(x.name) === k);
+  return pc && pc.meets.length ? { dows: new Set(pc.meets.map(m => m.dow)), off: new Set(plan.daysOff.map(x => x.date)) } : null;
+}
+// src/attend.js
+function attStep(c, d, dir) {
+  const m = attMeets(c), t = new Date(d + 'T12:00:00');
+  for (let i = 0; i < 90; i++) { t.setDate(t.getDate() + dir); const x = isoDay(t); if (!m || (m.dows.has(t.getDay()) && !m.off.has(x)) || attRec(c, x)) return x; }
+  return isoDay(new Date(new Date(d + 'T12:00:00').getTime() + dir * 864e5));
+}
+// src/attend.js
+const attUnknown = (c, days) => days.flatMap(d => c.names.filter(n => attOf(c, d, n) === 'a').map(n => ({ d, n }))).reverse();
+// src/goals.js
+function goalList() { return Array.isArray(lib.goals) ? lib.goals.filter(g => g && g.id && String(g.name || '').trim()) : []; }
 // src/goals.js
 function goalCell(d, g, p) {
   if (!g || !p || p.status === 'missing' || p.status === 'excused' || g.outAvg) return null;
@@ -461,6 +632,27 @@ function goalCell(d, g, p) {
   else if (d.goal && p.pct != null && !p.partial) out[d.goal] = { got: p.total != null ? p.total : p.pct, of: p.total != null && p.max ? p.max : 100, pct: p.pct, parts: ['The whole score'] };
   for (const e of Object.values(out)) if (e.pct == null) { const share = Math.max(0, Math.min(1, e.got / e.of)), v = max ? percentWith(share * max, max, s.scale) : null; e.pct = v == null ? share * 100 : Math.max(0, v); }
   return Object.keys(out).length ? out : null;
+}
+// src/goals.js
+const GOAL_LOW = 70;
+// src/goals.js
+function goalData(c, cols) {
+  const use = cols.filter(x => x.type !== 'fm' && x.type !== 'xc');
+  return goalList().map(g => {
+    const per = new Map(), from = [];
+    for (const col of use) {
+      const parts = []; let n = 0;
+      for (const nm of c.names) {
+        const cell = col.cells.get(nm), e = cell && cell.goals && cell.goals[g.id]; if (!e) continue;
+        n++; for (const p of e.parts) if (!parts.includes(p)) parts.push(p);
+        if (!per.has(nm)) per.set(nm, []); per.get(nm).push({ col, pct: e.pct, got: e.got, of: e.of });
+      }
+      if (n) from.push({ col, parts, n });
+    }
+    const stu = new Map(); for (const [nm, list] of per) stu.set(nm, bkMean(list.map(x => x.pct)));
+    const inAvg = c.names.filter(nm => stu.has(nm) && bkIn(nm)), low = inAvg.filter(nm => roundPct(stu.get(nm)) < GOAL_LOW);
+    return { g, per, stu, from, avg: inAvg.length ? bkMean(inAvg.map(nm => stu.get(nm))) : null, n: inAvg.length, low };
+  }).filter(x => x.from.length);
 }
 // src/ib.js
 const IB_TOP = 8;
@@ -545,6 +737,8 @@ function classNewWay() { const g = meGrade(); return (g && g.way === 'myp') || /
 // src/ib.js
 function ibConf(c, conf) { const w = classWay(c) === 'dp' && c.ib && c.ib.w && typeof c.ib.w === 'object' ? c.ib.w : null; return w ? { ...conf, w: { ...conf.w, ...w } } : conf; }
 // src/ib.js
+const ibTermKey = () => bk.term == null ? '' : bk.term;
+// src/ib.js
 function ibCols(c, cols) {
   const keys = new Set(ibCrit(c).map(x => x.k));
   return cols.map(col => {
@@ -565,6 +759,160 @@ function ibCols(c, cols) {
 const ibEvFor = (icols, name, k) => icols.filter(x => x.cells.has(name) && x.cells.get(name).lv[k] != null).map(x => ({ v: x.cells.get(name).lv[k], t: x.t, name: x.name, fm: x.fm }));
 // src/ib.js
 function ibMid(list) { const v = list.filter(x => x != null).sort((a, b) => a - b), n = v.length; if (!n) return null; const a = v[Math.floor((n - 1) / 2)], b = v[Math.ceil((n - 1) / 2)]; return a === b ? String(a) : a + ' to ' + b; }
+// src/ib.js
+const ibLvAt = (c, term, name) => ((c.lv || {})[term == null ? ibTermKey() : term] || {})[name] || {};
+// src/ib.js
+function ibRptFacts(c, cols, n, term, said) {
+  const crit = ibCrit(c), icols = ibCols(c, cols), lv = ibLvAt(c, term, n), r = ibTerm(lv, crit, ibBounds(c)), g = r.grade;
+  const at = crit.map(x => { const v = ibLevel(lv[x.k]); return { name: x.name, avg: v != null ? v : ibEvidence(ibEvFor(icols, n, x.k)).last }; }).filter(x => x.avg != null).sort((a, b) => b.avg - a.avg);
+  const apart = at.length >= 2 && at[0].avg - at[at.length - 1].avg >= 1;
+  return { grade: g, soFar: false, band: g == null ? 'None' : g >= 6 ? 'High' : g === 5 ? 'Good' : g >= 3 ? 'Mid' : 'Low', gradeText: g != null ? g + ' out of 7' : '',
+    chip: g != null ? 'Grade ' + g + ' · total ' + r.total + ' of ' + crit.length * IB_TOP : r.set ? r.set + ' of ' + crit.length + ' criteria set' : 'No levels set yet',
+    strong: apart ? at[0] : null, weak: apart ? at[at.length - 1] : null, words: '', move: 0, best: '', said,
+    missing: icols.filter(x => (x.cells.get(n) || {}).st === 'missing').map(x => x.name), scored: icols.filter(x => x.cells.has(n) && Object.keys(x.cells.get(n).lv).length).length };
+}
+// src/mbentry.js
+const MB_ORDERS = [['', 'Roster order'], ['last', 'Last name'], ['first', 'First name']];
+// src/mbentry.js
+function mbParts(n) {
+  const s = String(n).trim(), c = s.indexOf(',');
+  if (c > 0) return { first: s.slice(c + 1).trim(), last: s.slice(0, c).trim() };
+  const w = s.split(/\s+/); return { first: w[0], last: w.length > 1 ? w[w.length - 1] : '' };
+}
+// src/mbentry.js
+function mbSorted(names, how) {
+  const idx = names.map((n, i) => i);
+  if (!how || anonOn()) return idx;
+  const key = i => { const p = mbParts(names[i]); return how === 'last' ? [p.last, p.first] : [p.first, p.last]; };
+  return idx.sort((a, b) => { const x = key(a), y = key(b); return x[0].localeCompare(y[0], undefined, { sensitivity: 'base' }) || x[1].localeCompare(y[1], undefined, { sensitivity: 'base' }) || a - b; });
+}
+// src/reports.js
+const RPT_LEN = [['short', 'Short'], ['medium', 'Medium'], ['long', 'Long']];
+// src/reports.js
+const RPT_WORDS = {
+  openHigh: ['{name} has had an excellent term{in}.', '{name} has worked to a very high standard{in} this term.', 'This has been a very strong term{in} for {name}.'],
+  openGood: ['{name} has had a good term{in}.', '{name} has made solid progress{in} this term.', 'This has been a positive term{in} for {name}.'],
+  openMid: ['{name} has had a mixed term{in}.', '{name} has shown what {they} can do at times{in} this term.', 'This has been an uneven term{in} for {name}.'],
+  openLow: ['{name} has found this term{in} difficult.', 'This has been a challenging term{in} for {name}.'],
+  openNone: ['{name} has not yet finished enough work{in} this term for a grade.'],
+  grade: ['{Their} term grade is {grade}.'],
+  strong: ['{Their} strongest area is {row}.', '{They} {is} at {their} best in {row}.', '{row} has been a real strength.'],
+  best: ['{Their} best piece of work was {work}.', '{work} showed what {they} can do.'],
+  up: ['{Their} recent work shows clear improvement.', '{They} {has} improved steadily over the term.'],
+  down: ['{Their} most recent scores have been lower than earlier in the term.', 'Recent work has not matched what {they} did earlier in the term.'],
+  next: ['The next step is to work on {row}.', '{They} should now focus on {row}.', 'More attention to {row} will lift {their} work.'],
+  level: ['To move up in {row}, the aim is: {words}.'],
+  missing1: ['{They} still {has} one piece of work to hand in: {list}.'],
+  missing: ['{They} still {has} {n} pieces of work to hand in: {list}.'],
+  closeHigh: ['Well done, {name}.', '{They} should be proud of this term.'],
+  closeGood: ['With the same effort next term, {they} can go further.', 'Keep it up, {name}.'],
+  closeMid: ['Steady effort on this next term will make a real difference.', 'A consistent routine next term will help {them} show {their} best work more often.'],
+  closeLow: ['Regular practice, and asking for help early, will make a difference next term.', 'I would like {name} to ask for help as soon as something is unclear.'],
+};
+// src/reports.js
+const RPT_SLOTS = [['openHigh', 'Opening, for the highest grades'], ['openGood', 'Opening, for good grades'], ['openMid', 'Opening, for middling grades'], ['openLow', 'Opening, for the lowest grades'], ['openNone', 'Opening, when there is no grade yet'],
+  ['grade', 'The grade'], ['strong', 'Strongest rubric row'], ['best', 'Best piece of work'], ['up', 'Scores going up'], ['down', 'Scores going down'], ['next', 'Rubric row to work on'], ['level', 'What the next level asks for'],
+  ['missing1', 'One piece of work missing'], ['missing', 'Several pieces missing'], ['closeHigh', 'Closing, for the highest grades'], ['closeGood', 'Closing, for good grades'], ['closeMid', 'Closing, for middling grades'], ['closeLow', 'Closing, for the lowest grades']];
+// src/reports.js
+const RPT_PRO = { they: ['they', 'them', 'their', 'are', 'have', ''], she: ['she', 'her', 'her', 'is', 'has', 's'], he: ['he', 'him', 'his', 'is', 'has', 's'] };
+// src/reports.js
+const RPT_PROS = [['they', 'they / their'], ['she', 'she / her'], ['he', 'he / his'], ['name', 'No pronoun: use the name']];
+// src/reports.js
+function rptConf() {
+  const r = (lib.book && lib.book.rep) || {}, cut = Array.isArray(r.cut) && r.cut.length === 3 && r.cut.every(v => isFinite(+v)) ? r.cut.map(Number) : [85, 70, 55];
+  return { len: RPT_LEN.some(x => x[0] === r.len) ? r.len : 'medium', grade: !!r.grade, limit: +r.limit > 0 ? Math.round(+r.limit) : 0, cut, words: r.words || {}, subj: r.subj || {} };
+}
+// src/reports.js
+const rptTerm = () => bk.term === '*' ? 'year' : bk.term || 'all';
+// src/reports.js
+function rptCall(c, n) {
+  const own = (infoOf(c, n).call || '').trim(); if (own) return own;
+  const t = String(n), part = /,/.test(t) ? t.split(',').slice(1).join(' ') : t;
+  return (part.trim().split(/\s+/)[0] || t).trim();
+}
+// src/reports.js
+const rptPro = (c, n) => { const p = infoOf(c, n).pro; return RPT_PROS.some(x => x[0] === p) ? p : 'they'; };
+// src/reports.js
+const rptEntry = (c, n) => ((infoOf(c, n).rep || {})[rptTerm()]) || {};
+// src/reports.js
+function rptPut(c, n, patch, term) {
+  const key = term || rptTerm(), rep = { ...(infoOf(c, n).rep || {}) }, e = { ...(rep[key] || {}), ...patch };
+  for (const k of Object.keys(e)) if (e[k] == null || e[k] === false || e[k] === 0) delete e[k];
+  if (Object.keys(e).some(k => k !== 't')) rep[key] = e; else delete rep[key];
+  setInfo(c, n, { rep: Object.keys(rep).length ? rep : '' });
+  bkSaveLib();
+}
+// src/reports.js
+const rptPairs = new WeakMap();
+// src/reports.js
+function rptSaid(c, cols, n) {
+  const said = [];
+  for (const col of cols) {
+    if (!col.d || !col.d.s) continue;
+    let pairs = rptPairs.get(col); if (!pairs) rptPairs.set(col, pairs = rosterPairs(c.names, Object.keys({ ...col.d.s, ...col.d.read })));
+    const k = pairs.get(n), t = k && col.d.s[k] && col.d.s[k].g ? String(col.d.s[k].g.comment || '').trim() : '';
+    if (t) said.push({ work: col.name, text: t });
+  }
+  return said;
+}
+// src/reports.js
+function rptFacts(c, cols, conf, n, term) {
+  // an MYP class has levels and a 1 to 7, never a percent (ib.js)
+  if (classWay(c) === 'myp') return ibRptFacts(c, cols, n, term, rptSaid(c, cols, n));
+  const g = bkGrade(n, cols, conf), scored = bkScored(cols).map(col => ({ col, cell: col.cells.get(n) })).filter(x => bkCounts(x.cell));
+  const rows = new Map(), T = chRowTop(scored.map(x => x.col));   // rows on different scales are put on the one most of them use
+  for (const { col, cell } of scored) for (const [nm, v0, t] of cell.rows || []) {
+    const v = (t || ROW_TOP) !== T && v0 != null ? +v0 * T / (t || ROW_TOP) : v0;
+    const name = chRowName(nm), k = name.toLowerCase(); if (!k || v == null || isNaN(+v)) continue;
+    if (!rows.has(k)) rows.set(k, { name, v: [] });
+    const e = rows.get(k); e.v.push(+v); e.col = col; e.raw = nm;
+  }
+  const avg = [...rows.values()].map(e => ({ ...e, avg: bkMean(e.v) })).sort((a, b) => b.avg - a.avg);
+  // A strongest and a weakest row only when they really differ: a quarter of a point across the term.
+  const apart = avg.length >= 2 && avg[0].avg - avg[avg.length - 1].avg >= 0.25 * T / ROW_TOP, strong = apart ? avg[0] : null, weak = apart ? avg[avg.length - 1] : null;
+  let words = '';
+  if (weak && weak.col.d) {   // her own words for the level above where the student is now, from the newest rubric with that row
+    const s = weak.col.d.setup || {}, i = (s.criteria || []).findIndex(x => chRowName(x).toLowerCase() === weak.name.toLowerCase());
+    if (i >= 0) words = String(levelIn(s, i, Math.min(rowTop(s, i), Math.floor(weak.avg * rowTop(s, i) / T + 1e-9) + 1)) || '').trim().replace(/[.。]+$/, '');
+  }
+  const v = scored.map(x => x.cell.pct), move = v.length >= 4 ? bkMean(v.slice(-3)) - bkMean(v.slice(0, -3)) : 0;
+  const missing = cols.filter(x => x.type !== 'xc' && (x.cells.get(n) || {}).st === 'missing').map(x => x.name);
+  const best = scored.length >= 2 ? scored.reduce((a, b) => b.cell.pct > a.cell.pct ? b : a) : null;
+  const said = rptSaid(c, cols, n);
+  return { grade: g.grade, soFar: g.soFar, strong, weak, words, move, missing, best: best && best.cell.pct >= 70 ? best.col.name : '', said, scored: scored.length };
+}
+// src/reports.js
+const rptHash = s => { let h = 7; for (const ch of String(s)) h = (h * 31 + ch.codePointAt(0)) >>> 0; return h; };
+// src/reports.js
+const rptList = a => a.length <= 1 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+// src/reports.js
+function rptFill(t, c, n, f, rc) {
+  const call = rptCall(c, n), pro = rptPro(c, n), P = RPT_PRO[pro] || [call, call, call + '’s', 'is', 'has', 's'], subj = (rc.subj[c.id] || '').trim();
+  const map = { name: call, they: P[0], them: P[1], their: P[2], is: P[3], has: P[4], s: P[5], in: subj ? ' in ' + subj : '', subject: subj, grade: f.gradeText != null ? f.gradeText : f.grade != null ? roundPct(f.grade) + '%' : '',
+    row: '', work: f.best, n: String(f.missing.length), list: rptList(f.missing), words: f.words };
+  const out = t.replace(/\{(\w+)\}/g, (m, k) => {
+    const low = k[0].toLowerCase() + k.slice(1); if (!(low in map)) return m;
+    const v = String(map[low]); return k !== low && v ? v[0].toUpperCase() + v.slice(1) : v;
+  });
+  return out.replace(/\s+([.,;:!?])/g, '$1').replace(/\s{2,}/g, ' ').trim().replace(/^./, ch => ch.toUpperCase());
+}
+// src/reports.js
+function rptDraft(c, n, f, rc, v) {
+  const band = f.band ? f.band : f.grade == null ? 'None' : f.grade >= rc.cut[0] ? 'High' : f.grade >= rc.cut[1] ? 'Good' : f.grade >= rc.cut[2] ? 'Mid' : 'Low';
+  const say = (k, row) => { const own = (rc.words[k] || []).filter(Boolean), list = own.length ? own : RPT_WORDS[k]; return rptFill(list[(rptHash(n + k) + (v || 0)) % list.length].replace(/\{row\}/g, row || ''), c, n, f, rc); };
+  const long = rc.len === 'long', short = rc.len === 'short', out = [say('open' + band)];
+  if (rc.grade && f.grade != null) out.push(say('grade'));
+  if (!short && f.strong) out.push(say('strong', f.strong.name));
+  if (long && f.best) out.push(say('best'));
+  if (!short && Math.abs(f.move) >= 5) out.push(say(f.move > 0 ? 'up' : 'down'));
+  if (f.weak) out.push(say('next', f.weak.name));
+  if (long && f.weak && f.words) out.push(say('level', f.weak.name));
+  if (f.missing.length) out.push(say(f.missing.length === 1 ? 'missing1' : 'missing'));
+  if (!short && band !== 'None') out.push(say('close' + band));
+  return out.join(' ');
+}
+// src/reports.js
+function rptText(c, cols, conf, n, rc) { const e = rptEntry(c, n); return e.text != null ? e.text : rptDraft(c, n, rptFacts(c, cols, conf, n), rc, e.v); }
 // src/missing.js
 const MIS_WORDS = {
   subj: 'Missing work for {class}',
@@ -575,6 +923,8 @@ function misConf() {
   const m = (lib.book && lib.book.miss) || {};
   return { subj: String(m.subj || '').trim() || MIS_WORDS.subj, body: String(m.body || '').trim() ? m.body : MIS_WORDS.body, cls: m.cls || {} };
 }
+// src/missing.js
+const misClassName = (c, mc) => String(mc.cls[c.id] || '').trim() || c.name;
 // src/missing.js
 const misCols = cols => cols.filter(x => x.type !== 'xc');
 // src/missing.js
@@ -591,6 +941,8 @@ function misByCol(c, cols) {
 // src/missing.js
 const misNudge = (c, n, col) => ((infoOf(c, n).nudge || {})[col.key]) || 0;
 // src/missing.js
+const misEmail = (c, n) => String(infoOf(c, n).email || '').split(/[;,\s]+/).filter(s => /@/.test(s)).join(',');
+// src/missing.js
 function misLate(due) {
   if (!due) return 0;
   const d = new Date(due + 'T12:00:00'), now = new Date(isoDay(Date.now()) + 'T12:00:00');
@@ -598,5 +950,30 @@ function misLate(due) {
 }
 // src/missing.js
 const misDue = col => col.due ? 'Due ' + bkDay(col.due) + (misLate(col.due) ? ' · ' + people(misLate(col.due), 'day') + ' ago' : '') : '';
-export { BK_TYPES, bkConf, bkCats, bkType, bkIsType, bkIsDef, bkLabel, bkTermOf, bkMean, bkCellOf, bkTypedCell, bkLoad, bkClassCols, bkCounts, bkGrade, bkXcTo, bkTabs, bkTermNow, bkClassAvg, bkBands, bkGroups, bkCountTypes, pctAvgText, bkParse, bkCellVal, bkColMax, bkPut, typedStamp, isoDay, bkDay, BK_DEF, rosterPairs, bkTypeUse, IB_TOP, IB_BANDS, IB_GROUPS, IB_WAYS, IB_BOUNDS_DP, ibLetter, classWay, ibGroup, ibGroupCrit, ibBoundsFor, ibBoundsClean, ibCrit, ibBounds, ibGradeOf, ibLevel, ibBandName, ibTerm, ibEvidence, ibConf, ibCols, ibEvFor, ibMid, MIS_WORDS, misConf, misCols, misOwes, misByStu, misByCol, misNudge, misLate, misDue, parseRosterRows, keepInfo, keepAtt, infoOf, setInfo, blankInfo, attDays, attCount, attOf, attNote, classNewWay };
+// src/missing.js
+const misLine = col => '- ' + col.name + (col.due ? ' (due ' + bkDay(col.due) + ')' : '');
+// src/missing.js
+function misFill(t, map) { return String(t).replace(/\{(\w+)\}/g, (m, k) => k in map ? map[k] : m); }
+// src/missing.js
+function misDraft(c, n, cols, mc) {
+  mc = mc || misConf();
+  const map = { name: rptCall(c, n), class: misClassName(c, mc), list: cols.map(misLine).join('\n'), n: String(cols.length) };
+  return { to: misEmail(c, n), bcc: '', subject: misFill(mc.subj, map), body: misFill(mc.body, map) };
+}
+// src/missing.js
+function misGroup(c, col, who, mc) {
+  mc = mc || misConf();
+  const map = { name: 'everyone', class: misClassName(c, mc), list: misLine(col), n: '1' };
+  return { to: '', bcc: who.map(x => misEmail(c, x.n)).filter(Boolean).join(','), subject: misFill(mc.subj, map), body: misFill(mc.body, map) };
+}
+// src/missing.js
+const misEnc = s => encodeURIComponent(s).replace(/%40/g, '@').replace(/%2C/g, ',');
+// src/missing.js
+function misHref(m, noBody) {
+  const q = [m.bcc ? 'bcc=' + misEnc(m.bcc) : '', 'subject=' + encodeURIComponent(m.subject), noBody ? '' : 'body=' + encodeURIComponent(m.body.replace(/\r?\n/g, '\r\n'))].filter(Boolean).join('&');
+  return 'mailto:' + misEnc(m.to) + '?' + q;
+}
+// src/missing.js
+const misPlain = m => (m.to ? 'To: ' + m.to.replace(/,/g, ', ') + '\n' : '') + (m.bcc ? 'Bcc: ' + m.bcc.replace(/,/g, ', ') + '\n' : '') + 'Subject: ' + m.subject + '\n\n' + m.body;
+export { BK_TYPES, bkConf, bkCats, bkType, bkIsType, bkIsDef, bkLabel, bkTermOf, bkMean, bkCellOf, bkTypedCell, bkLoad, bkClassCols, bkCounts, bkGrade, bkXcTo, bkTabs, bkTermNow, bkClassAvg, bkBands, bkGroups, bkCountTypes, pctAvgText, bkParse, bkCellVal, bkColMax, bkPut, typedStamp, isoDay, bkDay, BK_DEF, rosterPairs, bkTypeUse, IB_TOP, IB_BANDS, IB_GROUPS, IB_WAYS, IB_BOUNDS_DP, ibLetter, classWay, ibGroup, ibGroupCrit, ibBoundsFor, ibBoundsClean, ibCrit, ibBounds, ibGradeOf, ibLevel, ibBandName, ibTerm, ibEvidence, ibConf, ibCols, ibEvFor, ibMid, MIS_WORDS, misConf, misCols, misOwes, misByStu, misByCol, misNudge, misLate, misDue, mbParts, mbSorted, MB_ORDERS, parseRosterRows, keepInfo, keepAtt, infoOf, setInfo, blankInfo, attDays, attCount, attOf, attNote, classNewWay, ATT_WAYS, attRec, attDayOk, attSet, attTake, attClear, attDayCount, attUnknown, attMeets, attStep, csvSafe, SEAT_ROOMS, SEAT_MAX_W, SEAT_MAX_H, seatXY, seatKeys, seatRoom, seatOf, seatSave, seatList, seatFill, seatPut, seatSetRoom, pkNice, pkShort, pkShuffle, pkCount, pkGroups, misDraft, misGroup, misHref, misPlain, misEmail, misLine, misFill, misClassName, rptCall, goalList, goalData, GOAL_LOW, RPT_WORDS, RPT_SLOTS, RPT_PROS, RPT_LEN, rptConf, rptEntry, rptPut, rptPro, rptFacts, rptDraft, rptText };
 export { EMAIL_RX };

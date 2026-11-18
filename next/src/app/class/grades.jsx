@@ -6,15 +6,20 @@ import { h, Fragment } from 'preact';
 import { useState, useRef, useLayoutEffect } from 'preact/hooks';
 import { Segmented, Icon, EmptyState, Button, Menu, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
-import { href } from '../router.js';
+import { href, PARTS } from '../router.js';
 import { copyText } from '../../services/clipboard.js';
-import { useBook, classBook } from './data.js';
+import { useBook, classBook, handoff } from './data.js';
 import { engine as B, change } from '../../students/book.js';
 import { prefs } from '../../students/prefs.js';
 import { fmtNum } from '../../engines/gcore.js';
 import { itemIn, ColDialog, TypesDialog, SetupSheet, AddSheet } from './bookedit.jsx';
 import { ChartsSheet } from './charts.jsx';
+import { openEntry } from './entry.jsx';
+import { PhoneScores } from './phscores.jsx';
+
+const onPhone = () => typeof matchMedia === 'function' && matchMedia('(max-width: 640px)').matches;
 import { MypBook, PredSheet, DpSay, GradingDialog } from './ib.jsx';
+import { usePart } from '../parts.js';
 import './lines.js';
 
 // What-if: students left out of the class averages, per class, for this visit only and never saved (src/book.js bkLeftAll).
@@ -47,9 +52,11 @@ const low = (cell, col) => col.type !== 'xc' && col.type !== 'fm' && cell && cel
 
 export default function Grades({ classId }) {
   const b = useBook(), [show, setShow] = useState(() => keep('show') || 'pct'), [term, setTerm] = useState(() => keep('term:' + classId)), tab = useRef(null);
-  const [box, setBox] = useState(null), [only, setOnly] = useState(onlyOn), [pick, setPick] = useState(false), [, redraw] = useState(0);
+  const [box, setBox] = useState(null), [whole, setWhole] = useState(false), [Imp, setImp] = useState(null), [only, setOnly] = useState(onlyOn), [pick, setPick] = useState(false), [, redraw] = useState(0);
+  const Gl = usePart('goals', !!(box && box.goals)), Rp = usePart('reports', !!(box && box.reports));
   if (!b) return <div class="loading" aria-busy="true" />;
   const x = classBook(b, classId);
+  if (x && handoff.rows && handoff.cls === classId && !box) { const rows = handoff.rows; handoff.rows = null; PARTS.bki().then(m => { setImp(() => m.ImportSheet); setBox({ imp: true, rows }); }); }
   if (!x) return <EmptyState icon="warn" title={t('class.read_failed')} />;
   const { c, conf } = x;
   if (!c.names.length) return <EmptyState icon="people" title={t('class.no_roster')} text={t('class.no_roster_text')} action={<a class="btn" href={href('class', classId, 'people')}>{t('class.add_roster')}</a>} />;
@@ -71,7 +78,8 @@ export default function Grades({ classId }) {
     { label: t('class.term_setup'), sub: t('class.term_setup_sub'), icon: 'settings', onSelect: () => setBox({ setup: true }) },
     { label: t('class.graded_how_short'), icon: 'grades', onSelect: () => setBox({ grading: true }) },
     ...(dp ? [{ label: t('class.predicted_grades'), onSelect: () => setBox({ pred: true }) }] : []),
-    ...(myp ? [] : [{ label: t('class.add_xc'), icon: 'plus', onSelect: () => setBox({ add: true, xc: true }) }]),
+    ...(myp ? [] : [{ label: t('class.add_xc'), icon: 'plus', onSelect: () => setBox({ add: true, xc: true }) }, { label: t('class.bki_menu'), sub: t('class.bki_menu_sub'), icon: 'upload', onSelect: () => PARTS.bki().then(m => { setImp(() => m.ImportSheet); setBox({ imp: true }); }) }]),
+    { label: t('class.mb_title'), sub: t('class.mb_sub'), icon: 'menu', onSelect: () => openEntry(x, x.lib, on) },
     { sep: true },
     ...(table && !myp ? [{ label: t('class.averages_only'), checked: only, onSelect: () => setOnlyKept(!only) }] : []),
     ...(table && !only && !myp ? [{ label: t('class.leave_out'), sub: t('class.leave_out_sub'), checked: pick, onSelect: () => setPick(!pick) }] : []),
@@ -90,15 +98,23 @@ export default function Grades({ classId }) {
     </div>
     {untyped.length > 0 && <div class="cp-note" role="note" data-untyped>{untyped.length === 1 ? t('class.untyped_one', { name: untyped[0].name }) : t('class.untyped', { n: untyped.length })}
       <Button size="sm" onClick={() => setBox({ types: true })} data-set-types>{t('class.set_types')}</Button></div>}
-    {table && myp ? <MypBook x={x} cols={cols} all={x.cols} term={on} termName={termName} tab={tab} />
+    {table && !myp && !whole && onPhone() && x.cols.length ? <PhoneScores x={x} onTable={() => setWhole(true)} />
+      : table && myp ? <MypBook x={x} cols={cols} all={x.cols} term={on} termName={termName} tab={tab} />
       : !table ? <Year x={x} ct={ct} labelOf={labelOf} tab={tab} /> : !cols.length ? <EmptyState icon="grades" title={t('class.nothing_graded', { name: c.name })} text={t('class.nothing_graded_text')} />
       : <Table x={x} cols={cols} show={show} ct={ct} labelOf={labelOf} term={on} tab={tab} only={only} pick={pick} left={left} onLeft={() => redraw(k => k + 1)} onCol={col => setBox({ col })} />}
-    {table && !myp && c.names.length > 0 && <div class="gfoot"><button type="button" class="gl2" onClick={() => setBox({ charts: true })} data-open-charts><span class="ic"><Icon name="chart" /></span>
-      <span><b>{t('class.charts')} <Icon name="chr" size="xs" /></b><p>{t('class.charts_say')}</p></span></button></div>}
+    {c.names.length > 0 && <div class="gfoot">{table && !myp && <button type="button" class="gl2" onClick={() => setBox({ charts: true })} data-open-charts><span class="ic"><Icon name="chart" /></span>
+      <span><b>{t('class.charts')} <Icon name="chr" size="xs" /></b><p>{t('class.charts_say')}</p></span></button>}
+      <button type="button" class="gl2" onClick={() => setBox({ goals: true })} data-open-goals><span class="ic"><Icon name="target" /></span>
+      <span><b>{t('class.gl_title')} <Icon name="chr" size="xs" /></b><p>{t('class.gl_card_say')}</p></span></button>
+      <button type="button" class="gl2" onClick={() => setBox({ reports: true })} data-open-reports><span class="ic"><Icon name="edit" /></span>
+      <span><b>{t('class.rp_title')} <Icon name="chr" size="xs" /></b><p>{t('class.rp_card_say')}</p></span></button></div>}
+    {box && box.goals && Gl && <Gl.GoalsSheet x={x} cols={table ? cols : x.cols} term={on} left={left} onClose={() => setBox(null)} />}
+    {box && box.reports && Rp && <Rp.ReportsSheet x={x} cols={table ? cols : x.cols} term={on} onClose={() => setBox(null)} />}
     {box && box.charts && <ChartsSheet x={x} cols={cols} all={b.cols} term={on} left={left} labelOf={labelOf} onClose={() => setBox(null)} />}
     {box && box.col && <ColDialog col={box.col} conf={conf} labelOf={labelOf} onClose={() => setBox(null)} onEditTyped={id => setBox({ add: true, itId: id })} />}
     {box && box.types && <TypesDialog cols={untyped} onClose={() => setBox(null)} />}
     {box && box.setup && <SetupSheet conf={conf} book={x.lib.book} onClose={() => setBox(null)} />}
+    {box && box.imp && Imp && <Imp x={x} rows={box.rows} onClose={() => setBox(null)} />}
     {box && box.grading && <GradingDialog c={c} onClose={() => setBox(null)} />}
     {box && box.pred && <PredSheet x={x} cols={cols} all={x.cols} term={on} termName={termName} onClose={() => setBox(null)} />}
     {box && box.add && <AddSheet c={c} cols={x.cols} conf={conf} labelOf={labelOf} itId={box.itId} xc={box.xc} onClose={() => setBox(null)} />}

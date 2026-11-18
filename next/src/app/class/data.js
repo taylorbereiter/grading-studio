@@ -25,5 +25,8 @@ export function classBook(b, id) {
   return { c, lib: b.lib, cols: classCols(b.lib, c, b.cols), conf: B.ibConf(c, conf(b.lib)), now: termNow(b.lib), way: B.classWay(c) };   // a DP class can weigh its components its own way (src/ib.js ibConf)
 }
 export { fullLibrary };
+// Scores waiting to be imported into a class just made from a Google Classroom file (class/classroom.jsx): its Grades tab opens
+// Import a gradebook with them.
+export const handoff = { rows: null, cls: '' };
 // The test seam (next/test/browser/class-book.test.js): the same table of terms and scores is run through main's functions and these.
 if (typeof window !== 'undefined') window.__class = { readBook, B };
