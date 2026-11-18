@@ -20,6 +20,7 @@ const heard = new Set(), emit = () => heard.forEach(f => f());
 function useLight() { const [, n] = useState(0); useEffect(() => { const f = () => n(k => k + 1); heard.add(f); return () => heard.delete(f); }, []); }
 let raf = 0;
 // lightApply: every page drawn again, the chips, and a save.
+export const lightApply = () => apply();
 function apply() { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { for (const pg of state().pages) D.draw(pg); C.changed(); emit(); }); }
 const snap = join => { if (b()) fieldSnap(b(), KEYS, apply, 'lighting', join); };
 const ROWS = [['b', 'mark.l_b', -60, 60], ['c', 'mark.l_c', 0, 400], ['d', 'mark.l_d', 0, 100], ['s', 'mark.l_s', 0, 100]];

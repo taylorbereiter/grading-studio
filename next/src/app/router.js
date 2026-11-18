@@ -59,6 +59,12 @@ export const PARTS = {
   report: () => import('./mark/report.jsx'),
   files: () => import('./mark/files.jsx'),
   fileui: () => import('./mark/fileui.jsx'),
+  // splitting a scan onto names (mark/split.jsx), from the class page or into an open download
+  split: () => import('./mark/split.jsx'),
+  // video and audio papers, their transcripts, and notes pages (mark/media.jsx)
+  media: () => import('./mark/media.jsx'),
+  // typed notes and the Timer under the comment (mark/typed.jsx)
+  typed: () => import('./mark/typed.jsx'),
 };
 export const CHUNKS = {
   home: () => import('./screens/home.jsx'),

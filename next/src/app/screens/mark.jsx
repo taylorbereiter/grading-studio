@@ -57,12 +57,12 @@ function Page({ pg, room, tall, zoom, FU }) {
     pg.wrapEl = wrap.current; if (MK) MK.M.bind(pg, wrap.current);
     renderPage(pg, fitScale(pg, room, tall, (state().disp || {}).fit, zoom));
   }, [pg, room, zoom]);
-  return <>{FU && pg.impTop && <FU.ImpNote pg={pg} />}<div ref={wrap} class={'pg' + (pg.out ? ' out' : '')} data-tool={state().tool}><canvas ref={ref} data-page={pg.file.path + '|' + pg.idx} />{FU && <FU.TurnChip pg={pg} />}{FU && <FU.LightChip pg={pg} />}</div></>;
+  return <>{FU && pg.impTop && <FU.ImpNote pg={pg} />}{FU && <FU.ScanNote pg={pg} />}<div ref={wrap} class={'pg' + (pg.out ? ' out' : '')} data-tool={state().tool}><canvas ref={ref} data-page={pg.file.path + '|' + pg.idx} />{FU && <FU.TurnChip pg={pg} />}{FU && <FU.LightChip pg={pg} />}{FU && <FU.Unskew pg={pg} />}</div></>;
 }
 
 // The marking tools load as a part of their own (router.js PARTS.marking, screens/mark-tools.jsx) once the paper is open, so
 // the read-only paper shows as soon as it can. Until they are there, the paper is drawn and nothing on it can be changed.
-let MK = null;
+let MK = null, TN = null;   // the marking tools, and typed notes with the Timer (each its own part)
 const SAVE_LINE = { saving: () => t('mark.saving'), saved: () => t('mark.saved'), partly: () => t('mark.partly'), not: () => t('mark.not_saved') };
 const saveLine = k => (SAVE_LINE[k] ? SAVE_LINE[k]() : t('mark.cannot'));
 
@@ -80,6 +80,13 @@ function WordPaper({ st, f, FU }) {
   return <><div ref={box} class="wordwrap"><div class="loading" aria-busy="true" /></div>{pdf && FU && <FU.PdfAsk st={st} f={f} onClose={() => setPdf(false)} />}</>;
 }
 
+// A recording or a video link (mark/media.jsx, a part of its own); its name until the part is there.
+let MEDIA = null;
+function MediaFile({ st, f }) {
+  const [, again] = useState(0);
+  useEffect(() => { if (!MEDIA) PARTS.media().then(m => { MEDIA = m; again(1); }, e => console.error(e)); }, []);
+  return MEDIA ? <MEDIA.MediaCard st={st} f={f} /> : <div class="fcard"><Icon name="play" /><span data-raw>{f.name}</span></div>;
+}
 // A text file or any other file (mark/files.jsx, a part of its own); its name until the part is there.
 let FILES = null;
 function OtherFile({ f }) {
@@ -89,9 +96,11 @@ function OtherFile({ f }) {
 }
 
 function Paper({ batch, cur, zoom, ver, FU }) {
-  const st = batch.students[cur], [got, setGot] = useState(null), area = useRef(null), [size, setSize] = useState([0, 0]);
+  const st = batch.students[cur], [got, setGot] = useState(null), area = useRef(null), [size, setSize] = useState([0, 0]), was = useRef(null);
   useEffect(() => {
-    let live = true; setGot(null);
+    // the same student opened again after a change keeps showing until the pages are ready, so the paper doesn't flash and a dialog
+    // open under it (Add, A video…) isn't lost
+    let live = true; if (!was.current || was.current[0] !== batch || was.current[1] !== cur) setGot(null); was.current = [batch, cur, ver];
     use({ cur });
     seam.ready = false;
     if (st) openPages(st, () => live, FU && FU.impAuto).then(r => { if (live) { setGot(r); seam.ready = true; } });
@@ -102,14 +111,18 @@ function Paper({ batch, cur, zoom, ver, FU }) {
     const measure = () => { const cs = getComputedStyle(el); setSize([el.clientWidth - (parseFloat(cs.paddingLeft) || 18) - (parseFloat(cs.paddingRight) || 18), el.clientHeight]); };
     measure(); const ro = new ResizeObserver(measure); ro.observe(el); return () => ro.disconnect();
   }, []);
+  // until the effect above has run for a newly opened student, what was got is the last student's
+  const fresh = !!was.current && was.current[0] === batch && was.current[1] === cur, gotNow = fresh ? got : null;
+  if (!fresh || was.current[2] !== ver) seam.ready = false;   // the pages are opening again: not ready until they have
   return <div class="mk-paper" ref={area} tabindex="-1">
-    {!st ? null : !st.files.length ? <><EmptyState icon="inbox" title={t('mark.nothing_in')} />{FU && <FU.FilesFoot key={st.key + ver} st={st} name={shownName(st, cur)} />}</>
-      : !got ? <div class="loading" aria-busy="true" />
-      : <>{got.cards.map(c => c.kind === 'file' ? <div class="fwrap">{FU && <FU.CarryTag st={st} f={c.f} />}{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
+    {!st ? null : !st.files.length ? <><EmptyState icon="inbox" title={t('mark.nothing_in')} />{FU && <FU.FilesFoot key={st.key} st={st} name={shownName(st, cur)} />}</>
+      : !gotNow ? <div class="loading" aria-busy="true" />
+      : <>{st.files.filter(f => f.kind === 'link').concat(st.files.filter(f => f.kind === 'media')).map(f => <div class="fwrap"><header class="fhead"><span data-raw>{f.kind === 'link' ? f.name.replace(/\.(url|webloc)$/i, '').replace(/ \(added \d+\)$/, '') : f.name}</span><span class="mute">{t(f.kind === 'media' ? 'mark.v_recording' : 'mark.v_link_kind')}</span>{FU && <FU.AddTag st={st} f={f} />}{FU && <FU.CarryTag st={st} f={f} />}<span class="grow" />{FU && <FU.FileMenu st={st} path={f.path} name={f.name} />}</header><MediaFile key={f.path} st={st} f={f} /></div>)}
+        {gotNow.cards.map(c => c.kind === 'file' ? <div class="fwrap">{FU && <FU.CarryTag st={st} f={c.f} />}{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
         : <section class="doc">
           <header class="fhead"><span data-raw>{c.d.name}</span>{FU && <FU.AddTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}{!c.on && <span class="pill">{t(c.auto ? 'mark.left_out_auto' : 'mark.left_out')}</span>}{FU && <FU.CarryTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}<span class="grow" />{FU && !c.on && <FU.BackIn st={st} d={c.d} />}{FU && <FU.FileMenu st={st} path={c.d.file || c.d.pages[0][0]} name={c.d.name} d={c.d} on={c.on} auto={c.auto} />}</header>
           {c.pages.map(pg => <Page key={pg.file.path + '|' + pg.idx} pg={pg} room={size[0]} tall={size[1]} zoom={zoom} FU={FU} />)}
-        </section>)}{FU && <FU.FilesFoot key={st.key + ver} st={st} name={shownName(st, cur)} />}</>}
+        </section>)}{FU && <FU.FilesFoot key={st.key} st={st} name={shownName(st, cur)} />}</>}
   </div>;
 }
 
@@ -142,6 +155,7 @@ function ScorePanel({ batch, cur, onNext, onPrev }) {
     {g.total == null && <p class="mute">{t('mark.no_score')}</p>}
     <div class="mk-stat" role="group" aria-label={t('mark.mark_as')}>{STATUS.map(([k, l]) => <button type="button" class="chip" aria-pressed={gr.status === k ? 'true' : 'false'} disabled={off} data-status={k} onClick={() => M.setStatus(k)}>{l()}</button>)}</div>
     <textarea class="mk-cmt" aria-label={t('mark.comment_for')} placeholder={t('mark.comment_for_ph')} value={gr.comment || ''} disabled={off} data-raw onInput={e => M.setComment(e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.blur(); }} />
+    {TN && M && <TN.NotesPart st={st} />}
     <div class="foot"><IconButton icon="chl" label={t('mark.prev')} onClick={onPrev} disabled={cur === 0} />
       <Button variant="primary" kbd="Enter" onClick={next} data-next>{t('mark.next_score')}</Button>
       <IconButton icon="chr" label={t('mark.next')} onClick={onNext} disabled={cur >= batch.students.length - 1} data-next-plain /></div>
@@ -181,10 +195,11 @@ export default function MarkScreen({ route, classes }) {
     return () => { live = false; }; }, [w, tab]);
   const openOn = i => { pick(i); go('mark', id, ''); };
   // A student's files changed (mark/change.js through mark/fileui.jsx, loaded with the tools): the paper opens again.
-  const [FU, setFU] = useState(null), [ver, setVer] = useState(0), [carried, setCarried] = useState(false), [light, setLight] = useState(false);
+  const [FU, setFU] = useState(null), [ver, setVer] = useState(0), [carried, setCarried] = useState(false), [light, setLight] = useState(false), [rescans, setRescans] = useState(false);
   useEffect(() => setCarried(!!(w && w.carried)), [w]);
   useEffect(() => { if (!w || !MK) return; let live = true;
-    PARTS.fileui().then(m => { if (!live) return; m.wire(MK.M, i => { if (i >= 0) pickRef.current(i); setVer(v => v + 1); }); setFU(m); m.pdfAuto(); m.impAutoNow();
+    PARTS.fileui().then(m => { if (!live) return; m.wire(MK.M, i => { if (i >= 0) pickRef.current(i); setVer(v => v + 1); }); setFU(m); m.takeSplit(); m.pdfAuto(); m.impAutoNow();
+      PARTS.typed().then(x => { x.useKeep(MK.M.keepSetup); TN = x; if (live) tick(n => n + 1); }, e => console.error(e));
       // the papers are read in the background as they open, as the current app reads them (src/app/open.js scanAll): a grade written on
       // a paper, notes made in other apps, and marks from other apps that could be hers
       PARTS.outEngine().then(E => { E.withMarking(MK.M); return E.readPapers(); }).then(() => { seam.read = true; if (live) tick(n => n + 1); }, e => console.error(e)); }, e => console.error(e));
@@ -229,7 +244,7 @@ export default function MarkScreen({ route, classes }) {
           {MK && <MK.Tools />}
           <Paper batch={w.batch} cur={cur} zoom={zoom} ver={ver} FU={FU} />
           {FU && light && <FU.LightPanel onClose={() => setLight(false)} />}
-          <div class="mk-zoom">{FU && <IconButton icon="sun" label={t('mark.l_title')} aria-pressed={light ? 'true' : 'false'} onClick={() => setLight(v => !v)} data-light />}<IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => { const z = Math.max(0.5, Math.round((zoom - 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} />
+          <div class="mk-zoom">{FU && FU.rescanCount() > 0 && <IconButton icon="flag" label={t('mark.rs_title_n', { n: FU.rescanCount() })} title={t('mark.rs_title_n', { n: FU.rescanCount() })} onClick={() => setRescans(true)} data-rescans />}{FU && <IconButton icon="sun" label={t('mark.l_title')} aria-pressed={light ? 'true' : 'false'} onClick={() => setLight(v => !v)} data-light />}<IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => { const z = Math.max(0.5, Math.round((zoom - 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} />
             <span>{t('mark.zoom', { n: Math.round(zoom * 100) })}</span>
             <IconButton icon="plus" label={t('mark.zoom_in')} onClick={() => { const z = Math.min(3, Math.round((zoom + 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} /></div>
         </div>
@@ -237,6 +252,7 @@ export default function MarkScreen({ route, classes }) {
       </div>
       {rep && <rep.OpenedBar key={w.batch.id} onList={() => setRepList(true)} />}
       {FU && carried && <FU.CarryBox onClose={() => setCarried(false)} />}
+      {FU && rescans && <FU.Rescans onClose={() => setRescans(false)} onGo={pick} />}
       {rep && repList && <rep.OpenedList onClose={() => setRepList(false)} onGo={pick} />}</>}
   </div>;
 }

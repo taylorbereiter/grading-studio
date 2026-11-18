@@ -11,7 +11,7 @@
 // Every write first checks: this window holds the lock; the saved work is at the format this build knows (the new app never
 // changes the format); no other window has started replacing everything; and a download that was forgotten stays forgotten.
 // The merge engine is the current app's own (engines/merge.js), loaded on the first write so it is not in the first load.
-import { papers, edits, added, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame, readings } from './index.js';
+import { papers, edits, added, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame, readings, videos } from './index.js';
 import { words } from '../planning/index.js';
 import { mayWrite } from '../shared/lock.js';
 import { json, text, setText, remove } from '../shared/ls.js';
@@ -177,3 +177,14 @@ export function saveSetting(key, value) {
   saved({ kind: 'setting', id: key, side: 'students' });
 }
 export const forgotten = () => deleted.json({}) || {};
+
+/* a video file kept in this browser (src/video.js vkPut): the file itself in grading-studio-videos, under an id the student's
+   shortcut file names ("gs-video:<id>"). Throws CannotSave('room') when the computer has no room for it. */
+export async function keepVideo(file, id) {
+  check('videos');
+  id = id || uid();
+  try { const e = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; if (e && e.quota && e.quota - (e.usage || 0) < file.size * 1.05) throw new CannotSave('room', file.name); } catch (er) { if (er && er.why === 'room') throw er; }
+  await videos.put({ id, name: file.name, type: file.type || '', size: file.size, at: Date.now(), blob: file }, id);
+  saved({ kind: 'video', id, side: 'students' });
+  return id;
+}

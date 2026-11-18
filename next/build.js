@@ -146,11 +146,12 @@ const GRADING_STATE = {
   toast: '() => {}', renderList: '() => {}', renderTools: '() => {}', renderGrade: '() => {}', openStudent: '() => {}', renderPage: '() => {}',
   gradeMarksChanged: '() => {}', gradeShown: '() => {}', openImported: '() => {}', rescanFile: '() => {}', editText: '() => {}', openNote: '() => {}',
   openStampMenu: '() => {}', placeScore: '() => {}', stopScorePlace: '() => {}', scanNote: '() => {}', refound: '() => {}', endOnce: '() => {}', setTool: '() => {}',
+  lightPagesChanged: '() => {}',
   scorePlacing: 'null', activeEditor: 'null',
   writeWork: '() => {}', tabLive: '() => true', tabForgot: '() => false', tabLetGo: '() => {}', tabsBehind: '() => false', saveBehind: '() => {}', stampWork: '() => {}',
 };
 // What the lifted code calls that belongs to the screen (a toast, a redraw): quiet here, the new screen says and draws things itself.
-const GRADING_STUBS = { pickedUpNew: '() => false', renderKept: '() => {}', groupNoteRefresh: '() => {}' };
+const GRADING_STUBS = { pickedUpNew: '() => false', renderKept: '() => {}', groupNoteRefresh: '() => {}', groupBandRefresh: '() => {}' };
 const GRADING_DENY = ['$', 'openDlg', 'closeDlg', 'sayDlg', 'saveLib', 'keepWork', 'go', 'routeNow', 'paperPut', 'folderSaved', 'syncSoon', 'homeRender'];
 // Names that are only local variables in what is lifted (an unrelated top-level declaration has the same name).
 const GRADING_LOCAL = ['inside', 'num', 'average'];
@@ -214,7 +215,41 @@ const GRADING = [
     'goneNow', 'markCount', 'replacedOf', 'freshRows', 'guessNewName', 'fileShown', 'sortTag', 'madeFromWord', 'setDocIn', 'gradeWords', 'wordsJoin', 'moveFileNow', 'gradeHasWork', 'pasteTextPdf', 'pasteClean', 'pasteName', 'outPages',
     // marks from other apps (src/imported.js): read off a file and made hers; what changes the file is in app/mark/change.js
     'impRead', 'impCount', 'gsFlatCheck', 'impKind',
+    // splitting a scan (src/app/scansplit.js, src/scans.js): each page read as it comes, the page's turn and straightening, the
+    // blank-page check, and what was decided going along with each student's new file; the dialog itself is app/mark/split.jsx
+    'scanLook', 'scanDarken', 'spView', 'spXf', 'scanSplitSays', 'scanHint', 'scanHintsAll', 'scanBytes', 'spRange', 'spWho', 'spAll', 'spLight', 'splitIntoNames', 'rosterMatch', 'splitInk', 'scanRescans',
+    // the strip above a scanned page (src/scans.js scanNote): Turn it, Straighten, Put back, Fix the lighting
+    'scanTurn', 'scanStraighten', 'scanLight', 'scanLightBack', 'scanAsks',
   ], '', [], ['gcore', 'gdraw', 'gopen', 'greport'], ['num', 'inside']],
+  ['gmedia', [
+    // video and audio papers (src/video.js, src/app/media.js, src/app/readings.js): links and how they play, a kept video's id, a video
+    // turned for one filmed sideways, transcripts read from what she pastes or made in this browser by the speech engine, notes pages
+    'linkClean', 'linkOf', 'linkPlayer', 'linkTitle', 'linkHost', 'linkBytes', 'vidRef', 'drvRef', 'keptId', 'linkKey', 'vrotKey', 'vrotOf', 'frameTicks',
+    'MEDIA_RX', 'VIDEO_RX', 'MIME', 'extOf', 'fmtTime', 'trLines', 'trText', 'trParse', 'trMakeable', 'transcribe', 'asrStop', 'asrStandIn',
+    'notesPdf', 'npRows', 'npFileName', 'isNotes', 'notesFileOf', 'NP_TAIL', 'vidBytes', 'sameVideo',
+  ], '', [], ['gcore', 'gdraw']],
+  ['gnotes', [
+    // typed notes (src/typednotes.js): the page she types on, drawn from the blocks and read back by walking it, the bar, the margin's
+    // times and marks, Enter, a paste read from an inert copy, each change one undo step; and the Timer's clock for a talk given live
+    // (src/sidepane.js). The listeners that src/typednotes.js puts on the page are the new screen's (app/mark/typed.js).
+    'tnDraw', 'tnLoad', 'tnPaint', 'tnMore', 'tnBar', 'tnGutter', 'tnShowTime', 'tnAllHid', 'tnApply', 'tnStyle', 'tnList', 'tnMark', 'tnIndent', 'tnHl',
+    'tnTime', 'tnEnter', 'tnInsert', 'tnFromHtml', 'tnParse', 'tnText', 'tnSync', 'tnPos', 'tnSetPos', 'tnRestore', 'tnReadAll', 'tnBack', 'tnPut', 'tnSnap',
+    'tnStored', 'tnHidden', 'tnTimesOn', 'tnBackOn', 'tnSizeOf', 'tnHead', 'TN_SIZE', 'tnView',
+    'spClockOf', 'spClockMs', 'spClockGo', 'spTalk',
+  ], `// The page the notes are drawn in, and what gives a new paragraph its time (a playing video, or the Timer): the screen hands them in.
+let tnHostEl = null, tnNowFn = () => null;
+export const tnUse = o => { if ('host' in o) tnHostEl = o.host; if ('now' in o) tnNowFn = o.now; };
+const tnHost = () => tnHostEl;
+const tnEd = () => (tnHostEl ? tnHostEl.querySelector('.tned') : null);
+const tnNow = st => tnNowFn(st);
+// The blocks on the page, read and set by the screen's listeners (src/typednotes.js sets them from its own).
+export const tnGetL = () => tnL;
+export const tnSetL = v => { tnL = v; };
+export const tnGetSt = () => tnSt;
+export const tnQuietSet = v => { tnQuiet = v; };
+export const tnIsQuiet = () => tnQuiet;
+export const tnRngSet = r => { tnRng = r; };
+`, ['tnHost', 'tnEd', 'tnNow'], ['gcore', 'gdraw', 'gmark', 'gmedia']],
   ['gword', [
     // a Word paper on the marking screen (src/app/word.js, src/wordnotes.js): drawn from its own XML, typed in, cells shaded, boxes
     // ticked, comments named Teacher added and taken off, and the file written back; the screen around it is the new app's

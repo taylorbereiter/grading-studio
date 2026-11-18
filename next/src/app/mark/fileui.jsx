@@ -16,7 +16,17 @@ export { LightPanel, LightChip } from './light.jsx';
 import { viewable, fileSeq } from '../../engines/gdraw.js';
 import './lines.js';
 
-export const wire = C.wire;
+import { PARTS } from '../router.js';
+import { lightApply } from './light.jsx';
+import { use } from '../../engines/gcore.js';
+import { rotOf, skewOf, lightLive } from '../../engines/gdraw.js';
+import { scanAsks } from '../../engines/gfiles.js';
+
+// m: the marking code; open(i): show this student again. Lighting changed by the lifted code (a scan's Fix the lighting) draws
+// every page again and saves, as the panel does.
+export const takeSplit = () => C.takeSplit();
+export const rescanCount = () => C.rescans().length;
+export function wire(m, open) { C.wire(m, open); use({ lightPagesChanged: lightApply }); }
 const pickFile = (multiple, done) => { const i = document.createElement('input'); i.type = 'file'; i.multiple = multiple; i.onchange = () => done([...i.files]); i.click(); };
 
 // The ⋯ on a file: Move to…, Replace…, Leave out and Remove, in the current app's order (src/app/student.js). Not on her own rubric
@@ -95,12 +105,20 @@ export function FilesFoot({ st, name }) {
     again(n => n + 1);
   });
   // Add: a late or forgotten paper, or work sent in a message (the current app's Add menu on the student's bar)
-  const items = [{ label: t('mark.f_add'), icon: 'file', onSelect: add }, { label: t('mark.f_paste'), icon: 'paste', onSelect: () => setPaste(true) }];
+  const [split, setSplit] = useState(null), [media, setMedia] = useState(null);
+  const scan = () => pickFile(false, files => { if (files[0]) PARTS.split().then(S => setSplit({ S, file: files[0] }), e => console.error(e)); });
+  const items = [{ label: t('mark.f_add'), icon: 'file', onSelect: add }, { label: t('mark.f_paste'), icon: 'paste', onSelect: () => setPaste(true) },
+    { label: t('mark.v_add_menu'), icon: 'play', onSelect: () => PARTS.media().then(S => setMedia({ S, k: 'video' }), e => console.error(e)) },
+    { label: t('mark.v_np_menu'), icon: 'note', onSelect: () => PARTS.media().then(S => setMedia({ S, k: 'notes' }), e => console.error(e)) },
+    { label: t('mark.s_into'), icon: 'image', onSelect: scan }];
   return <div class="mk-ffoot">
     <Menu label={t('mark.f_add_for', { name })} trigger={b => <Button {...b} size="sm" icon="plus" data-addmenu>{t('mark.f_add_menu')}</Button>} items={items} />
     {(st.files.some(viewable) || fileSeq(st).length > 1) && <Button size="sm" icon="grip" onClick={() => setArr(true)} title={t('mark.a_open_tip')} data-arrange>{t('mark.a_open')}</Button>}
     {paste && <PasteText st={st} name={name} onClose={() => { setPaste(false); again(n => n + 1); }} />}
     {arr && <Arrange st={st} onClose={() => { setArr(false); again(n => n + 1); }} />}
+    {media && media.k === 'video' && <media.S.VideoAdd st={st} name={name} onClose={() => { setMedia(null); again(n => n + 1); }} />}
+    {media && media.k === 'notes' && <media.S.NotesAdd st={st} name={name} onClose={() => { setMedia(null); again(n => n + 1); }} />}
+    {split && <split.S.Split file={split.file} into lib={state().lib} onClose={() => { setSplit(null); again(n => n + 1); }} />}
     {(gone.length > 0 || op.length > 0) && <details class="mk-gone" open={op.length > 0}><summary>{t(op.length ? (gone.length ? 'mark.a_gone_both' : 'mark.a_gone_pages') : 'mark.f_gone', { n: gone.length + op.length })}</summary>
       <ul>{op.map(([path, p]) => { const f = st.files.find(x => x.path === path), n = ((f.marks || {})[p] || []).length;
         return <li><span><span data-raw>{C.shown(st, f.name)}</span>{', ' + [t('mark.a_page_n', { n: p + 1 }), f.virtual ? t('mark.a_your_rubric') : '', n ? t('mark.f_marks', { n }) : ''].filter(Boolean).join(' · ')}</span>
@@ -168,8 +186,11 @@ export async function pdfAuto() { if (!pdfAlways() || C.pdfBusyNow()) return; co
 
 // The turn buttons in the top corner of each page, shown when the mouse is over it (rotChip).
 export function TurnChip({ pg }) {
+  const re = !!(pg.file.sc && pg.file.sc[pg.idx] && pg.file.sc[pg.idx].re);
   return <span class="rchip"><IconButton icon="turnl" size="sm" label={t('mark.f_turn_l')} onClick={() => C.turnPages(pg.file, [pg.idx], -1)} data-rot="-1" />
     <IconButton icon="turnr" size="sm" label={t('mark.f_turn_r')} onClick={() => C.turnPages(pg.file, [pg.idx], 1)} data-rot="1" />
+    {!pg.file.virtual && <IconButton icon="flag" size="sm" label={t(re ? 'mark.rs_flag_off' : 'mark.rs_flag')} title={t(re ? 'mark.rs_flag_off' : 'mark.rs_flag')} aria-pressed={re ? 'true' : 'false'} class={re ? 'on' : ''}
+      onClick={() => toast(t(C.scanFlag(pg) ? 'mark.rs_flagged' : 'mark.rs_unflagged'))} data-pgre />}
     {!pg.out && <IconButton icon="x" size="sm" label={t('mark.a_take_tip')} title={t('mark.a_take_tip')} onClick={() => { const st = state().batch.students[state().cur]; C.takePageOut(st, pg.file.path, pg.idx); toast(t('mark.a_took', { name: C.shown(st, pg.file.name), n: pg.idx + 1 }), { undo: C.undo }); }} data-pgout />}</span>;
 }
 
@@ -254,5 +275,46 @@ export function Imported({ onClose }) {
       {r.keep > 0 && <tr><td>{t('mark.i_k_other')}</td><td>{t('mark.i_stay', { n: r.keep })}</td></tr>}</tbody></table>}
     <Checkbox checked={auto} onChange={v => { setAuto(v); if (v) prefs.set('gs.impAuto', true); else prefs.del('gs.impAuto'); }} label={t('mark.i_auto')} />
     <p class="mute">{t('mark.i_hint')}</p>
+  </Dialog>;
+}
+
+// The strip above a scanned page (src/scans.js scanNote): what was done, with Put back, or what might be wrong, with a way to fix it,
+// and a page waiting on a rescan. It says nothing about who the paper is from. Each choice is mark/change.js scanAct.
+export function ScanNote({ pg }) {
+  const f = pg.file, p = pg.idx, r = f.sc && f.sc[p]; if (!r) return null;
+  const bb = state().batch, st = bb.students[state().cur], off = r.off || {}, lines = [];
+  const act = a => () => { if (a === 'rescan') return pickFile(true, async files => { if (!files.length) return; const made = await C.addFiles(st, files.map(file => ({ path: file.name, file }))); if (made.length) toast(t('mark.f_added', { n: made.length, name: shownName(st, state().cur) })); C.reopen(); }); C.scanAct(pg, a); };
+  const btn = (a, k) => <Button size="sm" variant="quiet" onClick={act(a)} data-sc={a}>{t(k)}</Button>;
+  if (r.re) lines.push(<>{t('mark.rs_note')}{btn('rescan', 'mark.rs_bring')}{btn('unre', 'mark.rs_fine')}</>);
+  if (r.w && r.w.length && !anonOn()) lines.push(<span data-raw>{t('mark.rs_group', { names: r.w.join(', ') })}</span>);
+  if (!r.typed) {
+    const turned = !!r.didTurn && rotOf(f, p) === r.didTurn, straight = !!skewOf(f, p);
+    if ((turned || straight) && !off.done) lines.push(<>{t(turned && straight ? 'mark.rs_both' : turned ? 'mark.rs_turned' : 'mark.rs_straight')}{btn('back', 'mark.rs_back')}{btn('done', 'mark.rs_right')}</>);
+    if (scanAsks(f, p, r) && !off.turn) lines.push(<>{t(r.turn === 180 ? 'mark.rs_upside' : 'mark.rs_side')}{btn('turn', 'mark.rs_turn')}{btn('noturn', 'mark.rs_fine2')}</>);
+    else if (r.side && !r.turn && rotOf(f, p) === (r.rot0 || 0) && !off.turn) lines.push(<>{t('mark.rs_side')}{btn('left', 'mark.rs_left')}{btn('right', 'mark.rs_right_t')}{btn('noturn', 'mark.rs_fine2')}</>);
+    if (r.skew && !r.didSkew && !straight && !off.skew) lines.push(<>{t('mark.rs_crooked')}{btn('skew', 'mark.rs_skew')}{btn('noskew', 'mark.rs_fine2')}</>);
+    if (r.blank && !off.blank && !(f.marks[p] || []).length) lines.push(<>{t('mark.rs_blank')}{btn('noblank', 'mark.rs_ok')}</>);
+    const live = lightLive(st);
+    if (r.lit && !live) delete r.lit;   // she switched it off herself
+    if (r.lit) lines.push(<>{t('mark.rs_lit')}{btn('unlit', 'mark.rs_back')}{btn('lit', 'mark.rs_right')}</>);
+    else if (r.faint && !off.faint && !live) lines.push(<>{t('mark.rs_faint')}{btn('light', 'mark.rs_light')}{btn('nofaint', 'mark.rs_fine2')}</>);
+  }
+  if (!lines.length) return null;
+  return <div class={'mk-scnote' + (r.re ? ' re' : '')} data-scnote={f.path + '|' + p}>{lines.map(l => <div>{l}</div>)}</div>;
+}
+// Straightened pages can always be put back from the corner, after the strip has gone.
+export function Unskew({ pg }) { return skewOf(pg.file, pg.idx) ? <IconButton icon="undo" size="sm" label={t('mark.rs_unskew')} title={t('mark.rs_unskew')} onClick={() => C.scanAct(pg, 'unskew')} data-scun /> : null; }
+// Rescans (openRescans): every page flagged as needing a rescan, by student; a name goes to that paper. Copy the list.
+export function Rescans({ onClose, onGo }) {
+  const bb = state().batch, all = C.rescans(), by = new Map();
+  for (const x of all) { if (!by.has(x.i)) by.set(x.i, []); by.get(x.i).push(x); }
+  const order = [...by.keys()].sort((a, b) => a - b);
+  const line = i => shownName(bb.students[i], i) + ': ' + by.get(i).map(x => t('mark.rs_line', { n: x.p + 1, file: C.shown(x.st, x.f.name) })).join(', ');
+  const copy = () => { try { navigator.clipboard.writeText(order.map(line).join('\n')); toast(t('mark.rs_copied')); } catch (e) { console.error(e); } };
+  return <Dialog open title={all.length ? t('mark.rs_title_n', { n: by.size }) : t('mark.rs_title')} onClose={onClose}
+    actions={<>{all.length > 0 && <Button onClick={copy} data-rscopy>{t('mark.rs_copy')}</Button>}<Button onClick={onClose}>{t('mark.s_close')}</Button></>}>
+    {all.length ? <><p class="mute">{t('mark.rs_text')}</p>
+      <ul class="mk-rslist">{order.map(i => <li><button class="mk-rsrow" onClick={() => { onClose(); onGo(i); }} data-rsgo={i}><span data-raw>{shownName(bb.students[i], i)}</span><span class="mute">{by.get(i).map(x => t('mark.rs_p', { n: x.p + 1 })).join(', ')}</span></button></li>)}</ul></>
+      : <p class="mute">{t('mark.rs_none')}</p>}
   </Dialog>;
 }

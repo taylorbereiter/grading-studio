@@ -25,7 +25,7 @@ const entriesOf = files => [...files].map(f => ({ path: f.webkitRelativePath || 
 
 export default function ClassWork({ classId }) {
   const [lib, setLib] = useState(null), [kept, setKept] = useState(null), [busy, setBusy] = useState(null);
-  const files = useRef(null), folder = useRef(null), want = useRef(null), [ask, setAsk] = useState(null);
+  const files = useRef(null), folder = useRef(null), scan = useRef(null), want = useRef(null), [ask, setAsk] = useState(null), [split, setSplit] = useState(null);
   const load = () => { setLib(readLibrary()); readKept().then(setKept); };
   useEffect(load, [classId]);
   if (!lib || !kept) return <div class="loading" aria-busy="true" />;
@@ -56,6 +56,10 @@ export default function ClassWork({ classId }) {
     <input ref={files} type="file" multiple hidden accept=".zip,.pdf,.docx,.docm,.doc,.png,.jpg,.jpeg,.heic,.heif,.gif,.webp,.mp4,.mov,.m4v,.webm,.mp3,.m4a,.wav,.txt,.md"
       onChange={e => bring(want.current, e.currentTarget.files)} data-bring="files" />
     <input ref={folder} type="file" multiple hidden webkitdirectory="" onChange={e => bring(want.current, e.currentTarget.files)} data-bring="folder" />
+    {/* a scan of everyone's papers, split page by page onto names (mark/split.jsx) */}
+    <input ref={scan} type="file" hidden accept=".pdf,application/pdf" data-bring="scan"
+      onChange={e => { const f = e.currentTarget.files[0], it = want.current; if (f) PARTS.split().then(S => setSplit({ S, f, it }), er => console.error(er)); }} />
+    {split && <split.S.Split file={split.f} asg={split.it} lib={lib} onClose={() => { setSplit(null); load(); }} />}
     {!units.length ? <EmptyState icon="inbox" title={t('mark.w_none')} />
       : units.map(u => <div class="wunit"><h3 class="t5" data-raw>{u.name}</h3>
         <ul class="wlist">{u.items.map(it => { const st = standing(lib, kept, it), open = st.m && canOpen(st.m);
@@ -70,7 +74,7 @@ export default function ClassWork({ classId }) {
               <Menu label={t('mark.w_again')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('mark.w_again')} disabled={busy === it.id} data-again-for={it.id} />}
                 items={[{ label: t('mark.w_again_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('mark.w_again_folder'), icon: 'folder', onSelect: () => pick(it, folder) }]} /></span>
               : <Menu label={t('mark.w_bring')} trigger={b => <Button {...b} size="sm" icon="upload" disabled={busy === it.id} data-bring-for={it.id}>{t('mark.w_bring')}</Button>}
-                items={[{ label: t('mark.w_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('mark.w_folder'), icon: 'folder', onSelect: () => pick(it, folder) }]} />}
+                items={[{ label: t('mark.w_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('mark.w_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, { label: t('mark.w_scan'), icon: 'image', onSelect: () => pick(it, scan) }]} />}
           </li>; })}</ul></div>)}
     <p class="mute hint">{t('mark.w_drop')}</p>
   </section>;

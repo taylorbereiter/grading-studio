@@ -9,6 +9,7 @@ import * as D from '../../engines/gdraw.js';
 import * as E from '../../engines/gopen.js';
 import * as F from '../../engines/gfiles.js';
 import * as K from '../../engines/gmark.js';
+import * as V from '../../engines/gmedia.js';
 import { PARTS } from '../router.js';
 import { libs } from './paper.js';
 import { prefs } from '../../students/prefs.js';
@@ -129,6 +130,11 @@ export function tagOf(st, f) {
   return { replaced: was ? F.fileShown(st, was.name) : null, word: !!was && F.madeFromWord(f), from: f.from || null, t: f.added };
 }
 export const undo = () => M && M.undo();
+export const redo = () => M && M.redo();
+// Typed notes (mark/typed.jsx): a student's grade changed by the notes, saved and shown; a setting of the assignment's setup changed as
+// one undo step, after() run each way (the setup kept and the bar drawn again).
+export function touched(st) { K.touchGrade(st); tell(); }
+export function setupStep(keys, fn, after) { K.fieldSnap(state().setup, keys, () => { after(); tell(); }, 'setup'); fn(); after(); tell(); }
 
 // Leave out: the file stays with the student but off the screen and out of what goes back; Bring back undoes it (setDocIn).
 export function setIn(st, d, on) { const was = D.docIn(st, d); F.setDocIn(st, d, on); step(() => { F.setDocIn(st, d, was); tell(); show(b().students.indexOf(st)); }, () => { F.setDocIn(st, d, on); tell(); show(b().students.indexOf(st)); }, on ? 'brought back' : 'left out'); tell(); show(b().students.indexOf(st)); }
@@ -420,3 +426,106 @@ export const gsFlat = (f, doc) => F.gsFlatCheck(f, doc);
 // For the other file tools (mark/light.jsx): the download changed (saved soon), and the paper opened again.
 export const changed = () => tell();
 export const reopen = (i = -1) => show(i);
+
+// Scanned pages (src/scans.js): the strip above a page and its choices (scanNote and its clicks), the ⚑ flag for a rescan (scanFlag),
+// the list of pages waiting on one (scanRescans), and what the scan split decided, taken as the papers open (scanHintsAll). The turn
+// and the straightening are the current app's own scanTurn and scanStraighten (lifted), each one undo step.
+export function scanFlag(pg) {
+  const f = pg.file; if (f.virtual) return null;
+  K.fieldSnap(f, ['sc'], () => { tell(); show(-1); }, 'rescan flag');
+  const r = (f.sc ||= {})[pg.idx] ||= { later: 1 };
+  if (r.re) delete r.re; else r.re = 1;
+  tell(); show(-1);
+  return !!r.re;
+}
+const lits = rec => b().students.flatMap(s => s.files.flatMap(f => Object.values(f.sc || {}))).filter(r => r.lit && r !== rec);
+export function scanAct(pg, a) {
+  const f = pg.file, p = pg.idx, r = f.sc && f.sc[p]; if (!r) return;
+  const off = r.off ||= {};
+  K.commitEditors();
+  if (a === 'back') { if (r.didTurn && D.rotOf(f, p) === r.didTurn) { off.turn = 1; F.scanTurn(pg, (360 - r.didTurn) % 360); } if (D.skewOf(f, p)) { off.skew = 1; F.scanStraighten(pg, 0); } }
+  else if (a === 'done') off.done = 1;
+  else if (a === 'turn') F.scanTurn(pg, r.turn);
+  else if (a === 'left') F.scanTurn(pg, 270);
+  else if (a === 'right') F.scanTurn(pg, 90);
+  else if (a === 'skew') F.scanStraighten(pg, r.skew);
+  else if (a === 'unskew') { off.skew = 1; F.scanStraighten(pg, 0); }
+  else if (a === 'light') F.scanLight(pg, r);
+  else if (a === 'unlit') { off.faint = 1; F.scanLightBack(r); }
+  else if (a === 'unre') { K.fieldSnap(f, ['sc'], () => { tell(); show(-1); }, 'rescan flag'); delete f.sc[p].re; }
+  else if (a === 'lit') { delete r.lit; off.faint = 1; for (const o of lits(r)) o.lit.on = true; }   // she wants Lighting on now, whichever page goes back
+  else off[a.slice(2)] = 1;   // noturn, noskew, noblank, nofaint
+  K.thumbCache.clear();
+  tell(); show(-1);
+}
+export const rescans = () => F.scanRescans();
+// The split hands over what goes with the download once it opens: { id, wide (the whole scan's lighting), cls (the class she picked) }.
+let fromSplit = null;
+export const afterSplit = p => { fromSplit = p; };
+export function takeSplit() {
+  const bb = b(); if (!bb || !fromSplit || fromSplit.id !== bb.id) return false;
+  const { wide, cls, lit } = fromSplit; fromSplit = null;
+  if (wide) { bb.light = { ...(bb.light || {}), '*': { ...wide } }; bb.lightOpt = { ...D.lightOpts(), on: true }; }
+  F.scanHintsAll();
+  if (cls != null && cls !== '') bb.classId = cls;
+  if (wide || lit) state().lightPagesChanged();
+  tell(); show(-1);
+  return true;
+}
+
+// Video and audio papers (src/app/media.js, src/video.js): the time in the comment, a video turned for one filmed sideways, a
+// transcript put on or taken off (partners with the same video share it), and a notes page added beside a video. Each one undo step.
+export function addStamp(st, t) {
+  K.gradeSnap(st);
+  const tag = '[' + V.fmtTime(t) + '] ';
+  st.grade.comment = (st.grade.comment && !/\s$/.test(st.grade.comment) ? st.grade.comment + '\n' : st.grade.comment || '') + tag;
+  K.touchGrade(st);
+  tell();
+}
+export function vidTurn(f) {
+  const bb = b(), k = V.vrotKey(f), d = (V.vrotOf(f) + 90) % 360;
+  K.fieldSnap(bb, ['vrot'], () => tell(), 'video turn');
+  bb.vrot ||= {}; if (d) bb.vrot[k] = d; else delete bb.vrot[k];
+  if (!Object.keys(bb.vrot).length) delete bb.vrot;
+  tell();
+}
+const trSame = f => { const same = f.kind === 'link' && b() ? b().students.flatMap(s => s.files).filter(x => x.kind === 'link' && V.linkKey(x) === V.linkKey(f)) : []; return same.includes(f) ? same : same.concat(f); };
+export function trSet(f, tr) {
+  const all = trSame(f), was = all.map(x => x.tr);
+  const put = list => { all.forEach((x, i) => { if (list[i]) x.tr = list[i]; else delete x.tr; }); tell(); };
+  step(() => put(was), () => put(all.map(() => tr)), tr ? 'transcript' : 'transcript taken off');
+  put(all.map(() => tr));
+}
+// A recording's transcript made in this browser (transcribeFile): bytes, the recording itself.
+export async function trMake(f, bytes, say, stop) {
+  const w = await V.transcribe(bytes, say, stop);
+  if (stop && stop.on) return false;
+  trSet(f, { w });
+  return true;
+}
+export async function notesAdd(st, kind, name) {
+  const rows = V.npRows(state().setup), PDFLib = await PARTS.pdflib(); use({ PDFLib });
+  const bytes = await V.notesPdf(kind, b().name, rows), file = V.npFileName(name) + '.pdf';
+  return addFiles(st, [{ path: file, file: new File([bytes], file, { type: 'application/pdf' }) }]);
+}
+// Add, A video… (openAddVideo, videoAdd): a link, or a video file kept in this browser, and a notes page if she wants one. A video
+// already there (the same link however it was written) isn't added twice. A browser where the current app has never kept a video has
+// no store for one yet (the new app doesn't make the current app's databases), so the file is added to the student as it is.
+export async function videoAdd(st, o) {
+  const had = V.sameVideo(st, o), list = [];
+  if (!had) {
+    if (o.file) {
+      const W = await PARTS.write();
+      let id = null; try { id = await W.keepVideo(o.file); } catch (e) { if (e && e.name !== 'NotThere') throw e; }
+      if (id) list.push({ path: o.name + '.url', file: new File([V.vidBytes(id, o.file.name, o.file.size)], o.name + '.url') });
+      else list.push({ path: o.name + '.' + V.extOf(o.file.name), file: new File([o.file], o.name + '.' + V.extOf(o.file.name), { type: o.file.type }) });
+    } else list.push({ path: o.name + '.url', file: new File([V.linkBytes(o.url)], o.name + '.url') });
+  }
+  if (o.kind) {
+    const PDFLib = await PARTS.pdflib(); use({ PDFLib });
+    const n = V.npFileName(o.name.replace(/\s*video$/i, '') + ' notes') + '.pdf';
+    list.push({ path: n, file: new File([await V.notesPdf(o.kind, b().name, V.npRows(state().setup))], n, { type: 'application/pdf' }) });
+  }
+  const made = list.length ? await addFiles(st, list) : [];
+  return { had, made };
+}
