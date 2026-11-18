@@ -110,7 +110,7 @@ test('every word on the planning screens comes through t() or is the teacher’s
   const counts = {};
   for (const w of [1366, 390]) {
     const p = await fresh(w);
-    for (const hash of SCREENS) {
+    for (const hash of [...SCREENS, 'settings/timetable']) {
       await open(p, hash, true);
       const loose = await p.evaluate(() => {
         const bad = [], ok = s => !/[A-Za-z]/.test(s.replace(/⟦[^⟧]*⟧/g, ''));
@@ -121,7 +121,7 @@ test('every word on the planning screens comes through t() or is the teacher’s
         return bad;
       });
       assert.deepEqual(loose, [], 'words not from t() on ' + hash + ' at ' + w + ' px');
-      if (w > 700) counts[hash] = await p.evaluate(() => [...document.querySelectorAll('main a[href], main button:not([disabled]), main input, main select, main textarea, main [tabindex="0"]')]
+      if (w > 700 && SCREENS.includes(hash)) counts[hash] = await p.evaluate(() => [...document.querySelectorAll('main a[href], main button:not([disabled]), main input, main select, main textarea, main [tabindex="0"]')]
         .filter(el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.top < innerHeight && r.bottom > 0 && el.getAttribute('tabindex') !== '-1'; }).length);
     }
     assert.deepEqual(p.errors, [], 'errors at ' + w + ' px'); await p.ctx.close();
@@ -238,5 +238,32 @@ test('a strong example goes on a slide by reference: drawn from the marking side
   const there = await p.evaluate(() => { const P = window.__planner, l = P.L.lessons.find(x => x.id === 'L5'); P.openLessonForTest(l, 4); return { src: l.slides[4].img.src, pic: !!document.querySelector('.ls-pic') }; });
   assert.deepEqual(there, { src: 'gsex:EX1|0', pic: true });
   await new Promise(r => setTimeout(r, 500));
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('Settings > Timetable: a class renamed and recoloured, a meeting and a day off added, kept as the current Planner keeps its setup', async () => {
+  const p = await fresh();
+  await open(p, 'settings/timetable');
+  await p.waitForSelector('main .ttset input');
+  await p.$eval('main .ttset .card input', el => { el.focus(); el.select(); });
+  await p.keyboard.type('Grade 9 English A');
+  await p.click('main .ttset .card .swatches button:nth-child(3)');
+  await p.$eval('main .ttset .card', c => [...c.querySelectorAll(':scope > div > div > button, :scope button')].find(b => b.textContent === 'Add a time').click());
+  const dayOff = (await p.$$('main .ttset .dlist'))[0];
+  await (await dayOff.$(':scope > div:last-child button')).click();
+  const rows = await dayOff.$$('.drow');
+  const inputs = await rows[1].$$('input');
+  await inputs[0].type('12252026'); await inputs[1].type('Winter break');
+  await p.click('main [data-focus="save-timetable"]');
+  const readSetup = () => p.evaluate(() => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('setup'); q.onsuccess = () => { r.result.close(); res(q.result); }; }; }));
+  let setup = null;
+  for (let k = 0; k < 40 && !setup; k++) { const s = await readSetup(); if (s.classes[0].name === 'Grade 9 English A') setup = s; else await new Promise(r => setTimeout(r, 150)); }
+  assert.ok(setup, 'the setup is saved');
+  assert.equal(setup.classes[0].color, '#B71E42');
+  assert.equal(setup.classes[0].meets.length, 4);
+  assert.deepEqual(setup.daysOff.map(x => x.label), ['Staff training day', 'Winter break']);
+  assert.equal(setup.classes[0].id, 'A1', 'the class keeps its id, so its lessons stay its own');
+  await p.goto(srv.url + 'planner.html');
+  await p.waitForFunction(() => { const P = window.__planner; return P && P.L.setup && P.L.setup.classes[0].name === 'Grade 9 English A'; }, { timeout: 20000 });
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });

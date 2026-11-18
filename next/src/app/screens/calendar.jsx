@@ -12,8 +12,6 @@ import { toneOf } from '../colors.js';
 import { workForCalendar } from '../../crossings.js';
 import { nameKey } from '../../planning/plan.js';
 import { lessonsOn, stateOf, STATE_LINE, periods, dayOff, eventsOn, newLesson, moveLesson, mondayOf, weekDays, today, plus, at, iso, mins } from '../plan/lessons.js';
-import { CannotSave } from '../../planning/write.js';
-import { ReadOnly } from '../../shared/lock.js';
 
 const VIEWS = ['class', 'time', 'month'];
 const clock = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? date(new Date(2000, 0, 1, +m[1], +m[2]), { hour: 'numeric', minute: '2-digit' }) : ''; };
@@ -21,10 +19,8 @@ const raw = s => <span data-raw>{s}</span>;
 const STATE_ICON = { taught: '', ready: 'check', draft: 'half', none: 'dash' };
 const keep = (k, v) => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem('gsn.cal.' + k)); sessionStorage.setItem('gsn.cal.' + k, JSON.stringify(v)); } catch {} return null; };
 
-export function saveFailed(e) {
-  console.error(e);
-  toast(e instanceof ReadOnly || (e && e.name === 'ReadOnly') ? t('plan.read_only') : e instanceof CannotSave ? t('plan.not_saved') : t('plan.not_saved'));
-}
+export { saveFailed } from '../plan/save.js';
+import { saveFailed } from '../plan/save.js';
 
 function State({ s }) {
   return <span class={'st st-' + s}>{STATE_ICON[s] && <Icon name={STATE_ICON[s]} size="xs" />}{t(STATE_LINE[s])}</span>;

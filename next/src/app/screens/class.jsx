@@ -12,7 +12,7 @@ import { toneOf, classTone } from '../colors.js';
 import { timetableClass } from '../../planning/plan.js';
 import { engine } from '../../planning/engine.js';
 import { lessonsOn, stateOf, STATE_LINE, periods, dayOff, today, plus, at, mondayOf, weekDays, newLesson } from '../plan/lessons.js';
-import { saveFailed } from './calendar.jsx';
+import { saveFailed } from '../plan/save.js';
 import Later from './later.jsx';
 
 const TABS = ['course', 'people', 'grades', 'todo'];

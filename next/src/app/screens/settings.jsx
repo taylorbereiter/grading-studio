@@ -9,6 +9,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { LANGUAGES, IN_NEXT, savedLanguage, saveLanguage } from '../language.js';
 import { sampleOn, enterSample, leaveSample } from '../sample.js';
 import { useUpdate } from '../update.js';
+import { TimetableSettings } from './settings-plan.jsx';
 
 export const GROUPS = [['classes', 'people', 'settings.classes'], ['timetable', 'cal', 'settings.timetable'], ['grading', 'grades', 'settings.grading'], ['marking', 'pen', 'settings.marking'],
   ['focus', 'timer', 'settings.focus'], ['ai', 'assist', 'settings.ai'], ['saving', 'cloud', 'settings.saving'], ['display', 'sun', 'settings.display'], ['about', 'info', 'settings.about']];
@@ -46,7 +47,7 @@ export default function Settings({ route }) {
       <nav class="setnav" aria-label={t('nav.settings')}>{GROUPS.map(([id, icon, line]) => <NavItem icon={icon} label={t(line)} href={href('settings', id)} current={id === g[0]} />)}</nav>
       <section class="setbody" aria-label={t(g[2])}>
         <h2 class="h2">{t(g[2])}</h2>
-        {g[0] === 'display' ? <Display /> : g[0] === 'about' ? <About /> : <EmptyState icon="spark" title={t('settings.later_title')} text={t('settings.later_text')} />}
+        {g[0] === 'display' ? <Display /> : g[0] === 'about' ? <About /> : g[0] === 'timetable' ? <TimetableSettings /> : <EmptyState icon="spark" title={t('settings.later_title')} text={t('settings.later_text')} />}
       </section>
     </div>
   </div>;

@@ -17,7 +17,7 @@ import { lessons, kv, school, manageBacLinks, taughtIn, planTime, newYear, words
 import { mayWrite } from '../shared/lock.js';
 import * as tabs from '../shared/tabs.js';
 import { saved } from '../shared/saved.js';
-import { plannerFolder, writeLessonFile, removeLessonFile } from './folder.js';
+import { plannerFolder, writeLessonFile, removeLessonFile, writeTimetableFile } from './folder.js';
 
 export class CannotSave extends Error { constructor(why, what) { super(what + ': ' + why); this.name = 'CannotSave'; this.why = why; } }
 const check = what => { mayWrite(what); if (!tabs.live()) throw new CannotSave('replaced', what); };
@@ -59,6 +59,8 @@ export async function saveKv(name, value) {
   if (!KV.includes(name)) throw new Error('Not a Planner record: ' + name);
   check('gs-lessons/kv/' + name);
   await kv.put(value, name);
+  // The timetable also goes to its file in a linked Planner folder, as the current Planner writes it when it is changed there.
+  if (name === 'setup') await writeTimetableFile(value, await plannerFolder()).catch(e => console.error(e));
   tell('gs-plan-out'); if (name === 'bank') tell('gs-bank');
   saved({ kind: 'plan', id: name, side: 'planning' });
 }

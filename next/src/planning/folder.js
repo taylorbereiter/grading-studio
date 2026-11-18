@@ -37,4 +37,11 @@ export async function removeLessonFile(l, f) {
   const gone = (await kv.get('syncGoneFiles').catch(() => null)) || [];
   if (!gone.includes(l._file)) await kv.put([...gone, l._file], 'syncGoneFiles');
 }
+// The timetable's file in the folder (src/planner/lessons.js folderWriteSchedule): the setup without the slide template.
+export async function writeTimetableFile(setup, f) {
+  if (!f || !f.ok || !setup) return f ? 'later' : 'none';
+  const { template, tplName, ...tt } = setup;
+  await writeFile(f.dir, 'timetable.json', JSON.stringify(tt, null, 2));
+  return 'written';
+}
 export { lessons as lessonStore };

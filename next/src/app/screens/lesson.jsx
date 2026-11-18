@@ -19,7 +19,7 @@ import { engine } from '../../planning/engine.js';
 import { saveLesson } from '../../planning/write.js';
 import { Slide } from '../plan/slide.jsx';
 import { stateOf, classOf, today, at, mins, lessonsOn } from '../plan/lessons.js';
-import { saveFailed } from './calendar.jsx';
+import { saveFailed } from '../plan/save.js';
 import { Present } from '../plan/present.jsx';
 import Editor, { Talk } from './lesson-edit.jsx';
 import { AssistantSheet } from '../plan/assistant.jsx';
