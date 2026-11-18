@@ -205,7 +205,7 @@ const GRADING = [
   ['gfiles', [
     // a student's files changed on the marking screen (src/app/kept.js addFiles, src/app/replace.js, src/app/bringin.js bringIn):
     // what a file added, removed, brought back or replaced does to the student, and how files are sorted to students by name
-    'goneNow', 'markCount', 'replacedOf', 'freshRows', 'guessNewName', 'fileShown', 'sortTag', 'madeFromWord', 'setDocIn', 'gradeWords', 'wordsJoin', 'moveFileNow', 'gradeHasWork',
+    'goneNow', 'markCount', 'replacedOf', 'freshRows', 'guessNewName', 'fileShown', 'sortTag', 'madeFromWord', 'setDocIn', 'gradeWords', 'wordsJoin', 'moveFileNow', 'gradeHasWork', 'pasteTextPdf', 'pasteClean', 'pasteName',
   ], '', [], ['gcore', 'gdraw', 'gopen', 'greport'], ['num', 'inside']],
   ['gword', [
     // a Word paper on the marking screen (src/app/word.js, src/wordnotes.js): drawn from its own XML, typed in, cells shaded, boxes

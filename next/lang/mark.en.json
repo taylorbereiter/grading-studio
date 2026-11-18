@@ -458,5 +458,20 @@
  "mark.f_pdf_none": "Nothing to convert",
  "mark.f_turn_all": "Turn all pages",
  "mark.f_turn_l": "Turn this page to the left",
- "mark.f_turn_r": "Turn this page to the right"
+ "mark.f_turn_r": "Turn this page to the right",
+ "mark.f_add_menu": "Add",
+ "mark.f_add_for": "Add to {name}",
+ "mark.f_paste": "Pasted text…",
+ "mark.f_paste_t": "Paste text for {name}",
+ "mark.f_paste_text": "For work a student sent in an email or a message. It becomes a page you can mark, score and export like any paper, added after their other files. It stays in this browser.",
+ "mark.f_paste_name": "Name it",
+ "mark.f_paste_default": "Emailed work",
+ "mark.f_paste_ph": "Paste what they sent here",
+ "mark.f_paste_words": {
+  "one": "{n} word",
+  "other": "{n} words"
+ },
+ "mark.f_paste_pic": "Some letters can’t be typed into the page, so it comes in as a picture of the text. Pen, highlighter and comments still work.",
+ "mark.f_paste_add": "Add to {name}",
+ "mark.f_paste_fail": "That text couldn’t be added: {why}"
 }

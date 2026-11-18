@@ -263,3 +263,4 @@
 .mk-mvlist{list-style:none;margin:8px 0 0;padding:0;max-height:300px;overflow:auto}.mk-mvlist li .btn{width:100%;justify-content:flex-start}
 .mk-pdfwhich{display:grid;gap:6px;margin:0 0 12px}
 .pg .rchip{position:absolute;top:6px;right:6px;z-index:3;display:flex;gap:2px;padding:2px;border-radius:var(--rf);background:var(--surface);box-shadow:var(--sh-1);opacity:0;transition:opacity var(--d)}.pg:hover .rchip,.pg .rchip:focus-within{opacity:.95}@media (hover:none){.pg .rchip{opacity:.92}}
+.mk-pttext{width:100%;box-sizing:border-box;height:220px;margin:10px 0 0}

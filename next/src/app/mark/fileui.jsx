@@ -71,7 +71,7 @@ function MoveTo({ st, path, f, onClose }) {
   }
   return <Dialog open title={t('mark.f_move_t', { name: C.shown(st, f.name) })} onClose={onClose} actions={<Button onClick={onClose}>{t('mark.cancel')}</Button>}>
     <p class="mute">{t('mark.f_move_text')}</p>
-    <TextInput icon="search" label={t('mark.f_find')} value={q} onInput={e => setQ(e.target.value)} />
+    <TextInput icon="search" label={t('mark.f_find')} value={q} onInput={setQ} />
     <ul class="mk-mvlist">{rows.map(r => <li><Button variant="quiet" onClick={() => go(r.s)} data-mvto={r.s.key}><span data-raw>{r.name}</span></Button></li>)}</ul>
     {!rows.length && <p class="mute">{t('mark.f_none_found')}</p>}
   </Dialog>;
@@ -82,7 +82,7 @@ export function BackIn({ st, d }) { return <Button size="sm" variant="quiet" onC
 
 // Under the paper: Add a file…, and the files taken off this student, each with Bring back.
 export function FilesFoot({ st, name }) {
-  const [, again] = useState(0), gone = (st.gone || []).filter(g => !g.virtual);
+  const [, again] = useState(0), [paste, setPaste] = useState(false), gone = (st.gone || []).filter(g => !g.virtual);
   const add = () => pickFile(true, async files => {
     if (!files.length) return;
     const made = await C.addFiles(st, files.map(file => ({ path: file.name, file })));
@@ -90,11 +90,33 @@ export function FilesFoot({ st, name }) {
     if (made.length) toast(t('mark.f_added', { n: made.length, name }));
     again(n => n + 1);
   });
+  // Add: a late or forgotten paper, or work sent in a message (the current app's Add menu on the student's bar)
+  const items = [{ label: t('mark.f_add'), icon: 'file', onSelect: add }, { label: t('mark.f_paste'), icon: 'paste', onSelect: () => setPaste(true) }];
   return <div class="mk-ffoot">
-    <Button size="sm" icon="plus" onClick={add} data-addfile>{t('mark.f_add')}</Button>
+    <Menu label={t('mark.f_add_for', { name })} trigger={b => <Button {...b} size="sm" icon="plus" data-addmenu>{t('mark.f_add_menu')}</Button>} items={items} />
+    {paste && <PasteText st={st} name={name} onClose={() => { setPaste(false); again(n => n + 1); }} />}
     {gone.length > 0 && <details class="mk-gone"><summary>{t('mark.f_gone', { n: gone.length })}</summary>
       <ul>{gone.map(g => <li><span data-raw>{C.shown(st, g.name)}</span><Button size="sm" variant="quiet" onClick={() => { C.bringBack(st, g.path); toast(t('mark.f_back_t', { name: C.shown(st, g.name) })); again(n => n + 1); }} data-back={g.path}>{t('mark.f_back')}</Button></li>)}</ul></details>}
   </div>;
+}
+// Pasted text (src/pastetext.js openPasteText): work a student sent in an email or a message becomes a page added to them.
+function PasteText({ st, name, onClose }) {
+  const [title, setTitle] = useState(t('mark.f_paste_default')), [text, setText] = useState(''), [busy, setBusy] = useState(false);
+  const clean = C.pasteClean(text), words = (clean.match(/\S+/g) || []).length;
+  const pic = [...clean].some(ch => ch.codePointAt(0) > 0x24F && !/[\u2000-\u206F\u20AC\u2122]/.test(ch));
+  const go = async () => {
+    setBusy(true);
+    try { const r = await C.pasteAdd(st, title, text); if (r) toast(t('mark.f_added', { n: 1, name })); }
+    catch (e) { toast(t('mark.f_paste_fail', { why: (e && e.message) || String(e) })); }
+    onClose();
+  };
+  return <Dialog open title={t('mark.f_paste_t', { name })} onClose={onClose}
+    actions={<><Button onClick={onClose}>{t('mark.cancel')}</Button><Button variant="primary" onClick={go} disabled={!clean || busy} data-ok>{t('mark.f_paste_add', { name })}</Button></>}>
+    <p class="mute">{t('mark.f_paste_text')}</p>
+    <TextInput label={t('mark.f_paste_name')} value={title} onInput={setTitle} autocomplete="off" data-ptname />
+    <textarea class="input mk-pttext" aria-label={t('mark.f_paste_ph')} placeholder={t('mark.f_paste_ph')} value={text} onInput={e => setText(e.currentTarget.value)} data-raw data-pttext />
+    {clean && <p class="mute">{t('mark.f_paste_words', { n: words })}{pic ? ' ' + t('mark.f_paste_pic') : ''}</p>}
+  </Dialog>;
 }
 // The tag on a file she added (addTag): Added by you, Replaced …, From Word, with the day.
 export function AddTag({ st, f }) {

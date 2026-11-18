@@ -250,3 +250,14 @@ async function rescan(f) {
   state().refound(st); state().renderList(); state().gradeShown(st);
   for (const pg of state().pages) if (pg.file === f) { pg.extra = (f.kami && f.kami[pg.idx] && f.kami[pg.idx].notes) || []; D.draw(pg); }
 }
+
+// Pasted text (src/pastetext.js pasteTextAdd): the text becomes a PDF added to the student like any added file. Text the PDF's own font
+// can write is real text; anything else is a picture of each page, so marks still work.
+export const pasteClean = s => F.pasteClean(s);
+export async function pasteAdd(st, title, text) {
+  if (!F.pasteClean(text)) return null;
+  await (await PARTS.outEngine()).load();
+  const name = F.pasteName(title) + '.pdf', { bytes, typed } = await F.pasteTextPdf(title, text);
+  await addFiles(st, [{ path: name, file: new File([bytes], name, { type: 'application/pdf' }) }]);
+  return { name, typed };
+}

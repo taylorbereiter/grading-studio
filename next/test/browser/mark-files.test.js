@@ -62,9 +62,10 @@ test('a file added, replaced, removed and brought back in the new app is where t
   const i = await p.evaluate(k => window.__mark.state().batch.students.findIndex(s => s.key === k), KEY);
   await p.click('[data-st="' + i + '"]');
   await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready, { timeout: 60000 }, i);
-  await p.waitForSelector('[data-addfile]', { timeout: 60000 });
-  // Add a file…
-  const [c1] = await Promise.all([p.waitForFileChooser(), p.click('[data-addfile]')]);
+  await p.waitForSelector('[data-addmenu]', { timeout: 60000 });
+  // Add > A file…
+  const addDo = async label => { await p.click('[data-addmenu]'); await p.waitForSelector('.pop [role="menuitem"]'); for (const it of await p.$$('.pop [role="menuitem"]')) if ((await it.evaluate(e => e.textContent)).includes(label)) return it.click(); throw new Error('no ' + label); };
+  const [c1] = await Promise.all([p.waitForFileChooser(), addDo('Add a file')]);
   await c1.accept([late]);
   await has(p, 'files', KEY + '/Late page.pdf');
   // Replace… the essay with a corrected copy, after the check
@@ -93,7 +94,12 @@ test('a file added, replaced, removed and brought back in the new app is where t
   const moveLate = async () => {
     await p.waitForFunction(f => window.__mark.ready && !!document.querySelector('[data-fmenu="' + f + '"]'), { timeout: 30000 }, KEY + '/Late page.pdf');
     await menuDo(p, KEY + '/Late page.pdf', 'Move to');
-    await p.waitForSelector('[data-mvto="' + OTHER + '"]'); await p.click('[data-mvto="' + OTHER + '"]');
+    await p.waitForSelector('[data-mvto="' + OTHER + '"]');
+    // the find box narrows the list
+    const nm = await p.$eval('[data-mvto="' + OTHER + '"]', e => e.textContent.trim()), all = (await p.$$('[data-mvto]')).length;
+    await p.type('.dlg input', nm.slice(0, 4));
+    await p.waitForFunction(n => document.querySelectorAll('[data-mvto]').length < n, {}, all);
+    await p.click('[data-mvto="' + OTHER + '"]');
     await p.waitForSelector('[data-take]'); await p.click('[data-take]');
     await p.waitForFunction((o, f) => window.__mark.state().batch.students.find(s => s.key === o).files.some(x => x.path === f), { timeout: 30000 }, OTHER, KEY + '/Late page.pdf');
   };
@@ -132,6 +138,44 @@ test('a file added, replaced, removed and brought back in the new app is where t
   assert.deepEqual(await m2.evaluate((k, f) => window.__gs.state().batch.students.find(s => s.key === k).files.find(x => x.path === f).rot, KEY, FIXED), turned, 'and the pages are turned the same');
   assert.equal(was.removed[KEY + '/Essay.pdf'].by, KEY + '/Essay fixed.pdf', 'and knows which file replaced which');
   assert.ok(was.removed[KEY + '/Extra notes.pdf'].back, 'and that the notes were brought back');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('text pasted for a student with nothing turned in is the same page the current app makes, and the current app finds it', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zip);
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  const who = await p.evaluate(() => { const b = window.__mark.state().batch, i = b.students.findIndex(s => !s.files.length); return { i, key: b.students[i].key }; });
+  await p.click('[data-st="' + who.i + '"]');
+  await p.waitForSelector('[data-addmenu]', { timeout: 60000 });
+  await p.click('[data-addmenu]'); await p.waitForSelector('.pop [role="menuitem"]');
+  for (const it of await p.$$('.pop [role="menuitem"]')) if ((await it.evaluate(e => e.textContent)).includes('Pasted text')) { await it.click(); break; }
+  await p.waitForSelector('[data-pttext]');
+  const TEXT = 'My answer to question one.\n\nThe second part, sent late by email.';
+  await p.click('[data-pttext]'); await p.keyboard.type(TEXT);
+  await p.click('.dlg [data-ok]');
+  const PATH = who.key + '/Emailed work.pdf';
+  await p.waitForFunction((k, f) => window.__mark.state().batch.students.find(s => s.key === k).files.some(x => x.path === f && x.numPages), { timeout: 30000 }, who.key, PATH);
+  const made = await p.evaluate((k, f) => btoa(String.fromCharCode(...window.__mark.state().batch.students.find(s => s.key === k).files.find(x => x.path === f).data)), who.key, PATH);
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m2 = await page(ctx, errors);
+  await m2.goto(srv.url); await appReady(m2);
+  await m2.evaluate(id => window.__gs.reopenKept(id), id);
+  await m2.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  const was = await m2.evaluate(async (k, f, text) => {
+    const st = window.__gs.state().batch.students.find(s => s.key === k), x = st.files.find(y => y.path === f), again = await window.__gs.pasteTextPdf('Emailed work', text);
+    return { kept: !!x && btoa(String.fromCharCode(...x.data)), again: btoa(String.fromCharCode(...again.bytes)) };
+  }, who.key, PATH, TEXT);
+  assert.equal(was.kept, made, 'the current app finds the page');
+  assert.equal(made, was.again, 'and it is the page the current app makes from the same text');
   assert.deepEqual(errors, []);
   await ctx.close();
 });

@@ -39,7 +39,7 @@ function StudentList({ batch, cur, onPick, onReport }) {
   const rows = batch.students.map((st, i) => ({ st, i, name: shownName(st, i) })).filter(r => !q || r.name.toLowerCase().includes(q.toLowerCase()));
   return <aside class="mk-list" aria-label={t('mark.students')}>
     <div class="mk-lhead mute"><span>{t('mark.papers', { n: batch.students.filter(st => st.files.length).length })}</span>{missing > 0 && <span>{t('mark.missing_n', { n: missing })}</span>}{onReport && <button type="button" class="link" onClick={onReport} data-report>{t('mark.op_title')}</button>}</div>
-    <div ref={box} class="mk-find"><TextInput icon="search" label={t('mark.find')} value={q} onInput={e => setQ(e.target.value)} /></div>
+    <div ref={box} class="mk-find"><TextInput icon="search" label={t('mark.find')} value={q} onInput={setQ} /></div>
     <ol class="mk-rows">{rows.map(({ st, i, name }) => { const sc = rowScore(st);
       return <li><button type="button" class={'mk-row' + (i === cur ? ' on' : '')} aria-current={i === cur ? 'true' : undefined} onClick={() => onPick(i)} data-st={i}>
         <Avatar name={name} size="sm" /><span class="nm" data-raw>{name}</span>
@@ -103,7 +103,7 @@ function Paper({ batch, cur, zoom, ver, FU }) {
     measure(); const ro = new ResizeObserver(measure); ro.observe(el); return () => ro.disconnect();
   }, []);
   return <div class="mk-paper" ref={area} tabindex="-1">
-    {!st ? null : !st.files.length ? <EmptyState icon="inbox" title={t('mark.nothing_in')} />
+    {!st ? null : !st.files.length ? <><EmptyState icon="inbox" title={t('mark.nothing_in')} />{FU && <FU.FilesFoot key={st.key + ver} st={st} name={shownName(st, cur)} />}</>
       : !got ? <div class="loading" aria-busy="true" />
       : <>{got.cards.map(c => c.kind === 'file' ? <div class="fwrap">{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
         : <section class="doc">
