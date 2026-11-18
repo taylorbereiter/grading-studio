@@ -3,7 +3,7 @@
 // [{ id, name, url }], only addresses, each opening in a new tab. Replace keeps the file's id, so anything that points at it still
 // does. Taking a file or link off can be undone from the toast. Planning material only, never student work.
 import { h, Fragment } from 'preact';
-import { useState, useRef } from 'preact/hooks';
+import { useState, useRef, useEffect } from 'preact/hooks';
 import { Button, IconButton, Icon, TextInput, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { engine } from '../../planning/engine.js';
@@ -19,6 +19,8 @@ function saveAs(name, b) { const a = document.createElement('a'), url = URL.crea
 export function Materials({ p, l, onSave }) {
   const E = engine(p), files = l.files || [], links = l.links || [];
   const pick = useRef(), form = useRef(), swap = useRef(''), [over, setOver] = useState(false), [adding, setAdding] = useState(false), [url, setUrl] = useState(''), [name, setName] = useState('');
+  // The address box takes the keys as soon as Add a link opens it.
+  useEffect(() => { const b = adding && form.current && form.current.querySelector('input'); if (b) b.focus(); }, [adding]);
   const put = async n => { try { await onSave(n); } catch (e) { saveFailed(e); } };
   const add = async list => {
     const n = copy(l); n.files = n.files || []; let k = 0;

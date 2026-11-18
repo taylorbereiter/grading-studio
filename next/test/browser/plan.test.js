@@ -419,7 +419,8 @@ test('a lesson’s materials and links, its versions, and deleting it with undo,
   // A link
   await p.click('main [data-focus="add-link"]');
   await p.waitForSelector('main [data-focus="link-url"]');
-  await p.focus('main [data-focus="link-url"]'); await p.keyboard.type('example.com/sonnets');
+  await p.bringToFront(); await p.click('main [data-focus="link-url"]'); await p.keyboard.type('example.com/sonnets');
+  await p.waitForFunction(() => document.querySelector('main [data-focus="link-url"]').value === 'example.com/sonnets');
   await p.keyboard.press('Enter');
   await p.waitForFunction(() => [...document.querySelectorAll('main .mlist a')].some(a => a.href === 'https://example.com/sonnets'));
   l3 = await lessonInDb(p, 'L3');
