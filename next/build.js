@@ -223,6 +223,8 @@ const GRADING = [
     'wordPagesPdf', 'WP_MAX', 'scanFile',
     // the Grade sheet's rows and what she says about a grade read off a paper (src/app/gradesheet.js, src/grades.js)
     'sheetRows', 'appScored', 'appShots', 'rowGraded', 'splitReads', 'readKey', 'readingDoubt', 'quietReads', 'paperScore', 'rivalReads', 'paperBytes', 'fileIn',
+    // a paper's pages drawn as an assistant or the same-score view sees them (src/app/claude.js sharePage, shareDocs)
+    'sharePage', 'shareDocs',
   ], "// the Grade sheet's choices, which the current app keeps in module variables: read and set from the Grades tab\nexport function sheetSet(o) { if ('all' in o) sheetAll = !!o.all; if ('found' in o) sheetFound = !!o.found; if ('out' in o) sheetShowOut = !!o.out; }\nexport const sheetNow = () => ({ all: sheetAll, found: sheetFound, out: sheetShowOut });\n", [], ['gcore', 'gdraw', 'gopen'], ['num', 'inside']],
   ['greport', [
     // the opening report (src/intake.js openingFacts, checkStack): what opened, what didn't and why, who has nothing, and anything odd
@@ -299,6 +301,11 @@ export const tnRngSet = r => { tnRng = r; };
     // tagged with, and rows read out of a rubric she brings in (Word or PDF); the dialog and its one undo step are the new app's
     'tidyLevels', 'levelIn', 'goalList', 'goalById', 'goalName', 'goalsTidy', 'ruFromWord', 'ruFromPdf', 'rubricRowsInto',
   ], '', [], ['gcore', 'gdraw', 'gword']],
+  ['ginsight', [
+    // Insights > Consistency (src/insight.js): whether her scores drifted as she went, read the same way, rubric row by row, and
+    // the papers that share a score; the chart, the list and the side-by-side pages are the new app's
+    'consData', 'driftRead', 'rowDrifts', 'roughly', 'roughGap', 'roughStep', 'DRIFT_MIN', 'DRIFT_SURE', 'sameLabel',
+  ], '', [], ['gcore', 'gdraw', 'gexport'], ['average']],
   ['gways', [
     // the teacher's usual way of grading (src/app/library.js GRADE_WAYS, meGrade): what a new assignment starts with, read from the
     // library the settings screen has in hand (useLib), not the marking screen's

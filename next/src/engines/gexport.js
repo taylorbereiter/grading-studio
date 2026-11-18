@@ -770,6 +770,8 @@ async function sharePage(st, f, js, p, scale, rx, opts, look) {
   page.cleanup();
   return { c, W, H, side, covers, gone: auto.gone };
 }
+// src/app/claude.js
+const shareDocs = (st, all) => layoutOf(st).filter(d => all || docIn(st, d)).map(d => ({ ...d, pages: d.pages.filter(([path]) => { const f = fileByPath(st, path); return f && !f.virtual && viewable(f); }) })).filter(d => d.pages.length);
 // src/app/media.js
 async function docxHtml(bytes) {
   const r = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) });
@@ -2321,4 +2323,4 @@ function ibBounds(c) {
 }
 // src/ib.js
 function ibGradeOf(v, bounds) { if (v == null || v === '' || isNaN(v)) return null; const b = bounds.find(r => +v >= r[0]); return b ? b[1] : null; }
-export { exportPlan, nameOut, outStem, flattenDoc, oneLeftOver, xOne, xNames, xEdit, xAll, xEarly, gotEarly, canvasJpg, exportWhy, fbOn, keyOn, asgName, fileSafe, outWord, scanAll, buildSheetPdf, parseGrade, foundLabel, manyReads, readsCount, disagreeNote, gradeRows, tableHead, tableRow, gradesSummary, cellCopy, totalText, statusText, rowShown, scoreText, cellOut, csvCell, tsvLine, bandOf, ibSetup, meGrade, pctAvgText, setKey, keyRows, classStats, leftOutText, spreadBins, onThisScale, partNote, STATUS_LABEL, triesSay, anchorDocs, anchorDocPdf, anchorFile, anchorsHere, ANCHORS, anchorOf, anchorLabel, setAnchor, anchorCoverOn, wordPagesPdf, WP_MAX, scanFile, sheetRows, appScored, appShots, rowGraded, splitReads, readKey, readingDoubt, quietReads, paperScore, rivalReads, paperBytes, fileIn };
+export { exportPlan, nameOut, outStem, flattenDoc, oneLeftOver, xOne, xNames, xEdit, xAll, xEarly, gotEarly, canvasJpg, exportWhy, fbOn, keyOn, asgName, fileSafe, outWord, scanAll, buildSheetPdf, parseGrade, foundLabel, manyReads, readsCount, disagreeNote, gradeRows, tableHead, tableRow, gradesSummary, cellCopy, totalText, statusText, rowShown, scoreText, cellOut, csvCell, tsvLine, bandOf, ibSetup, meGrade, pctAvgText, setKey, keyRows, classStats, leftOutText, spreadBins, onThisScale, partNote, STATUS_LABEL, triesSay, anchorDocs, anchorDocPdf, anchorFile, anchorsHere, ANCHORS, anchorOf, anchorLabel, setAnchor, anchorCoverOn, wordPagesPdf, WP_MAX, scanFile, sheetRows, appScored, appShots, rowGraded, splitReads, readKey, readingDoubt, quietReads, paperScore, rivalReads, paperBytes, fileIn, sharePage, shareDocs };

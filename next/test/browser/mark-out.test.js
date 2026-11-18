@@ -211,3 +211,48 @@ test('the Grade sheet: a grade typed on a paper read as the score, also the grad
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('Insights > Consistency says what the current app says about the same work, and the papers with the same score go side by side', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const old = await mainSide(ctx, []);
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), old.id);
+  await m.waitForFunction(() => window.__gs.state().batch, { timeout: 60000 });
+  // scores given a minute apart, the first three the same (one of them is marked missing): rubric rows, or points
+  await m.evaluate(() => {
+    const g = window.__gs, s = g.state(), su = s.setup, t0 = Date.now() - 3600e3;
+    s.batch.students.filter(st => st.files.length).forEach((st, k) => {
+      const at = t0 + k * 60e3, v = k < 3 ? 2 : 1;
+      if (su.mode === 'rubric') { st.grade.rubric = su.criteria.map(() => v); st.grade.atR = Object.fromEntries(su.criteria.map((_, r) => [r, at + r])); }
+      else { st.grade.points = String(v * 2); st.grade.atR = { points: at }; }
+    });
+    g.saveNow();
+  });
+  await settle(m);
+  await m.evaluate(id => { location.hash = '#/a/' + encodeURIComponent(id.replace(/^gs\.b\./, '')) + '/insights/consistency'; }, old.id);
+  await m.waitForSelector('#consSay', { timeout: 60000 });
+  const was = await m.$eval('#consSay', e => e.textContent);
+  const wasSame = await m.$$eval('[data-same]', l => l.map(e => e.dataset.same + ':' + e.textContent.replace(/\s+/g, ' ').trim()));
+  await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(old.id) + '/insights');
+  await p.waitForSelector('#ovLeft', { timeout: 60000 });
+  await p.evaluate(() => [...document.querySelectorAll('.mk-ins [role="radio"], .mk-ins .seg button, .mk-ins [aria-pressed]')].find(b => /Consistency/.test(b.textContent)).click());
+  await p.waitForSelector('[data-cons] [data-csay]', { timeout: 60000 });
+  assert.equal(await p.$eval('[data-csay]', e => e.textContent), was, 'the same reading, word for word');
+  assert.deepEqual(await p.$$eval('[data-cssame]', l => l.map(e => e.dataset.cssame + ':' + e.textContent.replace(/\s+/g, ' ').trim())), wasSame, 'the same scores shared by more than one paper');
+  assert.equal(wasSame.length, 1, 'one score shared by two papers');
+  {
+    await p.click('[data-cssame]');
+    await p.waitForSelector('[data-cssameview] [data-cscol]', { timeout: 30000 });
+    const n = await p.$$eval('[data-cscol]', l => l.length);
+    assert.ok(n >= 2, 'a column for each paper with that score');
+    await p.waitForFunction(() => document.querySelector('[data-cspage] canvas'), { timeout: 60000 });
+    assert.equal(await p.evaluate(() => document.activeElement && document.activeElement.hasAttribute('data-csback')), true, 'Back has the focus');
+    await p.keyboard.press('Enter');
+    await p.waitForSelector('[data-cons] [data-csay]', { timeout: 30000 });
+  }
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

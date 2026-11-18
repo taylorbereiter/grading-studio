@@ -80,12 +80,19 @@ function paperCell(p) {
 const oneDp = v => fmtNum(Math.round(v * 10) / 10);
 export function Insights({ E, onOpen }) {
   const s = useMemo(() => E.stats(), [E]), ib = E.X.ibSetup(), su = state().setup;
+  const [view, setView] = useState('overview'), [CS, setCS] = useState(null);
+  useEffect(() => { if (view === 'cons' && !CS) PARTS.cons().then(setCS, e => console.error(e)); }, [view]);
+  const views = <Segmented label={t('paper.i_view')} size="sm" value={view} onChange={setView} options={[{ value: 'overview', label: t('paper.i_overview') }, { value: 'cons', label: t('paper.i_cons') }]} />;
+  if (view === 'cons') return <section class="mk-out mk-ins" aria-labelledby="mk-i-h">
+    <header class="oh"><h2 id="mk-i-h" class="t3">{t('paper.i_cons')}</h2>{views}</header>
+    {CS ? <CS.Consistency E={E} onOpen={onOpen} /> : <div class="loading" aria-busy="true" />}
+  </section>;
   const tile = (l, v, sub, main) => <div class={'tile' + (main ? ' main' : '')}><div class="tl">{l}</div><div class="tv num">{v}</div>{sub && <div class="ts mute">{sub}</div>}</div>;
   const of = v => fmtNum(v) + ' / ' + fmtNum(s.max);
   const most = s.bins.length ? Math.max(1, ...s.bins.map(x => x.who.length)) : 1;
   const groups = [['setup.i_not_scored', s.notScored], ['setup.i_partial', s.partial], ['setup.i_missing', s.missing], ['setup.i_excused', s.excused], ['setup.i_off_scale', s.offScale], ['setup.i_own_off', s.ownOff], ['setup.i_left_out', s.leftOut], ['setup.i_late', s.counted.filter(x => x.late)]].filter(g => g[1].length);
   return <section class="mk-out mk-ins" aria-labelledby="mk-i-h">
-    <header class="oh"><h2 id="mk-i-h" class="t3">{t('mark.insights')}</h2></header>
+    <header class="oh"><h2 id="mk-i-h" class="t3">{t('mark.insights')}</h2>{views}</header>
     <p class="mute" id="ovLeft">{E.leftOut(s)}</p>
     {s.n > 0 && !ib && <div class="tiles" id="ovTiles">{s.meanPct != null
       ? <>{tile(t('setup.i_average'), E.X.pctAvgText(s.meanPct), oneDp(s.mean) + ' / ' + fmtNum(s.max), true)}{tile(t('setup.i_middle'), s.medPct + '%', of(s.median))}{tile(t('setup.i_lowest'), s.lowPct + '%', of(s.low))}{tile(t('setup.i_highest'), s.highPct + '%', of(s.high))}</>

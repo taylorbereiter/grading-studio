@@ -49,6 +49,7 @@ export const PARTS = {
   outEngine: () => import('./mark/out.js'),
   // the Grade sheet on the Grades tab
   sheet: () => import('./mark/sheet.jsx'),
+  cons: () => import('./mark/cons.jsx'),
   pdflib: () => import('pdf-lib'),
   zip: () => import('fflate'),
   h2c: () => import('html2canvas'),

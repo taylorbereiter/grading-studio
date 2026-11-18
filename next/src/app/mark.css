@@ -157,6 +157,31 @@
 .mk-ins .tile .tl{font-size:var(--t2);color:var(--mute)}
 .mk-ins .tile .tv{font-size:28px;font-weight:600;letter-spacing:-.02em}
 .mk-ins .tile.main .tv{color:var(--acc-ink)}
+/* Insights > Consistency (mark/cons.jsx) */
+.mk-ins .cs{display:flex;flex-direction:column;gap:10px;max-width:960px}
+.mk-ins .cs h3{margin:8px 0 0}
+.mk-ins .cs-say{margin:0;line-height:1.5}
+.mk-ins .cs-chart svg{display:block;width:100%;height:auto;max-width:760px}
+.mk-ins .cs-chart .dgrid{stroke:var(--line);stroke-width:1}
+.mk-ins .cs-chart .dax{fill:var(--mute);font-size:12px;font-variant-numeric:tabular-nums}
+.mk-ins .cs-chart .dmean{stroke:var(--ink2);stroke-width:2;stroke-linecap:round}
+.mk-ins .cs-chart .dlab{fill:var(--ink);font-size:12px;font-weight:600;paint-order:stroke;stroke:var(--s);stroke-width:4px;stroke-linejoin:round}
+.mk-ins .cs-chart .ddot{fill:var(--acc);stroke:var(--s);stroke-width:2;pointer-events:none}
+.mk-ins .cs-chart .dhit{fill:transparent;cursor:pointer;outline:none}
+.mk-ins .cs-chart .dpt:hover .ddot,.mk-ins .cs-chart .dhit:focus-visible+.ddot{r:6.5px}
+.mk-ins .cs-chart .dhit:focus-visible{stroke:var(--acc);stroke-width:1.5}
+.mk-ins .cs-rows{margin:0;padding-left:18px;font-size:var(--t2)}
+.mk-ins .cs-list summary{cursor:pointer;color:var(--acc-ink)}
+.mk-ins .cs-chips{display:flex;flex-wrap:wrap;gap:6px}
+.mk-ins .cs-sh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mk-ins .cs-sh .btn{margin-left:auto}
+.mk-ins .cs-same{max-width:none}
+.mk-ins .cs-cols{display:flex;gap:14px;overflow:auto;align-items:flex-start;padding-bottom:6px}
+.mk-ins .cs-col{flex:0 0 min(420px,44%);min-width:260px;background:var(--s);box-shadow:0 0 0 1px var(--line);border-radius:var(--r3);padding:10px;display:flex;flex-direction:column;gap:6px}
+.mk-ins .cs-ch{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-height:56px}
+.mk-ins .cs-cm{font-size:var(--t2);white-space:pre-wrap}
+.mk-ins .cs-nav{display:flex;align-items:center;gap:8px;justify-content:center;font-size:var(--t2)}
+.mk-ins .cs-pg{min-height:240px}
 .mk-ins .charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .mk-ins .bars{display:flex;align-items:flex-end;gap:4px;height:160px;padding-bottom:18px}
 .mk-ins .bar{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative}

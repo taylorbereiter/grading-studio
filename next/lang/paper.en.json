@@ -138,5 +138,79 @@
   "other": "{n} papers to check: their own grade differs from yours, or they have more than one grade, or one that may not be the grade."
  },
  "paper.g_check_only": "Show only these",
- "paper.g_check_all": "Show everyone"
+ "paper.g_check_all": "Show everyone",
+ "paper.i_view": "Insights view",
+ "paper.i_overview": "Overview",
+ "paper.i_cons": "Consistency",
+ "paper.cs_h_drift": "Did you get harder or softer as you went?",
+ "paper.cs_few_h": "Too few papers to say.",
+ "paper.cs_few_n": {
+  "one": "Only {n} paper has a time to go by so far.",
+  "other": "Only {n} papers have a time to go by so far."
+ },
+ "paper.cs_few_none": "No papers have a time to go by so far.",
+ "paper.cs_few_min": "It takes at least {n} before this will say anything about getting harder or softer. Any pattern in fewer is mostly chance.",
+ "paper.cs_nums": "Your first {k} papers average about {a} and your last {k} about {b}, out of {max}.",
+ "paper.cs_none_h": "No clear change.",
+ "paper.cs_none_few": "With {n} papers only a big change would show, so this doesn't prove you stayed even.",
+ "paper.cs_none_chance": "A gap that size often happens by chance.",
+ "paper.cs_lower": {
+  "one": "Later papers scored lower, by about {n} point.",
+  "other": "Later papers scored lower, by about {n} points."
+ },
+ "paper.cs_higher": {
+  "one": "Later papers scored higher, by about {n} point.",
+  "other": "Later papers scored higher, by about {n} points."
+ },
+ "paper.cs_why_lower": "It could mean you got harder as you went, or just that those papers were weaker. Look at a few early and late papers with the same score.",
+ "paper.cs_why_higher": "It could mean you got softer as you went, or just that those papers were stronger. Look at a few early and late papers with the same score.",
+ "paper.cs_hint_h": "Maybe, but it's too soon to be sure.",
+ "paper.cs_hint": "With {n} papers this could easily be chance.",
+ "paper.cs_likely_h": "Worth a look.",
+ "paper.cs_likely": "That's bigger than chance usually makes with {n} papers.",
+ "paper.cs_rows_few": "Rubric rows aren't read one by one with fewer than {n} papers: each row is too noisy on its own.",
+ "paper.cs_row_few": "too few papers with a time",
+ "paper.cs_row_none": "no clear change",
+ "paper.cs_row_lower": {
+  "one": "later papers lower, by about {n} point",
+  "other": "later papers lower, by about {n} points"
+ },
+ "paper.cs_row_higher": {
+  "one": "later papers higher, by about {n} point",
+  "other": "later papers higher, by about {n} points"
+ },
+ "paper.cs_foot": "This goes by when each score last changed, so a paper you came back to counts as late. Finished scores only.",
+ "paper.cs_left": "Left out: {list}.",
+ "paper.cs_no_time": {
+  "one": "{n} has no time (scored before the app kept them, or read off the paper)",
+  "other": "{n} have no time (scored before the app kept them, or read off the paper)"
+ },
+ "paper.cs_at_once": "{n} changed all at once, like feedback brought back from an assistant, so their order isn't known",
+ "paper.cs_chart": "Scores in the order you gave them. The same scores are in the list under the chart.",
+ "paper.cs_first": "First scored",
+ "paper.cs_last": "Last scored",
+ "paper.cs_about": "about {v}",
+ "paper.cs_dot": "{who}, {v} out of {max}, scored {k} of {n}",
+ "paper.cs_list": "See these as a list",
+ "paper.cs_order": "Order",
+ "paper.cs_student": "Student",
+ "paper.cs_paper": "Paper",
+ "paper.cs_score": "Score",
+ "paper.cs_scored": "Scored",
+ "paper.cs_h_same": "The same score, side by side",
+ "paper.cs_pick": "Pick a score to see those papers next to each other.",
+ "paper.cs_single": "Scores with just one paper aren't listed.",
+ "paper.cs_none_same": "No two papers share a finished score yet.",
+ "paper.cs_n_papers": {
+  "one": "{n} paper",
+  "other": "{n} papers"
+ },
+ "paper.cs_same_h": "Papers scored {v}",
+ "paper.cs_back": "Back",
+ "paper.cs_page": "Page {a} of {b}",
+ "paper.cs_prev": "Earlier page",
+ "paper.cs_next": "Later page",
+ "paper.cs_no_pdf": "No PDF or picture to show here. Open the paper to read it.",
+ "paper.cs_no_paper": "No paper.",
+ "paper.cs_cant": "This page couldn't be drawn."
 }
