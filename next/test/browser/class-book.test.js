@@ -893,7 +893,8 @@ test('A student\'s details and Settings > Classes: ID and email edited and opene
   assert.equal(href, 'mailto:pat.madeup@example.org');
   assert.match(url, /^https:\/\/outlook\.office\.com\/mail\/deeplink\/compose\?to=pat\.madeup%40example\.org$/);
   const n = (await libOf(p)).classes[0].names[1];
-  await p.waitForFunction(n => { const i = (JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}; return i.id === 'S-1042' && i.email === 'pat.madeup@example.org'; }, {}, n);
+  // polled by the clock: a window behind another doesn't draw frames, so a wait tied to them can stall (test/helpers/app.js appReady)
+  await p.waitForFunction(n => { const i = (JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}; return i.id === 'S-1042' && i.email === 'pat.madeup@example.org'; }, { polling: 100, timeout: 30000 }, n);
   const old = await page(ctx, errors);
   await old.goto(srv.url); await appReady(old);
   const main = await old.evaluate(n => { const l = window.__gs.state().lib, i = l.classes[0].info[n]; return { id: i.id, email: i.email, att: l.me.att, mail: JSON.parse(localStorage.getItem('gs.mailApp')) }; }, n);
