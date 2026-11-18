@@ -804,3 +804,21 @@ dialog.dlg:has(.mk-bx){width:min(980px,calc(100vw - 32px))}
 .mk-bx .bxpages{max-height:calc(88vh - 180px);overflow:auto;background:var(--s2);padding:12px;border-radius:var(--r2)}
 .mk-bx .bxpages canvas{display:block;margin:0 auto 14px;background:#fff;box-shadow:var(--sh-r);cursor:crosshair;touch-action:none}
 .mk-grades .gs-check{background:var(--warn-soft);padding:8px 10px;border-radius:var(--r2);margin:0 0 10px}
+/* Bring in files and Files to match to a roster (mark/bringin.jsx) */
+dialog.dlg:has(.mk-bf){width:min(860px,calc(100vw - 32px))}
+.mk-bf{display:grid;gap:10px}
+.mk-bf p{margin:0}
+.mk-bf .bf-t{width:100%;border-collapse:collapse;font-size:var(--t2)}
+.mk-bf .bf-t th{text-align:left;font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+.mk-bf .bf-t td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.mk-bf .bf-path{overflow-wrap:anywhere;max-width:280px}
+.mk-bf .selwrap select{max-width:260px}
+.mk-bf .bf-tag{display:inline-block;font-size:var(--t1);padding:2px 8px;border-radius:999px}
+.mk-bf .bf-tag.warn{background:var(--warn-soft);color:var(--warn)}
+.mk-bf .bf-tag.ok{color:var(--ok);font-weight:600;padding-left:0}
+.mk-bf .bf-note{font-size:var(--t1)}
+.mk-bf .bf-late{white-space:nowrap;display:inline-flex;gap:6px;align-items:center}
+.mk-bf .bf-new{display:flex;gap:6px;align-items:end}
+.mk-bf .bf-cls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.mk-bf .bf-cls label{display:flex;gap:6px;align-items:center;font-weight:500}
+@media (max-width:700px){.mk-bf .bf-t{font-size:var(--t1)}.mk-bf .selwrap select{max-width:160px}}

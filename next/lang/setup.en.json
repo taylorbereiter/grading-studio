@@ -1163,5 +1163,74 @@
  "setup.w_kept_not": "The papers aren’t kept in this browser",
  "setup.w_grades": "Grades",
  "setup.w_insights": "Insights",
- "setup.w_return": "Return"
+ "setup.w_return": "Return",
+ "setup.bf_menu": "Bring in files…",
+ "setup.bf_title": "Bring in files",
+ "setup.bf_sub": {
+  "one": "{n} file, sorted by the names in the file names",
+  "other": "{n} files, sorted by the names in the file names"
+ },
+ "setup.bf_about": "Each file goes into that student’s submission in this download, tagged “Added by you”. Check the ones marked “Check” or “Choose”. Tick Late beside anyone you want marked late; nothing is taken off.",
+ "setup.bf_dups": {
+  "one": "{n} file is already here, so it’s left out.",
+  "other": "{n} files are already here, so they’re left out."
+ },
+ "setup.bf_none": "Those files are already here, so there’s nothing new to add",
+ "setup.bf_nothing": "No files found there",
+ "setup.bf_file": "File",
+ "setup.bf_to": "Goes to",
+ "setup.bf_late": "Late",
+ "setup.bf_late_all": "Mark all late",
+ "setup.bf_late_one": "Mark {file} late",
+ "setup.bf_to_for": "Who {file} goes to",
+ "setup.bf_choose": "Choose a student…",
+ "setup.bf_new": "New student…",
+ "setup.bf_skip": "Skip this file",
+ "setup.bf_t_skip": "Skipped",
+ "setup.bf_t_choose": "Choose",
+ "setup.bf_t_set": "Chosen by you",
+ "setup.bf_t_sure": "Matched by name",
+ "setup.bf_t_check": "Check",
+ "setup.bf_new_name": "The new student’s name",
+ "setup.bf_new_ok": "Add",
+ "setup.bf_new_tag": "New: {name}",
+ "setup.bf_both": "They have a different file with this name. Both stay.",
+ "setup.bf_now_missing": "Now marked missing.",
+ "setup.bf_now_excused": "Now marked excused.",
+ "setup.bf_go": {
+  "one": "Add {n} file",
+  "other": "Add {n} files"
+ },
+ "setup.bf_cancel": "Cancel",
+ "setup.bf_pick_one": "Choose a student for at least one file",
+ "setup.bf_done": "Added {files} to {students}.",
+ "setup.bf_nf": {
+  "one": "{n} file",
+  "other": "{n} files"
+ },
+ "setup.bf_ns": {
+  "one": "{n} student",
+  "other": "{n} students"
+ },
+ "setup.bf_done_late": {
+  "one": "Added {files} to {students}. {n} marked late.",
+  "other": "Added {files} to {students}. {n} marked late."
+ },
+ "setup.bf_bad": {
+  "one": "{n} file came in but can’t be opened here. Its card says why.",
+  "other": "{n} files came in but can’t be opened here. Each card says why."
+ },
+ "setup.mr_menu": "Files to match to a roster…",
+ "setup.mr_title": "Match files to students",
+ "setup.mr_sub": {
+  "one": "{n} file",
+  "other": "{n} files"
+ },
+ "setup.mr_class": "Class",
+ "setup.mr_class_opt": "{name} ({n})",
+ "setup.mr_about": "Matched by the names in the file and folder names. Check the ones marked “Check” or “Choose”.",
+ "setup.mr_student": "Student",
+ "setup.mr_no_roster": "Add a roster for this class first, on the class’s own page, then try again.",
+ "setup.mr_no_file": "No file yet: {names}",
+ "setup.mr_go": "Open {files} for {students}"
 }

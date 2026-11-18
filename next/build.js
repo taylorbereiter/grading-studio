@@ -231,6 +231,8 @@ const GRADING = [
   ['greport', [
     // the opening report (src/intake.js openingFacts, checkStack): what opened, what didn't and why, who has nothing, and anything odd
     'openingFacts', 'checkStack', 'checkFile', 'repHead', 'zipSay', 'troubleOf', 'troubleText', 'hash', 'textOf',
+    // files sorted to students by the names in their file names (src/app/bringin.js sortGuess, guessAmong: Bring in files, Match files to a roster)
+    'sortGuess', 'guessAmong', 'nameWords',
   ], '', ['drop'], ['gcore', 'gdraw', 'gopen'], ['num', 'inside']],   // drop: only ever rtfText's own counter here
   ['gfiles', [
     // a student's files changed on the marking screen (src/app/kept.js addFiles, src/app/replace.js, src/app/bringin.js bringIn):

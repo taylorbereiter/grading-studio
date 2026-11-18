@@ -82,20 +82,26 @@ export default function ClassWork({ classId }) {
   if (!lib || !kept) return <div class="loading" aria-busy="true" />;
   const c = classId === '-' ? lib.loose : lib.classes.find(x => String(x.id) === String(classId));
   if (!c) return <EmptyState icon="inbox" title={t('setup.w_none')} />;
-  const bring = async (it, list) => {
+  // list: picked or dropped files, or entries made already (matched to a roster: each path "Name/file", and the class they matched)
+  const bring = async (it, list, cls) => {
     if (!list.length || busy) return;
     setBusy(it.id);
     try {
       const O = await PARTS.bring();
       // a newer copy of a download she has worked on: asked whether her marks and scores come over, when it isn't plainly the same one
       const carry = e => new Promise(done => setAsk({ e, done: v => { setAsk(null); done(v); } }));
-      const r = await O.bringIn(entriesOf(list), { assignment: it, label: it.name, carry });
+      const r = await O.bringIn(list[0] && list[0].file ? list : entriesOf(list), { assignment: it, label: it.name, carry });
+      if (r && cls) (await PARTS.bringin()).classAfter(r.batch.id, cls.id);
       if (r && r.changed) toast(t('setup.c_changed_toast', { n: r.changed }), { ms: 7000 });
       if (r) go('mark', r.batch.id);
     } catch (e) { console.error(e); toast(e && e.name === 'NothingIn' ? t('setup.w_nothing') : e && e.name === 'CannotSave' ? t('mark.cannot') : t('setup.w_failed')); }
     finally { setBusy(null); load(); }
   };
   const pick = (it, el) => { want.current = it; el.current.value = ''; el.current.click(); };
+  // Files to match to a roster (mark/bringin.jsx MatchRoster): picked, matched to a class's names, then opened as above
+  const [match, setMatch] = useState(null);
+  const matchFor = it => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true;
+    i.onchange = async () => { const B = await PARTS.bringin(), list = await B.expand([...i.files]); if (!list.length) return toast(t('setup.bf_nothing')); setMatch({ B, it, list }); }; i.click(); };
   const units = c.units;
   const lc = (label, fn) => libraryChange(t(label), fn, true).catch(e => { console.error(e); toast(t('mark.cannot')); });
   const named = async v => {
@@ -117,6 +123,7 @@ export default function ClassWork({ classId }) {
   const more = it => ({ label: t('setup.u_move'), icon: 'arrow', onSelect: () => setMove(it) });
   return <section class="classwork" aria-labelledby="h-work">
     <h2 id="h-work" class="sr">{t('setup.w_title')}</h2>
+    {match && <match.B.MatchRoster list={match.list} lib={lib} classId={classId} onClose={() => setMatch(null)} onGo={(entries, cls) => bring(match.it, entries, cls)} />}
     {ask && <Dialog open title={t('setup.c_ask_t')} onClose={() => ask.done(false)}
       actions={<><Button onClick={() => ask.done(false)} data-fresh>{t('setup.c_fresh')}</Button><Button variant="primary" onClick={() => ask.done(true)} data-carry>{t('setup.c_bring')}</Button></>}>
       <p data-raw>{t('setup.c_ask', { name: ask.e.name || t('setup.c_noname') })}</p>
@@ -150,7 +157,7 @@ export default function ClassWork({ classId }) {
               <Menu label={t('setup.w_again')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.w_again')} disabled={busy === it.id} data-again-for={it.id} />}
                 items={[{ label: t('setup.w_again_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_again_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, more(it)]} /></span>
               : <span class="wopen"><Menu label={t('setup.w_bring')} trigger={b => <Button {...b} size="sm" icon="upload" disabled={busy === it.id} data-bring-for={it.id}>{t('setup.w_bring')}</Button>}
-                items={[{ label: t('setup.w_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, { label: t('setup.w_scan'), icon: 'image', onSelect: () => pick(it, scan) }]} />
+                items={[{ label: t('setup.w_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, { label: t('setup.w_scan'), icon: 'image', onSelect: () => pick(it, scan) }, { label: t('setup.mr_menu'), icon: 'people', onSelect: () => matchFor(it) }]} />
               <Menu label={t('setup.u_item_more', { name: it.name })} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.u_item_more', { name: it.name })} data-more-for={it.id} />} items={[more(it)]} /></span>}
             {shown.has(it.id) && <Details it={it} st={st} />}
           </li>; })}</ul>}</div>)}

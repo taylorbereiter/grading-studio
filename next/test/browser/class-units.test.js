@@ -6,6 +6,7 @@ const http = require('http'), fs = require('fs'), os = require('os'), path = req
 const { launch } = require('../../../test/helpers/chrome.js');
 const { plant, appReady } = require('../../../test/helpers/app.js');
 const { gradingSeed, STEADY } = require('../../../test/helpers/steady.js');
+const { makePaper } = require('../../../test/helpers/fixtures.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
 const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp', png: 'image/png', webmanifest: 'application/manifest+json' };
@@ -121,6 +122,37 @@ test('an assignment row: early returns shown on the row, and its details say how
   assert.match(await p.$eval('[data-wdet="i9"]', e => e.textContent), /No papers yet/);
   await p.click('[data-wmore="i5"]');
   await p.waitForFunction(() => !document.querySelector('[data-wdet="i5"]'));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Files to match to a roster: outside files matched to the class names, one fixed by hand, opened as the assignment\'s papers for that class', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gs-match-'));
+  const files = [['Aria Testwell speech.pdf', 'Aria'], ['Cleo notes.pdf', 'Cleo'], ['untitled.pdf', 'Who']].map(([n, title]) => { const f = path.join(dir, n); return f; });
+  for (const f of files) fs.writeFileSync(f, await makePaper({ title: path.basename(f) }));
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForFunction(() => [...document.querySelectorAll('.pop [role="menuitem"]')].some(e => /match to a roster/.test(e.textContent)));
+  const [ch] = await Promise.all([p.waitForFileChooser(), p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => /match to a roster/.test(e.textContent)).click())]);
+  await ch.accept(files);
+  await p.waitForSelector('[data-mr]', { timeout: 30000 });
+  assert.equal(await p.$eval('[data-mrcls]', e => e.value), 'c1');
+  const tags = await p.$$eval('[data-mrrow]', rs => rs.map(r => [r.querySelector('.bf-path').textContent, r.querySelector('select').value, r.lastElementChild.textContent]));
+  assert.deepEqual(tags, [['Aria Testwell speech.pdf', '0', 'Matched by name'], ['Cleo notes.pdf', '2', 'Check'], ['untitled.pdf', '-1', 'Choose']]);
+  assert.match(await p.$eval('[data-mrmissing]', e => e.textContent), /No file yet: Bram Sample, Dov Madeup, Esme Placeholder, Finn Example/);
+  await p.select('[data-mrto="2"]', '5');
+  assert.equal(await p.$eval('[data-mrgo]', e => e.textContent), 'Open 3 files for 3 students');
+  await p.click('[data-mrgo]');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready, { timeout: 60000 });
+  const got = await p.evaluate(() => { const b = window.__mark.state().batch; return { cls: b.classId, have: b.students.filter(s => s.files.length).map(s => [s.key, s.files.map(f => f.name)]) }; });
+  assert.equal(got.cls, 'c1');
+  assert.deepEqual(got.have.sort(), [['Aria Testwell', ['Aria Testwell speech.pdf']], ['Cleo Fixture', ['Cleo notes.pdf']], ['Finn Example', ['untitled.pdf']]]);
+  assert.equal((await libOf(p)).classes[0].units[0].items.find(i => i.id === 'i9').batchId != null, true, 'the card is linked to the papers');
+  fs.rmSync(dir, { recursive: true, force: true });
   assert.deepEqual(errors, []);
   await ctx.close();
 });

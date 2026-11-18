@@ -366,3 +366,55 @@ test('lighting set in the new app, for the download, one student and one page, i
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('Bring in files: each file sorted to its student by name, one given to a new student, a late tick, files already here left out; the current app finds them', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zip);
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  const sub = path.join(dir, 'many'); fs.mkdirSync(sub, { recursive: true });
+  const named = path.join(sub, 'Bram Sample redo.pdf'); fs.writeFileSync(named, await makePaper({ title: 'Bram redo' }));
+  const odd = path.join(sub, 'scan 0412.pdf'); fs.writeFileSync(odd, await makePaper({ title: 'Nobody can tell' }));
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  // a file already in the download, to be left out
+  const here = await p.evaluate(k => { const f = window.__mark.state().batch.students.find(s => s.key === k).files.find(x => x.data); return { name: f.name, data: btoa(String.fromCharCode(...f.data)) }; }, KEY);
+  const same = path.join(sub, here.name); fs.writeFileSync(same, Buffer.from(here.data, 'base64'));
+  await p.waitForSelector('[data-addmenu]', { timeout: 60000 });
+  await p.waitForFunction(() => { if (document.querySelector('.pop [role="menuitem"]')) return true; const b = document.querySelector('[data-addmenu]'); if (b) b.click(); return false; }, { timeout: 30000, polling: 400 });
+  const [ch] = await Promise.all([p.waitForFileChooser(), p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.includes('Bring in files')).click())]);
+  await ch.accept([named, odd, same]);
+  await p.waitForSelector('[data-bf]', { timeout: 30000 });
+  const rows = await p.$$eval('[data-bfrow]', rs => rs.map(r => ({ file: r.querySelector('.bf-path').textContent, tag: r.querySelector('[data-bftag]').textContent })));
+  assert.deepEqual(rows.map(r => r.file), ['Bram Sample redo.pdf', 'scan 0412.pdf'], 'the file already here is left out');
+  assert.match(await p.$eval('[data-bf]', e => e.textContent), /1 file is already here/);
+  assert.equal(rows[0].tag, 'Matched by name');
+  assert.equal(rows[1].tag, 'Choose');
+  assert.equal(await p.$eval('[data-bfgo]', e => e.textContent), 'Add 1 file');
+  // the second file goes to someone new
+  await p.select('[data-bfto="1"]', '-3');
+  await p.waitForSelector('[data-bfnewname]');
+  await p.$eval('[data-bfnewname]', e => e.select());
+  await p.type('[data-bfnewname]', 'Nova Madeup');
+  await p.keyboard.press('Enter');
+  await p.waitForFunction(() => /New: Nova Madeup/.test(document.querySelector('[data-bftag="1"]').textContent));
+  await p.click('[data-bflate="0"]');
+  assert.equal(await p.$eval('[data-bfgo]', e => e.textContent), 'Add 2 files');
+  await p.click('[data-bfgo]');
+  await p.waitForFunction(k => { const b = window.__mark.state().batch, s = b.students.find(x => x.key === k), n = b.students.find(x => x.key === 'Nova Madeup');
+    return s.grade.status === 'late' && s.files.some(f => f.name === 'Bram Sample redo.pdf' && f.added) && n && n.files.some(f => f.name === 'scan 0412.pdf'); }, { timeout: 30000 }, KEY);
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast')].some(e => /Added 2 files to 2 students\. 1 marked late\./.test(e.textContent)), { timeout: 10000 });
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m2 = await page(ctx, errors);
+  await m2.goto(srv.url); await appReady(m2);
+  await m2.evaluate(id => window.__gs.reopenKept(id), id);
+  await m2.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  await m2.waitForFunction(k => { const b = window.__gs.state().batch, s = b.students.find(x => x.key === k), n = b.students.find(x => x.key === 'Nova Madeup');
+    return s && s.grade.status === 'late' && s.files.some(f => f.name === 'Bram Sample redo.pdf') && n && n.files.some(f => f.name === 'scan 0412.pdf'); }, { timeout: 30000 }, KEY);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
