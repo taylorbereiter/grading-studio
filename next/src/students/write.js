@@ -21,8 +21,8 @@ import { KNOWN } from '../services/assistant.js';
 
 export const DATA_V = __GS_DATA_V__;
 export class CannotSave extends Error { constructor(why, what) { super(what + ': ' + why); this.name = 'CannotSave'; this.why = why; } }
-let engine = null;
-const merge = () => (engine ||= import('../engines/merge.js'));
+let engine = null, engineNow = null;
+const merge = () => (engine ||= import('../engines/merge.js').then(m => (engineNow = m)));
 const copy = v => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
 
 export function check(what) {
@@ -46,6 +46,23 @@ export async function saveWork(id, change, { fresh = false } = {}) {
   const r = await writeWork(id, data, M);
   saved({ kind: 'work', id, side: 'students', data, before: prev });
   return r;
+}
+// Leaving the page (the tab closing or reloading), as the current app's saveNow(true) on beforeunload: there is no time to wait, so
+// only the quick copy is written, at once, over the quick copy already there. The next open reads the newer of the two copies
+// (index.js newestWork), and its first save writes the full copy. False when it could not (no save yet this visit, or no quick copy).
+export const leavingReady = () => merge();
+export function saveWorkLeaving(id, change) {
+  if (!engineNow) return false;
+  check(id);
+  if ((json('gs.tomb', {}) || {})[id]) return false;
+  const qid = id.replace(/^gs\.b\./, ''), prev = quick.json(qid); if (!prev) return false;
+  const data = copy(prev); change(data); data.t = Date.now();
+  engineNow.stampData(engineNow.revsOf(prev), data, tabs.devId(), Date.now(), null);
+  quick.setText(qid, JSON.stringify(data));
+  const idx = quickList.json({}) || {}; idx[id] = data.t; quickList.setJson(idx);
+  tabs.stamp(id, data.t);
+  saved({ kind: 'work', id, side: 'students', data, before: prev });
+  return true;
 }
 async function writeWork(id, data, M) {
   const idx = quickList.json({}) || {}; idx[id] = data.t;

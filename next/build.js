@@ -205,6 +205,11 @@ const GRADING = [
     'circleWord', 'highlightWord', 'textBoxHere',
     // scoring (src/grades.js, src/app/panels.js): the score changes as the current app makes them
     'scoreTouched', 'setStatus', 'touchGrade', 'nextUnscored', 'stampName', 'isSticker', 'isProof', 'PROOF', 'PUNCT', 'BRAINROT', 'wordUnder', 'newCheckSize', 'stickerAspect', 'RECENT_STAMPS',
+    // the screen's own keys and stamps (src/app/wiring.js keydown, src/app/calc.js placeScore, src/app/panels.js): a picked mark resized,
+    // the highlighter's snap, the score and a row's score put on the paper
+    'canResize', 'setHlMode', 'hlMode', 'critStampOf', 'scoreStampText', 'stampOwner', 'newStampSize', 'fmNow',
+    // the mark key's wording, for Settings > Marking (src/stamps.js openMarkKey)
+    'markLabel0', 'markMean', 'keySet', 'MARK_KEY',
   ], '', [], ['gcore', 'gdraw']],
   ['gexport', [
     // what goes back to students (src/app/export.js, src/feedback.js, src/exportreport.js, src/anchors.js): which files, their names,

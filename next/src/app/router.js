@@ -68,6 +68,8 @@ export const PARTS = {
   setup: () => import('./mark/setup.jsx'),
   setgrade: () => import('./screens/settings-grading.jsx'),
   bank: () => import('./plan/bank-edit.jsx'),
+  // her saved comments (students/comments.js), for the chips under the comment box
+  cbank: () => import('../students/comments.js'),
 };
 export const CHUNKS = {
   home: () => import('./screens/home.jsx'),

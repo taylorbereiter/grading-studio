@@ -13,7 +13,7 @@ import { fileShown } from '../../engines/gfiles.js';
 import { prefs } from '../../students/prefs.js';
 import { t } from '../../i18n/t.js';
 import * as C from './change.js';
-import './lines.js';
+import './setup-lines.js';
 
 const SIZES = [90, 130, 190];
 const isMac = () => /Mac|iP/.test(navigator.platform || '');
@@ -50,7 +50,7 @@ function Big({ st, it, turn, onClose }) {
     await page.render({ canvasContext: ctx, viewport: vp, transform: D.skewXf(f, it[1], vp) }).promise;
     if (live) setSrc(c.toDataURL('image/jpeg', 0.85));
   })().catch(e => console.error(e)); return () => { live = false; }; }, [it]);
-  return <div class="arr-big" onClick={onClose} role="presentation">{src ? <img src={src} alt={t('mark.a_page', { n: it[1] + 1 })} /> : <div class="loading" aria-busy="true" />}</div>;
+  return <div class="arr-big" onClick={onClose} role="presentation">{src ? <img src={src} alt={t('setup.a_page', { n: it[1] + 1 })} /> : <div class="loading" aria-busy="true" />}</div>;
 }
 
 export function Arrange({ st, onClose }) {
@@ -65,7 +65,7 @@ export function Arrange({ st, onClose }) {
   const picked = () => lists().flatMap(l => l.filter(it => a.sel.has(it)));
   const turnOf = it => a.turns.get(it[0] + '|' + it[1]) || 0;
   const nameOf = path => fileShown(st, (D.fileByPath(st, path) || { name: path }).name);
-  const first = () => { if (!a.sel.size) { toast(t('mark.a_pick_first')); return false; } return true; };
+  const first = () => { if (!a.sel.size) { toast(t('setup.a_pick_first')); return false; } return true; };
   const move = how => {
     if (!first()) return;
     for (const l of lists()) {
@@ -123,61 +123,61 @@ export function Arrange({ st, onClose }) {
           onDragStart={e => { if (!a.sel.has(it)) { a.sel = new Set([it]); a.anchor = it; } a.drag = true; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'page'); redraw(); }}
           onDragEnd={() => { a.drag = false; setIns(null); redraw(); }}>
           <button type="button" class="apick" aria-pressed={on ? 'true' : 'false'} onClick={e => pick(e, it, items)} onDblClick={() => setBig(it)} data-apg={it[0] + '|' + it[1]}
-            aria-label={t('mark.a_page', { n: it[1] + 1 }) + (a.many ? ', ' + nameOf(it[0]) : '')}>
+            aria-label={t('setup.a_page', { n: it[1] + 1 }) + (a.many ? ', ' + nameOf(it[0]) : '')}>
             <Thumb st={st} it={it} turn={turnOf(it)} />
-            <span class="cap">{w === 'tray' ? '' : <b>{i + 1}</b>}{w === 'tray' ? '' : ' · '}{t('mark.a_page', { n: it[1] + 1 })}{a.many ? <span data-raw>{' · ' + nameOf(it[0])}</span> : ''}</span>
+            <span class="cap">{w === 'tray' ? '' : <b>{i + 1}</b>}{w === 'tray' ? '' : ' · '}{t('setup.a_page', { n: it[1] + 1 })}{a.many ? <span data-raw>{' · ' + nameOf(it[0])}</span> : ''}</span>
           </button>
-          {off && <span class="aoff">{t('mark.a_light_off')}</span>}
-          {w !== 'tray' && <button type="button" class="rm" title={t('mark.a_take_one')} aria-label={t('mark.a_take_one')} onClick={() => { a.tray.push(...listOf(w).splice(i, 1)); redraw(); }} data-arm={w + ':' + i}>×</button>}
+          {off && <span class="aoff">{t('setup.a_light_off')}</span>}
+          {w !== 'tray' && <button type="button" class="rm" title={t('setup.a_take_one')} aria-label={t('setup.a_take_one')} onClick={() => { a.tray.push(...listOf(w).splice(i, 1)); redraw(); }} data-arm={w + ':' + i}>×</button>}
         </div>; })}
-      {!items.length && <div class="empty">{t(w === 'tray' ? 'mark.a_tray_empty' : 'mark.a_drag_here')}</div>}
+      {!items.length && <div class="empty">{t(w === 'tray' ? 'setup.a_tray_empty' : 'setup.a_drag_here')}</div>}
     </div></div>;
   const strip = a.strip = C.stripNow(a.L, a.strip), cards = strip.some(x => typeof x === 'string');
   const cardName = id => { const f = D.fileByPath(st, id.slice(2)); return fileShown(st, f ? f.name : id.slice(2)); };
-  const kindOf = id => { const f = D.fileByPath(st, id.slice(2)); return !f ? '' : t(f.kind === 'docx' ? 'mark.a_word' : f.kind === 'text' ? 'mark.a_text' : 'mark.a_file'); };
+  const kindOf = id => { const f = D.fileByPath(st, id.slice(2)); return !f ? '' : t(f.kind === 'docx' ? 'setup.a_word' : f.kind === 'text' ? 'setup.a_text' : 'setup.a_file'); };
   const n = a.sel.size, none = !n;
   const save = async () => {
     const r = await C.arrangeSave(st, { L: a.L, strip: a.strip, everyone: a.everyone, lp: a.lp, turns: a.turns });
     onClose();
-    if (r) toast(t('mark.a_same_n', { n: r }));
-    toast(t('mark.a_saved'), { undo: C.undo });
+    if (r) toast(t('setup.a_same_n', { n: r }));
+    toast(t('setup.a_saved'), { undo: C.undo });
   };
   return <dialog class="dlg mk-arr" aria-labelledby="arrT" {...p} onKeyDown={e => { p.onKeyDown(e); keys(e); }}>
-    <header><h2 id="arrT">{t('mark.a_title')}</h2><span class="mute" data-raw>{shownName(st, bb.students.indexOf(st))}</span></header>
+    <header><h2 id="arrT">{t('setup.a_title')}</h2><span class="mute" data-raw>{shownName(st, bb.students.indexOf(st))}</span></header>
     <div class="arrbar">
-      <Segmented label={t('mark.a_size')} value={String(size)} onChange={v => { setSize(+v); prefs.set('gs.arrsize', +v); }}
-        options={[{ value: '0', label: t('mark.a_s') }, { value: '1', label: t('mark.a_m') }, { value: '2', label: t('mark.a_l') }]} />
-      <Button size="sm" disabled={none} onClick={() => move('start')} title={t('mark.a_start_tip')} data-amv="start">{t('mark.a_start')}</Button>
-      <Button size="sm" disabled={none} onClick={() => move(-1)} title={t('mark.a_earlier_tip')} data-amv="-1">{t('mark.a_earlier')}</Button>
-      <Button size="sm" disabled={none} onClick={() => move(1)} title={t('mark.a_later_tip')} data-amv="1">{t('mark.a_later')}</Button>
-      <Button size="sm" disabled={none} onClick={() => move('end')} title={t('mark.a_end_tip')} data-amv="end">{t('mark.a_end')}</Button>
-      <Button size="sm" disabled={none} onClick={takeOut} title={t('mark.a_out_tip')} data-aout>{t('mark.a_out')}</Button>
-      <Button size="sm" icon="turnr" disabled={none} onClick={turn} title={t('mark.a_turn_tip')} data-aturn>{t('mark.a_turn')}</Button>
-      {a.lit && <Button size="sm" icon="sun" disabled={none} onClick={light} data-alight>{t('mark.a_light')}</Button>}
-      <span class="grow" /><span class={'mute' + (n ? ' on' : '')} role="status">{n ? t('mark.a_picked', { n }) : t('mark.a_picked_none')}</span>
+      <Segmented label={t('setup.a_size')} value={String(size)} onChange={v => { setSize(+v); prefs.set('gs.arrsize', +v); }}
+        options={[{ value: '0', label: t('setup.a_s') }, { value: '1', label: t('setup.a_m') }, { value: '2', label: t('setup.a_l') }]} />
+      <Button size="sm" disabled={none} onClick={() => move('start')} title={t('setup.a_start_tip')} data-amv="start">{t('setup.a_start')}</Button>
+      <Button size="sm" disabled={none} onClick={() => move(-1)} title={t('setup.a_earlier_tip')} data-amv="-1">{t('setup.a_earlier')}</Button>
+      <Button size="sm" disabled={none} onClick={() => move(1)} title={t('setup.a_later_tip')} data-amv="1">{t('setup.a_later')}</Button>
+      <Button size="sm" disabled={none} onClick={() => move('end')} title={t('setup.a_end_tip')} data-amv="end">{t('setup.a_end')}</Button>
+      <Button size="sm" disabled={none} onClick={takeOut} title={t('setup.a_out_tip')} data-aout>{t('setup.a_out')}</Button>
+      <Button size="sm" icon="turnr" disabled={none} onClick={turn} title={t('setup.a_turn_tip')} data-aturn>{t('setup.a_turn')}</Button>
+      {a.lit && <Button size="sm" icon="sun" disabled={none} onClick={light} data-alight>{t('setup.a_light')}</Button>}
+      <span class="grow" /><span class={'mute' + (n ? ' on' : '')} role="status">{n ? t('setup.a_picked', { n }) : t('setup.a_picked_none')}</span>
     </div>
-    {cards && <div class="aseq"><div class="aseqh"><b>{t('mark.a_order')}</b><span class="mute">{t('mark.a_order_text')}</span><span class="grow" />
-      <Checkbox checked={a.everyone} onChange={v => { a.everyone = v; redraw(); }} label={t('mark.a_order_all')} /></div>
+    {cards && <div class="aseq"><div class="aseqh"><b>{t('setup.a_order')}</b><span class="mute">{t('setup.a_order_text')}</span><span class="grow" />
+      <Checkbox checked={a.everyone} onChange={v => { a.everyone = v; redraw(); }} label={t('setup.a_order_all')} /></div>
       <ol class="aseqr">{strip.map((x, k) => <li class={'aseqc' + (typeof x === 'string' ? ' card' : '')}><b>{k + 1}</b> <span data-raw>{typeof x === 'string' ? cardName(x) : fileShown(st, x.name)}</span>
-        <span class="mute">{typeof x === 'string' ? kindOf(x) : t('mark.f_pages', { n: x.pages.length })}</span>
-        <button type="button" title={t('mark.a_f_earlier')} aria-label={t('mark.a_f_earlier')} disabled={!k} onClick={() => { [strip[k - 1], strip[k]] = [strip[k], strip[k - 1]]; redraw(); }} data-sq={k + ':-1'}>←</button>
-        <button type="button" title={t('mark.a_f_later')} aria-label={t('mark.a_f_later')} disabled={k >= strip.length - 1} onClick={() => { [strip[k], strip[k + 1]] = [strip[k + 1], strip[k]]; redraw(); }} data-sq={k + ':1'}>→</button></li>)}</ol></div>}
-    <p class="mute ahint">{t('mark.a_hint', { mod: isMac() ? '⌘' : 'Ctrl' })}</p>
+        <span class="mute">{typeof x === 'string' ? kindOf(x) : t('setup.f_pages', { n: x.pages.length })}</span>
+        <button type="button" title={t('setup.a_f_earlier')} aria-label={t('setup.a_f_earlier')} disabled={!k} onClick={() => { [strip[k - 1], strip[k]] = [strip[k], strip[k - 1]]; redraw(); }} data-sq={k + ':-1'}>←</button>
+        <button type="button" title={t('setup.a_f_later')} aria-label={t('setup.a_f_later')} disabled={k >= strip.length - 1} onClick={() => { [strip[k], strip[k + 1]] = [strip[k + 1], strip[k]]; redraw(); }} data-sq={k + ':1'}>→</button></li>)}</ol></div>}
+    <p class="mute ahint">{t('setup.a_hint', { mod: isMac() ? '⌘' : 'Ctrl' })}</p>
     <div class="body arrbody" style={{ '--aw': SIZES[size] + 'px' }}><div class="acols">
       {a.L.map((d, di) => col(d.pages, String(di), <div class="ahead">
-        <input type="text" class="input" value={fileShown(st, d.name)} aria-label={t('mark.a_name')} readOnly={anon} title={anon ? t('mark.a_name_hidden') : undefined}
+        <input type="text" class="input" value={fileShown(st, d.name)} aria-label={t('setup.a_name')} readOnly={anon} title={anon ? t('setup.a_name_hidden') : undefined}
           onInput={e => { d.name = e.currentTarget.value; }} data-aname={di} data-raw />
-        <Checkbox checked={D.docIn(st, d)} onChange={v => { d.out = !v; redraw(); }} label={t('mark.a_send')} />
-        {a.L.length > 1 && <button type="button" class="link" onClick={() => { a.tray.push(...d.pages); a.L.splice(di, 1); redraw(); }} data-adel={di}>{t('mark.a_del_file')}</button>}
+        <Checkbox checked={D.docIn(st, d)} onChange={v => { d.out = !v; redraw(); }} label={t('setup.a_send')} />
+        {a.L.length > 1 && <button type="button" class="link" onClick={() => { a.tray.push(...d.pages); a.L.splice(di, 1); redraw(); }} data-adel={di}>{t('setup.a_del_file')}</button>}
       </div>))}
-      {col(a.tray, 'tray', <div class="ahead"><b>{t('mark.a_tray')}</b><small class="mute">{t('mark.a_tray_text')}</small></div>)}
+      {col(a.tray, 'tray', <div class="ahead"><b>{t('setup.a_tray')}</b><small class="mute">{t('setup.a_tray_text')}</small></div>)}
     </div></div>
     <footer class="arrfoot"><span class="grp">
       <Button onClick={() => { const keep = a.L.filter(d => !d.out), from = keep.length ? keep : a.L, one = from[0] || { name: 'Combined.pdf' };
-        a.L = [{ name: one.name, pages: from.flatMap(d => d.pages), out: false }].concat(a.L.filter(d => keep.length && d.out)); redraw(); }} data-acombine>{t('mark.a_combine')}</Button>
-      <Button icon="plus" onClick={() => { a.L.push({ name: t('mark.a_new_name', { n: a.L.length + 1 }) + '.pdf', pages: [], out: false }); redraw(); }} data-anew>{t('mark.a_new')}</Button>
-      <Button variant="quiet" onClick={() => { Object.assign(a, C.arrangeReset(st), { tray: [], sel: new Set() }); redraw(); }} data-areset>{t('mark.a_reset')}</Button></span>
-      <span class="grp"><Button onClick={onClose}>{t('mark.cancel')}</Button><Button variant="primary" onClick={save} data-asave>{t('mark.a_save')}</Button></span></footer>
+        a.L = [{ name: one.name, pages: from.flatMap(d => d.pages), out: false }].concat(a.L.filter(d => keep.length && d.out)); redraw(); }} data-acombine>{t('setup.a_combine')}</Button>
+      <Button icon="plus" onClick={() => { a.L.push({ name: t('setup.a_new_name', { n: a.L.length + 1 }) + '.pdf', pages: [], out: false }); redraw(); }} data-anew>{t('setup.a_new')}</Button>
+      <Button variant="quiet" onClick={() => { Object.assign(a, C.arrangeReset(st), { tray: [], sel: new Set() }); redraw(); }} data-areset>{t('setup.a_reset')}</Button></span>
+      <span class="grp"><Button onClick={onClose}>{t('setup.cancel')}</Button><Button variant="primary" onClick={save} data-asave>{t('setup.a_save')}</Button></span></footer>
     {big && <Big st={st} it={big} turn={turnOf(big)} onClose={() => setBig(null)} />}
   </dialog>;
 }

@@ -338,3 +338,110 @@ test('scoring in the new app: rows by click and by key, the half, a status, the 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('the marking screen around the paper: a picked mark moved, resized, copied and pasted by key, the highlighter snap, the score and a row stamped on the paper, the list filtered, in points and folded, the score panel folded, a saved comment, and Only this student; the current app opens the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(await standardFiles()));
+  await made.evaluate(() => window.__gs.saveNow()); await settle(made);
+  const id = await made.evaluate(() => window.__gs.state().batch.id);
+  await made.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForSelector('.mk-crit .sticks button:not([disabled])');
+  await p.waitForSelector('[data-repx]', { timeout: 15000 }).then(() => p.click('[data-repx]'), () => {});
+  const cur = () => p.evaluate(() => window.__mark.state().cur);
+  const blur = () => p.evaluate(() => document.activeElement && document.activeElement.blur());
+
+  // a check placed, picked with Select: the arrows move it (and not to the next student), Shift for ten, + makes it bigger
+  await p.keyboard.press('k'); { const q = await nextAt(p, 0, 200, 300); await p.mouse.click(q.x, q.y); }
+  await p.keyboard.press('v'); { const q = await nextAt(p, 0, 200, 300); await p.mouse.click(q.x, q.y); }
+  await p.waitForFunction(() => !!window.__mark.state().selected);
+  const c0 = (await marksOf(p, 0))[0], at = await cur();
+  await p.keyboard.press('ArrowRight'); await p.keyboard.down('Shift'); await p.keyboard.press('ArrowDown'); await p.keyboard.up('Shift');
+  const c1 = (await marksOf(p, 0))[0];
+  assert.equal(await cur(), at, 'the arrows move the mark, not to the next student');
+  assert.deepEqual([c1.x - c0.x, c1.y - c0.y], [1, 10]);
+  await p.keyboard.press('='); assert.ok((await marksOf(p, 0))[0].size > c1.size, '+ makes it bigger');
+  // Ctrl C and Ctrl V: a copy beside it; Ctrl D: another
+  await p.keyboard.down('Control'); await p.keyboard.press('c'); await p.keyboard.press('v'); await p.keyboard.press('d'); await p.keyboard.up('Control');
+  assert.equal((await marksOf(p, 0)).length, 3, 'pasted and duplicated');
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  assert.equal((await marksOf(p, 0)).length, 2, 'Ctrl Z takes the copy back');
+  await p.keyboard.press('Escape');
+  assert.equal(await p.evaluate(() => window.__mark.state().selected), null, 'Esc lets go');
+  // the highlighter: H again switches between snapping and freehand, and the bar says which
+  await p.keyboard.press('h'); await p.keyboard.press('h');
+  assert.equal(await p.$eval('[data-hlm="free"]', b => b.getAttribute('aria-pressed')), 'true');
+  await p.click('[data-hlm="auto"]');
+  assert.equal(await p.$eval('[data-hlm="auto"]', b => b.getAttribute('aria-pressed')), 'true');
+  await p.keyboard.press('v');
+
+  // a score, then the score and the first row put on the paper where she clicks
+  await p.click('.mk-crit[data-row="0"] .sticks button[data-v="3"]');
+  await p.click('.mk-crit[data-row="1"] .sticks button[data-v="4"]');
+  await p.click('.mk-crit[data-row="2"] .sticks button[data-v="2"]');
+  await press(p, '[data-stampscore]'); { const q = await nextAt(p, 0, 450, 120); await p.mouse.click(q.x, q.y); }
+  await press(p, '[data-critstamp="0"]'); { const q = await nextAt(p, 0, 450, 220); await p.mouse.click(q.x, q.y); }
+  const stamps = (await marksOf(p, 0)).filter(m => m.t === 'stamp');
+  assert.deepEqual(stamps.map(m => m.k), ['score', 'crit']);
+  assert.match(stamps[0].text, /^9\/12 = \d+%$/); assert.equal(stamps[1].text, '3/4');
+  // the score changes: the stamps keep up
+  await p.click('.mk-crit[data-row="0"] .sticks button[data-v="4"]');
+  await p.waitForFunction(() => window.__mark.state().pages[0].marks().find(m => m.k === 'crit').text === '4/4');
+
+  // the list: To score shows who has no score yet (and the one open), points in place of percent, folded with [ and back
+  const shown = () => p.$$eval('.mk-rows [data-st]', l => l.map(b => +b.dataset.st));
+  const all = (await shown()).length;
+  await p.click('[data-lf-open]'); await press(p, '[data-lf="todo"]');
+  assert.equal((await shown()).length, all, 'nobody else is scored yet, so everyone is still to score');
+  await p.click('[data-way="pts"]');
+  assert.match(await p.$eval('.mk-row.on .sc', e => e.textContent), /^10\s\/\s12$/);
+  await blur(); await p.keyboard.press('Escape'); await p.keyboard.press('ArrowRight');   // the stamp just placed is let go of first
+  assert.equal(await cur(), 1);
+  assert.ok(!(await shown()).includes(0), 'scored, the first student leaves To score once she moves on');
+  await p.click('[data-lf-open]'); await press(p, '[data-lf="all"]');
+  await blur(); await p.keyboard.press('[');
+  assert.ok(await p.$('.mk-list.fold'), '[ folds the list to a strip');
+  await p.keyboard.press('['); assert.equal(await p.$('.mk-list.fold'), null);
+  await p.keyboard.press(']'); assert.equal(await p.$('.mk-side'), null, '] folds the score panel away');
+  await p.click('[data-panelshow]'); await p.waitForSelector('.mk-side');
+
+  // a comment saved to the bank: a chip under every comment box from then on, and Ctrl Z takes the saving back
+  await p.click('.mk-cmt'); await p.keyboard.type('Clear and careful.');
+  await p.click('[data-cbmore]'); await press(p, '[data-cbsave]');
+  await p.waitForSelector('[data-cbank]');
+  assert.equal(await p.$eval('[data-cbank]', b => b.textContent), 'Clear and careful.');
+  assert.deepEqual(await p.evaluate(() => JSON.parse(localStorage.getItem('gs.bank'))), ['Clear and careful.']);
+  await p.click('[data-st="2"]'); await p.waitForFunction(() => window.__mark.state().cur === 2);
+  await p.click('[data-cbank]');
+  assert.equal(await p.evaluate(() => window.__mark.state().batch.students[2].grade.comment), 'Clear and careful.');
+
+  // Only this student: I, then no list, tabs or other students; it stays through a reload and ends only by holding the button
+  await blur(); await p.keyboard.press('i');
+  await p.waitForSelector('.mk-solo');
+  assert.equal(await p.$('.mk-list'), null); assert.equal(await p.$('.mk-top [role="tablist"]'), null);
+  await p.keyboard.press('ArrowRight'); assert.equal(await cur(), 2, 'the arrows do not leave them');
+  await p.reload(); await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForSelector('.mk-solo');
+  assert.equal(await p.evaluate(() => window.__mark.state().batch.students[2].grade.comment), 'Clear and careful.', 'a change made just before the reload was saved on the way out');
+  await p.click('[data-soloend]'); assert.ok(await p.$('.mk-solo'), 'a click does not end it');
+  const b = await p.$('[data-soloend]'), r = await b.boundingBox();
+  await p.mouse.move(r.x + r.width / 2, r.y + r.height / 2); await p.mouse.down();
+  await p.waitForFunction(() => !document.querySelector('.mk-solo'), { timeout: 4000 }); await p.mouse.up();
+  await p.waitForSelector('.mk-list');
+
+  await p.evaluate(() => window.__mark.saved());
+  const nowShape = await p.evaluate(shape => eval(shape)(window.__mark.state().batch), shape);
+  await p.close();
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  await old.evaluate(id => window.__gs.reopenKept(id), id);
+  await old.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id && s.pages.length; }, { timeout: 60000 }, id);
+  assert.deepEqual(await old.evaluate(shape => eval(shape)(window.__gs.state().batch), shape), nowShape, 'main has the same marks, stamps, scores and comments');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

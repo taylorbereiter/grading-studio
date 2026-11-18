@@ -14,7 +14,7 @@ import { videos } from '../../students/index.js';
 import { prefs } from '../../students/prefs.js';
 import { t } from '../../i18n/t.js';
 import * as C from './change.js';
-import './lines.js';
+import './setup-lines.js';
 
 // the tests stand in for the speech engine here, so it is never downloaded
 if (typeof window !== 'undefined') window.__media = { asrStandIn: V.asrStandIn };
@@ -38,7 +38,7 @@ function Turned({ f, children }) {
     : { position: 'absolute', inset: 0, width: '100%', height: '100%', transform: 'rotate(180deg)' };
   const h0 = +prefs.get('gs.vidH', 0) || 0;
   return <div ref={box} class={'vrot' + (d ? ' on' : '')} data-turn={d} style={h0 ? { height: h0 + 'px' } : null}>{children(style)}
-    <span class="vgrip" role="separator" aria-orientation="horizontal" aria-label={t('mark.v_size')} tabIndex={0}
+    <span class="vgrip" role="separator" aria-orientation="horizontal" aria-label={t('setup.v_size')} tabIndex={0}
       onPointerDown={e => { const el = box.current, y0 = e.clientY, h1 = el.offsetHeight; e.currentTarget.setPointerCapture(e.pointerId);
         const mv = ev => { el.style.height = Math.max(140, Math.min(900, h1 + ev.clientY - y0)) + 'px'; tick(n => n + 1); };
         const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); prefs.set('gs.vidH', el.offsetHeight); };
@@ -49,12 +49,12 @@ function Turned({ f, children }) {
 function Controls({ st, f, m, video }) {
   const [r, setR] = useState(rate);
   return <div class="mctl">
-    <Button size="sm" onClick={() => { const x = m(); if (x) x.currentTime = Math.max(0, x.currentTime - 10); }} data-skip="-10">{t('mark.v_back')}</Button>
-    <Button size="sm" onClick={() => { const x = m(); if (x) x.currentTime = x.currentTime + 10; }} data-skip="10">{t('mark.v_ahead')}</Button>
-    <Segmented size="sm" label={t('mark.v_speed')} value={String(r)} onChange={v => { prefs.set('gs.rate', +v); setR(+v); const x = m(); if (x) x.playbackRate = +v; }} options={RATES.map(x => ({ value: String(x), label: x + '×' }))} />
-    <Button size="sm" onClick={() => { const x = m(); if (x) C.addStamp(st, x.currentTime); toast(t('mark.v_stamped')); }} title={t('mark.v_stamp_tip')} data-stamp>{t('mark.v_stamp')}</Button>
-    {video && <Button size="sm" icon="turnr" onClick={() => C.vidTurn(f)} title={t('mark.v_turn_tip')} data-vrot>{t('mark.v_turn')}</Button>}
-    {video && document.pictureInPictureEnabled && <Button size="sm" onClick={() => { const x = m(); if (!x) return; if (document.pictureInPictureElement === x) document.exitPictureInPicture().catch(() => {}); else x.requestPictureInPicture().catch(() => {}); }} title={t('mark.v_float_tip')} data-pip>{t('mark.v_float')}</Button>}
+    <Button size="sm" onClick={() => { const x = m(); if (x) x.currentTime = Math.max(0, x.currentTime - 10); }} data-skip="-10">{t('setup.v_back')}</Button>
+    <Button size="sm" onClick={() => { const x = m(); if (x) x.currentTime = x.currentTime + 10; }} data-skip="10">{t('setup.v_ahead')}</Button>
+    <Segmented size="sm" label={t('setup.v_speed')} value={String(r)} onChange={v => { prefs.set('gs.rate', +v); setR(+v); const x = m(); if (x) x.playbackRate = +v; }} options={RATES.map(x => ({ value: String(x), label: x + '×' }))} />
+    <Button size="sm" onClick={() => { const x = m(); if (x) C.addStamp(st, x.currentTime); toast(t('setup.v_stamped')); }} title={t('setup.v_stamp_tip')} data-stamp>{t('setup.v_stamp')}</Button>
+    {video && <Button size="sm" icon="turnr" onClick={() => C.vidTurn(f)} title={t('setup.v_turn_tip')} data-vrot>{t('setup.v_turn')}</Button>}
+    {video && document.pictureInPictureEnabled && <Button size="sm" onClick={() => { const x = m(); if (!x) return; if (document.pictureInPictureElement === x) document.exitPictureInPicture().catch(() => {}); else x.requestPictureInPicture().catch(() => {}); }} title={t('setup.v_float_tip')} data-pip>{t('setup.v_float')}</Button>}
   </div>;
 }
 // A recording: the student's own file, or a video kept in this browser (k: { name, url }).
@@ -64,7 +64,7 @@ function Recording({ st, f, k }) {
   const src = k ? k.url : urlOf(f), m = () => ref.current;
   const seek = s => { const x = m(); if (!x) return; x.currentTime = s; if (x.paused) x.play().catch(() => {}); };
   return <div class="media" data-media={f.path}>
-    <div class="mstick"><div class="mhead"><b data-raw>{k ? V.linkTitle(f) : f.name}</b><span class="mute">{t(video ? 'mark.v_video' : 'mark.v_audio')}</span></div>
+    <div class="mstick"><div class="mhead"><b data-raw>{k ? V.linkTitle(f) : f.name}</b><span class="mute">{t(video ? 'setup.v_video' : 'setup.v_audio')}</span></div>
       {video ? <Turned f={f}>{style => <video ref={ref} controls preload="metadata" playsInline src={src} style={style} onTimeUpdate={e => setNow(e.currentTarget.currentTime)} />}</Turned>
         : <audio ref={ref} controls preload="metadata" src={src} onTimeUpdate={e => setNow(e.currentTarget.currentTime)} />}
       <Caption f={f} now={now} />
@@ -83,12 +83,12 @@ function Link({ st, f }) {
       {on && <Caption f={f} now={now} />}
       {on && ticks && <Controls st={st} f={f} m={m} video={!!play.video} />}
       <div class="mctl">
-        {play && <Button size="sm" variant={on ? undefined : 'primary'} aria-pressed={on ? 'true' : 'false'} onClick={() => setOn(v => !v)} data-vplay>{t(on ? 'mark.v_close' : 'mark.v_play')}</Button>}
-        <Button size="sm" variant={play ? undefined : 'primary'} onClick={() => window.open(url, '_blank', 'noopener,noreferrer,popup,width=980,height=640')} title={t('mark.v_open_tip')} data-vopen>{t('mark.v_open')}</Button>
-        <Button size="sm" onClick={() => navigator.clipboard.writeText(url).then(() => toast(t('mark.v_copied')), () => toast(t('mark.v_not_copied')))} data-vcopy>{t('mark.v_copy')}</Button>
-        {play && play.frame && <Button size="sm" icon="turnr" onClick={() => C.vidTurn(f)} title={t('mark.v_turn_tip')} data-vrot>{t('mark.v_turn')}</Button>}</div>
-      {play && play.frame && V.vrotOf(f) > 0 && <p class="mute vlnote">{t('mark.v_caps_turn')}</p>}
-      <p class="mute vlnote">{t(play ? 'mark.v_link_note' : 'mark.v_link_only')}</p></div>
+        {play && <Button size="sm" variant={on ? undefined : 'primary'} aria-pressed={on ? 'true' : 'false'} onClick={() => setOn(v => !v)} data-vplay>{t(on ? 'setup.v_close' : 'setup.v_play')}</Button>}
+        <Button size="sm" variant={play ? undefined : 'primary'} onClick={() => window.open(url, '_blank', 'noopener,noreferrer,popup,width=980,height=640')} title={t('setup.v_open_tip')} data-vopen>{t('setup.v_open')}</Button>
+        <Button size="sm" onClick={() => navigator.clipboard.writeText(url).then(() => toast(t('setup.v_copied')), () => toast(t('setup.v_not_copied')))} data-vcopy>{t('setup.v_copy')}</Button>
+        {play && play.frame && <Button size="sm" icon="turnr" onClick={() => C.vidTurn(f)} title={t('setup.v_turn_tip')} data-vrot>{t('setup.v_turn')}</Button>}</div>
+      {play && play.frame && V.vrotOf(f) > 0 && <p class="mute vlnote">{t('setup.v_caps_turn')}</p>}
+      <p class="mute vlnote">{t(play ? 'setup.v_link_note' : 'setup.v_link_only')}</p></div>
     <Transcript f={f} seek={seek} now={now} />
   </div>;
 }
@@ -96,10 +96,10 @@ function Link({ st, f }) {
 function Kept({ st, f }) {
   const id = V.vidRef(f.data), [k, setK] = useState(undefined);
   useEffect(() => { let live = true; keptGet(id).then(v => { if (live) setK(v); }); return () => { live = false; }; }, [id]);
-  if (k === undefined) return <div class="media vfile"><div class="mstick"><div class="mhead"><b data-raw>{V.linkTitle(f)}</b><span class="mute">{t('mark.v_opening')}</span></div></div></div>;
+  if (k === undefined) return <div class="media vfile"><div class="mstick"><div class="mhead"><b data-raw>{V.linkTitle(f)}</b><span class="mute">{t('setup.v_opening')}</span></div></div></div>;
   if (k) return <Recording st={st} f={f} k={k} />;
-  return <div class="media vfile" data-media={f.path}><div class="mstick"><div class="mhead"><b data-raw>{V.linkTitle(f)}</b><span class="mute">{t('mark.v_file')}</span></div>
-    <p class="vlnote">{t('mark.v_not_here')}</p></div></div>;
+  return <div class="media vfile" data-media={f.path}><div class="mstick"><div class="mhead"><b data-raw>{V.linkTitle(f)}</b><span class="mute">{t('setup.v_file')}</span></div>
+    <p class="vlnote">{t('setup.v_not_here')}</p></div></div>;
 }
 export function MediaCard({ st, f }) {
   if (f.kind === 'media') return <Recording st={st} f={f} />;
@@ -124,54 +124,54 @@ function Transcript({ f, seek, now, bytes }) {
     if (!prefs.get('gs.asrHave', 0) && mode !== 'ask') return setMode('ask');
     setMode('make'); setErr('');
     const me = stop.current = { on: false };
-    try { if (await C.trMake(f, await bytes(), (s, p) => { if (stop.current === me) setSay([s, p == null ? null : p]); }, me)) toast(t('mark.v_tr_ready')); }
+    try { if (await C.trMake(f, await bytes(), (s, p) => { if (stop.current === me) setSay([s, p == null ? null : p]); }, me)) toast(t('setup.v_tr_ready')); }
     catch (e) { if (!me.on) { console.error(e); setErr((e && e.message) || String(e)); } }
     if (stop.current === me) { stop.current = null; setMode(''); }
   };
-  const save = () => { const v = text, x = V.trParse(v); if (!x && v.trim()) return toast(t('mark.v_tr_empty')); const had = f.tr; C.trSet(f, x); setMode(''); if (!x && had) toast(t('mark.v_tr_off'), { undo: C.undo }); };
-  if (mode === 'edit') return <div class="trbox"><label class="trlab">{t(tr ? 'mark.v_tr_change' : 'mark.v_tr_paste')}
+  const save = () => { const v = text, x = V.trParse(v); if (!x && v.trim()) return toast(t('setup.v_tr_empty')); const had = f.tr; C.trSet(f, x); setMode(''); if (!x && had) toast(t('setup.v_tr_off'), { undo: C.undo }); };
+  if (mode === 'edit') return <div class="trbox"><label class="trlab">{t(tr ? 'setup.v_tr_change' : 'setup.v_tr_paste')}
     <textarea class="input trta" rows="8" spellcheck={false} value={text} onInput={e => setText(e.currentTarget.value)} placeholder={'[0:00] …\n[0:12] …'} data-raw data-trta
       onKeyDown={e => { e.stopPropagation(); if (e.key === 'Escape') { e.preventDefault(); setMode(''); } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); save(); } }} /></label>
-    <div class="trrow"><Button size="sm" variant="primary" onClick={save} data-trsave>{t('mark.v_save')}</Button><Button size="sm" onClick={() => setMode('')}>{t('mark.cancel')}</Button></div>
-    <small class="mute">{t('mark.v_tr_how')}</small></div>;
-  if (mode === 'ask') return <div class="trbox"><p>{t('mark.v_tr_ask')}</p><div class="trrow"><Button size="sm" variant="primary" onClick={make} data-trgo>{t('mark.v_tr_go')}</Button><Button size="sm" onClick={() => setMode('')}>{t('mark.v_not_now')}</Button></div></div>;
+    <div class="trrow"><Button size="sm" variant="primary" onClick={save} data-trsave>{t('setup.v_save')}</Button><Button size="sm" onClick={() => setMode('')}>{t('setup.cancel')}</Button></div>
+    <small class="mute">{t('setup.v_tr_how')}</small></div>;
+  if (mode === 'ask') return <div class="trbox"><p>{t('setup.v_tr_ask')}</p><div class="trrow"><Button size="sm" variant="primary" onClick={make} data-trgo>{t('setup.v_tr_go')}</Button><Button size="sm" onClick={() => setMode('')}>{t('setup.v_not_now')}</Button></div></div>;
   if (mode === 'make') return <div class="trbox"><div class="prog"><i style={{ width: Math.round((say[1] || 0) * 100) + '%' }} /></div>
-    <div class="trrow"><span role="status" data-trmsg>{say[0] || t('mark.v_tr_start')}</span><Button size="sm" onClick={() => { if (stop.current) stop.current.on = true; stop.current = null; V.asrStop(); setMode(''); toast(t('mark.v_tr_stopped')); }} data-trstop>{t('mark.cancel')}</Button></div>
-    <small class="mute">{t('mark.v_tr_making')}</small></div>;
-  if (!tr) return <div class="trbox"><div class="trrow trnone">{canMake && <Button size="sm" onClick={make} title={t('mark.v_tr_make_tip')} data-trmake>{t('mark.v_tr_make')}</Button>}
-    <Button size="sm" onClick={() => { setText(''); setMode('edit'); }} title={t('mark.v_tr_paste_tip')} data-trpaste>{t('mark.v_tr_paste')}</Button>
-    {err ? <small class="trerr">{err}</small> : f.kind === 'link' && !canMake ? <small class="mute">{t('mark.v_tr_sites')}</small> : null}</div></div>;
+    <div class="trrow"><span role="status" data-trmsg>{say[0] || t('setup.v_tr_start')}</span><Button size="sm" onClick={() => { if (stop.current) stop.current.on = true; stop.current = null; V.asrStop(); setMode(''); toast(t('setup.v_tr_stopped')); }} data-trstop>{t('setup.cancel')}</Button></div>
+    <small class="mute">{t('setup.v_tr_making')}</small></div>;
+  if (!tr) return <div class="trbox"><div class="trrow trnone">{canMake && <Button size="sm" onClick={make} title={t('setup.v_tr_make_tip')} data-trmake>{t('setup.v_tr_make')}</Button>}
+    <Button size="sm" onClick={() => { setText(''); setMode('edit'); }} title={t('setup.v_tr_paste_tip')} data-trpaste>{t('setup.v_tr_paste')}</Button>
+    {err ? <small class="trerr">{err}</small> : f.kind === 'link' && !canMake ? <small class="mute">{t('setup.v_tr_sites')}</small> : null}</div></div>;
   const lines = V.trLines(tr); let at = -1; lines.forEach((x, i) => { if (x.t != null && x.t <= now + 0.05) at = i; });
   const cap = !!prefs.get('gs.trCap', 0);
-  return <div class="trbox"><div class="trhead"><b>{t('mark.v_tr')}</b><span class="mute">{t(tr.w ? 'mark.v_tr_made' : 'mark.v_tr_pasted')}</span><span class="grow" />
-    <Button size="sm" variant="quiet" aria-pressed={cap ? 'true' : 'false'} onClick={() => { if (cap) prefs.del('gs.trCap'); else prefs.set('gs.trCap', 1); dispatchEvent(new Event('gs-trcap')); tick(n => n + 1); }} title={t('mark.v_caps_tip')} data-trcap>{t('mark.v_caps')}</Button>
-    <Button size="sm" variant="quiet" onClick={() => { setText(V.trText(tr)); setMode('edit'); }} data-trpaste>{t('mark.v_edit')}</Button>
-    {canMake && <Button size="sm" variant="quiet" onClick={make} data-trmake>{t('mark.v_tr_again')}</Button>}
-    <Button size="sm" variant="quiet" onClick={() => { C.trSet(f, null); toast(t('mark.v_tr_off'), { undo: C.undo }); }} data-trdel>{t('mark.v_remove')}</Button></div>
+  return <div class="trbox"><div class="trhead"><b>{t('setup.v_tr')}</b><span class="mute">{t(tr.w ? 'setup.v_tr_made' : 'setup.v_tr_pasted')}</span><span class="grow" />
+    <Button size="sm" variant="quiet" aria-pressed={cap ? 'true' : 'false'} onClick={() => { if (cap) prefs.del('gs.trCap'); else prefs.set('gs.trCap', 1); dispatchEvent(new Event('gs-trcap')); tick(n => n + 1); }} title={t('setup.v_caps_tip')} data-trcap>{t('setup.v_caps')}</Button>
+    <Button size="sm" variant="quiet" onClick={() => { setText(V.trText(tr)); setMode('edit'); }} data-trpaste>{t('setup.v_edit')}</Button>
+    {canMake && <Button size="sm" variant="quiet" onClick={make} data-trmake>{t('setup.v_tr_again')}</Button>}
+    <Button size="sm" variant="quiet" onClick={() => { C.trSet(f, null); toast(t('setup.v_tr_off'), { undo: C.undo }); }} data-trdel>{t('setup.v_remove')}</Button></div>
     <div class="trans" data-raw>{lines.map((x, i) => <p class={'trl' + (i === at ? ' now' : '')} data-t={x.t != null ? x.t : undefined} onClick={() => { if (x.t != null) seek(x.t); }}>
       {x.t != null && <time>{V.fmtTime(x.t)}</time>}{x.w ? x.w.map(([w, s]) => <span data-t={s} onClick={e => { e.stopPropagation(); seek(s); }}>{w}</span>) : <span>{x.s}</span>}</p>)}</div></div>;
 }
 
 // Add, A notes page… (openAddNotes): a page to write on while she watches or listens, scored and returned like a paper.
 let npLast = 'lined';   // the kind of notes page picked last, while this page is open
-const KINDS = [['lined', 'mark.v_np_lined', 'mark.v_np_lined_tip'], ['rubric', 'mark.v_np_rubric', 'mark.v_np_rubric_tip'], ['cols', 'mark.v_np_cols', 'mark.v_np_cols_tip'], ['blank', 'mark.v_np_blank', 'mark.v_np_blank_tip']];
+const KINDS = [['lined', 'setup.v_np_lined', 'setup.v_np_lined_tip'], ['rubric', 'setup.v_np_rubric', 'setup.v_np_rubric_tip'], ['cols', 'setup.v_np_cols', 'setup.v_np_cols_tip'], ['blank', 'setup.v_np_blank', 'setup.v_np_blank_tip']];
 export function NotesAdd({ st, name, onClose }) {
   const rows = V.npRows(state().setup), [kind, setKind] = useState(() => (npLast === 'rubric' && !rows.length ? 'lined' : npLast));
-  const [title, setTitle] = useState(t('mark.v_np_name0')), [busy, setBusy] = useState(false);
+  const [title, setTitle] = useState(t('setup.v_np_name0')), [busy, setBusy] = useState(false);
   const go = async () => {
     setBusy(true);
     npLast = kind;
-    try { const made = await C.notesAdd(st, kind, title); if (made.length) { toast(t('mark.v_np_added', { name })); C.reopen(); } }
-    catch (e) { console.error(e); toast(t('mark.v_np_fail', { why: (e && e.message) || String(e) })); }
+    try { const made = await C.notesAdd(st, kind, title); if (made.length) { toast(t('setup.v_np_added', { name })); C.reopen(); } }
+    catch (e) { console.error(e); toast(t('setup.v_np_fail', { why: (e && e.message) || String(e) })); }
     onClose();
   };
-  return <Dialog open title={t('mark.v_np_t', { name })} onClose={onClose}
-    actions={<><Button onClick={onClose}>{t('mark.cancel')}</Button><Button variant="primary" onClick={go} disabled={busy} data-npadd>{t('mark.v_np_add', { name })}</Button></>}>
-    <p class="mute">{t('mark.v_np_text')}</p>
-    <div class="nptiles" role="radiogroup" aria-label={t('mark.v_np_kind')}>{KINDS.map(([k, label, tip]) => { const off = k === 'rubric' && !rows.length;
-      return <button type="button" class="nptile" role="radio" aria-checked={kind === k ? 'true' : 'false'} disabled={off} title={t(off ? 'mark.v_np_norows' : tip)} onClick={() => setKind(k)} data-np={k}>
+  return <Dialog open title={t('setup.v_np_t', { name })} onClose={onClose}
+    actions={<><Button onClick={onClose}>{t('setup.cancel')}</Button><Button variant="primary" onClick={go} disabled={busy} data-npadd>{t('setup.v_np_add', { name })}</Button></>}>
+    <p class="mute">{t('setup.v_np_text')}</p>
+    <div class="nptiles" role="radiogroup" aria-label={t('setup.v_np_kind')}>{KINDS.map(([k, label, tip]) => { const off = k === 'rubric' && !rows.length;
+      return <button type="button" class="nptile" role="radio" aria-checked={kind === k ? 'true' : 'false'} disabled={off} title={t(off ? 'setup.v_np_norows' : tip)} onClick={() => setKind(k)} data-np={k}>
         <span class={'npart ' + k} aria-hidden="true" /><b>{t(label)}</b></button>; })}</div>
-    <TextInput label={t('mark.v_np_name')} value={title} onInput={setTitle} autocomplete="off" data-npname />
+    <TextInput label={t('setup.v_np_name')} value={title} onInput={setTitle} autocomplete="off" data-npname />
   </Dialog>;
 }
 
@@ -179,35 +179,35 @@ export function NotesAdd({ st, name, onClose }) {
 // video come with group work.
 export function VideoAdd({ st, name, onClose, file: file0 }) {
   const rows = V.npRows(state().setup), has = !!V.notesFileOf(st);
-  const [by, setBy] = useState(file0 ? 'file' : 'link'), [url, setUrl] = useState(''), [file, setFile] = useState(file0 || null), [title, setTitle] = useState(t('mark.v_name0'));
+  const [by, setBy] = useState(file0 ? 'file' : 'link'), [url, setUrl] = useState(''), [file, setFile] = useState(file0 || null), [title, setTitle] = useState(t('setup.v_name0'));
   const [kind, setKind] = useState(has ? '' : 'lined'), [busy, setBusy] = useState(false);
   const clean = V.linkClean(url), ok = by === 'file' ? !!file : !!clean;
   const pick = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'video/*,audio/*'; i.onchange = () => use1(i.files[0]); i.click(); };
-  const use1 = f => { if (!f) return; if (!V.MEDIA_RX.test(f.name) && !/^(video|audio)\//.test(f.type)) return toast(t('mark.v_not_media')); setFile(f); setBy('file'); };
+  const use1 = f => { if (!f) return; if (!V.MEDIA_RX.test(f.name) && !/^(video|audio)\//.test(f.type)) return toast(t('setup.v_not_media')); setFile(f); setBy('file'); };
   const go = async () => {
     setBusy(true);
     try {
       if (kind) npLast = kind;
-      const r = await C.videoAdd(st, { url: by === 'link' ? clean : '', file: by === 'file' ? file : null, name: V.npFileName(title || t('mark.v_name0')), kind });
-      toast(r.had && !r.made.length ? t('mark.v_has', { name }) : t('mark.v_added', { name }));
+      const r = await C.videoAdd(st, { url: by === 'link' ? clean : '', file: by === 'file' ? file : null, name: V.npFileName(title || t('setup.v_name0')), kind });
+      toast(r.had && !r.made.length ? t('setup.v_has', { name }) : t('setup.v_added', { name }));
       C.reopen();
       onClose();
-    } catch (e) { console.error(e); setBusy(false); toast((e && e.why === 'room') ? t('mark.v_room') : t('mark.v_fail', { why: (e && e.message) || String(e) })); }
+    } catch (e) { console.error(e); setBusy(false); toast((e && e.why === 'room') ? t('setup.v_room') : t('setup.v_fail', { why: (e && e.message) || String(e) })); }
   };
-  return <Dialog open title={t('mark.v_add_t', { name })} onClose={onClose}
-    actions={<><Button onClick={onClose}>{t('mark.cancel')}</Button><Button variant="primary" onClick={go} disabled={!ok || busy} data-vdadd>{t('mark.v_np_add', { name })}</Button></>}>
+  return <Dialog open title={t('setup.v_add_t', { name })} onClose={onClose}
+    actions={<><Button onClick={onClose}>{t('setup.cancel')}</Button><Button variant="primary" onClick={go} disabled={!ok || busy} data-vdadd>{t('setup.v_np_add', { name })}</Button></>}>
     <div onDragOver={e => { if (by === 'file') e.preventDefault(); }} onDrop={e => { if (by !== 'file') return; e.preventDefault(); use1(e.dataTransfer.files[0]); }}>
-    <Segmented label={t('mark.v_which')} value={by} onChange={v => { setBy(v); if (v === 'file' && !file) pick(); }} options={[{ value: 'link', label: t('mark.v_by_link') }, { value: 'file', label: t('mark.v_by_file') }]} />
-    {by === 'link' ? <><TextInput label={t('mark.v_link')} value={url} onInput={setUrl} placeholder={t('mark.v_link_ph')} autocomplete="off" spellcheck={false} error={url.trim() && !clean ? t('mark.v_bad_link') : ''} data-vdlink />
-      <p class="mute">{t('mark.v_link_say')}</p></>
-      : <><div class="vdfile"><Button onClick={pick} data-vdfile>{t('mark.v_choose')}</Button><span class="mute" data-raw>{file ? file.name : t('mark.v_or_drop')}</span></div>
-      <p class="mute">{t('mark.v_file_say')}</p></>}
-    <TextInput label={t('mark.v_np_name')} value={title} onInput={setTitle} autocomplete="off" data-vdname />
-    <p class="vdlab"><b>{t('mark.v_np_kind')}</b> <small class="mute">{t('mark.v_np_say')}</small></p>
-    <div class="nptiles" role="radiogroup" aria-label={t('mark.v_np_kind')}>
-      <button type="button" class="nptile" role="radio" aria-checked={kind === '' ? 'true' : 'false'} onClick={() => setKind('')} data-np="none"><span class="npart none" aria-hidden="true" /><b>{t('mark.v_np_none')}</b></button>
+    <Segmented label={t('setup.v_which')} value={by} onChange={v => { setBy(v); if (v === 'file' && !file) pick(); }} options={[{ value: 'link', label: t('setup.v_by_link') }, { value: 'file', label: t('setup.v_by_file') }]} />
+    {by === 'link' ? <><TextInput label={t('setup.v_link')} value={url} onInput={setUrl} placeholder={t('setup.v_link_ph')} autocomplete="off" spellcheck={false} error={url.trim() && !clean ? t('setup.v_bad_link') : ''} data-vdlink />
+      <p class="mute">{t('setup.v_link_say')}</p></>
+      : <><div class="vdfile"><Button onClick={pick} data-vdfile>{t('setup.v_choose')}</Button><span class="mute" data-raw>{file ? file.name : t('setup.v_or_drop')}</span></div>
+      <p class="mute">{t('setup.v_file_say')}</p></>}
+    <TextInput label={t('setup.v_np_name')} value={title} onInput={setTitle} autocomplete="off" data-vdname />
+    <p class="vdlab"><b>{t('setup.v_np_kind')}</b> <small class="mute">{t('setup.v_np_say')}</small></p>
+    <div class="nptiles" role="radiogroup" aria-label={t('setup.v_np_kind')}>
+      <button type="button" class="nptile" role="radio" aria-checked={kind === '' ? 'true' : 'false'} onClick={() => setKind('')} data-np="none"><span class="npart none" aria-hidden="true" /><b>{t('setup.v_np_none')}</b></button>
       {KINDS.map(([k, label, tip]) => { const off = k === 'rubric' && !rows.length;
-        return <button type="button" class="nptile" role="radio" aria-checked={kind === k ? 'true' : 'false'} disabled={off} title={t(off ? 'mark.v_np_norows' : tip)} onClick={() => setKind(k)} data-np={k}><span class={'npart ' + k} aria-hidden="true" /><b>{t(label)}</b></button>; })}</div>
+        return <button type="button" class="nptile" role="radio" aria-checked={kind === k ? 'true' : 'false'} disabled={off} title={t(off ? 'setup.v_np_norows' : tip)} onClick={() => setKind(k)} data-np={k}><span class={'npart ' + k} aria-hidden="true" /><b>{t(label)}</b></button>; })}</div>
     </div>
   </Dialog>;
 }

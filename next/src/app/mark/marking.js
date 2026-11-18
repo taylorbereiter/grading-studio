@@ -4,7 +4,8 @@
 // (mark/editors.js), and where a save goes. The lifted saveNow builds the same record the current app builds and hands it to
 // writeWork, which saves it through students/write.js saveWork: the only way the new app writes a download's work.
 import * as K from '../../engines/gmark.js';
-import { use, state, COLORS, setCheckInk, rowSteps, rowTop, roundPct, pointsFor } from '../../engines/gcore.js';
+import { use, state, COLORS, setCheckInk, rowSteps, rowTop, roundPct, pointsFor, gradeOf, totalInk } from '../../engines/gcore.js';
+import { bboxOf, stampBox, drawStamp } from '../../engines/gdraw.js';
 import { prefs } from '../../students/prefs.js';
 import { PARTS } from '../router.js';
 import { editText, openNote } from './editors.js';
@@ -161,11 +162,13 @@ export function endOnce() { const o = state().once; if (!o) return; use({ once: 
 let groupSync = () => {};
 export const useGroupSync = f => { groupSync = f; };
 function saveSoon() { groupSync(); clearTimeout(saveT); saveT = setTimeout(() => K.saveNow(), 500); saveState = 'saving'; tell(); }
+let W0 = null, leaving = false;
 async function writeWork(b, data) {
   const seq = ++saveSeq;
+  if (leaving && W0) { try { W0.saveWorkLeaving(b.id, d => { for (const k of Object.keys(d)) delete d[k]; Object.assign(d, JSON.parse(JSON.stringify(data))); }); } catch (e) { console.error(e); } return; }
   try {
     // the save layer (students/write.js) loads with the first save, so it isn't part of the tools' first load
-    const W = await PARTS.write();
+    const W = W0 = await PARTS.write();
     const r = await W.saveWork(b.id, d => { for (const k of Object.keys(d)) delete d[k]; Object.assign(d, JSON.parse(JSON.stringify(data))); }, { fresh: !!b.fresh });
     if (r.full || r.quick) delete b.fresh;
     if (seq === saveSeq) saveState = r.full ? 'saved' : r.quick ? 'partly' : 'not';
@@ -184,7 +187,13 @@ export async function saveNowDone() { await Promise.all([...flushers].map(f => f
 export function bind(pg, wrap) { pg.wrap = wrap; if (pg.bound) return; pg.bound = true; K.bindPage(pg); }
 
 // The hooks: called by the lifted code when it would, in the current app, redraw a panel, open an editor or say something.
+// The page closing or reloading with a save still waiting (or a box still being typed in): saved at once, as the current app does.
+function onLeave() { if (!saveT && !state().activeEditor) return; leaving = true; try { K.commitEditors(); clearTimeout(saveT); saveT = null; K.saveNow(true); } finally { leaving = false; } }
+let leaveOn = false;
 export function startMarking({ toast, openStudent }) {
+  if (!leaveOn) { leaveOn = true; addEventListener('pagehide', onLeave); }
+  // the save layer and its merge engine, ready before anything needs saving on the way out
+  PARTS.write().then(w => { W0 = w; return w.leavingReady(); }).catch(e => console.error(e));
   loadTools();
   entries.length = 0; undoList.forget();
   use({
@@ -196,6 +205,7 @@ export function startMarking({ toast, openStudent }) {
     renderPage: pg => pg.canvas && renderPage(pg, pg.s),
     editText, openNote,
     setTool: chooseTool, openStampMenu: openMenu, endOnce,
+    placeScore, stopScorePlace: stopPlace,
   });
 }
 
@@ -211,3 +221,98 @@ export async function keepSetup() {
 // A score the Word rubric gave (the lifted rubricToGrade / wordScoreGone), as one undo step, saved and shown.
 export function wordGrade(st, fn) { K.gradeSnap(st); fn(); saveSoon(); tell(); }
 export const changedNow = () => { saveSoon(); tell(); };
+
+// A picked mark from the keyboard (src/app/wiring.js keydown, src/app/paper.js copyMark, pasteMark): the arrow keys move it (Shift for
+// bigger steps, one undo step for a key held down), + and − make it bigger or smaller, Ctrl C and Ctrl V copy it and put it on the page
+// in view (another student's too), Ctrl D makes a copy beside it, Esc lets go.
+let clip = null, nudging = false;
+const picked = () => { const s = state(); return s.selected && s.selected.page && s.selected.mark ? s.selected : null; };
+export const pickedNow = () => !!picked() && state().tool === 'select';
+export function nudge(dx, dy, repeat) {
+  const sel = picked(); if (!sel) return;
+  const pg = sel.page;
+  if (!repeat || !nudging) { K.snap(pg); nudging = true; }
+  K.moveMark(sel.mark, dx, dy); if (sel.mark.t === 'text') K.keepOnPage(sel.mark, pg.W, pg.H);
+  K.changed(pg); tell();
+}
+export const nudgeDone = () => { nudging = false; };
+export const resizable = () => { const sel = picked(); return !!sel && !(sel.fresh && sel.mark.t === 'text') && K.canResize(sel.mark); };
+export function resize(dir) { if (!resizable()) return; K.stepSize(dir); tell(); }
+export function copyMark() {
+  const sel = picked(); if (!sel) return false;
+  clip = { m: JSON.parse(JSON.stringify(sel.mark)), file: sel.page.file, idx: sel.page.idx, n: 0 };
+  delete clip.m.ro; delete clip.m.imp; return true;
+}
+export const hasClip = () => !!clip;
+// The page in view: the picked mark's, else the one nearest the top third of the paper area.
+function pageInView() {
+  const s = state(), sel = picked(); if (sel && s.pages.includes(sel.page)) return sel.page;
+  const area = document.querySelector('.mk-paper'); if (!area) return s.pages[0] || null;
+  const P = area.getBoundingClientRect(), mid = P.top + P.height / 3;
+  let best = null, bd = 1e9;
+  for (const pg of s.pages) { if (!pg.canvas) continue; const r = pg.canvas.getBoundingClientRect(), d = mid < r.top ? r.top - mid : mid > r.bottom ? mid - r.bottom : 0; if (d < bd) { bd = d; best = pg; } }
+  return best;
+}
+export function pasteMark() {
+  const pg = pageInView(); if (!pg || !clip) return false;
+  const m = JSON.parse(JSON.stringify(clip.m));
+  if (pg.file === clip.file && pg.idx === clip.idx) { clip.n++; K.moveMark(m, 12 * clip.n, 12 * clip.n); }
+  const bb = bboxOf(m, pg.W);
+  if (bb) K.moveMark(m, K.clamp(bb.x, 0, Math.max(0, pg.W - bb.w)) - bb.x, K.clamp(bb.y, 0, Math.max(0, pg.H - bb.h)) - bb.y);
+  if (m.t === 'text') K.keepOnPage(m, pg.W, pg.H);
+  K.snap(pg); pg.marks().push(m);
+  chooseTool('select'); use({ selected: { page: pg, mark: m } }); K.changed(pg); K.redrawAll(); tell();
+  return true;
+}
+export function letGo() { if (!state().selected) return false; use({ selected: null }); K.redrawAll(); tell(); return true; }
+
+// The highlighter snaps to typed lines (where a page has them) or goes freehand; H with the highlighter in hand switches.
+export const hlFree = () => K.hlMode === 'free';
+export function setHlFree(free) { K.setHlMode(free ? 'free' : 'auto'); tell(); }
+
+// The score, or one rubric row's score, put on the paper where she clicks next (src/app/calc.js startScorePlace, placeScore): a picture
+// of it follows the pointer, Esc or a click off the paper stops. It is the same stamp the current app places, and it keeps up with the score.
+let placing = null;
+export const placingNow = () => !!placing;
+export function scoreStamp(row) {
+  const st = open(); if (!st) return false;
+  if (row != null) { const c = K.critStampOf(st, row); if (!c) return false; startPlace(c.text, { k: 'crit', of: c.of, name: c.name }); return true; }
+  const g = gradeOf(st); if (g.total == null) return false;
+  startPlace(K.scoreStampText(g, st)); return true;
+}
+function startPlace(text, extra = {}) {
+  stopPlace();
+  const gh = document.createElement('canvas'); gh.className = 'mk-ghost'; gh.hidden = true; document.body.append(gh);
+  const move = e => {
+    const pg = state().pages.find(q => q.canvas === e.target);
+    if (!pg || !pg.s) { gh.hidden = true; return; }
+    const m = { t: 'stamp', k: 'score', x: 0, y: 0, color: totalInk(), text, ...extra }; m.size = K.newStampSize(m.k);
+    const b = stampBox(m), dpr = window.devicePixelRatio || 1, k = pg.s;
+    gh.width = Math.ceil(b.w * k * dpr) + 2; gh.height = Math.ceil(b.h * k * dpr) + 2;
+    gh.style.width = gh.width / dpr + 'px'; gh.style.height = gh.height / dpr + 'px';
+    gh.style.left = (e.clientX - gh.width / dpr / 2) + 'px'; gh.style.top = (e.clientY - gh.height / dpr / 2) + 'px';
+    const ctx = gh.getContext('2d'); ctx.setTransform(k * dpr, 0, 0, k * dpr, gh.width / 2, gh.height / 2); drawStamp(ctx, m);
+    gh.hidden = false;
+  };
+  const key = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); stopPlace(); } };
+  const away = e => { if (!state().pages.some(q => q.canvas === e.target)) stopPlace(); };
+  document.addEventListener('pointermove', move, true); document.addEventListener('keydown', key, true); document.addEventListener('pointerdown', away, true);
+  placing = { text, extra, stop: () => { document.removeEventListener('pointermove', move, true); document.removeEventListener('keydown', key, true); document.removeEventListener('pointerdown', away, true); gh.remove(); } };
+  use({ scorePlacing: placing }); tell();
+}
+function stopPlace() { if (placing) { placing.stop(); placing = null; use({ scorePlacing: null }); tell(); } }
+function placeScore(pg, x, y) {
+  const { text, extra } = placing; stopPlace();
+  const st = open(), m = K.stampOwner({ t: 'stamp', k: 'score', x: K.r1(x), y: K.r1(y), color: totalInk(), text, ...extra }, st); m.size = K.newStampSize(m.k);
+  const bb = stampBox(m);   // kept on the page
+  m.x = K.r1(m.x + Math.max(0, -bb.x) - Math.max(0, bb.x + bb.w - pg.W)); m.y = K.r1(m.y + Math.max(0, -bb.y) - Math.max(0, bb.y + bb.h - pg.H));
+  K.snap(pg); pg.marks().push(m); use({ selected: { page: pg, mark: m, fresh: true } }); K.changed(pg); K.redrawAll(); tell();
+  return m;
+}
+
+// Formative work is feedback only (src/app/panels.js fmNow, setFb, fbToggle): Feedback complete for each student, no score.
+export const fmNow = () => K.fmNow();
+export function setFb(on) {
+  const st = open(); if (!st) return;
+  K.gradeSnap(st); if (on) st.grade.fb = true; else delete st.grade.fb; K.touchGrade(st); saveSoon(); tell();
+}

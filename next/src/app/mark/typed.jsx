@@ -11,7 +11,6 @@ import { tnHas } from '../../engines/gdraw.js';
 import { fmtTime } from '../../engines/gmedia.js';
 import { t } from '../../i18n/t.js';
 import * as C from './change.js';
-import './lines.js';
 import './setup-lines.js';
 
 const b = () => state().batch;
@@ -146,7 +145,7 @@ export function Timer({ st }) {
     <div class="mk-tmrow"><b class="mk-tmclock num" role="timer" data-tmclock>{fmtTime(s)}</b>
       <Button size="sm" variant={c.at ? undefined : 'primary'} aria-pressed={c.at ? 'true' : 'false'} onClick={() => { N.spClockGo(c); tick(n => n + 1); }} data-tmgo>{t(c.at ? 'setup.tm_pause' : c.ms ? 'setup.tm_carry' : 'setup.tm_start')}</Button>
       <Button size="sm" disabled={!c.at && !c.ms} onClick={() => { c.ms = 0; c.at = 0; tick(n => n + 1); }} data-tmreset>{t('setup.tm_reset')}</Button>
-      <Button size="sm" variant="quiet" title={t('setup.tm_stamp_tip')} onClick={() => { C.addStamp(st, N.spClockMs(c) / 1000); toast(t('mark.v_stamped')); }} data-tmstamp>{t('mark.v_stamp')}</Button></div>
+      <Button size="sm" variant="quiet" title={t('setup.tm_stamp_tip')} onClick={() => { C.addStamp(st, N.spClockMs(c) / 1000); toast(t('setup.v_stamped')); }} data-tmstamp>{t('setup.v_stamp')}</Button></div>
     <div class="mk-tmrow"><span class="mute">{t('setup.tm_asked')}</span>{num(0, lo, t('setup.tm_least'))}<span aria-hidden="true">–</span>{num(1, hi, t('setup.tm_most'))}</div>
     {how && <p class={'mk-tmhow ' + how} data-tmhow={how}>{t(HOW[how])}</p>}
   </div>;

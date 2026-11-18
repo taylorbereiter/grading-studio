@@ -11,6 +11,7 @@ import * as R from '../../engines/greport.js';
 import { prefs } from '../../students/prefs.js';
 import { libs } from './paper.js';
 import './lines.js';
+import './setup-lines.js';
 
 // null when the papers have changed meanwhile (another download brought in)
 async function facts() { const b = state().batch; if (!b) return null; await libs(); await R.checkStack(b); return state().batch === b ? R.openingFacts() : null; }
@@ -26,8 +27,8 @@ export function OpenedBar({ onList }) {
   if (!x) return null;
   const saw = () => { sawAll(state().batch.id, keysOf(x)); setX(null); };
   return <div class="mk-opened" role="status"><span class="grow">{R.repHead(x)}</span>
-    <Button size="sm" onClick={() => { saw(); onList(); }} data-rep>{t('mark.op_list')}</Button>
-    <IconButton icon="x" label={t('mark.op_close')} onClick={saw} data-repx /></div>;
+    <Button size="sm" onClick={() => { saw(); onList(); }} data-rep>{t('setup.op_list')}</Button>
+    <IconButton icon="x" label={t('setup.op_close')} onClick={saw} data-repx /></div>;
 }
 
 // The whole report.
@@ -37,14 +38,14 @@ export function OpenedList({ onClose, onGo }) {
   const go = o => <button type="button" class="link" data-repgo={o.i} onClick={() => { onClose(); onGo(o.i); }} data-raw>{o.name}</button>;
   const good = x && !x.cant.length && !x.zip && !x.nothing.length && !x.odd.length;
   const whys = x ? [...new Set(x.cant.map(o => o.why))] : [];
-  return <Dialog open title={t('mark.op_title')} onClose={onClose} actions={<Button variant="primary" onClick={onClose}>{t('mark.ok')}</Button>}>
-    {!x ? <p class="mute" aria-busy="true">{t('mark.op_checking')}</p> : <div class="mk-oplist" id="openRepBox">
-      <p class={'xchk' + (good ? ' ok' : '')}>{good ? (x.total ? t('mark.op_all', { files: t('mark.op_files', { n: x.total }), students: t('mark.op_students', { n: x.nStu }) }) : t('mark.op_none')) : R.repHead(x) + ' ' + t('mark.op_click')}</p>
-      {(x.cant.length > 0 || x.zip) && <details open data-group="cant"><summary>{t('mark.op_cant', { n: x.cant.length + (x.zip ? x.zip.n : 0) })}</summary>
+  return <Dialog open title={t('mark.op_title')} onClose={onClose} actions={<Button variant="primary" onClick={onClose}>{t('setup.ok')}</Button>}>
+    {!x ? <p class="mute" aria-busy="true">{t('setup.op_checking')}</p> : <div class="mk-oplist" id="openRepBox">
+      <p class={'xchk' + (good ? ' ok' : '')}>{good ? (x.total ? t('setup.op_all', { files: t('setup.op_files', { n: x.total }), students: t('setup.op_students', { n: x.nStu }) }) : t('setup.op_none')) : R.repHead(x) + ' ' + t('setup.op_click')}</p>
+      {(x.cant.length > 0 || x.zip) && <details open data-group="cant"><summary>{t('setup.op_cant', { n: x.cant.length + (x.zip ? x.zip.n : 0) })}</summary>
         {x.zip && <p>{R.zipSay(x.zip)}</p>}
         {whys.map(w => { const of = x.cant.filter(o => o.why === w); return <><p>{w} {of[0].next}</p><ul>{of.map(o => <li>{go(o)} {o.shown && <span class="mute" data-raw>{o.shown}</span>}</li>)}</ul></>; })}</details>}
-      {x.nothing.length > 0 && <details open data-group="nothing"><summary>{t('mark.op_nothing', { n: x.nothing.length })}</summary><ul>{x.nothing.map(o => <li>{go(o)}</li>)}</ul></details>}
-      {x.odd.length > 0 && <details open data-group="odd"><summary>{t('mark.op_odd', { n: x.odd.length })}</summary><ul>{x.odd.map(o => <li>{go(o)} {o.note}</li>)}</ul></details>}
+      {x.nothing.length > 0 && <details open data-group="nothing"><summary>{t('setup.op_nothing', { n: x.nothing.length })}</summary><ul>{x.nothing.map(o => <li>{go(o)}</li>)}</ul></details>}
+      {x.odd.length > 0 && <details open data-group="odd"><summary>{t('setup.op_odd', { n: x.odd.length })}</summary><ul>{x.odd.map(o => <li>{go(o)} {o.note}</li>)}</ul></details>}
     </div>}
   </Dialog>;
 }
