@@ -193,7 +193,14 @@ const folderTree = page => page.evaluate(async () => {
   const out = {}, hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
   let root; try { root = await (await navigator.storage.getDirectory()).getDirectoryHandle('Linked'); } catch { return out; }
   try { root = await root.getDirectoryHandle('Grading Studio'); } catch {}
-  const walk = async (d, pre) => { for await (const [n, h] of d.entries()) { if (h.kind === 'directory') await walk(h, pre + n + '/'); else { const t = await (await h.getFile()).text(); out[pre + n] = t.length > 400 ? 'sha256 ' + hex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t))) : t; } } };
+  // Main's pages write a download's record with its fields in the order they were last set, which varies with timing, and its work
+  // timer fills gs.focus's base (each download's marked count) in the background as it gets to each one. Neither is work: a file
+  // is compared by what it reads as, its fields sorted, and library.json without that base.
+  const sort = v => Array.isArray(v) ? v.map(sort) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map(k => [k, sort(v[k])])) : v;
+  const same = (f, t) => { let o; try { o = JSON.parse(t); } catch { return t; }
+    if (f === 'library.json' && o && o.ls && typeof o.ls['gs.focus'] === 'string') { try { const x = JSON.parse(o.ls['gs.focus']); delete x.base; o.ls['gs.focus'] = JSON.stringify(sort(x)); } catch {} }
+    return JSON.stringify(sort(o)); };
+  const walk = async (d, pre) => { for await (const [n, h] of d.entries()) { if (h.kind === 'directory') await walk(h, pre + n + '/'); else { const t = same(pre + n, await (await h.getFile()).text()); out[pre + n] = t.length > 400 ? 'sha256 ' + hex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t))) : t; } } };
   await walk(root, ''); return out;
 });
 // Like inProfile, but keeps the profile afterwards.
@@ -342,6 +349,9 @@ async function nextLegs(old) {
           } catch (e) { throw new Error('main’s pages could not save: ' + e.stack); }
         }, COMMENT, NAME);
         await sleep(500); await q.evaluate(() => window.__gs.folderWait());
+        // main's pages put the library in the folder a moment after saveLib, later still on a busy machine: wait until it holds the rename
+        await q.waitForFunction(async N => { try { let d = await (await navigator.storage.getDirectory()).getDirectoryHandle('Linked'); try { d = await d.getDirectoryHandle('Grading Studio'); } catch {} return (await (await (await d.getFileHandle('library.json')).getFile()).text()).includes(N); } catch { return false; } }, { polling: 250, timeout: 20000 }, NAME).catch(() => {});
+        await q.evaluate(() => window.__gs.folderWait());
         const folder = await folderTree(q);
         // Main's own sync, Drive played here with nothing in it yet, so what goes up is built from this browser's storage alone.
         D.body = null; await q.evaluate(async () => { await window.__gs.gIn(); await window.__gs.syncNow(); });
