@@ -13,13 +13,15 @@ export async function libs() {
 function viewWorker() { try { if (!viewW || viewW.destroyed) viewW = new pdfjs.PDFWorker({ name: 'papers' }); return viewW; } catch { return undefined; } }
 
 // The open student's documents and pages, in the order the current app shows them (fileSeq). token: a newer open cancels this one.
-export async function openPages(st, live) {
+// before(f): anything to do to a file before it's drawn (marks from other apps made hers, when she asked for that).
+export async function openPages(st, live, before) {
   await libs();
   const docs = [], docMap = new Map(), pages = [], cards = [];
   for (const d of state().docs) d.destroy();
   use({ docs, docMap, pages, selected: null });
   for (const f of st.files.filter(D.viewable)) {
     try {
+      if (before) { try { await before(f); } catch (e) { console.error(e); } if (!live()) return null; }
       const doc = await pdfjs.getDocument({ data: (await D.viewBytes(f)).slice(), isEvalSupported: false, worker: viewWorker() }).promise;
       if (!live()) { doc.destroy(); return null; }
       docs.push(doc); docMap.set(f.path, doc); f.numPages = doc.numPages;
@@ -38,6 +40,7 @@ export async function openPages(st, live) {
       if (!live()) return null;
       const vp = D.vpRot(f, p, page, 1);
       const pg = { file: f, idx: p, page, W: vp.width, H: vp.height, side: D.sideScreen(vp.width), marks: () => (f.marks[p] ||= []), extra: (f.kami && f.kami[p] && f.kami[p].notes) || [], out: !on };
+      if (!pages.some(q => q.file === f)) pg.impTop = true;
       pages.push(pg); doc.pages.push(pg);
     }
   }

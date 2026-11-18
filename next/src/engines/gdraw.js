@@ -256,6 +256,8 @@ function fileSeq(st) {
   const rank = (it, k) => { const i = o.indexOf(it.id); return i >= 0 ? i : o.length + k; };
   return def.map((it, k) => [rank(it, k), k, it]).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(x => x[2]);
 }
+// src/app/files.js
+const seqSig = (st, it) => it.f ? it.f.kind + (it.f.rubric ? 'R' : '') + (it.f.added ? 'A' : '') : 'doc' + (it.d.pages.length && (fileByPath(st, it.d.pages[0][0]) || {}).added ? 'A' : '') + ((fileByPath(st, (it.d.pages[0] || [])[0]) || {}).virtual ? 'R' : '');
 // src/app/arrange.js
 function draw(pg, live, part) {
   if (!pg.bmp) return;
@@ -345,6 +347,8 @@ const anonRx = st => coverRx(st);
 // src/app/lighting.js
 const LIGHT0 = { b: 0, c: 0, d: 0, s: 0, g: 0 };
 // src/app/lighting.js
+const lightKey = st => (batch.light && st && batch.light[st.key]) ? st.key : '*';
+// src/app/lighting.js
 const lightFor = st => (batch && batch.light && ((st && batch.light[st.key]) || batch.light['*'])) || LIGHT0;
 // src/app/lighting.js
 const lightOn = L => !!(L && (L.b || L.c || L.d || L.s || L.g));
@@ -368,7 +372,18 @@ function pageLit(st, f, p, map) {
   return v != null ? v : pageLitDefault(f);
 }
 // src/app/lighting.js
+function setPageLit(st, f, p, on, map) {
+  if (!map) map = batch.lightPg || (batch.lightPg = {});
+  const k = lightPgKey(st, f, p);
+  if (on === pageLitDefault(f)) delete map[k]; else map[k] = on;
+}
+// src/app/lighting.js
 const pageOwnL = (st, f, p) => (batch && batch.lightPgL && batch.lightPgL[lightPgKey(st, f, p)]) || null;
+// src/app/lighting.js
+function setPageOwnL(st, f, p, L) {
+  const m = batch.lightPgL || (batch.lightPgL = {}), k = lightPgKey(st, f, p);
+  if (L) m[k] = { ...LIGHT0, ...L }; else delete m[k];
+}
 // src/app/lighting.js
 const hasOwnL = st => !!(st && batch && batch.lightPgL && Object.keys(batch.lightPgL).some(k => k.startsWith(st.key + '|')));
 // src/app/lighting.js
@@ -410,6 +425,18 @@ function lightBmp(pg) {
   lightCanvas(x, c.width, c.height, L);
   pg.adj = c; pg.adjSrc = pg.bmp; pg.adjKey = key;
   return c;
+}
+// src/app/lighting.js
+function lightAuto(pg) {
+  const b = pg.bmp, s = Math.min(1, 400 / b.width), c = document.createElement('canvas'); c.width = Math.round(b.width * s); c.height = Math.round(b.height * s);
+  const x = c.getContext('2d'); x.drawImage(b, 0, 0, c.width, c.height);
+  const d = x.getImageData(0, 0, c.width, c.height).data, h = new Uint32Array(256); let n = 0;
+  for (let i = 0; i < d.length; i += 4) { h[Math.round(d[i] * .3 + d[i + 1] * .59 + d[i + 2] * .11)]++; n++; }
+  const pct = p => { let a = 0; for (let v = 0; v < 256; v++) { a += h[v]; if (a >= n * p) return v / 255; } return 1; };
+  const lo = pct(.002), hi = pct(.5);   // the darkest writing, and the paper
+  if (hi - lo < .03) return { b: 0, c: 0, d: 30 };
+  const k = Math.max(1, Math.min(5, .9 / (hi - lo))), bb = (1 - hi) * k * 200;
+  return { b: Math.round(Math.max(-60, Math.min(60, bb))), c: Math.round((k - 1) * 100), d: 20 };
 }
 // src/app/word.js
 const WORD_RX = /\.(docx|docm|dotx|dotm)$/i;
@@ -910,5 +937,5 @@ const tnMine = (st, L) => (Array.isArray(L) ? L.filter(x => !tnHidden(x, st)) : 
 const tnBackOn = () => setup.tnBack !== false;
 // src/typednotes.js
 function tnOut(st) { return tnBackOn() && tnHas(st); }
-export { FONT, AT_END, drawMarks, layoutNotes, textLayout, wrapText, bboxOf, sideFor, sideScreen, drawStamp, stampBox, strokePath, drawHls, stickersReady, STICKERS, lightLut, lightCanvas, draw, marksMine, loadLines, anonOn, shownName, viewBytes, impHas, fileSeq, layoutOf, docIn, docAuto, fileByPath, viewable, vpRot, vpDraw, skewXf, rotOf, skewOf };
-export { nameFold, rosterMatch, batchClass, WORD_RX, one, stampHidden, tnHasG, noteRunY, anonOrder, hasPress, PRESS_MAX, textGrips, canResize, cornerPt, isSticker, isScoreStamp, stickerAspect, measureCtx, rgb, docMarked, docAdded, scrub, scrubMarks, lightOpts, lightForPage, isLatin, rawWords, namesNow, ownNames, coverRx, stampScore, tnMine, tnOut, nameWords, SORT_STOP, madeFromWord, AT_START, ID_RX, latinRx, anyRx, wordOk, bounded, alt, runAlts, latinParts, initialAlts, altsRx, FILE_SEP };
+export { FONT, AT_END, drawMarks, layoutNotes, textLayout, wrapText, bboxOf, sideFor, sideScreen, drawStamp, stampBox, strokePath, drawHls, stickersReady, STICKERS, lightLut, lightCanvas, draw, marksMine, loadLines, anonOn, shownName, viewBytes, impHas, fileSeq, layoutOf, docIn, docAuto, fileByPath, viewable, vpRot, vpDraw, skewXf, rotOf, skewOf, defaultLayout, seqSig, pageLit, setPageLit, lightLive, lightAuto, lightFor, lightOpts, lightKey, pageOwnL, setPageOwnL, LIGHT0, lightOn };
+export { nameFold, rosterMatch, batchClass, WORD_RX, lostPages, one, stampHidden, tnHasG, noteRunY, anonOrder, hasPress, PRESS_MAX, textGrips, canResize, cornerPt, isSticker, isScoreStamp, stickerAspect, measureCtx, rgb, docMarked, docAdded, scrub, scrubMarks, lightForPage, isLatin, rawWords, namesNow, ownNames, coverRx, stampScore, tnMine, tnOut, nameWords, SORT_STOP, madeFromWord, AT_START, ID_RX, latinRx, anyRx, wordOk, bounded, alt, runAlts, latinParts, initialAlts, altsRx, FILE_SEP };

@@ -1,7 +1,7 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
 import { batch, cur, setup, lib, pages, tr, keptMeta, saveSoon, pdfjsLib, PDFLib, fflate, workerReady, heicLoad, toast, store, kdo, kget, idbDo, pickedUpNew, groupNoteRefresh, SCALE12, rowTop, rowsMax, rowScaleOf, setupOver, maxPoints, gradeOf, xcSay, fmtNum, noScore, ibSetup } from './gcore.js';
-import { rotOf, skewOf, viewable, fileByPath, draw, nameFold, rosterMatch, batchClass, WORD_RX, one, stampHidden, tnHasG } from './gdraw.js';
+import { rotOf, skewOf, viewable, fileByPath, draw, nameFold, rosterMatch, batchClass, WORD_RX, lostPages, one, stampHidden, tnHasG } from './gdraw.js';
 
 // src/app/start.js
 const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
@@ -474,6 +474,66 @@ function tryOfFile(st, f) {
 }
 // src/saving.js
 const newestWork = (a, b) => !a ? b || null : !b ? a : (b.t || 0) > (a.t || 0) ? b : a;
+// src/carryover.js
+const nfc = s => String(s).normalize('NFC');
+// src/carryover.js
+const sameBytes = (a, b) => { if (!a || !b || a.length !== b.length) return false; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false; return true; };
+// src/carryover.js
+const rubricNamed = (d, path) => { const rp = d.setup && d.setup.rubricPage, base = path.split('/').pop(); return base === RUBRIC_NAME || (!!rp && !!rp.name && base === rp.name.replace(/[\\/]+/g, '-')); };
+// src/carryover.js
+function compareFiles(oldList, newList) {
+  const byPath = new Map(newList.map(e => [nfc(e.path), e])), map = {}, flags = {}, used = new Set(), goneFiles = [];
+  let same = 0, named = 0;
+  const left = [];
+  for (const o of oldList) {
+    const n = byPath.get(nfc(o.path));
+    if (!n) { left.push(o); continue; }
+    used.add(n); map[o.path] = n.path; named++;
+    if (sameBytes(o.data, n.data)) same++; else flags[n.path] = 'changed';
+  }
+  for (const o of left) {
+    const n = newList.find(e => !used.has(e) && nfc(studentOf(e.path)) === nfc(studentOf(o.path)) && sameBytes(o.data, e.data));
+    if (n) { used.add(n); map[o.path] = n.path; same++; } else goneFiles.push(o.path);
+  }
+  for (const n of newList) if (!used.has(n)) flags[n.path] = 'new';
+  return { map, flags, goneFiles, same, named, nOld: oldList.length, nNew: newList.length };
+}
+// src/carryover.js
+function compareNames(d, newList) {
+  const byPath = new Map(newList.map(e => [nfc(e.path), e])), map = {}, goneFiles = [];
+  let named = 0;
+  for (const s of Object.values(d.s)) for (const part of [s.f, s.h, s.tr, s.r, s.sk]) for (const path of Object.keys(part || {})) {
+    if (path in map || goneFiles.includes(path)) continue;
+    const n = byPath.get(nfc(path));
+    if (n) { map[path] = n.path; named++; } else if (!rubricNamed(d, path)) goneFiles.push(path);
+  }
+  return { map, flags: {}, goneFiles, same: 0, named, nOld: named + goneFiles.length, nNew: newList.length, unchecked: true };
+}
+// src/carryover.js
+function matchLevel(c, linked) {
+  const small = Math.max(1, Math.min(c.nOld, c.nNew));
+  if (linked) return 2;
+  if (c.unchecked) return c.named > 0 && c.named * 2 >= c.nOld ? 1 : 0;
+  if (c.same * 2 >= small) return 2;
+  return c.same || c.named * 2 >= small ? 1 : 0;
+}
+// src/carryover.js
+const mapBoxes = (o, map) => { if (!o) return o; const out = {}; for (const [k, v] of Object.entries(o)) { const at = k.lastIndexOf('|'), p = k.slice(0, at); out[(map[p] || p) + k.slice(at)] = v; } return out; };
+// src/carryover.js
+const mapLit = (o, map) => { if (!o) return o; const out = {}; for (const [k, v] of Object.entries(o)) { const a = k.indexOf('|'), b = k.lastIndexOf('|'), p = k.slice(a + 1, b); out[k.slice(0, a + 1) + (map[p] || p) + k.slice(b)] = v; } return out; };
+// src/carryover.js
+const mapPaths = (o, map) => { if (!o) return o; const out = {}; for (const [p, v] of Object.entries(o)) if (map[p]) out[map[p]] = v; return out; };
+// src/carryover.js
+function carryRoster({ d }) {
+  const carry = batch.carry;
+  carry.goneStudents = carry.goneStudents.filter(key => {
+    const st = rosterMatch([key]).get(key);
+    if (!st || !st.gap || st.files.length) return true;
+    st.grade = { ...st.grade, ...d.s[key].g };
+    batch.keptWork.s[st.key] = { f: {}, g: st.grade, h: {} };
+    return false;
+  });
+}
 // src/exportreport.js
 const canvasJpg = (c, q) => new Promise((res, rej) => c.toBlob(b => { if (!b) { const er = new Error('page too big'); er.name = 'PageTooBig'; return rej(er); } b.arrayBuffer().then(x => res(new Uint8Array(x)), rej); }, 'image/jpeg', q));
 // src/rubrics.js
@@ -762,11 +822,15 @@ function linkOf(data) {
 }
 // src/video.js
 const vidRef = data => { if (!data || !data.length || data.length > 4000) return ''; let s = ''; try { s = new TextDecoder().decode(data); } catch { return ''; } const m = /^\s*URL\s*=\s*gs-video:([\w-]{6,40})\s*$/mi.exec(s); return m ? m[1] : ''; };
+// src/video.js
+const NP_W = 595.28, NP_H = 841.89, NP_M = 48, NP_TAIL = '%GradingStudio-notes';
+// src/video.js
+const isNotes = d => !!d && d.length > 64 && new TextDecoder('latin1').decode(d.subarray(d.length - 64)).includes(NP_TAIL);
 // src/ib.js
 const ibTaskLevels = st => setup.ib.map((k, i) => [k, noScore(st) ? null : st.grade.rubric[i]]).filter(x => x[0]);
 // src/ib.js
 function ibStampText(st) { return ibTaskLevels(st).filter(x => x[1] != null).map(([k, v]) => k + ' ' + fmtNum(v)).join('   '); }
 // src/phone.js
 const ph = { cols: null, ver: -1, busy: null, lib: null, later: false };
-export { paperGet, srcRead, spellLikeSaved, groupRaw, houseFile, makeFile, batchIdOf, revsBase, restore, rosterSort, loadAdded, loadEdits, applyRubricPage, loadRefs, photoTurns, natural, newestWork, cardOfKept, findItem, holders, rubricsDiffer, workScored, rubricFitting, junk, unzipInto, qmkFor, revsOf, partHashes, batchClass };
-export { GS_TAIL, syncScoreStamps, boxKey, hasSheet, stampSoon, tryOfFile, canvasJpg, groupFileOf, groupOwn, groupJust, hash, realType, moveFileNow, REF_KEY, underId, goneNow, gradeHasWork };
+export { paperGet, srcRead, spellLikeSaved, groupRaw, houseFile, makeFile, batchIdOf, revsBase, restore, rosterSort, loadAdded, loadEdits, applyRubricPage, loadRefs, photoTurns, natural, newestWork, cardOfKept, findItem, holders, rubricsDiffer, workScored, rubricFitting, junk, unzipInto, qmkFor, revsOf, partHashes, batchClass, compareFiles, compareNames, matchLevel, mapBoxes, mapLit, mapPaths, rubricNamed, sameBytes, nfc, carryRoster, lostPages, studentOf, hasGsTail, underId, REF_KEY, isNotes };
+export { GS_TAIL, syncScoreStamps, boxKey, hasSheet, stampSoon, tryOfFile, canvasJpg, groupFileOf, groupOwn, groupJust, hash, realType, moveFileNow, goneNow, gradeHasWork };

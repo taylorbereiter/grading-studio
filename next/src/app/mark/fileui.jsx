@@ -2,14 +2,18 @@
 // file with Replace… and Remove, the check before a replace (the two files side by side), Add a file…, and Removed files with Bring
 // back. What each does is mark/change.js, the current app's own steps. Loaded with it as a part of its own (router.js PARTS.fileui).
 import { h, Fragment } from 'preact';
-import { useState, useRef } from 'preact/hooks';
+import { useState, useRef, useEffect } from 'preact/hooks';
 import { Button, IconButton, Menu, Dialog, TextInput, toast } from '../../ui/index.js';
 import { state } from '../../engines/gcore.js';
-import { shownName } from '../../engines/gdraw.js';
+import { shownName, anonOn } from '../../engines/gdraw.js';
+import { lostPages } from '../../engines/gopen.js';
 import { prefs } from '../../students/prefs.js';
 import { Checkbox, Segmented } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import * as C from './change.js';
+import { Arrange } from './arrange.jsx';
+export { LightPanel, LightChip } from './light.jsx';
+import { viewable, fileSeq } from '../../engines/gdraw.js';
 import './lines.js';
 
 export const wire = C.wire;
@@ -71,7 +75,7 @@ function MoveTo({ st, path, f, onClose }) {
   }
   return <Dialog open title={t('mark.f_move_t', { name: C.shown(st, f.name) })} onClose={onClose} actions={<Button onClick={onClose}>{t('mark.cancel')}</Button>}>
     <p class="mute">{t('mark.f_move_text')}</p>
-    <TextInput icon="search" label={t('mark.f_find')} value={q} onInput={e => setQ(e.target.value)} />
+    <TextInput icon="search" label={t('mark.f_find')} value={q} onInput={setQ} />
     <ul class="mk-mvlist">{rows.map(r => <li><Button variant="quiet" onClick={() => go(r.s)} data-mvto={r.s.key}><span data-raw>{r.name}</span></Button></li>)}</ul>
     {!rows.length && <p class="mute">{t('mark.f_none_found')}</p>}
   </Dialog>;
@@ -82,7 +86,7 @@ export function BackIn({ st, d }) { return <Button size="sm" variant="quiet" onC
 
 // Under the paper: Add a file…, and the files taken off this student, each with Bring back.
 export function FilesFoot({ st, name }) {
-  const [, again] = useState(0), gone = (st.gone || []).filter(g => !g.virtual);
+  const [, again] = useState(0), [paste, setPaste] = useState(false), [arr, setArr] = useState(false), gone = (st.gone || []).filter(g => !g.virtual), op = C.outPages(st);
   const add = () => pickFile(true, async files => {
     if (!files.length) return;
     const made = await C.addFiles(st, files.map(file => ({ path: file.name, file })));
@@ -90,11 +94,37 @@ export function FilesFoot({ st, name }) {
     if (made.length) toast(t('mark.f_added', { n: made.length, name }));
     again(n => n + 1);
   });
+  // Add: a late or forgotten paper, or work sent in a message (the current app's Add menu on the student's bar)
+  const items = [{ label: t('mark.f_add'), icon: 'file', onSelect: add }, { label: t('mark.f_paste'), icon: 'paste', onSelect: () => setPaste(true) }];
   return <div class="mk-ffoot">
-    <Button size="sm" icon="plus" onClick={add} data-addfile>{t('mark.f_add')}</Button>
-    {gone.length > 0 && <details class="mk-gone"><summary>{t('mark.f_gone', { n: gone.length })}</summary>
-      <ul>{gone.map(g => <li><span data-raw>{C.shown(st, g.name)}</span><Button size="sm" variant="quiet" onClick={() => { C.bringBack(st, g.path); toast(t('mark.f_back_t', { name: C.shown(st, g.name) })); again(n => n + 1); }} data-back={g.path}>{t('mark.f_back')}</Button></li>)}</ul></details>}
+    <Menu label={t('mark.f_add_for', { name })} trigger={b => <Button {...b} size="sm" icon="plus" data-addmenu>{t('mark.f_add_menu')}</Button>} items={items} />
+    {(st.files.some(viewable) || fileSeq(st).length > 1) && <Button size="sm" icon="grip" onClick={() => setArr(true)} title={t('mark.a_open_tip')} data-arrange>{t('mark.a_open')}</Button>}
+    {paste && <PasteText st={st} name={name} onClose={() => { setPaste(false); again(n => n + 1); }} />}
+    {arr && <Arrange st={st} onClose={() => { setArr(false); again(n => n + 1); }} />}
+    {(gone.length > 0 || op.length > 0) && <details class="mk-gone" open={op.length > 0}><summary>{t(op.length ? (gone.length ? 'mark.a_gone_both' : 'mark.a_gone_pages') : 'mark.f_gone', { n: gone.length + op.length })}</summary>
+      <ul>{op.map(([path, p]) => { const f = st.files.find(x => x.path === path), n = ((f.marks || {})[p] || []).length;
+        return <li><span><span data-raw>{C.shown(st, f.name)}</span>{', ' + [t('mark.a_page_n', { n: p + 1 }), f.virtual ? t('mark.a_your_rubric') : '', n ? t('mark.f_marks', { n }) : ''].filter(Boolean).join(' · ')}</span>
+          <Button size="sm" variant="quiet" onClick={() => { C.bringPageBack(st, path, p); toast(t('mark.a_page_back', { name: C.shown(st, f.name), n: p + 1 }), { undo: C.undo }); again(n => n + 1); }} data-backpg={path + '|' + p}>{t('mark.f_back')}</Button></li>; })}{gone.map(g => <li><span data-raw>{C.shown(st, g.name)}</span><Button size="sm" variant="quiet" onClick={() => { C.bringBack(st, g.path); toast(t('mark.f_back_t', { name: C.shown(st, g.name) })); again(n => n + 1); }} data-back={g.path}>{t('mark.f_back')}</Button></li>)}</ul></details>}
   </div>;
+}
+// Pasted text (src/pastetext.js openPasteText): work a student sent in an email or a message becomes a page added to them.
+function PasteText({ st, name, onClose }) {
+  const [title, setTitle] = useState(t('mark.f_paste_default')), [text, setText] = useState(''), [busy, setBusy] = useState(false);
+  const clean = C.pasteClean(text), words = (clean.match(/\S+/g) || []).length;
+  const pic = [...clean].some(ch => ch.codePointAt(0) > 0x24F && !/[\u2000-\u206F\u20AC\u2122]/.test(ch));
+  const go = async () => {
+    setBusy(true);
+    try { const r = await C.pasteAdd(st, title, text); if (r) toast(t('mark.f_added', { n: 1, name })); }
+    catch (e) { toast(t('mark.f_paste_fail', { why: (e && e.message) || String(e) })); }
+    onClose();
+  };
+  return <Dialog open title={t('mark.f_paste_t', { name })} onClose={onClose}
+    actions={<><Button onClick={onClose}>{t('mark.cancel')}</Button><Button variant="primary" onClick={go} disabled={!clean || busy} data-ok>{t('mark.f_paste_add', { name })}</Button></>}>
+    <p class="mute">{t('mark.f_paste_text')}</p>
+    <TextInput label={t('mark.f_paste_name')} value={title} onInput={setTitle} autocomplete="off" data-ptname />
+    <textarea class="input mk-pttext" aria-label={t('mark.f_paste_ph')} placeholder={t('mark.f_paste_ph')} value={text} onInput={e => setText(e.currentTarget.value)} data-raw data-pttext />
+    {clean && <p class="mute">{t('mark.f_paste_words', { n: words })}{pic ? ' ' + t('mark.f_paste_pic') : ''}</p>}
+  </Dialog>;
 }
 // The tag on a file she added (addTag): Added by you, Replaced …, From Word, with the day.
 export function AddTag({ st, f }) {
@@ -139,5 +169,90 @@ export async function pdfAuto() { if (!pdfAlways() || C.pdfBusyNow()) return; co
 // The turn buttons in the top corner of each page, shown when the mouse is over it (rotChip).
 export function TurnChip({ pg }) {
   return <span class="rchip"><IconButton icon="turnl" size="sm" label={t('mark.f_turn_l')} onClick={() => C.turnPages(pg.file, [pg.idx], -1)} data-rot="-1" />
-    <IconButton icon="turnr" size="sm" label={t('mark.f_turn_r')} onClick={() => C.turnPages(pg.file, [pg.idx], 1)} data-rot="1" /></span>;
+    <IconButton icon="turnr" size="sm" label={t('mark.f_turn_r')} onClick={() => C.turnPages(pg.file, [pg.idx], 1)} data-rot="1" />
+    {!pg.out && <IconButton icon="x" size="sm" label={t('mark.a_take_tip')} title={t('mark.a_take_tip')} onClick={() => { const st = state().batch.students[state().cur]; C.takePageOut(st, pg.file.path, pg.idx); toast(t('mark.a_took', { name: C.shown(st, pg.file.name), n: pg.idx + 1 }), { undo: C.undo }); }} data-pgout />}</span>;
+}
+
+// A newer copy of a download (src/carryover.js carryTag): the file's flag, Looks fine, the pages its marks no longer have, Mark late.
+export function CarryTag({ st, f }) {
+  const c = state().batch.carry, flag = c && f && c.flags[f.path]; if (!flag) return null;
+  const lost = lostPages(f);
+  return <span class="mk-carrytag"><span class="carrytag" title={t(flag === 'new' ? 'mark.c_tip_new' : 'mark.c_tip_changed')}>{t(flag === 'new' ? 'mark.c_tag_new' : 'mark.c_tag_changed')}</span>
+    <Button size="sm" variant="quiet" onClick={() => C.carryOk(f.path)} title={t('mark.c_ok_tip')} data-carryok={f.path}>{t('mark.c_ok')}</Button>
+    {lost.length > 0 && <small class="warn">{t('mark.c_lost', { n: lost.length, pages: lost.map(p => p + 1).join(', ') })}</small>}
+    {flag === 'new' && st.grade.status !== 'late' && <Button size="sm" variant="quiet" onClick={() => { C.markLate([st]); toast(t('mark.c_marked_late')); }} data-marklate>{t('mark.c_mark_late')}</Button>}</span>;
+}
+// Your work came over (carrySay): what happened, in one box, as the download opens. Short lists are written out, long ones counted;
+// while names are hidden it only counts.
+export function CarryBox({ onClose }) {
+  const bb = state().batch, c = bb.carry; if (!c) return null;
+  const changed = bb.students.flatMap(st => st.files.filter(f => c.flags[f.path] === 'changed' && Object.keys(f.marks || {}).length));
+  const n = Object.keys((bb.keptWork && bb.keptWork.s) || {}).length, paths = k => Object.keys(c.flags).filter(p => c.flags[p] === k), anon = anonOn();
+  const names = (items, key) => anon ? (items.length ? [t(key, { n: items.length })] : []) : items;
+  const late = bb.students.filter(st => st.grade.status !== 'late' && st.grade.status !== 'excused' && st.files.some(f => c.flags[f.path] === 'new'));
+  const [lateDone, setLateDone] = useState(false);
+  const list = (title, items) => items.length > 0 && <><h3>{t(title)}</h3><ul>{items.slice(0, 12).map(x => <li data-raw>{x}</li>)}{items.length > 12 && <li>{t('mark.c_more', { n: items.length - 12 })}</li>}</ul></>;
+  const status = st => t(st.grade.status === 'missing' ? 'mark.missing' : 'mark.excused');
+  return <Dialog open title={t('mark.c_title')} onClose={onClose} actions={<>{late.length > 0 && !lateDone && <Button onClick={() => { C.markLate(late); toast(t('mark.c_late_t', { n: late.length })); setLateDone(true); }} data-carrylate>{t('mark.c_late', { n: late.length })}</Button>}<Button variant="primary" onClick={onClose} data-ok>{t('mark.ok')}</Button></>}>
+    <div class="mk-carry" id="carryBox">
+      <p>{t('mark.c_intro', { n, name: c.name || t('mark.c_noname') })}</p>
+      {c.unchecked && <p>{t('mark.c_unchecked')}</p>}
+      {list('mark.c_l_changed', names(paths('changed'), 'mark.c_n_files'))}
+      {list('mark.c_l_lost', names(changed.filter(f => lostPages(f).length).map(f => t('mark.c_page', { name: f.name, pages: lostPages(f).map(p => p + 1).join(', ') })), 'mark.c_n_files'))}
+      {list('mark.c_l_new', names(paths('new'), 'mark.c_n_files'))}
+      {list('mark.c_l_status', names(bb.students.filter(st => (st.grade.status === 'missing' || st.grade.status === 'excused') && st.files.some(f => c.flags[f.path])).map(st => t('mark.c_marked', { name: st.key, status: status(st) })), 'mark.c_n_students'))}
+      {list('mark.c_l_gone', names(c.goneFiles, 'mark.c_n_files').concat(anon ? (c.goneStudents.length ? [t('mark.c_n_whole', { n: c.goneStudents.length })] : []) : c.goneStudents.map(k => t('mark.c_whole', { name: k }))))}
+      {list('mark.c_l_layouts', names(c.layouts, 'mark.c_n_students'))}
+      {list('mark.c_l_edits', names(c.edits, 'mark.c_n_files'))}
+      {c.extrasFailed && <p>{t('mark.c_failed')}</p>}
+      <p class="mute">{t('mark.c_foot')}</p>
+    </div>
+  </Dialog>;
+}
+
+// Marks from other apps (src/imported.js impNote): the note above a file's first page. It offers to make the marks hers, says what
+// happened after (with Put back), or says why a paper exported from here can't have its marks changed.
+export const impAuto = f => C.impAuto(f);
+export async function impAutoNow() { const bb = state().batch, st = bb && bb.students[state().cur]; if (!st) return; let any = false; for (const f of st.files) if (await C.impAuto(f)) any = true; if (any) C.impAfter(st.files[0], true); }
+export function ImpNote({ pg }) {
+  const f = pg.file, [, again] = useState(0), [busy, setBusy] = useState(false), [all, setAll] = useState(false);
+  const [flat, setFlat] = useState(f.gsFlat);
+  if (f.virtual || f.kind !== 'pdf') return null;
+  if (flat === undefined) { const doc = state().docMap.get(f.path); if (doc) C.gsFlat(f, doc).then(v => setFlat(v)); }
+  const run = async fn => { setBusy(true); try { await fn(); } catch (e) { console.error(e); toast(t('mark.i_failed')); } finally { setBusy(false); again(n => n + 1); } };
+  const make = () => run(async () => { const r = await C.impMake(f); if (!r.n) { C.impNo(f); toast(t(r.locked ? 'mark.i_locked' : 'mark.i_none')); } await C.impAfter(f); });
+  const back = () => run(async () => { C.impBack(f); await C.impAfter(f); });
+  let body;
+  if (f.impNew) body = <><div>{t('mark.i_now', { n: f.impNew.n })}<Button size="sm" variant="quiet" onClick={back} disabled={busy} data-imp="back">{t('mark.i_back')}</Button></div>
+    {f.impNew.keep > 0 && <small class="mute">{t('mark.i_kept', { n: f.impNew.keep })}</small>}</>;
+  else if (flat) body = <><div>{t('mark.i_flat')}</div><small class="mute">{t('mark.i_flat_how')}</small></>;
+  else {
+    const n = C.impCount(f); if (!n) return null;
+    const others = state().batch.students.flatMap(st => st.files).filter(x => x !== f && C.impCount(x)).length;
+    body = <><div>{t('mark.i_has', { n })}<Button size="sm" variant="quiet" onClick={make} disabled={busy} data-imp="make">{t('mark.i_make', { n })}</Button>
+      <Button size="sm" variant="quiet" onClick={() => { C.impNo(f); again(k => k + 1); }} data-imp="no">{t('mark.i_not_now')}</Button></div>
+      {others > 0 && <small class="mute">{t('mark.i_others', { n: others + 1 })}<Button size="sm" variant="quiet" onClick={() => setAll(true)} data-imp="all">{t('mark.i_all')}</Button></small>}</>;
+  }
+  return <div class="mk-impnote impnote" role="note">{body}{all && <Imported onClose={() => setAll(false)} />}</div>;
+}
+// Marks from other apps, for every paper (openImported): what they have, all of it made hers at once, and From now on (gs.impAuto).
+const IMP_ROWS = [['pen', 'mark.i_k_pen', 'mark.i_to_pen'], ['note', 'mark.i_k_note', 'mark.i_to_note'], ['hl', 'mark.i_k_hl', 'mark.i_to_hl'], ['text', 'mark.i_k_text', 'mark.i_to_text'], ['oval', 'mark.i_k_oval', 'mark.i_to_oval']];
+export function Imported({ onClose }) {
+  const [r, setR] = useState(null), [at, setAt] = useState([0, 0]), [auto, setAuto] = useState(!!prefs.get('gs.impAuto', false)), [busy, setBusy] = useState(null), live = useRef(true);
+  useEffect(() => { C.impReadAll((i, n) => setAt([i + 1, n]), () => live.current).then(x => x && setR(x)); return () => { live.current = false; }; }, []);
+  const close = () => { live.current = false; onClose(); };
+  const go = async () => {
+    setBusy([0, r.reads.size]);
+    const x = await C.impMakeAll(r.reads, (i, n) => setBusy([i, n]));
+    close();
+    toast(t('mark.i_now', { n: x.n }) + (x.bad ? ' ' + t('mark.i_bad', { n: x.bad }) : ''));
+  };
+  return <Dialog open title={t('mark.i_title')} onClose={close}
+    actions={<><Button onClick={close}>{t('mark.cancel')}</Button><Button variant="primary" onClick={go} disabled={!r || !r.total || !!busy} data-impgo>{busy ? t('mark.i_working', { i: busy[0], n: busy[1] }) : r && r.total ? t('mark.i_make_n', { n: r.total }) : t('mark.i_make_them')}</Button></>}>
+    <p>{!r ? t('mark.i_looking', { i: at[0], n: at[1] }) : r.total ? t('mark.i_sum', { n: r.reads.size, marks: t('mark.f_marks', { n: r.total }) }) : t('mark.i_sum_none')}</p>
+    {r && r.total > 0 && <table class="mk-imptbl"><tbody>{IMP_ROWS.filter(x => r.kinds[x[0]]).map(x => <tr><td>{t(x[1])}</td><td>{t(x[2], { n: r.kinds[x[0]] })}</td></tr>)}
+      {r.keep > 0 && <tr><td>{t('mark.i_k_other')}</td><td>{t('mark.i_stay', { n: r.keep })}</td></tr>}</tbody></table>}
+    <Checkbox checked={auto} onChange={v => { setAuto(v); if (v) prefs.set('gs.impAuto', true); else prefs.del('gs.impAuto'); }} label={t('mark.i_auto')} />
+    <p class="mute">{t('mark.i_hint')}</p>
+  </Dialog>;
 }

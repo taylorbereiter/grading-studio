@@ -11,7 +11,7 @@
 // Every write first checks: this window holds the lock; the saved work is at the format this build knows (the new app never
 // changes the format); no other window has started replacing everything; and a download that was forgotten stays forgotten.
 // The merge engine is the current app's own (engines/merge.js), loaded on the first write so it is not in the first load.
-import { papers, edits, added, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame } from './index.js';
+import { papers, edits, added, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame, readings } from './index.js';
 import { words } from '../planning/index.js';
 import { mayWrite } from '../shared/lock.js';
 import { json, text, setText, remove } from '../shared/ls.js';
@@ -111,6 +111,21 @@ export async function dropEdit(id, path) { check(id); await edits.del(id + '|' +
 
 /* a file she added to a student (src/app/kept.js addFiles), kept in this browser under "download id|student|file path" */
 export async function keepAdded(id, rec, key) { check(id); await added.put(rec, key); saved({ kind: 'added', id, side: 'students' }); }
+
+/* a newer copy of a download (src/carryover.js carryExtras, carryRubric, carryInto) */
+// What sits beside the older copy's work is copied under the new download's id, never moved: its readings, the files she added
+// (each record with the new id), and the Word edits that still fit. The older copy's row in the list says which is newer.
+// Returns false when the added files couldn't be copied (the current app's carry.extrasFailed).
+export async function carryExtras(from, id, recs) {
+  check(id);
+  const old = readings.json(from, null);
+  if (old) readings.setJson(id, old);
+  try { for (const r of recs) await added.put({ ...r, bid: id }, id + '|' + r.key + '|' + r.path); return true; }
+  catch (e) { console.error(e); return false; }
+  finally { saved({ kind: 'added', id, side: 'students' }); }
+}
+export async function carryEdits(id, puts) { check(id); for (const [k, v] of puts) await edits.put(v, k); saved({ kind: 'edit', id, side: 'students' }); }
+export async function markNewer(from, id) { check(from); const m = await meta.get(from); if (!m) return; m.newer = id; await meta.put(m, from); saved({ kind: 'papers', id: from, side: 'students' }); }
 
 /* the library */
 export async function saveLibrary(change) {

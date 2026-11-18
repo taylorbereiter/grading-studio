@@ -39,10 +39,10 @@ function StudentList({ batch, cur, onPick, onReport }) {
   const rows = batch.students.map((st, i) => ({ st, i, name: shownName(st, i) })).filter(r => !q || r.name.toLowerCase().includes(q.toLowerCase()));
   return <aside class="mk-list" aria-label={t('mark.students')}>
     <div class="mk-lhead mute"><span>{t('mark.papers', { n: batch.students.filter(st => st.files.length).length })}</span>{missing > 0 && <span>{t('mark.missing_n', { n: missing })}</span>}{onReport && <button type="button" class="link" onClick={onReport} data-report>{t('mark.op_title')}</button>}</div>
-    <div ref={box} class="mk-find"><TextInput icon="search" label={t('mark.find')} value={q} onInput={e => setQ(e.target.value)} /></div>
+    <div ref={box} class="mk-find"><TextInput icon="search" label={t('mark.find')} value={q} onInput={setQ} /></div>
     <ol class="mk-rows">{rows.map(({ st, i, name }) => { const sc = rowScore(st);
       return <li><button type="button" class={'mk-row' + (i === cur ? ' on' : '')} aria-current={i === cur ? 'true' : undefined} onClick={() => onPick(i)} data-st={i}>
-        <Avatar name={name} size="sm" /><span class="nm" data-raw>{name}</span>
+        <Avatar name={name} size="sm" /><span class="nm" data-raw>{name}</span>{batch.carry && st.files.some(f => batch.carry.flags[f.path]) && <span class="bang" title={t('mark.c_pill')} aria-label={t('mark.c_pill')}>!</span>}
         {sc && <span class={'sc ' + (sc.tone || '')}>{sc.done && <Icon name="check" size="xs" />}{sc.text}</span>}
       </button></li>; })}</ol>
   </aside>;
@@ -57,7 +57,7 @@ function Page({ pg, room, tall, zoom, FU }) {
     pg.wrapEl = wrap.current; if (MK) MK.M.bind(pg, wrap.current);
     renderPage(pg, fitScale(pg, room, tall, (state().disp || {}).fit, zoom));
   }, [pg, room, zoom]);
-  return <div ref={wrap} class={'pg' + (pg.out ? ' out' : '')} data-tool={state().tool}><canvas ref={ref} data-page={pg.file.path + '|' + pg.idx} />{FU && <FU.TurnChip pg={pg} />}</div>;
+  return <>{FU && pg.impTop && <FU.ImpNote pg={pg} />}<div ref={wrap} class={'pg' + (pg.out ? ' out' : '')} data-tool={state().tool}><canvas ref={ref} data-page={pg.file.path + '|' + pg.idx} />{FU && <FU.TurnChip pg={pg} />}{FU && <FU.LightChip pg={pg} />}</div></>;
 }
 
 // The marking tools load as a part of their own (router.js PARTS.marking, screens/mark-tools.jsx) once the paper is open, so
@@ -94,7 +94,7 @@ function Paper({ batch, cur, zoom, ver, FU }) {
     let live = true; setGot(null);
     use({ cur });
     seam.ready = false;
-    if (st) openPages(st, () => live).then(r => { if (live) { setGot(r); seam.ready = true; } });
+    if (st) openPages(st, () => live, FU && FU.impAuto).then(r => { if (live) { setGot(r); seam.ready = true; } });
     return () => { live = false; };
   }, [batch, cur, ver]);
   useEffect(() => {
@@ -103,11 +103,11 @@ function Paper({ batch, cur, zoom, ver, FU }) {
     measure(); const ro = new ResizeObserver(measure); ro.observe(el); return () => ro.disconnect();
   }, []);
   return <div class="mk-paper" ref={area} tabindex="-1">
-    {!st ? null : !st.files.length ? <EmptyState icon="inbox" title={t('mark.nothing_in')} />
+    {!st ? null : !st.files.length ? <><EmptyState icon="inbox" title={t('mark.nothing_in')} />{FU && <FU.FilesFoot key={st.key + ver} st={st} name={shownName(st, cur)} />}</>
       : !got ? <div class="loading" aria-busy="true" />
-      : <>{got.cards.map(c => c.kind === 'file' ? <div class="fwrap">{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
+      : <>{got.cards.map(c => c.kind === 'file' ? <div class="fwrap">{FU && <FU.CarryTag st={st} f={c.f} />}{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
         : <section class="doc">
-          <header class="fhead"><span data-raw>{c.d.name}</span>{FU && <FU.AddTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}{!c.on && <span class="pill">{t(c.auto ? 'mark.left_out_auto' : 'mark.left_out')}</span>}<span class="grow" />{FU && !c.on && <FU.BackIn st={st} d={c.d} />}{FU && <FU.FileMenu st={st} path={c.d.file || c.d.pages[0][0]} name={c.d.name} d={c.d} on={c.on} auto={c.auto} />}</header>
+          <header class="fhead"><span data-raw>{c.d.name}</span>{FU && <FU.AddTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}{!c.on && <span class="pill">{t(c.auto ? 'mark.left_out_auto' : 'mark.left_out')}</span>}{FU && <FU.CarryTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}<span class="grow" />{FU && !c.on && <FU.BackIn st={st} d={c.d} />}{FU && <FU.FileMenu st={st} path={c.d.file || c.d.pages[0][0]} name={c.d.name} d={c.d} on={c.on} auto={c.auto} />}</header>
           {c.pages.map(pg => <Page key={pg.file.path + '|' + pg.idx} pg={pg} room={size[0]} tall={size[1]} zoom={zoom} FU={FU} />)}
         </section>)}{FU && <FU.FilesFoot key={st.key + ver} st={st} name={shownName(st, cur)} />}</>}
   </div>;
@@ -166,11 +166,11 @@ export default function MarkScreen({ route, classes }) {
     PARTS.marking().then(m => { if (!live) return; MK = m; off = m.start({ toast: text => toast(text), openStudent: i => pickRef.current(i), changed: () => tick(n => n + 1) }); tick(n => n + 1); });
     return () => { live = false; if (off) off(); }; }, [w]);
   useEffect(() => {
-    let live = true; setW(null); setErr(null);
+    let live = true; setW(null); setErr(null); seam.read = false; seam.ready = false;
     // the opener (mark/open.js, with the lifted opening code) loads as a part of its own, so it isn't in this screen's own load
     PARTS.bring().then(O => O.openKept(id, { question: q => new Promise(done => setAsk({ q, done: v => { setAsk(null); done(v); } })) }))
       .then(r => { if (!live) return; if (!r) return history.back(); setW(r); setCur(Math.min(r.cur || 0, r.batch.students.length - 1)); }, e => { console.error(e); if (live) setErr(e); });
-    return () => { live = false; if (MK) MK.M.saveNowDone(); };
+    return () => { live = false; seam.ready = false; if (MK) MK.M.saveNowDone(); };
   }, [id]);
   const pick = useCallback(i => { if (!w) return; const n = Math.max(0, Math.min(w.batch.students.length - 1, i)); if (MK) MK.M.commit(); if (n !== state().cur) seam.ready = false; setCur(n); use({ cur: n }); }, [w]);
   const pickRef = useRef(pick); pickRef.current = pick;
@@ -181,9 +181,13 @@ export default function MarkScreen({ route, classes }) {
     return () => { live = false; }; }, [w, tab]);
   const openOn = i => { pick(i); go('mark', id, ''); };
   // A student's files changed (mark/change.js through mark/fileui.jsx, loaded with the tools): the paper opens again.
-  const [FU, setFU] = useState(null), [ver, setVer] = useState(0);
+  const [FU, setFU] = useState(null), [ver, setVer] = useState(0), [carried, setCarried] = useState(false), [light, setLight] = useState(false);
+  useEffect(() => setCarried(!!(w && w.carried)), [w]);
   useEffect(() => { if (!w || !MK) return; let live = true;
-    PARTS.fileui().then(m => { if (!live) return; m.wire(MK.M, i => { if (i >= 0) pickRef.current(i); setVer(v => v + 1); }); setFU(m); m.pdfAuto(); }, e => console.error(e));
+    PARTS.fileui().then(m => { if (!live) return; m.wire(MK.M, i => { if (i >= 0) pickRef.current(i); setVer(v => v + 1); }); setFU(m); m.pdfAuto(); m.impAutoNow();
+      // the papers are read in the background as they open, as the current app reads them (src/app/open.js scanAll): a grade written on
+      // a paper, notes made in other apps, and marks from other apps that could be hers
+      PARTS.outEngine().then(E => { E.withMarking(MK.M); return E.readPapers(); }).then(() => { seam.read = true; if (live) tick(n => n + 1); }, e => console.error(e)); }, e => console.error(e));
     return () => { live = false; }; }, [w, !!MK]);
   // What opened: a line after the papers open when there's something new to say, and the whole report from the student list.
   const [rep, setRep] = useState(null), [repList, setRepList] = useState(false);
@@ -224,13 +228,15 @@ export default function MarkScreen({ route, classes }) {
         <div class="mk-mid">
           {MK && <MK.Tools />}
           <Paper batch={w.batch} cur={cur} zoom={zoom} ver={ver} FU={FU} />
-          <div class="mk-zoom"><IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => { const z = Math.max(0.5, Math.round((zoom - 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} />
+          {FU && light && <FU.LightPanel onClose={() => setLight(false)} />}
+          <div class="mk-zoom">{FU && <IconButton icon="sun" label={t('mark.l_title')} aria-pressed={light ? 'true' : 'false'} onClick={() => setLight(v => !v)} data-light />}<IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => { const z = Math.max(0.5, Math.round((zoom - 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} />
             <span>{t('mark.zoom', { n: Math.round(zoom * 100) })}</span>
             <IconButton icon="plus" label={t('mark.zoom_in')} onClick={() => { const z = Math.min(3, Math.round((zoom + 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} /></div>
         </div>
         <ScorePanel batch={w.batch} cur={cur} onNext={() => pick(cur + 1)} onPrev={() => pick(cur - 1)} />
       </div>
       {rep && <rep.OpenedBar key={w.batch.id} onList={() => setRepList(true)} />}
+      {FU && carried && <FU.CarryBox onClose={() => setCarried(false)} />}
       {rep && repList && <rep.OpenedList onClose={() => setRepList(false)} onGo={pick} />}</>}
   </div>;
 }

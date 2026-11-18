@@ -12,7 +12,8 @@ import { prefs } from '../../students/prefs.js';
 import { libs } from './paper.js';
 import './lines.js';
 
-async function facts() { await libs(); await R.checkStack(state().batch); return R.openingFacts(); }
+// null when the papers have changed meanwhile (another download brought in)
+async function facts() { const b = state().batch; if (!b) return null; await libs(); await R.checkStack(b); return state().batch === b ? R.openingFacts() : null; }
 const keysOf = x => x.keys.concat(x.zip ? ['zip'] : []).map(R.hash);
 function sawAll(id, keys) { const all = prefs.get('gs.openSeen', {}) || {}; all[id] = [...new Set((all[id] || []).concat(keys))]; prefs.set('gs.openSeen', all); }
 
@@ -20,7 +21,7 @@ function sawAll(id, keys) { const all = prefs.get('gs.openSeen', {}) || {}; all[
 export function OpenedBar({ onList }) {
   const [x, setX] = useState(null);
   useEffect(() => { const b = state().batch; let live = true;
-    facts().then(f => { if (!live || state().batch !== b) return; const seen = (prefs.get('gs.openSeen', {}) || {})[b.id] || []; if (keysOf(f).some(k => !seen.includes(k))) setX(f); }, e => console.error(e));
+    facts().then(f => { if (!f || !live || state().batch !== b) return; const seen = (prefs.get('gs.openSeen', {}) || {})[b.id] || []; if (keysOf(f).some(k => !seen.includes(k))) setX(f); }, e => console.error(e));
     return () => { live = false; }; }, []);
   if (!x) return null;
   const saw = () => { sawAll(state().batch.id, keysOf(x)); setX(null); };
@@ -32,7 +33,7 @@ export function OpenedBar({ onList }) {
 // The whole report.
 export function OpenedList({ onClose, onGo }) {
   const [x, setX] = useState(null);
-  useEffect(() => { let live = true; facts().then(f => { if (live) { setX(f); sawAll(state().batch.id, keysOf(f)); } }, e => console.error(e)); return () => { live = false; }; }, []);
+  useEffect(() => { let live = true; facts().then(f => { if (live && f) { setX(f); sawAll(state().batch.id, keysOf(f)); } }, e => console.error(e)); return () => { live = false; }; }, []);
   const go = o => <button type="button" class="link" data-repgo={o.i} onClick={() => { onClose(); onGo(o.i); }} data-raw>{o.name}</button>;
   const good = x && !x.cant.length && !x.zip && !x.nothing.length && !x.odd.length;
   const whys = x ? [...new Set(x.cant.map(o => o.why))] : [];

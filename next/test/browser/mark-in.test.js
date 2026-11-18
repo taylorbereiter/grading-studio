@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const http = require('http'), fs = require('fs'), os = require('os'), path = require('path');
 const { launch } = require('../../../test/helpers/chrome.js');
 const { plant, appReady } = require('../../../test/helpers/app.js');
-const { standardFiles, zipOf } = require('../../../test/helpers/fixtures.js');
+const { standardFiles, zipOf, makePaper } = require('../../../test/helpers/fixtures.js');
 const { gradingSeed, STEADY } = require('../../../test/helpers/steady.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
@@ -69,6 +69,57 @@ test('papers brought in from the class page open for marking, and the current ap
   await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, now.id);
   const was = await m.evaluate(shape => eval(shape)(window.__gs.state().batch), shape);
   assert.deepEqual(was, now.shape, 'the same students, files and comment in the current app');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('a newer copy of the same papers brought in brings the work over, flags what changed, and the current app opens it the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const seed = gradingSeed(), lib = JSON.parse(seed.ls['gs.lib']);
+  lib.classes[0].units[0].items.push({ id: 'i9', name: 'Book review', classId: 'c1', type: 'sum', due: '2026-11-20' });
+  seed.ls['gs.lib'] = JSON.stringify(lib);
+  const files = await standardFiles();
+  const a = path.join(dir, 'Book review A.zip'); fs.writeFileSync(a, zipOf(files));
+  const CHANGED = 'Bram Sample/Essay.pdf', NEW = 'Cleo Fixture/Extra.pdf';
+  const b = path.join(dir, 'Book review B.zip'); fs.writeFileSync(b, zipOf({ ...files, [CHANGED]: await makePaper({ title: 'Bram Sample essay, sent again', pages: 2 }), [NEW]: await makePaper({ title: 'Cleo Fixture extra page' }) }));
+  const bringFor = async (p, zip, sel = '[data-bring-for="i9"]') => {
+    await p.goto(srv.url + 'next/#/class/c1/work');
+    await p.waitForSelector(sel, { timeout: 60000 });
+    await p.click(sel);
+    await p.waitForSelector('.pop [role="menuitem"]');
+    const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+    await chooser.accept([zip]);
+    await p.waitForFunction(was => { const b = /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.state().batch; return b && b.id !== was; }, { timeout: 60000 }, sel === '[data-bring-for="i9"]' ? null : p.idA);
+    return p.evaluate(() => window.__mark.state().batch.id);
+  };
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seed);
+  const idA = await bringFor(p, a); p.idA = idA;
+  const who = await p.evaluate(() => { const b = window.__mark.state(); return b.batch.students[b.cur].key; });
+  await p.waitForSelector('.mk-cmt:not([disabled])', { timeout: 60000 });
+  await p.click('.mk-cmt'); await p.keyboard.type('Carried over.');
+  await p.evaluate(() => window.__mark.saved());
+  // the newer copy: one paper sent again, one new
+  const idB = await bringFor(p, b, '[data-again-for="i9"]');
+  assert.notEqual(idB, idA, 'a different download');
+  await p.waitForSelector('#carryBox', { timeout: 30000 });
+  assert.match(await p.$eval('#carryBox', e => e.textContent), /Changed, so check your marks/);
+  const now = await p.evaluate(k => { const b = window.__mark.state().batch; return { flags: b.carry.flags, from: b.carry.from, comment: b.students.find(s => s.key === k).grade.comment }; }, who);
+  assert.deepEqual(now.flags, { [CHANGED]: 'changed', [NEW]: 'new' });
+  assert.equal(now.from, idA);
+  assert.equal(now.comment, 'Carried over.', 'the comment came over');
+  await p.click('.dlg [data-ok]');
+  assert.ok(await p.$('.mk-row .bang'), 'the list says which students have something new');
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), idB);
+  await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, idB);
+  const was = await m.evaluate(k => { const b = window.__gs.state().batch; return { flags: b.carry && b.carry.flags, from: b.carry && b.carry.from, comment: b.students.find(s => s.key === k).grade.comment }; }, who);
+  assert.deepEqual(was, now, 'the current app opens the same work and flags');
+  const older = await m.evaluate(id => new Promise(res => { const r = indexedDB.open('grading-studio-keep'); r.onsuccess = () => { const g = r.result.transaction('meta').objectStore('meta').get(id); g.onsuccess = () => res(g.result || null); g.onerror = () => res(null); }; r.onerror = () => res(null); }), idA);
+  assert.equal(older && older.newer, idB, 'and the older copy knows which is newer');
   assert.deepEqual(errors, []);
   await ctx.close();
 });
