@@ -11,6 +11,7 @@ import { usePlan } from '../plan.js';
 import { saveKv } from '../../planning/write.js';
 import { saveFailed } from '../plan/save.js';
 import '../plan/lines.js';
+import { DriveButton } from '../drive-button.jsx';
 
 // The colours a class can have: the current Planner's unit colours (src/planner/units.js UNIT_COLORS). Shown as the theme's own.
 export const CLASS_COLORS = ['#1F6FB2', '#7B3FC4', '#B71E42', '#0E7C66', '#B35C00', '#3D5A80', '#8E3B8A', '#2F6B2F'];
@@ -100,7 +101,7 @@ export function TimetableSettings() {
     <Card title={t('plan.events')}><Dates list={d.events || []} label={t('plan.what_event')} add={t('plan.add_event')} onChange={v => put({ ...d, events: v })} /></Card>
     <Card title={t('plan.slide_template')}>
       <p class="mute" role="status">{d.template ? <>{t('plan.tpl_yours')} <b data-raw>{d.tplName || ''}</b></> : t('plan.tpl_plain')}</p>
-      <div class="row"><label class="btn sm"><input type="file" class="vh" accept=".pptx,.potx" onChange={async e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; const x = await readTemplate(f); if (x) put({ ...d, template: x.b64, tplName: x.name }); }} data-tpl />{d.template ? t('plan.tpl_pick_another') : t('plan.tpl_pick')}</label>
+      <div class="row"><label class="btn sm"><input type="file" class="vh" accept=".pptx,.potx" onChange={async e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; const x = await readTemplate(f); if (x) put({ ...d, template: x.b64, tplName: x.name }); }} data-tpl />{d.template ? t('plan.tpl_pick_another') : t('plan.tpl_pick')}</label><DriveButton />
         {d.template && <Button size="sm" variant="quiet" onClick={() => { const n = { ...d, template: '' }; delete n.tplName; put(n); }}>{t('plan.tpl_use_plain')}</Button>}</div>
     </Card>
     <Card title={t('plan.slide_rules')}>

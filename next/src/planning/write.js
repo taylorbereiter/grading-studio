@@ -16,10 +16,11 @@
 //   saveVersions(id, list)    a lesson's versions as a whole (kv ver:<id>), when one is put back
 //   saveSchoolFile(hash, data) a School file's bytes by their SHA-256 (grading-studio-school/files; src/school.js schPut)
 // A lesson written while a Planner folder is linked also goes to its file there (planning/folder.js), as the current Planner does.
-import { lessons, kv, school, schoolFiles, manageBacLinks, taughtIn, planTime, newYear, words, look, theme, language, mailApp } from './index.js';
+import { lessons, kv, school, schoolFiles, manageBacLinks, taughtIn, planTime, newYear, words, look, theme, language, mailApp, googleEmail, googleAuto, drivePaperDir, driveVideoDir, planCopy, planSeen, planBig } from './index.js';
 import { mayWrite } from '../shared/lock.js';
 import * as tabs from '../shared/tabs.js';
 import { saved } from '../shared/saved.js';
+import { writeMany } from '../shared/idb.js';
 import { plannerFolder, writeLessonFile, removeLessonFile, writeTimetableFile, writeActivitiesFile } from './folder.js';
 
 export class CannotSave extends Error { constructor(why, what) { super(what + ': ' + why); this.name = 'CannotSave'; this.why = why; } }
@@ -96,7 +97,8 @@ export async function saveKv(name, value) {
   tell('gs-plan-out'); if (name === 'bank') tell('gs-bank');
   saved({ kind: 'plan', id: name, side: 'planning' });
 }
-const PREFS = { 'gs.look': look, 'gs.theme': theme, 'gs.lang': language, 'gs.words': words, 'gs.mailApp': mailApp, 'gs.mblinks': manageBacLinks, 'gs.school': school };
+const PREFS = { 'gs.look': look, 'gs.theme': theme, 'gs.lang': language, 'gs.words': words, 'gs.mailApp': mailApp, 'gs.mblinks': manageBacLinks, 'gs.school': school,
+  'gs.gEmail': googleEmail, 'gs.gAuto': googleAuto, 'gs.gPaperDir': drivePaperDir, 'gs.gVidDir': driveVideoDir, 'gs.planCopy': planCopy, 'gs.planSeen': planSeen, 'gs.planBig': planBig };
 // value undefined removes the key, as the current app does for English (gs.lang).
 export function savePref(key, value) {
   const acc = PREFS[key]; if (!acc) throw new Error('Not a teacher-wide setting: ' + key);
@@ -135,4 +137,32 @@ export async function saveSchoolFile(hash, data) {
   check('grading-studio-school/files');
   await schoolFiles.put({ data }, hash);
   saved({ kind: 'pref', id: 'gs.school', side: 'planning' });
+}
+
+// What the Drive sync brings in for the Planner (src/app/drive.js planApply), as one transaction: each lesson and record only if
+// it is still what the sync read before merging (otherwise she saved it again meanwhile, and hers stays: it goes up next time).
+// put: lessons to write; del: lesson ids; keys: [[name, value]]; had: id -> the lesson as read; seenKv: name -> the value as read;
+// out(name, value): a record as the sync compares it (units without where each is kept in the Planner folder).
+export async function takePlan({ put = [], del = [], keys = [], had = {}, seenKv = {}, out = (k, v) => v }) {
+  check('gs-lessons/lessons');
+  await writeMany('gs-lessons', ['lessons', 'kv'], o => {
+    const ls = o.lessons, kvs = o.kv, goneFiles = [];
+    const same = (was, id) => (was ? was.updated || 0 : null) === (had[id] ? had[id].updated || 0 : null);
+    for (const l of put) { const r = ls.get(l.id); r.onsuccess = () => { const was = r.result; if (!same(was, l.id)) return; ls.put(was && was._file ? { ...l, _file: was._file, _mod: was._mod, _sync: 1 } : l); }; }
+    for (const id of del) { const r = ls.get(id); r.onsuccess = () => { const was = r.result; if (!was || !same(was, id)) return; if (was._file) goneFiles.push(was._file); ls.delete(id); }; }
+    for (const [k, v0] of keys) {
+      const r = kvs.get(k);
+      r.onsuccess = () => {
+        const was = r.result; if (JSON.stringify(out(k, was)) !== JSON.stringify(seenKv[k])) return;
+        let v = v0;
+        if (k === 'units' && Array.isArray(v) && Array.isArray(was)) v = v.map(u => { const w = was.find(x => x && u && x.id === u.id); return w && w._file ? { ...u, _file: w._file, _mod: w._mod } : u; });
+        kvs.put(v, k);
+      };
+    }
+    // after the reads above: the files of lessons deleted by the sync, for the Planner to take out of its folder
+    const g = kvs.get('syncGoneFiles');
+    const last = ls.count(); last.onsuccess = () => { if (goneFiles.length) kvs.put([...new Set([...(g.result || []), ...goneFiles])], 'syncGoneFiles'); };
+  });
+  tell('gs-plan-in');
+  saved({ kind: 'plan', id: 'sync', side: 'planning', from: 'sync' });
 }

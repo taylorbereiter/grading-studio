@@ -13,6 +13,7 @@ import { undo as undoLast } from '../../services/undo.js';
 import { PARTS } from '../router.js';
 import { typeName } from './grades.jsx';
 import './lines.js';
+import { DriveButton } from '../drive-button.jsx';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const SUM = G.BKI_SUM;
@@ -139,7 +140,7 @@ export function ImportSheet({ x, rows: given, onClose }) {
   if (!d) return <Sheet open wide title={t('class.bki_title', { name: c.name })} onClose={onClose} footer={<><span class="grow" /><Button onClick={onClose}>{t('common.cancel')}</Button></>}>
     <div class="cp-bki" data-bki>
       <p class="mute small">{t('class.bki_say')}</p>
-      <div class="cp-bkidrop"><Button variant="primary" icon="upload" onClick={() => file.current.click()} data-bki-file>{t('class.bki_choose')}</Button><span class="mute small">{t('class.bki_kinds')}</span>
+      <div class="cp-bkidrop"><Button variant="primary" icon="upload" onClick={() => file.current.click()} data-bki-file>{t('class.bki_choose')}</Button><DriveButton input={file} /><span class="mute small">{t('class.bki_kinds')}</span>
         <input ref={file} type="file" hidden accept=".csv,.tsv,.txt,.xlsx,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={e => { readFile(e.currentTarget.files[0]); e.currentTarget.value = ''; }} data-bki-input /></div>
       <textarea class="input cp-paste" rows="3" placeholder={t('class.bki_paste_ph')} aria-label={t('class.bki_paste')} onPaste={e => { e.preventDefault(); take(G.bkiParse((e.clipboardData || window.clipboardData).getData('text'))); }} data-bki-paste />
       {s.err && <p class="cp-err" role="alert" data-bki-err>{s.err}</p>}

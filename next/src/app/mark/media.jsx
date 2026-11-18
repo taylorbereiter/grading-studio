@@ -3,8 +3,8 @@
 // sideways, and a picture-in-picture window; a link plays on the page where the site allows it (YouTube, Vimeo, Loom, Google Drive and
 // Slides) or opens in a window of its own; a video kept in this browser plays from its own database. Under each, the transcript: one
 // she pastes, or one made in this browser by the speech engine, each line playing the video from there, with captions under the
-// video. Add, A notes page… makes a page to write on beside a video. What changes the work is mark/change.js. Videos from Google Drive
-// come with Drive (part d6); clips to show the class, and partners sharing a video, come with group work.
+// video. Add, A notes page… makes a page to write on beside a video. What changes the work is mark/change.js. A video from Google Drive
+// (src/video.js driveCard, drvPlayer) plays straight from Drive, or from its download kept in this browser.
 import { h, Fragment } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { Button, IconButton, Segmented, Dialog, TextInput, CopyButton, toast } from '../../ui/index.js';
@@ -14,9 +14,13 @@ import { videos } from '../../students/index.js';
 import { prefs } from '../../students/prefs.js';
 import { t } from '../../i18n/t.js';
 import { register } from '../../services/shortcuts.js';
+import { saving } from '../../services/saving.js';
+import { PARTS } from '../router.js';
+import { sampleOn } from '../sample.js';
 import * as C from './change.js';
 import './lines.js';
 import './setup-lines.js';
+import './video-lines.js';
 
 // the tests stand in for the speech engine here, so it is never downloaded
 if (typeof window !== 'undefined') window.__media = { asrStandIn: V.asrStandIn };
@@ -68,18 +72,18 @@ function Controls({ st, f, m, video }) {
   </div>;
 }
 // A recording: the student's own file, or a video kept in this browser (k: { name, url }).
-function Recording({ st, f, k }) {
+function Recording({ st, f, k, at, extra, onErr, note }) {
   const ref = useRef(null), [now, setNow] = useState(0), video = V.VIDEO_RX.test(k ? k.name : f.name);
-  useEffect(() => { if (ref.current) { ref.current.playbackRate = rate(); own(ref.current); } }, []);
+  useEffect(() => { const x = ref.current; if (x) { x.playbackRate = rate(); own(x); if (at) x.addEventListener('loadedmetadata', () => { x.currentTime = at; }, { once: true }); } }, []);
   const src = k ? k.url : urlOf(f), m = () => ref.current;
   const seek = s => { const x = m(); if (!x) return; x.currentTime = s; if (x.paused) x.play().catch(() => {}); };
   return <div class="media" data-media={f.path}>
-    <div class="mstick"><div class="mhead"><b data-raw>{k ? V.linkTitle(f) : f.name}</b><span class="mute">{t(video ? 'setup.v_video' : 'setup.v_audio')}</span></div>
-      {video ? <Turned f={f}>{style => <video ref={ref} controls preload="metadata" playsInline src={src} style={style} onTimeUpdate={e => setNow(e.currentTarget.currentTime)} />}</Turned>
+    <div class="mstick"><div class="mhead"><b data-raw>{k ? V.linkTitle(f) : f.name}</b><span class="mute">{note || t(video ? 'setup.v_video' : 'setup.v_audio')}</span></div>
+      {video ? <Turned f={f}>{style => <video ref={ref} controls preload="metadata" playsInline src={src} style={style} onTimeUpdate={e => setNow(e.currentTarget.currentTime)} onError={onErr && (() => onErr(ref.current ? ref.current.currentTime : 0))} />}</Turned>
         : <audio ref={ref} controls preload="metadata" src={src} onTimeUpdate={e => setNow(e.currentTarget.currentTime)} />}
       <Caption f={f} now={now} />
-      <Controls st={st} f={f} m={m} video={video} /></div>
-    <Transcript f={f} seek={seek} now={now} bytes={async () => k ? new Uint8Array(await k.blob.arrayBuffer()) : f.data} />
+      <Controls st={st} f={f} m={m} video={video} />{extra && extra(m)}</div>
+    <Transcript f={f} seek={seek} now={now} bytes={k && !k.blob ? null : async () => k ? new Uint8Array(await k.blob.arrayBuffer()) : f.data} />
   </div>;
 }
 // A link (linkCard): plays here where the site lets it, or opens in its own window.
@@ -112,9 +116,65 @@ function Kept({ st, f }) {
   return <div class="media vfile" data-media={f.path}><div class="mstick"><div class="mhead"><b data-raw>{V.linkTitle(f)}</b><span class="mute">{t('setup.v_file')}</span></div>
     <p class="vlnote">{t('setup.v_not_here')}</p></div></div>;
 }
+const drvMeta = (f, k) => (new RegExp('^\\s*' + k + '\\s*=\\s*(.+)$', 'mi').exec(new TextDecoder().decode(f.data)) || [, ''])[1].trim();
+const VID_EXT = { 'video/mp4': 'mp4', 'video/quicktime': 'mov', 'video/webm': 'webm', 'video/x-m4v': 'm4v', 'video/x-matroska': 'mkv', 'video/3gpp': '3gp' };
+const drvBad = new Set(), drvWeb = new Set(), drvGetting = new Map();   // while this page is open: wouldn't stream; chose Drive's player; downloads under way
+function drvSay(e) {
+  const m = (e && e.message) || String(e), s = e && e.status;
+  if (e && e.why === 'room') return t('video.drv_room', { size: e.size });
+  if (s === 404 || /\b404\b/.test(m)) return t('video.drv_gone');
+  if (s === 401 || (e && (e.why === 'signin' || e.why === 'closed'))) return t('video.drv_signin');
+  if (s === 403 || /\b403\b/.test(m)) return t('video.drv_no');
+  return m;
+}
+// One download for each Drive video, shared by every card that asks. onStep(percent).
+function drvGet(f, onStep) {
+  const S = saving(), id = V.drvRef(f.data), key = 'd-' + id;
+  if (!drvGetting.has(id)) drvGetting.set(id, (async () => {
+    let name = drvMeta(f, 'Name') || V.linkTitle(f);
+    const size = +drvMeta(f, 'Size') || 0;
+    try { const e = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; if (size && e && e.quota && e.quota - (e.usage || 0) < size * 1.05) throw Object.assign(new Error('room'), { why: 'room', size: V.fmtSize(size) }); } catch (e) { if (e.why === 'room') throw e; }
+    const blob = await S.vidBytes(id, (n, tot) => { const all = tot || size; if (all) for (const cb of drvGetting.get(id).steps) cb(Math.min(100, Math.round(n / all * 100))); }, true);
+    const type = blob.type && blob.type !== 'application/octet-stream' ? blob.type : V.MIME[V.extOf(name)] || 'video/mp4';
+    if (!V.VIDEO_RX.test(name)) name += '.' + (VID_EXT[type.split(';')[0]] || 'mp4');
+    await (await PARTS.write()).keepVideo(new File([blob], name, { type }), key);
+    kept.delete(key); return keptGet(key);
+  })().finally(() => drvGetting.delete(id)));
+  const p = drvGetting.get(id); p.steps = p.steps || new Set(); if (onStep) p.steps.add(onStep);
+  return p;
+}
+// A video from her Drive: its download kept here, played straight from Drive, or the ways to watch it.
+function DriveVideo({ st, f }) {
+  const S = saving(), id = V.drvRef(f.data), key = 'd-' + id, size = +drvMeta(f, 'Size') || 0;
+  const [k, setK] = useState(undefined), [stream, setStream] = useState(null), [why, setWhy] = useState(''), [at, setAt] = useState(0), [busy, setBusy] = useState(''), [pc, setPc] = useState(-1), [, tick] = useState(0);
+  useEffect(() => { let live = true; keptGet(key).then(v => { if (live) { if (!v) kept.delete(key); setK(v); } }); S.vidStreamOk().then(v => { if (live) setStream(v); }); return () => { live = false; }; }, [key]);
+  const getOne = async () => {
+    setBusy('get'); setPc(0);
+    try { setK(await drvGet(f, setPc)); setWhy(''); } catch (e) { console.error(e); setWhy(drvSay(e)); }
+    setBusy(''); setPc(-1);
+  };
+  const gb = size ? t('video.drv_get_n', { size: V.fmtSize(size) }) : t('video.drv_get');
+  const bar = pc >= 0 && <><div class="prog"><i style={{ width: pc + '%' }} /></div><p class="mute vlnote" role="status">{t('video.drv_getting', { p: pc })}</p></>;
+  if (drvWeb.has(key)) return <Link st={st} f={f} />;
+  if (k === undefined || stream === null) return <div class="media vfile vdrv"><div class="mstick"><div class="mhead"><b data-raw>{V.linkTitle(f)}</b><span class="mute">{t('video.drive')}</span></div></div></div>;
+  if (k) return <Recording key="kept" st={st} f={f} k={k} at={at} note={t('video.drv_kept')} extra={m => <><div class="mctl"><Button size="sm" onClick={async () => { const x = m(); setAt(x ? x.currentTime : 0); if (x) x.pause();
+    try { await (await PARTS.write()).dropVideo(key); } catch (e) { console.error(e); } kept.delete(key); toast(t('video.drv_dropped')); setK(null); }} data-drvdrop>{t('video.drv_drop')}</Button></div>
+    <p class="mute vlnote">{t('video.drv_kept_note')}</p></>} />;
+  const ok = stream && !drvBad.has(id);
+  if (ok && S.vidReady() && !why) return <Recording key="stream" st={st} f={f} at={at} k={{ name: V.VIDEO_RX.test(drvMeta(f, 'Name')) ? drvMeta(f, 'Name') : 'video.mp4', url: S.vidUrl(id) }} note={t('video.drv_stream')}
+    onErr={async now => { setAt(now); if (!S.vidReady()) return tick(n => n + 1); drvBad.add(id); let w = ''; try { await S.vidCheck(id); } catch (e) { w = drvSay(e); } setWhy(w || t('video.drv_bad')); }}
+    extra={() => <><div class="mctl"><Button size="sm" disabled={!!busy} onClick={getOne} data-drvget>{gb}</Button></div>{bar || <p class="mute vlnote">{t('video.drv_stream_note')}</p>}</>} />;
+  return <div class="media vfile vdrv" data-media={f.path}><div class="mstick"><div class="mhead"><b data-raw>{V.linkTitle(f)}</b><span class="mute">{t('video.drive')}</span></div>
+    <div class="mctl">
+      {ok && <Button size="sm" variant="primary" disabled={!!busy} onClick={async () => { setBusy('play'); try { await S.vidSignIn(); drvBad.delete(id); setWhy(''); } catch (e) { console.error(e); setWhy(drvSay(e)); } setBusy(''); }} data-drvplay>{t('video.drv_play')}</Button>}
+      <Button size="sm" variant={ok ? undefined : 'primary'} disabled={!!busy} onClick={getOne} data-drvget>{gb}</Button>
+      <Button size="sm" onClick={() => { drvWeb.add(key); tick(n => n + 1); }} data-drvweb>{t('video.drv_web')}</Button></div>
+    {bar || <p class="mute vlnote" data-drvwhy>{busy === 'play' ? t('video.drv_opening') : why || t(ok ? 'video.drv_note' : 'video.drv_note2')}</p>}</div></div>;
+}
 export function MediaCard({ st, f }) {
   if (f.kind === 'media') return <Recording st={st} f={f} />;
   if (V.vidRef(f.data)) return <Kept st={st} f={f} />;
+  if (V.drvRef(f.data) && saving() && saving().google().can && !sampleOn()) return <DriveVideo st={st} f={f} />;
   return <Link st={st} f={f} />;
 }
 
@@ -191,16 +251,18 @@ export function NotesAdd({ st, name, onClose }) {
 // video come with group work.
 export function VideoAdd({ st, name, onClose, file: file0 }) {
   const rows = V.npRows(state().setup), has = !!V.notesFileOf(st);
-  const [by, setBy] = useState(file0 ? 'file' : 'link'), [url, setUrl] = useState(''), [file, setFile] = useState(file0 || null), [title, setTitle] = useState(t('setup.v_name0'));
+  const [by, setBy] = useState(file0 ? 'file' : 'link'), [url, setUrl] = useState(''), [file, setFile] = useState(file0 || null), [title, setTitle] = useState(t('setup.v_name0')), [drv, setDrv] = useState(null);
+  const S = saving(), canDrive = !!(S && S.google().pickNow);
   const [kind, setKind] = useState(has ? '' : 'lined'), [busy, setBusy] = useState(false);
-  const clean = V.linkClean(url), ok = by === 'file' ? !!file : !!clean;
+  const clean = V.linkClean(url), ok = by === 'file' ? !!file : by === 'drive' ? !!drv : !!clean;
+  const fromDrive = async () => { try { const [d] = await S.vidPick({ title: t('video.drv_choose') }); if (d) { setDrv(d); setBy('drive'); } } catch (e) { console.error(e); toast(t('setup.v_fail', { why: (e && e.message) || String(e) })); } };
   const pick = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'video/*,audio/*'; i.onchange = () => use1(i.files[0]); i.click(); };
   const use1 = f => { if (!f) return; if (!V.MEDIA_RX.test(f.name) && !/^(video|audio)\//.test(f.type)) return toast(t('setup.v_not_media')); setFile(f); setBy('file'); };
   const go = async () => {
     setBusy(true);
     try {
       if (kind) npLast = kind;
-      const r = await C.videoAdd(st, { url: by === 'link' ? clean : '', file: by === 'file' ? file : null, name: V.npFileName(title || t('setup.v_name0')), kind });
+      const r = await C.videoAdd(st, { url: by === 'link' ? clean : '', file: by === 'file' ? file : null, drive: by === 'drive' ? drv : null, name: V.npFileName(title || t('setup.v_name0')), kind });
       toast(r.had && !r.made.length ? t('setup.v_has', { name }) : t('setup.v_added', { name }));
       C.reopen();
       onClose();
@@ -209,8 +271,10 @@ export function VideoAdd({ st, name, onClose, file: file0 }) {
   return <Dialog open title={t('setup.v_add_t', { name })} onClose={onClose}
     actions={<><Button onClick={onClose}>{t('setup.cancel')}</Button><Button variant="primary" onClick={go} disabled={!ok || busy} data-vdadd>{t('setup.v_np_add', { name })}</Button></>}>
     <div onDragOver={e => { if (by === 'file') e.preventDefault(); }} onDrop={e => { if (by !== 'file') return; e.preventDefault(); use1(e.dataTransfer.files[0]); }}>
-    <Segmented label={t('setup.v_which')} value={by} onChange={v => { setBy(v); if (v === 'file' && !file) pick(); }} options={[{ value: 'link', label: t('setup.v_by_link') }, { value: 'file', label: t('setup.v_by_file') }]} />
-    {by === 'link' ? <><TextInput label={t('setup.v_link')} value={url} onInput={setUrl} placeholder={t('setup.v_link_ph')} autocomplete="off" spellcheck={false} error={url.trim() && !clean ? t('setup.v_bad_link') : ''} data-vdlink />
+    <Segmented label={t('setup.v_which')} value={by} onChange={v => { setBy(v); if (v === 'file' && !file) pick(); if (v === 'drive' && !drv) fromDrive(); }} options={[{ value: 'link', label: t('setup.v_by_link') }, { value: 'file', label: t('setup.v_by_file') }].concat(canDrive ? [{ value: 'drive', label: t('video.by_drive') }] : [])} />
+    {by === 'drive' ? <><div class="vdfile"><Button onClick={fromDrive} data-vddrive>{t('video.drv_choose')}</Button><span class="mute" data-raw>{drv ? drv.name : ''}</span></div>
+      <p class="mute">{t('video.drv_say')}</p></>
+      : by === 'link' ? <><TextInput label={t('setup.v_link')} value={url} onInput={setUrl} placeholder={t('setup.v_link_ph')} autocomplete="off" spellcheck={false} error={url.trim() && !clean ? t('setup.v_bad_link') : ''} data-vdlink />
       <p class="mute">{t('setup.v_link_say')}</p></>
       : <><div class="vdfile"><Button onClick={pick} data-vdfile>{t('setup.v_choose')}</Button><span class="mute" data-raw>{file ? file.name : t('setup.v_or_drop')}</span></div>
       <p class="mute">{t('setup.v_file_say')}</p></>}

@@ -12,6 +12,7 @@ import { copyText } from '../../services/clipboard.js';
 import { askAdd, askPerson } from '../todo-add.js';
 import * as S from '../../planning/school.js';
 import LINES from '../../../lang/school.en.json';
+import { DriveButton } from '../drive-button.jsx';
 addLines(LINES);
 
 const raw = s => <span data-raw>{s}</span>;
@@ -114,7 +115,7 @@ export default function School() {
       <div class="end">
         {(all.length >= 6 || q) && <div class="schq"><TextInput icon="search" label={t('school.find')} value={q} onInput={setQ} onKeyDown={e => { if (e.key === 'Escape' && q) { e.preventDefault(); e.stopPropagation(); setQ(''); } }} data-schq /></div>}
         <Menu label={t('school.add')} items={[{ label: t('school.add_link'), icon: 'link', onSelect: () => setForm({ kind: 'link', cls: forNames() }) }, { label: t('school.add_file'), icon: 'file', onSelect: () => { again.current = ''; fileIn.current.click(); } }, { label: t('school.add_note'), icon: 'note', onSelect: () => setForm({ kind: 'note', cls: forNames() }) }]}
-          trigger={p => <Button variant="primary" icon="plus" {...p} data-schadd>{t('school.add')}</Button>} />
+          trigger={p => <Button variant="primary" icon="plus" {...p} data-schadd>{t('school.add')}</Button>} /><DriveButton input={fileIn} onClick={() => { again.current = ''; }} />
       </div></header>
     <input type="file" multiple hidden ref={fileIn} onChange={e => { const fs = [...e.currentTarget.files]; e.currentTarget.value = ''; pick(fs); }} data-schin />
     {!words.length && <People s={s} setPform={setPform} setSpots={setSpots} change={change} copy={copy} />}

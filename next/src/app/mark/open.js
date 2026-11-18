@@ -12,6 +12,7 @@ import { keepPapers, saveLibrary, saveWork } from '../../students/write.js';
 import * as K from './carry.js';
 import { PARTS } from '../router.js';
 import { setOpenWork } from '../openwork.js';
+import { saving } from '../../services/saving.js';
 import { savedStamp } from '../../shared/tabs.js';
 
 export class NotKept extends Error { constructor(id) { super('The papers for this one aren’t kept in this browser.'); this.name = 'NotKept'; this.id = id; } }
@@ -74,9 +75,12 @@ async function studentsOf(raw) {
 }
 
 // question(q): how the screen asks which rubric to use when the card and the saved work disagree (returns 'a', 'b' or null).
-export async function openKept(id, { question } = {}) {
+// onStep(n, of): papers coming down from her Google Drive, the first time a download is opened on this device (src/app/drive.js dvPull).
+export async function openKept(id, { question, onStep } = {}) {
   const lib = await begin();
-  const rec = await E.paperGet(id);
+  let rec = await E.paperGet(id);
+  const S = saving();
+  if (!rec && S && S.inDrive(id)) { await S.pull(id, onStep); rec = await E.paperGet(id); }
   if (!rec) throw new NotKept(id);
   let { raw, label } = await rawOf(rec.entries, rec.label);
   if (!raw.length) throw new NotKept(id);
@@ -92,7 +96,7 @@ export class NothingIn extends Error { constructor() { super('Nothing found in w
 // Papers brought in (src/app/open.js intake, not from the kept list): the same steps, then the papers are kept in this browser and,
 // for an assignment card, the card is linked to them (assignment.batchId), each through students/write.js. entries: [{ path, file|data }].
 // A newer copy of a download already worked on brings that work over (mark/carry.js); carry(e) asks when it isn't plainly the same one.
-export async function bringIn(entries, { label, assignment, question, carry } = {}) {
+export async function bringIn(entries, { label, assignment, question, carry, drive } = {}) {
   const lib = await begin();
   if (entries.length === 1 && /\.gswork$/i.test(entries[0].path)) throw new NothingIn();
   const got = await rawOf(entries, label);
@@ -113,6 +117,8 @@ export async function bringIn(entries, { label, assignment, question, carry } = 
   // the carried work is this download's first saved work, so it is there when the papers open for marking
   if (earlier) { const kw = b.keptWork; await saveWork(id, d => { for (const k of Object.keys(kw)) if (k !== 't' && kw[k] !== undefined) d[k] = kw[k]; }, { fresh: true }); carriedNow = id; }
   else if (b.fresh && b.keptWork && b.keptWork.scan) await saveWork(id, d => { d.s = {}; d.scan = b.keptWork.scan; }, { fresh: true });
+  // papers picked in Drive: Return can save the marked ones next to them (batch.drive, as src/app/drive.js openFromDrive keeps it)
+  if (drive) { b.drive = drive; await saveWork(id, d => { d.s = d.s || {}; d.drive = drive; }, { fresh: true }); }
   if (sameSize.length) { K.flagInPlace(sameSize); const c = b.carry; await saveWork(id, d => { d.carry = c; }, { fresh: true }); r.changed = sameSize.length; }
   if (assignment) {
     const aid = assignment.id, su = { ...state().setup, spot: undefined };
@@ -133,7 +139,7 @@ async function assemble({ raw, label, students, lib, assignment, question, earli
   if (rub.su) setup = setupOver(rub.su);
   delete setup.spot;
   use({ batch, setup });
-  setOpenWork(batch.id);
+  setOpenWork(batch.id, batch);
   batch.keptWork = keptWork;
   // no work saved for it yet (papers just brought in): its first save makes the record (students/write.js saveWork fresh)
   if (!keptWork && !prefs.get(bid, null)) batch.fresh = true;

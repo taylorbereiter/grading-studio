@@ -16,6 +16,7 @@ import * as undoList from '../../services/undo.js';
 import { onSaved } from '../../shared/saved.js';
 import '../mark/lines.js';
 import '../mark/setup-lines.js';
+import { useSaving } from '../../services/saving.js';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const holderOf = (l, id) => (id === '-' || id === '' ? l.loose : l.classes.find(x => String(x.id) === String(id)));
@@ -73,7 +74,7 @@ const entriesOf = files => [...files].map(f => ({ path: f.webkitRelativePath || 
 
 export default function ClassWork({ classId }) {
   const [lib, setLib] = useState(null), [kept, setKept] = useState(null), [busy, setBusy] = useState(null);
-  const files = useRef(null), folder = useRef(null), scan = useRef(null), want = useRef(null), [ask, setAsk] = useState(null), [split, setSplit] = useState(null);
+  const files = useRef(null), folder = useRef(null), scan = useRef(null), want = useRef(null), fromDrive = useRef(null), [ask, setAsk] = useState(null), [split, setSplit] = useState(null);
   const [name, setName] = useState(null), [move, setMove] = useState(null);
   const [shown, setShown] = useState(() => new Set());
   const L = usePart('linked', true);   // linked classes (class/linked.jsx)
@@ -92,14 +93,17 @@ export default function ClassWork({ classId }) {
       const O = await PARTS.bring();
       // a newer copy of a download she has worked on: asked whether her marks and scores come over, when it isn't plainly the same one
       const carry = e => new Promise(done => setAsk({ e, done: v => { setAsk(null); done(v); } }));
-      const r = await O.bringIn(list[0] && list[0].file ? list : entriesOf(list), { assignment: it, label: it.name, carry });
+      const drive = fromDrive.current; fromDrive.current = null;
+      const r = await O.bringIn(list[0] && list[0].file ? list : entriesOf(list), { assignment: it, label: it.name, carry, drive });
       if (r && cls) (await PARTS.bringin()).classAfter(r.batch.id, cls.id);
       if (r && r.changed) toast(t('setup.c_changed_toast', { n: r.changed }), { ms: 7000 });
       if (r) go('mark', r.batch.id);
     } catch (e) { console.error(e); toast(e && e.name === 'NothingIn' ? t('setup.w_nothing') : e && e.name === 'CannotSave' ? t('mark.cannot') : t('setup.w_failed')); }
     finally { setBusy(null); load(); }
   };
-  const pick = (it, el) => { want.current = it; el.current.value = ''; el.current.click(); };
+  const pick = (it, el) => { want.current = it; fromDrive.current = null; el.current.value = ''; el.current.click(); };
+  // From Google Drive (src/app/drive.js openFromDrive): the papers picked in Google's chooser come in as files from the computer do
+  const S = useSaving(), driveItem = it => (S && S.google().pickNow ? [{ label: t('file.from_drive_pick'), icon: 'drive', onSelect: () => { want.current = it; S.driveFill(files.current, { title: t('drive.pick_many'), picked: p => { fromDrive.current = p[0] && { id: p[0].id, name: p[0].name, kind: p.length === 1 && /\.zip$/i.test(p[0].name) ? 'zip' : 'files' }; } }).catch(e => { console.error(e); toast(t('drive.failed')); }); } }] : []);
   // Files to match to a roster (mark/bringin.jsx MatchRoster): picked, matched to a class's names, then opened as above
   const [match, setMatch] = useState(null);
   const matchFor = it => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true;
@@ -164,9 +168,9 @@ export default function ClassWork({ classId }) {
             {open ? <span class="wopen"><a class="btn sm" href={href('mark', st.m.id)}>{t('setup.w_open')}</a>
               {/* a newer copy of the papers: her work comes over (mark/carry.js) */}
               <Menu label={t('setup.w_again')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.w_again')} disabled={busy === it.id} data-again-for={it.id} />}
-                items={[{ label: t('setup.w_again_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_again_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, quiz(it), more(it), ...links(it)]} /></span>
+                items={[{ label: t('setup.w_again_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_again_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, ...driveItem(it), quiz(it), more(it), ...links(it)]} /></span>
               : <span class="wopen"><Menu label={t('setup.w_bring')} trigger={b => <Button {...b} size="sm" icon="upload" disabled={busy === it.id} data-bring-for={it.id}>{t('setup.w_bring')}</Button>}
-                items={[{ label: t('setup.w_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, { label: t('setup.w_scan'), icon: 'image', onSelect: () => pick(it, scan) }, { label: t('setup.mr_menu'), icon: 'people', onSelect: () => matchFor(it) }]} />
+                items={[{ label: t('setup.w_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, ...driveItem(it), { label: t('setup.w_scan'), icon: 'image', onSelect: () => pick(it, scan) }, { label: t('setup.mr_menu'), icon: 'people', onSelect: () => matchFor(it) }]} />
               <Menu label={t('setup.u_item_more', { name: it.name })} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.u_item_more', { name: it.name })} data-more-for={it.id} />} items={[quiz(it), ...quizScan(it), more(it), ...links(it)]} /></span>}
             {shown.has(it.id) && <Details it={it} st={st} />}
           </li>; })}</ul>}</div>)}

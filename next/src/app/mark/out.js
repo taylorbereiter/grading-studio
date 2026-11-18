@@ -133,7 +133,7 @@ export async function exportAll({ keep = true, dpi = 150, sheet = true, dir = nu
     onStep('bake', items.length, items.length);
     const zip = !dir && Object.keys(files).length ? new Blob([state().fflate.zipSync(files)], { type: 'application/zip' }) : null;
     if (nOut && (dir || zip)) M.setReturned(nOut);
-    return { nOut, failed, zip, name: 'Marked - ' + b.name + '.zip', paths: Object.keys(files) };
+    return { nOut, failed, zip, name: 'Marked - ' + b.name + '.zip', paths: Object.keys(files), files: Object.fromEntries(Object.entries(files).map(([k, v]) => [k, v[0]])) };
   } finally { busy = false; }
 }
 // One student's paper on its own (the current app's exportOne): one file as it is, or several in one ZIP. Marks them as exported.

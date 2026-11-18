@@ -39,7 +39,7 @@ function writeVersion() {
 function writeEngines() {
   const src = fs.readFileSync(path.join(ROOT, 'src/merge.js'), 'utf8');
   const out = '// MADE BY next/build.js FROM src/merge.js. Do not edit: change src/merge.js and build again.\n/* eslint-disable */\n' + src +
-    '\nexport { hashOf, recHash, revsOf, stampData, workCounts, workVec, libPrev, stampLib, mergeLib, mergeWork, mergeStates, mergeLs, focusShared, planTimeMerge, taughtInMerge, vJoin, tabDiffers, tabMerge };\n';
+    '\nexport { hashOf, recHash, revsOf, stampData, workCounts, workVec, libPrev, stampLib, mergeLib, mergeWork, mergeStates, mergeLs, focusShared, planTimeMerge, taughtInMerge, vJoin, tabDiffers, tabMerge, mergePlan, libLinked, libFollow, libHold, snapKeep };\n';
   fs.mkdirSync(path.join(NEXT, 'src/engines'), { recursive: true });
   const f = path.join(NEXT, 'src/engines/merge.js');
   if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
@@ -596,7 +596,7 @@ async function build() {
     loader: { '.woff2': 'file', '.json': 'json', '.webp': 'file' }, assetNames: '[name]-[hash]',
     outdir: DIST, bundle: true, splitting: true, format: 'esm', target: ['chrome109', 'safari16'], minify: !process.env.GS_NEXT_DEBUG,
     chunkNames: 'chunk-[hash]', entryNames: '[name]', metafile: true, absWorkingDir: ROOT, legalComments: 'none', logLevel: 'warning',
-    jsxFactory: 'h', jsxFragment: 'Fragment', define: { __GS_LANGS__: JSON.stringify(langList()), __GS_DATA_V__: String(dataVersion()) },
+    jsxFactory: 'h', jsxFragment: 'Fragment', define: { __GS_LANGS__: JSON.stringify(langList()), __GS_DATA_V__: String(dataVersion()), __GS_GCID__: JSON.stringify(process.env.GCID || require('../site.json').googleClientId || '') },
   });
   fs.writeFileSync(path.join(DIST, 'meta.json'), JSON.stringify(r.metafile, null, 1) + '\n');
   // The tokens, as a stylesheet: made from next/src/ui/tokens.js, the one place colours and sizes are written.

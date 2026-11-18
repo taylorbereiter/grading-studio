@@ -15,7 +15,7 @@
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import * as fflate from 'fflate';
-import { Sheet, Dialog, Button, IconButton, Icon, TextInput, Checkbox, Segmented, toast } from '../../ui/index.js';
+import { Sheet, Dialog, Button, IconButton, Icon, TextInput, Checkbox, Segmented, Menu, toast } from '../../ui/index.js';
 import { Mic } from '../../ui/services.jsx';
 import { t, date } from '../../i18n/t.js';
 import { go, PARTS } from '../router.js';
@@ -28,6 +28,7 @@ import { isExample } from '../plan/examples.js';
 import { assistant } from '../../services/assistant.js';
 import { saveFailed } from '../plan/save.js';
 import '../plan/tool-lines.js';
+import { DriveButton, useDrivePick } from '../drive-button.jsx';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 const DOC_TYPE = 'text/html';
@@ -123,7 +124,7 @@ export function ImportSheet({ p, slot, onClose }) {
     footer={<><span class="grow" /><Button variant="quiet" onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" disabled={busy || !text.trim()} onClick={pasted} data-focus="import-paste">{t('tool.import_pasted')}</Button></>}>
     <div class="actedit" ref={box}>
       <p class="mute">{t('tool.import_text')}</p>
-      <label class="btn"><Icon name="upload" />{t('tool.choose_file')}<input type="file" class="vh" accept=".gslesson,.json,application/json" onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; file(f); }} data-import /></label>
+      <label class="btn"><Icon name="upload" />{t('tool.choose_file')}<input type="file" class="vh" accept=".gslesson,.json,application/json" onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; file(f); }} data-import /></label><DriveButton />
       <label class="fld"><span class="lab">{t('tool.or_paste')}</span><textarea rows={8} value={text} onInput={e => setText(e.currentTarget.value)} data-focus="import-text" /></label>
     </div>
   </Sheet>;
@@ -233,7 +234,7 @@ export function Finished({ p, l, save, onClose }) {
   return <Sheet open title={t('tool.final_title')} icon={<Icon name="slides" />} onClose={onClose} footer={<><span class="grow" /><Button variant="quiet" onClick={onClose}>{t('common.close')}</Button></>}>
     <div class="fin">
       <p class="mute">{f ? t('tool.final_has') : t('tool.final_none')}</p>
-      <label class={'btn' + (busy ? ' busy' : '')}><Icon name="upload" />{f ? t('tool.final_newer') : t('tool.final_upload')}<input type="file" class="vh" disabled={busy} accept=".pptx,.zip,application/zip" onChange={e => { const x = e.currentTarget.files[0]; e.currentTarget.value = ''; pick(x); }} data-final /></label>
+      <label class={'btn' + (busy ? ' busy' : '')}><Icon name="upload" />{f ? t('tool.final_newer') : t('tool.final_upload')}<input type="file" class="vh" disabled={busy} accept=".pptx,.zip,application/zip" onChange={e => { const x = e.currentTarget.files[0]; e.currentTarget.value = ''; pick(x); }} data-final /></label><DriveButton />
       {f && <div class="frow"><Icon name="slides" /><span class="main"><b data-raw>{f.name}</b><small class="mute">{size(f.size)} · {t('tool.uploaded', { when: when(f.at) })}{finFresh(l) ? '' : ' · ' + t('tool.changed_since')}</small></span>
         <Button size="sm" icon="download" onClick={() => dl(f)} data-focus="final-dl">{t('tool.download')}</Button></div>}
       {old.length > 0 && <details class="finold"><summary>{t('tool.older_finals', { n: old.length })}</summary>
@@ -293,6 +294,8 @@ export function Shots({ p, l, i, save, setCur }) {
     for (const f of files) { if (!/^image\//.test(f.type)) continue; try { got.push({ id: E.lid(), ...(await T.shrinkPic(f)), note: '' }); } catch { toast(t('tool.pic_unread')); } }
     if (got.length) put(x => { x.ctx = [...(x.ctx || []), ...got]; });
   };
+  const shotIn = useRef(), drive = useDrivePick(shotIn);
+  const shotInput = <input type="file" class="vh" accept="image/*" multiple ref={shotIn} tabIndex={drive ? -1 : undefined} onChange={e => { const fs = [...e.currentTarget.files]; e.currentTarget.value = ''; add(fs); }} data-shot />;
   const toSlide = x => { const n = copy(l); n.slides.splice(i + 1, 0, E.normSlide({ layout: 'picture', title: x.note || '', img: { src: x.src, w: x.w, h: x.h, source: '' }, fmt: 2 })); save(n); setCur(i + 1); toast(t('tool.shot_on_slide')); };
   const copyPic = async x => {
     try { const im = new Image(); im.src = x.src; await im.decode(); const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0);
@@ -306,7 +309,10 @@ export function Shots({ p, l, i, save, setCur }) {
     onDragOver={e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { e.preventDefault(); setOver(true); } }} onDragLeave={() => setOver(false)}
     onDrop={e => { if (!e.dataTransfer || !e.dataTransfer.files.length) return; e.preventDefault(); setOver(false); add([...e.dataTransfer.files]); }}>
     <div class="row"><h2 class="sub grow" id="h-shots">{t('tool.shots', { name })}</h2>
-      <label class="btn sm"><Icon name="image" />{t('tool.add_shot')}<input type="file" class="vh" accept="image/*" multiple onChange={e => { const fs = [...e.currentTarget.files]; e.currentTarget.value = ''; add(fs); }} data-shot /></label></div>
+      {/* with Drive, one button opens a short menu: this computer or Drive (the slide screen stays under its presses at rest) */}
+      {drive ? <><Menu label={t('tool.add_shot')} trigger={b => <Button {...b} size="sm" icon="image" data-shotmenu>{t('tool.add_shot')}</Button>}
+        items={[{ label: t('file.from_computer'), icon: 'upload', onSelect: () => shotIn.current.click() }, { label: t('file.from_drive_pick'), icon: 'drive', onSelect: drive }]} />{shotInput}</>
+        : <label class="btn sm"><Icon name="image" />{t('tool.add_shot')}{shotInput}</label>}</div>
     {!list.length && <p class="mute small">{t('tool.shots_help')}</p>}
     <ul class="shotlist">{list.map((x, k) => <li>
       <button type="button" class="shotimg" onClick={() => setBig(x)} aria-label={t('tool.shot_bigger')}><img src={x.src} alt={x.note || ''} data-raw /></button>

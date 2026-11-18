@@ -19,6 +19,7 @@ import { undo as undoLast } from '../../services/undo.js';
 import { onSaved } from '../../shared/saved.js';
 import './lines.js';
 import './setup-lines.js';
+import { DriveButton } from '../drive-button.jsx';
 
 const J = v => JSON.parse(JSON.stringify(v));
 const ROW_MAX = 6, TOP_MAX = 10;
@@ -232,7 +233,7 @@ export function SetupDialog({ onClose }) {
       <div class="su-page" data-supage>
         <b>{t('setup.su_page')}</b>
         <p class="mute">{t('setup.su_page_say')}</p>
-        <span class="su-btns"><Button size="sm" icon="upload" disabled={busy} onClick={() => { file.current.value = ''; file.current.click(); }} data-suup>{rp ? t('setup.su_replace') : t('setup.su_bring')}</Button>
+        <span class="su-btns"><Button size="sm" icon="upload" disabled={busy} onClick={() => { file.current.value = ''; file.current.click(); }} data-suup>{rp ? t('setup.su_replace') : t('setup.su_bring')}</Button><DriveButton input={file} />
           {rp && <><b data-raw>{rp.name || t('setup.su_page_name')}</b>
             <Segmented size="sm" label={t('setup.su_where')} value={d.rubricPos || 'end'} onChange={v => { d.rubricPos = v; re(); }} options={[{ value: 'end', label: t('setup.su_after') }, { value: 'start', label: t('setup.su_before') }]} />
             <Button size="sm" variant="quiet" onClick={() => { setPage(null); setFound(null); }} data-surprm>{t('setup.su_remove')}</Button></>}</span>

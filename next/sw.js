@@ -63,9 +63,32 @@ async function answer(key, req, page) {
   } catch {}
   return fetch(req);
 }
+// A Drive video played straight from Drive (as the root worker does): the page's player asks for gs-drive/<id>, and this asks Drive for
+// the same bytes (the part being watched, by its Range), signed with her key. The key is asked of the page (whole/stream.js) and held
+// only in memory.
+let dTok = null;
+async function driveToken(clientId, fresh) {
+  if (!fresh && dTok && dTok.exp > Date.now() + 30000) return dTok.token;
+  const c = (clientId && await self.clients.get(clientId)) || (await self.clients.matchAll({ type: 'window' })).find(x => x.url.startsWith(SCOPE));
+  if (!c) return null;
+  const t = await new Promise(res => { const ch = new MessageChannel(), to = setTimeout(() => res(null), 10000); ch.port1.onmessage = ev => { clearTimeout(to); res(ev.data); }; c.postMessage({ type: 'gs-drive-token', fresh: !!fresh }, [ch.port2]); });
+  dTok = t && t.token ? { token: t.token, exp: t.exp || Date.now() + 300000 } : null;
+  return dTok && dTok.token;
+}
+async function driveStream(id, req, clientId) {
+  const go = async fresh => {
+    const tok = await driveToken(clientId, fresh);
+    if (!tok) return new Response('', { status: 401, statusText: 'Sign in' });
+    const h = { Authorization: 'Bearer ' + tok }, rg = req.headers.get('Range'); if (rg) h.Range = rg;
+    return fetch('https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(id) + '?alt=media&supportsAllDrives=true', { headers: h, signal: req.signal });
+  };
+  try { let r = await go(false); if (r.status === 401) r = await go(true); return r; } catch (err) { return new Response('', { status: 502, statusText: String(err && err.message || err) }); }
+}
 self.addEventListener('fetch', e => {
   const req = e.request; if (req.method !== 'GET' || !req.url.startsWith(SCOPE)) return;
   const rel = new URL(req.url).pathname.slice(new URL(SCOPE).pathname.length);
+  const dm = /^gs-drive\/([\w-]{10,})$/.exec(rel);
+  if (dm) { e.respondWith(driveStream(dm[1], req, e.clientId)); return; }
   const page = req.mode === 'navigate';
   const key = rel === '' ? 'index.html' : rel;
   if (page && key !== 'index.html') return;   // the gallery and the proof page always come from the web
@@ -75,7 +98,8 @@ self.addEventListener('fetch', e => {
 });
 self.addEventListener('message', e => {
   const d = e.data || {};
-  if (d.type === 'gsn-state') e.waitUntil(tell());
+  if (d.type === 'gs-drive-ok' && e.ports[0]) e.ports[0].postMessage({ drive: 1 });
+  else if (d.type === 'gsn-state') e.waitUntil(tell());
   else if (d.type === 'gsn-check') e.waitUntil(inTurn(check).then(() => tell({ checked: 'ok' }), () => tell({ checked: 'offline' })));
   else if (d.type === 'gsn-apply') e.waitUntil(inTurn(promote).then(done => tell({ applied: !!done })));
   else if (d.type === 'gsn-mode') e.waitUntil(caches.open(KEPT).then(c => c.put(at('mode'), new Response(d.mode === 'auto' ? 'auto' : 'ask'))).then(() => tell()));

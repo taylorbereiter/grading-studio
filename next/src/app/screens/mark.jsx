@@ -402,12 +402,12 @@ export default function MarkScreen({ route, classes }) {
     PARTS.marking().then(m => { if (!live) return; MK = m; off = m.start({ toast: text => toast(text), openStudent: i => pickRef.current(i), changed: () => tick(n => n + 1) }); tick(n => n + 1); });
     return () => { live = false; if (off) off(); }; }, [w]);
   // again: the download opened once more from storage (another window saved it), on the student she was on (wantKey)
-  const [again, setAgain] = useState(0), wantKey = useRef(null);
+  const [again, setAgain] = useState(0), wantKey = useRef(null), [dl, setDl] = useState(null);
   useEffect(() => {
     let live = true; setW(null); setErr(null); seam.read = false; seam.ready = false;
     // the opener (mark/open.js, with the lifted opening code) loads as a part of its own, so it isn't in this screen's own load
-    PARTS.bring().then(O => O.openKept(id, { question: q => new Promise(done => setAsk({ q, done: v => { setAsk(null); done(v); } })) }))
-      .then(r => { if (!live) return; if (!r) return history.back(); setW(r);
+    PARTS.bring().then(O => O.openKept(id, { question: q => new Promise(done => setAsk({ q, done: v => { setAsk(null); done(v); } })), onStep: (n, of) => live && setDl({ n, of }) }))
+      .then(r => { if (!live) return; setDl(null); if (!r) return history.back(); setW(r);
         const k = wantKey.current, at = k ? r.batch.students.findIndex(st => st.key === k) : -1; wantKey.current = null;
         const n = at >= 0 ? at : Math.min(r.cur || 0, r.batch.students.length - 1); setCur(n); if (at >= 0) use({ cur: at }); }, e => { console.error(e); if (live) setErr(e); });
     return () => { live = false; seam.ready = false; if (MK) MK.M.saveNowDone(); };
@@ -516,7 +516,7 @@ export default function MarkScreen({ route, classes }) {
     {setupDlg && setupDlg.k === 'qb' && <setupDlg.B.QuickBoxes onClose={() => setSetupDlg(null)} onSaved={on => (on ? quick() : setSetupDlg(null))} />}
     <RubricAsk ask={ask} />
     {err ? <EmptyState icon="inbox" title={t(err.name === 'NotKept' ? 'mark.not_kept' : 'mark.page_bad')} text={err.name === 'NotKept' ? t('mark.not_kept_text') : ''} />
-      : !w ? <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />
+      : !w ? (dl ? <p class="mk-dl mute" role="status" data-mkdl>{t('mark.from_drive', { n: dl.n, of: dl.of })}</p> : <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />)
       : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} E={out.E} cur={cur} onOpen={openOn} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
       : <><div class="mk-body">
         {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} onHide={MK ? () => hideNames() : null} onShuffle={() => hideNames(true)} />}

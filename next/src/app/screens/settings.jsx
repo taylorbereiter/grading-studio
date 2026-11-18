@@ -31,6 +31,11 @@ function MorePart({ name }) {
   const C = P[name];
   return <C />;
 }
+function SavePart() {
+  const [P, setP] = useState(null);
+  useEffect(() => { PARTS.setsave().then(setP); }, []);
+  return P ? <P.SavingSettings /> : null;
+}
 function FocusPart() {
   const [P, setP] = useState(null);
   useEffect(() => { PARTS.setfocus().then(setP); }, []);
@@ -75,7 +80,7 @@ export default function Settings({ route }) {
         <h2 class="h2">{t(g[2])}</h2>
         {g[0] === 'display' ? <><Display /><MorePart name="DisplayMore" /></> : g[0] === 'about' ? <About /> : g[0] === 'timetable' ? <TimetableSettings />
           : g[0] === 'grading' ? <><GradingPart name="GradingSettings" /><MorePart name="GradingMore" /></> : g[0] === 'marking' ? <><GradingPart name="MarkingSettings" /><MorePart name="MarkingMore" /></>
-          : g[0] === 'focus' ? <FocusPart /> : g[0] === 'classes' ? <><GradingPart name="ClassesSettings" /><MorePart name="ClassesMore" /><MorePart name="ClassesSetup" /></> : g[0] === 'ai' ? <MorePart name="AiSettings" />
+          : g[0] === 'focus' ? <FocusPart /> : g[0] === 'classes' ? <><GradingPart name="ClassesSettings" /><MorePart name="ClassesMore" /><MorePart name="ClassesSetup" /></> : g[0] === 'ai' ? <MorePart name="AiSettings" /> : g[0] === 'saving' ? <SavePart />
           : <EmptyState icon="spark" title={t('settings.later_title')} text={t('settings.later_text')} />}
       </section>
     </div>
