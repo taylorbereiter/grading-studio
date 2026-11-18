@@ -87,7 +87,7 @@ function MoveTo({ st, path, f, onClose }) {
     if (r.kept) toast(t('setup.f_mv_clash', { a, b, said: r.kept }));
   };
   if (qa) {
-    const answer = v => { const res = qa.res; setQa({ ...qa, res: null }); if (res) res(v); };
+    const answer = v => { const res = qa.res; setQa(qa => ({ ...qa, res: null })); if (res) res(v); };
     return <Dialog open title={t('setup.f_move_t', { name: C.shown(st, f.name) })} onClose={() => answer(false)}
       actions={<><Button onClick={() => answer(false)} data-keep>{t('setup.f_mv_keep', { a })}</Button><Button variant="primary" onClick={() => answer(true)} data-take>{t('setup.f_mv_ok', { b: qa.b })}</Button></>}>
       <p data-raw>{t('setup.f_mv_q', { a, b: qa.b, said: qa.said, n: qa.n })}</p>

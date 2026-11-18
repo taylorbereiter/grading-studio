@@ -22,6 +22,20 @@ function GradingPart({ name }) {
   const C = P[name];
   return <C />;
 }
+// Focus and goals load with their page too (PARTS.setfocus): the timer's engine comes with them.
+// The rest of each page (PARTS.setmore), after what is already there.
+function MorePart({ name }) {
+  const [P, setP] = useState(null);
+  useEffect(() => { PARTS.setmore().then(setP); }, []);
+  if (!P) return null;
+  const C = P[name];
+  return <C />;
+}
+function FocusPart() {
+  const [P, setP] = useState(null);
+  useEffect(() => { PARTS.setfocus().then(setP); }, []);
+  return P ? <P.FocusSettings /> : null;
+}
 function Display() {
   const [look, setLook] = useState(currentLook()), [lang, setLang] = useState(savedLanguage());
   useEffect(() => onLook(setLook), []);
@@ -38,14 +52,18 @@ function Display() {
   </>;
 }
 function About() {
-  const u = useUpdate();
-  return <Card title={t('settings.about')}>
+  const u = useUpdate(), standalone = typeof matchMedia === 'function' && matchMedia('(display-mode: standalone)').matches;
+  return <><Card title={t('settings.about')}>
     <p>{u.current ? t('update.current', { v: u.current }) : t('update.not_kept')}</p>
     {u.waiting && <p role="status">{t('update.ready_v', { v: u.waiting })}</p>}
     <div class="row gap">{u.waiting ? <Button variant="primary" onClick={u.apply}>{t('update.now')}</Button> : <Button onClick={u.check}>{t('update.check')}</Button>}</div>
     <Segmented label={t('update.mode')} value={u.mode} onChange={u.setMode} options={[{ value: 'ask', label: t('update.mode_ask') }, { value: 'auto', label: t('update.mode_auto') }]} />
     {u.checked === 'offline' && <p class="hint">{t('update.offline')}</p>}
-  </Card>;
+  </Card>
+  <Card title={t('settings.install_h')}>
+    <p class="mute">{t(standalone || u.installed ? 'settings.install_done' : 'settings.install_about')}</p>
+    {u.install && <Button onClick={u.installApp} data-install>{t('settings.install')}</Button>}
+  </Card></>;
 }
 export default function Settings({ route }) {
   const g = GROUPS.find(x => x[0] === route.params.group) || GROUPS.find(x => x[0] === 'display');
@@ -55,7 +73,10 @@ export default function Settings({ route }) {
       <nav class="setnav" aria-label={t('nav.settings')}>{GROUPS.map(([id, icon, line]) => <NavItem icon={icon} label={t(line)} href={href('settings', id)} current={id === g[0]} />)}</nav>
       <section class="setbody" aria-label={t(g[2])}>
         <h2 class="h2">{t(g[2])}</h2>
-        {g[0] === 'display' ? <Display /> : g[0] === 'about' ? <About /> : g[0] === 'timetable' ? <TimetableSettings /> : g[0] === 'grading' ? <GradingPart name="GradingSettings" /> : g[0] === 'marking' ? <GradingPart name="MarkingSettings" /> : g[0] === 'classes' ? <GradingPart name="ClassesSettings" /> : <EmptyState icon="spark" title={t('settings.later_title')} text={t('settings.later_text')} />}
+        {g[0] === 'display' ? <><Display /><MorePart name="DisplayMore" /></> : g[0] === 'about' ? <About /> : g[0] === 'timetable' ? <TimetableSettings />
+          : g[0] === 'grading' ? <><GradingPart name="GradingSettings" /><MorePart name="GradingMore" /></> : g[0] === 'marking' ? <><GradingPart name="MarkingSettings" /><MorePart name="MarkingMore" /></>
+          : g[0] === 'focus' ? <FocusPart /> : g[0] === 'classes' ? <><GradingPart name="ClassesSettings" /><MorePart name="ClassesMore" /><MorePart name="ClassesSetup" /></> : g[0] === 'ai' ? <MorePart name="AiSettings" />
+          : <EmptyState icon="spark" title={t('settings.later_title')} text={t('settings.later_text')} />}
       </section>
     </div>
   </div>;

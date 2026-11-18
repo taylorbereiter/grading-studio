@@ -65,9 +65,9 @@ export default function Examples({ view: start }) {
   const groups = groupsOf(list), flat = groups.flat(), filtered = Object.values(f).some(v => String(v).trim());
   const uniq = pairs => [...new Map(pairs).entries()].sort((a, b) => natural(a[1], b[1]));
   const clsOpts = uniq(src.map(r => [r.cls || '-', cname(r.cls)])), asgOpts = uniq(src.filter(r => !f.cls || (r.cls || '-') === f.cls).map(r => [exAsgKey(r), r.title || t('class.ex_asg')]));
-  const set = (k, v) => setF({ ...f, [k]: v, ...(k === 'cls' ? { asg: '' } : {}) });
+  const set = (k, v) => setF(f => ({ ...f, [k]: v, ...(k === 'cls' ? { asg: '' } : {}) }));
   const sel = (k, opts, any) => <Select label={any} value={f[k]} onChange={v => set(k, v)} options={[{ value: '', label: any }, ...opts.map(([v, l]) => ({ value: v, label: l }))]} data-exf={k} />;
-  const act = { show: r => setShow({ list: flat, at: Math.max(0, flat.findIndex(x => x.id === r.id)) }), edit: (r, k) => setEdit({ r, k }), cover: r => setCover(r), tag: v => setF({ ...f, tag: v }) };
+  const act = { show: r => setShow({ list: flat, at: Math.max(0, flat.findIndex(x => x.id === r.id)) }), edit: (r, k) => setEdit({ r, k }), cover: r => setCover(r), tag: v => setF(f => ({ ...f, tag: v })) };
   return <div class="cp-ex" data-examples>
     <div class="exhead"><Segmented label={t('class.ex_view')} value={view} onChange={v => { setView(v); setF({ cls: '', asg: '', kind: '', row: '', tag: '', q: '' }); }}
       options={[{ value: 'ex', label: t('class.ex_strong') }, { value: 'watch', label: t('class.ex_watchlist') }, { value: 'who', label: t('class.ex_whose') }]} />

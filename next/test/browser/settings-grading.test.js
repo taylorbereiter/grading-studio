@@ -150,6 +150,14 @@ test('while marking, saved comments and the mark key: the list kept or folded, E
   assert.ok(await until(async () => ((await ls(p, 'gs.markKey')).means || {}).sp === 'Look this word up.'));
   await p.click('[data-sgmkusual="sp"]');
   const k = await ls(p, 'gs.markKey'); assert.ok(!(k.names || {}).sp && !('sp' in (k.means || {})), 'back to the usual wording');
+  // typing on straight away in the next box: the save of the box just left never takes back what she has started typing
+  await p.waitForFunction(() => document.querySelector('[data-sgmk="sp"] input') && !document.querySelector('[data-sgmkusual="sp"]'));
+  await p.$eval('[data-sgmk="sp"] input', e => { e.focus(); e.select(); });
+  await p.waitForFunction(() => document.activeElement && document.activeElement.closest('[data-sgmk="sp"]'));
+  await p.keyboard.type('Sp'); await p.keyboard.press('Tab'); await p.keyboard.down('Control'); await p.keyboard.press('a'); await p.keyboard.up('Control');
+  await p.keyboard.type('Spelling, look it up.'); await p.keyboard.press('Tab');
+  assert.ok(await until(async () => { const m = await ls(p, 'gs.markKey'); return (m.names || {}).sp === 'Sp' && (m.means || {}).sp === 'Spelling, look it up.'; }), 'both boxes kept');
+  assert.deepEqual(await p.$$eval('[data-sgmk="sp"] input', l => l.map(e => e.value)), ['Sp', 'Spelling, look it up.']);
   // the current app reads the same saved comments and mark key
   const q = await ctx.newPage(); await q.evaluateOnNewDocument(STEADY);
   await q.goto(srv.url); await q.waitForFunction(() => window.__gs && window.__gs.state, { timeout: 60000 });

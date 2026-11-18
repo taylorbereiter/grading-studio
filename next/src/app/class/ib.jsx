@@ -86,7 +86,7 @@ function AddLevels({ c, itId, onClose }) {
   const [a, setA] = useState(() => ({ name: it0 ? it0.name : '', due: it0 ? it0.due || '' : B.isoDay(Date.now()), fm: !!it0 && it0.type === 'fm', crit: it0 && it0.crit ? it0.crit.slice() : crit.slice(0, 2).map(k => k.k), s: it0 ? JSON.parse(JSON.stringify((it0.typed && it0.typed.s) || {})) : {} }));
   const [err, setErr] = useState('');
   const on = crit.filter(k => a.crit.includes(k.k));
-  const put = (n, k, v) => { const s = { ...a.s }, r = { ...(s[n] || {}) }; r.l = { ...(r.l || {}) }; if (v === '') delete r.l[k]; else r.l[k] = v; s[n] = r; setA({ ...a, s }); };
+  const put = (n, k, v) => setA(a => { const s = { ...a.s }, r = { ...(s[n] || {}) }; r.l = { ...(r.l || {}) }; if (v === '') delete r.l[k]; else r.l[k] = v; s[n] = r; return { ...a, s }; });
   const save = () => {
     if (!a.name.trim()) { setErr(t('class.name_needed_task')); return; }
     if (!a.crit.length) return toast(t('class.tick_crit'));
@@ -109,10 +109,10 @@ function AddLevels({ c, itId, onClose }) {
     footer={<>{it0 && it0.typed && <Button onClick={del} data-ib-del>{t('class.delete_levels')}</Button>}<span class="grow" /><Button onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" onClick={save} data-ib-save>{t('common.save')}</Button></>}>
     <div class="cp-add" data-ib-addbox>
       <p class="mute small">{t('class.add_levels_say')}</p>
-      <div class="cp-addgrid"><TextInput label={t('class.task')} value={a.name} error={err} onInput={v => setA({ ...a, name: v })} maxLength={80} placeholder={t('class.task_ph')} data-ib-name autofocus={!it0} />
-        <TextInput type="date" label={t('class.date')} value={a.due} onInput={v => setA({ ...a, due: v })} />
-        <Checkbox label={t('class.formative')} checked={a.fm} onChange={v => setA({ ...a, fm: v })} /></div>
-      <div class="cp-crits" role="group" aria-label={t('class.assessed')}><span class="mute">{t('class.assessed')}</span>{crit.map(k => <Checkbox label={<span data-raw>{k.k} <span class="mute">{k.name}</span></span>} checked={a.crit.includes(k.k)} onChange={v => setA({ ...a, crit: crit.map(q => q.k).filter(q => (q === k.k ? v : a.crit.includes(q))) })} />)}</div>
+      <div class="cp-addgrid"><TextInput label={t('class.task')} value={a.name} error={err} onInput={v => setA(a => ({ ...a, name: v }))} maxLength={80} placeholder={t('class.task_ph')} data-ib-name autofocus={!it0} />
+        <TextInput type="date" label={t('class.date')} value={a.due} onInput={v => setA(a => ({ ...a, due: v }))} />
+        <Checkbox label={t('class.formative')} checked={a.fm} onChange={v => setA(a => ({ ...a, fm: v }))} /></div>
+      <div class="cp-crits" role="group" aria-label={t('class.assessed')}><span class="mute">{t('class.assessed')}</span>{crit.map(k => <Checkbox label={<span data-raw>{k.k} <span class="mute">{k.name}</span></span>} checked={a.crit.includes(k.k)} onChange={v => setA(a => ({ ...a, crit: crit.map(q => q.k).filter(q => (q === k.k ? v : a.crit.includes(q))) }))} />)}</div>
       {on.length ? <table class="cp-ent"><thead><tr><th>{t('class.student')}</th>{on.map(k => <th>{k.k} <small class="mute">{t('class.zero_to', { n: B.IB_TOP })}</small></th>)}</tr></thead>
         <tbody>{c.names.map(n => <tr><td data-raw>{n}</td>{on.map(k => { const v = ((a.s[n] || {}).l || {})[k.k]; return <td><input class="input cp-sc" type="number" min="0" max={B.IB_TOP} step="1" value={v == null ? '' : v} aria-label={t('class.level_for', { k: k.k, name: n })} onInput={e => put(n, k.k, e.currentTarget.value)} data-ib-lv={k.k} /></td>; })}</tr>)}</tbody></table>
         : <p class="mute small">{t('class.tick_crit')}</p>}
@@ -148,7 +148,7 @@ export function GradingDialog({ c, onClose }) {
   const [d, setD] = useState(() => ({ way: way0, group: way0 === 'myp' && B.ibGroup(ib.group) ? ib.group : way0 === 'myp' ? 'own' : 'sci', crit: way0 === 'myp' ? B.ibCrit(c) : B.ibGroupCrit(B.ibGroup(ib.group) ? ib.group : 'sci'),
     mypB: way0 === 'myp' ? B.ibBounds(c) : null, dpB: way0 === 'dp' ? B.ibBounds(c) : B.ibBoundsClean(null, B.IB_BOUNDS_DP), touched: false,
     dpW: Object.fromEntries(B.bkCats().filter(k => k[0] !== 'fm').map(k => [k[0], +((way0 === 'dp' && ib.w && ib.w[k[0]] != null ? ib.w : B.bkConf().w)[k[0]]) || 0])) }));
-  const set = part => setD({ ...d, ...part });
+  const set = part => setD(d => ({ ...d, ...part }));
   const mypB = d.mypB || B.ibBoundsFor(d.crit.length), top = d.crit.length * B.IB_TOP;
   const ways = [['', t('class.way_pts'), t('class.way_pts_say')], ['myp', t('class.way_myp'), t('class.way_myp_say')], ['dp', t('class.way_dp'), t('class.way_dp_say')]];
   const groups = B.IB_GROUPS.map(g => ({ value: g[0], label: g[1] }));
@@ -173,7 +173,7 @@ export function GradingDialog({ c, onClose }) {
   return <Sheet open wide title={t('class.graded_how', { name: c.name })} onClose={onClose} footer={<><span class="grow" /><Button onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" onClick={check} data-grading-save>{t('common.save')}</Button></>}>
     <div class="cp-ways" role="radiogroup" aria-label={t('class.graded_how_short')}>{ways.map(([k, l, s]) => <button type="button" role="radio" aria-checked={String(d.way === k)} class={'cp-way' + (d.way === k ? ' on' : '')} onClick={() => set({ way: k })} data-way={k || 'pts'}><b>{l}</b><span>{s}</span></button>)}</div>
     {d.way === 'myp' && <div class="cp-ibcols"><div>
-      <Select label={t('class.subject_group')} value={d.group} options={groups} onChange={v => setD({ ...d, group: v, crit: B.ibGroupCrit(v), mypB: d.touched ? d.mypB : null })} data-ib-group />
+      <Select label={t('class.subject_group')} value={d.group} options={groups} onChange={v => setD(d => ({ ...d, group: v, crit: B.ibGroupCrit(v), mypB: d.touched ? d.mypB : null }))} data-ib-group />
       <p class="small"><b>{t('class.criteria')}</b> <span class="mute">{t('class.criteria_say', { n: B.IB_TOP })}</span></p>
       {d.crit.map((x, i) => <div class="cp-crit"><b>{x.k}</b><input class="input" value={x.name} maxLength={80} aria-label={t('class.crit_name', { k: x.k })} onInput={e => set({ crit: d.crit.map((y, j) => (j === i ? { ...y, name: e.currentTarget.value } : y)) })} />
         <IconButton icon="x" label={t('class.crit_remove', { k: x.k })} disabled={d.crit.length < 2} onClick={() => { const crit = d.crit.filter((_, j) => j !== i).map((y, j) => ({ ...y, k: B.ibLetter(j) })); set({ crit, mypB: d.touched ? d.mypB : null }); }} /></div>)}

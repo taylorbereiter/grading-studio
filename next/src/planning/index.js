@@ -21,6 +21,12 @@ export const school = localKey(P, 'gs.school');
 export const manageBacLinks = localKey(P, 'gs.mblinks');
 export const taughtIn = localKey(P, 'gsp.taughtIn');
 export const planTime = localKey(P, 'gsp.planTime');
+// The focus timer's own: the session going on (shared with the current app's pages and its Planner), sessions that ended in the
+// Planner, "Next paper" pressed there, and the settings the Planner reads for counting time.
+export const focusRun = localKey(P, 'gsp.focusRun');
+export const focusQueue = localKey(P, 'gsp.focusQ');
+export const focusGo = localKey(P, 'gsp.focusGo');
+export const timeCount = localKey(P, 'gsp.timeCount');
 export const newYear = localKey(P, 'gsp.newYear');
 
 // Teacher-wide settings with no student content (stage 2 put them on this side, whichever page writes them).

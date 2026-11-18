@@ -84,3 +84,10 @@ export function workForCalendar() {
     .map(it => ({ id: it.id, text: String(it.x || ''), day: it.d, done: !!it.done, cls: (((l.classes || []).find(c => c && c.id === it.c)) || {}).name || '' }));
   return { due, todos };
 }
+// Home's Focus button (src/focus.js fcGoalHtml, the sidebar's Focus ring): today against her goal, and the session going on, if
+// any, with its seconds. Numbers only.
+export async function focusForHome() {
+  const F = await import('./students/focus.js'); await F.focusRead();
+  const E = F.engine, c = E.fcConf(), r = E.fcRun(), on = !!r && (r.st === 'run' || r.st === 'paused' || r.st === 'brk');
+  return { goal: c.goal ? { n: E.fcGoalNow(c), of: c.goal.n } : null, run: on ? { st: r.st, secs: r.st === 'brk' ? E.fcLeft(r) : r.one ? E.fcElapsed(r) : E.fcLeft(r) } : null };
+}
