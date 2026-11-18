@@ -166,11 +166,11 @@ export default function MarkScreen({ route, classes }) {
     PARTS.marking().then(m => { if (!live) return; MK = m; off = m.start({ toast: text => toast(text), openStudent: i => pickRef.current(i), changed: () => tick(n => n + 1) }); tick(n => n + 1); });
     return () => { live = false; if (off) off(); }; }, [w]);
   useEffect(() => {
-    let live = true; setW(null); setErr(null); seam.read = false;
+    let live = true; setW(null); setErr(null); seam.read = false; seam.ready = false;
     // the opener (mark/open.js, with the lifted opening code) loads as a part of its own, so it isn't in this screen's own load
     PARTS.bring().then(O => O.openKept(id, { question: q => new Promise(done => setAsk({ q, done: v => { setAsk(null); done(v); } })) }))
       .then(r => { if (!live) return; if (!r) return history.back(); setW(r); setCur(Math.min(r.cur || 0, r.batch.students.length - 1)); }, e => { console.error(e); if (live) setErr(e); });
-    return () => { live = false; if (MK) MK.M.saveNowDone(); };
+    return () => { live = false; seam.ready = false; if (MK) MK.M.saveNowDone(); };
   }, [id]);
   const pick = useCallback(i => { if (!w) return; const n = Math.max(0, Math.min(w.batch.students.length - 1, i)); if (MK) MK.M.commit(); if (n !== state().cur) seam.ready = false; setCur(n); use({ cur: n }); }, [w]);
   const pickRef = useRef(pick); pickRef.current = pick;

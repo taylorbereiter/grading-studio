@@ -61,7 +61,8 @@ test('a file added, replaced, removed and brought back in the new app is where t
   await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
   const i = await p.evaluate(k => window.__mark.state().batch.students.findIndex(s => s.key === k), KEY);
   await p.click('[data-st="' + i + '"]');
-  await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready, { timeout: 60000 }, i);
+  // the papers are read in the background as they open; what that changes (a file left out by itself) is settled first
+  await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready && window.__mark.read, { timeout: 60000 }, i);
   await p.waitForSelector('[data-addmenu]', { timeout: 60000 });
   // Add > A file…
   const addDo = async label => { await p.click('[data-addmenu]'); await p.waitForSelector('.pop [role="menuitem"]'); for (const it of await p.$$('.pop [role="menuitem"]')) if ((await it.evaluate(e => e.textContent)).includes(label)) return it.click(); throw new Error('no ' + label); };
