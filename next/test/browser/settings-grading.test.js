@@ -89,7 +89,7 @@ test('how she usually grades: letters with where each letter starts, Undo, the u
   await ctx.close();
 });
 
-test('points colour and the unit plan tool name: kept, said, undone, and read by the current app and the Planner', async () => {
+test('mark colours, points colour, paper and text, and the unit plan tool name: kept, said, undone, and read by the current app and the Planner', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const p = await page(ctx, errors);
   await p.goto(srv.url + 'blank'); await plant(p, gradingSeed());
@@ -101,6 +101,11 @@ test('points colour and the unit plan tool name: kept, said, undone, and read by
   assert.equal(await ls(p, 'gs.ptsInk'), null);
   await p.click('[data-sgpts="blue"]');
   assert.equal(await ls(p, 'gs.ptsInk'), 'blue');
+  await p.click('[data-sgink="purple"]'); assert.equal(await ls(p, 'gs.ink'), 'purple');
+  await p.click('[data-sgchk="blue"]'); assert.equal(await ls(p, 'gs.checkInk'), 'blue');
+  await p.evaluate(() => [...document.querySelectorAll('.seg button, [role=radio]')].find(b => b.textContent.trim() === 'Fit whole page').click());
+  await p.evaluate(() => [...document.querySelectorAll('.seg button, [role=radio]')].find(b => b.textContent.trim() === 'Roomy').click());
+  const d = await ls(p, 'gs.disp'); assert.equal(d.fit, 'page'); assert.equal(d.dlh, 1.8);
   await p.goto(srv.url + 'blank'); await p.goto(srv.url + 'next/#/settings/classes');
   await p.waitForSelector('[data-sgunit]', { timeout: 60000 });
   assert.equal(await p.$eval('[data-sgunit]', e => e.value), 'Atlas');

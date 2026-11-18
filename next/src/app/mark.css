@@ -579,3 +579,9 @@ dialog.dlg.mk-split[open]{display:flex}
 .sg-band span{color:var(--mute);font-size:var(--t2)}
 .sg-sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:2px}
 .sg-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.sg-inkrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
+.sg-inkrow>span{min-width:120px;font-size:var(--t2);color:var(--mute)}
+.sg-disp{display:flex;flex-direction:column;gap:16px}
+.sg-line{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.sg-line>span{font-size:var(--t2);font-weight:500}
+.sg-disp .hint{margin:0}

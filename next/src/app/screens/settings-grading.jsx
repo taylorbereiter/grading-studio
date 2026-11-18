@@ -5,7 +5,7 @@
 // the current app asks first. Boxes save when she leaves them (preact/compat turns onChange into every key). Loaded only on those settings pages (PARTS.setgrade).
 import { h, Fragment } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { Card, Select, Switch, TextInput, toast } from '../../ui/index.js';
+import { Card, Select, Switch, TextInput, Slider, Segmented, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { PARTS } from '../router.js';
 import { library, gradingSetup } from '../../students/index.js';
@@ -13,7 +13,7 @@ import { prefs } from '../../students/prefs.js';
 import { onSaved } from '../../shared/saved.js';
 import * as undoList from '../../services/undo.js';
 import { GRADE_WAYS, gradeWay, meGrade, ME_OLD, useLib } from '../../engines/gways.js';
-import { rowScaleOf, rowsTop, rowHalf, rowsSay, ROW_TOP, COLORS, PTS_AMBER, CHECK_INK } from '../../engines/gcore.js';
+import { rowScaleOf, rowsTop, rowHalf, rowsSay, ROW_TOP, COLORS, PTS_AMBER } from '../../engines/gcore.js';
 import '../mark/setup-lines.js';
 import '../mark/lines.js';
 
@@ -91,21 +91,41 @@ export function GradingSettings() {
   </>;
 }
 
-// How points are written (src/app/start.js setPtsInk): in the pen's colour, one colour, or by credit. Kept on this computer (gs.ptsInk).
+// Settings > Marking. Mark colors (src/quiz.js inkRows, Settings' #setInkRows): the colour of ✗ and the pen (gs.ink), of checks
+// (gs.checkInk) and of points written on a paper (gs.ptsInk: the pen's colour, one colour, or by credit). Paper and text (src/app/display.js
+// openDisplay): new text boxes, fit width or the whole page, and Word documents' text size and line spacing (gs.disp). Kept on this computer.
+const DISP0 = { tsize: 14, fit: 'width', dfs: 15, dlh: 1.45 };
+const okInk = (k, d) => (COLORS[k] ? k : d);
 export function MarkingSettings() {
-  const [ink, setInk] = useState(() => { const k = prefs.get('gs.ptsInk', ''); return k === 'credit' || COLORS[k] ? k : ''; });
-  const choose = k => { if (k) prefs.set('gs.ptsInk', k); else prefs.del('gs.ptsInk'); setInk(k); };
+  const [, again] = useState(0), re = () => again(n => n + 1);
+  const ink = okInk(prefs.get('gs.ink', 'red'), 'red'), chk = okInk(prefs.get('gs.checkInk', 'green'), 'green');
+  const pts = (k => (k === 'credit' || COLORS[k] ? k : ''))(prefs.get('gs.ptsInk', ''));
+  const disp = { ...DISP0, ...(prefs.get('gs.disp', null) || {}) };
+  const setDisp = (k, v) => { prefs.set('gs.disp', { ...(prefs.get('gs.disp', null) || {}), [k]: v }); re(); };
+  const setPts = k => { if (k) prefs.set('gs.ptsInk', k); else prefs.del('gs.ptsInk'); re(); };
   const Chip = ({ on, onClick, children, ...rest }) => <button type="button" class="chip" aria-pressed={String(!!on)} onClick={onClick} {...rest}>{children}</button>;
   const sw = c => <i class="sg-sw" style={{ background: c }} />;
-  return <Card title={t('setup.sg_pts_h')}>
-    <p class="mute">{t('setup.sg_pts_about')}</p>
-    <div class="sg-chips" role="group" aria-label={t('setup.sg_pts_h')}>
-      <Chip on={ink === ''} onClick={() => choose('')} data-sgpts="">{t('setup.sg_pts_pen')}</Chip>
-      {Object.entries(COLORS).map(([k, c]) => <Chip on={ink === k} onClick={() => choose(k)} data-sgpts={k}>{sw(c)}{t(INKS[k])}</Chip>)}
-      <Chip on={ink === 'credit'} onClick={() => choose('credit')} data-sgpts="credit">{t('setup.sg_pts_credit')} {sw(CHECK_INK)}{sw(PTS_AMBER)}{sw(COLORS.red)}</Chip>
-    </div>
-    {ink === 'credit' && <p class="hint">{t('setup.sg_pts_credit_say')}</p>}
-  </Card>;
+  const row = (label, on, pick, attr) => <div class="sg-inkrow" role="group" aria-label={label}><span>{label}</span>
+    {Object.entries(COLORS).map(([k, c]) => <Chip on={on === k} onClick={() => { pick(k); re(); }} {...{ [attr]: k }}>{sw(c)}{t(INKS[k])}</Chip>)}</div>;
+  return <>
+    <Card title={t('setup.sg_inks_h')}>
+      <p class="mute">{t('setup.sg_inks_about')}</p>
+      {row(t('setup.sg_ink_x'), ink, k => prefs.set('gs.ink', k), 'data-sgink')}
+      {row(t('setup.sg_ink_ok'), chk, k => prefs.set('gs.checkInk', k), 'data-sgchk')}
+      <div class="sg-inkrow" role="group" aria-label={t('setup.sg_pts_h')}><span>{t('setup.sg_pts_h')}</span>
+        <Chip on={pts === ''} onClick={() => setPts('')} data-sgpts="">{t('setup.sg_pts_pen')}</Chip>
+        {Object.entries(COLORS).map(([k, c]) => <Chip on={pts === k} onClick={() => setPts(k)} data-sgpts={k}>{sw(c)}{t(INKS[k])}</Chip>)}
+        <Chip on={pts === 'credit'} onClick={() => setPts('credit')} data-sgpts="credit">{t('setup.sg_pts_credit')} {sw(COLORS[chk])}{sw(PTS_AMBER)}{sw(COLORS[ink])}</Chip></div>
+      {pts === 'credit' && <p class="hint">{t('setup.sg_pts_credit_say')}</p>}
+    </Card>
+    <Card title={t('setup.sg_disp_h')}><div class="sg-disp">
+      <Slider label={t('setup.sg_tsize')} min={8} max={32} step={1} value={+disp.tsize || 14} onInput={v => setDisp('tsize', v)} format={v => t('setup.sg_pt', { n: v })} />
+      <div class="sg-line"><span>{t('setup.sg_fit')}</span><Segmented label={t('setup.sg_fit')} value={disp.fit === 'page' ? 'page' : 'width'} onChange={v => setDisp('fit', v)} options={[{ value: 'width', label: t('setup.sg_fit_width') }, { value: 'page', label: t('setup.sg_fit_page') }]} /></div>
+      <Slider label={t('setup.sg_dfs')} min={12} max={24} step={1} value={+disp.dfs || 15} onInput={v => setDisp('dfs', v)} format={v => t('setup.sg_px', { n: v })} />
+      <div class="sg-line"><span>{t('setup.sg_dlh')}</span><Segmented label={t('setup.sg_dlh')} value={String(+disp.dlh || 1.45)} onChange={v => setDisp('dlh', +v)} options={[{ value: '1.3', label: t('setup.sg_dlh_tight') }, { value: '1.45', label: t('setup.sg_dlh_normal') }, { value: '1.8', label: t('setup.sg_dlh_roomy') }]} /></div>
+      <p class="hint">{t('setup.sg_disp_about')}</p>
+    </div></Card>
+  </>;
 }
 
 // The word on unit plan links, for example the name of the school's unit planner (src/app/library.js unitLinkName). Only words on screen.
