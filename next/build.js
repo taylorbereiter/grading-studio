@@ -330,6 +330,13 @@ export const tnRngSet = r => { tnRng = r; };
     'qzAnsOld', 'qzMoved', 'qzAnsLab', 'qzAns', 'qzAnsOf', 'qzTotal', 'qzRedoPaper', 'qzDropGone', 'qzNoteOf', 'qzNoteSet', 'qzMarkInk', 'qzAnswerPic',
     'ibQzOn', 'ibQzOf', 'ibQzUsed', 'ibQzMax', 'ibQzRaw', 'ibQzTable', 'ibQzLevel', 'ibQzEven', 'ibQzParts', 'ibQzScore', 'ibQzSay',
   ], "// the papers' documents are let go once the answers being cut from them are done, so a cut under way isn't cancelled\nexport const qzLetGo = () => qzQueue.then(() => qzClose());\n", [], null],
+  ['gqmake', [
+    // A quiz made here (src/quizmake.js, src/quizread.js): typed questions printed with bubbles and a code on each page, the code
+    // read back to send each scanned page to its student, and the bubbles read and scored; the maker, the print window and the
+    // answers to check are the new app's
+    'QMK_T', 'QMK_L', 'qmkNew', 'qmkNew0', 'qmkPts', 'qmkLetters', 'QMK_CSS', 'qmkBits', 'qmkQ', 'qmkPageHtml', 'qmkPages', 'qmkLayout', 'qmkBoxes',
+    'QR_REG', 'qrGrey', 'qrFind', 'qrH', 'qrMean', 'qrRing', 'qrCode', 'qrPageCode', 'qrSplitPage', 'qrSplitSays', 'qrStudent', 'qrDecide', 'qzAutoLetters', 'qrScoreOf',
+  ], '', [], null],
   ['gways', [
     // the teacher's usual way of grading (src/app/library.js GRADE_WAYS, meGrade): what a new assignment starts with, read from the
     // library the settings screen has in hand (useLib), not the marking screen's

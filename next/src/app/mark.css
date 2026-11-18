@@ -957,3 +957,42 @@ dialog.dlg.mk-qm[open],dialog.dlg.mk-qb[open]{display:flex}
 .qbopt{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:12px}
 .qbo{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.qbanssay{display:inline-flex;align-items:center;gap:8px}
 @media (max-width:800px){.mk-qb .qbwrap{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;overflow:auto}.qbside{padding:16px}}
+/* Make a quiz (mark/quizmaker.jsx) and Quiz scan (mark/quizread.jsx) */
+dialog.dlg.mk-qf{width:min(1400px,calc(100vw - 32px));height:calc(100vh - 48px);margin:24px auto;flex-direction:column}
+dialog.dlg.mk-qf[open]{display:flex}
+.mk-qf>header{gap:12px;align-items:baseline}
+.mk-qf .qfwrap{display:grid;grid-template-columns:minmax(0,1fr) 620px;gap:16px;flex:1;min-height:0;overflow:hidden;padding:0}
+.mk-qf .qfed{overflow:auto;padding:var(--s4);display:flex;flex-direction:column;gap:var(--s3)}
+.mk-qf .qfc{border:1px solid var(--line);border-radius:var(--r2);padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--s)}
+.mk-qf .qfc.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
+.mk-qf .qfch{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.mk-qf .qfch>b{min-width:20px;font-variant-numeric:tabular-nums}
+.mk-qf .qfpts,.mk-qf .qfblank{display:inline-flex;align-items:center;gap:6px;font-size:var(--t2)}.mk-qf .qfpts input,.mk-qf .qfblank input{width:72px}
+.mk-qf .qfch .qfpts{margin-left:auto}
+.mk-qf .qfopts{display:flex;flex-direction:column;gap:6px}
+.mk-qf .qfo{display:flex;align-items:center;gap:8px}.mk-qf .qfo input{flex:1}
+.mk-qf .qfkey{width:28px;height:28px;flex:none;border-radius:50%;border:1.5px solid var(--line-3);background:var(--s);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
+.mk-qf .qfkey.on{background:var(--acc);border-color:var(--acc);color:var(--white)}
+.mk-qf .qfkey:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.mk-qf .qfopts .link{align-self:flex-start}
+.mk-qf .qfwarn,.mk-qr .qfwarn{color:var(--warn);font-weight:600}
+.mk-qf .qfadd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-bottom:var(--s4)}
+.mk-qf .qfprev{display:flex;flex-direction:column;min-height:0;background:var(--s2);border-left:1px solid var(--line)}
+.mk-qf .qfpbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line)}
+.mk-qf .qfpages{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.mk-qf .qfscale{width:571px;height:739px;flex:none}
+.mk-qf .qfscale>.qfpage{transform:scale(.7);transform-origin:0 0}
+.mk-qf .qfq[data-on]{background:var(--acc-soft)}
+@media (max-width:1100px){.mk-qf .qfwrap{grid-template-columns:1fr;overflow:auto}.mk-qf .qfed{overflow:visible}.mk-qf .qfprev{border-left:0;border-top:1px solid var(--line)}.mk-qf .qfpages{overflow:visible}}
+@media (max-width:620px){.mk-qf .qfscale{width:326px;height:422px}.mk-qf .qfscale>.qfpage{transform:scale(.4)}}
+dialog.dlg.mk-qr{width:min(880px,calc(100vw - 32px))}
+.mk-qr .qftiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.mk-qr .qftiles>div{border:1px solid var(--line);border-radius:var(--r2);padding:10px;display:flex;flex-direction:column;gap:2px}
+.mk-qr .qftiles b{font-size:var(--t5);font-variant-numeric:tabular-nums}.mk-qr .qftiles span{font-size:var(--t2);color:var(--ink2)}
+.mk-qr .qftiles .need{border-color:var(--acc)}
+.mk-qr .qfrr{border:1px solid var(--line);border-radius:var(--r2);padding:10px;margin-top:8px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:8px 12px}
+.mk-qr .qfrr.done{border-color:var(--acc)}
+.mk-qr .qfrw{display:flex;flex-direction:column;gap:2px}
+.mk-qr .qfcrop{grid-row:span 2;grid-column:2;background:#fff;border-radius:6px;min-height:60px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.mk-qr .qfcrop img{max-width:100%;display:block}
+.mk-qr .qfpick{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+@media (max-width:620px){.mk-qr .qftiles{grid-template-columns:repeat(2,minmax(0,1fr))}.mk-qr .qfrr{grid-template-columns:1fr}.mk-qr .qfcrop{grid-column:1;grid-row:auto}}

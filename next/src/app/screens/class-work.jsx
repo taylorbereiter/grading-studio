@@ -121,6 +121,10 @@ export default function ClassWork({ classId }) {
     if (where) toast(t('setup.u_moved', { name: where }), { undo: () => undoList.undo() });
   };
   const more = it => ({ label: t('setup.u_move'), icon: 'arrow', onSelect: () => setMove(it) });
+  // Make a quiz… (mark/quizmaker.jsx): questions with bubbles, printed with each student's name and scored from the scan
+  const [qmk, setQmk] = useState(null);
+  const quiz = it => ({ label: t(it.quiz && it.quiz.made ? 'setup.qf_edit' : 'setup.qf_make'), icon: 'check', onSelect: () => PARTS.quizmaker().then(Q => setQmk({ Q, it }), e => console.error(e)) });
+  const quizScan = it => (it.quiz && it.quiz.made ? [{ label: t('setup.qf_scan'), icon: 'image', onSelect: () => pick(it, scan) }] : []);
   return <section class="classwork" aria-labelledby="h-work">
     <h2 id="h-work" class="sr">{t('setup.w_title')}</h2>
     {match && <match.B.MatchRoster list={match.list} lib={lib} classId={classId} onClose={() => setMatch(null)} onGo={(entries, cls) => bring(match.it, entries, cls)} />}
@@ -137,6 +141,7 @@ export default function ClassWork({ classId }) {
       onChange={e => { const f = e.currentTarget.files[0], it = want.current; if (f) PARTS.split().then(S => setSplit({ S, f, it }), er => console.error(er)); }} />
     {name && <NameUnit was={name} onDone={named} />}
     {move && <MoveTo lib={lib} it={move} onDone={moved} />}
+    {qmk && <qmk.Q.QuizMaker it={qmk.it} names={((lib.classes.find(k => String(k.id) === String(qmk.it.classId)) || {}).names || []).slice()} onClose={() => { setQmk(null); load(); }} />}
     {split && <split.S.Split file={split.f} asg={split.it} lib={lib} onClose={() => { setSplit(null); load(); }} />}
     {!units.length ? <EmptyState icon="inbox" title={t('setup.w_none')} />
       : units.map(u => <div class="wunit" data-unit={u.id}><div class="whead"><h3 class="t5" data-raw>{u.name}</h3>
@@ -155,10 +160,10 @@ export default function ClassWork({ classId }) {
             {open ? <span class="wopen"><a class="btn sm" href={href('mark', st.m.id)}>{t('setup.w_open')}</a>
               {/* a newer copy of the papers: her work comes over (mark/carry.js) */}
               <Menu label={t('setup.w_again')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.w_again')} disabled={busy === it.id} data-again-for={it.id} />}
-                items={[{ label: t('setup.w_again_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_again_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, more(it)]} /></span>
+                items={[{ label: t('setup.w_again_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_again_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, quiz(it), more(it)]} /></span>
               : <span class="wopen"><Menu label={t('setup.w_bring')} trigger={b => <Button {...b} size="sm" icon="upload" disabled={busy === it.id} data-bring-for={it.id}>{t('setup.w_bring')}</Button>}
                 items={[{ label: t('setup.w_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, { label: t('setup.w_scan'), icon: 'image', onSelect: () => pick(it, scan) }, { label: t('setup.mr_menu'), icon: 'people', onSelect: () => matchFor(it) }]} />
-              <Menu label={t('setup.u_item_more', { name: it.name })} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.u_item_more', { name: it.name })} data-more-for={it.id} />} items={[more(it)]} /></span>}
+              <Menu label={t('setup.u_item_more', { name: it.name })} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.u_item_more', { name: it.name })} data-more-for={it.id} />} items={[quiz(it), ...quizScan(it), more(it)]} /></span>}
             {shown.has(it.id) && <Details it={it} st={st} />}
           </li>; })}</ul>}</div>)}
     {classId !== '-' && <div><Button size="sm" icon="plus" onClick={() => setName({ name: t('setup.u_new', { n: units.length + 1 }) })} data-addunit>{t('setup.u_add')}</Button></div>}

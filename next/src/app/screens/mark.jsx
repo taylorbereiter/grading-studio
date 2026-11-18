@@ -456,7 +456,12 @@ export default function MarkScreen({ route, classes }) {
   const bringMany = () => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true; i.onchange = async () => { const B = await PARTS.bringin(); await B.bringFiles(await B.expand([...i.files]), o => setSetupDlg({ k: 'bring', B, ...o })); }; i.click(); };
   const setupItems = [{ label: t('mark.su_menu'), icon: 'settings', onSelect: openSetup }, { label: t('mark.bf_menu'), icon: 'upload', onSelect: bringMany },
     { label: t('mark.pv_menu'), icon: 'people', onSelect: () => PARTS.partners().then(P => setSetupDlg({ k: 'pv', P }), e => console.error(e)) },
-    { label: t('mark.qm_menu'), icon: 'check', onSelect: () => quick() }];
+    { label: t('mark.qm_menu'), icon: 'check', onSelect: () => quick() },
+    ...(w && w.batch.quiz && w.batch.quiz.made ? [{ label: t('mark.qr_menu'), icon: 'image', onSelect: () => quizScan() }] : [])];
+  // a quiz made here (mark/quizread.jsx): Quiz scan shows what the scan read; before the first reading, it reads the papers first
+  const quizScan = async again => { const R = await PARTS.quizread(); if ((again || !state().batch.quiz.lastRead) && !await R.readAll(!!again)) return; setSetupDlg({ k: 'qr', R }); };
+  const readOnce = useRef(null);
+  useEffect(() => { if (!w || !FU || readOnce.current === w.batch.id) return; readOnce.current = w.batch.id; const Q = w.batch.quiz; if (Q && Q.made && !Q.lastRead && Q.qs.some(q => q.auto)) quizScan().catch(e => console.error(e)); }, [w, FU]);
   // Quick mark (mark/quick.jsx): the cards once the quiz has boxes, the boxes (mark/quickboxes.jsx) before that or when she asks
   const quick = boxes => (boxes || !quizOn() ? PARTS.quickboxes().then(B => setSetupDlg({ k: 'qb', B })) : PARTS.quick().then(Q => setSetupDlg({ k: 'qm', Q }))).catch(e => console.error(e));
   return <div class={'markscreen' + (solo ? ' solo' : '') + (noR ? ' nor' : '')} data-tab={tab}>
@@ -478,6 +483,7 @@ export default function MarkScreen({ route, classes }) {
     {setupDlg && setupDlg.k === 'bring' && <setupDlg.B.BringFiles rows={setupDlg.rows} dups={setupDlg.dups} onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'pv' && <setupDlg.P.Partners onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'qm' && <setupDlg.Q.QuickMark onClose={() => setSetupDlg(null)} onBoxes={() => quick(true)} onOpen={pick} />}
+    {setupDlg && setupDlg.k === 'qr' && <setupDlg.R.QuizLook onClose={() => setSetupDlg(null)} onAgain={() => quizScan(true)} />}
     {setupDlg && setupDlg.k === 'qb' && <setupDlg.B.QuickBoxes onClose={() => setSetupDlg(null)} onSaved={on => (on ? quick() : setSetupDlg(null))} />}
     <RubricAsk ask={ask} />
     {err ? <EmptyState icon="inbox" title={t(err.name === 'NotKept' ? 'mark.not_kept' : 'mark.page_bad')} text={err.name === 'NotKept' ? t('mark.not_kept_text') : ''} />

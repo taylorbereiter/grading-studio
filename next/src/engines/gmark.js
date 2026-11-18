@@ -1038,4 +1038,4 @@ function gpShortNext(left) {
   return best;
 }
 export { bindPage, undo, redo, snap, changed, pushUndo, gradeSnap, fieldSnap, commitEditors, stepSize, saveNow, placeStamp, redrawAll, hitMark, moveMark, keepOnPage, deleteSelected, gripDrag, r1, clamp, turnMarks, stepOf, reshape, thumbCache, setRot, circleWord, highlightWord, textBoxHere, scoreTouched, setStatus, touchGrade, nextUnscored, stampName, isSticker, isProof, PROOF, PUNCT, BRAINROT, wordUnder, newCheckSize, stickerAspect, RECENT_STAMPS, canResize, setHlMode, hlMode, critStampOf, scoreStampText, stampOwner, newStampSize, fmNow, markLabel0, MARK_MEAN, MARK_KEY, groupStep, gradeStep };
-export { actStep, groupOf, liftStatus };
+export { actStep, groupOf, liftStatus, me };

@@ -14,6 +14,7 @@ import { state, use } from '../../engines/gcore.js';
 import * as D from '../../engines/gdraw.js';
 import * as G from '../../engines/gfiles.js';
 import * as E from '../../engines/gopen.js';
+import * as QR from '../../engines/gqmake.js';
 import { prefs } from '../../students/prefs.js';
 import { t } from '../../i18n/t.js';
 import { PARTS, go } from '../router.js';
@@ -88,6 +89,7 @@ async function read(me, live, each) {
       me.sc[i] = rec;
       if (rec.sure === 2 && rec.turn) { me.rot[i] = rec.turn; rec.didTurn = rec.turn; }
       if (rec.skewSure === 2) { me.skew[i] = rec.skew; rec.didSkew = rec.skew; }
+      try { await QR.qrSplitPage(me, i, page); } catch (e) { console.error(e); }   // a page of a quiz made here goes to its student by its code
     }
     if (!live()) return;
     const vp0 = G.spView(me, i, page, 1), vp = G.spView(me, i, page, 520 / vp0.width);
@@ -322,7 +324,10 @@ export function Split({ file, asg, into, lib, onClose }) {
   const given = me.owner.filter(Boolean).length, left = me.n - given - me.skip.size, who = G.spAll(me).length, shared = Object.keys(me.more).length, re = me.re.size;
   const none = me.names.filter(nm => !pagesOf(me, nm).length), read1 = me.thumbs.filter(Boolean).length;
   const info = sel.length ? t(sel.length === 1 ? 'setup.s_sel_one' : 'setup.s_sel_many', { pages: range(sel) }) : free(me, me.anchor) && me.owner.some(Boolean) ? t('setup.s_next', { n: me.anchor + 1 }) : t('setup.s_none_picked');
-  const foot = [t('setup.s_foot', { n: who, given, of: me.n }), shared ? t('setup.s_foot_shared', { n: shared }) : '', re ? t('setup.s_foot_re', { n: re }) : ''].filter(Boolean).join(' · ');
+  // the pages of a quiz made here, found by their code (qrSplitSays)
+  const qp = me.qpg ? Object.keys(me.qpg) : [], qWho = new Set(qp.map(i => me.owner[i]).filter(Boolean)).size, qLeft = qp.filter(i => !me.owner[i]).length;
+  const qSay = qp.length ? t('setup.s_quiz', { n: qp.length, who: qWho }) + (qLeft ? ' ' + t('setup.s_quiz_left', { n: qLeft }) : '') : '';
+  const foot = [qSay, t('setup.s_foot', { n: who, given, of: me.n }), shared ? t('setup.s_foot_shared', { n: shared }) : '', re ? t('setup.s_foot_re', { n: re }) : ''].filter(Boolean).join(' · ');
   return <dialog class="dlg mk-split" aria-labelledby="spT" {...p} onCancel={e => { e.preventDefault(); close(); }}
     onKeyDown={e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return close(); } p.onKeyDown(e); }}>
     <header><h2 id="spT">{t('setup.s_title', { name: me.name })}</h2><span class="mute" data-spstat>{read1 < me.n ? t('setup.s_reading', { n: read1, of: me.n }) : says(me)}</span><span class="mute">{t('setup.s_pages', { n: me.n })}</span></header>

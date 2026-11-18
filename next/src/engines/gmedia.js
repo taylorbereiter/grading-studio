@@ -315,3 +315,4 @@ function sameVideo(st, o) {
   return st.files.find(f => f.kind === 'link' && !vidRef(f.data) && (linkOf(f.data) === url || (!!spot && linkSame(f) === spot))) || null;
 }
 export { linkClean, linkOf, linkPlayer, linkTitle, linkHost, linkBytes, vidRef, drvRef, keptId, linkKey, vrotKey, vrotOf, frameTicks, fmtSize, MEDIA_RX, VIDEO_RX, MIME, extOf, fmtTime, trLines, trText, trParse, trMakeable, transcribe, asrStop, asrStandIn, notesPdf, npRows, npFileName, isNotes, notesFileOf, NP_TAIL, vidBytes, sameVideo };
+export { uid };
