@@ -1,1 +1,0 @@
-import{a as n}from"./chunk-YCJ5FRK7.js";import{f as e}from"./chunk-55DMKAEM.js";import{e as o}from"./chunk-GLVRXFZR.js";o();function a(s,c,r=0){let t=e(s,c);return t?n(t.color):r<0?"var(--g500)":"var(--c"+(r%8+1)+")"}export{a};

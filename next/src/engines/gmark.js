@@ -1,5 +1,9 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
+// a focus session on these papers with shortest first on picks the next paper (src/gradeplan.js gpShortNext): the new app has the plan
+const gpReady = true;
+// the session as it runs (src/focus.js fcRun): a planning key the students side reads but never writes (shared/keys.js)
+const fcRun = () => { try { const r = JSON.parse(localStorage.getItem('gsp.focusRun') || 'null'); return r && r.st ? r : null; } catch { return null; } };
 import { batch, cur, setup, lib, tool, selected, pages, undoStack, redoStack, disp, inkColor, hlColor, penW, CHECK_INK, once, tr, saveSoon, toast, renderList, renderTools, renderGrade, openStudent, renderPage, gradeMarksChanged, rescanFile, editText, openNote, openStampMenu, placeScore, stopScorePlace, scanNote, refound, endOnce, setTool, groupJust, scorePlacing, activeEditor, writeWork, tabLive, tabForgot, tabLetGo, tabsBehind, saveBehind, stampWork, store, rowTop, maxPoints, gradeOf, xcSay, fmtNum, COLORS, HL, noScore, ibSetup, set } from './gcore.js';
 import { sideScreen, textLayout, noteRunY, bboxOf, rotOf, vpRot, skewOf, draw, anonOn, anonOrder, hasPress, PRESS_MAX, textGrips, canResize, cornerPt, STICKERS, isSticker, isScoreStamp, stickerAspect, stampBox, impHas, one, stampHidden, marksMine } from './gdraw.js';
 
@@ -1011,12 +1015,6 @@ function fcConf() {
     goal: g && (g.k === 'papers' || g.k === 'min') && +g.n > 0 ? { k: g.k, n: Math.min(fcGoalMax(g.k, g.per), Math.round(+g.n)), per: g.per === 'week' ? 'week' : 'day',
       days: g.per !== 'week' && Array.isArray(g.days) && g.days.some(d => FC_DOWS.includes(d)) ? FC_DOWS.filter(d => g.days.includes(d)) : null } : null };
 }
-// src/focus.js
-const FC_KEY = 'gsp.focusRun';
-// src/focus.js
-const fcRun = () => { const r = store.get(FC_KEY, null); return r && r.st ? r : null; };
-// src/gradeplan.js
-var gpReady = false;
 // src/gradeplan.js
 const gpLens = new WeakMap();
 // src/gradeplan.js

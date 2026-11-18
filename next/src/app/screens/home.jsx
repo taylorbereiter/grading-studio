@@ -6,7 +6,8 @@ import { useState, useEffect } from 'preact/hooks';
 import { Button, Card, ClassDot, Icon, EmptyState, Progress } from '../../ui/index.js';
 import { t, date, num } from '../../i18n/t.js';
 import { href } from '../router.js';
-import { countsForHome } from '../../crossings.js';
+import { countsForHome, focusForHome } from '../../crossings.js';
+import { openFocus, onFocus } from '../focus/bus.js';
 import { usePlan } from '../plan.js';
 import { toneOf, classTone } from '../colors.js';
 import { Slide } from '../plan/slide.jsx';
@@ -53,6 +54,18 @@ function NowCard({ teach, now, plan }) {
   </section>;
 }
 
+// Focus: today against her goal on a ring ("6/10"), or the time left while a session runs; it opens the timer (src/focus.js, the
+// sidebar's Focus). Numbers only, through crossings.js focusForHome.
+function HomeFocus() {
+  const [v, set] = useState(null);
+  useEffect(() => { const read = () => focusForHome().then(set, e => console.error(e)); read(); const off = onFocus(read), iv = setInterval(read, 15000); return () => { off(); clearInterval(iv); }; }, []);
+  const g = v && v.goal, f = g ? Math.min(1, g.n / g.of) : 0, c = 2 * Math.PI * 7;
+  const clock = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  return <button type="button" class="btn fchome" onClick={openFocus} data-fc-home={g ? g.n + '/' + g.of : ''}>
+    {g ? <svg class={'fcring' + (g.n >= g.of ? ' met' : '')} width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7" fill="none" stroke-width="3" class="bg" />
+      <circle cx="9" cy="9" r="7" fill="none" stroke-width="3" class="on" stroke-dasharray={c.toFixed(2)} stroke-dashoffset={(c * (1 - f)).toFixed(2)} transform="rotate(-90 9 9)" stroke-linecap="round" /></svg> : <Icon name="timer" />}
+    <span>{v && v.run ? <span class="num" data-raw>{clock(v.run.secs)}</span> : t('nav.focus')}</span>{g && !(v && v.run) ? <span class="mute num" data-raw>{g.n}/{g.of}</span> : null}</button>;
+}
 function Line({ icon, title, sub, href: to, kind }) {
   return <li class="hl" data-kind={kind}><span class="hi"><Icon name={icon} /></span><span class="tx"><b>{title}</b>{sub && sub.length > 0 && <small>{sub}</small>}</span>{to && <a class="go" href={to} aria-label={title}><Icon name="chr" /></a>}</li>;
 }
@@ -65,7 +78,7 @@ export default function Home({ classes }) {
   const left = new Map((classes || []).map((x, i) => [x.loose ? '' : x.name, { ...x, i }]));
   return <div class="page home">
     <header class="ph hello"><div><h1>{greeting(d)}</h1><p data-raw>{date(d, { weekday: 'long', day: 'numeric', month: 'long' })}</p></div>
-      <a class="btn" href={href('calendar')}><Icon name="week" />{t('home.this_week')}</a></header>
+      <div class="row gap"><HomeFocus /><a class="btn" href={href('calendar')}><Icon name="week" />{t('home.this_week')}</a></div></header>
     <p class="say" data-home="say" data-mark={c.mark} data-back={c.back} data-today={c.classesToday} data-plan={c.toPlan} data-missing={c.missing}>{say || t('home.say_none')}</p>
     <NowCard teach={v.teach} now={now} plan={plan} />
     <div class="homegrid">

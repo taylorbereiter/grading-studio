@@ -114,7 +114,7 @@ export function BringFiles({ rows: rows0, dups, onClose }) {
         <tbody>{rows.map((r, k) => <tr data-bfrow={k}>
           <td class="bf-path" data-raw>{r.e.path}</td>
           <td>{ask && ask.k === k
-            ? <span class="bf-new"><TextInput label={t('setup.bf_new_name')} value={ask.name} onInput={v => setAsk({ ...ask, name: v })} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); newOk(); } if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setAsk(null); } }} data-raw data-bfnewname autofocus />
+            ? <span class="bf-new"><TextInput label={t('setup.bf_new_name')} value={ask.name} onInput={v => setAsk(ask => ({ ...ask, name: v }))} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); newOk(); } if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setAsk(null); } }} data-raw data-bfnewname autofocus />
               <Button size="sm" onClick={newOk} data-bfnewok>{t('setup.bf_new_ok')}</Button></span>
             : <span class="selwrap"><select class="input" aria-label={t('setup.bf_to_for', { file: r.e.file.name })} value={r.newKey ? '-3' : String(r.i)} onChange={e => pick(k, e.currentTarget.value)} data-bfto={k}>
               <option value="-1">{t('setup.bf_choose')}</option>

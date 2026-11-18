@@ -14,8 +14,9 @@
 //   saveLessonFile(blob)      a file kept with a lesson, as its Materials (kv file:<id>; src/planner/finished.js lessonZip); returns the id
 //   dropLessonFile(id)        a material's bytes, when it is taken off the lesson
 //   saveVersions(id, list)    a lesson's versions as a whole (kv ver:<id>), when one is put back
+//   saveSchoolFile(hash, data) a School file's bytes by their SHA-256 (grading-studio-school/files; src/school.js schPut)
 // A lesson written while a Planner folder is linked also goes to its file there (planning/folder.js), as the current Planner does.
-import { lessons, kv, school, manageBacLinks, taughtIn, planTime, newYear, words, look, theme, language, mailApp } from './index.js';
+import { lessons, kv, school, schoolFiles, manageBacLinks, taughtIn, planTime, newYear, words, look, theme, language, mailApp } from './index.js';
 import { mayWrite } from '../shared/lock.js';
 import * as tabs from '../shared/tabs.js';
 import { saved } from '../shared/saved.js';
@@ -130,3 +131,8 @@ export function saveTaughtNote(key, note) {
 }
 export function startNewYear(v) { check('gsp.newYear'); newYear.setJson(v); saved({ kind: 'pref', id: 'gsp.newYear', side: 'planning' }); }
 export function setGoogleToken(v) { mayWrite('sessionStorage:gs.gTok'); try { if (v == null) sessionStorage.removeItem('gs.gTok'); else sessionStorage.setItem('gs.gTok', JSON.stringify(v)); } catch {} }
+export async function saveSchoolFile(hash, data) {
+  check('grading-studio-school/files');
+  await schoolFiles.put({ data }, hash);
+  saved({ kind: 'pref', id: 'gs.school', side: 'planning' });
+}

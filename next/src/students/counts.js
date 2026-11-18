@@ -11,7 +11,7 @@ export function readLibrary() {
   const l = library.json(null) || {};
   const cls = (Array.isArray(l.classes) ? l.classes : []).filter(c => c && c.id != null).map(c => ({ ...c, names: Array.isArray(c.names) ? c.names : [], units: (Array.isArray(c.units) ? c.units : []).map(u => ({ ...u, items: Array.isArray(u && u.items) ? u.items : [] })) }));
   const loose = l.loose && typeof l.loose === 'object' ? l.loose : { id: '', units: [] };
-  return { classes: cls, loose: { ...loose, id: loose.id || '', units: (Array.isArray(loose.units) ? loose.units : []).map(u => ({ ...u, items: Array.isArray(u && u.items) ? u.items : [] })) }, todo: l.todo || {} };
+  return { classes: cls, loose: { ...loose, id: loose.id || '', units: (Array.isArray(loose.units) ? loose.units : []).map(u => ({ ...u, items: Array.isArray(u && u.items) ? u.items : [] })) }, todo: l.todo || {}, me: l.me && typeof l.me === 'object' ? l.me : {} };
 }
 export async function readKept() { return new Map((await meta.entries()).map(([k, v]) => [k, v])); }
 
