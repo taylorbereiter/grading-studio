@@ -29,6 +29,7 @@ import { AssistantSheet } from '../plan/assistant.jsx';
 import { TextBox } from '../../ui/services.jsx';
 import '../plan/lines.js';
 import { usePart } from '../parts.js';
+import { startFocus } from '../focus/bus.js';
 
 const VIEWS = ['lesson', 'slides', 'edit'];
 // The editor, Present and the lesson's tools come in their own files when first wanted (router.js PARTS).
@@ -296,6 +297,7 @@ export default function LessonPage({ route }) {
     <h1 class="lt" data-raw>{l.title || t('plan.untitled')}</h1>
     {Tools && <Tools.VariantBar p={p} l={l} save={save} />}
     <div class="lbar"><StateSeg l={l} slot={slot} onSave={save} /><span class="mute">{t('plan.n_slides', { n })}</span><span class="grow" />
+      {!l.ready && <Button icon="timer" onClick={() => startFocus('les:' + l.id)} data-focus="lesson-focus">{t('plan.focus_lesson')}</Button>}
       <Button variant="primary" icon="play" onClick={() => setPresenting(true)} data-focus="present">{t('plan.present')}</Button></div>
     <div class={'lgrid' + (view === 'edit' ? ' edit' : '')}>
       <div class="lmain">

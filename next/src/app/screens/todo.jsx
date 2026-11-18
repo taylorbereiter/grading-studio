@@ -13,6 +13,8 @@ import { readTodo, todoChange, engine as E } from '../../students/todo.js';
 import { appLinesForTodo } from '../../crossings.js';
 import { toneOf } from '../tone.js';
 import { takeAdd, onAdd } from '../todo-add.js';
+import { startFocus } from '../focus/bus.js';
+import { FocusAside } from '../focus/aside.jsx';
 import LINES from '../../../lang/todo.en.json';
 import { addLines } from '../../i18n/t.js';
 addLines(LINES);
@@ -97,7 +99,7 @@ export default function Todo({ route, classes }) {
         </>}
       </div>
       <aside class="tdaside" aria-label={t('todo.title')}>
-        {picked ? <Pane key={picked.id} ctx={ctx} r={picked} close={() => setSel('')} /> : !week && <><Kinds lib={lib} /><Cats /></>}
+        {picked ? <Pane key={picked.id} ctx={ctx} r={picked} close={() => setSel('')} /> : !week && <><FocusAside tone={tone} /><Kinds lib={lib} /><Cats /></>}
       </aside>
     </div>
   </div>;
@@ -227,7 +229,7 @@ function Pane({ ctx, r, close }) {
     return <section class="tdpane" data-td-pane={r.id}><IconButton icon="x" label={t('todo.close')} onClick={close} class="tdclose" />
       <h2 class="tdtitle" data-raw>{r.x}</h2><p class="tdm"><span class="tdtag">{t('todo.from_work')}</span>{raw(r.sub)}</p>{when}{catF}
       <p class="mute small">{t('todo.auto_say')}</p>
-      <div class="tdacts"><a class="btn pri" href={bh}>{t(bl)}</a><span class="grow" /><Button onClick={() => tick(r)} data-td-hide>{t('todo.hide')}</Button></div>{ask}</section>;
+      <div class="tdacts"><a class="btn pri" href={bh}>{t(bl)}</a>{focusKey(r) && <Button icon="timer" onClick={() => startFocus(focusKey(r))} data-td-focus>{t('todo.focus_on')}</Button>}<span class="grow" /><Button onClick={() => tick(r)} data-td-hide>{t('todo.hide')}</Button></div>{ask}</section>;
   }
   const items = c ? c.units.flatMap(u => u.items) : [], si = c && it.who ? c.names.indexOf(it.who) : -1, a = it.a && items.find(i => i.id === it.a);
   const mine = (it.ppl || []).map(id => ctx.people.find(p => p.id === id)).filter(Boolean), others = ctx.people.filter(p => !mine.includes(p));
@@ -260,9 +262,12 @@ function Pane({ ctx, r, close }) {
       onChange={e => { const x = e.currentTarget.value.trim(); if (x !== (it.note || '')) put(r.id, { note: x }); }} /></div></div>
     <div class="tdacts"><Button variant="primary" onClick={() => tick(r)} data-td-fin>{it.done ? t('todo.undone_tip') : t('todo.done')}</Button>
       {!it.done && <Button onClick={() => setDay(E.tdAdd(today, 1))} data-td-tomorrow>{t('todo.move_tomorrow')}</Button>}
+      {!it.done && <Button icon="timer" onClick={() => startFocus('td:' + r.id)} data-td-focus>{t('todo.focus_on')}</Button>}
       <span class="grow" /><Button variant="quiet" onClick={() => { close(); remove(r.id); }} data-td-del>{t('todo.delete')}</Button></div>{ask}
   </section>;
 }
+// A focus session on a line (src/todo.js "Focus" button, src/focus.js focusOn): its papers, its lesson to plan, or the to-do itself.
+const focusKey = r => r.kind === 'mark' && r.open ? 'mark:' + r.open : r.kind === 'plan' ? 'les:+' + r.pid + '|' + r.day : '';
 function NewCat({ onClose, then }) {
   const [name, setName] = useState('');
   const go2 = async () => { const n = name.trim(); if (!n) return; const { out } = await todoChange(t('todo.u_cats'), E => E.todoCatAdd(n)); onClose(); if (out) then(out); };

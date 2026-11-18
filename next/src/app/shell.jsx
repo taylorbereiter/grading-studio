@@ -18,6 +18,7 @@ import { onLook, currentLook, saveLook } from '../services/theme.js';
 import { LOOKS, THEMES } from '../ui/tokens.js';
 import { classesForHome, todoCountForSidebar } from '../crossings.js';
 import { askAdd } from './todo-add.js';
+import { runner, openFocus } from './focus/bus.js';
 import { usePlan } from './plan.js';
 import { classTone } from './colors.js';
 import { onSaved } from '../shared/saved.js';
@@ -184,11 +185,15 @@ export function Shell() {
       register({ id: 'keys', keys: '?', label: 'keys.show_list', run: () => router.go('help', 'keys') }),
       ...[['home', 'nav.home', 'home'], ['calendar', 'nav.calendar', 'cal'], ['todo', 'nav.todo', 'todo'], ['library', 'nav.library', 'library'], ['school', 'nav.school', 'school'], ['settings', 'nav.settings', 'settings'], ['help', 'nav.help', 'help']]
         .map(([id, line, icon]) => addCommand({ id: 'go-' + id, label: () => t(line), group: t('cmd.group_go'), icon, run: () => router.go(id) })),
+      addCommand({ id: 'go-time', label: () => t('nav.time'), group: t('cmd.group_go'), icon: 'clock', run: () => router.go('time') }),
+      addCommand({ id: 'focus', label: () => t('nav.focus'), group: t('cmd.group_do'), icon: 'timer', run: openFocus }),
       addCommand({ id: 'go-keys', label: () => t('keys.title'), group: t('cmd.group_go'), icon: 'keyboard', run: () => router.go('help', 'keys') }),
       addCommand({ id: 'theme', label: () => t('cmd.change_theme'), group: t('cmd.group_do'), icon: 'sun', run: () => router.go('settings', 'display') }),
       addCommand({ id: 'fold', label: () => t('keys.fold'), group: t('cmd.group_do'), icon: 'menu', keys: 'mod+\\', run: fold }),
     ];
-    return () => offs.forEach(f => f());
+    // the focus timer's runner and panel (app/focus/run.js): a session going on shows on every screen, and time is counted
+    const fc = setTimeout(runner, 600);
+    return () => { offs.forEach(f => f()); clearTimeout(fc); };
   }, []);
   // Planning destinations, and every lesson by its title (with its class and day), so typing finds a lesson (the Planner's Search).
   const plan = usePlan();

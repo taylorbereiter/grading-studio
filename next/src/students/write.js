@@ -11,7 +11,7 @@
 // Every write first checks: this window holds the lock; the saved work is at the format this build knows (the new app never
 // changes the format); no other window has started replacing everything; and a download that was forgotten stays forgotten.
 // The merge engine is the current app's own (engines/merge.js), loaded on the first write so it is not in the first load.
-import { papers, edits, added, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame, readings, videos, rubricPages, watchCodes } from './index.js';
+import { papers, edits, added, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame, readings, videos, rubricPages, watchCodes, workTimer } from './index.js';
 import { words } from '../planning/index.js';
 import { mayWrite } from '../shared/lock.js';
 import { json, text, setText, remove } from '../shared/ls.js';
@@ -22,7 +22,9 @@ import { writeMany } from '../shared/idb.js';
 
 export const DATA_V = __GS_DATA_V__;
 export class CannotSave extends Error { constructor(why, what) { super(what + ': ' + why); this.name = 'CannotSave'; this.why = why; } }
-let engine = null, engineNow = null;
+let engine = null, engineNow = null, count = null;
+// The timer's count of papers marked (students/count.js), loaded with the first save of work, as the merge engine is.
+const counter = () => (count ||= import('./count.js'));
 const merge = () => (engine ||= import('../engines/merge.js').then(m => (engineNow = m)));
 const copy = v => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
 
@@ -118,6 +120,8 @@ async function writeWork(id, data, M) {
     delete m.fb; delete m.sent; delete m.sentT; delete m.joined; Object.assign(m, M.workCounts(data));
     if (m.joined) m.n = students - m.joined;
     delete m.ret; if (!(data.returned && data.returned.ok)) delete m.back;
+    // the papers this save finished count toward today, and toward a focus session running (src/app/kept.js keepWork: fcSeen, fcGain)
+    try { await (await counter()).workCounted(id, m0, m); } catch (e) { console.error(e); }
     await meta.put(m, id);
   } catch (e) { if (e && e.name === 'ReadOnly') throw e; console.error(e); full = false; }
   if (full && !ok) quick.remove(qid);
@@ -221,7 +225,7 @@ function shareWords(l) {
 }
 
 /* the other grading records that travel with the work */
-const SETTINGS = { 'gs.setup': gradingSetup, 'gs.bank': commentBank, 'gs.rubrics': rubrics, 'gs.rubricsGone': rubricsGone, 'gs.carryNo': carryNo, 'gs.histSame': historySame };
+const SETTINGS = { 'gs.setup': gradingSetup, 'gs.bank': commentBank, 'gs.rubrics': rubrics, 'gs.rubricsGone': rubricsGone, 'gs.carryNo': carryNo, 'gs.histSame': historySame, 'gs.focus': workTimer };
 export function saveSetting(key, value) {
   const acc = SETTINGS[key]; if (!acc) throw new Error('Not a grading setting: ' + key);
   check(key);

@@ -214,7 +214,7 @@ const GRADING = [
     'markLabel0', 'MARK_MEAN', 'MARK_KEY',
     // one undo step for several students' grades (src/anchors.js setAnchor: a level moved from one paper to another)
     'groupStep', 'gradeStep',
-  ], '', [], ['gcore', 'gdraw']],
+  ], "// a focus session on these papers with shortest first on picks the next paper (src/gradeplan.js gpShortNext): the new app has the plan\nconst gpReady = true;\n// the session as it runs (src/focus.js fcRun): a planning key the students side reads but never writes (shared/keys.js)\nconst fcRun = () => { try { const r = JSON.parse(localStorage.getItem('gsp.focusRun') || 'null'); return r && r.st ? r : null; } catch { return null; } };\n", ['gpReady', 'fcRun'], ['gcore', 'gdraw']],
   ['gexport', [
     // what goes back to students (src/app/export.js, src/feedback.js, src/exportreport.js, src/anchors.js): which files, their names,
     // each paper with its marks baked in, the feedback page; the grades read off the papers and the grade sheet (src/app/gradesheet.js);
@@ -409,6 +409,61 @@ let lib = { classes: [], loose: { id: '', units: [] } }, plan = null, people = [
 export const todoUse = o => { if ('lib' in o) lib = o.lib; if ('plan' in o) plan = o.plan; if ('people' in o) people = o.people || []; };
 const saveLib = () => {}, todoRender = () => {}, schPeople = () => people;
 `, ['lib', 'plan', 'saveLib', 'todoRender', 'schPeople', 'setup'], []],
+  ['gcount', [
+    // Papers marked today (src/focus.js fcSeen, fcGain, fcCame): what each save of work tells the timer's log, and a running session,
+    // so a paper counts only when it is marked, wherever. Small, apart from the timer: students/write.js loads it with a save.
+    'fcSeen', 'fcGain', 'fcCame', 'fcLog', 'fcLogSet', 'fcToday', 'fcMon', 'fcRun', 'fcPut', 'fcOwnRun', 'FC_P0', 'FC_KEY', 'fcDone', 'fcKnown', 'fcPapersOf', 'fcPapersBy', 'fcFrom',
+  ], `// The library, the kept rows (all of them, as they stand before this save) and the store, handed in by students/count.js.
+import { useKept } from './gkept.js';
+let lib = { classes: [], loose: { id: '', units: [] } }, keptMeta = new Map(), keptRead = false;
+let store = { get: (k, d) => d, set: () => {}, del: () => {} };
+export function countUse(o) { if ('lib' in o) lib = o.lib; if ('keptMeta' in o) { keptMeta = o.keptMeta; keptRead = true; } if ('store' in o) store = o.store; useKept(lib, keptMeta); }
+const FC_ON = true;
+`, ['lib', 'keptMeta', 'keptRead', 'store', 'FC_ON', 'useKept'], ['gkept']],
+  ['gfocus', [
+    // Focus and time (src/focus.js, src/tracker.js, src/gradeplan.js): the timer's settings and log, a session from start to its end and
+    // break, papers counted only as they are marked (fcSeen, fcGain, fcCame on each save of work), the session goal, the time tracker's
+    // days and sums, time added by hand, and the grading plan's free periods, due work and pace. The drawing is the new app's
+    // (app/focus/); the music is engines/glofi.js, loaded when it plays.
+    'FC_LENS', 'FC_BRKS', 'TK_IDLES', 'TK_PES', 'FC_DOWS', 'fcGoalMax', 'fcConf', 'fcConfSet',
+    'fcPapersToday', 'fcSecsToday', 'fcWeekPapers', 'fcWeekMins', 'fcWeekPapersNow', 'fcGoalNow', 'fcGoalDay', 'fcRunSet', 'fcElapsed', 'fcIdle',
+    'fcBusy', 'fcLeft', 'fcGot', 'fcN', 'fcClock', 'fcWorks', 'fcWork', 'fcPicked', 'fcSgSuggest', 'fcSgNow', 'fcSgN', 'fcSgMet', 'fcDaysTo', 'fcStart',
+    'fcLesStart', 'fcPlanAdd', 'fcLesSecs', 'fcRecord', 'fcExt', 'fcPause', 'fcResume', 'fcMore', 'fcBreak', 'fcStop', 'fcClose', 'fcTick', 'fcTickOn', 'fcDrain', 'fcUp',
+    'focusOn', 'fcS', 'fcFrac',
+    'tkPlan', 'tkDay', 'tkPeriod', 'tkSum', 'tkDur', 'tkAsg', 'tkAddTime', 'tkCsvText', 'tkFlush', 'tkShare', 'tkMonday', 'tkYmd',
+    'gpPaces', 'gpPaceN', 'gpKept', 'gpLeft', 'gpDue', 'gpSum', 'gpGaps', 'gpFreeNow', 'gpFreeLen', 'gpBack', 'gpPlanWeek', 'gpLesWorked', 'gpLesPace', 'gpAdd',
+  ], `// What the lifted timer reads and writes, handed in by students/focus.js: the library (lib.me.focus is her settings), the kept rows, the
+// timetable, and the store (gs.focus on the students side, gsp.focusRun, gsp.focusQ, gsp.planTime and gsp.timeCount on the planning
+// side). What it calls that draws or moves between screens are the hooks (H), quiet until the new app hands its own in.
+import { useKept } from './gkept.js';
+import { todoUse } from './gtodo.js';
+import { countUse } from './gcount.js';
+let lib = { classes: [], loose: { id: '', units: [] } }, keptMeta = new Map(), keptRead = false, plan = null, LANG_LOCALE = undefined;
+let store = { get: (k, d) => d, set: () => {}, del: () => {} }, canOpen = m => !!m && !!m.papers;
+const H = { render() {}, clock() {}, title() {}, goTo() {}, lesOpen() {}, chime() {}, wake() {}, page() {} };
+export function focusUse(o) {
+  if ('lib' in o) lib = o.lib; if ('keptMeta' in o) { keptMeta = o.keptMeta; keptRead = true; } if ('plan' in o) plan = o.plan; if ('store' in o) store = o.store;
+  if ('canOpen' in o) canOpen = o.canOpen; if ('locale' in o) LANG_LOCALE = o.locale; if ('hooks' in o) Object.assign(H, o.hooks);
+  useKept(lib, keptMeta); todoUse({ lib, plan }); countUse({ lib, keptMeta, store });
+}
+// Something pressed, typed or scrolled (src/tracker.js tkLast): the new app's shell tells it.
+export const fcActive = t => { tkLast = t; };
+export const fcActiveAt = () => tkLast;
+export const tkPending = () => tkPend;
+export const tkCount = (k, secs) => { tkPend.g += secs; tkPend.a[k] = (tkPend.a[k] || 0) + secs; };
+const FC_ON = true, tkReady = true, gpReady = true, batch = null, cur = 0, $ = () => ({ hidden: true });
+const fcRender = () => H.render(), fcClockDraw = () => H.clock(), fcTitle = () => H.title(), fcGoTo = n => H.goTo(n), fcLesOpen = () => H.lesOpen();
+const fcChime = () => H.chime(), fcAudioWake = () => H.wake(), tkPageRender = () => H.page(), renderProg = () => {}, routeNow = () => ({});
+const me = () => lib.me || {}, meDrop = (k, v) => { const m = { ...me() }; if (v) m[k] = v; else delete m[k]; lib.me = m; };
+// The music's moods, by id (engines/glofi.js LOFI_STYLES, which next/test/focus.test.js holds this to): fcConf only checks a mood is one.
+const LOFI_STYLES = ['rain', 'library', 'coffee', 'night', 'tape', 'garden', 'blue', 'quiet'].map(id => ({ id }));
+const tr = s => s;
+`, ['lib', 'keptMeta', 'keptRead', 'plan', 'LANG_LOCALE', 'store', 'canOpen', 'FC_ON', 'tkReady', 'gpReady', 'batch', 'cur', '$', 'fcRender', 'fcClockDraw', 'fcTitle',
+    'fcGoTo', 'fcLesOpen', 'fcChime', 'fcAudioWake', 'tkPageRender', 'renderProg', 'routeNow', 'me', 'meDrop', 'LOFI_STYLES', 'tr', 'useKept', 'todoUse', 'countUse', 'once'], ['gkept', 'gtodo', 'gcount']],
+  ['glofi', [
+    // lo-fi music while a session runs (src/lofi.js): made in the browser as it plays, nothing fetched
+    'LOFI_STYLES', 'lofi', 'lofiCompose', 'lofiPlay', 'lofiPause', 'lofiNext', 'lofiStop', 'lofiVolume', 'lofiStyle', 'lofiAmb', 'lofiRender',
+  ], '', [], []],
   ['gbki', [
     // a gradebook imported from a spreadsheet (src/bookimport.js): the file read (CSV, TSV, Excel or pasted cells), its rows and
     // columns found, each column matched to an assignment already in the class, a category to a type; the screen is the new app's
@@ -506,7 +561,7 @@ async function build() {
   fs.rmSync(DIST, { recursive: true, force: true });
   const r = await esbuild.build({
     entryPoints: { main: path.join(NEXT, 'src/main.js'), proof: path.join(NEXT, 'src/proof.js'), parts: path.join(NEXT, 'src/ui/index.js'), gallery: path.join(NEXT, 'src/gallery/main.jsx'),
-      'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css'), 'mark-css': path.join(NEXT, 'src/app/mark.css'), 'class-css': path.join(NEXT, 'src/app/class.css'), 'todo-css': path.join(NEXT, 'src/app/todo.css') },
+      'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css'), 'mark-css': path.join(NEXT, 'src/app/mark.css'), 'class-css': path.join(NEXT, 'src/app/class.css'), 'todo-css': path.join(NEXT, 'src/app/todo.css'), 'focus-css': path.join(NEXT, 'src/app/focus/focus.css') },
     // pdf.js's worker, as text, so the Beside drawer's Books can start it from a blob: address (it loads only when a book is opened).
     plugins: [{ name: 'pdf-worker', setup(b) {
       // The path is kept relative to the repository so the build is the same on every machine.
@@ -534,7 +589,7 @@ async function build() {
     '<script>' + sample + '</script>\n' + look +
     '<link rel="stylesheet" href="dist/tokens.css"><link rel="stylesheet" href="dist/parts-css.css">' + css.map(c => '<link rel="stylesheet" href="dist/' + c + '.css">').join('') + (style ? '<style>' + style + '</style>' : '') + '\n' +
     '<script type="module" src="dist/' + entry + '.js"></script></head><body>' + body + '</body></html>\n';
-  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css', 'mark-css', 'class-css', 'todo-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}.wrap p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
+  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css', 'mark-css', 'class-css', 'todo-css', 'focus-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}.wrap p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'gallery.html'), partsPage('Parts gallery', 'gallery', ['gallery-css'], '', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'proof.html'), page('Saved-work proof', 'proof', '<p>Saved-work proof page. Used by the checks, not by teachers.</p>'));
   writeVersion();

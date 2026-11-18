@@ -22,6 +22,12 @@ function GradingPart({ name }) {
   const C = P[name];
   return <C />;
 }
+// Focus and goals load with their page too (PARTS.setfocus): the timer's engine comes with them.
+function FocusPart() {
+  const [P, setP] = useState(null);
+  useEffect(() => { PARTS.setfocus().then(setP); }, []);
+  return P ? <P.FocusSettings /> : null;
+}
 function Display() {
   const [look, setLook] = useState(currentLook()), [lang, setLang] = useState(savedLanguage());
   useEffect(() => onLook(setLook), []);
@@ -55,7 +61,7 @@ export default function Settings({ route }) {
       <nav class="setnav" aria-label={t('nav.settings')}>{GROUPS.map(([id, icon, line]) => <NavItem icon={icon} label={t(line)} href={href('settings', id)} current={id === g[0]} />)}</nav>
       <section class="setbody" aria-label={t(g[2])}>
         <h2 class="h2">{t(g[2])}</h2>
-        {g[0] === 'display' ? <Display /> : g[0] === 'about' ? <About /> : g[0] === 'timetable' ? <TimetableSettings /> : g[0] === 'grading' ? <GradingPart name="GradingSettings" /> : g[0] === 'marking' ? <GradingPart name="MarkingSettings" /> : g[0] === 'classes' ? <GradingPart name="ClassesSettings" /> : <EmptyState icon="spark" title={t('settings.later_title')} text={t('settings.later_text')} />}
+        {g[0] === 'display' ? <Display /> : g[0] === 'about' ? <About /> : g[0] === 'timetable' ? <TimetableSettings /> : g[0] === 'grading' ? <GradingPart name="GradingSettings" /> : g[0] === 'marking' ? <GradingPart name="MarkingSettings" /> : g[0] === 'focus' ? <FocusPart /> : g[0] === 'classes' ? <GradingPart name="ClassesSettings" /> : <EmptyState icon="spark" title={t('settings.later_title')} text={t('settings.later_text')} />}
       </section>
     </div>
   </div>;

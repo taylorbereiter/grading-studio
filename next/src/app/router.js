@@ -14,6 +14,7 @@ export const ROUTES = [
   ['week', 'calendar', 'calendar'],
   ['todo', 'todo', 'todo'],
   ['todo/:view', 'todo', 'todo'],
+  ['time', 'time', 'todo'],   // the time tracker, from To do > Time this week
   ['class/:id', 'class', 'class'],
   ['class/:id/:tab', 'class', 'class'],
   ['class/:id/:tab/:sub', 'class', 'class'],
@@ -101,6 +102,10 @@ export const PARTS = {
   typed: () => import('./mark/typed.jsx'),
   setup: () => import('./mark/setup.jsx'),
   setgrade: () => import('./screens/settings-grading.jsx'),
+  // Settings > Focus and goals, with the timer's engine (app/focus/settings.jsx)
+  setfocus: () => import('./focus/settings.jsx'),
+  // the focus timer's runner and panel (app/focus/bus.js loads it)
+  focus: () => import('./focus/run.js'),
   bank: () => import('./plan/bank-edit.jsx'),
   // her saved comments (students/comments.js), for the chips under the comment box
   cbank: () => import('../students/comments.js'),
@@ -114,6 +119,7 @@ export const CHUNKS = {
   more: () => import('./screens/more.jsx'),
   later: () => import('./screens/later.jsx'),
   todo: () => import('./screens/todo.jsx'),
+  time: () => import('./screens/time.jsx'),
   calendar: () => import('./screens/calendar.jsx'),
   class: () => import('./screens/class.jsx'),
   lesson: () => import('./screens/lesson.jsx'),
