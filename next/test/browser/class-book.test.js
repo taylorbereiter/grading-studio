@@ -882,9 +882,9 @@ test('A student\'s details and Settings > Classes: ID and email edited and opene
   await p.goto(srv.url + 'next/#/class/c1/people/2');
   await p.waitForSelector('[data-details]', { timeout: 60000 });
   assert.equal(await p.$('[data-att-open]'), null, 'attendance is off');
-  await p.click('[data-det-edit]');
-  // typed only once the box is open and holds the focus: a key pressed before showModal lands on the page behind
-  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('dialog[open] [data-det="id"]'));
+  await p.click('[data-det-edit]'); await p.waitForSelector('[data-det="email"]');
+  // typed once the box is open and has the focus: a key pressed before that goes to the page behind
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('dialog[open] [data-det="id"]'), { timeout: 10000 });
   await p.type('[data-det="id"]', 'S-1042'); await p.type('[data-det="email"]', 'pat.madeup@example.org');
   await p.click('[data-det-save]');
   await p.waitForSelector('[data-det-mail]');

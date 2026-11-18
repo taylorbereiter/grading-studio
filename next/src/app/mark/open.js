@@ -58,6 +58,8 @@ async function rawOf(entries, label) {
 async function studentsOf(raw) {
   await E.srcRead(raw);
   await E.spellLikeSaved(raw);
+  // a photo of a paper becomes a PDF page (makeFile, pictureToPdf), which needs pdf-lib: loaded first when there is one
+  if (!state().PDFLib && raw.some(r => /\.(png|jpe?g|gif|webp|bmp|heic|heif|tiff?|avif)$/i.test(r.path))) use({ PDFLib: await PARTS.pdflib() });
   const map = E.groupRaw(raw), keys = [...map.keys()].sort(E.natural), students = [], keepList = [];
   for (const key of keys) {
     const files = [];

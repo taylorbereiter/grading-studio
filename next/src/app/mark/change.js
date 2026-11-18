@@ -32,6 +32,8 @@ export async function addFiles(st, list) {
   if (!list.length) return [];
   K.commitEditors();
   const pdfjs = await libs(), X = (await PARTS.outEngine()).X, W = await PARTS.write(), bb = b(), made = [];
+  // a photo becomes a PDF page (makeFile, pictureToPdf), which needs pdf-lib
+  if (!state().PDFLib && list.some(e => /\.(png|jpe?g|gif|webp|bmp|heic|heif|tiff?|avif)$/i.test(e.path))) use({ PDFLib: await PARTS.pdflib() });
   for (const e of list) {
     const bytes = new Uint8Array(await e.file.arrayBuffer());
     const name = e.file.name.replace(/[\\/]+/g, '-'), base = st.key + '/' + name;
