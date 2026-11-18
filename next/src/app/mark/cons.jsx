@@ -110,13 +110,14 @@ function Pages({ st, rx, E }) {
         await E.load();
         const [path, p] = pages[at], f = fileByPath(st, path);
         js = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
+        if (!live || !spot.current) return;   // Back pressed while the file was opening
         const w = spot.current.clientWidth || 380, dpr = window.devicePixelRatio || 1;
         const pg = await js.getPage(p + 1), v1 = pg.getViewport({ scale: 1 }), k = Math.min(1.6, w / v1.width);
         const r = await E.X.sharePage(st, f, js, p, k * dpr, rx);
         if (!live || !spot.current) return;
         Object.assign(r.c.style, { width: '100%', height: 'auto', display: 'block', background: '#fff' });
         spot.current.replaceChildren(r.c);
-      } catch (e) { console.error(e); if (live) setBad(true); }
+      } catch (e) { if (live) { console.error(e); setBad(true); } }
       finally { if (js) js.destroy(); }
     })();
     return () => { live = false; };
