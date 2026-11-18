@@ -1269,5 +1269,19 @@
  "setup.s_quiz_left": {
   "one": "{n} page needs a name.",
   "other": "{n} pages need a name."
- }
+ },
+ "setup.sg_att_h": "Attendance",
+ "setup.sg_att_say": "Each class can take attendance from its People tab and a student’s page.",
+ "setup.sg_att_on": "Take attendance in Grading Studio",
+ "setup.sg_att_step": "Turn attendance on or off",
+ "setup.sg_att_kept": {
+  "one": "The day you saved is kept, and shows again when this is turned back on.",
+  "other": "The {n} days you saved are kept, and show again when this is turned back on."
+ },
+ "setup.sg_mail_h": "Email opens in",
+ "setup.sg_mail_say": "Where the Email buttons open a message. Nothing is sent until you send it. On a phone, the phone’s own mail app opens.",
+ "setup.sg_mail_gmail": "Gmail",
+ "setup.sg_mail_outlook": "Outlook on the web",
+ "setup.sg_mail_app": "This computer’s mail app",
+ "setup.f_example": "Use as an example"
 }

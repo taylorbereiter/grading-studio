@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { Button, IconButton, Icon, EmptyState, Menu, Dialog, TextInput, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { href, go, PARTS } from '../router.js';
+import { usePart } from '../parts.js';
 import { readLibrary, readKept, stateOf, backOf, canOpen } from '../../students/counts.js';
 import { libraryChange } from '../../students/undo.js';
 import * as undoList from '../../services/undo.js';
@@ -75,6 +76,7 @@ export default function ClassWork({ classId }) {
   const files = useRef(null), folder = useRef(null), scan = useRef(null), want = useRef(null), [ask, setAsk] = useState(null), [split, setSplit] = useState(null);
   const [name, setName] = useState(null), [move, setMove] = useState(null);
   const [shown, setShown] = useState(() => new Set());
+  const L = usePart('linked', true);   // linked classes (class/linked.jsx)
   const flip = id => setShown(o => { const n = new Set(o); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const load = () => { setLib(readLibrary()); readKept().then(setKept); };
   useEffect(load, [classId]);
@@ -121,12 +123,14 @@ export default function ClassWork({ classId }) {
     if (where) toast(t('setup.u_moved', { name: where }), { undo: () => undoList.undo() });
   };
   const more = it => ({ label: t('setup.u_move'), icon: 'arrow', onSelect: () => setMove(it) });
+  const links = it => (L ? L.linkItems(lib, classId, it) : []);
   // Make a quiz… (mark/quizmaker.jsx): questions with bubbles, printed with each student's name and scored from the scan
   const [qmk, setQmk] = useState(null);
   const quiz = it => ({ label: t(it.quiz && it.quiz.made ? 'setup.qf_edit' : 'setup.qf_make'), icon: 'check', onSelect: () => PARTS.quizmaker().then(Q => setQmk({ Q, it }), e => console.error(e)) });
   const quizScan = it => (it.quiz && it.quiz.made ? [{ label: t('setup.qf_scan'), icon: 'image', onSelect: () => pick(it, scan) }] : []);
   return <section class="classwork" aria-labelledby="h-work">
     <h2 id="h-work" class="sr">{t('setup.w_title')}</h2>
+    {L && <L.LinkedHead lib={lib} classId={classId} />}
     {match && <match.B.MatchRoster list={match.list} lib={lib} classId={classId} onClose={() => setMatch(null)} onGo={(entries, cls) => bring(match.it, entries, cls)} />}
     {ask && <Dialog open title={t('setup.c_ask_t')} onClose={() => ask.done(false)}
       actions={<><Button onClick={() => ask.done(false)} data-fresh>{t('setup.c_fresh')}</Button><Button variant="primary" onClick={() => ask.done(true)} data-carry>{t('setup.c_bring')}</Button></>}>
@@ -152,7 +156,7 @@ export default function ClassWork({ classId }) {
           return <li class="wrow" data-item={it.id}
             onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add('over'); }} onDragLeave={e => e.currentTarget.classList.remove('over')}
             onDrop={e => { e.currentTarget.classList.remove('over'); e.preventDefault(); bring(it, e.dataTransfer.files); }}>
-            <div class="wn"><span class="wnm"><IconButton icon={shown.has(it.id) ? 'chd' : 'chr'} size="sm" label={t('setup.w_more', { name: it.name })} aria-expanded={shown.has(it.id) ? 'true' : 'false'} onClick={() => flip(it.id)} data-wmore={it.id} /><b data-raw>{it.name}</b></span>
+            <div class="wn"><span class="wnm"><IconButton icon={shown.has(it.id) ? 'chd' : 'chr'} size="sm" label={t('setup.w_more', { name: it.name })} aria-expanded={shown.has(it.id) ? 'true' : 'false'} onClick={() => flip(it.id)} data-wmore={it.id} /><b data-raw>{it.name}</b></span>{L && <L.AlsoIn lib={lib} it={it} />}
               <small class="mute">{[KIND[it.type] && t(KIND[it.type]), it.due && t('setup.w_due', { d: date(new Date(it.due + 'T12:00'), { day: 'numeric', month: 'short' }) })].filter(Boolean).join(' · ')}</small></div>
             <span class={'wst ' + st.cls}>{t(st.key)}{st.s && st.s.left ? ' · ' + t('home.left_of', { left: st.s.left, of: st.s.of }) : ''}
               {/* some got theirs early, one at a time */}
@@ -160,10 +164,10 @@ export default function ClassWork({ classId }) {
             {open ? <span class="wopen"><a class="btn sm" href={href('mark', st.m.id)}>{t('setup.w_open')}</a>
               {/* a newer copy of the papers: her work comes over (mark/carry.js) */}
               <Menu label={t('setup.w_again')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.w_again')} disabled={busy === it.id} data-again-for={it.id} />}
-                items={[{ label: t('setup.w_again_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_again_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, quiz(it), more(it)]} /></span>
+                items={[{ label: t('setup.w_again_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_again_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, quiz(it), more(it), ...links(it)]} /></span>
               : <span class="wopen"><Menu label={t('setup.w_bring')} trigger={b => <Button {...b} size="sm" icon="upload" disabled={busy === it.id} data-bring-for={it.id}>{t('setup.w_bring')}</Button>}
                 items={[{ label: t('setup.w_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, { label: t('setup.w_scan'), icon: 'image', onSelect: () => pick(it, scan) }, { label: t('setup.mr_menu'), icon: 'people', onSelect: () => matchFor(it) }]} />
-              <Menu label={t('setup.u_item_more', { name: it.name })} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.u_item_more', { name: it.name })} data-more-for={it.id} />} items={[quiz(it), ...quizScan(it), more(it)]} /></span>}
+              <Menu label={t('setup.u_item_more', { name: it.name })} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.u_item_more', { name: it.name })} data-more-for={it.id} />} items={[quiz(it), ...quizScan(it), more(it), ...links(it)]} /></span>}
             {shown.has(it.id) && <Details it={it} st={st} />}
           </li>; })}</ul>}</div>)}
     {classId !== '-' && <div><Button size="sm" icon="plus" onClick={() => setName({ name: t('setup.u_new', { n: units.length + 1 }) })} data-addunit>{t('setup.u_add')}</Button></div>}

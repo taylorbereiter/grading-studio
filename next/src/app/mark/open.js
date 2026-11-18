@@ -11,6 +11,8 @@ import { library, gradingSetup, meta } from '../../students/index.js';
 import { keepPapers, saveLibrary, saveWork } from '../../students/write.js';
 import * as K from './carry.js';
 import { PARTS } from '../router.js';
+import { setOpenWork } from '../openwork.js';
+import { savedStamp } from '../../shared/tabs.js';
 
 export class NotKept extends Error { constructor(id) { super('The papers for this one aren’t kept in this browser.'); this.name = 'NotKept'; this.id = id; } }
 
@@ -32,6 +34,7 @@ async function begin() {
   // fflate: a download kept as a ZIP is unzipped, and a .doc is told from a Word file, as the current app does
   gradeDefaultApply(lib);
   use({ lib, keptMeta: await keptRows(), setup: setupOver(gradingSetup.json(null)), batch: null, cur: 0, fflate: state().fflate || await PARTS.zip() });
+  setOpenWork(null);
   return lib;
 }
 // The files of a download as intake reads them: ZIPs opened (a ZIP inside a student's folder opens inside that folder), junk left out.
@@ -130,6 +133,7 @@ async function assemble({ raw, label, students, lib, assignment, question, earli
   if (rub.su) setup = setupOver(rub.su);
   delete setup.spot;
   use({ batch, setup });
+  setOpenWork(batch.id);
   batch.keptWork = keptWork;
   // no work saved for it yet (papers just brought in): its first save makes the record (students/write.js saveWork fresh)
   if (!keptWork && !prefs.get(bid, null)) batch.fresh = true;
@@ -143,6 +147,7 @@ async function assemble({ raw, label, students, lib, assignment, question, earli
   await E.loadRefs();
   await E.loadEdits();
   batch.revs = E.revsOf(E.revsBase(saved));
+  batch.seen = savedStamp(bid);   // whose save this window opened (src/saving.js b.seen): a newer stamp means another window saved since
   batch.lastS = saved && saved.s;
   E.restore();
   await E.photoTurns();

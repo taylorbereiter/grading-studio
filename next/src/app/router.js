@@ -12,16 +12,18 @@ export const ROUTES = [
   ['calendar', 'calendar', 'calendar'],
   ['calendar/:view', 'calendar', 'calendar'],
   ['week', 'calendar', 'calendar'],
-  ['todo', 'later', 'todo'],
+  ['todo', 'todo', 'todo'],
+  ['todo/:view', 'todo', 'todo'],
   ['class/:id', 'class', 'class'],
   ['class/:id/:tab', 'class', 'class'],
-  ['class/:id/:tab/:sub', 'later', 'class'],
+  ['class/:id/:tab/:sub', 'class', 'class'],
   ['lesson/:id', 'lesson', 'class'],
   ['lesson/:id/:view', 'lesson', 'class'],
   ['mark/:id', 'mark', 'class'],
   ['mark/:id/:tab', 'mark', 'class'],
   ['library', 'library', 'library'],
   ['library/:tab', 'library', 'library'],
+  ['library/:tab/:sub', 'library', 'library'],   // Library > Examples > Watch list
   ['school', 'later', 'school'],
   ['settings', 'settings', 'settings'],
   ['settings/:group', 'settings', 'settings'],
@@ -68,6 +70,24 @@ export const PARTS = {
   write: () => import('../students/write.js'),
   // a class's assignments, and bringing papers in for one (the opening engine loads only when papers come in)
   work: () => import('./screens/class-work.jsx'),
+  // a class's People and Grades tabs (app/class/), each with the gradebook's engine
+  people: () => import('./class/people.jsx'),
+  grades: () => import('./class/grades.jsx'),
+  // a gradebook imported from a spreadsheet, with its reading engine (gbki)
+  bki: () => import('./class/bookimport.jsx'),
+  // a class brought over from Google Classroom's grades file
+  gc: () => import('./class/classroom.jsx'),
+  // Pick a name, make groups, from the class header
+  picker: () => import('./class/picker.jsx'),
+  // a class's To do tab: its to-dos and missing work
+  ctodo: () => import('./class/todo.jsx'),
+  goals: () => import('./class/goals.jsx'),
+  reports: () => import('./class/reports.jsx'),
+  sheets: () => import('./class/sheets.jsx'),
+  examples: () => import('./class/examples.jsx'),
+  exsave: () => import('./class/exsave.jsx'),
+  linked: () => import('./class/linked.jsx'),
+  watch: () => import('./class/watch.jsx'),
   bring: () => import('./mark/open.js'),
   word: () => import('./mark/word.js'),
   report: () => import('./mark/report.jsx'),
@@ -93,6 +113,7 @@ export const CHUNKS = {
   keys: () => import('./screens/keys.jsx'),
   more: () => import('./screens/more.jsx'),
   later: () => import('./screens/later.jsx'),
+  todo: () => import('./screens/todo.jsx'),
   calendar: () => import('./screens/calendar.jsx'),
   class: () => import('./screens/class.jsx'),
   lesson: () => import('./screens/lesson.jsx'),
@@ -137,7 +158,8 @@ export function restore(path, fresh) {
   const find = key => key && (document.getElementById(key) || main.querySelector('[data-focus="' + CSS.escape(key) + '"]') || document.querySelector('[data-shell-nav] [href="' + CSS.escape(key) + '"]'));
   const el = k && find(k.focus);
   if (el) el.focus({ preventScroll: true });
-  else if (fresh) { const h = main.querySelector('h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } }
+  // A field she has already started typing in keeps the focus.
+  else if (fresh && !(document.activeElement && main.contains(document.activeElement) && document.activeElement.matches('input,textarea,select,[contenteditable]'))) { const h = main.querySelector('h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } }
 }
 let started = false;
 export function start() {

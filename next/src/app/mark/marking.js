@@ -163,13 +163,19 @@ let groupSync = () => {};
 export const useGroupSync = f => { groupSync = f; };
 function saveSoon() { groupSync(); clearTimeout(saveT); saveT = setTimeout(() => K.saveNow(), 500); saveState = 'saving'; tell(); }
 let W0 = null, leaving = false;
+// What goes on each save before it is stamped (src/folder.js stampWork): a Word paper edited in the app, and what was taken off, so a
+// copy elsewhere doesn't bring it back. The stamps themselves, and the merge with another window's save, are students/write.js saveWork's.
+function stampWork(b, data) {
+  for (const st of b.students) for (const f of st.files) if (f.edited) ((data.s[st.key] ||= { f: {}, g: st.grade, h: {} }).e ||= {})[f.path] = f.edited;
+  if (b.goneNow) data.gone = b.goneNow;
+}
 async function writeWork(b, data) {
   const seq = ++saveSeq;
-  if (leaving && W0) { try { W0.saveWorkLeaving(b.id, d => { for (const k of Object.keys(d)) delete d[k]; Object.assign(d, JSON.parse(JSON.stringify(data))); }); } catch (e) { console.error(e); } return; }
+  if (leaving && W0) { try { W0.saveWorkLeaving(b.id, d => Object.assign(d, JSON.parse(JSON.stringify(data))), { hold: b }); } catch (e) { console.error(e); } return; }
   try {
     // the save layer (students/write.js) loads with the first save, so it isn't part of the tools' first load
     const W = W0 = await PARTS.write();
-    const r = await W.saveWork(b.id, d => { for (const k of Object.keys(d)) delete d[k]; Object.assign(d, JSON.parse(JSON.stringify(data))); }, { fresh: !!b.fresh });
+    const r = await W.saveWork(b.id, d => Object.assign(d, JSON.parse(JSON.stringify(data))), { fresh: !!b.fresh, hold: b });
     if (r.full || r.quick) delete b.fresh;
     if (seq === saveSeq) saveState = r.full ? 'saved' : r.quick ? 'partly' : 'not';
   } catch (e) {
@@ -221,7 +227,7 @@ export function startMarking({ toast, openStudent }) {
   entries.length = 0; undoList.forget();
   use({
     undoStack: steps(), redoStack: [],
-    saveSoon, writeWork,
+    saveSoon, writeWork, stampWork,
     renderTools: tell, renderList: tell, renderGrade: tell,
     toast: () => {},   // the lifted code's own words are the current app's; the screen says what it needs in its own lines
     openStudent: i => openStudent && openStudent(i),
@@ -234,11 +240,13 @@ export function startMarking({ toast, openStudent }) {
 
 // The class's setup changed from the marking screen (a Word rubric's Out of or grading scale, src/app/wordrubric.js setClassOutOf and
 // setClassScale): kept as her last setup (gs.setup) and on the assignment's card, through students/write.js, as the current app does.
-export async function keepSetup() {
+// share: the first rubric set up for an assignment added to several linked classes goes to the copies with none yet (src/app/screens.js shareRubric).
+export async function keepSetup(share) {
   const s = state(), su = { ...s.setup, spot: undefined, rubricPage: undefined }, b = s.batch;
   const W = await PARTS.write();
   await W.saveSetting('gs.setup', su);
-  if (b && b.assignment) { const { findIn } = await PARTS.bring(); const id = b.assignment.id; await W.saveLibrary(l => { const f = findIn(l, id); if (f) f.setup = { ...s.setup, spot: undefined }; }); b.assignment.setup = { ...s.setup, spot: undefined }; }
+  if (b && b.assignment) { const { findIn } = await PARTS.bring(); const id = b.assignment.id; await W.saveLibrary(l => { const f = findIn(l, id); if (f) f.setup = { ...s.setup, spot: undefined };
+    if (f && share && f.group) for (const c of (l.classes || []).concat([l.loose]).filter(Boolean)) for (const u of c.units || []) for (const x of u.items) if (x !== f && x.group === f.group && !x.setup) x.setup = JSON.parse(JSON.stringify(f.setup)); }); b.assignment.setup = { ...s.setup, spot: undefined }; }
   tell();
 }
 // A score the Word rubric gave (the lifted rubricToGrade / wordScoreGone), as one undo step, saved and shown.

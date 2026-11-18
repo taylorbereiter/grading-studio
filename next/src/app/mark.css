@@ -789,6 +789,8 @@ dialog.dlg:has(.mk-su)>.body{max-height:calc(88vh - 120px);overflow:auto}
 .mk-snip .snipacts{display:flex;align-items:center;gap:8px;flex:none}
 .mk-snip .snipmk{display:flex;align-items:center;gap:6px;font-size:var(--t2);color:var(--ink2);cursor:pointer;margin-right:4px}
 .mk-snip .snipmk input{accent-color:var(--acc);margin:0}
+.mk-snip .snipthen{display:flex;gap:2px;margin-right:6px}
+.mk-snip .snipthen .btn.on{background:var(--acc-soft);color:var(--acc-ink);box-shadow:0 0 0 1px var(--acc)}
 .mk-snip .snipnote{flex:1 0 100%;margin:0;font-size:var(--t3)}
 /* The side pane (screens/mark.jsx SideBar): the paper becomes a grid and the file shown beside keeps its place in the page */
 .mk-paper.sp-right,.mk-paper.sp-left{display:grid;grid-template-columns:minmax(0,1fr) var(--sp-px);column-gap:16px;align-content:start;align-items:start}

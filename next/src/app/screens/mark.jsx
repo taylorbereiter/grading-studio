@@ -2,6 +2,7 @@
 // them; the student list on the left, the student's paper large in the middle, their score on the right, Next student at the foot.
 // The papers open the way the current app reopens a download kept in this browser (mark/open.js), and every page is drawn by the
 // current app's own drawing code (engines/gdraw.js), so what she sees is what she marked there, mark for mark.
+import { watchWindows } from '../mark/windows.js';
 import { h, Fragment } from 'preact';
 import { useRove } from '../mark/rove.js';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'preact/hooks';
@@ -400,13 +401,24 @@ export default function MarkScreen({ route, classes }) {
   useEffect(() => { if (!w) return; let off = null, live = true;
     PARTS.marking().then(m => { if (!live) return; MK = m; off = m.start({ toast: text => toast(text), openStudent: i => pickRef.current(i), changed: () => tick(n => n + 1) }); tick(n => n + 1); });
     return () => { live = false; if (off) off(); }; }, [w]);
+  // again: the download opened once more from storage (another window saved it), on the student she was on (wantKey)
+  const [again, setAgain] = useState(0), wantKey = useRef(null);
   useEffect(() => {
     let live = true; setW(null); setErr(null); seam.read = false; seam.ready = false;
     // the opener (mark/open.js, with the lifted opening code) loads as a part of its own, so it isn't in this screen's own load
     PARTS.bring().then(O => O.openKept(id, { question: q => new Promise(done => setAsk({ q, done: v => { setAsk(null); done(v); } })) }))
-      .then(r => { if (!live) return; if (!r) return history.back(); setW(r); setCur(Math.min(r.cur || 0, r.batch.students.length - 1)); }, e => { console.error(e); if (live) setErr(e); });
+      .then(r => { if (!live) return; if (!r) return history.back(); setW(r);
+        const k = wantKey.current, at = k ? r.batch.students.findIndex(st => st.key === k) : -1; wantKey.current = null;
+        const n = at >= 0 ? at : Math.min(r.cur || 0, r.batch.students.length - 1); setCur(n); if (at >= 0) use({ cur: at }); }, e => { console.error(e); if (live) setErr(e); });
     return () => { live = false; seam.ready = false; if (MK) MK.M.saveNowDone(); };
-  }, [id]);
+  }, [id, again]);
+  // other windows: their saves come in when she comes back here, a download forgotten there closes here (mark/windows.js)
+  useEffect(() => watchWindows({
+    batch: () => (w && state().batch === w.batch ? w.batch : null), cur: () => state().cur,
+    save: () => (MK ? MK.M.saveNowDone() : Promise.resolve()),
+    reopen: key => { wantKey.current = key; setAgain(n => n + 1); toast(t('mark.win_reopened')); },
+    forgotten: () => { toast(t('mark.win_forgot')); history.back(); },
+  }), [w]);
   const solo = w ? soloOf(w.batch) : null, soloI = solo ? w.batch.students.findIndex(st => st.key === solo.key) : -1;
   const pick = useCallback(i => { if (!w) return; if (soloOf(w.batch)) return; const n = Math.max(0, Math.min(w.batch.students.length - 1, i)); if (MK) MK.M.commit(); if (n !== state().cur) seam.ready = false; setCur(n); use({ cur: n }); }, [w]);
   const pickRef = useRef(pick); pickRef.current = pick;
@@ -431,7 +443,8 @@ export default function MarkScreen({ route, classes }) {
       PARTS.typed().then(x => { x.useKeep(MK.M.keepSetup); TN = x; if (live) tick(n => n + 1); }, e => console.error(e));
       // the papers are read in the background as they open, as the current app reads them (src/app/open.js scanAll): a grade written on
       // a paper, notes made in other apps, and marks from other apps that could be hers
-      PARTS.outEngine().then(E => { E.withMarking(MK.M); OE = E.X; return E.readPapers(); }).then(() => { seam.read = true; if (live) tick(n => n + 1); }, e => console.error(e)); }, e => console.error(e));
+      // (a download opened again partway through, another window's work coming in, leaves the first read without its papers: not an error)
+      PARTS.outEngine().then(E => { E.withMarking(MK.M); OE = E.X; return E.readPapers(); }).then(() => { seam.read = true; if (live) tick(n => n + 1); }, e => { if (live) console.error(e); }); }, e => console.error(e));
     return () => { live = false; }; }, [w, !!MK]);
   // What opened: a line after the papers open when there's something new to say, and the whole report from the student list.
   const [rep, setRep] = useState(null), [repList, setRepList] = useState(false);

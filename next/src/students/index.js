@@ -25,7 +25,9 @@ export async function newestWork(id) {
 export const added = idbStore(S, 'grading-studio-added', 'files');
 export const examples = idbStore(S, 'grading-studio-examples', 'ex');
 export const examplePictures = idbStore(S, 'grading-studio-examples', 'pix');
-export const watchList = { get: () => examples.get('watch:1'), put: v => examples.put(v, 'watch:1') };
+// Every example record, the watch list's too: a watch-list picture is an ordinary record with watch: 1 (src/examples.js), and a
+// deleted one stays as { id, u, gone: true } so a merge doesn't bring it back. [] in a browser that never kept one.
+export const exampleRecords = async () => (await examples.entries()).map(([, v]) => v).filter(Boolean);
 export const videos = idbStore(S, 'grading-studio-videos', 'v');
 export const safetyCopies = idbStore(S, 'grading-studio-safety', 'meta');
 export const safetyData = idbStore(S, 'grading-studio-safety', 'data');

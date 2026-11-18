@@ -1,0 +1,1 @@
+import{e as d}from"./chunk-GLVRXFZR.js";d();var e=!1,n=new Set;function a(){e=!0,n.forEach(t=>t())}function c(){let t=e;return e=!1,t}function f(t){let o=()=>{e=!1,t()};return n.add(o),()=>n.delete(o)}export{a,c as b,f as c};

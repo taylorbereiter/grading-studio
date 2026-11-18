@@ -677,7 +677,7 @@ export async function ibTaskApply(c, keys, S) {
   const apply = async (setup, grades) => {
     use({ setup });
     bb.students.forEach((st, k) => { const x = grades[k]; st.grade.rubric = J(x.rubric) || []; if (x.atR) st.grade.atR = J(x.atR); else delete st.grade.atR; st.grade.points = x.points ?? ''; if (x.qAuto != null) st.grade.qAuto = x.qAuto; else delete st.grade.qAuto; K.touchGrade(st); s.refound(st); });
-    await M.keepSetup();
+    await M.keepSetup(true);   // and to the linked copies with no rubric yet
     tell(); show(state().cur);
   };
   await apply(su, after);

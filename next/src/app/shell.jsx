@@ -12,10 +12,12 @@ import { addCommand, openCommandBar } from '../services/commands.js';
 import { register, start as keysStart, pieces } from '../services/shortcuts.js';
 import * as undo from '../services/undo.js';
 import { assistant } from '../services/assistant.js';
-import { lockState, onLockChange, takeOver } from '../shared/lock.js';
+import { lockState, onLockChange } from '../shared/lock.js';
+import { stopped as tabsStopped, onStopped } from '../shared/tabs.js';
 import { onLook, currentLook, saveLook } from '../services/theme.js';
 import { LOOKS, THEMES } from '../ui/tokens.js';
 import { classesForHome, todoCountForSidebar } from '../crossings.js';
+import { askAdd } from './todo-add.js';
 import { usePlan } from './plan.js';
 import { classTone } from './colors.js';
 import { onSaved } from '../shared/saved.js';
@@ -33,12 +35,17 @@ export function useClasses() {
   const [list, setList] = useState(null);
   useEffect(() => {
     let live = true;
-    const read = () => classesForHome().then(l => live && setList(l), e => { console.error(e); live && setList([]); });
+    // a list that reads the same is kept as it was, so a save that changes nothing here draws nothing again
+    let was = '';
+    const keep = l => { const k = JSON.stringify(l); if (live && k !== was) { was = k; setList(l); } };
+    const read = () => classesForHome().then(keep, e => { console.error(e); keep([]); });
     read();
     const vis = () => { if (!document.hidden) read(); };
     document.addEventListener('visibilitychange', vis);
     window.addEventListener('storage', read);
-    return () => { live = false; document.removeEventListener('visibilitychange', vis); window.removeEventListener('storage', read); };
+    // and after a save on the students' side here (a class added, a roster changed), so a new class opens at once
+    const off = onSaved(e => { if (e.side === 'students' && e.kind === 'library') read(); });
+    return () => { live = false; off(); document.removeEventListener('visibilitychange', vis); window.removeEventListener('storage', read); };
   }, []);
   return list;
 }
@@ -84,6 +91,7 @@ function Sidebar({ route, classes, folded, onFold }) {
     <NavSection>{t('nav.classes')}</NavSection>
     <div class="sclasses">
       {(classes || []).map((c, i) => <NavItem color={classTone(plan, c.name, c.loose ? -1 : i)} label={c.loose ? t('nav.no_class') : <span data-raw>{c.name}</span>} count={c.left || null} href={router.href('class', c.id || '-')} current={cls === (c.id || '-')} />)}
+      <NavItem icon="plus" label={t('nav.add_class')} href={router.href('class', 'new')} current={cls === 'new'} />
     </div>
     <div class="grow" />
     {FOOT.map(([id, icon, line]) => <NavItem icon={icon} label={t(line)} href={router.href(id)} current={on(id)} />)}
@@ -121,9 +129,15 @@ function Tabs({ route }) {
 }
 
 function Strip({ lock }) {
-  if (lock === 'read-only' || lock === 'taken') return <div class="strip" role="alert"><Icon name="info" /><span>{t(lock === 'taken' ? 'lock.taken' : 'lock.read_only')}</span>
-    <button type="button" class="btn sm" onClick={() => takeOver()}>{t('lock.take_over')}</button></div>;
+  if (lock === 'read-only') return <div class="strip" role="alert"><Icon name="info" /><span>{t('lock.read_only')}</span></div>;
   return null;
+}
+// Another window is replacing everything (Bring work in, Put back, Remove): this one stops writing and says so over the whole
+// page, and reloads by itself when that is done (shared/tabs.js, as the current app's src/saving.js tabLive).
+function OverCover() {
+  const [on, set] = useState(tabsStopped());
+  useEffect(() => { const off = onStopped(() => set(true)); set(tabsStopped()); return off; }, []);
+  return on ? <div class="tabover" role="alert" data-tabover>{t('lock.over')}</div> : null;
 }
 function SampleStrip() {
   if (!sampleOn()) return null;
@@ -166,6 +180,7 @@ export function Shell() {
       register({ id: 'undo', keys: 'mod+z', label: 'keys.undo', run: () => { const e = undo.undo(); if (e) toast(t('undo.undone', { what: e.label })); } }),
       register({ id: 'redo', keys: ['mod+shift+z', 'mod+y'], label: 'keys.redo', run: () => undo.redo() }),
       register({ id: 'fold', keys: 'mod+\\', label: 'keys.fold', run: fold }),
+      register({ id: 'todo-add', keys: 'n', label: 'nav.todo_add', when: () => router.current().chunk !== 'mark', run: () => { askAdd(); router.go('todo'); } }),
       register({ id: 'keys', keys: '?', label: 'keys.show_list', run: () => router.go('help', 'keys') }),
       ...[['home', 'nav.home', 'home'], ['calendar', 'nav.calendar', 'cal'], ['todo', 'nav.todo', 'todo'], ['library', 'nav.library', 'library'], ['school', 'nav.school', 'school'], ['settings', 'nav.settings', 'settings'], ['help', 'nav.help', 'help']]
         .map(([id, line, icon]) => addCommand({ id: 'go-' + id, label: () => t(line), group: t('cmd.group_go'), icon, run: () => router.go(id) })),
@@ -206,6 +221,7 @@ export function Shell() {
     <div class="mainwrap">
       <SampleStrip />
       <Strip lock={lock} />
+      <OverCover />
       <main id="main" ref={main} class="main" data-route={route.path}><Screen route={route} classes={classes} /></main>
     </div>
     <Tabs route={route} />

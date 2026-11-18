@@ -18,8 +18,8 @@ import { today, at, classOf } from '../plan/lessons.js';
 import { ACTIVITIES, BOOK, actVideo, actSlide, normActivity } from '../../engines/activities.js';
 import '../plan/lines.js';
 
-const TABS = ['activities', 'past', 'units', 'rubrics'];
-const TAB_LINE = { activities: 'plan.lib_activities', past: 'plan.lib_past', units: 'plan.lib_units', rubrics: 'plan.lib_rubrics' };
+const TABS = ['activities', 'past', 'units', 'rubrics', 'examples'];
+const TAB_LINE = { activities: 'plan.lib_activities', past: 'plan.lib_past', units: 'plan.lib_units', rubrics: 'plan.lib_rubrics', examples: 'plan.lib_examples' };
 const PARTS = ['warmup', 'activity', 'review'], KINDS = ['talk', 'read', 'write', 'words', 'move', 'check'];
 const PART_LINE = { warmup: 'plan.part_warmup', activity: 'plan.part_activity', review: 'plan.part_review' };
 const KIND_LINE = { talk: 'plan.kind_talk', read: 'plan.kind_read', write: 'plan.kind_write', words: 'plan.kind_words', move: 'plan.kind_move', check: 'plan.kind_check' };
@@ -162,6 +162,12 @@ function Rubrics({ p }) {
   useEffect(() => { PART.bank().then(setB); }, []);
   return B ? <B.BankList p={p} /> : <div class="loading" aria-busy="true" />;
 }
+// Strong examples, the watch list and whose work: the grading side's part (class/examples.jsx), loaded when the tab opens.
+function Examples({ view }) {
+  const [E, setE] = useState(null);
+  useEffect(() => { PART.examples().then(setE); }, []);
+  return E ? <E.default view={view} /> : <div class="loading" aria-busy="true" />;
+}
 
 export default function Library({ route, classes }) {
   const p = usePlan();
@@ -171,7 +177,7 @@ export default function Library({ route, classes }) {
     <Tabs label={t('nav.library')} value={tab} onChange={v => go('library', v === 'activities' ? '' : v)} tabs={TABS.map(id => ({ id, label: t(TAB_LINE[id]) }))} />
     <div role="tabpanel" id={'panel-' + tab} aria-labelledby={'tab-' + tab} class="libpanel">
       {!p ? <div class="loading" aria-busy="true" />
-        : tab === 'activities' ? <Activities p={p} /> : tab === 'past' ? <Past p={p} /> : tab === 'units' ? <Units p={p} classes={classes} /> : <Rubrics p={p} />}
+        : tab === 'activities' ? <Activities p={p} /> : tab === 'past' ? <Past p={p} /> : tab === 'units' ? <Units p={p} classes={classes} /> : tab === 'examples' ? <Examples view={route.params.sub} /> : <Rubrics p={p} />}
     </div>
   </div>;
 }

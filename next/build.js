@@ -149,7 +149,9 @@ const GRADING_STATE = {
   saveSoon: '() => {}',
   // the libraries, loaded by the screen when a paper needs them (each has its own budget) and handed in
   pdfjsLib: 'null', PDFLib: 'null', fflate: 'null', mammoth: 'null', html2canvas: 'null', workerReady: 'Promise.resolve()',
-  heicLoad: "() => { throw new Error('no decoder in this copy'); }",
+  // the iPhone photo decoder (libheif-js, src/engines/heic.js): its own chunk, fetched only when an HEIC picture is read
+  // (with pdf-lib, which the photo's page is made with, when the screen hasn't loaded it yet)
+  heicLoad: "() => import('./heic.js').then(async m => { if (!PDFLib) PDFLib = await m.pdflib(); return m.heic(); })",
   // Hooks: what the lifted marking code calls that belongs to the screen. The marking screen hands in its own with use({ ... });
   // until it does, each is quiet. writeWork is where a lifted saveNow hands the work it built: the screen saves it through
   // students/write.js saveWork. The window checks (tabLive and the rest) are students/write.js's, so here they let the save through.
@@ -330,6 +332,11 @@ export const tnRngSet = r => { tnRng = r; };
     'qzAnsOld', 'qzMoved', 'qzAnsLab', 'qzAns', 'qzAnsOf', 'qzTotal', 'qzRedoPaper', 'qzDropGone', 'qzNoteOf', 'qzNoteSet', 'qzMarkInk', 'qzAnswerPic',
     'ibQzOn', 'ibQzOf', 'ibQzUsed', 'ibQzMax', 'ibQzRaw', 'ibQzTable', 'ibQzLevel', 'ibQzEven', 'ibQzParts', 'ibQzScore', 'ibQzSay',
   ], "// the papers' documents are let go once the answers being cut from them are done, so a cut under way isn't cancelled\nexport const qzLetGo = () => qzQueue.then(() => qzClose());\n", [], null],
+  ['gex', [
+    // strong examples from a paper (src/examples.js): one Quick mark answer cut from the clean page with every cover painted in, the
+    // pages of a paper that can be kept, the score written on a picture; the boxes, the dialog and the saving are the new app's
+    'exAnswerPic', 'exItems', 'exScoreText', 'exScoreMarks', 'exScoreOn', 'exScoreTop', 'exJpg', 'coverRx', 'exWho', 'exFrom', 'exTitleNow',
+  ], '', [], null],
   ['gqmake', [
     // A quiz made here (src/quizmake.js, src/quizread.js): typed questions printed with bubbles and a code on each page, the code
     // read back to send each scanned page to its student, and the bubbles read and scored; the maker, the print window and the
@@ -352,6 +359,63 @@ export const useLib = l => { lib = l || { me: null }; };
   ], `let lib = { classes: [], loose: { units: [] } }, keptMeta = new Map();
 export const useKept = (l, k) => { lib = l; keptMeta = k; };
 `, ['lib', 'keptMeta'], ['gcore']],
+  ['gbook', [
+    // the gradebook (src/book.js): its columns read from saved work and typed scores, each cell, each term, the weighted term grade
+    // with extra credit, and a typed score parsed and put the way the current app puts it; the table and its keys are the new app's
+    'BK_TYPES', 'bkConf', 'bkCats', 'bkType', 'bkIsType', 'bkIsDef', 'bkLabel', 'bkTermOf', 'bkMean', 'bkCellOf', 'bkTypedCell', 'bkLoad', 'bkClassCols', 'bkCounts', 'bkGrade', 'bkXcTo',
+    'bkTabs', 'bkTermNow', 'bkClassAvg', 'bkBands', 'bkGroups', 'bkCountTypes', 'pctAvgText', 'bkParse', 'bkCellVal', 'bkColMax', 'bkPut', 'typedStamp', 'isoDay', 'bkDay', 'BK_DEF', 'rosterPairs', 'bkTypeUse',
+    // IB classes (src/ib.js): an MYP class's criteria, boundaries, evidence and the level she sets; a DP class's 1 to 7 and predicted grades
+    'IB_TOP', 'IB_BANDS', 'IB_GROUPS', 'IB_WAYS', 'IB_BOUNDS_DP', 'ibLetter', 'classWay', 'ibGroup', 'ibGroupCrit', 'ibBoundsFor', 'ibBoundsClean', 'ibCrit', 'ibBounds', 'ibGradeOf', 'ibLevel', 'ibBandName', 'ibTerm', 'ibEvidence', 'ibConf', 'ibCols', 'ibEvFor', 'ibMid',
+    // missing work (src/missing.js): who owes what, and who was reminded
+    'MIS_WORDS', 'misConf', 'misCols', 'misOwes', 'misByStu', 'misByCol', 'misNudge', 'misLate', 'misDue',
+    // the roster (src/app/screens.js, src/people.js, src/attend.js): a pasted list read, and a student's details and days kept through an edit
+    'mbParts', 'mbSorted', 'MB_ORDERS', 'parseRosterRows', 'keepInfo', 'keepAtt', 'infoOf', 'setInfo', 'blankInfo', 'attDays', 'attCount', 'attOf', 'attNote', 'classNewWay',
+    // attendance (src/attend.js): a day taken, one student set, a day cleared, the day before or after on the class's timetable;
+    // seating (src/seating.js): the room, who sits where, kept in a seat; the name picker's groups (src/pickshare.js)
+    'ATT_WAYS', 'attRec', 'attDayOk', 'attSet', 'attTake', 'attClear', 'attDayCount', 'attUnknown', 'attMeets', 'attStep', 'csvSafe',
+    'SEAT_ROOMS', 'SEAT_MAX_W', 'SEAT_MAX_H', 'seatXY', 'seatKeys', 'seatRoom', 'seatOf', 'seatSave', 'seatList', 'seatFill', 'seatPut', 'seatSetRoom',
+    'pkNice', 'pkShort', 'pkShuffle', 'pkCount', 'pkGroups',
+    // missing-work reminders (src/missing.js): one student's email, one to everyone who owes an assignment, the link, reminded today
+    'misDraft', 'misGroup', 'misHref', 'misPlain', 'misEmail', 'misLine', 'misFill', 'misClassName', 'rptCall',
+    // learning goals (src/goals.js): each goal's percent for each student and the class, from the rows and questions tagged with it
+    'goalList', 'goalData', 'GOAL_LOW',
+    // report comments (src/reports.js): what the gradebook knows about a student this term, and a draft from her own sentences
+    'RPT_WORDS', 'RPT_SLOTS', 'RPT_PROS', 'RPT_LEN', 'rptConf', 'rptEntry', 'rptPut', 'rptPro', 'rptFacts', 'rptDraft', 'rptText', 'bkScored', 'bkIn', 'ibLvAt', 'ibPredOf',
+    // linked classes (src/linked.js): sections of one course, copies of one assignment, and the cards made twice that look alike
+    'lkKey', 'lkSibs', 'lkTwins', 'lkCopy', 'lkJoin1', 'lkLev', 'lkLike', 'lkSuggest',
+  ], `// The class page hands in which class the gradebook is on (src/book.js keeps it in bk.cls); saving is the screen's, through
+// students/write.js: what the lifted code changes is the library it was handed inside saveLibrary.
+export const bkUse = o => Object.assign(bk, o);
+// Its own library, setup and kept rows (bookUse), so a class page or Home reading the book never changes the marking screen's.
+let lib = { classes: [], loose: { id: '', units: [] } }, setup = null, keptMeta = new Map();
+export const bookUse = o => { if ('lib' in o) lib = o.lib; if ('setup' in o) setup = o.setup; if ('keptMeta' in o) keptMeta = o.keptMeta; };
+// A retake's counting rule (gcore retakeRule) is read from the library: this one, for just the moment of the call.
+import { withTries as coreTries, state as coreState, set as coreSet } from './gcore.js';
+const withTries = (...a) => { const was = coreState().lib; coreSet.lib(lib); try { return coreTries(...a); } finally { coreSet.lib(was); } };
+const saveLib = () => {}, bkSaveLib = () => {}, renderLib = () => {}, seatDraw = () => {};
+// The Planner's timetable as attendance reads it (src/today.js plan: { classes: [{ name, meets: [{ dow }] }], daysOff: [{ date }] }), handed in by the page.
+let plan = null;
+export const planUse = p => { plan = p; };
+`, ['lib', 'setup', 'keptMeta', 'withTries', 'saveLib', 'bkSaveLib', 'renderLib', 'seatDraw', 'plan'], ['gcore']],
+  ['gtodo', [
+    // To do (src/todo.js): her lines and their categories, a typed line read for its day, class, student and School people, a
+    // repeating line's next day, the groups by day, and each change saved the way the current app saves it (tdSave keeps lib.todo
+    // tidy); the page, the week and the lines the app adds from saved work are the new app's (app/todo/, crossings.js)
+    'TD_CAT0', 'TD_DAY', 'tdData', 'tdSave', 'tdItems', 'tdItem', 'tdPut', 'tdAutoPut', 'tdCats', 'tdCat', 'tdGuess', 'tdCatOf', 'tdCatSave', 'tdCatPut', 'todoCatAdd', 'todoCatMove',
+    'tdToday', 'tdAt', 'tdAdd', 'tdGap', 'tdNextMon', 'tdWordDay', 'tdReadDay', 'tdKey', 'tdReadWho', 'tdReadPpl', 'todoRead', 'todoAdd', 'tdNext', 'todoTick', 'tdGroups', 'tdSort', 'tdDoneToday',
+  ], `// The library she is changing (inside students/write.js saveLibrary), the timetable for "each time this class meets", and the
+// people on the School page, handed in by the page. Saving is the page's: tdSave changes lib.todo of the library handed in.
+let lib = { classes: [], loose: { id: '', units: [] } }, plan = null, people = [];
+export const todoUse = o => { if ('lib' in o) lib = o.lib; if ('plan' in o) plan = o.plan; if ('people' in o) people = o.people || []; };
+const saveLib = () => {}, todoRender = () => {}, schPeople = () => people;
+`, ['lib', 'plan', 'saveLib', 'todoRender', 'schPeople', 'setup'], []],
+  ['gbki', [
+    // a gradebook imported from a spreadsheet (src/bookimport.js): the file read (CSV, TSV, Excel or pasted cells), its rows and
+    // columns found, each column matched to an assignment already in the class, a category to a type; the screen is the new app's
+    'bkiParse', 'bkiXlsx', 'bkiCell', 'bkiDate', 'bkiWide', 'bkiRead', 'bkiGuess', 'bkiFit', 'bkiMatch', 'bkiCatGuess', 'BKI_SUM', 'normName', 'gcRead', 'gcNameOf',
+  ], "// the teacher's types as the class page's gradebook reads them (gbook's own library), not a copy reading the marking screen's\nimport { bkCats } from './gbook.js';\n",
+  // given: bkCats from gbook; mis, te and td only look used (a local td, the word "mis" in a pattern)
+  ['bkCats', 'mis', 'te', 'td'], ['gcore', 'gbook']],
 ];
 function writeGrading() {
   const { lift } = require('./tools/lift.js');
@@ -366,6 +430,9 @@ function writeGrading() {
     'export const set = { ' + names.map(n => n + ': v => (' + n + ' = v)').join(', ') + ' };\n';
   const declared = [...names, 'store', 'kdo', 'kget', 'idbDo', ...Object.keys(GRADING_STUBS)], made = {}, texts = {}, needs = {};
   const sticker = Object.fromEntries(fs.readdirSync(path.join(ROOT, 'src/stickers')).filter(f => f.endsWith('.webp')).sort().map(f => [f.slice(0, -5), f]));
+  // The decoder's licence (LGPL) travels with it, as it does in the current app's page.
+  const heif = path.join(ROOT, 'node_modules', 'libheif-js');
+  writeIf('src/engines/heic-license.js', '// MADE BY next/build.js FROM node_modules/libheif-js. Loaded with the decoder, never on its own.\nexport default ' + JSON.stringify('libheif-js ' + require(path.join(heif, 'package.json')).version + ': libheif (https://github.com/strukturag/libheif), libde265 (https://github.com/strukturag/libde265), built by https://github.com/catdad-experiments/libheif-js\n' + fs.readFileSync(path.join(heif, 'libheif-wasm', 'LICENSE'), 'utf8')) + ';\n');
   writeIf('src/engines/stickers.js', '// MADE BY next/build.js FROM src/stickers/. Each sticker is its own file, fetched when a page with stickers is drawn.\n' +
     Object.entries(sticker).map(([k, f], i) => 'import s' + i + " from '../../../src/stickers/" + f + "';").join('\n') + '\n// The bundler gives each file a name next to this chunk; the page is a folder up, so each is read from where this module is.\nconst at = f => new URL(f, import.meta.url).href;\nexport default { ' + Object.keys(sticker).map((k, i) => JSON.stringify(k) + ': at(s' + i + ')').join(', ') + ' };\n');
   for (const [file, roots, preamble = '', given = [], uses = null, real = []] of GRADING) {
@@ -386,6 +453,9 @@ function writeGrading() {
     if (file === 'gcore') pre += 'export { ' + names.join(', ') + ', store, kdo, kget, idbDo, ' + Object.keys(GRADING_STUBS).join(', ') + ' };\n';
     else if (/(?<![.\w$])set\./.test(out)) pre = pre.replace(/^import \{ ([^}]*) \} from '\.\/gcore\.js';/m, (m, l) => "import { " + l + ", set } from './gcore.js';") || pre;
     if (file !== 'gcore' && /(?<![.\w$])set\./.test(out) && !/import \{[^}]*\bset\b[^}]*\} from '\.\/gcore\.js'/.test(pre)) pre = "import { set } from './gcore.js';\n" + pre;
+    // The one change to what is lifted: the current app has the decoder in its page, so heicToPdf reads it at once; here it is
+    // fetched when the first iPhone photo arrives, so heicToPdf waits for it (an await on the same call, in an async function).
+    if (file === 'gopen') { const n = out.split('const lib = heicLoad(),').length - 1; if (n !== 1) throw new Error('lift: heicToPdf changed'); out = out.replace('const lib = heicLoad(),', 'const lib = await heicLoad(),'); }
     out = head + preamble + pre + out;
     for (const n of own) { if (made[n]) continue; made[n] = file; declared.push(n); }
     texts[file] = { out, roots };
@@ -436,7 +506,7 @@ async function build() {
   fs.rmSync(DIST, { recursive: true, force: true });
   const r = await esbuild.build({
     entryPoints: { main: path.join(NEXT, 'src/main.js'), proof: path.join(NEXT, 'src/proof.js'), parts: path.join(NEXT, 'src/ui/index.js'), gallery: path.join(NEXT, 'src/gallery/main.jsx'),
-      'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css'), 'mark-css': path.join(NEXT, 'src/app/mark.css') },
+      'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css'), 'mark-css': path.join(NEXT, 'src/app/mark.css'), 'class-css': path.join(NEXT, 'src/app/class.css'), 'todo-css': path.join(NEXT, 'src/app/todo.css') },
     // pdf.js's worker, as text, so the Beside drawer's Books can start it from a blob: address (it loads only when a book is opened).
     plugins: [{ name: 'pdf-worker', setup(b) {
       // The path is kept relative to the repository so the build is the same on every machine.
@@ -464,7 +534,7 @@ async function build() {
     '<script>' + sample + '</script>\n' + look +
     '<link rel="stylesheet" href="dist/tokens.css"><link rel="stylesheet" href="dist/parts-css.css">' + css.map(c => '<link rel="stylesheet" href="dist/' + c + '.css">').join('') + (style ? '<style>' + style + '</style>' : '') + '\n' +
     '<script type="module" src="dist/' + entry + '.js"></script></head><body>' + body + '</body></html>\n';
-  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css', 'mark-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}.wrap p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
+  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css', 'mark-css', 'class-css', 'todo-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}.wrap p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'gallery.html'), partsPage('Parts gallery', 'gallery', ['gallery-css'], '', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'proof.html'), page('Saved-work proof', 'proof', '<p>Saved-work proof page. Used by the checks, not by teachers.</p>'));
   writeVersion();
