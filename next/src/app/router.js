@@ -22,6 +22,7 @@ export const ROUTES = [
   ['mark/:id/:tab', 'mark', 'class'],
   ['library', 'library', 'library'],
   ['library/:tab', 'library', 'library'],
+  ['library/:tab/:sub', 'library', 'library'],   // Library > Examples > Watch list
   ['school', 'later', 'school'],
   ['settings', 'settings', 'settings'],
   ['settings/:group', 'settings', 'settings'],

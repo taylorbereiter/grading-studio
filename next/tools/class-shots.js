@@ -32,11 +32,12 @@ const pressable = p => p.evaluate(() => {
     for (let x = e; x && x.nodeType === 1; x = x.parentElement) { const s = getComputedStyle(x); if (s.visibility === 'hidden' || +s.opacity === 0 || s.display === 'none') return false; } return true; };
   const root = document.querySelector('main') || document.body;
   const raw = [...new Set(root.querySelectorAll('button, a[href], input, select, textarea'))].filter(e => seen(e) && !e.disabled && !e.closest('.toast, [role="menu"], [role="status"]'));
-  const rows = raw.filter(e => e.closest('.stus, table.book tbody')), rest = raw.filter(e => !e.closest('.stus, table.book tbody'));
+  const LIST = '.stus, table.book tbody, ul.wlist';   // a list of students or of assignments counts as one
+  const rows = raw.filter(e => e.closest(LIST)), rest = raw.filter(e => !e.closest(LIST));
   const groups = new Set(), stops = [];
   for (const e of rest) { if (e.tabIndex < 0 || e.getAttribute('tabindex') === '-1') continue; const g = e.closest('[role="tablist"],[role="radiogroup"],[data-rove]'); if (g) { if (groups.has(g)) continue; groups.add(g); } stops.push(g || e); }
   const lab = e => (e.getAttribute('aria-label') || e.title || e.textContent || e.placeholder || e.tagName).replace(/\s+/g, ' ').trim().slice(0, 40);
-  return { stops: stops.length + (rows.length ? 1 : 0), raw: raw.length, students: rows.length, list: stops.map(lab).concat(rows.length ? ['Students'] : []) };
+  return { stops: stops.length + (rows.length ? 1 : 0), raw: raw.length, students: rows.length, list: stops.map(lab).concat(rows.length ? ['The list'] : []) };
 });
 
 // One browser per width: a computer's mouse hovers and points finely, a phone's finger does neither (headless Chrome says neither
@@ -46,8 +47,8 @@ const FLAGS = ['--font-render-hinting=none', '--disable-lcd-text', '--force-colo
 const MOUSE = '--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4';
 const FINGER = '--blink-settings=primaryHoverType=1,availableHoverTypes=1,primaryPointerType=2,availablePointerTypes=2';
 // [name, address, ready, what to press first]: a sheet is pictured open over its tab, and not counted (it is not the screen at rest)
-const TABS = [['grades', 'class/c1/grades', 'table.book'], ['charts', 'class/c1/grades', 'table.book', '[data-open-charts]'], ['goals', 'class/c1/grades', 'table.book', '[data-open-goals]'],
-  ['reports', 'class/c1/grades', 'table.book', '[data-open-reports]'], ['sheets', 'class/c1/grades', 'table.book', '[data-open-sheets]'], ['people', 'class/c1/people/2', '[data-student]'],
+const TABS = [['grades', 'class/c1/grades', 'table.book, [data-phone-scores]'], ['charts', 'class/c1/grades', 'table.book, [data-phone-scores]', '[data-open-charts]'], ['goals', 'class/c1/grades', 'table.book, [data-phone-scores]', '[data-open-goals]'],
+  ['reports', 'class/c1/grades', 'table.book, [data-phone-scores]', '[data-open-reports]'], ['sheets', 'class/c1/grades', 'table.book, [data-phone-scores]', '[data-open-sheets]'], ['people', 'class/c1/people/2', '[data-student]'],
   ['assignments', 'class/c1/work', '[data-lkhead]'], ['todo', 'class/c1/todo', '[data-ctd]'], ['examples', 'library/examples', '[data-exid]'], ['watch', 'library/examples/watch', '[data-exid]']];
 // Strong examples and one watch-list item in the current app's own database, with plain made-up pictures (no student work).
 const exSeed = async names => {
@@ -78,8 +79,9 @@ const exSeed = async names => {
       await p.evaluate(exSeed, JSON.parse(bookSeed().ls['gs.lib']).classes[0].names);
       for (const [name, at, ready, open] of TABS) {
         if (ONLY && !ONLY.includes(name)) continue;
-        await p.goto(srv.url + 'next/#/' + at);
-        await p.waitForSelector(ready, { timeout: 60000 });
+        await p.goto(srv.url + 'blank'); await p.goto(srv.url + 'next/#/' + at);   // a fresh page, so a sheet left open doesn't cover the next
+        await p.waitForSelector(ready, { timeout: 60000 }).catch(async e => { await p.screenshot({ path: path.join(OUT, 'failed-' + look + '-' + wn + '-' + name + '.png') }); throw e; });
+        if (open && !(await p.$(open))) continue;   // at phone width the Grades tab is the phone's scores, with no cards under a gradebook
         if (open) { await p.click(open); await p.waitForSelector('dialog[open]'); }
         await p.evaluate(() => document.fonts.ready); await new Promise(r => setTimeout(r, 400));
         await p.screenshot({ path: path.join(OUT, look + '-' + wn + '-' + name + '.png') });
@@ -91,7 +93,7 @@ const exSeed = async names => {
   }
   await srv.close();
   fs.writeFileSync(path.join(OUT, 'press-count.json'), JSON.stringify(counts, null, 1));
-  for (const [k, by] of Object.entries(counts)) for (const [wn, c] of Object.entries(by)) console.log(k + ' ' + wn + ': ' + c.stops + ' things to press at rest (' + c.raw + ' controls shown, ' + c.students + ' of them student rows): ' + c.list.join(' | '));
+  for (const [k, by] of Object.entries(counts)) for (const [wn, c] of Object.entries(by)) console.log(k + ' ' + wn + ': ' + c.stops + ' things to press at rest (' + c.raw + ' controls shown, ' + c.students + ' of them in the list of students or assignments): ' + c.list.join(' | '));
   if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
   console.log('Pictures in ' + OUT);
 })().catch(e => { console.error(e); process.exit(1); });

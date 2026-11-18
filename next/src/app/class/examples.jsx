@@ -58,7 +58,7 @@ export default function Examples({ view: start }) {
   const live = all.filter(r => !r.gone && Array.isArray(r.pages)), lib = library.json(null) || {}, classes = lib.classes || [];
   const cname = id => { const c = id && classes.find(k => String(k.id) === String(id)); return c ? c.name : id ? t('class.ex_class_gone') : t('class.ex_no_class'); };
   const W = view === 'watch', src = live.filter(r => (W ? r.watch : !r.watch));
-  const allTags = [...new Set(live.flatMap(exTags))].sort(natural);
+  const allTags = [...new Set(src.flatMap(exTags))].sort(natural);
   const q = f.q.trim().toLowerCase();
   const list = src.filter(r => (!f.cls || (r.cls || '-') === f.cls) && (!f.asg || exAsgKey(r) === f.asg) && (!f.kind || r.kind === f.kind) && (!f.row || r.row === f.row) && (!f.tag || exTags(r).includes(f.tag))
     && (!q || [r.title, r.why, r.row, exLabel(r), ...exTags(r)].some(x => String(x || '').toLowerCase().includes(q))));
@@ -81,7 +81,7 @@ export default function Examples({ view: start }) {
           {allTags.length > 0 && sel('tag', allTags.map(x => [x, x]), t('class.ex_every_tag'))}
           <input class="input exfind" type="search" placeholder={t('class.ex_search')} aria-label={t('class.ex_search')} value={f.q} onInput={e => set('q', e.currentTarget.value)} data-exfind />
           {filtered && <Button size="sm" variant="quiet" onClick={() => setF({ cls: '', asg: '', kind: '', row: '', tag: '', q: '' })} data-exclear>{t('class.ex_clear')}</Button>}
-          <span class="grow" /><span class="mute num" data-excount>{t(W ? 'class.ex_n_watch' : 'class.ex_n', { n: list.length })}</span>
+        </div><div class="exbar exacts"><span class="mute num" data-excount>{t(W ? 'class.ex_n_watch' : 'class.ex_n', { n: list.length })}</span><span class="grow" />
           {list.length > 0 && !W && <Button size="sm" icon="download" onClick={() => sheet(flat, new Set(flat.map(exAsgKey)).size > 1 ? t('class.ex_strong') : null)} data-exsheet>{t('class.ex_sheet')}</Button>}
           {list.length > 0 && !W && <Button size="sm" variant="primary" icon="play" onClick={() => setShow({ list: flat, at: 0 })} data-exshow>{t('class.ex_show')}</Button>}
           {list.length > 0 && W && <Send list={list} />}</div>
