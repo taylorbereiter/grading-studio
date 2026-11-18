@@ -46,7 +46,7 @@ const open = async (p, hash, keys) => {
   await new Promise(r => setTimeout(r, 300));
 };
 const lessonInDb = (p, id) => p.evaluate(id => new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('lessons').objectStore('lessons').get(id); q.onsuccess = () => { r.result.close(); res(q.result || null); }; q.onerror = () => rej(q.error); }; r.onerror = () => rej(r.error); }), id);
-const SCREENS = ['calendar/class', 'calendar/time', 'calendar/month', 'class/c1', 'lesson/L2', 'lesson/L2/slides'];
+const SCREENS = ['calendar/class', 'calendar/time', 'calendar/month', 'class/c1', 'lesson/L2', 'lesson/L2/slides', 'lesson/L2/edit'];
 
 test('the planning screens show the made-up week: lessons in their classes, the units, and today', async () => {
   const p = await fresh();
@@ -96,6 +96,7 @@ test('keyboard: mark a lesson ready, move through its slides, and present it', a
   assert.equal(await num(), 'Slide 3 of 5', 'arrow keys move between slides');
   await p.keyboard.press('F5');
   await p.waitForSelector('.present');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('.present'), { timeout: 5000 });
   assert.equal(await p.$eval('.present .num', x => x.textContent), 'Slide 3 of 5', 'Present starts on the slide in view');
   await p.keyboard.press('End');
   assert.equal(await p.$eval('.present .num', x => x.textContent), 'Slide 5 of 5');
@@ -127,4 +128,46 @@ test('every word on the planning screens comes through t() or is the teacher’s
   }
   console.log('# presses at rest (first screen, 1366 px): ' + JSON.stringify(counts));
   for (const [hash, n] of Object.entries(counts)) assert.ok(n < 25, hash + ' has ' + n + ' presses at rest; the brief asks for under 25');
+});
+
+test('the editor: words saved as typed, a slide added, too much text split onto a new slide, comments and an after-class note kept', async () => {
+  const p = await fresh();
+  await open(p, 'lesson/L3/edit');
+  await p.$eval('main .ed-top input', el => { el.focus(); el.select(); });
+  await p.keyboard.type('Sonnets: where it turns');
+  const saved = async (f, what) => { for (let k = 0; k < 40; k++) { const l = await lessonInDb(p, 'L3'); if (f(l)) return l; await new Promise(r => setTimeout(r, 150)); } assert.fail(what + ' was not saved'); };
+  await saved(l => l.title === 'Sonnets: where it turns', 'the title');
+  await p.click('main [data-focus="add-slide"]');
+  let l = await saved(l => l.slides.length === 6, 'the new slide');
+  assert.equal(l.slides[1].layout, 'content', 'the slide added after the one in view is the deck’s usual layout');
+  assert.equal(await p.$eval('main .ed-bar .num', x => x.textContent), 'Slide 2 of 6');
+  // Twenty lines are more than fit at 28 pt: the warning offers to move the extra lines, and the text is never made smaller.
+  await p.$eval('main .ed-form textarea', el => el.focus());
+  await p.keyboard.type(Array.from({ length: 20 }, (_, k) => 'Line ' + (k + 1)).join('\n'));
+  await p.waitForSelector('main .ed-warn button', { timeout: 5000 });
+  await saved(l => l.slides[1].body.split('\n').length === 20, 'the long text');
+  await p.click('main .ed-warn button');
+  l = await saved(l => l.slides.length === 7, 'the split');
+  assert.ok(l.slides[1].body.split('\n').length < 20 && l.slides[2].body.startsWith('Line '), 'the extra lines are on the next slide');
+  assert.equal(l.slides[1].size, 28, 'the text size is unchanged');
+  assert.match(l.slides[2].title, /\(continued\)$/);
+  // A comment on the slide.
+  await p.click('main .ed-form .talk button');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('.talk textarea'), { timeout: 5000 });
+  await p.keyboard.type('Add a picture of a sonnet here');
+  await p.click('main .ed-form .talk .row button:last-child');
+  l = await saved(l => (l.slides[1].talk || []).length === 1, 'the slide comment');
+  assert.deepEqual({ by: l.slides[1].talk[0].by, text: l.slides[1].talk[0].text }, { by: 'you', text: 'Add a picture of a sonnet here' });
+  // After class, on a lesson whose day has come: the note goes on the class's place in "taught".
+  await open(p, 'lesson/L2');
+  await p.$eval('main .lside .after textarea', el => el.focus());
+  await p.keyboard.type('Got to slide 4. Start with the exit ticket.');
+  await p.$eval('main .lside .after textarea', el => el.blur());
+  const two = await (async () => { for (let k = 0; k < 40; k++) { const x = await lessonInDb(p, 'L2'); if (x.taught) return x; await new Promise(r => setTimeout(r, 150)); } return null; })();
+  assert.ok(two, 'the note is saved');
+  assert.deepEqual(two.taught.map(x => [x.classId, x.date, x.note]), [['A1', '2026-10-27', 'Got to slide 4. Start with the exit ticket.']]);
+  // The current Planner reads the edited lesson as written.
+  await p.goto(srv.url + 'planner.html');
+  await p.waitForFunction(() => { const P = window.__planner; return P && P.L.lessons.some(l => l.id === 'L3' && l.slides.length === 7); }, { timeout: 20000 });
+  assert.deepEqual(p.errors, []); await p.ctx.close();
 });

@@ -915,6 +915,29 @@ function boxStyle(s, k) {
   const b = s.box && s.box[k], z = k !== 'body' && s.fs && s.fs[k];
   return (b ? 'left:' + b.x + 'px;top:' + b.y + 'px;width:' + b.w + 'px;height:' + b.h + 'px;' : '') + (z ? 'font-size:' + (z * PT).toFixed(1) + 'px;' : '');
 }
+// src/planner/boxes.js
+const boxOver = el => el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2;
+// src/planner/boxes.js
+const FIT_SEL = '.ls-t,.ls-ttl,.ls-sub,.ls-body,.ls-bx';
+// src/planner/boxes.js
+function slideFit(root, mode) {
+  const over = [];
+  if (!root) return over;
+  for (const el of root.querySelectorAll(FIT_SEL)) {
+    if (!el.offsetHeight || !boxOver(el)) continue;
+    if (mode === 'edit') { el.classList.add('ls-over'); over.push(el.dataset.k); continue; }
+    // First the box takes the empty room under it (down to the next box, or near the slide's bottom edge), then the text gets smaller.
+    const top = el.offsetTop, l = el.offsetLeft, r = l + el.offsetWidth;
+    let floor = root.querySelector('.lk-wood') ? 640 : 700;
+    for (const o of root.querySelectorAll(FIT_SEL + ',.ls-pic,.ls-src,.ls-vid')) if (o !== el && o.offsetTop > top && o.offsetLeft < r && o.offsetLeft + o.offsetWidth > l && (o.textContent.trim() || o.querySelector('img'))) floor = Math.min(floor, o.offsetTop - 8);
+    if (floor > top + el.offsetHeight) el.style.height = (floor - top) + 'px';
+    if (!boxOver(el)) continue;
+    const base = parseFloat(getComputedStyle(el).fontSize) || 16;
+    for (let f = 0.95; f >= 0.4 && boxOver(el); f -= 0.05) el.style.fontSize = (base * f).toFixed(1) + 'px';
+    el.classList.add('ls-shrunk');
+  }
+  return over;
+}
 // src/planner/rich.js
 const RT_LVL = 2, RT_KEYS = ['body', 'body2', 'foot'];
 // src/planner/rich.js
@@ -1509,4 +1532,4 @@ function pfLesSecs(r) {
   const last = Math.max(r.at, r.seen || 0), cap = r.st === 'paused' ? Infinity : Math.round((last + 20 * 60e3 - r.at) / 1000);
   return Math.max(0, Math.min(r.len, pfElapsed(r) - pfIdle(r), cap));
 }
-export { L, meetsOn, plWeekOffs, ymd, parseYmd, addDays, mondayOf, longDate, shortDate, hm, classById, className, dayOff, eventsOn, meetingsOn, lessonsAt, partnerSlots, semesterMondays, schoolWeek, weekDays, weekMeetings, rangeLabel, courses, lid, LAYOUTS, SIZES, SIZES_ANY, deckRule, deckAgenda, deckSizes, deckAdd, deckSizeSay, deckClean, normSlide, normLesson, deckStart, titleSlideOf, titlesLinked, bodyLines, slideHtml, titleSubtitle, imgSrc, ytId, ytStart, videoLink, videoSource, STATUS, statusSay, LOOKS, lookOf, normLinks, normBoxes, normTaught, taughtAt, taughtWhere, taughtText, minsOf, varName, normUnit, unitColor, unitEnd, unitAt, unitBase, unitForFile, tidyBank, normScale, normRef, normRubric, normBankScale, bankRubrics, bankScales, bankList, refKey, refLabel, refUnit, unitRef, bankForFile, bankBase, ACTIVITIES, normActivity, actSlide, planGaps, planNextWeek, planRecent, ptPace, ptLessonSecs, lessonText, lessonForFile, ctxFile, fileBase, folderReadme, FOLDER_MARK, b64ToU8, buildPptx, tplPreview, lessonBack, pptxToSlides, mimeOf, hash, esc };
+export { L, meetsOn, plWeekOffs, ymd, parseYmd, addDays, mondayOf, longDate, shortDate, hm, classById, className, dayOff, eventsOn, meetingsOn, lessonsAt, partnerSlots, semesterMondays, schoolWeek, weekDays, weekMeetings, rangeLabel, courses, lid, LAYOUTS, SIZES, SIZES_ANY, deckRule, deckAgenda, deckSizes, deckAdd, deckSizeSay, deckClean, normSlide, normLesson, deckStart, titleSlideOf, titlesLinked, bodyLines, slideHtml, titleSubtitle, imgSrc, ytId, ytStart, videoLink, videoSource, STATUS, statusSay, LOOKS, lookOf, normLinks, normBoxes, normTaught, taughtAt, taughtWhere, taughtText, minsOf, varName, normUnit, unitColor, unitEnd, unitAt, unitBase, unitForFile, tidyBank, normScale, normRef, normRubric, normBankScale, bankRubrics, bankScales, bankList, refKey, refLabel, refUnit, unitRef, bankForFile, bankBase, ACTIVITIES, normActivity, actSlide, planGaps, planNextWeek, planRecent, ptPace, ptLessonSecs, lessonText, lessonForFile, ctxFile, fileBase, folderReadme, FOLDER_MARK, b64ToU8, buildPptx, slideFit, tplPreview, lessonBack, pptxToSlides, mimeOf, hash, esc };

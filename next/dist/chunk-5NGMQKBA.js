@@ -1,1 +1,0 @@
-import{Ua as l,ha as n,t}from"./chunk-FK4PWGJ6.js";var o=null;function i(e){if(e){t.setup=e.setup,t.lessons=e.lessons,t.units=e.units,t.defLook=e.deflook;let s=e.setup&&e.setup.template||null;s!==o&&(o=s,n())}return l}export{i as a};

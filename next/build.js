@@ -61,7 +61,7 @@ const PLANNER_ROOTS = [
   'bankScales', 'bankList', 'refKey', 'refLabel', 'refUnit', 'unitRef', 'bankForFile', 'bankBase', 'ACTIVITIES', 'normActivity', 'actSlide',
   // planning pace, the brief for an assistant, files: the Planner folder, the .pptx, an assistant's .zip
   'planGaps', 'planNextWeek', 'planRecent', 'ptPace', 'ptLessonSecs', 'lessonText', 'lessonForFile', 'ctxFile', 'fileBase', 'folderReadme', 'FOLDER_MARK',
-  'b64ToU8', 'buildPptx', 'tplPreview', 'lessonBack', 'pptxToSlides', 'mimeOf', 'hash', 'esc',
+  'b64ToU8', 'buildPptx', 'slideFit', 'tplPreview', 'lessonBack', 'pptxToSlides', 'mimeOf', 'hash', 'esc',
 ];
 const PLANNER_DENY = ['$', 'toast', 'openDlg', 'closeDlg', 'lTx', 'kvGet', 'kvSet', 'kvDel', 'lPut', 'lDelete', 'lOpenDb', 'saveBlob', 'renderLessons', 'renderWeek',
   'renderEditor', 'renderStage', 'renderUnits', 'renderUnit', 'renderSemester', 'renderBank', 'renderLibrary', 'renderActivities', 'openLesson', 'folderWriteSoon',

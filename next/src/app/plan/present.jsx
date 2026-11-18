@@ -2,7 +2,7 @@
 // Arrow keys, Page Up and Down, the space bar and a click move; Home and End go to the first and last slide; Esc ends. The browser's
 // full screen is asked for when the teacher starts; a slide is drawn as large as the screen allows.
 import { h } from 'preact';
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useLayoutEffect, useRef } from 'preact/hooks';
 import { IconButton } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { Slide } from './slide.jsx';
@@ -12,7 +12,8 @@ export function Present({ p, l, start = 0, onClose }) {
   const [size, setSize] = useState(() => fit());
   const box = useRef(null), at = useRef(i); at.current = i;
   function fit() { const w = window.innerWidth, hh = window.innerHeight; return Math.floor(Math.min(w, hh * 1280 / 720)); }
-  useEffect(() => {
+  // Before the first paint, so a key pressed as soon as Present shows is not lost.
+  useLayoutEffect(() => {
     const n = l.slides.length, go = d => setI(x => Math.max(0, Math.min(n - 1, x + d)));
     const key = e => {
       const k = e.key;

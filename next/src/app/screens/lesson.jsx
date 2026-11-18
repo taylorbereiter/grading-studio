@@ -21,6 +21,8 @@ import { Slide } from '../plan/slide.jsx';
 import { stateOf, classOf, today, at, mins, lessonsOn } from '../plan/lessons.js';
 import { saveFailed } from './calendar.jsx';
 import { Present } from '../plan/present.jsx';
+import Editor, { Talk } from './lesson-edit.jsx';
+import { TextBox } from '../../ui/services.jsx';
 
 const VIEWS = ['lesson', 'slides', 'edit'];
 const clock = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? date(new Date(2000, 0, 1, +m[1], +m[2]), { hour: 'numeric', minute: '2-digit' }) : ''; };
@@ -46,7 +48,7 @@ export function useLesson(p, id) {
   useEffect(() => {
     if (!p) return;
     const got = p.lessons.find(x => x.id === id) || null;
-    if (!l || !got || got.updated !== l.updated && Date.now() - mine.current > 1500) setL(got);
+    if (!l || !got || got.id !== l.id || got.updated !== l.updated && Date.now() - mine.current > 1500) setL(got);
   }, [p, id]);
   const save = useCallback(async next => {
     setL(next); mine.current = Date.now();
@@ -133,10 +135,28 @@ function Side({ p, l, slot, per, onSave, onDownload }) {
       {shared.map(x => { const c = classOf(p, x.classId); return <p class="mute"><span class="dot" style={{ '--cc': c ? toneOf(c.color) : 'var(--g500)' }} /><span data-raw>{c ? c.name : ''}, {date(at(x.date), { weekday: 'short', day: 'numeric', month: 'short' })}</span></p>; })}
       {(partners.length > 0 || shared.length > 0) && <Switch label={shared.length ? t('plan.shared_on') : t('plan.also_give', { names: partners.map(x => (classOf(p, x.classId) || {}).name || '').join(', ') })} checked={shared.length > 0} onChange={share} />}
     </section>}
+    {slot && slot.date <= today() && <AfterClass l={l} slot={slot} onSave={onSave} />}
     <section><h2 class="sub">{t('plan.comments_for', { name: ai.name || t('assistant.generic') })}</h2>
-      <p class="mute">{t('plan.n_lesson_comments', { n: (l.talk || []).length })} · {t('plan.n_slide_comments', { n: talk })}</p></section>
+      <p class="mute">{t('plan.n_lesson_comments', { n: (l.talk || []).length })} · {t('plan.n_slide_comments', { n: talk })}</p>
+      <Talk talk={l.talk || []} ai={ai.name || t('assistant.generic')} label={t('plan.comments_for', { name: ai.name || t('assistant.generic') })} onChange={v => { const n = JSON.parse(JSON.stringify(l)); if (v.length) n.talk = v; else delete n.talk; onSave(n); }} /></section>
     <div class="acts"><Button icon="download" onClick={onDownload}>{t('plan.download_slides')}</Button></div>
   </aside>;
+}
+
+// What happened in class, kept on the class's place in "taught" as the current Planner's After class note keeps it
+// (src/planner/present.js taughtDlg). Writing one for a class not yet marked taught marks it taught at the last slide.
+export function AfterClass({ l, slot, onSave }) {
+  const had = (l.taught || []).find(x => x.classId === slot.classId && x.date === slot.date);
+  const [v, setV] = useState(had ? had.note || '' : '');
+  useEffect(() => { setV(had ? had.note || '' : ''); }, [l.id, slot.classId, slot.date, had && had.at]);
+  const keep = () => {
+    if ((had ? had.note || '' : '') === v.trim()) return;
+    const n = JSON.parse(JSON.stringify(l)), of = n.slides.length;
+    const t0 = had ? { ...had, note: v.trim(), at: Date.now() } : { classId: slot.classId, date: slot.date, slide: of, of, note: v.trim(), at: Date.now() };
+    n.taught = [...(n.taught || []).filter(x => !(x.classId === slot.classId && x.date === slot.date)), t0];
+    onSave(n);
+  };
+  return <section class="after"><TextBox label={t('plan.after_class')} hint={t('plan.after_class_hint')} value={v} onInput={setV} onBlur={keep} rows={3} /></section>;
 }
 
 export default function LessonPage({ route }) {
@@ -174,7 +194,7 @@ export default function LessonPage({ route }) {
       <div class="lmain">
         {view === 'lesson' && <LessonView p={p} l={l} slot={slot} per={per} onOpenSlide={i => { setCur(i); setView('slides'); }} />}
         {view === 'slides' && <SlidesView p={p} l={l} cur={Math.min(cur, n - 1)} setCur={setCur} onPresent={() => setPresenting(true)} />}
-        {view === 'edit' && <EmptyState icon="edit" title={t('plan.edit_soon')} />}
+        {view === 'edit' && <Editor key={l.id} p={p} l={l} cur={cur} setCur={setCur} save={save} ai={assistant().name || t('assistant.generic')} />}
       </div>
       {view !== 'edit' && <Side p={p} l={l} slot={slot} per={per} onSave={save} onDownload={() => download(p, l)} />}
     </div>
