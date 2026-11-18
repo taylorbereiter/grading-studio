@@ -357,5 +357,8 @@ into `engines/slidecss.js`.
 
 Only the names the new app calls are lifted, because each planning screen loads the whole module and must stay inside the 60 KB
 screen budget (at stage 3: about 38 KB for the engines and 12 KB for fflate). A screen that needs another engine adds its name.
-Not lifted yet, with the stage that adds them: the activity bank and rubric bank (Library and settings, later in stage 3), reading
-a .pptx back into slides (`pptxToSlides`, with the Library's import), the focus timer's pace (`ptPace`, with the lesson timer).
+The activity bank is lifted the same way into its own module, `engines/activities.js` (`ACTIVITIES`, `PARTS`, `KINDS`, `BOOK`,
+`actVideo`, `actSlide`, `normActivity`), so only Library > Activities loads its text; it takes `normSlide` and `lid` from
+`engines/planner.js`, so a slide made from an activity is the Planner's own. Library > Rubrics reads the bank record as it is and
+needs no engine. Not lifted yet, with the stage that adds them: rubric bank editing (`bankEdRender` and the rest, with the scoring
+screens in stage 4), reading a .pptx back into slides (`pptxToSlides`), the focus timer's pace (`ptPace`, with the lesson timer).

@@ -20,8 +20,8 @@ export const ROUTES = [
   ['lesson/:id/:view', 'lesson', 'class'],
   ['mark/:id', 'later', 'class'],
   ['mark/:id/:tab', 'later', 'class'],
-  ['library', 'later', 'library'],
-  ['library/:tab', 'later', 'library'],
+  ['library', 'library', 'library'],
+  ['library/:tab', 'library', 'library'],
   ['school', 'later', 'school'],
   ['settings', 'settings', 'settings'],
   ['settings/:group', 'settings', 'settings'],
@@ -40,6 +40,7 @@ export const CHUNKS = {
   calendar: () => import('./screens/calendar.jsx'),
   class: () => import('./screens/class.jsx'),
   lesson: () => import('./screens/lesson.jsx'),
+  library: () => import('./screens/library.jsx'),
 };
 
 export function parse(hash) {

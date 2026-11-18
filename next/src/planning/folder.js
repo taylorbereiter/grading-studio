@@ -44,4 +44,10 @@ export async function writeTimetableFile(setup, f) {
   await writeFile(f.dir, 'timetable.json', JSON.stringify(tt, null, 2));
   return 'written';
 }
+// The teacher's own activities in the folder (src/planner/activities.js actFolderWrite): activities.json, two-space JSON.
+export async function writeActivitiesFile(list, f) {
+  if (!f || !f.ok) return f ? 'later' : 'none';
+  await writeFile(f.dir, 'activities.json', JSON.stringify(list || [], null, 2));
+  return 'written';
+}
 export { lessons as lessonStore };

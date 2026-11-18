@@ -46,7 +46,7 @@ const open = async (p, hash, keys) => {
   await new Promise(r => setTimeout(r, 300));
 };
 const lessonInDb = (p, id) => p.evaluate(id => new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('lessons').objectStore('lessons').get(id); q.onsuccess = () => { r.result.close(); res(q.result || null); }; q.onerror = () => rej(q.error); }; r.onerror = () => rej(r.error); }), id);
-const SCREENS = ['calendar/class', 'calendar/time', 'calendar/month', 'class/c1', 'lesson/L2', 'lesson/L2/slides', 'lesson/L2/edit'];
+const SCREENS = ['calendar/class', 'calendar/time', 'calendar/month', 'class/c1', 'lesson/L2', 'lesson/L2/slides', 'lesson/L2/edit', 'library', 'library/past', 'library/units', 'library/rubrics'];
 
 test('the planning screens show the made-up week: lessons in their classes, the units, and today', async () => {
   const p = await fresh();
@@ -301,6 +301,64 @@ test('Settings > Timetable: a class renamed and recoloured, a meeting and a day 
   assert.equal(setup.classes[0].id, 'A1', 'the class keeps its id, so its lessons stay its own');
   await p.goto(srv.url + 'planner.html');
   await p.waitForFunction(() => { const P = window.__planner; return P && P.L.setup && P.L.setup.classes[0].name === 'Grade 9 English A'; }, { timeout: 20000 });
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('Library: an activity found and filtered, one of my own saved, an activity put in a lesson as a slide; past lessons, units and the bank', async () => {
+  const p = await fresh();
+  await open(p, 'library');
+  const n = () => p.$eval('main .libpanel [role=status]', x => x.textContent);
+  const all = await n();
+  await p.$eval('main [data-focus="find-activity"]', el => el.focus());
+  await p.keyboard.type('jigsaw');
+  await p.waitForFunction(() => document.querySelectorAll('main .acts > li').length === 1);
+  await p.$eval('main [data-focus="find-activity"]', el => { el.focus(); el.select(); });
+  await p.keyboard.press('Backspace');
+  await p.waitForFunction(a => document.querySelector('main .libpanel [role=status]').textContent === a, {}, all);
+  const chip = async (group, i) => { const g = (await p.$$('main .chips'))[group]; await (await g.$$('button'))[i].click(); };
+  await chip(0, 1); await chip(1, 1);   // Warm-up, Discussion
+  const names = await p.$$eval('main .acts .acth b', b => b.map(x => x.textContent));
+  assert.ok(names.length > 0 && names.length < 40 && names.includes('Think, pair, share'), 'filters by part and kind');
+  await chip(0, 0); await chip(1, 0);
+  // One of my own
+  await p.click('main [data-focus="new-activity"]');
+  await p.waitForSelector('[data-act="name"]');
+  await p.focus('[data-act="name"]'); await p.keyboard.type('Silent debate');
+  const areas = await p.$$('.actedit textarea');
+  await areas[1].type('Write a claim\nPass it on'); await areas[2].type('Write one claim\nAnswer the one you get');
+  await p.click('[data-focus="save-activity"]');
+  await p.waitForFunction(() => !document.querySelector('.actedit'));
+  const kvAct = () => p.evaluate(() => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('activities'); q.onsuccess = () => { r.result.close(); res(q.result); }; }; }));
+  let acts = null; for (let k = 0; k < 30 && !(acts && acts.length === 2); k++) { acts = await kvAct(); if (!acts || acts.length < 2) await new Promise(r => setTimeout(r, 150)); }
+  assert.equal(acts[0].name, 'Silent debate'); assert.deepEqual(acts[0].how, ['Write a claim', 'Pass it on']); assert.equal(acts[1].id, 'my-poem');
+  assert.ok(/^my-/.test(acts[0].id), 'saved as the current Planner saves its own activities');
+  // Put an activity in a lesson
+  await p.waitForFunction(() => [...document.querySelectorAll('main .acth b')].some(b => b.textContent === 'Silent debate'));
+  const rows = await p.$$('main .acth');
+  await rows[0].click();
+  await p.waitForSelector('main .act.open .actb');
+  await (await p.$('main .act.open .actb .row button')).click();
+  await p.waitForSelector('.sheet .lrow');
+  const before = (await lessonInDb(p, 'L3')).slides.length;
+  const pick = await p.$$('.sheet .lrow');
+  const titles = await Promise.all(pick.map(x => x.evaluate(e => e.querySelector('b').textContent)));
+  await pick[titles.indexOf('Sonnets: the turn')].click();
+  await p.waitForFunction(() => /#\/lesson\/L3\/edit$/.test(location.hash));
+  const l3 = await lessonInDb(p, 'L3');
+  assert.equal(l3.slides.length, before + 1);
+  const s = l3.slides[l3.slides.length - 1];
+  assert.equal(s.layout, 'steps'); assert.equal(s.title, 'Silent debate'); assert.match(s.body, /1\. Write one claim\n2\. Answer the one you get/); assert.match(s.notes, /How to run it:\n1\. Write a claim/);
+  // Past lessons, units, the bank
+  await open(p, 'library/past');
+  assert.deepEqual(await p.$$eval('main .libpanel .lrow b', b => b.map(x => x.textContent)), ['Stressed words in a poem', 'What makes a story a story?']);
+  await open(p, 'library/units');
+  assert.deepEqual(await p.$$eval('main .libsec h2', b => b.map(x => x.textContent)), ['Grade 9', 'Grade 10']);
+  const g9 = (await p.$$('main .libsec'))[0];
+  await (await g9.$$('a.lrow'))[1].click();
+  await p.waitForFunction(() => /#\/class\//.test(location.hash) && document.querySelector('main #h-unit'), { timeout: 10000 });
+  assert.equal(await p.$eval('main #h-unit', x => x.textContent), 'Unit 2: Poetry', 'a unit opens on its class’s Course line');
+  await open(p, 'library/rubrics');
+  assert.deepEqual(await p.$$eval('main .libpanel .lrow b', b => b.map(x => x.textContent)), ['Story analysis', 'School percent scale']);
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 

@@ -44,6 +44,7 @@ function writeEngines() {
   const f = path.join(NEXT, 'src/engines/merge.js');
   if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
   writePlanner();
+  writeActivities();
   return out;
 }
 // next/src/engines/planner.js: the Planner's engines (next/docs/engines.md, "Planning engines"), cut by name out of src/planner by
@@ -63,6 +64,16 @@ const PLANNER_ROOTS = [
 const PLANNER_DENY = ['$', 'toast', 'openDlg', 'closeDlg', 'lTx', 'kvGet', 'kvSet', 'kvDel', 'lPut', 'lDelete', 'lOpenDb', 'saveBlob', 'renderLessons', 'renderWeek',
   'renderEditor', 'renderStage', 'renderUnits', 'renderUnit', 'renderSemester', 'renderBank', 'renderLibrary', 'renderActivities', 'openLesson', 'folderWriteSoon',
   'unitWriteSoon', 'bankWriteSoon', 'copyText', 'refreshThumb'];
+// next/src/engines/activities.js: the Planner's activity bank (src/planner/activities.js), lifted the same way into its own module so
+// only Library > Activities loads its words. normSlide and lid come from the planner engine, so a slide made here is the Planner's own.
+function writeActivities() {
+  const { lift } = require('./tools/lift.js');
+  const out = lift({ roots: ['ACTIVITIES', 'PARTS', 'KINDS', 'BOOK', 'actVideo', 'actSlide', 'normActivity'], deny: PLANNER_DENY,
+    header: '// MADE BY next/build.js FROM src/planner/activities.js (next/tools/lift.js). Do not edit: change the source and build again.\n/* eslint-disable */\n',
+    given: ['normSlide', 'lid'], preamble: "import { normSlide, lid } from './planner.js';\n" });
+  const f = path.join(NEXT, 'src/engines/activities.js');
+  if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
+}
 function writePlanner() {
   const { lift } = require('./tools/lift.js');
   const out = lift({ roots: PLANNER_ROOTS, deny: PLANNER_DENY,

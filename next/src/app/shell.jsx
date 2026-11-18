@@ -184,6 +184,8 @@ export function Shell() {
       addCommand({ id: 'go-cal-time', label: () => t('plan.by_time'), also: t('nav.calendar'), group: t('nav.calendar'), icon: 'week', run: go('calendar', 'time') }),
       addCommand({ id: 'go-cal-month', label: () => t('plan.month'), also: t('nav.calendar'), group: t('nav.calendar'), icon: 'cal', run: go('calendar', 'month') }),
       addCommand({ id: 'go-timetable', label: () => t('settings.timetable'), also: t('nav.settings'), group: t('cmd.group_go'), icon: 'cal', run: go('settings', 'timetable') }),
+      ...[['activities', 'plan.lib_activities', 'spark', ''], ['past', 'plan.lib_past', 'slides', 'past'], ['units', 'plan.lib_units', 'cal', 'units'], ['rubrics', 'plan.lib_rubrics', 'grades', 'rubrics']]
+        .map(([id, line, icon, tab]) => addCommand({ id: 'go-lib-' + id, label: () => t(line), also: t('nav.library'), group: t('nav.library'), icon, run: go('library', tab) })),
     ];
     const cls = id => (((plan && plan.setup && plan.setup.classes) || []).find(c => c.id === id) || {}).name || '';
     for (const l of (plan && plan.lessons) || []) {

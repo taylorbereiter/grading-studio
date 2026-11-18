@@ -438,7 +438,9 @@ send and merge the same.
 Planner does (planning/folder.js: the same `<M-DD Day - title>.lesson.json` name, the same JSON, pictures in `images/`, the old file
 removed when the name changes). When the browser has not been given the folder this session, the lesson is marked `_sync: 1`
 and the current Planner writes it the next time it opens, as it already does for its own saves. A saved lesson is announced on
-`gs-plan-out` so the grading page starts its Drive sync.
+`gs-plan-out` so the grading page starts its Drive sync. Saving the timetable (`saveKv('setup')`) also writes `timetable.json` there (the setup without the slide template), and
+saving the teacher's own activities (`saveKv('activities')`) writes `activities.json`, both as the current Planner writes them.
+Without permission this session they are left for the current Planner, which writes both on its next save of them.
 
 **Not yet.** Sending the sync file to Drive and taking in what comes back, reading a folder changed elsewhere, and the paper and
 reading files in the folder come before the switch, in stage 6. Until then the current app does them as soon as it is opened, so nothing is lost.
