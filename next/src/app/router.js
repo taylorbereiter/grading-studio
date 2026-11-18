@@ -28,8 +28,9 @@ export const ROUTES = [
   ['school', 'school', 'school'],
   ['settings', 'settings', 'settings'],
   ['settings/:group', 'settings', 'settings'],
-  ['help', 'later', 'help'],
+  ['help', 'help', 'help'],
   ['help/keys', 'keys', 'help'],
+  ['help/:topic', 'help', 'help'],
   ['more', 'more', 'more'],
   ['classes', 'more', 'classes'],
 ];
@@ -121,6 +122,7 @@ export const CHUNKS = {
   todo: () => import('./screens/todo.jsx'),
   time: () => import('./screens/time.jsx'),
   school: () => import('./screens/school.jsx'),
+  help: () => import('./screens/help.jsx'),
   calendar: () => import('./screens/calendar.jsx'),
   class: () => import('./screens/class.jsx'),
   lesson: () => import('./screens/lesson.jsx'),

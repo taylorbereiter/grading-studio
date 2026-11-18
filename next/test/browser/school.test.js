@@ -148,3 +148,31 @@ test('School: the search box shows once there are six things, and Esc clears it'
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('Help: an answer at its own address, search with Esc, where things live, what is new, and answers in the command bar', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, gradingSeed());
+  await p.goto(srv.url + 'next/#/help/open-work');
+  await p.waitForSelector('#hlpa-open_work', { timeout: 30000 });
+  const n = (await p.$$('[data-hlp]')).length;
+  assert.ok(n > 60, 'every answer is here: ' + n);
+  assert.match(await p.$eval('#hlpa-open_work', e => e.textContent), /\S/);
+  await p.click('input[data-hlpq]'); await p.keyboard.type('attendance');
+  await p.waitForFunction(n => document.querySelectorAll('[data-hlp]').length < n, {}, n);
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(n => document.querySelectorAll('[data-hlp]').length === n, {}, n);
+  assert.ok((await p.$$('[data-hlpmap] tr')).length > 20, 'where everything lives now');
+  await p.click('[data-hlpnewopen]');
+  await p.waitForSelector('.hlpnew li', { timeout: 10000 });
+  await p.click('input[data-hlpq]');
+  await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
+  await p.waitForFunction(() => { const d = document.querySelector('dialog[open]'); return d && d.contains(document.activeElement); }, { timeout: 10000 });
+  await p.keyboard.type('anchor papers');
+  await p.waitForFunction(() => [...document.querySelectorAll('dialog[open] [role="option"]')].some(o => /anchor papers/i.test(o.textContent)), { timeout: 10000 });
+  const first = await p.$eval('dialog[open] [role="option"]', o => o.textContent);
+  await p.keyboard.press('Enter');
+  await p.waitForFunction(() => location.hash.startsWith('#/help/'), { timeout: 10000 });
+  assert.ok(first.length > 0);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

@@ -8,7 +8,7 @@ import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { NavItem, NavSection, IconButton, Icon, CommandBar, ToastHost, toast, LOOK_LINES } from '../ui/index.js';
 import { t } from '../i18n/t.js';
 import * as router from './router.js';
-import { addCommand, openCommandBar } from '../services/commands.js';
+import { addCommand, openCommandBar, loadWhenOpened } from '../services/commands.js';
 import { register, start as keysStart, pieces } from '../services/shortcuts.js';
 import * as undo from '../services/undo.js';
 import { assistant } from '../services/assistant.js';
@@ -187,6 +187,7 @@ export function Shell() {
         .map(([id, line, icon]) => addCommand({ id: 'go-' + id, label: () => t(line), group: t('cmd.group_go'), icon, run: () => router.go(id) })),
       addCommand({ id: 'go-time', label: () => t('nav.time'), group: t('cmd.group_go'), icon: 'clock', run: () => router.go('time') }),
       addCommand({ id: 'focus', label: () => t('nav.focus'), group: t('cmd.group_do'), icon: 'timer', run: openFocus }),
+      (loadWhenOpened(() => import('./help/find.js').then(m => m.addHelpCommands(), e => console.error(e))), () => {}),
       addCommand({ id: 'go-keys', label: () => t('keys.title'), group: t('cmd.group_go'), icon: 'keyboard', run: () => router.go('help', 'keys') }),
       addCommand({ id: 'theme', label: () => t('cmd.change_theme'), group: t('cmd.group_do'), icon: 'sun', run: () => router.go('settings', 'display') }),
       addCommand({ id: 'fold', label: () => t('keys.fold'), group: t('cmd.group_do'), icon: 'menu', keys: 'mod+\\', run: fold }),

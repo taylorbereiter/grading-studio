@@ -7,7 +7,7 @@ import { Button, IconButton, Field, Avatar } from './controls.jsx';
 import { Menu } from './popups.jsx';
 import { useModal, toast } from './overlay.jsx';
 import { t, num, date, getLocale } from '../i18n/t.js';
-import { findCommands, onCommandsChange, setCommandOpener } from '../services/commands.js';
+import { findCommands, onCommandsChange, setCommandOpener, commandsOpened } from '../services/commands.js';
 import { register, list as shortcutList, onShortcutsChange, pieces } from '../services/shortcuts.js';
 import { hasSpeech, listen } from '../services/speech.js';
 import { copyText } from '../services/clipboard.js';
@@ -26,6 +26,7 @@ export function CommandBar() {
     const off2 = onCommandsChange(() => bump(n => n + 1));
     return () => { off1(); off2(); setCommandOpener(null); };
   }, []);
+  useEffect(() => { if (open) commandsOpened(); }, [open]);
   const found = open ? findCommands(q) : [];
   const run = c => { setOpen(false); setTimeout(() => c.run(), 0); };
   const key = e => {
