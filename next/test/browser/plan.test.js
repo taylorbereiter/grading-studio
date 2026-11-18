@@ -417,6 +417,15 @@ test('a lesson’s materials and links, its versions, and deleting it with undo,
   await p.waitForFunction(() => document.querySelector('main h1.lt').textContent === 'Sonnets: the turn');
   const vs = await p.evaluate(() => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('ver:L3'); q.onsuccess = () => { r.result.close(); res(q.result); }; }; }));
   assert.equal(vs.length, 2); assert.equal(vs[0].label, 'Before going back to Saved by you'); assert.equal(vs[0].lesson.title, 'Sonnets, changed');
+  // A copy for another day: its own id, slides and materials, not taught
+  await menu('Copy to another class');
+  await p.waitForSelector('[data-focus="copy-make"]');
+  await p.click('[data-focus="copy-make"]');
+  await p.waitForFunction(() => /#\/lesson\//.test(location.hash) && !/L3$/.test(location.hash));
+  const cid = await p.evaluate(() => location.hash.split('/').pop());
+  const cp = await lessonInDb(p, cid);
+  assert.equal(cp.title, 'Sonnets: the turn'); assert.ok(!cp.taught && !cp.ready); assert.equal(cp.files.length, 1); assert.notEqual(cp.files[0].id, fid); assert.ok(await blob(cp.files[0].id) > 0);
+  await open(p, 'lesson/L3');
   // Delete, then undo
   await menu('Delete lesson');
   await p.waitForFunction(() => /#\/calendar/.test(location.hash));

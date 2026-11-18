@@ -580,5 +580,11 @@
  "plan.ver_before": "Before going back to {label}",
  "plan.ver_back": "Back to {label}. The version you left is saved too.",
  "plan.ver_go_back": "Go back to this",
- "plan.no_versions": "No versions yet. One is kept each time changes from your assistant are kept, and whenever you save one here."
+ "plan.no_versions": "No versions yet. One is kept each time changes from your assistant are kept, and whenever you save one here.",
+ "plan.copy_to": "Copy to another class or day…",
+ "plan.copy_named": "Copy {title}",
+ "plan.make_copy": "Make the copy",
+ "plan.copied_lesson": "Copied. This is the copy.",
+ "plan.no_class": "No class",
+ "plan.copy_own": "The copy gets its own slides, notes and materials, so changing one won’t change the other."
 }
