@@ -48,20 +48,17 @@ function writeEngines() {
 }
 // next/src/engines/planner.js: the Planner's engines (next/docs/engines.md, "Planning engines"), cut by name out of src/planner by
 // next/tools/lift.js with everything they use. Made here, never edited by hand.
+// Only what the new app calls: every name here comes with everything it uses, and each planning screen loads all of it, inside the
+// 60 KB screen budget (next/budgets.json route). A screen that needs another engine adds its name here.
 const PLANNER_ROOTS = [
   // the timetable and the school week
-  'L', 'meetsOn', 'plWeekOffs', 'ymd', 'parseYmd', 'addDays', 'mondayOf', 'longDate', 'shortDate', 'hm', 'classById', 'className', 'dayOff', 'eventsOn',
-  'meetingsOn', 'lessonsAt', 'partnerSlots', 'semesterMondays', 'schoolWeek', 'weekDays', 'weekMeetings', 'rangeLabel', 'courses',
-  // the lesson and its slides
-  'lid', 'LAYOUTS', 'SIZES', 'SIZES_ANY', 'deckRule', 'deckAgenda', 'deckSizes', 'deckAdd', 'deckSizeSay', 'deckClean', 'normSlide', 'normLesson', 'deckStart',
-  'titleSlideOf', 'titlesLinked', 'bodyLines', 'slideHtml', 'titleSubtitle', 'imgSrc', 'ytId', 'ytStart', 'videoLink', 'videoSource', 'STATUS', 'statusSay',
-  'LOOKS', 'lookOf', 'normLinks', 'normBoxes', 'normTaught', 'taughtAt', 'taughtWhere', 'taughtText', 'minsOf', 'varName',
-  // units, the rubric bank, activities
-  'normUnit', 'unitColor', 'unitEnd', 'unitAt', 'unitBase', 'unitForFile', 'tidyBank', 'normScale', 'normRef', 'normRubric', 'normBankScale', 'bankRubrics',
-  'bankScales', 'bankList', 'refKey', 'refLabel', 'refUnit', 'unitRef', 'bankForFile', 'bankBase', 'ACTIVITIES', 'normActivity', 'actSlide',
-  // planning pace, the brief for an assistant, files: the Planner folder, the .pptx, an assistant's .zip
-  'planGaps', 'planNextWeek', 'planRecent', 'ptPace', 'ptLessonSecs', 'lessonText', 'lessonForFile', 'ctxFile', 'fileBase', 'folderReadme', 'FOLDER_MARK',
-  'b64ToU8', 'buildPptx', 'slideFit', 'tplPreview', 'lessonBack', 'pptxToSlides', 'mimeOf', 'hash', 'esc',
+  'L', 'plWeekOffs', 'mondayOf', 'meetingsOn', 'partnerSlots', 'unitAt', 'unitEnd',
+  // lessons and slides: the model, the deck rules (28 to 36 pt, agenda on slide 2), drawing and measuring a slide
+  'lid', 'LAYOUTS', 'deckAgenda', 'deckSizes', 'deckAdd', 'deckSizeSay', 'normSlide', 'normLesson', 'deckStart', 'slideHtml', 'slideFit', 'tplPreview',
+  // files: the lesson's file in the Planner folder, the .pptx from the teacher's template
+  'lessonForFile', 'fileBase', 'b64ToU8', 'buildPptx', 'mimeOf',
+  // the assistant: the lesson as one message, the .zip that comes back, versions
+  'lessonText', 'lessonZipAsk', 'lessonContext', 'lessonBack', 'ZIP_SKIP', 'baseName', 'MAX_FILE', 'snap', 'MAX_VERSIONS',
 ];
 const PLANNER_DENY = ['$', 'toast', 'openDlg', 'closeDlg', 'lTx', 'kvGet', 'kvSet', 'kvDel', 'lPut', 'lDelete', 'lOpenDb', 'saveBlob', 'renderLessons', 'renderWeek',
   'renderEditor', 'renderStage', 'renderUnits', 'renderUnit', 'renderSemester', 'renderBank', 'renderLibrary', 'renderActivities', 'openLesson', 'folderWriteSoon',
@@ -71,7 +68,9 @@ function writePlanner() {
   const out = lift({ roots: PLANNER_ROOTS, deny: PLANNER_DENY,
     header: '// MADE BY next/build.js FROM src/planner/*.js (next/tools/lift.js). Do not edit: change the source and build again.\n' +
       '// L holds what the Planner keeps in memory: the new app puts the timetable in L.setup (and lessons, units) before calling.\n/* eslint-disable */\n',
-    preamble: "import * as fflate from 'fflate';\n" });
+    given: ['myActivities'],
+    // The teacher's own activities come from L.activities (the new app reads them with the rest), not from the Planner's database.
+    preamble: "import * as fflate from 'fflate';\nconst myActivities = async () => ((L && L.activities) || []).filter(a => a && a.name);\n" });
   const f = path.join(NEXT, 'src/engines/planner.js');
   if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
   // The slide's own look (what slideHtml draws), taken from the Planner page's stylesheet: the rules about the slide and its text,

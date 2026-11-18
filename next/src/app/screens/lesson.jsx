@@ -22,6 +22,7 @@ import { stateOf, classOf, today, at, mins, lessonsOn } from '../plan/lessons.js
 import { saveFailed } from './calendar.jsx';
 import { Present } from '../plan/present.jsx';
 import Editor, { Talk } from './lesson-edit.jsx';
+import { AssistantSheet } from '../plan/assistant.jsx';
 import { TextBox } from '../../ui/services.jsx';
 
 const VIEWS = ['lesson', 'slides', 'edit'];
@@ -117,7 +118,7 @@ function SlidesView({ p, l, cur, setCur, onPresent }) {
   </div>;
 }
 
-function Side({ p, l, slot, per, onSave, onDownload }) {
+function Side({ p, l, slot, per, onSave, onDownload, onAssistant }) {
   const ai = assistant(), E = engine(p);
   const shared = (l.slots || []).filter(x => !slot || x.classId !== slot.classId || x.date !== slot.date);
   const partners = slot ? E.partnerSlots(slot.classId, slot.date) : [];
@@ -139,7 +140,7 @@ function Side({ p, l, slot, per, onSave, onDownload }) {
     <section><h2 class="sub">{t('plan.comments_for', { name: ai.name || t('assistant.generic') })}</h2>
       <p class="mute">{t('plan.n_lesson_comments', { n: (l.talk || []).length })} · {t('plan.n_slide_comments', { n: talk })}</p>
       <Talk talk={l.talk || []} ai={ai.name || t('assistant.generic')} label={t('plan.comments_for', { name: ai.name || t('assistant.generic') })} onChange={v => { const n = JSON.parse(JSON.stringify(l)); if (v.length) n.talk = v; else delete n.talk; onSave(n); }} /></section>
-    <div class="acts"><Button icon="download" onClick={onDownload}>{t('plan.download_slides')}</Button></div>
+    <div class="acts"><Button icon="assist" onClick={onAssistant} data-focus="assistant">{t('plan.work_with', { name: ai.name || t('assistant.generic') })}</Button><Button icon="download" onClick={onDownload}>{t('plan.download_slides')}</Button></div>
   </aside>;
 }
 
@@ -162,7 +163,7 @@ export function AfterClass({ l, slot, onSave }) {
 export default function LessonPage({ route }) {
   const p = usePlan();
   const [l, save] = useLesson(p, route.params.id);
-  const [cur, setCur] = useState(0), [presenting, setPresenting] = useState(false);
+  const [cur, setCur] = useState(0), [presenting, setPresenting] = useState(false), [asking, setAsking] = useState(false);
   const view = VIEWS.includes(route.params.view) ? route.params.view : 'lesson';
   const setView = v => go('lesson', route.params.id, v === 'lesson' ? '' : v);
   useEffect(() => {
@@ -173,6 +174,7 @@ export default function LessonPage({ route }) {
       register({ id: 'slide-prev', keys: ['arrowleft', 'pageup'], label: 'plan.prev_slide', when: () => view === 'slides' && !presenting, run: () => step(-1) }),
       register({ id: 'present', keys: 'f5', label: 'plan.present', run: () => setPresenting(true) }),
       addCommand({ id: 'lesson-present', label: () => t('plan.present_this'), group: t('cmd.group_do'), icon: 'play', run: () => setPresenting(true) }),
+      addCommand({ id: 'lesson-assistant', label: () => t('plan.work_with', { name: assistant().name || t('assistant.generic') }), group: t('cmd.group_do'), icon: 'assist', run: () => setAsking(true) }),
       addCommand({ id: 'lesson-download', label: () => t('plan.download_slides'), group: t('cmd.group_do'), icon: 'download', run: () => download(p, l) }),
     ];
     return () => offs.forEach(f => f());
@@ -196,8 +198,9 @@ export default function LessonPage({ route }) {
         {view === 'slides' && <SlidesView p={p} l={l} cur={Math.min(cur, n - 1)} setCur={setCur} onPresent={() => setPresenting(true)} />}
         {view === 'edit' && <Editor key={l.id} p={p} l={l} cur={cur} setCur={setCur} save={save} ai={assistant().name || t('assistant.generic')} />}
       </div>
-      {view !== 'edit' && <Side p={p} l={l} slot={slot} per={per} onSave={save} onDownload={() => download(p, l)} />}
+      {view !== 'edit' && <Side p={p} l={l} slot={slot} per={per} onSave={save} onDownload={() => download(p, l)} onAssistant={() => setAsking(true)} />}
     </div>
+    <AssistantSheet p={p} l={l} open={asking} onClose={() => setAsking(false)} save={save} />
     {presenting && <Present p={p} l={l} start={view === 'slides' ? cur : 0} onClose={i => { setPresenting(false); if (typeof i === 'number') setCur(i); }} />}
   </div>;
 }

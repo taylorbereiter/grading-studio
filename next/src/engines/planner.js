@@ -2,6 +2,7 @@
 // L holds what the Planner keeps in memory: the new app puts the timetable in L.setup (and lessons, units) before calling.
 /* eslint-disable */
 import * as fflate from 'fflate';
+const myActivities = async () => ((L && L.activities) || []).filter(a => a && a.name);
 
 // src/planner/base.js
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -11,97 +12,44 @@ function hash(s) {
   for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619); h2 = Math.imul(h2 ^ c, 2246822519); }
   return (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36);
 }
-// src/planner/bank.js
-const B_TOP = 4, B_TOP_MAX = 10;
-// src/planner/bank.js
-const bTopOk = v => { v = Math.round(+v); return v >= 1 && v <= B_TOP_MAX ? v : 0; };
-// src/planner/bank.js
-const bTop = (x, i) => (i != null && Array.isArray(x.tops) && bTopOk(x.tops[i])) || bTopOk(x.top) || B_TOP;
-// src/planner/bank.js
-const bLevels = (x, i) => { const out = []; for (let v = bTop(x, i); v >= 0; v--) out.push(v); return out; };
-// src/planner/bank.js
-const tidyBank = b => ({ rubrics: Array.isArray(b && b.rubrics) ? b.rubrics : [], scales: Array.isArray(b && b.scales) ? b.scales : [], gone: (b && b.gone && typeof b.gone === 'object') ? b.gone : {} });
-// src/planner/bank.js
-function normScale(s) {
-  if (!s || typeof s !== 'object') return null;
-  const out = {};
-  for (const [k, v] of Object.entries(s)) { const n = +k, p = +v; if (Number.isInteger(n) && n >= 0 && n <= 40 && v !== '' && v != null && isFinite(p) && p >= 0 && p <= 200) out[n] = p; }
-  return Object.keys(out).length ? out : null;
-}
-// src/planner/bank.js
-function normRef(u) {
-  if (!u || typeof u !== 'object' || !(u.title || u.id)) return null;
-  return { id: String(u.id || ''), course: String(u.course || ''), title: String(u.title || '') };
-}
-// src/planner/bank.js
-function normRubric(x) {
-  x = x && typeof x === 'object' ? x : {};
-  const criteria = (Array.isArray(x.criteria) ? x.criteria : []).map(c => String(c == null ? '' : c).trim()).slice(0, 12).map((c, i) => c || 'Criterion ' + (i + 1));
-  let levels;
-  if (Array.isArray(x.levels)) {
-    levels = criteria.map((_, i) => { const r = x.levels[i] || {}, o = {}; for (const v of bLevels({ ...x, criteria }, i)) { const t = String(r[v] == null ? '' : r[v]).trim(); if (t) o[v] = t; } return o; });
-    if (!levels.some(r => Object.keys(r).length)) levels = undefined;
-  }
-  const r = { id: typeof x.id === 'string' && x.id ? x.id : lid(), name: String(x.name || '').trim() || 'Rubric', criteria: criteria.length ? criteria : ['Criterion 1'], levels, scale: normScale(x.scale), ...bRowScale(x), at: +x.at || Date.now() };
-  if (r.tops) r.tops = r.criteria.map((_, i) => r.tops[i] || null);
-  const u = normRef(x.unit); if (u) r.unit = u;
-  return r;
-}
-// src/planner/bank.js
-function normBankScale(x) {
-  x = x && typeof x === 'object' ? x : {};
-  const s = { id: typeof x.id === 'string' && x.id ? x.id : lid(), name: String(x.name || '').trim() || 'Grading scale', scale: normScale(x.scale) || { 0: 0 }, at: +x.at || Date.now() };
-  const u = normRef(x.unit); if (u) s.unit = u;
-  return s;
-}
-// src/planner/bank.js
-const bankRubrics = () => ((L.bank && L.bank.rubrics) || []).filter(r => r && r.id && r.name && Array.isArray(r.criteria) && r.criteria.length);
-// src/planner/bank.js
-const bankScales = () => ((L.bank && L.bank.scales) || []).filter(s => s && s.id && s.name && s.scale && typeof s.scale === 'object');
-// src/planner/bank.js
-const bankList = kind => kind === 'scales' ? bankScales() : bankRubrics();
-// src/planner/bank.js
-const unitRef = u => u ? { id: u.id, course: u.course, title: u.title } : null;
-// src/planner/bank.js
-function refUnit(ref) {
-  if (!ref) return null;
-  return L.units.find(u => u.id === ref.id) || L.units.find(u => u.course === ref.course && u.title.trim().toLowerCase() === ref.title.trim().toLowerCase()) || null;
-}
-// src/planner/bank.js
-const refKey = ref => { if (!ref) return ''; const u = refUnit(ref); return u ? u.id : 'ref:' + ref.course + '|' + ref.title; };
-// src/planner/bank.js
-const refLabel = ref => { if (!ref) return 'Not in a unit'; const u = refUnit(ref) || ref; return (u.course ? u.course + ' · ' : '') + (u.title || 'Unit'); };
-// src/planner/bank.js
-const bankBase = (kind, x) => x.name.replace(/[\\/:*?"<>|]+/g, '-').trim().slice(0, 90) + (kind === 'scales' ? '.scale.json' : '.rubric.json');
-// src/planner/bank.js
-function bankForFile(kind, x) {
-  const o = { id: x.id, name: x.name };
-  if (x.unit) o.unit = { course: x.unit.course, title: x.unit.title };
-  if (kind === 'rubrics') { o.criteria = x.criteria; if (x.levels) o.levels = x.levels; o.scale = x.scale || null; } else o.scale = x.scale;
-  return o;
-}
-// src/planner/bank.js
-const BANK_README = `
-## Rubrics and grading scales
-\`Rubrics/*.rubric.json\` and \`Rubrics/*.scale.json\` are the teacher's bank of rubrics and grading scales,
-sorted by unit. Only the wording and percents are here: never scores or anything about a student.
-Edit one in place (keep its "id"), or write a new file to add one (leave "id" out). Don't delete files;
-the teacher deletes in the app.
-
-Rubric: {
-  "id": "…", "name": "Book cover formative",
-  "unit": { "course": "<course from timetable.json>", "title": "<a unit's title from Units/>" },   // optional
-  "criteria": ["Row 1 name", "Row 2 name", "Row 3 name"],        // each row is scored 4 to 1 (0 if needed), so 3 rows = out of 12
-  "top": 8, "half": false,                                       // optional: a row's highest score when it isn't 4 (1 to 10), and false for whole numbers only
-  "levels": [ { "4": "What a 4 looks like on row 1", "3": "…", "2": "…", "1": "…" }, { … }, { … } ],   // optional; "0" too if wanted
-  "scale": { "12": 100, "11": 95, "10": 90, … }                  // optional: total points -> percent; null = plain share of points
-}
-Grading scale: { "id": "…", "name": "Out of 12, steps of 5", "unit": { … }, "scale": { "12": 100, "11": 95, … , "0": 40 } }
-`;
 // src/planner/review.js
 const STATUS = { claude: 'With the assistant', review: 'Ready for you' };   // the chip's words are read when it is drawn (statusSay): the assistant's name is the teacher's own
 // src/planner/review.js
-const statusSay = k => k === 'claude' ? 'With ' + plAi() : STATUS[k];
+const MAX_VERSIONS = 30;
+// src/planner/review.js
+const snap = l => { const c = JSON.parse(JSON.stringify(l)); delete c._file; delete c._mod; delete c.pending; return c; };
+// src/planner/review.js
+const lessonZipAsk = () => 'When you are done, give me ONE downloadable .zip file. In it:\n' +
+  '- lesson.json: { "kind": "grading-studio-lesson-zip", "lesson": { "title": "…", "slides": [ … ] }, "preview": "<the .pptx file name>", "materials": ["<each handout file name>"] }.\n' +
+  '  "slides" is every slide of the lesson, in order. My Planner makes the real PowerPoint from these with my school template, so they matter most. Each slide is one of:\n' +
+  '  { "layout": "title", "title": "…", "body": "" }   { "layout": "agenda", "title": "…", "body": "1. …\\n2. …" }\n' +
+  '  { "layout": "content", "title": "…", "body": "• Point\\n\\t• Smaller point", "notes": "speaker notes" }   { "layout": "text", "title": "…", "body": "plain paragraphs" }\n' +
+  '  { "layout": "warmup", "title": "Warm-up", "tag": "Journal", "body": "the prompt" }   { "layout": "objectives", "title": "Today we will", "body": "1. …" }\n' +
+  '  { "layout": "steps", "title": "…", "body": "1. …\\n2. …", "foot": "When you’re done: …" }   { "layout": "discuss", "title": "…", "body": "the question", "foot": "Think · Pair · Share" }\n' +
+  '  { "layout": "twocol", "title": "…", "h1": "left heading", "body": "left", "h2": "right heading", "body2": "right" }   { "layout": "passage", "title": "…", "body": "“the passage”", "cite": "source", "foot": "the question" }\n' +
+  '  { "layout": "vocab", "title": "Word of the day", "word": "…", "pos": "noun", "body": "meaning", "foot": "example" }   { "layout": "video", "title": "…", "video": { "url": "https://…", "start": 30 } }\n' +
+  '  { "layout": "exit", "title": "Exit ticket", "tag": "On a sticky note", "body": "the question" }   { "layout": "picture", "title": "…" } (keeps the picture already on that slide)\n' +
+  '  Any slide may have "notes" and "size" (' + deckSizeSay() + '). Lines are separated by \\n and show exactly as written. Reply to my comments with "talk": [{ "by": "claude", "text": "…" }] on that slide.\n' +
+  '- a preview PowerPoint (.pptx) of the same slides, so I can look before I upload;\n' +
+  '- any handouts or other files the lesson needs (.docx, .pdf and so on).\n' +
+  'Also give me each piece (the preview PowerPoint and every handout) as its own downloadable file, so I can open or use one without the .zip.\n' +
+  'Put nothing about any student in any of them. Then tell me in a few lines what you changed. I will upload the .zip on this lesson in my Planner.';
+// src/planner/review.js
+async function lessonContext(l) {
+  let t = '';
+  const when = (l.slots || []).map(sl => { const c = classById(sl.classId); if (!c) return ''; const d = parseYmd(sl.date).getDay(), m = (c.meets || []).find(x => +x.dow === d);
+    return '- ' + c.name + (c.course && c.course !== c.name ? ' (' + c.course + ')' : '') + ', ' + longDate(sl.date) + (m && m.start ? ', ' + hm(m.start) + (m.end ? '–' + hm(m.end) + ' (' + (minsOf(m.end) - minsOf(m.start)) + ' minutes)' : '') : ''); }).filter(Boolean);
+  if (when.length) t += '## When I teach it\n' + when.join('\n') + '\n\n';
+  const hit = lessonUnit(l);
+  if (hit) {
+    const { u, n } = hit;
+    t += '## The unit: ' + u.title + (u.course ? ' (' + u.course + ')' : '') + '\nThis lesson is in week ' + (n + 1) + ' of ' + u.weeks.length + '.' + (u.atlas ? ' Unit plan page: ' + u.atlas : '') + '\n' +
+      u.weeks.map((w, i) => '- Week ' + (i + 1) + (i === n ? ' (this week)' : '') + ': ' + (w.focus || '…') + (w.standards ? ' [' + w.standards + ']' : '') + (w.notes ? ' My notes: ' + w.notes : '')).join('\n') + '\n\n';
+  }
+  const acts = (await myActivities()).slice(0, 25);
+  if (acts.length) t += '## Activities I like to use (use one where it fits)\n' + acts.map(a => '- ' + a.name + (a.what ? ': ' + a.what : '')).join('\n') + '\n\n';
+  return t;
+}
 // src/planner/review.js
 const minsOf = s => { const m = /^(\d+):(\d\d)/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : 0; };
 // src/planner/lessons.js
@@ -129,8 +77,6 @@ const deckAdd = () => LAYOUTS[deckRule().add] && deckRule().add !== 'title' ? de
 // src/planner/lessons.js
 const deckSizeSay = () => { const z = deckSizes(); return z[0] + ' to ' + z[z.length - 1]; };
 // src/planner/lessons.js
-function deckClean(d) { const o = {}; if (d && d.agenda === false) o.agenda = false; if (d && d.sizes === 'any') o.sizes = 'any'; if (d && LAYOUTS[d.add] && d.add !== 'content' && d.add !== 'title') o.add = d.add; return Object.keys(o).length ? o : null; }
-// src/planner/lessons.js
 const meetsOn = (dow, cs) => (cs || (L.setup && L.setup.classes) || []).some(c => (c.meets || []).some(m => +m.dow === dow));
 // src/planner/lessons.js
 const plWeekOffs = () => [...(meetsOn(0) ? [-1] : []), 0, 1, 2, 3, 4, ...(meetsOn(6) ? [5] : [])];
@@ -150,8 +96,6 @@ const mondayOf = (d, sun = meetsOn(0)) => addDays(new Date(d.getFullYear(), d.ge
 const ordinal = n => n + (n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th');
 // src/planner/lessons.js
 const longDate = s => { const d = parseYmd(s); return LDAYS_LONG[d.getDay()] + ' ' + LMONTHS[d.getMonth()] + ' ' + ordinal(d.getDate()) + ' ' + d.getFullYear(); };
-// src/planner/lessons.js
-const shortDate = s => { const d = parseYmd(s); return LDAYS[d.getDay()] + ' ' + plMd(d); };
 // src/planner/lessons.js
 const hm = t => { if (!t) return ''; const [h, m] = t.split(':').map(Number); return (h % 12 || 12) + ':' + String(m).padStart(2, '0'); };
 // src/planner/lessons.js
@@ -220,10 +164,6 @@ function deckStart(l) {
   return l;
 }
 // src/planner/lessons.js
-const titleSlideOf = l => l.slides.find(s => s.layout === 'title');
-// src/planner/lessons.js
-const titlesLinked = l => !l.titleApart;
-// src/planner/lessons.js
 const classById = id => ((L.setup && L.setup.classes) || []).find(c => c.id === id);
 // src/planner/lessons.js
 const className = id => { const c = classById(id); return c ? c.name : id; };
@@ -235,13 +175,9 @@ function plWords() {
   return { sys: String(w.sys || '').trim().slice(0, 40), unit: String(w.unit || '').trim().slice(0, 40), scale12: !!w.scale12, ai: String(w.ai == null ? (w.scale12 ? 'Claude' : '') : w.ai).trim().slice(0, 30) };   // scale12: the rubric bank offers the 12-point scale as a preset
 }
 // src/planner/lessons.js
-function plAi() { return plWords().ai || 'your AI assistant'; }
-// src/planner/lessons.js
 function PlAi() { return plWords().ai || 'Your AI assistant'; }
 // src/planner/lessons.js
 const dayOff = date => ((L.setup && L.setup.daysOff) || []).find(d => d.date === date);
-// src/planner/lessons.js
-const eventsOn = date => ((L.setup && L.setup.events) || []).filter(e => e.date === date || (e.to && e.date <= date && date <= e.to));
 // src/planner/lessons.js
 function meetingsOn(date) {
   if (!L.setup || dayOff(date)) return [];
@@ -266,8 +202,6 @@ function partnerSlots(classId, date) {
 }
 // src/planner/lessons.js
 const PT = 4 / 3;
-// src/planner/lessons.js
-function bodyLines(body) { return String(body || '').split('\n').map(t => { const m = /^(\t| {2,})/.exec(t); return { lvl: m ? 1 : 0, text: t.replace(/^\s+/, '') }; }).filter((x, i, a) => x.text || i < a.length - 1); }
 // src/planner/lessons.js
 function slideHtml(s, lesson, edit) {
   const look = lookOf(lesson), titleSlide = s.layout === 'title';
@@ -328,8 +262,6 @@ function ytId(u) {
   return '';
 }
 // src/planner/lessons.js
-function ytStart(u) { try { const t = new URL(u).searchParams.get('t') || ''; const m = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/.exec(t); return m ? (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0) : 0; } catch { return 0; } }
-// src/planner/lessons.js
 const hostOf = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
 // src/planner/lessons.js
 const mmss = t => Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
@@ -337,18 +269,6 @@ const mmss = t => Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
 function videoLink(v) { const id = ytId(v.url); return id ? 'https://www.youtube.com/watch?v=' + id + (v.start ? '&t=' + v.start + 's' : '') : v.url; }
 // src/planner/lessons.js
 function videoSource(v) { return (v.title ? v.title + ' · ' : '') + (ytId(v.url) ? 'YouTube' + (v.by ? ', ' + v.by : '') : hostOf(v.url)) + (v.start ? ' · starts at ' + mmss(v.start) : ''); }
-// src/planner/lessons.js
-async function shrinkPic(file) {
-  const url = URL.createObjectURL(file);
-  try {
-    const im = await new Promise((res, rej) => { const x = new Image(); x.onload = () => res(x); x.onerror = rej; x.src = url; });
-    const k = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight));
-    const c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
-    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
-    const png = /png|gif|webp/.test(file.type) && c.width * c.height < 1.2e6;
-    return { src: c.toDataURL(png ? 'image/png' : 'image/jpeg', 0.86), w: c.width, h: c.height };
-  } finally { URL.revokeObjectURL(url); }
-}
 // src/planner/lessons.js
 const boxLessonNotes = l => ((SP.box && SP.box.chips) || []).filter(c => c && c.kind === 'note' && c.about && c.about.kind === 'lesson' && c.about.lesson === l.id && String(c.text || '').trim());
 // src/planner/lessons.js
@@ -525,107 +445,6 @@ function fileBase(l) {
   const md = d ? (parseYmd(d).getMonth() + 1) + '-' + String(parseYmd(d).getDate()).padStart(2, '0') + ' ' + LDAYS[parseYmd(d).getDay()] + ' - ' : '';
   return (md + (l.title || 'Lesson')).replace(/[\\/:*?"<>|]+/g, '-').slice(0, 90);
 }
-// src/planner/lessons.js
-const FOLDER_MARK = 'planner-folder.json';
-// src/planner/lessons.js
-const folderReadme = () => FOLDER_README.replace('@@SIZES@@', deckSizeSay()).replace('@@AGENDA@@', deckAgenda()
-  ? 'Slide 1 is always the title slide and slide 2 always the agenda ("layout": "agenda"): the parts of the lesson in order,\none line each. Keep them there; the app puts them there in a new lesson.'
-  : 'Slide 1 is always the title slide. Keep it there; the app puts it there in a new lesson.');
-// src/planner/lessons.js
-const FOLDER_README = `# Planner folder
-
-The Planner (part of Grading Studio) keeps planning here so the teacher's AI assistant can read and edit it. Only planning is in
-this folder: lessons, units, the timetable, files the teacher added to a unit, and rubrics and grading scales. Student work and grades
-never are, and nothing here should point to a student.
-
-## Files
-- \`profile.json\` (if there): the teacher's profile; the app loads it when it changes. Don't edit it.
-- \`timetable.json\`: classes (id, name, course, meets: dow 0=Sun, 1=Mon .. 6=Sat, start, end, label), days off,
-  dates to show, and the semester's first and last Monday. Read it; the teacher changes it in the app.
-- \`*.lesson.json\`: one lesson each. Edit in place and keep the "id". To add a lesson, write a new file
-  ending in .lesson.json (leave "id" out). \`images/\` holds slide pictures ("img.src": "images/abc.jpg").
-- \`Units/*.unit.json\`: one unit each (see below). Its files (screenshots of the unit plan, summative task sheets)
-  are in the folder next to it with the same name plus " files".
-- \`activities.json\`: the teacher's own activities, a list of { "name", "what", "kind" (talk, read, write,
-  words, move, check), "parts" (warmup, activity, review), "group", "how": [steps for the teacher],
-  "slide": [steps for students], "video" (optional: a web address of a video showing it in a classroom) }.
-  Add or edit entries here; the built-in bank isn't in this file.
-
-## Lesson shape
-{
-  "id": "…", "title": "Lesson name", "fmt": 2,
-  "slots": [{ "classId": "<id from timetable.json>", "date": "2026-11-03" }],
-  "slides": [
-    { "layout": "title", "title": "Lesson name", "body": "" },
-    { "layout": "agenda", "title": "11/3 Agenda", "body": "1. Warm-up\\n2. Activity\\n3. Review", "size": 28 },
-    { "layout": "content", "title": "Slide title", "body": "• Point one\\n\\t• Smaller point under it", "size": 28, "notes": "Speaker notes" },
-    { "layout": "text", "title": "The passage", "body": "Plain paragraphs, no bullets", "size": 28 },
-    { "layout": "picture", "title": "Title", "img": { "src": "images/x.jpg", "w": 1600, "h": 900, "source": "Source line" } },
-    { "layout": "video", "title": "Watch for the appeals", "video": { "url": "https://www.youtube.com/watch?v=…", "start": 30 } },
-    { "layout": "warmup", "title": "Warm-up", "tag": "Journal", "body": "The prompt", "size": 36 },
-    { "layout": "objectives", "title": "Today we will", "body": "1. First objective\\n2. Second objective" },
-    { "layout": "steps", "title": "Gallery walk", "body": "1. Step one\\n2. Step two\\n3. Step three", "foot": "When you’re done: …" },
-    { "layout": "discuss", "title": "Let’s talk", "body": "The question", "foot": "Think · Pair · Share" },
-    { "layout": "twocol", "title": "…", "h1": "Left heading", "body": "Left points", "h2": "Right heading", "body2": "Right points" },
-    { "layout": "passage", "title": "Close read", "body": "“The passage”", "cite": "Author, title, page", "foot": "The question" },
-    { "layout": "fullpic", "title": "Name for the list of slides (not shown)", "img": { … } },
-    { "layout": "textpic", "title": "Title", "body": "Text on the left", "img": { … } },
-    { "layout": "picprompt", "title": "See · Think · Wonder", "img": { … }, "body": "Question one\\nQuestion two" },
-    { "layout": "vocab", "title": "Word of the day", "word": "ethos", "pos": "noun", "body": "Meaning", "foot": "Example sentence" },
-    { "layout": "exit", "title": "Exit ticket", "tag": "On a sticky note", "body": "The question" }
-  ],
-  "look": "wood",
-  "atlas": "https://…",             // optional: this lesson's page in the school's curriculum tool (otherwise its unit's link is used)
-  "links": [ { "name": "Article to read", "url": "https://…" } ]   // optional: web pages the teacher opens while teaching this lesson
-}
-"look" is the lesson's colors: wood (the teacher's template), white, cream, sage, sky, blush, charcoal, navy,
-stripe, band, bigtype, framed, notebook, chalk. Leave it out to use the teacher's default; change it only when asked.
-"ask", "talk", "status" and "claudeNote" are for working together, and are all optional:
-- A lesson .zip (the teacher uploads it on a lesson): the finished .pptx plus handouts and files, flat or in folders.
-  The .pptx becomes the finished PowerPoint; every other file goes into the lesson's materials. An optional lesson.json
-  { "kind": "grading-studio-lesson-zip", "finished": "Deck.pptx", "materials": ["Handout.docx"] } picks the deck and the files.
-- "variantOf" and "variant" (on a lesson) mark an alternative version of another lesson ("variantOf" is that lesson's id,
-  "variant" its name, like "Shorter Friday"). It is a full lesson of its own; edit only the one you were asked about.
-- "final" and "finals" (on a lesson) are the teacher's finished PowerPoint and older ones (the files stay in the app). Leave them as they are.
-- "ready" (on a lesson) is { "at" }, set when the teacher said the lesson is ready to teach. Leave it as it is.
-- "notebook" (on a lesson or unit) is the teacher's own jotted thoughts, as simple HTML. Read it for ideas; don't edit it.
-- "taught" (on a lesson) is where each class got to when the lesson was taught: [{ "classId", "date", "slide" (the slide
-  they reached, counting from 1), "of" (how many slides there were), "note" (the teacher's line for next time) }].
-  Read it to plan what comes next; leave it as it is.
-- A slide's "ask" is what the teacher wants on that slide. Use it, and leave it as it is.
-- A slide's "ctx" is screenshots the teacher added for context (like assignment instructions), not shown on the slide:
-  [{ "id", "src": "images/ctx-….png", "w", "h", "note": "what it is" }]. Open the image files and use them; leave "ctx" as it is.
-  To put one on a slide, use its "src" as a picture slide's "img.src".
-- A slide's "talk" is comments: { "by": "you" | "claude", "text": "…" }. Reply by adding one with "by": "claude".
-  Don't edit or remove the teacher's comments.
-- The lesson's own "talk" (same shape) is comments on the whole lesson: how it should go overall. Apply them across the
-  slides, and reply there the same way.
-- "status": "claude" means the teacher sent it to you; set it to "review" when you're done.
-  "claudeNote" is your short summary of what you did.
-The teacher sees your changes slide by slide and keeps theirs or yours for each, so change what the lesson needs and leave the rest.
-For a video, give just "url" (and "start" in seconds, if it should start partway); the app adds the title, channel and picture.
-Rules: "size" is @@SIZES@@ (pt). Text lines ("body", "body2", "foot") are separated by \\n and show exactly as written:
-a line starting with "• " is a bullet, "1. " (any number) is a numbered line, anything else is plain. One or two
-leading tabs indent the line. **bold**, *italic*, __underline__ and {red}colored words{/} (red, orange, green, blue,
-purple, gray) work inside a line (a backslash shows a *, _ or { as is).
-No layout adds bullets or numbers by itself, so add them only where the teacher would. Keep "fmt": 2 on the lesson.
-A slide may have "fs" (the teacher's own text sizes for other boxes, like { "title": 34, "foot": 30 }) and "box" (boxes the
-teacher moved or resized, like { "body": { "x": 152, "y": 211, "w": 1008, "h": 420 } } on a 1280 x 720 slide). Keep both as they are.
-The lesson's "title" and the title slide's title are the same: change both together (unless the lesson has
-"titleApart": true). @@AGENDA@@ An empty title-slide body means the app fills in the course and dates. Bump "updated" (milliseconds) when you change a lesson.
-
-## Unit shape
-{
-  "id": "…", "course": "<course from timetable.json, like English 10>", "title": "Unit 2: Argument",
-  "start": "2026-10-05",            // the Monday of the unit's first week
-  "atlas": "https://…",             // the unit's page in the school's curriculum tool, if the teacher added it
-  "weeks": [ { "focus": "What this week is about (from the unit plan)", "notes": "Teacher's own notes", "standards": "RL.1, RL.2" } ],
-  "files": [ { "name": "Unit plan week 1-3.png", "kind": "atlas" }, { "name": "Summative task sheet.docx", "kind": "summative" } ]
-}
-To fill a unit's weeks from its unit plan screenshots: read the "atlas" files in its files folder and write each
-week's focus (and standards, if shown) into "weeks", in order, one entry per week. Keep the teacher's "notes".
-Don't add, rename or remove files in the files folder; the teacher adds those in the app.
-` + BANK_README;
 // src/planner/lessons.js
 const ctxFile = (s, x) => { const m = /^data:image\/(png|jpeg);base64,/.exec(x.src); return m ? 'images/ctx-' + s.id + '-' + hash(x.src).slice(0, 8) + (m[1] === 'png' ? '.png' : '.jpg') : /^images\//.test(x.src) ? x.src : ''; };
 // src/planner/lessons.js
@@ -1013,166 +832,7 @@ function rtParasXml(text, o) {
   }).join('');
 }
 // src/planner/activities.js
-const PARTS = { warmup: 'Warm-up', activity: 'Activity', review: 'Review' };
-// src/planner/activities.js
-const KINDS = { talk: 'Discussion', read: 'Reading', write: 'Writing', words: 'Vocabulary', move: 'Movement and games', check: 'Checking understanding' };
-// src/planner/activities.js
-const BOOK = '50 Instructional Routines (Fisher, Brozo, Frey & Ivey, 2015)';
-// src/planner/activities.js
 const A = (id, name, kind, parts, group, what, how, slide, book, tip) => ({ id, name, kind, parts, group, what, how, slide, book: book || 0, tip: tip || '' });
-// src/planner/activities.js
-const ACTIVITIES = [
-  A('journal', 'Journal entry', 'write', ['warmup'], 'On their own', 'A short written response to one open question, in a notebook students keep all term.',
-    ['Put one open question on the board that links to today’s text or idea.', 'Students write without stopping until you call time. Spelling doesn’t count here.', 'Ask two or three students to read a line aloud, or have partners swap and read.', 'Come back to the question at the end of class so the entry feeds the lesson.'],
-    ['Open your journal to a new page', 'Write today’s date and the question', 'Write the whole time, without stopping', 'Be ready to share one line'], 31, 'Response Writing is routine 31.'),
-  A('quickwrite-pair', 'Read, write, pair, share', 'write', ['warmup', 'activity'], 'Pairs', 'Students read a short piece, write about it on their own, then compare with a partner before the class talks.',
-    ['Give a short passage and one question about it.', 'Students read and write an answer on their own first.', 'Partners read each other’s answer and agree or push back.', 'Call on pairs to share what changed when they talked.'],
-    ['Read the passage', 'Write your answer on your own', 'Swap with your partner and compare', 'Get ready to share what you agreed on'], 28),
-  A('think-pair-share', 'Think, pair, share', 'talk', ['warmup', 'activity', 'review'], 'Pairs', 'Quiet thinking, then a partner talk, then a few pairs share. A low-stakes way to get everyone talking.',
-    ['Ask one question with more than one good answer.', 'Give quiet thinking time first.', 'Partners take turns: one talks, one listens, then switch.', 'Call on a few pairs. Ask what their partner said.'],
-    ['Think on your own first', 'Talk with your partner: take turns', 'Be ready to share your partner’s idea'], 0),
-  A('roundtable', 'Conversation roundtable', 'talk', ['activity'], 'Groups of 4', 'Each student folds a paper into four boxes: their own notes, then one box for each groupmate’s ideas as they speak.',
-    ['Students fold a sheet into four boxes and write their name in one.', 'Everyone reads or thinks about the same question and writes their own notes in their box.', 'Each person shares in turn. The others write that person’s main idea in a box with their name on it.', 'Each student writes a short summary that pulls the four ideas together.'],
-    ['Fold your paper into four boxes', 'Write your own ideas in your box', 'As each person shares, note their idea in a box', 'Write a summary that uses all four ideas'], 6),
-  A('fishbowl', 'Fishbowl discussion', 'talk', ['activity'], 'Whole class', 'A small inner circle talks about a question while the outer circle listens and takes notes, then the circles switch or the outside joins in.',
-    ['Pick a question people can disagree about.', 'Partners talk first so everyone has something to say.', 'Five or six students sit in the middle and talk; everyone else sits around them and tracks ideas or evidence.', 'Switch circles, or leave one empty chair for someone from outside to step in.', 'End by asking the outer circle what they noticed.'],
-    ['Inner circle: talk about the question, using the text', 'Outer circle: note the best point and one question', 'Want to join? Take the empty chair'], 10),
-  A('socratic', 'Socratic seminar', 'talk', ['activity'], 'Whole class', 'A student-led discussion of a text, with open questions and evidence. The teacher mostly listens.',
-    ['Students read and annotate the text ahead of time and write two open questions.', 'Seat everyone in a circle. Share a few norms, like building on what the last person said.', 'Open with one question, then step back. Students call on each other.', 'Close with each student naming one idea that changed their thinking.'],
-    ['Bring your marked-up text and two questions', 'Point to the text when you make a claim', 'Build on what the last person said', 'Invite someone who hasn’t spoken yet'], 34),
-  A('debate', 'Four-corners debate', 'move', ['warmup', 'activity'], 'Whole class', 'Students move to a corner (strongly agree to strongly disagree) and defend their spot. People can change corners when they hear a good point.',
-    ['Post four signs: strongly agree, agree, disagree, strongly disagree.', 'Read one statement. Students move to a corner.', 'Each corner talks briefly, then sends one speaker.', 'Let anyone move when an argument convinces them, and ask what changed their mind.'],
-    ['Listen to the statement', 'Walk to the corner that fits what you think', 'Talk with your corner: why are you here?', 'Changed your mind? Move, and tell us why'], 7, 'Debate is routine 7; the corners make it quick to run.'),
-  A('opinionnaire', 'Opinionnaire', 'talk', ['warmup'], 'On their own, then pairs', 'Students mark agree or disagree on a few bold statements before reading, then come back to them after.',
-    ['Write four or five strong statements tied to the text’s big ideas.', 'Students mark agree or disagree and add a reason.', 'Partners compare. Take a quick poll on the most split statement.', 'After reading, students look again: would they change any answers?'],
-    ['Agree or disagree with each statement', 'Write one reason for each', 'Compare with a partner', 'We’ll come back to these after reading'], 21),
-  A('anticipation', 'Anticipation guide', 'read', ['warmup'], 'On their own', 'True or false guesses about what a text will say, checked against the text afterward.',
-    ['Write several statements about the text, some true, some not.', 'Students guess true or false before reading.', 'As they read, they look for the line that settles each one.', 'They correct their guesses and quote the line that proves it.'],
-    ['Guess: true or false?', 'Read and look for the answers', 'Fix your guesses and quote the line'], 3),
-  A('close-read', 'Close reading', 'read', ['activity'], 'On their own, then whole class', 'A short, rich passage read more than once, with a different question each time.',
-    ['Choose a short passage worth slowing down for.', 'First read: what is it saying? Students annotate.', 'Second read: how is it written? Word choice, structure, tone.', 'Third read: what does it mean, and why does it matter? Discuss using the text.'],
-    ['Read once: what is it saying?', 'Read again: mark words and choices that stand out', 'Read a third time: what does it mean?', 'Use the text when you share'], 4),
-  A('annotation', 'Annotation with a code', 'read', ['activity'], 'On their own', 'Students mark the text with a small set of symbols as they read, so their thinking is on the page.',
-    ['Give three or four symbols, like ! for a surprise, ? for a question, * for something important.', 'Model one paragraph out loud.', 'Students annotate the rest on their own.', 'Partners compare one mark each and explain it.'],
-    ['! something that surprised you', '? something you’d ask the author', '* something important', 'Explain one mark to your partner'], 2),
-  A('jigsaw', 'Jigsaw', 'read', ['activity'], 'Groups', 'Each member of a home group becomes the expert on one part, meets other experts on it, then teaches it back home.',
-    ['Split the material into parts, one per group member.', 'Expert groups meet: same part, read it and agree on what matters.', 'Students return home and teach their part in turn.', 'Finish with a task that needs every part.'],
-    ['Read your part with your expert group', 'Agree on the three most important points', 'Go home and teach your part', 'Answer the group question together'], 16),
-  A('reciprocal', 'Reciprocal teaching', 'read', ['activity'], 'Groups of 4', 'Small groups read together, with four jobs: predict, question, clear up, summarize.',
-    ['Hand out four role cards: predictor, questioner, clarifier, summarizer.', 'Groups read a chunk, then each role does its job.', 'Rotate roles every chunk.', 'Check in with each group and listen to one role.'],
-    ['Predictor: what will happen next?', 'Questioner: ask the group a question', 'Clarifier: clear up a confusing part', 'Summarizer: sum it up in a sentence'], 29),
-  A('qar', 'Question-answer types', 'read', ['activity'], 'Pairs', 'Students sort questions by where the answer comes from: right there, think and search, the author and me, on my own.',
-    ['Teach the four types with one easy example each.', 'Give a set of questions on the text.', 'Pairs label each question’s type, then answer it.', 'Talk about which types were hardest and why.'],
-    ['Right there: in one place', 'Think and search: put parts together', 'Author and me: the text plus what you know', 'On my own: from your own life'], 23),
-  A('qta', 'Questioning the author', 'read', ['activity'], 'Whole class', 'Stop during a read to ask what the author is trying to say and why they said it that way.',
-    ['Pick stopping points ahead of time.', 'At each stop ask: What is the author trying to tell us? Why put it this way?', 'Push for evidence: Where does it say that?', 'Connect stops: How does this fit with what the author said before?'],
-    ['What is the author trying to say?', 'Why did they say it this way?', 'Does it make sense with what came before?'], 24),
-  A('dr-ta', 'Predict, read, check', 'read', ['activity'], 'Whole class', 'Students predict, read to a stopping point, check their prediction against the text, then predict again.',
-    ['Start from the title, a picture or the first lines and ask for predictions.', 'Read to the first stop.', 'Ask: Were you right? What in the text tells you?', 'Repeat at each stop, then talk about how the predictions changed.'],
-    ['Predict what happens', 'Read to the stop', 'Check: right or not? Show the line', 'Predict again'], 8),
-  A('text-impressions', 'Text impressions', 'write', ['warmup'], 'Pairs', 'From a short list of key words in order, students write their own short version of the text before reading it.',
-    ['Pull eight to twelve key words from the text, in order.', 'Pairs write a short paragraph using the words in that order.', 'Read the real text.', 'Compare: what did you guess well, and what surprised you?'],
-    ['Use these words, in order', 'Write what you think the text is about', 'Read it, then compare'], 40),
-  A('found-poem', 'Found poem', 'write', ['activity', 'review'], 'On their own or pairs', 'Students build a poem only from words and lines they find in a text.',
-    ['Students skim the text and copy lines and phrases that stand out.', 'They arrange the pieces into a short poem, adding nothing new.', 'Share a few aloud.', 'Ask what the poem shows about the text’s big idea.'],
-    ['Copy words and lines that stand out', 'Arrange them into a poem', 'Only words from the text', 'Give it a title'], 11),
-  A('raft', 'RAFT writing', 'write', ['activity'], 'On their own', 'Students write as a Role, to an Audience, in a Format, about a Topic, which makes them think about voice and purpose.',
-    ['Give a RAFT, like a character writing a letter to another character about a choice.', 'Brainstorm what that role would know and care about.', 'Students write.', 'Share a few and ask how the role changed the writing.'],
-    ['Role: who you are', 'Audience: who you’re writing to', 'Format: what kind of writing', 'Topic: what it’s about'], 25),
-  A('split-notes', 'Two-column notes', 'write', ['activity'], 'On their own', 'Main ideas on the left, details and examples on the right, so notes can be used to study later.',
-    ['Students draw a line down the page, about a third from the left.', 'Big ideas or questions go on the left, details on the right.', 'Afterward, they cover the right side and quiz themselves from the left.'],
-    ['Big ideas on the left', 'Details and examples on the right', 'Cover the right side and quiz yourself'], 35),
-  A('writing-frame', 'Sentence frames', 'write', ['activity'], 'On their own', 'Starter sentences that show the shape of a good answer, used as a scaffold and then dropped.',
-    ['Give two or three frames, like “At first ___, but ___ because ___.”', 'Model one with a sample answer.', 'Students write using the frames.', 'Next time, give fewer frames.'],
-    ['Use the frames to start your sentences', 'Fill in your own ideas and evidence'], 50),
-  A('exit-slip', 'Exit ticket', 'check', ['review'], 'On their own', 'One or two quick questions at the end of class to see what stuck.',
-    ['Ask one question that shows whether today’s goal was met.', 'Students answer on a slip or a sticky note.', 'Sort the slips into got it, almost, not yet, and start tomorrow from there.'],
-    ['Answer the question on your sticky note', 'Put your name on it', 'Hand it in on your way out'], 9),
-  A('popcorn', 'Popcorn review', 'check', ['review'], 'Whole class', 'Students stand and share one thing they learned; each person adds something new until everyone has spoken.',
-    ['Everyone stands.', 'One student shares a fact or idea from the lesson and sits.', 'The next person adds something that hasn’t been said yet.', 'Keep going until everyone has shared.'],
-    ['Stand up', 'Share one thing you learned, then sit', 'No repeats: add something new'], 22),
-  A('take6', 'Take 6', 'check', ['review'], 'Pairs', 'Six quick prompts that pull a lesson together: two to recall, two to connect, two to use.',
-    ['Write six short prompts about the lesson.', 'Partners take turns answering them.', 'Go over the two hardest as a class.'],
-    ['Answer the six questions with your partner', 'Take turns: one answers, one checks'], 38),
-  A('trashketball', 'Trashketball', 'move', ['review'], 'Teams', 'Teams answer review questions; a right answer earns a shot at a trash can for bonus points.',
-    ['Make teams and a set of review questions.', 'Ask a question. Every team writes an answer.', 'Teams that got it right earn a shot from a line (closer line, fewer points).', 'Keep score on the board and go over any question most teams missed.'],
-    ['Answer with your team', 'Right answer: one shot at the basket', 'Close line 1 point, far line 2 points'], 0, 'A classroom favorite; not in the book.'),
-  A('gallery-walk', 'Gallery walk', 'move', ['activity', 'review'], 'Groups', 'Work or prompts are posted around the room; groups rotate and leave notes on each.',
-    ['Post work, quotes or questions around the room.', 'Groups visit each station and leave a sticky note.', 'Rotate on a signal.', 'Back at their seats, groups talk about what they saw most.'],
-    ['Visit each poster with your group', 'Leave one sticky note at each', 'Move on when you hear the signal', 'Back at your seat: what stood out?'], 0),
-  A('stations', 'Stations', 'move', ['activity'], 'Groups', 'Different short tasks at different tables; groups rotate through them.',
-    ['Set up three to five stations, each with clear written steps.', 'Groups start at different stations.', 'Rotate on a signal.', 'End with one question that pulls the stations together.'],
-    ['Read the steps at your station', 'Do the task with your group', 'Move when you hear the signal'], 0),
-  A('readers-theatre', 'Readers’ theatre', 'read', ['activity'], 'Groups', 'Students turn a scene or passage into a short script and read it aloud with expression, no props needed.',
-    ['Choose a scene with several voices.', 'Groups split the lines and mark how to say them.', 'Practice once, then perform.', 'Ask what the performance showed about the characters.'],
-    ['Split the lines in your group', 'Mark how each line should sound', 'Practice once, then perform'], 27),
-  A('charades', 'Charades', 'move', ['warmup', 'review'], 'Teams', 'A student acts out a word, idea or moment from the text; their team guesses.',
-    ['Write words or moments on cards.', 'One student acts it out without talking.', 'Their team guesses.', 'Ask what in the acting gave it away.'],
-    ['Act it out: no words', 'Your team guesses', 'Then: what gave it away?'], 0),
-  A('see-think-wonder', 'See, think, wonder', 'talk', ['warmup', 'activity'], 'Pairs', 'Students look closely at an image, then say what they see, what they think about it and what they wonder.',
-    ['Show one rich image.', 'Students list what they see, only what is visible.', 'Then what they think is going on, with reasons from the image.', 'Then what they wonder. Keep the questions for later.'],
-    ['What do you see?', 'What do you think is going on?', 'What do you wonder?'], 0, 'A thinking routine from Project Zero at the Harvard Graduate School of Education.'),
-  A('kwl', 'Know, want to know, learned', 'check', ['warmup', 'review'], 'Whole class', 'A three-column chart: what we already know, what we want to find out, and what we learned.',
-    ['Students list what they already know about the topic.', 'Then what they want to know.', 'At the end of the lesson or unit, fill in what they learned.', 'Check the middle column: what’s still open?'],
-    ['Know: what do you already know?', 'Want: what do you want to find out?', 'Learned: fill this in at the end'], 17),
-  A('word-sort', 'Word sort', 'words', ['warmup', 'activity'], 'Pairs', 'Students sort word cards into groups, either into given categories or groups they invent and name.',
-    ['Make a set of word cards from the text or unit.', 'Pairs sort them into groups.', 'Each pair explains one group.', 'Talk about words that could go in more than one group.'],
-    ['Sort the words into groups', 'Name each group', 'Explain one group to the class'], 48),
-  A('shades', 'Shades of meaning', 'words', ['warmup', 'activity'], 'Pairs', 'Students line up related words from mild to strong, like annoyed, angry, furious.',
-    ['Give a set of related words.', 'Pairs put them in order from weakest to strongest.', 'Compare orders across pairs and argue the close calls.', 'Use one word in a sentence that shows its strength.'],
-    ['Put the words in order, weakest to strongest', 'Compare with another pair', 'Write a sentence with one word'], 32),
-  A('vocab-cards', 'Vocabulary cards', 'words', ['activity'], 'On their own', 'Each card has a word, its meaning in the student’s own words, an example, and a picture or a non-example.',
-    ['Give the words for the unit.', 'Students make a card for each: word, own meaning, example, picture.', 'Partners quiz each other with the cards.'],
-    ['Word on the front', 'Your own meaning and an example on the back', 'Add a picture', 'Quiz a partner'], 44),
-  A('tossed-terms', 'Tossed terms', 'words', ['warmup'], 'Groups', 'Groups get a handful of key terms from a text and predict how they connect before reading.',
-    ['Give each group eight to ten terms.', 'Groups sort them and predict how they relate.', 'Read the text and check the predictions.'],
-    ['Sort the terms with your group', 'Predict how they connect', 'Read and check'], 43),
-  A('word-scavenger', 'Word scavenger hunt', 'words', ['activity'], 'Pairs', 'Students hunt through a text for words that fit a category, like strong verbs or words that show mood.',
-    ['Name the categories to hunt for.', 'Pairs search the text and list what they find with page numbers.', 'Share the best find in each category.'],
-    ['Hunt for words that fit each category', 'Write the page number for each', 'Share your best find'], 47),
-  A('think-aloud', 'Think aloud', 'read', ['activity'], 'Whole class', 'The teacher or a student reads and says their thinking out loud, so the class hears how a reader works through a hard part.',
-    ['Pick a short, tricky passage.', 'Read and say your thinking: questions, guesses, fix-ups.', 'Ask students what they heard you do.', 'Students try it with a partner on the next paragraph.'],
-    ['Listen to how a reader thinks', 'Name one thing the reader did', 'Try it on the next part with your partner'], 42),
-  A('student-questions', 'Student questions', 'talk', ['warmup', 'activity'], 'Groups', 'Students write their own questions about a topic and use them to drive the reading or discussion.',
-    ['Show a prompt: an image, a quote, a short clip.', 'Groups write as many questions as they can without answering them.', 'They pick their three best and say why.', 'Use those questions for the reading or discussion.'],
-    ['Write as many questions as you can', 'Don’t answer them yet', 'Pick your three best'], 37),
-  A('booktalk', 'Student booktalks', 'talk', ['activity'], 'On their own', 'A short talk where a student sells a book they read to the class.',
-    ['Show a sample booktalk: hook, a little plot, no ending, why read it.', 'Students plan a short talk.', 'Run a few each day.'],
-    ['Hook us in', 'Tell a little, not the ending', 'Say who would like it'], 36)
-];
-// src/planner/activities.js
-const VIDEOS = {
-  'journal': ['ZeaO-0_Kc3g', 'Edutopia', '1 min'], 'quickwrite-pair': ['H5BWms1KAKk', 'Edutopia', '3 min'],
-  'think-pair-share': ['P4xUbicJTA4', 'EL Education', '3 min'], 'fishbowl': ['JVCFGLVZA3w', 'Edutopia', '1 min'],
-  'socratic': ['e3IBLKYaK1E', 'Edutopia', '4 min'], 'debate': ['M2XmJQ9FL5A', 'ESC Region 13', '2 min'],
-  'anticipation': ['jQCKXQUquTc', 'Reading Rockets', '8 min'], 'close-read': ['84VyogMSuv0', 'EL Education', '8 min'],
-  'jigsaw': ['VsI9EpSSavo', 'Edutopia', '3 min'], 'reciprocal': ['My68SDGeTHI', 'Reading Rockets', '2 min'],
-  'qta': ['tAIj2MqEz9s', 'Literacy How', '3 min'], 'dr-ta': ['ya6c1Im3-NU', 'Willans Hill', '3 min'],
-  'split-notes': ['nX-xshA_0m8', 'Cornell Learning Strategies Center', '4 min'], 'writing-frame': ['f3rXwstobh8', 'Colorín Colorado', '1 min'],
-  'exit-slip': ['PWUxFSXEsC8', 'Edutopia', '5 min'], 'trashketball': ['rOZlSwLUQGw', 'Ole Miss News', '3 min'],
-  'gallery-walk': ['ElVO7RWAxa4', 'ESC Region 13', '2 min'], 'stations': ['Kg38A1ggYiE', 'Edutopia', '5 min'],
-  'readers-theatre': ['4L5q0Y8hukU', 'Chase Young', '6 min'], 'see-think-wonder': ['oKV_S5NpDdc', 'Project Zero', '5 min'],
-  'kwl': ['5JYkfJnqAbk', 'Educational Partners International', '4 min'], 'word-sort': ['d_R5wfmWIlQ', 'Reading Rockets', '6 min'],
-  'vocab-cards': ['x83RVBIAnYQ', 'ESC Region 13', '2 min'], 'think-aloud': ['UmhLgsBD1-I', 'Smekens Education', '2 min'],
-  'student-questions': ['JJJ6V4p1nfs', 'Right Question Institute', '1 min'], 'booktalk': ['lH5LghhwQDQ', 'We Are Teachers', '2 min']
-};
-// src/planner/activities.js
-const vidOk = u => /^https?:\/\/\S+$/i.test(String(u || '').trim());
-// src/planner/activities.js
-function actVideo(a) {
-  if (a.mine && vidOk(a.video)) return { url: a.video.trim(), note: 'Your video link', found: true };
-  const v = !a.mine && VIDEOS[a.id];
-  if (v) return { url: 'https://www.youtube.com/watch?v=' + v[0], note: v[1] + ', ' + v[2], found: true };
-  return { url: 'https://www.youtube.com/results?search_query=' + encodeURIComponent(a.name + ' classroom strategy'), note: 'Search YouTube for classroom videos', found: false };
-}
-// src/planner/activities.js
-const actSlide = a => normSlide({ layout: 'steps', title: a.name, body: a.slide.map((x, i) => (i + 1) + '. ' + x).join('\n'), size: 32, fmt: 2, notes: 'How to run it:\n' + a.how.map((x, i) => (i + 1) + '. ' + x).join('\n') + (a.book ? '\n(' + BOOK + ', routine ' + a.book + ')' : '') + (actVideo(a).found ? '\nSee it in action: ' + actVideo(a).url : '') });
-// src/planner/activities.js
-function normActivity(x) {
-  if (!x || typeof x.name !== 'string' || !x.name.trim()) return null;
-  const arr = v => (Array.isArray(v) ? v : []).map(String).filter(Boolean);
-  return { id: typeof x.id === 'string' && x.id ? x.id : 'my-' + lid(), name: x.name.trim(), what: String(x.what || ''), kind: KINDS[x.kind] ? x.kind : 'talk', parts: arr(x.parts).filter(p => PARTS[p]).length ? arr(x.parts).filter(p => PARTS[p]) : ['activity'], group: String(x.group || ''), how: arr(x.how), slide: arr(x.slide), book: 0, tip: String(x.tip || ''), ...(vidOk(x.video) ? { video: String(x.video).trim() } : {}) };
-}
 // src/planner/links.js
 const LK_MAX = 40;
 // src/planner/links.js
@@ -1193,9 +853,13 @@ function normLinks(v) {
   return out;
 }
 // src/planner/finished.js
+const ZIP_SKIP = n => /(^|\/)(__MACOSX\/|\.DS_Store$|Thumbs\.db$|desktop\.ini$|~\$)/i.test(n) || /(^|\/)\.[^/]/.test(n);
+// src/planner/finished.js
 const MIME = { pdf: 'application/pdf', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', doc: 'application/msword', pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', txt: 'text/plain', md: 'text/markdown', html: 'text/html', mp3: 'audio/mpeg', mp4: 'video/mp4' };
 // src/planner/finished.js
 const mimeOf = n => MIME[((/\.(\w+)$/.exec(n) || [])[1] || '').toLowerCase()] || '';
+// src/planner/finished.js
+const baseName = n => String(n).split('/').pop();
 // src/planner/finished.js
 function lessonBack(l, back) {
   const was = l.slides, old = JSON.parse(JSON.stringify(was));
@@ -1217,129 +881,15 @@ function lessonBack(l, back) {
   if (typeof back.title === 'string' && back.title.trim() && !l.titleApart) l.title = back.title.trim().slice(0, 200);
   if (typeof back.claudeNote === 'string') l.claudeNote = back.claudeNote.slice(0, 2000);
 }
-// src/planner/finished.js
-const PX = { a: 'http://schemas.openxmlformats.org/drawingml/2006/main', p: 'http://schemas.openxmlformats.org/presentationml/2006/main', r: 'http://schemas.openxmlformats.org/officeDocument/2006/relationships' };
-// src/planner/finished.js
-const xmlOf = (z, p) => z[p] ? new DOMParser().parseFromString(new TextDecoder().decode(z[p]), 'application/xml') : null;
-// src/planner/finished.js
-const kids = (el, ns, name) => el ? [...el.getElementsByTagNameNS(ns, name)] : [];
-// src/planner/finished.js
-const kid = (el, ns, name) => kids(el, ns, name)[0] || null;
-// src/planner/finished.js
-function relsOf(z, part) {
-  const i = part.lastIndexOf('/'), x = xmlOf(z, part.slice(0, i) + '/_rels/' + part.slice(i + 1) + '.rels'), m = {};
-  if (x) for (const r of x.getElementsByTagName('Relationship')) {
-    const t = r.getAttribute('Target'); if (r.getAttribute('TargetMode') === 'External') continue;
-    m[r.getAttribute('Id')] = { type: r.getAttribute('Type') || '', path: pathJoin(part.slice(0, i), t) };
-  }
-  return m;
-}
-// src/planner/finished.js
-function pathJoin(dir, t) {
-  if (t.startsWith('/')) return t.slice(1);
-  const out = dir.split('/');
-  for (const s of t.split('/')) { if (s === '..') out.pop(); else if (s && s !== '.') out.push(s); }
-  return out.join('/');
-}
-// src/planner/finished.js
-const RT_HEX = () => ({ FF0000: 'red', C00000: 'red', FFC000: 'orange', ED7D31: 'orange', '00B050': 'green', '70AD47': 'green', '0070C0': 'blue', '0000FF': 'blue', '00B0F0': 'blue', '4472C4': 'blue', '7030A0': 'purple', '808080': 'gray', '7F7F7F': 'gray',
-  ...Object.fromEntries(Object.entries(RT_COLORS).map(([k, v]) => [v.replace('#', '').toUpperCase(), k])) });
-// src/planner/finished.js
-function paraLine(p, bulleted, hexes) {
-  const pPr = kid(p, PX.a, 'pPr');
-  // Level: PowerPoint's own "lvl", or (as the Planner writes it) the left margin less the hanging indent, half an inch a level.
-  const marL = pPr && pPr.getAttribute('marL'), base = marL != null ? +marL + Math.min(0, +pPr.getAttribute('indent') || 0) : 0;
-  const lvl = Math.min(2, +(pPr && pPr.getAttribute('lvl')) || Math.round(base / 457200));
-  let t = '';
-  for (const n of p.childNodes) {
-    if (n.localName === 'br') { t += ' '; continue; }
-    if (n.localName !== 'r' && n.localName !== 'fld') continue;
-    let x = (kid(n, PX.a, 't') || {}).textContent || ''; if (!x) continue;
-    x = x.replace(/([*_{\\])/g, '\\$1');
-    const rPr = kid(n, PX.a, 'rPr');
-    if (rPr && x.trim()) {
-      const clr = kid(kid(rPr, PX.a, 'solidFill'), PX.a, 'srgbClr'), c = clr && hexes[(clr.getAttribute('val') || '').toUpperCase()];
-      if (rPr.getAttribute('u') && rPr.getAttribute('u') !== 'none') x = '__' + x + '__';
-      if (rPr.getAttribute('i') === '1') x = '*' + x + '*';
-      if (rPr.getAttribute('b') === '1') x = '**' + x + '**';
-      if (c) x = '{' + c + '}' + x + '{/}';
-    }
-    t += x;
-  }
-  t = t.replace(/(?<!\\)\*\*\*\*/g, '');
-  if (!t.trim()) return null;
-  const none = pPr && kid(pPr, PX.a, 'buNone'), num = pPr && kid(pPr, PX.a, 'buAutoNum'), ch = pPr && kid(pPr, PX.a, 'buChar');
-  const mark = none ? '' : num ? (+num.getAttribute('startAt') || 1) + '. ' : (ch || bulleted) ? '• ' : '';
-  return '\t'.repeat(lvl) + mark + t.trim();
-}
-// src/planner/finished.js
-function shapeText(sp, bulleted, hexes) {
-  const tb = kid(sp, PX.p, 'txBody'); if (!tb) return [];
-  return kids(tb, PX.a, 'p').map(p => paraLine(p, bulleted, hexes)).filter(x => x != null);
-}
-// src/planner/finished.js
-function numberLines(lines) {
-  const n = [0, 0, 0];
-  return lines.map(x => {
-    const d = /^\t*/.exec(x)[0].length, m = /^(\t*)(\d+)\. /.exec(x);
-    for (let k = d + 1; k < 3; k++) n[k] = 0;
-    if (!m) { n[d] = 0; return x; }
-    n[d] = +m[2] > 1 ? +m[2] : n[d] + 1;
-    return m[1] + n[d] + '. ' + x.slice(m[0].length);
-  });
-}
-// src/planner/finished.js
-async function mediaPic(z, path) {
-  const u8 = z[path]; if (!u8) return null;
-  const type = /\.png$/i.test(path) ? 'image/png' : /\.jpe?g$/i.test(path) ? 'image/jpeg' : /\.gif$/i.test(path) ? 'image/gif' : '';
-  if (!type) return null;   // emf/wmf and the like can't be shown in a browser
-  try { return await shrinkPic(new Blob([u8], { type })); } catch { return null; }
-}
-// src/planner/finished.js
-async function pptxToSlides(u8) {
-  const z = fflate.unzipSync(u8), hexes = RT_HEX();
-  const pres = xmlOf(z, 'ppt/presentation.xml'); if (!pres) throw new Error('not a pptx');
-  const prels = relsOf(z, 'ppt/presentation.xml');
-  const order = kids(pres, PX.p, 'sldId').map(s => prels[s.getAttributeNS(PX.r, 'id')]).filter(Boolean).map(r => r.path);
-  const out = [];
-  for (const [i, part] of order.entries()) {
-    const x = xmlOf(z, part); if (!x) continue;
-    const rels = relsOf(z, part);
-    let title = '', body = [], sizes = [], ctr = false, pic = null;
-    for (const sp of kids(x, PX.p, 'sp')) {
-      const ph = kid(kid(sp, PX.p, 'nvPr'), PX.p, 'ph'), type = ph ? ph.getAttribute('type') || 'body' : '';
-      if (/^(sldNum|dt|ftr)$/.test(type)) continue;
-      for (const r of kids(sp, PX.a, 'rPr')) if (+r.getAttribute('sz')) sizes.push(+r.getAttribute('sz') / 100);
-      if (type === 'title' || type === 'ctrTitle') { ctr = ctr || type === 'ctrTitle'; title = title || shapeText(sp, false, hexes).map(t => t.replace(/^[•\t ]+|^\d+\. /g, '')).join(' '); continue; }
-      body.push(...shapeText(sp, type === 'body' || type === 'obj' || (ph && !type), hexes));
-    }
-    for (const p of kids(x, PX.p, 'pic')) {
-      if (pic) break;
-      const bl = kid(p, PX.a, 'blip'), rid = bl && bl.getAttributeNS(PX.r, 'embed');
-      if (rid && rels[rid]) pic = await mediaPic(z, rels[rid].path);
-    }
-    let notes = '';
-    const nr = Object.values(rels).find(r => /notesSlide$/.test(r.type));
-    const nx = nr && xmlOf(z, nr.path);
-    if (nx) for (const sp of kids(nx, PX.p, 'sp')) {
-      const ph = kid(kid(sp, PX.p, 'nvPr'), PX.p, 'ph'); if (!ph || (ph.getAttribute('type') && ph.getAttribute('type') !== 'body')) continue;
-      notes = kids(sp, PX.a, 'p').map(p => kids(p, PX.a, 't').map(t => t.textContent).join('')).join('\n').trim();
-    }
-    const big = sizes.filter(s => s >= 20), size = big.length ? deckSizes().reduce((a, b) => Math.abs(b - Math.min(...big)) < Math.abs(a - Math.min(...big)) ? b : a) : 28;
-    title = title.replace(/[\u200b\ufeff]/g, '').trim();
-    const s = { title, body: numberLines(body).join('\n'), notes, size };
-    if (ctr || (i === 0 && !pic && body.length <= 2)) { s.layout = 'title'; s.body = body.join('\n').replace(/^[•\t ]+|^\d+\. /gm, ''); }
-    else if (pic && body.length) { s.layout = 'picprompt'; s.img = { ...pic, source: '' }; }
-    else if (pic) { s.layout = 'picture'; s.img = { ...pic, source: '' }; }
-    else s.layout = /\bagenda\b/i.test(title) ? 'agenda' : 'content';
-    out.push(s);
-  }
-  return out;
-}
 // src/planner/variants.js
 const varName = l => l.variant || (l.variantOf ? 'Alternative' : 'Original');
 // src/planner/panel.js
 const SP = { open: false, tab: 'books', w: 420, view: 'page', book: null, pdf: null, page: 1, outline: null, find: '', hits: null, texts: {}, video: '', box: { text: '', chips: [] } };
+// src/planner/panel.js
+function lessonUnit(l) {
+  for (const t of (l && l.slots) || []) { const c = classById(t.classId), hit = c && c.course && unitAt(c.course, ymd(mondayOf(parseYmd(t.date)))); if (hit) return hit; }
+  return null;
+}
 // src/planner/notebook.js
 const NB_OK = /^(P|BR|B|STRONG|I|EM|U|UL|OL|LI|DIV|H3|A|IMG|BLOCKQUOTE)$/;
 // src/planner/notebook.js
@@ -1390,27 +940,13 @@ function normTaught(a) {
   return [...seen.values()].sort((x, y) => x.date.localeCompare(y.date) || x.at - y.at);
 }
 // src/planner/present.js
-const taughtAt = (l, classId, date) => (l.taught || []).find(t => t.classId === classId && t.date === date);
-// src/planner/present.js
 const taughtWhere = t => t.slide >= t.of ? 'finished all ' + t.of + ' slides' : 'got to slide ' + t.slide + ' of ' + t.of;
 // src/planner/present.js
 function taughtText(l) {
   return (l.taught || []).map(t => 'Taught: ' + (t.classId ? className(t.classId) + ', ' : '') + longDate(t.date) + ': ' + taughtWhere(t) + (t.agenda ? ' (agenda: ' + t.agenda[0] + ' of ' + t.agenda[1] + ' done)' : '') + (t.note ? '. Note: ' + t.note : '') + '\n').join('');
 }
 // src/planner/units.js
-const UNIT_COLORS = ['#1F6FB2', '#7B3FC4', '#B71E42', '#0E7C66', '#B35C00', '#3D5A80', '#8E3B8A', '#2F6B2F'];
-// src/planner/units.js
-function normUnit(x) {
-  x = x && typeof x === 'object' ? x : {};
-  const weeks = (Array.isArray(x.weeks) ? x.weeks : []).map(w => ({ focus: String((w && w.focus) || ''), notes: String((w && w.notes) || ''), standards: String((w && w.standards) || '') }));
-  const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.name === 'string').map(f => ({ id: typeof f.id === 'string' ? f.id : '', name: f.name, kind: ['atlas', 'summative', 'other', 'doc'].includes(f.kind) ? f.kind : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
-  const start = /^\d{4}-\d\d-\d\d$/.test(x.start) ? ymd(mondayOf(parseYmd(x.start))) : ymd(mondayOf(new Date()));
-  const u = { id: typeof x.id === 'string' && x.id ? x.id : lid(), course: String(x.course || ''), title: String(x.title || 'New unit'), start, weeks: weeks.length ? weeks : [{ focus: '', notes: '', standards: '' }],
-    atlas: /^https?:\/\//.test(x.atlas) ? String(x.atlas) : '', color: /^#[0-9a-f]{6}$/i.test(x.color) ? x.color : '', files, updated: +x.updated || Date.now() };
-  if (typeof x.notebook === 'string' && x.notebook.trim()) u.notebook = nbClean(x.notebook);
-  if (x._file) u._file = x._file; if (x._mod) u._mod = x._mod;
-  return u;
-}
+const MAX_FILE = 40 * 1024 * 1024;
 // src/planner/units.js
 function courses() {
   const out = [];
@@ -1423,8 +959,6 @@ function courses() {
   return out;
 }
 // src/planner/units.js
-const unitColor = u => u.color || UNIT_COLORS[Math.max(0, L.units.filter(x => x.course === u.course).sort((a, b) => a.start.localeCompare(b.start)).indexOf(u)) % UNIT_COLORS.length];
-// src/planner/units.js
 const unitEnd = u => ymd(addDays(parseYmd(u.start), 7 * (u.weeks.length - 1)));
 // src/planner/units.js
 function unitAt(course, monday) {
@@ -1435,101 +969,4 @@ function unitAt(course, monday) {
   }
   return null;
 }
-// src/planner/units.js
-function semesterMondays() {
-  const s = L.setup || {}, today = mondayOf(new Date());
-  let a = s.semStart ? parseYmd(s.semStart) : null, b = s.semEnd ? parseYmd(s.semEnd) : null;
-  if (!a) { const starts = L.units.map(u => u.start).sort(); a = starts.length ? parseYmd(starts[0]) : addDays(today, -28); }
-  if (!b) { const ends = L.units.map(unitEnd).sort(); b = addDays(today, 7 * 12); if (ends.length && parseYmd(ends[ends.length - 1]) > b) b = parseYmd(ends[ends.length - 1]); }
-  if (b < a) b = addDays(a, 7 * 18);
-  const out = []; for (let d = mondayOf(a); d <= b && out.length < 60; d = addDays(d, 7)) out.push(ymd(d));
-  return out;
-}
-// src/planner/units.js
-const schoolWeek = monday => { const s = L.setup && L.setup.semStart; if (!s) return 0; const n = Math.round((parseYmd(monday) - parseYmd(s)) / 864e5 / 7) + 1; return n >= 1 ? n : 0; };
-// src/planner/units.js
-const weekDays = monday => plWeekOffs().map(i => ymd(addDays(parseYmd(monday), i)));
-// src/planner/units.js
-function weekMeetings(course, monday) {
-  const ids = new Set(((courses().find(c => c.course === course) || {}).classes || []).map(c => c.id));
-  return weekDays(monday).flatMap(d => meetingsOn(d).filter(m => ids.has(m.c.id)));
-}
-// src/planner/units.js
-const rangeLabel = monday => { const o = plWeekOffs(), a = addDays(parseYmd(monday), o[0]), b = addDays(parseYmd(monday), o[o.length - 1]); return a.getMonth() !== b.getMonth() || plMd(a) !== (a.getMonth() + 1) + '/' + a.getDate() ? plMd(a) + '–' + plMd(b) : plMd(a) + '–' + b.getDate(); };
-// src/planner/units.js
-const unitBase = u => ((u.course ? u.course + ' - ' : '') + (u.title || 'Unit')).replace(/[\\/:*?"<>|]+/g, '-').trim().slice(0, 90);
-// src/planner/units.js
-function unitForFile(u) { const { _file, _mod, ...c } = u; c.files = u.files.map(({ name, kind, type, size }) => ({ name, kind, type, size })); return c; }
-// src/planner/plannext.js
-const PN_DAYS = 14, PN_SHOW = 4, PN_RECENT = 3 * 864e5;
-// src/planner/plannext.js
-function planGaps(now = new Date()) {
-  const out = [], today = ymd(now), hhmm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-  for (let i = 0; i < PN_DAYS; i++) {
-    const d = ymd(addDays(now, i)); if (dayOff(d)) continue;
-    for (const { c, m } of meetingsOn(d)) {
-      if (d === today && m.end && m.end <= hhmm) continue;
-      if (!lessonsAt(c.id, d).length) out.push({ c, m, d });
-    }
-  }
-  return out;
-}
-// src/planner/plannext.js
-function planNextWeek(now = new Date()) {
-  const mon = addDays(new Date(now.getFullYear(), now.getMonth(), now.getDate()), 7 - (now.getDay() + 6) % 7), m = ymd(mon), s = L.setup || {}, out = { of: 0, planned: 0, ready: 0, dots: [] };
-  const lastMon = s.semEnd ? ymd(addDays(parseYmd(s.semEnd), -((parseYmd(s.semEnd).getDay() + 6) % 7))) : '';
-  if (lastMon && m > lastMon) return out;
-  for (let i = 0; i < 7; i++) {
-    const d = ymd(addDays(mon, i)); if (s.semStart && d < s.semStart) continue;
-    for (const { c } of meetingsOn(d)) {
-      const ls = lessonsAt(c.id, d), ok = ls.some(l => l.ready || l.final);
-      out.of++; if (ls.length) out.planned++; if (ok) out.ready++;
-      out.dots.push(ok ? 2 : ls.length ? 1 : 0);
-    }
-  }
-  return out;
-}
-// src/planner/plannext.js
-const planRecent = () => L.lessons.filter(l => !l.library && Date.now() - l.updated < PN_RECENT).sort((a, b) => b.updated - a.updated)[0] || null;
-// src/planner/plantime.js
-var ptReady = false;
-// src/planner/plantime.js
-let ptLast = 0, ptRun = { s: 0, a: {}, n: {}, live: false }, ptPend = { l: 0, a: {}, n: {} }, ptFlushed = Date.now();
-// src/planner/plantime.js
-function ptPlan() { try { const P = JSON.parse(localStorage.getItem('gsp.planTime') || 'null'); return P && typeof P === 'object' ? P : {}; } catch { return {}; } }
-// src/planner/plantime.js
-function ptLessonSecs(id) {
-  if (!ptReady || !id) return 0;
-  let s = ptPend.a[id] || 0;
-  for (const d of Object.values(ptPlan().days || {})) if (d && d.a && d.a[id]) s += d.a[id];
-  const r = pfReady ? pfRun() : null;   // src/planner/plfocus.js, which runs after this file
-  if (r && r.k === 'l' && r.l === id && (r.st === 'run' || r.st === 'paused')) s += pfLesSecs(r);
-  return s;
-}
-// src/planner/plantime.js
-function ptPace() {
-  const days = Object.values(ptPlan().days || {});
-  const tot = id => { let s = ptPend.a[id] || 0; for (const d of days) if (d && d.a && d.a[id]) s += d.a[id]; return s; };
-  const xs = L.lessons.filter(l => l.ready && l.ready.at).sort((a, b) => b.ready.at - a.ready.at).map(l => tot(l.id)).filter(s => s >= 60).slice(0, 10);
-  if (xs.length < 3) return null;
-  const o = xs.slice().sort((a, b) => a - b), h = o.length >> 1;
-  return { s: o.length % 2 ? o[h] : (o[h - 1] + o[h]) / 2, n: xs.length };
-}
-// src/planner/plfocus.js
-var pfReady = false;   // src/planner/plantime.js and the lesson editor can ask before this file has run
-// src/planner/plfocus.js
-const PF_KEY = 'gsp.focusRun', PF_Q = 'gsp.focusQ', PF_P0 = 1e9;
-// src/planner/plfocus.js
-const pfGet = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
-// src/planner/plfocus.js
-const pfRun = () => { const r = pfGet(PF_KEY, null); return r && r.st ? r : null; };
-// src/planner/plfocus.js
-const pfElapsed = r => Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.at) / 1000));
-// src/planner/plfocus.js
-const pfIdle = r => (r.idl || 0) + (r.ii ? Math.max(0, Math.round(((r.st === 'paused' ? r.pz : Date.now()) - r.ii) / 1000)) : 0);
-// src/planner/plfocus.js
-function pfLesSecs(r) {
-  const last = Math.max(r.at, r.seen || 0), cap = r.st === 'paused' ? Infinity : Math.round((last + 20 * 60e3 - r.at) / 1000);
-  return Math.max(0, Math.min(r.len, pfElapsed(r) - pfIdle(r), cap));
-}
-export { L, meetsOn, plWeekOffs, ymd, parseYmd, addDays, mondayOf, longDate, shortDate, hm, classById, className, dayOff, eventsOn, meetingsOn, lessonsAt, partnerSlots, semesterMondays, schoolWeek, weekDays, weekMeetings, rangeLabel, courses, lid, LAYOUTS, SIZES, SIZES_ANY, deckRule, deckAgenda, deckSizes, deckAdd, deckSizeSay, deckClean, normSlide, normLesson, deckStart, titleSlideOf, titlesLinked, bodyLines, slideHtml, titleSubtitle, imgSrc, ytId, ytStart, videoLink, videoSource, STATUS, statusSay, LOOKS, lookOf, normLinks, normBoxes, normTaught, taughtAt, taughtWhere, taughtText, minsOf, varName, normUnit, unitColor, unitEnd, unitAt, unitBase, unitForFile, tidyBank, normScale, normRef, normRubric, normBankScale, bankRubrics, bankScales, bankList, refKey, refLabel, refUnit, unitRef, bankForFile, bankBase, ACTIVITIES, normActivity, actSlide, planGaps, planNextWeek, planRecent, ptPace, ptLessonSecs, lessonText, lessonForFile, ctxFile, fileBase, folderReadme, FOLDER_MARK, b64ToU8, buildPptx, slideFit, tplPreview, lessonBack, pptxToSlides, mimeOf, hash, esc };
+export { L, plWeekOffs, mondayOf, meetingsOn, partnerSlots, unitAt, unitEnd, lid, LAYOUTS, deckAgenda, deckSizes, deckAdd, deckSizeSay, normSlide, normLesson, deckStart, slideHtml, slideFit, tplPreview, lessonForFile, fileBase, b64ToU8, buildPptx, mimeOf, lessonText, lessonZipAsk, lessonContext, lessonBack, ZIP_SKIP, baseName, MAX_FILE, snap, MAX_VERSIONS };

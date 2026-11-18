@@ -171,3 +171,39 @@ test('the editor: words saved as typed, a slide added, too much text split onto 
   await p.waitForFunction(() => { const P = window.__planner; return P && P.L.lessons.some(l => l.id === 'L3' && l.slides.length === 7); }, { timeout: 20000 });
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
+
+test('the assistant: the lesson copied as one self-contained message, the .zip back looked at slide by slide, then kept', async () => {
+  const p = await fresh();
+  await p.ctx.overridePermissions(srv.url.replace(/\/$/, ''), ['clipboard-read', 'clipboard-write', 'clipboard-sanitized-write']);
+  await open(p, 'lesson/L2');
+  await p.click('main [data-focus="assistant"]');
+  await p.waitForSelector('[data-focus="copy-brief"]');
+  await p.click('[data-focus="copy-brief"]');
+  await p.waitForFunction(async () => (await navigator.clipboard.readText()).length > 500, { timeout: 5000, polling: 200 });
+  const brief = await p.evaluate(() => navigator.clipboard.readText());
+  assert.match(brief, /Don't look for, open or ask for any folder or file on my computer/);
+  assert.match(brief, /# Reading a poem aloud/); assert.match(brief, /lesson\.json/); assert.match(brief, /Unit 2: Poetry/);
+  assert.doesNotMatch(brief, /\/Users\/|~\/|[A-Z]:\\|\.lesson\.json|Lessons\//, 'it names no folder, path or file on the computer');
+  // What the assistant sends back: slide 3 reworded, one new slide, a handout.
+  const fflate = require('fflate');
+  const slides = [{ layout: 'title', title: 'Reading a poem aloud' }, { layout: 'agenda', title: '10/27 Agenda', body: '1. Warm-up\n2. Read in pairs\n3. Exit ticket' },
+    { layout: 'content', title: 'Warm-up', body: '• Read the poem twice in your head\n• Mark two words you would stress', notes: 'Two minutes, silent.' },
+    { layout: 'discuss', title: 'Let’s talk', body: 'Which word carries the poem?', foot: 'Think · Pair · Share' }, { layout: 'exit', title: 'Exit ticket', tag: 'On a sticky note', body: 'One word, and why.' },
+    { layout: 'content', title: 'If there is time', body: '• Read it to a partner' }];
+  const zip = fflate.zipSync({ 'lesson.json': fflate.strToU8(JSON.stringify({ kind: 'grading-studio-lesson-zip', lesson: { title: 'Reading a poem aloud', slides }, preview: 'preview.pptx', materials: ['handout.pdf'] })), 'handout.pdf': fflate.strToU8('%PDF-1.4 made up') });
+  const f = path.join(require('os').tmpdir(), 'gs-plan-test-' + process.pid + '.zip'); fs.writeFileSync(f, zip);
+  const input = await p.$('input[data-zip]'); await input.uploadFile(f);
+  await p.waitForSelector('[data-focus="keep-changes"]', { timeout: 10000 }); fs.unlinkSync(f);
+  assert.equal(await p.$$eval('.review li.ch', x => x.length), 2, 'the changed slide and the new one are marked');
+  await p.click('[data-focus="keep-changes"]');
+  const l = await (async () => { for (let k = 0; k < 40; k++) { const x = await lessonInDb(p, 'L2'); if (x.slides.length === 6) return x; await new Promise(r => setTimeout(r, 150)); } return null; })();
+  assert.ok(l, 'the changes are kept');
+  assert.equal(l.slides[2].body.split('\n')[0], '• Read the poem twice in your head');
+  assert.equal(l.slides[2].id, 'L2s2', 'a slide keeps its place’s id');
+  assert.equal(l.files.length, 1); assert.equal(l.files[0].name, 'handout.pdf');
+  const kept = await p.evaluate(id => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const s = r.result.transaction('kv').objectStore('kv'), out = {}; const a = s.get('file:' + id), b = s.get('ver:L2'); b.onsuccess = () => { out.file = !!a.result; out.vers = (b.result || []).length; out.before = b.result && b.result[0].lesson.slides.length; r.result.close(); res(out); }; }; }), l.files[0].id);
+  assert.deepEqual(kept, { file: true, vers: 1, before: 5 }, 'the handout is kept and the lesson as it was is under Versions');
+  await p.goto(srv.url + 'planner.html');
+  await p.waitForFunction(() => { const P = window.__planner; return P && P.L.lessons.some(l => l.id === 'L2' && l.slides.length === 6); }, { timeout: 20000 });
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});

@@ -375,5 +375,48 @@
  "plan.layout_textpic": "Text + picture",
  "plan.layout_picprompt": "Picture + questions",
  "plan.layout_video": "Video",
- "plan.sub_hint": "Left empty, it shows the class and the day."
+ "plan.sub_hint": "Left empty, it shows the class and the day.",
+ "plan.work_with": "Work on it with {name}",
+ "plan.step_copy": "Copy the lesson",
+ "plan.step_copy_text": "Everything {name} needs is in one message: the slides, your comments, when the class meets, the unit and your activities.",
+ "plan.copy_brief": "Copy the lesson",
+ "plan.open_name": "Open {name}",
+ "plan.attach_pics": {
+  "one": "Attach the 1 picture on the slides yourself; pictures don’t travel as text.",
+  "other": "Attach the {n} pictures on the slides yourself; pictures don’t travel as text."
+ },
+ "plan.step_zip": "Bring back the .zip",
+ "plan.step_zip_text": "When {name} answers with one .zip, drop it here or choose it.",
+ "plan.drop_zip": "Drop the .zip here, or choose it",
+ "plan.reading": "Reading…",
+ "plan.step_review": "Look before you keep",
+ "plan.step_review_text": "You see each changed slide beside yours, and keep the ones you want. The lesson as it was stays under Versions.",
+ "plan.brief_copied": "Lesson copied. Paste it into {name}.",
+ "plan.brief_copied_pics": {
+  "one": "Lesson copied. Paste it into {name} and attach the 1 picture.",
+  "other": "Lesson copied. Paste it into {name} and attach the {n} pictures."
+ },
+ "plan.copy_failed": "Couldn’t copy. Try again.",
+ "plan.zip_only": "Choose the .zip file.",
+ "plan.zip_empty": "Nothing to add in that .zip.",
+ "plan.zip_bad": "That .zip couldn’t be opened.",
+ "plan.before_changes": "Before {name}’s changes",
+ "plan.kept_changes": {
+  "one": "Kept: 1 slide.",
+  "other": "Kept: {n} slides."
+ },
+ "plan.keep_failed": "Couldn’t keep the changes. Nothing was changed.",
+ "plan.keep_these": "Keep these",
+ "plan.n_changed": {
+  "one": "1 of {of} slides changed.",
+  "other": "{n} of {of} slides changed."
+ },
+ "plan.n_files_in": {
+  "one": "1 file for Materials:",
+  "other": "{n} files for Materials:"
+ },
+ "plan.too_big": "Too big to keep (over 40 MB):",
+ "plan.keep_new_n": "Slide {n}: keep the new one",
+ "plan.same_n": "Slide {n}: no change",
+ "plan.add_new_n": "Slide {n}: add this new slide"
 }
