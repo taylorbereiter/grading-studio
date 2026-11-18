@@ -1,1 +1,0 @@
-import{a as c}from"./chunk-EMAY3GY7.js";import{K as s}from"./chunk-DDKYA7NU.js";import{i as e,j as p,s as i}from"./chunk-JVTVGKFZ.js";import{e as u}from"./chunk-GLVRXFZR.js";u();var r={};function d(t,f=!0){let[,m]=e(0);return p(()=>{f&&!r[t]&&c[t]().then(o=>{r[t]=o,m(l=>l+1)},o=>{console.error(o),s(i("app.chunk_failed"))})},[t,f]),r[t]||null}export{d as a};

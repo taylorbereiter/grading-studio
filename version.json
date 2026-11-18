@@ -1,14 +1,12 @@
 {
- "version": "1.28.72",
- "build": "696b16c394aa",
+ "version": "1.28.73",
+ "build": "25f147c8fb53",
  "notes": [
-  "Make a quiz: on an assignment’s card, choose ⋯ then Make a quiz. Type multiple choice, true or false, pick all that apply and short answer questions, and print a copy for each student with their name on it.",
-  "Scan the whole stack in any order and choose Bring in the scanned quiz. Each page finds its student by the code at the top, and the bubbles are scored. Answers that aren’t clear are shown to you to pick, and Ctrl Z takes the scan’s scores back.",
-  "Short answers get a Teacher box: fill the score bubble while you mark and the scan reads it, or mark them in Quick mark."
+  "Score stamps and criterion stamps are red again. They no longer take the pen or comment color, so purple comments don’t make purple grades. Stamps already on papers show red too. To use another color for grades, pick a points color in Settings, Marking."
  ],
  "files": {
-  "index.html": "549cb3314ee5d2689348c1057d59947587fa5ac3218b64a79517816fce795911",
-  "planner.html": "5e6222efacbafc3c309a0a13425b162a549b1a80ec6755348145e5e52c323f22"
+  "index.html": "6d3c06b6e21742b389149dd9063ed6cfb3ffe6ec503587d1727208f52740fdaa",
+  "planner.html": "d9ae41f867ea4eb22397c879e137bdb3ab43c4be84491fdb8bdd9e92286ca3b1"
  },
  "langs": {
   "lang/zh-Hant.js": "1f6c72319366bc2cb027a2ad8ca790bdf3982ac2b2c8cf5958525f87ec6ee574",

@@ -297,7 +297,7 @@ function ptsColor(v, top) {
   return COLORS[ptsInk] || COLORS[inkColor] || COLORS.red;
 }
 // src/app/start.js
-const totalInk = () => ptsColor();
+const totalInk = () => COLORS[ptsInk] || COLORS.red;
 // src/app/start.js
 const HL = { yellow: '#FFE45C', green: '#B4F0A8', pink: '#FFB8D6', blue: '#B0E0FF' };
 // src/grades.js
