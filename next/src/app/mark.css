@@ -706,3 +706,4 @@ dialog.dlg:has(.mk-su)>.body{max-height:calc(88vh - 120px);overflow:auto}
 .mk-sprub .splvb b{font-size:var(--t2)}
 .mk-sprub .splvb:hover{border-color:var(--acc)}
 .mk-sprub .splvb.on{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-ink)}
+.mk-tnbank{display:flex;justify-content:flex-end;margin-top:4px}
