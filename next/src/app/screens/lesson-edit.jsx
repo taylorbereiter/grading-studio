@@ -8,14 +8,20 @@
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef, useLayoutEffect } from 'preact/hooks';
 import * as undo from '../../services/undo.js';
-import { Button, IconButton, Icon, Select, TextInput, Menu, Checkbox } from '../../ui/index.js';
+import { Button, IconButton, Icon, Select, TextInput, Menu, Checkbox, Sheet, toast } from '../../ui/index.js';
 import { TextBox } from '../../ui/services.jsx';
 import { t, date } from '../../i18n/t.js';
 import { register } from '../../services/shortcuts.js';
 import { engine } from '../../planning/engine.js';
 import { Slide } from '../plan/slide.jsx';
 import { ExamplePicker } from '../plan/example-pick.jsx';
+import { Talk } from '../plan/talk.jsx';
 import { isExample, exampleSize } from '../plan/examples.js';
+import { RichBox } from '../plan/richbox.jsx';
+import * as T from '../../engines/plantools.js';
+import { saveKv } from '../../planning/write.js';
+import '../plan/lines.js';
+import '../plan/edit-lines.js';
 
 const PIC = ['picture', 'fullpic', 'textpic', 'picprompt'];
 // A picture from this computer, made small enough to keep in a lesson as the current Planner does (src/planner/lessons.js shrinkPic):
@@ -50,27 +56,66 @@ const MORE = { warmup: ['tag'], exit: ['tag'], steps: ['foot'], discuss: ['foot'
 const LAYOUT_LINE = { title: 'plan.layout_title', agenda: 'plan.layout_agenda', objectives: 'plan.layout_objectives', warmup: 'plan.layout_warmup', exit: 'plan.layout_exit', steps: 'plan.layout_steps', discuss: 'plan.layout_discuss', content: 'plan.layout_content', twocol: 'plan.layout_twocol', text: 'plan.layout_text', passage: 'plan.layout_passage', vocab: 'plan.layout_vocab', picture: 'plan.layout_picture', fullpic: 'plan.layout_fullpic', textpic: 'plan.layout_textpic', picprompt: 'plan.layout_picprompt', video: 'plan.layout_video' };
 const BOX_LINE = { tag: 'plan.box_tag', foot: 'plan.box_foot', h1: 'plan.box_h1', h2: 'plan.box_h2', body2: 'plan.box_body2', cite: 'plan.box_cite', word: 'plan.box_word', pos: 'plan.box_pos' };
 const NO_BODY = ['picture', 'fullpic', 'video'];
-const copy = x => JSON.parse(JSON.stringify(x));
+// The looks (src/planner/looks.js LOOKS), each name a line of its own.
+const LOOK_LINE = { wood: 'edit.look_wood', white: 'edit.look_white', cream: 'edit.look_cream', sage: 'edit.look_sage', sky: 'edit.look_sky', blush: 'edit.look_blush', charcoal: 'edit.look_charcoal', navy: 'edit.look_navy',
+  stripe: 'edit.look_stripe', band: 'edit.look_band', bigtype: 'edit.look_bigtype', framed: 'edit.look_framed', notebook: 'edit.look_notebook', chalk: 'edit.look_chalk' };
+// Each box's name (src/planner/boxes.js BOX_NAME).
+const BOXN = { title: 'edit.box_title', body: 'edit.box_body', body2: 'edit.box_body2', sub: 'edit.box_sub', tag: 'edit.box_tag', foot: 'edit.box_foot', h1: 'edit.box_h1', h2: 'edit.box_h2', cite: 'edit.box_cite', word: 'edit.box_word', pos: 'edit.box_pos' };
+const BOX_MIN_W = 80, BOX_MIN_H = 36;
 
-// Comments on a slide or the whole lesson, in the current Planner's shape: { by: 'you' | 'claude', text, at, done? }.
-export function Talk({ talk, onChange, ai, label }) {
-  const [text, setText] = useState(''), [writing, setWriting] = useState(false);
-  const add = () => { const v = text.trim(); if (!v) return; onChange([...(talk || []), { by: 'you', text: v, at: Date.now() }]); setText(''); setWriting(false); };
-  return <section class="talk" aria-label={label}>
-    {(talk || []).length > 0 && <ul class="tlist">{talk.map((c, i) => <li class={'tc' + (c.done ? ' done' : '')}>
-      <Checkbox round checked={!!c.done} label={c.by === "claude" ? t('plan.from_name', { name: ai }) : t('plan.you')} onChange={on => onChange(talk.map((x, j) => j !== i ? x : on ? { ...x, done: true } : (({ done, ...r }) => r)(x)))} />
-      <p data-raw>{c.text}</p><small class="mute" data-raw>{c.at ? date(new Date(c.at), { month: 'short', day: 'numeric' }) : ''}</small></li>)}</ul>}
-    {writing ? <>
-      <TextBox label={t('plan.add_comment')} value={text} onInput={setText} rows={2} autoFocus onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); add(); } if (e.key === 'Escape' && !text) { e.stopPropagation(); setWriting(false); } }} />
-      <div class="row"><Button size="sm" variant="quiet" onClick={() => { setText(''); setWriting(false); }}>{t('common.cancel')}</Button><Button size="sm" variant="primary" disabled={!text.trim()} onClick={add}>{t('plan.add_comment')}</Button></div></>
-      : <div><Button size="sm" icon="comment" onClick={() => setWriting(true)}>{t('plan.add_comment')}</Button></div>}
-  </section>;
+// The look of every slide in the lesson (src/planner/looks.js lookDlg): colors and background; layouts and text stay.
+function LookSheet({ p, d, s, onPick, onClose }) {
+  const E = engine(p), cur = T.lookOf(d), [mine, setMine] = useState(p.deflook === cur);
+  const pick = k => { onPick(k); if (mine) saveKv('deflook', k).catch(e => console.error(e)); toast(t('edit.look_set', { name: t(LOOK_LINE[k]) })); };
+  return <Sheet open wide title={t('edit.look')} icon={<Icon name="image" />} onClose={onClose} footer={<><Checkbox label={t('edit.look_default')} checked={mine} onChange={v => { setMine(v); saveKv('deflook', v ? T.lookOf(d) : '').catch(e => console.error(e)); }} /><span class="grow" /><Button onClick={onClose}>{t('common.close')}</Button></>}>
+    <p class="mute">{t('edit.look_about')}</p>
+    <div class="looks">{Object.keys(T.LOOKS).filter(k => k !== 'wood' || T.ownTpl()).map(k => <button type="button" class={'look' + (k === cur ? ' on' : '')} aria-pressed={String(k === cur)} onClick={() => pick(k)} data-look={k}>
+      <Slide slide={s} lesson={{ ...d, look: k }} plan={p} width={164} /><span>{t(LOOK_LINE[k])}{k === 'wood' ? ' ' + t('edit.look_yours') : ''}</span></button>)}</div>
+  </Sheet>;
+}
+function Tips({ onClose }) {
+  return <Sheet open title={t('edit.tips')} icon={<Icon name="info" />} onClose={onClose} footer={<><span class="grow" /><Button variant="primary" onClick={onClose}>{t('common.close')}</Button></>}>
+    <ul class="tips">{['edit.tip_box', 'edit.tip_move', 'edit.tip_lists', 'edit.tip_format', 'edit.tip_keys', 'edit.tip_undo', 'edit.tip_pic', 'edit.tip_comment'].map(k => <li>{t(k)}</li>)}</ul>
+  </Sheet>;
 }
 
-export default function Editor({ p, l, cur, setCur, save, ai }) {
+// The frame round the box picked on the slide (src/planner/boxes.js boxFrame): drag the bar to move it, a corner or side to resize it,
+// snapped to 4 slide units and kept on the slide. Kept on the slide as s.box[k] = { x, y, w, h } in 1280 x 720 slide units.
+const HANDLES = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
+function Frame({ host, k, moved, onDone, onBack }) {
+  const [r, setR] = useState(null), drag = useRef(null);
+  const find = () => { const el = host.current && host.current.querySelector('.ls-slide [data-k="' + k + '"]'), sb = host.current && host.current.querySelector('.slidebox'); return el && sb ? { el, kk: sb.clientWidth / 1280 } : null; };
+  useLayoutEffect(() => { if (drag.current) return; const f = find(); const n = f ? { x: f.el.offsetLeft, y: f.el.offsetTop, w: f.el.offsetWidth, h: f.el.offsetHeight, kk: f.kk } : null; if (JSON.stringify(n) !== JSON.stringify(r)) setR(n); });
+  if (!r) return null;
+  const down = (e, hd) => {
+    const f = find(); if (!f) return; e.preventDefault(); e.stopPropagation();
+    drag.current = { hd, el: f.el, kk: f.kk, x0: e.clientX, y0: e.clientY, b: { x: r.x, y: r.y, w: r.w, h: r.h }, now: null };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { }
+  };
+  const move = e => {
+    const D = drag.current; if (!D) return;
+    const dx = (e.clientX - D.x0) / D.kk, dy = (e.clientY - D.y0) / D.kk, sn = v => Math.round(v / 4) * 4; let { x, y, w, h } = D.b;
+    if (D.hd === 'move') { x += dx; y += dy; }
+    else { if (D.hd.includes('e')) w += dx; if (D.hd.includes('s')) h += dy; if (D.hd.includes('w')) { x += dx; w -= dx; } if (D.hd.includes('n')) { y += dy; h -= dy; }
+      if (w < BOX_MIN_W) { if (D.hd.includes('w')) x -= BOX_MIN_W - w; w = BOX_MIN_W; } if (h < BOX_MIN_H) { if (D.hd.includes('n')) y -= BOX_MIN_H - h; h = BOX_MIN_H; } }
+    x = Math.max(0, Math.min(1280 - w, sn(x))); y = Math.max(0, Math.min(720 - h, sn(y))); w = Math.min(1280 - x, sn(w)); h = Math.min(720 - y, sn(h));
+    Object.assign(D.el.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
+    D.now = { x, y, w, h }; setR({ ...D.now, kk: D.kk });
+  };
+  const up = () => { const D = drag.current; drag.current = null; if (D && D.now) onDone(D.now); };
+  const kk = r.kk;
+  return <div class="edframe" style={{ left: r.x * kk + 'px', top: r.y * kk + 'px', width: r.w * kk + 'px', height: r.h * kk + 'px' }} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
+    <span class={'grips' + (r.y * kk < 30 ? ' in' : '')}><b class="grip" onPointerDown={e => down(e, 'move')} data-h="move" title={t('edit.box_drag')}><Icon name="grip" size="xs" />{t(BOXN[k])}</b>
+      {moved && <button type="button" class="grip back" onPointerDown={e => e.stopPropagation()} onClick={onBack} data-focus="box-back">{t('edit.box_back')}</button>}</span>
+    {HANDLES.map(hd => <i class={'hd hd-' + hd} onPointerDown={e => down(e, hd)} data-h={hd} aria-hidden="true" />)}
+  </div>;
+}
+const copy = x => JSON.parse(JSON.stringify(x));
+
+export default function Editor({ p, l, cur, setCur, save, ai, onAsk = () => {} }) {
   const E = engine(p);
   const [d, setD] = useState(() => copy(l)), timer = useRef(0), last = useRef(l.updated), stage = useRef(null);
-  const [over, setOver] = useState(false);
+  const [over, setOver] = useState(false), [box, setBox] = useState(''), [keys, setKeys] = useState([]), [looking, setLooking] = useState(false), [tips, setTips] = useState(false), host = useRef(null);
   // Another window saved this lesson while it is open here: take it, unless she is typing.
   useEffect(() => { if (l.updated !== last.current && !timer.current) { setD(copy(l)); last.current = l.updated; } }, [l.updated]);
   useEffect(() => () => { if (timer.current) { clearTimeout(timer.current); save(dRef.current); } }, []);
@@ -103,40 +148,78 @@ export default function Editor({ p, l, cur, setCur, save, ai }) {
       sl.splice(i + 1, 0, E.normSlide({ layout: s.layout, title: s.title + (/\(continued\)/i.test(s.title) ? '' : ' ' + t('plan.continued')), body: lines.slice(cut).join('\n'), size: s.size, fmt: 2 })); }, i);
   };
   // Measured after each drawing, on the slide at its full size (offsets are not scaled).
-  useLayoutEffect(() => { const el = stage.current && stage.current.querySelector('.ls-slide'); let o = []; try { o = el ? E.slideFit(el, 'edit') : []; } catch { } setOver(o.length > 0 ? (o.includes('body') ? 'body' : o[0]) : false); });
+  useLayoutEffect(() => { const el = stage.current && stage.current.querySelector('.ls-slide'); let o = []; try { o = el ? E.slideFit(el, 'edit') : []; } catch { } setOver(o.length > 0 ? (o.includes('body') ? 'body' : o[0]) : false);
+    // The boxes on the slide that can be sized and moved, the title first (src/planner/boxes.js sizable).
+    const ks = el ? [...el.querySelectorAll('[data-k]')].map(e => e.dataset.k).filter((k, j, a) => T.BOX_KEYS.includes(k) && a.indexOf(k) === j) : [];
+    if (ks.join() !== keys.join()) setKeys(ks);
+  });
+  // The box the size and place are about: the one last clicked on the slide, or the slide's main text.
+  const k = keys.includes(box) ? box : '';
+  const sizeOf = kk => kk === 'body' ? s.size : (s.fs && s.fs[kk]) || 0;
+  const setSize = (kk, v) => {
+    if (v === 'fit') return fit(kk);
+    if (kk === 'body') return setSlide({ size: +v }, true);
+    const fs = { ...(s.fs || {}) }; if (v) fs[kk] = +v; else delete fs[kk]; setSlide({ fs: Object.keys(fs).length ? fs : undefined }, true);
+  };
+  // The biggest size in the list at which the box's words fit, tried on the slide itself (src/planner/boxes.js fitBox).
+  const fit = kk => {
+    const el = stage.current && stage.current.querySelector('.ls-slide [data-k="' + kk + '"]'); if (!el) return;
+    const list = T.boxSizes(s, kk).slice().sort((a, b) => b - a), was = el.style.fontSize; let pick = 0;
+    for (const v of list) { el.style.fontSize = (v * T.PT).toFixed(1) + 'px'; if (!T.boxOver(el)) { pick = v; break; } }
+    el.style.fontSize = was;
+    if (!pick) { pick = list[list.length - 1]; toast(t('edit.fit_none', { n: pick }), { ms: 7000 }); }
+    if (kk === 'body') setSlide({ size: pick }, true); else setSlide({ fs: { ...(s.fs || {}), [kk]: pick } }, true);
+  };
+  const placeBox = (kk, r) => setSlide({ box: { ...(s.box || {}), [kk]: r } }, true);
+  const boxBack = kk => { const b = { ...(s.box || {}) }; delete b[kk]; setSlide({ box: Object.keys(b).length ? b : undefined }, true); };
   useEffect(() => {
     const offs = [
       register({ id: 'edit-next', keys: ['alt+arrowdown'], label: 'plan.next_slide', run: () => setCur(Math.min(n - 1, i + 1)) }),
       register({ id: 'edit-prev', keys: ['alt+arrowup'], label: 'plan.prev_slide', run: () => setCur(Math.max(0, i - 1)) }),
+      // Listed in Help; the slide's text box itself does them (plan/richbox.jsx), so they never run from here.
+      register({ id: 'edit-bullets', keys: ['mod+shift+8'], label: 'edit.rt_bullets_tip', when: () => false, run: () => {} }),
+      register({ id: 'edit-numbers', keys: ['mod+shift+7'], label: 'edit.rt_numbers_tip', when: () => false, run: () => {} }),
     ];
     return () => offs.forEach(f => f());
   }, [i, n]);
-  const sizes = E.deckSizes();
   const layouts = Object.keys(E.LAYOUTS).map(k => ({ value: k, label: LAYOUT_LINE[k] ? t(LAYOUT_LINE[k]) : k }));
   return <div class="editor">
-    <div class="ed-top"><TextInput label={t('plan.lesson_title')} value={d.title} onInput={v => put({ ...d, title: v })} /></div>
+    <div class="ed-top"><TextInput label={t('plan.lesson_title')} value={d.title} onInput={v => put({ ...d, title: v })} />
+      <Button icon="image" onClick={() => setLooking(true)} data-focus="look">{t('edit.look_n', { name: t(LOOK_LINE[T.lookOf(d)] || 'edit.look') })}</Button>
+      <Button variant="quiet" icon="info" onClick={() => setTips(true)} data-focus="tips">{t('edit.tips')}</Button></div>
+    {looking && <LookSheet p={p} d={d} s={s} onPick={lk => put({ ...d, look: lk }, true)} onClose={() => setLooking(false)} />}
+    {tips && <Tips onClose={() => setTips(false)} />}
     <div class="ed-grid">
-      <ol class="ed-list" aria-label={t('plan.all_slides')}>{d.slides.map((x, j) => <li><button type="button" class={'th' + (j === i ? ' on' : '')} aria-current={j === i ? 'true' : undefined} onClick={() => setCur(j)} aria-label={t('plan.slide_n', { n: j + 1 })}>
+      <ol class="ed-list" aria-label={t('plan.all_slides')}>{d.slides.map((x, j) => <li><button type="button" class={'th' + (j === i ? ' on' : '')} aria-current={j === i ? 'true' : undefined} onClick={() => setCur(j)} aria-label={t('plan.slide_n', { n: j + 1 })} data-slide-i={j}>
         <span class="n">{j + 1}</span><Slide slide={x} lesson={d} plan={p} width={132} />{(x.talk || []).some(c => !c.done) && <Icon name="comment" size="xs" />}</button></li>)}
         <li><Button size="sm" icon="plus" onClick={add} data-focus="add-slide">{t('plan.add_slide')}</Button></li></ol>
       <div class="ed-stage" ref={stage}>
-        <Slide slide={s} lesson={d} plan={p} width={900} fill label={t('plan.slide_of', { n: i + 1, of: n })} />
+        <div class="ed-stagewrap" ref={host} onClick={e => { const b = e.target.closest && e.target.closest('.ls-slide [data-k]'); if (b && T.BOX_KEYS.includes(b.dataset.k)) setBox(b.dataset.k); }}>
+          <Slide slide={s} lesson={d} plan={p} width={900} fill label={t('plan.slide_of', { n: i + 1, of: n })} />
+          {k && <Frame key={i + ':' + k} host={host} k={k} moved={!!(s.box && s.box[k])} onDone={r => placeBox(k, r)} onBack={() => boxBack(k)} />}</div>
         {over && <p class="ed-warn" role="status"><Icon name="warn" size="sm" /><span>{over === 'body' ? t('plan.too_much', { n: s.size }) : t('plan.box_over')}</span>
           {over === 'body' && <Button size="sm" onClick={split}>{t('plan.split_slide')}</Button>}</p>}
         <div class="ed-bar"><span class="num">{t('plan.slide_of', { n: i + 1, of: n })}</span><span class="grow" />
           <IconButton icon="chu" label={t('plan.move_up')} disabled={i === 0} onClick={() => move(-1)} />
           <IconButton icon="chd" label={t('plan.move_down')} disabled={i >= n - 1} onClick={() => move(1)} />
-          <Menu label={t('plan.slide_actions')} items={[{ id: 'dup', label: t('plan.duplicate'), icon: 'copy', onSelect: dup }, { id: 'del', label: t('common.delete'), icon: 'trash', disabled: n < 2, onSelect: del }]}
+          <Menu label={t('plan.slide_actions')} items={[{ id: 'dup', label: t('plan.duplicate'), icon: 'copy', onSelect: dup }, { id: 'ask', label: t('plan.redo_with', { name: ai }), icon: 'assist', onSelect: () => onAsk(i) }, { id: 'del', label: t('common.delete'), icon: 'trash', disabled: n < 2, onSelect: del }]}
             trigger={q => <IconButton icon="dots" label={t('plan.slide_actions')} {...q} />} /></div>
       </div>
       <div class="ed-form">
-        <Select label={t('plan.layout')} value={s.layout} options={layouts} onChange={v => setSlide({ layout: v }, true)} />
+        {k && <div class="boxtools" role="group" aria-label={t('edit.box_tools')}>
+          <Select label={t('edit.box_pick')} value={k} options={keys.map(x => ({ value: x, label: t(BOXN[x]) }))} onChange={setBox} data-focus="box-pick" />
+          <Select label={t('plan.text_size')} value={String(sizeOf(k) || '')} data-focus="box-size" onChange={v => setSize(k, v)}
+            options={[...(k === 'body' ? [] : [{ value: '', label: T.boxUsual(s, k) ? t('edit.size_usual_n', { n: T.boxUsual(s, k) }) : t('edit.size_usual') }]), ...T.boxSizes(s, k).map(z => ({ value: String(z), label: t('plan.pt', { n: z }) })), { value: 'fit', label: t('edit.size_fit') }]} />
+          {s.box && s.box[k] && <Button size="sm" variant="quiet" onClick={() => boxBack(k)}>{t('edit.box_back')}</Button>}
+          <small class="hint">{t('edit.box_hint')}</small></div>}
+        {!k && keys.length > 0 && <p class="hint">{t('edit.box_hint')}</p>}
+        <Select label={t('plan.layout')} value={s.layout} options={layouts} onChange={v => setSlide({ layout: v }, true)} data-focus="layout" />
         <TextInput label={t('plan.slide_title')} value={s.title} onInput={v => setSlide({ title: v })} />
-        {(MORE[s.layout] || []).map(k => k === 'body2' ? <TextBox label={t(BOX_LINE[k])} value={s[k] || ''} onInput={v => setSlide({ [k]: v })} rows={4} />
-          : <TextInput label={t(BOX_LINE[k])} value={s[k] || ''} onInput={v => setSlide({ [k]: v })} />)}
+        {(MORE[s.layout] || []).map(x => x === 'body2' ? <RichBox key={i + x} label={t(BOX_LINE[x])} value={s[x] || ''} onInput={v => setSlide({ [x]: v })} />
+          : <TextInput label={t(BOX_LINE[x])} value={s[x] || ''} onInput={v => setSlide({ [x]: v })} />)}
         {PIC.includes(s.layout) && <PictureField s={s} setSlide={setSlide} />}
-        {!NO_BODY.includes(s.layout) && <TextBox label={t(s.layout === 'title' ? 'plan.box_sub' : 'plan.box_body')} hint={t(s.layout === 'title' ? 'plan.sub_hint' : 'plan.body_hint')} value={s.body} onInput={v => setSlide({ body: v })} rows={7} />}
-        {s.layout !== 'title' && <Select label={t('plan.text_size')} value={String(s.size)} options={sizes.map(z => ({ value: String(z), label: t('plan.pt', { n: z }) }))} onChange={v => setSlide({ size: +v }, true)} />}
+        {!NO_BODY.includes(s.layout) && (s.layout === 'title' ? <TextBox label={t('plan.box_sub')} hint={t('plan.sub_hint')} value={s.body} onInput={v => setSlide({ body: v })} rows={3} />
+          : <RichBox key={i + 'body'} label={t('plan.box_body')} hint={t('edit.body_hint')} value={s.body} onInput={v => setSlide({ body: v })} data-focus="slide-body" />)}
         <TextBox label={t('plan.speaker_notes')} value={s.notes} onInput={v => setSlide({ notes: v })} rows={3} />
         <h3 class="sub">{t('plan.comments_slide', { name: ai })}</h3>
         <Talk talk={s.talk} ai={ai} label={t('plan.comments_slide', { name: ai })} onChange={v => setSlide({ talk: v }, true)} />

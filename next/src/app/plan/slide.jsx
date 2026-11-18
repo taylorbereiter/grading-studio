@@ -6,8 +6,10 @@ import CSS from '../../engines/slidecss.js';
 import { engine } from '../../planning/engine.js';
 import { isExample, exampleUrl, loadExample } from './examples.js';
 
+// The current Planner's page sets p{margin:0 0 6px}; slides drawn here need the same, or a short box like the exit ticket's tag clips.
+export const SLIDE_CSS = CSS + '.ls-slide p{margin:0 0 6px}';
 let put = false;
-function sheet() { if (put) return; put = true; const s = document.createElement('style'); s.dataset.slides = ''; s.textContent = CSS; document.head.appendChild(s); }
+function sheet() { if (put) return; put = true; const s = document.createElement('style'); s.dataset.slides = ''; s.textContent = SLIDE_CSS; document.head.appendChild(s); }
 // fill: as wide as the space it is in (up to width), measured, so the scale always matches the box.
 export function Slide({ slide, lesson, plan, width = 320, label, fill, ...rest }) {
   sheet();

@@ -4,9 +4,11 @@
 // teacher's own to-dos come from the grading side through crossings.js (names and days only).
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useMemo } from 'preact/hooks';
-import { Segmented, IconButton, Button, Icon, Chip, Switch, EmptyState, toast } from '../../ui/index.js';
+import { Segmented, IconButton, Button, Icon, Chip, Switch, EmptyState, Menu, toast } from '../../ui/index.js';
 import { t, date, dateRange } from '../../i18n/t.js';
-import { href, go } from '../router.js';
+import { href, go, PARTS } from '../router.js';
+import { usePart } from '../parts.js';
+import { assistant } from '../../services/assistant.js';
 import { usePlan } from '../plan.js';
 import { toneOf } from '../colors.js';
 import { workForCalendar } from '../../crossings.js';
@@ -22,6 +24,7 @@ const keep = (k, v) => { try { if (v === undefined) return JSON.parse(sessionSto
 export { saveFailed } from '../plan/save.js';
 import { saveFailed } from '../plan/save.js';
 import { printWeek } from '../plan/print.js';
+import '../plan/lines.js';
 
 function State({ s }) {
   return <span class={'st st-' + s}>{STATE_ICON[s] && <Icon name={STATE_ICON[s]} size="xs" />}{t(STATE_LINE[s])}</span>;
@@ -37,14 +40,21 @@ function LessonCard({ l, c, m, day, compact, onDrag }) {
     <span class="lm"><span data-raw>{clock(m.start)}</span><State s={s} /></span>
   </a>;
 }
-function PlanIt({ p, c, m, day, compact, busy, setBusy }) {
-  const go2 = async () => {
+function PlanIt({ p, c, m, day, compact, busy, setBusy, onTool }) {
+  const go2 = async ask => {
     if (busy) return; setBusy(true);
-    try { const l = await newLesson(p, c.id, day); go('lesson', l.id); } catch (e) { saveFailed(e); } finally { setBusy(false); }
+    try { const l = await newLesson(p, c.id, day); if (ask) { try { sessionStorage.setItem('gsn.ask', l.id); } catch { } } go('lesson', l.id); } catch (e) { saveFailed(e); } finally { setBusy(false); }
   };
-  return <button type="button" class={'lc open' + (compact ? ' compact' : '')} style={{ '--cc': toneOf(c.color) }} onClick={go2} data-plan={c.id + '|' + day}>
-    <b><Icon name="plus" size="xs" />{compact ? t('plan.class_not_planned', { name: c.name }) : t('plan.plan_this')}</b><span class="lm" data-raw>{clock(m.start)}</span>
-  </button>;
+  const ai = assistant().name || t('assistant.generic');
+  // One press makes a blank lesson; the menu beside it starts one another way (the design's empty-slot choices).
+  return <span class={'planit' + (compact ? ' compact' : '')}><button type="button" class={'lc open' + (compact ? ' compact' : '')} style={{ '--cc': toneOf(c.color) }} onClick={() => go2()} data-plan={c.id + '|' + day}>
+    {compact ? <><b class="one" data-raw>{c.name}</b><span class="lm"><span><Icon name="plus" size="xs" />{t('plan.not_planned')}</span><span data-raw>{clock(m.start)}</span></span></>
+      : <><b><Icon name="plus" size="xs" />{t('plan.plan_this')}</b><span class="lm" data-raw>{clock(m.start)}</span></>}
+  </button>
+    <Menu label={t('plan.slot_menu')} items={[{ id: 'blank', label: t('plan.slot_blank'), icon: 'plus', onSelect: () => go2() }, { id: 'have', label: t('plan.slot_have'), icon: 'slides', onSelect: () => onTool({ name: 'use', c, day }) },
+      { id: 'lib', label: t('plan.slot_library'), icon: 'spark', onSelect: () => onTool({ name: 'lib', c, day }) }, { id: 'ask', label: t('plan.slot_assist', { name: ai }), icon: 'assist', onSelect: () => go2(true) },
+      { id: 'import', label: t('plan.import_lesson'), icon: 'upload', onSelect: () => onTool({ name: 'import', c, day }) }]}
+      trigger={q => <IconButton icon="dots" size="sm" label={t('plan.slot_menu')} {...q} data-slotmenu={c.id + '|' + day} />} /></span>;
 }
 function DueChip({ x, p }) {
   const c = ((p.setup && p.setup.classes) || []).find(k => nameKey(k.name) === nameKey(x.cls));
@@ -66,7 +76,7 @@ function useDrop(p, dragging) {
   });
 }
 
-function ByClass({ p, days, shown, work, layers, dragging, setDragging, busy, setBusy }) {
+function ByClass({ p, days, shown, work, layers, dragging, setDragging, busy, setBusy, onTool }) {
   const drop = useDrop(p, dragging), now = today();
   const classes = p.setup.classes.filter(c => shown(c.id));
   return <div class="cal byclass" role="table" aria-label={t('plan.by_class')} style={{ '--days': days.length }}>
@@ -79,7 +89,7 @@ function ByClass({ p, days, shown, work, layers, dragging, setDragging, busy, se
         const dues = layers.work ? work.due.filter(x => x.day === d && nameKey(x.cls) === nameKey(c.name)) : [];
         return <span role="cell" class={'cc' + (d === now ? ' now' : '') + (off ? ' off' : '')} {...drop(c, d)}>
           {off && c === classes[0] ? <span class="offl" data-raw>{off.label || t('plan.day_off')}</span> : null}
-          {layers.lessons && ms.map(x => { const ls = lessonsOn(p, c.id, d); return ls.length ? ls.map(l => <LessonCard l={l} c={c} m={x.m} day={d} onDrag={setDragging} />) : d >= now ? <PlanIt p={p} c={c} m={x.m} day={d} busy={busy} setBusy={setBusy} /> : null; })}
+          {layers.lessons && ms.map(x => { const ls = lessonsOn(p, c.id, d); return ls.length ? ls.map(l => <LessonCard l={l} c={c} m={x.m} day={d} onDrag={setDragging} />) : d >= now ? <PlanIt p={p} c={c} m={x.m} day={d} busy={busy} setBusy={setBusy} onTool={onTool} /> : null; })}
           {dues.map(x => <DueChip x={x} p={p} />)}
         </span>;
       })}
@@ -95,7 +105,7 @@ function eventRow(p, days, layers, work) {
   </div>;
 }
 
-function ByTime({ p, days, shown, work, layers, dragging, setDragging, busy, setBusy }) {
+function ByTime({ p, days, shown, work, layers, dragging, setDragging, busy, setBusy, onTool }) {
   const drop = useDrop(p, dragging), now = today();
   const all = days.flatMap(d => periods(p, d)).filter(x => shown(x.c.id));
   const from = Math.floor(Math.min(8 * 60, ...all.map(x => mins(x.m.start)).filter(v => v != null)) / 60) * 60;
@@ -116,7 +126,7 @@ function ByTime({ p, days, shown, work, layers, dragging, setDragging, busy, set
           {!off && periods(p, d).filter(x => shown(x.c.id)).map(x => {
             const top = (mins(x.m.start) - from) * px, ht = Math.max(40, ((mins(x.m.end) || mins(x.m.start) + 45) - mins(x.m.start)) * px - 4), ls = lessonsOn(p, x.c.id, d);
             return <div class="tslot" style={{ top: top + 'px', height: ht + 'px' }} {...drop(x.c, d)}>
-              {layers.lessons && (ls.length ? <LessonCard l={ls[0]} c={x.c} m={x.m} day={d} onDrag={setDragging} /> : d >= now ? <PlanIt p={p} c={x.c} m={x.m} day={d} busy={busy} setBusy={setBusy} compact /> : <span class="lc past" style={{ '--cc': toneOf(x.c.color) }}><b data-raw>{x.c.name}</b></span>)}
+              {layers.lessons && (ls.length ? <LessonCard l={ls[0]} c={x.c} m={x.m} day={d} onDrag={setDragging} /> : d >= now ? <PlanIt p={p} c={x.c} m={x.m} day={d} busy={busy} setBusy={setBusy} onTool={onTool} compact /> : <span class="lc past" style={{ '--cc': toneOf(x.c.color) }}><b data-raw>{x.c.name}</b></span>)}
             </div>;
           })}
         </div>;
@@ -125,7 +135,7 @@ function ByTime({ p, days, shown, work, layers, dragging, setDragging, busy, set
   </div>;
 }
 
-function Month({ p, anchor, shown, work, layers, weekends, setView, setAnchor, busy, setBusy }) {
+function Month({ p, anchor, shown, work, layers, weekends, setView, setAnchor, busy, setBusy, onTool }) {
   const first = at(anchor.slice(0, 8) + '01'), now = today();
   const start = mondayOf(p, iso(first)), month = first.getMonth();
   const weeks = []; for (let w = start; at(w).getMonth() === month || at(w) < first || weeks.length === 0; w = plus(w, 7)) { weeks.push(w); if (weeks.length > 6) break; }
@@ -145,7 +155,7 @@ function Month({ p, anchor, shown, work, layers, weekends, setView, setAnchor, b
         if (off) items.push(<span class="evc off" data-raw>{off.label || t('plan.day_off')}</span>);
         const empty = [];
         if (layers.lessons) for (const x of ms) { const ls = lessonsOn(p, x.c.id, d); if (ls.length) ls.forEach(l => items.push(<LessonCard l={l} c={x.c} m={x.m} day={d} compact />)); else if (d >= now) empty.push(x); }
-        if (empty.length === 1) items.push(<PlanIt p={p} c={empty[0].c} m={empty[0].m} day={d} compact busy={busy} setBusy={setBusy} />);
+        if (empty.length === 1) items.push(<PlanIt p={p} c={empty[0].c} m={empty[0].m} day={d} compact busy={busy} setBusy={setBusy} onTool={onTool} />);
         else if (empty.length > 1) items.push(<button type="button" class="lc open compact" onClick={() => { setAnchor(d); setView('class'); }}><b>{t('plan.n_not_planned', { n: empty.length })}</b><span class="lm" data-raw>{clock(empty[0].m.start)}</span></button>);
         if (layers.work) for (const x of work.due.filter(x => x.day === d)) items.push(<DueChip x={x} p={p} />);
         if (layers.todos) for (const x of work.todos.filter(x => x.day === d)) items.push(<TodoChip x={x} />);
@@ -170,7 +180,8 @@ export default function Calendar({ route }) {
   const [hidden, setHidden] = useState(() => keep('hide') || []);
   const [layers, setLayers] = useState(() => ({ lessons: true, work: true, todos: true, ...(keep('layers') || {}) }));
   const [weekends, setWeekends] = useState(() => !!keep('weekends'));
-  const [dragging, setDragging] = useState(null), [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(null), [busy, setBusy] = useState(false), [tool, setTool] = useState(null);
+  const Cal = usePart('cal', !!tool), Tools = usePart('tools', !!tool && tool.name === 'import');
   const work = useMemo(() => { try { return workForCalendar(); } catch (e) { console.error(e); return { due: [], todos: [] }; } }, [p]);
   useEffect(() => { keep('at', anchor); }, [anchor]);
   const setView = v => { keep('view', v); go('calendar', v); };
@@ -187,7 +198,8 @@ export default function Calendar({ route }) {
   const thisWeek = days.includes(today());
   const counted = days.flatMap(d => periods(p, d).filter(x => shown(x.c.id)).map(x => ({ x, d, l: lessonsOn(p, x.c.id, d)[0] })));
   const done = counted.filter(r => r.l && stateOf(r.l, r.x.c.id, r.d) !== 'draft').length;
-  const props = { p, days, shown, work, layers, dragging, setDragging, busy, setBusy };
+  const props = { p, days, shown, work, layers, dragging, setDragging, busy, setBusy, onTool: setTool };
+  const close = () => setTool(null), ai = assistant().name || t('assistant.generic');
   return <div class="page calendar" data-view={view}>
     <header class="ph calh">
       <div><h1 id="cal-title" data-raw>{title}</h1><p class="mute">{t(view === 'month' ? 'plan.month_help' : view === 'time' ? 'plan.time_help' : 'plan.class_help')}</p></div>
@@ -211,6 +223,13 @@ export default function Calendar({ route }) {
     {view === 'month' && <Month {...props} anchor={anchor} weekends={weekends} setView={setView} setAnchor={setAnchor} />}
     {view !== 'month' && <div class="legend"><State s="ready" /><State s="draft" /><State s="none" /><span class="due plain"><Icon name="flag" size="xs" />{t('plan.due_legend')}</span>
       <span class="grow" /><span class="mute">{thisWeek || counted.length ? t('plan.n_of_ready', { n: done, of: counted.length }) : ''}</span>
-      <Button size="sm" variant="quiet" icon="file" onClick={() => printWeek(p, mondayOf(p, anchor))} data-focus="print-week">{t('plan.print_week')}</Button></div>}
+      <Button size="sm" variant="quiet" icon="file" onClick={() => printWeek(p, mondayOf(p, anchor))} data-focus="print-week">{t('plan.print_week')}</Button>
+      <Menu label={t('plan.week_menu')} items={[{ id: 'week', label: t('plan.week_with', { name: ai }), icon: 'assist', onSelect: () => setTool({ name: 'week' }) },
+        { id: 'download', label: t('plan.download_week'), icon: 'download', onSelect: () => PARTS.tools().then(m => m.downloadWeek(p, mondayOf(p, anchor))).catch(e => console.error(e)) }]}
+        trigger={q => <IconButton icon="dots" size="sm" label={t('plan.week_menu')} {...q} data-focus="week-menu" />} /></div>}
+    {tool && tool.name === 'use' && Cal && <Cal.UseLesson p={p} c={tool.c} d={tool.day} onClose={close} />}
+    {tool && tool.name === 'lib' && Cal && <Cal.FromLibrary p={p} c={tool.c} d={tool.day} onClose={close} />}
+    {tool && tool.name === 'week' && Cal && <Cal.WeekAssist p={p} mon={mondayOf(p, anchor)} onClose={close} />}
+    {tool && tool.name === 'import' && Tools && <Tools.ImportSheet p={p} slot={{ classId: tool.c.id, date: tool.day }} onClose={close} />}
   </div>;
 }

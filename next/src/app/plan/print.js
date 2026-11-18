@@ -4,6 +4,7 @@ import { t, date } from '../../i18n/t.js';
 import { toast } from '../../ui/index.js';
 import { engine } from '../../planning/engine.js';
 import { periods, dayOff, eventsOn, lessonsOn, weekDays, at, mins } from './lessons.js';
+import './lines.js';
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const clock = s => { const m = mins(s); return m == null ? '' : date(new Date(2000, 0, 1, Math.floor(m / 60), m % 60), { hour: 'numeric', minute: '2-digit' }); };

@@ -44,4 +44,5 @@ export const nameKey = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, 
 export function timetableClass(p, name) { const k = nameKey(name); return ((p && p.setup && p.setup.classes) || []).find(c => nameKey(c.name) === k) || null; }
 // A lesson's material (kv file:<id>, a Blob) and its versions (kv ver:<id>), read when a screen needs them.
 export const lessonBlob = id => kv.get('file:' + id).catch(() => null);
+export const plannerKv = key => kv.get(key).catch(() => null);
 export const lessonVersions = id => kv.get('ver:' + id).then(v => Array.isArray(v) ? v : [], () => []);

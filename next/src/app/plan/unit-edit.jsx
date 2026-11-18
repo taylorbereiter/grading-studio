@@ -10,6 +10,7 @@ import { engine } from '../../planning/engine.js';
 import { saveKv, dropLessonFile } from '../../planning/write.js';
 import { saveFailed } from './save.js';
 import { at, plus } from './lessons.js';
+import './lines.js';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 function Area({ label, value, onInput, rows = 2, ...rest }) {

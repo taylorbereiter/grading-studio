@@ -207,7 +207,7 @@ test('the editor: words saved as typed, a slide added, too much text split onto 
   assert.equal(l.slides[1].layout, 'content', 'the slide added after the one in view is the deck’s usual layout');
   assert.equal(await p.$eval('main .ed-bar .num', x => x.textContent), 'Slide 2 of 6');
   // Twenty lines are more than fit at 28 pt: the warning offers to move the extra lines, and the text is never made smaller.
-  await p.$eval('main .ed-form textarea', el => el.focus());
+  await p.click('main .ed-form .rtbox');
   await p.keyboard.type(Array.from({ length: 20 }, (_, k) => 'Line ' + (k + 1)).join('\n'));
   await p.waitForSelector('main .ed-warn button', { timeout: 5000 });
   await saved(l => l.slides[1].body.split('\n').length === 20, 'the long text');
@@ -287,7 +287,7 @@ test('a strong example goes on a slide by reference: drawn from the marking side
   });
   await open(p, 'lesson/L5/edit');
   await p.click('main .ed-list li:nth-child(5) button'); // the exit ticket, made a picture slide
-  await p.select('main .ed-form select', 'picture');
+  await p.select('main .ed-form select[data-focus="layout"]', 'picture');
   await p.waitForSelector('main [data-focus="add-example"]');
   await p.click('main [data-focus="add-example"]');
   await p.waitForSelector('.excard');
@@ -312,7 +312,7 @@ test('Settings > Timetable: a class renamed and recoloured, a meeting and a day 
   await p.waitForSelector('main .ttset input');
   await p.$eval('main .ttset .card input', el => { el.focus(); el.select(); });
   await p.keyboard.type('Grade 9 English A');
-  await p.click('main .ttset .card .swatches button:nth-child(3)');
+  await p.click('main .ttset .card .ccsw button:nth-child(3)');
   await p.$eval('main .ttset .card', c => [...c.querySelectorAll(':scope > div > div > button, :scope button')].find(b => b.textContent === 'Add a time').click());
   const dayOff = (await p.$$('main .ttset .dlist'))[0];
   await (await dayOff.$(':scope > div:last-child button')).click();

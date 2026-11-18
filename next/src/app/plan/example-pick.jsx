@@ -6,6 +6,7 @@ import { Sheet, Button, Icon, TextInput, EmptyState } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { examplesForPlanning } from '../../crossings.js';
 import { exampleRef, loadExample } from './examples.js';
+import './lines.js';
 
 export const exampleName = r => r.kind === 'answer' ? t('plan.ex_question', { q: r.q || '?' }) : r.kind === 'paper' ? t('plan.ex_example', { x: r.letter || 'A' })
   : r.kind === 'shot' ? t('plan.ex_shot', { x: r.letter || '1' }) : t('plan.ex_part');
@@ -22,7 +23,7 @@ export function ExamplePicker({ open, onClose, onPick }) {
   const hit = r => !q.trim() || [r.title, exampleName(r), r.why, ...r.tags].some(x => x.toLowerCase().includes(q.trim().toLowerCase()));
   const groups = []; for (const r of (list || []).filter(hit)) { let g = groups.find(x => x[0] === r.title); if (!g) groups.push(g = [r.title, []]); g[1].push(r); }
   return <Sheet open={open} wide title={t('plan.add_example')} icon={<Icon name="image" />} onClose={onClose}
-    footer={<><Button variant="quiet" onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" disabled={!pick} onClick={() => onPick(exampleRef(pick.id, page))} data-focus="use-example">{t('plan.use_example')}</Button></>}>
+    footer={<><Button variant="quiet" onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" disabled={!pick} onClick={() => onPick(exampleRef(pick.id, page), pick, page)} data-focus="use-example">{t('plan.use_example')}</Button></>}>
     {list && !list.length ? <EmptyState icon="image" title={t('plan.no_examples')} text={t('plan.no_examples_text')} />
       : <div class="expick"><p class="mute">{t('plan.example_stays')}</p>
         <TextInput label={t('plan.find_example')} icon="search" value={q} onInput={setQ} />
