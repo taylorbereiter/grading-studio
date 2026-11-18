@@ -52,14 +52,18 @@ function Display() {
   </>;
 }
 function About() {
-  const u = useUpdate();
-  return <Card title={t('settings.about')}>
+  const u = useUpdate(), standalone = typeof matchMedia === 'function' && matchMedia('(display-mode: standalone)').matches;
+  return <><Card title={t('settings.about')}>
     <p>{u.current ? t('update.current', { v: u.current }) : t('update.not_kept')}</p>
     {u.waiting && <p role="status">{t('update.ready_v', { v: u.waiting })}</p>}
     <div class="row gap">{u.waiting ? <Button variant="primary" onClick={u.apply}>{t('update.now')}</Button> : <Button onClick={u.check}>{t('update.check')}</Button>}</div>
     <Segmented label={t('update.mode')} value={u.mode} onChange={u.setMode} options={[{ value: 'ask', label: t('update.mode_ask') }, { value: 'auto', label: t('update.mode_auto') }]} />
     {u.checked === 'offline' && <p class="hint">{t('update.offline')}</p>}
-  </Card>;
+  </Card>
+  <Card title={t('settings.install_h')}>
+    <p class="mute">{t(standalone || u.installed ? 'settings.install_done' : 'settings.install_about')}</p>
+    {u.install && <Button onClick={u.installApp} data-install>{t('settings.install')}</Button>}
+  </Card></>;
 }
 export default function Settings({ route }) {
   const g = GROUPS.find(x => x[0] === route.params.group) || GROUPS.find(x => x[0] === 'display');

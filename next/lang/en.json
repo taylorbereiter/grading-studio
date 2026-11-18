@@ -243,5 +243,9 @@
  "lock.over": "Your saved work is being changed in another window. This window will reload by itself when that’s done.",
  "nav.todo_add": "Add a to-do",
  "nav.time": "Time tracker",
- "nav.focus": "Focus timer"
+ "nav.focus": "Focus timer",
+ "settings.install_h": "Install as an app",
+ "settings.install_about": "Opens like a program, in its own window, with the same work as this tab. In Chrome or Edge, use Install in the address bar or the browser’s menu.",
+ "settings.install_done": "Installed: it opens in its own window, with the same work as the browser tab.",
+ "settings.install": "Install"
 }
