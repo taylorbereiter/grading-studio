@@ -174,6 +174,12 @@ export function ClassesMore() {
     {other && <Box label={t('prefs.sys_its_name')} value={s} maxLength={40} save={save} data-raw data-stsysother />}
   </Card>;
 }
+// My setup loads with its card (PARTS.mysetup): it brings the reading and the preview.
+export function ClassesSetup() {
+  const [P, setP] = useState(null);
+  useEffect(() => { PARTS.mysetup().then(setP); }, []);
+  return P ? <P.MySetup /> : null;
+}
 
 // Settings > Display: the app's text size, and full screen.
 export function DisplayMore() {

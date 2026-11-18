@@ -460,6 +460,30 @@ const LOFI_STYLES = ['rain', 'library', 'coffee', 'night', 'tape', 'garden', 'bl
 const tr = s => s;
 `, ['lib', 'keptMeta', 'keptRead', 'plan', 'LANG_LOCALE', 'store', 'canOpen', 'FC_ON', 'tkReady', 'gpReady', 'batch', 'cur', '$', 'fcRender', 'fcClockDraw', 'fcTitle',
     'fcGoTo', 'fcLesOpen', 'fcChime', 'fcAudioWake', 'tkPageRender', 'renderProg', 'routeNow', 'me', 'meDrop', 'LOFI_STYLES', 'tr', 'useKept', 'todoUse', 'countUse', 'once'], ['gkept', 'gtodo', 'gcount']],
+  ['gstp', [
+    // My setup (src/setupin.js): a setup pasted back from an assistant read key by key, never running anything and never taking a
+    // student in (stpParse, stpRead); the Planner's timetable with its classes and calendar laid over (stpPlanNext); this teacher's
+    // setup copied out in the same format (stpExport); and the prompt that describes the format (stpPrompt). The preview, bringing it
+    // in and undo are the new app's (app/setup/).
+    'stpParse', 'stpRead', 'stpPlanNext', 'stpExport', 'stpPrompt', 'stpKey', 'STP_V', 'stpApply', 'stpUndo', 'stpUndoRec', 'stpMarkNow', 'stpTodoNext', 'stpIbChanges', 'stpOwnTypes', 'stpPersonHere',
+    // what the preview compares with (the new app's own words, app/setup/diff.js)
+    'me', 'meGrade', 'bkConf', 'retakeRule', 'savedRubrics', 'goalList', 'fcConf', 'tdCats', 'TD_CAT0', 'tabsKept', 'attOn', 'stpPlanGet', 'sysName', 'unitLinkName', 'mbOrder', 'mbOf', 'BK_TYPES', 'CLASS_TABS', 'STP_LAYOUTS', 'lkKey', 'stpMonday', 'aiUrlClean', 'GP_DAYS', 'gradeWay',
+  ], `// What My setup reads, handed in by app/setup/stp.js (stpUse): the library, the students' store, her saved comments, the School
+// page's people and spots, and how points are coloured and the student list shown.
+let lib = { classes: [], loose: { id: '', units: [] } }, bank = [], ptsInk = '', listPts = false, people = [], roles = null, setup = null;
+let store = { get: (k, d) => d, set: () => {}, del: () => {} };
+export function stpUse(o) { if ('lib' in o) lib = o.lib; if ('bank' in o) bank = o.bank || []; if ('store' in o) store = o.store; if ('ptsInk' in o) ptsInk = o.ptsInk || ''; if ('listPts' in o) listPts = !!o.listPts; if ('people' in o) people = o.people || []; if ('roles' in o) roles = o.roles || null; }
+const schPeople = () => people, schNow = () => ({ roles }), go = () => {}, saveLib = () => {};
+// What bringing a setup in does that is the page's: the School page's people (H.school(fn) changes them), the Planner's timetable
+// (H.planPut), and what the page says (H.said). Quiet until the page hands its own in.
+const H = { school() {}, async planPut() {}, said() {} };
+export const stpHooks = o => Object.assign(H, o);
+// what the engine was handed, for the preview
+export const libNow = () => lib, bankNow = () => bank;
+const schChange = f => H.school(f), stpPlanPut = s => H.planPut(s), stpAfter = () => {}, toast = s => H.said(s), bankJob = () => Promise.resolve(), bankRead = () => {}, batch = null, fcCardRender = () => {}, fcRender = () => {}, listDraw = () => {}, renderPage = () => {}, once = () => {};
+// only words in the lifted text ("a few pages", a local cur), never the marking screen's
+const cur = 0, pages = [];
+`, ['lib', 'bank', 'ptsInk', 'listPts', 'people', 'roles', 'setup', 'store', 'schPeople', 'schNow', 'go', 'saveLib', 'cur', 'pages', 'H', 'schChange', 'stpPlanPut', 'stpAfter', 'toast', 'bankJob', 'bankRead', 'batch', 'fcCardRender', 'fcRender', 'listDraw', 'renderPage', 'once'], []],
   ['glofi', [
     // lo-fi music while a session runs (src/lofi.js): made in the browser as it plays, nothing fetched
     'LOFI_STYLES', 'lofi', 'lofiCompose', 'lofiPlay', 'lofiPause', 'lofiNext', 'lofiStop', 'lofiVolume', 'lofiStyle', 'lofiAmb', 'lofiRender',
@@ -503,7 +527,8 @@ function writeGrading() {
     const used = may.filter(n => !given.includes(n) && new RegExp('(?<![\\w$])(?<![^.]\\.)' + n.replace(/\$/g, '\\$') + '(?![\\w$])').test(out));
     const imports = {};
     for (const n of used) { const from = file === 'gcore' ? null : (made[n] || 'gcore'); if (from && from !== file) { (imports[from] ||= []).push(n); (needs[from] ||= new Set()).add(n); } }
-    if (file !== 'gcore') out = setters(out, names);
+    // a name the module declares for itself in its preamble (given) is its own: assigning it is not gcore's setter
+    if (file !== 'gcore') out = setters(out, names.filter(n => !given.includes(n)));
     let pre = file === 'gcore' ? core : Object.entries(imports).map(([f, l]) => 'import { ' + l.join(', ') + " } from './" + f + ".js';").join('\n') + '\n';
     if (file === 'gcore') pre += 'export { ' + names.join(', ') + ', store, kdo, kget, idbDo, ' + Object.keys(GRADING_STUBS).join(', ') + ' };\n';
     else if (/(?<![.\w$])set\./.test(out)) pre = pre.replace(/^import \{ ([^}]*) \} from '\.\/gcore\.js';/m, (m, l) => "import { " + l + ", set } from './gcore.js';") || pre;
