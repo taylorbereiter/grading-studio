@@ -106,6 +106,42 @@ test('keyboard: mark a lesson ready, move through its slides, and present it', a
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
+test('Present: the class tools on their keys, a slide by number, and Esc closing one thing at a time', async () => {
+  const p = await fresh();
+  await open(p, 'lesson/L3/slides');
+  await p.keyboard.press('F5');
+  await p.waitForSelector('.present');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('.present'), { timeout: 5000 });
+  const num = () => p.$eval('.present .num', x => x.textContent);
+  await p.keyboard.press('4'); await p.keyboard.press('Enter');
+  assert.equal(await num(), 'Slide 4 of 5', 'a number then Enter goes to that slide');
+  await p.keyboard.press('Backspace');
+  assert.equal(await num(), 'Slide 3 of 5', 'Backspace goes back');
+  await p.keyboard.press('n');
+  await p.waitForSelector('.prpanel.pr-notes');
+  await p.keyboard.press('t');
+  await p.waitForSelector('.prpanel.pr-timer');
+  await p.keyboard.press('3');
+  await p.waitForFunction(() => /^[23]:\d\d$/.test(document.querySelector('.prtimer b').textContent));
+  await p.keyboard.press('+');
+  await p.waitForFunction(() => /^[34]:\d\d$/.test(document.querySelector('.prtimer b').textContent));
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('.prpanel') && document.querySelector('.prclock'));
+  await p.keyboard.press('g');
+  await p.waitForSelector('.prpanel.pr-groups');
+  await p.keyboard.press('b');
+  await p.waitForSelector('.present.blank');
+  assert.equal(await p.$('.present .slidebox, .present .prpanel'), null, 'a blank screen shows nothing');
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('.present.blank') && document.querySelector('.prpanel.pr-groups'));
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('.prpanel'));
+  assert.ok(await p.$('.present'), 'Esc closes what is open before it ends');
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('.present'));
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
 test('every word on the planning screens comes through t() or is the teacher’s own text, and presses at rest are counted', async () => {
   const counts = {};
   for (const w of [1366, 390]) {

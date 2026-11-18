@@ -251,3 +251,13 @@
   .cal .cr,.bytime .tgrid{grid-template-columns:92px repeat(var(--days),minmax(118px,1fr))}
   .month .cr{grid-template-columns:repeat(var(--days),minmax(64px,1fr))}
 }
+/* present: the class's tools */
+.present.blank{background:#000}
+.prpanel{position:absolute;right:24px;top:24px;max-width:min(520px,42vw);max-height:70vh;overflow:auto;padding:18px 22px;border-radius:var(--r3);background:color-mix(in oklab,var(--s) 94%,transparent);color:var(--ink);box-shadow:var(--sh-r);font-size:20px}
+.prpanel p{margin:0;white-space:pre-wrap}.prpanel ol,.prpanel ul{margin:0;padding-left:22px}
+.prtimer b{display:block;font-size:72px;font-variant-numeric:tabular-nums;line-height:1}
+.prpick{font-size:56px;font-weight:600}
+.prgroups{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;font-size:18px}
+.pr-groups{max-width:min(900px,80vw)}
+.prtyped,.prclock{position:absolute;left:24px;top:24px;padding:8px 14px;border-radius:var(--r2);background:var(--inv-bg,#111);color:var(--inv-fg,#fff);font-size:20px;font-variant-numeric:tabular-nums}
+.prclock{left:auto;right:24px;bottom:72px;top:auto;font-size:32px}

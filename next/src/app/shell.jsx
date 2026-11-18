@@ -175,6 +175,23 @@ export function Shell() {
     ];
     return () => offs.forEach(f => f());
   }, []);
+  // Planning destinations, and every lesson by its title (with its class and day), so typing finds a lesson (the Planner's Search).
+  const plan = usePlan();
+  useEffect(() => {
+    const go = (...a) => () => router.go(...a);
+    const offs = [
+      addCommand({ id: 'go-cal-class', label: () => t('plan.by_class'), also: t('nav.calendar'), group: t('nav.calendar'), icon: 'cal', run: go('calendar', 'class') }),
+      addCommand({ id: 'go-cal-time', label: () => t('plan.by_time'), also: t('nav.calendar'), group: t('nav.calendar'), icon: 'week', run: go('calendar', 'time') }),
+      addCommand({ id: 'go-cal-month', label: () => t('plan.month'), also: t('nav.calendar'), group: t('nav.calendar'), icon: 'cal', run: go('calendar', 'month') }),
+      addCommand({ id: 'go-timetable', label: () => t('settings.timetable'), also: t('nav.settings'), group: t('cmd.group_go'), icon: 'cal', run: go('settings', 'timetable') }),
+    ];
+    const cls = id => (((plan && plan.setup && plan.setup.classes) || []).find(c => c.id === id) || {}).name || '';
+    for (const l of (plan && plan.lessons) || []) {
+      const s = [...(l.slots || [])].sort((a, b) => b.date.localeCompare(a.date))[0];
+      offs.push(addCommand({ id: 'lesson-' + l.id, label: l.title || t('plan.untitled'), also: (s ? cls(s.classId) + ' ' + s.date : '') + ' ' + t('plan.lessons'), group: t('plan.lessons'), icon: 'slides', run: go('lesson', l.id) }));
+    }
+    return () => offs.forEach(f => f());
+  }, [plan]);
   // The classes as commands, so typing a class's name opens it.
   useEffect(() => {
     const offs = (classes || []).map(c => addCommand({ id: 'class-' + (c.id || '-'), label: c.loose ? t('nav.no_class') : c.name, also: t('nav.classes'), group: t('nav.classes'), icon: 'people', run: () => router.go('class', c.id || '-') }));

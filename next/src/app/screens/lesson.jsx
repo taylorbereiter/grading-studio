@@ -209,6 +209,6 @@ export default function LessonPage({ route }) {
       {view !== 'edit' && <Side p={p} l={l} slot={slot} per={per} onSave={save} onDownload={() => download(p, l)} onAssistant={() => setAsking(true)} />}
     </div>
     <AssistantSheet p={p} l={l} open={asking} onClose={() => setAsking(false)} save={save} />
-    {presenting && <Present p={p} l={l} start={view === 'slides' ? cur : 0} onClose={i => { setPresenting(false); if (typeof i === 'number') setCur(i); }} />}
+    {presenting && <Present p={p} l={l} className={per ? per.c.name : ''} start={view === 'slides' ? cur : 0} onClose={i => { setPresenting(false); if (typeof i === 'number') setCur(i); }} />}
   </div>;
 }
