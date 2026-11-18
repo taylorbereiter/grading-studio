@@ -558,3 +558,37 @@ test('the side pane: B opens it with the rubric in full, a file beside the other
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('a tablet reaches the marks: the Stamp tool opens the menu where she taps, and a finger held still opens it too; a quick touch does not', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(await standardFiles()));
+  await made.evaluate(() => window.__gs.saveNow()); await settle(made);
+  const id = await made.evaluate(() => window.__gs.state().batch.id);
+  await made.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForSelector('[data-tool="stamp"]');
+  await p.waitForSelector('[data-repx]', { timeout: 15000 }).then(() => p.click('[data-repx]'), () => {});
+  // the Stamp tool: a tap opens the menu there and starts no mark; a sticker from it goes where she tapped
+  await p.click('[data-tool="stamp"]'); assert.equal(await p.$eval('[data-tool="stamp"]', e => e.getAttribute('aria-pressed')), 'true');
+  { const q = await nextAt(p, 0, 220, 260); await p.mouse.click(q.x, q.y); }
+  await p.waitForSelector('.mk-menu'); assert.equal((await marksOf(p, 0)).length, 0);
+  await press(p, '.mk-menu [data-sub="stick"]'); await press(p, '.mk-fly [data-mark="star"]');
+  const st = (await marksOf(p, 0)).find(m => m.k === 'star'); assert.ok(st && Math.abs(st.x - 220) < 2 && Math.abs(st.y - 260) < 2, 'the sticker is where she tapped');
+  assert.equal(await p.$eval('[data-tool="stamp"]', e => e.getAttribute('aria-pressed')), 'true', 'the Stamp tool stays in hand');
+  // the pen: a quick touch makes a dot and no menu; a finger held still opens the menu and leaves no mark
+  await p.keyboard.press('Escape'); await p.click('[data-tool="pen"]');
+  const n0 = (await marksOf(p, 0)).length;
+  { const q = await nextAt(p, 0, 300, 400); await p.touchscreen.touchStart(q.x, q.y); await p.touchscreen.touchEnd(); }
+  await new Promise(r => setTimeout(r, 800)); assert.equal(await p.$('.mk-menu'), null, 'a quick touch opens nothing');
+  const n1 = (await marksOf(p, 0)).length;
+  { const q = await nextAt(p, 0, 320, 420); await p.touchscreen.touchStart(q.x, q.y); await p.waitForSelector('.mk-menu', { timeout: 3000 }); await p.touchscreen.touchEnd(); }
+  assert.equal((await marksOf(p, 0)).length, n1, 'held still: the menu, and no mark');
+  assert.ok(n1 >= n0);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

@@ -20,13 +20,14 @@ const TOOL_LINE = { select: () => t('mark.t_select'), pen: () => t('mark.t_pen')
 const COLOR_LINE = { red: () => t('mark.c_red'), blue: () => t('mark.c_blue'), green: () => t('mark.c_green'), purple: () => t('mark.c_purple'), black: () => t('mark.c_black'), yellow: () => t('mark.c_yellow'), pink: () => t('mark.c_pink') };
 const WIDTHS = [[1.2, () => t('mark.w_fine')], [2, () => t('mark.w_medium')], [3.5, () => t('mark.w_bold')]];
 function Tools() {
-  const s = state(), bar = s.once ? s.once.prev : s.tool;
+  const s = state(), bar = M.stampTool() ? 'stamp' : s.once ? s.once.prev : s.tool;
   const sw = (list, on, pick, label) => <span class="mk-sw" role="group" aria-label={label}>{Object.entries(list).map(([k, v]) =>
     <button type="button" class="sw" style={'background:' + v} aria-pressed={k === on ? 'true' : 'false'} title={COLOR_LINE[k] ? COLOR_LINE[k]() : k} aria-label={COLOR_LINE[k] ? COLOR_LINE[k]() : k} data-sw={k} onClick={() => pick(k)} />)}</span>;
   return <div class="mk-tools" role="toolbar" aria-label={t('mark.tools')} aria-orientation="vertical">
     {TOOLS.map(([k, icon, key]) => <IconButton icon={icon} label={TOOL_LINE[k]()} kbd={key.toUpperCase()} aria-pressed={bar === k ? 'true' : 'false'} data-tool={k} onClick={() => M.chooseTool(k)} />)}
-    {bar !== 'select' && bar !== 'erase' && <span class="sep" />}
-    {bar === 'hl' ? sw(HL, s.hlColor, M.chooseHl, t('mark.hl_color')) : bar === 'check' ? sw(COLORS, s.checkInk, M.chooseCheck, t('mark.check_color')) : bar !== 'select' && bar !== 'erase' ? sw(COLORS, s.inkColor, M.chooseInk, t('mark.ink')) : null}
+    <IconButton icon="stamp" label={t('mark.t_stamp')} aria-pressed={bar === 'stamp' ? 'true' : 'false'} onClick={() => M.setStampTool(bar !== 'stamp')} data-tool="stamp" />
+    {bar !== 'select' && bar !== 'erase' && bar !== 'stamp' && <span class="sep" />}
+    {bar === 'hl' ? sw(HL, s.hlColor, M.chooseHl, t('mark.hl_color')) : bar === 'check' ? sw(COLORS, s.checkInk, M.chooseCheck, t('mark.check_color')) : bar !== 'select' && bar !== 'erase' && bar !== 'stamp' ? sw(COLORS, s.inkColor, M.chooseInk, t('mark.ink')) : null}
     {bar === 'hl' && <span class="mk-hlm" role="group" aria-label={t('mark.hl_how')}><button type="button" aria-pressed={M.hlFree() ? 'false' : 'true'} title={t('mark.hl_snap_tip')} data-hlm="auto" onClick={() => M.setHlFree(false)}>{t('mark.hl_snap')}</button><button type="button" aria-pressed={M.hlFree() ? 'true' : 'false'} title={t('mark.hl_free_tip')} data-hlm="free" onClick={() => M.setHlFree(true)}>{t('mark.hl_free')}</button></span>}
     {bar === 'pen' && <span class="mk-w" role="group" aria-label={t('mark.width')}>{WIDTHS.map(([w, l]) => <button type="button" aria-pressed={s.penW === w ? 'true' : 'false'} title={l()} aria-label={l()} data-w={w} onClick={() => M.chooseWidth(w)}><i style={'--w:' + w} /></button>)}</span>}
     <span class="sep" />
