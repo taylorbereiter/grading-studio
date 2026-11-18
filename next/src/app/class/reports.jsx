@@ -98,6 +98,6 @@ function Words({ rc, onClose }) {
   };
   return <Dialog open title={t('class.rp_wording_t')} onClose={onClose} actions={<><Button onClick={() => setV(Object.fromEntries(B.RPT_SLOTS.map(([k]) => [k, B.RPT_WORDS[k].join('\n')])))}>{t('class.mis_builtin')}</Button><span class="grow" /><Button onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" onClick={go} data-rp-words-save>{t('class.save')}</Button></>}>
     <p class="mute small">{t('class.rp_words_say')}</p><p class="mute small">{t('class.rp_fills')}</p>
-    <div class="rpwords">{B.RPT_SLOTS.map(([k]) => <label class="cp-fld"><span class="lab">{t(SLOT[k])}</span><textarea class="input" rows="3" value={v[k]} onInput={ev => setV({ ...v, [k]: ev.currentTarget.value })} data-rp-slot={k} /></label>)}</div>
+    <div class="rpwords">{B.RPT_SLOTS.map(([k]) => <label class="cp-fld"><span class="lab">{t(SLOT[k])}</span><textarea class="input" rows="3" value={v[k]} onInput={ev => { const x = ev.currentTarget.value; setV(o => ({ ...o, [k]: x })); }} data-rp-slot={k} /></label>)}</div>
   </Dialog>;
 }

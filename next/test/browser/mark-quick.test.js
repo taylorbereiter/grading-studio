@@ -208,3 +208,96 @@ test('Quick mark in an MYP class: each question\'s criterion, the points that ea
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// The examples database as the current app makes it on its first save (the new app reads and writes it, never makes it).
+const exDbMake = () => new Promise((res, rej) => { const r = indexedDB.open('grading-studio-examples', 1); r.onupgradeneeded = () => { r.result.createObjectStore('ex'); r.result.createObjectStore('pix'); }; r.onsuccess = () => { r.result.close(); res(); }; r.onerror = () => rej(r.error); });
+const exRecs = p => p.evaluate(() => new Promise((res, rej) => { const r = indexedDB.open('grading-studio-examples'); r.onsuccess = () => { const tx = r.result.transaction('ex'), q = tx.objectStore('ex').getAll(); q.onsuccess = () => { r.result.close(); res(q.result.filter(x => !x.gone)); }; q.onerror = () => rej(q.error); }; r.onerror = () => rej(r.error); }));
+const menuPick = (p, text) => p.evaluate(t => { const b = [...document.querySelectorAll('.pop [role^="menuitem"]')].find(x => x.textContent.includes(t)); if (!b) throw new Error('no menu item ' + t); b.click(); }, text);
+
+test('Strong examples from the marking screen: E keeps a Quick mark answer and takes it back, a whole paper and part of a page kept with Use as an example, Make again from Library > Examples, and a screenshot kept on the watch list; the current app reads them all', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard()); await p.evaluate(exDbMake);
+  const z = path.join(dir, 'Quiz2.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+  // one question box, then E on the first student's answer
+  await setupDo(p, 'Quick mark');
+  await p.waitForSelector('dialog[open][data-qb] [data-qbpg="0"] canvas', { timeout: 60000 });
+  await box(p, 0, 0.1, 0.12, 0.6, 0.2);
+  await p.waitForFunction(() => document.querySelectorAll('[data-qb] [data-qbrow]').length === 1);
+  const q1 = await p.$eval('[data-qb] [data-qbrow]', e => e.dataset.qbrow);
+  await p.click('[data-qbsave]');
+  await p.waitForSelector('dialog[open][data-qm] .qmc img', { timeout: 60000 });
+  await p.focus(card(0, q1)); await p.keyboard.press('KeyE');
+  await p.waitForFunction(async () => true);
+  for (let i = 0; i < 100 && (await exRecs(p)).length < 1; i++) await new Promise(r => setTimeout(r, 100));
+  let recs = await exRecs(p);
+  assert.equal(recs.length, 1);
+  assert.deepEqual([recs[0].kind, recs[0].work, recs[0].asg, recs[0].cls, recs[0].q.id, recs[0].q.lab, recs[0].who && recs[0].who.c], ['answer', id, 'i9', 'c1', q1, '1', 'c1']);
+  // E again takes it back
+  await p.focus(card(0, q1)); await p.keyboard.press('KeyE');
+  for (let i = 0; i < 100 && (await exRecs(p)).length; i++) await new Promise(r => setTimeout(r, 100));
+  assert.equal((await exRecs(p)).length, 0);
+  await p.click('[data-qmclose]'); await p.waitForSelector('[data-quicktop]');
+  // Use as an example from the paper's ⋯: the whole paper, with the marks
+  await p.click('[data-fmenu]'); await p.waitForSelector('.pop [role^="menuitem"]');
+  await menuPick(p, 'Use as an example');
+  await p.waitForSelector('[data-esuse] [data-espg="0"] canvas', { timeout: 60000 });
+  await p.click('[data-essw="marks"] [role="switch"]');
+  await p.type('[data-eswhy] input, input[data-eswhy]', 'Neat working');
+  await p.click('[data-essave]');
+  for (let i = 0; i < 150 && (await exRecs(p)).length < 1; i++) await new Promise(r => setTimeout(r, 100));
+  recs = await exRecs(p);
+  assert.deepEqual(recs.map(r => [r.kind, r.letter, r.why, r.marks, r.pages.length]), [['paper', 'A', 'Neat working', true, 1]]);
+  // part of a page
+  await p.click('[data-fmenu]'); await p.waitForSelector('.pop [role^="menuitem"]');
+  await menuPick(p, 'Use as an example');
+  await p.waitForSelector('[data-esuse] [data-espg="0"] canvas', { timeout: 60000 });
+  await p.click('[data-esuse] [role="radio"][data-v="part"]');
+  const r = await p.$eval('[data-espg="0"]', e => { const b = e.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; });
+  await p.mouse.move(r.x + r.w * 0.1, r.y + r.h * 0.1); await p.mouse.down(); await p.mouse.move(r.x + r.w * 0.5, r.y + r.h * 0.3, { steps: 4 }); await p.mouse.up();
+  await p.waitForSelector('[data-espg="0"] .escrop');
+  await p.click('[data-essave]');
+  for (let i = 0; i < 150 && (await exRecs(p)).length < 2; i++) await new Promise(r => setTimeout(r, 100));
+  recs = await exRecs(p);
+  const part = recs.find(x => x.kind === 'part');
+  assert.ok(part && part.pages[0].w > 100 && part.pages[0].h > 50, 'part of a page kept');
+  // a screenshot on the watch list
+  await p.click('[data-snip]'); await p.waitForSelector('[data-snipthen="wl"]');
+  await p.click('[data-snipthen="wl"]');
+  await p.click('[data-snipall]');
+  await p.waitForSelector('[data-esshot] img', { timeout: 60000 });
+  await p.type('input[data-eswhy]', 'Mixes up the steps');
+  await p.click('[data-esshot-save]');
+  for (let i = 0; i < 150 && (await exRecs(p)).length < 3; i++) await new Promise(r => setTimeout(r, 100));
+  recs = await exRecs(p);
+  const wl = recs.find(x => x.watch);
+  assert.deepEqual(wl && [wl.kind, wl.letter, wl.why, wl.work, wl.who && wl.who.c], ['shot', '1', 'Mixes up the steps', id, 'c1']);
+  // Make again from Library > Examples, while the download is open: Example A without the marks now
+  await p.evaluate(() => { location.hash = '#/library/examples'; });
+  const paper = recs.find(x => x.kind === 'paper');
+  await p.waitForSelector('[data-exid="' + paper.id + '"] [data-exmenu]', { timeout: 60000 });
+  await p.click('[data-exid="' + paper.id + '"] [data-exmenu]'); await p.waitForSelector('.pop [role^="menuitem"]');
+  await menuPick(p, 'Make again from the paper');
+  await p.waitForSelector('[data-esuse] [data-espg="0"] canvas', { timeout: 60000 });
+  await p.click('[data-essw="marks"] [role="switch"]');
+  await p.click('[data-essave]');
+  for (let i = 0; i < 150 && ((await exRecs(p)).find(x => x.id === paper.id) || {}).marks !== false; i++) await new Promise(r => setTimeout(r, 100));
+  const again = (await exRecs(p)).find(x => x.id === paper.id);
+  assert.deepEqual([again.letter, again.why, again.marks], ['A', 'Neat working', false]);
+  // the current app reads them
+  await p.goto(srv.url + 'blank'); await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.waitForFunction(() => window.__gs.exList().length === 2 && window.__gs.exWatch().length === 1, { timeout: 30000 });
+  assert.deepEqual(await m.evaluate(() => window.__gs.exList().map(r => r.kind).sort()), ['paper', 'part']);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

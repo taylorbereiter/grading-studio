@@ -24,7 +24,7 @@ import './lines.js';
 
 // What-if: students left out of the class averages, per class, for this visit only and never saved (src/book.js bkLeftAll).
 const leftAll = {};
-const leftOf = id => leftAll[id] || (leftAll[id] = new Set());
+export const leftOf = id => leftAll[id] || (leftAll[id] = new Set());
 const onlyOn = () => prefs.get('gs.bkOnly', null) == 1;
 
 const keep = (k, v) => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem('gsn.book.' + k)); sessionStorage.setItem('gsn.book.' + k, JSON.stringify(v)); } catch {} return null; };
@@ -53,7 +53,7 @@ const low = (cell, col) => col.type !== 'xc' && col.type !== 'fm' && cell && cel
 export default function Grades({ classId }) {
   const b = useBook(), [show, setShow] = useState(() => keep('show') || 'pct'), [term, setTerm] = useState(() => keep('term:' + classId)), tab = useRef(null);
   const [box, setBox] = useState(null), [whole, setWhole] = useState(false), [Imp, setImp] = useState(null), [only, setOnly] = useState(onlyOn), [pick, setPick] = useState(false), [, redraw] = useState(0);
-  const Gl = usePart('goals', !!(box && box.goals)), Rp = usePart('reports', !!(box && box.reports));
+  const Gl = usePart('goals', !!(box && box.goals)), Rp = usePart('reports', !!(box && box.reports)), Ps = usePart('sheets', !!(box && box.sheets));
   if (!b) return <div class="loading" aria-busy="true" />;
   const x = classBook(b, classId);
   if (x && handoff.rows && handoff.cls === classId && !box) { const rows = handoff.rows; handoff.rows = null; PARTS.bki().then(m => { setImp(() => m.ImportSheet); setBox({ imp: true, rows }); }); }
@@ -107,9 +107,12 @@ export default function Grades({ classId }) {
       <button type="button" class="gl2" onClick={() => setBox({ goals: true })} data-open-goals><span class="ic"><Icon name="target" /></span>
       <span><b>{t('class.gl_title')} <Icon name="chr" size="xs" /></b><p>{t('class.gl_card_say')}</p></span></button>
       <button type="button" class="gl2" onClick={() => setBox({ reports: true })} data-open-reports><span class="ic"><Icon name="edit" /></span>
-      <span><b>{t('class.rp_title')} <Icon name="chr" size="xs" /></b><p>{t('class.rp_card_say')}</p></span></button></div>}
+      <span><b>{t('class.rp_title')} <Icon name="chr" size="xs" /></b><p>{t('class.rp_card_say')}</p></span></button>
+      <button type="button" class="gl2" onClick={() => setBox({ sheets: true })} data-open-sheets><span class="ic"><Icon name="file" /></span>
+      <span><b>{t('class.pss_open_all')} <Icon name="chr" size="xs" /></b><p>{t('class.pss_card_say')}</p></span></button></div>}
     {box && box.goals && Gl && <Gl.GoalsSheet x={x} cols={table ? cols : x.cols} term={on} left={left} onClose={() => setBox(null)} />}
     {box && box.reports && Rp && <Rp.ReportsSheet x={x} cols={table ? cols : x.cols} term={on} onClose={() => setBox(null)} />}
+    {box && box.sheets && Ps && <Ps.SheetsSheet x={x} term={on} left={left} onClose={() => setBox(null)} />}
     {box && box.charts && <ChartsSheet x={x} cols={cols} all={b.cols} term={on} left={left} labelOf={labelOf} onClose={() => setBox(null)} />}
     {box && box.col && <ColDialog col={box.col} conf={conf} labelOf={labelOf} onClose={() => setBox(null)} onEditTyped={id => setBox({ add: true, itId: id })} />}
     {box && box.types && <TypesDialog cols={untyped} onClose={() => setBox(null)} />}

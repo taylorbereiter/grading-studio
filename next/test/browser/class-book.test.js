@@ -661,7 +661,15 @@ test('Pick a name from the class header: nobody twice, groups of 3, groups by ha
   await p.click('[data-pick-name]');
   await p.waitForSelector('[data-picker] [data-pk-name]');
   const picked = [await p.$eval('[data-pk-name]', e => e.textContent)];
-  for (let i = 1; i < N.length; i++) { await p.keyboard.press('Space'); picked.push(await p.$eval('[data-pk-name]', e => e.textContent)); }
+  // each Space shows the next name (pressed again if it came before the picker listened for keys)
+  for (let i = 1; i < N.length; i++) {
+    const was = picked[picked.length - 1];
+    for (let k = 0; k < 20; k++) {
+      await p.keyboard.press('Space');
+      const now = await p.waitForFunction(w => { const t = document.querySelector('[data-pk-name]').textContent; return t !== w && t; }, { timeout: 1000 }, was).then(h => h.jsonValue(), () => null);
+      if (now) { picked.push(now); break; }
+    }
+  }
   assert.equal(new Set(picked).size, N.length);
   // groups of 3
   await p.keyboard.press('g'); await p.keyboard.press('3');
@@ -805,6 +813,7 @@ test('Report comments: each draft is the current app\'s draft, edited and marked
   // short comments
   await p.evaluate(() => [...document.querySelectorAll('.rptopts [role="radio"]')].find(b => b.dataset.v === 'short').click());
   await p.waitForFunction(() => ((JSON.parse(localStorage.getItem('gs.lib')).book || {}).rep || {}).len === 'short');
+  await p.waitForFunction(v => document.querySelector('[data-rp-text]').value !== v, {}, was[1]);   // the shown draft follows the length
   const short = await p.$eval('[data-rp-text]', e => e.value);
   // the current app reads all of it back
   const old2 = await page(ctx, errors);
@@ -813,6 +822,204 @@ test('Report comments: each draft is the current app\'s draft, edited and marked
   assert.equal(back.len, 'short'); assert.equal(back.rep.year.done, true); assert.match(back.rep.year.text, /A pleasure to teach\.$/);
   assert.equal(short, back.drafts[1]);
   await old2.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+const sheetNums = sel => `[...document.querySelectorAll('${sel} .pss')].map(a => ({ n: a.dataset.pss, tiles: [...a.querySelectorAll('.psst b')].map(b => b.textContent.replace(/\\s+/g, ' ').trim()), cells: [...a.querySelectorAll('.psstab td.pssv')].map(b => b.textContent.replace(/\\s+/g, ' ').trim()) }))`;
+test('Progress sheets: every student\'s page has the current app\'s numbers, the choices kept where the current app reads them, and Print shows only the sheets', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const old = await page(ctx, errors);
+  await old.goto(srv.url + 'blank'); await plant(old, bookSeed());
+  await old.goto(srv.url); await appReady(old);
+  await old.evaluate(() => { location.hash = '#/class/c1/students'; });
+  await old.waitForSelector('[data-pssall]'); await old.click('[data-pssall]');
+  await old.waitForSelector('#pssPages .pss'); await old.click('[data-pssterm="*"]');
+  await old.waitForFunction(() => document.querySelector('[data-pssterm="*"]').getAttribute('aria-selected') === 'true');
+  const was = await old.evaluate(sheetNums('#pssPages'));
+  await old.close();
+  assert.ok(was.length > 3 && was[0].tiles.length > 2 && was[0].cells.length > 5);
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForFunction(() => window.__class && document.querySelector('table.book'), { timeout: 60000 });
+  await p.click('[data-open-sheets]');
+  await p.waitForSelector('[data-pss-sheet] .pss');
+  await p.evaluate(() => document.querySelector('[data-pss-sheet] .pssbar [data-v="*"]').click());
+  await p.waitForFunction(() => document.querySelector('[data-pss-sheet] .pssbar [data-v="*"]').getAttribute('aria-checked') === 'true');
+  const now = await p.evaluate(sheetNums('[data-pss-sheet]'));
+  assert.deepEqual(now, was);
+  // the three choices
+  await p.click('[data-pss-opt="notes"] input');
+  await p.waitForFunction(() => ((JSON.parse(localStorage.getItem('gs.lib')).book || {}).sheet || {}).notes === false);
+  await p.waitForFunction(() => !document.querySelector('[data-pss-sheet] .pssnotes'));
+  // Print: only the sheets are left for the printer
+  await p.evaluate(() => { window.__printed = 0; window.print = () => { window.__printed++; }; });
+  await p.click('[data-pss-print]');
+  assert.equal(await p.evaluate(() => window.__printed), 1);
+  assert.equal(await p.$$eval('#pssPrint .pss', a => a.length), was.length);
+  await p.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+  assert.equal(await p.$('#pssPrint'), null);
+  const old2 = await page(ctx, errors);
+  await old2.goto(srv.url); await appReady(old2);
+  assert.deepEqual(await old2.evaluate(() => window.__gs.state().lib.book.sheet), { notes: false });
+  await old2.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('A student\'s details and Settings > Classes: ID and email edited and opened in the mail app chosen in Settings, attendance turned off; the current app reads the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  // Settings: Outlook on the web, and attendance off
+  await p.goto(srv.url + 'next/#/settings/classes');
+  await p.waitForSelector('[data-sgmail] [data-v="outlook"]', { timeout: 60000 });
+  await p.click('[data-sgmail] [data-v="outlook"]');
+  await p.waitForFunction(() => localStorage.getItem('gs.mailApp') === '"outlook"');
+  await p.click('[data-sgatt] [role="switch"]');
+  await p.waitForFunction(() => (JSON.parse(localStorage.getItem('gs.lib')).me || {}).att === false);
+  // a student's details
+  await p.goto(srv.url + 'next/#/class/c1/people/2');
+  await p.waitForSelector('[data-details]', { timeout: 60000 });
+  assert.equal(await p.$('[data-att-open]'), null, 'attendance is off');
+  await p.click('[data-det-edit]'); await p.waitForSelector('[data-det="email"]');
+  await p.type('[data-det="id"]', 'S-1042'); await p.type('[data-det="email"]', 'pat.madeup@example.org');
+  await p.click('[data-det-save]');
+  await p.waitForSelector('[data-det-mail]');
+  await p.evaluate(() => { window.__mails = []; window.__gsMailTest = (h, u) => window.__mails.push([h, u]); });
+  await p.click('[data-det-mail]');
+  await p.waitForFunction(() => window.__mails.length > 0);
+  const [href, url] = await p.evaluate(() => window.__mails[0]);
+  assert.equal(href, 'mailto:pat.madeup@example.org');
+  assert.match(url, /^https:\/\/outlook\.office\.com\/mail\/deeplink\/compose\?to=pat\.madeup%40example\.org$/);
+  const n = (await libOf(p)).classes[0].names[1];
+  await p.waitForFunction(n => { const i = (JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}; return i.id === 'S-1042' && i.email === 'pat.madeup@example.org'; }, {}, n);
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const main = await old.evaluate(n => { const l = window.__gs.state().lib, i = l.classes[0].info[n]; return { id: i.id, email: i.email, att: l.me.att, mail: JSON.parse(localStorage.getItem('gs.mailApp')) }; }, n);
+  assert.deepEqual(main, { id: 'S-1042', email: 'pat.madeup@example.org', att: false, mail: 'outlook' });
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Strong examples and the watch list, kept in the current app's own database (grading-studio-examples: ex, pix) as the current app
+// saves them: two strong examples and one concern on a made-up student, with plain pictures drawn here.
+const exSeed = `async names => {
+  const pic = async (shade) => { const c = document.createElement('canvas'); c.width = 400; c.height = 300; const x = c.getContext('2d'); x.fillStyle = shade; x.fillRect(0, 0, 400, 300); x.fillStyle = '#333'; x.fillRect(40, 40, 320, 20); return new Promise(r => c.toBlob(r, 'image/jpeg', 0.8)); };
+  const now = Date.now(), base = { work: null, asg: 'i1', cls: 'c1', title: 'Fractions quiz', q: null, row: null, marks: true, score: false, from: null, pages: [{ w: 400, h: 300 }] };
+  const recs = [
+    { ...base, id: 'exa', t: now - 3000, kind: 'paper', letter: 'A', why: 'Shows every step', tags: ['steps', 'Unit 1'], who: { c: 'c1', n: names[0] } },
+    { ...base, id: 'exb', t: now - 2000, kind: 'shot', letter: '1', why: '', tags: ['diagrams'], who: { c: 'c1', n: names[1] } },
+    { ...base, id: 'wla', t: now - 1000, kind: 'shot', letter: '1', why: 'Mixes up mean and median', tags: [], who: { c: 'c1', n: names[1] }, watch: 1 },
+  ];
+  const blobs = await Promise.all(recs.map((r, i) => pic(['#dde', '#ede', '#eed'][i])));
+  const db = await new Promise((res, rej) => { const r = indexedDB.open('grading-studio-examples', 1); r.onupgradeneeded = () => { r.result.createObjectStore('ex'); r.result.createObjectStore('pix'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  await new Promise((res, rej) => { const tx = db.transaction(['ex', 'pix'], 'readwrite'); recs.forEach((r, i) => { tx.objectStore('ex').put(r, r.id); tx.objectStore('pix').put(blobs[i], r.id + '|0'); }); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+  db.close();
+}`;
+
+test('Library > Examples and the watch list: the current app\'s examples shown, filtered, edited and deleted; a student\'s strengths and concerns on their page; the current app reads the changes', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  const names = (await libOf(p)).classes[0].names;
+  await p.evaluate(`(${exSeed})(${JSON.stringify(names)})`);
+  // the current app reads them as they are
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  await old.waitForFunction(() => window.__gs.exList().length === 2);
+  const mainBefore = await old.evaluate(() => ({ ex: window.__gs.exList().map(r => r.id).sort(), watch: window.__gs.exWatch().map(r => r.id) }));
+  assert.deepEqual(mainBefore, { ex: ['exa', 'exb'], watch: ['wla'] });
+  await old.close();
+  // Library > Examples: the two strong ones, with no names on them
+  await p.goto(srv.url + 'next/#/library/examples');
+  await p.waitForSelector('[data-exid="exa"]', { timeout: 60000 });
+  const cards = () => p.$$eval('[data-exid]', l => l.map(e => e.getAttribute('data-exid')).sort());
+  assert.deepEqual(await cards(), ['exa', 'exb']);
+  // a tag narrows the list
+  await p.click('[data-exid="exb"] [data-extag="diagrams"]');
+  await p.waitForFunction(() => document.querySelectorAll('[data-exid]').length === 1);
+  assert.deepEqual(await cards(), ['exb']);
+  await p.click('[data-exclear]');
+  await p.waitForFunction(() => document.querySelectorAll('[data-exid]').length === 2);
+  // why it's strong, added to the second
+  await p.click('[data-exid="exb"] [data-exmenu]');
+  await p.waitForSelector('.pop [role^="menuitem"]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role^="menuitem"]')].find(b => /why it/.test(b.textContent)).click());
+  await p.waitForSelector('[data-exedit]'); await p.type('[data-exedit]', 'Labels every part');
+  await p.click('[data-exedit-save]');
+  await p.waitForFunction(() => /Labels every part/.test((document.querySelector('[data-exid="exb"] .exwhy') || {}).textContent || ''));
+  // Show to the class: no names, arrows move, Esc closes
+  await p.click('[data-exshow]'); await p.waitForSelector('[data-exshow-on]');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('[data-exshow-on]'));   // the keys are listened for once it has focus
+  assert.equal(await p.$eval('[data-exshow-on]', (e, N) => N.some(n => e.textContent.includes(n)), names), false);
+  await p.keyboard.press('ArrowRight');
+  await p.waitForFunction(() => /^2/.test(document.querySelector('[data-exshow-at]').textContent));
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('[data-exshow-on]'));
+  // the watch list
+  await p.click('[data-v="watch"]');
+  await p.waitForSelector('[data-exid="wla"]');
+  assert.deepEqual(await cards(), ['wla']);
+  // delete the first strong example
+  await p.click('[data-v="ex"]'); await p.waitForSelector('[data-exid="exa"] [data-exmenu]');
+  await p.click('[data-exid="exa"] [data-exmenu]');
+  await p.waitForSelector('.pop [role^="menuitem"]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role^="menuitem"]')].find(b => /Delete/.test(b.textContent)).click());
+  await p.waitForFunction(() => !document.querySelector('[data-exid="exa"]'));
+  // the second student's page: one strength and one concern
+  await p.goto(srv.url + 'next/#/class/c1/people/2');
+  await p.waitForSelector('[data-wl-stu]', { timeout: 60000 });
+  assert.equal(await p.$$eval('[data-wl-stu] .wltime li', l => l.map(e => e.className).sort().join(',')), 'g,w');
+  // the current app reads the same
+  const old2 = await page(ctx, errors);
+  await old2.goto(srv.url); await appReady(old2);
+  await old2.waitForFunction(() => window.__gs.exList().length === 1);
+  const mainAfter = await old2.evaluate(n => ({ ex: window.__gs.exList().map(r => [r.id, r.why]), watch: window.__gs.exWatch().length, wl: window.__gs.wlOf ? (window.__gs.wlOf('c1', n) || []).length : 2 }), names[1]);
+  assert.deepEqual(mainAfter.ex, [['exb', 'Labels every part']]);
+  assert.equal(mainAfter.watch, 1);
+  await old2.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Linked classes: two classes linked, a card made in each joined, an assignment added to the other class and unlinked; the current app reads the same links', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  const seed = bookSeed(), L = JSON.parse(seed.ls['gs.lib']);
+  L.classes[1].units = [{ id: 'u20', name: 'Unit 1: Stories', items: [{ id: 'k2', name: 'Story map', classId: 'c2', type: 'fm', due: '2026-09-06' }] }];
+  seed.ls['gs.lib'] = JSON.stringify(L);
+  await p.goto(srv.url + 'blank'); await plant(p, seed);
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-lkhead] [data-lkedit]', { timeout: 60000 });
+  await p.click('[data-lkedit]'); await p.waitForSelector('[data-lkpick="c2"] input');
+  await p.click('[data-lkpick="c2"] input');
+  await p.type('[data-lkcourse] input, input[data-lkcourse]', 'English');
+  await p.click('[data-lksave]');
+  await p.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); return l.classes[0].course === 'English' && l.classes[1].course === 'English'; });
+  // the cards made in each class that look alike: Story map ticked
+  await p.waitForSelector('[data-lkrow="0"] input');
+  assert.equal(await p.$eval('[data-lkrow="0"] input', e => e.checked), true);
+  await p.click('[data-lkmatch-save]');
+  await p.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')), a = l.classes[0].units[0].items.find(x => x.id === 'i2'), b = l.classes[1].units[0].items[0]; return a.group && a.group === b.group; });
+  await p.waitForSelector('[data-item="i2"] [data-lktw]');
+  // Narrative essay added to the other class, in the unit of the same name
+  await p.click('[data-more-for="i3"]'); await p.waitForSelector('.pop [role^="menuitem"]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role^="menuitem"]')].find(b => /Add to Grade 10/.test(b.textContent)).click());
+  await p.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); return l.classes[1].units[0].items.some(x => x.name === 'Narrative essay'); });
+  const lib1 = await libOf(p), i3 = lib1.classes[0].units[0].items.find(x => x.id === 'i3'), copy = lib1.classes[1].units[0].items.find(x => x.name === 'Narrative essay');
+  assert.equal(copy.group, i3.group); assert.equal(copy.due, i3.due); assert.equal(copy.type, i3.type); assert.equal(lib1.classes[1].units.length, 1);
+  // the current app reads the links
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const main = await old.evaluate(cid => ({ sibs: window.__gs.lkSibs('c1'), i2: window.__gs.lkTwins('i2'), i3: window.__gs.lkTwins('i3'), copy: window.__gs.lkTwins(cid) }), copy.id);
+  assert.deepEqual(main, { sibs: ['c2'], i2: ['k2'], i3: [copy.id], copy: ['i3'] });
+  await old.close();
+  // Unlink Narrative essay: neither copy keeps the group
+  await p.reload(); await p.waitForSelector('[data-item="i3"] [data-lktw]', { timeout: 60000 });
+  await p.click('[data-more-for="i3"]'); await p.waitForSelector('.pop [role^="menuitem"]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role^="menuitem"]')].find(b => /Unlink/.test(b.textContent)).click());
+  await p.waitForFunction(id => { const l = JSON.parse(localStorage.getItem('gs.lib')); return !l.classes[0].units[0].items.find(x => x.id === 'i3').group && !l.classes[1].units[0].items.find(x => x.id === id).group; }, {}, copy.id);
   assert.deepEqual(errors, []);
   await ctx.close();
 });

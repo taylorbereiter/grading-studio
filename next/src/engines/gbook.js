@@ -58,6 +58,8 @@ let bkCatsSeen;
 // src/app/start.js
 const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 // src/app/library.js
+const uid = () => Math.random().toString(36).slice(2, 10);
+// src/app/library.js
 const ME_OLD = { sys: 'ManageBac', unit: 'Atlas', scale12: true, ai: 'Claude' };   // scale12: Rubric setup offers the 12-point scale (12 = 100, 11 = 95…) as a preset
 // src/app/library.js
 const me = () => lib.me || ME_OLD;
@@ -737,6 +739,8 @@ function classNewWay() { const g = meGrade(); return (g && g.way === 'myp') || /
 // src/ib.js
 function ibConf(c, conf) { const w = classWay(c) === 'dp' && c.ib && c.ib.w && typeof c.ib.w === 'object' ? c.ib.w : null; return w ? { ...conf, w: { ...conf.w, ...w } } : conf; }
 // src/ib.js
+function ibPredOf(c, name, term) { const p = ((c.pred || {})[term == null ? ibTermKey() : term] || {})[name]; return p && Number.isInteger(p.g) && p.g >= 1 && p.g <= 7 ? p.g : null; }
+// src/ib.js
 const ibTermKey = () => bk.term == null ? '' : bk.term;
 // src/ib.js
 function ibCols(c, cols) {
@@ -975,5 +979,65 @@ function misHref(m, noBody) {
 }
 // src/missing.js
 const misPlain = m => (m.to ? 'To: ' + m.to.replace(/,/g, ', ') + '\n' : '') + (m.bcc ? 'Bcc: ' + m.bcc.replace(/,/g, ', ') + '\n' : '') + 'Subject: ' + m.subject + '\n\n' + m.body;
-export { BK_TYPES, bkConf, bkCats, bkType, bkIsType, bkIsDef, bkLabel, bkTermOf, bkMean, bkCellOf, bkTypedCell, bkLoad, bkClassCols, bkCounts, bkGrade, bkXcTo, bkTabs, bkTermNow, bkClassAvg, bkBands, bkGroups, bkCountTypes, pctAvgText, bkParse, bkCellVal, bkColMax, bkPut, typedStamp, isoDay, bkDay, BK_DEF, rosterPairs, bkTypeUse, IB_TOP, IB_BANDS, IB_GROUPS, IB_WAYS, IB_BOUNDS_DP, ibLetter, classWay, ibGroup, ibGroupCrit, ibBoundsFor, ibBoundsClean, ibCrit, ibBounds, ibGradeOf, ibLevel, ibBandName, ibTerm, ibEvidence, ibConf, ibCols, ibEvFor, ibMid, MIS_WORDS, misConf, misCols, misOwes, misByStu, misByCol, misNudge, misLate, misDue, mbParts, mbSorted, MB_ORDERS, parseRosterRows, keepInfo, keepAtt, infoOf, setInfo, blankInfo, attDays, attCount, attOf, attNote, classNewWay, ATT_WAYS, attRec, attDayOk, attSet, attTake, attClear, attDayCount, attUnknown, attMeets, attStep, csvSafe, SEAT_ROOMS, SEAT_MAX_W, SEAT_MAX_H, seatXY, seatKeys, seatRoom, seatOf, seatSave, seatList, seatFill, seatPut, seatSetRoom, pkNice, pkShort, pkShuffle, pkCount, pkGroups, misDraft, misGroup, misHref, misPlain, misEmail, misLine, misFill, misClassName, rptCall, goalList, goalData, GOAL_LOW, RPT_WORDS, RPT_SLOTS, RPT_PROS, RPT_LEN, rptConf, rptEntry, rptPut, rptPro, rptFacts, rptDraft, rptText };
+// src/linked.js
+function lkKey(s) { return String(s || '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, ''); }
+// src/linked.js
+function lkSibs(c) { return c && c !== lib.loose && lkKey(c.course) ? lib.classes.filter(x => x !== c && lkKey(x.course) === lkKey(c.course)) : []; }
+// src/linked.js
+function lkTwins(it) {
+  const out = []; if (!it || !it.group) return out;
+  for (const c of holders()) for (const u of c.units) for (const x of u.items) if (x !== it && x.group === it.group) out.push({ c, u, it: x });
+  return out;
+}
+// src/linked.js
+function lkCopy(v) { return v == null ? v : JSON.parse(JSON.stringify(v)); }
+// src/linked.js
+function lkJoin1(a, b) {
+  const g = a.group || b.group || uid(), old = b.group;
+  for (const c of holders()) for (const u of c.units) for (const x of u.items) if (old && x.group === old) x.group = g;
+  a.group = b.group = g;
+}
+// src/linked.js
+function lkLev(a, b) {
+  if (Math.abs(a.length - b.length) > 3) return 9;
+  let p = [...Array(b.length + 1).keys()];
+  for (let i = 1; i <= a.length; i++) { const q = [i]; for (let j = 1; j <= b.length; j++) q[j] = Math.min(p[j] + 1, q[j - 1] + 1, p[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); p = q; }
+  return p[b.length];
+}
+// src/linked.js
+function lkLike(a, b, drop) {
+  const words = it => { let t = String(it.name || '').normalize('NFKC').toLowerCase().replace(/\s*[([][^)\]]*[)\]]\s*$/, ''); for (const d of drop) if (d) t = t.split(d).join(' '); return t.match(/[\p{L}]+|\p{N}+/gu) || []; };
+  const wa = words(a), wb = words(b), ka = wa.join(''), kb = wb.join('');
+  if (!ka || !kb) return 0;
+  const num = w => w.filter(x => /^\p{N}/u.test(x)).join(' ');
+  const odd = (a.type && b.type && a.type !== b.type) || (a.due && b.due && Math.abs(Date.parse(a.due) - Date.parse(b.due)) > 21 * 864e5);
+  if (ka === kb) return odd ? 1 : 2;   // the same name, but another type or weeks apart: offered, not ticked
+  if (odd || num(wa) !== num(wb)) return 0;
+  const la = wa.filter(x => !/^\p{N}/u.test(x)), lb = wb.filter(x => !/^\p{N}/u.test(x)), sb = new Set(lb);
+  const dice = la.length + lb.length ? 2 * la.filter(x => sb.has(x)).length / (la.length + lb.length) : 0, ja = la.join(''), jb = lb.join('');
+  return dice >= 0.8 || (ja.length > 3 && lkLev(ja, jb) <= Math.max(1, Math.floor(ja.length * 0.15))) ? 1 : 0;
+}
+// src/linked.js
+function lkSuggest(c) {
+  const out = [], mine = c.units.flatMap(u => u.items.map(it => ({ u, it })));
+  for (const x of lkSibs(c)) {
+    const drop = [c.name, x.name, c.course].map(d => String(d || '').normalize('NFKC').toLowerCase().trim()), theirs = x.units.flatMap(u => u.items.map(it => ({ u, it })));
+    const inX = new Set(theirs.map(t => t.it.group).filter(Boolean)), inC = new Set(mine.map(m => m.it.group).filter(Boolean)), all = [];
+    for (const m of mine) for (const t of theirs) {
+      if ((m.it.group && inX.has(m.it.group)) || (t.it.group && inC.has(t.it.group))) continue;
+      const k = lkLike(m.it, t.it, drop); if (!k) continue;
+      const days = m.it.due && t.it.due ? Math.abs(Date.parse(m.it.due) - Date.parse(t.it.due)) / 864e5 : 99;
+      all.push({ a: m.it, b: t.it, x, k, w: k * 1000 + (lkKey(m.u.name) === lkKey(t.u.name) ? 100 : 0) - Math.min(days, 99) });
+    }
+    all.sort((p, q) => q.w - p.w);
+    const used = new Set();
+    for (const p of all) {
+      if (used.has(p.a) || used.has(p.b)) continue;
+      if (all.some(q => q !== p && q.w === p.w && !used.has(q.a) && !used.has(q.b) && (q.a === p.a || q.b === p.b))) { used.add(p.a); used.add(p.b); continue; }
+      used.add(p.a); used.add(p.b); out.push(p);
+    }
+  }
+  return out;
+}
+export { BK_TYPES, bkConf, bkCats, bkType, bkIsType, bkIsDef, bkLabel, bkTermOf, bkMean, bkCellOf, bkTypedCell, bkLoad, bkClassCols, bkCounts, bkGrade, bkXcTo, bkTabs, bkTermNow, bkClassAvg, bkBands, bkGroups, bkCountTypes, pctAvgText, bkParse, bkCellVal, bkColMax, bkPut, typedStamp, isoDay, bkDay, BK_DEF, rosterPairs, bkTypeUse, IB_TOP, IB_BANDS, IB_GROUPS, IB_WAYS, IB_BOUNDS_DP, ibLetter, classWay, ibGroup, ibGroupCrit, ibBoundsFor, ibBoundsClean, ibCrit, ibBounds, ibGradeOf, ibLevel, ibBandName, ibTerm, ibEvidence, ibConf, ibCols, ibEvFor, ibMid, MIS_WORDS, misConf, misCols, misOwes, misByStu, misByCol, misNudge, misLate, misDue, mbParts, mbSorted, MB_ORDERS, parseRosterRows, keepInfo, keepAtt, infoOf, setInfo, blankInfo, attDays, attCount, attOf, attNote, classNewWay, ATT_WAYS, attRec, attDayOk, attSet, attTake, attClear, attDayCount, attUnknown, attMeets, attStep, csvSafe, SEAT_ROOMS, SEAT_MAX_W, SEAT_MAX_H, seatXY, seatKeys, seatRoom, seatOf, seatSave, seatList, seatFill, seatPut, seatSetRoom, pkNice, pkShort, pkShuffle, pkCount, pkGroups, misDraft, misGroup, misHref, misPlain, misEmail, misLine, misFill, misClassName, rptCall, goalList, goalData, GOAL_LOW, RPT_WORDS, RPT_SLOTS, RPT_PROS, RPT_LEN, rptConf, rptEntry, rptPut, rptPro, rptFacts, rptDraft, rptText, bkScored, bkIn, ibLvAt, ibPredOf, lkKey, lkSibs, lkTwins, lkCopy, lkJoin1, lkLev, lkLike, lkSuggest };
 export { EMAIL_RX };

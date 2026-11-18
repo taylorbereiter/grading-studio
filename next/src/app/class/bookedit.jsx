@@ -33,7 +33,7 @@ export function setCol(col, part) {
 // The column box: what bkColMenu shows, changed as she picks (the current app saves each choice at once too).
 export function ColDialog({ col, conf, labelOf, onClose, onEditTyped }) {
   const [v, setV] = useState({ type: col.type, due: col.due || '', term: col.term || '', xcTo: B.bkXcTo(col, conf) });
-  const put = part => { setV({ ...v, ...part }); setCol(col, part); };
+  const put = part => { setV(o => ({ ...o, ...part })); setCol(col, part); };
   const terms = conf.terms, byDate = (terms.find(x => x.id === B.bkTermOf({ ...col, due: v.due, term: '' }, terms)) || { name: t('class.term_none') }).name;
   return <Dialog open title={<span data-raw>{col.name}</span>} onClose={onClose} actions={<Button variant="primary" onClick={onClose} data-col-done>{t('class.done')}</Button>}>
     <div class="cp-col" data-col-box={col.key}>
@@ -135,6 +135,8 @@ export function AddSheet({ c, cols, conf, labelOf, itId, xc: wantXc, onClose }) 
     mode: ty0 && !ty0.max && it.type !== 'xc' ? 'pct' : 'pts', max: ty0 && ty0.max ? ty0.max : 20, xcTo: (it && it.xcTo) || conf.xcTo || 'term', give: 1 }));
   const [s, setS] = useState(() => JSON.parse(JSON.stringify((ty0 && ty0.s) || {})));
   const [note, setNote] = useState(''), [err, setErr] = useState('');
+  // a card with copies in linked classes (src/linked.js lkAlsoHtml): its name, type and due date can go to them too
+  const tw = it && it.group ? B.lkTwins(it) : [], [also, setAlso] = useState(true);
   const xc = a.type === 'xc', fm = a.type === 'fm', max = a.mode === 'pct' ? null : Math.max(0.5, +a.max || 0) || null;
   const empty = c.units.flatMap(u => u.items).filter(x => !x.typed && !x.batchId && x.type !== 'xc' && x.name && !cols.some(k => k.key === x.id));
   const setOne = (n, part) => setS({ ...s, [n]: { ...(s[n] || {}), ...part } });
@@ -168,7 +170,8 @@ export function AddSheet({ c, cols, conf, labelOf, itId, xc: wantXc, onClose }) 
       const was = it && itemIn(l, it.id), typed = B.typedStamp(was && was.typed, { max: xc ? null : max, s: out });
       const card = !was && k.units.flatMap(u => u.items).find(x => !x.typed && !x.batchId && x.type !== 'xc' && x.name && x.name.trim().toLowerCase() === name.toLowerCase() && empty.some(e => e.id === x.id));
       if (card) Object.assign(card, { type: card.type || a.type, due: card.due || a.due, typed });
-      else if (was) { Object.assign(was, { name, type: a.type, due: a.due, typed }); if (xc) was.xcTo = a.xcTo; else delete was.xcTo; }
+      else if (was) { const old = { name: was.name, type: was.type, due: was.due }; Object.assign(was, { name, type: a.type, due: a.due, typed }); if (xc) was.xcTo = a.xcTo; else delete was.xcTo;
+        if (also && tw.length && was.group) for (const h of [...l.classes, l.loose].filter(Boolean)) for (const u of h.units || []) for (const x of u.items) if (x !== was && x.group === was.group) for (const k of ['name', 'type', 'due']) if (was[k] !== old[k]) { if (was[k] == null) delete x[k]; else x[k] = was[k]; } }
       else {
         let u = k.units.find(x => x.id === a.unit);
         if (!u) k.units.push(u = { id: uid(), name: k.units.length ? unitTyped : unit1, items: [] });
@@ -194,6 +197,7 @@ export function AddSheet({ c, cols, conf, labelOf, itId, xc: wantXc, onClose }) 
           {a.mode === 'pts' && <input class="input cp-max" type="number" min="0.5" step="0.5" value={a.max} aria-label={t('class.out_of_l')} onInput={e => setA({ ...a, max: e.currentTarget.value })} data-add-max />}</div></div>}
         {xc && <div class="cp-fld"><span class="lab">{t('class.adds_to')}</span><Segmented size="sm" label={t('class.adds_to')} value={a.xcTo} onChange={x => setA({ ...a, xcTo: x })} options={xcChoices(labelOf)} /></div>}
       </div>
+      {tw.length > 0 && <span data-add-also><Checkbox label={t('class.lk_also_do', { names: tw.map(x => x.c.name || t('nav.no_class')).join(', ') })} checked={also} onChange={setAlso} /></span>}
       {xc && <><div class="cp-xcall"><span>{t('class.give')}</span><input class="input cp-sc" type="number" step="0.5" min="0" value={a.give} aria-label={t('class.give_pts')} onInput={e => setA({ ...a, give: e.currentTarget.value })} /><span>{t('class.points_to')}</span>
         <Button size="sm" onClick={() => { const v = Math.max(0, hp(a.give)) || 0, o = { ...s }; for (const n of c.names) o[n] = { v }; setS(o); }}>{t('class.give_all')}</Button>
         <Button size="sm" onClick={() => { const v = Math.max(0, hp(a.give)) || 0, o = { ...s }; for (const n of c.names) if (!(+((o[n] || {}).v) > 0)) o[n] = { v }; setS(o); }}>{t('class.give_none')}</Button>

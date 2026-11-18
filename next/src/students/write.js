@@ -11,13 +11,14 @@
 // Every write first checks: this window holds the lock; the saved work is at the format this build knows (the new app never
 // changes the format); no other window has started replacing everything; and a download that was forgotten stays forgotten.
 // The merge engine is the current app's own (engines/merge.js), loaded on the first write so it is not in the first load.
-import { papers, edits, added, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame, readings, videos, rubricPages } from './index.js';
+import { papers, edits, added, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame, readings, videos, rubricPages, watchCodes } from './index.js';
 import { words } from '../planning/index.js';
 import { mayWrite } from '../shared/lock.js';
 import { json, text, setText, remove } from '../shared/ls.js';
 import * as tabs from '../shared/tabs.js';
 import { saved } from '../shared/saved.js';
 import { KNOWN } from '../services/assistant.js';
+import { writeMany } from '../shared/idb.js';
 
 export const DATA_V = __GS_DATA_V__;
 export class CannotSave extends Error { constructor(why, what) { super(what + ': ' + why); this.name = 'CannotSave'; this.why = why; } }
@@ -213,3 +214,24 @@ export async function keepVideo(file, id) {
   saved({ kind: 'video', id, side: 'students' });
   return id;
 }
+
+/* strong examples and the watch list (grading-studio-examples: ex and pix; src/examples.js exPut, exDelete) */
+// A record and its pictures in one transaction, as exPut writes them: u stamps the change (the newer one wins a merge), new
+// pictures replace the old ones. The database is the current app's to make: a browser that never kept one in the current app
+// refuses here with NotThere, and the screen says so.
+export async function keepExample(rec, blobs) {
+  check('grading-studio-examples');
+  rec = { ...rec, u: Date.now() };
+  const lo = rec.id + '|', hi = rec.id + '|\uffff';
+  await writeMany('grading-studio-examples', ['ex', 'pix'], o => {
+    o.ex.put(rec, rec.id);
+    if (rec.gone || blobs) o.pix.delete(IDBKeyRange.bound(lo, hi));
+    if (blobs) blobs.forEach((b, n) => o.pix.put(b, rec.id + '|' + n));
+  });
+  saved({ kind: 'example', id: rec.id, side: 'students' });
+  return rec;
+}
+// Deleting leaves { id, t, gone: true } (watch: 1 kept for a watch-list one), so a copy elsewhere doesn't bring it back.
+export const dropExample = r => keepExample({ id: r.id, t: Date.now(), gone: true, ...(r.watch ? { watch: 1 } : {}) });
+// The watch list's codes for students (gs.wlCodes): kept in this browser only, never in the folder, Drive or a take-home file.
+export function saveWatchCodes(map) { check('gs.wlCodes'); watchCodes.setJson(map); }

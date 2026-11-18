@@ -57,6 +57,7 @@ export function FileMenu({ st, path, name, d, on, auto }) {
   if (one) items.push({ label: t('setup.f_move'), icon: 'arrow', onSelect: () => setAsk({ kind: 'mv' }) }, { label: t('setup.f_replace'), icon: 'replace', onSelect: replace });
   if (d && on && mine) items.push({ label: t('setup.f_leave'), icon: 'minus', onSelect: leave });
   if (one && f.data && !f.virtual) items.push({ label: t('setup.gw_menu'), icon: 'people', onSelect: () => setAsk({ kind: 'grp' }) });
+  if (mine && viewable(f)) items.push({ label: t('setup.f_example'), icon: 'spark', onSelect: () => PARTS.exsave().then(m => m.useExample(st)) });   // the whole paper or part of a page (stage 5)
   if (one) items.push({ label: t('setup.f_remove'), icon: 'trash', onSelect: remove });
   if (!items.length) return null;
   return <span class="mk-fmenu">

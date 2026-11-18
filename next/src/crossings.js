@@ -16,7 +16,7 @@ export async function classListsForPlanning() {
 // whose it was, its work or its class, and never the watch list. Read only; a browser that never kept one gets [] and no database.
 const EX_KINDS = { answer: 1, paper: 1, part: 1, shot: 1 };
 export async function examplesForPlanning() {
-  const ex = (await students.examples.entries()).filter(([k]) => !String(k).startsWith('watch:')).map(([, v]) => v);
+  const ex = await students.exampleRecords();
   return ex.filter(r => r && !r.gone && !r.watch && EX_KINDS[r.kind] && Array.isArray(r.pages) && r.pages.length).map(r => ({
     id: String(r.id), t: +r.t || 0, kind: r.kind, title: String(r.title || ''), letter: String(r.letter || ''), q: r.q && r.q.lab ? String(r.q.lab) : '',
     why: String(r.why || ''), tags: Array.isArray(r.tags) ? r.tags.map(String) : [], pages: r.pages.length })).sort((a, b) => b.t - a.t);

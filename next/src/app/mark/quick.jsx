@@ -17,6 +17,7 @@ import { assistant } from '../../services/assistant.js';
 import { libs } from './paper.js';
 import { t } from '../../i18n/t.js';
 import * as C from './change.js';
+import { PARTS } from '../router.js';
 import './lines.js';
 import './paper-lines.js';
 
@@ -277,6 +278,7 @@ export function QuickMark({ onClose, onBoxes, onOpen }) {
     if (e.key === 'x' || e.key === 'X') { stop(); return mark(s, x, 0).then(next); }
     if (e.key === 'c' || e.key === 'C') { stop(); return setNote(+el.dataset.st + '|' + x.id); }
     if (e.key === 'p' || e.key === 'P') { stop(); return copy(s, x, qi); }
+    if (e.key === 'e' || e.key === 'E') { stop(); return PARTS.exsave().then(m => m.keepAnswer(s, x, qi)); }   // keep as a strong example (stage 5)
     if (e.key === 'Backspace' || e.key === 'Delete') { stop(); return mark(s, x, null); }
   };
   const nav = view === 'q'

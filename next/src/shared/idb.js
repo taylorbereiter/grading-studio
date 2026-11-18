@@ -57,6 +57,17 @@ export async function del(dbName, store, key) {
   mayWrite(dbName + '/' + store);
   await withStore(dbName, store, 'readwrite', o => o.delete(key));
 }
+// One write over several stores of one database, as one transaction (src/examples.js exPut writes a record and its pictures
+// together): fn gets { store name: object store }.
+export async function writeMany(dbName, stores, fn) {
+  for (const st of stores) mayWrite(dbName + '/' + st);
+  const db = await openExisting(dbName); if (!db) throw new NotThere(dbName);
+  try {
+    for (const st of stores) if (!db.objectStoreNames.contains(st)) throw new NotThere(dbName + '/' + st);
+    const tx = db.transaction(stores, 'readwrite'), o = Object.fromEntries(stores.map(st => [st, tx.objectStore(st)]));
+    fn(o); await done(tx);
+  } finally { db.close(); }
+}
 // One read-only transaction on a store, for engines lifted from the current app that read a store their own way (kept.js kdo):
 // fn gets the object store and returns a request (its result is returned) or a value.
 export const readStore = (dbName, store, fn) => withStore(dbName, store, 'readonly', fn);

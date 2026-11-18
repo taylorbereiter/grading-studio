@@ -5,13 +5,16 @@
 // The address carries the student's place on the roster (#/class/<id>/people/<n>), never a name, as the current app does.
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { Button, IconButton, Icon, EmptyState, Dialog, TextInput, Menu, toast } from '../../ui/index.js';
+import { Button, IconButton, Icon, EmptyState, Dialog, TextInput, Menu, CopyButton, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { href, go, PARTS } from '../router.js';
 import * as undoList from '../../services/undo.js';
 import { useBook, classBook } from './data.js';
 import { engine as B, change, classIn } from '../../students/book.js';
-import { initials, pct, typeName } from './grades.jsx';
+import { initials, pct, typeName, leftOf } from './grades.jsx';
+import { usePart } from '../parts.js';
+import { openMail } from './mail.js';
+import { copyText } from '../../services/clipboard.js';
 import { AttendSheet, AttStudent, attOn } from './attend.jsx';
 import { SeatingSheet } from './seating.jsx';
 import { GoalsStudent } from './goals.jsx';
@@ -69,7 +72,7 @@ function MoveDialog({ lib, c, n, onClose }) {
 }
 
 export default function People({ classId, sub }) {
-  const b = useBook(), [find, setFind] = useState(''), [editing, setEditing] = useState(false), [moving, setMoving] = useState(null), [tool, setTool] = useState(null);
+  const b = useBook(), [find, setFind] = useState(''), [editing, setEditing] = useState(false), [moving, setMoving] = useState(null), [tool, setTool] = useState(null), Ps = usePart('sheets', !!(tool && tool.k === 'pss'));
   if (!b) return <div class="loading" aria-busy="true" />;
   const x = classBook(b, classId);
   if (!x) return <EmptyState icon="warn" title={t('class.read_failed')} />;
@@ -87,13 +90,17 @@ export default function People({ classId, sub }) {
   return <div class="pgrid">
     <div class="card roster" role="navigation" aria-label={t('class.roster')}>
       <div class="rhead"><input class="input" type="search" placeholder={t('class.find_student')} aria-label={t('class.find_student')} value={find} onInput={e => setFind(e.currentTarget.value)} data-roster-find />
-        <IconButton icon="edit" label={t('class.edit_roster')} onClick={() => setEditing(true)} data-roster-edit /></div>
+        <IconButton icon="edit" label={t('class.edit_roster')} onClick={() => setEditing(true)} data-roster-edit />
+        <Menu label={t('class.roster_menu')} trigger={m => <IconButton {...m} icon="dots" label={t('class.roster_menu')} data-roster-menu />}
+          items={[{ label: t('class.copy_emails'), icon: 'copy', onSelect: () => { const m = c.names.map(k => B.infoOf(c, k).email).filter(Boolean); if (!m.length) return toast(t('class.no_emails')); copyText(m.join('; ')).then(ok => toast(ok ? t('class.copied_emails', { n: m.length }) : t('class.copy_failed'))); } },
+            { label: t('class.pss_open_all'), icon: 'file', onSelect: () => setTool({ k: 'pss' }) }]} /></div>
       <div class="cp-grp">{t('class.everyone', { n: c.names.length })}</div>
       <ul class="stus">{shown.map(r => <li><a class={'stu' + (r.j === i ? ' on' : '')} href={href('class', classId, 'people', r.j + 1)} aria-current={r.j === i ? 'page' : undefined} data-stu={r.j}>
         <span class="cav" aria-hidden="true" data-raw>{initials(r.m)}</span><span class="nm" data-raw>{r.m}</span><span class="sc num">{grades[r.j].grade != null ? pct(grades[r.j].grade) : ''}</span></a></li>)}</ul>
     </div>
     <Student key={c.id + '|' + n} x={x} n={n} i={i} cols={cols} r={grades[i]} onMove={() => setMoving(n)} onRemove={remove} onTool={setTool} />
     {tool && tool.k === 'att' && <AttendSheet x={x} day={tool.d} onClose={() => setTool(null)} />}
+    {tool && tool.k === 'pss' && Ps && <Ps.SheetsSheet x={x} who={tool.n} term={x.now} left={leftOf(c.id)} onClose={() => setTool(null)} />}
     {tool && tool.k === 'seat' && <SeatingSheet x={x} onClose={() => setTool(null)} />}
     {dlg}
     {moving && <MoveDialog lib={x.lib} c={c} n={moving} onClose={ok => { setMoving(null); if (ok) go('class', classId, 'people'); }} />}
@@ -102,7 +109,7 @@ export default function People({ classId, sub }) {
 
 // One student's page: what the current app's one-student view and details card say, laid out as the design draws it.
 function Student({ x, n, i, cols, r, onMove, onRemove, onTool }) {
-  const { c } = x, miss = cols.filter(col => col.type !== 'xc' && (col.cells.get(n) || {}).st === 'missing');
+  const { c } = x, miss = cols.filter(col => col.type !== 'xc' && (col.cells.get(n) || {}).st === 'missing'), Wl = usePart('watch');
   const days = B.attDays(c), att = days.length ? B.attCount(c, n, days) : null, here = att ? Math.round((att.p + att.l) / days.length * 100) : null;
   const recent = cols.filter(col => col.type !== 'xc').slice(-6).reverse();
   const trend = recent.map(col => col.cells.get(n)).filter(B.bkCounts).map(k => k.pct).reverse();
@@ -112,7 +119,7 @@ function Student({ x, n, i, cols, r, onMove, onRemove, onTool }) {
   return <article class="card cp-sp" aria-labelledby="h-stu" data-student={i}>
     <div class="sp-head"><span class="cav lg" aria-hidden="true" data-raw>{initials(n)}</span>
       <div><h2 id="h-stu" data-raw>{n}</h2><div class="sub"><span data-raw>{c.name}</span>{(B.infoOf(c, n).id || '') && <span data-raw>{B.infoOf(c, n).id}</span>}</div></div>
-      <div class="acts"><Button size="sm" icon="seat" onClick={() => onTool({ k: 'seat' })} data-seat-open>{t('class.seat_groups')}</Button>
+      <div class="acts"><Button size="sm" icon="file" onClick={() => onTool({ k: 'pss', n })} data-pss-open>{t('class.pss_open_one')}</Button><Button size="sm" icon="seat" onClick={() => onTool({ k: 'seat' })} data-seat-open>{t('class.seat_groups')}</Button>
         {attOn(x.lib) && <Button size="sm" icon="check" onClick={() => onTool({ k: 'att' })} data-att-open>{t('class.attendance')}</Button>}
         <Menu label={t('class.student_menu', { name: n })} trigger={m => <IconButton {...m} icon="dots" label={t('class.student_menu', { name: n })} data-stu-menu />}
         items={[{ label: t('class.move_to'), icon: 'arrow', onSelect: onMove }, { label: t('class.remove'), icon: 'trash', onSelect: onRemove }]} /></div></div>
@@ -128,8 +135,10 @@ function Student({ x, n, i, cols, r, onMove, onRemove, onTool }) {
         : <p class="mute">{t('class.no_work_yet')}</p>}
     </section>
     <GoalsStudent x={x} cols={cols} n={n} />
+    {Wl && <Wl.WatchStudent c={c} n={n} />}
     {attOn(x.lib) && <AttStudent c={c} n={n} term={x.now ? x.conf.terms.find(k => k.id === x.now) : null} onDay={d => onTool({ k: 'att', d })} />}
-    <section class="sp-sec"><h3><label for="stu-note">{t('class.notes')}</label></h3>
+    <Details c={c} n={n} />
+    <section class="sp-sec"><div class="sp-h"><h3><label for="stu-note">{t('class.notes')}</label></h3>{note.trim() && <CopyButton text={note} data-note-copy />}</div>
       <textarea id="stu-note" class="input" rows="3" value={note} placeholder={t('class.notes_ph')} onInput={e => typeNote(e.currentTarget.value)} data-stu-note /></section>
   </article>;
 }
@@ -139,4 +148,25 @@ function Spark({ v }) {
   if (v.length < 2) return <b>–</b>;
   const pts = v.map((p, k) => (6 + k * (188 / (v.length - 1))).toFixed(1) + ',' + (46 - Math.max(0, Math.min(100, p)) * 0.4).toFixed(1)).join(' ');
   return <svg class="spark" viewBox="0 0 200 52" aria-hidden="true"><polyline points={pts} /></svg>;
+}
+
+// A student's details (src/people.js details card): student ID, email and last year's level, each copied with one press, the
+// email opened in the teacher's mail app. Edited in a small box, saved as one undo step.
+function Details({ c, n }) {
+  const i = B.infoOf(c, n), [edit, setEdit] = useState(false);
+  const copy = v => copyText(v).then(ok => toast(t(ok ? 'class.copied' : 'class.copy_failed')));
+  const row = (k, lab, v, more) => v ? <div class="dt"><dt>{lab}</dt><dd><span data-raw>{v}</span><span class="grow" /><Button size="sm" variant="quiet" icon="copy" onClick={() => copy(v)} data-det-copy={k}>{t('class.copy')}</Button>{more}</dd></div> : null;
+  const any = i.id || i.email || i.prev || (i.other || []).length;
+  return <section class="sp-sec" aria-labelledby="h-det" data-details><div class="sp-h"><h3 id="h-det">{t('class.details')}</h3><Button size="sm" variant="quiet" icon="edit" onClick={() => setEdit(true)} data-det-edit>{t('class.edit')}</Button></div>
+    {any ? <dl class="dets">{row('id', t('class.student_id'), i.id)}{row('email', t('class.email'), i.email, <Button size="sm" variant="quiet" icon="mail" onClick={() => openMail('mailto:' + i.email)} data-det-mail>{t('class.email_send')}</Button>)}{row('prev', t('class.last_year'), i.prev)}
+      {(i.other || []).length > 0 && <div class="dt"><dt>{t('class.also_called')}</dt><dd data-raw>{i.other.join(', ')}</dd></div>}</dl>
+      : <p class="mute small">{t('class.no_details')}</p>}
+    {edit && <DetailsDialog c={c} n={n} onClose={() => setEdit(false)} />}</section>;
+}
+function DetailsDialog({ c, n, onClose }) {
+  const i = B.infoOf(c, n), [v, setV] = useState({ id: i.id || '', email: i.email || '', prev: i.prev || '' });
+  const save = async () => { await change(t('class.u_details', { name: n }), l => { const k = classIn(l, c.id); if (k && k.names.includes(n)) B.setInfo(k, n, { id: v.id.trim(), email: v.email.trim(), prev: v.prev.trim() }); }, true); onClose(); };
+  const f = (k, lab, type) => <TextInput label={lab} type={type || 'text'} value={v[k]} maxLength={120} onInput={val => setV(o => ({ ...o, [k]: val }))} onKeyDown={e => { if (e.key === 'Enter') save(); }} data-det={k} />;
+  return <Dialog open title={t('class.details_for', { name: n })} onClose={onClose} actions={<><Button onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" onClick={save} data-det-save>{t('class.save')}</Button></>}>
+    {f('id', t('class.student_id'))}{f('email', t('class.email'), 'email')}{f('prev', t('class.last_year_opt'))}</Dialog>;
 }
