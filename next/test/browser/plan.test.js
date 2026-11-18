@@ -142,6 +142,35 @@ test('Present: the class tools on their keys, a slide by number, and Esc closing
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
+test('Present: W puts the class screen in its own window, kept in step, with the keys working in either window', async () => {
+  const p = await fresh();
+  await open(p, 'lesson/L3/slides');
+  await p.keyboard.press('F5');
+  await p.waitForSelector('.present');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('.present'), { timeout: 5000 });
+  const num = () => p.$eval('.present .num', x => x.textContent);
+  const got = p.ctx.waitForTarget(x => x.type() === 'page' && x !== p.target(), { timeout: 10000 });
+  await p.keyboard.press('w');
+  const w = await (await got).page();
+  await w.waitForSelector('#fit .ls-slide');
+  await p.waitForSelector('.prpanel.pr-notes');
+  const shown = () => w.$eval('#fit', x => x.textContent.trim());
+  const first = await shown();
+  await p.keyboard.press('ArrowRight');
+  assert.equal(await num(), 'Slide 2 of 5');
+  await w.waitForFunction(was => document.getElementById('fit').textContent.trim() !== was, {}, first);
+  await w.keyboard.press('ArrowRight');
+  await p.waitForFunction(() => document.querySelector('.present .num').textContent === 'Slide 3 of 5');
+  await p.keyboard.press('b');
+  await w.waitForFunction(() => !document.querySelector('#fit .ls-slide'));
+  await p.keyboard.press('Escape');
+  await w.waitForSelector('#fit .ls-slide');
+  await p.keyboard.press('w');
+  await p.waitForFunction(() => !document.querySelector('[aria-label="Close the class screen window"]'));
+  assert.ok(w.isClosed(), 'W again closes it');
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
 test('every word on the planning screens comes through t() or is the teacher’s own text, and presses at rest are counted', async () => {
   const counts = {};
   for (const w of [1366, 390]) {
