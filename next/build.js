@@ -124,8 +124,9 @@ async function build() {
       'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css') },
     // pdf.js's worker, as text, so the Beside drawer's Books can start it from a blob: address (it loads only when a book is opened).
     plugins: [{ name: 'pdf-worker', setup(b) {
-      b.onResolve({ filter: /^pdfjs-worker-text$/ }, () => ({ path: require.resolve('pdfjs-dist/build/pdf.worker.min.js', { paths: [ROOT] }), namespace: 'pdfw' }));
-      b.onLoad({ filter: /.*/, namespace: 'pdfw' }, a => ({ contents: fs.readFileSync(a.path, 'utf8'), loader: 'text' }));
+      // The path is kept relative to the repository so the build is the same on every machine.
+      b.onResolve({ filter: /^pdfjs-worker-text$/ }, () => ({ path: 'node_modules/pdfjs-dist/build/pdf.worker.min.js', namespace: 'pdfw' }));
+      b.onLoad({ filter: /.*/, namespace: 'pdfw' }, a => ({ contents: fs.readFileSync(path.join(ROOT, a.path), 'utf8'), loader: 'text' }));
     } }],
     loader: { '.woff2': 'file', '.json': 'json' }, assetNames: '[name]-[hash]',
     outdir: DIST, bundle: true, splitting: true, format: 'esm', target: ['chrome109', 'safari16'], minify: true,
