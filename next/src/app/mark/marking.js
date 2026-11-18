@@ -24,6 +24,7 @@ export function loadTools() {
   const o = {};
   const ink = prefs.get('gs.ink', null), hl = prefs.get('gs.hl', null), w = prefs.get('gs.penW', null), chk = prefs.get('gs.checkInk', null), disp = prefs.get('gs.disp', null);
   if (ink) o.inkColor = ink; if (hl) o.hlColor = hl; if (w) o.penW = +w; if (chk) o.checkInk = chk;
+  const pts = prefs.get('gs.ptsInk', ''); o.ptsInk = pts === 'credit' || COLORS[pts] ? pts : '';   // how points are written (Settings > Marking)
   o.disp = { tsize: 14, ...(state().disp || {}), ...(disp || {}) };
   use(o);
   const { checkInk } = state();

@@ -3,7 +3,7 @@
 import { h, Fragment } from 'preact';
 import { NavItem, ThemePicker, Select, Button, Card, Segmented, toast, EmptyState } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
-import { href } from '../router.js';
+import { href, PARTS } from '../router.js';
 import { currentLook, saveLook, onLook } from '../../services/theme.js';
 import { useState, useEffect } from 'preact/hooks';
 import { LANGUAGES, IN_NEXT, savedLanguage, saveLanguage } from '../language.js';
@@ -14,6 +14,14 @@ import { TimetableSettings } from './settings-plan.jsx';
 export const GROUPS = [['classes', 'people', 'settings.classes'], ['timetable', 'cal', 'settings.timetable'], ['grading', 'grades', 'settings.grading'], ['marking', 'pen', 'settings.marking'],
   ['focus', 'timer', 'settings.focus'], ['ai', 'assist', 'settings.ai'], ['saving', 'cloud', 'settings.saving'], ['display', 'sun', 'settings.display'], ['about', 'info', 'settings.about']];
 
+// The grading settings load with their pages, not with Settings (PARTS.setgrade): their part brings the grading engines.
+function GradingPart({ name }) {
+  const [P, setP] = useState(null);
+  useEffect(() => { PARTS.setgrade().then(setP); }, []);
+  if (!P) return null;
+  const C = P[name];
+  return <C />;
+}
 function Display() {
   const [look, setLook] = useState(currentLook()), [lang, setLang] = useState(savedLanguage());
   useEffect(() => onLook(setLook), []);
@@ -47,7 +55,7 @@ export default function Settings({ route }) {
       <nav class="setnav" aria-label={t('nav.settings')}>{GROUPS.map(([id, icon, line]) => <NavItem icon={icon} label={t(line)} href={href('settings', id)} current={id === g[0]} />)}</nav>
       <section class="setbody" aria-label={t(g[2])}>
         <h2 class="h2">{t(g[2])}</h2>
-        {g[0] === 'display' ? <Display /> : g[0] === 'about' ? <About /> : g[0] === 'timetable' ? <TimetableSettings /> : <EmptyState icon="spark" title={t('settings.later_title')} text={t('settings.later_text')} />}
+        {g[0] === 'display' ? <Display /> : g[0] === 'about' ? <About /> : g[0] === 'timetable' ? <TimetableSettings /> : g[0] === 'grading' ? <GradingPart name="GradingSettings" /> : g[0] === 'marking' ? <GradingPart name="MarkingSettings" /> : g[0] === 'classes' ? <GradingPart name="ClassesSettings" /> : <EmptyState icon="spark" title={t('settings.later_title')} text={t('settings.later_text')} />}
       </section>
     </div>
   </div>;

@@ -3,7 +3,8 @@
 // students, files, pages and marks come out. Nothing here writes: what the current app saves on opening (a card's batchId, a
 // quiz from the card) is left for the first change the teacher makes, which saves through students/write.js.
 import * as E from '../../engines/gopen.js';
-import { use, setupOver, state, kget } from '../../engines/gcore.js';
+import { use, setupOver, state, kget, DEFAULT_SETUP } from '../../engines/gcore.js';
+import { meGrade, useLib } from '../../engines/gways.js';
 import { useStore } from '../../engines/gstore.js';
 import { prefs } from '../../students/prefs.js';
 import { library, gradingSetup, meta } from '../../students/index.js';
@@ -16,12 +17,20 @@ export class NotKept extends Error { constructor(id) { super('The papers for thi
 // The kept downloads' rows (keptMeta), as loadKept reads them.
 async function keptRows() { const m = new Map(); for (const [k, v] of await meta.entries()) m.set(k, v); return m; }
 
+// Her usual way of grading as what a new assignment starts with (src/app/library.js gradeDefaultApply): DEFAULT_SETUP becomes her own.
+const DEFAULT_OLD = JSON.parse(JSON.stringify(DEFAULT_SETUP));
+function gradeDefaultApply(lib) {
+  useLib(lib); const g = meGrade(), d = JSON.parse(JSON.stringify(g ? g.setup : DEFAULT_OLD));
+  for (const k of Object.keys(DEFAULT_SETUP)) delete DEFAULT_SETUP[k];
+  Object.assign(DEFAULT_SETUP, d);
+}
 async function begin() {
   useStore(prefs);
   const lib = library.json(null) || { classes: [], loose: { id: '', units: [] } };
   for (const c of lib.classes || []) { c.units ||= []; c.names ||= []; }
   lib.loose ||= { id: '', units: [] }; lib.loose.units ||= [];
   // fflate: a download kept as a ZIP is unzipped, and a .doc is told from a Word file, as the current app does
+  gradeDefaultApply(lib);
   use({ lib, keptMeta: await keptRows(), setup: setupOver(gradingSetup.json(null)), batch: null, cur: 0, fflate: state().fflate || await PARTS.zip() });
   return lib;
 }

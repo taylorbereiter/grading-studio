@@ -66,6 +66,7 @@ export const PARTS = {
   // typed notes and the Timer under the comment (mark/typed.jsx)
   typed: () => import('./mark/typed.jsx'),
   setup: () => import('./mark/setup.jsx'),
+  setgrade: () => import('./screens/settings-grading.jsx'),
 };
 export const CHUNKS = {
   home: () => import('./screens/home.jsx'),
