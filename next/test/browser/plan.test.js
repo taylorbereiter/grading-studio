@@ -489,6 +489,23 @@ test('a taught lesson says where the class got to last time and what was noted',
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
+test('printing the week and a lesson’s plan: each day’s classes with their lessons, slides and materials', async () => {
+  const p = await fresh();
+  const catchPrint = () => p.evaluate(() => { window.__printed = ''; window.open = () => ({ document: { write: s => { window.__printed += s; }, close() {} }, focus() {}, print() {} }); });
+  await open(p, 'calendar/class');
+  await catchPrint();
+  await p.click('main [data-focus="print-week"]');
+  const week = await p.evaluate(() => window.__printed);
+  assert.match(week, /Reading a poem aloud/); assert.match(week, /Grade 9 English/); assert.match(week, /Parent evening/); assert.match(week, /Warm-up/);
+  await open(p, 'lesson/L2');
+  await catchPrint();
+  await p.click('main [data-focus="lesson-menu"]'); await p.waitForSelector('.pop [role=menuitem]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role=menuitem]')].find(b => b.textContent.includes('Print the plan')).click());
+  const plan = await p.evaluate(() => window.__printed);
+  assert.match(plan, /<h1>Reading a poem aloud<\/h1>/); assert.match(plan, /Two minutes, silent\./);
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
 test('on a phone: the lesson reads, and an after-class note waits for the computer without the lesson being written', async () => {
   const p = await fresh(390);
   await open(p, 'lesson/L2');

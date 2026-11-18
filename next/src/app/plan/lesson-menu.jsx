@@ -11,6 +11,7 @@ import { saveVersion, saveLesson, deleteLesson, saveLessonFile } from '../../pla
 import { lessonVersions, lessonBlob } from '../../planning/plan.js';
 import { today } from './lessons.js';
 import { saveFailed } from './save.js';
+import { printLesson } from './print.js';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 function saveAs(name, b) { const a = document.createElement('a'), url = URL.createObjectURL(b); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000); }
@@ -72,6 +73,7 @@ export function LessonMenu({ p, l, save }) {
   const items = [
     { id: 'copy', label: t('plan.copy_text'), icon: 'copy', onSelect: async () => toast(await copyText(E.lessonText(copy(l))) ? t('plan.copied') : t('plan.copy_failed')) },
     { id: 'file', label: t('plan.save_file'), icon: 'download', onSelect: () => saveAs(E.fileBase(l) + '.lesson.json', new Blob([JSON.stringify(E.lessonForFile(copy(l), null), null, 2)], { type: 'application/json' })) },
+    { id: 'print', label: t('plan.print_plan'), icon: 'file', onSelect: () => printLesson(p, l) },
     { id: 'copyto', label: t('plan.copy_to'), icon: 'copy', onSelect: () => setCopying(true) },
     { id: 'versions', label: t('plan.versions'), icon: 'copy', onSelect: () => setVers(true) },
     { sep: true },
