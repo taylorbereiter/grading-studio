@@ -401,3 +401,20 @@ The engines' own checks are this equivalence: the lifted code is the current app
 One thing the page around a canvas changes: Chrome applies the page's `letter-spacing` to text drawn on a canvas in the page. The
 new app's body has a slight negative letter spacing, so `.mk-paper canvas` resets it (`next/src/app/mark.css`); without that, every
 drawn comment, stamp and note was a few pixels off.
+
+**Marking (stage 4 part b).** `engines/gmark.js` lifts the current app's marking code: `bindPage` and everything a gesture uses (pen,
+highlighter, circle, check, eraser, moving and resizing marks), the undo steps (`pushUndo`, `snap`, `gradeSnap`, `fieldSnap`, `undo`,
+`redo`), the marks the right-click menu places (`placeStamp`, `circleWord`, `highlightWord`, `textBoxHere`) and `saveNow`. What
+that code calls on the current app's screen is a hook in gcore's state, quiet until the marking screen hands in its own with `use()`
+(`app/mark/marking.js`): `renderTools`, `renderList`, `toast`, `openStudent`, `editText`, `openNote`, `openStampMenu`, `endOnce`,
+and `writeWork`, where saveNow's record goes to `students/write.js saveWork`. Hooks not yet filled (`gradeMarksChanged`, `refound`,
+`scanNote`, `rescanFile`, `placeScore`) are the scoring and page-turning parts that come later in stage 4.
+
+Two build rules make this work. An assignment in a later module to one of gcore's state names (`selected = null`) is rewritten to
+gcore's setter (`set.selected(null)`), so gcore stays the only place state changes and esbuild's refusal still catches anything else.
+A module can name the earlier modules it may import from (`uses`); gmark uses only gcore and gdraw and lifts its own copies of the
+few pure functions it needs from gopen, so the marking tools (their own part, `router.js PARTS.marking`) don't load the opening engine.
+
+**Undo.** The app has one undo list (`services/undo.js`). The lifted stack stays the engine that knows how to put a page's marks, a
+score or a setting back; each step it pushes records one entry in the app's list whose undo and redo run the lifted ones, so
+Ctrl/Cmd+Z, Ctrl+Y, the toast and the toolbar all take back marks, and the two lists move together.

@@ -28,4 +28,6 @@ export function track(label, get, set, change, group) { const done = snapshot(la
 export function undo() { const e = past.pop(); if (!e) return null; e.undo(); if (e.redo) future.push(e); tell(); return e; }
 export function redo() { const e = future.pop(); if (!e) return null; e.redo(); past.push(e); tell(); return e; }
 // Where the steps no longer apply (the thing was replaced from outside, as libUndoForget does today).
+// One step taken out again because what it recorded came to nothing (a text box closed empty, as the current app pops it).
+export function drop(e) { const i = past.lastIndexOf(e); if (i >= 0) { past.splice(i, 1); tell(); } }
 export function forget() { past.length = 0; future.length = 0; tell(); }

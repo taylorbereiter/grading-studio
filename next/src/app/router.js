@@ -42,6 +42,7 @@ export const PARTS = {
   pdf: () => import('./plan/pdf.js'),
   cal: () => import('./plan/cal-tools.jsx'),
   unit: () => import('./plan/unit-tools.jsx'),
+  marking: () => import('./screens/mark-tools.jsx'),
 };
 export const CHUNKS = {
   home: () => import('./screens/home.jsx'),

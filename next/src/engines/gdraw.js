@@ -918,4 +918,4 @@ const tnBackOn = () => setup.tnBack !== false;
 // src/typednotes.js
 function tnOut(st) { return tnBackOn() && tnHas(st); }
 export { FONT, drawMarks, layoutNotes, textLayout, wrapText, bboxOf, sideFor, sideScreen, drawStamp, stampBox, strokePath, drawHls, stickersReady, STICKERS, lightLut, lightCanvas, draw, marksMine, loadLines, anonOn, shownName, viewBytes, impHas, fileSeq, layoutOf, docIn, docAuto, fileByPath, viewable, vpRot, vpDraw, skewXf, rotOf, skewOf };
-export { nameFold, rosterMatch, batchClass, WORD_RX, one, stampHidden, tnHasG };
+export { nameFold, rosterMatch, batchClass, WORD_RX, one, stampHidden, tnHasG, noteRunY, hasPress, PRESS_MAX, textGrips, canResize, cornerPt, isSticker, isScoreStamp, stickerAspect };

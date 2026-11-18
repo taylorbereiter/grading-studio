@@ -1,6 +1,6 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
-import { batch, cur, setup, lib, pages, tr, keptMeta, saveSoon, pdfjsLib, PDFLib, fflate, workerReady, heicLoad, store, kdo, kget, idbDo, toast, pickedUpNew, groupNoteRefresh, SCALE12, rowTop, rowsMax, rowScaleOf, setupOver, maxPoints, gradeOf, xcSay, fmtNum, noScore, ibSetup } from './gcore.js';
+import { batch, cur, setup, lib, pages, tr, keptMeta, saveSoon, pdfjsLib, PDFLib, fflate, workerReady, heicLoad, toast, store, kdo, kget, idbDo, pickedUpNew, groupNoteRefresh, SCALE12, rowTop, rowsMax, rowScaleOf, setupOver, maxPoints, gradeOf, xcSay, fmtNum, noScore, ibSetup } from './gcore.js';
 import { rotOf, skewOf, viewable, fileByPath, draw, nameFold, rosterMatch, batchClass, WORD_RX, one, stampHidden, tnHasG } from './gdraw.js';
 
 // src/app/start.js

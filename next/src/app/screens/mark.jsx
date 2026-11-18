@@ -6,16 +6,17 @@ import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'preact/hooks';
 import { Tabs, Button, IconButton, Icon, EmptyState, Dialog, Progress, Avatar, TextInput } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
-import { go, href } from '../router.js';
+import { go, href, PARTS } from '../router.js';
 import { register } from '../../services/shortcuts.js';
 import { openKept, NotKept } from '../mark/open.js';
 import { openPages, renderPage, fitScale } from '../mark/paper.js';
 import { use, gradeOf, maxPoints, fmtNum, state } from '../../engines/gcore.js';
 import { shownName } from '../../engines/gdraw.js';
+import { toast } from '../../ui/index.js';
 import '../mark/lines.js';
 
-// The checks' way in (next/test/browser/mark.test.js): the open work, and drawing one page at a given scale.
-const seam = { state, gradeOf, renderPage, ready: false };
+// The checks' way in (next/test/browser/mark.test.js): the open work, drawing one page at a given scale, and waiting for a save.
+const seam = { state, gradeOf, renderPage, ready: false, saved: () => (MK ? MK.M.saveNowDone() : Promise.resolve()) };
 if (typeof window !== 'undefined') window.__mark = seam;
 
 const TABS = ['mark', 'grades', 'insights', 'return'];
@@ -50,14 +51,21 @@ function StudentList({ batch, cur, onPick }) {
 
 // One page: a canvas drawn by the current app's code at the scale the paper area allows.
 function Page({ pg, room, tall, zoom }) {
-  const ref = useRef(null);
+  const ref = useRef(null), wrap = useRef(null);
   useEffect(() => {
     if (!ref.current || !room) return;
     pg.canvas = ref.current;
+    pg.wrapEl = wrap.current; if (MK) MK.M.bind(pg, wrap.current);
     renderPage(pg, fitScale(pg, room, tall, (state().disp || {}).fit, zoom));
   }, [pg, room, zoom]);
-  return <div class={'pg' + (pg.out ? ' out' : '')}><canvas ref={ref} data-page={pg.file.path + '|' + pg.idx} /></div>;
+  return <div ref={wrap} class={'pg' + (pg.out ? ' out' : '')} data-tool={state().tool}><canvas ref={ref} data-page={pg.file.path + '|' + pg.idx} /></div>;
 }
+
+// The marking tools load as a part of their own (router.js PARTS.marking, screens/mark-tools.jsx) once the paper is open, so
+// the read-only paper shows as soon as it can. Until they are there, the paper is drawn and nothing on it can be changed.
+let MK = null;
+const SAVE_LINE = { saving: () => t('mark.saving'), saved: () => t('mark.saved'), partly: () => t('mark.partly'), not: () => t('mark.not_saved') };
+const saveLine = k => (SAVE_LINE[k] ? SAVE_LINE[k]() : t('mark.cannot'));
 
 function Paper({ batch, cur, zoom }) {
   const st = batch.students[cur], [got, setGot] = useState(null), area = useRef(null), [size, setSize] = useState([0, 0]);
@@ -113,14 +121,18 @@ function RubricAsk({ ask }) {
 export default function MarkScreen({ route, classes }) {
   const id = route.params.id, tab = TABS.includes(route.params.tab) ? route.params.tab : 'mark';
   const [w, setW] = useState(null), [err, setErr] = useState(null), [cur, setCur] = useState(0), [ask, setAsk] = useState(null);
-  const [zoom, setZoom] = useState(() => keep('zoom') || 1);
+  const [zoom, setZoom] = useState(() => keep('zoom') || 1), [, tick] = useState(0);
+  useEffect(() => { if (!w) return; let off = null, live = true;
+    PARTS.marking().then(m => { if (!live) return; MK = m; off = m.start({ toast: text => toast(text), openStudent: i => pickRef.current(i), changed: () => tick(n => n + 1) }); tick(n => n + 1); });
+    return () => { live = false; if (off) off(); }; }, [w]);
   useEffect(() => {
     let live = true; setW(null); setErr(null);
     openKept(id, { question: q => new Promise(done => setAsk({ q, done: v => { setAsk(null); done(v); } })) })
       .then(r => { if (!live) return; if (!r) return history.back(); setW(r); setCur(Math.min(r.cur || 0, r.batch.students.length - 1)); }, e => { console.error(e); if (live) setErr(e); });
-    return () => { live = false; };
+    return () => { live = false; if (MK) MK.M.saveNowDone(); };
   }, [id]);
-  const pick = useCallback(i => { if (!w) return; const n = Math.max(0, Math.min(w.batch.students.length - 1, i)); setCur(n); use({ cur: n }); }, [w]);
+  const pick = useCallback(i => { if (!w) return; const n = Math.max(0, Math.min(w.batch.students.length - 1, i)); if (MK) MK.M.commit(); if (n !== state().cur) seam.ready = false; setCur(n); use({ cur: n }); }, [w]);
+  const pickRef = useRef(pick); pickRef.current = pick;
   useEffect(() => {
     if (!w) return;
     const offs = [
@@ -139,6 +151,7 @@ export default function MarkScreen({ route, classes }) {
       <Tabs label={t('mark.tabs')} value={tab} onChange={v => go('mark', id, v === 'mark' ? '' : v)}
         tabs={TABS.map(k => ({ id: k, label: TAB_LINE[k]() }))} />
       <span class="grow" />
+      {w && <span class="mk-save mute" role="status" data-save={MK ? MK.M.saveLabel() : 'saved'}>{saveLine(MK ? MK.M.saveLabel() : 'saved')}</span>}
       {w && <span class="mk-prog mute">{t('mark.marked_of', { n: marked, of: n })}<Progress value={marked} max={Math.max(1, n)} label={t('mark.marked_of', { n: marked, of: n })} /></span>}
       <Button icon="settings" size="sm" disabled title={t('mark.later')}>{t('mark.setup')}</Button>
     </header>
@@ -149,6 +162,7 @@ export default function MarkScreen({ route, classes }) {
       : <div class="mk-body">
         <StudentList batch={w.batch} cur={cur} onPick={pick} />
         <div class="mk-mid">
+          {MK && <MK.Tools />}
           <Paper batch={w.batch} cur={cur} zoom={zoom} />
           <div class="mk-zoom"><IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => { const z = Math.max(0.5, Math.round((zoom - 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} />
             <span>{t('mark.zoom', { n: Math.round(zoom * 100) })}</span>

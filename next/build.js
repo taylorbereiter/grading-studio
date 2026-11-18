@@ -138,11 +138,18 @@ const GRADING_STATE = {
   // the libraries, loaded by the screen when a paper needs them (each has its own budget) and handed in
   pdfjsLib: 'null', PDFLib: 'null', fflate: 'null', mammoth: 'null', html2canvas: 'null', workerReady: 'Promise.resolve()',
   heicLoad: "() => { throw new Error('no decoder in this copy'); }",
+  // Hooks: what the lifted marking code calls that belongs to the screen. The marking screen hands in its own with use({ ... });
+  // until it does, each is quiet. writeWork is where a lifted saveNow hands the work it built: the screen saves it through
+  // students/write.js saveWork. The window checks (tabLive and the rest) are students/write.js's, so here they let the save through.
+  toast: '() => {}', renderList: '() => {}', renderTools: '() => {}', renderGrade: '() => {}', openStudent: '() => {}', renderPage: '() => {}',
+  gradeMarksChanged: '() => {}', gradeShown: '() => {}', openImported: '() => {}', rescanFile: '() => {}', editText: '() => {}', openNote: '() => {}',
+  openStampMenu: '() => {}', placeScore: '() => {}', stopScorePlace: '() => {}', scanNote: '() => {}', refound: '() => {}', endOnce: '() => {}', setTool: '() => {}',
+  scorePlacing: 'null', activeEditor: 'null',
+  writeWork: '() => {}', tabLive: '() => true', tabForgot: '() => false', tabLetGo: '() => {}', tabsBehind: '() => false', saveBehind: '() => {}', stampWork: '() => {}',
 };
 // What the lifted code calls that belongs to the screen (a toast, a redraw): quiet here, the new screen says and draws things itself.
-const GRADING_STUBS = { toast: '() => {}', pickedUpNew: '() => false', renderKept: '() => {}', groupNoteRefresh: '() => {}' };
-const GRADING_DENY = ['$', 'toast', 'openDlg', 'closeDlg', 'sayDlg', 'saveNow', 'saveLib', 'writeWork', 'keepWork', 'renderList', 'renderTools',
-  'renderGrade', 'openStudent', 'redrawAll', 'go', 'routeNow', 'paperPut', 'folderSaved', 'syncSoon', 'homeRender'];
+const GRADING_STUBS = { pickedUpNew: '() => false', renderKept: '() => {}', groupNoteRefresh: '() => {}' };
+const GRADING_DENY = ['$', 'openDlg', 'closeDlg', 'sayDlg', 'saveLib', 'keepWork', 'go', 'routeNow', 'paperPut', 'folderSaved', 'syncSoon', 'homeRender'];
 // Names that are only local variables in what is lifted (an unrelated top-level declaration has the same name).
 const GRADING_LOCAL = ['inside', 'num', 'average'];
 // Each module: [file, roots, preamble]. Later modules may use anything the earlier ones declare.
@@ -166,6 +173,14 @@ const GRADING = [
     'applyRubricPage', 'loadRefs', 'photoTurns', 'natural', 'newestWork', 'cardOfKept', 'findItem', 'holders', 'rubricsDiffer', 'workScored', 'rubricFitting',
     'junk', 'unzipInto', 'qmkFor', 'revsOf', 'partHashes', 'batchClass',
   ]],
+  ['gmark', [
+    // marking a page as the current app does (src/app/paper.js bindPage, src/marking.js, src/stamps.js): the pen, highlighter,
+    // shapes, checks, eraser, moving and resizing marks, undo and redo; and saveNow, which builds the record to save
+    'bindPage', 'undo', 'redo', 'snap', 'changed', 'pushUndo', 'gradeSnap', 'fieldSnap', 'commitEditors', 'stepSize', 'saveNow', 'placeStamp', 'redrawAll',
+    'hitMark', 'moveMark', 'keepOnPage', 'deleteSelected', 'gripDrag', 'r1', 'clamp',
+    // the right-click menu's marks (src/stamps.js openStampMenu; the menu itself is the new screen's)
+    'circleWord', 'highlightWord', 'textBoxHere', 'stampName', 'isSticker', 'isProof', 'PROOF', 'PUNCT', 'BRAINROT', 'wordUnder', 'newCheckSize', 'stickerAspect', 'RECENT_STAMPS',
+  ], '', [], ['gcore', 'gdraw']],
 ];
 function writeGrading() {
   const { lift } = require('./tools/lift.js');
@@ -175,21 +190,29 @@ function writeGrading() {
     Object.entries(GRADING_STUBS).map(([n, v]) => 'const ' + n + ' = ' + v + ';').join('\n') + '\n' +
     '// The open work, handed in by the marking screen: use({ batch, setup, lib, … }). Only the names above.\n' +
     'export function use(o) {\n' + names.map(n => "  if ('" + n + "' in o) " + n + ' = o.' + n + ';').join('\n') + '\n}\n' +
-    'export const state = () => ({ ' + names.join(', ') + ' });\n';
+    'export const state = () => ({ ' + names.join(', ') + ' });\n' +
+    '// A later module that assigns one of these (the marking code clears what is picked) calls its setter instead; see setters() below.\n' +
+    'export const set = { ' + names.map(n => n + ': v => (' + n + ' = v)').join(', ') + ' };\n';
   const declared = [...names, 'store', 'kdo', 'kget', 'idbDo', ...Object.keys(GRADING_STUBS)], made = {}, texts = {}, needs = {};
   const sticker = Object.fromEntries(fs.readdirSync(path.join(ROOT, 'src/stickers')).filter(f => f.endsWith('.webp')).sort().map(f => [f.slice(0, -5), f]));
   writeIf('src/engines/stickers.js', '// MADE BY next/build.js FROM src/stickers/. Each sticker is its own file, fetched when a page with stickers is drawn.\n' +
     Object.entries(sticker).map(([k, f], i) => 'import s' + i + " from '../../../src/stickers/" + f + "';").join('\n') + '\n// The bundler gives each file a name next to this chunk; the page is a folder up, so each is read from where this module is.\nconst at = f => new URL(f, import.meta.url).href;\nexport default { ' + Object.keys(sticker).map((k, i) => JSON.stringify(k) + ': at(s' + i + ')').join(', ') + ' };\n');
-  for (const [file, roots, preamble = '', given = []] of GRADING) {
-    let out = lift({ files: 'grading', scoped: true, roots, deny: GRADING_DENY, ignore: GRADING_LOCAL, given: [...declared, ...given], header: '', preamble: '' });
+  for (const [file, roots, preamble = '', given = [], uses = null] of GRADING) {
+    // uses: the earlier modules this one may import from (all of them when not given). Anything else it needs it lifts for itself,
+    // so a part loaded on its own (the marking tools) doesn't bring a module it barely uses (opening a download).
+    const may = uses ? declared.filter(n => !made[n] || uses.includes(made[n])) : declared;
+    let out = lift({ files: 'grading', scoped: true, roots, deny: GRADING_DENY, ignore: GRADING_LOCAL, given: [...may, ...given], header: '', preamble: '' });
     const own = [...out.matchAll(/^(?:async )?function\*? ?(\w+)|^(?:const|let|var) (\w+)/gm)].map(m => m[1] || m[2]);
-    const used = declared.filter(n => new RegExp('(?<![.\\w$])' + n.replace(/\$/g, '\\$') + '(?![\\w$])').test(out));
+    const used = may.filter(n => new RegExp('(?<![.\\w$])' + n.replace(/\$/g, '\\$') + '(?![\\w$])').test(out));
     const imports = {};
     for (const n of used) { const from = file === 'gcore' ? null : (made[n] || 'gcore'); if (from && from !== file) { (imports[from] ||= []).push(n); (needs[from] ||= new Set()).add(n); } }
+    if (file !== 'gcore') out = setters(out, names);
     let pre = file === 'gcore' ? core : Object.entries(imports).map(([f, l]) => 'import { ' + l.join(', ') + " } from './" + f + ".js';").join('\n') + '\n';
     if (file === 'gcore') pre += 'export { ' + names.join(', ') + ', store, kdo, kget, idbDo, ' + Object.keys(GRADING_STUBS).join(', ') + ' };\n';
+    else if (/(?<![.\w$])set\./.test(out)) pre = pre.replace(/^import \{ ([^}]*) \} from '\.\/gcore\.js';/m, (m, l) => "import { " + l + ", set } from './gcore.js';") || pre;
+    if (file !== 'gcore' && /(?<![.\w$])set\./.test(out) && !/import \{[^}]*\bset\b[^}]*\} from '\.\/gcore\.js'/.test(pre)) pre = "import { set } from './gcore.js';\n" + pre;
     out = head + preamble + pre + out;
-    for (const n of own) { made[n] = file; declared.push(n); }
+    for (const n of own) { if (made[n]) continue; made[n] = file; declared.push(n); }
     texts[file] = { out, roots };
   }
   for (const [file, { out, roots }] of Object.entries(texts)) {
@@ -197,6 +220,29 @@ function writeGrading() {
     const extra = [...(needs[file] || [])].filter(n => !roots.includes(n) && !(file === 'gcore' && coreOut.includes(n)));
     writeIf('src/engines/' + file + '.js', extra.length ? out + 'export { ' + extra.join(', ') + ' };\n' : out);
   }
+}
+// Only gcore may change the open work's state (esbuild refuses an assignment to an import). Where a later module's lifted code
+// assigns one of gcore's names (\`selected = null\`), the assignment becomes that name's setter (\`set.selected(null)\`), which
+// gcore exports. The value runs to the end of the expression: a ; or , or closing bracket at its own depth, or the end of the line.
+function setters(text, names) {
+  const rx = new RegExp('(?<![.\\w$])(' + names.join('|') + ')\\s*=(?![=>])', 'g');
+  let out = '', at = 0, m;
+  while ((m = rx.exec(text))) {
+    const before = text.slice(Math.max(0, m.index - 12), m.index);
+    if (/\b(let|const|var)\s+$/.test(before)) continue;   // a declaration of its own (never in what is lifted now, but not an assignment)
+    let i = m.index + m[0].length, depth = 0, q = null;
+    for (; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '\\') i++; else if (c === q) q = null; continue; }
+      if (c === '"' || c === "'" || c === '`') { q = c; continue; }
+      if ('([{'.includes(c)) depth++;
+      else if (')]}'.includes(c)) { if (!depth) break; depth--; }
+      else if (!depth && (c === ';' || c === ',' || c === '\n')) break;
+    }
+    out += text.slice(at, m.index) + 'set.' + m[1] + '(' + text.slice(m.index + m[0].length, i).trim() + ')';
+    at = i; rx.lastIndex = i;
+  }
+  return out + text.slice(at);
 }
 function writeIf(rel, text) { const f = path.join(NEXT, rel); if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== text) fs.writeFileSync(f, text); }
 
