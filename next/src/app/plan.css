@@ -378,3 +378,6 @@
 .ufiles .mlist .mopen span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ufiles .mlist .fld .lab{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .ufiles .mlist li>.row{margin-left:auto}
+.planit.compact>.lc{padding-right:8px}
+.planit.compact>.lc b.one{padding-right:24px}
+.lc.open .lm>span{white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
