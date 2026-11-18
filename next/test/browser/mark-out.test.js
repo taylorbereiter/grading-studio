@@ -256,3 +256,48 @@ test('Insights > Consistency says what the current app says about the same work,
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('anchor papers: High, Mid or Low under the score, one paper each with one undo step, the tag in the list, and Return exports them named and covered; the current app reads the same tags', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const old = await mainSide(ctx, []);
+  const p = await page(ctx, errors), dl = await catchDownloads(p);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(old.id));
+  await p.waitForSelector('[data-anchrow] [data-anchor="high"]', { timeout: 60000 });
+  const tags = () => p.evaluate(() => window.__mark.state().batch.students.map(s => s.grade.anchor || ''));
+  await p.click('[data-anchor="high"]');
+  await p.waitForFunction(() => window.__mark.state().batch.students[0].grade.anchor === 'high');
+  assert.equal(await p.$eval('[data-st="0"] [data-anchtag]', e => e.textContent), 'high', 'the tag in the list');
+  // High on another paper moves it; one Ctrl Z puts both back
+  await p.click('[data-st="2"]');
+  await p.waitForFunction(() => document.querySelector('.mk-side h2') && /Cleo/.test(document.querySelector('.mk-side h2').textContent));
+  await p.waitForSelector('[data-anchrow] [data-anchor="high"]');
+  await p.click('[data-anchor="high"]');
+  await p.waitForFunction(() => window.__mark.state().batch.students[2].grade.anchor === 'high');
+  assert.deepEqual((await tags()).slice(0, 3), ['', '', 'high'], 'one paper each');
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForFunction(() => window.__mark.state().batch.students[0].grade.anchor === 'high');
+  assert.deepEqual((await tags()).slice(0, 3), ['high', '', ''], 'one undo step puts both papers back');
+  await p.waitForSelector('[data-anchrow] [data-anchor="low"]');
+  await p.click('[data-anchor="low"]');
+  await p.waitForFunction(() => window.__mark.state().batch.students[2].grade.anchor === 'low');
+  await p.evaluate(() => window.__mark.saved());
+  // Return: the card lists them, and one button makes both files in a ZIP, named for the assignment and the level
+  await p.evaluate(() => { location.hash = location.hash.replace(/(\/mark\/[^/]+).*$/, '$1/return'); });
+  await p.waitForSelector('#rtAnchors [data-anchout]', { timeout: 60000 });
+  assert.equal(await p.$$eval('#rtAnchors li:not(.none)', l => l.length), 2);
+  const zip = await dl.next(() => p.click('#rtAnchors [data-anchout]'));
+  assert.match(zip.name, /^Anchor papers - .+\.zip$/);
+  const files = unzipSync(zip.bytes), names = Object.keys(files).sort();
+  assert.equal(names.length, 2);
+  assert.match(names[0], / - \S+ High\.pdf$/); assert.match(names[1], / - \S+ Low\.pdf$/);
+  for (const n of names) assert.equal(Buffer.from(files[n].slice(0, 5)).toString(), '%PDF-');
+  await dl.close(); await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), old.id);
+  await m.waitForFunction(() => window.__gs.state().batch, { timeout: 60000 });
+  assert.deepEqual((await m.evaluate(() => window.__gs.state().batch.students.map(s => s.grade.anchor || ''))).slice(0, 3), ['high', '', 'low'], 'the current app has the same anchor papers');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

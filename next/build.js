@@ -210,6 +210,8 @@ const GRADING = [
     'canResize', 'setHlMode', 'hlMode', 'critStampOf', 'scoreStampText', 'stampOwner', 'newStampSize', 'fmNow',
     // the mark key's wording, for Settings > Marking (src/stamps.js openMarkKey)
     'markLabel0', 'MARK_MEAN', 'MARK_KEY',
+    // one undo step for several students' grades (src/anchors.js setAnchor: a level moved from one paper to another)
+    'groupStep', 'gradeStep',
   ], '', [], ['gcore', 'gdraw']],
   ['gexport', [
     // what goes back to students (src/app/export.js, src/feedback.js, src/exportreport.js, src/anchors.js): which files, their names,
@@ -224,7 +226,7 @@ const GRADING = [
     // the Grade sheet's rows and what she says about a grade read off a paper (src/app/gradesheet.js, src/grades.js)
     'sheetRows', 'appScored', 'appShots', 'rowGraded', 'splitReads', 'readKey', 'readingDoubt', 'quietReads', 'paperScore', 'rivalReads', 'paperBytes', 'fileIn',
     // a paper's pages drawn as an assistant or the same-score view sees them (src/app/claude.js sharePage, shareDocs)
-    'sharePage', 'shareDocs',
+    'sharePage', 'shareDocs', 'classCommon', 'nameFreeText',
   ], "// the Grade sheet's choices, which the current app keeps in module variables: read and set from the Grades tab\nexport function sheetSet(o) { if ('all' in o) sheetAll = !!o.all; if ('found' in o) sheetFound = !!o.found; if ('out' in o) sheetShowOut = !!o.out; }\nexport const sheetNow = () => ({ all: sheetAll, found: sheetFound, out: sheetShowOut });\n", [], ['gcore', 'gdraw', 'gopen'], ['num', 'inside']],
   ['greport', [
     // the opening report (src/intake.js openingFacts, checkStack): what opened, what didn't and why, who has nothing, and anything odd

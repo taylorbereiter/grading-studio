@@ -212,5 +212,30 @@
  "paper.cs_next": "Later page",
  "paper.cs_no_pdf": "No PDF or picture to show here. Open the paper to read it.",
  "paper.cs_no_paper": "No paper.",
- "paper.cs_cant": "This page couldn't be drawn."
+ "paper.cs_cant": "This page couldn't be drawn.",
+ "paper.an_label": "Anchor paper",
+ "paper.an_tip": "The high, middle and low paper your school keeps from a summative. Return exports all three, named and with names covered.",
+ "paper.an_on": "This is the {lv} paper. Click again to take it off.",
+ "paper.an_move": "Make this the {lv} paper instead of {who}",
+ "paper.an_move_anon": "Make this the {lv} paper instead of another paper",
+ "paper.an_make": "Make this the {lv} anchor paper",
+ "paper.an_set": "{lv} anchor paper. It's on Return, ready to export.",
+ "paper.an_h": "Anchor papers",
+ "paper.an_pick": "Pick a high, middle and low paper while you mark: under the score, click High, Mid or Low.",
+ "paper.an_none": "Not picked yet",
+ "paper.an_cover": "Cover student names",
+ "paper.an_files": {
+  "one": "Files come out as “{name}”.",
+  "other": "Files come out as “{name}”, {n} in one ZIP."
+ },
+ "paper.an_cover_say": "Typed names and your own cover boxes are blacked out. A handwritten name needs a cover box of its own.",
+ "paper.an_plain": "Names stay as they are on the paper.",
+ "paper.an_out": "Export anchor papers",
+ "paper.an_making": "Making the files…",
+ "paper.an_saved_one": "Saved “{name}”.",
+ "paper.an_saved_n": "Saved {n} anchor papers in one ZIP.",
+ "paper.an_first": "Pick a high, middle or low paper first",
+ "paper.an_failed": "Not exported: {list}. The rest downloaded.",
+ "paper.an_no_pages": "{lv} (no pages to export)",
+ "paper.an_wrong": "Something went wrong: {e}"
 }

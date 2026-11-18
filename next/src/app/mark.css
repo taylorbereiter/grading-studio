@@ -157,6 +157,14 @@
 .mk-ins .tile .tl{font-size:var(--t2);color:var(--mute)}
 .mk-ins .tile .tv{font-size:28px;font-weight:600;letter-spacing:-.02em}
 .mk-ins .tile.main .tv{color:var(--acc-ink)}
+/* Anchor papers: under the score, and the Return card */
+.mk-anch{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:var(--t2)}
+.mk-anch .lab{color:var(--mute)}
+.mk-anch .seg{display:inline-flex;gap:4px}
+.mk-list .pill.anch{text-transform:lowercase}
+.mk-ret .anchlist{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-direction:column;gap:4px}
+.mk-ret .anchlist li{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.mk-ret .anchlist li b{min-width:40px}
 /* Insights > Consistency (mark/cons.jsx) */
 .mk-ins .cs{display:flex;flex-direction:column;gap:10px;max-width:960px}
 .mk-ins .cs h3{margin:8px 0 0}

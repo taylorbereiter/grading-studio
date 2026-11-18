@@ -83,6 +83,7 @@ function StudentList({ batch, cur, onPick, onReport, lf, setLf, fold, setFold, f
       return <li><button type="button" class={'mk-row' + (i === cur ? ' on' : '')} aria-current={i === cur ? 'true' : undefined} onClick={() => onPick(i)} data-st={i} title={fold ? name : undefined}>
         <Avatar name={name} size="sm" /><span class="nm" data-raw>{name}</span>{fl && <span class="bang" title={t('mark.lf_flagged')} aria-label={t('mark.lf_flagged')}>!</span>}
         {st.grade.status === 'late' && <span class="pill">{t('mark.late')}</span>}
+        {AN[st.grade.anchor] && <span class="pill anch" title={t('mark.an_tag', { lv: t(AN[st.grade.anchor]) })} data-anchtag>{t(AN[st.grade.anchor]).toLowerCase()}</span>}
         {sc && <span class={'sc ' + (sc.tone || '')}>{sc.done && <Icon name="check" size="xs" />}{sc.text}</span>}
       </button></li>; })}
       {lf !== 'all' && !q && rows.length <= 1 && <li class="mute mk-lfnone">{t('mark.lf_none')} <button type="button" class="link" onClick={() => setLf('all')}>{t('mark.lf_everyone')}</button></li>}</ol>
@@ -268,6 +269,8 @@ function Paper({ batch, cur, zoom, ver, FU, ctl, onSp }) {
 // Missing / Excused / Late, the comment, and Next to score. Until the marking tools have loaded it shows the score and can't change it.
 // Enter presses Next to score only from nowhere in particular (or a score slider), never over a button she has focused.
 const free = () => { const a = document.activeElement; return !a || a === document.body || (a.classList && (a.classList.contains('srange') || a.classList.contains('mk-paper'))); };
+// an anchor paper's tag in the list (src/anchors.js anchorTag)
+const AN = { high: 'mark.an_high', mid: 'mark.an_mid', low: 'mark.an_low' };
 const STATUS = [['missing', () => t('mark.missing')], ['excused', () => t('mark.excused')], ['late', () => t('mark.late')]];
 function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onCalc }) {
   const st = batch.students[cur]; if (!st) return null;
@@ -299,6 +302,7 @@ function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onC
       <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span>{M && <IconButton icon="grades" size="sm" label={t('mark.calc')} kbd="=" onClick={onCalc} data-calcopen />}{g.total != null && M && <Button size="sm" icon="stamp" onClick={() => stamp(null)} title={t('mark.stamp_tip')} data-stampscore>{t('mark.stamp')}</Button>}</div>
     {g.total == null && <p class="mute">{t('mark.no_score')}</p>}</>}
     <div class="mk-stat" role="group" aria-label={t('mark.mark_as')}>{STATUS.map(([k, l]) => <button type="button" class="chip" aria-pressed={gr.status === k ? 'true' : 'false'} disabled={off} data-status={k} onClick={() => M.setStatus(k)}>{l()}</button>)}{FU && M && <FU.ScoreMore st={st} />}</div>
+    {FU && M && <FU.Anchors st={st} />}
     <textarea class="mk-cmt" aria-label={t('mark.comment_for')} placeholder={t('mark.comment_for_ph')} value={gr.comment || ''} disabled={off} data-raw onInput={e => M.setComment(e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.blur(); }} />
     {M && <CommentChips text={gr.comment || ''} onAdd={c => M.setComment((gr.comment || '').trim() ? (gr.comment || '').replace(/\s+$/, '') + ' ' + c : c)} />}
     {TN && M && <TN.NotesPart st={st} />}

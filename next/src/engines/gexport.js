@@ -3,7 +3,7 @@
 // the Grade sheet's choices, which the current app keeps in module variables: read and set from the Grades tab
 export function sheetSet(o) { if ('all' in o) sheetAll = !!o.all; if ('found' in o) sheetFound = !!o.found; if ('out' in o) sheetShowOut = !!o.out; }
 export const sheetNow = () => ({ all: sheetAll, found: sheetFound, out: sheetShowOut });
-import { batch, cur, setup, lib, selected, pages, undoStack, redoStack, disp, once, LANG_LOCALE, tr, gradesOrder, saveSoon, pdfjsLib, PDFLib, fflate, mammoth, html2canvas, workerReady, toast, renderList, renderTools, renderGrade, openStudent, gradeMarksChanged, openImported, rescanFile, refound, groupJust, store, ROW_TOP, rowTop, rowScaleOf, maxPoints, roundPct, percentWith, gradeOf, tryGrade, ownGrade, fmtNum, fmtPct, COLORS, HL, noScore, wordPart, quizCount, quizPart, ibSetup, set } from './gcore.js';
+import { batch, cur, setup, lib, selected, pages, docs, undoStack, redoStack, disp, once, LANG_LOCALE, tr, gradesOrder, saveSoon, pdfjsLib, PDFLib, fflate, mammoth, html2canvas, workerReady, toast, renderList, renderTools, renderGrade, openStudent, gradeMarksChanged, openImported, rescanFile, refound, groupJust, store, ROW_TOP, rowTop, rowScaleOf, maxPoints, roundPct, percentWith, gradeOf, tryGrade, ownGrade, fmtNum, fmtPct, COLORS, HL, noScore, wordPart, quizCount, quizPart, ibSetup, set } from './gcore.js';
 import { FONT, measureCtx, sideFor, wrapText, rgb, textLayout, drawMarks, rotOf, vpRot, skewOf, skewXf, vpDraw, viewable, fileByPath, layoutOf, docMarked, docIn, docAuto, draw, docAdded, scrub, scrubMarks, nameFold, rosterMatch, batchClass, anonOn, shownName, lightOpts, lightForPage, lightCanvas, WORD_RX, isLatin, rawWords, namesNow, ownNames, coverRx, stampScore, stampBox, drawStamp, viewBytes, one, marksMine, tnMine, tnOut } from './gdraw.js';
 import { natural, GS_TAIL, syncScoreStamps, boxKey, findItem, hasSheet, stampSoon, tryOfFile, canvasJpg, groupFileOf, groupOwn } from './gopen.js';
 
@@ -819,6 +819,14 @@ function rosterNames() {
   if (c && c.names.length) for (const [n, st] of rosterMatch(c.names)) out.set(st, n);
   return out;
 }
+// src/app/lighting.js
+async function ensureCounts() {
+  await workerReady;
+  for (const s of batch.students) for (const f of s.files) {
+    if (!viewable(f) || f.numPages || f.bad) continue;
+    try { const d = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise; f.numPages = d.numPages; d.destroy(); } catch (e) { pdfBad(f, e); }
+  }
+}
 // src/app/word.js
 const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 // src/app/word.js
@@ -1096,6 +1104,32 @@ const thaiPlain = s => /[\uF700-\uF71A]/.test(s) ? s.replace(/[\uF700-\uF71A]/g,
 function classRx() { const N = namesNow(); return N.cls === null ? (N.cls = N.classSrc ? new RegExp(N.classSrc, 'gu') : false) || null : N.cls || null; }
 // src/names.js
 const nameFindOn = () => !!store.get('gs.nameFind', false);
+// src/names.js
+const paperKey = (st, d) => st.key + '\n' + d.pages.map(([path, p]) => boxKey(path, p) + '|' + coverSig(fileByPath(st, path))).join('\n');
+// src/names.js
+async function classCommon() {
+  await ensureCounts();
+  const N = namesNow(), list = coverList(), key = list.map(x => paperKey(x.st, x.d)).join('\n');
+  if (N.commonKey === key) return N.common;
+  const count = new Map(), rx = N.classSrc && list.length >= 3 ? new RegExp(N.classSrc, 'gu') : null;
+  if (rx) for (const { st, d } of list) {
+    const seen = new Set(), docs = new Map();
+    try {
+      for (const [path, p] of d.pages) {
+        const f = fileByPath(st, path);
+        if (!docs.has(path)) docs.set(path, await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false }).promise);
+        const page = await docs.get(path).getPage(p + 1), t = (await page.getTextContent()).items.map(it => thaiPlain(it.str)).join('\n').normalize('NFKC');
+        page.cleanup();
+        for (const m of t.matchAll(rx)) if (m[0] && rawWords(m[0]).length === 1 && !/[@\d]/.test(m[0])) seen.add(nameFold(m[0]));
+      }
+    } catch (er) { console.error(er); }
+    finally { for (const js of docs.values()) js.destroy(); }
+    for (const w of seen) count.set(w, (count.get(w) || 0) + 1);
+  }
+  const need = Math.max(3, Math.ceil(list.length * 0.4));
+  N.commonKey = key;
+  return N.common = new Set([...count].filter(([, n]) => n >= need).map(([w]) => w));
+}
 // src/names.js
 function shareOpts(st) {
   const N = namesNow();
@@ -1588,6 +1622,11 @@ function bkCats() {
   BK_TYPES.splice(0, BK_TYPES.length, ...(out.length ? out : BK_DEF.map(x => x.slice())));
   return BK_TYPES;
 }
+// src/intake.js
+function pdfBad(f, e) {
+  const locked = !!e && (e.name === 'PasswordException' || /password/i.test(e.message || ''));
+  f.badIs = locked ? 'locked' : 'damaged'; f.bad = locked ? 'it’s password-protected' : 'it couldn’t be opened';
+}
 // src/insight.js
 function paperReads() {
   const r = {}, was = batch.read || {};
@@ -1598,6 +1637,10 @@ function paperReads() {
   }
   return Object.keys(r).length ? r : undefined;
 }
+// src/insight.js
+const coverList = all => { const list = []; for (const st of batch.students) shareDocs(st, all).forEach((d, k) => list.push({ st, d, k })); return list; };
+// src/insight.js
+const coverSig = f => (f.data && f.data.length) || 0;
 // src/insight.js
 const nameFreeText = t => scrub(t, classRx());
 // src/scans.js
@@ -2323,4 +2366,4 @@ function ibBounds(c) {
 }
 // src/ib.js
 function ibGradeOf(v, bounds) { if (v == null || v === '' || isNaN(v)) return null; const b = bounds.find(r => +v >= r[0]); return b ? b[1] : null; }
-export { exportPlan, nameOut, outStem, flattenDoc, oneLeftOver, xOne, xNames, xEdit, xAll, xEarly, gotEarly, canvasJpg, exportWhy, fbOn, keyOn, asgName, fileSafe, outWord, scanAll, buildSheetPdf, parseGrade, foundLabel, manyReads, readsCount, disagreeNote, gradeRows, tableHead, tableRow, gradesSummary, cellCopy, totalText, statusText, rowShown, scoreText, cellOut, csvCell, tsvLine, bandOf, ibSetup, meGrade, pctAvgText, setKey, keyRows, classStats, leftOutText, spreadBins, onThisScale, partNote, STATUS_LABEL, triesSay, anchorDocs, anchorDocPdf, anchorFile, anchorsHere, ANCHORS, anchorOf, anchorLabel, setAnchor, anchorCoverOn, wordPagesPdf, WP_MAX, scanFile, sheetRows, appScored, appShots, rowGraded, splitReads, readKey, readingDoubt, quietReads, paperScore, rivalReads, paperBytes, fileIn, sharePage, shareDocs };
+export { exportPlan, nameOut, outStem, flattenDoc, oneLeftOver, xOne, xNames, xEdit, xAll, xEarly, gotEarly, canvasJpg, exportWhy, fbOn, keyOn, asgName, fileSafe, outWord, scanAll, buildSheetPdf, parseGrade, foundLabel, manyReads, readsCount, disagreeNote, gradeRows, tableHead, tableRow, gradesSummary, cellCopy, totalText, statusText, rowShown, scoreText, cellOut, csvCell, tsvLine, bandOf, ibSetup, meGrade, pctAvgText, setKey, keyRows, classStats, leftOutText, spreadBins, onThisScale, partNote, STATUS_LABEL, triesSay, anchorDocs, anchorDocPdf, anchorFile, anchorsHere, ANCHORS, anchorOf, anchorLabel, setAnchor, anchorCoverOn, wordPagesPdf, WP_MAX, scanFile, sheetRows, appScored, appShots, rowGraded, splitReads, readKey, readingDoubt, quietReads, paperScore, rivalReads, paperBytes, fileIn, sharePage, shareDocs, classCommon, nameFreeText };

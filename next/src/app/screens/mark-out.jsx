@@ -6,7 +6,7 @@ import { h, Fragment } from 'preact';
 import { useState, useEffect, useMemo } from 'preact/hooks';
 import { Button, Checkbox, Segmented, Icon, Progress, Card, EmptyState, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
-import { state, fmtNum, fmtPct, rowsTop, maxPoints } from '../../engines/gcore.js';
+import { state, fmtNum, fmtPct, rowsTop, maxPoints, gradeOf } from '../../engines/gcore.js';
 import { shownName, anonOn } from '../../engines/gdraw.js';
 import '../mark/lines.js';
 import '../mark/setup-lines.js';
@@ -120,6 +120,35 @@ export function Insights({ E, onOpen }) {
 }
 
 /* ---------------- Return ---------------- */
+// Anchor papers (src/anchors.js anchorCardHtml, anchorExport): the high, middle and low paper, and one button for all three.
+function AnchorCard({ E, onOpen }) {
+  const X = E.X, b = state().batch, [, tick] = useState(0), [busy, setBusy] = useState(false);
+  if (!X.anchorsHere() && !b.students.some(s => s.grade.anchor)) return null;
+  const n = X.ANCHORS.filter(([k]) => X.anchorOf(k) >= 0).length, cover = X.anchorCoverOn();
+  const first = X.ANCHORS.find(([k]) => X.anchorOf(k) >= 0);
+  const out = async () => {
+    setBusy(true);
+    try {
+      const r = await E.anchorsOut();
+      if (r.none) return toast(t('paper.an_first'));
+      E.saveFile(r.name, r.blob);
+      toast(r.n === 1 ? t('paper.an_saved_one', { name: r.name }) : t('paper.an_saved_n', { n: r.n }));
+      if (r.failed.length) toast(t('paper.an_failed', { list: r.failed.map(f => f.why ? f.lv + ' (' + f.why + ')' : t('paper.an_no_pages', { lv: f.lv })).join(', ') }));
+    } catch (e) { console.error(e); toast(t('paper.an_wrong', { e: e.message || String(e) })); }
+    finally { setBusy(false); }
+  };
+  return <Card title={t('paper.an_h')} id="rtAnchors">
+    {!n && <p class="mute">{t('paper.an_pick')}</p>}
+    <ul class="anchlist">{X.ANCHORS.map(([k, name]) => { const j = X.anchorOf(k), st = j >= 0 ? b.students[j] : null, g = st && gradeOf(st);
+      const sc = g && g.total != null ? fmtNum(g.total) + ' / ' + fmtNum(g.outOf != null ? g.outOf : maxPoints()) + (g.pct != null ? ' · ' + fmtPct(g.pct) : '') : g && g.pct != null ? fmtPct(g.pct) : '';
+      return <li class={st ? '' : 'none'} data-anchli={k}><b>{t(k === 'high' ? 'mark.an_high' : k === 'mid' ? 'mark.an_mid' : 'mark.an_low')}</b>
+        {st ? <><button type="button" class="link" onClick={() => onOpen(j)} data-raw>{shownName(st, j)}</button><span class="mute">{sc}</span></> : <span class="mute">{t('paper.an_none')}</span>}</li>; })}</ul>
+    {n > 0 && <>
+      <Checkbox checked={cover} onChange={v => { E.anchorCover(v); tick(x => x + 1); }} label={t('paper.an_cover')} />
+      <p class="mute">{t('paper.an_files', { name: X.anchorFile(first[0], 0, 1), n })} {t(cover ? 'paper.an_cover_say' : 'paper.an_plain')}</p>
+      <Button variant="primary" disabled={busy} onClick={out} data-anchout>{t(busy ? 'paper.an_making' : 'paper.an_out')}</Button></>}
+  </Card>;
+}
 const when = ms => { const d = new Date(ms); return d.toDateString() === new Date().toDateString() ? t('setup.r_today', { t: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) }) : t('setup.r_on', { d: d.toLocaleDateString([], { day: 'numeric', month: 'short' }) }); };
 export function Return({ E, cur, onOpen }) {
   const [, tick] = useState(0), [say, setSay] = useState(''), [bar, setBar] = useState(null), [keep, setKeep] = useState(true), [sheet, setSheet] = useState(true), [dpi, setDpi] = useState(150);
@@ -189,6 +218,7 @@ export function Return({ E, cur, onOpen }) {
         {sent.length > 0 && <ul class="sent">{sent.slice(0, 6).map(y => <li><button type="button" class="link" onClick={() => onOpen(y.i)} data-raw>{shownName(y.x, y.i)}</button> <span class="mute">{t('setup.r_sent', { when: when(y.x.grade.sent) })}</span></li>)}
           {sent.length > 6 && <li class="mute">{t('setup.r_more', { n: sent.length - 6 })}</li>}</ul>}
         {who ? <Button data-rtone onClick={one}>{t('setup.r_one_btn', { name: who })}</Button> : <p class="mute">{t('setup.r_one_none')}</p>}</Card>
+      <AnchorCard E={E} onOpen={onOpen} />
     </aside>
   </section>;
 }
