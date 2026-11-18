@@ -163,7 +163,7 @@ const GRADING_STATE = {
   writeWork: '() => {}', tabLive: '() => true', tabForgot: '() => false', tabLetGo: '() => {}', tabsBehind: '() => false', saveBehind: '() => {}', stampWork: '() => {}',
 };
 // What the lifted code calls that belongs to the screen (a toast, a redraw): quiet here, the new screen says and draws things itself.
-const GRADING_STUBS = { pickedUpNew: '() => false', nameFlagsShow: '() => {}', renderKept: '() => {}', groupNoteRefresh: '() => {}', groupBandRefresh: '() => {}' };
+const GRADING_STUBS = { pickedUpNew: '() => false', histFill: '() => {}', nameFlagsShow: '() => {}', renderKept: '() => {}', groupNoteRefresh: '() => {}', groupBandRefresh: '() => {}' };
 const GRADING_DENY = ['$', 'openDlg', 'closeDlg', 'sayDlg', 'saveLib', 'keepWork', 'go', 'routeNow', 'paperPut', 'folderSaved', 'syncSoon', 'homeRender'];
 // Names that are only local variables in what is lifted (an unrelated top-level declaration has the same name).
 const GRADING_LOCAL = ['inside', 'num', 'average'];
@@ -309,7 +309,9 @@ export const tnRngSet = r => { tnRng = r; };
     // Insights > Consistency (src/insight.js): whether her scores drifted as she went, read the same way, rubric row by row, and
     // the papers that share a score; the chart, the list and the side-by-side pages are the new app's
     'consData', 'driftRead', 'rowDrifts', 'roughly', 'roughGap', 'roughStep', 'DRIFT_MIN', 'DRIFT_SURE', 'sameLabel',
-  ], '', [], ['gcore', 'gdraw', 'gexport'], ['average']],
+    // Past work beside this one (src/insight.js): other downloads' scores and comments for this student, matched through the roster
+    'histLoad', 'histFind', 'histHas', 'pastScore', 'workTime',
+  ], '', [], ['gcore', 'gdraw', 'gopen', 'gexport'], ['average']],
   ['gnames', [
     // hiding names while marking and Check the covers (src/app/anon.js, src/app/claude.js checkCovers, src/insight.js cover*, src/names.js):
     // the shuffled order, which papers she has looked at, her own cover boxes and the ones she took off, and what the name search found;

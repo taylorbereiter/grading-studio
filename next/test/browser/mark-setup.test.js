@@ -265,3 +265,36 @@ test('the rubric bank in Rubric setup: a saved rubric used (its rows by place), 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('learning goals in Rubric setup: a goal picked beside two rows is kept with the setup, and the current app opens the same', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  const seed = withCard(), lib = JSON.parse(seed.ls['gs.lib']);
+  lib.goals = [{ id: 'g1', name: 'Uses evidence' }, { id: 'g2', name: 'Clear structure' }]; seed.ls['gs.lib'] = JSON.stringify(lib);
+  await p.goto(srv.url + 'blank'); await plant(p, seed);
+  const z = path.join(dir, 'Goals.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+  await p.click('[data-setupopen]');
+  await p.waitForSelector('dialog[open] select[data-sugoal="0"]');
+  assert.deepEqual((await p.$$eval('dialog[open] select[data-sugoal="0"] option', os => os.map(o => o.textContent))).slice(1), ['Uses evidence', 'Clear structure'], 'her goals to pick from');
+  await p.select('dialog[open] select[data-sugoal="0"]', 'g1');
+  await p.select('dialog[open] select[data-sugoal="2"]', 'g2');
+  await tap(p, 'dialog[open] [data-susave]');
+  await p.waitForFunction(() => JSON.stringify(window.__mark.state().setup.goals) === '["g1",null,"g2"]');
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), id);
+  await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  assert.deepEqual(await m.evaluate(() => window.__gs.state().setup.goals), ['g1', null, 'g2']);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

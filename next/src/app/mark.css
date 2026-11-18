@@ -822,3 +822,15 @@ dialog.dlg:has(.mk-bf){width:min(860px,calc(100vw - 32px))}
 .mk-bf .bf-cls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .mk-bf .bf-cls label{display:flex;gap:6px;align-items:center;font-weight:500}
 @media (max-width:700px){.mk-bf .bf-t{font-size:var(--t1)}.mk-bf .selwrap select{max-width:160px}}
+/* Past work under the score (mark/past.jsx) */
+.mk-pw{margin-top:10px;border-top:1px solid var(--line);padding-top:8px;font-size:var(--t2)}
+.mk-pw summary{cursor:pointer;font-weight:600;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.mk-pw summary .mute{font-weight:400}
+.mk-pw .stag{display:inline-block;margin-left:6px;font-size:var(--t1);padding:1px 7px;border-radius:999px;background:var(--line);color:var(--mute)}
+.mk-pw .pw-row,.mk-pw .pw-ask{padding:8px 0;border-bottom:1px solid var(--line);display:grid;gap:3px}
+.mk-pw .pw-row:last-child,.mk-pw .pw-ask:last-child{border-bottom:0}
+.mk-pw .pw-hd{display:flex;justify-content:space-between;gap:8px}
+.mk-pw .pw-hd b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk-pw .pw-sm{font-size:var(--t1);margin:0}
+.mk-pw .pw-cm{white-space:pre-wrap;color:var(--ink)}
+.mk-pw .pw-btns{display:flex;gap:6px;margin-top:4px}

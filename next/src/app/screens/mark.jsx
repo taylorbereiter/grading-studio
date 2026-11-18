@@ -309,6 +309,7 @@ function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onC
     {FU && M && <FU.Anchors st={st} />}
     <textarea class="mk-cmt" aria-label={t('mark.comment_for')} placeholder={t('mark.comment_for_ph')} value={gr.comment || ''} disabled={off} data-raw onInput={e => M.setComment(e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.blur(); }} />
     {M && <CommentChips text={gr.comment || ''} onAdd={c => M.setComment((gr.comment || '').trim() ? (gr.comment || '').replace(/\s+$/, '') + ' ' + c : c)} />}
+    {FU && M && <FU.PastWork st={st} />}
     {TN && M && <TN.NotesPart st={st} />}
     {!solo && <div class="foot"><IconButton icon="chl" label={t('mark.prev')} onClick={onPrev} disabled={first} />
       {fm ? <span class="grow" /> : <Button variant="primary" kbd="Enter" onClick={next} data-next>{t('mark.next_score')}</Button>}
