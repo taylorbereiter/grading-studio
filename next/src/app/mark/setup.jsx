@@ -5,7 +5,7 @@
 // (mark/change.js setupSave). The current app asks before a Save that changes scores already given; here the dialog says it as it
 // goes (what would change, in counts), and Save goes at once with Undo.
 import { h, Fragment } from 'preact';
-import { useState, useRef } from 'preact/hooks';
+import { useState, useRef, useEffect } from 'preact/hooks';
 import { Button, IconButton, Segmented, Dialog, TextInput, Select, Switch, toast } from '../../ui/index.js';
 import { state, rowsTop, rowHalf, rowsMax, rowLevels, rowSteps, rowScaleOf, topOk, ROW_TOP, SCALE12, SCALE_FIVES } from '../../engines/gcore.js';
 import { WORD_RX } from '../../engines/gdraw.js';
@@ -14,6 +14,9 @@ import * as E from '../../engines/gopen.js';
 import { libs } from './paper.js';
 import { t } from '../../i18n/t.js';
 import * as C from './change.js';
+import { readBank, keepRubric, dropRubric, keepScale, uid } from '../../students/bank.js';
+import { undo as undoLast } from '../../services/undo.js';
+import { onSaved } from '../../shared/saved.js';
 import './lines.js';
 import './setup-lines.js';
 
@@ -38,6 +41,32 @@ function stakes(d, from, n0) {
   return out;
 }
 
+// The rubric bank in Rubric setup (src/rubrics.js rubricLibRaw, scaleBankRaw, rubricUse, rubricSave, scaleSave): saved rubrics by
+// unit with Use, Save to the bank… with a name and a unit, and saved grading scales with the same top score. Saving or deleting is one
+// undo step at once; the current app asks before replacing one of the same name or deleting.
+const slug = v => String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+const refUnit = (bk, ref) => (!ref ? null : bk.units.find(u => u.id === ref.id) || bk.units.find(u => u.course === ref.course && slug(u.title) === slug(ref.title)) || null);
+const unitKeyOf = (bk, ref) => { if (!ref || !(ref.id || ref.title)) return ''; const u = refUnit(bk, ref); return u ? u.id : 'ref:' + (ref.course || '') + '|' + (ref.title || ''); };
+const unitLabel = (bk, k) => { if (!k) return t('setup.sb_no_unit'); const u = bk.units.find(x => x.id === k); if (u) return (u.course ? u.course + ' · ' : '') + u.title; const [c, ...rest] = k.slice(4).split('|'); return (c ? c + ' · ' : '') + rest.join('|'); };
+const keyRef = (bk, k, was) => { if (!k) return null; const u = bk.units.find(x => x.id === k); if (u) return { id: u.id, course: u.course, title: u.title }; return was && unitKeyOf(bk, was) === k ? { id: was.id || '', course: was.course || '', title: was.title || '' } : null; };
+function unitOpts(bk, all) {
+  const out = all ? [{ value: '*', label: t('setup.sb_every') }] : [];
+  out.push({ value: '', label: t('setup.sb_no_unit') });
+  for (const u of bk.units.slice().sort((a, b) => a.course.localeCompare(b.course) || a.start.localeCompare(b.start))) out.push({ value: u.id, label: (u.course ? u.course + ' · ' : '') + u.title });
+  for (const k of new Set([...bk.rubrics, ...bk.scales].map(r => unitKeyOf(bk, r.unit)).filter(k => k.startsWith('ref:')))) out.push({ value: k, label: unitLabel(bk, k) });
+  return out;
+}
+// Save to the bank…: a name and a unit, under the button that asked
+function AskSave({ bk, name, onSave, onCancel }) {
+  const [n, setN] = useState(name), [k, setK] = useState('');
+  return <div class="su-ask" data-suask>
+    <TextInput label={t('setup.sb_name')} value={n} onInput={setN} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); onSave(n.trim(), k); } }} data-raw data-subname />
+    <Select label={t('setup.sb_unit')} value={k} options={unitOpts(bk, false)} onChange={setK} data-subunit />
+    <p class="mute">{t('setup.sb_only')}</p>
+    <span class="su-btns"><Button size="sm" onClick={onCancel}>{t('setup.su_cancel')}</Button><Button size="sm" variant="primary" disabled={!n.trim()} onClick={() => onSave(n.trim(), k)} data-subok>{t('setup.sb_save_ok')}</Button></span>
+  </div>;
+}
+
 export function SetupDialog({ onClose }) {
   const s = state(), b = s.batch;
   const [d] = useState(() => J(s.setup)), [, again] = useState(0), re = () => again(n => n + 1);
@@ -45,6 +74,9 @@ export function SetupDialog({ onClose }) {
   const [page, setPage] = useState(undefined), [found, setFound] = useState(null), [goal, setGoal] = useState((b && b.goal) || ''), [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(() => new Set());
   const file = useRef(null);
+  const [bk, setBk] = useState(null), [fk, setFk] = useState('*'), [asking, setAsking] = useState('');
+  const loadBank = () => readBank().then(setBk, e => { console.error(e); setBk({ rubrics: [], scales: [], units: [] }); });
+  useEffect(() => { loadBank(); return onSaved(e => { if ((e.kind === 'plan' && e.id === 'bank') || (e.kind === 'setting' && /^gs\.rubrics/.test(e.id))) loadBank(); }); }, []);   // Undo, or a change in another window
   const goals = S.goalList(), max = draftMax(d), rp = page === undefined ? d.rubricPage : page;
   const scale12 = !!(s.lib.me || { scale12: true }).scale12;
 
@@ -95,6 +127,38 @@ export function SetupDialog({ onClose }) {
   };
   const useRows = () => { S.rubricRowsInto(d, found); from.length = 0; d.criteria.forEach((_, i) => from.push(i < n0.current ? i : null)); setFound(null); open.clear(); re(); };
 
+  const useRubric = r => {
+    for (const k of ['top', 'tops', 'half']) delete d[k];   // the saved rubric's own row scale, or 0 to 4 with halves when it says none
+    Object.assign(d, rowScaleOf(r), { mode: 'rubric', criteria: r.criteria.slice(), levels: r.levels ? J(r.levels) : undefined, goals: Array.isArray(r.goals) ? r.goals.slice() : undefined, scale: r.scale ? { ...r.scale } : null, rubricName: r.name });
+    from.length = 0; r.criteria.forEach((_, i) => from.push(i)); n0.current = r.criteria.length;   // a saved rubric's rows go by place
+    open.clear(); re(); toast(t('setup.sb_filled', { name: r.name }));
+  };
+  const saveRubric = async (name, key) => {
+    if (!name) return;
+    const old = bk.rubrics.find(r => r.name.toLowerCase() === name.toLowerCase());
+    const r = { id: old ? old.id : uid(), name, criteria: d.criteria.map((c, i) => c.trim() || t('setup.su_row_n', { n: i + 1 })), levels: S.tidyLevels(d), scale: d.scale ? { ...d.scale } : null, ...rowScaleOf(d), at: Date.now() };
+    if (!r.levels) delete r.levels;
+    const tags = S.goalsTidy(d); if (tags) r.goals = tags;   // a saved rubric keeps its rows' learning goals
+    const unit = keyRef(bk, key, old && old.unit); if (unit) r.unit = unit;
+    try { await keepRubric(t('setup.sb_step_save'), r); } catch (e) { console.error(e); return toast(t('setup.sb_not_saved')); }
+    d.rubricName = name; setAsking(''); setFk(key || '*'); await loadBank();
+    toast(t(old ? 'setup.sb_replaced' : 'setup.sb_saved', { name, unit: unitLabel(bk, key) }), { undo: undoLast });
+  };
+  const deleteRubric = async r => {
+    try { await dropRubric(t('setup.sb_step_del'), r.id); } catch (e) { console.error(e); return toast(t('setup.sb_not_saved')); }
+    await loadBank(); toast(t('setup.sb_deleted', { name: r.name }), { undo: undoLast });
+  };
+  const saveScale = async (name, key) => {
+    if (!name) return;
+    const old = bk.scales.find(x => x.name.toLowerCase() === name.toLowerCase()), scale = {};
+    for (let k = max; k >= 0; k--) if (d.scale[k] != null && d.scale[k] !== '' && isFinite(+d.scale[k])) scale[k] = +d.scale[k];
+    if (scale[max] == null) scale[max] = 100;   // so its top score is always known
+    const sc = { id: old ? old.id : uid(), name, scale, at: Date.now() }, unit = keyRef(bk, key, old && old.unit); if (unit) sc.unit = unit;
+    try { await keepScale(t('setup.sb_step_scale'), sc); } catch (e) { console.error(e); return toast(t('setup.sb_not_saved')); }
+    setAsking(''); await loadBank(); toast(t(old ? 'setup.sb_replaced' : 'setup.sb_saved', { name, unit: unitLabel(bk, key) }), { undo: undoLast });
+  };
+  const fitScales = bk ? bk.scales.filter(x => Math.max(...Object.keys(x.scale).map(Number)) === max) : [];
+
   const save = async () => {
     setBusy(true);
     try {
@@ -136,6 +200,18 @@ export function SetupDialog({ onClose }) {
           <Switch label={t('setup.su_half')} checked={rowHalf(d)} onChange={setHalf} />
           <span class="mute">{t('setup.su_out_all', { n: rowsMax(d) })}</span>
         </div>
+        {bk && <div class="su-bank" data-subank>
+          <b>{t('setup.sb_title')}</b>
+          {bk.rubrics.length > 0 && <Select label={t('setup.sb_show')} value={fk} options={unitOpts(bk, true)} onChange={setFk} data-subfilter />}
+          {(() => { const shown = fk === '*' ? bk.rubrics : bk.rubrics.filter(r => unitKeyOf(bk, r.unit) === fk);
+            if (!bk.rubrics.length) return <p class="mute">{t('setup.sb_none')}</p>;
+            if (!shown.length) return <p class="mute">{t('setup.sb_none_unit')}</p>;
+            return <ul class="su-blist">{shown.map(r => <li data-subitem={r.id}><span><b data-raw>{r.name}</b><small>{t('setup.sb_about', { n: r.criteria.length })}{fk === '*' ? ' · ' + unitLabel(bk, unitKeyOf(bk, r.unit)) : ''}</small></span>
+              <Button size="sm" onClick={() => useRubric(r)} data-subuse={r.id}>{t('setup.sb_use')}</Button>
+              <IconButton icon="x" size="sm" label={t('setup.sb_del', { name: r.name })} onClick={() => deleteRubric(r)} data-subdel={r.id} /></li>)}</ul>; })()}
+          {asking === 'rubric' ? <AskSave bk={bk} name={d.rubricName || (b && b.assignment && b.assignment.name) || ''} onSave={saveRubric} onCancel={() => setAsking('')} />
+            : <div><Button size="sm" onClick={() => setAsking('rubric')} data-subsave>{t('setup.sb_save')}</Button></div>}
+        </div>}
       </div> : <div class="su-out"><TextInput label={t('setup.su_out_of')} type="number" min="1" step="0.5" value={String(d.outOf ?? '')} onInput={v => { d.outOf = v; re(); }} data-suout />
         {!!goals.length && b && <Select label={t('setup.su_goal_all')} value={goal} options={goalOpts(goal)} onChange={setGoal} data-raw data-sugoalall />}</div>}
 
@@ -143,7 +219,11 @@ export function SetupDialog({ onClose }) {
         <b>{t('setup.su_scale')}</b>
         <span class="su-btns">{scale12 && <Button size="sm" onClick={() => preset('usual')} data-supreset="usual">{t('setup.su_usual')}</Button>}
           <Button size="sm" onClick={() => preset('fives')} data-supreset="fives">{t('setup.su_fives')}</Button>
-          <Button size="sm" onClick={() => preset('none')} data-supreset="none">{t('setup.su_none')}</Button></span>
+          <Button size="sm" onClick={() => preset('none')} data-supreset="none">{t('setup.su_none')}</Button>
+          {fitScales.length > 0 && <span class="selwrap"><select class="input" aria-label={t('setup.sb_scales')} value="" onChange={e => { const sc = fitScales.find(x => x.id === e.currentTarget.value); if (sc) { d.scale = { ...sc.scale }; re(); toast(t('setup.sb_scale_used', { name: sc.name })); } }} data-suscuse>
+            <option value="">{t('setup.sb_scales')}</option>{fitScales.map(x => <option value={x.id}>{x.name}</option>)}</select></span>}
+          {bk && d.scale && max <= 40 && asking !== 'scale' && <Button size="sm" variant="quiet" onClick={() => setAsking('scale')} data-suscsave>{t('setup.sb_scale_save')}</Button>}</span>
+        {asking === 'scale' && bk && <AskSave bk={bk} name={t('setup.sb_scale_name', { n: max })} onSave={saveScale} onCancel={() => setAsking('')} />}
         {!d.scale ? <p class="mute">{t('setup.su_none_say')}</p> : max > 40 ? <p class="mute">{t('setup.su_too_many')}</p>
           : <><div class="su-grid">{[...Array(max + 1).keys()].reverse().map(k => <label><span>{k}</span>=<input class="input" type="number" step="0.5" value={d.scale[k] == null ? '' : String(d.scale[k])} onInput={e => scaleAt(k, e.currentTarget.value)} data-susk={k} /></label>)}</div>
             <p class="mute">{t('setup.su_blank_rows')}</p></>}
