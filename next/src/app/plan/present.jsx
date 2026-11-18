@@ -29,7 +29,7 @@ export function Present({ p, l, start = 0, className, onClose }) {
   const [size, setSize] = useState(() => fit());
   const [panel, setPanel] = useState(''), [blank, setBlank] = useState(false), [typed, setTyped] = useState('');
   const [timer, setTimer] = useState({ left: 0, run: false }), [pick, setPick] = useState(''), [groups, setGroups] = useState([]), [gsize, setGsize] = useState(4);
-  const box = useRef(null), st = useRef({}); st.current = { i, panel, typed, gsize, blank };
+  const box = useRef(null), st = useRef({}), far = useRef(i), began = useRef(Date.now()); st.current = { i, panel, typed, gsize, blank }; far.current = Math.max(far.current, i);
   function fit() { const w = window.innerWidth, hh = window.innerHeight; return Math.floor(Math.min(w, hh * 1280 / 720)); }
   const names = () => { const r = rosterNamesForPresent(), k = nameKey(className || ''); const c = r.find(x => nameKey(x.name) === k); return c ? c.names : []; };
   const links = l.links || [];
@@ -75,7 +75,7 @@ export function Present({ p, l, start = 0, className, onClose }) {
   }, [l.id]);
   // The class timer counts down once a second while it runs.
   useEffect(() => { if (!timer.run) return; const id = setInterval(() => setTimer(x => x.left <= 1 ? { left: 0, run: false } : { ...x, left: x.left - 1 }), 1000); return () => clearInterval(id); }, [timer.run]); // not-words
-  function end() { try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch {} onClose(st.current.i); }
+  function end() { try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch {} onClose(st.current.i, far.current, (Date.now() - began.current) / 1000); }
   const s = l.slides[i];
   return <div class={'present' + (blank ? ' blank' : '')} ref={box} tabIndex={-1} role="dialog" aria-modal="true" aria-label={t('plan.presenting', { title: l.title })}
     onClick={e => { if (!e.target.closest('button,a,.prpanel')) go(1); }}>

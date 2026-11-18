@@ -88,11 +88,16 @@ function download(p, l) {
 function LessonView({ p, l, slot, per, onOpenSlide }) {
   const obj = l.slides.find(s => s.layout === 'objectives'), ag = l.slides.find((s, i) => i > 0 && s.layout === 'agenda');
   const rest = l.slides.map((s, i) => ({ s, i })).filter(x => x.s.layout !== 'title' && x.s !== ag);
+  // Last time you taught it: the latest class it was taught to, where that class got to, and the note kept then.
+  const last = [...(l.taught || [])].filter(x => x && x.date && x.date <= today()).sort((a, b) => a.date.localeCompare(b.date) || (a.at || 0) - (b.at || 0)).pop();
   return <div class="lv">
     {obj && lines(obj.body).length > 0 && <section class="lsec" aria-labelledby="h-obj"><h2 id="h-obj" class="t3" data-raw>{obj.title || t('plan.today_you_will')}</h2>
       <ul class="obj">{lines(obj.body).map(x => <li data-raw>{plain(x)}</li>)}</ul></section>}
     {ag && lines(ag.body).length > 0 && <section class="lsec" aria-labelledby="h-ag"><h2 id="h-ag" class="t3">{t('plan.agenda')} {per && per.m && <small class="mute" data-raw>{t('plan.time_range', { from: clock(per.m.start), to: clock(per.m.end) })}</small>}</h2>
       <ol class="agenda">{lines(ag.body).map(x => <li data-raw>{plain(x)}</li>)}</ol></section>}
+    {last && <section class="lsec last" aria-labelledby="h-last"><h2 id="h-last" class="t3">{t('plan.last_time')}</h2>
+      <p><span data-raw>{(classOf(p, last.classId) || {}).name || ''}</span> · <span data-raw>{date(at(last.date), { weekday: 'short', day: 'numeric', month: 'short' })}</span> · {last.slide >= last.of ? t('plan.got_to_end') : t('plan.got_to_n', { n: last.slide, of: last.of })}</p>
+      {last.note && <p class="mute" data-raw>{last.note}</p>}</section>}
     <section class="lsec" aria-labelledby="h-steps"><h2 id="h-steps" class="t3">{t('plan.slides_n', { n: l.slides.length })}</h2>
       <ol class="steps">{rest.map(({ s, i }) => <li class="step">
         <div class="stx"><h3 data-raw>{plain(s.title) || t('plan.slide_n', { n: i + 1 })}</h3>
@@ -171,6 +176,22 @@ export function AfterClass({ l, slot, onSave }) {
   return <section class="after"><TextBox label={t('plan.after_class')} hint={t('plan.after_class_hint')} value={v} onInput={setV} onBlur={keep} rows={3} /></section>;
 }
 
+// Where Present begins from the lesson: the slide this class stopped on last time, if it stopped partway (src/planner/present.js
+// prResume). And where the class got to, kept on its place in "taught" once a lesson for today has been presented for two minutes
+// or more (present.js presentEnd asks then); the teacher's note stays, and the toast takes it back.
+function resumeAt(l, slot) {
+  const ts = (l.taught || []).filter(x => !slot || x.classId === slot.classId), x = ts[ts.length - 1];
+  return x && x.slide < l.slides.length && x.slide < x.of ? x.slide - 1 : 0;
+}
+function gotTo(l, slot, far, secs, save) {
+  if (!slot || slot.date !== today() || !(secs >= 120) || typeof far !== 'number') return;
+  const n = JSON.parse(JSON.stringify(l)), had = (n.taught || []).find(x => x.classId === slot.classId && x.date === slot.date);
+  const t0 = { ...(had || { classId: slot.classId, date: slot.date, note: '' }), slide: far + 1, of: l.slides.length, at: Date.now() };
+  n.taught = [...(n.taught || []).filter(x => x !== had), t0];
+  save(n);
+  toast(t('plan.got_to', { n: far + 1, of: l.slides.length }), { undo: () => { const b = JSON.parse(JSON.stringify(n)); b.taught = l.taught ? JSON.parse(JSON.stringify(l.taught)) : undefined; if (!b.taught) delete b.taught; save(b); } });
+}
+
 export default function LessonPage({ route }) {
   const p = usePlan();
   const [l, save] = useLesson(p, route.params.id);
@@ -213,6 +234,6 @@ export default function LessonPage({ route }) {
       {view !== 'edit' && <Side p={p} l={l} slot={slot} per={per} onSave={save} onDownload={() => download(p, l)} onAssistant={() => setAsking(true)} />}
     </div>
     <AssistantSheet p={p} l={l} open={asking} onClose={() => setAsking(false)} save={save} />
-    {presenting && <Present p={p} l={l} className={per ? per.c.name : ''} start={view === 'slides' ? cur : 0} onClose={i => { setPresenting(false); if (typeof i === 'number') setCur(i); }} />}
+    {presenting && <Present p={p} l={l} className={per ? per.c.name : ''} start={view === 'slides' ? cur : resumeAt(l, slot)} onClose={(i, far, secs) => { setPresenting(false); if (typeof i === 'number') setCur(i); gotTo(l, slot, far, secs, save); }} />}
   </div>;
 }

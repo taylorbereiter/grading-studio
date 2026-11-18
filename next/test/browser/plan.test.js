@@ -481,6 +481,14 @@ test('Course line: a unit renamed with its weeks pasted, a new unit made and the
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
+test('a taught lesson says where the class got to last time and what was noted', async () => {
+  const p = await fresh();
+  await open(p, 'lesson/L1');
+  assert.equal(await p.$eval('main .last h2', x => x.textContent), 'Last time you taught it');
+  assert.match(await p.$eval('main .last p', x => x.textContent), /Grade 9 English · .* · got to the end/);
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
 test('on a phone: the lesson reads, and an after-class note waits for the computer without the lesson being written', async () => {
   const p = await fresh(390);
   await open(p, 'lesson/L2');
