@@ -96,3 +96,31 @@ test('units on the class page: added, renamed, an assignment moved into one, and
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('an assignment row: early returns shown on the row, and its details say how many are scored, partial, missing and returned early', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  const seed = withCard(), meta = seed.idb['grading-studio-keep'].stores.meta, n2 = meta.find(([id]) => id === 'gs.b.n2')[1];
+  Object.assign(n2, { n: 6, scored: 3, partial: 1, off: 1, sent: 2, sentT: Date.parse('2026-10-24T09:00') });
+  await p.goto(srv.url + 'blank'); await plant(p, seed);
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-item="i5"] [data-wearly]', { timeout: 60000 });
+  assert.equal(await p.$eval('[data-item="i5"] [data-wearly]', e => e.textContent), 'Returned 2/5');
+  assert.equal(await p.$('[data-wdet="i5"]'), null, 'details start closed');
+  await p.click('[data-wmore="i5"]');
+  await p.waitForSelector('[data-wdet="i5"]');
+  assert.equal(await p.$eval('[data-wmore="i5"]', e => e.getAttribute('aria-expanded')), 'true');
+  assert.equal(await p.$eval('[data-wdet="i5"] [data-wsay]', e => e.textContent), '3 of 5 scored · 1 partial · 1 missing or excused');
+  const more = await p.$eval('[data-wdet="i5"]', e => e.textContent);
+  assert.match(more, /2 students got theirs early/);
+  assert.match(more, /aren’t kept in this browser/, 'no papers here, so no ways to the marking steps');
+  assert.equal(await p.$('[data-wdet="i5"] [data-wgo]'), null);
+  // an assignment with no papers yet says so; the details close again
+  await p.click('[data-wmore="i9"]');
+  await p.waitForSelector('[data-wdet="i9"]');
+  assert.match(await p.$eval('[data-wdet="i9"]', e => e.textContent), /No papers yet/);
+  await p.click('[data-wmore="i5"]');
+  await p.waitForFunction(() => !document.querySelector('[data-wdet="i5"]'));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

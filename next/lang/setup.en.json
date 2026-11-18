@@ -1140,5 +1140,28 @@
  "setup.sg_names_h": "Name covers",
  "setup.sg_names_about": "You cover names yourself in Check the covers. Finding them on its own can cover words that aren't names.",
  "setup.sg_names_mine": "Cover names myself",
- "setup.sg_names_find": "Also find typed names"
+ "setup.sg_names_find": "Also find typed names",
+ "setup.w_more": "Details for {name}",
+ "setup.w_scored": "{done} of {of} scored",
+ "setup.w_fb": "{done} of {of} feedback complete",
+ "setup.w_partial": {
+  "one": "{n} partial",
+  "other": "{n} partial"
+ },
+ "setup.w_off": {
+  "one": "{n} missing or excused",
+  "other": "{n} missing or excused"
+ },
+ "setup.w_early": "Returned {sent}/{of}",
+ "setup.w_early_tip": "Students who got theirs early, one at a time",
+ "setup.w_early_n": {
+  "one": "{n} student got theirs early",
+  "other": "{n} students got theirs early"
+ },
+ "setup.w_back_on": "Returned {d}",
+ "setup.w_brought": "Papers brought in {d}",
+ "setup.w_kept_not": "The papers aren’t kept in this browser",
+ "setup.w_grades": "Grades",
+ "setup.w_insights": "Insights",
+ "setup.w_return": "Return"
 }

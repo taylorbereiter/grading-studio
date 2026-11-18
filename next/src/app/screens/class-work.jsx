@@ -50,6 +50,23 @@ function standing(lib, kept, it) {
   if (!s.left) return { key: back ? 'setup.s_returned' : 'setup.s_ready', cls: back ? 'ret' : 'ok', m, s };
   return { key: began ? (s.fm ? 'setup.s_feedback' : 'setup.s_scoring') : 'setup.s_started_not', cls: began ? 'on' : '', m, s };
 }
+// A row's details (the current app's card: keptSay, the early-returned chip and its Open): how many are scored, partial, missing or
+// excused, who got theirs early, when the papers came in and went back, and the way to each marking step.
+const day = ms => date(new Date(ms), { day: 'numeric', month: 'short' });
+function Details({ it, st }) {
+  const m = st.m, s = st.s, open = m && canOpen(m), back = m && backOf(m);
+  if (!m) return <div class="wdet" data-wdet={it.id}><p class="mute">{t(st.key)}</p></div>;
+  const bits = s && s.of ? [t(s.fm ? 'setup.w_fb' : 'setup.w_scored', { done: s.done, of: s.of })] : [];
+  if (s && !s.fm && m.partial) bits.push(t('setup.w_partial', { n: m.partial }));
+  if (m.off) bits.push(t('setup.w_off', { n: m.off }));
+  const early = s && m.sent && !back ? Math.min(s.of, m.sent) : 0;
+  return <div class="wdet" data-wdet={it.id}>
+    {!!bits.length && <p data-wsay>{bits.join(' · ')}</p>}
+    {s && s.of > 0 && <span class="wbar" role="img" aria-label={bits[0]}><i style={{ width: Math.round(s.done / s.of * 100) + '%' }} /></span>}
+    <p class="mute">{[m.t && t('setup.w_brought', { d: day(m.t) }), back ? t('setup.w_back_on', { d: day(back) }) : early ? t('setup.w_early_n', { n: early }) : '', !open && t('setup.w_kept_not')].filter(Boolean).join(' · ')}</p>
+    {open && <div class="wgo">{[['mark', t('setup.w_open')], ['grades', t('setup.w_grades')], ['insights', t('setup.w_insights')], ['return', t('setup.w_return')]].map(([k, l]) => <a class="btn sm" href={href('mark', m.id, k === 'mark' ? null : k)} data-wgo={k}>{l}</a>)}</div>}
+  </div>;
+}
 // Files from a picker or a drop: each with the path it had (a folder keeps its folders, as the current app reads them).
 const entriesOf = files => [...files].map(f => ({ path: f.webkitRelativePath || f.name, file: f }));
 
@@ -57,6 +74,8 @@ export default function ClassWork({ classId }) {
   const [lib, setLib] = useState(null), [kept, setKept] = useState(null), [busy, setBusy] = useState(null);
   const files = useRef(null), folder = useRef(null), scan = useRef(null), want = useRef(null), [ask, setAsk] = useState(null), [split, setSplit] = useState(null);
   const [name, setName] = useState(null), [move, setMove] = useState(null);
+  const [shown, setShown] = useState(() => new Set());
+  const flip = id => setShown(o => { const n = new Set(o); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const load = () => { setLib(readLibrary()); readKept().then(setKept); };
   useEffect(load, [classId]);
   useEffect(() => onSaved(e => { if (e.kind === 'library') setLib(readLibrary()); }), []);
@@ -121,9 +140,11 @@ export default function ClassWork({ classId }) {
           return <li class="wrow" data-item={it.id}
             onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add('over'); }} onDragLeave={e => e.currentTarget.classList.remove('over')}
             onDrop={e => { e.currentTarget.classList.remove('over'); e.preventDefault(); bring(it, e.dataTransfer.files); }}>
-            <div class="wn"><b data-raw>{it.name}</b>
+            <div class="wn"><span class="wnm"><IconButton icon={shown.has(it.id) ? 'chd' : 'chr'} size="sm" label={t('setup.w_more', { name: it.name })} aria-expanded={shown.has(it.id) ? 'true' : 'false'} onClick={() => flip(it.id)} data-wmore={it.id} /><b data-raw>{it.name}</b></span>
               <small class="mute">{[KIND[it.type] && t(KIND[it.type]), it.due && t('setup.w_due', { d: date(new Date(it.due + 'T12:00'), { day: 'numeric', month: 'short' }) })].filter(Boolean).join(' · ')}</small></div>
-            <span class={'wst ' + st.cls}>{t(st.key)}{st.s && st.s.left ? ' · ' + t('home.left_of', { left: st.s.left, of: st.s.of }) : ''}</span>
+            <span class={'wst ' + st.cls}>{t(st.key)}{st.s && st.s.left ? ' · ' + t('home.left_of', { left: st.s.left, of: st.s.of }) : ''}
+              {/* some got theirs early, one at a time */}
+              {st.s && st.m.sent > 0 && st.m.sent < st.s.of && !backOf(st.m) && <span class="wearly" title={t('setup.w_early_tip')} data-wearly>{t('setup.w_early', { sent: st.m.sent, of: st.s.of })}</span>}</span>
             {open ? <span class="wopen"><a class="btn sm" href={href('mark', st.m.id)}>{t('setup.w_open')}</a>
               {/* a newer copy of the papers: her work comes over (mark/carry.js) */}
               <Menu label={t('setup.w_again')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.w_again')} disabled={busy === it.id} data-again-for={it.id} />}
@@ -131,6 +152,7 @@ export default function ClassWork({ classId }) {
               : <span class="wopen"><Menu label={t('setup.w_bring')} trigger={b => <Button {...b} size="sm" icon="upload" disabled={busy === it.id} data-bring-for={it.id}>{t('setup.w_bring')}</Button>}
                 items={[{ label: t('setup.w_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, { label: t('setup.w_scan'), icon: 'image', onSelect: () => pick(it, scan) }]} />
               <Menu label={t('setup.u_item_more', { name: it.name })} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.u_item_more', { name: it.name })} data-more-for={it.id} />} items={[more(it)]} /></span>}
+            {shown.has(it.id) && <Details it={it} st={st} />}
           </li>; })}</ul>}</div>)}
     {classId !== '-' && <div><Button size="sm" icon="plus" onClick={() => setName({ name: t('setup.u_new', { n: units.length + 1 }) })} data-addunit>{t('setup.u_add')}</Button></div>}
     <p class="mute hint">{t('setup.w_drop')}</p>
