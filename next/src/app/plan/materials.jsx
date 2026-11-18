@@ -18,7 +18,7 @@ function saveAs(name, b) { const a = document.createElement('a'), url = URL.crea
 
 export function Materials({ p, l, onSave }) {
   const E = engine(p), files = l.files || [], links = l.links || [];
-  const pick = useRef(), swap = useRef(''), [over, setOver] = useState(false), [adding, setAdding] = useState(false), [url, setUrl] = useState(''), [name, setName] = useState('');
+  const pick = useRef(), form = useRef(), swap = useRef(''), [over, setOver] = useState(false), [adding, setAdding] = useState(false), [url, setUrl] = useState(''), [name, setName] = useState('');
   const put = async n => { try { await onSave(n); } catch (e) { saveFailed(e); } };
   const add = async list => {
     const n = copy(l); n.files = n.files || []; let k = 0;
@@ -47,9 +47,11 @@ export function Materials({ p, l, onSave }) {
     await put(n); await dropLessonFile(f.id).catch(e => console.error(e));
     toast(t('plan.removed', { name: f.name }), { undo: async () => { if (b) await saveLessonFile(b, f.id); const m = copy(n); m.files = [...(m.files || []), f]; await put(m); } });
   };
+  // Read from the boxes themselves, so a key pressed straight after typing never misses the last letter.
   const addLink = async () => {
-    const u = E.lkUrl(url); if (!u) return toast(t('plan.link_bad'));
-    const n = copy(l); n.links = E.normLinks([...(n.links || []), { name: name.trim(), url: u }]);
+    const box = form.current ? [...form.current.querySelectorAll('input')] : [], uv = box[0] ? box[0].value : url, nv = box[1] ? box[1].value : name;
+    const u = E.lkUrl(uv); if (!u) return toast(t('plan.link_bad'));
+    const n = copy(l); n.links = E.normLinks([...(n.links || []), { name: nv.trim(), url: u }]);
     setUrl(''); setName(''); setAdding(false); await put(n);
   };
   const removeLink = async x => {
@@ -70,7 +72,7 @@ export function Materials({ p, l, onSave }) {
       {links.map(x => <li><a class="link mopen" href={x.url} target="_blank" rel="noopener"><Icon name="link" size="sm" /><span data-raw>{x.name}</span></a>
         <small class="mute" data-raw>{E.lkHost(x.url)}</small><IconButton icon="trash" size="sm" label={t('common.remove')} onClick={() => removeLink(x)} /></li>)}
     </ul>
-    {adding ? <div class="mlink">
+    {adding ? <div class="mlink" ref={form}>
       <TextInput label={t('plan.link_address')} type="url" value={url} onInput={setUrl} onKeyDown={e => { if (e.key === 'Enter') addLink(); }} data-focus="link-url" />
       <TextInput label={t('plan.link_name')} value={name} onInput={setName} onKeyDown={e => { if (e.key === 'Enter') addLink(); }} />
       <div class="row"><Button size="sm" variant="quiet" onClick={() => setAdding(false)}>{t('common.cancel')}</Button><Button size="sm" variant="primary" onClick={addLink} data-focus="link-add">{t('plan.add_link')}</Button></div></div>
