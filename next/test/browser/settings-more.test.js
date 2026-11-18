@@ -89,7 +89,8 @@ test('Settings: the assistant and where it opens, the programme, places in an av
   // handing back, and the app's text size
   await p.goto(srv.url + 'next/#/settings/marking');
   await p.waitForSelector('[data-stxnames] [role="switch"][aria-checked="true"]', { timeout: 30000 });
-  await p.click('[data-stxnames] [role="switch"]');
+  // the Undo toast from the goals may still be over it, so the switch is pressed itself
+  await p.$eval('[data-stxnames] [role="switch"]', e => e.click());
   assert.equal(await until(async () => (await ls(p, 'gs.xnames')) === false), true);
   await p.goto(srv.url + 'next/#/settings/display');
   await p.waitForSelector('[data-stsize] [data-v="1.15"]', { timeout: 30000 });

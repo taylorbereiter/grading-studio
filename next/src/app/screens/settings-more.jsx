@@ -100,13 +100,20 @@ export function AiSettings() {
 
 // The library's learning goals, as one undo step (src/goals.js goalsDlg finish): a removed goal is remembered as gone, so another
 // computer removes it too, and it comes off whatever was tagged with it.
-async function goalsPut(next, was, label) {
-  const W = await PARTS.write(), L = readLibrary(), before = { goals: J(L.goals), gone: J(L.goalsGone) };
-  const now = Date.now(), gone = { ...(L.goalsGone || {}) };
-  for (const g of was) if (!next.some(x => x.id === g.id)) gone[g.id] = now;
-  const after = { goals: next.length ? J(next) : undefined, gone: Object.keys(gone).length ? gone : undefined };
+// edit(list) gives the new list from the goals as they are when the change is saved, so two changes made one after the other (a goal
+// renamed, then the next one before the first has saved) both stay.
+async function goalsPut(edit, label) {
+  const W = await PARTS.write(), J2 = v => (v == null ? undefined : J(v));
+  let before, after;
   const put = s => W.saveLibrary(l => { if (s.goals) l.goals = J(s.goals); else delete l.goals; if (s.gone) l.goalsGone = J(s.gone); else delete l.goalsGone; });
-  await put(after);
+  await W.saveLibrary(l => {
+    before = { goals: J2(l.goals), gone: J2(l.goalsGone) };
+    const was = goalList(l), next = edit(was), now = Date.now(), gone = { ...(l.goalsGone || {}) };
+    for (const g of was) if (!next.some(x => x.id === g.id)) gone[g.id] = now;
+    after = { goals: next.length ? J(next) : undefined, gone: Object.keys(gone).length ? gone : undefined };
+    if (after.goals) l.goals = J(after.goals); else delete l.goals;
+    if (after.gone) l.goalsGone = J(after.gone); else delete l.goalsGone;
+  });
   undoList.record({ label, undo: () => put(before), redo: () => put(after) });
 }
 const goalList = L => (Array.isArray(L.goals) ? L.goals.filter(g => g && g.id && String(g.name || '').trim()) : []);
@@ -114,15 +121,16 @@ const gid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 function Goals() {
   const L = useLibrary(), list = goalList(L), [add, setAdd] = useState('');
   const tidy = v => String(v || '').trim().replace(/\s+/g, ' ').slice(0, 80);
-  const rename = (g, v) => { v = tidy(v); if (!v || v === g.name) return; if (list.some(x => x.id !== g.id && x.name.toLowerCase() === v.toLowerCase())) return toast(t('prefs.goal_twice')); goalsPut(list.map(x => (x.id === g.id ? { ...x, name: v, at: Date.now() } : x)), list, t('prefs.goal_step_name')); };
-  const remove = g => { goalsPut(list.filter(x => x.id !== g.id), list, t('prefs.goal_step_rm')); toast(t('prefs.goal_gone', { name: g.name }), { undo: () => undoList.undo() }); };
-  const up = i => { const n = list.slice(); [n[i - 1], n[i]] = [n[i], n[i - 1]]; goalsPut(n, list, t('prefs.goal_step_move')); };
-  const plus = () => { const v = tidy(add); if (!v) return; setAdd(''); if (list.some(x => x.name.toLowerCase() === v.toLowerCase())) return toast(t('prefs.goal_twice')); goalsPut([...list, { id: gid(), name: v, at: Date.now() }], list, t('prefs.goal_step_add')); };
+  const twice = (l, id, v) => l.some(x => x.id !== id && x.name.toLowerCase() === v.toLowerCase());
+  const rename = (g, v) => { v = tidy(v); if (!v || v === g.name) return; if (twice(list, g.id, v)) return toast(t('prefs.goal_twice')); goalsPut(l => (twice(l, g.id, v) ? l : l.map(x => (x.id === g.id ? { ...x, name: v, at: Date.now() } : x))), t('prefs.goal_step_name')); };
+  const remove = g => { goalsPut(l => l.filter(x => x.id !== g.id), t('prefs.goal_step_rm')); toast(t('prefs.goal_gone', { name: g.name }), { undo: () => undoList.undo() }); };
+  const up = g => goalsPut(l => { const n = l.slice(), i = n.findIndex(x => x.id === g.id); if (i > 0) [n[i - 1], n[i]] = [n[i], n[i - 1]]; return n; }, t('prefs.goal_step_move'));
+  const plus = () => { const v = tidy(add); if (!v) return; setAdd(''); if (twice(list, '', v)) return toast(t('prefs.goal_twice')); goalsPut(l => (twice(l, '', v) ? l : [...l, { id: gid(), name: v, at: Date.now() }]), t('prefs.goal_step_add')); };
   return <Card title={t('prefs.goal_h')} data-stgoals>
     <p class="mute">{t(list.length ? 'prefs.goal_about' : 'prefs.goal_none')}</p>
     {list.length > 0 && <ol class="sg-cb">{list.map((g, i) => <li key={g.id} data-stgoal={g.id}>
       <Box label={t('prefs.goal_n', { n: i + 1 })} value={g.name} maxLength={80} save={v => rename(g, v)} data-raw />
-      <IconButton icon="chu" label={t('prefs.goal_up')} disabled={i === 0} onClick={() => up(i)} />
+      <IconButton icon="chu" label={t('prefs.goal_up')} disabled={i === 0} onClick={() => up(g)} />
       <IconButton icon="trash" label={t('prefs.goal_rm')} onClick={() => remove(g)} data-stgoalrm={g.id} /></li>)}</ol>}
     <div class="sg-cbadd"><TextInput label={t('prefs.goal_add')} value={add} maxLength={80} onInput={setAdd} onKeyDown={e => { if (e.key === 'Enter') plus(); }} data-raw data-stgoalnew /><Button onClick={plus} data-stgoaladd>{t('prefs.goal_add_btn')}</Button></div>
     {list.length > 0 && <p class="hint">{t('prefs.goal_tags')}</p>}
