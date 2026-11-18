@@ -153,9 +153,9 @@ function Row({ ctx, r, cat }) {
   return <li class={'tdl' + (done ? ' done' : '') + (r.auto ? ' auto' : '') + (ctx.sel === r.id ? ' sel' : '')} data-td-row={r.id}>
     <Check r={r} />
     <button type="button" class="tdmain" onClick={() => ctx.setSel(r.id)} aria-expanded={String(ctx.sel === r.id)}><span class="tdx" data-raw>{r.x}</span>
-      <span class="tdm">{meta.filter(Boolean)}{!r.auto && due && <span class={late ? 'late' : ''} data-td-due>{due}</span>}</span></button>
+      <span class="tdm">{meta.filter(Boolean)}{!r.auto && due && <span class={late ? 'late' : ''} data-td-due data-raw>{due}</span>}</span></button>
     {r.auto && <a class="btn sm" href={bh} data-td-go={r.id}>{t(bl)}</a>}
-    {r.auto && <span class="tddue" data-td-due>{due}</span>}
+    {r.auto && <span class="tddue" data-td-due data-raw>{due}</span>}
   </li>;
 }
 function List({ ctx, g, by, showDone, empty }) {
