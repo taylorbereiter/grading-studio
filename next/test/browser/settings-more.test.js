@@ -88,7 +88,7 @@ test('Settings: the assistant and where it opens, the programme, places in an av
   await until(async () => (await lib(p)).goals.length === 3);
   // handing back, and the app's text size
   await p.goto(srv.url + 'next/#/settings/marking');
-  await p.waitForSelector('[data-stxnames] [role="switch"]', { timeout: 30000 });
+  await p.waitForSelector('[data-stxnames] [role="switch"][aria-checked="true"]', { timeout: 30000 });
   await p.click('[data-stxnames] [role="switch"]');
   assert.equal(await until(async () => (await ls(p, 'gs.xnames')) === false), true);
   await p.goto(srv.url + 'next/#/settings/display');
