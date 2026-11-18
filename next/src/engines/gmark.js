@@ -1,7 +1,7 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
-import { batch, cur, setup, tool, selected, pages, undoStack, redoStack, disp, inkColor, hlColor, penW, CHECK_INK, once, tr, saveSoon, toast, renderList, renderTools, renderGrade, openStudent, renderPage, gradeMarksChanged, rescanFile, editText, openNote, openStampMenu, placeScore, stopScorePlace, scanNote, refound, endOnce, setTool, scorePlacing, activeEditor, writeWork, tabLive, tabForgot, tabLetGo, tabsBehind, saveBehind, stampWork, store, COLORS, HL, set } from './gcore.js';
-import { sideScreen, textLayout, noteRunY, bboxOf, rotOf, vpRot, skewOf, draw, hasPress, PRESS_MAX, textGrips, canResize, cornerPt, STICKERS, isSticker, isScoreStamp, stickerAspect, stampBox, impHas, one, marksMine } from './gdraw.js';
+import { batch, cur, setup, lib, tool, selected, pages, undoStack, redoStack, disp, inkColor, hlColor, penW, CHECK_INK, once, tr, saveSoon, toast, renderList, renderTools, renderGrade, openStudent, renderPage, gradeMarksChanged, rescanFile, editText, openNote, openStampMenu, placeScore, stopScorePlace, scanNote, refound, endOnce, setTool, scorePlacing, activeEditor, writeWork, tabLive, tabForgot, tabLetGo, tabsBehind, saveBehind, stampWork, store, rowTop, maxPoints, gradeOf, xcSay, fmtNum, COLORS, HL, noScore, ibSetup, set } from './gcore.js';
+import { sideScreen, textLayout, noteRunY, bboxOf, rotOf, vpRot, skewOf, draw, anonOn, anonOrder, hasPress, PRESS_MAX, textGrips, canResize, cornerPt, STICKERS, isSticker, isScoreStamp, stickerAspect, stampBox, impHas, one, stampHidden, marksMine } from './gdraw.js';
 
 // src/app/keep.js
 let saveT, saveDue = false;
@@ -351,11 +351,61 @@ function deleteSelected() {
 // src/app/paper.js
 function commitEditors() { if (activeEditor) { const a = activeEditor; set.activeEditor(null); a.commit(); } }
 // src/app/panels.js
+function fmNow() { const a = batch && batch.assignment, f = a && findItem(a.id); return ((f && f.it) || a || {}).type === 'fm'; }
+// src/app/panels.js
+function nextUnscored() {
+  const N = batch.students.length, o = anonOn() ? anonOrder() : batch.students.map((_, i) => i), p = o.indexOf(cur);
+  const fm = fmNow(), left = st => fm ? !st.grade.fb && !noScore(st) : !gradeOf(st).done;
+  const short = gpShortNext(left); if (short >= 0) return openStudent(short);   // a focus session with shortest papers first (src/gradeplan.js)
+  for (let k = 1; k <= N; k++) { const i = o[(p + k) % N]; if (left(batch.students[i])) return openStudent(i); }
+  toast(fm ? 'Feedback is complete for everyone' : 'Everyone has a score');
+}
+// src/app/panels.js
 let rowOn = -1, rowOnOf = null, rowKeyed = -1;
+// src/app/panels.js
+function critStampOf(st, i) {
+  const v = st.grade.rubric[i]; if (v == null || i < 0 || i >= setup.criteria.length) return null;
+  const ib = ibSetup() && setup.ib[i];
+  return ib ? { of: ib, name: ib, text: fmtNum(v) } : { of: setup.criteria[i], name: setup.criteria[i], text: fmtNum(v) + '/' + rowTop(setup, i) };
+}
+// src/app/panels.js
+const critRowOf = m => setup.mode !== 'rubric' ? -1 : ibSetup() ? setup.ib.indexOf(m.of) : setup.criteria.indexOf(m.of);
+// src/app/panels.js
+function scoreStampText(gr, st) {
+  if (ibSetup()) return ibStampText(st || batch.students[cur]);
+  const max = gr.outOf != null ? gr.outOf : maxPoints();
+  // Extra credit goes on a line of its own under the score it was added to: "17/20 = 85% + 5% extra credit" (src/stamps.js draws the three lines).
+  if (gr.xc && gr.base != null) return fmtNum(gr.base) + (max ? '/' + fmtNum(max) : '') + (gr.bpct != null ? ' = ' + gr.bpct + '%' : '') + ' + ' + xcSay(gr) + ' extra credit';
+  return fmtNum(gr.total) + (max ? '/' + fmtNum(max) : '') + (gr.pct != null ? ' = ' + gr.pct + '%' : '');
+}
+// src/app/panels.js
+function syncScoreStamps(st) {
+  if (!st || noScore(st)) return false;
+  const gr = gradeOf(st);
+  const text = gr.total == null || gr.paper ? null : scoreStampText(gr, st);   // a score read off the paper itself isn't the app's own
+  let changed = false;
+  for (const f of st.files) {
+    if (!f.marks || tryOfFile(st, f)) continue;
+    for (const l of Object.values(f.marks)) for (const m of l || []) {
+      if (m.t !== 'stamp' || stampHidden(m, st.key)) continue;
+      if (m.k === 'score' && text != null && m.text !== text) { m.text = text; changed = true; }
+      if (m.k === 'crit') { const c = critStampOf(st, critRowOf(m)); if (c && (m.text !== c.text || m.name !== c.name)) { m.text = c.text; m.name = c.name; changed = true; } }
+    }
+  }
+  return changed;
+}
 // src/app/gradesheet.js
 let scanned = false;
 // src/app/claude.js
 const boxKey = (path, p) => path + '|' + p;
+// src/app/library.js
+const ME_OLD = { sys: 'ManageBac', unit: 'Atlas', scale12: true, ai: 'Claude' };   // scale12: Rubric setup offers the 12-point scale (12 = 100, 11 = 95…) as a preset
+// src/app/library.js
+const me = () => lib.me || ME_OLD;
+// src/app/library.js
+const holders = () => lib.classes.concat([lib.loose]);
+// src/app/library.js
+const findItem = id => { for (const c of holders()) for (const u of c.units) { const it = u.items.find(x => x.id === id); if (it) return { c, u, it }; } return null; };
 // src/marking.js
 const keepP = (n, q) => q.length > 2 ? [n[0], n[1], q[2]] : n;
 // src/marking.js
@@ -757,6 +807,52 @@ function textBoxHere(pg, x, y) {
 }
 // src/grades.js
 const hasSheet = g => g.sheet != null && g.sheet !== '';
+// src/grades.js
+function touchGrade(st, rowIndex) {
+  const g = st.grade, t = Date.now();
+  if (rowIndex !== 'points' && g.at && g.points !== '' && g.points != null && !(g.atR && g.atR.points)) (g.atR ||= {}).points = g.at;   // a points score from before these times were kept: when it last changed is the last we know of
+  g.at = t;
+  if (rowIndex != null) (g.atR ||= {})[rowIndex] = t;
+  stampSoon(st);
+}
+// src/grades.js
+const stampWait = new Set();
+// src/grades.js
+function stampSoon(st) {
+  if (stampWait.has(st)) return;
+  stampWait.add(st);
+  setTimeout(() => {
+    stampWait.delete(st);
+    if (!batch || !batch.students.includes(st) || !syncScoreStamps(st)) return;
+    if (st === batch.students[cur]) for (const pg of pages) draw(pg);
+    saveSoon();
+  }, 0);
+}
+// src/grades.js
+function liftStatus(st) {
+  if (!noScore(st)) return;
+  const was = st.grade.status;
+  st.grade.status = ''; touchGrade(st);
+  toast('No longer marked ' + was);
+}
+// src/grades.js
+function scoreTouched(st, rowIndex) {
+  touchGrade(st, rowIndex != null ? rowIndex : 'points');
+  if (st.found !== undefined) refound(st);   // a table is only quiet while her score matches it
+  const g = st.grade, has = rowIndex != null ? g.rubric[rowIndex] != null : g.points !== '' || g.pk != null || hasSheet(g);
+  if (has) liftStatus(st);
+}
+// src/grades.js
+function setStatus(st, s) {
+  st.grade.status = (st.grade.status || '') === s ? '' : s;
+  touchGrade(st); saveSoon(); renderGrade(); renderList();
+}
+// src/grades.js
+function tryOfFile(st, f) {
+  const ts = st && st.grade && st.grade.tries; if (!ts || !ts.length || !f) return 0;
+  const i = ts.findIndex(t => (t.files || []).includes(f.path));
+  return i < 0 ? 0 : i + 1;
+}
 // src/saving.js
 const saveBad = new Map();   // download id: { b, data, ls }, the latest work that didn't get saved
 // src/intake.js
@@ -841,6 +937,66 @@ function justSeen(pg) { pg.seen = groupJustOn(batch.students[cur]) ? new Set(pg.
 function justTag(pg) { if (!pg.seen || !groupJustOn(batch.students[cur])) return; for (const m of pg.marks()) if (!pg.seen.has(m) && !m.o) m.o = groupJust; pg.seen = null; }
 // src/groups.js
 const groupsSave = own => { const l = (batch.groups || []).filter(g => groupOwn(g) === own); return l.length ? l : undefined; };
+// src/ib.js
+const ibTaskLevels = st => setup.ib.map((k, i) => [k, noScore(st) ? null : st.grade.rubric[i]]).filter(x => x[0]);
+// src/ib.js
+function ibStampText(st) { return ibTaskLevels(st).filter(x => x[1] != null).map(([k, v]) => k + ' ' + fmtNum(v)).join('   '); }
 // src/touch.js
 const ptrLive = new Set();   // every pointer that is down now, for bindPage to know its own gesture is still going
-export { bindPage, undo, redo, snap, changed, pushUndo, gradeSnap, fieldSnap, commitEditors, stepSize, saveNow, placeStamp, redrawAll, hitMark, moveMark, keepOnPage, deleteSelected, gripDrag, r1, clamp, circleWord, highlightWord, textBoxHere, stampName, isSticker, isProof, PROOF, PUNCT, BRAINROT, wordUnder, newCheckSize, stickerAspect, RECENT_STAMPS };
+// src/lofi.js
+const LOFI_STYLES = [
+  { id: 'rain', name: 'Rainy window', bpm: [66, 74], modes: ['min', 'dor', 'maj', 'min'], keys: ['rhodes'], mel: ['bell', 'vibes'], kit: ['brush', 'rim'], amb: 'rain', swing: [.56, .6], cut: 2700, wow: 1, comp: ['hold', 'push', 'lazy'], pad: .5, dens: .8 },
+  { id: 'library', name: 'Late library', bpm: [74, 82], modes: ['maj', 'min', 'dor'], keys: ['piano'], mel: ['lead', 'vibes', 'bell'], kit: ['rim', 'snare'], amb: 'vinyl', swing: [.55, .6], cut: 3000, wow: 1, comp: ['push', 'lazy', 'two'], pad: 0, dens: .9 },
+  { id: 'coffee', name: 'Morning coffee', bpm: [82, 92], modes: ['maj', 'maj', 'dor'], keys: ['guitar', 'rhodes'], mel: ['bell', 'pluck', 'vibes'], kit: ['snare', 'rim'], amb: 'vinyl', swing: [.54, .58], cut: 3900, wow: .7, comp: ['push', 'two', 'arp'], pad: 0, dens: 1 },
+  { id: 'night', name: 'Night bus', bpm: [68, 76], modes: ['min', 'min', 'dor'], keys: ['rhodes'], mel: ['lead', 'bell'], kit: ['clap', 'snare'], amb: 'vinyl', swing: [.56, .62], cut: 2300, wow: 1.2, comp: ['hold', 'lazy'], pad: 1, dens: .7, half: 1 },
+  { id: 'tape', name: 'Sunday tape', bpm: [76, 84], modes: ['maj', 'min', 'dor', 'maj'], keys: ['piano', 'rhodes'], mel: ['bell', 'pluck'], kit: ['brush', 'snare'], amb: 'vinyl2', swing: [.56, .6], cut: 2400, wow: 2.2, comp: ['push', 'lazy', 'arp'], pad: .4, dens: .9 },
+  { id: 'garden', name: 'Garden', bpm: [86, 96], modes: ['maj', 'dor', 'maj'], keys: ['guitar'], mel: ['vibes', 'lead', 'bell'], kit: ['rim'], amb: 'none', swing: [.5, .52], cut: 4300, wow: .6, comp: ['bossa', 'arp'], pad: 0, dens: 1, bossa: 1 },
+  { id: 'blue', name: 'Blue hour', bpm: [80, 88], modes: ['dor', 'min', 'dor'], keys: ['rhodes', 'piano'], mel: ['vibes', 'lead'], kit: ['snare', 'brush'], amb: 'vinyl', swing: [.6, .64], cut: 3400, wow: 1, comp: ['push', 'two'], pad: 0, dens: 1, walk: 1 },
+  { id: 'quiet', name: 'Quiet desk', bpm: [60, 70], modes: ['maj', 'min', 'dor', 'maj'], keys: ['piano', 'rhodes', 'guitar'], mel: ['bell', 'vibes'], kit: [], amb: 'rain', swing: [.5, .5], cut: 2600, wow: 1.2, comp: ['arp', 'hold'], pad: 1, dens: .6, nodrums: 1 }
+];
+// src/lofi.js
+const lofi = { E: null, on: false, vol: .5, amb: false, style: 'mix', cur: null, old: [], timer: 0, last: '', seed: 0, onTrack: null };
+// src/focus.js
+const FC_LENS = [5, 10, 15, 20, 25, 30, 45, 60], FC_BRKS = [3, 5, 10, 15], FC_AWAY = 180e3, FC_DAY = 864e5, FC_KEEP = 400, TK_IDLES = [2, 5, 10, 15], TK_PES = [0, 2, 3, 5, 10];
+// src/focus.js
+const FC_DOWS = [1, 2, 3, 4, 5, 6, 0];
+// src/focus.js
+const fcGoalMax = (k, per) => (k === 'min' ? 600 : 500) * (per === 'week' ? 7 : 1);
+// src/focus.js
+function fcConf() {
+  const f = me().focus || {}, g = f.goal || null;
+  return { len: FC_LENS.includes(+f.len) ? +f.len : 10, llen: FC_LENS.includes(+f.llen) ? +f.llen : 45, brk: FC_BRKS.includes(+f.brk) ? +f.brk : 5, sound: f.sound !== false, title: f.title !== false,
+    track: f.track !== false, idle: TK_IDLES.includes(+f.idle) ? +f.idle : 5, pe: TK_PES.includes(+f.pe) ? +f.pe : 3,   // pe: minutes of steady work in the Planner before it counts as planning; 0 never
+    free: f.free !== false, wk: f.wk === false ? false : [0, 1, 2, 3, 4, 5, 6].includes(f.wk) ? f.wk : 5, quiet: f.quiet === true, short: f.short === true,   // src/gradeplan.js
+    sg: f.sg !== false,   // a goal suggested for each session
+    music: f.music === true, mood: LOFI_STYLES.some(x => x.id === f.mood) ? f.mood : 'mix', mvol: +f.mvol >= .05 && +f.mvol <= 1 ? +f.mvol : .5, mamb: f.mamb === true,   // lo-fi music while a session runs (src/lofi.js)
+    goal: g && (g.k === 'papers' || g.k === 'min') && +g.n > 0 ? { k: g.k, n: Math.min(fcGoalMax(g.k, g.per), Math.round(+g.n)), per: g.per === 'week' ? 'week' : 'day',
+      days: g.per !== 'week' && Array.isArray(g.days) && g.days.some(d => FC_DOWS.includes(d)) ? FC_DOWS.filter(d => g.days.includes(d)) : null } : null };
+}
+// src/focus.js
+const FC_KEY = 'gsp.focusRun';
+// src/focus.js
+const fcRun = () => { const r = store.get(FC_KEY, null); return r && r.st ? r : null; };
+// src/gradeplan.js
+var gpReady = false;
+// src/gradeplan.js
+const gpLens = new WeakMap();
+// src/gradeplan.js
+function gpPages(f) {
+  if (f.numPages) return f.numPages;
+  const d = f.data, size = f.size || (d ? d.length : 0);
+  if (f.kind === 'pdf' && d && d.length) { try { const m = new TextDecoder('latin1').decode(d.length > 8e6 ? d.subarray(0, 8e6) : d).match(/\/Type\s*\/Page(?![a-zA-Z])/g); if (m && m.length) return m.length; } catch {} }
+  return Math.max(1, Math.round(size / (f.kind === 'pdf' ? 6e4 : 4e3)));
+}
+// src/gradeplan.js
+function gpLen(st) { let n = 0; for (const f of st.files || []) { if (f.virtual) continue; let v = gpLens.get(f); if (v == null) { v = gpPages(f); gpLens.set(f, v); } n += v; } return n; }
+// src/gradeplan.js
+function gpShortNext(left) {
+  if (!gpReady || !batch || !fcConf().short) return -1;
+  const r = fcRun(); if (!r || (r.st !== 'run' && r.st !== 'paused') || r.w !== 'mark:' + batch.id) return -1;
+  let best = -1, bl = Infinity;
+  // a student with no paper in comes last
+  batch.students.forEach((st, i) => { if (i === cur || !left(st)) return; const l = gpLen(st) || 1e9; if (l < bl) { bl = l; best = i; } });
+  return best;
+}
+export { bindPage, undo, redo, snap, changed, pushUndo, gradeSnap, fieldSnap, commitEditors, stepSize, saveNow, placeStamp, redrawAll, hitMark, moveMark, keepOnPage, deleteSelected, gripDrag, r1, clamp, circleWord, highlightWord, textBoxHere, scoreTouched, setStatus, touchGrade, nextUnscored, stampName, isSticker, isProof, PROOF, PUNCT, BRAINROT, wordUnder, newCheckSize, stickerAspect, RECENT_STAMPS };

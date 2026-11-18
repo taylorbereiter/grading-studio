@@ -118,5 +118,20 @@
  "mark.once_pen": "Writing with the pen",
  "mark.once_oval": "Drag to circle once",
  "mark.once_hl": "Drag to highlight once",
- "mark.once_esc": "Esc to cancel"
+ "mark.once_esc": "Esc to cancel",
+ "mark.row_score": "Score for {c}",
+ "mark.not_scored": "Not scored",
+ "mark.v_of": "{v} out of {of}",
+ "mark.points": "Points",
+ "mark.out_of_pts": "out of {n}",
+ "mark.mark_as": "Mark as",
+ "mark.late": "Late",
+ "mark.comment_for": "Comment for the student",
+ "mark.comment_for_ph": "Comment for the student (optional). It shows on the Grades tab so you can copy it.",
+ "mark.next_score": "Next to score",
+ "mark.everyone_scored": "Everyone has a score",
+ "mark.key_score": "Score the row in hand (a full stop for the half)",
+ "mark.every_row": "Every row has a score. To change one, click the row first.",
+ "mark.row_top": "This row goes up to {n}.",
+ "mark.no_half": "There’s no half on this scale."
 }

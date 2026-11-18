@@ -114,3 +114,21 @@
 .mk-fly .st-head{font-size:var(--t1);color:var(--mute);font-weight:600;margin:8px 2px 4px}
 .mk-once{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:4;display:flex;gap:10px;align-items:center;padding:6px 12px;border-radius:var(--rf);background:#1E2024;color:#fff;font-size:var(--t2)}
 .mk-once button{border:0;border-radius:var(--rf);background:#fff;color:#1E2024;padding:3px 10px;font:inherit;font-weight:600}
+/* The score (src/app/panels.js renderGrade in the current app): a row per criterion with its slider and steps. */
+.mk-side .mk-h{margin:0;font-size:var(--t1);text-transform:uppercase;letter-spacing:.05em;color:var(--mute)}
+.mk-crits{display:flex;flex-direction:column;gap:12px}
+.mk-crit .cn{display:flex;align-items:baseline;gap:8px}
+.mk-crit .cn .nm{flex:1;min-width:0;border:0;background:none;padding:0;font:inherit;font-weight:600;color:var(--ink);text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk-crit .cn em{font-style:normal;font-weight:600;color:var(--acc-ink)}
+.mk-crit .cn small{color:var(--mute);font-weight:400}
+.mk-crit.on .cn .nm{color:var(--acc-ink)}
+.mk-crit .srange{width:100%;accent-color:var(--acc);margin:6px 0 2px}
+.mk-crit .srange.unset{opacity:.45}
+.mk-crit .sticks{display:flex;justify-content:space-between}
+.mk-crit .sticks button{border:0;background:none;color:var(--mute);font:inherit;font-size:var(--t1);padding:2px 4px;border-radius:var(--r2)}
+.mk-crit .sticks button.half{opacity:.75}
+.mk-crit .sticks button[aria-pressed=true]{color:var(--acc-ink);font-weight:700}
+.mk-pts{display:flex;align-items:center;gap:8px}
+.mk-pts input{width:96px;font:inherit;font-size:var(--t5);padding:6px 8px;border:1px solid var(--line-2);border-radius:var(--r2);background:var(--s);color:var(--ink)}
+.mk-stat{display:flex;gap:6px;flex-wrap:wrap}
+.mk-cmt{width:100%;min-height:84px;font:inherit;padding:8px 10px;border:1px solid var(--line-2);border-radius:var(--r2);background:var(--s);color:var(--ink);resize:vertical}

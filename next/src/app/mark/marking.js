@@ -4,7 +4,7 @@
 // (mark/editors.js), and where a save goes. The lifted saveNow builds the same record the current app builds and hands it to
 // writeWork, which saves it through students/write.js saveWork: the only way the new app writes a download's work.
 import * as K from '../../engines/gmark.js';
-import { use, state, COLORS, setCheckInk } from '../../engines/gcore.js';
+import { use, state, COLORS, setCheckInk, rowSteps, rowTop, roundPct, pointsFor } from '../../engines/gcore.js';
 import { prefs } from '../../students/prefs.js';
 import { saveWork, CannotSave } from '../../students/write.js';
 import { editText, openNote } from './editors.js';
@@ -81,6 +81,59 @@ export function menuDo(act, k) {
   else if (act === 'oval' || act === 'hl' || act === 'pen') startOnce(act);
   tell();
 }
+// Scoring, as the current app's score panel does it (src/app/panels.js): each change is one undo step (gradeSnap), stamped with when
+// it changed (scoreTouched / touchGrade), and saved. The row the number keys score next starts on the first row with no score.
+let rowOn = -1, rowOf = null, rowKeyed = -1, ptsVisit = null;
+const open = () => { const s = state(); return s.batch && s.batch.students[s.cur]; };
+export function rowInHand() {
+  const st = open(), s = state(); if (!st) return -1;
+  if (rowOf !== st) { rowOf = st; rowKeyed = -1; rowOn = s.setup.mode === 'rubric' ? s.setup.criteria.findIndex((_, i) => st.grade.rubric[i] == null) : -1; }
+  return rowOn;
+}
+export function pickRow(i) { rowInHand(); rowOn = i; rowKeyed = -1; tell(); }
+export function setRow(i, v, { toggle = true } = {}) {
+  const st = open(); if (!st) return;
+  rowInHand(); K.gradeSnap(st);
+  st.grade.rubric[i] = toggle && st.grade.rubric[i] === v ? null : v;
+  K.scoreTouched(st, i); rowOn = i; rowKeyed = -1;
+  saveSoon(); tell();
+}
+export function setPoints(raw, box) {
+  const st = open(); if (!st) return;
+  if (ptsVisit !== box) { K.gradeSnap(st); ptsVisit = box; }   // one step for a visit to the box, not one a keystroke
+  const v = String(raw).trim().replace(',', '.'), m = v.match(/^(\d+(?:\.\d+)?)\s*%$/);   // "73%" is a percent that stays the score; a plain number is points
+  if (m) { st.grade.pk = roundPct(+m[1]); const pp = pointsFor(st.grade.pk); st.grade.points = pp == null ? '' : String(pp); } else { delete st.grade.pk; st.grade.points = v; }
+  K.scoreTouched(st); saveSoon(); tell();
+}
+export const leftPoints = () => { ptsVisit = null; };
+export function setStatus(k) { const st = open(); if (!st) return; K.gradeSnap(st); K.setStatus(st, k); tell(); }
+export function setComment(text) { const st = open(); if (!st) return; st.grade.comment = text; K.touchGrade(st); saveSoon(); tell(); }
+// The next paper that still needs a score; null when everyone has one.
+export function nextUnscored() { const before = state().cur; K.nextUnscored(); return state().cur !== before || null; }
+// A number scores the row in hand and moves to the next row; a full stop right after adds or takes off the half (src/app/panels.js
+// scoreKey). Returns what happened, for the screen to say: 'scored', 'none' (every row scored), 'over' (the row stops lower), 'nohalf'.
+export function scoreKey(key) {
+  const st = open(), s = state(); if (!st || s.setup.mode !== 'rubric') return null;
+  const n = s.setup.criteria.length; if (!n) return null;
+  const i = rowInHand();
+  if (/^[0-9]$/.test(key)) {
+    if (+key > Math.max(...s.setup.criteria.map((_, k) => rowTop(s.setup, k)))) return null;
+    if (i < 0) return 'none';
+    if (+key > rowTop(s.setup, i)) return 'over';
+    K.gradeSnap(st); st.grade.rubric[i] = +key; K.scoreTouched(st, i);
+    rowKeyed = i; rowOn = Math.min(i + 1, n - 1); rowOf = st;
+    saveSoon(); tell(); return 'scored';
+  }
+  if (key === '.' && rowKeyed >= 0) {
+    const v = st.grade.rubric[rowKeyed]; if (v == null) return null;
+    const to = v % 1 ? Math.floor(v) : v + 0.5;
+    if (!rowSteps(s.setup, rowKeyed).includes(to)) return 'nohalf';
+    K.gradeSnap(st); st.grade.rubric[rowKeyed] = to; K.scoreTouched(st, rowKeyed);
+    saveSoon(); tell(); return 'scored';
+  }
+  return null;
+}
+
 // One go with a tool from the menu (src/stamps.js startOnce): a circle or highlight once, the pen until Done or Esc.
 function startOnce(k) {
   const s = state(), prev = s.once ? s.once.prev : s.tool;
@@ -116,7 +169,7 @@ export function startMarking({ toast, openStudent }) {
     undoStack: steps(), redoStack: [],
     saveSoon, writeWork,
     renderTools: tell, renderList: tell, renderGrade: tell,
-    toast: (text, ms) => { if (!stepping && toast) toast(text, ms); },   // the app's own undo says what it took back
+    toast: () => {},   // the lifted code's own words are the current app's; the screen says what it needs in its own lines
     openStudent: i => openStudent && openStudent(i),
     renderPage: pg => renderPage(pg, pg.s),
     editText, openNote,

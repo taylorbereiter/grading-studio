@@ -179,7 +179,9 @@ const GRADING = [
     'bindPage', 'undo', 'redo', 'snap', 'changed', 'pushUndo', 'gradeSnap', 'fieldSnap', 'commitEditors', 'stepSize', 'saveNow', 'placeStamp', 'redrawAll',
     'hitMark', 'moveMark', 'keepOnPage', 'deleteSelected', 'gripDrag', 'r1', 'clamp',
     // the right-click menu's marks (src/stamps.js openStampMenu; the menu itself is the new screen's)
-    'circleWord', 'highlightWord', 'textBoxHere', 'stampName', 'isSticker', 'isProof', 'PROOF', 'PUNCT', 'BRAINROT', 'wordUnder', 'newCheckSize', 'stickerAspect', 'RECENT_STAMPS',
+    'circleWord', 'highlightWord', 'textBoxHere',
+    // scoring (src/grades.js, src/app/panels.js): the score changes as the current app makes them
+    'scoreTouched', 'setStatus', 'touchGrade', 'nextUnscored', 'stampName', 'isSticker', 'isProof', 'PROOF', 'PUNCT', 'BRAINROT', 'wordUnder', 'newCheckSize', 'stickerAspect', 'RECENT_STAMPS',
   ], '', [], ['gcore', 'gdraw']],
 ];
 function writeGrading() {
