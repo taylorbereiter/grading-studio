@@ -166,7 +166,7 @@ function Details({ c, n }) {
 function DetailsDialog({ c, n, onClose }) {
   const i = B.infoOf(c, n), [v, setV] = useState({ id: i.id || '', email: i.email || '', prev: i.prev || '' });
   const save = async () => { await change(t('class.u_details', { name: n }), l => { const k = classIn(l, c.id); if (k && k.names.includes(n)) B.setInfo(k, n, { id: v.id.trim(), email: v.email.trim(), prev: v.prev.trim() }); }, true); onClose(); };
-  const f = (k, lab, type) => <TextInput label={lab} type={type || 'text'} value={v[k]} maxLength={120} onInput={val => setV({ ...v, [k]: val })} onKeyDown={e => { if (e.key === 'Enter') save(); }} data-det={k} />;
+  const f = (k, lab, type) => <TextInput label={lab} type={type || 'text'} value={v[k]} maxLength={120} onInput={val => setV(o => ({ ...o, [k]: val }))} onKeyDown={e => { if (e.key === 'Enter') save(); }} data-det={k} />;
   return <Dialog open title={t('class.details_for', { name: n })} onClose={onClose} actions={<><Button onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" onClick={save} data-det-save>{t('class.save')}</Button></>}>
     {f('id', t('class.student_id'))}{f('email', t('class.email'), 'email')}{f('prev', t('class.last_year_opt'))}</Dialog>;
 }

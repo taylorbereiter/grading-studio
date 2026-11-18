@@ -944,6 +944,7 @@ test('Library > Examples and the watch list: the current app\'s examples shown, 
   await p.waitForFunction(() => /Labels every part/.test((document.querySelector('[data-exid="exb"] .exwhy') || {}).textContent || ''));
   // Show to the class: no names, arrows move, Esc closes
   await p.click('[data-exshow]'); await p.waitForSelector('[data-exshow-on]');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('[data-exshow-on]'));   // the keys are listened for once it has focus
   assert.equal(await p.$eval('[data-exshow-on]', (e, N) => N.some(n => e.textContent.includes(n)), names), false);
   await p.keyboard.press('ArrowRight');
   await p.waitForFunction(() => /^2/.test(document.querySelector('[data-exshow-at]').textContent));

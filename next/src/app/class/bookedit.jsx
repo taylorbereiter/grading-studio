@@ -33,7 +33,7 @@ export function setCol(col, part) {
 // The column box: what bkColMenu shows, changed as she picks (the current app saves each choice at once too).
 export function ColDialog({ col, conf, labelOf, onClose, onEditTyped }) {
   const [v, setV] = useState({ type: col.type, due: col.due || '', term: col.term || '', xcTo: B.bkXcTo(col, conf) });
-  const put = part => { setV({ ...v, ...part }); setCol(col, part); };
+  const put = part => { setV(o => ({ ...o, ...part })); setCol(col, part); };
   const terms = conf.terms, byDate = (terms.find(x => x.id === B.bkTermOf({ ...col, due: v.due, term: '' }, terms)) || { name: t('class.term_none') }).name;
   return <Dialog open title={<span data-raw>{col.name}</span>} onClose={onClose} actions={<Button variant="primary" onClick={onClose} data-col-done>{t('class.done')}</Button>}>
     <div class="cp-col" data-col-box={col.key}>
