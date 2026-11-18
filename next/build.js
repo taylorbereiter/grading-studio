@@ -163,7 +163,7 @@ const GRADING_STATE = {
   writeWork: '() => {}', tabLive: '() => true', tabForgot: '() => false', tabLetGo: '() => {}', tabsBehind: '() => false', saveBehind: '() => {}', stampWork: '() => {}',
 };
 // What the lifted code calls that belongs to the screen (a toast, a redraw): quiet here, the new screen says and draws things itself.
-const GRADING_STUBS = { pickedUpNew: '() => false', renderKept: '() => {}', groupNoteRefresh: '() => {}', groupBandRefresh: '() => {}' };
+const GRADING_STUBS = { pickedUpNew: '() => false', nameFlagsShow: '() => {}', renderKept: '() => {}', groupNoteRefresh: '() => {}', groupBandRefresh: '() => {}' };
 const GRADING_DENY = ['$', 'openDlg', 'closeDlg', 'sayDlg', 'saveLib', 'keepWork', 'go', 'routeNow', 'paperPut', 'folderSaved', 'syncSoon', 'homeRender'];
 // Names that are only local variables in what is lifted (an unrelated top-level declaration has the same name).
 const GRADING_LOCAL = ['inside', 'num', 'average'];
@@ -226,7 +226,7 @@ const GRADING = [
     // the Grade sheet's rows and what she says about a grade read off a paper (src/app/gradesheet.js, src/grades.js)
     'sheetRows', 'appScored', 'appShots', 'rowGraded', 'splitReads', 'readKey', 'readingDoubt', 'quietReads', 'paperScore', 'rivalReads', 'paperBytes', 'fileIn',
     // a paper's pages drawn as an assistant or the same-score view sees them (src/app/claude.js sharePage, shareDocs)
-    'sharePage', 'shareDocs', 'classCommon', 'nameFreeText',
+    'sharePage', 'shareDocs', 'classCommon', 'nameFreeText', 'shareOpts', 'nameFindOn',
   ], "// the Grade sheet's choices, which the current app keeps in module variables: read and set from the Grades tab\nexport function sheetSet(o) { if ('all' in o) sheetAll = !!o.all; if ('found' in o) sheetFound = !!o.found; if ('out' in o) sheetShowOut = !!o.out; }\nexport const sheetNow = () => ({ all: sheetAll, found: sheetFound, out: sheetShowOut });\n", [], ['gcore', 'gdraw', 'gopen'], ['num', 'inside']],
   ['greport', [
     // the opening report (src/intake.js openingFacts, checkStack): what opened, what didn't and why, who has nothing, and anything odd
@@ -308,6 +308,13 @@ export const tnRngSet = r => { tnRng = r; };
     // the papers that share a score; the chart, the list and the side-by-side pages are the new app's
     'consData', 'driftRead', 'rowDrifts', 'roughly', 'roughGap', 'roughStep', 'DRIFT_MIN', 'DRIFT_SURE', 'sameLabel',
   ], '', [], ['gcore', 'gdraw', 'gexport'], ['average']],
+  ['gnames', [
+    // hiding names while marking and Check the covers (src/app/anon.js, src/app/claude.js checkCovers, src/insight.js cover*, src/names.js):
+    // the shuffled order, which papers she has looked at, her own cover boxes and the ones she took off, and what the name search found;
+    // the switch, the dialog and the page she boxes on are the new app's, and saving goes through the marking screen
+    'anonShuffle', 'coverList', 'coverOk', 'coverMark', 'coverAgain', 'coverName', 'coverFirst', 'coverLine', 'boxKey', 'shareState', 'sameSpot',
+    'findNames', 'nameFlag', 'nameFlagged', 'namesLooking', 'wordNoName', 'stillCounting', 'ensureCounts', 'anonCovers',
+  ], '', [], ['gcore', 'gdraw', 'gopen', 'greport', 'gexport']],
   ['gways', [
     // the teacher's usual way of grading (src/app/library.js GRADE_WAYS, meGrade): what a new assignment starts with, read from the
     // library the settings screen has in hand (useLib), not the marking screen's

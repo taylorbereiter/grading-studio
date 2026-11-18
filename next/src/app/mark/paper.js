@@ -62,6 +62,11 @@ export async function renderPage(pg, s, dpr = window.devicePixelRatio || 1) {
   if (D.anonOn() && !pg.covers) pg.bmp = null;
   if (!pg.bmp) { const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.fillStyle = '#F6F7F9'; x.fillRect(Math.round(pg.W * s * dpr), 0, c.width, c.height); }
   D.draw(pg);
+  // names hidden: the page's covers first (mark/covers.jsx), so a name never reaches the screen
+  if (D.anonOn() && !pg.covers) {
+    try { const C = await PARTS.covers(); if (job !== pg.job) return; pg.covers = await C.pageCovers(pg); } catch (e) { console.error(e); pg.covers = []; }
+    if (job !== pg.job || !state().pages.includes(pg)) return;
+  }
   const vp = D.vpRot(pg.file, pg.idx, pg.page, s * dpr);
   const bmp = document.createElement('canvas');
   bmp.width = Math.ceil(vp.width); bmp.height = Math.ceil(vp.height);

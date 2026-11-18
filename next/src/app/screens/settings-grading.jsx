@@ -126,6 +126,9 @@ export function MarkingSettings() {
       <div class="sg-line"><span>{t('setup.sg_dlh')}</span><Segmented label={t('setup.sg_dlh')} value={String(+disp.dlh || 1.45)} onChange={v => setDisp('dlh', +v)} options={[{ value: '1.3', label: t('setup.sg_dlh_tight') }, { value: '1.45', label: t('setup.sg_dlh_normal') }, { value: '1.8', label: t('setup.sg_dlh_roomy') }]} /></div>
       <p class="hint">{t('setup.sg_disp_about')}</p>
     </div></Card>
+    <Card title={t('setup.sg_names_h')}><p class="mute">{t('setup.sg_names_about')}</p>
+      <span data-sgnames><Segmented label={t('setup.sg_names_h')} value={prefs.get('gs.nameFind', false) ? 'find' : 'mine'} onChange={v => { if (v === 'find') prefs.set('gs.nameFind', true); else prefs.del('gs.nameFind'); re(); }}
+        options={[{ value: 'mine', label: t('setup.sg_names_mine') }, { value: 'find', label: t('setup.sg_names_find') }]} /></span></Card>
     <Card title={t('setup.sg_while_h')}><div class="sg-while">
       <span data-sglist><Switch label={t('setup.sg_list_kept')} checked={prefs.get('gs.listOpen', null) !== false} onChange={v => { prefs.set('gs.listOpen', !!v); re(); }} /></span>
       <span data-sgenter><Switch label={t('setup.sg_enter_next')} checked={prefs.get('gs.enterNext', null) !== false} onChange={v => { if (v) prefs.del('gs.enterNext'); else prefs.set('gs.enterNext', false); re(); }} /></span>

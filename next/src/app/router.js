@@ -50,6 +50,7 @@ export const PARTS = {
   // the Grade sheet on the Grades tab
   sheet: () => import('./mark/sheet.jsx'),
   cons: () => import('./mark/cons.jsx'),
+  covers: () => import('./mark/covers.jsx'),
   pdflib: () => import('pdf-lib'),
   zip: () => import('fflate'),
   h2c: () => import('html2canvas'),

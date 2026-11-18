@@ -157,6 +157,39 @@
 .mk-ins .tile .tl{font-size:var(--t2);color:var(--mute)}
 .mk-ins .tile .tv{font-size:28px;font-weight:600;letter-spacing:-.02em}
 .mk-ins .tile.main .tv{color:var(--acc-ink)}
+/* Hide names (list foot) and Check the covers (mark/covers.jsx) */
+.mk-lfoot{display:flex;align-items:center;gap:6px;padding:8px 10px;border-top:1px solid var(--line)}
+.mk-list.fold .mk-lfoot{display:none}
+.mk-lfoot .hn-sw{display:inline-flex;align-items:center;gap:8px;background:none;border:0;padding:4px 2px;font:inherit;font-size:var(--t2);color:var(--ink);cursor:pointer}
+.mk-lfoot .hn-sw i{width:28px;height:16px;border-radius:8px;background:var(--line-2);position:relative;transition:background .15s}
+.mk-lfoot .hn-sw i::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--s);transition:left .15s}
+.mk-lfoot .hn-sw[aria-checked="true"] i{background:var(--acc)}
+.mk-lfoot .hn-sw[aria-checked="true"] i::after{left:14px}
+.mk-hn ul{margin:4px 0 0;padding-left:20px}
+.mk-hn .mk-warn{background:var(--warn-soft);border-radius:var(--r2);padding:8px 12px;margin:8px 0}
+dialog.dlg:has(.mk-cc){width:min(1200px,96vw);max-width:none;height:92vh}
+dialog.dlg:has(.mk-cc) .body{display:flex;flex-direction:column;min-height:0;flex:1;overflow:hidden}
+dialog.dlg:has(.mk-cc) footer .grow{flex:1}
+dialog.dlg:has(.mk-cc) footer .cc-hint{font-size:var(--t2);max-width:46%}
+.mk-cc{display:flex;flex-direction:column;gap:8px;min-height:0;flex:1}
+.mk-cc .cc-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:var(--t2)}
+.mk-cc .cc-top .grow{flex:1}
+.mk-cc .cc-mid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:12px;min-height:0;flex:1}
+.mk-cc .cc-side{display:flex;flex-direction:column;gap:8px;min-height:0;overflow:auto;font-size:var(--t2)}
+.mk-cc .cc-bar{height:4px;border-radius:2px;background:var(--line)}
+.mk-cc .cc-bar i{display:block;height:100%;border-radius:2px;background:var(--acc)}
+.mk-cc .cc-seg{display:flex;gap:4px;flex-wrap:wrap}
+.mk-cc .cc-rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.mk-cc .cc-rows button{display:flex;gap:8px;align-items:flex-start;width:100%;text-align:left;background:none;border:0;border-radius:var(--r1);padding:6px;font:inherit;color:var(--ink);cursor:pointer}
+.mk-cc .cc-rows button:hover{background:var(--hv)}
+.mk-cc .cc-rows button[aria-current="true"]{background:var(--acc-soft)}
+.mk-cc .cc-ic{width:16px;flex:none;text-align:center;font-weight:700}
+.mk-cc .cc-ic.done{color:var(--acc-ink)}.mk-cc .cc-ic.flag{color:var(--warn)}
+.mk-cc .cc-nm{display:flex;flex-direction:column;gap:2px}
+.mk-cc .cc-nm small{color:var(--warn)}
+.mk-cc .cc-body{overflow:auto;background:var(--s2);border-radius:var(--r2);padding:14px;min-height:0}
+.mk-cc .cc-page{display:block;margin:0 auto 14px;background:#fff;box-shadow:var(--sh-r);cursor:crosshair;touch-action:none}
+@media (max-width:760px){.mk-cc .cc-mid{grid-template-columns:minmax(0,1fr)}.mk-cc .cc-side{max-height:30vh}}
 /* Anchor papers: under the score, and the Return card */
 .mk-anch{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:var(--t2)}
 .mk-anch .lab{color:var(--mute)}

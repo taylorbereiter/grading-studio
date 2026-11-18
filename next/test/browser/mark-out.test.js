@@ -301,3 +301,72 @@ test('anchor papers: High, Mid or Low under the score, one paper each with one u
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('hide names: the switch, Check the covers (a box drawn, used on every paper, taken back, a paper said to look right, the keys), then Paper 1, 2… shuffled with the covers on the page; the current app reads the same; Name covers in Settings', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const old = await mainSide(ctx, []);
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(old.id));
+  await p.waitForSelector('[data-anonsw]', { timeout: 60000 });
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.click('[data-anonsw]');
+  await p.waitForSelector('dialog[open] [data-hnstart]', { timeout: 30000 });
+  await p.waitForFunction(() => /checked/.test((document.querySelector('[data-hncount]') || {}).textContent || ''), { timeout: 30000 });
+  await p.click('[data-hncheck]');
+  await p.waitForSelector('dialog[open] [data-cc] canvas[data-ccpage]', { timeout: 60000 });
+  const share = () => p.evaluate(() => JSON.parse(JSON.stringify(window.__mark.state().batch.share || {})));
+  const nBoxes = s => Object.values(s.boxes || {}).reduce((n, l) => n + l.length, 0);
+  // a box over the name at the top of the first page
+  const c = await (await p.$('canvas[data-ccpage]')).boundingBox();
+  await p.mouse.move(c.x + c.width * 0.08, c.y + c.height * 0.03); await p.mouse.down(); await p.mouse.move(c.x + c.width * 0.2, c.y + c.height * 0.05); await p.mouse.move(c.x + c.width * 0.3, c.y + c.height * 0.06); await p.mouse.up();
+  await p.waitForSelector('[data-ccevery]');
+  assert.equal(nBoxes(await share()), 1, 'one box');
+  await p.click('[data-ccevery]');
+  await p.waitForFunction(() => Object.values((window.__mark.state().batch.share || {}).boxes || {}).reduce((n, l) => n + l.length, 0) > 1);
+  const every = nBoxes(await share());
+  assert.ok(every >= 3, 'the same box on the other papers');
+  // Ctrl Z takes back the last box drawn here
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForFunction(n => Object.values((window.__mark.state().batch.share || {}).boxes || {}).reduce((m, l) => m + l.length, 0) === n - 1, {}, every);
+  // Enter: this one looks right, on to the next not checked; up goes back to it
+  await p.waitForFunction(() => document.querySelector('[data-cc] canvas[data-ccpage]'));
+  const first = await p.$eval('dialog[open] h2', e => e.textContent);
+  await p.waitForFunction(() => document.querySelector('[data-ccstate]'));
+  await new Promise(r => setTimeout(r, 300));
+  await p.keyboard.press('Enter');
+  await p.waitForFunction(f => document.querySelector('dialog[open] h2').textContent !== f, {}, first);
+  assert.equal(Object.keys((await share()).checked || {}).length >= 1, true, 'the first paper is checked');
+  await p.keyboard.press('ArrowUp');
+  await p.waitForFunction(f => document.querySelector('dialog[open] h2').textContent === f, {}, first);
+  assert.match(await p.$eval('[data-ccstate]', e => e.textContent), /Checked/);
+  await p.keyboard.press('Escape');
+  await p.waitForSelector('dialog[open] [data-hnstart]', { timeout: 30000 });
+  await p.click('[data-hnstart]');
+  await p.waitForFunction(() => window.__mark.state().batch.anon && window.__mark.state().batch.anon.on);
+  await p.waitForFunction(() => [...document.querySelectorAll('.mk-rows .nm')].every(e => /^Paper \d+$/.test(e.textContent)), { timeout: 30000 });
+  assert.equal(await p.$eval('[data-anonsw]', e => e.getAttribute('aria-checked')), 'true');
+  // the open paper's page has her box as a cover
+  await p.waitForFunction(() => { const pg = window.__mark.state().pages[0]; return pg && pg.covers && pg.covers.some(c => c.own); }, { timeout: 60000 });
+  const order = await p.evaluate(() => window.__mark.state().batch.anon.order.slice());
+  assert.equal(order.length, await p.evaluate(() => window.__mark.state().batch.students.length));
+  await p.click('[data-anonshuf]');
+  await p.evaluate(() => window.__mark.saved());
+  const now = await p.evaluate(() => JSON.parse(JSON.stringify({ anon: window.__mark.state().batch.anon, share: window.__mark.state().batch.share })));
+  // Name covers in Settings: Also find typed names
+  await p.goto(srv.url + 'next/#/settings/marking');
+  await p.waitForSelector('[data-sgnames]', { timeout: 30000 });
+  await p.evaluate(() => [...document.querySelectorAll('[data-sgnames] [role="radio"], [data-sgnames] button')].find(b => /Also find/.test(b.textContent)).click());
+  await p.waitForFunction(() => localStorage.getItem('gs.nameFind') === 'true');
+  await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), old.id);
+  await m.waitForFunction(() => window.__gs.state().batch, { timeout: 60000 });
+  const was = await m.evaluate(() => JSON.parse(JSON.stringify({ anon: window.__gs.state().batch.anon, share: window.__gs.state().batch.share })));
+  assert.deepEqual(was.anon, now.anon, 'the same shuffled order, names hidden');
+  assert.deepEqual(was.share.boxes, now.share.boxes, 'the same boxes'); assert.deepEqual(was.share.checked, now.share.checked, 'the same papers checked');
+  assert.equal(await m.evaluate(() => window.__gs.nameFindOn()), true, 'the current app finds typed names too');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

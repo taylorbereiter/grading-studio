@@ -12,7 +12,7 @@ import { openPages, renderPage, fitScale } from '../mark/paper.js';
 import { use, gradeOf, maxPoints, fmtNum, state, rowSteps, rowTop, setupOver, DEFAULT_SETUP, SCALE12, SCALE_FIVES, noScore, xcSay } from '../../engines/gcore.js';
 import { prefs } from '../../students/prefs.js';
 import { onSaved } from '../../shared/saved.js';
-import { shownName } from '../../engines/gdraw.js';
+import { shownName, anonOn, anonOrder } from '../../engines/gdraw.js';
 import { toast } from '../../ui/index.js';
 import '../mark/lines.js';
 
@@ -54,10 +54,11 @@ const LF_MATCH = {
 };
 const LF_LINE = { all: () => t('mark.lf_all'), todo: fm => t(fm ? 'mark.lf_finish' : 'mark.lf_todo'), flag: () => t('mark.lf_flag'), nopaper: () => t('mark.lf_nopaper'), late: () => t('mark.lf_late'), out: () => t('mark.lf_out') };
 // The students the list shows, in order: Previous, Next and the arrow keys walk these. The open one always stays.
-const shownOrder = (b, lf, cur, fm) => b.students.map((st, i) => i).filter(i => lf === 'all' || i === cur || LF_MATCH[lf](b.students[i], b, fm));
+// With names hidden, the papers go in the shuffled order (src/app/anon.js anonOrder).
+const shownOrder = (b, lf, cur, fm) => (anonOn() ? anonOrder() : b.students.map((st, i) => i)).filter(i => lf === 'all' || i === cur || LF_MATCH[lf](b.students[i], b, fm));
 const isMarked = st => { const g = gradeOf(st); return !!g.done && !st.gap; };
 
-function StudentList({ batch, cur, onPick, onReport, lf, setLf, fold, setFold, fm }) {
+function StudentList({ batch, cur, onPick, onReport, lf, setLf, fold, setFold, fm, onHide, onShuffle }) {
   const [q, setQ] = useState(''), box = useRef(null), [pts, setPts] = useState(() => !!prefs.get('gs.listPts', false)), [menu, setMenu] = useState(false);
   const findNow = () => { if (fold) setFold(false); setTimeout(() => { const i = box.current && box.current.querySelector('input'); if (i) i.focus(); }); };
   useEffect(() => register({ id: 'mark-find', keys: '/', label: 'mark.find', run: findNow }), [fold]);
@@ -69,7 +70,7 @@ function StudentList({ batch, cur, onPick, onReport, lf, setLf, fold, setFold, f
   // Enter in the find box opens the first match; Esc clears it
   const findKey = e => { if (e.key === 'Enter' && rows[0]) { e.preventDefault(); onPick(rows[0].i); e.currentTarget.blur(); } if (e.key === 'Escape') { e.preventDefault(); setQ(''); e.currentTarget.blur(); } };
   return <aside class={'mk-list' + (fold ? ' fold' : '')} aria-label={t('mark.students')}>
-    <div class="mk-lhead mute"><span>{t('mark.papers', { n: batch.students.filter(st => st.files.length).length })}</span>{missing > 0 && <span>{t('mark.missing_n', { n: missing })}</span>}{onReport && <button type="button" class="link" onClick={onReport} data-report>{t('mark.op_title')}</button>}</div>
+    <div class="mk-lhead mute"><span>{anonOn() ? t('mark.hn_head') : t('mark.papers', { n: batch.students.filter(st => st.files.length).length })}</span>{missing > 0 && <span>{t('mark.missing_n', { n: missing })}</span>}{onReport && <button type="button" class="link" onClick={onReport} data-report>{t('mark.op_title')}</button>}</div>
     <div ref={box} class="mk-find" onKeyDown={findKey}><TextInput icon="search" label={t('mark.find')} value={q} onInput={setQ} /></div>
     <div class="mk-lbar">
       <span class="mk-lf"><button type="button" class={'chip' + (lf !== 'all' ? ' on' : '')} aria-haspopup="menu" aria-expanded={menu ? 'true' : 'false'} onClick={() => setMenu(v => !v)} data-lf-open><Icon name="menu" size="xs" />{LF_LINE[lf](fm)}</button>
@@ -87,6 +88,9 @@ function StudentList({ batch, cur, onPick, onReport, lf, setLf, fold, setFold, f
         {sc && <span class={'sc ' + (sc.tone || '')}>{sc.done && <Icon name="check" size="xs" />}{sc.text}</span>}
       </button></li>; })}
       {lf !== 'all' && !q && rows.length <= 1 && <li class="mute mk-lfnone">{t('mark.lf_none')} <button type="button" class="link" onClick={() => setLf('all')}>{t('mark.lf_everyone')}</button></li>}</ol>
+    {onHide && <div class="mk-lfoot">
+      <button type="button" class="hn-sw" role="switch" aria-checked={anonOn() ? 'true' : 'false'} title={t('mark.hn_sw_tip')} onClick={onHide} data-anonsw>{t('mark.hn_sw')}<i /></button>
+      <span class="grow" />{anonOn() && <Button size="sm" variant="quiet" title={t('mark.hn_shuf_tip')} onClick={onShuffle} data-anonshuf>{t('mark.hn_shuf')}</Button>}</div>}
   </aside>;
 }
 
@@ -363,6 +367,10 @@ export default function MarkScreen({ route, classes }) {
   // the list's filter (this visit to this assignment only), the list folded to a strip ([, gs.listOpen), the score panel folded away
   // (], gs.panels.R), and Only this student (gs.solo)
   const [Calc, setCalc] = useState(null);
+  // Hide names and Check the covers (mark/covers.jsx), loaded when first asked for
+  const [CV, setCV] = useState(null), [cvDlg, setCvDlg] = useState(null);
+  const cvCtx = { M: MK && MK.M, open: i => pickRef.current(i), cur: () => state().cur, reopen: () => setVer(v => v + 1) };
+  const hideNames = async again => { const m = CV || await PARTS.covers(); setCV(m); if (again) return m.shuffle(cvCtx); if (anonOn()) m.setAnon(false, cvCtx); else setCvDlg({ k: 'anon' }); };
   const spCtl = useRef(null), [sp, setSp] = useState({ n: 0, shown: false });
   const openCalc = () => { if (Calc) return setCalc(null); PARTS.calc().then(m => setCalc(() => m.Calculator), e => console.error(e)); };
   const [lf, setLf] = useState('all'), [fold, setFoldS] = useState(() => prefs.get('gs.listOpen', null) === false), [noR, setNoR] = useState(() => !!(prefs.get('gs.panels', {}) || {}).R), [soloK, setSoloK] = useState(0);
@@ -458,7 +466,7 @@ export default function MarkScreen({ route, classes }) {
       : !w ? <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />
       : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} E={out.E} cur={cur} onOpen={openOn} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
       : <><div class="mk-body">
-        {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} />}
+        {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} onHide={MK ? () => hideNames() : null} onShuffle={() => hideNames(true)} />}
         <div class="mk-mid">
           {MK && <MK.Tools />}
           <Paper batch={w.batch} cur={cur} zoom={zoom} ver={ver} FU={FU} ctl={spCtl} onSp={setSp} />
@@ -470,6 +478,8 @@ export default function MarkScreen({ route, classes }) {
         {!noR && <ScorePanel batch={w.batch} cur={cur} FU={FU} fm={fm} solo={!!solo} first={at <= 0} last={at < 0 || at >= order.length - 1} onCalc={openCalc} onNext={() => step(1)} onPrev={() => step(-1)} />}
       </div>
       {Calc && MK && <Calc M={MK.M} onClose={() => setCalc(null)} />}
+      {CV && cvDlg && cvDlg.k === 'anon' && <CV.AnonDialog ctx={cvCtx} onClose={() => setCvDlg(null)} onCheck={i => setCvDlg({ k: 'check', start: i, back: 'anon' })} />}
+      {CV && cvDlg && cvDlg.k === 'check' && <CV.CheckCovers ctx={cvCtx} start={cvDlg.start} onDone={() => { setCvDlg(cvDlg.back ? { k: cvDlg.back } : null); cvCtx.reopen(); }} />}
       {rep && <rep.OpenedBar key={w.batch.id} onList={() => setRepList(true)} />}
       {FU && carried && <FU.CarryBox onClose={() => setCarried(false)} />}
       {FU && rescans && <FU.Rescans onClose={() => setRescans(false)} onGo={pick} />}

@@ -237,5 +237,74 @@
  "paper.an_first": "Pick a high, middle or low paper first",
  "paper.an_failed": "Not exported: {list}. The rest downloaded.",
  "paper.an_no_pages": "{lv} (no pages to export)",
- "paper.an_wrong": "Something went wrong: {e}"
+ "paper.an_wrong": "Something went wrong: {e}",
+ "paper.hn_on": "Names hidden: papers in a random order, names covered",
+ "paper.hn_off": "Names are back",
+ "paper.hn_shuffled": "Shuffled: a new random order",
+ "paper.hn_counting": "Counting the papers…",
+ "paper.hn_no_pdf": "No PDFs or pictures to check.",
+ "paper.hn_checked": {
+  "one": "{n} of {of} paper checked.",
+  "other": "{n} of {of} papers checked."
+ },
+ "paper.hn_title": "Hide names",
+ "paper.hn_p1": "Papers show as Paper 1, Paper 2… in a random order. Scores still go to the right student.",
+ "paper.hn_cover_h": "Cover the names first.",
+ "paper.hn_cover": "In Check the covers, drag a box over a name, then use it on every paper.",
+ "paper.hn_word_off": {
+  "one": "This Word paper shows names.",
+  "other": "These Word papers show names."
+ },
+ "paper.hn_word_on": {
+  "one": "This paper may show a name.",
+  "other": "These papers may show a name."
+ },
+ "paper.hn_word_turn": {
+  "one": "Turn it into PDF pages to cover it.",
+  "other": "Turn them into PDF pages to cover them."
+ },
+ "paper.hn_looking": "Looking for names…",
+ "paper.hn_flags": {
+  "one": "Check this one first:",
+  "other": "Check these first:"
+ },
+ "paper.hn_check": "Check the covers…",
+ "paper.hn_shuf_start": "Shuffle a new order and start",
+ "paper.hn_start": "Start hiding names",
+ "paper.cc_title": "Check the covers",
+ "paper.cc_none": "No PDFs or pictures to check",
+ "paper.cc_last": "That was the last paper",
+ "paper.cc_drawing": "Still drawing this paper",
+ "paper.cc_all_done": "Every paper is checked",
+ "paper.cc_nothing": "Nothing to take back",
+ "paper.cc_every_done": {
+  "one": "Added that cover to {n} more paper",
+  "other": "Added that cover to {n} more papers"
+ },
+ "paper.cc_took": "Cover taken off. {key} puts it back.",
+ "paper.cc_cant": "This page couldn't be shown.",
+ "paper.cc_all": "All {n}",
+ "paper.cc_todo": "Not checked {n}",
+ "paper.cc_flagged": "Flagged {n}",
+ "paper.cc_hint": "Drag over a name to cover it. Click a box to take it off. {key} undoes.",
+ "paper.cc_every": "Use my last box on every paper",
+ "paper.cc_back": "Back",
+ "paper.cc_right": "Covers look right",
+ "paper.cc_right_done": "Covers look right, done",
+ "paper.cc_ok": "Checked",
+ "paper.cc_not": "Not checked yet",
+ "paper.cc_unmark": "Mark not checked",
+ "paper.cc_count": "paper {n} of {of}",
+ "paper.cc_papers": "Papers",
+ "paper.cc_prog": "{n} of {of} checked",
+ "paper.cc_find": "Find a paper",
+ "paper.cc_boxes": {
+  "one": "{n} box",
+  "other": "{n} boxes"
+ },
+ "paper.cc_sr_ok": ", checked",
+ "paper.cc_sr_not": ", not checked yet",
+ "paper.cc_no_match": "No one matches “{q}”.",
+ "paper.cc_nothing_show": "Nothing to show.",
+ "paper.cc_every_checked": "Every paper is checked."
 }
