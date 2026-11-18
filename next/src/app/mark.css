@@ -662,3 +662,15 @@ dialog.dlg:has(.mk-su)>.body{max-height:calc(88vh - 120px);overflow:auto}
 .mk-calc .cprow{display:flex;align-items:center;gap:6px}.mk-calc .cprow .input{width:80px}
 .mk-calc .cphi{display:flex;justify-content:space-between;gap:8px;border:0;background:none;padding:3px 4px;border-radius:var(--r1);font:inherit;color:var(--ink);cursor:pointer;text-align:left}
 .mk-calc .cphi:hover{background:var(--g100)}
+/* The screenshot (mark/snip.jsx): the layer she drags on, the bar along the top and the box being drawn */
+.mk-snip{position:fixed;inset:0;z-index:2000;cursor:crosshair;background:rgba(20,25,40,.18);outline:0;touch-action:none;user-select:none}
+.mk-snip:has(.snipbox){background:transparent}
+.mk-snip .snipbox{position:fixed;border:2px solid var(--acc);border-radius:var(--r1);box-shadow:0 0 0 9999px rgba(20,25,40,.28);pointer-events:none}
+.mk-snip .snipbar{position:fixed;top:12px;left:50%;transform:translateX(-50%);width:min(620px,calc(100vw - 32px));box-sizing:border-box;background:var(--sf);color:var(--ink);border-radius:var(--r3);box-shadow:var(--sh-f);padding:10px 12px;cursor:default;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.mk-snip:has(.snipbox) .snipbar{opacity:.35;pointer-events:none}
+.mk-snip .snipt{display:flex;flex-direction:column;gap:2px;flex:1 1 240px;min-width:0}
+.mk-snip .snipt span{color:var(--ink2);font-size:var(--t2)}
+.mk-snip .snipacts{display:flex;align-items:center;gap:8px;flex:none}
+.mk-snip .snipmk{display:flex;align-items:center;gap:6px;font-size:var(--t2);color:var(--ink2);cursor:pointer;margin-right:4px}
+.mk-snip .snipmk input{accent-color:var(--acc);margin:0}
+.mk-snip .snipnote{flex:1 0 100%;margin:0;font-size:var(--t3)}

@@ -277,6 +277,11 @@ export const tnRngSet = r => { tnRng = r; };
     // the calculator (src/app/calc.js): its own small reader of sums (no eval), the keys it takes, and the words on a score sticker
     'calcEval', 'calcFmt', 'calcKeyOf', 'stickerText',
   ], '', [], ['gcore']],
+  ['gsnip', [
+    // a screenshot (src/snip.js): one page drawn fresh from its file with name covers painted in, the area's rectangle, and the
+    // picture put on the clipboard (or saved where the browser can't copy pictures); the layer and the area picture are the screen's
+    'snipPage', 'snipRect', 'copyPicture', 'canvasPng', 'nameFindOn', 'fileRx',
+  ], '', [], ['gcore', 'gdraw']],
   ['gword', [
     // a Word paper on the marking screen (src/app/word.js, src/wordnotes.js): drawn from its own XML, typed in, cells shaded, boxes
     // ticked, comments named Teacher added and taken off, and the file written back; the screen around it is the new app's

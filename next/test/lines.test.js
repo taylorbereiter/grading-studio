@@ -6,7 +6,7 @@ const fs = require('fs'), path = require('path');
 const SRC = path.join(__dirname, '..', 'src');
 // en.json: the app's lines. gallery.en.json: the gallery page's own, never shipped with the app (only gallery/ may use them).
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lang', f), 'utf8'));
-const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), EN = { ...APP, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP };
+const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), EN = { ...APP, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER };
 const noComments = s => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(x => x.isDirectory() ? walk(path.join(d, x.name)) : /\.jsx?$/.test(x.name) ? [path.join(d, x.name)] : []);
 const files = walk(SRC);
@@ -50,6 +50,9 @@ test('planning lines live in plan.en.json and load where they are used', () => {
   // and the marking screen's occasional parts' (next/lang/setup.en.json), through app/mark/setup-lines.js
   assert.ok(Object.keys(SETUP).every(k => k.startsWith('setup.')) && !Object.keys(APP).some(k => k.startsWith('setup.')));
   for (const [f, s] of Object.entries(text)) if (/'setup\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '(\.\.\/)+mark\/setup-lines\.js';|import '\.\/setup-lines\.js';/.test(s), f + ' uses a setup line without importing mark/setup-lines.js');
+  // and the marking screen's tools that load on their own, such as the calculator and the screenshot (next/lang/paper.en.json), through app/mark/paper-lines.js
+  assert.ok(Object.keys(PAPER).every(k => k.startsWith('paper.')) && !Object.keys(APP).some(k => k.startsWith('paper.')));
+  for (const [f, s] of Object.entries(text)) if (/'paper\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '(\.\.\/)+mark\/paper-lines\.js';|import '\.\/paper-lines\.js';/.test(s), f + ' uses a paper line without importing mark/paper-lines.js');
 });
 test('lines are well formed: area.name keys, plural lines have one and other, no stray braces', () => {
   for (const [k, v] of Object.entries(EN)) {

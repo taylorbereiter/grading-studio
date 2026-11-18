@@ -50,6 +50,8 @@ export const PARTS = {
   pdflib: () => import('pdf-lib'),
   zip: () => import('fflate'),
   h2c: () => import('html2canvas'),
+  // the screenshot on the marking screen (S, Alt S)
+  snip: () => import('./mark/snip.jsx'),
   // the save layer for marking (students/write.js), loaded with the first save
   write: () => import('../students/write.js'),
   // a class's assignments, and bringing papers in for one (the opening engine loads only when papers come in)

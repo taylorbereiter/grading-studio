@@ -10,6 +10,7 @@ import { drawStamp, STICKERS } from '../../engines/gdraw.js';
 import * as K from '../../engines/gmark.js';
 import { prefs } from '../../students/prefs.js';
 import * as M from '../mark/marking.js';
+import { PARTS } from '../router.js';
 import '../mark/lines.js';
 
 export { M };
@@ -31,6 +32,8 @@ function Tools() {
     <span class="sep" />
     <IconButton icon="undo" label={t('mark.undo')} kbd="mod+z" disabled={!s.undoStack.length} onClick={M.undo} data-undo />
     <IconButton icon="redo" label={t('mark.redo')} kbd="mod+y" disabled={!s.redoStack.length} onClick={M.redo} data-redo />
+    <span class="sep" />
+    <IconButton icon="crop" label={t('mark.t_snip')} kbd="S" onClick={snip} data-snip />
   </div>;
 }
 
@@ -104,6 +107,7 @@ function Marking() { return <><Tools /><StampMenu /></>; }
 export { Marking as Tools };
 // Starts marking on the open paper: the hooks, the keys, and the pages already on screen. Returns what stops it again.
 let say = () => {};
+const snip = () => PARTS.snip().then(m => m.startSnip({ toast: say })).catch(e => console.error(e));
 const hlSwitch = () => { const free = !M.hlFree(); M.setHlFree(free); say(t(free ? 'mark.hl_free_on' : 'mark.hl_snap_on')); };
 export function start({ toast, openStudent, changed }) {
   say = toast; M.startMarking({ toast, openStudent });
@@ -123,6 +127,8 @@ export function start({ toast, openStudent, changed }) {
     register({ id: 'mark-dup', keys: 'mod+d', label: 'mark.k_dup', group: 'mark.tools', when: () => !!state().selected, run: () => { if (M.copyMark()) M.pasteMark(); } }),
     register({ id: 'mark-letgo', keys: 'escape', label: 'mark.k_letgo', group: 'mark.tools', when: () => !!state().selected && !state().once, run: () => M.letGo() }),
     register({ id: 'mark-once-end', keys: 'escape', label: 'mark.once_esc', group: 'mark.tools', when: () => !!state().once, run: () => M.endOnce() }),
+    // the screenshot: S on the paper, Alt S (on a Mac Alt S types ß)
+    register({ id: 'mark-snip', keys: ['s', 'alt+s', 'alt+ß'], label: 'mark.k_snip', group: 'mark.tools', when: () => !document.querySelector('[data-sniplayer]'), run: snip }),
     register({ id: 'mark-del', keys: ['delete', 'backspace'], label: 'mark.delete_mark', group: 'mark.tools', when: () => !!state().selected, run: () => M.deleteSelected() }),
   ];
   return () => { removeEventListener('keyup', up); offs.forEach(f => f()); };

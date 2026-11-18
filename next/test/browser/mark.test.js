@@ -458,3 +458,48 @@ test('the marking screen around the paper: a picked mark moved, resized, copied 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('the screenshot: S opens it and Esc closes it, a page clicked for all of it with or without the marks, Alt S and an area dragged; the picture goes on the clipboard', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(await standardFiles()));
+  await made.evaluate(() => window.__gs.saveNow()); await settle(made);
+  const id = await made.evaluate(() => window.__gs.state().batch.id);
+  await made.close();
+  const p = await page(ctx, errors);
+  // what goes on the clipboard, kept to look at
+  await p.evaluateOnNewDocument(() => { const cb = navigator.clipboard; Object.defineProperty(cb, 'write', { value: async items => { const b = await items[0].getType('image/png'); const im = await createImageBitmap(b); window.__shots = (window.__shots || []).concat([{ w: im.width, h: im.height, type: b.type }]); } }); });
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForSelector('[data-repx]', { timeout: 15000 }).then(() => p.click('[data-repx]'), () => {});
+  const blur = () => p.evaluate(() => document.activeElement && document.activeElement.blur());
+  const shots = () => p.evaluate(() => window.__shots || []);
+  const ls = k => p.evaluate(k => JSON.parse(localStorage.getItem(k)), k);
+
+  await blur(); await p.keyboard.press('s');
+  await p.waitForSelector('[data-sniplayer] .snipbar');
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('[data-sniplayer]'));
+  // the button, then "With my marks" off (kept), and a page clicked: all of it, about 1700 pixels across
+  await p.click('[data-snip]'); await p.waitForSelector('[data-snipmk]');
+  await p.click('[data-snipmk]'); assert.equal(await ls('gs.snipMarks'), 0);
+  { const q = await nextAt(p, 0, 200, 300); await p.mouse.click(q.x, q.y); }
+  await p.waitForFunction(() => (window.__shots || []).length === 1, { timeout: 30000 });
+  const one = (await shots())[0];
+  assert.equal(one.type, 'image/png'); assert.ok(one.w >= 1650 && one.w <= 1750, 'the whole page about 1700 across, ' + one.w);
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast')].some(e => /Picture copied/.test(e.textContent)));
+  // Alt S, the marks back on, and an area dragged over the paper: that area, at two or three pixels a point
+  await blur(); await p.keyboard.down('Alt'); await p.keyboard.press('KeyS'); await p.keyboard.up('Alt');
+  await p.waitForSelector('[data-snipmk]');
+  assert.equal(await p.$eval('[data-snipmk]', e => e.checked), false, 'it remembers the marks were off');
+  await p.click('[data-snipmk]'); assert.equal(await ls('gs.snipMarks'), null);
+  const a = await nextAt(p, 0, 100, 120), b = await nextAt(p, 0, 400, 320);
+  await p.mouse.move(a.x, a.y); await p.mouse.down(); await p.mouse.move((a.x + b.x) / 2, (a.y + b.y) / 2); await p.mouse.move(b.x, b.y); await p.mouse.up();
+  await p.waitForFunction(() => (window.__shots || []).length === 2, { timeout: 30000 });
+  const two = (await shots())[1], k = two.w / Math.round(b.x - a.x);
+  assert.ok(k >= 1.9 && k <= 3.1, 'the area at two or three pixels a point, ' + k);
+  assert.equal(await p.$('[data-sniplayer]'), null);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
