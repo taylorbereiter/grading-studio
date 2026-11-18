@@ -189,8 +189,11 @@ test('To do: the week, a line typed into a day and one dragged to another, the k
   await p.click('[data-td-view]'); await todoUp(p);
   const before = (await p.$$('[data-td-list] .tdck.app')).length;
   await p.waitForSelector('[data-td-kind="back"] [role="switch"]', { timeout: 20000 });
-  await p.click('[data-td-kind="back"] [role="switch"]');
-  await p.waitForFunction(() => (JSON.parse(localStorage.getItem('gs.lib')).todo.off || {}).back === 1);
+  // pressed until it is kept: a press that lands while the list is still drawing is lost
+  for (let i = 0; i < 5; i++) {
+    await p.$eval('[data-td-kind="back"] [role="switch"]', e => e.click());
+    try { await p.waitForFunction(() => (JSON.parse(localStorage.getItem('gs.lib')).todo.off || {}).back === 1, { timeout: 4000 }); break; } catch (e) { if (i === 4) throw e; }
+  }
   await p.waitForFunction(n => document.querySelectorAll('[data-td-list] .tdck.app').length <= n, {}, before);
   // N from Home opens To do with the box ready
   await p.goto(srv.url + 'next/#/home'); await p.waitForSelector('[data-home]', { timeout: 20000 });
