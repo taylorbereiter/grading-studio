@@ -249,7 +249,7 @@ const GRADING = [
   ['gmedia', [
     // video and audio papers (src/video.js, src/app/media.js, src/app/readings.js): links and how they play, a kept video's id, a video
     // turned for one filmed sideways, transcripts read from what she pastes or made in this browser by the speech engine, notes pages
-    'linkClean', 'linkOf', 'linkPlayer', 'linkTitle', 'linkHost', 'linkBytes', 'vidRef', 'drvRef', 'keptId', 'linkKey', 'vrotKey', 'vrotOf', 'frameTicks',
+    'linkClean', 'linkOf', 'linkPlayer', 'linkTitle', 'linkHost', 'linkBytes', 'vidRef', 'drvRef', 'keptId', 'linkKey', 'vrotKey', 'vrotOf', 'frameTicks', 'fmtSize',
     'MEDIA_RX', 'VIDEO_RX', 'MIME', 'extOf', 'fmtTime', 'trLines', 'trText', 'trParse', 'trMakeable', 'transcribe', 'asrStop', 'asrStandIn',
     'notesPdf', 'npRows', 'npFileName', 'isNotes', 'notesFileOf', 'NP_TAIL', 'vidBytes', 'sameVideo',
   ], '', [], ['gcore', 'gdraw']],

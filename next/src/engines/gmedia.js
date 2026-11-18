@@ -181,6 +181,8 @@ async function transcribe(bytes, say, stop) {
 }
 // src/app/library.js
 const uid = () => Math.random().toString(36).slice(2, 10);
+// src/app/kept.js
+const fmtSize = b => b > 1e9 ? (b / 1e9).toFixed(1) + ' GB' : b > 1e6 ? Math.round(b / 1e6) + ' MB' : Math.max(1, Math.round(b / 1e3)) + ' KB';
 // src/video.js
 const LINK_RX = /\.(url|webloc)$/i;
 // src/video.js
@@ -312,4 +314,4 @@ function sameVideo(st, o) {
   if (!url) return null;
   return st.files.find(f => f.kind === 'link' && !vidRef(f.data) && (linkOf(f.data) === url || (!!spot && linkSame(f) === spot))) || null;
 }
-export { linkClean, linkOf, linkPlayer, linkTitle, linkHost, linkBytes, vidRef, drvRef, keptId, linkKey, vrotKey, vrotOf, frameTicks, MEDIA_RX, VIDEO_RX, MIME, extOf, fmtTime, trLines, trText, trParse, trMakeable, transcribe, asrStop, asrStandIn, notesPdf, npRows, npFileName, isNotes, notesFileOf, NP_TAIL, vidBytes, sameVideo };
+export { linkClean, linkOf, linkPlayer, linkTitle, linkHost, linkBytes, vidRef, drvRef, keptId, linkKey, vrotKey, vrotOf, frameTicks, fmtSize, MEDIA_RX, VIDEO_RX, MIME, extOf, fmtTime, trLines, trText, trParse, trMakeable, transcribe, asrStop, asrStandIn, notesPdf, npRows, npFileName, isNotes, notesFileOf, NP_TAIL, vidBytes, sameVideo };

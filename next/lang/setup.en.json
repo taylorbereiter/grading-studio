@@ -1164,7 +1164,6 @@
  "setup.w_grades": "Grades",
  "setup.w_insights": "Insights",
  "setup.w_return": "Return",
- "setup.bf_menu": "Bring in files…",
  "setup.bf_title": "Bring in files",
  "setup.bf_sub": {
   "one": "{n} file, sorted by the names in the file names",
@@ -1232,5 +1231,32 @@
  "setup.mr_student": "Student",
  "setup.mr_no_roster": "Add a roster for this class first, on the class’s own page, then try again.",
  "setup.mr_no_file": "No file yet: {names}",
- "setup.mr_go": "Open {files} for {students}"
+ "setup.mr_go": "Open {files} for {students}",
+ "setup.pv_title": "Partners and videos",
+ "setup.pv_about": "Pick each group’s partners: one grade covers the group, and a group with no video shares the first one’s paper and marks. Paste a link to a video, or choose a video file. You can also drop video files here, and each goes to the student named in its file name.",
+ "setup.pv_get": "Partners get",
+ "setup.pv_one": "One grade",
+ "setup.pv_own": "Their own scores",
+ "setup.pv_own_say": "The notes are shared either way.",
+ "setup.pv_same": "Same video as:",
+ "setup.pv_link_ph": "Paste a link to their video",
+ "setup.pv_link": "Link to the video for {name}",
+ "setup.pv_file": "File…",
+ "setup.pv_file_tip": "A video file on this computer",
+ "setup.pv_unfile": "Take the file off",
+ "setup.pv_with": "With:",
+ "setup.pv_partners": "Partners",
+ "setup.pv_pick": "Partners for {name}",
+ "setup.pv_locked": "Already in the group",
+ "setup.pv_done": "Done",
+ "setup.pv_save": "Save",
+ "setup.pv_saving": "Saving…",
+ "setup.pv_saved": {
+  "one": "Saved {n} group or video",
+  "other": "Saved {n} groups and videos"
+ },
+ "setup.pv_miss": {
+  "one": "This file didn’t match a name: {names}. Use File… on the right row.",
+  "other": "These files didn’t match a name: {names}. Use File… on the right row."
+ }
 }

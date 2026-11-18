@@ -367,7 +367,7 @@ test('lighting set in the new app, for the download, one student and one page, i
   await ctx.close();
 });
 
-test('Bring in files: each file sorted to its student by name, one given to a new student, a late tick, files already here left out; the current app finds them', async () => {
+test('Setup > Bring in files: each file sorted to its student by name, one given to a new student, a late tick, files already here left out; the current app finds them', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const m = await page(ctx, errors);
   await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
@@ -383,8 +383,9 @@ test('Bring in files: each file sorted to its student by name, one given to a ne
   // a file already in the download, to be left out
   const here = await p.evaluate(k => { const f = window.__mark.state().batch.students.find(s => s.key === k).files.find(x => x.data); return { name: f.name, data: btoa(String.fromCharCode(...f.data)) }; }, KEY);
   const same = path.join(sub, here.name); fs.writeFileSync(same, Buffer.from(here.data, 'base64'));
-  await p.waitForSelector('[data-addmenu]', { timeout: 60000 });
-  await p.waitForFunction(() => { if (document.querySelector('.pop [role="menuitem"]')) return true; const b = document.querySelector('[data-addmenu]'); if (b) b.click(); return false; }, { timeout: 30000, polling: 400 });
+  await p.waitForSelector('[data-setupopen]:not([disabled])', { timeout: 60000 });
+  await p.click('[data-setupopen]');
+  await p.waitForFunction(() => [...document.querySelectorAll('.pop [role="menuitem"]')].some(e => e.textContent.includes('Bring in files')));
   const [ch] = await Promise.all([p.waitForFileChooser(), p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.includes('Bring in files')).click())]);
   await ch.accept([named, odd, same]);
   await p.waitForSelector('[data-bf]', { timeout: 30000 });

@@ -52,6 +52,7 @@ export const PARTS = {
   cons: () => import('./mark/cons.jsx'),
   covers: () => import('./mark/covers.jsx'),
   bringin: () => import('./mark/bringin.jsx'),
+  partners: () => import('./mark/partners.jsx'),
   pdflib: () => import('pdf-lib'),
   zip: () => import('fflate'),
   h2c: () => import('html2canvas'),

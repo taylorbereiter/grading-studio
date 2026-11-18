@@ -566,6 +566,39 @@ export async function groupGive(st, f, to, once, own) {
   if (once) groupDo(groupWho(st, to), () => { G.groupAdd(st, f, to, copyOf(st, f, to)); if (own) G.groupSetOwn(st, true); }, 'group');
   else tell();
 }
+// Setup > Partners and videos… (src/video.js openPartners, pvApply): for each group, the video added to the one it belongs to, the
+// partners given their own copies (a notes page they have is used), and then every group made at once, one undo step.
+// groups: [{ k: [keys, the first is the one whose video and paper the group shares], url, file }]. own: partners get their own scores.
+const fileOfGroup = st => { const g = (b().groups || []).find(x => x.k.includes(st.key)), p = g && g.p && g.p[st.key]; return p ? st.files.find(f => f.path === p) || null : null; };
+async function partnerCopy(st, f, to) {
+  if (f.kind === 'link') { const have = to.files.find(x => x.kind === 'link' && V.linkKey(x) === V.linkKey(f)); if (have) return have; }
+  const have = copyOf(st, f, to); if (have) return have;
+  return (await addFiles(to, [{ path: f.name, file: new File([f.data], f.name), from: st.key }]))[0] || null;
+}
+export async function partnersApply(groups, own) {
+  const bb = b(), stOf = k => bb.students.find(s => s.key === k), joins = [];
+  for (const g of groups) {
+    const all = g.k.map(stOf).filter(Boolean); if (!all.length) continue;
+    let st = all[0];
+    if (!g.url && !g.file && !(V.notesFileOf(st) || G.groupPaper(st))) st = all.find(s => V.notesFileOf(s) || G.groupPaper(s)) || st;
+    const partners = all.filter(s => s !== st && !G.groupMates(st).includes(s));
+    if (g.url || g.file) await videoAdd(st, { url: g.url, file: g.file, name: 'Presentation video', kind: '' });
+    const links = st.files.filter(f => f.kind === 'link');
+    const anchor = fileOfGroup(st) || V.notesFileOf(st) || G.groupPaper(st) || links[0] || st.files.find(f => f.kind === 'media');
+    if (!anchor) continue;
+    const pairs = [];
+    for (const to of partners) {
+      for (const f of links) if (f !== anchor) await partnerCopy(st, f, to);
+      const theirs = anchor.kind === 'media' ? null : (V.isNotes(anchor.data) && !anchor.added && V.notesFileOf(to)) || await partnerCopy(st, anchor, to);
+      pairs.push([to, theirs]);
+    }
+    joins.push({ st, anchor, pairs });
+  }
+  const sts = joins.flatMap(j => [j.st, ...j.pairs.map(p => p[0])]);
+  if (sts.length) groupDo(groupWho(...sts), () => { for (const j of joins) { for (const [to, theirs] of j.pairs) G.groupAdd(j.st, j.anchor, to, theirs); if (own && j.pairs.length) G.groupSetOwn(j.st, true); } G.groupSync(); }, 'group');
+  else tell();
+  return groups.length;
+}
 // The switch Mark and grade once for the group: on, everyone with a copy joins; off, everyone is graded on their own again.
 export function groupOnce(st, f, on, own) {
   const has = G.shareCopies(st, f);

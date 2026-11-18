@@ -834,3 +834,20 @@ dialog.dlg:has(.mk-bf){width:min(860px,calc(100vw - 32px))}
 .mk-pw .pw-sm{font-size:var(--t1);margin:0}
 .mk-pw .pw-cm{white-space:pre-wrap;color:var(--ink)}
 .mk-pw .pw-btns{display:flex;gap:6px;margin-top:4px}
+/* Partners and videos (mark/partners.jsx) */
+dialog.dlg:has(.mk-pv){width:min(860px,calc(100vw - 32px))}
+.mk-pv{display:grid;gap:10px}
+.mk-pv p{margin:0}
+.mk-pv .pv-own{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.mk-pv .pv-list{display:grid;border:1px solid var(--line);border-radius:var(--r2)}
+.mk-pv .pv-row{display:grid;grid-template-columns:minmax(120px,180px) minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}
+.mk-pv .pv-row:last-child{border-bottom:0}
+.mk-pv .pv-row.on{background:var(--acc-soft)}
+.mk-pv .pv-name{font-weight:600;overflow-wrap:anywhere}
+.mk-pv .pv-vid{display:flex;gap:6px;align-items:center;min-width:0}
+.mk-pv .pv-link{flex:1;min-width:0}
+.mk-pv .pv-link.bad{border-color:var(--warn)}
+.mk-pv .pv-has{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk-pv .pv-file{display:flex;gap:6px;align-items:center;min-width:0}
+.mk-pv .pv-pick{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+@media (max-width:700px){.mk-pv .pv-row{grid-template-columns:minmax(0,1fr) auto}.mk-pv .pv-vid{grid-column:1/-1;grid-row:2}}

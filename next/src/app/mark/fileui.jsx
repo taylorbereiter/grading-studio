@@ -113,14 +113,11 @@ export function FilesFoot({ st, name }) {
   });
   // Add: a late or forgotten paper, or work sent in a message (the current app's Add menu on the student's bar)
   const [split, setSplit] = useState(null), [media, setMedia] = useState(null);
-  // Bring in files: several late papers at once, each sorted to its student (mark/bringin.jsx)
-  const [many, setMany] = useState(null);
-  const bringMany = () => pickFile(true, async files => { if (!files.length) return; const B = await PARTS.bringin(); await B.bringFiles(await B.expand(files), o => setMany({ B, ...o })); });
   const scan = () => pickFile(false, files => { if (files[0]) PARTS.split().then(S => setSplit({ S, file: files[0] }), e => console.error(e)); });
   const items = [{ label: t('setup.f_add'), icon: 'file', onSelect: add }, { label: t('setup.f_paste'), icon: 'paste', onSelect: () => setPaste(true) },
     { label: t('setup.v_add_menu'), icon: 'play', onSelect: () => PARTS.media().then(S => setMedia({ S, k: 'video' }), e => console.error(e)) },
     { label: t('setup.v_np_menu'), icon: 'note', onSelect: () => PARTS.media().then(S => setMedia({ S, k: 'notes' }), e => console.error(e)) },
-    { label: t('setup.s_into'), icon: 'image', onSelect: scan }, { label: t('setup.bf_menu'), icon: 'upload', onSelect: bringMany }];
+    { label: t('setup.s_into'), icon: 'image', onSelect: scan }];
   return <div class="mk-ffoot">
     <Menu label={t('setup.f_add_for', { name })} trigger={b => <Button {...b} size="sm" icon="plus" data-addmenu>{t('setup.f_add_menu')}</Button>} items={items} />
     {(st.files.some(viewable) || fileSeq(st).length > 1) && <Button size="sm" icon="grip" onClick={() => setArr(true)} title={t('setup.a_open_tip')} data-arrange>{t('setup.a_open')}</Button>}
@@ -128,7 +125,6 @@ export function FilesFoot({ st, name }) {
     {arr && <Arrange st={st} onClose={() => { setArr(false); again(n => n + 1); }} />}
     {media && media.k === 'video' && <media.S.VideoAdd st={st} name={name} onClose={() => { setMedia(null); again(n => n + 1); }} />}
     {media && media.k === 'notes' && <media.S.NotesAdd st={st} name={name} onClose={() => { setMedia(null); again(n => n + 1); }} />}
-    {many && <many.B.BringFiles rows={many.rows} dups={many.dups} onClose={() => { setMany(null); again(n => n + 1); }} />}
     {split && <split.S.Split file={split.file} into lib={state().lib} onClose={() => { setSplit(null); again(n => n + 1); }} />}
     {(gone.length > 0 || op.length > 0) && <details class="mk-gone" open={op.length > 0}><summary>{t(op.length ? (gone.length ? 'setup.a_gone_both' : 'setup.a_gone_pages') : 'setup.f_gone', { n: gone.length + op.length })}</summary>
       <ul>{op.map(([path, p]) => { const f = st.files.find(x => x.path === path), n = ((f.marks || {})[p] || []).length;
