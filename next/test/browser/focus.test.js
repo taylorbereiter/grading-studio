@@ -74,7 +74,7 @@ test('a focus session from To do: it opens the papers it suggests, counts a pape
   await p.evaluate(() => window.__mark.saved());
   await p.waitForFunction(() => (JSON.parse(localStorage.getItem('gsp.focusRun')) || {}).pg === 1, { timeout: 10000, polling: 100 });
   await p.waitForSelector('[data-fc-panel="run"] [data-fc-got="1"]', { timeout: 10000 });
-  assert.equal((await ls(p, 'gs.focus')).days[TODAY].p, 1, 'one paper today');
+  await p.waitForFunction(d => { const f = JSON.parse(localStorage.getItem('gs.focus') || '{}'); return f.days && f.days[d] && f.days[d].p === 1; }, { timeout: 10000, polling: 100 }, TODAY);   // one paper today
 
   // Pause, carry on, 5 more minutes, end, close
   await p.click('[data-fc-pause]'); await p.waitForSelector('[data-fc-panel="paused"]');
