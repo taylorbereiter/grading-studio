@@ -515,6 +515,8 @@ export async function notesAdd(st, kind, name) {
 // Add, A video… (openAddVideo, videoAdd): a link, or a video file kept in this browser, and a notes page if she wants one. A video
 // already there (the same link however it was written) isn't added twice. A browser where the current app has never kept a video has
 // no store for one yet (the new app doesn't make the current app's databases), so the file is added to the student as it is.
+// A video picked in Drive, as the shortcut the current app writes (src/video.js drvBytes): only the link and its name and size.
+const drvBytes = d => new TextEncoder().encode('[InternetShortcut]\r\nURL=https://drive.google.com/file/d/' + d.id + '/view\r\nGsDrive=' + d.id + '\r\nName=' + String(d.name || '').replace(/[\r\n]+/g, ' ').slice(0, 120) + '\r\nSize=' + (d.size || 0) + '\r\n');
 export async function videoAdd(st, o) {
   const had = V.sameVideo(st, o), list = [];
   if (!had) {
@@ -523,7 +525,8 @@ export async function videoAdd(st, o) {
       let id = null; try { id = await W.keepVideo(o.file); } catch (e) { if (e && e.name !== 'NotThere') throw e; }
       if (id) list.push({ path: o.name + '.url', file: new File([V.vidBytes(id, o.file.name, o.file.size)], o.name + '.url') });
       else list.push({ path: o.name + '.' + V.extOf(o.file.name), file: new File([o.file], o.name + '.' + V.extOf(o.file.name), { type: o.file.type }) });
-    } else list.push({ path: o.name + '.url', file: new File([V.linkBytes(o.url)], o.name + '.url') });
+    } else if (o.drive) list.push({ path: o.name + '.url', file: new File([drvBytes(o.drive)], o.name + '.url') });
+    else list.push({ path: o.name + '.url', file: new File([V.linkBytes(o.url)], o.name + '.url') });
   }
   if (o.kind) {
     const PDFLib = await PARTS.pdflib(); use({ PDFLib });

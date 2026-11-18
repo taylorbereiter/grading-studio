@@ -6,7 +6,7 @@ const fs = require('fs'), path = require('path');
 const SRC = path.join(__dirname, '..', 'src');
 // en.json: the app's lines. gallery.en.json: the gallery page's own, never shipped with the app (only gallery/ may use them).
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lang', f), 'utf8'));
-const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), CLASS = read('class.en.json'), TODO = read('todo.en.json'), FOCUS = read('focus.en.json'), SCHOOL = read('school.en.json'), HELP = read('help.en.json'), PREFS = read('prefs.en.json'), EN = { ...APP, ...TODO, ...FOCUS, ...SCHOOL, ...HELP, ...PREFS, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...CLASS };
+const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), VIDEO = read('video.en.json'), SAVING = read('saving.en.json'), CLASS = read('class.en.json'), TODO = read('todo.en.json'), FOCUS = read('focus.en.json'), SCHOOL = read('school.en.json'), HELP = read('help.en.json'), PREFS = read('prefs.en.json'), EN = { ...APP, ...TODO, ...FOCUS, ...SCHOOL, ...HELP, ...PREFS, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...VIDEO, ...SAVING, ...CLASS };
 const noComments = s => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(x => x.isDirectory() ? walk(path.join(d, x.name)) : /\.jsx?$/.test(x.name) ? [path.join(d, x.name)] : []);
 const files = walk(SRC);
@@ -53,6 +53,12 @@ test('planning lines live in plan.en.json and load where they are used', () => {
   // and the marking screen's tools that load on their own, such as the calculator and the screenshot (next/lang/paper.en.json), through app/mark/paper-lines.js
   assert.ok(Object.keys(PAPER).every(k => k.startsWith('paper.')) && !Object.keys(APP).some(k => k.startsWith('paper.')));
   for (const [f, s] of Object.entries(text)) if (/'paper\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '(\.\.\/)+mark\/paper-lines\.js';|import '\.\/paper-lines\.js';/.test(s), f + ' uses a paper line without importing mark/paper-lines.js');
+  // and a Drive video's (next/lang/video.en.json), through app/mark/video-lines.js
+  assert.ok(Object.keys(VIDEO).every(k => k.startsWith('video.')) && !Object.keys(APP).some(k => k.startsWith('video.')));
+  for (const [f, s] of Object.entries(text)) if (/'video\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '(\.\.\/)+mark\/video-lines\.js';|import '\.\/video-lines\.js';/.test(s), f + ' uses a video line without importing mark/video-lines.js');
+  // and the folder's, going back in time's, safety copies' and the two-versions choice's (next/lang/saving.en.json), through app/saving/lines.js
+  assert.ok(Object.keys(SAVING).every(k => k.startsWith('saving.')) && !Object.keys(APP).some(k => k.startsWith('saving.')));
+  for (const [f, s] of Object.entries(text)) if (/'saving\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '(\.\.\/)+(app\/)?saving\/lines\.js';|import '\.\/lines\.js';/.test(s), f + ' uses a saving line without importing saving/lines.js');
   // and the class page's tabs' (next/lang/class.en.json), through app/class/lines.js
   assert.ok(Object.keys(CLASS).every(k => k.startsWith('class.')) && !Object.keys(APP).some(k => k.startsWith('class.')));
   for (const [f, s] of Object.entries(text)) if (/'class\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '(\.\.\/)+class\/lines\.js';|import '\.\/lines\.js';/.test(s), f + ' uses a class line without importing class/lines.js');

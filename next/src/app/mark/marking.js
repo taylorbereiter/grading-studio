@@ -13,6 +13,7 @@ import { renderPage } from './paper.js';
 import * as undoList from '../../services/undo.js';
 import { t } from '../../i18n/t.js';
 import './lines.js';
+import { setOpenFlush } from '../openwork.js';
 
 let saveT = null, saveSeq = 0, listeners = new Set(), saveState = 'saved';
 const tell = () => listeners.forEach(f => f());
@@ -188,6 +189,7 @@ async function writeWork(b, data) {
 // Word edits waiting out their pause (mark/word.js) are written first.
 export const flushers = new Set();
 export async function saveNowDone() { await Promise.all([...flushers].map(f => f())); if (saveT) { clearTimeout(saveT); saveT = null; K.saveNow(); } while (saveState === 'saving') await new Promise(r => setTimeout(r, 30)); }
+setOpenFlush(saveNowDone);
 
 // Every page on screen gets the current app's pointer handling once its canvas is there.
 export function bind(pg, wrap) { pg.wrap = wrap; if (pg.bound) return; pg.bound = true; K.bindPage(pg); reach(pg); }

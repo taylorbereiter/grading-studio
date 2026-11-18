@@ -19,6 +19,7 @@ import { AttendSheet, AttStudent, attOn } from './attend.jsx';
 import { SeatingSheet } from './seating.jsx';
 import { GoalsStudent } from './goals.jsx';
 import './lines.js';
+import { DriveButton } from '../drive-button.jsx';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -46,7 +47,7 @@ export function RosterDialog({ c, onClose }) {
     <label class="cp-fld"><span class="lab">{t('class.students_one_per_line')}</span>
       <textarea class="input roster-ta" rows="12" value={names} onInput={e => setNames(e.currentTarget.value)} placeholder={t('class.roster_ph')} data-roster-names /></label>
     <p class="mute small">{t('class.roster_note')}</p>
-    <Button size="sm" icon="upload" onClick={() => file.current.click()} data-roster-file>{t('class.upload_list')}</Button>
+    <Button size="sm" icon="upload" onClick={() => file.current.click()} data-roster-file>{t('class.upload_list')}</Button><DriveButton input={file} />
     <input type="file" ref={file} accept=".csv,.txt,text/csv,text/plain" hidden onChange={read} data-roster-input />
     {!c && <Button size="sm" icon="school" onClick={() => PARTS.gc().then(m => setGc(() => m.ClassroomSheet))} data-roster-gc>{t('class.gc_open')}</Button>}
     {Gc && <Gc onClose={(id, cols) => { setGc(null); if (id) go('class', id, cols ? 'grades' : 'people'); }} />}

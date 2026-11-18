@@ -7,6 +7,7 @@
 .t4{font-size:var(--t5);font-weight:600;margin:0;letter-spacing:-.02em}
 .saved{display:flex;align-items:center;gap:6px;font-size:var(--t1);color:var(--mute)}
 .saved .i{color:var(--ok)}
+.saved{flex-wrap:wrap}.saved .sv-w{flex-basis:100%;padding-left:18px;color:var(--warn)}.saved:has(.sv-w) .i{color:var(--mute)}
 .slidebox{position:relative;overflow:hidden;border-radius:var(--r2);background:var(--white);box-shadow:0 0 0 1px var(--line);flex:none}
 .slidebox .ls-slide{position:absolute;left:0;top:0}
 .st{display:inline-flex;align-items:center;gap:4px;font-size:var(--t1);color:var(--mute);white-space:nowrap}

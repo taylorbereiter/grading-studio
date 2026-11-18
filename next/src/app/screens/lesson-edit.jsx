@@ -22,6 +22,7 @@ import * as T from '../../engines/plantools.js';
 import { saveKv } from '../../planning/write.js';
 import '../plan/lines.js';
 import '../plan/edit-lines.js';
+import { LazyDrive } from '../drive-lazy.js';
 
 const PIC = ['picture', 'fullpic', 'textpic', 'picprompt'];
 // A picture from this computer, made small enough to keep in a lesson as the current Planner does (src/planner/lessons.js shrinkPic):
@@ -42,7 +43,7 @@ function PictureField({ s, setSlide }) {
   const ex = s.img && isExample(s.img.src);
   return <div class="picfield"><span class="lab">{t('plan.picture')}</span>
     {ex && <p class="mute">{t('plan.example_ref')}</p>}
-    <div class="row"><label class="btn sm"><Icon name="upload" />{s.img ? t('plan.replace_picture') : t('plan.choose_picture')}<input type="file" accept="image/*" class="vh" onChange={file} /></label>
+    <div class="row"><label class="btn sm"><Icon name="upload" />{s.img ? t('plan.replace_picture') : t('plan.choose_picture')}<input type="file" accept="image/*" class="vh" onChange={file} /></label><LazyDrive />
       <Button size="sm" icon="image" onClick={() => setPicking(true)} data-focus="add-example">{t('plan.add_example')}</Button>
       {s.img && <Button size="sm" variant="quiet" icon="trash" onClick={() => setSlide({ img: undefined }, true)}>{t('plan.remove_picture')}</Button>}</div>
     {s.img && !ex && <TextInput label={t('plan.picture_source')} value={s.img.source || ''} onInput={v => setSlide({ img: { ...s.img, source: v.replace(/\n+/g, ' ') } })} />}

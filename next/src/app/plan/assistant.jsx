@@ -18,6 +18,7 @@ import { saveVersion, saveLessonFile } from '../../planning/write.js';
 import { Slide } from './slide.jsx';
 import { briefFor, readZip, copy, same, BRIEF_PARTS } from './brief.js';
 import './lines.js';
+import { DriveButton } from '../drive-button.jsx';
 
 // What can be left out of the message (src/planner/review.js lessonContext, lessonText), each line named in full.
 const PART_LINE = { when: 'plan.brief_when', unit: 'plan.brief_unit', acts: 'plan.brief_acts', notes: 'plan.brief_notes', talk: 'plan.brief_talk', taught: 'plan.brief_taught', notebook: 'plan.brief_notebook' };
@@ -84,7 +85,7 @@ export function AssistantSheet({ p, l, open, onClose, save, slide }) {
             onDrop={e => { e.preventDefault(); setOver(false); take(e.dataTransfer.files[0]); }}>
             <Icon name="upload" /><span>{busy ? t('plan.reading') : t('plan.drop_zip')}</span>
             <input type="file" accept=".zip,application/zip" class="vh" onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; take(f); }} data-zip />
-          </label></li>
+          </label><DriveButton /></li>
         <li><b>{t('plan.step_review')}</b><p class="mute">{t('plan.step_review_text')}</p></li>
       </ol></div>
       : <div class="asst">

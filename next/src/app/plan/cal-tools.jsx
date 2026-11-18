@@ -23,6 +23,7 @@ import { saveFailed } from './save.js';
 import { Slide } from './slide.jsx';
 import './lines.js';
 import './more-lines.js';
+import { DriveButton } from '../drive-button.jsx';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 const day = d => date(at(d), { weekday: 'short', month: 'short', day: 'numeric' });
@@ -195,7 +196,7 @@ export function WeekAssist({ p, mon, onClose }) {
       <li><b>{t('plan.step_zip')}</b><p class="mute">{t('more.week_zip_text', { name })}</p>
         <label class={'drop' + (over ? ' over' : '')} onDragOver={e => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={e => { e.preventDefault(); setOver(false); take(e.dataTransfer.files); }}>
           <Icon name="upload" /><span>{busy ? t('plan.reading') : t('more.week_drop')}</span>
-          <input type="file" multiple accept=".zip,.json,application/zip,application/json" class="vh" onChange={e => { const f = [...e.currentTarget.files]; e.currentTarget.value = ''; take(f); }} data-weekzip /></label></li>
+          <input type="file" multiple accept=".zip,.json,application/zip,application/json" class="vh" onChange={e => { const f = [...e.currentTarget.files]; e.currentTarget.value = ''; take(f); }} data-weekzip /></label><DriveButton /></li>
       <li><b>{t('plan.step_review')}</b><p class="mute">{t('more.week_review_text')}</p></li>
     </ol></div>
       : <div class="asst"><p>{t('more.week_got', { n: got.length })}</p>
