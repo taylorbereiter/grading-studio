@@ -165,6 +165,19 @@ test('the Grade sheet: a grade typed on a paper read as the score, also the grad
   const cleo = await p.evaluate(() => window.__mark.state().batch.students.findIndex(st => /Cleo/.test(st.key)));
   const rowOf = i => p.evaluate(i => { const tr = [...document.querySelectorAll('.gs-tbl tbody tr')].find(r => r.querySelector('td.n') && r.querySelector('td.n').textContent === String(i + 1)); return tr ? tr.querySelector('.gs-r').textContent : null; }, i);
   assert.match(await rowOf(cleo), /9\.5/);
+  // back on the table: the papers to check, and only those at a click
+  // her own score (a 1 on every rubric row) and the 9.5 typed from her paper differ
+  await p.evaluate(i => { const s = window.__mark.state(); const g = s.batch.students[i].grade; g.rubric = s.setup.criteria.map(() => 1); g.sheet = '9.5'; }, cleo);
+  await p.evaluate(() => [...document.querySelectorAll('.mk-grades [role="radio"], .mk-grades .seg button, .mk-grades [aria-pressed]')].find(b => /Table/.test(b.textContent)).click());
+  await p.waitForSelector('[data-gcheck]', { timeout: 60000 });
+  const all = await p.evaluate(() => document.querySelectorAll('#glTable tbody tr').length);
+  await p.click('[data-gonly]');
+  await p.waitForFunction(n => document.querySelectorAll('#glTable tbody tr').length < n, {}, all);
+  await p.click('[data-gonly]');
+  await p.waitForFunction(n => document.querySelectorAll('#glTable tbody tr').length === n, {}, all);
+  await p.evaluate(i => { const g = window.__mark.state().batch.students[i].grade; g.rubric = []; delete g.sheet; }, cleo);
+  await p.evaluate(() => [...document.querySelectorAll('.mk-grades [role="radio"], .mk-grades .seg button, .mk-grades [aria-pressed]')].find(b => /Grade sheet/.test(b.textContent)).click());
+  await p.waitForSelector('[data-sheet] .gs-tbl', { timeout: 60000 });
   // also the grades found: kept for the next time, as the current app keeps it
   await p.evaluate(() => [...document.querySelectorAll('[data-sheet] .gs-opts label')][0].click());
   assert.equal(await p.evaluate(() => localStorage.getItem('gs.sheetfound')), 'true');

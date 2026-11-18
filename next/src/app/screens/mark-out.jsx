@@ -28,7 +28,9 @@ export function Grades({ E, onOpen }) {
   const banded = !ib && !!(E.X.meGrade() || {}).bands, rows = E.rows();
   const save = (name, blob) => E.saveFile(name, blob);
   const copyAll = async k => { const r = E.copyText(k); await copy(r.text); toast(t('setup.copied_rows', { n: r.n })); };
-  const [view, setView] = useState('table'), [SH, setSH] = useState(null);
+  const [view, setView] = useState('table'), [SH, setSH] = useState(null), [only, setOnly] = useState(false);
+  // a paper whose own grade differs from hers, has more than one grade, or a doubtful one (src/tabs.js glPaperOf): how many, and just those
+  const check = r => !!(r.paper && (r.paper.ask || r.paper.differs)), nCheck = rows.filter(check).length;
   useEffect(() => { if (view === 'sheet' && !SH) PARTS.sheet().then(setSH, e => console.error(e)); }, [view]);
   const views = <Segmented label={t('paper.gs_view')} size="sm" value={view} onChange={setView} options={[{ value: 'table', label: t('paper.gs_table') }, { value: 'sheet', label: t('paper.gs_sheet') }]} />;
   if (view === 'sheet') return <section class="mk-out mk-grades" aria-labelledby="mk-g-h">
@@ -41,11 +43,12 @@ export function Grades({ E, onOpen }) {
       {cls && <Segmented label={t('setup.g_order')} size="sm" value={E.order()} onChange={v => { E.setOrder(v); tick(n => n + 1); }}
         options={[{ value: 'folder', label: t('setup.g_folder') }, { value: 'roster', label: t('setup.g_roster', { name: cls.name }) }]} />}</header>
     <p class="mute help">{t('setup.g_help')}</p>
+    {nCheck > 0 && <p class="gs-check" data-gcheck>{t('paper.g_check', { n: nCheck })} <button type="button" class="link" onClick={() => setOnly(!only)} data-gonly>{t(only ? 'paper.g_check_all' : 'paper.g_check_only')}</button></p>}
     <div class="tbl gl"><table id="glTable"><thead><tr><th>{t('setup.g_num')}</th><th>{t('setup.g_student')}</th>
       {rub && su.criteria.map(c => <th data-raw>{c}</th>)}
       {ib ? <th>{t('setup.g_status')}</th> : <><th>{t('setup.g_total', { n: maxPoints() })}</th><th>{t('setup.g_pct')}</th></>}
       {banded && <th>{t('setup.g_band')}</th>}<th title={t('setup.g_paper_tip')}>{t('setup.g_paper')}</th><th>{t('setup.g_comment')}</th></tr></thead>
-      <tbody>{rows.map(r => r.missing
+      <tbody>{rows.filter(r => !only || !nCheck || check(r)).map(r => r.missing
         ? <tr class="gap"><td class="n">{r.n}</td><td class="nm"><span data-raw>{r.missing}</span> <span class="mute">{t('setup.g_no_folder')}</span></td>
           {rub && su.criteria.map(() => <td />)}<td />{!ib && <td />}{banded && <td />}<td /><td /></tr>
         : <tr data-i={r.i}><td class="n">{r.n}</td>

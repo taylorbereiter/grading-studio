@@ -132,5 +132,11 @@
  "paper.gs_first": "First page",
  "paper.gs_lastp": "Last page",
  "paper.gs_cancel": "Cancel",
- "paper.gs_spot_use": "Use this spot"
+ "paper.gs_spot_use": "Use this spot",
+ "paper.g_check": {
+  "one": "{n} paper to check: its own grade differs from yours, or it has more than one grade, or one that may not be the grade.",
+  "other": "{n} papers to check: their own grade differs from yours, or they have more than one grade, or one that may not be the grade."
+ },
+ "paper.g_check_only": "Show only these",
+ "paper.g_check_all": "Show everyone"
 }

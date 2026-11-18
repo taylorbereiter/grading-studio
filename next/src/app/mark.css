@@ -729,3 +729,4 @@ dialog.dlg:has(.mk-su)>.body{max-height:calc(88vh - 120px);overflow:auto}
 dialog.dlg:has(.mk-bx){width:min(980px,calc(100vw - 32px))}
 .mk-bx .bxpages{max-height:calc(88vh - 180px);overflow:auto;background:var(--s2);padding:12px;border-radius:var(--r2)}
 .mk-bx .bxpages canvas{display:block;margin:0 auto 14px;background:#fff;box-shadow:var(--sh-r);cursor:crosshair;touch-action:none}
+.mk-grades .gs-check{background:var(--warn-soft);padding:8px 10px;border-radius:var(--r2);margin:0 0 10px}
