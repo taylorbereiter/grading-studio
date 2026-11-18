@@ -17,7 +17,6 @@ import { rowScaleOf, rowsTop, rowHalf, rowsSay, ROW_TOP, COLORS, PTS_AMBER } fro
 import { PROOF, PUNCT, markLabel0, MARK_MEAN, MARK_KEY } from '../../engines/gmark.js';
 import { drawStamp } from '../../engines/gdraw.js';
 import '../mark/setup-lines.js';
-import '../mark/lines.js';
 
 const readLibrary = () => library.json(null) || {};
 const J = o => (o == null ? o : JSON.parse(JSON.stringify(o)));
@@ -44,7 +43,7 @@ async function change(label, f, said) {
 }
 const WAYS = { rubric: ['setup.sg_way_rubric', 'setup.sg_way_rubric_say'], points: ['setup.sg_way_points', 'setup.sg_way_points_say'], percent: ['setup.sg_way_percent', 'setup.sg_way_percent_say'], letters: ['setup.sg_way_letters', 'setup.sg_way_letters_say'], myp: ['setup.sg_way_myp', 'setup.sg_way_myp_say'], ib7: ['setup.sg_way_ib7', 'setup.sg_way_ib7_say'] };
 const wayName = k => t(WAYS[k][0]), waySay = k => t(WAYS[k][1]);
-const INKS = { red: 'mark.c_red', blue: 'mark.c_blue', green: 'mark.c_green', purple: 'mark.c_purple', black: 'mark.c_black' };
+const INKS = { red: 'setup.sg_c_red', blue: 'setup.sg_c_blue', green: 'setup.sg_c_green', purple: 'setup.sg_c_purple', black: 'setup.sg_c_black' };
 
 export function GradingSettings() {
   const L = useLibrary(), g = meGrade(), way = g ? g.way : '';
