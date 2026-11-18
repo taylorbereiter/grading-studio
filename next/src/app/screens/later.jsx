@@ -8,7 +8,8 @@ import { go } from '../router.js';
 
 addLines(LINES);
 const NAMES = { calendar: 'building.calendar', week: 'building.calendar', todo: 'building.todo', class: 'building.class', lesson: 'building.lesson', mark: 'building.mark', library: 'building.library', school: 'building.school', help: 'building.help' };
-export default function Later({ route, classes }) {
+export default function Later({ route, classes, embedded }) {
+  if (embedded) return <EmptyState icon="spark" title={t('building.title')} text={t('building.text')} />;
   const first = route.path.split('/')[0];
   const c = first === 'class' && (classes || []).find(x => (x.id || '-') === route.params.id);
   const title = c ? (c.loose ? t('nav.no_class') : c.name) : route.known && NAMES[first] ? t(NAMES[first]) : t('building.unknown');

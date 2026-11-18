@@ -43,7 +43,45 @@ function writeEngines() {
   fs.mkdirSync(path.join(NEXT, 'src/engines'), { recursive: true });
   const f = path.join(NEXT, 'src/engines/merge.js');
   if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
+  writePlanner();
   return out;
+}
+// next/src/engines/planner.js: the Planner's engines (next/docs/engines.md, "Planning engines"), cut by name out of src/planner by
+// next/tools/lift.js with everything they use. Made here, never edited by hand.
+const PLANNER_ROOTS = [
+  // the timetable and the school week
+  'L', 'meetsOn', 'plWeekOffs', 'ymd', 'parseYmd', 'addDays', 'mondayOf', 'longDate', 'shortDate', 'hm', 'classById', 'className', 'dayOff', 'eventsOn',
+  'meetingsOn', 'lessonsAt', 'partnerSlots', 'semesterMondays', 'schoolWeek', 'weekDays', 'weekMeetings', 'rangeLabel', 'courses',
+  // the lesson and its slides
+  'lid', 'LAYOUTS', 'SIZES', 'SIZES_ANY', 'deckRule', 'deckAgenda', 'deckSizes', 'deckAdd', 'deckSizeSay', 'deckClean', 'normSlide', 'normLesson', 'deckStart',
+  'titleSlideOf', 'titlesLinked', 'bodyLines', 'slideHtml', 'titleSubtitle', 'imgSrc', 'ytId', 'ytStart', 'videoLink', 'videoSource', 'STATUS', 'statusSay',
+  'LOOKS', 'lookOf', 'normLinks', 'normBoxes', 'normTaught', 'taughtAt', 'taughtWhere', 'taughtText', 'minsOf', 'varName',
+  // units, the rubric bank, activities
+  'normUnit', 'unitColor', 'unitEnd', 'unitAt', 'unitBase', 'unitForFile', 'tidyBank', 'normScale', 'normRef', 'normRubric', 'normBankScale', 'bankRubrics',
+  'bankScales', 'bankList', 'refKey', 'refLabel', 'refUnit', 'unitRef', 'bankForFile', 'bankBase', 'ACTIVITIES', 'normActivity', 'actSlide',
+  // planning pace, the brief for an assistant, files: the Planner folder, the .pptx, an assistant's .zip
+  'planGaps', 'planNextWeek', 'planRecent', 'ptPace', 'ptLessonSecs', 'lessonText', 'lessonForFile', 'ctxFile', 'fileBase', 'folderReadme', 'FOLDER_MARK',
+  'b64ToU8', 'buildPptx', 'tplPreview', 'lessonBack', 'pptxToSlides', 'mimeOf', 'hash', 'esc',
+];
+const PLANNER_DENY = ['$', 'toast', 'openDlg', 'closeDlg', 'lTx', 'kvGet', 'kvSet', 'kvDel', 'lPut', 'lDelete', 'lOpenDb', 'saveBlob', 'renderLessons', 'renderWeek',
+  'renderEditor', 'renderStage', 'renderUnits', 'renderUnit', 'renderSemester', 'renderBank', 'renderLibrary', 'renderActivities', 'openLesson', 'folderWriteSoon',
+  'unitWriteSoon', 'bankWriteSoon', 'copyText', 'refreshThumb'];
+function writePlanner() {
+  const { lift } = require('./tools/lift.js');
+  const out = lift({ roots: PLANNER_ROOTS, deny: PLANNER_DENY,
+    header: '// MADE BY next/build.js FROM src/planner/*.js (next/tools/lift.js). Do not edit: change the source and build again.\n' +
+      '// L holds what the Planner keeps in memory: the new app puts the timetable in L.setup (and lessons, units) before calling.\n/* eslint-disable */\n',
+    preamble: "import * as fflate from 'fflate';\n" });
+  const f = path.join(NEXT, 'src/engines/planner.js');
+  if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
+  // The slide's own look (what slideHtml draws), taken from the Planner page's stylesheet: the rules about the slide and its text,
+  // not the editor around it. The two sizes the slide borrows from the current app's tokens come with it.
+  const page = fs.readFileSync(path.join(ROOT, 'src/planner/planner.html'), 'utf8'), st = page.slice(page.indexOf('<style>') + 7, page.indexOf('</style>'));
+  const KEEP = /\.(ls-(slide|bg|body|bx|fade|full|fullsrc|lk|ph|pic|play|rule|shape|src|sub|t|trule|tslide|ttl|vid|vlink|wood)|rt|lk-[a-z]+|rt-[a-z]+)(?![\w-])/;
+  const DROP = /\.(ls-(stage|mini|ta|rted|frame|ed|over|grip|grips|boxback|stagewrap)|pl-|rt-(tools|tb|pal|sw|sep))|::?(hover|focus)/;
+  const css = '.ls-slide{--text-heading:24px;--text-display:28px}\n' + st.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('/*') && KEEP.test(l) && !DROP.test(l)).join('\n');
+  const g = path.join(NEXT, 'src/engines/slidecss.js'), js = '// MADE BY next/build.js FROM src/planner/planner.html. Do not edit.\nexport default ' + JSON.stringify(css) + ';\n';
+  if (!fs.existsSync(g) || fs.readFileSync(g, 'utf8') !== js) fs.writeFileSync(g, js);
 }
 
 async function build() {
@@ -51,7 +89,7 @@ async function build() {
   fs.rmSync(DIST, { recursive: true, force: true });
   const r = await esbuild.build({
     entryPoints: { main: path.join(NEXT, 'src/main.js'), proof: path.join(NEXT, 'src/proof.js'), parts: path.join(NEXT, 'src/ui/index.js'), gallery: path.join(NEXT, 'src/gallery/main.jsx'),
-      'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css') },
+      'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css') },
     loader: { '.woff2': 'file', '.json': 'json' }, assetNames: '[name]-[hash]',
     outdir: DIST, bundle: true, splitting: true, format: 'esm', target: ['chrome109', 'safari16'], minify: true,
     chunkNames: 'chunk-[hash]', entryNames: '[name]', metafile: true, absWorkingDir: ROOT, legalComments: 'none', logLevel: 'warning',
@@ -73,7 +111,7 @@ async function build() {
     '<script>' + sample + '</script>\n' + look +
     '<link rel="stylesheet" href="dist/tokens.css"><link rel="stylesheet" href="dist/parts-css.css">' + css.map(c => '<link rel="stylesheet" href="dist/' + c + '.css">').join('') + (style ? '<style>' + style + '</style>' : '') + '\n' +
     '<script type="module" src="dist/' + entry + '.js"></script></head><body>' + body + '</body></html>\n';
-  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
+  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'gallery.html'), partsPage('Parts gallery', 'gallery', ['gallery-css'], '', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'proof.html'), page('Saved-work proof', 'proof', '<p>Saved-work proof page. Used by the checks, not by teachers.</p>'));
   writeVersion();

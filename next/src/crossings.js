@@ -50,3 +50,29 @@ export async function countsForHome(now = Date.now()) {
   const mark = sets(g.mark), back = sets(g.back);
   return { teach, mark, back, toPlan, missing: null, counts: { classesToday: teach ? teach.rows.length : 0, mark: mark.length, back: back.length, toPlan: toPlan.length } };
 }
+// The sidebar's To do count, the way the current app counts it (src/todo.js todoCount): every line not done that is overdue or for
+// today, her own lines and the ones the app noticed (papers to mark and to hand back, today's classes still to plan), less the ones
+// she hid or moved to a later day. Missing-work reminders join it with the gradebook's engine (a later stage).
+export async function todoCountForSidebar(now = Date.now()) {
+  const C = await import('./students/counts.js'), T = await import('./planning/today.js');
+  const lib = C.readLibrary(), kept = await C.readKept(), plan = await T.readPlan(), today = T.isoDay(now);
+  const t = lib.todo || {}, ch = C.todoChoices(lib), items = Array.isArray(t.items) ? t.items : [];
+  let n = items.filter(it => it && it.id && !it.gone && !it.done && it.d && it.d <= today).length;
+  const counts = (key, day, sig) => { const a = ch.auto[key] || {}; if (a.h != null && a.h === sig) return 0; const d = a.d && a.d > day && a.d > today ? a.d : day < today ? today : day; return d <= today ? 1 : 0; };
+  const g = C.groups(lib, kept);
+  if (!ch.off.mark) for (const m of g.mark) if (C.canOpen(m)) n += counts('mark:' + m.id, today, 'x');
+  if (!ch.off.back) for (const m of g.back) if (C.canOpen(m)) n += counts('back:' + m.id, today, 'x');
+  if (!ch.off.plan) for (const x of T.toPlan(plan, now)) n += counts(x.key, x.day, x.lesson ? 'w' : 'x');
+  return n;
+}
+// The calendar's "Work due" and "To-dos": each assignment with a due date (its name, its class's name, the day) and the teacher's own
+// to-do lines with a day. No student is in either. Shown, never stored by the calendar.
+export function workForCalendar() {
+  const l = students.library.json(null) || {};
+  const due = [];
+  for (const c of Array.isArray(l.classes) ? l.classes : []) for (const u of (c && Array.isArray(c.units) ? c.units : [])) for (const it of (u && Array.isArray(u.items) ? u.items : []))
+    if (it && it.id && /^\d{4}-\d\d-\d\d/.test(it.due || '')) due.push({ id: it.id, name: String(it.name || ''), cls: String(c.name || ''), day: String(it.due).slice(0, 10), type: String(it.type || '') });
+  const t = l.todo || {}, todos = (Array.isArray(t.items) ? t.items : []).filter(it => it && it.id && !it.gone && /^\d{4}-\d\d-\d\d$/.test(it.d || ''))
+    .map(it => ({ id: it.id, text: String(it.x || ''), day: it.d, done: !!it.done, cls: (((l.classes || []).find(c => c && c.id === it.c)) || {}).name || '' }));
+  return { due, todos };
+}
