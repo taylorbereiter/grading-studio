@@ -420,3 +420,49 @@ export const gsFlat = (f, doc) => F.gsFlatCheck(f, doc);
 // For the other file tools (mark/light.jsx): the download changed (saved soon), and the paper opened again.
 export const changed = () => tell();
 export const reopen = (i = -1) => show(i);
+
+// Scanned pages (src/scans.js): the strip above a page and its choices (scanNote and its clicks), the ⚑ flag for a rescan (scanFlag),
+// the list of pages waiting on one (scanRescans), and what the scan split decided, taken as the papers open (scanHintsAll). The turn
+// and the straightening are the current app's own scanTurn and scanStraighten (lifted), each one undo step.
+export function scanFlag(pg) {
+  const f = pg.file; if (f.virtual) return null;
+  K.fieldSnap(f, ['sc'], () => { tell(); show(-1); }, 'rescan flag');
+  const r = (f.sc ||= {})[pg.idx] ||= { later: 1 };
+  if (r.re) delete r.re; else r.re = 1;
+  tell(); show(-1);
+  return !!r.re;
+}
+const lits = rec => b().students.flatMap(s => s.files.flatMap(f => Object.values(f.sc || {}))).filter(r => r.lit && r !== rec);
+export function scanAct(pg, a) {
+  const f = pg.file, p = pg.idx, r = f.sc && f.sc[p]; if (!r) return;
+  const off = r.off ||= {};
+  K.commitEditors();
+  if (a === 'back') { if (r.didTurn && D.rotOf(f, p) === r.didTurn) { off.turn = 1; F.scanTurn(pg, (360 - r.didTurn) % 360); } if (D.skewOf(f, p)) { off.skew = 1; F.scanStraighten(pg, 0); } }
+  else if (a === 'done') off.done = 1;
+  else if (a === 'turn') F.scanTurn(pg, r.turn);
+  else if (a === 'left') F.scanTurn(pg, 270);
+  else if (a === 'right') F.scanTurn(pg, 90);
+  else if (a === 'skew') F.scanStraighten(pg, r.skew);
+  else if (a === 'unskew') { off.skew = 1; F.scanStraighten(pg, 0); }
+  else if (a === 'light') F.scanLight(pg, r);
+  else if (a === 'unlit') { off.faint = 1; F.scanLightBack(r); }
+  else if (a === 'unre') { K.fieldSnap(f, ['sc'], () => { tell(); show(-1); }, 'rescan flag'); delete f.sc[p].re; }
+  else if (a === 'lit') { delete r.lit; off.faint = 1; for (const o of lits(r)) o.lit.on = true; }   // she wants Lighting on now, whichever page goes back
+  else off[a.slice(2)] = 1;   // noturn, noskew, noblank, nofaint
+  K.thumbCache.clear();
+  tell(); show(-1);
+}
+export const rescans = () => F.scanRescans();
+// The split hands over what goes with the download once it opens: { id, wide (the whole scan's lighting), cls (the class she picked) }.
+let fromSplit = null;
+export const afterSplit = p => { fromSplit = p; };
+export function takeSplit() {
+  const bb = b(); if (!bb || !fromSplit || fromSplit.id !== bb.id) return false;
+  const { wide, cls, lit } = fromSplit; fromSplit = null;
+  if (wide) { bb.light = { ...(bb.light || {}), '*': { ...wide } }; bb.lightOpt = { ...D.lightOpts(), on: true }; }
+  F.scanHintsAll();
+  if (cls != null && cls !== '') bb.classId = cls;
+  if (wide || lit) state().lightPagesChanged();
+  tell(); show(-1);
+  return true;
+}

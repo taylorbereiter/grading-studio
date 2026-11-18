@@ -146,11 +146,12 @@ const GRADING_STATE = {
   toast: '() => {}', renderList: '() => {}', renderTools: '() => {}', renderGrade: '() => {}', openStudent: '() => {}', renderPage: '() => {}',
   gradeMarksChanged: '() => {}', gradeShown: '() => {}', openImported: '() => {}', rescanFile: '() => {}', editText: '() => {}', openNote: '() => {}',
   openStampMenu: '() => {}', placeScore: '() => {}', stopScorePlace: '() => {}', scanNote: '() => {}', refound: '() => {}', endOnce: '() => {}', setTool: '() => {}',
+  lightPagesChanged: '() => {}',
   scorePlacing: 'null', activeEditor: 'null',
   writeWork: '() => {}', tabLive: '() => true', tabForgot: '() => false', tabLetGo: '() => {}', tabsBehind: '() => false', saveBehind: '() => {}', stampWork: '() => {}',
 };
 // What the lifted code calls that belongs to the screen (a toast, a redraw): quiet here, the new screen says and draws things itself.
-const GRADING_STUBS = { pickedUpNew: '() => false', renderKept: '() => {}', groupNoteRefresh: '() => {}' };
+const GRADING_STUBS = { pickedUpNew: '() => false', renderKept: '() => {}', groupNoteRefresh: '() => {}', groupBandRefresh: '() => {}' };
 const GRADING_DENY = ['$', 'openDlg', 'closeDlg', 'sayDlg', 'saveLib', 'keepWork', 'go', 'routeNow', 'paperPut', 'folderSaved', 'syncSoon', 'homeRender'];
 // Names that are only local variables in what is lifted (an unrelated top-level declaration has the same name).
 const GRADING_LOCAL = ['inside', 'num', 'average'];
@@ -214,6 +215,11 @@ const GRADING = [
     'goneNow', 'markCount', 'replacedOf', 'freshRows', 'guessNewName', 'fileShown', 'sortTag', 'madeFromWord', 'setDocIn', 'gradeWords', 'wordsJoin', 'moveFileNow', 'gradeHasWork', 'pasteTextPdf', 'pasteClean', 'pasteName', 'outPages',
     // marks from other apps (src/imported.js): read off a file and made hers; what changes the file is in app/mark/change.js
     'impRead', 'impCount', 'gsFlatCheck', 'impKind',
+    // splitting a scan (src/app/scansplit.js, src/scans.js): each page read as it comes, the page's turn and straightening, the
+    // blank-page check, and what was decided going along with each student's new file; the dialog itself is app/mark/split.jsx
+    'scanLook', 'scanDarken', 'spView', 'spXf', 'scanSplitSays', 'scanHint', 'scanHintsAll', 'scanBytes', 'spRange', 'spWho', 'spAll', 'spLight', 'splitIntoNames', 'rosterMatch', 'splitInk', 'scanRescans',
+    // the strip above a scanned page (src/scans.js scanNote): Turn it, Straighten, Put back, Fix the lighting
+    'scanTurn', 'scanStraighten', 'scanLight', 'scanLightBack', 'scanAsks',
   ], '', [], ['gcore', 'gdraw', 'gopen', 'greport'], ['num', 'inside']],
   ['gword', [
     // a Word paper on the marking screen (src/app/word.js, src/wordnotes.js): drawn from its own XML, typed in, cells shaded, boxes

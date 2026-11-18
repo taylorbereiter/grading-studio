@@ -59,6 +59,8 @@ export const PARTS = {
   report: () => import('./mark/report.jsx'),
   files: () => import('./mark/files.jsx'),
   fileui: () => import('./mark/fileui.jsx'),
+  // splitting a scan onto names (mark/split.jsx), from the class page or into an open download
+  split: () => import('./mark/split.jsx'),
 };
 export const CHUNKS = {
   home: () => import('./screens/home.jsx'),
