@@ -1,7 +1,7 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
-import { batch, cur, pages, saveSoon, PDFLib, store, idbDo, ownGrade, fmtNum } from './gcore.js';
-import { viewable, madeFromWord, scrub, nameFold, anonOn, SORT_STOP, AT_START, ID_RX, latinRx, isLatin, anyRx, wordOk, bounded, alt, runAlts, latinParts, initialAlts, altsRx, namesNow, ownNames, AT_END, FILE_SEP } from './gdraw.js';
+import { batch, cur, lib, pages, saveSoon, pdfjsLib, PDFLib, workerReady, store, idbDo, ownGrade, fmtNum, COLORS, HL } from './gcore.js';
+import { vpRot, skewXf, viewable, madeFromWord, scrub, nameFold, anonOn, SORT_STOP, AT_START, ID_RX, latinRx, isLatin, anyRx, wordOk, bounded, alt, runAlts, latinParts, initialAlts, altsRx, namesNow, ownNames, AT_END, FILE_SEP } from './gdraw.js';
 import { moveFileNow, REF_KEY, underId, paperGet, goneNow, hasSheet, gradeHasWork, nfc, sameBytes } from './gopen.js';
 
 // src/app/files.js
@@ -10,6 +10,10 @@ function setDocIn(st, d, on) {
   else { st.inc = st.inc || {}; st.inc[d.file] = on; }
   saveSoon();
 }
+// src/app/paper.js
+const r1 = v => Math.round(v * 10) / 10;
+// src/app/gradesheet.js
+const commentText = a => ((a.contentsObj && a.contentsObj.str) || a.contents || '').replace(/\r\n?/g, '\n').trim();
 // src/app/library.js
 let fresh = store.get('gs.lib', null) == null;   // a browser nobody has used yet: it gets the welcome, and nothing of anyone's
 // src/app/replace.js
@@ -46,6 +50,14 @@ function fileRx(st) {
 }
 // src/names.js
 const fileShown = (st, name) => anonOn() && st ? scrub(name, fileRx(st)) : name;
+// src/marking.js
+const rectBox = rs => { const x = Math.min(...rs.map(r => r.x)), y = Math.min(...rs.map(r => r.y)); return { x, y, w: r1(Math.max(...rs.map(r => r.x + r.w)) - x), h: r1(Math.max(...rs.map(r => r.y + r.h)) - y) }; };
+// src/marking.js
+function setRects(m, rects) {
+  Object.assign(m, rectBox(rects));
+  if (rects.length > 1) m.rects = rects; else delete m.rects;
+  return m;
+}
 // src/grades.js
 const STATUS_LABEL = { missing: 'Missing', excused: 'Excused', late: 'Late' };
 // src/grades.js
@@ -79,6 +91,133 @@ async function freshRows(rows) {
 }
 // src/intake.js
 const guessNewName = path => { const p = path.split('/').filter(Boolean); return (p.length > 2 ? p[p.length - 2] : p.length > 1 ? p[0] : p[0].replace(/\.[^.]+$/, '')).trim(); };
+// src/imported.js
+const IMP_ID = /^\d+R\d*$/;
+// src/imported.js
+const IMP_LINES = new Set(['Ink', 'Line', 'PolyLine', 'Polygon', 'Underline', 'StrikeOut', 'Squiggly']);
+// src/imported.js
+function impVisible(a) { return !IMP_SKIP.has(a.subtype) && !(a.annotationFlags & 2) && !(a.annotationFlags & 32); }
+// src/imported.js
+const IMP_SKIP = new Set(['Link', 'Popup', 'Widget']);
+// src/imported.js
+function impKind(a) {
+  if (!IMP_ID.test(String(a.id || ''))) return null;
+  if (IMP_LINES.has(a.subtype)) return 'pen';
+  if (a.subtype === 'Highlight') return 'hl';
+  if (a.subtype === 'Square' || a.subtype === 'Circle') return 'oval';
+  if (a.subtype === 'FreeText') return commentText(a) ? 'text' : null;
+  if (a.subtype === 'Text') return commentText(a) ? 'note' : null;
+  return null;
+}
+// src/imported.js
+function impHex(c, dflt) { return c && c.length >= 3 ? '#' + [0, 1, 2].map(i => Math.round(c[i]).toString(16).padStart(2, '0')).join('') : dflt; }
+// src/imported.js
+function impMarks(a, vp, xf, line) {
+  const P = (x, y) => {
+    let [X, Y] = vp.convertToViewportPoint(x, y);
+    if (xf) [X, Y] = [xf[0] * X + xf[2] * Y + xf[4], xf[1] * X + xf[3] * Y + xf[5]];
+    return [r1(X), r1(Y)];
+  };
+  const box = pts => { const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]), x = Math.min(...xs), y = Math.min(...ys); return { x: r1(x), y: r1(y), w: r1(Math.max(...xs) - x), h: r1(Math.max(...ys) - y) }; };
+  const rectBoxOf = rc => box([P(rc[0], rc[1]), P(rc[2], rc[3]), P(rc[0], rc[3]), P(rc[2], rc[1])]);
+  const quads = () => (a.quadPoints || []).map(q => box(q.map(o => P(o.x, o.y)))).filter(r => r.w > 0 && r.h > 0);
+  const col = impHex(a.color, COLORS.red), w = r1(Math.max(0.6, (a.borderStyle && a.borderStyle.width) || 1)), text = commentText(a);
+  const out = [], rb = rectBoxOf(a.rect);
+  // a pen mark, shape or highlight can have a comment too: it goes in the margin, pointing at the mark's top right
+  const withNote = () => { if (text) out.push({ t: 'note', color: col, ax: r1(Math.min(rb.x + rb.w, vp.width - 2)), ay: r1(rb.y + Math.min(8, rb.h / 2)), text }); };
+  switch (a.subtype) {
+    case 'Ink':
+      for (const L of a.inkLists || []) if (L.length) out.push({ t: 'pen', color: col, w, pts: L.map(o => P(o.x, o.y)) });
+      withNote(); break;
+    case 'Line': {
+      const c = line && line.length === 4 ? line : a.lineCoordinates;
+      if (c) out.push({ t: 'pen', color: col, w, pts: [P(c[0], c[1]), P(c[2], c[3])] });
+      withNote(); break;
+    }
+    case 'PolyLine': case 'Polygon': {
+      const v = (a.vertices || []).map(o => P(o.x, o.y));
+      if (v.length) out.push({ t: 'pen', color: col, w, pts: a.subtype === 'Polygon' ? v.concat([v[0]]) : v });
+      withNote(); break;
+    }
+    case 'Underline': case 'StrikeOut': case 'Squiggly':
+      for (const r of quads()) {
+        const y = r1(a.subtype === 'StrikeOut' ? r.y + r.h / 2 : r.y + r.h - 0.6), lw = r1(Math.max(1, r.h / 14));
+        if (a.subtype !== 'Squiggly') { out.push({ t: 'pen', color: col, w: lw, pts: [[r.x, y], [r1(r.x + r.w), y]] }); continue; }
+        const pts = [], step = Math.max(2, r.h / 5);
+        for (let x = r.x, k = 0; x <= r.x + r.w; x += step, k++) pts.push([r1(x), r1(y - (k % 2 ? step * 0.6 : 0))]);
+        if (pts.length > 1) out.push({ t: 'pen', color: col, w: lw, pts });
+      }
+      withNote(); break;
+    case 'Highlight': {
+      const rs = quads(); if (!rs.length) rs.push(rb);
+      const hc = impHex(a.color, HL.yellow);
+      if (text) {
+        const last = rs[rs.length - 1], m = { t: 'note', color: hc, ax: r1(last.x + last.w), ay: r1(last.y + last.h / 2), hl: rectBox(rs), hc, text };
+        if (rs.length > 1) m.rects = rs;
+        out.push(m);
+      } else out.push(setRects({ t: 'hl', color: hc }, rs));
+      break;
+    }
+    case 'Square': case 'Circle':
+      out.push({ t: 'oval', color: col, sw: w, x: r1(rb.x + w / 2), y: r1(rb.y + w / 2), w: r1(Math.max(2, rb.w - w)), h: r1(Math.max(2, rb.h - w)) });
+      withNote(); break;
+    case 'FreeText': {
+      const da = a.defaultAppearanceData || {}, size = r1(Math.min(48, Math.max(6, da.fontSize || 12)));
+      out.push({ t: 'text', color: impHex(da.fontColor, COLORS.black), x: r1(rb.x + 2), y: r1(rb.y + 2), size, text, bw: r1(Math.max(24, rb.w - 4)) });
+      break;
+    }
+    case 'Text':
+      out.push({ t: 'note', color: col, ax: r1(Math.min(rb.x + rb.w / 2, vp.width - 2)), ay: r1(rb.y + rb.h / 2), text });
+      break;
+  }
+  for (const m of out) m.imp = a.id;
+  return out;
+}
+// src/imported.js
+async function impRead(f) {
+  const res = { pages: {}, n: 0, keep: 0, kinds: {}, locked: false };
+  if (f.kind !== 'pdf' || !f.data || f.virtual) return res;
+  await workerReady;
+  const js = await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise;
+  let lib = null;
+  try {
+    for (let p = 0; p < js.numPages; p++) {
+      const page = await js.getPage(p + 1);
+      const done = new Set((f.imp && f.imp[p]) || []);
+      const annots = (await page.getAnnotations({ intent: 'display' })).filter(a => impVisible(a) && !done.has(a.id));
+      if (!annots.length) { page.cleanup(); continue; }
+      if (!lib) {
+        lib = await PDFLib.PDFDocument.load(f.data, { ignoreEncryption: true, updateMetadata: false });
+        // a locked file can't be saved again without its marks, so they stay as they are
+        if (lib.isEncrypted) { res.locked = true; }
+      }
+      const vp = vpRot(f, p, page, 1), xf = skewXf(f, p, vp), list = [];
+      for (const a of annots) {
+        const kind = res.locked ? null : impKind(a);
+        if (!kind) { res.keep++; continue; }
+        let line = null;
+        if (a.subtype === 'Line') { try { const [num, gen] = a.id.split('R'); const d = lib.context.lookup(PDFLib.PDFRef.of(+num, +(gen || 0))); const L = d && d.lookupMaybe(PDFLib.PDFName.of('L'), PDFLib.PDFArray); if (L) line = L.asArray().map(v => v.asNumber()); } catch {} }
+        const marks = impMarks(a, vp, xf, line);
+        if (!marks.length) { res.keep++; continue; }
+        list.push({ id: a.id, kind, marks });
+        res.kinds[kind] = (res.kinds[kind] || 0) + 1; res.n++;
+      }
+      if (list.length) res.pages[p] = list;
+      page.cleanup();
+    }
+  } finally { js.destroy(); }
+  return res;
+}
+// src/imported.js
+function impCount(f) { return (f && !f.impNo && f.scan && f.scan.impN) || 0; }
+// src/imported.js
+async function gsFlatCheck(f, doc) {
+  if (f.gsFlat !== undefined) return f.gsFlat;
+  f.gsFlat = false;
+  if (f.kind !== 'pdf' || f.virtual || f.noauto) return false;
+  try { const { info } = await doc.getMetadata(); f.gsFlat = !!info && info.Creator === 'Grading Studio'; } catch {}
+  return f.gsFlat;
+}
 // src/pastetext.js
 const PT_W = 595.28, PT_H = 841.89, PT_M = 64, PT_SIZE = 12, PT_LINE = 18;
 // src/pastetext.js
@@ -171,4 +310,4 @@ async function pasteTextPdf(title, text, when) {
   }
   return { bytes: await doc.save(), typed: false };
 }
-export { goneNow, markCount, replacedOf, freshRows, guessNewName, fileShown, sortTag, madeFromWord, setDocIn, gradeWords, wordsJoin, moveFileNow, gradeHasWork, pasteTextPdf, pasteClean, pasteName, outPages };
+export { goneNow, markCount, replacedOf, freshRows, guessNewName, fileShown, sortTag, madeFromWord, setDocIn, gradeWords, wordsJoin, moveFileNow, gradeHasWork, pasteTextPdf, pasteClean, pasteName, outPages, impRead, impCount, gsFlatCheck, impKind };

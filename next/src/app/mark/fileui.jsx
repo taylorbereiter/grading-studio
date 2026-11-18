@@ -2,7 +2,7 @@
 // file with Replace… and Remove, the check before a replace (the two files side by side), Add a file…, and Removed files with Bring
 // back. What each does is mark/change.js, the current app's own steps. Loaded with it as a part of its own (router.js PARTS.fileui).
 import { h, Fragment } from 'preact';
-import { useState, useRef } from 'preact/hooks';
+import { useState, useRef, useEffect } from 'preact/hooks';
 import { Button, IconButton, Menu, Dialog, TextInput, toast } from '../../ui/index.js';
 import { state } from '../../engines/gcore.js';
 import { shownName, anonOn } from '../../engines/gdraw.js';
@@ -206,5 +206,52 @@ export function CarryBox({ onClose }) {
       {c.extrasFailed && <p>{t('mark.c_failed')}</p>}
       <p class="mute">{t('mark.c_foot')}</p>
     </div>
+  </Dialog>;
+}
+
+// Marks from other apps (src/imported.js impNote): the note above a file's first page. It offers to make the marks hers, says what
+// happened after (with Put back), or says why a paper exported from here can't have its marks changed.
+export const impAuto = f => C.impAuto(f);
+export async function impAutoNow() { const bb = state().batch, st = bb && bb.students[state().cur]; if (!st) return; let any = false; for (const f of st.files) if (await C.impAuto(f)) any = true; if (any) C.impAfter(st.files[0], true); }
+export function ImpNote({ pg }) {
+  const f = pg.file, [, again] = useState(0), [busy, setBusy] = useState(false), [all, setAll] = useState(false);
+  const [flat, setFlat] = useState(f.gsFlat);
+  if (f.virtual || f.kind !== 'pdf') return null;
+  if (flat === undefined) { const doc = state().docMap.get(f.path); if (doc) C.gsFlat(f, doc).then(v => setFlat(v)); }
+  const run = async fn => { setBusy(true); try { await fn(); } catch (e) { console.error(e); toast(t('mark.i_failed')); } finally { setBusy(false); again(n => n + 1); } };
+  const make = () => run(async () => { const r = await C.impMake(f); if (!r.n) { C.impNo(f); toast(t(r.locked ? 'mark.i_locked' : 'mark.i_none')); } await C.impAfter(f); });
+  const back = () => run(async () => { C.impBack(f); await C.impAfter(f); });
+  let body;
+  if (f.impNew) body = <><div>{t('mark.i_now', { n: f.impNew.n })}<Button size="sm" variant="quiet" onClick={back} disabled={busy} data-imp="back">{t('mark.i_back')}</Button></div>
+    {f.impNew.keep > 0 && <small class="mute">{t('mark.i_kept', { n: f.impNew.keep })}</small>}</>;
+  else if (flat) body = <><div>{t('mark.i_flat')}</div><small class="mute">{t('mark.i_flat_how')}</small></>;
+  else {
+    const n = C.impCount(f); if (!n) return null;
+    const others = state().batch.students.flatMap(st => st.files).filter(x => x !== f && C.impCount(x)).length;
+    body = <><div>{t('mark.i_has', { n })}<Button size="sm" variant="quiet" onClick={make} disabled={busy} data-imp="make">{t('mark.i_make', { n })}</Button>
+      <Button size="sm" variant="quiet" onClick={() => { C.impNo(f); again(k => k + 1); }} data-imp="no">{t('mark.i_not_now')}</Button></div>
+      {others > 0 && <small class="mute">{t('mark.i_others', { n: others + 1 })}<Button size="sm" variant="quiet" onClick={() => setAll(true)} data-imp="all">{t('mark.i_all')}</Button></small>}</>;
+  }
+  return <div class="mk-impnote impnote" role="note">{body}{all && <Imported onClose={() => setAll(false)} />}</div>;
+}
+// Marks from other apps, for every paper (openImported): what they have, all of it made hers at once, and From now on (gs.impAuto).
+const IMP_ROWS = [['pen', 'mark.i_k_pen', 'mark.i_to_pen'], ['note', 'mark.i_k_note', 'mark.i_to_note'], ['hl', 'mark.i_k_hl', 'mark.i_to_hl'], ['text', 'mark.i_k_text', 'mark.i_to_text'], ['oval', 'mark.i_k_oval', 'mark.i_to_oval']];
+export function Imported({ onClose }) {
+  const [r, setR] = useState(null), [at, setAt] = useState([0, 0]), [auto, setAuto] = useState(!!prefs.get('gs.impAuto', false)), [busy, setBusy] = useState(null), live = useRef(true);
+  useEffect(() => { C.impReadAll((i, n) => setAt([i + 1, n]), () => live.current).then(x => x && setR(x)); return () => { live.current = false; }; }, []);
+  const close = () => { live.current = false; onClose(); };
+  const go = async () => {
+    setBusy([0, r.reads.size]);
+    const x = await C.impMakeAll(r.reads, (i, n) => setBusy([i, n]));
+    close();
+    toast(t('mark.i_now', { n: x.n }) + (x.bad ? ' ' + t('mark.i_bad', { n: x.bad }) : ''));
+  };
+  return <Dialog open title={t('mark.i_title')} onClose={close}
+    actions={<><Button onClick={close}>{t('mark.cancel')}</Button><Button variant="primary" onClick={go} disabled={!r || !r.total || !!busy} data-impgo>{busy ? t('mark.i_working', { i: busy[0], n: busy[1] }) : r && r.total ? t('mark.i_make_n', { n: r.total }) : t('mark.i_make_them')}</Button></>}>
+    <p>{!r ? t('mark.i_looking', { i: at[0], n: at[1] }) : r.total ? t('mark.i_sum', { n: r.reads.size, marks: t('mark.f_marks', { n: r.total }) }) : t('mark.i_sum_none')}</p>
+    {r && r.total > 0 && <table class="mk-imptbl"><tbody>{IMP_ROWS.filter(x => r.kinds[x[0]]).map(x => <tr><td>{t(x[1])}</td><td>{t(x[2], { n: r.kinds[x[0]] })}</td></tr>)}
+      {r.keep > 0 && <tr><td>{t('mark.i_k_other')}</td><td>{t('mark.i_stay', { n: r.keep })}</td></tr>}</tbody></table>}
+    <Checkbox checked={auto} onChange={v => { setAuto(v); if (v) prefs.set('gs.impAuto', true); else prefs.del('gs.impAuto'); }} label={t('mark.i_auto')} />
+    <p class="mute">{t('mark.i_hint')}</p>
   </Dialog>;
 }

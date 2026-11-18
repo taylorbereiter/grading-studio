@@ -117,10 +117,13 @@ test('a file added, replaced, removed and brought back in the new app is where t
   await p.waitForFunction(f => { const c = window.__mark.ready && document.querySelector('canvas[data-page="' + f + '|0"]'), b = c && c.parentNode.querySelector('[data-rot="-1"]'); if (b) b.click(); return !!b; }, { timeout: 30000 }, FIXED);
   await p.waitForFunction((k, f) => { const x = window.__mark.state().batch.students.find(s => s.key === k).files.find(x => x.path === f); return x.rot && !x.rot[0] && x.rot[1] === 90; }, { timeout: 30000 }, KEY, FIXED);
   const turned = await rot();
-  // Leave out the notes, from the menu on their header
-  await p.waitForFunction(f => window.__mark.ready && !!document.querySelector('[data-fmenu="' + f + '"]'), { timeout: 30000 }, KEY + '/Extra notes.pdf');
+  // Once the papers are read, the notes, with no marks while other papers have some, are left out by themselves (docIn), as in the
+  // current app: Bring back puts them in, and Leave out, from the menu on their header, takes them out for good
+  await p.waitForFunction(() => window.__mark.read, { timeout: 60000 });
+  await p.waitForFunction(() => { const b = window.__mark.ready && document.querySelector('[data-inout]'); if (b) b.click(); return !!b; }, { timeout: 30000 });
+  await p.waitForFunction(k => (window.__mark.state().batch.students.find(s => s.key === k).inc || {})[k + '/Extra notes.pdf'] === true, { timeout: 30000 }, KEY);
   await menuDo(p, KEY + '/Extra notes.pdf', 'Leave out');
-  await p.waitForSelector('[data-inout]', { timeout: 30000 });
+  await p.waitForFunction(k => (window.__mark.state().batch.students.find(s => s.key === k).inc || {})[k + '/Extra notes.pdf'] === false, { timeout: 30000 }, KEY);
   const out = await p.evaluate(k => { const st = window.__mark.state().batch.students.find(s => s.key === k); return { inc: st.inc || null, layout: st.layout || null }; }, KEY);
   await p.evaluate(() => window.__mark.saved());
   await p.close();
@@ -194,6 +197,7 @@ test('pages arranged in the new app, and a page taken out, are where the current
   await p.click('[data-st="' + i + '"]');
   await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready, { timeout: 60000 }, i);
   const ESSAY = KEY + '/Essay.pdf', NOTES = KEY + '/Extra notes.pdf';
+  await p.waitForFunction(() => window.__mark.read, { timeout: 60000 });
   const st = () => p.evaluate(k => { const s = window.__mark.state().batch.students.find(x => x.key === k); return JSON.parse(JSON.stringify({ layout: s.layout || null, rot: Object.fromEntries(s.files.map(f => [f.path, f.rot || {}])) })); }, KEY);
   const mine = L => L && L.map(d => ({ name: d.name, pages: d.pages.filter(([q]) => q === ESSAY || q === NOTES) }));
   await p.waitForFunction(() => { const b = window.__mark.ready && document.querySelector('[data-arrange]'); if (b) b.click(); return !!b; }, { timeout: 30000 });
@@ -220,22 +224,19 @@ test('pages arranged in the new app, and a page taken out, are where the current
   await redo();
   await p.waitForFunction((k, f) => { const s = window.__mark.state().batch.students.find(x => x.key === k); return s.layout && (s.files.find(x => x.path === f).rot || {})[0] === 90; }, { timeout: 30000 }, KEY, ESSAY);
   assert.deepEqual(await st(), saved, 'redo makes the same paper');
-  // the × on the notes page takes it out; it waits below the paper, with Bring back
+  // the × on the notes page takes it out; Arrange pages shows it in the tray, and it waits below the paper, with Bring back
   await p.waitForFunction(f => { const c = window.__mark.ready && document.querySelector('canvas[data-page="' + f + '|0"]'), b = c && c.parentNode.querySelector('[data-pgout]'); if (b) b.click(); return !!b; }, { timeout: 30000 }, NOTES);
   await p.waitForFunction((k, f) => !window.__mark.state().batch.students.find(x => x.key === k).layout.some(d => d.pages.some(([q]) => q === f)), { timeout: 30000 }, KEY, NOTES);
-  await p.waitForFunction(f => { const b = window.__mark.ready && document.querySelector('[data-backpg="' + f + '|0"]'); if (b) b.click(); return !!b; }, { timeout: 30000 }, NOTES);
-  await p.waitForFunction((k, f) => window.__mark.state().batch.students.find(x => x.key === k).layout.some(d => d.pages.some(([q]) => q === f)), { timeout: 30000 }, KEY, NOTES);
-  // no file left holds a page of the notes, so it comes back as a file of its own, as in the current app (bringPageBack)
-  assert.deepEqual(mine((await st()).layout), [{ name: 'Both.pdf', pages: [[ESSAY, 0]] }, { name: 'Extra notes.pdf', pages: [[NOTES, 0]] }]);
-  // out again, and kept that way; Arrange pages shows it in the tray
-  await p.waitForFunction(f => { const c = window.__mark.ready && document.querySelector('canvas[data-page="' + f + '|0"]'), b = c && c.parentNode.querySelector('[data-pgout]'); if (b) b.click(); return !!b; }, { timeout: 30000 }, NOTES);
-  await p.waitForFunction(f => window.__mark.ready && !!document.querySelector('[data-backpg="' + f + '|0"]'), { timeout: 30000 }, NOTES);
-  await p.click('[data-arrange]');
+  assert.deepEqual(mine((await st()).layout), [{ name: 'Both.pdf', pages: [[ESSAY, 0]] }]);
+  await p.waitForFunction(() => { const b = window.__mark.ready && document.querySelector('[data-arrange]'); if (b) b.click(); return !!b; }, { timeout: 30000 });
   await p.waitForSelector('.mk-arr .acol[data-where="tray"] [data-apg="' + NOTES + '|0"]');
   await p.click('.mk-arr .arrfoot .grp:last-child button');   // Cancel
   await p.waitForFunction(() => !document.querySelector('.mk-arr'));
+  await p.waitForFunction(f => { const b = window.__mark.ready && document.querySelector('[data-backpg="' + f + '|0"]'); if (b) b.click(); return !!b; }, { timeout: 30000 }, NOTES);
+  await p.waitForFunction((k, f) => window.__mark.state().batch.students.find(x => x.key === k).layout.some(d => d.pages.some(([q]) => q === f)), { timeout: 30000 }, KEY, NOTES);
+  // no file left holds a page of the notes, so it comes back as a file of its own, as in the current app (bringPageBack)
   const now = await st();
-  assert.deepEqual(mine(now.layout), [{ name: 'Both.pdf', pages: [[ESSAY, 0]] }]);
+  assert.deepEqual(mine(now.layout), [{ name: 'Both.pdf', pages: [[ESSAY, 0]] }, { name: 'Extra notes.pdf', pages: [[NOTES, 0]] }]);
   await p.evaluate(() => window.__mark.saved());
   await p.close();
   const m2 = await page(ctx, errors);
@@ -244,6 +245,73 @@ test('pages arranged in the new app, and a page taken out, are where the current
   await m2.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
   const was = await m2.evaluate(k => { const s = window.__gs.state().batch.students.find(x => x.key === k); return JSON.parse(JSON.stringify({ layout: s.layout || null, rot: Object.fromEntries(s.files.map(f => [f.path, f.rot || {}])) })); }, KEY);
   assert.deepEqual(was, now, 'the current app finds the same paper, turned the same');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// A paper marked in another app (as test/imported-marks.test.js makes it): ink, highlights, typed text, a sticky note, a box, a line and a stamp.
+async function markedPaper() {
+  const { PDFDocument, PDFName, PDFString, PDFHexString } = require('pdf-lib');
+  const doc = await PDFDocument.load(await makePaper({ title: 'Rivers', lines: ['A made-up paragraph about a river and a town.', 'Another made-up line of the essay.'] })), ctx = doc.context;
+  const red = [0.8, 0.1, 0.1], add = o => ctx.register(ctx.obj({ Type: 'Annot', F: 4, ...o }));
+  const annots = [
+    add({ Subtype: 'Ink', Rect: [100, 500, 220, 560], C: red, InkList: [[100, 520, 140, 560, 180, 500, 220, 540]], BS: { W: 2 } }),
+    add({ Subtype: 'Highlight', Rect: [72, 600, 300, 614], C: [1, 0.9, 0.3], QuadPoints: [72, 614, 300, 614, 72, 600, 300, 600] }),
+    add({ Subtype: 'Highlight', Rect: [72, 580, 250, 594], C: [1, 0.9, 0.3], QuadPoints: [72, 594, 250, 594, 72, 580, 250, 580], Contents: PDFHexString.fromText('Which chapter is this from?') }),
+    add({ Subtype: 'FreeText', Rect: [320, 400, 520, 430], DA: PDFString.of('/Helv 14 Tf 0.8 0.1 0.1 rg'), Contents: PDFHexString.fromText('Good topic sentence!') }),
+    add({ Subtype: 'Text', Rect: [500, 700, 520, 720], C: [0.4, 0.6, 0.9], Contents: PDFHexString.fromText('9.5/12 = 79%') }),
+    add({ Subtype: 'Square', Rect: [300, 300, 400, 340], C: red, BS: { W: 1.5 } }),
+    add({ Subtype: 'Line', Rect: [80, 200, 300, 260], C: red, L: [80, 260, 300, 200] }),
+    add({ Subtype: 'Stamp', Rect: [400, 100, 520, 140], Name: PDFName.of('Approved') }),
+  ];
+  doc.getPage(0).node.set(PDFName.of('Annots'), ctx.obj(annots));
+  return doc.save();
+}
+
+test('marks from another app made editable in the new app are the marks the current app makes, and Put back puts them back', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const z = zipOf({ 'Aria Testwell/Essay.pdf': await markedPaper(), 'Bram Sample/Essay.pdf': await markedPaper(), 'Cleo Madeup/Essay.pdf': await makePaper({ title: 'Plain' }) });
+  const m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, z, 'Imported.zip');
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  const A = 'Aria Testwell', B = 'Bram Sample';
+  const ix = k => p.evaluate(k => window.__mark.state().batch.students.findIndex(s => s.key === k), k);
+  const marksOf = (pg, k) => pg.evaluate(k => { const b = (window.__mark || window.__gs).state().batch, f = b.students.find(s => s.key === k).files[0]; return JSON.parse(JSON.stringify({ marks: f.marks[0] || [], imp: f.imp || null, impNo: !!f.impNo })); }, k);
+  await p.click('[data-st="' + await ix(A) + '"]');
+  await p.waitForFunction(() => { const n = document.querySelector('.mk-impnote'); return n && /papers in this download/.test(n.textContent); }, { timeout: 60000 });
+  assert.match(await p.$eval('.mk-impnote', n => n.textContent), /This paper has 7 marks from another app.*2 papers in this download/);
+  // Make all of them editable: the dialog reads every paper and makes them hers at once
+  await p.click('.mk-impnote [data-imp="all"]');
+  await p.waitForFunction(() => /Make 14 marks editable/.test((document.querySelector('[data-impgo]') || {}).textContent || ''), { timeout: 60000 });
+  assert.match(await p.$eval('.mk-imptbl', e => e.textContent), /Pen and lines4 → your pen/);
+  await p.click('[data-impgo]');
+  await p.waitForFunction(() => !document.querySelector('[data-impgo]'), { timeout: 60000 });
+  await p.waitForFunction(() => { const n = window.__mark.ready && document.querySelector('.mk-impnote'); return n && /now yours to change/.test(n.textContent); }, { timeout: 30000 });
+  assert.match(await p.$eval('.mk-impnote', n => n.textContent), /7 marks are now yours to change.*1 mark .*couldn’t be changed/);
+  const a = await marksOf(p, A), b = await marksOf(p, B);
+  assert.deepEqual(a.marks.map(x => x.t).sort(), ['hl', 'note', 'note', 'oval', 'pen', 'pen', 'text']);
+  assert.equal(b.marks.length, 7, 'the other paper too');
+  // Put back on the first: none of them are hers, and the note doesn't offer again
+  await p.waitForFunction(() => { const b = window.__mark.ready && document.querySelector('.mk-impnote [data-imp="back"]'); if (b) b.click(); return !!b; }, { timeout: 30000 });
+  await p.waitForFunction(k => { const f = window.__mark.state().batch.students.find(s => s.key === k).files[0]; return f.impNo && !(f.marks[0] || []).length; }, { timeout: 30000 }, A);
+  await p.waitForFunction(() => window.__mark.ready && !document.querySelector('.mk-impnote'), { timeout: 30000 });
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m2 = await page(ctx, errors);
+  await m2.goto(srv.url); await appReady(m2);
+  await m2.evaluate(id => window.__gs.reopenKept(id), id);
+  await m2.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  assert.deepEqual(await marksOf(m2, B), b, 'the current app finds the marks the new app made');
+  assert.equal((await marksOf(m2, A)).impNo, true, 'and the put back paper as put back');
+  // the current app makes the same marks from the same paper
+  const fresh = await m2.evaluate(async k => { const f = window.__gs.state().batch.students.find(s => s.key === k).files[0]; delete f.impNo; await window.__gs.impConvert(f); return JSON.parse(JSON.stringify({ marks: f.marks[0] || [], imp: f.imp })); }, A);
+  assert.deepEqual(fresh.marks, b.marks, 'the same marks');
+  assert.deepEqual(fresh.imp, b.imp);
   assert.deepEqual(errors, []);
   await ctx.close();
 });

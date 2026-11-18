@@ -11,6 +11,9 @@ import * as F from '../../engines/gfiles.js';
 import * as K from '../../engines/gmark.js';
 import { PARTS } from '../router.js';
 import { libs } from './paper.js';
+import { prefs } from '../../students/prefs.js';
+
+const prefsGet = k => !!prefs.get(k, false);
 
 let M = null, show = () => {};
 // m: the marking code (mark/marking.js); open(i, path): show this student (and file) on screen.
@@ -349,3 +352,68 @@ export function bringPageBack(st, path, p) {
   put(now);
 }
 export const outPages = st => F.outPages(st);
+
+// Marks from other apps (src/imported.js): pen, highlights, typed text and comments a PDF came in with (Kami, Acrobat, Preview), made
+// into her own marks (impConvert), or put back as the file had them (impPutBack). The file she was sent is never changed. As in the
+// current app these are not undo steps: Put back is the way back, and the file's earlier undo steps go, since they would bring back
+// marks that no longer match what's drawn (impForgetUndo).
+export const impCount = f => F.impCount(f);
+function impForget(f) {
+  const { undoStack: u, redoStack: r } = state();
+  for (const s of [u, r]) { const keep = s.filter(x => x.file !== f); s.splice(0, s.length, ...keep); }
+  if (state().selected && state().selected.page && state().selected.page.file === f) use({ selected: null });
+}
+export async function impMake(f, read) {
+  await libs(); await (await PARTS.outEngine()).load();
+  const r = read || await F.impRead(f);
+  if (!r.n) return { n: 0, keep: r.keep, locked: r.locked };
+  f.imp ||= {};
+  for (const [p, list] of Object.entries(r.pages)) { const marks = (f.marks[p] ||= []); for (const it of list) { marks.push(...it.marks); (f.imp[p] ||= []).push(it.id); } }
+  delete f.impNo;
+  f.impNew = { n: r.n, keep: r.keep };
+  impForget(f); tell();
+  return { n: r.n, keep: r.keep };
+}
+export function impBack(f) {
+  for (const p of Object.keys(f.marks)) f.marks[p] = f.marks[p].filter(m => !m.imp);
+  delete f.imp; delete f.view; delete f.viewOf; delete f.viewKey; delete f.impNew;
+  f.impNo = 1;
+  impForget(f); tell();
+}
+export function impNo(f) { f.impNo = 1; tell(); }
+// After a change (impAfter): read again (a grade in a comment is hers now) and draw again.
+export async function impAfter(f, again = true) {
+  K.thumbCache.clear();
+  await rescan(f);
+  if (state().gradeMarksChanged) state().gradeMarksChanged(f);
+  tell(); if (again) show(-1);
+}
+// Every paper's marks from other apps, read for the dialog (openImported). each(i, n): progress.
+export async function impReadAll(each, live) {
+  await libs(); await (await PARTS.outEngine()).load();
+  const files = b().students.flatMap(st => st.files.filter(f => f.kind === 'pdf' && !f.virtual && !f.bad && !f.impNo)), reads = new Map(), kinds = {};
+  let total = 0, keep = 0;
+  for (let i = 0; i < files.length; i++) {
+    if (!live()) return null;
+    each(i, files.length);
+    let r; try { r = await F.impRead(files[i]); } catch (e) { console.error(e); continue; }
+    if (!r.n) continue;
+    reads.set(files[i], r); total += r.n; keep += r.keep;
+    for (const [k, v] of Object.entries(r.kinds)) kinds[k] = (kinds[k] || 0) + v;
+  }
+  return { reads, total, keep, kinds };
+}
+export async function impMakeAll(reads, each) {
+  let n = 0, i = 0, bad = 0;
+  for (const [f, r] of reads) { each(++i, reads.size); try { n += (await impMake(f, r)).n; K.thumbCache.clear(); await rescan(f); } catch (e) { console.error(e); bad++; } }
+  tell(); show(-1);
+  return { n, bad };
+}
+// As a paper opens, when she asked for it (impAuto).
+export async function impAuto(f) {
+  if (!prefsGet('gs.impAuto') || f.impNo || f.virtual || f.kind !== 'pdf' || !F.impCount(f)) return false;
+  const r = await impMake(f); if (!r.n) return false;
+  K.thumbCache.clear(); await rescan(f); tell();
+  return true;
+}
+export const gsFlat = (f, doc) => F.gsFlatCheck(f, doc);

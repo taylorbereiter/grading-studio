@@ -603,5 +603,61 @@
  "mark.a_page_back": "Brought back {name}, page {n}",
  "mark.a_gone_pages": "Removed pages ({n})",
  "mark.a_gone_both": "Removed files and pages ({n})",
- "mark.a_your_rubric": "your rubric page"
+ "mark.a_your_rubric": "your rubric page",
+ "mark.i_has": {
+  "one": "This paper has {n} mark from another app. You can see it but not change it.",
+  "other": "This paper has {n} marks from another app. You can see them but not change them."
+ },
+ "mark.i_make": {
+  "one": "Make it editable",
+  "other": "Make them editable"
+ },
+ "mark.i_not_now": "Not now",
+ "mark.i_others": "{n} papers in this download have marks like these.",
+ "mark.i_all": "Make all of them editable",
+ "mark.i_now": {
+  "one": "{n} mark is now yours to change.",
+  "other": "{n} marks are now yours to change."
+ },
+ "mark.i_back": "Put back",
+ "mark.i_kept": {
+  "one": "{n} mark (like a stamp or a picture) couldn’t be changed and stays on the page as it was.",
+  "other": "{n} marks (like a stamp or a picture) couldn’t be changed and stay on the page as they were."
+ },
+ "mark.i_flat": "This file was exported from Grading Studio with its marks drawn into the page, so they can’t be changed here.",
+ "mark.i_flat_how": "To change them, open the download you marked them in: your marks are kept there. Files exported with Keep marks editable on come back with their marks.",
+ "mark.i_locked": "This file is locked, so its marks stay as they are.",
+ "mark.i_none": "None of these marks could be made editable, so they stay as they are.",
+ "mark.i_failed": "That didn’t work on this file. Its marks are as they were.",
+ "mark.i_title": "Marks from other apps",
+ "mark.i_looking": "Looking through the papers… {i} of {n}",
+ "mark.i_sum": {
+  "one": "{n} paper has {marks} made in another app.",
+  "other": "{n} papers have {marks} made in another app."
+ },
+ "mark.i_sum_none": "No paper in this download has marks from another app that could be made editable.",
+ "mark.i_k_pen": "Pen and lines",
+ "mark.i_k_note": "Comments",
+ "mark.i_k_hl": "Highlights",
+ "mark.i_k_text": "Typed text on the page",
+ "mark.i_k_oval": "Circles and boxes",
+ "mark.i_k_other": "Stamps, pictures and other marks",
+ "mark.i_to_pen": "{n} → your pen",
+ "mark.i_to_note": "{n} → your margin comments",
+ "mark.i_to_hl": "{n} → your highlighter",
+ "mark.i_to_text": "{n} → your text",
+ "mark.i_to_oval": "{n} → your oval",
+ "mark.i_stay": "{n} stay as they are",
+ "mark.i_auto": "Do this by itself for papers I open from now on",
+ "mark.i_hint": "Your original files aren’t changed, and Put back above each paper undoes it. A grade written in one of these comments still counts.",
+ "mark.i_make_them": "Make them editable",
+ "mark.i_make_n": {
+  "one": "Make {n} mark editable",
+  "other": "Make {n} marks editable"
+ },
+ "mark.i_working": "Working… {i} of {n}",
+ "mark.i_bad": {
+  "one": "{n} file couldn’t be changed.",
+  "other": "{n} files couldn’t be changed."
+ }
 }

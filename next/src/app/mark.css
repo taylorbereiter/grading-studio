@@ -303,3 +303,7 @@ dialog.dlg.mk-arr[open]{display:flex}
 .mk-arr .arr-big{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--scrim);cursor:zoom-out}
 .mk-arr .arr-big img{max-width:100%;max-height:100%;box-shadow:var(--sh-f);background:#fff}
 @media (max-width:640px){dialog.dlg.mk-arr{width:100vw;height:100vh;margin:0;border-radius:0}.mk-arr .acols{flex-wrap:wrap}.mk-arr .acol{flex-basis:100%}}
+/* marks from other apps (mark/fileui.jsx ImpNote, Imported) */
+.mk-impnote{display:flex;flex-direction:column;gap:2px;margin:0 auto 8px;max-width:var(--pgw,720px);padding:8px 12px;border-radius:var(--r2);background:var(--acc-soft);color:var(--ink2);font-size:var(--t2)}
+.mk-impnote>div{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.mk-imptbl{width:100%;border-collapse:collapse;margin:4px 0 12px;font-size:var(--t2)}.mk-imptbl td{padding:4px 0;border-top:1px solid var(--line)}.mk-imptbl td+td{text-align:right;color:var(--ink2)}

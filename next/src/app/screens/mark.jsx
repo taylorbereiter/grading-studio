@@ -57,7 +57,7 @@ function Page({ pg, room, tall, zoom, FU }) {
     pg.wrapEl = wrap.current; if (MK) MK.M.bind(pg, wrap.current);
     renderPage(pg, fitScale(pg, room, tall, (state().disp || {}).fit, zoom));
   }, [pg, room, zoom]);
-  return <div ref={wrap} class={'pg' + (pg.out ? ' out' : '')} data-tool={state().tool}><canvas ref={ref} data-page={pg.file.path + '|' + pg.idx} />{FU && <FU.TurnChip pg={pg} />}</div>;
+  return <>{FU && pg.impTop && <FU.ImpNote pg={pg} />}<div ref={wrap} class={'pg' + (pg.out ? ' out' : '')} data-tool={state().tool}><canvas ref={ref} data-page={pg.file.path + '|' + pg.idx} />{FU && <FU.TurnChip pg={pg} />}</div></>;
 }
 
 // The marking tools load as a part of their own (router.js PARTS.marking, screens/mark-tools.jsx) once the paper is open, so
@@ -94,7 +94,7 @@ function Paper({ batch, cur, zoom, ver, FU }) {
     let live = true; setGot(null);
     use({ cur });
     seam.ready = false;
-    if (st) openPages(st, () => live).then(r => { if (live) { setGot(r); seam.ready = true; } });
+    if (st) openPages(st, () => live, FU && FU.impAuto).then(r => { if (live) { setGot(r); seam.ready = true; } });
     return () => { live = false; };
   }, [batch, cur, ver]);
   useEffect(() => {
@@ -166,7 +166,7 @@ export default function MarkScreen({ route, classes }) {
     PARTS.marking().then(m => { if (!live) return; MK = m; off = m.start({ toast: text => toast(text), openStudent: i => pickRef.current(i), changed: () => tick(n => n + 1) }); tick(n => n + 1); });
     return () => { live = false; if (off) off(); }; }, [w]);
   useEffect(() => {
-    let live = true; setW(null); setErr(null);
+    let live = true; setW(null); setErr(null); seam.read = false;
     // the opener (mark/open.js, with the lifted opening code) loads as a part of its own, so it isn't in this screen's own load
     PARTS.bring().then(O => O.openKept(id, { question: q => new Promise(done => setAsk({ q, done: v => { setAsk(null); done(v); } })) }))
       .then(r => { if (!live) return; if (!r) return history.back(); setW(r); setCur(Math.min(r.cur || 0, r.batch.students.length - 1)); }, e => { console.error(e); if (live) setErr(e); });
@@ -184,7 +184,10 @@ export default function MarkScreen({ route, classes }) {
   const [FU, setFU] = useState(null), [ver, setVer] = useState(0), [carried, setCarried] = useState(false);
   useEffect(() => setCarried(!!(w && w.carried)), [w]);
   useEffect(() => { if (!w || !MK) return; let live = true;
-    PARTS.fileui().then(m => { if (!live) return; m.wire(MK.M, i => { if (i >= 0) pickRef.current(i); setVer(v => v + 1); }); setFU(m); m.pdfAuto(); }, e => console.error(e));
+    PARTS.fileui().then(m => { if (!live) return; m.wire(MK.M, i => { if (i >= 0) pickRef.current(i); setVer(v => v + 1); }); setFU(m); m.pdfAuto(); m.impAutoNow();
+      // the papers are read in the background as they open, as the current app reads them (src/app/open.js scanAll): a grade written on
+      // a paper, notes made in other apps, and marks from other apps that could be hers
+      PARTS.outEngine().then(E => { E.withMarking(MK.M); return E.readPapers(); }).then(() => { seam.read = true; if (live) tick(n => n + 1); }, e => console.error(e)); }, e => console.error(e));
     return () => { live = false; }; }, [w, !!MK]);
   // What opened: a line after the papers open when there's something new to say, and the whole report from the student list.
   const [rep, setRep] = useState(null), [repList, setRepList] = useState(false);
