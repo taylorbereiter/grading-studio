@@ -333,5 +333,23 @@
  "paper.pw_same": "Same student",
  "paper.pw_not": "Not them",
  "paper.pw_no": "You said “{name}” isn’t this student.",
- "paper.pw_again": "Ask again"
+ "paper.pw_again": "Ask again",
+ "paper.ib_ask": "{cls} is graded with MYP criteria.",
+ "paper.ib_choose": "Choose this task’s criteria",
+ "paper.ib_crit": "Criteria",
+ "paper.ib_title": "Criteria this task assesses",
+ "paper.ib_about": "Tick the criteria you are marking on this task. Each becomes a row scored 0 to {top}. A task usually assesses two or three.",
+ "paper.ib_note": "What each level means on a row is yours to write: use Rubric setup afterwards and paste your own descriptors.",
+ "paper.ib_save": "Save",
+ "paper.ib_cancel": "Cancel",
+ "paper.ib_one": "Tick at least one criterion",
+ "paper.ib_done": "This task assesses {list}",
+ "paper.ib_lose": {
+  "one": "The levels or score already given on {n} paper go. Undo brings them back.",
+  "other": "The levels or scores already given on {n} papers go. Undo brings them back."
+ },
+ "paper.ib_n_of": "{n} of {of} criteria marked",
+ "paper.ib_levels": "levels, 0 to {top}",
+ "paper.ib_stamp": "Stamp",
+ "paper.ib_stamp_tip": "Put the levels on the paper: {text}"
 }

@@ -9,7 +9,7 @@ import { t } from '../../i18n/t.js';
 import { go, href, PARTS } from '../router.js';
 import { register } from '../../services/shortcuts.js';
 import { openPages, renderPage, fitScale } from '../mark/paper.js';
-import { use, gradeOf, maxPoints, fmtNum, state, rowSteps, rowTop, setupOver, DEFAULT_SETUP, SCALE12, SCALE_FIVES, noScore, xcSay } from '../../engines/gcore.js';
+import { use, gradeOf, maxPoints, fmtNum, state, rowSteps, rowTop, setupOver, DEFAULT_SETUP, SCALE12, SCALE_FIVES, noScore, xcSay, ibSetup } from '../../engines/gcore.js';
 import { prefs } from '../../students/prefs.js';
 import { onSaved } from '../../shared/saved.js';
 import { shownName, anonOn, anonOrder } from '../../engines/gdraw.js';
@@ -31,6 +31,8 @@ function rowScore(st, pts, fm) {
   if (s === 'missing') return { text: t('mark.missing'), tone: 'warn' };
   if (s === 'excused') return { text: t('mark.excused'), tone: 'mute' };
   if (fm) return st.grade.fb ? { text: t('mark.fb_done_short'), done: true } : null;
+  // an MYP task: each criterion's level in turn, as the current app's list has them (src/ib.js ibListSay)
+  if (ibSetup() && g.total != null) { const su = state().setup; return { text: su.ib.map((k, i) => (k ? (st.grade.rubric[i] == null ? '–' : fmtNum(st.grade.rubric[i])) : null)).filter(x => x !== null).join(' '), done: !!g.done }; }
   if (g.total == null) return g.pct != null ? { text: fmtNum(g.pct) + '%', done: !!g.done } : null;
   const x = !!g.xc && g.base != null, pc = x ? g.bpct : g.pct, tot = x ? g.base : g.total, of = g.outOf != null ? g.outOf : maxPoints();
   const more = x ? ' +' + (!pts && !g.partial ? xcSay(g) : fmtNum(g.xc) + (g.xcU === 'pct' ? '%' : '')) : '';
@@ -291,7 +293,7 @@ function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onC
       <p class="mute">{t('mark.fb_text')}</p>
       <div class="mk-fb"><Button aria-pressed={gr.fb ? 'true' : 'false'} icon={gr.fb ? 'check' : undefined} disabled={off} onClick={() => M.setFb(!gr.fb)} kbd="F" data-fb>{t(gr.fb ? 'mark.fb_done' : 'mark.fb_mark')}</Button>
         {!gr.fb && !last && <Button variant="primary" disabled={off} onClick={() => { M.setFb(true); onNext(); }} kbd="Shift F" data-fbnext>{t('mark.fb_next')}</Button>}</div></>
-    : <><h3 class="mk-h">{t('mark.score')}</h3>
+    : <>{FU && M && <FU.IbAsk />}<h3 class="mk-h">{t('mark.score')}</h3>
     {su.mode === 'rubric' ? <div class="mk-crits">{su.criteria.map((c, i) => { const v = gr.rubric[i], steps = rowSteps(su, i), top = rowTop(su, i), k = steps.indexOf(v);
       return <div class={'mk-crit' + (i === row ? ' on' : '')} data-row={i}>
         <div class="cn"><button type="button" class="nm" onClick={() => M && M.pickRow(i)} data-raw>{c}</button><em>{v == null ? '' : fmtNum(v)}{v == null ? '' : <small>{' / ' + top}</small>}</em>{v != null && M && <IconButton icon="stamp" size="sm" label={t('mark.stamp_row', { c })} onClick={() => stamp(i)} data-critstamp={i} />}</div>
@@ -302,8 +304,8 @@ function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onC
       </div>; })}</div>
       : <div class="mk-pts"><input type="text" inputmode="decimal" aria-label={t('mark.points')} value={gr.pk != null && gr.pk !== '' ? gr.pk + '%' : gr.points} disabled={off}
           onInput={e => M.setPoints(e.currentTarget.value, e.currentTarget)} onBlur={() => M && M.leftPoints()} onKeyDown={ptsKey} /><span class="mute">{t('mark.out_of_pts', { n: su.outOf })}</span></div>}
-    <div class="total"><b>{g.total != null ? fmtNum(g.total) : '–'}</b><span class="mute">{max ? t('mark.out_of', { n: fmtNum(max) }) : ''}</span>
-      <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span>{M && <IconButton icon="grades" size="sm" label={t('mark.calc')} kbd="=" onClick={onCalc} data-calcopen />}{g.total != null && M && <Button size="sm" icon="stamp" onClick={() => stamp(null)} title={t('mark.stamp_tip')} data-stampscore>{t('mark.stamp')}</Button>}</div>
+    {FU && M && ibSetup() ? <FU.IbTotal st={st} onStamp={() => stamp(null)} /> : <div class="total"><b>{g.total != null ? fmtNum(g.total) : '–'}</b><span class="mute">{max ? t('mark.out_of', { n: fmtNum(max) }) : ''}</span>
+      <span class="grow" /><span class="pct">{g.pct != null ? fmtNum(g.pct) + '%' : ''}</span>{M && <IconButton icon="grades" size="sm" label={t('mark.calc')} kbd="=" onClick={onCalc} data-calcopen />}{g.total != null && M && <Button size="sm" icon="stamp" onClick={() => stamp(null)} title={t('mark.stamp_tip')} data-stampscore>{t('mark.stamp')}</Button>}</div>}
     {g.total == null && <p class="mute">{t('mark.no_score')}</p>}</>}
     <div class="mk-stat" role="group" aria-label={t('mark.mark_as')}>{STATUS.map(([k, l]) => <button type="button" class="chip" aria-pressed={gr.status === k ? 'true' : 'false'} disabled={off} data-status={k} onClick={() => M.setStatus(k)}>{l()}</button>)}{FU && M && <FU.ScoreMore st={st} />}</div>
     {FU && M && <FU.Anchors st={st} />}

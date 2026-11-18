@@ -1,7 +1,7 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
-import { lib, tr, pdfjsLib, fflate, workerReady, ROW_TOP, topOk, rowLevels } from './gcore.js';
-import { one } from './gdraw.js';
+import { batch, setup, lib, tr, pdfjsLib, fflate, workerReady, ROW_TOP, topOk, rowLevels, fmtNum, noScore } from './gcore.js';
+import { batchClass, one } from './gdraw.js';
 
 // src/app/word.js
 const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
@@ -281,4 +281,41 @@ function goalsTidy(d) {
   const a = (d.criteria || []).map((_, i) => (d.goals && d.goals[i]) || null);
   return a.some(Boolean) ? a : undefined;
 }
-export { tidyLevels, levelIn, goalList, goalById, goalName, goalsTidy, ruFromWord, ruFromPdf, rubricRowsInto };
+// src/ib.js
+const IB_TOP = 8;
+// src/ib.js
+const IB_GROUPS = [
+  ['langlit', 'Language and literature', ['Analysing', 'Organizing', 'Producing text', 'Using language']],
+  ['langacq', 'Language acquisition', ['Listening', 'Reading', 'Speaking', 'Writing']],
+  ['indsoc', 'Individuals and societies', ['Knowing and understanding', 'Investigating', 'Communicating', 'Thinking critically']],
+  ['sci', 'Sciences', ['Knowing and understanding', 'Inquiring and designing', 'Processing and evaluating', 'Reflecting on the impacts of science']],
+  ['math', 'Mathematics', ['Knowing and understanding', 'Investigating patterns', 'Communicating', 'Applying mathematics in real-life contexts']],
+  ['arts', 'Arts', ['Investigating', 'Developing', 'Creating or performing', 'Evaluating']],
+  ['phe', 'Physical and health education', ['Knowing and understanding', 'Planning for performance', 'Applying and performing', 'Reflecting and improving performance']],
+  ['design', 'Design', ['Inquiring and analysing', 'Developing ideas', 'Creating the solution', 'Evaluating']],
+  ['idu', 'Interdisciplinary', ['Evaluating', 'Synthesizing', 'Reflecting']],
+  ['pp', 'Personal project', ['Planning', 'Applying skills', 'Reflecting']],
+  ['own', 'Another subject', ['Criterion A', 'Criterion B', 'Criterion C', 'Criterion D']],
+];
+// src/ib.js
+const ibLetter = i => String.fromCharCode(65 + i);
+// src/ib.js
+function classWay(c) { return c && (c.way === 'myp' || c.way === 'dp') ? c.way : ''; }
+// src/ib.js
+const ibGroup = k => IB_GROUPS.find(g => g[0] === k) || null;
+// src/ib.js
+const ibGroupCrit = k => (ibGroup(k) || IB_GROUPS[IB_GROUPS.length - 1])[2].map((name, i) => ({ k: ibLetter(i), name }));
+// src/ib.js
+function ibCrit(c) {
+  const ib = c && c.ib || {}, own = Array.isArray(ib.crit) ? ib.crit.filter(x => x && String(x.k || '').trim()).map(x => ({ k: String(x.k).trim().slice(0, 2), name: String(x.name || '').trim().slice(0, 80) })) : [];
+  return own.length ? own : ibGroupCrit(ib.group);
+}
+// src/ib.js
+const ibTaskClass = () => { const c = batch && batchClass(); return c && classWay(c) === 'myp' ? c : null; };
+// src/ib.js
+const ibTaskLevels = st => setup.ib.map((k, i) => [k, noScore(st) ? null : st.grade.rubric[i]]).filter(x => x[0]);
+// src/ib.js
+function ibListSay(st) { return ibTaskLevels(st).map(x => x[1] == null ? '–' : fmtNum(x[1])).join(' '); }
+// src/ib.js
+function ibStampText(st) { return ibTaskLevels(st).filter(x => x[1] != null).map(([k, v]) => k + ' ' + fmtNum(v)).join('   '); }
+export { tidyLevels, levelIn, goalList, goalById, goalName, goalsTidy, ruFromWord, ruFromPdf, rubricRowsInto, classWay, ibCrit, IB_TOP, ibTaskClass, ibTaskLevels, ibListSay, ibStampText };

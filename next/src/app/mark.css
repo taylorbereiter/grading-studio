@@ -851,3 +851,13 @@ dialog.dlg:has(.mk-pv){width:min(860px,calc(100vw - 32px))}
 .mk-pv .pv-file{display:flex;gap:6px;align-items:center;min-width:0}
 .mk-pv .pv-pick{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 @media (max-width:700px){.mk-pv .pv-row{grid-template-columns:minmax(0,1fr) auto}.mk-pv .pv-vid{grid-column:1/-1;grid-row:2}}
+/* an MYP task (mark/ib.jsx) */
+.mk-ibask{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--acc-soft);border-radius:var(--r2);padding:8px 12px;margin-bottom:8px;font-size:var(--t2)}
+.mk-ibtl .ib-lvs{display:flex;gap:6px;flex-wrap:wrap}
+.mk-ibtl .ib-lv{display:inline-flex;gap:4px;align-items:baseline;padding:2px 8px;border-radius:999px;background:var(--line)}
+.mk-ibtl .ib-lv i{font-style:normal;color:var(--mute);font-size:var(--t1)}
+.mk-ibtask{display:grid;gap:10px}
+.mk-ibtask p{margin:0}
+.mk-ibtask .ib-list{display:grid;gap:6px}
+.mk-ibtask .ib-chk{display:flex;gap:8px;align-items:center}
+.mk-ibtask .mk-warn{background:var(--warn-soft);border-radius:var(--r2);padding:8px 12px}

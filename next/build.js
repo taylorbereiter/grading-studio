@@ -304,6 +304,8 @@ export const tnRngSet = r => { tnRng = r; };
     // Rubric setup (src/rubrics.js, src/goals.js, src/rubricup.js): what each score means kept tidy, the learning goals a row can be
     // tagged with, and rows read out of a rubric she brings in (Word or PDF); the dialog and its one undo step are the new app's
     'tidyLevels', 'levelIn', 'goalList', 'goalById', 'goalName', 'goalsTidy', 'ruFromWord', 'ruFromPdf', 'rubricRowsInto',
+    // an IB MYP class's task (src/ib.js): the class's criteria, the ones this task assesses, and its levels in the list and on a stamp
+    'classWay', 'ibCrit', 'IB_TOP', 'ibTaskClass', 'ibTaskLevels', 'ibListSay', 'ibStampText',
   ], '', [], ['gcore', 'gdraw', 'gword']],
   ['ginsight', [
     // Insights > Consistency (src/insight.js): whether her scores drifted as she went, read the same way, rubric row by row, and

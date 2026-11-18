@@ -652,6 +652,37 @@ export async function setupSave(draft, { page, from, n0, goal }) {
   return d;
 }
 
+// An IB MYP class's task (src/ib.js ibTaskApply): its rows become the criteria ticked, in the class's order, each scored 0 to 8. Levels
+// given for a criterion that stays are kept, with what each level means and its goal; the rest go (the current app asks first; here
+// it goes at once, one undo step, with Undo). Before, a task scored as a total loses that total.
+export async function ibTaskApply(c, keys, S) {
+  const s = state(), bb = b(), su0 = s.setup, crit = S.ibCrit(c).filter(x => keys.includes(x.k));
+  if (!crit.length || !bb) return false;
+  const had = !!(su0.mode === 'rubric' && Array.isArray(su0.ib) && su0.ib.some(Boolean)), old = had ? su0.ib : [], from = crit.map(x => old.indexOf(x.k));
+  const pick = a => (Array.isArray(a) ? from.map(i => (i >= 0 && a[i] != null ? a[i] : null)) : null);
+  const su = { ...J(su0), mode: 'rubric', criteria: crit.map((x, n) => (from[n] >= 0 ? su0.criteria[from[n]] : x.k + ' ' + x.name)), ib: crit.map(x => x.k), top: S.IB_TOP, half: false, scale: null };
+  delete su.tops;
+  const lv = pick(su0.levels), gl = pick(su0.goals);
+  if (lv && lv.some(Boolean)) su.levels = lv.map(x => x || []); else delete su.levels;
+  if (gl && gl.some(Boolean)) su.goals = gl.map(x => x || ''); else delete su.goals;
+  const keep = st => J({ rubric: st.grade.rubric, atR: st.grade.atR, points: st.grade.points, qAuto: st.grade.qAuto });
+  const before = bb.students.map(keep), now = Date.now();
+  const after = bb.students.map(st => {
+    const g = st.grade, r = g.rubric || [], at = g.atR || {}, nat = {};
+    from.forEach((i, n) => { nat[n] = i >= 0 && at[i] ? at[i] : now; }); if (at.points) nat.points = now;
+    return { rubric: from.map(i => (i >= 0 && r[i] != null ? r[i] : null)), atR: nat, points: had ? g.points : '', qAuto: had ? g.qAuto : undefined };
+  });
+  const apply = async (setup, grades) => {
+    use({ setup });
+    bb.students.forEach((st, k) => { const x = grades[k]; st.grade.rubric = J(x.rubric) || []; if (x.atR) st.grade.atR = J(x.atR); else delete st.grade.atR; st.grade.points = x.points ?? ''; if (x.qAuto != null) st.grade.qAuto = x.qAuto; else delete st.grade.qAuto; K.touchGrade(st); s.refound(st); });
+    await M.keepSetup();
+    tell(); show(state().cur);
+  };
+  await apply(su, after);
+  step(() => apply(J(su0), before), () => apply(J(su), after), 'setup');
+  return true;
+}
+
 /* Anchor papers (src/anchors.js): the high, middle and low paper a school keeps from a summative. One paper each: tagging a second
    paper High takes High off the first, and one undo step puts both back. Stored on the paper's grade as grade.anchor. */
 export const ANCHOR_LV = ['high', 'mid', 'low'];

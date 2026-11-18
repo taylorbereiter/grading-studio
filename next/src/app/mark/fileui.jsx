@@ -14,6 +14,7 @@ import { GroupBand, GroupDialog } from './group.jsx';
 export { GroupBand };
 export { ScoreMore, Anchors } from './score-more.jsx';
 export { PastWork } from './past.jsx';
+export { IbAsk, IbTotal } from './ib.jsx';
 import * as C from './change.js';
 import { Arrange } from './arrange.jsx';
 export { LightPanel, LightChip } from './light.jsx';
