@@ -366,6 +366,72 @@ test('Library: an activity found and filtered, one of my own saved, an activity 
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
+test('a lesson’s materials and links, its versions, and deleting it with undo, kept as the current Planner keeps them', async () => {
+  const p = await fresh();
+  await open(p, 'lesson/L3');
+  // A file from this computer
+  const f = path.join(require('os').tmpdir(), 'gs-plan-handout-' + process.pid + '.txt'); fs.writeFileSync(f, 'Sonnet handout');
+  await (await p.$('input[data-mats]')).uploadFile(f);
+  await p.waitForFunction(() => [...document.querySelectorAll('main .mlist .mopen span')].some(x => /gs-plan-handout/.test(x.textContent)), { timeout: 10000 });
+  fs.unlinkSync(f);
+  let l3 = await lessonInDb(p, 'L3');
+  for (let k = 0; k < 30 && !(l3.files && l3.files.length); k++) { await new Promise(r => setTimeout(r, 150)); l3 = await lessonInDb(p, 'L3'); }
+  assert.equal(l3.files.length, 1); assert.equal(l3.files[0].kind, 'other'); assert.ok(l3.files[0].size > 0);
+  const blob = id => p.evaluate(id => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('file:' + id); q.onsuccess = () => { r.result.close(); res(q.result ? q.result.size : 0); }; }; }), id);
+  assert.ok(await blob(l3.files[0].id) > 0, 'the bytes are in kv file:<id>');
+  // A link
+  await p.click('main [data-focus="add-link"]');
+  await p.waitForSelector('main [data-focus="link-url"]');
+  await p.focus('main [data-focus="link-url"]'); await p.keyboard.type('example.com/sonnets');
+  await p.keyboard.press('Enter');
+  await p.waitForFunction(() => [...document.querySelectorAll('main .mlist a')].some(a => a.href === 'https://example.com/sonnets'));
+  l3 = await lessonInDb(p, 'L3');
+  for (let k = 0; k < 30 && !(l3.links && l3.links.length); k++) { await new Promise(r => setTimeout(r, 150)); l3 = await lessonInDb(p, 'L3'); }
+  assert.equal(l3.links[0].url, 'https://example.com/sonnets'); assert.equal(l3.links[0].name, 'example.com');
+  // Taking the file off, then undo
+  const fid = l3.files[0].id;
+  await (await p.$$('main .mlist li'))[0].$('button[aria-label="Remove"]').then(b => b.click());
+  await p.waitForFunction(() => !document.querySelector('main .mlist .mopen span') || ![...document.querySelectorAll('main .mlist .mopen span')].some(x => /gs-plan-handout/.test(x.textContent)));
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast button')].some(b => b.textContent === 'Undo'));
+  await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => b.textContent === 'Undo').click());
+  await p.waitForFunction(() => [...document.querySelectorAll('main .mlist .mopen span')].some(x => /gs-plan-handout/.test(x.textContent)));
+  for (let k = 0; k < 30 && !(await blob(fid)); k++) await new Promise(r => setTimeout(r, 150));
+  assert.ok(await blob(fid) > 0, 'undo puts the bytes back under the same id');
+  // Versions: save one, change the title, go back
+  const menu = async label => { await p.click('main [data-focus="lesson-menu"]'); await p.waitForSelector('.pop [role=menuitem]'); await p.evaluate(t => [...document.querySelectorAll('.pop [role=menuitem]')].find(b => b.textContent.includes(t)).click(), label); };
+  await menu('Versions');
+  await p.waitForSelector('[data-focus="ver-now"]');
+  await p.click('[data-focus="ver-now"]');
+  await p.waitForSelector('.sheet .vers .lrow');
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('.sheet .vers'));
+  await open(p, 'lesson/L3/edit');
+  await p.$eval('main .ed-top input', el => { el.focus(); el.select(); });
+  await p.keyboard.type('Sonnets, changed');
+  for (let k = 0; k < 40 && (await lessonInDb(p, 'L3')).title !== 'Sonnets, changed'; k++) await new Promise(r => setTimeout(r, 150));
+  await open(p, 'lesson/L3');
+  assert.equal(await p.$eval('main h1.lt', x => x.textContent), 'Sonnets, changed');
+  await menu('Versions');
+  await p.waitForSelector('.sheet .vers .lrow button');
+  await p.click('.sheet .vers .lrow button');
+  await p.waitForFunction(() => document.querySelector('main h1.lt').textContent === 'Sonnets: the turn');
+  const vs = await p.evaluate(() => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('ver:L3'); q.onsuccess = () => { r.result.close(); res(q.result); }; }; }));
+  assert.equal(vs.length, 2); assert.equal(vs[0].label, 'Before going back to Saved by you'); assert.equal(vs[0].lesson.title, 'Sonnets, changed');
+  // Delete, then undo
+  await menu('Delete lesson');
+  await p.waitForFunction(() => /#\/calendar/.test(location.hash));
+  for (let k = 0; k < 30 && await lessonInDb(p, 'L3'); k++) await new Promise(r => setTimeout(r, 150));
+  assert.ok(!(await lessonInDb(p, 'L3')), 'deleted');
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast button')].some(b => b.textContent === 'Undo'));
+  await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => b.textContent === 'Undo').click());
+  await p.waitForFunction(() => /#\/lesson\/L3$/.test(location.hash));
+  const back = await lessonInDb(p, 'L3');
+  assert.equal(back.title, 'Sonnets: the turn'); assert.equal(back.files.length, 1); assert.equal(back.links.length, 1);
+  await p.goto(srv.url + 'planner.html');
+  await p.waitForFunction(() => { const P = window.__planner; return P && P.L && P.L.lessons && P.L.lessons.some(l => l.id === 'L3' && l.links && l.links.length === 1 && l.files && l.files.length === 1); }, { timeout: 20000 });
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
 test('on a phone: the lesson reads, and an after-class note waits for the computer without the lesson being written', async () => {
   const p = await fresh(390);
   await open(p, 'lesson/L2');

@@ -553,5 +553,32 @@
  "plan.rubric_rows": {
   "one": "{n} row, out of {max}",
   "other": "{n} rows, out of {max}"
- }
+ },
+ "plan.materials": "Materials",
+ "plan.no_materials": "Nothing yet. Add a file or a link.",
+ "plan.add_files": "Add files",
+ "plan.add_link": "Add a link",
+ "plan.link_address": "Web address",
+ "plan.link_name": "Name (optional)",
+ "plan.link_bad": "That isn’t a web address. It needs to start with https:// or look like example.com.",
+ "plan.file_too_big": "{name} is too big (over 40 MB)",
+ "plan.replaced": "Replaced {name}",
+ "plan.file_missing": "That file is missing",
+ "plan.removed": "Removed {name}",
+ "plan.lesson_menu": "More for this lesson",
+ "plan.copy_text": "Copy lesson as text",
+ "plan.copied": "Copied",
+ "plan.save_file": "Save lesson file",
+ "plan.versions": "Versions…",
+ "plan.delete_lesson": "Delete lesson",
+ "plan.lesson_deleted": "Lesson deleted",
+ "plan.lesson_back": "Lesson back",
+ "plan.versions_of": "Versions of {title}",
+ "plan.ver_save_now": "Save a version now",
+ "plan.ver_by_you": "Saved by you",
+ "plan.ver_saved": "Version saved",
+ "plan.ver_before": "Before going back to {label}",
+ "plan.ver_back": "Back to {label}. The version you left is saved too.",
+ "plan.ver_go_back": "Go back to this",
+ "plan.no_versions": "No versions yet. One is kept each time changes from your assistant are kept, and whenever you save one here."
 }

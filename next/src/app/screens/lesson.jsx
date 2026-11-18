@@ -23,6 +23,8 @@ import { stateOf, classOf, today, at, mins, lessonsOn } from '../plan/lessons.js
 import { saveFailed } from '../plan/save.js';
 import { Present } from '../plan/present.jsx';
 import Editor, { Talk } from './lesson-edit.jsx';
+import { Materials } from '../plan/materials.jsx';
+import { LessonMenu } from '../plan/lesson-menu.jsx';
 import { AssistantSheet } from '../plan/assistant.jsx';
 import { TextBox } from '../../ui/services.jsx';
 
@@ -137,6 +139,7 @@ function Side({ p, l, slot, per, onSave, onDownload, onAssistant }) {
       {shared.map(x => { const c = classOf(p, x.classId); return <p class="mute"><span class="dot" style={{ '--cc': c ? toneOf(c.color) : 'var(--g500)' }} /><span data-raw>{c ? c.name : ''}, {date(at(x.date), { weekday: 'short', day: 'numeric', month: 'short' })}</span></p>; })}
       {(partners.length > 0 || shared.length > 0) && <Switch label={shared.length ? t('plan.shared_on') : t('plan.also_give', { names: partners.map(x => (classOf(p, x.classId) || {}).name || '').join(', ') })} checked={shared.length > 0} onChange={share} />}
     </section>}
+    <Materials p={p} l={l} onSave={onSave} />
     {slot && slot.date <= today() && <AfterClass l={l} slot={slot} onSave={onSave} />}
     <section><h2 class="sub">{t('plan.comments_for', { name: ai.name || t('assistant.generic') })}</h2>
       <p class="mute">{t('plan.n_lesson_comments', { n: (l.talk || []).length })} · {t('plan.n_slide_comments', { n: talk })}</p>
@@ -195,6 +198,7 @@ export default function LessonPage({ route }) {
     <header class="lh">
       <div class="crumbs">{per && <a class="link" href={href('calendar')}><Icon name="back" size="sm" /><span class="dot" style={{ '--cc': toneOf(per.c.color) }} /><span data-raw>{per.c.name}</span></a>}</div>
       <Segmented label={t('plan.lesson_view')} value={view} onChange={setView} options={[{ value: 'lesson', label: t('plan.lesson') }, { value: 'slides', label: t('plan.slides') }, { value: 'edit', label: t('common.edit') }]} />
+      <LessonMenu p={p} l={l} save={save} />
     </header>
     {per && slot && <p class="mute when"><span class="dot" style={{ '--cc': toneOf(per.c.color) }} /><span data-raw>{per.c.name}</span> <span data-raw>{date(at(slot.date), { weekday: 'short', day: 'numeric', month: 'short' })}{per.m ? ', ' + (per.m.label ? per.m.label + ', ' : '') + clock(per.m.start) : ''}</span></p>}
     <h1 class="lt" data-raw>{l.title || t('plan.untitled')}</h1>

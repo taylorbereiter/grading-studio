@@ -969,4 +969,12 @@ function unitAt(course, monday) {
   }
   return null;
 }
-export { L, plWeekOffs, mondayOf, meetingsOn, partnerSlots, unitAt, unitEnd, lid, LAYOUTS, deckAgenda, deckSizes, deckAdd, deckSizeSay, normSlide, normLesson, deckStart, slideHtml, slideFit, tplPreview, lessonForFile, fileBase, b64ToU8, buildPptx, mimeOf, lessonText, lessonZipAsk, lessonContext, lessonBack, ZIP_SKIP, baseName, MAX_FILE, snap, MAX_VERSIONS };
+// src/planner/units.js
+function uniqueName(u, name) {
+  name = String(name || 'file').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'file';
+  if (!u.files.some(f => f.name === name)) return name;
+  const m = /^(.*?)(\.[^.]*)?$/.exec(name); let i = 2;
+  while (u.files.some(f => f.name === m[1] + ' (' + i + ')' + (m[2] || ''))) i++;
+  return m[1] + ' (' + i + ')' + (m[2] || '');
+}
+export { L, plWeekOffs, mondayOf, meetingsOn, partnerSlots, unitAt, unitEnd, lid, LAYOUTS, deckAgenda, deckSizes, deckAdd, deckSizeSay, normSlide, normLesson, deckStart, slideHtml, slideFit, tplPreview, lessonForFile, fileBase, b64ToU8, buildPptx, mimeOf, lessonText, lessonZipAsk, lessonContext, lessonBack, ZIP_SKIP, baseName, MAX_FILE, snap, MAX_VERSIONS, uniqueName, normLinks, lkUrl, lkHost };
