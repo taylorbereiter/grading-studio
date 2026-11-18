@@ -5283,7 +5283,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.72";
+  const APP_VERSION = "1.28.73";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -5835,7 +5835,7 @@ words: 'screenshot snip capture picture image copy clipboard grab area region' }
 { id: 'mark-colors', sec: 'mark', q: 'Can I change the color of ✗, checks and points?',
 a: ['Yes. In Settings, Marking, **Mark colors**, or the **Colors** menu in Quick mark. ✗ uses your pen’s color and checks have their own.',
 'Points written on a paper, like 1/2, are in the ✗ color unless you pick another. **By credit** writes full points in the check color, part in amber and none in the ✗ color: green, amber and red if you keep those.',
-'Totals and score stamps are in the points color you pick, or in the ✗ color with By credit. In Quick mark, marks already given on the quiz change to the new colors.'],
+'Totals and score stamps are red, or in the points color you pick. They never follow the pen or comment color. In Quick mark, marks already given on the quiz change to the new colors.'],
 go: ['Open Settings, Marking', '#/settings/marking'], words: 'color colour ink red green yellow amber points partial credit full' },
 { id: 'late-work', sec: 'mark', q: 'A student handed in late. How do I add their paper?',
 a: ['With the assignment open, press **+ Add** above the paper and choose **A file…**, or drop the file on the student’s name.', 'For several late files at once, use **Bring in files** under Setup. Anything already here is left out, so only the new files are left to place. Tick **Late** beside anyone you want marked late.'],
@@ -6756,7 +6756,7 @@ function ptsColor(v, top) {
 if (ptsInk === 'credit' && v != null && top != null) return +v <= 0 ? COLORS[inkColor] || COLORS.red : +v >= +top ? CHECK_INK : PTS_AMBER;
 return COLORS[ptsInk] || COLORS[inkColor] || COLORS.red;
 }
-const totalInk = () => ptsColor();
+const totalInk = () => COLORS[ptsInk] || COLORS.red;
 const HL = { yellow: '#FFE45C', green: '#B4F0A8', pink: '#FFB8D6', blue: '#B0E0FF' };
 let inkColor = store.get('gs.ink', 'red'), hlColor = store.get('gs.hl', 'yellow'), penW = store.get('gs.penW', 2);
 const DISP0 = { ui: 1, tsize: 14, fit: 'width', dfs: 15, dlh: 1.45, trim: true };
@@ -15588,11 +15588,12 @@ function drawStamp(ctx, m) {
     ctx.restore();
     return;
   }
+  const ink = isScoreStamp(m.k) ? totalInk() : m.color;
   if (m.k === 'crit') {
     const z = critSize(m), l = x - z.w / 2, t = y - z.h / 2;
     ctx.save(); ctx.lineWidth = Math.max(1, s * 0.045);
-    ctx.beginPath(); ctx.roundRect(l, t, z.w, z.h, s * 0.14); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = m.color; ctx.stroke();
-    ctx.fillStyle = m.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.beginPath(); ctx.roundRect(l, t, z.w, z.h, s * 0.14); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = ink; ctx.stroke();
+    ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     if (z.two) { ctx.font = '600 ' + (s * 0.24) + 'px ' + FONT; ctx.fillText(z.nm, x, t + s * 0.25); }
     ctx.font = '700 ' + (s * 0.4) + 'px ' + FONT; ctx.fillText(String(m.text || '').replace('/', ' / '), x, z.two ? t + s * 0.66 : y + s * 0.01);
     ctx.restore(); return;
@@ -15600,8 +15601,8 @@ function drawStamp(ctx, m) {
   if (isScoreStamp(m.k)) {
     const z = scoreSize(m), [a, b] = scoreLines(m), l = x - z.w / 2, t = y - z.h / 2, r = s * 0.14;
     ctx.save(); ctx.lineWidth = Math.max(1, s * 0.04);
-    ctx.beginPath(); ctx.roundRect(l, t, z.w, z.h, r); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = m.color; ctx.stroke();
-    ctx.fillStyle = m.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.beginPath(); ctx.roundRect(l, t, z.w, z.h, r); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = ink; ctx.stroke();
+    ctx.fillStyle = ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.font = '700 ' + (s * 0.34) + 'px ' + FONT; ctx.fillText(a || '', x, z.two ? t + s * 0.31 : y + s * 0.01);
     if (z.two) {
       ctx.lineWidth = Math.max(0.8, s * 0.022); ctx.beginPath(); ctx.moveTo(l, t + s * 0.6); ctx.lineTo(l + z.w, t + s * 0.6); ctx.stroke();
@@ -23172,7 +23173,7 @@ return row('ink', inkColor, '✗ wrong') + row('chk', checkInk, '✓ right') +
 '<div class="qmirow qmipts"><span class="hsm">Points</span><button class="chip" data-' + p + 'pts="" aria-pressed="' + (ptsInk === '') + '" title="Points in the ✗ color">Same as ✗</button>' +
 Object.entries(COLORS).map(([k, v]) => sw('pts', k, v, k === ptsInk, 'Points')).join('') + '</div>' +
 '<div class="qmirow qmipts"><span class="hsm"></span><button class="chip" data-' + p + 'pts="credit" aria-pressed="' + (ptsInk === 'credit') + '" title="Full points in the ✓ color, part in amber, none in the ✗ color">By credit <i class="qmcr" style="background:' + CHECK_INK + '"></i><i class="qmcr" style="background:' + PTS_AMBER + '"></i><i class="qmcr" style="background:' + x + '"></i></button></div>' +
-(ptsInk === 'credit' ? '<p class="muted hsm">Full: 2/2 · part: 1/2 · none: 0/2. Totals and score stamps stay in the ✗ color.</p>' : '');
+(ptsInk === 'credit' ? '<p class="muted hsm">Full: 2/2 · part: 1/2 · none: 0/2. Totals and score stamps stay red.</p>' : '');
 }
 function qmInkMenu(open) {
 const pop = $('#qmInkPop'), btn = $('#qmInkBtn'); if (!pop) return;
@@ -33845,7 +33846,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.72":["Make a quiz: on an assignment’s card, choose ⋯ then Make a quiz. Type multiple choice, true or false, pick all that apply and short answer questions, and print a copy for each student with their name on it.","Scan the whole stack in any order and choose Bring in the scanned quiz. Each page finds its student by the code at the top, and the bubbles are scored. Answers that aren’t clear are shown to you to pick, and Ctrl Z takes the scan’s scores back.","Short answers get a Teacher box: fill the score bubble while you mark and the scan reads it, or mark them in Quick mark."]};
+const WHATS_NEW = {"1.28.73":["Score stamps and criterion stamps are red again. They no longer take the pen or comment color, so purple comments don’t make purple grades. Stamps already on papers show red too. To use another color for grades, pick a points color in Settings, Marking."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };
