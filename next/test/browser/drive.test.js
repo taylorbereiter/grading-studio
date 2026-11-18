@@ -49,9 +49,11 @@ async function syncNew(p, D) {
   if (!/#\/settings\/saving/.test(p.url())) { await p.goto(srv.url + 'next/#/settings/saving'); }
   await p.waitForSelector('[data-svsync]:not([disabled])', { timeout: 30000 });
   const n = D.reads || 0;
+  await p.evaluate(() => localStorage.removeItem('gs.syncAt'));   // the clock stands still in these checks, so the stamp is taken away and waited for
   await p.click('[data-svsync]');
   assert.ok(await until(() => (D.reads || 0) > n), 'the sync read the file');
-  await p.waitForFunction(() => /synced/.test((document.querySelector('[data-svstate]') || {}).textContent || ''));
+  // the line reads "synced" from the sync before, so the round is over once gs.syncAt is back and the line says synced again
+  await p.waitForFunction(() => localStorage.getItem('gs.syncAt') && /synced/.test((document.querySelector('[data-svstate]') || {}).textContent || ''));
 }
 
 test('signing in from Settings, the sync file sent with the library, the work and the Planner, and signing out', async () => {
