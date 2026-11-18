@@ -11,7 +11,7 @@ picker copy (`gs.rolls`), strong examples, the watch list, and the Focus log `gs
 
 - students/ may import planning/. planning/ never imports students/, `whole/` or crossings.js.
 - A top-level file (the shell, a screen) reaches students/ only through crossings.js, which names each read-only crossing:
-  `classListsForPlanning`, `classesForHome`, `countsForHome`, `examplesForPlanning`, `rosterNamesForPresent`.
+  `classListsForPlanning`, `classesForHome`, `countsForHome`, `examplesForPlanning`, `rosterNamesForPresent`, and since stage 3 `todoCountForSidebar` (the sidebar's To do count) and `workForCalendar` (assignment names and due days, and the teacher's own to-dos, for the calendar).
 - **whole/** is the work that has to see everything at once: the linked folder, the Drive sync file, and later the year file,
   take-home and the sample. It imports both sides; only main.js and the proof page import it.
 
@@ -60,6 +60,27 @@ and once through these functions leaves the same records, the same files in a li
 only difference allowed is that the current app keeps empty fields as fields holding `undefined` in the full copy, which read,
 send and merge the same.
 
-**Not yet.** Sending the sync file to Drive and taking in what comes back, reading a folder changed elsewhere, the paper and
-reading files in the folder, and a lesson's file in a linked Planner folder (until then `saveLesson` refuses while one is linked)
-come before the switch, in stage 6. Until then the current app does them as soon as it is opened, so nothing is lost.
+**Lessons and the Planner folder (stage 3).** `saveLesson` writes the lesson's file in a linked Planner folder the way the current
+Planner does (planning/folder.js: the same `<M-DD Day - title>.lesson.json` name, the same JSON, pictures in `images/`, the old file
+removed when the name changes). When the browser has not been given the folder this session, the lesson is marked `_sync: 1`
+and the current Planner writes it the next time it opens, as it already does for its own saves. A saved lesson is announced on
+`gs-plan-out` so the grading page starts its Drive sync. Saving the timetable (`saveKv('setup')`) also writes `timetable.json` there (the setup without the slide template), and
+saving the teacher's own activities (`saveKv('activities')`) writes `activities.json`, both as the current Planner writes them.
+Without permission this session they are left for the current Planner, which writes both on its next save of them.
+
+**Not yet.** Sending the sync file to Drive and taking in what comes back, reading a folder changed elsewhere, and the paper and
+reading files in the folder come before the switch, in stage 6. Until then the current app does them as soon as it is opened, so nothing is lost.
+
+**Strong examples on slides, by reference (stage 3).** In the current Planner a strong example put on a slide is copied into the
+lesson as an ordinary picture (src/planner/plexamples.js), so it travels wherever the lesson goes. In the new app the picture stays
+in `grading-studio-examples` and the slide keeps only which example it is:
+
+    slide.img = { src: "gsex:<example id>|<page, from 0>", w, h, source: "" }
+
+The new app draws it from the examples database each time (crossings.js `examplePictureForSlide`; app/plan/examples.js). Everywhere
+the lesson leaves this browser, only the reference goes: the lesson's file in the Planner folder (the reference as text, no file
+in `images/`), the message for the assistant (`[Picture]`, and the picture is not counted among those to attach), the .pptx (the
+slide without its picture), Drive sync and a shared lesson. The current Planner draws such a slide with an empty picture
+(`imgSrc` gives '' for it), writes the reference on unchanged, and drops it when it reads a shared lesson file. Lessons that already
+hold a copied picture are left as they are. `examplesForPlanning` hands over only what names an example the way grading does
+(assignment, Example A, Question 3), never whose it was, and never the watch list.

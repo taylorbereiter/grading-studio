@@ -25,3 +25,4 @@ export function t(key, params) {
 // Numbers and dates written the way the language writes them.
 export const num = (n, o) => new Intl.NumberFormat(locale, o).format(n);
 export const date = (d, o) => new Intl.DateTimeFormat(locale, o).format(d);
+export const dateRange = (a, b, o) => new Intl.DateTimeFormat(locale, o).formatRange(a, b);

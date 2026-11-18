@@ -55,7 +55,7 @@ test('every crossing is a named function that only reads', () => {
   const named = [...text.matchAll(/^export (?:async )?function (\w+)/gm)].map(m => m[1]);
   assert.ok(named.length >= 3);
   // the named crossings, and no others (stage 2 brief, item 7)
-  assert.deepEqual(named.sort(), ['classListsForPlanning', 'classesForHome', 'countsForHome', 'examplesForPlanning', 'rosterNamesForPresent'].sort());
+  assert.deepEqual(named.sort(), ['classListsForPlanning', 'classesForHome', 'countsForHome', 'examplesForPlanning', 'examplePictureForSlide', 'rosterNamesForPresent', 'todoCountForSidebar', 'workForCalendar'].sort());
   assert.ok(named.every(n => /For[A-Z]\w*$/.test(n)), 'a crossing says who it is for: ' + named.join(', '));
   assert.ok(!/\.(put|del|setText|setJson|remove)\(/.test(text), 'a crossing writes');
   assert.ok(!/^export (?!(async )?function)/m.test(text), 'crossings.js exports only functions');

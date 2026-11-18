@@ -43,7 +43,55 @@ function writeEngines() {
   fs.mkdirSync(path.join(NEXT, 'src/engines'), { recursive: true });
   const f = path.join(NEXT, 'src/engines/merge.js');
   if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
+  writePlanner();
+  writeActivities();
   return out;
+}
+// next/src/engines/planner.js: the Planner's engines (next/docs/engines.md, "Planning engines"), cut by name out of src/planner by
+// next/tools/lift.js with everything they use. Made here, never edited by hand.
+// Only what the new app calls: every name here comes with everything it uses, and each planning screen loads all of it, inside the
+// 60 KB screen budget (next/budgets.json route). A screen that needs another engine adds its name here.
+const PLANNER_ROOTS = [
+  // the timetable and the school week
+  'L', 'plWeekOffs', 'mondayOf', 'meetingsOn', 'partnerSlots', 'unitAt', 'unitEnd',
+  // lessons and slides: the model, the deck rules (28 to 36 pt, agenda on slide 2), drawing and measuring a slide
+  'lid', 'LAYOUTS', 'deckAgenda', 'deckSizes', 'deckAdd', 'deckSizeSay', 'normSlide', 'normLesson', 'deckStart', 'slideHtml', 'slideFit', 'tplPreview',
+  // files: the lesson's file in the Planner folder, the .pptx from the teacher's template
+  'lessonForFile', 'fileBase', 'b64ToU8', 'buildPptx', 'mimeOf',
+  // the assistant: the lesson as one message, the .zip that comes back, versions
+  'lessonText', 'lessonZipAsk', 'lessonContext', 'lessonBack', 'ZIP_SKIP', 'baseName', 'MAX_FILE', 'snap', 'MAX_VERSIONS',
+];
+const PLANNER_DENY = ['$', 'toast', 'openDlg', 'closeDlg', 'lTx', 'kvGet', 'kvSet', 'kvDel', 'lPut', 'lDelete', 'lOpenDb', 'saveBlob', 'renderLessons', 'renderWeek',
+  'renderEditor', 'renderStage', 'renderUnits', 'renderUnit', 'renderSemester', 'renderBank', 'renderLibrary', 'renderActivities', 'openLesson', 'folderWriteSoon',
+  'unitWriteSoon', 'bankWriteSoon', 'copyText', 'refreshThumb'];
+// next/src/engines/activities.js: the Planner's activity bank (src/planner/activities.js), lifted the same way into its own module so
+// only Library > Activities loads its words. normSlide and lid come from the planner engine, so a slide made here is the Planner's own.
+function writeActivities() {
+  const { lift } = require('./tools/lift.js');
+  const out = lift({ roots: ['ACTIVITIES', 'PARTS', 'KINDS', 'BOOK', 'actVideo', 'actSlide', 'normActivity'], deny: PLANNER_DENY,
+    header: '// MADE BY next/build.js FROM src/planner/activities.js (next/tools/lift.js). Do not edit: change the source and build again.\n/* eslint-disable */\n',
+    given: ['normSlide', 'lid'], preamble: "import { normSlide, lid } from './planner.js';\n" });
+  const f = path.join(NEXT, 'src/engines/activities.js');
+  if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
+}
+function writePlanner() {
+  const { lift } = require('./tools/lift.js');
+  const out = lift({ roots: PLANNER_ROOTS, deny: PLANNER_DENY,
+    header: '// MADE BY next/build.js FROM src/planner/*.js (next/tools/lift.js). Do not edit: change the source and build again.\n' +
+      '// L holds what the Planner keeps in memory: the new app puts the timetable in L.setup (and lessons, units) before calling.\n/* eslint-disable */\n',
+    given: ['myActivities'],
+    // The teacher's own activities come from L.activities (the new app reads them with the rest), not from the Planner's database.
+    preamble: "import * as fflate from 'fflate';\nconst myActivities = async () => ((L && L.activities) || []).filter(a => a && a.name);\n" });
+  const f = path.join(NEXT, 'src/engines/planner.js');
+  if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
+  // The slide's own look (what slideHtml draws), taken from the Planner page's stylesheet: the rules about the slide and its text,
+  // not the editor around it. The two sizes the slide borrows from the current app's tokens come with it.
+  const page = fs.readFileSync(path.join(ROOT, 'src/planner/planner.html'), 'utf8'), st = page.slice(page.indexOf('<style>') + 7, page.indexOf('</style>'));
+  const KEEP = /\.(ls-(slide|bg|body|bx|fade|full|fullsrc|lk|ph|pic|play|rule|shape|src|sub|t|trule|tslide|ttl|vid|vlink|wood)|rt|lk-[a-z]+|rt-[a-z]+)(?![\w-])/;
+  const DROP = /\.(ls-(stage|mini|ta|rted|frame|ed|over|grip|grips|boxback|stagewrap)|pl-|rt-(tools|tb|pal|sw|sep))|::?(hover|focus)/;
+  const css = '.ls-slide{--text-heading:24px;--text-display:28px}\n' + st.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('/*') && KEEP.test(l) && !DROP.test(l)).join('\n');
+  const g = path.join(NEXT, 'src/engines/slidecss.js'), js = '// MADE BY next/build.js FROM src/planner/planner.html. Do not edit.\nexport default ' + JSON.stringify(css) + ';\n';
+  if (!fs.existsSync(g) || fs.readFileSync(g, 'utf8') !== js) fs.writeFileSync(g, js);
 }
 
 async function build() {
@@ -51,7 +99,7 @@ async function build() {
   fs.rmSync(DIST, { recursive: true, force: true });
   const r = await esbuild.build({
     entryPoints: { main: path.join(NEXT, 'src/main.js'), proof: path.join(NEXT, 'src/proof.js'), parts: path.join(NEXT, 'src/ui/index.js'), gallery: path.join(NEXT, 'src/gallery/main.jsx'),
-      'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css') },
+      'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css') },
     loader: { '.woff2': 'file', '.json': 'json' }, assetNames: '[name]-[hash]',
     outdir: DIST, bundle: true, splitting: true, format: 'esm', target: ['chrome109', 'safari16'], minify: true,
     chunkNames: 'chunk-[hash]', entryNames: '[name]', metafile: true, absWorkingDir: ROOT, legalComments: 'none', logLevel: 'warning',
@@ -73,7 +121,7 @@ async function build() {
     '<script>' + sample + '</script>\n' + look +
     '<link rel="stylesheet" href="dist/tokens.css"><link rel="stylesheet" href="dist/parts-css.css">' + css.map(c => '<link rel="stylesheet" href="dist/' + c + '.css">').join('') + (style ? '<style>' + style + '</style>' : '') + '\n' +
     '<script type="module" src="dist/' + entry + '.js"></script></head><body>' + body + '</body></html>\n';
-  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
+  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'gallery.html'), partsPage('Parts gallery', 'gallery', ['gallery-css'], '', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'proof.html'), page('Saved-work proof', 'proof', '<p>Saved-work proof page. Used by the checks, not by teachers.</p>'));
   writeVersion();

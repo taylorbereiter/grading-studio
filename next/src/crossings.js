@@ -12,10 +12,20 @@ export async function classListsForPlanning() {
   const s = await planning.setupRecord.get();
   return ((s && s.classes) || []).map(c => { const { names: _n, students: _s, ...rest } = c; return rest; });
 }
-// The strong examples, as the Planner shows them: what they are and their pictures. Read only.
+// The strong examples, as the Planner lists them (src/planner/plexamples.js plxLoad): what each one is and how many pages, never
+// whose it was, its work or its class, and never the watch list. Read only; a browser that never kept one gets [] and no database.
+const EX_KINDS = { answer: 1, paper: 1, part: 1, shot: 1 };
 export async function examplesForPlanning() {
   const ex = (await students.examples.entries()).filter(([k]) => !String(k).startsWith('watch:')).map(([, v]) => v);
-  return ex;
+  return ex.filter(r => r && !r.gone && !r.watch && EX_KINDS[r.kind] && Array.isArray(r.pages) && r.pages.length).map(r => ({
+    id: String(r.id), t: +r.t || 0, kind: r.kind, title: String(r.title || ''), letter: String(r.letter || ''), q: r.q && r.q.lab ? String(r.q.lab) : '',
+    why: String(r.why || ''), tags: Array.isArray(r.tags) ? r.tags.map(String) : [], pages: r.pages.length })).sort((a, b) => b.t - a.t);
+}
+// One page of a strong example (a JPEG, every cover painted in), to draw on a slide that refers to it (gsex:<id>|<page>). The
+// picture stays in the examples database: the caller shows it and keeps nothing.
+export async function examplePictureForSlide(id, page = 0) {
+  const b = await students.examplePictures.get(String(id) + '|' + (+page || 0));
+  return b instanceof Blob ? b : null;
 }
 // The names on each class's roster, to show while presenting (pick a name, groups), as the Planner reads them today from gs.rolls
 // (src/pickshare.js pkRolls, written by the grading page's src/seating.js rollsShare). Shown, never stored by the caller.
@@ -49,4 +59,30 @@ export async function countsForHome(now = Date.now()) {
   const toPlan = ch.off.plan ? [] : T.toPlan(plan, now).filter(x => { const a = ch.auto[x.key] || {}; return !(a.h != null && a.h === (x.lesson ? 'w' : 'x')); });
   const mark = sets(g.mark), back = sets(g.back);
   return { teach, mark, back, toPlan, missing: null, counts: { classesToday: teach ? teach.rows.length : 0, mark: mark.length, back: back.length, toPlan: toPlan.length } };
+}
+// The sidebar's To do count, the way the current app counts it (src/todo.js todoCount): every line not done that is overdue or for
+// today, her own lines and the ones the app noticed (papers to mark and to hand back, today's classes still to plan), less the ones
+// she hid or moved to a later day. Missing-work reminders join it with the gradebook's engine (a later stage).
+export async function todoCountForSidebar(now = Date.now()) {
+  const C = await import('./students/counts.js'), T = await import('./planning/today.js');
+  const lib = C.readLibrary(), kept = await C.readKept(), plan = await T.readPlan(), today = T.isoDay(now);
+  const t = lib.todo || {}, ch = C.todoChoices(lib), items = Array.isArray(t.items) ? t.items : [];
+  let n = items.filter(it => it && it.id && !it.gone && !it.done && it.d && it.d <= today).length;
+  const counts = (key, day, sig) => { const a = ch.auto[key] || {}; if (a.h != null && a.h === sig) return 0; const d = a.d && a.d > day && a.d > today ? a.d : day < today ? today : day; return d <= today ? 1 : 0; };
+  const g = C.groups(lib, kept);
+  if (!ch.off.mark) for (const m of g.mark) if (C.canOpen(m)) n += counts('mark:' + m.id, today, 'x');
+  if (!ch.off.back) for (const m of g.back) if (C.canOpen(m)) n += counts('back:' + m.id, today, 'x');
+  if (!ch.off.plan) for (const x of T.toPlan(plan, now)) n += counts(x.key, x.day, x.lesson ? 'w' : 'x');
+  return n;
+}
+// The calendar's "Work due" and "To-dos": each assignment with a due date (its name, its class's name, the day) and the teacher's own
+// to-do lines with a day. No student is in either. Shown, never stored by the calendar.
+export function workForCalendar() {
+  const l = students.library.json(null) || {};
+  const due = [];
+  for (const c of Array.isArray(l.classes) ? l.classes : []) for (const u of (c && Array.isArray(c.units) ? c.units : [])) for (const it of (u && Array.isArray(u.items) ? u.items : []))
+    if (it && it.id && /^\d{4}-\d\d-\d\d/.test(it.due || '')) due.push({ id: it.id, name: String(it.name || ''), cls: String(c.name || ''), day: String(it.due).slice(0, 10), type: String(it.type || '') });
+  const t = l.todo || {}, todos = (Array.isArray(t.items) ? t.items : []).filter(it => it && it.id && !it.gone && /^\d{4}-\d\d-\d\d$/.test(it.d || ''))
+    .map(it => ({ id: it.id, text: String(it.x || ''), day: it.d, done: !!it.done, cls: (((l.classes || []).find(c => c && c.id === it.c)) || {}).name || '' }));
+  return { due, todos };
 }

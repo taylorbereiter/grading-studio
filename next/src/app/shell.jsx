@@ -15,14 +15,18 @@ import { assistant } from '../services/assistant.js';
 import { lockState, onLockChange, takeOver } from '../shared/lock.js';
 import { onLook, currentLook, saveLook } from '../services/theme.js';
 import { LOOKS, THEMES } from '../ui/tokens.js';
-import { classesForHome } from '../crossings.js';
+import { classesForHome, todoCountForSidebar } from '../crossings.js';
+import { usePlan } from './plan.js';
+import { classTone } from './colors.js';
+import { onSaved } from '../shared/saved.js';
 import { sampleOn, leaveSample } from './sample.js';
 import { useUpdate } from './update.js';
 
 const TOP = [['home', 'home', 'nav.home'], ['calendar', 'cal', 'nav.calendar'], ['todo', 'todo', 'nav.todo']];
 const FOOT = [['library', 'library', 'nav.library'], ['school', 'school', 'nav.school'], ['settings', 'settings', 'nav.settings'], ['help', 'help', 'nav.help']];
 const TABS = [['home', 'home', 'nav.home'], ['todo', 'todo', 'nav.todo'], ['classes', 'people', 'nav.classes'], ['find', 'search', 'nav.find_short'], ['more', 'menu', 'nav.more']];
-export const classColor = i => (i < 0 ? 'var(--g500)' : 'var(--c' + ((i % 8) + 1) + ')');
+// A class's colour: the one from the timetable setup (app/colors.js), for every screen.
+export { classTone } from './colors.js';
 
 // The classes, read again whenever the teacher comes back to this window (another window may have changed them).
 export function useClasses() {
@@ -39,6 +43,28 @@ export function useClasses() {
   return list;
 }
 
+// The To do count, read again with the classes.
+function useTodoCount() {
+  const [n, set] = useState(0);
+  useEffect(() => {
+    let live = true;
+    const read = () => todoCountForSidebar().then(v => live && set(v), e => console.error(e));
+    read();
+    const vis = () => { if (!document.hidden) read(); };
+    const off = onSaved(read), iv = setInterval(read, 60000);
+    document.addEventListener('visibilitychange', vis); window.addEventListener('storage', read);
+    return () => { live = false; off(); clearInterval(iv); document.removeEventListener('visibilitychange', vis); window.removeEventListener('storage', read); };
+  }, []);
+  return n;
+}
+// "Saved 2 min ago" at the foot of the sidebar: the last save this window made through the write functions.
+function SavedLine() {
+  const [at, setAt] = useState(0), [, tick] = useState(0);
+  useEffect(() => { const off = onSaved(() => setAt(Date.now())), iv = setInterval(() => tick(n => n + 1), 30000); return () => { off(); clearInterval(iv); }; }, []);
+  const mins = at ? Math.floor((Date.now() - at) / 60000) : -1;
+  return <div class="saved" role="status" data-saved={at || ''}><Icon name="check" size="xs" /><span>{mins < 0 ? t('saved.all') : mins < 1 ? t('saved.now') : t('saved.ago', { n: mins })}</span></div>;
+}
+
 function useLock() {
   const [s, set] = useState(lockState().state);
   // The lock is asked for as soon as the shell is drawn, so it can answer before this effect runs: read it again once listening.
@@ -47,17 +73,17 @@ function useLock() {
 }
 
 function Sidebar({ route, classes, folded, onFold }) {
-  const ai = assistant(), look = useLookValue();
+  const ai = assistant(), look = useLookValue(), plan = usePlan(), todo = useTodoCount();
   const on = id => route.nav === id;
   const cls = route.nav === 'class' ? route.params.id : null;
   return <nav class={'side' + (folded ? ' folded' : '')} aria-label={t('nav.main')} data-shell-nav>
     <div class="brand"><span class="logo"><Icon name="line" /></span><span class="bn">{t('app.name')}</span>
       <IconButton icon="chl" size="sm" label={t('nav.collapse')} onClick={onFold} data-focus="fold" /></div>
     <button type="button" class="find" onClick={openCommandBar}><Icon name="search" /><span>{t('nav.find')}</span><span class="fk">{pieces('mod+k').map(k => <kbd>{k}</kbd>)}</span></button>
-    {TOP.map(([id, icon, line]) => <NavItem icon={icon} label={t(line)} href={router.href(id)} current={on(id)} />)}
+    {TOP.map(([id, icon, line]) => <NavItem icon={icon} label={t(line)} href={router.href(id)} current={on(id)} count={id === 'todo' && todo ? todo : null} />)}
     <NavSection>{t('nav.classes')}</NavSection>
     <div class="sclasses">
-      {(classes || []).map((c, i) => <NavItem color={classColor(c.loose ? -1 : i)} label={c.loose ? t('nav.no_class') : <span data-raw>{c.name}</span>} count={c.left || null} href={router.href('class', c.id || '-')} current={cls === (c.id || '-')} />)}
+      {(classes || []).map((c, i) => <NavItem color={classTone(plan, c.name, c.loose ? -1 : i)} label={c.loose ? t('nav.no_class') : <span data-raw>{c.name}</span>} count={c.left || null} href={router.href('class', c.id || '-')} current={cls === (c.id || '-')} />)}
     </div>
     <div class="grow" />
     {FOOT.map(([id, icon, line]) => <NavItem icon={icon} label={t(line)} href={router.href(id)} current={on(id)} />)}
@@ -67,6 +93,7 @@ function Sidebar({ route, classes, folded, onFold }) {
         {LOOKS.map(n => <button type="button" role="radio" class="swt" aria-checked={String(n === look)} aria-label={t(LOOK_LINES[n][0])} style={{ '--sa': THEMES[n].acc, '--sb2': THEMES[n].bg }} onClick={() => pickLook(n)} />)}
       </div>
       <UpdateLine />
+      <SavedLine />
     </div>
   </nav>;
 }
@@ -148,6 +175,25 @@ export function Shell() {
     ];
     return () => offs.forEach(f => f());
   }, []);
+  // Planning destinations, and every lesson by its title (with its class and day), so typing finds a lesson (the Planner's Search).
+  const plan = usePlan();
+  useEffect(() => {
+    const go = (...a) => () => router.go(...a);
+    const offs = [
+      addCommand({ id: 'go-cal-class', label: () => t('plan.by_class'), also: t('nav.calendar'), group: t('nav.calendar'), icon: 'cal', run: go('calendar', 'class') }),
+      addCommand({ id: 'go-cal-time', label: () => t('plan.by_time'), also: t('nav.calendar'), group: t('nav.calendar'), icon: 'week', run: go('calendar', 'time') }),
+      addCommand({ id: 'go-cal-month', label: () => t('plan.month'), also: t('nav.calendar'), group: t('nav.calendar'), icon: 'cal', run: go('calendar', 'month') }),
+      addCommand({ id: 'go-timetable', label: () => t('settings.timetable'), also: t('nav.settings'), group: t('cmd.group_go'), icon: 'cal', run: go('settings', 'timetable') }),
+      ...[['activities', 'plan.lib_activities', 'spark', ''], ['past', 'plan.lib_past', 'slides', 'past'], ['units', 'plan.lib_units', 'cal', 'units'], ['rubrics', 'plan.lib_rubrics', 'grades', 'rubrics']]
+        .map(([id, line, icon, tab]) => addCommand({ id: 'go-lib-' + id, label: () => t(line), also: t('nav.library'), group: t('nav.library'), icon, run: go('library', tab) })),
+    ];
+    const cls = id => (((plan && plan.setup && plan.setup.classes) || []).find(c => c.id === id) || {}).name || '';
+    for (const l of (plan && plan.lessons) || []) {
+      const s = [...(l.slots || [])].sort((a, b) => b.date.localeCompare(a.date))[0];
+      offs.push(addCommand({ id: 'lesson-' + l.id, label: l.title || t('plan.untitled'), also: (s ? cls(s.classId) + ' ' + s.date : '') + ' ' + t('plan.lessons'), group: t('plan.lessons'), icon: 'slides', run: go('lesson', l.id) }));
+    }
+    return () => offs.forEach(f => f());
+  }, [plan]);
   // The classes as commands, so typing a class's name opens it.
   useEffect(() => {
     const offs = (classes || []).map(c => addCommand({ id: 'class-' + (c.id || '-'), label: c.loose ? t('nav.no_class') : c.name, also: t('nav.classes'), group: t('nav.classes'), icon: 'people', run: () => router.go('class', c.id || '-') }));

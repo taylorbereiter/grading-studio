@@ -344,3 +344,21 @@ Each of these becomes a parameter, an import, or a callback before its engine ca
 
 - **Stage 6, before the switch: several windows.** The one-writer lock of stage 0 (src/lock.js in the current app, next/src/shared/lock.js in the new one) is an interim. The new app holds the lock "gs-writer" alone, so a second window of the new app, or a window of the current app, cannot write beside it. The teacher runs the installed app and a browser tab together, and the current app lets several windows write at once and merges what they save (src/saving.js: TAB, tabStamp, tabLive, tabMerge, the gsc.saved., gsc.forgot., gsc.over, gsc.finish and gsc.saving. keys; src/folder.js store.set merging gs.lib with mergeLib). Before the switch the new app must speak that same protocol, so several of its windows work as several old windows do now. Once it does, the new app takes the lock in shared mode like the current app, and new plus new no longer blocks.
 - **Folder and Drive hooks go with the first stage that writes real work.** Every save in the current app also goes to the linked folder (writeWork calls folderSaved) and starts a Drive sync (syncSoon); a Planner save posts on gs-plan-out so the grading page syncs. If the new app writes lessons (stage 3) or marks (stage 4) without these, the folder and the other devices fall behind until the current app is opened. Lift those hooks in the stage that first writes, or keep the new app from writing real work until stage 6.
+
+## Planning engines, as lifted (stage 3)
+
+The Planner's engines are not copied by hand. `next/tools/lift.js` reads `src/planner/*.js` (one shared scope, as the Planner page
+is built), cuts out the top-level declarations named in `PLANNER_ROOTS` (next/build.js) with everything they use, and writes
+`next/src/engines/planner.js` on every build. A change to the current Planner therefore reaches the new app on the next build, and
+the two always draw slides, name files and read lessons the same way. `PLANNER_DENY` stops the build if a lifted name reaches screen,
+storage or toast code. `L` holds what the Planner keeps in memory; `planning/engine.js` puts the plan the new app read into it
+(setup, lessons, units, default look, the teacher's activities) before any engine runs. The slide stylesheet is lifted the same way
+into `engines/slidecss.js`.
+
+Only the names the new app calls are lifted, because each planning screen loads the whole module and must stay inside the 60 KB
+screen budget (at stage 3: about 38 KB for the engines and 12 KB for fflate). A screen that needs another engine adds its name.
+The activity bank is lifted the same way into its own module, `engines/activities.js` (`ACTIVITIES`, `PARTS`, `KINDS`, `BOOK`,
+`actVideo`, `actSlide`, `normActivity`), so only Library > Activities loads its text; it takes `normSlide` and `lid` from
+`engines/planner.js`, so a slide made from an activity is the Planner's own. Library > Rubrics reads the bank record as it is and
+needs no engine. Not lifted yet, with the stage that adds them: rubric bank editing (`bankEdRender` and the rest, with the scoring
+screens in stage 4), reading a .pptx back into slides (`pptxToSlides`), the focus timer's pace (`ptPace`, with the lesson timer).

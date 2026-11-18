@@ -9,18 +9,19 @@
 // [pattern, chunk, nav]: pattern pieces starting with ":" are named parts; nav is the sidebar item the route lights up.
 export const ROUTES = [
   ['home', 'home', 'home'],
-  ['calendar', 'later', 'calendar'],
-  ['calendar/:view', 'later', 'calendar'],
-  ['week', 'later', 'calendar'],
+  ['calendar', 'calendar', 'calendar'],
+  ['calendar/:view', 'calendar', 'calendar'],
+  ['week', 'calendar', 'calendar'],
   ['todo', 'later', 'todo'],
-  ['class/:id', 'later', 'class'],
-  ['class/:id/:tab', 'later', 'class'],
+  ['class/:id', 'class', 'class'],
+  ['class/:id/:tab', 'class', 'class'],
   ['class/:id/:tab/:sub', 'later', 'class'],
-  ['lesson/:id', 'later', 'class'],
+  ['lesson/:id', 'lesson', 'class'],
+  ['lesson/:id/:view', 'lesson', 'class'],
   ['mark/:id', 'later', 'class'],
   ['mark/:id/:tab', 'later', 'class'],
-  ['library', 'later', 'library'],
-  ['library/:tab', 'later', 'library'],
+  ['library', 'library', 'library'],
+  ['library/:tab', 'library', 'library'],
   ['school', 'later', 'school'],
   ['settings', 'settings', 'settings'],
   ['settings/:group', 'settings', 'settings'],
@@ -36,6 +37,10 @@ export const CHUNKS = {
   keys: () => import('./screens/keys.jsx'),
   more: () => import('./screens/more.jsx'),
   later: () => import('./screens/later.jsx'),
+  calendar: () => import('./screens/calendar.jsx'),
+  class: () => import('./screens/class.jsx'),
+  lesson: () => import('./screens/lesson.jsx'),
+  library: () => import('./screens/library.jsx'),
 };
 
 export function parse(hash) {

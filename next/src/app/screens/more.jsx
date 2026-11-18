@@ -3,13 +3,16 @@ import { h } from 'preact';
 import { ListRow, ClassDot, Icon } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { href } from '../router.js';
-import { classColor, UpdateLine } from '../shell.jsx';
+import { UpdateLine } from '../shell.jsx';
+import { usePlan } from '../plan.js';
+import { classTone } from '../colors.js';
 import { assistant } from '../../services/assistant.js';
 
 const ROWS = [['calendar', 'cal', 'nav.calendar'], ['library', 'library', 'nav.library'], ['school', 'school', 'nav.school'], ['settings', 'settings', 'nav.settings'], ['help', 'help', 'nav.help']];
 export function ClassList({ classes }) {
+  const plan = usePlan();
   if (classes && !classes.length) return <p class="mute">{t('home.no_classes')}</p>;
-  return <ul class="list">{(classes || []).map((c, i) => <li><ListRow lead={<ClassDot color={classColor(c.loose ? -1 : i)} />} title={c.loose ? t('nav.no_class') : <span data-raw>{c.name}</span>}
+  return <ul class="list">{(classes || []).map((c, i) => <li><ListRow lead={<ClassDot color={classTone(plan, c.name, c.loose ? -1 : i)} />} title={c.loose ? t('nav.no_class') : <span data-raw>{c.name}</span>}
     sub={c.left ? t('nav.left', { n: c.left }) : null} href={href('class', c.id || '-')} end={<Icon name="chr" />} /></li>)}</ul>;
 }
 export default function More({ route, classes }) {
