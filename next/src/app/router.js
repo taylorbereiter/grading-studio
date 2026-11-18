@@ -31,6 +31,13 @@ export const ROUTES = [
   ['classes', 'more', 'classes'],
 ];
 // The chunks. Written out one by one so the bundler makes one file for each.
+// Parts of the lesson screen loaded only when asked for: the editor (the Edit view), Present, and the lesson's tools (sheets from
+// the lesson menu, the Beside drawer). Each is a screen of its own for the size budget (next/budgets.json route).
+export const PARTS = {
+  edit: () => import('./screens/lesson-edit.jsx'),
+  present: () => import('./screens/present.jsx'),
+  tools: () => import('./screens/lesson-tools.jsx'),
+};
 export const CHUNKS = {
   home: () => import('./screens/home.jsx'),
   settings: () => import('./screens/settings.jsx'),

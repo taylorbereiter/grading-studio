@@ -10,6 +10,7 @@ import { engine } from '../../planning/engine.js';
 import { saveLessonFile, dropLessonFile } from '../../planning/write.js';
 import { lessonBlob } from '../../planning/plan.js';
 import { saveFailed } from './save.js';
+import './lines.js';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 const ICON = f => f.kind === 'doc' ? 'note' : /^image\//.test(f.type || '') ? 'image' : 'file';

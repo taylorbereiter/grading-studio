@@ -10,6 +10,7 @@ import { href } from '../router.js';
 import { usePlan } from '../plan.js';
 import { saveKv } from '../../planning/write.js';
 import { saveFailed } from '../plan/save.js';
+import '../plan/lines.js';
 
 // The colours a class can have: the current Planner's unit colours (src/planner/units.js UNIT_COLORS). Shown as the theme's own.
 export const CLASS_COLORS = ['#1F6FB2', '#7B3FC4', '#B71E42', '#0E7C66', '#B35C00', '#3D5A80', '#8E3B8A', '#2F6B2F'];
@@ -55,7 +56,7 @@ function ClassCard({ c, onChange, onRemove }) {
       <TextInput label={t('plan.class_name')} value={c.name} onInput={v => set({ name: v })} />
       <TextInput label={t('plan.course')} hint={t('plan.course_hint')} value={c.course || ''} onInput={v => set({ course: v })} />
       <IconButton icon="trash" label={t('plan.remove_class')} onClick={onRemove} /></div>
-    <div class="swatches" role="radiogroup" aria-label={t('plan.class_colour')}>{CLASS_COLORS.map((x, i) => <button type="button" role="radio" aria-checked={String(c.color.toLowerCase() === x.toLowerCase())}
+    <div class="ccsw" role="radiogroup" aria-label={t('plan.class_colour')}>{CLASS_COLORS.map((x, i) => <button type="button" role="radio" aria-checked={String(c.color.toLowerCase() === x.toLowerCase())}
       aria-label={t('plan.colour_n', { n: i + 1 })} style={{ '--cc': x }} onClick={() => set({ color: x })} />)}</div>
     <h3 class="sub">{t('plan.meets')}</h3>
     {c.meets.map((m, i) => <div class="mrow">

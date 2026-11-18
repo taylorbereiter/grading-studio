@@ -65,6 +65,7 @@ const PLANNER_ROOTS = [
   // units
   'normUnit', 'tplLayouts',
 ];
+const TOOLS_ROOTS = ['pptxToSlides', 'docxOf', 'shareLesson', 'finSig'];
 const PLANNER_DENY = ['$', 'toast', 'openDlg', 'closeDlg', 'lTx', 'kvGet', 'kvSet', 'kvDel', 'lPut', 'lDelete', 'lOpenDb', 'saveBlob', 'renderLessons', 'renderWeek',
   'renderEditor', 'renderStage', 'renderUnits', 'renderUnit', 'renderSemester', 'renderBank', 'renderLibrary', 'renderActivities', 'openLesson', 'folderWriteSoon',
   'unitWriteSoon', 'bankWriteSoon', 'copyText', 'refreshThumb'];
@@ -86,8 +87,20 @@ function writePlanner() {
     given: ['myActivities'],
     // The teacher's own activities come from L.activities (the new app reads them with the rest), not from the Planner's database.
     preamble: "import * as fflate from 'fflate';\nconst myActivities = async () => ((L && L.activities) || []).filter(a => a && a.name);\n" });
+  // next/src/engines/plantools.js: what the lesson's own tools need beyond that (reading a finished .pptx, a lesson file to share,
+  // a document as .docx, rich slide text, looks, a class's lasting links). Lifted the same way into its own module, loaded only by
+  // the lesson tools screen; every name the planner engine already holds is imported from it, so both share one L.
+  const decl = new Set([...out.matchAll(/^(?:async )?function\*? ?(\w+)|^(?:const|let|var) (\w+)/gm)].map(m => m[1] || m[2]));
+  const tools = lift({ roots: TOOLS_ROOTS, deny: PLANNER_DENY, header: '', given: [...decl] });
+  const used = [...decl].filter(n => new RegExp('\\b' + n.replace(/\$/g, '\\$') + '\\b').test(tools));
+  const head = '// MADE BY next/build.js FROM src/planner/*.js (next/tools/lift.js). Do not edit: change the source and build again.\n/* eslint-disable */\n';
+  const toolsOut = head + "import * as fflate from 'fflate';\nimport { " + used.join(', ') + " } from './planner.js';\n" + tools;
+  const exported = new Set(PLANNER_ROOTS), extra = used.filter(n => !exported.has(n));
+  const plannerOut = extra.length ? out + 'export { ' + extra.join(', ') + ' };\n' : out;
   const f = path.join(NEXT, 'src/engines/planner.js');
-  if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== out) fs.writeFileSync(f, out);
+  if (!fs.existsSync(f) || fs.readFileSync(f, 'utf8') !== plannerOut) fs.writeFileSync(f, plannerOut);
+  const tf = path.join(NEXT, 'src/engines/plantools.js');
+  if (!fs.existsSync(tf) || fs.readFileSync(tf, 'utf8') !== toolsOut) fs.writeFileSync(tf, toolsOut);
   // The slide's own look (what slideHtml draws), taken from the Planner page's stylesheet: the rules about the slide and its text,
   // not the editor around it. The two sizes the slide borrows from the current app's tokens come with it.
   const page = fs.readFileSync(path.join(ROOT, 'src/planner/planner.html'), 'utf8'), st = page.slice(page.indexOf('<style>') + 7, page.indexOf('</style>'));

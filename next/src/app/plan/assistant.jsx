@@ -16,6 +16,7 @@ import { engine } from '../../planning/engine.js';
 import { saveVersion, saveLessonFile } from '../../planning/write.js';
 import { Slide } from './slide.jsx';
 import { briefFor, readZip, copy, same } from './brief.js';
+import './lines.js';
 
 export function AssistantSheet({ p, l, open, onClose, save }) {
   const ai = assistant(), name = ai.name || t('assistant.generic');

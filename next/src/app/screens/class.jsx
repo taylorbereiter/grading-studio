@@ -15,6 +15,7 @@ import { lessonsOn, stateOf, STATE_LINE, periods, dayOff, today, plus, at, monda
 import { saveFailed } from '../plan/save.js';
 import Later from './later.jsx';
 import { UnitSheet } from '../plan/unit-edit.jsx';
+import '../plan/lines.js';
 
 const TABS = ['course', 'people', 'grades', 'todo'];
 const keep = (k, v) => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem('gsn.class.' + k)); sessionStorage.setItem('gsn.class.' + k, JSON.stringify(v)); } catch {} return null; };

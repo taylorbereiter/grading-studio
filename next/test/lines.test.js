@@ -6,7 +6,7 @@ const fs = require('fs'), path = require('path');
 const SRC = path.join(__dirname, '..', 'src');
 // en.json: the app's lines. gallery.en.json: the gallery page's own, never shipped with the app (only gallery/ may use them).
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lang', f), 'utf8'));
-const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), EN = { ...APP, ...GAL, ...BLD };
+const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), EN = { ...APP, ...GAL, ...BLD, ...PLAN };
 const noComments = s => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(x => x.isDirectory() ? walk(path.join(d, x.name)) : /\.jsx?$/.test(x.name) ? [path.join(d, x.name)] : []);
 const files = walk(SRC);
@@ -27,6 +27,14 @@ test('gallery lines stay in the gallery, app lines in the app file', () => {
   // the "not built yet" screen's own lines (next/lang/building.en.json): only that screen uses them, and they go when it goes
   assert.ok(Object.keys(BLD).every(k => k.startsWith('building.')) && !Object.keys(APP).some(k => k.startsWith('building.')));
   for (const [f, s] of Object.entries(text)) if (f !== 'app/screens/later.jsx') assert.ok(!/'building\./.test(noComments(s)), f + ' uses a building line');
+});
+// the planning screens' lines (next/lang/plan.en.json) load with those screens (app/plan/lines.js): a file that uses one imports it
+test('planning lines live in plan.en.json and load where they are used', () => {
+  assert.ok(Object.keys(PLAN).every(k => k.startsWith('plan.')) && !Object.keys(PLAN).some(k => k in APP));
+  for (const [f, s] of Object.entries(text)) {
+    const used = [...noComments(s).matchAll(/'(plan\.[a-z0-9_]+)'/g)].map(m => m[1]).filter(k => k in PLAN);
+    if (used.length) assert.ok(/import '\.\.?\/(plan\/)?lines\.js';/.test(s), f + ' uses ' + used[0] + ' without importing plan/lines.js');
+  }
 });
 test('lines are well formed: area.name keys, plural lines have one and other, no stray braces', () => {
   for (const [k, v] of Object.entries(EN)) {

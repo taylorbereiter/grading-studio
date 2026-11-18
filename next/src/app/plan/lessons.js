@@ -5,6 +5,7 @@
 import { saveLesson } from '../../planning/write.js';
 import { engine } from '../../planning/engine.js';
 import { t } from '../../i18n/t.js';
+import './lines.js';
 
 export const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 export const at = s => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, m - 1, d); };

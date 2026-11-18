@@ -12,6 +12,7 @@ import { lessonVersions, lessonBlob } from '../../planning/plan.js';
 import { today } from './lessons.js';
 import { saveFailed } from './save.js';
 import { printLesson } from './print.js';
+import './lines.js';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 function saveAs(name, b) { const a = document.createElement('a'), url = URL.createObjectURL(b); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000); }

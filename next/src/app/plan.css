@@ -47,6 +47,9 @@
 .lc.open:hover{background:color-mix(in oklab,var(--cc) 8%,var(--s))}
 .lc.past{background:var(--g50);border-left-color:var(--g300);cursor:default}
 .lc.compact{padding:4px 8px;flex-direction:row;align-items:center;justify-content:space-between}
+.lc.open.compact{flex-direction:column;align-items:stretch;gap:2px}
+.lc b.one{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lc.open .lm>span:first-child{display:flex;align-items:center;gap:4px}
 .lc.compact b{-webkit-line-clamp:1;font-size:var(--t1)}
 .lc.compact .lm{flex:none}
 .lc.compact .lm .st{display:none}
@@ -241,9 +244,9 @@
 .ccrow .dot.big{margin-bottom:12px}
 .ccrow>.field,.drow>.field{flex:1;min-width:160px}
 .mrow>.field{min-width:110px}
-.swatches{display:flex;gap:8px;margin:10px 0}
-.swatches button{width:24px;height:24px;border-radius:50%;background:var(--cc)}
-.swatches button[aria-checked="true"]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--cc)}
+.ccsw{display:flex;gap:8px;margin:10px 0}
+.ccsw button{width:24px;height:24px;border-radius:50%;background:var(--cc)}
+.ccsw button[aria-checked="true"]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--cc)}
 .dlist{display:flex;flex-direction:column;gap:8px}
 .savebar{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;padding:10px 0;background:var(--bg);border-top:1px solid var(--line)}
 @media (max-width:640px){

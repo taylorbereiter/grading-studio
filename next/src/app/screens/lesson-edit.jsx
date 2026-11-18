@@ -15,7 +15,9 @@ import { register } from '../../services/shortcuts.js';
 import { engine } from '../../planning/engine.js';
 import { Slide } from '../plan/slide.jsx';
 import { ExamplePicker } from '../plan/example-pick.jsx';
+import { Talk } from '../plan/talk.jsx';
 import { isExample, exampleSize } from '../plan/examples.js';
+import '../plan/lines.js';
 
 const PIC = ['picture', 'fullpic', 'textpic', 'picprompt'];
 // A picture from this computer, made small enough to keep in a lesson as the current Planner does (src/planner/lessons.js shrinkPic):
@@ -51,21 +53,6 @@ const LAYOUT_LINE = { title: 'plan.layout_title', agenda: 'plan.layout_agenda', 
 const BOX_LINE = { tag: 'plan.box_tag', foot: 'plan.box_foot', h1: 'plan.box_h1', h2: 'plan.box_h2', body2: 'plan.box_body2', cite: 'plan.box_cite', word: 'plan.box_word', pos: 'plan.box_pos' };
 const NO_BODY = ['picture', 'fullpic', 'video'];
 const copy = x => JSON.parse(JSON.stringify(x));
-
-// Comments on a slide or the whole lesson, in the current Planner's shape: { by: 'you' | 'claude', text, at, done? }.
-export function Talk({ talk, onChange, ai, label }) {
-  const [text, setText] = useState(''), [writing, setWriting] = useState(false);
-  const add = () => { const v = text.trim(); if (!v) return; onChange([...(talk || []), { by: 'you', text: v, at: Date.now() }]); setText(''); setWriting(false); };
-  return <section class="talk" aria-label={label}>
-    {(talk || []).length > 0 && <ul class="tlist">{talk.map((c, i) => <li class={'tc' + (c.done ? ' done' : '')}>
-      <Checkbox round checked={!!c.done} label={c.by === "claude" ? t('plan.from_name', { name: ai }) : t('plan.you')} onChange={on => onChange(talk.map((x, j) => j !== i ? x : on ? { ...x, done: true } : (({ done, ...r }) => r)(x)))} />
-      <p data-raw>{c.text}</p><small class="mute" data-raw>{c.at ? date(new Date(c.at), { month: 'short', day: 'numeric' }) : ''}</small></li>)}</ul>}
-    {writing ? <>
-      <TextBox label={t('plan.add_comment')} value={text} onInput={setText} rows={2} autoFocus onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); add(); } if (e.key === 'Escape' && !text) { e.stopPropagation(); setWriting(false); } }} />
-      <div class="row"><Button size="sm" variant="quiet" onClick={() => { setText(''); setWriting(false); }}>{t('common.cancel')}</Button><Button size="sm" variant="primary" disabled={!text.trim()} onClick={add}>{t('plan.add_comment')}</Button></div></>
-      : <div><Button size="sm" icon="comment" onClick={() => setWriting(true)}>{t('plan.add_comment')}</Button></div>}
-  </section>;
-}
 
 export default function Editor({ p, l, cur, setCur, save, ai }) {
   const E = engine(p);

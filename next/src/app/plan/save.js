@@ -3,6 +3,7 @@
 import { toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { ReadOnly } from '../../shared/lock.js';
+import './lines.js';
 
 export function saveFailed(e) {
   console.error(e);

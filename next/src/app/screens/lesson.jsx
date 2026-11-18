@@ -21,14 +21,22 @@ import { taughtIn } from '../../planning/index.js';
 import { Slide } from '../plan/slide.jsx';
 import { stateOf, classOf, today, at, mins, lessonsOn } from '../plan/lessons.js';
 import { saveFailed } from '../plan/save.js';
-import { Present } from '../plan/present.jsx';
-import Editor, { Talk } from './lesson-edit.jsx';
+import { Talk } from '../plan/talk.jsx';
+import { PARTS } from '../router.js';
 import { Materials } from '../plan/materials.jsx';
 import { LessonMenu } from '../plan/lesson-menu.jsx';
 import { AssistantSheet } from '../plan/assistant.jsx';
 import { TextBox } from '../../ui/services.jsx';
+import '../plan/lines.js';
 
 const VIEWS = ['lesson', 'slides', 'edit'];
+// The editor, Present and the lesson's tools come in their own files when first wanted (router.js PARTS).
+const got = {};
+export function usePart(name, want = true) {
+  const [, bump] = useState(0);
+  useEffect(() => { if (want && !got[name]) PARTS[name]().then(m => { got[name] = m; bump(n => n + 1); }, e => { console.error(e); toast(t('app.chunk_failed')); }); }, [name, want]);
+  return got[name] || null;
+}
 const clock = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? date(new Date(2000, 0, 1, +m[1], +m[2]), { hour: 'numeric', minute: '2-digit' }) : ''; };
 const lines = body => String(body || '').split('\n').map(x => x.replace(/^\s*(?:[•\-*]|\d+[.)])\s*/, '').trim()).filter(Boolean);
 // Plain words of a slide line, without the Planner's **bold** and {red} marks.
@@ -184,7 +192,20 @@ export function AfterClass({ l, slot, onSave }) {
     n.taught = [...(n.taught || []).filter(x => !(x.classId === slot.classId && x.date === slot.date)), t0];
     onSave(n);
   };
-  return <section class="after"><TextBox label={t('plan.after_class')} hint={t('plan.after_class_hint')} value={v} onInput={setV} onBlur={keep} rows={3} /></section>;
+  // Where the class got to, set by hand: Present records it on its own after two minutes, and this changes it or sets it.
+  const reached = v2 => {
+    const of = l.slides.length, sl = Math.max(1, Math.min(of, +v2 || of));
+    if (onPhone()) { try { saveTaughtNote(key, { slide: sl, of, x: shown(), t: Date.now() }); toast(t('plan.note_waits')); } catch (e) { saveFailed(e); } return; }
+    const n = JSON.parse(JSON.stringify(l));
+    const t0 = had ? { ...had, slide: sl, of, at: Date.now() } : { classId: slot.classId, date: slot.date, slide: sl, of, note: v.trim(), at: Date.now() };
+    n.taught = [...(n.taught || []).filter(x => !(x.classId === slot.classId && x.date === slot.date)), t0];
+    onSave(n);
+  };
+  const of = l.slides.length;
+  return <section class="after"><TextBox label={t('plan.after_class')} hint={t('plan.after_class_hint')} value={v} onInput={setV} onBlur={keep} rows={3} />
+    <Select label={t('plan.got_to_label')} value={had ? String(Math.min(had.slide, of)) : ''} data-focus="got-to"
+      options={[...(had ? [] : [{ value: '', label: t('plan.got_to_none') }]), ...l.slides.map((x, i) => ({ value: String(i + 1), label: i + 1 === of ? t('plan.got_to_last', { n: i + 1 }) : t('plan.slide_n', { n: i + 1 }) }))]}
+      onChange={reached} /></section>;
 }
 
 // Where Present begins from the lesson: the slide this class stopped on last time, if it stopped partway (src/planner/present.js
@@ -209,6 +230,8 @@ export default function LessonPage({ route }) {
   const [cur, setCur] = useState(0), [presenting, setPresenting] = useState(false), [asking, setAsking] = useState(false);
   const view = VIEWS.includes(route.params.view) ? route.params.view : 'lesson';
   const setView = v => go('lesson', route.params.id, v === 'lesson' ? '' : v);
+  // Present is fetched with the page, so F5 shows it at once; the editor when the Edit view opens.
+  const PresentMod = usePart('present'), EditMod = usePart('edit', view === 'edit');
   useEffect(() => {
     if (!l) return;
     const n = l.slides.length, step = d => setCur(c => Math.max(0, Math.min(n - 1, c + d)));
@@ -240,11 +263,11 @@ export default function LessonPage({ route }) {
       <div class="lmain">
         {view === 'lesson' && <LessonView p={p} l={l} slot={slot} per={per} onOpenSlide={i => { setCur(i); setView('slides'); }} />}
         {view === 'slides' && <SlidesView p={p} l={l} cur={Math.min(cur, n - 1)} setCur={setCur} onPresent={() => setPresenting(true)} />}
-        {view === 'edit' && <Editor key={l.id} p={p} l={l} cur={cur} setCur={setCur} save={save} ai={assistant().name || t('assistant.generic')} />}
+        {view === 'edit' && (EditMod ? <EditMod.default key={l.id} p={p} l={l} cur={cur} setCur={setCur} save={save} ai={assistant().name || t('assistant.generic')} /> : <div class="loading" aria-busy="true" />)}
       </div>
       {view !== 'edit' && <Side p={p} l={l} slot={slot} per={per} onSave={save} onDownload={() => download(p, l)} onAssistant={() => setAsking(true)} />}
     </div>
     <AssistantSheet p={p} l={l} open={asking} onClose={() => setAsking(false)} save={save} />
-    {presenting && <Present p={p} l={l} className={per ? per.c.name : ''} start={view === 'slides' ? cur : resumeAt(l, slot)} onClose={(i, far, secs) => { setPresenting(false); if (typeof i === 'number') setCur(i); gotTo(l, slot, far, secs, save); }} />}
+    {presenting && PresentMod && <PresentMod.Present p={p} l={l} className={per ? per.c.name : ''} start={view === 'slides' ? cur : resumeAt(l, slot)} onClose={(i, far, secs) => { setPresenting(false); if (typeof i === 'number') setCur(i); gotTo(l, slot, far, secs, save); }} />}
   </div>;
 }

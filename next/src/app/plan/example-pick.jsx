@@ -6,6 +6,7 @@ import { Sheet, Button, Icon, TextInput, EmptyState } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { examplesForPlanning } from '../../crossings.js';
 import { exampleRef, loadExample } from './examples.js';
+import './lines.js';
 
 export const exampleName = r => r.kind === 'answer' ? t('plan.ex_question', { q: r.q || '?' }) : r.kind === 'paper' ? t('plan.ex_example', { x: r.letter || 'A' })
   : r.kind === 'shot' ? t('plan.ex_shot', { x: r.letter || '1' }) : t('plan.ex_part');

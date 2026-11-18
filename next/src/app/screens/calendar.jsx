@@ -22,6 +22,7 @@ const keep = (k, v) => { try { if (v === undefined) return JSON.parse(sessionSto
 export { saveFailed } from '../plan/save.js';
 import { saveFailed } from '../plan/save.js';
 import { printWeek } from '../plan/print.js';
+import '../plan/lines.js';
 
 function State({ s }) {
   return <span class={'st st-' + s}>{STATE_ICON[s] && <Icon name={STATE_ICON[s]} size="xs" />}{t(STATE_LINE[s])}</span>;
@@ -43,7 +44,8 @@ function PlanIt({ p, c, m, day, compact, busy, setBusy }) {
     try { const l = await newLesson(p, c.id, day); go('lesson', l.id); } catch (e) { saveFailed(e); } finally { setBusy(false); }
   };
   return <button type="button" class={'lc open' + (compact ? ' compact' : '')} style={{ '--cc': toneOf(c.color) }} onClick={go2} data-plan={c.id + '|' + day}>
-    <b><Icon name="plus" size="xs" />{compact ? t('plan.class_not_planned', { name: c.name }) : t('plan.plan_this')}</b><span class="lm" data-raw>{clock(m.start)}</span>
+    {compact ? <><b class="one" data-raw>{c.name}</b><span class="lm"><span><Icon name="plus" size="xs" />{t('plan.not_planned')}</span><span data-raw>{clock(m.start)}</span></span></>
+      : <><b><Icon name="plus" size="xs" />{t('plan.plan_this')}</b><span class="lm" data-raw>{clock(m.start)}</span></>}
   </button>;
 }
 function DueChip({ x, p }) {

@@ -312,7 +312,7 @@ test('Settings > Timetable: a class renamed and recoloured, a meeting and a day 
   await p.waitForSelector('main .ttset input');
   await p.$eval('main .ttset .card input', el => { el.focus(); el.select(); });
   await p.keyboard.type('Grade 9 English A');
-  await p.click('main .ttset .card .swatches button:nth-child(3)');
+  await p.click('main .ttset .card .ccsw button:nth-child(3)');
   await p.$eval('main .ttset .card', c => [...c.querySelectorAll(':scope > div > div > button, :scope button')].find(b => b.textContent === 'Add a time').click());
   const dayOff = (await p.$$('main .ttset .dlist'))[0];
   await (await dayOff.$(':scope > div:last-child button')).click();

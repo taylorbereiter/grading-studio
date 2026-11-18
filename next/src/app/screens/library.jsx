@@ -16,6 +16,7 @@ import { nameKey } from '../../planning/plan.js';
 import { saveFailed } from '../plan/save.js';
 import { today, at, classOf } from '../plan/lessons.js';
 import { ACTIVITIES, BOOK, actVideo, actSlide, normActivity } from '../../engines/activities.js';
+import '../plan/lines.js';
 
 const TABS = ['activities', 'past', 'units', 'rubrics'];
 const TAB_LINE = { activities: 'plan.lib_activities', past: 'plan.lib_past', units: 'plan.lib_units', rubrics: 'plan.lib_rubrics' };
