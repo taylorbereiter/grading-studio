@@ -130,6 +130,9 @@ test('To do: a line edited at the side, moving quickly from box to box loses not
   await p.waitForSelector('[data-td-with]');
   await p.select('[data-td-with]', 's:1');
   await p.select('[data-td-ppl]', 'p2');
+  // the pane grows a line for the student's page: press Every week where it is drawn now
+  await p.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')).todo.items.find(x => x.id === 'tdC'); return l && l.who && (l.ppl || []).includes('p2'); });
+  await new Promise(r => setTimeout(r, 150));
   await p.click('[data-td-rep="week"]');
   await p.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')).todo.items.find(x => x.id === 'tdC'); return l && l.rep === 'week' && (l.ppl || []).includes('p2') && l.who; });
   it = (await items(p)).find(x => x.id === 'tdC');
@@ -185,6 +188,7 @@ test('To do: the week, a line typed into a day and one dragged to another, the k
   // the list again: the kinds the app adds, one switched off
   await p.click('[data-td-view]'); await todoUp(p);
   const before = (await p.$$('[data-td-list] .tdck.app')).length;
+  await p.waitForSelector('[data-td-kind="back"] [role="switch"]', { timeout: 20000 });
   await p.click('[data-td-kind="back"] [role="switch"]');
   await p.waitForFunction(() => (JSON.parse(localStorage.getItem('gs.lib')).todo.off || {}).back === 1);
   await p.waitForFunction(n => document.querySelectorAll('[data-td-list] .tdck.app').length <= n, {}, before);
