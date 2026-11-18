@@ -15,6 +15,7 @@ import { libs } from './paper.js';
 import { t } from '../../i18n/t.js';
 import * as C from './change.js';
 import './lines.js';
+import './setup-lines.js';
 
 const J = v => JSON.parse(JSON.stringify(v));
 const ROW_MAX = 6, TOP_MAX = 10;
@@ -25,14 +26,14 @@ function stakes(d, from, n0) {
   const s = state(), b = s.batch; if (!b) return [];
   const S0 = b.students, gone = [...Array(n0).keys()].filter(i => !from.includes(i)), out = [], has = v => v !== '' && v != null;
   const nGone = S0.filter(st => gone.some(i => st.grade.rubric[i] != null)).length;
-  if (nGone) out.push(t('mark.su_gone', { n: nGone }));
+  if (nGone) out.push(t('setup.su_gone', { n: nGone }));
   if (d.mode === 'rubric') {
     const off = S0.filter(st => d.criteria.some((_, i) => { const f = from[i], v = f == null ? null : st.grade.rubric[f]; return v != null && !rowSteps(d, i).includes(v); })).length;
-    if (off) out.push(t('mark.su_off', { n: off }));
+    if (off) out.push(t('setup.su_off', { n: off }));
   }
   if (d.mode !== s.setup.mode) {
     const n = d.mode === 'points' ? S0.filter(st => st.grade.rubric.some(v => v != null)).length : S0.filter(st => has(st.grade.points)).length;
-    if (n) out.push(t(d.mode === 'points' ? 'mark.su_rows_wait' : 'mark.su_total_wait', { n }));
+    if (n) out.push(t(d.mode === 'points' ? 'setup.su_rows_wait' : 'setup.su_total_wait', { n }));
   }
   return out;
 }
@@ -54,7 +55,7 @@ export function SetupDialog({ onClose }) {
     if (d.levels) d.levels.splice(i, 1); if (Array.isArray(d.ib)) d.ib.splice(i, 1); if (Array.isArray(d.tops)) d.tops.splice(i, 1); if (d.goals) d.goals.splice(i, 1);
     from.splice(i, 1); open.clear(); re();
   };
-  const rowAdd = () => { d.criteria.push(t('mark.su_row_n', { n: d.criteria.length + 1 })); if (Array.isArray(d.tops)) d.tops.push(null); if (Array.isArray(d.ib)) d.ib.push(null); from.push(null); re(); };
+  const rowAdd = () => { d.criteria.push(t('setup.su_row_n', { n: d.criteria.length + 1 })); if (Array.isArray(d.tops)) d.tops.push(null); if (Array.isArray(d.ib)) d.ib.push(null); from.push(null); re(); };
   const setTop = v => { const k = topOk(v); if (!k) return; delete d.tops; if (k === ROW_TOP) delete d.top; else d.top = k; open.clear(); re(); };
   const setHalf = on => { if (on) delete d.half; else d.half = false; re(); };
   const setLevel = (i, v, txt) => { d.levels ||= []; while (d.levels.length <= i) d.levels.push({}); (d.levels[i] ||= {})[v] = txt; re(); };
@@ -87,9 +88,9 @@ export function SetupDialog({ onClose }) {
         got = m.data === bytes ? await S.ruFromPdf(bytes).catch(() => null) : null;
       }
       setFound(got && got.rows.length ? got : null);
-      if (d.mode === 'rubric' && d.criteria.every((c, i) => c === t('mark.su_row_n', { n: i + 1 }))) { d.outOf = rowsMax(d); d.mode = 'points'; }   // her rubric replaces the generic rows
+      if (d.mode === 'rubric' && d.criteria.every((c, i) => c === t('setup.su_row_n', { n: i + 1 }))) { d.outOf = rowsMax(d); d.mode = 'points'; }   // her rubric replaces the generic rows
       re();
-    } catch (e) { console.error(e); toast(t('mark.su_bad_file')); }
+    } catch (e) { console.error(e); toast(t('setup.su_bad_file')); }
     setBusy(false);
   };
   const useRows = () => { S.rubricRowsInto(d, found); from.length = 0; d.criteria.forEach((_, i) => from.push(i < n0.current ? i : null)); setFound(null); open.clear(); re(); };
@@ -97,70 +98,70 @@ export function SetupDialog({ onClose }) {
   const save = async () => {
     setBusy(true);
     try {
-      d.criteria = d.criteria.map((c, i) => c.trim() || t('mark.su_row_n', { n: i + 1 }));
+      d.criteria = d.criteria.map((c, i) => c.trim() || t('setup.su_row_n', { n: i + 1 }));
       d.levels = S.tidyLevels(d); if (!d.levels) delete d.levels;
       { const rs = rowScaleOf(d); for (const k of ['top', 'tops', 'half']) delete d[k]; if (d.mode === 'rubric') Object.assign(d, rs); }   // only a scale that isn't 0 to 4 with halves is written down
       d.goals = S.goalsTidy(d); if (!d.goals) delete d.goals;
       await C.setupSave(d, { page, from: from.slice(), n0: n0.current, goal: b && goal !== ((b && b.goal) || '') ? goal : undefined });
       onClose();
-      toast(t('mark.su_saved'), { undo: C.undo });
-    } catch (e) { console.error(e); setBusy(false); toast(e && e.name === 'CannotSave' && e.why === 'room' ? t('mark.su_too_big') : t('mark.cannot')); }
+      toast(t('setup.su_saved'), { undo: C.undo });
+    } catch (e) { console.error(e); setBusy(false); toast(e && e.name === 'CannotSave' && e.why === 'room' ? t('setup.su_too_big') : t('mark.cannot')); }
   };
 
   const say = stakes(d, from, n0.current), top = rowsTop(d);
-  const topOpts = [...(top ? [] : [{ value: '', label: t('mark.su_each_own') }]), ...[...Array(TOP_MAX).keys()].map(k => ({ value: String(k + 1), label: String(k + 1) }))];
-  const goalOpts = sel => [{ value: '', label: t('mark.su_no_goal') }, ...goals.map(g => ({ value: g.id, label: g.name })), ...(sel && !goals.some(g => g.id === sel) ? [{ value: sel, label: t('mark.su_goal_gone') }] : [])];
+  const topOpts = [...(top ? [] : [{ value: '', label: t('setup.su_each_own') }]), ...[...Array(TOP_MAX).keys()].map(k => ({ value: String(k + 1), label: String(k + 1) }))];
+  const goalOpts = sel => [{ value: '', label: t('setup.su_no_goal') }, ...goals.map(g => ({ value: g.id, label: g.name })), ...(sel && !goals.some(g => g.id === sel) ? [{ value: sel, label: t('setup.su_goal_gone') }] : [])];
 
-  return <Dialog open title={t('mark.su_title')} onClose={onClose}
-    actions={<><Button onClick={onClose} data-sucancel>{t('mark.su_cancel')}</Button><Button variant="primary" disabled={busy} onClick={save} data-susave>{t('mark.su_save')}</Button></>}>
+  return <Dialog open title={t('setup.su_title')} onClose={onClose}
+    actions={<><Button onClick={onClose} data-sucancel>{t('setup.su_cancel')}</Button><Button variant="primary" disabled={busy} onClick={save} data-susave>{t('setup.su_save')}</Button></>}>
     <div class="mk-su" data-setup>
-      <Segmented label={t('mark.su_how')} value={d.mode} onChange={setMode} options={[{ value: 'points', label: t('mark.su_total') }, { value: 'rubric', label: t('mark.su_rows') }]} />
-      <p class="mute mk-swsay">{t('mark.su_total_say')}</p>
+      <Segmented label={t('setup.su_how')} value={d.mode} onChange={setMode} options={[{ value: 'points', label: t('setup.su_total') }, { value: 'rubric', label: t('setup.su_rows') }]} />
+      <p class="mute mk-swsay">{t('setup.su_total_say')}</p>
 
       {d.mode === 'rubric' ? <div class="su-rows" data-surows>
         {d.criteria.map((c, i) => { const lv = rowLevels(d, i), n = lv.filter(v => S.levelIn(d, i, v).trim()).length;
           return <div class="su-row" data-surow={i}>
-            <div class="su-rowline"><TextInput label={t('mark.su_row_label', { n: i + 1 })} value={c} onInput={v => rowName(i, v)} data-raw data-suname={i} />
-              {!!goals.length && <Select label={t('mark.su_goal_row')} value={(d.goals && d.goals[i]) || ''} options={goalOpts(d.goals && d.goals[i])} onChange={v => setGoalRow(i, v)} data-raw data-sugoal={i} />}
-              {d.criteria.length > 1 && <IconButton icon="x" size="sm" label={t('mark.su_row_out', { n: i + 1 })} onClick={() => rowOut(i)} data-surm={i} />}</div>
+            <div class="su-rowline"><TextInput label={t('setup.su_row_label', { n: i + 1 })} value={c} onInput={v => rowName(i, v)} data-raw data-suname={i} />
+              {!!goals.length && <Select label={t('setup.su_goal_row')} value={(d.goals && d.goals[i]) || ''} options={goalOpts(d.goals && d.goals[i])} onChange={v => setGoalRow(i, v)} data-raw data-sugoal={i} />}
+              {d.criteria.length > 1 && <IconButton icon="x" size="sm" label={t('setup.su_row_out', { n: i + 1 })} onClick={() => rowOut(i)} data-surm={i} />}</div>
             <details class="lved" open={open.has(i)} onToggle={e => { if (e.currentTarget.open) open.add(i); else open.delete(i); }}>
-              <summary data-sulv={i}>{n ? t('mark.su_means_n', { n, of: lv.length }) : t('mark.su_means')}</summary>
-              {lv.map(v => <label class="lvin"><b>{v}</b><textarea class="input" rows="2" data-raw aria-label={t('mark.su_means_v', { v })} value={S.levelIn(d, i, v)} onInput={e => setLevel(i, v, e.currentTarget.value)} data-sulvi={i + ':' + v} /></label>)}
-              <span class="mute lvnote">{rowHalf(d) ? t('mark.su_means_half') : t('mark.su_means_blank')}</span>
+              <summary data-sulv={i}>{n ? t('setup.su_means_n', { n, of: lv.length }) : t('setup.su_means')}</summary>
+              {lv.map(v => <label class="lvin"><b>{v}</b><textarea class="input" rows="2" data-raw aria-label={t('setup.su_means_v', { v })} value={S.levelIn(d, i, v)} onInput={e => setLevel(i, v, e.currentTarget.value)} data-sulvi={i + ':' + v} /></label>)}
+              <span class="mute lvnote">{rowHalf(d) ? t('setup.su_means_half') : t('setup.su_means_blank')}</span>
             </details>
           </div>; })}
-        {d.criteria.length < ROW_MAX && <div><Button size="sm" icon="plus" onClick={rowAdd} data-suadd>{t('mark.su_add_row')}</Button></div>}
+        {d.criteria.length < ROW_MAX && <div><Button size="sm" icon="plus" onClick={rowAdd} data-suadd>{t('setup.su_add_row')}</Button></div>}
         <div class="su-scale">
-          <Select label={t('mark.su_top')} value={top ? String(top) : ''} options={topOpts} onChange={setTop} data-sutop />
-          <Switch label={t('mark.su_half')} checked={rowHalf(d)} onChange={setHalf} />
-          <span class="mute">{t('mark.su_out_all', { n: rowsMax(d) })}</span>
+          <Select label={t('setup.su_top')} value={top ? String(top) : ''} options={topOpts} onChange={setTop} data-sutop />
+          <Switch label={t('setup.su_half')} checked={rowHalf(d)} onChange={setHalf} />
+          <span class="mute">{t('setup.su_out_all', { n: rowsMax(d) })}</span>
         </div>
-      </div> : <div class="su-out"><TextInput label={t('mark.su_out_of')} type="number" min="1" step="0.5" value={String(d.outOf ?? '')} onInput={v => { d.outOf = v; re(); }} data-suout />
-        {!!goals.length && b && <Select label={t('mark.su_goal_all')} value={goal} options={goalOpts(goal)} onChange={setGoal} data-raw data-sugoalall />}</div>}
+      </div> : <div class="su-out"><TextInput label={t('setup.su_out_of')} type="number" min="1" step="0.5" value={String(d.outOf ?? '')} onInput={v => { d.outOf = v; re(); }} data-suout />
+        {!!goals.length && b && <Select label={t('setup.su_goal_all')} value={goal} options={goalOpts(goal)} onChange={setGoal} data-raw data-sugoalall />}</div>}
 
       <div class="su-grade" data-suscale>
-        <b>{t('mark.su_scale')}</b>
-        <span class="su-btns">{scale12 && <Button size="sm" onClick={() => preset('usual')} data-supreset="usual">{t('mark.su_usual')}</Button>}
-          <Button size="sm" onClick={() => preset('fives')} data-supreset="fives">{t('mark.su_fives')}</Button>
-          <Button size="sm" onClick={() => preset('none')} data-supreset="none">{t('mark.su_none')}</Button></span>
-        {!d.scale ? <p class="mute">{t('mark.su_none_say')}</p> : max > 40 ? <p class="mute">{t('mark.su_too_many')}</p>
+        <b>{t('setup.su_scale')}</b>
+        <span class="su-btns">{scale12 && <Button size="sm" onClick={() => preset('usual')} data-supreset="usual">{t('setup.su_usual')}</Button>}
+          <Button size="sm" onClick={() => preset('fives')} data-supreset="fives">{t('setup.su_fives')}</Button>
+          <Button size="sm" onClick={() => preset('none')} data-supreset="none">{t('setup.su_none')}</Button></span>
+        {!d.scale ? <p class="mute">{t('setup.su_none_say')}</p> : max > 40 ? <p class="mute">{t('setup.su_too_many')}</p>
           : <><div class="su-grid">{[...Array(max + 1).keys()].reverse().map(k => <label><span>{k}</span>=<input class="input" type="number" step="0.5" value={d.scale[k] == null ? '' : String(d.scale[k])} onInput={e => scaleAt(k, e.currentTarget.value)} data-susk={k} /></label>)}</div>
-            <p class="mute">{t('mark.su_blank_rows')}</p></>}
+            <p class="mute">{t('setup.su_blank_rows')}</p></>}
       </div>
 
       <div class="su-page" data-supage>
-        <b>{t('mark.su_page')}</b>
-        <p class="mute">{t('mark.su_page_say')}</p>
-        <span class="su-btns"><Button size="sm" icon="upload" disabled={busy} onClick={() => { file.current.value = ''; file.current.click(); }} data-suup>{rp ? t('mark.su_replace') : t('mark.su_bring')}</Button>
-          {rp && <><b data-raw>{rp.name || t('mark.su_page_name')}</b>
-            <Segmented size="sm" label={t('mark.su_where')} value={d.rubricPos || 'end'} onChange={v => { d.rubricPos = v; re(); }} options={[{ value: 'end', label: t('mark.su_after') }, { value: 'start', label: t('mark.su_before') }]} />
-            <Button size="sm" variant="quiet" onClick={() => { setPage(null); setFound(null); }} data-surprm>{t('mark.su_remove')}</Button></>}</span>
-        {found && <p class="su-found"><span>{t('mark.su_found')}</span> <Button size="sm" onClick={useRows} data-suuse>{t('mark.su_use_rows')}</Button></p>}
+        <b>{t('setup.su_page')}</b>
+        <p class="mute">{t('setup.su_page_say')}</p>
+        <span class="su-btns"><Button size="sm" icon="upload" disabled={busy} onClick={() => { file.current.value = ''; file.current.click(); }} data-suup>{rp ? t('setup.su_replace') : t('setup.su_bring')}</Button>
+          {rp && <><b data-raw>{rp.name || t('setup.su_page_name')}</b>
+            <Segmented size="sm" label={t('setup.su_where')} value={d.rubricPos || 'end'} onChange={v => { d.rubricPos = v; re(); }} options={[{ value: 'end', label: t('setup.su_after') }, { value: 'start', label: t('setup.su_before') }]} />
+            <Button size="sm" variant="quiet" onClick={() => { setPage(null); setFound(null); }} data-surprm>{t('setup.su_remove')}</Button></>}</span>
+        {found && <p class="su-found"><span>{t('setup.su_found')}</span> <Button size="sm" onClick={useRows} data-suuse>{t('setup.su_use_rows')}</Button></p>}
         <input ref={file} type="file" hidden accept=".docx,.docm,.pdf,.png,.jpg,.jpeg,.heic,.heif,.gif,.webp" onChange={e => bringIn(e.currentTarget.files[0])} data-sufile />
       </div>
 
       {!!say.length && <div class="su-say" role="status" data-susay>{say.map(x => <p>{x}</p>)}</div>}
-      <p class="mute">{b && b.assignment ? t('mark.su_kept_for', { name: b.assignment.name }) : t('mark.su_kept')}</p>
+      <p class="mute">{b && b.assignment ? t('setup.su_kept_for', { name: b.assignment.name }) : t('setup.su_kept')}</p>
     </div>
   </Dialog>;
 }

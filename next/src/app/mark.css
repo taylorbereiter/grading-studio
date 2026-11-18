@@ -556,3 +556,12 @@ dialog.dlg.mk-split[open]{display:flex}
 .mk-su .su-grade p,.mk-su .su-page p{margin:0;font-size:var(--t2)}
 .mk-su .su-say{background:var(--acc-soft);border-radius:var(--r2);padding:8px 12px;font-size:var(--t2)}
 .mk-su .su-say p{margin:4px 0}
+/* the ⋯ under the score: leave out, extra credit, a percent, retakes */
+.mk-stat{flex-wrap:wrap}
+.mk-more{display:contents}
+.mk-more .mk-note{flex-basis:100%;margin:6px 0 0;font-size:var(--t2);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mk-more .mk-xc input{width:80px;margin-left:6px}
+.mk-more .mk-xc small{flex-basis:100%;color:var(--mute)}
+.mk-tries{flex-basis:100%;margin-top:8px;padding:8px 10px;border-radius:var(--r2);box-shadow:0 0 0 1px var(--line);font-size:var(--t2);display:flex;flex-direction:column;gap:4px}
+.mk-tries .hd,.mk-tries .row,.mk-tries .count{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mk-tries .cm{color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}

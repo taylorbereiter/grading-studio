@@ -273,6 +273,13 @@ export const tnRngSet = r => { tnRng = r; };
     // tagged with, and rows read out of a rubric she brings in (Word or PDF); the dialog and its one undo step are the new app's
     'tidyLevels', 'levelIn', 'goalList', 'goalById', 'goalName', 'goalsTidy', 'ruFromWord', 'ruFromPdf', 'rubricRowsInto',
   ], '', [], ['gcore', 'gdraw', 'gword']],
+  ['gways', [
+    // the teacher's usual way of grading (src/app/library.js GRADE_WAYS, meGrade): what a new assignment starts with, read from the
+    // library the settings screen has in hand (useLib), not the marking screen's
+    'GRADE_WAYS', 'gradeWay', 'meGrade', 'ME_OLD',
+  ], `let lib = { me: null };
+export const useLib = l => { lib = l || { me: null }; };
+`, ['lib'], ['gcore']],
 ];
 function writeGrading() {
   const { lift } = require('./tools/lift.js');
@@ -299,7 +306,7 @@ function writeGrading() {
     const { depthOf } = require('./tools/lift.js');
     for (const ln of out.split('\n')) if (/^(?:const|let|var) /.test(ln)) for (const x of ln.matchAll(/,\s*([A-Za-z_$][\w$]*)\s*=(?!=|>)/g)) if (depthOf(ln.slice(0, x.index)) === 0 && !own.includes(x[1])) own.push(x[1]);
     // a name right after a dot is a property, except after a spread (...vpDraw(…))
-    const used = may.filter(n => new RegExp('(?<![\\w$])(?<![^.]\\.)' + n.replace(/\$/g, '\\$') + '(?![\\w$])').test(out));
+    const used = may.filter(n => !given.includes(n) && new RegExp('(?<![\\w$])(?<![^.]\\.)' + n.replace(/\$/g, '\\$') + '(?![\\w$])').test(out));
     const imports = {};
     for (const n of used) { const from = file === 'gcore' ? null : (made[n] || 'gcore'); if (from && from !== file) { (imports[from] ||= []).push(n); (needs[from] ||= new Set()).add(n); } }
     if (file !== 'gcore') out = setters(out, names);

@@ -127,3 +127,81 @@ test('rubric setup: rows renamed, taken out (the scores after it move up), added
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('under the score: leave out of the average, extra credit, a retake that keeps the first try, which try counts, the retake taken off with Undo; the current app opens the same', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  const z = path.join(dir, 'Speech2.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+  const g = () => p.evaluate(() => JSON.parse(JSON.stringify(window.__mark.state().batch.students[0].grade)));
+  const menu = async re => {
+    await p.waitForSelector('[data-smmenu]');
+    await p.click('[data-smmenu]');
+    await p.waitForFunction(re => [...document.querySelectorAll('.pop [role="menuitem"]')].some(e => new RegExp(re).test(e.textContent)), {}, re);
+    await p.evaluate(re => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => new RegExp(re).test(e.textContent)).click(), re);
+  };
+  for (const [r, v] of [[0, 3], [1, 2], [2, 4]]) { await p.click(`.mk-crit[data-row="${r}"] [data-v="${v}"]`); await p.waitForFunction((r, v) => window.__mark.state().batch.students[0].grade.rubric[r] === v, {}, r, v); }
+
+  // Leave out of the average, then count it again with Undo
+  await menu('^Leave out of the average');
+  await p.waitForFunction(() => window.__mark.state().batch.students[0].grade.outAvg === true);
+  await p.waitForSelector('[data-smout]');
+  await p.click('[data-undo]');
+  await p.waitForFunction(() => !window.__mark.state().batch.students[0].grade.outAvg);
+
+  // Extra credit: 2 points
+  await menu('^Extra credit');
+  await p.waitForSelector('[data-smxc]');
+  await p.type('[data-smxc]', '2'); await p.keyboard.press('Enter');
+  await p.waitForFunction(() => window.__mark.state().batch.students[0].grade.xc === 2);
+  const first = await g();
+
+  // a retake: the first try kept, the score starts again; the retake scored lower; Highest counts, then Latest
+  await menu('^Start a retake');
+  await p.waitForFunction(() => (window.__mark.state().batch.students[0].grade.tries || []).length === 1);
+  const t1 = (await g()).tries[0];
+  assert.deepEqual([t1.rubric, t1.xc, t1.total, t1.pct], [first.rubric, 2, 11, await p.evaluate(() => window.__mark.state().batch.students[0].grade.tries[0].pct)]);
+  assert.deepEqual((await g()).rubric, []);
+  for (const [r, v] of [[0, 2], [1, 2], [2, 2]]) { await p.click(`.mk-crit[data-row="${r}"] [data-v="${v}"]`); await p.waitForFunction((r, v) => window.__mark.state().batch.students[0].grade.rubric[r] === v, {}, r, v); }
+  await p.waitForSelector('[data-smtries]');
+  const counts = () => p.evaluate(() => window.__mark.gradeOf(window.__mark.state().batch.students[0]).pct);
+  const high = await counts();
+  assert.equal(high, t1.pct, 'the highest try counts');
+  await p.click('[data-smrule]');
+  await p.waitForFunction(() => [...document.querySelectorAll('.pop [role="menuitem"]')].some(e => /^Latest/.test(e.textContent)));
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => /^Latest/.test(e.textContent)).click());
+  await p.waitForFunction(() => window.__mark.state().lib.book && window.__mark.state().lib.book.retake === 'last');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).book.retake === 'last');
+  assert.ok(await counts() < high, 'the latest try counts now');
+  const withRetake = await g();
+
+  // take the retake off: at once, and Undo brings it back
+  await p.click('[data-smoff]');
+  await p.waitForFunction(() => !window.__mark.state().batch.students[0].grade.tries);
+  assert.deepEqual((await g()).rubric, first.rubric);
+  await p.click('[data-undo]');
+  await p.waitForFunction(() => (window.__mark.state().batch.students[0].grade.tries || []).length === 1);
+  const back = await g();
+  assert.deepEqual([back.rubric, back.tries], [withRetake.rubric, withRetake.tries]);
+
+  const pctNew = await counts();
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), id);
+  await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  const theirs = await m.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().batch.students[0].grade)));
+  assert.deepEqual([theirs.rubric, theirs.tries, theirs.xc], [back.rubric, back.tries, back.xc]);
+  assert.equal(await m.evaluate(() => window.__gs.gradeOf(window.__gs.state().batch.students[0]).pct), pctNew, 'the same try counts in the current app');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
