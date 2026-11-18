@@ -30,7 +30,7 @@ export function useModal(open, onClose, { initial } = {}) {
       d.close();
       if (back.current && back.current.isConnected) back.current.focus();
     }
-  }, [open]);
+  });   // every render, not only when open changes: a dialog element made again by a redraw behind it is shown again
   useEffect(() => () => { const d = ref.current; if (d && d.open) { d.close(); if (back.current && back.current.isConnected) back.current.focus(); } }, []);
   const props = {
     ref,

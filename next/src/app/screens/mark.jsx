@@ -80,6 +80,13 @@ function WordPaper({ st, f, FU }) {
   return <><div ref={box} class="wordwrap"><div class="loading" aria-busy="true" /></div>{pdf && FU && <FU.PdfAsk st={st} f={f} onClose={() => setPdf(false)} />}</>;
 }
 
+// A recording or a video link (mark/media.jsx, a part of its own); its name until the part is there.
+let MEDIA = null;
+function MediaFile({ st, f }) {
+  const [, again] = useState(0);
+  useEffect(() => { if (!MEDIA) PARTS.media().then(m => { MEDIA = m; again(1); }, e => console.error(e)); }, []);
+  return MEDIA ? <MEDIA.MediaCard st={st} f={f} /> : <div class="fcard"><Icon name="play" /><span data-raw>{f.name}</span></div>;
+}
 // A text file or any other file (mark/files.jsx, a part of its own); its name until the part is there.
 let FILES = null;
 function OtherFile({ f }) {
@@ -89,9 +96,11 @@ function OtherFile({ f }) {
 }
 
 function Paper({ batch, cur, zoom, ver, FU }) {
-  const st = batch.students[cur], [got, setGot] = useState(null), area = useRef(null), [size, setSize] = useState([0, 0]);
+  const st = batch.students[cur], [got, setGot] = useState(null), area = useRef(null), [size, setSize] = useState([0, 0]), was = useRef(null);
   useEffect(() => {
-    let live = true; setGot(null);
+    // the same student opened again after a change keeps showing until the pages are ready, so the paper doesn't flash and a dialog
+    // open under it (Add, A video…) isn't lost
+    let live = true; if (!was.current || was.current[0] !== batch || was.current[1] !== cur) setGot(null); was.current = [batch, cur];
     use({ cur });
     seam.ready = false;
     if (st) openPages(st, () => live, FU && FU.impAuto).then(r => { if (live) { setGot(r); seam.ready = true; } });
@@ -102,14 +111,18 @@ function Paper({ batch, cur, zoom, ver, FU }) {
     const measure = () => { const cs = getComputedStyle(el); setSize([el.clientWidth - (parseFloat(cs.paddingLeft) || 18) - (parseFloat(cs.paddingRight) || 18), el.clientHeight]); };
     measure(); const ro = new ResizeObserver(measure); ro.observe(el); return () => ro.disconnect();
   }, []);
+  // until the effect above has run for a newly opened student, what was got is the last student's
+  const fresh = !!was.current && was.current[0] === batch && was.current[1] === cur, gotNow = fresh ? got : null;
+  if (!fresh) seam.ready = false;
   return <div class="mk-paper" ref={area} tabindex="-1">
-    {!st ? null : !st.files.length ? <><EmptyState icon="inbox" title={t('mark.nothing_in')} />{FU && <FU.FilesFoot key={st.key + ver} st={st} name={shownName(st, cur)} />}</>
-      : !got ? <div class="loading" aria-busy="true" />
-      : <>{got.cards.map(c => c.kind === 'file' ? <div class="fwrap">{FU && <FU.CarryTag st={st} f={c.f} />}{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
+    {!st ? null : !st.files.length ? <><EmptyState icon="inbox" title={t('mark.nothing_in')} />{FU && <FU.FilesFoot key={st.key} st={st} name={shownName(st, cur)} />}</>
+      : !gotNow ? <div class="loading" aria-busy="true" />
+      : <>{st.files.filter(f => f.kind === 'link').concat(st.files.filter(f => f.kind === 'media')).map(f => <div class="fwrap"><header class="fhead"><span data-raw>{f.kind === 'link' ? f.name.replace(/\.(url|webloc)$/i, '').replace(/ \(added \d+\)$/, '') : f.name}</span><span class="mute">{t(f.kind === 'media' ? 'mark.v_recording' : 'mark.v_link_kind')}</span>{FU && <FU.AddTag st={st} f={f} />}{FU && <FU.CarryTag st={st} f={f} />}<span class="grow" />{FU && <FU.FileMenu st={st} path={f.path} name={f.name} />}</header><MediaFile key={f.path} st={st} f={f} /></div>)}
+        {gotNow.cards.map(c => c.kind === 'file' ? <div class="fwrap">{FU && <FU.CarryTag st={st} f={c.f} />}{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
         : <section class="doc">
           <header class="fhead"><span data-raw>{c.d.name}</span>{FU && <FU.AddTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}{!c.on && <span class="pill">{t(c.auto ? 'mark.left_out_auto' : 'mark.left_out')}</span>}{FU && <FU.CarryTag st={st} f={st.files.find(f => f.path === (c.d.file || c.d.pages[0][0])) || {}} />}<span class="grow" />{FU && !c.on && <FU.BackIn st={st} d={c.d} />}{FU && <FU.FileMenu st={st} path={c.d.file || c.d.pages[0][0]} name={c.d.name} d={c.d} on={c.on} auto={c.auto} />}</header>
           {c.pages.map(pg => <Page key={pg.file.path + '|' + pg.idx} pg={pg} room={size[0]} tall={size[1]} zoom={zoom} FU={FU} />)}
-        </section>)}{FU && <FU.FilesFoot key={st.key + ver} st={st} name={shownName(st, cur)} />}</>}
+        </section>)}{FU && <FU.FilesFoot key={st.key} st={st} name={shownName(st, cur)} />}</>}
   </div>;
 }
 

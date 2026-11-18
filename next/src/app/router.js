@@ -61,6 +61,8 @@ export const PARTS = {
   fileui: () => import('./mark/fileui.jsx'),
   // splitting a scan onto names (mark/split.jsx), from the class page or into an open download
   split: () => import('./mark/split.jsx'),
+  // video and audio papers, their transcripts, and notes pages (mark/media.jsx)
+  media: () => import('./mark/media.jsx'),
 };
 export const CHUNKS = {
   home: () => import('./screens/home.jsx'),

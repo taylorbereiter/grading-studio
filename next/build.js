@@ -221,6 +221,13 @@ const GRADING = [
     // the strip above a scanned page (src/scans.js scanNote): Turn it, Straighten, Put back, Fix the lighting
     'scanTurn', 'scanStraighten', 'scanLight', 'scanLightBack', 'scanAsks',
   ], '', [], ['gcore', 'gdraw', 'gopen', 'greport'], ['num', 'inside']],
+  ['gmedia', [
+    // video and audio papers (src/video.js, src/app/media.js, src/app/readings.js): links and how they play, a kept video's id, a video
+    // turned for one filmed sideways, transcripts read from what she pastes or made in this browser by the speech engine, notes pages
+    'linkClean', 'linkOf', 'linkPlayer', 'linkTitle', 'linkHost', 'linkBytes', 'vidRef', 'drvRef', 'keptId', 'linkKey', 'vrotKey', 'vrotOf', 'frameTicks',
+    'MEDIA_RX', 'VIDEO_RX', 'MIME', 'extOf', 'fmtTime', 'trLines', 'trText', 'trParse', 'trMakeable', 'transcribe', 'asrStop', 'asrStandIn',
+    'notesPdf', 'npRows', 'npFileName', 'isNotes', 'notesFileOf', 'NP_TAIL', 'vidBytes', 'sameVideo',
+  ], '', [], ['gcore', 'gdraw']],
   ['gword', [
     // a Word paper on the marking screen (src/app/word.js, src/wordnotes.js): drawn from its own XML, typed in, cells shaded, boxes
     // ticked, comments named Teacher added and taken off, and the file written back; the screen around it is the new app's

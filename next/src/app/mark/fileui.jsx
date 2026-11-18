@@ -105,15 +105,19 @@ export function FilesFoot({ st, name }) {
     again(n => n + 1);
   });
   // Add: a late or forgotten paper, or work sent in a message (the current app's Add menu on the student's bar)
-  const [split, setSplit] = useState(null);
+  const [split, setSplit] = useState(null), [media, setMedia] = useState(null);
   const scan = () => pickFile(false, files => { if (files[0]) PARTS.split().then(S => setSplit({ S, file: files[0] }), e => console.error(e)); });
   const items = [{ label: t('mark.f_add'), icon: 'file', onSelect: add }, { label: t('mark.f_paste'), icon: 'paste', onSelect: () => setPaste(true) },
+    { label: t('mark.v_add_menu'), icon: 'play', onSelect: () => PARTS.media().then(S => setMedia({ S, k: 'video' }), e => console.error(e)) },
+    { label: t('mark.v_np_menu'), icon: 'note', onSelect: () => PARTS.media().then(S => setMedia({ S, k: 'notes' }), e => console.error(e)) },
     { label: t('mark.s_into'), icon: 'image', onSelect: scan }];
   return <div class="mk-ffoot">
     <Menu label={t('mark.f_add_for', { name })} trigger={b => <Button {...b} size="sm" icon="plus" data-addmenu>{t('mark.f_add_menu')}</Button>} items={items} />
     {(st.files.some(viewable) || fileSeq(st).length > 1) && <Button size="sm" icon="grip" onClick={() => setArr(true)} title={t('mark.a_open_tip')} data-arrange>{t('mark.a_open')}</Button>}
     {paste && <PasteText st={st} name={name} onClose={() => { setPaste(false); again(n => n + 1); }} />}
     {arr && <Arrange st={st} onClose={() => { setArr(false); again(n => n + 1); }} />}
+    {media && media.k === 'video' && <media.S.VideoAdd st={st} name={name} onClose={() => { setMedia(null); again(n => n + 1); }} />}
+    {media && media.k === 'notes' && <media.S.NotesAdd st={st} name={name} onClose={() => { setMedia(null); again(n => n + 1); }} />}
     {split && <split.S.Split file={split.file} into lib={state().lib} onClose={() => { setSplit(null); again(n => n + 1); }} />}
     {(gone.length > 0 || op.length > 0) && <details class="mk-gone" open={op.length > 0}><summary>{t(op.length ? (gone.length ? 'mark.a_gone_both' : 'mark.a_gone_pages') : 'mark.f_gone', { n: gone.length + op.length })}</summary>
       <ul>{op.map(([path, p]) => { const f = st.files.find(x => x.path === path), n = ((f.marks || {})[p] || []).length;
