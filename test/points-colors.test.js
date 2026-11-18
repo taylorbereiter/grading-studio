@@ -81,7 +81,7 @@ test('Settings, Marking, Mark colors sets the same three colors, and Quick mark 
   await page.waitForSelector('#setInks:not([hidden]) [data-spts="credit"]');
   await page.click('[data-spts="credit"]');
   await page.waitForSelector('[data-spts="credit"][aria-pressed="true"]');
-  assert.match(await page.$eval('#setInks', e => e.textContent), /Totals and score stamps stay in the ✗ color/);
+  assert.match(await page.$eval('#setInks', e => e.textContent), /Totals and score stamps stay red/);
   await page.click('[data-schk="purple"]');
   assert.deepEqual(await page.evaluate(() => [localStorage.getItem('gs.ptsInk'), localStorage.getItem('gs.checkInk')]), ['"credit"', '"purple"']);
   await quickMark(page);
