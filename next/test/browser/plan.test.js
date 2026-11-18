@@ -142,6 +142,35 @@ test('Present: the class tools on their keys, a slide by number, and Esc closing
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
+test('Present: W puts the class screen in its own window, kept in step, with the keys working in either window', async () => {
+  const p = await fresh();
+  await open(p, 'lesson/L3/slides');
+  await p.keyboard.press('F5');
+  await p.waitForSelector('.present');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('.present'), { timeout: 5000 });
+  const num = () => p.$eval('.present .num', x => x.textContent);
+  const got = p.ctx.waitForTarget(x => x.type() === 'page' && x !== p.target(), { timeout: 10000 });
+  await p.keyboard.press('w');
+  const w = await (await got).page();
+  await w.waitForSelector('#fit .ls-slide');
+  await p.waitForSelector('.prpanel.pr-notes');
+  const shown = () => w.$eval('#fit', x => x.textContent.trim());
+  const first = await shown();
+  await p.keyboard.press('ArrowRight');
+  assert.equal(await num(), 'Slide 2 of 5');
+  await w.waitForFunction(was => document.getElementById('fit').textContent.trim() !== was, {}, first);
+  await w.keyboard.press('ArrowRight');
+  await p.waitForFunction(() => document.querySelector('.present .num').textContent === 'Slide 3 of 5');
+  await p.keyboard.press('b');
+  await w.waitForFunction(() => !document.querySelector('#fit .ls-slide'));
+  await p.keyboard.press('Escape');
+  await w.waitForSelector('#fit .ls-slide');
+  await p.keyboard.press('w');
+  await p.waitForFunction(() => !document.querySelector('[aria-label="Close the class screen window"]'));
+  assert.ok(w.isClosed(), 'W again closes it');
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
 test('every word on the planning screens comes through t() or is the teacher’s own text, and presses at rest are counted', async () => {
   const counts = {};
   for (const w of [1366, 390]) {
@@ -290,6 +319,13 @@ test('Settings > Timetable: a class renamed and recoloured, a meeting and a day 
   const rows = await dayOff.$$('.drow');
   const inputs = await rows[1].$$('input');
   await inputs[0].type('12252026'); await inputs[1].type('Winter break');
+  // A made-up school template: only the two layouts the slides go in
+  const fflate = require('fflate'), L = n => fflate.strToU8('<p:sldLayout><p:cSld name="' + n + '"></p:cSld></p:sldLayout>');
+  const tpl = path.join(require('os').tmpdir(), 'gs-plan-tpl-' + process.pid + '.pptx');
+  fs.writeFileSync(tpl, fflate.zipSync({ 'ppt/presentation.xml': fflate.strToU8('<p:presentation/>'), 'ppt/slideLayouts/slideLayout1.xml': L('Title Slide'), 'ppt/slideLayouts/slideLayout2.xml': L('Title and Content') }));
+  await (await p.$('main input[data-tpl]')).uploadFile(tpl);
+  await p.waitForFunction(() => /Your own/.test(document.querySelector('main .ttset [role=status]').textContent));
+  fs.unlinkSync(tpl);
   await p.click('main [data-focus="save-timetable"]');
   const readSetup = () => p.evaluate(() => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('setup'); q.onsuccess = () => { r.result.close(); res(q.result); }; }; }));
   let setup = null;
@@ -299,6 +335,7 @@ test('Settings > Timetable: a class renamed and recoloured, a meeting and a day 
   assert.equal(setup.classes[0].meets.length, 4);
   assert.deepEqual(setup.daysOff.map(x => x.label), ['Staff training day', 'Winter break']);
   assert.equal(setup.classes[0].id, 'A1', 'the class keeps its id, so its lessons stay its own');
+  assert.ok(setup.template.length > 100 && /^gs-plan-tpl-/.test(setup.tplName), 'the template is kept as base64 with its name');
   await p.goto(srv.url + 'planner.html');
   await p.waitForFunction(() => { const P = window.__planner; return P && P.L.setup && P.L.setup.classes[0].name === 'Grade 9 English A'; }, { timeout: 20000 });
   assert.deepEqual(p.errors, []); await p.ctx.close();
@@ -363,6 +400,187 @@ test('Library: an activity found and filtered, one of my own saved, an activity 
   assert.equal(await p.$eval('main #h-unit', x => x.textContent), 'Unit 2: Poetry', 'a unit opens on its class’s Course line');
   await open(p, 'library/rubrics');
   assert.deepEqual(await p.$$eval('main .libpanel .lrow b', b => b.map(x => x.textContent)), ['Story analysis', 'School percent scale']);
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('a lesson’s materials and links, its versions, and deleting it with undo, kept as the current Planner keeps them', async () => {
+  const p = await fresh();
+  await open(p, 'lesson/L3');
+  // A file from this computer
+  const f = path.join(require('os').tmpdir(), 'gs-plan-handout-' + process.pid + '.txt'); fs.writeFileSync(f, 'Sonnet handout');
+  await (await p.$('input[data-mats]')).uploadFile(f);
+  await p.waitForFunction(() => [...document.querySelectorAll('main .mlist .mopen span')].some(x => /gs-plan-handout/.test(x.textContent)), { timeout: 10000 });
+  fs.unlinkSync(f);
+  let l3 = await lessonInDb(p, 'L3');
+  for (let k = 0; k < 30 && !(l3.files && l3.files.length); k++) { await new Promise(r => setTimeout(r, 150)); l3 = await lessonInDb(p, 'L3'); }
+  assert.equal(l3.files.length, 1); assert.equal(l3.files[0].kind, 'other'); assert.ok(l3.files[0].size > 0);
+  const blob = id => p.evaluate(id => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('file:' + id); q.onsuccess = () => { r.result.close(); res(q.result ? q.result.size : 0); }; }; }), id);
+  assert.ok(await blob(l3.files[0].id) > 0, 'the bytes are in kv file:<id>');
+  // A link
+  await p.click('main [data-focus="add-link"]');
+  await p.waitForSelector('main [data-focus="link-url"]');
+  // The address goes in as the browser's own input event (keys typed here were lost on CI after the Library test), then Add.
+  await p.$eval('main [data-focus="link-url"]', el => { el.value = 'example.com/sonnets'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.click('main [data-focus="link-add"]');
+  await p.waitForFunction(() => [...document.querySelectorAll('main .mlist a')].some(a => a.href === 'https://example.com/sonnets'));
+  l3 = await lessonInDb(p, 'L3');
+  for (let k = 0; k < 30 && !(l3.links && l3.links.length); k++) { await new Promise(r => setTimeout(r, 150)); l3 = await lessonInDb(p, 'L3'); }
+  assert.equal(l3.links[0].url, 'https://example.com/sonnets'); assert.equal(l3.links[0].name, 'example.com');
+  // Taking the file off, then undo
+  const fid = l3.files[0].id;
+  await (await p.$$('main .mlist li'))[0].$('button[aria-label="Remove"]').then(b => b.click());
+  await p.waitForFunction(() => !document.querySelector('main .mlist .mopen span') || ![...document.querySelectorAll('main .mlist .mopen span')].some(x => /gs-plan-handout/.test(x.textContent)));
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast button')].some(b => b.textContent === 'Undo'));
+  await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => b.textContent === 'Undo').click());
+  await p.waitForFunction(() => [...document.querySelectorAll('main .mlist .mopen span')].some(x => /gs-plan-handout/.test(x.textContent)));
+  for (let k = 0; k < 30 && !(await blob(fid)); k++) await new Promise(r => setTimeout(r, 150));
+  assert.ok(await blob(fid) > 0, 'undo puts the bytes back under the same id');
+  // Versions: save one, change the title, go back
+  const menu = async label => { await p.click('main [data-focus="lesson-menu"]'); await p.waitForSelector('.pop [role=menuitem]'); await p.evaluate(t => [...document.querySelectorAll('.pop [role=menuitem]')].find(b => b.textContent.includes(t)).click(), label); };
+  await menu('Versions');
+  await p.waitForSelector('[data-focus="ver-now"]');
+  await p.click('[data-focus="ver-now"]');
+  await p.waitForSelector('.sheet .vers .lrow');
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('.sheet .vers'));
+  await open(p, 'lesson/L3/edit');
+  await p.$eval('main .ed-top input', el => { el.value = 'Sonnets, changed'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  for (let k = 0; k < 40 && (await lessonInDb(p, 'L3')).title !== 'Sonnets, changed'; k++) await new Promise(r => setTimeout(r, 150));
+  await open(p, 'lesson/L3');
+  assert.equal(await p.$eval('main h1.lt', x => x.textContent), 'Sonnets, changed');
+  await menu('Versions');
+  await p.waitForSelector('.sheet .vers .lrow button');
+  await p.click('.sheet .vers .lrow button');
+  await p.waitForFunction(() => document.querySelector('main h1.lt').textContent === 'Sonnets: the turn');
+  const vs = await p.evaluate(() => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('ver:L3'); q.onsuccess = () => { r.result.close(); res(q.result); }; }; }));
+  assert.equal(vs.length, 2); assert.equal(vs[0].label, 'Before going back to Saved by you'); assert.equal(vs[0].lesson.title, 'Sonnets, changed');
+  // A copy for another day: its own id, slides and materials, not taught
+  await menu('Copy to another class');
+  await p.waitForSelector('[data-focus="copy-make"]');
+  await p.click('[data-focus="copy-make"]');
+  await p.waitForFunction(() => /#\/lesson\//.test(location.hash) && !/L3$/.test(location.hash));
+  const cid = await p.evaluate(() => location.hash.split('/').pop());
+  const cp = await lessonInDb(p, cid);
+  assert.equal(cp.title, 'Sonnets: the turn'); assert.ok(!cp.taught && !cp.ready); assert.equal(cp.files.length, 1); assert.notEqual(cp.files[0].id, fid); assert.ok(await blob(cp.files[0].id) > 0);
+  await open(p, 'lesson/L3');
+  // Delete, then undo
+  await menu('Delete lesson');
+  await p.waitForFunction(() => /#\/calendar/.test(location.hash));
+  for (let k = 0; k < 30 && await lessonInDb(p, 'L3'); k++) await new Promise(r => setTimeout(r, 150));
+  assert.ok(!(await lessonInDb(p, 'L3')), 'deleted');
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast button')].some(b => b.textContent === 'Undo'));
+  await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => b.textContent === 'Undo').click());
+  await p.waitForFunction(() => /#\/lesson\/L3$/.test(location.hash));
+  const back = await lessonInDb(p, 'L3');
+  assert.equal(back.title, 'Sonnets: the turn'); assert.equal(back.files.length, 1); assert.equal(back.links.length, 1);
+  await p.goto(srv.url + 'planner.html');
+  await p.waitForFunction(() => { const P = window.__planner; return P && P.L && P.L.lessons && P.L.lessons.some(l => l.id === 'L3' && l.links && l.links.length === 1 && l.files && l.files.length === 1); }, { timeout: 20000 });
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('Course line: a unit renamed with its weeks pasted, a new unit made and then deleted, kept as the current Planner keeps units', async () => {
+  const p = await fresh();
+  await open(p, 'class/c1');
+  const units = () => p.evaluate(() => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get('units'); q.onsuccess = () => { r.result.close(); res(q.result); }; }; }));
+  const sheetReady = async sel => { await p.waitForSelector(sel); await p.waitForFunction(() => document.activeElement && document.activeElement.closest('.sheet')); await new Promise(r => setTimeout(r, 200)); };
+  await p.click('main [data-focus="edit-unit"]');
+  await sheetReady('[data-focus="unit-name"]');
+  await p.$eval('[data-focus="unit-name"]', el => { el.focus(); el.select(); });
+  await p.keyboard.type('Unit 2: Poems aloud');
+  await p.click('[data-focus="paste-weeks"]');
+  await p.waitForSelector('[data-paste]');
+  await p.$eval('[data-paste]', el => { el.focus(); el.select(); });
+  await p.keyboard.type('Week 1: Sound\nWeek 2: Images\nWeek 3: Voice\nWeek 4: Form');
+  await p.click('[data-focus="use-weeks"]');
+  await p.waitForFunction(() => document.querySelectorAll('.uweeks > li').length === 4);
+  await p.click('[data-focus="save-unit"]');
+  let us = null; for (let k = 0; k < 40; k++) { us = await units(); if (us.find(u => u.id === 'U2').title === 'Unit 2: Poems aloud') break; await new Promise(r => setTimeout(r, 150)); }
+  const u2 = us.find(u => u.id === 'U2');
+  assert.equal(u2.title, 'Unit 2: Poems aloud'); assert.deepEqual(u2.weeks.map(w => w.focus), ['Sound', 'Images', 'Voice', 'Form']); assert.equal(u2.start, '2026-10-12'); assert.equal(us.length, 3);
+  await p.waitForFunction(() => document.querySelector('main #h-unit').textContent === 'Unit 2: Poems aloud');
+  // A new unit, then deleted
+  await p.click('main [data-focus="new-unit"]');
+  await sheetReady('[data-focus="unit-name"]');
+  await p.$eval('[data-focus="unit-name"]', el => { el.focus(); el.select(); });
+  await p.keyboard.type('Unit 3: Drama');
+  await p.click('[data-focus="save-unit"]');
+  for (let k = 0; k < 40 && (await units()).length < 4; k++) await new Promise(r => setTimeout(r, 150));
+  us = await units(); const u3 = us.find(u => u.title === 'Unit 3: Drama');
+  assert.ok(u3, 'the new unit is saved'); assert.equal(u3.course, 'Grade 9'); assert.equal(u3.weeks.length, 6); assert.equal(new Date(u3.start + 'T12:00').getDay(), 1, 'starts on a Monday');
+  await p.waitForFunction(() => document.querySelector('main #h-unit').textContent === 'Unit 3: Drama');
+  await p.click('main [data-focus="edit-unit"]');
+  await sheetReady('[data-focus="delete-unit"]');
+  await p.click('[data-focus="delete-unit"]'); await p.click('[data-focus="delete-unit"]');
+  for (let k = 0; k < 40 && (await units()).length > 3; k++) await new Promise(r => setTimeout(r, 150));
+  assert.equal((await units()).length, 3);
+  await p.goto(srv.url + 'planner.html');
+  await p.waitForFunction(() => { const P = window.__planner; return P && P.L && P.L.units && P.L.units.some(u => u.id === 'U2' && u.title === 'Unit 2: Poems aloud' && u.weeks.length === 4); }, { timeout: 20000 });
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('a taught lesson says where the class got to last time and what was noted', async () => {
+  const p = await fresh();
+  await open(p, 'lesson/L1');
+  assert.equal(await p.$eval('main .last h2', x => x.textContent), 'Last time you taught it');
+  assert.match(await p.$eval('main .last p', x => x.textContent), /Grade 9 English · .* · got to the end/);
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('printing the week and a lesson’s plan: each day’s classes with their lessons, slides and materials', async () => {
+  const p = await fresh();
+  const catchPrint = () => p.evaluate(() => { window.__printed = ''; window.open = () => ({ document: { write: s => { window.__printed += s; }, close() {} }, focus() {}, print() {} }); });
+  await open(p, 'calendar/class');
+  await catchPrint();
+  await p.click('main [data-focus="print-week"]');
+  const week = await p.evaluate(() => window.__printed);
+  assert.match(week, /Reading a poem aloud/); assert.match(week, /Grade 9 English/); assert.match(week, /Parent evening/); assert.match(week, /Warm-up/);
+  await open(p, 'lesson/L2');
+  await catchPrint();
+  await p.click('main [data-focus="lesson-menu"]'); await p.waitForSelector('.pop [role=menuitem]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role=menuitem]')].find(b => b.textContent.includes('Print the plan')).click());
+  const plan = await p.evaluate(() => window.__printed);
+  assert.match(plan, /<h1>Reading a poem aloud<\/h1>/); assert.match(plan, /Two minutes, silent\./);
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('a lesson on no class or day shows beside the Course line and goes on the calendar from its page', async () => {
+  const p = await fresh();
+  await open(p, 'library');
+  await (await p.$$('main .acth'))[1].click();
+  await p.waitForSelector('main .act.open .actb .row button');
+  await (await p.$('main .act.open .actb .row button')).click();
+  await p.waitForSelector('[data-focus="act-new-lesson"]');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.closest('.sheet'));
+  await p.click('[data-focus="act-new-lesson"]');
+  await p.waitForFunction(() => /#\/lesson\/[^/]+\/edit$/.test(location.hash));
+  const id = await p.evaluate(() => location.hash.split('/')[2]);
+  for (let k = 0; k < 30 && !(await lessonInDb(p, id)); k++) await new Promise(r => setTimeout(r, 150));
+  assert.deepEqual((await lessonInDb(p, id)).slots, []);
+  await open(p, 'class/c1');
+  assert.ok((await p.$$eval('main .loose a', a => a.map(x => x.getAttribute('href')))).includes('#/lesson/' + id), 'listed as not on the calendar');
+  await open(p, 'lesson/' + id);
+  await p.click('main [data-focus="place-it"]');
+  let l = null; for (let k = 0; k < 30; k++) { l = await lessonInDb(p, id); if (l.slots.length) break; await new Promise(r => setTimeout(r, 150)); }
+  assert.deepEqual(l.slots, [{ classId: 'A1', date: '2026-10-27' }]);
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('slide editing undo: a deleted slide comes back with Ctrl+Z, and Ctrl+Y does it again', async () => {
+  const p = await fresh();
+  await open(p, 'lesson/L5/edit');
+  const count = async () => { for (let k = 0; k < 30; k++) { const l = await lessonInDb(p, 'L5'); if (l) return l.slides.length; } return 0; };
+  const before = await count();
+  await p.click('main button[aria-label="Slide actions"]'); await p.waitForSelector('.pop [role=menuitem]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role=menuitem]')].find(b => b.textContent.includes('Delete')).click());
+  for (let k = 0; k < 30 && await count() === before; k++) await new Promise(r => setTimeout(r, 150));
+  assert.equal(await count(), before - 1);
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  for (let k = 0; k < 30 && await count() !== before; k++) await new Promise(r => setTimeout(r, 150));
+  assert.equal(await count(), before, 'the slide is back');
+  await p.keyboard.down('Control'); await p.keyboard.press('y'); await p.keyboard.up('Control');
+  for (let k = 0; k < 30 && await count() !== before - 1; k++) await new Promise(r => setTimeout(r, 150));
+  assert.equal(await count(), before - 1, 'redo deletes it again');
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 

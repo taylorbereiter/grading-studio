@@ -22,6 +22,23 @@ const nid = () => 'c' + Math.random().toString(36).slice(2, 8);
 const dayName = d => date(new Date(2024, 0, 7 + d), { weekday: 'long' });
 const isDate = s => /^\d{4}-\d\d-\d\d$/.test(s || '');
 
+// The teacher's slide template (src/planner/lessons.js readTemplate): a .pptx or .potx with a Title Slide and a Title and Content
+// layout, kept in the setup as base64 for Download slides.
+async function readTemplate(file) {
+  if (!file) return null;
+  const say = m => { toast(m); return null; };
+  if (!/\.(pptx|potx)$/i.test(file.name)) return say(t('plan.tpl_not_pptx'));
+  if (file.size > 40 * 1024 * 1024) return say(t('plan.tpl_too_big'));
+  const u8 = new Uint8Array(await file.arrayBuffer());
+  const [{ unzipSync }, { tplLayouts }] = await Promise.all([import('fflate'), import('../../engines/planner.js')]);
+  let z; try { z = unzipSync(u8); } catch { return say(t('plan.tpl_cant_open')); }
+  if (!z['ppt/presentation.xml']) return say(t('plan.tpl_cant_open'));
+  const lay = tplLayouts(z);
+  if (!lay.title || !lay.content) return say(t('plan.tpl_needs_layouts'));
+  let b = ''; for (let i = 0; i < u8.length; i += 0x8000) b += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return { b64: btoa(b), name: file.name.replace(/\.(pptx|potx)$/i, '').slice(0, 120) };
+}
+
 function Dates({ list, onChange, label, add }) {
   return <div class="dlist">{list.map((x, i) => <div class="drow">
     <TextInput label={t('plan.date')} type="date" value={x.date} onInput={v => onChange(list.map((y, j) => j === i ? { ...y, date: v } : y))} />
@@ -80,6 +97,11 @@ export function TimetableSettings() {
       <TextInput label={t('plan.sem_end')} type="date" value={d.semEnd || ''} onInput={v => put({ ...d, semEnd: v })} /></div></Card>
     <Card title={t('plan.days_off')}><Dates list={d.daysOff || []} label={t('plan.what_day')} add={t('plan.add_day_off')} onChange={v => put({ ...d, daysOff: v })} /></Card>
     <Card title={t('plan.events')}><Dates list={d.events || []} label={t('plan.what_event')} add={t('plan.add_event')} onChange={v => put({ ...d, events: v })} /></Card>
+    <Card title={t('plan.slide_template')}>
+      <p class="mute" role="status">{d.template ? <>{t('plan.tpl_yours')} <b data-raw>{d.tplName || ''}</b></> : t('plan.tpl_plain')}</p>
+      <div class="row"><label class="btn sm"><input type="file" class="vh" accept=".pptx,.potx" onChange={async e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; const x = await readTemplate(f); if (x) put({ ...d, template: x.b64, tplName: x.name }); }} data-tpl />{d.template ? t('plan.tpl_pick_another') : t('plan.tpl_pick')}</label>
+        {d.template && <Button size="sm" variant="quiet" onClick={() => { const n = { ...d, template: '' }; delete n.tplName; put(n); }}>{t('plan.tpl_use_plain')}</Button>}</div>
+    </Card>
     <Card title={t('plan.slide_rules')}>
       <Switch label={t('plan.rule_agenda')} checked={deck.agenda !== false} onChange={v => setDeck({ agenda: v ? null : false })} />
       <Switch label={t('plan.rule_any_size')} checked={deck.sizes === 'any'} onChange={v => setDeck({ sizes: v ? 'any' : null })} />

@@ -948,6 +948,18 @@ function taughtText(l) {
 // src/planner/units.js
 const MAX_FILE = 40 * 1024 * 1024;
 // src/planner/units.js
+function normUnit(x) {
+  x = x && typeof x === 'object' ? x : {};
+  const weeks = (Array.isArray(x.weeks) ? x.weeks : []).map(w => ({ focus: String((w && w.focus) || ''), notes: String((w && w.notes) || ''), standards: String((w && w.standards) || '') }));
+  const files = (Array.isArray(x.files) ? x.files : []).filter(f => f && typeof f.name === 'string').map(f => ({ id: typeof f.id === 'string' ? f.id : '', name: f.name, kind: ['atlas', 'summative', 'other', 'doc'].includes(f.kind) ? f.kind : 'other', type: String(f.type || ''), size: +f.size || 0, added: +f.added || 0 }));
+  const start = /^\d{4}-\d\d-\d\d$/.test(x.start) ? ymd(mondayOf(parseYmd(x.start))) : ymd(mondayOf(new Date()));
+  const u = { id: typeof x.id === 'string' && x.id ? x.id : lid(), course: String(x.course || ''), title: String(x.title || 'New unit'), start, weeks: weeks.length ? weeks : [{ focus: '', notes: '', standards: '' }],
+    atlas: /^https?:\/\//.test(x.atlas) ? String(x.atlas) : '', color: /^#[0-9a-f]{6}$/i.test(x.color) ? x.color : '', files, updated: +x.updated || Date.now() };
+  if (typeof x.notebook === 'string' && x.notebook.trim()) u.notebook = nbClean(x.notebook);
+  if (x._file) u._file = x._file; if (x._mod) u._mod = x._mod;
+  return u;
+}
+// src/planner/units.js
 function courses() {
   const out = [];
   for (const c of (L.setup && L.setup.classes) || []) {
@@ -969,4 +981,12 @@ function unitAt(course, monday) {
   }
   return null;
 }
-export { L, plWeekOffs, mondayOf, meetingsOn, partnerSlots, unitAt, unitEnd, lid, LAYOUTS, deckAgenda, deckSizes, deckAdd, deckSizeSay, normSlide, normLesson, deckStart, slideHtml, slideFit, tplPreview, lessonForFile, fileBase, b64ToU8, buildPptx, mimeOf, lessonText, lessonZipAsk, lessonContext, lessonBack, ZIP_SKIP, baseName, MAX_FILE, snap, MAX_VERSIONS };
+// src/planner/units.js
+function uniqueName(u, name) {
+  name = String(name || 'file').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'file';
+  if (!u.files.some(f => f.name === name)) return name;
+  const m = /^(.*?)(\.[^.]*)?$/.exec(name); let i = 2;
+  while (u.files.some(f => f.name === m[1] + ' (' + i + ')' + (m[2] || ''))) i++;
+  return m[1] + ' (' + i + ')' + (m[2] || '');
+}
+export { L, plWeekOffs, mondayOf, meetingsOn, partnerSlots, unitAt, unitEnd, lid, LAYOUTS, deckAgenda, deckSizes, deckAdd, deckSizeSay, normSlide, normLesson, deckStart, slideHtml, slideFit, tplPreview, lessonForFile, fileBase, b64ToU8, buildPptx, mimeOf, lessonText, lessonZipAsk, lessonContext, lessonBack, ZIP_SKIP, baseName, MAX_FILE, snap, MAX_VERSIONS, uniqueName, normLinks, lkUrl, lkHost, normUnit, tplLayouts };

@@ -12,6 +12,8 @@
 //   deleteLesson(lesson)      a lesson removed (src/planner/lessons.js lDelete), and its file in the Planner folder
 //   saveVersion(lesson, label) the lesson as it is, kept under its Versions (kv ver:<id>; src/planner/review.js saveVersion)
 //   saveLessonFile(blob)      a file kept with a lesson, as its Materials (kv file:<id>; src/planner/finished.js lessonZip); returns the id
+//   dropLessonFile(id)        a material's bytes, when it is taken off the lesson
+//   saveVersions(id, list)    a lesson's versions as a whole (kv ver:<id>), when one is put back
 // A lesson written while a Planner folder is linked also goes to its file there (planning/folder.js), as the current Planner does.
 import { lessons, kv, school, manageBacLinks, taughtIn, planTime, newYear, words, look, theme, language, mailApp } from './index.js';
 import { mayWrite } from '../shared/lock.js';
@@ -53,6 +55,16 @@ export async function saveLessonFile(blob, id) {
   check('gs-lessons/kv/file');
   await kv.put(blob, 'file:' + id);
   return id;
+}
+// A material taken off a lesson: its bytes go too (src/planner/materials.js matClick rm). The screen keeps the Blob for undo.
+export async function dropLessonFile(id) {
+  check('gs-lessons/kv/file');
+  await kv.del('file:' + id);
+}
+// Versions as the Planner keeps them: newest first, at most max (src/planner/review.js saveVersion, verRestore).
+export async function saveVersions(id, list) {
+  check('gs-lessons/kv/ver');
+  await kv.put(list, 'ver:' + id);
 }
 const KV = ['setup', 'units', 'bank', 'activities', 'words', 'deflook'];
 export async function saveKv(name, value) {

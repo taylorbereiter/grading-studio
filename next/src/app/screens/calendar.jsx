@@ -21,6 +21,7 @@ const keep = (k, v) => { try { if (v === undefined) return JSON.parse(sessionSto
 
 export { saveFailed } from '../plan/save.js';
 import { saveFailed } from '../plan/save.js';
+import { printWeek } from '../plan/print.js';
 
 function State({ s }) {
   return <span class={'st st-' + s}>{STATE_ICON[s] && <Icon name={STATE_ICON[s]} size="xs" />}{t(STATE_LINE[s])}</span>;
@@ -209,6 +210,7 @@ export default function Calendar({ route }) {
     {view === 'time' && <ByTime {...props} />}
     {view === 'month' && <Month {...props} anchor={anchor} weekends={weekends} setView={setView} setAnchor={setAnchor} />}
     {view !== 'month' && <div class="legend"><State s="ready" /><State s="draft" /><State s="none" /><span class="due plain"><Icon name="flag" size="xs" />{t('plan.due_legend')}</span>
-      <span class="grow" /><span class="mute">{thisWeek || counted.length ? t('plan.n_of_ready', { n: done, of: counted.length }) : ''}</span></div>}
+      <span class="grow" /><span class="mute">{thisWeek || counted.length ? t('plan.n_of_ready', { n: done, of: counted.length }) : ''}</span>
+      <Button size="sm" variant="quiet" icon="file" onClick={() => printWeek(p, mondayOf(p, anchor))} data-focus="print-week">{t('plan.print_week')}</Button></div>}
   </div>;
 }
