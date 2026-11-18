@@ -805,6 +805,7 @@ test('Report comments: each draft is the current app\'s draft, edited and marked
   // short comments
   await p.evaluate(() => [...document.querySelectorAll('.rptopts [role="radio"]')].find(b => b.dataset.v === 'short').click());
   await p.waitForFunction(() => ((JSON.parse(localStorage.getItem('gs.lib')).book || {}).rep || {}).len === 'short');
+  await p.waitForFunction(v => document.querySelector('[data-rp-text]').value !== v, {}, was[1]);   // the shown draft follows the length
   const short = await p.$eval('[data-rp-text]', e => e.value);
   // the current app reads all of it back
   const old2 = await page(ctx, errors);
@@ -879,10 +880,12 @@ test('A student\'s details and Settings > Classes: ID and email edited and opene
   await p.waitForSelector('[data-det-mail]');
   await p.evaluate(() => { window.__mails = []; window.__gsMailTest = (h, u) => window.__mails.push([h, u]); });
   await p.click('[data-det-mail]');
+  await p.waitForFunction(() => window.__mails.length > 0);
   const [href, url] = await p.evaluate(() => window.__mails[0]);
   assert.equal(href, 'mailto:pat.madeup@example.org');
   assert.match(url, /^https:\/\/outlook\.office\.com\/mail\/deeplink\/compose\?to=pat\.madeup%40example\.org$/);
   const n = (await libOf(p)).classes[0].names[1];
+  await p.waitForFunction(n => { const i = (JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}; return i.id === 'S-1042' && i.email === 'pat.madeup@example.org'; }, {}, n);
   const old = await page(ctx, errors);
   await old.goto(srv.url); await appReady(old);
   const main = await old.evaluate(n => { const l = window.__gs.state().lib, i = l.classes[0].info[n]; return { id: i.id, email: i.email, att: l.me.att, mail: JSON.parse(localStorage.getItem('gs.mailApp')) }; }, n);
