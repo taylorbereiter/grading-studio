@@ -514,6 +514,28 @@ test('printing the week and a lesson’s plan: each day’s classes with their l
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
+test('a lesson on no class or day shows beside the Course line and goes on the calendar from its page', async () => {
+  const p = await fresh();
+  await open(p, 'library');
+  await (await p.$$('main .acth'))[1].click();
+  await p.waitForSelector('main .act.open .actb .row button');
+  await (await p.$('main .act.open .actb .row button')).click();
+  await p.waitForSelector('[data-focus="act-new-lesson"]');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.closest('.sheet'));
+  await p.click('[data-focus="act-new-lesson"]');
+  await p.waitForFunction(() => /#\/lesson\/[^/]+\/edit$/.test(location.hash));
+  const id = await p.evaluate(() => location.hash.split('/')[2]);
+  for (let k = 0; k < 30 && !(await lessonInDb(p, id)); k++) await new Promise(r => setTimeout(r, 150));
+  assert.deepEqual((await lessonInDb(p, id)).slots, []);
+  await open(p, 'class/c1');
+  assert.ok((await p.$$eval('main .loose a', a => a.map(x => x.getAttribute('href')))).includes('#/lesson/' + id), 'listed as not on the calendar');
+  await open(p, 'lesson/' + id);
+  await p.click('main [data-focus="place-it"]');
+  let l = null; for (let k = 0; k < 30; k++) { l = await lessonInDb(p, id); if (l.slots.length) break; await new Promise(r => setTimeout(r, 150)); }
+  assert.deepEqual(l.slots, [{ classId: 'A1', date: '2026-10-27' }]);
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
 test('on a phone: the lesson reads, and an after-class note waits for the computer without the lesson being written', async () => {
   const p = await fresh(390);
   await open(p, 'lesson/L2');

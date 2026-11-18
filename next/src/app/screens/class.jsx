@@ -46,6 +46,8 @@ function CourseLine({ p, c, lib }) {
   const courses = [...new Set((p.setup.classes || []).map(x => x.course || x.name).filter(Boolean))];
   const newUnit = () => setEditing(E.normUnit({ course, start: plus(units.length ? E.unitEnd(units[units.length - 1]) : mon, 7), title: t('plan.new_unit'), weeks: Array.from({ length: 6 }, () => ({})) }));
   const partners = (p.setup.classes || []).filter(x => x.id !== c.id && (x.course || x.name) === course && x.course);
+  // Lessons kept without a class or day (src/planner Not scheduled): newest first.
+  const loose = (p.lessons || []).filter(l => !(l.slots || []).length).sort((a, b) => (b.updated || 0) - (a.updated || 0));
   // The weeks to show: the unit's, or without units the four weeks around today.
   const weeks = u ? u.weeks.map((w, i) => ({ mon: plus(u.start, i * 7), focus: w && w.focus, n: i + 1 })) : [-1, 0, 1, 2].map(i => ({ mon: plus(mon, i * 7), focus: '', n: 0 }));
   const plan = async day => { if (busy) return; setBusy(true); try { const l = await newLesson(p, c.id, day); go('lesson', l.id); } catch (e) { saveFailed(e); } finally { setBusy(false); } };
@@ -83,6 +85,9 @@ function CourseLine({ p, c, lib }) {
       </section>
       <aside class="cl-side">
         <Pace p={p} c={c} />
+        {loose.length > 0 && <section class="side-sec" aria-labelledby="h-loose"><h2 id="h-loose" class="sub">{t('plan.not_on_calendar')}</h2>
+          <ul class="loose">{loose.slice(0, 8).map(l => <li><a class="link" href={href('lesson', l.id)} data-raw>{l.title || t('plan.untitled')}</a></li>)}</ul>
+          {loose.length > 8 && <a class="link" href={href('library', 'past')}>{t('plan.n_more', { n: loose.length - 8 })}</a>}</section>}
         {partners.length > 0 && <section class="side-sec" aria-labelledby="h-share"><h2 id="h-share" class="sub">{t('plan.shares_with')}</h2>
           {partners.map(x => <p class="share"><span class="dot" style={{ '--cc': toneOf(x.color) }} /><b data-raw>{x.name}</b> {lib.find(k => k.name === x.name) && <a class="link" href={href('class', lib.find(k => k.name === x.name).id)}>{t('plan.open_course_line')}</a>}</p>)}
         </section>}

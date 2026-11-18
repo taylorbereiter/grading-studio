@@ -7,7 +7,7 @@
 // place to "taught" (src/planner/plfocus.js pfReady, src/planner/present.js). Every change saves through planning/write.js.
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
-import { Segmented, Button, IconButton, Icon, EmptyState, Switch, toast } from '../../ui/index.js';
+import { Segmented, Button, IconButton, Icon, EmptyState, Switch, Select, TextInput, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { href, go } from '../router.js';
 import { usePlan } from '../plan.js';
@@ -138,6 +138,7 @@ function Side({ p, l, slot, per, onSave, onDownload, onAssistant }) {
     onSave(n);
   };
   return <aside class="lside">
+    {!(l.slots || []).length && <PlaceIt p={p} l={l} onSave={onSave} />}
     {per && <section><h2 class="sub">{t('plan.class')}</h2><p><span class="dot" style={{ '--cc': toneOf(per.c.color) }} /><b data-raw>{per.c.name}</b></p></section>}
     {slot && <section><h2 class="sub">{t('plan.when')}</h2><p data-raw>{date(at(slot.date), { weekday: 'short', day: 'numeric', month: 'short' })}</p>{per && per.m && <p class="mute" data-raw>{per.m.label ? per.m.label + ', ' : ''}{clock(per.m.start)}</p>}</section>}
     {(shared.length > 0 || partners.length > 0) && <section><h2 class="sub">{t('plan.shared')}</h2>
@@ -151,6 +152,16 @@ function Side({ p, l, slot, per, onSave, onDownload, onAssistant }) {
       <Talk talk={l.talk || []} ai={ai.name || t('assistant.generic')} label={t('plan.comments_for', { name: ai.name || t('assistant.generic') })} onChange={v => { const n = JSON.parse(JSON.stringify(l)); if (v.length) n.talk = v; else delete n.talk; onSave(n); }} /></section>
     <div class="acts"><Button icon="assist" onClick={onAssistant} data-focus="assistant">{t('plan.work_with', { name: ai.name || t('assistant.generic') })}</Button><Button icon="download" onClick={onDownload}>{t('plan.download_slides')}</Button></div>
   </aside>;
+}
+
+// A lesson on no class and no day (kept without a date, or brought back from Past lessons) goes on the calendar from here.
+function PlaceIt({ p, l, onSave }) {
+  const cls = (p.setup && p.setup.classes) || [], [c, setC] = useState(cls[0] ? cls[0].id : ''), [d, setD] = useState(today());
+  if (!cls.length) return null;
+  return <section class="placeit"><h2 class="sub">{t('plan.not_on_calendar')}</h2>
+    <Select label={t('plan.class')} value={c} options={cls.map(x => ({ value: x.id, label: x.name }))} onChange={setC} data-raw />
+    <TextInput label={t('plan.date')} type="date" value={d} onInput={setD} />
+    <Button size="sm" variant="primary" onClick={() => { if (!c || !/^\d{4}-\d\d-\d\d$/.test(d)) return; const n = JSON.parse(JSON.stringify(l)); n.slots = [{ classId: c, date: d }]; onSave(n); }} data-focus="place-it">{t('plan.put_on_calendar')}</Button></section>;
 }
 
 // What happened in class, kept on the class's place in "taught" as the current Planner's After class note keeps it

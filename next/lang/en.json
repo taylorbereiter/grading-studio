@@ -622,5 +622,7 @@
  "plan.tpl_not_pptx": "Pick a PowerPoint file (.pptx or .potx)",
  "plan.tpl_too_big": "That template is over 40 MB. Save a copy without its slides and pick that one.",
  "plan.tpl_cant_open": "That file can’t be opened as a PowerPoint",
- "plan.tpl_needs_layouts": "That template needs a “Title Slide” and a “Title and Content” layout, which is where the slides go. PowerPoint’s own templates have both."
+ "plan.tpl_needs_layouts": "That template needs a “Title Slide” and a “Title and Content” layout, which is where the slides go. PowerPoint’s own templates have both.",
+ "plan.not_on_calendar": "Not on the calendar",
+ "plan.put_on_calendar": "Put it on the calendar"
 }
