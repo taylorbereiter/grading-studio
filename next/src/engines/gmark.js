@@ -158,6 +158,26 @@ function setRot(f, p, r) { r = ((r % 360) + 360) % 360; coverTurn(f, p, r - rotO
 // src/app/paper.js
 function setSkew(f, p, a) { f.skew ||= {}; if (a) f.skew[p] = a; else delete f.skew[p]; }
 // src/app/paper.js
+function turnMarks(marks, W, H, dir) {
+  const pt = ([x, y]) => dir > 0 ? [r1(H - y), r1(x)] : [r1(y), r1(W - x)];
+  const box = b => { const [ax, ay] = pt([b.x, b.y]), [bx, by] = pt([b.x + b.w, b.y + b.h]); return { x: Math.min(ax, bx), y: Math.min(ay, by), w: Math.abs(bx - ax), h: Math.abs(by - ay) }; };
+  for (const m of marks) {
+    if (m.t === 'pen') m.pts = m.pts.map(q => keepP(pt(q), q));
+    else if (m.t === 'hl' || m.t === 'oval') { Object.assign(m, box(m)); if (m.rects) m.rects = m.rects.map(box); if (m.pts) m.pts = m.pts.map(pt); }
+    else if (m.t === 'check' || m.t === 'stamp') [m.x, m.y] = pt([m.x, m.y]);
+    else if (m.t === 'note') { delete m.ly; [m.ax, m.ay] = pt([m.ax, m.ay]); if (m.hl) m.hl = box(m.hl); if (m.rects) m.rects = m.rects.map(box); }
+    else if (m.t === 'text') {
+      const L = textLayout(m, W), [cx, cy] = pt([m.x + L.ink / 2, m.y + L.h / 2]);   // turns about the words, not the empty part of a wide box
+      const want = m.bwFull || m.bw;
+      if (m.bw) m.bw = Math.min(want, H - 12);
+      const L2 = textLayout({ ...m, x: 0 }, H);
+      m.x = r1(cx - L2.ink / 2); m.y = r1(cy - L2.h / 2);
+      if (m.bw) { m.bw = Math.min(m.bw, Math.max(Math.ceil(L2.ink) + 1, 24, H - m.x - 6)); if (m.bw < want) m.bwFull = want; else delete m.bwFull; }   // near the edge a box gives up its empty part, so the words needn't move
+      keepOnPage(m, H, W);
+    }
+  }
+}
+// src/app/paper.js
 function reshape(pg) {
   const vp = vpRot(pg.file, pg.idx, pg.page, 1);
   pg.W = vp.width; pg.H = vp.height; pg.side = sideScreen(vp.width); pg.covers = null; pg.adj = null; pg.extra = [];
@@ -997,4 +1017,4 @@ function gpShortNext(left) {
   batch.students.forEach((st, i) => { if (i === cur || !left(st)) return; const l = gpLen(st) || 1e9; if (l < bl) { bl = l; best = i; } });
   return best;
 }
-export { bindPage, undo, redo, snap, changed, pushUndo, gradeSnap, fieldSnap, commitEditors, stepSize, saveNow, placeStamp, redrawAll, hitMark, moveMark, keepOnPage, deleteSelected, gripDrag, r1, clamp, circleWord, highlightWord, textBoxHere, scoreTouched, setStatus, touchGrade, nextUnscored, stampName, isSticker, isProof, PROOF, PUNCT, BRAINROT, wordUnder, newCheckSize, stickerAspect, RECENT_STAMPS };
+export { bindPage, undo, redo, snap, changed, pushUndo, gradeSnap, fieldSnap, commitEditors, stepSize, saveNow, placeStamp, redrawAll, hitMark, moveMark, keepOnPage, deleteSelected, gripDrag, r1, clamp, turnMarks, stepOf, reshape, thumbCache, setRot, circleWord, highlightWord, textBoxHere, scoreTouched, setStatus, touchGrade, nextUnscored, stampName, isSticker, isProof, PROOF, PUNCT, BRAINROT, wordUnder, newCheckSize, stickerAspect, RECENT_STAMPS };

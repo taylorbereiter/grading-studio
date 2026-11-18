@@ -86,4 +86,4 @@ function lift({ roots, deny = [], given = [], ignore = [], preamble = '', header
   const body = decls.map(d => '// ' + d.file + '\n' + d.lines.join('\n').replace(/\s+$/, '')).join('\n');
   return header + preamble + '\n' + body + '\nexport { ' + roots.join(', ') + ' };\n';
 }
-module.exports = { lift, declarations, gradingFiles };
+module.exports = { lift, declarations, gradingFiles, depthOf: depth };

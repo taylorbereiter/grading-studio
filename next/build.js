@@ -167,7 +167,7 @@ const GRADING = [
   ]],
   ['gdraw', [
     // drawing marks on a page, shared by the screen and the export (src/app/draw.js, marking.js, stamps.js, lighting.js)
-    'FONT', 'drawMarks', 'layoutNotes', 'textLayout', 'wrapText', 'bboxOf', 'sideFor', 'sideScreen', 'drawStamp', 'stampBox', 'strokePath', 'drawHls',
+    'FONT', 'AT_END', 'drawMarks', 'layoutNotes', 'textLayout', 'wrapText', 'bboxOf', 'sideFor', 'sideScreen', 'drawStamp', 'stampBox', 'strokePath', 'drawHls',
     'stickersReady', 'STICKERS', 'lightLut', 'lightCanvas', 'draw', 'marksMine', 'loadLines', 'anonOn', 'shownName', 'viewBytes', 'impHas', 'fileSeq', 'layoutOf', 'docIn', 'docAuto', 'fileByPath', 'viewable', 'vpRot', 'vpDraw', 'skewXf', 'rotOf', 'skewOf',
   ], "import STICKER_SRC from './stickers.js';\n", ['STICKER_SRC']],
   ['gopen', [
@@ -181,6 +181,7 @@ const GRADING = [
     // shapes, checks, eraser, moving and resizing marks, undo and redo; and saveNow, which builds the record to save
     'bindPage', 'undo', 'redo', 'snap', 'changed', 'pushUndo', 'gradeSnap', 'fieldSnap', 'commitEditors', 'stepSize', 'saveNow', 'placeStamp', 'redrawAll',
     'hitMark', 'moveMark', 'keepOnPage', 'deleteSelected', 'gripDrag', 'r1', 'clamp',
+    'turnMarks', 'stepOf', 'reshape', 'thumbCache', 'setRot',
     // the right-click menu's marks (src/stamps.js openStampMenu; the menu itself is the new screen's)
     'circleWord', 'highlightWord', 'textBoxHere',
     // scoring (src/grades.js, src/app/panels.js): the score changes as the current app makes them
@@ -195,7 +196,27 @@ const GRADING = [
     'gradeRows', 'tableHead', 'tableRow', 'gradesSummary', 'cellCopy', 'totalText', 'statusText', 'rowShown', 'scoreText', 'cellOut', 'csvCell', 'tsvLine', 'bandOf', 'ibSetup',
     'meGrade', 'pctAvgText', 'setKey', 'keyRows', 'classStats', 'leftOutText', 'spreadBins', 'onThisScale', 'partNote', 'STATUS_LABEL', 'triesSay',
     'anchorDocs', 'anchorDocPdf', 'anchorFile', 'anchorsHere', 'ANCHORS', 'anchorOf', 'anchorLabel', 'setAnchor', 'anchorCoverOn',
+    'wordPagesPdf', 'WP_MAX', 'scanFile',
   ], '', [], ['gcore', 'gdraw', 'gopen'], ['num', 'inside']],
+  ['greport', [
+    // the opening report (src/intake.js openingFacts, checkStack): what opened, what didn't and why, who has nothing, and anything odd
+    'openingFacts', 'checkStack', 'checkFile', 'repHead', 'zipSay', 'troubleOf', 'troubleText', 'hash', 'textOf',
+  ], '', ['drop'], ['gcore', 'gdraw', 'gopen'], ['num', 'inside']],   // drop: only ever rtfText's own counter here
+  ['gfiles', [
+    // a student's files changed on the marking screen (src/app/kept.js addFiles, src/app/replace.js, src/app/bringin.js bringIn):
+    // what a file added, removed, brought back or replaced does to the student, and how files are sorted to students by name
+    'goneNow', 'markCount', 'replacedOf', 'freshRows', 'guessNewName', 'fileShown', 'sortTag', 'madeFromWord', 'setDocIn', 'gradeWords', 'wordsJoin', 'moveFileNow', 'gradeHasWork',
+  ], '', [], ['gcore', 'gdraw', 'gopen', 'greport'], ['num', 'inside']],
+  ['gword', [
+    // a Word paper on the marking screen (src/app/word.js, src/wordnotes.js): drawn from its own XML, typed in, cells shaded, boxes
+    // ticked, comments named Teacher added and taken off, and the file written back; the screen around it is the new app's
+    'openWord', 'wordBytes', 'renderWord', 'wApplyPara', 'wToggle', 'wShadeCell', 'CELL_COLORS', 'wordScore', 'wordCanPdf',
+    'wCommentAdd', 'wCommentDrop', 'wCommentSet', 'wCommentEls', 'wCommentText', 'wCommentMap', 'wPickWords', 'wId',
+    'wComments', 'wCommentsKeep', 'wSplitSpan', 'wNotesPaint',
+    // scoring on her own Word rubric (src/app/wordrubric.js): the boxes read as a rubric, the score they give, the Total line written in
+    'rubricModel', 'rubricScore', 'isShaded', 'RUB_HL', 'fillTotalBlank', 'wordLineHers', 'rubricToGrade', 'wordScoreGone', 'scaleDiffers',
+    'wordTabOn', 'tryOfFile', 'liftStatus', 'ownGrade', 'hasOwnScore', 'wordFound', 'wordTableRead', 'readKey', 'rubricKey',
+  ], '', [], ['gcore', 'gdraw'], ['num', 'inside']],
 ];
 function writeGrading() {
   const { lift } = require('./tools/lift.js');
@@ -218,6 +239,9 @@ function writeGrading() {
     const may = uses ? declared.filter(n => !made[n] || uses.includes(made[n])) : declared;
     let out = lift({ files: 'grading', scoped: true, roots, deny: GRADING_DENY, ignore: GRADING_LOCAL.filter(n => !real.includes(n)), given: [...may, ...given], header: '', preamble: '' });
     const own = [...out.matchAll(/^(?:async )?function\*? ?(\w+)|^(?:const|let|var) (\w+)/gm)].map(m => m[1] || m[2]);
+    // const a = 1, b = 2 on one line declares b too (as lift.js reads it), so a later module imports b instead of declaring the line again
+    const { depthOf } = require('./tools/lift.js');
+    for (const ln of out.split('\n')) if (/^(?:const|let|var) /.test(ln)) for (const x of ln.matchAll(/,\s*([A-Za-z_$][\w$]*)\s*=(?!=|>)/g)) if (depthOf(ln.slice(0, x.index)) === 0 && !own.includes(x[1])) own.push(x[1]);
     // a name right after a dot is a property, except after a spread (...vpDraw(…))
     const used = may.filter(n => new RegExp('(?<![\\w$])(?<![^.]\\.)' + n.replace(/\$/g, '\\$') + '(?![\\w$])').test(out));
     const imports = {};
@@ -230,6 +254,12 @@ function writeGrading() {
     out = head + preamble + pre + out;
     for (const n of own) { if (made[n]) continue; made[n] = file; declared.push(n); }
     texts[file] = { out, roots };
+  }
+  // A module may not assign a name it imports from another lifted module (only gcore's state has setters): that throws when it runs.
+  for (const [file, { out }] of Object.entries(texts)) for (const m of out.matchAll(/^import \{ ([^}]*) \} from '\.\/(g\w+)\.js';$/gm)) {
+    if (m[2] === 'gcore') continue;
+    const rest = out.slice(m.index + m[0].length), q = n => n.replace(/\$/g, '\\$');
+    for (const n of m[1].split(',').map(x => x.trim())) if (!new RegExp('\\b(?:const|let|var)\\s+(?:[^;]*?[,\\s])?' + q(n) + '\\s*[=,;]').test(rest) && new RegExp('(?<!(?:const|let|var)\\s+)(?<![\\w$.])' + n.replace(/\$/g, '\\$') + '\\s*(?:[-+*/|&]?=(?!=)|\\+\\+|--)').test(out.slice(m.index + m[0].length))) throw new Error('lift: ' + file + ' assigns ' + n + ', which belongs to ' + m[2]);
   }
   for (const [file, { out, roots }] of Object.entries(texts)) {
     const coreOut = [...names, 'store', 'kdo', 'kget', 'idbDo', ...Object.keys(GRADING_STUBS)];
@@ -299,7 +329,7 @@ async function build() {
     '<script>' + sample + '</script>\n' + look +
     '<link rel="stylesheet" href="dist/tokens.css"><link rel="stylesheet" href="dist/parts-css.css">' + css.map(c => '<link rel="stylesheet" href="dist/' + c + '.css">').join('') + (style ? '<style>' + style + '</style>' : '') + '\n' +
     '<script type="module" src="dist/' + entry + '.js"></script></head><body>' + body + '</body></html>\n';
-  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css', 'mark-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
+  fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css', 'mark-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}.wrap p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'gallery.html'), partsPage('Parts gallery', 'gallery', ['gallery-css'], '', '<div id="app"></div>'));
   fs.writeFileSync(path.join(NEXT, 'proof.html'), page('Saved-work proof', 'proof', '<p>Saved-work proof page. Used by the checks, not by teachers.</p>'));
   writeVersion();

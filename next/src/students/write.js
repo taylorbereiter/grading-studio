@@ -11,7 +11,7 @@
 // Every write first checks: this window holds the lock; the saved work is at the format this build knows (the new app never
 // changes the format); no other window has started replacing everything; and a download that was forgotten stays forgotten.
 // The merge engine is the current app's own (engines/merge.js), loaded on the first write so it is not in the first load.
-import { work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame } from './index.js';
+import { papers, edits, added, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame } from './index.js';
 import { words } from '../planning/index.js';
 import { mayWrite } from '../shared/lock.js';
 import { json, text, setText, remove } from '../shared/ls.js';
@@ -34,11 +34,12 @@ export function check(what) {
 
 /* one download's marks and scores */
 // change(data) changes a copy of the newest saved work in place. Returns { quick, full } as the current app's save label reads them.
-export async function saveWork(id, change) {
+// fresh: a download brought in just now, with no work saved yet (its papers were kept first, keepPapers below).
+export async function saveWork(id, change, { fresh = false } = {}) {
   check(id);
   if ((json('gs.tomb', {}) || {})[id]) throw new CannotSave('forgotten', id);
-  const prev = await newestWork(id); if (!prev) throw new CannotSave('missing', id);
-  const M = await merge(), data = copy(prev);
+  const prev = await newestWork(id); if (!prev && !fresh) throw new CannotSave('missing', id);
+  const M = await merge(), data = prev ? copy(prev) : {};
   change(data);
   data.t = Date.now();
   M.stampData(M.revsOf(prev), data, tabs.devId(), Date.now(), null);
@@ -71,6 +72,45 @@ async function writeWork(id, data, M) {
   if ((text('gsc.saved.' + id) || '').startsWith(tabs.TAB + ':')) tabs.stamp(id, data.t + ':full');
   return { quick: ok, full };
 }
+
+/* a download's papers (src/app/kept.js keepPapers and paperPut) */
+// The files of a download brought in, kept in this browser so it reopens by itself, and its row in the list of kept work. A download
+// over about 100 MB is kept in pieces ("id|file|piece"), the list going in last so it never names a piece that isn't there.
+const PAPER_ONE = 100e6, PAPER_PIECE = 64e6;
+export async function keepPapers(b, label, list) {
+  check(b.id);
+  if ((json('gs.tomb', {}) || {})[b.id]) throw new CannotSave('forgotten', b.id);
+  const id = b.id, rec = { id, label: label || '', entries: list }, under = IDBKeyRange.bound(id + '|', id + '|\uffff');
+  const held = e => (e.data ? e.data.buffer.byteLength : 0);
+  if (rec.entries.reduce((a, e) => a + held(e), 0) <= PAPER_ONE) { await papers.del(under); await papers.put(rec, id); }
+  else {
+    try {
+      const entries = [];
+      for (let i = 0; i < rec.entries.length; i++) {
+        const e = rec.entries[i], d = e.data;
+        if (!d) { entries.push(e); continue; }
+        let n = 0;
+        for (let at = 0; at < d.length; at += PAPER_PIECE, n++) await papers.put(d.slice(at, at + PAPER_PIECE), id + '|' + i + '|' + n);
+        entries.push({ path: e.path, data: null, parts: n, size: d.length });
+      }
+      await papers.put({ ...rec, entries }, id);
+    } catch (e) { await papers.del(id).catch(() => {}); await papers.del(under).catch(() => {}); throw e; }
+  }
+  const m0 = await meta.get(id);
+  const m = { ...(m0 || {}), id, name: b.name, n: b.students.length, t: Date.now(), asg: b.assignment ? b.assignment.id : (m0 || {}).asg, papers: true, size: list.reduce((a, e) => a + (e.data ? e.data.length : 0), 0) };
+  await meta.put(m, id);
+  saved({ kind: 'papers', id, side: 'students' });
+  return m;
+}
+
+/* a Word paper edited in the app (src/app/word.js keepEdit, dropEdit) */
+// { data, orig, t } under "download id|file path", so the edit comes back next time. Taking it back off is noted with the work's
+// own save (the caller marks it gone with noteGone, as the current app does), so a copy elsewhere doesn't bring it back.
+export async function keepEdit(id, path, rec) { check(id); await edits.put({ data: rec.data, orig: rec.orig || null, t: rec.t }, id + '|' + path); saved({ kind: 'edit', id, side: 'students' }); }
+export async function dropEdit(id, path) { check(id); await edits.del(id + '|' + path); saved({ kind: 'edit', id, side: 'students' }); }
+
+/* a file she added to a student (src/app/kept.js addFiles), kept in this browser under "download id|student|file path" */
+export async function keepAdded(id, rec, key) { check(id); await added.put(rec, key); saved({ kind: 'added', id, side: 'students' }); }
 
 /* the library */
 export async function saveLibrary(change) {
