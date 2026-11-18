@@ -536,3 +536,23 @@ dialog.dlg.mk-split[open]{display:flex}
 .classwork .whead h3{margin:0}
 .classwork .wempty{margin:0;font-size:var(--t2)}
 .wmove h4{margin:10px 0 4px}
+/* Rubric setup */
+.mk-su{display:flex;flex-direction:column;gap:14px;min-width:min(620px,80vw)}
+.mk-su .su-rows{display:flex;flex-direction:column;gap:10px}
+.mk-su .su-rowline{display:flex;gap:8px;align-items:flex-end}
+.mk-su .su-rowline>.field:first-child{flex:1}
+.mk-su .lved summary{cursor:pointer;font-size:var(--t2);color:var(--acc-ink);margin-top:4px}
+.mk-su .lvin{display:flex;gap:8px;align-items:flex-start;margin-top:6px}
+.mk-su .lvin b{width:22px;text-align:right;padding-top:6px}
+.mk-su .lvin textarea{flex:1}
+.mk-su .lvnote{font-size:var(--t1)}
+.mk-su .su-scale{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.mk-su .su-btns{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.mk-su .su-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px 10px;margin-top:6px}
+.mk-su .su-grid label{display:flex;align-items:center;gap:4px;font-size:var(--t2);font-weight:600}
+.mk-su .su-grid label span{width:22px;text-align:right}
+.mk-su .su-grid input{width:64px}
+.mk-su .su-grade,.mk-su .su-page{display:flex;flex-direction:column;gap:6px}
+.mk-su .su-grade p,.mk-su .su-page p{margin:0;font-size:var(--t2)}
+.mk-su .su-say{background:var(--acc-soft);border-radius:var(--r2);padding:8px 12px;font-size:var(--t2)}
+.mk-su .su-say p{margin:4px 0}

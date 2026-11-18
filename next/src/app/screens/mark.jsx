@@ -206,6 +206,7 @@ export default function MarkScreen({ route, classes }) {
     return () => { live = false; }; }, [w, !!MK]);
   // What opened: a line after the papers open when there's something new to say, and the whole report from the student list.
   const [rep, setRep] = useState(null), [repList, setRepList] = useState(false);
+  const [su, setSu] = useState(null);
   useEffect(() => { if (!w) return; let live = true; setRep(null); PARTS.report().then(m => { if (live) setRep(m); }, e => console.error(e)); return () => { live = false; }; }, [w]);
   useEffect(() => {
     if (!w) return;
@@ -223,6 +224,7 @@ export default function MarkScreen({ route, classes }) {
   const cls = w && w.batch.classId != null ? (w.lib.classes || []).find(c => c.id === w.batch.classId) : null;
   const marked = w ? w.batch.students.filter(isMarked).length : 0, n = w ? w.batch.students.filter(st => !st.gap || st.files.length).length : 0;
   const close = () => (cls ? go('class', cls.id) : go('home'));
+  const openSetup = () => PARTS.setup().then(m => setSu(m), e => console.error(e));
   return <div class="markscreen" data-tab={tab}>
     <header class="mk-top">
       <IconButton icon="x" label={t('mark.close')} onClick={close} />
@@ -232,8 +234,9 @@ export default function MarkScreen({ route, classes }) {
       <span class="grow" />
       {w && <span class="mk-save mute" role="status" data-save={MK ? MK.M.saveLabel() : 'saved'}>{saveLine(MK ? MK.M.saveLabel() : 'saved')}</span>}
       {w && <span class="mk-prog mute">{t('mark.marked_of', { n: marked, of: n })}<Progress value={marked} max={Math.max(1, n)} label={t('mark.marked_of', { n: marked, of: n })} /></span>}
-      <Button icon="settings" size="sm" disabled title={t('mark.later')}>{t('mark.setup')}</Button>
+      <Button icon="settings" size="sm" disabled={!w || !MK} onClick={openSetup} data-setupopen>{t('mark.setup')}</Button>
     </header>
+    {su && <su.SetupDialog onClose={() => setSu(null)} />}
     <RubricAsk ask={ask} />
     {err ? <EmptyState icon="inbox" title={t(err.name === 'NotKept' ? 'mark.not_kept' : 'mark.page_bad')} text={err.name === 'NotKept' ? t('mark.not_kept_text') : ''} />
       : !w ? <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />

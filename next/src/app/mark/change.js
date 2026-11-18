@@ -574,3 +574,47 @@ export function groupOnce(st, f, on, own) {
     else for (const s of G.groupMates(st)) G.groupLeave(s, true);
   }, 'group');
 }
+
+// Rubric setup's Save (src/app/dialogs.js openSetup), as one undo step: the setup, the whole score's goal, and every score that sits on
+// a row by its place (rowsTakenOut: when a row goes, the scores after it move up with their rows, each keeping its time). page: the new
+// rubric file { bytes, name }, null when it comes off, undefined when it stays. from: where each draft row came from (null: new), n0:
+// how many rows there were. Her rubric file is kept under a new id before the step; the one before stays, so Undo can bring it back.
+export async function setupSave(draft, { page, from, n0, goal }) {
+  const s = state(), bb = b(), W = await PARTS.write();
+  const J0 = { setup: J(s.setup), goal: bb ? bb.goal : undefined, g: bb ? bb.students.map(st => J({ rubric: st.grade.rubric, atR: st.grade.atR })) : [] };
+  const d = J(draft);
+  if (page === null) d.rubricPage = null;
+  else if (page) {
+    const id = Math.random().toString(36).slice(2, 10);
+    let bin = ''; for (let i = 0; i < page.bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, page.bytes.subarray(i, i + 0x8000));
+    W.keepRubricPage(id, btoa(bin));   // throws CannotSave('room'): nothing has changed yet
+    d.rubricPage = { id, name: page.name };
+  }
+  const gone = [...Array(n0).keys()].filter(i => !from.includes(i));
+  const pageChanged = JSON.stringify(d.rubricPage) !== JSON.stringify(s.setup.rubricPage) || d.rubricPos !== s.setup.rubricPos;
+  const apply = async (su, gl, grades) => {
+    use({ setup: su });
+    if (bb) {
+      if (gl) bb.goal = gl; else delete bb.goal;
+      bb.students.forEach((st, k) => { if (grades) { st.grade.rubric = J(grades[k].rubric) || []; if (grades[k].atR) st.grade.atR = J(grades[k].atR); else delete st.grade.atR; K.touchGrade(st); } });
+      if (pageChanged) { await libs(); await E.applyRubricPage(); }
+      bb.students.forEach(st => s.refound(st));
+    }
+    await M.keepSetup();
+    tell(); if (bb) show(state().cur);
+  };
+  // the scores that move up when rows go, as rowsTakenOut moves them
+  let after = null;
+  if (bb && gone.length) {
+    const low = gone[0], left = k => k - gone.filter(x => k > x).length;
+    after = bb.students.map(st => {
+      const g = st.grade, keys = Object.keys(g.atR || {}).filter(k => k !== 'points').map(Number);
+      if (g.rubric.length <= low && !keys.some(k => k >= low)) return { rubric: g.rubric, atR: g.atR };
+      return { rubric: Array.from(g.rubric, v => (v == null ? null : v)).filter((_, k) => !gone.includes(k)), atR: g.atR ? Object.fromEntries(keys.filter(k => !gone.includes(k)).map(k => [left(k), g.atR[k]]).concat(g.atR.points ? [['points', g.atR.points]] : [])) : undefined };
+    });
+  }
+  const goalNow = goal === undefined ? J0.goal : goal;
+  await apply(d, goalNow, after);
+  step(() => apply(J(J0.setup), J0.goal, J0.g), () => apply(J(d), goalNow, after), 'setup');
+  return d;
+}

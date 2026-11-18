@@ -315,4 +315,4 @@ function quizPart(st) { const n = quizCount(st); return quizOn() && n > 0 && n <
 // src/ib.js
 function ibSetup(su) { su = su || setup; return su.mode === 'rubric' && Array.isArray(su.ib) && su.ib.some(Boolean); }
 export { setupOver, DEFAULT_SETUP, setupMax, rowsMax, rowTop, rowHalf, rowSteps, rowLevels, rowsTop, rowsSay, rowScaleOf, SCALE12, SCALE_FIVES, RUBRIC_STEPS, maxPoints, roundPct, pointsWith, pointsFor, percentFor, percentWith, gradeOf, tryGrade, scoreOf, ownGrade, withTries, retakeRule, RETAKE_RULES, addXc, xcSay, fmtNum, fmtPct, noScore, COLORS, HL, NOTE_COLORS, TEXT_COLORS, PTS_AMBER, QZ_GOLD, ptsColor, totalInk, setCheckInk };
-export { ibSetup, ROW_TOP, wordPart, quizCount, quizPart };
+export { ibSetup, ROW_TOP, wordPart, quizCount, quizPart, topOk };

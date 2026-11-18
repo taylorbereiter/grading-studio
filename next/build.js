@@ -268,6 +268,11 @@ export const tnRngSet = r => { tnRng = r; };
     'rubricModel', 'rubricScore', 'isShaded', 'RUB_HL', 'fillTotalBlank', 'wordLineHers', 'rubricToGrade', 'wordScoreGone', 'scaleDiffers',
     'wordTabOn', 'tryOfFile', 'liftStatus', 'ownGrade', 'hasOwnScore', 'wordFound', 'wordTableRead', 'readKey', 'rubricKey',
   ], '', [], ['gcore', 'gdraw'], ['num', 'inside']],
+  ['gsetup', [
+    // Rubric setup (src/rubrics.js, src/goals.js, src/rubricup.js): what each score means kept tidy, the learning goals a row can be
+    // tagged with, and rows read out of a rubric she brings in (Word or PDF); the dialog and its one undo step are the new app's
+    'tidyLevels', 'levelIn', 'goalList', 'goalById', 'goalName', 'goalsTidy', 'ruFromWord', 'ruFromPdf', 'rubricRowsInto',
+  ], '', [], ['gcore', 'gdraw', 'gword']],
 ];
 function writeGrading() {
   const { lift } = require('./tools/lift.js');
