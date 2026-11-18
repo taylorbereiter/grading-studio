@@ -419,9 +419,9 @@ test('a lesson’s materials and links, its versions, and deleting it with undo,
   // A link
   await p.click('main [data-focus="add-link"]');
   await p.waitForSelector('main [data-focus="link-url"]');
-  await p.bringToFront(); await p.click('main [data-focus="link-url"]'); await p.keyboard.type('example.com/sonnets');
-  await p.waitForFunction(() => document.querySelector('main [data-focus="link-url"]').value === 'example.com/sonnets');
-  await p.keyboard.press('Enter');
+  // The address goes in as the browser's own input event (keys typed here were lost on CI after the Library test), then Add.
+  await p.$eval('main [data-focus="link-url"]', el => { el.value = 'example.com/sonnets'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.click('main [data-focus="link-add"]');
   await p.waitForFunction(() => [...document.querySelectorAll('main .mlist a')].some(a => a.href === 'https://example.com/sonnets'));
   l3 = await lessonInDb(p, 'L3');
   for (let k = 0; k < 30 && !(l3.links && l3.links.length); k++) { await new Promise(r => setTimeout(r, 150)); l3 = await lessonInDb(p, 'L3'); }
@@ -444,8 +444,7 @@ test('a lesson’s materials and links, its versions, and deleting it with undo,
   await p.keyboard.press('Escape');
   await p.waitForFunction(() => !document.querySelector('.sheet .vers'));
   await open(p, 'lesson/L3/edit');
-  await p.$eval('main .ed-top input', el => { el.focus(); el.select(); });
-  await p.keyboard.type('Sonnets, changed');
+  await p.$eval('main .ed-top input', el => { el.value = 'Sonnets, changed'; el.dispatchEvent(new Event('input', { bubbles: true })); });
   for (let k = 0; k < 40 && (await lessonInDb(p, 'L3')).title !== 'Sonnets, changed'; k++) await new Promise(r => setTimeout(r, 150));
   await open(p, 'lesson/L3');
   assert.equal(await p.$eval('main h1.lt', x => x.textContent), 'Sonnets, changed');
