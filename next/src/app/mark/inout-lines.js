@@ -2,4 +2,4 @@
 // cards and options), kept apart from setup.en.json so that Settings, which loads those, doesn't carry these too.
 import { addLines } from '../../i18n/t.js';
 import LINES from '../../../lang/inout.en.json';
-addLines(LINES);
+addLines(LINES, 'inout');

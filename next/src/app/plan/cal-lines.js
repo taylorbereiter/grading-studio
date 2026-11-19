@@ -2,4 +2,4 @@
 // the date jump. They load with the Calendar and its tools, not with the lesson page.
 import { addLines } from '../../i18n/t.js';
 import LINES from '../../../lang/calendar.en.json';
-addLines(LINES);
+addLines(LINES, 'calendar');

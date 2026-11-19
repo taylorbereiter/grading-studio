@@ -1,5 +1,8 @@
-// Each language's lines (next/lang/<code>.json, made from the current app's src/lang-*.js by next/tools/lang-convert.js), loaded
-// only for a teacher who chose that language. English when one can't be fetched, as the current app does for that visit.
-const LOAD = { 'zh-Hant': () => import('../../lang/zh-Hant.json'), 'zh-Hans': () => import('../../lang/zh-Hans.json'), es: () => import('../../lang/es.json'), fr: () => import('../../lang/fr.json'),
-  de: () => import('../../lang/de.json'), 'pt-BR': () => import('../../lang/pt-BR.json'), ja: () => import('../../lang/ja.json'), ko: () => import('../../lang/ko.json') };
-export const lines = async c => (LOAD[c] ? (await LOAD[c]()).default : {});
+// Each language's lines (made from the current app's src/lang-*.js by next/tools/lang-convert.js), loaded only for a teacher who
+// chose that language, one file per area (next/lang/<code>/<area>.json, each its own chunk) with the screens that use it.
+// English when one can't be fetched, as the current app does for that visit.
+export const area = (c, a) => import(`../../lang/${c}/${a}.json`).then(m => m.default, () => ({}));
+// The areas, the same as the English files' (next/lang/<area>.en.json, en.json is core; next/test/lines.test.js holds the two the same).
+export const AREAS = ['building', 'calendar', 'class', 'edit', 'core', 'engine', 'focus', 'help', 'home', 'inout', 'mark', 'more', 'paper', 'plan', 'prefs', 'present', 'saving', 'school', 'settings', 'setup', 'todo', 'tools', 'video'];
+// Every area of a language at once (a quiz printed in another language, app/mark/quizmaker.jsx).
+export const lines = async c => (c === 'en' ? {} : Object.assign({}, ...await Promise.all(AREAS.map(a => area(c, a)))));
