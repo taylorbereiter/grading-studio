@@ -21,7 +21,7 @@ import { plan } from './plan.js';
 import * as tabs from '../shared/tabs.js';
 import { saved } from '../shared/saved.js';
 import { writeMany } from '../shared/idb.js';
-import { plannerFolder, removeLessonFile, writeTimetableFile, writeActivitiesFile } from './folder.js';
+import { plannerFolder } from './folder.js';
 
 export class CannotSave extends Error { constructor(why, what) { super(what + ': ' + why); this.name = 'CannotSave'; this.why = why; } }
 export const check = what => { mayWrite(what); if (!tabs.live()) throw new CannotSave('replaced', what); };
@@ -31,26 +31,33 @@ export const tell = name => { try { const ch = new BroadcastChannel(name); ch.po
 // stored (with _file and _mod, or _sync, when a Planner folder is linked). file: false for a lesson just read from its file there.
 // base: the stored lesson this change was made from; when another window has saved it since (audit hook H-017), behind(stored)
 // is waited for first, so its work can be kept as a version before this one replaces it.
-export async function saveLesson(lesson, { file = true, base = 0, behind = null } = {}) {
+export async function saveLesson(lesson, { file = true, base = 0, behind = null, folderLock } = {}) {
   check('gs-lessons/lessons');
   if (base && behind) { const s = await lessons.get(lesson.id); if (s && (s.updated || 0) > base) await behind(s); }
   const l = JSON.parse(JSON.stringify(lesson)); l.updated = Date.now();
   await lessons.put(l);
-  return finishLessonSave(l, file);
+  return finishLessonSave(l, file, folderLock);
 }
-export async function finishLessonSave(l, file) {
-  const f = file ? await plannerFolder() : null;
-  if (f) await import('./folder-more.js').then(m => m.finishLessonFile(l, f));
-  tell('gs-plan-out');
-  saved({ kind: 'lesson', id: l.id, side: 'planning' });
+export async function finishLessonSave(l, file, folderLock) {
+  try {
+    const f = file ? await plannerFolder({ strict: true }) : null;
+    if (f) await import('./folder-more.js').then(m => m.finishLessonFile(l, f, folderLock));
+  } finally {
+    tell('gs-plan-out');
+    saved({ kind: 'lesson', id: l.id, side: 'planning' });
+  }
   return l;
 }
 export async function deleteLesson(lesson) {
   check('gs-lessons/lessons');
+  const f = await plannerFolder({ strict: true });
   await lessons.del(lesson.id);
-  await removeLessonFile(lesson, await plannerFolder()).catch(e => console.error(e));
-  tell('gs-plan-out');
-  saved({ kind: 'lesson', id: lesson.id, side: 'planning', gone: true });
+  try {
+    if (f) await import('./folder-more.js').then(m => m.finishLessonRemoval(lesson, f));
+  } finally {
+    tell('gs-plan-out');
+    saved({ kind: 'lesson', id: lesson.id, side: 'planning', gone: true });
+  }
 }
 // snap and max are the Planner's own (engines/planner.js snap, MAX_VERSIONS), passed in so this layer stays without the engine.
 export async function saveVersion(lesson, label, snap, max = 30) {
@@ -94,27 +101,27 @@ export async function dropPlannerKv(key) {
 const KV = ['setup', 'units', 'bank', 'activities', 'words', 'deflook'];
 // file: false for a record just read from the Planner folder, so it isn't written straight back.
 const WHOLE = ['units', 'bank', 'activities'];
-export async function saveKv(name, value, { file = true } = {}) {
+export async function saveKv(name, value, { file = true, folderLock } = {}) {
   if (!KV.includes(name)) throw new Error('Not a Planner record: ' + name);
   check('gs-lessons/kv/' + name);
   // The units, the bank and her activities are saved whole, from the copy last read: if that read failed, the copy is empty and
   // saving it would erase the rest (rebuild/audit/hooks.md H-013, H-014, H-020). Nothing is saved until a read works.
   const cur = plan();
   if (cur && Array.isArray(cur.failed) && cur.failed.includes(name) && WHOLE.includes(name)) throw Object.assign(new Error('Planner record not read: ' + name), { unread: true });
-  const was = name === 'units' ? await kv.get('units').catch(() => null) : null;
+  const was = name === 'units' ? await import('./change.js').then(m => m.readPlannerRecord('kv', 'units')) : null;
   await kv.put(value, name);
-  await finishKvSave(name, value, was, file);
+  await finishKvSave(name, value, was, file, folderLock);
 }
-export async function finishKvSave(name, value, was, file) {
-  const f = file ? await plannerFolder() : null;
-  // The timetable also goes to its file in a linked Planner folder, as the current Planner writes it when it is changed there.
-  if (name === 'setup') await writeTimetableFile(value, f).catch(e => console.error(e));
-  // The teacher's own activities go to activities.json there too (src/planner/activities.js actFolderWrite).
-  if (name === 'activities') await writeActivitiesFile(value, f).catch(e => console.error(e));
-  // A unit she changed goes to Units/ there, and the bank to Rubrics/ (planning/folder-more.js afterSave).
-  if (f && (name === 'units' || name === 'bank')) await import('./folder-more.js').then(m => m.afterSave(name, value, was, f)).catch(e => console.error(e));
-  tell('gs-plan-out'); if (name === 'bank') tell('gs-bank');
-  saved({ kind: 'plan', id: name, side: 'planning' });
+export async function finishKvSave(name, value, was, file, folderLock) {
+  try {
+    if (file && ['setup', 'activities', 'units', 'bank'].includes(name)) {
+      const f = await plannerFolder({ strict: true });
+      if (f) await import('./folder-more.js').then(m => m.afterSave(name, value, was, f, folderLock));
+    }
+  } finally {
+    tell('gs-plan-out'); if (name === 'bank') tell('gs-bank');
+    saved({ kind: 'plan', id: name, side: 'planning' });
+  }
 }
 
 // Linking the Planner folder, writing it whole and what reading it keeps are in planning/folder-more.js (loaded only with a folder).

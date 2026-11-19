@@ -4,23 +4,82 @@
 // (pending, as the current Planner keeps it); a new one arrives marked "Ready for you" (status review, the current Planner's own
 // word for a lesson the assistant has finished), so both show as arrived and not reviewed until she marks them Ready.
 // Everything is saved through planning/write.js. Returns { added, changed }, or null when no folder can be read now.
-import { kv } from './index.js';
-import { readAll } from './plan.js';
+import { textStrict } from '../shared/ls.js';
+import { readPlannerRecord, changePlannerRecord } from './change.js';
+import { openExistingStrict, NotThere } from '../shared/idb.js';
+import { withFolderLock } from './folder-lock.js';
 import { engine } from './engine.js';
 import { plannerFolder } from './folder.js';
-import { saveLesson, saveVersion, saveKv } from './write.js';
-import { saveFolderNote } from './folder-more.js';
+import { finishLessonSave, finishKvSave } from './write.js';
+import { FolderFileChanged, removeRecordFile } from './folder-file.js';
+import { afterSave, finishLessonFile, saveFolderNote } from './folder-more.js';
 
 const copy = v => JSON.parse(JSON.stringify(v));
 const NEWER = 1500;   // a file within this of the app's own write is the app's own
 
+// Screen reads can fall back to display defaults. A folder scan may write those records
+// back, so it needs a successful read of each source and companion record first.
+async function readImportPlan() {
+  const keys = ['setup', 'units', 'activities', 'bank', 'bankFiles', 'deflook', 'words', 'profMod', 'syncGoneFiles'];
+  const db = await openExistingStrict('gs-lessons');
+  if (!db) throw new NotThere('gs-lessons');
+  try {
+    const { stored, lessons } = await new Promise((resolve, reject) => {
+      const tx = db.transaction(['lessons', 'kv'], 'readonly'), kv = tx.objectStore('kv');
+      const list = tx.objectStore('lessons').getAll(), values = keys.map(key => kv.get(key));
+      tx.onabort = () => reject(tx.error || new Error('Planner folder read aborted'));
+      tx.oncomplete = () => resolve({
+        stored: Object.fromEntries(keys.map((key, i) => [key, values[i].result])), lessons: list.result
+      });
+    });
+    let setup = stored.setup;
+    if (setup == null) {
+      const mirror = textStrict('gs.planCopy');
+      if (mirror != null) setup = JSON.parse(mirror);
+    }
+    if (setup != null && !Array.isArray(setup.classes)) throw new Error('Invalid Planner timetable');
+    return { ...stored, stored, lessons, setup, units: stored.units || [], activities: stored.activities || [] };
+  } finally { db.close(); }
+}
+
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+async function importRecord(f, p, key, value, file = false, extra) {
+  const was = p.stored[key];
+  await changePlannerRecord('kv', key, (latest, store) => {
+    if (!same(latest, was)) throw new Error('Planner record changed while reading the folder: ' + key);
+    if (extra) extra(store);
+    return value;
+  });
+  p[key] = p.stored[key] = value;
+  await finishKvSave(key, value, was, file, f.lock);
+}
+
+// A missing optional file is ordinary. A failed read must keep the scan retryable.
+async function optional(open) {
+  try { return await open(); } catch (e) { if (e.name !== 'NotFoundError') throw e; return null; }
+}
+async function jsonFile(file) {
+  const text = await file.text();
+  try { return JSON.parse(text); } catch { return null; }
+}
+
 // After a sync from her other device: a lesson that changed there goes to its file here, and a lesson deleted there has its file
 // taken away, or reading the folder would bring the old copy back.
 async function catchUp(f, p) {
-  const gone = (await kv.get('syncGoneFiles').catch(() => null)) || [];
-  for (const name of gone) if (!p.lessons.some(l => l._file === name)) { try { await f.dir.removeEntry(name); } catch {} }
-  if (gone.length) await saveFolderNote('syncGoneFiles', null);
-  for (const l of p.lessons.filter(l => l._sync)) { const n = copy(l); delete n._sync; await saveLesson(n); }
+  const gone = p.syncGoneFiles || [];
+  for (const name of gone) if (!p.lessons.some(l => l._file === name)) await optional(() => f.dir.removeEntry(name));
+  if (gone.length) await changePlannerRecord('kv', 'syncGoneFiles', (latest, store) => {
+    const keep = (latest || []).filter(name => !gone.includes(name));
+    if (keep.length) return keep;
+    store.delete('syncGoneFiles');
+  });
+  const conflicts = new Set();
+  for (const l of p.lessons) if (l._sync) {
+    try { await finishLessonFile(l, f, f.lock); }
+    catch (e) { if (!(e instanceof FolderFileChanged)) throw e; conflicts.add(l.id); }
+    // A changed external file is handled by readLessons, which keeps a version.
+  }
+  return conflicts;
 }
 
 // The pictures of a lesson file are in images/ beside it.
@@ -42,28 +101,48 @@ async function pictures(f, l, E) {
 }
 
 // A lesson file changed outside the app (src/planner/review.js claudeChanged).
-async function changedThere(old, l, P, E) {
+function changedThere(old, l, P, E) {
   if (!old) return;
+  // The folder instructions reserve notebook entries and uploaded decks for the teacher.
+  if ('notebook' in old) l.notebook = old.notebook; else delete l.notebook;
+  for (const key of ['final', 'finals']) if (old[key] && !l[key]) l[key] = old[key];
   if (!l.taught && old.taught) l.taught = old.taught;   // a file written without the taught notes doesn't lose them
   if (JSON.stringify(old.slides.map(P.slideKey)) === JSON.stringify(l.slides.map(P.slideKey)) && old.title === l.title) { if (old.pending) l.pending = old.pending; return; }
-  await saveVersion(old, 'Before ' + P.plAi() + '’s changes', E.snap, E.MAX_VERSIONS);
+  const version = { at: Date.now(), label: 'Before ' + P.plAi() + '’s changes', lesson: E.snap(old) };
   l.pending = old.pending || { at: Date.now(), before: copy(old.slides), title: old.title };
+  return version;
 }
 
-async function readLessons(f, p, E, P, out) {
+async function readLessons(f, p, E, P, out, conflicts) {
   for await (const [name, h] of f.dir.entries()) {
     if (h.kind !== 'file' || !/\.lesson\.json$/i.test(name)) continue;
     const file = await h.getFile(), mine = p.lessons.find(l => l._file === name);
-    if (mine && mine._mod && file.lastModified <= mine._mod + NEWER) continue;
-    let j; try { j = JSON.parse(await file.text()); } catch { continue; }
+    if (mine && !conflicts.has(mine.id) && mine._mod && file.lastModified <= mine._mod + NEWER) continue;
+    const j = await jsonFile(file); if (!j || typeof j !== 'object') continue;
     const l = E.normLesson(j), old = p.lessons.find(x => x.id === l.id);
     if (old && old._file && old._file !== name) continue;   // a stale copy under an old name
     if (!old) { E.deckStart(l); if (!l.status) l.status = 'review'; }   // a new deck from the assistant: title, then agenda
     await pictures(f, l, E);
     l._file = name; l._mod = file.lastModified; if (old) l.created = old.created;
-    await changedThere(old, l, P, E);
+    const version = changedThere(old, l, P, E);
     // a new file gets its id, and its title and agenda slides, written back
-    const s = await saveLesson(l, { file: !j.id || !old });
+    const normalize = !j.id || !old;
+    if (normalize) l._sync = 1;   // catchUp retries a failed file write using this same lesson ID
+    l.updated = Math.max(Date.now(), (old?.updated || 0) + 1);
+    await changePlannerRecord('lessons', l.id, (latest, store, versions) => {
+      if (!same(latest, old)) throw new Error('Lesson changed while reading the folder: ' + l.id);
+      if (version) {
+        const key = 'ver:' + l.id, read = versions.get(key);
+        read.onsuccess = () => {
+          const previous = read.result ?? [];
+          if (!Array.isArray(previous)) { versions.transaction.abort(); return; }
+          try { versions.put([version, ...previous].slice(0, E.MAX_VERSIONS), key); }
+          catch { versions.transaction.abort(); }
+        };
+      }
+      return l;
+    }, version ? 'kv' : undefined);
+    const s = await finishLessonSave(l, normalize, f.lock);
     const i = p.lessons.findIndex(x => x.id === s.id); if (i >= 0) p.lessons[i] = s; else p.lessons.push(s);
     old ? out.changed++ : out.added++;
   }
@@ -71,51 +150,55 @@ async function readLessons(f, p, E, P, out) {
 
 // Units/*.unit.json: the weeks, title, start and Atlas link. Files stay as the app has them.
 async function readUnits(f, p, E, out) {
-  let dir; try { dir = await f.dir.getDirectoryHandle('Units'); } catch { return; }
+  const dir = await optional(() => f.dir.getDirectoryHandle('Units')); if (!dir) return;
   const list = p.units.slice(); let n0 = 0, firstNew = [];
   for await (const [name, h] of dir.entries()) {
     if (h.kind !== 'file' || !/\.unit\.json$/i.test(name)) continue;
     const file = await h.getFile(), mine = list.find(u => u._file === name);
-    if (mine && mine._mod && file.lastModified <= mine._mod + NEWER) continue;
-    let j; try { j = JSON.parse(await file.text()); } catch { continue; }
+    const j = await jsonFile(file); if (!j || typeof j !== 'object') continue;
+    if (j.id && mine && mine._mod && file.lastModified === mine._mod) continue;
     const old = list.find(u => u.id === j.id) || mine;
     if (old && old._file && old._file !== name) continue;
-    const n = E.normUnit({ ...j, id: old ? old.id : j.id });
-    if (old) { n.files = old.files; n.color = n.color || old.color; } else n.files = [];   // files only come in through the app
+    let n = E.normUnit({ ...j, id: old ? old.id : j.id });
+    if (old) {
+      const { importUnit } = await import('./unit-recovery.js');
+      n = await importUnit(dir, old, n, file);
+    } else n.files = [];   // attachments only come in through the app
     n._file = name; n._mod = file.lastModified;
     const i = list.findIndex(u => u.id === n.id); if (i >= 0) list[i] = n; else list.push(n);
     old ? out.changed++ : out.added++; n0++;
     if (!j.id) firstNew.push(n.id);
   }
   if (!n0) return;
-  // the rest are kept as read; a new file without an id is then written back with one (under the unit's own name)
-  await saveKv('units', list.filter(u => !firstNew.includes(u.id)), { file: false });
-  if (firstNew.length) await saveKv('units', list);
-  p.units = list;
+  await importRecord(f, p, 'units', list);
+  if (firstNew.length) {
+    // Store each generated ID before normalizing its file. If I/O fails, a
+    // retry finds the same unit by its source filename, even at the same mtime.
+    await afterSave('units', list, list.filter(u => !firstNew.includes(u.id)), f, f.lock);
+    p.units = p.stored.units = await readPlannerRecord('kv', 'units');
+  }
 }
 
 // activities.json: the teacher's own activities.
 async function readActivities(f, p, out) {
-  let file; try { file = await (await f.dir.getFileHandle('activities.json')).getFile(); } catch { return; }
-  // the time it was last read is kept in memory, as the current Planner keeps it; the list is compared, so reading again is harmless
-  if (actSeen && file.lastModified <= actSeen + NEWER) return;
-  actSeen = file.lastModified;
-  let j; try { j = JSON.parse(await file.text()); } catch { return; }
+  const file = await optional(async () => (await f.dir.getFileHandle('activities.json')).getFile());
+  if (!file) return;
+  if (actSeen && file.lastModified === actSeen.mod && await actSeen.dir.isSameEntry(f.dir)) return;
+  const j = await jsonFile(file); if (!Array.isArray(j)) return;
   const { normActivity } = await import('../engines/activities.js');
-  const list = (Array.isArray(j) ? j : []).map(normActivity).filter(Boolean);
-  if (JSON.stringify(list) === JSON.stringify(p.activities || [])) return;
-  await saveKv('activities', list, { file: false }); p.activities = list; out.changed++;
+  const list = j.map(normActivity).filter(Boolean);
+  if (!same(list, p.activities)) { await importRecord(f, p, 'activities', list); out.changed++; }
+  actSeen = { dir: f.dir, mod: file.lastModified };
 }
-let actSeen = 0;
+let actSeen = null;
 
 // profile.json: the teacher's profile, loaded when it is new or changed (src/planner/lessons.js applySetup), so each computer picks
 // it up: the timetable, units not here yet, a missing Atlas link, the default look.
 async function readProfile(f, p, E, P) {
-  let file; try { file = await (await f.dir.getFileHandle('profile.json')).getFile(); } catch { return; }
-  if ((await kv.get('profMod').catch(() => null)) === file.lastModified) return;
-  let j; try { j = JSON.parse(await file.text()); } catch { return; }
+  const file = await optional(async () => (await f.dir.getFileHandle('profile.json')).getFile());
+  if (!file || p.profMod === file.lastModified) return;
+  const j = await jsonFile(file);
   if (!j || !Array.isArray(j.classes)) return;
-  await saveFolderNote('profMod', file.lastModified);
   const was = p.setup || {}, old = id => (was.classes || []).find(x => x.id === String(id)) || {}, sun = P.meetsOn(0, j.classes);
   const monday = s => P.ymd(E.mondayOf(P.parseYmd(s), sun));
   const setup = { classes: j.classes.map(c => ({ id: String(c.id), name: String(c.name || c.id), course: String(c.course || ''), color: /^#[0-9a-f]{6}$/i.test(c.color) ? c.color : '#1F6FB2', ...((u => u ? { mb: u } : {})(P.mbUrl(c.mb) || P.mbUrl(old(c.id).mb))), meets: (c.meets || []).map(m => ({ dow: +m.dow, start: String(m.start || ''), end: String(m.end || ''), label: String(m.label || '') })) })),
@@ -125,32 +208,46 @@ async function readProfile(f, p, E, P) {
     semStart: /^\d{4}-\d\d-\d\d$/.test(j.semStart) ? monday(j.semStart) : '', semEnd: /^\d{4}-\d\d-\d\d$/.test(j.semEnd) ? monday(j.semEnd) : '',
     claudeUrl: /^https:\/\/claude\.ai\//.test(j.claudeUrl) ? String(j.claudeUrl) : '', profile: String(j.profile || '').slice(0, 80) };
   const deck = P.deckClean(j.deck); if (deck) setup.deck = deck;
-  if (typeof j.sys === 'string' || typeof j.unitPlans === 'string' || (j.plain && !(await kv.get('words').catch(() => null)))) await saveKv('words', { sys: String(j.sys || '').slice(0, 40), unit: String(j.unitPlans || '').slice(0, 40) });
-  await saveKv('setup', setup); p.setup = setup; E.L.setup = setup;
+  if (typeof j.sys === 'string' || typeof j.unitPlans === 'string' || (j.plain && !p.words)) {
+    await importRecord(f, p, 'words', {
+      ...p.words,
+      sys: typeof j.sys === 'string' ? j.sys.slice(0, 40) : p.words?.sys || '',
+      unit: typeof j.unitPlans === 'string' ? j.unitPlans.slice(0, 40) : p.words?.unit || ''
+    });
+  }
+  await importRecord(f, p, 'setup', setup, true); E.L.setup = setup;
   let units = null;
+  const profileUnits = new Set();
   for (const x of Array.isArray(j.units) ? j.units : []) {
+    if (x.id) profileUnits.add(x.id);
     const u = E.normUnit(x), list = units || p.units, had = list.find(v => v.id === u.id);
     if (x.id && !had) (units ||= list.slice()).push(u);
     else if (had && !had.atlas && u.atlas) { units ||= list.slice(); units[units.indexOf(had)] = { ...had, atlas: u.atlas }; }   // fill in a missing Atlas link, nothing else
   }
-  if (units) { await saveKv('units', units); p.units = units; }
+  if (units) await importRecord(f, p, 'units', units);
+  if (profileUnits.size) {
+    // A previous attempt may have stored the unit before its folder write failed.
+    await afterSave('units', p.units, p.units.filter(u => !profileUnits.has(u.id)), f, f.lock);
+    p.units = p.stored.units = await readPlannerRecord('kv', 'units');
+  }
   const { LOOKS } = await import('../engines/plantools.js');
-  if (LOOKS[j.look] && !p.deflook) { await saveKv('deflook', j.look); p.deflook = j.look; }
+  if (LOOKS[j.look] && !p.deflook) await importRecord(f, p, 'deflook', j.look);
+  await saveFolderNote('profMod', file.lastModified);
 }
 
 // Rubrics/*.rubric.json and *.scale.json.
 async function readBank(f, p, P, out) {
-  let dir; try { dir = await f.dir.getDirectoryHandle('Rubrics'); } catch { return; }
+  const dir = await optional(() => f.dir.getDirectoryHandle('Rubrics')); if (!dir) return;
   const B = await import('../engines/pbank.js');
-  const files = { ...((await kv.get('bankFiles').catch(() => null)) || {}) }, byFile = new Map(Object.entries(files).map(([id, v]) => [v.file, { id, ...v }]));
+  const files = { ...(p.bankFiles || {}) }, byFile = new Map(Object.entries(files).map(([id, v]) => [v.file, { id, ...v }]));
   const bank = copy(p.bank || { rubrics: [], scales: [], gone: {}, units: [] }); bank.rubrics ||= []; bank.scales ||= []; bank.gone ||= {};
   let any = false;
   for await (const [name, h] of dir.entries()) {
     const kind = /\.rubric\.json$/i.test(name) ? 'rubrics' : /\.scale\.json$/i.test(name) ? 'scales' : null;
     if (h.kind !== 'file' || !kind) continue;
     const file = await h.getFile(), mine = byFile.get(name);
-    if (mine && file.lastModified <= mine.mod + NEWER) continue;
-    let j; try { j = JSON.parse(await file.text()); } catch { continue; }
+    if (mine && mine.text && file.lastModified <= mine.mod + NEWER) continue;
+    const j = await jsonFile(file); if (!j || typeof j !== 'object') continue;
     const list = bank[kind], old = list.find(x => x.id === (j.id || (mine && mine.id)));
     if (old && files[old.id] && files[old.id].file !== name) continue;   // a stale copy under an old name
     const unit = j.unit ? (unitRef(p, j.unit) || B.normRef(j.unit)) : null;
@@ -166,8 +263,10 @@ async function readBank(f, p, P, out) {
     old ? out.changed++ : out.added++; any = true;
   }
   if (!any) return;
-  await saveFolderNote('bankFiles', files);
-  await saveKv('bank', bank); p.bank = bank;
+  // The item and its filename/ID are one change. A file still awaiting its
+  // generated ID has an empty text signature, and is retried after a disk error.
+  await importRecord(f, p, 'bank', bank, false, store => store.put(files, 'bankFiles'));
+  await afterSave('bank', bank, null, f, f.lock);
 }
 // A unit named in a file, as the bank refers to it (src/planner/bank.js unitRef).
 function unitRef(p, x) {
@@ -177,17 +276,27 @@ function unitRef(p, x) {
 
 let running = null;
 export function readPlannerFolder() {
-  return (running ||= (async () => {
-    const f = await plannerFolder(); if (!f || !f.ok) return null;
+  return (running ||= withFolderLock(async token => {
     const out = { added: 0, changed: 0 };
-    let p = await readAll(); const E = engine(p), P = await import('../engines/pfolder.js');
-    try { await catchUp(f, p); } catch (e) { console.error(e); }
-    p = await readAll(); engine(p);
-    try { await readLessons(f, p, E, P, out); } catch (e) { console.error(e); return { ...out, failed: true }; }
-    try { await readUnits(f, p, E, out); } catch (e) { console.error(e); }
-    try { await readActivities(f, p, out); } catch (e) { console.error(e); }
-    try { await readProfile(f, p, E, P); } catch (e) { console.error(e); }
-    try { await readBank(f, p, P, out); } catch (e) { console.error(e); }
-    return out;
-  })().finally(() => { running = null; }));
+    try {
+      const f = await plannerFolder({ strict: true }); if (!f || !f.ok) return null;
+      f.lock = token;
+      let p = await readImportPlan();
+      const catchingUp = p.lessons.some(l => l._sync);
+      const conflicts = await catchUp(f, p);
+      if (catchingUp) {
+        const before = p.lessons;
+        p = await readImportPlan();
+        const present = new Set(p.lessons.map(l => l.id));
+        for (const old of before) if (old._file && !present.has(old.id)) await removeRecordFile(f.dir, old);
+      }
+      const E = engine(p), P = await import('../engines/pfolder.js');
+      await readLessons(f, p, E, P, out, conflicts);
+      await readUnits(f, p, E, out);
+      await readActivities(f, p, out);
+      await readProfile(f, p, E, P);
+      await readBank(f, p, P, out);
+      return out;
+    } catch (e) { console.error(e); return { ...out, failed: true }; }
+  }).finally(() => { running = null; }));
 }

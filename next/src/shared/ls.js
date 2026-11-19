@@ -4,7 +4,8 @@
 // new app too) give every key its sample name, as they do for the current app. No DOM is used here.
 import { mayWrite } from './lock.js';
 
-export const text = k => { try { return localStorage.getItem(k); } catch { return null; } };
+export const textStrict = k => localStorage.getItem(k);
+export const text = k => { try { return textStrict(k); } catch { return null; } };
 export function json(k, fallback = null) {
   const t = text(k); if (t == null) return fallback;
   try { return JSON.parse(t); } catch { return fallback; }

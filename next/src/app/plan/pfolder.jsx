@@ -43,6 +43,12 @@ export function watchPlannerFolder() {
   window.addEventListener('focus', () => { if (!typing()) lookNow(true); });
 }
 
+async function populateLinkedFolder() {
+  const result = await readPlannerFolder();
+  if (!result || result.failed) { toast(t('prefs.pf_read_failed')); return false; }
+  return writePlannerFolderAll(await loadPlan(true));
+}
+
 async function link() {
   if (inSample()) return toast(t('prefs.pf_sample'), { ms: 7000 });
   let h;
@@ -51,7 +57,7 @@ async function link() {
   try {
     if (await holdsGrading(h)) { toast(t('prefs.pf_grading'), { ms: 8000 }); return false; }
     await linkPlannerFolder(h);
-    await writePlannerFolderAll(await loadPlan(true));
+    if (!await populateLinkedFolder()) return false;
     toast(t('prefs.pf_linked', { name: h.name }));
     watchPlannerFolder();
     return true;
@@ -61,7 +67,7 @@ async function permit() {
   const f = await plannerFolder(); if (!f) return false;
   let p = 'denied'; try { p = await f.dir.requestPermission({ mode: 'readwrite' }); } catch {}
   if (p !== 'granted') return false;
-  try { await lookNow(true); await writePlannerFolderAll(await loadPlan(true)); return true; } catch (e) { console.error(e); saveFailed(e); return false; }
+  try { return await populateLinkedFolder(); } catch (e) { console.error(e); saveFailed(e); return false; }
 }
 
 // The command bar's Planner folder command (plan/find.js addFolderCommand).

@@ -1,1 +1,0 @@
-import{k as n}from"./chunk-GUOYAVNL.js";var i=t=>String(t||"").toLowerCase().replace(/[^a-z0-9]/g,""),e=t=>(t=String(t||"").trim(),/^[\w.-]+\.[a-z]{2,}\//i.test(t)&&(t="https://"+t),/^https?:\/\/[^\s"<>]+$/i.test(t)?t:""),s=i;function a(t){if(!t)return"";let r={};try{r=n.json(null)||{}}catch{}return e(t.mb)||e(r[i(t.name)])||""}export{e as a,s as b,a as c};
