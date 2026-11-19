@@ -657,7 +657,9 @@ test('Seating: a room laid out, seated in roster order, a student kept in a seat
   const first = await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('gs.lib')).classes[0].seats; return s.desks['0,0']; });
   assert.equal(first, N[0]);
   // keep the first student in their seat, then shuffle
-  await p.click('[data-desk="0,0"]');
+  // the desk is drawn again after the save; press it once it shows the student, and again if the redraw took the press
+  await p.waitForSelector('[data-desk="0,0"][data-n]');
+  for (let k = 0; k < 4 && !(await p.$('[data-seat-pin]')); k++) { await p.click('[data-desk="0,0"]'); await p.waitForSelector('[data-seat-pin]', { timeout: 3000 }).catch(() => {}); }
   await p.waitForSelector('[data-seat-pin]');
   await p.click('[data-seat-pin]');
   await p.waitForFunction(n => (JSON.parse(localStorage.getItem('gs.lib')).classes[0].seats.pins || []).includes(n), {}, N[0]);
