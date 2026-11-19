@@ -100,12 +100,12 @@ test('Settings > Display > Phone layout: off keeps a phone laid out as a compute
   await p.waitForSelector('[data-stphone] [role="switch"]', { timeout: 30000 });
   assert.equal(await p.$eval('[data-stphone] [role="switch"]', e => e.getAttribute('aria-checked')), 'true');
   await p.click('[data-stphone] [role="switch"]');
-  assert.equal(await p.evaluate(() => localStorage.getItem('gs.phone')), '0');
+  await p.waitForFunction(() => localStorage.getItem('gs.phone') === '0', { timeout: 10000 });   // the setting is kept a moment after the press
   await p.reload(); await shellUp(p);
   assert.equal(await p.$eval('meta[name=viewport]', e => e.content), 'width=1100', 'a phone lays the page out 1100 wide');
   await p.waitForSelector('[data-stphone] [role="switch"]', { timeout: 30000 });
   await p.click('[data-stphone] [role="switch"]');
-  assert.equal(await p.evaluate(() => localStorage.getItem('gs.phone')), null);
+  await p.waitForFunction(() => localStorage.getItem('gs.phone') === null, { timeout: 10000 });
   await p.reload(); await shellUp(p);
   assert.equal(await p.$eval('meta[name=viewport]', e => e.content), 'width=device-width,initial-scale=1');
   assert.ok(await p.$('[data-stphonewin]'), 'the phone version can be opened in a narrow window');
@@ -119,8 +119,10 @@ test('Find has the settings people look for by name, each opening its group', as
     await p.goto(srv.url + 'next/#/home'); await shellUp(p);
     await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
     await p.waitForSelector('dialog.cmd[open]');
+    await p.waitForFunction(() => document.activeElement && document.activeElement.matches('dialog.cmd input'));
     await p.keyboard.type(say);
-    await p.waitForFunction(s => [...document.querySelectorAll('dialog.cmd[open] [role="option"]')].some(o => o.textContent.includes(s)), { timeout: 10000 }, say);
+    // Enter takes the selected row: wait until that is the setting, not a row still settling (such as the one that searches inside lessons)
+    await p.waitForFunction(s => { const o = document.querySelector('dialog.cmd[open] [role="option"][aria-selected="true"]'); return o && o.textContent.includes(s) && !o.textContent.startsWith('Search inside'); }, { timeout: 10000 }, say);
     await p.keyboard.press('Enter');
     await p.waitForFunction(h => location.hash === h, { timeout: 10000 }, to);
   }

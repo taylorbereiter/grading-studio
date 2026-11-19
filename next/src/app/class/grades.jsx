@@ -57,7 +57,7 @@ export default function Grades({ classId, sub }) {
   useLayoutEffect(() => { if (!b || !/^type-/.test(sub || '')) return; setBox({ add: true, itId: sub.slice(5) }); location.replace(href('class', classId, 'grades')); }, [b, sub]);
   // grades/charts, grades/goals, grades/reports, grades/sheets: the card's sheet, opened (Find and the tab row reach them by address)
   useLayoutEffect(() => { if (!b || !['charts', 'goals', 'reports', 'sheets'].includes(sub)) return; setBox({ [sub]: true }); location.replace(href('class', classId, 'grades')); }, [b, sub]);
-  const Gl = usePart('goals', !!(box && box.goals)), Rp = usePart('reports', !!(box && box.reports)), Ps = usePart('sheets', !!(box && box.sheets));
+  const Gl = usePart('goals', !!(box && box.goals)), Rp = usePart('reports', !!(box && box.reports)), Ps = usePart('sheets', !!(box && box.sheets)), Mc = usePart('mypCharts', !!(box && box.charts && b && !b.error && (c0 => c0 && B.classWay(c0) === 'myp')((b.lib.classes || []).find(k => k.id === classId))));
   if (!b) return <div class="loading" aria-busy="true" />;
   const x = classBook(b, classId);
   if (x && handoff.rows && handoff.cls === classId && !box) { const rows = handoff.rows; handoff.rows = null; PARTS.bki().then(m => { setImp(() => m.ImportSheet); setBox({ imp: true, rows }); }); }
@@ -111,8 +111,8 @@ export default function Grades({ classId, sub }) {
       : <Table x={x} cols={cols} show={show} ct={ct} labelOf={labelOf} term={on} tab={tab} only={only} pick={pick} left={left} onLeft={() => redraw(k => k + 1)} onCol={col => setBox({ col })} />}
     {table && !myp && cols.length > 0 && <details class="bkhow" data-book-how><summary>{t('class.how_title')}</summary>
       <p class="mute small">{[t('class.how_order'), ct.length ? t(on ? 'class.how_types_term' : 'class.how_types') : '', t('class.how_never'), cols.some(k => k.type === 'xc') ? t('class.how_xc') : '', only ? '' : t('class.how_typed')].filter(Boolean).join(' ')}</p></details>}
-    {c.names.length > 0 && <div class="gfoot">{!myp && <button type="button" class="gl2" onClick={() => setBox({ charts: true })} data-open-charts><span class="ic"><Icon name="chart" /></span>
-      <span><b>{t('class.charts')} <Icon name="chr" size="xs" /></b><p>{t('class.charts_say')}</p></span></button>}
+    {c.names.length > 0 && <div class="gfoot"><button type="button" class="gl2" onClick={() => setBox({ charts: true })} data-open-charts><span class="ic"><Icon name="chart" /></span>
+      <span><b>{t('class.charts')} <Icon name="chr" size="xs" /></b><p>{t(myp ? 'class.mc_card_say' : 'class.charts_say')}</p></span></button>
       <button type="button" class="gl2" onClick={() => setBox({ goals: true })} data-open-goals><span class="ic"><Icon name="target" /></span>
       <span><b>{t('class.gl_title')} <Icon name="chr" size="xs" /></b><p>{t('class.gl_card_say')}</p></span></button>
       <button type="button" class="gl2" onClick={() => setBox({ reports: true })} data-open-reports><span class="ic"><Icon name="edit" /></span>
@@ -122,7 +122,8 @@ export default function Grades({ classId, sub }) {
     {box && box.goals && Gl && <Gl.GoalsSheet x={x} cols={table ? cols : x.cols} term={on} left={left} onClose={() => setBox(null)} />}
     {box && box.reports && Rp && <Rp.ReportsSheet x={x} cols={table ? cols : x.cols} term={on} onClose={() => setBox(null)} />}
     {box && box.sheets && Ps && <Ps.SheetsSheet x={x} term={on} left={left} onClose={() => setBox(null)} />}
-    {box && box.charts && <ChartsSheet x={x} cols={table ? cols : x.cols} all={b.cols} term={on} left={left} labelOf={labelOf} onClose={() => setBox(null)} />}
+    {box && box.charts && myp && Mc && <Mc.MypChartsSheet x={x} cols={table ? cols : x.cols} all={b.cols} term={on} left={left} onClose={() => setBox(null)} />}
+    {box && box.charts && !myp && <ChartsSheet x={x} cols={table ? cols : x.cols} all={b.cols} term={on} left={left} labelOf={labelOf} onClose={() => setBox(null)} />}
     {box && box.col && <ColDialog col={box.col} conf={conf} labelOf={labelOf} onClose={() => setBox(null)} onEditTyped={id => setBox({ add: true, itId: id })} onEntry={k => openEntry(x, x.lib, on, k)} />}
     {box && box.types && <TypesDialog cols={untyped} onClose={() => setBox(null)} />}
     {box && box.setup && <SetupSheet conf={conf} book={x.lib.book} onClose={() => setBox(null)} />}

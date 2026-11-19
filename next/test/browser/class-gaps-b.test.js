@@ -133,8 +133,8 @@ test('B-005 B-006 B-007 B-010 B-002 B-003: a card\'s name opens it; typed-in pil
   await p.keyboard.press('Escape');
   // B-002/B-003: New assignment, a date in the week the essay plan is due
   await p.goto(srv.url + 'next/#/class/c1/work');
-  await p.waitForSelector('[data-newasg]', { timeout: 60000 });
-  await p.click('[data-newasg]');
+  await p.waitForSelector('[data-newasg]', { visible: true, timeout: 60000 });
+  await p.$eval('[data-newasg]', e => e.click());   // the cards fill in their counts when the papers' save comes, so press it where it is now
   await p.waitForSelector('dialog[open] [data-asg-due]');
   await p.$eval('dialog[open] input[data-asg-due], dialog[open] [data-asg-due] input', e => { e.value = '2026-11-03'; e.dispatchEvent(new Event('input', { bubbles: true })); });
   await p.waitForFunction(() => /Also due that week: 1 set, 6 papers/.test((document.querySelector('dialog[open] [data-asg-week]') || {}).textContent || ''), { timeout: 15000 });
@@ -425,7 +425,7 @@ test('H-004: Undo of a unit rename puts back only the name; a class added in ano
   await ctx.close();
 });
 
-test('H-021: Undo of a School link deleted brings back the link and keeps a person added in another window since', async () => {
+test('H-021 B-904: Undo of a School link deleted brings back the link on the page at once and keeps a person added in another window since', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const p = await page(ctx, errors);
   await p.goto(srv.url + 'blank'); await plant(p, seedB());
@@ -449,6 +449,12 @@ test('H-021: Undo of a School link deleted brings back the link and keeps a pers
   await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
   await p.waitForFunction(() => !JSON.parse(localStorage.getItem('gs.school')).items.find(i => i.id === 'sl1').gone);
   assert.deepEqual(((await sch(p)).people || []).map(x => x.name), ['Rowan Placeholder'], 'the person added since stays');
+  // B-904: the page shows it at once, and Redo takes it away again
+  await p.waitForSelector('[data-sch="sl1"]', { timeout: 5000 });
+  await p.keyboard.down('Control'); await p.keyboard.press('y'); await p.keyboard.up('Control');
+  await p.waitForFunction(() => !document.querySelector('[data-sch="sl1"]'), { timeout: 5000 });
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForSelector('[data-sch="sl1"]', { timeout: 5000 });
   const old = await page(ctx, errors);
   await old.goto(srv.url); await appReady(old);
   assert.deepEqual(await old.evaluate(() => { const s = JSON.parse(localStorage.getItem('gs.school')); return [s.items.filter(i => !i.gone).length, s.people.length]; }), [2, 1]);
@@ -718,6 +724,88 @@ test('B-056: No class says how its assignments reach a class: dragged onto one i
   await p.goto(srv.url + 'next/#/class/-/work');
   await p.waitForSelector('[data-loose-say]', { timeout: 60000 });
   assert.match(await p.$eval('[data-loose-say]', e => e.textContent), /sidebar/);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('B-903: the Assignments tab she lands on shows the counts filled in at load without leaving it', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  // the download's card is formative, so its card says how much feedback is given: a count the oldest kept rows lack
+  await p.evaluate(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); for (const u of l.classes[0].units) for (const x of u.items) if (x.batchId) x.type = 'fm'; localStorage.setItem('gs.lib', JSON.stringify(l)); });
+  // two students' feedback marked complete in the saved work (the current app saves it this way)
+  await p.evaluate(() => { const w = JSON.parse(localStorage.getItem('gs.b.n1')); for (const k of Object.keys(w.s).slice(0, 2)) w.s[k].g = { ...w.s[k].g, fb: 1 }; w.t = Date.now() + 1000; localStorage.setItem('gs.b.n1', JSON.stringify(w)); });
+  const lib = await libOf(p), it = lib.classes[0].units.flatMap(u => u.items).find(x => x.batchId);
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector(`[data-item="${it.id}"]`, { timeout: 60000 });
+  const was = await p.$eval(`[data-item="${it.id}"]`, e => e.textContent);
+  await p.waitForFunction(() => new Promise(res => { const r = indexedDB.open('grading-studio-keep'); r.onsuccess = () => { const g = r.result.transaction('meta').objectStore('meta').getAll(); g.onsuccess = () => { res(g.result.every(m => m.marked != null)); r.result.close(); }; }; }), { timeout: 20000, polling: 250 });
+  await p.waitForFunction((id, w) => document.querySelector(`[data-item="${id}"]`).textContent !== w, { timeout: 10000 }, it.id, was);
+  // the same as a fresh load shows
+  const now = await p.$eval(`[data-item="${it.id}"]`, e => e.textContent);
+  await p.goto(srv.url + 'blank'); await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector(`[data-item="${it.id}"]`, { timeout: 60000 });
+  await p.waitForFunction((id, now) => document.querySelector(`[data-item="${id}"]`).textContent === now, { timeout: 10000 }, it.id, now);
+  assert.match(now, /4 of 6 left/);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('B-905: an MYP student\'s page shows the 1 to 7, the total and each criterion\'s level, never a percent; a level set there is kept and the current app reads it', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  await p.evaluate(() => { const l = JSON.parse(localStorage.getItem('gs.lib')), c = l.classes[0]; Object.assign(c, { way: 'myp', ib: { group: 'sci' } }); c.lv = { t1: { [c.names[0]]: { A: 5, B: 6, C: 7, t: 1 } } }; localStorage.setItem('gs.lib', JSON.stringify(l)); });
+  await p.goto(srv.url + 'next/#/class/c1/people/1');
+  await p.waitForSelector('[data-myp-stu] [data-kpi="lv-A"]', { timeout: 60000 });
+  if (!(await p.$eval('[data-myp-stu] [data-fit-box]', e => e.textContent)).length) throw new Error('no fit box');
+  assert.equal(await p.$('[data-kpi="avg"]'), null, 'no percent average');
+  assert.equal(await p.$eval('[data-kpi="lv-A"] b', e => e.textContent), '5');
+  assert.equal(await p.$eval('[data-kpi="lv-D"] b', e => e.textContent), '–');
+  assert.equal(await p.$eval('[data-kpi="grade"] b', e => e.textContent), '–', 'D is still to set');
+  // D set from the page: the grade comes
+  await p.click('[data-myp-stu] [data-lv="D:4"]');
+  await p.waitForFunction(() => document.querySelector('[data-kpi="grade"] b').textContent !== '–', { timeout: 10000 });
+  const g = await p.$eval('[data-kpi="grade"] b', e => e.textContent);
+  assert.equal(await p.$eval('[data-kpi="total"] b', e => e.textContent), '22');
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  assert.equal(await old.evaluate(() => { const G = window.__gs, c = G.state().lib.classes[0]; return String(G.ibTerm(c.lv.t1[c.names[0]], G.ibCrit(c), G.ibBounds(c)).grade); }), g);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('B-906: an MYP class has Charts on its Grades tab: grades set, the middle grade and levels, the stacks by criterion, the 1 to 7s, each task and how often; the address opens it; the current app counts the same grades', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  await p.evaluate(() => { const l = JSON.parse(localStorage.getItem('gs.lib')), c = l.classes[0]; Object.assign(c, { way: 'myp', ib: { group: 'sci' } });
+    c.lv = { t1: { [c.names[0]]: { A: 5, B: 6, C: 7, D: 4, t: 1 }, [c.names[1]]: { A: 3, B: 4, C: 5, D: 6, t: 1 }, [c.names[2]]: { A: 8, t: 1 } } }; localStorage.setItem('gs.lib', JSON.stringify(l)); });
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('[data-open-charts]', { timeout: 60000 });
+  await p.click('[data-open-charts]');
+  await p.waitForSelector('dialog[open] [data-myp-charts] [data-tile="set"]', { timeout: 30000 });
+  const n = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].names.length);
+  assert.equal(await p.$eval('[data-tile="set"] b', e => e.textContent), `2 of ${n}`);
+  assert.equal(await p.$eval('[data-tile="lv-A"] b', e => e.textContent), '5');
+  assert.equal(await p.$$eval('[data-myp-stack="set"] .cp-ibstack', a => a.length), 4);
+  assert.equal(await p.$$eval('[data-myp-grades] .cp-band', a => a.length), 7);
+  assert.equal(await p.$$eval('[data-myp-often] .cp-band', a => a.length), 4);
+  assert.equal(await p.$('dialog[open] [data-chart="trend"]'), null, 'not the percent charts');
+  const grades = await p.$$eval('[data-myp-grades] .cp-band', a => a.map(e => +e.querySelector('b').textContent));
+  // the address opens it too
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('dialog[open] [data-myp-charts]'));
+  await p.goto(srv.url + 'next/#/class/c1/grades/charts');
+  await p.waitForSelector('dialog[open] [data-myp-charts]', { timeout: 30000 });
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const want = await old.evaluate(() => { const G = window.__gs, c = G.state().lib.classes[0], crit = G.ibCrit(c), bd = G.ibBounds(c);
+    return [7, 6, 5, 4, 3, 2, 1].map(g => c.names.filter(n => G.ibTerm((c.lv.t1 || {})[n] || {}, crit, bd).grade === g).length); });
+  assert.deepEqual(grades, want);
+  assert.equal(want.reduce((a, b) => a + b, 0), 2);
+  await old.close();
   assert.deepEqual(errors, []);
   await ctx.close();
 });
