@@ -183,3 +183,184 @@ test('a recording and a link added to students: played, the time put in the comm
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// YouTube's player, played by this test (its embed messages): it says where it is when asked, and keeps the orders it is given.
+const FAKE_YT = `<!doctype html><title>player</title><body style="background:#000"><script>
+let t = 0, on = false, rate = 1, at = Date.now(), listening = false; window.__log = [];
+const cur = () => t + (on ? (Date.now() - at) / 1000 * rate : 0);
+const tell = () => parent.postMessage(JSON.stringify({ event: 'infoDelivery', info: { currentTime: cur(), playerState: on ? 1 : 2 } }), '*');
+addEventListener('message', e => { let d; try { d = JSON.parse(e.data); } catch { return; }
+  if (d.event === 'listening') { if (!listening) { listening = true; setInterval(tell, 250); } return tell(); }
+  if (d.event !== 'command') return;
+  window.__log.push(d.func + ' ' + JSON.stringify(d.args));
+  const now = cur(); t = now; at = Date.now();
+  if (d.func === 'seekTo') t = d.args[0]; if (d.func === 'playVideo') on = true; if (d.func === 'pauseVideo') on = false; if (d.func === 'setPlaybackRate') rate = d.args[0];
+  tell(); });
+</script></body>`;
+async function pageYT(ctx, errors) {
+  const p = await ctx.newPage();
+  p.on('pageerror', e => errors.push(e.message)); p.on('dialog', d => { errors.push('dialog: ' + d.message()); d.dismiss(); });
+  p.on('console', m => { if (m.type() === 'error' && !/favicon/.test(m.location().url || '') && !/ERR_FAILED|net::/.test(m.text())) errors.push(m.text()); });
+  await p.setRequestInterception(true);
+  p.on('request', r => { const u = r.url();
+    if (/^https:\/\/www\.youtube-nocookie\.com\/embed\/abcDEF12345\?enablejsapi=1/.test(u)) return r.respond({ status: 200, contentType: 'text/html', body: FAKE_YT });
+    if (/^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(u) || /^(data|blob|about):/.test(u)) return r.continue(); r.abort(); });
+  await p.evaluateOnNewDocument(STEADY);
+  await p.setViewport({ width: 1440, height: 900 });
+  return p;
+}
+const ytLog = async p => { const f = p.frames().find(x => /youtube-nocookie/.test(x.url())); return f ? f.evaluate(() => window.__log.slice()) : []; };
+
+// D-048 D-050 D-051 D-052 H-037 H-058: a YouTube link plays here with Back and Ahead, the speed and + Time to comment, as a video file
+// does, because its player says where it is; typed notes take their times from it (and say what gives the times when nothing does);
+// captions step back and ahead with ‹ and ›; a link straight to a video file can be turned before it plays.
+test('D-048 D-050 D-051 D-052 H-037 H-058: a YouTube player driven like a video file, captions stepped, typed-note times, Turn on a video link', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await pageYT(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  await p.evaluate(() => Promise.all([['grading-studio-added', 'files'], ['grading-studio-videos', 'v']].map(([n, s]) => new Promise(res => { const r = indexedDB.open(n, 1); r.onupgradeneeded = () => r.result.createObjectStore(s); r.onsuccess = () => { r.result.close(); res(); }; }))));
+  const z = path.join(dir, 'Speech2.zip'); fs.writeFileSync(z, zipOf({ 'Aria Testwell/Outline.pdf': await makePaper({ title: 'An outline' }), 'Bram Sample/Outline.pdf': await makePaper({ title: 'Another outline' }) }));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+
+  // D-052: a link straight to a video file has Turn before it plays
+  await goTo(p, 'Aria Testwell');
+  await addPick(p, 'video or recording');
+  await p.waitForSelector('dialog[open] [data-vdlink]');
+  await typeLink(p, 'https://example.com/talks/aria.mp4');
+  await tap(p, '[data-np="none"]');
+  await tap(p, '[data-vdadd]');
+  await p.waitForSelector('.media.vlink [data-vplay]', { timeout: 60000 });
+  await tap(p, '.media.vlink [data-vrot]');
+  await p.waitForFunction(() => { const v = window.__mark.state().batch.vrot; return v && Object.values(v)[0] === 90; });
+
+  // H-037: typed notes, the time button with nothing playing says what gives the times
+  await goTo(p, 'Bram Sample');
+  await p.waitForSelector('[data-tnopen]', { timeout: 60000 });
+  await p.click('[data-tnopen]'); await p.waitForSelector('.mk-tn .tn .tned');
+  await p.click('.mk-tn .tned'); await p.keyboard.type('Strong opening');
+  await p.evaluate(() => new Promise(r => setTimeout(r, 400)));
+  // the time button on the notes' bar, or under its ⋯ where the bar has no room
+  const timeBtn = async () => {
+    for (let i = 0; i < 5; i++) {
+      if (await p.evaluate(() => { const b = [...document.querySelectorAll('.mk-tn [data-tntm]')].find(e => e.checkVisibility()); if (b) b.click(); return !!b; })) return true;
+      await p.evaluate(() => { const d = document.querySelector('.mk-tn .kdots'); if (d) d.click(); });
+      await new Promise(r => setTimeout(r, 300));
+    }
+    return false;
+  };
+  assert.ok(await timeBtn(), 'the time button');
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast')].some(e => /A video, or the Timer for a talk given live, gives the times/.test(e.textContent)), { timeout: 10000 });
+
+  // Bram: a YouTube link, played here
+  await addPick(p, 'video or recording');
+  await p.waitForSelector('dialog[open] [data-vdlink]');
+  await typeLink(p, 'https://www.youtube.com/watch?v=abcDEF12345');
+  await tap(p, '[data-np="none"]');
+  await tap(p, '[data-vdadd]');
+  await p.waitForSelector('.media.vlink [data-vplay]', { timeout: 60000 });
+  await p.click('.media.vlink [data-trpaste]');
+  await p.type('.media.vlink [data-trta]', '[0:00] Good morning.\n[0:05] The tides rise.\n[0:09] Thank you.');
+  await p.click('.media.vlink [data-trsave]');
+  await p.waitForFunction(() => document.querySelectorAll('.media.vlink .trl').length === 3);
+  await p.click('.media.vlink [data-vplay]');
+  // D-050: Back and Ahead and the speed, sent to the player in its own messages
+  await p.waitForSelector('.media.vlink [data-skip="10"]', { timeout: 30000 });
+  await p.waitForFunction(() => !!document.querySelector('.media.vlink iframe'));
+  await new Promise(r => setTimeout(r, 1500));
+  await p.click('.media.vlink [data-skip="10"]');
+  await p.evaluate(() => [...document.querySelectorAll('.media.vlink .mctl button')].find(b => b.textContent.trim() === '1.5×').click());
+  let log = []; for (let i = 0; i < 20 && !(log.some(x => /^seekTo \[10,true\]/.test(x)) && log.some(x => /^setPlaybackRate \[1\.5\]/.test(x))); i++) { await new Promise(r => setTimeout(r, 250)); log = await ytLog(p); }
+  assert.ok(log.some(x => /^seekTo \[10,true\]/.test(x)), 'Ahead 10s: ' + log.join(' | '));
+  assert.ok(log.some(x => /^setPlaybackRate \[1\.5\]/.test(x)), 'the speed: ' + log.join(' | '));
+  // D-051: + Time to comment, from where the player says it is
+  await p.click('.media.vlink [data-stamp]');
+  await p.waitForFunction(() => /\[0:10\]/.test(window.__mark.state().batch.students.find(s => s.key === 'Bram Sample').grade.comment || ''), { timeout: 10000 });
+  // D-048: captions under the video follow it, and ‹ › step a line back and ahead
+  await p.click('.media.vlink [data-trcap]');
+  await p.waitForFunction(() => /Thank you\./.test((document.querySelector('.media.vlink .trcap') || {}).textContent || ''), { timeout: 10000 });
+  await p.click('.media.vlink [data-capgo="-1"]');
+  await p.waitForFunction(() => /The tides rise\./.test(document.querySelector('.media.vlink .trcap').textContent));
+  await p.click('.media.vlink [data-capgo="-1"]');
+  await p.waitForFunction(() => /Good morning\./.test(document.querySelector('.media.vlink .trcap').textContent));
+  assert.equal(await p.$eval('.media.vlink [data-capgo="-1"]', e => e.disabled), true, 'nothing before the first line');
+  // H-058: playing, a typed note's time comes from the player; Space pauses it
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.press(' ');
+  for (let i = 0; i < 20 && !(log = await ytLog(p)).some(x => /^playVideo/.test(x)); i++) await new Promise(r => setTimeout(r, 250));
+  assert.ok(log.some(x => /^playVideo/.test(x)), 'Space plays it: ' + log.join(' | '));
+  await p.click('.mk-tn .tned'); await p.keyboard.press('End');
+  assert.ok(await timeBtn());
+  await p.waitForFunction(() => { const tn = window.__mark.state().batch.students.find(s => s.key === 'Bram Sample').grade.tn; return tn && tn.l.some(x => x.t >= 10); }, { timeout: 10000 });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// D-045 D-046 D-047: a kept video that isn't in this browser can be put back with Choose the video file…, under the same name the
+// current app looks for; a recording that won't play says why and offers Download; Make again asks before replacing a transcript.
+test('D-045 D-046 D-047: a kept video put back, a recording that won’t play, and Make again asks first', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  await p.evaluate(() => Promise.all([['grading-studio-added', 'files'], ['grading-studio-videos', 'v']].map(([n, s]) => new Promise(res => { const r = indexedDB.open(n, 1); r.onupgradeneeded = () => r.result.createObjectStore(s); r.onsuccess = () => { r.result.close(); res(); }; }))));
+  const z = path.join(dir, 'Speech3.zip'); fs.writeFileSync(z, zipOf({ 'Aria Testwell/Outline.pdf': await makePaper({ title: 'An outline' }), 'Bram Sample/Outline.pdf': await makePaper({ title: 'Another outline' }) }));
+  const rec = path.join(dir, 'Speech take.wav'); fs.writeFileSync(rec, wav());
+  const broken = path.join(dir, 'Broken talk.mp4'); fs.writeFileSync(broken, Buffer.from('this is not a video at all'));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  let [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+
+  // D-045: a recording kept in this browser, then gone from it (as on another computer): put back
+  await goTo(p, 'Aria Testwell');
+  await addPick(p, 'video or recording');
+  await p.waitForSelector('dialog[open] [data-vdadd]');
+  [chooser] = await Promise.all([p.waitForFileChooser(), p.click('dialog[open] [data-v="file"]')]);
+  await chooser.accept([rec]);
+  await tap(p, '[data-np="none"]');
+  await tap(p, '[data-vdadd]');
+  await p.waitForFunction(() => document.querySelector('.media audio') && window.__mark.ready, { timeout: 60000 });
+  const vid = await p.evaluate(() => { const f = window.__mark.state().batch.students.find(s => s.key === 'Aria Testwell').files.find(f => f.kind === 'link'); return /gs-video:([\w-]+)/.exec(new TextDecoder().decode(f.data))[1]; });
+  await p.evaluate(v => new Promise(res => { const r = indexedDB.open('grading-studio-videos'); r.onsuccess = () => { const tx = r.result.transaction('v', 'readwrite'); tx.objectStore('v').delete(v); tx.oncomplete = () => { r.result.close(); res(); }; }; }), vid);
+  await p.reload();
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await goTo(p, 'Aria Testwell');
+  await p.waitForSelector('.media.vfile [data-vkback]', { timeout: 30000 });
+  [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.media.vfile [data-vkback]')]);
+  await chooser.accept([rec]);
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast')].some(e => /The video is back/.test(e.textContent)), { timeout: 30000 });
+  await p.waitForSelector('.media audio', { timeout: 30000 });
+  const back = await p.evaluate(v => new Promise(res => { const r = indexedDB.open('grading-studio-videos'); r.onsuccess = () => { const q = r.result.transaction('v').objectStore('v').get(v); q.onsuccess = () => { res(q.result ? q.result.name : null); r.result.close(); }; }; }), vid);
+  assert.equal(back, 'Speech take.wav', 'kept again under the id every paper with it looks for');
+
+  // D-047: Make again asks first; Cancel keeps the one she has
+  await p.click('.media [data-trpaste]');
+  await p.type('.media [data-trta]', '[0:00] Good morning.');
+  await p.click('.media [data-trsave]');
+  await p.waitForFunction(() => document.querySelectorAll('.media .trl').length === 1);
+  await p.click('.media [data-trmake]');
+  await p.waitForSelector('.media [data-tragain]');
+  assert.equal(await p.$eval('.media [data-tragain]', e => e.textContent), 'Make the transcript again? The one you have will be replaced.');
+  await p.evaluate(() => [...document.querySelectorAll('.media .trbox button')].find(b => b.textContent === 'Cancel').click());
+  await p.waitForFunction(() => document.querySelectorAll('.media .trl').length === 1);
+
+  // D-046: a recording that won't play says why, with Download
+  await goTo(p, 'Bram Sample');
+  [chooser] = await Promise.all([p.waitForFileChooser(), addPick(p, 'Add a file')]);
+  await chooser.accept([broken]);
+  await p.waitForSelector('.media [data-mbad="play"]', { timeout: 30000 });
+  assert.match(await p.$eval('.media [data-mbad]', e => e.textContent), /won’t play in this browser/);
+  assert.ok(await p.$('.media [data-mdl]'), 'Download');
+  await p.evaluate(() => window.__mark.saved());
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
