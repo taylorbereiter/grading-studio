@@ -27,7 +27,23 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 // .csv or .txt list read the same way, with any student ID and email kept as that student's details. Saved as one undo step.
 export function RosterDialog({ c, onClose }) {
   const [name, setName] = useState(c ? c.name : ''), [names, setNames] = useState(c ? c.names.join('\n') : ''), up = useRef([]), file = useRef(null);
-  const [err, setErr] = useState(''), [Gc, setGc] = useState(null);
+  const [err, setErr] = useState(''), [Gc, setGc] = useState(null), [sure, setSure] = useState(false);
+  // Delete (src/app/screens.js editClass): asked first; its units and assignments move to No class, and Undo puts it all back
+  const del = async () => {
+    let moved = false;
+    await change(t('class.del_class'), l => {
+      const i = l.classes.findIndex(k => String(k.id) === String(c.id)); if (i < 0) return;
+      l.loose ||= { id: '', units: [] };
+      for (const u of l.classes[i].units) { for (const it of u.items) { it.classId = ''; moved = true; } l.loose.units.push(u); }
+      l.classes.splice(i, 1);
+    }, true);
+    onClose(null);
+    go(...(moved ? ['class', '-', 'work'] : ['home']));
+    toast(t('class.del_done', { name: c.name }), { undo: () => undoList.undo() });
+  };
+  if (sure) return <Dialog open title={t('class.del_q', { name: c.name })} onClose={() => setSure(false)}
+    actions={<><Button onClick={() => setSure(false)}>{t('common.cancel')}</Button><Button variant="primary" onClick={del} data-class-delok>{t('class.del_ok')}</Button></>}>
+    <p>{t('class.del_say')}</p></Dialog>;
   const read = async e => { const f = e.currentTarget.files[0]; if (!f) return; const rows = B.parseRosterRows(await f.text()); up.current = rows; setNames(rows.map(r => r.name).join('\n')); e.currentTarget.value = ''; };
   const save = async () => {
     const nm = name.trim(); if (!nm) { setErr(t('class.name_needed')); return; }
@@ -42,7 +58,7 @@ export function RosterDialog({ c, onClose }) {
     onClose(id);
   };
   return <Dialog open title={t(c ? 'class.edit_roster' : 'class.new_class')} onClose={() => onClose(null)}
-    actions={<><Button onClick={() => onClose(null)}>{t('common.cancel')}</Button><Button variant="primary" onClick={save} data-roster-save>{t('class.save')}</Button></>}>
+    actions={<>{c && <Button variant="quiet" onClick={() => setSure(true)} data-class-del>{t('class.del_class')}</Button>}<Button onClick={() => onClose(null)}>{t('common.cancel')}</Button><Button variant="primary" onClick={save} data-roster-save>{t('class.save')}</Button></>}>
     <TextInput label={t('class.class_name')} value={name} onInput={setName} error={err} data-roster-name autofocus={!c} />
     <label class="cp-fld"><span class="lab">{t('class.students_one_per_line')}</span>
       <textarea class="input roster-ta" rows="12" value={names} onInput={e => setNames(e.currentTarget.value)} placeholder={t('class.roster_ph')} data-roster-names /></label>
