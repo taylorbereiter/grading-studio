@@ -488,7 +488,7 @@ export default function MarkScreen({ route, classes }) {
   // student: mark/bringin.jsx) and Partners and videos (mark/partners.jsx)
   const [setupDlg, setSetupDlg] = useState(null);
   // Share with your assistant (mark/share.jsx), from this menu and from Insights; the assistant's name is handed in with ctx
-  const openShare = () => PARTS.share().then(S => setSetupDlg({ k: 'sh', S }), e => console.error(e));
+  const openShare = kind => PARTS.share().then(S => setSetupDlg({ k: 'sh', S, kind: typeof kind === 'string' ? kind : null }), e => console.error(e));
   const bringMany = () => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true; i.onchange = async () => { const B = await PARTS.bringin(); await B.bringFiles(await B.expand([...i.files]), o => setSetupDlg({ k: 'bring', B, ...o })); }; i.click(); };
   const setupItems = [{ label: t('mark.su_menu'), icon: 'settings', onSelect: openSetup }, { label: t('mark.bf_menu'), icon: 'upload', onSelect: bringMany },
     { label: t('mark.pv_menu'), icon: 'people', onSelect: () => PARTS.partners().then(P => setSetupDlg({ k: 'pv', P }), e => console.error(e)) },
@@ -529,15 +529,16 @@ export default function MarkScreen({ route, classes }) {
     {su && <su.SetupDialog onClose={() => setSu(null)} />}
     {setupDlg && setupDlg.k === 'bring' && <setupDlg.B.BringFiles rows={setupDlg.rows} dups={setupDlg.dups} onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'pv' && <setupDlg.P.Partners onClose={() => setSetupDlg(null)} />}
-    {setupDlg && setupDlg.k === 'sh' && <setupDlg.S.Share ctx={{ ...cvCtx, ai: assistant() }} onClose={() => setSetupDlg(null)} />}
+    {setupDlg && setupDlg.k === 'sh' && <setupDlg.S.Share ctx={{ ...cvCtx, ai: assistant() }} kind={setupDlg.kind === 'back' ? null : setupDlg.kind} back={setupDlg.kind === 'back'} onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'cl' && <setupDlg.Cl.ClipStage onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'qm' && <setupDlg.Q.QuickMark onClose={() => setSetupDlg(null)} onBoxes={() => quick(true)} onOpen={pick} />}
     {setupDlg && setupDlg.k === 'qr' && <setupDlg.R.QuizLook onClose={() => setSetupDlg(null)} onAgain={() => quizScan(true)} />}
     {setupDlg && setupDlg.k === 'qb' && <setupDlg.B.QuickBoxes onClose={() => setSetupDlg(null)} onSaved={on => (on ? quick() : setSetupDlg(null))} />}
     <RubricAsk ask={ask} />
+    {FU && rescans && <FU.Rescans onClose={() => setRescans(false)} onGo={tab === 'mark' ? pick : openOn} />}
     {err ? <EmptyState icon="inbox" title={t(err.name === 'NotKept' ? 'mark.not_kept' : 'mark.page_bad')} text={err.name === 'NotKept' ? t('mark.not_kept_text') : ''} />
       : !w ? (dl ? <p class="mk-dl mute" role="status" data-mkdl>{t('mark.from_drive', { n: dl.n, of: dl.of })}</p> : <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />)
-      : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} E={out.E} cur={cur} onOpen={openOn} onShare={openShare} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
+      : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} E={out.E} cur={cur} onOpen={openOn} onShare={openShare} onSheet={() => go('mark', id, 'grades')} rescans={FU ? FU.rescanList() : []} onRescans={() => setRescans(true)} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
       : <><div class="mk-body">
         {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} onHide={MK ? () => hideNames() : null} onShuffle={() => hideNames(true)} />}
         <div class="mk-mid">
@@ -555,7 +556,6 @@ export default function MarkScreen({ route, classes }) {
       {CV && cvDlg && cvDlg.k === 'check' && <CV.CheckCovers ctx={cvCtx} start={cvDlg.start} onDone={() => { setCvDlg(cvDlg.back ? { k: cvDlg.back } : null); cvCtx.reopen(); }} />}
       {rep && <rep.OpenedBar key={w.batch.id} onList={() => setRepList(true)} />}
       {FU && carried && <FU.CarryBox onClose={() => setCarried(false)} />}
-      {FU && rescans && <FU.Rescans onClose={() => setRescans(false)} onGo={pick} />}
       {rep && repList && <rep.OpenedList onClose={() => setRepList(false)} onGo={pick} />}</>}
   </div>;
 }

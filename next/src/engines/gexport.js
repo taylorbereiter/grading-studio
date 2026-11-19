@@ -4,7 +4,7 @@
 export function sheetSet(o) { if ('all' in o) sheetAll = !!o.all; if ('found' in o) sheetFound = !!o.found; if ('out' in o) sheetShowOut = !!o.out; }
 export const sheetNow = () => ({ all: sheetAll, found: sheetFound, out: sheetShowOut });
 import { batch, cur, setup, lib, selected, pages, docs, undoStack, redoStack, disp, once, LANG_LOCALE, tr, gradesOrder, saveSoon, pdfjsLib, PDFLib, fflate, mammoth, html2canvas, workerReady, toast, renderList, renderTools, renderGrade, openStudent, gradeMarksChanged, openImported, rescanFile, refound, groupJust, store, ROW_TOP, rowTop, rowScaleOf, maxPoints, roundPct, percentWith, gradeOf, tryGrade, ownGrade, fmtNum, fmtPct, COLORS, HL, noScore, wordPart, quizCount, quizPart, ibSetup, set } from './gcore.js';
-import { FONT, measureCtx, sideFor, wrapText, rgb, textLayout, drawMarks, rotOf, vpRot, skewOf, skewXf, vpDraw, viewable, fileByPath, layoutOf, docMarked, docIn, docAuto, draw, docAdded, scrub, scrubMarks, nameFold, rosterMatch, batchClass, anonOn, shownName, lightOpts, lightForPage, lightCanvas, WORD_RX, isLatin, rawWords, namesNow, ownNames, coverRx, stampScore, stampBox, drawStamp, viewBytes, one, marksMine, tnMine, tnOut } from './gdraw.js';
+import { FONT, measureCtx, sideFor, wrapText, rgb, textLayout, drawMarks, rotOf, vpRot, skewOf, skewXf, vpDraw, viewable, fileByPath, layoutOf, docMarked, docIn, docAuto, draw, fileMarked, docAdded, scrub, scrubMarks, nameFold, rosterMatch, batchClass, anonOn, shownName, lightOpts, lightForPage, lightCanvas, WORD_RX, isLatin, rawWords, namesNow, ownNames, coverRx, stampScore, stampBox, drawStamp, viewBytes, one, marksMine, tnMine, tnOut } from './gdraw.js';
 import { natural, GS_TAIL, syncScoreStamps, boxKey, findItem, hasSheet, stampSoon, tryOfFile, canvasJpg, groupFileOf, groupOwn } from './gopen.js';
 
 // src/app/start.js
@@ -1359,6 +1359,17 @@ function splitReads(st, list) {
   return out;
 }
 // src/grades.js
+function unmarkedFile(st, f) {
+  if (f.virtual) return false;
+  if (viewable(f)) {
+    if (fileMarked(f)) return false;
+    return !layoutOf(st).some(d => !docAuto(st, d) && !docIn(st, d) && d.pages.some(([path]) => path === f.path));
+  }
+  if (f.kind !== 'docx' || f.edited || f.hand) return false;
+  const w = wordScore(f);
+  return !(w && w.total != null) && !wordFound(f, st).length;
+}
+// src/grades.js
 function disagreeNote(st) {
   const own = ownGrade(st);
   if (own.total == null || own.partial) return '';
@@ -1381,6 +1392,15 @@ function exportWhy(er, toFolder) {
   if (n === 'NoModificationAllowedError') return 'the file is open in another program, or the folder is read-only';
   if (n === 'InvalidPDFException' || n === 'MissingPDFException' || /invalid pdf|failed to parse|no pdf header/i.test(msg)) return 'the PDF is damaged';
   return 'something went wrong while making it (' + msg.slice(0, 120) + ')';
+}
+// src/exportreport.js
+async function unopenable(failed) {
+  await workerReady;
+  for (const st of batch.students) for (const f of st.files.filter(f => viewable(f) && !f.virtual && !f.numPages)) {
+    let why = f.bad || 'it couldn’t be opened';
+    try { (await pdfjsLib.getDocument({ data: f.data.slice(), isEvalSupported: false }).promise).destroy(); } catch (er) { why = exportWhy(er); }
+    if (!failed.some(x => x.path === f.path)) failed.push({ path: f.path, st, why });
+  }
 }
 // src/feedback.js
 const fbOn = () => store.get('gs.xfb', true) !== false;
@@ -2366,5 +2386,5 @@ function ibBounds(c) {
 }
 // src/ib.js
 function ibGradeOf(v, bounds) { if (v == null || v === '' || isNaN(v)) return null; const b = bounds.find(r => +v >= r[0]); return b ? b[1] : null; }
-export { exportPlan, nameOut, outStem, flattenDoc, oneLeftOver, xOne, xNames, xEdit, xAll, xEarly, gotEarly, canvasJpg, exportWhy, fbOn, keyOn, asgName, fileSafe, outWord, scanAll, buildSheetPdf, parseGrade, foundLabel, manyReads, readsCount, disagreeNote, gradeRows, tableHead, tableRow, gradesSummary, cellCopy, totalText, statusText, rowShown, scoreText, cellOut, csvCell, tsvLine, bandOf, ibSetup, meGrade, pctAvgText, setKey, keyRows, classStats, leftOutText, spreadBins, onThisScale, partNote, STATUS_LABEL, triesSay, anchorDocs, anchorDocPdf, anchorFile, anchorsHere, ANCHORS, anchorOf, anchorLabel, setAnchor, anchorCoverOn, wordPagesPdf, WP_MAX, scanFile, sheetRows, appScored, appShots, rowGraded, splitReads, readKey, readingDoubt, quietReads, paperScore, rivalReads, paperBytes, fileIn, sharePage, shareDocs, classCommon, nameFreeText, shareOpts, nameFindOn };
+export { exportPlan, nameOut, outStem, flattenDoc, oneLeftOver, xOne, xNames, xEdit, xAll, xEarly, gotEarly, canvasJpg, exportWhy, fbOn, keyOn, asgName, fileSafe, outWord, scanAll, buildSheetPdf, parseGrade, foundLabel, manyReads, readsCount, disagreeNote, unmarkedFile, unopenable, wordFound, gradeRows, tableHead, tableRow, gradesSummary, cellCopy, totalText, statusText, rowShown, scoreText, cellOut, csvCell, tsvLine, bandOf, ibSetup, meGrade, pctAvgText, setKey, keyRows, classStats, leftOutText, spreadBins, onThisScale, partNote, STATUS_LABEL, triesSay, anchorDocs, anchorDocPdf, anchorFile, anchorsHere, ANCHORS, anchorOf, anchorLabel, setAnchor, anchorCoverOn, wordPagesPdf, WP_MAX, scanFile, sheetRows, appScored, appShots, rowGraded, splitReads, readKey, readingDoubt, quietReads, paperScore, rivalReads, paperBytes, fileIn, sharePage, shareDocs, classCommon, nameFreeText, shareOpts, nameFindOn };
 export { shareState, autoCovers, ownCovers, sameSpot, keptCovers, ensureCounts, wordScore, paperKey, coverList, coverSig, scanP, scanClip, IB_TOP, ibCrit, isScoreMark, people, esc, num };

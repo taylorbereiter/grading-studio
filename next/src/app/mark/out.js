@@ -6,10 +6,21 @@
 // through mark/marking.js, which saves through students/write.js.
 import * as X from '../../engines/gexport.js';
 import { use, state, gradeOf, fmtNum, noScore } from '../../engines/gcore.js';
-import { layoutOf, docIn, docAuto } from '../../engines/gdraw.js';
+import { layoutOf, docIn, docAuto, fileByPath, shownName, anonOn } from '../../engines/gdraw.js';
 import { store } from '../../engines/gstore.js';
 import { PARTS } from '../router.js';
 import { libs as pdfReady } from './paper.js';
+import { tryOfFile } from '../../engines/gopen.js';
+// The grades read off a student's papers, sorted into the one that counts and the ones to confirm (src/app/replace.js refound), as
+// the current app does after reading the papers and after a file changes. The lifted code calls it through gcore's hook.
+export function refound(st) {
+  const fs = st.files.filter(f => !tryOfFile(st, f));   // a grade written on an earlier try's paper belongs to that try
+  const all = fs.filter(f => f.kind !== 'docx' && X.fileIn(st, f)).flatMap(f => (f.scan && f.scan.found) || []).concat(fs.flatMap(f => X.wordFound(f, st)));
+  const r = X.splitReads(st, all), rd = st.grade.reads || {}, ok = r.ok.filter(g => !r.mine.includes(g)).filter((g, n, a) => rd[X.readKey(g)] !== 1 || a.findIndex(o => X.readKey(o) === X.readKey(g)) === n);
+  st.foundCount = ok.length; st.doubts = r.ask; st.foundAll = ok;
+  st.found = ok.length === 1 && !X.rivalReads(st).length ? { ...ok[0], found: true } : null;
+}
+use({ refound });
 // The marking code (mark/marking.js), handed in by the marking screen once its tools have loaded (saving and undo live there).
 let M = null;
 export const withMarking = m => { M = m; };
@@ -94,7 +105,27 @@ export function plan() {
   const early = [...new Set(X.exportPlan(true, true).map(o => o.st))].filter(X.gotEarly), nOut = X.xEarly() ? early.length : 0;
   const nStu = new Set(list.map(o => o.st)).size, skipped = b.students.length - nStu - nOut;
   const nLeft = b.students.reduce((a, st) => a + layoutOf(st).filter(d => !docAuto(st, d) && !docIn(st, d)).length, 0);
-  return { files: list.length, students: nStu, skipped, left: nLeft, early, nOut, example: list[0] ? X.nameOut([{ ...list[0] }])[0].path.split('/').pop() : '' };
+  // files that get a mark key page: those with a proofreading mark on them (the current Return box's hint)
+  const nKey = list.filter(o => o.d && X.keyRows(o.d.pages.flatMap(([path, p]) => fileByPath(o.st, path).marks[p] || [])).length).length;
+  return { files: list.length, students: nStu, skipped, left: nLeft, early, nOut, nKey, example: list[0] ? X.nameOut([{ ...list[0] }])[0].path.split('/').pop() : '' };
+}
+// The things to look at before returning (src/grades.js exportCheck): scores not finished, no paper, a score that disagrees with the
+// paper, files with no marks, grades read off a paper to confirm. The same groups and order; each note is made into words by the
+// Return tab, so it can be put into the teacher's language.
+export function check() {
+  const c = { unfinished: [], noPaper: [], disagree: [], unmarked: [], doubts: [] };
+  state().batch.students.forEach((st, i) => {
+    if (noScore(st)) return;   // she's already said what's going on with this student
+    const g = gradeOf(st), name = shownName(st, i);
+    if (!g.done) c.unfinished.push({ i, name, part: g.partial ? X.partNote(st) : '' });
+    if (!st.files.length) c.noPaper.push({ i, name });
+    const d = X.disagreeNote(st); if (d) c.disagree.push({ i, name, note: d });
+    for (const f of st.files) if (X.unmarkedFile(st, f)) c.unmarked.push({ i, name, fname: anonOn() ? '' : f.name, bad: !!f.bad, file: f.path });
+    if (g.total != null || g.pct != null) return;   // her own score, or one clear reading, already stands
+    if (X.manyReads(st)) { c.doubts.push({ i, name, many: X.readsCount(st) }); return; }
+    for (const r of st.doubts || []) c.doubts.push({ i, name, said: X.foundLabel(r) });
+  });
+  return c;
 }
 let busy = false;
 export const exporting = () => busy;
@@ -131,6 +162,7 @@ export async function exportAll({ keep = true, dpi = 150, sheet = true, dir = nu
       if (it.one) for (const x of X.oneLeftOver(it)) if (await putOut(x.path, () => x.bytes, it.st)) nOut++;
     }
     onStep('bake', items.length, items.length);
+    await X.unopenable(failed);   // files nothing could be drawn from never reach the plan; they are still named (src/exportreport.js)
     const zip = !dir && Object.keys(files).length ? new Blob([state().fflate.zipSync(files)], { type: 'application/zip' }) : null;
     if (nOut && (dir || zip)) M.setReturned(nOut);
     return { nOut, failed, zip, name: 'Marked - ' + b.name + '.zip', paths: Object.keys(files), files: Object.fromEntries(Object.entries(files).map(([k, v]) => [k, v[0]])) };

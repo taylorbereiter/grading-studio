@@ -34,6 +34,7 @@ import { scanAsks } from '../../engines/gfiles.js';
 // every page again and saves, as the panel does.
 export const takeSplit = () => C.takeSplit();
 export const rescanCount = () => C.rescans().length;
+export const rescanList = () => C.rescans();
 export function wire(m, open) { C.wire(m, open); use({ lightPagesChanged: lightApply }); }
 const pickFile = (multiple, done) => { const i = document.createElement('input'); i.type = 'file'; i.multiple = multiple; i.onchange = () => done([...i.files]); i.click(); };
 

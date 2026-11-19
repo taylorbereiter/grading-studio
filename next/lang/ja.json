@@ -6512,5 +6512,72 @@
  "class.fg_back": "提出物を戻すには、このカードにもう一度ダウンロードを取り込みます。採点と点数は戻りません。",
  "class.fg_ok": "忘れる",
  "class.fg_done": "「{name}」の提出物を忘れました",
- "class.fg_failed": "うまくいかなかったので、何も忘れていません。もう一度お試しください。"
+ "class.fg_failed": "うまくいかなかったので、何も忘れていません。もう一度お試しください。",
+ "inout.r_ck_h": {
+  "one": "返却の前に確認すること {n} 件",
+  "other": "返却の前に確認すること {n} 件"
+ },
+ "inout.r_ck_still": "（ダウンロードはできます）",
+ "inout.r_ck_show": "表示",
+ "inout.r_ck_click": "名前をクリックするとそこへ移動します。",
+ "inout.r_ck_ok": "問題なし：全員に点数があり、点数は答案と一致し、すべてのファイルが採点済みです。",
+ "inout.r_ck_unfinished": "採点が終わっていない（{n}）",
+ "inout.r_ck_nopaper": "答案なし（{n}）",
+ "inout.r_ck_disagree": "答案と合わない点数（{n}）",
+ "inout.r_ck_unmarked": "書き込みのないファイル（{n}）",
+ "inout.r_ck_doubts": "確認する成績（{n}）",
+ "inout.r_ck_partial": "一部：{what}",
+ "inout.r_ck_bad": "開けなかったため、書き出しに含まれません",
+ "inout.r_ck_many": "答案に成績が {n} 個見つかりました",
+ "inout.r_ck_is": "「{v}」が成績ですか？",
+ "inout.r_early_who": "{names}。",
+ "inout.r_early_more": "{names} ほか {n} 人。",
+ "inout.r_early_untick": "チェックを外すと、他の人の分と一緒にもう一度送ります。",
+ "inout.r_early_again": "その人たちの分も他の人の分と一緒にもう一度送ります。",
+ "inout.r_opts_say": "オプション：{list}",
+ "inout.r_on_none": "なし",
+ "inout.r_on_one": "生徒ごとに1つのPDF",
+ "inout.r_on_folders": "生徒のフォルダー",
+ "inout.r_on_names": "生徒名のファイル名",
+ "inout.r_on_sheet": "成績シート",
+ "inout.r_on_edit": "書き込みを後で編集可",
+ "inout.r_on_key": "記号の説明",
+ "inout.r_on_fb": "フィードバックページ",
+ "inout.r_on_all": "書き込みのないファイルも",
+ "inout.r_on_sharp": "高画質",
+ "inout.r_key_none": "校正記号のあるファイルはまだありません。",
+ "inout.r_key_one": "このファイルに付きます。",
+ "inout.r_key_all": "{n} 個すべてのファイルに付きます。",
+ "inout.r_key_some": {
+  "one": "{of} 個中 {n} 個のファイルに付きます。",
+  "other": "{of} 個中 {n} 個のファイルに付きます。"
+ },
+ "inout.r_key_change": "意味を変える…",
+ "inout.r_fails": {
+  "one": "この書き出しに含まれていないファイル {n} 個：",
+  "other": "この書き出しに含まれていないファイル {n} 個："
+ },
+ "inout.r_fail_row": "{who}：{why}",
+ "inout.r_ai_h": "{ai} に頼む",
+ "inout.r_ai_opt": "（任意）",
+ "inout.r_ai_papers": "名前を隠した答案",
+ "inout.r_ai_papers_s": "全ページを画像にしたZIP",
+ "inout.r_ai_marks_s": "1つのファイル：点数、ルーブリック、あなたの書き込み",
+ "inout.r_ai_marks_b": "ファイルを作る",
+ "inout.r_ai_back": "{ai} のフィードバックを取り込む",
+ "inout.r_ai_back_s": "返答を貼り付けると、生徒ごとに分けられます",
+ "inout.r_ai_back_b": "返答を貼り付ける",
+ "inout.r_rs_h": "再スキャン",
+ "inout.r_rs_n": {
+  "one": "再スキャンの印が付いたページ {n} 枚",
+  "other": "再スキャンの印が付いたページ {n} 枚"
+ },
+ "inout.r_rs_from": {
+  "one": "{n} 人の生徒から",
+  "other": "{n} 人の生徒から"
+ },
+ "inout.rows_scored": "{of} 行中 {n} 行を採点",
+ "inout.qs_marked": "クイック採点で {of} 問中 {n} 問を採点",
+ "inout.score_vs_paper": "あなたの点数は {a}、答案には {b} とあります",
+ "inout.score_vs_word": "あなたの点数は {a}、Wordのルーブリックでは {b} です"
 }
