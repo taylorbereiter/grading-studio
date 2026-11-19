@@ -3,7 +3,7 @@
 // misDraft and misGroup and opened in her own mail app ready to send. Grading Studio sends nothing. When a student was reminded is
 // kept in their details (c.info[name].nudge) and the wording in lib.book.miss, both saved as the current app saves them.
 import { h, Fragment } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { Button, Segmented, EmptyState, Dialog, TextInput, Checkbox, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { href } from '../router.js';
@@ -43,8 +43,10 @@ function send(m) {
   openMail(link); return cut;
 }
 
-export default function ClassTodo({ classId }) {
+export default function ClassTodo({ classId, sub }) {
   const b = useBook(), [term, setTerm] = useState(() => keep('term:' + classId)), [view, setView] = useState(() => keep('misview') || 'stu'), [words, setWords] = useState(false);
+  // todo/missing: straight to the missing work (Find and the tab row reach it by address)
+  useEffect(() => { if (!b || sub !== 'missing') return; const el = document.querySelector('[data-mis]'); if (el) { el.scrollIntoView({ block: 'start' }); const h = el.querySelector('h2'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } } location.replace(href('class', classId, 'todo')); }, [b, sub]);
   if (!b) return <div class="loading" aria-busy="true" />;
   const x = classBook(b, classId);
   if (!x) return <EmptyState icon="warn" title={t('class.read_failed')} />;

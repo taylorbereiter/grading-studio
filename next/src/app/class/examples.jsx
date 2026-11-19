@@ -51,9 +51,11 @@ export function useExamples() {
 const failed = e => { console.error(e); toast(e && e.name === 'NotThere' ? t('class.ex_no_db') : t('class.ex_failed')); };
 export const putExample = (r, blobs) => keepExample(r, blobs).catch(e => { failed(e); throw e; });
 
-export default function Examples({ view: start }) {
+export default function Examples({ view: start, work }) {
   const all = useExamples(), [view, setView] = useState(start || 'ex'), [f, setF] = useState({ cls: '', asg: '', kind: '', row: '', tag: '', q: '' });
   const [edit, setEdit] = useState(null), [show, setShow] = useState(null), [cover, setCover] = useState(null);
+  // shown for one assignment: the examples made from that download's papers
+  useEffect(() => { if (!all || !work) return; const r = all.find(x => !x.gone && !x.watch && String(x.work || '').replace(/^gs\.b\./, '') === String(work).replace(/^gs\.b\./, '')); if (r) setF(f => ({ ...f, cls: r.cls || '-', asg: exAsgKey(r) })); }, [!all, work]);
   if (!all) return <div class="loading" aria-busy="true" />;
   const live = all.filter(r => !r.gone && Array.isArray(r.pages)), lib = library.json(null) || {}, classes = lib.classes || [];
   const cname = id => { const c = id && classes.find(k => String(k.id) === String(id)); return c ? c.name : id ? t('class.ex_class_gone') : t('class.ex_no_class'); };

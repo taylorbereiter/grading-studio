@@ -258,5 +258,12 @@
  "mark.cw_ul_change": "Change the unit plan link",
  "mark.cw_ul_change_n": "Change the {name} link",
  "mark.cw_ul_open": "Unit plan",
- "mark.cw_ul_open_n": "Open in {name}"
+ "mark.cw_ul_open_n": "Open in {name}",
+ "mark.cw_typed": "Typed in",
+ "mark.cw_ud_q": "Delete “{name}”?",
+ "mark.cw_ud_say": {
+  "one": "Its assignment goes with it. Saved marks for that download stay in this browser.",
+  "other": "Its {n} assignments go with it. Saved marks for those downloads stay in this browser."
+ },
+ "mark.cw_loose_say": "Assignments with no class. Drag one onto a class in the sidebar, or use Move to… in its ⋯ menu."
 }
