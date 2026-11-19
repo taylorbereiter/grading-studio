@@ -40,6 +40,13 @@ export async function classesForHome() {
   const { readLibrary, readKept, sidebarClasses } = await import('./students/counts.js');
   return sidebarClasses(readLibrary(), await readKept());
 }
+// The sample's things to try (src/welcome.js sampleGo): its first class, and the downloads of its marked essay and its quiz. Ids only.
+export async function sampleTry() {
+  const { readLibrary } = await import('./students/counts.js'), c = (readLibrary().classes || [])[0];
+  if (!c) return null;
+  const it = k => { for (const u of c.units || []) for (const x of u.items || []) if (x.sampleKey === k) return x.batchId || null; return null; };
+  return { classId: String(c.id), paper: it('essay'), quiz: it('quiz') };
+}
 // Home: what the app worked out, the same as the current app's Today (src/today.js homeRender) for the same saved work. Today's
 // classes and lessons (planning), the sets of papers to mark and to hand back (assignment and class names, counts), and the
 // lessons still to plan in the next four days (src/todo.js "plan" lines, minus the ones the teacher hid or switched off).

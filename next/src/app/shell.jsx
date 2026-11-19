@@ -17,7 +17,7 @@ import { lockState, onLockChange } from '../shared/lock.js';
 import { stopped as tabsStopped, onStopped } from '../shared/tabs.js';
 import { onLook, currentLook, saveLook } from '../services/theme.js';
 import { LOOKS, SWATCH } from '../ui/looks.js';
-import { classesForHome, todoCountForSidebar } from '../crossings.js';
+import { classesForHome, todoCountForSidebar, sampleTry } from '../crossings.js';
 import { askAdd } from './todo-add.js';
 import { runner, openFocus } from './focus/bus.js';
 import { usePlan } from './plan.js';
@@ -162,9 +162,17 @@ function SaveBar() {
   useEffect(() => onTrouble(() => { const k = troubles().length; set(k); if (k) router.PARTS.savebar().then(setB, e => console.error(e)); }), []);
   return n && B ? <B.SaveBar /> : null;
 }
+// The sample says what it is, and what to try in it (src/welcome.js SAMPLE_TRY): a marked paper, the quiz, the gradebook, charts,
+// missing work, the seating chart and this week's lessons, each opening its page.
 function SampleStrip() {
-  if (!sampleOn()) return null;
-  return <div class="strip sample" role="note"><span><b>{t('sample.title')}</b> {t('sample.text')}</span>
+  const [tr, setTr] = useState(null), on = sampleOn();
+  useEffect(() => { if (on) sampleTry().then(setTr, e => console.error(e)); }, [on]);
+  if (!on) return null;
+  const c = tr && tr.classId, go = [tr && tr.paper && ['paper', router.href('mark', tr.paper)], tr && tr.quiz && ['quiz', router.href('mark', tr.quiz)],
+    c && ['book', router.href('class', c, 'grades')], c && ['charts', router.href('class', c, 'grades', 'charts')], c && ['missing', router.href('class', c, 'todo', 'missing')],
+    c && ['seats', router.href('class', c, 'people', 'seating')], ['plan', router.href('week')]].filter(Boolean);
+  return <div class="strip sample" role="note"><span><b>{t('sample.title')}</b> {t('sample.text')}
+    <span class="sampletry" data-sampletry-row> {t('sample.try')} {go.map(([k, to], i) => <>{i ? ' · ' : ''}<a href={to} data-sampletry={k}>{t('sample.try_' + k)}</a></>)}</span></span>
     <button type="button" class="btn sm" onClick={leaveSample}>{t('sample.leave')}</button></div>;
 }
 

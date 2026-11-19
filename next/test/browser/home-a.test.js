@@ -190,3 +190,21 @@ test('A-902: pressing anywhere on a Needs you row opens it, and its menu still o
   await p.waitForFunction(h => location.hash === h, { timeout: 10000 }, go);
   assert.deepEqual(errors, []); await p.ctx.close();
 });
+
+test('A-076: in the sample, the strip lists things to try, each opening its page', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), p = await ctx.newPage();
+  p.on('pageerror', e => errors.push(e.message));
+  await p.evaluateOnNewDocument(STEADY); await p.setViewport({ width: 1440, height: 900 });
+  const s = seed(), lib = JSON.parse(s.ls['gs.lib']), items = lib.classes[0].units[0].items;
+  Object.assign(items.find(i => i.id === 'i3'), { sampleKey: 'essay' });
+  items.push({ id: 'smp-quiz', sampleKey: 'quiz', name: 'Quiz', classId: 'c1', type: 'ic', batchId: 'gs.b.n2' });
+  s.ls['sample:gs.lib'] = JSON.stringify(lib); s.ls['sample:gs.sampleBuilt'] = '"made-up"'; s.ls['gs.sampleOn'] = '1';
+  await p.goto(srv.url + 'blank'); await plant(p, s);
+  await p.goto(srv.url + 'next/#/home'); await p.waitForSelector('[data-sampletry="paper"]', { timeout: 30000 });
+  const links = await p.$$eval('[data-sampletry]', l => l.map(a => [a.dataset.sampletry, a.hash]));
+  assert.deepEqual(links, [['paper', '#/mark/gs.b.n1'], ['quiz', '#/mark/gs.b.n2'], ['book', '#/class/c1/grades'], ['charts', '#/class/c1/grades/charts'],
+    ['missing', '#/class/c1/todo/missing'], ['seats', '#/class/c1/people/seating'], ['plan', '#/week']]);
+  await p.click('[data-sampletry="charts"]');
+  await p.waitForSelector('dialog[open] [data-charts]', { timeout: 15000 });
+  assert.deepEqual(errors, []); await ctx.close();
+});

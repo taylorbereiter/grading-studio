@@ -170,5 +170,13 @@
  "cmd.light_mode": "ライトモード",
  "update.wait_save": "最新の作業がまだ保存されていないため、更新は待機しています。赤いバーをご覧ください。",
  "update.stale": "別のウィンドウが更新されました。このウィンドウはまだ古いバージョンです。",
- "update.reload": "このウィンドウを再読み込み"
+ "update.reload": "このウィンドウを再読み込み",
+ "sample.try": "試してみる：",
+ "sample.try_paper": "採点済みの答案",
+ "sample.try_quiz": "問題ごとに採点した小テスト",
+ "sample.try_book": "成績簿",
+ "sample.try_charts": "グラフ",
+ "sample.try_missing": "未提出の課題",
+ "sample.try_seats": "座席表",
+ "sample.try_plan": "今週の授業"
 }
