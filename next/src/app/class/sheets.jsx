@@ -8,6 +8,7 @@ import { t, date } from '../../i18n/t.js';
 import { engine as B, change } from '../../students/book.js';
 import { fmtNum, roundPct } from '../../engines/gcore.js';
 import { pct, typeName } from './grades.jsx';
+import { href } from '../router.js';
 import './lines.js';
 
 const confOf = lib => { const s = (lib.book && lib.book.sheet) || {}; return { cls: s.cls !== false, rep: s.rep !== false, notes: s.notes !== false }; };
@@ -51,7 +52,7 @@ export function SheetsSheet({ x, term, who, left, onClose }) {
         <span data-pss-opt="notes"><Checkbox label={t('class.pss_notes')} checked={o.notes} onChange={v => save({ notes: v })} /></span>
         <Button variant="primary" icon="file" onClick={print} data-pss-print>{names.length === 1 ? t('class.pss_print') : t('class.pss_print_n', { n: names.length })}</Button>
       </div>
-      <p class="mute small">{t(names.length === 1 ? 'class.pss_say_one' : 'class.pss_say')}{drafts > 0 && <span class="pssdraft"> {t('class.pss_drafts', { n: drafts })}</span>}</p>
+      <p class="mute small">{t(names.length === 1 ? 'class.pss_say_one' : 'class.pss_say')}{drafts > 0 && <span class="pssdraft"> {t('class.pss_drafts', { n: drafts })} <a class="link" href={href('class', c.id, 'grades', 'reports')} data-pss-reports>{t('class.pss_open_rp')}</a></span>}</p>
       <div class="psspages" ref={pages}>{names.map(n => (myp ? <MypOne key={n} {...{ c, all, cols, conf, n, o, rep: reps[n], period, today, tm, inn }} /> : <One key={n} {...{ c, all, cols, conf, n, o, rep: reps[n], period, today, tm, inn }} />))}</div>
     </div>
   </Sheet>;
@@ -105,7 +106,7 @@ function One({ c, all, cols, conf, n, o, rep, period, tm, today, inn }) {
 }
 
 // The student's scores as a line over the class's middle half (src/classpage.js bkBandLine), or the line alone.
-function BandLine({ c, sc, n, band, inn }) {
+export function BandLine({ c, sc, n, band, inn }) {
   const cols = sc.map(col => { const v = c.names.filter(inn).map(k => col.cells.get(k)).filter(B.bkCounts).map(k => k.pct).sort((a, b) => a - b), cell = col.cells.get(n); return { col, v, me: B.bkCounts(cell) ? cell.pct : null, miss: !!cell && cell.st === 'missing' }; }).filter(k => k.v.length || k.miss);
   const qs = cols.map(k => (band && k.v.length ? [q(k.v, 0.25), q(k.v, 0.5), q(k.v, 0.75)] : null)), vals = qs.filter(Boolean).flat().concat(cols.map(k => k.me).filter(v => v != null));
   if (!vals.length) return <p class="mute">{t('class.pss_nothing')}</p>;

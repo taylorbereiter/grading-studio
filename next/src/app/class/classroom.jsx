@@ -4,20 +4,29 @@
 // assignment's Drive folder, downloaded as a ZIP and brought in from the class's Assignments tab. Read in this browser; nothing is sent.
 import { h, Fragment } from 'preact';
 import { useState, useRef } from 'preact/hooks';
-import { Sheet, Button, Select, TextInput } from '../../ui/index.js';
+import { Sheet, Button, Select, TextInput, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { engine as B, change, classIn } from '../../students/book.js';
 import * as G from '../../engines/gbki.js';
 import { use as coreUse, state as coreState } from '../../engines/gcore.js';
-import { PARTS } from '../router.js';
+import { PARTS, go as goTo } from '../router.js';
 import { useBook, handoff } from './data.js';
 import './lines.js';
+import '../mark/setup-lines.js';
 import { DriveButton } from '../drive-button.jsx';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 export function ClassroomSheet({ onClose }) {
   const b = useBook(), file = useRef(null);
+  // Step 2's ZIP (src/classroom.js data-gczip): Drive's download of an assignment's folder, read the way a dropped download is read
+  // (mark/open.js bringIn) and opened for marking; it goes on a card with the class's papers once she picks its assignment there.
+  const zip = useRef(null), [busy, setBusy] = useState(false);
+  const takeZip = async f => {
+    if (!f || busy) return; setBusy(true);
+    try { const O = await PARTS.bring(), r = await O.bringIn([{ path: f.name, file: f }], { label: f.name.replace(/\.zip$/i, '') }); if (r) { onClose(null); goTo('mark', r.batch.id); } }
+    catch (e) { console.error(e); toast(t(e && e.name === 'NothingIn' ? 'setup.w_nothing' : 'setup.w_failed')); } finally { setBusy(false); }
+  };
   const [d, setD] = useState(null), [to, setTo] = useState(''), [name, setName] = useState(''), [err, setErr] = useState(''), [nameErr, setNameErr] = useState('');
   const classes = b && !b.error ? b.lib.classes : [];
   const read = async f => {
@@ -72,6 +81,8 @@ export function ClassroomSheet({ onClose }) {
       </div></section>
       <section class="cp-gccard"><span class="n" aria-hidden="true">2</span><div><h3>{t('class.gc_2')}</h3>
         <ol class="small"><li>{t('class.gc_2a')}</li><li>{t('class.gc_2b')}</li><li>{t('class.gc_2c')}</li></ol>
+        <div class="cp-bkidrop"><Button icon="upload" disabled={busy} onClick={() => zip.current.click()} data-gc-zip>{t('class.gc_zip')}</Button>
+          <input ref={zip} type="file" hidden accept=".zip,application/zip" onChange={e => { takeZip(e.currentTarget.files[0]); e.currentTarget.value = ''; }} data-gc-zipin /></div>
         <p class="mute small">{t('class.gc_2_note')}</p></div></section>
       <p class="mute small">{t('class.gc_back')}</p>
     </div>

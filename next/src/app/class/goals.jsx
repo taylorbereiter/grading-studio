@@ -6,6 +6,7 @@ import { h, Fragment } from 'preact';
 import { useState } from 'preact/hooks';
 import { Sheet, Dialog, Button, IconButton } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
+import { href } from '../router.js';
 import { engine as B, change } from '../../students/book.js';
 import { roundPct } from '../../engines/gcore.js';
 import { pct } from './grades.jsx';
@@ -44,7 +45,7 @@ export function GoalsSheet({ x, cols, term, left, onClose }) {
           <div class="cp-heatw"><table class="cp-heat gl" data-goal-heat>
             <thead><tr><th aria-sort={aria('name')}><button type="button" class="colbtn" onClick={() => sortBy('name')}>{t('class.student')}</button></th>
               {data.map(d => <th aria-sort={aria(d.g.id)}><button type="button" class="colbtn" onClick={() => sortBy(d.g.id)}><span data-raw>{d.g.name}</span></button></th>)}</tr></thead>
-            <tbody>{rows.map(r => <tr class={left && left.has(r.n) ? 'out' : ''}><th scope="row" data-raw>{r.n}</th>{data.map(d => { const v = d.stu.get(r.n);
+            <tbody>{rows.map(r => <tr class={left && left.has(r.n) ? 'out' : ''}><th scope="row"><a class="link" href={href('class', x.c.id, 'people', x.c.names.indexOf(r.n) + 1)} data-raw data-goal-stu>{r.n}</a></th>{data.map(d => { const v = d.stu.get(r.n);
               return <td>{v == null ? <span class="gc none" title={t('class.gl_no_score')} /> : <span class="gc" style={shade(v)} title={r.n + ' · ' + d.g.name + ': ' + roundPct(v) + '% · ' + d.per.get(r.n).map(k => k.col.name + ' ' + roundPct(k.pct) + '%').join(' · ')} data-raw>{roundPct(v)}</span>}</td>; })}</tr>)}
               <tr class="foot"><th scope="row">{t('class.class_avg')}</th>{data.map(d => <td class="num">{d.avg != null ? roundPct(d.avg) + '%' : '–'}</td>)}</tr></tbody></table></div></section>
         <details class="cp-from"><summary>{t('class.gl_from')}</summary><table class="cp-tab"><thead><tr><th>{t('class.gl_goal')}</th><th>{t('class.gl_asg')}</th><th>{t('class.gl_tagged')}</th><th>{t('class.gl_papers')}</th></tr></thead>

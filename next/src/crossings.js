@@ -68,6 +68,13 @@ export async function countsForHome(now = Date.now()) {
 export async function todoCountForSidebar(now = Date.now()) {
   return (await import('./students/todo-auto.js')).countDue(now);
 }
+// The School page's people (src/school.js nTodo): how many of her open to-do lines name each one. Person ids and counts only; the
+// lines themselves stay on the grading side.
+export function todoCountsForSchool() {
+  const l = students.library.json(null), items = l && l.todo && Array.isArray(l.todo.items) ? l.todo.items : [], out = {};
+  for (const it of items) if (it && it.id && !it.gone && !it.done && Array.isArray(it.ppl)) for (const id of new Set(it.ppl.map(String))) out[id] = (out[id] || 0) + 1;
+  return out;
+}
 // To do: the lines the app adds from saved work (students/todo-auto.js), the same ones Home and the sidebar count. Assignment and
 // class names, keys and numbers only: no student is named.
 export async function appLinesForTodo(now = Date.now()) {

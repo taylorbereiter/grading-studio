@@ -55,13 +55,18 @@ export default function Grades({ classId, sub }) {
   const [box, setBox] = useState(null), [whole, setWhole] = useState(false), [Imp, setImp] = useState(null), [only, setOnly] = useState(onlyOn), [pick, setPick] = useState(false), [, redraw] = useState(0);
   // #/class/<id>/grades/type-<card> (the Assignments tab's No papers: just type the scores): that card's typing, then the address back
   useLayoutEffect(() => { if (!b || !/^type-/.test(sub || '')) return; setBox({ add: true, itId: sub.slice(5) }); location.replace(href('class', classId, 'grades')); }, [b, sub]);
+  // grades/charts, grades/goals, grades/reports, grades/sheets: the card's sheet, opened (Find and the tab row reach them by address)
+  useLayoutEffect(() => { if (!b || !['charts', 'goals', 'reports', 'sheets'].includes(sub)) return; setBox({ [sub]: true }); location.replace(href('class', classId, 'grades')); }, [b, sub]);
   const Gl = usePart('goals', !!(box && box.goals)), Rp = usePart('reports', !!(box && box.reports)), Ps = usePart('sheets', !!(box && box.sheets));
   if (!b) return <div class="loading" aria-busy="true" />;
   const x = classBook(b, classId);
   if (x && handoff.rows && handoff.cls === classId && !box) { const rows = handoff.rows; handoff.rows = null; PARTS.bki().then(m => { setImp(() => m.ImportSheet); setBox({ imp: true, rows }); }); }
   if (!x) return <EmptyState icon="warn" title={t('class.read_failed')} />;
   const { c, conf } = x;
-  if (!c.names.length) return <EmptyState icon="people" title={t('class.no_roster')} text={t('class.no_roster_text')} action={<a class="btn" href={href('class', classId, 'people')}>{t('class.add_roster')}</a>} />;
+  // no roster yet: add one, or bring in the old gradebook, whose students can become the roster (src/book.js:251)
+  if (!c.names.length) return <><EmptyState icon="people" title={t('class.no_roster')} text={t('class.no_roster_text')} action={<span class="row gap"><a class="btn" href={href('class', classId, 'people')}>{t('class.add_roster')}</a>
+    <Button icon="upload" onClick={() => PARTS.bki().then(m => { setImp(() => m.ImportSheet); setBox({ imp: true }); })} data-bki-first>{t('class.bki_menu')}</Button></span>} />
+    {box && box.imp && Imp && <Imp x={x} onClose={() => setBox(null)} />}</>;
   const tabs = B.bkTabs(x.cols), on = term != null && tabs.some(tb => tb[0] === term) ? term : x.now;
   const cols = on === '*' ? x.cols : x.cols.filter(k => k.termId === on);
   const choose = v => { setTerm(v); keep('term:' + classId, v); };
@@ -104,7 +109,9 @@ export default function Grades({ classId, sub }) {
       : table && myp ? <MypBook x={x} cols={cols} all={x.cols} term={on} termName={termName} tab={tab} />
       : !table ? <Year x={x} ct={ct} labelOf={labelOf} tab={tab} /> : !cols.length ? <EmptyState icon="grades" title={t('class.nothing_graded', { name: c.name })} text={t('class.nothing_graded_text')} />
       : <Table x={x} cols={cols} show={show} ct={ct} labelOf={labelOf} term={on} tab={tab} only={only} pick={pick} left={left} onLeft={() => redraw(k => k + 1)} onCol={col => setBox({ col })} />}
-    {c.names.length > 0 && <div class="gfoot">{table && !myp && <button type="button" class="gl2" onClick={() => setBox({ charts: true })} data-open-charts><span class="ic"><Icon name="chart" /></span>
+    {table && !myp && cols.length > 0 && <details class="bkhow" data-book-how><summary>{t('class.how_title')}</summary>
+      <p class="mute small">{[t('class.how_order'), ct.length ? t(on ? 'class.how_types_term' : 'class.how_types') : '', t('class.how_never'), cols.some(k => k.type === 'xc') ? t('class.how_xc') : '', only ? '' : t('class.how_typed')].filter(Boolean).join(' ')}</p></details>}
+    {c.names.length > 0 && <div class="gfoot">{!myp && <button type="button" class="gl2" onClick={() => setBox({ charts: true })} data-open-charts><span class="ic"><Icon name="chart" /></span>
       <span><b>{t('class.charts')} <Icon name="chr" size="xs" /></b><p>{t('class.charts_say')}</p></span></button>}
       <button type="button" class="gl2" onClick={() => setBox({ goals: true })} data-open-goals><span class="ic"><Icon name="target" /></span>
       <span><b>{t('class.gl_title')} <Icon name="chr" size="xs" /></b><p>{t('class.gl_card_say')}</p></span></button>
@@ -115,8 +122,8 @@ export default function Grades({ classId, sub }) {
     {box && box.goals && Gl && <Gl.GoalsSheet x={x} cols={table ? cols : x.cols} term={on} left={left} onClose={() => setBox(null)} />}
     {box && box.reports && Rp && <Rp.ReportsSheet x={x} cols={table ? cols : x.cols} term={on} onClose={() => setBox(null)} />}
     {box && box.sheets && Ps && <Ps.SheetsSheet x={x} term={on} left={left} onClose={() => setBox(null)} />}
-    {box && box.charts && <ChartsSheet x={x} cols={cols} all={b.cols} term={on} left={left} labelOf={labelOf} onClose={() => setBox(null)} />}
-    {box && box.col && <ColDialog col={box.col} conf={conf} labelOf={labelOf} onClose={() => setBox(null)} onEditTyped={id => setBox({ add: true, itId: id })} />}
+    {box && box.charts && <ChartsSheet x={x} cols={table ? cols : x.cols} all={b.cols} term={on} left={left} labelOf={labelOf} onClose={() => setBox(null)} />}
+    {box && box.col && <ColDialog col={box.col} conf={conf} labelOf={labelOf} onClose={() => setBox(null)} onEditTyped={id => setBox({ add: true, itId: id })} onEntry={k => openEntry(x, x.lib, on, k)} />}
     {box && box.types && <TypesDialog cols={untyped} onClose={() => setBox(null)} />}
     {box && box.setup && <SetupSheet conf={conf} book={x.lib.book} onClose={() => setBox(null)} />}
     {box && box.imp && Imp && <Imp x={x} rows={box.rows} onClose={() => setBox(null)} />}
