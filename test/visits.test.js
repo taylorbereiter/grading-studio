@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path');
 const { launch } = require('./helpers/chrome');
 const { openApp } = require('./helpers/app');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 
 const ROOT = path.join(__dirname, '..'), HOME = JSON.parse(fs.readFileSync(path.join(ROOT, 'site.json'), 'utf8')).address;
 const COUNTER = 'https://abacus.jasoncameron.dev/';
@@ -37,8 +38,10 @@ const today = () => new Date().toISOString().slice(0, 10);
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
 test('only the pages at the web address carry the count, never the double-click copies', () => {
-  for (const f of ['index.html', 'planner.html']) assert.equal(fs.readFileSync(path.join(ROOT, f), 'utf8').split(COUNTER).length, 2, f);
-  for (const f of ['Grading Studio.html', 'Planner.html']) assert.equal(fs.readFileSync(path.join(ROOT, f), 'utf8').includes(COUNTER), false, f);
+  for (const f of ['index.html', 'planner.html']) assert.equal(fs.readFileSync(path.join(BASE, f), 'utf8').split(COUNTER).length, 2, f);
+  for (const f of ['Grading Studio.html', 'Planner.html']) assert.equal(fs.readFileSync(path.join(BASE, f), 'utf8').includes(COUNTER), false, f);
+  // the new app's page at the main address counts too, with the very same lines
+  assert.equal(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').split(COUNTER).length, 2, 'the new app');
 });
 
 test('a browser at the address is counted once a day, as new the first time, and nothing else is sent', async () => {
@@ -79,7 +82,7 @@ test('not in the sample, not under test automation, and not counted when the cou
 
   ({ page, asked, close } = await atHome());
   page.removeAllListeners('request');
-  page.on('request', r => r.url().startsWith(COUNTER) ? r.abort('internetdisconnected') : r.url().startsWith(HOME) ? r.respond({ status: 200, contentType: 'text/html', body: fs.readFileSync(path.join(ROOT, 'index.html')) }) : r.abort());
+  page.on('request', r => r.url().startsWith(COUNTER) ? r.abort('internetdisconnected') : r.url().startsWith(HOME) ? r.respond({ status: 200, contentType: 'text/html', body: fs.readFileSync(path.join(BASE, 'index.html')) }) : r.abort());
   await page.goto(HOME, { waitUntil: 'domcontentloaded' });
   await wait(6500);
   assert.equal(await page.evaluate(() => localStorage.getItem('gsc.counted')), null, 'tried again next time the app opens');

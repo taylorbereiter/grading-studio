@@ -10,12 +10,13 @@ const fs = require('fs'), path = require('path');
 const { launch } = require('./helpers/chrome');
 const { builtHtml } = require('./helpers/app');
 const { serveBuild } = require('./helpers/steady');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 const ROOT = path.join(__dirname, '..');
 
 let browser, srv;
 before(async () => {
   builtHtml();
-  srv = await serveBuild({ index: fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'), planner: fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8') });
+  srv = await serveBuild({ index: fs.readFileSync(path.join(BASE, 'index.html'), 'utf8'), planner: fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8') });
   browser = await launch();
 });
 after(async () => { await browser.close(); await srv.close(); });

@@ -7,6 +7,7 @@ const { launch } = require('./helpers/chrome');
 const { ROOT, builtHtml, openApp, openOwn, closeOwn, goTo, openZip, waitPaper, appReady, goToStudent, score, settle, idbRead } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 const { linkFolder, folderWait, folderRead, wipeBrowser } = require('./helpers/carry');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 
 let zip, browser;
 before(async () => { builtHtml(); zip = zipOf(await standardFiles()); browser = await launch(); });
@@ -172,8 +173,8 @@ test('with no folder, Go back in time says why there are no days yet and offers 
 // A folder served the way the web address serves the repo. put() swaps in a new version of the pages; down stops answering, like no internet.
 async function site() {
   const dir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'gs-test-site-'));
-  for (const f of ['index.html', 'planner.html', 'sw.js', 'manifest.webmanifest', 'version.json']) fs.copyFileSync(path.join(ROOT, f), path.join(dir, f));
-  fs.mkdirSync(path.join(dir, 'lang')); for (const f of fs.readdirSync(path.join(ROOT, 'lang'))) fs.copyFileSync(path.join(ROOT, 'lang', f), path.join(dir, 'lang', f));
+  for (const f of ['index.html', 'planner.html', 'sw.js', 'version.json']) fs.copyFileSync(path.join(BASE, f), path.join(dir, f));   // classic/ has no install card: that is the new app's
+  fs.mkdirSync(path.join(dir, 'lang')); for (const f of fs.readdirSync(path.join(BASE, 'lang'))) fs.copyFileSync(path.join(BASE, 'lang', f), path.join(dir, 'lang', f));
   fs.mkdirSync(path.join(dir, 'icons')); for (const f of fs.readdirSync(path.join(ROOT, 'icons'))) fs.copyFileSync(path.join(ROOT, 'icons', f), path.join(dir, 'icons', f));
   const s = { dir, down: false, hits: [] };
   const types = { html: 'text/html; charset=utf-8', js: 'text/javascript', json: 'application/json', webmanifest: 'application/manifest+json', png: 'image/png' };
@@ -191,7 +192,7 @@ async function site() {
   const sha = b => crypto.createHash('sha256').update(b).digest('hex');
   // A new version: the same pages with a mark in them, and a version.json that describes them. half: version.json runs ahead of the pages, as in the middle of an upload.
   s.put = (version, mark, { half, langMark } = {}) => {
-    let index = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').replace('</body>', '<i id="buildMark" hidden>' + mark + '</i></body>'), planner = fs.readFileSync(path.join(ROOT, 'planner.html'));
+    let index = fs.readFileSync(path.join(BASE, 'index.html'), 'utf8').replace('</body>', '<i id="buildMark" hidden>' + mark + '</i></body>'), planner = fs.readFileSync(path.join(BASE, 'planner.html'));
     const files = { 'index.html': sha(Buffer.from(index)), 'planner.html': sha(planner) };
     // A new version can bring a changed language file too (langMark): the offline copy takes it with the pages.
     const langs = {};
@@ -220,7 +221,7 @@ test('the app is kept on the computer: it opens with no internet, and nothing of
   assert.equal((await updState(page)).cur, require('../package.json').version);
   await openZip(page, zip, 'River essay.zip'); await score(page, [3, 3, 3]); await settle(page);
   const cached = await page.evaluate(async () => { const out = {}; for (const n of await caches.keys()) out[n] = (await (await caches.open(n)).keys()).map(r => new URL(r.url).pathname).sort(); return out; });
-  assert.deepEqual(cached, { 'gs-app-1': ['/icons/icon-192.png', '/icons/icon-512.png', '/icons/icon-maskable-512.png', '/index.html', '/manifest.webmanifest', '/planner.html', '/version.json'] }, 'the pages, their icons and nothing else');
+  assert.deepEqual(cached, { 'gsc-app-1': ['/index.html', '/planner.html', '/version.json'] }, 'the pages, their icons and nothing else');
   s.down = true;
   await reloadApp(page);
   assert.equal(await page.evaluate(() => window.__gs.kept().size), 1, 'with no internet the app opens, with her work');
@@ -262,12 +263,12 @@ test('a newer version waits until she says so: the page stays as it is, the side
 test('the language she chose is kept with the app: it opens in it with no internet, and a new version brings its language along', async () => {
   const s = await site(), { page, close } = await openOwn({ server: s });
   await kept(page);
-  const langsKept = () => page.evaluate(async () => (await (await caches.open('gs-app-1')).keys()).map(r => new URL(r.url).pathname).filter(p => p.startsWith('/lang/')).sort());
+  const langsKept = () => page.evaluate(async () => (await (await caches.open('gsc-app-1')).keys()).map(r => new URL(r.url).pathname).filter(p => p.startsWith('/lang/')).sort());
   assert.deepEqual(await langsKept(), [], 'in English no language is kept');
   await page.evaluate(() => localStorage.setItem('gs.lang', '"es"'));
   await reloadApp(page);
   await page.waitForFunction(() => window.__gsLang.lang === 'es' && document.querySelector('#rail [data-nav="home"]').textContent.trim() === 'Hoy');
-  await page.waitForFunction(async () => !!(await (await caches.open('gs-app-1')).match('lang/es.js')), { timeout: 30000, polling: 200 });
+  await page.waitForFunction(async () => !!(await (await caches.open('gsc-app-1')).match('lang/es.js')), { timeout: 30000, polling: 200 });
   assert.deepEqual(await langsKept(), ['/lang/es.js'], 'the one she chose, and no other');
   s.down = true;
   await reloadApp(page);

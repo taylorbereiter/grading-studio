@@ -7,8 +7,9 @@ const assert = require('node:assert');
 const fs = require('fs'), path = require('path');
 const { serve } = require('./helpers/serve');
 const { launch } = require('./helpers/chrome');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 const ROOT = path.join(__dirname, '..');
-const PAGE = () => fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8');
+const PAGE = () => fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8');
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const until = async (page, fn, arg) => { for (let i = 0; i < 160; i++) { if (await page.evaluate(fn, arg)) return; await wait(50); } throw new Error('Waited too long for ' + fn); };
 const SETUP = { kind: 'grading-studio-lessons-setup', version: 1, semStart: '2026-08-31', semEnd: '2027-01-18', daysOff: [], events: [],

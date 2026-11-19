@@ -7,6 +7,7 @@ const { launch } = require('./helpers/chrome');
 const { serve } = require('./helpers/serve');
 const { ROOT, openApp, openZip, pick } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 
 let browser;
 before(async () => { browser = await launch(); });
@@ -70,7 +71,7 @@ test('the Add menu and Readings take files from Drive: a PDF as it is, a Google 
 });
 
 test('without Google set up there is no Drive button (a double-click copy, or no key)', async () => {
-  const { page, close } = await openApp(browser, { html: fs.readFileSync(path.join(ROOT, 'Grading Studio.html'), 'utf8').replace(/652182763861-[\w]+\.apps\.googleusercontent\.com/g, '') });
+  const { page, close } = await openApp(browser, { html: fs.readFileSync(path.join(BASE, 'Grading Studio.html'), 'utf8').replace(/652182763861-[\w]+\.apps\.googleusercontent\.com/g, '') });
   try {
     await openZip(page, await zipOf({ 'Aria Testwell/Outline.pdf': await makePaper({ title: 'Aria outline' }) }), 'Outlines.zip');
     await page.waitForSelector('#addFileBtn');
@@ -79,7 +80,7 @@ test('without Google set up there is no Drive button (a double-click copy, or no
 });
 
 test('the Planner takes lesson materials and the finished deck from Drive: a Google Doc comes down as a Word file', async () => {
-  const server = await serve(() => fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8'));
+  const server = await serve(() => fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8'));
   const page = await browser.newPage();
   const D = { asked: [], files: { '1DocDocDocDocDocDocDocDocDoc0004': Buffer.from('PK fake docx') },
     picks: [[{ id: '1DocDocDocDocDocDocDocDocDoc0004', name: 'Task sheet', mimeType: 'application/vnd.google-apps.document' }]] };

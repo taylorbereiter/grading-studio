@@ -8,6 +8,7 @@ const { serve } = require('./helpers/serve');
 const { openApp, openZip, goTo, answerDlg } = require('./helpers/app');
 const { standardFiles, zipOf } = require('./helpers/fixtures');
 const { gradingSeed } = require('./helpers/steady');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 
 let browser, zip;
 before(async () => { browser = await launch(); zip = zipOf(await standardFiles()); });
@@ -102,7 +103,7 @@ test('away from the marking screen, Ctrl Z takes back a deleted unit, Ctrl Y del
 });
 
 test('in the Planner’s slide editor Ctrl Z takes back a slide added, and Shift Ctrl Z adds it again', async () => {
-  const server = await serve(() => require('fs').readFileSync(path.join(__dirname, '..', 'planner.html'), 'utf8'));
+  const server = await serve(() => require('fs').readFileSync(path.join(BASE, 'planner.html'), 'utf8'));
   const page = await browser.newPage(), errors = []; page.on('pageerror', e => errors.push(e.message));
   try {
     await page.goto(server.url, { waitUntil: 'load' });

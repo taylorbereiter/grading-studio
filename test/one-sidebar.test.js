@@ -6,6 +6,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path'), http = require('http');
 const { launch } = require('./helpers/chrome');
 const { openApp, appReady, goTo, idbRead, builtHtml, closeBox } = require('./helpers/app');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 const ROOT = path.join(__dirname, '..');
 
 // Grading and the Planner on one address, as on GitHub Pages.
@@ -15,7 +16,7 @@ function serveBoth() {
     const p = req.url.split('?')[0], file = p === '/' || p === '/index.html' ? 'index.html' : p === '/planner.html' ? 'planner.html' : null;
     if (!file && p !== '/blank') { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
-    res.end(file ? fs.readFileSync(path.join(ROOT, file), 'utf8') : '<!doctype html><title>blank</title>');
+    res.end(file ? fs.readFileSync(path.join(BASE, file), 'utf8') : '<!doctype html><title>blank</title>');
   });
   return new Promise(r => srv.listen(0, '127.0.0.1', () => { srv.unref(); r({ url: 'http://localhost:' + srv.address().port + '/', close: () => new Promise(d => { srv.closeAllConnections(); srv.close(d); }) }); }));
 }
@@ -105,7 +106,7 @@ test('the Planner’s sidebar reads nothing of grading’s', async () => {
   const rail = fs.readFileSync(path.join(ROOT, 'src', 'planner', 'rail.js'), 'utf8');
   assert.ok(!/localStorage|indexedDB|sessionStorage/.test(rail), 'rail.js opens no storage');
   // The lines that keep the sample apart (src/samplemode.js) are on both pages and name every database, only to clear the sample's own copies.
-  const whole = fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8'), html = whole.replace(/<script>\/\* -+ the sample:[\s\S]*?<\/script>/, '');
+  const whole = fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8'), html = whole.replace(/<script>\/\* -+ the sample:[\s\S]*?<\/script>/, '');
   assert.notEqual(html, whole);
   for (const s of ['gs.lib', 'grading-studio-keep', 'grading-studio-added', 'keptMeta', 'gs.b.']) assert.ok(!html.includes(s), 'planner.html should not contain ' + s);
   // And as it runs, with grading work in the browser: every key and database it opens is the Planner's own or one of the two shared ones.

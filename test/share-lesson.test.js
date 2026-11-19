@@ -6,8 +6,9 @@ const assert = require('node:assert');
 const fs = require('fs'), path = require('path');
 const { serve } = require('./helpers/serve');
 const { launch } = require('./helpers/chrome');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 const ROOT = path.join(__dirname, '..');
-const PAGE = () => fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8');
+const PAGE = () => fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8');
 const SETUP = { kind: 'grading-studio-lessons-setup', version: 1, semStart: '2026-08-31', semEnd: '2027-01-18', daysOff: [], events: [],
   classes: [{ id: 'A1', name: 'Course A-1', course: 'Course A', color: '#1F6FB2', meets: [{ dow: 2, start: '09:00', end: '10:30' }] }] };
 

@@ -3,15 +3,16 @@
 const fs = require('fs'), os = require('os'), path = require('path');
 const { serve } = require('./serve');
 const ROOT = path.join(__dirname, '..', '..');
-const BUILT = path.join(ROOT, 'index.html');
+const BASE = require('./base');   // the current app's pages: classic/ since the switch
+const BUILT = path.join(BASE, 'index.html');
 
 // Tests on a stale build would pass or fail about old code, so stop with a clear message instead.
 function builtHtml() {
-  if (!fs.existsSync(BUILT)) throw new Error('index.html is missing. Run: npm run check');
+  if (!fs.existsSync(BUILT)) throw new Error(path.relative(ROOT, BUILT) + ' is missing. Run: npm run check');
   const walk = d => fs.readdirSync(path.join(ROOT, d), { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(d + '/' + e.name) : [d + '/' + e.name]);   // every file under src, folders within folders too
   const t = fs.statSync(BUILT).mtimeMs, src = ['build.js', 'package.json', ...walk('src')];
   const old = src.filter(f => fs.statSync(path.join(ROOT, f)).mtimeMs > t + 1000);
-  if (old.length) throw new Error('index.html is older than ' + old.join(', ') + '. Run: npm run check');
+  if (old.length) throw new Error(path.relative(ROOT, BUILT) + ' is older than ' + old.join(', ') + '. Run: npm run check');
   return fs.readFileSync(BUILT, 'utf8');
 }
 const tmpDir = pre => fs.mkdtempSync(path.join(os.tmpdir(), 'gs-test-' + pre + '-'));
@@ -301,4 +302,4 @@ function noStamps(lib) {
   }
   return lib;
 }
-module.exports = { noStamps, USED_BEFORE, openOwn, closeOwn, goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, toScreen, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };
+module.exports = { BASE, noStamps, USED_BEFORE, openOwn, closeOwn, goTo, openClass, classPage, menuPick, press, pick, closeBox, MARK_BOXES, ROOT, BUILT, builtHtml, tmpDir, openApp, answerDlg, appReady, plant, idbRead, pickFile, openZip, waitPaper, goToStudent, toScreen, at, drag, clickAt, setTool, score, markPage, settle, catchDownloads, probePdf, probeScreen, workOf };

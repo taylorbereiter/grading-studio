@@ -7,7 +7,7 @@ const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..', '..'), SRC = path.join(ROOT, 'src');
 const LANG_RE = /^lang(-.+)?\.js$/;
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]);
-const app = walk(SRC).filter(f => /\.(js|html|json)$/.test(f) && !LANG_RE.test(path.basename(f))).concat([path.join(ROOT, 'sample.js'), path.join(ROOT, 'build.js')].filter(f => fs.existsSync(f)));
+const app = walk(SRC).filter(f => /\.(js|html|json)$/.test(f) && !LANG_RE.test(path.basename(f))).concat([path.join(require('../helpers/base'), 'sample.js'), path.join(ROOT, 'build.js')].filter(f => fs.existsSync(f)));
 // The text of the app as it would be read: strings joined across " + ", escapes and the common HTML entities undone.
 const ENT = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'", '&nbsp;': ' ', '&hellip;': '…', '&rsquo;': '’', '&lsquo;': '‘', '&ldquo;': '“', '&rdquo;': '”', '&mdash;': '—', '&ndash;': '–', '&middot;': '·', '&times;': '×', '&rarr;': '→', '&larr;': '←' };
 const read = f => {
