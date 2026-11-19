@@ -6435,7 +6435,6 @@
  "engine.tn_start": "Iniciar el Cronómetro",
  "engine.tn_just_for": "Solo para {name}",
  "class.del_ok": "Eliminar",
- "class.c_more": "Más para {name}",
  "class.c_up": "Subir en la barra lateral",
  "class.c_down": "Bajar en la barra lateral",
  "help.cmd_new_asg": "Nueva tarea",
@@ -6504,7 +6503,8 @@
  "class.to_step": "Notas escritas",
  "mark.cw_fg_menu": "Olvidar estos trabajos…",
  "class.fg_t": "¿Olvidar los trabajos de “{name}”?",
- "class.fg_text": "Los trabajos, las correcciones y las notas de esta descarga salen de este navegador, y una copia sincronizada o una carpeta vinculada también los suelta. La tarjeta de la tarea se queda. No se puede deshacer.",
+ "class.fg_text": "Los trabajos, las correcciones y las notas de esta descarga salen de este navegador y de sus copias de seguridad, y una copia sincronizada o una carpeta vinculada también los suelta. La tarjeta de la tarea se queda.",
+ "class.fg_back": "Para recuperar los trabajos, vuelve a traer la descarga en esta tarjeta. Las correcciones y las notas no vuelven.",
  "class.fg_ok": "Olvidarlos",
  "class.fg_done": "Se olvidaron los trabajos de “{name}”",
  "class.fg_failed": "No funcionó, así que no se olvidó nada. Inténtalo de nuevo."

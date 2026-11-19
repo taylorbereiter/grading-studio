@@ -6442,7 +6442,6 @@
  "engine.tn_start": "启动计时器",
  "engine.tn_just_for": "只给 {name}",
  "class.del_ok": "删除",
- "class.c_more": "{name} 的更多操作",
  "class.c_up": "在侧边栏上移",
  "class.c_down": "在侧边栏下移",
  "help.cmd_new_asg": "添加作业",
@@ -6511,7 +6510,8 @@
  "class.to_step": "输入的分数",
  "mark.cw_fg_menu": "忘记这些书面作业…",
  "class.fg_t": "要忘记“{name}”的书面作业吗？",
- "class.fg_text": "这份下载的书面作业、批改和分数会从这个浏览器删除，同步的副本或关联的文件夹也会一并删除。作业卡片会保留。此操作无法撤销。",
+ "class.fg_text": "这份下载的书面作业、批改和分数会从这个浏览器和它的安全副本中删除，同步的副本或关联的文件夹也会一并删除。作业卡片会保留。",
+ "class.fg_back": "要取回书面作业，请在这张卡片上再次导入那份下载。批改和分数不会回来。",
  "class.fg_ok": "忘记",
  "class.fg_done": "已忘记“{name}”的书面作业",
  "class.fg_failed": "没有成功，所以什么都没忘记。请再试一次。"

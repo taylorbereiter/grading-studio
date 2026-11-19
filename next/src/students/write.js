@@ -45,7 +45,9 @@ export function check(what) {
 export async function saveWork(id, change, { fresh = false, hold = null } = {}) {
   return oneAtATime(async () => {
     check(id);
-    if ((json('gs.tomb', {}) || {})[id]) throw new CannotSave('forgotten', id);
+    const tomb = (json('gs.tomb', {}) || {})[id];
+    if (tomb && !again.has(id)) throw new CannotSave('forgotten', id);
+    const seen = tomb ? tomb.v || {} : null;
     const prev = await newestWork(id); if (!prev && !fresh) throw new CannotSave('missing', id);
     const M = await merge(), data = hold ? {} : prev ? copy(prev) : {};
     change(data);
@@ -55,7 +57,7 @@ export async function saveWork(id, change, { fresh = false, hold = null } = {}) 
       if (!hold.revs) hold.revs = M.revsOf(prev);
       if (!hold.bad) hold.wasOk = hold.revs;   // a change whose save failed still counts as this window's own, until one works
       const was = hold.wasOk, st = tabs.savedStamp(id);
-      hold.revs = M.stampData(hold.revs, data, tabs.devId(), Date.now(), null);
+      hold.revs = M.stampData(hold.revs, data, tabs.devId(), Date.now(), seen);
       if (prev && (hold.behind || (st && st !== hold.seen))) {
         if (!hold.behind && !M.tabDiffers(was, prev)) hold.seen = st;   // it saved nothing new
         else {
@@ -65,8 +67,9 @@ export async function saveWork(id, change, { fresh = false, hold = null } = {}) 
           out = m.data;
         }
       }
-    } else M.stampData(M.revsOf(prev), data, tabs.devId(), Date.now(), null);
+    } else M.stampData(M.revsOf(prev), data, tabs.devId(), Date.now(), seen);
     const r = await writeWork(id, out, M);
+    if (tomb) { const tb = json('gs.tomb', {}) || {}; delete tb[id]; deleted.setJson(tb); again.delete(id); saved({ kind: 'setting', id: 'gs.tomb', side: 'students', from: 'local' }); }
     if (hold) { hold.bad = !r.full; hold.seen = tabs.savedStamp(id); }
     saved({ kind: 'work', id, side: 'students', data: out, before: prev });
     return r;
@@ -133,9 +136,14 @@ async function writeWork(id, data, M) {
 // The files of a download brought in, kept in this browser so it reopens by itself, and its row in the list of kept work. A download
 // over about 100 MB is kept in pieces ("id|file|piece"), the list going in last so it never names a piece that isn't there.
 const PAPER_ONE = 100e6, PAPER_PIECE = 64e6;
+// A forgotten download brought in again on purpose (src/folder.js stampWork, folderPapers): it isn't forgotten any more. Its papers
+// are kept, and its first save takes the tombstone away and is stamped with everything the tombstone had seen, so a synced copy or a
+// folder that still has the tombstone gives way to it. Until that save the tombstone stays. True when it was forgotten.
+const again = new Set();
+export function bringBack(id) { if (!(json('gs.tomb', {}) || {})[id]) return false; again.add(id); return true; }
 export async function keepPapers(b, label, list) {
   check(b.id);
-  if ((json('gs.tomb', {}) || {})[b.id]) throw new CannotSave('forgotten', b.id);
+  if ((json('gs.tomb', {}) || {})[b.id] && !again.has(b.id)) throw new CannotSave('forgotten', b.id);
   const id = b.id, rec = { id, label: label || '', entries: list };
   await putPapers(id, rec);
   const m0 = await meta.get(id);

@@ -43,9 +43,11 @@ test('a language chosen in the current app: the new app opens in it, with the cu
   await p.goto(srv.url + 'next/#/');
   await p.waitForSelector('[data-shell-nav]', { timeout: 30000 });
   assert.equal(await p.evaluate(() => document.documentElement.lang), 'de');
+  // the sidebar draws its fixed rows first and the classes once the library is read: wait for the classes before reading it
+  const names = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')).classes.map(c => c.name));
+  await p.waitForFunction(names => { const t = [...document.querySelectorAll('[data-shell-nav] a, [data-shell-nav] button')].map(e => e.textContent).join(' | '); return names.every(n => t.includes(n)); }, { timeout: 30000, polling: 200 }, names).catch(() => {});
   const nav = await navText(p);
   for (const w of ['Kalender', 'Bibliothek', 'Einstellungen', 'Hilfe']) assert.ok(nav.includes(w), w + ' in ' + nav);
-  const names = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')).classes.map(c => c.name));
   for (const n of names) assert.ok(nav.includes(n), 'the class name ' + n + ' as typed');
   assert.deepEqual(p.errors, []);
   await p.ctx.close();

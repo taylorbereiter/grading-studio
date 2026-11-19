@@ -6442,7 +6442,6 @@
  "engine.tn_start": "타이머 시작",
  "engine.tn_just_for": "{name}에게만",
  "class.del_ok": "삭제",
- "class.c_more": "{name} 더 보기",
  "class.c_up": "사이드바에서 위로",
  "class.c_down": "사이드바에서 아래로",
  "help.cmd_new_asg": "새 과제",
@@ -6511,7 +6510,8 @@
  "class.to_step": "입력한 점수",
  "mark.cw_fg_menu": "이 제출물 잊기…",
  "class.fg_t": "‘{name}’의 제출물을 잊을까요?",
- "class.fg_text": "이 다운로드의 제출물, 채점, 점수가 이 브라우저에서 사라지고, 동기화된 사본이나 연결된 폴더에서도 사라집니다. 과제 카드는 남아요. 되돌릴 수 없습니다.",
+ "class.fg_text": "이 다운로드의 제출물, 채점, 점수가 이 브라우저와 안전 사본에서 사라지고, 동기화된 사본이나 연결된 폴더에서도 사라집니다. 과제 카드는 남아요.",
+ "class.fg_back": "제출물을 되찾으려면 이 카드에 다운로드를 다시 가져오세요. 채점과 점수는 돌아오지 않아요.",
  "class.fg_ok": "잊기",
  "class.fg_done": "‘{name}’의 제출물을 잊었어요",
  "class.fg_failed": "잘 되지 않아서 아무것도 잊지 않았어요. 다시 시도하세요."

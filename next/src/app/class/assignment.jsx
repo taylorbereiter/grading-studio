@@ -18,6 +18,7 @@ import * as B from '../../engines/gbook.js';
 import { libraryChange } from '../../students/undo.js';
 import * as undoList from '../../services/undo.js';
 import { PARTS } from '../router.js';
+import { saving } from '../../services/saving.js';
 import '../mark/setup-lines.js';
 import './lines.js';
 
@@ -146,24 +147,30 @@ export function StartNotes({ lib, it, bring, onClose }) {
   </Dialog>;
 }
 
-// Forget these papers (src/app/kept.js forgetKept, src/folder.js noteForgotten): the download's tombstone, so a synced copy or a
-// linked folder lets it go too, then everything of it in this browser. The card stays. Cannot be undone, so asked first.
+// Forget these papers (src/app/kept.js forgetKept, src/folder.js noteForgotten), in the current app's order. First the download
+// comes out of every safety copy (whole/safety.js forget through services/saving.js, src/migrate.js gsData.forget), so Put back can't bring its work back; if
+// that fails nothing is forgotten and she can try again. Then its tombstone, so a synced copy or a linked folder lets it go too, and
+// everything of it in this browser. The card stays. The papers come back the way they do in the current app: bringing the download
+// in again (mark/open.js bringIn, students/write.js bringBack), with no marks or scores. Asked first, and the box says so.
 export function Forget({ it, id, onClose }) {
   const [busy, setBusy] = useState(false);
   const go = async () => {
     setBusy(true);
+    try { const S = saving(); if (!S || !S.safetyForget) throw new Error('No safety copies here yet'); await S.safetyForget(id); }
+    catch (e) { console.error(e); toast(t('class.fg_failed')); onClose(false); return; }
     try {
-      const [W, S, M] = await Promise.all([PARTS.write(), import('../../students/index.js'), import('../../engines/merge.js')]);
+      const [W, S, M, P] = await Promise.all([PARTS.write(), import('../../students/index.js'), import('../../engines/merge.js'), import('../../students/prefs.js')]);
       const tb = S.deleted.json({}) || {}, now = Date.now();
       if (!tb[id]) { const w = await S.newestWork(id); tb[id] = { t: now, name: it.name || '', v: M.vJoin(M.workVec(w), { ['!' + id + ':' + now]: 1 }) }; W.takeTombs(tb, 'local'); }
       await W.dropDownload(id, 'local');
+      const seen = P.prefs.get('gs.openSeen', {}) || {}; if (seen[id]) { delete seen[id]; P.prefs.set('gs.openSeen', seen); }
       toast(t('class.fg_done', { name: it.name }));
     } catch (e) { console.error(e); toast(t('class.fg_failed')); }
     onClose(true);
   };
   return <Dialog open title={t('class.fg_t', { name: it.name })} onClose={() => onClose(false)}
     actions={<><Button onClick={() => onClose(false)}>{t('setup.u_cancel')}</Button><Button variant="primary" disabled={busy} onClick={go} data-fgok>{t('class.fg_ok')}</Button></>}>
-    <p>{t('class.fg_text')}</p></Dialog>;
+    <p>{t('class.fg_text')}</p><p>{t('class.fg_back')}</p></Dialog>;
 }
 
 // A unit's link to its unit plan in the school's curriculum tool (src/app/screens.js askAtlas): a web link; empty takes it off.

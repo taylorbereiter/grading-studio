@@ -1214,7 +1214,6 @@
  "class.del_ok": "Delete",
  "class.del_done": "Deleted the {name} class",
  "class.u_order": "Move in the sidebar",
- "class.c_more": "More for {name}",
  "class.c_up": "Move up in the sidebar",
  "class.c_down": "Move down in the sidebar",
  "class.as_new": "New assignment",
@@ -1259,7 +1258,8 @@
  "class.to_roster": "Put this assignment in a class with a roster first.",
  "class.to_step": "Typed scores",
  "class.fg_t": "Forget the papers for “{name}”?",
- "class.fg_text": "The papers, marks and scores of this download leave this browser, and a synced copy or linked folder lets them go too. The assignment card stays. This can’t be undone.",
+ "class.fg_text": "The papers, marks and scores of this download leave this browser and its safety copies, and a synced copy or linked folder lets them go too. The assignment card stays.",
+ "class.fg_back": "To get the papers back, bring the download in again on this card. Your marks and scores don’t come back.",
  "class.fg_ok": "Forget them",
  "class.fg_done": "Forgot the papers for “{name}”",
  "class.fg_failed": "That didn’t work, so nothing was forgotten. Try again."

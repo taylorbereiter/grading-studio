@@ -51,6 +51,8 @@ export function startWhole() {
     folder: () => ({ state: F.state, booted: F.booted, name: F.name, canPick: 'showDirectoryPicker' in window, ...(F.mod ? F.mod.info() : {}) }),
     folderPick: fr('pick'), folderUse: fr('use'), folderStop: fr('unlink'), folderResume: fr('resume', true), folderDecide: fr('decide'), folderWait: fr('wait'), snapList: fr('snaps'), goBack: fr('folderGoBack'),
     safetyList: async () => (await import('./safety.js')).snapshots(),
+    // a forgotten download out of every safety copy (Forget these papers on the class page)
+    safetyForget: async id => (await import('./safety.js')).forget(id),
     putBack: async id => { await (await import('./safety.js')).putBack(id); if (F.mod) F.mod.carryAfterPutBack(); },
     // the take-home file, a new school year and Remove from this computer (whole/takehome.js, newyear.js, remove.js)
     take: () => import('./takehome.js'), year: () => import('./newyear.js'), remove: () => import('./remove.js'),

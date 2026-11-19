@@ -6358,7 +6358,6 @@
  "engine.tn_start": "Lancer le Chronomètre",
  "engine.tn_just_for": "Seulement pour {name}",
  "class.del_ok": "Supprimer",
- "class.c_more": "Plus pour {name}",
  "class.c_up": "Monter dans la barre latérale",
  "class.c_down": "Descendre dans la barre latérale",
  "help.cmd_new_asg": "Nouveau devoir",
@@ -6425,7 +6424,8 @@
  "class.to_step": "Notes saisies",
  "mark.cw_fg_menu": "Oublier ces copies…",
  "class.fg_t": "Oublier les copies de « {name} » ?",
- "class.fg_text": "Les copies, annotations et notes de ce téléchargement quittent ce navigateur, et une copie synchronisée ou un dossier lié les oublie aussi. La carte du devoir reste. Impossible d’annuler.",
+ "class.fg_text": "Les copies, annotations et notes de ce téléchargement quittent ce navigateur et ses copies de sécurité, et une copie synchronisée ou un dossier lié les oublie aussi. La carte du devoir reste.",
+ "class.fg_back": "Pour récupérer les copies, importez à nouveau le téléchargement sur cette carte. Les annotations et les notes ne reviennent pas.",
  "class.fg_ok": "Les oublier",
  "class.fg_done": "Copies de « {name} » oubliées",
  "class.fg_failed": "Cela n’a pas marché, donc rien n’a été oublié. Réessayez."
