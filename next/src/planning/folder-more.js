@@ -4,6 +4,7 @@
 import { writeFile, plannerFolder, writeLessonFile, writeTimetableFile, writeActivitiesFile } from './folder.js';
 import { kv, lessons } from './index.js';
 import { check, tell } from './write.js';
+import { changePlannerRecord } from './change.js';
 import { saved } from '../shared/saved.js';
 const fileBlob = id => kv.get('file:' + id).catch(() => null);
 /* ---------- units, the rubric bank, and the folder written whole ---------- */
@@ -112,6 +113,30 @@ export async function saveFolderNote(key, value) {
 // to Rubrics/ (src/planner/units.js unitWriteSoon, bank.js bankWriteSoon); where each was written is kept with it (units' _file
 // and _mod, kv bankFiles).
 export async function afterSave(name, value, was, f) {
-  if (name === 'units') { const u = await writeUnitFiles(value, Array.isArray(was) ? was : null, f, fileBlob); if (u) await kv.put(u, 'units'); }
+  if (name === 'units') {
+    const written = await writeUnitFiles(value, Array.isArray(was) ? was : null, f, fileBlob);
+    if (written) {
+      await changePlannerRecord('kv', 'units', list => {
+        if (!Array.isArray(list)) return;
+        return list.map(u => {
+          const file = written.find(v => v && u && v.id === u.id);
+          return file && file._file && same(bare(file), bare(u)) ? { ...u, _file: file._file, _mod: file._mod } : u;
+        });
+      });
+    }
+  }
   if (name === 'bank') { const b = await writeBankFiles(value, await kv.get('bankFiles'), f); if (b) await kv.put(b, 'bankFiles'); }
+}
+
+export async function finishLessonFile(l, folder) {
+  try { await writeLessonFile(l, folder); } catch (e) { console.error(e); l._sync = 1; }
+  // Only apply the folder metadata for the revision actually written. An edit
+  // or deletion during folder I/O must not be replaced by the old lesson.
+  await changePlannerRecord('lessons', l.id, current => {
+    if (!current || current.updated !== l.updated) return;
+    for (const key of ['_file', '_mod', '_sync']) {
+      if (key in l) current[key] = l[key]; else delete current[key];
+    }
+    return current;
+  });
 }

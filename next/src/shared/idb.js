@@ -13,16 +13,18 @@ import { mayWrite } from './lock.js';
 
 export class NotThere extends Error { constructor(what) { super(what + ' could not be made in this browser.'); this.name = 'NotThere'; } }
 
-export function openExisting(name) {
-  return new Promise(res => {
-    let r; try { r = indexedDB.open(name); } catch { return res(null); }
+export function openExistingStrict(name) {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(name);
     let made = false;
+    let blocked = false;
     r.onupgradeneeded = () => { made = true; r.transaction.abort(); };   // it was not there: leave it not there
-    r.onsuccess = () => { const db = r.result; db.onversionchange = () => db.close(); res(db); };
-    r.onerror = e => { if (made) e.preventDefault(); res(null); };
-    r.onblocked = () => res(null);
+    r.onsuccess = () => { const db = r.result; if (blocked) return db.close(); db.onversionchange = () => db.close(); res(db); };
+    r.onerror = e => { if (made) { e.preventDefault(); res(null); } else rej(r.error); };
+    r.onblocked = () => { blocked = true; rej(new Error('Database blocked: ' + name)); };
   });
 }
+export const openExisting = name => openExistingStrict(name).catch(() => null);
 // The current app's databases as it makes them (src/app/kept.js keepDb and addDb, src/examples.js, src/video.js vkDb, src/migrate.js,
 // src/school.js schDb, src/planner/lessons.js, src/folder.js folderKv, src/app/readings.js): version, and each store with its keyPath
 // (null: keys given with each record). next/test/keys.test.js checks this against shared/keys.js DATABASES and the current app's source.

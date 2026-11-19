@@ -6,7 +6,6 @@
 //   saveKv(name, value)       a gs-lessons kv record: setup (row 8), units, bank (row 3; also tells gs-bank), activities, words, deflook
 //   savePref(key, value)      a teacher-wide setting: gs.look, gs.theme (38), gs.lang, gs.words, gs.mailApp, gs.mblinks (41), gs.school
 //   addPlanTime(r, secs)      planning time on a lesson (22; src/planner/plfocus.js pfPlanAdd)
-//   saveTaughtNote(key, note) an after-class note (29). MAY HOLD NAMES: never sent to an assistant unless the teacher puts it in
 //   startNewYear(v)           tells the Planner a new year is under way (32)
 //   setGoogleToken(v)         the Google sign-in token for this window (49; sessionStorage, as the current app keeps it)
 //   deleteLesson(lesson)      a lesson removed (src/planner/lessons.js lDelete), and its file in the Planner folder
@@ -16,13 +15,13 @@
 //   saveVersions(id, list)    a lesson's versions as a whole (kv ver:<id>), when one is put back
 //   saveSchoolFile(hash, data) a School file's bytes by their SHA-256 (grading-studio-school/files; src/school.js schPut)
 // A lesson written while a Planner folder is linked also goes to its file there (planning/folder.js), as the current Planner does.
-import { lessons, kv, school, schoolFiles, manageBacLinks, taughtIn, planTime, newYear, words, look, theme, language, mailApp, googleEmail, googleAuto, drivePaperDir, driveVideoDir, planCopy, planSeen, planBig, presentTimer, presentSound, presentBig, presentOwn } from './index.js';
+import { lessons, kv, school, schoolFiles, manageBacLinks, planTime, newYear, words, look, theme, language, mailApp, googleEmail, googleAuto, drivePaperDir, driveVideoDir, planCopy, planSeen, planBig, presentTimer, presentSound, presentBig, presentOwn } from './index.js';
 import { mayWrite } from '../shared/lock.js';
 import { plan } from './plan.js';
 import * as tabs from '../shared/tabs.js';
 import { saved } from '../shared/saved.js';
 import { writeMany } from '../shared/idb.js';
-import { plannerFolder, writeLessonFile, removeLessonFile, writeTimetableFile, writeActivitiesFile } from './folder.js';
+import { plannerFolder, removeLessonFile, writeTimetableFile, writeActivitiesFile } from './folder.js';
 
 export class CannotSave extends Error { constructor(why, what) { super(what + ': ' + why); this.name = 'CannotSave'; this.why = why; } }
 export const check = what => { mayWrite(what); if (!tabs.live()) throw new CannotSave('replaced', what); };
@@ -37,8 +36,11 @@ export async function saveLesson(lesson, { file = true, base = 0, behind = null 
   if (base && behind) { const s = await lessons.get(lesson.id); if (s && (s.updated || 0) > base) await behind(s); }
   const l = JSON.parse(JSON.stringify(lesson)); l.updated = Date.now();
   await lessons.put(l);
+  return finishLessonSave(l, file);
+}
+export async function finishLessonSave(l, file) {
   const f = file ? await plannerFolder() : null;
-  if (f) { try { if (await writeLessonFile(l, f) !== 'none') await lessons.put(l); } catch (e) { console.error(e); l._sync = 1; await lessons.put(l); } }
+  if (f) await import('./folder-more.js').then(m => m.finishLessonFile(l, f));
   tell('gs-plan-out');
   saved({ kind: 'lesson', id: l.id, side: 'planning' });
   return l;
@@ -101,6 +103,9 @@ export async function saveKv(name, value, { file = true } = {}) {
   if (cur && Array.isArray(cur.failed) && cur.failed.includes(name) && WHOLE.includes(name)) throw Object.assign(new Error('Planner record not read: ' + name), { unread: true });
   const was = name === 'units' ? await kv.get('units').catch(() => null) : null;
   await kv.put(value, name);
+  await finishKvSave(name, value, was, file);
+}
+export async function finishKvSave(name, value, was, file) {
   const f = file ? await plannerFolder() : null;
   // The timetable also goes to its file in a linked Planner folder, as the current Planner writes it when it is changed there.
   if (name === 'setup') await writeTimetableFile(value, f).catch(e => console.error(e));
@@ -140,22 +145,6 @@ export function addPlanTime(r, secs) {
   for (const n of Object.keys(names)) if (!used.has(n)) delete names[n];
   planTime.setJson({ days, names, ...(r.id ? { ids: [...ids, r.id] } : {}) });
   saved({ kind: 'pref', id: 'gsp.planTime', side: 'planning' });
-}
-// key "<lesson id>|<class id>|<date>", note { slide, of, x (the note), t }. MAY HOLD NAMES.
-export function saveTaughtNote(key, note) {
-  check('gsp.taughtIn');
-  const T = taughtIn.json(null), o = T && typeof T === 'object' && T.items && typeof T.items === 'object' ? T : { items: {} };
-  o.items = { ...o.items, [key]: note };
-  taughtIn.setJson(o);
-  saved({ kind: 'pref', id: 'gsp.taughtIn', side: 'planning' });
-}
-// Phone notes put on their lessons (planning/taught-fold.js): each marked f: 1, read again first, so one that came meanwhile stays.
-export function foldedTaught(done) {
-  check('gsp.taughtIn');
-  const T = taughtIn.json(null), o = T && typeof T === 'object' && T.items && typeof T.items === 'object' ? T : { items: {} };
-  for (const [k, t] of done) if (o.items[k] && o.items[k].t === t) o.items[k] = { ...o.items[k], f: 1 };
-  taughtIn.setJson(o);
-  saved({ kind: 'pref', id: 'gsp.taughtIn', side: 'planning' });
 }
 // The new school years the Planner has moved on to (kv yearsDone, src/planner/units.js yearMoveOn), so a move is done once.
 export async function saveYearsDone(list) { check('gs-lessons/kv/yearsDone'); await kv.put(list, 'yearsDone'); tell('gs-plan-out'); saved({ kind: 'plan', id: 'yearsDone', side: 'planning' }); }

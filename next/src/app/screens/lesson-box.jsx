@@ -2,7 +2,7 @@
 // drawer's box tab opens: its chips, what she wants done with them (typed or said), and one copy of it all, ready to paste into her
 // assistant. The box itself is kv "cbox" (plan/cbox.js).
 import { h, Fragment } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { Button, IconButton, Icon, toast } from '../../ui/index.js';
 import { TextBox } from '../../ui/services.jsx';
 import { t } from '../../i18n/t.js';
@@ -11,7 +11,7 @@ import { lessonBlob } from '../../planning/plan.js';
 import { PARTS as LAZY } from '../router.js';
 import { assistant } from '../../services/assistant.js';
 import { copyText } from '../../services/clipboard.js';
-import { readBox, writeBox, onBox } from '../plan/cbox.js';
+import { readBox, changeBox, takeChips, onBox } from '../plan/cbox.js';
 import { saveFailed } from '../plan/save.js';
 import '../plan/les-lines.js';
 import '../plan/tool-lines.js';
@@ -63,11 +63,50 @@ export async function chipText(p, c, T, E) {
 }
 // T and E: the Planner's tools and engine, from the drawer, which has them already (so this part needn't carry them).
 export function Box({ p, T, E }) {
-  const [b, setB] = useState(null), [text, setText] = useState('');
-  useEffect(() => { readBox().then(x => { setB(x); setText(x.text); }, e => { saveFailed(e); setB(null); }); return onBox(x => { setB(x); setText(x.text); }); }, []);
-  const keep = async n => { try { await writeBox(n); } catch (e) { saveFailed(e); } };
-  const say = v => { setText(v); clearTimeout(say.tm); say.tm = setTimeout(() => keep({ ...b, text: v }), 400); };
-  const clear = () => { const was = b; keep({ text: '', chips: [] }); toast(t('les.box_cleared'), { undo: () => keep(was) }); };
+  const [b, setB] = useState(null), [draft, setDraft] = useState(null);
+  const pending = useRef(null), timer = useRef(0);
+  const text = draft ?? b?.text ?? '';
+  const flush = () => {
+    clearTimeout(timer.current);
+    const edit = pending.current;
+    if (!edit) return Promise.resolve(true);
+    if (!edit.saving) edit.saving = changeBox(box => {
+      if (box.text !== edit.base && box.text !== edit.value) throw new Error('The assistant box text changed in storage');
+      return { ...box, text: edit.value };
+    }).then(() => {
+      if (pending.current === edit) { pending.current = null; setDraft(null); }
+      return true;
+    }, e => { edit.saving = null; saveFailed(e); return false; });
+    return edit.saving;
+  };
+  useEffect(() => {
+    let initial = true;
+    const stop = onBox(box => { initial = false; setB(box); });
+    readBox().then(box => { if (initial) setB(box); }, e => { if (initial) saveFailed(e); });
+    return () => { initial = false; stop(); flush(); };
+  }, []);
+  const say = value => {
+    const prior = pending.current;
+    const base = prior ? (prior.saving ? prior.value : prior.base) : b.text;
+    setDraft(value); pending.current = { base, value };
+    clearTimeout(timer.current); timer.current = setTimeout(flush, 400);
+  };
+  const remove = chip => changeBox(box => ({ ...box, chips: takeChips(box.chips, [chip]).rest })).catch(saveFailed);
+  const clear = async () => {
+    if (!await flush()) return;
+    try {
+      let removed, clearedText;
+      await changeBox(box => {
+        const selection = takeChips(box.chips, b.chips);
+        removed = selection.removed;
+        clearedText = box.text === text ? box.text : '';
+        return { ...box, chips: selection.rest, text: clearedText ? '' : box.text };
+      });
+      toast(t('les.box_cleared'), { undo: () => changeBox(box => ({
+        ...box, text: box.text || clearedText, chips: [...removed, ...box.chips],
+      })).catch(saveFailed) });
+    } catch (e) { saveFailed(e); }
+  };
   const copy = async () => {
     const parts = []; for (const c of b.chips) parts.push(await chipText(p, c, T, E).catch(() => c.label || ''));
     const all = (text.trim() ? text.trim() + '\n\n' : '') + parts.filter(Boolean).join('\n\n');
@@ -78,8 +117,8 @@ export function Box({ p, T, E }) {
   return <div class="cbox">
     <p class="mute small">{t('les.box_about', { name: aiName() })}</p>
     <ul class="chiplist" aria-label={t('les.box_things')}>{b.chips.length ? b.chips.map((c, i) => <li class="bchip"><Icon name={CHIP_ICON[c.kind] || 'dash'} size="xs" /><span data-raw>{chipName(p, c)}</span>
-      <IconButton icon="x" size="sm" label={t('common.remove')} onClick={() => keep({ ...b, text, chips: b.chips.filter((_, j) => j !== i) })} data-chip-x={i} /></li>) : <li class="mute small">{t('les.box_none')}</li>}</ul>
-    <TextBox label={t('les.box_ask', { name: aiName() })} value={text} onInput={say} rows={6} data-focus="box-text" />
+      <IconButton icon="x" size="sm" label={t('common.remove')} onClick={() => remove(c)} data-chip-x={i} /></li>) : <li class="mute small">{t('les.box_none')}</li>}</ul>
+    <TextBox label={t('les.box_ask', { name: aiName() })} value={text} onInput={say} onBlur={flush} rows={6} data-focus="box-text" />
     <div class="row"><span class="grow" /><Button size="sm" variant="quiet" onClick={clear} data-focus="box-clear">{t('les.box_clear')}</Button>
       <Button size="sm" variant="primary" icon="copy" onClick={copy} data-focus="box-copy">{t('les.box_copy', { name: aiName() })}</Button></div>
   </div>;

@@ -1,0 +1,1 @@
+var e=!1,n=new Set;function s(){e=!0,n.forEach(t=>t())}function a(){let t=e;return e=!1,t}function c(t){let r=()=>{e=!1,t()};return n.add(r),()=>n.delete(r)}var o="";function d(t){o=String(t||"")}function f(){let t=o;return o="",t}export{s as a,a as b,c,d,f as e};

@@ -1,0 +1,1 @@
+import{b as o}from"./chunk-BXRYBTAE.js";import{b as i}from"./chunk-NP5M33QV.js";var e=i("planning","gsp.panel");function a(n){n===void 0?e.remove():e.setJson(n),o({kind:"pref",id:e.key,side:"planning"})}export{a};

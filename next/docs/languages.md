@@ -11,7 +11,7 @@ Stage 0, item 8. A plan only: nothing is converted in stage 0.
 | Part | What it holds | Size in every file |
 |---|---|---|
 | `name`, `locale` | The language's own name for the picker; the locale for dates (`LANG_LOCALE`). | 2 |
-| `words` | English line → translation. A key can carry a context prefix for a word with two meanings: `att|Late`, `att|Present`, `att|excused`, `tn|Mark`, `mail|Subject` (picked by the nearest `data-lc` attribute). | 1,862 lines, 5 with a context |
+| `words` | English line Ã¢â€ â€™ translation. A key can carry a context prefix for a word with two meanings: `att|Late`, `att|Present`, `att|excused`, `tn|Mark`, `mail|Subject` (picked by the nearest `data-lc` attribute). | 1,862 lines, 5 with a context |
 | `rules` | `[regex, replacement]` for English lines with a number or a name in them. The replacement is a `$1` string or a function; the first rule that answers wins. Two rules look other lines up by English (`LANG_DE.words[m[1]]`). | 78 rules; 22 to 33 of them are functions, depending on the language |
 | `fill` | Named pieces (`fcof`, `gpsess`, `owesA`, `how1`...) that src/lang.js `LANG_FILLS` uses: lang.js holds the 243 English regexes once, and each language gives only the wording. `{1}` `{2}` are parts found in the English, `{t1}` is that part put into the language when it is known, and a two-item array is `[one, many]` picked by whether the first number is 1. | 286 keys, 51 of them plural pairs |
 | `helpSecs`, `help` | Help sections and answers by topic id (`help['typed-notes'] = { q, words, a, go }`), matching `HELP` in src/helpdata.js. | 8 sections, 76 topics |
@@ -23,7 +23,7 @@ keys differs in some files). The `fill` placeholders match across all eight.
 
 **Translating.** src/lang.js does not know where a line comes from. With a language on, a `MutationObserver` watches the parts of the page
 in `LANG_ROOTS` (the sidebar, Today, Settings, a class page's tabs, the marking screen and others) and replaces each text node and each
-`title`, `aria-label` and `placeholder` it sees: `trWith` tries the whole line, then each part between `" · "`. `trPiece` tries the context
+`title`, `aria-label` and `placeholder` it sees: `trWith` tries the whole line, then each part between `" Ã‚Â· "`. `trPiece` tries the context
 key, then the plain key, then `LANG_FILLS` and the language's `rules`. A line nobody knows stays in English, which is how names a teacher
 typed stay as typed; `LANG_RAW` lists what is never touched (text areas, contenteditable, `[data-raw]`, names, class titles). Text that is
 drawn rather than put on the page (the feedback page in an exported paper, Quick mark pictures) goes through `tr(s, ctx)`: 54 calls in 13
@@ -50,7 +50,7 @@ text (`pack85`/`unpack85`), in `LANG_PACKED`. The Planner page gets the same `@l
 ## The new scheme: named lines
 
 The new app calls `t('key', params)` where it draws a line, so a screen knows exactly which line it shows. Nothing reads the finished page.
-This removes the need for `LANG_ROOTS`, `LANG_RAW`, `data-lc`, the `" · "` splitting, `LANG_DONE` and every regex: a teacher's typed name is
+This removes the need for `LANG_ROOTS`, `LANG_RAW`, `data-lc`, the `" Ã‚Â· "` splitting, `LANG_DONE` and every regex: a teacher's typed name is
 never translated because it is only ever a parameter.
 
 ### Where the files live in next/
@@ -77,10 +77,10 @@ A key is `area.name`, lowercase, words joined with `_`, for example `focus.paper
 `attendance.late`, `common.save`.
 
 - **area** is where the line is used. The script finds each English line in the current source the way lang-unused.js already does (strings
-  joined across `+`, escapes and HTML entities undone) and maps the file to an area: src/focus.js → `focus`, src/book.js → `gradebook`,
-  src/attend.js → `attendance`, src/app/export.js and src/feedback.js → `export`, src/help.js → `help`, src/shell.js → `shell`, and so on
-  (the map is a small table in the script). A context prefix decides the area directly: `att|Late` → `attendance.late`, `tn|Mark` →
-  `typednotes.mark`, `mail|Subject` → `mail.subject`.
+  joined across `+`, escapes and HTML entities undone) and maps the file to an area: src/focus.js Ã¢â€ â€™ `focus`, src/book.js Ã¢â€ â€™ `gradebook`,
+  src/attend.js Ã¢â€ â€™ `attendance`, src/app/export.js and src/feedback.js Ã¢â€ â€™ `export`, src/help.js Ã¢â€ â€™ `help`, src/shell.js Ã¢â€ â€™ `shell`, and so on
+  (the map is a small table in the script). A context prefix decides the area directly: `att|Late` Ã¢â€ â€™ `attendance.late`, `tn|Mark` Ã¢â€ â€™
+  `typednotes.mark`, `mail|Subject` Ã¢â€ â€™ `mail.subject`.
 - **name** comes from the English: the first five meaningful words, accents folded to ASCII, punctuation dropped, small words (a, the, of,
   to) dropped after the first. If two lines in one area give the
   same name, the second and later ones get the first four hex characters of a SHA-256 of their English added (`classpage.delete_q_3f9a`).
@@ -102,12 +102,12 @@ New line format: `{name}` for a parameter; a plural line is an object keyed by `
   template's help text: those braces are the teacher's own template tokens, not parameters. The script marks those lines `literal` so `t()`
   leaves the braces alone, and the placeholder check skips them.
 - **`fill`.** Already named. Each of the 243 `LANG_FILLS` entries gets one hand-written row in the script giving its new key and a name for
-  each captured group (`fcleft`: `{1}` → `{n}`). `[one, many]` arrays become `{ one, other }`. `{t1}` ("put this part into the language
+  each captured group (`fcleft`: `{1}` Ã¢â€ â€™ `{n}`). `[one, many]` arrays become `{ one, other }`. `{t1}` ("put this part into the language
   when known") becomes a normal parameter: the new code passes an already translated value (`t('attendance.present')`), never a string to
   look up. The fills that lang.js assembles with functions (`how`, `cap`, `taken`, `hint`, `few`, `owes`, `here`, `rowavg` and about 25 more)
   were split into pieces already (`how1`..`how5`, `capA`/`capB`/`capR`); each piece becomes its own key and the component puts them
   together.
-- **`rules` with a `$1` string** (about 45 to 56 per language) convert by script: `'$1 von $2 erledigt'` → `'{done} von {total} erledigt'`
+- **`rules` with a `$1` string** (about 45 to 56 per language) convert by script: `'$1 von $2 erledigt'` Ã¢â€ â€™ `'{done} von {total} erledigt'`
   through a table of parameter names per rule (78 rows, written once, shared by all eight languages since the regexes are the same).
   Plural pairs written as `m[1] === '1' ? ... : ...` are recognised and turned into `{ one, other }`.
 - **`rules` with a function** (22 to 33 per language) are listed by the script for hand conversion. Most are a plural choice or a lookup
@@ -183,7 +183,7 @@ with a column for "wording changed since the last report" so a review only reads
   assistant names, literals kept (`[name]`, `S-XXXX`, file names), and every `**button**` in Help written as that button's own
   line in the language.
 - `next/tools/lang-convert.js` no longer replaces anything: a run only adds a converted line where a language has none.
-- Each language is built as one `JSON.parse` string (next/build.js `lines-json`), about a third smaller than esbuild's named
+- Stage 7 built each language as one `JSON.parse` string (next/build.js `lines-json`), about a third smaller than esbuild's named
   exports.
 - Its letters are written as themselves, not as `\u` escapes (next/build.js, after esbuild), about 10 KB smaller squeezed.
 - Size: each language chunk has its own limit (`langFile`, 120 KB), and the 3 MB total counts the app with one language, the
@@ -199,5 +199,6 @@ At the start (`app/language.js`), only `core` and the areas of the lines files a
 (`addLines(LINES, '<area>')`) fetches its area in the chosen language as it loads, and `router.js` hands over a screen or part only once
 those have arrived (`addLines.ready()`), so nothing shows its English first. A new line goes into the English area file and into
 `next/lang/<code>/<area>.json` for each language. `lines.test.js` holds each language's files to the English areas, and checks that every
-lines file names the area of the English it imports. The size budget `langFile` is per file. The 3 MB total counts the app plus all the
-files of its largest language.
+lines file names the area of the English it imports. The build packs each area's values in sorted English key order and restores the original
+dictionary using the English area already shipped with the screen. A round-trip check compares each compiled dictionary with its source.
+One language's area chunks, including the shared language loader and unpacker, must fit `langFile` (120,000 bytes). The 3 MB total counts the app plus its largest language.

@@ -106,7 +106,7 @@ test('Settings: the assistant and where it opens, the programme, places in an av
 });
 
 const SETUP = '```json\n' + JSON.stringify({
-  gradingStudioSetup: 1,
+  gradingStudioSetup: 1, panelWidth: 672,
   school: { system: 'Canvas', staff: [{ role: 'Principal', name: 'Avery Example', email: 'avery@example.org' }] },
   classes: [{ name: 'Grade 9 Science B', course: 'Grade 9 Science', meets: [{ day: 'Tue', start: '10:00', end: '10:50' }], units: ['Forces'], students: ['Made Up One', 'Made Up Two'] }],
   comments: ['Show your working.'],
@@ -117,6 +117,7 @@ test('My setup: the prompt, a pasted setup checked part by part, brought in with
   const errors = [], ctx = await browser.createBrowserContext(), p = await page(ctx, errors);
   await ctx.overridePermissions(srv.url.replace(/\/$/, ''), ['clipboard-read', 'clipboard-write', 'clipboard-sanitized-write']);
   await p.goto(srv.url + 'blank'); await plant(p, gradingSeed()); await plantPlan(p);
+  await p.evaluate(() => localStorage.setItem('gsp.panel', JSON.stringify({ open: true, tab: 'video', w: 490 })));
   await p.goto(srv.url + 'next/#/settings/classes');
   await p.waitForSelector('[data-mysetup] [data-supaste]', { timeout: 30000 });
   // the prompt names no folder and asks for nothing about students
@@ -132,7 +133,8 @@ test('My setup: the prompt, a pasted setup checked part by part, brought in with
   await p.click('[data-sucheck]');
   await p.waitForSelector('[data-supreview]');
   const parts = await p.$$eval('[data-supart]', l => l.map(e => e.dataset.supart));
-  for (const k of ['school', 'classes', 'comments', 'goals']) assert.ok(parts.includes(k), k + ' in the preview: ' + parts);
+  for (const k of ['school', 'classes', 'comments', 'goals', 'panelWidth']) assert.ok(parts.includes(k), k + ' in the preview: ' + parts);
+  assert.match(await p.$eval('[data-supart="panelWidth"]', el => el.textContent), /672 px/);
   assert.ok(await p.$('[data-suleft]'), 'says the student list was left out');
   // comments not wanted this time
   await p.click('[data-supart="comments"] .cb');
@@ -145,6 +147,8 @@ test('My setup: the prompt, a pasted setup checked part by part, brought in with
   assert.ok(((await ls(p, 'gs.school')) || {}).people.some(x => x.name === 'Avery Example'), 'the School page has the person');
   const plan = await until(() => planKv(p, 'setup').then(s => s && s.classes.find(x => x.name === 'Grade 9 Science B') && s));
   assert.deepEqual(plan.classes.find(x => x.name === 'Grade 9 Science B').meets.map(m => [m.dow, m.start, m.end]), [[2, '10:00', '10:50']]);
+  assert.deepEqual(await ls(p, 'gsp.panel'), { open: true, tab: 'video', w: 672 });
+  await p.evaluate(() => localStorage.setItem('gsp.panel', JSON.stringify({ open: false, tab: 'books', w: 672 })));
   // put back
   await p.waitForSelector('[data-suundo]');
   await p.click('[data-suundo]');
@@ -156,6 +160,8 @@ test('My setup: the prompt, a pasted setup checked part by part, brought in with
   const out = await until(() => p.evaluate(() => navigator.clipboard.readText().catch(() => '')).then(s => (/gradingStudioSetup/.test(s) && s !== prompt ? s : '')));
   const j = JSON.parse(out);
   assert.equal(j.gradingStudioSetup, 1);
+  assert.equal(j.panelWidth, 490, 'the restored width is in My setup');
+  assert.deepEqual(await ls(p, 'gsp.panel'), { open: false, tab: 'books', w: 490 }, 'undo only changes the width');
   const names = JSON.stringify(j);
   for (const c of (await lib(p)).classes) for (const n of c.names) assert.ok(!names.includes(n), 'no student name in the setup');
   assert.deepEqual(errors, []);

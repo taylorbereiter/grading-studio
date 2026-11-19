@@ -31,12 +31,13 @@ test('the new app keeps to its size budgets', () => {
   assert.deepEqual([...new Set(langs.map(codeOf))].sort(), [...CODES].sort(), 'every language has its files');
   for (const x of langs) assert.equal(Object.keys(x.o.inputs).length, 1, x.f + ' holds one language file and nothing else');
   // The total is what one teacher can download: the app and one language, the largest (Taylor, 19 Nov 2026).
-  const sum = c => langs.filter(x => codeOf(x) === c).reduce((n, x) => n + gz(x.f), 0);
-  const appOnly = total - langs.reduce((n, x) => n + gz(x.f), 0), one = Math.max(...CODES.map(sum));
+  const shared = outs.filter(x => Object.keys(x.o.inputs).some(i => i === 'next/src/app/lang-load.js' || i === 'next/src/i18n/unpack-area.js'));
+  const sharedBytes = shared.reduce((n, x) => n + gz(x.f), 0);
+  const sum = c => langs.filter(x => codeOf(x) === c).reduce((n, x) => n + gz(x.f), sharedBytes);
+  const appOnly = total - sharedBytes - langs.reduce((n, x) => n + gz(x.f), 0), one = Math.max(...CODES.map(sum));
   assert.ok(appOnly + one <= B.total, 'total ' + (appOnly + one) + ' (the app and its largest language) > ' + B.total);
-  // Each whole language, all its files added up, written to the test's output so its growth stays visible. Not a limit: twenty small
-  // files squeeze less well than one, so every language now adds up to about 117 to 128 KB, and a limit at the old one-file 125 KB
-  // would bring back the ceiling the split removed. Whether to add one is Taylor's decision (19 Nov 2026).
+  // Count every area of one language, including areas only loaded on demand.
+  for (const c of CODES) assert.ok(sum(c) <= B.langFile, c + ' (whole language) ' + sum(c) + ' > ' + B.langFile);
   console.log('each whole language, squeezed: ' + CODES.map(c => c + ' ' + sum(c)).join(', '));
   for (const x of langs) { assert.ok(gz(x.f) <= B.langFile, x.f + ' (a language file) ' + gz(x.f) + ' > ' + B.langFile); assert.ok(!first.has(x.f), 'the first load does not bring a language'); }
   // Each screen the shell loads by its address (next/src/app/router.js CHUNKS), with everything it loads in turn that the first

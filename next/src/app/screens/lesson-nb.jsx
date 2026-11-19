@@ -7,10 +7,12 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { Button, IconButton, TextInput, toast } from '../../ui/index.js';
 import { Mic } from '../../ui/services.jsx';
 import { t } from '../../i18n/t.js';
-import { kv } from '../../planning/index.js';
 import { assistant } from '../../services/assistant.js';
 import * as T from '../../engines/plantools.js';
-import { savePlannerKv, saveLesson, saveKv } from '../../planning/write.js';
+import { readPlannerRecord, changePlannerRecord } from '../../planning/change.js';
+import { changeLesson, changeNotebookUnits } from '../../planning/lesson-change.js';
+import { tell } from '../../planning/write.js';
+import { saved } from '../../shared/saved.js';
 import { saveFailed } from '../plan/save.js';
 import '../plan/lines.js';
 import '../plan/tool-lines.js';
@@ -19,48 +21,81 @@ import '../plan/rev-lines.js';
 import { DriveButton } from '../drive-button.jsx';
 import { boxAdd } from '../plan/cbox.js';
 
-const copy = x => JSON.parse(JSON.stringify(x));
 const esc = s => String(s).replace(/[&"><]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const { ytId, ytStart } = T;
 const aiName = () => assistant().name || t('assistant.generic');
 /* ---------- Notebook ---------- */
 const nbChip = (general, l, u) => general ? { kind: 'notebook', t: 'general', id: '', label: 'Notebook: General notes' } : l ? { kind: 'notebook', t: 'lesson', id: l.id, label: 'Notebook: ' + l.title } : { kind: 'notebook', t: 'unit', id: u.id, label: 'Notebook: ' + u.title }; // not-words
-// A unit's page, read from the units as stored (a read that fails is never saved over) and saved back into them.
-const unitsNow = async () => { const v = await kv.get('units'); if (!Array.isArray(v)) throw new Error('units unread'); return v; };
-export function Notebook({ p, l, u, save }) {
+async function readPage(page) {
+  if (page.kind === 'general') return (await readPlannerRecord('kv', 'nb:general')) ?? '';
+  const owner = page.kind === 'lesson' ? await readPlannerRecord('lessons', page.id) :
+    (await readPlannerRecord('kv', 'units'))?.find(x => x && x.id === page.id);
+  if (!owner) throw new Error('Notebook owner is missing');
+  return owner.notebook || '';
+}
+async function writePage(page, html) {
+  const check = value => {
+    if ((value || '') !== page.original && (value || '') !== html) throw new Error('Notebook changed in another window');
+  };
+  if (page.kind === 'general') {
+    await changePlannerRecord('kv', 'nb:general', current => { check(current); return html; });
+    tell('gs-plan-out'); saved({ kind: 'plan', id: 'nb:general', side: 'planning' });
+  } else {
+    let found = false;
+    const update = owner => {
+      found = true; check(owner.notebook);
+      const next = { ...owner };
+      if (html) next.notebook = html; else delete next.notebook;
+      return next;
+    };
+    if (page.kind === 'lesson') await changeLesson(page.id, update);
+    else await changeNotebookUnits(list => {
+      const i = list.findIndex(x => x && x.id === page.id);
+      if (i < 0) return;
+      const next = list.slice(); next[i] = update(list[i]); return next;
+    });
+    if (!found) throw new Error('Notebook owner was removed');
+  }
+  page.original = html;
+}
+export function Notebook({ l, u }) {
   const own = !!(l || u), [general, setGeneral] = useState(!own), [state, setState] = useState(''), [ask, setAsk] = useState(null), [askV, setAskV] = useState('');
-  const pg = useRef(), timer = useRef(0), range = useRef(null), lRef = useRef(l), byId = useRef({}), ready = useRef(false), [, redraw] = useState(0); lRef.current = l; if (l) byId.current[l.id] = l;
+  const pg = useRef(), timer = useRef(0), range = useRef(null), loaded = useRef(null), pending = useRef(null), queue = useRef(Promise.resolve());
+  const [, redraw] = useState(0);
+  const kind = general ? 'general' : l ? 'lesson' : 'unit', id = general ? '' : l ? l.id : u.id;
+  const ready = loaded.current?.kind === kind && loaded.current.id === id;
   const players = el => { for (const v of el.querySelectorAll('.nb-vid')) if (v.getAttribute('contenteditable') !== 'false') { v.contentEditable = 'false'; v.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + esc(v.dataset.yt) + (v.dataset.t ? '?start=' + esc(v.dataset.t) : '') + '" title="' + esc(t('tool.video')) + '" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>'; } };
   useEffect(() => {
     // The page read here is the only one this page's typing is saved to: the lesson open now, or the general page once its read
     // has worked (a failed read never saves over it). Until then the page can't be typed in.
-    let on = true; const id = l ? l.id : ''; ready.current = false; redraw(n => n + 1);
+    let on = true; const page = { kind, id };
+    loaded.current = null; setState(''); range.current = null;
     (async () => {
-      let html; try { html = general ? String((await kv.get('nb:general')) || '') : l ? lRef.current.notebook || '' : ((await unitsNow()).find(x => x && x.id === u.id) || {}).notebook || ''; } catch (e) { if (on) toast(t('tool.nb_unread')); return; }
-      if (on && pg.current) { pg.current.innerHTML = T.nbClean(html); players(pg.current); ready.current = true; redraw(n => n + 1); }
+      try { await queue.current; page.original = await readPage(page); } catch (e) { if (on) toast(t('tool.nb_unread')); return; }
+      if (on && pg.current) { pg.current.innerHTML = T.nbClean(page.original); players(pg.current); loaded.current = page; redraw(n => n + 1); }
     })();
-    return () => { on = false; if (timer.current) { clearTimeout(timer.current); flush(general, id); } ready.current = false; };
-  }, [general, l ? l.id : u ? u.id : '']);
+    return () => { on = false; loaded.current = null; flush(); };
+  }, [kind, id]);
   const stored = el => { const c = el.cloneNode(true); for (const v of c.querySelectorAll('.nb-vid')) { v.removeAttribute('contenteditable'); v.innerHTML = ''; } return T.nbClean(c.innerHTML); };
-  const flush = async (gen, id = lRef.current ? lRef.current.id : "") => {
-    timer.current = 0; if (!pg.current || !ready.current) return;
-    const html = stored(pg.current), empty = !T.nbText(html).trim() && !/<img|nb-vid/.test(html);
-    try {
-      if (gen) await savePlannerKv('nb:general', empty ? '' : html);
-      else if (!l) {
-        const list = await unitsNow(), i = list.findIndex(x => x && x.id === u.id); if (i < 0) return;
-        const n = { ...list[i] }; if (empty) delete n.notebook; else n.notebook = html;
-        if ((n.notebook || '') !== (list[i].notebook || '')) { list[i] = n; await saveKv('units', list); }
-      } else {
-        // After she has gone to another lesson, the words go to the lesson they were typed in, not the one on screen.
-        const was = byId.current[id], here = id === lRef.current.id; if (!was) return;
-        const n = copy(was); if (empty) delete n.notebook; else n.notebook = html;
-        if ((n.notebook || '') !== (was.notebook || '')) { if (here) await save(n); else { const st = await saveLesson(n); byId.current[id] = st; } }
-      }
-      setState('saved');
-    } catch (e) { saveFailed(e); }
+  const flush = () => {
+    clearTimeout(timer.current); timer.current = 0;
+    const change = pending.current; pending.current = null;
+    if (!change) return queue.current;
+    const cleaned = stored(change.element);
+    const html = T.nbText(cleaned).trim() || /<img|nb-vid/.test(cleaned) ? cleaned : '';
+    queue.current = queue.current.then(async () => {
+      if (html !== change.page.original) await writePage(change.page, html);
+      if (loaded.current === change.page && !pending.current) setState('saved');
+    }).catch(e => { saveFailed(e); });
+    return queue.current;
   };
-  const changed = () => { setState('saving'); clearTimeout(timer.current); timer.current = setTimeout(() => flush(general), 500); };
+  const changed = () => {
+    if (!ready || !pg.current) return;
+    // Keep the actual page and element that received the typing. Its DOM ref can
+    // already be cleared by the time Preact runs cleanup on navigation.
+    pending.current = { page: loaded.current, element: pg.current };
+    setState('saving'); clearTimeout(timer.current); timer.current = setTimeout(flush, 500);
+  };
   const sel = () => { const s = getSelection(), el = pg.current; return el && s.rangeCount && el.contains(s.getRangeAt(0).commonAncestorContainer) ? s.getRangeAt(0).cloneRange() : null; };
   const focus = () => { const el = pg.current; el.focus(); const s = getSelection(); s.removeAllRanges(); if (range.current && el.contains(range.current.commonAncestorContainer)) s.addRange(range.current); else { const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); s.addRange(r); } };
   const cmd = c => { if (document.activeElement !== pg.current) focus(); document.execCommand({ ul: 'insertUnorderedList', ol: 'insertOrderedList' }[c] || c); changed(); };
@@ -76,8 +111,8 @@ export function Notebook({ p, l, u, save }) {
   const pic = async f => { if (!f || !/^image\//.test(f.type)) return; try { const x = await T.shrinkPic(f); insert('<img src="' + x.src + '" alt="">'); } catch { toast(t('tool.pic_unread')); } };
   const B = (c, line, cls) => <button type="button" class={'btn sm quiet nb-' + c + (cls ? ' ' + cls : '')} onMouseDown={e => { e.preventDefault(); cmd(c); }} data-nb={c}>{t(line)}</button>;
   return <div class="nb">
-    <div class="row"><b class="grow">{general ? t('tool.nb_general') : l ? t('tool.nb_lesson') : t('rev.nb_unit')}</b>{own && <Button size="sm" variant="quiet" onClick={() => { if (timer.current) { clearTimeout(timer.current); flush(general); } setGeneral(!general); }} data-focus="nb-swap">{!general ? t('tool.nb_general') : l ? t('tool.nb_lesson') : t('rev.nb_unit')}</Button>}
-      <Button size="sm" variant="quiet" icon="assist" onClick={async () => { if (timer.current) { clearTimeout(timer.current); await flush(general); } boxAdd(nbChip(general, l, u)); }} data-focus="nb-to-box">{t('les.to_box', { name: aiName() })}</Button></div>
+    <div class="row"><b class="grow">{general ? t('tool.nb_general') : l ? t('tool.nb_lesson') : t('rev.nb_unit')}</b>{own && <Button size="sm" variant="quiet" onClick={() => { flush(); setGeneral(!general); }} data-focus="nb-swap">{!general ? t('tool.nb_general') : l ? t('tool.nb_lesson') : t('rev.nb_unit')}</Button>}
+      <Button size="sm" variant="quiet" icon="assist" onClick={async () => { await flush(); boxAdd(nbChip(general, l, u)); }} data-focus="nb-to-box">{t('les.to_box', { name: aiName() })}</Button></div>
     <div class="doctools" role="toolbar" aria-label={t('tool.notebook')}>
       {B('bold', 'tool.doc_b', 'dt-bold')}{B('italic', 'tool.doc_i', 'dt-italic')}{B('underline', 'tool.doc_u', 'dt-underline')}{B('ul', 'tool.doc_ul')}{B('ol', 'tool.doc_ol')}
       <button type="button" class="btn sm quiet" onMouseDown={e => { e.preventDefault(); range.current = sel(); setAsk('link'); }}>{t('tool.nb_link')}</button>
@@ -87,7 +122,7 @@ export function Notebook({ p, l, u, save }) {
     </div>
     {ask && <div class="row"><TextInput label={ask === 'video' ? t('tool.nb_paste_video') : t('tool.nb_paste_link')} value={askV} onInput={setAskV} onKeyDown={e => { if (e.key === 'Enter') addUrl(); if (e.key === 'Escape') setAsk(null); }} data-focus="nb-ask" autoFocus />
       <Button size="sm" variant="primary" onClick={addUrl}>{t('tool.add')}</Button><IconButton icon="x" size="sm" label={t('common.cancel')} onClick={() => setAsk(null)} /></div>}
-    <div class="nbpage" ref={pg} contentEditable={ready.current ? "true" : "false"} aria-busy={ready.current ? undefined : "true"} spellcheck={true} role="textbox" aria-multiline="true" aria-label={general ? t('tool.nb_general') : l ? t('tool.nb_lesson') : t('rev.nb_unit')} data-raw data-nbpage onInput={changed}
+    <div class="nbpage" key={kind + ':' + id} ref={pg} contentEditable={ready ? "true" : "false"} aria-busy={ready ? undefined : "true"} spellcheck={true} role="textbox" aria-multiline="true" aria-label={general ? t('tool.nb_general') : l ? t('tool.nb_lesson') : t('rev.nb_unit')} data-raw data-nbpage onInput={changed}
       onBlur={() => { range.current = sel() || range.current; }}
       onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && /^[biu]$/i.test(e.key)) { e.preventDefault(); cmd({ b: 'bold', i: 'italic', u: 'underline' }[e.key.toLowerCase()]); } }}
       onPaste={e => { const f = [...((e.clipboardData && e.clipboardData.files) || [])].find(x => /^image\//.test(x.type)); if (f) { e.preventDefault(); range.current = sel(); return pic(f); }

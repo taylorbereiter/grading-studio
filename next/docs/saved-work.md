@@ -165,7 +165,7 @@ The current app's own legs (web address and double-clicked copy, main against th
 | `gsp.focusGo` | planning | pref | json | the Planner focus timer: what to start | focus.js, planner/plfocus.js, takehome.js |
 | `gsp.focusQ` | planning | pref | json | the Planner focus timer: the queue | focus.js, planner/plfocus.js, takehome.js |
 | `gsp.focusRun` | planning | coord | json | the Planner focus timer: a session running | focus.js, planner/plfocus.js, takehome.js |
-| `gsp.panel` | planning | pref | json | the Planner side panel | planner/panel.js |
+| `gsp.panel` | planning | pref | json | the Planner side panel | planner/panel.js, setupin.js |
 | `gsp.presentBig` | planning | pref | json | Present: text size | planner/present.js |
 | `gsp.presentOwn` | planning | pref | json | Present: own window | planner/present.js |
 | `gsp.presentSound` | planning | pref | json | Present: timer sound | planner/present.js |

@@ -394,13 +394,19 @@ test('E1-001 E1-064 E1-073 E1-074 E1-075 E1-076 E1-077: Beside has the activity 
 
 test('E1-063 E1-065 E1-066 E1-082: Beside is made wider at its edge, takes a dropped PDF or YouTube link, and a pasted YouTube link plays in the notebook', async () => {
   const p = await K.fresh();
+  const panelPrefs = { open: true, tab: 'notes', retained: 'keep this' };
+  await p.evaluate(panel => {
+    localStorage.setItem('gsp.panel', JSON.stringify(panel));
+    localStorage.setItem('gsn.besideW', '475');
+  }, panelPrefs);
   await beside(p, 'L2');
-  // E1-063: drag the edge
+  // E1-063: an older rebuild's width is read, then the resized drawer is kept where the current Planner reads it.
+  await p.waitForFunction(() => document.querySelector('aside.beside').getBoundingClientRect().width === 475);
   const w0 = await p.$eval('aside.beside', a => a.getBoundingClientRect().width), g = await p.$eval('aside.beside [data-grip]', e => { const r = e.getBoundingClientRect(); return { x: r.left + 3, y: r.top + 200 }; });
   await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move(g.x - 60, g.y, { steps: 4 }); await p.mouse.move(g.x - 120, g.y, { steps: 4 }); await p.mouse.up(); await wait(200);
   const w1 = await p.$eval('aside.beside', a => a.getBoundingClientRect().width);
   assert.ok(Math.abs(w1 - (w0 + 120)) < 4, 'the drawer is 120 px wider (' + w0 + ' to ' + w1 + ')');
-  assert.equal(+(await p.evaluate(() => localStorage.getItem('gsn.besideW'))), Math.round(w1), 'and stays that wide');
+  assert.deepEqual(await p.evaluate(() => JSON.parse(localStorage.getItem('gsp.panel'))), { ...panelPrefs, w: Math.round(w1) });
   // E1-065: a PDF dropped on the drawer goes to Books
   await p.evaluate(() => [...document.querySelectorAll('aside.beside [role=tab]')].find(x => x.textContent === 'Notebook').click()); await wait(200);
   await dropOn(p, 'aside.beside .bhead', { file: { name: 'Poems for reading aloud.pdf', type: 'application/pdf', bytes: [...Buffer.from('%PDF-1.4\n%%EOF\n')] } });
@@ -459,6 +465,42 @@ test('E1-064 E1-068 E1-069 E1-070 E1-071 E1-072 E1-078 E1-081 E1-084 E1-085: the
   await until(async () => { const b = await kvGet(p, 'cbox'); return b && !b.chips.length && !b.text; });
   await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => /Undo/.test(b.textContent)).click());
   assert.ok(await until(async () => { const b = await kvGet(p, 'cbox'); return b && b.chips.length === 2; }), 'Undo puts the box back');
+  assert.deepEqual(p.errors, []);
+  await p.ctx.close();
+});
+
+test('assistant box edits and clear undo keep chips and instructions saved since the screen was opened', async () => {
+  const p = await K.fresh();
+  const chip = label => ({ kind: 'quote', label, text: label });
+  const first = chip('First quote'), incoming = chip('Another window'), later = chip('New quote after clear');
+  const store = (text, chips) => p.evaluate(box => new Promise((resolve, reject) => {
+    const open = indexedDB.open('gs-lessons');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const tx = open.result.transaction('kv', 'readwrite');
+      tx.objectStore('kv').put(box, 'cbox');
+      tx.onabort = () => reject(tx.error);
+      tx.oncomplete = () => { open.result.close(); resolve(); };
+    };
+  }), { text, chips });
+  await store('', [first]);
+  await beside(p, 'L2', 'Assistant');
+  const field = 'aside.beside [data-focus="box-text"]';
+  await p.waitForSelector(field);
+  await store('', [first, incoming]);
+  await p.type(field, 'Use these');
+  // Navigate before the debounce fires. Only the text was edited.
+  await tabTo(p, 'Unit');
+  assert.ok(await until(async () => (await kvGet(p, 'cbox')).text === 'Use these'));
+  assert.deepEqual((await kvGet(p, 'cbox')).chips, [first, incoming]);
+  await tabTo(p, 'Assistant');
+  await p.waitForSelector('[data-chip-x="1"]');
+  await p.click('[data-focus="box-clear"]');
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast button')].some(b => /Undo/.test(b.textContent)));
+  await store('Keep these newer instructions', [later]);
+  await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => /Undo/.test(b.textContent)).click());
+  assert.ok(await until(async () => (await kvGet(p, 'cbox')).chips.length === 3));
+  assert.deepEqual(await kvGet(p, 'cbox'), { text: 'Keep these newer instructions', chips: [first, incoming, later] });
   assert.deepEqual(p.errors, []);
   await p.ctx.close();
 });
