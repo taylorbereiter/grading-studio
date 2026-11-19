@@ -184,7 +184,6 @@ function Student({ x, n, i, cols, r, onMove, onRemove, onTool, onStep, term, who
       <div class="kpi"><Spark v={trend} /><span>{t('class.recent_trend')}</span></div>
     </div>
     {terms && <div class="sp-sec stterms" data-stu-terms>{terms}</div>}
-    {More && x.way !== 'myp' && <More c={c} n={n} cols={cols} conf={x.conf} labelOf={labelOf} inn={m => !left.has(m)} whole={whole} />}
     <section class="sp-sec" aria-labelledby="h-recent"><h3 id="h-recent">{t('class.recent_work')}</h3>
       {recent.length ? <table class="wl">{recent.map(col => { const cell = col.cells.get(n); return <tr><td data-raw>{col.name}</td><td class="k">{kindOf(col.type)}</td>
         <td class={'s' + (cell && cell.st === 'missing' ? ' warn' : '')}>{!cell ? '–' : cell.st === 'missing' ? t('class.missing') : cell.st === 'excused' ? t('class.excused') : cell.pct != null ? (cell.total != null ? fmtPts(cell) : cell.pct + '%') : cell.fb ? t('class.fb_given') : '–'}</td></tr>; })}</table>
@@ -196,6 +195,8 @@ function Student({ x, n, i, cols, r, onMove, onRemove, onTool, onStep, term, who
     <Details c={c} n={n} />
     <section class="sp-sec"><div class="sp-h"><h3><label for="stu-note">{t('class.notes')}</label></h3><span class="grow" /><Mic onText={w => typeNote((note.trim() ? note.replace(/\s*$/, ' ') : '') + w.trim())} />{note.trim() && <CopyButton text={note} data-note-copy />}</div>
       <textarea id="stu-note" class="input" rows="3" value={note} placeholder={t('class.notes_ph')} onInput={e => typeNote(e.currentTarget.value)} data-stu-note /></section>
+    {/* the charts load a moment later: last, so nothing above them moves when they come */}
+    {More && x.way !== 'myp' && <More c={c} n={n} cols={cols} conf={x.conf} labelOf={labelOf} inn={m => !left.has(m)} whole={whole} />}
   </article>;
 }
 const kindOf = id => { if (!id) return ''; const k = B.bkCats().find(y => y[0] === id); return typeName(id, k && k[2]); };
