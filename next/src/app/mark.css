@@ -289,6 +289,9 @@ dialog.dlg:has(.mk-cc) footer .cc-hint{font-size:var(--t2);max-width:46%}
 .mk-ret .sharp{display:flex;align-items:center;gap:10px}
 .mk-ret .rtside{display:flex;flex-direction:column;gap:12px}
 .mk-ret .sent{margin:0 0 8px;padding-left:18px;font-size:var(--t2)}
+.mk-ret .rtrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line)}.mk-ret .rtrow:first-of-type{border-top:0}
+.mk-ret .rtrow>span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.mk-ret .xchk summary{cursor:pointer;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}.mk-ret .xchk .xshow{text-decoration:underline}
 @media (max-width:900px){
   .mk-outwrap{padding:16px}
   .mk-ins .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
