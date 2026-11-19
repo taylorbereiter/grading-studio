@@ -7,11 +7,12 @@ const lib = () => ({ v: 3, me: { name: 'Teacher' }, gone: {}, classes: [{ id: 'c
   { id: 'u1', name: 'Unit 1', items: [{ id: 'i1', name: 'Essay' }, { id: 'i2', name: 'Quiz' }] },
   { id: 'u2', name: 'Unit 2', items: [] }] }] });
 const copy = v => JSON.parse(JSON.stringify(v));
+const TOP = ['v', 'gone'];
 
 test('a rename taken back leaves a card link, a setting and a new class made since', async () => {
-  const { patch, apply } = await import('../src/students/libpatch.js');
+  const { patch, apply } = await import('../src/shared/patch.js');
   const before = lib(), after = copy(before); after.classes[0].units[0].name = 'Poems';
-  const back = patch(after, before), fwd = patch(before, after);
+  const back = patch(after, before, TOP), fwd = patch(before, after, TOP);
   const now = copy(after);
   now.classes[0].units[0].items[0].batchId = 'b1';   // a download opened from the card
   now.me.name = 'Ms T';                                // Settings
@@ -27,36 +28,46 @@ test('a rename taken back leaves a card link, a setting and a new class made sin
 });
 
 test('a card added, deleted or moved is taken back by id, around cards added elsewhere', async () => {
-  const { patch, apply } = await import('../src/students/libpatch.js');
+  const { patch, apply } = await import('../src/shared/patch.js');
   // added
   let before = lib(), after = copy(before); after.classes[0].units[0].items.push({ id: 'i3', name: 'Poster' });
   let now = copy(after); now.classes[0].units[0].items.unshift({ id: 'i9', name: 'From the other window' });
-  apply(now, patch(after, before));
+  apply(now, patch(after, before, TOP));
   assert.deepEqual(now.classes[0].units[0].items.map(i => i.id), ['i9', 'i1', 'i2']);
   // deleted: comes back in its place, with what it had
   before = lib(); before.classes[0].units[0].items[1].typed = { max: 10 }; after = copy(before); after.classes[0].units[0].items.splice(1, 1); after.gone = { i2: 1 };
   now = copy(after); now.classes[0].units[0].items[0].name = 'Essay 2';
-  apply(now, patch(after, before));
+  apply(now, patch(after, before, TOP));
   assert.deepEqual(now.classes[0].units[0].items.map(i => [i.id, i.name]), [['i1', 'Essay 2'], ['i2', 'Quiz']]);
   assert.deepEqual(now.classes[0].units[0].items[1].typed, { max: 10 });
   assert.deepEqual(now.gone, { i2: 1 }, 'the deleted list is left to the save, as before');
   // moved up: the order goes back, the rest stays
   before = lib(); after = copy(before); after.classes[0].units[0].items.reverse();
   now = copy(after); now.classes[0].units[1].name = 'Changed elsewhere';
-  apply(now, patch(after, before));
+  apply(now, patch(after, before, TOP));
   assert.deepEqual(now.classes[0].units[0].items.map(i => i.id), ['i1', 'i2']);
   assert.equal(now.classes[0].units[1].name, 'Changed elsewhere');
 });
 
 test('a card moved to another unit, and a roster edit, go back and forward', async () => {
-  const { patch, apply } = await import('../src/students/libpatch.js');
+  const { patch, apply } = await import('../src/shared/patch.js');
   const before = lib(), after = copy(before);
   const [it] = after.classes[0].units[0].items.splice(0, 1); after.classes[0].units[1].items.push(it);
   after.classes[0].names = ['Bram Sample', 'Aria Testwell', 'Cleo Fixture'];
   const now = copy(after);
-  apply(now, patch(after, before));
+  apply(now, patch(after, before, TOP));
   assert.deepEqual(now.classes[0].units.map(u => u.items.map(i => i.id)), [['i1', 'i2'], []]);
   assert.deepEqual(now.classes[0].names, ['Aria Testwell', 'Bram Sample']);
-  apply(now, patch(before, after));
+  apply(now, patch(before, after, TOP));
   assert.deepEqual(now, after);
+});
+
+test('a school link deleted and taken back leaves people added since', async () => {
+  const { patch, apply } = await import('../src/shared/patch.js');
+  const before = { items: [{ id: 'a', kind: 'link', url: 'https://example.org' }, { id: 'b', kind: 'note' }], order: [], ot: 0, people: [{ id: 'p1', name: 'Pat Example' }] };
+  const after = copy(before); after.items[0].gone = 5;
+  const now = copy(after); now.people.push({ id: 'p2', name: 'Lee Sample' });
+  apply(now, patch(after, before));
+  assert.equal(now.items[0].gone, undefined);
+  assert.deepEqual(now.people.map(p => p.id), ['p1', 'p2']);
 });

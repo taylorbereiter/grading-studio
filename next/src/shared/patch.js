@@ -1,19 +1,18 @@
-// What one library step changed, as a patch that can be put on the library as it is now (students/undo.js libraryChange).
+// What one step changed, as a patch that can be put on the record as it is now (students/undo.js libraryChange, planning/school.js).
 // The step as a patch: each place that differs between from and to, with what it should become. Lists of things with ids
 // (classes, units, cards) are matched by id, so a card added, moved or changed elsewhere since keeps its place and its change.
-// The deleted list (gone) and the save counter are left to the save; what was deleted stays deleted, as before.
+// top: keys at the top left to the save (for the library, its deleted list and save counter: what was deleted stays deleted).
 const copy = v => JSON.parse(JSON.stringify(v));
-const TOP = new Set(['v', 'gone']);
 const obj = v => v && typeof v === 'object' && !Array.isArray(v);
 const idList = (a, b) => [a, b].every(x => Array.isArray(x) && x.every(e => obj(e) && e.id != null)) && (a.length || b.length) && [a, b].every(x => new Set(x.map(e => e.id)).size === x.length);
-export function patch(from, to, path = [], out = []) {
+export function patch(from, to, top = [], path = [], out = []) {
   if (JSON.stringify(from) === JSON.stringify(to)) return out;
   if (obj(from) && obj(to)) {
-    for (const k of new Set([...Object.keys(from), ...Object.keys(to)])) if (!(path.length === 0 && TOP.has(k))) patch(from[k], to[k], path.concat(k), out);
+    for (const k of new Set([...Object.keys(from), ...Object.keys(to)])) if (!(path.length === 0 && top.includes(k))) patch(from[k], to[k], top, path.concat(k), out);
   } else if (idList(from, to)) {
     const was = from.map(e => e.id), now = to.map(e => e.id), common = now.filter(id => was.includes(id));
     out.push({ p: path, list: { add: to.filter(e => !was.includes(e.id)).map(e => [now.indexOf(e.id), copy(e)]), drop: was.filter(id => !now.includes(id)), order: common.join('\n') !== was.filter(id => now.includes(id)).join('\n') ? now : null } });
-    for (const e of to) { const f = from.find(x => x.id === e.id); if (f) patch(f, e, path.concat({ id: e.id }), out); }
+    for (const e of to) { const f = from.find(x => x.id === e.id); if (f) patch(f, e, top, path.concat({ id: e.id }), out); }
   } else out.push({ p: path, v: to === undefined ? undefined : copy(to) });
   return out;
 }

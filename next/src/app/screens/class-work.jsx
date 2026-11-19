@@ -7,6 +7,7 @@
 // order with Move up and Move down or by dragging. New assignment (at the top and at each unit's end), Edit assignment, No papers,
 // Forget these papers and a unit's plan link open the boxes in class/assignment.jsx. Its lines are in next/lang/mark.en.json
 // (mark.cw_*), which this screen loads anyway, so the screen stays inside its size budget.
+import * as tabs from '../../shared/tabs.js';
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Button, IconButton, Icon, EmptyState, Menu, Dialog, TextInput, toast } from '../../ui/index.js';
@@ -96,6 +97,8 @@ export default function ClassWork({ classId, sub }) {
   const load = () => { setLib(readLibrary()); readKept().then(setKept); PARTS.asg().then(A => A.timing().then(E => setTm({ A, E }))).catch(e => console.error(e)); };
   useEffect(load, [classId]);
   useEffect(() => onSaved(e => { if (e.kind === 'library') setLib(readLibrary()); }), []);
+  // another window changed the library or saved marks in a download (src/folder.js libNews, src/saving.js; audit H-062, H-063)
+  useEffect(() => { const offs = [tabs.on('library', k => { if (k === 'gs.lib') setLib(readLibrary()); }), tabs.on('saved', () => readKept().then(setKept))]; return () => offs.forEach(f => f()); }, []);
   if (!lib || !kept) return <div class="loading" aria-busy="true" />;
   const c = classId === '-' ? lib.loose : lib.classes.find(x => String(x.id) === String(classId));
   if (!c) return <EmptyState icon="inbox" title={t('setup.w_none')} />;

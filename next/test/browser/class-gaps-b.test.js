@@ -424,3 +424,85 @@ test('H-004: Undo of a unit rename puts back only the name; a class added in ano
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('H-021: Undo of a School link deleted brings back the link and keeps a person added in another window since', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  await p.evaluate(() => localStorage.setItem('gs.school', JSON.stringify({ items: [{ id: 'sl1', kind: 'link', name: 'Staff handbook', url: 'https://handbook.example.org/', t: 1 }, { id: 'sn1', kind: 'note', name: 'Bell times', note: 'Ask the office', t: 2 }], order: [], ot: 0 })));
+  const sch = q => q.evaluate(() => JSON.parse(localStorage.getItem('gs.school')));
+  await p.goto(srv.url + 'next/#/school');
+  await p.waitForSelector('[data-sch="sl1"] [data-schmore]', { timeout: 60000 });
+  await menu(p, '[data-sch="sl1"] [data-schmore]', '^Delete');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.school')).items.find(i => i.id === 'sl1').gone);
+  // another window adds the principal
+  const q = await page(ctx, errors);
+  await q.goto(srv.url + 'next/#/school');
+  await q.waitForSelector('[data-schpadd="Principal"]', { timeout: 60000 });
+  await q.click('[data-schpadd="Principal"]');
+  await q.waitForSelector('input[data-schpname]');
+  await q.type('input[data-schpname]', 'Rowan Placeholder');
+  await q.click('[data-schpok]');
+  await q.waitForFunction(() => (JSON.parse(localStorage.getItem('gs.school')).people || []).length === 1);
+  await q.close();
+  await p.bringToFront(); await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForFunction(() => !JSON.parse(localStorage.getItem('gs.school')).items.find(i => i.id === 'sl1').gone);
+  assert.deepEqual(((await sch(p)).people || []).map(x => x.name), ['Rowan Placeholder'], 'the person added since stays');
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  assert.deepEqual(await old.evaluate(() => { const s = JSON.parse(localStorage.getItem('gs.school')); return [s.items.filter(i => !i.gone).length, s.people.length]; }), [2, 1]);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('H-066: a report comment typed just before the tab is left is kept, and the current app reads it', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  const N = (await libOf(p)).classes[0].names;
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('[data-open-reports]', { timeout: 60000 });
+  await p.click('[data-open-reports]');
+  await p.waitForSelector('[data-rp-text]');
+  await p.focus('[data-rp-text]'); await p.keyboard.press('End'); await p.keyboard.type(' Last words.');
+  await p.goto(srv.url + 'blank');   // straight away: the page is left before the 400 ms wait to save
+  const reps = await p.evaluate(n => Object.values(((JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}).rep || {}).map(r => r.text || ''), N[0]);
+  assert.ok(reps.some(x => /Last words\.$/.test(x)), 'kept: ' + JSON.stringify(reps));
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  assert.ok(await old.evaluate(n => Object.values(((window.__gs.state().lib.classes[0].info || {})[n] || {}).rep || {}).some(r => /Last words\.$/.test(r.text || '')), N[0]));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('H-062 H-063: the Assignments tab shows a unit renamed in another window, and the gradebook shows marks another window saved, without leaving the page', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  const lib = await libOf(p), u = lib.classes[0].units[0], N = lib.classes[0].names;
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector(`[data-unit="${u.id}"]`, { timeout: 60000 });
+  // H-062: another window renames the unit
+  const q = await page(ctx, errors);
+  await q.goto(srv.url + 'next/#/class/c1/work');
+  await q.waitForSelector(`[data-umenu="${u.id}"]`, { timeout: 60000 });
+  await menu(q, `[data-umenu="${u.id}"]`, '^Rename');
+  await q.waitForSelector('dialog[open] input[data-uname]');
+  await q.$eval('dialog[open] input[data-uname]', e => e.select());
+  await q.type('dialog[open] input[data-uname]', 'Renamed elsewhere');
+  await q.click('dialog[open] [data-uok]');
+  await p.waitForFunction(id => (document.querySelector(`[data-unit="${id}"]`) || {}).textContent?.includes('Renamed elsewhere'), { timeout: 10000, polling: 100 }, u.id);
+  // H-063: another window saves marks in a download the way the current app does (the work, then gsc.saved.<id>)
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('table.book', { timeout: 60000 });
+  if (!(await p.$('table.book[data-term="t1"]'))) { await p.click('.bookbar [data-v="t1"]'); await p.waitForSelector('table.book[data-term="t1"]'); }
+  const cell = () => p.$eval('tr[data-stu="0"] td[data-cell="i3"]', e => e.textContent);
+  const was = await cell();
+  await q.evaluate(n => { const w = JSON.parse(localStorage.getItem('gs.b.n1')); w.s[n].g = { ...w.s[n].g, rubric: [1, 1, 1], at: Date.now() }; w.t = Date.now(); localStorage.setItem('gs.b.n1', JSON.stringify(w)); localStorage.setItem('gsc.saved.gs.b.n1', 'otherwin:' + Date.now()); }, N[0]);
+  await p.waitForFunction(w => document.querySelector('tr[data-stu="0"] td[data-cell="i3"]').textContent !== w, { timeout: 10000, polling: 100 }, was);   // a window behind another draws no frames
+  assert.notEqual(await cell(), was);
+  await q.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

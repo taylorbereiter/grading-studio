@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import { readBook, classCols, classIn, conf, termNow, fullLibrary } from '../../students/book.js';
 import { onSaved } from '../../shared/saved.js';
+import * as tabs from '../../shared/tabs.js';
 import { engine as B } from '../../students/book.js';
 
 export function useBook() {
@@ -12,9 +13,9 @@ export function useBook() {
     const read = () => { const k = ++tok; readBook().then(b => { if (live && k === tok) set(b); }, e => { console.error(e); if (live) set({ error: true }); }); };
     read();
     const off = onSaved(e => { if (e.side === 'students' && (e.kind === 'library' || e.kind === 'work')) read(); });
-    const other = e => { if (e.key === 'gs.lib') read(); };
-    window.addEventListener('storage', other);
-    return () => { live = false; off(); window.removeEventListener('storage', other); };
+    // another window: its library, and marks it saved in a download (src/saving.js gsc.saved.*, audit H-063)
+    const offs = [tabs.on('library', k => { if (k === 'gs.lib') read(); }), tabs.on('saved', read)];
+    return () => { live = false; off(); offs.forEach(f => f()); };
   }, []);
   return v;
 }

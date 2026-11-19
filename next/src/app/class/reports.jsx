@@ -4,6 +4,7 @@
 // them written in lib.book.rep, all saved as the current app saves them. A sheet from under the gradebook.
 import { h, Fragment } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
+import { leavingReady } from '../../students/write.js';
 import { Sheet, Dialog, Button, Segmented, TextInput, Checkbox, Select, Mic, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import * as undoList from '../../services/undo.js';
@@ -32,7 +33,11 @@ export function ReportsSheet({ x, cols, term, onClose }) {
   const f = B.rptFacts(c, cols, x.conf, n), e = B.rptEntry(c, n), shown = text != null ? text : e.text != null ? e.text : B.rptDraft(c, n, f, rc, e.v);
   const done = c.names.filter(k => B.rptEntry(c, k).done).length;
   const flush = () => { clearTimeout(wait.current); if (text != null && text !== (e.text != null ? e.text : null)) { const v = text; putRep(c, n, { text: v, t: Date.now() }, term); } };
-  useEffect(() => () => clearTimeout(wait.current), []);
+  // what was typed in the last moment is kept when the sheet closes or the tab is closed (src/reports.js pagehide rptKeep, audit H-066)
+  const keep = useRef(null); keep.current = flush;
+  useEffect(() => { const k = () => keep.current(), v = () => { if (document.visibilityState === 'hidden') k(); };
+    leavingReady(); addEventListener('pagehide', k); document.addEventListener('visibilitychange', v);
+    return () => { removeEventListener('pagehide', k); document.removeEventListener('visibilitychange', v); k(); }; }, []);
   const go = k => { flush(); setText(null); setStu(k); setTimeout(() => { const ta = box.current && box.current.querySelector('[data-rp-text]'); if (ta) ta.focus({ preventScroll: true }); }); };
   const typed = v => { setText(v); clearTimeout(wait.current); wait.current = setTimeout(() => putRep(c, n, { text: v, t: Date.now() }, term), 400); };
   const again = () => { const wasTyped = e.text != null; clearTimeout(wait.current); setText(null); putRep(c, n, { text: null, done: false, v: ((e.v || 0) + 1) % 60, t: Date.now() }, term).then(() => toast(t(wasTyped ? 'class.rp_again_lost' : 'class.rp_again'), { undo: () => undoList.undo() })); };

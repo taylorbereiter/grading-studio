@@ -9,7 +9,7 @@
 import * as undo from '../services/undo.js';
 import { saveWork, saveLibrary } from './write.js';
 import { library } from './index.js';
-import { patch, apply } from './libpatch.js';
+import { patch, apply } from '../shared/patch.js';
 
 const copy = v => JSON.parse(JSON.stringify(v));
 export async function scoreChange(id, key, label, change) {
@@ -37,6 +37,7 @@ export async function fieldChange(id, label, change, group) {
 const SKIP = new Set(['v', 'at', 'fv', 'gone', 'opened']);
 const sig = l => JSON.stringify(l, (k, v) => (SKIP.has(k) ? undefined : v));
 let joinT = 0, joinT0 = 0, run = null;
+const LIB_TOP = ['v', 'gone'];   // the save counter, and the deleted list: what was deleted stays deleted, as before
 // alone: a step of its own (a unit added, renamed, moved or deleted), never joined to the saves just before it
 export async function libraryChange(label, change, alone) {
   const before = library.json(null);
@@ -47,7 +48,7 @@ export async function libraryChange(label, change, alone) {
   joinT = t;
   // only what this step changed goes back (or forward): a change saved since from anywhere else stays (H-004). Saves joined into
   // one step share one record, so its patch runs from before the first of them.
-  const g = run; g.back = patch(after, g.before); g.fwd = patch(g.before, after);
+  const g = run; g.back = patch(after, g.before, LIB_TOP); g.fwd = patch(g.before, after, LIB_TOP);
   undo.record({ label, group: alone ? undefined : 'library:' + joinT0, undo: () => saveLibrary(l => apply(l, g.back)), redo: () => saveLibrary(l => apply(l, g.fwd)) });
   return after;
 }

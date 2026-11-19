@@ -198,9 +198,14 @@ export async function carryEdits(id, puts) { check(id); for (const [k, v] of put
 export async function markNewer(from, id) { check(from); const m = await meta.get(from); if (!m) return; m.newer = id; await meta.put(m, from); saved({ kind: 'papers', id: from, side: 'students' }); }
 
 /* the library */
-export async function saveLibrary(change) {
+// Written at once when the merge engine is already loaded (leavingReady), so a save made as the page is left (pagehide) lands.
+export function saveLibrary(change) {
+  if (engineNow) { try { return Promise.resolve(libWrite(engineNow, change)); } catch (e) { return Promise.reject(e); } }
+  return merge().then(M => libWrite(M, change));
+}
+function libWrite(M, change) {
   check('gs.lib');
-  const M = await merge(), was = library.json(null) || { classes: [], loose: { id: '', units: [] } }, prev = M.libPrev(was), l = migrateLib(copy(was));
+  const was = library.json(null) || { classes: [], loose: { id: '', units: [] } }, prev = M.libPrev(was), l = migrateLib(copy(was));
   change(l);
   M.stampLib(l, prev, tabs.devId(), Date.now());
   library.setJson(l);
