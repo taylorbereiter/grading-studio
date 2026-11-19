@@ -98,7 +98,7 @@ test('the previous version’s addresses, the Planner’s and next/ land on the 
   // the new app's own addresses stay as they are, and Google's sign-in coming back is never taken for a screen
   await lands('#/class/c1/people', '#/class/c1/people');
   await p.goto(srv.url + '#access_token=abc&state=1'); await shellUp(p);
-  assert.ok(await p.$('main h1'), 'Home is drawn');
+  await p.waitForSelector('[data-home]', { timeout: 20000 }).catch(() => {}); assert.ok(await p.$('[data-home]'), 'Home is drawn');
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
