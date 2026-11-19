@@ -97,7 +97,7 @@ export function FolderCard() {
   const stop = async () => { setAsk(null); await S.folderStop(); toast(t('saving.f_stopped')); };
   const decided = ans => { setAsk(null); if (ans) S.folderDecide(ans); };
   return <Card title={t('saving.where_h')} data-svwhere>
-    <p class={w.warn ? 'sv-warn' : ''} data-svsay={f.state}>{w.text}{w.tip ? '. ' + w.tip + '.' : '.'}</p>
+    <p class={w.warn ? 'sv-warn' : ''} data-svsay={f.state}>{w.tip ? t('saving.w_line2', { text: w.text, tip: w.tip }) : t('saving.w_line', { text: w.text })}</p>
     {w.act === 'reconnect' && <p><Button variant="primary" onClick={() => S.folderResume()} data-svreconnect>{t('saving.reconnect')}</Button></p>}
     {w.act === 'decide' && <p><Button variant="primary" onClick={() => setAsk('decide')} data-svdecide>{t('saving.decide')}</Button></p>}
     {!sampleOn() && <>

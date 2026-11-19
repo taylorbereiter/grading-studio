@@ -8,8 +8,10 @@
 // Help answers are matched by topic: a piece whose English is still the current app's (src/helpdata.js) takes that piece's
 // translation; a piece reworded for the new screens stays English and is listed.
 //
-// Writes next/lang/<code>.json (only the lines a language has) and next/lang/english-only.json (key -> the codes that lack it),
-// which the report for stage 7 reads. Run: node next/tools/lang-convert.js
+// Since stage 7 every line has its own translation (most written new, not converted), so a run never replaces or removes a line
+// a language already has: it only adds a converted line where the language has none, drops lines the app no longer has, and
+// prints the lines still missing (next/test/lines.test.js fails on those unless next/lang/same.json says the line is the same
+// in that language). Run: node next/tools/lang-convert.js
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const ROOT = path.join(__dirname, '..', '..'), NEXT = path.join(ROOT, 'next'), LANG = path.join(NEXT, 'lang');
 const LANGS = [['zh-Hant', 'zh', 'LANG_ZH'], ['zh-Hans', 'zh-hans', 'LANG_ZHS'], ['es', 'es', 'LANG_ES'], ['fr', 'fr', 'LANG_FR'], ['de', 'de', 'LANG_DE'], ['pt-BR', 'pt', 'LANG_PT'], ['ja', 'ja', 'LANG_JA'], ['ko', 'ko', 'LANG_KO']];
@@ -89,15 +91,17 @@ function main() {
     all[code] = out;
   }
   const partial = new Set(Object.keys(EN).filter(k => !k.startsWith('help.') && ['zh-Hant', 'ja'].some(c => all[c][k] != null && englishIn(EN[k], all[c][k]))));
+  const same = JSON.parse(fs.readFileSync(path.join(LANG, 'same.json'), 'utf8'));
   for (const [code] of LANGS) {
-    const out = all[code];
-    out['@locale'] = locales[code];   // for dates and numbers (the current app's LANG_LOCALE)
-    for (const k of partial) if (out[k] != null) { delete out[k]; (missing[k] ||= []).push(code); }
+    const conv = all[code];
+    for (const k of partial) delete conv[k];
+    const had = JSON.parse(fs.readFileSync(path.join(LANG, code + '.json'), 'utf8')), out = { '@locale': had['@locale'] || locales[code] };
+    for (const k of Object.keys(EN)) { const v = had[k] != null ? had[k] : conv[k]; if (v != null) out[k] = v; else if (!(same[k] || []).includes(code)) (missing[k] ||= []).push(code); }
     fs.writeFileSync(path.join(LANG, code + '.json'), JSON.stringify(out, null, 1) + '\n');
     counts[code] = Object.keys(out).length - 1;
   }
-  fs.writeFileSync(path.join(LANG, 'english-only.json'), JSON.stringify(missing, null, 1) + '\n');
-  console.log('lines', Object.keys(EN).length, counts, 'english somewhere', Object.keys(missing).length);
+  console.log('lines', Object.keys(EN).length, counts, 'still English somewhere', Object.keys(missing).length);
+  for (const [k, c] of Object.entries(missing)) console.log('  ' + k + ': ' + c.join(', '));
 }
 if (require.main === module) main();
 module.exports = { translator, convert };

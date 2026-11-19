@@ -117,6 +117,6 @@ export function AttStudent({ c, n, term, onDay }) {
   const o = B.attCount(c, n, days);
   const line = k => { const ds = days.filter(d => B.attOf(c, d, n) === k); return ds.length ? <p class="attstu"><b>{t(WORD[k])}</b> {ds.map((d, j) => <>{j ? ', ' : ''}<button type="button" class="link" onClick={() => onDay(d)}>{short(d)}</button>{B.attNote(c, d, n) && <span data-raw> ({B.attNote(c, d, n)})</span>}</>)}</p> : null; };
   return <section class="sp-sec" aria-labelledby="h-att" data-att-stu><h3 id="h-att">{t('class.attendance')}</h3>
-    <p>{t('class.att_here_of', { h: o.p + o.l, n: days.length })}{o.a || o.l || o.e ? ': ' + attSay({ ...o, p: 0 }) + '.' : ' ' + t('class.att_never_late')}</p>
+    <p>{o.a || o.l || o.e ? t('class.att_here_list', { here: t('class.att_here_of', { h: o.p + o.l, n: days.length }), list: attSay({ ...o, p: 0 }) }) : t('class.att_here_never', { here: t('class.att_here_of', { h: o.p + o.l, n: days.length }), never: t('class.att_never_late') })}</p>
     {line('a')}{line('e')}{line('l')}</section>;
 }
