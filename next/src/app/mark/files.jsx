@@ -7,6 +7,7 @@ import { t } from '../../i18n/t.js';
 import * as R from '../../engines/greport.js';
 import { PARTS } from '../router.js';
 import './setup-lines.js';
+import './inout-lines.js';
 
 const download = f => PARTS.outEngine().then(E => E.saveFile(f.name, new Blob([f.data])));
 export function FileCard({ f }) {
@@ -15,6 +16,6 @@ export function FileCard({ f }) {
     <div class="dpage ftext" data-raw>{R.textOf(f)}</div></div>;
   const why = R.troubleText(R.troubleOf(f)) || t('setup.f_cant');
   return <div class="fcard other" data-file={f.path}><Icon name="file" />
-    <div class="grow"><b data-raw>{f.name}</b><p>{why} {t('setup.f_score')}</p></div>
+    <div class="grow"><b data-raw>{f.name}</b><p>{why}{f.hurt && (Object.values(f.marks || {}).some(a => a.length) || !!f.hand) && ' ' + t('inout.f_marks_kept')} {t('setup.f_score')}{f.added && ' ' + t('inout.f_goes_back')}</p></div>
     {f.data && <Button size="sm" onClick={() => download(f)}>{t('setup.wd_download')}</Button>}</div>;
 }

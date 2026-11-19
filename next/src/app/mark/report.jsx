@@ -12,6 +12,7 @@ import { prefs } from '../../students/prefs.js';
 import { libs } from './paper.js';
 import './lines.js';
 import './setup-lines.js';
+import './inout-lines.js';
 
 // null when the papers have changed meanwhile (another download brought in)
 async function facts() { const b = state().batch; if (!b) return null; await libs(); await R.checkStack(b); return state().batch === b ? R.openingFacts() : null; }
@@ -44,7 +45,7 @@ export function OpenedList({ onClose, onGo }) {
       {(x.cant.length > 0 || x.zip) && <details open data-group="cant"><summary>{t('setup.op_cant', { n: x.cant.length + (x.zip ? x.zip.n : 0) })}</summary>
         {x.zip && <p>{R.zipSay(x.zip)}</p>}
         {whys.map(w => { const of = x.cant.filter(o => o.why === w); return <><p>{w} {of[0].next}</p><ul>{of.map(o => <li>{go(o)} {o.shown && <span class="mute" data-raw>{o.shown}</span>}</li>)}</ul></>; })}</details>}
-      {x.nothing.length > 0 && <details open data-group="nothing"><summary>{t('setup.op_nothing', { n: x.nothing.length })}</summary><ul>{x.nothing.map(o => <li>{go(o)}</li>)}</ul></details>}
+      {x.nothing.length > 0 && <details open data-group="nothing"><summary>{t('setup.op_nothing', { n: x.nothing.length })}</summary><ul>{x.nothing.map(o => <li>{go(o)}</li>)}</ul><p class="mute" data-oplater>{t('inout.op_later', { bring: t('mark.bf_menu').replace(/…$/, ''), setup: t('mark.setup'), add: '+ ' + t('setup.f_add_menu') })}</p></details>}
       {x.odd.length > 0 && <details open data-group="odd"><summary>{t('setup.op_odd', { n: x.odd.length })}</summary><ul>{x.odd.map(o => <li>{go(o)} {o.note}</li>)}</ul></details>}
     </div>}
   </Dialog>;

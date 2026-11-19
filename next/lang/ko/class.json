@@ -1147,7 +1147,6 @@
  "class.es_whole": "제출물 전체",
  "class.es_part": "페이지 일부",
  "class.es_part_say": "남길 부분을 상자로 드래그하세요. 이름은 검게 가려지고 되돌릴 수 없어요.",
- "class.es_names_say": "이름을 검게 가린 사진으로 보관되며 되돌릴 수 없어요. 다른 부분을 가리려면 저장한 뒤 일부 가리기를 쓰세요.",
  "class.es_marks": "내 표시와 의견",
  "class.es_score": "점수",
  "class.es_row": "루브릭 항목",
@@ -1373,5 +1372,56 @@
  "class.rp_cuts": "성적:",
  "class.rp_cut_hi": "최고 기준",
  "class.rp_cut_good": "좋음 기준",
- "class.rp_cut_mid": "보통 기준"
+ "class.rp_cut_mid": "보통 기준",
+ "class.ru_h": "루브릭",
+ "class.ru_say": "Word, PDF 또는 사진. 표가 있으면 행을 읽어 옵니다.",
+ "class.ru_none": "아직 설정 안 됨",
+ "class.ru_total": "총점만, {n}점 만점",
+ "class.ru_score": "이 항목으로 채점",
+ "class.ru_copy": "학생마다 표시할 사본 주기",
+ "class.ru_norows": "이 파일에서 루브릭 표를 읽지 못해 행이 채워지지 않았습니다. 루브릭 설정에서 입력할 수 있습니다.",
+ "class.ru_use": "이 루브릭 사용",
+ "class.ru_tick": "먼저 어떻게 쓸지 선택하세요",
+ "class.ru_set": "“{name}”의 루브릭을 설정했습니다",
+ "class.ru_step": "가져온 루브릭",
+ "class.ru_t": "“{name}”의 루브릭",
+ "class.es_n_covered": {
+  "one": "이름 1개를 가렸습니다.",
+  "other": "이름 {n}개를 가렸습니다."
+ },
+ "class.es_cover_say": "페이지에서 드래그하면 손으로 쓴 이름이나 점수 같은 다른 부분도 가릴 수 있습니다. 가림을 클릭하면 없어집니다.",
+ "class.es_shot_n": {
+  "one": "1곳을 검게 가렸습니다.",
+  "other": "{n}곳을 검게 가렸습니다."
+ },
+ "class.es_shot_paper": "답안지의 이름 가림은 이미 칠해져 있습니다.",
+ "class.es_shot_say": "이름이 보이는 곳을 드래그하면 검게 가려집니다. 검은 상자를 클릭하면 없어집니다.",
+ "class.es_tags_used": "사용한 태그",
+ "class.ax_say": "이 과제의 우수 작품, 이름 없이.",
+ "class.ax_none_say": "빠른 채점에서 답안의 '예시'를 누르거나, 답안지의 ⋯ 메뉴에서 '예시로 사용'을 고르거나, 스크린샷(S)을 찍어 우수 예시로 저장하세요. 고르는 것은 언제나 선생님 몫입니다.",
+ "class.ax_answers": "답안, 문항별",
+ "class.ax_q_none": {
+  "one": "{list}번 문항에는 아직 예시가 없습니다. 빠른 채점에서 답안의 '예시'를 누르세요.",
+  "other": "{list}번 문항에는 아직 예시가 없습니다. 빠른 채점에서 답안의 '예시'를 누르세요."
+ },
+ "class.ax_rest": "답안 전체와 페이지 일부",
+ "class.ax_rest_shots": "답안 전체, 페이지 일부와 스크린샷",
+ "class.ax_linked": "연결된 반에서",
+ "class.ax_show_lk": {
+  "one": "{names}의 예시 1개 보기",
+  "other": "{names}의 예시 {n}개 보기"
+ },
+ "class.ax_hide": "숨기기",
+ "class.ax_lk_say": "다른 반의 같은 과제입니다. 카드마다 어느 반에서 왔는지 나옵니다.",
+ "class.ax_from": "출처",
+ "class.ex_copy": "사진 복사",
+ "class.ex_copied_first": "복사했습니다. 수업에 붙여 넣은 사진은 그 수업과 함께 저장됩니다.",
+ "class.ex_copy_bad": "여기서는 복사가 되지 않았습니다. 다운로드를 사용하세요.",
+ "class.wl_none_say": "아직 이 학생의 작품에서 저장한 것이 없습니다. 우수 예시로 저장하거나 관찰 목록에 추가한 스크린샷이 날짜와 함께 여기에 나옵니다.",
+ "class.wl_f_all": "전체",
+ "class.wl_f_good": "우수 · {n}",
+ "class.wl_f_watch": "관찰 · {n}",
+ "class.wl_seen": "가장 많이 보임:",
+ "class.wl_none_kind": "이 종류는 아직 없습니다.",
+ "class.wl_more": "더 가리기"
 }

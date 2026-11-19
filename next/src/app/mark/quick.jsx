@@ -4,7 +4,7 @@
 // the mark goes on the paper where it will be returned, with the total once every question is marked. Each mark is one undo step
 // (mark/change.js quickDo); Give the rest is one step for all of them. A drag on an answer lines that paper's page up; a drag on
 // the mark moves it on that paper only. Keys as the current app has them (qmKey). The boxes are set in Boxes (mark/quickboxes.jsx).
-// Not here yet: keeping an answer as a strong example (E), which comes with the examples in stage 5.
+// Example on an answer (or E) keeps it as a strong example with the name covered, and takes it back (class/exsave.jsx keepAnswer).
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Button, IconButton, Segmented, toast, useModal, Mic } from '../../ui/index.js';
@@ -14,6 +14,8 @@ import { shownName, lightForPage, lightCanvas } from '../../engines/gdraw.js';
 import { copyPicture, canvasPng } from '../../engines/gsnip.js';
 import * as Z from '../../engines/gquiz.js';
 import { prefs } from '../../students/prefs.js';
+import { exampleRecords } from '../../students/index.js';
+import { onSaved } from '../../shared/saved.js';
 import { assistant } from '../../services/assistant.js';
 import { libs } from './paper.js';
 import { t } from '../../i18n/t.js';
@@ -83,7 +85,7 @@ function MarkOver({ st, q, r }) {
   }
   return <span class={'qmmk ' + kind} style={style} title={t(kind === 'pin' ? 'paper.qm_pin_tip' : 'paper.qm_mk_tip')} data-qmmk>{kind === 'txt' ? look.text : kind === 'ok' ? '✓' : kind === 'x' ? '✗' : ''}</span>;
 }
-function Card({ i, q, qi, view, ver, focus, onNote, noteOpen, onPeek, onCopy }) {
+function Card({ i, q, qi, view, ver, focus, onNote, noteOpen, onPeek, onCopy, kept, onStar }) {
   const st = state().batch.students[i], v = Z.quizMarks(st)[q.id], pts = ptsOf(q), scale = Z.qzByPts(q);
   const [crop, setCrop] = useState(undefined), img = useRef(), drag = useRef(null), el = useRef();
   const ck = Z.qzCropKey(st, q);
@@ -131,7 +133,8 @@ function Card({ i, q, qi, view, ver, focus, onNote, noteOpen, onPeek, onCopy }) 
       {v != null && scale && <span class="qmchip">{t('paper.qm_of', { n: fmtNum(v), of: fmtNum(pts) })}</span>}
       <span class="qmchr">{Z.qzOwn(st, q) && <button type="button" class="link" title={t('paper.qm_reset_tip')} onClick={() => spotSet(st, q, null)} data-reset>{t('paper.qm_reset')}</button>}
         <Button size="sm" title={t('paper.qm_copy_tip')} onClick={() => onCopy(st, q, qi)} data-qcopy>{t('paper.qm_copy')}</Button>
-        <Button size="sm" title={t('paper.qm_peek_tip')} onClick={() => onPeek(st, q, qi)} data-peek>{t('paper.qm_peek')}</Button></span></div>
+        <Button size="sm" title={t('paper.qm_peek_tip')} onClick={() => onPeek(st, q, qi)} data-peek>{t('paper.qm_peek')}</Button>
+        <Button size="sm" icon="spark" variant={kept ? 'primary' : undefined} aria-pressed={kept ? 'true' : 'false'} title={t(kept ? 'paper.qm_ex_on' : 'paper.qm_ex_tip')} onClick={() => onStar(st, q, qi)} data-ex>{t('paper.qm_ex')}</Button></span></div>
     <div class={'qmimg' + (crop ? ' in' : '')} title={t(scale && Z.qzHow(q) === 'pts' ? 'paper.qm_img_pts' : 'paper.qm_img_tip')} onPointerDown={down} onPointerMove={move} onPointerUp={up} data-qmimg>
       {crop === undefined ? <span class="mute">…</span> : !crop ? <span class="mute">{t('paper.qm_no_page')}</span>
         : <><img ref={img} alt="" draggable={false} src={crop.url} /><MarkOver st={st} q={q} r={crop.r} key={ver} /></>}</div>
@@ -222,6 +225,11 @@ export function QuickMark({ onClose, onBoxes, onOpen }) {
   const [ver, setVer] = useState(0), [ready, setReady] = useState(false);
   const [view, setView] = useState(KEEP.view), [at, setAt] = useState(Math.min(KEEP.at, qs.length - 1)), [stu, setStu] = useState(who.includes(KEEP.stu) ? KEEP.stu : who[0]);
   const [only, setOnly] = useState(KEEP.only), [size, setSize] = useState(sizeNow()), [ink, setInk] = useState(false), [note, setNote] = useState(null), [peek, setPeek] = useState(null);
+  // the answers kept as strong examples from this download (exAnswerOf), read again when one is kept or taken back anywhere
+  const [kept, setKept] = useState(() => new Set());
+  useEffect(() => { let live = true; const id = state().batch.id, read = () => exampleRecords().then(l => live && setKept(new Set(l.filter(r => !r.gone && !r.watch && r.kind === 'answer' && r.work === id && r.q && r.from).map(r => r.from.key + '|' + r.q.id))), () => {});
+    read(); const off = onSaved(e => { if (e.kind === 'example') read(); }); return () => { live = false; off(); }; }, []);
+  const star = (s, x, qi) => PARTS.exsave().then(m => m.keepAnswer(s, x, qi, () => close()));
   const [focusAt, setFocusAt] = useState(null), [seen, setSeen] = useState(!!prefs.get('gs.qmCopySeen', 0)), [copyNote, setCopyNote] = useState(false);
   const body = useRef(), p = useModal(true, () => close());
   Object.assign(KEEP, { view, at, stu, only });
@@ -279,7 +287,7 @@ export function QuickMark({ onClose, onBoxes, onOpen }) {
     if (e.key === 'x' || e.key === 'X') { stop(); return mark(s, x, 0).then(next); }
     if (e.key === 'c' || e.key === 'C') { stop(); return setNote(+el.dataset.st + '|' + x.id); }
     if (e.key === 'p' || e.key === 'P') { stop(); return copy(s, x, qi); }
-    if (e.key === 'e' || e.key === 'E') { stop(); return PARTS.exsave().then(m => m.keepAnswer(s, x, qi)); }   // keep as a strong example (stage 5)
+    if (e.key === 'e' || e.key === 'E') { stop(); return star(s, x, qi); }   // keep as a strong example, or take it back
     if (e.key === 'Backspace' || e.key === 'Delete') { stop(); return mark(s, x, null); }
   };
   const nav = view === 'q'
@@ -308,7 +316,8 @@ export function QuickMark({ onClose, onBoxes, onOpen }) {
     <div ref={body} class={'body qmbody qmz-' + size + (view === 'q' ? ' qmgrid' : ' qmcol')} data-qmbody>
       {!ready ? <div class="loading" aria-busy="true" /> : !who.length ? <p class="mute">{t('paper.qm_none_papers')}</p>
         : cards.length ? cards.map(([i, x, qi], k) => <Card key={i + '|' + x.id} i={i} q={x} qi={qi} view={view} ver={ver} focus={focusAt === 'first' && k === 0 ? at + '|' + stu + '|' + view : false}
-          noteOpen={note === i + '|' + x.id} onNote={(ii, qq) => setNote(ii == null ? null : ii + '|' + qq.id)} onPeek={(a, b2, c) => setPeek({ st: a, q: b2, qi: c })} onCopy={copy} />)
+          noteOpen={note === i + '|' + x.id} onNote={(ii, qq) => setNote(ii == null ? null : ii + '|' + qq.id)} onPeek={(a, b2, c) => setPeek({ st: a, q: b2, qi: c })} onCopy={copy}
+          kept={kept.has(state().batch.students[i].key + '|' + x.id)} onStar={star} />)
         : <p class="mute qmnone">{t('paper.qm_all_done')}</p>}
     </div>
     <footer class="qmfoot"><span class="mute qmhint">{view === 'q' ? (Z.qzByPts(q) ? t('paper.qm_hint_pts') : t('paper.qm_hint_rw')) + ' ' + t('paper.qm_hint_q') : t('paper.qm_hint_s')}</span>

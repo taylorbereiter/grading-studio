@@ -14,6 +14,8 @@ import '../mark/setup-lines.js';
 import '../mark/paper-lines.js';
 import { PARTS } from '../router.js';
 import { saving } from '../../services/saving.js';
+import { store } from '../../engines/gstore.js';
+import { go as goTo } from '../router.js';
 
 const copy = text => copyText(text);
 const cut = s => (s.length > 40 ? s.slice(0, 40) + '…' : s);
@@ -21,13 +23,15 @@ const copyCell = v => copy(v).then(() => toast(v ? t('setup.copied', { text: cut
 const Cell = ({ v, children, cls = '' }) => <td class={cls}><button type="button" class="cp" data-copy={v} title={cls === "cm" ? v : undefined} onClick={() => copyCell(v)}>{children == null ? v : children}</button></td>;
 
 /* ---------------- Grades ---------------- */
+// Return's check sends a grade to confirm here, on the grade sheet
+let sheetNext = false;
 export function Grades({ E, onOpen, sub }) {
   const [, tick] = useState(0), s = state(), su = s.setup, rub = su.mode === 'rubric', ib = E.X.ibSetup(), b = s.batch;
   const cls = b.classId != null ? (s.lib.classes || []).find(c => c.id === b.classId) : null;
   const banded = !ib && !!(E.X.meGrade() || {}).bands, rows = E.rows();
   const save = (name, blob) => E.saveFile(name, blob);
   const copyAll = async k => { const r = E.copyText(k); await copy(r.text); toast(t('setup.copied_rows', { n: r.n })); };
-  const [view, setView] = useState(sub === 'sheet' ? 'sheet' : 'table'), [SH, setSH] = useState(null), [only, setOnly] = useState(false);
+  const [view, setView] = useState(() => (sheetNext ? ((sheetNext = false), 'sheet') : sub === 'sheet' ? 'sheet' : 'table')), [SH, setSH] = useState(null), [only, setOnly] = useState(false);
   // a paper whose own grade differs from hers, has more than one grade, or a doubtful one (src/tabs.js glPaperOf): how many, and just those
   const check = r => !!(r.paper && (r.paper.ask || r.paper.differs)), nCheck = rows.filter(check).length;
   useEffect(() => { if (view === 'sheet' && !SH) PARTS.sheet().then(setSH, e => console.error(e)); }, [view]);
@@ -151,7 +155,11 @@ function AnchorCard({ E, onOpen }) {
   </Card>;
 }
 const when = ms => { const d = new Date(ms); return d.toDateString() === new Date().toDateString() ? t('setup.r_today', { t: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) }) : t('setup.r_on', { d: d.toLocaleDateString([], { day: 'numeric', month: 'short' }) }); };
-export function Return({ E, cur, onOpen }) {
+// The mark key lives in Settings, Marking: go there and bring its card into view.
+const toMarkKey = () => { goTo('settings', 'marking'); let n = 0; const look = () => { const el = document.querySelector('[data-sgmk]'); if (el) { el.closest('section').scrollIntoView({ block: 'start' }); const i = el.querySelector('input'); if (i) i.focus(); } else if (n++ < 40) setTimeout(look, 75); }; look(); };
+export function Return({ E, cur, onOpen, onShare, onSheet, rescans = [], onRescans, ai }) {
+  const [RC, setRC] = useState(null), [fails, setFails] = useState([]), [optsOpen, setOptsOpen] = useState(() => !!store.get('gs.xopts', false));
+  useEffect(() => { PARTS.retcards().then(setRC, e => console.error(e)); }, []);
   const [, tick] = useState(0), [say, setSay] = useState(''), [bar, setBar] = useState(null), [keep, setKeep] = useState(true), [sheet, setSheet] = useState(true), [dpi, setDpi] = useState(150);
   const s = state(), b = s.batch, p = E.plan(), o = E.opts(), redo = () => tick(n => n + 1);
   const r = b.returned || {}, canDir = !!(window.showDirectoryPicker && window.self === window.top);
@@ -167,9 +175,16 @@ export function Return({ E, cur, onOpen }) {
       const out = await E.exportAll({ keep, dpi, sheet, dir, onStep: (k, n, of) => { if (k === 'read') { setSay(t('setup.r_reading')); setBar(of ? 0.3 * n / of : 0); } else { setSay(t('setup.r_baking', { n: Math.min(n + 1, of), of })); setBar(0.3 + 0.7 * (of ? n / of : 1)); } } });
       if (!out.nOut && !out.zip) setSay(t('setup.r_none'));
       else { if (out.zip) E.saveFile(out.name, out.zip); setSay((dir ? t('setup.r_done_dir', { n: out.nOut, dir: dir.name }) : t('setup.r_done_zip', { n: out.nOut })) + (r.ok ? '' : ' ' + t('setup.r_once'))); }
-      if (out.failed.length) toast(t('setup.r_failed', { n: out.failed.length, list: out.failed.map(f => f.path.split('/').pop() + ' (' + f.why + ')').join(', ') }), { ms: 8000 });
+      setFails(out.failed); afterOut(out);
     } catch (er) { console.error(er); setSay(t('setup.r_wrong', { why: er.message || String(er) })); }
     setBar(null); redo();
+  };
+  // Once the files are out: if she has left the Return tab meanwhile, a toast says what's next with Mark as returned (src/tabs.js
+  // setReturned, A-081); while the tab is open, the button under the download says it. A failed list she can't see goes in a toast.
+  const afterOut = out => {
+    if (document.getElementById('rtState')) return;
+    if (out.failed.length) toast(t('setup.r_failed', { n: out.failed.length, list: out.failed.map(f => f.path.split('/').pop() + ' (' + f.why + ')').join(', ') }), { ms: 8000 });
+    if (out.nOut && !(state().batch.returned || {}).ok) { const b0 = state().batch; toast(t('setup.r_once'), { ms: 10000, action: { label: t('setup.r_mark'), run: () => { if (state().batch === b0) E.marking().markReturned(true); } } }); }
   };
   // Save to Google Drive (src/app/export.js data-go="drive"): the same files, in a new folder next to the papers opened from Drive, or in My Drive
   const goDrive = async () => {
@@ -182,7 +197,7 @@ export function Return({ E, cur, onOpen }) {
         const where = await S.driveSave(name, out.files, from, (n, of) => { setSay(t('setup.r_drive_saving', { n, of })); setBar(0.75 + 0.25 * n / of); });
         setSay(t(where !== 'next' ? 'setup.r_drive_root' : from.kind === 'folder' ? 'setup.r_drive_in' : from.kind === 'zip' ? 'setup.r_drive_zip' : 'setup.r_drive_next', { name }) + (r.ok ? '' : ' ' + t('setup.r_once')));
       }
-      if (out.failed.length) toast(t('setup.r_failed', { n: out.failed.length, list: out.failed.map(f => f.path.split('/').pop() + ' (' + f.why + ')').join(', ') }), { ms: 8000 });
+      setFails(out.failed); afterOut(out);
     } catch (er) { console.error(er); setSay(t('setup.r_wrong', { why: er.message || String(er) })); }
     setBar(null); redo();
   };
@@ -199,8 +214,9 @@ export function Return({ E, cur, onOpen }) {
   const sent = b.students.map((x, i) => ({ x, i })).filter(y => y.x.grade.sent).sort((a, c) => c.x.grade.sent - a.x.grade.sent);
   const state1 = <p class="rtdone" id="rtState">{r.ok
     ? <><span>✓ {t('setup.r_returned', { when: when(r.ok) })}</span> <Button size="sm" variant="quiet" data-unreturn onClick={() => { E.marking().markReturned(false); toast(t('setup.r_unmarked')); redo(); }}>{t('setup.r_unmark')}</Button></>
-    : <><span>{r.t ? t('setup.r_exported', { when: when(r.t), n: r.n || 0 }) : ''}</span> <Button size="sm" data-doreturn onClick={() => { E.marking().markReturned(true); toast(t('setup.r_marked')); redo(); }}>{t('setup.r_mark')}</Button></>}</p>;
-  const earlyBox = p.early.length > 0 && <Checkbox label={t('setup.r_early', { n: p.early.length })} checked={o.early} onChange={v => opt('early', v)} />;
+    : <>{r.t ? <span>{t('setup.r_exported', { when: when(r.t), n: r.n || 0 })}</span> : null} <Button size="sm" data-doreturn onClick={() => { E.marking().markReturned(true); toast(t('setup.r_marked')); redo(); }}>{t('setup.r_mark')}</Button></>}</p>;
+  const earlyBox = p.early.length > 0 && <><Checkbox label={t('setup.r_early', { n: p.early.length })} checked={o.early} onChange={v => opt('early', v)} />{RC && <RC.Early early={p.early} on={o.early} />}</>;
+  const checkBox = RC && <RC.Check E={E} onOpen={onOpen} onSheet={() => { sheetNext = true; onSheet(); }} />;
   return <section class="mk-out mk-ret" aria-labelledby="mk-r-h">
     <div class="rtmain">
       <header class="oh"><h2 id="mk-r-h" class="t3">{t('mark.return')}</h2></header>
@@ -208,27 +224,29 @@ export function Return({ E, cur, onOpen }) {
         <p class="big t2" id="rtReady">{t('setup.r_ready', { n: p.files })}</p>
         <p class="mute">{t('setup.r_from', { n: p.students })}{p.skipped > 0 && ' ' + t('setup.r_skipped', { n: p.skipped })}{p.left > 0 && ' ' + t('setup.r_left', { n: p.left })}</p>
         {earlyBox}
+        {checkBox}
         <div class="go"><Button variant="primary" icon="download" data-go="zip" disabled={bar != null} onClick={() => go(false)}>{t('setup.r_zip')}</Button>
           {canDir && <Button data-go="dir" disabled={bar != null} onClick={() => go(true)}>{t('setup.r_dir')}</Button>}
           {toDrive && <Button icon="drive" data-go="drive" disabled={bar != null} onClick={() => go('drive')}>{t('setup.r_drive')}</Button>}</div>
         {bar != null && <Progress value={bar} max={1} label={say} />}
         <p class="mute" role="status" id="xStatus">{say}</p>
+        {RC && fails.length > 0 && <RC.Fails failed={fails} onClose={() => setFails([])} />}
         {state1}
-        <details class="xopts"><summary>{t('setup.r_options')}</summary>
+        <details class="xopts" open={optsOpen} onToggle={e => { const v = e.currentTarget.open; if (v !== optsOpen) { setOptsOpen(v); store.set('gs.xopts', v); } }}><summary data-xoptssay>{RC ? RC.optsSay({ o, keep, sheet, dpi }) : t('setup.r_options')}</summary>
           <Checkbox label={t('setup.r_keep')} checked={keep} onChange={setKeep} />
           <Checkbox label={t('setup.r_one')} checked={o.one} onChange={v => opt('one', v)} /><p class="hint mute">{t('setup.r_one_hint')}</p>
           <Checkbox label={t('setup.r_names')} checked={o.names} onChange={v => opt('names', v)} />
           <p class="hint mute">{o.names ? (p.example ? t('setup.r_names_like', { name: anonOn() ? '…' : p.example }) : '') : t('setup.r_names_off')}</p>
           <Checkbox label={t('setup.r_sheet')} checked={sheet} onChange={setSheet} />
           <Checkbox label={t('setup.r_edit')} checked={o.edit} onChange={v => opt('edit', v)} /><p class="hint mute">{t('setup.r_edit_hint')}</p>
-          <Checkbox label={t('setup.r_key')} checked={o.key} onChange={v => opt('key', v)} />
+          <Checkbox label={t('setup.r_key')} checked={o.key} onChange={v => opt('key', v)} />{RC && <RC.KeyHint p={p} onChange={toMarkKey} />}
           <Checkbox label={t('setup.r_fb')} checked={o.fb} onChange={v => opt('fb', v)} /><p class="hint mute">{t('setup.r_fb_hint')}</p>
           <Checkbox label={t('setup.r_all')} checked={o.all} onChange={v => opt('all', v)} />
           <div class="sharp"><span>{t('setup.r_sharp')}</span><Segmented size="sm" label={t('setup.r_sharp')} value={String(dpi)} onChange={v => setDpi(+v)} options={[{ value: '150', label: t('setup.r_standard') }, { value: '220', label: t('setup.r_extra') }]} /></div>
         </details>
         <p class="mute foot">{t('setup.r_foot')}</p>
       </> : <>
-        <p>{p.nOut ? t('setup.r_all_early') : t('setup.r_nothing')}</p>{earlyBox}
+        <p>{p.nOut ? t('setup.r_all_early') : t('setup.r_nothing')}</p>{earlyBox}{checkBox}
         <Checkbox label={t('setup.r_all')} checked={o.all} onChange={v => opt('all', v)} />{state1}
       </>}
     </div>
@@ -238,15 +256,17 @@ export function Return({ E, cur, onOpen }) {
           {sent.length > 6 && <li class="mute">{t('setup.r_more', { n: sent.length - 6 })}</li>}</ul>}
         {who ? <Button data-rtone onClick={one}>{t('setup.r_one_btn', { name: who })}</Button> : <p class="mute">{t('setup.r_one_none')}</p>}</Card>
       <AnchorCard E={E} onOpen={onOpen} />
+      {RC && onShare && <RC.AskCard onShare={onShare} ai={ai} />}
+      {RC && <RC.RescanCard list={rescans} onShow={onRescans} />}
     </aside>
   </section>;
 }
 
 // The tab, read once the papers have been read (a grade written on a paper counts), as the current app reads them first.
-export default function Out({ tab, sub, E, cur, onOpen, onShare }) {
+export default function Out({ tab, sub, E, cur, onOpen, onShare, onSheet, rescans, onRescans, ai }) {
   const [ok, setOk] = useState(false);
   useEffect(() => { let live = true; E.readPapers().then(() => live && setOk(true), e => { console.error(e); if (live) setOk(true); }); return () => { live = false; }; }, [E]);
   if (!ok) return <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />;
-  const P = { E, cur, onOpen, onShare, sub };
+  const P = { E, cur, onOpen, onShare, onSheet, rescans, onRescans, sub, ai };
   return tab === 'grades' ? <Grades {...P} /> : tab === 'insights' ? <Insights {...P} /> : tab === 'return' ? <Return {...P} /> : <EmptyState title="" />;
 }

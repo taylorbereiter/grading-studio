@@ -31,7 +31,7 @@ after(async () => { await browser.close(); await srv.close(); fs.rmSync(dir, { r
 // The decoder's chunk, from what next/build.js last built.
 const heicChunk = () => { const meta = JSON.parse(fs.readFileSync(path.join(ROOT, 'next', 'dist', 'meta.json'), 'utf8')); return path.basename(Object.entries(meta.outputs).find(([, o]) => Object.keys(o.inputs).some(i => /libheif-js\//.test(i)))[0]); };
 
-test('the iPhone photo decoder is fetched only when an HEIC picture arrives, and the photo opens', async () => {
+test('H-039: the iPhone photo decoder is fetched only when an HEIC picture arrives, and the photo opens', async () => {
   const ctx = await browser.createBrowserContext(), errors = [], got = [], chunk = heicChunk();
   const seed = gradingSeed(), lib = JSON.parse(seed.ls['gs.lib']);
   lib.classes[0].units[0].items.push({ id: 'i9', name: 'Photo homework', classId: 'c1', type: 'ic', due: '2026-11-20' });
@@ -51,6 +51,8 @@ test('the iPhone photo decoder is fetched only when an HEIC picture arrives, and
   await p.goto(srv.url + 'next/#/class/c1/work');
   await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
   assert.ok(!got.some(u => u.endsWith('/' + chunk)), 'not fetched before a photo arrives');
+  // H-039: what she is told while the photo is read
+  await p.evaluate(() => { window.__toasts = []; new MutationObserver(() => { for (const x of document.querySelectorAll('.toast')) if (!window.__toasts.includes(x.textContent)) window.__toasts.push(x.textContent); }).observe(document.body, { childList: true, subtree: true, characterData: true }); });
   await p.click('[data-bring-for="i9"]');
   await p.waitForSelector('.pop [role="menuitem"]');
   const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
@@ -59,6 +61,7 @@ test('the iPhone photo decoder is fetched only when an HEIC picture arrives, and
   const f = await p.evaluate(() => { for (const st of window.__mark.state().batch.students) for (const x of st.files) if (/\.heic$/i.test(x.path)) return { kind: x.kind, pdf: !!x.data && x.data[0] === 0x25 && x.data[1] === 0x50 }; return null; });
   assert.deepEqual(f, { kind: 'img', pdf: true }, 'the photo became a page');
   assert.equal(got.filter(u => u.endsWith('/' + chunk)).length, 1, 'fetched once, when the photo arrived');
+  assert.ok((await p.evaluate(() => window.__toasts)).some(x => /Reading an iPhone photo/.test(x)), 'H-039: she is told an iPhone photo is being read');
   assert.deepEqual(errors, []);
   await ctx.close();
 });

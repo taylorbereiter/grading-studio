@@ -54,5 +54,28 @@
  "video.cl_prev": "Der vorherige Ausschnitt",
  "video.cl_next": "Der nächste Ausschnitt",
  "video.cl_of": "{n} von {of}",
- "video.cl_full": "Vollbild"
+ "video.cl_full": "Vollbild",
+ "video.drv_dir_change": "Ordner ändern",
+ "video.drv_only": "Nur die Videos, die Sie auswählen, können geöffnet werden, sonst nichts in Ihrem Drive.",
+ "video.pv_drive": "Drive…",
+ "video.pv_many": "Aus Drive auswählen…",
+ "video.pv_miss_drv": {
+  "one": "Diese Datei passte zu keinem Namen: {names}. Nutzen Sie Drive… in der richtigen Zeile.",
+  "other": "Diese Dateien passten zu keinem Namen: {names}. Nutzen Sie Drive… in der richtigen Zeile."
+ },
+ "video.vd_partners": "Partner",
+ "video.vd_partners_say": "Haken Sie alle anderen im Video an. Sie bekommen das Video und die Notizseite, und ein Satz Markierungen und eine Note gelten für die Gruppe.",
+ "video.vd_add_with": {
+  "one": "Zu {name} und 1 Partner hinzufügen",
+  "other": "Zu {name} und {n} Partnern hinzufügen"
+ },
+ "video.sn_pv_h": "Videos und Partner",
+ "video.sn_pv_say": "Optional, Sie können sie auch später hinzufügen. Fügen Sie für jedes Video einen Link ein oder wählen Sie eine Datei, oder legen Sie Videodateien hier ab: Jede geht an die Person, die im Dateinamen steht. Partner teilen eine Notizseite, einen Satz Markierungen und eine Note.",
+ "video.cap_prev": "Die Zeile davor",
+ "video.cap_next": "Die nächste Zeile",
+ "video.tr_again_q": "Das Transkript neu erstellen? Das vorhandene wird ersetzt.",
+ "video.tr_again_ok": "Neu erstellen",
+ "video.vk_back": "Das Video ist wieder da",
+ "video.no_picture": "In diesem Browser wird nur der Ton dieses Videos abgespielt. Ein iPhone-Video muss für das Bild vielleicht auf Ihrem Computer geöffnet werden: Laden Sie es herunter oder bitten Sie um eine .mp4.",
+ "video.tn_no_time": "Ein Video oder der Timer für einen Live-Vortrag liefert die Zeiten"
 }

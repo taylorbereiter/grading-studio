@@ -1149,7 +1149,6 @@
  "class.es_whole": "Whole paper",
  "class.es_part": "Part of a page",
  "class.es_part_say": "Drag a box around the part to keep. Names are blacked out for good.",
- "class.es_names_say": "Kept as pictures with the names blacked out for good. To cover anything else, use Cover part of it once it is saved.",
  "class.es_marks": "My marks and comments",
  "class.es_score": "The score",
  "class.es_row": "Rubric row",
@@ -1375,5 +1374,56 @@
  "class.rp_cuts": "Grades:",
  "class.rp_cut_hi": "highest from",
  "class.rp_cut_good": "good from",
- "class.rp_cut_mid": "middling from"
+ "class.rp_cut_mid": "middling from",
+ "class.ru_h": "Rubric",
+ "class.ru_say": "Word, PDF or a picture. Rows are read from a table where they can be.",
+ "class.ru_none": "Not set yet",
+ "class.ru_total": "Just the total, out of {n}",
+ "class.ru_score": "Score with these rows",
+ "class.ru_copy": "Give every student a copy to mark on",
+ "class.ru_norows": "No rubric table could be read from this file, so its rows aren’t filled in. You can type them in Rubric setup.",
+ "class.ru_use": "Use this rubric",
+ "class.ru_tick": "Tick what to do with it first",
+ "class.ru_set": "The rubric is set for “{name}”",
+ "class.ru_step": "a rubric brought in",
+ "class.ru_t": "Rubric for “{name}”",
+ "class.es_n_covered": {
+  "one": "1 name covered.",
+  "other": "{n} names covered."
+ },
+ "class.es_cover_say": "Drag on a page to cover anything else, like a handwritten name or score. Click a cover to take it off.",
+ "class.es_shot_n": {
+  "one": "1 area blacked out.",
+  "other": "{n} areas blacked out."
+ },
+ "class.es_shot_paper": "Name covers on the paper are already painted in.",
+ "class.es_shot_say": "Drag over anything that shows a name to black it out. Click a black box to take it off.",
+ "class.es_tags_used": "Tags you have used",
+ "class.ax_say": "Strong work from this assignment, with no names on it.",
+ "class.ax_none_say": "Press Example on an answer in Quick mark, pick Use as an example in a paper’s ⋯ menu, or take a screenshot (S) and save it as a strong example. Picking one is always up to you.",
+ "class.ax_answers": "Answers, by question",
+ "class.ax_q_none": {
+  "one": "Question {list} has no example yet. Press Example on an answer in Quick mark.",
+  "other": "Questions {list} have no example yet. Press Example on an answer in Quick mark."
+ },
+ "class.ax_rest": "Whole papers and parts of pages",
+ "class.ax_rest_shots": "Whole papers, parts of pages and screenshots",
+ "class.ax_linked": "From linked classes",
+ "class.ax_show_lk": {
+  "one": "Show 1 example from {names}",
+  "other": "Show {n} examples from {names}"
+ },
+ "class.ax_hide": "Hide",
+ "class.ax_lk_say": "The same assignment in another class. Each card says which class it came from.",
+ "class.ax_from": "From",
+ "class.ex_copy": "Copy picture",
+ "class.ex_copied_first": "Copied. A picture you paste into a lesson is kept with that lesson.",
+ "class.ex_copy_bad": "Copying didn’t work here. Use Download instead.",
+ "class.wl_none_say": "Nothing saved from their work yet. A screenshot saved as a strong example or added to the watch list shows here, with the date.",
+ "class.wl_f_all": "All",
+ "class.wl_f_good": "Strong · {n}",
+ "class.wl_f_watch": "Watch · {n}",
+ "class.wl_seen": "Seen most:",
+ "class.wl_none_kind": "None of this kind yet.",
+ "class.wl_more": "Black out more"
 }

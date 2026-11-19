@@ -20,6 +20,8 @@ export function startWhole() {
   // The sync itself loads after the first screen is drawn (it brings the merge and the writes with it).
   let D = null;
   const drive = () => import('./drive.js').then(m => { if (!D) { D = m; m.startDrive(); } return m; });
+  // Email links and the video sweep, just after start (whole/later.js)
+  setTimeout(() => import('./later.js').then(m => m.startLater(), e => console.error(e)), 800);
   onSaved(e => { if (SYNCS(e)) { markSyncDue(); if (G.email) drive().then(m => m.syncSoon()); } queue = queue.then(() => folderSaved(e)).catch(err => console.error(err)); });
   if (G.email || G.token) setTimeout(drive, 0);
   onGoogle(changedSaving); onFolder(changedSaving);

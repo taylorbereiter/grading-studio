@@ -92,6 +92,9 @@ export default function ClassWork({ classId, sub }) {
   const shut = () => { setBox(null); load(); };
   // #/class/<id>/work/new (Find's New assignment): the New box, and the address back to the tab
   useEffect(() => { if (sub === 'new') { open('asg', { unitId: null }); location.replace(href('class', classId, 'work')); } }, [sub, classId]);
+  // Find's "Match files to a roster" (D-028): the matcher straight away, with no assignment, as the current app's Today button
+  const ready = !!(lib && kept);
+  useEffect(() => { if (sub === 'match' && ready) { matchFor(null); location.replace(href('class', classId, 'work')); } }, [sub, classId, ready]);
   const L = usePart('linked', true);   // linked classes (class/linked.jsx)
   const flip = id => setShown(o => { const n = new Set(o); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const [tm, setTm] = useState(null);
@@ -125,16 +128,18 @@ export default function ClassWork({ classId, sub }) {
   const c = classId === '-' ? lib.loose : lib.classes.find(x => String(x.id) === String(classId));
   if (!c) return <EmptyState icon="inbox" title={t('setup.w_none')} />;
   // list: picked or dropped files, or entries made already (matched to a roster: each path "Name/file", and the class they matched)
-  const bring = async (it, list, cls) => {
+  // pv: the videos and partners of an assignment with no papers, made once the pages open (StartNotes, D-022)
+  const bring = async (it, list, cls, pv) => {
     if (!list.length || busy) return;
-    setBusy(it.id);
+    setBusy(it ? it.id : 'match');
     try {
       const O = await PARTS.bring();
       // a newer copy of a download she has worked on: asked whether her marks and scores come over, when it isn't plainly the same one
       const carry = e => new Promise(done => setAsk({ e, done: v => { setAsk(null); done(v); } }));
       const drive = fromDrive.current; fromDrive.current = null;
-      const r = await O.bringIn(list[0] && list[0].file ? list : entriesOf(list), { assignment: it, label: it.name, carry, drive });
+      const r = await O.bringIn(list[0] && list[0].file ? list : entriesOf(list), { assignment: it, label: it ? it.name : 'Matched files', carry, drive });
       if (r && cls) (await PARTS.bringin()).classAfter(r.batch.id, cls.id);
+      if (r && pv) (await PARTS.bringin()).partnersAfter(r.batch.id, pv);
       if (r && r.changed) toast(t('setup.c_changed_toast', { n: r.changed }), { ms: 7000 });
       if (r) go('mark', r.batch.id);
     } catch (e) { console.error(e); toast(e && e.name === 'NothingIn' ? t('setup.w_nothing') : e && e.name === 'CannotSave' ? t('mark.cannot') : t('setup.w_failed')); }
@@ -142,11 +147,11 @@ export default function ClassWork({ classId, sub }) {
   };
   const pick = (it, el) => { want.current = it; fromDrive.current = null; el.current.value = ''; el.current.click(); };
   // From Google Drive (src/app/drive.js openFromDrive): the papers picked in Google's chooser come in as files from the computer do
-  const S = useSaving(), driveItem = it => (S && S.google().pickNow ? [{ label: t('file.from_drive_pick'), icon: 'drive', onSelect: () => { want.current = it; S.driveFill(files.current, { title: t('drive.pick_many'), picked: p => { fromDrive.current = p[0] && { id: p[0].id, name: p[0].name, kind: p.length === 1 && /\.zip$/i.test(p[0].name) ? 'zip' : 'files' }; } }).catch(e => { console.error(e); toast(t('drive.failed')); }); } }] : []);
+  const S = useSaving(), driveItem = it => (S && S.google().pickNow ? [{ label: t('file.from_drive_pick'), icon: 'drive', onSelect: () => { want.current = it; S.driveFill(files.current, { title: t('drive.pick_many'), papers: true, picked: p => { fromDrive.current = p[0] && { id: p[0].id, name: p[0].name, kind: p.length === 1 && /\.zip$/i.test(p[0].name) ? 'zip' : 'files' }; } }).catch(e => { console.error(e); toast(t('drive.failed')); }); } }] : []);
   // Files to match to a roster (mark/bringin.jsx MatchRoster): picked, matched to a class's names, then opened as above
   const [match, setMatch] = useState(null);
-  const matchFor = it => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true;
-    i.onchange = async () => { const B = await PARTS.bringin(), list = await B.expand([...i.files]); if (!list.length) return toast(t('setup.bf_nothing')); setMatch({ B, it, list }); }; i.click(); };
+  // first: files or a whole folder (folder names often carry the student's name); it null: no assignment, a new download "Matched files"
+  const matchFor = it => PARTS.bringin().then(B => setMatch({ B, it, ask: true }), e => console.error(e));
   const units = c.units;
   const named = async v => {
     const was = name; setName(null); if (!v) return;
@@ -179,6 +184,9 @@ export default function ClassWork({ classId, sub }) {
   const dropUnit = (id, before) => { if (id === before) return; order(l => { const f = unitIn(l, id), d = unitIn(l, before); if (!f || !d) return; f.c.units.splice(f.c.units.indexOf(f.u), 1); d.c.units.splice(d.c.units.indexOf(d.u), 0, f.u); if (f.c !== d.c) for (const x of f.u.items) x.classId = d.c.id; }); };
   const tool = String((lib.me || {}).unit || '').trim();
   // No papers: a notes page for each student; or only typed scores, in the gradebook
+  // Bring in a rubric… (B-004): the rubric for the papers to come, from a file or Google Drive (class/rubricin.jsx)
+  const [rbox, setRbox] = useState(null);
+  const rubricIn = it => ({ label: t('setup.su_bring'), icon: 'grades', onSelect: () => PARTS.rubricin().then(R => setRbox({ R, it }), e => console.error(e)) });
   const noPapers = it => [{ label: t('mark.cw_sn_menu'), icon: 'play', onSelect: () => open('notes', { it }) },
     ...(it.batchId ? [] : [{ label: t('mark.cw_to_menu'), icon: 'edit', onSelect: () => PARTS.asg().then(A => A.typeOnly(lib, it)).then(r => { if (r != null) go('class', classId, 'grades', r || null); }, e => console.error(e)) }])];
   const forget = (it, m) => ({ label: t('mark.cw_fg_menu'), icon: 'trash', onSelect: () => open('forget', { it, id: m.id }) });
@@ -191,7 +199,8 @@ export default function ClassWork({ classId, sub }) {
     <h2 id="h-work" class="sr">{t('setup.w_title')}</h2>
     {L && <L.LinkedHead lib={lib} classId={classId} />}
     {c === lib.loose && c.units.some(u => u.items.length) && <p class="mute" data-loose-say>{t('mark.cw_loose_say')}</p>}
-    {match && <match.B.MatchRoster list={match.list} lib={lib} classId={classId} onClose={() => setMatch(null)} onGo={(entries, cls) => bring(match.it, entries, cls)} />}
+    {match && match.ask && <match.B.FilesOrFolder kind="match" onClose={() => setMatch(m => (m && m.ask ? null : m))} onPick={list => setMatch({ ...match, ask: false, list })} />}
+    {match && !match.ask && <match.B.MatchRoster list={match.list} lib={lib} classId={classId} onClose={() => setMatch(null)} onGo={(entries, cls) => bring(match.it, entries, cls)} />}
     {ask && <Dialog open title={t('setup.c_ask_t')} onClose={() => ask.done(false)}
       actions={<><Button onClick={() => ask.done(false)} data-fresh>{t('setup.c_fresh')}</Button><Button variant="primary" onClick={() => ask.done(true)} data-carry>{t('setup.c_bring')}</Button></>}>
       <p data-raw>{t('setup.c_ask', { name: ask.e.name || t('setup.c_noname') })}</p>
@@ -209,7 +218,8 @@ export default function ClassWork({ classId, sub }) {
       <p>{t('mark.cw_ud_say', { n: sure.items.length })}</p></Dialog>}
     {move && <MoveTo lib={lib} it={move} onDone={moved} />}
     {box && box.kind === 'asg' && <box.A.AssignmentDialog lib={lib} it={box.it} classId={classId} unitId={box.unitId} onClose={shut} />}
-    {box && box.kind === 'notes' && <box.A.StartNotes lib={lib} it={box.it} bring={list => bring(box.it, list)} onClose={() => setBox(null)} />}
+    {rbox && <rbox.R.RubricBox it={rbox.it} onClose={ok => { setRbox(null); if (ok) load(); }} />}
+    {box && box.kind === 'notes' && <box.A.StartNotes lib={lib} it={box.it} bring={(list, pv) => bring(box.it, list, null, pv)} onClose={() => setBox(null)} />}
     {box && box.kind === 'forget' && <box.A.Forget it={box.it} id={box.id} onClose={shut} />}
     {box && box.kind === 'ulink' && <box.A.UnitLink u={box.u} tool={tool} onClose={shut} />}
     {box && box.kind === 'unitto' && <box.A.UnitTo lib={lib} u={box.u} onClose={shut} />}
@@ -245,9 +255,9 @@ export default function ClassWork({ classId, sub }) {
             {open ? <span class="wopen"><a class="btn sm" href={href('mark', st.m.id)}>{t('setup.w_open')}</a>
               {/* a newer copy of the papers: her work comes over (mark/carry.js) */}
               <Menu label={t('setup.w_again')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.w_again')} disabled={busy === it.id} data-again-for={it.id} />}
-                items={[{ label: t('setup.w_again_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_again_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, ...driveItem(it), edit(it), quiz(it), more(it), ...itemSteps(it, u), ...links(it), forget(it, st.m)]} /></span>
+                items={[{ label: t('setup.w_again_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_again_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, ...driveItem(it), { label: t('setup.w_scan'), icon: 'image', onSelect: () => pick(it, scan) }, { label: t('setup.mr_menu'), icon: 'people', onSelect: () => matchFor(it) }, ...noPapers(it), edit(it), quiz(it), more(it), ...itemSteps(it, u), ...links(it), forget(it, st.m)]} /></span>
               : <span class="wopen"><Menu label={t('setup.w_bring')} trigger={b => <Button {...b} size="sm" icon="upload" disabled={busy === it.id} data-bring-for={it.id}>{t('setup.w_bring')}</Button>}
-                items={[{ label: t('setup.w_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, ...driveItem(it), { label: t('setup.w_scan'), icon: 'image', onSelect: () => pick(it, scan) }, { label: t('setup.mr_menu'), icon: 'people', onSelect: () => matchFor(it) }, ...noPapers(it)]} />
+                items={[{ label: t('setup.w_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, ...driveItem(it), { label: t('setup.w_scan'), icon: 'image', onSelect: () => pick(it, scan) }, { label: t('setup.mr_menu'), icon: 'people', onSelect: () => matchFor(it) }, rubricIn(it), ...noPapers(it)]} />
               <Menu label={t('setup.u_item_more', { name: it.name })} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.u_item_more', { name: it.name })} data-more-for={it.id} />} items={[edit(it), quiz(it), ...quizScan(it), more(it), ...itemSteps(it, u), ...links(it)]} /></span>}
             {shown.has(it.id) && <Details it={it} st={st} />}
           </li>; })}</ul>}

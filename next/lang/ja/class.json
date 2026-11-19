@@ -1147,7 +1147,6 @@
  "class.es_whole": "提出物全体",
  "class.es_part": "ページの一部",
  "class.es_part_say": "残したい部分をドラッグで囲みます。名前は黒く塗られ、元に戻せません。",
- "class.es_names_say": "名前を黒く塗った画像として保存され、元に戻せません。ほかの部分を隠すには、保存後に「一部を隠す」を使います。",
  "class.es_marks": "自分の書き込みとコメント",
  "class.es_score": "点数",
  "class.es_row": "ルーブリックの観点",
@@ -1373,5 +1372,56 @@
  "class.rp_cuts": "成績：",
  "class.rp_cut_hi": "最高は",
  "class.rp_cut_good": "良いは",
- "class.rp_cut_mid": "中程度は"
+ "class.rp_cut_mid": "中程度は",
+ "class.ru_h": "ルーブリック",
+ "class.ru_say": "Word、PDF、画像。表があれば行を読み取ります。",
+ "class.ru_none": "未設定",
+ "class.ru_total": "合計のみ（{n} 点満点）",
+ "class.ru_score": "この観点で採点する",
+ "class.ru_copy": "生徒ごとに書き込める写しを付ける",
+ "class.ru_norows": "このファイルから表を読み取れなかったため、行は入っていません。ルーブリック設定で入力できます。",
+ "class.ru_use": "このルーブリックを使う",
+ "class.ru_tick": "先に使い方を選んでください",
+ "class.ru_set": "「{name}」のルーブリックを設定しました",
+ "class.ru_step": "取り込んだルーブリック",
+ "class.ru_t": "「{name}」のルーブリック",
+ "class.es_n_covered": {
+  "one": "名前を 1 か所隠しました。",
+  "other": "名前を {n} か所隠しました。"
+ },
+ "class.es_cover_say": "ページ上をドラッグすると、手書きの名前や点数などほかの部分も隠せます。隠した部分をクリックすると外れます。",
+ "class.es_shot_n": {
+  "one": "1 か所を黒く塗りました。",
+  "other": "{n} か所を黒く塗りました。"
+ },
+ "class.es_shot_paper": "答案の名前の目隠しはすでに塗られています。",
+ "class.es_shot_say": "名前が見える部分をドラッグすると黒く塗れます。黒い枠をクリックすると外れます。",
+ "class.es_tags_used": "使ったことのあるタグ",
+ "class.ax_say": "この課題の優れた作品（名前なし）。",
+ "class.ax_none_say": "クイック採点で解答の「お手本」を押すか、答案の ⋯ メニューで「例として使う」を選ぶか、スクリーンショット (S) を優れた例として保存します。どれを選ぶかはいつもあなた次第です。",
+ "class.ax_answers": "解答（問題ごと）",
+ "class.ax_q_none": {
+  "one": "問題 {list} にはまだお手本がありません。クイック採点で解答の「お手本」を押してください。",
+  "other": "問題 {list} にはまだお手本がありません。クイック採点で解答の「お手本」を押してください。"
+ },
+ "class.ax_rest": "答案全体とページの一部",
+ "class.ax_rest_shots": "答案全体、ページの一部、スクリーンショット",
+ "class.ax_linked": "連携したクラスから",
+ "class.ax_show_lk": {
+  "one": "{names} のお手本を 1 件表示",
+  "other": "{names} のお手本を {n} 件表示"
+ },
+ "class.ax_hide": "隠す",
+ "class.ax_lk_say": "別のクラスの同じ課題です。各カードにどのクラスのものか書かれています。",
+ "class.ax_from": "出典",
+ "class.ex_copy": "画像をコピー",
+ "class.ex_copied_first": "コピーしました。授業に貼り付けた画像はその授業と一緒に保存されます。",
+ "class.ex_copy_bad": "ここではコピーできませんでした。ダウンロードを使ってください。",
+ "class.wl_none_say": "まだ作品から保存したものはありません。優れた例として保存したり、見守りリストに加えたりしたスクリーンショットが日付つきでここに出ます。",
+ "class.wl_f_all": "すべて",
+ "class.wl_f_good": "優れた例 · {n}",
+ "class.wl_f_watch": "見守り · {n}",
+ "class.wl_seen": "よく見られる点：",
+ "class.wl_none_kind": "この種類はまだありません。",
+ "class.wl_more": "さらに黒く塗る"
 }
