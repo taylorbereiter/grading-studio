@@ -6669,5 +6669,19 @@
  "cal.type_classes": "내 학급 입력하기",
  "cal.no_timetable_text": "학급이 언제 모이는지 알면 수업이 학급에 맞춰 놓입니다. 학급과 시간을 입력하는 데 몇 분이면 되고 한 번만 하면 됩니다. 다른 컴퓨터의 설정 파일이 있다면 불러오거나 이 페이지에 끌어다 놓으세요.",
  "cal.date_to": "까지 (선택)",
- "cal.any_colour": "원하는 색"
+ "cal.any_colour": "원하는 색",
+ "cal.search": "검색",
+ "cal.search_inside": "수업 안에서 “{q}” 검색",
+ "cal.search_label": "수업, 슬라이드, 메모, 문서, 단원",
+ "cal.search_two": "두 글자 이상 입력하세요.",
+ "cal.search_none": "“{q}”에 대한 결과가 없습니다.",
+ "cal.search_n": {
+  "one": "{n}개 찾음",
+  "other": "{n}개 찾음"
+ },
+ "cal.search_first": "처음 {n}개를 표시합니다.",
+ "cal.search_slide": "{title}, 슬라이드 {n}",
+ "cal.search_nb": "{title}, 노트",
+ "cal.search_in": "“{title}” 안",
+ "cal.search_no_class": "학급 없음"
 }

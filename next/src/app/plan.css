@@ -272,6 +272,13 @@
 .prclock{left:auto;right:24px;bottom:72px;top:auto;font-size:32px}
 /* Library */
 .library .libpanel{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.lsearch{display:flex;flex-direction:column;gap:12px;max-width:760px}
+.lsearch h2{font-size:var(--t4);margin:0}
+.lsearch .hits{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.lsearch .hit{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;padding:10px 12px;border-radius:var(--r2);background:var(--s);box-shadow:0 0 0 1px var(--edge)}
+.lsearch .hit:hover{box-shadow:0 0 0 1px var(--ink2)}
+.lsearch .ht{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lsearch .sn{font-size:var(--t2);color:var(--ink2);overflow-wrap:anywhere}
 .libtools{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}.libtools .field{flex:1 1 240px;margin:0}
 .library .chips{display:flex;flex-wrap:wrap;gap:6px}
 .actlist{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:var(--r2);background:var(--s)}

@@ -201,15 +201,22 @@ function Examples({ view }) {
   return E ? <E.default view={view} /> : <div class="loading" aria-busy="true" />;
 }
 
+// Searching inside lessons, slides, notes, documents and units (plan/search.jsx), from the command bar.
+function Find({ p, q }) {
+  const [S, setS] = useState(null);
+  useEffect(() => { PART.search().then(setS); }, []);
+  return S ? <S.Search key={q} p={p} q={q} /> : <div class="loading" aria-busy="true" />;
+}
+
 export default function Library({ route, classes }) {
   const p = usePlan();
-  const tab = TABS.includes(route.params.tab) ? route.params.tab : 'activities';
+  const tab = TABS.includes(route.params.tab) ? route.params.tab : 'activities', find = route.params.tab === 'search';
   return <div class="page library">
     <header class="ph"><div><h1>{t('nav.library')}</h1><p class="mute">{t('plan.lib_about')}</p></div></header>
-    <Tabs label={t('nav.library')} value={tab} onChange={v => go('library', v === 'activities' ? '' : v)} tabs={TABS.map(id => ({ id, label: t(TAB_LINE[id]) }))} />
+    <Tabs label={t('nav.library')} value={find ? '' : tab} onChange={v => go('library', v === 'activities' ? '' : v)} tabs={TABS.map(id => ({ id, label: t(TAB_LINE[id]) }))} />
     <div role="tabpanel" id={'panel-' + tab} aria-labelledby={'tab-' + tab} class="libpanel">
       {!p ? <div class="loading" aria-busy="true" />
-        : tab === 'activities' ? <Activities p={p} /> : tab === 'past' ? <Past p={p} /> : tab === 'units' ? <Units p={p} classes={classes} sub={route.params.sub} /> : tab === 'examples' ? <Examples view={route.params.sub} /> : <Rubrics p={p} />}
+        : find ? <Find p={p} q={route.params.sub || ''} /> : tab === 'activities' ? <Activities p={p} /> : tab === 'past' ? <Past p={p} /> : tab === 'units' ? <Units p={p} classes={classes} sub={route.params.sub} /> : tab === 'examples' ? <Examples view={route.params.sub} /> : <Rubrics p={p} />}
     </div>
   </div>;
 }

@@ -6641,5 +6641,19 @@
  "cal.type_classes": "Digitar minhas turmas",
  "cal.no_timetable_text": "As aulas se encaixam nas suas turmas quando o app sabe quando elas se reúnem. Digite suas turmas e horários: leva alguns minutos e é feito uma vez. Se tiver um arquivo de configuração de outro computador, carregue-o ou solte-o nesta página.",
  "cal.date_to": "Até (opcional)",
- "cal.any_colour": "Qualquer cor"
+ "cal.any_colour": "Qualquer cor",
+ "cal.search": "Pesquisar",
+ "cal.search_inside": "Pesquisar “{q}” dentro das aulas",
+ "cal.search_label": "Aulas, slides, notas, documentos, unidades",
+ "cal.search_two": "Digite pelo menos duas letras.",
+ "cal.search_none": "Nada encontrado para “{q}”.",
+ "cal.search_n": {
+  "one": "{n} encontrado",
+  "other": "{n} encontrados"
+ },
+ "cal.search_first": "Mostrando os primeiros {n}.",
+ "cal.search_slide": "{title}, slide {n}",
+ "cal.search_nb": "{title}, caderno",
+ "cal.search_in": "Em “{title}”",
+ "cal.search_no_class": "Sem turma"
 }

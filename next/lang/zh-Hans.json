@@ -6669,5 +6669,19 @@
  "cal.type_classes": "输入我的班级",
  "cal.no_timetable_text": "知道班级何时上课后，课就会排到对应的班级。输入班级和上课时间只要几分钟，做一次就好。如果你有另一台电脑的设置文件，可以载入或拖到这个页面上。",
  "cal.date_to": "到（选填）",
- "cal.any_colour": "任意颜色"
+ "cal.any_colour": "任意颜色",
+ "cal.search": "搜索",
+ "cal.search_inside": "在课程内搜索“{q}”",
+ "cal.search_label": "课程、幻灯片、备注、文档、单元",
+ "cal.search_two": "请至少输入两个字。",
+ "cal.search_none": "找不到“{q}”。",
+ "cal.search_n": {
+  "one": "找到 {n} 条",
+  "other": "找到 {n} 条"
+ },
+ "cal.search_first": "只显示前 {n} 条。",
+ "cal.search_slide": "{title}，第 {n} 张幻灯片",
+ "cal.search_nb": "{title}，笔记本",
+ "cal.search_in": "在“{title}”中",
+ "cal.search_no_class": "不在任何班级"
 }

@@ -30,8 +30,9 @@ test('E2-061 E2-062 E2-063 E2-105 E2-095: Library > Units makes a unit and opens
   await h.open(p, 'home');
   await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
   await p.waitForSelector('dialog.cmd[open] input');
-  await p.keyboard.type('Stories');
-  await until(p, () => [...document.querySelectorAll('dialog.cmd [role="option"]')].some(o => o.textContent.includes('Unit 1: Stories')));
+  // (a made-up assignment's name has "stories" in it too: the unit's own words pick it)
+  await p.keyboard.type('Unit 1 Stories');
+  await until(p, () => { const o = document.querySelector('dialog.cmd [role="option"][aria-selected="true"]'); return o && o.textContent === 'Unit 1: Stories'; });
   await p.keyboard.press('Enter');
   await until(p, () => /^#\/class\//.test(location.hash) && document.querySelector('#h-unit') && document.querySelector('#h-unit').textContent === 'Unit 1: Stories');
   assert.deepEqual(p.errors, []); await p.ctx.close();

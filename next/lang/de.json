@@ -6640,5 +6640,19 @@
  "cal.type_classes": "Meine Klassen eingeben",
  "cal.no_timetable_text": "Stunden ordnen sich Ihren Klassen zu, sobald die App weiß, wann sie stattfinden. Geben Sie Ihre Klassen und Zeiten ein; das dauert ein paar Minuten und ist einmalig. Haben Sie eine Einrichtungsdatei von einem anderen Computer, laden Sie sie oder ziehen Sie sie auf diese Seite.",
  "cal.date_to": "Bis (optional)",
- "cal.any_colour": "Beliebige Farbe"
+ "cal.any_colour": "Beliebige Farbe",
+ "cal.search": "Suchen",
+ "cal.search_inside": "In den Stunden nach „{q}“ suchen",
+ "cal.search_label": "Stunden, Folien, Notizen, Dokumente, Einheiten",
+ "cal.search_two": "Geben Sie mindestens zwei Buchstaben ein.",
+ "cal.search_none": "Nichts gefunden für „{q}“.",
+ "cal.search_n": {
+  "one": "{n} gefunden",
+  "other": "{n} gefunden"
+ },
+ "cal.search_first": "Die ersten {n} werden gezeigt.",
+ "cal.search_slide": "{title}, Folie {n}",
+ "cal.search_nb": "{title}, Notizbuch",
+ "cal.search_in": "In „{title}“",
+ "cal.search_no_class": "Keiner Klasse zugeordnet"
 }

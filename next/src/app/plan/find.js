@@ -1,5 +1,5 @@
 // The Planner's own commands in the command bar (src/planner/rail.js findRows): loaded the first time the bar opens. A lesson
-// on no class or day, every lesson in one list, the Semester view, each unit.
+// on no class or day, every lesson in one list, the Semester view, each unit, and searching inside lessons.
 import { addCommand } from '../../services/commands.js';
 import { t } from '../../i18n/t.js';
 import { go, PARTS } from '../router.js';
@@ -19,5 +19,7 @@ export function addPlanCommands() {
   addCommand({ id: 'plan-loose', label: () => t('cal.new_loose'), group: t('cmd.group_do'), icon: 'plus', run: () => Promise.all([loadPlan(), PARTS.calx()]).then(([p, m]) => m.newLoose(p)).catch(e => console.error(e)) });
   addCommand({ id: 'plan-import', label: () => t('plan.import_lesson'), also: t('cal.import_sub'), group: t('cmd.group_do'), icon: 'upload', run: () => go('calendar', 'import') });
   addCommand({ id: 'plan-sem', label: () => t('cal.sem'), group: t('cmd.group_go'), icon: 'cal', run: () => go('calendar', 'semester') });
+  // Search inside lessons for "…" (src/planner/rail.js, extras.js findDlg): slides, notes, documents and units, in Library > Search
+  addCommand({ id: 'plan-search', query: true, label: q => t('cal.search_inside', { q }), group: t('cal.search'), icon: 'search', run: q => go('library', 'search', q) });
   addCommand({ id: 'plan-all', label: () => t('cal.all_lessons'), group: t('cmd.group_go'), icon: 'slides', run: () => go('calendar', 'all') });
 }

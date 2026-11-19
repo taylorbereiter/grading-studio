@@ -6583,5 +6583,19 @@
  "cal.type_classes": "Saisir mes classes",
  "cal.no_timetable_text": "Les leçons se placent dans vos classes dès que l’app sait quand elles ont lieu. Saisissez vos classes et leurs horaires : quelques minutes, une seule fois. Si vous avez un fichier de configuration d’un autre ordinateur, chargez-le ou déposez-le sur cette page.",
  "cal.date_to": "Jusqu’au (facultatif)",
- "cal.any_colour": "N’importe quelle couleur"
+ "cal.any_colour": "N’importe quelle couleur",
+ "cal.search": "Rechercher",
+ "cal.search_inside": "Rechercher « {q} » dans les leçons",
+ "cal.search_label": "Leçons, diapositives, notes, documents, unités",
+ "cal.search_two": "Tapez au moins deux lettres.",
+ "cal.search_none": "Rien trouvé pour « {q} ».",
+ "cal.search_n": {
+  "one": "{n} trouvé",
+  "other": "{n} trouvés"
+ },
+ "cal.search_first": "Les {n} premiers sont affichés.",
+ "cal.search_slide": "{title}, diapositive {n}",
+ "cal.search_nb": "{title}, carnet",
+ "cal.search_in": "Dans « {title} »",
+ "cal.search_no_class": "Sur aucune classe"
 }

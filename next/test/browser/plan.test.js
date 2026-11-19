@@ -175,7 +175,7 @@ test('every word on the planning screens comes through t() or is the teacher’s
   const counts = {};
   for (const w of [1366, 390]) {
     const p = await fresh(w);
-    for (const hash of [...SCREENS, 'settings/timetable']) {
+    for (const hash of [...SCREENS, 'settings/timetable', 'library/search/poem']) {
       await open(p, hash, true);
       const loose = await p.evaluate(() => {
         const bad = [], ok = s => !/[A-Za-z]/.test(s.replace(/⟦[^⟧]*⟧/g, ''));

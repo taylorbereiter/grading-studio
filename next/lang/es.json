@@ -6662,5 +6662,19 @@
  "cal.type_classes": "Escribir mis clases",
  "cal.no_timetable_text": "Las lecciones se colocan en tus clases cuando la app sabe cuándo se reúnen. Escribe tus clases y sus horas: lleva unos minutos y se hace una vez. Si tienes un archivo de configuración de otro ordenador, cárgalo o suéltalo en esta página.",
  "cal.date_to": "Hasta (opcional)",
- "cal.any_colour": "Cualquier color"
+ "cal.any_colour": "Cualquier color",
+ "cal.search": "Buscar",
+ "cal.search_inside": "Buscar «{q}» dentro de las lecciones",
+ "cal.search_label": "Lecciones, diapositivas, notas, documentos, unidades",
+ "cal.search_two": "Escribe al menos dos letras.",
+ "cal.search_none": "No se encontró nada para «{q}».",
+ "cal.search_n": {
+  "one": "{n} encontrado",
+  "other": "{n} encontrados"
+ },
+ "cal.search_first": "Se muestran los primeros {n}.",
+ "cal.search_slide": "{title}, diapositiva {n}",
+ "cal.search_nb": "{title}, cuaderno",
+ "cal.search_in": "En «{title}»",
+ "cal.search_no_class": "Sin clase"
 }

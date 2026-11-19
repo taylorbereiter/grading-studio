@@ -6669,5 +6669,19 @@
  "cal.type_classes": "クラスを入力する",
  "cal.no_timetable_text": "クラスの時間がわかると、授業がそれぞれのクラスに並びます。クラスと時間の入力は数分で、一度だけです。別のパソコンの設定ファイルがあれば、読み込むかこのページにドロップしてください。",
  "cal.date_to": "終了日（任意）",
- "cal.any_colour": "好きな色"
+ "cal.any_colour": "好きな色",
+ "cal.search": "検索",
+ "cal.search_inside": "授業の中から「{q}」を検索",
+ "cal.search_label": "授業、スライド、メモ、文書、単元",
+ "cal.search_two": "2文字以上入力してください。",
+ "cal.search_none": "「{q}」は見つかりませんでした。",
+ "cal.search_n": {
+  "one": "{n} 件見つかりました",
+  "other": "{n} 件見つかりました"
+ },
+ "cal.search_first": "最初の {n} 件を表示しています。",
+ "cal.search_slide": "{title}、スライド {n}",
+ "cal.search_nb": "{title}、ノート",
+ "cal.search_in": "「{title}」内",
+ "cal.search_no_class": "クラスなし"
 }
