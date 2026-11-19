@@ -4,7 +4,7 @@
 // are parts of their own (app/class/), loaded with the gradebook's engine when opened; To do keeps the "not built yet" state until
 // its part comes. #/class/new is a new class: its name and roster.
 import { h, Fragment } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { Tabs, Icon, EmptyState, Progress, Button, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { href, go, PARTS } from '../router.js';
@@ -15,6 +15,7 @@ import { engine } from '../../planning/engine.js';
 import { lessonsOn, stateOf, arrived, STATE_LINE, periods, dayOff, today, plus, at, mondayOf, weekDays, newLesson } from '../plan/lessons.js';
 import { saveFailed } from '../plan/save.js';
 import Later from './later.jsx';
+import { goNew } from '../old-routes.js';
 import { UnitSheet } from '../plan/unit-edit.jsx';
 import { usePart } from '../parts.js';
 import '../plan/lines.js';
@@ -116,6 +117,8 @@ export default function ClassPage({ route, classes }) {
   const lib = (classes || []).filter(x => !x.loose);
   const x = (classes || []).find(k => (k.id || '-') === route.params.id);
   const tab = TABS.includes(route.params.tab) ? route.params.tab : 'course';
+  // a tab of the previous version's class page (#/class/<id>/gradebook…): the new tab with that work (old-routes.js)
+  useEffect(() => { if (route.params.tab && !TABS.includes(route.params.tab)) goNew(); }, [route.path]);
   const [pk, setPk] = useState(false), Pk = usePart('picker', pk), Cl = usePart('clink', !!x && !x.loose);
   const Work = usePart('work', tab === 'work'), People = usePart('people', tab === 'people' || route.params.id === 'new'), Grades = usePart('grades', tab === 'grades'), Todo = usePart('ctodo', tab === 'todo');
   if (route.params.id === 'new') return <div class="page classpage"><header class="ph"><h1>{t('nav.add_class')}</h1></header>
