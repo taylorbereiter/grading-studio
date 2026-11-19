@@ -64,7 +64,7 @@ export async function shareSave(p, l) {
   toast(t('tool.share_saved', { name, size: size(u8.length) }), { ms: 6000 });
 }
 // A lesson file opened: always a lesson of its own (a copy when this lesson is already here), on slot when one is given.
-async function shareOpen(p, file, slot) {
+export async function shareOpen(p, file, slot) {
   const E = engine(p);
   let z, j;
   try { z = fflate.unzipSync(new Uint8Array(await file.arrayBuffer())); } catch { return toast(t('tool.not_opened')); }
@@ -92,7 +92,7 @@ async function shareOpen(p, file, slot) {
   return n;
 }
 // A .lesson.json from the assistant, or one pasted: the same id replaces the lesson here (its versions keep the one before).
-async function importText(p, text, slot) {
+export async function importText(p, text, slot) {
   const E = engine(p);
   let j; try { j = JSON.parse(String(text).replace(/^\s*```(json)?|```\s*$/g, '')); } catch { toast(t('tool.not_lesson')); return []; }
   const done = [];
@@ -115,7 +115,7 @@ export function ImportSheet({ p, slot, onClose }) {
     if (!f) return; setBusy(true);
     try {
       if (/\.gslesson$/i.test(f.name)) { const n = await shareOpen(p, f, slot); after(n ? [n] : null); }
-      else if (/\.zip$/i.test(f.name)) toast(t('tool.zip_in_library'));
+      else if (/\.zip$/i.test(f.name)) { await (await PARTS.packs()).packImport(p, f); onClose(); }
       else after(await importText(p, await f.text(), slot));
     } catch (e) { saveFailed(e); } finally { setBusy(false); }
   };
@@ -124,7 +124,7 @@ export function ImportSheet({ p, slot, onClose }) {
     footer={<><span class="grow" /><Button variant="quiet" onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" disabled={busy || !text.trim()} onClick={pasted} data-focus="import-paste">{t('tool.import_pasted')}</Button></>}>
     <div class="actedit" ref={box}>
       <p class="mute">{t('tool.import_text')}</p>
-      <label class="btn"><Icon name="upload" />{t('tool.choose_file')}<input type="file" class="vh" accept=".gslesson,.json,application/json" onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; file(f); }} data-import /></label><DriveButton />
+      <label class="btn"><Icon name="upload" />{t('tool.choose_file')}<input type="file" class="vh" accept=".gslesson,.json,.zip" onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; file(f); }} data-import /></label><DriveButton />
       <label class="fld"><span class="lab">{t('tool.or_paste')}</span><textarea rows={8} value={text} onInput={e => setText(e.currentTarget.value)} data-focus="import-text" /></label>
     </div>
   </Sheet>;

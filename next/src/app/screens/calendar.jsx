@@ -224,7 +224,7 @@ export default function Calendar({ route }) {
   // plan/<class>/<day> (the old planner.html#plan/<class>/<day>, from Home and the focus timer): that meeting's lesson, opened or
   // made, with a focus session on it (src/planner/rail.js).
   const { cls, day } = route.params, list = route.params.view;
-  useEffect(() => { if (list === 'all' || list === 'loose') setTool({ name: 'all', loose: list === 'loose' }); }, [list]);
+  useEffect(() => { if (list === 'all' || list === 'loose') setTool({ name: 'all', loose: list === 'loose' }); else if (list === 'import') setTool({ name: 'import' }); }, [list]);
   useEffect(() => {
     if (!p || !cls || !day) return;
     const l = lessonsOn(p, cls, day)[0];
@@ -277,6 +277,7 @@ export default function Calendar({ route }) {
       <Menu label={t('plan.week_menu')} items={[{ id: 'week', label: t('plan.week_with', { name: ai }), icon: 'assist', onSelect: () => setTool({ name: 'week' }) },
         { id: 'all', label: t('cal.all_lessons'), icon: 'slides', onSelect: () => setTool({ name: 'all' }) },
         { id: 'loose', label: t('cal.new_loose'), icon: 'plus', onSelect: () => PARTS.calx().then(m => m.newLoose(p)) },
+        { id: 'import', label: t('plan.import_lesson'), sub: t('cal.import_sub'), icon: 'upload', onSelect: () => setTool({ name: 'import' }) },
         { id: 'print', label: t('plan.print_week'), icon: 'file', onSelect: () => printWeek(p, mondayOf(p, anchor)) },
         { id: 'download', label: t('plan.download_week'), icon: 'download', onSelect: () => PARTS.tools().then(m => m.downloadWeek(p, mondayOf(p, anchor))).catch(e => console.error(e)) },
         { sep: true }, ...units.map(({ co, u }) => u ? { id: 'u' + u.id, label: t('cal.open_unit', { title: u.title }), sub: co, icon: 'cal', onSelect: () => setTool({ name: 'unit', u }) }
@@ -290,6 +291,6 @@ export default function Calendar({ route }) {
     {tool && tool.name === 'copy' && X && <X.CopyTo p={p} l={tool.l} onClose={close} />}
     {tool && tool.name === 'link' && X && <X.LinkDialog p={p} c={tool.c} onClose={close} />}
     {tool && tool.name === 'unit' && X && <X.UnitSheet p={p} unit={tool.u} courses={[...new Set(p.setup.classes.map(c => c.course || c.name))]} onClose={close} />}
-    {tool && tool.name === 'import' && Tools && <Tools.ImportSheet p={p} slot={{ classId: tool.c.id, date: tool.day }} onClose={close} />}
+    {tool && tool.name === 'import' && Tools && <Tools.ImportSheet p={p} slot={tool.c ? { classId: tool.c.id, date: tool.day } : null} onClose={() => { close(); if (list === 'import') go('calendar', keep('view') || 'class'); }} />}
   </div>;
 }

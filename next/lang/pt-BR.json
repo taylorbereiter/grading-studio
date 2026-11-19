@@ -6104,7 +6104,6 @@
  "tool.no_lesson_found": "Nenhuma aula encontrada aí.",
  "tool.imported": "\"{title}\" importada.",
  "tool.imported_n": "{n} aulas importadas.",
- "tool.zip_in_library": "Um pacote de aulas (.zip) vai em Biblioteca, Aulas anteriores.",
  "tool.import_title": "Importar uma aula",
  "tool.import_text": "Escolha um arquivo de aula (.gslesson, de outro computador ou de outro professor) ou um .lesson.json do seu assistente, ou cole uma aula abaixo. Um arquivo de aula nunca substitui uma aula que você tem; um .lesson.json com a mesma aula a substitui, e a anterior fica guardada em Versões.",
  "tool.choose_file": "Escolher um arquivo",
@@ -6585,5 +6584,33 @@
  "cal.open_link": "Abrir",
  "cal.unit_lessons": "Aulas desta unidade",
  "cal.open_bank": "Abrir o banco de rubricas",
- "cal.bk_new": "Nova rubrica ou escala"
+ "cal.bk_new": "Nova rubrica ou escala",
+ "cal.pack_opening": "Abrindo {name}…",
+ "cal.zip_bad": "Não foi possível abrir esse .zip",
+ "cal.pack_bad": "Esse .zip não é um pacote de aulas",
+ "cal.pack_lessons": {
+  "one": "{n} aula adicionada a Aulas anteriores.",
+  "other": "{n} aulas adicionadas a Aulas anteriores."
+ },
+ "cal.pack_none": "Nenhuma aula nova: todas já estão aqui.",
+ "cal.pack_files": {
+  "one": "{n} arquivo veio junto.",
+  "other": "{n} arquivos vieram junto."
+ },
+ "cal.pack_links": {
+  "one": "{n} link de plano de unidade preenchido.",
+  "other": "{n} links de plano de unidade preenchidos."
+ },
+ "cal.pack_skipped": {
+  "one": "{n} já estava aqui.",
+  "other": "{n} já estavam aqui."
+ },
+ "cal.pack_see": "Ver",
+ "cal.import_pack": "Importar um pacote de aulas…",
+ "cal.past_packs_text": "Apresentações antigas e seus materiais também aparecem aqui depois que você importa um pacote de aulas (um .zip feito para o Planejador).",
+ "cal.open_file": "Abrir {name}",
+ "cal.n_more": "+{n} mais",
+ "cal.from_pack": "De um pacote de aulas",
+ "cal.file_missing": "Esse arquivo não está mais aqui.",
+ "cal.import_sub": "Um arquivo de aula, um pacote de aulas ou texto colado"
 }

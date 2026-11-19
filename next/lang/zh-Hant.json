@@ -6130,7 +6130,6 @@
  "tool.no_lesson_found": "裡面找不到課程。",
  "tool.imported": "已匯入「{title}」。",
  "tool.imported_n": "已匯入 {n} 堂課。",
- "tool.zip_in_library": "課程包（.zip）請放在「資料庫」的「過去的課程」。",
  "tool.import_title": "匯入課程",
  "tool.import_text": "選擇課程檔案（.gslesson，來自另一台電腦或另一位老師）或助理產生的 .lesson.json，或在下方貼上課程。課程檔案絕不會取代你現有的課程；同一堂課的 .lesson.json 會取代它，之前的版本會保留在「版本」中。",
  "tool.choose_file": "選擇檔案",
@@ -6613,5 +6612,33 @@
  "cal.open_link": "打開",
  "cal.unit_lessons": "這個單元的課堂",
  "cal.open_bank": "打開評分規準庫",
- "cal.bk_new": "新增評分規準或量表"
+ "cal.bk_new": "新增評分規準或量表",
+ "cal.pack_opening": "正在打開 {name}…",
+ "cal.zip_bad": "無法打開這個 .zip",
+ "cal.pack_bad": "這個 .zip 不是課堂包",
+ "cal.pack_lessons": {
+  "one": "已將 {n} 節課加入過去的課程。",
+  "other": "已將 {n} 節課加入過去的課程。"
+ },
+ "cal.pack_none": "沒有新的課堂：都已經在這裡了。",
+ "cal.pack_files": {
+  "one": "附帶了 {n} 個檔案。",
+  "other": "附帶了 {n} 個檔案。"
+ },
+ "cal.pack_links": {
+  "one": "補上了 {n} 個單元計畫連結。",
+  "other": "補上了 {n} 個單元計畫連結。"
+ },
+ "cal.pack_skipped": {
+  "one": "有 {n} 節原本就在。",
+  "other": "有 {n} 節原本就在。"
+ },
+ "cal.pack_see": "查看",
+ "cal.import_pack": "匯入課堂包…",
+ "cal.past_packs_text": "匯入課堂包（為備課工具做的 .zip）後，舊的簡報和講義也會顯示在這裡。",
+ "cal.open_file": "打開 {name}",
+ "cal.n_more": "+{n} 個",
+ "cal.from_pack": "來自課堂包",
+ "cal.file_missing": "這個檔案已經不在了。",
+ "cal.import_sub": "課堂檔案、課堂包或貼上的文字"
 }

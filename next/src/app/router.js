@@ -55,6 +55,8 @@ export const PARTS = {
   planFind: () => import('./plan/find.js'),
   // the Semester view, and the classes coming up without a lesson (plan/semester.jsx)
   sem: () => import('./plan/semester.jsx'),
+  // lesson packs, and lesson files dropped anywhere (plan/packs.js)
+  packs: () => import('./plan/packs.js'),
   unit: () => import('./plan/unit-tools.jsx'),
   marking: () => import('./screens/mark-tools.jsx'),
   // Grades, Insights and Return (the screen part), and what they run: the export engine with pdf-lib and fflate, loaded on their

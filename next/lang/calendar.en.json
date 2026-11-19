@@ -63,5 +63,33 @@
  "cal.open_link": "Open",
  "cal.unit_lessons": "Lessons for this unit",
  "cal.open_bank": "Open the rubric bank",
- "cal.bk_new": "New rubric or scale"
+ "cal.bk_new": "New rubric or scale",
+ "cal.pack_opening": "Opening {name}…",
+ "cal.zip_bad": "That .zip couldn’t be opened",
+ "cal.pack_bad": "That .zip isn’t a lesson pack",
+ "cal.pack_lessons": {
+  "one": "{n} lesson added to Past lessons.",
+  "other": "{n} lessons added to Past lessons."
+ },
+ "cal.pack_none": "No new lessons: they are all here already.",
+ "cal.pack_files": {
+  "one": "{n} file came with them.",
+  "other": "{n} files came with them."
+ },
+ "cal.pack_links": {
+  "one": "{n} unit plan link filled in.",
+  "other": "{n} unit plan links filled in."
+ },
+ "cal.pack_skipped": {
+  "one": "{n} was here already.",
+  "other": "{n} were here already."
+ },
+ "cal.pack_see": "Show them",
+ "cal.import_pack": "Import a lesson pack…",
+ "cal.past_packs_text": "Old decks and their handouts show here too once you import a lesson pack (a .zip made for the Planner).",
+ "cal.open_file": "Open {name}",
+ "cal.n_more": "+{n} more",
+ "cal.from_pack": "From a lesson pack",
+ "cal.file_missing": "That file isn’t here any more.",
+ "cal.import_sub": "A lesson file, a lesson pack, or pasted text"
 }

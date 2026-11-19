@@ -6130,7 +6130,6 @@
  "tool.no_lesson_found": "授業が見つかりませんでした。",
  "tool.imported": "「{title}」を取り込みました。",
  "tool.imported_n": "{n} 件の授業を取り込みました。",
- "tool.zip_in_library": "授業パック（.zip）は「ライブラリ」の「過去の授業」に入れてください。",
  "tool.import_title": "授業を取り込む",
  "tool.import_text": "授業ファイル（.gslesson：別のパソコンや別の先生から）またはアシスタントの .lesson.json を選ぶか、下に授業を貼り付けてください。授業ファイルが既存の授業を置き換えることはありません。同じ授業の .lesson.json は置き換え、前のものは「バージョン」に残ります。",
  "tool.choose_file": "ファイルを選択",
@@ -6613,5 +6612,33 @@
  "cal.open_link": "開く",
  "cal.unit_lessons": "この単元の授業",
  "cal.open_bank": "ルーブリックバンクを開く",
- "cal.bk_new": "新しいルーブリックまたは尺度"
+ "cal.bk_new": "新しいルーブリックまたは尺度",
+ "cal.pack_opening": "{name} を開いています…",
+ "cal.zip_bad": "その .zip を開けませんでした",
+ "cal.pack_bad": "その .zip は授業パックではありません",
+ "cal.pack_lessons": {
+  "one": "{n} 件の授業を過去の授業に追加しました。",
+  "other": "{n} 件の授業を過去の授業に追加しました。"
+ },
+ "cal.pack_none": "新しい授業はありません。すべてすでにあります。",
+ "cal.pack_files": {
+  "one": "ファイル {n} 件も一緒です。",
+  "other": "ファイル {n} 件も一緒です。"
+ },
+ "cal.pack_links": {
+  "one": "単元計画のリンクを {n} 件補いました。",
+  "other": "単元計画のリンクを {n} 件補いました。"
+ },
+ "cal.pack_skipped": {
+  "one": "{n} 件はすでにありました。",
+  "other": "{n} 件はすでにありました。"
+ },
+ "cal.pack_see": "見る",
+ "cal.import_pack": "授業パックを読み込む…",
+ "cal.past_packs_text": "授業パック（プランナー用の .zip）を読み込むと、古いスライドと配布物もここに表示されます。",
+ "cal.open_file": "{name} を開く",
+ "cal.n_more": "+{n} 件",
+ "cal.from_pack": "授業パックから",
+ "cal.file_missing": "そのファイルはもうありません。",
+ "cal.import_sub": "授業ファイル、授業パック、または貼り付けたテキスト"
 }

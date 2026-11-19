@@ -6130,7 +6130,6 @@
  "tool.no_lesson_found": "里面没有找到课程。",
  "tool.imported": "已导入“{title}”。",
  "tool.imported_n": "已导入 {n} 节课。",
- "tool.zip_in_library": "课程包（.zip）请放到“资料库”的“过去的课程”。",
  "tool.import_title": "导入课程",
  "tool.import_text": "选择课程文件（.gslesson，来自另一台电脑或另一位老师）或助手生成的 .lesson.json，或在下方粘贴课程。课程文件绝不会替换你已有的课程；同一节课的 .lesson.json 会替换它，之前的版本保留在“版本”中。",
  "tool.choose_file": "选择文件",
@@ -6613,5 +6612,33 @@
  "cal.open_link": "打开",
  "cal.unit_lessons": "这个单元的课",
  "cal.open_bank": "打开评分标准库",
- "cal.bk_new": "新建评分标准或量表"
+ "cal.bk_new": "新建评分标准或量表",
+ "cal.pack_opening": "正在打开 {name}…",
+ "cal.zip_bad": "无法打开这个 .zip",
+ "cal.pack_bad": "这个 .zip 不是课程包",
+ "cal.pack_lessons": {
+  "one": "已将 {n} 节课加入过去的课程。",
+  "other": "已将 {n} 节课加入过去的课程。"
+ },
+ "cal.pack_none": "没有新的课：都已经在这里了。",
+ "cal.pack_files": {
+  "one": "附带了 {n} 个文件。",
+  "other": "附带了 {n} 个文件。"
+ },
+ "cal.pack_links": {
+  "one": "补上了 {n} 个单元计划链接。",
+  "other": "补上了 {n} 个单元计划链接。"
+ },
+ "cal.pack_skipped": {
+  "one": "有 {n} 节原本就在。",
+  "other": "有 {n} 节原本就在。"
+ },
+ "cal.pack_see": "查看",
+ "cal.import_pack": "导入课程包…",
+ "cal.past_packs_text": "导入课程包（为备课工具做的 .zip）后，旧的演示文稿和讲义也会显示在这里。",
+ "cal.open_file": "打开 {name}",
+ "cal.n_more": "+{n} 个",
+ "cal.from_pack": "来自课程包",
+ "cal.file_missing": "这个文件已经不在了。",
+ "cal.import_sub": "课程文件、课程包或粘贴的文字"
 }

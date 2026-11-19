@@ -24,6 +24,10 @@ loadLanguage().then(() => {
   if (sampleReady()) { startWhole(); render(h(Shell), root); start().then(() => import('./app/plan/pfolder.jsx')).then(m => m.watchPlannerFolder(), e => console.error(e)); startUpdates();
     // A class timer still running from Present (here or in the current Planner) comes back in the corner after a refresh.
     try { if (localStorage.getItem('gsp.presentTimer')) PARTS.ptimer().then(m => m.showFloat(), e => console.error(e)); } catch {}
+    // A lesson file, a .lesson.json or a lesson pack dropped where no box took it (src/planner/lessons.js): it opens or comes in.
+    const lf = e => [...((e.dataTransfer && e.dataTransfer.files) || [])].filter(f => /\.(zip|gslesson|json)$/i.test(f.name));
+    window.addEventListener('dragover', e => { if (!e.defaultPrevented && e.dataTransfer && [...e.dataTransfer.types].includes('Files')) e.preventDefault(); });
+    window.addEventListener('drop', e => { const fs = lf(e); if (e.defaultPrevented || !e.dataTransfer || ![...e.dataTransfer.types].includes('Files')) return; e.preventDefault(); if (fs.length) PARTS.packs().then(m => m.dropped(fs), err => console.error(err)); });
   }
   else {
     render(h('main', { class: 'wrap', role: 'status' }, h('h1', null, t('sample.making')), h('p', null, t('sample.making_text'))), root);

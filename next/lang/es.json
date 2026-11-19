@@ -6124,7 +6124,6 @@
  "tool.no_lesson_found": "No se encontró ninguna lección ahí.",
  "tool.imported": "Se importó \"{title}\".",
  "tool.imported_n": "Se importaron {n} lecciones.",
- "tool.zip_in_library": "Un paquete de lecciones (.zip) va en Biblioteca, Lecciones anteriores.",
  "tool.import_title": "Importar una lección",
  "tool.import_text": "Elige un archivo de lección (.gslesson, de otra computadora o de otro docente) o un .lesson.json de tu asistente, o pega una lección abajo. Un archivo de lección nunca reemplaza una lección que ya tienes; un .lesson.json con la misma lección la reemplaza, y la anterior se guarda en Versiones.",
  "tool.choose_file": "Elegir un archivo",
@@ -6606,5 +6605,33 @@
  "cal.open_link": "Abrir",
  "cal.unit_lessons": "Lecciones de esta unidad",
  "cal.open_bank": "Abrir el banco de rúbricas",
- "cal.bk_new": "Nueva rúbrica o escala"
+ "cal.bk_new": "Nueva rúbrica o escala",
+ "cal.pack_opening": "Abriendo {name}…",
+ "cal.zip_bad": "No se pudo abrir ese .zip",
+ "cal.pack_bad": "Ese .zip no es un paquete de lecciones",
+ "cal.pack_lessons": {
+  "one": "{n} lección añadida a Lecciones anteriores.",
+  "other": "{n} lecciones añadidas a Lecciones anteriores."
+ },
+ "cal.pack_none": "No hay lecciones nuevas: ya están todas aquí.",
+ "cal.pack_files": {
+  "one": "Vino {n} archivo con ellas.",
+  "other": "Vinieron {n} archivos con ellas."
+ },
+ "cal.pack_links": {
+  "one": "Se completó {n} enlace de plan de unidad.",
+  "other": "Se completaron {n} enlaces de plan de unidad."
+ },
+ "cal.pack_skipped": {
+  "one": "{n} ya estaba aquí.",
+  "other": "{n} ya estaban aquí."
+ },
+ "cal.pack_see": "Verlas",
+ "cal.import_pack": "Importar un paquete de lecciones…",
+ "cal.past_packs_text": "Las presentaciones antiguas y sus materiales también aparecen aquí cuando importas un paquete de lecciones (un .zip hecho para el Planificador).",
+ "cal.open_file": "Abrir {name}",
+ "cal.n_more": "+{n} más",
+ "cal.from_pack": "De un paquete de lecciones",
+ "cal.file_missing": "Ese archivo ya no está.",
+ "cal.import_sub": "Un archivo de lección, un paquete de lecciones o texto pegado"
 }

@@ -5,14 +5,14 @@
 // one on its class's Course line. Rubrics shows the bank (kv "bank": rubrics and grading scales, wording only), sorted by unit.
 // The built-in activities are the app's own English text, as in the current Planner; they are shown as written.
 import { h, Fragment } from 'preact';
-import { useState, useId, useEffect } from 'preact/hooks';
+import { useState, useId, useEffect, useRef } from 'preact/hooks';
 import { Tabs, Chip, Button, Checkbox, Select, TextInput, Field, Sheet, EmptyState, Icon, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { href, go, PARTS as PART } from '../router.js';
 import { usePlan } from '../plan.js';
 import { engine } from '../../planning/engine.js';
 import { saveKv, saveLesson } from '../../planning/write.js';
-import { nameKey } from '../../planning/plan.js';
+import { nameKey, plannerKv } from '../../planning/plan.js';
 import { saveFailed } from '../plan/save.js';
 import { today, at, classOf, mondayOf } from '../plan/lessons.js';
 import { ACTIVITIES, BOOK, actVideo, actSlide, normActivity } from '../../engines/activities.js';
@@ -127,18 +127,37 @@ function Activities({ p }) {
 function Past({ p }) {
   const [q, setQ] = useState(''), [cls, setCls] = useState('');
   const now = today(), s = q.trim().toLowerCase();
+  // found by its title, its pack's name and its files' names (src/planner/library.js renderLibrary)
+  const hit = l => !s || [l.title, l.library, ...(l.files || []).map(f => f.name)].join(' ').toLowerCase().includes(s);
   const rows = (p.lessons || []).map(l => ({ l, past: (l.slots || []).filter(x => x.date && x.date < now && (!cls || x.classId === cls)) }))
-    .filter(r => r.past.length && (!s || String(r.l.title || '').toLowerCase().includes(s)))
+    .filter(r => r.past.length && hit(r.l))
     .map(r => ({ ...r, last: r.past.map(x => x.date).sort().pop() })).sort((a, b) => b.last.localeCompare(a.last));
+  // lessons from a lesson pack (l.library), by the pack's name: on no class, so shown here and nowhere else
+  const packs = cls ? [] : [...new Set((p.lessons || []).filter(l => l.library).map(l => l.library))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+    .map(g => ({ g, ls: p.lessons.filter(l => l.library === g && !(l.slots || []).some(x => x.date && x.date < now) && hit(l)).sort((a, b) => String(a.title).localeCompare(String(b.title), undefined, { numeric: true })) })).filter(x => x.ls.length);
   const classes = (p.setup && p.setup.classes) || [];
+  const pick = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = '.zip,application/zip'; i.onchange = () => i.files[0] && PART.packs().then(m => m.packImport(p, i.files[0])).catch(saveFailed); i.click(); };
+  const imp = <Button icon="upload" onClick={pick} data-pack-import>{t('cal.import_pack')}</Button>;
+  const card = (l, sub) => <li><div class="lrow"><a class="main link" href={href('lesson', l.id)}><span class="lead"><Icon name="slides" /></span><span><b data-raw>{l.title}</b><small>{sub}</small></span></a>
+    <span class="end mute">{t('plan.n_slides', { n: (l.slides || []).length })}</span></div>
+    {(l.files || []).length > 0 && <div class="lfiles">{l.files.slice(0, 6).map(f => <button type="button" class="chip" onClick={() => openFile(f)} title={t('cal.open_file', { name: f.name })} data-libf={l.id + '|' + f.id}><Icon name="file" size="xs" /><span data-raw>{f.name.replace(/\.[^.]+$/, '')}</span></button>)}
+      {l.files.length > 6 && <span class="mute">{t('cal.n_more', { n: l.files.length - 6 })}</span>}</div>}</li>;
   return <>
     <div class="libtools"><TextInput label={t('plan.find_lesson')} icon="search" type="search" value={q} onInput={setQ} data-focus="find-lesson" />
-      <Select label={t('plan.class')} value={cls} options={[{ value: '', label: t('plan.all_classes') }, ...classes.map(c => ({ value: c.id, label: c.name }))]} onChange={setCls} data-raw /></div>
-    {rows.length ? <ul class="list">{rows.map(({ l, past }) => <li><a class="lrow" href={href('lesson', l.id)}><span class="lead"><Icon name="slides" /></span>
-      <span class="main"><b data-raw>{l.title}</b><small>{t('plan.taught_to', { day: day(past[0].date), classes: [...new Set(past.map(x => (classOf(p, x.classId) || {}).name).filter(Boolean))].join(', ') })}</small></span>
-      <span class="end mute">{t('plan.n_slides', { n: (l.slides || []).length })}</span></a></li>)}</ul>
-      : <EmptyState icon="slides" title={t('plan.no_past')} text={t('plan.no_past_text')} />}
+      <Select label={t('plan.class')} value={cls} options={[{ value: '', label: t('plan.all_classes') }, ...classes.map(c => ({ value: c.id, label: c.name }))]} onChange={setCls} data-raw /><span class="grow" />{imp}</div>
+    {rows.length ? <ul class="list">{rows.map(({ l, past }) => card(l, t('plan.taught_to', { day: day(past[0].date), classes: [...new Set(past.map(x => (classOf(p, x.classId) || {}).name).filter(Boolean))].join(', ') })))}</ul>
+      : !packs.length && <EmptyState icon="slides" title={t('plan.no_past')} text={t('plan.no_past_text') + ' ' + t('cal.past_packs_text')} />}
+    {packs.map(({ g, ls }) => <section class="libsec" data-pack={g}><h2 class="t4"><span data-raw>{g}</span> <span class="mute">{t('cal.n_lessons', { n: ls.length })}</span></h2>
+      <ul class="list">{ls.map(l => card(l, (l.slots || []).length ? (l.slots || []).map(x => ((classOf(p, x.classId) || {}).name || '') + ' ' + day(x.date)).join(', ') : t('cal.from_pack')))}</ul></section>)}
   </>;
+}
+// A lesson's file from a pack: a PDF or picture opens in a new tab, anything else is saved (src/planner/library.js matOpen).
+async function openFile(f) {
+  const b = await plannerKv('file:' + f.id); if (!b) return toast(t('cal.file_missing'));
+  const url = URL.createObjectURL(/pdf/.test(b.type || '') || /\.pdf$/i.test(f.name) ? new Blob([b], { type: 'application/pdf' }) : b);
+  if (/pdf|^image\//.test(b.type || '') || /\.pdf$/i.test(f.name)) window.open(url, '_blank', 'noopener');
+  else { const a = document.createElement('a'); a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); }
+  setTimeout(() => URL.revokeObjectURL(url), 120000);
 }
 
 // ---------- Units ----------
@@ -155,7 +174,9 @@ function Units({ p, classes, sub }) {
   const lineFor = course => { for (const x of classes || []) { if (x.loose) continue; const c = tt.find(k => nameKey(k.name) === nameKey(x.name)); if (c && c.course === course) return { x, c }; } return null; };
   const toLine = (u, to) => { try { sessionStorage.setItem('gsn.class.unit:' + to.c.id, JSON.stringify(u.id)); } catch {} };
   // library/units/<unit id> (a unit from the command bar): its Course line, or the sheet
-  useEffect(() => { const u = sub && (p.units || []).find(x => x.id === sub); if (!u) return; const to = lineFor(u.course); if (to) { toLine(u, to); location.replace(href('class', to.x.id || '-')); } else { open(u); history.replaceState(null, '', href('library', 'units')); } }, [sub]);
+  // (only once the classes are read: before that no Course line can be found)
+  const did = useRef('');
+  useEffect(() => { const u = sub && (p.units || []).find(x => x.id === sub); if (!u || !classes || did.current === sub) return; did.current = sub; const to = lineFor(u.course); if (to) { toLine(u, to); location.replace(href('class', to.x.id || '-')); } else { open(u); history.replaceState(null, '', href('library', 'units')); } }, [sub, classes]);
   if (!courses.length) return <><EmptyState icon="cal" title={t('plan.no_units')} text={t('cal.units_text')} action={add} />{sheet}</>;
   return <>{add && <div class="row libtop"><span class="grow" />{add}</div>}{sheet}{courses.map(course => { const to = lineFor(course), us = p.units.filter(u => u.course === course && u.start).sort((a, b) => a.start.localeCompare(b.start));
     return <section class="libsec"><h2 class="t4" data-raw>{course}</h2>

@@ -6109,7 +6109,6 @@
  "tool.no_lesson_found": "Darin wurde keine Stunde gefunden.",
  "tool.imported": "„{title}“ importiert.",
  "tool.imported_n": "{n} Stunden importiert.",
- "tool.zip_in_library": "Ein Stundenpaket (.zip) gehört in Bibliothek, Frühere Stunden.",
  "tool.import_title": "Stunde importieren",
  "tool.import_text": "Wählen Sie eine Stundendatei (.gslesson, von einem anderen Computer oder einer anderen Lehrkraft) oder eine .lesson.json von Ihrem Assistenten, oder fügen Sie unten eine Stunde ein. Eine Stundendatei ersetzt nie eine vorhandene Stunde; eine .lesson.json mit derselben Stunde ersetzt sie, und die vorherige bleibt unter Versionen erhalten.",
  "tool.choose_file": "Datei wählen",
@@ -6584,5 +6583,33 @@
  "cal.open_link": "Öffnen",
  "cal.unit_lessons": "Stunden dieser Einheit",
  "cal.open_bank": "Raster-Sammlung öffnen",
- "cal.bk_new": "Neues Raster oder neue Skala"
+ "cal.bk_new": "Neues Raster oder neue Skala",
+ "cal.pack_opening": "{name} wird geöffnet…",
+ "cal.zip_bad": "Diese .zip ließ sich nicht öffnen",
+ "cal.pack_bad": "Diese .zip ist kein Stundenpaket",
+ "cal.pack_lessons": {
+  "one": "{n} Stunde zu Frühere Stunden hinzugefügt.",
+  "other": "{n} Stunden zu Frühere Stunden hinzugefügt."
+ },
+ "cal.pack_none": "Keine neuen Stunden: Sie sind alle schon da.",
+ "cal.pack_files": {
+  "one": "{n} Datei kam mit.",
+  "other": "{n} Dateien kamen mit."
+ },
+ "cal.pack_links": {
+  "one": "{n} Link zum Einheitenplan ergänzt.",
+  "other": "{n} Links zum Einheitenplan ergänzt."
+ },
+ "cal.pack_skipped": {
+  "one": "{n} war schon da.",
+  "other": "{n} waren schon da."
+ },
+ "cal.pack_see": "Anzeigen",
+ "cal.import_pack": "Stundenpaket importieren…",
+ "cal.past_packs_text": "Alte Präsentationen und ihre Arbeitsblätter erscheinen auch hier, sobald Sie ein Stundenpaket importieren (eine .zip für den Planer).",
+ "cal.open_file": "{name} öffnen",
+ "cal.n_more": "+{n} weitere",
+ "cal.from_pack": "Aus einem Stundenpaket",
+ "cal.file_missing": "Diese Datei ist nicht mehr da.",
+ "cal.import_sub": "Eine Stundendatei, ein Stundenpaket oder eingefügter Text"
 }
