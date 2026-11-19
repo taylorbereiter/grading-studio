@@ -52,9 +52,10 @@ export function asgTime(E, id) {
 function DueWeek({ due, except }) {
   const [E, setE] = useState(null);
   useEffect(() => { timing().then(setE, e => console.error(e)); }, []);
-  if (!E || !/^\d{4}-\d\d-\d\d$/.test(due || '')) return null;
+  if (!/^\d{4}-\d\d-\d\d$/.test(due || '')) return null;
+  if (!E) return <p class="mute small asgweek" aria-hidden="true" />;   // its room kept while the timer's log is read, so the buttons below don't move
   const mon = E.fcMon(due), sum = E.gpSum(E.gpDue(mon, E.gpAdd(mon, 6), except));
-  return <p class="mute small" data-asg-week>{!sum.n ? t('class.due_none') : t('class.due_also', { n: sum.n, what: sum.s >= 60 ? t('class.due_about', { time: E.tkDur(sum.s) }) : t('class.due_papers', { n: sum.p }) })}</p>;
+  return <p class="mute small asgweek" data-asg-week>{!sum.n ? t('class.due_none') : t('class.due_also', { n: sum.n, what: sum.s >= 60 ? t('class.due_about', { time: E.tkDur(sum.s) }) : t('class.due_papers', { n: sum.p }) })}</p>;
 }
 
 // New (it null: in classId, in unitId when there is one) or Edit (it: the card). onClose(true) once saved or deleted.

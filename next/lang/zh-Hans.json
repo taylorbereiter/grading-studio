@@ -6542,5 +6542,56 @@
   "one": "里面的 {n} 份作业会一起删除。已保存的批改仍留在这个浏览器里。",
   "other": "里面的 {n} 份作业会一起删除。已保存的批改仍留在这个浏览器里。"
  },
- "plan.no_such_class": "还没有名为“{name}”的班级。在侧栏添加班级即可创建。"
+ "plan.no_such_class": "还没有名为“{name}”的班级。在侧栏添加班级即可创建。",
+ "class.st_by_type": "按类型",
+ "class.st_class_avg": "班级平均 {v}",
+ "class.st_xc": "+{n} 加分",
+ "class.st_no_fb": "尚无反馈",
+ "class.st_not_scored": "尚未评分",
+ "class.st_year": "本学年至今",
+ "class.st_term": "本学期至今",
+ "class.st_against": "与全班相比",
+ "class.st_against_say": "阴影带是全班中间的一半学生，这样能看出某个分数是否异常，还是作业本身就难。",
+ "class.st_rows": "评分量表各行",
+ "class.st_rows_none": "该学生有总结性评估用评分量表评分后，这里就会显示。",
+ "class.st_class_n": "全班 {v}",
+ "class.st_rows_say": "该学生在各次总结性评估中每行评分量表的平均分（满分 {n}）。每条横条上的标记是全班平均。",
+ "class.st_pos": "第 {n} 位，共 {of} 位",
+ "class.st_prev": "上一位学生",
+ "class.st_next": "下一位学生",
+ "class.avg_year": "本学年平均",
+ "class.paste_ids": "粘贴学号和邮箱…",
+ "class.paste_ids_sub": "一次填写多位学生",
+ "class.fill_ids": "填写信息…",
+ "class.fill_ids_sub": "在列表中依次填写学号、邮箱和去年水平",
+ "class.sp_u_add": "为 {name} 添加写法",
+ "class.sp_u_remove": "删除 {name} 的一种写法",
+ "class.sp_remove": "删除 {name}",
+ "class.sp_add": "添加",
+ "class.sp_say": "其他写法和学号用来把文件夹和文件对应到这位学生。",
+ "class.sp_add_t": "{name} 名字的另一种写法",
+ "class.sp_add_ok": "添加",
+ "class.sp_label": "在下载文件、文件夹或学校系统里的写法",
+ "class.paste_ids_u": "粘贴学号和邮箱",
+ "class.paste_ids_t": "粘贴学号和邮箱",
+ "class.paste_ids_none": "没有与名单相符的名字。",
+ "class.paste_ids_some": {
+  "one": "已填写 {n} 位学生。不在名单上：{names}{more}",
+  "other": "已填写 {n} 位学生。不在名单上：{names}{more}"
+ },
+ "class.paste_ids_more": {
+  "one": " 等另外 {n} 位",
+  "other": " 等另外 {n} 位"
+ },
+ "class.paste_ids_done": {
+  "one": "已填写 {n} 位学生。",
+  "other": "已填写 {n} 位学生。"
+ },
+ "class.paste_ids_ok": "填入",
+ "class.paste_ids_say": "粘贴一份含姓名和学号或邮箱列的班级名单（来自学校系统或电子表格）。每一行会填到同名的学生。",
+ "class.paste_ids_ph": "姓名, 学号, 邮箱",
+ "class.fill_bad_email": "这看起来不像邮箱地址。",
+ "class.fill_ids_t": "学生信息：{name}",
+ "class.fill_n": "{of} 位中有 {n} 位有学号",
+ "class.fill_say": "离开每个框时会保存，按 Tab 进入下一个。"
 }

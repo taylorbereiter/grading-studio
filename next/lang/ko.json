@@ -6542,5 +6542,56 @@
   "one": "안에 있는 과제 {n}개도 함께 삭제돼요. 저장된 채점은 이 브라우저에 남아요.",
   "other": "안에 있는 과제 {n}개도 함께 삭제돼요. 저장된 채점은 이 브라우저에 남아요."
  },
- "plan.no_such_class": "‘{name}’(이)라는 반이 아직 없어요. 사이드바에서 반을 추가해 만드세요."
+ "plan.no_such_class": "‘{name}’(이)라는 반이 아직 없어요. 사이드바에서 반을 추가해 만드세요.",
+ "class.st_by_type": "종류별",
+ "class.st_class_avg": "반 평균 {v}",
+ "class.st_xc": "+{n} 추가",
+ "class.st_no_fb": "아직 피드백 없음",
+ "class.st_not_scored": "아직 채점 안 함",
+ "class.st_year": "올해 지금까지",
+ "class.st_term": "이번 학기 지금까지",
+ "class.st_against": "반과 비교",
+ "class.st_against_say": "음영 띠는 반의 가운데 절반이에요. 점수가 특이한지, 과제가 그냥 어려웠는지 알 수 있어요.",
+ "class.st_rows": "루브릭 항목",
+ "class.st_rows_none": "이 학생의 총괄 평가가 루브릭으로 채점되면 나타나요.",
+ "class.st_class_n": "반 {v}",
+ "class.st_rows_say": "총괄 평가에서 루브릭 항목별 평균({n}점 만점). 막대의 표시는 반 평균이에요.",
+ "class.st_pos": "{of}명 중 {n}번째",
+ "class.st_prev": "이전 학생",
+ "class.st_next": "다음 학생",
+ "class.avg_year": "올해 평균",
+ "class.paste_ids": "학번과 이메일 붙여넣기…",
+ "class.paste_ids_sub": "여러 학생을 한 번에 채우기",
+ "class.fill_ids": "정보 입력…",
+ "class.fill_ids_sub": "학번, 이메일, 작년 수준을 목록에서",
+ "class.sp_u_add": "{name}의 다른 표기 추가",
+ "class.sp_u_remove": "{name}의 다른 표기 삭제",
+ "class.sp_remove": "{name} 삭제",
+ "class.sp_add": "추가",
+ "class.sp_say": "다른 표기와 학번으로 폴더와 파일을 이 학생에게 연결해요.",
+ "class.sp_add_t": "{name} 이름의 다른 표기",
+ "class.sp_add_ok": "추가",
+ "class.sp_label": "다운로드, 폴더, 학교 시스템에 적힌 그대로",
+ "class.paste_ids_u": "학번과 이메일 붙여넣기",
+ "class.paste_ids_t": "학번과 이메일 붙여넣기",
+ "class.paste_ids_none": "명단과 일치하는 이름이 없어요.",
+ "class.paste_ids_some": {
+  "one": "{n}명을 채웠어요. 명단에 없음: {names}{more}",
+  "other": "{n}명을 채웠어요. 명단에 없음: {names}{more}"
+ },
+ "class.paste_ids_more": {
+  "one": " 외 {n}명",
+  "other": " 외 {n}명"
+ },
+ "class.paste_ids_done": {
+  "one": "{n}명을 채웠어요.",
+  "other": "{n}명을 채웠어요."
+ },
+ "class.paste_ids_ok": "채우기",
+ "class.paste_ids_say": "학교 시스템이나 스프레드시트에서 이름과 학번 또는 이메일 열이 있는 명단을 붙여넣으세요. 각 줄이 같은 이름의 학생에게 채워져요.",
+ "class.paste_ids_ph": "이름, 학번, 이메일",
+ "class.fill_bad_email": "이메일 주소가 아닌 것 같아요.",
+ "class.fill_ids_t": "학생 정보: {name}",
+ "class.fill_n": "{of}명 중 {n}명 학번 있음",
+ "class.fill_say": "칸을 벗어나면 저장되고, Tab으로 다음 칸으로 가요."
 }

@@ -5,6 +5,7 @@ import { h, Fragment } from 'preact';
 import { useState } from 'preact/hooks';
 import { Sheet } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
+import { href } from '../router.js';
 import { engine as B, classCols } from '../../students/book.js';
 import { roundPct } from '../../engines/gcore.js';
 import { pct } from './grades.jsx';
@@ -49,7 +50,7 @@ export function ChartsSheet({ x, cols, all, term, left, labelOf, onClose }) {
           <thead><tr><th aria-sort={aria('name')}><button type="button" class="colbtn" onClick={() => sortBy('name')}>{t('class.student')}</button></th>
             {heat.map(col => <th aria-sort={aria(col.key)}><button type="button" class="colbtn v" title={col.name} onClick={() => sortBy(col.key)}><span data-raw>{col.name}</span></button></th>)}
             <th aria-sort={aria('grade')}><button type="button" class="colbtn" onClick={() => sortBy('grade')}>{t(term ? 'class.term_grade' : 'class.grade')}</button></th></tr></thead>
-          <tbody>{sorted.map(row => <tr class={left.has(row.n) ? 'out' : ''}><th scope="row" data-raw>{row.n}</th>
+          <tbody>{sorted.map(row => <tr class={left.has(row.n) ? 'out' : ''}><th scope="row"><a class="link" href={href('class', c.id, 'people', row.i + 1)} data-raw data-heat-stu>{row.n}</a></th>
             {heat.map(col => { const cell = col.cells.get(row.n), on = col.type === 'fm' ? !!(cell && cell.fb) : B.bkCounts(cell);
               const say = !cell ? '–' : cell.st === 'missing' ? t('class.missing') : cell.st === 'excused' ? t('class.excused') : col.type === 'fm' ? (cell.fb ? t('class.fb_done') : '–') : cell.pct != null ? cell.pct + '%' : '–';
               return <td title={row.n + ': ' + say} data-raw><span class={'hc' + (cell && cell.st === 'missing' ? ' ms' : '')} style={on ? shade(col.type === 'fm' ? 100 : cell.pct) : undefined} aria-label={say} /></td>; })}

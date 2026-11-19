@@ -6456,5 +6456,56 @@
   "one": "Son devoir part avec elle. Les corrections enregistrées restent dans ce navigateur.",
   "other": "Ses {n} devoirs partent avec elle. Les corrections enregistrées restent dans ce navigateur."
  },
- "plan.no_such_class": "Il n’y a pas encore de classe appelée « {name} ». Ajoute une classe dans la barre latérale pour la créer."
+ "plan.no_such_class": "Il n’y a pas encore de classe appelée « {name} ». Ajoute une classe dans la barre latérale pour la créer.",
+ "class.st_by_type": "Par type",
+ "class.st_class_avg": "moyenne de la classe {v}",
+ "class.st_xc": "+{n} bonus",
+ "class.st_no_fb": "Pas encore de retour",
+ "class.st_not_scored": "Pas encore noté",
+ "class.st_year": "L’année jusqu’ici",
+ "class.st_term": "La période jusqu’ici",
+ "class.st_against": "Par rapport à la classe",
+ "class.st_against_say": "La bande ombrée est la moitié centrale de la classe : on voit ainsi si une note sort de l’ordinaire ou si le devoir était simplement difficile.",
+ "class.st_rows": "Lignes de la grille",
+ "class.st_rows_none": "Ceci s’affiche dès qu’une de ses évaluations sommatives est notée avec une grille.",
+ "class.st_class_n": "classe {v}",
+ "class.st_rows_say": "Sa moyenne sur chaque ligne de la grille dans les évaluations sommatives, sur {n}. Le trait sur chaque barre est la moyenne de la classe.",
+ "class.st_pos": "{n} sur {of}",
+ "class.st_prev": "Élève précédent",
+ "class.st_next": "Élève suivant",
+ "class.avg_year": "Moyenne cette année",
+ "class.paste_ids": "Coller identifiants et e-mails…",
+ "class.paste_ids_sub": "Remplir plusieurs élèves d’un coup",
+ "class.fill_ids": "Remplir les informations…",
+ "class.fill_ids_sub": "Identifiant, e-mail et année précédente, en descendant la liste",
+ "class.sp_u_add": "Ajouter une graphie pour {name}",
+ "class.sp_u_remove": "Retirer une graphie de {name}",
+ "class.sp_remove": "Retirer {name}",
+ "class.sp_add": "Ajouter",
+ "class.sp_say": "Les autres graphies et l’identifiant associent dossiers et fichiers à cet élève.",
+ "class.sp_add_t": "Une autre façon d’écrire le nom de {name}",
+ "class.sp_add_ok": "Ajouter",
+ "class.sp_label": "Tel qu’il est écrit dans un téléchargement, un dossier ou le système de l’école",
+ "class.paste_ids_u": "Coller identifiants et e-mails",
+ "class.paste_ids_t": "Coller identifiants et e-mails",
+ "class.paste_ids_none": "Aucun nom ne correspond à la liste.",
+ "class.paste_ids_some": {
+  "one": "{n} élève rempli. Pas sur la liste : {names}{more}",
+  "other": "{n} élèves remplis. Pas sur la liste : {names}{more}"
+ },
+ "class.paste_ids_more": {
+  "one": " et {n} autre",
+  "other": " et {n} autres"
+ },
+ "class.paste_ids_done": {
+  "one": "{n} élève rempli.",
+  "other": "{n} élèves remplis."
+ },
+ "class.paste_ids_ok": "Remplir",
+ "class.paste_ids_say": "Collez une liste de classe avec les noms et une colonne d’identifiants ou d’e-mails, depuis le système de l’école ou un tableur. Chaque ligne remplit l’élève du même nom.",
+ "class.paste_ids_ph": "Nom, identifiant, e-mail",
+ "class.fill_bad_email": "Cela ne ressemble pas à une adresse e-mail.",
+ "class.fill_ids_t": "Informations des élèves : {name}",
+ "class.fill_n": "{n} sur {of} avec un identifiant",
+ "class.fill_say": "Chaque case est enregistrée quand vous la quittez, et Tab passe à la suivante."
 }

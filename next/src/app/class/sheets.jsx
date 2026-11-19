@@ -105,7 +105,7 @@ function One({ c, all, cols, conf, n, o, rep, period, tm, today, inn }) {
 }
 
 // The student's scores as a line over the class's middle half (src/classpage.js bkBandLine), or the line alone.
-function BandLine({ c, sc, n, band, inn }) {
+export function BandLine({ c, sc, n, band, inn }) {
   const cols = sc.map(col => { const v = c.names.filter(inn).map(k => col.cells.get(k)).filter(B.bkCounts).map(k => k.pct).sort((a, b) => a - b), cell = col.cells.get(n); return { col, v, me: B.bkCounts(cell) ? cell.pct : null, miss: !!cell && cell.st === 'missing' }; }).filter(k => k.v.length || k.miss);
   const qs = cols.map(k => (band && k.v.length ? [q(k.v, 0.25), q(k.v, 0.5), q(k.v, 0.75)] : null)), vals = qs.filter(Boolean).flat().concat(cols.map(k => k.me).filter(v => v != null));
   if (!vals.length) return <p class="mute">{t('class.pss_nothing')}</p>;

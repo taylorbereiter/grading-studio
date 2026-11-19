@@ -1285,5 +1285,56 @@
   "one": "{n} paper",
   "other": "{n} papers"
  },
- "class.gc_zip": "Choose the ZIP…"
+ "class.gc_zip": "Choose the ZIP…",
+ "class.st_by_type": "By type",
+ "class.st_class_avg": "class average {v}",
+ "class.st_xc": "+{n} extra",
+ "class.st_no_fb": "No feedback yet",
+ "class.st_not_scored": "Not scored yet",
+ "class.st_year": "The year so far",
+ "class.st_term": "The term so far",
+ "class.st_against": "Against the class",
+ "class.st_against_say": "The shaded band is the middle half of the class, so it’s clear when a score is unusual and when the assignment was just hard.",
+ "class.st_rows": "Rubric rows",
+ "class.st_rows_none": "This shows once a summative of theirs has been scored with a rubric.",
+ "class.st_class_n": "class {v}",
+ "class.st_rows_say": "Their average on each rubric row across the summatives, out of {n}. The mark on each bar is the class average.",
+ "class.st_pos": "{n} of {of}",
+ "class.st_prev": "Previous student",
+ "class.st_next": "Next student",
+ "class.avg_year": "Average this year",
+ "class.paste_ids": "Paste IDs and emails…",
+ "class.paste_ids_sub": "Fill in many students at once",
+ "class.fill_ids": "Fill in details…",
+ "class.fill_ids_sub": "Student ID, email and last year, down the list",
+ "class.sp_u_add": "Add a spelling for {name}",
+ "class.sp_u_remove": "Remove a spelling for {name}",
+ "class.sp_remove": "Remove {name}",
+ "class.sp_add": "Add",
+ "class.sp_say": "Other spellings and the student ID match folders and files to this student.",
+ "class.sp_add_t": "Another way {name}’s name is written",
+ "class.sp_add_ok": "Add",
+ "class.sp_label": "As it is written in a download, a folder or the school’s system",
+ "class.paste_ids_u": "Paste IDs and emails",
+ "class.paste_ids_t": "Paste IDs and emails",
+ "class.paste_ids_none": "No names matched the roster.",
+ "class.paste_ids_some": {
+  "one": "Filled in {n} student. Not on the roster: {names}{more}",
+  "other": "Filled in {n} students. Not on the roster: {names}{more}"
+ },
+ "class.paste_ids_more": {
+  "one": " and {n} more",
+  "other": " and {n} more"
+ },
+ "class.paste_ids_done": {
+  "one": "Filled in {n} student.",
+  "other": "Filled in {n} students."
+ },
+ "class.paste_ids_ok": "Fill in",
+ "class.paste_ids_say": "Paste a class list with names and a student ID or email column, from the school’s system or a spreadsheet. Each row fills in the student with the same name.",
+ "class.paste_ids_ph": "Name, student ID, email",
+ "class.fill_bad_email": "That doesn’t look like an email address.",
+ "class.fill_ids_t": "Student details: {name}",
+ "class.fill_n": "{n} of {of} with a student ID",
+ "class.fill_say": "Each box is kept when you leave it, and Tab goes on to the next."
 }

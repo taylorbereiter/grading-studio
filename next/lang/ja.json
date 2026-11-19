@@ -6542,5 +6542,56 @@
   "one": "中の {n} 件の課題も一緒に削除されます。保存した採点はこのブラウザに残ります。",
   "other": "中の {n} 件の課題も一緒に削除されます。保存した採点はこのブラウザに残ります。"
  },
- "plan.no_such_class": "「{name}」というクラスはまだありません。サイドバーの「クラスを追加」で作れます。"
+ "plan.no_such_class": "「{name}」というクラスはまだありません。サイドバーの「クラスを追加」で作れます。",
+ "class.st_by_type": "種類別",
+ "class.st_class_avg": "クラス平均 {v}",
+ "class.st_xc": "+{n} 加点",
+ "class.st_no_fb": "まだフィードバックなし",
+ "class.st_not_scored": "まだ採点なし",
+ "class.st_year": "今年のこれまで",
+ "class.st_term": "今学期のこれまで",
+ "class.st_against": "クラスとの比較",
+ "class.st_against_say": "網かけの帯はクラスの中央の半数です。点数が珍しいのか、課題がただ難しかったのかがわかります。",
+ "class.st_rows": "ルーブリックの行",
+ "class.st_rows_none": "この生徒の総括的評価がルーブリックで採点されると表示されます。",
+ "class.st_class_n": "クラス {v}",
+ "class.st_rows_say": "総括的評価でのルーブリック各行の平均（{n} 点満点）。各バーの印はクラス平均です。",
+ "class.st_pos": "{of} 人中 {n} 人目",
+ "class.st_prev": "前の生徒",
+ "class.st_next": "次の生徒",
+ "class.avg_year": "今年の平均",
+ "class.paste_ids": "ID とメールを貼り付け…",
+ "class.paste_ids_sub": "まとめて入力",
+ "class.fill_ids": "詳細を入力…",
+ "class.fill_ids_sub": "学籍番号・メール・昨年度を一覧で",
+ "class.sp_u_add": "{name} の別表記を追加",
+ "class.sp_u_remove": "{name} の別表記を削除",
+ "class.sp_remove": "{name} を削除",
+ "class.sp_add": "追加",
+ "class.sp_say": "別表記と学籍番号で、フォルダやファイルがこの生徒に結びつきます。",
+ "class.sp_add_t": "{name} の名前の別の書き方",
+ "class.sp_add_ok": "追加",
+ "class.sp_label": "ダウンロード、フォルダ、学校のシステムでの書き方",
+ "class.paste_ids_u": "ID とメールを貼り付け",
+ "class.paste_ids_t": "ID とメールを貼り付け",
+ "class.paste_ids_none": "名簿に一致する名前はありませんでした。",
+ "class.paste_ids_some": {
+  "one": "{n} 人を入力しました。名簿にない名前：{names}{more}",
+  "other": "{n} 人を入力しました。名簿にない名前：{names}{more}"
+ },
+ "class.paste_ids_more": {
+  "one": " ほか {n} 人",
+  "other": " ほか {n} 人"
+ },
+ "class.paste_ids_done": {
+  "one": "{n} 人を入力しました。",
+  "other": "{n} 人を入力しました。"
+ },
+ "class.paste_ids_ok": "入力する",
+ "class.paste_ids_say": "学校のシステムや表計算ソフトから、名前と学籍番号またはメールの列があるクラス名簿を貼り付けます。各行が同じ名前の生徒に入ります。",
+ "class.paste_ids_ph": "名前, 学籍番号, メール",
+ "class.fill_bad_email": "メールアドレスではないようです。",
+ "class.fill_ids_t": "生徒の詳細：{name}",
+ "class.fill_n": "{of} 人中 {n} 人に学籍番号",
+ "class.fill_say": "各欄は離れたときに保存され、Tab で次へ進みます。"
 }

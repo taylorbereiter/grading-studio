@@ -191,3 +191,108 @@ test('B-055: Google Classroom\'s step 2 takes the ZIP of student work and opens 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('B-029 B-030 B-032 B-031 B-033 B-034 B-035: a student\'s page for any term or the whole year, previous and next by button and arrow key, by-type bars, every assignment strip, against the class, rubric rows', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const old = await page(ctx, errors);
+  await old.goto(srv.url + 'blank'); await plant(old, seedB());
+  await old.goto(srv.url); await appReady(old);
+  // the rubric rows the current app finds for the second student, across the year's summatives
+  const rowsMain = await old.evaluate(async () => { const g = window.__gs, l = g.state().lib, c = l.classes[0], cols = g.bkClassCols(c, await g.bkLoad()), n = c.names[1];
+    const names = new Set(); for (const p of g.chRowAvgs(c, cols.filter(x => x.termId === 't1'), n)) for (const e of p.by.values()) names.add(e.name); return [...names]; });
+  await old.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/class/c1/people/2');
+  await p.waitForSelector('[data-stu-strip]', { timeout: 60000 });
+  assert.equal(await p.$eval('[data-stu-pos]', e => e.textContent), '2 of 6');
+  // B-030: Next and Previous
+  await p.click('[data-stu-next]'); await p.waitForFunction(() => location.hash === '#/class/c1/people/3');
+  await p.waitForFunction(() => document.querySelector('[data-stu-pos]').textContent === '3 of 6');
+  // B-032: Left and Right, not while typing in a box
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.press('ArrowLeft'); await p.waitForFunction(() => location.hash === '#/class/c1/people/2');
+  await p.focus('[data-roster-find]'); await p.keyboard.press('ArrowRight'); await new Promise(r => setTimeout(r, 300));
+  assert.equal(await p.evaluate(() => location.hash), '#/class/c1/people/2', 'arrow keys in the search box stay there');
+  await p.evaluate(() => document.activeElement.blur());
+  // B-031: each counted type with the class average, and formatives' feedback
+  await p.waitForSelector('[data-stu-type="sum"] em');
+  assert.ok(await p.$('[data-stu-fb]'), 'feedback given on formatives');
+  // B-033: the term's assignments as blocks; B-029: the whole year adds the next term's
+  const strip = () => p.$$eval('[data-stu-strip] .stsi b', a => a.map(e => e.textContent));
+  assert.ok(!(await strip()).includes('Moved quiz'));
+  await p.click('[data-stu-terms] [data-v="*"]');
+  await p.waitForFunction(() => [...document.querySelectorAll('[data-stu-strip] .stsi b')].some(e => e.textContent === 'Moved quiz'));
+  assert.equal(await p.$eval('[data-kpi="avg"] span', e => e.textContent), 'Average this year');
+  await p.click('[data-stu-terms] [data-v="t1"]');
+  await p.waitForFunction(() => ![...document.querySelectorAll('[data-stu-strip] .stsi b')].some(e => e.textContent === 'Moved quiz'));
+  // B-034: the student's line over the class's middle half
+  assert.ok(await p.$('[data-stu-line] svg polygon, [data-stu-line] svg rect.band'), 'the band is drawn');
+  // B-035: the same rubric rows as the current app
+  const rowsNew = await p.$$eval('[data-stu-row]', a => a.map(e => e.getAttribute('data-stu-row')));
+  assert.deepEqual(rowsNew.sort(), rowsMain.sort());
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('B-026 B-027 B-028 B-061 B-062: paste IDs and emails into the roster, type details down the list, add and remove another spelling; the current app reads them', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  const N = (await libOf(p)).classes[0].names;
+  await p.goto(srv.url + 'next/#/class/c1/people/1');
+  await p.waitForSelector('[data-roster-menu]', { timeout: 60000 });
+  // B-026: Paste IDs and emails…; B-027: Cancel leaves everything, Fill in fills those on the roster
+  await menu(p, '[data-roster-menu]', '^Paste IDs and emails');
+  await p.waitForSelector('dialog[open] [data-paste-in]');
+  await p.click('dialog[open] [data-paste-cancel]'); await p.waitForFunction(() => !document.querySelector('dialog[open]'));
+  await menu(p, '[data-roster-menu]', '^Paste IDs and emails');
+  await p.waitForSelector('dialog[open] [data-paste-in]');
+  await p.$eval('dialog[open] [data-paste-in]', (e, v) => { e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); }, [N[0] + ',109001,first@example.org', N[2] + ',109003', 'Zed Nobody,100000,zed@example.org'].join('\n'));
+  await p.click('dialog[open] [data-paste-fill]');
+  await p.waitForFunction(n => { const i = JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {}; return (i[n] || {}).id === '109001'; }, {}, N[0]);
+  await p.waitForFunction(() => /Filled in 2 students\. Not on the roster: Zed Nobody/.test(document.body.textContent), { timeout: 10000 });
+  // B-028: details typed down the list, each kept when the box is left
+  await menu(p, '[data-roster-menu]', '^Fill in details');
+  await p.waitForSelector(`dialog[open] [data-fill="email"][data-fill-who="${N[1]}"]`);
+  await p.type(`dialog[open] [data-fill="id"][data-fill-who="${N[1]}"]`, 'S 9002'); await p.keyboard.press('Tab');
+  await p.keyboard.type('second@example.org'); await p.keyboard.press('Tab');
+  await p.keyboard.type('MYP 3'); await p.keyboard.press('Tab');
+  await p.waitForFunction(n => { const i = (JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}; return i.id === 'S9002' && i.email === 'second@example.org' && i.prev === 'MYP 3'; }, {}, N[1]);
+  await p.click('dialog[open] [data-fill-done]'); await p.waitForFunction(() => !document.querySelector('dialog[open]'));
+  // B-062: another spelling added; B-061: one taken away
+  await p.click('[data-sp-add]'); await p.waitForSelector('dialog[open] [data-sp-input]');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('dialog[open] [data-sp-input], dialog[open] [data-sp-input] input'));
+  await p.keyboard.type('Tess W.'); await p.keyboard.press('Enter');
+  await p.waitForSelector('[data-spelling="Tess W."]');
+  await p.click('[data-sp-add]'); await p.waitForSelector('dialog[open] [data-sp-input]');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('dialog[open] [data-sp-input], dialog[open] [data-sp-input] input'));
+  await p.keyboard.type('T. Testwell'); await p.click('dialog[open] [data-sp-ok]');
+  await p.waitForSelector('[data-spelling="T. Testwell"]');
+  await p.click('[data-spelling="Tess W."] [data-sp-drop]');
+  await p.waitForFunction(n => JSON.stringify(((JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}).other) === '["T. Testwell"]', {}, N[0]);
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const main = await old.evaluate(N => { const c = window.__gs.state().lib.classes[0], i = n => c.info[n] || {}; return [i(N[0]).id, i(N[0]).email, i(N[0]).other, i(N[1]).id, i(N[1]).email, i(N[1]).prev, i(N[2]).id]; }, N);
+  assert.deepEqual(main, ['109001', 'first@example.org', ['T. Testwell'], 'S9002', 'second@example.org', 'MYP 3', '109003']);
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('B-017 B-018: a name in the charts\' every-student table and in the learning goals table opens that student\'s page', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('[data-open-charts]', { timeout: 60000 });
+  await p.click('[data-open-charts]'); await p.waitForSelector('[data-heat-stu]');
+  const name = await p.$eval('[data-heat-stu]', e => e.textContent), href = await p.$eval('[data-heat-stu]', e => e.getAttribute('href'));
+  const N = (await libOf(p)).classes[0].names;
+  assert.equal(href, '#/class/c1/people/' + (N.indexOf(name) + 1));
+  await p.click('[data-heat-stu]');
+  await p.waitForFunction(h => location.hash === h, {}, href);
+  await p.waitForFunction(n => (document.querySelector('#h-stu') || {}).textContent === n, {}, name);
+  assert.equal(await p.$('dialog[open]'), null, 'the sheet closed');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

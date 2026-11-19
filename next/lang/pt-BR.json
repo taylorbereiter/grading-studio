@@ -6514,5 +6514,56 @@
   "one": "A tarefa dela vai junto. As correções salvas ficam neste navegador.",
   "other": "As {n} tarefas dela vão junto. As correções salvas ficam neste navegador."
  },
- "plan.no_such_class": "Ainda não há nenhuma turma chamada “{name}”. Adicione uma turma na barra lateral para criá-la."
+ "plan.no_such_class": "Ainda não há nenhuma turma chamada “{name}”. Adicione uma turma na barra lateral para criá-la.",
+ "class.st_by_type": "Por tipo",
+ "class.st_class_avg": "média da turma {v}",
+ "class.st_xc": "+{n} extra",
+ "class.st_no_fb": "Ainda sem feedback",
+ "class.st_not_scored": "Ainda sem nota",
+ "class.st_year": "O ano até agora",
+ "class.st_term": "O período até agora",
+ "class.st_against": "Em relação à turma",
+ "class.st_against_say": "A faixa sombreada é a metade do meio da turma, assim fica claro quando uma nota é incomum e quando a tarefa foi só difícil.",
+ "class.st_rows": "Linhas da rubrica",
+ "class.st_rows_none": "Aparece quando uma avaliação somativa do aluno for corrigida com rubrica.",
+ "class.st_class_n": "turma {v}",
+ "class.st_rows_say": "A média em cada linha da rubrica nas avaliações somativas, de {n}. A marca em cada barra é a média da turma.",
+ "class.st_pos": "{n} de {of}",
+ "class.st_prev": "Aluno anterior",
+ "class.st_next": "Próximo aluno",
+ "class.avg_year": "Média deste ano",
+ "class.paste_ids": "Colar IDs e e-mails…",
+ "class.paste_ids_sub": "Preencher vários alunos de uma vez",
+ "class.fill_ids": "Preencher dados…",
+ "class.fill_ids_sub": "ID, e-mail e ano anterior, ao longo da lista",
+ "class.sp_u_add": "Adicionar uma grafia para {name}",
+ "class.sp_u_remove": "Remover uma grafia de {name}",
+ "class.sp_remove": "Remover {name}",
+ "class.sp_add": "Adicionar",
+ "class.sp_say": "Outras grafias e o ID ligam pastas e arquivos a este aluno.",
+ "class.sp_add_t": "Outra forma de escrever o nome de {name}",
+ "class.sp_add_ok": "Adicionar",
+ "class.sp_label": "Como aparece em um download, uma pasta ou no sistema da escola",
+ "class.paste_ids_u": "Colar IDs e e-mails",
+ "class.paste_ids_t": "Colar IDs e e-mails",
+ "class.paste_ids_none": "Nenhum nome correspondeu à lista.",
+ "class.paste_ids_some": {
+  "one": "{n} aluno preenchido. Fora da lista: {names}{more}",
+  "other": "{n} alunos preenchidos. Fora da lista: {names}{more}"
+ },
+ "class.paste_ids_more": {
+  "one": " e mais {n}",
+  "other": " e mais {n}"
+ },
+ "class.paste_ids_done": {
+  "one": "{n} aluno preenchido.",
+  "other": "{n} alunos preenchidos."
+ },
+ "class.paste_ids_ok": "Preencher",
+ "class.paste_ids_say": "Cole uma lista da turma com nomes e uma coluna de ID ou e-mail, do sistema da escola ou de uma planilha. Cada linha preenche o aluno com o mesmo nome.",
+ "class.paste_ids_ph": "Nome, ID, e-mail",
+ "class.fill_bad_email": "Isso não parece um endereço de e-mail.",
+ "class.fill_ids_t": "Dados dos alunos: {name}",
+ "class.fill_n": "{n} de {of} com ID",
+ "class.fill_say": "Cada campo é salvo quando você sai dele, e Tab vai para o próximo."
 }

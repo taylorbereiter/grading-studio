@@ -6513,5 +6513,56 @@
   "one": "Die Aufgabe darin wird mitgelöscht. Gespeicherte Korrekturen bleiben in diesem Browser.",
   "other": "Die {n} Aufgaben darin werden mitgelöscht. Gespeicherte Korrekturen bleiben in diesem Browser."
  },
- "plan.no_such_class": "Es gibt noch keine Klasse namens „{name}“. Lege sie in der Seitenleiste mit „Klasse hinzufügen“ an."
+ "plan.no_such_class": "Es gibt noch keine Klasse namens „{name}“. Lege sie in der Seitenleiste mit „Klasse hinzufügen“ an.",
+ "class.st_by_type": "Nach Art",
+ "class.st_class_avg": "Klassenschnitt {v}",
+ "class.st_xc": "+{n} extra",
+ "class.st_no_fb": "Noch kein Feedback",
+ "class.st_not_scored": "Noch nicht bewertet",
+ "class.st_year": "Das Jahr bisher",
+ "class.st_term": "Der Zeitraum bisher",
+ "class.st_against": "Im Vergleich zur Klasse",
+ "class.st_against_say": "Das schattierte Band ist die mittlere Hälfte der Klasse. So sehen Sie, ob ein Ergebnis ungewöhnlich ist oder die Aufgabe einfach schwer war.",
+ "class.st_rows": "Rubrik-Zeilen",
+ "class.st_rows_none": "Das erscheint, sobald eine Leistungsüberprüfung mit einer Rubrik bewertet wurde.",
+ "class.st_class_n": "Klasse {v}",
+ "class.st_rows_say": "Der Durchschnitt in jeder Rubrik-Zeile über die Leistungsüberprüfungen, von {n}. Der Strich auf jedem Balken ist der Klassenschnitt.",
+ "class.st_pos": "{n} von {of}",
+ "class.st_prev": "Vorherige Person",
+ "class.st_next": "Nächste Person",
+ "class.avg_year": "Durchschnitt dieses Jahr",
+ "class.paste_ids": "IDs und E-Mails einfügen…",
+ "class.paste_ids_sub": "Viele auf einmal ausfüllen",
+ "class.fill_ids": "Angaben ausfüllen…",
+ "class.fill_ids_sub": "Schüler-ID, E-Mail und Vorjahr, die Liste hinunter",
+ "class.sp_u_add": "Schreibweise für {name} hinzufügen",
+ "class.sp_u_remove": "Schreibweise für {name} entfernen",
+ "class.sp_remove": "{name} entfernen",
+ "class.sp_add": "Hinzufügen",
+ "class.sp_say": "Andere Schreibweisen und die Schüler-ID ordnen Ordner und Dateien dieser Person zu.",
+ "class.sp_add_t": "Eine andere Schreibweise für {name}",
+ "class.sp_add_ok": "Hinzufügen",
+ "class.sp_label": "So, wie er in einem Download, einem Ordner oder im Schulsystem steht",
+ "class.paste_ids_u": "IDs und E-Mails einfügen",
+ "class.paste_ids_t": "IDs und E-Mails einfügen",
+ "class.paste_ids_none": "Kein Name passte zur Liste.",
+ "class.paste_ids_some": {
+  "one": "{n} Person ausgefüllt. Nicht auf der Liste: {names}{more}",
+  "other": "{n} Personen ausgefüllt. Nicht auf der Liste: {names}{more}"
+ },
+ "class.paste_ids_more": {
+  "one": " und {n} weitere",
+  "other": " und {n} weitere"
+ },
+ "class.paste_ids_done": {
+  "one": "{n} Person ausgefüllt.",
+  "other": "{n} Personen ausgefüllt."
+ },
+ "class.paste_ids_ok": "Ausfüllen",
+ "class.paste_ids_say": "Fügen Sie eine Klassenliste mit Namen und einer Spalte für Schüler-ID oder E-Mail ein, aus dem Schulsystem oder einer Tabelle. Jede Zeile füllt die Person mit demselben Namen aus.",
+ "class.paste_ids_ph": "Name, Schüler-ID, E-Mail",
+ "class.fill_bad_email": "Das sieht nicht nach einer E-Mail-Adresse aus.",
+ "class.fill_ids_t": "Angaben der Klasse {name}",
+ "class.fill_n": "{n} von {of} mit Schüler-ID",
+ "class.fill_say": "Jedes Feld wird beim Verlassen gespeichert, und die Tabulatortaste geht zum nächsten."
 }

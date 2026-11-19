@@ -6542,5 +6542,56 @@
   "one": "裡面的 {n} 份作業會一起刪除。已儲存的批改仍留在這個瀏覽器裡。",
   "other": "裡面的 {n} 份作業會一起刪除。已儲存的批改仍留在這個瀏覽器裡。"
  },
- "plan.no_such_class": "還沒有名為「{name}」的班級。在側欄新增班級即可建立。"
+ "plan.no_such_class": "還沒有名為「{name}」的班級。在側欄新增班級即可建立。",
+ "class.st_by_type": "按類型",
+ "class.st_class_avg": "班級平均 {v}",
+ "class.st_xc": "+{n} 加分",
+ "class.st_no_fb": "尚無回饋",
+ "class.st_not_scored": "尚未評分",
+ "class.st_year": "本學年至今",
+ "class.st_term": "本學期至今",
+ "class.st_against": "與全班相比",
+ "class.st_against_say": "陰影帶是全班中間的一半學生，這樣能看出某個分數是否異常，還是作業本身就難。",
+ "class.st_rows": "評分量表各列",
+ "class.st_rows_none": "該學生有總結性評量用評分量表評分後，這裡就會顯示。",
+ "class.st_class_n": "全班 {v}",
+ "class.st_rows_say": "該學生在各次總結性評量中每列評分量表的平均分（滿分 {n}）。每條橫條上的標記是全班平均。",
+ "class.st_pos": "第 {n} 位，共 {of} 位",
+ "class.st_prev": "上一位學生",
+ "class.st_next": "下一位學生",
+ "class.avg_year": "本學年平均",
+ "class.paste_ids": "貼上學號和電子郵件…",
+ "class.paste_ids_sub": "一次填寫多位學生",
+ "class.fill_ids": "填寫資料…",
+ "class.fill_ids_sub": "在列表中依序填寫學號、電子郵件和去年程度",
+ "class.sp_u_add": "為 {name} 新增寫法",
+ "class.sp_u_remove": "刪除 {name} 的一種寫法",
+ "class.sp_remove": "刪除 {name}",
+ "class.sp_add": "新增",
+ "class.sp_say": "其他寫法和學號用來把資料夾和檔案對應到這位學生。",
+ "class.sp_add_t": "{name} 名字的另一種寫法",
+ "class.sp_add_ok": "新增",
+ "class.sp_label": "在下載檔案、資料夾或學校系統裡的寫法",
+ "class.paste_ids_u": "貼上學號和電子郵件",
+ "class.paste_ids_t": "貼上學號和電子郵件",
+ "class.paste_ids_none": "沒有與名單相符的名字。",
+ "class.paste_ids_some": {
+  "one": "已填寫 {n} 位學生。不在名單上：{names}{more}",
+  "other": "已填寫 {n} 位學生。不在名單上：{names}{more}"
+ },
+ "class.paste_ids_more": {
+  "one": " 等另外 {n} 位",
+  "other": " 等另外 {n} 位"
+ },
+ "class.paste_ids_done": {
+  "one": "已填寫 {n} 位學生。",
+  "other": "已填寫 {n} 位學生。"
+ },
+ "class.paste_ids_ok": "填入",
+ "class.paste_ids_say": "貼上一份含姓名和學號或電子郵件欄的班級名單（來自學校系統或試算表）。每一列會填到同名的學生。",
+ "class.paste_ids_ph": "姓名, 學號, 電子郵件",
+ "class.fill_bad_email": "這看起來不像電子郵件地址。",
+ "class.fill_ids_t": "學生資料：{name}",
+ "class.fill_n": "{of} 位中有 {n} 位有學號",
+ "class.fill_say": "離開每個欄位時會儲存，按 Tab 進入下一個。"
 }
