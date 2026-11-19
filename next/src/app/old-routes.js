@@ -15,7 +15,8 @@ export function newHash(hash) {
   const [a, b, c, d] = p, to = s => '#/' + s;
   if (/(^|&)(access_token|error)=/.test(a)) return to('home');   // Google's sign-in coming back is never a screen (whole/google.js reads it first)
   switch (a) {
-    case 'a': return b ? to('mark/' + e(b) + (['grades', 'insights', 'return'].includes(c) ? '/' + c : '')) : to('home');
+    // the previous version's #/a/<id> leaves out the download's gs.b., which the new app's #/mark/<id> keeps
+    case 'a': return b ? to('mark/' + e(/^gs\.b\./.test(b) ? b : 'gs.b.' + b) + (['grades', 'insights', 'return'].includes(c) ? '/' + c : '')) : to('home');
     case 'class': { if (!b) return to('classes'); const t = c in CLASS_TAB ? CLASS_TAB[c] : c; return to('class/' + e(b) + (t ? '/' + t + (c === 'students' && /^\d+$/.test(d || '') ? '/' + d : '') : '')); }
     case 'class-named': return to('classes');
     case 'settings': return to(SETTINGS[b] || 'settings' + (b ? '/' + e(b) : ''));

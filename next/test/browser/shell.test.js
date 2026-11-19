@@ -81,8 +81,8 @@ test('the root’s worker and the previous version’s each keep to their own sc
 test('the previous version’s addresses, the Planner’s and next/ land on the matching new screen', async () => {
   const p = await fresh();
   const lands = async (url, want) => { await p.goto(srv.url + url); await p.waitForFunction(w => location.pathname === '/' && location.hash === w, { timeout: 15000 }, want).catch(() => {}); assert.equal(await p.evaluate(() => location.pathname + location.hash), '/' + want, url); };
-  await lands('#/a/b123/grades/sheet', '#/mark/b123/grades');
-  await lands('#/a/b123', '#/mark/b123');
+  await lands('#/a/b123/grades/sheet', '#/mark/gs.b.b123/grades');
+  await lands('#/a/b123', '#/mark/gs.b.b123');
   await lands('#/class/c1/gradebook', '#/class/c1/grades');
   await lands('#/class/c1/students/2', '#/class/c1/people/2');
   await lands('#/settings/claude', '#/settings/ai');

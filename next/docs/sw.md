@@ -36,8 +36,10 @@ by itself choice, stored apart from the current app's (`gsn-kept`).
   has no install card: the installed app (start_url and scope `./`) is the new version.
 - `next/sw.js` now retires: it deletes the `gsn-*` caches, sends its windows to the root (same search and hash), and unregisters.
   `next/index.html` does the same for a page opened without it.
-- Google's sign-in returns only to the root. The previous version leaves `gs.gBack` = `classic` in the tab's sessionStorage before
-  it goes; the root page sees it with the token in the address and sends the address on to `classic/` before anything else runs.
+- Google's sign-in returns only to the root. The previous version leaves `gs.gBack` = `classic:<state>` in the tab's sessionStorage
+  before it goes; the root page sees it with the token and the same state in the address and sends the address on to `classic/`
+  before anything else runs. Until Update now the root still shows the previous version's page (from `gs-app-1`), which takes the
+  key itself: the teacher is signed in there, at the root, and not sent on to `classic/`.
 
 `test/tools/rehearsal.js` (CI's rehearsal job) carries work made on the version before through all of this in a real Chrome.
 
