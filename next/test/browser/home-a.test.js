@@ -1,0 +1,97 @@
+// Stage 8, slice A: Home's lists (rebuild/audit/gaps.md A-058, A-059, A-067, A-068, A-069, A-070, A-074), as the current app's
+// Today has them (src/today.js oldRow, src/shell.js renderNeedsOnly, src/app/kept.js forgetKept). Made-up downloads only.
+const { test, before, after } = require('node:test');
+const assert = require('node:assert/strict');
+const http = require('http'), fs = require('fs'), path = require('path');
+const { launch } = require('../../../test/helpers/chrome.js');
+const { plant } = require('../../../test/helpers/app.js');
+const { gradingSeed, PLAN_SETUP, STEADY } = require('../../../test/helpers/steady.js');
+
+const ROOT = path.join(__dirname, '..', '..', '..');
+const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp', png: 'image/png', webmanifest: 'application/manifest+json' };
+function serveSite() {
+  const srv = http.createServer((req, res) => {
+    let p = decodeURIComponent(req.url.split('?')[0]);
+    if (p === '/blank') { res.writeHead(200, { 'Content-Type': TYPES.html }); return res.end('<!doctype html><title>blank</title>'); }
+    if (p === '/') p = '/index.html'; if (p === '/next/') p = '/next/index.html';
+    const ok = /^\/(index|planner)\.html$|^\/(sw\.js|version\.json|manifest\.webmanifest)$|^\/icons\/[\w-]+\.png$|^\/lang\/[\w-]+\.js$|^\/next\/(index\.html|sw\.js|version\.json|dist\/[\w-]+\.(js|css|woff2|webp))$/.test(p);
+    const f = path.join(ROOT, p);
+    if (!ok || !fs.existsSync(f)) { res.writeHead(404); return res.end(); }
+    res.writeHead(200, { 'Content-Type': TYPES[f.split('.').pop()] || 'application/octet-stream', 'Cache-Control': 'no-store' }); res.end(fs.readFileSync(f));
+  });
+  return new Promise(r => srv.listen(0, '127.0.0.1', () => { srv.unref(); r({ url: 'http://localhost:' + srv.address().port + '/', close: () => new Promise(d => { srv.closeAllConnections(); srv.close(d); }) }); }));
+}
+
+let browser, srv;
+before(async () => { srv = await serveSite(); browser = await launch(); });
+after(async () => { await browser.close(); await srv.close(); });
+
+
+// Made-up downloads: one partly scored with its papers here, one whose papers aren't kept, four handed back already (earlier work),
+// her last take-home file ten days old, and the folder question put away for now. The clock stands at 27 October 2026, 10:20.
+const NOW = Date.parse('2026-10-27T10:20:00Z');
+function seed() {
+  const s = gradingSeed(), meta = s.idb['grading-studio-keep'].stores.meta;
+  for (const [id, m] of meta) { if (id === 'gs.b.n2') Object.assign(m, { papers: 1, scored: 4, partial: 2 }); }
+  for (const [i, nm] of ['Book report', 'Lab write-up', 'Short story', 'Speech outline'].entries()) {
+    const id = 'gs.b.o' + i, t = Date.parse('2026-09-0' + (i + 1) + 'T12:00:00Z');
+    meta.push([id, { id, name: nm, n: 6, scored: 6, t, back: t + 864e5, papers: 1 }]);
+  }
+  s.ls['gs.lastBackup'] = String(NOW - 10 * 864e5); s.ls['gsc.folderLater'] = String(NOW);
+  s.idb['gs-lessons'] = { version: 1, stores: { lessons: [], kv: [['setup', PLAN_SETUP]] } };
+  return s;
+}
+async function home(errors) {
+  const ctx = await browser.createBrowserContext(), p = await ctx.newPage();
+  p.on('pageerror', e => errors.push(e.message)); p.on('dialog', d => { errors.push('dialog: ' + d.message()); d.dismiss(); });
+  p.on('console', m => { if (m.type() === 'error' && !/favicon|Failed to load resource/.test(m.text())) errors.push(m.text()); });
+  await p.evaluateOnNewDocument(STEADY); await p.setViewport({ width: 1440, height: 900 });
+  await p.goto(srv.url + 'blank'); await plant(p, seed());
+  await p.goto(srv.url + 'next/#/home'); await p.waitForSelector('[data-home="earlier"]', { timeout: 30000 });
+  p.ctx = ctx; return p;
+}
+const rows = (p, sel) => p.$$eval(sel + ' li.hl', l => l.map(e => ({ kind: e.dataset.kind, id: e.dataset.id || '', text: e.textContent, go: (e.querySelector('a.go') || {}).hash || '' })));
+
+test('A-068 A-069 A-070: Needs a look lists papers partly scored (opening them), papers not kept here, and work not backed up for a week', async () => {
+  const errors = [], p = await home(errors);
+  const look = await rows(p, '[data-home="look"]');
+  const part = look.find(r => r.kind === 'partial'), gone = look.find(r => r.kind === 'notkept'), bk = look.find(r => r.kind === 'backup');
+  assert.ok(part && /2 papers are partly scored/.test(part.text) && /Poetry analysis/.test(part.text), JSON.stringify(look));
+  assert.equal(part.go, '#/mark/gs.b.n2');
+  assert.ok(gone && /Papers not kept in this browser/.test(gone.text) && /Narrative essay: drop the download in again/.test(gone.text));
+  assert.ok(bk && /Your take-home file is 10 days old/.test(bk.text) && bk.go === '#/settings/saving');
+  assert.equal(await p.$eval('[data-home="look"] .hcount', e => e.textContent), String(look.length));
+  // the partly scored row opens the papers
+  await p.click('[data-home="look"] li[data-kind="partial"] a.go');
+  await p.waitForFunction(() => location.hash === '#/mark/gs.b.n2', { timeout: 10000 });
+  assert.deepEqual(errors, []); await p.ctx.close();
+});
+
+test('A-058 A-059 A-067 A-074: Earlier work shows the newest three, Show all and back, and Forget takes a download out after asking', async () => {
+  const errors = [], p = await home(errors);
+  let old = await rows(p, '[data-home="earlier"]');
+  assert.deepEqual(old.map(r => r.id), ['gs.b.o3', 'gs.b.o2', 'gs.b.o1'], 'the newest three');
+  assert.match(old[0].text, /Speech outline.*returned.*6 of 6 scored/s);
+  assert.equal(await p.$eval('[data-earlier-all]', e => e.textContent), 'Show all 4');
+  await p.click('[data-earlier-all]');
+  old = await rows(p, '[data-home="earlier"]');
+  assert.equal(old.length, 4);
+  assert.equal(await p.$eval('[data-earlier-all]', e => e.textContent), 'Show only the newest');
+  await p.click('[data-earlier-all]');
+  assert.equal((await rows(p, '[data-home="earlier"]')).length, 3);
+  // Forget, from the row's menu: asked first; Cancel keeps it, Forget takes it out of this browser
+  await p.click('[data-hmenu="gs.b.o3"]');
+  await p.waitForSelector('[role="menuitem"]', { visible: true });
+  await p.evaluate(() => [...document.querySelectorAll('[role="menuitem"]')].find(e => e.textContent.includes('Forget')).click());
+  await p.waitForSelector('[data-fgok]', { visible: true, timeout: 15000 });
+  assert.match(await p.$eval('dialog[open], [role="dialog"]', e => e.textContent), /Forget the papers for “Speech outline”\?/);
+  await p.click('[data-fgok]');
+  await p.waitForFunction(() => !document.querySelector('[data-home="earlier"] li[data-id="gs.b.o3"]'), { timeout: 15000 });
+  const kept = await p.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-keep'); r.onsuccess = () => { const q = r.result.transaction('meta').objectStore('meta').getAllKeys(); q.onsuccess = () => { res(q.result); r.result.close(); }; }; }));
+  assert.ok(!kept.includes('gs.b.o3') && kept.includes('gs.b.o2'), JSON.stringify(kept));
+  assert.equal((await rows(p, '[data-home="earlier"]')).length, 3, 'the next one moves up');
+  assert.equal(await p.$('[data-earlier-all]'), null, 'three left: nothing more to show');
+  // the papers still to mark and to hand back have the same menu
+  assert.ok(await p.$('[data-home="needs"] [data-hmenu="gs.b.n2"]'));
+  assert.deepEqual(errors, []); await p.ctx.close();
+});

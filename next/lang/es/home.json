@@ -69,5 +69,30 @@
   "one": "Recordar a un estudiante sus trabajos sin entregar",
   "other": "Recordar a {n} estudiantes sus trabajos sin entregar"
  },
- "home.plan_tomorrow": "Planificar la lección de {cls} de mañana"
+ "home.plan_tomorrow": "Planificar la lección de {cls} de mañana",
+ "home.look_h": "Para revisar",
+ "home.look_partly": {
+  "one": "{n} trabajo está calificado en parte",
+  "other": "{n} trabajos están calificados en parte"
+ },
+ "home.look_notkept": "Trabajos no guardados en este navegador",
+ "home.look_notkept_s": "{name}: vuelve a soltar la descarga para abrirla de nuevo",
+ "home.look_backup_none": "Tu trabajo no tiene copia de seguridad",
+ "home.look_backup_old": {
+  "one": "Tu archivo para llevar tiene un día",
+  "other": "Tu archivo para llevar tiene {n} días"
+ },
+ "home.look_backup_s": "Elige una carpeta o haz un archivo para llevar, en Ajustes",
+ "home.look_more": "y {n} más",
+ "home.earlier_h": "Trabajo anterior",
+ "home.earlier_all": "Mostrar los {n}",
+ "home.earlier_newest": "Mostrar solo los más recientes",
+ "home.old_stale": "una copia anterior: seguiste trabajando en una más nueva",
+ "home.old_returned": "devuelto el {date}",
+ "home.old_worked": "último trabajo el {date}",
+ "home.old_scored": "{done} de {of} calificados",
+ "home.old_notkept": "trabajos no guardados, suelta la descarga de nuevo",
+ "home.row_more": "Más para {name}",
+ "home.forget": "Olvidar",
+ "home.a_download": "Una descarga"
 }

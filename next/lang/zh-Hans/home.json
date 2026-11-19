@@ -69,5 +69,30 @@
   "one": "提醒一个学生缺交作业",
   "other": "提醒 {n} 个学生缺交作业"
  },
- "home.plan_tomorrow": "为明天的 {cls} 备课"
+ "home.plan_tomorrow": "为明天的 {cls} 备课",
+ "home.look_h": "需要看一下",
+ "home.look_partly": {
+  "one": "{n} 份作业只评了一部分",
+  "other": "{n} 份作业只评了一部分"
+ },
+ "home.look_notkept": "这个浏览器没有保存这些作业",
+ "home.look_notkept_s": "{name}：再把下载的文件拖进来即可重新打开",
+ "home.look_backup_none": "你的工作还没有备份",
+ "home.look_backup_old": {
+  "one": "你的带回家文件已经 {n} 天没更新",
+  "other": "你的带回家文件已经 {n} 天没更新"
+ },
+ "home.look_backup_s": "在设置中选一个文件夹，或做一个带回家文件",
+ "home.look_more": "还有 {n} 项",
+ "home.earlier_h": "较早的作业",
+ "home.earlier_all": "显示全部 {n} 项",
+ "home.earlier_newest": "只显示最新的",
+ "home.old_stale": "较旧的副本：你在较新的副本中继续了工作",
+ "home.old_returned": "已于 {date} 发还",
+ "home.old_worked": "最后处理于 {date}",
+ "home.old_scored": "已评 {done}/{of}",
+ "home.old_notkept": "作业未保存，请再拖入下载的文件",
+ "home.row_more": "{name} 的更多选项",
+ "home.forget": "忘记",
+ "home.a_download": "一份下载"
 }

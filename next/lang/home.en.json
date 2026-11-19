@@ -69,5 +69,30 @@
   "one": "Remind one student about missing work",
   "other": "Remind {n} students about missing work"
  },
- "home.plan_tomorrow": "Plan tomorrow’s {cls} lesson"
+ "home.plan_tomorrow": "Plan tomorrow’s {cls} lesson",
+ "home.look_h": "Needs a look",
+ "home.look_partly": {
+  "one": "{n} paper is partly scored",
+  "other": "{n} papers are partly scored"
+ },
+ "home.look_notkept": "Papers not kept in this browser",
+ "home.look_notkept_s": "{name}: drop the download in again to reopen it",
+ "home.look_backup_none": "Your work is not backed up",
+ "home.look_backup_old": {
+  "one": "Your take-home file is one day old",
+  "other": "Your take-home file is {n} days old"
+ },
+ "home.look_backup_s": "Choose a folder or make a take-home file, in Settings",
+ "home.look_more": "and {n} more",
+ "home.earlier_h": "Earlier work",
+ "home.earlier_all": "Show all {n}",
+ "home.earlier_newest": "Show only the newest",
+ "home.old_stale": "an older copy: your work went on in a newer one",
+ "home.old_returned": "returned {date}",
+ "home.old_worked": "last worked on {date}",
+ "home.old_scored": "{done} of {of} scored",
+ "home.old_notkept": "papers not kept, drop the download again",
+ "home.row_more": "More for {name}",
+ "home.forget": "Forget",
+ "home.a_download": "A download"
 }

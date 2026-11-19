@@ -69,5 +69,30 @@
   "one": "未提出の課題を生徒 1 人に知らせる",
   "other": "未提出の課題を生徒 {n} 人に知らせる"
  },
- "home.plan_tomorrow": "明日の {cls} の授業を計画"
+ "home.plan_tomorrow": "明日の {cls} の授業を計画",
+ "home.look_h": "確認が必要",
+ "home.look_partly": {
+  "one": "{n} 件の採点が途中です",
+  "other": "{n} 件の採点が途中です"
+ },
+ "home.look_notkept": "このブラウザーに保存されていない提出物",
+ "home.look_notkept_s": "{name}：ダウンロードしたファイルをもう一度ドロップすると開けます",
+ "home.look_backup_none": "作業のバックアップがありません",
+ "home.look_backup_old": {
+  "one": "持ち帰り用ファイルは {n} 日前のものです",
+  "other": "持ち帰り用ファイルは {n} 日前のものです"
+ },
+ "home.look_backup_s": "設定でフォルダーを選ぶか、持ち帰り用ファイルを作ってください",
+ "home.look_more": "ほか {n} 件",
+ "home.earlier_h": "以前の課題",
+ "home.earlier_all": "{n} 件すべて表示",
+ "home.earlier_newest": "新しいものだけ表示",
+ "home.old_stale": "古いコピー：作業は新しいコピーで続いています",
+ "home.old_returned": "{date} に返却",
+ "home.old_worked": "最終作業 {date}",
+ "home.old_scored": "{of} 件中 {done} 件採点済み",
+ "home.old_notkept": "提出物が保存されていません。ダウンロードしたファイルをもう一度ドロップしてください",
+ "home.row_more": "{name} のその他",
+ "home.forget": "削除",
+ "home.a_download": "ダウンロード"
 }

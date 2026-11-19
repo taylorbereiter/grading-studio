@@ -95,6 +95,9 @@ section.now .empty{padding-bottom:22px}
 .hl .tx small{display:block;color:var(--mute);font-size:var(--t1)}
 .hl .go{color:var(--g600);display:grid;place-items:center;width:28px;height:28px;border-radius:var(--r1)}
 .hl .go:hover{background:var(--g100)}
+.hcount{font-size:var(--t1);padding:1px 8px;border-radius:var(--rf);background:var(--warn-soft);color:var(--warn)}
+.home > section[data-home="earlier"]{margin-top:24px}
+.homegrid section[data-home="look"]{margin-top:20px}
 
 /* Settings */
 .setg{display:grid;grid-template-columns:220px minmax(0,1fr);gap:32px;align-items:start}

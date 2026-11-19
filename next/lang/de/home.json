@@ -69,5 +69,30 @@
   "one": "Eine Person an fehlende Arbeiten erinnern",
   "other": "{n} Lernende an fehlende Arbeiten erinnern"
  },
- "home.plan_tomorrow": "Morgige {cls}-Stunde planen"
+ "home.plan_tomorrow": "Morgige {cls}-Stunde planen",
+ "home.look_h": "Bitte ansehen",
+ "home.look_partly": {
+  "one": "{n} Arbeit ist erst teilweise bewertet",
+  "other": "{n} Arbeiten sind erst teilweise bewertet"
+ },
+ "home.look_notkept": "Arbeiten nicht in diesem Browser gespeichert",
+ "home.look_notkept_s": "{name}: den Download noch einmal hineinziehen, um ihn wieder zu öffnen",
+ "home.look_backup_none": "Ihre Arbeit ist nicht gesichert",
+ "home.look_backup_old": {
+  "one": "Ihre Mitnahme-Datei ist einen Tag alt",
+  "other": "Ihre Mitnahme-Datei ist {n} Tage alt"
+ },
+ "home.look_backup_s": "In den Einstellungen einen Ordner wählen oder eine Mitnahme-Datei erstellen",
+ "home.look_more": "und {n} weitere",
+ "home.earlier_h": "Frühere Arbeiten",
+ "home.earlier_all": "Alle {n} zeigen",
+ "home.earlier_newest": "Nur die neuesten zeigen",
+ "home.old_stale": "eine ältere Kopie: Ihre Arbeit ging in einer neueren weiter",
+ "home.old_returned": "zurückgegeben am {date}",
+ "home.old_worked": "zuletzt bearbeitet am {date}",
+ "home.old_scored": "{done} von {of} bewertet",
+ "home.old_notkept": "Arbeiten nicht gespeichert, den Download noch einmal hineinziehen",
+ "home.row_more": "Mehr zu {name}",
+ "home.forget": "Vergessen",
+ "home.a_download": "Ein Download"
 }

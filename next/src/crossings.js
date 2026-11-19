@@ -44,7 +44,7 @@ export async function classesForHome() {
 // classes and lessons (planning), the sets of papers to mark and to hand back (assignment and class names, counts), and the
 // lessons still to plan in the next four days (src/todo.js "plan" lines, minus the ones the teacher hid or switched off).
 // Missing work: the classes with students who owe work this term and haven't been reminded (src/todo.js tdMissLoad, its "miss" lines),
-// through the gradebook's engine (students/book.js), less the lines she hid.
+// through the gradebook's engine (students/book.js), less the lines she hid. Earlier work and what needs a look, by assignment name.
 export async function countsForHome(now = Date.now()) {
   const C = await import('./students/counts.js'), T = await import('./planning/today.js');
   const lib = C.readLibrary(), kept = await C.readKept(), plan = await T.readPlan();
@@ -59,8 +59,17 @@ export async function countsForHome(now = Date.now()) {
   // the lines To do works out (students/todo.js autoLines), so Home, To do and the sidebar count the same
   const auto = await (await import('./students/todo-auto.js')).autoLines(now, { lib, kept, plan }), cname = id => String((lib.classes.find(c => String(c.id) === id) || {}).name || '');
   const toPlan = auto.filter(a => a.kind === 'plan').map(a => ({ in: a.in, key: a.key, classId: a.pid, className: a.pname, color: a.color, day: a.day, start: a.start, lesson: a.lesson }));
+  // earlier work (src/today.js oldRow): an older copy, handed back already, or nothing in it to score
+  const old = sets(g.old).map((x, i) => { const m = g.old[i]; return { ...x, back: C.backOf(m) || 0, stale: !!(m.newer && kept.has(m.newer)) }; });
+  // needs a look (src/shell.js renderNeedsOnly): papers partly scored, papers not kept here; and when a second copy was last made
+  const look = [];
+  for (const m of [...kept.values()].sort((a, b) => b.t - a.t)) {
+    if (m.partial && C.canOpen(m)) look.push({ kind: 'partial', id: m.id, name: String(m.name || ''), n: +m.partial || 0 });
+    else if (!C.canOpen(m)) look.push({ kind: 'notkept', id: m.id, name: String(m.name || '') });
+  }
+  const backup = { last: +(students.lastBackup.json(0) || 0), kept: kept.size };
   const mark = sets(g.mark), back = sets(g.back), missing = auto.filter(a => a.kind === 'miss').map(a => ({ classId: a.classId, name: cname(a.classId), n: a.n }));
-  return { teach, mark, back, toPlan, missing, counts: { classesToday: teach ? teach.rows.length : 0, mark: mark.length, back: back.length, toPlan: toPlan.length, missing: missing.length } };
+  return { teach, mark, back, old, look, backup, toPlan, missing, counts: { classesToday: teach ? teach.rows.length : 0, mark: mark.length, back: back.length, toPlan: toPlan.length, missing: missing.length } };
 }
 // The sidebar's To do count, the way the current app counts it (src/todo.js todoCount): every line not done that is overdue or for
 // today, her own lines and the ones the app noticed (papers to mark and to hand back, today's classes still to plan), less the ones
