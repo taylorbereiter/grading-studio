@@ -252,6 +252,9 @@
 .ccsw{display:flex;gap:8px;margin:10px 0}
 .ccsw button{width:24px;height:24px;border-radius:50%;background:var(--cc)}
 .ccsw button[aria-checked="true"]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--cc)}
+.ccany{position:relative;width:24px;height:24px;border-radius:50%;background:conic-gradient(#d33,#db3,#3b5,#3bd,#35d,#b3d,#d33);cursor:pointer}
+.ccany:focus-within{outline:2px solid var(--focus,var(--accent));outline-offset:2px}
+.ccany input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
 .dlist{display:flex;flex-direction:column;gap:8px}
 .savebar{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;padding:10px 0;background:var(--bg);border-top:1px solid var(--line)}
 @media (max-width:640px){
@@ -271,6 +274,13 @@
 .prclock{left:auto;right:24px;bottom:72px;top:auto;font-size:32px}
 /* Library */
 .library .libpanel{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.lsearch{display:flex;flex-direction:column;gap:12px;max-width:760px}
+.lsearch h2{font-size:var(--t4);margin:0}
+.lsearch .hits{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.lsearch .hit{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;padding:10px 12px;border-radius:var(--r2);background:var(--s);box-shadow:0 0 0 1px var(--edge)}
+.lsearch .hit:hover{box-shadow:0 0 0 1px var(--ink2)}
+.lsearch .ht{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lsearch .sn{font-size:var(--t2);color:var(--ink2);overflow-wrap:anywhere}
 .libtools{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}.libtools .field{flex:1 1 240px;margin:0}
 .library .chips{display:flex;flex-wrap:wrap;gap:6px}
 .actlist{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:var(--r2);background:var(--s)}
@@ -439,3 +449,34 @@ button.prclock{border:0;cursor:pointer}
 .wu small{font-size:var(--t1);color:var(--mute)}.wu b{font-weight:600;font-size:var(--t2)}.wu>span{font-size:var(--t1);color:var(--ink2)}
 .wu.none{flex-direction:row;align-items:center;gap:8px;cursor:default;border-left-color:var(--g300)}
 .datejump{width:auto;padding:4px 8px;font-size:var(--t2)}
+
+/* Semester view and coming up without a lesson (plan/semester.jsx) */
+.calendar .ahead { display: grid; gap: var(--s2); margin-bottom: var(--s4); }
+.calendar .ahh { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2) var(--s3); }
+.calendar .ahh h2 { font-size: 1rem; margin: 0; }
+.calendar .ahh .pace { margin-left: auto; color: var(--mute); font-size: .875rem; }
+.calendar .nwk { display: inline-flex; align-items: center; gap: var(--s2); font-size: .875rem; color: var(--mute); }
+.calendar .nwk.all { color: var(--ok); }
+.calendar .nwk .dots, .calendar .sem .dots { display: inline-flex; gap: 3px; align-items: center; }
+.calendar .nwk .dots i, .calendar .sem .dots i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--g300); }
+.calendar .nwk .dots i.pl { background: color-mix(in srgb, var(--acc) 35%, transparent); border-color: var(--acc); }
+.calendar .nwk .dots i.on, .calendar .sem .dots i.on { background: var(--acc); border-color: var(--acc); }
+.calendar .gaps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s1); }
+.calendar .gaps li { display: flex; align-items: center; gap: var(--s2); padding: var(--s1) 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.calendar .gaps .dot, .calendar .sem .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--cc); display: inline-block; flex: none; }
+.calendar .semh { display: flex; margin-bottom: var(--s2); }
+.calendar .sem { display: grid; grid-template-columns: minmax(7rem, 9rem) repeat(var(--cols), minmax(9rem, 1fr)); border: 1px solid var(--line); border-radius: var(--r2); overflow: auto; }
+.calendar .sem .sr { display: contents; }
+.calendar .sem .sr > * { padding: var(--s2); border-bottom: 1px solid var(--line); min-width: 0; }
+.calendar .sem .hd > * { font-weight: 600; background: var(--g100); display: flex; align-items: center; gap: var(--s1); position: sticky; top: 0; z-index: 1; }
+.calendar .sem .wkc { display: flex; flex-direction: column; gap: 2px; }
+.calendar .sem .wkc small { color: var(--mute); }
+.calendar .sem .wkc .off, .calendar .sem .wkc .ev { font-size: .75rem; }
+.calendar .sem .cell { display: flex; flex-direction: column; gap: 2px; cursor: pointer; border-left: 4px solid transparent; }
+.calendar .sem .cell.has { border-left-color: var(--uc); background: color-mix(in srgb, var(--uc) 8%, transparent); }
+.calendar .sem .cell:hover { background: color-mix(in srgb, var(--acc) 10%, transparent); }
+.calendar .sem .cell .un { color: var(--mute); }
+.calendar .sem .cell em { font-style: normal; font-size: .75rem; color: var(--mute); margin-left: var(--s1); }
+.calendar .sem .now > * { background: color-mix(in srgb, var(--acc) 12%, transparent); }
+.calendar .sem .past > * { opacity: .7; }
+@media (max-width: 640px) { .calendar .ahh .pace { margin-left: 0; } }

@@ -5,7 +5,7 @@
 // teacher's week. This file holds no engine itself, so the sidebar can read the timetable without loading them.
 //
 // Read again when another window saves (gs-plan-out), when this window saves (shared/saved.js), and when she comes back to it.
-import { lessons as lessonStore, kv, units as unitRec, bank as bankRec, activities as actRec, setupRecord, lessonLook, planCopy } from './index.js';
+import { lessons as lessonStore, kv, units as unitRec, bank as bankRec, activities as actRec, setupRecord, lessonLook, planCopy, plannerWords } from './index.js';
 import { onSaved } from '../shared/saved.js';
 import * as tabs from '../shared/tabs.js';
 
@@ -13,11 +13,16 @@ let cur = null, reading = null, stamp = 0;
 const told = new Set();
 
 export async function readAll() {
-  const [setup, list, units, bank, activities, deflook, dir] = await Promise.all([setupRecord.get(), lessonStore.entries().then(e => e.map(([, v]) => v)),
-    unitRec.get(), bankRec.get(), actRec.get(), lessonLook.get(), kv.get('dir')].map(p => p.catch(() => undefined)));
+  // A record that could not be read (the database blocked or erroring) is named in failed: it reads as empty here, so saving the
+  // whole of it then would put one change in place of everything else in it. planning/write.js saveKv refuses those until a read works.
+  const NAMES = ['setup', 'lessons', 'units', 'bank', 'activities', 'deflook', 'dir', 'words'], failed = [];
+  const [setup, list, units, bank, activities, deflook, dir, words] = await Promise.all([setupRecord.get(), lessonStore.entries().then(e => e.map(([, v]) => v)),
+    unitRec.get(), bankRec.get(), actRec.get(), lessonLook.get(), kv.get('dir'), plannerWords.get()].map((p, i) => p.catch(e => { console.error(e); failed.push(NAMES[i]); return undefined; })));
   const s = setup && Array.isArray(setup.classes) ? setup : (planCopy.json(null) || null);
   const p = { setup: s || null, lessons: (list || []).filter(l => l && l.id), units: Array.isArray(units) ? units : [], bank: bank || null,
-    activities: Array.isArray(activities) ? activities : [], deflook: deflook || '', folder: !!dir, at: Date.now() };
+    activities: Array.isArray(activities) ? activities : [], deflook: deflook || '', folder: !!dir, at: Date.now(), failed,
+    // the words a folder's setup gave (kv words): the Planner's fallback when the app's own gs.words is empty (src/planner/lessons.js L.words)
+    words: words && typeof words === 'object' ? words : null };
   use(p);
   return p;
 }

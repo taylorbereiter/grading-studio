@@ -21,6 +21,8 @@ import { tidyBank, normRubric, normBankScale, presetScale, rescale, scaleTop, bM
 import { saveFailed } from './save.js';
 import './lines.js';
 import './more-lines.js';
+import './cal-lines.js';
+import { href } from '../router.js';
 
 const J = o => JSON.parse(JSON.stringify(o));
 const usable = (kind, x) => x && x.id && x.name && (kind === 'scales' ? x.scale && typeof x.scale === 'object' : Array.isArray(x.criteria) && x.criteria.length);
@@ -29,7 +31,7 @@ const rowsText = x => (Array.isArray(x.criteria) ? { ...x, criteria: x.criteria.
 const listOf = (b, kind) => ((b && b[kind]) || []).filter(x => usable(kind, x)).map(rowsText);
 
 // Read, change and write in one go; the whole record before and after is the undo step.
-// A read that fails stops the change, so a bank that couldn't be read is never written over (audit H-010). Undo and redo change the
+// A read that fails stops the change, so a bank that couldn't be read is never written over (audit H-010, H-011). Undo and redo change the
 // bank as it is then, keeping what was saved in between (audit H-012).
 const byId = { key: x => (x && x.id) || JSON.stringify(x) };
 const bankStep = (from, to) => async () => { const now = tidyBank(await bankRec.get());
@@ -133,8 +135,10 @@ export function UnitBank({ p, u }) {
   const mine = [...listOf(b, 'rubrics').map(x => ['rubrics', x]), ...listOf(b, 'scales').map(x => ['scales', x])].filter(([, x]) => refKey(p, x.unit) === u.id);
   return <section class="side-sec ubank" aria-labelledby="h-ubank"><h2 id="h-ubank" class="sub">{t('more.bk_unit_h')}</h2>
     {mine.length ? <ul class="list">{sortIt(mine).map(([kind, x]) => <Item p={p} kind={kind} x={x} open={E.open} onMove={E.onMove} />)}</ul> : <p class="mute">{t('more.bk_unit_none')}</p>}
-    <div class="row gap"><Button size="sm" icon="plus" onClick={() => E.open('rubrics', newItem(p, 'rubrics', u.id), true)} data-bknew="rubrics">{t('more.bk_rubric')}</Button>
-      <Button size="sm" icon="plus" onClick={() => E.open('scales', newItem(p, 'scales', u.id), true)} data-bknew="scales">{t('more.bk_scale')}</Button></div>
+    <div class="row gap"><Menu label={t('cal.bk_new')} items={[{ id: 'rubrics', label: t('more.bk_rubric'), icon: 'plus', onSelect: () => E.open('rubrics', newItem(p, 'rubrics', u.id), true) },
+        { id: 'scales', label: t('more.bk_scale'), icon: 'plus', onSelect: () => E.open('scales', newItem(p, 'scales', u.id), true) }]}
+        trigger={q => <Button size="sm" icon="plus" {...q} data-bknew-unit>{t('cal.bk_new')}</Button>} />
+      <a class="btn sm quiet" href={href('library', 'rubrics')} data-bkopen>{t('cal.open_bank')}</a></div>
     {E.ui}
   </section>;
 }

@@ -66,6 +66,8 @@ async function refresh() { try { data = await focusRead(); } catch (e) { console
 export async function start(key, len, one) {
   wake();
   if (!data) await refresh();
+  // A lesson made a moment ago (Plan it, plan/<class>/<day>) is not in what was read before: read again, or nothing would start.
+  else if (/^les:/.test(key || '') && !safe(() => E.fcWork(key))) await refresh();
   const c = E.fcConf();
   ui.open = false; E.fcS.len = 0;
   safe(() => E.fcStart(len || (/^les:/.test(key || '') ? c.llen : c.len), key || '', one || false));

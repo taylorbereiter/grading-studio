@@ -10,7 +10,12 @@ const until = (p, fn, ...a) => p.waitForFunction(fn, { timeout: 8000 }, ...a);
 const menuItem = (p, label) => p.evaluate(l => { const b = [...document.querySelectorAll('.pop [role="menuitem"]')].find(x => x.textContent.includes(l)); if (!b) return false; b.click(); return true; }, label);
 async function cardMenu(p, id, how = 'right') {
   if (how === 'right') await p.click('.lcw a[data-lesson="' + id + '"]', { button: 'right' });
-  else { await p.focus('.lcw a[data-lesson="' + id + '"]'); await p.keyboard.press('Tab'); await until(p, id => document.activeElement && document.activeElement.matches('[data-cardmenu="' + id + '"]'), id); await p.keyboard.press('Enter'); }
+  else {
+    // the cards can draw again just after an Undo, taking focus with them: focus and Tab until the dots hold focus
+    const on = () => p.evaluate(id => !!(document.activeElement && document.activeElement.matches('[data-cardmenu="' + id + '"]')), id);
+    for (let i = 0; i < 20 && !(await on()); i++) { await p.focus('.lcw a[data-lesson="' + id + '"]'); await p.keyboard.press('Tab'); if (!(await on())) await new Promise(r => setTimeout(r, 200)); }
+    assert.ok(await on(), 'the card’s dots hold focus'); await p.keyboard.press('Enter');
+  }
   await p.waitForSelector('.pop [role="menuitem"]');
 }
 

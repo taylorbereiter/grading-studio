@@ -174,7 +174,15 @@ export function Present({ p, l, start = 0, className, slot, save, onClose }) {
     const fs = () => { setIsFull(!!document.fullscreenElement); if (!document.fullscreenElement) setSize(fit()); };
     document.addEventListener('fullscreenchange', fs);
     if (box.current) box.current.focus();
-    return () => { shut(); window.removeEventListener('keydown', key, true); window.removeEventListener('resize', rs); document.removeEventListener('fullscreenchange', fs); };
+    // The class screen window closes with this page too (a reload, the tab closed), not left frozen on the projector; and the
+    // screen stays awake while presenting, taken again when she comes back to the tab (src/planner/present.js).
+    const gone = () => shut();
+    window.addEventListener('pagehide', gone);
+    let lock = null;
+    const awake = () => { try { if (lock && !lock.released) return; if (document.visibilityState === 'visible' && navigator.wakeLock) navigator.wakeLock.request('screen').then(x => { lock = x; }, () => {}); } catch {} };
+    awake(); document.addEventListener('visibilitychange', awake);
+    return () => { shut(); window.removeEventListener('pagehide', gone); document.removeEventListener('visibilitychange', awake); try { if (lock) lock.release(); } catch {}
+      window.removeEventListener('keydown', key, true); window.removeEventListener('resize', rs); document.removeEventListener('fullscreenchange', fs); };
   }, [l.id]);
   st.current.links = links; st.current.ticks = ticks; st.current.nItems = items.length;
   // The class screen window: the slide drawn the same way, scaled to the window, kept in step below. F there (or its own button)

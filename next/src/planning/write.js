@@ -18,6 +18,7 @@
 // A lesson written while a Planner folder is linked also goes to its file there (planning/folder.js), as the current Planner does.
 import { lessons, kv, school, schoolFiles, manageBacLinks, taughtIn, planTime, newYear, words, look, theme, language, mailApp, googleEmail, googleAuto, drivePaperDir, driveVideoDir, planCopy, planSeen, planBig, presentTimer, presentSound, presentBig, presentOwn } from './index.js';
 import { mayWrite } from '../shared/lock.js';
+import { plan } from './plan.js';
 import * as tabs from '../shared/tabs.js';
 import { saved } from '../shared/saved.js';
 import { writeMany } from '../shared/idb.js';
@@ -87,9 +88,14 @@ export async function dropPlannerKv(key) {
 }
 const KV = ['setup', 'units', 'bank', 'activities', 'words', 'deflook'];
 // file: false for a record just read from the Planner folder, so it isn't written straight back.
+const WHOLE = ['units', 'bank', 'activities'];
 export async function saveKv(name, value, { file = true } = {}) {
   if (!KV.includes(name)) throw new Error('Not a Planner record: ' + name);
   check('gs-lessons/kv/' + name);
+  // The units, the bank and her activities are saved whole, from the copy last read: if that read failed, the copy is empty and
+  // saving it would erase the rest (rebuild/audit/hooks.md H-013, H-014, H-020). Nothing is saved until a read works.
+  const cur = plan();
+  if (cur && Array.isArray(cur.failed) && cur.failed.includes(name) && WHOLE.includes(name)) throw Object.assign(new Error('Planner record not read: ' + name), { unread: true });
   const was = name === 'units' ? await kv.get('units').catch(() => null) : null;
   await kv.put(value, name);
   const f = file ? await plannerFolder() : null;
@@ -140,6 +146,8 @@ export function saveTaughtNote(key, note) {
   taughtIn.setJson(o);
   saved({ kind: 'pref', id: 'gsp.taughtIn', side: 'planning' });
 }
+// The new school years the Planner has moved on to (kv yearsDone, src/planner/units.js yearMoveOn), so a move is done once.
+export async function saveYearsDone(list) { check('gs-lessons/kv/yearsDone'); await kv.put(list, 'yearsDone'); tell('gs-plan-out'); saved({ kind: 'plan', id: 'yearsDone', side: 'planning' }); }
 export function startNewYear(v) { check('gsp.newYear'); newYear.setJson(v); saved({ kind: 'pref', id: 'gsp.newYear', side: 'planning' }); }
 export function setGoogleToken(v) { mayWrite('sessionStorage:gs.gTok'); try { if (v == null) sessionStorage.removeItem('gs.gTok'); else sessionStorage.setItem('gs.gTok', JSON.stringify(v)); } catch {} }
 export async function saveSchoolFile(hash, data) {
