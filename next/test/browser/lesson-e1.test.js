@@ -39,7 +39,9 @@ test('E1-004 E1-005 E1-006 E1-007 E1-015 E1-016: a Video slide gets its link, wh
   // Not a link: says so and keeps the sheet open
   await p.click('main [data-focus="video-link"]'); await K.focusIn(p, '.sheet');
   assert.equal(await p.$eval('.sheet [data-focus="video-start"]', i => i.value), '1:05', 'the start is shown as minutes:seconds');
-  await p.focus('.sheet [data-focus="video-url"]'); await p.keyboard.down('Control'); await p.keyboard.press('a'); await p.keyboard.up('Control'); await p.keyboard.type('not a link');
+  // emptied first (a select-all by keys can miss under load, leaving the old link in front of the words)
+  await p.$eval('.sheet [data-focus="video-url"]', i => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(i, ''); i.dispatchEvent(new Event('input', { bubbles: true })); });
+  await typeIn(p, '.sheet [data-focus="video-url"]', 'not a link');
   await p.click('.sheet [data-focus="video-use"]');
   await p.waitForFunction(() => document.body.textContent.includes('That doesn’t look like a link'));
   // Take the video off (E1-006)
