@@ -26,6 +26,7 @@ import { onSaved } from '../shared/saved.js';
 import { sampleOn, leaveSample } from './sample.js';
 import { useUpdate } from './update.js';
 import { useSaving } from '../services/saving.js';
+import { troubles, onTrouble } from './saving/trouble.js';
 
 const TOP = [['home', 'home', 'nav.home'], ['calendar', 'cal', 'nav.calendar'], ['todo', 'todo', 'nav.todo']];
 const FOOT = [['library', 'library', 'nav.library'], ['school', 'school', 'nav.school'], ['settings', 'settings', 'nav.settings'], ['help', 'help', 'nav.help']];
@@ -122,6 +123,7 @@ function useLookValue() {
 // The update line at the foot of the sidebar, above a phone's tabs (src/phone.js phUpd), and on More on a phone.
 export function UpdateLine({ big }) {
   const u = useUpdate();
+  if (u.stale) return big ? <p class="mute upd-none">{t('update.stale')}</p> : null; // the strip over the page says it (StaleStrip)
   if (!u.waiting) return big ? <p class="mute upd-none">{u.current ? t('update.current', { v: u.current }) : t('update.not_kept')}</p> : null;
   return <div class={'upd' + (big ? ' big' : '')} role="status"><Icon name="download" /><span>{t('update.ready')}</span>
     <button type="button" class="btn sm pri" onClick={u.apply} data-focus="update-now">{t('update.now')}</button></div>;
@@ -140,12 +142,25 @@ function Strip({ lock }) {
   if (lock === 'read-only') return <div class="strip" role="alert"><Icon name="info" /><span>{t('lock.read_only')}</span></div>;
   return null;
 }
+// Another window updated: this one stays on the older version, with its work, until she reloads it (src/safe.js, the current
+// app's "Reload to update"). Over the page, so it shows while marking too.
+function StaleStrip() {
+  const u = useUpdate();
+  return u.stale ? <div class="strip" role="status" data-upd-strip><Icon name="download" /><span>{t('update.stale')}</span>
+    <button type="button" class="btn sm pri" onClick={u.reload} data-focus="update-reload">{t('update.reload')}</button></div> : null;
+}
 // Another window is replacing everything (Bring work in, Put back, Remove): this one stops writing and says so over the whole
 // page, and reloads by itself when that is done (shared/tabs.js, as the current app's src/saving.js tabLive).
 function OverCover() {
   const [on, set] = useState(tabsStopped());
   useEffect(() => { const off = onStopped(() => set(true)); set(tabsStopped()); return off; }, []);
   return on ? <div class="tabover" role="alert" data-tabover>{t('lock.over')}</div> : null;
+}
+// Work that didn't save: the red bar (saving/bar.jsx), loaded only then.
+function SaveBar() {
+  const [B, setB] = useState(null), [n, set] = useState(troubles().length);
+  useEffect(() => onTrouble(() => { const k = troubles().length; set(k); if (k) router.PARTS.savebar().then(setB, e => console.error(e)); }), []);
+  return n && B ? <B.SaveBar /> : null;
 }
 function SampleStrip() {
   if (!sampleOn()) return null;
@@ -242,6 +257,8 @@ export function Shell() {
     {folded && <IconButton class="unfold" icon="menu" label={t('nav.expand')} onClick={fold} />}
     <div class="mainwrap">
       <SampleStrip />
+      <SaveBar />
+      <StaleStrip />
       <Strip lock={lock} />
       <OverCover />
       <main id="main" ref={main} class="main" data-route={route.path}><Screen route={route} classes={classes} /></main>

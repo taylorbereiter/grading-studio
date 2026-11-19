@@ -283,5 +283,11 @@
  "saving.ask_later": "暫時不要",
  "saving.ask_later_done": "在選擇資料夾之前，側邊欄會一直顯示「尚未備份」。隨時都可以點選它。",
  "saving.w_line": "{text}。",
- "saving.w_line2": "{text}。{tip}。"
+ "saving.w_line2": "{text}。{tip}。",
+ "saving.bad_not": "您最新的批改和分數尚未儲存。",
+ "saving.bad_partly": "您最新的批改和分數只部分儲存在這個瀏覽器的小型快速副本中。",
+ "saving.bad_how": "瀏覽器無法儲存它們，通常是因為電腦空間不足。請保持這個視窗開啟，騰出一些空間，然後按「再試一次」。",
+ "saving.bad_retry": "再試一次",
+ "saving.bad_export": "匯出目前的內容",
+ "saving.bad_over": "已儲存。您的工作又安全了。"
 }

@@ -61,9 +61,12 @@ test('the new app’s service worker has its own scope and leaves the current ap
   for (const n of Object.keys(after)) assert.ok(n in before || /^gsn-/.test(n), 'a cache that is neither the current app’s nor gsn-*: ' + n);
   assert.ok(after['gsn-app-1'].every(f => f.startsWith('/next/')), 'the new app keeps only its own files');
   // The current app's pages are still answered by the current app's worker.
-  await p.goto(srv.url + 'index.html?sw=1#/');
-  assert.equal(await p.evaluate(() => new URL(navigator.serviceWorker.controller.scriptURL).pathname), '/sw.js');
-  assert.deepEqual(p.errors, []); await p.ctx.close();
+  // (in a new tab of the same profile: the next/ page is left as it is rather than navigated away mid-update)
+  const errs = p.errors, q = await p.ctx.newPage(); await p.close();
+  await q.goto(srv.url + 'index.html?sw=1#/');
+  await q.waitForFunction(() => !!navigator.serviceWorker.controller, { timeout: 15000 });
+  assert.equal(await q.evaluate(() => new URL(navigator.serviceWorker.controller.scriptURL).pathname), '/sw.js');
+  assert.deepEqual(errs, []); await p.ctx.close();
 });
 
 test('on a phone, a newer version shows Update now on More, and pressing it takes the new version whole', async () => {

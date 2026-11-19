@@ -283,5 +283,11 @@
  "saving.ask_later": "Ahora no",
  "saving.ask_later_done": "La barra lateral seguirá diciendo “Sin copia de seguridad” hasta que elijas una carpeta. Haz clic ahí cuando quieras.",
  "saving.w_line": "{text}.",
- "saving.w_line2": "{text}. {tip}."
+ "saving.w_line2": "{text}. {tip}.",
+ "saving.bad_not": "Sus últimas marcas y puntuaciones NO están guardadas.",
+ "saving.bad_partly": "Sus últimas marcas y puntuaciones solo están guardadas en parte, en la pequeña copia rápida de este navegador.",
+ "saving.bad_how": "El navegador no quiso guardarlas, a menudo porque el equipo no tiene espacio. Deje esta ventana abierta, libere algo de espacio y pulse Intentar de nuevo.",
+ "saving.bad_retry": "Intentar de nuevo",
+ "saving.bad_export": "Exportar lo que tengo",
+ "saving.bad_over": "Guardado. Su trabajo vuelve a estar a salvo."
 }
