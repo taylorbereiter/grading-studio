@@ -6,6 +6,7 @@ import { t } from '../../i18n/t.js';
 import { href, PARTS } from '../router.js';
 import { currentLook, saveLook, onLook } from '../../services/theme.js';
 import { useState, useEffect } from 'preact/hooks';
+import { goNew } from '../old-routes.js';
 import { LANGUAGES, savedLanguage, saveLanguage, langMissed } from '../language.js';
 import { sampleOn, enterSample, leaveSample } from '../sample.js';
 import { useUpdate } from '../update.js';
@@ -65,6 +66,9 @@ function About() {
     <div class="row gap">{u.waiting ? <Button variant="primary" onClick={u.apply}>{t('update.now')}</Button> : <Button onClick={u.check}>{t('update.check')}</Button>}</div>
     <Segmented label={t('update.mode')} value={u.mode} onChange={u.setMode} options={[{ value: 'ask', label: t('update.mode_ask') }, { value: 'auto', label: t('update.mode_auto') }]} />
     {u.checked === 'offline' && <p class="hint">{t('update.offline')}</p>}
+    {/* the previous version, whole at classic/ beside this one, on the same saved work (build.js writes it) */}
+    <p class="mute">{t('update.previous_text')}</p>
+    <div class="row gap"><a class="btn" href="classic/" data-focus="previous-version">{t('update.previous')}</a></div>
   </Card>
   <Card title={t('settings.install_h')}>
     <p class="mute">{t(standalone || u.installed ? 'settings.install_done' : 'settings.install_about')}</p>
@@ -73,6 +77,8 @@ function About() {
 }
 export default function Settings({ route }) {
   const g = GROUPS.find(x => x[0] === route.params.group) || GROUPS.find(x => x[0] === 'display');
+  // a page of the previous version's Settings (#/settings/claude…): the group with those settings now (old-routes.js)
+  useEffect(() => { if (route.params.group && g[0] !== route.params.group) goNew(); }, [route.path]);
   return <div class="page">
     <header class="ph"><h1>{t('nav.settings')}</h1><p>{t('settings.about_page')}</p></header>
     <div class="setg">

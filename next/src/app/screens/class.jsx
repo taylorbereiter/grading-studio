@@ -16,6 +16,7 @@ import { lessonsOn, stateOf, arrived, STATE_LINE, periods, dayOff, today, plus, 
 import { saveFailed } from '../plan/save.js';
 import '../plan/rev-lines.js';
 import Later from './later.jsx';
+import { goNew } from '../old-routes.js';
 import { UnitSheet } from '../plan/unit-edit.jsx';
 import { usePart } from '../parts.js';
 import { planCtx } from '../plan/ctx-on.js';
@@ -121,6 +122,8 @@ export default function ClassPage({ route, classes }) {
   const lib = (classes || []).filter(x => !x.loose);
   const x = (classes || []).find(k => (k.id || '-') === route.params.id);
   const tab = TABS.includes(route.params.tab) ? route.params.tab : 'course';
+  // a tab of the previous version's class page (#/class/<id>/gradebook…): the new tab with that work (old-routes.js)
+  useEffect(() => { if (route.params.tab && !TABS.includes(route.params.tab)) goNew(); }, [route.path]);
   const [pins, setPins] = useState([]), [pk, setPk] = useState(false), Pk = usePart('picker', pk), Cl = usePart('clink', !!x && !x.loose);
   // An address for a class that isn't there (src/app/screens.js noClass): said, and the class list; checked against a fresh read, so
   // a class made a moment ago isn't taken for one that's gone. #/class-named/<name> (the Planner's sidebar link) finds it by name.
