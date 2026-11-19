@@ -120,5 +120,11 @@
  "home.nx_see": "See who",
  "home.nx_open": "Open Insights",
  "home.nx_last": "the last set of papers",
- "home.nx_bar": "{name} {avg} of {top}"
+ "home.nx_bar": "{name} {avg} of {top}",
+ "home.att_take": "Take attendance",
+ "home.att_done": "Attendance taken · {say}",
+ "home.att_all": "everyone here",
+ "home.att_l": "{n} late",
+ "home.att_a": "{n} absent",
+ "home.att_e": "{n} excused"
 }

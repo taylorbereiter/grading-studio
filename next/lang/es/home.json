@@ -120,5 +120,11 @@
  "home.nx_see": "Ver quiénes",
  "home.nx_open": "Abrir Análisis",
  "home.nx_last": "el último grupo de trabajos",
- "home.nx_bar": "{name} {avg} de {top}"
+ "home.nx_bar": "{name} {avg} de {top}",
+ "home.att_take": "Pasar lista",
+ "home.att_done": "Lista pasada · {say}",
+ "home.att_all": "todos presentes",
+ "home.att_l": "{n} con retraso",
+ "home.att_a": "{n} ausentes",
+ "home.att_e": "{n} justificados"
 }

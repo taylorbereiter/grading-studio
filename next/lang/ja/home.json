@@ -120,5 +120,11 @@
  "home.nx_see": "誰かを見る",
  "home.nx_open": "分析を開く",
  "home.nx_last": "直近の提出物",
- "home.nx_bar": "{name} {top} 中 {avg}"
+ "home.nx_bar": "{name} {top} 中 {avg}",
+ "home.att_take": "出欠をとる",
+ "home.att_done": "出欠確認済み · {say}",
+ "home.att_all": "全員出席",
+ "home.att_l": "遅刻 {n}",
+ "home.att_a": "欠席 {n}",
+ "home.att_e": "公欠 {n}"
 }

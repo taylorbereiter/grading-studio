@@ -156,3 +156,5 @@ section.now .empty{padding-bottom:22px}
 .hnext .bv{color:var(--mute)}
 .hnext p.mute{margin:0 0 10px}
 .hnext .link{display:inline-flex;align-items:center;gap:4px;color:var(--acc-ink);text-decoration:none;font-size:var(--t2)}
+.now .day .tatt{font-size:var(--t1);color:var(--acc-ink);text-decoration:none}
+.now .day .tatt.done{color:var(--mute)}

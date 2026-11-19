@@ -116,5 +116,11 @@
  "home.nx_see": "Ver quem",
  "home.nx_open": "Abrir Análise",
  "home.nx_last": "o último conjunto de trabalhos",
- "home.nx_bar": "{name} {avg} de {top}"
+ "home.nx_bar": "{name} {avg} de {top}",
+ "home.att_take": "Fazer a chamada",
+ "home.att_done": "Chamada feita · {say}",
+ "home.att_all": "todos presentes",
+ "home.att_l": "{n} atrasados",
+ "home.att_a": "{n} ausentes",
+ "home.att_e": "{n} justificados"
 }

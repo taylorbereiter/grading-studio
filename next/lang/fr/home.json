@@ -120,5 +120,11 @@
  "home.nx_see": "Voir qui",
  "home.nx_open": "Ouvrir Analyse",
  "home.nx_last": "le dernier lot de copies",
- "home.nx_bar": "{name} {avg} sur {top}"
+ "home.nx_bar": "{name} {avg} sur {top}",
+ "home.att_take": "Faire l’appel",
+ "home.att_done": "Appel fait · {say}",
+ "home.att_all": "tout le monde est là",
+ "home.att_l": "{n} en retard",
+ "home.att_a": "{n} absents",
+ "home.att_e": "{n} excusés"
 }

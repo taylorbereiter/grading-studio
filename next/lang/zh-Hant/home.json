@@ -120,5 +120,11 @@
  "home.nx_see": "查看是誰",
  "home.nx_open": "開啟分析",
  "home.nx_last": "最近一批作業",
- "home.nx_bar": "{name} {avg}/{top}"
+ "home.nx_bar": "{name} {avg}/{top}",
+ "home.att_take": "點名",
+ "home.att_done": "已點名 · {say}",
+ "home.att_all": "全員到齊",
+ "home.att_l": "{n} 人遲到",
+ "home.att_a": "{n} 人缺席",
+ "home.att_e": "{n} 人請假"
 }

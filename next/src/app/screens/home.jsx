@@ -40,6 +40,12 @@ function useHome() {
   return [v, tick];
 }
 
+// Take attendance, or what was taken today (src/attend.js attTodayLine)
+function attLine(a) {
+  if (!a.taken) return t('home.att_take');
+  const say = [a.l ? t('home.att_l', { n: a.l }) : '', a.a ? t('home.att_a', { n: a.a }) : '', a.e ? t('home.att_e', { n: a.e }) : ''].filter(Boolean).join(' · ');
+  return t('home.att_done', { say: say || t('home.att_all') });
+}
 function NowCard({ teach, now, plan }) {
   if (!teach) return <Card class="card pad now"><EmptyState icon="cal" title={t('home.no_timetable')} text={t('home.no_timetable_text')} /></Card>;
   if (teach.off || !teach.rows.length) return <Card class="card pad now"><EmptyState icon="sun" title={t('home.no_classes_today')} text={typeof teach.off === 'string' ? raw(teach.off) : null} /></Card>;
@@ -62,7 +68,8 @@ function NowCard({ teach, now, plan }) {
       const note = l && l.got ? (l.got.slide >= l.got.of ? t('home.taught') : t('home.taught_to', { n: l.got.slide, of: l.got.of })) : '';
       return <li class={r.now ? 'on' : hm(r.end) <= mins ? 'past' : ''} style={{ '--cc': toneOf(r.color) }}>
         <a class="p" href={to} title={what} aria-label={t('home.row_go', { cls: r.name, what })} data-teach={r.classId}><ClassDot color={toneOf(r.color)} />{raw(r.name)}</a>
-        <span class="tm"><span data-raw>{clock(r.start)}</span>{note && <span data-taught> · {note}</span>}</span></li>; })}</ol>
+        <span class="tm"><span data-raw>{clock(r.start)}</span>{note && <span data-taught> · {note}</span>}</span>
+        {r.att && <a class={'tatt' + (r.att.taken ? ' done' : '')} href={href('class', r.att.classId, 'people', 'attendance')} data-tatt={r.att.classId}>{attLine(r.att)}</a>}</li>; })}</ol>
   </section>;
 }
 

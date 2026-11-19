@@ -120,5 +120,11 @@
  "home.nx_see": "누구인지 보기",
  "home.nx_open": "분석 열기",
  "home.nx_last": "최근 과제 묶음",
- "home.nx_bar": "{name} {top} 중 {avg}"
+ "home.nx_bar": "{name} {top} 중 {avg}",
+ "home.att_take": "출석 확인",
+ "home.att_done": "출석 확인 완료 · {say}",
+ "home.att_all": "전원 출석",
+ "home.att_l": "지각 {n}명",
+ "home.att_a": "결석 {n}명",
+ "home.att_e": "사유 결석 {n}명"
 }

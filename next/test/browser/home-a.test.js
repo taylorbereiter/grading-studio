@@ -160,3 +160,20 @@ test('A-060 A-075: what the class needs next, from the newest finished rubric se
   for (const n of ['Aria', 'Bram', 'Cleo', 'Dov', 'Esme', 'Finn']) assert.ok(!card.text.includes(n));
   assert.deepEqual(errors, []); await ctx.close();
 });
+
+test('B-064: each of today’s classes with a roster says whether attendance was taken, and opens the attendance page', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), p = await ctx.newPage();
+  p.on('pageerror', e => errors.push(e.message));
+  await p.evaluateOnNewDocument(STEADY); await p.setViewport({ width: 1440, height: 900 });
+  const s = seed(), lib = JSON.parse(s.ls['gs.lib']), c1 = lib.classes[0];
+  c1.att = { '2026-10-27': { t: NOW, m: { [c1.names[0]]: 'l' }, n: {} } };
+  lib.classes.push({ id: 'c2', name: 'Grade 10 Literature', names: ['Avery Stone', 'Blake Rivers'], units: [] });
+  s.ls['gs.lib'] = JSON.stringify(lib);
+  await p.goto(srv.url + 'blank'); await plant(p, s);
+  await p.goto(srv.url + 'next/#/home'); await p.waitForSelector('[data-tatt]', { timeout: 30000 });
+  const att = await p.$$eval('[data-home="teach"] [data-tatt]', l => l.map(a => [a.dataset.tatt, a.textContent, a.hash]));
+  assert.deepEqual(att, [['c2', 'Take attendance', '#/class/c2/people/attendance'], ['c1', 'Attendance taken · 1 late', '#/class/c1/people/attendance']]);
+  await p.click('[data-tatt="c2"]');
+  await p.waitForFunction(() => location.hash === '#/class/c2/people/attendance', { timeout: 10000 });
+  assert.deepEqual(errors, []); await ctx.close();
+});
