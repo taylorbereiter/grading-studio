@@ -54,7 +54,10 @@ export async function countsForHome(now = Date.now()) {
   if (plan) {
     const t = T.dayRows(plan, now), cur = T.nowRow(t.rows, now);
     teach = { off: t.off, rows: t.rows.map(r => ({ classId: r.c.id, name: r.c.name, color: r.c.color, start: r.m.start, end: r.m.end, now: r === cur,
-      lesson: r.lessons[0] ? { id: r.lessons[0].id, title: r.lessons[0].title, n: r.lessons[0].n, ready: r.lessons[0].ready, done: r.lessons[0].done } : null, more: Math.max(0, r.lessons.length - 1) })) };
+      lesson: r.lessons[0] ? (l => { const got = l.taught.find(x => x.classId === String(r.c.id) && x.date === T.isoDay(now)) || null;
+        // presents unless this class was taught it to the end today (src/today.js todayHtml row)
+        return { id: l.id, title: l.title, n: l.n, ready: l.ready, done: l.done, got: got ? { slide: got.slide, of: got.of } : null, show: l.n > 0 && !(got && got.slide >= got.of) }; })(r.lessons[0]) : null,
+      more: Math.max(0, r.lessons.length - 1) })) };
   }
   // the lines To do works out (students/todo.js autoLines), so Home, To do and the sidebar count the same
   const auto = await (await import('./students/todo-auto.js')).autoLines(now, { lib, kept, plan }), cname = id => String((lib.classes.find(c => String(c.id) === id) || {}).name || '');

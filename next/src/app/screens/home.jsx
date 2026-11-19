@@ -53,11 +53,16 @@ function NowCard({ teach, now, plan }) {
       {cur.lesson && <div class="meta">{(cur.lesson.ready || cur.lesson.done) && <span class="ok"><Icon name="check" size="xs" />{t('home.ready')}</span>}
         {cur.lesson.n > 0 && <span><Icon name="slides" size="xs" />{t('home.slides', { n: cur.lesson.n })}</span>}</div>}
       {cur.lesson && (l => l && l.slides && l.slides[0] ? <a class="first" href={href('lesson', l.id)} aria-label={t('home.open_lesson')}><Slide slide={l.slides[0]} lesson={l} plan={plan} width={240} /></a> : null)(plan && plan.lessons.find(x => x.id === cur.lesson.id))}
-      <div class="acts">{cur.lesson ? <><a class="btn pri lg" href={href('lesson', cur.lesson.id)}><Icon name="play" />{t('home.present')}</a><a class="btn lg" href={href('lesson', cur.lesson.id)}>{t('home.open_lesson')}</a></>
+      <div class="acts">{cur.lesson ? <>{cur.lesson.show && <a class="btn pri lg" href={href('lesson', cur.lesson.id, 'present', cur.classId)} data-now-present><Icon name="play" />{t('home.present')}</a>}<a class={'btn lg' + (cur.lesson.show ? '' : ' pri')} href={href('lesson', cur.lesson.id)}>{t('home.open_lesson')}</a></>
         : <a class="btn pri lg" href={href('class', cur.classId)}>{t('home.plan_it')}</a>}</div>
     </div> : <p class="mute nowdone">{t('home.day_over')}</p>}
-    <ol class="day" aria-label={t('home.today_classes')}>{teach.rows.map(r => <li class={r.now ? 'on' : hm(r.end) <= mins ? 'past' : ''} style={{ '--cc': toneOf(r.color) }}>
-      <span class="p"><ClassDot color={toneOf(r.color)} />{raw(r.name)}</span><span class="tm" data-raw>{clock(r.start)}</span></li>)}</ol>
+    <ol class="day" aria-label={t('home.today_classes')}>{teach.rows.map(r => { const l = r.lesson, what = l ? (l.show ? t('home.present') : t('home.open_lesson')) : t('home.plan_it');
+      // each class goes where the current app's Teaching today row goes: presenting, its lesson, or planning it (src/today.js todayHtml)
+      const to = l ? (l.show ? href('lesson', l.id, 'present', r.classId) : href('lesson', l.id)) : href('class', r.classId);
+      const note = l && l.got ? (l.got.slide >= l.got.of ? t('home.taught') : t('home.taught_to', { n: l.got.slide, of: l.got.of })) : '';
+      return <li class={r.now ? 'on' : hm(r.end) <= mins ? 'past' : ''} style={{ '--cc': toneOf(r.color) }}>
+        <a class="p" href={to} title={what} aria-label={t('home.row_go', { cls: r.name, what })} data-teach={r.classId}><ClassDot color={toneOf(r.color)} />{raw(r.name)}</a>
+        <span class="tm"><span data-raw>{clock(r.start)}</span>{note && <span data-taught> · {note}</span>}</span></li>; })}</ol>
   </section>;
 }
 

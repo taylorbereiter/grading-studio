@@ -1,4 +1,4 @@
-// Stage 8, slice A: Home's lists (rebuild/audit/gaps.md A-058, A-059, A-067, A-068, A-069, A-070, A-074), as the current app's
+// Stage 8, slice A: Home's lists and today's classes (rebuild/audit/gaps.md A-071, A-072, A-058, A-059, A-067, A-068, A-069, A-070, A-074), as the current app's
 // Today has them (src/today.js oldRow, src/shell.js renderNeedsOnly, src/app/kept.js forgetKept). Made-up downloads only.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
@@ -94,4 +94,23 @@ test('A-058 A-059 A-067 A-074: Earlier work shows the newest three, Show all and
   // the papers still to mark and to hand back have the same menu
   assert.ok(await p.$('[data-home="needs"] [data-hmenu="gs.b.n2"]'));
   assert.deepEqual(errors, []); await p.ctx.close();
+});
+
+test('A-071 A-072: each of today’s classes presents its lesson, opens it, or plans it, and says where the class got to', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), p = await ctx.newPage();
+  p.on('pageerror', e => errors.push(e.message));
+  await p.evaluateOnNewDocument(STEADY); await p.setViewport({ width: 1440, height: 900 });
+  const s = seed(), slides = [1, 2, 3].map(i => ({ layout: 'content', title: 'Part ' + i, body: '' }));
+  s.idb['gs-lessons'].stores.lessons = [['LB', { id: 'LB', title: 'Unreliable narrators', slots: [{ classId: 'B1', date: '2026-10-27' }], slides, taught: [{ classId: 'B1', date: '2026-10-27', slide: 2, of: 3 }], updated: NOW }]];
+  await p.goto(srv.url + 'blank'); await plant(p, s);
+  await p.goto(srv.url + 'next/#/home'); await p.waitForSelector('[data-teach]', { timeout: 30000 });
+  const day = await p.$$eval('[data-home="teach"] .day li', l => l.map(e => ({ cls: e.querySelector('[data-teach]').dataset.teach, href: e.querySelector('a').hash, label: e.querySelector('a').getAttribute('aria-label'), note: e.querySelector('.tm').textContent })));
+  assert.deepEqual(day.map(d => [d.cls, d.href]), [['B1', '#/lesson/LB/present/B1'], ['A1', '#/class/A1']]);
+  assert.equal(day[0].label, 'Grade 10 Literature: Present'); assert.equal(day[1].label, 'Grade 9 English: Plan it');
+  assert.match(day[0].note, /taught to slide 2 of 3/);
+  // the class on next presents from its own button too
+  assert.equal(await p.$eval('[data-now-present]', a => a.hash), '#/lesson/LB/present/B1');
+  await p.click('[data-teach="B1"]');
+  await p.waitForFunction(() => location.hash === '#/lesson/LB/present/B1', { timeout: 10000 });
+  assert.deepEqual(errors, []); await ctx.close();
 });
