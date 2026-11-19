@@ -1352,5 +1352,29 @@
  "class.rp_cuts": "Notes :",
  "class.rp_cut_hi": "la plus haute à partir de",
  "class.rp_cut_good": "bonne à partir de",
- "class.rp_cut_mid": "moyenne à partir de"
+ "class.rp_cut_mid": "moyenne à partir de",
+ "class.mc_card_say": "Niveaux par critère, les notes de 1 à 7, chaque tâche",
+ "class.mc_set": "Notes attribuées",
+ "class.mc_set_say": "chaque critère a un niveau",
+ "class.mc_crit_mid": "{k} niveau médian",
+ "class.mc_levels": "Niveaux que vous avez attribués, par critère",
+ "class.mc_levels_say": "Combien d’élèves se trouvent dans chaque tranche de chaque critère, d’après les niveaux que vous avez attribués pour cette période. Le nombre à droite est le niveau médian.",
+ "class.mc_recent": "Niveau le plus récent, par critère",
+ "class.mc_recent_say": "La même image à partir de la dernière tâche de chaque élève sur chaque critère, avant que vous ayez attribué quoi que ce soit.",
+ "class.mc_grades": "Notes",
+ "class.mc_grade_n": "Note {g}",
+ "class.mc_grades_say": "Les élèves dont chaque critère a un niveau, selon la note de 1 à 7 que leur total obtient avec les seuils de cette classe.",
+ "class.mc_tasks": "Chaque tâche",
+ "class.mc_task": "Tâche",
+ "class.mc_marked": "Corrigées",
+ "class.mc_no_task": "Aucune tâche n’a encore de niveaux pour cette période.",
+ "class.mc_tasks_say": "Le niveau médian atteint par la classe sur chaque critère évalué par une tâche, avec le plus bas et le plus haut.",
+ "class.mc_often": "Combien de fois chaque critère a été évalué cette année",
+ "class.mc_n_tasks": {
+  "one": "une tâche",
+  "other": "{n} tâches"
+ },
+ "class.mc_plus_fm": "+ {n} formative(s)",
+ "class.mc_fewer": "moins de deux",
+ "class.mc_foot": "Rien ici n’est une moyenne de niveaux : le niveau médian est celui que la moitié de la classe atteint ou dépasse."
 }

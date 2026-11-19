@@ -1373,5 +1373,29 @@
  "class.rp_cuts": "성적:",
  "class.rp_cut_hi": "최고 기준",
  "class.rp_cut_good": "좋음 기준",
- "class.rp_cut_mid": "보통 기준"
+ "class.rp_cut_mid": "보통 기준",
+ "class.mc_card_say": "기준별 수준, 1~7 등급, 과제별",
+ "class.mc_set": "등급 확정",
+ "class.mc_set_say": "모든 기준에 수준이 있음",
+ "class.mc_crit_mid": "{k} 중간 수준",
+ "class.mc_levels": "내가 정한 수준(기준별)",
+ "class.mc_levels_say": "이번 학기에 정한 수준으로 본, 각 기준의 구간별 학생 수입니다. 오른쪽 숫자는 중간 수준입니다.",
+ "class.mc_recent": "가장 최근 수준(기준별)",
+ "class.mc_recent_say": "아무것도 정하기 전, 각 학생의 기준별 최근 과제로 본 같은 그림입니다.",
+ "class.mc_grades": "등급",
+ "class.mc_grade_n": "{g}등급",
+ "class.mc_grades_say": "모든 기준에 수준이 있는 학생을, 합계가 이 반의 경계로 받는 1~7 등급별로 보여 줍니다.",
+ "class.mc_tasks": "과제별",
+ "class.mc_task": "과제",
+ "class.mc_marked": "채점함",
+ "class.mc_no_task": "이번 학기에는 아직 수준이 있는 과제가 없습니다.",
+ "class.mc_tasks_say": "과제가 평가한 각 기준에서 반이 도달한 중간 수준과 최저, 최고입니다.",
+ "class.mc_often": "올해 각 기준을 평가한 횟수",
+ "class.mc_n_tasks": {
+  "one": "과제 {n}개",
+  "other": "과제 {n}개"
+ },
+ "class.mc_plus_fm": "+ 형성 {n}개",
+ "class.mc_fewer": "두 번 미만",
+ "class.mc_foot": "여기에는 수준의 평균이 없습니다. 중간 수준은 반의 절반이 그 수준 이상인 수준입니다."
 }

@@ -97,9 +97,9 @@ export default function ClassWork({ classId, sub }) {
   const [tm, setTm] = useState(null);
   const load = () => { setLib(readLibrary()); readKept().then(setKept); PARTS.asg().then(A => A.timing().then(E => setTm({ A, E }))).catch(e => console.error(e)); };
   useEffect(load, [classId]);
-  useEffect(() => onSaved(e => { if (e.kind === 'library') setLib(readLibrary()); }), []);
+  useEffect(() => onSaved(e => { if (e.kind === 'library') setLib(readLibrary()); else if (e.side === 'students' && (e.kind === 'papers' || e.kind === 'work')) load(); }), []);   // counts filled in at load (H-047, B-903)
   // another window changed the library or saved marks in a download (src/folder.js libNews, src/saving.js; audit H-062, H-063)
-  useEffect(() => { const offs = [tabs.on('library', k => { if (k === 'gs.lib') setLib(readLibrary()); }), tabs.on('saved', () => readKept().then(setKept))]; return () => offs.forEach(f => f()); }, []);
+  useEffect(() => { const offs = [tabs.on('library', k => { if (k === 'gs.lib') setLib(readLibrary()); }), tabs.on('saved', () => load())]; return () => offs.forEach(f => f()); }, []);
   // A card or a unit dragged onto a class in the sidebar (src/app/screens.js railDragTarget): a card goes to that class's unit of the
   // same name (made if it isn't there), a unit to the end of that class. One undo step. Only this tab's own drags count.
   useEffect(() => {

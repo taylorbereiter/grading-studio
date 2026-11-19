@@ -9,6 +9,7 @@ import { t, num, addLines } from '../../i18n/t.js';
 import { go, href } from '../router.js';
 import { usePlan } from '../plan.js';
 import { copyText } from '../../services/clipboard.js';
+import { onSaved } from '../../shared/saved.js';
 import { askAdd, askPerson } from '../todo-add.js';
 import { todoCountsForSchool } from '../../crossings.js';
 import * as S from '../../planning/school.js';
@@ -30,7 +31,9 @@ function useSchool() {
     const other = e => { if (!e.key || e.key === 'gs.school') read(); };
     window.addEventListener('storage', other);
     const iv = setInterval(read, 30000);
-    return () => { window.removeEventListener('storage', other); clearInterval(iv); };
+    // a save in this window from anywhere, Ctrl+Z and Redo included (audit B-904)
+    const off = onSaved(e => { if (e.kind === 'pref' && e.id === 'gs.school') read(); });
+    return () => { window.removeEventListener('storage', other); clearInterval(iv); off(); };
   }, []);
   return [s, () => { set(S.schoolNow()); S.filesHere().then(setHave); }, have];
 }

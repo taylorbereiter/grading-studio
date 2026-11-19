@@ -646,3 +646,24 @@ dialog.dlg:has([data-wl-ask]){width:min(760px,calc(100vw - 32px));margin-top:6vh
 .cp-ch .rng{fill:color-mix(in oklab,var(--mute) 35%,transparent)}.cp-ch .iqr{fill:color-mix(in oklab,var(--acc) 55%,var(--s))}.cp-ch .mid{stroke:var(--ink);stroke-width:2}
 .chleg{display:flex;gap:16px;flex-wrap:wrap;font-size:var(--t1);color:var(--mute);margin-top:6px}.chleg i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .rpcuts{margin:8px 0 12px;align-items:center}.rpcuts input{width:5.5em}
+/* MYP charts (class/charts-myp.jsx): one stacked bar per criterion, a segment per band */
+.cp-ibstacks{display:grid;gap:6px;max-width:640px}
+.cp-ibstack{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:var(--t2)}
+.cp-ibstack>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cp-ibstack .num{text-align:right;font-weight:500;font-variant-numeric:tabular-nums}
+.ibsegs{display:flex;height:18px;border-radius:4px;overflow:hidden;background:var(--g100)}
+.ibseg{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:10.5px;min-width:14px;color:var(--ink)}
+.ibseg.s0{background:var(--g200,var(--line))}
+.ibseg.s1{background:color-mix(in oklab,var(--acc) 18%,var(--s))}
+.ibseg.s2{background:color-mix(in oklab,var(--acc) 40%,var(--s))}
+.ibseg.s3{background:color-mix(in oklab,var(--acc) 65%,var(--s));color:var(--white)}
+.ibseg.s4{background:var(--acc);color:var(--white)}
+.ibseg.sn{background:repeating-linear-gradient(45deg,var(--g100),var(--g100) 3px,var(--s) 3px,var(--s) 6px);color:var(--mute)}
+.cp-ibtasks{border-collapse:collapse;font-size:var(--t2)}
+.cp-ibtasks th,.cp-ibtasks td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.cp-ibtasks thead th{font-weight:500;color:var(--mute)}
+.cp-ibtasks tbody th{font-weight:400}
+.cp-ibtasks tr.fm th{color:var(--mute)}
+[data-myp-often] .cp-band{grid-template-columns:minmax(0,220px) 1fr auto}
+[data-myp-often] .warn{color:var(--warn);font-weight:500}
+@media (max-width:720px){.cp-ibstack{grid-template-columns:minmax(0,90px) minmax(0,1fr) 36px}}

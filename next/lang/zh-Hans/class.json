@@ -1373,5 +1373,29 @@
  "class.rp_cuts": "成绩：",
  "class.rp_cut_hi": "最高从",
  "class.rp_cut_good": "良好从",
- "class.rp_cut_mid": "中等从"
+ "class.rp_cut_mid": "中等从",
+ "class.mc_card_say": "按标准的等级、1 到 7 的成绩、每项任务",
+ "class.mc_set": "已定成绩",
+ "class.mc_set_say": "每项标准都有等级",
+ "class.mc_crit_mid": "{k} 中间等级",
+ "class.mc_levels": "你设定的等级（按标准）",
+ "class.mc_levels_say": "按你本学期设定的等级，每项标准各区间有多少学生。右边的数字是中间等级。",
+ "class.mc_recent": "最近的等级（按标准）",
+ "class.mc_recent_say": "在你设定任何等级之前，按每个学生在每项标准上最近一次任务得出的同一张图。",
+ "class.mc_grades": "成绩",
+ "class.mc_grade_n": "成绩 {g}",
+ "class.mc_grades_say": "每项标准都有等级的学生，按其总分在本班界线下得到的 1 到 7 成绩分组。",
+ "class.mc_tasks": "每项任务",
+ "class.mc_task": "任务",
+ "class.mc_marked": "已批改",
+ "class.mc_no_task": "本学期还没有任务有等级。",
+ "class.mc_tasks_say": "每项任务评估的各标准上全班达到的中间等级，以及最低和最高。",
+ "class.mc_often": "今年每项标准评估了几次",
+ "class.mc_n_tasks": {
+  "one": "{n} 项任务",
+  "other": "{n} 项任务"
+ },
+ "class.mc_plus_fm": "+ {n} 项形成性",
+ "class.mc_fewer": "少于两次",
+ "class.mc_foot": "这里没有等级的平均数：中间等级是全班一半学生达到或超过的那个等级。"
 }

@@ -1372,5 +1372,29 @@
  "class.rp_cuts": "Noten:",
  "class.rp_cut_hi": "am höchsten ab",
  "class.rp_cut_good": "gut ab",
- "class.rp_cut_mid": "mittel ab"
+ "class.rp_cut_mid": "mittel ab",
+ "class.mc_card_say": "Stufen je Kriterium, die Noten 1 bis 7, jede Aufgabe",
+ "class.mc_set": "Noten gesetzt",
+ "class.mc_set_say": "jedes Kriterium hat eine Stufe",
+ "class.mc_crit_mid": "{k} mittlere Stufe",
+ "class.mc_levels": "Ihre gesetzten Stufen, je Kriterium",
+ "class.mc_levels_say": "Wie viele Lernende in jedem Bereich jedes Kriteriums liegen, nach den Stufen, die Sie für diesen Abschnitt gesetzt haben. Die Zahl rechts ist die mittlere Stufe.",
+ "class.mc_recent": "Letzte Stufe, je Kriterium",
+ "class.mc_recent_say": "Dasselbe Bild aus der letzten Aufgabe jeder Person zu jedem Kriterium, bevor Sie etwas gesetzt haben.",
+ "class.mc_grades": "Noten",
+ "class.mc_grade_n": "Note {g}",
+ "class.mc_grades_say": "Lernende, deren Kriterien alle eine Stufe haben, nach der Note 1 bis 7, die ihre Summe mit den Grenzen dieser Klasse ergibt.",
+ "class.mc_tasks": "Jede Aufgabe",
+ "class.mc_task": "Aufgabe",
+ "class.mc_marked": "Bewertet",
+ "class.mc_no_task": "In diesem Abschnitt hat noch keine Aufgabe Stufen.",
+ "class.mc_tasks_say": "Die mittlere Stufe der Klasse bei jedem Kriterium, das eine Aufgabe bewertet hat, mit der niedrigsten und höchsten.",
+ "class.mc_often": "Wie oft jedes Kriterium dieses Jahr bewertet wurde",
+ "class.mc_n_tasks": {
+  "one": "eine Aufgabe",
+  "other": "{n} Aufgaben"
+ },
+ "class.mc_plus_fm": "+ {n} formativ",
+ "class.mc_fewer": "weniger als zwei",
+ "class.mc_foot": "Nichts hier ist ein Durchschnitt von Stufen: Die mittlere Stufe ist die, die die Hälfte der Klasse erreicht oder übertrifft."
 }

@@ -1372,5 +1372,29 @@
  "class.rp_cuts": "Notas:",
  "class.rp_cut_hi": "la más alta desde",
  "class.rp_cut_good": "buena desde",
- "class.rp_cut_mid": "media desde"
+ "class.rp_cut_mid": "media desde",
+ "class.mc_card_say": "Niveles por criterio, las notas de 1 a 7, cada tarea",
+ "class.mc_set": "Notas puestas",
+ "class.mc_set_say": "cada criterio tiene un nivel",
+ "class.mc_crit_mid": "{k} nivel medio",
+ "class.mc_levels": "Niveles que pusiste, por criterio",
+ "class.mc_levels_say": "Cuántos estudiantes hay en cada franja de cada criterio, según los niveles que pusiste este periodo. El número de la derecha es el nivel medio.",
+ "class.mc_recent": "Nivel más reciente, por criterio",
+ "class.mc_recent_say": "La misma imagen a partir de la última tarea de cada estudiante en cada criterio, antes de que pongas nada.",
+ "class.mc_grades": "Notas",
+ "class.mc_grade_n": "Nota {g}",
+ "class.mc_grades_say": "Estudiantes con nivel en todos los criterios, según la nota de 1 a 7 que da su total con los límites de esta clase.",
+ "class.mc_tasks": "Cada tarea",
+ "class.mc_task": "Tarea",
+ "class.mc_marked": "Corregidas",
+ "class.mc_no_task": "Ninguna tarea tiene niveles en este periodo todavía.",
+ "class.mc_tasks_say": "El nivel medio que alcanzó la clase en cada criterio que evaluó una tarea, con el más bajo y el más alto.",
+ "class.mc_often": "Cuántas veces se evaluó cada criterio este año",
+ "class.mc_n_tasks": {
+  "one": "una tarea",
+  "other": "{n} tareas"
+ },
+ "class.mc_plus_fm": "+ {n} formativa(s)",
+ "class.mc_fewer": "menos de dos",
+ "class.mc_foot": "Nada aquí es un promedio de niveles: el nivel medio es el que la mitad de la clase alcanza o supera."
 }
