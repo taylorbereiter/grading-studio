@@ -92,7 +92,8 @@ export default function ClassWork({ classId, sub }) {
   useEffect(() => { if (sub === 'new') { open('asg', { unitId: null }); location.replace(href('class', classId, 'work')); } }, [sub, classId]);
   const L = usePart('linked', true);   // linked classes (class/linked.jsx)
   const flip = id => setShown(o => { const n = new Set(o); if (n.has(id)) n.delete(id); else n.add(id); return n; });
-  const load = () => { setLib(readLibrary()); readKept().then(setKept); };
+  const [tm, setTm] = useState(null);
+  const load = () => { setLib(readLibrary()); readKept().then(setKept); PARTS.asg().then(A => A.timing().then(E => setTm({ A, E }))).catch(e => console.error(e)); };
   useEffect(load, [classId]);
   useEffect(() => onSaved(e => { if (e.kind === 'library') setLib(readLibrary()); }), []);
   if (!lib || !kept) return <div class="loading" aria-busy="true" />;
@@ -128,8 +129,10 @@ export default function ClassWork({ classId, sub }) {
     if (was.id) await lc('setup.u_rename', l => { const f = unitIn(l, was.id); if (f) f.u.name = v; });
     else await lc('setup.u_add', l => { const h = holderOf(l, classId); if (h) h.units.push({ id: uid(), name: v, items: [] }); });
   };
+  // Delete unit (src/app/screens.js udel): asked first when it holds assignments; an empty one goes at once. Undo either way.
+  const [sure, setSure] = useState(null);
   const drop = async u => {
-    const n = u.items.length;
+    const n = u.items.length; setSure(null);
     await lc('setup.u_del', l => { const f = unitIn(l, u.id); if (f) f.c.units.splice(f.c.units.indexOf(f.u), 1); });
     toast(n ? t('setup.u_gone_n', { name: u.name, n }) : t('setup.u_gone', { name: u.name }), { undo: () => undoList.undo() });
   };
@@ -176,6 +179,9 @@ export default function ClassWork({ classId, sub }) {
     <input ref={scan} type="file" hidden accept=".pdf,application/pdf" data-bring="scan"
       onChange={e => { const f = e.currentTarget.files[0], it = want.current; if (f) PARTS.split().then(S => setSplit({ S, f, it }), er => console.error(er)); }} />
     {name && <NameUnit was={name} onDone={named} />}
+    {sure && <Dialog open title={t('mark.cw_ud_q', { name: sure.name })} onClose={() => setSure(null)}
+      actions={<><Button onClick={() => setSure(null)}>{t('setup.u_cancel')}</Button><Button variant="primary" onClick={() => drop(sure)} data-udel-ok>{t('setup.u_del')}</Button></>}>
+      <p>{t('mark.cw_ud_say', { n: sure.items.length })}</p></Dialog>}
     {move && <MoveTo lib={lib} it={move} onDone={moved} />}
     {box && box.kind === 'asg' && <box.A.AssignmentDialog lib={lib} it={box.it} classId={classId} unitId={box.unitId} onClose={shut} />}
     {box && box.kind === 'notes' && <box.A.StartNotes lib={lib} it={box.it} bring={list => bring(box.it, list)} onClose={() => setBox(null)} />}
@@ -197,14 +203,17 @@ export default function ClassWork({ classId, sub }) {
             { label: t('mark.cw_o_down'), icon: 'chd', disabled: ui === units.length - 1, onSelect: () => order(l => { const f = unitIn(l, u.id); if (f) step(f.c.units, u.id, 1); }) },
             { label: t('mark.cw_uc_move'), icon: 'arrow', onSelect: () => open('unitto', { u }) },
             { label: u.atlas ? (tool ? t('mark.cw_ul_change_n', { name: tool }) : t('mark.cw_ul_change')) : tool ? t('mark.cw_ul_add_n', { name: tool }) : t('mark.cw_ul_add'), icon: 'link', onSelect: () => open('ulink', { u }) },
-            { label: t('setup.u_del'), icon: 'trash', onSelect: () => drop(u) }]} /></div>
+            { label: t('setup.u_del'), icon: 'trash', onSelect: () => (u.items.length ? setSure(u) : drop(u)) }]} /></div>
         {!u.items.length && <p class="mute wempty">{t('setup.u_empty')}</p>}
         {!!u.items.length && <ul class="wlist">{u.items.map(it => { const st = standing(lib, kept, it), open = st.m && canOpen(st.m);
           return <li class="wrow" data-item={it.id} draggable="true" onDragStart={e => { if (e.target.closest && e.target.closest('a,button')) return; e.dataTransfer.setData(CARD, it.id); e.dataTransfer.effectAllowed = 'move'; }}
             onDragOver={e => { if (dragging(e, UNIT)) return; e.preventDefault(); e.currentTarget.classList.add('over'); }} onDragLeave={e => e.currentTarget.classList.remove('over')}
             onDrop={e => { if (dragging(e, UNIT)) return; e.currentTarget.classList.remove('over'); e.preventDefault(); e.stopPropagation(); if (dragging(e, CARD)) dropCard(e.dataTransfer.getData(CARD), u.id, it.id); else bring(it, e.dataTransfer.files); }}>
-            <div class="wn"><span class="wnm"><IconButton icon={shown.has(it.id) ? 'chd' : 'chr'} size="sm" label={t('setup.w_more', { name: it.name })} aria-expanded={shown.has(it.id) ? 'true' : 'false'} onClick={() => flip(it.id)} data-wmore={it.id} /><b data-raw>{it.name}</b></span>{L && <L.AlsoIn lib={lib} it={it} />}
-              <small class="mute">{[KIND[it.type] && t(KIND[it.type]), it.due && t('setup.w_due', { d: date(new Date(it.due + 'T12:00'), { day: 'numeric', month: 'short' }) })].filter(Boolean).join(' · ')}</small></div>
+            <div class="wn"><span class="wnm"><IconButton icon={shown.has(it.id) ? 'chd' : 'chr'} size="sm" label={t('setup.w_more', { name: it.name })} aria-expanded={shown.has(it.id) ? 'true' : 'false'} onClick={() => flip(it.id)} data-wmore={it.id} />{open ? <a class="wname" href={href('mark', st.m.id)} data-wname={it.id}><b data-raw>{it.name}</b></a>
+                : it.typed && !it.batchId ? <a class="wname" href={href('class', classId, 'grades', 'type-' + it.id)} data-wname={it.id}><b data-raw>{it.name}</b></a>
+                : <button type="button" class="wname" onClick={e => { const b = e.currentTarget.closest('.wrow').querySelector('[data-bring-for]'); if (b) b.click(); }} data-wname={it.id}><b data-raw>{it.name}</b></button>}
+              {it.typed && it.type !== 'xc' && <span class="tag" data-wtyped>{t('mark.cw_typed')}</span>}</span>{L && <L.AlsoIn lib={lib} it={it} />}
+              <small class="mute">{[KIND[it.type] && t(KIND[it.type]), it.due && t('setup.w_due', { d: date(new Date(it.due + 'T12:00'), { day: 'numeric', month: 'short' }) }), tm && tm.A.asgTime(tm.E, it.id)].filter(Boolean).join(' · ')}</small></div>
             <span class={'wst ' + st.cls}>{t(st.key)}{st.s && st.s.left ? ' · ' + t('home.left_of', { left: st.s.left, of: st.s.of }) : ''}
               {/* some got theirs early, one at a time */}
               {st.s && st.m.sent > 0 && st.m.sent < st.s.of && !backOf(st.m) && <span class="wearly" title={t('setup.w_early_tip')} data-wearly>{t('setup.w_early', { sent: st.m.sent, of: st.s.of })}</span>}</span>

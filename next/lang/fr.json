@@ -523,7 +523,7 @@
  "class.gc_2": "Travaux d’élèves à corriger",
  "class.gc_2a": "Dans Google Drive, ouvrez le dossier Classroom, puis la classe, puis le dossier du devoir.",
  "class.gc_2b": "Téléchargez le dossier. Drive crée un ZIP, et les Google Docs arrivent en fichiers Word.",
- "class.gc_2c": "Dans l’onglet Devoirs de la classe, importez le ZIP pour ce devoir.",
+ "class.gc_2c": "Choisissez le ZIP ici, ou importez-le sur ce devoir, dans l’onglet Devoirs de la classe.",
  "class.gc_2_note": "Les fichiers nommés « Nom de l’élève - titre » sont regroupés sous chaque élève. Un fichier qu’un élève a déposé sous son propre nom s’ouvre comme une entrée à part, que vous associez vous-même.",
  "class.gc_back": "Les notes ne peuvent pas être renvoyées dans Google Classroom d’ici. L’onglet Notes d’un devoir liste chaque note à recopier.",
  "class.ph_asg": "Devoirs",
@@ -6426,5 +6426,35 @@
  "class.fg_back": "Pour récupérer les copies, importez à nouveau le téléchargement sur cette carte. Les annotations et les notes ne reviennent pas.",
  "class.fg_ok": "Les oublier",
  "class.fg_done": "Copies de « {name} » oubliées",
- "class.fg_failed": "Cela n’a pas marché, donc rien n’a été oublié. Réessayez."
+ "class.fg_failed": "Cela n’a pas marché, donc rien n’a été oublié. Réessayez.",
+ "class.cs_title": "Réglages de la classe",
+ "class.cs_roster_sub": "Les noms, et le nom de la classe",
+ "class.tk_so_far": "{time} jusqu’ici",
+ "class.tk_per": {
+  "one": "environ {n} minute par copie",
+  "other": "environ {n} minutes par copie"
+ },
+ "class.tk_left": "encore environ {time}",
+ "class.tk_from": {
+  "one": "d’après {n} copie jusqu’ici",
+  "other": "d’après {n} copies jusqu’ici"
+ },
+ "class.due_none": "Rien d’autre à corriger n’est prévu cette semaine-là.",
+ "class.due_also": {
+  "one": "À rendre aussi cette semaine-là : {n} lot, {what}",
+  "other": "À rendre aussi cette semaine-là : {n} lots, {what}"
+ },
+ "class.due_about": "environ {time}",
+ "class.due_papers": {
+  "one": "{n} copie",
+  "other": "{n} copies"
+ },
+ "class.gc_zip": "Choisir le ZIP…",
+ "mark.cw_typed": "Saisies",
+ "mark.cw_ud_q": "Supprimer « {name} » ?",
+ "mark.cw_ud_say": {
+  "one": "Son devoir part avec elle. Les corrections enregistrées restent dans ce navigateur.",
+  "other": "Ses {n} devoirs partent avec elle. Les corrections enregistrées restent dans ce navigateur."
+ },
+ "plan.no_such_class": "Il n’y a pas encore de classe appelée « {name} ». Ajoute une classe dans la barre latérale pour la créer."
 }

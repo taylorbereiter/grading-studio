@@ -531,7 +531,7 @@
  "class.gc_2": "Student work to mark",
  "class.gc_2a": "In Google Drive, open the Classroom folder, then the class, then the assignment’s folder.",
  "class.gc_2b": "Download the folder. Drive makes a ZIP, and Google Docs come as Word files.",
- "class.gc_2c": "On the class’s Assignments tab, bring the ZIP in for that assignment.",
+ "class.gc_2c": "Choose the ZIP here, or bring it in on that assignment on the class’s Assignments tab.",
  "class.gc_2_note": "Files named “Student name - title” are put together under each student. A file a student uploaded under its own name opens as its own entry, for you to match.",
  "class.gc_back": "Scores can’t be sent back into Google Classroom from here. The Grades tab of an assignment lists every score to copy across.",
  "class.ph_asg": "Assignments",
@@ -1262,5 +1262,28 @@
  "class.fg_back": "To get the papers back, bring the download in again on this card. Your marks and scores don’t come back.",
  "class.fg_ok": "Forget them",
  "class.fg_done": "Forgot the papers for “{name}”",
- "class.fg_failed": "That didn’t work, so nothing was forgotten. Try again."
+ "class.fg_failed": "That didn’t work, so nothing was forgotten. Try again.",
+ "class.cs_title": "Class setup",
+ "class.cs_roster_sub": "Names, and the name of the class",
+ "class.tk_so_far": "{time} so far",
+ "class.tk_per": {
+  "one": "about {n} minute a paper",
+  "other": "about {n} minutes a paper"
+ },
+ "class.tk_left": "about {time} left",
+ "class.tk_from": {
+  "one": "from {n} paper so far",
+  "other": "from {n} papers so far"
+ },
+ "class.due_none": "Nothing else to grade is due that week.",
+ "class.due_also": {
+  "one": "Also due that week: {n} set, {what}",
+  "other": "Also due that week: {n} sets, {what}"
+ },
+ "class.due_about": "about {time}",
+ "class.due_papers": {
+  "one": "{n} paper",
+  "other": "{n} papers"
+ },
+ "class.gc_zip": "Choose the ZIP…"
 }

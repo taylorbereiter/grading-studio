@@ -530,7 +530,7 @@
  "class.gc_2": "採点する生徒の提出物",
  "class.gc_2a": "Google Drive で Classroom フォルダを開き、クラス、課題のフォルダの順に開きます。",
  "class.gc_2b": "フォルダをダウンロードします。Drive が ZIP を作成し、Google Docs は Word ファイルになります。",
- "class.gc_2c": "クラスの「課題」タブで、その課題に ZIP を取り込みます。",
+ "class.gc_2c": "ここで ZIP を選ぶか、クラスの「課題」タブでその課題に取り込みます。",
  "class.gc_2_note": "「生徒名 - タイトル」という名前のファイルは、生徒ごとにまとめられます。生徒が独自の名前でアップロードしたファイルは別の項目として開くので、照合してください。",
  "class.gc_back": "ここから Google Classroom に点数を送り返すことはできません。課題の「成績」タブに、写し取るための点数がすべて表示されます。",
  "class.ph_asg": "課題",
@@ -6512,5 +6512,35 @@
  "class.fg_back": "提出物を戻すには、このカードにもう一度ダウンロードを取り込みます。採点と点数は戻りません。",
  "class.fg_ok": "忘れる",
  "class.fg_done": "「{name}」の提出物を忘れました",
- "class.fg_failed": "うまくいかなかったので、何も忘れていません。もう一度お試しください。"
+ "class.fg_failed": "うまくいかなかったので、何も忘れていません。もう一度お試しください。",
+ "class.cs_title": "クラスの設定",
+ "class.cs_roster_sub": "名前とクラス名",
+ "class.tk_so_far": "これまで {time}",
+ "class.tk_per": {
+  "one": "1 枚あたり約 {n} 分",
+  "other": "1 枚あたり約 {n} 分"
+ },
+ "class.tk_left": "残り約 {time}",
+ "class.tk_from": {
+  "one": "これまでの {n} 枚から",
+  "other": "これまでの {n} 枚から"
+ },
+ "class.due_none": "その週に採点するものはほかにありません。",
+ "class.due_also": {
+  "one": "その週の締め切り：ほかに {n} 件、{what}",
+  "other": "その週の締め切り：ほかに {n} 件、{what}"
+ },
+ "class.due_about": "約 {time}",
+ "class.due_papers": {
+  "one": "{n} 枚",
+  "other": "{n} 枚"
+ },
+ "class.gc_zip": "ZIP を選ぶ…",
+ "mark.cw_typed": "入力済み",
+ "mark.cw_ud_q": "「{name}」を削除しますか？",
+ "mark.cw_ud_say": {
+  "one": "中の {n} 件の課題も一緒に削除されます。保存した採点はこのブラウザに残ります。",
+  "other": "中の {n} 件の課題も一緒に削除されます。保存した採点はこのブラウザに残ります。"
+ },
+ "plan.no_such_class": "「{name}」というクラスはまだありません。サイドバーの「クラスを追加」で作れます。"
 }

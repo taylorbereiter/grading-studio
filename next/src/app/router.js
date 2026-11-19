@@ -18,6 +18,7 @@ export const ROUTES = [
   ['class/:id', 'class', 'class'],
   ['class/:id/:tab', 'class', 'class'],
   ['class/:id/:tab/:sub', 'class', 'class'],
+  ['class-named/:name', 'class', 'class'],   // the Planner's sidebar link to a class by its name
   ['lesson/:id', 'lesson', 'class'],
   ['lesson/:id/:view', 'lesson', 'class'],
   ['mark/:id', 'mark', 'class'],

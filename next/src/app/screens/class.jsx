@@ -4,7 +4,7 @@
 // are parts of their own (app/class/), loaded with the gradebook's engine when opened; To do keeps the "not built yet" state until
 // its part comes. #/class/new is a new class: its name and roster.
 import { h, Fragment } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { Tabs, Icon, EmptyState, Progress, Button, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { href, go, PARTS } from '../router.js';
@@ -18,6 +18,7 @@ import Later from './later.jsx';
 import { UnitSheet } from '../plan/unit-edit.jsx';
 import { usePart } from '../parts.js';
 import '../plan/lines.js';
+import { classesForHome } from '../../crossings.js';
 
 const TABS = ['course', 'work', 'people', 'grades', 'todo'];
 const keep = (k, v) => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem('gsn.class.' + k)); sessionStorage.setItem('gsn.class.' + k, JSON.stringify(v)); } catch {} return null; };
@@ -117,6 +118,20 @@ export default function ClassPage({ route, classes }) {
   const x = (classes || []).find(k => (k.id || '-') === route.params.id);
   const tab = TABS.includes(route.params.tab) ? route.params.tab : 'course';
   const [pk, setPk] = useState(false), Pk = usePart('picker', pk), Cl = usePart('clink', !!x && !x.loose);
+  // An address for a class that isn't there (src/app/screens.js noClass): said, and the class list; checked against a fresh read, so
+  // a class made a moment ago isn't taken for one that's gone. #/class-named/<name> (the Planner's sidebar link) finds it by name.
+  const id = route.params.id, nm = route.params.name;
+  useEffect(() => {
+    if (!classes || (x && !nm) || id === 'new') return;
+    let live = true;
+    classesForHome().then(all => {
+      if (!live) return;
+      if (nm != null) { const k = all.find(c => !c.loose && String(c.name).trim().toLowerCase() === String(nm).trim().toLowerCase()); if (k) return location.replace(href('class', k.id)); }
+      else if (all.some(c => (c.id || '-') === id)) return;
+      toast(t('plan.no_such_class', { name: nm != null ? nm : id })); go('classes');
+    }, e => console.error(e));
+    return () => { live = false; };
+  }, [id, nm, !!classes, !!x]);
   const Work = usePart('work', tab === 'work'), People = usePart('people', tab === 'people' || route.params.id === 'new'), Grades = usePart('grades', tab === 'grades'), Todo = usePart('ctodo', tab === 'todo');
   if (route.params.id === 'new') return <div class="page classpage"><header class="ph"><h1>{t('nav.add_class')}</h1></header>
     {People ? <People.RosterDialog c={null} onClose={id => (id ? go('class', id, 'people') : history.length > 1 ? history.back() : go('home'))} /> : <div class="loading" aria-busy="true" />}</div>;
@@ -129,7 +144,7 @@ export default function ClassPage({ route, classes }) {
       <h1><span class="dot big" style={{ '--cc': classTone(p, x.name, x.loose ? -1 : lib.indexOf(x)) }} />{x.loose ? t('nav.no_class') : <span data-raw>{x.name}</span>}</h1>
       <p class="mute meta">{x.students > 0 && <span>{t('home.students', { n: x.students })}</span>}{days.length > 0 && <span data-raw>{days.join(', ')}</span>}
         {partners.length > 0 && <span><Icon name="link" size="xs" />{t('plan.shares_lessons', { names: partners.map(k => k.name).join(', ') })}</span>}</p></div>
-      <div class="row gap">{Cl && <Cl.ClassLink classId={x.id} />}
+      <div class="row gap">{Cl && <Cl.ClassLink classId={x.id} />}{Cl && <Cl.ClassSetup classId={x.id} />}
       {!x.loose && x.students > 0 && <Button size="sm" icon="shuffle" onClick={() => setPk(true)} data-pick-name>{t('plan.pr_pick')}</Button>}</div></header>
     {pk && Pk && <Pk.PickerFor classId={x.id} onClose={() => setPk(false)} />}
     <Tabs label={t('plan.class_tabs')} value={tab} onChange={v => go('class', route.params.id, v === 'course' ? '' : v)}

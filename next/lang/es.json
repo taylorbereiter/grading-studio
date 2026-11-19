@@ -531,7 +531,7 @@
  "class.gc_2": "Trabajos de los estudiantes para corregir",
  "class.gc_2a": "En Google Drive, abre la carpeta Classroom, luego la clase y luego la carpeta de la tarea.",
  "class.gc_2b": "Descarga la carpeta. Drive crea un ZIP, y los documentos de Google llegan como archivos de Word.",
- "class.gc_2c": "En la pestaña Tareas de la clase, trae el ZIP a esa tarea.",
+ "class.gc_2c": "Elige el ZIP aquí, o tráelo en esa tarea, en la pestaña Tareas de la clase.",
  "class.gc_2_note": "Los archivos llamados “Nombre del estudiante - título” se agrupan bajo cada estudiante. Un archivo que un estudiante subió con su propio nombre se abre como una entrada aparte, para que lo emparejes tú.",
  "class.gc_back": "Desde aquí no se pueden enviar notas a Google Classroom. La pestaña Notas de una tarea muestra todas las notas para copiarlas.",
  "class.ph_asg": "Tareas",
@@ -6505,5 +6505,35 @@
  "class.fg_back": "Para recuperar los trabajos, vuelve a traer la descarga en esta tarjeta. Las correcciones y las notas no vuelven.",
  "class.fg_ok": "Olvidarlos",
  "class.fg_done": "Se olvidaron los trabajos de “{name}”",
- "class.fg_failed": "No funcionó, así que no se olvidó nada. Inténtalo de nuevo."
+ "class.fg_failed": "No funcionó, así que no se olvidó nada. Inténtalo de nuevo.",
+ "class.cs_title": "Ajustes de la clase",
+ "class.cs_roster_sub": "Los nombres y el nombre de la clase",
+ "class.tk_so_far": "{time} hasta ahora",
+ "class.tk_per": {
+  "one": "unos {n} minuto por trabajo",
+  "other": "unos {n} minutos por trabajo"
+ },
+ "class.tk_left": "quedan unos {time}",
+ "class.tk_from": {
+  "one": "según {n} trabajo hasta ahora",
+  "other": "según {n} trabajos hasta ahora"
+ },
+ "class.due_none": "No hay nada más que corregir esa semana.",
+ "class.due_also": {
+  "one": "También vence esa semana: {n} entrega, {what}",
+  "other": "También vencen esa semana: {n} entregas, {what}"
+ },
+ "class.due_about": "unos {time}",
+ "class.due_papers": {
+  "one": "{n} trabajo",
+  "other": "{n} trabajos"
+ },
+ "class.gc_zip": "Elegir el ZIP…",
+ "mark.cw_typed": "Escritas a mano",
+ "mark.cw_ud_q": "¿Eliminar «{name}»?",
+ "mark.cw_ud_say": {
+  "one": "Su tarea se elimina con ella. Las correcciones guardadas se quedan en este navegador.",
+  "other": "Sus {n} tareas se eliminan con ella. Las correcciones guardadas se quedan en este navegador."
+ },
+ "plan.no_such_class": "Todavía no hay ninguna clase llamada «{name}». Añade una clase en la barra lateral para crearla."
 }

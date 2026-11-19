@@ -100,7 +100,8 @@ export default function People({ classId, sub }) {
   if (!x) return <EmptyState icon="warn" title={t('class.read_failed')} />;
   const { c } = x;
   const dlg = editing && <RosterDialog c={c} onClose={() => setEditing(false)} />;
-  if (!c.names.length) return <><EmptyState icon="people" title={t('class.no_roster')} text={t('class.no_roster_text')} action={<Button variant="primary" icon="plus" onClick={() => setEditing(true)} data-roster-edit>{t('class.add_roster')}</Button>} />{dlg}</>;
+  if (!c.names.length) return <><EmptyState icon="people" title={t('class.no_roster')} text={t('class.no_roster_text')} action={<span class="row gap"><Button variant="primary" icon="plus" onClick={() => setEditing(true)} data-roster-edit>{t('class.add_roster')}</Button>
+    <a class="btn" href={href('class', classId, 'grades')} data-bki-go>{t('class.bki_menu')}</a></span>} />{dlg}</>;
   const i = sub && /^\d+$/.test(sub) && +sub >= 1 && +sub <= c.names.length ? +sub - 1 : 0, n = c.names[i];
   const term = x.now, cols = x.cols.filter(k => (term == null ? true : k.termId === term)), grades = c.names.map(m => B.bkGrade(m, cols, x.conf));
   const shown = c.names.map((m, j) => ({ m, j })).filter(r => !find.trim() || r.m.toLowerCase().includes(find.trim().toLowerCase()));

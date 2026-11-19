@@ -530,7 +530,7 @@
  "class.gc_2": "要批改的学生作业",
  "class.gc_2a": "在 Google Drive 中打开 Classroom 文件夹，再打开班级，然后打开作业的文件夹。",
  "class.gc_2b": "下载这个文件夹。Drive 会生成 ZIP 文件，Google Docs 会变成 Word 文件。",
- "class.gc_2c": "在班级的“作业”标签页中，把 ZIP 文件导入该作业。",
+ "class.gc_2c": "在这里选择 ZIP 文件，或在班级的“作业”标签页里把它导入那份作业。",
  "class.gc_2_note": "名为“学生姓名 - 标题”的文件会归到各个学生名下。学生用自己的文件名上传的文件会单独列出，由你匹配。",
  "class.gc_back": "无法从这里把分数传回 Google Classroom。作业的“成绩”标签页会列出所有分数，方便你复制过去。",
  "class.ph_asg": "作业",
@@ -6512,5 +6512,35 @@
  "class.fg_back": "要取回书面作业，请在这张卡片上再次导入那份下载。批改和分数不会回来。",
  "class.fg_ok": "忘记",
  "class.fg_done": "已忘记“{name}”的书面作业",
- "class.fg_failed": "没有成功，所以什么都没忘记。请再试一次。"
+ "class.fg_failed": "没有成功，所以什么都没忘记。请再试一次。",
+ "class.cs_title": "班级设置",
+ "class.cs_roster_sub": "学生姓名和班级名称",
+ "class.tk_so_far": "目前 {time}",
+ "class.tk_per": {
+  "one": "每份约 {n} 分钟",
+  "other": "每份约 {n} 分钟"
+ },
+ "class.tk_left": "还剩约 {time}",
+ "class.tk_from": {
+  "one": "根据目前的 {n} 份",
+  "other": "根据目前的 {n} 份"
+ },
+ "class.due_none": "那一周没有其他要批改的作业。",
+ "class.due_also": {
+  "one": "那一周还要交：{n} 份作业，{what}",
+  "other": "那一周还要交：{n} 份作业，{what}"
+ },
+ "class.due_about": "约 {time}",
+ "class.due_papers": {
+  "one": "{n} 份",
+  "other": "{n} 份"
+ },
+ "class.gc_zip": "选择 ZIP 文件…",
+ "mark.cw_typed": "手动输入",
+ "mark.cw_ud_q": "删除“{name}”？",
+ "mark.cw_ud_say": {
+  "one": "里面的 {n} 份作业会一起删除。已保存的批改仍留在这个浏览器里。",
+  "other": "里面的 {n} 份作业会一起删除。已保存的批改仍留在这个浏览器里。"
+ },
+ "plan.no_such_class": "还没有名为“{name}”的班级。在侧栏添加班级即可创建。"
 }

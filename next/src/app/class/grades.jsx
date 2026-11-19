@@ -61,7 +61,10 @@ export default function Grades({ classId, sub }) {
   if (x && handoff.rows && handoff.cls === classId && !box) { const rows = handoff.rows; handoff.rows = null; PARTS.bki().then(m => { setImp(() => m.ImportSheet); setBox({ imp: true, rows }); }); }
   if (!x) return <EmptyState icon="warn" title={t('class.read_failed')} />;
   const { c, conf } = x;
-  if (!c.names.length) return <EmptyState icon="people" title={t('class.no_roster')} text={t('class.no_roster_text')} action={<a class="btn" href={href('class', classId, 'people')}>{t('class.add_roster')}</a>} />;
+  // no roster yet: add one, or bring in the old gradebook, whose students can become the roster (src/book.js:251)
+  if (!c.names.length) return <><EmptyState icon="people" title={t('class.no_roster')} text={t('class.no_roster_text')} action={<span class="row gap"><a class="btn" href={href('class', classId, 'people')}>{t('class.add_roster')}</a>
+    <Button icon="upload" onClick={() => PARTS.bki().then(m => { setImp(() => m.ImportSheet); setBox({ imp: true }); })} data-bki-first>{t('class.bki_menu')}</Button></span>} />
+    {box && box.imp && Imp && <Imp x={x} onClose={() => setBox(null)} />}</>;
   const tabs = B.bkTabs(x.cols), on = term != null && tabs.some(tb => tb[0] === term) ? term : x.now;
   const cols = on === '*' ? x.cols : x.cols.filter(k => k.termId === on);
   const choose = v => { setTerm(v); keep('term:' + classId, v); };

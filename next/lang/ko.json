@@ -530,7 +530,7 @@
  "class.gc_2": "채점할 학생 제출물",
  "class.gc_2a": "Google Drive에서 Classroom 폴더를 열고, 학급, 과제 폴더 순서로 여세요.",
  "class.gc_2b": "폴더를 내려받으세요. Drive가 ZIP을 만들고, Google Docs는 Word 파일로 바뀌어요.",
- "class.gc_2c": "학급의 과제 탭에서 그 과제에 ZIP을 가져오세요.",
+ "class.gc_2c": "여기서 ZIP 파일을 선택하거나, 반의 과제 탭에서 그 과제에 가져오세요.",
  "class.gc_2_note": "“학생 이름 - 제목” 형식의 파일은 학생별로 묶여요. 학생이 자기 파일 이름으로 올린 파일은 따로 열리니 직접 맞춰 주세요.",
  "class.gc_back": "여기에서 Google Classroom으로 점수를 다시 보낼 수는 없어요. 과제의 성적 탭에 옮겨 적을 점수가 모두 나와요.",
  "class.ph_asg": "과제",
@@ -6512,5 +6512,35 @@
  "class.fg_back": "제출물을 되찾으려면 이 카드에 다운로드를 다시 가져오세요. 채점과 점수는 돌아오지 않아요.",
  "class.fg_ok": "잊기",
  "class.fg_done": "‘{name}’의 제출물을 잊었어요",
- "class.fg_failed": "잘 되지 않아서 아무것도 잊지 않았어요. 다시 시도하세요."
+ "class.fg_failed": "잘 되지 않아서 아무것도 잊지 않았어요. 다시 시도하세요.",
+ "class.cs_title": "반 설정",
+ "class.cs_roster_sub": "학생 이름과 반 이름",
+ "class.tk_so_far": "지금까지 {time}",
+ "class.tk_per": {
+  "one": "한 장에 약 {n}분",
+  "other": "한 장에 약 {n}분"
+ },
+ "class.tk_left": "약 {time} 남음",
+ "class.tk_from": {
+  "one": "지금까지 {n}장 기준",
+  "other": "지금까지 {n}장 기준"
+ },
+ "class.due_none": "그 주에 채점할 다른 과제는 없어요.",
+ "class.due_also": {
+  "one": "그 주에 마감되는 다른 과제: {n}개, {what}",
+  "other": "그 주에 마감되는 다른 과제: {n}개, {what}"
+ },
+ "class.due_about": "약 {time}",
+ "class.due_papers": {
+  "one": "{n}장",
+  "other": "{n}장"
+ },
+ "class.gc_zip": "ZIP 파일 선택…",
+ "mark.cw_typed": "직접 입력",
+ "mark.cw_ud_q": "‘{name}’을(를) 삭제할까요?",
+ "mark.cw_ud_say": {
+  "one": "안에 있는 과제 {n}개도 함께 삭제돼요. 저장된 채점은 이 브라우저에 남아요.",
+  "other": "안에 있는 과제 {n}개도 함께 삭제돼요. 저장된 채점은 이 브라우저에 남아요."
+ },
+ "plan.no_such_class": "‘{name}’(이)라는 반이 아직 없어요. 사이드바에서 반을 추가해 만드세요."
 }

@@ -530,7 +530,7 @@
  "class.gc_2": "Arbeiten zum Korrigieren",
  "class.gc_2a": "Öffnen Sie in Google Drive den Ordner Classroom, dann die Klasse, dann den Ordner der Aufgabe.",
  "class.gc_2b": "Laden Sie den Ordner herunter. Drive erstellt eine ZIP-Datei, und Google Docs kommen als Word-Dateien.",
- "class.gc_2c": "Holen Sie die ZIP-Datei im Tab Aufgaben der Klasse in diese Aufgabe.",
+ "class.gc_2c": "Wählen Sie die ZIP-Datei hier, oder holen Sie sie im Tab Aufgaben der Klasse in diese Aufgabe.",
  "class.gc_2_note": "Dateien mit dem Namen „Name - Titel“ werden der jeweiligen Person zugeordnet. Eine Datei, die jemand unter eigenem Dateinamen hochgeladen hat, öffnet sich als eigener Eintrag, den Sie zuordnen.",
  "class.gc_back": "Ergebnisse lassen sich von hier nicht zurück in Google Classroom schicken. Der Tab Noten einer Aufgabe listet alle Ergebnisse zum Übertragen auf.",
  "class.ph_asg": "Aufgaben",
@@ -6483,5 +6483,35 @@
  "class.fg_back": "Um die Arbeiten zurückzubekommen, holen Sie den Download auf dieser Karte noch einmal herein. Korrekturen und Punkte kommen nicht zurück.",
  "class.fg_ok": "Vergessen",
  "class.fg_done": "Arbeiten für „{name}“ vergessen",
- "class.fg_failed": "Das hat nicht geklappt, also wurde nichts vergessen. Versuchen Sie es noch einmal."
+ "class.fg_failed": "Das hat nicht geklappt, also wurde nichts vergessen. Versuchen Sie es noch einmal.",
+ "class.cs_title": "Klasseneinstellungen",
+ "class.cs_roster_sub": "Namen und der Name der Klasse",
+ "class.tk_so_far": "bisher {time}",
+ "class.tk_per": {
+  "one": "etwa {n} Minute pro Arbeit",
+  "other": "etwa {n} Minuten pro Arbeit"
+ },
+ "class.tk_left": "noch etwa {time}",
+ "class.tk_from": {
+  "one": "nach bisher {n} Arbeit",
+  "other": "nach bisher {n} Arbeiten"
+ },
+ "class.due_none": "In dieser Woche ist sonst nichts zu bewerten.",
+ "class.due_also": {
+  "one": "In dieser Woche außerdem fällig: {n} Stapel, {what}",
+  "other": "In dieser Woche außerdem fällig: {n} Stapel, {what}"
+ },
+ "class.due_about": "etwa {time}",
+ "class.due_papers": {
+  "one": "{n} Arbeit",
+  "other": "{n} Arbeiten"
+ },
+ "class.gc_zip": "ZIP-Datei wählen…",
+ "mark.cw_typed": "Eingetippt",
+ "mark.cw_ud_q": "„{name}“ löschen?",
+ "mark.cw_ud_say": {
+  "one": "Die Aufgabe darin wird mitgelöscht. Gespeicherte Korrekturen bleiben in diesem Browser.",
+  "other": "Die {n} Aufgaben darin werden mitgelöscht. Gespeicherte Korrekturen bleiben in diesem Browser."
+ },
+ "plan.no_such_class": "Es gibt noch keine Klasse namens „{name}“. Lege sie in der Seitenleiste mit „Klasse hinzufügen“ an."
 }

@@ -529,7 +529,7 @@
  "class.gc_2": "Trabalhos dos alunos para corrigir",
  "class.gc_2a": "No Google Drive, abra a pasta Classroom, depois a turma e depois a pasta da atividade.",
  "class.gc_2b": "Baixe a pasta. O Drive cria um ZIP, e os Documentos Google vêm como arquivos do Word.",
- "class.gc_2c": "Na aba Atividades da turma, traga o ZIP para essa atividade.",
+ "class.gc_2c": "Escolha o ZIP aqui ou traga-o nessa tarefa, na aba Tarefas da turma.",
  "class.gc_2_note": "Arquivos chamados “Nome do aluno - título” são agrupados sob cada aluno. Um arquivo que o aluno enviou com outro nome abre como uma entrada separada, para você associar.",
  "class.gc_back": "Daqui não dá para enviar notas de volta ao Google Classroom. A aba Notas de uma atividade lista todas as notas para você copiar.",
  "class.ph_asg": "Atividades",
@@ -6484,5 +6484,35 @@
  "class.fg_back": "Para recuperar os trabalhos, traga o download de novo neste cartão. As correções e as notas não voltam.",
  "class.fg_ok": "Esquecer",
  "class.fg_done": "Trabalhos de “{name}” esquecidos",
- "class.fg_failed": "Não funcionou, então nada foi esquecido. Tente de novo."
+ "class.fg_failed": "Não funcionou, então nada foi esquecido. Tente de novo.",
+ "class.cs_title": "Configurar a turma",
+ "class.cs_roster_sub": "Os nomes e o nome da turma",
+ "class.tk_so_far": "{time} até agora",
+ "class.tk_per": {
+  "one": "cerca de {n} minuto por trabalho",
+  "other": "cerca de {n} minutos por trabalho"
+ },
+ "class.tk_left": "faltam cerca de {time}",
+ "class.tk_from": {
+  "one": "com base em {n} trabalho até agora",
+  "other": "com base em {n} trabalhos até agora"
+ },
+ "class.due_none": "Não há mais nada para corrigir nessa semana.",
+ "class.due_also": {
+  "one": "Também vence nessa semana: {n} conjunto, {what}",
+  "other": "Também vencem nessa semana: {n} conjuntos, {what}"
+ },
+ "class.due_about": "cerca de {time}",
+ "class.due_papers": {
+  "one": "{n} trabalho",
+  "other": "{n} trabalhos"
+ },
+ "class.gc_zip": "Escolher o ZIP…",
+ "mark.cw_typed": "Digitadas",
+ "mark.cw_ud_q": "Excluir “{name}”?",
+ "mark.cw_ud_say": {
+  "one": "A tarefa dela vai junto. As correções salvas ficam neste navegador.",
+  "other": "As {n} tarefas dela vão junto. As correções salvas ficam neste navegador."
+ },
+ "plan.no_such_class": "Ainda não há nenhuma turma chamada “{name}”. Adicione uma turma na barra lateral para criá-la."
 }
