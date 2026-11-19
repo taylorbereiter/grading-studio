@@ -49,6 +49,9 @@ export async function saveWork(id, change, { fresh = false, hold = null } = {}) 
     if (tomb && !again.has(id)) throw new CannotSave('forgotten', id);
     const seen = tomb ? tomb.v || {} : null;
     const prev = await newestWork(id); if (!prev && !fresh) throw new CannotSave('missing', id);
+    // The screen opened this download as new, but marks and scores were saved for it before it opened: it didn't read them, so its
+    // save would go over them. It stops, and opening the download again reads them (audit H-025).
+    if (fresh && hold && hold.opened) { const m = await meta.get(id).catch(() => null); if (m && (m.t || 0) < hold.opened && ((m.scored || 0) + (m.marked || 0) + (m.partial || 0)) > 0) throw new CannotSave('missing', id); }
     const M = await merge(), data = hold ? {} : prev ? copy(prev) : {};
     change(data);
     data.t = Date.now();

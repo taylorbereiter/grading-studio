@@ -142,6 +142,13 @@ test('while marking, saved comments and the mark key: the list kept or folded, E
   assert.ok(await until(async () => (await ls(p, 'gs.bank')).length === 1));
   await undoToast(p);
   assert.ok(await until(async () => JSON.stringify(await ls(p, 'gs.bank')) === JSON.stringify(['Good evidence.', 'Check spelling and capitals.'])), 'Undo puts the comment back where it was');
+  // H-012: one taken out, then a comment comes in from elsewhere (a sync, another tab), then Undo: both are there
+  await p.click('[data-sgcbrm="0"]');
+  assert.ok(await until(async () => (await ls(p, 'gs.bank')).length === 1));
+  await p.evaluate(() => localStorage.setItem('gs.bank', JSON.stringify(['From the phone.', 'Check spelling and capitals.'])));
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  assert.ok(await until(async () => JSON.stringify(await ls(p, 'gs.bank')) === JSON.stringify(['From the phone.', 'Good evidence.', 'Check spelling and capitals.'])), 'H-012 Undo keeps the comment that came in since');
+  await p.evaluate(() => localStorage.setItem('gs.bank', JSON.stringify(['Good evidence.', 'Check spelling and capitals.'])));
   // the mark key: the key page off, a mark renamed and its meaning changed, then put back to the usual wording
   await p.click('[data-sgmkon] [role="switch"]'); assert.equal((await ls(p, 'gs.markKey')).on, false);
   await p.$eval('[data-sgmk="sp"] input', e => { e.focus(); e.select(); }); await p.keyboard.type('Spell check'); await p.keyboard.press('Enter');

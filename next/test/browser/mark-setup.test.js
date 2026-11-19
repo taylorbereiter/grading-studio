@@ -262,6 +262,17 @@ test('the rubric bank in Rubric setup: a saved rubric used (its rows by place), 
   await until(async () => (await kvBank()).scales.some(x => x.name === 'Out of 12'), 'the scale in the bank');
   b = await kvBank(); const sc = b.scales.find(x => x.name === 'Out of 12');
   assert.ok(sc); assert.equal(sc.scale[12], 100); assert.equal(sc.scale[11], 95);
+  // H-010: the Planner's database fails the read for a moment as she saves: nothing is saved, and every rubric and scale is still there
+  const had = JSON.stringify(await kvBank());
+  await p.evaluate(() => { const g = IDBObjectStore.prototype.get; window.__unbreak = () => { IDBObjectStore.prototype.get = g; }; IDBObjectStore.prototype.get = function (k) { if (this.name === 'kv' && k === 'bank') throw new DOMException('test: bank read blocked', 'InvalidStateError'); return g.call(this, k); }; });
+  await tap(p, 'dialog[open] [data-subsave]');
+  await p.waitForSelector('dialog[open] [data-subname]');
+  await typeIn(p, 'dialog[open] [data-subname]', 'Broken save');
+  await tap(p, 'dialog[open] [data-subok]');
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast')].some(t => /wasn’t saved to the bank/.test(t.textContent)), { timeout: 10000 });
+  await p.evaluate(() => window.__unbreak());
+  assert.equal(JSON.stringify(await kvBank()), had, 'H-010 the bank is unchanged');
+  errors.splice(0, errors.length, ...errors.filter(e => !/bank read blocked/.test(e)));
   await tap(p, 'dialog[open] [data-sucancel]');
   assert.deepEqual(errors, []);
   await ctx.close();
