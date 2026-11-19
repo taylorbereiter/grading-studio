@@ -9,7 +9,7 @@ import { state, maxPoints, fmtNum } from '../../engines/gcore.js';
 import { t } from '../../i18n/t.js';
 import { toast, copyButton } from '../../ui/index.js';
 import { PARTS } from '../router.js';
-import { keepBank } from './editors.js';
+import { keepBank, loadBank } from './editors.js';
 import './lines.js';
 import './setup-lines.js';
 import { micFor } from './dictate.js';
@@ -181,7 +181,7 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
     foot.append(button('btn', { 'data-a': 'star', title: t('mark.save_reuse_tip') }, t('mark.save_reuse')), micFor(ta), el('span', 'sp'));
     if (!isNew) foot.append(button('btn', { 'data-a': 'del' }, t('mark.delete')));
     foot.append(button('btn primary', { 'data-a': 'ok' }, t('mark.done')));
-    const bank = () => state().bank || [];
+    loadBank(); const bank = () => state().bank || [];
     const drawChips = () => { chips.replaceChildren(...bank().map((txt, i) => { const c = el('span', 'chip', { 'data-i': i }), s = el('span', '', { title: txt, 'data-raw': '' }); s.textContent = txt; c.append(s, button('', { 'data-x': i, title: t('mark.bank_remove'), 'aria-label': t('mark.bank_remove') }, '×')); return c; })); bankL.hidden = !bank().length; };
     drawChips();
     box.append(lbl, ta, bankL, chips, foot);
@@ -202,11 +202,11 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
     box.addEventListener('click', e => {
       e.stopPropagation();
       const x = e.target.closest('[data-x]');
-      if (x) { const b = bank().slice(); b.splice(+x.dataset.x, 1); keepBank(b); drawChips(); return; }
+      if (x) { const gone = bank()[+x.dataset.x]; keepBank(t('mark.bank_remove'), l => l.filter(c => c !== gone), drawChips); return; }
       const ch = e.target.closest('.chip');
       if (ch) { const txt = bank()[+ch.dataset.i]; ta.value = ta.value.trim() ? ta.value.trim() + ' ' + txt : txt; ta.focus(); return; }
       const a = e.target.closest('[data-a]'); if (!a) return;
-      if (a.dataset.a === 'star') { const txt = ta.value.trim(); if (txt && !bank().includes(txt)) { keepBank([txt, ...bank()]); drawChips(); toast(t('mark.bank_saved')); } }
+      if (a.dataset.a === 'star') { const txt = ta.value.trim(); if (txt && !bank().includes(txt)) keepBank(t('mark.save_reuse'), l => (l.includes(txt) ? l : [txt, ...l]), () => { drawChips(); toast(t('mark.bank_saved')); }); }
       if (a.dataset.a === 'ok') close(ta.value.trim());
       if (a.dataset.a === 'del') close('');
     });

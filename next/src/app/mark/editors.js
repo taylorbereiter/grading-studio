@@ -7,6 +7,8 @@ import * as K from '../../engines/gmark.js';
 import { prefs } from '../../students/prefs.js';
 import { t } from '../../i18n/t.js';
 import { PARTS } from '../router.js';
+import { commentBank } from '../../students/index.js';
+import { onSaved } from '../../shared/saved.js';
 import './lines.js';
 import { toast } from '../../ui/index.js';
 import { micFor } from './dictate.js';
@@ -99,7 +101,7 @@ export function openNote(pg, m, isNew) {
   pop.append(...rows, bankL, chips, foot);
   // Its color can change at any time, new or old: shown on the paper straight away, kept with Done, put back on Escape.
   const was = { color: m.color, hc: m.hc, ly: m.ly };
-  const bank = () => state().bank;
+  loadBank(); const bank = () => state().bank;
   const drawChips = () => {
     chips.replaceChildren(...bank().map((txt, i) => { const c = el('span', 'chip', { 'data-i': i }); const w = el('span', '', { title: txt, 'data-raw': '' }); w.textContent = txt; c.append(w, button('', { 'data-x': i, title: t('mark.bank_remove'), 'aria-label': t('mark.bank_remove') }, '×')); return c; }));
     bankL.hidden = !bank().length;
@@ -144,19 +146,28 @@ export function openNote(pg, m, isNew) {
       K.redrawAll(); ta.focus({ preventScroll: true }); return;
     }
     const x = e.target.closest('[data-x]');
-    if (x) { const b = bank().slice(); b.splice(+x.dataset.x, 1); keepBank(b); drawChips(); return; }
+    if (x) { const gone = bank()[+x.dataset.x]; keepBank(t('mark.bank_remove'), l => l.filter(c => c !== gone), drawChips); return; }
     const ch = e.target.closest('.chip');
     if (ch) { const txt = bank()[+ch.dataset.i]; ta.value = ta.value.trim() ? ta.value.trim() + ' ' + txt : txt; ta.focus(); return; }
     const b = e.target.closest('[data-a]'); if (!b) return;
     if (b.dataset.a === 'star') {
       const txt = ta.value.trim(); if (!txt) return;
-      if (!bank().includes(txt)) { keepBank([txt, ...bank()]); drawChips(); toast(t('mark.bank_saved')); }
+      if (!bank().includes(txt)) keepBank(t('mark.save_reuse'), l => (l.includes(txt) ? l : [txt, ...l]), () => { drawChips(); toast(t('mark.bank_saved')); });
     }
     if (b.dataset.a === 'ok') close(true);
     if (b.dataset.a === 'del') { ta.value = ''; close(true); }
   });
 }
-// The saved comments go where the current app keeps them (gs.bank), through students/write.js.
-export function keepBank(b) { use({ bank: b }); PARTS.write().then(W => W.saveSetting('gs.bank', b)).catch(e => console.error(e)); }
+// The saved comments (gs.bank), shared with the current app and Settings > Marking. The engine's copy is read from storage whenever a
+// comment box opens and whenever gs.bank changes (here or in another tab). A change is never a whole list from memory: keepBank takes a
+// change, and students/comments.js applies it to the list read from storage at that moment, so a list that was never loaded can't be
+// saved over hers. One undo step each.
+const tidyBank = a => (Array.isArray(a) ? a.filter(c => typeof c === 'string' && c.trim()) : []);
+export function loadBank() { const b = tidyBank(commentBank.json([])); use({ bank: b }); return b; }
+onSaved(e => { if (e.kind === 'setting' && e.id === 'gs.bank') loadBank(); });
+try { addEventListener('storage', e => { if (e.key === 'gs.bank' || e.key === null) loadBank(); }); } catch {}
+export function keepBank(label, change, after) {
+  PARTS.cbank().then(m => { m.changeBank(label, change); loadBank(); if (after) after(); }).catch(e => console.error(e));
+}
 
 export const editMark = (pg, m) => { if (m.t === 'text') editText(pg, m); else if (m.t === 'note') openNote(pg, m); };
