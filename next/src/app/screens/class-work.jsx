@@ -102,7 +102,8 @@ export default function ClassWork({ classId, sub }) {
   const c = classId === '-' ? lib.loose : lib.classes.find(x => String(x.id) === String(classId));
   if (!c) return <EmptyState icon="inbox" title={t('setup.w_none')} />;
   // list: picked or dropped files, or entries made already (matched to a roster: each path "Name/file", and the class they matched)
-  const bring = async (it, list, cls) => {
+  // pv: the videos and partners of an assignment with no papers, made once the pages open (StartNotes, D-022)
+  const bring = async (it, list, cls, pv) => {
     if (!list.length || busy) return;
     setBusy(it ? it.id : 'match');
     try {
@@ -112,6 +113,7 @@ export default function ClassWork({ classId, sub }) {
       const drive = fromDrive.current; fromDrive.current = null;
       const r = await O.bringIn(list[0] && list[0].file ? list : entriesOf(list), { assignment: it, label: it ? it.name : 'Matched files', carry, drive });
       if (r && cls) (await PARTS.bringin()).classAfter(r.batch.id, cls.id);
+      if (r && pv) (await PARTS.bringin()).partnersAfter(r.batch.id, pv);
       if (r && r.changed) toast(t('setup.c_changed_toast', { n: r.changed }), { ms: 7000 });
       if (r) go('mark', r.batch.id);
     } catch (e) { console.error(e); toast(e && e.name === 'NothingIn' ? t('setup.w_nothing') : e && e.name === 'CannotSave' ? t('mark.cannot') : t('setup.w_failed')); }
@@ -182,7 +184,7 @@ export default function ClassWork({ classId, sub }) {
     {name && <NameUnit was={name} onDone={named} />}
     {move && <MoveTo lib={lib} it={move} onDone={moved} />}
     {box && box.kind === 'asg' && <box.A.AssignmentDialog lib={lib} it={box.it} classId={classId} unitId={box.unitId} onClose={shut} />}
-    {box && box.kind === 'notes' && <box.A.StartNotes lib={lib} it={box.it} bring={list => bring(box.it, list)} onClose={() => setBox(null)} />}
+    {box && box.kind === 'notes' && <box.A.StartNotes lib={lib} it={box.it} bring={(list, pv) => bring(box.it, list, null, pv)} onClose={() => setBox(null)} />}
     {box && box.kind === 'forget' && <box.A.Forget it={box.it} id={box.id} onClose={shut} />}
     {box && box.kind === 'ulink' && <box.A.UnitLink u={box.u} tool={tool} onClose={shut} />}
     {box && box.kind === 'unitto' && <box.A.UnitTo lib={lib} u={box.u} onClose={shut} />}

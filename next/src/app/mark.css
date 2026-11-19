@@ -1066,3 +1066,8 @@ dialog.dlg.mk-qr{width:min(880px,calc(100vw - 32px))}
 .bbwrap .gl td,.bbwrap .gl th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 .bbwrap .gl .cm{white-space:pre-wrap}
 .bbwrap .warn{color:var(--warn)}
+/* Add, A video: partners as chips; the videos folder line; Choose from Drive… above Partners and videos (D-006, D-007, D-036, D-037) */
+.vdlist{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;max-height:180px;overflow:auto}
+.vdlist .chip[aria-checked="true"]{color:var(--ink);background:var(--sb);box-shadow:var(--sh-btn)}
+.vddir{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.vddir .icon{width:14px;height:14px}
+.mk-pv .pv-drv{display:flex;gap:10px;align-items:center;flex-wrap:wrap}

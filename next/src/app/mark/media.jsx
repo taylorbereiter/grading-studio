@@ -19,6 +19,10 @@ import { PARTS } from '../router.js';
 import { sampleOn } from '../sample.js';
 import * as C from './change.js';
 import { ClipStrip } from './clips.jsx';
+import { VidDir } from './vdir.jsx';
+import { shownName, anonOn, anonOrder } from '../../engines/gdraw.js';
+import { groupMates } from '../../engines/ggroup.js';
+import './inout-lines.js';
 import './lines.js';
 import './setup-lines.js';
 import './video-lines.js';
@@ -249,13 +253,26 @@ export function NotesAdd({ st, name, onClose }) {
   </Dialog>;
 }
 
-// Add, A video… (openAddVideo): a link or a video file, its name, and a notes page to write on while she watches. Partners in the
-// video come with group work.
+// Partners in the video (src/video.js partnerList, D-037): a find box, and everyone else ticked who is in it; those already in her
+// group are ticked and can't be taken off here.
+function PartnerPick({ st, picked, onTog }) {
+  const [q, setQ] = useState(''), bb = state().batch, anon = anonOn(), ord = anon ? anonOrder() : null, locked = new Set(groupMates(st));
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const rows = bb.students.map((s, i) => ({ s, i, name: shownName(s, i) })).filter(r => r.s !== st && (r.s.files.length || !r.s.gap) && words.every(w => r.name.toLowerCase().split(/[\s,_-]+/).some(y => y.startsWith(w))))
+    .sort((x, y) => (ord ? ord.indexOf(x.i) - ord.indexOf(y.i) : 0));
+  return <><TextInput icon="search" label={t('setup.f_find')} placeholder={t(anon ? 'inout.mv_num' : 'inout.mv_name')} value={q} onInput={setQ} autocomplete="off" data-vdfind />
+    <div class="vdlist">{rows.map(r => { const lock = locked.has(r.s), on = lock || picked.has(r.s.key);
+      return <button type="button" class="chip" role="checkbox" aria-checked={on ? 'true' : 'false'} disabled={lock} title={lock ? t('setup.pv_locked') : undefined} onClick={() => onTog(r.s.key)} data-vdto={r.s.key}><span data-raw>{r.name}</span></button>; })}
+      {!rows.length && <p class="mute">{t('setup.f_none_found')}</p>}</div></>;
+}
+
+// Add, A video… (openAddVideo): a link or a video file, its name, a notes page to write on while she watches, and partners in it.
 export function VideoAdd({ st, name, onClose, file: file0 }) {
   const rows = V.npRows(state().setup), has = !!V.notesFileOf(st);
   const [by, setBy] = useState(file0 ? 'file' : 'link'), [url, setUrl] = useState(''), [file, setFile] = useState(file0 || null), [title, setTitle] = useState(t('setup.v_name0')), [drv, setDrv] = useState(null);
   const S = saving(), canDrive = !!(S && S.google().pickNow);
   const [kind, setKind] = useState(has ? '' : 'lined'), [busy, setBusy] = useState(false);
+  const [picked, setPicked] = useState(() => new Set()), tog = k => setPicked(p => { const n = new Set(p); if (n.has(k)) n.delete(k); else n.add(k); return n; });
   const clean = V.linkClean(url), ok = by === 'file' ? !!file : by === 'drive' ? !!drv : !!clean;
   const fromDrive = async () => { try { const [d] = await S.vidPick({ title: t('video.drv_choose') }); if (d) { setDrv(d); setBy('drive'); } } catch (e) { console.error(e); toast(t('setup.v_fail', { why: (e && e.message) || String(e) })); } };
   const pick = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'video/*,audio/*'; i.onchange = () => use1(i.files[0]); i.click(); };
@@ -265,16 +282,18 @@ export function VideoAdd({ st, name, onClose, file: file0 }) {
     try {
       if (kind) npLast = kind;
       const r = await C.videoAdd(st, { url: by === 'link' ? clean : '', file: by === 'file' ? file : null, drive: by === 'drive' ? drv : null, name: V.npFileName(title || t('setup.v_name0')), kind });
+      // the partners get the video and the notes page, and one set of marks and one grade covers the group (pvApply)
+      if (picked.size) await C.partnersApply([{ k: [st.key, ...picked], url: '', file: null }], false);
       toast(r.had && !r.made.length ? t('setup.v_has', { name }) : t('setup.v_added', { name }));
       C.reopen();
       onClose();
     } catch (e) { console.error(e); setBusy(false); toast((e && e.why === 'room') ? t('setup.v_room') : t('setup.v_fail', { why: (e && e.message) || String(e) })); }
   };
   return <Dialog open title={t('setup.v_add_t', { name })} onClose={onClose}
-    actions={<><Button onClick={onClose}>{t('setup.cancel')}</Button><Button variant="primary" onClick={go} disabled={!ok || busy} data-vdadd>{t('setup.v_np_add', { name })}</Button></>}>
+    actions={<><Button onClick={onClose}>{t('setup.cancel')}</Button><Button variant="primary" onClick={go} disabled={!ok || busy} data-vdadd>{picked.size ? t('video.vd_add_with', { name, n: picked.size }) : t('setup.v_np_add', { name })}</Button></>}>
     <div onDragOver={e => { if (by === 'file') e.preventDefault(); }} onDrop={e => { if (by !== 'file') return; e.preventDefault(); use1(e.dataTransfer.files[0]); }}>
     <Segmented label={t('setup.v_which')} value={by} onChange={v => { setBy(v); if (v === 'file' && !file) pick(); if (v === 'drive' && !drv) fromDrive(); }} options={[{ value: 'link', label: t('setup.v_by_link') }, { value: 'file', label: t('setup.v_by_file') }].concat(canDrive ? [{ value: 'drive', label: t('video.by_drive') }] : [])} />
-    {by === 'drive' ? <><div class="vdfile"><Button onClick={fromDrive} data-vddrive>{t('video.drv_choose')}</Button><span class="mute" data-raw>{drv ? drv.name : ''}</span></div>
+    {by === 'drive' ? <><div class="vdfile"><Button onClick={fromDrive} data-vddrive>{t('video.drv_choose')}</Button><span class="mute" data-raw>{drv ? drv.name : ''}</span><VidDir /></div>
       <p class="mute">{t('video.drv_say')}</p></>
       : by === 'link' ? <><TextInput label={t('setup.v_link')} value={url} onInput={setUrl} placeholder={t('setup.v_link_ph')} autocomplete="off" spellcheck={false} error={url.trim() && !clean ? t('setup.v_bad_link') : ''} data-vdlink />
       <p class="mute">{t('setup.v_link_say')}</p></>
@@ -286,6 +305,8 @@ export function VideoAdd({ st, name, onClose, file: file0 }) {
       <button type="button" class="nptile" role="radio" aria-checked={kind === '' ? 'true' : 'false'} onClick={() => setKind('')} data-np="none"><span class="npart none" aria-hidden="true" /><b>{t('setup.v_np_none')}</b></button>
       {KINDS.map(([k, label, tip]) => { const off = k === 'rubric' && !rows.length;
         return <button type="button" class="nptile" role="radio" aria-checked={kind === k ? 'true' : 'false'} disabled={off} title={t(off ? 'setup.v_np_norows' : tip)} onClick={() => setKind(k)} data-np={k}><span class={'npart ' + k} aria-hidden="true" /><b>{t(label)}</b></button>; })}</div>
+    <p class="vdlab"><b>{t('video.vd_partners')}</b> <small class="mute">{t('video.vd_partners_say')}</small></p>
+    <PartnerPick st={st} picked={picked} onTog={tog} />
     </div>
   </Dialog>;
 }

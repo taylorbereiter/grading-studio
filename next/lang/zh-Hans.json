@@ -6597,5 +6597,21 @@
  "inout.mv_num": "输入作业编号",
  "inout.f_marks_kept": "你在上面的批改仍然保存着。",
  "inout.f_goes_back": "因为是你加入的，所以会随导出一起退回。",
- "inout.op_later": "他们的作业交来时，用“{setup}”下的“{bring}”，或在他们的作业上点“{add}”。"
+ "inout.op_later": "他们的作业交来时，用“{setup}”下的“{bring}”，或在他们的作业上点“{add}”。",
+ "video.drv_dir_change": "更换文件夹",
+ "video.drv_only": "只能打开你选的视频，云端硬盘里的其他内容都不会被打开。",
+ "video.pv_drive": "云端硬盘…",
+ "video.pv_many": "从云端硬盘选择…",
+ "video.pv_miss_drv": {
+  "one": "这个文件没有对上任何名字：{names}。请在正确的那一行使用“云端硬盘…”。",
+  "other": "这些文件没有对上任何名字：{names}。请在正确的那一行使用“云端硬盘…”。"
+ },
+ "video.vd_partners": "伙伴",
+ "video.vd_partners_say": "勾选视频中的其他每个人。他们会拿到视频和笔记页，整组共用一套标记和一个成绩。",
+ "video.vd_add_with": {
+  "one": "添加给{name}和 1 位伙伴",
+  "other": "添加给{name}和 {n} 位伙伴"
+ },
+ "video.sn_pv_h": "视频和伙伴",
+ "video.sn_pv_say": "可以不填，之后也能再加。为每段视频粘贴链接或选择文件，或把视频文件拖到这里，每个文件会交给文件名中提到的学生。伙伴共用一张笔记页、一套标记和一个成绩。"
 }

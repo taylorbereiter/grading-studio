@@ -160,6 +160,8 @@ export function BringFiles({ rows: rows0, dups, onClose }) {
 
 // The class the matched files belong to, given to the download when it opens (as the split gives it: change.js takeSplit).
 export const classAfter = (id, cls) => C.afterSplit({ id, cls });
+// The videos and partners picked for an assignment with no papers, made once its pages open (StartNotes, D-022).
+export const partnersAfter = (id, pv) => C.afterSplit({ id, pv });
 
 // Files to match to a roster: outside files with no download, matched to a class's names and opened as a new download.
 // lib: the library; classId: the class to start with; onGo(entries, cls): opens them (each path "Name/file").

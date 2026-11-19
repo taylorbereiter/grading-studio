@@ -424,3 +424,41 @@ test('Match files (D-002 D-005 D-028 B-009): a whole folder through the Mac app 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// D-022: an assignment with no papers starts with Videos and partners (src/video.js openStartNotes): a link for one student, a partner
+// picked, their own scores; once the pages open the video is added, the partner gets it and the group is made, as the current app reads.
+test('D-022: No papers with a video and a partner: the pages open with the video added and the group made; the current app reads the same', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  await p.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-added', 1); r.onupgradeneeded = () => r.result.createObjectStore('files'); r.onsuccess = () => { r.result.close(); res(); }; }));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await pickItem(p, '[data-bring-for="i9"]', 'presentations or videos');
+  await p.waitForSelector('dialog[open] [data-pv] [data-pvlink="0"]', { timeout: 30000 });
+  assert.match(await p.$eval('dialog[open]', d => d.textContent), /Videos and partners/);
+  const [a, b] = await p.$$eval('[data-pvrow]', rs => rs.slice(0, 2).map(r => r.dataset.pvrow));
+  await p.type('[data-pvlink="0"]', 'https://www.youtube.com/watch?v=abcdefghijk');
+  await p.click('[data-pvp="0"]');
+  await p.waitForSelector(`[data-pvto="${b}"]`);
+  await p.click(`[data-pvto="${b}"]`);
+  await p.click('[data-pvdone]');
+  assert.match(await p.$eval(`[data-pvrow="${b}"]`, e => e.textContent), new RegExp('Same video as: ' + a));
+  await p.evaluate(() => [...document.querySelectorAll('dialog[open] [data-pv] .seg button, dialog[open] [data-pv] [role="radio"]')].find(x => /Their own scores/.test(x.textContent)).click());
+  await p.click('dialog[open] [data-sngo]');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForFunction((a, b) => { const g = window.__mark.state().batch.groups || []; return g.length === 1 && g[0].k[0] === a && g[0].k.includes(b) && g[0].own; }, { timeout: 60000 }, a, b);
+  const files = await p.evaluate((a, b) => [a, b].map(k => window.__mark.state().batch.students.find(s => s.key === k).files.map(f => f.name).sort()), a, b);
+  assert.ok(files[0].includes('Presentation video.url') && files[1].includes('Presentation video.url'), JSON.stringify(files));
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+  const made = await p.evaluate(() => JSON.parse(JSON.stringify(window.__mark.state().batch.groups)));
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), id);
+  await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  assert.deepEqual(await m.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().batch.groups || []))), made);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

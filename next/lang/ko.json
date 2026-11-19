@@ -6597,5 +6597,21 @@
  "inout.mv_num": "과제 번호 입력",
  "inout.f_marks_kept": "이 파일에 한 표시는 그대로 저장되어 있습니다.",
  "inout.f_goes_back": "내가 추가한 파일이라 내보내기와 함께 돌아갑니다.",
- "inout.op_later": "과제가 들어오면 {setup}의 {bring}이나 그 과제의 {add}를 쓰세요."
+ "inout.op_later": "과제가 들어오면 {setup}의 {bring}이나 그 과제의 {add}를 쓰세요.",
+ "video.drv_dir_change": "폴더 바꾸기",
+ "video.drv_only": "고른 동영상만 열 수 있고, 드라이브의 다른 것은 열 수 없습니다.",
+ "video.pv_drive": "드라이브…",
+ "video.pv_many": "드라이브에서 고르기…",
+ "video.pv_miss_drv": {
+  "one": "이 파일은 이름과 맞지 않았습니다: {names}. 맞는 줄에서 드라이브…를 사용하세요.",
+  "other": "이 파일들은 이름과 맞지 않았습니다: {names}. 맞는 줄에서 드라이브…를 사용하세요."
+ },
+ "video.vd_partners": "파트너",
+ "video.vd_partners_say": "동영상에 나오는 다른 사람을 모두 체크하세요. 그들도 동영상과 메모 페이지를 받고, 그룹 전체에 표시 한 벌과 성적 하나가 적용됩니다.",
+ "video.vd_add_with": {
+  "one": "{name}님과 파트너 1명에게 추가",
+  "other": "{name}님과 파트너 {n}명에게 추가"
+ },
+ "video.sn_pv_h": "동영상과 파트너",
+ "video.sn_pv_say": "선택 사항이며 나중에 추가할 수도 있습니다. 동영상마다 링크를 붙여넣거나 파일을 고르세요. 동영상 파일을 여기에 놓으면 파일 이름에 있는 학생에게 각각 갑니다. 파트너는 메모 페이지 하나, 표시 한 벌, 성적 하나를 함께 씁니다."
 }

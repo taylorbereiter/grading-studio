@@ -45,6 +45,8 @@ export function startWhole() {
     vidBytes: async (id, onStep, interactive) => (await V()).bytes(id, onStep, interactive),
     vidCheck: async id => (await V()).check(id),
     vidPick: async o => (await V()).videos(o),
+    // the videos folder the chooser opens in, and Change folder (src/video.js vidDir, pickVidDir)
+    vidDir: () => lsJson('gs.gVidDir', null), vidPickDir: async () => (await V()).pickVidDir(),
     vidSignIn: async () => { const { gToken } = await import('./google.js'); return gToken(true, 'pick'); },
     pullOne: async (id, key) => { await drive(); return (await import('./papers.js')).pullOne(id, key); },
     // the linked folder (whole/folder.js, folder-run.js), going back to its dated copies, and this browser's safety copies (whole/safety.js)

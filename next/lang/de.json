@@ -6568,5 +6568,21 @@
  "inout.mv_num": "Nummer der Arbeit eingeben",
  "inout.f_marks_kept": "Ihre Korrekturen darauf sind weiter gespeichert.",
  "inout.f_goes_back": "Sie geht mit dem Export zurück, weil Sie sie hinzugefügt haben.",
- "inout.op_later": "Wenn die Arbeit kommt, nutzen Sie {bring} unter {setup} oder {add} bei der Arbeit."
+ "inout.op_later": "Wenn die Arbeit kommt, nutzen Sie {bring} unter {setup} oder {add} bei der Arbeit.",
+ "video.drv_dir_change": "Ordner ändern",
+ "video.drv_only": "Nur die Videos, die Sie auswählen, können geöffnet werden, sonst nichts in Ihrem Drive.",
+ "video.pv_drive": "Drive…",
+ "video.pv_many": "Aus Drive auswählen…",
+ "video.pv_miss_drv": {
+  "one": "Diese Datei passte zu keinem Namen: {names}. Nutzen Sie Drive… in der richtigen Zeile.",
+  "other": "Diese Dateien passten zu keinem Namen: {names}. Nutzen Sie Drive… in der richtigen Zeile."
+ },
+ "video.vd_partners": "Partner",
+ "video.vd_partners_say": "Haken Sie alle anderen im Video an. Sie bekommen das Video und die Notizseite, und ein Satz Markierungen und eine Note gelten für die Gruppe.",
+ "video.vd_add_with": {
+  "one": "Zu {name} und 1 Partner hinzufügen",
+  "other": "Zu {name} und {n} Partnern hinzufügen"
+ },
+ "video.sn_pv_h": "Videos und Partner",
+ "video.sn_pv_say": "Optional, Sie können sie auch später hinzufügen. Fügen Sie für jedes Video einen Link ein oder wählen Sie eine Datei, oder legen Sie Videodateien hier ab: Jede geht an die Person, die im Dateinamen steht. Partner teilen eine Notizseite, einen Satz Markierungen und eine Note."
 }

@@ -173,3 +173,51 @@ test('Setup > Partners and videos: a link pasted for one student, a partner pick
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// D-037: Add, A video… has Partners: a find box and everyone else in the video ticked. They get the video and the notes page, and one
+// set of marks and one grade covers the group, as the current app makes it.
+test('D-037: Add, A video with a partner ticked: the partner gets the video and the notes page, one group; the current app opens the same', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  await p.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-added', 1); r.onupgradeneeded = () => r.result.createObjectStore('files'); r.onsuccess = () => { r.result.close(); res(); }; }));
+  const z = path.join(dir, 'Talk2.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+  const [aria, bram] = await p.evaluate(() => window.__mark.state().batch.students.map(s => s.key));
+  await p.click('[data-st="0"]');
+  await p.waitForFunction(() => window.__mark.state().cur === 0 && window.__mark.ready, { timeout: 60000 });
+  await p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => /video or recording/.test(e.textContent)); if (it) { it.click(); return true; } const b = document.querySelector('[data-addmenu]'); if (b && !document.querySelector('.pop')) b.click(); return false; }, { timeout: 30000, polling: 500 });
+  await p.waitForSelector('dialog[open] [data-vdadd]');
+  await p.waitForFunction(() => { const e = document.querySelector('input[data-vdlink]'); if (e) e.focus(); return e && document.activeElement === e; });
+  await p.keyboard.type('https://www.youtube.com/watch?v=abcdefghijk');
+  await p.waitForFunction(() => !document.querySelector('[data-vdadd]').disabled);
+  // the find box narrows the list by the start of a word
+  await p.focus('input[data-vdfind]'); await p.keyboard.type(bram.split(' ')[0].slice(0, 3).toLowerCase());
+  await p.waitForFunction(b => [...document.querySelectorAll('[data-vdto]')].some(e => e.dataset.vdto === b), {}, bram);
+  await p.click(`[data-vdto="${bram}"]`);
+  assert.equal(await p.$eval(`[data-vdto="${bram}"]`, e => e.getAttribute('aria-checked')), 'true');
+  assert.equal(await p.$eval('[data-vdadd]', e => e.textContent), 'Add to ' + aria + ' and 1 partner');
+  await p.click('dialog[open] [data-np="lined"]');
+  await p.click('[data-vdadd]');
+  await p.waitForFunction((a, b) => { const g = window.__mark.state().batch.groups || []; return g.length === 1 && g[0].k[0] === a && g[0].k.includes(b); }, { timeout: 60000 }, aria, bram);
+  const theirs = await p.evaluate(b => window.__mark.state().batch.students.find(s => s.key === b).files.filter(f => f.from).map(f => f.name).sort(), bram);
+  assert.equal(theirs.length, 2, 'the partner got the video and the notes page: ' + theirs.join());
+  assert.ok(theirs.includes('Presentation video.url'));
+  const made = await groups(p);
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), id);
+  await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  assert.deepEqual(await m.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().batch.groups || []))), made);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

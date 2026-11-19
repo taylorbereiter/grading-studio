@@ -55,5 +55,21 @@
  "video.cl_prev": "The clip before",
  "video.cl_next": "The next clip",
  "video.cl_of": "{n} of {of}",
- "video.cl_full": "Full screen"
+ "video.cl_full": "Full screen",
+ "video.drv_dir_change": "Change folder",
+ "video.drv_only": "Only the videos you pick can be opened, nothing else in your Drive.",
+ "video.pv_drive": "Drive…",
+ "video.pv_many": "Choose from Drive…",
+ "video.pv_miss_drv": {
+  "one": "This file didn’t match a name: {names}. Use Drive… on the right row.",
+  "other": "These files didn’t match a name: {names}. Use Drive… on the right row."
+ },
+ "video.vd_partners": "Partners",
+ "video.vd_partners_say": "Tick everyone else in the video. They get the video and the notes page, and one set of marks and one grade covers the group.",
+ "video.vd_add_with": {
+  "one": "Add to {name} and 1 partner",
+  "other": "Add to {name} and {n} partners"
+ },
+ "video.sn_pv_h": "Videos and partners",
+ "video.sn_pv_say": "Optional, and you can add them later too. Paste a link or choose a file for each video, or drop video files here and each goes to the student named in its file name. Partners share one notes page, one set of marks and one grade."
 }

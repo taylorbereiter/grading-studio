@@ -125,7 +125,9 @@ const folder = n => String(n).replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').trim()
 export function StartNotes({ lib, it, bring, onClose }) {
   const f = itemIn(lib, it.id), c = f && f.c !== lib.loose ? f.c : null, names = c ? c.names.filter(n => String(n).trim()) : [];
   const [V, setV] = useState(null), [kind, setKind] = useState(npLast), [busy, setBusy] = useState(false);
-  useEffect(() => { if (names.length) import('../../engines/gmedia.js').then(setV, e => console.error(e)); }, []);
+  // Videos and partners (D-022): a part of its own, loaded with the box
+  const [P, setP] = useState(null), [pv, setPv] = useState(null);
+  useEffect(() => { if (names.length) { import('../../engines/gmedia.js').then(setV, e => console.error(e)); PARTS.partners().then(setP, e => console.error(e)); } }, []);
   if (!names.length) return <Dialog open title={t('class.sn_t', { name: it.name })} onClose={onClose} actions={<Button onClick={onClose}>{t('setup.u_cancel')}</Button>}><p>{t('class.sn_roster')}</p></Dialog>;
   const rows = V ? V.npRows(it.setup) : [], k = kind === 'rubric' && !rows.length ? 'lined' : kind;
   const go = async () => {
@@ -134,16 +136,16 @@ export function StartNotes({ lib, it, bring, onClose }) {
       const [PDFLib, G] = await Promise.all([PARTS.pdflib(), import('../../engines/gcore.js')]); G.use({ PDFLib });
       const bytes = await V.notesPdf(k, it.name, rows), file = V.npFileName(it.name) + ' notes.pdf';
       const list = names.map(n => ({ path: folder(n) + '/' + file, file: new File([bytes.slice()], file, { type: 'application/pdf' }) }));
-      onClose(); bring(list);
+      onClose(); bring(list, pv && pv.groups.length ? { groups: pv.groups, own: pv.own } : null);
     } catch (e) { console.error(e); toast(t('class.sn_fail', { why: (e && e.message) || String(e) })); onClose(); }
   };
   return <Dialog open title={t('class.sn_t', { name: it.name })} onClose={onClose}
-    actions={<><Button onClick={onClose}>{t('setup.u_cancel')}</Button><Button variant="primary" onClick={go} disabled={busy || !V} data-sngo>{t('class.sn_go')}</Button></>}>
+    actions={<><Button onClick={onClose}>{t('setup.u_cancel')}</Button><Button variant="primary" onClick={go} disabled={busy || !V || !!(pv && pv.bad)} data-sngo>{t('class.sn_go')}</Button></>}>
     <p data-raw>{t('class.sn_text', { n: names.length, cls: c.name })}</p>
     <div class="nptiles" role="radiogroup" aria-label={t('setup.v_np_kind')}>{KINDS.map(([id, label, tip]) => { const off = id === 'rubric' && !rows.length;
       return <button type="button" class="nptile" role="radio" aria-checked={k === id ? 'true' : 'false'} disabled={off} title={t(off ? 'setup.v_np_norows' : tip)} onClick={() => setKind(id)} data-np={id}>
         <span class={'npart ' + id} aria-hidden="true" /><b>{t(label)}</b></button>; })}</div>
-    <p class="mute small">{t('class.sn_later')}</p>
+    {P ? <P.StartPv names={names} keyOf={folder} onChange={setPv} /> : <p class="mute small">{t('class.sn_later')}</p>}
   </Dialog>;
 }
 

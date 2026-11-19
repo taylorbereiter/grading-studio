@@ -466,12 +466,14 @@ export function scanAct(pg, a) {
   tell(); show(-1);
 }
 export const rescans = () => F.scanRescans();
-// The split hands over what goes with the download once it opens: { id, wide (the whole scan's lighting), cls (the class she picked) }.
+// The split hands over what goes with the download once it opens: { id, wide (the whole scan's lighting), cls (the class she picked) },
+// or StartNotes its videos and partners (pv: { groups, own }, D-022).
 let fromSplit = null;
 export const afterSplit = p => { fromSplit = p; };
 export function takeSplit() {
   const bb = b(); if (!bb || !fromSplit || fromSplit.id !== bb.id) return false;
-  const { wide, cls, lit } = fromSplit; fromSplit = null;
+  const { wide, cls, lit, pv } = fromSplit; fromSplit = null;
+  if (pv) partnersApply(pv.groups, pv.own).catch(e => console.error(e));
   if (wide) { bb.light = { ...(bb.light || {}), '*': { ...wide } }; bb.lightOpt = { ...D.lightOpts(), on: true }; }
   F.scanHintsAll();
   if (cls != null && cls !== '') bb.classId = cls;
@@ -588,9 +590,9 @@ export async function partnersApply(groups, own) {
   for (const g of groups) {
     const all = g.k.map(stOf).filter(Boolean); if (!all.length) continue;
     let st = all[0];
-    if (!g.url && !g.file && !(V.notesFileOf(st) || G.groupPaper(st))) st = all.find(s => V.notesFileOf(s) || G.groupPaper(s)) || st;
+    if (!g.url && !g.file && !g.drive && !(V.notesFileOf(st) || G.groupPaper(st))) st = all.find(s => V.notesFileOf(s) || G.groupPaper(s)) || st;
     const partners = all.filter(s => s !== st && !G.groupMates(st).includes(s));
-    if (g.url || g.file) await videoAdd(st, { url: g.url, file: g.file, name: 'Presentation video', kind: '' });
+    if (g.url || g.file || g.drive) await videoAdd(st, { url: g.url, file: g.file, drive: g.drive || null, name: 'Presentation video', kind: '' });
     const links = st.files.filter(f => f.kind === 'link');
     const anchor = fileOfGroup(st) || V.notesFileOf(st) || G.groupPaper(st) || links[0] || st.files.find(f => f.kind === 'media');
     if (!anchor) continue;

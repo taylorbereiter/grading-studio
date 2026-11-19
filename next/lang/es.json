@@ -6590,5 +6590,21 @@
  "inout.mv_num": "Escriba un número de trabajo",
  "inout.f_marks_kept": "Sus correcciones en él siguen guardadas.",
  "inout.f_goes_back": "Vuelve con la exportación porque usted lo añadió.",
- "inout.op_later": "Cuando llegue su trabajo, use {bring} en {setup} o {add} en su trabajo."
+ "inout.op_later": "Cuando llegue su trabajo, use {bring} en {setup} o {add} en su trabajo.",
+ "video.drv_dir_change": "Cambiar carpeta",
+ "video.drv_only": "Solo se pueden abrir los videos que elijas, nada más de tu Drive.",
+ "video.pv_drive": "Drive…",
+ "video.pv_many": "Elegir de Drive…",
+ "video.pv_miss_drv": {
+  "one": "Este archivo no coincidió con ningún nombre: {names}. Usa Drive… en la fila correcta.",
+  "other": "Estos archivos no coincidieron con ningún nombre: {names}. Usa Drive… en la fila correcta."
+ },
+ "video.vd_partners": "Compañeros",
+ "video.vd_partners_say": "Marca a todos los demás que salen en el video. Reciben el video y la hoja de notas, y un solo conjunto de marcas y una sola nota cubren al grupo.",
+ "video.vd_add_with": {
+  "one": "Añadir a {name} y 1 compañero",
+  "other": "Añadir a {name} y {n} compañeros"
+ },
+ "video.sn_pv_h": "Videos y compañeros",
+ "video.sn_pv_say": "Opcional, y también puedes añadirlos después. Pega un enlace o elige un archivo para cada video, o suelta aquí los archivos de video y cada uno irá al estudiante nombrado en su nombre de archivo. Los compañeros comparten una hoja de notas, un conjunto de marcas y una nota."
 }

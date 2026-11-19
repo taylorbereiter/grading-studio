@@ -217,3 +217,59 @@ test('D-042: + Add > From Google Drive adds the file picked in Drive to that stu
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// D-006 D-007 D-036: Partners and videos with Drive. Choose from Drive… above the list picks many videos, each going to the student
+// named in its file name; the folder line says where the chooser opens and Change folder changes it; Drive… on a row picks that
+// student's video; Save adds each as the shortcut the current app writes. Add, A video shows the same folder line.
+test('D-006 D-007 D-036: Choose from Drive… matched by name, Change folder, Drive… on a row, and the folder line in Add a video', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const D = { asked: [], folders: [], sent: [], videos: {}, papers: { '1PaperAriaPaperAriaPaperAria00001': await makePaper({ title: 'Aria outline' }), '1PaperBramPaperBramPaperBram00002': await makePaper({ title: 'Bram outline' }) } };
+  const p = await page(ctx, errors, D);
+  await p.goto(srv.url + 'blank'); await plant(p, seed());
+  await p.evaluate(() => Promise.all([['grading-studio-added', 'files'], ['grading-studio-videos', 'v']].map(([n, s]) => new Promise(res => { const r = indexedDB.open(n, 1); r.onupgradeneeded = () => r.result.createObjectStore(s); r.onsuccess = () => { r.result.close(); res(); }; }))));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.evaluate(() => { window.__picks.push([
+    { id: '1PaperAriaPaperAriaPaperAria00001', name: 'Aria Testwell.pdf', mimeType: 'application/pdf', sizeBytes: '900' },
+    { id: '1PaperBramPaperBramPaperBram00002', name: 'Bram Sample.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.click('[data-bring-for="i9"]');
+  await menuPick(p, 'Google Drive');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await tap(p, '[data-setupopen]');
+  await menuPick(p, 'Partners and videos');
+  await p.waitForSelector('dialog[open] [data-pvmany]');
+  // the videos folder first (once), then two videos, each named for a student
+  await p.evaluate(() => { window.__picks.length = 0; window.__picks.push([{ id: '1FolderVideosFolderVideos0000007', name: 'Class videos', mimeType: 'application/vnd.google-apps.folder' }],
+    [{ id: '1VideoAriaVideoAriaVideoAria00009', name: 'Aria Testwell speech.webm', mimeType: 'video/webm', sizeBytes: '2000' }, { id: '1VideoBramVideoBramVideoBram00010', name: 'Bram Sample talk.webm', mimeType: 'video/webm', sizeBytes: '3000' }]); });
+  await p.click('dialog[open] [data-pvmany]');
+  await p.waitForFunction(() => /Aria Testwell speech\.webm/.test(document.querySelector('[data-pvrow="Aria Testwell"]').textContent) && /Bram Sample talk\.webm/.test(document.querySelector('[data-pvrow="Bram Sample"]').textContent), { timeout: 30000 });
+  assert.match(await p.$eval('[data-pvrow="Aria Testwell"]', e => e.textContent), /Google Drive/, 'marked as from Drive');
+  assert.equal(await p.evaluate(() => window.__pickerSeen.slice(-1)[0].features.includes('multi')), true, 'many at once');
+  assert.match(await p.$eval('dialog[open] .vddir', e => e.textContent), /Class videos.*Change folder/);
+  // Change folder
+  await p.evaluate(() => { window.__picks.push([{ id: '1FolderOtherFolderOtherFolder00008', name: 'Speeches 2026', mimeType: 'application/vnd.google-apps.folder' }]); });
+  await p.click('dialog[open] [data-vddir]');
+  await p.waitForFunction(() => /Speeches 2026/.test((document.querySelector('dialog[open] .vddir') || {}).textContent || ''), { timeout: 30000 });
+  // Drive… on Bram's row, once his matched video is taken off: the chooser opens in the new folder
+  await p.click('[data-pvrow="Bram Sample"] [data-pvunfile]');
+  await p.waitForSelector('[data-pvrow="Bram Sample"] [data-pvdrive]');
+  await p.evaluate(() => { window.__picks.push([{ id: '1VideoBramRedoVideoBramRedo00011', name: 'Bram retake.webm', mimeType: 'video/webm', sizeBytes: '4000' }]); });
+  await p.click('[data-pvrow="Bram Sample"] [data-pvdrive]');
+  await p.waitForFunction(() => /Bram retake\.webm/.test(document.querySelector('[data-pvrow="Bram Sample"]').textContent), { timeout: 30000 });
+  assert.equal(await p.evaluate(() => window.__pickerSeen.slice(-1)[0].views[0].parent), '1FolderOtherFolderOtherFolder00008');
+  await tap(p, '[data-pvgo]');
+  await p.waitForFunction(() => ['Aria Testwell', 'Bram Sample'].every(k => window.__mark.state().batch.students.find(s => s.key === k).files.some(f => f.kind === 'link')), { timeout: 60000 });
+  const links = await p.evaluate(() => ['Aria Testwell', 'Bram Sample'].map(k => new TextDecoder().decode(window.__mark.state().batch.students.find(s => s.key === k).files.find(f => f.kind === 'link').data)));
+  assert.match(links[0], /GsDrive=1VideoAriaVideoAriaVideoAria00009/); assert.match(links[0], /Name=Aria Testwell speech\.webm/);
+  assert.match(links[1], /GsDrive=1VideoBramRedoVideoBramRedo00011/);
+  assert.deepEqual(await p.evaluate(() => JSON.parse(localStorage.getItem('gs.gVidDir'))), { id: '1FolderOtherFolderOtherFolder00008', name: 'Speeches 2026' }, 'kept where the current app keeps it');
+  // D-036: Add, A video, From Google Drive shows where the chooser opens, with Change folder
+  await goTo(p, 'Aria Testwell');
+  await p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => /video or recording/.test(e.textContent)); if (it) { it.click(); return true; } const b = document.querySelector('[data-addmenu]'); if (b && !document.querySelector('.pop')) b.click(); return false; }, { timeout: 30000, polling: 500 });
+  await p.waitForSelector('dialog[open] [data-vdadd]');
+  await p.evaluate(() => { window.__picks.push([]); });
+  await p.click('dialog[open] [data-v="drive"]');
+  await p.waitForFunction(() => /Speeches 2026.*Change folder/.test((document.querySelector('dialog[open] .vddir') || {}).textContent || ''), { timeout: 30000 });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

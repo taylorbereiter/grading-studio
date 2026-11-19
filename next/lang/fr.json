@@ -6511,5 +6511,21 @@
  "inout.mv_num": "Tapez un numéro de copie",
  "inout.f_marks_kept": "Vos annotations dessus sont toujours enregistrées.",
  "inout.f_goes_back": "Il repart avec l’export parce que vous l’avez ajouté.",
- "inout.op_later": "Quand leur travail arrive, utilisez {bring} dans {setup}, ou {add} sur leur copie."
+ "inout.op_later": "Quand leur travail arrive, utilisez {bring} dans {setup}, ou {add} sur leur copie.",
+ "video.drv_dir_change": "Changer de dossier",
+ "video.drv_only": "Seules les vidéos que vous choisissez peuvent être ouvertes, rien d’autre dans votre Drive.",
+ "video.pv_drive": "Drive…",
+ "video.pv_many": "Choisir dans Drive…",
+ "video.pv_miss_drv": {
+  "one": "Ce fichier ne correspond à aucun nom : {names}. Utilisez Drive… sur la bonne ligne.",
+  "other": "Ces fichiers ne correspondent à aucun nom : {names}. Utilisez Drive… sur la bonne ligne."
+ },
+ "video.vd_partners": "Partenaires",
+ "video.vd_partners_say": "Cochez toutes les autres personnes de la vidéo. Elles reçoivent la vidéo et la page de notes, et un seul jeu d’annotations et une seule note valent pour le groupe.",
+ "video.vd_add_with": {
+  "one": "Ajouter à {name} et 1 partenaire",
+  "other": "Ajouter à {name} et {n} partenaires"
+ },
+ "video.sn_pv_h": "Vidéos et partenaires",
+ "video.sn_pv_say": "Facultatif, et vous pouvez aussi les ajouter plus tard. Collez un lien ou choisissez un fichier pour chaque vidéo, ou déposez ici les fichiers vidéo : chacun va à l’élève nommé dans son nom de fichier. Les partenaires partagent une page de notes, un jeu d’annotations et une note."
 }
