@@ -65,5 +65,18 @@
  "inout.rows_scored": "{n} of {of} rows scored",
  "inout.qs_marked": "{n} of {of} questions marked in Quick mark",
  "inout.score_vs_paper": "Your score is {a}, the paper says {b}",
- "inout.score_vs_word": "Your score is {a}, the Word rubric says {b}"
+ "inout.score_vs_word": "Your score is {a}, the Word rubric says {b}",
+ "inout.bf_title": "Bring in files",
+ "inout.bf_whole": "A whole folder…",
+ "inout.bf_text": "Each file goes to its student by the name in its file name or folder name, for example your marked rubrics. You check the matches before anything is added.",
+ "inout.bf_late_h": "Late work:",
+ "inout.bf_late": "pick the late files, or the whole new download. What’s already here is left out, and you can mark anyone late as you add them.",
+ "inout.bf_scan_h": "A scan of papers",
+ "inout.bf_scan": "(like a makeup day): split it page by page onto names, and each student’s pages are added to them here.",
+ "inout.mr_text": "For files that aren’t in one folder per student, like rubrics you marked outside Grading Studio. Each file is matched to a student on your roster by the name in its file name or folder name, and you can fix any match.",
+ "inout.bf_opening": "Opening {name}…",
+ "inout.bf_mac_perm": "macOS didn’t let Grading Studio open that folder. Allow it in System Settings → Privacy & Security → Files and Folders.",
+ "inout.bf_folder_no": "Couldn’t open that folder: {why}",
+ "inout.bf_folder_empty": "No files found in {name}",
+ "inout.mr_title": "Match files to a roster"
 }

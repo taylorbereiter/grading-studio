@@ -6551,5 +6551,18 @@
  "inout.rows_scored": "{n} de {of} linhas pontuadas",
  "inout.qs_marked": "{n} de {of} questões corrigidas na Correção rápida",
  "inout.score_vs_paper": "Sua nota é {a}, o trabalho diz {b}",
- "inout.score_vs_word": "Sua nota é {a}, a rubrica do Word diz {b}"
+ "inout.score_vs_word": "Sua nota é {a}, a rubrica do Word diz {b}",
+ "inout.bf_title": "Trazer arquivos",
+ "inout.bf_whole": "Uma pasta inteira…",
+ "inout.bf_text": "Cada arquivo vai para o aluno pelo nome no nome do arquivo ou da pasta, por exemplo suas rubricas corrigidas. Você confere as correspondências antes de adicionar qualquer coisa.",
+ "inout.bf_late_h": "Trabalhos atrasados:",
+ "inout.bf_late": "escolha os arquivos atrasados ou o download novo inteiro. O que já está aqui fica de fora, e você pode marcar qualquer um como atrasado ao adicionar.",
+ "inout.bf_scan_h": "Um escaneamento de trabalhos",
+ "inout.bf_scan": "(como um dia de reposição): divida página por página entre os nomes, e as páginas de cada aluno são adicionadas aqui.",
+ "inout.mr_text": "Para arquivos que não estão em uma pasta por aluno, como rubricas que você corrigiu fora do Grading Studio. Cada arquivo é ligado a um aluno da sua lista pelo nome no nome do arquivo ou da pasta, e você pode corrigir qualquer ligação.",
+ "inout.bf_opening": "Abrindo {name}…",
+ "inout.bf_mac_perm": "O macOS não deixou o Grading Studio abrir essa pasta. Permita em Ajustes do Sistema → Privacidade e Segurança → Arquivos e Pastas.",
+ "inout.bf_folder_no": "Não foi possível abrir essa pasta: {why}",
+ "inout.bf_folder_empty": "Nenhum arquivo encontrado em {name}",
+ "inout.mr_title": "Associar arquivos a uma lista"
 }

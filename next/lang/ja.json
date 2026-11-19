@@ -6579,5 +6579,18 @@
  "inout.rows_scored": "{of} 行中 {n} 行を採点",
  "inout.qs_marked": "クイック採点で {of} 問中 {n} 問を採点",
  "inout.score_vs_paper": "あなたの点数は {a}、答案には {b} とあります",
- "inout.score_vs_word": "あなたの点数は {a}、Wordのルーブリックでは {b} です"
+ "inout.score_vs_word": "あなたの点数は {a}、Wordのルーブリックでは {b} です",
+ "inout.bf_title": "ファイルを取り込む",
+ "inout.bf_whole": "フォルダーごと…",
+ "inout.bf_text": "各ファイルは、ファイル名やフォルダー名にある名前で生徒に割り当てられます（採点済みのルーブリックなど）。追加する前に割り当てを確認できます。",
+ "inout.bf_late_h": "遅れた提出物：",
+ "inout.bf_late": "遅れたファイルか、新しいダウンロード全体を選びます。すでにあるものは除かれ、追加するときに誰でも遅れとしてマークできます。",
+ "inout.bf_scan_h": "答案のスキャン",
+ "inout.bf_scan": "（追試の日など）：1ページずつ名前に分けると、各生徒のページがここに追加されます。",
+ "inout.mr_text": "生徒ごとのフォルダーに入っていないファイル用です（Grading Studio の外で採点したルーブリックなど）。各ファイルはファイル名やフォルダー名の名前で名簿の生徒に割り当てられ、どの割り当ても直せます。",
+ "inout.bf_opening": "{name} を開いています…",
+ "inout.bf_mac_perm": "macOS が Grading Studio にそのフォルダーを開かせませんでした。システム設定 → プライバシーとセキュリティ → ファイルとフォルダで許可してください。",
+ "inout.bf_folder_no": "そのフォルダーを開けませんでした：{why}",
+ "inout.bf_folder_empty": "{name} にファイルが見つかりません",
+ "inout.mr_title": "ファイルを名簿と照合"
 }

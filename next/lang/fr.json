@@ -6493,5 +6493,18 @@
  "inout.rows_scored": "{n} lignes sur {of} notées",
  "inout.qs_marked": "{n} questions sur {of} corrigées en Correction rapide",
  "inout.score_vs_paper": "Votre note est {a}, la copie indique {b}",
- "inout.score_vs_word": "Votre note est {a}, la grille Word indique {b}"
+ "inout.score_vs_word": "Votre note est {a}, la grille Word indique {b}",
+ "inout.bf_title": "Ajouter des fichiers",
+ "inout.bf_whole": "Un dossier entier…",
+ "inout.bf_text": "Chaque fichier va à son élève d’après le nom dans le nom du fichier ou du dossier, par exemple vos grilles corrigées. Vous vérifiez les correspondances avant tout ajout.",
+ "inout.bf_late_h": "Travaux en retard :",
+ "inout.bf_late": "choisissez les fichiers en retard, ou tout le nouveau téléchargement. Ce qui est déjà ici est laissé de côté, et vous pouvez marquer qui est en retard en ajoutant.",
+ "inout.bf_scan_h": "Un scan de copies",
+ "inout.bf_scan": "(comme un jour de rattrapage) : répartissez-le page par page sur les noms, et les pages de chaque élève sont ajoutées ici.",
+ "inout.mr_text": "Pour les fichiers qui ne sont pas dans un dossier par élève, comme des grilles corrigées hors de Grading Studio. Chaque fichier est associé à un élève de votre liste d’après le nom dans le nom du fichier ou du dossier, et vous pouvez corriger chaque association.",
+ "inout.bf_opening": "Ouverture de {name}…",
+ "inout.bf_mac_perm": "macOS n’a pas laissé Grading Studio ouvrir ce dossier. Autorisez-le dans Réglages Système → Confidentialité et sécurité → Fichiers et dossiers.",
+ "inout.bf_folder_no": "Impossible d’ouvrir ce dossier : {why}",
+ "inout.bf_folder_empty": "Aucun fichier trouvé dans {name}",
+ "inout.mr_title": "Associer des fichiers à une liste"
 }

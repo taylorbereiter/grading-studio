@@ -6579,5 +6579,18 @@
  "inout.rows_scored": "已评 {of} 项中的 {n} 项",
  "inout.qs_marked": "在快速批改中已批 {of} 题中的 {n} 题",
  "inout.score_vs_paper": "你给的分数是 {a}，作业上写的是 {b}",
- "inout.score_vs_word": "你给的分数是 {a}，Word 评分标准上是 {b}"
+ "inout.score_vs_word": "你给的分数是 {a}，Word 评分标准上是 {b}",
+ "inout.bf_title": "导入文件",
+ "inout.bf_whole": "整个文件夹…",
+ "inout.bf_text": "每个文件会按文件名或文件夹名称中的名字分给对应的学生，例如你批改好的评分标准。加入前你会先确认配对。",
+ "inout.bf_late_h": "迟交作业：",
+ "inout.bf_late": "选择迟交的文件，或整个新的下载。已经在这里的会略过，加入时可以把任何人标为迟交。",
+ "inout.bf_scan_h": "扫描的作业",
+ "inout.bf_scan": "（例如补考日）：逐页分到名字上，每名学生的页面会加到这里的他们名下。",
+ "inout.mr_text": "适用于不是每名学生一个文件夹的文件，例如你在 Grading Studio 以外批改的评分标准。每个文件会按文件名或文件夹名称中的名字配对到名单上的学生，任何配对都可以修改。",
+ "inout.bf_opening": "正在打开 {name}…",
+ "inout.bf_mac_perm": "macOS 不允许 Grading Studio 打开那个文件夹。请到“系统设置”→“隐私与安全性”→“文件与文件夹”允许。",
+ "inout.bf_folder_no": "无法打开那个文件夹：{why}",
+ "inout.bf_folder_empty": "{name} 里没有找到文件",
+ "inout.mr_title": "将文件与名单配对"
 }

@@ -386,7 +386,11 @@ test('Setup > Bring in files: each file sorted to its student by name, one given
   await p.waitForSelector('[data-setupopen]:not([disabled])', { timeout: 60000 });
   await p.click('[data-setupopen]');
   await p.waitForFunction(() => [...document.querySelectorAll('.pop [role="menuitem"]')].some(e => e.textContent.includes('Bring in files')));
-  const [ch] = await Promise.all([p.waitForFileChooser(), p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.includes('Bring in files')).click())]);
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.includes('Bring in files')).click());
+  // D-001: what the files are for (late work, a scan), then files or a whole folder (D-002)
+  await p.waitForSelector('dialog[open] [data-fof="bring"]', { timeout: 30000 });
+  assert.match(await p.$eval('[data-fof="bring"]', e => e.textContent), /Late work:.*A scan of papers/s);
+  const [ch] = await Promise.all([p.waitForFileChooser(), p.click('dialog[open] [data-pf]')]);
   await ch.accept([named, odd, same]);
   await p.waitForSelector('[data-bf]', { timeout: 30000 });
   const rows = await p.$$eval('[data-bfrow]', rs => rs.map(r => ({ file: r.querySelector('.bf-path').textContent, tag: r.querySelector('[data-bftag]').textContent })));

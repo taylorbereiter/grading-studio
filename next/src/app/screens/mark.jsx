@@ -489,7 +489,7 @@ export default function MarkScreen({ route, classes }) {
   const [setupDlg, setSetupDlg] = useState(null);
   // Share with your assistant (mark/share.jsx), from this menu and from Insights; the assistant's name is handed in with ctx
   const openShare = kind => PARTS.share().then(S => setSetupDlg({ k: 'sh', S, kind: typeof kind === 'string' ? kind : null }), e => console.error(e));
-  const bringMany = () => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true; i.onchange = async () => { const B = await PARTS.bringin(); await B.bringFiles(await B.expand([...i.files]), o => setSetupDlg({ k: 'bring', B, ...o })); }; i.click(); };
+  const bringMany = () => PARTS.bringin().then(B => setSetupDlg({ k: 'fof', B }), e => console.error(e));
   const setupItems = [{ label: t('mark.su_menu'), icon: 'settings', onSelect: openSetup }, { label: t('mark.bf_menu'), icon: 'upload', onSelect: bringMany },
     { label: t('mark.pv_menu'), icon: 'people', onSelect: () => PARTS.partners().then(P => setSetupDlg({ k: 'pv', P }), e => console.error(e)) },
     { label: t('mark.qm_menu'), icon: 'check', onSelect: () => quick() },
@@ -527,6 +527,7 @@ export default function MarkScreen({ route, classes }) {
         : <Button icon="settings" size="sm" disabled data-setupopen>{t('mark.setup')}</Button>)}
     </header>
     {su && <su.SetupDialog onClose={() => setSu(null)} />}
+    {setupDlg && setupDlg.k === 'fof' && <setupDlg.B.FilesOrFolder kind="bring" onClose={() => setSetupDlg(null)} onPick={list => setupDlg.B.bringFiles(list, o => setSetupDlg({ k: 'bring', B: setupDlg.B, ...o }))} />}
     {setupDlg && setupDlg.k === 'bring' && <setupDlg.B.BringFiles rows={setupDlg.rows} dups={setupDlg.dups} onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'pv' && <setupDlg.P.Partners onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'sh' && <setupDlg.S.Share ctx={{ ...cvCtx, ai: assistant() }} kind={setupDlg.kind === 'back' ? null : setupDlg.kind} back={setupDlg.kind === 'back'} onClose={() => setSetupDlg(null)} />}

@@ -138,7 +138,10 @@ test('Files to match to a roster: outside files matched to the class names, one 
   await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
   await p.click('[data-bring-for="i9"]');
   await p.waitForFunction(() => [...document.querySelectorAll('.pop [role="menuitem"]')].some(e => /match to a roster/.test(e.textContent)));
-  const [ch] = await Promise.all([p.waitForFileChooser(), p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => /match to a roster/.test(e.textContent)).click())]);
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => /match to a roster/.test(e.textContent)).click());
+  // D-002: files or a whole folder first, with what it's for
+  await p.waitForSelector('dialog[open] [data-fof="match"]', { timeout: 30000 });
+  const [ch] = await Promise.all([p.waitForFileChooser(), p.click('dialog[open] [data-pf]')]);
   await ch.accept(files);
   await p.waitForSelector('[data-mr]', { timeout: 30000 });
   assert.equal(await p.$eval('[data-mrcls]', e => e.value), 'c1');
@@ -375,6 +378,49 @@ test('order: cards and units moved, a unit to another class, its plan link; a cl
   assert.deepEqual(back.loose.units, []);
   assert.deepEqual(back.classes.map(c => [c.id, c.units.map(u => [u.id, u.items.map(i => i.id)])]), [placed[1], placed[0]]);
   assert.ok(back.classes[1].units.every(u => u.items.every(i => i.classId === 'c1')));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Stage 8 slice D: D-002 a whole folder to match (the Mac app's own folder chooser, D-005, stands in for the browser's), B-009 the
+// Again menu's scan, match and no papers for an assignment with papers, D-028 Find's "Match files to a roster" with no assignment.
+test('Match files (D-002 D-005 D-028 B-009): a whole folder through the Mac app chooser, the Again menu, and Find with no assignment', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  const pdfs = await Promise.all(['Aria Testwell', 'Bram Sample'].map(n => makePaper({ title: n })));
+  await p.evaluateOnNewDocument(b64s => {
+    const bytes = b => Uint8Array.from(atob(b), c => c.charCodeAt(0));
+    window.gsNative = { pickFolder: async () => ({ name: 'Speeches' }), readFolder: async () => ({ name: 'Speeches', files: [{ rel: 'Aria Testwell/speech.pdf', data: bytes(b64s[0]), mtime: 1 }, { rel: 'Bram Sample/speech.pdf', data: bytes(b64s[1]), mtime: 1 }] }) };
+  }, pdfs.map(b => Buffer.from(b).toString('base64')));
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  // D-028: Find's job opens the matcher straight away, with no assignment
+  await p.goto(srv.url + 'next/#/class/c1/work/match');
+  await p.waitForSelector('dialog[open] [data-fof="match"]', { timeout: 60000 });
+  await p.click('dialog[open] [data-pd]');
+  await p.waitForSelector('[data-mr]', { timeout: 30000 });
+  const tags = await p.$$eval('[data-mrrow]', rs => rs.map(r => [r.querySelector('.bf-path').textContent, r.lastElementChild.textContent]));
+  assert.deepEqual(tags, [['Speeches/Aria Testwell/speech.pdf', 'Matched by name'], ['Speeches/Bram Sample/speech.pdf', 'Matched by name']], 'folder names kept, so the names match');
+  await p.click('[data-mrgo]');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready, { timeout: 60000 });
+  const got = await p.evaluate(() => { const b = window.__mark.state().batch; return { name: b.name, cls: b.classId, have: b.students.filter(s => s.files.length).map(s => s.key).sort() }; });
+  assert.equal(got.name, 'Matched files'); assert.equal(got.cls, 'c1'); assert.deepEqual(got.have, ['Aria Testwell', 'Bram Sample']);
+  // B-009: an assignment with papers: the Again menu has the scan, the match and no papers, as Open other papers… does
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForFunction(() => [...document.querySelectorAll('.pop [role="menuitem"]')].some(e => /match to a roster/.test(e.textContent)));
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => /match to a roster/.test(e.textContent)).click());
+  await p.waitForSelector('dialog[open] [data-fof="match"]', { timeout: 30000 });
+  await p.click('dialog[open] [data-pd]');
+  await p.waitForSelector('[data-mrgo]:not([disabled])', { timeout: 30000 });
+  await p.click('[data-mrgo]');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-again-for="i9"]', { timeout: 60000 });
+  await p.click('[data-again-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const items = await p.$$eval('.pop [role="menuitem"]', es => es.map(e => e.textContent));
+  for (const want of [/A scan to split/, /match to a roster/, /No papers/]) assert.ok(items.some(x => want.test(x)), String(want));
   assert.deepEqual(errors, []);
   await ctx.close();
 });

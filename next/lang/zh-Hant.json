@@ -6579,5 +6579,18 @@
  "inout.rows_scored": "已評 {of} 項中的 {n} 項",
  "inout.qs_marked": "在快速批改中已批 {of} 題中的 {n} 題",
  "inout.score_vs_paper": "你給的分數是 {a}，作業上寫的是 {b}",
- "inout.score_vs_word": "你給的分數是 {a}，Word 評分規準上是 {b}"
+ "inout.score_vs_word": "你給的分數是 {a}，Word 評分規準上是 {b}",
+ "inout.bf_title": "匯入檔案",
+ "inout.bf_whole": "整個資料夾…",
+ "inout.bf_text": "每個檔案會依檔名或資料夾名稱中的名字分給對應的學生，例如你批改好的評分規準。加入前你會先確認配對。",
+ "inout.bf_late_h": "遲交作業：",
+ "inout.bf_late": "選擇遲交的檔案，或整個新的下載。已經在這裡的會略過，加入時可以把任何人標為遲交。",
+ "inout.bf_scan_h": "掃描的作業",
+ "inout.bf_scan": "（例如補考日）：逐頁分到名字上，每位學生的頁面會加到這裡的他們名下。",
+ "inout.mr_text": "適用於不是每位學生一個資料夾的檔案，例如你在 Grading Studio 以外批改的評分規準。每個檔案會依檔名或資料夾名稱中的名字配對到名單上的學生，任何配對都可以修改。",
+ "inout.bf_opening": "正在開啟 {name}…",
+ "inout.bf_mac_perm": "macOS 不允許 Grading Studio 開啟那個資料夾。請到「系統設定」→「隱私權與安全性」→「檔案與檔案夾」允許。",
+ "inout.bf_folder_no": "無法開啟那個資料夾：{why}",
+ "inout.bf_folder_empty": "{name} 裡沒有找到檔案",
+ "inout.mr_title": "將檔案與名單配對"
 }

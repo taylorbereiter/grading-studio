@@ -6550,5 +6550,18 @@
  "inout.rows_scored": "{n} von {of} Zeilen bewertet",
  "inout.qs_marked": "{n} von {of} Fragen in der Schnellkorrektur korrigiert",
  "inout.score_vs_paper": "Ihre Bewertung ist {a}, auf der Arbeit steht {b}",
- "inout.score_vs_word": "Ihre Bewertung ist {a}, im Word-Raster steht {b}"
+ "inout.score_vs_word": "Ihre Bewertung ist {a}, im Word-Raster steht {b}",
+ "inout.bf_title": "Dateien hereinholen",
+ "inout.bf_whole": "Einen ganzen Ordner…",
+ "inout.bf_text": "Jede Datei geht anhand des Namens im Datei- oder Ordnernamen an die richtige Person, zum Beispiel Ihre korrigierten Raster. Sie prüfen die Zuordnung, bevor etwas hinzukommt.",
+ "inout.bf_late_h": "Verspätete Arbeiten:",
+ "inout.bf_late": "Wählen Sie die verspäteten Dateien oder den ganzen neuen Download. Was schon hier ist, bleibt weg, und Sie können beim Hinzufügen jede Person als verspätet markieren.",
+ "inout.bf_scan_h": "Ein Scan von Arbeiten",
+ "inout.bf_scan": "(etwa ein Nachschreibtermin): Seite für Seite auf Namen aufteilen, und die Seiten jeder Person kommen hier dazu.",
+ "inout.mr_text": "Für Dateien, die nicht in einem Ordner pro Person liegen, etwa Raster, die Sie außerhalb von Grading Studio korrigiert haben. Jede Datei wird anhand des Namens im Datei- oder Ordnernamen einer Person Ihrer Liste zugeordnet, und Sie können jede Zuordnung ändern.",
+ "inout.bf_opening": "{name} wird geöffnet…",
+ "inout.bf_mac_perm": "macOS hat Grading Studio diesen Ordner nicht öffnen lassen. Erlauben Sie es unter Systemeinstellungen → Datenschutz & Sicherheit → Dateien und Ordner.",
+ "inout.bf_folder_no": "Der Ordner ließ sich nicht öffnen: {why}",
+ "inout.bf_folder_empty": "Keine Dateien in {name} gefunden",
+ "inout.mr_title": "Dateien einer Klassenliste zuordnen"
 }

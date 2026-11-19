@@ -6579,5 +6579,18 @@
  "inout.rows_scored": "{of}줄 중 {n}줄 채점",
  "inout.qs_marked": "빠른 채점에서 {of}문항 중 {n}문항 채점",
  "inout.score_vs_paper": "내 점수는 {a}, 과제에는 {b}",
- "inout.score_vs_word": "내 점수는 {a}, Word 루브릭에는 {b}"
+ "inout.score_vs_word": "내 점수는 {a}, Word 루브릭에는 {b}",
+ "inout.bf_title": "파일 가져오기",
+ "inout.bf_whole": "폴더 전체…",
+ "inout.bf_text": "각 파일은 파일 이름이나 폴더 이름에 있는 이름으로 학생에게 갑니다(예: 채점한 루브릭). 추가하기 전에 짝을 확인합니다.",
+ "inout.bf_late_h": "늦은 과제:",
+ "inout.bf_late": "늦은 파일이나 새 다운로드 전체를 고르세요. 이미 있는 것은 빠지고, 추가하면서 누구든 늦음으로 표시할 수 있습니다.",
+ "inout.bf_scan_h": "과제 스캔",
+ "inout.bf_scan": "(보충 시험일처럼): 페이지마다 이름에 나누면 학생마다 페이지가 여기에 추가됩니다.",
+ "inout.mr_text": "학생마다 폴더가 없는 파일용입니다(예: Grading Studio 밖에서 채점한 루브릭). 각 파일은 파일 이름이나 폴더 이름의 이름으로 명단의 학생과 짝지어지며, 어떤 짝이든 고칠 수 있습니다.",
+ "inout.bf_opening": "{name} 여는 중…",
+ "inout.bf_mac_perm": "macOS에서 Grading Studio가 그 폴더를 열지 못하게 했습니다. 시스템 설정 → 개인정보 보호 및 보안 → 파일 및 폴더에서 허용하세요.",
+ "inout.bf_folder_no": "그 폴더를 열 수 없습니다: {why}",
+ "inout.bf_folder_empty": "{name}에서 파일을 찾지 못했습니다",
+ "inout.mr_title": "파일을 명단과 맞추기"
 }

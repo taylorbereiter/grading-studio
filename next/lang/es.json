@@ -6572,5 +6572,18 @@
  "inout.rows_scored": "{n} de {of} filas puntuadas",
  "inout.qs_marked": "{n} de {of} preguntas corregidas en Corrección rápida",
  "inout.score_vs_paper": "Su nota es {a}, el trabajo dice {b}",
- "inout.score_vs_word": "Su nota es {a}, la rúbrica de Word dice {b}"
+ "inout.score_vs_word": "Su nota es {a}, la rúbrica de Word dice {b}",
+ "inout.bf_title": "Traer archivos",
+ "inout.bf_whole": "Una carpeta entera…",
+ "inout.bf_text": "Cada archivo va a su estudiante por el nombre en el nombre del archivo o de la carpeta, por ejemplo sus rúbricas corregidas. Revisa las coincidencias antes de añadir nada.",
+ "inout.bf_late_h": "Trabajos tardíos:",
+ "inout.bf_late": "elija los archivos tardíos o la descarga nueva completa. Lo que ya está aquí se omite, y puede marcar a cualquiera como tarde al añadirlo.",
+ "inout.bf_scan_h": "Un escaneo de trabajos",
+ "inout.bf_scan": "(como un día de recuperación): divídalo página a página entre los nombres y las páginas de cada estudiante se añaden aquí.",
+ "inout.mr_text": "Para archivos que no están en una carpeta por estudiante, como rúbricas que corrigió fuera de Grading Studio. Cada archivo se empareja con un estudiante de su lista por el nombre en el nombre del archivo o de la carpeta, y puede corregir cualquier coincidencia.",
+ "inout.bf_opening": "Abriendo {name}…",
+ "inout.bf_mac_perm": "macOS no dejó que Grading Studio abriera esa carpeta. Permítalo en Ajustes del Sistema → Privacidad y seguridad → Archivos y carpetas.",
+ "inout.bf_folder_no": "No se pudo abrir esa carpeta: {why}",
+ "inout.bf_folder_empty": "No se encontraron archivos en {name}",
+ "inout.mr_title": "Emparejar archivos con una lista"
 }
