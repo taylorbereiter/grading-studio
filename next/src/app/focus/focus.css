@@ -98,3 +98,15 @@ body.fcquiet .side .nav .ct{visibility:hidden}
 .setdays{border:0;padding:0;margin:8px 0;display:flex;flex-wrap:wrap;gap:4px 16px}
 .setdays legend{font-size:var(--t1);color:var(--mute);margin-bottom:4px}
 @media (max-width:640px){.fcpanel{left:8px;right:8px;width:auto;bottom:calc(72px + env(safe-area-inset-bottom))}body:has(.shell.folded) .fcpanel{left:8px}}
+/* Home's look back at the week */
+.wklook{margin-top:24px}
+.wklook .hrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.wklook h2{margin:0}
+.wklook>p{margin:2px 0 14px}
+.wkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.wktile{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r2)}
+.wktile b{font-size:var(--t4);font-variant-numeric:tabular-nums}
+.wktile small{color:var(--mute)}
+.wkrow{margin-top:14px}
+.wkrow ul{margin:6px 0 0;padding-left:18px}
+.wkfoot{display:flex;align-items:center;gap:16px;margin-top:16px}

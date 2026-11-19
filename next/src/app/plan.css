@@ -242,7 +242,7 @@
 .expages{display:flex;gap:8px;flex-wrap:wrap}
 .expages button{width:100px;display:flex;flex-direction:column;gap:2px;padding:4px;border-radius:var(--r2);box-shadow:0 0 0 1px var(--line)}
 /* settings: timetable */
-.ttset{display:flex;flex-direction:column;gap:14px}
+.ttset,.ttclasses{display:flex;flex-direction:column;gap:14px}
 .ccrow,.mrow,.drow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
 .ccrow .dot.big{margin-bottom:12px}
 .ccrow>.field,.drow>.field{flex:1;min-width:160px}

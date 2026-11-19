@@ -76,6 +76,15 @@ export function GradingSettings() {
 // Settings > Marking. Mark colors (src/quiz.js inkRows, Settings' #setInkRows): the colour of ✗ and the pen (gs.ink), of checks
 // (gs.checkInk) and of points written on a paper (gs.ptsInk: the pen's colour, one colour, or by credit). Paper and text (src/app/display.js
 // openDisplay): new text boxes, fit width or the whole page, and Word documents' text size and line spacing (gs.disp). Kept on this computer.
+// A chip that stays on or off. Made once here, so a choice doesn't make the buttons again and lose the keyboard's place.
+const Chip = ({ on, onClick, children, ...rest }) => <button type="button" class="chip" aria-pressed={String(!!on)} onClick={onClick} {...rest}>{children}</button>;
+// A set of colours that belong together: one stop in the Tab order (the one that is on), the arrow keys among them (as mark/rove.js).
+function InkRow({ label, children }) {
+  const r = useRef(null), all = () => [...r.current.querySelectorAll('button')];
+  useEffect(() => { const b = all(), on = b.find(x => x === document.activeElement) || b.find(x => x.getAttribute('aria-pressed') === 'true') || b[0]; b.forEach(x => { x.tabIndex = x === on ? 0 : -1; }); });
+  const key = e => { const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key], b = all(), i = b.indexOf(document.activeElement); if (!d || i < 0) return; e.preventDefault(); const n = b[(i + d + b.length) % b.length]; b.forEach(x => { x.tabIndex = x === n ? 0 : -1; }); n.focus(); };
+  return <div class="sg-inkrow" role="group" aria-label={label} ref={r} onKeyDown={key} data-rove><span>{label}</span>{children}</div>;
+}
 const DISP0 = { tsize: 14, fit: 'width', dfs: 15, dlh: 1.45 };
 const okInk = (k, d) => (COLORS[k] ? k : d);
 export function MarkingSettings() {
@@ -85,19 +94,18 @@ export function MarkingSettings() {
   const disp = { ...DISP0, ...(prefs.get('gs.disp', null) || {}) };
   const setDisp = (k, v) => { prefs.set('gs.disp', { ...(prefs.get('gs.disp', null) || {}), [k]: v }); re(); };
   const setPts = k => { if (k) prefs.set('gs.ptsInk', k); else prefs.del('gs.ptsInk'); re(); };
-  const Chip = ({ on, onClick, children, ...rest }) => <button type="button" class="chip" aria-pressed={String(!!on)} onClick={onClick} {...rest}>{children}</button>;
   const sw = c => <i class="sg-sw" style={{ background: c }} />;
-  const row = (label, on, pick, attr) => <div class="sg-inkrow" role="group" aria-label={label}><span>{label}</span>
-    {Object.entries(COLORS).map(([k, c]) => <Chip on={on === k} onClick={() => { pick(k); re(); }} {...{ [attr]: k }}>{sw(c)}{t(INKS[k])}</Chip>)}</div>;
+  const row = (label, on, pick, attr) => <InkRow label={label}>
+    {Object.entries(COLORS).map(([k, c]) => <Chip on={on === k} onClick={() => { pick(k); re(); }} {...{ [attr]: k }}>{sw(c)}{t(INKS[k])}</Chip>)}</InkRow>;
   return <>
     <Card title={t('setup.sg_inks_h')}>
       <p class="mute">{t('setup.sg_inks_about')}</p>
       {row(t('setup.sg_ink_x'), ink, k => prefs.set('gs.ink', k), 'data-sgink')}
       {row(t('setup.sg_ink_ok'), chk, k => prefs.set('gs.checkInk', k), 'data-sgchk')}
-      <div class="sg-inkrow" role="group" aria-label={t('setup.sg_pts_h')}><span>{t('setup.sg_pts_h')}</span>
+      <InkRow label={t('setup.sg_pts_h')}>
         <Chip on={pts === ''} onClick={() => setPts('')} data-sgpts="">{t('setup.sg_pts_pen')}</Chip>
         {Object.entries(COLORS).map(([k, c]) => <Chip on={pts === k} onClick={() => setPts(k)} data-sgpts={k}>{sw(c)}{t(INKS[k])}</Chip>)}
-        <Chip on={pts === 'credit'} onClick={() => setPts('credit')} data-sgpts="credit">{t('setup.sg_pts_credit')} {sw(COLORS[chk])}{sw(PTS_AMBER)}{sw(COLORS[ink])}</Chip></div>
+        <Chip on={pts === 'credit'} onClick={() => setPts('credit')} data-sgpts="credit">{t('setup.sg_pts_credit')} {sw(COLORS[chk])}{sw(PTS_AMBER)}{sw(COLORS[ink])}</Chip></InkRow>
       {pts === 'credit' && <p class="hint">{t('setup.sg_pts_credit_say')}</p>}
     </Card>
     <Card title={t('setup.sg_disp_h')}><div class="sg-disp">

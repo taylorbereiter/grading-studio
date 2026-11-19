@@ -74,6 +74,7 @@ export const PARTS = {
   work: () => import('./screens/class-work.jsx'),
   // a class's People and Grades tabs (app/class/), each with the gradebook's engine
   people: () => import('./class/people.jsx'),
+  clink: () => import('./class/classlink.jsx'),
   grades: () => import('./class/grades.jsx'),
   // a gradebook imported from a spreadsheet, with its reading engine (gbki)
   bki: () => import('./class/bookimport.jsx'),
