@@ -1,6 +1,6 @@
 // The language. One setting for both versions (gs.lang, written as the current app writes it: removed for English, else the code
-// as JSON). Each language's lines are the current app's own wording, converted (next/tools/lang-convert.js); a line the current
-// app has no wording for shows in English (next/lang/english-only.json lists them for stage 7).
+// as JSON). Each language has every line (next/lang/<code>.json; next/test/lines.test.js checks), the current app's own wording
+// where it had one (next/tools/lang-convert.js) and new wording for the rest.
 import { json } from '../shared/ls.js';
 import { useLanguage } from '../i18n/t.js';
 import { savePref } from '../planning/write.js';

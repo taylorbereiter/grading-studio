@@ -13,6 +13,7 @@ import { renderPage } from './paper.js';
 import * as undoList from '../../services/undo.js';
 import { t } from '../../i18n/t.js';
 import './lines.js';
+import '../engine-lines.js';   // the engines' own words (feedback page, typed notes' bar, Quick mark) in the language
 import { setOpenFlush } from '../openwork.js';
 
 let saveT = null, saveSeq = 0, listeners = new Set(), saveState = 'saved';

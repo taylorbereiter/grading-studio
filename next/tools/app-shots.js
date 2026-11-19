@@ -1,13 +1,15 @@
 // Pictures of the stage 6 screens on the sample (made-up classes with marked work, lessons, to-dos and school links, built by the new
 // app as the sample test builds it): Home, To do, the time tracker, School, Help, each Settings group and the phone's More, in Graphite
 // and Midnight, at computer (1440) and phone (390) width, and the count of things to press at rest on each.
-// node next/tools/app-shots.js [--out dir] [--only home,todo]. Fails on any error on the page. Made-up students only.
+// node next/tools/app-shots.js [--out dir] [--only home,todo] [--lang de] (a language: Graphite only, its code in the file names,
+// and a list of screens that scroll sideways or cut a line off). Fails on any error on the page. Made-up students only.
 const fs = require('fs'), path = require('path'), http = require('http');
 const { launch } = require('../../test/helpers/chrome.js');
 const { STEADY } = require('../../test/helpers/steady.js');
 const ROOT = path.join(__dirname, '..', '..');
 const onDisk = require('../test/browser/site-path');
 const OUT = path.resolve(process.argv.includes('--out') ? process.argv[process.argv.indexOf('--out') + 1] : path.join(ROOT, 'out', 'app-shots'));
+const LANG = process.argv.includes('--lang') ? process.argv[process.argv.indexOf('--lang') + 1] : null, CUT = [];
 const ONLY = process.argv.includes('--only') ? process.argv[process.argv.indexOf('--only') + 1].split(',') : null;
 const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp', png: 'image/png', webmanifest: 'application/manifest+json' };
 function serveSite() {
@@ -60,20 +62,26 @@ const SCREENS = [['home', 'home', '[data-home="needs"]'], ['todo', 'todo', '[dat
     await p.goto(srv.url + 'next/#/home');
     await p.waitForFunction(() => localStorage.getItem('gs.sampleBuilt'), { timeout: 180000, polling: 300 });
     await p.waitForSelector('[data-shell-nav], nav.tabbar', { timeout: 60000 });
-    for (const look of ['graphite', 'midnight']) {
+    if (LANG) await p.evaluate(c => { localStorage.setItem('gs.lang', JSON.stringify(c)); localStorage.setItem('sample:gs.lang', JSON.stringify(c)); }, LANG);
+    for (const look of LANG ? ['graphite'] : ['graphite', 'midnight']) {
       await p.evaluate(l => { localStorage.setItem('gs.look', JSON.stringify(l)); localStorage.setItem('sample:gs.look', JSON.stringify(l)); }, look);
       for (const [name, at, ready, only] of SCREENS) {
         if ((ONLY && !ONLY.includes(name)) || (only && only !== wn)) continue;
         await p.goto(srv.url + 'blank'); await p.goto(srv.url + 'next/#/' + at);
         await p.waitForSelector(ready, { timeout: 60000 }).catch(async e => { await p.screenshot({ path: path.join(OUT, 'failed-' + look + '-' + wn + '-' + name + '.png') }); throw new Error(name + ': ' + e.message); });
         await p.evaluate(() => document.fonts.ready); await new Promise(r => setTimeout(r, 600));
-        await p.screenshot({ path: path.join(OUT, look + '-' + wn + '-' + name + '.png') });
+        await p.screenshot({ path: path.join(OUT, (LANG ? LANG + '-' : '') + look + '-' + wn + '-' + name + '.png') });
+        if (LANG) { const cut = await p.evaluate(() => { const out = []; if (document.documentElement.scrollWidth > innerWidth + 1) out.push('page scrolls sideways');
+          for (const e of document.querySelectorAll('button, a, label, th, h1, h2, h3, .chip, [role=tab]')) { const s = getComputedStyle(e); if (e.offsetParent && e.scrollWidth > e.clientWidth + 2 && (s.overflow === 'hidden' || s.textOverflow === 'ellipsis' || s.whiteSpace === 'nowrap')) out.push((e.textContent || '').trim().slice(0, 50)); }
+          for (const e of document.querySelectorAll('main button, main a, main label, main span, main p, main h1, main h2, main h3')) { const r = e.getBoundingClientRect(); if (r.width && r.right > innerWidth + 1 && !e.closest('[aria-hidden=true], .hscroll, [data-scroll]') && e.children.length === 0) out.push('off the edge: ' + (e.textContent || '').trim().slice(0, 50)); }
+          return out.slice(0, 12); }); if (cut.length) CUT.push(wn + ' ' + name + ': ' + cut.join(' | ')); }
         if (look === 'graphite') (counts[name] ||= {})[wn] = await pressable(p);
       }
     }
     await browser.close();
   }
   await srv.close();
+  if (LANG) fs.writeFileSync(path.join(OUT, LANG + '-cut.txt'), CUT.join('\n') + '\n');
   fs.writeFileSync(path.join(OUT, 'press-count.json'), JSON.stringify(counts, null, 1));
   for (const [k, by] of Object.entries(counts)) for (const [wn, c] of Object.entries(by)) console.log(k + ' ' + wn + ': ' + c.stops + ' things to press at rest (' + c.raw + ' controls shown): ' + c.list.join(' | '));
   if (errors.length) { console.error(errors.join('\n')); process.exit(1); }

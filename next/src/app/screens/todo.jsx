@@ -66,7 +66,7 @@ export default function Todo({ route, classes }) {
   const shown = all.filter(x => f === 'all' || (f === 'mine' ? x.own : pf ? x.own && (x.it.ppl || []).includes(pf) : String(x.classId) === String(f)));
   const g = E.tdGroups(shown, today), nDone = E.tdGroups(all, today).done.length;
   const late = all.filter(x => !x.done && x.d && x.d < today).length, now = all.filter(x => !x.done && x.d === today).length;
-  const say = late || now ? [late ? t('todo.say_late', { n: late }) : '', now ? t('todo.say_now', { n: now }) : ''].filter(Boolean).join(', ') + '.' : all.some(x => !x.done) ? t('todo.say_nothing_today') : t('todo.say_empty');
+  const say = late && now ? t('todo.say_two', { a: t('todo.say_late', { n: late }), b: t('todo.say_now', { n: now }) }) : late || now ? t('todo.say_one', { a: late ? t('todo.say_late', { n: late }) : t('todo.say_now', { n: now }) }) : all.some(x => !x.done) ? t('todo.say_nothing_today') : t('todo.say_empty');
   const picked = sel ? all.find(x => x.id === sel) || null : null;
   const ctx = { today, lib, plan, people, cls, tone, sel, setSel: id => setSel(s => (s === id ? '' : id)), filter: f };
   const named = people.filter(p => f === 'p:' + p.id || all.some(x => x.own && !x.done && (x.it.ppl || []).includes(p.id)));

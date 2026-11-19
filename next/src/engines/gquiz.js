@@ -45,8 +45,8 @@ const qzWordsAll = () => ({ ...qzWordsMine(), ...(batch && batch.quiz && qzWords
 function qzStepWords(pts, all = qzWordsAll()) {
   const n = qzSteps(pts).length, own = all[String(pts)];
   if (own && own.length === n) return own.slice();
-  if (n === 3) return ['Not shown', 'Partial', 'Full'];
-  return Array.from({ length: n }, (_, k) => k === 0 ? 'Not shown' : k === n - 1 ? 'Full' : '');
+  if (n === 3) return [tr('Not shown'), tr('Partial'), tr('Full')];
+  return Array.from({ length: n }, (_, k) => k === 0 ? tr('Not shown') : k === n - 1 ? tr('Full') : '');
 }
 // src/quiz.js
 const qzWord = (s, pts) => qzStepWords(pts)[qzSteps(pts).indexOf(s)] || '';
@@ -347,9 +347,9 @@ async function qzAnswerPic(st, q, qi) {
   const sx = Math.round(x0 * pc.width), sy = Math.round(y0 * pc.height), sw = Math.max(1, Math.round((x1 - x0) * pc.width)), sh = Math.max(1, Math.round((y1 - y0) * pc.height));
   // The words on top, wrapped to the picture's width.
   const pts = +q.pts || 1, words = qzByPts(q) ? qzStepWords(pts) : [];
-  const lines = [['600', 'Question ' + quizLabel(q, qi) + ' · ' + (qzByPts(q) ? 'scored 0 to ' + fmtNum(pts) : fmtNum(pts) + (pts === 1 ? ' point' : ' points') + ', right or wrong')]];
-  if (q.key) lines.push(['400', 'Answer key: ' + q.key]);
-  if (words.some(Boolean)) lines.push(['400', 'Scale: ' + qzSteps(pts).map((v, i) => fmtNum(v) + (words[i] ? ' ' + words[i] : '')).join(', ')]);
+  const lines = [['600', tr('Question ' + quizLabel(q, qi)) + ' · ' + (qzByPts(q) ? tr('scored 0 to ' + fmtNum(pts)) : pts === 1 ? tr(fmtNum(pts) + ' point, right or wrong') : tr(fmtNum(pts) + ' points, right or wrong'))]];
+  if (q.key) lines.push(['400', tr('Answer key: ' + q.key)]);
+  if (words.some(Boolean)) lines.push(['400', tr('Scale: ' + qzSteps(pts).map((v, i) => fmtNum(v) + (words[i] ? ' ' + words[i] : '')).join(', '))]);
   const W = Math.max(sw, 560), pad = 16, fs = 20, lh = 28, font = w => w + ' ' + fs + 'px Inter, system-ui, sans-serif';
   const m = document.createElement('canvas').getContext('2d'), rows = [];
   for (const [w, t] of lines) {

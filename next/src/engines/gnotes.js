@@ -13,7 +13,7 @@ export const tnGetSt = () => tnSt;
 export const tnQuietSet = v => { tnQuiet = v; };
 export const tnIsQuiet = () => tnQuiet;
 export const tnRngSet = r => { tnRng = r; };
-import { batch, cur, setup, undoStack, redoStack, saveSoon, toast, renderList, openStudent, groupJust, store } from './gcore.js';
+import { batch, cur, setup, undoStack, redoStack, tr, saveSoon, toast, renderList, openStudent, groupJust, store } from './gcore.js';
 import { shownName, one, tnHas, tnHidden, tnMine, tnBackOn } from './gdraw.js';
 import { pushUndo, actStep, touchGrade, groupOf } from './gmark.js';
 import { fmtTime } from './gmedia.js';
@@ -125,7 +125,7 @@ function tnBack(st) {
 function tnEl(x) {
   const el = document.createElement('div'); el.className = 'tnp'; el.tnWas = x.s;
   for (const k of ['k', 'y', 'd', 't', 'h', 'o']) if (x[k] != null) el.dataset[k] = x[k];
-  if (x.o) el.title = 'Just for ' + tnWho(x.o);
+  if (x.o) el.title = tr('Just for ' + tnWho(x.o));
   if (tnHeadOf(x)) { el.setAttribute('role', 'heading'); el.setAttribute('aria-level', x.k === 'h' ? '3' : '4'); }
   const a = tnBits(x);
   for (let i = 0; i < x.s.length;) {
@@ -219,30 +219,30 @@ const TN_SVG = d => '<svg viewBox="0 0 24 24" width="16" height="16" fill="none"
 // src/typednotes.js
 function tnFrame() {
   const b = (a, t, i) => '<button class="tnb" ' + a + ' aria-pressed="false" title="' + t + '" aria-label="' + t + '">' + i + '</button>';
-  const marks = Object.entries(TN_K).filter(([k]) => k !== 'h').map(([k, [w, g]]) => '<button class="mitem" role="menuitemradio" data-tnmk="' + k + '"><i data-k="' + k + '" aria-hidden="true">' + g + '</i> ' + w + '</button>').join('') + '<button class="mitem" role="menuitemradio" data-tnmk="">None</button>';
-  const times = '<button class="mitem tnr2" data-tntm>Time</button>';
-  return '<div class="tn" data-lc="tn"><span id="tnLab" hidden>Notes</span><div class="tnbar" role="toolbar" aria-label="Notes">' +
-    kmWrap('<span>Normal text</span>' + TN_SVG('<path d="m7 10 5 5 5-5"/>'), 'class="tnb tnsty" title="Text style"',
-      '<button class="mitem" role="menuitemradio" data-tns="">Normal text</button><button class="mitem tnh1" role="menuitemradio" data-tns="h">Heading</button><button class="mitem tnh2" role="menuitemradio" data-tns="h2">Small heading</button>') +
-    b('data-tnf="bold"', 'Bold', '<b>B</b>') + b('data-tnf="italic"', 'Italic', '<i class="tnit">I</i>') + b('data-tnf="underline"', 'Underline', '<u>U</u>') +
-    b('data-tnf="hl"', 'Highlight', TN_SVG('<path d="M9 15l-3 3h5l1-1"/><path d="M9 15l7-10 4 3-7 10z"/><path d="M4 21h16"/>')) +
-    b('data-tnl="ul"', 'Bulleted list', TN_SVG('<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>')) +
-    b('data-tnl="ol"', 'Numbered list', TN_SVG('<path d="M10 6h10M10 12h10M10 18h10M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>')) +
+  const marks = Object.entries(TN_K).filter(([k]) => k !== 'h').map(([k, [w, g]]) => '<button class="mitem" role="menuitemradio" data-tnmk="' + k + '"><i data-k="' + k + '" aria-hidden="true">' + g + '</i> ' + tr(w) + '</button>').join('') + '<button class="mitem" role="menuitemradio" data-tnmk="">' + tr('None') + '</button>';
+  const times = '<button class="mitem tnr2" data-tntm>' + tr('Time') + '</button>';
+  return '<div class="tn" data-lc="tn"><span id="tnLab" hidden>' + tr('Notes') + '</span><div class="tnbar" role="toolbar" aria-label="' + tr('Notes') + '">' +
+    kmWrap('<span>' + tr('Normal text') + '</span>' + TN_SVG('<path d="m7 10 5 5 5-5"/>'), 'class="tnb tnsty" title="' + tr('Text style') + '"',
+      '<button class="mitem" role="menuitemradio" data-tns="">' + tr('Normal text') + '</button><button class="mitem tnh1" role="menuitemradio" data-tns="h">' + tr('Heading') + '</button><button class="mitem tnh2" role="menuitemradio" data-tns="h2">' + tr('Small heading') + '</button>') +
+    b('data-tnf="bold"', tr('Bold'), '<b>B</b>') + b('data-tnf="italic"', tr('Italic'), '<i class="tnit">I</i>') + b('data-tnf="underline"', tr('Underline'), '<u>U</u>') +
+    b('data-tnf="hl"', tr('Highlight'), TN_SVG('<path d="M9 15l-3 3h5l1-1"/><path d="M9 15l7-10 4 3-7 10z"/><path d="M4 21h16"/>')) +
+    b('data-tnl="ul"', tr('Bulleted list'), TN_SVG('<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>')) +
+    b('data-tnl="ol"', tr('Numbered list'), TN_SVG('<path d="M10 6h10M10 12h10M10 18h10M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>')) +
     '<span class="tnsep tnr" aria-hidden="true"></span>' +
-    '<span class="tnr">' + kmWrap(TN_SVG('<path d="M5 21V4h11l-2 4 2 4H5"/>'), 'class="tnb tnmk" aria-pressed="false" title="Mark" aria-label="Mark"', marks, 'right') + '</span>' +
-    '<span class="tnr">' + b('data-tntm', 'Put the time on this paragraph, or take it off', TN_SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')) + '</span>' +
-    kmWrap('⋯', 'class="icon kdots" aria-label="More for these notes" title="More for these notes"',
+    '<span class="tnr">' + kmWrap(TN_SVG('<path d="M5 21V4h11l-2 4 2 4H5"/>'), 'class="tnb tnmk" aria-pressed="false" title="' + tr('Mark') + '" aria-label="' + tr('Mark') + '"', marks, 'right') + '</span>' +
+    '<span class="tnr">' + b('data-tntm', tr('Put the time on this paragraph, or take it off'), TN_SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')) + '</span>' +
+    kmWrap('⋯', 'class="icon kdots" aria-label="' + tr('More for these notes') + '" title="' + tr('More for these notes') + '"',
       '<span class="tnr2">' + marks + times + '</span>' +
-      '<button class="mitem" role="menuitemcheckbox" data-tnm="times" aria-checked="true">Times</button><button class="mitem" data-tnm="alltimes">Hide all times</button>' +
-      '<button class="mitem" data-tnm="head">Use these headings for every student</button><button class="mitem" data-tnm="unhead">Clear the headings for every student</button>' +
-      '<button class="mitem" role="menuitemcheckbox" data-tnm="back" aria-checked="true">Give these notes back with the paper</button>' +
-      '<button class="mitem" data-tnm="size" data-kmstay aria-expanded="false">Text size for the student</button><span class="tnszs" hidden>' +
-      Object.entries(TN_SIZE).map(([k, [, w]]) => '<button class="mitem tnszi" role="menuitemradio" data-tnsz="' + k + '">' + w + '</button>').join('') + '</span>' +
-      '<button class="mitem" data-tnm="copy">Copy notes</button><button class="mitem" data-tnm="clear">Clear this student’s notes</button>', 'right') +
-    '</div><p class="tnhint" hidden><button class="link" data-tnrub>Start with a heading for each rubric row</button></p>' +
-    '<div class="tnpage"><div class="tngut"></div><div class="tnph" aria-hidden="true">Type your notes. Enter starts a new line.</div>' +
+      '<button class="mitem" role="menuitemcheckbox" data-tnm="times" aria-checked="true">' + tr('Times') + '</button><button class="mitem" data-tnm="alltimes">' + tr('Hide all times') + '</button>' +
+      '<button class="mitem" data-tnm="head">' + tr('Use these headings for every student') + '</button><button class="mitem" data-tnm="unhead">' + tr('Clear the headings for every student') + '</button>' +
+      '<button class="mitem" role="menuitemcheckbox" data-tnm="back" aria-checked="true">' + tr('Give these notes back with the paper') + '</button>' +
+      '<button class="mitem" data-tnm="size" data-kmstay aria-expanded="false">' + tr('Text size for the student') + '</button><span class="tnszs" hidden>' +
+      Object.entries(TN_SIZE).map(([k, [, w]]) => '<button class="mitem tnszi" role="menuitemradio" data-tnsz="' + k + '">' + tr(w) + '</button>').join('') + '</span>' +
+      '<button class="mitem" data-tnm="copy">' + tr('Copy notes') + '</button><button class="mitem" data-tnm="clear">' + tr('Clear this student’s notes') + '</button>', 'right') +
+    '</div><p class="tnhint" hidden><button class="link" data-tnrub>' + tr('Start with a heading for each rubric row') + '</button></p>' +
+    '<div class="tnpage"><div class="tngut"></div><div class="tnph" aria-hidden="true">' + tr('Type your notes. Enter starts a new line.') + '</div>' +
     '<div class="tned" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="tnLab" spellcheck="true"></div></div>' +
-    '<div class="tnfoot"><button class="tnb tnclock" data-tnclk hidden></button><button class="tnback" data-tnback aria-pressed="true" title="Whether these notes go back to the student as a page of the returned paper, for every student in this assignment. Click to change."><i aria-hidden="true"></i><span></span><span class="tnszw" hidden></span></button></div></div>';
+    '<div class="tnfoot"><button class="tnb tnclock" data-tnclk hidden></button><button class="tnback" data-tnback aria-pressed="true" title="' + tr('Whether these notes go back to the student as a page of the returned paper, for every student in this assignment. Click to change.') + '"><i aria-hidden="true"></i><span></span><span class="tnszw" hidden></span></button></div></div>';
 }
 // src/typednotes.js
 function tnPaint() { const ed = tnEd(); if (!ed) return; ed.replaceChildren(...tnL.map(tnEl)); tnMore(); }
@@ -265,9 +265,9 @@ function tnGutter() {
     const row = document.createElement('div'); row.className = 'tng'; row.style.top = el.offsetTop + 'px';
     // a time shown: the time (a click plays from there) and a small button that hides it; a time hidden: a faint clock that brings it back
     const btn = (c, k, t, txt) => { const b = document.createElement('button'); b.className = c; b.dataset[k] = i; b.title = t; if (txt) b.textContent = txt; else b.innerHTML = TN_SVG(c === 'tnhid' ? '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' : '<path d="M6 6l12 12M18 6 6 18"/>'); if (!txt) b.setAttribute('aria-label', t); row.appendChild(b); };
-    if (tm && x.h) btn('tnhid', 'tnts', 'Show this time');
-    else if (tm) { btn('tnhide', 'tnts', 'Hide this time'); btn('tnchip', 'tnt', vid ? 'Play the video from here' : 'The time on the Timer', fmtTime(x.t)); }
-    if (mk) { const m = document.createElement('i'); m.dataset.k = x.k; m.title = TN_K[x.k][0]; m.textContent = TN_K[x.k][1]; row.appendChild(m); }
+    if (tm && x.h) btn('tnhid', 'tnts', tr('Show this time'));
+    else if (tm) { btn('tnhide', 'tnts', tr('Hide this time')); btn('tnchip', 'tnt', vid ? tr('Play the video from here') : tr('The time on the Timer'), fmtTime(x.t)); }
+    if (mk) { const m = document.createElement('i'); m.dataset.k = x.k; m.title = tr(TN_K[x.k][0]); m.textContent = TN_K[x.k][1]; row.appendChild(m); }
     rows.push(row);
   });
   g.replaceChildren(...rows);
@@ -297,11 +297,11 @@ function tnBar(h, st) {
   set(bar.querySelector('[data-tntm]'), x.t != null && !x.h);
   const mk = x.k && x.k !== 'h' ? x.k : ''; set(bar.querySelector('.tnmk'), mk);
   for (const b of h.querySelectorAll('[data-tnmk]')) b.setAttribute('aria-checked', String(b.dataset.tnmk === mk));
-  const sty = x.k === 'h' ? 'h' : x.y === 'h2' ? 'h2' : '', w = { '': 'Normal text', h: 'Heading', h2: 'Small heading' }[sty], sl = bar.querySelector('.tnsty span');
+  const sty = x.k === 'h' ? 'h' : x.y === 'h2' ? 'h2' : '', w = tr({ '': 'Normal text', h: 'Heading', h2: 'Small heading' }[sty]), sl = bar.querySelector('.tnsty span');
   if (sl.dataset.say !== w) { sl.dataset.say = w; sl.textContent = w; }
   for (const b of h.querySelectorAll('[data-tns]')) b.setAttribute('aria-checked', String(b.dataset.tns === sty));
   const any = tnL.some(y => y.s.trim()), heads = tnL.some(y => y.k === 'h' && y.s.trim());
-  const timed = tnTimesOn() && tnL.some(y => y.t != null), allw = tnAllHid() ? 'Show all times' : 'Hide all times', ab = bar.querySelector('[data-tnm="alltimes"]');
+  const timed = tnTimesOn() && tnL.some(y => y.t != null), allw = tnAllHid() ? tr('Show all times') : tr('Hide all times'), ab = bar.querySelector('[data-tnm="alltimes"]');
   if (ab.dataset.say !== allw) { ab.dataset.say = allw; ab.textContent = allw; }
   const show = { times: true, alltimes: timed, head: heads, unhead: tnHead().length > 0, copy: any, clear: !!tnStored(st), back: true, size: true };
   for (const b of bar.querySelectorAll('[data-tnm]')) b.hidden = !show[b.dataset.tnm];
@@ -311,11 +311,11 @@ function tnBar(h, st) {
   if (!back) { szb.setAttribute('aria-expanded', 'false'); szb.nextElementSibling.hidden = true; }
   for (const b of bar.querySelectorAll('[data-tnsz]')) { b.setAttribute('aria-checked', String(b.dataset.tnsz === sz)); b.disabled = !back; }
   const ck = h.querySelector('.tnclock'), live = tnTimer(st); ck.hidden = !live;
-  if (live) { const c = spClockOf(st), say = (c.at ? '❚❚ ' : '▶ ') + fmtTime(spClockMs(c) / 1000); if (ck.dataset.say !== say) { ck.dataset.say = say; ck.textContent = say; ck.setAttribute('aria-pressed', String(!!c.at)); ck.title = c.at ? 'Pause the Timer' : 'Start the Timer'; } }
-  const ft = h.querySelector('.tnback'), fs = back ? 'Goes back to the student with the paper' : 'Only for you. Not given back.';
+  if (live) { const c = spClockOf(st), say = (c.at ? '❚❚ ' : '▶ ') + fmtTime(spClockMs(c) / 1000); if (ck.dataset.say !== say) { ck.dataset.say = say; ck.textContent = say; ck.setAttribute('aria-pressed', String(!!c.at)); ck.title = c.at ? tr('Pause the Timer') : tr('Start the Timer'); } }
+  const ft = h.querySelector('.tnback'), fs = back ? tr('Goes back to the student with the paper') : tr('Only for you. Not given back.');
   if (ft.dataset.say !== fs) { ft.dataset.say = fs; ft.dataset.on = String(back); ft.querySelector('span').textContent = fs; ft.setAttribute('aria-pressed', String(back)); }
   // the size shows at the foot only when it isn't the usual one
-  const sw = ft.querySelector('.tnszw'), sws = back && sz ? TN_SIZE[sz][1] : '';
+  const sw = ft.querySelector('.tnszw'), sws = back && sz ? tr(TN_SIZE[sz][1]) : '';
   if (sw.dataset.say !== sws) { sw.dataset.say = sws; sw.textContent = sws; sw.hidden = !sws; }
 }
 // src/typednotes.js
@@ -453,7 +453,7 @@ function tnSync(type) {
       tnL = L.map(tnClean); tnPaint(); tnSetPos({ a: [i, 0], z: [i, 0] }); return tnPut(st, false);
     }
     // a paragraph started now is for whoever Write for points at: Just the partner on screen, or everyone
-    if (/^insert/.test(type) && el && !el.tnWas && x.s && !tnHeadOf(x)) { const o = tnOwnNew(st); if (o) { x.o = o; el.dataset.o = o; el.title = 'Just for ' + tnWho(o); } else if (x.o) { delete x.o; delete el.dataset.o; el.removeAttribute('title'); } }
+    if (/^insert/.test(type) && el && !el.tnWas && x.s && !tnHeadOf(x)) { const o = tnOwnNew(st); if (o) { x.o = o; el.dataset.o = o; el.title = tr('Just for ' + tnWho(o)); } else if (x.o) { delete x.o; delete el.dataset.o; el.removeAttribute('title'); } }
     if (/^insert/.test(type) && el && !el.tnWas && x.s && x.t == null && !tnHeadOf(x) && tnTimesOn()) { const t = tnNow(st); if (t != null) { const hid = tnAllHid(); x.t = Math.floor(t); el.dataset.t = x.t; if (hid) { x.h = 1; el.dataset.h = 1; } } }
   }
   [...ed.children].forEach((el, j) => { el.tnWas = L[j].s; });

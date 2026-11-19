@@ -398,6 +398,16 @@ scale; and the legacy-v1 fixture (work saved before saved-data versions) does th
 The engines' own checks are this equivalence: the lifted code is the current app's code, rebuilt on every build, and CI fails when
 `next/src/engines` is not what the build makes from main's source.
 
+**The engines' own words.** What the engines draw keeps the current app's English, passed through gcore's `tr(s)`: the feedback
+page, a notes page, an answer note (already `tr` there), and, wrapped as they are lifted (next/build.js `ENGINE_TR`, and every word of
+the typed notes' bar in `tnFrame`), what the current app translated by watching the page: the bar, "Paper 3" with names hidden, Past
+work's "An earlier download", Quick mark's step words and answer pictures, and a printed quiz. `app/engine-lines.js` sets `tr` (and
+`LANG_LOCALE` for dates) when the marking screens load: it finds the line in `next/lang/engine.en.json` by its English, a line with
+parameters by its pattern (`returned {date}`), else each part between " · ", as src/lang.js `trWith` does. `next/test/lines.test.js`
+holds every text given to `tr(` to a line and every line to a text an engine draws. Not wrapped: keptState's labels (Home doesn't
+show them) and qrDecide's reasons (the scan screen shows its own lines for them). A printed quiz is measured (`qmkBoxes`) and printed
+in the language on at the time, so changing the language between saving a quiz and printing it can move its bubbles.
+
 One thing the page around a canvas changes: Chrome applies the page's `letter-spacing` to text drawn on a canvas in the page. The
 new app's body has a slight negative letter spacing, so `.mk-paper canvas` resets it (`next/src/app/mark.css`); without that, every
 drawn comment, stamp and note was a few pixels off.

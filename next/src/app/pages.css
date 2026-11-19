@@ -5,7 +5,7 @@
 .schgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;align-items:start;margin-top:12px}
 .schsec,.schppl{padding:8px 8px 10px}
 .schppl{margin-bottom:18px}
-.schhead{display:flex;align-items:center;gap:8px;padding:6px 8px 8px}
+.schhead{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 8px 8px}
 .schhead h2{font-size:var(--t3);margin:0;font-weight:600}
 .schhead .ct{color:var(--faint);font-size:var(--t1)}
 .schhead .sp{flex:1}

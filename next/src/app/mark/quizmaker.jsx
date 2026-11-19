@@ -14,6 +14,7 @@ import { libraryChange } from '../../students/undo.js';
 import { t } from '../../i18n/t.js';
 import './lines.js';
 import './paper-lines.js';
+import '../engine-lines.js';   // the engines' own words (a printed quiz) in the language
 
 const J = v => JSON.parse(JSON.stringify(v));
 const uid = () => Math.random().toString(36).slice(2, 10);

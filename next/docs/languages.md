@@ -171,3 +171,20 @@ with a column for "wording changed since the last report" so a review only reads
 - Named lines need every screen to call `t()` from stage 1 (parts) onward. A screen built in English first and translated later would
   repeat today's gap, so the lang-lines test should run from stage 1 with English-only keys allowed only through pending.json.
 - The conversion itself fits stage 6 ("eight languages"), but the key scheme, `t()` and `en.json` are needed in stage 1.
+
+## Stage 7: every line in every language
+
+- Every line in `next/lang/*.en.json` (except the gallery's and the "not built yet" page's) has a translation in all eight
+  `next/lang/<code>.json`, or is listed for that language in `next/lang/same.json` because it is the same word there (French
+  "Note", German "Name", "Google Drive"). `next/test/lines.test.js` fails on a line missing from a language without that mark, so
+  a new line needs its eight translations before it merges. `english-only.json` is gone.
+- About 3,700 lines were written new in stage 7 (they had no wording in the current app), in the app's plain register, then
+  checked by script: placeholders, plural forms (French and Portuguese "one" says the number, since 0 is "one" there), no
+  assistant names, literals kept (`[name]`, `S-XXXX`, file names), and every `**button**` in Help written as that button's own
+  line in the language.
+- `next/tools/lang-convert.js` no longer replaces anything: a run only adds a converted line where a language has none.
+- Each language is built as one `JSON.parse` string (next/build.js `lines-json`), about a third smaller than esbuild's named
+  exports.
+- Lines held back for size: `next/lang/held/<code>.json` holds lines written for a language but not yet shipped, while the
+  new app's 3 MB total waits on the teacher's decision (a teacher downloads only the one language they choose). The app never
+  loads them; the test counts them as written.
