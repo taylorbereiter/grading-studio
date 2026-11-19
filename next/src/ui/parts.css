@@ -239,6 +239,7 @@ dialog.dlg{width:min(440px,calc(100vw - 32px));border-radius:var(--r4);margin:13
 .dlg>header{border-bottom:0;padding-bottom:4px}
 .dlg>.body{padding:6px 22px 18px;color:var(--ink2);font-size:var(--t3);max-height:calc(84vh - 120px);overflow:auto}
 .dlg>footer{border-top:0;background:transparent;padding:0 16px 16px}
+dialog.dlg[open]{display:flex;flex-direction:column;max-height:calc(87vh - 16px)}.dlg>.body{overflow:auto;min-height:0}
 
 /* command bar */
 dialog.cmd{width:min(600px,calc(100vw - 24px));border-radius:var(--r4);margin:13vh auto auto;animation:popin var(--d2) var(--spring) both}
@@ -319,3 +320,4 @@ dialog.cmd{width:min(600px,calc(100vw - 24px));border-radius:var(--r4);margin:13
   .cmd .ft{display:none}
 }
 @keyframes sheetup{from{transform:translateY(24px);opacity:0}}
+.side .nav.over{background:var(--acc-soft);box-shadow:inset 0 0 0 2px var(--acc)}

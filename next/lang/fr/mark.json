@@ -256,5 +256,12 @@
  "mark.cw_ul_change_n": "Changer le lien {name}",
  "mark.cw_ul_open": "Plan de séquence",
  "mark.cw_ul_open_n": "Ouvrir dans {name}",
+ "mark.cw_typed": "Saisies",
+ "mark.cw_ud_q": "Supprimer « {name} » ?",
+ "mark.cw_ud_say": {
+  "one": "Son devoir part avec elle. Les corrections enregistrées restent dans ce navigateur.",
+  "other": "Ses {n} devoirs partent avec elle. Les corrections enregistrées restent dans ce navigateur."
+ },
+ "mark.cw_loose_say": "Devoirs sans classe. Faites-en glisser un sur une classe dans la barre latérale, ou utilisez « Déplacer vers… » dans son menu ⋯.",
  "mark.examples": "Exemples"
 }

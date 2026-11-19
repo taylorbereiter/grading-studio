@@ -259,5 +259,12 @@
  "mark.cw_ul_change_n": "变更{name}的链接",
  "mark.cw_ul_open": "单元计划",
  "mark.cw_ul_open_n": "在 {name} 中打开",
+ "mark.cw_typed": "手动输入",
+ "mark.cw_ud_q": "删除“{name}”？",
+ "mark.cw_ud_say": {
+  "one": "里面的 {n} 份作业会一起删除。已保存的批改仍留在这个浏览器里。",
+  "other": "里面的 {n} 份作业会一起删除。已保存的批改仍留在这个浏览器里。"
+ },
+ "mark.cw_loose_say": "没有班级的作业。把它拖到侧边栏中的班级上，或使用其 ⋯ 菜单中的“移动到…”。",
  "mark.examples": "范例"
 }

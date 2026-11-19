@@ -25,13 +25,13 @@ const Cell = ({ v, children, cls = '' }) => <td class={cls}><button type="button
 /* ---------------- Grades ---------------- */
 // Return's check sends a grade to confirm here, on the grade sheet
 let sheetNext = false;
-export function Grades({ E, onOpen }) {
+export function Grades({ E, onOpen, sub }) {
   const [, tick] = useState(0), s = state(), su = s.setup, rub = su.mode === 'rubric', ib = E.X.ibSetup(), b = s.batch;
   const cls = b.classId != null ? (s.lib.classes || []).find(c => c.id === b.classId) : null;
   const banded = !ib && !!(E.X.meGrade() || {}).bands, rows = E.rows();
   const save = (name, blob) => E.saveFile(name, blob);
   const copyAll = async k => { const r = E.copyText(k); await copy(r.text); toast(t('setup.copied_rows', { n: r.n })); };
-  const [view, setView] = useState(() => (sheetNext ? ((sheetNext = false), 'sheet') : 'table')), [SH, setSH] = useState(null), [only, setOnly] = useState(false);
+  const [view, setView] = useState(() => (sheetNext ? ((sheetNext = false), 'sheet') : sub === 'sheet' ? 'sheet' : 'table')), [SH, setSH] = useState(null), [only, setOnly] = useState(false);
   // a paper whose own grade differs from hers, has more than one grade, or a doubtful one (src/tabs.js glPaperOf): how many, and just those
   const check = r => !!(r.paper && (r.paper.ask || r.paper.differs)), nCheck = rows.filter(check).length;
   useEffect(() => { if (view === 'sheet' && !SH) PARTS.sheet().then(setSH, e => console.error(e)); }, [view]);
@@ -81,9 +81,9 @@ function paperCell(p) {
 
 /* ---------------- Insights ---------------- */
 const oneDp = v => fmtNum(Math.round(v * 10) / 10);
-export function Insights({ E, onOpen, onShare }) {
+export function Insights({ E, onOpen, onShare, sub }) {
   const s = useMemo(() => E.stats(), [E]), ib = E.X.ibSetup(), su = state().setup;
-  const [view, setView] = useState('overview'), [CS, setCS] = useState(null);
+  const [view, setView] = useState(sub === 'consistency' ? 'cons' : 'overview'), [CS, setCS] = useState(null);
   useEffect(() => { if (view === 'cons' && !CS) PARTS.cons().then(setCS, e => console.error(e)); }, [view]);
   const views = <Segmented label={t('paper.i_view')} size="sm" value={view} onChange={setView} options={[{ value: 'overview', label: t('paper.i_overview') }, { value: 'cons', label: t('paper.i_cons') }]} />;
   // Share with your assistant (mark/share.jsx, opened by the marking screen as from its Setup menu)
@@ -263,10 +263,10 @@ export function Return({ E, cur, onOpen, onShare, onSheet, rescans = [], onResca
 }
 
 // The tab, read once the papers have been read (a grade written on a paper counts), as the current app reads them first.
-export default function Out({ tab, E, cur, onOpen, onShare, onSheet, rescans, onRescans }) {
+export default function Out({ tab, sub, E, cur, onOpen, onShare, onSheet, rescans, onRescans }) {
   const [ok, setOk] = useState(false);
   useEffect(() => { let live = true; E.readPapers().then(() => live && setOk(true), e => { console.error(e); if (live) setOk(true); }); return () => { live = false; }; }, [E]);
   if (!ok) return <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />;
-  const P = { E, cur, onOpen, onShare, onSheet, rescans, onRescans };
+  const P = { E, cur, onOpen, onShare, onSheet, rescans, onRescans, sub };
   return tab === 'grades' ? <Grades {...P} /> : tab === 'insights' ? <Insights {...P} /> : tab === 'return' ? <Return {...P} /> : <EmptyState title="" />;
 }

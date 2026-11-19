@@ -37,6 +37,29 @@ const typeLabel = ([id, , s]) => (DEF[id] && (!s || B.bkIsDef(id)) ? t(DEF[id]) 
 // "A, B and C" the way the current app joins class names
 const joinNames = a => (a.length > 1 ? t('class.as_and', { list: a.slice(0, -1).join(', '), last: a[a.length - 1] }) : a.join(''));
 
+// The timer's log, read once a visit (students/focus.js focusRead): time spent grading each card and what is due each week.
+let F = null;
+export async function timing() { F ||= await import('../../students/focus.js'); await F.focusRead(); return F.engine; }
+// A card's time (src/tracker.js tkAsgHtml): so far, a paper's time, and how long the papers left will take at her pace.
+export function asgTime(E, id) {
+  const x = E.tkAsg(id); if (!x) return '';
+  const per = x.p ? Math.max(1, Math.round(x.s / 60 / x.p)) : 0, left = E.gpLeft(id), bits = [];
+  if (x.s >= 60) bits.push(t('class.tk_so_far', { time: E.tkDur(x.s) }));
+  if (x.s >= 60 && per) bits.push(t('class.tk_per', { n: per }));
+  if (left >= 60) bits.push(t('class.tk_left', { time: E.tkDur(left) }));
+  if (left >= 60 && x.p < 3) bits.push(t('class.tk_from', { n: x.p }));
+  return bits.join(' · ');
+}
+// Under the due date (src/gradeplan.js gpDueHint): what else is due that week, so a week that piles up is seen in time.
+function DueWeek({ due, except }) {
+  const [E, setE] = useState(null);
+  useEffect(() => { timing().then(setE, e => console.error(e)); }, []);
+  if (!/^\d{4}-\d\d-\d\d$/.test(due || '')) return null;
+  if (!E) return <p class="mute small asgweek" aria-hidden="true" />;   // its room kept while the timer's log is read, so the buttons below don't move
+  const mon = E.fcMon(due), sum = E.gpSum(E.gpDue(mon, E.gpAdd(mon, 6), except));
+  return <p class="mute small asgweek" data-asg-week>{!sum.n ? t('class.due_none') : t('class.due_also', { n: sum.n, what: sum.s >= 60 ? t('class.due_about', { time: E.tkDur(sum.s) }) : t('class.due_papers', { n: sum.p }) })}</p>;
+}
+
 // New (it null: in classId, in unitId when there is one) or Edit (it: the card). onClose(true) once saved or deleted.
 export function AssignmentDialog({ lib: lib0, it: it0, classId, unitId, onClose }) {
   // the card as it was when the box opened: a save while it's open (Delete, before the box shuts) leaves it in place
@@ -119,6 +142,7 @@ export function AssignmentDialog({ lib: lib0, it: it0, classId, unitId, onClose 
       <div class="cp-fld"><span class="lab">{t('class.as_type')}</span>
         <Segmented size="sm" label={t('class.as_type')} value={type} onChange={v => setType(v === type ? '' : v)} options={cats.map(k => ({ value: k[0], label: typeLabel(k) })).concat({ value: '', label: t('class.type_none') })} /></div>
       <TextInput type="date" label={t('class.as_due')} value={due} onInput={setDue} data-asg-due />
+      <DueWeek due={due} except={f ? f.it.id : null} />
       {R && <R.RubricField su={f ? f.it.setup || null : null} onGot={setRub} />}
       {twins.length > 0 && <span data-asg-also><Checkbox label={t('class.lk_also_do', { names: joinNames(twins.map(x => nameOf(lib, x.c))) })} checked={also} onChange={setAlso} /></span>}
     </div>

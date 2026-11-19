@@ -532,5 +532,24 @@ test('Return (D-029 D-030 D-031 D-032 D-033 D-034 D-035 A-020 A-021 A-022 A-023 
   assert.deepEqual(await m.evaluate(() => window.__gs.state().batch.returned), back, 'the current app reads the same Returned');
   assert.equal(await m.evaluate(() => localStorage.getItem('gs.xopts')), 'true');
   assert.deepEqual(errors.filter(e => !/couldn.t|PDF|page/i.test(e)), []);
+test('B-066: an assignment\'s views each have an address: grades/sheet opens the Grade sheet, insights/consistency opens Consistency, and examples opens the assignment\'s Examples tab', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zipOf(await standardFiles()));
+  await m.evaluate(() => window.__gs.saveNow()); await settle(m);
+  const id = await m.evaluate(() => window.__gs.state().batch.id);
+  await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id) + '/grades/sheet');
+  await p.waitForSelector('[data-sheet] .gs-tbl', { timeout: 60000 });
+  await p.goto(srv.url + 'blank'); await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id) + '/insights/consistency');
+  await p.waitForSelector('[data-cons]', { timeout: 60000 });
+  // the assignment's own Examples tab, as the current app's #/a/<id>/examples (D-020)
+  await p.goto(srv.url + 'blank'); await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id) + '/examples');
+  await p.waitForSelector('[data-asgex]', { timeout: 60000 });
+  assert.equal(await p.evaluate(() => location.hash.split('/').pop()), 'examples', 'stays at its own address');
+  assert.deepEqual(errors, []);
   await ctx.close();
 });

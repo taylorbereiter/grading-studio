@@ -105,5 +105,9 @@
  "school.foot_files": {
   "one": "{n} file ({size}).",
   "other": "{n} files ({size})."
+ },
+ "school.n_todos": {
+  "one": "{n} to-do",
+  "other": "{n} to-dos"
  }
 }

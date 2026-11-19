@@ -80,8 +80,10 @@ test('units on the class page: added, renamed, an assignment moved into one, and
   await p.waitForSelector(`[data-unit="${poetry}"] [data-item="i9"]`);
   const moved = units(await libOf(p));
 
-  // Delete unit: at once, and Undo brings it back with its assignment
+  // Delete unit: asked first since it has an assignment, and Undo brings it back with it
   await pickItem(p, `[data-umenu="${poetry}"]`, '^Delete unit');
+  // it holds an assignment, so it asks first (B-010)
+  await p.waitForSelector('dialog[open] [data-udel-ok]'); await p.click('dialog[open] [data-udel-ok]');
   await p.waitForFunction(id => !JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.some(u => u.id === id), {}, poetry);
   await p.waitForFunction(id => !document.querySelector(`[data-unit="${id}"]`), {}, poetry);
   await undoToast(p);
