@@ -2,4 +2,4 @@
 // page, so the first load stays small.
 import { addLines } from '../../i18n/t.js';
 import LINES from '../../../lang/settings.en.json';
-addLines(LINES);
+addLines(LINES, 'settings');

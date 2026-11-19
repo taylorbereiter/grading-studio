@@ -1,0 +1,1 @@
+import{c as a}from"./chunk-2K42ZOD6.js";var e,r=a(()=>{e=[["zh-Hant","\u7E41\u9AD4\u4E2D\u6587"],["zh-Hans","\u7B80\u4F53\u4E2D\u6587"],["es","Espa\xF1ol"],["fr","Fran\xE7ais"],["de","Deutsch"],["pt-BR","Portugu\xEAs (Brasil)"],["ja","\u65E5\u672C\u8A9E"],["ko","\uD55C\uAD6D\uC5B4"]]});export{r as a,e as b};

@@ -1,0 +1,28 @@
+{
+ "cal.card_menu": "{title} のメニュー",
+ "cal.alt": "別バージョン",
+ "cal.finished": "完成版",
+ "cal.taught_to": "スライド {n} まで実施",
+ "cal.also": "{name} でも",
+ "cal.class_page": "クラスのページ",
+ "cal.link_add": "クラスのページのリンクを追加…",
+ "cal.link_change": "クラスのページのリンクを変更…",
+ "cal.link_title": "{name} のクラスのページ",
+ "cal.link_label": "ウェブアドレス",
+ "cal.link_hint": "週の表示のこのクラス、その授業、採点に表示されます。空にすると削除されます。",
+ "cal.link_bad": "ウェブのリンクではないようです",
+ "cal.go_date": "日付へ移動",
+ "cal.no_unit": "今週の単元はありません",
+ "cal.open_unit": "「{title}」を開く",
+ "cal.new_unit_for": "今週から {course} の新しい単元",
+ "cal.all_lessons": "すべての授業",
+ "cal.all_find": "授業を探す",
+ "cal.no_slot": "時間割にない",
+ "cal.new_loose": "クラスなしの新しい授業",
+ "cal.del_sure": "削除しますか？もう一度押す",
+ "cal.n_lessons": {
+  "one": "{n} 件の授業",
+  "other": "{n} 件の授業"
+ },
+ "cal.none_found": "一致する授業はありません。"
+}

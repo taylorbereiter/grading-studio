@@ -2,4 +2,4 @@
 // load with Settings > Saving and sync and with the folder's own part (whole/folder-run.js), never with the first screen.
 import { addLines } from '../../i18n/t.js';
 import LINES from '../../../lang/saving.en.json';
-addLines(LINES);
+addLines(LINES, 'saving');

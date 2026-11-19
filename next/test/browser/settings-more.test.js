@@ -51,6 +51,8 @@ test('Settings: the assistant and where it opens, the programme, places in an av
   await p.select('[data-stai] select', 'other');
   await p.waitForSelector('[data-staiother] input, input[data-staiother]');
   const other = (await p.$('input[data-staiother]')) ? 'input[data-staiother]' : '[data-staiother] input';
+  // the box fills in with the name 'other' starts from once that choice is kept; type over it only then
+  await p.waitForFunction(sel => document.querySelector(sel).value !== '', { timeout: 10000 }, other);
   await typeIn(p, other, 'School Helper'); await p.keyboard.press('Tab');
   await until(async () => ((await lib(p)).me || {}).ai === 'School Helper');
   await p.waitForSelector('input[data-staiurl], [data-staiurl] input');
