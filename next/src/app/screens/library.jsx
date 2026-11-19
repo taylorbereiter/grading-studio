@@ -14,9 +14,10 @@ import { engine } from '../../planning/engine.js';
 import { saveKv, saveLesson } from '../../planning/write.js';
 import { nameKey } from '../../planning/plan.js';
 import { saveFailed } from '../plan/save.js';
-import { today, at, classOf } from '../plan/lessons.js';
+import { today, at, classOf, mondayOf } from '../plan/lessons.js';
 import { ACTIVITIES, BOOK, actVideo, actSlide, normActivity } from '../../engines/activities.js';
 import '../plan/lines.js';
+import '../plan/cal-lines.js';
 
 const TABS = ['activities', 'past', 'units', 'rubrics', 'examples'];
 const TAB_LINE = { activities: 'plan.lib_activities', past: 'plan.lib_past', units: 'plan.lib_units', rubrics: 'plan.lib_rubrics', examples: 'plan.lib_examples' };
@@ -141,17 +142,27 @@ function Past({ p }) {
 }
 
 // ---------- Units ----------
-function Units({ p, classes }) {
-  const E = engine(p), tt = (p.setup && p.setup.classes) || [];
+function Units({ p, classes, sub }) {
+  const E = engine(p), tt = (p.setup && p.setup.classes) || [], [edit, setEdit] = useState(null), [X, setX] = useState(null);
   const courses = [...new Set((p.units || []).filter(u => u && u.course).map(u => u.course))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-  // A course's units open on the Course line of the first class that takes it.
+  const ttCourses = [...new Set(tt.map(c => c.course || c.name).filter(Boolean))];
+  // A unit made or changed here, in the same sheet as on the Course line and the week (app/plan/unit-edit.jsx, through PARTS.calx).
+  const open = u => PART.calx().then(m => { setX(m); setEdit(u); }, e => console.error(e));
+  const newUnit = () => open(E.normUnit({ course: ttCourses[0] || '', start: mondayOf(p, today()), title: t('plan.new_unit'), weeks: Array.from({ length: 6 }, () => ({})) }));
+  const add = ttCourses.length ? <Button icon="plus" onClick={newUnit} data-lib-newunit>{t('plan.new_unit')}</Button> : null;
+  const sheet = edit && X && <X.UnitSheet p={p} unit={edit} courses={[...new Set([...ttCourses, ...courses])]} onClose={() => setEdit(null)} />;
+  // A course's units open on the Course line of the first class that takes it; a unit of a course no class takes opens in the sheet.
   const lineFor = course => { for (const x of classes || []) { if (x.loose) continue; const c = tt.find(k => nameKey(k.name) === nameKey(x.name)); if (c && c.course === course) return { x, c }; } return null; };
-  if (!courses.length) return <EmptyState icon="cal" title={t('plan.no_units')} text={t('plan.no_units_text')} />;
-  return <>{courses.map(course => { const to = lineFor(course), us = p.units.filter(u => u.course === course && u.start).sort((a, b) => a.start.localeCompare(b.start));
+  const toLine = (u, to) => { try { sessionStorage.setItem('gsn.class.unit:' + to.c.id, JSON.stringify(u.id)); } catch {} };
+  // library/units/<unit id> (a unit from the command bar): its Course line, or the sheet
+  useEffect(() => { const u = sub && (p.units || []).find(x => x.id === sub); if (!u) return; const to = lineFor(u.course); if (to) { toLine(u, to); location.replace(href('class', to.x.id || '-')); } else { open(u); history.replaceState(null, '', href('library', 'units')); } }, [sub]);
+  if (!courses.length) return <><EmptyState icon="cal" title={t('plan.no_units')} text={t('cal.units_text')} action={add} />{sheet}</>;
+  return <>{add && <div class="row libtop"><span class="grow" />{add}</div>}{sheet}{courses.map(course => { const to = lineFor(course), us = p.units.filter(u => u.course === course && u.start).sort((a, b) => a.start.localeCompare(b.start));
     return <section class="libsec"><h2 class="t4" data-raw>{course}</h2>
       <ul class="list">{us.map(u => { const inner = <><span class="main"><b data-raw>{u.title}</b>
         <small>{t('plan.unit_dates', { from: day(u.start), to: day(E.unitEnd(u)), n: (u.weeks || []).length })}</small></span>{to && <span class="end"><Icon name="chr" /></span>}</>;
-        return <li>{to ? <a class="lrow" href={href('class', to.x.id || '-')} onClick={() => { try { sessionStorage.setItem('gsn.class.unit:' + to.c.id, JSON.stringify(u.id)); } catch {} }}>{inner}</a> : <div class="lrow">{inner}</div>}</li>; })}</ul>
+        return <li>{to ? <a class="lrow" href={href('class', to.x.id || '-')} onClick={() => toLine(u, to)} data-lib-unit={u.id}>{inner}</a>
+          : <button type="button" class="lrow" onClick={() => open(u)} data-lib-unit={u.id}>{inner}</button>}</li>; })}</ul>
     </section>; })}</>;
 }
 
@@ -177,7 +188,7 @@ export default function Library({ route, classes }) {
     <Tabs label={t('nav.library')} value={tab} onChange={v => go('library', v === 'activities' ? '' : v)} tabs={TABS.map(id => ({ id, label: t(TAB_LINE[id]) }))} />
     <div role="tabpanel" id={'panel-' + tab} aria-labelledby={'tab-' + tab} class="libpanel">
       {!p ? <div class="loading" aria-busy="true" />
-        : tab === 'activities' ? <Activities p={p} /> : tab === 'past' ? <Past p={p} /> : tab === 'units' ? <Units p={p} classes={classes} /> : tab === 'examples' ? <Examples view={route.params.sub} /> : <Rubrics p={p} />}
+        : tab === 'activities' ? <Activities p={p} /> : tab === 'past' ? <Past p={p} /> : tab === 'units' ? <Units p={p} classes={classes} sub={route.params.sub} /> : tab === 'examples' ? <Examples view={route.params.sub} /> : <Rubrics p={p} />}
     </div>
   </div>;
 }

@@ -56,5 +56,12 @@
  "cal.hr_min": "{h} hr {m} min",
  "cal.tomorrow": "Tomorrow",
  "cal.plan_it": "Plan it",
- "cal.gap_more": "More ways to plan {name}’s lesson"
+ "cal.gap_more": "More ways to plan {name}’s lesson",
+ "cal.units_text": "A unit is some weeks of one course, each week with its focus. The week and the Semester show which unit you are in, and its lessons, files and rubrics stay together.",
+ "cal.start_week": "Week {n}, {date}",
+ "cal.week_off": "Week {n} taken off, with what was written in it",
+ "cal.open_link": "Open",
+ "cal.unit_lessons": "Lessons for this unit",
+ "cal.open_bank": "Open the rubric bank",
+ "cal.bk_new": "New rubric or scale"
 }

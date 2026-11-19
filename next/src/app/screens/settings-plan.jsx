@@ -9,6 +9,7 @@ import { t, date } from '../../i18n/t.js';
 import { href } from '../router.js';
 import { usePlan } from '../plan.js';
 import { saveKv } from '../../planning/write.js';
+import { plannerKv } from '../../planning/plan.js';
 import { saveFailed } from '../plan/save.js';
 import '../plan/lines.js';
 import { DriveButton } from '../drive-button.jsx';
@@ -20,6 +21,20 @@ const ADD = ['content', 'twocol', 'text', 'steps', 'discuss', 'warmup', 'exit', 
 const ADD_LINE = { content: 'plan.layout_content', twocol: 'plan.layout_twocol', text: 'plan.layout_text', steps: 'plan.layout_steps', discuss: 'plan.layout_discuss', warmup: 'plan.layout_warmup',
   exit: 'plan.layout_exit', objectives: 'plan.layout_objectives', passage: 'plan.layout_passage', vocab: 'plan.layout_vocab', picture: 'plan.layout_picture', textpic: 'plan.layout_textpic', video: 'plan.layout_video' };
 const copy = x => JSON.parse(JSON.stringify(x));
+// Her changes to the timetable, put over what is stored now: My setup, the Planner folder or another window may have changed it
+// while she was editing (rebuild/audit/hooks.md H-015). A part she changed is hers; a part she left alone keeps the newer one; a
+// class she added or removed is added or removed, and a class added elsewhere stays.
+export function mergeSetup(base, mine, now) {
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  if (!now || !Array.isArray(now.classes)) return copy(mine);
+  const out = copy(now);
+  for (const k of new Set([...Object.keys(base), ...Object.keys(mine)])) if (k !== 'classes' && !same(base[k], mine[k])) { if (mine[k] === undefined) delete out[k]; else out[k] = copy(mine[k]); }
+  const b = new Map((base.classes || []).map(c => [c.id, c])), m = new Map((mine.classes || []).map(c => [c.id, c])), changed = id => m.has(id) && !same(b.get(id), m.get(id));
+  const cls = out.classes.filter(c => !(b.has(c.id) && !m.has(c.id))).map(c => changed(c.id) ? copy(m.get(c.id)) : c);
+  for (const c of mine.classes || []) if (!cls.some(x => x.id === c.id) && (!b.has(c.id) || changed(c.id))) cls.push(copy(c));
+  out.classes = cls;
+  return out;
+}
 const nid = () => 'c' + Math.random().toString(36).slice(2, 8);
 const dayName = d => date(new Date(2024, 0, 7 + d), { weekday: 'long' });
 const isDate = s => /^\d{4}-\d\d-\d\d$/.test(s || '');
@@ -72,8 +87,8 @@ function ClassCard({ c, onChange, onRemove }) {
 
 export function TimetableSettings() {
   const p = usePlan();
-  const [d, setD] = useState(null), [dirty, setDirty] = useState(false), [busy, setBusy] = useState(false);
-  useEffect(() => { if (p && !dirty) setD(copy(p.setup || { classes: [] })); }, [p]);
+  const [d, setD] = useState(null), [base, setBase] = useState(null), [dirty, setDirty] = useState(false), [busy, setBusy] = useState(false);
+  useEffect(() => { if (p && !dirty) { const s = copy(p.setup || { classes: [] }); setD(s); setBase(copy(s)); } }, [p]);
   if (!p || !d) return <div class="loading" aria-busy="true" />;
   const put = next => { setD(next); setDirty(true); };
   const deck = d.deck || {};
@@ -83,11 +98,11 @@ export function TimetableSettings() {
     if (bad) return toast(bad);
     setBusy(true);
     try {
-      const next = copy(d);
+      const next = mergeSetup(base, d, await plannerKv('setup'));
       next.classes = next.classes.map(c => ({ ...c, name: c.name.trim(), course: (c.course || '').trim(), meets: c.meets.filter(m => /^\d\d:\d\d$/.test(m.start)).map(m => ({ dow: +m.dow, start: m.start, end: m.end || '', label: (m.label || '').trim() })) }));
       for (const k of ['daysOff', 'events']) { const v = (next[k] || []).filter(x => isDate(x.date)).map(x => ({ date: x.date, label: (x.label || '').trim() })); if (v.length) next[k] = v; else delete next[k]; }
       for (const k of ['semStart', 'semEnd']) if (!isDate(next[k])) delete next[k];
-      await saveKv('setup', next); setDirty(false); toast(t('plan.timetable_saved'));
+      await saveKv('setup', next); setD(copy(next)); setBase(copy(next)); setDirty(false); toast(t('plan.timetable_saved'));
     } catch (e) { saveFailed(e); } finally { setBusy(false); }
   };
   return <div class="ttset">

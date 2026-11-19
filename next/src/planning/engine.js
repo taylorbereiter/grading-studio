@@ -6,7 +6,7 @@ import * as E from '../engines/planner.js';
 let tpl = null;
 export function engine(p) {
   if (p) {
-    E.L.setup = p.setup; E.L.lessons = p.lessons; E.L.units = p.units; E.L.defLook = p.deflook; E.L.activities = p.activities;
+    E.L.setup = p.setup; E.L.lessons = p.lessons; E.L.units = p.units; E.L.defLook = p.deflook; E.L.activities = p.activities; E.L.words = p.words || null;
     const t = (p.setup && p.setup.template) || null; if (t !== tpl) { tpl = t; E.tplPreview(); }
   }
   return E;

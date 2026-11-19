@@ -12,7 +12,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { Sheet, Dialog, Button, IconButton, Icon, Select, toast } from '../../ui/index.js';
 import { TextBox } from '../../ui/services.jsx';
 import { t, date } from '../../i18n/t.js';
-import { PARTS } from '../router.js';
+import { PARTS, href } from '../router.js';
 import { engine } from '../../planning/engine.js';
 import { saveKv, saveLessonFile, dropLessonFile } from '../../planning/write.js';
 import { lessonBlob } from '../../planning/plan.js';
@@ -23,6 +23,7 @@ import { saveFailed } from './save.js';
 import { usePart } from '../parts.js';
 import './lines.js';
 import './more-lines.js';
+import './cal-lines.js';
 import { UnitBank } from './bank-edit.jsx';
 import { DriveButton } from '../drive-button.jsx';
 
@@ -89,6 +90,14 @@ export function UnitSide({ p, u }) {
       await saveLessonFile(b, id); n.files.push({ id, name: nm, kind: 'doc', type: DOC, size: b.size, added: Date.now() }); await saveUnit(p, n); setDoc(id); } catch (e) { saveFailed(e); }
   };
   const paste = e => { const fs = [...((e.clipboardData && e.clipboardData.files) || [])].filter(f => /^image\//.test(f.type)); if (fs.length) { e.preventDefault(); addFiles(p, u, fs, 'atlas').catch(saveFailed); } };
+  // A screenshot pasted anywhere on the page goes to the unit plan's pictures, as on the current Planner's unit page (units.js), unless
+  // it is pasted into a box or a sheet is open (rebuild/audit/hooks.md H-072).
+  useEffect(() => {
+    const any = e => { const el = e.target; if (e.defaultPrevented || document.querySelector('dialog[open]') || (el && el.closest && el.closest('input,textarea,select,[contenteditable],.ushots'))) return; paste(e); };
+    document.addEventListener('paste', any); return () => document.removeEventListener('paste', any);
+  }, [u.id, u.files.length]);
+  // The lessons tied to this unit (l.unit), newest first (src/planner/library.js unitLessonsSection).
+  const tied = (p.lessons || []).filter(l => l && l.unit === u.id).sort((a, b) => (((b.slots || [])[0] || {}).date || '').localeCompare(((a.slots || [])[0] || {}).date || '') || String(a.title).localeCompare(String(b.title), undefined, { numeric: true }));
   return <>
     <section class="side-sec ugoals" aria-labelledby="h-goals"><h2 id="h-goals" class="sub">{t('more.unit_goals')}</h2>
       {stds.length > 0 && <p class="chips">{stds.map(s => <span class="chip sm" data-raw>{s}</span>)}</p>}
@@ -115,6 +124,9 @@ export function UnitSide({ p, u }) {
       <div class="row"><Button size="sm" icon="image" onClick={() => pickFiles('atlas', 'image/*')} data-focus="unit-add-shot">{t('more.add_shot')}</Button>
         <Button size="sm" icon="assist" onClick={() => setAsking(true)} data-focus="unit-ask">{t('more.fill_with', { name })}</Button></div>
     </section>
+    {tied.length > 0 && <section class="side-sec ulessons" aria-labelledby="h-ulessons"><h2 id="h-ulessons" class="sub">{t('cal.unit_lessons')} <span class="mute">{tied.length}</span></h2>
+      <ul class="mlist">{tied.map(l => <li data-ulesson={l.id}><a class="link" href={href('lesson', l.id)}><Icon name="slides" size="sm" /><span data-raw>{l.title || t('plan.untitled')}</span></a>
+        {(l.slots || [])[0] && <small class="mute" data-raw>{date(at(l.slots[0].date), { day: 'numeric', month: 'short' })}</small>}</li>)}</ul></section>}
     <UnitBank p={p} u={u} />
     {asking && <UnitAssist p={p} u={u} onClose={() => setAsking(false)} />}
     <Dialog open={!!big} title={big ? big.f.name : ''} onClose={() => { URL.revokeObjectURL(big.url); setBig(null); }} actions={<Button onClick={() => { URL.revokeObjectURL(big.url); setBig(null); }}>{t('common.close')}</Button>}>{big && <img class="shotbig" src={big.url} alt="" />}</Dialog>

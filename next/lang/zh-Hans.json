@@ -3679,7 +3679,6 @@
  "plan.no_past": "还没有过去的课",
  "plan.no_past_text": "课的日期过去后就会显示在这里。",
  "plan.no_units": "还没有单元",
- "plan.no_units_text": "单元来自每个班级的课程时间轴。",
  "plan.unit_dates": {
   "one": "{from} 到 {to}，{n} 周",
   "other": "{from} 到 {to}，{n} 周"
@@ -3728,7 +3727,6 @@
  "plan.delete_unit_sure": "删除它和它的文件吗？",
  "plan.unit_name": "单元名称",
  "plan.unit_starts": "开始",
- "plan.unit_starts_hint": "单元从周一开始；选其他日子会移到那一周的周一。",
  "plan.unit_weeks": "周数",
  "plan.week_fewer": "少一周",
  "plan.week_more": "多一周",
@@ -6608,5 +6606,12 @@
  "cal.hr_min": "{h} 小时 {m} 分",
  "cal.tomorrow": "明天",
  "cal.plan_it": "备课",
- "cal.gap_more": "{name} 这节课的其他备课方式"
+ "cal.gap_more": "{name} 这节课的其他备课方式",
+ "cal.units_text": "单元是一门课程的几个星期，每周有它的重点。周视图和学期视图会显示你在哪个单元，它的课、文件和评分标准都放在一起。",
+ "cal.start_week": "第 {n} 周，{date}",
+ "cal.week_off": "已移除第 {n} 周和其中写的内容",
+ "cal.open_link": "打开",
+ "cal.unit_lessons": "这个单元的课",
+ "cal.open_bank": "打开评分标准库",
+ "cal.bk_new": "新建评分标准或量表"
 }

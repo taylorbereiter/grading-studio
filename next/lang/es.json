@@ -3675,7 +3675,6 @@
  "plan.no_past": "Aún no hay lecciones anteriores",
  "plan.no_past_text": "Una lección aparece aquí cuando su día ya ha pasado.",
  "plan.no_units": "Aún no hay unidades",
- "plan.no_units_text": "Las unidades vienen de la Línea del curso de cada clase.",
  "plan.unit_dates": {
   "one": "Del {from} al {to}, {n} semana",
   "other": "Del {from} al {to}, {n} semanas"
@@ -3724,7 +3723,6 @@
  "plan.delete_unit_sure": "¿Eliminarla con sus archivos?",
  "plan.unit_name": "Nombre de la unidad",
  "plan.unit_starts": "Empieza",
- "plan.unit_starts_hint": "Las unidades empiezan en lunes; otro día pasa al lunes de su semana.",
  "plan.unit_weeks": "Semanas",
  "plan.week_fewer": "Una semana menos",
  "plan.week_more": "Una semana más",
@@ -6601,5 +6599,12 @@
  "cal.hr_min": "{h} h {m} min",
  "cal.tomorrow": "Mañana",
  "cal.plan_it": "Planificar",
- "cal.gap_more": "Más formas de planificar la lección de {name}"
+ "cal.gap_more": "Más formas de planificar la lección de {name}",
+ "cal.units_text": "Una unidad son algunas semanas de un curso, cada una con su enfoque. La semana y el semestre muestran en qué unidad estás, y sus lecciones, archivos y rúbricas quedan juntos.",
+ "cal.start_week": "Semana {n}, {date}",
+ "cal.week_off": "Semana {n} quitada, con lo que tenía escrito",
+ "cal.open_link": "Abrir",
+ "cal.unit_lessons": "Lecciones de esta unidad",
+ "cal.open_bank": "Abrir el banco de rúbricas",
+ "cal.bk_new": "Nueva rúbrica o escala"
 }
