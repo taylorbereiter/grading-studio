@@ -789,3 +789,111 @@ test('H-055: signed in to Google with no live key, the sign-in script is loaded 
   assert.ok(await until(() => p.evaluate(() => window.__gisLoaded === true)), 'and loaded');
   await p.close();
 });
+
+test('E1-052: the Finished PowerPoint comes from Google Drive too (present after all: From Google Drive in its sheet)', async () => {
+  const { SETUP, LESSONS } = require('./planseed.js');
+  const E = await import('../../src/engines/planner.js');
+  E.L.setup = SETUP; E.L.lessons = LESSONS; E.L.units = [];
+  const deck = JSON.parse(JSON.stringify(LESSONS[2])); deck.slides = deck.slides.slice(0, 2); deck.slides[1].title = 'From Drive';
+  const bytes = Buffer.from(E.buildPptx(deck));
+  const p = await K.fresh();
+  await p.evaluate(() => { localStorage.setItem('gs.gEmail', JSON.stringify('teacher@example.org')); localStorage.setItem('gs.gcid', JSON.stringify('123-made-up.apps.googleusercontent.com')); });
+  await p.evaluateOnNewDocument(() => {
+    window.__pickerSeen = [];
+    const P = { ViewId: { DOCS: 'docs' }, DocsViewMode: { LIST: 'list' }, Feature: { MULTISELECT_ENABLED: 'multi', SUPPORT_DRIVES: 'drives' }, Action: { PICKED: 'picked', CANCEL: 'cancel' }, Response: { ACTION: 'action', DOCUMENTS: 'docs' },
+      DocsView: class { constructor() { this.o = {}; } setIncludeFolders() { return this; } setMode() { return this; } setSelectFolderEnabled() { return this; } setMimeTypes(v) { this.o.mimes = v; return this; } setParent() { return this; } setLabel() { return this; } setOwnedByMe() { return this; } setEnableDrives() { return this; } },
+      PickerBuilder: class { constructor() { this.o = { views: [] }; } setOAuthToken() { return this; } setAppId() { return this; } setOrigin() { return this; } setTitle() { return this; } addView(v) { this.o.views.push(v.o); return this; } enableFeature() { return this; } setCallback(cb) { this.cb = cb; return this; }
+        build() { return { setVisible: () => { window.__pickerSeen.push(this.o); setTimeout(() => this.cb({ action: 'picked', docs: [{ id: '1DeckDeckDeckDeckDeckDeckDeck0001', name: 'Sonnets final.pptx', mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', sizeBytes: '5000' }] }), 20); } }; } } };
+    window.google = { picker: P, accounts: { oauth2: { initTokenClient: o => ({ requestAccessToken: () => setTimeout(() => o.callback({ access_token: 'tok', expires_in: 3600, scope: o.scope }), 10) }), revoke: () => {} } } };
+    window.gapi = { load: (n, o) => setTimeout(o.callback, 0) };
+  });
+  await p.setRequestInterception(true);
+  const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'GET, POST', 'Access-Control-Expose-Headers': 'Content-Length, Content-Type' };
+  p.on('request', r => { const u = r.url();
+    if (/^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(u) || /^(data|blob|about):/.test(u)) return r.continue();
+    if (r.method() === 'OPTIONS') return r.respond({ status: 204, headers: cors, body: '' });
+    if (/1DeckDeckDeckDeckDeckDeckDeck0001\?alt=media/.test(u)) return r.respond({ status: 200, headers: { ...cors, 'Content-Length': String(bytes.length) }, contentType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', body: bytes });
+    if (/\/about\?/.test(u)) return r.respond({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify({ user: { emailAddress: 'teacher@example.org' } }) });
+    r.respond({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify({ files: [] }) }); });
+  await K.open(p, 'lesson/L3');
+  await p.click('main [data-focus="lesson-menu"]'); await p.waitForSelector('[role^="menuitem"]'); await K.item(p, 'Finished PowerPoint');
+  await p.waitForSelector('.sheet [data-drive], dialog [data-drive]', { timeout: 10000 });
+  await p.click('.sheet [data-drive], dialog [data-drive]');
+  const l = await until(async () => { const x = await K.lessonInDb(p, 'L3'); return x && x.final && x; }, 15000);
+  assert.ok(l, 'the deck from Drive is the finished deck');
+  assert.equal(l.final.name, 'Sonnets final.pptx'); assert.equal(l.slides.length, 2); assert.match(l.slides[1].title, /From Drive/);
+  for (const [k, [a, b2]] of Object.entries(await K.sameInPlanner(p, 'L3', l, ['slides', 'final']))) assert.deepEqual(a, b2, k + ' reads the same in the current Planner');
+  assert.deepEqual(p.errors.filter(e => !/googleapis|accounts\.google/.test(e)), []);
+  await p.close();
+});
+
+// Beside away from a lesson: the week on the Calendar, a unit on its course line, and a document.
+const unitsInPlanner = async p => { await p.goto(K.srv.url + 'planner.html'); await p.waitForFunction(() => window.__planner && Array.isArray(window.__planner.L.units) && window.__planner.L.units.length, { timeout: 20000 }); return p.evaluate(() => JSON.parse(JSON.stringify(window.__planner.L.units))); };
+test('E1-062 E1-083: Beside on the Calendar\'s week, with each course\'s unit that week and the general notebook', async () => {
+  const p = await K.fresh();
+  await K.open(p, 'calendar/class');
+  await p.evaluate(() => { const b = document.querySelector('[data-focus="cal-next"]'); b && b.click(); });   // the week the seeded units run in is any; go back to this one
+  await p.evaluate(() => { const b = document.querySelector('[data-focus="cal-prev"]'); b && b.click(); });
+  await p.click('main [data-focus="week-menu"]'); await p.waitForSelector('[role^="menuitem"]'); await K.item(p, 'Beside');
+  await p.waitForSelector('aside.beside');
+  assert.ok(await p.$eval('main .page.calendar, .page.calendar', e => e.classList.contains('with-beside')), 'the week moves aside for it');
+  await tabTo(p, 'Unit');
+  const shown = await p.$$eval('aside.beside [data-unitside]', s => s.map(x => x.dataset.unitside));
+  assert.ok(shown.length > 0 || await p.$eval('aside.beside .bbody', b => /No unit this week/.test(b.textContent)), 'this week\'s units, or none: ' + shown.join());
+  await tabTo(p, 'Notebook');
+  await p.waitForSelector('aside.beside [data-nbpage][contenteditable="true"]');
+  assert.equal(await p.$('aside.beside [data-focus="nb-swap"]'), null, 'only the general page here');
+  await p.click('aside.beside [data-nbpage]'); await p.keyboard.type('Bring the poetry books');
+  assert.ok(await until(async () => /Bring the poetry books/.test(String(await kvGet(p, 'nb:general') || ''))), 'saved on the general page');
+  await p.click('aside.beside [data-focus="beside-close"]');
+  assert.ok(await until(async () => !(await p.$('aside.beside'))), 'and it closes');
+  assert.deepEqual(p.errors, []);
+  await p.close();
+});
+
+test('E1-062 E1-080 E1-083: Beside on a unit\'s course line: the unit with its week, its own notebook page, and General notes and back', async () => {
+  const p = await K.fresh();
+  await K.open(p, 'class/c1');
+  await p.waitForSelector('main [data-focus="unit-menu"]', { timeout: 10000 });
+  await p.click('main [data-focus="unit-menu"]'); await p.waitForSelector('[role^="menuitem"]'); await K.item(p, 'Beside');
+  await p.waitForSelector('aside.beside');
+  const unitTab = await p.$$eval('aside.beside [role=tab]', b => b.map(x => x.textContent));
+  await tabTo(p, unitTab[3]);
+  const uid = await p.$eval('main .us.on', b => b.textContent).catch(() => '');
+  const ids = await p.$$eval('aside.beside [data-unitside]', s => s.map(x => x.dataset.unitside));
+  assert.equal(ids.length, 1, 'the unit open on the course line: ' + uid);
+  await tabTo(p, 'Notebook');
+  await p.waitForSelector('aside.beside [data-nbpage][contenteditable="true"]');
+  assert.match(await p.$eval('aside.beside .nb .row b', b => b.textContent), /This unit/);
+  await p.click('aside.beside [data-nbpage]'); await p.keyboard.type('Unit idea: a poem wall');
+  assert.ok(await until(async () => ((await kvGet(p, 'units')) || []).some(u => u.id === ids[0] && /a poem wall/.test(u.notebook || ''))), 'saved on the unit');
+  await p.click('aside.beside [data-focus="nb-swap"]');
+  await p.waitForFunction(() => /General notes/.test(document.querySelector('aside.beside .nb .row b').textContent));
+  assert.match(await p.$eval('aside.beside [data-focus="nb-swap"]', b => b.textContent), /This unit/, 'and back to this unit');
+  await p.click('aside.beside [data-focus="nb-swap"]');
+  await p.waitForFunction(() => /a poem wall/.test(document.querySelector('aside.beside [data-nbpage]').textContent), { timeout: 5000 });
+  const theirs = (await unitsInPlanner(p)).find(u => u.id === ids[0]);
+  assert.match(theirs.notebook || '', /a poem wall/, 'the current Planner reads the unit\'s page');
+  assert.deepEqual(p.errors, []);
+  await p.close();
+});
+
+test('E1-003: Beside opens from a document, beside it, and its notebook is the lesson\'s', async () => {
+  const p = await K.fresh(1440, withFiles());
+  await putDoc(p);
+  await K.open(p, 'lesson/L2');
+  await p.click('main .mopen');   // the Reading guide document
+  await p.waitForSelector('[data-docpage]');
+  await p.click('[data-focus="doc-beside"]');
+  await p.waitForSelector('dialog[open] aside.beside');
+  await p.evaluate(() => [...document.querySelectorAll('dialog[open] aside.beside [role=tab]')].find(x => x.textContent === 'Notebook').click()); await wait(300);
+  await p.waitForSelector('dialog[open] aside.beside [data-nbpage][contenteditable="true"]');
+  await p.click('dialog[open] aside.beside [data-nbpage]'); await p.keyboard.type('Read it twice');
+  assert.ok(await until(async () => /Read it twice/.test((await K.lessonInDb(p, 'L2')).notebook || '')), 'saved with the lesson');
+  const box = await p.$eval('dialog[open] [data-docpage]', e => e.getBoundingClientRect().right), side = await p.$eval('dialog[open] aside.beside', e => e.getBoundingClientRect().left);
+  assert.ok(box <= side + 1, 'the document stays clear of it');
+  const l = await K.lessonInDb(p, 'L2'), both = await K.sameInPlanner(p, 'L2', l, ['notebook']);
+  assert.deepEqual(both.notebook[0], both.notebook[1]);
+  assert.deepEqual(p.errors, []);
+  await p.close();
+});

@@ -294,7 +294,7 @@
 .courseline .hrow{flex-wrap:wrap;gap:8px}
 /* Stage 3 follow-up: the lesson's tools */
 .varbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
-.lessonpage.with-beside{padding-right:calc(var(--bw,min(420px,40vw)) + 20px)}
+.page.with-beside,.courseline.with-beside{padding-right:calc(var(--bw,min(420px,40vw)) + 20px)}
 .beside{position:fixed;top:8px;right:8px;bottom:8px;width:var(--bw,min(420px,40vw));background:var(--sf,var(--s));border-radius:var(--r4);box-shadow:var(--sh-f);display:flex;flex-direction:column;z-index:30;overflow:hidden}
 .beside .bhead{display:flex;align-items:center;gap:8px;padding:8px 10px 0 16px;border-bottom:1px solid var(--line)}
 .beside .bhead .tabs{flex:1;border-bottom:0}
@@ -360,7 +360,7 @@
 .ticks{display:flex;flex-wrap:wrap;gap:6px 16px;border:0;padding:0;margin:8px 0}
 .ticks legend{width:100%;margin-bottom:4px}
 .lkgroup{margin-top:10px}.lkh{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:var(--t2)}
-@media (max-width:900px){.lessonpage.with-beside{padding-right:0}.beside{width:auto;left:8px;top:auto;height:70vh}}
+@media (max-width:900px){.page.with-beside,.courseline.with-beside{padding-right:0}.beside{width:auto;left:8px;top:auto;height:70vh}}
 .with-beside .lgrid{grid-template-columns:minmax(0,1fr)}
 .with-beside .step{grid-template-columns:minmax(0,1fr) 300px}
 .rttools .rtb{padding:0 8px}
@@ -464,3 +464,6 @@ button.prclock{border:0;cursor:pointer}
 .tglist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;align-self:stretch}
 .tglist li{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.tglist li>.mute{flex-basis:100%;order:3}
 .lkpicks{display:flex;flex-direction:column;gap:6px;margin-top:6px}.lkpicks h3{margin:0}
+/* Beside open from a document: the document moves left of it */
+dialog.sheet:has(.docwrap.with-beside){margin-left:16px;margin-right:calc(var(--bw,min(420px,40vw)) + 24px);max-width:calc(100vw - var(--bw,min(420px,40vw)) - 40px)}
+@media (max-width:900px){dialog.sheet:has(.docwrap.with-beside){margin:auto;max-width:none}}

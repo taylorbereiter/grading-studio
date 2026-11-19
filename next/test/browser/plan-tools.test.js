@@ -183,7 +183,7 @@ test('a unit: a summative file added, the weeks filled from the assistant’s re
   const u = await until(async () => { const us = await kvGet(p, 'units'); const x = us && us.find(y => y.id === 'U2'); return x && x.weeks[0].focus === 'Sound and sense' && x; });
   assert.ok(u, 'the weeks are kept'); assert.equal(u.weeks[1].standards, 'RL.5'); assert.equal(u.files.length, 1, 'the files stay');
   await p.waitForFunction(() => /RL\.4/.test(document.querySelector('.ugoals').textContent), { timeout: 5000 });
-  await p.click('[data-focus="unit-from-shots"]');
+  await p.click('[data-focus="unit-menu"]'); await p.waitForSelector('[role^="menuitem"]'); await item(p, 'Unit from screenshots');
   assert.ok(await until(async () => ((await kvGet(p, 'units')) || []).filter(x => x.course === 'Grade 9').length === 3), 'a new unit is made');
   await p.waitForSelector('[data-focus="unit-add-shot"]');
   assert.deepEqual(p.errors, []); await p.ctx.close();

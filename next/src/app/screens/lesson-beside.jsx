@@ -12,26 +12,24 @@
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Button, IconButton, Icon, Tabs, TextInput, toast } from '../../ui/index.js';
-import { Mic } from '../../ui/services.jsx';
 import { t } from '../../i18n/t.js';
 import { PARTS } from '../router.js';
 import { words, kv } from '../../planning/index.js';
 import { assistant } from '../../services/assistant.js';
 import { engine } from '../../planning/engine.js';
 import * as T from '../../engines/plantools.js';
-import { savePlannerKv, dropPlannerKv, saveLesson } from '../../planning/write.js';
+import { savePlannerKv, dropPlannerKv } from '../../planning/write.js';
 import { plannerKv, lessonBlob } from '../../planning/plan.js';
 import { saveFailed } from '../plan/save.js';
 import '../plan/lines.js';
 import '../plan/tool-lines.js';
 import '../plan/les-lines.js';
+import '../plan/rev-lines.js';
 import { DriveButton } from '../drive-button.jsx';
 import { usePart } from '../parts.js';
 import { boxAdd, CHIP_TYPE } from '../plan/cbox.js';
 
-const copy = x => JSON.parse(JSON.stringify(x));
 const TABS = ['books', 'acts', 'video', 'unit', 'notes', 'box'];
-const esc = s => String(s).replace(/[&"><]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const { ytId, ytStart } = T;
 // The name of the teacher's unit plan tool, when they gave one (Settings > Classes and terms); otherwise the plain word.
 export const unitTool = () => { const w = words.json(null); return (w && typeof w.unit === 'string' && w.unit.trim()) || ''; };
@@ -53,10 +51,10 @@ function Grip() {
   return <div class="bgrip" role="separator" aria-orientation="vertical" aria-label={t('les.beside_width')} tabIndex={-1} onPointerDown={down} onKeyDown={key} data-grip />;
 }
 
-export default function Beside({ p, l, save, onClose, onSlide }) {
+export default function Beside({ p, l, u, week, save, onClose, onSlide }) {
   const [tab, setTab] = useState(() => { try { const v = sessionStorage.getItem('gsn.beside'); return TABS.includes(v) ? v : 'books'; } catch { return 'books'; } });
   const pick = v => { setTab(v); try { sessionStorage.setItem('gsn.beside', v); } catch { } };
-  const tool = unitTool(), B2 = usePart('beside2', tab === 'acts'), Bx = usePart('box', tab === 'box'), [pdfIn, setPdfIn] = useState(null), [vidIn, setVidIn] = useState('');
+  const tool = unitTool(), B2 = usePart('beside2', tab === 'acts'), Bx = usePart('box', tab === 'box'), Nb = usePart('nb', tab === 'notes'), [pdfIn, setPdfIn] = useState(null), [vidIn, setVidIn] = useState('');
   // A PDF dropped on the drawer goes to Books, a YouTube link to Video (src/planner/panel.js spDrop).
   const over = e => { const d = e.dataTransfer; if (d && [...d.types].some(x => x === 'Files' || x === 'text/uri-list' || x === 'text/plain')) { e.preventDefault(); e.stopPropagation(); } };
   const drop = e => {
@@ -78,8 +76,8 @@ export default function Beside({ p, l, save, onClose, onSlide }) {
       {tab === 'books' && <Books l={l} save={save} incoming={pdfIn} onTaken={() => setPdfIn(null)} />}
       {tab === 'acts' && B2 && <B2.Acts p={p} l={l} onSlide={onSlide} />}
       {tab === 'video' && <Video p={p} l={l} save={save} onSlide={onSlide} incoming={vidIn} onTaken={() => setVidIn('')} />}
-      {tab === 'unit' && <Unit p={p} l={l} save={save} tool={tool} />}
-      {tab === 'notes' && <Notebook p={p} l={l} save={save} />}
+      {tab === 'unit' && <Unit p={p} l={l} u={u} week={week} tool={tool} />}
+      {tab === 'notes' && Nb && <Nb.Notebook key={l ? l.id : u ? 'u' + u.id : 'g'} p={p} l={l} u={u} save={save} />}
       {tab === 'box' && Bx && <Bx.Box p={p} T={T} E={engine(p)} />}
     </div>
   </aside>;
@@ -202,85 +200,19 @@ function Shot({ f }) {
   useEffect(() => { let url = ''; lessonBlob(f.id).then(b => { if (b && /^image\//.test(b.type || f.type)) { url = URL.createObjectURL(b); setU(url); } }); return () => url && URL.revokeObjectURL(url); }, [f.id]);
   return u ? <a class="shot" href={u} target="_blank" rel="noopener"><img src={u} alt={f.name} data-raw /></a> : null;
 }
-function Unit({ p, l, save, tool }) {
-  engine(p);
-  const hit = T.lessonUnit(l);
-  if (!hit) return <p class="mute">{t('tool.no_unit')}</p>;
-  const { u, n } = hit, w = u.weeks[n];
-  return <div class="unitside">
-    <h3 class="sub" data-raw>{u.title}</h3>
-    {u.atlas && <><a class="btn sm" href={u.atlas} target="_blank" rel="noopener">{tool ? t('tool.open_named', { name: tool }) : t('tool.open_unit_plan')}<Icon name="arrow" size="xs" /></a><p class="mute small">{t('tool.unit_tab')}</p></>}
-    {w && <div class="wk"><b>{t('tool.week_of_n', { n: n + 1, of: u.weeks.length })}</b>{w.focus && <p data-raw>{w.focus}</p>}{w.standards && <p class="mute" data-raw>{w.standards}</p>}{w.notes && <p class="mute" data-raw>{w.notes}</p>}
-      <Button size="sm" icon="assist" onClick={() => boxAdd({ kind: 'week', label: u.title + ', week ' + (n + 1) + ' of ' + u.weeks.length, unit: u.title, n: n + 1, of: u.weeks.length, text: [w.focus && 'Focus: ' + w.focus, w.standards && 'Standards: ' + w.standards, w.notes && 'Notes: ' + w.notes].filter(Boolean).join('\n') })} data-focus="week-to-box">{t('les.to_box', { name: aiName() })}</Button></div>} {/* not-words */}
-    <div class="shots">{(u.files || []).filter(f => f.kind === 'atlas').map(f => <Shot f={f} />)}</div>
-  </div>;
-}
-
-/* ---------- Notebook ---------- */
-const nbChip = (general, l) => general ? { kind: 'notebook', t: 'general', id: '', label: 'Notebook: General notes' } : { kind: 'notebook', t: 'lesson', id: l.id, label: 'Notebook: ' + l.title }; // not-words
-function Notebook({ p, l, save }) {
-  const [general, setGeneral] = useState(false), [state, setState] = useState(''), [ask, setAsk] = useState(null), [askV, setAskV] = useState('');
-  const pg = useRef(), timer = useRef(0), range = useRef(null), lRef = useRef(l), byId = useRef({}), ready = useRef(false), [, redraw] = useState(0); lRef.current = l; byId.current[l.id] = l;
-  const players = el => { for (const v of el.querySelectorAll('.nb-vid')) if (v.getAttribute('contenteditable') !== 'false') { v.contentEditable = 'false'; v.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + esc(v.dataset.yt) + (v.dataset.t ? '?start=' + esc(v.dataset.t) : '') + '" title="' + esc(t('tool.video')) + '" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>'; } };
-  useEffect(() => {
-    // The page read here is the only one this page's typing is saved to: the lesson open now, or the general page once its read
-    // has worked (a failed read never saves over it). Until then the page can't be typed in.
-    let on = true; const id = l.id; ready.current = false; redraw(n => n + 1);
-    (async () => {
-      let html; try { html = general ? String((await kv.get('nb:general')) || '') : lRef.current.notebook || ''; } catch (e) { if (on) toast(t('tool.nb_unread')); return; }
-      if (on && pg.current) { pg.current.innerHTML = T.nbClean(html); players(pg.current); ready.current = true; redraw(n => n + 1); }
-    })();
-    return () => { on = false; if (timer.current) { clearTimeout(timer.current); flush(general, id); } ready.current = false; };
-  }, [general, l.id]);
-  const stored = el => { const c = el.cloneNode(true); for (const v of c.querySelectorAll('.nb-vid')) { v.removeAttribute('contenteditable'); v.innerHTML = ''; } return T.nbClean(c.innerHTML); };
-  const flush = async (gen, id = lRef.current.id) => {
-    timer.current = 0; if (!pg.current || !ready.current) return;
-    const html = stored(pg.current), empty = !T.nbText(html).trim() && !/<img|nb-vid/.test(html);
-    try {
-      if (gen) await savePlannerKv('nb:general', empty ? '' : html);
-      else {
-        // After she has gone to another lesson, the words go to the lesson they were typed in, not the one on screen.
-        const was = byId.current[id], here = id === lRef.current.id; if (!was) return;
-        const n = copy(was); if (empty) delete n.notebook; else n.notebook = html;
-        if ((n.notebook || '') !== (was.notebook || '')) { if (here) await save(n); else { const st = await saveLesson(n); byId.current[id] = st; } }
-      }
-      setState('saved');
-    } catch (e) { saveFailed(e); }
-  };
-  const changed = () => { setState('saving'); clearTimeout(timer.current); timer.current = setTimeout(() => flush(general), 500); };
-  const sel = () => { const s = getSelection(), el = pg.current; return el && s.rangeCount && el.contains(s.getRangeAt(0).commonAncestorContainer) ? s.getRangeAt(0).cloneRange() : null; };
-  const focus = () => { const el = pg.current; el.focus(); const s = getSelection(); s.removeAllRanges(); if (range.current && el.contains(range.current.commonAncestorContainer)) s.addRange(range.current); else { const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); s.addRange(r); } };
-  const cmd = c => { if (document.activeElement !== pg.current) focus(); document.execCommand({ ul: 'insertUnorderedList', ol: 'insertOrderedList' }[c] || c); changed(); };
-  const insert = html => { focus(); document.execCommand('insertHTML', false, html); players(pg.current); range.current = sel(); changed(); };
-  const addUrl = () => {
-    let u = askV.trim(); if (/^www\./i.test(u)) u = 'https://' + u; setAsk(null); setAskV('');
-    if (!/^(https?:\/\/|mailto:)\S+$/i.test(u)) return toast(t('plan.link_bad'));
-    if (ask === 'video' && ytId(u)) return insert('<div class="nb-vid" data-yt="' + ytId(u) + '"' + (ytStart(u) ? ' data-t="' + ytStart(u) + '"' : '') + '></div><p><br></p>');
-    if (ask === 'video') toast(t('tool.not_youtube'));
-    const r = range.current; if (r && !r.collapsed) { focus(); document.execCommand('createLink', false, u); for (const a of pg.current.querySelectorAll('a')) { a.target = '_blank'; a.rel = 'noopener'; } return changed(); }
-    insert('<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(u) + '</a>&nbsp;');
-  };
-  const pic = async f => { if (!f || !/^image\//.test(f.type)) return; try { const x = await T.shrinkPic(f); insert('<img src="' + x.src + '" alt="">'); } catch { toast(t('tool.pic_unread')); } };
-  const B = (c, line, cls) => <button type="button" class={'btn sm quiet nb-' + c + (cls ? ' ' + cls : '')} onMouseDown={e => { e.preventDefault(); cmd(c); }} data-nb={c}>{t(line)}</button>;
-  return <div class="nb">
-    <div class="row"><b class="grow">{general ? t('tool.nb_general') : t('tool.nb_lesson')}</b><Button size="sm" variant="quiet" onClick={() => { if (timer.current) { clearTimeout(timer.current); flush(general); } setGeneral(!general); }} data-focus="nb-swap">{general ? t('tool.nb_lesson') : t('tool.nb_general')}</Button>
-      <Button size="sm" variant="quiet" icon="assist" onClick={async () => { if (timer.current) { clearTimeout(timer.current); await flush(general); } boxAdd(nbChip(general, l)); }} data-focus="nb-to-box">{t('les.to_box', { name: aiName() })}</Button></div>
-    <div class="doctools" role="toolbar" aria-label={t('tool.notebook')}>
-      {B('bold', 'tool.doc_b', 'dt-bold')}{B('italic', 'tool.doc_i', 'dt-italic')}{B('underline', 'tool.doc_u', 'dt-underline')}{B('ul', 'tool.doc_ul')}{B('ol', 'tool.doc_ol')}
-      <button type="button" class="btn sm quiet" onMouseDown={e => { e.preventDefault(); range.current = sel(); setAsk('link'); }}>{t('tool.nb_link')}</button>
-      <label class="btn sm quiet">{t('tool.nb_pic')}<input type="file" class="vh" accept="image/*" onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; pic(f); }} /></label><DriveButton small />
-      <button type="button" class="btn sm quiet" onMouseDown={e => { e.preventDefault(); range.current = sel(); setAsk('video'); }}>{t('tool.nb_video')}</button>
-      <Mic onText={w => { focus(); document.execCommand('insertText', false, (w.match(/^\s/) ? '' : ' ') + w); range.current = sel(); changed(); }} />
-    </div>
-    {ask && <div class="row"><TextInput label={ask === 'video' ? t('tool.nb_paste_video') : t('tool.nb_paste_link')} value={askV} onInput={setAskV} onKeyDown={e => { if (e.key === 'Enter') addUrl(); if (e.key === 'Escape') setAsk(null); }} data-focus="nb-ask" autoFocus />
-      <Button size="sm" variant="primary" onClick={addUrl}>{t('tool.add')}</Button><IconButton icon="x" size="sm" label={t('common.cancel')} onClick={() => setAsk(null)} /></div>}
-    <div class="nbpage" ref={pg} contentEditable={ready.current ? "true" : "false"} aria-busy={ready.current ? undefined : "true"} spellcheck={true} role="textbox" aria-multiline="true" aria-label={general ? t('tool.nb_general') : t('tool.nb_lesson')} data-raw data-nbpage onInput={changed}
-      onBlur={() => { range.current = sel() || range.current; }}
-      onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && /^[biu]$/i.test(e.key)) { e.preventDefault(); cmd({ b: 'bold', i: 'italic', u: 'underline' }[e.key.toLowerCase()]); } }}
-      onPaste={e => { const f = [...((e.clipboardData && e.clipboardData.files) || [])].find(x => /^image\//.test(x.type)); if (f) { e.preventDefault(); range.current = sel(); return pic(f); }
-        const u = ((e.clipboardData && e.clipboardData.getData('text/plain')) || '').trim(); if (/^https?:\/\/\S+$/.test(u) && ytId(u)) { e.preventDefault(); range.current = sel(); insert('<div class="nb-vid" data-yt="' + ytId(u) + '"' + (ytStart(u) ? ' data-t="' + ytStart(u) + '"' : '') + '></div><p><br></p>'); } }}
-      onDrop={e => { const f = [...((e.dataTransfer && e.dataTransfer.files) || [])].find(x => /^image\//.test(x.type)); if (f) { e.preventDefault(); e.stopPropagation(); pic(f); } }}
-      onClick={e => { const a = e.target.closest && e.target.closest('a[href]'); if (a) { e.preventDefault(); window.open(a.href, '_blank', 'noopener'); } }} />
-    <small class="mute" role="status">{state === 'saving' ? t('tool.saving') : state === 'saved' ? t('tool.saved') : general ? t('tool.nb_kept_here') : t('tool.nb_kept_lesson')}</small>
+// The lesson's unit; on a unit's page that unit (its week now, when it is running); elsewhere each course's unit in the week shown
+// (src/planner/panel.js atlasHtml).
+const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+function Unit({ p, l, u, week, tool }) {
+  const E = engine(p), mon = ymd(E.mondayOf(week ? new Date(week + 'T12:00:00') : new Date()));
+  const hits = l ? [T.lessonUnit(l)].filter(Boolean) : u ? [(x => x && x.u.id === u.id ? x : { u, n: -1 })(E.unitAt(u.course, mon))]
+    : [...new Set((p.units || []).map(x => x && x.course).filter(Boolean))].map(c => E.unitAt(c, mon)).filter(Boolean);
+  if (!hits.length) return <p class="mute">{l ? t('tool.no_unit') : t('rev.no_unit_week')}</p>;
+  return <div class="unitside">{hits.map(({ u: un, n }) => { const w = n >= 0 ? un.weeks[n] : null;
+    return <section data-unitside={un.id}><h3 class="sub" data-raw>{un.title}</h3>
+      {un.atlas && <><a class="btn sm" href={un.atlas} target="_blank" rel="noopener">{tool ? t('tool.open_named', { name: tool }) : t('tool.open_unit_plan')}<Icon name="arrow" size="xs" /></a><p class="mute small">{t('tool.unit_tab')}</p></>}
+      {w && <div class="wk"><b>{t('tool.week_of_n', { n: n + 1, of: un.weeks.length })}</b>{w.focus && <p data-raw>{w.focus}</p>}{w.standards && <p class="mute" data-raw>{w.standards}</p>}{w.notes && <p class="mute" data-raw>{w.notes}</p>}
+        <Button size="sm" icon="assist" onClick={() => boxAdd({ kind: 'week', label: un.title + ', week ' + (n + 1) + ' of ' + un.weeks.length, unit: un.title, n: n + 1, of: un.weeks.length, text: [w.focus && 'Focus: ' + w.focus, w.standards && 'Standards: ' + w.standards, w.notes && 'Notes: ' + w.notes].filter(Boolean).join('\n') })} data-focus="week-to-box">{t('les.to_box', { name: aiName() })}</Button></div>} {/* not-words */}
+      <div class="shots">{(un.files || []).filter(f => f.kind === 'atlas').map(f => <Shot f={f} />)}</div></section>; })}
   </div>;
 }

@@ -5,7 +5,8 @@
 //                  grading side, so the Planner folder, downloads and shared lessons never carry it
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { Sheet, Button, TextInput, Icon, toast } from '../../ui/index.js';
+import { Sheet, Button, IconButton, TextInput, Icon, toast } from '../../ui/index.js';
+import { usePart } from '../parts.js';
 import { Mic } from '../../ui/services.jsx';
 import { t } from '../../i18n/t.js';
 import * as T from '../../engines/plantools.js';
@@ -41,6 +42,7 @@ function docBlock(pg, html) {
   r.selectNodeContents(first.tagName === 'TABLE' ? cell : last); r.collapse(true); sel.removeAllRanges(); sel.addRange(r);
 }
 export function DocEditor({ p, l, id, save, onClose }) {
+  const [bes, setBes] = useState(false), Bs = usePart('beside', bes);
   const f = (l.files || []).find(x => x.id === id), pg = useRef(), timer = useRef(0), [state, setState] = useState(''), [name, setName] = useState(f ? f.name : '');
   const lRef = useRef(l); lRef.current = l;
   useEffect(() => { lessonBlob(id).then(async b => { if (pg.current) pg.current.innerHTML = T.docClean(b ? await b.text() : ''); }); return () => { if (timer.current) { clearTimeout(timer.current); keep(); } }; }, [id]);
@@ -73,11 +75,13 @@ export function DocEditor({ p, l, id, save, onClose }) {
   return <Sheet open wide title={t('tool.doc_title')} icon={<Icon name="note" />} onClose={onClose}
     footer={<><small class="mute" role="status">{state === 'saving' ? t('tool.saving') : state === 'saved' ? t('tool.saved') : ''}</small><span class="grow" />
       <Button icon="assist" variant="quiet" onClick={async () => { if (timer.current) { clearTimeout(timer.current); await keep(); } boxAdd({ kind: 'file', t: 'lesson', owner: l.id, id, label: name || (f && f.name) || '' }); }} data-focus="doc-to-box">{t('les.to_box', { name: assistant().name || t('assistant.generic') })}</Button><Button icon="file" onClick={print} data-focus="doc-print">{t('tool.print')}</Button><Button icon="download" onClick={docx} data-focus="doc-docx">{t('tool.save_docx')}</Button><Button variant="primary" onClick={onClose}>{t('common.close')}</Button></>}>
-    <div class="docwrap">
+    <div class={'docwrap' + (bes ? ' with-beside' : '')}>
+      {/* the Beside drawer, beside the document too (src/planner/materials.js: the side panel from a document) */}
+      {bes && Bs && <Bs.default p={p} l={l} save={save} onClose={() => setBes(false)} />}
       <TextInput label={t('tool.doc_name')} value={name} onInput={rename} data-focus="doc-name" />
       <div class="doctools" role="toolbar" aria-label={t('tool.doc_tools')}>
         {DOC_TOOLS.map(x => x ? <button type="button" class={'btn sm quiet dt-' + x[0]} onMouseDown={e => { e.preventDefault(); tool(x[0]); }} data-dt={x[0]}>{t(x[1])}</button> : <span class="dsep" />)}
-        <span class="grow" /><Mic onText={said} />
+        <span class="grow" /><Mic onText={said} /><IconButton icon="book" size="sm" label={t('plan.beside')} state={bes ? 'on' : undefined} aria-pressed={String(bes)} onClick={() => setBes(!bes)} data-focus="doc-beside" />
       </div>
       <div class="docpage" ref={pg} contentEditable="true" spellcheck={true} role="textbox" aria-multiline="true" aria-label={t('tool.doc_page')} data-raw onInput={changed}
         onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && !e.shiftKey && /^[biu]$/i.test(e.key)) { e.preventDefault(); tool({ b: 'bold', i: 'italic', u: 'underline' }[e.key.toLowerCase()]); } }} data-docpage />
