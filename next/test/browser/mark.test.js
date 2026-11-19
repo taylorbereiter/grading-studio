@@ -658,3 +658,61 @@ test('a tablet (src/touch.js): a finger draws until a pencil is used, then moves
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('saved comments (audit hooks row H): with three already saved, a comment starred in the new app joins them, one removed leaves the rest, and the current app shows the same list', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.evaluate(() => localStorage.setItem('gs.bank', JSON.stringify(['Speak a little slower.', 'Good eye contact.', 'Cite the page.'])));
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(await standardFiles()));
+  await made.evaluate(() => window.__gs.saveNow()); await settle(made);
+  const id = await made.evaluate(() => window.__gs.state().batch.id);
+  await made.close();
+
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await nextReady(p, await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 }).then(() => p.evaluate(() => window.__mark.state().cur)));
+  await p.waitForSelector('[data-repx]', { timeout: 15000 }).then(() => p.click('[data-repx]'), () => {});
+  const chips = () => p.$$eval('.mk-paper .pop .chips .chip [data-raw]', l => l.map(e => e.textContent));
+  const stored = () => p.evaluate(() => JSON.parse(localStorage.getItem('gs.bank')));
+  // a margin comment: her three saved comments are under it before anything is saved
+  await p.keyboard.press('c'); { const q = await nextAt(p, 0, 300, 620); await p.mouse.click(q.x, q.y); }
+  await p.waitForSelector('.mk-paper .pop textarea');
+  assert.deepEqual(await chips(), ['Speak a little slower.', 'Good eye contact.', 'Cite the page.'], 'the saved comments load into the comment box');
+  await p.keyboard.type('Strong opening.');
+  await p.click('.mk-paper .pop [data-a="star"]');
+  await p.waitForFunction(() => document.querySelectorAll('.mk-paper .pop .chips .chip').length === 4);
+  assert.deepEqual(await stored(), ['Strong opening.', 'Speak a little slower.', 'Good eye contact.', 'Cite the page.'], 'starring adds to her list and keeps every other comment');
+  // one removed by its ×: the others stay
+  await p.click('.mk-paper .pop .chips .chip:nth-child(3) [data-x]');
+  await p.waitForFunction(() => document.querySelectorAll('.mk-paper .pop .chips .chip').length === 3);
+  assert.deepEqual(await stored(), ['Strong opening.', 'Speak a little slower.', 'Cite the page.']);
+  // a change made elsewhere (another tab, Settings) shows the next time a comment box opens, and starring keeps it
+  await p.click('.mk-paper .pop [data-a="ok"]');
+  await p.evaluate(() => localStorage.setItem('gs.bank', JSON.stringify(['Strong opening.', 'Speak a little slower.', 'Cite the page.', 'From the other tab.'])));
+  await p.keyboard.press('c'); { const q = await nextAt(p, 0, 300, 700); await p.mouse.click(q.x, q.y); }
+  await p.waitForSelector('.mk-paper .pop textarea');
+  await p.keyboard.type('Check your units.'); await p.click('.mk-paper .pop [data-a="star"]');
+  await p.waitForFunction(() => document.querySelectorAll('.mk-paper .pop .chips .chip').length === 5);
+  const want = ['Check your units.', 'Strong opening.', 'Speak a little slower.', 'Cite the page.', 'From the other tab.'];
+  assert.deepEqual(await stored(), want);
+  await p.click('.mk-paper .pop [data-a="ok"]');
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+
+  // the current app opens the same list under its own comment box
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  await old.evaluate(id => window.__gs.reopenKept(id), id);
+  await old.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id && s.pages.length; }, { timeout: 60000 }, id);
+  await goToStudent(old, 0); await waitPaper(old);
+  await old.evaluate(() => window.__gs.setTool('note'));
+  const r = await old.evaluate(() => { const pg = window.__gs.state().pages[0], b = pg.canvas.getBoundingClientRect(); return { x: b.left + 200 * pg.s, y: b.top + 200 * pg.s }; });
+  await old.mouse.click(r.x, r.y);
+  await old.waitForSelector('.pop .chips .chip');
+  assert.deepEqual(await old.$$eval('.pop .chips .chip > span', l => l.map(e => e.textContent)), want, 'the current app has every comment');
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
