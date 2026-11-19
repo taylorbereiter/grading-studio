@@ -13,7 +13,6 @@
  "tool.no_lesson_found": "里面没有找到课程。",
  "tool.imported": "已导入“{title}”。",
  "tool.imported_n": "已导入 {n} 节课。",
- "tool.zip_in_library": "课程包（.zip）请放到“资料库”的“过去的课程”。",
  "tool.import_title": "导入课程",
  "tool.import_text": "选择课程文件（.gslesson，来自另一台电脑或另一位老师）或助手生成的 .lesson.json，或在下方粘贴课程。课程文件绝不会替换你已有的课程；同一节课的 .lesson.json 会替换它，之前的版本保留在“版本”中。",
  "tool.choose_file": "选择文件",

@@ -67,6 +67,14 @@ export const PARTS = {
   calx: () => import('./plan/card-menu.jsx'),
   // the Planner's commands in the command bar (plan/find.js)
   planFind: () => import('./plan/find.js'),
+  // the Semester view, and the classes coming up without a lesson (plan/semester.jsx)
+  sem: () => import('./plan/semester.jsx'),
+  // lesson packs, and lesson files dropped anywhere (plan/packs.js)
+  packs: () => import('./plan/packs.js'),
+  // the Planner's setup file, and the move to a new school year (plan/setupfile.js)
+  setupFile: () => import('./plan/setupfile.js'),
+  // searching inside lessons, slides, notes, documents and units (plan/search.jsx), Library > Search
+  search: () => import('./plan/search.jsx'),
   unit: () => import('./plan/unit-tools.jsx'),
   marking: () => import('./screens/mark-tools.jsx'),
   // Grades, Insights and Return (the screen part), and what they run: the export engine with pdf-lib and fflate, loaded on their

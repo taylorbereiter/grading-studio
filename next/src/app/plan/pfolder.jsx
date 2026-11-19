@@ -64,6 +64,9 @@ async function permit() {
   try { await lookNow(true); await writePlannerFolderAll(await loadPlan(true)); return true; } catch (e) { console.error(e); saveFailed(e); return false; }
 }
 
+// The command bar's Planner folder command (plan/find.js addFolderCommand).
+export const folderDo = how => (how === 'link' ? link() : how === 'permit' ? permit() : lookNow(false));
+
 // Settings > Working with AI: the Planner folder's card.
 export function FolderCard() {
   const [f, setF] = useState(undefined), [busy, setBusy] = useState(false);

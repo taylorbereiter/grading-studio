@@ -46,7 +46,7 @@ const open = async (p, hash, keys) => {
   await new Promise(r => setTimeout(r, 300));
 };
 const lessonInDb = (p, id) => p.evaluate(id => new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('lessons').objectStore('lessons').get(id); q.onsuccess = () => { r.result.close(); res(q.result || null); }; q.onerror = () => rej(q.error); }; r.onerror = () => rej(r.error); }), id);
-const SCREENS = ['calendar/class', 'calendar/time', 'calendar/month', 'class/c1', 'lesson/L2', 'lesson/L2/slides', 'lesson/L2/edit', 'library', 'library/past', 'library/units', 'library/rubrics'];
+const SCREENS = ['calendar/class', 'calendar/time', 'calendar/month', 'calendar/semester', 'class/c1', 'lesson/L2', 'lesson/L2/slides', 'lesson/L2/edit', 'library', 'library/past', 'library/units', 'library/rubrics'];
 
 test('the planning screens show the made-up week: lessons in their classes, the units, and today', async () => {
   const p = await fresh();
@@ -175,7 +175,7 @@ test('every word on the planning screens comes through t() or is the teacher’s
   const counts = {};
   for (const w of [1366, 390]) {
     const p = await fresh(w);
-    for (const hash of [...SCREENS, 'settings/timetable']) {
+    for (const hash of [...SCREENS, 'settings/timetable', 'library/search/poem']) {
       await open(p, hash, true);
       const loose = await p.evaluate(() => {
         const bad = [], ok = s => !/[A-Za-z]/.test(s.replace(/⟦[^⟧]*⟧/g, ''));

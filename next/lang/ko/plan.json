@@ -309,7 +309,6 @@
  "plan.no_past": "아직 지난 수업이 없어요",
  "plan.no_past_text": "수업 날짜가 지나면 여기에 보여요.",
  "plan.no_units": "아직 단원이 없어요",
- "plan.no_units_text": "단원은 각 학급의 과목 타임라인에서 와요.",
  "plan.unit_dates": {
   "one": "{from}~{to}, {n}주",
   "other": "{from}~{to}, {n}주"
@@ -358,7 +357,6 @@
  "plan.delete_unit_sure": "단원과 그 파일을 삭제할까요?",
  "plan.unit_name": "단원 이름",
  "plan.unit_starts": "시작",
- "plan.unit_starts_hint": "단원은 월요일에 시작해요. 다른 요일을 고르면 그 주의 월요일로 옮겨져요.",
  "plan.unit_weeks": "주 수",
  "plan.week_fewer": "한 주 줄이기",
  "plan.week_more": "한 주 늘리기",

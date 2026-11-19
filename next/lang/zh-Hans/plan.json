@@ -309,7 +309,6 @@
  "plan.no_past": "还没有过去的课",
  "plan.no_past_text": "课的日期过去后就会显示在这里。",
  "plan.no_units": "还没有单元",
- "plan.no_units_text": "单元来自每个班级的课程时间轴。",
  "plan.unit_dates": {
   "one": "{from} 到 {to}，{n} 周",
   "other": "{from} 到 {to}，{n} 周"
@@ -358,7 +357,6 @@
  "plan.delete_unit_sure": "删除它和它的文件吗？",
  "plan.unit_name": "单元名称",
  "plan.unit_starts": "开始",
- "plan.unit_starts_hint": "单元从周一开始；选其他日子会移到那一周的周一。",
  "plan.unit_weeks": "周数",
  "plan.week_fewer": "少一周",
  "plan.week_more": "多一周",

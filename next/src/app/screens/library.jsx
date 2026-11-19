@@ -12,12 +12,13 @@ import { href, go, PARTS as PART } from '../router.js';
 import { usePlan } from '../plan.js';
 import { engine } from '../../planning/engine.js';
 import { saveKv, saveLesson } from '../../planning/write.js';
-import { nameKey } from '../../planning/plan.js';
+import { nameKey, plannerKv } from '../../planning/plan.js';
 import { saveFailed } from '../plan/save.js';
-import { today, at, classOf } from '../plan/lessons.js';
+import { today, at, classOf, mondayOf } from '../plan/lessons.js';
 import { normActivity } from '../../engines/activities.js';
 import { ActList, UseActivity, PARTS, KINDS, PART_LINE, KIND_LINE, mine } from '../plan/acts.jsx';
 import '../plan/lines.js';
+import '../plan/cal-lines.js';
 
 const TABS = ['activities', 'past', 'units', 'rubrics', 'examples'];
 const TAB_LINE = { activities: 'plan.lib_activities', past: 'plan.lib_past', units: 'plan.lib_units', rubrics: 'plan.lib_rubrics', examples: 'plan.lib_examples' };
@@ -73,32 +74,63 @@ function Activities({ p }) {
 function Past({ p }) {
   const [q, setQ] = useState(''), [cls, setCls] = useState('');
   const now = today(), s = q.trim().toLowerCase();
+  // found by its title, its pack's name and its files' names (src/planner/library.js renderLibrary)
+  const hit = l => !s || [l.title, l.library, ...(l.files || []).map(f => f.name)].join(' ').toLowerCase().includes(s);
   const rows = (p.lessons || []).map(l => ({ l, past: (l.slots || []).filter(x => x.date && x.date < now && (!cls || x.classId === cls)) }))
-    .filter(r => r.past.length && (!s || String(r.l.title || '').toLowerCase().includes(s)))
+    .filter(r => r.past.length && hit(r.l))
     .map(r => ({ ...r, last: r.past.map(x => x.date).sort().pop() })).sort((a, b) => b.last.localeCompare(a.last));
+  // lessons from a lesson pack (l.library), by the pack's name: on no class, so shown here and nowhere else
+  const packs = cls ? [] : [...new Set((p.lessons || []).filter(l => l.library).map(l => l.library))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+    .map(g => ({ g, ls: p.lessons.filter(l => l.library === g && !(l.slots || []).some(x => x.date && x.date < now) && hit(l)).sort((a, b) => String(a.title).localeCompare(String(b.title), undefined, { numeric: true })) })).filter(x => x.ls.length);
   const classes = (p.setup && p.setup.classes) || [];
+  const pick = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = '.zip,application/zip'; i.onchange = () => i.files[0] && PART.packs().then(m => m.packImport(p, i.files[0])).catch(saveFailed); i.click(); };
+  const imp = <Button icon="upload" onClick={pick} data-pack-import>{t('cal.import_pack')}</Button>;
+  const card = (l, sub) => <li><div class="lrow"><a class="main link" href={href('lesson', l.id)}><span class="lead"><Icon name="slides" /></span><span><b data-raw>{l.title}</b><small>{sub}</small></span></a>
+    <span class="end mute">{t('plan.n_slides', { n: (l.slides || []).length })}</span></div>
+    {(l.files || []).length > 0 && <div class="lfiles">{l.files.slice(0, 6).map(f => <button type="button" class="chip" onClick={() => openFile(f)} title={t('cal.open_file', { name: f.name })} data-libf={l.id + '|' + f.id}><Icon name="file" size="xs" /><span data-raw>{f.name.replace(/\.[^.]+$/, '')}</span></button>)}
+      {l.files.length > 6 && <span class="mute">{t('cal.n_more', { n: l.files.length - 6 })}</span>}</div>}</li>;
   return <>
     <div class="libtools"><TextInput label={t('plan.find_lesson')} icon="search" type="search" value={q} onInput={setQ} data-focus="find-lesson" />
-      <Select label={t('plan.class')} value={cls} options={[{ value: '', label: t('plan.all_classes') }, ...classes.map(c => ({ value: c.id, label: c.name }))]} onChange={setCls} data-raw /></div>
-    {rows.length ? <ul class="list">{rows.map(({ l, past }) => <li><a class="lrow" href={href('lesson', l.id)}><span class="lead"><Icon name="slides" /></span>
-      <span class="main"><b data-raw>{l.title}</b><small>{t('plan.taught_to', { day: day(past[0].date), classes: [...new Set(past.map(x => (classOf(p, x.classId) || {}).name).filter(Boolean))].join(', ') })}</small></span>
-      <span class="end mute">{t('plan.n_slides', { n: (l.slides || []).length })}</span></a></li>)}</ul>
-      : <EmptyState icon="slides" title={t('plan.no_past')} text={t('plan.no_past_text')} />}
+      <Select label={t('plan.class')} value={cls} options={[{ value: '', label: t('plan.all_classes') }, ...classes.map(c => ({ value: c.id, label: c.name }))]} onChange={setCls} data-raw /><span class="grow" />{imp}</div>
+    {rows.length ? <ul class="list">{rows.map(({ l, past }) => card(l, t('plan.taught_to', { day: day(past[0].date), classes: [...new Set(past.map(x => (classOf(p, x.classId) || {}).name).filter(Boolean))].join(', ') })))}</ul>
+      : !packs.length && <EmptyState icon="slides" title={t('plan.no_past')} text={t('plan.no_past_text') + ' ' + t('cal.past_packs_text')} />}
+    {packs.map(({ g, ls }) => <section class="libsec" data-pack={g}><h2 class="t4"><span data-raw>{g}</span> <span class="mute">{t('cal.n_lessons', { n: ls.length })}</span></h2>
+      <ul class="list">{ls.map(l => card(l, (l.slots || []).length ? (l.slots || []).map(x => ((classOf(p, x.classId) || {}).name || '') + ' ' + day(x.date)).join(', ') : t('cal.from_pack')))}</ul></section>)}
   </>;
+}
+// A lesson's file from a pack: a PDF or picture opens in a new tab, anything else is saved (src/planner/library.js matOpen).
+async function openFile(f) {
+  const b = await plannerKv('file:' + f.id); if (!b) return toast(t('cal.file_missing'));
+  const url = URL.createObjectURL(/pdf/.test(b.type || '') || /\.pdf$/i.test(f.name) ? new Blob([b], { type: 'application/pdf' }) : b);
+  if (/pdf|^image\//.test(b.type || '') || /\.pdf$/i.test(f.name)) window.open(url, '_blank', 'noopener');
+  else { const a = document.createElement('a'); a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); }
+  setTimeout(() => URL.revokeObjectURL(url), 120000);
 }
 
 // ---------- Units ----------
-function Units({ p, classes }) {
-  const E = engine(p), tt = (p.setup && p.setup.classes) || [];
+function Units({ p, classes, sub }) {
+  const E = engine(p), tt = (p.setup && p.setup.classes) || [], [edit, setEdit] = useState(null), [X, setX] = useState(null);
   const courses = [...new Set((p.units || []).filter(u => u && u.course).map(u => u.course))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-  // A course's units open on the Course line of the first class that takes it.
+  const ttCourses = [...new Set(tt.map(c => c.course || c.name).filter(Boolean))];
+  // A unit made or changed here, in the same sheet as on the Course line and the week (app/plan/unit-edit.jsx, through PARTS.calx).
+  const open = u => PART.calx().then(m => { setX(m); setEdit(u); }, e => console.error(e));
+  const newUnit = () => open(E.normUnit({ course: ttCourses[0] || '', start: mondayOf(p, today()), title: t('plan.new_unit'), weeks: Array.from({ length: 6 }, () => ({})) }));
+  const add = ttCourses.length ? <Button icon="plus" onClick={newUnit} data-lib-newunit>{t('plan.new_unit')}</Button> : null;
+  const sheet = edit && X && <X.UnitSheet p={p} unit={edit} courses={[...new Set([...ttCourses, ...courses])]} onClose={() => setEdit(null)} />;
+  // A course's units open on the Course line of the first class that takes it; a unit of a course no class takes opens in the sheet.
   const lineFor = course => { for (const x of classes || []) { if (x.loose) continue; const c = tt.find(k => nameKey(k.name) === nameKey(x.name)); if (c && c.course === course) return { x, c }; } return null; };
-  if (!courses.length) return <EmptyState icon="cal" title={t('plan.no_units')} text={t('plan.no_units_text')} />;
-  return <>{courses.map(course => { const to = lineFor(course), us = p.units.filter(u => u.course === course && u.start).sort((a, b) => a.start.localeCompare(b.start));
+  const toLine = (u, to) => { try { sessionStorage.setItem('gsn.class.unit:' + to.c.id, JSON.stringify(u.id)); } catch {} };
+  // library/units/<unit id> (a unit from the command bar): its Course line, or the sheet
+  // (only once the classes are read: before that no Course line can be found)
+  const did = useRef('');
+  useEffect(() => { const u = sub && (p.units || []).find(x => x.id === sub); if (!u || !classes || did.current === sub) return; did.current = sub; const to = lineFor(u.course); if (to) { toLine(u, to); location.replace(href('class', to.x.id || '-')); } else { open(u); history.replaceState(null, '', href('library', 'units')); } }, [sub, classes]);
+  if (!courses.length) return <><EmptyState icon="cal" title={t('plan.no_units')} text={t('cal.units_text')} action={add} />{sheet}</>;
+  return <>{add && <div class="row libtop"><span class="grow" />{add}</div>}{sheet}{courses.map(course => { const to = lineFor(course), us = p.units.filter(u => u.course === course && u.start).sort((a, b) => a.start.localeCompare(b.start));
     return <section class="libsec"><h2 class="t4" data-raw>{course}</h2>
       <ul class="list">{us.map(u => { const inner = <><span class="main"><b data-raw>{u.title}</b>
         <small>{t('plan.unit_dates', { from: day(u.start), to: day(E.unitEnd(u)), n: (u.weeks || []).length })}</small></span>{to && <span class="end"><Icon name="chr" /></span>}</>;
-        return <li>{to ? <a class="lrow" href={href('class', to.x.id || '-')} onClick={() => { try { sessionStorage.setItem('gsn.class.unit:' + to.c.id, JSON.stringify(u.id)); } catch {} }}>{inner}</a> : <div class="lrow">{inner}</div>}</li>; })}</ul>
+        return <li>{to ? <a class="lrow" href={href('class', to.x.id || '-')} onClick={() => toLine(u, to)} data-lib-unit={u.id}>{inner}</a>
+          : <button type="button" class="lrow" onClick={() => open(u)} data-lib-unit={u.id}>{inner}</button>}</li>; })}</ul>
     </section>; })}</>;
 }
 
@@ -117,15 +149,22 @@ function Examples({ view, more }) {
   return E ? <E.default view={view === 'a' ? 'ex' : view} work={view === 'a' ? more : null} key={more || ''} /> : <div class="loading" aria-busy="true" />;
 }
 
+// Searching inside lessons, slides, notes, documents and units (plan/search.jsx), from the command bar.
+function Find({ p, q }) {
+  const [S, setS] = useState(null);
+  useEffect(() => { PART.search().then(setS); }, []);
+  return S ? <S.Search key={q} p={p} q={q} /> : <div class="loading" aria-busy="true" />;
+}
+
 export default function Library({ route, classes }) {
   const p = usePlan();
-  const tab = TABS.includes(route.params.tab) ? route.params.tab : 'activities';
+  const tab = TABS.includes(route.params.tab) ? route.params.tab : 'activities', find = route.params.tab === 'search';
   return <div class="page library">
     <header class="ph"><div><h1>{t('nav.library')}</h1><p class="mute">{t('plan.lib_about')}</p></div></header>
-    <Tabs label={t('nav.library')} value={tab} onChange={v => go('library', v === 'activities' ? '' : v)} tabs={TABS.map(id => ({ id, label: t(TAB_LINE[id]) }))} />
+    <Tabs label={t('nav.library')} value={find ? '' : tab} onChange={v => go('library', v === 'activities' ? '' : v)} tabs={TABS.map(id => ({ id, label: t(TAB_LINE[id]) }))} />
     <div role="tabpanel" id={'panel-' + tab} aria-labelledby={'tab-' + tab} class="libpanel">
       {!p ? <div class="loading" aria-busy="true" />
-        : tab === 'activities' ? <Activities p={p} /> : tab === 'past' ? <Past p={p} /> : tab === 'units' ? <Units p={p} classes={classes} /> : tab === 'examples' ? <Examples view={route.params.sub} more={route.params.more} /> : <Rubrics p={p} />}
+        : find ? <Find p={p} q={route.params.sub || ''} /> : tab === 'activities' ? <Activities p={p} /> : tab === 'past' ? <Past p={p} /> : tab === 'units' ? <Units p={p} classes={classes} sub={route.params.sub} /> : tab === 'examples' ? <Examples view={route.params.sub} more={route.params.more} /> : <Rubrics p={p} />}
     </div>
   </div>;
 }
