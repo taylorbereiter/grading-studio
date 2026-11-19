@@ -632,3 +632,4 @@ dialog.dlg:has([data-wl-ask]){width:min(760px,calc(100vw - 32px));margin-top:6vh
 .filltab .input{width:100%;min-width:120px}
 .asgweek{min-height:1.5em;margin:4px 0}
 .sp-head .stnav{display:flex;flex-direction:row;flex-shrink:0;gap:4px}.sp-head .sub span{white-space:nowrap}
+.bkhow{margin:12px 0 4px}.bkhow summary{cursor:pointer;color:var(--mute);font-size:var(--t2)}.bkhow p{margin:6px 0 0;max-width:72ch}

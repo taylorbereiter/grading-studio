@@ -6593,5 +6593,13 @@
  "class.fill_bad_email": "這看起來不像電子郵件地址。",
  "class.fill_ids_t": "學生資料：{name}",
  "class.fill_n": "{of} 位中有 {n} 位有學號",
- "class.fill_say": "離開每個欄位時會儲存，按 Tab 進入下一個。"
+ "class.fill_say": "離開每個欄位時會儲存，按 Tab 進入下一個。",
+ "class.mb_this": "此欄的輸入清單",
+ "class.how_title": "計算方式",
+ "class.how_order": "學生依名單順序排列。",
+ "class.how_types_term": "每類的平均對該類每項作業一視同仁；學期成績依你的「學期設定」加權。",
+ "class.how_types": "每類的平均對該類每項作業一視同仁；成績依你的「學期設定」加權。",
+ "class.how_never": "缺交和免交從不對學生不利。把指標移到成績上可看到計算方式。",
+ "class.how_xc": "已計入加分。",
+ "class.how_typed": "你輸入的分數可在這裡修改；已批改下載的分數要在該下載中修改。"
 }

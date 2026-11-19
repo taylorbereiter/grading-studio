@@ -296,3 +296,51 @@ test('B-017 B-018: a name in the charts\' every-student table and in the learnin
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('B-020 B-021 C-002 B-022 B-043: how the grade is worked out, the Entry list from a column, Enter in Out of adds the scores, Use another file in the import; the current app reads the new column', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('table.book[data-term="t1"]', { timeout: 60000 });
+  // B-020: the explanation opens under the table
+  await p.click('[data-book-how] summary');
+  const how = await p.$eval('[data-book-how] p', e => (e.offsetParent ? e.textContent : ''));
+  assert.match(how, /roster order/); assert.match(how, /term grade weights them/); assert.match(how, /never count against/);
+  // B-021, C-002: Entry list for this column opens the list on that task
+  await p.click('th[data-col="i4"] .colbtn');
+  await p.waitForSelector('dialog[open] [data-col-entry]');
+  const popup = new Promise(r => ctx.once('targetcreated', async tg => r(await tg.page())));
+  await p.click('dialog[open] [data-col-entry]');
+  const w = await popup;
+  await w.waitForSelector('[data-mb] [data-mb-task]');
+  assert.equal(await w.$eval('[data-mb-task]', e => e.value), 'i4');
+  assert.equal(await p.$('dialog[open] [data-col-box]'), null, 'the column box closed');
+  await w.close();
+  // B-022: Enter in the Out of box adds the column
+  await p.click('[data-book-add]');
+  await p.waitForSelector('dialog[open] [data-add]');
+  await p.type('dialog[open] input[data-add-name]', 'Enter quiz');
+  const vs = await p.$$('dialog[open] [data-add-v]'); await vs[0].type('9');
+  await p.$eval('dialog[open] [data-add-max]', e => { e.value = ''; e.dispatchEvent(new Event('input', { bubbles: true })); }); await p.type('dialog[open] [data-add-max]', '12'); await p.keyboard.press('Enter');
+  await p.waitForFunction(() => !document.querySelector('dialog[open] [data-add]'));
+  const it = (await libOf(p)).classes[0].units.flatMap(u => u.items).find(i => i.name === 'Enter quiz');
+  assert.ok(it, 'the column was added'); assert.equal(it.typed.max, 12);
+  // B-043: Use another file goes back to choosing a file, and a second paste is read
+  await menu(p, '[data-book-more]', '^Import a gradebook');
+  await p.waitForSelector('dialog[open] [data-bki-paste]');
+  await paste(p, 'dialog[open] [data-bki-paste]', ['Student\tFirst file (10)', 'Testwell, Aria\t8'].join('\n'));
+  await p.waitForSelector('dialog[open] [data-bki-cols]');
+  await p.click('dialog[open] [data-bki-again]');
+  await p.waitForSelector('dialog[open] [data-bki-paste]');
+  await paste(p, 'dialog[open] [data-bki-paste]', ['Student\tSecond file (10)', 'Testwell, Aria\t7'].join('\n'));
+  await p.waitForFunction(() => [...document.querySelectorAll('dialog[open] [data-bki-cols] input')].some(e => e.value === 'Second file'));
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open]'));
+  // the current app reads the column added with Enter
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  const seen = await old.evaluate(async () => { const g = window.__gs, c = g.state().lib.classes[0], cols = g.bkClassCols(c, await g.bkLoad()), col = cols.find(k => k.name === 'Enter quiz'); return col ? [...col.cells.values()].map(k => k.pct) : null; });
+  assert.deepEqual(seen, [75]);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

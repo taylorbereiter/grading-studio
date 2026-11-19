@@ -6564,5 +6564,13 @@
  "class.fill_bad_email": "Das sieht nicht nach einer E-Mail-Adresse aus.",
  "class.fill_ids_t": "Angaben der Klasse {name}",
  "class.fill_n": "{n} von {of} mit Schüler-ID",
- "class.fill_say": "Jedes Feld wird beim Verlassen gespeichert, und die Tabulatortaste geht zum nächsten."
+ "class.fill_say": "Jedes Feld wird beim Verlassen gespeichert, und die Tabulatortaste geht zum nächsten.",
+ "class.mb_this": "Eingabeliste für diese Spalte",
+ "class.how_title": "So wird es berechnet",
+ "class.how_order": "Die Schüler stehen in der Reihenfolge Ihrer Klassenliste.",
+ "class.how_types_term": "Der Durchschnitt jeder Art zählt jede Aufgabe dieser Art gleich; die Zeitraumnote gewichtet sie nach „Zeiträume einrichten“.",
+ "class.how_types": "Der Durchschnitt jeder Art zählt jede Aufgabe dieser Art gleich; die Note gewichtet sie nach „Zeiträume einrichten“.",
+ "class.how_never": "„Fehlt“ und „Entschuldigt“ zählen nie gegen einen Schüler. Zeigen Sie auf eine Note, um zu sehen, wie sie berechnet wird.",
+ "class.how_xc": "Zusatzpunkte sind eingerechnet.",
+ "class.how_typed": "Eingetippte Punkte können Sie hier ändern; die Punkte eines bewerteten Downloads ändern Sie in diesem Download."
 }

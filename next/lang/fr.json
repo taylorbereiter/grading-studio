@@ -6507,5 +6507,13 @@
  "class.fill_bad_email": "Cela ne ressemble pas à une adresse e-mail.",
  "class.fill_ids_t": "Informations des élèves : {name}",
  "class.fill_n": "{n} sur {of} avec un identifiant",
- "class.fill_say": "Chaque case est enregistrée quand vous la quittez, et Tab passe à la suivante."
+ "class.fill_say": "Chaque case est enregistrée quand vous la quittez, et Tab passe à la suivante.",
+ "class.mb_this": "Liste de saisie pour cette colonne",
+ "class.how_title": "Comment c’est calculé",
+ "class.how_order": "Les élèves sont dans l’ordre de votre liste.",
+ "class.how_types_term": "La moyenne de chaque type compte chaque devoir de ce type de la même façon ; la note de la période les pondère selon vos réglages dans Configurer les périodes.",
+ "class.how_types": "La moyenne de chaque type compte chaque devoir de ce type de la même façon ; la note les pondère selon vos réglages dans Configurer les périodes.",
+ "class.how_never": "Non rendu et Dispensé ne comptent jamais contre un élève. Pointez une note pour voir comment elle est calculée.",
+ "class.how_xc": "Les points bonus sont inclus.",
+ "class.how_typed": "Les notes saisies se modifient ici ; celles d’un téléchargement corrigé se modifient dans ce téléchargement."
 }

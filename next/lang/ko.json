@@ -6593,5 +6593,13 @@
  "class.fill_bad_email": "이메일 주소가 아닌 것 같아요.",
  "class.fill_ids_t": "학생 정보: {name}",
  "class.fill_n": "{of}명 중 {n}명 학번 있음",
- "class.fill_say": "칸을 벗어나면 저장되고, Tab으로 다음 칸으로 가요."
+ "class.fill_say": "칸을 벗어나면 저장되고, Tab으로 다음 칸으로 가요.",
+ "class.mb_this": "이 열의 입력 목록",
+ "class.how_title": "계산 방법",
+ "class.how_order": "학생은 명단 순서대로 나옵니다.",
+ "class.how_types_term": "유형별 평균은 그 유형의 과제를 모두 같게 셉니다. 학기 성적은 「학기 설정」의 비율로 가중합니다.",
+ "class.how_types": "유형별 평균은 그 유형의 과제를 모두 같게 셉니다. 성적은 「학기 설정」의 비율로 가중합니다.",
+ "class.how_never": "미제출과 면제는 학생에게 불리하게 세지 않습니다. 성적에 포인터를 올리면 계산 방법이 보입니다.",
+ "class.how_xc": "추가 점수도 포함됩니다.",
+ "class.how_typed": "직접 입력한 점수는 여기서 바꿀 수 있고, 채점한 다운로드의 점수는 그 다운로드에서 바꿉니다."
 }

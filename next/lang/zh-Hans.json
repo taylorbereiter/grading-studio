@@ -6593,5 +6593,13 @@
  "class.fill_bad_email": "这看起来不像邮箱地址。",
  "class.fill_ids_t": "学生信息：{name}",
  "class.fill_n": "{of} 位中有 {n} 位有学号",
- "class.fill_say": "离开每个框时会保存，按 Tab 进入下一个。"
+ "class.fill_say": "离开每个框时会保存，按 Tab 进入下一个。",
+ "class.mb_this": "此列的录入清单",
+ "class.how_title": "计算方法",
+ "class.how_order": "学生按名单顺序排列。",
+ "class.how_types_term": "每类的平均分对该类每项作业一视同仁；学期成绩按你的“学期设置”加权。",
+ "class.how_types": "每类的平均分对该类每项作业一视同仁；成绩按你的“学期设置”加权。",
+ "class.how_never": "缺交和免交从不对学生不利。把指针移到成绩上可看到计算方法。",
+ "class.how_xc": "已计入加分。",
+ "class.how_typed": "你输入的分数可在这里修改；已批改下载的分数要在该下载中修改。"
 }

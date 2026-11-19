@@ -107,6 +107,8 @@ export default function Grades({ classId, sub }) {
       : table && myp ? <MypBook x={x} cols={cols} all={x.cols} term={on} termName={termName} tab={tab} />
       : !table ? <Year x={x} ct={ct} labelOf={labelOf} tab={tab} /> : !cols.length ? <EmptyState icon="grades" title={t('class.nothing_graded', { name: c.name })} text={t('class.nothing_graded_text')} />
       : <Table x={x} cols={cols} show={show} ct={ct} labelOf={labelOf} term={on} tab={tab} only={only} pick={pick} left={left} onLeft={() => redraw(k => k + 1)} onCol={col => setBox({ col })} />}
+    {table && !myp && cols.length > 0 && <details class="bkhow" data-book-how><summary>{t('class.how_title')}</summary>
+      <p class="mute small">{[t('class.how_order'), ct.length ? t(on ? 'class.how_types_term' : 'class.how_types') : '', t('class.how_never'), cols.some(k => k.type === 'xc') ? t('class.how_xc') : '', only ? '' : t('class.how_typed')].filter(Boolean).join(' ')}</p></details>}
     {c.names.length > 0 && <div class="gfoot">{table && !myp && <button type="button" class="gl2" onClick={() => setBox({ charts: true })} data-open-charts><span class="ic"><Icon name="chart" /></span>
       <span><b>{t('class.charts')} <Icon name="chr" size="xs" /></b><p>{t('class.charts_say')}</p></span></button>}
       <button type="button" class="gl2" onClick={() => setBox({ goals: true })} data-open-goals><span class="ic"><Icon name="target" /></span>
@@ -119,7 +121,7 @@ export default function Grades({ classId, sub }) {
     {box && box.reports && Rp && <Rp.ReportsSheet x={x} cols={table ? cols : x.cols} term={on} onClose={() => setBox(null)} />}
     {box && box.sheets && Ps && <Ps.SheetsSheet x={x} term={on} left={left} onClose={() => setBox(null)} />}
     {box && box.charts && <ChartsSheet x={x} cols={cols} all={b.cols} term={on} left={left} labelOf={labelOf} onClose={() => setBox(null)} />}
-    {box && box.col && <ColDialog col={box.col} conf={conf} labelOf={labelOf} onClose={() => setBox(null)} onEditTyped={id => setBox({ add: true, itId: id })} />}
+    {box && box.col && <ColDialog col={box.col} conf={conf} labelOf={labelOf} onClose={() => setBox(null)} onEditTyped={id => setBox({ add: true, itId: id })} onEntry={k => openEntry(x, x.lib, on, k)} />}
     {box && box.types && <TypesDialog cols={untyped} onClose={() => setBox(null)} />}
     {box && box.setup && <SetupSheet conf={conf} book={x.lib.book} onClose={() => setBox(null)} />}
     {box && box.imp && Imp && <Imp x={x} rows={box.rows} onClose={() => setBox(null)} />}

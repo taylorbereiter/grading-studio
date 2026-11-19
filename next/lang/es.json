@@ -6586,5 +6586,13 @@
  "class.fill_bad_email": "Eso no parece una dirección de correo.",
  "class.fill_ids_t": "Datos de los estudiantes: {name}",
  "class.fill_n": "{n} de {of} con ID",
- "class.fill_say": "Cada casilla se guarda al salir de ella, y Tab pasa a la siguiente."
+ "class.fill_say": "Cada casilla se guarda al salir de ella, y Tab pasa a la siguiente.",
+ "class.mb_this": "Lista de entrada para esta columna",
+ "class.how_title": "Cómo se calcula",
+ "class.how_order": "Los estudiantes están en el orden de tu lista.",
+ "class.how_types_term": "El promedio de cada tipo cuenta igual cada tarea de ese tipo; la nota del periodo los pondera según lo que pusiste en Configurar periodos.",
+ "class.how_types": "El promedio de cada tipo cuenta igual cada tarea de ese tipo; la nota los pondera según lo que pusiste en Configurar periodos.",
+ "class.how_never": "No entregado y Justificado nunca cuentan en contra de un estudiante. Pasa el puntero sobre una nota para ver cómo se calcula.",
+ "class.how_xc": "Los puntos extra están incluidos.",
+ "class.how_typed": "Los puntajes que escribiste se pueden cambiar aquí; los de una descarga corregida se cambian en esa descarga."
 }

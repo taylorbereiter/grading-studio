@@ -6565,5 +6565,13 @@
  "class.fill_bad_email": "Isso não parece um endereço de e-mail.",
  "class.fill_ids_t": "Dados dos alunos: {name}",
  "class.fill_n": "{n} de {of} com ID",
- "class.fill_say": "Cada campo é salvo quando você sai dele, e Tab vai para o próximo."
+ "class.fill_say": "Cada campo é salvo quando você sai dele, e Tab vai para o próximo.",
+ "class.mb_this": "Lista de lançamento desta coluna",
+ "class.how_title": "Como isto é calculado",
+ "class.how_order": "Os alunos estão na ordem da sua lista.",
+ "class.how_types_term": "A média de cada tipo conta todas as tarefas desse tipo igualmente; a nota do período as pondera pelo que você definiu em Configurar períodos.",
+ "class.how_types": "A média de cada tipo conta todas as tarefas desse tipo igualmente; a nota as pondera pelo que você definiu em Configurar períodos.",
+ "class.how_never": "Não entregue e Dispensado nunca contam contra um aluno. Aponte para uma nota para ver como ela é calculada.",
+ "class.how_xc": "Os pontos extras estão incluídos.",
+ "class.how_typed": "As notas que você digitou podem ser mudadas aqui; as de um download corrigido mudam nesse download."
 }
