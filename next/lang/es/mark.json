@@ -257,5 +257,12 @@
  "mark.cw_ul_change": "Cambiar el enlace del plan de unidad",
  "mark.cw_ul_change_n": "Cambiar el enlace de {name}",
  "mark.cw_ul_open": "Plan de unidad",
- "mark.cw_ul_open_n": "Abrir en {name}"
+ "mark.cw_ul_open_n": "Abrir en {name}",
+ "mark.cw_typed": "Escritas a mano",
+ "mark.cw_ud_q": "¿Eliminar «{name}»?",
+ "mark.cw_ud_say": {
+  "one": "Su tarea se elimina con ella. Las correcciones guardadas se quedan en este navegador.",
+  "other": "Sus {n} tareas se eliminan con ella. Las correcciones guardadas se quedan en este navegador."
+ },
+ "mark.cw_loose_say": "Tareas sin clase. Arrastra una a una clase de la barra lateral o usa «Mover a…» en su menú ⋯."
 }

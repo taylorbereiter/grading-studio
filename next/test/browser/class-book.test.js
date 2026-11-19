@@ -224,9 +224,12 @@ test('the class link: added from the class header named for her system, opened, 
   await p.evaluate(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); l.me = { ...(l.me || {}), sys: 'Canvas' }; localStorage.setItem('gs.lib', JSON.stringify(l)); });
   const c0 = (await libOf(p)).classes[0];
   await p.goto(srv.url + 'next/#/class/' + c0.id);
-  await p.waitForSelector('[data-clink-add]', { timeout: 60000 });
-  assert.ok((await p.$eval('[data-clink-add]', e => e.textContent)).includes('Canvas'), 'named for her system');
-  await p.click('[data-clink-add]'); await p.waitForSelector('dialog[open] [data-clink-url]');
+  // in the Class setup menu while there is no link, so the header keeps under 25 presses
+  await p.waitForSelector('[data-class-setup]', { timeout: 60000 });
+  await p.click('[data-class-setup]'); await p.waitForSelector('.pop [role^="menuitem"]');
+  const add = await p.evaluateHandle(() => [...document.querySelectorAll('.pop [role^="menuitem"]')].find(b => /Add the .* link/.test(b.textContent)));
+  assert.ok((await add.evaluate(e => e.textContent)).includes('Canvas'), 'named for her system');
+  await add.click(); await p.waitForSelector('dialog[open] [data-clink-url]');
   await p.waitForFunction(() => document.activeElement && document.activeElement.matches('[data-clink-url]'));
   await p.keyboard.type('not a link'); await p.keyboard.press('Enter');
   await new Promise(r => setTimeout(r, 300)); assert.ok(await p.$('dialog[open] [data-clink-url]'), 'a bad link is not kept');
@@ -244,7 +247,7 @@ test('the class link: added from the class header named for her system, opened, 
   await p.click('[data-clink-edit]'); await p.waitForSelector('dialog[open] [data-clink-url]');
   await p.$eval('[data-clink-url]', e => { e.value = ''; e.dispatchEvent(new Event('input', { bubbles: true })); });
   await p.click('[data-clink-save]');
-  await p.waitForSelector('[data-clink-add]', { timeout: 10000 });
+  await p.waitForFunction(() => !document.querySelector('[data-clink-go]'), { timeout: 10000 });
   assert.equal((await libOf(p)).classes[0].mb, undefined);
   assert.deepEqual(await p.evaluate(() => JSON.parse(localStorage.getItem('gs.mblinks'))), {});
   assert.deepEqual(errors, []);
@@ -657,7 +660,9 @@ test('Seating: a room laid out, seated in roster order, a student kept in a seat
   const first = await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('gs.lib')).classes[0].seats; return s.desks['0,0']; });
   assert.equal(first, N[0]);
   // keep the first student in their seat, then shuffle
-  await p.click('[data-desk="0,0"]');
+  // the desk is drawn again after the save; press it once it shows the student, and again if the redraw took the press
+  await p.waitForSelector('[data-desk="0,0"][data-n]');
+  for (let k = 0; k < 4 && !(await p.$('[data-seat-pin]')); k++) { await p.click('[data-desk="0,0"]'); await p.waitForSelector('[data-seat-pin]', { timeout: 3000 }).catch(() => {}); }
   await p.waitForSelector('[data-seat-pin]');
   await p.click('[data-seat-pin]');
   await p.waitForFunction(n => (JSON.parse(localStorage.getItem('gs.lib')).classes[0].seats.pins || []).includes(n), {}, N[0]);

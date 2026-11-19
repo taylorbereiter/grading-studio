@@ -400,6 +400,8 @@ export const useKept = (l, k) => { lib = l; keptMeta = k; };
     'RPT_WORDS', 'RPT_SLOTS', 'RPT_PROS', 'RPT_LEN', 'rptConf', 'rptEntry', 'rptPut', 'rptPro', 'rptFacts', 'rptDraft', 'rptText', 'bkScored', 'bkIn', 'ibLvAt', 'ibPredOf',
     // linked classes (src/linked.js): sections of one course, copies of one assignment, and the cards made twice that look alike
     'lkKey', 'lkSibs', 'lkTwins', 'lkCopy', 'lkJoin1', 'lkLev', 'lkLike', 'lkSuggest',
+    // charts (src/classpage.js): rubric rows across the summatives, for the class and one student
+    'chRowAvgs', 'chSums', 'chRowTop',
   ], `// The class page hands in which class the gradebook is on (src/book.js keeps it in bk.cls); saving is the screen's, through
 // students/write.js: what the lifted code changes is the library it was handed inside saveLibrary.
 export const bkUse = o => Object.assign(bk, o);

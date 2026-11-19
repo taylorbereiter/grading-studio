@@ -258,5 +258,12 @@
  "mark.cw_ul_change": "単元計画のリンクを変更",
  "mark.cw_ul_change_n": "{name}のリンクを変更",
  "mark.cw_ul_open": "単元計画",
- "mark.cw_ul_open_n": "{name} で開く"
+ "mark.cw_ul_open_n": "{name} で開く",
+ "mark.cw_typed": "入力済み",
+ "mark.cw_ud_q": "「{name}」を削除しますか？",
+ "mark.cw_ud_say": {
+  "one": "中の {n} 件の課題も一緒に削除されます。保存した採点はこのブラウザに残ります。",
+  "other": "中の {n} 件の課題も一緒に削除されます。保存した採点はこのブラウザに残ります。"
+ },
+ "mark.cw_loose_say": "クラスのない課題です。サイドバーのクラスにドラッグするか、⋯ メニューの「移動…」を使ってください。"
 }

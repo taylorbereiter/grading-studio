@@ -433,3 +433,24 @@ test('share with your assistant (src/app/claude.js): from Insights, a ZIP of pap
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('B-066: an assignment\'s views each have an address: grades/sheet opens the Grade sheet, insights/consistency opens Consistency, and examples opens Library > Examples for that assignment', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zipOf(await standardFiles()));
+  await m.evaluate(() => window.__gs.saveNow()); await settle(m);
+  const id = await m.evaluate(() => window.__gs.state().batch.id);
+  await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id) + '/grades/sheet');
+  await p.waitForSelector('[data-sheet] .gs-tbl', { timeout: 60000 });
+  await p.goto(srv.url + 'blank'); await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id) + '/insights/consistency');
+  await p.waitForSelector('[data-cons]', { timeout: 60000 });
+  await p.goto(srv.url + 'blank'); await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id) + '/examples');
+  await p.waitForFunction(id => location.hash === '#/library/examples/a/' + encodeURIComponent(id), { timeout: 60000 }, id);
+  await p.waitForSelector('[data-examples]', { timeout: 60000 });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
