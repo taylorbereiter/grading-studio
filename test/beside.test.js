@@ -6,6 +6,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path'), http = require('http');
 const { launch } = require('./helpers/chrome');
 const { openApp, goTo, builtHtml } = require('./helpers/app');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 const ROOT = path.join(__dirname, '..');
 
 function serveBoth() {
@@ -14,7 +15,7 @@ function serveBoth() {
     const p = req.url.split('?')[0], file = p === '/' || p === '/index.html' ? 'index.html' : p === '/planner.html' ? 'planner.html' : null;
     if (!file) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
-    res.end(fs.readFileSync(path.join(ROOT, file), 'utf8'));
+    res.end(fs.readFileSync(path.join(BASE, file), 'utf8'));
   });
   return new Promise(r => srv.listen(0, '127.0.0.1', () => { srv.unref(); r({ url: 'http://localhost:' + srv.address().port + '/', close: () => new Promise(d => { srv.closeAllConnections(); srv.close(d); }) }); }));
 }

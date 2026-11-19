@@ -2,12 +2,15 @@
 //   node test/tools/run.js                 every file in test/
 //   node test/tools/run.js marking shell   only the files whose names contain one of these words
 //   JOBS=1 node test/tools/run.js          one file at a time (the default is one fewer than the processors, up to 4)
+//   node test/tools/run.js --base classic  the current app's pages from that folder (classic/, the default since the switch)
 // Each file gets its own Chrome with a throwaway profile, so files can't disturb each other. A file that fails while
 // others were running is run once more on its own: if it passes then, it is listed under "passed on a second try"
 // so a test that depends on timing is seen, and the run still counts as failed if it fails alone.
 const fs = require('fs'), os = require('os'), path = require('path'), { spawn } = require('child_process');
 const ROOT = path.join(__dirname, '..', '..'), DIR = path.join(ROOT, 'test');
-const words = process.argv.slice(2).filter((a, i, l) => !a.startsWith('-') && l[i - 1] !== '--part');
+// --base <folder>: where the current app's built pages are (classic/ since the switch, test/helpers/base.js).
+{ const i = process.argv.indexOf('--base'); if (i > 0 && process.argv[i + 1]) process.env.GS_BASE = process.argv[i + 1]; }
+const words = process.argv.slice(2).filter((a, i, l) => !a.startsWith('-') && l[i - 1] !== '--part' && l[i - 1] !== '--base');
 // --part 2/3 runs every third file, starting with the second: for sharing the files between computers that run at once.
 const part = (process.argv.find((a, i) => process.argv[i - 1] === '--part') || '1/1').split('/').map(Number);
 const all = fs.readdirSync(DIR).filter(f => f.endsWith('.test.js')).sort();

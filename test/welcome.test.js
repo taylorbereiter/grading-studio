@@ -8,6 +8,7 @@ const { launch } = require('./helpers/chrome');
 const { serve } = require('./helpers/serve');
 const { ROOT, USED_BEFORE, builtHtml, openApp, goTo, openZip, waitPaper, appReady, answerDlg, settle } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 
 let browser;
 before(async () => { builtHtml(); browser = await launch(); });
@@ -230,7 +231,7 @@ test('work from before the welcome, brought into a browser that was only just se
 });
 
 test('the Planner for a new teacher: classes typed in, no setup file, plain words, and a lesson that downloads as PowerPoint', async () => {
-  const server = await serve(() => fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8'));
+  const server = await serve(() => fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8'));
   const ctx = await browser.createBrowserContext(), page = await ctx.newPage(), errors = [];
   page.on('pageerror', e => errors.push(e.message));
   try {
@@ -262,7 +263,7 @@ test('the Planner for a new teacher: classes typed in, no setup file, plain word
 });
 
 test('the Planner uses the names grading was given, and a setup file from before still loads with its own', async () => {
-  const server = await serve(() => fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8'));
+  const server = await serve(() => fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8'));
   const ctx = await browser.createBrowserContext(), page = await ctx.newPage();
   try {
     await page.goto(server.url + 'blank').catch(() => {});

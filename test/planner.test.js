@@ -5,8 +5,9 @@ const assert = require('node:assert');
 const fs = require('fs'), path = require('path');
 const { serve } = require('./helpers/serve');
 const { launch } = require('./helpers/chrome');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 const ROOT = path.join(__dirname, '..');
-const PAGE = () => fs.readFileSync(path.join(ROOT, 'planner.html'), 'utf8');
+const PAGE = () => fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8');
 
 const SETUP = {
   kind: 'grading-studio-lessons-setup', version: 1, semStart: '2026-08-31', semEnd: '2027-01-18',
@@ -35,7 +36,7 @@ test('the Planner page carries none of the grading code', () => {
     if (s === 'gs-folder.json') continue;   // named once, only to refuse the grading folder
     assert.ok(!html.includes(s), 'planner.html should not contain ' + s);
   }
-  assert.ok(!fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').includes('function renderSemester'), 'grading page should not carry the Planner');
+  assert.ok(!fs.readFileSync(path.join(BASE, 'index.html'), 'utf8').includes('function renderSemester'), 'grading page should not carry the Planner');
   for (const f of fs.readdirSync(path.join(ROOT, 'src', 'planner')).filter(f => f.endsWith('.js'))) {
     const src = fs.readFileSync(path.join(ROOT, 'src', 'planner', f), 'utf8');
     assert.ok(!/indexedDB\.open\(\s*'(?!gs-lessons)/.test(src), f + ' opens only the Planner database');

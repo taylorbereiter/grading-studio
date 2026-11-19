@@ -8,6 +8,7 @@ const { launch } = require('./helpers/chrome');
 const { serve } = require('./helpers/serve');
 const { openApp, openZip, score, settle, goTo } = require('./helpers/app');
 const { makePaper, zipOf } = require('./helpers/fixtures');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 
 const wait = ms => new Promise(r => setTimeout(r, ms));
 // Asked from here, not waited for inside the page: a page going in or out of full screen can leave an in-page wait hanging.
@@ -89,7 +90,7 @@ test('on other screens the sidebar button and Find anything do it, the sidebar f
 });
 
 test('the Planner goes full screen too, and Present on top of it comes back to it', async () => {
-  const server = await serve(() => fs.readFileSync(path.join(__dirname, '..', 'planner.html'), 'utf8'));
+  const server = await serve(() => fs.readFileSync(path.join(BASE, 'planner.html'), 'utf8'));
   const page = await (await browser.createBrowserContext()).newPage();
   const errors = []; page.on('pageerror', e => errors.push(e.message));
   try {

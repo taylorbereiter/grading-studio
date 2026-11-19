@@ -10,6 +10,7 @@ const { standardFiles, zipOf } = require('./helpers/fixtures');
 const { gradingSeed } = require('./helpers/steady');
 const { ibSeed } = require('./helpers/ibseed');
 const { langFile } = require('./helpers/serve');
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 
 let browser, zip;
 before(async () => { browser = await launch(); zip = zipOf(await standardFiles()); });
@@ -31,7 +32,7 @@ function serveBoth() {
     if (langFile(res, p)) return;
     if (!file && p !== '/blank') { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
-    res.end(file ? fs.readFileSync(path.join(ROOT, file), 'utf8') : '<!doctype html><title>blank</title>');
+    res.end(file ? fs.readFileSync(path.join(BASE, file), 'utf8') : '<!doctype html><title>blank</title>');
   });
   return new Promise(r => srv.listen(0, '127.0.0.1', () => { srv.unref(); r({ url: 'http://localhost:' + srv.address().port + '/', close: () => new Promise(d => { srv.closeAllConnections(); srv.close(d); }) }); }));
 }
@@ -680,7 +681,7 @@ function serveCounting(html, { noLangs } = {}) {
 test('the page at the web address carries no language: English asks for none, and Spanish fetches its one file', async () => {
   const html = builtHtml();
   assert.match(html, /const LANG_PACKED = \{\};/, 'no language is inside the page');
-  for (const f of fs.readdirSync(path.join(ROOT, 'lang'))) assert.ok(fs.statSync(path.join(ROOT, 'lang', f)).size < 250e3, f + ' is a small file');
+  for (const f of fs.readdirSync(path.join(BASE, 'lang'))) assert.ok(fs.statSync(path.join(BASE, 'lang', f)).size < 250e3, f + ' is a small file');
   let srv = await serveCounting(html), o = await openApp(browser, { server: srv, seed: gradingSeed() });
   assert.equal(await o.page.evaluate(() => window.__gsLang.lang), 'en');
   assert.deepEqual(srv.asked.filter(p => p.startsWith('/lang/')), [], 'in English nothing is fetched');
@@ -702,7 +703,7 @@ test('a language that can’t be fetched leaves the app in English for that visi
   await close(); await srv.close();
 });
 test('the double-click copy has every language inside and fetches nothing', async () => {
-  const one = fs.readFileSync(path.join(ROOT, 'Grading Studio.html'), 'utf8');
+  const one = fs.readFileSync(path.join(BASE, 'Grading Studio.html'), 'utf8');
   assert.ok(!/gsL=JSON\.parse/.test(one), 'it has no fetching step');
   const srv = await serveCounting(one, { noLangs: true }), { page, close } = await openApp(browser, { server: srv, seed: { ...gradingSeed(), ls: { ...gradingSeed().ls, 'gs.lang': '"ja"' } } });
   await page.waitForFunction(() => document.querySelector('#rail [data-nav="home"]').textContent.trim() === '今日');

@@ -3,7 +3,7 @@ const http = require('http'), fs = require('fs'), path = require('path');
 // Answers a request for a file the build writes beside the page (a language, lang/<code>.js, or the sample's builder, sample.js) and says whether it did. For a test's own server too.
 function langFile(res, p) {
   if (!/^\/(lang\/[A-Za-z-]+|sample)\.js$/.test(p)) return false;
-  const f = path.join(__dirname, '..', '..', p); if (!fs.existsSync(f)) return false;
+  const f = path.join(require('./base'), p); if (!fs.existsSync(f)) return false;   // beside the current app's pages, in classic/
   res.writeHead(200, { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(fs.readFileSync(f)); return true;
 }
 function serve(html, port = 0, { keepAlive } = {}) {

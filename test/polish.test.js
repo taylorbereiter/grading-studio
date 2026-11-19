@@ -7,6 +7,7 @@ const { classPage, ROOT, builtHtml, openApp, answerDlg, appReady, openZip, pickF
 const { makePaper, standardFiles, zipOf } = require('./helpers/fixtures');
 const { contrastFails, contrastSeen } = require('./helpers/contrast');
 const APP_PARTS = require('../src/app/order.json').map(n => 'app/' + n);   // the app's own source, in the order it is built
+const BASE = require('./helpers/base');   // the current app's pages: classic/ since the switch
 
 let browser, zip;
 before(async () => { browser = await launch(); zip = zipOf(await standardFiles()); });
@@ -513,7 +514,7 @@ test('Inter is built in, and opening the app contacts nobody', async () => {
 test('the built file stays a sensible size with the font in it', () => {
   // The page at the web address, which is what a teacher's browser fetches. It carries no languages: each is its own file in lang/,
   // fetched only when chosen. The double-click copy is the same page with every language inside, and nothing else may make it bigger.
-  const size = fs.statSync(path.join(ROOT, 'index.html')).size, one = fs.statSync(path.join(ROOT, 'Grading Studio.html')).size, langs = fs.readdirSync(path.join(ROOT, 'lang')).length;
+  const size = fs.statSync(path.join(BASE, 'index.html')).size, one = fs.statSync(path.join(BASE, 'Grading Studio.html')).size, langs = fs.readdirSync(path.join(BASE, 'lang')).length;
   // A language grows as more screens are put into it: about 46 KB packed with Settings and a class page, and the gradebook, the other
   // class tabs and the marking screen are still to come. 100 KB each (90 until 1.28.15, when the marking screen's lines filled it) leaves
   // room for those and still catches anything else getting in.
