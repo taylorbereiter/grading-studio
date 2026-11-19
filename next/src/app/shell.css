@@ -66,6 +66,7 @@ section.now{padding:22px 22px 0;border-radius:16px;box-shadow:var(--sh-r2);backg
 .now .day{list-style:none;display:flex;gap:3px;margin:22px -22px 0;padding:14px 22px 16px;border-top:1px solid var(--line);background:var(--s2)}
 .now .day li{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
 .now .day .p{height:30px;border-radius:6px;background:var(--s);box-shadow:0 0 0 1px var(--line-2);display:flex;align-items:center;gap:6px;padding:0 9px;font-size:var(--t1);color:var(--ink2);font-weight:500;white-space:nowrap;overflow:hidden}
+.now .day a.p{text-decoration:none}.now .day a.p:hover{background:var(--g100)}
 .now .day li.on .p{box-shadow:0 0 0 2px var(--acc)}
 .now .day li.past{opacity:.55}
 .now .day .tm{font-size:var(--t1);color:var(--mute)}
@@ -95,6 +96,13 @@ section.now .empty{padding-bottom:22px}
 .hl .tx small{display:block;color:var(--mute);font-size:var(--t1)}
 .hl .go{color:var(--g600);display:grid;place-items:center;width:28px;height:28px;border-radius:var(--r1)}
 .hl .go:hover{background:var(--g100)}
+/* the whole row opens it (src/shell.js needs rows); its menu stays its own button */
+.hl:has(>.go){position:relative;cursor:pointer}.hl:has(>.go):hover{background:var(--g100)}
+.hl>.go::after{content:'';position:absolute;inset:0}
+.hl:has(>.go) [data-hmenu]{position:relative;z-index:1}
+.hcount{font-size:var(--t1);padding:1px 8px;border-radius:var(--rf);background:var(--warn-soft);color:var(--warn)}
+.home > section[data-home="earlier"]{margin-top:24px}
+.homegrid section[data-home="look"]{margin-top:20px}
 
 /* Settings */
 .setg{display:grid;grid-template-columns:220px minmax(0,1fr);gap:32px;align-items:start}
@@ -135,3 +143,24 @@ section.now .empty{padding-bottom:22px}
 .prf-t{font-size:18px;font-variant-numeric:tabular-nums}.prf-t small{margin-left:6px;font-size:12px;opacity:.8}
 .prf.done{background:var(--warn);color:#fff}.prf.paused{opacity:.8}
 @media (max-width:700px){.prf{bottom:84px}}
+.hcol{display:flex;flex-direction:column;gap:20px;min-width:0}
+.htodo ul{list-style:none;margin:0;padding:0}
+.htodo .tick{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--line-2);display:grid;place-items:center;color:var(--s);flex:none}
+.htodo .tick[aria-checked="true"]{background:var(--ok);box-shadow:none}
+.htodo .hl.done .tx b{text-decoration:line-through;color:var(--mute)}
+.htodo .none{margin:0;padding:12px 16px}
+.htodo .tdadd{display:flex;align-items:center;gap:10px;padding:8px 16px;border-top:1px solid var(--line);color:var(--g600)}
+.htodo .tdadd input{flex:1;min-width:0;border:0;background:transparent;font:inherit;color:var(--ink);padding:6px 0;outline:none}
+.htodo .tdfoot{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-top:1px solid var(--line);font-size:var(--t2);color:var(--mute)}
+.hnext .big{margin:0 0 14px;font-size:var(--t3);font-weight:500;line-height:1.4}
+.hnext .bars{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;margin-bottom:12px;font-size:var(--t2)}
+.hnext .bt{height:8px;border-radius:var(--rf);background:var(--g100);overflow:hidden}
+.hnext .bt i{display:block;height:100%;background:var(--acc)}
+.hnext .bt i.low{background:var(--warn)}
+.hnext .bv{color:var(--mute)}
+.hnext p.mute{margin:0 0 10px}
+.hnext .link{display:inline-flex;align-items:center;gap:4px;color:var(--acc-ink);text-decoration:none;font-size:var(--t2)}
+.now .day .tatt{font-size:var(--t1);color:var(--acc-ink);text-decoration:none}
+.now .day .tatt.done{color:var(--mute)}
+.sampletry a{color:var(--acc);text-decoration:underline;text-underline-offset:2px}.strip.sample>span{flex:1;min-width:0}
+.hfoot{margin-top:24px;font-size:var(--t1)}

@@ -23,7 +23,7 @@ import { runner, openFocus } from './focus/bus.js';
 import { usePlan } from './plan.js';
 import { classTone } from './colors.js';
 import { onSaved } from '../shared/saved.js';
-import { sampleOn, leaveSample } from './sample.js';
+import { sampleOn } from './sample.js';
 import { useUpdate } from './update.js';
 import { useSaving } from '../services/saving.js';
 import { troubles, onTrouble } from './saving/trouble.js';
@@ -123,7 +123,7 @@ function useLookValue() {
 // The update line at the foot of the sidebar, above a phone's tabs (src/phone.js phUpd), and on More on a phone.
 export function UpdateLine({ big }) {
   const u = useUpdate();
-  if (u.stale) return big ? <p class="mute upd-none">{t('update.stale')}</p> : null; // the strip over the page says it (StaleStrip)
+  // another window updated: the strip over the page says so (StaleStrip), and this says the version still in use
   if (!u.waiting) return big ? <p class="mute upd-none">{u.current ? t('update.current', { v: u.current }) : t('update.not_kept')}</p> : null;
   return <div class={'upd' + (big ? ' big' : '')} role="status"><Icon name="download" /><span>{t('update.ready')}</span>
     <button type="button" class="btn sm pri" onClick={u.apply} data-focus="update-now">{t('update.now')}</button></div>;
@@ -162,10 +162,11 @@ function SaveBar() {
   useEffect(() => onTrouble(() => { const k = troubles().length; set(k); if (k) router.PARTS.savebar().then(setB, e => console.error(e)); }), []);
   return n && B ? <B.SaveBar /> : null;
 }
+// The sample strip (app/help/sample-strip.jsx: what it is, what to try, and the way out), loaded only while the sample is open.
 function SampleStrip() {
-  if (!sampleOn()) return null;
-  return <div class="strip sample" role="note"><span><b>{t('sample.title')}</b> {t('sample.text')}</span>
-    <button type="button" class="btn sm" onClick={leaveSample}>{t('sample.leave')}</button></div>;
+  const [S, setS] = useState(null);   // the sample opens and closes with a reload (sample.js), so once is enough
+  useEffect(() => { if (sampleOn()) import('./help/sample-strip.jsx').then(setS, e => console.error(e)); }, []);
+  return S && <S.SampleStrip />;
 }
 
 // The screen for a route: its chunk, loaded once. Until it arrives the old screen stays, so nothing flashes.
@@ -208,13 +209,11 @@ export function Shell() {
       register({ id: 'keys', keys: '?', label: 'keys.show_list', run: () => router.go('help', 'keys') }),
       ...[['home', 'nav.home', 'home'], ['calendar', 'nav.calendar', 'cal'], ['todo', 'nav.todo', 'todo'], ['library', 'nav.library', 'library'], ['school', 'nav.school', 'school'], ['settings', 'nav.settings', 'settings'], ['help', 'nav.help', 'help']]
         .map(([id, line, icon]) => addCommand({ id: 'go-' + id, label: () => t(line), group: t('cmd.group_go'), icon, run: () => router.go(id) })),
-      addCommand({ id: 'go-time', label: () => t('nav.time'), group: t('cmd.group_go'), icon: 'clock', run: () => router.go('time') }),
       addCommand({ id: 'focus', label: () => t('nav.focus'), group: t('cmd.group_do'), icon: 'timer', run: openFocus }),
       (loadWhenOpened(() => import('./help/find.js').then(m => addLines.ready().then(() => m.addHelpCommands(shortcuts)), e => console.error(e))), () => {}),
       (loadWhenOpened(() => router.PARTS.planFind().then(m => addLines.ready().then(() => m.addPlanCommands()), e => console.error(e))), () => {}),
       (loadWhenOpened(() => router.PARTS.planFind().then(m => addLines.ready().then(() => m.addUnitCommands()), e => console.error(e)), true), () => {}),
       (loadWhenOpened(() => router.PARTS.planFind().then(m => addLines.ready().then(() => m.addFolderCommand()), e => console.error(e)), true), () => {}),
-      addCommand({ id: 'go-keys', label: () => t('keys.title'), group: t('cmd.group_go'), icon: 'keyboard', run: () => router.go('help', 'keys') }),
       // Dark mode / Light mode flips between Midnight and the light theme she had (src/planner/rail.js); Change theme picks any
       addCommand({ id: 'dark', label: () => t(currentLook() === 'midnight' ? 'cmd.light_mode' : 'cmd.dark_mode'), group: t('cmd.group_do'), icon: 'moon', run: () => { const was = currentLook(); if (was !== 'midnight') lightWas = was; pickLook(was === 'midnight' ? lightWas : 'midnight'); } }),
       addCommand({ id: 'theme', label: () => t('cmd.change_theme'), group: t('cmd.group_do'), icon: 'sun', run: () => router.go('settings', 'display') }),
@@ -228,29 +227,8 @@ export function Shell() {
     return () => { offs.forEach(f => f()); clearTimeout(fc); };
   }, []);
   // Planning destinations, and every lesson by its title (with its class and day), so typing finds a lesson (the Planner's Search).
-  const plan = usePlan();
-  useEffect(() => {
-    const go = (...a) => () => router.go(...a);
-    const offs = [
-      addCommand({ id: 'go-cal-class', label: () => t('plan.by_class'), also: t('nav.calendar'), group: t('nav.calendar'), icon: 'cal', run: go('calendar', 'class') }),
-      addCommand({ id: 'go-cal-time', label: () => t('plan.by_time'), also: t('nav.calendar'), group: t('nav.calendar'), icon: 'week', run: go('calendar', 'time') }),
-      addCommand({ id: 'go-cal-month', label: () => t('plan.month'), also: t('nav.calendar'), group: t('nav.calendar'), icon: 'cal', run: go('calendar', 'month') }),
-      addCommand({ id: 'go-timetable', label: () => t('settings.timetable'), also: t('nav.settings'), group: t('cmd.group_go'), icon: 'cal', run: go('settings', 'timetable') }),
-      ...[['activities', 'plan.lib_activities', 'spark', ''], ['past', 'plan.lib_past', 'slides', 'past'], ['units', 'plan.lib_units', 'cal', 'units'], ['rubrics', 'plan.lib_rubrics', 'grades', 'rubrics']]
-        .map(([id, line, icon, tab]) => addCommand({ id: 'go-lib-' + id, label: () => t(line), also: t('nav.library'), group: t('nav.library'), icon, run: go('library', tab) })),
-    ];
-    const cls = id => (((plan && plan.setup && plan.setup.classes) || []).find(c => c.id === id) || {}).name || '';
-    for (const l of (plan && plan.lessons) || []) {
-      const s = [...(l.slots || [])].sort((a, b) => b.date.localeCompare(a.date))[0];
-      offs.push(addCommand({ id: 'lesson-' + l.id, label: l.title || t('plan.untitled'), also: (s ? cls(s.classId) + ' ' + s.date : '') + ' ' + t('plan.lessons'), group: t('plan.lessons'), icon: 'slides', run: go('lesson', l.id) }));
-    }
-    return () => offs.forEach(f => f());
-  }, [plan]);
-  // The classes as commands, so typing a class's name opens it.
-  useEffect(() => {
-    const offs = (classes || []).map(c => addCommand({ id: 'class-' + (c.id || '-'), label: c.loose ? t('nav.no_class') : c.name, also: t('nav.classes'), group: t('nav.classes'), icon: 'people', run: () => router.go('class', c.id || '-') }));
-    return () => offs.forEach(f => f());
-  }, [classes]);
+  // the screens, the calendar's views, Library's tabs, every lesson and every class are Find's own rows (help/find.js), read each
+  // time the bar opens
   return <div class={'shell' + (folded ? ' folded' : '') + (route.chunk === 'mark' ? ' marking' : '')} data-lock={lock}>
     <a class="skip" href="#main" onClick={e => { e.preventDefault(); const hd = main.current && main.current.querySelector('h1'); if (hd) { hd.setAttribute('tabindex', '-1'); hd.focus(); } }}>{t('nav.skip')}</a>
     <Sidebar route={route} classes={classes} folded={folded} onFold={fold} />

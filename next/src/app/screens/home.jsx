@@ -3,7 +3,7 @@
 // saved-work proof holds the two to the same counts.
 import { h, Fragment } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { toast, Button, Card, ClassDot, Icon, EmptyState, Progress } from '../../ui/index.js';
+import { toast, Button, Card, ClassDot, Icon, IconButton, Menu, EmptyState, Progress } from '../../ui/index.js';
 import { t, date, num } from '../../i18n/t.js';
 import { href } from '../router.js';
 import { countsForHome, focusForHome } from '../../crossings.js';
@@ -16,7 +16,7 @@ import './home-lines.js';
 import '../plan/lines.js';
 import '../saving/lines.js';
 import { useSaving } from '../../services/saving.js';
-import { sampleOn } from '../sample.js';
+import { sampleOn, enterSample } from '../sample.js';
 
 const hm = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : null; };
 const clock = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? date(new Date(2000, 0, 1, +m[1], +m[2]), { hour: 'numeric', minute: '2-digit' }) : ''; };
@@ -34,11 +34,18 @@ function useHome() {
     const vis = () => { if (!document.hidden) read(); };
     document.addEventListener('visibilitychange', vis); window.addEventListener('storage', read);
     const iv = setInterval(() => setTick(Date.now()), 30000);
+    useHome.read = read;
     return () => { live = false; document.removeEventListener('visibilitychange', vis); window.removeEventListener('storage', read); clearInterval(iv); };
   }, []);
   return [v, tick];
 }
 
+// Take attendance, or what was taken today (src/attend.js attTodayLine)
+function attLine(a) {
+  if (!a.taken) return t('home.att_take');
+  const say = [a.l ? t('home.att_l', { n: a.l }) : '', a.a ? t('home.att_a', { n: a.a }) : '', a.e ? t('home.att_e', { n: a.e }) : ''].filter(Boolean).join(' · ');
+  return t('home.att_done', { say: say || t('home.att_all') });
+}
 function NowCard({ teach, now, plan }) {
   if (!teach) return <Card class="card pad now"><EmptyState icon="cal" title={t('home.no_timetable')} text={t('home.no_timetable_text')} /></Card>;
   if (teach.off || !teach.rows.length) return <Card class="card pad now"><EmptyState icon="sun" title={t('home.no_classes_today')} text={typeof teach.off === 'string' ? raw(teach.off) : null} /></Card>;
@@ -52,11 +59,17 @@ function NowCard({ teach, now, plan }) {
       {cur.lesson && <div class="meta">{(cur.lesson.ready || cur.lesson.done) && <span class="ok"><Icon name="check" size="xs" />{t('home.ready')}</span>}
         {cur.lesson.n > 0 && <span><Icon name="slides" size="xs" />{t('home.slides', { n: cur.lesson.n })}</span>}</div>}
       {cur.lesson && (l => l && l.slides && l.slides[0] ? <a class="first" href={href('lesson', l.id)} aria-label={t('home.open_lesson')}><Slide slide={l.slides[0]} lesson={l} plan={plan} width={240} /></a> : null)(plan && plan.lessons.find(x => x.id === cur.lesson.id))}
-      <div class="acts">{cur.lesson ? <><a class="btn pri lg" href={href('lesson', cur.lesson.id)}><Icon name="play" />{t('home.present')}</a><a class="btn lg" href={href('lesson', cur.lesson.id)}>{t('home.open_lesson')}</a></>
+      <div class="acts">{cur.lesson ? <>{cur.lesson.show && <a class="btn pri lg" href={href('lesson', cur.lesson.id, 'present', cur.classId)} data-now-present><Icon name="play" />{t('home.present')}</a>}<a class={'btn lg' + (cur.lesson.show ? '' : ' pri')} href={href('lesson', cur.lesson.id)}>{t('home.open_lesson')}</a></>
         : <a class="btn pri lg" href={href('class', cur.classId)}>{t('home.plan_it')}</a>}</div>
     </div> : <p class="mute nowdone">{t('home.day_over')}</p>}
-    <ol class="day" aria-label={t('home.today_classes')}>{teach.rows.map(r => <li class={r.now ? 'on' : hm(r.end) <= mins ? 'past' : ''} style={{ '--cc': toneOf(r.color) }}>
-      <span class="p"><ClassDot color={toneOf(r.color)} />{raw(r.name)}</span><span class="tm" data-raw>{clock(r.start)}</span></li>)}</ol>
+    <ol class="day" aria-label={t('home.today_classes')}>{teach.rows.map(r => { const l = r.lesson, what = l ? (l.show ? t('home.present') : t('home.open_lesson')) : t('home.plan_it');
+      // each class goes where the current app's Teaching today row goes: presenting, its lesson, or planning it (src/today.js todayHtml)
+      const to = l ? (l.show ? href('lesson', l.id, 'present', r.classId) : href('lesson', l.id)) : href('class', r.classId);
+      const note = l && l.got ? (l.got.slide >= l.got.of ? t('home.taught') : t('home.taught_to', { n: l.got.slide, of: l.got.of })) : '';
+      return <li class={r.now ? 'on' : hm(r.end) <= mins ? 'past' : ''} style={{ '--cc': toneOf(r.color) }}>
+        <a class="p" href={to} title={what} aria-label={t('home.row_go', { cls: r.name, what })} data-teach={r.classId}><ClassDot color={toneOf(r.color)} />{raw(r.name)}</a>
+        <span class="tm"><span data-raw>{clock(r.start)}</span>{note && <span data-taught> · {note}</span>}</span>
+        {r.att && <a class={'tatt' + (r.att.taken ? ' done' : '')} href={href('class', r.att.classId, 'people', 'attendance')} data-tatt={r.att.classId}>{attLine(r.att)}</a>}</li>; })}</ol>
   </section>;
 }
 
@@ -81,10 +94,14 @@ function WeekLook() {
 // First thing on Home while no folder or Drive keeps a second copy (src/safe.js safeAskRender): choose a folder, or where a browser
 // can't, make a take-home file. "Not now" puts it away for a week, in this browser only (gsc.folderLater).
 const WEEK = 7 * 864e5;
-function FolderAsk({ work }) {
-  const S = useSaving(), [, bump] = useState(0), f = S && S.folder ? S.folder() : null, g = S ? S.google() : {};
+function askShows(S, work) {
+  const f = S && S.folder ? S.folder() : null, g = S ? S.google() : {};
   let later = 0; try { later = +localStorage.getItem('gsc.folderLater') || 0; } catch { }
-  if (!f || sampleOn() || matchMedia('(max-width:640px)').matches || f.state !== 'none' || !f.booted || g.email || Date.now() - later < WEEK || !(f.canPick || work)) return null;
+  return !(!f || sampleOn() || matchMedia('(max-width:640px)').matches || f.state !== 'none' || !f.booted || g.email || Date.now() - later < WEEK || !(f.canPick || work));
+}
+function FolderAsk({ work }) {
+  const S = useSaving(), [, bump] = useState(0), f = S && S.folder ? S.folder() : null;
+  if (!askShows(S, work)) return null;
   const pick = async () => { try { const st = await S.folderPick(); if (st === 'ok' || st === 'decide') toast(t('saving.f_done', { name: S.folder().name })); } catch (e) { if (!e || e.name !== 'AbortError') { console.error(e); toast(t('saving.f_bad')); } } bump(n => n + 1); };
   const away = () => { try { localStorage.setItem('gsc.folderLater', String(Date.now())); } catch { } toast(t('saving.ask_later_done')); bump(n => n + 1); };
   return <section class="card pad fask" data-home="folder"><Icon name="cloud" /><div>
@@ -101,11 +118,56 @@ function pickUp(plan, now) {
   const c = slot && ((plan.setup && plan.setup.classes) || []).find(x => x.id === slot.classId);
   return { l, sub: slot ? [c ? raw(c.name) : null, slot.date === today ? t('plan.today') : dayOf(slot.date)] : [t('plan.off_timetable')] };
 }
-function Line({ icon, title, sub, href: to, kind }) {
-  return <li class="hl" data-kind={kind}><span class="hi"><Icon name={icon} /></span><span class="tx"><b>{title}</b>{sub && sub.length > 0 && <small>{sub}</small>}</span>{to && <a class="go" href={to} aria-label={title}><Icon name="chr" /></a>}</li>;
+function Line({ icon, title, sub, href: to, kind, menu, id }) {
+  return <li class="hl" data-kind={kind} data-id={id}><span class="hi"><Icon name={icon} /></span><span class="tx"><b>{title}</b>{sub && sub.length > 0 && <small>{sub}</small>}</span>
+    {menu && <Menu label={menu.label} trigger={b => <IconButton {...b} icon="dots" size="sm" label={menu.label} data-hmenu={id} />} items={menu.items} />}
+    {to && <a class="go" href={to} aria-label={title}><Icon name="chr" /></a>}</li>;
+}
+// Needs a look (src/shell.js renderNeedsOnly): papers partly scored, papers not kept in this browser, and work with no second copy
+// for a week (only while the folder question isn't already asking). Six rows, then how many more.
+function Look({ v }) {
+  const S = useSaving(), f = S && S.folder ? S.folder() : null, g = S ? S.google() : {}, rows = [];
+  for (const m of v.look) rows.push(m.kind === 'partial'
+    ? { k: 'partial', title: t('home.look_partly', { n: m.n }), sub: [raw(m.name) || t('home.a_download')], to: href('mark', m.id), id: m.id }
+    : { k: 'notkept', title: t('home.look_notkept'), sub: m.name ? t('home.look_notkept_s', { name: m.name }) : t('home.look_notkept_s', { name: t('home.a_download') }), id: m.id });
+  const b = v.backup, days = Math.floor((Date.now() - b.last) / 864e5);
+  if (b.kept > 0 && f && f.booted && f.state === 'none' && !g.email && days >= 7 && !askShows(S, v.mark.length + v.back.length > 0))
+    rows.push({ k: 'backup', title: b.last ? t('home.look_backup_old', { n: days }) : t('home.look_backup_none'), sub: t('home.look_backup_s'), to: href('settings', 'saving') });
+  if (!rows.length) return null;
+  return <section aria-labelledby="h-look" data-home="look"><div class="hrow"><h2 id="h-look">{t('home.look_h')}</h2><span class="hcount num">{rows.length}</span></div>
+    <ul class="card hlist">{rows.slice(0, 6).map(r => <Line kind={r.k} id={r.id} icon={r.k === 'backup' ? 'cloud' : 'warn'} title={r.title} sub={r.sub} href={r.to} />)}
+      {rows.length > 6 && <li class="hl"><span class="mute">{t('home.look_more', { n: rows.length - 6 })}</span></li>}</ul></section>;
+}
+// What the class needs next (src/today.js nextHtml): the newest finished rubric set's weakest row, every row's class average as a
+// bar, how many scored at half the row's top or below, and the way to Insights to see who. Numbers and row names only.
+function NextCard({ n }) {
+  if (!n) return null;
+  const low = n.rows[n.low], half = num(low.top / 2), name = n.name || t('home.nx_last');
+  const head = n.flat ? (n.cls ? t('home.nx_flat_cls', { cls: n.cls, name }) : t('home.nx_flat', { name })) : (n.cls ? t('home.nx_weak_cls', { cls: n.cls, row: low.name, name }) : t('home.nx_weak', { row: low.name, name }));
+  return <section aria-labelledby="h-next" data-home="next"><div class="hrow"><h2 id="h-next">{t('home.nx_h')}</h2></div>
+    <div class="card pad hnext"><p class="big" data-raw>{head}</p>
+      <div class="bars" role="img" aria-label={n.rows.map(r => t('home.nx_bar', { name: r.name, avg: num(r.avg), top: r.top })).join(', ')}>
+        {n.rows.map((r, i) => <><span class="bn" data-raw>{r.name}</span><span class="bt"><i class={i === n.low && !n.flat ? 'low' : ''} style={{ width: Math.round(r.avg / r.top * 100) + '%' }} /></span><span class="bv num" data-raw>{r.avg.toFixed(1)}</span></>)}</div>
+      {!n.flat && <p class="mute" data-raw>{low.low ? t('home.nx_who', { n: low.low, half, row: low.name }) : t('home.nx_nobody', { half, row: low.name })}</p>}
+      {n.open && <a class="link" href={href('mark', n.id, 'insights')} data-next-go>{low.low && !n.flat ? t('home.nx_see') : t('home.nx_open')}<Icon name="chr" size="sm" /></a>}
+    </div></section>;
+}
+// Earlier work (src/today.js oldRow): an older copy, handed back already, or nothing in it to score. The newest three, or all.
+const OLD_SHOWN = 3;
+function Earlier({ v, menu }) {
+  const [all, setAll] = useState(false);
+  if (!v.old.length) return null;
+  const list = all ? v.old : v.old.slice(0, OLD_SHOWN), day = ms => date(new Date(ms), { day: 'numeric', month: 'short' });
+  return <section aria-labelledby="h-earlier" data-home="earlier"><div class="hrow"><h2 id="h-earlier">{t('home.earlier_h')}</h2>
+    {v.old.length > OLD_SHOWN && <button type="button" class="link" onClick={() => setAll(!all)} data-earlier-all>{all ? t('home.earlier_newest') : t('home.earlier_all', { n: v.old.length })}</button>}</div>
+    <ul class="card hlist">{list.map(m => <Line kind="old" id={m.id} icon="inbox" title={raw(m.name) || t('home.student_work')} menu={menu(m)} href={m.open ? href('mark', m.id) : null}
+      sub={dot([raw(m.cls), m.stale ? t('home.old_stale') : m.back ? t('home.old_returned', { date: day(m.back) }) : t('home.old_worked', { date: day(m.t) }), m.of ? t('home.old_scored', { done: m.done, of: m.of }) : null, m.open ? null : t('home.old_notkept')])} />)}</ul></section>;
 }
 export default function Home({ classes }) {
   const [v, now] = useHome(), plan = usePlan(), Sv = usePart('setsave', matchMedia('(max-width:640px)').matches);   // a phone's sign-in card
+  const [fg, setFg] = useState(null), A = usePart('asg', !!fg);
+  const TD = usePart('hometodo');   // Forget (class/assignment.jsx), asked first
+  const menu = m => ({ label: t('home.row_more', { name: m.name || t('home.student_work') }), items: [{ label: t('home.forget'), icon: 'trash', onSelect: () => setFg(m) }] });
   const d = new Date(now);
   if (!v) return <div class="page"><header class="ph"><h1>{greeting(d)}</h1></header><div class="loading" aria-busy="true" /></div>;
   if (v.error) return <div class="page"><header class="ph"><h1>{greeting(d)}</h1></header><EmptyState icon="warn" title={t('home.read_failed')} /></div>;
@@ -130,17 +192,23 @@ export default function Home({ classes }) {
             <span role="cell" class="r tm"><b class="num">{x.left}</b></span></a>; })}
         </div> : <EmptyState icon="people" title={t('home.no_classes')} />}
       </section>
-      <section aria-labelledby="h-needs"><div class="hrow"><h2 id="h-needs">{t('home.needs_you')}</h2><a class="link" href={href('todo')}>{t('home.all_todos')}</a></div>
+      <div class="hcol">{TD && <TD.TodoCard L={{ title: t('nav.todo'), all: t('home.all_todos'), none: t('home.td_none'), add: t('home.td_add'), more: n => t('home.td_more', { n }), see: t('home.td_all'), tick_step: t('home.td_step_tick'), add_step: t('home.td_step_add') }} />}
+      <section aria-labelledby="h-needs"><div class="hrow"><h2 id="h-needs">{t('home.needs_you')}</h2>{!TD && <a class="link" href={href('todo')}>{t('home.all_todos')}</a>}</div>
         <ul class="card hlist" data-home="needs">
           {pk && <Line kind="pick" icon="slides" title={t('plan.pick_up')} sub={dot([raw(pk.l.title) || t('home.untitled_lesson'), ...pk.sub])} href={href('lesson', pk.l.id)} />}
-          {v.mark.map(m => <Line kind="mark" icon="pen" title={t(m.fm ? 'home.feedback_on' : m.done ? 'home.finish_marking' : 'home.mark', { name: m.name || t('home.student_work') })}
+          {v.mark.map(m => <Line kind="mark" id={m.id} menu={menu(m)} icon="pen" title={t(m.fm ? 'home.feedback_on' : m.done ? 'home.finish_marking' : 'home.mark', { name: m.name || t('home.student_work') })}
             sub={dot([raw(m.cls), m.fm ? t('home.feedback_only') : t('home.left_of', { left: m.left, of: m.of })])} href={m.open ? href('mark', m.id) : null} />)}
-          {v.back.map(m => <Line kind="back" icon="upload" title={t('home.hand_back', { name: m.name || t('home.student_work') })} sub={dot([raw(m.cls), t('home.all_scored', { n: m.of })])} href={m.open ? href('mark', m.id, 'return') : null} />)}
+          {v.back.map(m => <Line kind="back" id={m.id} menu={menu(m)} icon="upload" title={t('home.hand_back', { name: m.name || t('home.student_work') })} sub={dot([raw(m.cls), t('home.all_scored', { n: m.of })])} href={m.open ? href('mark', m.id, 'return') : null} />)}
           {v.toPlan.map(p => <Line kind="plan" icon="slides" title={p.in === 0 ? t('home.plan_today', { cls: p.className }) : p.in === 1 ? t('home.plan_tomorrow', { cls: p.className }) : t('home.plan_lesson', { cls: p.className, day: dayOf(p.day) })} sub={dot([raw(clock(p.start)), raw(p.lesson) || t('home.nothing_planned')])} href={href('class', p.classId)} />)}
           {(v.missing || []).map(m => <Line kind="miss" icon="warn" title={t('home.remind', { n: m.n })} sub={raw(m.name)} href={href('class', m.classId, 'todo')} />)}
           {!pk && !v.mark.length && !v.back.length && !v.toPlan.length && !(v.missing || []).length && <li class="hl none"><span class="mute">{t('home.all_clear')}</span></li>}
         </ul>
-      </section>
+        <Look v={v} />
+        <NextCard n={v.next} />
+      </section></div>
     </div>
+    <Earlier v={v} menu={menu} />
+    {!sampleOn() && <p class="mute hfoot" data-home-foot>{t('home.foot')} <button type="button" class="link" data-home-sample onClick={() => { if (!enterSample()) toast(t('sample.cant')); }}>{t('home.try_sample')}</button></p>}
+    {fg && A && <A.Forget it={{ name: fg.name || t('home.student_work') }} id={fg.id} onClose={ok => { setFg(null); if (ok && useHome.read) useHome.read(); }} />}
   </div>;
 }

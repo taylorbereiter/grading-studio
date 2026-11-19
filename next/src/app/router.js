@@ -96,6 +96,8 @@ export const PARTS = {
   work: () => import('./screens/class-work.jsx'),
   // an assignment made, changed or deleted there, and its less common tools (no papers, forget, a unit's link)
   asg: () => import('./class/assignment.jsx'),
+  // Home's To do card, with the To do engine (app/home/todo-card.jsx)
+  hometodo: () => import('./home/todo-card.jsx'),
   // a class's People and Grades tabs (app/class/), each with the gradebook's engine
   people: () => import('./class/people.jsx'),
   clink: () => import('./class/classlink.jsx'),
