@@ -6,6 +6,7 @@ let lib = { classes: [], loose: { id: '', units: [] } }, bank = [], ptsInk = '',
 let store = { get: (k, d) => d, set: () => {}, del: () => {} };
 export function stpUse(o) { if ('lib' in o) lib = o.lib; if ('bank' in o) bank = o.bank || []; if ('store' in o) store = o.store; if ('ptsInk' in o) ptsInk = o.ptsInk || ''; if ('listPts' in o) listPts = !!o.listPts; if ('people' in o) people = o.people || []; if ('roles' in o) roles = o.roles || null; }
 const schPeople = () => people, schNow = () => ({ roles }), go = () => {}, saveLib = () => {};
+const tr = s => s; // The setup screen supplies its translated undo result.
 // What bringing a setup in does that is the page's: the School page's people (H.school(fn) changes them), the Planner's timetable
 // (H.planPut), and what the page says (H.said). Quiet until the page hands its own in.
 const H = { school() {}, async planPut() {}, said() {} };
@@ -15,7 +16,7 @@ export const libNow = () => lib, bankNow = () => bank;
 const schChange = f => H.school(f), stpPlanPut = s => H.planPut(s), stpAfter = () => {}, toast = s => H.said(s), bankJob = () => Promise.resolve(), bankRead = () => {}, batch = null, fcCardRender = () => {}, fcRender = () => {}, listDraw = () => {}, renderPage = () => {}, once = () => {};
 // only words in the lifted text ("a few pages", a local cur), never the marking screen's
 const cur = 0, pages = [];
-
+import { stpPanelRecord, stpPanelWidth } from './gpanel.js';
 
 // src/beside.js
 function aiUrlClean(v) {
@@ -372,13 +373,20 @@ const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', point
 // src/setupin.js
 const STP_LAYOUTS = { agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Title and text', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', fullpic: 'Full picture', textpic: 'Text + picture', picprompt: 'Picture + questions', video: 'Video' };
 // src/setupin.js
+function stpSetPanelWidth(panel, width) {
+  if (width == null) delete panel.w; else panel.w = width;
+  if (!Object.keys(panel).length) store.del('gsp.panel');
+  else if (store.set('gsp.panel', panel) === false) throw new Error('Could not save gsp.panel');
+}
+// src/setupin.js
 function stpRead(j) {
-  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking', 'focus', 'todo']);
+  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking', 'focus', 'todo', 'panelWidth']);
   for (const k of Object.keys(j)) {
     if (STP_STUDENT.test(k)) { if (stpCount(j[k])) S.left.push('Something about students (“' + stpStr(k, 30) + '”).'); }
     else if (!known.has(k)) S.unknown.push(stpStr(k, 30));
   }
   if (stpNum(j.gradingStudioSetup, 0, 1e6) > STP_V) S.notes.push('This setup was written for a newer version of Grading Studio. What this version understands is listed below.');
+  if (Number.isFinite(j.panelWidth) && j.panelWidth >= 300 && j.panelWidth <= 900) S.panelWidth = j.panelWidth;
   S.about = stpStr(stpObj(j.teacher) ? j.teacher.label : j.about || j.teacher, 80);
   const prog = stpStr(j.programme != null ? j.programme : j.program, 24); if (prog) S.prog = prog;
   // the school's own words
@@ -619,6 +627,11 @@ const stpClone = v => v == null ? v : JSON.parse(JSON.stringify(v));
 // src/setupin.js
 async function stpApply(S, pick) {
   const U = { t: Date.now(), parts: Object.keys(pick).filter(k => pick[k]) }, now = Date.now();
+  if (pick.panelWidth && S.panelWidth != null) {
+    const panel = stpPanelRecord();
+    U.panelWidth = { was: panel.w, wrote: S.panelWidth };
+    stpSetPanelWidth(panel, S.panelWidth);
+  }
   if (pick.school || pick.grading || pick.att || pick.tabs || pick.focus) { U.hadMe = !!lib.me; U.me = stpClone(lib.me || null); }
   if (pick.school) {
     const sc = { ...(S.school || {}) };
@@ -723,6 +736,11 @@ const stpUndoRec = () => { const u = store.get('gs.setupUndo', null); return stp
 async function stpUndo() {
   const U = stpUndoRec(); if (!U) return;
   const kept = [];
+  if (U.panelWidth) {
+    const panel = stpPanelRecord();
+    if (panel.w === U.panelWidth.wrote) stpSetPanelWidth(panel, U.panelWidth.was);
+    else kept.push(tr('Side panel'));
+  }
   if ('me' in U) { if (U.hadMe) lib.me = U.me; else delete lib.me; }
   if ('setupLs' in U) { if (U.setupLs == null) store.del('gs.setup'); else try { localStorage.setItem('gs.setup', U.setupLs); } catch {} }
   if ('book' in U) { if (U.book) lib.book = U.book; else delete lib.book; }
@@ -757,6 +775,8 @@ async function stpUndo() {
 async function stpExport() {
   const p = await stpPlanGet(), g = meGrade(), conf = bkConf(), day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const out = { gradingStudioSetup: STP_V };
+  const panelWidth = stpPanelWidth();
+  if (panelWidth != null) out.panelWidth = panelWidth;
   if (me().prog) out.programme = me().prog;
   if (sysName() || unitLinkName() || me().ai || mbOrder()) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(mbOrder() ? { entryOrder: mbOrder() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}), ...(me().ai && aiUrlClean(me().aiUrl) ? { assistantLink: aiUrlClean(me().aiUrl) } : {}), ...(me().ai && me().aiOpen === 'tab' ? { assistantOpens: 'tab' } : {}), ...(me().ai && me().aiUrls && Object.keys(me().aiUrls).length ? { otherAssistants: Object.entries(me().aiUrls).map(([name, link]) => ({ name, link })) } : {}), ...(me().ai && Array.isArray(me().aiOff) && me().aiOff.length ? { assistantsNotListed: me().aiOff.slice() } : {}) };
   const ppl = schPeople(), sr = schNow().roles;

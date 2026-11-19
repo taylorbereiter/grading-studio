@@ -6,7 +6,7 @@ import { useLanguage, addLines } from '../i18n/t.js';
 import { savePref } from '../planning/write.js';
 
 // The languages the current app has, by code, each in its own name (made by next/build.js from src/lang-*.js).
-export const LANGUAGES = [['en', 'English'], ...__GS_LANGS__];   // not-words
+export const LANGUAGES = [['en', 'English'], ...JSON.parse(__GS_LANGS_JSON__)];   // not-words
 export function savedLanguage() { const v = json('gs.lang'); return LANGUAGES.some(l => l[0] === v) ? v : 'en'; }
 export function setLanguage() { document.documentElement.lang = savedLanguage(); }
 // Before anything is drawn: the chosen language's core lines and those of every lines file already loaded (app/lang-load.js).

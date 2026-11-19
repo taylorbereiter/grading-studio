@@ -65,6 +65,8 @@ const PLANNER_ROOTS = [
   'uniqueName', 'normLinks', 'lkUrl', 'lkHost',
   // units
   'normUnit', 'tplLayouts',
+  // where each class got to, for the phone's notes put on their lessons (planning/taught-fold.js)
+  'normTaught',
 ];
 const TOOLS_ROOTS = ['pptxToSlides', 'docxOf', 'shareLesson', 'finSig', 'docClean', 'DOC_CSS', 'shrinkPic', 'imgSrc',
   // slide looks and the editor's text tools: per-box sizes, biggest that fits, moving a box, lists and formatting (src/planner/boxes.js, rich.js)
@@ -479,6 +481,7 @@ const LOFI_STYLES = ['rain', 'library', 'coffee', 'night', 'tape', 'garden', 'bl
 const tr = s => s;
 `, ['lib', 'keptMeta', 'keptRead', 'plan', 'LANG_LOCALE', 'store', 'canOpen', 'FC_ON', 'tkReady', 'gpReady', 'batch', 'cur', '$', 'fcRender', 'fcClockDraw', 'fcTitle',
     'fcGoTo', 'fcLesOpen', 'fcChime', 'fcAudioWake', 'tkPageRender', 'renderProg', 'routeNow', 'me', 'meDrop', 'LOFI_STYLES', 'tr', 'useKept', 'todoUse', 'countUse', 'once'], ['gkept', 'gtodo', 'gcount']],
+  ['gpanel', ['stpPanelRecord', 'stpPanelWidth'], '', [], []],
   ['gstp', [
     // My setup (src/setupin.js): a setup pasted back from an assistant read key by key, never running anything and never taking a
     // student in (stpParse, stpRead); the Planner's timetable with its classes and calendar laid over (stpPlanNext); this teacher's
@@ -493,6 +496,7 @@ let lib = { classes: [], loose: { id: '', units: [] } }, bank = [], ptsInk = '',
 let store = { get: (k, d) => d, set: () => {}, del: () => {} };
 export function stpUse(o) { if ('lib' in o) lib = o.lib; if ('bank' in o) bank = o.bank || []; if ('store' in o) store = o.store; if ('ptsInk' in o) ptsInk = o.ptsInk || ''; if ('listPts' in o) listPts = !!o.listPts; if ('people' in o) people = o.people || []; if ('roles' in o) roles = o.roles || null; }
 const schPeople = () => people, schNow = () => ({ roles }), go = () => {}, saveLib = () => {};
+const tr = s => s; // The setup screen supplies its translated undo result.
 // What bringing a setup in does that is the page's: the School page's people (H.school(fn) changes them), the Planner's timetable
 // (H.planPut), and what the page says (H.said). Quiet until the page hands its own in.
 const H = { school() {}, async planPut() {}, said() {} };
@@ -502,7 +506,7 @@ export const libNow = () => lib, bankNow = () => bank;
 const schChange = f => H.school(f), stpPlanPut = s => H.planPut(s), stpAfter = () => {}, toast = s => H.said(s), bankJob = () => Promise.resolve(), bankRead = () => {}, batch = null, fcCardRender = () => {}, fcRender = () => {}, listDraw = () => {}, renderPage = () => {}, once = () => {};
 // only words in the lifted text ("a few pages", a local cur), never the marking screen's
 const cur = 0, pages = [];
-`, ['lib', 'bank', 'ptsInk', 'listPts', 'people', 'roles', 'setup', 'store', 'schPeople', 'schNow', 'go', 'saveLib', 'cur', 'pages', 'H', 'schChange', 'stpPlanPut', 'stpAfter', 'toast', 'bankJob', 'bankRead', 'batch', 'fcCardRender', 'fcRender', 'listDraw', 'renderPage', 'once'], []],
+`, ['lib', 'bank', 'ptsInk', 'listPts', 'people', 'roles', 'setup', 'store', 'schPeople', 'schNow', 'go', 'saveLib', 'cur', 'pages', 'H', 'schChange', 'stpPlanPut', 'stpAfter', 'toast', 'bankJob', 'bankRead', 'batch', 'fcCardRender', 'fcRender', 'listDraw', 'renderPage', 'once', 'tr'], ['gpanel']],
   ['gyear', [
     // a new school year (src/newyear.js): the year's names and its file's name, what is about a student, and the next year's library
     // (the same classes, units and cards, with no student in them unless the class lists are kept). The box and the steps are whole/'s.
@@ -688,9 +692,21 @@ async function build() {
       'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css'), 'mark-css': path.join(NEXT, 'src/app/mark.css'), 'class-css': path.join(NEXT, 'src/app/class.css'), 'todo-css': path.join(NEXT, 'src/app/todo.css'), 'focus-css': path.join(NEXT, 'src/app/focus/focus.css'), 'pages-css': path.join(NEXT, 'src/app/pages.css') },
     // pdf.js's worker, as text, so the Beside drawer's Books can start it from a blob: address (it loads only when a book is opened).
     plugins: [{ name: 'lines-json', setup(b) {
-      // The lines files (next/lang/<code>/<area>.json) as one JSON.parse of a UTF-8 string: smaller than esbuild's named exports with every
-      // letter outside ASCII escaped (about 17 KB less per language).
-      b.onLoad({ filter: /[\\/]next[\\/]lang[\\/](zh-Hant|zh-Hans|es|fr|de|pt-BR|ja|ko)[\\/]\w+\.json$/ }, a => ({ contents: 'export default JSON.parse(' + JSON.stringify(JSON.stringify(JSON.parse(fs.readFileSync(a.path, 'utf8')))) + ')', loader: 'js' }));
+      // The English area already ships with its screen. Ship only each translation's values, in the same key
+      // order in all eight languages. Null keeps the slot for an untranslated (identical-to-English) line.
+      const englishAreas = require('./tools/lang-areas.js').english();
+      b.onLoad({ filter: /[\\/]next[\\/]lang[\\/](zh-Hant|zh-Hans|es|fr|de|pt-BR|ja|ko)[\\/]\w+\.json$/ }, a => {
+        const area = path.basename(a.path, '.json'), english = englishAreas[area];
+        const translated = JSON.parse(fs.readFileSync(a.path, 'utf8'));
+        const englishFile = area === 'core' ? 'en.json' : area + '.en.json';
+        for (const key of Object.keys(translated)) {
+          if (!Object.hasOwn(english, key) && !(area === 'core' && key === '@locale')) throw new Error(a.path + ': unknown line ' + key);
+        }
+        const values = Object.keys(english).sort().map(key => Object.hasOwn(translated, key) ? translated[key] : null);
+        return { loader: 'js', contents: `import english from '../${englishFile}';
+          import { unpackArea } from '../../src/i18n/unpack-area.js';
+          export default unpackArea(english, ${JSON.stringify(values)}, ${JSON.stringify(translated['@locale'] || null)});` };
+      });
     } }, { name: 'pdf-worker', setup(b) {
       // The path is kept relative to the repository so the build is the same on every machine.
       b.onResolve({ filter: /^pdfjs-worker-text$/ }, () => ({ path: 'node_modules/pdfjs-dist/build/pdf.worker.min.js', namespace: 'pdfw' }));
@@ -699,7 +715,8 @@ async function build() {
     loader: { '.woff2': 'file', '.json': 'json', '.webp': 'file' }, assetNames: '[name]-[hash]',
     outdir: DIST, bundle: true, splitting: true, format: 'esm', target: ['chrome109', 'safari16'], minify: !process.env.GS_NEXT_DEBUG,
     chunkNames: 'chunk-[hash]', entryNames: '[name]', metafile: true, absWorkingDir: ROOT, legalComments: 'none', logLevel: 'warning',
-    jsxFactory: 'h', jsxFragment: 'Fragment', define: { __GS_LANGS__: JSON.stringify(langList()), __GS_DATA_V__: String(dataVersion()), __GS_APP_VERSION__: JSON.stringify(JSON.parse(fs.readFileSync(path.join(ROOT, 'version.json'), 'utf8')).version), __GS_GCID__: JSON.stringify(process.env.GCID || require('../site.json').googleClientId || '') },
+    // An array-valued define injects its initializer into every chunk. Only the language picker needs the list.
+    jsxFactory: 'h', jsxFragment: 'Fragment', define: { __GS_LANGS_JSON__: JSON.stringify(JSON.stringify(langList())), __GS_DATA_V__: String(dataVersion()), __GS_APP_VERSION__: JSON.stringify(JSON.parse(fs.readFileSync(path.join(ROOT, 'version.json'), 'utf8')).version), __GS_GCID__: JSON.stringify(process.env.GCID || require('../site.json').googleClientId || '') },
   });
   // Each language's chunk with its letters written as themselves, not as \\u escapes: about 10 KB smaller squeezed. Only these
   // chunks: done for the whole app it makes some screens larger. A module is always read as UTF-8, so the letters arrive whole.

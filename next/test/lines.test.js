@@ -8,7 +8,7 @@ const SRC = path.join(__dirname, '..', 'src');
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lang', f), 'utf8'));
 // a language, every area as one (next/lang/<code>/<area>.json, tools/lang-areas.js)
 const AREAS = require('../tools/lang-areas.js'), readLang = c => AREAS.readLang(c);
-const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), VIDEO = read('video.en.json'), SAVING = read('saving.en.json'), CLASS = read('class.en.json'), TODO = read('todo.en.json'), FOCUS = read('focus.en.json'), SCHOOL = read('school.en.json'), HELP = read('help.en.json'), HOME = read('home.en.json'), SETS = read('settings.en.json'), PREFS = read('prefs.en.json'), ENGINE = read('engine.en.json'), PRESENT = read('present.en.json'), CAL = read('calendar.en.json'), EN = { ...APP, ...PRESENT, ...CAL, ...ENGINE, ...HOME, ...SETS, ...TODO, ...FOCUS, ...SCHOOL, ...HELP, ...PREFS, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...VIDEO, ...SAVING, ...CLASS };
+const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), VIDEO = read('video.en.json'), SAVING = read('saving.en.json'), CLASS = read('class.en.json'), TODO = read('todo.en.json'), FOCUS = read('focus.en.json'), SCHOOL = read('school.en.json'), HELP = read('help.en.json'), HOME = read('home.en.json'), SETS = read('settings.en.json'), PREFS = read('prefs.en.json'), ENGINE = read('engine.en.json'), PRESENT = read('present.en.json'), CAL = read('calendar.en.json'), LES = read('lesson.en.json'), REV = read('review.en.json'), EN = { ...LES, ...REV, ...APP, ...PRESENT, ...CAL, ...ENGINE, ...HOME, ...SETS, ...TODO, ...FOCUS, ...SCHOOL, ...HELP, ...PREFS, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...VIDEO, ...SAVING, ...CLASS };
 const noComments = s => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(x => x.isDirectory() ? walk(path.join(d, x.name)) : /\.jsx?$/.test(x.name) ? [path.join(d, x.name)] : []);
 const files = walk(SRC);
@@ -44,6 +44,12 @@ test('planning lines live in plan.en.json and load where they are used', () => {
   // and the editor's (next/lang/edit.en.json), through app/plan/edit-lines.js
   assert.ok(Object.keys(EDIT).every(k => k.startsWith('edit.')) && !Object.keys(APP).some(k => k.startsWith('edit.')));
   for (const [f, s] of Object.entries(text)) if (/'edit\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '\.\.?\/(plan\/)?edit-lines\.js';/.test(s), f + ' uses an editor line without importing plan/edit-lines.js');
+  // and the lesson screen's later parts' (next/lang/lesson.en.json), through app/plan/les-lines.js
+  assert.ok(Object.keys(LES).every(k => k.startsWith('les.')) && !Object.keys(APP).some(k => k.startsWith('les.')));
+  for (const [f, s] of Object.entries(text)) if (/'les\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '\.\.?\/(plan\/)?les-lines\.js';/.test(s), f + ' uses a lesson line without importing plan/les-lines.js');
+  // and looking back over a lesson's (next/lang/review.en.json), through app/plan/rev-lines.js
+  assert.ok(Object.keys(REV).every(k => k.startsWith('rev.')) && !Object.keys(APP).some(k => k.startsWith('rev.')));
+  for (const [f, s] of Object.entries(text)) if (/'rev\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '\.\.?\/(plan\/)?rev-lines\.js';/.test(s), f + ' uses a review line without importing plan/rev-lines.js');
   // and the Calendar's and units' occasional tools (next/lang/more.en.json), through app/plan/more-lines.js
   assert.ok(Object.keys(MORE).every(k => k.startsWith('more.')) && !Object.keys(APP).some(k => k.startsWith('more.')));
   for (const [f, s] of Object.entries(text)) if (/'more\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '\.\.?\/(plan\/)?more-lines\.js';/.test(s), f + ' uses a tools line without importing plan/more-lines.js');
@@ -279,5 +285,21 @@ test('each language\'s files mirror the English areas, and every lines file name
     if (!imp || f.startsWith('gallery/')) continue;
     assert.ok(call, f + ' imports lines but never adds them');
     assert.equal(call[1], imp[1], f + ' adds ' + imp[1] + '.en.json under the area ' + call[1]);
+  }
+});
+
+
+// Check the delivered modules as well as the source dictionaries: packing must never shift or lose a line.
+test('every compiled language area restores its exact source dictionary', async () => {
+  const next = path.join(__dirname, '..'), meta = require('../dist/meta.json');
+  const emitted = new Map(Object.entries(meta.outputs).map(([file, output]) => [output.entryPoint, file]));
+  for (const code of AREAS.CODES) {
+    for (const [area, expected] of Object.entries(AREAS.readAreas(code))) {
+      const input = 'next/lang/' + code + '/' + area + '.json', file = emitted.get(input);
+      assert.ok(file, 'missing language module for ' + input);
+      const url = require('node:url').pathToFileURL(path.join(next, 'dist', path.basename(file)));
+      const { default: actual } = await import(url.href);
+      assert.deepEqual(actual, expected, input);
+    }
   }
 });

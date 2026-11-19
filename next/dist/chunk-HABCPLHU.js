@@ -1,1 +1,0 @@
-import{a as s}from"./chunk-SFQL27JW.js";s();var e=null,t=null,o=null,r=(l,n)=>{e=l||null,t=e&&n?n:null},u=()=>e,x=()=>t,c=l=>{o=l},d=()=>e&&o?o():Promise.resolve();export{r as a,u as b,x as c,c as d,d as e};

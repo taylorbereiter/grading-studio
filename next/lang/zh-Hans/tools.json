@@ -85,7 +85,6 @@
  "tool.doc_name": "姓名",
  "tool.doc_tools": "格式",
  "tool.doc_page": "页面",
- "tool.told": "已添加到这节课给 {name} 的评语中。",
  "tool.beside": "侧边",
  "tool.books": "书籍",
  "tool.video": "视频",
@@ -115,11 +114,9 @@
  "tool.no_contents": "这个 PDF 没有章节目录。请使用搜索，或逐页翻阅。",
  "tool.page_of": "第 {n} 页，共 {of} 页",
  "tool.next_page": "下一页",
- "tool.page_to_ai": "把这页发给 {name}",
  "tool.video_find": "粘贴 YouTube 链接，或输入关键词搜索",
  "tool.go": "前往",
  "tool.put_on_slide": "放到幻灯片上",
- "tool.to_ai": "发给 {name}",
  "tool.on_youtube": "YouTube",
  "tool.not_youtube": "这里只能播放 YouTube 视频。",
  "tool.video_help": "YouTube 不允许在其他网站内搜索，所以输入关键词会在新标签页打开 YouTube 搜索。在那里复制视频链接，粘贴到这里，就能在课程旁边观看。",
@@ -163,5 +160,6 @@
  "tool.file_missing": "那个文件不见了。",
  "tool.pptx_failed": "无法生成 PowerPoint。",
  "tool.print_blocked": "请允许这个页面的弹出窗口才能打印。",
- "tool.ok": "确定"
+ "tool.ok": "确定",
+ "tool.nb_unread": "无法读取这些笔记，所以这里不会覆盖它们。"
 }

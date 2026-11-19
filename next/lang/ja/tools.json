@@ -85,7 +85,6 @@
  "tool.doc_name": "名前",
  "tool.doc_tools": "書式",
  "tool.doc_page": "ページ",
- "tool.told": "この授業の {name} へのコメントに追加しました。",
  "tool.beside": "横に表示",
  "tool.books": "本",
  "tool.video": "動画",
@@ -115,11 +114,9 @@
  "tool.no_contents": "この PDF には章の一覧がありません。検索するか、ページをめくってください。",
  "tool.page_of": "{n} / {of} ページ",
  "tool.next_page": "次のページ",
- "tool.page_to_ai": "このページを {name} へ",
  "tool.video_find": "YouTube のリンクを貼り付けるか、語を入力して検索",
  "tool.go": "移動",
  "tool.put_on_slide": "スライドに入れる",
- "tool.to_ai": "{name} へ",
  "tool.on_youtube": "YouTube",
  "tool.not_youtube": "ここで再生できるのは YouTube の動画だけです。",
  "tool.video_help": "YouTube はほかのサイト内での検索を許可していないため、語を入力すると新しいタブで YouTube の検索が開きます。そこで動画のリンクをコピーしてここに貼り付けると、授業の横で見られます。",
@@ -163,5 +160,6 @@
  "tool.file_missing": "そのファイルが見つかりません。",
  "tool.pptx_failed": "PowerPoint を作成できませんでした。",
  "tool.print_blocked": "印刷するには、このページのポップアップを許可してください。",
- "tool.ok": "OK"
+ "tool.ok": "OK",
+ "tool.nb_unread": "このメモを読み込めなかったため、ここで上書き保存はしません。"
 }

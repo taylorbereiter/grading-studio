@@ -15,19 +15,16 @@ import { saveKv, saveLesson } from '../../planning/write.js';
 import { nameKey, plannerKv } from '../../planning/plan.js';
 import { saveFailed } from '../plan/save.js';
 import { today, at, classOf, mondayOf } from '../plan/lessons.js';
-import { ACTIVITIES, BOOK, actVideo, actSlide, normActivity } from '../../engines/activities.js';
+import { normActivity } from '../../engines/activities.js';
+import { ActList, UseActivity, PARTS, KINDS, PART_LINE, KIND_LINE, mine } from '../plan/acts.jsx';
 import '../plan/lines.js';
 import '../plan/cal-lines.js';
 
 const TABS = ['activities', 'past', 'units', 'rubrics', 'examples'];
 const TAB_LINE = { activities: 'plan.lib_activities', past: 'plan.lib_past', units: 'plan.lib_units', rubrics: 'plan.lib_rubrics', examples: 'plan.lib_examples' };
-const PARTS = ['warmup', 'activity', 'review'], KINDS = ['talk', 'read', 'write', 'words', 'move', 'check'];
-const PART_LINE = { warmup: 'plan.part_warmup', activity: 'plan.part_activity', review: 'plan.part_review' };
-const KIND_LINE = { talk: 'plan.kind_talk', read: 'plan.kind_read', write: 'plan.kind_write', words: 'plan.kind_words', move: 'plan.kind_move', check: 'plan.kind_check' };
 const raw = s => <span data-raw>{s}</span>;
 const day = s => date(at(s), { day: 'numeric', month: 'long' });
 const lines = s => String(s || '').split('\n').map(x => x.trim()).filter(Boolean);
-const mine = p => ((p && p.activities) || []).filter(a => a && a.name);
 
 function Area({ label, value, onInput, rows = 3 }) {
   const id = useId();
@@ -35,25 +32,6 @@ function Area({ label, value, onInput, rows = 3 }) {
 }
 
 // ---------- Activities ----------
-function ActivityRow({ a, open, onOpen, onUse, onEdit }) {
-  const v = actVideo(a);
-  return <li class={'act' + (open ? ' open' : '')}>
-    <button type="button" class="acth" aria-expanded={String(open)} onClick={onOpen}>
-      <b data-raw>{a.name}</b>
-      <span class="mute">{a.parts.map(x => t(PART_LINE[x])).join(', ')} · {t(KIND_LINE[a.kind] || 'plan.kind_talk')}{a.group && <> · {raw(a.group)}</>}{a.book > 0 && <> · {t('plan.routine_n', { n: a.book })}</>}{a.mine && <> · {t('plan.mine')}</>}</span>
-      <Icon name={open ? 'chu' : 'chd'} size="xs" /></button>
-    {open && <div class="actb">
-      {a.what && <p data-raw>{a.what}</p>}
-      {a.how.length > 0 && <><h4 class="sub">{t('plan.how_to_run')}</h4><ol>{a.how.map(x => <li data-raw>{x}</li>)}</ol></>}
-      {a.tip && <p class="mute" data-raw>{a.tip}</p>}
-      {a.slide.length > 0 && <><h4 class="sub">{t('plan.on_the_slide')}</h4><ol>{a.slide.map(x => <li data-raw>{x}</li>)}</ol></>}
-      <div class="row"><Button size="sm" variant="primary" icon="plus" onClick={onUse}>{t('plan.add_to_lesson')}</Button>
-        <a class="btn sm" href={v.url} target="_blank" rel="noopener">{v.found ? t('plan.see_it') : t('plan.find_video')}<Icon name="arrow" size="xs" /></a>
-        {a.mine && <Button size="sm" variant="quiet" onClick={onEdit}>{t('common.edit')}</Button>}</div>
-    </div>}
-  </li>;
-}
-
 function EditActivity({ p, a, onClose }) {
   const [d, setD] = useState(() => ({ ...a, how: a.how.join('\n'), slide: a.slide.join('\n'), video: a.video || '' })), [busy, setBusy] = useState(false);
   const set = patch => setD({ ...d, ...patch });
@@ -82,43 +60,12 @@ function EditActivity({ p, a, onClose }) {
   </Sheet>;
 }
 
-// Put an activity in a lesson: the activity's steps for students as one slide at the end, the how-to in its speaker notes.
-function UseActivity({ p, a, onClose }) {
-  const E = engine(p), now = today();
-  const soon = (p.lessons || []).filter(l => (l.slots || []).some(s => s.date >= now))
-    .sort((x, y) => Math.min(...x.slots.map(s => s.date >= now ? +at(s.date) : Infinity)) - Math.min(...y.slots.map(s => s.date >= now ? +at(s.date) : Infinity))).slice(0, 8);
-  const put = async l => {
-    try {
-      const n = JSON.parse(JSON.stringify(l || E.normLesson({ title: a.name, slots: [], slides: [{ layout: 'title', title: a.name }] })));
-      n.slides.push(actSlide(a));
-      await saveLesson(n); toast(t('plan.act_added', { title: n.title })); onClose(); go('lesson', n.id, 'edit');
-    } catch (e) { saveFailed(e); }
-  };
-  const when = l => l.slots.filter(s => s.date >= now).map(s => { const c = classOf(p, s.classId); return (c ? c.name + ' ' : '') + day(s.date); }).join(', ');
-  return <Sheet open title={t('plan.add_name_to', { name: a.name })} icon={<Icon name="plus" />} onClose={onClose}>
-    <p class="mute">{t('plan.act_goes_in')}</p>
-    {soon.length > 0 && <><h3 class="sub">{t('plan.coming_up')}</h3>
-      <ul class="list">{soon.map(l => <li><button type="button" class="lrow" onClick={() => put(l)}><span class="main"><b data-raw>{l.title}</b><small data-raw>{when(l)}</small></span></button></li>)}</ul></>}
-    <div class="row"><Button icon="plus" onClick={() => put(null)} data-focus="act-new-lesson">{t('plan.start_with_it')}</Button></div>
-  </Sheet>;
-}
-
 function Activities({ p }) {
-  const [q, setQ] = useState(''), [part, setPart] = useState(''), [kind, setKind] = useState(''), [open, setOpen] = useState('');
-  const [edit, setEdit] = useState(null), [use, setUse] = useState(null);
-  const all = [...mine(p).map(a => ({ ...normActivity(a), mine: true })), ...ACTIVITIES], s = q.trim().toLowerCase();
-  const list = all.filter(a => (!part || a.parts.includes(part)) && (!kind || a.kind === kind) && (!s || (a.name + ' ' + a.what + ' ' + a.group + (a.book ? ' routine ' + a.book : '')).toLowerCase().includes(s)));
+  const [edit, setEdit] = useState(null), [use, setUse] = useState(null), reset = useRef(null);
   return <>
-    <div class="libtools">
-      <TextInput label={t('plan.find_activity')} icon="search" type="search" value={q} onInput={setQ} data-focus="find-activity" />
-      <Button icon="plus" onClick={() => setEdit({ id: '', name: '', what: '', kind: 'talk', parts: ['activity'], group: '', how: [], slide: [] })} data-focus="new-activity">{t('plan.my_activity')}</Button></div>
-    <div class="chips" role="group" aria-label={t('plan.act_parts')}><Chip on={!part} onClick={() => setPart('')}>{t('plan.any_part')}</Chip>{PARTS.map(k => <Chip on={part === k} onClick={() => setPart(part === k ? '' : k)}>{t(PART_LINE[k])}</Chip>)}</div>
-    <div class="chips" role="group" aria-label={t('plan.act_kind')}><Chip on={!kind} onClick={() => setKind('')}>{t('plan.any_kind')}</Chip>{KINDS.map(k => <Chip on={kind === k} onClick={() => setKind(kind === k ? '' : k)}>{t(KIND_LINE[k])}</Chip>)}</div>
-    <p class="mute" role="status">{t('plan.n_activities', { n: list.length })}</p>
-    {list.length ? <ul class="actlist">{list.map(a => <ActivityRow a={a} open={open === a.id} onOpen={() => setOpen(open === a.id ? '' : a.id)} onUse={() => setUse(a)} onEdit={() => setEdit(a)} />)}</ul>
-      : <EmptyState icon="search" title={t('plan.nothing_matches')} text={t('plan.try_another')} />}
-    <p class="mute credit">{t('plan.act_credit')} {raw(BOOK)}</p>
-    {edit && <EditActivity p={p} a={edit.id ? edit : { ...edit, id: 'my-' + engine(p).lid() }} onClose={ok => { setEdit(null); if (ok) { setQ(''); setPart(''); setKind(''); } }} />}
+    <ActList p={p} reset={reset} onUse={setUse} onEdit={setEdit}
+      tools={<Button icon="plus" onClick={() => setEdit({ id: '', name: '', what: '', kind: 'talk', parts: ['activity'], group: '', how: [], slide: [] })} data-focus="new-activity">{t('plan.my_activity')}</Button>} />
+    {edit && <EditActivity p={p} a={edit.id ? edit : { ...edit, id: 'my-' + engine(p).lid() }} onClose={ok => { setEdit(null); if (ok && reset.current) reset.current(); }} />}
     {use && <UseActivity p={p} a={use} onClose={() => setUse(null)} />}
   </>;
 }

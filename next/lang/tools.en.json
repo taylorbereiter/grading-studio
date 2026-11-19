@@ -85,7 +85,6 @@
  "tool.doc_name": "Name",
  "tool.doc_tools": "Formatting",
  "tool.doc_page": "The page",
- "tool.told": "Added to the comments for {name} on this lesson.",
  "tool.beside": "Beside",
  "tool.books": "Books",
  "tool.video": "Video",
@@ -115,11 +114,9 @@
  "tool.no_contents": "This PDF has no chapter list. Use search, or page through it.",
  "tool.page_of": "Page {n} of {of}",
  "tool.next_page": "Next page",
- "tool.page_to_ai": "This page to {name}",
  "tool.video_find": "Paste a YouTube link, or type words to search",
  "tool.go": "Go",
  "tool.put_on_slide": "Put on a slide",
- "tool.to_ai": "To {name}",
  "tool.on_youtube": "YouTube",
  "tool.not_youtube": "Only YouTube videos play here.",
  "tool.video_help": "YouTube doesn't allow its search inside other sites, so words open YouTube's search in a new tab. Copy a video's link there and paste it here to watch it beside your lesson.",
@@ -163,5 +160,6 @@
  "tool.file_missing": "That file is missing.",
  "tool.pptx_failed": "The PowerPoint couldn't be made.",
  "tool.print_blocked": "Allow pop-ups for this page to print.",
- "tool.ok": "OK"
+ "tool.ok": "OK",
+ "tool.nb_unread": "These notes couldn't be read, so nothing here will be saved over them."
 }

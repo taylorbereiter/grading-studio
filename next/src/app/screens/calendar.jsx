@@ -217,8 +217,8 @@ export default function Calendar({ route }) {
   const [hidden, setHidden] = useState(() => keep('hide') || []);
   const [layers, setLayers] = useState(() => ({ lessons: true, work: true, todos: true, ...(keep('layers') || {}) }));
   const [weekends, setWeekends] = useState(() => !!keep('weekends'));
-  const [dragging, setDragging] = useState(null), [busy, setBusy] = useState(false), [tool, setTool] = useState(null);
-  const Sem = usePart('sem', true), Cal = usePart('cal', !!tool), Tools = usePart('tools', !!tool && tool.name === 'import'), X = usePart('calx', !!tool && ['copy', 'link', 'unit', 'all'].includes(tool.name));
+  const [dragging, setDragging] = useState(null), [busy, setBusy] = useState(false), [tool, setTool] = useState(null), [bes, setBes] = useState(false);
+  const Sem = usePart('sem', true), Cal = usePart('cal', !!tool), Tools = usePart('tools', !!tool && tool.name === 'import'), X = usePart('calx', !!tool && ['copy', 'link', 'unit', 'all'].includes(tool.name)), Bs = usePart('beside', bes);
   const work = useMemo(() => { try { return workForCalendar(); } catch (e) { console.error(e); return { due: [], todos: [] }; } }, [p]);
   useEffect(() => { keep('at', anchor); }, [anchor]);
   // plan/<class>/<day> (the old planner.html#plan/<class>/<day>, from Home and the focus timer): that meeting's lesson, opened or
@@ -249,7 +249,7 @@ export default function Calendar({ route }) {
   const props = { p, days, shown, work, layers, dragging, setDragging, busy, setBusy, onTool: setTool };
   const units = view === 'month' ? [] : weekUnits(p, mon, shown), E = engine(p);
   const close = () => setTool(null), ai = assistant().name || t('assistant.generic');
-  return <div class="page calendar" data-view={view}>
+  return <div class={'page calendar' + (bes ? ' with-beside' : '')} data-view={view}>
     <header class="ph calh">
       <div><h1 id="cal-title" data-raw>{title}</h1><p class="mute">{t(view === 'semester' ? 'cal.sem_help' : view === 'month' ? 'plan.month_help' : view === 'time' ? 'plan.time_help' : 'plan.class_help')}</p></div>
       <div class="calnav">
@@ -276,6 +276,8 @@ export default function Calendar({ route }) {
     {(view === 'class' || view === 'time') && <div class="legend"><State s="ready" /><State s="draft" /><State s="none" /><span class="due plain"><Icon name="flag" size="xs" />{t('plan.due_legend')}</span>
       <span class="grow" />{Sem && <Sem.NextWeekLine p={p} />}<span class="mute">{thisWeek || counted.length ? t('plan.n_of_ready', { n: done, of: counted.length }) : ''}</span>
       <Menu label={t('plan.week_menu')} items={[{ id: 'week', label: t('plan.week_with', { name: ai }), icon: 'assist', onSelect: () => setTool({ name: 'week' }) },
+        // The Beside drawer beside the week (src/planner/panel.js, its Side panel button): books, activities, this week's units, notes.
+        { id: 'beside', label: t('plan.beside'), icon: 'book', checked: bes, onSelect: () => setBes(!bes) },
         { id: 'all', label: t('cal.all_lessons'), icon: 'slides', onSelect: () => setTool({ name: 'all' }) },
         { id: 'loose', label: t('cal.new_loose'), icon: 'plus', onSelect: () => PARTS.calx().then(m => m.newLoose(p)) },
         { id: 'import', label: t('plan.import_lesson'), sub: t('cal.import_sub'), icon: 'upload', onSelect: () => setTool({ name: 'import' }) },
@@ -292,6 +294,7 @@ export default function Calendar({ route }) {
     {tool && tool.name === 'copy' && X && <X.CopyTo p={p} l={tool.l} onClose={close} />}
     {tool && tool.name === 'link' && X && <X.LinkDialog p={p} c={tool.c} onClose={close} />}
     {tool && tool.name === 'unit' && X && <X.UnitSheet p={p} unit={tool.u} courses={[...new Set(p.setup.classes.map(c => c.course || c.name))]} onClose={close} />}
+    {bes && Bs && <Bs.default p={p} week={mon} onClose={() => setBes(false)} />}
     {tool && tool.name === 'import' && Tools && <Tools.ImportSheet p={p} slot={tool.c ? { classId: tool.c.id, date: tool.day } : null} onClose={() => { close(); if (list === 'import') go('calendar', keep('view') || 'class'); }} />}
   </div>;
 }

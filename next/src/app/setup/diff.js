@@ -1,6 +1,7 @@
 // What a setup would change, one part per subject, in the new app's own words (the current app's src/setupin.js stpDiff says the
 // same things in its own). Each part: { key, title, lines, sub }. key is what bringing it in is asked for (stpApply's pick). A part
 // with no lines changes nothing and is left out. Names the teacher typed are parameters, never translated.
+import { stpPanelWidth } from '../../engines/gpanel.js';
 import { t, date, num } from '../../i18n/t.js';
 import '../screens/prefs-lines.js';
 import '../plan/lines.js';
@@ -18,6 +19,7 @@ const TYPE = { sum: 'prefs.su_t_sum', ic: 'prefs.su_t_ic', fm: 'prefs.su_t_fm' }
 export function setupParts(M, S, planNow) {
   const parts = [], add = (key, title, lines, sub) => { if (lines.length) parts.push({ key, title: t(title), lines, sub: sub ? t(sub) : '' }); };
   const K = M.stpKey, m = M.me();
+  if (S.panelWidth != null && S.panelWidth !== stpPanelWidth()) add('panelWidth', 'prefs.su_h_panel', [num(S.panelWidth) + ' px']);
   // her school's words, the assistant, the programme and the School page's people
   if (S.school || S.prog || S.staff || S.staffRoles) {
     const L = [], s = S.school || {};

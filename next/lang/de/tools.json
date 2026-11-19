@@ -82,7 +82,6 @@
  "tool.save_docx": "Als .docx speichern",
  "tool.doc_tools": "Formatierung",
  "tool.doc_page": "Die Seite",
- "tool.told": "Zu den Kommentaren für {name} in dieser Stunde hinzugefügt.",
  "tool.beside": "Daneben",
  "tool.books": "Bücher",
  "tool.video": "Video",
@@ -112,11 +111,9 @@
  "tool.no_contents": "Dieses PDF hat kein Kapitelverzeichnis. Nutzen Sie die Suche oder blättern Sie durch.",
  "tool.page_of": "Seite {n} von {of}",
  "tool.next_page": "Nächste Seite",
- "tool.page_to_ai": "Diese Seite an {name}",
  "tool.video_find": "YouTube-Link einfügen oder Suchbegriffe eingeben",
  "tool.go": "Los",
  "tool.put_on_slide": "Auf eine Folie setzen",
- "tool.to_ai": "An {name}",
  "tool.on_youtube": "YouTube",
  "tool.not_youtube": "Hier lassen sich nur YouTube-Videos abspielen.",
  "tool.video_help": "YouTube erlaubt seine Suche nicht innerhalb anderer Seiten, daher öffnen Suchbegriffe die YouTube-Suche in einem neuen Tab. Kopieren Sie dort den Link eines Videos und fügen Sie ihn hier ein, um es neben Ihrer Stunde anzusehen.",
@@ -159,5 +156,6 @@
  "tool.file_missing": "Diese Datei fehlt.",
  "tool.pptx_failed": "Die PowerPoint konnte nicht erstellt werden.",
  "tool.print_blocked": "Erlauben Sie Pop-ups für diese Seite, um zu drucken.",
- "tool.ok": "OK"
+ "tool.ok": "OK",
+ "tool.nb_unread": "Diese Notizen konnten nicht gelesen werden, daher wird hier nichts darüber gespeichert."
 }

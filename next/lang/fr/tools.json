@@ -84,7 +84,6 @@
  "tool.doc_name": "Nom",
  "tool.doc_tools": "Mise en forme",
  "tool.doc_page": "La page",
- "tool.told": "Ajouté aux commentaires pour {name} sur cette leçon.",
  "tool.beside": "À côté",
  "tool.books": "Livres",
  "tool.video": "Vidéo",
@@ -109,11 +108,9 @@
  "tool.no_contents": "Ce PDF n’a pas de liste de chapitres. Utilisez la recherche ou feuilletez-le.",
  "tool.page_of": "Page {n} sur {of}",
  "tool.next_page": "Page suivante",
- "tool.page_to_ai": "Cette page à {name}",
  "tool.video_find": "Collez un lien YouTube ou tapez des mots pour chercher",
  "tool.go": "OK",
  "tool.put_on_slide": "Mettre sur une diapositive",
- "tool.to_ai": "À {name}",
  "tool.on_youtube": "YouTube",
  "tool.not_youtube": "Seules les vidéos YouTube peuvent être lues ici.",
  "tool.video_help": "YouTube n’autorise pas sa recherche dans d’autres sites, donc les mots ouvrent la recherche YouTube dans un nouvel onglet. Copiez-y le lien d’une vidéo et collez-le ici pour la regarder à côté de votre leçon.",
@@ -157,5 +154,6 @@
  "tool.file_missing": "Ce fichier est introuvable.",
  "tool.pptx_failed": "Le PowerPoint n’a pas pu être créé.",
  "tool.print_blocked": "Autorisez les fenêtres pop-up pour cette page afin d’imprimer.",
- "tool.ok": "OK"
+ "tool.ok": "OK",
+ "tool.nb_unread": "Ces notes n’ont pas pu être lues, donc rien ne sera enregistré par-dessus."
 }

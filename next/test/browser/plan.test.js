@@ -87,7 +87,7 @@ test('keyboard: mark a lesson ready, move through its slides, and present it', a
   await open(p, 'lesson/L3');
   await p.click('main [role=radiogroup] [data-v="ready"]');
   await p.waitForFunction(() => document.querySelector('main [role=radiogroup] [data-v="ready"]').getAttribute('aria-checked') === 'true');
-  const l3 = await lessonInDb(p, 'L3');
+  let l3; for (let i = 0; i < 40 && !(l3 && l3.ready); i++) { l3 = await lessonInDb(p, 'L3'); if (!l3.ready) await new Promise(r => setTimeout(r, 50)); }   // the save goes through a moment after the press shows
   assert.ok(l3.ready && l3.ready.at > 0, 'ready is saved the way the current Planner keeps it');
   await open(p, 'lesson/L3/slides');
   const num = () => p.$eval('main .svbar .num', x => x.textContent);
@@ -287,7 +287,7 @@ test('a strong example goes on a slide by reference: drawn from the marking side
   });
   await open(p, 'lesson/L5/edit');
   await p.click('main .ed-list li:nth-child(5) button'); // the exit ticket, made a picture slide
-  await p.select('main .ed-form select[data-focus="layout"]', 'picture');
+  await p.click('main .ed-form [data-focus="layout"]'); await p.waitForSelector('.sheet [data-layout="picture"]'); await p.click('.sheet [data-layout="picture"]'); await p.waitForFunction(() => !document.querySelector('.sheet[open]'));
   await p.waitForSelector('main [data-focus="add-example"]');
   await p.click('main [data-focus="add-example"]');
   await p.waitForSelector('.excard');
@@ -499,7 +499,8 @@ test('Course line: a unit renamed with its weeks pasted, a new unit made and the
   assert.equal(u2.title, 'Unit 2: Poems aloud'); assert.deepEqual(u2.weeks.map(w => w.focus), ['Sound', 'Images', 'Voice', 'Form']); assert.equal(u2.start, '2026-10-12'); assert.equal(us.length, 3);
   await p.waitForFunction(() => document.querySelector('main #h-unit').textContent === 'Unit 2: Poems aloud');
   // A new unit, then deleted
-  await p.click('main [data-focus="new-unit"]');
+  await p.click('main [data-focus="unit-menu"]'); await p.waitForSelector('[role^="menuitem"]');   // New unit sits in the course line's menu
+  await p.evaluate(() => [...document.querySelectorAll('[role^="menuitem"]')].find(x => /New unit/.test(x.textContent)).click());
   await sheetReady('[data-focus="unit-name"]');
   await p.$eval('[data-focus="unit-name"]', el => { el.focus(); el.select(); });
   await p.keyboard.type('Unit 3: Drama');
@@ -560,7 +561,9 @@ test('a lesson on no class or day shows beside the Course line and goes on the c
   await open(p, 'class/c1');
   assert.ok((await p.$$eval('main .loose a', a => a.map(x => x.getAttribute('href')))).includes('#/lesson/' + id), 'listed as not on the calendar');
   await open(p, 'lesson/' + id);
-  await p.click('main [data-focus="place-it"]');
+  await p.waitForSelector('main [data-focus="add-slot"]'); await p.click('main [data-focus="add-slot"]');
+  await p.waitForSelector('.sheet [data-focus="slot-add"]'); await p.waitForFunction(() => document.activeElement && document.activeElement.closest('.sheet'));
+  await p.click('.sheet [data-focus="slot-add"]');
   let l = null; for (let k = 0; k < 30; k++) { l = await lessonInDb(p, id); if (l.slots.length) break; await new Promise(r => setTimeout(r, 150)); }
   assert.deepEqual(l.slots, [{ classId: 'A1', date: '2026-10-27' }]);
   assert.deepEqual(p.errors, []); await p.ctx.close();

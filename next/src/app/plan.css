@@ -306,10 +306,10 @@
 .courseline .hrow{flex-wrap:wrap;gap:8px}
 /* Stage 3 follow-up: the lesson's tools */
 .varbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
-.lessonpage.with-beside{padding-right:min(440px,42vw)}
-.beside{position:fixed;top:8px;right:8px;bottom:8px;width:min(420px,40vw);background:var(--sf,var(--s));border-radius:var(--r4);box-shadow:var(--sh-f);display:flex;flex-direction:column;z-index:30;overflow:hidden}
+.page.with-beside,.courseline.with-beside{padding-right:calc(var(--bw,min(420px,40vw)) + 20px)}
+.beside{position:fixed;top:8px;right:8px;bottom:8px;width:var(--bw,min(420px,40vw));background:var(--sf,var(--s));border-radius:var(--r4);box-shadow:var(--sh-f);display:flex;flex-direction:column;z-index:30;overflow:hidden}
 .beside .bhead{display:flex;align-items:center;gap:8px;padding:8px 10px 0 16px;border-bottom:1px solid var(--line)}
-.beside .bhead .tabs{flex:1;border-bottom:0}
+.beside .bhead .tabs{flex:1;min-width:0;border-bottom:0;gap:14px;font-size:.94em;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
 .beside .bbody{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
 .beside .books,.beside .book,.beside .video,.beside .unitside,.beside .nb{display:flex;flex-direction:column;gap:10px}
 .beside .row{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap}
@@ -372,7 +372,7 @@
 .ticks{display:flex;flex-wrap:wrap;gap:6px 16px;border:0;padding:0;margin:8px 0}
 .ticks legend{width:100%;margin-bottom:4px}
 .lkgroup{margin-top:10px}.lkh{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:var(--t2)}
-@media (max-width:900px){.lessonpage.with-beside{padding-right:0}.beside{width:auto;left:8px;top:auto;height:70vh}}
+@media (max-width:900px){.page.with-beside,.courseline.with-beside{padding-right:0}.beside{width:auto;left:8px;top:auto;height:70vh}}
 .with-beside .lgrid{grid-template-columns:minmax(0,1fr)}
 .with-beside .step{grid-template-columns:minmax(0,1fr) 300px}
 .rttools .rtb{padding:0 8px}
@@ -412,6 +412,21 @@
 .bk-scale label{display:flex;align-items:center;gap:6px;font-size:var(--t2)}.bk-scale label span{width:22px;text-align:right;font-weight:600}.bk-scale input{width:76px}
 .bk-pre{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .ubank .list{margin-bottom:8px}
+/* stage 8 E1: a lesson's classes (screens/lesson-side.jsx), the editor's save state and planning time */
+.slotlist{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-direction:column;gap:4px}
+.slotchip{display:flex;align-items:center;gap:8px}
+.slotchip>span:nth-child(2){flex:1;min-width:0}
+.addslot{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.addslot .row{display:flex;gap:8px;justify-content:flex-end}
+.ed-top .savest,.ed-top .ptime{font-size:var(--t2);white-space:nowrap;align-self:center}
+.vidrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ed-grid.dropping .ed-stagewrap{outline:2px dashed var(--acc-ink);outline-offset:4px;border-radius:var(--r2)}
+.beside .bgrip{position:absolute;left:0;top:0;bottom:0;width:6px;cursor:ew-resize;z-index:1}.beside .bgrip:hover,.beside .bgrip:active{background:var(--acc-ink);opacity:.25}
+.beside .acts{display:flex;flex-direction:column;gap:10px}.beside .acts .libtools{display:flex;gap:8px}
+@media (max-width:900px){.beside .bgrip{display:none}}
+.beside .cbox{display:flex;flex-direction:column;gap:10px}.beside .chiplist{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.beside .bchip{display:inline-flex;align-items:center;gap:6px;padding:2px 2px 2px 10px;border:1px solid var(--line);border-radius:999px;background:var(--s2,var(--s));max-width:100%}
+.beside .bchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* present: the bar's clock, the timer panel, agenda ticks, links (E2) */
 .prbar .prtime{padding:0 8px;font-size:14px;opacity:.9}
 .prbar .btn[aria-pressed="true"],.prbar .btn[aria-expanded="true"]{background:rgba(255,255,255,.18)}
@@ -449,6 +464,21 @@ button.prclock{border:0;cursor:pointer}
 .wu small{font-size:var(--t1);color:var(--mute)}.wu b{font-weight:600;font-size:var(--t2)}.wu>span{font-size:var(--t1);color:var(--ink2)}
 .wu.none{flex-direction:row;align-items:center;gap:8px;cursor:default;border-left-color:var(--g300)}
 .datejump{width:auto;padding:4px 8px;font-size:var(--t2)}
+.cmts{display:flex;flex-direction:column;gap:14px}.cmt-s{display:flex;flex-direction:column;gap:6px}
+.cmt{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.cmt>span{flex:1;min-width:0;white-space:pre-wrap}.cmt.done>span{color:var(--mute);text-decoration:line-through}
+.cmp{display:flex;flex-direction:column;gap:18px}.crow h3{margin:0 0 6px}
+.cpair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cside{display:flex;flex-direction:column;gap:6px;padding:8px;border:2px solid var(--line);border-radius:var(--r2);cursor:pointer}
+.cside.on{border-color:var(--acc)}.cside input{position:absolute;opacity:0;pointer-events:none}.cside:focus-within{outline:2px solid var(--acc);outline-offset:2px}
+.cnone{display:grid;place-items:center;aspect-ratio:16/9;background:var(--g100);color:var(--mute);border-radius:var(--r1)}
+@media (max-width:600px){.cpair{grid-template-columns:1fr}}
+.taught{display:flex;flex-direction:column;gap:6px;align-items:flex-start}.taught .mute{margin:0}
+.tglist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;align-self:stretch}
+.tglist li{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}.tglist li>.mute{flex-basis:100%;order:3}
+.lkpicks{display:flex;flex-direction:column;gap:6px;margin-top:6px}.lkpicks h3{margin:0}
+/* Beside open from a document: the document moves left of it */
+dialog.sheet:has(.docwrap.with-beside){margin-left:16px;margin-right:calc(var(--bw,min(420px,40vw)) + 24px);max-width:calc(100vw - var(--bw,min(420px,40vw)) - 40px)}
+@media (max-width:900px){dialog.sheet:has(.docwrap.with-beside){margin:auto;max-width:none}}
 
 /* Semester view and coming up without a lesson (plan/semester.jsx) */
 .calendar .ahead { display: grid; gap: var(--s2); margin-bottom: var(--s4); }

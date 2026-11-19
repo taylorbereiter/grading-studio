@@ -622,9 +622,12 @@ test('Attendance: a day taken with presses, the keys and a note, Everyone is her
   await p.waitForFunction(d => { const r = JSON.parse(localStorage.getItem('gs.lib')).classes[0].att[d]; return r && !r.off && !Object.keys(r.m).length; }, {}, before);
   // Look back, every date: main's day reads E with its note, the unknown absence is listed
   await p.click('dialog[open] .attbar [data-v="all"]');
-  await p.waitForSelector('[data-att-tab], [data-att-none]');
-  await p.evaluate(() => { const b = document.querySelector('dialog[open] .attnav [data-v="*"]'); if (b) b.click(); });
-  await p.waitForSelector('[data-att-tab] [data-att-open="2026-09-14"]');
+  const allDates = 'dialog[open] .attnav [data-v="*"]';
+  await p.waitForSelector(allDates);
+  await p.click(allDates);
+  await p.waitForSelector(allDates + '[aria-checked="true"]');
+  // The saved day reaches localStorage before the gradebook reread adds its column.
+  await p.waitForSelector('[data-att-tab] [data-att-open="' + before + '"]');
   const back = await p.evaluate(n => { const row = [...document.querySelectorAll('[data-att-tab] tbody tr')].find(r => r.querySelector('th').textContent === n); return [...row.querySelectorAll('.attc')].map(c => c.textContent + (c.querySelector('i') ? '*' : '')); }, N[3]);
   assert.deepEqual(back, ['E*', '', '']);
   assert.match(await p.$eval('[data-att-unk]', e => e.textContent), /1 absence still has no reason/);

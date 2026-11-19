@@ -5,7 +5,7 @@
 import { onSaved } from '../shared/saved.js';
 import { folderSaved, folderState, onFolder, folderBoot, folderRun, F } from './folder.js';
 import { markSyncDue, syncDue } from './due.js';
-import { G, gAuto, setAuto, signOut, googleCan, onGoogle, G_REDIRECT, gHas, gLive, PICK_SCOPE } from './google.js';
+import { G, gAuto, setAuto, signOut, googleCan, onGoogle, G_REDIRECT, gHas, gLive, PICK_SCOPE, gPreload } from './google.js';
 import { provideSaving, changedSaving } from '../services/saving.js';
 import { json as lsJson } from '../shared/ls.js';
 
@@ -22,6 +22,7 @@ export function startWhole() {
   const drive = () => import('./drive.js').then(m => { if (!D) { D = m; m.startDrive(); } return m; });
   onSaved(e => { if (SYNCS(e)) { markSyncDue(); if (G.email) drive().then(m => m.syncSoon()); } queue = queue.then(() => folderSaved(e)).catch(err => console.error(err)); });
   if (G.email || G.token) setTimeout(drive, 0);
+  gPreload();
   onGoogle(changedSaving); onFolder(changedSaving);
   booting = folderBoot().catch(e => console.error(e));
   // the counts the oldest kept downloads lack, worked out once a little after opening (students/backfill.js, audit H-047)

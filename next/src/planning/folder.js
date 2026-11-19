@@ -11,31 +11,27 @@ import { kv, lessons } from './index.js';
 async function writeFile(dir, name, data) { const fh = await dir.getFileHandle(name, { create: true }); const w = await fh.createWritable(); await w.write(data); await w.close(); return (await fh.getFile()).lastModified; }
 
 // The folder handle, or null when none is linked. { dir, ok }: ok is false while permission must be asked for again.
-export async function plannerFolder() {
+export async function plannerFolder({ strict = false } = {}) {
   if (typeof window !== 'undefined' && window.__gsSample && window.__gsSample.on) return null;
-  const dir = await kv.get('dir').catch(() => null); if (!dir) return null;
+  const dir = strict
+    ? await import('./change.js').then(m => m.readPlannerRecord('kv', 'dir'))
+    : await kv.get('dir').catch(() => null);
+  if (!dir) return null;
+  if (strict) return { dir, ok: await dir.queryPermission({ mode: 'readwrite' }) === 'granted' };
   let p = 'denied'; try { p = await dir.queryPermission({ mode: 'readwrite' }); } catch {}
   return { dir, ok: p === 'granted' };
 }
 // l: the lesson as it is being stored (it gets _file and _mod, or _sync). Returns 'written', 'later' or 'none'.
-export async function writeLessonFile(l, f) {
+export async function writeLessonFile(l, f, previous) {
   if (!f) return 'none';
   if (!f.ok) { l._sync = 1; return 'later'; }
   const { lessonForFile, fileBase, b64ToU8 } = await import('../engines/planner.js');
   const imgs = new Map(), data = lessonForFile(l, imgs), name = fileBase(l) + '.lesson.json';
   if (imgs.size) { const idir = await f.dir.getDirectoryHandle('images', { create: true }); for (const [p, src] of imgs) { try { await idir.getFileHandle(p.slice(7)); } catch { await writeFile(idir, p.slice(7), b64ToU8(src.split(',')[1])); } } }
-  if (l._file && l._file !== name) { try { await f.dir.removeEntry(l._file); } catch {} }
-  l._mod = await writeFile(f.dir, name, JSON.stringify(data, null, 2)); l._file = name;
+  const { writeRecordFile } = await import('./folder-file.js');
+  l._mod = await writeRecordFile(f.dir, name, JSON.stringify(data, null, 2), l, previous); l._file = name;
   delete l._sync;
   return 'written';
-}
-// A lesson deleted: its file goes too (src/planner/lessons.js folderRemove). Without permission now, its name is left for the
-// current Planner to remove when it next opens (kv syncGoneFiles, as a lesson deleted on another device is).
-export async function removeLessonFile(l, f) {
-  if (!f || !l._file) return;
-  if (f.ok) { try { await f.dir.removeEntry(l._file); } catch {} return; }
-  const gone = (await kv.get('syncGoneFiles').catch(() => null)) || [];
-  if (!gone.includes(l._file)) await kv.put([...gone, l._file], 'syncGoneFiles');
 }
 // The timetable's file in the folder (src/planner/lessons.js folderWriteSchedule): the setup without the slide template.
 export async function writeTimetableFile(setup, f) {

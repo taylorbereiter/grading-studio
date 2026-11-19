@@ -86,3 +86,6 @@ export function signOut() {
 }
 export const googleCan = () => GOK && !!gcid();
 export const changed = say;
+// Google's sign-in script loaded ahead when she is signed in with no live key (src/planner/pldrive.js, audit hook H-055), so its
+// window opens straight from the first press of From Google Drive and the browser doesn't hold it back as a pop-up.
+export function gPreload() { if (G.email && gcid() && !gLive() && !G_REDIRECT) setTimeout(() => loadGis().catch(() => {}), 3000); }

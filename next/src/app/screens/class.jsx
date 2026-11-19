@@ -5,7 +5,7 @@
 // its part comes. #/class/new is a new class: its name and roster.
 import { h, Fragment } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { Tabs, Icon, EmptyState, Progress, Button, toast } from '../../ui/index.js';
+import { Tabs, Icon, EmptyState, Progress, Button, IconButton, Menu, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { href, go, PARTS } from '../router.js';
 import { usePlan } from '../plan.js';
@@ -14,6 +14,7 @@ import { timetableClass } from '../../planning/plan.js';
 import { engine } from '../../planning/engine.js';
 import { lessonsOn, stateOf, arrived, STATE_LINE, periods, dayOff, today, plus, at, mondayOf, weekDays, newLesson } from '../plan/lessons.js';
 import { saveFailed } from '../plan/save.js';
+import '../plan/rev-lines.js';
 import Later from './later.jsx';
 import { UnitSheet } from '../plan/unit-edit.jsx';
 import { usePart } from '../parts.js';
@@ -47,7 +48,7 @@ function CourseLine({ p, c, lib }) {
   const u = units.find(x => x.id === pick) || (here && here.u) || units.find(x => x.start > now) || units[units.length - 1] || null;
   const [fold, setFold] = useState(() => keep('fold') !== false);
   const [busy, setBusy] = useState(false), [editing, setEditing] = useState(null);
-  const Unit = usePart('unit', !!u);
+  const Unit = usePart('unit', !!u), [bes, setBes] = useState(false), Bs = usePart('beside', bes);
   const courses = [...new Set((p.setup.classes || []).map(x => x.course || x.name).filter(Boolean))];
   const newUnit = () => setEditing(E.normUnit({ course, start: plus(units.length ? E.unitEnd(units[units.length - 1]) : mon, 7), title: t('plan.new_unit'), weeks: Array.from({ length: 6 }, () => ({})) }));
   // A unit from its unit plan's screenshots (src/planner/units.js: new unit, screenshots, the assistant fills the weeks): made at once,
@@ -64,7 +65,8 @@ function CourseLine({ p, c, lib }) {
   // The weeks to show: the unit's, or without units the four weeks around today.
   const weeks = u ? u.weeks.map((w, i) => ({ mon: plus(u.start, i * 7), focus: w && w.focus, n: i + 1 })) : [-1, 0, 1, 2].map(i => ({ mon: plus(mon, i * 7), focus: '', n: 0 }));
   const plan = async day => { if (busy) return; setBusy(true); try { const l = await newLesson(p, c.id, day); go('lesson', l.id); } catch (e) { saveFailed(e); } finally { setBusy(false); } };
-  return <div class="courseline">
+  return <div class={'courseline' + (bes ? ' with-beside' : '')}>
+    {bes && Bs && <Bs.default p={p} u={u} onClose={() => setBes(false)} />}
     {units.length > 0 && <nav class="ustrip" aria-label={t('plan.units')}>
       {units.map((x, i) => { const end = plus(E.unitEnd(x), 4), on = x === u, past = end < now, cur = x.start <= now && now <= end;
         return <button type="button" class={'us' + (on ? ' on' : '') + (past ? ' past' : '') + (cur ? ' cur' : '')} style={{ '--cc': toneOf(c.color) }} aria-pressed={String(on)} onClick={() => { setPick(x.id); keep('unit:' + c.id, x.id); }}>
@@ -78,8 +80,9 @@ function CourseLine({ p, c, lib }) {
           {u && here && here.u === u && <span class="mute">{t('plan.unit_week', { n: here.n + 1, of: u.weeks.length })}</span>}
           <span class="grow" /><button type="button" class="link" onClick={() => { setFold(!fold); keep('fold', !fold); }}>{t(fold ? 'plan.show_past' : 'plan.fold_past')}</button>
           {u && <Button size="sm" icon="pen" onClick={() => setEditing(u)} data-focus="edit-unit">{t('plan.edit_unit')}</Button>}
-          <Button size="sm" icon="plus" onClick={newUnit} data-focus="new-unit">{t('plan.new_unit')}</Button>
-          <Button size="sm" icon="image" onClick={fromShots} data-focus="unit-from-shots">{t('plan.unit_from_shots')}</Button></div>
+          {/* the less used: a new unit, a unit from its plan's screenshots, and the Beside drawer beside the unit (src/planner/panel.js Side panel) */}
+          <Menu label={t('rev.unit_menu')} items={[{ id: 'new', label: t('plan.new_unit'), icon: 'plus', onSelect: newUnit }, { id: 'shots', label: t('plan.unit_from_shots'), icon: 'image', onSelect: fromShots }, { id: 'beside', label: t('plan.beside'), icon: 'book', checked: bes, onSelect: () => setBes(!bes) }]}
+            trigger={q => <IconButton icon="dots" size="sm" label={t('rev.unit_menu')} {...q} data-focus="unit-menu" />} /></div>
         <ol class="weeks">{weeks.map(w => {
           const rows = weekRows(p, c, w.mon), past = plus(w.mon, 6) < now, cur = w.mon === mon;
           const taught = rows.filter(r => r.lessons.some(l => stateOf(l, c.id, r.day) === 'taught')).length, ready = rows.filter(r => r.lessons.some(l => stateOf(l, c.id, r.day) === 'ready')).length;

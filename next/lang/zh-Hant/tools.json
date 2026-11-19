@@ -85,7 +85,6 @@
  "tool.doc_name": "姓名",
  "tool.doc_tools": "格式",
  "tool.doc_page": "頁面",
- "tool.told": "已加入這堂課給 {name} 的評語。",
  "tool.beside": "側邊",
  "tool.books": "書籍",
  "tool.video": "影片",
@@ -115,11 +114,9 @@
  "tool.no_contents": "這個 PDF 沒有章節目錄。請用搜尋，或逐頁翻閱。",
  "tool.page_of": "第 {n} 頁，共 {of} 頁",
  "tool.next_page": "下一頁",
- "tool.page_to_ai": "把這頁給 {name}",
  "tool.video_find": "貼上 YouTube 連結，或輸入字詞搜尋",
  "tool.go": "前往",
  "tool.put_on_slide": "放到投影片上",
- "tool.to_ai": "給 {name}",
  "tool.on_youtube": "YouTube",
  "tool.not_youtube": "這裡只能播放 YouTube 影片。",
  "tool.video_help": "YouTube 不允許在其他網站內搜尋，所以輸入字詞會在新分頁開啟 YouTube 搜尋。在那裡複製影片連結，貼到這裡，就能在課程旁邊觀看。",
@@ -163,5 +160,6 @@
  "tool.file_missing": "那個檔案不見了。",
  "tool.pptx_failed": "無法製作 PowerPoint。",
  "tool.print_blocked": "請允許這個頁面的彈出式視窗才能列印。",
- "tool.ok": "確定"
+ "tool.ok": "確定",
+ "tool.nb_unread": "無法讀取這些筆記，所以這裡不會覆蓋它們。"
 }

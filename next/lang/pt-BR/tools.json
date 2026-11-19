@@ -85,7 +85,6 @@
  "tool.doc_name": "Nome",
  "tool.doc_tools": "Formatação",
  "tool.doc_page": "A página",
- "tool.told": "Adicionado aos comentários para {name} nesta aula.",
  "tool.beside": "Ao lado",
  "tool.books": "Livros",
  "tool.video": "Vídeo",
@@ -114,11 +113,9 @@
  "tool.no_contents": "Este PDF não tem lista de capítulos. Use a busca ou folheie as páginas.",
  "tool.page_of": "Página {n} de {of}",
  "tool.next_page": "Próxima página",
- "tool.page_to_ai": "Esta página para {name}",
  "tool.video_find": "Cole um link do YouTube ou digite palavras para buscar",
  "tool.go": "Ir",
  "tool.put_on_slide": "Colocar em um slide",
- "tool.to_ai": "Para {name}",
  "tool.on_youtube": "YouTube",
  "tool.not_youtube": "Só vídeos do YouTube tocam aqui.",
  "tool.video_help": "O YouTube não permite a busca dele dentro de outros sites, então as palavras abrem a busca do YouTube em uma nova aba. Copie lá o link de um vídeo e cole aqui para assistir ao lado da sua aula.",
@@ -161,5 +158,6 @@
  "tool.file_missing": "Esse arquivo está faltando.",
  "tool.pptx_failed": "Não foi possível criar o PowerPoint.",
  "tool.print_blocked": "Permita pop-ups nesta página para imprimir.",
- "tool.ok": "OK"
+ "tool.ok": "OK",
+ "tool.nb_unread": "Não foi possível ler estas notas, então nada será salvo por cima delas."
 }

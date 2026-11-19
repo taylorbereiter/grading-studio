@@ -9,6 +9,7 @@ import { prefs } from './prefs.js';
 import * as ls from '../shared/ls.js';
 import { check, saveLibrary, saveSetting } from './write.js';
 import { schoolNow, people } from '../planning/school.js';
+import { savePanel } from '../planning/panel.js';
 import { savePref, saveKv } from '../planning/write.js';
 
 const E = () => import('../engines/gstp.js');
@@ -18,8 +19,9 @@ function jobStore() {
   const wait = new Map(), none = {};
   return {
     get(k, d) { if (wait.has(k)) { const v = wait.get(k); return v === undefined ? d : v; } const v = ls.json(k, none); return v === none || v == null ? d : v; },
-    set(k, v) { wait.set(k, JSON.parse(JSON.stringify(v))); },
-    del(k) { wait.set(k, undefined); },
+    // The drawer width was just merged into the latest panel record. Write it before yielding to another job.
+    set(k, v) { if (k === 'gsp.panel') savePanel(v); else wait.set(k, JSON.parse(JSON.stringify(v))); },
+    del(k) { if (k === 'gsp.panel') savePanel(undefined); else wait.set(k, undefined); },
     flush() { for (const [k, v] of wait) { if (WORK.has(k)) saveSetting(k, v === undefined ? null : v); else if (v === undefined) prefs.del(k); else prefs.set(k, v); } },
   };
 }

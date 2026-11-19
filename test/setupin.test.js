@@ -358,3 +358,24 @@ test('to-do categories come in by name, in her order, with the role beside teach
   assert.deepEqual(r.back, [['grade', 'Grading and feedback', ''], ['plan', 'Lesson planning', ''], ['admin', 'Administrative', ''], ['role', 'Leadership role', '']], 'undo puts the app’s own back');
   await close();
 });
+
+test('the Planner side panel width can travel in My setup without changing its tab or open state', async () => {
+  const { page, close } = await openApp(browser);
+  try {
+    await page.evaluate(() => localStorage.setItem('gsp.panel', JSON.stringify({ open: false, tab: 'notes', w: 504 })));
+    await check(page, { gradingStudioSetup: 1, panelWidth: 711 });
+    await page.waitForSelector('#stpGo');
+    assert.match(await text(page, '.stpprev'), /711 px/);
+    const panel = () => page.evaluate(() => JSON.parse(localStorage.getItem('gsp.panel')));
+    assert.equal((await panel()).w, 504, 'preview leaves storage alone');
+    await page.click('#stpGo');
+    await page.waitForFunction(() => localStorage.getItem('gs.setupUndo'));
+    assert.deepEqual(await panel(), { open: false, tab: 'notes', w: 711 });
+    assert.equal(await page.evaluate(async () => JSON.parse(await __gs.stpExport()).panelWidth), 711);
+    await page.evaluate(() => {
+      localStorage.setItem('gsp.panel', JSON.stringify({ open: true, tab: 'books', w: 560 }));
+    });
+    await page.evaluate(() => __gs.stpUndo());
+    assert.deepEqual(await panel(), { open: true, tab: 'books', w: 560 }, 'undo preserves a later resize');
+  } finally { await close(); }
+});
