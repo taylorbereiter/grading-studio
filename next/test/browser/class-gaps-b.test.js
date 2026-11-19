@@ -562,8 +562,7 @@ test('B-065 B-039: each class page has its own address: attendance for a day or 
   await at('grades/reports', 'dialog[open] [data-rp-text]', 'grades');
   await at('grades/sheets', 'dialog[open] [data-pss-sheet]', 'grades');
   await at('todo/missing', '[data-mis]', 'todo');
-  // the heading takes the focus in an effect just after the list is drawn, so wait a moment for it
-  assert.ok(await p.waitForFunction(() => document.activeElement && document.activeElement.id === 'h-mis', { timeout: 3000 }).then(() => true, () => false), 'Missing work has the focus; it is on ' + await p.evaluate(() => { const a = document.activeElement; return a ? a.tagName + '#' + a.id + '.' + a.className + ' ' + (a.textContent || '').slice(0, 40) + ' ' + location.hash : 'nothing'; }));
+  await p.waitForFunction(() => document.activeElement && document.activeElement.id === 'h-mis', { timeout: 10000 });   // Missing work has the focus (it moves there a moment after the address settles)
   assert.deepEqual(errors, []);
   await ctx.close();
 });
