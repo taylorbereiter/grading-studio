@@ -30,7 +30,7 @@ before(async () => { srv = await serveSite(); browser = await launch(); dir = fs
 after(async () => { await browser.close(); await srv.close(); fs.rmSync(dir, { recursive: true, force: true }); });
 
 // The decoder's chunk, from what next/build.js last built.
-const heicChunk = () => { const meta = JSON.parse(fs.readFileSync(path.join(ROOT, 'next', 'dist', 'meta.json'), 'utf8')); return path.basename(Object.entries(meta.outputs).find(([, o]) => Object.keys(o.inputs).some(i => /libheif-js\//.test(i)))[0]); };
+const heicChunk = () => { const meta = JSON.parse(fs.readFileSync(path.join(ROOT, 'dist', 'meta.json'), 'utf8')); return path.basename(Object.entries(meta.outputs).find(([, o]) => Object.keys(o.inputs).some(i => /libheif-js\//.test(i)))[0]); };
 
 test('the iPhone photo decoder is fetched only when an HEIC picture arrives, and the photo opens', async () => {
   const ctx = await browser.createBrowserContext(), errors = [], got = [], chunk = heicChunk();
