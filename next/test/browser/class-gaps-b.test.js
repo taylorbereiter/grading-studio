@@ -566,3 +566,43 @@ test('B-065 B-039: each class page has its own address: attendance for a day or 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('B-902: Class setup > Pages in the tab row keeps Seating and Missing work beside the five tabs, each opening its tool; one taken out again; the current app shows the same pins', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-class-setup]', { timeout: 60000 });
+  assert.equal(await p.$('#tab-pin\\:seating'), null, 'nothing kept yet');
+  await menu(p, '[data-class-setup]', '^Pages in the tab row');
+  await p.waitForSelector('dialog[open] [data-kt="seating"] [role="switch"]');
+  assert.deepEqual(await p.$$eval('dialog[open] [data-kt]', a => a.map(e => e.dataset.kt)), ['attendance', 'seating', 'missing', 'charts', 'goals', 'reports']);
+  await p.click('dialog[open] [data-kt="seating"] [role="switch"]');
+  await p.waitForFunction(() => document.querySelector('dialog[open] [data-kt="seating"] [role="switch"]').getAttribute('aria-checked') === 'true');
+  await p.click('dialog[open] [data-kt="missing"] [role="switch"]');
+  await p.waitForFunction(() => (JSON.parse(localStorage.getItem('gs.lib')).me || {}).tabs?.join() === 'seating,missing', { polling: 100, timeout: 10000 });
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open]'));
+  await p.waitForSelector('#tab-pin\\:seating'); await p.waitForSelector('#tab-pin\\:missing');
+  await p.click('#tab-pin\\:seating');
+  await p.waitForSelector('dialog[open] [data-seat-menu], dialog[open] [data-seat-start]', { timeout: 30000 });
+  await p.waitForFunction(() => location.hash === '#/class/c1/people');
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open]'));
+  await p.click('#tab-pin\\:missing');
+  await p.waitForSelector('[data-mis]', { timeout: 30000 });
+  await p.waitForFunction(() => location.hash === '#/class/c1/todo');
+  // the current app shows the same two pages in its tab row
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  await classPage(old, 'c1');
+  await old.waitForSelector('.ctabs > [data-ctab="seating"]'); await old.waitForSelector('.ctabs > [data-ctab="missing"]');
+  await old.close();
+  // taken out again
+  await menu(p, '[data-class-setup]', '^Pages in the tab row');
+  await p.waitForSelector('dialog[open] [data-kt="seating"] [role="switch"][aria-checked="true"]');
+  await p.click('dialog[open] [data-kt="seating"] [role="switch"]');
+  await p.waitForFunction(() => (JSON.parse(localStorage.getItem('gs.lib')).me || {}).tabs?.join() === 'missing', { polling: 100, timeout: 10000 });
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.getElementById('tab-pin:seating') && document.getElementById('tab-pin:missing'));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

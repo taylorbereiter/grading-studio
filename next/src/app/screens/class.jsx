@@ -117,7 +117,7 @@ export default function ClassPage({ route, classes }) {
   const lib = (classes || []).filter(x => !x.loose);
   const x = (classes || []).find(k => (k.id || '-') === route.params.id);
   const tab = TABS.includes(route.params.tab) ? route.params.tab : 'course';
-  const [pk, setPk] = useState(false), Pk = usePart('picker', pk), Cl = usePart('clink', !!x && !x.loose);
+  const [pins, setPins] = useState([]), [pk, setPk] = useState(false), Pk = usePart('picker', pk), Cl = usePart('clink', !!x && !x.loose);
   // An address for a class that isn't there (src/app/screens.js noClass): said, and the class list; checked against a fresh read, so
   // a class made a moment ago isn't taken for one that's gone. #/class-named/<name> (the Planner's sidebar link) finds it by name.
   const id = route.params.id, nm = route.params.name;
@@ -147,8 +147,9 @@ export default function ClassPage({ route, classes }) {
       <div class="row gap">{Cl && <Cl.ClassLink classId={x.id} />}{Cl && <Cl.ClassSetup classId={x.id} />}
       {!x.loose && x.students > 0 && <Button size="sm" icon="shuffle" onClick={() => setPk(true)} data-pick-name>{t('plan.pr_pick')}</Button>}</div></header>
     {pk && Pk && <Pk.PickerFor classId={x.id} onClose={() => setPk(false)} />}
-    <Tabs label={t('plan.class_tabs')} value={tab} onChange={v => go('class', route.params.id, v === 'course' ? '' : v)}
-      tabs={[{ id: 'course', label: t('plan.course_line') }, { id: 'work', label: t('plan.assignments') }, { id: 'people', label: t('plan.people'), count: x.students || null }, { id: 'grades', label: t('plan.grades') }, { id: 'todo', label: t('nav.todo') }]} />
+    {Cl && !x.loose && <Cl.KeptTabs onTabs={setPins} />}
+    <Tabs label={t('plan.class_tabs')} value={tab} onChange={v => { const pin = pins.find(k => k.id === v); if (pin) location.hash = href('class', route.params.id, ...pin.to.split('/')); else go('class', route.params.id, v === 'course' ? '' : v); }}
+      tabs={[{ id: 'course', label: t('plan.course_line') }, { id: 'work', label: t('plan.assignments') }, { id: 'people', label: t('plan.people'), count: x.students || null }, { id: 'grades', label: t('plan.grades') }, { id: 'todo', label: t('nav.todo') }, ...(x.loose ? [] : pins)]} />
     {tab === 'work' ? (Work ? <Work.default classId={route.params.id} sub={route.params.sub} /> : <div class="loading" aria-busy="true" />)
       : tab === 'people' && !x.loose ? (People ? <People.default classId={route.params.id} sub={route.params.sub} more={route.params.more} /> : <div class="loading" aria-busy="true" />)
       : tab === 'grades' && !x.loose ? (Grades ? <Grades.default classId={route.params.id} sub={route.params.sub} /> : <div class="loading" aria-busy="true" />)
