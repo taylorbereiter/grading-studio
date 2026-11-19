@@ -36,7 +36,7 @@ async function fakeGoogle(page, D) {
     const P = {
       ViewId: { DOCS: 'docs' }, DocsViewMode: { LIST: 'list' }, Feature: { MULTISELECT_ENABLED: 'multi', SUPPORT_DRIVES: 'drives' },
       Action: { PICKED: 'picked', CANCEL: 'cancel' }, Response: { ACTION: 'action', DOCUMENTS: 'docs' },
-      DocsView: class { constructor() { this.o = {}; } setIncludeFolders() { return this; } setMode() { return this; } setSelectFolderEnabled(v) { this.o.pickFolder = v; return this; } setMimeTypes(v) { this.o.mimes = v; return this; } setParent(v) { this.o.parent = v; return this; } setLabel() { return this; } setOwnedByMe() { return this; } setEnableDrives() { return this; } },
+      DocsView: class { constructor() { this.o = {}; } setIncludeFolders() { return this; } setMode() { return this; } setSelectFolderEnabled(v) { this.o.pickFolder = v; return this; } setMimeTypes(v) { this.o.mimes = v; return this; } setParent(v) { this.o.parent = v; return this; } setLabel(v) { this.o.label = v; return this; } setOwnedByMe() { return this; } setEnableDrives() { return this; } },
       PickerBuilder: class {
         constructor() { this.o = { features: [], views: [] }; }
         setOAuthToken(t) { this.o.token = t; return this; } setAppId() { return this; } setOrigin() { return this; } setTitle(v) { this.o.title = v; return this; }
@@ -100,7 +100,7 @@ const makeVideo = p => p.evaluate(async () => {
   const b = new Uint8Array(await new Blob(parts).arrayBuffer()); let s = ''; for (const x of b) s += String.fromCharCode(x); return btoa(s);
 });
 
-test('papers picked in Drive come in for an assignment; Return saves the marked files to Drive, in My Drive when the folder beside them is not the app’s', async () => {
+test('D-004: papers picked in Drive come in for an assignment; Return saves the marked files to Drive, in My Drive when the folder beside them is not the app’s', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const D = { asked: [], folders: [], sent: [], videos: {}, papers: { '1PaperAriaPaperAriaPaperAria00001': await makePaper({ title: 'Aria outline' }), '1PaperBramPaperBramPaperBram00002': await makePaper({ title: 'Bram outline' }) } };
   const p = await page(ctx, errors, D);
@@ -117,6 +117,9 @@ test('papers picked in Drive come in for an assignment; Return saves the marked 
   await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
   const seen = await p.evaluate(() => window.__pickerSeen[0]);
   assert.ok(seen.features.includes('multi'), 'many papers at once');
+  // D-004: the chooser's tabs as the current app names them, and the folder the papers came from remembered for next time
+  assert.deepEqual(seen.views.map(v => v.label), ['My Drive', 'Shared with me', 'Shared drives']);
+  assert.equal(await p.evaluate(() => JSON.parse(localStorage.getItem('gs.gPaperDir'))), '1ParentNotOursParentNotOurs000000', 'kept where the current app keeps it');
   assert.deepEqual(await p.evaluate(() => window.__mark.state().batch.students.filter(s => s.files.length).map(s => s.key).sort()), ['Aria Testwell', 'Bram Sample']);
   assert.deepEqual(await p.evaluate(() => window.__mark.state().batch.drive), { id: '1PaperAriaPaperAriaPaperAria00001', name: 'Aria Testwell.pdf', kind: 'files' }, 'the download remembers it came from Drive');
   assert.ok(!D.asked.some(u => /files\?q=|files\?spaces=drive/.test(u)), 'the app never lists her Drive');
@@ -201,9 +204,12 @@ test('D-042: + Add > From Google Drive adds the file picked in Drive to that stu
   await p.goto(srv.url + 'next/#/class/c1/work');
   await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
   await p.evaluate(() => { window.__picks.push([{ id: '1PaperAriaPaperAriaPaperAria00001', name: 'Aria Testwell.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.evaluate(() => localStorage.setItem('gs.gPaperDir', JSON.stringify('1FolderPapersFolderPapers0000001')));
   await p.click('[data-bring-for="i9"]');
   await menuPick(p, 'Google Drive');
   await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  // D-004: papers open first in the folder she last took papers from
+  assert.deepEqual(await p.evaluate(() => { const v = window.__pickerSeen[0].views[0]; return [v.label, v.parent]; }), ['Last folder', '1FolderPapersFolderPapers0000001']);
   await goTo(p, 'Aria Testwell');
   await p.evaluate(() => { window.__picks.length = 0; window.__picks.push([{ id: '1PaperLateLatePaperLatePaper00003', name: 'Late page.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
   await p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.trim() === 'From Google Drive'); if (it) { it.click(); return true; } const b = document.querySelector('[data-addmenu]'); if (b && !document.querySelector('.pop')) b.click(); return false; }, { timeout: 30000, polling: 500 });

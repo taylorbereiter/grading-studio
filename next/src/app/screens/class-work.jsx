@@ -147,7 +147,7 @@ export default function ClassWork({ classId, sub }) {
   };
   const pick = (it, el) => { want.current = it; fromDrive.current = null; el.current.value = ''; el.current.click(); };
   // From Google Drive (src/app/drive.js openFromDrive): the papers picked in Google's chooser come in as files from the computer do
-  const S = useSaving(), driveItem = it => (S && S.google().pickNow ? [{ label: t('file.from_drive_pick'), icon: 'drive', onSelect: () => { want.current = it; S.driveFill(files.current, { title: t('drive.pick_many'), picked: p => { fromDrive.current = p[0] && { id: p[0].id, name: p[0].name, kind: p.length === 1 && /\.zip$/i.test(p[0].name) ? 'zip' : 'files' }; } }).catch(e => { console.error(e); toast(t('drive.failed')); }); } }] : []);
+  const S = useSaving(), driveItem = it => (S && S.google().pickNow ? [{ label: t('file.from_drive_pick'), icon: 'drive', onSelect: () => { want.current = it; S.driveFill(files.current, { title: t('drive.pick_many'), papers: true, picked: p => { fromDrive.current = p[0] && { id: p[0].id, name: p[0].name, kind: p.length === 1 && /\.zip$/i.test(p[0].name) ? 'zip' : 'files' }; } }).catch(e => { console.error(e); toast(t('drive.failed')); }); } }] : []);
   // Files to match to a roster (mark/bringin.jsx MatchRoster): picked, matched to a class's names, then opened as above
   const [match, setMatch] = useState(null);
   // first: files or a whole folder (folder names often carry the student's name); it null: no assignment, a new download "Matched files"

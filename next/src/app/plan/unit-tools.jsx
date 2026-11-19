@@ -67,6 +67,9 @@ export function UnitSide({ p, u }) {
   const shots = u.files.filter(f => f.kind === 'atlas'), files = u.files.filter(f => f.kind !== 'atlas');
   const stds = [...new Set(u.weeks.flatMap(w => String(w.standards || '').split(/[,;]+/).map(s => s.trim()).filter(Boolean)))];
   const summ = files.filter(f => f.kind === 'summative');
+  // Drive's mark beside Add files and Add a screenshot (src/planner/units.js gpDrv; D-021): the picked files go in as if from the computer
+  const fileIn = useRef(), shotIn = useRef();
+  const takeIn = kind => e => { const fs = [...e.currentTarget.files]; e.currentTarget.value = ''; if (fs.length) addFiles(p, u, fs, kind).catch(saveFailed); };
   const pickFiles = (kind, accept) => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true; if (accept) i.accept = accept; i.onchange = () => addFiles(p, u, [...i.files], kind).catch(saveFailed); i.click(); };
   const open = async f => {
     if (f.kind === 'doc') return setDoc(f.id);
@@ -103,7 +106,7 @@ export function UnitSide({ p, u }) {
         {f.kind !== 'doc' && <Select label={t('more.kind')} value={f.kind} options={[{ value: 'summative', label: t('more.summative') }, { value: 'other', label: t('more.unit_file') }]} onChange={v => put(n => { const y = n.files.find(z => z.id === f.id); if (y) y.kind = v; })} />}
         <span class="row">{f.kind !== 'doc' && <IconButton icon="replace" size="sm" label={t('more.replace')} onClick={() => replace(f)} />}<IconButton icon="download" size="sm" label={t('more.download')} onClick={() => download(f)} />
           <IconButton icon="trash" size="sm" label={t('common.remove')} onClick={() => remove(f)} /></span></li>)}</ul>}
-      <div class="row"><Button size="sm" icon="upload" onClick={() => pickFiles(null)} data-focus="unit-add-file">{t('more.add_files')}</Button><Button size="sm" icon="note" onClick={newDoc} data-focus="unit-new-doc">{t('plan.new_document')}</Button></div>
+      <div class="row"><Button size="sm" icon="upload" onClick={() => pickFiles(null)} data-focus="unit-add-file">{t('more.add_files')}</Button><input ref={fileIn} type="file" multiple hidden onChange={takeIn(null)} data-ufile /><DriveButton input={fileIn} small data-udrv="file" /><Button size="sm" icon="note" onClick={newDoc} data-focus="unit-new-doc">{t('plan.new_document')}</Button></div>
       <p class="mute small">{t('more.files_help')}</p>
     </section>
     <section class={'side-sec ushots' + (over ? ' over' : '')} aria-labelledby="h-ushots" tabIndex={0} onPaste={paste}
@@ -112,7 +115,7 @@ export function UnitSide({ p, u }) {
       {shots.length > 0 && <div class="shots">{shots.map(f => <figure><button type="button" class="shot" onClick={() => open(f)} aria-label={t('more.look_at', { name: f.name })}><Thumb id={f.id} alt={f.name} /></button>
         <figcaption><span data-raw>{f.name}</span><IconButton icon="trash" size="sm" label={t('common.remove')} onClick={() => remove(f)} /></figcaption></figure>)}</div>}
       <p class="mute small">{t('more.shots_help')}</p>
-      <div class="row"><Button size="sm" icon="image" onClick={() => pickFiles('atlas', 'image/*')} data-focus="unit-add-shot">{t('more.add_shot')}</Button>
+      <div class="row"><Button size="sm" icon="image" onClick={() => pickFiles('atlas', 'image/*')} data-focus="unit-add-shot">{t('more.add_shot')}</Button><input ref={shotIn} type="file" multiple hidden accept="image/*" onChange={takeIn('atlas')} data-ushotin /><DriveButton input={shotIn} small data-udrv="shot" />
         <Button size="sm" icon="assist" onClick={() => setAsking(true)} data-focus="unit-ask">{t('more.fill_with', { name })}</Button></div>
     </section>
     <UnitBank p={p} u={u} />
