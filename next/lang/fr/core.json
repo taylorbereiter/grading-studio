@@ -166,6 +166,9 @@
  "drive.failed": "Cela ne vient pas de Google Drive. Réessayez.",
  "cmd.dark_mode": "Mode sombre",
  "cmd.light_mode": "Mode clair",
+ "update.wait_save": "Votre dernier travail n’est pas encore enregistré, la mise à jour attend donc. Voyez la barre rouge.",
+ "update.stale": "Une autre fenêtre a été mise à jour. Cette fenêtre est encore sur l’ancienne version.",
+ "update.reload": "Recharger cette fenêtre",
  "saved.pf_ask": "Le Dossier de Planification demande une autorisation",
  "saved.pf_lost": "Dossier de Planification non lié"
 }
