@@ -532,6 +532,9 @@ test('Return (D-029 D-030 D-031 D-032 D-033 D-034 D-035 A-020 A-021 A-022 A-023 
   assert.deepEqual(await m.evaluate(() => window.__gs.state().batch.returned), back, 'the current app reads the same Returned');
   assert.equal(await m.evaluate(() => localStorage.getItem('gs.xopts')), 'true');
   assert.deepEqual(errors.filter(e => !/couldn.t|PDF|page/i.test(e)), []);
+  await ctx.close();
+});
+
 test('B-066: an assignment\'s views each have an address: grades/sheet opens the Grade sheet, insights/consistency opens Consistency, and examples opens the assignment\'s Examples tab', async () => {
   const ctx = await browser.createBrowserContext(), errors = [];
   const m = await page(ctx, errors);
