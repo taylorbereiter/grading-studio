@@ -252,7 +252,8 @@ test('D-006 D-007 D-036: Choose from Drive… matched by name, Change folder, Dr
   await p.waitForFunction(() => /Aria Testwell speech\.webm/.test(document.querySelector('[data-pvrow="Aria Testwell"]').textContent) && /Bram Sample talk\.webm/.test(document.querySelector('[data-pvrow="Bram Sample"]').textContent), { timeout: 30000 });
   assert.match(await p.$eval('[data-pvrow="Aria Testwell"]', e => e.textContent), /Google Drive/, 'marked as from Drive');
   assert.equal(await p.evaluate(() => window.__pickerSeen.slice(-1)[0].features.includes('multi')), true, 'many at once');
-  assert.match(await p.$eval('dialog[open] .vddir', e => e.textContent), /Class videos.*Change folder/);
+  // the line is asked of the video part, so it shows a moment after the box opens
+  await p.waitForFunction(() => /Class videos.*Change folder/.test((document.querySelector('dialog[open] .vddir') || {}).textContent || ''), { timeout: 30000 });
   // Change folder
   await p.evaluate(() => { window.__picks.push([{ id: '1FolderOtherFolderOtherFolder00008', name: 'Speeches 2026', mimeType: 'application/vnd.google-apps.folder' }]); });
   await p.click('dialog[open] [data-vddir]');

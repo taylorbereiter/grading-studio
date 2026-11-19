@@ -6,7 +6,6 @@
 import { h, Fragment } from 'preact';
 import { Button, Card } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
-import { assistant } from '../../services/assistant.js';
 import { anonOn, shownName } from '../../engines/gdraw.js';
 import { state } from '../../engines/gcore.js';
 import './inout-lines.js';
@@ -62,8 +61,8 @@ export function Fails({ failed, onClose }) {
 }
 
 // Ask your assistant (optional): papers with names covered, marks only, and bringing its feedback back. Each opens Share at that step.
-export function AskCard({ onShare }) {
-  const ai = assistant().name || t('assistant.generic');
+export function AskCard({ onShare, ai }) {   // ai: the assistant's name, from mark.jsx (services/assistant.js)
+  ai = ai || t('assistant.generic');
   const row = (title, sub, k, label) => <div class="rtrow"><span><b>{title}</b><small class="mute">{sub}</small></span><Button size="sm" onClick={() => onShare(k)} data-rtask={k}>{label}</Button></div>;
   return <Card title={<>{t('inout.r_ai_h', { ai })} <span class="mute">{t('inout.r_ai_opt')}</span></>} id="rtClaude">
     {row(t('inout.r_ai_papers'), t('inout.r_ai_papers_s'), 'papers', t('paper.cc_title'))}

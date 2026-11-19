@@ -20,10 +20,8 @@ export function startWhole() {
   // The sync itself loads after the first screen is drawn (it brings the merge and the writes with it).
   let D = null;
   const drive = () => import('./drive.js').then(m => { if (!D) { D = m; m.startDrive(); } return m; });
-  // kept videos nothing names any more (students/write.js sweepVideos; H-048): 20 seconds after the app opens, and after a download goes
-  const sweep = () => import('../students/write.js').then(m => m.sweepVideos()).catch(err => { if (!(err && /lock|ReadOnly|CannotSave/.test(err.name + err.message))) console.error(err); });
-  setTimeout(sweep, (typeof window !== 'undefined' && window.__gsSweepMs) || 20000);
-  onSaved(e => { if (e.kind === 'papers' && e.gone) setTimeout(sweep, 0); });
+  // Email links and the video sweep, just after start (whole/later.js)
+  setTimeout(() => import('./later.js').then(m => m.startLater(), e => console.error(e)), 800);
   onSaved(e => { if (SYNCS(e)) { markSyncDue(); if (G.email) drive().then(m => m.syncSoon()); } queue = queue.then(() => folderSaved(e)).catch(err => console.error(err)); });
   if (G.email || G.token) setTimeout(drive, 0);
   onGoogle(changedSaving); onFolder(changedSaving);
@@ -51,8 +49,6 @@ export function startWhole() {
     vidBytes: async (id, onStep, interactive) => (await V()).bytes(id, onStep, interactive),
     vidCheck: async id => (await V()).check(id),
     vidPick: async o => (await V()).videos(o),
-    // the videos folder the chooser opens in, and Change folder (src/video.js vidDir, pickVidDir)
-    vidDir: () => lsJson('gs.gVidDir', null), vidPickDir: async () => (await V()).pickVidDir(),
     vidSignIn: async () => { const { gToken } = await import('./google.js'); return gToken(true, 'pick'); },
     pullOne: async (id, key) => { await drive(); return (await import('./papers.js')).pullOne(id, key); },
     // the linked folder (whole/folder.js, folder-run.js), going back to its dated copies, and this browser's safety copies (whole/safety.js)

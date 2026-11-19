@@ -157,7 +157,7 @@ function AnchorCard({ E, onOpen }) {
 const when = ms => { const d = new Date(ms); return d.toDateString() === new Date().toDateString() ? t('setup.r_today', { t: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) }) : t('setup.r_on', { d: d.toLocaleDateString([], { day: 'numeric', month: 'short' }) }); };
 // The mark key lives in Settings, Marking: go there and bring its card into view.
 const toMarkKey = () => { goTo('settings', 'marking'); let n = 0; const look = () => { const el = document.querySelector('[data-sgmk]'); if (el) { el.closest('section').scrollIntoView({ block: 'start' }); const i = el.querySelector('input'); if (i) i.focus(); } else if (n++ < 40) setTimeout(look, 75); }; look(); };
-export function Return({ E, cur, onOpen, onShare, onSheet, rescans = [], onRescans }) {
+export function Return({ E, cur, onOpen, onShare, onSheet, rescans = [], onRescans, ai }) {
   const [RC, setRC] = useState(null), [fails, setFails] = useState([]), [optsOpen, setOptsOpen] = useState(() => !!store.get('gs.xopts', false));
   useEffect(() => { PARTS.retcards().then(setRC, e => console.error(e)); }, []);
   const [, tick] = useState(0), [say, setSay] = useState(''), [bar, setBar] = useState(null), [keep, setKeep] = useState(true), [sheet, setSheet] = useState(true), [dpi, setDpi] = useState(150);
@@ -256,17 +256,17 @@ export function Return({ E, cur, onOpen, onShare, onSheet, rescans = [], onResca
           {sent.length > 6 && <li class="mute">{t('setup.r_more', { n: sent.length - 6 })}</li>}</ul>}
         {who ? <Button data-rtone onClick={one}>{t('setup.r_one_btn', { name: who })}</Button> : <p class="mute">{t('setup.r_one_none')}</p>}</Card>
       <AnchorCard E={E} onOpen={onOpen} />
-      {RC && onShare && <RC.AskCard onShare={onShare} />}
+      {RC && onShare && <RC.AskCard onShare={onShare} ai={ai} />}
       {RC && <RC.RescanCard list={rescans} onShow={onRescans} />}
     </aside>
   </section>;
 }
 
 // The tab, read once the papers have been read (a grade written on a paper counts), as the current app reads them first.
-export default function Out({ tab, sub, E, cur, onOpen, onShare, onSheet, rescans, onRescans }) {
+export default function Out({ tab, sub, E, cur, onOpen, onShare, onSheet, rescans, onRescans, ai }) {
   const [ok, setOk] = useState(false);
   useEffect(() => { let live = true; E.readPapers().then(() => live && setOk(true), e => { console.error(e); if (live) setOk(true); }); return () => { live = false; }; }, [E]);
   if (!ok) return <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />;
-  const P = { E, cur, onOpen, onShare, onSheet, rescans, onRescans, sub };
+  const P = { E, cur, onOpen, onShare, onSheet, rescans, onRescans, sub, ai };
   return tab === 'grades' ? <Grades {...P} /> : tab === 'insights' ? <Insights {...P} /> : tab === 'return' ? <Return {...P} /> : <EmptyState title="" />;
 }
