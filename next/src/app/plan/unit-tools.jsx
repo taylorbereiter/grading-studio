@@ -9,10 +9,10 @@
 // A unit's files are planning files only, never a student's work. Units are kept in kv "units" as the current Planner keeps them.
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { Sheet, Dialog, Button, IconButton, Icon, Select, toast } from '../../ui/index.js';
+import { Sheet, Dialog, Button, IconButton, Icon, Select, Menu, toast } from '../../ui/index.js';
 import { TextBox } from '../../ui/services.jsx';
 import { t, date } from '../../i18n/t.js';
-import { PARTS } from '../router.js';
+import { PARTS, href } from '../router.js';
 import { engine } from '../../planning/engine.js';
 import { saveKv, saveLessonFile, dropLessonFile } from '../../planning/write.js';
 import { lessonBlob } from '../../planning/plan.js';
@@ -23,8 +23,9 @@ import { saveFailed } from './save.js';
 import { usePart } from '../parts.js';
 import './lines.js';
 import './more-lines.js';
+import './cal-lines.js';
 import { UnitBank } from './bank-edit.jsx';
-import { DriveButton } from '../drive-button.jsx';
+import { DriveButton, useDrivePick } from '../drive-button.jsx';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 const aiName = () => assistant().name || t('assistant.generic');
@@ -62,7 +63,9 @@ function Thumb({ id, alt }) {
 
 /* ---------- beside the weeks ---------- */
 export function UnitSide({ p, u }) {
-  const [big, setBig] = useState(null), [doc, setDoc] = useState(null), [asking, setAsking] = useState(false), [over, setOver] = useState(false);
+  const [big, setBig] = useState(null), [doc, setDoc] = useState(null), [asking, setAsking] = useState(false), [over, setOver] = useState(false), [overF, setOverF] = useState(false);
+  const shotIn = useRef(null), fileIn = useRef(null), shotDrive = useDrivePick(shotIn);   // the file boxes Google Drive's chooser fills (drive-button.jsx)
+  const took = kind => e => { const fs = [...e.currentTarget.files]; e.currentTarget.value = ''; if (fs.length) addFiles(p, u, fs, kind).catch(saveFailed); };
   const Doc = usePart('doc', !!doc), E = engine(p), name = aiName(), tool = toolName();
   const shots = u.files.filter(f => f.kind === 'atlas'), files = u.files.filter(f => f.kind !== 'atlas');
   const stds = [...new Set(u.weeks.flatMap(w => String(w.standards || '').split(/[,;]+/).map(s => s.trim()).filter(Boolean)))];
@@ -89,6 +92,14 @@ export function UnitSide({ p, u }) {
       await saveLessonFile(b, id); n.files.push({ id, name: nm, kind: 'doc', type: DOC, size: b.size, added: Date.now() }); await saveUnit(p, n); setDoc(id); } catch (e) { saveFailed(e); }
   };
   const paste = e => { const fs = [...((e.clipboardData && e.clipboardData.files) || [])].filter(f => /^image\//.test(f.type)); if (fs.length) { e.preventDefault(); addFiles(p, u, fs, 'atlas').catch(saveFailed); } };
+  // A screenshot pasted anywhere on the page goes to the unit plan's pictures, as on the current Planner's unit page (units.js), unless
+  // it is pasted into a box or a sheet is open (rebuild/audit/hooks.md H-072).
+  useEffect(() => {
+    const any = e => { const el = e.target; if (e.defaultPrevented || document.querySelector('dialog[open]') || (el && el.closest && el.closest('input,textarea,select,[contenteditable],.ushots'))) return; paste(e); };
+    document.addEventListener('paste', any); return () => document.removeEventListener('paste', any);
+  }, [u.id, u.files.length]);
+  // The lessons tied to this unit (l.unit), newest first (src/planner/library.js unitLessonsSection).
+  const tied = (p.lessons || []).filter(l => l && l.unit === u.id).sort((a, b) => (((b.slots || [])[0] || {}).date || '').localeCompare(((a.slots || [])[0] || {}).date || '') || String(a.title).localeCompare(String(b.title), undefined, { numeric: true }));
   return <>
     <section class="side-sec ugoals" aria-labelledby="h-goals"><h2 id="h-goals" class="sub">{t('more.unit_goals')}</h2>
       {stds.length > 0 && <p class="chips">{stds.map(s => <span class="chip sm" data-raw>{s}</span>)}</p>}
@@ -96,25 +107,33 @@ export function UnitSide({ p, u }) {
       {u.weeks.some(w => w.focus) && <p class="mute small">{t('more.goals_weeks', { n: u.weeks.filter(w => w.focus).length, of: u.weeks.length })}</p>}
       {!stds.length && !summ.length && <p class="mute small">{t('more.goals_none')}</p>}
     </section>
-    <section class="side-sec ufiles" aria-labelledby="h-ufiles"><h2 id="h-ufiles" class="sub">{t('more.unit_files')}</h2>
+    <section class={'side-sec ufiles' + (overF ? ' over' : '')} aria-labelledby="h-ufiles"
+      onDragOver={e => { e.preventDefault(); setOverF(true); }} onDragLeave={() => setOverF(false)} onDrop={e => { e.preventDefault(); setOverF(false); const fs = [...e.dataTransfer.files]; if (fs.length) addFiles(p, u, fs, null).catch(saveFailed); }} data-ufiles-drop><h2 id="h-ufiles" class="sub">{t('more.unit_files')}</h2>
       {files.length > 0 && <ul class="mlist">{files.map(f => <li data-ufile={f.id}>
         <button type="button" class="link mopen" onClick={() => open(f)}><Icon name={f.kind === 'doc' ? 'note' : 'file'} size="sm" /><span data-raw>{f.name}</span></button>
         <small class="mute">{f.kind === 'doc' ? t('more.document') : kb(f.size)}</small>
         {f.kind !== 'doc' && <Select label={t('more.kind')} value={f.kind} options={[{ value: 'summative', label: t('more.summative') }, { value: 'other', label: t('more.unit_file') }]} onChange={v => put(n => { const y = n.files.find(z => z.id === f.id); if (y) y.kind = v; })} />}
         <span class="row">{f.kind !== 'doc' && <IconButton icon="replace" size="sm" label={t('more.replace')} onClick={() => replace(f)} />}<IconButton icon="download" size="sm" label={t('more.download')} onClick={() => download(f)} />
           <IconButton icon="trash" size="sm" label={t('common.remove')} onClick={() => remove(f)} /></span></li>)}</ul>}
-      <div class="row"><Button size="sm" icon="upload" onClick={() => pickFiles(null)} data-focus="unit-add-file">{t('more.add_files')}</Button><Button size="sm" icon="note" onClick={newDoc} data-focus="unit-new-doc">{t('plan.new_document')}</Button></div>
+      <div class="row"><Button size="sm" icon="upload" onClick={() => pickFiles(null)} data-focus="unit-add-file">{t('more.add_files')}</Button><Button size="sm" icon="note" onClick={newDoc} data-focus="unit-new-doc">{t('plan.new_document')}</Button>
+        <input type="file" multiple class="vh" tabIndex={-1} aria-hidden="true" ref={fileIn} onChange={took(null)} data-ufile-input /><DriveButton input={fileIn} small /></div>
       <p class="mute small">{t('more.files_help')}</p>
     </section>
-    <section class={'side-sec ushots' + (over ? ' over' : '')} aria-labelledby="h-ushots" tabIndex={0} onPaste={paste}
+    <section class={'side-sec ushots' + (over ? ' over' : '')} aria-labelledby="h-ushots" onPaste={paste}
       onDragOver={e => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={e => { e.preventDefault(); setOver(false); const fs = [...e.dataTransfer.files].filter(f => /^image\//.test(f.type)); if (fs.length) addFiles(p, u, fs, 'atlas').catch(saveFailed); }}>
       <h2 id="h-ushots" class="sub">{tool ? t('more.from_named', { name: tool }) : t('more.from_plan')}</h2>
-      {shots.length > 0 && <div class="shots">{shots.map(f => <figure><button type="button" class="shot" onClick={() => open(f)} aria-label={t('more.look_at', { name: f.name })}><Thumb id={f.id} alt={f.name} /></button>
-        <figcaption><span data-raw>{f.name}</span><IconButton icon="trash" size="sm" label={t('common.remove')} onClick={() => remove(f)} /></figcaption></figure>)}</div>}
+      {shots.length > 0 && <div class="shots">{shots.map(f => <figure key={f.id + ':' + f.added}><button type="button" class="shot" onClick={() => open(f)} aria-label={t('more.look_at', { name: f.name })}><Thumb id={f.id} alt={f.name} /></button>
+        <figcaption><span data-raw>{f.name}</span><IconButton icon="replace" size="sm" label={t('more.replace')} onClick={() => replace(f)} data-shot-replace={f.id} /><IconButton icon="trash" size="sm" label={t('common.remove')} onClick={() => remove(f)} /></figcaption></figure>)}</div>}
       <p class="mute small">{t('more.shots_help')}</p>
-      <div class="row"><Button size="sm" icon="image" onClick={() => pickFiles('atlas', 'image/*')} data-focus="unit-add-shot">{t('more.add_shot')}</Button>
+      <div class="row">{shotDrive ? <Menu label={t('more.add_shot')} items={[{ id: 'pc', label: t('file.from_computer'), icon: 'upload', onSelect: () => pickFiles('atlas', 'image/*') }, { id: 'drive', label: t('file.from_drive_pick'), icon: 'drive', onSelect: shotDrive }]}
+          trigger={q => <Button size="sm" icon="image" {...q} data-focus="unit-add-shot">{t('more.add_shot')}</Button>} />
+        : <Button size="sm" icon="image" onClick={() => pickFiles('atlas', 'image/*')} data-focus="unit-add-shot">{t('more.add_shot')}</Button>}
+        <input type="file" multiple accept="image/*" class="vh" tabIndex={-1} aria-hidden="true" ref={shotIn} onChange={took('atlas')} data-shot-input />
         <Button size="sm" icon="assist" onClick={() => setAsking(true)} data-focus="unit-ask">{t('more.fill_with', { name })}</Button></div>
     </section>
+    {tied.length > 0 && <section class="side-sec ulessons" aria-labelledby="h-ulessons"><h2 id="h-ulessons" class="sub">{t('cal.unit_lessons')} <span class="mute">{tied.length}</span></h2>
+      <ul class="mlist">{tied.map(l => <li data-ulesson={l.id}><a class="link" href={href('lesson', l.id)}><Icon name="slides" size="sm" /><span data-raw>{l.title || t('plan.untitled')}</span></a>
+        {(l.slots || [])[0] && <small class="mute" data-raw>{date(at(l.slots[0].date), { day: 'numeric', month: 'short' })}</small>}</li>)}</ul></section>}
     <UnitBank p={p} u={u} />
     {asking && <UnitAssist p={p} u={u} onClose={() => setAsking(false)} />}
     <Dialog open={!!big} title={big ? big.f.name : ''} onClose={() => { URL.revokeObjectURL(big.url); setBig(null); }} actions={<Button onClick={() => { URL.revokeObjectURL(big.url); setBig(null); }}>{t('common.close')}</Button>}>{big && <img class="shotbig" src={big.url} alt="" />}</Dialog>

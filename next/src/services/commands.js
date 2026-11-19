@@ -1,14 +1,18 @@
 // The command bar's list (Ctrl/Cmd+K). Screens add their own commands and take them away when they close.
 // { id, label: a translated line, group: a translated heading, icon, keys: 'mod+…' shown beside it, run, when }
+// or { id, query: true, label: q => line, run: q => …, group, icon }: a row made from what is typed.
 const all = new Map(), told = new Set();
 export function addCommand(c) { all.set(c.id, c); told.forEach(f => f()); return () => { all.delete(c.id); told.forEach(f => f()); }; }
 export function onCommandsChange(f) { told.add(f); return () => told.delete(f); }
 const fold = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 // Every word typed must start a word of the label (or of its extra words); labels that start with the first word come first.
 export function findCommands(q) {
+  const q0 = q;
   const words = fold(q).split(/\s+/).filter(Boolean), out = [];
   for (const c of all.values()) {
     if (c.when && !c.when()) continue;
+    // query: a command made from what is typed (Search inside lessons for "…"), offered once two letters are typed, after the rest
+    if (c.query) { const q = String(q0 || '').trim(); if (q.length >= 2) out.push({ ...c, label: c.label(q), run: () => c.run(q), score: 2 }); continue; }
     const label = typeof c.label === 'function' ? c.label() : c.label, hay = fold(label + ' ' + (c.also || '')), starts = hay.split(/[\s/,.-]+/);
     if (!words.every(w => starts.some(s => s.startsWith(w)) || hay.includes(w))) continue;
     out.push({ ...c, label, score: words.length && fold(label).startsWith(words[0]) ? 0 : 1 });
