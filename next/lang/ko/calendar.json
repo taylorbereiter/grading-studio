@@ -1,0 +1,28 @@
+{
+ "cal.card_menu": "{title} 메뉴",
+ "cal.alt": "다른 버전",
+ "cal.finished": "완성본",
+ "cal.taught_to": "슬라이드 {n}까지 진행",
+ "cal.also": "{name}에도",
+ "cal.class_page": "반 페이지",
+ "cal.link_add": "반 페이지 링크 추가…",
+ "cal.link_change": "반 페이지 링크 변경…",
+ "cal.link_title": "{name} 반 페이지",
+ "cal.link_label": "웹 주소",
+ "cal.link_hint": "주간 보기의 이 반, 그 수업, 채점 화면에 표시됩니다. 비워 두면 삭제됩니다.",
+ "cal.link_bad": "웹 링크가 아닌 것 같습니다",
+ "cal.go_date": "날짜로 이동",
+ "cal.no_unit": "이번 주 단원 없음",
+ "cal.open_unit": "{title} 열기",
+ "cal.new_unit_for": "이번 주부터 {course} 새 단원",
+ "cal.all_lessons": "모든 수업",
+ "cal.all_find": "수업 찾기",
+ "cal.no_slot": "시간표에 없음",
+ "cal.new_loose": "반 없는 새 수업",
+ "cal.del_sure": "삭제할까요? 한 번 더 누르기",
+ "cal.n_lessons": {
+  "one": "수업 {n}개",
+  "other": "수업 {n}개"
+ },
+ "cal.none_found": "맞는 수업이 없습니다."
+}

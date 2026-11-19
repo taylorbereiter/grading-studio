@@ -8,7 +8,7 @@
 import { addLines, t, getLocale } from '../i18n/t.js';
 import { use } from '../engines/gcore.js';
 import LINES from '../../lang/engine.en.json';
-addLines(LINES);
+addLines(LINES, 'engine');
 
 const EXACT = new Map(), PATTERNS = [];
 const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

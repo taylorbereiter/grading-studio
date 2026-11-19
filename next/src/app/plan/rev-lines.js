@@ -2,4 +2,4 @@
 // assistant's changes slide by slide (plan/pfolder.jsx). Kept apart from lesson.en.json so Beside and the lesson tools don't carry them.
 import { addLines } from '../../i18n/t.js';
 import LINES from '../../../lang/review.en.json';
-addLines(LINES);
+addLines(LINES, 'review');
