@@ -165,5 +165,8 @@
  },
  "drive.closed": "Google 창이 닫혔어요.",
  "drive.offline": "Google에 연결할 수 없어요. 인터넷 연결을 확인하세요.",
- "drive.failed": "Google Drive에서 가져오지 못했어요. 다시 시도하세요."
+ "drive.failed": "Google Drive에서 가져오지 못했어요. 다시 시도하세요.",
+ "update.wait_save": "최근 작업이 아직 저장되지 않아 업데이트가 기다리고 있습니다. 빨간 막대를 확인하세요.",
+ "update.stale": "다른 창이 업데이트되었습니다. 이 창은 아직 이전 버전입니다.",
+ "update.reload": "이 창 새로 고침"
 }

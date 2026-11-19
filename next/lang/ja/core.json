@@ -165,5 +165,8 @@
  },
  "drive.closed": "Google のウィンドウが閉じられました。",
  "drive.offline": "Google に接続できませんでした。インターネット接続を確認してください。",
- "drive.failed": "Google Drive から取得できませんでした。もう一度お試しください。"
+ "drive.failed": "Google Drive から取得できませんでした。もう一度お試しください。",
+ "update.wait_save": "最新の作業がまだ保存されていないため、更新は待機しています。赤いバーをご覧ください。",
+ "update.stale": "別のウィンドウが更新されました。このウィンドウはまだ古いバージョンです。",
+ "update.reload": "このウィンドウを再読み込み"
 }

@@ -165,5 +165,8 @@
  },
  "drive.closed": "Google 的窗口已关闭。",
  "drive.offline": "无法连接 Google。请检查网络连接。",
- "drive.failed": "这不是从 Google Drive 获取的。请重试。"
+ "drive.failed": "这不是从 Google Drive 获取的。请重试。",
+ "update.wait_save": "您最新的工作还没有保存，所以更新会先等一下。请看红色提示栏。",
+ "update.stale": "另一个窗口已经更新。这个窗口仍是旧版本。",
+ "update.reload": "重新加载这个窗口"
 }
