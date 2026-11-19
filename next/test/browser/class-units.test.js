@@ -286,14 +286,34 @@ test('No papers: presentations or videos makes a notes page for each student; Fo
   const bid = (await libOf(p)).classes[0].units[0].items.find(i => i.id === 'i9').batchId;
   assert.ok(bid, 'the card is linked to the pages');
 
+  // a safety copy made since (as the current app's are: localStorage, and the stores in slices) holds this download's work
+  const safe = (fn, ...a) => p.evaluate(fn, ...a);
+  await safe(id => new Promise((res, rej) => { const r = indexedDB.open('grading-studio-safety', 1); r.onupgradeneeded = () => { r.result.createObjectStore('meta'); r.result.createObjectStore('data'); };
+    r.onsuccess = () => { const tx = r.result.transaction(['meta', 'data'], 'readwrite'); tx.objectStore('meta').put({ id: 'c1', t: Date.now(), why: 'Before bringing work in', app: 'test', fromV: 1, toV: 1 }, 'c1');
+      tx.objectStore('data').put({ ls: { 'gs.batches': JSON.stringify({ [id]: 1, other: 1 }), ['gsc.saved.' + id]: '1' } }, 'c1'); tx.objectStore('data').put({ where: 'grading-studio-keep/work', k: [id, 'other'], v: [{ s: {} }, { s: {} }] }, 'c1|0');
+      tx.oncomplete = () => { r.result.close(); res(); }; tx.onerror = () => rej(tx.error); }; }), bid);
+
   await p.goto(srv.url + 'next/#/class/c1/work');
   await p.waitForSelector('[data-again-for="i9"]', { timeout: 30000 });
   await pickItem(p, '[data-again-for="i9"]', '^Forget these papers');
   await p.waitForSelector('dialog[open] [data-fgok]');
+  assert.match(await p.$eval('dialog[open]', d => d.textContent), /To get the papers back, bring the download in again on this card/, 'the box says how to get them back');
   await p.click('dialog[open] [data-fgok]');
   await p.waitForSelector('[data-bring-for="i9"]', { timeout: 30000 });
   assert.ok(JSON.parse(await p.evaluate(() => localStorage.getItem('gs.tomb')))[bid], 'a tombstone, so a synced copy lets it go too');
   assert.equal(await p.evaluate(id => new Promise(r => { const q = indexedDB.open('grading-studio-keep'); q.onsuccess = () => { const g = q.result.transaction('meta').objectStore('meta').get(id); g.onsuccess = () => r(g.result == null); }; }), bid), true, 'its row is gone from this browser');
+  // out of the safety copy too, as the current app does (src/migrate.js gsData.forget): Put back can't bring its work back
+  const copy = await safe(() => new Promise(res => { const r = indexedDB.open('grading-studio-safety'); r.onsuccess = () => { const o = r.result.transaction('data').objectStore('data'), a = o.get('c1'), b = o.get('c1|0'); b.onsuccess = () => res({ ls: a.result.ls, k: b.result.k }); }; }));
+  assert.deepEqual(copy, { ls: { 'gs.batches': JSON.stringify({ other: 1 }) }, k: ['other'] });
+
+  // brought in again on the card: the same pages, kept and saved at once, and not forgotten any more
+  await pickItem(p, '[data-bring-for="i9"]', 'presentations or videos');
+  await p.waitForSelector('dialog[open] [data-sngo]:not([disabled])', { timeout: 30000 });
+  await p.click('dialog[open] [data-np="cols"]');
+  await p.click('dialog[open] [data-sngo]');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready, { timeout: 60000 });
+  assert.equal(await p.evaluate(() => window.__mark.state().batch.id), bid, 'the same download');
+  await p.waitForFunction(id => !(JSON.parse(localStorage.getItem('gs.tomb') || '{}'))[id], {}, bid);
   assert.deepEqual(errors, []);
   await ctx.close();
 });
@@ -332,16 +352,16 @@ test('order: cards and units moved, a unit to another class, its plan link; a cl
   assert.equal(await p.$eval('[data-uatlas="u1"]', a => a.href), 'https://example.org/units/stories');
   const placed = await order();
 
-  // the class one down in the sidebar
-  await p.waitForSelector('[data-cmenu]');
-  await pickItem(p, '[data-cmenu]', 'Move down in the sidebar');
-  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes.map(c => c.id).join() === 'c2,c1');
-  await p.waitForFunction(() => [...document.querySelectorAll('a[href="#/class/c1"], a[href="#/class/c2"]')].map(x => x.getAttribute('href')).join() === '#/class/c2,#/class/c1');
-
-  // Delete class, from Edit roster: its units to No class, and Undo puts it back where it was
+  // Edit roster: the class one down in the sidebar, then deleted (its units to No class), and Undo puts it back where it was
   await p.goto(srv.url + 'next/#/class/c1/people');
   await p.waitForSelector('[data-roster-edit]', { timeout: 30000 });
   await p.click('[data-roster-edit]');
+  await p.waitForSelector('dialog[open] [data-class-down]');
+  assert.equal(await p.$eval('dialog[open] [data-class-up]', b => b.disabled), true, 'the first class goes no higher');
+  await p.click('dialog[open] [data-class-down]');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes.map(c => c.id).join() === 'c2,c1');
+  await p.waitForFunction(() => [...document.querySelectorAll('a[href="#/class/c1"], a[href="#/class/c2"]')].map(x => x.getAttribute('href')).join() === '#/class/c2,#/class/c1');
+  await p.waitForFunction(() => document.querySelector('dialog[open] [data-class-down]').disabled);
   await p.waitForSelector('dialog[open] [data-class-del]');
   await p.click('dialog[open] [data-class-del]');
   await p.waitForSelector('dialog[open] [data-class-delok]');

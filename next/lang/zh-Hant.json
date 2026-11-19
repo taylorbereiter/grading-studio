@@ -6440,7 +6440,6 @@
  "engine.tn_start": "啟動計時器",
  "engine.tn_just_for": "只給 {name}",
  "class.del_ok": "刪除",
- "class.c_more": "{name} 的更多操作",
  "class.c_up": "在側邊欄上移",
  "class.c_down": "在側邊欄下移",
  "help.cmd_new_asg": "新增作業",
@@ -6509,7 +6508,8 @@
  "class.to_step": "輸入的分數",
  "mark.cw_fg_menu": "忘記這些書面作業…",
  "class.fg_t": "要忘記「{name}」的書面作業嗎？",
- "class.fg_text": "這份下載的書面作業、批改和分數會從這個瀏覽器移除，同步的副本或連結的資料夾也會一併移除。作業卡片會保留。這個動作無法復原。",
+ "class.fg_text": "這份下載的書面作業、批改和分數會從這個瀏覽器和它的安全副本中移除，同步的副本或連結的資料夾也會一併移除。作業卡片會保留。",
+ "class.fg_back": "要取回書面作業，請在這張卡片上再次匯入那份下載。批改和分數不會回來。",
  "class.fg_ok": "忘記",
  "class.fg_done": "已忘記「{name}」的書面作業",
  "class.fg_failed": "沒有成功，所以什麼都沒忘記。請再試一次。"

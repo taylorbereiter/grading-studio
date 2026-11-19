@@ -27,7 +27,10 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 // .csv or .txt list read the same way, with any student ID and email kept as that student's details. Saved as one undo step.
 export function RosterDialog({ c, onClose }) {
   const [name, setName] = useState(c ? c.name : ''), [names, setNames] = useState(c ? c.names.join('\n') : ''), up = useRef([]), file = useRef(null);
-  const [err, setErr] = useState(''), [Gc, setGc] = useState(null), [sure, setSure] = useState(false);
+  const [err, setErr] = useState(''), [Gc, setGc] = useState(null), [sure, setSure] = useState(false), bk = useBook();
+  // its place in the sidebar (src/app/screens.js cmove): one up or one down, one undo step each, while the box stays open
+  const all = bk && !bk.error ? bk.lib.classes : [], at = c ? all.findIndex(k => String(k.id) === String(c.id)) : -1;
+  const place = d => change(t('class.u_order'), l => { const a = l.classes.findIndex(k => String(k.id) === String(c.id)), j = a + d; if (a < 0 || j < 0 || j >= l.classes.length) return; [l.classes[a], l.classes[j]] = [l.classes[j], l.classes[a]]; }, true).catch(e => console.error(e));
   // Delete (src/app/screens.js editClass): asked first; its units and assignments move to No class, and Undo puts it all back
   const del = async () => {
     let moved = false;
@@ -65,6 +68,8 @@ export function RosterDialog({ c, onClose }) {
     <p class="mute small">{t('class.roster_note')}</p>
     <Button size="sm" icon="upload" onClick={() => file.current.click()} data-roster-file>{t('class.upload_list')}</Button><DriveButton input={file} />
     <input type="file" ref={file} accept=".csv,.txt,text/csv,text/plain" hidden onChange={read} data-roster-input />
+    {c && all.length > 1 && <p class="row gap"><Button size="sm" variant="quiet" icon="chu" disabled={at <= 0} onClick={() => place(-1)} data-class-up>{t('class.c_up')}</Button>
+      <Button size="sm" variant="quiet" icon="chd" disabled={at < 0 || at >= all.length - 1} onClick={() => place(1)} data-class-down>{t('class.c_down')}</Button></p>}
     {!c && <Button size="sm" icon="school" onClick={() => PARTS.gc().then(m => setGc(() => m.ClassroomSheet))} data-roster-gc>{t('class.gc_open')}</Button>}
     {Gc && <Gc onClose={(id, cols) => { setGc(null); if (id) go('class', id, cols ? 'grades' : 'people'); }} />}
   </Dialog>;

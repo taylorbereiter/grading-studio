@@ -6412,7 +6412,6 @@
  "engine.tn_start": "Stoppuhr starten",
  "engine.tn_just_for": "Nur für {name}",
  "class.del_ok": "Löschen",
- "class.c_more": "Mehr für {name}",
  "class.c_up": "In der Seitenleiste nach oben",
  "class.c_down": "In der Seitenleiste nach unten",
  "help.cmd_new_asg": "Neue Aufgabe",
@@ -6480,7 +6479,8 @@
  "class.to_step": "Eingetippte Punkte",
  "mark.cw_fg_menu": "Diese Arbeiten vergessen…",
  "class.fg_t": "Die Arbeiten für „{name}“ vergessen?",
- "class.fg_text": "Die Arbeiten, Korrekturen und Punkte dieses Downloads verschwinden aus diesem Browser, und eine synchronisierte Kopie oder ein verknüpfter Ordner gibt sie ebenfalls frei. Die Aufgabenkarte bleibt. Das lässt sich nicht rückgängig machen.",
+ "class.fg_text": "Die Arbeiten, Korrekturen und Punkte dieses Downloads verschwinden aus diesem Browser und seinen Sicherheitskopien, und eine synchronisierte Kopie oder ein verknüpfter Ordner gibt sie ebenfalls frei. Die Aufgabenkarte bleibt.",
+ "class.fg_back": "Um die Arbeiten zurückzubekommen, holen Sie den Download auf dieser Karte noch einmal herein. Korrekturen und Punkte kommen nicht zurück.",
  "class.fg_ok": "Vergessen",
  "class.fg_done": "Arbeiten für „{name}“ vergessen",
  "class.fg_failed": "Das hat nicht geklappt, also wurde nichts vergessen. Versuchen Sie es noch einmal."

@@ -6412,7 +6412,6 @@
  "class.way_myp": "PAI do IB",
  "class.way_dp": "PD do IB",
  "class.del_ok": "Excluir",
- "class.c_more": "Mais para {name}",
  "class.c_up": "Subir na barra lateral",
  "class.c_down": "Descer na barra lateral",
  "help.cmd_new_asg": "Nova atividade",
@@ -6481,7 +6480,8 @@
  "class.to_step": "Notas digitadas",
  "mark.cw_fg_menu": "Esquecer estes trabalhos…",
  "class.fg_t": "Esquecer os trabalhos de “{name}”?",
- "class.fg_text": "Os trabalhos, as correções e as notas deste download saem deste navegador, e uma cópia sincronizada ou pasta vinculada também os libera. O cartão da atividade fica. Isso não pode ser desfeito.",
+ "class.fg_text": "Os trabalhos, as correções e as notas deste download saem deste navegador e das cópias de segurança dele, e uma cópia sincronizada ou pasta vinculada também os libera. O cartão da atividade fica.",
+ "class.fg_back": "Para recuperar os trabalhos, traga o download de novo neste cartão. As correções e as notas não voltam.",
  "class.fg_ok": "Esquecer",
  "class.fg_done": "Trabalhos de “{name}” esquecidos",
  "class.fg_failed": "Não funcionou, então nada foi esquecido. Tente de novo."
