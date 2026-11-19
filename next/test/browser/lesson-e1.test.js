@@ -535,3 +535,150 @@ test('E1-002 E1-046 E1-056 E1-067: a slide, a file and a document go in the box;
   const theirs = await p.evaluate(() => window.__planner && window.__planner.L ? true : false); assert.ok(theirs);
   await p.ctx.close();
 });
+
+const withTalk = () => { const L = JSON.parse(JSON.stringify(require('./planseed.js').LESSONS)), l = L.find(x => x.id === 'L2');
+  l.talk = [{ by: 'you', text: 'Shorter overall?', at: 1792000000000 }];
+  l.slides[2].talk = [{ by: 'claude', text: 'Cut the second bullet?', at: 1792000000000 }, { by: 'you', text: 'Old note', at: 1792000000000, done: true }];
+  return L; };
+test('E1-034 E1-047 E1-048 E1-049 E1-050: every comment in one list, ticked Done or opened again, done ones shown on asking, and a slide opened from it', async () => {
+  const p = await K.fresh(1366, withTalk());
+  await K.open(p, 'lesson/L2');
+  await p.click('main [data-focus="lesson-menu"]'); await p.waitForSelector('[role^="menuitem"]'); await K.item(p, 'All comments');
+  await p.waitForSelector('.sheet [data-cgo]');
+  const heads = await p.$$eval('.sheet [data-cgo]', bs => bs.map(b => b.dataset.cgo + ' ' + b.textContent.trim()));
+  assert.deepEqual(heads, ['-1 The whole lesson', '2 Slide 3: Warm-up'], 'the whole lesson first, then each slide with comments');
+  assert.equal(await p.$$eval('.sheet .cmt', d => d.length), 2, 'the done one is hidden');
+  await p.click('[data-focus="show-done"]');
+  assert.equal(await p.$$eval('.sheet .cmt', d => d.length), 3, 'Show done shows it');
+  await p.click('[data-cdone="2:0"]');
+  assert.ok(await until(async () => { const l = await K.lessonInDb(p, 'L2'); return l.slides[2].talk[0].done === true; }), 'Done is saved on the comment');
+  await p.click('[data-cdone="2:1"]');
+  assert.ok(await until(async () => { const l = await K.lessonInDb(p, 'L2'); return !('done' in l.slides[2].talk[1]); }), 'Open again takes Done off');
+  await p.click('[data-cgo="2"]');
+  await p.waitForSelector('main .editor .ed-form', { timeout: 10000 });
+  assert.ok(await until(() => p.$eval('main .ed-list [data-slide-i="2"]', b => b.getAttribute('aria-current') === 'true' || b.classList.contains('on') || b.getAttribute('aria-selected') === 'true').catch(() => false)), 'the slide opens in Edit');
+  const mine = await K.lessonInDb(p, 'L2'), both = await K.sameInPlanner(p, 'L2', mine, ['slides']);
+  assert.deepEqual(both.slides[0].map(s => s.talk), both.slides[1].map(s => s.talk), 'the current Planner reads the same comments');
+  assert.deepEqual(p.errors, []);
+  await p.close();
+});
+
+const withPending = () => { const L = JSON.parse(JSON.stringify(require('./planseed.js').LESSONS)), l = L.find(x => x.id === 'L3');
+  const before = JSON.parse(JSON.stringify(l.slides));
+  l.slides[2].title = 'Warm-up, shorter'; l.slides[2].talk = [{ by: 'claude', text: 'Made it one bullet.', at: 1792000000000 }];
+  l.slides.splice(4, 1); l.slides.push({ ...JSON.parse(JSON.stringify(before[4])), id: 'L3new', title: 'Exit ticket, two words' });
+  l.pending = { at: 1792000000000, before, title: l.title };
+  return L; };
+test('E1-043 E1-044 E1-045: the assistant\'s changes slide by slide, Keep mine or theirs on each, All mine, All theirs, Later and Done', async () => {
+  const p = await K.fresh(1366, withPending());
+  await K.open(p, 'lesson/L3');
+  await p.waitForSelector('[data-arrived-look]', { timeout: 10000 });
+  await p.click('[data-arrived-look]');
+  await p.waitForSelector('.sheet [data-crow]');
+  const heads = await p.$$eval('.sheet [data-crow] h3', h => h.map(x => x.textContent));
+  assert.equal(heads.length, 3); assert.match(heads[0], /Slide 3 changed/); assert.match(heads[1], /added a slide/); assert.match(heads[2], /took out a slide/);
+  assert.equal(await p.$$eval('.sheet .cside.on input[data-cpick$=":ai"]', i => i.length), 3, 'theirs picked on each to start');
+  await p.click('[data-call="mine"]');
+  assert.equal(await p.$$eval('.sheet .cside.on input[data-cpick$=":mine"]', i => i.length), 3, 'All mine');
+  await p.click('[data-call="ai"]');
+  assert.equal(await p.$$eval('.sheet .cside.on input[data-cpick$=":ai"]', i => i.length), 3, 'All theirs');
+  await p.click('[data-clater]');
+  assert.ok(await until(async () => !(await p.$('.sheet [data-crow]'))), 'Later closes it');
+  assert.ok((await K.lessonInDb(p, 'L3')).pending, 'and the lesson still waits for review');
+  await p.click('[data-arrived-look]');
+  await p.waitForSelector('.sheet [data-crow]');
+  await p.click('.sheet [data-crow="0"] .cside:first-child');   // Keep mine on the changed slide
+  await p.click('.sheet [data-crow="2"] .cside:first-child');   // put the taken-out one back
+  await p.click('[data-cmpdone]');
+  assert.ok(await until(async () => !(await K.lessonInDb(p, 'L3')).pending), 'Done clears the review');
+  const l = await K.lessonInDb(p, 'L3');
+  assert.deepEqual(l.slides.map(s => s.id), ['L3s0', 'L3s1', 'L3s2', 'L3s3', 'L3s4', 'L3new'], 'the taken-out slide is back after the one before it; the added one stays');
+  assert.equal(l.slides[2].title, 'Warm-up', 'hers is back on the changed slide');
+  assert.equal(l.slides[2].talk[0].text, 'Made it one bullet.', 'its comments stay either way');
+  assert.ok(await until(() => p.evaluate(() => [...document.querySelectorAll('.toast')].some(x => /Kept yours on 2/.test(x.textContent)))), 'what was kept is said');
+  const both = await K.sameInPlanner(p, 'L3', l, ['slides', 'pending']);
+  assert.deepEqual(both.slides[0].map(s => [s.id, s.title]), both.slides[1].map(s => [s.id, s.title]));
+  assert.equal(both.pending[0], undefined);
+  assert.deepEqual(p.errors, []);
+  await p.close();
+});
+
+const withTaught = () => { const L = JSON.parse(JSON.stringify(require('./planseed.js').LESSONS));
+  L.find(x => x.id === 'L1').taught = [{ classId: 'A1', date: '2026-10-26', slide: 3, of: 5, note: 'Start with the poem', at: 1792000000000, agenda: [1, 3] }];
+  return L; };
+test('E1-059 E1-060 E1-061: where each class got to, noted by hand, edited (its agenda ticks kept) and removed', async () => {
+  const p = await K.fresh(1366, withTaught());
+  await K.open(p, 'lesson/L1');
+  await p.waitForSelector('main [data-taught] [data-tg="0"]');
+  assert.match(await p.$eval('main [data-taught] [data-tg="0"]', e => e.textContent), /Got to slide 3 of 5 · agenda 1 of 3/);
+  const menu = async name => { await p.click('main [data-focus="lesson-menu"]'); await p.waitForSelector('[role^="menuitem"]'); await K.item(p, name); };
+  // Add a note: the other class on the lesson
+  await menu('Add a note');
+  await p.waitForSelector('[data-focus="taught-class"]');
+  await p.select('[data-focus="taught-class"] select, select[data-focus="taught-class"]', '1').catch(async () => { await p.$eval('[data-focus="taught-class"]', s => { s.value = '1'; s.dispatchEvent(new Event('change', { bubbles: true })); }); });
+  const slide = await p.$('select[data-focus="taught-slide"]') ? 'select[data-focus="taught-slide"]' : '[data-focus="taught-slide"] select';
+  await p.select(slide, '4');
+  await p.type('input[data-focus="taught-note"], [data-focus="taught-note"] input', 'Exit ticket next time');
+  await p.click('[data-focus="taught-save"]');
+  assert.ok(await until(async () => ((await K.lessonInDb(p, 'L1')).taught || []).length === 2), 'the note is added');
+  let l = await K.lessonInDb(p, 'L1'), a2 = l.taught.find(x => x.classId === 'A2');
+  assert.deepEqual([a2.date, a2.slide, a2.of, a2.note], ['2026-10-26', 4, 5, 'Exit ticket next time']);
+  // Edit the first: its agenda ticks stay
+  await p.click('main [data-taught] [data-tg="0"] [aria-haspopup]'); await p.waitForSelector('[role^="menuitem"]'); await K.item(p, 'Edit');
+  await p.waitForSelector('[data-focus="taught-save"]');
+  await p.select(slide, '5');
+  await p.click('[data-focus="taught-save"]');
+  assert.ok(await until(async () => { const x = (await K.lessonInDb(p, 'L1')).taught.find(y => y.classId === 'A1'); return x.slide === 5 && x.agenda && x.agenda[0] === 1 && x.note === 'Start with the poem'; }), 'edited, agenda and note kept');
+  await p.waitForFunction(() => /Finished all 5 slides/.test(document.querySelector('main [data-taught]').textContent));
+  // Remove the second
+  await p.click('main [data-taught] [data-tg="1"] [aria-haspopup]'); await p.waitForSelector('[role^="menuitem"]'); await K.item(p, 'Remove');
+  assert.ok(await until(async () => (await K.lessonInDb(p, 'L1')).taught.length === 1), 'removed');
+  l = await K.lessonInDb(p, 'L1');
+  const both = await K.sameInPlanner(p, 'L1', l, ['taught']);
+  assert.deepEqual(both.taught[0], both.taught[1], 'the current Planner reads the same notes');
+  assert.deepEqual(p.errors, []);
+  await p.close();
+});
+
+test('H-053: a note from the phone waiting in gsp.taughtIn is put on its lesson on the computer, and marked put on', async () => {
+  const p = await K.fresh();
+  await p.evaluate(() => localStorage.setItem('gsp.taughtIn', JSON.stringify({ items: { 'L2|A1|2026-10-27': { slide: 2, of: 5, x: 'Ran out of time', t: 1793000000000 } } })));
+  await K.open(p, 'home');
+  assert.ok(await until(async () => { const l = await K.lessonInDb(p, 'L2'); return l.taught && l.taught[0] && l.taught[0].note === 'Ran out of time'; }, 10000), 'the note is on the lesson');
+  const l = await K.lessonInDb(p, 'L2');
+  assert.deepEqual([l.taught[0].classId, l.taught[0].date, l.taught[0].slide, l.taught[0].of, l.taught[0].at], ['A1', '2026-10-27', 2, 5, 1793000000000]);
+  assert.equal(JSON.parse(await p.evaluate(() => localStorage.getItem('gsp.taughtIn'))).items['L2|A1|2026-10-27'].f, 1, 'marked put on');
+  const both = await K.sameInPlanner(p, 'L2', l, ['taught']);
+  assert.deepEqual(both.taught[0], both.taught[1]);
+  assert.deepEqual(p.errors, []);
+  await p.close();
+});
+
+test('E1-054 E1-055: a link edited, and links picked from School resources (searched when there are many)', async () => {
+  const p = await K.fresh();
+  await p.evaluate(() => localStorage.setItem('gs.school', JSON.stringify({ items: [1, 2, 3, 4, 5, 6, 7].map(i => ({ id: 'k' + i, kind: 'link', name: i === 3 ? 'Poetry archive' : 'School page ' + i, url: 'https://example.org/p' + i, cls: [], group: i === 3 ? 'English' : '' })).concat([{ id: 'f1', kind: 'note', name: 'Bell times' }]) })));
+  await K.open(p, 'lesson/L2');
+  await p.click('main [data-focus="add-link"]');
+  await p.waitForSelector('main [data-lkpick]');
+  assert.equal(await p.$$eval('main [data-lkpick]', b => b.length), 7, 'only School links are offered');
+  await p.type('main input[data-focus="lk-q"], main [data-focus="lk-q"] input', 'poetry english');
+  assert.ok(await until(async () => (await p.$$eval('main [data-lkpick]', b => b.map(x => x.dataset.lkpick))).join() === 'k3'), 'the search finds it by name and group');
+  await p.click('main [data-lkpick="k3"]');
+  assert.ok(await until(async () => ((await K.lessonInDb(p, 'L2')).links || []).some(x => x.url === 'https://example.org/p3' && x.name === 'Poetry archive')), 'the pick goes on');
+  assert.ok(await until(() => p.$eval('main [data-lkpick="k3"]', b => b.disabled)), 'and is shown as added');
+  await p.$eval('main [data-focus="link-url"]', el => { el.value = 'example.com/sonnets'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.click('main [data-focus="link-add"]');
+  assert.ok(await until(async () => ((await K.lessonInDb(p, 'L2')).links || []).length === 2), 'a typed one goes on too');
+  const id = (await K.lessonInDb(p, 'L2')).links.find(x => /sonnets/.test(x.url)).id;
+  await p.click('main [data-lkedit="' + id + '"]');
+  await p.waitForSelector('main [data-focus="link-url"]');
+  assert.equal(await p.$eval('main [data-focus="link-url"]', e => e.value), 'https://example.com/sonnets', 'Edit opens with its address');
+  assert.equal(await p.$('main [data-lkpick]'), null, 'and no School picks');
+  await p.$$eval('main .mlink input', ins => { ins[1].value = 'Sonnet guide'; ins[1].dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.click('main [data-focus="link-add"]');
+  assert.ok(await until(async () => (await K.lessonInDb(p, 'L2')).links.find(x => x.id === id).name === 'Sonnet guide'), 'the new name is saved on the same link');
+  const l = await K.lessonInDb(p, 'L2'), both = await K.sameInPlanner(p, 'L2', l, ['links']);
+  assert.deepEqual(both.links[0], both.links[1], 'the current Planner reads the same links');
+  assert.deepEqual(p.errors, []);
+  await p.close();
+});

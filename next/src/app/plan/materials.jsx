@@ -3,8 +3,8 @@
 // [{ id, name, url }], only addresses, each opening in a new tab. Replace keeps the file's id, so anything that points at it still
 // does. Taking a file or link off can be undone from the toast. Planning material only, never student work.
 import { h, Fragment } from 'preact';
-import { useState, useRef, useEffect } from 'preact/hooks';
-import { Button, IconButton, Icon, TextInput, Menu, toast } from '../../ui/index.js';
+import { useState, useRef } from 'preact/hooks';
+import { Button, IconButton, Icon, Menu, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { engine } from '../../planning/engine.js';
 import { saveLessonFile, dropLessonFile } from '../../planning/write.js';
@@ -39,11 +39,9 @@ function classGroups(p, l, E) {
   return out;
 }
 
-export function Materials({ p, l, onSave, onTool = () => {} }) {
+export function Materials({ p, l, onSave, onTool = () => {}, More }) {
   const E = engine(p), files = l.files || [], links = l.links || [];
-  const pick = useRef(), drive = useDrivePick(pick, true), form = useRef(), swap = useRef(''), [over, setOver] = useState(false), [adding, setAdding] = useState(false), [url, setUrl] = useState(''), [name, setName] = useState('');
-  // The address box takes the keys as soon as Add a link opens it.
-  useEffect(() => { const b = adding && form.current && form.current.querySelector('input'); if (b) b.focus(); }, [adding]);
+  const pick = useRef(), drive = useDrivePick(pick, true), swap = useRef(''), [over, setOver] = useState(false), [adding, setAdding] = useState(null);
   const put = async n => { try { await onSave(n); } catch (e) { saveFailed(e); } };
   const add = async list => {
     const n = copy(l); n.files = n.files || []; let k = 0;
@@ -74,13 +72,6 @@ export function Materials({ p, l, onSave, onTool = () => {} }) {
     await put(n); if (!ex) await dropLessonFile(f.id).catch(e => console.error(e));
     toast(t('plan.removed', { name: f.name }), { undo: async () => { if (b) await saveLessonFile(b, f.id); const m = copy(n); m.files = [...(m.files || []), f]; await put(m); } });
   };
-  // Read from the boxes themselves, so a key pressed straight after typing never misses the last letter.
-  const addLink = async () => {
-    const box = form.current ? [...form.current.querySelectorAll('input')] : [], uv = box[0] ? box[0].value : url, nv = box[1] ? box[1].value : name;
-    const u = E.lkUrl(uv); if (!u) return toast(t('plan.link_bad'));
-    const n = copy(l); n.links = E.normLinks([...(n.links || []), { name: nv.trim(), url: u }]);
-    setUrl(''); setName(''); setAdding(false); await put(n);
-  };
   const removeLink = async x => {
     const n = copy(l); n.links = n.links.filter(y => y.id !== x.id); if (!n.links.length) delete n.links;
     await put(n); toast(t('plan.removed', { name: x.name }), { undo: () => { const m = copy(n); m.links = E.normLinks([...(m.links || []), x]); put(m); } });
@@ -97,19 +88,16 @@ export function Materials({ p, l, onSave, onTool = () => {} }) {
         {f.kind !== 'doc' && !isExample(f.id) && <IconButton icon="replace" size="sm" label={t('file.replace')} onClick={() => { swap.current = f.id; pick.current.multiple = false; pick.current.click(); pick.current.multiple = true; }} />}
         <IconButton icon="trash" size="sm" label={t('common.remove')} onClick={() => remove(f)} /></li>)}
       {links.map(x => <li><a class="link mopen" href={x.url} target="_blank" rel="noopener"><Icon name="link" size="sm" /><span data-raw>{x.name}</span></a>
-        <small class="mute" data-raw>{E.lkHost(x.url)}</small><IconButton icon="trash" size="sm" label={t('common.remove')} onClick={() => removeLink(x)} /></li>)}
+        <small class="mute" data-raw>{E.lkHost(x.url)}</small>{More && <IconButton icon="pen" size="sm" label={t('common.edit')} onClick={() => setAdding({ was: x })} data-lkedit={x.id} />}<IconButton icon="trash" size="sm" label={t('common.remove')} onClick={() => removeLink(x)} /></li>)}
     </ul>
     {classGroups(p, l, E).map(g => <div class="lkgroup"><p class="lkh"><b>{t('plan.for_all_year', { name: g.label })}</b><a class="link" href={href('school')}>{t('plan.change_in_school')}</a></p>
       <ul class="mlist">{g.links.map(x => <li><a class="link mopen" href={x.url} target="_blank" rel="noopener"><Icon name="link" size="sm" /><span data-raw>{x.name}</span></a><small class="mute" data-raw>{E.lkHost(x.url)}</small></li>)}</ul>
       {g.more.length > 0 && <p class="mute small">{t('plan.also_in_school', { name: g.label })} <span data-raw>{g.more.join(', ')}</span></p>}</div>)}
-    {adding ? <div class="mlink" ref={form}>
-      <TextInput label={t('plan.link_address')} type="url" value={url} onInput={setUrl} onKeyDown={e => { if (e.key === 'Enter') addLink(); }} data-focus="link-url" />
-      <TextInput label={t('plan.link_name')} value={name} onInput={setName} onKeyDown={e => { if (e.key === 'Enter') addLink(); }} />
-      <div class="row"><Button size="sm" variant="quiet" onClick={() => setAdding(false)}>{t('common.cancel')}</Button><Button size="sm" variant="primary" onClick={addLink} data-focus="link-add">{t('plan.add_link')}</Button></div></div>
+    {adding && More ? <More.LinkForm p={p} l={l} was={adding.was} save={put} onClose={() => setAdding(null)} />
       : <div class="row">{drive ? <Menu label={t('plan.add_files')} trigger={b => <Button {...b} size="sm" icon="upload" data-focus="add-files">{t('plan.add_files')}</Button>}
           items={[{ label: t('file.from_computer'), icon: 'upload', onSelect: () => { swap.current = ''; pick.current.click(); } }, { label: t('file.from_drive_pick'), icon: 'drive', onSelect: () => { swap.current = ''; drive(); } }]} />
           : <Button size="sm" icon="upload" onClick={() => { swap.current = ''; pick.current.click(); }} data-focus="add-files">{t('plan.add_files')}</Button>}
-        <Button size="sm" icon="link" onClick={() => setAdding(true)} data-focus="add-link">{t('plan.add_link')}</Button>
+        <Button size="sm" icon="link" onClick={() => setAdding({})} data-focus="add-link">{t('plan.add_link')}</Button>
         <Button size="sm" icon="note" onClick={() => onTool('newdoc')} data-focus="new-doc">{t('plan.new_document')}</Button>
         <Button size="sm" icon="image" onClick={() => onTool('example')} data-focus="add-example-mat">{t('plan.add_example')}</Button></div>}
   </section>;

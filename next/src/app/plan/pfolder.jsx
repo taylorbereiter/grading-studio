@@ -6,7 +6,8 @@
 // Loaded through router.js PARTS.pfolder, so Settings and the lesson page carry none of it until it is wanted.
 import { h, Fragment } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { Card, Button, Icon, toast } from '../../ui/index.js';
+import { Card, Button, Icon, Sheet, toast } from '../../ui/index.js';
+import { Slide } from './slide.jsx';
 import { t } from '../../i18n/t.js';
 import { assistant } from '../../services/assistant.js';
 import { plannerFolder } from '../../planning/folder.js';
@@ -17,6 +18,8 @@ import { loadPlan } from '../../planning/plan.js';
 import { engine } from '../../planning/engine.js';
 import { saveFailed } from './save.js';
 import '../screens/prefs-lines.js';
+import './rev-lines.js';
+import './lines.js';
 
 const inSample = () => !!(window.__gsSample && window.__gsSample.on);
 const can = () => 'showDirectoryPicker' in window;
@@ -94,10 +97,55 @@ export function Arrived({ p, l, save }) {
     } catch (e) { saveFailed(e); }
   };
   const keep = () => { const n = JSON.parse(JSON.stringify(l)); delete n.pending; if (n.status === 'review') n.status = ''; save(n); };
+  const [cmp, setCmp] = useState(false), ch = changesOf(l);
   return <div class="aimark" role="status" data-arrived>
     <Icon name="assist" size="sm" /><span>{l.pending ? t('prefs.pf_changed', { name }) : t('prefs.pf_arrived')}</span>
     <span class="mute">{t('prefs.pf_read_through')}</span><span class="grow" />
+    {ch.length > 0 && <Button size="sm" variant="primary" onClick={() => setCmp(true)} data-arrived-look>{t('rev.look_each')}</Button>}
     {l.pending && Array.isArray(l.pending.before) && <Button size="sm" variant="quiet" onClick={back} data-arrived-back>{t('prefs.pf_back')}</Button>}
     <Button size="sm" onClick={keep} data-arrived-keep>{t('prefs.pf_reviewed')}</Button>
+    {cmp && <Compare p={p} l={l} ch={ch} name={name} save={save} onClose={() => setCmp(false)} />}
   </div>;
+}
+
+// The assistant's changes, slide by slide (src/planner/review.js changesOf, compareDlg, applyPicks): theirs picked on each to start;
+// Keep mine puts her slide back (its comments stay either way), leaves an added one out or puts a taken-out one back after the slide
+// that came before it in her version. Later closes and keeps the mark; Done keeps the picks and clears it.
+const slideKey = s => JSON.stringify({ l: s.layout, t: s.title, b: s.body, z: s.size, n: s.notes, i: s.img && s.img.src.length + ':' + s.img.source, v: s.video && s.video.url + s.video.start });
+export function changesOf(l) {
+  if (!l.pending || !Array.isArray(l.pending.before)) return [];
+  const before = l.pending.before, out = [];
+  l.slides.forEach((s, at) => { const o = before.find(x => x.id === s.id); if (!o) out.push({ kind: 'added', now: s, at }); else if (slideKey(o) !== slideKey(s)) out.push({ kind: 'changed', now: s, was: o, at }); });
+  for (const o of before) if (!l.slides.some(s => s.id === o.id)) out.push({ kind: 'removed', was: o });
+  return out;
+}
+function Compare({ p, l, ch, name, save, onClose }) {
+  const [pick, setPick] = useState(() => ch.map(() => 'ai'));
+  const set = (i, v) => setPick(pick.map((x, j) => j === i ? v : x));
+  const done = async () => {
+    const E = engine(p), n = JSON.parse(JSON.stringify(l));
+    ch.forEach((c, i) => {
+      if (pick[i] !== 'mine') return;
+      if (c.kind === 'added') n.slides = n.slides.filter(s => s.id !== c.now.id);
+      else if (c.kind === 'changed') { const k = n.slides.findIndex(s => s.id === c.now.id); n.slides[k] = E.normSlide({ ...c.was, talk: c.now.talk }); }
+      else { const before = l.pending.before, j = before.findIndex(s => s.id === c.was.id); let at = 0;
+        for (let k = j - 1; k >= 0; k--) { const q = n.slides.findIndex(s => s.id === before[k].id); if (q >= 0) { at = q + 1; break; } }
+        n.slides.splice(at, 0, E.normSlide(c.was)); }
+    });
+    delete n.pending; if (n.status === 'review') n.status = '';
+    const mine = pick.filter(x => x === 'mine').length;
+    if (await save(n)) { toast(mine ? t('rev.cmp_kept', { mine, ai: pick.length - mine, name }) : t('rev.cmp_all', { name })); onClose(); }
+  };
+  const side = (c, i, v, s, label) => <label class={'cside' + (pick[i] === v ? ' on' : '')}><input type="radio" name={'c' + i} checked={pick[i] === v} onChange={() => set(i, v)} data-cpick={i + ':' + v} />
+    {s ? <Slide slide={s} lesson={l} width={240} /> : <div class="cnone">{t('rev.cmp_none')}</div>}<span>{label}</span></label>;
+  return <Sheet open wide title={t('rev.cmp_title', { name })} icon={<Icon name="assist" />} onClose={onClose}
+    footer={<><Button onClick={() => setPick(ch.map(() => 'mine'))} data-call="mine">{t('rev.cmp_all_mine')}</Button><Button onClick={() => setPick(ch.map(() => 'ai'))} data-call="ai">{t('rev.cmp_all_ai', { name })}</Button>
+      <span class="grow" /><Button variant="quiet" onClick={onClose} data-clater>{t('rev.cmp_later')}</Button><Button variant="primary" onClick={done} data-cmpdone>{t('rev.c_done')}</Button></>}>
+    <p class="mute">{t('rev.cmp_about', { name })}</p>
+    <div class="cmp">{ch.map((c, i) => <section class="crow" data-crow={i}>
+      <h3 class="sub">{c.kind === 'added' ? t('rev.cmp_added', { name }) : c.kind === 'removed' ? t('rev.cmp_removed', { name }) : t('rev.cmp_changed', { n: c.at + 1 })}</h3>
+      <div class="cpair">{side(c, i, 'mine', c.was, c.kind === 'added' ? t('rev.cmp_leave') : t('rev.cmp_mine'))}{side(c, i, 'ai', c.now, c.kind === 'removed' ? t('rev.cmp_out') : t('rev.cmp_theirs', { name }))}</div>
+      {c.now && (c.now.talk || []).some(x => x.by === 'claude') && <p class="mute">{c.now.talk.filter(x => x.by === 'claude').map(x => <span data-raw>{name}: {x.text} </span>)}</p>}
+    </section>)}</div>
+  </Sheet>;
 }

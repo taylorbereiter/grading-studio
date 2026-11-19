@@ -153,8 +153,9 @@ function Side({ p, l, slot, per, onSave, onDownload, onAssistant, onTool, Sd }) 
     {(shared.length > 0 || partners.length > 0) && <section>
       {(partners.length > 0 || shared.length > 0) && <Switch label={shared.length ? t('plan.shared_on') : t('plan.also_give', { names: partners.map(x => (classOf(p, x.classId) || {}).name || '').join(', ') })} checked={shared.length > 0} onChange={share} />}
     </section>}
-    <Materials p={p} l={l} slot={slot} onSave={onSave} onTool={onTool} />
+    <Materials p={p} l={l} slot={slot} onSave={onSave} onTool={onTool} More={Sd} />
     {slot && slot.date <= today() && <AfterClass l={l} slot={slot} onSave={onSave} />}
+    {Sd && <Sd.Taught p={p} l={l} save={onSave} />}
     <section><h2 class="sub">{t('plan.comments_for', { name: ai.name || t('assistant.generic') })}</h2>
       <p class="mute">{t('plan.n_lesson_comments', { n: (l.talk || []).length })} · {t('plan.n_slide_comments', { n: talk })}</p>
       <Talk talk={l.talk || []} ai={ai.name || t('assistant.generic')} label={t('plan.comments_for', { name: ai.name || t('assistant.generic') })} onChange={v => { const n = JSON.parse(JSON.stringify(l)); if (v.length) n.talk = v; else delete n.talk; onSave(n); }} /></section>
@@ -286,7 +287,7 @@ export default function LessonPage({ route }) {
       </div>
       {view !== 'edit' && <Side Sd={Sd} p={p} l={l} slot={slot} per={per} onSave={save} onDownload={dl} onAssistant={() => ask()} onTool={onTool} />}
     </div>
-    {Sd && <Sd.SlotSheet p={p} l={l} save={save} />}
+    {Sd && <><Sd.SlotSheet p={p} l={l} save={save} /><Sd.Comments l={l} ai={assistant().name || t('assistant.generic')} save={save} onGo={i => onStep('edit', i)} /><Sd.TaughtAdd p={p} l={l} save={save} /></>}
     {beside && Side2 && <Side2.default p={p} l={l} save={save} onClose={() => setBeside(false)} onSlide={addSlide} />}
     <AssistantSheet key={asking ? 'a' + redo : 'x'} p={p} l={l} open={asking} slide={redo} onClose={() => { setAsking(false); setRedo(null); }} save={save} />
     {Tools && tool && <Tools.default name={tool.name} arg={tool.arg} p={p} l={l} slot={slot} save={save} onClose={() => setTool(null)} />}

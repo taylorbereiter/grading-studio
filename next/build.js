@@ -65,6 +65,8 @@ const PLANNER_ROOTS = [
   'uniqueName', 'normLinks', 'lkUrl', 'lkHost',
   // units
   'normUnit', 'tplLayouts',
+  // where each class got to, for the phone's notes put on their lessons (planning/taught-fold.js)
+  'normTaught',
 ];
 const TOOLS_ROOTS = ['pptxToSlides', 'docxOf', 'shareLesson', 'finSig', 'docClean', 'DOC_CSS', 'shrinkPic', 'imgSrc',
   // slide looks and the editor's text tools: per-box sizes, biggest that fits, moving a box, lists and formatting (src/planner/boxes.js, rich.js)

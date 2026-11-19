@@ -140,6 +140,14 @@ export function saveTaughtNote(key, note) {
   taughtIn.setJson(o);
   saved({ kind: 'pref', id: 'gsp.taughtIn', side: 'planning' });
 }
+// Phone notes put on their lessons (planning/taught-fold.js): each marked f: 1, read again first, so one that came meanwhile stays.
+export function foldedTaught(done) {
+  check('gsp.taughtIn');
+  const T = taughtIn.json(null), o = T && typeof T === 'object' && T.items && typeof T.items === 'object' ? T : { items: {} };
+  for (const [k, t] of done) if (o.items[k] && o.items[k].t === t) o.items[k] = { ...o.items[k], f: 1 };
+  taughtIn.setJson(o);
+  saved({ kind: 'pref', id: 'gsp.taughtIn', side: 'planning' });
+}
 export function startNewYear(v) { check('gsp.newYear'); newYear.setJson(v); saved({ kind: 'pref', id: 'gsp.newYear', side: 'planning' }); }
 export function setGoogleToken(v) { mayWrite('sessionStorage:gs.gTok'); try { if (v == null) sessionStorage.removeItem('gs.gTok'); else sessionStorage.setItem('gs.gTok', JSON.stringify(v)); } catch {} }
 export async function saveSchoolFile(hash, data) {
