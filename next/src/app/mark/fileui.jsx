@@ -48,7 +48,7 @@ export function FileMenu({ st, path, name, d, on, auto }) {
   const f = st.files.find(x => x.path === path);
   if (!f) return null;
   const mine = !f.virtual && !f.rubric;
-  const one = mine && !d || d.pages.every(([q]) => q === path || (st.files.find(x => x.path === q) || {}).virtual);
+  const one = mine && (!d || d.pages.every(([q]) => q === path || (st.files.find(x => x.path === q) || {}).virtual));
   // nothing is thrown away and Undo takes it back, so it isn't asked first; the toast says how many marks went with it
   const remove = async () => { const n = C.marksOn(st, path), gone = await C.removeFile(st, path); if (gone) toast(t(n ? 'setup.f_removed_marks' : 'setup.f_removed_t', { name: C.shown(st, gone.name), n }), { undo: C.undo }); };
   const replace = () => pickFile(false, async ([file]) => { if (!file) return; setAsk({ kind: 'rpl', file, a: await C.about(st, path, file) }); });

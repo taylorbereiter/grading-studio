@@ -6598,5 +6598,17 @@
  "video.tr_again_ok": "La refaire",
  "video.vk_back": "La vidéo est de retour",
  "video.no_picture": "Seul le son de cette vidéo est lu dans ce navigateur. Une vidéo d’iPhone peut devoir être ouverte sur votre ordinateur pour avoir l’image : téléchargez-la ou demandez un .mp4 à l’élève.",
- "video.tn_no_time": "Une vidéo, ou le Minuteur pour un exposé en direct, donne les temps"
+ "video.tn_no_time": "Une vidéo, ou le Minuteur pour un exposé en direct, donne les temps",
+ "class.ru_h": "Grille",
+ "class.ru_say": "Word, PDF ou une image. Les lignes sont lues dans un tableau quand c’est possible.",
+ "class.ru_none": "Pas encore défini",
+ "class.ru_total": "Juste le total, sur {n}",
+ "class.ru_score": "Noter avec ces critères",
+ "class.ru_copy": "Donner à chaque élève une copie à annoter",
+ "class.ru_norows": "Aucun tableau de grille n’a pu être lu dans ce fichier, ses lignes ne sont donc pas remplies. Vous pouvez les taper dans la configuration de la grille.",
+ "class.ru_use": "Utiliser cette grille",
+ "class.ru_tick": "Cochez d’abord ce qu’il faut en faire",
+ "class.ru_set": "La grille est définie pour « {name} »",
+ "class.ru_step": "une grille importée",
+ "class.ru_t": "Grille de « {name} »"
 }

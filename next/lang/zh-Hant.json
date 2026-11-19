@@ -6684,5 +6684,17 @@
  "video.tr_again_ok": "重新製作",
  "video.vk_back": "影片已放回",
  "video.no_picture": "這段影片在這個瀏覽器只會播放聲音。iPhone 拍的影片可能要在你的電腦上才能打開畫面：請下載它，或請學生改交 .mp4。",
- "video.tn_no_time": "影片，或現場演講用的計時器，會提供時間"
+ "video.tn_no_time": "影片，或現場演講用的計時器，會提供時間",
+ "class.ru_h": "評分規準",
+ "class.ru_say": "Word、PDF 或圖片。能讀到表格時，會從表格讀出各項目。",
+ "class.ru_none": "尚未設定",
+ "class.ru_total": "只有總分，滿分 {n}",
+ "class.ru_score": "用這些項目評分",
+ "class.ru_copy": "給每位學生一份可批改的副本",
+ "class.ru_norows": "這個檔案讀不到評分規準，所以沒有填入各項目。可以在評分規準設定中輸入。",
+ "class.ru_use": "使用這份評分規準",
+ "class.ru_tick": "請先勾選要怎麼使用",
+ "class.ru_set": "已為「{name}」設定評分規準",
+ "class.ru_step": "匯入的評分規準",
+ "class.ru_t": "「{name}」的評分規準"
 }

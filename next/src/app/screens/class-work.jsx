@@ -157,6 +157,9 @@ export default function ClassWork({ classId, sub }) {
   const dropUnit = (id, before) => { if (id === before) return; order(l => { const f = unitIn(l, id), d = unitIn(l, before); if (!f || !d) return; f.c.units.splice(f.c.units.indexOf(f.u), 1); d.c.units.splice(d.c.units.indexOf(d.u), 0, f.u); if (f.c !== d.c) for (const x of f.u.items) x.classId = d.c.id; }); };
   const tool = String((lib.me || {}).unit || '').trim();
   // No papers: a notes page for each student; or only typed scores, in the gradebook
+  // Bring in a rubric… (B-004): the rubric for the papers to come, from a file or Google Drive (class/rubricin.jsx)
+  const [rbox, setRbox] = useState(null);
+  const rubricIn = it => ({ label: t('setup.su_bring'), icon: 'grades', onSelect: () => PARTS.rubricin().then(R => setRbox({ R, it }), e => console.error(e)) });
   const noPapers = it => [{ label: t('mark.cw_sn_menu'), icon: 'play', onSelect: () => open('notes', { it }) },
     ...(it.batchId ? [] : [{ label: t('mark.cw_to_menu'), icon: 'edit', onSelect: () => PARTS.asg().then(A => A.typeOnly(lib, it)).then(r => { if (r != null) go('class', classId, 'grades', r || null); }, e => console.error(e)) }])];
   const forget = (it, m) => ({ label: t('mark.cw_fg_menu'), icon: 'trash', onSelect: () => open('forget', { it, id: m.id }) });
@@ -184,6 +187,7 @@ export default function ClassWork({ classId, sub }) {
     {name && <NameUnit was={name} onDone={named} />}
     {move && <MoveTo lib={lib} it={move} onDone={moved} />}
     {box && box.kind === 'asg' && <box.A.AssignmentDialog lib={lib} it={box.it} classId={classId} unitId={box.unitId} onClose={shut} />}
+    {rbox && <rbox.R.RubricBox it={rbox.it} onClose={ok => { setRbox(null); if (ok) load(); }} />}
     {box && box.kind === 'notes' && <box.A.StartNotes lib={lib} it={box.it} bring={(list, pv) => bring(box.it, list, null, pv)} onClose={() => setBox(null)} />}
     {box && box.kind === 'forget' && <box.A.Forget it={box.it} id={box.id} onClose={shut} />}
     {box && box.kind === 'ulink' && <box.A.UnitLink u={box.u} tool={tool} onClose={shut} />}
@@ -219,7 +223,7 @@ export default function ClassWork({ classId, sub }) {
               <Menu label={t('setup.w_again')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.w_again')} disabled={busy === it.id} data-again-for={it.id} />}
                 items={[{ label: t('setup.w_again_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_again_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, ...driveItem(it), { label: t('setup.w_scan'), icon: 'image', onSelect: () => pick(it, scan) }, { label: t('setup.mr_menu'), icon: 'people', onSelect: () => matchFor(it) }, ...noPapers(it), edit(it), quiz(it), more(it), ...itemSteps(it, u), ...links(it), forget(it, st.m)]} /></span>
               : <span class="wopen"><Menu label={t('setup.w_bring')} trigger={b => <Button {...b} size="sm" icon="upload" disabled={busy === it.id} data-bring-for={it.id}>{t('setup.w_bring')}</Button>}
-                items={[{ label: t('setup.w_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, ...driveItem(it), { label: t('setup.w_scan'), icon: 'image', onSelect: () => pick(it, scan) }, { label: t('setup.mr_menu'), icon: 'people', onSelect: () => matchFor(it) }, ...noPapers(it)]} />
+                items={[{ label: t('setup.w_files'), icon: 'file', onSelect: () => pick(it, files) }, { label: t('setup.w_folder'), icon: 'folder', onSelect: () => pick(it, folder) }, ...driveItem(it), { label: t('setup.w_scan'), icon: 'image', onSelect: () => pick(it, scan) }, { label: t('setup.mr_menu'), icon: 'people', onSelect: () => matchFor(it) }, rubricIn(it), ...noPapers(it)]} />
               <Menu label={t('setup.u_item_more', { name: it.name })} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('setup.u_item_more', { name: it.name })} data-more-for={it.id} />} items={[edit(it), quiz(it), ...quizScan(it), more(it), ...itemSteps(it, u), ...links(it)]} /></span>}
             {shown.has(it.id) && <Details it={it} st={st} />}
           </li>; })}</ul>}

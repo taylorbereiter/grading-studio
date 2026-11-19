@@ -6656,5 +6656,17 @@
  "video.tr_again_ok": "Fazer de novo",
  "video.vk_back": "O vídeo voltou",
  "video.no_picture": "Neste navegador só o som deste vídeo toca. Um vídeo de iPhone pode precisar ser aberto no seu computador para ver a imagem: baixe-o ou peça ao aluno um .mp4.",
- "video.tn_no_time": "Um vídeo, ou o Cronômetro para uma fala ao vivo, dá os tempos"
+ "video.tn_no_time": "Um vídeo, ou o Cronômetro para uma fala ao vivo, dá os tempos",
+ "class.ru_h": "Rubrica",
+ "class.ru_say": "Word, PDF ou uma imagem. As linhas são lidas de uma tabela quando possível.",
+ "class.ru_none": "Ainda não definido",
+ "class.ru_total": "Só o total, de {n}",
+ "class.ru_score": "Pontuar com estes critérios",
+ "class.ru_copy": "Dar a cada aluno uma cópia para marcar",
+ "class.ru_norows": "Não foi possível ler uma tabela de rubrica deste arquivo, então as linhas não foram preenchidas. Você pode digitá-las na configuração da rubrica.",
+ "class.ru_use": "Usar esta rubrica",
+ "class.ru_tick": "Marque primeiro o que fazer com ela",
+ "class.ru_set": "A rubrica está definida para “{name}”",
+ "class.ru_step": "uma rubrica trazida",
+ "class.ru_t": "Rubrica de “{name}”"
 }

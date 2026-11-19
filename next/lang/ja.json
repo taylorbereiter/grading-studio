@@ -6684,5 +6684,17 @@
  "video.tr_again_ok": "作り直す",
  "video.vk_back": "動画が戻りました",
  "video.no_picture": "このブラウザでは、この動画は音声だけが再生されます。iPhone の動画は、映像をパソコンで開く必要があるかもしれません。ダウンロードするか、生徒に .mp4 を頼んでください。",
- "video.tn_no_time": "時間は、動画か、その場の発表用のタイマーから入ります"
+ "video.tn_no_time": "時間は、動画か、その場の発表用のタイマーから入ります",
+ "class.ru_h": "ルーブリック",
+ "class.ru_say": "Word、PDF、画像。表があれば行を読み取ります。",
+ "class.ru_none": "未設定",
+ "class.ru_total": "合計のみ（{n} 点満点）",
+ "class.ru_score": "この観点で採点する",
+ "class.ru_copy": "生徒ごとに書き込める写しを付ける",
+ "class.ru_norows": "このファイルから表を読み取れなかったため、行は入っていません。ルーブリック設定で入力できます。",
+ "class.ru_use": "このルーブリックを使う",
+ "class.ru_tick": "先に使い方を選んでください",
+ "class.ru_set": "「{name}」のルーブリックを設定しました",
+ "class.ru_step": "取り込んだルーブリック",
+ "class.ru_t": "「{name}」のルーブリック"
 }

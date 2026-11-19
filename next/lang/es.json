@@ -6677,5 +6677,17 @@
  "video.tr_again_ok": "Hacerla de nuevo",
  "video.vk_back": "El video está de vuelta",
  "video.no_picture": "En este navegador solo se reproduce el sonido de este video. Un video de iPhone puede necesitar abrirse en tu computadora para ver la imagen: descárgalo o pide al estudiante un .mp4.",
- "video.tn_no_time": "Un video, o el Temporizador para una charla en directo, da los tiempos"
+ "video.tn_no_time": "Un video, o el Temporizador para una charla en directo, da los tiempos",
+ "class.ru_h": "Rúbrica",
+ "class.ru_say": "Word, PDF o una imagen. Las filas se leen de una tabla cuando se puede.",
+ "class.ru_none": "Aún sin definir",
+ "class.ru_total": "Solo el total, sobre {n}",
+ "class.ru_score": "Puntuar con estas filas",
+ "class.ru_copy": "Dar a cada estudiante una copia para marcar",
+ "class.ru_norows": "No se pudo leer una tabla de rúbrica de este archivo, así que sus filas no se rellenan. Puedes escribirlas en la configuración de la rúbrica.",
+ "class.ru_use": "Usar esta rúbrica",
+ "class.ru_tick": "Marca primero qué hacer con ella",
+ "class.ru_set": "La rúbrica está lista para «{name}»",
+ "class.ru_step": "una rúbrica traída",
+ "class.ru_t": "Rúbrica de «{name}»"
 }

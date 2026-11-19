@@ -5,9 +5,11 @@
 //   gets its own card; the copies share a group id. One undo step.
 // - Edit assignment: the same, with one class; the card keeps its id, so its papers and scores stay with it, and a move to another
 //   class or unit is the one Move to makes. Linked copies take the new name, type and date when asked (src/linked.js lkAlsoDo).
-//   Delete is at once, with Undo. The rubric is set up on the marking screen (Setup), so it isn't here.
+//   Delete is at once, with Undo. Both have Rubric (D-901, B-001, B-008; class/rubricin.jsx, a part of its own): a rubric brought in
+//   from a file or Google Drive goes on the card on Save, and to the linked copies when they take the change.
+// - Bring in a rubric… from the card's Bring in menu (B-004): the same part on its own, used at once.
 // - No papers: presentations or videos (src/video.js openStartNotes): a notes page for every student on the roster, opened for
-//   marking like papers. Videos and partners are added on the marking screen.
+//   marking like papers, with Videos and partners (D-022) when there are videos.
 // - Forget these papers (src/app/kept.js forgetKept): the download leaves this browser and any synced copy; asked first.
 // - A unit's link to its unit plan (src/app/screens.js askAtlas), and a unit moved to another class.
 import { h, Fragment } from 'preact';
@@ -46,6 +48,8 @@ export function AssignmentDialog({ lib: lib0, it: it0, classId, unitId, onClose 
   const [cls, setCls] = useState(String(start.c.id)), [type, setType] = useState(f ? f.it.type || '' : ''), [due, setDue] = useState(f ? f.it.due || '' : '');
   const [unit, setUnit] = useState(f ? f.u.id : start.u ? start.u.name : ''), [also, setAlso] = useState(true), [sure, setSure] = useState(false);
   const twins = f ? B.lkTwins(f.it) : [];
+  const [R, setR] = useState(null), [rub, setRub] = useState(null);
+  useEffect(() => { PARTS.rubricin().then(setR, e => console.error(e)); }, []);
   const cats = B.bkCats();
   // New: unit names from every ticked class; Edit: the chosen class's units
   const one = f ? holderOf(lib, cls) || lib.loose : null;
@@ -69,6 +73,7 @@ export function AssignmentDialog({ lib: lib0, it: it0, classId, unitId, onClose 
         setKind(a); to.items.push(a);
       }));
       if (ok === false) return;
+      if (rub) await R.putRubric(first, rub, false);
       onClose(true);
       if (ids.length > 1) toast(t('class.as_added', { names: joinNames(ticked.map(c => nameOf(lib, c))) }));
       return;
@@ -84,7 +89,9 @@ export function AssignmentDialog({ lib: lib0, it: it0, classId, unitId, onClose 
       if (g.u !== to) { g.u.items.splice(g.u.items.indexOf(g.it), 1); to.items.push(g.it); }
       g.it.classId = c.id;
     });
-    if (ok !== false) onClose(true);
+    if (ok === false) return;
+    if (rub) await R.putRubric(f.it.id, rub, also && twins.length > 0);
+    onClose(true);
   };
   const del = async () => {
     const ok = await lc(t('class.as_delete'), l => { const g = itemIn(l, f.it.id); if (g) g.u.items.splice(g.u.items.indexOf(g.it), 1); });
@@ -112,6 +119,7 @@ export function AssignmentDialog({ lib: lib0, it: it0, classId, unitId, onClose 
       <div class="cp-fld"><span class="lab">{t('class.as_type')}</span>
         <Segmented size="sm" label={t('class.as_type')} value={type} onChange={v => setType(v === type ? '' : v)} options={cats.map(k => ({ value: k[0], label: typeLabel(k) })).concat({ value: '', label: t('class.type_none') })} /></div>
       <TextInput type="date" label={t('class.as_due')} value={due} onInput={setDue} data-asg-due />
+      {R && <R.RubricField su={f ? f.it.setup || null : null} onGot={setRub} />}
       {twins.length > 0 && <span data-asg-also><Checkbox label={t('class.lk_also_do', { names: joinNames(twins.map(x => nameOf(lib, x.c))) })} checked={also} onChange={setAlso} /></span>}
     </div>
   </Dialog>;

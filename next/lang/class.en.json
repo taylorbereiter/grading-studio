@@ -1262,5 +1262,17 @@
  "class.fg_back": "To get the papers back, bring the download in again on this card. Your marks and scores don’t come back.",
  "class.fg_ok": "Forget them",
  "class.fg_done": "Forgot the papers for “{name}”",
- "class.fg_failed": "That didn’t work, so nothing was forgotten. Try again."
+ "class.fg_failed": "That didn’t work, so nothing was forgotten. Try again.",
+ "class.ru_h": "Rubric",
+ "class.ru_say": "Word, PDF or a picture. Rows are read from a table where they can be.",
+ "class.ru_none": "Not set yet",
+ "class.ru_total": "Just the total, out of {n}",
+ "class.ru_score": "Score with these rows",
+ "class.ru_copy": "Give every student a copy to mark on",
+ "class.ru_norows": "No rubric table could be read from this file, so its rows aren’t filled in. You can type them in Rubric setup.",
+ "class.ru_use": "Use this rubric",
+ "class.ru_tick": "Tick what to do with it first",
+ "class.ru_set": "The rubric is set for “{name}”",
+ "class.ru_step": "a rubric brought in",
+ "class.ru_t": "Rubric for “{name}”"
 }

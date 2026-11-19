@@ -68,6 +68,8 @@
 .roster-ta{width:100%;font-family:inherit}
 .cp-fld{display:block;margin:14px 0 6px}
 .cp-fld .lab{display:block;font-size:var(--t2);font-weight:500;margin-bottom:6px}
+/* Rubric in New / Edit assignment and the card's Bring in my rubric… (class/rubricin.jsx) */
+.rubup .rurow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0 4px}.rubup p{margin:4px 0}.rubup .rugot{margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r2)}.rubup .rurows{margin:4px 0 8px;padding-left:20px}.rubup .rurows li{margin:2px 0}.rubup .cb{display:flex;margin:4px 0}
 .mvlist{list-style:none;margin:0;padding:0}
 @media (max-width:760px){
   .pgrid{grid-template-columns:1fr}

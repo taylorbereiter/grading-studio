@@ -6684,5 +6684,17 @@
  "video.tr_again_ok": "重新制作",
  "video.vk_back": "视频已放回",
  "video.no_picture": "这段视频在这个浏览器只会播放声音。iPhone 拍的视频可能要在你的电脑上才能打开画面：请下载它，或请学生改交 .mp4。",
- "video.tn_no_time": "视频，或现场演讲用的计时器，会提供时间"
+ "video.tn_no_time": "视频，或现场演讲用的计时器，会提供时间",
+ "class.ru_h": "评分标准",
+ "class.ru_say": "Word、PDF 或图片。能读到表格时，会从表格读出各项目。",
+ "class.ru_none": "尚未设置",
+ "class.ru_total": "只有总分，满分 {n}",
+ "class.ru_score": "用这些项目评分",
+ "class.ru_copy": "给每位学生一份可批改的副本",
+ "class.ru_norows": "这个文件读不到评分标准，所以没有填入各项目。可以在评分标准设置中输入。",
+ "class.ru_use": "使用这份评分标准",
+ "class.ru_tick": "请先勾选要怎么使用",
+ "class.ru_set": "已为“{name}”设置评分标准",
+ "class.ru_step": "导入的评分标准",
+ "class.ru_t": "“{name}”的评分标准"
 }

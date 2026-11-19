@@ -6655,5 +6655,17 @@
  "video.tr_again_ok": "Neu erstellen",
  "video.vk_back": "Das Video ist wieder da",
  "video.no_picture": "In diesem Browser wird nur der Ton dieses Videos abgespielt. Ein iPhone-Video muss für das Bild vielleicht auf Ihrem Computer geöffnet werden: Laden Sie es herunter oder bitten Sie um eine .mp4.",
- "video.tn_no_time": "Ein Video oder der Timer für einen Live-Vortrag liefert die Zeiten"
+ "video.tn_no_time": "Ein Video oder der Timer für einen Live-Vortrag liefert die Zeiten",
+ "class.ru_h": "Bewertungsraster",
+ "class.ru_say": "Word, PDF oder ein Bild. Zeilen werden aus einer Tabelle gelesen, wo es geht.",
+ "class.ru_none": "Noch nicht festgelegt",
+ "class.ru_total": "Nur die Gesamtpunktzahl, von {n}",
+ "class.ru_score": "Mit diesen Kriterien bewerten",
+ "class.ru_copy": "Jedem Schüler eine Kopie zum Markieren geben",
+ "class.ru_norows": "Aus dieser Datei ließ sich keine Rastertabelle lesen, daher sind die Zeilen nicht ausgefüllt. Du kannst sie in der Raster-Einrichtung eingeben.",
+ "class.ru_use": "Dieses Raster verwenden",
+ "class.ru_tick": "Wähle zuerst aus, was damit geschehen soll",
+ "class.ru_set": "Das Raster für „{name}“ ist festgelegt",
+ "class.ru_step": "ein hereingeholtes Raster",
+ "class.ru_t": "Raster für „{name}“"
 }
