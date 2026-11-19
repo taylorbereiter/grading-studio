@@ -20,6 +20,8 @@ export const ROUTES = [
   ['class/:id/:tab/:sub', 'class', 'class'],
   ['lesson/:id', 'lesson', 'class'],
   ['lesson/:id/:view', 'lesson', 'class'],
+  ['lesson/:id/:view/:cls', 'lesson', 'class'],   // lesson/<id>/present/<class>: presents at once (planner.html#present/<id>/<class>)
+  ['plan/:cls/:day', 'calendar', 'calendar'],   // that meeting's lesson, opened or made, with a focus session (planner.html#plan/<class>/<day>)
   ['mark/:id', 'mark', 'class'],
   ['mark/:id/:tab', 'mark', 'class'],
   ['library', 'library', 'library'],

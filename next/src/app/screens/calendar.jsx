@@ -12,6 +12,7 @@ import { assistant } from '../../services/assistant.js';
 import { usePlan } from '../plan.js';
 import { toneOf } from '../colors.js';
 import { workForCalendar } from '../../crossings.js';
+import { startFocus } from '../focus/bus.js';
 import { nameKey } from '../../planning/plan.js';
 import { lessonsOn, stateOf, arrived, STATE_LINE, periods, dayOff, eventsOn, newLesson, moveLesson, mondayOf, weekDays, today, plus, at, iso, mins } from '../plan/lessons.js';
 
@@ -184,6 +185,14 @@ export default function Calendar({ route }) {
   const Cal = usePart('cal', !!tool), Tools = usePart('tools', !!tool && tool.name === 'import');
   const work = useMemo(() => { try { return workForCalendar(); } catch (e) { console.error(e); return { due: [], todos: [] }; } }, [p]);
   useEffect(() => { keep('at', anchor); }, [anchor]);
+  // plan/<class>/<day> (the old planner.html#plan/<class>/<day>, from Home and the focus timer): that meeting's lesson, opened or
+  // made, with a focus session on it (src/planner/rail.js).
+  const { cls, day } = route.params;
+  useEffect(() => {
+    if (!p || !cls || !day) return;
+    const l = lessonsOn(p, cls, day)[0];
+    (l ? Promise.resolve(l) : newLesson(p, cls, day)).then(x => { startFocus('les:' + x.id); location.replace(href('lesson', x.id)); }, saveFailed);
+  }, [!!p, cls, day]);
   const setView = v => { keep('view', v); go('calendar', v); };
   if (!p) return <div class="page"><header class="ph"><h1>{t('nav.calendar')}</h1></header><div class="loading" aria-busy="true" /></div>;
   if (!p.setup || !(p.setup.classes || []).length) return <div class="page"><header class="ph"><h1>{t('nav.calendar')}</h1></header>

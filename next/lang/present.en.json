@@ -10,7 +10,10 @@
  "present.restart": "Restart",
  "present.stop": "Stop",
  "present.s30": "30 seconds",
- "present.n_min": { "one": "{n} minute", "other": "{n} minutes" },
+ "present.n_min": {
+  "one": "{n} minute",
+  "other": "{n} minutes"
+ },
  "present.minutes_box": "Minutes",
  "present.seconds_box": "Seconds",
  "present.min": "min",
@@ -28,5 +31,10 @@
  "present.this_lesson": "This lesson",
  "present.blank": "Blank screen",
  "present.full": "Full screen",
- "present.full_leave": "Leave full screen"
+ "present.full_leave": "Leave full screen",
+ "present.change": "Change",
+ "present.where": "Where did the class get to?",
+ "present.not_now": "Not now",
+ "present.next_time": "A line for next time",
+ "present.noted": "Noted on the lesson"
 }

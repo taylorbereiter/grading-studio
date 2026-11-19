@@ -7,7 +7,9 @@
 // roster as the grading side last left it (crossings.js rosterNamesForPresent): shown, never kept.
 import { h, Fragment } from 'preact';
 import { useState, useLayoutEffect, useEffect, useRef } from 'preact/hooks';
-import { IconButton, Button, Switch } from '../../ui/index.js';
+import { IconButton, Button, Switch, Sheet, Select, TextInput, toast } from '../../ui/index.js';
+import { render } from 'preact';
+import { today } from '../plan/lessons.js';
 import { t, date } from '../../i18n/t.js';
 import * as PT from '../plan/ptimer.js';
 import { live, clsOf, norm, host } from '../../planning/school.js';
@@ -76,7 +78,47 @@ function TimerPanel({ tm, onOwn }) {
   </div>;
 }
 
-export function Present({ p, l, start = 0, className, onClose }) {
+// Where the class got to (src/planner/present.js taughtDlg): once a lesson for today has been presented for two minutes or more,
+// the slide reached and the agenda items ticked are kept on that class's place in "taught" at once; the toast takes it back, or
+// opens the question to change the class, the slide or add a line for next time.
+const copy = x => JSON.parse(JSON.stringify(x));
+export function gotTo(p, l, slot, far, secs, save, agenda) {
+  if (!slot || !save || slot.date !== today() || !(secs >= 120) || typeof far !== 'number') return;
+  const n = copy(l), had = (n.taught || []).find(x => x.classId === slot.classId && x.date === slot.date);
+  const t0 = { ...(had || { classId: slot.classId, date: slot.date, note: '' }), slide: far + 1, of: l.slides.length, at: Date.now() };
+  if (agenda && agenda[1]) t0.agenda = agenda;
+  n.taught = [...(n.taught || []).filter(x => x !== had), t0];
+  save(n);
+  toast(t('plan.got_to', { n: far + 1, of: l.slides.length }), { undo: () => { const b = copy(n); if (l.taught) b.taught = copy(l.taught); else delete b.taught; save(b); },
+    action: { label: t('present.change'), run: () => askGotTo(p, n, slot, save) } });
+}
+function GotTo({ p, l, slot, save, onClose }) {
+  const slots = l.slots.length ? [...l.slots].sort((a, b) => a.date.localeCompare(b.date)) : [slot];
+  if (!slots.some(s => s.classId === slot.classId && s.date === slot.date)) slots.push(slot);
+  const of = l.slides.length, find = s => (l.taught || []).find(x => x.classId === s.classId && x.date === s.date);
+  const [at, setAt] = useState(String(slots.findIndex(s => s.classId === slot.classId && s.date === slot.date)));
+  const h0 = find(slots[+at]) || {};
+  const [sl, setSl] = useState(String(Math.min(of, h0.slide || of))), [note, setNote] = useState(h0.note || '');
+  const pick = v => { setAt(v); const h = find(slots[+v]); if (h) { setSl(String(Math.min(of, h.slide))); setNote(h.note || ''); } };
+  const keep = () => {
+    const s = slots[+at], old = find(s), n = copy(l), t0 = { classId: s.classId, date: s.date, slide: +sl || 1, of, note: note.trim(), at: Date.now() };
+    if (old && old.agenda) t0.agenda = old.agenda;
+    n.taught = [...(n.taught || []).filter(x => !(x.classId === s.classId && x.date === s.date)), t0];
+    save(n); onClose(); toast(t('present.noted'));
+  };
+  const cn = id => { const c = ((p.setup && p.setup.classes) || []).find(x => String(x.id) === String(id)); return c ? c.name : ''; };
+  return <Sheet open title={t('present.where')} onClose={onClose} footer={<><Button onClick={onClose} data-gt="later">{t('present.not_now')}</Button><Button variant="primary" onClick={keep} data-gt="save">{t('common.save')}</Button></>}>
+    {slots.length > 1 && <Select label={t('plan.class')} value={at} onChange={pick} data-gt="class" options={slots.map((s, j) => ({ value: String(j), label: (cn(s.classId) ? cn(s.classId) + ' · ' : '') + date(new Date(s.date + 'T12:00'), { weekday: 'short', day: 'numeric', month: 'short' }) }))} />}
+    <Select label={t('plan.got_to_label')} value={sl} onChange={setSl} data-gt="slide" options={l.slides.map((x, j) => ({ value: String(j + 1), label: j + 1 === of ? t('plan.got_to_last', { n: j + 1 }) : t('plan.slide_n', { n: j + 1 }) }))} />
+    <TextInput label={t('present.next_time')} value={note} onInput={setNote} data-gt="note" />
+  </Sheet>;
+}
+function askGotTo(p, l, slot, save) {
+  const host = document.createElement('div'); document.body.appendChild(host);
+  render(h(GotTo, { p, l, slot, save, onClose: () => { render(null, host); host.remove(); } }), host);
+}
+
+export function Present({ p, l, start = 0, className, slot, save, onClose }) {
   const n = l.slides.length;
   const [i, setI] = useState(Math.max(0, Math.min(start, n - 1)));
   const [size, setSize] = useState(() => fit());
@@ -134,7 +176,7 @@ export function Present({ p, l, start = 0, className, onClose }) {
     if (box.current) box.current.focus();
     return () => { shut(); window.removeEventListener('keydown', key, true); window.removeEventListener('resize', rs); document.removeEventListener('fullscreenchange', fs); };
   }, [l.id]);
-  st.current.links = links;
+  st.current.links = links; st.current.ticks = ticks; st.current.nItems = items.length;
   // The class screen window: the slide drawn the same way, scaled to the window, kept in step below. F there (or its own button)
   // puts that window on its whole screen.
   function shut() { const w = pop.current; pop.current = null; setOut(false); try { if (w && !w.closed) w.close(); } catch {} }
@@ -165,7 +207,7 @@ export function Present({ p, l, start = 0, className, onClose }) {
   }
   useEffect(() => { paint(); }, [i, blank, out]);
   // Ending Present leaves a running timer in the corner of the app (plan/ptimer-float.jsx).
-  function end() { try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch {} if (PT.timer()) PARTS.ptimer().then(m => m.showFloat()).catch(e => console.error(e)); onClose(st.current.i, far.current, (Date.now() - began.current) / 1000); }
+  function end() { try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch {} if (PT.timer()) PARTS.ptimer().then(m => m.showFloat()).catch(e => console.error(e)); gotTo(p, l, slot, far.current, (Date.now() - began.current) / 1000, save, [st.current.ticks.size, st.current.nItems]); onClose(st.current.i); }
   const s = l.slides[i], cur = items.findIndex((x, j) => !ticks.has(j)), big = PT.bigOn();
   const chip = tm ? (tm.done ? t('present.up') : mmss(tm.left)) : '', clock = date(now, { hour: 'numeric', minute: '2-digit' });
   const chipLabel = tm ? (tm.done ? t('present.up_clear') : t(tm.paused ? 'present.chip_go' : 'present.chip_pause', { time: mmss(tm.left) })) : '';
