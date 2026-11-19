@@ -13,7 +13,7 @@ import { usePlan } from '../plan.js';
 import { toneOf } from '../colors.js';
 import { workForCalendar } from '../../crossings.js';
 import { nameKey } from '../../planning/plan.js';
-import { lessonsOn, stateOf, STATE_LINE, periods, dayOff, eventsOn, newLesson, moveLesson, mondayOf, weekDays, today, plus, at, iso, mins } from '../plan/lessons.js';
+import { lessonsOn, stateOf, arrived, STATE_LINE, periods, dayOff, eventsOn, newLesson, moveLesson, mondayOf, weekDays, today, plus, at, iso, mins } from '../plan/lessons.js';
 
 const VIEWS = ['class', 'time', 'month'];
 const clock = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? date(new Date(2000, 0, 1, +m[1], +m[2]), { hour: 'numeric', minute: '2-digit' }) : ''; };
@@ -37,7 +37,7 @@ function LessonCard({ l, c, m, day, compact, onDrag }) {
     onDragStart={e => { e.dataTransfer.setData('text/x-gs-lesson', JSON.stringify({ id: l.id, classId: c.id, date: day })); e.dataTransfer.effectAllowed = 'move'; onDrag && onDrag(c.id); }}
     onDragEnd={() => onDrag && onDrag(null)} data-lesson={l.id}>
     <b data-raw>{l.title || t('plan.untitled')}</b>
-    <span class="lm"><span data-raw>{clock(m.start)}</span><State s={s} /></span>
+    <span class="lm"><span data-raw>{clock(m.start)}</span><State s={s} />{arrived(l) && <span class="st st-new" data-notreviewed><Icon name="assist" size="xs" />{t('plan.not_reviewed')}</span>}</span>
   </a>;
 }
 function PlanIt({ p, c, m, day, compact, busy, setBusy, onTool }) {

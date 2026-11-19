@@ -18,6 +18,7 @@ import { saving } from '../../services/saving.js';
 import { PARTS } from '../router.js';
 import { sampleOn } from '../sample.js';
 import * as C from './change.js';
+import { ClipStrip } from './clips.jsx';
 import './lines.js';
 import './setup-lines.js';
 import './video-lines.js';
@@ -82,7 +83,7 @@ function Recording({ st, f, k, at, extra, onErr, note }) {
       {video ? <Turned f={f}>{style => <video ref={ref} controls preload="metadata" playsInline src={src} style={style} onTimeUpdate={e => setNow(e.currentTarget.currentTime)} onError={onErr && (() => onErr(ref.current ? ref.current.currentTime : 0))} />}</Turned>
         : <audio ref={ref} controls preload="metadata" src={src} onTimeUpdate={e => setNow(e.currentTarget.currentTime)} />}
       <Caption f={f} now={now} />
-      <Controls st={st} f={f} m={m} video={video} />{extra && extra(m)}</div>
+      <Controls st={st} f={f} m={m} video={video} />{extra && extra(m)}<ClipStrip f={f} media={m} /></div>
     <Transcript f={f} seek={seek} now={now} bytes={k && !k.blob ? null : async () => k ? new Uint8Array(await k.blob.arrayBuffer()) : f.data} />
   </div>;
 }
@@ -103,7 +104,8 @@ function Link({ st, f }) {
         <Button size="sm" onClick={() => navigator.clipboard.writeText(url).then(() => toast(t('setup.v_copied')), () => toast(t('setup.v_not_copied')))} data-vcopy>{t('setup.v_copy')}</Button>
         {play && play.frame && <Button size="sm" icon="turnr" onClick={() => C.vidTurn(f)} title={t('setup.v_turn_tip')} data-vrot>{t('setup.v_turn')}</Button>}</div>
       {play && play.frame && V.vrotOf(f) > 0 && <p class="mute vlnote">{t('setup.v_caps_turn')}</p>}
-      <p class="mute vlnote">{t(play ? 'setup.v_link_note' : 'setup.v_link_only')}</p></div>
+      <p class="mute vlnote">{t(play ? 'setup.v_link_note' : 'setup.v_link_only')}</p>
+      <ClipStrip f={f} media={on && ticks ? m : null} hint={play && play.frame ? 'drive' : ''} /></div>
     <Transcript f={f} seek={seek} now={now} />
   </div>;
 }

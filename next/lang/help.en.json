@@ -480,5 +480,20 @@
  "help.mf_look": "Themes, language, the sample class",
  "help.mw_look": "Settings, Display",
  "help.mf_keys": "Keyboard shortcuts",
- "help.mw_keys": "Help, Keyboard shortcuts; ? on any screen"
+ "help.mw_keys": "Help, Keyboard shortcuts; ? on any screen",
+ "help.cmd_asg": "Assignments",
+ "help.cmd_pages": "Class pages",
+ "help.cmd_p_work": "{name}: assignments",
+ "help.cmd_p_people": "{name}: people",
+ "help.cmd_p_grades": "{name}: grades",
+ "help.cmd_p_todo": "{name}: to do",
+ "help.cmd_no_class": "No class",
+ "help.cmd_open_work": "Open student work",
+ "help.cmd_open_folder": "Open a folder of papers",
+ "help.cmd_split": "Split a scan of everyone's papers",
+ "help.cmd_match": "Match files to a roster",
+ "help.cmd_add_class": "Add a class",
+ "help.cmd_gc": "Bring a class over from Google Classroom",
+ "help.cmd_sample": "Try it with a sample class",
+ "help.cmd_leave_sample": "Leave the sample"
 }

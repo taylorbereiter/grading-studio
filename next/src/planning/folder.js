@@ -51,3 +51,5 @@ export async function writeActivitiesFile(list, f) {
   return 'written';
 }
 export { lessons as lessonStore };
+
+export { writeFile };

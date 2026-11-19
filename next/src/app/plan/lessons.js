@@ -22,6 +22,8 @@ export function stateOf(l, classId, day) {
   if ((l.ready && +l.ready.at) || l.final) return 'ready';
   return 'draft';
 }
+// Made or changed by the assistant in the Planner folder and not looked at yet (planning/folder-read.js).
+export const arrived = l => !!l && (!!l.pending || l.status === 'review');
 export const STATE_LINE = { taught: 'plan.taught', ready: 'plan.ready', draft: 'plan.draft', none: 'plan.not_planned' };
 
 // The periods on a day: [{ c, m, date }] in time order, none on a day off (src/planner/lessons.js meetingsOn).

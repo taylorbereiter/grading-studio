@@ -6,6 +6,7 @@
 // undo step through settings-grading.jsx change(); the goals are the library's (lib.goals, lib.goalsGone) and change the same way.
 // Boxes keep what she types while she types (their own state) and save once when she leaves them, so moving quickly from one box to
 // the next loses nothing. Loaded with Settings' own pages (PARTS.setmore).
+import { SYS_LIST } from './systems.js';
 import { h, Fragment } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { Card, Select, Switch, TextInput, Segmented, Button, IconButton, Checkbox, toast } from '../../ui/index.js';
@@ -88,6 +89,7 @@ export function AiSettings() {
         <p class="hint">{t('prefs.ai_others_about')}</p></div>}
       {link && <p class="hint">{t('prefs.ai_side_about')}</p>}
     </Card>
+    <PlannerFolder />
     <Card title={t('prefs.see_h')} data-stsee>
       <p>{t('prefs.see_1')}</p>
       <p>{t('prefs.see_2')}</p>
@@ -160,18 +162,26 @@ export function GradingMore() {
 export function MarkingMore() {
   const [, again] = useState(0), re = () => again(n => n + 1);
   const on = k => prefs.get(k, true) !== false, set = (k, v) => { if (v) prefs.del(k); else prefs.set(k, false); re(); };
-  return <Card title={t('prefs.back_h')}>
+  const touch = prefs.get('gs.touch', 'auto');
+  return <><Card title={t('prefs.back_h')}>
     <p class="mute">{t('prefs.back_about')}</p>
     <div class="st-col">
       <span data-stxnames><Switch label={t('prefs.back_names')} checked={on('gs.xnames')} onChange={v => set('gs.xnames', v)} /></span>
       <span data-stxone><Switch label={t('prefs.back_one')} checked={on('gs.xone')} onChange={v => set('gs.xone', v)} /></span>
       <span data-stcover><Switch label={t('prefs.back_cover')} checked={on('gs.anchorCover')} onChange={v => set('gs.anchorCover', v)} /></span>
     </div>
-  </Card>;
+  </Card>
+  {/* Tablet and pencil (src/touch.js, src/app.html setTouch): what a finger does on the paper, and the pencil's wider line (gs.touch, gs.press) */}
+  <Card title={t('prefs.tch_h')}>
+    <p class="mute">{t('prefs.tch_about')}</p>
+    <span data-sttouch><Select label={t('prefs.tch_finger')} value={touch === 'move' || touch === 'draw' ? touch : 'auto'} onChange={v => { if (v === 'auto') prefs.del('gs.touch'); else prefs.set('gs.touch', v); re(); }}
+      options={[{ value: 'auto', label: t('prefs.tch_auto') }, { value: 'move', label: t('prefs.tch_move') }, { value: 'draw', label: t('prefs.tch_draw') }]} /></span>
+    <span data-stpress><Switch label={t('prefs.tch_press')} checked={on('gs.press')} onChange={v => set('gs.press', v)} /></span>
+    <p class="hint">{t('prefs.tch_two')}</p>
+  </Card></>;
 }
 
 // Settings > Classes: where students hand in work (lib.me.sys). Only words on screen: nothing is connected to it.
-export const SYS_LIST = ['Google Classroom', 'ManageBac', 'Canvas', 'Microsoft Teams', 'Moodle', 'Schoology'];
 export function ClassesMore() {
   const L = useLibrary(), s = String(meOf(L).sys || '').trim(), known = SYS_LIST.includes(s), [other, setOther] = useState(!!s && !known);
   const save = v => { v = String(v || '').trim().slice(0, 40); if (v === s) return; change(t('prefs.sys_step'), me => { if (v) me.sys = v; else delete me.sys; }); };
@@ -182,6 +192,12 @@ export function ClassesMore() {
     {other && <Box label={t('prefs.sys_its_name')} value={s} maxLength={40} save={save} data-raw data-stsysother />}
   </Card>;
 }
+// The Planner folder's card loads on its own (PARTS.pfolder): it is on the planning side.
+function PlannerFolder() {
+  const [P, setP] = useState(null);
+  useEffect(() => { PARTS.pfolder().then(setP); }, []);
+  return P ? <P.FolderCard /> : null;
+}
 // My setup loads with its card (PARTS.mysetup): it brings the reading and the preview.
 export function ClassesSetup() {
   const [P, setP] = useState(null);
@@ -190,15 +206,26 @@ export function ClassesSetup() {
 }
 
 // Settings > Display: the app's text size, and full screen.
+// The phone version on a computer: a narrow window of this app, with the same work (two windows share it as the current app's do).
+const phoneWindow = () => { try { window.open(location.href.split('#')[0] + '#/', 'gsphone', 'popup,width=400,height=860'); } catch {} };
 export function DisplayMore() {
   const [size, setSize] = useState(uiSize()), [full, setFull] = useState(fullOn());
   useEffect(() => { const f = () => setFull(fullOn()); document.addEventListener('fullscreenchange', f); return () => document.removeEventListener('fullscreenchange', f); }, []);
   const pickSize = v => { v = +v; const d = { ...(prefs.get('gs.disp', null) || {}) }; if (v === 1) delete d.ui; else d.ui = v; prefs.set('gs.disp', d); applySize(v); setSize(v); };
+  // Phone layout (gs.phone, as the current app keeps it): no key or 1 is on, 0 keeps a phone's page laid out as a computer's
+  const [phone, setPhone] = useState(prefs.get('gs.phone', null) !== 0);
+  const pickPhone = on => { if (on) prefs.del('gs.phone'); else prefs.set('gs.phone', 0); setPhone(on); toast(t('prefs.phone_next')); };
   const NAMES = { 0.9: 'prefs.size_s', 1: 'prefs.size_m', 1.15: 'prefs.size_l', 1.3: 'prefs.size_xl' };
   return <>
     <Card title={t('prefs.size_h')}>
       <p class="mute">{t('prefs.size_about')}</p>
       <span data-stsize><Segmented label={t('prefs.size_h')} value={String(size)} onChange={pickSize} options={SIZES.map(v => ({ value: String(v), label: t(NAMES[v]) }))} /></span>
+    </Card>
+    <Card title={t('prefs.phone_h')}>
+      <p class="mute">{t('prefs.phone_about')}</p>
+      <span data-stphone><Switch label={t('prefs.phone_on')} checked={phone} onChange={pickPhone} /></span>
+      <p class="mute">{t('prefs.phone_try_about')}</p>
+      <Button icon="phone" onClick={phoneWindow} data-stphonewin>{t('prefs.phone_try')}</Button>
     </Card>
     {fullCan() && <Card title={t('prefs.full_h')}>
       <p class="mute">{t('prefs.full_about')}</p>

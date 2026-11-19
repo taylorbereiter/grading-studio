@@ -1042,3 +1042,27 @@ dialog.dlg.mk-qr{width:min(880px,calc(100vw - 32px))}
 @media (max-width:620px){.mk-qr .qftiles{grid-template-columns:repeat(2,minmax(0,1fr))}.mk-qr .qfrr{grid-template-columns:1fr}.mk-qr .qfcrop{grid-column:1;grid-row:auto}}
 .mk-lfmenu [role="menuitem"].sep{border-top:1px solid var(--line);margin-top:4px;padding-top:8px}
 @media (max-width:760px){.mk-opened{left:16px;right:16px;transform:none;max-width:none}}
+/* clips to show the class (mark/clips.jsx) */
+.clips{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.cliprow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.clip{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:var(--r2);padding:2px}
+.clipform{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}.clipform label{display:inline-flex;gap:6px;align-items:center}
+.clipform .input{width:84px}.clipform .clipname{width:auto;flex:1 1 200px}.clipform small{flex-basis:100%}
+.clipstage{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;background:#000;color:#fff}
+.clipbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#111}.clipbar b{font-size:var(--t3)}
+.clipmain{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0}
+.clipmain video,.clipmain iframe{width:100%;height:100%;border:0;background:#000}.clipmain audio{width:min(600px,90vw)}
+/* Share with your assistant and Bring back (mark/share.jsx) */
+.shwrap>.seg{margin-bottom:12px}
+.shwrap .mk-warn,.bbwrap .mk-warn{background:var(--warn-soft);border-radius:var(--r2);padding:8px 12px;margin:8px 0}
+.shwrap .cclist{margin:6px 0}
+.shwrap .cclist ul{margin:4px 0 0;padding-left:18px;max-height:180px;overflow:auto}
+.shwrap ul.dots{list-style:disc;padding-left:20px;margin:6px 0 0;line-height:1.55}
+.shsteps{padding-left:20px;margin:12px 0;display:grid;gap:12px}
+.shsteps textarea{width:100%;margin:6px 0}
+.mkopts{display:grid;gap:6px;margin:8px 0}
+.bbwrap textarea{width:100%;margin:6px 0}
+.bbwrap .gl{width:100%;border-collapse:collapse;margin-top:8px}
+.bbwrap .gl td,.bbwrap .gl th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.bbwrap .gl .cm{white-space:pre-wrap}
+.bbwrap .warn{color:var(--warn)}

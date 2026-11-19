@@ -4,7 +4,7 @@
 // them written in lib.book.rep, all saved as the current app saves them. A sheet from under the gradebook.
 import { h, Fragment } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
-import { Sheet, Dialog, Button, Segmented, TextInput, Checkbox, Select, toast } from '../../ui/index.js';
+import { Sheet, Dialog, Button, Segmented, TextInput, Checkbox, Select, Mic, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import * as undoList from '../../services/undo.js';
 import { copyText } from '../../services/clipboard.js';
@@ -74,7 +74,7 @@ export function ReportsSheet({ x, cols, term, onClose }) {
             <Select label={t('class.rp_pronoun')} value={B.rptPro(c, n)} onChange={v => change(t('class.u_report'), l => { const k = classIn(l, c.id); if (k) B.setInfo(k, n, { pro: v === 'they' ? '' : v }); }, true)} options={B.RPT_PROS.map(([k]) => ({ value: k, label: t(PRO[k]) }))} data-rp-pro /></div>
           <div class="rptfacts">{chips.map(s => <span class="tag">{s}</span>)}{f.missing.length > 0 && <span class="tag warn">{t('class.rp_missing', { n: f.missing.length })}</span>}</div>
           <textarea class="input" rows="7" value={shown} aria-label={t('class.rp_for', { name: n })} spellcheck onInput={ev => typed(ev.currentTarget.value)} onBlur={flush} data-rp-text data-raw />
-          <div class="rptfoot"><span class="mute small" data-rp-count>{count(shown)}</span><span class="grow" />
+          <div class="rptfoot"><span class="mute small" data-rp-count>{count(shown)}</span><span class="grow" /><Mic onText={w => typed((shown.trim() ? shown.replace(/\s*$/, ' ') : '') + w.trim())} />
             <Button size="sm" onClick={again} title={t('class.rp_again_say')} data-rp-again>{t('class.rp_draft_again')}</Button>
             <Button size="sm" icon="copy" onClick={() => copyText(shown).then(ok => toast(t(ok ? 'class.rp_copied' : 'class.copy_failed')))} data-rp-copy>{t('class.rp_copy')}</Button>
             {e.done ? <><Button size="sm" onClick={() => putRep(c, n, { done: false }, term)} data-rp-undone>{t('class.rp_not_done')}</Button><Button variant="primary" onClick={() => finish(true)} data-rp-next>{t('class.rp_next')}</Button></>

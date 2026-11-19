@@ -12,7 +12,7 @@ import { usePlan } from '../plan.js';
 import { toneOf, classTone } from '../colors.js';
 import { timetableClass } from '../../planning/plan.js';
 import { engine } from '../../planning/engine.js';
-import { lessonsOn, stateOf, STATE_LINE, periods, dayOff, today, plus, at, mondayOf, weekDays, newLesson } from '../plan/lessons.js';
+import { lessonsOn, stateOf, arrived, STATE_LINE, periods, dayOff, today, plus, at, mondayOf, weekDays, newLesson } from '../plan/lessons.js';
 import { saveFailed } from '../plan/save.js';
 import Later from './later.jsx';
 import { UnitSheet } from '../plan/unit-edit.jsx';
@@ -89,7 +89,7 @@ function CourseLine({ p, c, lib }) {
                 <small class="mute">{past ? t('plan.week_taught', { n: taught, of: rows.length }) : t('plan.week_ready', { n: ready, of: rows.length })}</small></span></div>
             {!folded && <ul class="days">{rows.map(r => <li class={'dr' + (r.day === now ? ' today' : '')}>
               <span class="dd mute" data-raw>{date(at(r.day), { weekday: 'short', day: 'numeric' })}</span>
-              {r.lessons.length ? r.lessons.map(l => { const s = stateOf(l, c.id, r.day); return <a class={'dl st-' + s} href={href('lesson', l.id)} style={{ '--cc': toneOf(c.color) }}><i class="pip" /><span data-raw>{l.title || t('plan.untitled')}</span><span class={'st st-' + s}>{t(STATE_LINE[s])}</span></a>; })
+              {r.lessons.length ? r.lessons.map(l => { const s = stateOf(l, c.id, r.day); return <a class={'dl st-' + s} href={href('lesson', l.id)} style={{ '--cc': toneOf(c.color) }}><i class="pip" /><span data-raw>{l.title || t('plan.untitled')}</span><span class={'st st-' + s}>{t(STATE_LINE[s])}</span>{arrived(l) && <span class="st st-new" data-notreviewed>{t('plan.not_reviewed')}</span>}</a>; })
                 : r.day >= now ? <button type="button" class="dl open" onClick={() => plan(r.day)} data-plan={c.id + '|' + r.day}><i class="pip" /><span>{t('plan.plan_this')}</span></button>
                 : <span class="dl none"><i class="pip" /><span class="mute">{t('plan.nothing_planned')}</span></span>}
             </li>)}{!rows.length && <li class="dr mute">{t('plan.no_periods')}</li>}</ul>}

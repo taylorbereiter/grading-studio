@@ -7,7 +7,8 @@
 // Not here yet: keeping an answer as a strong example (E), which comes with the examples in stage 5.
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { Button, IconButton, Segmented, toast, useModal } from '../../ui/index.js';
+import { Button, IconButton, Segmented, toast, useModal, Mic } from '../../ui/index.js';
+import { putWords } from './dictate.js';
 import { state, use, fmtNum, COLORS, NOTE_COLORS, PTS_AMBER, ptsColor, percentFor, setCheckInk, totalInk } from '../../engines/gcore.js';
 import { shownName, lightForPage, lightCanvas } from '../../engines/gdraw.js';
 import { copyPicture, canvasPng } from '../../engines/gsnip.js';
@@ -160,7 +161,7 @@ function NoteEd({ st, q, onDone }) {
   };
   return <div class="qmned" data-qmned>
     <textarea ref={ta} rows={2} class="input" placeholder={t('paper.qm_note_ph')} aria-label={t('paper.qm_cm')} style={{ color: col }} defaultValue={m ? m.text : ''} onKeyDown={keys} data-raw />
-    <div class="qmnedc"><span class="mute">{t('paper.qm_color')}</span>{Object.entries(NOTE_COLORS).map(([k, v]) => <button type="button" class="sw" style={{ background: v }} aria-pressed={v === col || (k === 'yellow' && col === PTS_AMBER) ? 'true' : 'false'}
+    <div class="qmnedc"><Mic onText={w => { putWords(ta.current, w); ta.current.focus(); }} /><span class="mute">{t('paper.qm_color')}</span>{Object.entries(NOTE_COLORS).map(([k, v]) => <button type="button" class="sw" style={{ background: v }} aria-pressed={v === col || (k === 'yellow' && col === PTS_AMBER) ? 'true' : 'false'}
       aria-label={t('paper.qm_note_in', { c: k })} title={k} onClick={() => { setCol(v); ta.current.focus(); }} data-qnc={k} />)}</div>
     <div class="qmnedb"><Segmented size="sm" label={t('paper.qm_note_as')} value={as} onChange={v => { setAs(v); ta.current.focus(); }} options={[{ value: 'note', label: t('paper.qm_as_note') }, { value: 'text', label: t('paper.qm_as_text') }]} />
       <span class="mute">{t('paper.qm_note_keys')}</span><Button size="sm" variant="primary" onClick={save} data-nsave>{t('paper.qm_save')}</Button></div>

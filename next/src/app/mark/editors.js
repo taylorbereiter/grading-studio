@@ -9,6 +9,7 @@ import { t } from '../../i18n/t.js';
 import { PARTS } from '../router.js';
 import './lines.js';
 import { toast } from '../../ui/index.js';
+import { micFor } from './dictate.js';
 
 const el = (tag, cls, attrs = {}) => { const e = document.createElement(tag); if (cls) e.className = cls; for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
 const button = (cls, attrs, text) => { const b = el('button', cls, { type: 'button', ...attrs }); if (text != null) b.textContent = text; return b; };
@@ -91,8 +92,8 @@ export function openNote(pg, m, isNew) {
   }
   const bankL = el('div', 'lbl', { 'data-bank': '' }); bankL.textContent = t('mark.saved_comments');
   const chips = el('div', 'chips');
-  const foot = el('div', 'row');
-  foot.append(button('btn', { 'data-a': 'star', title: t('mark.save_reuse_tip') }, t('mark.save_reuse')), el('span', 'sp'));
+  const foot = el('div', 'row'), mic = micFor(ta);
+  foot.append(button('btn', { 'data-a': 'star', title: t('mark.save_reuse_tip') }, t('mark.save_reuse')), mic, el('span', 'sp'));
   if (!isNew) foot.append(button('btn', { 'data-a': 'del' }, t('mark.delete')));
   foot.append(button('btn primary', { 'data-a': 'ok' }, t('mark.done')));
   pop.append(...rows, bankL, chips, foot);
@@ -116,7 +117,7 @@ export function openNote(pg, m, isNew) {
   ta.focus({ preventScroll: true });
   if (isNew) { pg.pending = m; K.redrawAll(); }
   const close = save => {
-    pop.remove(); use({ activeEditor: null });
+    mic.stop(); pop.remove(); use({ activeEditor: null });
     if (pg.pending === m) pg.pending = null;
     const text = ta.value.trim(), now = { color: m.color, hc: m.hc, ly: m.ly };
     Object.assign(m, was); for (const k of ['hc', 'ly']) if (m[k] === undefined) delete m[k];   // the step Ctrl Z goes back to holds the colors it had when it opened

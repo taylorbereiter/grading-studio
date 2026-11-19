@@ -55,6 +55,11 @@ export function Panel({ ui, close, start, draw }) {
     return <aside class="fcpanel fold" aria-label={t('focus.title')} data-fc-panel="pill"><button type="button" class={'fcpill' + (r.st === 'brk' ? ' brk' : '')} title={t('focus.unfold')} data-fc-unfold onClick={() => { const x = E.fcRun(); x.fold = false; set(x); }}>
       <Clock r={r} />{w && raw(w.name)}{c.goal && r.k !== 'l' ? <span class={'fcpg' + (n >= c.goal.n ? ' met' : '')}>{n}/{c.goal.n}</span> : null}</button></aside>;
   }
+  // back after a few minutes away from the tab: how long, and the session goes on or starts again (src/focus.js fcaway)
+  if (r.st === 'run' && r.away) return <aside class="fcpanel" aria-label={t('focus.title')} data-fc-panel="away"><Head cap={t('focus.focusing')} fold={fold} />
+    <div class="fcrunv"><p class="fcbig">{t('focus.wb')}</p><p class="mute">{t('focus.wb_away', { n: r.away })}</p>
+      <div class="fcacts"><Button size="sm" variant="primary" data-fcaway="keep" onClick={() => { const x = E.fcRun(); if (x) { delete x.away; set(x); } }}>{t('focus.wb_keep')}</Button>
+        <Button size="sm" data-fcaway="again" onClick={() => { const x = E.fcRun(); if (x) { delete x.away; x.at = Date.now(); x.st = 'run'; delete x.pz; delete x.idl; delete x.ii; set(x); } }}>{t('focus.wb_again')}</Button></div></div></aside>;
   if (r.st === 'run' || r.st === 'paused') {
     return <aside class="fcpanel" aria-label={t('focus.title')} data-fc-panel={r.st}><Head cap={r.st === 'paused' ? t('focus.paused') : t('focus.focusing')} fold={fold} />
       <div class="fctop"><Clock r={r} big /><What r={r} w={w} /></div>

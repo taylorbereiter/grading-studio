@@ -11,6 +11,7 @@ import { openFocus, onFocus } from '../focus/bus.js';
 import { usePlan } from '../plan.js';
 import { toneOf, classTone } from '../colors.js';
 import { Slide } from '../plan/slide.jsx';
+import { usePart } from '../parts.js';
 
 const hm = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : null; };
 const clock = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? date(new Date(2000, 0, 1, +m[1], +m[2]), { hour: 'numeric', minute: '2-digit' }) : ''; };
@@ -70,7 +71,7 @@ function Line({ icon, title, sub, href: to, kind }) {
   return <li class="hl" data-kind={kind}><span class="hi"><Icon name={icon} /></span><span class="tx"><b>{title}</b>{sub && sub.length > 0 && <small>{sub}</small>}</span>{to && <a class="go" href={to} aria-label={title}><Icon name="chr" /></a>}</li>;
 }
 export default function Home({ classes }) {
-  const [v, now] = useHome(), plan = usePlan();
+  const [v, now] = useHome(), plan = usePlan(), Sv = usePart('setsave', matchMedia('(max-width:640px)').matches);   // a phone's sign-in card
   const d = new Date(now);
   if (!v) return <div class="page"><header class="ph"><h1>{greeting(d)}</h1></header><div class="loading" aria-busy="true" /></div>;
   if (v.error) return <div class="page"><header class="ph"><h1>{greeting(d)}</h1></header><EmptyState icon="warn" title={t('home.read_failed')} /></div>;
@@ -80,6 +81,7 @@ export default function Home({ classes }) {
     <header class="ph hello"><div><h1>{greeting(d)}</h1><p data-raw>{date(d, { weekday: 'long', day: 'numeric', month: 'long' })}</p></div>
       <div class="row gap"><HomeFocus /><a class="btn" href={href('calendar')}><Icon name="week" />{t('home.this_week')}</a></div></header>
     <p class="say" data-home="say" data-mark={c.mark} data-back={c.back} data-today={c.classesToday} data-plan={c.toPlan} data-missing={c.missing}>{say || t('home.say_none')}</p>
+    {Sv && <Sv.PhoneSign />}
     <NowCard teach={v.teach} now={now} plan={plan} />
     <div class="homegrid">
       <section aria-labelledby="h-classes"><div class="hrow"><h2 id="h-classes">{t('nav.classes')}</h2></div>

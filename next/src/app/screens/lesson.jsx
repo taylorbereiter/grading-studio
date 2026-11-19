@@ -19,7 +19,7 @@ import { engine } from '../../planning/engine.js';
 import { saveLesson, saveTaughtNote } from '../../planning/write.js';
 import { taughtIn } from '../../planning/index.js';
 import { Slide } from '../plan/slide.jsx';
-import { stateOf, classOf, today, at, mins, lessonsOn } from '../plan/lessons.js';
+import { stateOf, arrived, classOf, today, at, mins, lessonsOn } from '../plan/lessons.js';
 import { saveFailed } from '../plan/save.js';
 import { Talk } from '../plan/talk.jsx';
 import { PARTS } from '../router.js';
@@ -72,7 +72,7 @@ function StateSeg({ l, slot, onSave }) {
   const pick = v => {
     if (v === s) return;
     const n = JSON.parse(JSON.stringify(l));
-    if (v === 'ready') { n.ready = { at: Date.now() }; if (slot) n.taught = (n.taught || []).filter(x => !(x.classId === slot.classId && x.date === slot.date)); }
+    if (v === 'ready') { n.ready = { at: Date.now() }; delete n.pending; if (n.status === 'review') n.status = ''; if (slot) n.taught = (n.taught || []).filter(x => !(x.classId === slot.classId && x.date === slot.date)); }
     else if (v === 'draft') { delete n.ready; if (slot) n.taught = (n.taught || []).filter(x => !(x.classId === slot.classId && x.date === slot.date)); }
     else if (v === 'taught' && slot) { const of = n.slides.length; n.taught = [...(n.taught || []).filter(x => !(x.classId === slot.classId && x.date === slot.date)), { classId: slot.classId, date: slot.date, slide: of, of, note: '', at: Date.now() }]; }
     if (n.taught && !n.taught.length) delete n.taught;
@@ -236,7 +236,7 @@ export default function LessonPage({ route }) {
   const view = VIEWS.includes(route.params.view) ? route.params.view : 'lesson';
   const setView = v => go('lesson', route.params.id, v === 'lesson' ? '' : v);
   // Present is fetched with the page, so F5 shows it at once; the lesson's tools too; the editor when the Edit view opens; Beside when opened.
-  const PresentMod = usePart('present'), Tools = usePart('tools'), EditMod = usePart('edit', view === 'edit'), Side2 = usePart('beside', beside);
+  const PresentMod = usePart('present'), Tools = usePart('tools'), EditMod = usePart('edit', view === 'edit'), Side2 = usePart('beside', beside), Pf = usePart('pfolder', arrived(l));
   const ask = i => { setRedo(typeof i === 'number' ? i : null); setAsking(true); };
   // Planned from the Calendar "with your assistant": the assistant sheet opens on arrival, once.
   useEffect(() => { try { if (l && sessionStorage.getItem('gsn.ask') === l.id) { sessionStorage.removeItem('gsn.ask'); ask(); } } catch { } }, [l && l.id]);
@@ -296,6 +296,7 @@ export default function LessonPage({ route }) {
     {per && slot && <p class="mute when"><span class="dot" style={{ '--cc': toneOf(per.c.color) }} /><span data-raw>{per.c.name}</span> <span data-raw>{date(at(slot.date), { weekday: 'short', day: 'numeric', month: 'short' })}{per.m ? ', ' + (per.m.label ? per.m.label + ', ' : '') + clock(per.m.start) : ''}</span></p>}
     <h1 class="lt" data-raw>{l.title || t('plan.untitled')}</h1>
     {Tools && <Tools.VariantBar p={p} l={l} save={save} />}
+    {Pf && arrived(l) && <Pf.Arrived p={p} l={l} save={save} />}
     <div class="lbar"><StateSeg l={l} slot={slot} onSave={save} /><span class="mute">{t('plan.n_slides', { n })}</span><span class="grow" />
       {!l.ready && <Button icon="timer" onClick={() => startFocus('les:' + l.id)} data-focus="lesson-focus">{t('plan.focus_lesson')}</Button>}
       <Button variant="primary" icon="play" onClick={() => setPresenting(true)} data-focus="present">{t('plan.present')}</Button></div>

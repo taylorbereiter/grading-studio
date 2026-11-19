@@ -24,16 +24,16 @@ import { writeMany } from '../shared/idb.js';
 import { plannerFolder, writeLessonFile, removeLessonFile, writeTimetableFile, writeActivitiesFile } from './folder.js';
 
 export class CannotSave extends Error { constructor(why, what) { super(what + ': ' + why); this.name = 'CannotSave'; this.why = why; } }
-const check = what => { mayWrite(what); if (!tabs.live()) throw new CannotSave('replaced', what); };
-const tell = name => { try { const ch = new BroadcastChannel(name); ch.postMessage(name === 'gs-bank' ? 'changed' : 'saved'); ch.close(); } catch {} };
+export const check = what => { mayWrite(what); if (!tabs.live()) throw new CannotSave('replaced', what); };
+export const tell = name => { try { const ch = new BroadcastChannel(name); ch.postMessage(name === 'gs-bank' ? 'changed' : 'saved'); ch.close(); } catch {} };
 
 // The lesson is stored as given, with updated set to now (src/planner/lessons.js lPut; Drive sync goes by it), and returned as
-// stored (with _file and _mod, or _sync, when a Planner folder is linked).
-export async function saveLesson(lesson) {
+// stored (with _file and _mod, or _sync, when a Planner folder is linked). file: false for a lesson just read from its file there.
+export async function saveLesson(lesson, { file = true } = {}) {
   check('gs-lessons/lessons');
   const l = JSON.parse(JSON.stringify(lesson)); l.updated = Date.now();
   await lessons.put(l);
-  const f = await plannerFolder();
+  const f = file ? await plannerFolder() : null;
   if (f) { try { if (await writeLessonFile(l, f) !== 'none') await lessons.put(l); } catch (e) { console.error(e); l._sync = 1; await lessons.put(l); } }
   tell('gs-plan-out');
   saved({ kind: 'lesson', id: l.id, side: 'planning' });
@@ -86,17 +86,25 @@ export async function dropPlannerKv(key) {
   tell('gs-plan-out'); saved({ kind: 'plan', id: key, side: 'planning', gone: true });
 }
 const KV = ['setup', 'units', 'bank', 'activities', 'words', 'deflook'];
-export async function saveKv(name, value) {
+// file: false for a record just read from the Planner folder, so it isn't written straight back.
+export async function saveKv(name, value, { file = true } = {}) {
   if (!KV.includes(name)) throw new Error('Not a Planner record: ' + name);
   check('gs-lessons/kv/' + name);
+  const was = name === 'units' ? await kv.get('units').catch(() => null) : null;
   await kv.put(value, name);
+  const f = file ? await plannerFolder() : null;
   // The timetable also goes to its file in a linked Planner folder, as the current Planner writes it when it is changed there.
-  if (name === 'setup') await writeTimetableFile(value, await plannerFolder()).catch(e => console.error(e));
+  if (name === 'setup') await writeTimetableFile(value, f).catch(e => console.error(e));
   // The teacher's own activities go to activities.json there too (src/planner/activities.js actFolderWrite).
-  if (name === 'activities') await writeActivitiesFile(value, await plannerFolder()).catch(e => console.error(e));
+  if (name === 'activities') await writeActivitiesFile(value, f).catch(e => console.error(e));
+  // A unit she changed goes to Units/ there, and the bank to Rubrics/ (planning/folder-more.js afterSave).
+  if (f && (name === 'units' || name === 'bank')) await import('./folder-more.js').then(m => m.afterSave(name, value, was, f)).catch(e => console.error(e));
   tell('gs-plan-out'); if (name === 'bank') tell('gs-bank');
   saved({ kind: 'plan', id: name, side: 'planning' });
 }
+
+// Linking the Planner folder, writing it whole and what reading it keeps are in planning/folder-more.js (loaded only with a folder).
+
 const PREFS = { 'gs.look': look, 'gs.theme': theme, 'gs.lang': language, 'gs.words': words, 'gs.mailApp': mailApp, 'gs.mblinks': manageBacLinks, 'gs.school': school,
   'gs.gEmail': googleEmail, 'gs.gAuto': googleAuto, 'gs.gPaperDir': drivePaperDir, 'gs.gVidDir': driveVideoDir, 'gs.planCopy': planCopy, 'gs.planSeen': planSeen, 'gs.planBig': planBig };
 // value undefined removes the key, as the current app does for English (gs.lang).
@@ -166,3 +174,4 @@ export async function takePlan({ put = [], del = [], keys = [], had = {}, seenKv
   tell('gs-plan-in');
   saved({ kind: 'plan', id: 'sync', side: 'planning', from: 'sync' });
 }
+

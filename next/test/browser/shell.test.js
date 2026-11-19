@@ -79,10 +79,63 @@ test('on a phone, a newer version shows Update now on More, and pressing it take
     const btn = await p.waitForSelector('.upd.big [data-focus="update-now"]', { visible: true, timeout: 60000 });   // the sidebar's own is hidden on a phone
     assert.ok(await p.evaluate(() => getComputedStyle(document.querySelector('nav.tabbar')).display !== 'none'), 'the bottom tabs show at 390 px');
     const box = await btn.boundingBox(); assert.ok(box && box.x >= 0 && box.x + box.width <= 390, 'Update now is on screen');
+    // the same just above the tabs, on every screen (src/phone.js phUpd)
+    assert.ok(await p.$eval('nav.tabbar .upd [data-focus="update-now"]', e => e.getBoundingClientRect().height > 0), 'Update now above the tabs');
+    // Google sign-in and Sync now on More, as in Settings > Saving and sync
+    await p.waitForSelector('[data-moregoogle] [data-svgoogle]');
     await Promise.all([p.waitForNavigation({ timeout: 30000 }), btn.click()]);
     await shellUp(p);
     assert.equal(await kept(), 'newer-build-for-the-test');
   } finally { site.nextBuild = null; }
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('Settings > Display > Phone layout: off keeps a phone laid out as a computer (gs.phone 0, as the current app keeps it), on again takes it away', async () => {
+  const p = await fresh(390);
+  await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });   // a phone's screen, as the page reads it
+  await p.goto(srv.url + 'next/#/settings/display'); await shellUp(p);
+  await p.waitForSelector('[data-stphone] [role="switch"]', { timeout: 30000 });
+  assert.equal(await p.$eval('[data-stphone] [role="switch"]', e => e.getAttribute('aria-checked')), 'true');
+  await p.click('[data-stphone] [role="switch"]');
+  assert.equal(await p.evaluate(() => localStorage.getItem('gs.phone')), '0');
+  await p.reload(); await shellUp(p);
+  assert.equal(await p.$eval('meta[name=viewport]', e => e.content), 'width=1100', 'a phone lays the page out 1100 wide');
+  await p.waitForSelector('[data-stphone] [role="switch"]', { timeout: 30000 });
+  await p.click('[data-stphone] [role="switch"]');
+  assert.equal(await p.evaluate(() => localStorage.getItem('gs.phone')), null);
+  await p.reload(); await shellUp(p);
+  assert.equal(await p.$eval('meta[name=viewport]', e => e.content), 'width=device-width,initial-scale=1');
+  assert.ok(await p.$('[data-stphonewin]'), 'the phone version can be opened in a narrow window');
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('Find has the settings people look for by name, each opening its group', async () => {
+  const p = await fresh();
+  await p.goto(srv.url + 'next/#/home'); await shellUp(p);
+  for (const [say, to] of [['Remove from this computer', '#/settings/saving'], ['Start a new school year', '#/settings/saving'], ['Tablet and pencil', '#/settings/marking'], ['App text size', '#/settings/display']]) {
+    await p.goto(srv.url + 'next/#/home'); await shellUp(p);
+    await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
+    await p.waitForSelector('dialog.cmd[open]');
+    await p.keyboard.type(say);
+    await p.waitForFunction(s => [...document.querySelectorAll('dialog.cmd[open] [role="option"]')].some(o => o.textContent.includes(s)), { timeout: 10000 }, say);
+    await p.keyboard.press('Enter');
+    await p.waitForFunction(h => location.hash === h, { timeout: 10000 }, to);
+  }
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('Find reaches every assignment, each class page, the common jobs and the shortcuts that can run now (src/shell.js findRows; the open assignment\'s students are in mark-out.test.js)', async () => {
+  const p = await fresh();
+  for (const [say, to] of [['Grade 10 Literature: people', '#/class/c2/people'], ['Add a class', '#/class/new'], ['Show the shortcuts', '#/help/keys'], ['Poetry analysis', '#/mark/gs.b.n2']]) {
+    await p.goto(srv.url + 'next/#/home'); await shellUp(p);
+    await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
+    await p.waitForSelector('dialog.cmd[open]');
+    await p.waitForFunction(() => document.activeElement && document.activeElement.matches('dialog.cmd input'));
+    await p.keyboard.type(say);
+    await p.waitForFunction(s => { const o = document.querySelector('dialog.cmd[open] [role="option"][aria-selected="true"]'); return o && o.textContent.includes(s); }, { timeout: 10000 }, say);
+    await p.keyboard.press('Enter');
+    await p.waitForFunction(h => decodeURIComponent(location.hash) === h, { timeout: 10000 }, to);
+  }
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 

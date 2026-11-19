@@ -62,6 +62,13 @@ test('a focus session from To do: it opens the papers it suggests, counts a pape
   await p.waitForSelector('[data-fc-panel="run"]', { timeout: 20000 });
   const r0 = await ls(p, 'gsp.focusRun');
   assert.equal(r0.st, 'run'); assert.equal(r0.w, 'mark:' + id); assert.equal(r0.len, 10 * 60, 'her session length, 10 minutes by default');
+  // away from the tab for a few minutes while the clock runs: on the way back the panel says how long, and Keep going carries on
+  await p.evaluate(() => { const r = JSON.parse(localStorage.getItem('gsp.focusRun')); r.hid = Date.now() - 5 * 60000; localStorage.setItem('gsp.focusRun', JSON.stringify(r)); document.dispatchEvent(new Event('visibilitychange')); });
+  await p.waitForSelector('[data-fc-panel="away"]', { timeout: 10000 });
+  assert.match(await p.$eval('[data-fc-panel="away"]', e => e.textContent), /5 minutes/);
+  await p.click('[data-fcaway="keep"]');
+  await p.waitForSelector('[data-fc-panel="run"]');
+  assert.equal((await ls(p, 'gsp.focusRun')).away, undefined);
   await p.waitForFunction(() => window.__mark && window.__mark.ready && window.__mark.read && window.__mark.state().cur === 0, { timeout: 60000 });
 
   // nothing counts until a paper is marked: two rows scored is not a paper finished, the third is

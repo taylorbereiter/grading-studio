@@ -314,5 +314,28 @@ function sameVideo(st, o) {
   if (!url) return null;
   return st.files.find(f => f.kind === 'link' && !vidRef(f.data) && (linkOf(f.data) === url || (!!spot && linkSame(f) === spot))) || null;
 }
-export { linkClean, linkOf, linkPlayer, linkTitle, linkHost, linkBytes, vidRef, drvRef, keptId, linkKey, vrotKey, vrotOf, frameTicks, fmtSize, MEDIA_RX, VIDEO_RX, MIME, extOf, fmtTime, trLines, trText, trParse, trMakeable, transcribe, asrStop, asrStandIn, notesPdf, npRows, npFileName, isNotes, notesFileOf, NP_TAIL, vidBytes, sameVideo };
+// src/video.js
+function clipSecs(v) {
+  v = String(v == null ? '' : v).trim(); if (!v) return null;
+  if (!/^\d+(:\d{1,2}){0,2}(\.\d+)?$/.test(v)) return NaN;
+  return v.split(':').reduce((n, x) => n * 60 + parseFloat(x), 0);
+}
+// src/video.js
+const clipSpan = c => fmtTime(c.a) + (c.b != null ? '–' + fmtTime(c.b) : '');
+// src/video.js
+const clipsOf = f => (batch.clips || []).filter(c => (f.kind === 'link' ? c.u && c.u === linkKey(f) : c.p === f.path));
+// src/video.js
+function clipFile(c) {
+  for (const st of batch.students) for (const f of st.files) if (c.u ? f.kind === 'link' && linkKey(f) === c.u : f.path === c.p) return f;
+  return null;
+}
+// src/video.js
+function clipFrame(src, c) {
+  const a = Math.floor(c.a), b = c.b != null ? Math.ceil(c.b) : null;
+  if (/youtube-nocookie\.com\/embed\//.test(src)) return { src: src + '?start=' + a + (b != null ? '&end=' + b : '') + '&autoplay=1', stops: b != null };
+  if (/player\.vimeo\.com\//.test(src)) return { src: src + '#t=' + a + 's', stops: false };
+  if (/drive\.google\.com\/file\//.test(src) || /loom\.com\/embed\//.test(src)) return { src: src + '?t=' + a, stops: false };
+  return { src, stops: false };
+}
+export { linkClean, linkOf, linkPlayer, linkTitle, linkHost, linkBytes, vidRef, drvRef, keptId, linkKey, vrotKey, vrotOf, frameTicks, fmtSize, MEDIA_RX, VIDEO_RX, MIME, extOf, fmtTime, trLines, trText, trParse, trMakeable, transcribe, asrStop, asrStandIn, notesPdf, npRows, npFileName, isNotes, notesFileOf, NP_TAIL, vidBytes, sameVideo, clipSecs, clipFrame, clipSpan, clipsOf, clipFile };
 export { uid };

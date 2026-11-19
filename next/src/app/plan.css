@@ -13,6 +13,8 @@
 .st{display:inline-flex;align-items:center;gap:4px;font-size:var(--t1);color:var(--mute);white-space:nowrap}
 .st.st-ready{color:var(--ok)}
 .st.st-none{color:var(--faint)}
+.st.st-new{color:var(--acc-ink)}
+.aimark{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:10px 12px;margin:0 0 12px;border-radius:var(--r2);background:var(--acc-soft);color:var(--acc-ink)}.aimark .mute{color:var(--ink2)}
 .link{color:var(--acc-ink);background:none;border:0;padding:0;font:inherit;cursor:pointer;text-decoration:none}
 .link:hover{text-decoration:underline}
 

@@ -9,7 +9,7 @@ import { NavItem, NavSection, IconButton, Icon, CommandBar, ToastHost, toast, LO
 import { t } from '../i18n/t.js';
 import * as router from './router.js';
 import { addCommand, openCommandBar, loadWhenOpened } from '../services/commands.js';
-import { register, start as keysStart, pieces } from '../services/shortcuts.js';
+import { register, start as keysStart, pieces, shortcuts } from '../services/shortcuts.js';
 import * as undo from '../services/undo.js';
 import { assistant } from '../services/assistant.js';
 import { fullCan, fullToggle } from '../services/size.js';
@@ -118,7 +118,7 @@ function useLookValue() {
   useEffect(() => onLook(set), []);
   return v;
 }
-// The update line at the foot of the sidebar, and on More on a phone.
+// The update line at the foot of the sidebar, above a phone's tabs (src/phone.js phUpd), and on More on a phone.
 export function UpdateLine({ big }) {
   const u = useUpdate();
   if (!u.waiting) return big ? <p class="mute upd-none">{u.current ? t('update.current', { v: u.current }) : t('update.not_kept')}</p> : null;
@@ -128,7 +128,7 @@ export function UpdateLine({ big }) {
 
 function Tabs({ route }) {
   const cur = route.nav === 'class' ? 'classes' : route.path === 'classes' ? 'classes' : route.nav;
-  return <nav class="tabbar" aria-label={t('nav.tabs')}>
+  return <nav class="tabbar" aria-label={t('nav.tabs')}><UpdateLine />
     {TABS.map(([id, icon, line]) => id === 'find'
       ? <button type="button" class="tb" onClick={openCommandBar}><Icon name={icon} /><span>{t(line)}</span></button>
       : <a class="tb" href={router.href(id)} aria-current={cur === id ? 'page' : undefined}><Icon name={icon} /><span>{t(line)}</span></a>)}
@@ -194,7 +194,7 @@ export function Shell() {
         .map(([id, line, icon]) => addCommand({ id: 'go-' + id, label: () => t(line), group: t('cmd.group_go'), icon, run: () => router.go(id) })),
       addCommand({ id: 'go-time', label: () => t('nav.time'), group: t('cmd.group_go'), icon: 'clock', run: () => router.go('time') }),
       addCommand({ id: 'focus', label: () => t('nav.focus'), group: t('cmd.group_do'), icon: 'timer', run: openFocus }),
-      (loadWhenOpened(() => import('./help/find.js').then(m => m.addHelpCommands(), e => console.error(e))), () => {}),
+      (loadWhenOpened(() => import('./help/find.js').then(m => m.addHelpCommands(shortcuts), e => console.error(e))), () => {}),
       addCommand({ id: 'go-keys', label: () => t('keys.title'), group: t('cmd.group_go'), icon: 'keyboard', run: () => router.go('help', 'keys') }),
       addCommand({ id: 'theme', label: () => t('cmd.change_theme'), group: t('cmd.group_do'), icon: 'sun', run: () => router.go('settings', 'display') }),
       addCommand({ id: 'fold', label: () => t('keys.fold'), group: t('cmd.group_do'), icon: 'menu', keys: 'mod+\\', run: fold }),

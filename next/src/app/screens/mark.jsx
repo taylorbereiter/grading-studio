@@ -10,7 +10,10 @@ import { Tabs, Button, IconButton, Icon, EmptyState, Dialog, Progress, Avatar, T
 import { t } from '../../i18n/t.js';
 import { go, href, PARTS } from '../router.js';
 import { register } from '../../services/shortcuts.js';
+import { addCommand } from '../../services/commands.js';
+import { assistant } from '../../services/assistant.js';
 import { openPages, renderPage, fitScale } from '../mark/paper.js';
+import { installTouch } from '../mark/touch.js';
 import { use, gradeOf, maxPoints, fmtNum, state, rowSteps, rowTop, setupOver, DEFAULT_SETUP, SCALE12, SCALE_FIVES, noScore, xcSay, ibSetup, quizOn } from '../../engines/gcore.js';
 import { prefs } from '../../students/prefs.js';
 import { onSaved } from '../../shared/saved.js';
@@ -217,7 +220,7 @@ function SideRubric({ st }) {
   </div>;
 }
 
-function Paper({ batch, cur, zoom, ver, FU, ctl, onSp }) {
+function Paper({ batch, cur, zoom, ver, FU, ctl, onSp, onZoom }) {
   const st = batch.students[cur], [got, setGot] = useState(null), area = useRef(null), [size, setSize] = useState([0, 0]), was = useRef(null);
   useEffect(() => {
     // the same student opened again after a change keeps showing until the pages are ready, so the paper doesn't flash and a dialog
@@ -228,6 +231,9 @@ function Paper({ batch, cur, zoom, ver, FU, ctl, onSp }) {
     if (st) openPages(st, () => live, FU && FU.impAuto).then(r => { if (live) { setGot(r); seam.ready = true; } });
     return () => { live = false; };
   }, [batch, cur, ver]);
+  // a finger moves the page once a pencil has been used, two pinch to zoom, a palm does nothing (src/touch.js)
+  const zr = useRef(zoom); zr.current = zoom;
+  useEffect(() => area.current && installTouch(area.current, { zoom: () => zr.current, setZoom: onZoom, commit: () => { if (MK) MK.M.commit(); } }), []);
   useEffect(() => {
     const el = area.current; if (!el) return;
     const measure = () => { const cs = getComputedStyle(el); setSize([el.clientWidth - (parseFloat(cs.paddingLeft) || 18) - (parseFloat(cs.paddingRight) || 18), el.clientHeight]); };
@@ -481,13 +487,25 @@ export default function MarkScreen({ route, classes }) {
   // Setup (the current app's More menu, This assignment): Rubric setup, Bring in files (several late papers at once, each sorted to its
   // student: mark/bringin.jsx) and Partners and videos (mark/partners.jsx)
   const [setupDlg, setSetupDlg] = useState(null);
+  // Share with your assistant (mark/share.jsx), from this menu and from Insights; the assistant's name is handed in with ctx
+  const openShare = () => PARTS.share().then(S => setSetupDlg({ k: 'sh', S }), e => console.error(e));
   const bringMany = () => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true; i.onchange = async () => { const B = await PARTS.bringin(); await B.bringFiles(await B.expand([...i.files]), o => setSetupDlg({ k: 'bring', B, ...o })); }; i.click(); };
   const setupItems = [{ label: t('mark.su_menu'), icon: 'settings', onSelect: openSetup }, { label: t('mark.bf_menu'), icon: 'upload', onSelect: bringMany },
     { label: t('mark.pv_menu'), icon: 'people', onSelect: () => PARTS.partners().then(P => setSetupDlg({ k: 'pv', P }), e => console.error(e)) },
     { label: t('mark.qm_menu'), icon: 'check', onSelect: () => quick() },
+    ...(w && (w.batch.clips || []).length ? [{ label: t('mark.cl_menu'), icon: 'play', onSelect: () => PARTS.clips().then(Cl => setSetupDlg({ k: 'cl', Cl }), e => console.error(e)) }] : []),
+    { label: t('mark.sh_menu'), icon: 'assist', onSelect: openShare },
     { label: t('mark.calc'), icon: 'grades', kbd: '=', onSelect: openCalc },
     { label: t('mark.solo_start'), sub: t('mark.solo_tip'), icon: 'user', kbd: 'I', onSelect: soloStart },
     ...(w && w.batch.quiz && w.batch.quiz.made ? [{ label: t('mark.qr_menu'), icon: 'image', onSelect: () => quizScan() }] : [])];
+  // The command bar while an assignment is open (src/shell.js findRows): its students, its tabs, the Setup menu and closing it
+  const setupRef = useRef(setupItems); setupRef.current = setupItems;
+  useEffect(() => { if (!w) return; const g = t('mark.cmd_students'), th = t('mark.cmd_this');
+    const offs = w.batch.students.map((st, i) => addCommand({ id: 'st-' + i, label: shownName(st, i), group: g, icon: 'user', run: () => openOn(i) }));
+    TABS.forEach(k => offs.push(addCommand({ id: 'tab-' + k, label: TAB_LINE[k], group: th, icon: 'grades', run: () => go('mark', id, k === 'mark' ? '' : k) })));
+    setupItems.forEach((x, n) => offs.push(addCommand({ id: 'su-' + n, label: x.label, group: th, icon: x.icon, run: () => setupRef.current[n] && setupRef.current[n].onSelect() })));
+    offs.push(addCommand({ id: 'asg-close', label: () => t('mark.cmd_close'), group: th, icon: 'x', run: close }));
+    return () => offs.forEach(f => f()); }, [w, id, ver, setupItems.length]);
   // a quiz made here (mark/quizread.jsx): Quiz scan shows what the scan read; before the first reading, it reads the papers first
   const quizScan = async again => { const R = await PARTS.quizread(); if ((again || !state().batch.quiz.lastRead) && !await R.readAll(!!again)) return; setSetupDlg({ k: 'qr', R }); };
   const readOnce = useRef(null);
@@ -511,18 +529,20 @@ export default function MarkScreen({ route, classes }) {
     {su && <su.SetupDialog onClose={() => setSu(null)} />}
     {setupDlg && setupDlg.k === 'bring' && <setupDlg.B.BringFiles rows={setupDlg.rows} dups={setupDlg.dups} onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'pv' && <setupDlg.P.Partners onClose={() => setSetupDlg(null)} />}
+    {setupDlg && setupDlg.k === 'sh' && <setupDlg.S.Share ctx={{ ...cvCtx, ai: assistant() }} onClose={() => setSetupDlg(null)} />}
+    {setupDlg && setupDlg.k === 'cl' && <setupDlg.Cl.ClipStage onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'qm' && <setupDlg.Q.QuickMark onClose={() => setSetupDlg(null)} onBoxes={() => quick(true)} onOpen={pick} />}
     {setupDlg && setupDlg.k === 'qr' && <setupDlg.R.QuizLook onClose={() => setSetupDlg(null)} onAgain={() => quizScan(true)} />}
     {setupDlg && setupDlg.k === 'qb' && <setupDlg.B.QuickBoxes onClose={() => setSetupDlg(null)} onSaved={on => (on ? quick() : setSetupDlg(null))} />}
     <RubricAsk ask={ask} />
     {err ? <EmptyState icon="inbox" title={t(err.name === 'NotKept' ? 'mark.not_kept' : 'mark.page_bad')} text={err.name === 'NotKept' ? t('mark.not_kept_text') : ''} />
       : !w ? (dl ? <p class="mk-dl mute" role="status" data-mkdl>{t('mark.from_drive', { n: dl.n, of: dl.of })}</p> : <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />)
-      : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} E={out.E} cur={cur} onOpen={openOn} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
+      : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} E={out.E} cur={cur} onOpen={openOn} onShare={openShare} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
       : <><div class="mk-body">
         {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} onHide={MK ? () => hideNames() : null} onShuffle={() => hideNames(true)} />}
         <div class="mk-mid">
           {MK && <MK.Tools />}
-          <Paper batch={w.batch} cur={cur} zoom={zoom} ver={ver} FU={FU} ctl={spCtl} onSp={setSp} />
+          <Paper batch={w.batch} cur={cur} zoom={zoom} ver={ver} FU={FU} ctl={spCtl} onSp={setSp} onZoom={z => { z = Math.min(3, Math.max(0.5, Math.round(z * 100) / 100)); setZoom(z); keep('zoom', z); }} />
           {FU && light && <FU.LightPanel onClose={() => setLight(false)} />}
           <Rove class="mk-zoom" role="toolbar" aria-label={t('mark.view_tools')}>{sp.n > 0 && <IconButton icon="slides" label={t('mark.sp_open')} kbd="B" aria-pressed={sp.shown ? 'true' : 'false'} onClick={() => spCtl.current && spCtl.current.toggle()} data-spbtn />}{noR && <IconButton icon="chl" label={t('mark.panel_show')} kbd="]" onClick={() => setPanel(false)} data-panelshow />}{FU && FU.rescanCount() > 0 && <IconButton icon="flag" label={t('mark.rs_title_n', { n: FU.rescanCount() })} title={t('mark.rs_title_n', { n: FU.rescanCount() })} onClick={() => setRescans(true)} data-rescans />}{FU && <IconButton icon="sun" label={t('mark.l_title')} aria-pressed={light ? 'true' : 'false'} onClick={() => setLight(v => !v)} data-light />}<IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => { const z = Math.max(0.5, Math.round((zoom - 0.1) * 10) / 10); setZoom(z); keep('zoom', z); }} />
             <span>{t('mark.zoom', { n: Math.round(zoom * 100) })}</span>
