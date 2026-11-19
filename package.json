@@ -10,6 +10,7 @@
     "check": "npm run build && npm test",
     "screens": "node test/tools/screens.js",
     "saved-work": "node test/tools/saved-work.js",
+    "rehearsal": "node test/tools/rehearsal.js",
     "speed": "node test/tools/speed.js",
     "preview": "npm run build && node test/preview.js",
     "next:build": "node next/build.js",
