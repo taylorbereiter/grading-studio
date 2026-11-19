@@ -6,6 +6,9 @@ const assert = require('node:assert/strict');
 const { kit, wait, until } = require('./e1kit.js');
 const K = kit();
 before(K.start); after(K.stop);
+// Typing into a box in a sheet that is still opening can lose the first key to the sheet taking focus: the box is clicked, filled and
+// read back, and filled again if a key went missing.
+const typeIn = async (p, sel, text) => { for (let k = 0; k < 3; k++) { await p.click(sel); await p.$eval(sel, i => { i.select(); }); await p.keyboard.type(text); if (await p.$eval(sel, i => i.value) === text) return; } throw new Error('could not type in ' + sel); };
 
 test('E1-004 E1-005 E1-006 E1-007 E1-015 E1-016: a Video slide gets its link, where it starts, a Watch link, and can lose it again', async () => {
   const p = await K.fresh();
@@ -21,8 +24,8 @@ test('E1-004 E1-005 E1-006 E1-007 E1-015 E1-016: a Video slide gets its link, wh
   // The link and the start (E1-004, E1-005), then Use this link (E1-007); clicking the video box on the slide opens the same sheet
   await p.click('main .ed-stagewrap .ls-slide [data-k="video"]');
   await K.focusIn(p, '.sheet');
-  await p.type('.sheet [data-focus="video-url"]', 'youtube.com/watch?v=abcdefghijk');
-  await p.type('.sheet [data-focus="video-start"]', '1:05');
+  await typeIn(p, '.sheet [data-focus="video-url"]', 'youtube.com/watch?v=abcdefghijk');
+  await typeIn(p, '.sheet [data-focus="video-start"]', '1:05');
   await p.click('.sheet [data-focus="video-use"]');
   const l = await until(async () => { const x = await K.lessonInDb(p, 'L3'); return x && x.slides[2].video && x; });
   assert.ok(l, 'the link is saved on the slide');
@@ -46,7 +49,7 @@ test('E1-004 E1-005 E1-006 E1-007 E1-015 E1-016: a Video slide gets its link, wh
   // The current Planner opens a slide with a link as its own
   await K.edit(p, 'L3', 2);
   await p.click('main [data-focus="video-link"]'); await K.focusIn(p, '.sheet');
-  await p.type('.sheet [data-focus="video-url"]', 'https://example.org/film.mp4');
+  await typeIn(p, '.sheet [data-focus="video-url"]', 'https://example.org/film.mp4');
   await p.click('.sheet [data-focus="video-use"]');
   const mine = await until(async () => { const x = await K.lessonInDb(p, 'L3'); return x && x.slides[2].video && x; });
   for (const [k, [a, b]] of Object.entries(await K.sameInPlanner(p, 'L3', mine))) assert.deepEqual(a, b, k + ' reads the same in the current Planner');
