@@ -133,8 +133,8 @@ test('B-005 B-006 B-007 B-010 B-002 B-003: a card\'s name opens it; typed-in pil
   await p.keyboard.press('Escape');
   // B-002/B-003: New assignment, a date in the week the essay plan is due
   await p.goto(srv.url + 'next/#/class/c1/work');
-  await p.waitForSelector('[data-newasg]', { timeout: 60000 });
-  await p.click('[data-newasg]');
+  await p.waitForSelector('[data-newasg]', { visible: true, timeout: 60000 });
+  await p.$eval('[data-newasg]', e => e.click());   // the cards fill in their counts when the papers' save comes, so press it where it is now
   await p.waitForSelector('dialog[open] [data-asg-due]');
   await p.$eval('dialog[open] input[data-asg-due], dialog[open] [data-asg-due] input', e => { e.value = '2026-11-03'; e.dispatchEvent(new Event('input', { bubbles: true })); });
   await p.waitForFunction(() => /Also due that week: 1 set, 6 papers/.test((document.querySelector('dialog[open] [data-asg-week]') || {}).textContent || ''), { timeout: 15000 });

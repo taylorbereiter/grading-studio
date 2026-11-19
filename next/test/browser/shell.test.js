@@ -100,12 +100,12 @@ test('Settings > Display > Phone layout: off keeps a phone laid out as a compute
   await p.waitForSelector('[data-stphone] [role="switch"]', { timeout: 30000 });
   assert.equal(await p.$eval('[data-stphone] [role="switch"]', e => e.getAttribute('aria-checked')), 'true');
   await p.click('[data-stphone] [role="switch"]');
-  assert.equal(await p.evaluate(() => localStorage.getItem('gs.phone')), '0');
+  await p.waitForFunction(() => localStorage.getItem('gs.phone') === '0', { timeout: 10000 });   // the setting is kept a moment after the press
   await p.reload(); await shellUp(p);
   assert.equal(await p.$eval('meta[name=viewport]', e => e.content), 'width=1100', 'a phone lays the page out 1100 wide');
   await p.waitForSelector('[data-stphone] [role="switch"]', { timeout: 30000 });
   await p.click('[data-stphone] [role="switch"]');
-  assert.equal(await p.evaluate(() => localStorage.getItem('gs.phone')), null);
+  await p.waitForFunction(() => localStorage.getItem('gs.phone') === null, { timeout: 10000 });
   await p.reload(); await shellUp(p);
   assert.equal(await p.$eval('meta[name=viewport]', e => e.content), 'width=device-width,initial-scale=1');
   assert.ok(await p.$('[data-stphonewin]'), 'the phone version can be opened in a narrow window');
