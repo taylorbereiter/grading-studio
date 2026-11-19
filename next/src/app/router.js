@@ -20,6 +20,8 @@ export const ROUTES = [
   ['class/:id/:tab/:sub', 'class', 'class'],
   ['lesson/:id', 'lesson', 'class'],
   ['lesson/:id/:view', 'lesson', 'class'],
+  ['lesson/:id/:view/:cls', 'lesson', 'class'],   // lesson/<id>/present/<class>: presents at once (planner.html#present/<id>/<class>)
+  ['plan/:cls/:day', 'calendar', 'calendar'],   // that meeting's lesson, opened or made, with a focus session (planner.html#plan/<class>/<day>)
   ['mark/:id', 'mark', 'class'],
   ['mark/:id/:tab', 'mark', 'class'],
   ['library', 'library', 'library'],
@@ -44,6 +46,8 @@ export const PARTS = {
   edit2: () => import('./screens/lesson-edit2.jsx'),
   side2: () => import('./screens/lesson-side.jsx'),
   present: () => import('./screens/present.jsx'),
+  // the class timer in the corner after Present (plan/ptimer-float.jsx)
+  ptimer: () => import('./plan/ptimer-float.jsx'),
   tools: () => import('./screens/lesson-tools.jsx'),
   beside: () => import('./screens/lesson-beside.jsx'),
   beside2: () => import('./screens/lesson-beside2.jsx'),
@@ -51,6 +55,10 @@ export const PARTS = {
   doc: () => import('./screens/lesson-doc.jsx'),
   pdf: () => import('./plan/pdf.js'),
   cal: () => import('./plan/cal-tools.jsx'),
+  // a lesson card's menu, the class page link and a unit from the week (plan/card-menu.jsx)
+  calx: () => import('./plan/card-menu.jsx'),
+  // the Planner's commands in the command bar (plan/find.js)
+  planFind: () => import('./plan/find.js'),
   unit: () => import('./plan/unit-tools.jsx'),
   marking: () => import('./screens/mark-tools.jsx'),
   // Grades, Insights and Return (the screen part), and what they run: the export engine with pdf-lib and fflate, loaded on their

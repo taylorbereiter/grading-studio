@@ -200,20 +200,11 @@ export function AfterClass({ l, slot, onSave }) {
 
 // Where Present begins from the lesson: the slide this class stopped on last time, if it stopped partway (src/planner/present.js
 // prResume). And where the class got to, kept on its place in "taught" once a lesson for today has been presented for two minutes
-// or more (present.js presentEnd asks then); the teacher's note stays, and the toast takes it back.
+// or more: Present keeps it (screens/present.jsx gotTo).
 function resumeAt(l, slot) {
   const ts = (l.taught || []).filter(x => !slot || x.classId === slot.classId), x = ts[ts.length - 1];
   return x && x.slide < l.slides.length && x.slide < x.of ? x.slide - 1 : 0;
 }
-function gotTo(l, slot, far, secs, save) {
-  if (!slot || slot.date !== today() || !(secs >= 120) || typeof far !== 'number') return;
-  const n = JSON.parse(JSON.stringify(l)), had = (n.taught || []).find(x => x.classId === slot.classId && x.date === slot.date);
-  const t0 = { ...(had || { classId: slot.classId, date: slot.date, note: '' }), slide: far + 1, of: l.slides.length, at: Date.now() };
-  n.taught = [...(n.taught || []).filter(x => x !== had), t0];
-  save(n);
-  toast(t('plan.got_to', { n: far + 1, of: l.slides.length }), { undo: () => { const b = JSON.parse(JSON.stringify(n)); b.taught = l.taught ? JSON.parse(JSON.stringify(l.taught)) : undefined; if (!b.taught) delete b.taught; save(b); } });
-}
-
 export default function LessonPage({ route }) {
   const p = usePlan();
   const [l, save] = useLesson(p, route.params.id);
@@ -225,7 +216,7 @@ export default function LessonPage({ route }) {
   const PresentMod = usePart('present'), Tools = usePart('tools'), EditMod = usePart('edit', view === 'edit'), Side2 = usePart('beside', beside), Pf = usePart('pfolder', arrived(l)), Sd = usePart('side2');
   const ask = i => { setRedo(typeof i === 'number' ? i : null); setAsking(true); };
   // Planned from the Calendar "with your assistant": the assistant sheet opens on arrival, once.
-  useEffect(() => { try { if (l && sessionStorage.getItem('gsn.ask') === l.id) { sessionStorage.removeItem('gsn.ask'); ask(); } } catch { } }, [l && l.id]);
+  useEffect(() => { try { if (l && sessionStorage.getItem('gsn.ask') === l.id) { sessionStorage.removeItem('gsn.ask'); ask(); } } catch { } if (l && route.params.view === 'present') setPresenting(true); }, [l && l.id]);
   const dl = () => (l.final && Tools ? (Tools.finFresh(l) ? Tools.downloadFinal(l) : setTool({ name: 'which' })) : download(p, l));
   // A tool from a menu: the ones that are only a download run at once, the others open their sheet.
   const onTool = (name, arg) => {
@@ -270,7 +261,8 @@ export default function LessonPage({ route }) {
   }, [l && l.id, l && l.slides.length, l && l.final && l.final.id, view, presenting, !!Tools]);
   if (!p) return <div class="page"><div class="loading" aria-busy="true" /></div>;
   if (!l) return <div class="page"><header class="ph"><h1>{t('plan.lesson')}</h1></header><EmptyState icon="warn" title={t('plan.lesson_gone')} action={<a class="btn" href={href('calendar')}>{t('nav.calendar')}</a>} /></div>;
-  const slot = slotOf(p, l), per = periodOf(p, slot);
+  // lesson/<id>/present/<class>: the old planner.html#present address, presenting at once for that class today.
+  const cls = route.params.cls, slot = cls ? { classId: cls, date: today() } : slotOf(p, l), per = periodOf(p, slot);
   const n = l.slides.length;
   return <div class={'page lessonpage' + (beside ? ' with-beside' : '')} data-view={view} onContextMenu={onContext} onDragOver={e => Sd && Sd.pageOver(e)} onDrop={e => Sd && Sd.pageDrop(e, p, l, save, Tools)}>
     <header class="lh">
@@ -299,6 +291,6 @@ export default function LessonPage({ route }) {
     <AssistantSheet key={asking ? 'a' + redo : 'x'} p={p} l={l} open={asking} slide={redo} onClose={() => { setAsking(false); setRedo(null); }} save={save} />
     {Tools && tool && <Tools.default name={tool.name} arg={tool.arg} p={p} l={l} slot={slot} save={save} onClose={() => setTool(null)} />}
     {Tools && note && <Tools.NotePop p={p} l={l} at={note} save={save} onClose={() => setNote(null)} />}
-    {presenting && PresentMod && <PresentMod.Present p={p} l={l} className={per ? per.c.name : ''} start={view !== 'lesson' ? cur : resumeAt(l, slot)} onClose={(i, far, secs) => { setPresenting(false); if (typeof i === 'number') setCur(i); gotTo(l, slot, far, secs, save); }} />}
+    {presenting && PresentMod && <PresentMod.Present p={p} l={l} slot={slot} save={save} className={per ? per.c.name : cls ? (classOf(p, cls) || {}).name : ''} start={view !== 'lesson' ? cur : resumeAt(l, slot)} onClose={i => { setPresenting(false); if (typeof i === 'number') setCur(i); }} />}
   </div>;
 }

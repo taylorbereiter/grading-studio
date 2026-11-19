@@ -28,6 +28,11 @@ export const focusQueue = localKey(P, 'gsp.focusQ');
 export const focusGo = localKey(P, 'gsp.focusGo');
 export const timeCount = localKey(P, 'gsp.timeCount');
 export const newYear = localKey(P, 'gsp.newYear');
+// Present's class timer and its two choices, shared with the current Planner (src/planner/present.js): times only, nothing about a class.
+export const presentTimer = localKey(P, 'gsp.presentTimer');
+export const presentSound = localKey(P, 'gsp.presentSound');
+export const presentBig = localKey(P, 'gsp.presentBig');
+export const presentOwn = localKey(P, 'gsp.presentOwn');
 
 // Teacher-wide settings with no student content (stage 2 put them on this side, whichever page writes them).
 export const words = localKey(P, 'gs.words');   // the teacher's own words: assistant name and link, terms

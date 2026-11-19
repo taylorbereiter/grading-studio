@@ -531,7 +531,8 @@ test('printing the week and a lesson’s plan: each day’s classes with their l
   const catchPrint = () => p.evaluate(() => { window.__printed = ''; window.open = () => ({ document: { write: s => { window.__printed += s; }, close() {} }, focus() {}, print() {} }); });
   await open(p, 'calendar/class');
   await catchPrint();
-  await p.click('main [data-focus="print-week"]');
+  await p.click('main [data-focus="week-menu"]'); await p.waitForSelector('.pop [role=menuitem]');   // Print the week sits in the week's menu since stage 8 (E2)
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role=menuitem]')].find(b => b.textContent.includes('Print')).click());
   const week = await p.evaluate(() => window.__printed);
   assert.match(week, /Reading a poem aloud/); assert.match(week, /Grade 9 English/); assert.match(week, /Parent evening/); assert.match(week, /Warm-up/);
   await open(p, 'lesson/L2');
