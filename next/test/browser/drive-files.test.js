@@ -189,3 +189,31 @@ test('a video picked in Drive: added to a student, downloaded for offline, playe
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// D-042 (and C-055): + Add on one student's paper has From Google Drive, which adds the file picked there to her, kept where the
+// current app keeps added files.
+test('D-042: + Add > From Google Drive adds the file picked in Drive to that student, kept where the current app keeps added files', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const D = { asked: [], folders: [], sent: [], videos: {}, papers: { '1PaperAriaPaperAriaPaperAria00001': await makePaper({ title: 'Aria outline' }), '1PaperLateLatePaperLatePaper00003': await makePaper({ title: 'Aria late page' }) } };
+  const p = await page(ctx, errors, D);
+  await p.goto(srv.url + 'blank'); await plant(p, seed());
+  await p.evaluate(() => Promise.all([['grading-studio-added', 'files'], ['grading-studio-videos', 'v']].map(([n, s]) => new Promise(res => { const r = indexedDB.open(n, 1); r.onupgradeneeded = () => r.result.createObjectStore(s); r.onsuccess = () => { r.result.close(); res(); }; }))));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.evaluate(() => { window.__picks.push([{ id: '1PaperAriaPaperAriaPaperAria00001', name: 'Aria Testwell.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.click('[data-bring-for="i9"]');
+  await menuPick(p, 'Google Drive');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await goTo(p, 'Aria Testwell');
+  await p.evaluate(() => { window.__picks.length = 0; window.__picks.push([{ id: '1PaperLateLatePaperLatePaper00003', name: 'Late page.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.trim() === 'From Google Drive'); if (it) { it.click(); return true; } const b = document.querySelector('[data-addmenu]'); if (b && !document.querySelector('.pop')) b.click(); return false; }, { timeout: 30000, polling: 500 });
+  await p.waitForFunction(() => window.__mark.state().batch.students.find(s => s.key === 'Aria Testwell').files.some(f => f.name === 'Late page.pdf' && f.added), { timeout: 60000 });
+  assert.equal(await p.evaluate(() => window.__pickerSeen.slice(-1)[0].features.includes('multi')), true, 'more than one file can be picked');
+  // the paper shows it at once, with its Added tag
+  await p.waitForSelector('[data-fmenu="Aria Testwell/Late page.pdf"]', { timeout: 30000 });
+  await p.evaluate(() => window.__mark.saved());
+  const kept = await p.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-added'); r.onsuccess = () => { const q = r.result.transaction('files').objectStore('files').getAll(); q.onsuccess = () => { res(q.result.map(x => [x.key, x.path, x.name])); r.result.close(); }; }; }));
+  assert.ok(kept.some(([k, pth, n]) => k === 'Aria Testwell' && pth === 'Aria Testwell/Late page.pdf' && n === 'Late page.pdf'), JSON.stringify(kept));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

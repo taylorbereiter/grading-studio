@@ -36,7 +36,7 @@ async function page(ctx, errors) {
   return p;
 }
 
-test('What opened says what the current app says, and its list goes to the student', async () => {
+test('D-017: What opened says what the current app says, and its list goes to the student', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const m = await page(ctx, errors);
   await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
@@ -53,6 +53,9 @@ test('What opened says what the current app says, and its list goes to the stude
   assert.match(was, /couldn’t/, 'the broken file is counted');
   await p.click('[data-rep]');
   await p.waitForSelector('#openRepBox [data-group="cant"] [data-repgo]');
+  // D-017: those with nothing turned in, and where their work goes when it comes (the current app's hint, in this app's words)
+  await p.waitForSelector('#openRepBox [data-group="nothing"] [data-oplater]');
+  assert.equal(await p.$eval('[data-oplater]', e => e.textContent), 'When their work comes in, use Bring in files under Setup, or + Add on their paper.');
   const i = await p.$eval('#openRepBox [data-group="cant"] [data-repgo]', b => +b.dataset.repgo);
   assert.equal(await p.evaluate(i => window.__mark.state().batch.students[i].key, i), 'Eve Pretend');
   await p.click('#openRepBox [data-group="cant"] [data-repgo]');

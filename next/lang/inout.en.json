@@ -78,5 +78,10 @@
  "inout.bf_mac_perm": "macOS didn’t let Grading Studio open that folder. Allow it in System Settings → Privacy & Security → Files and Folders.",
  "inout.bf_folder_no": "Couldn’t open that folder: {why}",
  "inout.bf_folder_empty": "No files found in {name}",
- "inout.mr_title": "Match files to a roster"
+ "inout.mr_title": "Match files to a roster",
+ "inout.mv_name": "Type a name",
+ "inout.mv_num": "Type a paper number",
+ "inout.f_marks_kept": "Your marks on it are still saved.",
+ "inout.f_goes_back": "It goes back with the export because you added it.",
+ "inout.op_later": "When their work comes in, use {bring} under {setup}, or {add} on their paper."
 }

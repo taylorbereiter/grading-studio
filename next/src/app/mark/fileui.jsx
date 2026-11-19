@@ -5,7 +5,7 @@ import { h, Fragment } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { Button, IconButton, Menu, Dialog, TextInput, toast } from '../../ui/index.js';
 import { state } from '../../engines/gcore.js';
-import { shownName, anonOn } from '../../engines/gdraw.js';
+import { shownName, anonOn, anonOrder } from '../../engines/gdraw.js';
 import { lostPages } from '../../engines/gopen.js';
 import { prefs } from '../../students/prefs.js';
 import { Checkbox, Segmented } from '../../ui/index.js';
@@ -23,8 +23,10 @@ export { LightPanel, LightChip } from './light.jsx';
 import { viewable, fileSeq } from '../../engines/gdraw.js';
 import './lines.js';
 import './setup-lines.js';
+import './inout-lines.js';
 
 import { PARTS } from '../router.js';
+import { useDrivePick } from '../drive-button.jsx';
 import { lightApply } from './light.jsx';
 import { use } from '../../engines/gcore.js';
 import { rotOf, skewOf, lightLive } from '../../engines/gdraw.js';
@@ -77,7 +79,10 @@ export function FileMenu({ st, path, name, d, on, auto }) {
 function MoveTo({ st, path, f, onClose }) {
   const [q, setQ] = useState(''), [qa, setQa] = useState(null);
   const bb = state().batch, a = shownName(st, bb.students.indexOf(st));
-  const rows = bb.students.map((s, i) => ({ s, name: shownName(s, i) })).filter(r => r.s !== st && (!q || r.name.toLowerCase().includes(q.toLowerCase())));
+  // each word typed starts a word of the name (src/app/files.js openMoveFile, D-039); with names hidden, in paper-number order
+  const anon = anonOn(), words = q.toLowerCase().split(/\s+/).filter(Boolean), ord = anon ? anonOrder() : null;
+  const rows = bb.students.map((s, i) => ({ s, i, name: shownName(s, i) })).filter(r => r.s !== st && words.every(w => r.name.toLowerCase().split(/[\s,_-]+/).some(y => y.startsWith(w))))
+    .sort((x, y) => (ord ? ord.indexOf(x.i) - ord.indexOf(y.i) : 0));
   const go = async dst => {
     const b = shownName(dst, bb.students.indexOf(dst));
     const r = await C.moveFile(st, path, dst, (said, n, others) => new Promise(res => setQa({ said, n, others, b, res })));
@@ -97,8 +102,9 @@ function MoveTo({ st, path, f, onClose }) {
   }
   return <Dialog open title={t('setup.f_move_t', { name: C.shown(st, f.name) })} onClose={onClose} actions={<Button onClick={onClose}>{t('setup.cancel')}</Button>}>
     <p class="mute">{t('setup.f_move_text')}</p>
-    <TextInput icon="search" label={t('setup.f_find')} value={q} onInput={setQ} />
-    <ul class="mk-mvlist">{rows.map(r => <li><Button variant="quiet" onClick={() => go(r.s)} data-mvto={r.s.key}><span data-raw>{r.name}</span></Button></li>)}</ul>
+    <TextInput icon="search" label={t('setup.f_find')} placeholder={t(anon ? 'inout.mv_num' : 'inout.mv_name')} value={q} onInput={setQ} data-mvfind
+      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (rows[0]) go(rows[0].s); } }} />
+    <ul class="mk-mvlist">{rows.map((r, k) => <li><Button variant="quiet" class={k === 0 && words.length ? 'top' : undefined} onClick={() => go(r.s)} data-mvto={r.s.key}><span data-raw>{r.name}</span> <span class="mute" data-mvn>{t('setup.op_files', { n: r.s.files.length })}</span></Button></li>)}</ul>
     {!rows.length && <p class="mute">{t('setup.f_none_found')}</p>}
   </Dialog>;
 }
@@ -109,13 +115,30 @@ export function BackIn({ st, d }) { return <Button size="sm" variant="quiet" onC
 // Under the paper: Add a file…, and the files taken off this student, each with Bring back.
 export function FilesFoot({ st, name }) {
   const [, again] = useState(0), [paste, setPaste] = useState(false), [arr, setArr] = useState(false), gone = (st.gone || []).filter(g => !g.virtual), op = C.outPages(st);
-  const add = () => pickFile(true, async files => {
+  // A ZIP added to a student is opened and its files added; a ZIP with a folder per student goes to Bring in files (src/app/kept.js
+  // addFiles, D-043).
+  const [bring, setBring] = useState(null);
+  const addList = async files => {
     if (!files.length) return;
-    const made = await C.addFiles(st, files.map(file => ({ path: file.name, file })));
+    let list = files.map(file => ({ path: file.name, file }));
+    if (list.some(e => /\.zip$/i.test(e.file.name))) {
+      const B = await PARTS.bringin(), out = [];
+      for (const e of list) {
+        if (!/\.zip$/i.test(e.file.name)) { out.push(e); continue; }
+        const got = await B.expand([e.file]), tops = new Set(got.filter(g => g.path.split('/').length > 2).map(g => g.path.split('/')[1]));
+        if (tops.size >= 2) return B.bringFiles(got, o => setBring({ B, ...o }));
+        out.push(...got);
+      }
+      list = out;
+    }
+    const made = await C.addFiles(st, list);
     if (made.notKept) toast(t('setup.f_not_kept', { name: made.notKept[0] }));
     if (made.length) toast(t('setup.f_added', { n: made.length, name }));
     again(n => n + 1);
-  });
+  };
+  const add = () => pickFile(true, addList);
+  // From Google Drive, for this student (src/app/kept.js pickAdd with Drive, D-042 and C-055): Google's chooser fills a file input
+  const dIn = useRef(null), drive = useDrivePick(dIn);
   // Add: a late or forgotten paper, or work sent in a message (the current app's Add menu on the student's bar)
   const [split, setSplit] = useState(null), [media, setMedia] = useState(null);
   const scan = () => pickFile(false, files => { if (files[0]) PARTS.split().then(S => setSplit({ S, file: files[0] }), e => console.error(e)); });
@@ -123,9 +146,12 @@ export function FilesFoot({ st, name }) {
     { label: t('setup.v_add_menu'), icon: 'play', onSelect: () => PARTS.media().then(S => setMedia({ S, k: 'video' }), e => console.error(e)) },
     { label: t('setup.v_np_menu'), icon: 'note', onSelect: () => PARTS.media().then(S => setMedia({ S, k: 'notes' }), e => console.error(e)) },
     { label: t('setup.s_into'), icon: 'image', onSelect: scan }];
+  if (drive) items.splice(1, 0, { label: t('file.from_drive_pick'), icon: 'drive', onSelect: drive });
   return <div class="mk-ffoot">
     <Menu label={t('setup.f_add_for', { name })} trigger={b => <Button {...b} size="sm" icon="plus" data-addmenu>{t('setup.f_add_menu')}</Button>} items={items} />
     {(st.files.some(viewable) || fileSeq(st).length > 1) && <Button size="sm" icon="grip" onClick={() => setArr(true)} title={t('setup.a_open_tip')} data-arrange>{t('setup.a_open')}</Button>}
+    <input ref={dIn} type="file" multiple hidden onChange={e => { const fs = [...e.currentTarget.files]; e.currentTarget.value = ''; addList(fs); }} data-adddrive />
+    {bring && <bring.B.BringFiles rows={bring.rows} dups={bring.dups} onClose={() => { setBring(null); again(n => n + 1); }} />}
     {paste && <PasteText st={st} name={name} onClose={() => { setPaste(false); again(n => n + 1); }} />}
     {arr && <Arrange st={st} onClose={() => { setArr(false); again(n => n + 1); }} />}
     {media && media.k === 'video' && <media.S.VideoAdd st={st} name={name} onClose={() => { setMedia(null); again(n => n + 1); }} />}
@@ -160,7 +186,10 @@ function PasteText({ st, name, onClose }) {
 export function AddTag({ st, f }) {
   const x = C.tagOf(st, f); if (!x) return null;
   const day = date(new Date(x.t), { month: 'short', day: 'numeric' });
-  return <span class="pill addtag">{x.word ? t('setup.f_from_word') : x.replaced ? t('setup.f_tag_replaced', { name: x.replaced, d: day }) : t('setup.f_tag_added', { d: day })}</span>;
+  const [, again] = useState(0);
+  return <><span class="pill addtag">{x.word ? t('setup.f_from_word') : x.replaced ? t('setup.f_tag_replaced', { name: x.replaced, d: day }) : t('setup.f_tag_added', { d: day })}</span>
+    {/* Mark late beside any file she added (src/intake.js lateLink, D-044): nothing is taken off */}
+    {st.grade.status !== 'late' && <Button size="sm" variant="quiet" onClick={() => { C.markLate([st]); toast(t('setup.c_marked_late')); again(n => n + 1); }} data-marklate>{t('setup.c_mark_late')}</Button>}</>;
 }
 
 // Convert to PDF pages (src/wordpdf.js openWordPdf): this file, or every Word paper that can go without asking, and From now on.

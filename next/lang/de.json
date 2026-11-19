@@ -6563,5 +6563,10 @@
  "inout.bf_mac_perm": "macOS hat Grading Studio diesen Ordner nicht öffnen lassen. Erlauben Sie es unter Systemeinstellungen → Datenschutz & Sicherheit → Dateien und Ordner.",
  "inout.bf_folder_no": "Der Ordner ließ sich nicht öffnen: {why}",
  "inout.bf_folder_empty": "Keine Dateien in {name} gefunden",
- "inout.mr_title": "Dateien einer Klassenliste zuordnen"
+ "inout.mr_title": "Dateien einer Klassenliste zuordnen",
+ "inout.mv_name": "Namen eingeben",
+ "inout.mv_num": "Nummer der Arbeit eingeben",
+ "inout.f_marks_kept": "Ihre Korrekturen darauf sind weiter gespeichert.",
+ "inout.f_goes_back": "Sie geht mit dem Export zurück, weil Sie sie hinzugefügt haben.",
+ "inout.op_later": "Wenn die Arbeit kommt, nutzen Sie {bring} unter {setup} oder {add} bei der Arbeit."
 }

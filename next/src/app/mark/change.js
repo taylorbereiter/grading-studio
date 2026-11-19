@@ -50,7 +50,8 @@ export async function addFiles(st, list) {
     try { await W.keepAdded(bb.id, { bid: bb.id, key: st.key, path: f.path, name: f.name, data: bytes, added: f.added, ...(f.from ? { from: f.from } : {}) }, bb.id + '|' + st.key + '|' + f.path); }
     catch (er) { console.error(er); made.notKept = (made.notKept || []).concat(f.name); }
   }
-  tell();
+  // the paper opens again so the added files show at once (they showed only after another student was opened)
+  tell(); if (made.length) show(-1);
   return made;
 }
 

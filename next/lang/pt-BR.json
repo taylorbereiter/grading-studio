@@ -6564,5 +6564,10 @@
  "inout.bf_mac_perm": "O macOS não deixou o Grading Studio abrir essa pasta. Permita em Ajustes do Sistema → Privacidade e Segurança → Arquivos e Pastas.",
  "inout.bf_folder_no": "Não foi possível abrir essa pasta: {why}",
  "inout.bf_folder_empty": "Nenhum arquivo encontrado em {name}",
- "inout.mr_title": "Associar arquivos a uma lista"
+ "inout.mr_title": "Associar arquivos a uma lista",
+ "inout.mv_name": "Digite um nome",
+ "inout.mv_num": "Digite o número do trabalho",
+ "inout.f_marks_kept": "Suas correções nele continuam salvas.",
+ "inout.f_goes_back": "Ele volta com a exportação porque você o adicionou.",
+ "inout.op_later": "Quando o trabalho chegar, use {bring} em {setup} ou {add} no trabalho."
 }

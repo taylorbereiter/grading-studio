@@ -6592,5 +6592,10 @@
  "inout.bf_mac_perm": "macOS が Grading Studio にそのフォルダーを開かせませんでした。システム設定 → プライバシーとセキュリティ → ファイルとフォルダで許可してください。",
  "inout.bf_folder_no": "そのフォルダーを開けませんでした：{why}",
  "inout.bf_folder_empty": "{name} にファイルが見つかりません",
- "inout.mr_title": "ファイルを名簿と照合"
+ "inout.mr_title": "ファイルを名簿と照合",
+ "inout.mv_name": "名前を入力",
+ "inout.mv_num": "答案の番号を入力",
+ "inout.f_marks_kept": "このファイルへの書き込みは保存されたままです。",
+ "inout.f_goes_back": "あなたが追加したファイルなので、書き出しと一緒に返却されます。",
+ "inout.op_later": "提出物が届いたら、「{setup}」の「{bring}」か、その答案の「{add}」を使います。"
 }

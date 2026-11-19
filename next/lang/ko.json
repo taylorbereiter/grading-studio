@@ -6592,5 +6592,10 @@
  "inout.bf_mac_perm": "macOS에서 Grading Studio가 그 폴더를 열지 못하게 했습니다. 시스템 설정 → 개인정보 보호 및 보안 → 파일 및 폴더에서 허용하세요.",
  "inout.bf_folder_no": "그 폴더를 열 수 없습니다: {why}",
  "inout.bf_folder_empty": "{name}에서 파일을 찾지 못했습니다",
- "inout.mr_title": "파일을 명단과 맞추기"
+ "inout.mr_title": "파일을 명단과 맞추기",
+ "inout.mv_name": "이름 입력",
+ "inout.mv_num": "과제 번호 입력",
+ "inout.f_marks_kept": "이 파일에 한 표시는 그대로 저장되어 있습니다.",
+ "inout.f_goes_back": "내가 추가한 파일이라 내보내기와 함께 돌아갑니다.",
+ "inout.op_later": "과제가 들어오면 {setup}의 {bring}이나 그 과제의 {add}를 쓰세요."
 }
