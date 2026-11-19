@@ -98,7 +98,8 @@ test('the previous version’s addresses, the Planner’s and next/ land on the 
   await lands('#/class/c1/people', '#/class/c1/people');
   await p.goto(srv.url + '#access_token=abc&state=1'); await shellUp(p);
   await p.waitForSelector('[data-home]', { timeout: 20000 }).catch(() => {}); assert.ok(await p.$('[data-home]'), 'Home is drawn');
-  assert.deepEqual(p.errors, []); await p.ctx.close();
+  // b123 is not in this empty browser, so the marking screen may say its papers aren't kept before the next address replaces it
+  assert.deepEqual(p.errors.filter(e => !/^NotKept: /.test(e)), []); await p.ctx.close();
 });
 
 test('on a phone, a newer version shows Update now on More, and pressing it takes the new version whole', async () => {
