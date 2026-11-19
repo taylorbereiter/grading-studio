@@ -9,6 +9,7 @@
 import * as undo from '../services/undo.js';
 import { saveWork, saveLibrary } from './write.js';
 import { library } from './index.js';
+import { patch, apply } from './libpatch.js';
 
 const copy = v => JSON.parse(JSON.stringify(v));
 export async function scoreChange(id, key, label, change) {
@@ -35,17 +36,20 @@ export async function fieldChange(id, label, change, group) {
 }
 const SKIP = new Set(['v', 'at', 'fv', 'gone', 'opened']);
 const sig = l => JSON.stringify(l, (k, v) => (SKIP.has(k) ? undefined : v));
-let joinT = 0, joinT0 = 0;
+let joinT = 0, joinT0 = 0, run = null;
 // alone: a step of its own (a unit added, renamed, moved or deleted), never joined to the saves just before it
 export async function libraryChange(label, change, alone) {
   const before = library.json(null);
   const after = await saveLibrary(change);
   if (!before || sig(before) === sig(after)) return after;
   const t = Date.now(), join = !alone && t - joinT < 1000 && t - joinT0 < 3000;
-  if (!join) joinT0 = t;
+  if (!join) { joinT0 = t; run = { before }; }
   joinT = t;
-  const put = to => saveLibrary(l => { const gone = l.gone; for (const k of Object.keys(l)) delete l[k]; Object.assign(l, copy(to)); if (gone) l.gone = { ...(to.gone || {}), ...gone }; });
-  undo.record({ label, group: alone ? undefined : 'library:' + joinT0, undo: () => put(before), redo: () => put(after) });
+  // only what this step changed goes back (or forward): a change saved since from anywhere else stays (H-004). Saves joined into
+  // one step share one record, so its patch runs from before the first of them.
+  const g = run; g.back = patch(after, g.before); g.fwd = patch(g.before, after);
+  undo.record({ label, group: alone ? undefined : 'library:' + joinT0, undo: () => saveLibrary(l => apply(l, g.back)), redo: () => saveLibrary(l => apply(l, g.fwd)) });
   return after;
 }
 export const libraryForget = () => undo.forget();
+

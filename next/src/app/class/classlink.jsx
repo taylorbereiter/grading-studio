@@ -19,7 +19,7 @@ export function ClassLink({ classId }) {
   return <>
     {url ? <span class="row gap-s" data-clink><a class="btn sm" href={url} target="_blank" rel="noopener" data-clink-go><span data-raw={sys ? '' : undefined}>{what}</span> ↗</a>
       <IconButton size="sm" icon="edit" label={t('class.cl_change', { what })} onClick={() => setEdit(true)} data-clink-edit /></span>
-      : <Button size="sm" variant="quiet" icon="link" onClick={() => setEdit(true)} data-clink-add>{t('class.cl_add', { what })}</Button>}
+      : null}
     {edit && <LinkDialog c={c} sys={sys} url={url} onClose={() => setEdit(false)} />}
   </>;
 }
@@ -38,6 +38,7 @@ function LinkDialog({ c, sys, url, onClose }) {
 export function ClassSetup({ classId }) {
   const b = useBook(), [box, setBox] = useState(null);
   const c = b && !b.error ? classIn(b.lib, classId) : null; if (!c) return null;
+  const sys = String((b.lib.me || {}).sys || '').trim(), url = classLink(c);
   const all = b.lib.classes, at = all.findIndex(k => String(k.id) === String(c.id));
   const load = (k, part, f) => () => part().then(m => setBox({ k, C: f(m) }), e => console.error(e));
   const place = d => change(t('class.u_order'), l => { const a = l.classes.findIndex(k => String(k.id) === String(c.id)), j = a + d; if (a < 0 || j < 0 || j >= l.classes.length) return; [l.classes[a], l.classes[j]] = [l.classes[j], l.classes[a]]; }, true).catch(e => console.error(e));
@@ -46,11 +47,13 @@ export function ClassSetup({ classId }) {
     ...(c.names.length ? [] : [{ label: t('class.bki_menu'), sub: t('class.bki_menu_sub'), icon: 'upload', onSelect: load('imp', PARTS.bki, m => m.ImportSheet) }]),
     { label: t('class.graded_how_short'), icon: 'grades', onSelect: load('way', () => import('./ib.jsx'), m => m.GradingDialog) },
     ...(all.length > 1 ? [{ label: t('class.lk_title'), icon: 'link', onSelect: load('lk', PARTS.linked, m => m.LinkEdit) }] : []),
+    ...(url ? [] : [{ label: t('class.cl_add', { what: sys || t('class.cl_page') }), icon: 'link', onSelect: () => setBox({ k: 'link' }) }]),
     ...(all.length > 1 ? [{ sep: true }, { label: t('class.c_up'), icon: 'chu', disabled: at <= 0, onSelect: () => place(-1) }, { label: t('class.c_down'), icon: 'chd', disabled: at < 0 || at >= all.length - 1, onSelect: () => place(1) }] : []),
   ];
   const C = box && box.C, k = box && box.k, shut = () => { setBox(null); if (k === 'imp' && ((classIn(fullLibrary(), classId) || {}).names || []).length) go('class', classId, 'grades'); };
   return <>
     <Menu label={t('class.cs_title')} items={items} trigger={m => <Button {...m} size="sm" icon="settings" iconEnd="chd" data-class-setup>{t('class.cs_title')}</Button>} />
+    {k === 'link' && <LinkDialog c={c} sys={sys} url="" onClose={() => setBox(null)} />}
     {C && (k === 'imp' ? <C x={classBook(b, classId)} onClose={shut} /> : k === 'lk' ? <C lib={b.lib} classId={classId} onClose={shut} /> : <C c={c} onClose={shut} />)}
   </>;
 }

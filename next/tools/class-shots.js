@@ -47,7 +47,7 @@ const FLAGS = ['--font-render-hinting=none', '--disable-lcd-text', '--force-colo
 const MOUSE = '--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4';
 const FINGER = '--blink-settings=primaryHoverType=1,availableHoverTypes=1,primaryPointerType=2,availablePointerTypes=2';
 // [name, address, ready, what to press first]: a sheet is pictured open over its tab, and not counted (it is not the screen at rest)
-const TABS = [['grades', 'class/c1/grades', 'table.book, [data-phone-scores]'], ['charts', 'class/c1/grades', 'table.book, [data-phone-scores]', '[data-open-charts]'], ['goals', 'class/c1/grades', 'table.book, [data-phone-scores]', '[data-open-goals]'],
+const TABS = [['grades', 'class/c1/grades', 'table.book, [data-phone-scores]'], ['charts', 'class/c1/grades', 'table.book, [data-phone-scores]', '[data-open-charts]'], ['charts-move', 'class/c1/grades', 'table.book, [data-phone-scores]', '[data-open-charts]', '[data-chart="move"]'], ['charts-rows', 'class/c1/grades', 'table.book, [data-phone-scores]', '[data-open-charts]', '[data-chart="rows"]'], ['charts-spread', 'class/c1/grades', 'table.book, [data-phone-scores]', '[data-open-charts]', '[data-chart="scatter"]'], ['goals', 'class/c1/grades', 'table.book, [data-phone-scores]', '[data-open-goals]'],
   ['reports', 'class/c1/grades', 'table.book, [data-phone-scores]', '[data-open-reports]'], ['sheets', 'class/c1/grades', 'table.book, [data-phone-scores]', '[data-open-sheets]'], ['people', 'class/c1/people/2', '[data-student]'],
   ['assignments', 'class/c1/work', '[data-lkhead]'], ['header', 'class/c1', '[data-class-setup]'], ['setup', 'class/c1', '[data-class-setup]', '[data-class-setup]'], ['todo', 'class/c1/todo', '[data-ctd]'], ['examples', 'library/examples', '[data-exid]'], ['watch', 'library/examples/watch', '[data-exid]']];
 // Strong examples and one watch-list item in the current app's own database, with plain made-up pictures (no student work).
@@ -77,12 +77,13 @@ const exSeed = async names => {
       await p.setViewport(phone ? { width: w, height: h, deviceScaleFactor: 2, isMobile: true, hasTouch: true } : { width: w, height: h, deviceScaleFactor: 2 });
       await p.goto(srv.url + 'blank'); await plant(p, bookSeed()); await p.evaluate(l => localStorage.setItem('gs.look', JSON.stringify(l)), look);
       await p.evaluate(exSeed, JSON.parse(bookSeed().ls['gs.lib']).classes[0].names);
-      for (const [name, at, ready, open] of TABS) {
+      for (const [name, at, ready, open, to] of TABS) {
         if (ONLY && !ONLY.includes(name)) continue;
         await p.goto(srv.url + 'blank'); await p.goto(srv.url + 'next/#/' + at);   // a fresh page, so a sheet left open doesn't cover the next
         await p.waitForSelector(ready, { timeout: 60000 }).catch(async e => { await p.screenshot({ path: path.join(OUT, 'failed-' + look + '-' + wn + '-' + name + '.png') }); throw e; });
         if (open && !(await p.$(open))) continue;   // at phone width the Grades tab is the phone's scores, with no cards under a gradebook
         if (open) { await p.click(open); await p.waitForSelector('dialog[open], .pop [role^="menuitem"]'); }
+        if (to) { await p.waitForSelector(to); await p.$eval(to, e => e.scrollIntoView({ block: 'start' })); }
         await p.evaluate(() => document.fonts.ready); await new Promise(r => setTimeout(r, 400));
         await p.screenshot({ path: path.join(OUT, look + '-' + wn + '-' + name + '.png') });
         if (look === 'graphite' && !open) (counts[name] ||= {})[wn] = await pressable(p);

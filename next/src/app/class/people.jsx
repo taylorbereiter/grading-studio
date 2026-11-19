@@ -95,6 +95,16 @@ function MoveDialog({ lib, c, n, onClose }) {
 
 export default function People({ classId, sub }) {
   const b = useBook(), [find, setFind] = useState(''), [editing, setEditing] = useState(false), [term, setTerm] = useState(null), [moving, setMoving] = useState(null), [tool, setTool] = useState(null), Ps = usePart('sheets', !!(tool && tool.k === 'pss'));
+  // Left and Right step to the previous and next student (src/book.js), unless she is typing or a box is open. Listened for here,
+  // not on the student's card, which is drawn new for each student, so a key pressed just after a step is never missed.
+  const stepRef = useRef(null);
+  useEffect(() => { const k = e => {
+    if (!stepRef.current || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.defaultPrevented) return;
+    const a = document.activeElement; if (a && (a.matches('input,textarea,select,[contenteditable],[role="slider"],[role="radio"],[role="tab"]') || a.closest('[role="radiogroup"],[role="tablist"]'))) return;
+    if (document.querySelector('dialog[open], .pop')) return;
+    e.preventDefault(); stepRef.current(e.key === 'ArrowLeft' ? -1 : 1);
+  }; document.addEventListener('keydown', k); return () => document.removeEventListener('keydown', k); }, []);
+  stepRef.current = null;
   if (!b) return <div class="loading" aria-busy="true" />;
   const x = classBook(b, classId);
   if (!x) return <EmptyState icon="warn" title={t('class.read_failed')} />;
@@ -108,6 +118,7 @@ export default function People({ classId, sub }) {
   const cols = on === '*' ? x.cols : x.cols.filter(k => (on == null ? true : k.termId === on)), grades = c.names.map(m => B.bkGrade(m, cols, x.conf));
   const termLabel = ([id, name]) => (id === '*' ? t('class.whole_year') : id === '' ? t(x.conf.terms.length ? 'class.outside_terms' : 'class.this_year') : name);
   const step = d => { const j = i + d; if (j >= 0 && j < c.names.length) go('class', classId, 'people', j + 1); };
+  stepRef.current = step;
   const shown = c.names.map((m, j) => ({ m, j })).filter(r => !find.trim() || r.m.toLowerCase().includes(find.trim().toLowerCase()));
   const remove = async () => {
     await change(t('class.u_remove', { name: n }), l => { const k = classIn(l, c.id); if (!k) return; const was = k.names, wasInfo = k.info; k.names = was.filter(z => z !== n); B.keepInfo(k, was, []); B.keepAtt(k, was, wasInfo); }, true);
@@ -147,14 +158,6 @@ function Student({ x, n, i, cols, r, onMove, onRemove, onTool, onStep, term, who
   const trend = recent.map(col => col.cells.get(n)).filter(B.bkCounts).map(k => k.pct).reverse();
   const [note, setNote] = useState(B.infoOf(c, n).note || ''), wait = useRef(0);
   useEffect(() => () => clearTimeout(wait.current), []);
-  // Left and Right step to the previous and next student (src/book.js), unless she is typing or a box is open
-  const keyRef = useRef(null); keyRef.current = e => {
-    if ((e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.defaultPrevented) return;
-    const a = document.activeElement; if (a && (a.matches('input,textarea,select,[contenteditable],[role="slider"],[role="radio"],[role="tab"]') || a.closest('[role="radiogroup"],[role="tablist"]'))) return;
-    if (document.querySelector('dialog[open], .pop')) return;
-    e.preventDefault(); onStep(e.key === 'ArrowLeft' ? -1 : 1);
-  };
-  useEffect(() => { const k = e => keyRef.current(e); document.addEventListener('keydown', k); return () => document.removeEventListener('keydown', k); }, []);
   const [More, setMore] = useState(null);
   useEffect(() => { let live = true; import('./student-more.jsx').then(m => { if (live) setMore(() => m.StudentMore); }, e => console.error(e)); return () => { live = false; }; }, []);
   const left = leftOf(c.id), labelOf = id => kindOf(id) || t('class.type_none');

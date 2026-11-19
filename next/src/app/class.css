@@ -633,3 +633,15 @@ dialog.dlg:has([data-wl-ask]){width:min(760px,calc(100vw - 32px));margin-top:6vh
 .asgweek{min-height:1.5em;margin:4px 0}
 .sp-head .stnav{display:flex;flex-direction:row;flex-shrink:0;gap:4px}.sp-head .sub span{white-space:nowrap}
 .bkhow{margin:12px 0 4px}.bkhow summary{cursor:pointer;color:var(--mute);font-size:var(--t2)}.bkhow p{margin:6px 0 0;max-width:72ch}
+.cp-ch .lb{fill:var(--ink)}.cp-ch .me{fill:var(--ink);font-weight:600}.cp-ch .zero{stroke:var(--mute)}
+.cp-ch .mv.up,.chleg .mv.up{fill:var(--acc);background:var(--acc)}.cp-ch .mv.down,.chleg .mv.down{fill:var(--warn);background:var(--warn)}
+.cp-ch .sk.b5,.chleg .sk.b5{fill:color-mix(in oklab,var(--acc) 85%,var(--s));background:color-mix(in oklab,var(--acc) 85%,var(--s))}
+.cp-ch .sk.b4,.chleg .sk.b4{fill:color-mix(in oklab,var(--acc) 62%,var(--s));background:color-mix(in oklab,var(--acc) 62%,var(--s))}
+.cp-ch .sk.b3,.chleg .sk.b3{fill:color-mix(in oklab,var(--acc) 40%,var(--s));background:color-mix(in oklab,var(--acc) 40%,var(--s))}
+.cp-ch .sk.b2,.chleg .sk.b2{fill:color-mix(in oklab,var(--acc) 22%,var(--s));background:color-mix(in oklab,var(--acc) 22%,var(--s))}
+.cp-ch .sk.b1,.chleg .sk.b1{fill:color-mix(in oklab,var(--acc) 10%,var(--s));background:color-mix(in oklab,var(--acc) 10%,var(--s));box-shadow:inset 0 0 0 1px var(--line)}
+.cp-ch .rl{fill:none;stroke:var(--faint);stroke-width:1.5}.cp-ch .rd{fill:var(--s);stroke:var(--faint);stroke-width:1.5}
+.cp-ch .lo .rl{stroke:var(--acc);stroke-width:2.5}.cp-ch .lo .rd{stroke:var(--acc);stroke-width:2}
+.cp-ch.sq{max-width:480px}.cp-ch .pt{fill:var(--acc);fill-opacity:.75}
+.cp-ch .rng{fill:color-mix(in oklab,var(--mute) 35%,transparent)}.cp-ch .iqr{fill:color-mix(in oklab,var(--acc) 55%,var(--s))}.cp-ch .mid{stroke:var(--ink);stroke-width:2}
+.chleg{display:flex;gap:16px;flex-wrap:wrap;font-size:var(--t1);color:var(--mute);margin-top:6px}.chleg i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}

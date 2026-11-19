@@ -2,7 +2,7 @@
 // gradebook with the class's numbers at the top, every student and every assignment shaded by score, where the term grades
 // landed, each assignment's class average, and the other classes beside this one. Every number from the lifted engine.
 import { h, Fragment } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { Sheet } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { href } from '../router.js';
@@ -17,6 +17,8 @@ const middle = v => { const s = v.slice().sort((a, b) => a - b), n = s.length; r
 export function ChartsSheet({ x, cols, all, term, left, labelOf, onClose }) {
   const { c, conf, lib } = x;
   const [sort, setSort] = useState({ k: 'grade', dir: -1 });
+  const [More, setMore] = useState(null);
+  useEffect(() => { let live = true; import('./charts-more.jsx').then(m => { if (live) setMore(() => m.MoreCharts); }, e => console.error(e)); return () => { live = false; }; }, []);
   const rows = c.names.map((n, i) => ({ n, i, r: B.bkGrade(n, cols, conf) })), inn = rows.filter(r => !left.has(r.n));
   const gl = inn.filter(r => r.r.grade != null).map(r => r.r.grade), avg = gl.length ? B.bkMean(gl) : null, mid = middle(gl);
   const typeAvg = id => { const ps = inn.map(r => r.r.by[id]).filter(v => v != null); return ps.length ? pct(B.bkMean(ps)) : '–'; };
@@ -56,6 +58,7 @@ export function ChartsSheet({ x, cols, all, term, left, labelOf, onClose }) {
               return <td title={row.n + ': ' + say} data-raw><span class={'hc' + (cell && cell.st === 'missing' ? ' ms' : '')} style={on ? shade(col.type === 'fm' ? 100 : cell.pct) : undefined} aria-label={say} /></td>; })}
             <td class="num">{row.r.grade != null ? pct(row.r.grade) : '–'}</td></tr>)}</tbody></table></div></section>}
       {scored.length > 0 && line.some(v => v != null) && <section><h3>{t('class.each_avg')}</h3><Line cols={scored} pts={line} refv={avg} /></section>}
+      {More && <More c={c} cols={cols} conf={conf} labelOf={labelOf} inn={n => !left.has(n)} whole={term === '*'} />}
       <section><h3>{t(term === '*' ? 'class.grades_t' : 'class.term_grades_t')}</h3>
         <div class="cp-bands" data-bands>{BANDS.map((b, i) => <div class="cp-band"><span>{bandName(b)}</span><div class="bar"><i style={{ width: counts[i] / most * 100 + '%' }} /></div><b class="num">{counts[i]}</b></div>)}</div>
         <p class="mute small">{t('class.bands_say')}</p></section>

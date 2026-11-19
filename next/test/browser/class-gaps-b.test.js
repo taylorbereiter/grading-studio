@@ -5,7 +5,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('http'), fs = require('fs'), os = require('os'), path = require('path');
 const { launch } = require('../../../test/helpers/chrome.js');
-const { plant, appReady } = require('../../../test/helpers/app.js');
+const { plant, appReady, classPage, pick } = require('../../../test/helpers/app.js');
 const { STEADY } = require('../../../test/helpers/steady.js');
 const { bookSeed } = require('./classseed.js');
 
@@ -324,6 +324,7 @@ test('B-020 B-021 C-002 B-022 B-043: how the grade is worked out, the Entry list
   const vs = await p.$$('dialog[open] [data-add-v]'); await vs[0].type('9');
   await p.$eval('dialog[open] [data-add-max]', e => { e.value = ''; e.dispatchEvent(new Event('input', { bubbles: true })); }); await p.type('dialog[open] [data-add-max]', '12'); await p.keyboard.press('Enter');
   await p.waitForFunction(() => !document.querySelector('dialog[open] [data-add]'));
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.flatMap(u => u.items).some(i => i.name === 'Enter quiz'));
   const it = (await libOf(p)).classes[0].units.flatMap(u => u.items).find(i => i.name === 'Enter quiz');
   assert.ok(it, 'the column was added'); assert.equal(it.typed.max, 12);
   // B-043: Use another file goes back to choosing a file, and a second paste is read
@@ -341,6 +342,85 @@ test('B-020 B-021 C-002 B-022 B-043: how the grade is worked out, the Entry list
   await old.goto(srv.url); await appReady(old);
   const seen = await old.evaluate(async () => { const g = window.__gs, c = g.state().lib.classes[0], cols = g.bkClassCols(c, await g.bkLoad()), col = cols.find(k => k.name === 'Enter quiz'); return col ? [...col.cells.values()].map(k => k.pct) : null; });
   assert.deepEqual(seen, [75]);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('B-011 B-013 B-014 B-015 B-016 B-012: who is moving, where the class stands, rubric rows, summatives against in-class, the spread, each with the current app\'s numbers; the charts for the whole year', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const nums = s => (s || '').match(/\d+(\.\d+)?/g) || [];
+  const old = await page(ctx, errors);
+  await old.goto(srv.url + 'blank'); await plant(old, seedB());
+  await old.goto(srv.url); await appReady(old);
+  await classPage(old, 'c1');
+  await old.waitForSelector('[data-book="c1"]'); await old.click('[data-book="c1"]');
+  await old.waitForSelector('[data-bkterm="t1"]'); await old.click('[data-bkterm="t1"]');
+  await old.waitForFunction(() => document.querySelector('[data-bkterm="t1"]').getAttribute('aria-selected') === 'true');
+  await pick(old, '[data-ctab="charts"]'); await old.waitForSelector('#bkHeat');
+  const was = await old.evaluate(() => { const a = id => (document.getElementById(id) || {}).getAttribute?.('aria-label') || null;
+    return { move: a('bkMove'), stacks: a('bkStacks'), rows: a('bkRows'), scatter: a('bkScatter'), spread: [...document.querySelectorAll('#bkSpread .bkiqr')].map(e => e.dataset.tn + ' ' + e.dataset.tv).join(' ') }; });
+  await old.close();
+  for (const k of ['move', 'stacks', 'rows', 'scatter']) assert.ok(was[k], 'the current app draws ' + k);
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('table.book', { timeout: 60000 });
+  if (!(await p.$('table.book[data-term="t1"]'))) { await p.click('.bookbar [data-v="t1"]'); await p.waitForSelector('table.book[data-term="t1"]'); }
+  await p.click('[data-open-charts]');
+  await p.waitForSelector('dialog[open] [data-chart="spread"] svg');
+  const now = await p.evaluate(() => { const a = s => (document.querySelector('dialog[open] ' + s) || {}).getAttribute?.('aria-label') || null;
+    return { move: a('[data-move]'), stacks: a('[data-stacks]'), rows: a('[data-rows]'), scatter: a('[data-scatter]'), spread: a('[data-spread]') }; });
+  now.spread = now.spread.replace(/(^|\. )[^:]*: /g, ' ');   // the current app names each assignment on its own bar, not in the numbers
+  for (const k of ['move', 'stacks', 'rows', 'scatter', 'spread']) assert.deepEqual(nums(now[k]), nums(was[k]), k + ': ' + now[k] + ' / ' + was[k]);
+  assert.deepEqual(await p.$$eval('dialog[open] [data-move-row]', a => a.map(e => e.dataset.moveRow)), (was.move.match(/ (up|down) /g) || []).map(s => s.trim()));
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open]'));
+  // B-012: the whole year has its charts too, over every assignment of the year
+  await p.click('.bookbar [data-v="*"]');
+  await p.waitForSelector('[data-open-charts]');
+  await p.click('[data-open-charts]');
+  await p.waitForSelector('dialog[open] [data-chart="stacks"] svg');
+  const year = await p.$$eval('dialog[open] [data-stack]', a => a.length), term = nums(now.stacks).length;
+  assert.ok(year > 0 && (await p.$eval('dialog[open] [data-tile="avg"] span', e => e.textContent)) === 'Average grade', 'the year\'s tiles');
+  assert.ok(await p.$('dialog[open] [data-heat]'));
+  assert.ok(year >= (now.stacks.match(/\. /g) || []).length + 1, 'every assignment of the year');
+  assert.ok(term > 0);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('H-004: Undo of a unit rename puts back only the name; a class added in another window since stays, and Redo renames it again', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  const u = (await libOf(p)).classes[0].units[0], was = u.name;
+  await p.waitForSelector(`[data-umenu="${u.id}"]`, { timeout: 60000 });
+  await menu(p, `[data-umenu="${u.id}"]`, '^Rename');
+  await p.waitForSelector('dialog[open] input[data-uname]');
+  await p.$eval('dialog[open] input[data-uname]', e => e.select());
+  await p.type('dialog[open] input[data-uname]', 'Poems');
+  await p.click('dialog[open] [data-uok]');
+  await p.waitForFunction(id => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.find(x => x.id === id).name === 'Poems', {}, u.id);
+  // another window adds a class
+  const q = await page(ctx, errors);
+  await q.goto(srv.url + 'next/#/class/new');
+  await q.waitForSelector('dialog[open] [data-roster-name]', { timeout: 60000 });
+  await q.type('dialog[open] [data-roster-name]', 'Grade 11 Drama');
+  await q.$eval('dialog[open] [data-roster-names]', e => { e.value = 'Hal Pretend\nIvy Notreal'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await q.click('dialog[open] [data-roster-save]');
+  await q.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes.some(c => c.name === 'Grade 11 Drama'));
+  await q.close();
+  // Ctrl+Z in the first window
+  await p.bringToFront(); await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForFunction((id, was) => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.find(x => x.id === id).name === was, {}, u.id, was);
+  assert.ok((await libOf(p)).classes.some(c => c.name === 'Grade 11 Drama'), 'the class added in the other window is still there');
+  await p.keyboard.down('Control'); await p.keyboard.press('y'); await p.keyboard.up('Control');
+  await p.waitForFunction(id => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.find(x => x.id === id).name === 'Poems', {}, u.id);
+  assert.ok((await libOf(p)).classes.some(c => c.name === 'Grade 11 Drama'));
+  // the current app reads both
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  assert.deepEqual(await old.evaluate(id => { const l = window.__gs.state().lib; return [l.classes[0].units.find(x => x.id === id).name, l.classes.some(c => c.name === 'Grade 11 Drama')]; }, u.id), ['Poems', true]);
   assert.deepEqual(errors, []);
   await ctx.close();
 });
