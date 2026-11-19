@@ -2,6 +2,8 @@
 
 Everything the app does, screen by screen. For what it is and how to start, see the [README](../README.md).
 
+**Version 2.** The web address now opens the new Grading Studio, with the same saved work. This guide still describes the version before it, which stays at the same address followed by `classic/` (Settings, About in the new version has a link to it, and it has a link back, **Open the new version**). Both open the same classes, papers, scores and lessons, so a change made in one shows in the other. Old bookmarks open the matching screen of the new version: an assignment opens in marking, the gradebook in the class's Grades, the Planner's week and lessons in the Calendar and the lesson. Help in the new version answers its own questions.
+
 Where this guide says ManageBac or Atlas, read the name of your own school's system: the app uses whichever name you gave it in the welcome (or in Settings, under Classes and rosters), and plain words if you gave none. The same goes for Claude: the app names the AI assistant you chose in Settings, under Working with AI, and says "your AI assistant" if you chose none.
 
 ## How to use
@@ -110,10 +112,12 @@ These are under **Saving and carrying**, in Settings (the sidebar's "Saved" line
 
 Under **About and updates**, in Settings. This is for the web address; the double-click copy stays as it is.
 
+- **Moving to version 2.** A computer that kept version 1 goes on opening it, with or without internet, until you press **Update now** (or, if you chose to update by itself, until the next time you open it). Then the new version opens at the same address and version 1 moves to `classic/`. An installed app stays installed and opens the new version. Nothing you saved is moved or changed.
+
 - **It opens with no internet.** After the first visit, the pages are kept on the computer. Your work was always there; now the app is too.
 - **Install as an app** gives it its own window and icon. There is no installer: in Chrome or Edge press **Install**, or use the browser's menu, **Cast, save and share**, **Install page as app**. The app and the page in the browser are the same place, with the same saved work.
 - **Updates wait for you.** A newer version is fetched quietly and the sidebar says **Update ready**. Nothing changes until you press **Update now**, which saves your work first and reloads once. If you would rather not be asked, choose **Update by itself the next time I open Grading Studio**: even then it never changes while the app is open.
-- How it works is in `src/sw.js`. It keeps the two pages and the icons in the browser's cache and never opens your work.
+- How it works is in `src/sw.js` for this version (at `classic/`, keeping only its own pages) and `next/src/sw.js` for the new one at the web address (next/docs/sw.md). Neither ever opens your work.
 
 ## Audio, video and Word files
 - Recordings (mp3, m4a, wav, mp4, mov, webm…) play at the top of each student with 10s skips, 1× to 2× speed, and **+ Time to comment** (adds [2:15] to the ManageBac comment). Keys: Space play/pause, J/L back/ahead 5s.
@@ -186,5 +190,5 @@ The Planner has the same sidebar as grading: **Find anything** (lessons, units, 
 - Your marks, scores and comments are kept in this browser, per download. Today lists the papers still to mark, the ones ready to hand back, and earlier work, so **Continue** picks up the last one. Drop the same download in again to pick up where you left off.
 - Saved comments ("Save for reuse" in a comment) are kept in this browser too.
 - Old .doc files can't be opened here (Word .docx files can); they're listed, with what to do next, so you can still give a score.
-- Opening the app contacts the address it is served from, to ask which version is newest (`version.json`). Once a day per browser, the pages at the web address also add one to a public count of visits at `abacus.jasoncameron.dev` (and, the first time, one to a count of new browsers), so the maker can see whether anyone uses the app (src/visits.js). Nothing about you or your work is sent. The sample, tests and the double-click copies never count. The Inter font is built into the file (SIL Open Font License; the license is in `src/fonts/OFL.txt` and inside the built file). So is the iPhone photo decoder: libheif and libde265, built by libheif-js, under the LGPL 3. Its license text is inside the built file, and its source is at github.com/strukturag/libheif, github.com/strukturag/libde265 and github.com/catdad-experiments/libheif-js. It sits, packed by build.js, in its own script block (`heicSrc`), so it can be replaced; taking its lines out of build.js leaves a plain explanation for .heic files.
+- Opening the app contacts the address it is served from, to ask which version is newest (`version.json`). Once a day per browser, the pages at the web address (the new version's and this one's at `classic/`) also add one to a public count of visits at `abacus.jasoncameron.dev` (and, the first time, one to a count of new browsers), so the maker can see whether anyone uses the app (src/visits.js). Nothing about you or your work is sent. The sample, tests and the double-click copies never count. The Inter font is built into the file (SIL Open Font License; the license is in `src/fonts/OFL.txt` and inside the built file). So is the iPhone photo decoder: libheif and libde265, built by libheif-js, under the LGPL 3. Its license text is inside the built file, and its source is at github.com/strukturag/libheif, github.com/strukturag/libde265 and github.com/catdad-experiments/libheif-js. It sits, packed by build.js, in its own script block (`heicSrc`), so it can be replaced; taking its lines out of build.js leaves a plain explanation for .heic files.
 
