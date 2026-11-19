@@ -55,7 +55,7 @@ async function box(p, n, x0, y0, x1, y1) {
 const card = (st, q) => '[data-qm] .qmc[data-st="' + st + '"][data-q="' + q + '"]';
 
 
-test('Quick mark: boxes drawn and saved as one step (the score goes out of the quiz\'s points), answers marked by question and by student with clicks and keys, half points, a comment, Give the rest and Undo; the marks are on the papers and the current app opens the same', async () => {
+test('D-011 Quick mark: boxes drawn and saved as one step (the score goes out of the quiz\'s points), answers marked by question and by student with clicks and keys, half points, a comment, Give the rest and Undo; the marks are on the papers and the current app opens the same', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const p = await page(ctx, errors);
   await p.goto(srv.url + 'blank'); await plant(p, withCard());
@@ -90,9 +90,21 @@ test('Quick mark: boxes drawn and saved as one step (the score goes out of the q
   await p.waitForFunction(() => document.querySelectorAll('[data-qb] [data-qbrow]').length === 3);
   await p.keyboard.press('Delete');
   await p.waitForFunction(() => document.querySelectorAll('[data-qb] [data-qbrow]').length === 2);
+  // D-011: no goals yet, so Tag questions with learning goals… opens her list; the first question then takes one
+  assert.ok(!(await p.$('[data-qb] [data-qgoal]')), 'no Goal before there are goals');
+  assert.match(await p.$eval('[data-qb] [data-qgoals]', e => e.textContent), /Tag questions with learning goals/);
+  await p.click('[data-qb] [data-qgoals]');
+  await p.waitForSelector('dialog[open] [data-goal-row="0"]');
+  await p.type('dialog[open] [data-goal-row="0"]', 'Reads a map');
+  await p.click('dialog[open] [data-goals-done]');
+  await p.waitForSelector('[data-qb] [data-qgoal]', { timeout: 15000 });
+  assert.match(await p.$eval('[data-qb] [data-qgoals]', e => e.textContent), /Edit goals/);
+  const gid = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')).goals[0].id);
+  await p.select('[data-qb] [data-qbrow="' + q1 + '"] + tr [data-qgoal]', gid);
   await p.click('[data-qbsave]');
   await p.waitForSelector('dialog[open][data-qm] .qmc img', { timeout: 60000 });
   const su1 = await su(p);
+  assert.equal(await p.evaluate(q1 => window.__mark.state().batch.quiz.qs.find(q => q.id === q1).goal, q1), gid, 'D-011: the question keeps its goal, where the current app keeps it');
   assert.equal(su1.mode, 'points'); assert.equal(+su1.outOf, 3);
   // by question: a click on the ✗ button, and a click on the other answer's picture marks it wrong too
   await p.click(card(0, q1) + ' [data-v="0"]');
