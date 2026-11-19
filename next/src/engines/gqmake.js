@@ -34,22 +34,22 @@ function qmkBits(id, who, pg, ver = 0) {
 function qmkQ(q, i, m) {
   const L = qmkLetters(q), on = k => q.t === 'sa' ? false : (q.key || '').includes(L[k]);
   const bub = L.map((l, k) => '<i class="qfb' + (m.show && on(k) ? ' key' : '') + (m.fill && m.fill[i] && m.fill[i][k] ? ' ' + m.fill[i][k] : '') + '">' + l + '</i>').join('');
-  const words = m.sheet ? '' : '<div class="qftx">' + esc(q.text || (q.t === 'sa' ? 'Your question' : 'Your question')) +
+  const words = m.sheet ? '' : '<div class="qftx">' + esc(q.text || tr('Your question')) +
     (q.t === 'mc' || q.t === 'ms' ? '<ol class="qfops">' + q.opts.map((o, k) => '<li><b>' + QMK_L[k] + '</b> ' + esc(o || '…') + '</li>').join('') + '</ol>' : '') +
-    (q.t === 'ms' ? '<div class="qfhint">Fill every answer that applies.</div>' : '') +
+    (q.t === 'ms' ? '<div class="qfhint">' + tr('Fill every answer that applies.') + '</div>' : '') +
     (q.t === 'sa' ? '<div class="qflines">' + '<span></span>'.repeat(q.lines || 3) + '</div>' : '') + '</div>';
   return '<div class="qfq' + (m.sheet ? ' sheet' : '') + '" data-i="' + i + '"><span class="qfn">' + (i + 1) + '</span>' + words +
-    '<div class="qfbs' + (q.t === 'sa' ? ' sa' : '') + '">' + (q.t === 'sa' ? '<span class="qffor">Teacher</span>' : '') + bub + '</div></div>';
+    '<div class="qfbs' + (q.t === 'sa' ? ' sa' : '') + '">' + (q.t === 'sa' ? '<span class="qffor">' + tr('Teacher') + '</span>' : '') + bub + '</div></div>';
 }
 // src/quizmake.js
 function qmkPageHtml(m, title, name, pg, of, qs, from, who = 0) {
   const bits = qmkBits(m.id || 1, who, pg, m.ver || 0).map(b => '<i' + (b ? ' class="on"' : '') + '></i>').join('');
   return '<div class="qfpage"><i class="qfreg tl"></i><i class="qfreg tr"></i><i class="qfreg bl"></i><i class="qfreg br"></i><div class="qfcode">' + bits + '</div>' +
-    (pg === 0 ? '<div class="qfhead"><div><div class="qftitle" data-raw>' + esc(title) + '</div><div class="qfsub">' + m.items.length + ' questions · ' + fmtNum(qmkPts(m)) + ' points</div></div>' +
-      '<div class="qfname"><span>Name</span><b data-raw>' + esc(name || '') + '</b></div></div>' +
-      '<p class="qfhow">Fill each bubble completely with a dark pencil or pen. To change an answer, erase it fully or cross it out and fill the new one.</p>'
+    (pg === 0 ? '<div class="qfhead"><div><div class="qftitle" data-raw>' + esc(title) + '</div><div class="qfsub">' + tr(m.items.length + ' questions') + ' · ' + tr(fmtNum(qmkPts(m)) + ' points') + '</div></div>' +
+      '<div class="qfname"><span>' + tr('Name') + '</span><b data-raw>' + esc(name || '') + '</b></div></div>' +
+      '<p class="qfhow">' + tr('Fill each bubble completely with a dark pencil or pen. To change an answer, erase it fully or cross it out and fill the new one.') + '</p>'
       : '<div class="qfhead sm"><span data-raw>' + esc(title) + '</span><span data-raw>' + esc(name || '') + '</span></div>') +
-    '<div class="qfbody">' + qs.map((q, k) => qmkQ(q, from + k, m)).join('') + '</div><div class="qffoot">Page ' + (pg + 1) + ' of ' + of + '</div></div>';
+    '<div class="qfbody">' + qs.map((q, k) => qmkQ(q, from + k, m)).join('') + '</div><div class="qffoot">' + tr('Page ' + (pg + 1) + ' of ' + of) + '</div></div>';
 }
 // src/quizmake.js
 function qmkPages(m, title, name, who = 0) {
