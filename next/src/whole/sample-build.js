@@ -19,11 +19,11 @@ import { libs } from '../app/mark/paper.js';
 import { setOpenWork } from '../app/openwork.js';
 import { PARTS } from '../app/router.js';
 
-// sample.js, beside the current app's pages (one folder up from next/).
+// sample.js, beside the previous version's pages (classic/, beside this page at the root).
 function sampleData() {
   if (window.__gsSampleData) return Promise.resolve(window.__gsSampleData);
   return new Promise((res, rej) => {
-    const s = document.createElement('script'); s.src = '../sample.js?' + Date.now();
+    const s = document.createElement('script'); s.src = 'classic/sample.js?' + Date.now();
     s.onload = () => window.__gsSampleData ? res(window.__gsSampleData) : rej(new Error('sample.js held nothing'));
     s.onerror = () => rej(new Error('sample.js could not be fetched'));
     document.head.appendChild(s);

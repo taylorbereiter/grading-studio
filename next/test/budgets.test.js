@@ -3,10 +3,10 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs'), path = require('path'), zlib = require('zlib');
 const NEXT = path.join(__dirname, '..'), B = require('../budgets.json');
-const gz = f => zlib.gzipSync(fs.readFileSync(path.join(NEXT, 'dist', f)), { level: 9 }).length;
+const gz = f => zlib.gzipSync(fs.readFileSync(path.join(NEXT, '..', 'dist', f)), { level: 9 }).length;
 
 test('the new app keeps to its size budgets', () => {
-  const meta = JSON.parse(fs.readFileSync(path.join(NEXT, 'dist', 'meta.json'), 'utf8'));
+  const meta = JSON.parse(fs.readFileSync(path.join(NEXT, '..', 'dist', 'meta.json'), 'utf8'));
   const outs = Object.entries(meta.outputs).filter(([f]) => f.endsWith('.js')).map(([f, o]) => ({ f: path.basename(f), o }));
   // What the first page load needs: main.js and the chunks it imports straight away (not the ones it loads later).
   const loads = entry => { const s = new Set([entry]); const add = o => { for (const i of o.imports || []) if (i.kind === 'import-statement') { const b = path.basename(i.path); if (!s.has(b)) { s.add(b); add(outs.find(x => x.f === b).o); } } }; add(outs.find(x => x.f === entry).o); return s; };
