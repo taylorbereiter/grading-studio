@@ -6,6 +6,8 @@
 // a link, the sidebar) puts both back. A new screen puts focus on its heading, so a screen reader says where she is.
 // No saved work is read or written here.
 
+import { addLines } from '../i18n/t.js';
+
 // [pattern, chunk, nav]: pattern pieces starting with ":" are named parts; nav is the sidebar item the route lights up.
 export const ROUTES = [
   ['home', 'home', 'home'],
@@ -156,6 +158,8 @@ export const CHUNKS = {
   library: () => import('./screens/library.jsx'),
   mark: () => import('./screens/mark.jsx'),
 };
+// A screen or part is handed over once the chosen language's lines it brought with it have arrived (i18n/t.js addLines).
+for (const o of [PARTS, CHUNKS]) for (const k in o) { const f = o[k]; o[k] = () => f().then(m => addLines.ready().then(() => m)); }
 
 export function parse(hash) {
   const path = String(hash || '').replace(/^#\/?/, '').replace(/\/+$/, '').split('?')[0];

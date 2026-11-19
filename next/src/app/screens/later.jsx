@@ -6,7 +6,7 @@ import { t, addLines } from '../../i18n/t.js';
 import LINES from '../../../lang/building.en.json';
 import { go } from '../router.js';
 
-addLines(LINES);
+addLines(LINES, 'building');
 const NAMES = { calendar: 'building.calendar', week: 'building.calendar', todo: 'building.todo', class: 'building.class', lesson: 'building.lesson', mark: 'building.mark', library: 'building.library', school: 'building.school', help: 'building.help' };
 export default function Later({ route, classes, embedded }) {
   if (embedded) return <EmptyState icon="spark" title={t('building.title')} text={t('building.text')} />;

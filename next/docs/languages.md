@@ -188,3 +188,16 @@ with a column for "wording changed since the last report" so a review only reads
 - Its letters are written as themselves, not as `\u` escapes (next/build.js, after esbuild), about 10 KB smaller squeezed.
 - Size: each language chunk has its own limit (`langFile`, 120 KB), and the 3 MB total counts the app with one language, the
   largest, because a teacher downloads only the one they choose (the teacher's decision, 19 Nov 2026).
+
+## Files by area (stage 8, 19 Nov 2026)
+
+Each language is kept in files by area, the same areas as the English: `next/lang/<code>/<area>.json`, where `<area>` is the name of
+an English file `next/lang/<area>.en.json` and `core` stands for `en.json`. `@locale` is in `core`. `next/tools/lang-areas.js` reads and
+writes them (`readLang`, `writeLang`), and `lang-convert.js` uses it. Each file is a chunk of its own.
+
+At the start (`app/language.js`), only `core` and the areas of the lines files already loaded are fetched. After that, a lines file
+(`addLines(LINES, '<area>')`) fetches its area in the chosen language as it loads, and `router.js` hands over a screen or part only once
+those have arrived (`addLines.ready()`), so nothing shows its English first. A new line goes into the English area file and into
+`next/lang/<code>/<area>.json` for each language. `lines.test.js` holds each language's files to the English areas, and checks that every
+lines file names the area of the English it imports. The size budget `langFile` is per file. The 3 MB total counts the app plus all the
+files of its largest language.

@@ -1,0 +1,28 @@
+{
+ "cal.card_menu": "Menú de {title}",
+ "cal.alt": "Alternativa",
+ "cal.finished": "Terminada",
+ "cal.taught_to": "Dada hasta la diapositiva {n}",
+ "cal.also": "También en {name}",
+ "cal.class_page": "Página de la clase",
+ "cal.link_add": "Añadir el enlace de la página de la clase…",
+ "cal.link_change": "Cambiar el enlace de la página de la clase…",
+ "cal.link_title": "Página de la clase {name}",
+ "cal.link_label": "Dirección web",
+ "cal.link_hint": "Aparece en esta clase en la semana, en sus clases y al calificar. Déjalo vacío para quitarlo.",
+ "cal.link_bad": "Eso no parece un enlace web",
+ "cal.go_date": "Ir a una fecha",
+ "cal.no_unit": "Sin unidad esta semana",
+ "cal.open_unit": "Abrir {title}",
+ "cal.new_unit_for": "Nueva unidad de {course} desde esta semana",
+ "cal.all_lessons": "Todas las clases",
+ "cal.all_find": "Buscar una clase",
+ "cal.no_slot": "Fuera del horario",
+ "cal.new_loose": "Nueva clase sin grupo",
+ "cal.del_sure": "¿Borrar? Pulsa otra vez",
+ "cal.n_lessons": {
+  "one": "{n} clase",
+  "other": "{n} clases"
+ },
+ "cal.none_found": "Ninguna clase coincide."
+}
