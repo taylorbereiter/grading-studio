@@ -4,4 +4,5 @@ export * from './popups.jsx';
 export * from './overlay.jsx';
 export * from './services.jsx';
 export { Icon, ICONS, iconNames } from './icons.js';
-export { LOOKS, THEMES, SCALE } from './tokens.js';
+export { LOOKS } from './looks.js';
+// THEMES and SCALE are read from ui/tokens.js itself (the gallery), so the first load doesn't bring every theme's colours.

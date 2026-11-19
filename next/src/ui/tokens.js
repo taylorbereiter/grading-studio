@@ -5,8 +5,8 @@
 // Rules held by the tests: red (pen) is for marks on papers only; check marks are green (ok); no sage or yellow-green anywhere;
 // faint is never used for text; the theme is the teacher's choice and never follows the computer's light or dark setting.
 
-export const LOOKS = ['graphite', 'porcelain', 'ocean', 'ink', 'plum', 'midnight'];
-export const DEFAULT_LOOK = 'graphite';
+import { LOOKS, DEFAULT_LOOK } from './looks.js';
+export { LOOKS, DEFAULT_LOOK };
 
 // Sizes that are the same in every theme.
 export const SCALE = {

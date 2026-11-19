@@ -1,8 +1,8 @@
 // A timetable colour as the theme's class colour nearest to it (app/colors.js tells why). Kept apart from colors.js, which reads
 // the timetable, so a screen on the students' side can colour a class without reaching the planning side.
-import { THEMES } from '../ui/tokens.js';
+import { OCEAN_CLS } from '../ui/looks.js';
 
-const BASE = THEMES.ocean.cls.map(h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)));
+const BASE = OCEAN_CLS.map(h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)));
 const cache = new Map();
 // A timetable colour (#rrggbb) as the theme's class colour nearest to it.
 export function toneOf(hex) {

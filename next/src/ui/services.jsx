@@ -13,7 +13,7 @@ import { hasSpeech, listen } from '../services/speech.js';
 import { copyText } from '../services/clipboard.js';
 import { fileValue, filesFrom, accepts, isImage, isValue } from '../services/files.js';
 import * as undo from '../services/undo.js';
-import { LOOKS, THEMES } from './tokens.js';
+import { LOOKS, SWATCH } from './looks.js';
 
 /* ---------- command bar ---------- */
 // Mount once. Ctrl/Cmd+K opens it from anywhere (the shortcut is in the shortcut list like any other).
@@ -190,7 +190,7 @@ export function ThemePicker({ value, onPick }) {
     if (d) { e.preventDefault(); const box = e.currentTarget, n = LOOKS[(i + d + LOOKS.length) % LOOKS.length]; onPick(n); requestAnimationFrame(() => { const b = box.querySelector('[data-look="' + n + '"]'); b && b.focus(); }); }
   }}>
     {LOOKS.map(n => <button type="button" class="lk" role="radio" data-look={n} aria-checked={String(n === value)} tabIndex={n === value ? 0 : -1} onClick={() => onPick(n)}>
-      <span class="sw2" style={{ '--sa': THEMES[n].acc, '--sb2': THEMES[n].bg }}>{n === value && <Icon name="check" />}</span>
+      <span class="sw2" style={{ '--sa': SWATCH[n][0], '--sb2': SWATCH[n][1] }}>{n === value && <Icon name="check" />}</span>
       <span><b>{t(LOOK_LINES[n][0])}</b><small>{t(LOOK_LINES[n][1])}</small></span></button>)}
   </div>;
 }

@@ -12,6 +12,7 @@ import { usePlan } from '../plan.js';
 import { toneOf, classTone } from '../colors.js';
 import { Slide } from '../plan/slide.jsx';
 import { usePart } from '../parts.js';
+import './home-lines.js';
 import '../plan/lines.js';
 import '../saving/lines.js';
 import { useSaving } from '../../services/saving.js';

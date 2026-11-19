@@ -6,7 +6,7 @@ const fs = require('fs'), path = require('path');
 const SRC = path.join(__dirname, '..', 'src');
 // en.json: the app's lines. gallery.en.json: the gallery page's own, never shipped with the app (only gallery/ may use them).
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lang', f), 'utf8'));
-const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), VIDEO = read('video.en.json'), SAVING = read('saving.en.json'), CLASS = read('class.en.json'), TODO = read('todo.en.json'), FOCUS = read('focus.en.json'), SCHOOL = read('school.en.json'), HELP = read('help.en.json'), PREFS = read('prefs.en.json'), EN = { ...APP, ...TODO, ...FOCUS, ...SCHOOL, ...HELP, ...PREFS, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...VIDEO, ...SAVING, ...CLASS };
+const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), VIDEO = read('video.en.json'), SAVING = read('saving.en.json'), CLASS = read('class.en.json'), TODO = read('todo.en.json'), FOCUS = read('focus.en.json'), SCHOOL = read('school.en.json'), HELP = read('help.en.json'), HOME = read('home.en.json'), SETS = read('settings.en.json'), PREFS = read('prefs.en.json'), EN = { ...APP, ...HOME, ...SETS, ...TODO, ...FOCUS, ...SCHOOL, ...HELP, ...PREFS, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...VIDEO, ...SAVING, ...CLASS };
 const noComments = s => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(x => x.isDirectory() ? walk(path.join(d, x.name)) : /\.jsx?$/.test(x.name) ? [path.join(d, x.name)] : []);
 const files = walk(SRC);
@@ -78,6 +78,14 @@ test('Help lines live in help.en.json and load where they are used', () => {
 test('the rest of Settings has its lines in prefs.en.json and loads them where they are used', () => {
   assert.ok(Object.keys(PREFS).every(k => k.startsWith('prefs.')) && !Object.keys(APP).some(k => k.startsWith('prefs.')));
   for (const [f, s] of Object.entries(text)) if (/'prefs\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '(\.\.\/)+screens\/prefs-lines\.js';|import '\.\/prefs-lines\.js';/.test(s), f + ' uses a Settings line without importing screens/prefs-lines.js');
+});
+// Home's and the Settings page's own lines (next/lang/home.en.json, settings.en.json) load with that screen, so the first load
+// stays small: only that screen may use them.
+test('Home and Settings page lines are used only by their screen, which loads them', () => {
+  for (const [L, file, lines] of [[HOME, 'app/screens/home.jsx', 'home-lines.js'], [SETS, 'app/screens/settings.jsx', 'settings-lines.js']]) {
+    for (const k of Object.keys(L)) { assert.ok(!(k in APP), k + ' is in en.json too'); for (const [f, s] of Object.entries(text)) if (f !== file) assert.ok(!s.includes("'" + k + "'"), f + ' uses ' + k + ', which loads only with ' + file); }
+    assert.ok(text[file].includes("import './" + lines + "';"), file + ' imports ' + lines);
+  }
 });
 test('To do lines live in todo.en.json and are used only by the To do screen', () => {
   assert.ok(Object.keys(TODO).every(k => k.startsWith('todo.')) && !Object.keys(APP).some(k => k.startsWith('todo.')));

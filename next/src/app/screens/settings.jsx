@@ -10,6 +10,7 @@ import { LANGUAGES, savedLanguage, saveLanguage } from '../language.js';
 import { sampleOn, enterSample, leaveSample } from '../sample.js';
 import { useUpdate } from '../update.js';
 import { TimetableSettings } from './settings-plan.jsx';
+import './settings-lines.js';
 
 export const GROUPS = [['classes', 'people', 'settings.classes'], ['timetable', 'cal', 'settings.timetable'], ['grading', 'grades', 'settings.grading'], ['marking', 'pen', 'settings.marking'],
   ['focus', 'timer', 'settings.focus'], ['ai', 'assist', 'settings.ai'], ['saving', 'cloud', 'settings.saving'], ['display', 'sun', 'settings.display'], ['about', 'info', 'settings.about']];
