@@ -68,24 +68,6 @@ function useTodoCount() {
   }, []);
   return n;
 }
-// The Planner folder, when it was linked and now needs her: permission to ask for again ('ask'), or the link gone ('lost'). Read when
-// the shell opens, after each save, when she comes back to the window and each minute; the folder module loads only for this.
-function usePlannerFolderWarn() {
-  const [w, set] = useState('');
-  useEffect(() => {
-    let live = true;
-    const read = () => import('../planning/folder.js').then(m => m.plannerFolder()).then(f => {
-      let was = false; try { if (f) localStorage.setItem('gsn.pfWas', '1'); was = localStorage.getItem('gsn.pfWas') === '1'; } catch { }
-      if (live) set(sampleOn() ? '' : f ? (f.ok ? '' : 'ask') : was ? 'lost' : '');
-    }, e => console.error(e));
-    read();
-    const vis = () => { if (!document.hidden) read(); };
-    const off = onSaved(read), iv = setInterval(read, 60000);
-    document.addEventListener('visibilitychange', vis); window.addEventListener('focus', read);
-    return () => { live = false; off(); clearInterval(iv); document.removeEventListener('visibilitychange', vis); window.removeEventListener('focus', read); };
-  }, []);
-  return w;
-}
 // "Saved 2 min ago" at the foot of the sidebar: the last save this window made through the write functions.
 function SavedLine() {
   const [at, setAt] = useState(0), [, tick] = useState(0);
@@ -94,10 +76,8 @@ function SavedLine() {
   // Until a folder or Drive holds a second copy, or when the folder needs her, it says so in amber (src/folder.js whereSay, railSaved).
   const S = useSaving(), f = S && S.folder ? S.folder() : null, g = S ? S.google() : {};
   const warn = !f || sampleOn() ? '' : f.state === 'ask' ? 'saved.f_ask' : f.state === 'lost' ? 'saved.f_lost' : f.state === 'decide' ? 'saved.f_decide' : f.state === 'none' && f.booted && !g.email ? 'saved.not_backed' : '';
-  const pf = usePlannerFolderWarn();
   return <div class="saved" role="status" data-saved={at || ''}><Icon name="check" size="xs" /><span>{mins < 0 ? t('saved.all') : mins < 1 ? t('saved.now') : t('saved.ago', { n: mins })}</span>
-    {warn && <span class="sv-w" data-savewarn={f.state}>{t(warn)}</span>}
-    {pf && <a class="sv-w" href={router.href('settings', 'ai')} data-pfwarn={pf}>{t(pf === 'ask' ? 'saved.pf_ask' : 'saved.pf_lost')}</a>}</div>;
+    {warn && <span class="sv-w" data-savewarn={f.state}>{t(warn)}</span>}</div>;
 }
 
 function useLock() {

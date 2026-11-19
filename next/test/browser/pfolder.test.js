@@ -162,7 +162,7 @@ test('E2-108: the Planner folder that needs permission again, or has lost its li
   // permission taken away: the calendar at rest says so
   await p.evaluate(() => localStorage.setItem('test.revoke', '1'));
   await p.goto(srv.url + 'next/#/calendar/class'); await p.reload();
-  await p.waitForSelector('.saved [data-pfwarn="ask"]', { timeout: 20000 });
+  await p.waitForSelector('.saved + div [data-pfwarn="ask"]', { timeout: 20000 });
   assert.match(await p.$eval('[data-pfwarn]', e => e.textContent), /Planner folder needs permission/);
   await p.click('[data-pfwarn]');
   await p.waitForSelector('[data-pfolder] [data-pfstate="ask"]', { timeout: 20000 });
@@ -171,7 +171,7 @@ test('E2-108: the Planner folder that needs permission again, or has lost its li
   // the link gone (the folder's record cleared): it says so too
   await p.evaluate(() => { localStorage.removeItem('test.revoke'); return new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const tx = r.result.transaction('kv', 'readwrite'); tx.objectStore('kv').delete('dir'); tx.oncomplete = () => { r.result.close(); res(); }; tx.onerror = () => rej(tx.error); }; }); });
   await p.goto(srv.url + 'next/#/calendar/class'); await p.reload();
-  await p.waitForSelector('.saved [data-pfwarn="lost"]', { timeout: 20000 });
+  await p.waitForSelector('.saved + div [data-pfwarn="lost"]', { timeout: 20000 });
   assert.match(await p.$eval('[data-pfwarn]', e => e.textContent), /Planner folder not linked/);
   await p.click('[data-pfwarn]');
   await p.waitForSelector('[data-pfolder] [data-pfstate="none"]', { timeout: 20000 });
