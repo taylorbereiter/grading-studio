@@ -1148,7 +1148,6 @@
  "class.es_whole": "提出物全体",
  "class.es_part": "ページの一部",
  "class.es_part_say": "残したい部分をドラッグで囲みます。名前は黒く塗られ、元に戻せません。",
- "class.es_names_say": "名前を黒く塗った画像として保存され、元に戻せません。ほかの部分を隠すには、保存後に「一部を隠す」を使います。",
  "class.es_marks": "自分の書き込みとコメント",
  "class.es_score": "点数",
  "class.es_row": "ルーブリックの観点",
@@ -6696,5 +6695,17 @@
  "class.ru_tick": "先に使い方を選んでください",
  "class.ru_set": "「{name}」のルーブリックを設定しました",
  "class.ru_step": "取り込んだルーブリック",
- "class.ru_t": "「{name}」のルーブリック"
+ "class.ru_t": "「{name}」のルーブリック",
+ "class.es_n_covered": {
+  "one": "名前を 1 か所隠しました。",
+  "other": "名前を {n} か所隠しました。"
+ },
+ "class.es_cover_say": "ページ上をドラッグすると、手書きの名前や点数などほかの部分も隠せます。隠した部分をクリックすると外れます。",
+ "class.es_shot_n": {
+  "one": "1 か所を黒く塗りました。",
+  "other": "{n} か所を黒く塗りました。"
+ },
+ "class.es_shot_paper": "答案の名前の目隠しはすでに塗られています。",
+ "class.es_shot_say": "名前が見える部分をドラッグすると黒く塗れます。黒い枠をクリックすると外れます。",
+ "class.es_tags_used": "使ったことのあるタグ"
 }

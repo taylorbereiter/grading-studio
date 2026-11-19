@@ -1148,7 +1148,6 @@
  "class.es_whole": "제출물 전체",
  "class.es_part": "페이지 일부",
  "class.es_part_say": "남길 부분을 상자로 드래그하세요. 이름은 검게 가려지고 되돌릴 수 없어요.",
- "class.es_names_say": "이름을 검게 가린 사진으로 보관되며 되돌릴 수 없어요. 다른 부분을 가리려면 저장한 뒤 일부 가리기를 쓰세요.",
  "class.es_marks": "내 표시와 의견",
  "class.es_score": "점수",
  "class.es_row": "루브릭 항목",
@@ -6696,5 +6695,17 @@
  "class.ru_tick": "먼저 어떻게 쓸지 선택하세요",
  "class.ru_set": "“{name}”의 루브릭을 설정했습니다",
  "class.ru_step": "가져온 루브릭",
- "class.ru_t": "“{name}”의 루브릭"
+ "class.ru_t": "“{name}”의 루브릭",
+ "class.es_n_covered": {
+  "one": "이름 1개를 가렸습니다.",
+  "other": "이름 {n}개를 가렸습니다."
+ },
+ "class.es_cover_say": "페이지에서 드래그하면 손으로 쓴 이름이나 점수 같은 다른 부분도 가릴 수 있습니다. 가림을 클릭하면 없어집니다.",
+ "class.es_shot_n": {
+  "one": "1곳을 검게 가렸습니다.",
+  "other": "{n}곳을 검게 가렸습니다."
+ },
+ "class.es_shot_paper": "답안지의 이름 가림은 이미 칠해져 있습니다.",
+ "class.es_shot_say": "이름이 보이는 곳을 드래그하면 검게 가려집니다. 검은 상자를 클릭하면 없어집니다.",
+ "class.es_tags_used": "사용한 태그"
 }

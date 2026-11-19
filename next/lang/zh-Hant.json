@@ -1148,7 +1148,6 @@
  "class.es_whole": "整份作業",
  "class.es_part": "頁面局部",
  "class.es_part_say": "拖曳框住要保留的部分。姓名會永久塗黑。",
- "class.es_names_say": "以圖片保存，姓名已永久塗黑。若要遮住其他內容，儲存後使用「遮住一部分」。",
  "class.es_marks": "我的批註和評語",
  "class.es_score": "分數",
  "class.es_row": "評分規準項目",
@@ -6696,5 +6695,17 @@
  "class.ru_tick": "請先勾選要怎麼使用",
  "class.ru_set": "已為「{name}」設定評分規準",
  "class.ru_step": "匯入的評分規準",
- "class.ru_t": "「{name}」的評分規準"
+ "class.ru_t": "「{name}」的評分規準",
+ "class.es_n_covered": {
+  "one": "已遮住 1 個姓名。",
+  "other": "已遮住 {n} 個姓名。"
+ },
+ "class.es_cover_say": "在頁面上拖曳可遮住其他內容，例如手寫的姓名或分數。點一下遮罩可取消。",
+ "class.es_shot_n": {
+  "one": "已塗黑 1 處。",
+  "other": "已塗黑 {n} 處。"
+ },
+ "class.es_shot_paper": "答案上的姓名遮罩已經塗上。",
+ "class.es_shot_say": "在顯示姓名的地方拖曳即可塗黑。點一下黑框可取消。",
+ "class.es_tags_used": "用過的標籤"
 }

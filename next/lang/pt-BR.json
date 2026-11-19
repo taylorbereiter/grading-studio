@@ -1145,7 +1145,6 @@
  "class.es_whole": "Trabalho inteiro",
  "class.es_part": "Parte de uma página",
  "class.es_part_say": "Arraste uma caixa em volta da parte que quer guardar. Os nomes são cobertos de preto de vez.",
- "class.es_names_say": "Guardado como imagens com os nomes cobertos de preto de vez. Para cobrir outra coisa, use Cobrir uma parte depois de salvar.",
  "class.es_marks": "Minhas marcações e comentários",
  "class.es_score": "A nota",
  "class.es_row": "Critério de rubrica",
@@ -6668,5 +6667,17 @@
  "class.ru_tick": "Marque primeiro o que fazer com ela",
  "class.ru_set": "A rubrica está definida para “{name}”",
  "class.ru_step": "uma rubrica trazida",
- "class.ru_t": "Rubrica de “{name}”"
+ "class.ru_t": "Rubrica de “{name}”",
+ "class.es_n_covered": {
+  "one": "1 nome coberto.",
+  "other": "{n} nomes cobertos."
+ },
+ "class.es_cover_say": "Arraste sobre uma página para cobrir outra coisa, como um nome ou uma nota escritos à mão. Clique em uma cobertura para tirá-la.",
+ "class.es_shot_n": {
+  "one": "1 área coberta de preto.",
+  "other": "{n} áreas cobertas de preto."
+ },
+ "class.es_shot_paper": "As coberturas de nomes do trabalho já estão pintadas.",
+ "class.es_shot_say": "Arraste sobre o que mostra um nome para cobri-lo de preto. Clique em uma caixa preta para tirá-la.",
+ "class.es_tags_used": "Tags que você já usou"
 }

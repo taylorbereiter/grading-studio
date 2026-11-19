@@ -1149,7 +1149,6 @@
  "class.es_whole": "Whole paper",
  "class.es_part": "Part of a page",
  "class.es_part_say": "Drag a box around the part to keep. Names are blacked out for good.",
- "class.es_names_say": "Kept as pictures with the names blacked out for good. To cover anything else, use Cover part of it once it is saved.",
  "class.es_marks": "My marks and comments",
  "class.es_score": "The score",
  "class.es_row": "Rubric row",
@@ -1274,5 +1273,17 @@
  "class.ru_tick": "Tick what to do with it first",
  "class.ru_set": "The rubric is set for “{name}”",
  "class.ru_step": "a rubric brought in",
- "class.ru_t": "Rubric for “{name}”"
+ "class.ru_t": "Rubric for “{name}”",
+ "class.es_n_covered": {
+  "one": "1 name covered.",
+  "other": "{n} names covered."
+ },
+ "class.es_cover_say": "Drag on a page to cover anything else, like a handwritten name or score. Click a cover to take it off.",
+ "class.es_shot_n": {
+  "one": "1 area blacked out.",
+  "other": "{n} areas blacked out."
+ },
+ "class.es_shot_paper": "Name covers on the paper are already painted in.",
+ "class.es_shot_say": "Drag over anything that shows a name to black it out. Click a black box to take it off.",
+ "class.es_tags_used": "Tags you have used"
 }

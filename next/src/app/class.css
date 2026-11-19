@@ -575,7 +575,7 @@ button.seat[data-n]:hover{border-color:var(--acc)}
 .espg{position:relative;touch-action:none}
 .espg>span{position:absolute;right:6px;bottom:6px;background:var(--s);padding:0 4px;border-radius:var(--r1)}
 .espg canvas{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:var(--r2);background:#fff}
-.espg.part canvas{cursor:crosshair}
+.espg canvas{cursor:crosshair}.escrop.cover{border:0;background:rgba(17,17,17,.75)}.estags{display:flex;flex-wrap:wrap;gap:6px}
 .escrop{position:absolute;border:2px solid var(--acc);background:var(--acc-ring);pointer-events:none}
 .esside{display:flex;flex-direction:column;gap:12px}
 @media (max-width:700px){.esuse{grid-template-columns:1fr;min-width:0}}

@@ -1129,7 +1129,6 @@
  "class.es_whole": "Copie entière",
  "class.es_part": "Partie d’une page",
  "class.es_part_say": "Tracez un cadre autour de la partie à garder. Les noms sont masqués en noir définitivement.",
- "class.es_names_say": "Gardé en images avec les noms masqués en noir définitivement. Pour cacher autre chose, utilisez Masquer une partie une fois l’exemple enregistré.",
  "class.es_marks": "Mes annotations et commentaires",
  "class.es_score": "La note",
  "class.es_row": "Critère de grille",
@@ -6610,5 +6609,17 @@
  "class.ru_tick": "Cochez d’abord ce qu’il faut en faire",
  "class.ru_set": "La grille est définie pour « {name} »",
  "class.ru_step": "une grille importée",
- "class.ru_t": "Grille de « {name} »"
+ "class.ru_t": "Grille de « {name} »",
+ "class.es_n_covered": {
+  "one": "1 nom masqué.",
+  "other": "{n} noms masqués."
+ },
+ "class.es_cover_say": "Faites glisser sur une page pour masquer autre chose, comme un nom ou une note écrits à la main. Cliquez sur un cache pour l’enlever.",
+ "class.es_shot_n": {
+  "one": "1 zone masquée en noir.",
+  "other": "{n} zones masquées en noir."
+ },
+ "class.es_shot_paper": "Les caches des noms de la copie sont déjà peints.",
+ "class.es_shot_say": "Faites glisser sur ce qui montre un nom pour le masquer en noir. Cliquez sur un cadre noir pour l’enlever.",
+ "class.es_tags_used": "Mots-clés déjà utilisés"
 }

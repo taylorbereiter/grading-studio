@@ -273,7 +273,7 @@ test('Strong examples from the marking screen: E keeps a Quick mark answer and t
   await p.click('[data-snip]'); await p.waitForSelector('[data-snipthen="wl"]');
   await p.click('[data-snipthen="wl"]');
   await p.click('[data-snipall]');
-  await p.waitForSelector('[data-esshot] img', { timeout: 60000 });
+  await p.waitForSelector('[data-esshot] canvas', { timeout: 60000 });
   await p.type('input[data-eswhy]', 'Mixes up the steps');
   await p.click('[data-esshot-save]');
   for (let i = 0; i < 150 && (await exRecs(p)).length < 3; i++) await new Promise(r => setTimeout(r, 100));
@@ -298,6 +298,86 @@ test('Strong examples from the marking screen: E keeps a Quick mark answer and t
   await m.goto(srv.url); await appReady(m);
   await m.waitForFunction(() => window.__gs.exList().length === 2 && window.__gs.exWatch().length === 1, { timeout: 30000 });
   assert.deepEqual(await m.evaluate(() => window.__gs.exList().map(r => r.kind).sort()), ['paper', 'part']);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// D-053 to D-059 (src/examples.js exuBind, exuToggle, exuNames, exSaveShot): Use as an example counts the names covered, a drag on a
+// page covers anything else and a click takes it off (kept with the paper's covers, so Check the covers has it too), Enter in Why it's
+// strong saves; a screenshot has its own black boxes (drag, click to take off), Tags you have used as chips, and Enter saves.
+test('D-053 D-054 D-055 D-056 D-057 D-058 D-059: covers drawn and taken off on Use as an example and on a screenshot, names counted, tags you have used, Enter saves; the current app reads the covers and the examples', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard()); await p.evaluate(exDbMake);
+  const z = path.join(dir, 'Quiz3.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+  await p.click('[data-fmenu]'); await p.waitForSelector('.pop [role^="menuitem"]');
+  await menuPick(p, 'Use as an example');
+  await p.waitForSelector('[data-esuse] [data-espg="0"] canvas', { timeout: 60000 });
+  const named = () => p.$eval('[data-esnames]', e => (/(\d+) names? covered/.exec(e.textContent) || [])[1]).then(Number);
+  await p.waitForFunction(() => /names? covered\. Drag on a page to cover anything else/.test(document.querySelector('[data-esnames]').textContent));
+  const n0 = await named();
+  const at = async (sel, x, y) => { const r = await p.$eval(sel, e => { e.scrollIntoView({ block: 'start' }); const b = e.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; }); return [r.x + x * r.w, r.y + y * r.h]; };
+  const drag = async (sel, a, b) => { const [x0, y0] = await at(sel, ...a), [x1, y1] = await at(sel, ...b); await p.mouse.move(x0, y0); await p.mouse.down(); await p.mouse.move((x0 + x1) / 2, (y0 + y1) / 2, { steps: 4 }); await p.mouse.move(x1, y1, { steps: 4 }); await p.mouse.up(); };
+  const click = async (sel, x, y) => { const [cx, cy] = await at(sel, x, y); await p.mouse.click(cx, cy); };
+  const own = () => p.evaluate(() => Object.values((window.__mark.state().batch.share || {}).boxes || {}).reduce((n, l) => n + l.length, 0));
+  // D-053: a drag covers it; D-054: the count goes up
+  await drag('[data-espg="0"] canvas', [0.55, 0.25], [0.8, 0.33]);
+  await p.waitForFunction(() => Object.values((window.__mark.state().batch.share || {}).boxes || {}).some(l => l.length));
+  await p.waitForFunction(n => +(/(\d+) names? covered/.exec(document.querySelector('[data-esnames]').textContent) || [])[1] === n, {}, n0 + 1);
+  // D-056: a click on it takes it off
+  await click('[data-espg="0"] canvas', 0.67, 0.29);
+  await p.waitForFunction(n => +(/(\d+) names? covered/.exec(document.querySelector('[data-esnames]').textContent) || [])[1] === n, {}, n0);
+  assert.equal(await own(), 0);
+  await drag('[data-espg="0"] canvas', [0.55, 0.25], [0.8, 0.33]);
+  await p.waitForFunction(n => +(/(\d+) names? covered/.exec(document.querySelector('[data-esnames]').textContent) || [])[1] === n, {}, n0 + 1);
+  // D-055: Enter in Why it's strong saves
+  await p.type('input[data-eswhy]', 'Clear steps'); await p.keyboard.press('Enter');
+  for (let i = 0; i < 150 && (await exRecs(p)).length < 1; i++) await new Promise(r => setTimeout(r, 100));
+  assert.deepEqual((await exRecs(p)).map(r => [r.kind, r.why]), [['paper', 'Clear steps']]);
+  await p.waitForFunction(() => !document.querySelector('[data-esuse]'));
+  // a screenshot kept as a strong example: D-057 black boxes, D-059 Enter in Tags saves
+  const shot = async () => { await p.click('[data-snip]'); await p.waitForSelector('[data-snipthen="ex"]'); await p.click('[data-snipthen="ex"]'); await p.click('[data-snipall]'); await p.waitForSelector('[data-esshot] canvas', { timeout: 60000 }); await p.waitForFunction(() => document.querySelector('[data-esshot] canvas').width > 0); };
+  await shot();
+  assert.match(await p.$eval('[data-esshotn]', e => e.textContent), /^Name covers on the paper are already painted in\. Drag over anything that shows a name to black it out/);
+  await drag('[data-esshotpv] canvas', [0.1, 0.1], [0.3, 0.2]);
+  await p.waitForFunction(() => /^1 area blacked out\./.test(document.querySelector('[data-esshotn]').textContent));
+  await drag('[data-esshotpv] canvas', [0.5, 0.5], [0.7, 0.6]);
+  await p.waitForFunction(() => /^2 areas blacked out\./.test(document.querySelector('[data-esshotn]').textContent));
+  await click('[data-esshotpv] canvas', 0.6, 0.55);
+  await p.waitForFunction(() => /^1 area blacked out\./.test(document.querySelector('[data-esshotn]').textContent));
+  assert.equal(await p.$('[data-esaddtag]'), null, 'no tags used yet');
+  await p.type('input[data-estags]', 'steps'); await p.keyboard.press('Enter');
+  for (let i = 0; i < 150 && (await exRecs(p)).length < 2; i++) await new Promise(r => setTimeout(r, 100));
+  const first = (await exRecs(p)).find(r => r.kind === 'shot');
+  assert.deepEqual([first.tags, first.watch], [['steps'], undefined]);
+  await p.waitForFunction(() => !document.querySelector('[data-esshot]'));
+  // D-058: the tag used is a chip that adds it; Enter in Why saves
+  await shot();
+  await p.waitForSelector('[data-esaddtag="steps"]');
+  await p.click('[data-esaddtag="steps"]');
+  assert.equal(await p.$eval('input[data-estags]', e => e.value), 'steps');
+  await p.type('input[data-eswhy]', 'Labels each step'); await p.keyboard.press('Enter');
+  for (let i = 0; i < 150 && (await exRecs(p)).length < 3; i++) await new Promise(r => setTimeout(r, 100));
+  const second = (await exRecs(p)).find(r => r.kind === 'shot' && r.id !== first.id);
+  assert.deepEqual([second.tags, second.why, second.letter], [['steps'], 'Labels each step', '2']);
+  const share = await p.evaluate(() => JSON.parse(JSON.stringify(window.__mark.state().batch.share.boxes)));
+  await p.evaluate(() => window.__mark.saved());
+  await p.goto(srv.url + 'blank'); await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.waitForFunction(() => window.__gs.exList().length === 3, { timeout: 30000 });
+  assert.deepEqual(await m.evaluate(() => window.__gs.exList().map(r => r.kind + ':' + (r.tags || []).join()).sort()), ['paper:', 'shot:steps', 'shot:steps']);
+  await m.evaluate(id => window.__gs.reopenKept(id), id);
+  await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  assert.deepEqual(await m.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().batch.share.boxes))), share);
   assert.deepEqual(errors, []);
   await ctx.close();
 });

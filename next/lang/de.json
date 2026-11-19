@@ -1148,7 +1148,6 @@
  "class.es_whole": "Ganze Arbeit",
  "class.es_part": "Seitenausschnitt",
  "class.es_part_say": "Ziehen Sie einen Rahmen um den Teil, den Sie behalten wollen. Namen werden endgültig geschwärzt.",
- "class.es_names_say": "Als Bilder mit endgültig geschwärzten Namen gespeichert. Um anderes abzudecken, nutzen Sie nach dem Speichern Teil abdecken.",
  "class.es_marks": "Meine Markierungen und Kommentare",
  "class.es_score": "Die Bewertung",
  "class.es_row": "Rasterkriterium",
@@ -6667,5 +6666,17 @@
  "class.ru_tick": "Wähle zuerst aus, was damit geschehen soll",
  "class.ru_set": "Das Raster für „{name}“ ist festgelegt",
  "class.ru_step": "ein hereingeholtes Raster",
- "class.ru_t": "Raster für „{name}“"
+ "class.ru_t": "Raster für „{name}“",
+ "class.es_n_covered": {
+  "one": "1 Name abgedeckt.",
+  "other": "{n} Namen abgedeckt."
+ },
+ "class.es_cover_say": "Ziehen Sie auf einer Seite, um anderes abzudecken, etwa einen handschriftlichen Namen oder eine Note. Klicken Sie auf eine Abdeckung, um sie zu entfernen.",
+ "class.es_shot_n": {
+  "one": "1 Bereich geschwärzt.",
+  "other": "{n} Bereiche geschwärzt."
+ },
+ "class.es_shot_paper": "Die Namensabdeckungen der Arbeit sind schon eingezeichnet.",
+ "class.es_shot_say": "Ziehen Sie über alles, was einen Namen zeigt, um es zu schwärzen. Klicken Sie auf ein schwarzes Feld, um es zu entfernen.",
+ "class.es_tags_used": "Bereits verwendete Schlagwörter"
 }
