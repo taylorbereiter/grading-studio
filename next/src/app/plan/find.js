@@ -6,6 +6,8 @@ import { go, PARTS } from '../router.js';
 import { loadPlan } from '../../planning/plan.js';
 import './cal-lines.js';
 import './lines.js';
+import '../screens/prefs-lines.js';
+import { plannerFolder } from '../../planning/folder.js';
 
 // Each unit by its title (src/planner/rail.js findRows units), read again each time the bar opens: it opens on its Course line.
 let unitCmds = [];
@@ -22,4 +24,14 @@ export function addPlanCommands() {
   // Search inside lessons for "…" (src/planner/rail.js, extras.js findDlg): slides, notes, documents and units, in Library > Search
   addCommand({ id: 'plan-search', query: true, label: q => t('cal.search_inside', { q }), group: t('cal.search'), icon: 'search', run: q => go('library', 'search', q) });
   addCommand({ id: 'plan-all', label: () => t('cal.all_lessons'), group: t('cmd.group_go'), icon: 'slides', run: () => go('calendar', 'all') });
+}
+
+// The Planner folder as one command (src/planner/rail.js): Link it, give permission again, or look in it, as it stands now.
+let folderCmd = null;
+export async function addFolderCommand() {
+  if (!('showDirectoryPicker' in window)) return;
+  const f = await plannerFolder().catch(() => null), how = !f ? 'link' : f.ok ? 'look' : 'permit';
+  if (folderCmd) folderCmd();
+  folderCmd = addCommand({ id: 'plan-folder', label: () => t(how === 'link' ? 'prefs.pf_link' : how === 'look' ? 'prefs.pf_look' : 'prefs.pf_permit'), also: t('prefs.pf_h'), group: t('cmd.group_do'), icon: 'folder',
+    run: () => PARTS.pfolder().then(m => m.folderDo(how)).catch(e => console.error(e)) });
 }

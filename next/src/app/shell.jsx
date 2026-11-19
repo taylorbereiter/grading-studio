@@ -112,6 +112,7 @@ function Sidebar({ route, classes, folded, onFold }) {
     </div>
   </nav>;
 }
+let lightWas = 'graphite';
 function pickLook(n) { if (!saveLook(n)) toast(t('look.not_kept')); }
 function useLookValue() {
   const [v, set] = useState(currentLook());
@@ -197,7 +198,10 @@ export function Shell() {
       (loadWhenOpened(() => import('./help/find.js').then(m => addLines.ready().then(() => m.addHelpCommands(shortcuts)), e => console.error(e))), () => {}),
       (loadWhenOpened(() => router.PARTS.planFind().then(m => addLines.ready().then(() => m.addPlanCommands()), e => console.error(e))), () => {}),
       (loadWhenOpened(() => router.PARTS.planFind().then(m => addLines.ready().then(() => m.addUnitCommands()), e => console.error(e)), true), () => {}),
+      (loadWhenOpened(() => router.PARTS.planFind().then(m => addLines.ready().then(() => m.addFolderCommand()), e => console.error(e)), true), () => {}),
       addCommand({ id: 'go-keys', label: () => t('keys.title'), group: t('cmd.group_go'), icon: 'keyboard', run: () => router.go('help', 'keys') }),
+      // Dark mode / Light mode flips between Midnight and the light theme she had (src/planner/rail.js); Change theme picks any
+      addCommand({ id: 'dark', label: () => t(currentLook() === 'midnight' ? 'cmd.light_mode' : 'cmd.dark_mode'), group: t('cmd.group_do'), icon: 'moon', run: () => { const was = currentLook(); if (was !== 'midnight') lightWas = was; pickLook(was === 'midnight' ? lightWas : 'midnight'); } }),
       addCommand({ id: 'theme', label: () => t('cmd.change_theme'), group: t('cmd.group_do'), icon: 'sun', run: () => router.go('settings', 'display') }),
       addCommand({ id: 'fold', label: () => t('keys.fold'), group: t('cmd.group_do'), icon: 'menu', keys: 'mod+\\', run: fold }),
     ];
