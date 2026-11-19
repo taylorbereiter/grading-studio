@@ -4,10 +4,10 @@
 // she comes back to the window (not while she is typing). What the assistant added or changed comes in through
 // planning/folder-read.js and shows as arrived and not reviewed (Arrived below) until she marks it Ready.
 // Loaded through router.js PARTS.pfolder, so Settings and the lesson page carry none of it until it is wanted.
-import { h, Fragment } from 'preact';
+import { h, Fragment, render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { Card, Button, Icon, toast } from '../../ui/index.js';
-import { t } from '../../i18n/t.js';
+import { t, addLines } from '../../i18n/t.js';
 import { assistant } from '../../services/assistant.js';
 import { plannerFolder } from '../../planning/folder.js';
 import { holdsGrading, linkPlannerFolder, writePlannerFolderAll } from '../../planning/folder-more.js';
@@ -16,6 +16,8 @@ import { saveVersion } from '../../planning/write.js';
 import { loadPlan } from '../../planning/plan.js';
 import { engine } from '../../planning/engine.js';
 import { saveFailed } from './save.js';
+import { onSaved } from '../../shared/saved.js';
+import { href } from '../router.js';
 import '../screens/prefs-lines.js';
 
 const inSample = () => !!(window.__gsSample && window.__gsSample.on);
@@ -32,12 +34,38 @@ function said(r, quiet) {
 }
 export const lookNow = quiet => readPlannerFolder().then(r => said(r, quiet), e => { console.error(e); if (!quiet) toast(t('prefs.pf_read_failed')); });
 
+// At rest, under "Saved" at the foot of the sidebar (the current Planner's rail "Not backed up"): when a folder linked before needs
+// permission again ('ask') or its link is gone ('lost'), a line that opens the folder's card. It lives here, in its own spot beside
+// the save line, so the first load carries none of it; gsn.pfWas remembers that a folder was linked in this browser.
+let warnNow = '', host = null;
+function WarnLine({ w }) {
+  return w ? <a href={href('settings', 'ai')} data-pfwarn={w} style={{ display: 'block', paddingLeft: '18px', color: 'var(--warn)', fontSize: 'var(--t1)' }}>{t(w === 'ask' ? 'prefs.pf_warn_ask' : 'prefs.pf_warn_lost')}</a> : null;
+}
+function placeWarn() {
+  const s = document.querySelector('.saved'); if (!s) return;
+  if (!host) host = document.createElement('div');
+  if (host.previousElementSibling !== s) s.after(host);
+  render(<WarnLine w={warnNow} />, host);
+}
+async function readWarn() {
+  const f = await plannerFolder().catch(() => null);
+  let was = false; try { if (f) localStorage.setItem('gsn.pfWas', '1'); was = localStorage.getItem('gsn.pfWas') === '1'; } catch { }
+  warnNow = inSample() ? '' : f ? (f.ok ? '' : 'ask') : was ? 'lost' : '';
+  if (warnNow) await addLines.ready();
+  placeWarn();
+}
+
 let watching = false;
 export function watchPlannerFolder() {
   if (watching) return; watching = true;
   const typing = () => { const a = document.activeElement; return !!a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable); };
   lookNow(true);
   window.addEventListener('focus', () => { if (!typing()) lookNow(true); });
+  readWarn();
+  onSaved(readWarn); setInterval(readWarn, 60000);
+  window.addEventListener('focus', readWarn); document.addEventListener('visibilitychange', () => { if (!document.hidden) readWarn(); });
+  // the sidebar is drawn again (folded, opened on a phone): put the line back beside the save line
+  let q = 0; new MutationObserver(() => { const sv = document.querySelector('.saved'); if (q || !sv || (host && host.isConnected && host.previousElementSibling === sv)) return; q = requestAnimationFrame(() => { q = 0; placeWarn(); }); }).observe(document.body, { childList: true, subtree: true });
 }
 
 async function link() {
@@ -50,7 +78,7 @@ async function link() {
     await linkPlannerFolder(h);
     await writePlannerFolderAll(await loadPlan(true));
     toast(t('prefs.pf_linked', { name: h.name }));
-    watchPlannerFolder();
+    watchPlannerFolder(); readWarn();
     return true;
   } catch (e) { console.error(e); saveFailed(e); return false; }
 }
@@ -58,7 +86,7 @@ async function permit() {
   const f = await plannerFolder(); if (!f) return false;
   let p = 'denied'; try { p = await f.dir.requestPermission({ mode: 'readwrite' }); } catch {}
   if (p !== 'granted') return false;
-  try { await lookNow(true); await writePlannerFolderAll(await loadPlan(true)); return true; } catch (e) { console.error(e); saveFailed(e); return false; }
+  try { await lookNow(true); await writePlannerFolderAll(await loadPlan(true)); readWarn(); return true; } catch (e) { console.error(e); saveFailed(e); return false; }
 }
 
 // The command bar's Planner folder command (plan/find.js addFolderCommand).

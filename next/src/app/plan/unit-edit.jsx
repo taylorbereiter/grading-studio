@@ -1,9 +1,11 @@
 // A unit, changed or made new from the Course line (design: Course line > unit), kept as the current Planner keeps units
 // (kv "units", src/planner/units.js normUnit, renderUnit, pasteWeeksDlg, unitDelete): its name, course, the Monday it starts,
 // how many weeks, the unit plan link, and each week's focus, standards and notes. The weeks can be typed or pasted as one line
-// each. Deleting a unit takes its files with it, as the Planner does; lessons stay. Saved with Save, as one.
+// each. Deleting a unit takes its files with it, as the Planner does; lessons stay. Saved with Save, as one. The current unit page
+// saved as she typed, so nothing typed is lost here either: closing with changes (Esc, the backdrop, ×, Cancel) asks first, and
+// leaving the page under the sheet, or the window, saves them.
 import { h, Fragment } from 'preact';
-import { useState, useId } from 'preact/hooks';
+import { useState, useId, useRef, useEffect } from 'preact/hooks';
 import { Sheet, Button, IconButton, Icon, TextInput, Select, Field, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { engine } from '../../planning/engine.js';
@@ -34,16 +36,32 @@ export function UnitSheet({ p, unit, courses, onClose }) {
   const E = engine(p);
   const [u, setU] = useState(() => copy(unit)), [paste, setPaste] = useState(null), [busy, setBusy] = useState(false), [sure, setSure] = useState(false);
   const isNew = !(p.units || []).some(x => x.id === unit.id);
-  const set = patch => setU({ ...u, ...patch });
+  const [ask, setAsk] = useState(false), first = useRef(JSON.stringify(unit)), now = useRef(u), done = useRef(false);
+  now.current = u;
+  const dirty = () => !done.current && JSON.stringify(now.current) !== first.current;
+  const set = patch => { setAsk(false); setU({ ...u, ...patch }); };
   const week = (i, patch) => set({ weeks: u.weeks.map((w, j) => j === i ? { ...w, ...patch } : w) });
-  const write = async list => { setBusy(true); try { await saveKv('units', list); onClose(true); } catch (e) { saveFailed(e); } finally { setBusy(false); } };
+  const write = async list => { setBusy(true); try { await saveKv('units', list); done.current = true; onClose(true); } catch (e) { saveFailed(e); } finally { setBusy(false); } };
+  const made = (x, loose) => {
+    const n = E.normUnit({ ...x, title: x.title.trim() || (loose ? t('cal.untitled_unit') : ''), atlas: (x.atlas || '').trim(), updated: Date.now() });
+    if (unit._file) n._file = unit._file; if (unit._mod) n._mod = unit._mod;
+    const list = (p.units || []).filter(y => y.id !== n.id); list.push(n); return list;
+  };
   const save = () => {
     if (!u.title.trim()) return toast(t('plan.unit_needs_name'));
     if (u.atlas && !/^https?:\/\//.test(u.atlas.trim())) return toast(t('plan.link_bad'));
-    const n = E.normUnit({ ...u, title: u.title.trim(), atlas: (u.atlas || '').trim(), updated: Date.now() });
-    if (unit._file) n._file = unit._file; if (unit._mod) n._mod = unit._mod;
-    const list = (p.units || []).filter(x => x.id !== n.id); list.push(n); write(list);
+    write(made(u));
   };
+  // Esc, the backdrop, × and Cancel: with nothing changed it closes; with changes it asks Save, Discard or Keep editing.
+  const close = () => { if (!dirty()) { done.current = true; return onClose(false); } setAsk(true); };
+  const discard = () => { done.current = true; onClose(false); };
+  // The page changed under the sheet, or the window is closing: there is no one to ask, so what she typed is saved as it is.
+  useEffect(() => {
+    const away = () => { if (!dirty()) return; done.current = true; saveKv('units', made(now.current, true)).then(() => toast(t('cal.unit_saved_away', { name: now.current.title.trim() || t('cal.untitled_unit') })), e => saveFailed(e)); };
+    const leaving = e => { if (dirty()) { e.preventDefault(); e.returnValue = ''; } };
+    window.addEventListener('beforeunload', leaving);
+    return () => { window.removeEventListener('beforeunload', leaving); away(); };
+  }, []);
   const remove = async () => {
     if (!sure) return setSure(true);
     for (const f of unit.files || []) if (f.id) await dropLessonFile(f.id).catch(e => console.error(e));
@@ -57,9 +75,12 @@ export function UnitSheet({ p, unit, courses, onClose }) {
   const mon = s => date(at(s), { day: 'numeric', month: 'short' });
   // One week fewer; when the last week has writing in it, it can be had back (src/planner/units.js asks first).
   const fewer = () => { const last = u.weeks[u.weeks.length - 1], was = u; set({ weeks: u.weeks.slice(0, -1) }); if (writing(last)) toast(t('cal.week_off', { n: u.weeks.length }), { undo: () => setU(was) }); };
-  return <Sheet open wide title={isNew ? t('plan.new_unit') : t('plan.edit_unit')} icon={<Icon name="cal" />} onClose={() => onClose(false)}
-    footer={<>{!isNew && <Button variant="quiet" disabled={busy} onClick={remove} data-focus="delete-unit">{sure ? t('plan.delete_unit_sure') : t('plan.delete_unit')}</Button>}<span class="grow" />
-      <Button variant="quiet" onClick={() => onClose(false)}>{t('common.cancel')}</Button><Button variant="primary" disabled={busy} onClick={save} data-focus="save-unit">{t('common.save')}</Button></>}>
+  return <Sheet open wide title={isNew ? t('plan.new_unit') : t('plan.edit_unit')} icon={<Icon name="cal" />} onClose={close}
+    footer={ask ? <><span class="grow uask" role="alert" data-unit-ask>{t('cal.unit_unsaved')}</span>
+      <Button variant="quiet" onClick={discard} data-focus="unit-discard">{t('cal.unit_discard')}</Button><Button variant="quiet" onClick={() => setAsk(false)} data-focus="unit-keep">{t('cal.keep_editing')}</Button>
+      <Button variant="primary" disabled={busy} onClick={save} data-focus="save-unit" autoFocus>{t('common.save')}</Button></>
+      : <>{!isNew && <Button variant="quiet" disabled={busy} onClick={remove} data-focus="delete-unit">{sure ? t('plan.delete_unit_sure') : t('plan.delete_unit')}</Button>}<span class="grow" />
+      <Button variant="quiet" onClick={close} data-unit-cancel>{t('common.cancel')}</Button><Button variant="primary" disabled={busy} onClick={save} data-focus="save-unit">{t('common.save')}</Button></>}>
     <div class="unitedit">
       <TextInput label={t('plan.unit_name')} value={u.title} onInput={v => set({ title: v })} data-focus="unit-name" />
       <div class="row">

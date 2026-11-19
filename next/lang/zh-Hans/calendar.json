@@ -134,5 +134,10 @@
  "cal.search_slide": "{title}，第 {n} 张幻灯片",
  "cal.search_nb": "{title}，笔记本",
  "cal.search_in": "在“{title}”中",
- "cal.search_no_class": "不在任何班级"
+ "cal.search_no_class": "不在任何班级",
+ "cal.unit_unsaved": "此单元有尚未保存的更改。",
+ "cal.unit_discard": "放弃更改",
+ "cal.keep_editing": "继续编辑",
+ "cal.unit_saved_away": "已保存你对 {name} 的更改。",
+ "cal.untitled_unit": "未命名单元"
 }

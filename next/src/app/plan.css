@@ -480,3 +480,7 @@ button.prclock{border:0;cursor:pointer}
 .calendar .sem .now > * { background: color-mix(in srgb, var(--acc) 12%, transparent); }
 .calendar .sem .past > * { opacity: .7; }
 @media (max-width: 640px) { .calendar .ahh .pace { margin-left: 0; } }
+
+/* the unit sheet asking before it closes: on a phone the question takes its own line above the buttons */
+.sheet footer:has(.uask) { flex-wrap: wrap; }
+@media (max-width: 600px) { .sheet footer .uask { flex-basis: 100%; } }
