@@ -165,5 +165,8 @@
  "drive.offline": "Não foi possível acessar o Google. Verifique a conexão com a internet.",
  "drive.failed": "Isso não veio do Google Drive. Tente de novo.",
  "cmd.dark_mode": "Modo escuro",
- "cmd.light_mode": "Modo claro"
+ "cmd.light_mode": "Modo claro",
+ "update.wait_save": "Seu trabalho mais recente ainda não foi salvo, então a atualização está esperando. Veja a barra vermelha.",
+ "update.stale": "Outra janela foi atualizada. Esta janela ainda está na versão anterior.",
+ "update.reload": "Recarregar esta janela"
 }

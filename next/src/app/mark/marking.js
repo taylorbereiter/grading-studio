@@ -3,6 +3,7 @@
 // how to show a change (the toolbar, the list), how to say something (a toast), how to type a text box or a comment
 // (mark/editors.js), and where a save goes. The lifted saveNow builds the same record the current app builds and hands it to
 // writeWork, which saves it through students/write.js saveWork: the only way the new app writes a download's work.
+import { saveFailed, saveWorked, addFlush } from '../saving/trouble.js';
 import * as K from '../../engines/gmark.js';
 import { use, state, COLORS, setCheckInk, rowSteps, rowTop, roundPct, pointsFor, gradeOf, totalInk } from '../../engines/gcore.js';
 import { bboxOf, stampBox, drawStamp } from '../../engines/gdraw.js';
@@ -180,12 +181,20 @@ async function writeWork(b, data) {
     const r = await W.saveWork(b.id, d => Object.assign(d, JSON.parse(JSON.stringify(data))), { fresh: !!b.fresh, hold: b });
     if (r.full || r.quick) delete b.fresh;
     if (seq === saveSeq) saveState = r.full ? 'saved' : r.quick ? 'partly' : 'not';
+    if (r.full) saveWorked(b.id); else if (seq === saveSeq || b !== state().batch) saveFailed(b.id, again(b, data), r.quick);   // the red bar (saving/trouble.js)
   } catch (e) {
     console.error(e);
     if (seq === saveSeq) saveState = e && e.name === 'CannotSave' ? 'cannot:' + e.why : 'not';
+    if (!(e && e.name === 'CannotSave')) saveFailed(b.id, again(b, data), false);
   }
   tell();
 }
+// Tried again (src/saving.js saveRetry): a download still open is saved as it is now; one she has closed, as she left it.
+const again = (b, data) => async () => {
+  if (state().batch !== b) return writeWork(b, data);
+  clearTimeout(saveT); saveT = null; saveState = 'saving'; K.saveNow();
+  while (saveState === 'saving') await new Promise(r => setTimeout(r, 30));
+};
 // Waits for a save that is due and any under way (for leaving the screen, and for the checks).
 // Word edits waiting out their pause (mark/word.js) are written first.
 export const flushers = new Set();
@@ -223,7 +232,7 @@ function reach(pg) {
 function onLeave() { if (!saveT && !state().activeEditor) return; leaving = true; try { K.commitEditors(); clearTimeout(saveT); saveT = null; K.saveNow(true); } finally { leaving = false; } }
 let leaveOn = false;
 export function startMarking({ toast, openStudent }) {
-  if (!leaveOn) { leaveOn = true; addEventListener('pagehide', onLeave); }
+  if (!leaveOn) { leaveOn = true; addEventListener('pagehide', onLeave); addFlush(saveNowDone); }   // and saved before an update reloads the window
   // the save layer and its merge engine, ready before anything needs saving on the way out
   PARTS.write().then(w => { W0 = w; return w.leavingReady(); }).catch(e => console.error(e));
   loadTools();
