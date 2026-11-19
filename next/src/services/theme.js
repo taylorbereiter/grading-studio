@@ -3,7 +3,7 @@
 // written back. The current app's gs.theme is left alone. Never follows the computer's light or dark setting.
 import { json } from '../shared/ls.js';
 import { savePref } from '../planning/write.js';
-import { LOOKS, DEFAULT_LOOK } from '../ui/tokens.js';
+import { LOOKS, DEFAULT_LOOK } from '../ui/looks.js';
 
 const listeners = new Set();
 export const looks = () => LOOKS.slice();

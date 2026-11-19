@@ -16,7 +16,7 @@ import { fullCan, fullToggle } from '../services/size.js';
 import { lockState, onLockChange } from '../shared/lock.js';
 import { stopped as tabsStopped, onStopped } from '../shared/tabs.js';
 import { onLook, currentLook, saveLook } from '../services/theme.js';
-import { LOOKS, THEMES } from '../ui/tokens.js';
+import { LOOKS, SWATCH } from '../ui/looks.js';
 import { classesForHome, todoCountForSidebar } from '../crossings.js';
 import { askAdd } from './todo-add.js';
 import { runner, openFocus } from './focus/bus.js';
@@ -105,7 +105,7 @@ function Sidebar({ route, classes, folded, onFold }) {
     {ai.link && <a class="nav" href={ai.link} target="_blank" rel="noopener"><Icon name="assist" /><span>{ai.name ? t('assistant.open_named', { name: ai.name }) : t('assistant.open_generic')}</span></a>}
     <div class="sfoot">
       <div class="swatches" role="radiogroup" aria-label={t('look.title')}>
-        {LOOKS.map(n => <button type="button" role="radio" class="swt" aria-checked={String(n === look)} aria-label={t(LOOK_LINES[n][0])} style={{ '--sa': THEMES[n].acc, '--sb2': THEMES[n].bg }} onClick={() => pickLook(n)} />)}
+        {LOOKS.map(n => <button type="button" role="radio" class="swt" aria-checked={String(n === look)} aria-label={t(LOOK_LINES[n][0])} style={{ '--sa': SWATCH[n][0], '--sb2': SWATCH[n][1] }} onClick={() => pickLook(n)} />)}
       </div>
       <UpdateLine />
       <SavedLine />

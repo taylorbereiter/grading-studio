@@ -6,6 +6,7 @@
 import { h, Fragment, render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import * as P from '../ui/index.js';
+import { THEMES, SCALE } from '../ui/tokens.js';
 import { t, setMode, addLines } from '../i18n/t.js';
 import GALLERY_LINES from '../../lang/gallery.en.json';
 import { applyLook, savedLook, onLook } from '../services/theme.js';
@@ -37,12 +38,12 @@ function Sec({ id, title, children }) {
 const Row = ({ label, children }) => <div class="grow"><span class="glab">{label}</span><div class="gitems">{children}</div></div>;
 
 function Tokens({ look }) {
-  const th = P.THEMES[look];
+  const th = THEMES[look];
   const names = ['bg', 's', 'g100', 'g200', 'edge', 'faint', 'mute', 'ink2', 'ink', 'acc', 'accSoft', 'accInk', 'ok', 'warn', 'pen', 'inv'];
   return <>
     <Row label={t('gallery.colours')}><div class="sws">{names.map(n => <span class="swc"><i style={{ background: th[n] }} /><code>{n}</code></span>)}</div></Row>
     <Row label={t('gallery.class_colours')}>{th.cls.map((c, i) => <P.ClassDot color={c} size="lg" label={t('gallery.class_colour_n', { n: i + 1 })} />)}</Row>
-    <Row label={t('gallery.type')}><div class="gtype">{[6, 5, 4, 3, 2, 1].map(n => <span style={{ fontSize: 'var(--t' + n + ')', fontWeight: n > 4 ? 600 : 400 }}>{t('gallery.type_sample', { n: P.SCALE['t' + n] })}</span>)}</div></Row>
+    <Row label={t('gallery.type')}><div class="gtype">{[6, 5, 4, 3, 2, 1].map(n => <span style={{ fontSize: 'var(--t' + n + ')', fontWeight: n > 4 ? 600 : 400 }}>{t('gallery.type_sample', { n: SCALE['t' + n] })}</span>)}</div></Row>
     <Row label={t('gallery.surfaces')}>{['sh-r', 'sh-r2', 'sh-f'].map(s => <span class="gshadow" style={{ boxShadow: 'var(--' + s + ')' }}><code>{s}</code></span>)}</Row>
   </>;
 }
@@ -112,7 +113,7 @@ function Gallery() {
       <Sec id="choices" title={t('gallery.sec_choices')}>
         <Row label={t('gallery.segmented')}><P.Segmented label={t('gallery.view')} value={seg} onChange={setSeg} options={[{ value: 'class', label: t('gallery.by_class') }, { value: 'week', label: t('gallery.by_time') }, { value: 'month', label: t('gallery.month') }]} /><P.Segmented size="sm" label={t('gallery.score_as')} value="pct" options={[{ value: 'pct', label: '%' }, { value: 'pts', label: t('gallery.points') }]} /><P.Segmented label={t('gallery.view')} value="a" disabled options={[{ value: 'a', label: t('gallery.state_disabled') }, { value: 'b', label: t('gallery.month') }]} /></Row>
         <Row label={t('gallery.tabs')}><div style={{ flex: 1 }}><P.Tabs label={t('gallery.class_page')} value={tab} onChange={setTab} tabs={[{ id: 'lessons', label: t('gallery.tab_line'), icon: 'line' }, { id: 'people', label: t('gallery.tab_people'), count: 24 }, { id: 'grades', label: t('gallery.tab_grades') }, { id: 'goals', label: t('gallery.tab_goals'), disabled: true }]} /></div></Row>
-        <Row label={t('gallery.chips')}>{[0, 1, 2].map(i => <P.Chip on={chips[i]} color={P.THEMES[look].cls[i]} onClick={() => setChips(c => ({ ...c, [i]: !c[i] }))}><N>{['9A', '10B', '11C'][i]}</N></P.Chip>)}<P.Chip on icon="spark">{t('gallery.worked_out')}</P.Chip><P.Chip disabled>{t('gallery.state_disabled')}</P.Chip></Row>
+        <Row label={t('gallery.chips')}>{[0, 1, 2].map(i => <P.Chip on={chips[i]} color={THEMES[look].cls[i]} onClick={() => setChips(c => ({ ...c, [i]: !c[i] }))}><N>{['9A', '10B', '11C'][i]}</N></P.Chip>)}<P.Chip on icon="spark">{t('gallery.worked_out')}</P.Chip><P.Chip disabled>{t('gallery.state_disabled')}</P.Chip></Row>
         <Row label={t('gallery.checks')}><P.Checkbox label={t('gallery.check_returned')} checked={cb} onChange={setCb} /><P.Checkbox label={t('gallery.check_off')} checked={false} /><P.Checkbox round label={t('gallery.check_todo')} checked /><P.Checkbox label={t('gallery.state_disabled')} checked disabled /></Row>
         <Row label={t('gallery.switches')}><P.Switch label={t('gallery.switch_att')} checked={sw} onChange={setSw} /><P.Switch label={t('gallery.switch_off')} checked={false} /><P.Switch label={t('gallery.state_disabled')} checked disabled /></Row>
         <Row label={t('gallery.slider')}><div style={{ width: 280 }}><P.Slider label={t('gallery.slider_label')} value={sl} onInput={setSl} format={v => t('gallery.minutes', { n: v })} min={5} max={90} step={5} /></div><div style={{ width: 200 }}><P.Slider label={t('gallery.state_disabled')} value={30} disabled /></div></Row>
@@ -143,9 +144,9 @@ function Gallery() {
         <Row label={t('gallery.side_nav')}><nav class="gside" aria-label={t('gallery.side_nav')}>
           {['home', 'todo', 'cal', 'library'].map(n => <P.NavItem icon={n} label={t(NAV[n])} current={nav === n} count={n === 'todo' ? 7 : undefined} onClick={() => setNav(n)} />)}
           <P.NavSection>{t('gallery.nav_classes')}</P.NavSection>
-          {[0, 1, 2].map(i => <P.NavItem color={P.THEMES[look].cls[i]} label={<N>{['9A English', '10B English', '11C Literature'][i]}</N>} current={nav === 'c' + i} onClick={() => setNav('c' + i)} />)}
+          {[0, 1, 2].map(i => <P.NavItem color={THEMES[look].cls[i]} label={<N>{['9A English', '10B English', '11C Literature'][i]}</N>} current={nav === 'c' + i} onClick={() => setNav('c' + i)} />)}
         </nav></Row>
-        <Row label={t('gallery.dots')}>{PEOPLE.slice(0, 4).map(n => <P.Avatar name={n} />)}<P.Avatar name={PEOPLE[4]} size="lg" />{P.THEMES[look].cls.slice(0, 5).map(c => <P.ClassDot color={c} />)}</Row>
+        <Row label={t('gallery.dots')}>{PEOPLE.slice(0, 4).map(n => <P.Avatar name={n} />)}<P.Avatar name={PEOPLE[4]} size="lg" />{THEMES[look].cls.slice(0, 5).map(c => <P.ClassDot color={c} />)}</Row>
       </Sec>
       <Sec id="feedback" title={t('gallery.sec_feedback')}>
         <div class="ggrid2"><P.Card pad={false}><P.EmptyState icon="inbox" title={t('gallery.empty_title')} text={t('gallery.empty_text')} action={<P.Button variant="primary" icon="plus">{t('gallery.empty_action')}</P.Button>} /></P.Card>
@@ -209,7 +210,7 @@ function Gallery() {
 function Top({ look, width, setWidth }) {
   return <header class="gtop"><span class="glogo"><P.Icon name="check" /></span><h1>{t('gallery.title')}</h1>
     <div class="gtopr"><P.Segmented size="sm" label={t('gallery.width')} value={width} onChange={setWidth} options={[{ value: 'wide', label: t('gallery.width_wide'), icon: 'week' }, { value: 'phone', label: t('gallery.width_phone'), icon: 'phone' }]} />
-      <div class="gthemes" role="radiogroup" aria-label={t('look.title')}>{P.LOOKS.map(n => <button type="button" role="radio" aria-checked={String(n === look)} aria-label={t(P.LOOK_LINES[n][0])} title={t(P.LOOK_LINES[n][0])} class="gsw" style={{ '--sa': P.THEMES[n].acc, '--sb2': P.THEMES[n].bg }} onClick={() => applyLook(n)} />)}</div></div>
+      <div class="gthemes" role="radiogroup" aria-label={t('look.title')}>{P.LOOKS.map(n => <button type="button" role="radio" aria-checked={String(n === look)} aria-label={t(P.LOOK_LINES[n][0])} title={t(P.LOOK_LINES[n][0])} class="gsw" style={{ '--sa': THEMES[n].acc, '--sb2': THEMES[n].bg }} onClick={() => applyLook(n)} />)}</div></div>
   </header>;
 }
 render(<Gallery />, document.getElementById('app'));

@@ -56,3 +56,10 @@ test('parts.css draws only with tokens, and never uses a not-for-text token as t
   const kebab = k => k.replace(/[A-Z]/g, c => '-' + c.toLowerCase());
   for (const m of css.matchAll(/(?:^|[;{\s])color:\s*var\(--([\w-]+)\)/g)) assert.ok(!NOT_TEXT.map(kebab).includes(m[1]), '--' + m[1] + ' used for text');
 });
+// The first load reads the swatches and Ocean's class colours from ui/looks.js, written out so it doesn't bring THEMES: they must match.
+test('looks.js swatches match the themes', async () => {
+  const T = await import('../src/ui/tokens.js'), L = await import('../src/ui/looks.js');
+  for (const n of L.LOOKS) assert.deepEqual(L.SWATCH[n], [T.THEMES[n].acc, T.THEMES[n].bg], n);
+  assert.deepEqual(Object.keys(L.SWATCH), L.LOOKS);
+  assert.deepEqual(L.OCEAN_CLS, T.THEMES.ocean.cls);
+});
