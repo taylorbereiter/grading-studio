@@ -135,7 +135,7 @@ test('Find reaches every assignment, each class page, the common jobs and the sh
     await p.waitForSelector('dialog.cmd[open]');
     await p.waitForFunction(() => document.activeElement && document.activeElement.matches('dialog.cmd input'));
     await p.keyboard.type(say);
-    await p.waitForFunction(s => { const o = document.querySelector('dialog.cmd[open] [role="option"][aria-selected="true"]'); return o && o.textContent.includes(s); }, { timeout: 10000 }, say);
+    await p.waitForFunction(s => { const o = document.querySelector('dialog.cmd[open] [role="option"][aria-selected="true"]'); return o && o.textContent.includes(s) && !o.textContent.startsWith('Search inside'); }, { timeout: 10000 }, say);   // not the row that searches inside lessons for what was typed
     await p.keyboard.press('Enter');
     await p.waitForFunction(h => decodeURIComponent(location.hash) === h, { timeout: 10000 }, to);
   }

@@ -230,7 +230,9 @@ export default function LessonPage({ route }) {
   const PresentMod = usePart('present'), Tools = usePart('tools'), EditMod = usePart('edit', view === 'edit'), Side2 = usePart('beside', beside), Pf = usePart('pfolder', arrived(l));
   const ask = i => { setRedo(typeof i === 'number' ? i : null); setAsking(true); };
   // Planned from the Calendar "with your assistant": the assistant sheet opens on arrival, once.
-  useEffect(() => { try { if (l && sessionStorage.getItem('gsn.ask') === l.id) { sessionStorage.removeItem('gsn.ask'); ask(); } } catch { } if (l && route.params.view === 'present') setPresenting(true); }, [l && l.id]);
+  useEffect(() => { try { if (l && sessionStorage.getItem('gsn.ask') === l.id) { sessionStorage.removeItem('gsn.ask'); ask(); }
+    // a search hit (plan/search.jsx): the lesson opened at its slide or its document
+    const at = l && JSON.parse(sessionStorage.getItem('gsn.at') || 'null'); if (at && at.id === l.id) { sessionStorage.removeItem('gsn.at'); if (at.doc) setTool({ name: 'doc', arg: at.doc }); else if (at.slide >= 0) { setCur(at.slide); setView('slides'); } } } catch { } if (l && route.params.view === 'present') setPresenting(true); }, [l && l.id]);
   const dl = () => (l.final && Tools ? (Tools.finFresh(l) ? Tools.downloadFinal(l) : setTool({ name: 'which' })) : download(p, l));
   // A tool from a menu: the ones that are only a download run at once, the others open their sheet.
   const onTool = (name, arg) => {
