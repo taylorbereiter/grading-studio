@@ -274,11 +274,13 @@ function unitRef(p, x) {
   return u ? { id: u.id, course: u.course, title: u.title } : null;
 }
 
-let running = null;
-export function readPlannerFolder() {
-  return (running ||= withFolderLock(async token => {
-    const out = { added: 0, changed: 0 };
-    try {
+async function scanLinkedFolder() {
+  const out = { added: 0, changed: 0 };
+  try {
+    // Unlinked and sample windows do not perform folder I/O or take a folder lock.
+    if (!(await plannerFolder({ strict: true }))?.ok) return null;
+    return await withFolderLock(async token => {
+      // The teacher can change the link or its permission while this scan is queued.
       const f = await plannerFolder({ strict: true }); if (!f || !f.ok) return null;
       f.lock = token;
       let p = await readImportPlan();
@@ -297,6 +299,11 @@ export function readPlannerFolder() {
       await readProfile(f, p, E, P);
       await readBank(f, p, P, out);
       return out;
-    } catch (e) { console.error(e); return { ...out, failed: true }; }
-  }).finally(() => { running = null; }));
+    });
+  } catch (e) { console.error(e); return { ...out, failed: true }; }
+}
+
+let running = null;
+export function readPlannerFolder() {
+  return (running ||= scanLinkedFolder().finally(() => { running = null; }));
 }
