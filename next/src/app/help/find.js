@@ -6,7 +6,7 @@
 // the open assignment are the marking screen's own commands (screens/mark.jsx).
 import { addCommand, loadWhenOpened } from '../../services/commands.js';
 import { t } from '../../i18n/t.js';
-import { go, PARTS } from '../router.js';
+import { go, PARTS, current } from '../router.js';
 import { TOPICS } from './topics.js';
 import './lines.js';
 import '../saving/lines.js';
@@ -23,7 +23,7 @@ export function addHelpCommands(keys) {
 }
 
 let mine = [];
-const JOBS = [['help.cmd_open_work', 'upload', 'work'], ['help.cmd_open_folder', 'folder', 'work'], ['help.cmd_split', 'image', 'work'], ['help.cmd_match', 'people', 'work'], ['help.cmd_add_class', 'plus', 'new'], ['help.cmd_gc', 'school', 'new']];
+const JOBS = [['help.cmd_open_work', 'upload', 'work'], ['help.cmd_open_folder', 'folder', 'work'], ['help.cmd_split', 'image', 'work'], ['help.cmd_match', 'people', 'work'], ['help.cmd_new_asg', 'plus', 'asg'], ['help.cmd_add_class', 'plus', 'new'], ['help.cmd_gc', 'school', 'new']];
 const PAGES = [['work', 'help.cmd_p_work'], ['people', 'help.cmd_p_people'], ['grades', 'help.cmd_p_grades'], ['todo', 'help.cmd_p_todo']];
 async function findRows() {
   const [rows, S] = await Promise.all([PARTS.asgRows().then(m => m.assignmentRows()), import('../sample.js')]);
@@ -31,7 +31,7 @@ async function findRows() {
   const add = c => mine.push(addCommand(c)), firstCls = (await import('../../crossings.js').then(m => m.classesForHome()).catch(() => [])).filter(c => !c.loose);
   for (const r of rows) add({ id: 'asg-' + r.id, label: r.name || t('help.cmd_asg'), also: (r.cls || t('help.cmd_no_class')) + ' ' + r.unit, group: t('help.cmd_asg'), icon: 'grades', run: () => go('mark', r.id) });
   for (const c of firstCls) for (const [k, line] of PAGES) add({ id: 'cp-' + c.id + '-' + k, label: t(line, { name: c.name }), group: t('help.cmd_pages'), icon: 'people', run: () => go('class', c.id, k) });
-  for (const [k, icon, to] of JOBS) add({ id: 'job-' + k, label: t(k), group: t('cmd.group_do'), icon, run: () => (to === 'new' ? go('class', 'new') : go('class', firstCls[0] ? firstCls[0].id : '-', 'work')) });
+  for (const [k, icon, to] of JOBS) add({ id: 'job-' + k, label: t(k), group: t('cmd.group_do'), icon, run: () => (to === 'new' ? go('class', 'new') : go('class', to === 'asg' && /^class\//.test(current().pattern || '') && current().params.id !== 'new' ? current().params.id : firstCls[0] ? firstCls[0].id : '-', 'work', to === 'asg' ? 'new' : null)) });
   add(S.sampleOn() ? { id: 'job-sample', label: t('help.cmd_leave_sample'), group: t('cmd.group_do'), icon: 'x', run: S.leaveSample } : { id: 'job-sample', label: t('help.cmd_sample'), group: t('cmd.group_do'), icon: 'spark', run: () => S.enterSample() });
   for (const s of keyList()) if (!s.hidden && !/^(command-bar|fold|undo|redo|mark-(next|prev|score|nudge.*))$/.test(s.id)) add({ id: 'key-' + s.id, label: t(s.label), also: s.group ? t(s.group) : '', group: t('cmd.group_do'), icon: 'keyboard', keys: s.keys[0], when: s.when, run: () => s.run({ shiftKey: false, preventDefault() {} }) });
 }

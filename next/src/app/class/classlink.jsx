@@ -29,3 +29,4 @@ function LinkDialog({ c, sys, url, onClose }) {
     actions={<><Button onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" onClick={save} data-clink-save>{t('class.save')}</Button></>}>
     <TextInput label={t('class.cl_label')} hint={t('class.cl_hint')} value={v} maxLength={500} onInput={setV} onKeyDown={e => { if (e.key === 'Enter') save(); }} data-clink-url autoFocus /></Dialog>;
 }
+

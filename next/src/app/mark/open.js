@@ -8,7 +8,7 @@ import { meGrade, useLib } from '../../engines/gways.js';
 import { useStore } from '../../engines/gstore.js';
 import { prefs } from '../../students/prefs.js';
 import { library, gradingSetup, meta } from '../../students/index.js';
-import { keepPapers, saveLibrary, saveWork } from '../../students/write.js';
+import { keepPapers, saveLibrary, saveWork, bringBack } from '../../students/write.js';
 import * as K from './carry.js';
 import { PARTS } from '../router.js';
 import { setOpenWork } from '../openwork.js';
@@ -114,7 +114,10 @@ export async function bringIn(entries, { label, assignment, question, carry, dri
   const r = await assemble({ raw: got.raw, label: got.label, students, lib, assignment, question, earlier, paperList });
   if (!r) return null;
   const b = r.batch;
+  // a download she forgot, brought in again: kept, and saved straight away so it stays (src/folder.js folderPapers)
+  const back = bringBack(id);
   await keepPapers(b, got.label, keepList);
+  if (back && !earlier && !drive && !sameSize.length && !(b.fresh && b.keptWork && b.keptWork.scan)) await saveWork(id, d => { d.s = d.s || {}; }, { fresh: true });
   // the carried work is this download's first saved work, so it is there when the papers open for marking
   if (earlier) { const kw = b.keptWork; await saveWork(id, d => { for (const k of Object.keys(kw)) if (k !== 't' && kw[k] !== undefined) d[k] = kw[k]; }, { fresh: true }); carriedNow = id; }
   else if (b.fresh && b.keptWork && b.keptWork.scan) await saveWork(id, d => { d.s = {}; d.scan = b.keptWork.scan; }, { fresh: true });

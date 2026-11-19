@@ -76,6 +76,8 @@ export const PARTS = {
   write: () => import('../students/write.js'),
   // a class's assignments, and bringing papers in for one (the opening engine loads only when papers come in)
   work: () => import('./screens/class-work.jsx'),
+  // an assignment made, changed or deleted there, and its less common tools (no papers, forget, a unit's link)
+  asg: () => import('./class/assignment.jsx'),
   // a class's People and Grades tabs (app/class/), each with the gradebook's engine
   people: () => import('./class/people.jsx'),
   clink: () => import('./class/classlink.jsx'),

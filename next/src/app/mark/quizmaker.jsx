@@ -11,7 +11,8 @@ import { Button, IconButton, Segmented, Checkbox, toast, useModal } from '../../
 import { fmtNum } from '../../engines/gcore.js';
 import * as K from '../../engines/gqmake.js';
 import { libraryChange } from '../../students/undo.js';
-import { t } from '../../i18n/t.js';
+import { t, useLanguage } from '../../i18n/t.js';
+import { lines } from '../lang-load.js';
 import './lines.js';
 import './paper-lines.js';
 import '../engine-lines.js';   // the engines' own words (a printed quiz) in the language
@@ -23,9 +24,24 @@ const TYPES = () => [['mc', t('paper.qf_mc')], ['tf', t('paper.qf_tf')], ['ms', 
 function pageCss() { if (document.getElementById('qfPageCss')) return; const s = document.createElement('style'); s.id = 'qfPageCss'; s.textContent = K.QMK_CSS + '.qfprobe{position:absolute;left:-9999px;top:0;visibility:hidden}'; document.head.appendChild(s); }
 const itemIn = (l, id) => { for (const c of [...l.classes, l.loose]) for (const u of c.units) { const it = u.items.find(x => x.id === id); if (it) return { c, u, it }; } return null; };
 
+// The language a quiz's pages are laid out and printed in. Its words are in the pages, so another language moves the bubbles: once
+// copies are printed (m.lay), the quiz keeps the language they were printed in (m.lang), so printing again, or saving it from a
+// screen in another language, leaves the bubbles where the printed copies have them and the scan still reads them. A quiz printed
+// before m.lang was kept was printed in English: the current app's printed quiz is always English (src/quizmake.js).
+// The language on screen is the page's (app/language.js setLanguage, at the start).
+const onScreen = () => document.documentElement.lang || 'en';
+const printedIn = m => (m.lay != null ? m.lang || 'en' : onScreen());
+// Runs fn (it draws or measures pages, synchronously) with the engines' words in the quiz's language; lang is from langFor.
+const inLang = (lang, fn) => { if (!lang) return fn(); useLanguage(lang.code, lang.lines); try { return fn(); } finally { useLanguage(lang.now, lang.was); } };
+async function langFor(m) {
+  const now = onScreen(), code = printedIn(m);
+  if (code === now) return null;
+  const [was, l] = await Promise.all([lines(now), lines(code)]);
+  return { code, lines: l, now, was };
+}
 // Every student's copy with their name, in roster order, then the blank copies (qmkPrint).
-export function printQuiz(it, m, names) {
-  const all = [...names, ...Array(m.blank || 0).fill('')].flatMap((n, k) => K.qmkPages(m, it.name, n, n ? k + 1 : 0));
+export function printQuiz(it, m, names, lang) {
+  const all = inLang(lang, () => [...names, ...Array(m.blank || 0).fill('')].flatMap((n, k) => K.qmkPages(m, it.name, n, n ? k + 1 : 0)));
   const w = window.open('', '_blank'); if (!w) return toast(t('paper.qf_blocked'));
   const fonts = [...document.styleSheets].map(s => { try { return [...s.cssRules].filter(r => r instanceof CSSFontFaceRule).map(r => r.cssText).join('\n'); } catch { return ''; } }).join('\n');
   const title = String(it.name).replace(/[<&]/g, c => (c === '<' ? '&lt;' : '&amp;'));
@@ -64,6 +80,11 @@ export function QuizMaker({ it, names, onClose }) {
   const [sel, setSel] = useState(0), [show, setShow] = useState(false), [, again] = useState(0), [busy, setBusy] = useState(false);
   const re = () => again(n => n + 1);
   const p = useModal(true, onClose), ed = useRef();
+  // the quiz's language, when it is not the screen's (printedIn): the preview shows the pages as they print
+  const L = useRef(null);
+  if (!L.current) L.current = langFor(m).catch(e => { console.error(e); return null; });
+  const [lang, setLang] = useState(null);
+  useEffect(() => { L.current.then(setLang); }, []);
   const set = (i, what) => {
     if (what === 'up') { [m.items[i - 1], m.items[i]] = [m.items[i], m.items[i - 1]]; setSel(i - 1); }
     else if (what === 'del') { m.items.splice(i, 1); setSel(s => Math.min(s, m.items.length - 1)); }
@@ -72,19 +93,20 @@ export function QuizMaker({ it, names, onClose }) {
   };
   const add = k => { const n = K.qmkNew(k); if (k === 'tf') n.opts = [t('paper.qf_true'), t('paper.qf_false')]; m.items.push(n); setSel(m.items.length - 1); re();
     setTimeout(() => { const c = ed.current && ed.current.querySelector('[data-qfc="' + (m.items.length - 1) + '"] textarea'); if (c) { c.scrollIntoView({ block: 'nearest' }); c.focus(); } }, 0); };
-  const pages = K.qmkPages({ ...m, show }, it.name, names[0] || t('paper.qf_name'));
+  const pages = inLang(lang, () => K.qmkPages({ ...m, show }, it.name, names[0] || t('paper.qf_name')));
   const auto = m.items.filter(q => q.t !== 'sa').length, sa = m.items.length - auto;
   const save = async print => {
     m.blank = Math.max(0, Math.min(40, +m.blank || 0));
     for (const q of m.items) q.id ||= 'mq' + uid();
     if (print) m.names = names.slice();   // who each printed copy is for, by its number in the code, whatever the roster becomes
-    const Q = K.qmkBoxes(m, it.name, it.quiz), moved = m.lay != null && m.ver !== (m.pv || 0);
-    if (print) { m.pv = m.ver; m.lay = JSON.stringify(Q.qs.map(q => [q.n, q.auto.b])); }
+    const lang = await L.current;
+    const Q = inLang(lang, () => K.qmkBoxes(m, it.name, it.quiz)), moved = m.lay != null && m.ver !== (m.pv || 0);
+    if (print) { m.lang = printedIn(m); m.pv = m.ver; m.lay = JSON.stringify(Q.qs.map(q => [q.n, q.auto.b])); }
     const quiz = { ...Q, made: J(m) };
     setBusy(true);
     try { await libraryChange(t('paper.qf_step'), l => { const f = itemIn(l, it.id); if (f) f.it.quiz = J(quiz); }, true); }
     catch (e) { console.error(e); setBusy(false); return toast(t('mark.cannot')); }
-    if (print) printQuiz(it, m, names);
+    if (print) printQuiz(it, m, names, lang);
     onClose();
     toast(moved ? t('paper.qf_saved_moved') : t('paper.qf_saved'));
   };
