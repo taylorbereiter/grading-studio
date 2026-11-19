@@ -606,3 +606,118 @@ test('B-902: Class setup > Pages in the tab row keeps Seating and Missing work b
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('B-024 B-025 B-057: Report comments has Progress sheets in its bar and the three grade cut-offs in Wording; the draft warning on Progress sheets opens Report comments; the current app reads the cut-offs', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  await p.goto(srv.url + 'next/#/class/c1/grades/reports');
+  await p.waitForSelector('dialog[open] [data-rp-words]', { timeout: 60000 });
+  // B-025: cut-offs
+  await p.click('dialog[open] [data-rp-words]');
+  await p.waitForSelector('[data-rp-cut="0"]');
+  const was = await p.$$eval('[data-rp-cut]', a => a.map(e => +e.value));
+  assert.equal(was.length, 3);
+  await p.$eval('[data-rp-cut="1"]', e => { e.value = ''; }); await p.type('[data-rp-cut="1"]', '72');
+  await p.click('[data-rp-words-save]');
+  await p.waitForFunction(() => ((JSON.parse(localStorage.getItem('gs.lib')).book || {}).rep || {}).cut?.[1] === 72, { polling: 100, timeout: 10000 });
+  const cut = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')).book.rep.cut);
+  assert.deepEqual(cut, [was[0], 72, was[2]].sort((a, b) => b - a));
+  // B-024: Progress sheets from the reports bar
+  await p.click('dialog[open] [data-rp-sheets]');
+  await p.waitForSelector('dialog[open] [data-pss-sheet]', { timeout: 30000 });
+  await p.waitForFunction(() => location.hash === '#/class/c1/grades' && !document.querySelector('[data-reports]'));
+  // B-057: the seed's report comments are drafts nobody has looked at; the warning opens Report comments
+  await p.waitForSelector('dialog[open] [data-pss-reports]');
+  await p.click('dialog[open] [data-pss-reports]');
+  await p.waitForSelector('dialog[open] [data-rp-text]', { timeout: 30000 });
+  await p.waitForFunction(() => location.hash === '#/class/c1/grades' && !document.querySelector('[data-pss-sheet]'));
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  assert.deepEqual(await old.evaluate(() => window.__gs.rptConf().cut), cut);
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('B-058: a person on the School page shows how many open to-dos name them, and the count opens To do showing only theirs; the current app counts the same', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  await p.evaluate(() => {
+    localStorage.setItem('gs.school', JSON.stringify({ items: [], order: [], ot: 0, people: [{ id: 'p1', at: 1, name: 'Dana Example', role: 'Principal' }, { id: 'p2', at: 1, name: 'Lee Sample', role: 'Librarian' }] }));
+    const l = JSON.parse(localStorage.getItem('gs.lib')), t0 = Date.now();
+    l.todo = { ...(l.todo || {}), items: [...((l.todo || {}).items || []),
+      { id: 'tq1', x: 'Ask about the trip', d: '', c: '', who: '', a: '', rep: '', note: '', done: 0, made: t0, t: t0, ppl: ['p1'] },
+      { id: 'tq2', x: 'Send the forms', d: '', c: '', who: '', a: '', rep: '', note: '', done: 0, made: t0, t: t0, ppl: ['p1'] },
+      { id: 'tq3', x: 'Old line', d: '', c: '', who: '', a: '', rep: '', note: '', done: t0, made: t0, t: t0, ppl: ['p1', 'p2'] }] };
+    localStorage.setItem('gs.lib', JSON.stringify(l));
+  });
+  await p.goto(srv.url + 'next/#/school');
+  await p.waitForSelector('[data-schptd="p1"]', { timeout: 30000 });
+  assert.match(await p.$eval('[data-schptd="p1"]', e => e.textContent), /^2 to-dos$/);
+  assert.equal(await p.$('[data-schptd="p2"]'), null, 'a done line is not counted');
+  await p.click('[data-schptd="p1"]');
+  await p.waitForFunction(() => location.hash === '#/todo', { timeout: 30000 });
+  await p.waitForFunction(() => { const t = document.body.textContent; return t.includes('Ask about the trip') && t.includes('Send the forms'); }, { timeout: 30000 });
+  const old = await page(ctx, errors);
+  await old.goto(srv.url + '#/school'); await appReady(old);
+  await old.waitForSelector('[data-schptd="p1"]', { timeout: 30000 });
+  assert.match(await old.$eval('[data-schptd="p1"]', e => e.textContent), /^2 to-dos$/);
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('B-060 B-056: a card dropped on a class in the sidebar goes to that class\'s unit of the same name, a unit dropped there goes to its end, Ctrl+Z takes it back; the current app reads where they went', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  const lib = await libOf(p), c1 = lib.classes[0], c2 = lib.classes[1], u = c1.units[0], it = u.items[0];
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector(`[data-item="${it.id}"]`, { timeout: 60000 });
+  const side = `[data-shell-nav] .sclasses a[href="#/class/${c2.id}"]`;
+  await p.waitForSelector(side);
+  const drag = (from, to) => p.evaluate((from, to) => {
+    const dt = new DataTransfer(), a = document.querySelector(from), b = document.querySelector(to);
+    a.dispatchEvent(new DragEvent('dragstart', { dataTransfer: dt, bubbles: true, cancelable: true }));
+    const ov = new DragEvent('dragover', { dataTransfer: dt, bubbles: true, cancelable: true }); b.dispatchEvent(ov);
+    const lit = b.classList.contains('over');
+    b.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+    a.dispatchEvent(new DragEvent('dragend', { dataTransfer: dt, bubbles: true }));
+    return { took: ov.defaultPrevented, lit };
+  }, from, to);
+  assert.deepEqual(await drag(`[data-item="${it.id}"]`, side), { took: true, lit: true });
+  const where = () => p.evaluate(id => { const l = JSON.parse(localStorage.getItem('gs.lib')); for (const c of l.classes) for (const u of c.units) { const x = u.items.find(k => k.id === id); if (x) return [c.id, u.name, x.classId]; } return null; }, it.id);
+  await p.waitForFunction((id, cid) => JSON.parse(localStorage.getItem('gs.lib')).classes.find(c => c.id === cid).units.some(u => u.items.some(k => k.id === id)), { polling: 100, timeout: 10000 }, it.id, c2.id);
+  assert.deepEqual(await where(), [c2.id, u.name, c2.id]);
+  await p.waitForFunction(id => !document.querySelector(`[data-item="${id}"]`), {}, it.id);
+  // a unit onto the sidebar
+  const u2 = c1.units[1] || c1.units[0];
+  await p.waitForSelector(`[data-unit="${u2.id}"] .whead h3`);
+  await drag(`[data-unit="${u2.id}"] .whead h3`, side);
+  await p.waitForFunction((uid, cid) => { const l = JSON.parse(localStorage.getItem('gs.lib')); const c = l.classes.find(k => k.id === cid); return c.units[c.units.length - 1].id === uid; }, { polling: 100, timeout: 10000 }, u2.id, c2.id);
+  // the current app reads it
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  assert.ok(await old.evaluate((uid, cid) => { const c = window.__gs.state().lib.classes.find(k => k.id === cid); return c.units.some(u => u.id === uid); }, u2.id, c2.id));
+  await old.close();
+  // Ctrl+Z puts the unit back in its class
+  await p.bringToFront();
+  await p.click('h1'); await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForFunction((uid, cid) => JSON.parse(localStorage.getItem('gs.lib')).classes.find(k => k.id === cid).units.some(u => u.id === uid), { polling: 100, timeout: 10000 }, u2.id, c1.id);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('B-056: No class says how its assignments reach a class: dragged onto one in the sidebar, or Move to…', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  await p.evaluate(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); l.loose = { ...(l.loose || {}), units: [{ id: 'ul1', name: 'Loose', items: [{ id: 'il1', name: 'A worksheet', classId: '' }] }] }; localStorage.setItem('gs.lib', JSON.stringify(l)); });
+  await p.goto(srv.url + 'next/#/class/-/work');
+  await p.waitForSelector('[data-loose-say]', { timeout: 60000 });
+  assert.match(await p.$eval('[data-loose-say]', e => e.textContent), /sidebar/);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

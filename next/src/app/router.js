@@ -26,9 +26,11 @@ export const ROUTES = [
   ['plan/:cls/:day', 'calendar', 'calendar'],   // that meeting's lesson, opened or made, with a focus session (planner.html#plan/<class>/<day>)
   ['mark/:id', 'mark', 'class'],
   ['mark/:id/:tab', 'mark', 'class'],
+  ['mark/:id/:tab/:sub', 'mark', 'class'],   // grades/sheet, insights/consistency
   ['library', 'library', 'library'],
   ['library/:tab', 'library', 'library'],
   ['library/:tab/:sub', 'library', 'library'],   // Library > Examples > Watch list
+  ['library/:tab/:sub/:more', 'library', 'library'],   // Library > Examples > a/<download>: one assignment's examples
   ['school', 'school', 'school'],
   ['settings', 'settings', 'settings'],
   ['settings/:group', 'settings', 'settings'],

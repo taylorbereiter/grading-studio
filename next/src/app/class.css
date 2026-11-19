@@ -645,3 +645,4 @@ dialog.dlg:has([data-wl-ask]){width:min(760px,calc(100vw - 32px));margin-top:6vh
 .cp-ch.sq{max-width:480px}.cp-ch .pt{fill:var(--acc);fill-opacity:.75}
 .cp-ch .rng{fill:color-mix(in oklab,var(--mute) 35%,transparent)}.cp-ch .iqr{fill:color-mix(in oklab,var(--acc) 55%,var(--s))}.cp-ch .mid{stroke:var(--ink);stroke-width:2}
 .chleg{display:flex;gap:16px;flex-wrap:wrap;font-size:var(--t1);color:var(--mute);margin-top:6px}.chleg i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.rpcuts{margin:8px 0 12px;align-items:center}.rpcuts input{width:5.5em}

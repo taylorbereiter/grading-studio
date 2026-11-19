@@ -23,6 +23,7 @@ import '../mark/setup-lines.js';
 import { useSaving } from '../../services/saving.js';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
+const lc = (label, fn) => libraryChange(t(label), fn, true).catch(e => { console.error(e); toast(t('mark.cannot')); });
 const holderOf = (l, id) => (id === '-' || id === '' ? l.loose : l.classes.find(x => String(x.id) === String(id)));
 // The same change on the library as saved (it's read fresh there): a unit or a card found by its id.
 const unitIn = (l, id) => { for (const c of [...l.classes, l.loose]) { const u = c.units.find(x => x.id === id); if (u) return { c, u }; } return null; };
@@ -99,6 +100,27 @@ export default function ClassWork({ classId, sub }) {
   useEffect(() => onSaved(e => { if (e.kind === 'library') setLib(readLibrary()); }), []);
   // another window changed the library or saved marks in a download (src/folder.js libNews, src/saving.js; audit H-062, H-063)
   useEffect(() => { const offs = [tabs.on('library', k => { if (k === 'gs.lib') setLib(readLibrary()); }), tabs.on('saved', () => readKept().then(setKept))]; return () => offs.forEach(f => f()); }, []);
+  // A card or a unit dragged onto a class in the sidebar (src/app/screens.js railDragTarget): a card goes to that class's unit of the
+  // same name (made if it isn't there), a unit to the end of that class. One undo step. Only this tab's own drags count.
+  useEffect(() => {
+    const D = document, ev = ['dragover', 'drop', 'dragend'], clear = k => D.querySelectorAll('[data-shell-nav] .over').forEach(n => n !== k && n.classList.remove('over'));
+    const at = e => { const a = e.target.closest && e.target.closest('[data-shell-nav] .sclasses a[href^="#/class/"]'), id = a && decodeURIComponent(a.hash.split('/')[2]);
+      return a && (dragging(e, CARD) || dragging(e, UNIT)) && id !== 'new' && id !== String(classId) ? { a, id } : null; };
+    const on = e => {
+      const x = e.type !== 'dragend' && at(e); clear(x && e.type === 'dragover' && x.a); if (!x) return;
+      e.preventDefault(); e.stopPropagation();
+      if (e.type === 'dragover') return x.a.classList.add('over');
+      const card = dragging(e, CARD) && e.dataTransfer.getData(CARD), unit = e.dataTransfer.getData(UNIT);
+      let where = '';
+      lc('setup.u_move', l => {
+        const to = holderOf(l, x.id), f = card ? itemIn(l, card) : unitIn(l, unit); if (!to || !f || f.c === to) return;
+        if (card) { let u = to.units.find(k => k.name === f.u.name); if (!u) to.units.push(u = { id: uid(), name: f.u.name, items: [] }); f.u.items.splice(f.u.items.indexOf(f.it), 1); u.items.push(f.it); f.it.classId = to.id; }
+        else { f.c.units.splice(f.c.units.indexOf(f.u), 1); to.units.push(f.u); for (const k of f.u.items) k.classId = to.id; }
+        where = to === l.loose ? t('setup.u_noclass') : to.name;
+      }).then(() => where && toast(t('setup.u_moved', { name: where }), { undo: () => undoList.undo() }));
+    };
+    ev.forEach(k => D.addEventListener(k, on, true)); return () => ev.forEach(k => D.removeEventListener(k, on, true));
+  }, [classId]);
   if (!lib || !kept) return <div class="loading" aria-busy="true" />;
   const c = classId === '-' ? lib.loose : lib.classes.find(x => String(x.id) === String(classId));
   if (!c) return <EmptyState icon="inbox" title={t('setup.w_none')} />;
@@ -126,7 +148,6 @@ export default function ClassWork({ classId, sub }) {
   const matchFor = it => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true;
     i.onchange = async () => { const B = await PARTS.bringin(), list = await B.expand([...i.files]); if (!list.length) return toast(t('setup.bf_nothing')); setMatch({ B, it, list }); }; i.click(); };
   const units = c.units;
-  const lc = (label, fn) => libraryChange(t(label), fn, true).catch(e => { console.error(e); toast(t('mark.cannot')); });
   const named = async v => {
     const was = name; setName(null); if (!v) return;
     if (was.id) await lc('setup.u_rename', l => { const f = unitIn(l, was.id); if (f) f.u.name = v; });
@@ -169,6 +190,7 @@ export default function ClassWork({ classId, sub }) {
   return <section class="classwork" aria-labelledby="h-work">
     <h2 id="h-work" class="sr">{t('setup.w_title')}</h2>
     {L && <L.LinkedHead lib={lib} classId={classId} />}
+    {c === lib.loose && c.units.some(u => u.items.length) && <p class="mute" data-loose-say>{t('mark.cw_loose_say')}</p>}
     {match && <match.B.MatchRoster list={match.list} lib={lib} classId={classId} onClose={() => setMatch(null)} onGo={(entries, cls) => bring(match.it, entries, cls)} />}
     {ask && <Dialog open title={t('setup.c_ask_t')} onClose={() => ask.done(false)}
       actions={<><Button onClick={() => ask.done(false)} data-fresh>{t('setup.c_fresh')}</Button><Button variant="primary" onClick={() => ask.done(true)} data-carry>{t('setup.c_bring')}</Button></>}>

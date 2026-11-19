@@ -387,6 +387,8 @@ function RubricAsk({ ask }) {
 
 export default function MarkScreen({ route, classes }) {
   const id = route.params.id, tab = TABS.includes(route.params.tab) ? route.params.tab : 'mark';
+  // an assignment's strong examples (src/app/screens.js #/a/<id>/examples) are in Library > Examples, shown for this assignment
+  useEffect(() => { if (route.params.tab === 'examples') location.replace(href('library', 'examples', 'a', id)); }, [route.params.tab, id]);
   const [w, setW] = useState(null), [err, setErr] = useState(null), [cur, setCur] = useState(0), [ask, setAsk] = useState(null);
   const [zoom, setZoom] = useState(() => keep('zoom') || 1), [, tick] = useState(0);
   // the list's filter (this visit to this assignment only), the list folded to a strip ([, gs.listOpen), the score panel folded away
@@ -537,7 +539,7 @@ export default function MarkScreen({ route, classes }) {
     <RubricAsk ask={ask} />
     {err ? <EmptyState icon="inbox" title={t(err.name === 'NotKept' ? 'mark.not_kept' : 'mark.page_bad')} text={err.name === 'NotKept' ? t('mark.not_kept_text') : ''} />
       : !w ? (dl ? <p class="mk-dl mute" role="status" data-mkdl>{t('mark.from_drive', { n: dl.n, of: dl.of })}</p> : <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />)
-      : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} E={out.E} cur={cur} onOpen={openOn} onShare={openShare} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
+      : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} sub={route.params.sub} E={out.E} cur={cur} onOpen={openOn} onShare={openShare} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
       : <><div class="mk-body">
         {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} onHide={MK ? () => hideNames() : null} onShuffle={() => hideNames(true)} />}
         <div class="mk-mid">
