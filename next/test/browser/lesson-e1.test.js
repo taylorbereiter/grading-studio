@@ -344,3 +344,74 @@ test('H-005 H-016: the notebook keeps her words with the lesson she typed them i
   assert.deepEqual(p.errors, []);
   await p.ctx.close();
 });
+
+// Stage 8 E1 (5): the Beside drawer's Activities, its width, and what can be dropped or pasted on it.
+const beside = async (p, id, tab) => {
+  await K.open(p, 'lesson/' + id);
+  await p.click('main [data-focus="beside"]'); await p.waitForSelector('aside.beside [role=tab]');
+  if (tab) { await p.evaluate(n => [...document.querySelectorAll('aside.beside [role=tab]')].find(x => x.textContent === n).click(), tab); await wait(300); }
+};
+const dropOn = (p, sel, { file, text }) => p.evaluate(async (sel, file, text) => {
+  const dt = new DataTransfer();
+  if (file) dt.items.add(new File([new Uint8Array(file.bytes)], file.name, { type: file.type }));
+  if (text) { dt.setData('text/uri-list', text); dt.setData('text/plain', text); }
+  const el = document.querySelector(sel), r = el.getBoundingClientRect(), o = { bubbles: true, cancelable: true, dataTransfer: dt, clientX: r.left + 40, clientY: r.top + 80 };
+  el.dispatchEvent(new DragEvent('dragover', o)); el.dispatchEvent(new DragEvent('drop', o));
+}, sel, file, text);
+
+test('E1-001 E1-064 E1-073 E1-074 E1-075 E1-076 E1-077: Beside has the activity bank, found, narrowed, opened and added after the slide she is on', async () => {
+  const p = await K.fresh();
+  await beside(p, 'L2');
+  assert.deepEqual(await p.$$eval('aside.beside [role=tab]', b => b.map(x => x.textContent)), ['Books', 'Activities', 'Video', 'Unit', 'Notebook']);
+  await p.evaluate(() => [...document.querySelectorAll('aside.beside [role=tab]')].find(x => x.textContent === 'Activities').click());
+  await p.waitForSelector('aside.beside .actlist');
+  const all = await p.$$eval('aside.beside .actlist > li', x => x.length);
+  // E1-077: a kind chip narrows the list
+  await p.evaluate(() => [...document.querySelectorAll('aside.beside .chips button')].find(b => b.textContent === 'Reading').click()); await wait(200);
+  const reading = await p.$$eval('aside.beside .actlist > li', x => x.length);
+  assert.ok(reading > 0 && reading < all, 'Reading narrows the list');
+  // E1-076: found by name
+  await p.type('aside.beside [data-focus="find-activity"]', 'Poem relay'); await wait(200);
+  assert.deepEqual(await p.$$eval('aside.beside .actlist .acth b', b => b.map(x => x.textContent)), ['Poem relay']);
+  // E1-073: the row opens
+  await p.click('aside.beside .acth'); await p.waitForSelector('aside.beside .actb');
+  assert.match(await p.$eval('aside.beside .actb', x => x.textContent), /Hand each table one stanza/);
+  // E1-075: Add to a lesson… lists the lessons coming up
+  await p.click('aside.beside [data-act-use]'); await p.waitForSelector('.sheet .lrow');
+  assert.ok((await p.$$eval('.sheet .lrow', r => r.length)) > 0);
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('.sheet[open]'));
+  // E1-074 E1-001: Add after the slide I'm on
+  await p.click('aside.beside [data-act-after]');
+  const l = await until(async () => { const x = await K.lessonInDb(p, 'L2'); return x && x.slides.length === 6 && x; });
+  assert.ok(l, 'a slide is added'); assert.equal(l.slides[1].title, 'Poem relay', 'right after the slide she is on');
+  assert.deepEqual(p.errors, []);
+  for (const [k, [a, b]] of Object.entries(await K.sameInPlanner(p, 'L2', l))) assert.deepEqual(a, b, k + ' reads the same in the current Planner');
+  await p.ctx.close();
+});
+
+test('E1-063 E1-065 E1-066 E1-082: Beside is made wider at its edge, takes a dropped PDF or YouTube link, and a pasted YouTube link plays in the notebook', async () => {
+  const p = await K.fresh();
+  await beside(p, 'L2');
+  // E1-063: drag the edge
+  const w0 = await p.$eval('aside.beside', a => a.getBoundingClientRect().width), g = await p.$eval('aside.beside [data-grip]', e => { const r = e.getBoundingClientRect(); return { x: r.left + 3, y: r.top + 200 }; });
+  await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move(g.x - 60, g.y, { steps: 4 }); await p.mouse.move(g.x - 120, g.y, { steps: 4 }); await p.mouse.up(); await wait(200);
+  const w1 = await p.$eval('aside.beside', a => a.getBoundingClientRect().width);
+  assert.ok(Math.abs(w1 - (w0 + 120)) < 4, 'the drawer is 120 px wider (' + w0 + ' to ' + w1 + ')');
+  assert.equal(+(await p.evaluate(() => localStorage.getItem('gsn.besideW'))), Math.round(w1), 'and stays that wide');
+  // E1-065: a PDF dropped on the drawer goes to Books
+  await p.evaluate(() => [...document.querySelectorAll('aside.beside [role=tab]')].find(x => x.textContent === 'Notebook').click()); await wait(200);
+  await dropOn(p, 'aside.beside .bhead', { file: { name: 'Poems for reading aloud.pdf', type: 'application/pdf', bytes: [...Buffer.from('%PDF-1.4\n%%EOF\n')] } });
+  await p.waitForFunction(() => [...document.querySelectorAll('aside.beside [data-book] span')].some(s => s.textContent === 'Poems for reading aloud'), { timeout: 6000 });
+  assert.equal(await p.$eval('aside.beside [role=tab][aria-selected="true"]', x => x.textContent), 'Books');
+  // E1-066: a YouTube link dropped on it plays in Video
+  await dropOn(p, 'aside.beside .bbody', { text: 'https://www.youtube.com/watch?v=abcdefghijk' });
+  await p.waitForSelector('aside.beside .vidbox iframe[src*="abcdefghijk"]');
+  // E1-082: a YouTube link pasted into the notebook becomes a player, kept with the lesson
+  await p.evaluate(() => [...document.querySelectorAll('aside.beside [role=tab]')].find(x => x.textContent === 'Notebook').click());
+  await p.waitForSelector('[data-nbpage][contenteditable="true"]'); await p.click('[data-nbpage]');
+  await p.evaluate(() => { const dt = new DataTransfer(); dt.setData('text/plain', 'https://youtu.be/abcdefghijk?t=30'); document.querySelector('[data-nbpage]').dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); });
+  const l = await until(async () => { const x = await K.lessonInDb(p, 'L2'); return x && /nb-vid[^>]*data-yt="abcdefghijk"/.test(x.notebook || '') && x; });
+  assert.ok(l, 'the notebook keeps the video'); assert.match(l.notebook, /data-t="30"/);
+  assert.deepEqual(p.errors, []);
+  await p.ctx.close();
+});

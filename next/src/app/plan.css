@@ -294,8 +294,8 @@
 .courseline .hrow{flex-wrap:wrap;gap:8px}
 /* Stage 3 follow-up: the lesson's tools */
 .varbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
-.lessonpage.with-beside{padding-right:min(440px,42vw)}
-.beside{position:fixed;top:8px;right:8px;bottom:8px;width:min(420px,40vw);background:var(--sf,var(--s));border-radius:var(--r4);box-shadow:var(--sh-f);display:flex;flex-direction:column;z-index:30;overflow:hidden}
+.lessonpage.with-beside{padding-right:calc(var(--bw,min(420px,40vw)) + 20px)}
+.beside{position:fixed;top:8px;right:8px;bottom:8px;width:var(--bw,min(420px,40vw));background:var(--sf,var(--s));border-radius:var(--r4);box-shadow:var(--sh-f);display:flex;flex-direction:column;z-index:30;overflow:hidden}
 .beside .bhead{display:flex;align-items:center;gap:8px;padding:8px 10px 0 16px;border-bottom:1px solid var(--line)}
 .beside .bhead .tabs{flex:1;border-bottom:0}
 .beside .bbody{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
@@ -409,3 +409,6 @@
 .ed-top .savest,.ed-top .ptime{font-size:var(--t2);white-space:nowrap;align-self:center}
 .vidrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .ed-grid.dropping .ed-stagewrap{outline:2px dashed var(--acc-ink);outline-offset:4px;border-radius:var(--r2)}
+.beside .bgrip{position:absolute;left:0;top:0;bottom:0;width:6px;cursor:ew-resize;z-index:1}.beside .bgrip:hover,.beside .bgrip:active{background:var(--acc-ink);opacity:.25}
+.beside .acts{display:flex;flex-direction:column;gap:10px}.beside .acts .libtools{display:flex;gap:8px}
+@media (max-width:900px){.beside .bgrip{display:none}}

@@ -24,10 +24,12 @@ import { plannerKv, lessonBlob } from '../../planning/plan.js';
 import { saveFailed } from '../plan/save.js';
 import '../plan/lines.js';
 import '../plan/tool-lines.js';
+import '../plan/les-lines.js';
 import { DriveButton } from '../drive-button.jsx';
+import { usePart } from '../parts.js';
 
 const copy = x => JSON.parse(JSON.stringify(x));
-const TABS = ['books', 'video', 'unit', 'notes'];
+const TABS = ['books', 'acts', 'video', 'unit', 'notes'];
 const esc = s => String(s).replace(/[&"><]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const { ytId, ytStart } = T;
 // The name of the teacher's unit plan tool, when they gave one (Settings > Classes and terms); otherwise the plain word.
@@ -36,16 +38,43 @@ export const unitTool = () => { const w = words.json(null); return (w && typeof 
 const tell = (l, save, text) => { const n = copy(l); n.talk = [...(n.talk || []), { by: 'you', text, at: Date.now() }]; save(n); toast(t('tool.told', { name: aiName() })); };
 const aiName = () => assistant().name || t('assistant.generic');
 
+// The drawer's width, dragged at its edge (src/planner/panel.js spResize), kept for this browser (gsn.besideW) and shared with the
+// page's own room through --bw.
+const W_KEY = 'gsn.besideW', fitW = w => Math.round(Math.max(320, Math.min(w, Math.min(900, innerWidth - 360))));
+const putW = w => { try { if (w) document.documentElement.style.setProperty('--bw', w + 'px'); else document.documentElement.style.removeProperty('--bw'); } catch { } };
+function Grip() {
+  useEffect(() => { let w = 0; try { w = +localStorage.getItem(W_KEY) || 0; } catch { } if (w) putW(fitW(w)); return () => putW(0); }, []);
+  const down = e => {
+    if (e.button !== 0) return; e.preventDefault(); const el = e.currentTarget; el.setPointerCapture(e.pointerId);
+    const move = ev => putW(fitW(innerWidth - 8 - ev.clientX));
+    const up = ev => { el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); const w = fitW(innerWidth - 8 - ev.clientX); putW(w); try { localStorage.setItem(W_KEY, String(w)); } catch { } };
+    el.addEventListener('pointermove', move); el.addEventListener('pointerup', up);
+  };
+  const key = e => { const cur = document.querySelector('aside.beside').getBoundingClientRect().width, k = e.key === 'ArrowLeft' ? 40 : e.key === 'ArrowRight' ? -40 : 0; if (!k) return; e.preventDefault(); const w = fitW(cur + k); putW(w); try { localStorage.setItem(W_KEY, String(w)); } catch { } };
+  return <div class="bgrip" role="separator" aria-orientation="vertical" aria-label={t('les.beside_width')} tabIndex={-1} onPointerDown={down} onKeyDown={key} data-grip />;
+}
+
 export default function Beside({ p, l, save, onClose, onSlide }) {
   const [tab, setTab] = useState(() => { try { const v = sessionStorage.getItem('gsn.beside'); return TABS.includes(v) ? v : 'books'; } catch { return 'books'; } });
   const pick = v => { setTab(v); try { sessionStorage.setItem('gsn.beside', v); } catch { } };
-  const tool = unitTool();
-  return <aside class="beside" aria-label={t('tool.beside')}>
-    <div class="bhead"><Tabs label={t('tool.beside')} value={tab} onChange={pick} tabs={[{ id: 'books', label: t('tool.books') }, { id: 'video', label: t('tool.video') }, { id: 'unit', label: tool || t('tool.curriculum') }, { id: 'notes', label: t('tool.notebook') }]} />
+  const tool = unitTool(), B2 = usePart('beside2', tab === 'acts'), [pdfIn, setPdfIn] = useState(null), [vidIn, setVidIn] = useState('');
+  // A PDF dropped on the drawer goes to Books, a YouTube link to Video (src/planner/panel.js spDrop).
+  const over = e => { const d = e.dataTransfer; if (d && [...d.types].some(x => x === 'Files' || x === 'text/uri-list' || x === 'text/plain')) { e.preventDefault(); e.stopPropagation(); } };
+  const drop = e => {
+    const d = e.dataTransfer; if (!d) return;
+    const f = [...(d.files || [])].find(x => /\.pdf$/i.test(x.name) || x.type === 'application/pdf');
+    if (f) { e.preventDefault(); e.stopPropagation(); pick('books'); setPdfIn(f); return; }
+    const u = (d.getData('text/uri-list') || d.getData('text/plain') || '').split(/\s+/)[0];
+    if (u && ytId(u)) { e.preventDefault(); e.stopPropagation(); pick('video'); setVidIn(u); }
+  };
+  return <aside class="beside" aria-label={t('tool.beside')} onDragOver={over} onDrop={drop}>
+    <Grip />
+    <div class="bhead"><Tabs label={t('tool.beside')} value={tab} onChange={pick} tabs={[{ id: 'books', label: t('tool.books') }, { id: 'acts', label: t('plan.lib_activities') }, { id: 'video', label: t('tool.video') }, { id: 'unit', label: tool || t('tool.curriculum') }, { id: 'notes', label: t('tool.notebook') }]} />
       <IconButton icon="x" label={t('common.close')} onClick={onClose} data-focus="beside-close" /></div>
     <div class="bbody">
-      {tab === 'books' && <Books l={l} save={save} />}
-      {tab === 'video' && <Video p={p} l={l} save={save} onSlide={onSlide} />}
+      {tab === 'books' && <Books l={l} save={save} incoming={pdfIn} onTaken={() => setPdfIn(null)} />}
+      {tab === 'acts' && B2 && <B2.Acts p={p} l={l} onSlide={onSlide} />}
+      {tab === 'video' && <Video p={p} l={l} save={save} onSlide={onSlide} incoming={vidIn} onTaken={() => setVidIn('')} />}
       {tab === 'unit' && <Unit p={p} l={l} save={save} tool={tool} />}
       {tab === 'notes' && <Notebook p={p} l={l} save={save} />}
     </div>
@@ -55,10 +84,11 @@ export default function Beside({ p, l, save, onClose, onSlide }) {
 /* ---------- Books ---------- */
 let lib = null;
 const pdfLib = () => lib || (lib = PARTS.pdf().then(m => m.pdfjs()));
-function Books({ l, save }) {
+function Books({ l, save, incoming, onTaken }) {
   const [list, setList] = useState(null), [open, setOpen] = useState(null);
   const read = () => plannerKv('pdfs').then(v => setList(Array.isArray(v) ? v : []));
   useEffect(() => { read(); }, []);
+  useEffect(() => { if (incoming) { onTaken(); add(incoming); } }, [incoming]);
   const add = async f => {
     if (!f) return; if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') return toast(t('tool.pdf_only'));
     try { const id = Math.random().toString(36).slice(2, 10), cur = (await kv.get('pdfs')) || []; await savePlannerKv('pdf:' + id, f); await savePlannerKv('pdfs', [...cur, { id, name: f.name.replace(/\.pdf$/i, ''), pages: 0 }]); read(); }
@@ -144,8 +174,9 @@ async function outlineOf(pdf) {
 }
 
 /* ---------- Video ---------- */
-function Video({ p, l, save, onSlide }) {
+function Video({ p, l, save, onSlide, incoming, onTaken }) {
   const [v, setV] = useState(''), [url, setUrl] = useState('');
+  useEffect(() => { if (incoming) { setV(incoming); setUrl(incoming); onTaken(); } }, [incoming]);
   const goTo = () => { const s = v.trim(); if (!s) return; if (/^https?:\/\//.test(s)) setUrl(s); else window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(s), '_blank', 'noopener'); };
   const id = ytId(url), st = ytStart(url);
   return <div class="video">
@@ -236,7 +267,8 @@ function Notebook({ p, l, save }) {
     <div class="nbpage" ref={pg} contentEditable={ready.current ? "true" : "false"} aria-busy={ready.current ? undefined : "true"} spellcheck={true} role="textbox" aria-multiline="true" aria-label={general ? t('tool.nb_general') : t('tool.nb_lesson')} data-raw data-nbpage onInput={changed}
       onBlur={() => { range.current = sel() || range.current; }}
       onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && /^[biu]$/i.test(e.key)) { e.preventDefault(); cmd({ b: 'bold', i: 'italic', u: 'underline' }[e.key.toLowerCase()]); } }}
-      onPaste={e => { const f = [...((e.clipboardData && e.clipboardData.files) || [])].find(x => /^image\//.test(x.type)); if (f) { e.preventDefault(); range.current = sel(); pic(f); } }}
+      onPaste={e => { const f = [...((e.clipboardData && e.clipboardData.files) || [])].find(x => /^image\//.test(x.type)); if (f) { e.preventDefault(); range.current = sel(); return pic(f); }
+        const u = ((e.clipboardData && e.clipboardData.getData('text/plain')) || '').trim(); if (/^https?:\/\/\S+$/.test(u) && ytId(u)) { e.preventDefault(); range.current = sel(); insert('<div class="nb-vid" data-yt="' + ytId(u) + '"' + (ytStart(u) ? ' data-t="' + ytStart(u) + '"' : '') + '></div><p><br></p>'); } }}
       onDrop={e => { const f = [...((e.dataTransfer && e.dataTransfer.files) || [])].find(x => /^image\//.test(x.type)); if (f) { e.preventDefault(); e.stopPropagation(); pic(f); } }}
       onClick={e => { const a = e.target.closest && e.target.closest('a[href]'); if (a) { e.preventDefault(); window.open(a.href, '_blank', 'noopener'); } }} />
     <small class="mute" role="status">{state === 'saving' ? t('tool.saving') : state === 'saved' ? t('tool.saved') : general ? t('tool.nb_kept_here') : t('tool.nb_kept_lesson')}</small>
