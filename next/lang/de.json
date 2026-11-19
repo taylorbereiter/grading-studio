@@ -3471,7 +3471,6 @@
  "plan.move_down": "Folie nach unten",
  "plan.slide_actions": "Folienaktionen",
  "plan.duplicate": "Duplizieren",
- "plan.layout": "Layout",
  "plan.slide_title": "Titel",
  "plan.box_tag": "Etikett",
  "plan.box_foot": "Fußzeile",
@@ -6507,5 +6506,26 @@
  "les.add_slot": "Auf eine andere Klasse oder einen anderen Tag legen",
  "les.pics_n": "{n} Bilder, eines pro Folie",
  "les.links_on_video": "Links gehören auf eine Videofolie: Fügen Sie eine hinzu und ziehen Sie den Link darauf",
- "les.pic_blocked": "Diese Website lässt ihre Bilder so nicht kopieren. Klicken Sie mit der rechten Maustaste auf das Bild, wählen Sie Bild kopieren und fügen Sie es hier ein."
+ "les.pic_blocked": "Diese Website lässt ihre Bilder so nicht kopieren. Klicken Sie mit der rechten Maustaste auf das Bild, wählen Sie Bild kopieren und fügen Sie es hier ein.",
+ "les.ly_start": "Anfang und Ende",
+ "les.ly_teach": "Unterrichten und üben",
+ "les.ly_pics": "Bilder und Video",
+ "les.layout_for": "Layout dieser Folie",
+ "les.add_a_slide": "Folie hinzufügen",
+ "les.layout_keeps": "Ihr Text bleibt. Neue Felder beginnen leer, mit einem grauen Hinweis, was hineingehört.",
+ "les.layout_n": "Layout: {name}",
+ "les.add_layout": "Folie mit anderem Layout hinzufügen…",
+ "les.from_examples": "Aus Ihren starken Beispielen",
+ "les.pick_example": "Starkes Beispiel wählen…",
+ "les.put_on_slides": "Auf Folien setzen",
+ "les.pages": "Seiten",
+ "les.ex_slide": "Starkes Beispiel",
+ "les.ex_slide_n": "Starkes Beispiel: {name}",
+ "les.ex_added": "Starkes Beispiel auf einer neuen Folie hinzugefügt",
+ "les.ex_added_n": "Starkes Beispiel hinzugefügt, eine Seite auf jeder von {n} Folien",
+ "les.open_comments": {
+  "one": "{n} offener Kommentar",
+  "other": "{n} offene Kommentare"
+ },
+ "tool.nb_unread": "Diese Notizen konnten nicht gelesen werden, daher wird hier nichts darüber gespeichert."
 }

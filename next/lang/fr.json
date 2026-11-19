@@ -3437,7 +3437,6 @@
  "plan.move_down": "Descendre la diapositive",
  "plan.slide_actions": "Actions sur la diapositive",
  "plan.duplicate": "Dupliquer",
- "plan.layout": "Disposition",
  "plan.slide_title": "Titre",
  "plan.box_tag": "Étiquette",
  "plan.box_foot": "Ligne du bas",
@@ -6450,5 +6449,26 @@
  "les.add_slot": "La mettre sur une autre classe ou un autre jour",
  "les.pics_n": "{n} images, une par diapositive",
  "les.links_on_video": "Les liens vont sur une diapositive Vidéo : ajoutez-en une, puis déposez-y le lien",
- "les.pic_blocked": "Ce site ne permet pas de copier ses images ainsi. Faites un clic droit sur l’image, choisissez Copier l’image, puis collez-la ici."
+ "les.pic_blocked": "Ce site ne permet pas de copier ses images ainsi. Faites un clic droit sur l’image, choisissez Copier l’image, puis collez-la ici.",
+ "les.ly_start": "Début et fin",
+ "les.ly_teach": "Enseigner et s’exercer",
+ "les.ly_pics": "Images et vidéo",
+ "les.layout_for": "Mise en page de cette diapositive",
+ "les.add_a_slide": "Ajouter une diapositive",
+ "les.layout_keeps": "Votre texte reste. Les nouvelles zones commencent vides, avec une indication grise de ce qui y va.",
+ "les.layout_n": "Mise en page : {name}",
+ "les.add_layout": "Ajouter une diapositive avec une autre mise en page…",
+ "les.from_examples": "Parmi vos bons exemples",
+ "les.pick_example": "Choisir un bon exemple…",
+ "les.put_on_slides": "Mettre sur des diapositives",
+ "les.pages": "Pages",
+ "les.ex_slide": "Bon exemple",
+ "les.ex_slide_n": "Bon exemple : {name}",
+ "les.ex_added": "Bon exemple ajouté sur une nouvelle diapositive",
+ "les.ex_added_n": "Bon exemple ajouté, une page sur chacune de {n} diapositives",
+ "les.open_comments": {
+  "one": "{n} commentaire ouvert",
+  "other": "{n} commentaires ouverts"
+ },
+ "tool.nb_unread": "Ces notes n’ont pas pu être lues, donc rien ne sera enregistré par-dessus."
 }

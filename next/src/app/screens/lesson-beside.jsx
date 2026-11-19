@@ -15,11 +15,11 @@ import { Button, IconButton, Icon, Tabs, TextInput, toast } from '../../ui/index
 import { Mic } from '../../ui/services.jsx';
 import { t } from '../../i18n/t.js';
 import { PARTS } from '../router.js';
-import { words } from '../../planning/index.js';
+import { words, kv } from '../../planning/index.js';
 import { assistant } from '../../services/assistant.js';
 import { engine } from '../../planning/engine.js';
 import * as T from '../../engines/plantools.js';
-import { savePlannerKv, dropPlannerKv } from '../../planning/write.js';
+import { savePlannerKv, dropPlannerKv, saveLesson } from '../../planning/write.js';
 import { plannerKv, lessonBlob } from '../../planning/plan.js';
 import { saveFailed } from '../plan/save.js';
 import '../plan/lines.js';
@@ -61,13 +61,13 @@ function Books({ l, save }) {
   useEffect(() => { read(); }, []);
   const add = async f => {
     if (!f) return; if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') return toast(t('tool.pdf_only'));
-    try { const id = Math.random().toString(36).slice(2, 10), cur = (await plannerKv('pdfs')) || []; await savePlannerKv('pdf:' + id, f); await savePlannerKv('pdfs', [...cur, { id, name: f.name.replace(/\.pdf$/i, ''), pages: 0 }]); read(); }
+    try { const id = Math.random().toString(36).slice(2, 10), cur = (await kv.get('pdfs')) || []; await savePlannerKv('pdf:' + id, f); await savePlannerKv('pdfs', [...cur, { id, name: f.name.replace(/\.pdf$/i, ''), pages: 0 }]); read(); }
     catch (e) { saveFailed(e); }
   };
   const remove = async x => {
-    const b = await plannerKv('pdf:' + x.id), cur = (await plannerKv('pdfs')) || [];
-    try { await savePlannerKv('pdfs', cur.filter(y => y.id !== x.id)); await dropPlannerKv('pdf:' + x.id); read(); } catch (e) { return saveFailed(e); }
-    toast(t('tool.book_removed', { name: x.name }), { undo: async () => { if (b) await savePlannerKv('pdf:' + x.id, b); await savePlannerKv('pdfs', [...((await plannerKv('pdfs')) || []), x]); read(); } });
+    let b, cur;
+    try { b = await kv.get('pdf:' + x.id); cur = (await kv.get('pdfs')) || []; await savePlannerKv('pdfs', cur.filter(y => y.id !== x.id)); await dropPlannerKv('pdf:' + x.id); read(); } catch (e) { return saveFailed(e); }
+    toast(t('tool.book_removed', { name: x.name }), { undo: async () => { try { if (b) await savePlannerKv('pdf:' + x.id, b); await savePlannerKv('pdfs', [...((await kv.get('pdfs')) || []), x]); read(); } catch (e) { saveFailed(e); } } });
   };
   if (open) return <Book book={open} l={l} save={save} onBack={() => { setOpen(null); read(); }} />;
   return <div class="books">
@@ -89,7 +89,7 @@ function Book({ book, l, save, onBack }) {
       try {
         const L = await pdfLib(), doc = await L.getDocument({ data: new Uint8Array(await b.arrayBuffer()), isEvalSupported: false }).promise; if (!on) return;
         setPdf(doc); const last = +(await plannerKv('pdfpg:' + book.id)) || 1; setPage(Math.min(Math.max(1, last), doc.numPages));
-        if (!book.pages) { const cur = (await plannerKv('pdfs')) || [], x = cur.find(y => y.id === book.id); if (x) { x.pages = doc.numPages; await savePlannerKv('pdfs', cur).catch(() => {}); } }
+        if (!book.pages) { const cur = (await kv.get('pdfs').catch(() => null)) || [], x = cur.find(y => y.id === book.id); if (x) { x.pages = doc.numPages; await savePlannerKv('pdfs', cur).catch(() => {}); } }
         setOutline(await outlineOf(doc));
       } catch (e) { console.warn(e); toast(t('tool.book_unread')); onBack(); }
     })();
@@ -180,20 +180,30 @@ function Unit({ p, l, save, tool }) {
 /* ---------- Notebook ---------- */
 function Notebook({ p, l, save }) {
   const [general, setGeneral] = useState(false), [state, setState] = useState(''), [ask, setAsk] = useState(null), [askV, setAskV] = useState('');
-  const pg = useRef(), timer = useRef(0), range = useRef(null), lRef = useRef(l); lRef.current = l;
+  const pg = useRef(), timer = useRef(0), range = useRef(null), lRef = useRef(l), byId = useRef({}), ready = useRef(false), [, redraw] = useState(0); lRef.current = l; byId.current[l.id] = l;
   const players = el => { for (const v of el.querySelectorAll('.nb-vid')) if (v.getAttribute('contenteditable') !== 'false') { v.contentEditable = 'false'; v.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + esc(v.dataset.yt) + (v.dataset.t ? '?start=' + esc(v.dataset.t) : '') + '" title="' + esc(t('tool.video')) + '" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>'; } };
   useEffect(() => {
-    let on = true;
-    (async () => { const html = general ? String((await plannerKv('nb:general')) || '') : lRef.current.notebook || ''; if (on && pg.current) { pg.current.innerHTML = T.nbClean(html); players(pg.current); } })();
-    return () => { on = false; if (timer.current) { clearTimeout(timer.current); flush(general); } };
+    // The page read here is the only one this page's typing is saved to: the lesson open now, or the general page once its read
+    // has worked (a failed read never saves over it). Until then the page can't be typed in.
+    let on = true; const id = l.id; ready.current = false; redraw(n => n + 1);
+    (async () => {
+      let html; try { html = general ? String((await kv.get('nb:general')) || '') : lRef.current.notebook || ''; } catch (e) { if (on) toast(t('tool.nb_unread')); return; }
+      if (on && pg.current) { pg.current.innerHTML = T.nbClean(html); players(pg.current); ready.current = true; redraw(n => n + 1); }
+    })();
+    return () => { on = false; if (timer.current) { clearTimeout(timer.current); flush(general, id); } ready.current = false; };
   }, [general, l.id]);
   const stored = el => { const c = el.cloneNode(true); for (const v of c.querySelectorAll('.nb-vid')) { v.removeAttribute('contenteditable'); v.innerHTML = ''; } return T.nbClean(c.innerHTML); };
-  const flush = async gen => {
-    timer.current = 0; if (!pg.current) return;
+  const flush = async (gen, id = lRef.current.id) => {
+    timer.current = 0; if (!pg.current || !ready.current) return;
     const html = stored(pg.current), empty = !T.nbText(html).trim() && !/<img|nb-vid/.test(html);
     try {
       if (gen) await savePlannerKv('nb:general', empty ? '' : html);
-      else { const n = copy(lRef.current); if (empty) delete n.notebook; else n.notebook = html; if ((n.notebook || '') !== (lRef.current.notebook || '')) await save(n); }
+      else {
+        // After she has gone to another lesson, the words go to the lesson they were typed in, not the one on screen.
+        const was = byId.current[id], here = id === lRef.current.id; if (!was) return;
+        const n = copy(was); if (empty) delete n.notebook; else n.notebook = html;
+        if ((n.notebook || '') !== (was.notebook || '')) { if (here) await save(n); else { const st = await saveLesson(n); byId.current[id] = st; } }
+      }
       setState('saved');
     } catch (e) { saveFailed(e); }
   };
@@ -223,7 +233,7 @@ function Notebook({ p, l, save }) {
     </div>
     {ask && <div class="row"><TextInput label={ask === 'video' ? t('tool.nb_paste_video') : t('tool.nb_paste_link')} value={askV} onInput={setAskV} onKeyDown={e => { if (e.key === 'Enter') addUrl(); if (e.key === 'Escape') setAsk(null); }} data-focus="nb-ask" autoFocus />
       <Button size="sm" variant="primary" onClick={addUrl}>{t('tool.add')}</Button><IconButton icon="x" size="sm" label={t('common.cancel')} onClick={() => setAsk(null)} /></div>}
-    <div class="nbpage" ref={pg} contentEditable="true" spellcheck={true} role="textbox" aria-multiline="true" aria-label={general ? t('tool.nb_general') : t('tool.nb_lesson')} data-raw data-nbpage onInput={changed}
+    <div class="nbpage" ref={pg} contentEditable={ready.current ? "true" : "false"} aria-busy={ready.current ? undefined : "true"} spellcheck={true} role="textbox" aria-multiline="true" aria-label={general ? t('tool.nb_general') : t('tool.nb_lesson')} data-raw data-nbpage onInput={changed}
       onBlur={() => { range.current = sel() || range.current; }}
       onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && /^[biu]$/i.test(e.key)) { e.preventDefault(); cmd({ b: 'bold', i: 'italic', u: 'underline' }[e.key.toLowerCase()]); } }}
       onPaste={e => { const f = [...((e.clipboardData && e.clipboardData.files) || [])].find(x => /^image\//.test(x.type)); if (f) { e.preventDefault(); range.current = sel(); pic(f); } }}

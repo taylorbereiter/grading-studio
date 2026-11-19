@@ -3479,7 +3479,6 @@
  "plan.move_down": "スライドを下へ",
  "plan.slide_actions": "スライドの操作",
  "plan.duplicate": "複製",
- "plan.layout": "レイアウト",
  "plan.slide_title": "タイトル",
  "plan.box_tag": "ラベル",
  "plan.box_foot": "下部の一文",
@@ -6536,5 +6535,26 @@
  "les.add_slot": "別のクラスや日にも入れる",
  "les.pics_n": "{n} 枚の画像を 1 枚ずつスライドに",
  "les.links_on_video": "リンクは動画スライドに入れます。動画スライドを追加してから、そこにリンクをドロップしてください",
- "les.pic_blocked": "このサイトでは、この方法で画像をコピーできません。画像を右クリックして「画像をコピー」を選び、ここに貼り付けてください。"
+ "les.pic_blocked": "このサイトでは、この方法で画像をコピーできません。画像を右クリックして「画像をコピー」を選び、ここに貼り付けてください。",
+ "les.ly_start": "始まりと終わり",
+ "les.ly_teach": "指導と練習",
+ "les.ly_pics": "画像と動画",
+ "les.layout_for": "このスライドのレイアウト",
+ "les.add_a_slide": "スライドを追加",
+ "les.layout_keeps": "文字はそのまま残ります。新しい枠は空で始まり、何を入れるかが灰色で表示されます。",
+ "les.layout_n": "レイアウト: {name}",
+ "les.add_layout": "別のレイアウトでスライドを追加…",
+ "les.from_examples": "優れた例から",
+ "les.pick_example": "優れた例を選ぶ…",
+ "les.put_on_slides": "スライドに置く",
+ "les.pages": "ページ",
+ "les.ex_slide": "優れた例",
+ "les.ex_slide_n": "優れた例: {name}",
+ "les.ex_added": "新しいスライドに優れた例を追加しました",
+ "les.ex_added_n": "優れた例を追加しました。1 ページずつ {n} 枚のスライドに",
+ "les.open_comments": {
+  "one": "未完了のコメント {n} 件",
+  "other": "未完了のコメント {n} 件"
+ },
+ "tool.nb_unread": "このメモを読み込めなかったため、ここで上書き保存はしません。"
 }

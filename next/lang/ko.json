@@ -3479,7 +3479,6 @@
  "plan.move_down": "슬라이드 아래로",
  "plan.slide_actions": "슬라이드 작업",
  "plan.duplicate": "복제",
- "plan.layout": "레이아웃",
  "plan.slide_title": "제목",
  "plan.box_tag": "라벨",
  "plan.box_foot": "아래 문구",
@@ -6536,5 +6535,26 @@
  "les.add_slot": "다른 학급이나 날짜에 넣기",
  "les.pics_n": "사진 {n}장, 슬라이드마다 한 장씩",
  "les.links_on_video": "링크는 동영상 슬라이드에 넣습니다. 하나를 추가한 뒤 링크를 끌어다 놓으세요",
- "les.pic_blocked": "이 사이트는 이런 방식으로 사진을 복사할 수 없게 합니다. 사진을 오른쪽 클릭해 이미지 복사를 고른 뒤 여기에 붙여 넣으세요."
+ "les.pic_blocked": "이 사이트는 이런 방식으로 사진을 복사할 수 없게 합니다. 사진을 오른쪽 클릭해 이미지 복사를 고른 뒤 여기에 붙여 넣으세요.",
+ "les.ly_start": "시작과 마무리",
+ "les.ly_teach": "가르치기와 연습",
+ "les.ly_pics": "사진과 동영상",
+ "les.layout_for": "이 슬라이드의 레이아웃",
+ "les.add_a_slide": "슬라이드 추가",
+ "les.layout_keeps": "글은 그대로 남습니다. 새 상자는 비어 있고, 무엇이 들어갈지 회색 안내가 보입니다.",
+ "les.layout_n": "레이아웃: {name}",
+ "les.add_layout": "다른 레이아웃으로 슬라이드 추가…",
+ "les.from_examples": "우수 사례에서",
+ "les.pick_example": "우수 사례 고르기…",
+ "les.put_on_slides": "슬라이드에 넣기",
+ "les.pages": "페이지",
+ "les.ex_slide": "우수 사례",
+ "les.ex_slide_n": "우수 사례: {name}",
+ "les.ex_added": "새 슬라이드에 우수 사례를 추가했습니다",
+ "les.ex_added_n": "우수 사례를 추가했습니다. 슬라이드 {n}장에 한 페이지씩",
+ "les.open_comments": {
+  "one": "열린 댓글 {n}개",
+  "other": "열린 댓글 {n}개"
+ },
+ "tool.nb_unread": "이 메모를 읽을 수 없어 여기서 덮어써 저장하지 않습니다."
 }

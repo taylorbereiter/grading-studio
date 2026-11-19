@@ -25,5 +25,25 @@
  "les.add_slot": "Put it on another class or day",
  "les.pics_n": "{n} pictures, one on each slide",
  "les.links_on_video": "Links go on a Video slide: add one, then drop the link on it",
- "les.pic_blocked": "That site doesn’t let its pictures be copied this way. Right-click the picture, choose Copy image, then paste it here."
+ "les.pic_blocked": "That site doesn’t let its pictures be copied this way. Right-click the picture, choose Copy image, then paste it here.",
+ "les.ly_start": "Start and end",
+ "les.ly_teach": "Teach and practice",
+ "les.ly_pics": "Pictures and video",
+ "les.layout_for": "Layout for this slide",
+ "les.add_a_slide": "Add a slide",
+ "les.layout_keeps": "Your text stays. Any new boxes start empty, with a gray hint of what goes there.",
+ "les.layout_n": "Layout: {name}",
+ "les.add_layout": "Add a slide with another layout…",
+ "les.from_examples": "From your strong examples",
+ "les.pick_example": "Pick a strong example…",
+ "les.put_on_slides": "Put on slides",
+ "les.pages": "Pages",
+ "les.ex_slide": "Strong example",
+ "les.ex_slide_n": "Strong example: {name}",
+ "les.ex_added": "Strong example added on a new slide",
+ "les.ex_added_n": "Strong example added, one page on each of {n} slides",
+ "les.open_comments": {
+  "one": "{n} open comment",
+  "other": "{n} open comments"
+ }
 }

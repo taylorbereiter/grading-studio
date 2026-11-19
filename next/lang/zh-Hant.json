@@ -3479,7 +3479,6 @@
  "plan.move_down": "投影片下移",
  "plan.slide_actions": "投影片動作",
  "plan.duplicate": "製作副本",
- "plan.layout": "版面配置",
  "plan.slide_title": "標題",
  "plan.box_tag": "標籤",
  "plan.box_foot": "底部文字",
@@ -6536,5 +6535,26 @@
  "les.add_slot": "排到另一個班級或日期",
  "les.pics_n": "{n} 張圖片，每張一頁投影片",
  "les.links_on_video": "連結要放在影片投影片上：先加入一張，再把連結拖到上面",
- "les.pic_blocked": "這個網站不允許用這種方式複製圖片。請在圖片上按右鍵，選「複製圖片」，再貼到這裡。"
+ "les.pic_blocked": "這個網站不允許用這種方式複製圖片。請在圖片上按右鍵，選「複製圖片」，再貼到這裡。",
+ "les.ly_start": "開始與結尾",
+ "les.ly_teach": "教學與練習",
+ "les.ly_pics": "圖片與影片",
+ "les.layout_for": "這張投影片的版面",
+ "les.add_a_slide": "新增投影片",
+ "les.layout_keeps": "你的文字會保留。新的方框一開始是空的，並以灰色提示該放什麼。",
+ "les.layout_n": "版面：{name}",
+ "les.add_layout": "以其他版面新增投影片…",
+ "les.from_examples": "來自你的優秀範例",
+ "les.pick_example": "選一個優秀範例…",
+ "les.put_on_slides": "放到投影片上",
+ "les.pages": "頁面",
+ "les.ex_slide": "優秀範例",
+ "les.ex_slide_n": "優秀範例：{name}",
+ "les.ex_added": "已在新投影片上加入優秀範例",
+ "les.ex_added_n": "已加入優秀範例，每頁一張，共 {n} 張投影片",
+ "les.open_comments": {
+  "one": "{n} 則未完成的留言",
+  "other": "{n} 則未完成的留言"
+ },
+ "tool.nb_unread": "無法讀取這些筆記，所以這裡不會覆蓋它們。"
 }

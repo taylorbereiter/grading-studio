@@ -287,7 +287,7 @@ test('a strong example goes on a slide by reference: drawn from the marking side
   });
   await open(p, 'lesson/L5/edit');
   await p.click('main .ed-list li:nth-child(5) button'); // the exit ticket, made a picture slide
-  await p.select('main .ed-form select[data-focus="layout"]', 'picture');
+  await p.click('main .ed-form [data-focus="layout"]'); await p.waitForSelector('.sheet [data-layout="picture"]'); await p.click('.sheet [data-layout="picture"]'); await p.waitForFunction(() => !document.querySelector('.sheet[open]'));
   await p.waitForSelector('main [data-focus="add-example"]');
   await p.click('main [data-focus="add-example"]');
   await p.waitForSelector('.excard');

@@ -3459,7 +3459,6 @@
  "plan.move_down": "Mover slide para baixo",
  "plan.slide_actions": "Ações do slide",
  "plan.duplicate": "Duplicar",
- "plan.layout": "Layout",
  "plan.slide_title": "Título",
  "plan.box_tag": "Etiqueta",
  "plan.box_foot": "Linha de baixo",
@@ -6508,5 +6507,26 @@
  "les.add_slot": "Colocar em outra turma ou dia",
  "les.pics_n": "{n} imagens, uma em cada slide",
  "les.links_on_video": "Links vão em um slide de vídeo: adicione um e solte o link nele",
- "les.pic_blocked": "Esse site não deixa copiar as imagens assim. Clique com o botão direito na imagem, escolha Copiar imagem e cole aqui."
+ "les.pic_blocked": "Esse site não deixa copiar as imagens assim. Clique com o botão direito na imagem, escolha Copiar imagem e cole aqui.",
+ "les.ly_start": "Início e fim",
+ "les.ly_teach": "Ensinar e praticar",
+ "les.ly_pics": "Imagens e vídeo",
+ "les.layout_for": "Layout deste slide",
+ "les.add_a_slide": "Adicionar um slide",
+ "les.layout_keeps": "Seu texto fica. As caixas novas começam vazias, com uma dica em cinza do que vai nelas.",
+ "les.layout_n": "Layout: {name}",
+ "les.add_layout": "Adicionar um slide com outro layout…",
+ "les.from_examples": "Dos seus bons exemplos",
+ "les.pick_example": "Escolher um bom exemplo…",
+ "les.put_on_slides": "Colocar em slides",
+ "les.pages": "Páginas",
+ "les.ex_slide": "Bom exemplo",
+ "les.ex_slide_n": "Bom exemplo: {name}",
+ "les.ex_added": "Bom exemplo adicionado em um novo slide",
+ "les.ex_added_n": "Bom exemplo adicionado, uma página em cada um de {n} slides",
+ "les.open_comments": {
+  "one": "{n} comentário aberto",
+  "other": "{n} comentários abertos"
+ },
+ "tool.nb_unread": "Não foi possível ler estas notas, então nada será salvo por cima delas."
 }

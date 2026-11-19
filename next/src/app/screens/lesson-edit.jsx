@@ -40,7 +40,7 @@ const copy = x => JSON.parse(JSON.stringify(x));
 export default function Editor({ p, l, cur, setCur, save, ai, onAsk = () => {} }) {
   const E = engine(p);
   const [d, setD] = useState(() => copy(l)), timer = useRef(0), last = useRef(l.updated), stage = useRef(null);
-  const [over, setOver] = useState(false), [box, setBox] = useState(''), [keys, setKeys] = useState([]), [looking, setLooking] = useState(false), [tips, setTips] = useState(false), host = useRef(null), X = usePart('edit2'), [vid, setVid] = useState(false), [saving, setSaving] = useState(false), grid = useRef(null);
+  const [over, setOver] = useState(false), [box, setBox] = useState(''), [keys, setKeys] = useState([]), [looking, setLooking] = useState(false), [tips, setTips] = useState(false), host = useRef(null), X = usePart('edit2'), [vid, setVid] = useState(false), [saving, setSaving] = useState(false), grid = useRef(null), form = useRef(null), [ly, setLy] = useState(''), [exs, setExs] = useState(false);
   // Another window saved this lesson while it is open here: take it, unless she is typing.
   useEffect(() => { if (l.updated !== last.current && !timer.current) { setD(copy(l)); last.current = l.updated; } }, [l.updated]);
   useEffect(() => () => { if (timer.current) { clearTimeout(timer.current); save(dRef.current); } }, []);
@@ -59,7 +59,7 @@ export default function Editor({ p, l, cur, setCur, save, ai, onAsk = () => {} }
   const n = d.slides.length, i = Math.max(0, Math.min(cur, n - 1)), s = d.slides[i];
   const setSlide = (patch, now) => { let next = copy(d); next.slides[i] = { ...next.slides[i], ...patch }; for (const k in patch) if (patch[k] === undefined) delete next.slides[i][k]; if ('title' in patch && X) next = X.linkTitles(next, i); put(next, now, 'slide:' + (next.slides[i].id || i) + ':' + Object.keys(patch).join(',')); };
   const at = (k, j) => { const next = copy(d); k(next.slides, next); put(next, true); if (typeof j === 'number') setCur(j); };
-  const add = () => at(sl => sl.splice(i + 1, 0, E.normSlide({ layout: E.deckAdd(), fmt: 2 })), i + 1);
+  const add = (layout = E.deckAdd()) => at(sl => sl.splice(i + 1, 0, E.normSlide({ layout, fmt: 2 })), i + 1);
   const dup = () => at(sl => sl.splice(i + 1, 0, { ...copy(sl[i]), id: E.lid(), talk: [] }), i + 1);
   const del = () => n > 1 && at(sl => sl.splice(i, 1), Math.max(0, i - 1));
   const move = k => { const j = i + k; if (j < 0 || j >= n) return; at(sl => { const [x] = sl.splice(i, 1); sl.splice(j, 0, x); }, j); };
@@ -107,7 +107,7 @@ export default function Editor({ p, l, cur, setCur, save, ai, onAsk = () => {} }
     ];
     return () => offs.forEach(f => f());
   }, [i, n]);
-  const layouts = Object.keys(E.LAYOUTS).map(k => ({ value: k, label: LAYOUT_LINE[k] ? t(LAYOUT_LINE[k]) : k }));
+  const openTalk = x => (x.talk || []).filter(c => !c.done).length;
   return <div class="editor">
     <div class="ed-top"><TextInput label={t('plan.lesson_title')} value={d.title} onInput={v => { const n = copy(d); n.title = v; put(X ? X.linkTitles(n) : n); }} />
       <Button icon="image" onClick={() => setLooking(true)} data-focus="look">{t('edit.look_n', { name: t(LOOK_LINE[T.lookOf(d)] || 'edit.look') })}</Button>
@@ -115,23 +115,27 @@ export default function Editor({ p, l, cur, setCur, save, ai, onAsk = () => {} }
       {X && <X.TopExtras d={d} saving={saving} />}</div>
     {X && looking && <X.LookSheet k={{ p, E, T, Slide, saveKv, LOOK_LINE }} d={d} s={s} onPick={lk => put({ ...d, look: lk }, true)} onClose={() => setLooking(false)} />}
     {X && tips && <X.Tips onClose={() => setTips(false)} />}
+    {X && ly && <X.LayoutSheet k={{ p, E, Slide, LAYOUT_LINE }} d={d} s={s} mode={ly} onPick={x => ly === 'add' ? add(x) : setSlide({ layout: x }, true)} onExample={() => { setLy(''); setExs(true); }} onClose={() => setLy('')} />}
+    {X && exs && <X.ExampleSlides k={{ E, at, i }} onClose={() => setExs(false)} />}
+    {X && <X.SlideKeys n={n} i={i} setCur={setCur} />}
     <div class="ed-grid" ref={grid}>{X && <X.Drops root={grid} k={{ d, i, at, setCur, E, T }} />}
       <ol class="ed-list" aria-label={t('plan.all_slides')}>{d.slides.map((x, j) => <li><button type="button" draggable class={'th' + (j === i ? ' on' : '')} aria-current={j === i ? 'true' : undefined} onClick={() => setCur(j)} aria-label={t('plan.slide_n', { n: j + 1 })} data-slide-i={j}>
-        <span class="n">{j + 1}</span><Slide slide={x} lesson={d} plan={p} width={132} />{(x.talk || []).some(c => !c.done) && <Icon name="comment" size="xs" />}</button></li>)}
-        <li><Button size="sm" icon="plus" onClick={add} data-focus="add-slide">{t('plan.add_slide')}</Button></li></ol>
+        <span class="n">{j + 1}</span><Slide slide={x} lesson={d} plan={p} width={132} />{openTalk(x) > 0 && <span class="thc" title={X ? X.words.openComments(openTalk(x)) : ''}><Icon name="comment" size="xs" />{openTalk(x)}</span>}</button></li>)}
+        <li><Button size="sm" icon="plus" onClick={() => add()} data-focus="add-slide">{t('plan.add_slide')}</Button></li></ol>
       <div class="ed-stage" ref={stage}>
-        <div class="ed-stagewrap" ref={host} onClick={e => { const b = e.target.closest && e.target.closest('.ls-slide [data-k]'); if (b && b.dataset.k === 'video') setVid(true); if (b && T.BOX_KEYS.includes(b.dataset.k)) setBox(b.dataset.k); }}>
+        <div class="ed-stagewrap" ref={host} onClick={e => { const b = e.target.closest && e.target.closest('.ls-slide [data-k]'); if (b && b.dataset.k === 'video') setVid(true); if (b && T.BOX_KEYS.includes(b.dataset.k)) { setBox(b.dataset.k); if (X) X.focusField(form.current, b.dataset.k); } }}>
           <Slide slide={s} lesson={d} plan={p} width={900} fill label={t('plan.slide_of', { n: i + 1, of: n })} />
           {X && k && <X.Frame key={i + ':' + k} host={host} k={k} name={t(BOXN[k])} moved={!!(s.box && s.box[k])} onDone={r => placeBox(k, r)} onBack={() => boxBack(k)} />}</div>
         {over && <p class="ed-warn" role="status"><Icon name="warn" size="sm" /><span>{over === 'body' ? t('plan.too_much', { n: s.size }) : t('plan.box_over')}</span>
-          {over === 'body' && <Button size="sm" onClick={split}>{t('plan.split_slide')}</Button>}</p>}
+          {over === 'body' && <Button size="sm" onClick={split}>{t('plan.split_slide')}</Button>}
+          <Button size="sm" onClick={() => fit(over)} data-focus="fit">{t('edit.size_fit')}</Button></p>}
         <div class="ed-bar"><span class="num">{t('plan.slide_of', { n: i + 1, of: n })}</span><span class="grow" />
           <IconButton icon="chu" label={t('plan.move_up')} disabled={i === 0} onClick={() => move(-1)} />
           <IconButton icon="chd" label={t('plan.move_down')} disabled={i >= n - 1} onClick={() => move(1)} />
-          <Menu label={t('plan.slide_actions')} items={[{ id: 'dup', label: t('plan.duplicate'), icon: 'copy', onSelect: dup }, { id: 'ask', label: t('plan.redo_with', { name: ai }), icon: 'assist', onSelect: () => onAsk(i) }, { id: 'del', label: t('common.delete'), icon: 'trash', disabled: n < 2, onSelect: del }]}
+          <Menu label={t('plan.slide_actions')} items={[...(X ? [{ id: 'addly', label: X ? X.words.addLayout() : '', icon: 'plus', onSelect: () => setLy('add') }] : []), { id: 'dup', label: t('plan.duplicate'), icon: 'copy', onSelect: dup }, { id: 'ask', label: t('plan.redo_with', { name: ai }), icon: 'assist', onSelect: () => onAsk(i) }, { id: 'del', label: t('common.delete'), icon: 'trash', disabled: n < 2, onSelect: del }]}
             trigger={q => <IconButton icon="dots" label={t('plan.slide_actions')} {...q} />} /></div>
       </div>
-      <div class="ed-form">
+      <div class="ed-form" ref={form}>
         {k && <div class="boxtools" role="group" aria-label={t('edit.box_tools')}>
           <Select label={t('edit.box_pick')} value={k} options={keys.map(x => ({ value: x, label: t(BOXN[x]) }))} onChange={setBox} data-focus="box-pick" />
           <Select label={t('plan.text_size')} value={String(sizeOf(k) || '')} data-focus="box-size" onChange={v => setSize(k, v)}
@@ -139,15 +143,15 @@ export default function Editor({ p, l, cur, setCur, save, ai, onAsk = () => {} }
           {s.box && s.box[k] && <Button size="sm" variant="quiet" onClick={() => boxBack(k)}>{t('edit.box_back')}</Button>}
           <small class="hint">{t('edit.box_hint')}</small></div>}
         {!k && keys.length > 0 && <p class="hint">{t('edit.box_hint')}</p>}
-        <Select label={t('plan.layout')} value={s.layout} options={layouts} onChange={v => setSlide({ layout: v }, true)} data-focus="layout" />
-        <TextInput label={t('plan.slide_title')} value={s.title} onInput={v => setSlide({ title: v })} />
-        {(MORE[s.layout] || []).map(x => x === 'body2' ? <RichBox key={i + x} label={t(BOX_LINE[x])} value={s[x] || ''} onInput={v => setSlide({ [x]: v })} />
-          : <TextInput label={t(BOX_LINE[x])} value={s[x] || ''} onInput={v => setSlide({ [x]: v })} />)}
+        <Button class="lybtn" icon="slides" onClick={() => setLy('change')} data-focus="layout">{X ? X.words.layoutN(LAYOUT_LINE[s.layout] ? t(LAYOUT_LINE[s.layout]) : s.layout) : ''}</Button>
+        <TextInput label={t('plan.slide_title')} value={s.title} onInput={v => setSlide({ title: v })} data-box="title" />
+        {(MORE[s.layout] || []).map(x => x === 'body2' ? <RichBox key={i + x} label={t(BOX_LINE[x])} value={s[x] || ''} onInput={v => setSlide({ [x]: v })} data-box={x} />
+          : <TextInput label={t(BOX_LINE[x])} value={s[x] || ''} onInput={v => setSlide({ [x]: v })} data-box={x} />)}
         {X && PIC.includes(s.layout) && <X.PictureField s={s} setSlide={setSlide} />}
         {X && s.layout === 'video' && <X.VideoRow s={s} T={T} onOpen={() => setVid(true)} />}
         {X && vid && <X.VideoSheet s={s} T={T} onPatch={p2 => setSlide(p2, true)} onClose={() => setVid(false)} />}
-        {!NO_BODY.includes(s.layout) && (s.layout === 'title' ? <TextBox label={t('plan.box_sub')} hint={t('plan.sub_hint')} value={s.body} onInput={v => setSlide({ body: v })} rows={3} />
-          : <RichBox key={i + 'body'} label={t('plan.box_body')} hint={t('edit.body_hint')} value={s.body} onInput={v => setSlide({ body: v })} data-focus="slide-body" />)}
+        {!NO_BODY.includes(s.layout) && (s.layout === 'title' ? <TextBox label={t('plan.box_sub')} hint={t('plan.sub_hint')} value={s.body} onInput={v => setSlide({ body: v })} rows={3} data-box="body" />
+          : <RichBox key={i + 'body'} label={t('plan.box_body')} hint={t('edit.body_hint')} value={s.body} onInput={v => setSlide({ body: v })} data-focus="slide-body" data-box="body" />)}
         <TextBox label={t('plan.speaker_notes')} value={s.notes} onInput={v => setSlide({ notes: v })} rows={3} />
         <h3 class="sub">{t('plan.comments_slide', { name: ai })}</h3>
         <Talk talk={s.talk} ai={ai} label={t('plan.comments_slide', { name: ai })} onChange={v => setSlide({ talk: v }, true)} />

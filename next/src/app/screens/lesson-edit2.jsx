@@ -233,3 +233,56 @@ export function Drops({ root, k }) {
   }, [root.current]);
   return <input type="file" accept="image/*" class="vh" ref={file} tabIndex={-1} aria-hidden="true" data-pic-box onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; if (f) Drops.pics([f], K.current.i, ''); }} />;
 }
+
+// The layout gallery (src/planner/looks.js addSlideDlg): every layout as a small slide in the lesson's look, in the current Planner's
+// three groups. mode 'add' puts a new slide after this one; 'change' changes this one and keeps its words. The small slides show this
+// slide's own words in each layout (change) or the layout's name (add), so no sample text needs a line in every language.
+const GROUPS = [['les.ly_start', ['title', 'agenda', 'objectives', 'warmup', 'exit']], ['les.ly_teach', ['steps', 'discuss', 'content', 'twocol', 'text', 'passage', 'vocab']], ['les.ly_pics', ['picture', 'fullpic', 'textpic', 'picprompt', 'video']]];
+export function LayoutSheet({ k: { p, E, Slide, LAYOUT_LINE }, d, s, mode, onPick, onExample, onClose }) {
+  const change = mode === 'change', name = x => LAYOUT_LINE[x] ? t(LAYOUT_LINE[x]) : x;
+  const shown = x => change ? { ...s, layout: x } : E.normSlide({ layout: x, title: name(x), fmt: 2 });
+  return <Sheet open wide title={change ? t('les.layout_for') : t('les.add_a_slide')} icon={<Icon name="plus" />} onClose={onClose} footer={<><span class="grow" /><Button onClick={onClose}>{t('common.cancel')}</Button></>}>
+    {change && <p class="mute">{t('les.layout_keeps')}</p>}
+    {GROUPS.map(([g, ks]) => <section><h3 class="sub">{t(g)}</h3><div class="looks">{ks.filter(x => E.LAYOUTS[x]).map(x => <button type="button" class={'look' + (change && x === s.layout ? ' on' : '')} aria-pressed={change ? String(x === s.layout) : undefined} onClick={() => { onPick(x); onClose(); }} data-layout={x}>
+      <Slide slide={shown(x)} lesson={d} plan={p} width={164} /><span>{name(x)}</span></button>)}</div></section>)}
+    {!change && <section><h3 class="sub">{t('les.from_examples')}</h3><Button size="sm" icon="image" onClick={onExample} data-focus="ex-slides">{t('les.pick_example')}</Button></section>}
+  </Sheet>;
+}
+
+// Strong examples onto slides (src/planner/plexamples.js plxToSlides): one slide a page, after this one. A whole paper fills the slide
+// (Full picture), an answer or part sits under a title. Kept by reference, as every example in the new app is (plan/examples.js).
+export function ExampleSlides({ k: { E, at, i }, onClose }) {
+  return <ExamplePicker open many onClose={onClose} onPick={async (refs, r, pages, label) => {
+    onClose();
+    const sizes = await Promise.all(refs.map(ref => exampleSize(ref).catch(() => ({ w: 16, h: 10 })))), many = refs.length > 1 || r.pages > 1;
+    at(sl => refs.forEach((ref, j) => sl.splice(i + 1 + j, 0, { ...E.normSlide({ layout: r.kind === 'paper' ? 'fullpic' : 'picture', title: r.kind === 'paper' ? t('les.ex_slide_n', { name: label }) : t('les.ex_slide'), size: 28, fmt: 2 }),
+      img: { src: ref, w: sizes[j].w, h: sizes[j].h, source: r.title + ' · ' + label + (many ? ', ' + t('plan.page_n', { n: pages[j] + 1 }) : '') } })), i + refs.length);
+    toast(refs.length === 1 ? t('les.ex_added') : t('les.ex_added_n', { n: refs.length }));
+  }} />;
+}
+
+// Arrow keys and Page Up / Page Down move between slides when no box has the cursor (src/planner/lessons.js editor keys).
+export function SlideKeys({ n, i, setCur }) {
+  useEffect(() => {
+    const key = e => {
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+      const a = e.target, typing = a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable);
+      if (typing || document.querySelector('dialog[open], [role="menu"]')) return;
+      const k = e.key, dn = k === 'ArrowDown' || k === 'ArrowRight' || k === 'PageDown', up = k === 'ArrowUp' || k === 'ArrowLeft' || k === 'PageUp';
+      if (!dn && !up) return;
+      e.preventDefault(); setCur(Math.max(0, Math.min(n - 1, i + (dn ? 1 : -1))));
+    };
+    document.addEventListener('keydown', key); return () => document.removeEventListener('keydown', key);
+  }, [n, i]);
+  return null;
+}
+
+// Clicking a box on the slide puts the cursor in that box's own field beside it (the new editor types beside the slide, not on it).
+export function focusField(form, k) {
+  const f = form && form.querySelector('[data-box="' + k + '"]'); if (!f) return;
+  const el = f.matches('input, textarea, [contenteditable]') ? f : f.querySelector('input, textarea, [contenteditable]');
+  if (el) { el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block: 'nearest' }); }
+}
+
+// The editor's own words that live in the lesson lines (lesson.en.json), so the editor's route needn't carry that file.
+export const words = { layoutN: name => t('les.layout_n', { name }), addLayout: () => t('les.add_layout'), openComments: n => t('les.open_comments', { n }) };

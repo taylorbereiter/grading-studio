@@ -10,7 +10,7 @@ before(K.start); after(K.stop);
 test('E1-004 E1-005 E1-006 E1-007 E1-015 E1-016: a Video slide gets its link, where it starts, a Watch link, and can lose it again', async () => {
   const p = await K.fresh();
   await K.edit(p, 'L3', 2);
-  await p.select('main [data-focus="layout"]', 'video');
+  await p.click('main [data-focus="layout"]'); await pickLayout(p, 'video');
   await p.waitForSelector('main [data-focus="video-link"]');
   assert.equal(await p.$eval('main [data-focus="video-link"]', b => b.textContent), 'Add video link');
   // Cancel leaves it as it was (E1-007)
@@ -193,7 +193,7 @@ test('E1-028 E1-038: a picture or a YouTube link pasted into the editor, and the
   assert.equal(s[6].layout, 'video');
   // Clicking the empty picture box on a picture slide chooses a picture (E1-038)
   await p.click('main .ed-list [data-slide-i="1"]'); await wait(150);
-  await p.select('main [data-focus="layout"]', 'picture'); await wait(300);
+  await p.click('main [data-focus="layout"]'); await pickLayout(p, 'picture'); await wait(300);
   const [chooser] = await Promise.all([p.waitForFileChooser({ timeout: 5000 }), p.click('main .ed-stagewrap .ls-slide [data-k="img"]')]);
   const f = require('path').join(require('os').tmpdir(), 'gs-e1-pic-' + process.pid + '.png');
   require('fs').writeFileSync(f, Buffer.from(await p.evaluate(() => { const c = document.createElement('canvas'); c.width = 24; c.height = 24; return c.toDataURL('image/png').split(',')[1]; }), 'base64'));
@@ -220,5 +220,124 @@ test('E1-053: a finished .pptx dropped on the lesson page becomes its Finished P
   assert.equal(l.slides.length, 3); assert.match(l.slides[1].title, /From the finished deck/);
   assert.deepEqual(p.errors, []);
   for (const [k, [a, b2]] of Object.entries(await K.sameInPlanner(p, 'L3', l, ['slides', 'final']))) assert.deepEqual(a, b2, k + ' reads the same in the current Planner');
+  await p.ctx.close();
+});
+
+// Stage 8 E1 (4): the layout gallery, moving between slides, comments, the overflow warning, strong examples onto slides.
+const pickLayout = async (p, k) => { await p.waitForSelector('.sheet [data-layout="' + k + '"]'); await p.click('.sheet [data-layout="' + k + '"]'); await p.waitForFunction(() => !document.querySelector('.sheet[open]')); };
+
+test('E1-013 E1-014 E1-039: the layout gallery, grouped with small slides, changes this slide or adds one after it', async () => {
+  const p = await K.fresh();
+  await K.edit(p, 'L3', 2);
+  assert.equal(await p.$eval('main [data-focus="layout"]', b => b.textContent), 'Layout: Title and text');
+  await p.click('main [data-focus="layout"]');
+  await p.waitForSelector('.sheet [data-layout]');
+  assert.deepEqual(await p.$$eval('.sheet h3.sub', h => h.map(x => x.textContent)), ['Start and end', 'Teach and practice', 'Pictures and video']);
+  assert.equal(await p.$$eval('.sheet [data-layout] .slidebox', s => s.length), 17, 'every layout drawn as a small slide');
+  assert.equal(await p.$eval('.sheet [data-layout][aria-pressed="true"]', b => b.dataset.layout), 'content');
+  await pickLayout(p, 'twocol');
+  let l = await until(async () => { const x = await K.lessonInDb(p, 'L3'); return x && x.slides[2].layout === 'twocol' && x; });
+  assert.ok(l, 'the slide is Two columns now'); assert.equal(l.slides[2].title, 'Warm-up', 'its words stay');
+  // Add a slide with another layout (the current Planner's ▾ beside Add slide), from the slide's actions
+  await p.click('main .ed-bar [aria-label="Slide actions"]'); await K.item(p, 'Add a slide with another layout');
+  await pickLayout(p, 'exit');
+  l = await until(async () => { const x = await K.lessonInDb(p, 'L3'); return x && x.slides.length === 6 && x; });
+  assert.equal(l.slides[3].layout, 'exit', 'the new slide comes right after this one');
+  assert.equal(await p.$eval('main .ed-list .th.on', b => b.dataset.slideI), '3');
+  assert.deepEqual(p.errors, []);
+  for (const [k, [a, b]] of Object.entries(await K.sameInPlanner(p, 'L3', l))) assert.deepEqual(a, b, k + ' reads the same in the current Planner');
+  await p.ctx.close();
+});
+
+test('E1-017 E1-021 E1-023 E1-024: a box on the slide leads to its field, open comments are counted, Enter adds a comment, arrows move between slides', async () => {
+  const L = JSON.parse(JSON.stringify(require('./planseed.js').LESSONS));
+  L.find(x => x.id === 'L3').slides[1].talk = [{ by: 'you', text: 'Shorter?', at: 1792000000000 }, { by: 'claude', text: 'Maybe three items', at: 1792000000000 }, { by: 'you', text: 'Done', at: 1792000000000, done: true }];
+  const p = await K.fresh(1366, L);
+  await K.edit(p, 'L3', 0);
+  // E1-021: the thumbnail says how many comments are open
+  assert.equal(await p.$eval('main .ed-list [data-slide-i="1"] .thc', s => s.textContent.trim()), '2');
+  assert.equal(await p.$eval('main .ed-list [data-slide-i="1"] .thc', s => s.title), '2 open comments');
+  // E1-024: arrow keys and Page Down / Page Up when no box has the cursor
+  await p.click('main .ed-list [data-slide-i="0"]');
+  await p.keyboard.press('ArrowDown'); await p.waitForFunction(() => document.querySelector('main .ed-list .th.on').dataset.slideI === '1');
+  await p.keyboard.press('PageDown'); await p.waitForFunction(() => document.querySelector('main .ed-list .th.on').dataset.slideI === '2');
+  await p.keyboard.press('ArrowLeft'); await p.waitForFunction(() => document.querySelector('main .ed-list .th.on').dataset.slideI === '1');
+  // E1-017: clicking the title on the slide puts the cursor in the title's field
+  await p.click('main .ed-stagewrap .ls-slide [data-k="title"]');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.dataset.box === 'title');
+  await p.keyboard.press('ArrowDown'); await wait(200);
+  assert.equal(await p.$eval('main .ed-list .th.on', b => b.dataset.slideI), '1', 'arrows in a field stay in the field');
+  // E1-023: Enter adds the comment, Shift+Enter is a new line in it
+  await p.evaluate(() => [...document.querySelectorAll('main .talk button')].find(b => b.textContent === 'Add a comment').click());
+  await p.waitForSelector('main .talk textarea'); await p.click('main .talk textarea');
+  await p.keyboard.type('First line'); await p.keyboard.down('Shift'); await p.keyboard.press('Enter'); await p.keyboard.up('Shift'); await p.keyboard.type('second line'); await p.keyboard.press('Enter');
+  const l = await until(async () => { const x = await K.lessonInDb(p, 'L3'); return x && x.slides[1].talk.length === 4 && x; });
+  assert.ok(l, 'Enter added the comment'); assert.equal(l.slides[1].talk[3].text, 'First line\nsecond line');
+  assert.deepEqual(p.errors, []);
+  for (const [k, [a, b]] of Object.entries(await K.sameInPlanner(p, 'L3', l))) assert.deepEqual(a, b, k + ' reads the same in the current Planner');
+  await p.ctx.close();
+});
+
+test('E1-022: the overflow warning offers the biggest size that fits', async () => {
+  const L = JSON.parse(JSON.stringify(require('./planseed.js').LESSONS));
+  Object.assign(L.find(x => x.id === 'L3').slides[2], { size: 36, body: Array.from({ length: 6 }, (_, i) => 'Line ' + (i + 1) + ' of the warm-up').join('\n') });
+  const p = await K.fresh(1366, L);
+  await K.edit(p, 'L3', 2);
+  await p.waitForSelector('main .ed-warn [data-focus="fit"]');
+  assert.equal(await p.$eval('main .ed-warn [data-focus="fit"]', b => b.textContent), 'Biggest that fits');
+  await p.click('main .ed-warn [data-focus="fit"]');
+  const l = await until(async () => { const x = await K.lessonInDb(p, 'L3'); return x && x.slides[2].size < 36 && x; });
+  assert.ok(l, 'a smaller size is saved'); await wait(300);
+  assert.equal(await p.$('main .ed-warn'), null, 'and the words fit');
+  assert.deepEqual(p.errors, []);
+  await p.ctx.close();
+});
+
+// A made-up strong example of two pages, in the grading side's examples database, with plain pictures (no student work).
+const twoPages = () => p => (async () => {
+  const pic = async shade => { const c = document.createElement('canvas'); c.width = 600; c.height = 420; const x = c.getContext('2d'); x.fillStyle = shade; x.fillRect(0, 0, 600, 420); return new Promise(r => c.toBlob(r, 'image/jpeg', 0.8)); };
+  const rec = { id: 'ex2', t: Date.now(), kind: 'paper', letter: 'B', why: 'Clear turn', tags: [], title: 'Sonnet response', cls: 'A1', asg: 'i1', marks: true, score: false, pages: [{ w: 600, h: 420 }, { w: 600, h: 420 }] };
+  const db = await new Promise((res, rej) => { const r = indexedDB.open('grading-studio-examples', 1); r.onupgradeneeded = () => { r.result.createObjectStore('ex'); r.result.createObjectStore('pix'); }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  const blobs = [await pic('#cfe0f1'), await pic('#dfe9d8')];
+  await new Promise((res, rej) => { const tx = db.transaction(['ex', 'pix'], 'readwrite'); tx.objectStore('ex').put(rec, rec.id); blobs.forEach((b, i) => tx.objectStore('pix').put(b, rec.id + '|' + i)); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+  db.close();
+})();
+
+test('E1-041 E1-042: a strong example’s pages onto slides, one page each, after this one', async () => {
+  const p = await K.fresh();
+  await p.evaluate(twoPages());
+  await K.edit(p, 'L3', 1);
+  await p.click('main .ed-bar [aria-label="Slide actions"]'); await K.item(p, 'Add a slide with another layout');
+  await p.waitForSelector('.sheet [data-focus="ex-slides"]'); await p.click('.sheet [data-focus="ex-slides"]');
+  await p.waitForSelector('.sheet .excard'); await p.click('.sheet .excard');
+  await p.waitForSelector('.sheet .expages [data-page="1"]');
+  assert.deepEqual(await p.$$eval('.sheet .expages button', b => b.map(x => x.getAttribute('aria-pressed'))), ['true', 'true'], 'every page is chosen to start');
+  assert.equal(await p.$eval('.sheet [data-focus="use-example"]', b => b.textContent), 'Put on slides');
+  await p.click('.sheet [data-focus="use-example"]');
+  const l = await until(async () => { const x = await K.lessonInDb(p, 'L3'); return x && x.slides.length === 7 && x; });
+  assert.ok(l, 'two slides added');
+  assert.deepEqual(l.slides.slice(2, 4).map(s => [s.layout, s.img && s.img.src]), [['fullpic', 'gsex:ex2|0'], ['fullpic', 'gsex:ex2|1']]);
+  assert.match(l.slides[2].title, /^Strong example: Example B$/);
+  assert.match(l.slides[3].img.source, /Sonnet response · Example B, Page 2/);
+  assert.deepEqual(p.errors, []);
+  await p.ctx.close();
+});
+
+test('H-005 H-016: the notebook keeps her words with the lesson she typed them in, even when she moves on at once', async () => {
+  const p = await K.fresh();
+  await K.open(p, 'lesson/L2');
+  await p.click('main [data-focus="beside"]'); await p.waitForSelector('aside.beside [role=tab]');
+  await p.evaluate(() => [...document.querySelectorAll('aside.beside [role=tab]')].find(x => x.textContent === 'Notebook').click());
+  await p.waitForSelector('[data-nbpage][contenteditable="true"]');
+  await p.click('[data-nbpage]'); await p.keyboard.type('Only for reading aloud');
+  await p.evaluate(() => { location.hash = '#/lesson/L3'; });   // within half a second of the last key
+  await p.waitForFunction(() => location.hash === '#/lesson/L3' && document.querySelector('[data-nbpage][contenteditable="true"]'), { timeout: 8000 }).catch(() => {});
+  const two = await until(async () => { const x = await K.lessonInDb(p, 'L2'); return x && /Only for reading aloud/.test(x.notebook || '') && x; });
+  assert.ok(two, 'the words are kept with the lesson they were typed in');
+  await wait(800);
+  const three = await K.lessonInDb(p, 'L3');
+  assert.ok(!/Only for reading aloud/.test(three.notebook || ''), 'and never land in the next lesson');
+  assert.ok(!/Only for reading aloud/.test(await p.$eval('[data-nbpage]', e => e.textContent)), 'the next lesson shows its own page');
+  assert.deepEqual(p.errors, []);
   await p.ctx.close();
 });

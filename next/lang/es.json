@@ -3475,7 +3475,6 @@
  "plan.move_down": "Bajar diapositiva",
  "plan.slide_actions": "Acciones de la diapositiva",
  "plan.duplicate": "Duplicar",
- "plan.layout": "Diseño",
  "plan.slide_title": "Título",
  "plan.box_tag": "Etiqueta",
  "plan.box_foot": "Línea inferior",
@@ -6529,5 +6528,26 @@
  "les.add_slot": "Ponerla en otra clase o día",
  "les.pics_n": "{n} imágenes, una en cada diapositiva",
  "les.links_on_video": "Los enlaces van en una diapositiva de vídeo: añade una y suelta el enlace en ella",
- "les.pic_blocked": "Ese sitio no deja copiar sus imágenes así. Haz clic derecho en la imagen, elige Copiar imagen y pégala aquí."
+ "les.pic_blocked": "Ese sitio no deja copiar sus imágenes así. Haz clic derecho en la imagen, elige Copiar imagen y pégala aquí.",
+ "les.ly_start": "Inicio y cierre",
+ "les.ly_teach": "Enseñar y practicar",
+ "les.ly_pics": "Imágenes y video",
+ "les.layout_for": "Diseño de esta diapositiva",
+ "les.add_a_slide": "Añadir una diapositiva",
+ "les.layout_keeps": "Tu texto se queda. Los cuadros nuevos empiezan vacíos, con una pista en gris de lo que va ahí.",
+ "les.layout_n": "Diseño: {name}",
+ "les.add_layout": "Añadir una diapositiva con otro diseño…",
+ "les.from_examples": "De tus ejemplos destacados",
+ "les.pick_example": "Elegir un ejemplo destacado…",
+ "les.put_on_slides": "Poner en diapositivas",
+ "les.pages": "Páginas",
+ "les.ex_slide": "Ejemplo destacado",
+ "les.ex_slide_n": "Ejemplo destacado: {name}",
+ "les.ex_added": "Ejemplo destacado añadido en una diapositiva nueva",
+ "les.ex_added_n": "Ejemplo destacado añadido, una página en cada una de {n} diapositivas",
+ "les.open_comments": {
+  "one": "{n} comentario abierto",
+  "other": "{n} comentarios abiertos"
+ },
+ "tool.nb_unread": "No se pudieron leer estas notas, así que aquí no se guardará nada encima."
 }
