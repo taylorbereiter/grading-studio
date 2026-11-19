@@ -281,9 +281,9 @@ test('D-006 D-007 D-036: Choose from Drive… matched by name, Change folder, Dr
   await ctx.close();
 });
 
-// D-021: a unit's Add files and Add a screenshot, with Google usable here, open a menu of this computer or Drive (one press each, so
-// the class page stays under its count); From Google Drive adds the file picked there to the unit as the computer's chooser does.
-test('D-021: a unit\'s Add files > From Google Drive adds the file to the unit; Add a screenshot offers the same two ways', async () => {
+// D-021: with Google usable here, a unit's Add files has Drive's mark beside it and Add a screenshot is a menu of this computer or
+// Drive; the file picked in Drive goes on the unit as one from the computer's chooser does.
+test('D-021: Drive\'s mark beside a unit\'s Add files adds the file picked in Drive to the unit; Add a screenshot offers both ways', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const D = { asked: [], folders: [], sent: [], videos: {}, papers: { '1UnitTaskUnitTaskUnitTaskUnit00001': await makePaper({ title: 'Poem task' }) } };
   const p = await page(ctx, errors, D);
@@ -297,8 +297,7 @@ test('D-021: a unit\'s Add files > From Google Drive adds the file to the unit; 
   await p.waitForFunction(() => { const l = [...document.querySelectorAll('.pop [role="menuitem"]')].map(e => e.textContent.trim()); return l.includes('From this computer') && l.includes('From Google Drive'); }, { timeout: 15000 });
   await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('.pop [role="menuitem"]'));
   await p.evaluate(() => { window.__picks.push([{ id: '1UnitTaskUnitTaskUnitTaskUnit00001', name: 'Poem task.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
-  await p.click('[data-focus="unit-add-file"]');
-  await menuPick(p, 'From Google Drive');
+  await p.click('.ufiles .row [data-drive]');
   for (let k = 0; k < 100 && (await nFiles()) === before; k++) await new Promise(r => setTimeout(r, 150));
   const files = ((await kv('units')) || []).flatMap(u => u.files || []);
   assert.ok(files.some(f => f.name === 'Poem task.pdf'), 'the file picked in Drive is on the unit: ' + JSON.stringify(files.map(f => f.name)));

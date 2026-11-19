@@ -49,6 +49,8 @@ export function Panel({ ui, close, start, draw }) {
   const r = E.fcRun(), c0 = E.fcConf(), w = r ? E.fcWork(r.w) : null, c = r && r.k === 'l' ? { ...c0, len: c0.llen } : c0;
   const set = r2 => { E.fcRunSet(r2); draw(); };
   const fold = () => { const x = E.fcRun(); if (x) { x.fold = true; set(x); } };
+  // Esc inside a running session's panel folds it down to the pill (src/planner/plfocus.js)
+  const esc = { onKeyDown: e => { if (e.key === 'Escape' && !e.defaultPrevented) { e.preventDefault(); e.stopPropagation(); fold(); } } };
   if (!r) return <aside class="fcpanel" aria-label={t('focus.title')} data-fc-panel="start"><Head cap={t('focus.title')} onClose={close} /><Start /></aside>;
   if (r.fold && (r.st === 'run' || r.st === 'paused' || r.st === 'brk')) {
     const n = c.goal && r.k !== 'l' ? E.fcGoalNow(c) : 0;
@@ -56,12 +58,12 @@ export function Panel({ ui, close, start, draw }) {
       <Clock r={r} />{w && raw(w.name)}{c.goal && r.k !== 'l' ? <span class={'fcpg' + (n >= c.goal.n ? ' met' : '')}>{n}/{c.goal.n}</span> : null}</button></aside>;
   }
   // back after a few minutes away from the tab: how long, and the session goes on or starts again (src/focus.js fcaway)
-  if (r.st === 'run' && r.away) return <aside class="fcpanel" aria-label={t('focus.title')} data-fc-panel="away"><Head cap={t('focus.focusing')} fold={fold} />
+  if (r.st === 'run' && r.away) return <aside class="fcpanel" aria-label={t('focus.title')} data-fc-panel="away" {...esc}><Head cap={t('focus.focusing')} fold={fold} />
     <div class="fcrunv"><p class="fcbig">{t('focus.wb')}</p><p class="mute">{t('focus.wb_away', { n: r.away })}</p>
       <div class="fcacts"><Button size="sm" variant="primary" data-fcaway="keep" onClick={() => { const x = E.fcRun(); if (x) { delete x.away; set(x); } }}>{t('focus.wb_keep')}</Button>
         <Button size="sm" data-fcaway="again" onClick={() => { const x = E.fcRun(); if (x) { delete x.away; x.at = Date.now(); x.st = 'run'; delete x.pz; delete x.idl; delete x.ii; set(x); } }}>{t('focus.wb_again')}</Button></div></div></aside>;
   if (r.st === 'run' || r.st === 'paused') {
-    return <aside class="fcpanel" aria-label={t('focus.title')} data-fc-panel={r.st}><Head cap={r.st === 'paused' ? t('focus.paused') : t('focus.focusing')} fold={fold} />
+    return <aside class="fcpanel" aria-label={t('focus.title')} data-fc-panel={r.st} {...esc}><Head cap={r.st === 'paused' ? t('focus.paused') : t('focus.focusing')} fold={fold} />
       <div class="fctop"><Clock r={r} big /><What r={r} w={w} /></div>
       {r.k !== 'l' && <div class="fcstats"><div class="fcstat"><span class="mute">{r.no > 1 ? t('focus.session_n', { n: r.no }) : t('focus.this_session')}</span><b data-fc-got={E.fcGot(r)}>{t('focus.papers', { n: E.fcGot(r) })}</b></div><SgLine r={r} w={w} /><Goal /></div>}
       <Music c={c} draw={draw} />
@@ -83,7 +85,7 @@ export function Panel({ ui, close, start, draw }) {
       <div class="fcacts"><Button size="sm" variant="quiet" data-fc-stop onClick={() => { E.fcStop(); draw(); }}>{t('focus.stop_now')}</Button></div>
     </aside>;
   }
-  if (r.st === 'brk') return <aside class="fcpanel" aria-label={t('focus.title')} data-fc-panel="brk"><Head cap={t('focus.break')} fold={fold} />
+  if (r.st === 'brk') return <aside class="fcpanel" aria-label={t('focus.title')} data-fc-panel="brk" {...esc}><Head cap={t('focus.break')} fold={fold} />
     <div class="fctop"><Clock r={r} big /><div class="fcwhat"><b>{w ? t('focus.after_break') : t('focus.a_break')}</b>{w && raw(w.name)}</div></div>
     <p class="fcbrkbox">{t('focus.break_say')}</p>
     <div class="fcacts"><Button size="sm" variant="primary" data-fc-back onClick={() => start(r.w, c.len)}>{t('focus.back_now')}</Button><span class="sp" /><Button size="sm" variant="quiet" data-fc-stop onClick={() => { E.fcStop(); draw(); }}>{t('focus.stop_now')}</Button></div>

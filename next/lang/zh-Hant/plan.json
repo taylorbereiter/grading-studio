@@ -312,7 +312,6 @@
  "plan.no_past": "還沒有過去的課程",
  "plan.no_past_text": "課程的日期過了之後就會顯示在這裡。",
  "plan.no_units": "還沒有單元",
- "plan.no_units_text": "單元來自每個班級的課程時間軸。",
  "plan.unit_dates": {
   "one": "{from} 到 {to}，{n} 週",
   "other": "{from} 到 {to}，{n} 週"
@@ -361,7 +360,6 @@
  "plan.delete_unit_sure": "要刪除它和它的檔案嗎？",
  "plan.unit_name": "單元名稱",
  "plan.unit_starts": "開始",
- "plan.unit_starts_hint": "單元從星期一開始；選其他日子會移到那一週的星期一。",
  "plan.unit_weeks": "週數",
  "plan.week_fewer": "少一週",
  "plan.week_more": "多一週",

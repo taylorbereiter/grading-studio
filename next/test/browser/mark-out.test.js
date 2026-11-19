@@ -383,7 +383,7 @@ test('share with your assistant (src/app/claude.js): from Insights, a ZIP of pap
   await p.waitForSelector('dialog.cmd[open]');
   await p.waitForFunction(() => document.activeElement && document.activeElement.matches('dialog.cmd input'));
   await p.keyboard.type(who);
-  await p.waitForFunction(s => { const o = document.querySelector('dialog.cmd[open] [role="option"][aria-selected="true"]'); return o && o.textContent.includes(s); }, { timeout: 10000 }, who);
+  await p.waitForFunction(s => { const o = document.querySelector('dialog.cmd[open] [role="option"][aria-selected="true"]'); return o && o.textContent.includes(s) && !o.textContent.startsWith('Search inside'); }, { timeout: 10000 }, who);
   await p.keyboard.press('Enter');
   await p.waitForFunction(() => window.__mark.state().cur === 1 && !/insights/.test(location.hash), { timeout: 30000 });
   await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(old.id) + '/insights');

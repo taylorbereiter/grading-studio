@@ -164,15 +164,12 @@ test('the week planned with the assistant: one self-contained message for the em
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
-test('D-021 a unit: a summative file added, the weeks filled from the assistant’s reply, and a unit made to fill from screenshots', async () => {
+test('a unit: a summative file added, the weeks filled from the assistant’s reply, and a unit made to fill from screenshots', async () => {
   const p = await fresh(); await clip(p);
   await open(p, 'class/c1');
   await p.waitForSelector('[data-focus="unit-add-file"]', { timeout: 8000 });
   const f = path.join(require('os').tmpdir(), 'Summative task ' + process.pid + '.txt'); fs.writeFileSync(f, 'Write a poem of your own.');
-  // with Google usable, Add files is a menu of this computer or Drive (Drive's line: drive-files.test.js D-021)
-  await p.click('[data-focus="unit-add-file"]');
-  const [fc] = await Promise.all([p.waitForFileChooser(), p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.trim() === 'From this computer'); if (it) it.click(); return !!it; }, { timeout: 15000 })]); await fc.accept([f]);
-  await p.waitForFunction(() => !document.querySelector('.pop [role="menuitem"]'));
+  const [fc] = await Promise.all([p.waitForFileChooser(), p.click('[data-focus="unit-add-file"]')]); await fc.accept([f]);
   const withFile = await until(async () => { const us = await kvGet(p, 'units'); const u = us && us.find(x => x.id === 'U2'); return u && u.files.length && u; }); fs.unlinkSync(f);
   assert.equal(withFile.files[0].kind, 'summative', 'a task sheet is a summative file'); assert.ok((await kvGet(p, 'file:' + withFile.files[0].id)).blob > 0);
   await p.waitForFunction(() => /Summative/.test(document.querySelector('.ugoals').textContent));
@@ -189,13 +186,5 @@ test('D-021 a unit: a summative file added, the weeks filled from the assistant�
   await p.click('[data-focus="unit-from-shots"]');
   assert.ok(await until(async () => ((await kvGet(p, 'units')) || []).filter(x => x.course === 'Grade 9').length === 3), 'a new unit is made');
   await p.waitForSelector('[data-focus="unit-add-shot"]');
-  // D-021: the input Drive's mark fills (DriveButton, shown where Google can be used) adds a screenshot as the button's chooser does
-  const png = path.join(require('os').tmpdir(), 'unit-shot-' + process.pid + '.png');
-  fs.writeFileSync(png, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'));
-  const before = ((await kvGet(p, 'units')) || []).reduce((n, x) => n + x.files.filter(f => f.kind === 'atlas').length, 0);
-  await (await p.$('input[data-ushotin]')).uploadFile(png);
-  assert.ok(await until(async () => ((await kvGet(p, 'units')) || []).reduce((n, x) => n + x.files.filter(f => f.kind === 'atlas').length, 0) === before + 1), 'D-021: the screenshot is added');
-  fs.unlinkSync(png);
-  assert.ok(await p.$('input[data-ufile]'), 'and Add files has its own input for Drive to fill');
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });

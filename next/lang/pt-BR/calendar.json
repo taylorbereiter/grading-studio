@@ -24,5 +24,115 @@
   "one": "{n} aula",
   "other": "{n} aulas"
  },
- "cal.none_found": "Nenhuma aula corresponde."
+ "cal.none_found": "Nenhuma aula corresponde.",
+ "cal.sem": "Semestre",
+ "cal.sem_help": "Cada semana do semestre, com a unidade de cada curso. Abra uma semana para planejá-la.",
+ "cal.sem_week": "Semana",
+ "cal.open_week": "Abrir a semana de {range}",
+ "cal.no_unit_short": "Sem unidade",
+ "cal.n_planned": "{n}/{of} planejadas",
+ "cal.ahead": "Em breve, sem aula",
+ "cal.ahead_n": {
+  "one": "{n} turma nas próximas duas semanas",
+  "other": "{n} turmas nas próximas duas semanas"
+ },
+ "cal.ahead_none": "Todas as turmas das próximas duas semanas têm aula.",
+ "cal.ahead_more": {
+  "one": "Mais {n}. A visão da semana mostra.",
+  "other": "Mais {n}. A visão da semana mostra cada uma."
+ },
+ "cal.next_week": "Próxima semana: {n} de {of} aulas planejadas",
+ "cal.next_week_ready": "Próxima semana: {n} de {of} aulas planejadas, {r} prontas",
+ "cal.pace": "Cerca de {time} por aula, pelas suas últimas {n}",
+ "cal.pace_title": "O meio dos seus tempos de planejamento, das aulas que você marcou como prontas",
+ "cal.mins": {
+  "one": "{n} minuto",
+  "other": "{n} minutos"
+ },
+ "cal.hrs": {
+  "one": "{n} hora",
+  "other": "{n} horas"
+ },
+ "cal.hr_min": "{h} h {m} min",
+ "cal.tomorrow": "Amanhã",
+ "cal.plan_it": "Planejar",
+ "cal.gap_more": "Outras formas de planejar a aula de {name}",
+ "cal.units_text": "Uma unidade são algumas semanas de um curso, cada uma com seu foco. A semana e o semestre mostram em que unidade você está, e suas aulas, arquivos e rubricas ficam juntos.",
+ "cal.start_week": "Semana {n}, {date}",
+ "cal.week_off": "Semana {n} removida, com o que estava escrito nela",
+ "cal.open_link": "Abrir",
+ "cal.unit_lessons": "Aulas desta unidade",
+ "cal.open_bank": "Abrir o banco de rubricas",
+ "cal.bk_new": "Nova rubrica ou escala",
+ "cal.pack_opening": "Abrindo {name}…",
+ "cal.zip_bad": "Não foi possível abrir esse .zip",
+ "cal.pack_bad": "Esse .zip não é um pacote de aulas",
+ "cal.pack_lessons": {
+  "one": "{n} aula adicionada a Aulas anteriores.",
+  "other": "{n} aulas adicionadas a Aulas anteriores."
+ },
+ "cal.pack_none": "Nenhuma aula nova: todas já estão aqui.",
+ "cal.pack_files": {
+  "one": "{n} arquivo veio junto.",
+  "other": "{n} arquivos vieram junto."
+ },
+ "cal.pack_links": {
+  "one": "{n} link de plano de unidade preenchido.",
+  "other": "{n} links de plano de unidade preenchidos."
+ },
+ "cal.pack_skipped": {
+  "one": "{n} já estava aqui.",
+  "other": "{n} já estavam aqui."
+ },
+ "cal.pack_see": "Ver",
+ "cal.import_pack": "Importar um pacote de aulas…",
+ "cal.past_packs_text": "Apresentações antigas e seus materiais também aparecem aqui depois que você importa um pacote de aulas (um .zip feito para o Planejador).",
+ "cal.open_file": "Abrir {name}",
+ "cal.n_more": "+{n} mais",
+ "cal.from_pack": "De um pacote de aulas",
+ "cal.file_missing": "Esse arquivo não está mais aqui.",
+ "cal.import_sub": "Um arquivo de aula, um pacote de aulas ou texto colado",
+ "cal.setup_save": "Salvar meu arquivo de configuração",
+ "cal.setup_load": "Carregar um arquivo de configuração…",
+ "cal.setup_file_name": "Configuração do planejador",
+ "cal.setup_saved": "Salvo como “{name}”. Carregue com Carregar um arquivo de configuração… em outro computador.",
+ "cal.setup_bad": "Isso não é um arquivo de configuração",
+ "cal.setup_loaded": {
+  "one": "Horário carregado: {n} turma.",
+  "other": "Horário carregado: {n} turmas."
+ },
+ "cal.setup_loaded_named": {
+  "one": "{name} carregado: {n} turma.",
+  "other": "{name} carregado: {n} turmas."
+ },
+ "cal.setup_units": {
+  "one": "{n} unidade entrou.",
+  "other": "{n} unidades entraram."
+ },
+ "cal.setup_tpl": "Seu modelo de slides está carregado.",
+ "cal.no_school": "Sem aula",
+ "cal.last_year": "Ano passado",
+ "cal.year_moved": "Novo ano letivo: as unidades e o semestre avançaram um ano.",
+ "cal.year_moved_n": {
+  "one": "Novo ano letivo: as unidades e o semestre avançaram um ano, e {n} aula está em Aulas anteriores sob “{name}”.",
+  "other": "Novo ano letivo: as unidades e o semestre avançaram um ano, e {n} aulas estão em Aulas anteriores sob “{name}”."
+ },
+ "cal.type_classes": "Digitar minhas turmas",
+ "cal.no_timetable_text": "As aulas se encaixam nas suas turmas quando o app sabe quando elas se reúnem. Digite suas turmas e horários: leva alguns minutos e é feito uma vez. Se tiver um arquivo de configuração de outro computador, carregue-o ou solte-o nesta página.",
+ "cal.date_to": "Até (opcional)",
+ "cal.any_colour": "Qualquer cor",
+ "cal.search": "Pesquisar",
+ "cal.search_inside": "Pesquisar “{q}” dentro das aulas",
+ "cal.search_label": "Aulas, slides, notas, documentos, unidades",
+ "cal.search_two": "Digite pelo menos duas letras.",
+ "cal.search_none": "Nada encontrado para “{q}”.",
+ "cal.search_n": {
+  "one": "{n} encontrado",
+  "other": "{n} encontrados"
+ },
+ "cal.search_first": "Mostrando os primeiros {n}.",
+ "cal.search_slide": "{title}, slide {n}",
+ "cal.search_nb": "{title}, caderno",
+ "cal.search_in": "Em “{title}”",
+ "cal.search_no_class": "Sem turma"
 }

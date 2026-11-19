@@ -6,7 +6,7 @@
 // through mark/marking.js, which saves through students/write.js.
 import * as X from '../../engines/gexport.js';
 import { use, state, gradeOf, fmtNum, noScore } from '../../engines/gcore.js';
-import { layoutOf, docIn, docAuto, fileByPath, shownName, anonOn } from '../../engines/gdraw.js';
+import { layoutOf, docIn, docAuto, fileByPath, shownName, anonOn, viewable } from '../../engines/gdraw.js';
 import { store } from '../../engines/gstore.js';
 import { PARTS } from '../router.js';
 import { libs as pdfReady } from './paper.js';
@@ -129,6 +129,18 @@ export function plan() {
 // The things to look at before returning (src/grades.js exportCheck): scores not finished, no paper, a score that disagrees with the
 // paper, files with no marks, grades read off a paper to confirm. The same groups and order; each note is made into words by the
 // Return tab, so it can be put into the teacher's language.
+// A file nothing has been done to (src/grades.js unmarkedFile, with src/draw.js fileMarked): a paper with no marks, typed notes, scan
+// readings or handwriting that no page of the layout uses as it is; a Word file not edited, not handwritten, and with no score in it.
+function unmarked(st, f) {
+  if (f.virtual) return false;
+  if (viewable(f)) {
+    if (Object.values(f.marks).some(a => a.length) || (f.kami && Object.keys(f.kami).length > 0) || (f.scan && f.scan.found && f.scan.found.length) || f.hand) return false;
+    return !layoutOf(st).some(d => !docAuto(st, d) && !docIn(st, d) && d.pages.some(([path]) => path === f.path));
+  }
+  if (f.kind !== 'docx' || f.edited || f.hand) return false;
+  const w = X.wordScore(f);
+  return !(w && w.total != null) && !X.wordFound(f, st).length;
+}
 export function check() {
   const c = { unfinished: [], noPaper: [], disagree: [], unmarked: [], doubts: [] };
   state().batch.students.forEach((st, i) => {
@@ -137,7 +149,7 @@ export function check() {
     if (!g.done) c.unfinished.push({ i, name, part: g.partial ? X.partNote(st) : '' });
     if (!st.files.length) c.noPaper.push({ i, name });
     const d = X.disagreeNote(st); if (d) c.disagree.push({ i, name, note: d });
-    for (const f of st.files) if (X.unmarkedFile(st, f)) c.unmarked.push({ i, name, fname: anonOn() ? '' : f.name, bad: !!f.bad, file: f.path });
+    for (const f of st.files) if (unmarked(st, f)) c.unmarked.push({ i, name, fname: anonOn() ? '' : f.name, bad: !!f.bad, file: f.path });
     if (g.total != null || g.pct != null) return;   // her own score, or one clear reading, already stands
     if (X.manyReads(st)) { c.doubts.push({ i, name, many: X.readsCount(st) }); return; }
     for (const r of st.doubts || []) c.doubts.push({ i, name, said: X.foundLabel(r) });
