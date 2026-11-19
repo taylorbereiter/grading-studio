@@ -61,8 +61,12 @@ const libOf = p => p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib') ||
 // A box opened a moment ago can still be taking the focus: type, and type again until the box says it.
 const typeIn = async (p, sel, v) => {
   for (let n = 0; n < 4; n++) {
-    await p.focus(sel); await p.keyboard.down('Control'); await p.keyboard.press('KeyA'); await p.keyboard.up('Control'); await p.keyboard.press('Backspace'); await p.type(sel, v);
-    if (await p.$eval(sel, e => e.value) === v) return;
+    // the box from a step before can still be closing, so wait for the box each time and try again if it went away under us
+    try {
+      await p.waitForSelector(sel, { timeout: 10000 });
+      await p.focus(sel); await p.keyboard.down('Control'); await p.keyboard.press('KeyA'); await p.keyboard.up('Control'); await p.keyboard.press('Backspace'); await p.type(sel, v);
+      if (await p.$eval(sel, e => e.value) === v) return;
+    } catch {}
     await new Promise(r => setTimeout(r, 200));
   }
   throw new Error('could not type into ' + sel);
