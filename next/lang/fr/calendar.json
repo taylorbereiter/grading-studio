@@ -1,0 +1,138 @@
+{
+ "cal.card_menu": "Menu de {title}",
+ "cal.alt": "Variante",
+ "cal.finished": "Terminée",
+ "cal.taught_to": "Faite jusqu’à la diapositive {n}",
+ "cal.also": "Aussi pour {name}",
+ "cal.class_page": "Page de la classe",
+ "cal.link_add": "Ajouter le lien de la page de la classe…",
+ "cal.link_change": "Modifier le lien de la page de la classe…",
+ "cal.link_title": "Page de la classe {name}",
+ "cal.link_label": "Adresse web",
+ "cal.link_hint": "Il s’affiche sur cette classe dans la semaine, sur ses leçons et dans la notation. Laissez vide pour le retirer.",
+ "cal.link_bad": "Cela ne ressemble pas à un lien web",
+ "cal.go_date": "Aller à une date",
+ "cal.no_unit": "Pas d’unité cette semaine",
+ "cal.open_unit": "Ouvrir {title}",
+ "cal.new_unit_for": "Nouvelle unité pour {course} à partir de cette semaine",
+ "cal.all_lessons": "Toutes les leçons",
+ "cal.all_find": "Trouver une leçon",
+ "cal.no_slot": "Hors de l’emploi du temps",
+ "cal.new_loose": "Nouvelle leçon sans classe",
+ "cal.del_sure": "Supprimer ? Appuyez encore",
+ "cal.n_lessons": {
+  "one": "{n} leçon",
+  "other": "{n} leçons"
+ },
+ "cal.none_found": "Aucune leçon ne correspond.",
+ "cal.sem": "Semestre",
+ "cal.sem_help": "Chaque semaine du semestre, avec l’unité de chaque cours. Ouvrez une semaine pour la préparer.",
+ "cal.sem_week": "Semaine",
+ "cal.open_week": "Ouvrir la semaine du {range}",
+ "cal.no_unit_short": "Pas d’unité",
+ "cal.n_planned": "{n}/{of} préparées",
+ "cal.ahead": "À venir, sans leçon",
+ "cal.ahead_n": {
+  "one": "{n} cours dans les deux prochaines semaines",
+  "other": "{n} cours dans les deux prochaines semaines"
+ },
+ "cal.ahead_none": "Chaque cours des deux prochaines semaines a sa leçon.",
+ "cal.ahead_more": {
+  "one": "{n} de plus. La vue semaine le montre.",
+  "other": "{n} de plus. La vue semaine les montre."
+ },
+ "cal.next_week": "Semaine prochaine : {n} leçons préparées sur {of}",
+ "cal.next_week_ready": "Semaine prochaine : {n} leçons préparées sur {of}, {r} prêtes",
+ "cal.pace": "Environ {time} par leçon, d’après vos {n} dernières",
+ "cal.pace_title": "Le milieu de vos temps de préparation, d’après les leçons que vous avez dites prêtes",
+ "cal.mins": {
+  "one": "{n} minute",
+  "other": "{n} minutes"
+ },
+ "cal.hrs": {
+  "one": "{n} heure",
+  "other": "{n} heures"
+ },
+ "cal.hr_min": "{h} h {m} min",
+ "cal.tomorrow": "Demain",
+ "cal.plan_it": "Préparer",
+ "cal.gap_more": "D’autres façons de préparer la leçon de {name}",
+ "cal.units_text": "Une unité, ce sont quelques semaines d’un cours, chacune avec son thème. La semaine et le semestre montrent dans quelle unité vous êtes, et ses leçons, fichiers et grilles restent ensemble.",
+ "cal.start_week": "Semaine {n}, {date}",
+ "cal.week_off": "Semaine {n} retirée, avec ce qui y était écrit",
+ "cal.open_link": "Ouvrir",
+ "cal.unit_lessons": "Leçons de cette unité",
+ "cal.open_bank": "Ouvrir la banque de grilles",
+ "cal.bk_new": "Nouvelle grille ou échelle",
+ "cal.pack_opening": "Ouverture de {name}…",
+ "cal.zip_bad": "Ce .zip n’a pas pu être ouvert",
+ "cal.pack_bad": "Ce .zip n’est pas un paquet de leçons",
+ "cal.pack_lessons": {
+  "one": "{n} leçon ajoutée aux Leçons passées.",
+  "other": "{n} leçons ajoutées aux Leçons passées."
+ },
+ "cal.pack_none": "Pas de nouvelle leçon : elles sont toutes déjà là.",
+ "cal.pack_files": {
+  "one": "{n} fichier les accompagnait.",
+  "other": "{n} fichiers les accompagnaient."
+ },
+ "cal.pack_links": {
+  "one": "{n} lien de plan d’unité ajouté.",
+  "other": "{n} liens de plan d’unité ajoutés."
+ },
+ "cal.pack_skipped": {
+  "one": "{n} était déjà là.",
+  "other": "{n} étaient déjà là."
+ },
+ "cal.pack_see": "Les voir",
+ "cal.import_pack": "Importer un paquet de leçons…",
+ "cal.past_packs_text": "Les anciennes présentations et leurs documents apparaissent aussi ici une fois un paquet de leçons importé (un .zip fait pour le Planificateur).",
+ "cal.open_file": "Ouvrir {name}",
+ "cal.n_more": "+{n} de plus",
+ "cal.from_pack": "D’un paquet de leçons",
+ "cal.file_missing": "Ce fichier n’est plus là.",
+ "cal.import_sub": "Un fichier de leçon, un paquet de leçons ou du texte collé",
+ "cal.setup_save": "Enregistrer mon fichier de configuration",
+ "cal.setup_load": "Charger un fichier de configuration…",
+ "cal.setup_file_name": "Configuration du planificateur",
+ "cal.setup_saved": "Enregistré sous « {name} ». Chargez-le avec Charger un fichier de configuration… sur un autre ordinateur.",
+ "cal.setup_bad": "Ce n’est pas un fichier de configuration",
+ "cal.setup_loaded": {
+  "one": "Emploi du temps chargé : {n} classe.",
+  "other": "Emploi du temps chargé : {n} classes."
+ },
+ "cal.setup_loaded_named": {
+  "one": "{name} chargé : {n} classe.",
+  "other": "{name} chargé : {n} classes."
+ },
+ "cal.setup_units": {
+  "one": "{n} unité ajoutée.",
+  "other": "{n} unités ajoutées."
+ },
+ "cal.setup_tpl": "Votre modèle de diapositives est chargé.",
+ "cal.no_school": "Pas d’école",
+ "cal.last_year": "L’an dernier",
+ "cal.year_moved": "Nouvelle année scolaire : les unités et le semestre ont avancé d’un an.",
+ "cal.year_moved_n": {
+  "one": "Nouvelle année scolaire : les unités et le semestre ont avancé d’un an, et {n} leçon est dans Leçons passées sous « {name} ».",
+  "other": "Nouvelle année scolaire : les unités et le semestre ont avancé d’un an, et {n} leçons sont dans Leçons passées sous « {name} »."
+ },
+ "cal.type_classes": "Saisir mes classes",
+ "cal.no_timetable_text": "Les leçons se placent dans vos classes dès que l’app sait quand elles ont lieu. Saisissez vos classes et leurs horaires : quelques minutes, une seule fois. Si vous avez un fichier de configuration d’un autre ordinateur, chargez-le ou déposez-le sur cette page.",
+ "cal.date_to": "Jusqu’au (facultatif)",
+ "cal.any_colour": "N’importe quelle couleur",
+ "cal.search": "Rechercher",
+ "cal.search_inside": "Rechercher « {q} » dans les leçons",
+ "cal.search_label": "Leçons, diapositives, notes, documents, unités",
+ "cal.search_two": "Tapez au moins deux lettres.",
+ "cal.search_none": "Rien trouvé pour « {q} ».",
+ "cal.search_n": {
+  "one": "{n} trouvé",
+  "other": "{n} trouvés"
+ },
+ "cal.search_first": "Les {n} premiers sont affichés.",
+ "cal.search_slide": "{title}, diapositive {n}",
+ "cal.search_nb": "{title}, carnet",
+ "cal.search_in": "Dans « {title} »",
+ "cal.search_no_class": "Sur aucune classe"
+}

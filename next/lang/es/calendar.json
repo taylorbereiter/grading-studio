@@ -1,0 +1,138 @@
+{
+ "cal.card_menu": "Menú de {title}",
+ "cal.alt": "Alternativa",
+ "cal.finished": "Terminada",
+ "cal.taught_to": "Dada hasta la diapositiva {n}",
+ "cal.also": "También en {name}",
+ "cal.class_page": "Página de la clase",
+ "cal.link_add": "Añadir el enlace de la página de la clase…",
+ "cal.link_change": "Cambiar el enlace de la página de la clase…",
+ "cal.link_title": "Página de la clase {name}",
+ "cal.link_label": "Dirección web",
+ "cal.link_hint": "Aparece en esta clase en la semana, en sus clases y al calificar. Déjalo vacío para quitarlo.",
+ "cal.link_bad": "Eso no parece un enlace web",
+ "cal.go_date": "Ir a una fecha",
+ "cal.no_unit": "Sin unidad esta semana",
+ "cal.open_unit": "Abrir {title}",
+ "cal.new_unit_for": "Nueva unidad de {course} desde esta semana",
+ "cal.all_lessons": "Todas las clases",
+ "cal.all_find": "Buscar una clase",
+ "cal.no_slot": "Fuera del horario",
+ "cal.new_loose": "Nueva clase sin grupo",
+ "cal.del_sure": "¿Borrar? Pulsa otra vez",
+ "cal.n_lessons": {
+  "one": "{n} clase",
+  "other": "{n} clases"
+ },
+ "cal.none_found": "Ninguna clase coincide.",
+ "cal.sem": "Semestre",
+ "cal.sem_help": "Cada semana del semestre, con la unidad de cada curso. Abre una semana para planificarla.",
+ "cal.sem_week": "Semana",
+ "cal.open_week": "Abrir la semana del {range}",
+ "cal.no_unit_short": "Sin unidad",
+ "cal.n_planned": "{n}/{of} planificadas",
+ "cal.ahead": "Próximas clases sin lección",
+ "cal.ahead_n": {
+  "one": "{n} clase en las próximas dos semanas",
+  "other": "{n} clases en las próximas dos semanas"
+ },
+ "cal.ahead_none": "Todas las clases de las próximas dos semanas tienen lección.",
+ "cal.ahead_more": {
+  "one": "{n} más. La vista de semana la muestra.",
+  "other": "{n} más. La vista de semana muestra cada una."
+ },
+ "cal.next_week": "La semana próxima: {n} de {of} lecciones planificadas",
+ "cal.next_week_ready": "La semana próxima: {n} de {of} lecciones planificadas, {r} listas",
+ "cal.pace": "Unos {time} por lección, según tus últimas {n}",
+ "cal.pace_title": "El punto medio de tus tiempos de planificación, de las lecciones que marcaste como listas",
+ "cal.mins": {
+  "one": "{n} minuto",
+  "other": "{n} minutos"
+ },
+ "cal.hrs": {
+  "one": "{n} hora",
+  "other": "{n} horas"
+ },
+ "cal.hr_min": "{h} h {m} min",
+ "cal.tomorrow": "Mañana",
+ "cal.plan_it": "Planificar",
+ "cal.gap_more": "Más formas de planificar la lección de {name}",
+ "cal.units_text": "Una unidad son algunas semanas de un curso, cada una con su enfoque. La semana y el semestre muestran en qué unidad estás, y sus lecciones, archivos y rúbricas quedan juntos.",
+ "cal.start_week": "Semana {n}, {date}",
+ "cal.week_off": "Semana {n} quitada, con lo que tenía escrito",
+ "cal.open_link": "Abrir",
+ "cal.unit_lessons": "Lecciones de esta unidad",
+ "cal.open_bank": "Abrir el banco de rúbricas",
+ "cal.bk_new": "Nueva rúbrica o escala",
+ "cal.pack_opening": "Abriendo {name}…",
+ "cal.zip_bad": "No se pudo abrir ese .zip",
+ "cal.pack_bad": "Ese .zip no es un paquete de lecciones",
+ "cal.pack_lessons": {
+  "one": "{n} lección añadida a Lecciones anteriores.",
+  "other": "{n} lecciones añadidas a Lecciones anteriores."
+ },
+ "cal.pack_none": "No hay lecciones nuevas: ya están todas aquí.",
+ "cal.pack_files": {
+  "one": "Vino {n} archivo con ellas.",
+  "other": "Vinieron {n} archivos con ellas."
+ },
+ "cal.pack_links": {
+  "one": "Se completó {n} enlace de plan de unidad.",
+  "other": "Se completaron {n} enlaces de plan de unidad."
+ },
+ "cal.pack_skipped": {
+  "one": "{n} ya estaba aquí.",
+  "other": "{n} ya estaban aquí."
+ },
+ "cal.pack_see": "Verlas",
+ "cal.import_pack": "Importar un paquete de lecciones…",
+ "cal.past_packs_text": "Las presentaciones antiguas y sus materiales también aparecen aquí cuando importas un paquete de lecciones (un .zip hecho para el Planificador).",
+ "cal.open_file": "Abrir {name}",
+ "cal.n_more": "+{n} más",
+ "cal.from_pack": "De un paquete de lecciones",
+ "cal.file_missing": "Ese archivo ya no está.",
+ "cal.import_sub": "Un archivo de lección, un paquete de lecciones o texto pegado",
+ "cal.setup_save": "Guardar mi archivo de configuración",
+ "cal.setup_load": "Cargar un archivo de configuración…",
+ "cal.setup_file_name": "Configuración del planificador",
+ "cal.setup_saved": "Guardado como «{name}». Cárgalo con Cargar un archivo de configuración… en otro ordenador.",
+ "cal.setup_bad": "Eso no es un archivo de configuración",
+ "cal.setup_loaded": {
+  "one": "Horario cargado: {n} clase.",
+  "other": "Horario cargado: {n} clases."
+ },
+ "cal.setup_loaded_named": {
+  "one": "{name} cargado: {n} clase.",
+  "other": "{name} cargado: {n} clases."
+ },
+ "cal.setup_units": {
+  "one": "Llegó {n} unidad.",
+  "other": "Llegaron {n} unidades."
+ },
+ "cal.setup_tpl": "Tu plantilla de diapositivas está dentro.",
+ "cal.no_school": "Sin clases",
+ "cal.last_year": "El año pasado",
+ "cal.year_moved": "Nuevo curso: las unidades y el semestre avanzaron un año.",
+ "cal.year_moved_n": {
+  "one": "Nuevo curso: las unidades y el semestre avanzaron un año, y {n} lección está en Lecciones pasadas bajo «{name}».",
+  "other": "Nuevo curso: las unidades y el semestre avanzaron un año, y {n} lecciones están en Lecciones pasadas bajo «{name}»."
+ },
+ "cal.type_classes": "Escribir mis clases",
+ "cal.no_timetable_text": "Las lecciones se colocan en tus clases cuando la app sabe cuándo se reúnen. Escribe tus clases y sus horas: lleva unos minutos y se hace una vez. Si tienes un archivo de configuración de otro ordenador, cárgalo o suéltalo en esta página.",
+ "cal.date_to": "Hasta (opcional)",
+ "cal.any_colour": "Cualquier color",
+ "cal.search": "Buscar",
+ "cal.search_inside": "Buscar «{q}» dentro de las lecciones",
+ "cal.search_label": "Lecciones, diapositivas, notas, documentos, unidades",
+ "cal.search_two": "Escribe al menos dos letras.",
+ "cal.search_none": "No se encontró nada para «{q}».",
+ "cal.search_n": {
+  "one": "{n} encontrado",
+  "other": "{n} encontrados"
+ },
+ "cal.search_first": "Se muestran los primeros {n}.",
+ "cal.search_slide": "{title}, diapositiva {n}",
+ "cal.search_nb": "{title}, cuaderno",
+ "cal.search_in": "En «{title}»",
+ "cal.search_no_class": "Sin clase"
+}

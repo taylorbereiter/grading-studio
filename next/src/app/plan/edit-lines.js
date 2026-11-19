@@ -2,4 +2,4 @@
 // Every file that uses an edit.* line imports this.
 import { addLines } from '../../i18n/t.js';
 import LINES from '../../../lang/edit.en.json';
-addLines(LINES);
+addLines(LINES, 'edit');

@@ -13,7 +13,7 @@ import { askAdd, askPerson } from '../todo-add.js';
 import * as S from '../../planning/school.js';
 import LINES from '../../../lang/school.en.json';
 import { DriveButton } from '../drive-button.jsx';
-addLines(LINES);
+addLines(LINES, 'school');
 
 const raw = s => <span data-raw>{s}</span>;
 const fmtSize = b => (b >= 1048576 ? t('file.mb', { n: num(b / 1048576, { maximumFractionDigits: 1 }) }) : t('file.kb', { n: num(Math.max(1, Math.round(b / 1024))) }));

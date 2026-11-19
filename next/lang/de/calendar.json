@@ -1,0 +1,138 @@
+{
+ "cal.card_menu": "Menü für {title}",
+ "cal.alt": "Alternative",
+ "cal.finished": "Fertig",
+ "cal.taught_to": "Bis Folie {n} unterrichtet",
+ "cal.also": "Auch in {name}",
+ "cal.class_page": "Klassenseite",
+ "cal.link_add": "Link zur Klassenseite hinzufügen …",
+ "cal.link_change": "Link zur Klassenseite ändern …",
+ "cal.link_title": "Klassenseite von {name}",
+ "cal.link_label": "Webadresse",
+ "cal.link_hint": "Er erscheint bei dieser Klasse in der Woche, bei ihren Stunden und beim Bewerten. Leer lassen, um ihn zu entfernen.",
+ "cal.link_bad": "Das sieht nicht nach einem Weblink aus",
+ "cal.go_date": "Zu einem Datum springen",
+ "cal.no_unit": "Keine Einheit diese Woche",
+ "cal.open_unit": "{title} öffnen",
+ "cal.new_unit_for": "Neue Einheit für {course} ab dieser Woche",
+ "cal.all_lessons": "Alle Stunden",
+ "cal.all_find": "Stunde suchen",
+ "cal.no_slot": "Nicht im Stundenplan",
+ "cal.new_loose": "Neue Stunde ohne Klasse",
+ "cal.del_sure": "Löschen? Noch einmal drücken",
+ "cal.n_lessons": {
+  "one": "{n} Stunde",
+  "other": "{n} Stunden"
+ },
+ "cal.none_found": "Keine Stunde passt.",
+ "cal.sem": "Halbjahr",
+ "cal.sem_help": "Jede Woche des Halbjahrs mit der Einheit jedes Kurses. Öffnen Sie eine Woche, um sie zu planen.",
+ "cal.sem_week": "Woche",
+ "cal.open_week": "Woche {range} öffnen",
+ "cal.no_unit_short": "Keine Einheit",
+ "cal.n_planned": "{n}/{of} geplant",
+ "cal.ahead": "Demnächst ohne Stunde",
+ "cal.ahead_n": {
+  "one": "{n} Stunde in den nächsten zwei Wochen",
+  "other": "{n} Stunden in den nächsten zwei Wochen"
+ },
+ "cal.ahead_none": "Jede Stunde der nächsten zwei Wochen ist geplant.",
+ "cal.ahead_more": {
+  "one": "{n} weitere. Die Wochenansicht zeigt sie.",
+  "other": "{n} weitere. Die Wochenansicht zeigt jede."
+ },
+ "cal.next_week": "Nächste Woche: {n} von {of} Stunden geplant",
+ "cal.next_week_ready": "Nächste Woche: {n} von {of} Stunden geplant, {r} fertig",
+ "cal.pace": "Etwa {time} pro Stunde, nach Ihren letzten {n}",
+ "cal.pace_title": "Der Median Ihrer Planungszeiten, aus den Stunden, die Sie als fertig markiert haben",
+ "cal.mins": {
+  "one": "{n} Minute",
+  "other": "{n} Minuten"
+ },
+ "cal.hrs": {
+  "one": "{n} Stunde",
+  "other": "{n} Stunden"
+ },
+ "cal.hr_min": "{h} Std. {m} Min.",
+ "cal.tomorrow": "Morgen",
+ "cal.plan_it": "Planen",
+ "cal.gap_more": "Weitere Wege, die Stunde für {name} zu planen",
+ "cal.units_text": "Eine Einheit sind einige Wochen eines Kurses, jede mit ihrem Schwerpunkt. Woche und Halbjahr zeigen, in welcher Einheit Sie sind, und ihre Stunden, Dateien und Bewertungsraster bleiben beisammen.",
+ "cal.start_week": "Woche {n}, {date}",
+ "cal.week_off": "Woche {n} entfernt, mit dem, was darin stand",
+ "cal.open_link": "Öffnen",
+ "cal.unit_lessons": "Stunden dieser Einheit",
+ "cal.open_bank": "Raster-Sammlung öffnen",
+ "cal.bk_new": "Neues Raster oder neue Skala",
+ "cal.pack_opening": "{name} wird geöffnet…",
+ "cal.zip_bad": "Diese .zip ließ sich nicht öffnen",
+ "cal.pack_bad": "Diese .zip ist kein Stundenpaket",
+ "cal.pack_lessons": {
+  "one": "{n} Stunde zu Frühere Stunden hinzugefügt.",
+  "other": "{n} Stunden zu Frühere Stunden hinzugefügt."
+ },
+ "cal.pack_none": "Keine neuen Stunden: Sie sind alle schon da.",
+ "cal.pack_files": {
+  "one": "{n} Datei kam mit.",
+  "other": "{n} Dateien kamen mit."
+ },
+ "cal.pack_links": {
+  "one": "{n} Link zum Einheitenplan ergänzt.",
+  "other": "{n} Links zum Einheitenplan ergänzt."
+ },
+ "cal.pack_skipped": {
+  "one": "{n} war schon da.",
+  "other": "{n} waren schon da."
+ },
+ "cal.pack_see": "Anzeigen",
+ "cal.import_pack": "Stundenpaket importieren…",
+ "cal.past_packs_text": "Alte Präsentationen und ihre Arbeitsblätter erscheinen auch hier, sobald Sie ein Stundenpaket importieren (eine .zip für den Planer).",
+ "cal.open_file": "{name} öffnen",
+ "cal.n_more": "+{n} weitere",
+ "cal.from_pack": "Aus einem Stundenpaket",
+ "cal.file_missing": "Diese Datei ist nicht mehr da.",
+ "cal.import_sub": "Eine Stundendatei, ein Stundenpaket oder eingefügter Text",
+ "cal.setup_save": "Meine Einrichtungsdatei speichern",
+ "cal.setup_load": "Einrichtungsdatei laden…",
+ "cal.setup_file_name": "Planer-Einrichtung",
+ "cal.setup_saved": "Gespeichert als „{name}“. Auf einem anderen Computer mit „Einrichtungsdatei laden…“ laden.",
+ "cal.setup_bad": "Das ist keine Einrichtungsdatei",
+ "cal.setup_loaded": {
+  "one": "Stundenplan geladen: {n} Klasse.",
+  "other": "Stundenplan geladen: {n} Klassen."
+ },
+ "cal.setup_loaded_named": {
+  "one": "{name} geladen: {n} Klasse.",
+  "other": "{name} geladen: {n} Klassen."
+ },
+ "cal.setup_units": {
+  "one": "{n} Einheit hinzugekommen.",
+  "other": "{n} Einheiten hinzugekommen."
+ },
+ "cal.setup_tpl": "Ihre Folienvorlage ist übernommen.",
+ "cal.no_school": "Schulfrei",
+ "cal.last_year": "Letztes Jahr",
+ "cal.year_moved": "Neues Schuljahr: Einheiten und Halbjahr sind ein Jahr weitergerückt.",
+ "cal.year_moved_n": {
+  "one": "Neues Schuljahr: Einheiten und Halbjahr sind ein Jahr weitergerückt, und {n} Stunde liegt in Frühere Stunden unter „{name}“.",
+  "other": "Neues Schuljahr: Einheiten und Halbjahr sind ein Jahr weitergerückt, und {n} Stunden liegen in Frühere Stunden unter „{name}“."
+ },
+ "cal.type_classes": "Meine Klassen eingeben",
+ "cal.no_timetable_text": "Stunden ordnen sich Ihren Klassen zu, sobald die App weiß, wann sie stattfinden. Geben Sie Ihre Klassen und Zeiten ein; das dauert ein paar Minuten und ist einmalig. Haben Sie eine Einrichtungsdatei von einem anderen Computer, laden Sie sie oder ziehen Sie sie auf diese Seite.",
+ "cal.date_to": "Bis (optional)",
+ "cal.any_colour": "Beliebige Farbe",
+ "cal.search": "Suchen",
+ "cal.search_inside": "In den Stunden nach „{q}“ suchen",
+ "cal.search_label": "Stunden, Folien, Notizen, Dokumente, Einheiten",
+ "cal.search_two": "Geben Sie mindestens zwei Buchstaben ein.",
+ "cal.search_none": "Nichts gefunden für „{q}“.",
+ "cal.search_n": {
+  "one": "{n} gefunden",
+  "other": "{n} gefunden"
+ },
+ "cal.search_first": "Die ersten {n} werden gezeigt.",
+ "cal.search_slide": "{title}, Folie {n}",
+ "cal.search_nb": "{title}, Notizbuch",
+ "cal.search_in": "In „{title}“",
+ "cal.search_no_class": "Keiner Klasse zugeordnet"
+}

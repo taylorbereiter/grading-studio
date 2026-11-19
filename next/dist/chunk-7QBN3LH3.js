@@ -1,0 +1,1 @@
+import{a as s}from"./chunk-SFQL27JW.js";s();var e=!1,n=new Set;function c(){e=!0,n.forEach(t=>t())}function d(){let t=e;return e=!1,t}function f(t){let r=()=>{e=!1,t()};return n.add(r),()=>n.delete(r)}var o="";function u(t){o=String(t||"")}function l(){let t=o;return o="",t}export{c as a,d as b,f as c,u as d,l as e};

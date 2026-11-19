@@ -1,0 +1,138 @@
+{
+ "cal.card_menu": "{title} 的菜单",
+ "cal.alt": "替代版本",
+ "cal.finished": "完成版",
+ "cal.taught_to": "上到第 {n} 张幻灯片",
+ "cal.also": "也在 {name}",
+ "cal.class_page": "班级页面",
+ "cal.link_add": "添加班级页面链接…",
+ "cal.link_change": "更改班级页面链接…",
+ "cal.link_title": "{name} 的班级页面",
+ "cal.link_label": "网址",
+ "cal.link_hint": "它会显示在周历上的这个班、它的课和评分中。留空即可移除。",
+ "cal.link_bad": "这看起来不像网址",
+ "cal.go_date": "跳到某一天",
+ "cal.no_unit": "本周没有单元",
+ "cal.open_unit": "打开“{title}”",
+ "cal.new_unit_for": "从本周开始为 {course} 新建单元",
+ "cal.all_lessons": "所有课",
+ "cal.all_find": "查找课",
+ "cal.no_slot": "不在课表上",
+ "cal.new_loose": "没有班级的新课",
+ "cal.del_sure": "要删除吗？再按一次",
+ "cal.n_lessons": {
+  "one": "{n} 节课",
+  "other": "{n} 节课"
+ },
+ "cal.none_found": "没有匹配的课。",
+ "cal.sem": "学期",
+ "cal.sem_help": "学期的每一周，以及每门课程的单元。打开一周来备课。",
+ "cal.sem_week": "周",
+ "cal.open_week": "打开 {range} 这一周",
+ "cal.no_unit_short": "没有单元",
+ "cal.n_planned": "已备 {n}/{of}",
+ "cal.ahead": "即将到来、还没有课",
+ "cal.ahead_n": {
+  "one": "未来两周有 {n} 节课",
+  "other": "未来两周有 {n} 节课"
+ },
+ "cal.ahead_none": "未来两周的每节课都有课了。",
+ "cal.ahead_more": {
+  "one": "还有 {n} 节。周视图会显示。",
+  "other": "还有 {n} 节。周视图会逐一显示。"
+ },
+ "cal.next_week": "下周：已备 {n}/{of} 节课",
+ "cal.next_week_ready": "下周：已备 {n}/{of} 节课，{r} 节已完成",
+ "cal.pace": "每节课约 {time}，根据你最近的 {n} 节",
+ "cal.pace_title": "根据你标记为完成的课，备课时间的中位数",
+ "cal.mins": {
+  "one": "{n} 分钟",
+  "other": "{n} 分钟"
+ },
+ "cal.hrs": {
+  "one": "{n} 小时",
+  "other": "{n} 小时"
+ },
+ "cal.hr_min": "{h} 小时 {m} 分",
+ "cal.tomorrow": "明天",
+ "cal.plan_it": "备课",
+ "cal.gap_more": "{name} 这节课的其他备课方式",
+ "cal.units_text": "单元是一门课程的几个星期，每周有它的重点。周视图和学期视图会显示你在哪个单元，它的课、文件和评分标准都放在一起。",
+ "cal.start_week": "第 {n} 周，{date}",
+ "cal.week_off": "已移除第 {n} 周和其中写的内容",
+ "cal.open_link": "打开",
+ "cal.unit_lessons": "这个单元的课",
+ "cal.open_bank": "打开评分标准库",
+ "cal.bk_new": "新建评分标准或量表",
+ "cal.pack_opening": "正在打开 {name}…",
+ "cal.zip_bad": "无法打开这个 .zip",
+ "cal.pack_bad": "这个 .zip 不是课程包",
+ "cal.pack_lessons": {
+  "one": "已将 {n} 节课加入过去的课程。",
+  "other": "已将 {n} 节课加入过去的课程。"
+ },
+ "cal.pack_none": "没有新的课：都已经在这里了。",
+ "cal.pack_files": {
+  "one": "附带了 {n} 个文件。",
+  "other": "附带了 {n} 个文件。"
+ },
+ "cal.pack_links": {
+  "one": "补上了 {n} 个单元计划链接。",
+  "other": "补上了 {n} 个单元计划链接。"
+ },
+ "cal.pack_skipped": {
+  "one": "有 {n} 节原本就在。",
+  "other": "有 {n} 节原本就在。"
+ },
+ "cal.pack_see": "查看",
+ "cal.import_pack": "导入课程包…",
+ "cal.past_packs_text": "导入课程包（为备课工具做的 .zip）后，旧的演示文稿和讲义也会显示在这里。",
+ "cal.open_file": "打开 {name}",
+ "cal.n_more": "+{n} 个",
+ "cal.from_pack": "来自课程包",
+ "cal.file_missing": "这个文件已经不在了。",
+ "cal.import_sub": "课程文件、课程包或粘贴的文字",
+ "cal.setup_save": "保存我的设置文件",
+ "cal.setup_load": "载入设置文件…",
+ "cal.setup_file_name": "备课设置",
+ "cal.setup_saved": "已保存为“{name}”。在另一台电脑上用“载入设置文件…”载入。",
+ "cal.setup_bad": "这不是设置文件",
+ "cal.setup_loaded": {
+  "one": "已载入课表：{n} 个班级。",
+  "other": "已载入课表：{n} 个班级。"
+ },
+ "cal.setup_loaded_named": {
+  "one": "已载入 {name}：{n} 个班级。",
+  "other": "已载入 {name}：{n} 个班级。"
+ },
+ "cal.setup_units": {
+  "one": "加入了 {n} 个单元。",
+  "other": "加入了 {n} 个单元。"
+ },
+ "cal.setup_tpl": "你的幻灯片模板也已载入。",
+ "cal.no_school": "不上课",
+ "cal.last_year": "去年",
+ "cal.year_moved": "新学年：单元和学期已往后移一年。",
+ "cal.year_moved_n": {
+  "one": "新学年：单元和学期已往后移一年，{n} 节课在“过去的课”的“{name}”下。",
+  "other": "新学年：单元和学期已往后移一年，{n} 节课在“过去的课”的“{name}”下。"
+ },
+ "cal.type_classes": "输入我的班级",
+ "cal.no_timetable_text": "知道班级何时上课后，课就会排到对应的班级。输入班级和上课时间只要几分钟，做一次就好。如果你有另一台电脑的设置文件，可以载入或拖到这个页面上。",
+ "cal.date_to": "到（选填）",
+ "cal.any_colour": "任意颜色",
+ "cal.search": "搜索",
+ "cal.search_inside": "在课程内搜索“{q}”",
+ "cal.search_label": "课程、幻灯片、备注、文档、单元",
+ "cal.search_two": "请至少输入两个字。",
+ "cal.search_none": "找不到“{q}”。",
+ "cal.search_n": {
+  "one": "找到 {n} 条",
+  "other": "找到 {n} 条"
+ },
+ "cal.search_first": "只显示前 {n} 条。",
+ "cal.search_slide": "{title}，第 {n} 张幻灯片",
+ "cal.search_nb": "{title}，笔记本",
+ "cal.search_in": "在“{title}”中",
+ "cal.search_no_class": "不在任何班级"
+}

@@ -1,0 +1,138 @@
+{
+ "cal.card_menu": "{title} のメニュー",
+ "cal.alt": "別バージョン",
+ "cal.finished": "完成版",
+ "cal.taught_to": "スライド {n} まで実施",
+ "cal.also": "{name} でも",
+ "cal.class_page": "クラスのページ",
+ "cal.link_add": "クラスのページのリンクを追加…",
+ "cal.link_change": "クラスのページのリンクを変更…",
+ "cal.link_title": "{name} のクラスのページ",
+ "cal.link_label": "ウェブアドレス",
+ "cal.link_hint": "週の表示のこのクラス、その授業、採点に表示されます。空にすると削除されます。",
+ "cal.link_bad": "ウェブのリンクではないようです",
+ "cal.go_date": "日付へ移動",
+ "cal.no_unit": "今週の単元はありません",
+ "cal.open_unit": "「{title}」を開く",
+ "cal.new_unit_for": "今週から {course} の新しい単元",
+ "cal.all_lessons": "すべての授業",
+ "cal.all_find": "授業を探す",
+ "cal.no_slot": "時間割にない",
+ "cal.new_loose": "クラスなしの新しい授業",
+ "cal.del_sure": "削除しますか？もう一度押す",
+ "cal.n_lessons": {
+  "one": "{n} 件の授業",
+  "other": "{n} 件の授業"
+ },
+ "cal.none_found": "一致する授業はありません。",
+ "cal.sem": "学期",
+ "cal.sem_help": "学期の各週と、各コースの単元。週を開いて計画します。",
+ "cal.sem_week": "週",
+ "cal.open_week": "{range} の週を開く",
+ "cal.no_unit_short": "単元なし",
+ "cal.n_planned": "{n}/{of} 計画済み",
+ "cal.ahead": "授業が未作成の今後のクラス",
+ "cal.ahead_n": {
+  "one": "今後2週間で {n} コマ",
+  "other": "今後2週間で {n} コマ"
+ },
+ "cal.ahead_none": "今後2週間のすべてのクラスに授業があります。",
+ "cal.ahead_more": {
+  "one": "ほか {n} 件。週表示で確認できます。",
+  "other": "ほか {n} 件。週表示で確認できます。"
+ },
+ "cal.next_week": "来週：{of} 件中 {n} 件の授業を計画済み",
+ "cal.next_week_ready": "来週：{of} 件中 {n} 件を計画済み、{r} 件完成",
+ "cal.pace": "1授業あたり約 {time}（直近 {n} 件から）",
+ "cal.pace_title": "完成とした授業の計画時間の中央値",
+ "cal.mins": {
+  "one": "{n} 分",
+  "other": "{n} 分"
+ },
+ "cal.hrs": {
+  "one": "{n} 時間",
+  "other": "{n} 時間"
+ },
+ "cal.hr_min": "{h} 時間 {m} 分",
+ "cal.tomorrow": "明日",
+ "cal.plan_it": "計画する",
+ "cal.gap_more": "{name} の授業を計画する他の方法",
+ "cal.units_text": "単元は1つのコースの数週間で、各週に重点があります。週と学期の表示で今どの単元かがわかり、その授業・ファイル・ルーブリックはまとまっています。",
+ "cal.start_week": "第{n}週、{date}",
+ "cal.week_off": "第{n}週を、書いてあった内容ごと外しました",
+ "cal.open_link": "開く",
+ "cal.unit_lessons": "この単元の授業",
+ "cal.open_bank": "ルーブリックバンクを開く",
+ "cal.bk_new": "新しいルーブリックまたは尺度",
+ "cal.pack_opening": "{name} を開いています…",
+ "cal.zip_bad": "その .zip を開けませんでした",
+ "cal.pack_bad": "その .zip は授業パックではありません",
+ "cal.pack_lessons": {
+  "one": "{n} 件の授業を過去の授業に追加しました。",
+  "other": "{n} 件の授業を過去の授業に追加しました。"
+ },
+ "cal.pack_none": "新しい授業はありません。すべてすでにあります。",
+ "cal.pack_files": {
+  "one": "ファイル {n} 件も一緒です。",
+  "other": "ファイル {n} 件も一緒です。"
+ },
+ "cal.pack_links": {
+  "one": "単元計画のリンクを {n} 件補いました。",
+  "other": "単元計画のリンクを {n} 件補いました。"
+ },
+ "cal.pack_skipped": {
+  "one": "{n} 件はすでにありました。",
+  "other": "{n} 件はすでにありました。"
+ },
+ "cal.pack_see": "見る",
+ "cal.import_pack": "授業パックを読み込む…",
+ "cal.past_packs_text": "授業パック（プランナー用の .zip）を読み込むと、古いスライドと配布物もここに表示されます。",
+ "cal.open_file": "{name} を開く",
+ "cal.n_more": "+{n} 件",
+ "cal.from_pack": "授業パックから",
+ "cal.file_missing": "そのファイルはもうありません。",
+ "cal.import_sub": "授業ファイル、授業パック、または貼り付けたテキスト",
+ "cal.setup_save": "設定ファイルを保存",
+ "cal.setup_load": "設定ファイルを読み込む…",
+ "cal.setup_file_name": "授業計画の設定",
+ "cal.setup_saved": "「{name}」として保存しました。別のパソコンで「設定ファイルを読み込む…」から読み込めます。",
+ "cal.setup_bad": "設定ファイルではありません",
+ "cal.setup_loaded": {
+  "one": "時間割を読み込みました：{n} クラス。",
+  "other": "時間割を読み込みました：{n} クラス。"
+ },
+ "cal.setup_loaded_named": {
+  "one": "{name} を読み込みました：{n} クラス。",
+  "other": "{name} を読み込みました：{n} クラス。"
+ },
+ "cal.setup_units": {
+  "one": "{n} 件の単元が入りました。",
+  "other": "{n} 件の単元が入りました。"
+ },
+ "cal.setup_tpl": "スライドのテンプレートも入りました。",
+ "cal.no_school": "休校",
+ "cal.last_year": "昨年度",
+ "cal.year_moved": "新年度：単元と学期を1年進めました。",
+ "cal.year_moved_n": {
+  "one": "新年度：単元と学期を1年進め、{n} 件の授業を過去の授業の「{name}」に移しました。",
+  "other": "新年度：単元と学期を1年進め、{n} 件の授業を過去の授業の「{name}」に移しました。"
+ },
+ "cal.type_classes": "クラスを入力する",
+ "cal.no_timetable_text": "クラスの時間がわかると、授業がそれぞれのクラスに並びます。クラスと時間の入力は数分で、一度だけです。別のパソコンの設定ファイルがあれば、読み込むかこのページにドロップしてください。",
+ "cal.date_to": "終了日（任意）",
+ "cal.any_colour": "好きな色",
+ "cal.search": "検索",
+ "cal.search_inside": "授業の中から「{q}」を検索",
+ "cal.search_label": "授業、スライド、メモ、文書、単元",
+ "cal.search_two": "2文字以上入力してください。",
+ "cal.search_none": "「{q}」は見つかりませんでした。",
+ "cal.search_n": {
+  "one": "{n} 件見つかりました",
+  "other": "{n} 件見つかりました"
+ },
+ "cal.search_first": "最初の {n} 件を表示しています。",
+ "cal.search_slide": "{title}、スライド {n}",
+ "cal.search_nb": "{title}、ノート",
+ "cal.search_in": "「{title}」内",
+ "cal.search_no_class": "クラスなし"
+}

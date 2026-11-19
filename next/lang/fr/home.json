@@ -1,0 +1,73 @@
+{
+ "home.morning": "Bonjour",
+ "home.afternoon": "Bon après-midi",
+ "home.evening": "Bonsoir",
+ "home.this_week": "Cette semaine",
+ "home.no_timetable_text": "Ajoutez vos horaires de cours dans Réglages, Emploi du temps, et les cours de chaque jour s’afficheront ici.",
+ "home.no_classes_today": "Pas de cours aujourd’hui",
+ "home.next_class": "Prochain cours",
+ "home.time_range": "{from} – {to}",
+ "home.minutes": {
+  "one": "{n} min",
+  "other": "{n} min"
+ },
+ "home.until_starts": "avant le début",
+ "home.until_ends": "avant la fin",
+ "home.untitled_lesson": "Leçon sans titre",
+ "home.nothing_planned": "Rien de prévu pour l’instant",
+ "home.ready": "Prête",
+ "home.slides": {
+  "one": "{n} diapositive",
+  "other": "{n} diapositives"
+ },
+ "home.present": "Présenter",
+ "home.open_lesson": "Ouvrir la leçon",
+ "home.plan_it": "Planifier",
+ "home.day_over": "Les cours d’aujourd’hui sont terminés.",
+ "home.today_classes": "Cours d’aujourd’hui",
+ "home.say_classes": {
+  "one": "1 cours aujourd’hui.",
+  "other": "{n} cours aujourd’hui."
+ },
+ "home.say_mark": {
+  "one": "1 lot de copies à corriger.",
+  "other": "{n} lots de copies à corriger."
+ },
+ "home.say_back": {
+  "one": "{n} prête à rendre.",
+  "other": "{n} prêtes à rendre."
+ },
+ "home.say_plan": {
+  "one": "{n} leçon à préparer.",
+  "other": "{n} leçons à préparer."
+ },
+ "home.say_missing": {
+  "one": "{n} élève à relancer pour un travail manquant.",
+  "other": "{n} élèves à relancer pour un travail manquant."
+ },
+ "home.say_none": "Rien ne vous attend.",
+ "home.col_class": "Classe",
+ "home.col_today": "Aujourd’hui",
+ "home.col_mark": "À corriger",
+ "home.not_today": "Pas aujourd’hui",
+ "home.needs_you": "À traiter",
+ "home.all_todos": "Toutes les tâches",
+ "home.mark": "Corriger {name}",
+ "home.finish_marking": "Finir de corriger {name}",
+ "home.feedback_on": "Faire un retour sur {name}",
+ "home.student_work": "Travail des élèves",
+ "home.feedback_only": "commentaires seulement",
+ "home.hand_back": "Rendre {name}",
+ "home.all_scored": {
+  "one": "{n} copie notée",
+  "other": "les {n} notées"
+ },
+ "home.plan_lesson": "Préparer la leçon de {cls} de {day}",
+ "home.all_clear": "Rien à corriger, à rendre ou à préparer.",
+ "home.plan_today": "Préparer la leçon de {cls} d’aujourd’hui",
+ "home.remind": {
+  "one": "Relancer {n} élève pour un travail manquant",
+  "other": "Relancer {n} élèves pour un travail manquant"
+ },
+ "home.plan_tomorrow": "Préparer la leçon de {cls} de demain"
+}

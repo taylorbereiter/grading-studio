@@ -686,9 +686,9 @@ async function build() {
       'parts-css': path.join(NEXT, 'src/ui/parts.css'), 'gallery-css': path.join(NEXT, 'src/gallery/gallery.css'), 'shell-css': path.join(NEXT, 'src/app/shell.css'), 'plan-css': path.join(NEXT, 'src/app/plan.css'), 'mark-css': path.join(NEXT, 'src/app/mark.css'), 'class-css': path.join(NEXT, 'src/app/class.css'), 'todo-css': path.join(NEXT, 'src/app/todo.css'), 'focus-css': path.join(NEXT, 'src/app/focus/focus.css'), 'pages-css': path.join(NEXT, 'src/app/pages.css') },
     // pdf.js's worker, as text, so the Beside drawer's Books can start it from a blob: address (it loads only when a book is opened).
     plugins: [{ name: 'lines-json', setup(b) {
-      // The lines files (next/lang/*.json) as one JSON.parse of a UTF-8 string: smaller than esbuild's named exports with every
+      // The lines files (next/lang/<code>/<area>.json) as one JSON.parse of a UTF-8 string: smaller than esbuild's named exports with every
       // letter outside ASCII escaped (about 17 KB less per language).
-      b.onLoad({ filter: /[\\/]next[\\/]lang[\\/](zh-Hant|zh-Hans|es|fr|de|pt-BR|ja|ko)\.json$/ }, a => ({ contents: 'export default JSON.parse(' + JSON.stringify(JSON.stringify(JSON.parse(fs.readFileSync(a.path, 'utf8')))) + ')', loader: 'js' }));
+      b.onLoad({ filter: /[\\/]next[\\/]lang[\\/](zh-Hant|zh-Hans|es|fr|de|pt-BR|ja|ko)[\\/]\w+\.json$/ }, a => ({ contents: 'export default JSON.parse(' + JSON.stringify(JSON.stringify(JSON.parse(fs.readFileSync(a.path, 'utf8')))) + ')', loader: 'js' }));
     } }, { name: 'pdf-worker', setup(b) {
       // The path is kept relative to the repository so the build is the same on every machine.
       b.onResolve({ filter: /^pdfjs-worker-text$/ }, () => ({ path: 'node_modules/pdfjs-dist/build/pdf.worker.min.js', namespace: 'pdfw' }));
@@ -702,7 +702,7 @@ async function build() {
   // Each language's chunk with its letters written as themselves, not as \\u escapes: about 10 KB smaller squeezed. Only these
   // chunks: done for the whole app it makes some screens larger. A module is always read as UTF-8, so the letters arrive whole.
   for (const [f, o] of Object.entries(r.metafile.outputs)) {
-    if (!Object.keys(o.inputs).some(i => /next\/lang\/(zh-Hant|zh-Hans|es|fr|de|pt-BR|ja|ko)\.json$/.test(i))) continue;
+    if (!Object.keys(o.inputs).some(i => /next\/lang\/(zh-Hant|zh-Hans|es|fr|de|pt-BR|ja|ko)\/\w+\.json$/.test(i))) continue;
     const at = path.join(ROOT, f), s = fs.readFileSync(at, 'utf8');
     const out = s.replace(/\\u([0-9A-F]{4})/g, (m, x) => { const c = parseInt(x, 16); return c < 0x80 || (c >= 0xD800 && c < 0xE000) ? m : String.fromCharCode(c); });
     fs.writeFileSync(at, out); o.bytes = Buffer.byteLength(out);
