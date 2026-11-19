@@ -16,7 +16,7 @@ import './home-lines.js';
 import '../plan/lines.js';
 import '../saving/lines.js';
 import { useSaving } from '../../services/saving.js';
-import { sampleOn } from '../sample.js';
+import { sampleOn, enterSample } from '../sample.js';
 
 const hm = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : null; };
 const clock = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? date(new Date(2000, 0, 1, +m[1], +m[2]), { hour: 'numeric', minute: '2-digit' }) : ''; };
@@ -208,6 +208,7 @@ export default function Home({ classes }) {
       </section></div>
     </div>
     <Earlier v={v} menu={menu} />
+    {!sampleOn() && <p class="mute hfoot" data-home-foot>{t('home.foot')} <button type="button" class="link" data-home-sample onClick={() => { if (!enterSample()) toast(t('sample.cant')); }}>{t('home.try_sample')}</button></p>}
     {fg && A && <A.Forget it={{ name: fg.name || t('home.student_work') }} id={fg.id} onClose={ok => { setFg(null); if (ok && useHome.read) useHome.read(); }} />}
   </div>;
 }

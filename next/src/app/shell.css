@@ -163,3 +163,4 @@ section.now .empty{padding-bottom:22px}
 .now .day .tatt{font-size:var(--t1);color:var(--acc-ink);text-decoration:none}
 .now .day .tatt.done{color:var(--mute)}
 .sampletry a{color:var(--acc);text-decoration:underline;text-underline-offset:2px}.strip.sample>span{flex:1;min-width:0}
+.hfoot{margin-top:24px;font-size:var(--t1)}

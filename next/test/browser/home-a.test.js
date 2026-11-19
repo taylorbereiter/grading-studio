@@ -208,3 +208,11 @@ test('A-076: in the sample, the strip lists things to try, each opening its page
   await p.waitForSelector('dialog[open] [data-charts]', { timeout: 15000 });
   assert.deepEqual(errors, []); await ctx.close();
 });
+
+test('A-061 A-062: Home ends with where the work is kept and Try it with a sample class, which opens the sample', async () => {
+  const errors = [], p = await home(errors);
+  assert.match(await p.$eval('[data-home-foot]', e => e.textContent), /kept in this browser/);
+  await p.click('[data-home-sample]');
+  await p.waitForFunction(() => window.__gsSample && window.__gsSample.on, { timeout: 15000 });
+  assert.deepEqual(errors.filter(e => !/sample/i.test(e)), []); await p.ctx.close();
+});
