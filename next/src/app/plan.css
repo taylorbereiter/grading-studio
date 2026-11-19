@@ -408,3 +408,4 @@
 .addslot .row{display:flex;gap:8px;justify-content:flex-end}
 .ed-top .savest,.ed-top .ptime{font-size:var(--t2);white-space:nowrap;align-self:center}
 .vidrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ed-grid.dropping .ed-stagewrap{outline:2px dashed var(--acc-ink);outline-offset:4px;border-radius:var(--r2)}

@@ -272,7 +272,7 @@ export default function LessonPage({ route }) {
   if (!l) return <div class="page"><header class="ph"><h1>{t('plan.lesson')}</h1></header><EmptyState icon="warn" title={t('plan.lesson_gone')} action={<a class="btn" href={href('calendar')}>{t('nav.calendar')}</a>} /></div>;
   const slot = slotOf(p, l), per = periodOf(p, slot);
   const n = l.slides.length;
-  return <div class={'page lessonpage' + (beside ? ' with-beside' : '')} data-view={view} onContextMenu={onContext}>
+  return <div class={'page lessonpage' + (beside ? ' with-beside' : '')} data-view={view} onContextMenu={onContext} onDragOver={e => Sd && Sd.pageOver(e)} onDrop={e => Sd && Sd.pageDrop(e, p, l, save, Tools)}>
     <header class="lh">
       <div class="crumbs"><a class="link" href={from && !/^lesson\//.test(from) ? '#/' + from : href('calendar')} data-focus="lesson-back"><Icon name="back" size="sm" />{per ? <><span class="dot" style={{ '--cc': toneOf(per.c.color) }} /><span data-raw>{per.c.name}</span></> : t('nav.calendar')}</a></div>
       <Segmented label={t('plan.lesson_view')} value={view} onChange={setView} options={[{ value: 'lesson', label: t('plan.lesson') }, { value: 'slides', label: t('plan.slides') }, { value: 'edit', label: t('common.edit') }]} />

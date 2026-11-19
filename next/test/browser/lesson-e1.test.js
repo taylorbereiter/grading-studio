@@ -125,3 +125,100 @@ test('E1-008 E1-011 E1-012 E1-035 E1-040: back to the page it was opened from, s
   for (const [k, [a, b]] of Object.entries(await K.sameInPlanner(p, 'L3', l, ['title', 'slides', 'titleApart']))) assert.deepEqual(a, b, k + ' reads the same in the current Planner');
   await p.ctx.close();
 });
+
+// A drag in the page: what is dragged (files made in the page, and text by type) let go on an element.
+const dragTo = (p, sel, { files = [], data = {}, from } = {}) => p.evaluate(async (sel, files, data, from) => {
+  const dt = new DataTransfer();
+  for (const f of files) { const b = f.b64 ? Uint8Array.from(atob(f.b64), c => c.charCodeAt(0)) : await new Promise(r => { const c = document.createElement('canvas'); c.width = 40; c.height = 30; const g = c.getContext('2d'); g.fillStyle = f.color || '#36c'; g.fillRect(0, 0, 40, 30); c.toBlob(r, 'image/png'); }); dt.items.add(new File([b], f.name, { type: f.type || 'image/png' })); }
+  for (const [k, v] of Object.entries(data)) dt.setData(k, v);
+  if (from) document.querySelector(from).dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: dt }));
+  const el = document.querySelector(sel);
+  el.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: dt }));
+  el.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
+}, sel, files, data, from);
+
+test('E1-020 E1-025 E1-026 E1-027: thumbnails drag to reorder; pictures and links dropped on the editor', async () => {
+  const p = await K.fresh();
+  await K.edit(p, 'L3');
+  const slides = async () => (await K.lessonInDb(p, 'L3')).slides;
+  const ids = (await slides()).map(s => s.id);
+  // A thumbnail dropped on another moves there (E1-020, E1-025)
+  assert.equal(await p.$eval('main .ed-list [data-slide-i="3"]', b => b.draggable), true);
+  await dragTo(p, 'main .ed-list [data-slide-i="1"]', { from: 'main .ed-list [data-slide-i="3"]' });
+  let s = await until(async () => { const x = await slides(); return x[1].id === ids[3] && x; });
+  assert.deepEqual(s.map(x => x.id), [ids[0], ids[3], ids[1], ids[2], ids[4]]);
+  // Two pictures dropped on the Warm-up thumbnail: text + picture there, and a picture slide after it (E1-026)
+  const warm = s.findIndex(x => x.title === 'Warm-up');
+  await dragTo(p, 'main .ed-list [data-slide-i="' + warm + '"]', { files: [{ name: 'a.png' }, { name: 'b.png', color: '#c63' }] });
+  s = await until(async () => { const x = await slides(); return x.length === 6 && x; });
+  assert.equal(s[warm].layout, 'textpic', 'text already on the slide stays, with the picture beside it');
+  assert.match(s[warm].img.src, /^data:image\/jpeg;base64,/);
+  assert.equal(s[warm + 1].layout, 'picture'); assert.ok(s[warm + 1].img);
+  await p.waitForFunction(() => document.body.textContent.includes('2 pictures, one on each slide'));
+  // From another tab: a YouTube link makes a video slide after the one in view; a picture comes in by its address (E1-027)
+  await p.click('main .ed-list [data-slide-i="0"]'); await wait(150);
+  await dragTo(p, 'main .ed-stagewrap', { data: { 'text/uri-list': 'https://www.youtube.com/watch?v=abcdefghijk' } });
+  s = await until(async () => { const x = await slides(); return x.length === 7 && x; });
+  assert.equal(s[1].layout, 'video'); assert.equal(s[1].video.url, 'https://www.youtube.com/watch?v=abcdefghijk');
+  const png = await p.evaluate(() => { const c = document.createElement('canvas'); c.width = 20; c.height = 20; return c.toDataURL('image/png'); });
+  await dragTo(p, 'main .ed-stagewrap', { data: { 'text/html': '<img src="' + png + '">' } });
+  s = await until(async () => { const x = await slides(); return x.length === 8 && x; });
+  assert.equal(s[2].layout, 'picture'); assert.ok(s[2].img, 'a picture slide after the video slide');
+  // A plain web link where there is no video slide: says where links go
+  await p.click('main .ed-list [data-slide-i="0"]'); await wait(150);
+  await dragTo(p, 'main .ed-stagewrap', { data: { 'text/uri-list': 'https://example.org/page' } });
+  await p.waitForFunction(() => document.body.textContent.includes('Links go on a Video slide'));
+  assert.deepEqual(p.errors, []);
+  const mine = await K.lessonInDb(p, 'L3');
+  for (const [k, [a, b]] of Object.entries(await K.sameInPlanner(p, 'L3', mine))) assert.deepEqual(a, b, k + ' reads the same in the current Planner');
+  await p.ctx.close();
+});
+
+test('E1-028 E1-038: a picture or a YouTube link pasted into the editor, and the picture box on the slide chooses a picture', async () => {
+  const p = await K.fresh();
+  await K.edit(p, 'L3', 4);
+  const slides = async () => (await K.lessonInDb(p, 'L3')).slides;
+  const paste = (data, pic) => p.evaluate(async (data, pic) => {
+    const dt = new DataTransfer(); for (const [k, v] of Object.entries(data)) dt.setData(k, v);
+    if (pic) { const b = await new Promise(r => { const c = document.createElement('canvas'); c.width = 30; c.height = 20; c.toBlob(r, 'image/png'); }); dt.items.add(new File([b], 'clip.png', { type: 'image/png' })); }
+    document.body.focus(); document.dispatchEvent(new ClipboardEvent('paste', { bubbles: true, cancelable: true, clipboardData: dt }));
+  }, data, pic);
+  // A picture pasted on the exit ticket (which can't hold one): a picture slide after it (E1-028)
+  await paste({}, true);
+  let s = await until(async () => { const x = await slides(); return x.length === 6 && x; });
+  assert.equal(s[5].layout, 'picture'); assert.ok(s[5].img);
+  // A YouTube link pasted: a video slide
+  await paste({ 'text/plain': 'https://youtu.be/abcdefghijk' });
+  s = await until(async () => { const x = await slides(); return x.length === 7 && x; });
+  assert.equal(s[6].layout, 'video');
+  // Clicking the empty picture box on a picture slide chooses a picture (E1-038)
+  await p.click('main .ed-list [data-slide-i="1"]'); await wait(150);
+  await p.select('main [data-focus="layout"]', 'picture'); await wait(300);
+  const [chooser] = await Promise.all([p.waitForFileChooser({ timeout: 5000 }), p.click('main .ed-stagewrap .ls-slide [data-k="img"]')]);
+  const f = require('path').join(require('os').tmpdir(), 'gs-e1-pic-' + process.pid + '.png');
+  require('fs').writeFileSync(f, Buffer.from(await p.evaluate(() => { const c = document.createElement('canvas'); c.width = 24; c.height = 24; return c.toDataURL('image/png').split(',')[1]; }), 'base64'));
+  await chooser.accept([f]);
+  s = await until(async () => { const x = await slides(); return x[1].img && x; });
+  require('fs').unlinkSync(f);
+  assert.equal(s[1].layout, 'picture'); assert.match(s[1].img.src, /^data:image\/jpeg/);
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('E1-053: a finished .pptx dropped on the lesson page becomes its Finished PowerPoint', async () => {
+  const { SETUP, LESSONS } = require('./planseed.js');
+  const E = await import('../../src/engines/planner.js');
+  E.L.setup = SETUP; E.L.lessons = LESSONS; E.L.units = [];
+  const deck = JSON.parse(JSON.stringify(LESSONS[2])); deck.slides = deck.slides.slice(0, 3); deck.slides[1].title = 'From the finished deck';
+  const b64 = Buffer.from(E.buildPptx(deck)).toString('base64');
+  const p = await K.fresh();
+  await K.open(p, 'lesson/L3');
+  await p.waitForSelector('main .lside');
+  await dragTo(p, 'main .lv', { files: [{ name: 'Sonnets final.pptx', type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', b64 }] });
+  const l = await until(async () => { const x = await K.lessonInDb(p, 'L3'); return x && x.final && x; }, 10000);
+  assert.ok(l, 'the finished deck is kept');
+  assert.equal(l.final.name, 'Sonnets final.pptx');
+  assert.equal(l.slides.length, 3); assert.match(l.slides[1].title, /From the finished deck/);
+  assert.deepEqual(p.errors, []);
+  for (const [k, [a, b2]] of Object.entries(await K.sameInPlanner(p, 'L3', l, ['slides', 'final']))) assert.deepEqual(a, b2, k + ' reads the same in the current Planner');
+  await p.ctx.close();
+});

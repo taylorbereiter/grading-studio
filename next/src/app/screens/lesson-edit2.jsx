@@ -147,3 +147,89 @@ export function TopExtras({ d, saving }) {
     <span class="mute savest" role="status" data-focus="save-state">{saving ? t('les.saving') : t('les.saved')}</span>
   </>;
 }
+
+// Dragging and pasting in the editor (src/planner/lessons.js onLessonDrop, dropFromWeb, addVideoLink, the paste listener, startEdit):
+//   a thumbnail dragged onto another moves that slide there;
+//   pictures let go on the slide or a thumbnail go on that slide (a slide that can't hold one gets a picture slide after it),
+//   several pictures make a slide each;
+//   a picture or link from another tab: the picture is fetched where the site allows it; a YouTube link makes a video slide;
+//   pasting a picture puts it on a slide, pasting a YouTube link makes a video slide;
+//   clicking the picture box on the slide chooses a picture.
+// A .pptx or .zip is left to the lesson page (the finished deck). k: { d, i, at, setCur, E, T } from the editor, read at the moment.
+const PIC = ['picture', 'fullpic', 'textpic', 'picprompt'], canPic = s => PIC.includes(s.layout);
+// Where a picture goes (lessons.js pictureSlide): the slide if it can hold one, a text slide turned into text + picture, or a new
+// picture slide after it. Returns the index it went to.
+function picAt(E, sl, i) {
+  const s = sl[i]; if (canPic(s)) return i;
+  if (s.layout === 'content' || s.layout === 'text') { s.layout = s.body.trim() ? 'textpic' : 'picture'; return i; }
+  sl.splice(i + 1, 0, E.normSlide({ layout: 'picture', fmt: 2 })); return i + 1;
+}
+const hostOf = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
+export function Drops({ root, k }) {
+  const K = useRef(k); K.current = k;
+  const file = useRef(null);
+  useEffect(() => {
+    const el = root.current; if (!el) return;
+    const pics = async (list, j, source) => {
+      const got = []; for (const f of list) { try { got.push(await shrinkPic(f)); } catch { } }
+      if (!got.length) return;
+      const { at, E } = K.current; let last = j;
+      at(sl => { got.forEach((g, n) => { last = n ? last + 1 : picAt(E, sl, j); if (n) sl.splice(last, 0, E.normSlide({ layout: 'picture', fmt: 2 })); sl[last] = { ...sl[last], img: { ...g, source: n ? '' : source || '' } }; }); });
+      K.current.setCur(last);
+      if (got.length > 1) toast(t('les.pics_n', { n: got.length }));
+    };
+    // A video link (lessons.js addVideoLink): on this slide when it is an empty video or text slide, otherwise on a new one after it.
+    const video = async (url, plain) => {
+      const { d, i, at, E, T } = K.current, s = d.slides[i];
+      if (plain && !T.ytId(url)) { if (s.layout !== 'video') return toast(t('les.links_on_video')); }
+      const here = (s.layout === 'video' && (!s.video || plain)) || ((s.layout === 'content' || s.layout === 'text') && !s.body.trim() && !s.title.trim());
+      const j = here ? i : i + 1, p = await videoPatch(T, here ? s : { title: '' }, url, null);
+      at(sl => { if (!here) sl.splice(j, 0, E.normSlide({ layout: 'video', fmt: 2 })); sl[j] = { ...sl[j], ...p }; }, j);
+    };
+    const fromWeb = async dt => {
+      const { T } = K.current, html = dt.getData('text/html') || '', uri = (dt.getData('text/uri-list') || '').split('\n').find(x => x && !x.startsWith('#')) || dt.getData('text/plain') || '';
+      const img = ((/<img[^>]+src="([^"]+)"/i.exec(html) || [])[1] || '').replace(/&amp;/g, '&'), link = (/<a[^>]+href="([^"]+)"/i.exec(html) || [])[1] || uri;
+      if (T.ytId(link) || T.ytId(uri)) return video(T.ytId(link) ? link : uri);
+      const src = img || (/\.(png|jpe?g|gif|webp|avif)(\?|$)/i.test(uri) ? uri : '');
+      if (!src) { if (/^https?:\/\//.test(uri)) return video(uri.trim(), true); return; }
+      try { const r = await fetch(src, /^data:/.test(src) ? undefined : { mode: 'cors' }); if (!r.ok) throw 0; const b = await r.blob(); if (!/^image\//.test(b.type)) throw 0;
+        await pics([b], K.current.i, /^data:/.test(src) ? '' : hostOf(link && !T.ytId(link) ? link : src)); }
+      catch { toast(t('les.pic_blocked'), { ms: 8000 }); }
+    };
+    const kinds = e => [...((e.dataTransfer && e.dataTransfer.types) || [])];
+    const files = e => [...((e.dataTransfer && e.dataTransfer.files) || [])];
+    const ours = e => { const ty = kinds(e); return ty.includes('text/x-slide') || ty.includes('Files') || ty.includes('text/uri-list') || ty.includes('text/html'); };
+    const start = e => { const th = e.target.closest && e.target.closest('.ed-list [data-slide-i]'); if (!th) return; e.dataTransfer.setData('text/x-slide', th.dataset.slideI); e.dataTransfer.effectAllowed = 'move'; };
+    const over = e => { if (!ours(e)) return; e.preventDefault(); el.classList.add('dropping'); };
+    const leave = e => { if (!e.relatedTarget || !el.contains(e.relatedTarget)) el.classList.remove('dropping'); };
+    const drop = async e => {
+      el.classList.remove('dropping');
+      const fs = files(e); if (fs.some(f => /\.(pptx|zip)$/i.test(f.name))) return;   // the lesson page takes those
+      if (!ours(e)) return;
+      e.preventDefault(); e.stopPropagation();
+      const th = e.target.closest && e.target.closest('.ed-list [data-slide-i]'), j = th ? +th.dataset.slideI : K.current.i;
+      const from = e.dataTransfer.getData('text/x-slide');
+      if (from !== '') { const a = +from; if (!th || a === j) return; K.current.at(sl => { const [x] = sl.splice(a, 1); sl.splice(j, 0, x); }, j); return; }
+      // read now: the browser hands what was dragged over only while the drop is happening
+      const got = {}; for (const x of ['text/html', 'text/uri-list', 'text/plain']) got[x] = e.dataTransfer.getData(x);
+      const im = fs.filter(f => /^image\//.test(f.type));
+      if (im.length) { const h = got['text/html'], src = (/<img[^>]+src="([^"]+)"/i.exec(h || '') || [])[1] || got['text/uri-list'] || ''; return pics(im, j, hostOf(src.replace(/&amp;/g, '&'))); }
+      if (!fs.length) { if (th) K.current.setCur(j); return fromWeb({ getData: x => got[x] || '' }); }
+    };
+    const paste = e => {
+      const a = e.target;
+      if (!el.isConnected || document.querySelector('dialog[open]') || (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable))) return;
+      const cd = e.clipboardData; if (!cd) return;
+      const f = [...cd.files].filter(x => /^image\//.test(x.type));
+      if (f.length) { e.preventDefault(); return pics(f.slice(0, 1), K.current.i, ''); }
+      const s = (cd.getData('text/plain') || '').trim();
+      if (K.current.T.ytId(s)) { e.preventDefault(); video(s); }
+    };
+    const click = e => { const b = e.target.closest && e.target.closest('.ed-stagewrap .ls-slide [data-k="img"]'); if (b && file.current) file.current.click(); };
+    el.addEventListener('dragstart', start); el.addEventListener('dragover', over); el.addEventListener('dragleave', leave); el.addEventListener('drop', drop); el.addEventListener('click', click);
+    document.addEventListener('paste', paste);
+    Drops.pics = pics;
+    return () => { el.removeEventListener('dragstart', start); el.removeEventListener('dragover', over); el.removeEventListener('dragleave', leave); el.removeEventListener('drop', drop); el.removeEventListener('click', click); document.removeEventListener('paste', paste); };
+  }, [root.current]);
+  return <input type="file" accept="image/*" class="vh" ref={file} tabIndex={-1} aria-hidden="true" data-pic-box onChange={e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; if (f) Drops.pics([f], K.current.i, ''); }} />;
+}

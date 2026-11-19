@@ -226,6 +226,8 @@ async function lessonZip(p, l, file, save) {
   if (deck) await finUpload(p, { ...n, _file: l._file, _mod: l._mod }, new File([z[deck]], E.baseName(deck), { type: PPTX }), save);
   toast(t('tool.zip_added', { n: mats.length }) + (big.length ? ' ' + t('tool.too_big_n', { n: big.length }) : ''), { ms: 6000 });
 }
+// A .pptx or .zip let go anywhere on the lesson page (finished.js finishedDrop).
+export const dropFinal = (p, l, f, save) => (/\.zip$/i.test(f.name) ? lessonZip : finUpload)(p, l, f, save).catch(saveFailed);
 export function Finished({ p, l, save, onClose }) {
   const [busy, setBusy] = useState(false), f = l.final, old = l.finals || [];
   const pick = async file => { if (!file) return; setBusy(true); try { await (/\.zip$/i.test(file.name) ? lessonZip(p, l, file, save) : finUpload(p, l, file, save)); } catch (e) { saveFailed(e); } finally { setBusy(false); } };

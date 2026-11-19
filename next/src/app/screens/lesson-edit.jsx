@@ -40,7 +40,7 @@ const copy = x => JSON.parse(JSON.stringify(x));
 export default function Editor({ p, l, cur, setCur, save, ai, onAsk = () => {} }) {
   const E = engine(p);
   const [d, setD] = useState(() => copy(l)), timer = useRef(0), last = useRef(l.updated), stage = useRef(null);
-  const [over, setOver] = useState(false), [box, setBox] = useState(''), [keys, setKeys] = useState([]), [looking, setLooking] = useState(false), [tips, setTips] = useState(false), host = useRef(null), X = usePart('edit2'), [vid, setVid] = useState(false), [saving, setSaving] = useState(false);
+  const [over, setOver] = useState(false), [box, setBox] = useState(''), [keys, setKeys] = useState([]), [looking, setLooking] = useState(false), [tips, setTips] = useState(false), host = useRef(null), X = usePart('edit2'), [vid, setVid] = useState(false), [saving, setSaving] = useState(false), grid = useRef(null);
   // Another window saved this lesson while it is open here: take it, unless she is typing.
   useEffect(() => { if (l.updated !== last.current && !timer.current) { setD(copy(l)); last.current = l.updated; } }, [l.updated]);
   useEffect(() => () => { if (timer.current) { clearTimeout(timer.current); save(dRef.current); } }, []);
@@ -115,8 +115,8 @@ export default function Editor({ p, l, cur, setCur, save, ai, onAsk = () => {} }
       {X && <X.TopExtras d={d} saving={saving} />}</div>
     {X && looking && <X.LookSheet k={{ p, E, T, Slide, saveKv, LOOK_LINE }} d={d} s={s} onPick={lk => put({ ...d, look: lk }, true)} onClose={() => setLooking(false)} />}
     {X && tips && <X.Tips onClose={() => setTips(false)} />}
-    <div class="ed-grid">
-      <ol class="ed-list" aria-label={t('plan.all_slides')}>{d.slides.map((x, j) => <li><button type="button" class={'th' + (j === i ? ' on' : '')} aria-current={j === i ? 'true' : undefined} onClick={() => setCur(j)} aria-label={t('plan.slide_n', { n: j + 1 })} data-slide-i={j}>
+    <div class="ed-grid" ref={grid}>{X && <X.Drops root={grid} k={{ d, i, at, setCur, E, T }} />}
+      <ol class="ed-list" aria-label={t('plan.all_slides')}>{d.slides.map((x, j) => <li><button type="button" draggable class={'th' + (j === i ? ' on' : '')} aria-current={j === i ? 'true' : undefined} onClick={() => setCur(j)} aria-label={t('plan.slide_n', { n: j + 1 })} data-slide-i={j}>
         <span class="n">{j + 1}</span><Slide slide={x} lesson={d} plan={p} width={132} />{(x.talk || []).some(c => !c.done) && <Icon name="comment" size="xs" />}</button></li>)}
         <li><Button size="sm" icon="plus" onClick={add} data-focus="add-slide">{t('plan.add_slide')}</Button></li></ol>
       <div class="ed-stage" ref={stage}>

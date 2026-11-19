@@ -55,3 +55,12 @@ export function SlotSheet({ p, l, save }) {
       {c && d && !meets && <p class="mute" role="status" data-focus="slot-warn">{t('les.not_meet')}</p>}</div>
   </Sheet>;
 }
+
+// A finished .pptx, or a lesson .zip with the deck and its handouts, let go anywhere on the lesson page (src/planner/finished.js
+// finishedDrop): the Finished PowerPoint, as its upload button does. Materials and the assistant's sheet take their own drops first.
+const deckOf = e => [...((e.dataTransfer && e.dataTransfer.files) || [])].find(f => /\.(pptx|zip)$/i.test(f.name));
+export function pageOver(e) { if ([...((e.dataTransfer && e.dataTransfer.types) || [])].includes('Files')) e.preventDefault(); }
+export function pageDrop(e, p, l, save, Tools) {
+  const f = deckOf(e); if (!f || !Tools || e.defaultPrevented) return;
+  e.preventDefault(); Tools.dropFinal(p, l, f, save);
+}
