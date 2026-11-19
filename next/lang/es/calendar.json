@@ -134,5 +134,10 @@
  "cal.search_slide": "{title}, diapositiva {n}",
  "cal.search_nb": "{title}, cuaderno",
  "cal.search_in": "En «{title}»",
- "cal.search_no_class": "Sin clase"
+ "cal.search_no_class": "Sin clase",
+ "cal.unit_unsaved": "Esta unidad tiene cambios que aún no se han guardado.",
+ "cal.unit_discard": "Descartar cambios",
+ "cal.keep_editing": "Seguir editando",
+ "cal.unit_saved_away": "Se guardaron tus cambios en {name}.",
+ "cal.untitled_unit": "Unidad sin título"
 }

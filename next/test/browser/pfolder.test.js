@@ -145,3 +145,36 @@ test('the Planner folder: a folder with grading files in it is refused', async (
   assert.deepEqual(p.errors, []);
   await p.close();
 });
+
+test('E2-108: the Planner folder that needs permission again, or has lost its link, says so at rest at the foot of the sidebar, and pressing it opens its card', async () => {
+  const p = await open();
+  // the browser asking again after a restart, as a stand-in: queryPermission answers "prompt" while test.revoke is set
+  await p.evaluateOnNewDocument(() => { const q = FileSystemHandle.prototype.queryPermission; FileSystemHandle.prototype.queryPermission = function (o) { return localStorage.getItem('test.revoke') ? Promise.resolve('prompt') : q.call(this, o); }; });
+  // never linked: nothing to say
+  await p.goto(srv.url + 'next/#/calendar/class');
+  await p.waitForSelector('.saved', { timeout: 30000 }); await wait(800);
+  assert.equal(await p.$('[data-pfwarn]'), null, 'no warning before a folder was ever linked');
+  await p.goto(srv.url + 'next/#/settings/ai');
+  await p.waitForSelector('[data-pfolder] [data-pflink]', { timeout: 30000 });
+  await p.click('[data-pflink]');
+  assert.ok(await until(async () => /Planner folder linked: Lessons/.test(await toasts(p)), 20000), 'linked');
+  assert.equal(await until(async () => p.$eval('[data-pfstate]', e => e.dataset.pfstate === 'ok' && 'ok').catch(() => '')), 'ok');
+  // permission taken away: the calendar at rest says so
+  await p.evaluate(() => localStorage.setItem('test.revoke', '1'));
+  await p.goto(srv.url + 'next/#/calendar/class'); await p.reload();
+  await p.waitForSelector('.saved [data-pfwarn="ask"]', { timeout: 20000 });
+  assert.match(await p.$eval('[data-pfwarn]', e => e.textContent), /Planner folder needs permission/);
+  await p.click('[data-pfwarn]');
+  await p.waitForSelector('[data-pfolder] [data-pfstate="ask"]', { timeout: 20000 });
+  assert.equal(await p.evaluate(() => location.hash), '#/settings/ai');
+  assert.ok(await p.$('[data-pfpermit]'), 'Give permission again is on the card');
+  // the link gone (the folder's record cleared): it says so too
+  await p.evaluate(() => { localStorage.removeItem('test.revoke'); return new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const tx = r.result.transaction('kv', 'readwrite'); tx.objectStore('kv').delete('dir'); tx.oncomplete = () => { r.result.close(); res(); }; tx.onerror = () => rej(tx.error); }; }); });
+  await p.goto(srv.url + 'next/#/calendar/class'); await p.reload();
+  await p.waitForSelector('.saved [data-pfwarn="lost"]', { timeout: 20000 });
+  assert.match(await p.$eval('[data-pfwarn]', e => e.textContent), /Planner folder not linked/);
+  await p.click('[data-pfwarn]');
+  await p.waitForSelector('[data-pfolder] [data-pfstate="none"]', { timeout: 20000 });
+  assert.deepEqual(p.errors, []);
+  await p.close();
+});

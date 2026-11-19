@@ -166,5 +166,7 @@
  "drive.offline": "No se pudo conectar con Google. Revisa la conexión a internet.",
  "drive.failed": "Eso no llegó de Google Drive. Inténtalo de nuevo.",
  "cmd.dark_mode": "Modo oscuro",
- "cmd.light_mode": "Modo claro"
+ "cmd.light_mode": "Modo claro",
+ "saved.pf_ask": "La Carpeta del Planificador necesita permiso",
+ "saved.pf_lost": "Carpeta del Planificador sin vincular"
 }
