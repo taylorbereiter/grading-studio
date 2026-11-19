@@ -24,10 +24,12 @@ test('the new app keeps to its size budgets', () => {
   assert.ok(!first.has(heic[0].f), 'the first load does not bring the decoder');
   for (const x of outs) assert.ok(!(x.o.imports || []).some(i => i.kind === 'import-statement' && path.basename(i.path) === heic[0].f), x.f + ' loads the decoder at once');
   for (const x of outs) if (x !== heic[0]) assert.ok(gz(x.f) <= B.anyChunk, x.f + ' ' + gz(x.f) + ' > ' + B.anyChunk);
-  assert.ok(total <= B.total, 'total ' + total + ' > ' + B.total);
   // Each language's lines (next/lang/<code>.json), a chunk of its own, loaded only for a teacher who chose that language.
   const langs = outs.filter(x => Object.keys(x.o.inputs).some(i => /next\/lang\/(zh-Hant|zh-Hans|es|fr|de|pt-BR|ja|ko)\.json$/.test(i)));
   assert.equal(langs.length, 8, 'one chunk per language');
+  // The total is what one teacher can download: the app and one language, the largest (Taylor, 19 Nov 2026).
+  const appOnly = total - langs.reduce((n, x) => n + gz(x.f), 0), one = Math.max(...langs.map(x => gz(x.f)));
+  assert.ok(appOnly + one <= B.total, 'total ' + (appOnly + one) + ' (the app and its largest language) > ' + B.total);
   for (const x of langs) { assert.ok(gz(x.f) <= B.langFile, x.f + ' (a language) ' + gz(x.f) + ' > ' + B.langFile); assert.ok(!first.has(x.f), 'the first load does not bring a language'); }
   // Each screen the shell loads by its address (next/src/app/router.js CHUNKS), with everything it loads in turn that the first
   // load hasn't already brought.

@@ -699,6 +699,14 @@ async function build() {
     chunkNames: 'chunk-[hash]', entryNames: '[name]', metafile: true, absWorkingDir: ROOT, legalComments: 'none', logLevel: 'warning',
     jsxFactory: 'h', jsxFragment: 'Fragment', define: { __GS_LANGS__: JSON.stringify(langList()), __GS_DATA_V__: String(dataVersion()), __GS_APP_VERSION__: JSON.stringify(JSON.parse(fs.readFileSync(path.join(ROOT, 'version.json'), 'utf8')).version), __GS_GCID__: JSON.stringify(process.env.GCID || require('../site.json').googleClientId || '') },
   });
+  // Each language's chunk with its letters written as themselves, not as \\u escapes: about 10 KB smaller squeezed. Only these
+  // chunks: done for the whole app it makes some screens larger. A module is always read as UTF-8, so the letters arrive whole.
+  for (const [f, o] of Object.entries(r.metafile.outputs)) {
+    if (!Object.keys(o.inputs).some(i => /next\/lang\/(zh-Hant|zh-Hans|es|fr|de|pt-BR|ja|ko)\.json$/.test(i))) continue;
+    const at = path.join(ROOT, f), s = fs.readFileSync(at, 'utf8');
+    const out = s.replace(/\\u([0-9A-F]{4})/g, (m, x) => { const c = parseInt(x, 16); return c < 0x80 || (c >= 0xD800 && c < 0xE000) ? m : String.fromCharCode(c); });
+    fs.writeFileSync(at, out); o.bytes = Buffer.byteLength(out);
+  }
   fs.writeFileSync(path.join(DIST, 'meta.json'), JSON.stringify(r.metafile, null, 1) + '\n');
   // The tokens, as a stylesheet: made from next/src/ui/tokens.js, the one place colours and sizes are written.
   const tokens = await import(require('url').pathToFileURL(path.join(NEXT, 'src/ui/tokens.js')).href);

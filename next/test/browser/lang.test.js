@@ -48,6 +48,13 @@ test('a language chosen in the current app: the new app opens in it, with the cu
   for (const n of names) assert.ok(nav.includes(n), 'the class name ' + n + ' as typed');
   assert.deepEqual(p.errors, []);
   await p.ctx.close();
+  // a language outside the Latin letters: its chunk carries the letters as themselves (next/build.js), and they arrive whole
+  const j = await fresh('ja');
+  await j.goto(srv.url + 'next/#/');
+  await j.waitForSelector('[data-shell-nav]', { timeout: 30000 });
+  assert.ok((await navText(j)).includes('設定'), 'Japanese Settings in ' + await navText(j));
+  assert.deepEqual(j.errors, []);
+  await j.ctx.close();
 });
 
 test('choosing a language in Settings starts the page again in it, and English comes back the same way', async () => {

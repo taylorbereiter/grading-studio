@@ -6,7 +6,6 @@ const fs = require('fs'), path = require('path');
 const SRC = path.join(__dirname, '..', 'src');
 // en.json: the app's lines. gallery.en.json: the gallery page's own, never shipped with the app (only gallery/ may use them).
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lang', f), 'utf8'));
-const held = c => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lang', 'held', c + '.json'), 'utf8')); } catch { return {}; } };
 const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), VIDEO = read('video.en.json'), SAVING = read('saving.en.json'), CLASS = read('class.en.json'), TODO = read('todo.en.json'), FOCUS = read('focus.en.json'), SCHOOL = read('school.en.json'), HELP = read('help.en.json'), HOME = read('home.en.json'), SETS = read('settings.en.json'), PREFS = read('prefs.en.json'), ENGINE = read('engine.en.json'), EN = { ...APP, ...ENGINE, ...HOME, ...SETS, ...TODO, ...FOCUS, ...SCHOOL, ...HELP, ...PREFS, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...VIDEO, ...SAVING, ...CLASS };
 const noComments = s => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(x => x.isDirectory() ? walk(path.join(d, x.name)) : /\.jsx?$/.test(x.name) ? [path.join(d, x.name)] : []);
@@ -128,7 +127,7 @@ test('each language holds only the app\'s lines, with their parameters', () => {
   const codes = ['zh-Hant', 'zh-Hans', 'es', 'fr', 'de', 'pt-BR', 'ja', 'ko'];
   const ps = s => new Set([...String(s).matchAll(/\{(\w+)\}/g)].map(m => m[1]));
   for (const c of codes) {
-    const L = { ...read(c + '.json'), ...held(c) };
+    const L = read(c + '.json');
     assert.ok(typeof L['@locale'] === 'string' && L['@locale'], c + ' has its locale');
     for (const [k, v] of Object.entries(L)) {
       if (k === '@locale') continue;
@@ -146,15 +145,13 @@ test('each language holds only the app\'s lines, with their parameters', () => {
 });
 // Every line the app shows is in every language (stage 7). A line that is truly the same in a language (French "Note", German
 // "Name", "Google Drive") is listed for that language in next/lang/same.json instead, and must not also be in the language file.
-// A new line therefore needs its eight translations before it can merge. Lines written but held back from a language for now
-// (next/lang/held/<code>.json, not loaded by the app: the size total waits on the teacher's decision) count as written.
+// A new line therefore needs its eight translations before it can merge.
 test('every app line is in every language, or marked the same there', () => {
   const codes = ['zh-Hant', 'zh-Hans', 'es', 'fr', 'de', 'pt-BR', 'ja', 'ko'], same = read('same.json'), app = Object.keys(EN).filter(k => !(k in GAL) && !(k in BLD));
   for (const [k, cs] of Object.entries(same)) { assert.ok(app.includes(k), 'same.json names a line the app lacks: ' + k); for (const c of cs) assert.ok(codes.includes(c), 'same.json ' + k + ': ' + c); }
   const missing = [];
   for (const c of codes) {
-    const H = held(c), L = { ...read(c + '.json'), ...H };
-    for (const k of Object.keys(H)) assert.ok(!(k in read(c + '.json')), c + ' ' + k + ' is held back and also shipped');
+    const L = read(c + '.json');
     for (const k of app) { const sm = (same[k] || []).includes(c); if (sm) assert.ok(!(k in L), c + ' ' + k + ' is marked the same but also translated'); else if (!(k in L)) missing.push(c + ' ' + k); }
     for (const [k, v] of Object.entries(L)) {
       if (k === '@locale') continue;
