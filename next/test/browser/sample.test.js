@@ -7,6 +7,7 @@ const http = require('http'), fs = require('fs'), path = require('path');
 const { launch } = require('../../../test/helpers/chrome.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
+const onDisk = require('./site-path');
 const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp' };
 // Both apps at one address, with sample.js beside the current app's page, as on the web.
 function serveBoth() {
@@ -15,7 +16,7 @@ function serveBoth() {
     if (p === '/blank') { res.writeHead(200, { 'Content-Type': TYPES.html }); return res.end('<!doctype html><title>blank</title>'); }
     if (p === '/') p = '/index.html';
     if (p === '/next/') p = '/next/index.html';
-    const ok = /^\/(index\.html|sample\.js|next\/(index\.html|sw\.js|version\.json|dist\/[\w-]+\.(js|css|woff2|webp)))$/.test(p), f = path.join(ROOT, p);
+    const ok = /^\/(index\.html|sample\.js|next\/(index\.html|sw\.js|version\.json|dist\/[\w-]+\.(js|css|woff2|webp)))$/.test(p) || onDisk.extra(p), f = onDisk(p);
     if (!ok || !fs.existsSync(f)) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': TYPES[f.split('.').pop()] || 'application/octet-stream', 'Cache-Control': 'no-store' }); res.end(fs.readFileSync(f));
   });
@@ -24,7 +25,7 @@ function serveBoth() {
 let browser, srv;
 before(async () => { srv = await serveBoth(); browser = await launch(); });
 after(async () => { await browser.close(); await srv.close(); });
-const stamp = () => /window\.__gsSampleData\.api = "(\w+)"/.exec(fs.readFileSync(path.join(ROOT, 'sample.js'), 'utf8'))[1];
+const stamp = () => /window\.__gsSampleData\.api = "(\w+)"/.exec(fs.readFileSync(path.join(ROOT, 'classic', 'sample.js'), 'utf8'))[1];
 const count = (p, db, store) => p.evaluate((db, store) => new Promise(res => { const r = indexedDB.open(db); r.onupgradeneeded = () => r.transaction.abort(); r.onsuccess = () => { const d = r.result; if (!d.objectStoreNames.contains(store)) { d.close(); return res(0); } const q = d.transaction(store).objectStore(store).count(); q.onsuccess = () => { d.close(); res(q.result); }; }; r.onerror = () => res(0); }), db, store);
 
 test('the sample opened in the new app is filled in by the new app, and the current app opens it as it is', async () => {

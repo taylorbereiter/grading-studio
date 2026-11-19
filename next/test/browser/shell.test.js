@@ -1,6 +1,7 @@
-// The shell in a real browser (stage 2): its own service worker beside the current app's, the update control on a phone, the
-// keyboard (the command bar, the sidebar, the shortcut list), and every word through t(). The site is served from the repo the way
-// the web address serves it, the current app at the root and the new one at next/. Made-up saved work only (test/helpers/steady.js).
+// The shell in a real browser: the root's service worker beside the previous version's (classic/), the update control on a phone,
+// the previous version's addresses landing on the new screens, the keyboard (the command bar, the sidebar, the shortcut list), and
+// every word through t(). The site is served from the repo the way the web address serves it: the new app at the root, the previous
+// version at classic/ (since the switch). Made-up saved work only (test/helpers/steady.js).
 // npm run next:browser.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
@@ -11,18 +12,19 @@ const { gradingSeed, PLAN_SETUP } = require('../../../test/helpers/steady.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
 const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp', png: 'image/png', webmanifest: 'application/manifest+json' };
-// What the site serves, and nothing else. nextBuild, when set, stands in for next/version.json's build: a newer version going up.
+// What the site serves, and nothing else. nextBuild, when set, stands in for version.json's build: a newer version going up.
 const site = { nextBuild: null };
 function serveSite() {
   const srv = http.createServer((req, res) => {
     let p = decodeURIComponent(req.url.split('?')[0]);
     if (p === '/blank') { res.writeHead(200, { 'Content-Type': TYPES.html }); return res.end('<!doctype html><title>blank</title>'); }
-    if (p === '/') p = '/index.html'; if (p === '/next/') p = '/next/index.html';
-    const ok = /^\/(index|planner)\.html$|^\/(sw\.js|version\.json|manifest\.webmanifest)$|^\/icons\/[\w-]+\.png$|^\/lang\/[\w-]+\.js$|^\/next\/(index\.html|sw\.js|version\.json|dist\/[\w-]+\.(js|css|woff2|webp))$/.test(p);
+    if (p === '/') p = '/index.html'; if (p === '/next/') p = '/next/index.html'; if (p === '/classic/') p = '/classic/index.html';
+    // Since the switch: the new app at the root, the previous version at classic/, and next/'s page and retiring worker.
+    const ok = /^\/(index|planner)\.html$|^\/(sw\.js|version\.json|manifest\.webmanifest)$|^\/icons\/[\w-]+\.png$|^\/dist\/[\w-]+\.(js|css|woff2|webp)$|^\/classic\/(index\.html|planner\.html|sw\.js|version\.json|sample\.js|lang\/[\w-]+\.js)$|^\/next\/(index\.html|sw\.js)$/.test(p);
     const f = path.join(ROOT, p);
     if (!ok || !fs.existsSync(f)) { res.writeHead(404); return res.end(); }
     let body = fs.readFileSync(f);
-    if (p === '/next/version.json' && site.nextBuild) body = JSON.stringify({ ...JSON.parse(body), build: site.nextBuild });
+    if (p === '/version.json' && site.nextBuild) body = JSON.stringify({ ...JSON.parse(body), build: site.nextBuild });
     res.writeHead(200, { 'Content-Type': TYPES[f.split('.').pop()] || 'application/octet-stream', 'Cache-Control': 'no-store' }); res.end(body);
   });
   return new Promise(r => srv.listen(0, '127.0.0.1', () => { srv.unref(); r({ url: 'http://localhost:' + srv.address().port + '/', close: () => new Promise(d => { srv.closeAllConnections(); srv.close(d); }) }); }));
@@ -46,32 +48,66 @@ async function fresh(width = 1366) {
 const shellUp = p => p.waitForSelector('[data-shell-nav], nav.tabbar', { timeout: 20000 });
 const cacheList = p => p.evaluate(async () => { const out = {}; for (const n of (await caches.keys()).sort()) out[n] = (await (await caches.open(n)).keys()).map(r => new URL(r.url).pathname).sort(); return out; });
 
-test('the new app’s service worker has its own scope and leaves the current app’s worker and caches alone', async () => {
+const whole = (p, name, at) => p.waitForFunction(async (name, at) => (await caches.keys()).includes(name) && !!(await (await caches.open(name)).match(new URL(at, location.origin).href)), { timeout: 30000, polling: 300 }, name, at);
+
+test('the root’s worker and the previous version’s each keep to their own scope and caches', async () => {
   const p = await fresh();
-  // The current app first, with its worker (?sw=1 turns it on away from https), until it has kept its version.
-  await p.goto(srv.url + 'index.html?sw=1#/');
-  await p.waitForFunction(async () => (await caches.keys()).includes('gs-app-1') && !!(await (await caches.open('gs-app-1')).match(new URL('version.json', location.href).href)), { timeout: 30000, polling: 300 });
-  const before = await cacheList(p);
-  await p.goto(srv.url + 'next/#/home'); await shellUp(p);
-  await p.waitForFunction(async () => (await caches.keys()).includes('gsn-app-1') && !!(await (await caches.open('gsn-app-1')).match(new URL('version.json', location.href).href)), { timeout: 30000, polling: 300 });
+  await p.goto(srv.url + '#/home'); await shellUp(p);
+  await whole(p, 'gs-app-2', '/version.json');
+  // Settings, About opens the previous version, which keeps its own worker (?sw=1 turns it on away from https) and its own caches.
+  await p.goto(srv.url + '#/settings/about'); await shellUp(p);
+  const prev = await p.waitForSelector('a[data-focus="previous-version"]');
+  assert.equal(await prev.evaluate(a => a.href), srv.url + 'classic/');
+  await p.goto(srv.url + 'classic/?sw=1#/');
+  await p.waitForSelector('#rail', { timeout: 30000 });
+  await whole(p, 'gsc-app-1', '/classic/version.json');
   const regs = await p.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).map(r => new URL(r.scope).pathname).sort());
-  assert.deepEqual(regs, ['/', '/next/'], 'one worker for each version, each at its own scope');
-  const after = await cacheList(p);
-  for (const [n, files] of Object.entries(before)) assert.deepEqual(after[n], files, 'the current app’s cache ' + n + ' is as it was');
-  for (const n of Object.keys(after)) assert.ok(n in before || /^gsn-/.test(n), 'a cache that is neither the current app’s nor gsn-*: ' + n);
-  assert.ok(after['gsn-app-1'].every(f => f.startsWith('/next/')), 'the new app keeps only its own files');
-  // The current app's pages are still answered by the current app's worker.
-  await p.goto(srv.url + 'index.html?sw=1#/');
+  assert.deepEqual(regs, ['/', '/classic/'], 'one worker for each version, each at its own scope');
+  assert.equal(await p.evaluate(() => new URL(navigator.serviceWorker.controller.scriptURL).pathname), '/classic/sw.js');
+  const c = await cacheList(p);
+  assert.deepEqual(Object.keys(c), ['gs-app-2', 'gsc-app-1'], 'no cache but each version’s own');
+  assert.ok(c['gs-app-2'].every(f => !/^\/(classic|next)\//.test(f)) && c['gs-app-2'].includes('/index.html') && c['gs-app-2'].includes('/planner.html'), 'the root keeps only the new app’s files');
+  assert.deepEqual(c['gsc-app-1'], ['/classic/index.html', '/classic/planner.html', '/classic/version.json'], 'classic/ keeps only its own pages');
+  // The way back: About in the previous version opens the new one.
+  await p.goto(srv.url + 'classic/?sw=1#/settings/about');
+  const back = await p.waitForSelector('#setAbout a[data-newapp]', { timeout: 30000 });
+  assert.equal(await back.evaluate(a => a.href), srv.url);
+  await p.goto(srv.url + '#/home'); await shellUp(p);
   assert.equal(await p.evaluate(() => new URL(navigator.serviceWorker.controller.scriptURL).pathname), '/sw.js');
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('the previous version’s addresses, the Planner’s and next/ land on the matching new screen', async () => {
+  const p = await fresh();
+  const lands = async (url, want) => { await p.goto(srv.url + url); await p.waitForFunction(w => location.pathname === '/' && location.hash === w, { timeout: 15000 }, want).catch(() => {}); assert.equal(await p.evaluate(() => location.pathname + location.hash), '/' + want, url); };
+  await lands('#/a/b123/grades/sheet', '#/mark/b123/grades');
+  await lands('#/a/b123', '#/mark/b123');
+  await lands('#/class/c1/gradebook', '#/class/c1/grades');
+  await lands('#/class/c1/students/2', '#/class/c1/people/2');
+  await lands('#/settings/claude', '#/settings/ai');
+  await lands('#/settings/keys', '#/help/keys');
+  await lands('#/help/return', '#/help/return');   // a help topic of the new app's too
+  await lands('#/plans', '#/calendar');
+  await lands('#/scores/c1', '#/class/c1/grades');
+  await lands('planner.html#rubrics', '#/library/rubrics');
+  await lands('planner.html#timetable', '#/settings/timetable');
+  await lands('planner.html#present/L1/A1', '#/lesson/L1/slides');
+  await lands('planner.html', '#/week');
+  await lands('next/#/calendar', '#/calendar');
+  // the new app's own addresses stay as they are, and Google's sign-in coming back is never taken for a screen
+  await lands('#/class/c1/people', '#/class/c1/people');
+  await p.goto(srv.url + '#access_token=abc&state=1'); await shellUp(p);
+  assert.ok(await p.$('main h1'), 'Home is drawn');
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
 test('on a phone, a newer version shows Update now on More, and pressing it takes the new version whole', async () => {
   const p = await fresh(390);
-  await p.goto(srv.url + 'next/#/more'); await shellUp(p);
-  const kept = () => p.evaluate(async () => { const r = await (await caches.open('gsn-app-1')).match(new URL('version.json', location.href).href); return r ? (await r.json()).build : null; });
+  await p.goto(srv.url + '#/more'); await shellUp(p);
+  const kept = () => p.evaluate(async () => { const r = await (await caches.open('gs-app-2')).match(new URL('version.json', location.href).href); return r ? (await r.json()).build : null; });
+  await p.waitForFunction(async () => (await caches.keys()).includes('gs-app-2'), { timeout: 30000, polling: 300 });
   // The worker writes version.json last, so a cache without it is still being filled.
-  await p.waitForFunction(async () => (await caches.keys()).includes('gsn-app-1') && !!(await (await caches.open('gsn-app-1')).match(new URL('version.json', location.href).href)), { timeout: 30000, polling: 300 });
+  await p.waitForFunction(async () => !!(await (await caches.open('gs-app-2')).match(new URL('version.json', location.href).href)), { timeout: 30000, polling: 300 });
   const first = await kept(); assert.ok(first);
   site.nextBuild = 'newer-build-for-the-test';
   try {
@@ -141,7 +177,7 @@ test('Find reaches every assignment, each class page, the common jobs and the sh
 
 test('keyboard: the command bar goes to a screen, the sidebar is reachable with Tab, and Shift+? opens the shortcut list', async () => {
   const p = await fresh();
-  await p.goto(srv.url + 'next/#/home'); await shellUp(p);
+  await p.goto(srv.url + '#/home'); await shellUp(p);
   await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
   await p.waitForSelector('dialog.cmd[open]');
   await p.keyboard.type('settings'); await p.keyboard.press('Enter');
@@ -164,7 +200,7 @@ test('every word on the shell, Home and Settings comes through t() or is the tea
   for (const w of [1366, 390]) {
     const p = await fresh(w);
     for (const hash of ['#/home', '#/settings/display', '#/settings/about', '#/help/keys', '#/todo', w < 700 ? '#/more' : '#/library']) {
-      await p.goto(srv.url + 'next/?keys=1' + hash); await shellUp(p);
+      await p.goto(srv.url + '?keys=1' + hash); await shellUp(p);
       await p.waitForFunction(() => !document.querySelector('[data-loading]'), { timeout: 10000 }).catch(() => {});
       await new Promise(r => setTimeout(r, 400));
       const loose = await p.evaluate(() => {
