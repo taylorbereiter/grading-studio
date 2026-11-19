@@ -1,12 +1,12 @@
 {
- "version": "1.28.73",
- "build": "25f147c8fb53",
+ "version": "1.28.74",
+ "build": "95c979d5bdde",
  "notes": [
-  "Score stamps and criterion stamps are red again. They no longer take the pen or comment color, so purple comments don’t make purple grades. Stamps already on papers show red too. To use another color for grades, pick a points color in Settings, Marking."
+  "The lesson and unit prompts you copy from the Planner now say Claude shouldn't need anything from your computer, and ask it to tell you if anything is missing."
  ],
  "files": {
-  "index.html": "6d3c06b6e21742b389149dd9063ed6cfb3ffe6ec503587d1727208f52740fdaa",
-  "planner.html": "d9ae41f867ea4eb22397c879e137bdb3ab43c4be84491fdb8bdd9e92286ca3b1"
+  "index.html": "b69ce2e0d4d4c6a0628aed2cb52422c61f409eecc265209aaa3e17efccddb348",
+  "planner.html": "1b4898396c7452206cd726e98c616b1c001963358afd88060837904bbc239434"
  },
  "langs": {
   "lang/zh-Hant.js": "1f6c72319366bc2cb027a2ad8ca790bdf3982ac2b2c8cf5958525f87ec6ee574",

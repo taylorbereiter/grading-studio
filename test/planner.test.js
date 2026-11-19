@@ -1211,7 +1211,7 @@ test('comments on the whole lesson: a box in the editor, kept on the lesson, sha
     assert.match(r.copied, /My comment on the whole lesson: Keep it lighter[\s\S]*My comment on the whole lesson: Use the poem from Monday/);
     assert.equal(r.file, 2, 'saved in the lesson file for Claude');
     // The copied text stands on its own: it never sends the assistant to a folder or a file on the computer, and asks for a .zip back plus each piece on its own.
-    assert.match(r.copied, /Everything you need is in this message/);
+    assert.match(r.copied, /everything should already be in this message/);
     assert.match(r.copied, /ONE downloadable \.zip/); assert.match(r.copied, /its own downloadable file/);
     assert.doesNotMatch(r.copied, /Planner folder|README|\.lesson\.json|\.unit\.json/);
     assert.match(r.copied, /"lesson": \{ "title"/, 'asks for the slides back as data');

@@ -275,7 +275,7 @@ async function viewFile(u, id) {
 function askWeeks(u) {
   // Self-contained: never a folder, path or file on this computer. The teacher attaches the screenshots and pastes the answer back.
   const n = u.files.filter(x => x.kind === 'atlas').length;
-  const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshot' + (n === 1 ? '' : 's') + ', which I am attaching. Everything you need is in this message and the screenshots. Don\'t look for, open or ask for any folder or file on my computer.\n\n' +
+  const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshot' + (n === 1 ? '' : 's') + ', which I am attaching. You shouldn\'t need to look for or open any folder or file on my computer, because everything should already be in this message and the screenshots. If anything is missing, tell me.\n\n' +
     'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and reply with one line per week, in order, like "Week 1: what this week is about (standards, if shown)". Nothing else in those lines. Then tell me anything you weren\'t sure of.';
   copyText(msg).then(() => { toast('Message copied. Paste it into ' + plAi() + ' and attach the ' + (plCur() || 'unit plan') + ' screenshot' + (n === 1 ? '' : 's') + '. Then use Type or paste the weeks for its answer.', 8000); });
 }
