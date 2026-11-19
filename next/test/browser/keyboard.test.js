@@ -57,6 +57,8 @@ test('keyboard run, To do: N from anywhere, a line typed and added with Enter, i
   await p.keyboard.press('Enter');
   await p.waitForFunction(() => ((JSON.parse(localStorage.getItem('gs.lib')).todo || {}).items || []).some(i => /field trip/.test(i.x)), { timeout: 10000, polling: 100 });
   const it = (await lib(p)).todo.items.find(i => /field trip/.test(i.x));
+  await p.waitForSelector('[data-td-tick="' + it.id + '"]', { timeout: 10000 });   // drawn once the save is read back
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('[data-td-new]'), { timeout: 5000 });
   const n = await tabTo(p, '[data-td-tick="' + it.id + '"]');
   assert.ok(n < 40, 'the new line is ' + n + ' presses from the box');
   await p.keyboard.press('Space');
