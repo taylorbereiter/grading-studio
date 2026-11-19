@@ -7,6 +7,7 @@
 // order with Move up and Move down or by dragging. New assignment (at the top and at each unit's end), Edit assignment, No papers,
 // Forget these papers and a unit's plan link open the boxes in class/assignment.jsx. Its lines are in next/lang/mark.en.json
 // (mark.cw_*), which this screen loads anyway, so the screen stays inside its size budget.
+import * as tabs from '../../shared/tabs.js';
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Button, IconButton, Icon, EmptyState, Menu, Dialog, TextInput, toast } from '../../ui/index.js';
@@ -22,6 +23,7 @@ import '../mark/setup-lines.js';
 import { useSaving } from '../../services/saving.js';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
+const lc = (label, fn) => libraryChange(t(label), fn, true).catch(e => { console.error(e); toast(t('mark.cannot')); });
 const holderOf = (l, id) => (id === '-' || id === '' ? l.loose : l.classes.find(x => String(x.id) === String(id)));
 // The same change on the library as saved (it's read fresh there): a unit or a card found by its id.
 const unitIn = (l, id) => { for (const c of [...l.classes, l.loose]) { const u = c.units.find(x => x.id === id); if (u) return { c, u }; } return null; };
@@ -92,9 +94,33 @@ export default function ClassWork({ classId, sub }) {
   useEffect(() => { if (sub === 'new') { open('asg', { unitId: null }); location.replace(href('class', classId, 'work')); } }, [sub, classId]);
   const L = usePart('linked', true);   // linked classes (class/linked.jsx)
   const flip = id => setShown(o => { const n = new Set(o); if (n.has(id)) n.delete(id); else n.add(id); return n; });
-  const load = () => { setLib(readLibrary()); readKept().then(setKept); };
+  const [tm, setTm] = useState(null);
+  const load = () => { setLib(readLibrary()); readKept().then(setKept); PARTS.asg().then(A => A.timing().then(E => setTm({ A, E }))).catch(e => console.error(e)); };
   useEffect(load, [classId]);
   useEffect(() => onSaved(e => { if (e.kind === 'library') setLib(readLibrary()); }), []);
+  // another window changed the library or saved marks in a download (src/folder.js libNews, src/saving.js; audit H-062, H-063)
+  useEffect(() => { const offs = [tabs.on('library', k => { if (k === 'gs.lib') setLib(readLibrary()); }), tabs.on('saved', () => readKept().then(setKept))]; return () => offs.forEach(f => f()); }, []);
+  // A card or a unit dragged onto a class in the sidebar (src/app/screens.js railDragTarget): a card goes to that class's unit of the
+  // same name (made if it isn't there), a unit to the end of that class. One undo step. Only this tab's own drags count.
+  useEffect(() => {
+    const D = document, ev = ['dragover', 'drop', 'dragend'], clear = k => D.querySelectorAll('[data-shell-nav] .over').forEach(n => n !== k && n.classList.remove('over'));
+    const at = e => { const a = e.target.closest && e.target.closest('[data-shell-nav] .sclasses a[href^="#/class/"]'), id = a && decodeURIComponent(a.hash.split('/')[2]);
+      return a && (dragging(e, CARD) || dragging(e, UNIT)) && id !== 'new' && id !== String(classId) ? { a, id } : null; };
+    const on = e => {
+      const x = e.type !== 'dragend' && at(e); clear(x && e.type === 'dragover' && x.a); if (!x) return;
+      e.preventDefault(); e.stopPropagation();
+      if (e.type === 'dragover') return x.a.classList.add('over');
+      const card = dragging(e, CARD) && e.dataTransfer.getData(CARD), unit = e.dataTransfer.getData(UNIT);
+      let where = '';
+      lc('setup.u_move', l => {
+        const to = holderOf(l, x.id), f = card ? itemIn(l, card) : unitIn(l, unit); if (!to || !f || f.c === to) return;
+        if (card) { let u = to.units.find(k => k.name === f.u.name); if (!u) to.units.push(u = { id: uid(), name: f.u.name, items: [] }); f.u.items.splice(f.u.items.indexOf(f.it), 1); u.items.push(f.it); f.it.classId = to.id; }
+        else { f.c.units.splice(f.c.units.indexOf(f.u), 1); to.units.push(f.u); for (const k of f.u.items) k.classId = to.id; }
+        where = to === l.loose ? t('setup.u_noclass') : to.name;
+      }).then(() => where && toast(t('setup.u_moved', { name: where }), { undo: () => undoList.undo() }));
+    };
+    ev.forEach(k => D.addEventListener(k, on, true)); return () => ev.forEach(k => D.removeEventListener(k, on, true));
+  }, [classId]);
   if (!lib || !kept) return <div class="loading" aria-busy="true" />;
   const c = classId === '-' ? lib.loose : lib.classes.find(x => String(x.id) === String(classId));
   if (!c) return <EmptyState icon="inbox" title={t('setup.w_none')} />;
@@ -122,14 +148,15 @@ export default function ClassWork({ classId, sub }) {
   const matchFor = it => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true;
     i.onchange = async () => { const B = await PARTS.bringin(), list = await B.expand([...i.files]); if (!list.length) return toast(t('setup.bf_nothing')); setMatch({ B, it, list }); }; i.click(); };
   const units = c.units;
-  const lc = (label, fn) => libraryChange(t(label), fn, true).catch(e => { console.error(e); toast(t('mark.cannot')); });
   const named = async v => {
     const was = name; setName(null); if (!v) return;
     if (was.id) await lc('setup.u_rename', l => { const f = unitIn(l, was.id); if (f) f.u.name = v; });
     else await lc('setup.u_add', l => { const h = holderOf(l, classId); if (h) h.units.push({ id: uid(), name: v, items: [] }); });
   };
+  // Delete unit (src/app/screens.js udel): asked first when it holds assignments; an empty one goes at once. Undo either way.
+  const [sure, setSure] = useState(null);
   const drop = async u => {
-    const n = u.items.length;
+    const n = u.items.length; setSure(null);
     await lc('setup.u_del', l => { const f = unitIn(l, u.id); if (f) f.c.units.splice(f.c.units.indexOf(f.u), 1); });
     toast(n ? t('setup.u_gone_n', { name: u.name, n }) : t('setup.u_gone', { name: u.name }), { undo: () => undoList.undo() });
   };
@@ -163,6 +190,7 @@ export default function ClassWork({ classId, sub }) {
   return <section class="classwork" aria-labelledby="h-work">
     <h2 id="h-work" class="sr">{t('setup.w_title')}</h2>
     {L && <L.LinkedHead lib={lib} classId={classId} />}
+    {c === lib.loose && c.units.some(u => u.items.length) && <p class="mute" data-loose-say>{t('mark.cw_loose_say')}</p>}
     {match && <match.B.MatchRoster list={match.list} lib={lib} classId={classId} onClose={() => setMatch(null)} onGo={(entries, cls) => bring(match.it, entries, cls)} />}
     {ask && <Dialog open title={t('setup.c_ask_t')} onClose={() => ask.done(false)}
       actions={<><Button onClick={() => ask.done(false)} data-fresh>{t('setup.c_fresh')}</Button><Button variant="primary" onClick={() => ask.done(true)} data-carry>{t('setup.c_bring')}</Button></>}>
@@ -176,6 +204,9 @@ export default function ClassWork({ classId, sub }) {
     <input ref={scan} type="file" hidden accept=".pdf,application/pdf" data-bring="scan"
       onChange={e => { const f = e.currentTarget.files[0], it = want.current; if (f) PARTS.split().then(S => setSplit({ S, f, it }), er => console.error(er)); }} />
     {name && <NameUnit was={name} onDone={named} />}
+    {sure && <Dialog open title={t('mark.cw_ud_q', { name: sure.name })} onClose={() => setSure(null)}
+      actions={<><Button onClick={() => setSure(null)}>{t('setup.u_cancel')}</Button><Button variant="primary" onClick={() => drop(sure)} data-udel-ok>{t('setup.u_del')}</Button></>}>
+      <p>{t('mark.cw_ud_say', { n: sure.items.length })}</p></Dialog>}
     {move && <MoveTo lib={lib} it={move} onDone={moved} />}
     {box && box.kind === 'asg' && <box.A.AssignmentDialog lib={lib} it={box.it} classId={classId} unitId={box.unitId} onClose={shut} />}
     {box && box.kind === 'notes' && <box.A.StartNotes lib={lib} it={box.it} bring={list => bring(box.it, list)} onClose={() => setBox(null)} />}
@@ -197,14 +228,17 @@ export default function ClassWork({ classId, sub }) {
             { label: t('mark.cw_o_down'), icon: 'chd', disabled: ui === units.length - 1, onSelect: () => order(l => { const f = unitIn(l, u.id); if (f) step(f.c.units, u.id, 1); }) },
             { label: t('mark.cw_uc_move'), icon: 'arrow', onSelect: () => open('unitto', { u }) },
             { label: u.atlas ? (tool ? t('mark.cw_ul_change_n', { name: tool }) : t('mark.cw_ul_change')) : tool ? t('mark.cw_ul_add_n', { name: tool }) : t('mark.cw_ul_add'), icon: 'link', onSelect: () => open('ulink', { u }) },
-            { label: t('setup.u_del'), icon: 'trash', onSelect: () => drop(u) }]} /></div>
+            { label: t('setup.u_del'), icon: 'trash', onSelect: () => (u.items.length ? setSure(u) : drop(u)) }]} /></div>
         {!u.items.length && <p class="mute wempty">{t('setup.u_empty')}</p>}
         {!!u.items.length && <ul class="wlist">{u.items.map(it => { const st = standing(lib, kept, it), open = st.m && canOpen(st.m);
           return <li class="wrow" data-item={it.id} draggable="true" onDragStart={e => { if (e.target.closest && e.target.closest('a,button')) return; e.dataTransfer.setData(CARD, it.id); e.dataTransfer.effectAllowed = 'move'; }}
             onDragOver={e => { if (dragging(e, UNIT)) return; e.preventDefault(); e.currentTarget.classList.add('over'); }} onDragLeave={e => e.currentTarget.classList.remove('over')}
             onDrop={e => { if (dragging(e, UNIT)) return; e.currentTarget.classList.remove('over'); e.preventDefault(); e.stopPropagation(); if (dragging(e, CARD)) dropCard(e.dataTransfer.getData(CARD), u.id, it.id); else bring(it, e.dataTransfer.files); }}>
-            <div class="wn"><span class="wnm"><IconButton icon={shown.has(it.id) ? 'chd' : 'chr'} size="sm" label={t('setup.w_more', { name: it.name })} aria-expanded={shown.has(it.id) ? 'true' : 'false'} onClick={() => flip(it.id)} data-wmore={it.id} /><b data-raw>{it.name}</b></span>{L && <L.AlsoIn lib={lib} it={it} />}
-              <small class="mute">{[KIND[it.type] && t(KIND[it.type]), it.due && t('setup.w_due', { d: date(new Date(it.due + 'T12:00'), { day: 'numeric', month: 'short' }) })].filter(Boolean).join(' · ')}</small></div>
+            <div class="wn"><span class="wnm"><IconButton icon={shown.has(it.id) ? 'chd' : 'chr'} size="sm" label={t('setup.w_more', { name: it.name })} aria-expanded={shown.has(it.id) ? 'true' : 'false'} onClick={() => flip(it.id)} data-wmore={it.id} />{open ? <a class="wname" href={href('mark', st.m.id)} data-wname={it.id}><b data-raw>{it.name}</b></a>
+                : it.typed && !it.batchId ? <a class="wname" href={href('class', classId, 'grades', 'type-' + it.id)} data-wname={it.id}><b data-raw>{it.name}</b></a>
+                : <button type="button" class="wname" onClick={e => { const b = e.currentTarget.closest('.wrow').querySelector('[data-bring-for]'); if (b) b.click(); }} data-wname={it.id}><b data-raw>{it.name}</b></button>}
+              {it.typed && it.type !== 'xc' && <span class="tag" data-wtyped>{t('mark.cw_typed')}</span>}</span>{L && <L.AlsoIn lib={lib} it={it} />}
+              <small class="mute">{[KIND[it.type] && t(KIND[it.type]), it.due && t('setup.w_due', { d: date(new Date(it.due + 'T12:00'), { day: 'numeric', month: 'short' }) }), tm && tm.A.asgTime(tm.E, it.id)].filter(Boolean).join(' · ')}</small></div>
             <span class={'wst ' + st.cls}>{t(st.key)}{st.s && st.s.left ? ' · ' + t('home.left_of', { left: st.s.left, of: st.s.of }) : ''}
               {/* some got theirs early, one at a time */}
               {st.s && st.m.sent > 0 && st.m.sent < st.s.of && !backOf(st.m) && <span class="wearly" title={t('setup.w_early_tip')} data-wearly>{t('setup.w_early', { sent: st.m.sent, of: st.s.of })}</span>}</span>

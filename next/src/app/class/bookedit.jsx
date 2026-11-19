@@ -31,7 +31,7 @@ export function setCol(col, part) {
 }
 
 // The column box: what bkColMenu shows, changed as she picks (the current app saves each choice at once too).
-export function ColDialog({ col, conf, labelOf, onClose, onEditTyped }) {
+export function ColDialog({ col, conf, labelOf, onClose, onEditTyped, onEntry }) {
   const [v, setV] = useState({ type: col.type, due: col.due || '', term: col.term || '', xcTo: B.bkXcTo(col, conf) });
   const put = part => { setV(o => ({ ...o, ...part })); setCol(col, part); };
   const terms = conf.terms, byDate = (terms.find(x => x.id === B.bkTermOf({ ...col, due: v.due, term: '' }, terms)) || { name: t('class.term_none') }).name;
@@ -44,6 +44,7 @@ export function ColDialog({ col, conf, labelOf, onClose, onEditTyped }) {
       {terms.length > 0 && <Select label={t('class.term')} value={v.term} onChange={x => put({ term: x })} data-col-term
         options={[{ value: '', label: t('class.term_by_date', { term: byDate }) }].concat(terms.map(x => ({ value: x.id, label: x.name })))} />}
       {col.typed && col.it && !col.d && <Button size="sm" icon="edit" onClick={() => { onClose(); onEditTyped(col.it.id); }} data-col-typed>{t(col.type === 'xc' ? 'class.edit_xc' : 'class.edit_typed')}</Button>}
+      {onEntry && col.type !== 'xc' && <Button size="sm" icon="menu" onClick={() => { onClose(); onEntry(col.key); }} data-col-entry>{t('class.mb_this')}</Button>}
     </div>
   </Dialog>;
 }
@@ -194,7 +195,8 @@ export function AddSheet({ c, cols, conf, labelOf, itId, xc: wantXc, onClose }) 
         <TextInput type="date" label={t('class.due')} value={a.due} onInput={x => setA(a => ({ ...a, due: x }))} data-add-due />
         {!it && <Select label={t('class.unit')} value={a.unit} onChange={x => setA(a => ({ ...a, unit: x }))} options={c.units.map(u => ({ value: u.id, label: u.name })).concat({ value: '', label: t(c.units.length ? 'class.new_unit_typed' : 'class.new_unit_1') })} />}
         {!xc && !fm && <div class="cp-fld"><span class="lab">{t('class.scored_as')}</span><div class="cp-so"><Segmented size="sm" label={t('class.scored_as')} value={a.mode} onChange={x => setA(a => ({ ...a, mode: x }))} options={[{ value: 'pts', label: t('class.pts_out_of') }, { value: 'pct', label: t('class.percent') }]} />
-          {a.mode === 'pts' && <input class="input cp-max" type="number" min="0.5" step="0.5" value={a.max} aria-label={t('class.out_of_l')} onInput={e => { const max = e.currentTarget.value; setA(a => ({ ...a, max })); }} data-add-max />}</div></div>}
+          {a.mode === 'pts' && <input class="input cp-max" type="number" min="0.5" step="0.5" value={a.max} aria-label={t('class.out_of_l')} onInput={e => { const max = e.currentTarget.value; setA(a => ({ ...a, max })); }}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); save(); } }} data-add-max />}</div></div>}
         {xc && <div class="cp-fld"><span class="lab">{t('class.adds_to')}</span><Segmented size="sm" label={t('class.adds_to')} value={a.xcTo} onChange={x => setA(a => ({ ...a, xcTo: x }))} options={xcChoices(labelOf)} /></div>}
       </div>
       {tw.length > 0 && <span data-add-also><Checkbox label={t('class.lk_also_do', { names: tw.map(x => x.c.name || t('nav.no_class')).join(', ') })} checked={also} onChange={setAlso} /></span>}

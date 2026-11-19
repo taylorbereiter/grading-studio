@@ -11,7 +11,7 @@ picker copy (`gs.rolls`), strong examples, the watch list, and the Focus log `gs
 
 - students/ may import planning/. planning/ never imports students/, `whole/` or crossings.js.
 - A top-level file (the shell, a screen) reaches students/ only through crossings.js, which names each read-only crossing:
-  `classListsForPlanning`, `classesForHome`, `countsForHome`, `examplesForPlanning`, `rosterNamesForPresent`, and since stage 3 `todoCountForSidebar` (the sidebar's To do count) and `workForCalendar` (assignment names and due days, and the teacher's own to-dos, for the calendar).
+  `classListsForPlanning`, `classesForHome`, `countsForHome`, `examplesForPlanning`, `rosterNamesForPresent`, and since stage 3 `todoCountForSidebar` (the sidebar's To do count) `workForCalendar` (assignment names and due days, and the teacher's own to-dos, for the calendar), and since stage 8 `todoCountsForSchool` (how many open to-dos name each School person: ids and counts only).
 - **whole/** is the work that has to see everything at once: the linked folder, the Drive sync file, and later the year file,
   take-home and the sample. It imports both sides; only main.js and the proof page import it.
 
