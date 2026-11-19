@@ -78,3 +78,26 @@ test('choosing a language in Settings starts the page again in it, and English c
   assert.deepEqual(p.errors, []);
   await p.ctx.close();
 });
+
+// Each language is kept in files by area (next/lang/<code>/<area>.json): Home brings its own lines in the language, Settings' file
+// is fetched only when Settings opens, and a part that loads later (Settings > Marking) arrives with its lines already in the language.
+test('a language\'s lines arrive by area, with the screen or part that uses them', async () => {
+  const meta = JSON.parse(fs.readFileSync(path.join(ROOT, 'next', 'dist', 'meta.json'), 'utf8')), areaOf = {};
+  for (const [f, o] of Object.entries(meta.outputs)) for (const i of Object.keys(o.inputs)) { const m = /next\/lang\/de\/(\w+)\.json$/.exec(i); if (m) areaOf[path.basename(f)] = m[1]; }
+  const p = await fresh('de'), asked = new Set();
+  p.on('request', r => { const a = areaOf[r.url().split('/').pop()]; if (a) asked.add(a); });
+  await p.goto(srv.url + 'next/#/home');
+  await p.waitForSelector('main h1', { timeout: 30000 });
+  assert.match(await p.$eval('main h1', e => e.textContent), /^Guten (Morgen|Tag|Abend)$/, 'Home\'s own line in German at once');
+  assert.ok(asked.has('core') && asked.has('home'), 'core and home: ' + [...asked]);
+  assert.ok(!asked.has('settings') && !asked.has('setup'), 'nothing for screens not yet opened: ' + [...asked]);
+  // the marking settings come as a part of their own (router.js PARTS.setgrade) with the marking screen's setup lines
+  const seen = await p.evaluateHandle(() => { const s = { en: false }; new MutationObserver(() => { if (document.body.textContent.includes('Paper and text')) s.en = true; }).observe(document.body, { childList: true, subtree: true, characterData: true }); return s; });
+  await p.evaluate(() => { location.hash = '#/settings/marking'; });
+  await p.waitForFunction(() => document.body.textContent.includes('Arbeit und Text'), { timeout: 30000, polling: 200 });
+  assert.ok((await p.$eval('main', e => e.textContent)).includes('Alles lässt sich später ändern.'), 'Settings\' own line in German');
+  assert.equal(await seen.evaluate(s => s.en), false, 'the part never showed its English first');
+  assert.ok(asked.has('settings') && asked.has('setup'), [...asked].join(' '));
+  assert.deepEqual(p.errors, []);
+  await p.ctx.close();
+});

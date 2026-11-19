@@ -14,6 +14,7 @@
 // in that language). Run: node next/tools/lang-convert.js
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const ROOT = path.join(__dirname, '..', '..'), NEXT = path.join(ROOT, 'next'), LANG = path.join(NEXT, 'lang');
+const AREAS = require('./lang-areas.js');   // each language in files by area, next/lang/<code>/<area>.json
 const LANGS = [['zh-Hant', 'zh', 'LANG_ZH'], ['zh-Hans', 'zh-hans', 'LANG_ZHS'], ['es', 'es', 'LANG_ES'], ['fr', 'fr', 'LANG_FR'], ['de', 'de', 'LANG_DE'], ['pt-BR', 'pt', 'LANG_PT'], ['ja', 'ja', 'LANG_JA'], ['ko', 'ko', 'LANG_KO']];
 // Lines that never ship in the app: the parts gallery's and the "still being built" page's.
 const SKIP_FILES = ['gallery.en.json', 'building.en.json'];
@@ -95,9 +96,9 @@ function main() {
   for (const [code] of LANGS) {
     const conv = all[code];
     for (const k of partial) delete conv[k];
-    const had = JSON.parse(fs.readFileSync(path.join(LANG, code + '.json'), 'utf8')), out = { '@locale': had['@locale'] || locales[code] };
+    const had = AREAS.readLang(code), out = { '@locale': had['@locale'] || locales[code] };
     for (const k of Object.keys(EN)) { const v = had[k] != null ? had[k] : conv[k]; if (v != null) out[k] = v; else if (!(same[k] || []).includes(code)) (missing[k] ||= []).push(code); }
-    fs.writeFileSync(path.join(LANG, code + '.json'), JSON.stringify(out, null, 1) + '\n');
+    AREAS.writeLang(code, out);
     counts[code] = Object.keys(out).length - 1;
   }
   console.log('lines', Object.keys(EN).length, counts, 'still English somewhere', Object.keys(missing).length);

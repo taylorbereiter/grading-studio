@@ -1,1 +1,0 @@
-import{a,b as c}from"./chunk-KVQA2FGE.js";import{a as r}from"./chunk-7FGDWSVQ.js";r();var o=null,e=new Set;function s(t){o=t,e.forEach(n=>n())}var p=()=>o;function d(){e.forEach(t=>t())}function g(){let[,t]=a(0);return c(()=>{let n=()=>t(i=>i+1);return e.add(n),()=>e.delete(n)},[]),o}export{s as a,p as b,d as c,g as d};

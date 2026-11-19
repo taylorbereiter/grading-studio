@@ -17,7 +17,7 @@ import { startFocus } from '../focus/bus.js';
 import { FocusAside } from '../focus/aside.jsx';
 import LINES from '../../../lang/todo.en.json';
 import { addLines } from '../../i18n/t.js';
-addLines(LINES);
+addLines(LINES, 'todo');
 
 const KINDS = [['mark', 'todo.k_mark'], ['back', 'todo.k_back'], ['plan', 'todo.k_plan'], ['miss', 'todo.k_miss']];
 const EG = { grade: 'conferences', plan: 'labs', admin: 'IEP', role: 'tech' };   // not-words: examples of a teacher's own words
