@@ -86,7 +86,7 @@ async function sendToClaude(l) {
   const asks = l.slides.filter(s => s.ask.trim()).length, talks = l.slides.filter(s => s.talk.some(t => t.by === 'you' && !t.done)).length;
   // Self-contained on purpose: the text never names a folder, a path or a file on this computer, so the assistant
   // never goes looking on the teacher's computer. It hands back one .zip, which the teacher uploads on the lesson (lessonZip).
-  const msg = 'Here is a lesson from my Planner. Everything you need is in this message. Don\'t look for, open or ask for any folder or file on my computer.\n\n' +
+  const msg = 'Here is a lesson from my Planner. You shouldn\'t need to look for or open any folder or file on my computer, because everything should already be in this message. If anything is missing, tell me.\n\n' +
     (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' a "What I want on this slide" note. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me. ' : '') +
     'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. Slide 1 stays the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + ', and slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style.\n\n' +
     lessonZipAsk() + '\n\n' + await lessonContext(l) + lessonText(l);

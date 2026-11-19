@@ -1927,7 +1927,7 @@ async function sendToClaude(l) {
   await saveVersion(l, 'Sent to ' + plAi());
   l.status = 'claude'; await lPut(l);
   const asks = l.slides.filter(s => s.ask.trim()).length, talks = l.slides.filter(s => s.talk.some(t => t.by === 'you' && !t.done)).length;
-  const msg = 'Here is a lesson from my Planner. Everything you need is in this message. Don\'t look for, open or ask for any folder or file on my computer.\n\n' +
+  const msg = 'Here is a lesson from my Planner. You shouldn\'t need to look for or open any folder or file on my computer, because everything should already be in this message. If anything is missing, tell me.\n\n' +
     (asks ? asks + ' slide' + (asks === 1 ? ' has' : 's have') + ' a "What I want on this slide" note. ' : '') + (talks ? talks + ' slide' + (talks === 1 ? ' has' : 's have') + ' comments from me. ' : '') +
     'Build the lesson out from my outline and those notes. Keep my wording where I wrote it. Slide 1 stays the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + ', and slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style.\n\n' +
     lessonZipAsk() + '\n\n' + await lessonContext(l) + lessonText(l);
@@ -3061,7 +3061,7 @@ function lessonText(l) {
   return t;
 }
 async function askClaude(l) {
-  await copyText('Here is a lesson from my Planner. Everything you need is in this message. Don\'t look for, open or ask for any folder or file on my computer. Slide 1 is the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + '. Slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + await lessonContext(l) + lessonText(l));
+  await copyText('Here is a lesson from my Planner. You shouldn\'t need to look for or open any folder or file on my computer, because everything should already be in this message. If anything is missing, tell me. Slide 1 is the title slide' + (deckAgenda() ? ' and slide 2 the agenda' : '') + '. Slide text stays ' + deckSizeSay() + ' pt; keep my simple bullet style. In slide text, a line starting with "• " is a bullet and "1. " is a number (only where I put them), a tab indents, **bold**, *italic* and __underline__ work, and {red}words{/} are colored (red, orange, green, blue, purple, gray).\n\n' + await lessonContext(l) + lessonText(l));
   const shots = l.slides.reduce((n, s) => n + (s.ctx || []).length, 0);
   toast('Lesson copied. Paste it into ' + plAi() + ' and say what you want.' + (shots ? ' Its ' + (shots === 1 ? 'screenshot doesn’t' : shots + ' screenshots don’t') + ' come along as text: use Copy on each one and paste it in too.' : ''), 7000);
 }
@@ -8315,7 +8315,7 @@ async function viewFile(u, id) {
 }
 function askWeeks(u) {
   const n = u.files.filter(x => x.kind === 'atlas').length;
-  const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshot' + (n === 1 ? '' : 's') + ', which I am attaching. Everything you need is in this message and the screenshots. Don\'t look for, open or ask for any folder or file on my computer.\n\n' +
+  const msg = 'Please fill in the weeks of my ' + u.course + ' unit "' + u.title + '" from its ' + (plCur() || 'unit plan') + ' screenshot' + (n === 1 ? '' : 's') + ', which I am attaching. You shouldn\'t need to look for or open any folder or file on my computer, because everything should already be in this message and the screenshots. If anything is missing, tell me.\n\n' +
     'It starts the week of ' + shortDate(u.start) + ' and has ' + u.weeks.length + ' weeks. Read the screenshots and reply with one line per week, in order, like "Week 1: what this week is about (standards, if shown)". Nothing else in those lines. Then tell me anything you weren\'t sure of.';
   copyText(msg).then(() => { toast('Message copied. Paste it into ' + plAi() + ' and attach the ' + (plCur() || 'unit plan') + ' screenshot' + (n === 1 ? '' : 's') + '. Then use Type or paste the weeks for its answer.', 8000); });
 }
