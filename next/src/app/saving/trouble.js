@@ -19,4 +19,7 @@ export async function retryAll() { for (const [, v] of [...bad]) { try { await v
 export const addFlush = f => { flushes.add(f); return () => flushes.delete(f); };
 // Saves everything waiting; true when nothing is left unsaved, so the window may reload.
 export async function saveBeforeReload() { for (const f of [...flushes]) { try { await f(); } catch (e) { console.error(e); } } return !bad.size; }
-if (typeof window !== 'undefined') window.addEventListener('beforeunload', e => { if (bad.size) { e.preventDefault(); e.returnValue = ''; } });
+// The leave question is only listened for while work isn't saved, so at rest the page leaves (and is kept for Back) as usual.
+const askLeave = e => { if (bad.size) { e.preventDefault(); e.returnValue = ''; } };
+let asking = false;
+onTrouble(() => { const on = bad.size > 0; if (on === asking || typeof window === 'undefined') return; asking = on; (on ? addEventListener : removeEventListener)('beforeunload', askLeave); });
