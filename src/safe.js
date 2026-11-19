@@ -198,6 +198,8 @@ function updRender() {
   const el = $('#setAbout'), box = $('#setInstall'); if (!el || el.hidden) return;
   const notes = v => (WHATS_NEW[v] || []).map(n => '<li>' + esc(n) + '</li>').join('');
   let h = '<div class="lhead"><h2 data-raw>Grading Studio ' + esc(gsData.APP_VERSION) + '</h2><span class="muted">' + (upd.on ? 'Kept on this computer, so it opens with no internet.' : '') + '</span></div>';
+  // This is the previous version, at classic/: the new one is at the address above it. English only, so no language grows.
+  if (/^https?:$/.test(location.protocol) && /\/classic\/(index\.html)?$/.test(location.pathname)) h += '<p class="setp"><a class="btn sm" href="../" data-raw data-newapp>Open the new version</a></p>';
   if (!upd.on) h += '<p class="setp">' + (location.protocol === 'file:' ? 'This is a copy saved on this computer. It stays on this version until you download a newer copy.' : 'This copy gets the newest version each time the page is loaded.') + '</p>';
   else if (stale) h += '<p class="setp"><b>Another tab has updated.</b> This tab is still on the older version. <button class="btn sm primary" data-updreload>Reload this tab</button></p>';
   else if (next) h += '<div class="updbox"><p class="setp"><b>' + (next.version !== gsData.APP_VERSION ? 'Version ' + esc(next.version) + ' is ready.' : 'An update is ready.') + '</b> It waits here until you say so, so nothing changes while you are marking.</p>' +

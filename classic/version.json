@@ -1,0 +1,23 @@
+{
+ "version": "2.0.0",
+ "build": "de912dfc8cce",
+ "notes": [
+  "The new Grading Studio now opens at this address. Your classes, papers, marks, lessons and settings are the same: nothing is moved or copied.",
+  "The previous version stays one click away, in Settings, About and updates: Open the previous version. Both use the same saved work, and Open the new version brings you back.",
+  "Bookmarks to the old screens and to the Planner open the matching screen in the new version. The installed app and the phone’s home screen icon open the new version with no reinstall."
+ ],
+ "files": {
+  "index.html": "e87a0230f18409a25c86291a9756e1fafe89cc0e01d53a9723763e6f5683a60c",
+  "planner.html": "8cfefb405666ac88386092995b9c2ef8b54f06cd7800b5bf3004199cda6b31b5"
+ },
+ "langs": {
+  "lang/zh-Hant.js": "1f6c72319366bc2cb027a2ad8ca790bdf3982ac2b2c8cf5958525f87ec6ee574",
+  "lang/zh-Hans.js": "6427d65fce82fe3af7957b497f1243b64034515f55e873902b4692f4a9460468",
+  "lang/es.js": "bc4fc38cca9a088fcc34637578d0cfcc021f710d99d7f7084da7751de1c290a6",
+  "lang/fr.js": "2ff7f9775da31259cd86d2f34426fbac0bb78266be1a82643ec919052b6148b2",
+  "lang/de.js": "2beeeb86f58dc38cd2a84e70a2063a41ab622f3adfbb8d2579204a5206ac9f95",
+  "lang/pt-BR.js": "92549f2b8b3dceb6edd1f4575051a0e49dea5be11a033f70684703bb9add8014",
+  "lang/ja.js": "2d660575deaf9655f6504971be96b788eaeb1575116f84588a8133c3f1306d49",
+  "lang/ko.js": "f26c9c74d16094960c256149124c38c944c6c17989728e292b09bc6f490d213d"
+ }
+}

@@ -107,20 +107,25 @@ const VERSION = require('./package.json').version, whatsNew = require('./src/wha
 rep("'/*@@WHATSNEW@@*/'", JSON.stringify({ [VERSION]: whatsNew[VERSION] || [] }));   // what this version brought, for About (only this one is shown; a newer version's notes come in version.json)
 rep("'/*@@VERSION@@*/'", JSON.stringify(VERSION));   // the version shown in the app: set it in package.json
 fs.mkdirSync('out', { recursive: true });
+// The current app is the previous version now: its pages go to classic/, beside the new app at the root (next/build.js writes that).
+// Same address, same saved work; the icons stay shared at the root (../icons/).
+const C = 'classic/';
+fs.mkdirSync(C, { recursive: true });
 const fullHtml = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>\n' + h + '\n</body></html>';
-fs.writeFileSync('Grading Studio.html', fullHtml);
+fs.writeFileSync(C + 'Grading Studio.html', fullHtml);
 fs.writeFileSync('out/Grading Studio.html', fullHtml);
 // The pages at the web address can be installed as an app: they name the install card and the icon. The double-click copies don't, having no address to install from.
 // The pages at the web address also add one to a daily count of browsers that open them (src/visits.js): only at the addresses in site.json.
 const VISITS = (() => { const site = require('./site.json'), src = fs.readFileSync('src/visits.js', 'utf8').replace(/\/\*[\s\S]*?\*\/\s*/, '');
   if (src.split("'/*@@HOME@@*/'").length !== 2) throw new Error('src/visits.js: the address is not in it once');
   return '<script>' + src.replace("'/*@@HOME@@*/'", () => JSON.stringify([site.address, site.movingTo].filter(Boolean))).trim() + '</script>'; })();
-const HOSTED = '<meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF">' + LANG_LOADER + VISITS + '</head>';
-fs.writeFileSync('index.html', hosted(fullHtml).replace('</head>', HOSTED));
-fs.mkdirSync('lang', { recursive: true });
-for (const f of fs.readdirSync('lang')) if (!langFiles['lang/' + f]) fs.unlinkSync('lang/' + f);
-for (const [f, src] of Object.entries(langFiles)) fs.writeFileSync(f, src);
-fs.writeFileSync('sample.js', sampleFile);
+// The previous version is not installed on its own (no manifest): the installed app opens the new one at the root.
+const HOSTED = '<meta name="robots" content="noindex"><link rel="icon" href="../icons/icon-192.png"><link rel="apple-touch-icon" href="../icons/icon-192.png"><meta name="theme-color" content="#FFFFFF">' + LANG_LOADER + VISITS + '</head>';
+fs.writeFileSync(C + 'index.html', hosted(fullHtml).replace('</head>', HOSTED));
+fs.mkdirSync(C + 'lang', { recursive: true });
+for (const f of fs.readdirSync(C + 'lang')) if (!langFiles['lang/' + f]) fs.unlinkSync(C + 'lang/' + f);
+for (const [f, src] of Object.entries(langFiles)) fs.writeFileSync(C + f, src);
+fs.writeFileSync(C + 'sample.js', sampleFile);
 fs.writeFileSync('out/artifact.html', h.split('�').join('\\uFFFD'));
 console.log((h.length / 1e6).toFixed(2) + 'MB');
 // The Planner: its own page, built only from src/planner. No grading code goes into it.
@@ -141,20 +146,16 @@ console.log((h.length / 1e6).toFixed(2) + 'MB');
   prep('/*@@PLANNER@@*/', ('(() => {\n' + ['base', '../beside', 'bank', 'review', 'lessons', 'plain', 'looks', 'boxes', 'rich', 'activities', 'materials', 'links', 'plexamples', 'finished', 'share', 'variants', 'extras', 'library', 'panel', 'notebook', '../pickshare', '../gpick', 'pldrive', 'present', '@langs', '../lang', '../helpdata', 'rail', 'units', 'plannext', '../fullscreen', '../mail', 'plantime', '../lofi', 'plfocus'].map(n => n === '@langs' ? langSrc : fs.readFileSync('src/planner/' + n + '.js', 'utf8')).join('\n') + '\n})();').replace(/^[ \t]*\/\/.*\r?\n/gm, ''));
   prep("'/*@@GCID@@*/'", JSON.stringify(process.env.GCID || require('./site.json').googleClientId || ''));   // the same Google key as Grading Studio's, for Drive's chooser (src/planner/pldrive.js)
   const page = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"></head><body>\n' + p + '\n</body></html>';
-  fs.writeFileSync('planner.html', hosted(page).replace('<meta name="robots" content="noindex"></head>', HOSTED));
-  fs.writeFileSync('Planner.html', page);
+  fs.writeFileSync(C + 'planner.html', hosted(page).replace('<meta name="robots" content="noindex"></head>', HOSTED));
+  fs.writeFileSync(C + 'Planner.html', page);
   console.log('Planner ' + (p.length / 1e6).toFixed(2) + 'MB');
 }
 // What lets the pages be installed and kept on a computer (src/sw.js says how). version.json names this build by the pages themselves,
 // so the same source always gives the same name, and a kept copy can be checked against it.
 {
-  const sha = f => require('crypto').createHash('sha256').update(fs.readFileSync(f)).digest('hex');
+  const sha = f => require('crypto').createHash('sha256').update(fs.readFileSync(C + f)).digest('hex');
   const files = { 'index.html': sha('index.html'), 'planner.html': sha('planner.html') }, langs = Object.fromEntries(Object.keys(langFiles).map(f => [f, sha(f)]));
-  fs.writeFileSync('version.json', JSON.stringify({ version: VERSION, build: require('crypto').createHash('sha256').update(files['index.html'] + files['planner.html'] + Object.values(langs).join('')).digest('hex').slice(0, 12), notes: whatsNew[VERSION] || [], files, langs }, null, 1) + '\n');
-  fs.writeFileSync('sw.js', fs.readFileSync('src/sw.js', 'utf8'));
-  fs.writeFileSync('manifest.webmanifest', JSON.stringify({
-    name: 'Grading Studio', short_name: 'Grading Studio', description: 'Mark papers, plan lessons and hand work back. Everything stays on this computer.',
-    start_url: './', scope: './', display: 'standalone', background_color: '#F4F5F7', theme_color: '#FFFFFF',
-    icons: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }, { src: 'icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }],
-  }, null, 1) + '\n');
+  fs.writeFileSync(C + 'version.json', JSON.stringify({ version: VERSION, build: require('crypto').createHash('sha256').update(files['index.html'] + files['planner.html'] + Object.values(langs).join('')).digest('hex').slice(0, 12), notes: whatsNew[VERSION] || [], files, langs }, null, 1) + '\n');
+  fs.writeFileSync(C + 'sw.js', fs.readFileSync('src/sw.js', 'utf8'));
+  // No manifest here: the install card (manifest.webmanifest, start_url ./) is the new app's, written by next/build.js.
 }
