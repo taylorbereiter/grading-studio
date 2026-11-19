@@ -39,6 +39,7 @@ export const ROUTES = [
 // the lesson menu, the Beside drawer). Each is a screen of its own for the size budget (next/budgets.json route).
 export const PARTS = {
   edit: () => import('./screens/lesson-edit.jsx'),
+  edit2: () => import('./screens/lesson-edit2.jsx'),
   present: () => import('./screens/present.jsx'),
   tools: () => import('./screens/lesson-tools.jsx'),
   beside: () => import('./screens/lesson-beside.jsx'),

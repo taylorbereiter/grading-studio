@@ -4465,5 +4465,16 @@
  "engine.tn_timer_time": "O tempo do Cronômetro",
  "engine.tn_pause": "Pausar o Cronômetro",
  "engine.tn_start": "Iniciar o Cronômetro",
- "engine.tn_just_for": "Só para {name}"
+ "engine.tn_just_for": "Só para {name}",
+ "les.video": "Vídeo",
+ "les.video_add": "Adicionar link de vídeo",
+ "les.video_change": "Trocar vídeo",
+ "les.video_watch": "Assistir",
+ "les.video_url": "Link",
+ "les.video_url_ph": "Cole um link do YouTube (ou de qualquer vídeo)",
+ "les.video_start": "Começar em (minutos:segundos)",
+ "les.video_about": "O slide mostra a imagem do vídeo com um botão de reproduzir, e o título e o canal como linha de fonte. Clicar no .pptx abre o vídeo.",
+ "les.video_off": "Remover o vídeo",
+ "les.video_use": "Usar este link",
+ "les.video_bad": "Isso não parece um link"
 }

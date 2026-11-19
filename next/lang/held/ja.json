@@ -4467,5 +4467,16 @@
  "engine.tn_timer_time": "タイマーの時刻",
  "engine.tn_pause": "タイマーを一時停止",
  "engine.tn_start": "タイマーを開始",
- "engine.tn_just_for": "{name} だけ"
+ "engine.tn_just_for": "{name} だけ",
+ "les.video": "動画",
+ "les.video_add": "動画のリンクを追加",
+ "les.video_change": "動画を変更",
+ "les.video_watch": "見る",
+ "les.video_url": "リンク",
+ "les.video_url_ph": "YouTube のリンク（または任意の動画リンク）を貼り付け",
+ "les.video_start": "開始位置（分:秒）",
+ "les.video_about": "スライドには動画の画像と再生ボタン、出典行としてタイトルとチャンネルが表示されます。.pptx でクリックすると動画が開きます。",
+ "les.video_off": "動画を外す",
+ "les.video_use": "このリンクを使う",
+ "les.video_bad": "リンクではないようです"
 }

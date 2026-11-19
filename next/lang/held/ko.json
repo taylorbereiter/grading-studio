@@ -4464,5 +4464,16 @@
  "engine.tn_timer_time": "타이머의 시간",
  "engine.tn_pause": "타이머 일시 정지",
  "engine.tn_start": "타이머 시작",
- "engine.tn_just_for": "{name}에게만"
+ "engine.tn_just_for": "{name}에게만",
+ "les.video": "동영상",
+ "les.video_add": "동영상 링크 추가",
+ "les.video_change": "동영상 변경",
+ "les.video_watch": "보기",
+ "les.video_url": "링크",
+ "les.video_url_ph": "YouTube 링크(또는 다른 동영상 링크)를 붙여 넣으세요",
+ "les.video_start": "시작 위치(분:초)",
+ "les.video_about": "슬라이드에는 동영상 사진과 재생 버튼, 출처 줄로 제목과 채널이 표시됩니다. .pptx에서 클릭하면 동영상이 열립니다.",
+ "les.video_off": "동영상 빼기",
+ "les.video_use": "이 링크 사용",
+ "les.video_bad": "링크가 아닌 것 같습니다"
 }
