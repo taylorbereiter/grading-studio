@@ -89,3 +89,48 @@ test('E2-111 E2-112 H-072: the unit’s side opens the rubric bank, lists the le
   assert.ok(us.find(x => x.id === 'U2').files.some(f => f.kind === 'atlas'), 'the screenshot went to the unit plan’s pictures');
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
+
+test('E2-053 E2-054 E2-059 E2-052 E2-057: a unit’s screenshot replaced and removed with Undo; files dropped on the files box are unit files, from the computer or Drive’s chooser', async () => {
+  const p = await h.fresh();
+  await h.open(p, 'class/c1');
+  await p.waitForSelector('.ushots [data-shot-input]');
+  // Google Drive's chooser is offered beside both: a line of the screenshot's menu, a button by the files
+  await p.click('[data-focus="unit-add-shot"]'); await p.waitForSelector('.pop [role="menuitem"]');
+  assert.deepEqual(await p.$$eval('.pop [role="menuitem"]', b => b.map(x => x.textContent.trim())), ['From this computer', 'From Google Drive']);
+  await p.keyboard.press('Escape');
+  assert.ok(await p.$('.ufiles [data-drive]'), 'Drive beside the files');
+  const png = () => { const c = document.createElement('canvas'); c.width = 3; c.height = 3; return new Promise(r => c.toBlob(r, 'image/png')); };
+  // a screenshot through the box Drive's chooser fills
+  await p.evaluate(async png => { const b = await (new Function('return ' + png))()(); const dt = new DataTransfer(); dt.items.add(new File([b], 'plan.png', { type: 'image/png' })); const i = document.querySelector('[data-shot-input]'); i.files = dt.files; i.dispatchEvent(new Event('change', { bubbles: true })); }, png.toString());
+  let us = await unitsNow(p, u => (u.find(x => x.id === 'U2').files || []).some(f => f.kind === 'atlas'));
+  const shot = us.find(x => x.id === 'U2').files.find(f => f.kind === 'atlas');
+  assert.equal(shot.name, 'plan.png');
+  // replaced
+  await p.waitForSelector('[data-shot-replace="' + shot.id + '"]');
+  const chooser = p.waitForFileChooser();
+  await p.click('[data-shot-replace="' + shot.id + '"]');
+  const fs = require('fs'), os = require('os'), path = require('path'), tmp = path.join(os.tmpdir(), 'gs-e2-shot-' + process.pid + '.png');
+  fs.writeFileSync(tmp, Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64'));
+  await (await chooser).accept([tmp]);
+  us = await unitsNow(p, u => (u.find(x => x.id === 'U2').files || []).some(f => f.id === shot.id && f.name !== 'plan.png'));
+  assert.equal(us.find(x => x.id === 'U2').files.find(f => f.id === shot.id).name, path.basename(tmp));
+  // removed, then back with Undo
+  await p.click('.ushots figcaption [aria-label="Remove"]');
+  us = await unitsNow(p, u => !(u.find(x => x.id === 'U2').files || []).some(f => f.id === shot.id));
+  assert.ok(!us.find(x => x.id === 'U2').files.some(f => f.id === shot.id));
+  await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => b.textContent === 'Undo').click());
+  us = await unitsNow(p, u => (u.find(x => x.id === 'U2').files || []).some(f => f.id === shot.id));
+  assert.ok(us.find(x => x.id === 'U2').files.some(f => f.id === shot.id), 'back with Undo');
+  // a picture and a document dropped on the files box: unit files, not screenshots
+  await p.evaluate(async png => { const b = await (new Function('return ' + png))()(); const dt = new DataTransfer(); dt.items.add(new File([b], 'poster.png', { type: 'image/png' })); dt.items.add(new File(['made-up task'], 'Summative task.txt', { type: 'text/plain' }));
+    const z = document.querySelector('[data-ufiles-drop]'); z.dispatchEvent(new DragEvent('dragover', { dataTransfer: dt, bubbles: true, cancelable: true })); z.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true })); }, png.toString());
+  us = await unitsNow(p, u => (u.find(x => x.id === 'U2').files || []).some(f => f.name === 'poster.png'));
+  const fl = us.find(x => x.id === 'U2').files;
+  assert.equal(fl.find(f => f.name === 'poster.png').kind, 'other');
+  assert.equal(fl.find(f => f.name === 'Summative task.txt').kind, 'summative');
+  // a file through the files' Drive box
+  await p.evaluate(() => { const dt = new DataTransfer(); dt.items.add(new File(['notes'], 'From Drive.txt', { type: 'text/plain' })); const i = document.querySelector('[data-ufile-input]'); i.files = dt.files; i.dispatchEvent(new Event('change', { bubbles: true })); });
+  us = await unitsNow(p, u => (u.find(x => x.id === 'U2').files || []).some(f => f.name === 'From Drive.txt'));
+  assert.ok(us.find(x => x.id === 'U2').files.some(f => f.name === 'From Drive.txt'));
+  assert.deepEqual(p.errors, []); await p.ctx.close(); fs.unlinkSync(tmp);   // the browser may read the picture from the file until it closes
+});
