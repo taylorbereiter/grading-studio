@@ -128,3 +128,9 @@ section.now .empty{padding-bottom:22px}
 .fask{display:flex;gap:14px;align-items:flex-start;margin:0 0 24px}
 .fask h2{margin:0 0 4px;font-size:var(--t4)}
 .fask p{margin:0 0 12px;color:var(--mute);max-width:70ch}
+/* the class timer in the corner after Present (plan/ptimer-float.jsx) */
+.prf{position:fixed;right:16px;bottom:16px;z-index:90;display:flex;align-items:center;gap:2px;padding:4px;border-radius:var(--rf);background:var(--ink);color:var(--s);box-shadow:var(--sh-r)}
+.prf button{border:0;background:none;color:inherit;font:inherit;cursor:pointer;border-radius:var(--rf);padding:6px 10px}
+.prf-t{font-size:18px;font-variant-numeric:tabular-nums}.prf-t small{margin-left:6px;font-size:12px;opacity:.8}
+.prf.done{background:var(--warn);color:#fff}.prf.paused{opacity:.8}
+@media (max-width:700px){.prf{bottom:84px}}

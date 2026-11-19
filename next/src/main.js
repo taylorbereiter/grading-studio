@@ -21,7 +21,10 @@ loadLanguage().then(() => {
   const root = document.getElementById('app');
   if (fresh && sampleReady() && !(window.__gsSample && window.__gsSample.on) && /^#?\/?(home)?$/.test(location.hash)) PARTS.welcome().then(m => m.welcome(), e => console.error(e));
   // A linked Planner folder is read when the app opens and whenever she comes back to the window (app/plan/pfolder.jsx).
-  if (sampleReady()) { startWhole(); render(h(Shell), root); start().then(() => import('./app/plan/pfolder.jsx')).then(m => m.watchPlannerFolder(), e => console.error(e)); startUpdates(); }
+  if (sampleReady()) { startWhole(); render(h(Shell), root); start().then(() => import('./app/plan/pfolder.jsx')).then(m => m.watchPlannerFolder(), e => console.error(e)); startUpdates();
+    // A class timer still running from Present (here or in the current Planner) comes back in the corner after a refresh.
+    try { if (localStorage.getItem('gsp.presentTimer')) PARTS.ptimer().then(m => m.showFloat(), e => console.error(e)); } catch {}
+  }
   else {
     render(h('main', { class: 'wrap', role: 'status' }, h('h1', null, t('sample.making')), h('p', null, t('sample.making_text'))), root);
     buildSample(() => import('./whole/sample-build.js')).then(restartApp, () => render(h('main', { class: 'wrap', role: 'alert' }, h('h1', null, t('sample.failed')), h('p', null, t('sample.failed_text')),
