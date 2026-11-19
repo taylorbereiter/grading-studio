@@ -2,7 +2,7 @@
 // Sheets and dialogs are the browser's own modal dialog: the page behind can't be reached, Escape closes, and focus goes back to
 // what opened it. Tab and Shift+Tab are kept inside as well, so focus never leaves for the browser's own bar.
 import { h, Fragment } from 'preact';
-import { useEffect, useRef, useState, useId } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState, useId } from 'preact/hooks';
 import { IconButton } from './controls.jsx';
 import { Icon } from './icons.js';
 import { t } from '../i18n/t.js';
@@ -17,9 +17,11 @@ export function trapTab(e, root) {
   else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
 }
 // Opens a <dialog> modal while open is true; Escape or a click on the dim area calls onClose. Gives focus back on closing.
+// Shown in the same step that puts it on the page (a layout effect, not a later one): until showModal its fields are in the page
+// but can't take the focus, so keys typed in that moment went to the page behind, where a plain key is a shortcut ('n', 't').
 export function useModal(open, onClose, { initial } = {}) {
   const ref = useRef(), back = useRef(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const d = ref.current; if (!d) return;
     if (open && !d.open) {
       back.current = document.activeElement;
