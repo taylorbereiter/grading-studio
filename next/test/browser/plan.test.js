@@ -499,7 +499,8 @@ test('Course line: a unit renamed with its weeks pasted, a new unit made and the
   assert.equal(u2.title, 'Unit 2: Poems aloud'); assert.deepEqual(u2.weeks.map(w => w.focus), ['Sound', 'Images', 'Voice', 'Form']); assert.equal(u2.start, '2026-10-12'); assert.equal(us.length, 3);
   await p.waitForFunction(() => document.querySelector('main #h-unit').textContent === 'Unit 2: Poems aloud');
   // A new unit, then deleted
-  await p.click('main [data-focus="new-unit"]');
+  await p.click('main [data-focus="unit-menu"]'); await p.waitForSelector('[role^="menuitem"]');   // New unit sits in the course line's menu
+  await p.evaluate(() => [...document.querySelectorAll('[role^="menuitem"]')].find(x => /New unit/.test(x.textContent)).click());
   await sheetReady('[data-focus="unit-name"]');
   await p.$eval('[data-focus="unit-name"]', el => { el.focus(); el.select(); });
   await p.keyboard.type('Unit 3: Drama');

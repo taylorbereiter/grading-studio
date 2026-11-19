@@ -79,9 +79,8 @@ function CourseLine({ p, c, lib }) {
           {u && here && here.u === u && <span class="mute">{t('plan.unit_week', { n: here.n + 1, of: u.weeks.length })}</span>}
           <span class="grow" /><button type="button" class="link" onClick={() => { setFold(!fold); keep('fold', !fold); }}>{t(fold ? 'plan.show_past' : 'plan.fold_past')}</button>
           {u && <Button size="sm" icon="pen" onClick={() => setEditing(u)} data-focus="edit-unit">{t('plan.edit_unit')}</Button>}
-          <Button size="sm" icon="plus" onClick={newUnit} data-focus="new-unit">{t('plan.new_unit')}</Button>
-          {/* the less used: a unit from its plan's screenshots, and the Beside drawer beside the unit (src/planner/panel.js Side panel) */}
-          <Menu label={t('rev.unit_menu')} items={[{ id: 'shots', label: t('plan.unit_from_shots'), icon: 'image', onSelect: fromShots }, { id: 'beside', label: t('plan.beside'), icon: 'book', checked: bes, onSelect: () => setBes(!bes) }]}
+          {/* the less used: a new unit, a unit from its plan's screenshots, and the Beside drawer beside the unit (src/planner/panel.js Side panel) */}
+          <Menu label={t('rev.unit_menu')} items={[{ id: 'new', label: t('plan.new_unit'), icon: 'plus', onSelect: newUnit }, { id: 'shots', label: t('plan.unit_from_shots'), icon: 'image', onSelect: fromShots }, { id: 'beside', label: t('plan.beside'), icon: 'book', checked: bes, onSelect: () => setBes(!bes) }]}
             trigger={q => <IconButton icon="dots" size="sm" label={t('rev.unit_menu')} {...q} data-focus="unit-menu" />} /></div>
         <ol class="weeks">{weeks.map(w => {
           const rows = weekRows(p, c, w.mon), past = plus(w.mon, 6) < now, cur = w.mon === mon;

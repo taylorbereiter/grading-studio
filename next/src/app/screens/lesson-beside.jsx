@@ -77,7 +77,7 @@ export default function Beside({ p, l, u, week, save, onClose, onSlide }) {
       {tab === 'acts' && B2 && <B2.Acts p={p} l={l} onSlide={onSlide} />}
       {tab === 'video' && <Video p={p} l={l} save={save} onSlide={onSlide} incoming={vidIn} onTaken={() => setVidIn('')} />}
       {tab === 'unit' && <Unit p={p} l={l} u={u} week={week} tool={tool} />}
-      {tab === 'notes' && Nb && <Nb.Notebook key={l ? l.id : u ? 'u' + u.id : 'g'} p={p} l={l} u={u} save={save} />}
+      {tab === 'notes' && Nb && <Nb.Notebook key={l ? 'lesson' : u ? 'u' + u.id : 'g'} p={p} l={l} u={u} save={save} />}
       {tab === 'box' && Bx && <Bx.Box p={p} T={T} E={engine(p)} />}
     </div>
   </aside>;
