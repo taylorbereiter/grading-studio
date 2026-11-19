@@ -283,5 +283,11 @@
  "saving.ask_later": "Nicht jetzt",
  "saving.ask_later_done": "Die Seitenleiste zeigt weiter „Keine Sicherung“, bis ein Ordner gewählt ist. Klicken Sie jederzeit darauf.",
  "saving.w_line": "{text}.",
- "saving.w_line2": "{text}. {tip}."
+ "saving.w_line2": "{text}. {tip}.",
+ "saving.bad_not": "Ihre neuesten Markierungen und Bewertungen sind NICHT gespeichert.",
+ "saving.bad_partly": "Ihre neuesten Markierungen und Bewertungen sind nur teilweise gespeichert, in der kleinen Schnellkopie dieses Browsers.",
+ "saving.bad_how": "Der Browser konnte sie nicht speichern, oft weil der Computer keinen Platz mehr hat. Lassen Sie dieses Fenster offen, schaffen Sie etwas Platz und drücken Sie Erneut versuchen.",
+ "saving.bad_retry": "Erneut versuchen",
+ "saving.bad_export": "Exportieren, was ich habe",
+ "saving.bad_over": "Gespeichert. Ihre Arbeit ist wieder sicher."
 }

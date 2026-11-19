@@ -1,8 +1,13 @@
 // Updates for the new app: its own service worker (next/sw.js, scope next/), and the Update now control the sidebar's foot and
 // the phone's More screen show. Nothing here talks to the current app's worker or its messages (gs-state); ours are gsn-*.
 import { useState, useEffect } from 'preact/hooks';
+import { toast } from '../ui/index.js';
+import { t } from '../i18n/t.js';
+import { saveBeforeReload } from './saving/trouble.js';
 
-let st = { current: '', waiting: '', mode: 'ask', checked: '', install: null, installed: false };
+let st = { current: '', waiting: '', mode: 'ask', checked: '', install: null, installed: false, stale: false };
+// the version this window opened on, and whether it is this window that asked for the update (src/safe.js upd.mine, upd.applying)
+let mine = '', applying = false;
 const told = new Set();
 const set = s => { st = { ...st, ...s }; told.forEach(f => f(st)); };
 const sw = () => navigator.serviceWorker;
@@ -20,17 +25,21 @@ export function startUpdates() {
   sw().addEventListener('message', e => {
     const d = e.data || {}; if (d.type !== 'gsn-state') return;
     const s = d.state || {};
-    set({ current: ver(s.current), waiting: s.next && (!s.current || s.next.build !== s.current.build) ? ver(s.next) : '', mode: s.mode || 'ask', checked: d.checked || st.checked });
-    if (d.applied) location.reload();
+    if (!mine && s.current) mine = s.current.build;
+    // another window took the update: this one stays on the version it has, with her work, until she reloads it
+    set({ current: ver(s.current), waiting: s.next && (!s.current || s.next.build !== s.current.build) ? ver(s.next) : '', mode: s.mode || 'ask', checked: d.checked || st.checked, stale: !!(s.current && mine && s.current.build !== mine) });
+    if (d.applied && applying) location.reload();
   });
   // Each time the app opens it asks for the state, and for a check: the first visit's worker may not be answering this page yet.
   sw().register('sw.js', { scope: './' }).then(() => { post({ type: 'gsn-state' }); post({ type: 'gsn-check' }); }, e => console.error(e));
 }
-export const applyUpdate = () => post({ type: 'gsn-apply' });
+// Her work first (src/safe.js updApply): what is waiting is saved, and nothing reloads over work that isn't safely stored.
+export async function applyUpdate() { if (!(await saveBeforeReload())) return toast(t('update.wait_save'), { ms: 7000 }); applying = true; post({ type: 'gsn-apply' }); }
+export async function reloadWindow() { if (!(await saveBeforeReload())) return toast(t('update.wait_save'), { ms: 7000 }); location.reload(); }
 export const checkUpdate = () => post({ type: 'gsn-check' });
 export const setUpdateMode = m => post({ type: 'gsn-mode', mode: m });
 export function useUpdate() {
   const [s, setS] = useState(st);
   useEffect(() => { told.add(setS); setS(st); return () => told.delete(setS); }, []);
-  return { ...s, apply: applyUpdate, check: checkUpdate, setMode: setUpdateMode, installApp };
+  return { ...s, apply: applyUpdate, reload: reloadWindow, check: checkUpdate, setMode: setUpdateMode, installApp };
 }
