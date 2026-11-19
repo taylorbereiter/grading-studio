@@ -162,7 +162,7 @@ function Student({ x, n, i, cols, r, onMove, onRemove, onTool, onStep, term, who
   return <article class="card cp-sp" aria-labelledby="h-stu" data-student={i}>
     <div class="sp-head"><span class="cav lg" aria-hidden="true" data-raw>{initials(n)}</span>
       <div><h2 id="h-stu" data-raw>{n}</h2><div class="sub"><span data-raw>{c.name}</span>{(B.infoOf(c, n).id || '') && <span data-raw>{B.infoOf(c, n).id}</span>}<span data-stu-pos>{t('class.st_pos', { n: i + 1, of: c.names.length })}</span></div></div>
-      <span class="row gap-s"><IconButton icon="chl" size="sm" label={t('class.st_prev')} disabled={i <= 0} onClick={() => onStep(-1)} data-stu-prev /><IconButton icon="chr" size="sm" label={t('class.st_next')} disabled={i >= c.names.length - 1} onClick={() => onStep(1)} data-stu-next /></span>
+      <span class="stnav"><IconButton icon="chl" size="sm" label={t('class.st_prev')} disabled={i <= 0} onClick={() => onStep(-1)} data-stu-prev /><IconButton icon="chr" size="sm" label={t('class.st_next')} disabled={i >= c.names.length - 1} onClick={() => onStep(1)} data-stu-next /></span>
       <div class="acts"><Button size="sm" icon="file" onClick={() => onTool({ k: 'pss', n })} data-pss-open>{t('class.pss_open_one')}</Button><Button size="sm" icon="seat" onClick={() => onTool({ k: 'seat' })} data-seat-open>{t('class.seat_groups')}</Button>
         {attOn(x.lib) && <Button size="sm" icon="check" onClick={() => onTool({ k: 'att' })} data-att-open>{t('class.attendance')}</Button>}
         <Menu label={t('class.student_menu', { name: n })} trigger={m => <IconButton {...m} icon="dots" label={t('class.student_menu', { name: n })} data-stu-menu />}

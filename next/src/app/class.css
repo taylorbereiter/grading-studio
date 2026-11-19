@@ -37,7 +37,7 @@
 .book .cav{width:22px;height:22px;font-size:9.5px}
 .cav.lg{width:52px;height:52px;font-size:var(--t4)}
 .stu .sc{margin-left:auto;font-size:var(--t1);color:var(--faint)}
-.pgrid{display:grid;grid-template-columns:264px 1fr;gap:28px;align-items:start}
+.pgrid{display:grid;grid-template-columns:264px minmax(0,1fr);gap:28px;align-items:start}
 .roster{padding:8px;max-height:calc(100vh - 250px);overflow:auto}
 .roster .rhead{display:flex;gap:6px;padding:4px}
 .roster .rhead .input{flex:1;min-width:0}
@@ -47,7 +47,7 @@
 .sp-head{display:flex;gap:16px;align-items:center;padding:22px 24px}
 .sp-head h2{font-size:var(--t5);letter-spacing:-.018em;margin:0}
 .sp-head .sub{display:flex;gap:14px;color:var(--mute);font-size:var(--t2);margin-top:2px}
-.sp-head .acts{margin-left:auto;display:flex;gap:6px}
+.sp-head .acts{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;min-width:0}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .kpi{padding:16px 24px;border-right:1px solid var(--line)}
 .kpi:last-child{border:0}
@@ -70,7 +70,7 @@
 .cp-fld .lab{display:block;font-size:var(--t2);font-weight:500;margin-bottom:6px}
 .mvlist{list-style:none;margin:0;padding:0}
 @media (max-width:760px){
-  .pgrid{grid-template-columns:1fr}
+  .pgrid{grid-template-columns:minmax(0,1fr)}
   .roster{max-height:none}
   .kpis{grid-template-columns:repeat(2,1fr)}
   .kpi:nth-child(2){border-right:0}
@@ -631,3 +631,4 @@ dialog.dlg:has([data-wl-ask]){width:min(760px,calc(100vw - 32px));margin-top:6vh
 .filltab td{padding:4px 8px;border-bottom:1px solid var(--line)}
 .filltab .input{width:100%;min-width:120px}
 .asgweek{min-height:1.5em;margin:4px 0}
+.sp-head .stnav{display:flex;flex-direction:row;flex-shrink:0;gap:4px}.sp-head .sub span{white-space:nowrap}
