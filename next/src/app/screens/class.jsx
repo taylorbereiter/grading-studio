@@ -102,7 +102,7 @@ function CourseLine({ p, c, lib }) {
         {u && Unit && <Unit.UnitSide key={u.id} p={p} u={u} />}
         {loose.length > 0 && <section class="side-sec" aria-labelledby="h-loose"><h2 id="h-loose" class="sub">{t('plan.not_on_calendar')}</h2>
           <ul class="loose">{loose.slice(0, 8).map(l => <li><a class="link" href={href('lesson', l.id)} data-raw>{l.title || t('plan.untitled')}</a></li>)}</ul>
-          {loose.length > 8 && <a class="link" href={href('library', 'past')}>{t('plan.n_more', { n: loose.length - 8 })}</a>}</section>}
+          {loose.length > 8 && <a class="link" href={href('calendar', 'loose')}>{t('plan.n_more', { n: loose.length - 8 })}</a>}</section>}
         {partners.length > 0 && <section class="side-sec" aria-labelledby="h-share"><h2 id="h-share" class="sub">{t('plan.shares_with')}</h2>
           {partners.map(x => <p class="share"><span class="dot" style={{ '--cc': toneOf(x.color) }} /><b data-raw>{x.name}</b> {lib.find(k => k.name === x.name) && <a class="link" href={href('class', lib.find(k => k.name === x.name).id)}>{t('plan.open_course_line')}</a>}</p>)}
         </section>}

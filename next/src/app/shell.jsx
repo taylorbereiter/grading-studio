@@ -195,6 +195,7 @@ export function Shell() {
       addCommand({ id: 'go-time', label: () => t('nav.time'), group: t('cmd.group_go'), icon: 'clock', run: () => router.go('time') }),
       addCommand({ id: 'focus', label: () => t('nav.focus'), group: t('cmd.group_do'), icon: 'timer', run: openFocus }),
       (loadWhenOpened(() => import('./help/find.js').then(m => m.addHelpCommands(shortcuts), e => console.error(e))), () => {}),
+      (loadWhenOpened(() => router.PARTS.planFind().then(m => m.addPlanCommands(), e => console.error(e))), () => {}),
       addCommand({ id: 'go-keys', label: () => t('keys.title'), group: t('cmd.group_go'), icon: 'keyboard', run: () => router.go('help', 'keys') }),
       addCommand({ id: 'theme', label: () => t('cmd.change_theme'), group: t('cmd.group_do'), icon: 'sun', run: () => router.go('settings', 'display') }),
       addCommand({ id: 'fold', label: () => t('keys.fold'), group: t('cmd.group_do'), icon: 'menu', keys: 'mod+\\', run: fold }),
