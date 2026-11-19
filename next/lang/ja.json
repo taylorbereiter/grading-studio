@@ -6550,5 +6550,21 @@
  "present.where": "クラスはどこまで進みましたか？",
  "present.not_now": "今はしない",
  "present.next_time": "次回へのひとこと",
- "present.noted": "授業に記録しました"
+ "present.noted": "授業に記録しました",
+ "cal.card_menu": "{title} のメニュー",
+ "cal.alt": "別バージョン",
+ "cal.finished": "完成版",
+ "cal.taught_to": "スライド {n} まで実施",
+ "cal.also": "{name} でも",
+ "cal.class_page": "クラスのページ",
+ "cal.link_add": "クラスのページのリンクを追加…",
+ "cal.link_change": "クラスのページのリンクを変更…",
+ "cal.link_title": "{name} のクラスのページ",
+ "cal.link_label": "ウェブアドレス",
+ "cal.link_hint": "週の表示のこのクラス、その授業、採点に表示されます。空にすると削除されます。",
+ "cal.link_bad": "ウェブのリンクではないようです",
+ "cal.go_date": "日付へ移動",
+ "cal.no_unit": "今週の単元はありません",
+ "cal.open_unit": "「{title}」を開く",
+ "cal.new_unit_for": "今週から {course} の新しい単元"
 }

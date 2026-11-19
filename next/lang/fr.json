@@ -6464,5 +6464,21 @@
  "present.where": "Jusqu’où la classe est-elle allée ?",
  "present.not_now": "Pas maintenant",
  "present.next_time": "Une ligne pour la prochaine fois",
- "present.noted": "Noté sur la leçon"
+ "present.noted": "Noté sur la leçon",
+ "cal.card_menu": "Menu de {title}",
+ "cal.alt": "Variante",
+ "cal.finished": "Terminée",
+ "cal.taught_to": "Faite jusqu’à la diapositive {n}",
+ "cal.also": "Aussi pour {name}",
+ "cal.class_page": "Page de la classe",
+ "cal.link_add": "Ajouter le lien de la page de la classe…",
+ "cal.link_change": "Modifier le lien de la page de la classe…",
+ "cal.link_title": "Page de la classe {name}",
+ "cal.link_label": "Adresse web",
+ "cal.link_hint": "Il s’affiche sur cette classe dans la semaine, sur ses leçons et dans la notation. Laissez vide pour le retirer.",
+ "cal.link_bad": "Cela ne ressemble pas à un lien web",
+ "cal.go_date": "Aller à une date",
+ "cal.no_unit": "Pas d’unité cette semaine",
+ "cal.open_unit": "Ouvrir {title}",
+ "cal.new_unit_for": "Nouvelle unité pour {course} à partir de cette semaine"
 }

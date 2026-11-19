@@ -12,9 +12,12 @@ import { assistant } from '../../services/assistant.js';
 import { usePlan } from '../plan.js';
 import { toneOf } from '../colors.js';
 import { workForCalendar } from '../../crossings.js';
+import { engine } from '../../planning/engine.js';
 import { startFocus } from '../focus/bus.js';
+import { linkOf } from '../plan/classlink.js';
+import '../plan/cal-lines.js';
 import { nameKey } from '../../planning/plan.js';
-import { lessonsOn, stateOf, arrived, STATE_LINE, periods, dayOff, eventsOn, newLesson, moveLesson, mondayOf, weekDays, today, plus, at, iso, mins } from '../plan/lessons.js';
+import { classOf, lessonsOn, stateOf, arrived, STATE_LINE, periods, dayOff, eventsOn, newLesson, moveLesson, mondayOf, weekDays, today, plus, at, iso, mins } from '../plan/lessons.js';
 
 const VIEWS = ['class', 'time', 'month'];
 const clock = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? date(new Date(2000, 0, 1, +m[1], +m[2]), { hour: 'numeric', minute: '2-digit' }) : ''; };
@@ -31,15 +34,34 @@ function State({ s }) {
   return <span class={'st st-' + s}>{STATE_ICON[s] && <Icon name={STATE_ICON[s]} size="xs" />}{t(STATE_LINE[s])}</span>;
 }
 
-// One lesson in a period: its title, the time, how far along it is. Opens the lesson; drags to another of its class's periods.
-function LessonCard({ l, c, m, day, compact, onDrag }) {
-  const s = stateOf(l, c.id, day);
-  return <a class={'lc st-' + s + (compact ? ' compact' : '')} href={href('lesson', l.id)} style={{ '--cc': toneOf(c.color) }} draggable="true"
+// A class's page in the school's system (src/planner/lessons.js mbBtn, mbDlg): opened from a card or an empty period's menu, or
+// its link added there; changed from the week's menu.
+const linkItem = (c, onTool) => linkOf(c) ? { id: 'link', label: t('cal.class_page'), sub: c.name, icon: 'link', onSelect: () => window.open(linkOf(c), '_blank', 'noopener') }
+  : { id: 'link', label: t('cal.link_add'), sub: c.name, icon: 'link', onSelect: () => onTool({ name: 'link', c }) };
+// One lesson in a period: its title, the time, how far along it is, and the tags the current Planner's week cards carry (another
+// version's name, finished, where the class got to, the other classes it is on). Opens the lesson; drags to another of its
+// class's periods. Its menu (the dots on hover or focus, or a right-click) presents, downloads, copies, links the class page, deletes.
+function LessonCard({ l, c, m, day, compact, onDrag, p, onTool }) {
+  const s = stateOf(l, c.id, day), tg = (l.taught || []).find(x => x.classId === c.id && x.date === day), others = (l.slots || []).filter(x => x.classId !== c.id);
+  const calx = f => PARTS.calx().then(f).catch(e => console.error(e));
+  const items = [{ id: 'present', label: t('plan.present'), icon: 'play', onSelect: () => go('lesson', l.id, 'present', c.id) },
+    { id: 'dl', label: t('plan.download_slides'), icon: 'download', onSelect: () => calx(M => M.download(p, l)) },
+    { id: 'copy', label: t('plan.copy_to'), icon: 'copy', onSelect: () => onTool({ name: 'copy', l }) },
+    linkItem(c, onTool),
+    { sep: true }, { id: 'del', label: t('plan.delete_lesson'), icon: 'trash', onSelect: () => calx(M => M.remove(l)) }];
+  return <span class="lcw" onContextMenu={e => { if (e.shiftKey) return; e.preventDefault(); const w = e.currentTarget; w.classList.add('ctx'); w.querySelector('[data-cardmenu]').click(); setTimeout(() => w.classList.remove('ctx'), 0); }}>
+    <a class={'lc st-' + s + (compact ? ' compact' : '')} href={href('lesson', l.id)} style={{ '--cc': toneOf(c.color) }} draggable="true"
     onDragStart={e => { e.dataTransfer.setData('text/x-gs-lesson', JSON.stringify({ id: l.id, classId: c.id, date: day })); e.dataTransfer.effectAllowed = 'move'; onDrag && onDrag(c.id); }}
     onDragEnd={() => onDrag && onDrag(null)} data-lesson={l.id}>
     <b data-raw>{l.title || t('plan.untitled')}</b>
     <span class="lm"><span data-raw>{clock(m.start)}</span><State s={s} />{arrived(l) && <span class="st st-new" data-notreviewed><Icon name="assist" size="xs" />{t('plan.not_reviewed')}</span>}</span>
-  </a>;
+    {!compact && (l.variant || l.variantOf || l.final || (tg && tg.slide < tg.of) || others.length > 0) && <span class="ltags">
+      {(l.variant || l.variantOf) && <span data-tag="variant" data-raw>{l.variant || t('cal.alt')}</span>}
+      {l.final && <span data-tag="final"><Icon name="check" size="xs" />{t('cal.finished')}</span>}
+      {tg && tg.slide < tg.of && <span data-tag="taught">{t('cal.taught_to', { n: tg.slide })}</span>}
+      {others.length > 0 && <span data-tag="also">{t('cal.also', { name: [...new Set(others.map(x => (classOf(p, x.classId) || {}).name).filter(Boolean))].join(', ') })}</span>}</span>}
+  </a>
+  <Menu label={t('cal.card_menu', { title: l.title || t('plan.untitled') })} items={items} trigger={q => <IconButton icon="dots" size="sm" tip={false} label={t('cal.card_menu', { title: l.title || t('plan.untitled') })} {...q} data-cardmenu={l.id} />} /></span>;
 }
 function PlanIt({ p, c, m, day, compact, busy, setBusy, onTool }) {
   const go2 = async ask => {
@@ -54,7 +76,7 @@ function PlanIt({ p, c, m, day, compact, busy, setBusy, onTool }) {
   </button>
     <Menu label={t('plan.slot_menu')} items={[{ id: 'blank', label: t('plan.slot_blank'), icon: 'plus', onSelect: () => go2() }, { id: 'have', label: t('plan.slot_have'), icon: 'slides', onSelect: () => onTool({ name: 'use', c, day }) },
       { id: 'lib', label: t('plan.slot_library'), icon: 'spark', onSelect: () => onTool({ name: 'lib', c, day }) }, { id: 'ask', label: t('plan.slot_assist', { name: ai }), icon: 'assist', onSelect: () => go2(true) },
-      { id: 'import', label: t('plan.import_lesson'), icon: 'upload', onSelect: () => onTool({ name: 'import', c, day }) }]}
+      { id: 'import', label: t('plan.import_lesson'), icon: 'upload', onSelect: () => onTool({ name: 'import', c, day }) }, linkItem(c, onTool)]}
       trigger={q => <IconButton icon="dots" size="sm" label={t('plan.slot_menu')} {...q} data-slotmenu={c.id + '|' + day} />} /></span>;
 }
 function DueChip({ x, p }) {
@@ -84,13 +106,13 @@ function ByClass({ p, days, shown, work, layers, dragging, setDragging, busy, se
     <div class="cr hd" role="row"><span role="columnheader" />{days.map(d => <span role="columnheader" class={'dh' + (d === now ? ' now' : '') + (dayOff(p, d) ? ' off' : '')}><span data-raw>{date(at(d), { weekday: 'short' })}</span> <b class="num">{at(d).getDate()}</b></span>)}</div>
     {eventRow(p, days, layers, work)}
     {classes.map(c => <div class="cr" role="row">
-      <span role="rowheader" class="rh"><span class="dot" style={{ '--cc': toneOf(c.color) }} /><b data-raw>{c.name}</b></span>
+      <span role="rowheader" class="rh"><span class="dot" style={{ '--cc': toneOf(c.color) }} /><b data-raw>{c.name}</b>{linkOf(c) && <Icon name="link" size="xs" />}</span>
       {days.map(d => {
         const off = dayOff(p, d), ms = off ? [] : periods(p, d).filter(x => x.c.id === c.id);
         const dues = layers.work ? work.due.filter(x => x.day === d && nameKey(x.cls) === nameKey(c.name)) : [];
         return <span role="cell" class={'cc' + (d === now ? ' now' : '') + (off ? ' off' : '')} {...drop(c, d)}>
           {off && c === classes[0] ? <span class="offl" data-raw>{off.label || t('plan.day_off')}</span> : null}
-          {layers.lessons && ms.map(x => { const ls = lessonsOn(p, c.id, d); return ls.length ? ls.map(l => <LessonCard l={l} c={c} m={x.m} day={d} onDrag={setDragging} />) : d >= now ? <PlanIt p={p} c={c} m={x.m} day={d} busy={busy} setBusy={setBusy} onTool={onTool} /> : null; })}
+          {layers.lessons && ms.map(x => { const ls = lessonsOn(p, c.id, d); return ls.length ? ls.map(l => <LessonCard l={l} c={c} m={x.m} day={d} onDrag={setDragging} p={p} onTool={onTool} />) : d >= now ? <PlanIt p={p} c={c} m={x.m} day={d} busy={busy} setBusy={setBusy} onTool={onTool} /> : null; })}
           {dues.map(x => <DueChip x={x} p={p} />)}
         </span>;
       })}
@@ -127,7 +149,7 @@ function ByTime({ p, days, shown, work, layers, dragging, setDragging, busy, set
           {!off && periods(p, d).filter(x => shown(x.c.id)).map(x => {
             const top = (mins(x.m.start) - from) * px, ht = Math.max(40, ((mins(x.m.end) || mins(x.m.start) + 45) - mins(x.m.start)) * px - 4), ls = lessonsOn(p, x.c.id, d);
             return <div class="tslot" style={{ top: top + 'px', height: ht + 'px' }} {...drop(x.c, d)}>
-              {layers.lessons && (ls.length ? <LessonCard l={ls[0]} c={x.c} m={x.m} day={d} onDrag={setDragging} /> : d >= now ? <PlanIt p={p} c={x.c} m={x.m} day={d} busy={busy} setBusy={setBusy} onTool={onTool} compact /> : <span class="lc past" style={{ '--cc': toneOf(x.c.color) }}><b data-raw>{x.c.name}</b></span>)}
+              {layers.lessons && (ls.length ? <LessonCard l={ls[0]} c={x.c} m={x.m} day={d} onDrag={setDragging} p={p} onTool={onTool} /> : d >= now ? <PlanIt p={p} c={x.c} m={x.m} day={d} busy={busy} setBusy={setBusy} onTool={onTool} compact /> : <span class="lc past" style={{ '--cc': toneOf(x.c.color) }}><b data-raw>{x.c.name}</b></span>)}
             </div>;
           })}
         </div>;
@@ -155,7 +177,7 @@ function Month({ p, anchor, shown, work, layers, weekends, setView, setAnchor, b
         for (const e of eventsOn(p, d)) items.push(<span class="evc" data-raw>{e.label || e.title || ''}</span>);
         if (off) items.push(<span class="evc off" data-raw>{off.label || t('plan.day_off')}</span>);
         const empty = [];
-        if (layers.lessons) for (const x of ms) { const ls = lessonsOn(p, x.c.id, d); if (ls.length) ls.forEach(l => items.push(<LessonCard l={l} c={x.c} m={x.m} day={d} compact />)); else if (d >= now) empty.push(x); }
+        if (layers.lessons) for (const x of ms) { const ls = lessonsOn(p, x.c.id, d); if (ls.length) ls.forEach(l => items.push(<LessonCard l={l} c={x.c} m={x.m} day={d} compact p={p} onTool={onTool} />)); else if (d >= now) empty.push(x); }
         if (empty.length === 1) items.push(<PlanIt p={p} c={empty[0].c} m={empty[0].m} day={d} compact busy={busy} setBusy={setBusy} onTool={onTool} />);
         else if (empty.length > 1) items.push(<button type="button" class="lc open compact" onClick={() => { setAnchor(d); setView('class'); }}><b>{t('plan.n_not_planned', { n: empty.length })}</b><span class="lm" data-raw>{clock(empty[0].m.start)}</span></button>);
         if (layers.work) for (const x of work.due.filter(x => x.day === d)) items.push(<DueChip x={x} p={p} />);
@@ -174,6 +196,19 @@ const unitEndOf = (p, u) => { const n = Array.isArray(u.weeks) && u.weeks.length
 const courseTone = (p, course) => { const c = ((p.setup && p.setup.classes) || []).find(x => (x.course || x.name) === course); return c ? toneOf(c.color) : 'var(--g500)'; };
 const unitsShown = (u, p, shown) => { const cs = ((p.setup && p.setup.classes) || []).filter(c => (c.course || c.name) === u.course); return !cs.length || cs.some(c => shown(c.id)); };
 
+// The units of the week, one per course on show (src/planner/units.js weekUnitBar): the unit under way with this week's focus, or
+// none. The week's menu opens each unit, or makes one for a course with none starting this week.
+function weekUnits(p, mon, shown) {
+  const E = engine(p);
+  return [...new Set(p.setup.classes.filter(c => shown(c.id)).map(c => c.course || c.name))].map(co => { const here = E.unitAt(co, mon); return { co, u: here && here.u, n: here ? here.n : 0 }; });
+}
+function WeekUnits({ p, list }) {
+  if (!list.length) return null;
+  return <div class="wunits" aria-label={t('plan.units')}>{list.map(({ co, u, n }) => { const w = u && u.weeks[n];
+    return <span class={'wu' + (u ? '' : ' none')} style={{ '--cc': courseTone(p, co) }} data-wunit={u ? u.id : ''}><small data-raw>{co}</small>
+      {u ? <><b data-raw>{u.title}</b><span>{t('plan.unit_week', { n: n + 1, of: u.weeks.length })}{w && w.focus ? <>: <span data-raw>{w.focus}</span></> : null}</span></> : <span class="mute">{t('cal.no_unit')}</span>}</span>; })}</div>;
+}
+
 export default function Calendar({ route }) {
   const p = usePlan();
   const view = VIEWS.includes(route.params.view) ? route.params.view : (keep('view') && VIEWS.includes(keep('view')) ? keep('view') : 'class');
@@ -182,7 +217,7 @@ export default function Calendar({ route }) {
   const [layers, setLayers] = useState(() => ({ lessons: true, work: true, todos: true, ...(keep('layers') || {}) }));
   const [weekends, setWeekends] = useState(() => !!keep('weekends'));
   const [dragging, setDragging] = useState(null), [busy, setBusy] = useState(false), [tool, setTool] = useState(null);
-  const Cal = usePart('cal', !!tool), Tools = usePart('tools', !!tool && tool.name === 'import');
+  const Cal = usePart('cal', !!tool), Tools = usePart('tools', !!tool && tool.name === 'import'), X = usePart('calx', !!tool && ['copy', 'link', 'unit'].includes(tool.name));
   const work = useMemo(() => { try { return workForCalendar(); } catch (e) { console.error(e); return { due: [], todos: [] }; } }, [p]);
   useEffect(() => { keep('at', anchor); }, [anchor]);
   // plan/<class>/<day> (the old planner.html#plan/<class>/<day>, from Home and the focus timer): that meeting's lesson, opened or
@@ -208,6 +243,7 @@ export default function Calendar({ route }) {
   const counted = days.flatMap(d => periods(p, d).filter(x => shown(x.c.id)).map(x => ({ x, d, l: lessonsOn(p, x.c.id, d)[0] })));
   const done = counted.filter(r => r.l && stateOf(r.l, r.x.c.id, r.d) !== 'draft').length;
   const props = { p, days, shown, work, layers, dragging, setDragging, busy, setBusy, onTool: setTool };
+  const units = view === 'month' ? [] : weekUnits(p, mon, shown), E = engine(p);
   const close = () => setTool(null), ai = assistant().name || t('assistant.generic');
   return <div class="page calendar" data-view={view}>
     <header class="ph calh">
@@ -216,7 +252,8 @@ export default function Calendar({ route }) {
         <Segmented label={t('plan.view')} value={view} onChange={setView} options={[{ value: 'class', label: t('plan.by_class') }, { value: 'time', label: t('plan.by_time') }, { value: 'month', label: t('plan.month') }]} />
         <span class="pn"><IconButton icon="chl" label={t(view === 'month' ? 'plan.prev_month' : 'plan.prev_week')} onClick={() => move(-1)} data-focus="cal-prev" />
           <Button onClick={() => setAnchor(today())} data-focus="cal-today">{t('plan.today')}</Button>
-          <IconButton icon="chr" label={t(view === 'month' ? 'plan.next_month' : 'plan.next_week')} onClick={() => move(1)} data-focus="cal-next" /></span>
+          <IconButton icon="chr" label={t(view === 'month' ? 'plan.next_month' : 'plan.next_week')} onClick={() => move(1)} data-focus="cal-next" />
+          <input type="date" class="input datejump" aria-label={t('cal.go_date')} title={t('cal.go_date')} value={anchor} onInput={e => /^\d{4}-\d\d-\d\d$/.test(e.currentTarget.value) && setAnchor(e.currentTarget.value)} data-focus="cal-date" /></span>
       </div>
     </header>
     <div class="filters" role="group" aria-label={t('plan.show')}>
@@ -227,18 +264,25 @@ export default function Calendar({ route }) {
       <Chip on={layers.todos} icon="todo" onClick={() => layer('todos')}>{t('plan.todos')}</Chip>
       {view === 'month' && <span class="wk"><Switch label={t('plan.weekends')} checked={weekends} onChange={v => { setWeekends(v); keep('weekends', v); }} /></span>}
     </div>
+    {view !== 'month' && <WeekUnits p={p} list={units} />}
     {view === 'class' && <ByClass {...props} />}
     {view === 'time' && <ByTime {...props} />}
     {view === 'month' && <Month {...props} anchor={anchor} weekends={weekends} setView={setView} setAnchor={setAnchor} />}
     {view !== 'month' && <div class="legend"><State s="ready" /><State s="draft" /><State s="none" /><span class="due plain"><Icon name="flag" size="xs" />{t('plan.due_legend')}</span>
       <span class="grow" /><span class="mute">{thisWeek || counted.length ? t('plan.n_of_ready', { n: done, of: counted.length }) : ''}</span>
-      <Button size="sm" variant="quiet" icon="file" onClick={() => printWeek(p, mondayOf(p, anchor))} data-focus="print-week">{t('plan.print_week')}</Button>
       <Menu label={t('plan.week_menu')} items={[{ id: 'week', label: t('plan.week_with', { name: ai }), icon: 'assist', onSelect: () => setTool({ name: 'week' }) },
-        { id: 'download', label: t('plan.download_week'), icon: 'download', onSelect: () => PARTS.tools().then(m => m.downloadWeek(p, mondayOf(p, anchor))).catch(e => console.error(e)) }]}
+        { id: 'print', label: t('plan.print_week'), icon: 'file', onSelect: () => printWeek(p, mondayOf(p, anchor)) },
+        { id: 'download', label: t('plan.download_week'), icon: 'download', onSelect: () => PARTS.tools().then(m => m.downloadWeek(p, mondayOf(p, anchor))).catch(e => console.error(e)) },
+        { sep: true }, ...units.map(({ co, u }) => u ? { id: 'u' + u.id, label: t('cal.open_unit', { title: u.title }), sub: co, icon: 'cal', onSelect: () => setTool({ name: 'unit', u }) }
+          : { id: 'nu' + co, label: t('cal.new_unit_for', { course: co }), icon: 'plus', onSelect: () => setTool({ name: 'unit', u: E.normUnit({ course: co, start: mon, title: t('plan.new_unit'), weeks: Array.from({ length: 6 }, () => ({})) }) }) }),
+        { sep: true }, ...p.setup.classes.filter(c => shown(c.id)).map(c => ({ id: 'cl' + c.id, label: linkOf(c) ? t('cal.link_change') : t('cal.link_add'), sub: c.name, icon: 'link', onSelect: () => setTool({ name: 'link', c }) }))]}
         trigger={q => <IconButton icon="dots" size="sm" label={t('plan.week_menu')} {...q} data-focus="week-menu" />} /></div>}
     {tool && tool.name === 'use' && Cal && <Cal.UseLesson p={p} c={tool.c} d={tool.day} onClose={close} />}
     {tool && tool.name === 'lib' && Cal && <Cal.FromLibrary p={p} c={tool.c} d={tool.day} onClose={close} />}
     {tool && tool.name === 'week' && Cal && <Cal.WeekAssist p={p} mon={mondayOf(p, anchor)} onClose={close} />}
+    {tool && tool.name === 'copy' && X && <X.CopyTo p={p} l={tool.l} onClose={close} />}
+    {tool && tool.name === 'link' && X && <X.LinkDialog p={p} c={tool.c} onClose={close} />}
+    {tool && tool.name === 'unit' && X && <X.UnitSheet p={p} unit={tool.u} courses={[...new Set(p.setup.classes.map(c => c.course || c.name))]} onClose={close} />}
     {tool && tool.name === 'import' && Tools && <Tools.ImportSheet p={p} slot={{ classId: tool.c.id, date: tool.day }} onClose={close} />}
   </div>;
 }

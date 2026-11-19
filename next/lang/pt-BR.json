@@ -6522,5 +6522,21 @@
  "present.where": "Até onde a turma chegou?",
  "present.not_now": "Agora não",
  "present.next_time": "Uma linha para a próxima vez",
- "present.noted": "Anotado na aula"
+ "present.noted": "Anotado na aula",
+ "cal.card_menu": "Menu de {title}",
+ "cal.alt": "Alternativa",
+ "cal.finished": "Finalizada",
+ "cal.taught_to": "Dada até o slide {n}",
+ "cal.also": "Também em {name}",
+ "cal.class_page": "Página da turma",
+ "cal.link_add": "Adicionar o link da página da turma…",
+ "cal.link_change": "Alterar o link da página da turma…",
+ "cal.link_title": "Página da turma {name}",
+ "cal.link_label": "Endereço da web",
+ "cal.link_hint": "Aparece nesta turma na semana, nas aulas dela e na correção. Deixe vazio para remover.",
+ "cal.link_bad": "Isso não parece um link da web",
+ "cal.go_date": "Ir para uma data",
+ "cal.no_unit": "Sem unidade nesta semana",
+ "cal.open_unit": "Abrir {title}",
+ "cal.new_unit_for": "Nova unidade de {course} a partir desta semana"
 }

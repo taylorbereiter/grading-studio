@@ -6521,5 +6521,21 @@
  "present.where": "Wie weit ist die Klasse gekommen?",
  "present.not_now": "Nicht jetzt",
  "present.next_time": "Eine Zeile für nächstes Mal",
- "present.noted": "In der Stunde notiert"
+ "present.noted": "In der Stunde notiert",
+ "cal.card_menu": "Menü für {title}",
+ "cal.alt": "Alternative",
+ "cal.finished": "Fertig",
+ "cal.taught_to": "Bis Folie {n} unterrichtet",
+ "cal.also": "Auch in {name}",
+ "cal.class_page": "Klassenseite",
+ "cal.link_add": "Link zur Klassenseite hinzufügen …",
+ "cal.link_change": "Link zur Klassenseite ändern …",
+ "cal.link_title": "Klassenseite von {name}",
+ "cal.link_label": "Webadresse",
+ "cal.link_hint": "Er erscheint bei dieser Klasse in der Woche, bei ihren Stunden und beim Bewerten. Leer lassen, um ihn zu entfernen.",
+ "cal.link_bad": "Das sieht nicht nach einem Weblink aus",
+ "cal.go_date": "Zu einem Datum springen",
+ "cal.no_unit": "Keine Einheit diese Woche",
+ "cal.open_unit": "{title} öffnen",
+ "cal.new_unit_for": "Neue Einheit für {course} ab dieser Woche"
 }

@@ -49,6 +49,8 @@ export const PARTS = {
   doc: () => import('./screens/lesson-doc.jsx'),
   pdf: () => import('./plan/pdf.js'),
   cal: () => import('./plan/cal-tools.jsx'),
+  // a lesson card's menu, the class page link and a unit from the week (plan/card-menu.jsx)
+  calx: () => import('./plan/card-menu.jsx'),
   unit: () => import('./plan/unit-tools.jsx'),
   marking: () => import('./screens/mark-tools.jsx'),
   // Grades, Insights and Return (the screen part), and what they run: the export engine with pdf-lib and fflate, loaded on their
