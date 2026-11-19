@@ -24,5 +24,37 @@
   "one": "{n} lesson",
   "other": "{n} lessons"
  },
- "cal.none_found": "No lesson matches."
+ "cal.none_found": "No lesson matches.",
+ "cal.sem": "Semester",
+ "cal.sem_help": "Every week of the semester, with each course’s unit. Open a week to plan it.",
+ "cal.sem_week": "Week",
+ "cal.open_week": "Open the week of {range}",
+ "cal.no_unit_short": "No unit",
+ "cal.n_planned": "{n}/{of} planned",
+ "cal.ahead": "Coming up without a lesson",
+ "cal.ahead_n": {
+  "one": "{n} class in the next two weeks",
+  "other": "{n} classes in the next two weeks"
+ },
+ "cal.ahead_none": "Every class in the next two weeks has a lesson.",
+ "cal.ahead_more": {
+  "one": "{n} more. The week view shows it.",
+  "other": "{n} more. The week view shows each one."
+ },
+ "cal.next_week": "Next week: {n} of {of} lessons planned",
+ "cal.next_week_ready": "Next week: {n} of {of} lessons planned, {r} ready",
+ "cal.pace": "About {time} a lesson, from your last {n}",
+ "cal.pace_title": "The middle of your planning times, from the lessons you said were ready",
+ "cal.mins": {
+  "one": "{n} minute",
+  "other": "{n} minutes"
+ },
+ "cal.hrs": {
+  "one": "{n} hour",
+  "other": "{n} hours"
+ },
+ "cal.hr_min": "{h} hr {m} min",
+ "cal.tomorrow": "Tomorrow",
+ "cal.plan_it": "Plan it",
+ "cal.gap_more": "More ways to plan {name}’s lesson"
 }

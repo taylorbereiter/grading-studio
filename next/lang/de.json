@@ -6547,5 +6547,37 @@
   "one": "{n} Stunde",
   "other": "{n} Stunden"
  },
- "cal.none_found": "Keine Stunde passt."
+ "cal.none_found": "Keine Stunde passt.",
+ "cal.sem": "Halbjahr",
+ "cal.sem_help": "Jede Woche des Halbjahrs mit der Einheit jedes Kurses. Öffnen Sie eine Woche, um sie zu planen.",
+ "cal.sem_week": "Woche",
+ "cal.open_week": "Woche {range} öffnen",
+ "cal.no_unit_short": "Keine Einheit",
+ "cal.n_planned": "{n}/{of} geplant",
+ "cal.ahead": "Demnächst ohne Stunde",
+ "cal.ahead_n": {
+  "one": "{n} Stunde in den nächsten zwei Wochen",
+  "other": "{n} Stunden in den nächsten zwei Wochen"
+ },
+ "cal.ahead_none": "Jede Stunde der nächsten zwei Wochen ist geplant.",
+ "cal.ahead_more": {
+  "one": "{n} weitere. Die Wochenansicht zeigt sie.",
+  "other": "{n} weitere. Die Wochenansicht zeigt jede."
+ },
+ "cal.next_week": "Nächste Woche: {n} von {of} Stunden geplant",
+ "cal.next_week_ready": "Nächste Woche: {n} von {of} Stunden geplant, {r} fertig",
+ "cal.pace": "Etwa {time} pro Stunde, nach Ihren letzten {n}",
+ "cal.pace_title": "Der Median Ihrer Planungszeiten, aus den Stunden, die Sie als fertig markiert haben",
+ "cal.mins": {
+  "one": "{n} Minute",
+  "other": "{n} Minuten"
+ },
+ "cal.hrs": {
+  "one": "{n} Stunde",
+  "other": "{n} Stunden"
+ },
+ "cal.hr_min": "{h} Std. {m} Min.",
+ "cal.tomorrow": "Morgen",
+ "cal.plan_it": "Planen",
+ "cal.gap_more": "Weitere Wege, die Stunde für {name} zu planen"
 }

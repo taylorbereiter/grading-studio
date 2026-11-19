@@ -6576,5 +6576,37 @@
   "one": "{n} 节课",
   "other": "{n} 节课"
  },
- "cal.none_found": "没有匹配的课。"
+ "cal.none_found": "没有匹配的课。",
+ "cal.sem": "学期",
+ "cal.sem_help": "学期的每一周，以及每门课程的单元。打开一周来备课。",
+ "cal.sem_week": "周",
+ "cal.open_week": "打开 {range} 这一周",
+ "cal.no_unit_short": "没有单元",
+ "cal.n_planned": "已备 {n}/{of}",
+ "cal.ahead": "即将到来、还没有课",
+ "cal.ahead_n": {
+  "one": "未来两周有 {n} 节课",
+  "other": "未来两周有 {n} 节课"
+ },
+ "cal.ahead_none": "未来两周的每节课都有课了。",
+ "cal.ahead_more": {
+  "one": "还有 {n} 节。周视图会显示。",
+  "other": "还有 {n} 节。周视图会逐一显示。"
+ },
+ "cal.next_week": "下周：已备 {n}/{of} 节课",
+ "cal.next_week_ready": "下周：已备 {n}/{of} 节课，{r} 节已完成",
+ "cal.pace": "每节课约 {time}，根据你最近的 {n} 节",
+ "cal.pace_title": "根据你标记为完成的课，备课时间的中位数",
+ "cal.mins": {
+  "one": "{n} 分钟",
+  "other": "{n} 分钟"
+ },
+ "cal.hrs": {
+  "one": "{n} 小时",
+  "other": "{n} 小时"
+ },
+ "cal.hr_min": "{h} 小时 {m} 分",
+ "cal.tomorrow": "明天",
+ "cal.plan_it": "备课",
+ "cal.gap_more": "{name} 这节课的其他备课方式"
 }

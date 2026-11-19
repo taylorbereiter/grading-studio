@@ -6576,5 +6576,37 @@
   "one": "{n} 件の授業",
   "other": "{n} 件の授業"
  },
- "cal.none_found": "一致する授業はありません。"
+ "cal.none_found": "一致する授業はありません。",
+ "cal.sem": "学期",
+ "cal.sem_help": "学期の各週と、各コースの単元。週を開いて計画します。",
+ "cal.sem_week": "週",
+ "cal.open_week": "{range} の週を開く",
+ "cal.no_unit_short": "単元なし",
+ "cal.n_planned": "{n}/{of} 計画済み",
+ "cal.ahead": "授業が未作成の今後のクラス",
+ "cal.ahead_n": {
+  "one": "今後2週間で {n} コマ",
+  "other": "今後2週間で {n} コマ"
+ },
+ "cal.ahead_none": "今後2週間のすべてのクラスに授業があります。",
+ "cal.ahead_more": {
+  "one": "ほか {n} 件。週表示で確認できます。",
+  "other": "ほか {n} 件。週表示で確認できます。"
+ },
+ "cal.next_week": "来週：{of} 件中 {n} 件の授業を計画済み",
+ "cal.next_week_ready": "来週：{of} 件中 {n} 件を計画済み、{r} 件完成",
+ "cal.pace": "1授業あたり約 {time}（直近 {n} 件から）",
+ "cal.pace_title": "完成とした授業の計画時間の中央値",
+ "cal.mins": {
+  "one": "{n} 分",
+  "other": "{n} 分"
+ },
+ "cal.hrs": {
+  "one": "{n} 時間",
+  "other": "{n} 時間"
+ },
+ "cal.hr_min": "{h} 時間 {m} 分",
+ "cal.tomorrow": "明日",
+ "cal.plan_it": "計画する",
+ "cal.gap_more": "{name} の授業を計画する他の方法"
 }

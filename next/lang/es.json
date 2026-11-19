@@ -6569,5 +6569,37 @@
   "one": "{n} clase",
   "other": "{n} clases"
  },
- "cal.none_found": "Ninguna clase coincide."
+ "cal.none_found": "Ninguna clase coincide.",
+ "cal.sem": "Semestre",
+ "cal.sem_help": "Cada semana del semestre, con la unidad de cada curso. Abre una semana para planificarla.",
+ "cal.sem_week": "Semana",
+ "cal.open_week": "Abrir la semana del {range}",
+ "cal.no_unit_short": "Sin unidad",
+ "cal.n_planned": "{n}/{of} planificadas",
+ "cal.ahead": "Próximas clases sin lección",
+ "cal.ahead_n": {
+  "one": "{n} clase en las próximas dos semanas",
+  "other": "{n} clases en las próximas dos semanas"
+ },
+ "cal.ahead_none": "Todas las clases de las próximas dos semanas tienen lección.",
+ "cal.ahead_more": {
+  "one": "{n} más. La vista de semana la muestra.",
+  "other": "{n} más. La vista de semana muestra cada una."
+ },
+ "cal.next_week": "La semana próxima: {n} de {of} lecciones planificadas",
+ "cal.next_week_ready": "La semana próxima: {n} de {of} lecciones planificadas, {r} listas",
+ "cal.pace": "Unos {time} por lección, según tus últimas {n}",
+ "cal.pace_title": "El punto medio de tus tiempos de planificación, de las lecciones que marcaste como listas",
+ "cal.mins": {
+  "one": "{n} minuto",
+  "other": "{n} minutos"
+ },
+ "cal.hrs": {
+  "one": "{n} hora",
+  "other": "{n} horas"
+ },
+ "cal.hr_min": "{h} h {m} min",
+ "cal.tomorrow": "Mañana",
+ "cal.plan_it": "Planificar",
+ "cal.gap_more": "Más formas de planificar la lección de {name}"
 }

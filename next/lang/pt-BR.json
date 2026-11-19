@@ -6548,5 +6548,37 @@
   "one": "{n} aula",
   "other": "{n} aulas"
  },
- "cal.none_found": "Nenhuma aula corresponde."
+ "cal.none_found": "Nenhuma aula corresponde.",
+ "cal.sem": "Semestre",
+ "cal.sem_help": "Cada semana do semestre, com a unidade de cada curso. Abra uma semana para planejá-la.",
+ "cal.sem_week": "Semana",
+ "cal.open_week": "Abrir a semana de {range}",
+ "cal.no_unit_short": "Sem unidade",
+ "cal.n_planned": "{n}/{of} planejadas",
+ "cal.ahead": "Em breve, sem aula",
+ "cal.ahead_n": {
+  "one": "{n} turma nas próximas duas semanas",
+  "other": "{n} turmas nas próximas duas semanas"
+ },
+ "cal.ahead_none": "Todas as turmas das próximas duas semanas têm aula.",
+ "cal.ahead_more": {
+  "one": "Mais {n}. A visão da semana mostra.",
+  "other": "Mais {n}. A visão da semana mostra cada uma."
+ },
+ "cal.next_week": "Próxima semana: {n} de {of} aulas planejadas",
+ "cal.next_week_ready": "Próxima semana: {n} de {of} aulas planejadas, {r} prontas",
+ "cal.pace": "Cerca de {time} por aula, pelas suas últimas {n}",
+ "cal.pace_title": "O meio dos seus tempos de planejamento, das aulas que você marcou como prontas",
+ "cal.mins": {
+  "one": "{n} minuto",
+  "other": "{n} minutos"
+ },
+ "cal.hrs": {
+  "one": "{n} hora",
+  "other": "{n} horas"
+ },
+ "cal.hr_min": "{h} h {m} min",
+ "cal.tomorrow": "Amanhã",
+ "cal.plan_it": "Planejar",
+ "cal.gap_more": "Outras formas de planejar a aula de {name}"
 }

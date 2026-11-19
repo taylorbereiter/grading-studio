@@ -6576,5 +6576,37 @@
   "one": "{n} 堂課",
   "other": "{n} 堂課"
  },
- "cal.none_found": "沒有符合的課堂。"
+ "cal.none_found": "沒有符合的課堂。",
+ "cal.sem": "學期",
+ "cal.sem_help": "學期的每一週，以及每門課程的單元。打開一週來備課。",
+ "cal.sem_week": "週",
+ "cal.open_week": "打開 {range} 這一週",
+ "cal.no_unit_short": "沒有單元",
+ "cal.n_planned": "已備 {n}/{of}",
+ "cal.ahead": "即將到來、還沒有課堂",
+ "cal.ahead_n": {
+  "one": "未來兩週有 {n} 節課",
+  "other": "未來兩週有 {n} 節課"
+ },
+ "cal.ahead_none": "未來兩週的每節課都有課堂了。",
+ "cal.ahead_more": {
+  "one": "還有 {n} 節。週視圖會顯示。",
+  "other": "還有 {n} 節。週視圖會逐一顯示。"
+ },
+ "cal.next_week": "下週：已備 {n}/{of} 節課",
+ "cal.next_week_ready": "下週：已備 {n}/{of} 節課，{r} 節已完成",
+ "cal.pace": "每節課約 {time}，根據你最近的 {n} 節",
+ "cal.pace_title": "根據你標記為完成的課堂，備課時間的中位數",
+ "cal.mins": {
+  "one": "{n} 分鐘",
+  "other": "{n} 分鐘"
+ },
+ "cal.hrs": {
+  "one": "{n} 小時",
+  "other": "{n} 小時"
+ },
+ "cal.hr_min": "{h} 小時 {m} 分",
+ "cal.tomorrow": "明天",
+ "cal.plan_it": "備課",
+ "cal.gap_more": "{name} 這節課的其他備課方式"
 }

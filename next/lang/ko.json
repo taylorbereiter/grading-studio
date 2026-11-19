@@ -6576,5 +6576,37 @@
   "one": "수업 {n}개",
   "other": "수업 {n}개"
  },
- "cal.none_found": "맞는 수업이 없습니다."
+ "cal.none_found": "맞는 수업이 없습니다.",
+ "cal.sem": "학기",
+ "cal.sem_help": "학기의 모든 주와 각 과정의 단원. 주를 열어 계획하세요.",
+ "cal.sem_week": "주",
+ "cal.open_week": "{range} 주 열기",
+ "cal.no_unit_short": "단원 없음",
+ "cal.n_planned": "{n}/{of} 계획됨",
+ "cal.ahead": "수업이 없는 다가오는 시간",
+ "cal.ahead_n": {
+  "one": "앞으로 2주 동안 {n}개 시간",
+  "other": "앞으로 2주 동안 {n}개 시간"
+ },
+ "cal.ahead_none": "앞으로 2주의 모든 시간에 수업이 있습니다.",
+ "cal.ahead_more": {
+  "one": "{n}개 더. 주 보기에 나옵니다.",
+  "other": "{n}개 더. 주 보기에 각각 나옵니다."
+ },
+ "cal.next_week": "다음 주: {of}개 중 {n}개 수업 계획됨",
+ "cal.next_week_ready": "다음 주: {of}개 중 {n}개 계획됨, {r}개 준비됨",
+ "cal.pace": "수업당 약 {time}, 최근 {n}개 기준",
+ "cal.pace_title": "준비됨으로 표시한 수업의 계획 시간 중앙값",
+ "cal.mins": {
+  "one": "{n}분",
+  "other": "{n}분"
+ },
+ "cal.hrs": {
+  "one": "{n}시간",
+  "other": "{n}시간"
+ },
+ "cal.hr_min": "{h}시간 {m}분",
+ "cal.tomorrow": "내일",
+ "cal.plan_it": "계획하기",
+ "cal.gap_more": "{name} 수업을 계획하는 다른 방법"
 }

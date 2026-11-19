@@ -6490,5 +6490,37 @@
   "one": "{n} leçon",
   "other": "{n} leçons"
  },
- "cal.none_found": "Aucune leçon ne correspond."
+ "cal.none_found": "Aucune leçon ne correspond.",
+ "cal.sem": "Semestre",
+ "cal.sem_help": "Chaque semaine du semestre, avec l’unité de chaque cours. Ouvrez une semaine pour la préparer.",
+ "cal.sem_week": "Semaine",
+ "cal.open_week": "Ouvrir la semaine du {range}",
+ "cal.no_unit_short": "Pas d’unité",
+ "cal.n_planned": "{n}/{of} préparées",
+ "cal.ahead": "À venir, sans leçon",
+ "cal.ahead_n": {
+  "one": "{n} cours dans les deux prochaines semaines",
+  "other": "{n} cours dans les deux prochaines semaines"
+ },
+ "cal.ahead_none": "Chaque cours des deux prochaines semaines a sa leçon.",
+ "cal.ahead_more": {
+  "one": "{n} de plus. La vue semaine le montre.",
+  "other": "{n} de plus. La vue semaine les montre."
+ },
+ "cal.next_week": "Semaine prochaine : {n} leçons préparées sur {of}",
+ "cal.next_week_ready": "Semaine prochaine : {n} leçons préparées sur {of}, {r} prêtes",
+ "cal.pace": "Environ {time} par leçon, d’après vos {n} dernières",
+ "cal.pace_title": "Le milieu de vos temps de préparation, d’après les leçons que vous avez dites prêtes",
+ "cal.mins": {
+  "one": "{n} minute",
+  "other": "{n} minutes"
+ },
+ "cal.hrs": {
+  "one": "{n} heure",
+  "other": "{n} heures"
+ },
+ "cal.hr_min": "{h} h {m} min",
+ "cal.tomorrow": "Demain",
+ "cal.plan_it": "Préparer",
+ "cal.gap_more": "D’autres façons de préparer la leçon de {name}"
 }
