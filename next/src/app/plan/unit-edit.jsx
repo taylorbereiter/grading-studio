@@ -11,8 +11,20 @@ import { saveKv, dropLessonFile } from '../../planning/write.js';
 import { saveFailed } from './save.js';
 import { at, plus } from './lessons.js';
 import './lines.js';
+import './cal-lines.js';
 
 const copy = x => JSON.parse(JSON.stringify(x));
+// The Mondays a unit can start on, as the current Planner lists them (src/planner/units.js unit page "Starts"): the semester's,
+// each with its school week, or else half a year either side of today; and the unit's own Monday if it falls outside.
+function mondays(p, E, start) {
+  const s = p.setup || {}, mon = d => E.normUnit({ start: d }).start, now = mon(new Date().toISOString().slice(0, 10));
+  const a = s.semStart ? mon(s.semStart) : plus(now, -26 * 7), b = s.semEnd ? mon(s.semEnd) : plus(now, 30 * 7), out = [];
+  for (let d = a; d <= b && out.length < 60; d = plus(d, 7)) out.push(d);
+  if (start && !out.includes(start)) { out.push(start); out.sort(); }
+  const md = d => date(at(d), { day: 'numeric', month: 'short', year: d.slice(0, 4) === now.slice(0, 4) ? undefined : 'numeric' });
+  return out.map(d => { const n = s.semStart ? Math.round((at(d) - at(mon(s.semStart))) / 6048e5) + 1 : 0; return { value: d, label: n >= 1 && (!s.semEnd || d <= b) ? t('cal.start_week', { n, date: md(d) }) : md(d) }; });
+}
+const writing = w => !!(w && (String(w.focus || '').trim() || String(w.notes || '').trim() || String(w.standards || '').trim()));
 function Area({ label, value, onInput, rows = 2, ...rest }) {
   const id = useId();
   return <Field label={label} id={id}><textarea id={id} class="input" rows={rows} value={value} onInput={e => onInput(e.currentTarget.value)} {...rest} /></Field>;
@@ -43,6 +55,8 @@ export function UnitSheet({ p, unit, courses, onClose }) {
     setPaste(null);
   };
   const mon = s => date(at(s), { day: 'numeric', month: 'short' });
+  // One week fewer; when the last week has writing in it, it can be had back (src/planner/units.js asks first).
+  const fewer = () => { const last = u.weeks[u.weeks.length - 1], was = u; set({ weeks: u.weeks.slice(0, -1) }); if (writing(last)) toast(t('cal.week_off', { n: u.weeks.length }), { undo: () => setU(was) }); };
   return <Sheet open wide title={isNew ? t('plan.new_unit') : t('plan.edit_unit')} icon={<Icon name="cal" />} onClose={() => onClose(false)}
     footer={<>{!isNew && <Button variant="quiet" disabled={busy} onClick={remove} data-focus="delete-unit">{sure ? t('plan.delete_unit_sure') : t('plan.delete_unit')}</Button>}<span class="grow" />
       <Button variant="quiet" onClick={() => onClose(false)}>{t('common.cancel')}</Button><Button variant="primary" disabled={busy} onClick={save} data-focus="save-unit">{t('common.save')}</Button></>}>
@@ -50,11 +64,12 @@ export function UnitSheet({ p, unit, courses, onClose }) {
       <TextInput label={t('plan.unit_name')} value={u.title} onInput={v => set({ title: v })} data-focus="unit-name" />
       <div class="row">
         <Select label={t('plan.course')} value={u.course} options={courses.map(c => ({ value: c, label: c }))} onChange={v => set({ course: v })} data-raw />
-        <TextInput label={t('plan.unit_starts')} hint={t('plan.unit_starts_hint')} type="date" value={u.start} onInput={v => /^\d{4}-\d\d-\d\d$/.test(v) && set({ start: v })} />
-        <Field label={t('plan.unit_weeks')}><span class="step"><IconButton icon="minus" label={t('plan.week_fewer')} disabled={u.weeks.length <= 1} onClick={() => set({ weeks: u.weeks.slice(0, -1) })} />
+        <Select label={t('plan.unit_starts')} value={E.normUnit({ start: u.start }).start} options={mondays(p, E, E.normUnit({ start: u.start }).start)} onChange={v => set({ start: v })} data-unit-start />
+        <Field label={t('plan.unit_weeks')}><span class="step"><IconButton icon="minus" label={t('plan.week_fewer')} disabled={u.weeks.length <= 1} onClick={() => fewer()} data-week-fewer />
           <b class="num">{u.weeks.length}</b><IconButton icon="plus" label={t('plan.week_more')} onClick={() => set({ weeks: [...u.weeks, { focus: '', notes: '', standards: '' }] })} /></span></Field>
       </div>
-      <TextInput label={t('plan.unit_link')} type="url" value={u.atlas || ''} onInput={v => set({ atlas: v })} />
+      <div class="row ulink"><span class="grow"><TextInput label={t('plan.unit_link')} type="url" value={u.atlas || ''} onInput={v => set({ atlas: v })} /></span>
+        {/^https?:\/\/\S+$/.test((u.atlas || '').trim()) && <Button icon="link" onClick={() => window.open(u.atlas.trim(), '_blank', 'noopener')} data-unit-open-link>{t('cal.open_link')}</Button>}</div>
       <div class="row"><h3 class="sub grow">{t('plan.weeks')}</h3><Button size="sm" onClick={() => setPaste(u.weeks.map(w => w.focus).join('\n'))} data-focus="paste-weeks">{t('plan.paste_weeks')}</Button></div>
       {paste != null ? <div class="paste"><Area label={t('plan.paste_weeks_help')} rows={10} value={paste} onInput={setPaste} data-paste />
         <div class="row"><span class="grow" /><Button size="sm" variant="quiet" onClick={() => setPaste(null)}>{t('common.cancel')}</Button><Button size="sm" variant="primary" onClick={usePaste} data-focus="use-weeks">{t('plan.use_weeks')}</Button></div></div>
