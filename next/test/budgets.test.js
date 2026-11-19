@@ -34,6 +34,10 @@ test('the new app keeps to its size budgets', () => {
   const sum = c => langs.filter(x => codeOf(x) === c).reduce((n, x) => n + gz(x.f), 0);
   const appOnly = total - langs.reduce((n, x) => n + gz(x.f), 0), one = Math.max(...CODES.map(sum));
   assert.ok(appOnly + one <= B.total, 'total ' + (appOnly + one) + ' (the app and its largest language) > ' + B.total);
+  // Each whole language, all its files added up, written to the test's output so its growth stays visible. Not a limit: twenty small
+  // files squeeze less well than one, so every language now adds up to about 117 to 128 KB, and a limit at the old one-file 125 KB
+  // would bring back the ceiling the split removed. Whether to add one is Taylor's decision (19 Nov 2026).
+  console.log('each whole language, squeezed: ' + CODES.map(c => c + ' ' + sum(c)).join(', '));
   for (const x of langs) { assert.ok(gz(x.f) <= B.langFile, x.f + ' (a language file) ' + gz(x.f) + ' > ' + B.langFile); assert.ok(!first.has(x.f), 'the first load does not bring a language'); }
   // Each screen the shell loads by its address (next/src/app/router.js CHUNKS), with everything it loads in turn that the first
   // load hasn't already brought.
