@@ -102,5 +102,19 @@
  },
  "home.td_all": "Ver tudo",
  "home.td_step_tick": "Marcar uma tarefa",
- "home.td_step_add": "Adicionar uma tarefa"
+ "home.td_step_add": "Adicionar uma tarefa",
+ "home.nx_h": "Do que a turma precisa agora",
+ "home.nx_weak": "{row} foi a linha mais fraca em {name}.",
+ "home.nx_weak_cls": "{cls}: {row} foi a linha mais fraca em {name}.",
+ "home.nx_flat": "Todas as linhas ficaram iguais em {name}.",
+ "home.nx_flat_cls": "{cls}: todas as linhas ficaram iguais em {name}.",
+ "home.nx_who": {
+  "one": "Um estudante tirou {half} ou menos em {row}.",
+  "other": "{n} estudantes tiraram {half} ou menos em {row}."
+ },
+ "home.nx_nobody": "Ninguém tirou {half} ou menos em {row}.",
+ "home.nx_see": "Ver quem",
+ "home.nx_open": "Abrir Análise",
+ "home.nx_last": "o último conjunto de trabalhos",
+ "home.nx_bar": "{name} {avg} de {top}"
 }

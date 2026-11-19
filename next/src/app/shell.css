@@ -148,3 +148,11 @@ section.now .empty{padding-bottom:22px}
 .htodo .tdadd{display:flex;align-items:center;gap:10px;padding:8px 16px;border-top:1px solid var(--line);color:var(--g600)}
 .htodo .tdadd input{flex:1;min-width:0;border:0;background:transparent;font:inherit;color:var(--ink);padding:6px 0;outline:none}
 .htodo .tdfoot{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-top:1px solid var(--line);font-size:var(--t2);color:var(--mute)}
+.hnext .big{margin:0 0 14px;font-size:var(--t3);font-weight:500;line-height:1.4}
+.hnext .bars{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;margin-bottom:12px;font-size:var(--t2)}
+.hnext .bt{height:8px;border-radius:var(--rf);background:var(--g100);overflow:hidden}
+.hnext .bt i{display:block;height:100%;background:var(--acc)}
+.hnext .bt i.low{background:var(--warn)}
+.hnext .bv{color:var(--mute)}
+.hnext p.mute{margin:0 0 10px}
+.hnext .link{display:inline-flex;align-items:center;gap:4px;color:var(--acc-ink);text-decoration:none;font-size:var(--t2)}

@@ -106,5 +106,19 @@
  },
  "home.td_all": "Tout voir",
  "home.td_step_tick": "Cocher une tâche",
- "home.td_step_add": "Ajouter une tâche"
+ "home.td_step_add": "Ajouter une tâche",
+ "home.nx_h": "Ce dont la classe a besoin ensuite",
+ "home.nx_weak": "{row} était la ligne la plus faible sur {name}.",
+ "home.nx_weak_cls": "{cls} : {row} était la ligne la plus faible sur {name}.",
+ "home.nx_flat": "Toutes les lignes sont au même niveau sur {name}.",
+ "home.nx_flat_cls": "{cls} : toutes les lignes sont au même niveau sur {name}.",
+ "home.nx_who": {
+  "one": "Un élève a eu {half} ou moins sur {row}.",
+  "other": "{n} élèves ont eu {half} ou moins sur {row}."
+ },
+ "home.nx_nobody": "Personne n’a eu {half} ou moins sur {row}.",
+ "home.nx_see": "Voir qui",
+ "home.nx_open": "Ouvrir Analyse",
+ "home.nx_last": "le dernier lot de copies",
+ "home.nx_bar": "{name} {avg} sur {top}"
 }

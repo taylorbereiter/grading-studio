@@ -106,5 +106,19 @@
  },
  "home.td_all": "모두 보기",
  "home.td_step_tick": "할 일 체크",
- "home.td_step_add": "할 일 추가"
+ "home.td_step_add": "할 일 추가",
+ "home.nx_h": "반에 다음으로 필요한 것",
+ "home.nx_weak": "{name}에서 {row} 항목이 가장 약했습니다.",
+ "home.nx_weak_cls": "{cls}: {name}에서 {row} 항목이 가장 약했습니다.",
+ "home.nx_flat": "{name}에서 모든 항목의 결과가 같았습니다.",
+ "home.nx_flat_cls": "{cls}: {name}에서 모든 항목의 결과가 같았습니다.",
+ "home.nx_who": {
+  "one": "{row}에서 {half}점 이하인 학생이 {n}명입니다.",
+  "other": "{row}에서 {half}점 이하인 학생이 {n}명입니다."
+ },
+ "home.nx_nobody": "{row}에서 {half}점 이하인 학생은 없습니다.",
+ "home.nx_see": "누구인지 보기",
+ "home.nx_open": "분석 열기",
+ "home.nx_last": "최근 과제 묶음",
+ "home.nx_bar": "{name} {top} 중 {avg}"
 }

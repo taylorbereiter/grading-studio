@@ -106,5 +106,19 @@
  },
  "home.td_all": "See everything",
  "home.td_step_tick": "Tick a to-do",
- "home.td_step_add": "Add a to-do"
+ "home.td_step_add": "Add a to-do",
+ "home.nx_h": "What the class needs next",
+ "home.nx_weak": "{row} was the weakest row on {name}.",
+ "home.nx_weak_cls": "{cls}: {row} was the weakest row on {name}.",
+ "home.nx_flat": "Every row came out the same on {name}.",
+ "home.nx_flat_cls": "{cls}: every row came out the same on {name}.",
+ "home.nx_who": {
+  "one": "One student scored {half} or below on {row}.",
+  "other": "{n} students scored {half} or below on {row}."
+ },
+ "home.nx_nobody": "Nobody scored {half} or below on {row}.",
+ "home.nx_see": "See who",
+ "home.nx_open": "Open Insights",
+ "home.nx_last": "the last set of papers",
+ "home.nx_bar": "{name} {avg} of {top}"
 }

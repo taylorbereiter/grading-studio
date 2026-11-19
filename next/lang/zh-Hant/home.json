@@ -106,5 +106,19 @@
  },
  "home.td_all": "查看全部",
  "home.td_step_tick": "勾選待辦事項",
- "home.td_step_add": "新增待辦事項"
+ "home.td_step_add": "新增待辦事項",
+ "home.nx_h": "全班接下來需要什麼",
+ "home.nx_weak": "在「{name}」中，{row} 是最弱的一項。",
+ "home.nx_weak_cls": "{cls}：在「{name}」中，{row} 是最弱的一項。",
+ "home.nx_flat": "在「{name}」中，每一項結果都一樣。",
+ "home.nx_flat_cls": "{cls}：在「{name}」中，每一項結果都一樣。",
+ "home.nx_who": {
+  "one": "有 {n} 位學生在 {row} 得到 {half} 分或以下。",
+  "other": "有 {n} 位學生在 {row} 得到 {half} 分或以下。"
+ },
+ "home.nx_nobody": "沒有學生在 {row} 得到 {half} 分或以下。",
+ "home.nx_see": "查看是誰",
+ "home.nx_open": "開啟分析",
+ "home.nx_last": "最近一批作業",
+ "home.nx_bar": "{name} {avg}/{top}"
 }

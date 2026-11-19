@@ -106,5 +106,19 @@
  },
  "home.td_all": "Ver todo",
  "home.td_step_tick": "Marcar una tarea",
- "home.td_step_add": "Añadir una tarea"
+ "home.td_step_add": "Añadir una tarea",
+ "home.nx_h": "Lo que la clase necesita ahora",
+ "home.nx_weak": "{row} fue la fila más débil en {name}.",
+ "home.nx_weak_cls": "{cls}: {row} fue la fila más débil en {name}.",
+ "home.nx_flat": "Todas las filas salieron igual en {name}.",
+ "home.nx_flat_cls": "{cls}: todas las filas salieron igual en {name}.",
+ "home.nx_who": {
+  "one": "Un estudiante sacó {half} o menos en {row}.",
+  "other": "{n} estudiantes sacaron {half} o menos en {row}."
+ },
+ "home.nx_nobody": "Nadie sacó {half} o menos en {row}.",
+ "home.nx_see": "Ver quiénes",
+ "home.nx_open": "Abrir Análisis",
+ "home.nx_last": "el último grupo de trabajos",
+ "home.nx_bar": "{name} {avg} de {top}"
 }

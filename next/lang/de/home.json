@@ -106,5 +106,19 @@
  },
  "home.td_all": "Alles ansehen",
  "home.td_step_tick": "Aufgabe abhaken",
- "home.td_step_add": "Aufgabe hinzufügen"
+ "home.td_step_add": "Aufgabe hinzufügen",
+ "home.nx_h": "Was die Klasse als Nächstes braucht",
+ "home.nx_weak": "{row} war die schwächste Zeile bei {name}.",
+ "home.nx_weak_cls": "{cls}: {row} war die schwächste Zeile bei {name}.",
+ "home.nx_flat": "Bei {name} lagen alle Zeilen gleich.",
+ "home.nx_flat_cls": "{cls}: Bei {name} lagen alle Zeilen gleich.",
+ "home.nx_who": {
+  "one": "Eine Person hat bei {row} {half} oder weniger erreicht.",
+  "other": "{n} Lernende haben bei {row} {half} oder weniger erreicht."
+ },
+ "home.nx_nobody": "Niemand hat bei {row} {half} oder weniger erreicht.",
+ "home.nx_see": "Zeigen, wer",
+ "home.nx_open": "Auswertung öffnen",
+ "home.nx_last": "den letzten Satz Arbeiten",
+ "home.nx_bar": "{name} {avg} von {top}"
 }

@@ -131,6 +131,20 @@ function Look({ v }) {
     <ul class="card hlist">{rows.slice(0, 6).map(r => <Line kind={r.k} id={r.id} icon={r.k === 'backup' ? 'cloud' : 'warn'} title={r.title} sub={r.sub} href={r.to} />)}
       {rows.length > 6 && <li class="hl"><span class="mute">{t('home.look_more', { n: rows.length - 6 })}</span></li>}</ul></section>;
 }
+// What the class needs next (src/today.js nextHtml): the newest finished rubric set's weakest row, every row's class average as a
+// bar, how many scored at half the row's top or below, and the way to Insights to see who. Numbers and row names only.
+function NextCard({ n }) {
+  if (!n) return null;
+  const low = n.rows[n.low], half = num(low.top / 2), name = n.name || t('home.nx_last');
+  const head = n.flat ? (n.cls ? t('home.nx_flat_cls', { cls: n.cls, name }) : t('home.nx_flat', { name })) : (n.cls ? t('home.nx_weak_cls', { cls: n.cls, row: low.name, name }) : t('home.nx_weak', { row: low.name, name }));
+  return <section aria-labelledby="h-next" data-home="next"><div class="hrow"><h2 id="h-next">{t('home.nx_h')}</h2></div>
+    <div class="card pad hnext"><p class="big" data-raw>{head}</p>
+      <div class="bars" role="img" aria-label={n.rows.map(r => t('home.nx_bar', { name: r.name, avg: num(r.avg), top: r.top })).join(', ')}>
+        {n.rows.map((r, i) => <><span class="bn" data-raw>{r.name}</span><span class="bt"><i class={i === n.low && !n.flat ? 'low' : ''} style={{ width: Math.round(r.avg / r.top * 100) + '%' }} /></span><span class="bv num" data-raw>{r.avg.toFixed(1)}</span></>)}</div>
+      {!n.flat && <p class="mute" data-raw>{low.low ? t('home.nx_who', { n: low.low, half, row: low.name }) : t('home.nx_nobody', { half, row: low.name })}</p>}
+      {n.open && <a class="link" href={href('mark', n.id, 'insights')} data-next-go>{low.low && !n.flat ? t('home.nx_see') : t('home.nx_open')}<Icon name="chr" size="sm" /></a>}
+    </div></section>;
+}
 // Earlier work (src/today.js oldRow): an older copy, handed back already, or nothing in it to score. The newest three, or all.
 const OLD_SHOWN = 3;
 function Earlier({ v, menu }) {
@@ -183,6 +197,7 @@ export default function Home({ classes }) {
           {!pk && !v.mark.length && !v.back.length && !v.toPlan.length && !(v.missing || []).length && <li class="hl none"><span class="mute">{t('home.all_clear')}</span></li>}
         </ul>
         <Look v={v} />
+        <NextCard n={v.next} />
       </section></div>
     </div>
     <Earlier v={v} menu={menu} />

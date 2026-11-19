@@ -106,5 +106,19 @@
  },
  "home.td_all": "すべて見る",
  "home.td_step_tick": "ToDo にチェック",
- "home.td_step_add": "ToDo を追加"
+ "home.td_step_add": "ToDo を追加",
+ "home.nx_h": "クラスに次に必要なこと",
+ "home.nx_weak": "{name} では {row} がいちばん弱い項目でした。",
+ "home.nx_weak_cls": "{cls}：{name} では {row} がいちばん弱い項目でした。",
+ "home.nx_flat": "{name} ではどの項目も同じ結果でした。",
+ "home.nx_flat_cls": "{cls}：{name} ではどの項目も同じ結果でした。",
+ "home.nx_who": {
+  "one": "{row} で {half} 以下だった生徒は {n} 人です。",
+  "other": "{row} で {half} 以下だった生徒は {n} 人です。"
+ },
+ "home.nx_nobody": "{row} で {half} 以下だった生徒はいません。",
+ "home.nx_see": "誰かを見る",
+ "home.nx_open": "分析を開く",
+ "home.nx_last": "直近の提出物",
+ "home.nx_bar": "{name} {top} 中 {avg}"
 }

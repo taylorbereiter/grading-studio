@@ -71,8 +71,10 @@ export async function countsForHome(now = Date.now()) {
     else if (!C.canOpen(m)) look.push({ kind: 'notkept', id: m.id, name: String(m.name || '') });
   }
   const backup = { last: +(students.lastBackup.json(0) || 0), kept: kept.size };
+  // what the class needs next (src/today.js nextHtml): the newest finished rubric set's rows, as class averages
+  const next = await (await import('./students/home-next.js')).nextCard(lib, kept, g, now).catch(e => { console.error(e); return null; });
   const mark = sets(g.mark), back = sets(g.back), missing = auto.filter(a => a.kind === 'miss').map(a => ({ classId: a.classId, name: cname(a.classId), n: a.n }));
-  return { teach, mark, back, old, look, backup, toPlan, missing, counts: { classesToday: teach ? teach.rows.length : 0, mark: mark.length, back: back.length, toPlan: toPlan.length, missing: missing.length } };
+  return { teach, mark, back, old, look, backup, next, toPlan, missing, counts: { classesToday: teach ? teach.rows.length : 0, mark: mark.length, back: back.length, toPlan: toPlan.length, missing: missing.length } };
 }
 // The sidebar's To do count, the way the current app counts it (src/todo.js todoCount): every line not done that is overdue or for
 // today, her own lines and the ones the app noticed (papers to mark and to hand back, today's classes still to plan), less the ones

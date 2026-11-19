@@ -1,4 +1,4 @@
-// Stage 8, slice A: Home's lists and today's classes (rebuild/audit/gaps.md A-050, A-073, A-071, A-072, A-058, A-059, A-067, A-068, A-069, A-070, A-074), as the current app's
+// Stage 8, slice A: Home's lists and today's classes (rebuild/audit/gaps.md A-060, A-075, A-050, A-073, A-071, A-072, A-058, A-059, A-067, A-068, A-069, A-070, A-074), as the current app's
 // Today has them (src/today.js oldRow, src/shell.js renderNeedsOnly, src/app/kept.js forgetKept). Made-up downloads only.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
@@ -139,5 +139,24 @@ test('A-050 A-073: the To do card has today’s lines and the late ones, ticks t
   const nw = await saved('Call the museum');
   assert.equal(nw.d, '2026-10-27', 'a line typed on Home with no day is for today');
   assert.equal(await p.$eval('[data-tdcard-in]', e => e.value), '');
+  assert.deepEqual(errors, []); await ctx.close();
+});
+
+test('A-060 A-075: what the class needs next, from the newest finished rubric set: the weakest row, the bars, how many to sit down with, and See who', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), p = await ctx.newPage();
+  p.on('pageerror', e => errors.push(e.message));
+  await p.evaluateOnNewDocument(STEADY); await p.setViewport({ width: 1440, height: 1400 });
+  const s = gradingSeed(); for (const [id, m] of s.idb['grading-studio-keep'].stores.meta) if (id === 'gs.b.n2') m.papers = 1;
+  s.idb['gs-lessons'] = { version: 1, stores: { lessons: [], kv: [['setup', PLAN_SETUP]] } };
+  await p.goto(srv.url + 'blank'); await plant(p, s);
+  await p.goto(srv.url + 'next/#/home'); await p.waitForSelector('[data-home="next"]', { timeout: 30000 });
+  const card = await p.$eval('[data-home="next"]', e => ({ text: e.textContent, bars: e.querySelector('.bars').getAttribute('aria-label'), low: [...e.querySelectorAll('.bt i')].map(i => i.className) }));
+  assert.match(card.text, /Grade 9 English: Language was the weakest row on Poetry analysis\./);
+  assert.match(card.text, /4 students scored 2 or below on Language\./);
+  assert.equal(card.bars, 'Ideas 3.3 of 4, Organization 2.8 of 4, Language 2.3 of 4');
+  assert.deepEqual(card.low, ['', '', 'low']);
+  assert.equal(await p.$eval('[data-next-go]', a => a.textContent + '|' + a.hash), 'See who|#/mark/gs.b.n2/insights');
+  // no student's name is on the card
+  for (const n of ['Aria', 'Bram', 'Cleo', 'Dov', 'Esme', 'Finn']) assert.ok(!card.text.includes(n));
   assert.deepEqual(errors, []); await ctx.close();
 });

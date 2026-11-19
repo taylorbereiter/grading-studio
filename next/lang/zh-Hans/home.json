@@ -106,5 +106,19 @@
  },
  "home.td_all": "查看全部",
  "home.td_step_tick": "勾选待办事项",
- "home.td_step_add": "新增待办事项"
+ "home.td_step_add": "新增待办事项",
+ "home.nx_h": "全班接下来需要什么",
+ "home.nx_weak": "在“{name}”中，{row} 是最弱的一项。",
+ "home.nx_weak_cls": "{cls}：在“{name}”中，{row} 是最弱的一项。",
+ "home.nx_flat": "在“{name}”中，每一项结果都一样。",
+ "home.nx_flat_cls": "{cls}：在“{name}”中，每一项结果都一样。",
+ "home.nx_who": {
+  "one": "有 {n} 名学生在 {row} 得到 {half} 分或以下。",
+  "other": "有 {n} 名学生在 {row} 得到 {half} 分或以下。"
+ },
+ "home.nx_nobody": "没有学生在 {row} 得到 {half} 分或以下。",
+ "home.nx_see": "查看是谁",
+ "home.nx_open": "打开分析",
+ "home.nx_last": "最近一批作业",
+ "home.nx_bar": "{name} {avg}/{top}"
 }
