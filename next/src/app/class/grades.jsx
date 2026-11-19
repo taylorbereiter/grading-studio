@@ -50,9 +50,11 @@ const fmt = n => (n == null ? '' : fmtNum(n));
 const ticked = (cell, col) => !!cell && col.type !== 'xc' && !cell.st && cell.fb && (col.type === 'fm' || cell.pct == null);
 const low = (cell, col) => col.type !== 'xc' && col.type !== 'fm' && cell && cell.pct != null && cell.pct < 60 && !cell.st;
 
-export default function Grades({ classId }) {
+export default function Grades({ classId, sub }) {
   const b = useBook(), [show, setShow] = useState(() => keep('show') || 'pct'), [term, setTerm] = useState(() => keep('term:' + classId)), tab = useRef(null);
   const [box, setBox] = useState(null), [whole, setWhole] = useState(false), [Imp, setImp] = useState(null), [only, setOnly] = useState(onlyOn), [pick, setPick] = useState(false), [, redraw] = useState(0);
+  // #/class/<id>/grades/type-<card> (the Assignments tab's No papers: just type the scores): that card's typing, then the address back
+  useLayoutEffect(() => { if (!b || !/^type-/.test(sub || '')) return; setBox({ add: true, itId: sub.slice(5) }); location.replace(href('class', classId, 'grades')); }, [b, sub]);
   const Gl = usePart('goals', !!(box && box.goals)), Rp = usePart('reports', !!(box && box.reports)), Ps = usePart('sheets', !!(box && box.sheets));
   if (!b) return <div class="loading" aria-busy="true" />;
   const x = classBook(b, classId);

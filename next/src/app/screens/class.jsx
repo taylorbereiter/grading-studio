@@ -137,9 +137,9 @@ export default function ClassPage({ route, classes }) {
     {pk && Pk && <Pk.PickerFor classId={x.id} onClose={() => setPk(false)} />}
     <Tabs label={t('plan.class_tabs')} value={tab} onChange={v => go('class', route.params.id, v === 'course' ? '' : v)}
       tabs={[{ id: 'course', label: t('plan.course_line') }, { id: 'work', label: t('plan.assignments') }, { id: 'people', label: t('plan.people'), count: x.students || null }, { id: 'grades', label: t('plan.grades') }, { id: 'todo', label: t('nav.todo') }]} />
-    {tab === 'work' ? (Work ? <Work.default classId={route.params.id} /> : <div class="loading" aria-busy="true" />)
+    {tab === 'work' ? (Work ? <Work.default classId={route.params.id} sub={route.params.sub} /> : <div class="loading" aria-busy="true" />)
       : tab === 'people' && !x.loose ? (People ? <People.default classId={route.params.id} sub={route.params.sub} /> : <div class="loading" aria-busy="true" />)
-      : tab === 'grades' && !x.loose ? (Grades ? <Grades.default classId={route.params.id} /> : <div class="loading" aria-busy="true" />)
+      : tab === 'grades' && !x.loose ? (Grades ? <Grades.default classId={route.params.id} sub={route.params.sub} /> : <div class="loading" aria-busy="true" />)
       : tab === 'todo' && !x.loose ? (Todo ? <Todo.default classId={route.params.id} /> : <div class="loading" aria-busy="true" />)
       : tab !== 'course' ? <Later route={{ ...route, path: 'class', known: true }} classes={classes} embedded />
       : !p ? <div class="loading" aria-busy="true" />
