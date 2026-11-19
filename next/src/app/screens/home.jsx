@@ -144,7 +144,8 @@ function Earlier({ v, menu }) {
 }
 export default function Home({ classes }) {
   const [v, now] = useHome(), plan = usePlan(), Sv = usePart('setsave', matchMedia('(max-width:640px)').matches);   // a phone's sign-in card
-  const [fg, setFg] = useState(null), A = usePart('asg', !!fg);   // Forget (class/assignment.jsx), asked first
+  const [fg, setFg] = useState(null), A = usePart('asg', !!fg);
+  const TD = usePart('hometodo');   // Forget (class/assignment.jsx), asked first
   const menu = m => ({ label: t('home.row_more', { name: m.name || t('home.student_work') }), items: [{ label: t('home.forget'), icon: 'trash', onSelect: () => setFg(m) }] });
   const d = new Date(now);
   if (!v) return <div class="page"><header class="ph"><h1>{greeting(d)}</h1></header><div class="loading" aria-busy="true" /></div>;
@@ -170,7 +171,8 @@ export default function Home({ classes }) {
             <span role="cell" class="r tm"><b class="num">{x.left}</b></span></a>; })}
         </div> : <EmptyState icon="people" title={t('home.no_classes')} />}
       </section>
-      <section aria-labelledby="h-needs"><div class="hrow"><h2 id="h-needs">{t('home.needs_you')}</h2><a class="link" href={href('todo')}>{t('home.all_todos')}</a></div>
+      <div class="hcol">{TD && <TD.TodoCard L={{ title: t('nav.todo'), all: t('home.all_todos'), none: t('home.td_none'), add: t('home.td_add'), more: n => t('home.td_more', { n }), see: t('home.td_all'), tick_step: t('home.td_step_tick'), add_step: t('home.td_step_add') }} />}
+      <section aria-labelledby="h-needs"><div class="hrow"><h2 id="h-needs">{t('home.needs_you')}</h2>{!TD && <a class="link" href={href('todo')}>{t('home.all_todos')}</a>}</div>
         <ul class="card hlist" data-home="needs">
           {pk && <Line kind="pick" icon="slides" title={t('plan.pick_up')} sub={dot([raw(pk.l.title) || t('home.untitled_lesson'), ...pk.sub])} href={href('lesson', pk.l.id)} />}
           {v.mark.map(m => <Line kind="mark" id={m.id} menu={menu(m)} icon="pen" title={t(m.fm ? 'home.feedback_on' : m.done ? 'home.finish_marking' : 'home.mark', { name: m.name || t('home.student_work') })}
@@ -181,7 +183,7 @@ export default function Home({ classes }) {
           {!pk && !v.mark.length && !v.back.length && !v.toPlan.length && !(v.missing || []).length && <li class="hl none"><span class="mute">{t('home.all_clear')}</span></li>}
         </ul>
         <Look v={v} />
-      </section>
+      </section></div>
     </div>
     <Earlier v={v} menu={menu} />
     {fg && A && <A.Forget it={{ name: fg.name || t('home.student_work') }} id={fg.id} onClose={ok => { setFg(null); if (ok && useHome.read) useHome.read(); }} />}

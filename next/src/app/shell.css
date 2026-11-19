@@ -139,3 +139,12 @@ section.now .empty{padding-bottom:22px}
 .prf-t{font-size:18px;font-variant-numeric:tabular-nums}.prf-t small{margin-left:6px;font-size:12px;opacity:.8}
 .prf.done{background:var(--warn);color:#fff}.prf.paused{opacity:.8}
 @media (max-width:700px){.prf{bottom:84px}}
+.hcol{display:flex;flex-direction:column;gap:20px;min-width:0}
+.htodo ul{list-style:none;margin:0;padding:0}
+.htodo .tick{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--line-2);display:grid;place-items:center;color:var(--s);flex:none}
+.htodo .tick[aria-checked="true"]{background:var(--ok);box-shadow:none}
+.htodo .hl.done .tx b{text-decoration:line-through;color:var(--mute)}
+.htodo .none{margin:0;padding:12px 16px}
+.htodo .tdadd{display:flex;align-items:center;gap:10px;padding:8px 16px;border-top:1px solid var(--line);color:var(--g600)}
+.htodo .tdadd input{flex:1;min-width:0;border:0;background:transparent;font:inherit;color:var(--ink);padding:6px 0;outline:none}
+.htodo .tdfoot{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-top:1px solid var(--line);font-size:var(--t2);color:var(--mute)}

@@ -1,4 +1,4 @@
-// Stage 8, slice A: Home's lists and today's classes (rebuild/audit/gaps.md A-071, A-072, A-058, A-059, A-067, A-068, A-069, A-070, A-074), as the current app's
+// Stage 8, slice A: Home's lists and today's classes (rebuild/audit/gaps.md A-050, A-073, A-071, A-072, A-058, A-059, A-067, A-068, A-069, A-070, A-074), as the current app's
 // Today has them (src/today.js oldRow, src/shell.js renderNeedsOnly, src/app/kept.js forgetKept). Made-up downloads only.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
@@ -112,5 +112,32 @@ test('A-071 A-072: each of today’s classes presents its lesson, opens it, or p
   assert.equal(await p.$eval('[data-now-present]', a => a.hash), '#/lesson/LB/present/B1');
   await p.click('[data-teach="B1"]');
   await p.waitForFunction(() => location.hash === '#/lesson/LB/present/B1', { timeout: 10000 });
+  assert.deepEqual(errors, []); await ctx.close();
+});
+
+test('A-050 A-073: the To do card has today’s lines and the late ones, ticks them, takes a new line for today, and says how many more', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), p = await ctx.newPage();
+  p.on('pageerror', e => errors.push(e.message));
+  await p.evaluateOnNewDocument(STEADY); await p.setViewport({ width: 1440, height: 1200 });
+  const s = seed(), lib = JSON.parse(s.ls['gs.lib']), t0 = Date.parse('2026-10-20T09:00:00Z');
+  const line = (id, x, d) => ({ id, x, d, c: '', who: '', a: '', rep: '', note: '', done: 0, made: t0, t: t0 });
+  lib.todo = { items: [line('tdA', 'Notes from the department meeting', '2026-10-26'), line('tdB', 'Collect the permission slips', '2026-10-27'), line('tdC', 'Order lab supplies', '')] };
+  s.ls['gs.lib'] = JSON.stringify(lib);
+  await p.goto(srv.url + 'blank'); await plant(p, s);
+  await p.goto(srv.url + 'next/#/home'); await p.waitForSelector('[data-home="todo"] [data-td]', { timeout: 30000 });
+  const shown = () => p.$$eval('[data-home="todo"] [data-td]', l => l.map(e => e.dataset.td + (e.classList.contains('done') ? ':done' : '')));
+  assert.deepEqual(await shown(), ['tdA', 'tdB']);
+  assert.match(await p.$eval('[data-home="todo"] .tdfoot', e => e.textContent), /1 more on your list/);
+  assert.equal(await p.$eval('[data-tdcard-all]', a => a.hash), '#/todo');
+  const saved = id => p.evaluate(id => (JSON.parse(localStorage.getItem('gs.lib')).todo.items.find(x => x.id === id || x.x === id) || null), id);
+  await p.click('[data-tdtick="tdB"]');
+  await p.waitForFunction(() => document.querySelector('[data-td="tdB"]').classList.contains('done'), { timeout: 10000 });
+  assert.ok((await saved('tdB')).done > 0, 'ticked where the current app reads it');
+  assert.deepEqual(await shown(), ['tdA', 'tdB:done'], 'ticked today: it stays, crossed out, below the rest');
+  await p.click('[data-tdcard-in]'); await p.keyboard.type('Call the museum'); await p.keyboard.press('Enter');
+  await p.waitForFunction(() => [...document.querySelectorAll('[data-home="todo"] [data-td]')].some(e => e.textContent.includes('Call the museum')), { timeout: 10000 });
+  const nw = await saved('Call the museum');
+  assert.equal(nw.d, '2026-10-27', 'a line typed on Home with no day is for today');
+  assert.equal(await p.$eval('[data-tdcard-in]', e => e.value), '');
   assert.deepEqual(errors, []); await ctx.close();
 });

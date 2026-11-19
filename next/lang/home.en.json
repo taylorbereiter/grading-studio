@@ -97,5 +97,14 @@
  "home.a_download": "A download",
  "home.taught": "taught",
  "home.taught_to": "taught to slide {n} of {of}",
- "home.row_go": "{cls}: {what}"
+ "home.row_go": "{cls}: {what}",
+ "home.td_none": "Nothing on your list for today.",
+ "home.td_add": "Add a to-do…",
+ "home.td_more": {
+  "one": "{n} more on your list",
+  "other": "{n} more on your list"
+ },
+ "home.td_all": "See everything",
+ "home.td_step_tick": "Tick a to-do",
+ "home.td_step_add": "Add a to-do"
 }

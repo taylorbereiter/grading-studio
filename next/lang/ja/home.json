@@ -97,5 +97,14 @@
  "home.a_download": "ダウンロード",
  "home.taught": "授業済み",
  "home.taught_to": "{of} 枚中 {n} 枚目まで授業済み",
- "home.row_go": "{cls}：{what}"
+ "home.row_go": "{cls}：{what}",
+ "home.td_none": "今日のリストには何もありません。",
+ "home.td_add": "ToDo を追加…",
+ "home.td_more": {
+  "one": "リストにあと {n} 件",
+  "other": "リストにあと {n} 件"
+ },
+ "home.td_all": "すべて見る",
+ "home.td_step_tick": "ToDo にチェック",
+ "home.td_step_add": "ToDo を追加"
 }

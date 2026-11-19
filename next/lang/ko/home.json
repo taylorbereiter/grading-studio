@@ -97,5 +97,14 @@
  "home.a_download": "다운로드",
  "home.taught": "수업 완료",
  "home.taught_to": "{of}장 중 {n}번째 슬라이드까지 수업",
- "home.row_go": "{cls}: {what}"
+ "home.row_go": "{cls}: {what}",
+ "home.td_none": "오늘 목록에 할 일이 없습니다.",
+ "home.td_add": "할 일 추가…",
+ "home.td_more": {
+  "one": "목록에 {n}개 더",
+  "other": "목록에 {n}개 더"
+ },
+ "home.td_all": "모두 보기",
+ "home.td_step_tick": "할 일 체크",
+ "home.td_step_add": "할 일 추가"
 }

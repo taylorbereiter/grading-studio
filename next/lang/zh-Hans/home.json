@@ -97,5 +97,14 @@
  "home.a_download": "一份下载",
  "home.taught": "已教完",
  "home.taught_to": "教到第 {n}/{of} 张幻灯片",
- "home.row_go": "{cls}：{what}"
+ "home.row_go": "{cls}：{what}",
+ "home.td_none": "今天的清单上没有事项。",
+ "home.td_add": "新增待办事项…",
+ "home.td_more": {
+  "one": "清单上还有 {n} 项",
+  "other": "清单上还有 {n} 项"
+ },
+ "home.td_all": "查看全部",
+ "home.td_step_tick": "勾选待办事项",
+ "home.td_step_add": "新增待办事项"
 }

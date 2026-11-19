@@ -97,5 +97,14 @@
  "home.a_download": "Un téléchargement",
  "home.taught": "faite",
  "home.taught_to": "faite jusqu’à la diapositive {n} sur {of}",
- "home.row_go": "{cls} : {what}"
+ "home.row_go": "{cls} : {what}",
+ "home.td_none": "Rien sur votre liste pour aujourd’hui.",
+ "home.td_add": "Ajouter une tâche…",
+ "home.td_more": {
+  "one": "{n} autre sur votre liste",
+  "other": "{n} autres sur votre liste"
+ },
+ "home.td_all": "Tout voir",
+ "home.td_step_tick": "Cocher une tâche",
+ "home.td_step_add": "Ajouter une tâche"
 }

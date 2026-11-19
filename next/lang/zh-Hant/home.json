@@ -97,5 +97,14 @@
  "home.a_download": "一份下載",
  "home.taught": "已教完",
  "home.taught_to": "教到第 {n}/{of} 張投影片",
- "home.row_go": "{cls}：{what}"
+ "home.row_go": "{cls}：{what}",
+ "home.td_none": "今天的清單上沒有事項。",
+ "home.td_add": "新增待辦事項…",
+ "home.td_more": {
+  "one": "清單上還有 {n} 項",
+  "other": "清單上還有 {n} 項"
+ },
+ "home.td_all": "查看全部",
+ "home.td_step_tick": "勾選待辦事項",
+ "home.td_step_add": "新增待辦事項"
 }

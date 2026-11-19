@@ -97,5 +97,14 @@
  "home.a_download": "Ein Download",
  "home.taught": "unterrichtet",
  "home.taught_to": "bis Folie {n} von {of} unterrichtet",
- "home.row_go": "{cls}: {what}"
+ "home.row_go": "{cls}: {what}",
+ "home.td_none": "Für heute steht nichts auf Ihrer Liste.",
+ "home.td_add": "Aufgabe hinzufügen …",
+ "home.td_more": {
+  "one": "{n} weitere auf Ihrer Liste",
+  "other": "{n} weitere auf Ihrer Liste"
+ },
+ "home.td_all": "Alles ansehen",
+ "home.td_step_tick": "Aufgabe abhaken",
+ "home.td_step_add": "Aufgabe hinzufügen"
 }

@@ -97,5 +97,14 @@
  "home.a_download": "Una descarga",
  "home.taught": "impartida",
  "home.taught_to": "impartida hasta la diapositiva {n} de {of}",
- "home.row_go": "{cls}: {what}"
+ "home.row_go": "{cls}: {what}",
+ "home.td_none": "No hay nada en tu lista para hoy.",
+ "home.td_add": "Añadir una tarea…",
+ "home.td_more": {
+  "one": "{n} más en tu lista",
+  "other": "{n} más en tu lista"
+ },
+ "home.td_all": "Ver todo",
+ "home.td_step_tick": "Marcar una tarea",
+ "home.td_step_add": "Añadir una tarea"
 }

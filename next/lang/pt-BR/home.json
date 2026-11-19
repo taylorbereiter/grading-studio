@@ -93,5 +93,14 @@
  "home.a_download": "Um download",
  "home.taught": "dada",
  "home.taught_to": "dada até o slide {n} de {of}",
- "home.row_go": "{cls}: {what}"
+ "home.row_go": "{cls}: {what}",
+ "home.td_none": "Nada na sua lista para hoje.",
+ "home.td_add": "Adicionar uma tarefa…",
+ "home.td_more": {
+  "one": "mais {n} na sua lista",
+  "other": "mais {n} na sua lista"
+ },
+ "home.td_all": "Ver tudo",
+ "home.td_step_tick": "Marcar uma tarefa",
+ "home.td_step_add": "Adicionar uma tarefa"
 }
