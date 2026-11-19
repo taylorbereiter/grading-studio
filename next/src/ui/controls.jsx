@@ -92,8 +92,8 @@ export function Slider({ label, value, min = 0, max = 100, step = 1, onInput, fo
     <output for={id}>{format(value)}</output></div></Field>;
 }
 // A filter chip: on or off. color: a class colour for its dot.
-export function Chip({ on, onClick, color, icon, children, disabled }) {
-  return <button type="button" class="chip" aria-pressed={String(!!on)} onClick={onClick} disabled={disabled}>
+export function Chip({ on, onClick, color, icon, children, disabled, ...rest }) {
+  return <button type="button" class="chip" aria-pressed={String(!!on)} onClick={onClick} disabled={disabled} {...rest}>
     {color && <span class="dot" style={{ '--cc': color }} />}{icon && <Icon name={icon} />}{children}</button>;
 }
 export function Card({ title, pad = true, raised, children, ...rest }) {

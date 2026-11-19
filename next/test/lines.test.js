@@ -6,7 +6,7 @@ const fs = require('fs'), path = require('path');
 const SRC = path.join(__dirname, '..', 'src');
 // en.json: the app's lines. gallery.en.json: the gallery page's own, never shipped with the app (only gallery/ may use them).
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lang', f), 'utf8'));
-const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), VIDEO = read('video.en.json'), INOUT = read('inout.en.json'), SAVING = read('saving.en.json'), CLASS = read('class.en.json'), TODO = read('todo.en.json'), FOCUS = read('focus.en.json'), SCHOOL = read('school.en.json'), HELP = read('help.en.json'), HOME = read('home.en.json'), SETS = read('settings.en.json'), PREFS = read('prefs.en.json'), ENGINE = read('engine.en.json'), EN = { ...APP, ...ENGINE, ...HOME, ...SETS, ...TODO, ...FOCUS, ...SCHOOL, ...HELP, ...PREFS, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...VIDEO, ...INOUT, ...SAVING, ...CLASS };
+const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), VIDEO = read('video.en.json'), INOUT = read('inout.en.json'), SAVING = read('saving.en.json'), CLASS = read('class.en.json'), TODO = read('todo.en.json'), FOCUS = read('focus.en.json'), SCHOOL = read('school.en.json'), HELP = read('help.en.json'), HOME = read('home.en.json'), SETS = read('settings.en.json'), PREFS = read('prefs.en.json'), ENGINE = read('engine.en.json'), PRESENT = read('present.en.json'), CAL = read('calendar.en.json'), EN = { ...APP, ...PRESENT, ...CAL, ...ENGINE, ...HOME, ...SETS, ...TODO, ...FOCUS, ...SCHOOL, ...HELP, ...PREFS, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...VIDEO, ...INOUT, ...SAVING, ...CLASS };
 const noComments = s => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(x => x.isDirectory() ? walk(path.join(d, x.name)) : /\.jsx?$/.test(x.name) ? [path.join(d, x.name)] : []);
 const files = walk(SRC);
@@ -45,6 +45,12 @@ test('planning lines live in plan.en.json and load where they are used', () => {
   // and the Calendar's and units' occasional tools (next/lang/more.en.json), through app/plan/more-lines.js
   assert.ok(Object.keys(MORE).every(k => k.startsWith('more.')) && !Object.keys(APP).some(k => k.startsWith('more.')));
   for (const [f, s] of Object.entries(text)) if (/'more\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '\.\.?\/(plan\/)?more-lines\.js';/.test(s), f + ' uses a tools line without importing plan/more-lines.js');
+  // and Present's (next/lang/present.en.json), through app/plan/present-lines.js
+  assert.ok(Object.keys(PRESENT).every(k => k.startsWith('present.')) && !Object.keys(APP).some(k => k.startsWith('present.')));
+  for (const [f, s] of Object.entries(text)) if (/'present\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '\.\.?\/(plan\/)?present-lines\.js';/.test(s), f + ' uses a Present line without importing plan/present-lines.js');
+  // and the Calendar's (next/lang/calendar.en.json), through app/plan/cal-lines.js
+  assert.ok(Object.keys(CAL).every(k => k.startsWith('cal.')) && !Object.keys(APP).some(k => k.startsWith('cal.')));
+  for (const [f, s] of Object.entries(text)) if (/'cal\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '\.\.?\/(plan\/)?cal-lines\.js';/.test(s), f + ' uses a Calendar line without importing plan/cal-lines.js');
   // and the marking screens' (next/lang/mark.en.json), through app/mark/lines.js
   assert.ok(Object.keys(MARK).every(k => k.startsWith('mark.')) && !Object.keys(APP).some(k => k.startsWith('mark.')));
   for (const [f, s] of Object.entries(text)) if (/'mark\.[a-z0-9_]+'/.test(noComments(s))) assert.ok(/import '(\.\.\/)+mark\/lines\.js';|import '\.\/lines\.js';/.test(s), f + ' uses a marking line without importing mark/lines.js');
