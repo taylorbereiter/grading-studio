@@ -87,7 +87,7 @@ test('keyboard: mark a lesson ready, move through its slides, and present it', a
   await open(p, 'lesson/L3');
   await p.click('main [role=radiogroup] [data-v="ready"]');
   await p.waitForFunction(() => document.querySelector('main [role=radiogroup] [data-v="ready"]').getAttribute('aria-checked') === 'true');
-  const l3 = await lessonInDb(p, 'L3');
+  let l3; for (let i = 0; i < 40 && !(l3 && l3.ready); i++) { l3 = await lessonInDb(p, 'L3'); if (!l3.ready) await new Promise(r => setTimeout(r, 50)); }   // the save goes through a moment after the press shows
   assert.ok(l3.ready && l3.ready.at > 0, 'ready is saved the way the current Planner keeps it');
   await open(p, 'lesson/L3/slides');
   const num = () => p.$eval('main .svbar .num', x => x.textContent);

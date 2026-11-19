@@ -25,6 +25,8 @@ export function startWhole() {
   gPreload();
   onGoogle(changedSaving); onFolder(changedSaving);
   booting = folderBoot().catch(e => console.error(e));
+  // the counts the oldest kept downloads lack, worked out once a little after opening (students/backfill.js, audit H-047)
+  setTimeout(() => import('../students/backfill.js').then(m => m.run()).catch(e => console.error(e)), 4000);
   if (typeof navigator !== 'undefined' && navigator.serviceWorker) navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'gs-drive-token') import('./stream.js').then(m => m.answer(e)); });
   const V = () => import('./stream.js');
   provideSaving({

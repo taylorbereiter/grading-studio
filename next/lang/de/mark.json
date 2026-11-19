@@ -257,5 +257,12 @@
  "mark.cw_ul_change": "Link zum Einheitsplan ändern",
  "mark.cw_ul_change_n": "Link ändern: {name}",
  "mark.cw_ul_open": "Einheitsplan",
- "mark.cw_ul_open_n": "In {name} öffnen"
+ "mark.cw_ul_open_n": "In {name} öffnen",
+ "mark.cw_typed": "Eingetippt",
+ "mark.cw_ud_q": "„{name}“ löschen?",
+ "mark.cw_ud_say": {
+  "one": "Die Aufgabe darin wird mitgelöscht. Gespeicherte Korrekturen bleiben in diesem Browser.",
+  "other": "Die {n} Aufgaben darin werden mitgelöscht. Gespeicherte Korrekturen bleiben in diesem Browser."
+ },
+ "mark.cw_loose_say": "Aufgaben ohne Klasse. Ziehen Sie eine auf eine Klasse in der Seitenleiste oder nutzen Sie „Verschieben nach…“ in ihrem ⋯-Menü."
 }
