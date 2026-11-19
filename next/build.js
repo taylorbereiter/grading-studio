@@ -46,7 +46,8 @@ function rootHead() {
   const site = require(path.join(ROOT, 'site.json')), src = fs.readFileSync(path.join(ROOT, 'src/visits.js'), 'utf8').replace(/\/\*[\s\S]*?\*\/\s*/, '');
   if (src.split("'/*@@HOME@@*/'").length !== 2) throw new Error('src/visits.js: the address is not in it once');
   const visits = '<script>' + src.replace("'/*@@HOME@@*/'", () => JSON.stringify([site.address, site.movingTo].filter(Boolean))).trim() + '</script>';
-  const back = '<script>try{var gsS=sessionStorage;if(/(^#|&)(access_token|error)=/.test(location.hash)&&(gsS.getItem("gs.gBack")||gsS.getItem("sample:gs.gBack"))==="classic"){gsS.removeItem("gs.gBack");gsS.removeItem("sample:gs.gBack");location.replace("classic/"+location.hash)}}catch(e){}</script>';
+  // The note carries the sign-in's state (classic:<state>), so only the sign-in that left it is sent on.
+  const back = '<script>try{var gsS=sessionStorage,gsH=location.hash,gsM=/(?:^#|&)state=([^&]*)/.exec(gsH);if(/(^#|&)(access_token|error)=/.test(gsH)&&gsM&&[gsS.getItem("gs.gBack"),gsS.getItem("sample:gs.gBack")].indexOf("classic:"+decodeURIComponent(gsM[1]))>=0){gsS.removeItem("gs.gBack");gsS.removeItem("sample:gs.gBack");location.replace("classic/"+gsH)}}catch(e){}</script>';
   return back + '<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF">' + visits;
 }
 // planner.html: the Planner's own page is the previous version's (classic/planner.html). Its addresses, kept in bookmarks and in the

@@ -10547,7 +10547,7 @@ const PICK_SCOPE = 'https://www.googleapis.com/auth/drive.file ' + SYNC_SCOPE;
 const GOOGLE_API_KEY = '/*@@GKEY@@*/';
 const G = { token: null, exp: 0, scope: '', client: null, cscope: '', email: store.get('gs.gEmail', ''), waiters: [] };
 const G_REDIRECT = navigator.standalone === true || /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
-const gBack = () => { const p = location.pathname.replace(/index\.html$/, ''); if (!/\/classic\/$/.test(p)) return location.origin + p; try { sessionStorage.setItem('gs.gBack', 'classic'); } catch {} return location.origin + p.replace(/classic\/$/, ''); };
+const gBack = st => { const p = location.pathname.replace(/index\.html$/, ''); if (!/\/classic\/$/.test(p)) return location.origin + p; try { sessionStorage.setItem('gs.gBack', 'classic:' + st); } catch {} return location.origin + p.replace(/classic\/$/, ''); };
 {
 const h = new URLSearchParams(location.hash.replace(/^#/, '')), want = (() => { try { return sessionStorage.getItem('gs.gState'); } catch { return null; } })();
 if ((h.get('access_token') || h.get('error')) && h.get('state')) {
@@ -10558,7 +10558,7 @@ try { sessionStorage.removeItem('gs.gState'); history.replaceState(null, '', loc
 function gRedirect(scope, quiet) {
 const st = crypto.getRandomValues(new Uint32Array(2)).join('');
 try { sessionStorage.setItem('gs.gState', st); } catch {}
-location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({ client_id: gcid(), redirect_uri: gBack(), response_type: 'token', scope, include_granted_scopes: 'true', state: st, ...(G.email ? { login_hint: G.email } : {}), ...(quiet ? { prompt: 'none' } : {}) });
+location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({ client_id: gcid(), redirect_uri: gBack(st), response_type: 'token', scope, include_granted_scopes: 'true', state: st, ...(G.email ? { login_hint: G.email } : {}), ...(quiet ? { prompt: 'none' } : {}) });
 }
 let gisP = null;
 function loadGis() {
