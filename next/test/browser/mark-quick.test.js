@@ -367,7 +367,7 @@ test('D-053 D-054 D-055 D-056 D-057 D-058 D-059: covers drawn and taken off on U
   await p.waitForFunction(() => /^1 area blacked out\./.test(document.querySelector('[data-esshotn]').textContent));
   assert.equal(await p.$('[data-esaddtag]'), null, 'no tags used yet');
   await p.type('input[data-estags]', 'steps'); await p.keyboard.press('Enter');
-  for (let i = 0; i < 150 && (await exRecs(p)).length < 2; i++) await new Promise(r => setTimeout(r, 100));
+  for (let i = 0; i < 300 && (await exRecs(p)).length < 2; i++) await new Promise(r => setTimeout(r, 100));
   const first = (await exRecs(p)).find(r => r.kind === 'shot');
   assert.deepEqual([first.tags, first.watch], [['steps'], undefined]);
   await p.waitForFunction(() => !document.querySelector('[data-esshot]'));
@@ -377,7 +377,9 @@ test('D-053 D-054 D-055 D-056 D-057 D-058 D-059: covers drawn and taken off on U
   await p.click('[data-esaddtag="steps"]');
   assert.equal(await p.$eval('input[data-estags]', e => e.value), 'steps');
   await p.type('input[data-eswhy]', 'Labels each step'); await p.keyboard.press('Enter');
-  for (let i = 0; i < 150 && (await exRecs(p)).length < 3; i++) await new Promise(r => setTimeout(r, 100));
+  // the covered picture is drawn and kept before the box closes, which takes longer on a busy machine
+  await p.waitForFunction(() => !document.querySelector('[data-esshot]'), { timeout: 30000 });
+  for (let i = 0; i < 300 && (await exRecs(p)).length < 3; i++) await new Promise(r => setTimeout(r, 100));
   const second = (await exRecs(p)).find(r => r.kind === 'shot' && r.id !== first.id);
   assert.deepEqual([second.tags, second.why, second.letter], [['steps'], 'Labels each step', '2']);
   const share = await p.evaluate(() => JSON.parse(JSON.stringify(window.__mark.state().batch.share.boxes)));

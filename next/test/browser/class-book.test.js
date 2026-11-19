@@ -510,7 +510,8 @@ test('Entry list: one task in last-name order, ticked through, the order kept fo
   await w.click('[data-mb-row="0"]'); await w.click('[data-mb-row="1"]');
   assert.equal(await w.$eval('[data-mb] li.cur', e => e.dataset.mbRow), '2');
   assert.equal(await w.$$eval('[data-mb] li.done', l => l.length), 2);
-  await w.click('[data-mb-close]');
+  // Close shuts the window it is in, which can happen before the click has been reported back: wait for the window to go instead
+  await Promise.all([new Promise(r => w.once('close', r)), w.click('[data-mb-close]').catch(e => { if (!/Target closed|Session closed/.test(e.message)) throw e; })]);
   await p.close();
   const old = await page(ctx, errors);
   await old.goto(srv.url); await appReady(old);
