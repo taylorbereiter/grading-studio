@@ -47,6 +47,7 @@ export const PARTS = {
   tools: () => import('./screens/lesson-tools.jsx'),
   beside: () => import('./screens/lesson-beside.jsx'),
   beside2: () => import('./screens/lesson-beside2.jsx'),
+  box: () => import('./screens/lesson-box.jsx'),
   doc: () => import('./screens/lesson-doc.jsx'),
   pdf: () => import('./plan/pdf.js'),
   cal: () => import('./plan/cal-tools.jsx'),

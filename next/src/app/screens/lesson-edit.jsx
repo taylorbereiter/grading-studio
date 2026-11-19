@@ -40,7 +40,7 @@ const copy = x => JSON.parse(JSON.stringify(x));
 export default function Editor({ p, l, cur, setCur, save, ai, onAsk = () => {} }) {
   const E = engine(p);
   const [d, setD] = useState(() => copy(l)), timer = useRef(0), last = useRef(l.updated), stage = useRef(null);
-  const [over, setOver] = useState(false), [box, setBox] = useState(''), [keys, setKeys] = useState([]), [looking, setLooking] = useState(false), [tips, setTips] = useState(false), host = useRef(null), X = usePart('edit2'), [vid, setVid] = useState(false), [saving, setSaving] = useState(false), grid = useRef(null), form = useRef(null), [ly, setLy] = useState(''), [exs, setExs] = useState(false);
+  const [over, setOver] = useState(false), [box, setBox] = useState(''), [keys, setKeys] = useState([]), [looking, setLooking] = useState(false), [tips, setTips] = useState(false), host = useRef(null), X = usePart('edit2'), [vid, setVid] = useState(false), [saving, setSaving] = useState(false), grid = useRef(null), form = useRef(null), [ly, setLy] = useState(''), [exs, setExs] = useState(false), [asking, setAsking] = useState(false);
   // Another window saved this lesson while it is open here: take it, unless she is typing.
   useEffect(() => { if (l.updated !== last.current && !timer.current) { setD(copy(l)); last.current = l.updated; } }, [l.updated]);
   useEffect(() => () => { if (timer.current) { clearTimeout(timer.current); save(dRef.current); } }, []);
@@ -118,6 +118,7 @@ export default function Editor({ p, l, cur, setCur, save, ai, onAsk = () => {} }
     {X && ly && <X.LayoutSheet k={{ p, E, Slide, LAYOUT_LINE }} d={d} s={s} mode={ly} onPick={x => ly === 'add' ? add(x) : setSlide({ layout: x }, true)} onExample={() => { setLy(''); setExs(true); }} onClose={() => setLy('')} />}
     {X && exs && <X.ExampleSlides k={{ E, at, i }} onClose={() => setExs(false)} />}
     {X && <X.SlideKeys n={n} i={i} setCur={setCur} />}
+    {X && asking && <X.AskSheet s={s} ai={ai} onSave={v => setSlide({ ask: v || '' }, true)} onClose={() => setAsking(false)} />}
     <div class="ed-grid" ref={grid}>{X && <X.Drops root={grid} k={{ d, i, at, setCur, E, T }} />}
       <ol class="ed-list" aria-label={t('plan.all_slides')}>{d.slides.map((x, j) => <li><button type="button" draggable class={'th' + (j === i ? ' on' : '')} aria-current={j === i ? 'true' : undefined} onClick={() => setCur(j)} aria-label={t('plan.slide_n', { n: j + 1 })} data-slide-i={j}>
         <span class="n">{j + 1}</span><Slide slide={x} lesson={d} plan={p} width={132} />{openTalk(x) > 0 && <span class="thc" title={X ? X.words.openComments(openTalk(x)) : ''}><Icon name="comment" size="xs" />{openTalk(x)}</span>}</button></li>)}
@@ -132,7 +133,7 @@ export default function Editor({ p, l, cur, setCur, save, ai, onAsk = () => {} }
         <div class="ed-bar"><span class="num">{t('plan.slide_of', { n: i + 1, of: n })}</span><span class="grow" />
           <IconButton icon="chu" label={t('plan.move_up')} disabled={i === 0} onClick={() => move(-1)} />
           <IconButton icon="chd" label={t('plan.move_down')} disabled={i >= n - 1} onClick={() => move(1)} />
-          <Menu label={t('plan.slide_actions')} items={[...(X ? [{ id: 'addly', label: X ? X.words.addLayout() : '', icon: 'plus', onSelect: () => setLy('add') }] : []), { id: 'dup', label: t('plan.duplicate'), icon: 'copy', onSelect: dup }, { id: 'ask', label: t('plan.redo_with', { name: ai }), icon: 'assist', onSelect: () => onAsk(i) }, { id: 'del', label: t('common.delete'), icon: 'trash', disabled: n < 2, onSelect: del }]}
+          <Menu label={t('plan.slide_actions')} items={[...(X ? [{ id: 'addly', label: X ? X.words.addLayout() : '', icon: 'plus', onSelect: () => setLy('add') }, { id: 'want', label: X.words.slideAsk(ai), icon: 'assist', onSelect: () => setAsking(true) }] : []), { id: 'dup', label: t('plan.duplicate'), icon: 'copy', onSelect: dup }, { id: 'ask', label: t('plan.redo_with', { name: ai }), icon: 'assist', onSelect: () => onAsk(i) }, { id: 'del', label: t('common.delete'), icon: 'trash', disabled: n < 2, onSelect: del }]}
             trigger={q => <IconButton icon="dots" label={t('plan.slide_actions')} {...q} />} /></div>
       </div>
       <div class="ed-form" ref={form}>

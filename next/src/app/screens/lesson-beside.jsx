@@ -27,15 +27,14 @@ import '../plan/tool-lines.js';
 import '../plan/les-lines.js';
 import { DriveButton } from '../drive-button.jsx';
 import { usePart } from '../parts.js';
+import { boxAdd, CHIP_TYPE } from '../plan/cbox.js';
 
 const copy = x => JSON.parse(JSON.stringify(x));
-const TABS = ['books', 'acts', 'video', 'unit', 'notes'];
+const TABS = ['books', 'acts', 'video', 'unit', 'notes', 'box'];
 const esc = s => String(s).replace(/[&"><]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const { ytId, ytStart } = T;
 // The name of the teacher's unit plan tool, when they gave one (Settings > Classes and terms); otherwise the plain word.
 export const unitTool = () => { const w = words.json(null); return (w && typeof w.unit === 'string' && w.unit.trim()) || ''; };
-// A comment for the assistant on the whole lesson (src/planner/panel.js boxAdd, kept with the lesson as review.js keeps "talk").
-const tell = (l, save, text) => { const n = copy(l); n.talk = [...(n.talk || []), { by: 'you', text, at: Date.now() }]; save(n); toast(t('tool.told', { name: aiName() })); };
 const aiName = () => assistant().name || t('assistant.generic');
 
 // The drawer's width, dragged at its edge (src/planner/panel.js spResize), kept for this browser (gsn.besideW) and shared with the
@@ -57,19 +56,23 @@ function Grip() {
 export default function Beside({ p, l, save, onClose, onSlide }) {
   const [tab, setTab] = useState(() => { try { const v = sessionStorage.getItem('gsn.beside'); return TABS.includes(v) ? v : 'books'; } catch { return 'books'; } });
   const pick = v => { setTab(v); try { sessionStorage.setItem('gsn.beside', v); } catch { } };
-  const tool = unitTool(), B2 = usePart('beside2', tab === 'acts'), [pdfIn, setPdfIn] = useState(null), [vidIn, setVidIn] = useState('');
+  const tool = unitTool(), B2 = usePart('beside2', tab === 'acts'), Bx = usePart('box', tab === 'box'), [pdfIn, setPdfIn] = useState(null), [vidIn, setVidIn] = useState('');
   // A PDF dropped on the drawer goes to Books, a YouTube link to Video (src/planner/panel.js spDrop).
   const over = e => { const d = e.dataTransfer; if (d && [...d.types].some(x => x === 'Files' || x === 'text/uri-list' || x === 'text/plain')) { e.preventDefault(); e.stopPropagation(); } };
   const drop = e => {
     const d = e.dataTransfer; if (!d) return;
     const f = [...(d.files || [])].find(x => /\.pdf$/i.test(x.name) || x.type === 'application/pdf');
     if (f) { e.preventDefault(); e.stopPropagation(); pick('books'); setPdfIn(f); return; }
+    // A slide dragged from the editor, or a chip (a file in Materials, a book page), goes in the assistant box.
+    const sl = d.getData('text/x-slide'), chip = d.getData(CHIP_TYPE);
+    if (chip || (sl !== '' && l && l.slides[+sl])) { e.preventDefault(); e.stopPropagation(); pick('box');
+      return boxAdd(chip ? JSON.parse(chip) : { kind: 'slide', lesson: l.id, i: +sl, label: (l.title || 'Lesson') + ', slide ' + (+sl + 1) + (l.slides[+sl].title ? ': ' + l.slides[+sl].title : '') }); } // not-words
     const u = (d.getData('text/uri-list') || d.getData('text/plain') || '').split(/\s+/)[0];
     if (u && ytId(u)) { e.preventDefault(); e.stopPropagation(); pick('video'); setVidIn(u); }
   };
   return <aside class="beside" aria-label={t('tool.beside')} onDragOver={over} onDrop={drop}>
     <Grip />
-    <div class="bhead"><Tabs label={t('tool.beside')} value={tab} onChange={pick} tabs={[{ id: 'books', label: t('tool.books') }, { id: 'acts', label: t('plan.lib_activities') }, { id: 'video', label: t('tool.video') }, { id: 'unit', label: tool || t('tool.curriculum') }, { id: 'notes', label: t('tool.notebook') }]} />
+    <div class="bhead"><Tabs label={t('tool.beside')} value={tab} onChange={pick} tabs={[{ id: 'books', label: t('tool.books') }, { id: 'acts', label: t('plan.lib_activities') }, { id: 'video', label: t('tool.video') }, { id: 'unit', label: tool || t('tool.curriculum') }, { id: 'notes', label: t('tool.notebook') }, { id: 'box', label: assistant().name || t('les.box_tab') }]} />
       <IconButton icon="x" label={t('common.close')} onClick={onClose} data-focus="beside-close" /></div>
     <div class="bbody">
       {tab === 'books' && <Books l={l} save={save} incoming={pdfIn} onTaken={() => setPdfIn(null)} />}
@@ -77,6 +80,7 @@ export default function Beside({ p, l, save, onClose, onSlide }) {
       {tab === 'video' && <Video p={p} l={l} save={save} onSlide={onSlide} incoming={vidIn} onTaken={() => setVidIn('')} />}
       {tab === 'unit' && <Unit p={p} l={l} save={save} tool={tool} />}
       {tab === 'notes' && <Notebook p={p} l={l} save={save} />}
+      {tab === 'box' && Bx && <Bx.Box p={p} T={T} E={engine(p)} />}
     </div>
   </aside>;
 }
@@ -147,9 +151,13 @@ function Book({ book, l, save, onBack }) {
     for (let i = 1; i <= pdf.numPages; i++) { const s = await textOf(i), k = s.toLowerCase().indexOf(ql); if (k >= 0) out.push({ p: i, snip: s.slice(Math.max(0, k - 30), k + ql.length + 50).replace(/\s+/g, ' ') }); }
     setHits(out);
   };
-  const toAssistant = async () => { const s = await textOf(page).catch(() => ''); tell(l, save, '[' + book.name + ', page ' + page + ']\n' + (s || '')); }; // not-words
+  // This page into the assistant box (panel.js pagebox), named after the contents line it falls under.
+  const chipOf = (n, title) => ({ kind: 'page', book: book.id, page: n, title: title || 'p. ' + n, bookName: book.name, label: book.name + ', ' + (title ? title + ' (p. ' + n + ')' : 'p. ' + n) }); // not-words
+  const under = n => { const all = (outline || []).flatMap(function f(x) { return [x, ...(x.items || []).flatMap(f)]; }).filter(x => x.page && x.page <= n); return all.length ? all[all.length - 1].title : ''; };
+  const toAssistant = async () => { const s = await textOf(page).catch(() => ''); boxAdd({ ...chipOf(page, under(page)), text: s }); };
+  const drag = (n, title) => e => { e.dataTransfer.setData(CHIP_TYPE, JSON.stringify(chipOf(n, title))); e.dataTransfer.effectAllowed = 'copy'; };
   const go = n => { setPage(Math.max(1, Math.min(pdf ? pdf.numPages : 1, n))); setView('page'); };
-  const Item = ({ o, d }) => <><button type="button" class="toci" style={{ paddingLeft: 6 + d * 12 + 'px' }} disabled={!o.page} onClick={() => go(o.page)}><span data-raw>{o.title}</span>{o.page > 0 && <small class="mute">{t('tool.page_short', { n: o.page })}</small>}</button>{o.items.map(x => <Item o={x} d={d + 1} />)}</>;
+  const Item = ({ o, d }) => <><button type="button" class="toci" style={{ paddingLeft: 6 + d * 12 + 'px' }} disabled={!o.page} onClick={() => go(o.page)} draggable={!!o.page} onDragStart={o.page ? drag(o.page, o.title) : undefined}><span data-raw>{o.title}</span>{o.page > 0 && <small class="mute">{t('tool.page_short', { n: o.page })}</small>}</button>{o.items.map(x => <Item o={x} d={d + 1} />)}</>;
   return <div class="book" ref={wrap}>
     <div class="row"><Button size="sm" variant="quiet" icon="back" onClick={onBack}>{t('tool.books')}</Button><b class="grow" data-raw>{book.name}</b></div>
     <div class="row"><TextInput label={t('tool.search_book')} icon="search" value={q} onInput={setQ} onKeyDown={e => { if (e.key === 'Enter') find(); }} data-focus="book-find" />
@@ -159,8 +167,8 @@ function Book({ book, l, save, onBack }) {
         : !outline ? <p class="mute">{t('tool.reading_contents')}</p> : !outline.length ? <p class="mute">{t('tool.no_contents')}</p> : outline.map(o => <Item o={o} d={0} />)}
     </div> : <div class="pageview">
       <div class="row"><IconButton icon="chl" label={t('plan.prev_slide')} disabled={page <= 1} onClick={() => go(page - 1)} /><span class="num">{t('tool.page_of', { n: page, of: pdf ? pdf.numPages : '…' })}</span>
-        <IconButton icon="chr" label={t('tool.next_page')} disabled={!pdf || page >= pdf.numPages} onClick={() => go(page + 1)} /><span class="grow" /><Button size="sm" icon="assist" onClick={toAssistant} data-focus="page-to-ai">{t('tool.page_to_ai', { name: aiName() })}</Button></div>
-      <canvas ref={canvas} class="pdfpage" aria-label={t('tool.page_of', { n: page, of: pdf ? pdf.numPages : '…' })} />
+        <IconButton icon="chr" label={t('tool.next_page')} disabled={!pdf || page >= pdf.numPages} onClick={() => go(page + 1)} /><span class="grow" /><Button size="sm" icon="assist" onClick={toAssistant} data-focus="page-to-ai">{t('les.to_box', { name: aiName() })}</Button></div>
+      <canvas ref={canvas} draggable onDragStart={drag(page, under(page))} class="pdfpage" aria-label={t('tool.page_of', { n: page, of: pdf ? pdf.numPages : '…' })} />
     </div>}
   </div>;
 }
@@ -183,7 +191,7 @@ function Video({ p, l, save, onSlide, incoming, onTaken }) {
     <div class="row"><TextInput label={t('tool.video_find')} value={v} onInput={setV} onKeyDown={e => { if (e.key === 'Enter') goTo(); }} data-focus="video-find" /><Button size="sm" onClick={goTo} data-focus="video-go">{t('tool.go')}</Button></div>
     {id ? <><div class="vidbox"><iframe src={'https://www.youtube-nocookie.com/embed/' + id + (st ? '?start=' + st : '')} title={t('tool.video')} allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen /></div>
       <div class="row"><Button size="sm" icon="slides" onClick={async () => { const x = await T.videoFrom(url); onSlide && onSlide(engine(p).normSlide({ layout: 'video', title: x.title || t('tool.video'), video: x, fmt: 2 })); }} data-focus="video-slide">{t('tool.put_on_slide')}</Button>
-        <Button size="sm" icon="assist" onClick={() => tell(l, save, '[Video: ' + url + ']')}>{t('tool.to_ai', { name: aiName() })}</Button><a class="btn sm quiet" href={url} target="_blank" rel="noopener">{t('tool.on_youtube')}<Icon name="arrow" size="xs" /></a></div></> // not-words
+        <Button size="sm" icon="assist" onClick={() => boxAdd({ kind: 'video', url, label: 'Video: ' + url })} data-focus="video-to-box">{t('les.to_box', { name: aiName() })}</Button><a class="btn sm quiet" href={url} target="_blank" rel="noopener">{t('tool.on_youtube')}<Icon name="arrow" size="xs" /></a></div></> // not-words
       : url ? <p class="mute">{t('tool.not_youtube')}</p> : <p class="mute">{t('tool.video_help')}</p>}
   </div>;
 }
@@ -203,12 +211,13 @@ function Unit({ p, l, save, tool }) {
     <h3 class="sub" data-raw>{u.title}</h3>
     {u.atlas && <><a class="btn sm" href={u.atlas} target="_blank" rel="noopener">{tool ? t('tool.open_named', { name: tool }) : t('tool.open_unit_plan')}<Icon name="arrow" size="xs" /></a><p class="mute small">{t('tool.unit_tab')}</p></>}
     {w && <div class="wk"><b>{t('tool.week_of_n', { n: n + 1, of: u.weeks.length })}</b>{w.focus && <p data-raw>{w.focus}</p>}{w.standards && <p class="mute" data-raw>{w.standards}</p>}{w.notes && <p class="mute" data-raw>{w.notes}</p>}
-      <Button size="sm" icon="assist" onClick={() => tell(l, save, '[' + u.title + ', week ' + (n + 1) + ']\n' + [w.focus, w.standards, w.notes].filter(Boolean).join('\n'))}>{t('tool.to_ai', { name: aiName() })}</Button></div>} {/* not-words */}
+      <Button size="sm" icon="assist" onClick={() => boxAdd({ kind: 'week', label: u.title + ', week ' + (n + 1) + ' of ' + u.weeks.length, unit: u.title, n: n + 1, of: u.weeks.length, text: [w.focus && 'Focus: ' + w.focus, w.standards && 'Standards: ' + w.standards, w.notes && 'Notes: ' + w.notes].filter(Boolean).join('\n') })} data-focus="week-to-box">{t('les.to_box', { name: aiName() })}</Button></div>} {/* not-words */}
     <div class="shots">{(u.files || []).filter(f => f.kind === 'atlas').map(f => <Shot f={f} />)}</div>
   </div>;
 }
 
 /* ---------- Notebook ---------- */
+const nbChip = (general, l) => general ? { kind: 'notebook', t: 'general', id: '', label: 'Notebook: General notes' } : { kind: 'notebook', t: 'lesson', id: l.id, label: 'Notebook: ' + l.title }; // not-words
 function Notebook({ p, l, save }) {
   const [general, setGeneral] = useState(false), [state, setState] = useState(''), [ask, setAsk] = useState(null), [askV, setAskV] = useState('');
   const pg = useRef(), timer = useRef(0), range = useRef(null), lRef = useRef(l), byId = useRef({}), ready = useRef(false), [, redraw] = useState(0); lRef.current = l; byId.current[l.id] = l;
@@ -254,7 +263,8 @@ function Notebook({ p, l, save }) {
   const pic = async f => { if (!f || !/^image\//.test(f.type)) return; try { const x = await T.shrinkPic(f); insert('<img src="' + x.src + '" alt="">'); } catch { toast(t('tool.pic_unread')); } };
   const B = (c, line, cls) => <button type="button" class={'btn sm quiet nb-' + c + (cls ? ' ' + cls : '')} onMouseDown={e => { e.preventDefault(); cmd(c); }} data-nb={c}>{t(line)}</button>;
   return <div class="nb">
-    <div class="row"><b class="grow">{general ? t('tool.nb_general') : t('tool.nb_lesson')}</b><Button size="sm" variant="quiet" onClick={() => { if (timer.current) { clearTimeout(timer.current); flush(general); } setGeneral(!general); }} data-focus="nb-swap">{general ? t('tool.nb_lesson') : t('tool.nb_general')}</Button></div>
+    <div class="row"><b class="grow">{general ? t('tool.nb_general') : t('tool.nb_lesson')}</b><Button size="sm" variant="quiet" onClick={() => { if (timer.current) { clearTimeout(timer.current); flush(general); } setGeneral(!general); }} data-focus="nb-swap">{general ? t('tool.nb_lesson') : t('tool.nb_general')}</Button>
+      <Button size="sm" variant="quiet" icon="assist" onClick={async () => { if (timer.current) { clearTimeout(timer.current); await flush(general); } boxAdd(nbChip(general, l)); }} data-focus="nb-to-box">{t('les.to_box', { name: aiName() })}</Button></div>
     <div class="doctools" role="toolbar" aria-label={t('tool.notebook')}>
       {B('bold', 'tool.doc_b', 'dt-bold')}{B('italic', 'tool.doc_i', 'dt-italic')}{B('underline', 'tool.doc_u', 'dt-underline')}{B('ul', 'tool.doc_ul')}{B('ol', 'tool.doc_ol')}
       <button type="button" class="btn sm quiet" onMouseDown={e => { e.preventDefault(); range.current = sel(); setAsk('link'); }}>{t('tool.nb_link')}</button>

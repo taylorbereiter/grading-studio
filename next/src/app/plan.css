@@ -412,3 +412,6 @@
 .beside .bgrip{position:absolute;left:0;top:0;bottom:0;width:6px;cursor:ew-resize;z-index:1}.beside .bgrip:hover,.beside .bgrip:active{background:var(--acc-ink);opacity:.25}
 .beside .acts{display:flex;flex-direction:column;gap:10px}.beside .acts .libtools{display:flex;gap:8px}
 @media (max-width:900px){.beside .bgrip{display:none}}
+.beside .cbox{display:flex;flex-direction:column;gap:10px}.beside .chiplist{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.beside .bchip{display:inline-flex;align-items:center;gap:6px;padding:2px 2px 2px 10px;border:1px solid var(--line);border-radius:999px;background:var(--s2,var(--s));max-width:100%}
+.beside .bchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

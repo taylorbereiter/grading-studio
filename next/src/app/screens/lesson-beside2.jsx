@@ -15,3 +15,4 @@ export function Acts({ p, l, onSlide }) {
     {use && <UseActivity p={p} a={use} onClose={() => setUse(null)} />}
   </div>;
 }
+

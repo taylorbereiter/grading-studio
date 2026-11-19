@@ -15,6 +15,9 @@ import { ExamplePicker, exampleName } from '../plan/example-pick.jsx';
 import { saveFailed } from '../plan/save.js';
 import '../plan/lines.js';
 import '../plan/tool-lines.js';
+import '../plan/les-lines.js';
+import { boxAdd } from '../plan/cbox.js';
+import { assistant } from '../../services/assistant.js';
 
 const copy = x => JSON.parse(JSON.stringify(x));
 const DOC_TYPE = 'text/html';
@@ -69,7 +72,7 @@ export function DocEditor({ p, l, id, save, onClose }) {
   if (!f) return null;
   return <Sheet open wide title={t('tool.doc_title')} icon={<Icon name="note" />} onClose={onClose}
     footer={<><small class="mute" role="status">{state === 'saving' ? t('tool.saving') : state === 'saved' ? t('tool.saved') : ''}</small><span class="grow" />
-      <Button icon="file" onClick={print} data-focus="doc-print">{t('tool.print')}</Button><Button icon="download" onClick={docx} data-focus="doc-docx">{t('tool.save_docx')}</Button><Button variant="primary" onClick={onClose}>{t('common.close')}</Button></>}>
+      <Button icon="assist" variant="quiet" onClick={async () => { if (timer.current) { clearTimeout(timer.current); await keep(); } boxAdd({ kind: 'file', t: 'lesson', owner: l.id, id, label: name || (f && f.name) || '' }); }} data-focus="doc-to-box">{t('les.to_box', { name: assistant().name || t('assistant.generic') })}</Button><Button icon="file" onClick={print} data-focus="doc-print">{t('tool.print')}</Button><Button icon="download" onClick={docx} data-focus="doc-docx">{t('tool.save_docx')}</Button><Button variant="primary" onClick={onClose}>{t('common.close')}</Button></>}>
     <div class="docwrap">
       <TextInput label={t('tool.doc_name')} value={name} onInput={rename} data-focus="doc-name" />
       <div class="doctools" role="toolbar" aria-label={t('tool.doc_tools')}>

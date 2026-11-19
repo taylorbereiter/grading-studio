@@ -4,6 +4,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { kit, wait, until } = require('./e1kit.js');
+const path = require('path');
 const K = kit();
 before(K.start); after(K.stop);
 // Typing into a box in a sheet that is still opening can lose the first key to the sheet taking focus: the box is clicked, filled and
@@ -362,7 +363,7 @@ const dropOn = (p, sel, { file, text }) => p.evaluate(async (sel, file, text) =>
 test('E1-001 E1-064 E1-073 E1-074 E1-075 E1-076 E1-077: Beside has the activity bank, found, narrowed, opened and added after the slide she is on', async () => {
   const p = await K.fresh();
   await beside(p, 'L2');
-  assert.deepEqual(await p.$$eval('aside.beside [role=tab]', b => b.map(x => x.textContent)), ['Books', 'Activities', 'Video', 'Unit', 'Notebook']);
+  assert.deepEqual(await p.$$eval('aside.beside [role=tab]', b => b.map(x => x.textContent)), ['Books', 'Activities', 'Video', 'Unit', 'Notebook', 'Assistant']);
   await p.evaluate(() => [...document.querySelectorAll('aside.beside [role=tab]')].find(x => x.textContent === 'Activities').click());
   await p.waitForSelector('aside.beside .actlist');
   const all = await p.$$eval('aside.beside .actlist > li', x => x.length);
@@ -413,5 +414,124 @@ test('E1-063 E1-065 E1-066 E1-082: Beside is made wider at its edge, takes a dro
   const l = await until(async () => { const x = await K.lessonInDb(p, 'L2'); return x && /nb-vid[^>]*data-yt="abcdefghijk"/.test(x.notebook || '') && x; });
   assert.ok(l, 'the notebook keeps the video'); assert.match(l.notebook, /data-t="30"/);
   assert.deepEqual(p.errors, []);
+  await p.ctx.close();
+});
+
+// Stage 8 E1 (6): the assistant box. Kept in kv "cbox" as the current Planner keeps it, so either app shows the same box.
+const kvGet = (p, key) => p.evaluate(key => new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get(key); q.onsuccess = () => { r.result.close(); res(q.result); }; q.onerror = () => rej(q.error); }; }), key);
+const tabTo = (p, name) => p.evaluate(n => [...document.querySelectorAll('aside.beside [role=tab]')].find(x => x.textContent === n).click(), name).then(() => wait(300));
+const withFiles = () => { const L = JSON.parse(JSON.stringify(require('./planseed.js').LESSONS)); L.find(x => x.id === 'L2').files = [{ id: 'D1', name: 'Reading guide', kind: 'doc', type: 'text/html', size: 120, added: 1792000000000 }, { id: 'F1', name: 'Poem cards.pdf', kind: 'other', type: 'application/pdf', size: 900, added: 1792000000000 }]; return L; };
+const putDoc = p => p.evaluate(() => new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const tx = r.result.transaction('kv', 'readwrite'); tx.objectStore('kv').put(new Blob(['<h1>Reading guide</h1><p>Read each stanza twice.</p>'], { type: 'text/html' }), 'file:D1'); tx.oncomplete = () => { r.result.close(); res(); }; tx.onerror = () => rej(tx.error); }; }));
+
+test('E1-064 E1-068 E1-069 E1-070 E1-071 E1-072 E1-078 E1-081 E1-084 E1-085: the assistant box gathers a video, a unit week and the notebook, and copies them with what she asks', async () => {
+  const p = await K.fresh();
+  await p.ctx.overridePermissions(K.srv.url.replace(/\/$/, ''), ['clipboard-read', 'clipboard-write', 'clipboard-sanitized-write']);
+  await beside(p, 'L2');
+  assert.deepEqual(await p.$$eval('aside.beside [role=tab]', b => b.map(x => x.textContent)), ['Books', 'Activities', 'Video', 'Unit', 'Notebook', 'Assistant']);
+  // E1-085: a video
+  await tabTo(p, 'Video'); await p.type('aside.beside [data-focus="video-find"]', 'https://www.youtube.com/watch?v=abcdefghijk'); await p.click('aside.beside [data-focus="video-go"]');
+  await p.waitForSelector('aside.beside [data-focus="video-to-box"]'); await p.click('aside.beside [data-focus="video-to-box"]');
+  // E1-084: the unit week
+  await tabTo(p, 'Unit'); await p.click('aside.beside [data-focus="week-to-box"]');
+  // E1-081: the notebook
+  await tabTo(p, 'Notebook'); await p.waitForSelector('[data-nbpage][contenteditable="true"]'); await p.click('[data-nbpage]'); await p.keyboard.type('Bring the poem cards');
+  await p.click('aside.beside [data-focus="nb-to-box"]');
+  await until(async () => { const b = await kvGet(p, 'cbox'); return b && b.chips.length === 3; });
+  await tabTo(p, 'Assistant'); await p.waitForSelector('aside.beside .bchip');
+  assert.deepEqual(await p.$$eval('aside.beside .bchip span[data-raw]', s => s.map(x => x.textContent)), ['Video: https://www.youtube.com/watch?v=abcdefghijk', 'Unit 2: Poetry, week 3 of 5', 'Notebook: Reading a poem aloud']);
+  // E1-068: × takes one off
+  await p.click('aside.beside [data-chip-x="1"]');
+  await until(async () => { const b = await kvGet(p, 'cbox'); return b && b.chips.length === 2; });
+  // E1-069 E1-070: what she wants (typed here; the box has its dictation button)
+  assert.ok(await p.$('aside.beside .cbox button.mic') || !(await p.evaluate(() => 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window)), 'dictation where the browser has it');
+  await p.click('aside.beside [data-focus="box-text"]'); await p.keyboard.type('Make a warm-up from these');
+  await until(async () => { const b = await kvGet(p, 'cbox'); return b && b.text === 'Make a warm-up from these'; });
+  // E1-072: one copy of it all, self-contained
+  await p.click('aside.beside [data-focus="box-copy"]');
+  await p.waitForFunction(async () => (await navigator.clipboard.readText()).includes('[My notebook'), { timeout: 5000, polling: 200 });
+  const text = await p.evaluate(() => navigator.clipboard.readText());
+  assert.match(text, /^Make a warm-up from these\n\n\[Video\] https:\/\/www\.youtube\.com\/watch\?v=abcdefghijk\n\n\[My notebook: Reading a poem aloud\]\nBring the poem cards/);
+  assert.doesNotMatch(text, /\/Users\/|~\/|[A-Z]:\\|Lessons\//, 'names no folder or file on her computer');
+  // E1-071: Clear, and Undo brings it back
+  await p.click('aside.beside [data-focus="box-clear"]');
+  await until(async () => { const b = await kvGet(p, 'cbox'); return b && !b.chips.length && !b.text; });
+  await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => /Undo/.test(b.textContent)).click());
+  assert.ok(await until(async () => { const b = await kvGet(p, 'cbox'); return b && b.chips.length === 2; }), 'Undo puts the box back');
+  assert.deepEqual(p.errors, []);
+  await p.ctx.close();
+});
+
+// A one-page PDF with a line of made-up text, built here.
+function tinyPdf(text) {
+  const objs = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>', '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>'];
+  const stream = 'BT /F1 18 Tf 30 100 Td (' + text + ') Tj ET';
+  objs.push('<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+  let out = '%PDF-1.4\n'; const at = [];
+  objs.forEach((o, i) => { at.push(out.length); out += (i + 1) + ' 0 obj\n' + o + '\nendobj\n'; });
+  const x = out.length; out += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n' + at.map(n => String(n).padStart(10, '0') + ' 00000 n \n').join('') + 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + x + '\n%%EOF\n';
+  return Buffer.from(out, 'latin1');
+}
+
+test('E1-078 E1-079: a book page goes in the box by its button or by dragging it there, with its words', async () => {
+  const p = await K.fresh();
+  await p.ctx.overridePermissions(K.srv.url.replace(/\/$/, ''), ['clipboard-read', 'clipboard-write', 'clipboard-sanitized-write']);
+  await beside(p, 'L2');
+  const f = path.join(require('os').tmpdir(), 'e1-poems-' + process.pid + '.pdf'); require('fs').writeFileSync(f, tinyPdf('Stanza one is read slowly'));
+  const input = await p.$('aside.beside input[data-addpdf]'); await input.uploadFile(f);
+  await p.waitForSelector('aside.beside [data-book]'); await p.click('aside.beside [data-book]');
+  await p.waitForSelector('aside.beside [data-focus="page-to-ai"]'); await wait(500);
+  await p.click('aside.beside [data-focus="page-to-ai"]');
+  await until(async () => { const b = await kvGet(p, 'cbox'); return b && b.chips.length === 1; });
+  // E1-079: the page dragged onto the drawer
+  await p.evaluate(() => { const dt = new DataTransfer(); document.querySelector('aside.beside canvas.pdfpage').dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: dt }));
+    const el = document.querySelector('aside.beside .bbody'); for (const k of ['dragover', 'drop']) el.dispatchEvent(new DragEvent(k, { bubbles: true, cancelable: true, dataTransfer: dt })); });
+  await until(async () => { const b = await kvGet(p, 'cbox'); return b && b.chips.length === 2; });
+  await p.waitForSelector('aside.beside .bchip');
+  assert.deepEqual(await p.$$eval('aside.beside .bchip span[data-raw]', s => s.map(x => x.textContent)), ['e1-poems-' + process.pid + ', page 1', 'e1-poems-' + process.pid + ', page 1']);
+  await p.click('aside.beside [data-focus="box-copy"]');
+  await p.waitForFunction(async () => (await navigator.clipboard.readText()).includes('Stanza'), { timeout: 8000, polling: 200 });
+  const text = await p.evaluate(() => navigator.clipboard.readText());
+  assert.match(text, /^\[e1-poems-\d+, page 1\]\nStanza one is read slowly\n\n\[e1-poems-\d+, page 1\]\nStanza one is read slowly/);
+  require('fs').unlinkSync(f);
+  assert.deepEqual(p.errors, []);
+  await p.ctx.close();
+});
+
+test('E1-002 E1-046 E1-056 E1-067: a slide, a file and a document go in the box; what she wants on a slide is kept for the assistant', async () => {
+  const p = await K.fresh(1366, withFiles());
+  await p.ctx.overridePermissions(K.srv.url.replace(/\/$/, ''), ['clipboard-read', 'clipboard-write', 'clipboard-sanitized-write']);
+  await putDoc(p);
+  // E1-046: the slide's ask
+  await K.edit(p, 'L2', 2);
+  await p.click('main .ed-bar [aria-label="Slide actions"]'); await K.item(p, 'What I want on this slide');
+  await p.waitForSelector('.sheet [data-focus="slide-ask"]'); await p.click('.sheet [data-focus="slide-ask"]'); await p.keyboard.type('A quick pair task here'); await p.click('.sheet [data-focus="ask-save"]');
+  const l = await until(async () => { const x = await K.lessonInDb(p, 'L2'); return x && x.slides[2].ask === 'A quick pair task here' && x; });
+  assert.ok(l, 'kept on the slide as ask');
+  // E1-067: a thumbnail dragged onto Beside
+  await p.click('main [data-focus="beside"]'); await p.waitForSelector('aside.beside [role=tab]');
+  await p.evaluate(() => { const dt = new DataTransfer(); dt.setData('text/x-slide', '2'); const el = document.querySelector('aside.beside .bbody'); for (const k of ['dragover', 'drop']) el.dispatchEvent(new DragEvent(k, { bubbles: true, cancelable: true, dataTransfer: dt })); });
+  await p.waitForSelector('aside.beside .bchip');
+  // E1-056: a file in Materials dragged onto Beside
+  await K.open(p, 'lesson/L2'); await p.waitForSelector('main .mats .mopen');
+  if (!(await p.$('aside.beside'))) { await p.click('main [data-focus="beside"]'); await p.waitForSelector('aside.beside [role=tab]'); }
+  await p.evaluate(() => { const src = [...document.querySelectorAll('main .mats .mopen')].find(b => b.textContent.includes('Poem cards')); const dt = new DataTransfer(); src.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: dt }));
+    const el = document.querySelector('aside.beside .bbody'); for (const k of ['dragover', 'drop']) el.dispatchEvent(new DragEvent(k, { bubbles: true, cancelable: true, dataTransfer: dt })); });
+  await until(async () => { const b = await kvGet(p, 'cbox'); return b && b.chips.length === 2; });
+  // E1-002: a document's Add to the box
+  await p.evaluate(() => [...document.querySelectorAll('main .mats .mopen')].find(b => b.textContent.includes('Reading guide')).click());
+  await p.waitForSelector('.sheet [data-focus="doc-to-box"]'); await p.click('.sheet [data-focus="doc-to-box"]');
+  await until(async () => { const b = await kvGet(p, 'cbox'); return b && b.chips.length === 3; });
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('.sheet[open]'));
+  await tabTo(p, 'Assistant'); await p.waitForSelector('aside.beside .bchip');
+  assert.deepEqual(await p.$$eval('aside.beside .bchip span[data-raw]', s => s.map(x => x.textContent)), ['Reading a poem aloud, slide 3: Warm-up', 'Poem cards.pdf', 'Reading guide']);
+  await p.click('aside.beside [data-focus="box-copy"]');
+  await p.waitForFunction(async () => (await navigator.clipboard.readText()).includes('[Document'), { timeout: 5000, polling: 200 });
+  const text = await p.evaluate(() => navigator.clipboard.readText());
+  assert.match(text, /\[Slide 3 of "Reading a poem aloud" \(.+\)\]\nTitle: Warm-up/);
+  assert.match(text, /\[File: Poem cards\.pdf\]/); assert.match(text, /\[Document: Reading guide\]\nReading guide\s+Read each stanza twice\./);
+  assert.deepEqual(p.errors, []);
+  for (const [k, [a, b]] of Object.entries(await K.sameInPlanner(p, 'L2', l))) assert.deepEqual(a, b, k + ' reads the same in the current Planner');
+  // The current Planner shows the same box
+  const theirs = await p.evaluate(() => window.__planner && window.__planner.L ? true : false); assert.ok(theirs);
   await p.ctx.close();
 });

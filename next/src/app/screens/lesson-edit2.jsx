@@ -14,6 +14,7 @@ import '../plan/lines.js';
 import { ExamplePicker } from '../plan/example-pick.jsx';
 import { isExample, exampleSize } from '../plan/examples.js';
 import { LazyDrive } from '../drive-lazy.js';
+import { TextBox } from '../../ui/services.jsx';
 import { planTime } from '../../planning/index.js';
 
 const mmss = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
@@ -263,6 +264,8 @@ export function ExampleSlides({ k: { E, at, i }, onClose }) {
 
 // Arrow keys and Page Up / Page Down move between slides when no box has the cursor (src/planner/lessons.js editor keys).
 export function SlideKeys({ n, i, setCur }) {
+  // Where she is now, read when the key comes (two quick presses can arrive before the editor draws the first).
+  const at = useRef(i); at.current = i;
   useEffect(() => {
     const key = e => {
       if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -270,10 +273,10 @@ export function SlideKeys({ n, i, setCur }) {
       if (typing || document.querySelector('dialog[open], [role="menu"]')) return;
       const k = e.key, dn = k === 'ArrowDown' || k === 'ArrowRight' || k === 'PageDown', up = k === 'ArrowUp' || k === 'ArrowLeft' || k === 'PageUp';
       if (!dn && !up) return;
-      e.preventDefault(); setCur(Math.max(0, Math.min(n - 1, i + (dn ? 1 : -1))));
+      e.preventDefault(); at.current = Math.max(0, Math.min(n - 1, at.current + (dn ? 1 : -1))); setCur(at.current);
     };
     document.addEventListener('keydown', key); return () => document.removeEventListener('keydown', key);
-  }, [n, i]);
+  }, [n]);
   return null;
 }
 
@@ -284,5 +287,13 @@ export function focusField(form, k) {
   if (el) { el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block: 'nearest' }); }
 }
 
+// What she wants on this slide, for the assistant and never shown (the slide's ask, src/planner/lessons.js), from the slide's actions.
+export function AskSheet({ s, ai, onSave, onClose }) {
+  const [v, setV] = useState(s.ask || '');
+  return <Sheet open title={t('les.slide_ask', { name: ai })} icon={<Icon name="assist" />} onClose={onClose} footer={<><span class="grow" /><Button onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" onClick={() => { onSave(v.trim()); onClose(); }} data-focus="ask-save">{t('common.save')}</Button></>}>
+    <TextBox label={t('les.slide_ask', { name: ai })} value={v} onInput={setV} rows={4} data-focus="slide-ask" autoFocus />
+  </Sheet>;
+}
+
 // The editor's own words that live in the lesson lines (lesson.en.json), so the editor's route needn't carry that file.
-export const words = { layoutN: name => t('les.layout_n', { name }), addLayout: () => t('les.add_layout'), openComments: n => t('les.open_comments', { n }) };
+export const words = { layoutN: name => t('les.layout_n', { name }), addLayout: () => t('les.add_layout'), openComments: n => t('les.open_comments', { n }), slideAsk: name => t('les.slide_ask', { name }) };

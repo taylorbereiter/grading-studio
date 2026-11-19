@@ -92,7 +92,7 @@ export function Materials({ p, l, onSave, onTool = () => {} }) {
     <input ref={pick} type="file" hidden multiple onChange={e => { const fs = [...e.currentTarget.files]; e.currentTarget.value = ''; add(fs); }} data-mats />
     {files.length + links.length === 0 && <p class="mute">{t('plan.no_materials')}</p>}
     <ul class="mlist">
-      {files.map(f => <li><button type="button" class="link mopen" onClick={() => open(f)}><Icon name={ICON(f)} size="sm" /><span data-raw>{f.name}</span></button>
+      {files.map(f => <li><button type="button" class="link mopen" onClick={() => open(f)} draggable onDragStart={e => e.dataTransfer.setData('text/x-chip', JSON.stringify({ kind: 'file', t: 'lesson', owner: l.id, id: f.id, label: f.name }))}><Icon name={ICON(f)} size="sm" /><span data-raw>{f.name}</span></button>
         {f.size > 0 && <small class="mute num">{kb(f.size)}</small>}
         {f.kind !== 'doc' && !isExample(f.id) && <IconButton icon="replace" size="sm" label={t('file.replace')} onClick={() => { swap.current = f.id; pick.current.multiple = false; pick.current.click(); pick.current.multiple = true; }} />}
         <IconButton icon="trash" size="sm" label={t('common.remove')} onClick={() => remove(f)} /></li>)}

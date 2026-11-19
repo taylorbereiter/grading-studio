@@ -47,5 +47,23 @@
   "other": "{n} open comments"
  },
  "les.act_after": "Add after the slide I'm on",
- "les.beside_width": "Drag to make the panel wider or narrower"
+ "les.beside_width": "Drag to make the panel wider or narrower",
+ "les.to_box": "Add to the {name} box",
+ "les.box_added": "Added to the box",
+ "les.box_about": "Drag slides, book pages, contents lines and files here, or use the Add to the box buttons. Then say or type what you want, and copy it all for {name}.",
+ "les.box_things": "In the box",
+ "les.box_none": "Nothing here yet.",
+ "les.box_ask": "What do you want {name} to do with these?",
+ "les.box_clear": "Clear",
+ "les.box_cleared": "The box is cleared",
+ "les.box_copy": "Copy for {name}",
+ "les.box_copied": "Copied. Paste it into {name}.",
+ "les.box_empty": "The {name} box is empty",
+ "les.chip_slide": "{lesson}, slide {n}",
+ "les.chip_page": "{book}, page {n}",
+ "les.chip_video": "Video: {url}",
+ "les.chip_week": "{unit}, week {n} of {of}",
+ "les.chip_nb": "Notebook: {name}",
+ "les.slide_ask": "What I want on this slide, for {name} (not shown on the slide)",
+ "les.box_tab": "Assistant"
 }

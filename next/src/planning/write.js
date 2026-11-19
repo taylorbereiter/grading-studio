@@ -68,10 +68,10 @@ export async function saveVersions(id, list) {
   check('gs-lessons/kv/ver');
   await kv.put(list, 'ver:' + id);
 }
-// The Planner's other records kept by key (src/planner: panel.js books 'pdfs' and 'pdf:<id>', notebook.js 'nb:general'). Bytes of
-// a book stay in this browser, as today.
+// The Planner's other records kept by key (src/planner: panel.js books 'pdfs' and 'pdf:<id>' and the assistant box 'cbox',
+// notebook.js 'nb:general'). Bytes of a book stay in this browser, as today.
 // pdfpg:<id> is the page a book was left on; it is kept quietly (no other window needs to read the plan again for it).
-const KVX = /^(pdfs|pdf:[\w-]+|pdfpg:[\w-]+|nb:general)$/;
+const KVX = /^(pdfs|pdf:[\w-]+|pdfpg:[\w-]+|nb:general|cbox)$/;
 export async function savePlannerKv(key, value) {
   if (!KVX.test(key)) throw new Error('Not a Planner record: ' + key);
   check('gs-lessons/kv/' + key.split(':')[0]);
