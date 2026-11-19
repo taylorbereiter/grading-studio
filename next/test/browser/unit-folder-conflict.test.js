@@ -35,7 +35,7 @@ test('a concurrent disk-only unit edit retains both versions and dated teacher n
     const unit = structuredClone(UNITS[1]);
     unit.title = 'Contour lines'; unit.notebook = '<p>Keep Δ in the notebook</p>';
     unit.weeks[0].notes = 'Field trip, first week'; unit.weeks[1].notes = 'Second week, contour café';
-    const ref = { id: 'contour-ref', name: 'Map.pdf', kind: 'atlas', type: 'application/pdf', size: 4, added: 1 };
+    const ref = { id: 'contour-ref', name: 'Map.pdf', kind: 'other', type: 'application/pdf', size: 4, added: 1 };
     unit.files = [ref];
     const other = { ...UNITS[2], title: 'Timestamp only' };
     await plant(app, gradingSeed()); await plantPlan(app, { units: [unit, other] });
@@ -90,8 +90,25 @@ test('a concurrent disk-only unit edit retains both versions and dated teacher n
       return false;
     }, { polling: 50, timeout: 12000 });
     assert.equal((await disk(editor)).files[file], externalText, 'the writer preserved the external file');
+    const fault = () => {
+      const read = File.prototype.arrayBuffer;
+      File.prototype.arrayBuffer = async function (...args) {
+        const data = await read.apply(this, args);
+        if (sessionStorage.getItem('bad-recovery-read') && /[0-9a-f]{64}\.unit\.json$/.test(this.name)) {
+          new Uint8Array(data)[0] ^= 255;
+          window.recoveryReadFailed = true;
+        }
+        return data;
+      };
+    };
+    await app.evaluate(fault); await app.evaluateOnNewDocument(fault);
+    await app.evaluate(() => sessionStorage.setItem('bad-recovery-read', 'yes'));
     await h.open(app, 'settings/ai'); await app.click('[data-pflook]');
-    await app.waitForSelector('[data-pflook]:not(:disabled)');
+    await app.waitForFunction(() => window.recoveryReadFailed && !document.querySelector('[data-pflook]').disabled);
+    assert.deepEqual((await h.kvInDb(editor, 'units')).find(x => x.id === unit.id), local, 'unverified recovery keeps the local unit active');
+    assert.equal((await disk(editor)).files[file], externalText);
+    await app.evaluate(() => sessionStorage.removeItem('bad-recovery-read'));
+    await app.click('[data-pflook]'); await app.waitForSelector('[data-pflook]:not(:disabled)');
     await app.reload(); await app.waitForSelector('[data-pflook]:not(:disabled)');
     await app.click('[data-pflook]'); await app.waitForSelector('[data-pflook]:not(:disabled)');
     const saved = await h.kvInDb(editor, 'units');
@@ -119,6 +136,15 @@ test('a concurrent disk-only unit edit retains both versions and dated teacher n
     const classic = await app.evaluate(id => window.__planner.L.units.find(u => u.id === id), unit.id);
     assert.deepEqual(classic.weeks, active.weeks); assert.equal(classic.notebook, unit.notebook);
     assert.deepEqual(classic.files, active.files);
+    await app.evaluate(id => {
+      window.__planner.openUnit(window.__planner.L.units.find(u => u.id === id));
+      window.open = url => { window.openedMap = url; };
+    }, unit.id);
+    assert.equal(await app.$eval('[data-uw="notes"][data-i="0"]', t => t.value), unit.weeks[1].notes);
+    await app.click('[data-a="viewfile"][data-fid="contour-ref"]');
+    await app.waitForFunction(() => !!window.openedMap);
+    const fileBytes = await app.evaluate(async () => Array.from(new Uint8Array(await (await fetch(window.openedMap)).arrayBuffer())));
+    assert.deepEqual(fileBytes, [0, 128, 1, 255]);
     assert.deepEqual((await disk(editor)).recovered, end.recovered);
   } finally { await app.close(); await editor.close(); }
 });
