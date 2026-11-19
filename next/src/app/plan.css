@@ -299,7 +299,7 @@
 .page.with-beside,.courseline.with-beside{padding-right:calc(var(--bw,min(420px,40vw)) + 20px)}
 .beside{position:fixed;top:8px;right:8px;bottom:8px;width:var(--bw,min(420px,40vw));background:var(--sf,var(--s));border-radius:var(--r4);box-shadow:var(--sh-f);display:flex;flex-direction:column;z-index:30;overflow:hidden}
 .beside .bhead{display:flex;align-items:center;gap:8px;padding:8px 10px 0 16px;border-bottom:1px solid var(--line)}
-.beside .bhead .tabs{flex:1;border-bottom:0}
+.beside .bhead .tabs{flex:1;min-width:0;border-bottom:0;gap:14px;font-size:.94em;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
 .beside .bbody{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
 .beside .books,.beside .book,.beside .video,.beside .unitside,.beside .nb{display:flex;flex-direction:column;gap:10px}
 .beside .row{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap}
