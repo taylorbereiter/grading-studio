@@ -40,13 +40,8 @@ export async function classesForHome() {
   const { readLibrary, readKept, sidebarClasses } = await import('./students/counts.js');
   return sidebarClasses(readLibrary(), await readKept());
 }
-// The sample's things to try (src/welcome.js sampleGo): its first class, and the downloads of its marked essay and its quiz. Ids only.
-export async function sampleTry() {
-  const { readLibrary } = await import('./students/counts.js'), c = (readLibrary().classes || [])[0];
-  if (!c) return null;
-  const it = k => { for (const u of c.units || []) for (const x of u.items || []) if (x.sampleKey === k) return x.batchId || null; return null; };
-  return { classId: String(c.id), paper: it('essay'), quiz: it('quiz') };
-}
+// The sample's things to try (students/sample-try.js): its first class, and the downloads of its marked essay and its quiz. Ids only.
+export async function sampleForShell() { return (await import('./students/sample-try.js')).sampleTry(); }
 // Home: what the app worked out, the same as the current app's Today (src/today.js homeRender) for the same saved work. Today's
 // classes and lessons (planning), the sets of papers to mark and to hand back (assignment and class names, counts), and the
 // lessons still to plan in the next four days (src/todo.js "plan" lines, minus the ones the teacher hid or switched off).
@@ -58,15 +53,7 @@ export async function countsForHome(now = Date.now()) {
   const g = C.groups(lib, kept), where = m => { const w = C.whereOf(lib, kept, m.id); return w.cls ? String(w.cls.name || '') : ''; };
   const sets = list => list.map(m => { const st = C.stateOf(lib, kept, m); return { id: m.id, name: String(m.name || ''), cls: where(m), of: st.of, done: st.done, left: st.left, fm: st.fm, open: C.canOpen(m), t: m.t || 0 }; });
   let teach = null;
-  // attendance under each class (src/attend.js attTodayLine): the grading class of that name with a roster, taken today or not, and
-  // how many were late or away; numbers only. Nothing while attendance is switched off.
-  const B = await import('./engines/gbook.js'), nk = x => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''), today = T.isoDay(now);
-  const attFor = name => {
-    if (lib.me && lib.me.att === false) return null;
-    const k = nk(name), c = k && lib.classes.find(x => nk(x.name) === k && x.names.length); if (!c) return null;
-    const r = B.attRec(c, today), o = r ? B.attDayCount(c, today) : null;
-    return { classId: String(c.id), taken: !!r, l: o ? o.l : 0, a: o ? o.a : 0, e: o ? o.e : 0 };
-  };
+  const H = await import('./students/home-lists.js'), attFor = H.attFor(lib, T.isoDay(now));
   if (plan) {
     const t = T.dayRows(plan, now), cur = T.nowRow(t.rows, now);
     teach = { off: t.off, rows: t.rows.map(r => ({ classId: r.c.id, name: r.c.name, color: r.c.color, start: r.m.start, end: r.m.end, now: r === cur,
@@ -78,15 +65,7 @@ export async function countsForHome(now = Date.now()) {
   // the lines To do works out (students/todo.js autoLines), so Home, To do and the sidebar count the same
   const auto = await (await import('./students/todo-auto.js')).autoLines(now, { lib, kept, plan }), cname = id => String((lib.classes.find(c => String(c.id) === id) || {}).name || '');
   const toPlan = auto.filter(a => a.kind === 'plan').map(a => ({ in: a.in, key: a.key, classId: a.pid, className: a.pname, color: a.color, day: a.day, start: a.start, lesson: a.lesson }));
-  // earlier work (src/today.js oldRow): an older copy, handed back already, or nothing in it to score
-  const old = sets(g.old).map((x, i) => { const m = g.old[i]; return { ...x, back: C.backOf(m) || 0, stale: !!(m.newer && kept.has(m.newer)) }; });
-  // needs a look (src/shell.js renderNeedsOnly): papers partly scored, papers not kept here; and when a second copy was last made
-  const look = [];
-  for (const m of [...kept.values()].sort((a, b) => b.t - a.t)) {
-    if (m.partial && C.canOpen(m)) look.push({ kind: 'partial', id: m.id, name: String(m.name || ''), n: +m.partial || 0 });
-    else if (!C.canOpen(m)) look.push({ kind: 'notkept', id: m.id, name: String(m.name || '') });
-  }
-  const backup = { last: +(students.lastBackup.json(0) || 0), kept: kept.size };
+  const { old, look, backup } = H.lists(kept, g, C, sets(g.old));
   // what the class needs next (src/today.js nextHtml): the newest finished rubric set's rows, as class averages
   const next = await (await import('./students/home-next.js')).nextCard(lib, kept, g, now).catch(e => { console.error(e); return null; });
   const mark = sets(g.mark), back = sets(g.back), missing = auto.filter(a => a.kind === 'miss').map(a => ({ classId: a.classId, name: cname(a.classId), n: a.n }));
