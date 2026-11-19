@@ -203,6 +203,9 @@ export function Shell() {
     ];
     // the focus timer's runner and panel (app/focus/run.js): a session going on shows on every screen, and time is counted
     const fc = setTimeout(runner, 600);
+    // a new school year started in Settings: the Planner's side moves on once (app/plan/setupfile.js yearMoveOn)
+    let ny = null; try { ny = localStorage.getItem('gsp.newYear'); } catch {}
+    if (ny) router.PARTS.setupFile().then(m => m.yearMoveOn(), e => console.error(e));
     return () => { offs.forEach(f => f()); clearTimeout(fc); };
   }, []);
   // Planning destinations, and every lesson by its title (with its class and day), so typing finds a lesson (the Planner's Search).

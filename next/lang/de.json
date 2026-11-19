@@ -6611,5 +6611,34 @@
  "cal.n_more": "+{n} weitere",
  "cal.from_pack": "Aus einem Stundenpaket",
  "cal.file_missing": "Diese Datei ist nicht mehr da.",
- "cal.import_sub": "Eine Stundendatei, ein Stundenpaket oder eingefügter Text"
+ "cal.import_sub": "Eine Stundendatei, ein Stundenpaket oder eingefügter Text",
+ "cal.setup_save": "Meine Einrichtungsdatei speichern",
+ "cal.setup_load": "Einrichtungsdatei laden…",
+ "cal.setup_file_name": "Planer-Einrichtung",
+ "cal.setup_saved": "Gespeichert als „{name}“. Auf einem anderen Computer mit „Einrichtungsdatei laden…“ laden.",
+ "cal.setup_bad": "Das ist keine Einrichtungsdatei",
+ "cal.setup_loaded": {
+  "one": "Stundenplan geladen: {n} Klasse.",
+  "other": "Stundenplan geladen: {n} Klassen."
+ },
+ "cal.setup_loaded_named": {
+  "one": "{name} geladen: {n} Klasse.",
+  "other": "{name} geladen: {n} Klassen."
+ },
+ "cal.setup_units": {
+  "one": "{n} Einheit hinzugekommen.",
+  "other": "{n} Einheiten hinzugekommen."
+ },
+ "cal.setup_tpl": "Ihre Folienvorlage ist übernommen.",
+ "cal.no_school": "Schulfrei",
+ "cal.last_year": "Letztes Jahr",
+ "cal.year_moved": "Neues Schuljahr: Einheiten und Halbjahr sind ein Jahr weitergerückt.",
+ "cal.year_moved_n": {
+  "one": "Neues Schuljahr: Einheiten und Halbjahr sind ein Jahr weitergerückt, und {n} Stunde liegt in Frühere Stunden unter „{name}“.",
+  "other": "Neues Schuljahr: Einheiten und Halbjahr sind ein Jahr weitergerückt, und {n} Stunden liegen in Frühere Stunden unter „{name}“."
+ },
+ "cal.type_classes": "Meine Klassen eingeben",
+ "cal.no_timetable_text": "Stunden ordnen sich Ihren Klassen zu, sobald die App weiß, wann sie stattfinden. Geben Sie Ihre Klassen und Zeiten ein; das dauert ein paar Minuten und ist einmalig. Haben Sie eine Einrichtungsdatei von einem anderen Computer, laden Sie sie oder ziehen Sie sie auf diese Seite.",
+ "cal.date_to": "Bis (optional)",
+ "cal.any_colour": "Beliebige Farbe"
 }

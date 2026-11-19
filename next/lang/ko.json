@@ -6640,5 +6640,34 @@
  "cal.n_more": "+{n}개 더",
  "cal.from_pack": "수업 묶음에서",
  "cal.file_missing": "그 파일은 더 이상 없습니다.",
- "cal.import_sub": "수업 파일, 수업 묶음 또는 붙여 넣은 텍스트"
+ "cal.import_sub": "수업 파일, 수업 묶음 또는 붙여 넣은 텍스트",
+ "cal.setup_save": "내 설정 파일 저장",
+ "cal.setup_load": "설정 파일 불러오기…",
+ "cal.setup_file_name": "수업 계획 설정",
+ "cal.setup_saved": "“{name}”(으)로 저장했습니다. 다른 컴퓨터에서 설정 파일 불러오기…로 불러오세요.",
+ "cal.setup_bad": "설정 파일이 아닙니다",
+ "cal.setup_loaded": {
+  "one": "시간표를 불러왔습니다: 학급 {n}개.",
+  "other": "시간표를 불러왔습니다: 학급 {n}개."
+ },
+ "cal.setup_loaded_named": {
+  "one": "{name}을(를) 불러왔습니다: 학급 {n}개.",
+  "other": "{name}을(를) 불러왔습니다: 학급 {n}개."
+ },
+ "cal.setup_units": {
+  "one": "단원 {n}개가 들어왔습니다.",
+  "other": "단원 {n}개가 들어왔습니다."
+ },
+ "cal.setup_tpl": "슬라이드 템플릿도 들어왔습니다.",
+ "cal.no_school": "휴교",
+ "cal.last_year": "작년",
+ "cal.year_moved": "새 학년도: 단원과 학기를 1년 뒤로 옮겼습니다.",
+ "cal.year_moved_n": {
+  "one": "새 학년도: 단원과 학기를 1년 뒤로 옮겼고, 수업 {n}개는 지난 수업의 “{name}” 아래에 있습니다.",
+  "other": "새 학년도: 단원과 학기를 1년 뒤로 옮겼고, 수업 {n}개는 지난 수업의 “{name}” 아래에 있습니다."
+ },
+ "cal.type_classes": "내 학급 입력하기",
+ "cal.no_timetable_text": "학급이 언제 모이는지 알면 수업이 학급에 맞춰 놓입니다. 학급과 시간을 입력하는 데 몇 분이면 되고 한 번만 하면 됩니다. 다른 컴퓨터의 설정 파일이 있다면 불러오거나 이 페이지에 끌어다 놓으세요.",
+ "cal.date_to": "까지 (선택)",
+ "cal.any_colour": "원하는 색"
 }

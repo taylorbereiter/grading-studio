@@ -91,5 +91,34 @@
  "cal.n_more": "+{n} more",
  "cal.from_pack": "From a lesson pack",
  "cal.file_missing": "That file isn’t here any more.",
- "cal.import_sub": "A lesson file, a lesson pack, or pasted text"
+ "cal.import_sub": "A lesson file, a lesson pack, or pasted text",
+ "cal.setup_save": "Save my setup file",
+ "cal.setup_load": "Load a setup file…",
+ "cal.setup_file_name": "Planner setup",
+ "cal.setup_saved": "Saved as “{name}”. Load it with Load a setup file… on another computer.",
+ "cal.setup_bad": "That isn’t a setup file",
+ "cal.setup_loaded": {
+  "one": "Timetable loaded: {n} class.",
+  "other": "Timetable loaded: {n} classes."
+ },
+ "cal.setup_loaded_named": {
+  "one": "{name} loaded: {n} class.",
+  "other": "{name} loaded: {n} classes."
+ },
+ "cal.setup_units": {
+  "one": "{n} unit came in.",
+  "other": "{n} units came in."
+ },
+ "cal.setup_tpl": "Your slide template is in.",
+ "cal.no_school": "No school",
+ "cal.last_year": "Last year",
+ "cal.year_moved": "A new school year: units and the semester moved on a year.",
+ "cal.year_moved_n": {
+  "one": "A new school year: units and the semester moved on a year, and {n} lesson is in Past lessons under “{name}”.",
+  "other": "A new school year: units and the semester moved on a year, and {n} lessons are in Past lessons under “{name}”."
+ },
+ "cal.type_classes": "Type in my classes",
+ "cal.no_timetable_text": "Lessons line up with your classes once the app knows when they meet. Type your classes and their times in, which takes a few minutes and is done once. If you have a setup file from another computer, load it or drop it on this page.",
+ "cal.date_to": "To (optional)",
+ "cal.any_colour": "Any colour"
 }

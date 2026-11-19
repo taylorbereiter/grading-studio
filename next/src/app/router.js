@@ -57,6 +57,8 @@ export const PARTS = {
   sem: () => import('./plan/semester.jsx'),
   // lesson packs, and lesson files dropped anywhere (plan/packs.js)
   packs: () => import('./plan/packs.js'),
+  // the Planner's setup file, and the move to a new school year (plan/setupfile.js)
+  setupFile: () => import('./plan/setupfile.js'),
   unit: () => import('./plan/unit-tools.jsx'),
   marking: () => import('./screens/mark-tools.jsx'),
   // Grades, Insights and Return (the screen part), and what they run: the export engine with pdf-lib and fflate, loaded on their

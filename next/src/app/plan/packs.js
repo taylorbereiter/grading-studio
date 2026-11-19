@@ -1,7 +1,7 @@
 // Lesson packs and files dropped on the app (src/planner/library.js packImport, src/planner/lessons.js drop): a pack is a .zip
 // with pack.json ({ kind: 'grading-studio-lesson-pack', name, lessons, units }); its lessons go into Library > Past lessons under
 // the pack's name (l.library), with their files, and a unit already here gets a missing unit plan link and files it lacks. A lesson
-// file (.gslesson), a .lesson.json or a pack dropped anywhere opens or comes in. Planning files only, never a student's work.
+// file (.gslesson), a .lesson.json, a Planner setup file or a pack dropped anywhere opens or comes in. Planning files only, never a student's work.
 import { unzip, strFromU8 } from 'fflate';
 import { toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
@@ -58,11 +58,14 @@ export async function packImport(p, file) {
 }
 
 // Files dropped where nothing else took them: a lesson file opens, a .lesson.json comes in, a pack goes to Past lessons.
+const setupJson = async f => { let j; try { j = JSON.parse(await f.text()); } catch { return false; } const S = await PARTS.setupFile(); if (!S.isSetupFile(j)) return false; await S.applySetup(j); return true; };
 export async function dropped(files) {
   try {
     const p = await loadPlan(), ok = [];
     for (const f of files) {
       if (/\.zip$/i.test(f.name)) { const ls = await packImport(p, f); if (ls && ls.length) ok.push(...ls); }
+      // a setup file (classes, no lessons) loads the timetable, as dropping it on the current Planner's week does
+      else if (/\.json$/i.test(f.name) && await setupJson(f)) continue;
       else if (/\.gslesson$/i.test(f.name) || /\.json$/i.test(f.name)) { const T = await PARTS.tools(); const ls = /\.gslesson$/i.test(f.name) ? [await T.shareOpen(p, f)].filter(Boolean) : await T.importText(p, await f.text()); ok.push(...ls); }
     }
     if (ok.length === 1 && !ok[0].library) go('lesson', ok[0].id);

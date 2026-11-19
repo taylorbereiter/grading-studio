@@ -6640,5 +6640,34 @@
  "cal.n_more": "+{n} 个",
  "cal.from_pack": "来自课程包",
  "cal.file_missing": "这个文件已经不在了。",
- "cal.import_sub": "课程文件、课程包或粘贴的文字"
+ "cal.import_sub": "课程文件、课程包或粘贴的文字",
+ "cal.setup_save": "保存我的设置文件",
+ "cal.setup_load": "载入设置文件…",
+ "cal.setup_file_name": "备课设置",
+ "cal.setup_saved": "已保存为“{name}”。在另一台电脑上用“载入设置文件…”载入。",
+ "cal.setup_bad": "这不是设置文件",
+ "cal.setup_loaded": {
+  "one": "已载入课表：{n} 个班级。",
+  "other": "已载入课表：{n} 个班级。"
+ },
+ "cal.setup_loaded_named": {
+  "one": "已载入 {name}：{n} 个班级。",
+  "other": "已载入 {name}：{n} 个班级。"
+ },
+ "cal.setup_units": {
+  "one": "加入了 {n} 个单元。",
+  "other": "加入了 {n} 个单元。"
+ },
+ "cal.setup_tpl": "你的幻灯片模板也已载入。",
+ "cal.no_school": "不上课",
+ "cal.last_year": "去年",
+ "cal.year_moved": "新学年：单元和学期已往后移一年。",
+ "cal.year_moved_n": {
+  "one": "新学年：单元和学期已往后移一年，{n} 节课在“过去的课”的“{name}”下。",
+  "other": "新学年：单元和学期已往后移一年，{n} 节课在“过去的课”的“{name}”下。"
+ },
+ "cal.type_classes": "输入我的班级",
+ "cal.no_timetable_text": "知道班级何时上课后，课就会排到对应的班级。输入班级和上课时间只要几分钟，做一次就好。如果你有另一台电脑的设置文件，可以载入或拖到这个页面上。",
+ "cal.date_to": "到（选填）",
+ "cal.any_colour": "任意颜色"
 }

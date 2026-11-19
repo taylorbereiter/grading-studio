@@ -6640,5 +6640,34 @@
  "cal.n_more": "+{n} 件",
  "cal.from_pack": "授業パックから",
  "cal.file_missing": "そのファイルはもうありません。",
- "cal.import_sub": "授業ファイル、授業パック、または貼り付けたテキスト"
+ "cal.import_sub": "授業ファイル、授業パック、または貼り付けたテキスト",
+ "cal.setup_save": "設定ファイルを保存",
+ "cal.setup_load": "設定ファイルを読み込む…",
+ "cal.setup_file_name": "授業計画の設定",
+ "cal.setup_saved": "「{name}」として保存しました。別のパソコンで「設定ファイルを読み込む…」から読み込めます。",
+ "cal.setup_bad": "設定ファイルではありません",
+ "cal.setup_loaded": {
+  "one": "時間割を読み込みました：{n} クラス。",
+  "other": "時間割を読み込みました：{n} クラス。"
+ },
+ "cal.setup_loaded_named": {
+  "one": "{name} を読み込みました：{n} クラス。",
+  "other": "{name} を読み込みました：{n} クラス。"
+ },
+ "cal.setup_units": {
+  "one": "{n} 件の単元が入りました。",
+  "other": "{n} 件の単元が入りました。"
+ },
+ "cal.setup_tpl": "スライドのテンプレートも入りました。",
+ "cal.no_school": "休校",
+ "cal.last_year": "昨年度",
+ "cal.year_moved": "新年度：単元と学期を1年進めました。",
+ "cal.year_moved_n": {
+  "one": "新年度：単元と学期を1年進め、{n} 件の授業を過去の授業の「{name}」に移しました。",
+  "other": "新年度：単元と学期を1年進め、{n} 件の授業を過去の授業の「{name}」に移しました。"
+ },
+ "cal.type_classes": "クラスを入力する",
+ "cal.no_timetable_text": "クラスの時間がわかると、授業がそれぞれのクラスに並びます。クラスと時間の入力は数分で、一度だけです。別のパソコンの設定ファイルがあれば、読み込むかこのページにドロップしてください。",
+ "cal.date_to": "終了日（任意）",
+ "cal.any_colour": "好きな色"
 }

@@ -146,6 +146,8 @@ export function saveTaughtNote(key, note) {
   taughtIn.setJson(o);
   saved({ kind: 'pref', id: 'gsp.taughtIn', side: 'planning' });
 }
+// The new school years the Planner has moved on to (kv yearsDone, src/planner/units.js yearMoveOn), so a move is done once.
+export async function saveYearsDone(list) { check('gs-lessons/kv/yearsDone'); await kv.put(list, 'yearsDone'); tell('gs-plan-out'); saved({ kind: 'plan', id: 'yearsDone', side: 'planning' }); }
 export function startNewYear(v) { check('gsp.newYear'); newYear.setJson(v); saved({ kind: 'pref', id: 'gsp.newYear', side: 'planning' }); }
 export function setGoogleToken(v) { mayWrite('sessionStorage:gs.gTok'); try { if (v == null) sessionStorage.removeItem('gs.gTok'); else sessionStorage.setItem('gs.gTok', JSON.stringify(v)); } catch {} }
 export async function saveSchoolFile(hash, data) {

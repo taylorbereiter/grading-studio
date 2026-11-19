@@ -6,20 +6,21 @@ import { h, Fragment } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { Card, Button, IconButton, TextInput, Select, Switch, toast, EmptyState } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
-import { href } from '../router.js';
+import { href, PARTS } from '../router.js';
 import { usePlan } from '../plan.js';
 import { saveKv } from '../../planning/write.js';
 import { plannerKv } from '../../planning/plan.js';
 import { saveFailed } from '../plan/save.js';
 import '../plan/lines.js';
+import '../plan/cal-lines.js';
 import { DriveButton } from '../drive-button.jsx';
 
 // The colours a class can have: the current Planner's unit colours (src/planner/units.js UNIT_COLORS). Shown as the theme's own.
 export const CLASS_COLORS = ['#1F6FB2', '#7B3FC4', '#B71E42', '#0E7C66', '#B35C00', '#3D5A80', '#8E3B8A', '#2F6B2F'];
 const DOWS = [1, 2, 3, 4, 5, 6, 0];
-const ADD = ['content', 'twocol', 'text', 'steps', 'discuss', 'warmup', 'exit', 'objectives', 'passage', 'vocab', 'picture', 'textpic', 'video'];
+const ADD = ['content', 'twocol', 'text', 'steps', 'discuss', 'warmup', 'exit', 'objectives', 'passage', 'vocab', 'picture', 'textpic', 'fullpic', 'picprompt', 'video'];
 const ADD_LINE = { content: 'plan.layout_content', twocol: 'plan.layout_twocol', text: 'plan.layout_text', steps: 'plan.layout_steps', discuss: 'plan.layout_discuss', warmup: 'plan.layout_warmup',
-  exit: 'plan.layout_exit', objectives: 'plan.layout_objectives', passage: 'plan.layout_passage', vocab: 'plan.layout_vocab', picture: 'plan.layout_picture', textpic: 'plan.layout_textpic', video: 'plan.layout_video' };
+  exit: 'plan.layout_exit', objectives: 'plan.layout_objectives', passage: 'plan.layout_passage', vocab: 'plan.layout_vocab', picture: 'plan.layout_picture', textpic: 'plan.layout_textpic', fullpic: 'plan.layout_fullpic', picprompt: 'plan.layout_picprompt', video: 'plan.layout_video' };
 const copy = x => JSON.parse(JSON.stringify(x));
 // Her changes to the timetable, put over what is stored now: My setup, the Planner folder or another window may have changed it
 // while she was editing (rebuild/audit/hooks.md H-015). A part she changed is hers; a part she left alone keeps the newer one; a
@@ -56,9 +57,11 @@ async function readTemplate(file) {
   return { b64: btoa(b), name: file.name.replace(/\.(pptx|potx)$/i, '').slice(0, 120) };
 }
 
-function Dates({ list, onChange, label, add }) {
+// Events can run over several days (a "to" date, as the current Planner's "2026-11-09 to 2026-11-13 Midterms").
+function Dates({ list, onChange, label, add, to }) {
   return <div class="dlist">{list.map((x, i) => <div class="drow">
     <TextInput label={t('plan.date')} type="date" value={x.date} onInput={v => onChange(list.map((y, j) => j === i ? { ...y, date: v } : y))} />
+    {to && <TextInput label={t('cal.date_to')} type="date" value={x.to || ''} onInput={v => onChange(list.map((y, j) => j === i ? { ...y, to: v } : y))} data-ev-to />}
     <TextInput label={label} value={x.label} onInput={v => onChange(list.map((y, j) => j === i ? { ...y, label: v } : y))} />
     <IconButton icon="trash" label={t('common.delete')} onClick={() => onChange(list.filter((_, j) => j !== i))} /></div>)}
     <div><Button size="sm" icon="plus" onClick={() => onChange([...list, { date: '', label: '' }])}>{add}</Button></div></div>;
@@ -73,7 +76,8 @@ function ClassCard({ c, onChange, onRemove }) {
       <TextInput label={t('plan.course')} hint={t('plan.course_hint')} value={c.course || ''} onInput={v => set({ course: v })} />
       <IconButton icon="trash" label={t('plan.remove_class')} onClick={onRemove} /></div>
     <div class="ccsw" role="radiogroup" aria-label={t('plan.class_colour')}>{CLASS_COLORS.map((x, i) => <button type="button" role="radio" aria-checked={String(c.color.toLowerCase() === x.toLowerCase())}
-      aria-label={t('plan.colour_n', { n: i + 1 })} style={{ '--cc': x }} onClick={() => set({ color: x })} />)}</div>
+      aria-label={t('plan.colour_n', { n: i + 1 })} style={{ '--cc': x }} onClick={() => set({ color: x })} />)}
+      <label class="ccany" style={{ '--cc': c.color }}><input type="color" value={/^#[0-9a-f]{6}$/i.test(c.color) ? c.color : '#1F6FB2'} aria-label={t('cal.any_colour')} onInput={e => set({ color: e.currentTarget.value })} data-any-colour /></label></div>
     <h3 class="sub">{t('plan.meets')}</h3>
     {c.meets.map((m, i) => <div class="mrow">
       <Select label={t('plan.day')} value={String(m.dow)} options={DOWS.map(d => ({ value: String(d), label: dayName(d) }))} onChange={v => meet(i, { dow: +v })} data-raw />
@@ -100,12 +104,15 @@ export function TimetableSettings() {
     try {
       const next = mergeSetup(base, d, await plannerKv('setup'));
       next.classes = next.classes.map(c => ({ ...c, name: c.name.trim(), course: (c.course || '').trim(), meets: c.meets.filter(m => /^\d\d:\d\d$/.test(m.start)).map(m => ({ dow: +m.dow, start: m.start, end: m.end || '', label: (m.label || '').trim() })) }));
-      for (const k of ['daysOff', 'events']) { const v = (next[k] || []).filter(x => isDate(x.date)).map(x => ({ date: x.date, label: (x.label || '').trim() })); if (v.length) next[k] = v; else delete next[k]; }
+      for (const k of ['daysOff', 'events']) { const v = (next[k] || []).filter(x => isDate(x.date)).map(x => ({ date: x.date, ...(k === 'events' && isDate(x.to) && x.to > x.date ? { to: x.to } : {}), label: (x.label || '').trim() })); if (v.length) next[k] = v; else delete next[k]; }
       for (const k of ['semStart', 'semEnd']) if (!isDate(next[k])) delete next[k];
       await saveKv('setup', next); setD(copy(next)); setBase(copy(next)); setDirty(false); toast(t('plan.timetable_saved'));
     } catch (e) { saveFailed(e); } finally { setBusy(false); }
   };
+  const file = async how => { const S = await PARTS.setupFile(); if (how === 'save') S.saveSetupFile(d, p); else { setDirty(false); S.loadSetupFile(); } };
   return <div class="ttset">
+    <div class="row gap"><Button size="sm" variant="quiet" icon="download" onClick={() => file('save')} data-setup-save>{t('cal.setup_save')}</Button>
+      <Button size="sm" variant="quiet" icon="upload" onClick={() => file('load')} data-setup-load>{t('cal.setup_load')}</Button></div>
     {!(d.classes || []).length && <EmptyState icon="cal" title={t('home.no_timetable')} text={t('plan.no_timetable_text')} />}
     {(d.classes || []).length > 0 && <div class="ttclasses">{d.classes.map((c, i) => <ClassCard c={c} onChange={x => put({ ...d, classes: d.classes.map((y, j) => j === i ? x : y) })} onRemove={() => put({ ...d, classes: d.classes.filter((_, j) => j !== i) })} />)}</div>}
     <div><Button icon="plus" onClick={() => put({ ...d, classes: [...(d.classes || []), { id: nid(), name: '', course: '', color: CLASS_COLORS[(d.classes || []).length % 8], meets: [] }] })} data-focus="add-class">{t('plan.add_class')}</Button></div>
@@ -113,7 +120,7 @@ export function TimetableSettings() {
       <TextInput label={t('plan.sem_start')} type="date" value={d.semStart || ''} onInput={v => put({ ...d, semStart: v })} />
       <TextInput label={t('plan.sem_end')} type="date" value={d.semEnd || ''} onInput={v => put({ ...d, semEnd: v })} /></div></Card>
     <Card title={t('plan.days_off')}><Dates list={d.daysOff || []} label={t('plan.what_day')} add={t('plan.add_day_off')} onChange={v => put({ ...d, daysOff: v })} /></Card>
-    <Card title={t('plan.events')}><Dates list={d.events || []} label={t('plan.what_event')} add={t('plan.add_event')} onChange={v => put({ ...d, events: v })} /></Card>
+    <Card title={t('plan.events')}><Dates to list={d.events || []} label={t('plan.what_event')} add={t('plan.add_event')} onChange={v => put({ ...d, events: v })} /></Card>
     <Card title={t('plan.slide_template')}>
       <p class="mute" role="status">{d.template ? <>{t('plan.tpl_yours')} <b data-raw>{d.tplName || ''}</b></> : t('plan.tpl_plain')}</p>
       <div class="row"><label class="btn sm"><input type="file" class="vh" accept=".pptx,.potx" onChange={async e => { const f = e.currentTarget.files[0]; e.currentTarget.value = ''; const x = await readTemplate(f); if (x) put({ ...d, template: x.b64, tplName: x.name }); }} data-tpl />{d.template ? t('plan.tpl_pick_another') : t('plan.tpl_pick')}</label><DriveButton />

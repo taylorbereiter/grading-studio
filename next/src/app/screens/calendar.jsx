@@ -233,7 +233,8 @@ export default function Calendar({ route }) {
   const setView = v => { keep('view', v); go('calendar', v); };
   if (!p) return <div class="page"><header class="ph"><h1>{t('nav.calendar')}</h1></header><div class="loading" aria-busy="true" /></div>;
   if (!p.setup || !(p.setup.classes || []).length) return <div class="page"><header class="ph"><h1>{t('nav.calendar')}</h1></header>
-    <EmptyState icon="cal" title={t('home.no_timetable')} text={t('plan.no_timetable_text')} action={<><a class="btn pri" href={href('settings', 'timetable')}>{t('plan.set_up_timetable')}</a>
+    <EmptyState icon="cal" title={t('home.no_timetable')} text={t('cal.no_timetable_text')} action={<><a class="btn pri" href={href('settings', 'timetable')} data-type-classes>{t('cal.type_classes')}</a>
+      <Button onClick={() => PARTS.setupFile().then(m => m.loadSetupFile())} data-load-setup>{t('cal.setup_load')}</Button>
       <Button onClick={() => PARTS.calx().then(m => m.newLoose(p))} data-loose>{t('cal.new_loose')}</Button></>} /></div>;
   const mon = mondayOf(p, anchor), days = weekDays(p, mon), step = view === 'month' ? null : 7;
   const move = n => { if (step) setAnchor(plus(anchor, n * 7)); else { const d = at(anchor); d.setDate(1); d.setMonth(d.getMonth() + n); setAnchor(iso(d)); } };

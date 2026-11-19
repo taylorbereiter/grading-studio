@@ -6612,5 +6612,34 @@
  "cal.n_more": "+{n} mais",
  "cal.from_pack": "De um pacote de aulas",
  "cal.file_missing": "Esse arquivo não está mais aqui.",
- "cal.import_sub": "Um arquivo de aula, um pacote de aulas ou texto colado"
+ "cal.import_sub": "Um arquivo de aula, um pacote de aulas ou texto colado",
+ "cal.setup_save": "Salvar meu arquivo de configuração",
+ "cal.setup_load": "Carregar um arquivo de configuração…",
+ "cal.setup_file_name": "Configuração do planejador",
+ "cal.setup_saved": "Salvo como “{name}”. Carregue com Carregar um arquivo de configuração… em outro computador.",
+ "cal.setup_bad": "Isso não é um arquivo de configuração",
+ "cal.setup_loaded": {
+  "one": "Horário carregado: {n} turma.",
+  "other": "Horário carregado: {n} turmas."
+ },
+ "cal.setup_loaded_named": {
+  "one": "{name} carregado: {n} turma.",
+  "other": "{name} carregado: {n} turmas."
+ },
+ "cal.setup_units": {
+  "one": "{n} unidade entrou.",
+  "other": "{n} unidades entraram."
+ },
+ "cal.setup_tpl": "Seu modelo de slides está carregado.",
+ "cal.no_school": "Sem aula",
+ "cal.last_year": "Ano passado",
+ "cal.year_moved": "Novo ano letivo: as unidades e o semestre avançaram um ano.",
+ "cal.year_moved_n": {
+  "one": "Novo ano letivo: as unidades e o semestre avançaram um ano, e {n} aula está em Aulas anteriores sob “{name}”.",
+  "other": "Novo ano letivo: as unidades e o semestre avançaram um ano, e {n} aulas estão em Aulas anteriores sob “{name}”."
+ },
+ "cal.type_classes": "Digitar minhas turmas",
+ "cal.no_timetable_text": "As aulas se encaixam nas suas turmas quando o app sabe quando elas se reúnem. Digite suas turmas e horários: leva alguns minutos e é feito uma vez. Se tiver um arquivo de configuração de outro computador, carregue-o ou solte-o nesta página.",
+ "cal.date_to": "Até (opcional)",
+ "cal.any_colour": "Qualquer cor"
 }
