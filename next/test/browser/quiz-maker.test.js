@@ -201,3 +201,51 @@ test('Bring in the scanned quiz: the code on each page gives it to its student, 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// A quiz's words are on its pages, so another language moves its bubbles. Copies printed in English (here by the current app, whose
+// printed quiz is always English) keep their bubbles when the quiz is saved again from the new app in Chinese, whose shorter
+// instructions take one line where the English takes two; a quiz not printed yet is laid out in the language on screen.
+test('a printed quiz keeps the language it was printed in: saved again in another language, its bubbles stay where the copies have them', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const seed = withCard(), lib = JSON.parse(seed.ls['gs.lib']);
+  lib.classes[0].units[0].items.push({ id: 'i8', name: 'Speech draft', classId: 'c1', type: 'sum', due: '2026-11-21' });
+  seed.ls['gs.lib'] = JSON.stringify(lib);
+  const c = await page(ctx, errors);
+  await c.goto(srv.url + 'blank'); await plant(c, seed);
+  await c.goto(srv.url); await appReady(c);
+  // the same three questions on both cards, measured and printed by the current app on i9, only measured on i8
+  await c.evaluate(() => {
+    const items = [{ id: 'mq1', t: 'mc', text: 'Which planet is closest to the sun?', opts: ['Venus', 'Mercury', 'Mars', 'Earth'], key: 'B', pts: 1 }, { id: 'mq2', t: 'tf', text: 'The moon makes its own light.', opts: ['True', 'False'], key: 'F', pts: 1 }, { id: 'mq3', t: 'sa', text: 'Why do we have seasons?', opts: [], key: '', pts: 2, lines: 3 }];
+    const l = JSON.parse(localStorage.getItem('gs.lib')), all = l.classes[0].units[0].items;
+    for (const [id, printed] of [['i9', true], ['i8', false]]) {
+      const it = all.find(x => x.id === id), m = { id: 7, items: JSON.parse(JSON.stringify(items)), sheet: 0, blank: 0 };
+      const Q = window.__gs.qmkBoxes(m, it.name);
+      if (printed) { m.names = []; m.pv = m.ver; m.lay = JSON.stringify(Q.qs.map(q => [q.n, q.auto.b])); }
+      it.quiz = { ...Q, made: m };
+    }
+    localStorage.setItem('gs.lib', JSON.stringify(l));
+    localStorage.setItem('gs.lang', JSON.stringify('zh-Hans'));
+  });
+  const was = Object.fromEntries(await c.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units[0].items.filter(x => x.quiz).map(x => [x.id, x.quiz.qs.map(q => [q.n, q.y, q.auto.b])])));
+  await c.close();
+  const ZH = require('../../lang/zh-Hans.json'), howZh = ZH['engine.qf_how'].slice(0, 8);
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  for (const id of ['i9', 'i8']) {
+    await p.waitForSelector(`[data-more-for="${id}"]`, { timeout: 60000 });
+    await pickItem(p, `[data-more-for="${id}"]`, '^' + ZH['setup.qf_edit'].replace('…', ''));
+    await p.waitForSelector('dialog[open][data-qf] [data-qfc="2"]');
+    if (id === 'i9') await p.waitForFunction(() => /Fill each bubble/.test(document.querySelector('[data-qfpages]').textContent), { timeout: 10000 });
+    else assert.ok((await p.$eval('[data-qfpages]', e => e.textContent)).includes(howZh), 'a quiz not printed yet shows its pages in the language on screen');
+    await p.click('[data-qfsave]');
+    await p.waitForFunction(() => !document.querySelector('dialog[open][data-qf]'));
+  }
+  const now = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units[0].items.filter(x => x.quiz).map(x => [x.id, x.quiz.qs.map(q => [q.n, q.y, q.auto.b]), x.quiz.made]));
+  const nine = now.find(x => x[0] === 'i9'), eight = now.find(x => x[0] === 'i8');
+  assert.deepEqual(nine[1], was.i9, 'the printed quiz’s bubbles stay where the copies have them');
+  assert.equal(nine[2].ver, 0, 'and its copies are still read by the scan (the same number)');
+  assert.equal(nine[2].lang || 'en', 'en');
+  assert.notDeepEqual(eight[1], was.i8, 'in Chinese the same questions sit elsewhere on the page');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

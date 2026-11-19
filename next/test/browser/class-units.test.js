@@ -7,6 +7,7 @@ const { launch } = require('../../../test/helpers/chrome.js');
 const { plant, appReady } = require('../../../test/helpers/app.js');
 const { gradingSeed, STEADY } = require('../../../test/helpers/steady.js');
 const { makePaper } = require('../../../test/helpers/fixtures.js');
+const { plantPlan } = require('./planseed.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
 const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp', png: 'image/png', webmanifest: 'application/manifest+json' };
@@ -153,6 +154,227 @@ test('Files to match to a roster: outside files matched to the class names, one 
   assert.deepEqual(got.have.sort(), [['Aria Testwell', ['Aria Testwell speech.pdf']], ['Cleo Fixture', ['Cleo notes.pdf']], ['Finn Example', ['untitled.pdf']]]);
   assert.equal((await libOf(p)).classes[0].units[0].items.find(i => i.id === 'i9').batchId != null, true, 'the card is linked to the papers');
   fs.rmSync(dir, { recursive: true, force: true });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// New assignment and Edit assignment (src/app/screens.js editAssignment): made in two linked classes at once, changed, shown on the
+// week reached from Home and in the Gradebook, deleted and brought back with Undo; the current app reads the same cards.
+const linkedSeed = () => { const seed = withCard(), lib = JSON.parse(seed.ls['gs.lib']); lib.classes[0].course = 'English'; lib.classes[1].course = 'English'; seed.ls['gs.lib'] = JSON.stringify(lib); return seed; };
+const setDate = (p, sel, v) => p.$eval(sel, (e, v) => { e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); }, v);
+// a card as the teacher made it: without the sync stamps (v, at, fv) a save puts on
+const cards = (l, name) => [...l.classes, l.loose].flatMap(c => c.units.flatMap(u => u.items.filter(i => i.name === name).map(({ v, at, fv, ...i }) => ({ ...i, unit: u.name, in: c.id }))));
+test('New assignment in two linked classes, edited, on the week and in the Gradebook, deleted and brought back; the current app reads them', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, linkedSeed());
+  await plantPlan(p);
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-newasg]', { timeout: 60000 });
+  // every unit has its own + Assignment at its end
+  assert.deepEqual(await p.$$eval('[data-additem]', b => b.map(x => x.dataset.additem)), ['u1', 'u2']);
+
+  await p.click('[data-newasg]');
+  await p.waitForSelector('dialog[open] [data-asg-dlg]');
+  assert.deepEqual(await p.$$eval('[data-asg-cls]', s => s.map(x => [x.dataset.asgCls, x.querySelector('input').checked])), [['c1', true], ['c2', true], ['', false]], 'the linked class is ticked');
+  assert.match(await p.$eval('dialog[open]', d => d.textContent), /Linked classes are ticked/);
+  await p.type('dialog[open] input[data-asg-name]', 'Book talk');
+  await p.select('dialog[open] select[data-asg-unit]', 'Unit 2: Poetry');
+  assert.match(await p.$eval('[data-asg-made]', e => e.textContent), /Grade 10 Literature has no unit called “Unit 2: Poetry” yet/);
+  await p.click('dialog[open] .seg [data-v="sum"]');
+  await setDate(p, 'dialog[open] input[data-asg-due]', '2026-10-29');
+  assert.equal(await p.$eval('[data-asg-ok]', b => b.textContent), 'Add to 2 classes');
+  await p.click('[data-asg-ok]');
+  await p.waitForFunction(() => /Book talk/.test(localStorage.getItem('gs.lib')));
+  let made = cards(await libOf(p), 'Book talk');
+  assert.deepEqual(made.map(x => [x.in, x.classId, x.unit, x.type, x.due]), [['c1', 'c1', 'Unit 2: Poetry', 'sum', '2026-10-29'], ['c2', 'c2', 'Unit 2: Poetry', 'sum', '2026-10-29']]);
+  assert.ok(made[0].group && made[0].group === made[1].group && made[0].id !== made[1].id, 'the copies share a group, each its own card');
+  const id = made[0].id, twin = made[1].id;
+  await p.waitForSelector(`[data-unit="u2"] [data-item="${id}"]`);
+
+  // Edit assignment…: name, type and date, the copy too; the card keeps its id
+  await pickItem(p, `[data-more-for="${id}"]`, '^Edit assignment');
+  await p.waitForSelector('dialog[open] [data-asg-dlg]');
+  assert.equal(await p.$eval('dialog[open] select[data-asg-class]', s => s.value), 'c1');
+  await p.$eval('dialog[open] input[data-asg-name]', e => e.select());
+  await p.type('dialog[open] input[data-asg-name]', 'Book talk 2');
+  await p.click('dialog[open] .seg [data-v="ic"]');
+  await setDate(p, 'dialog[open] input[data-asg-due]', '2026-10-29');
+  await p.click('[data-asg-ok]');
+  await p.waitForFunction(() => /Book talk 2/.test(localStorage.getItem('gs.lib')));
+  made = cards(await libOf(p), 'Book talk 2');
+  assert.deepEqual(made.map(x => [x.id, x.type, x.due]), [[id, 'ic', '2026-10-29'], [twin, 'ic', '2026-10-29']]);
+
+  // Home: This week shows it due on Thursday
+  await p.goto(srv.url + 'next/#/');
+  await p.waitForSelector('a[href="#/calendar"]', { timeout: 30000 });
+  await p.click('a[href="#/calendar"]');
+  await p.waitForFunction(() => [...document.querySelectorAll('.due')].some(e => /Book talk 2/.test(e.textContent)), { timeout: 30000, polling: 200 });
+
+  // No papers: just type the scores: its own column in the Gradebook, typed into
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector(`[data-bring-for="${id}"]`, { timeout: 30000 });
+  await pickItem(p, `[data-bring-for="${id}"]`, 'just type the scores');
+  await p.waitForSelector('[data-add] [data-add-v]', { timeout: 30000 });
+  assert.equal(await p.evaluate(() => location.hash), '#/class/c1/grades');
+  await p.type('[data-add] [data-add-v]', '85');
+  await p.click('[data-add-save]');
+  await p.waitForSelector(`th[data-col="${id}"]`, { timeout: 30000 });
+
+  // Delete, at once after the question, and Undo brings the card back with its id and scores
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector(`[data-item="${id}"]`, { timeout: 30000 });
+  const before = cards(await libOf(p), 'Book talk 2').find(x => x.id === id);
+  assert.ok(before.typed, 'the typed score is on the card');
+  await pickItem(p, `[data-more-for="${id}"]`, '^Edit assignment');
+  await p.waitForSelector('dialog[open] [data-asg-del]');
+  await p.click('dialog[open] [data-asg-del]');
+  await p.waitForSelector('dialog[open] [data-asg-delok]');
+  await p.click('dialog[open] [data-asg-delok]');
+  const gone = id => p.waitForFunction(id => !JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.some(u => u.items.some(i => i.id === id)), {}, id);
+  await gone(id);
+  assert.equal(cards(await libOf(p), 'Book talk 2').length, 1, 'the copy in the linked class stays');
+  await undoToast(p);
+  await p.waitForFunction(id => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.some(u => u.items.some(i => i.id === id)), {}, id);
+  assert.deepEqual(cards(await libOf(p), 'Book talk 2').find(x => x.id === id), before);
+  await p.waitForSelector(`[data-item="${id}"]`);
+  const lib = await libOf(p);
+  await p.close();
+
+  // the current app reads both cards as they are
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  assert.deepEqual(cards(await m.evaluate(() => window.__gs.state().lib), 'Book talk 2'), cards(lib, 'Book talk 2'));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Find's New assignment: #/class/<id>/work/new opens the box on that class's tab
+test('Find: New assignment opens the box, with the class ticked and its first unit', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  await p.goto(srv.url + 'next/#/class/c1/work/new');
+  await p.waitForSelector('dialog[open] [data-asg-dlg]', { timeout: 60000 });
+  await p.waitForFunction(() => location.hash === '#/class/c1/work');
+  assert.deepEqual(await p.$$eval('[data-asg-cls]', s => s.map(x => [x.dataset.asgCls, x.querySelector('input').checked])), [['c1', true], ['c2', false], ['', false]]);
+  await p.type('dialog[open] input[data-asg-name]', 'Exit ticket');
+  assert.equal(await p.$eval('[data-asg-ok]', b => b.textContent), 'Save');
+  await p.keyboard.press('Enter');
+  await p.waitForFunction(() => /Exit ticket/.test(localStorage.getItem('gs.lib')));
+  assert.deepEqual(cards(await libOf(p), 'Exit ticket').map(x => [x.in, x.unit, x.type, x.due, x.group]), [['c1', 'Unit 1: Stories', undefined, undefined, undefined]]);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// No papers: a notes page for every student, opened for marking; then Forget these papers, asked first.
+test('No papers: presentations or videos makes a notes page for each student; Forget these papers lets the download go', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await pickItem(p, '[data-bring-for="i9"]', 'presentations or videos');
+  await p.waitForSelector('dialog[open] [data-sngo]:not([disabled])', { timeout: 30000 });
+  assert.match(await p.$eval('dialog[open]', d => d.textContent), /Each of the 6 students in Grade 9 English/);
+  await p.click('dialog[open] [data-np="cols"]');
+  await p.click('dialog[open] [data-sngo]');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready, { timeout: 60000 });
+  const got = await p.evaluate(() => window.__mark.state().batch.students.map(s => [s.key, s.files.map(f => f.name)]));
+  assert.equal(got.length, 6);
+  assert.ok(got.every(([, f]) => f.length === 1 && f[0] === 'Speech notes.pdf'), JSON.stringify(got));
+  const bid = (await libOf(p)).classes[0].units[0].items.find(i => i.id === 'i9').batchId;
+  assert.ok(bid, 'the card is linked to the pages');
+
+  // a safety copy made since (as the current app's are: localStorage, and the stores in slices) holds this download's work
+  const safe = (fn, ...a) => p.evaluate(fn, ...a);
+  await safe(id => new Promise((res, rej) => { const r = indexedDB.open('grading-studio-safety', 1); r.onupgradeneeded = () => { r.result.createObjectStore('meta'); r.result.createObjectStore('data'); };
+    r.onsuccess = () => { const tx = r.result.transaction(['meta', 'data'], 'readwrite'); tx.objectStore('meta').put({ id: 'c1', t: Date.now(), why: 'Before bringing work in', app: 'test', fromV: 1, toV: 1 }, 'c1');
+      tx.objectStore('data').put({ ls: { 'gs.batches': JSON.stringify({ [id]: 1, other: 1 }), ['gsc.saved.' + id]: '1' } }, 'c1'); tx.objectStore('data').put({ where: 'grading-studio-keep/work', k: [id, 'other'], v: [{ s: {} }, { s: {} }] }, 'c1|0');
+      tx.oncomplete = () => { r.result.close(); res(); }; tx.onerror = () => rej(tx.error); }; }), bid);
+
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-again-for="i9"]', { timeout: 30000 });
+  await pickItem(p, '[data-again-for="i9"]', '^Forget these papers');
+  await p.waitForSelector('dialog[open] [data-fgok]');
+  assert.match(await p.$eval('dialog[open]', d => d.textContent), /To get the papers back, bring the download in again on this card/, 'the box says how to get them back');
+  await p.click('dialog[open] [data-fgok]');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 30000 });
+  assert.ok(JSON.parse(await p.evaluate(() => localStorage.getItem('gs.tomb')))[bid], 'a tombstone, so a synced copy lets it go too');
+  assert.equal(await p.evaluate(id => new Promise(r => { const q = indexedDB.open('grading-studio-keep'); q.onsuccess = () => { const g = q.result.transaction('meta').objectStore('meta').get(id); g.onsuccess = () => r(g.result == null); }; }), bid), true, 'its row is gone from this browser');
+  // out of the safety copy too, as the current app does (src/migrate.js gsData.forget): Put back can't bring its work back
+  const copy = await safe(() => new Promise(res => { const r = indexedDB.open('grading-studio-safety'); r.onsuccess = () => { const o = r.result.transaction('data').objectStore('data'), a = o.get('c1'), b = o.get('c1|0'); b.onsuccess = () => res({ ls: a.result.ls, k: b.result.k }); }; }));
+  assert.deepEqual(copy, { ls: { 'gs.batches': JSON.stringify({ other: 1 }) }, k: ['other'] });
+
+  // brought in again on the card: the same pages, kept and saved at once, and not forgotten any more
+  await pickItem(p, '[data-bring-for="i9"]', 'presentations or videos');
+  await p.waitForSelector('dialog[open] [data-sngo]:not([disabled])', { timeout: 30000 });
+  await p.click('dialog[open] [data-np="cols"]');
+  await p.click('dialog[open] [data-sngo]');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready, { timeout: 60000 });
+  assert.equal(await p.evaluate(() => window.__mark.state().batch.id), bid, 'the same download');
+  await p.waitForFunction(id => !(JSON.parse(localStorage.getItem('gs.tomb') || '{}'))[id], {}, bid);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// Order and place: a card up in its unit, a unit up, a unit to another class and back, a unit's plan link, the class down in the
+// sidebar, and the class deleted (its cards to No class) and brought back with Undo. Each one undo step.
+test('order: cards and units moved, a unit to another class, its plan link; a class moved in the sidebar, deleted and brought back', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-more-for="i9"]', { timeout: 60000 });
+  const order = async () => (await libOf(p)).classes.map(c => [c.id, c.units.map(u => [u.id, u.items.map(i => i.id)])]);
+  await pickItem(p, '[data-more-for="i4"]', '^Move up');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units[0].items.map(i => i.id).join() === 'i1,i2,i4,i3,i9');
+  // dragged: a card onto another card goes before it
+  const drag = (from, to) => p.evaluate((from, to) => { const dt = new DataTransfer(), a = document.querySelector(from), b = document.querySelector(to);
+    a.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: dt })); for (const k of ['dragover', 'drop']) b.dispatchEvent(new DragEvent(k, { bubbles: true, cancelable: true, dataTransfer: dt })); }, from, to);
+  await drag('[data-item="i9"]', '[data-item="i1"]');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units[0].items.map(i => i.id).join() === 'i9,i1,i2,i4,i3');
+  await pickItem(p, '[data-umenu="u2"]', '^Move up');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.map(u => u.id).join() === 'u2,u1');
+  await pickItem(p, '[data-umenu="u2"]', '^Move to another class');
+  await p.waitForSelector('dialog[open] [data-unitto="c2"]');
+  await p.click('dialog[open] [data-unitto="c2"]');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes[1].units.map(u => u.id).join() === 'u2');
+  assert.deepEqual((await libOf(p)).classes[1].units[0].items.map(i => i.classId), ['c2', 'c2'], 'its cards take that class');
+  await undoToast(p);
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.map(u => u.id).join() === 'u2,u1');
+  // the unit's plan link
+  await pickItem(p, '[data-umenu="u1"]', '^Link to a unit plan');
+  await p.waitForSelector('dialog[open] input[data-ulink]');
+  await p.type('dialog[open] input[data-ulink]', 'example.org/units/stories');
+  await p.click('dialog[open] [data-ulok]');
+  await p.waitForSelector('[data-uatlas="u1"]');
+  assert.equal(await p.$eval('[data-uatlas="u1"]', a => a.href), 'https://example.org/units/stories');
+  const placed = await order();
+
+  // Edit roster: the class one down in the sidebar, then deleted (its units to No class), and Undo puts it back where it was
+  await p.goto(srv.url + 'next/#/class/c1/people');
+  await p.waitForSelector('[data-roster-edit]', { timeout: 30000 });
+  await p.click('[data-roster-edit]');
+  await p.waitForSelector('dialog[open] [data-class-down]');
+  assert.equal(await p.$eval('dialog[open] [data-class-up]', b => b.disabled), true, 'the first class goes no higher');
+  await p.click('dialog[open] [data-class-down]');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes.map(c => c.id).join() === 'c2,c1');
+  await p.waitForFunction(() => [...document.querySelectorAll('a[href="#/class/c1"], a[href="#/class/c2"]')].map(x => x.getAttribute('href')).join() === '#/class/c2,#/class/c1');
+  await p.waitForFunction(() => document.querySelector('dialog[open] [data-class-down]').disabled);
+  await p.waitForSelector('dialog[open] [data-class-del]');
+  await p.click('dialog[open] [data-class-del]');
+  await p.waitForSelector('dialog[open] [data-class-delok]');
+  await p.click('dialog[open] [data-class-delok]');
+  await p.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); return l.classes.length === 1 && l.loose.units.length === 2; });
+  assert.ok((await libOf(p)).loose.units.every(u => u.items.every(i => i.classId === '')));
+  await p.waitForFunction(() => location.hash === '#/class/-/work');
+  await undoToast(p);
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes.map(c => c.id).join() === 'c2,c1');
+  const back = await libOf(p);
+  assert.deepEqual(back.loose.units, []);
+  assert.deepEqual(back.classes.map(c => [c.id, c.units.map(u => [u.id, u.items.map(i => i.id)])]), [placed[1], placed[0]]);
+  assert.ok(back.classes[1].units.every(u => u.items.every(i => i.classId === 'c1')));
   assert.deepEqual(errors, []);
   await ctx.close();
 });

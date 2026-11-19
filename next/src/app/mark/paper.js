@@ -53,8 +53,12 @@ export function fitScale(pg, room, tall, fit, zoom) {
   s = Math.min(s, 1000 / pg.W);
   return Math.max(0.3, Math.min(2.2, s)) * (zoom || 1);
 }
-// renderPage: the page's picture at its size, then its marks over it.
+// renderPage: the page's picture at its size, then its marks over it. Drawing the marks reads the open download (state().batch), so
+// after each wait the page is drawn only while it is still shown and a download is still open: opening the paper again (another
+// window saved newer work, mark/windows.js; open.js begin) lets go of the download at once, before the new pages replace these.
+const shown = (pg, job) => job === pg.job && !!state().batch && state().pages.includes(pg);
 export async function renderPage(pg, s, dpr = window.devicePixelRatio || 1) {
+  if (!state().batch) return;
   const job = pg.job = (pg.job || 0) + 1, c = pg.canvas;
   pg.s = s;
   c.width = Math.ceil((pg.W + pg.side) * s * dpr); c.height = Math.ceil(pg.H * s * dpr);
@@ -65,19 +69,19 @@ export async function renderPage(pg, s, dpr = window.devicePixelRatio || 1) {
   // names hidden: the page's covers first (mark/covers.jsx), so a name never reaches the screen
   if (D.anonOn() && !pg.covers) {
     try { const C = await PARTS.covers(); if (job !== pg.job) return; pg.covers = await C.pageCovers(pg); } catch (e) { console.error(e); pg.covers = []; }
-    if (job !== pg.job || !state().pages.includes(pg)) return;
+    if (!shown(pg, job)) return;
   }
   const vp = D.vpRot(pg.file, pg.idx, pg.page, s * dpr);
   const bmp = document.createElement('canvas');
   bmp.width = Math.ceil(vp.width); bmp.height = Math.ceil(vp.height);
   const bctx = bmp.getContext('2d'); bctx.fillStyle = '#fff'; bctx.fillRect(0, 0, bmp.width, bmp.height);
   try { await pg.page.render({ canvasContext: bctx, viewport: vp, transform: D.skewXf(pg.file, pg.idx, vp), annotationMode: pdfjs.AnnotationMode.ENABLE }).promise; }
-  catch (e) { if ((e && e.name === 'RenderingCancelledException') || !state().pages.includes(pg)) return; console.error(e); }   // a paper opened again meanwhile: its old documents are gone
-  if (job !== pg.job || !state().pages.includes(pg)) return;
+  catch (e) { if ((e && e.name === 'RenderingCancelledException') || !shown(pg, job)) return; console.error(e); }   // a paper opened again meanwhile: its old documents are gone
+  if (!shown(pg, job)) return;
   D.loadLines(pg);
   pg.bmp = bmp;
   await D.stickersReady;
-  D.draw(pg);
+  if (shown(pg, job)) D.draw(pg);
 }
 export const redraw = pg => D.draw(pg);
 export const redrawAll = () => { for (const pg of state().pages) D.draw(pg); };

@@ -185,6 +185,6 @@ with a column for "wording changed since the last report" so a review only reads
 - `next/tools/lang-convert.js` no longer replaces anything: a run only adds a converted line where a language has none.
 - Each language is built as one `JSON.parse` string (next/build.js `lines-json`), about a third smaller than esbuild's named
   exports.
-- Lines held back for size: `next/lang/held/<code>.json` holds lines written for a language but not yet shipped, while the
-  new app's 3 MB total waits on the teacher's decision (a teacher downloads only the one language they choose). The app never
-  loads them; the test counts them as written.
+- Its letters are written as themselves, not as `\u` escapes (next/build.js, after esbuild), about 10 KB smaller squeezed.
+- Size: each language chunk has its own limit (`langFile`, 120 KB), and the 3 MB total counts the app with one language, the
+  largest, because a teacher downloads only the one they choose (the teacher's decision, 19 Nov 2026).
