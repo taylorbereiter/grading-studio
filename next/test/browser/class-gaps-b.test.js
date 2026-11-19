@@ -562,7 +562,7 @@ test('B-065 B-039: each class page has its own address: attendance for a day or 
   await at('grades/reports', 'dialog[open] [data-rp-text]', 'grades');
   await at('grades/sheets', 'dialog[open] [data-pss-sheet]', 'grades');
   await at('todo/missing', '[data-mis]', 'todo');
-  assert.ok(await p.evaluate(() => document.activeElement && document.activeElement.id === 'h-mis'), 'Missing work has the focus');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.id === 'h-mis', { timeout: 10000 });   // Missing work has the focus (it moves there a moment after the address settles)
   assert.deepEqual(errors, []);
   await ctx.close();
 });
