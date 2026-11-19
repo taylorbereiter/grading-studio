@@ -287,5 +287,11 @@
  "saving.drv_mine": "Meu Drive",
  "saving.drv_shared": "Compartilhados comigo",
  "saving.drv_drives": "Drives compartilhados",
- "saving.drv_last": "Última pasta"
+ "saving.drv_last": "Última pasta",
+ "saving.bad_not": "Suas marcações e notas mais recentes NÃO foram salvas.",
+ "saving.bad_partly": "Suas marcações e notas mais recentes foram salvas só em parte, na pequena cópia rápida deste navegador.",
+ "saving.bad_how": "O navegador não conseguiu guardá-las, muitas vezes porque o computador está sem espaço. Mantenha esta janela aberta, libere algum espaço e clique em Tentar de novo.",
+ "saving.bad_retry": "Tentar de novo",
+ "saving.bad_export": "Exportar o que tenho",
+ "saving.bad_over": "Salvo. Seu trabalho está seguro de novo."
 }

@@ -287,5 +287,11 @@
  "saving.drv_mine": "Mon Drive",
  "saving.drv_shared": "Partagés avec moi",
  "saving.drv_drives": "Drives partagés",
- "saving.drv_last": "Dernier dossier"
+ "saving.drv_last": "Dernier dossier",
+ "saving.bad_not": "Vos dernières annotations et notes NE sont PAS enregistrées.",
+ "saving.bad_partly": "Vos dernières annotations et notes ne sont enregistrées qu’en partie, dans la petite copie rapide de ce navigateur.",
+ "saving.bad_how": "Le navigateur n’a pas pu les stocker, souvent parce que l’ordinateur manque d’espace. Gardez cette fenêtre ouverte, libérez de l’espace et appuyez sur Réessayer.",
+ "saving.bad_retry": "Réessayer",
+ "saving.bad_export": "Exporter ce que j’ai",
+ "saving.bad_over": "Enregistré. Votre travail est de nouveau en sécurité."
 }

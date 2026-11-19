@@ -287,5 +287,11 @@
  "saving.drv_mine": "My Drive",
  "saving.drv_shared": "Shared with me",
  "saving.drv_drives": "Shared drives",
- "saving.drv_last": "Last folder"
+ "saving.drv_last": "Last folder",
+ "saving.bad_not": "Your latest marks and scores are NOT saved.",
+ "saving.bad_partly": "Your latest marks and scores are only partly saved, in this browser’s small quick copy.",
+ "saving.bad_how": "The browser wouldn’t store them, often because the computer is out of space. Keep this window open, free up some space, and press Try again.",
+ "saving.bad_retry": "Try again",
+ "saving.bad_export": "Export what I have",
+ "saving.bad_over": "Saved. Your work is safe again."
 }

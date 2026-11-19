@@ -287,5 +287,11 @@
  "saving.drv_mine": "マイドライブ",
  "saving.drv_shared": "共有アイテム",
  "saving.drv_drives": "共有ドライブ",
- "saving.drv_last": "前回のフォルダ"
+ "saving.drv_last": "前回のフォルダ",
+ "saving.bad_not": "最新の採点とスコアは保存されていません。",
+ "saving.bad_partly": "最新の採点とスコアは、このブラウザーの小さなクイックコピーに一部しか保存されていません。",
+ "saving.bad_how": "ブラウザーが保存できませんでした。多くの場合、コンピューターの空き容量不足が原因です。このウィンドウを開いたまま空き容量を確保し、「もう一度試す」を押してください。",
+ "saving.bad_retry": "もう一度試す",
+ "saving.bad_export": "今ある分を書き出す",
+ "saving.bad_over": "保存しました。作業は再び安全です。"
 }
