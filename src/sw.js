@@ -1,4 +1,7 @@
-// Grading Studio's service worker: keeps the pages on this computer, and holds a newer version back until the teacher says so.
+// The previous version's service worker (classic/sw.js, scope classic/): keeps its pages on this computer, and holds a newer version
+// back until the teacher says so. The new app's worker (next/src/sw.js, built to sw.js at the root) answers the root; this one answers
+// only classic/. Cache names are shared by the whole address, so this one's are gsc-*: it never opens the root's (gs-*) and the root's
+// never opens these.
 //
 // It touches nothing of her work. Marks, scores, papers and rosters live in localStorage and IndexedDB, which this file never opens;
 // the pages live in the browser's cache storage, which is separate. Deleting every cache here loses nothing but the offline copy.
@@ -10,8 +13,9 @@
 //
 // To switch all of this off for everyone, replace this file with one that unregisters itself and deletes the caches; browsers fetch
 // sw.js fresh, so that reaches every computer on its next visit.
-const APP = 'gs-app-1', NEXT = 'gs-next-1', KEPT = 'gs-kept-1';
-const PAGES = ['index.html', 'planner.html'], EXTRA = ['manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'];
+const APP = 'gsc-app-1', NEXT = 'gsc-next-1', KEPT = 'gsc-kept-1';
+// The icons and the install card are the new app's, at the root (outside this scope), so there is nothing extra to keep here.
+const PAGES = ['index.html', 'planner.html'], EXTRA = [];
 const SCOPE = self.registration.scope, at = n => SCOPE + n;
 const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
 const versionIn = async name => { try { const r = await caches.has(name) && await (await caches.open(name)).match(at('version.json')); return r ? await r.json() : null; } catch { return null; } };
@@ -85,7 +89,8 @@ async function promote() {
 const state = async () => ({ current: await versionIn(APP), next: await versionIn(NEXT), mode: await mode() });
 async function tell(extra) {
   const msg = { type: 'gs-state', state: await state(), ...extra };
-  for (const c of await self.clients.matchAll({ type: 'window', includeUncontrolled: true })) c.postMessage(msg);
+  // Only this version's windows: the new app's root worker sends its own gs-state to the root's.
+  for (const c of await self.clients.matchAll({ type: 'window', includeUncontrolled: true })) if (c.url.startsWith(SCOPE)) c.postMessage(msg);
 }
 
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(inTurn(() => check()).then(() => tell(), () => {})); });

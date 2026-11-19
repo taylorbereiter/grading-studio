@@ -13,7 +13,9 @@ const G = { token: null, exp: 0, scope: '', client: null, cscope: '', email: sto
 // A home-screen app on an iPhone can't use Google's pop-up window, so it goes to Google's page and comes back with the key in the address.
 // The same on any iPhone or iPad browser (Safari, Chrome): there the pop-up is left as a blank page after Continue and never comes back.
 const G_REDIRECT = navigator.standalone === true || /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
-const gBack = () => location.origin + location.pathname.replace(/index\.html$/, '');
+// Google sends her back only to the address it knows, the root. The previous version lives at classic/, so it asks for the root and
+// leaves a note in this tab (gs.gBack); the root page sees the note and hands the key in the address straight on to classic/.
+const gBack = () => { const p = location.pathname.replace(/index\.html$/, ''); if (!/\/classic\/$/.test(p)) return location.origin + p; try { sessionStorage.setItem('gs.gBack', 'classic'); } catch {} return location.origin + p.replace(/classic\/$/, ''); };
 {
   // Back from Google's page: the key is taken out of the address before anything reads it
   const h = new URLSearchParams(location.hash.replace(/^#/, '')), want = (() => { try { return sessionStorage.getItem('gs.gState'); } catch { return null; } })();
