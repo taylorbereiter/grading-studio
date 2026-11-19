@@ -506,5 +506,11 @@
  "help.cmd_snip": "스크린샷",
  "help.cmd_snip_also": "화면의 일부를 끌어서 그 그림을 복사합니다",
  "help.cmd_beside": "Grading Studio 옆에 {name} 열기",
- "help.cmd_beside_generic": "Grading Studio 옆에 AI 도우미 열기"
+ "help.cmd_beside_generic": "Grading Studio 옆에 AI 도우미 열기",
+ "help.cmd_p_att": "{name}: 출석",
+ "help.cmd_p_seat": "{name}: 자리 배치",
+ "help.cmd_p_charts": "{name}: 차트",
+ "help.cmd_p_goals": "{name}: 목표",
+ "help.cmd_p_reports": "{name}: 성적표 의견",
+ "help.cmd_p_missing": "{name}: 미제출 과제"
 }

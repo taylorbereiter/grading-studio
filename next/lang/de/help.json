@@ -506,5 +506,11 @@
  "help.cmd_snip": "Bildschirmfoto",
  "help.cmd_snip_also": "Ziehen Sie über einen Teil des Bildschirms, um ein Bild davon zu kopieren",
  "help.cmd_beside": "{name} neben Grading Studio öffnen",
- "help.cmd_beside_generic": "Ihren KI-Assistenten neben Grading Studio öffnen"
+ "help.cmd_beside_generic": "Ihren KI-Assistenten neben Grading Studio öffnen",
+ "help.cmd_p_att": "{name}: Anwesenheit",
+ "help.cmd_p_seat": "{name}: Sitzplan",
+ "help.cmd_p_charts": "{name}: Diagramme",
+ "help.cmd_p_goals": "{name}: Ziele",
+ "help.cmd_p_reports": "{name}: Zeugniskommentare",
+ "help.cmd_p_missing": "{name}: fehlende Arbeiten"
 }

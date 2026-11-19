@@ -108,3 +108,14 @@ test('A-013: her assistant opens beside Grading Studio from Find', async () => {
   assert.match(tg.url(), /gemini\.google\.com|about:blank/);
   await p.ctx.close();
 });
+
+test('A-008: each class page is found by name (attendance, seating, charts, goals, report comments, missing work), and opens', async () => {
+  const p = await fresh();
+  await p.goto(srv.url + 'next/#/home'); await shellUp(p);
+  for (const [text, hash] of [['Grade 9 English: attendance', '#/class/c1/people/attendance'], ['Grade 9 English: seating plan', '#/class/c1/people/seating'],
+    ['Grade 9 English: charts', '#/class/c1/grades/charts'], ['Grade 9 English: goals', '#/class/c1/grades/goals'],
+    ['Grade 9 English: report comments', '#/class/c1/grades/reports'], ['Grade 9 English: missing work', '#/class/c1/todo/missing']]) {
+    await press(p, text); await p.waitForFunction(h => location.hash === h, { timeout: 10000 }, hash);
+  }
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});

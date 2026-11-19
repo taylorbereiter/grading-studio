@@ -30,7 +30,10 @@ export function addHelpCommands(keys) {
 
 let mine = [];
 const JOBS = [['help.cmd_open_work', 'upload', 'work'], ['help.cmd_open_folder', 'folder', 'work'], ['help.cmd_split', 'image', 'work'], ['help.cmd_match', 'people', 'work'], ['help.cmd_new_asg', 'plus', 'asg'], ['help.cmd_add_class', 'plus', 'new'], ['help.cmd_gc', 'school', 'new']];
-const PAGES = [['work', 'help.cmd_p_work'], ['people', 'help.cmd_p_people'], ['grades', 'help.cmd_p_grades'], ['todo', 'help.cmd_p_todo']];
+// each class's pages, and the ones inside them (the current app's class tools: attendance, seating, charts, goals, report comments, missing work)
+const PAGES = [['work', 'help.cmd_p_work'], ['people', 'help.cmd_p_people'], ['grades', 'help.cmd_p_grades'], ['todo', 'help.cmd_p_todo'],
+  ['people/attendance', 'help.cmd_p_att'], ['people/seating', 'help.cmd_p_seat'], ['grades/charts', 'help.cmd_p_charts'], ['grades/goals', 'help.cmd_p_goals'],
+  ['grades/reports', 'help.cmd_p_reports'], ['todo/missing', 'help.cmd_p_missing']];
 // Settings' rest, ready before a row needs it: a window opened after waiting for a file is stopped by the browser.
 let more = null;
 async function findRows() {
@@ -40,7 +43,7 @@ async function findRows() {
   const add = c => mine.push(addCommand(c)), firstCls = (await import('../../crossings.js').then(m => m.classesForHome()).catch(() => [])).filter(c => !c.loose);
   for (const r of rows) add({ id: 'asg-' + r.id, label: r.name || t('help.cmd_asg'), also: (r.cls || t('help.cmd_no_class')) + ' ' + r.unit, group: t('help.cmd_asg'), icon: 'grades', run: () => go('mark', r.id) });
   for (const r of kept) add({ id: 'kept-' + r.id, label: r.name || t('help.cmd_a_download'), also: t('help.cmd_kept'), group: t('help.cmd_asg'), icon: 'grades', run: () => go('mark', r.id) });
-  for (const c of firstCls) for (const [k, line] of PAGES) add({ id: 'cp-' + c.id + '-' + k, label: t(line, { name: c.name }), group: t('help.cmd_pages'), icon: 'people', run: () => go('class', c.id, k) });
+  for (const c of firstCls) for (const [k, line] of PAGES) add({ id: 'cp-' + c.id + '-' + k.replace('/', '-'), label: t(line, { name: c.name }), group: t('help.cmd_pages'), icon: 'people', run: () => go('class', c.id, ...k.split('/')) });
   for (const [k, icon, to] of JOBS) add({ id: 'job-' + k, label: t(k), group: t('cmd.group_do'), icon, run: () => (to === 'new' ? go('class', 'new') : go('class', to === 'asg' && /^class\//.test(current().pattern || '') && current().params.id !== 'new' ? current().params.id : firstCls[0] ? firstCls[0].id : '-', 'work', to === 'asg' ? 'new' : null)) });
   add(S.sampleOn() ? { id: 'job-sample', label: t('help.cmd_leave_sample'), group: t('cmd.group_do'), icon: 'x', run: S.leaveSample } : { id: 'job-sample', label: t('help.cmd_sample'), group: t('cmd.group_do'), icon: 'spark', run: () => S.enterSample() });
   // Go to: To do by week and the strong examples; a dark or a light look in one press; a screenshot from any screen; her assistant beside the app

@@ -506,5 +506,11 @@
  "help.cmd_snip": "スクリーンショット",
  "help.cmd_snip_also": "画面の一部をドラッグして、その画像をコピーします",
  "help.cmd_beside": "Grading Studio の横に {name} を開く",
- "help.cmd_beside_generic": "Grading Studio の横に AI アシスタントを開く"
+ "help.cmd_beside_generic": "Grading Studio の横に AI アシスタントを開く",
+ "help.cmd_p_att": "{name}：出欠",
+ "help.cmd_p_seat": "{name}：座席表",
+ "help.cmd_p_charts": "{name}：グラフ",
+ "help.cmd_p_goals": "{name}：目標",
+ "help.cmd_p_reports": "{name}：通知表の所見",
+ "help.cmd_p_missing": "{name}：未提出の課題"
 }

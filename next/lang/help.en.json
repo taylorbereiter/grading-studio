@@ -506,5 +506,11 @@
  "help.cmd_snip": "Screenshot",
  "help.cmd_snip_also": "Drag over part of the screen to copy a picture of it",
  "help.cmd_beside": "Open {name} beside Grading Studio",
- "help.cmd_beside_generic": "Open your AI assistant beside Grading Studio"
+ "help.cmd_beside_generic": "Open your AI assistant beside Grading Studio",
+ "help.cmd_p_att": "{name}: attendance",
+ "help.cmd_p_seat": "{name}: seating plan",
+ "help.cmd_p_charts": "{name}: charts",
+ "help.cmd_p_goals": "{name}: goals",
+ "help.cmd_p_reports": "{name}: report comments",
+ "help.cmd_p_missing": "{name}: missing work"
 }

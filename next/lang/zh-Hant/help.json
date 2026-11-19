@@ -506,5 +506,11 @@
  "help.cmd_snip": "螢幕截圖",
  "help.cmd_snip_also": "在螢幕上拖曳選取一塊，複製成圖片",
  "help.cmd_beside": "在 Grading Studio 旁邊開啟 {name}",
- "help.cmd_beside_generic": "在 Grading Studio 旁邊開啟您的 AI 助理"
+ "help.cmd_beside_generic": "在 Grading Studio 旁邊開啟您的 AI 助理",
+ "help.cmd_p_att": "{name}：出缺勤",
+ "help.cmd_p_seat": "{name}：座位表",
+ "help.cmd_p_charts": "{name}：圖表",
+ "help.cmd_p_goals": "{name}：目標",
+ "help.cmd_p_reports": "{name}：成績單評語",
+ "help.cmd_p_missing": "{name}：缺交作業"
 }

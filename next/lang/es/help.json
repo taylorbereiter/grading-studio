@@ -506,5 +506,11 @@
  "help.cmd_snip": "Captura de pantalla",
  "help.cmd_snip_also": "Arrastre sobre una parte de la pantalla para copiar una imagen de ella",
  "help.cmd_beside": "Abrir {name} junto a Grading Studio",
- "help.cmd_beside_generic": "Abrir su asistente de IA junto a Grading Studio"
+ "help.cmd_beside_generic": "Abrir su asistente de IA junto a Grading Studio",
+ "help.cmd_p_att": "{name}: asistencia",
+ "help.cmd_p_seat": "{name}: plano de asientos",
+ "help.cmd_p_charts": "{name}: gráficos",
+ "help.cmd_p_goals": "{name}: metas",
+ "help.cmd_p_reports": "{name}: comentarios de boletín",
+ "help.cmd_p_missing": "{name}: trabajos pendientes"
 }
