@@ -139,6 +139,8 @@ export const PARTS = {
   // the rest of Settings: the assistant, programme, averages, goals, handing back, text size (screens/settings-more.jsx)
   setmore: () => import('./screens/settings-more.jsx'),
   setsave: () => import('./screens/settings-saving.jsx'),
+  // the red bar when work didn't save (saving/bar.jsx)
+  savebar: () => import('./saving/bar.jsx'),
   drive: () => import('./drive-button.jsx'),
   // My setup, with the current app's reading and bringing in (app/setup/mysetup.jsx, engines/gstp.js)
   mysetup: () => import('./setup/mysetup.jsx'),

@@ -164,5 +164,8 @@
  "drive.offline": "Google ist nicht erreichbar. Prüfen Sie die Internetverbindung.",
  "drive.failed": "Das kam nicht aus Google Drive. Versuchen Sie es noch einmal.",
  "cmd.dark_mode": "Dunkler Modus",
- "cmd.light_mode": "Heller Modus"
+ "cmd.light_mode": "Heller Modus",
+ "update.wait_save": "Ihre neueste Arbeit ist noch nicht gespeichert, daher wartet das Update. Siehe die rote Leiste.",
+ "update.stale": "Ein anderes Fenster wurde aktualisiert. Dieses Fenster hat noch die ältere Version.",
+ "update.reload": "Dieses Fenster neu laden"
 }
