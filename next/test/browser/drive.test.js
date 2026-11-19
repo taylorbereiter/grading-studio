@@ -75,7 +75,9 @@ test('signing in from Settings, the sync file sent with the library, the work an
   assert.ok(await until(() => D.plan), 'the Planner’s own file');
   assert.equal(Object.keys(D.planFile().lessons).length, 6);
   assert.ok(D.planFile().kv.units && D.planFile().kv.setup);
-  // nothing new: no new write
+  // nothing new: no new write. The focus runner boots a moment after the first screen and, on a fresh browser, writes its log once
+  // (fcSeen) and then its shared settings (tkShare, gsp.timeCount, the last of its first writes), so that is waited for first
+  await p.waitForFunction(() => document.querySelector('.fcroot') && localStorage.getItem('gsp.timeCount'), { timeout: 30000 });
   await syncNew(p, D);   // the first merge stamps the library, as the current app's does
   const w = D.writes; await syncNew(p, D); assert.equal(D.writes, w, 'nothing changed, so nothing is written');
   // the renewal by itself, on by default, turned off and kept
