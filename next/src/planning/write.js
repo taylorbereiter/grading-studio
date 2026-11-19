@@ -16,7 +16,7 @@
 //   saveVersions(id, list)    a lesson's versions as a whole (kv ver:<id>), when one is put back
 //   saveSchoolFile(hash, data) a School file's bytes by their SHA-256 (grading-studio-school/files; src/school.js schPut)
 // A lesson written while a Planner folder is linked also goes to its file there (planning/folder.js), as the current Planner does.
-import { lessons, kv, school, schoolFiles, manageBacLinks, taughtIn, planTime, newYear, words, look, theme, language, mailApp, googleEmail, googleAuto, drivePaperDir, driveVideoDir, planCopy, planSeen, planBig } from './index.js';
+import { lessons, kv, school, schoolFiles, manageBacLinks, taughtIn, planTime, newYear, words, look, theme, language, mailApp, googleEmail, googleAuto, drivePaperDir, driveVideoDir, planCopy, planSeen, planBig, presentTimer, presentSound, presentBig, presentOwn } from './index.js';
 import { mayWrite } from '../shared/lock.js';
 import * as tabs from '../shared/tabs.js';
 import { saved } from '../shared/saved.js';
@@ -106,7 +106,8 @@ export async function saveKv(name, value, { file = true } = {}) {
 // Linking the Planner folder, writing it whole and what reading it keeps are in planning/folder-more.js (loaded only with a folder).
 
 const PREFS = { 'gs.look': look, 'gs.theme': theme, 'gs.lang': language, 'gs.words': words, 'gs.mailApp': mailApp, 'gs.mblinks': manageBacLinks, 'gs.school': school,
-  'gs.gEmail': googleEmail, 'gs.gAuto': googleAuto, 'gs.gPaperDir': drivePaperDir, 'gs.gVidDir': driveVideoDir, 'gs.planCopy': planCopy, 'gs.planSeen': planSeen, 'gs.planBig': planBig };
+  'gs.gEmail': googleEmail, 'gs.gAuto': googleAuto, 'gs.gPaperDir': drivePaperDir, 'gs.gVidDir': driveVideoDir, 'gs.planCopy': planCopy, 'gs.planSeen': planSeen, 'gs.planBig': planBig,
+  'gsp.presentTimer': presentTimer, 'gsp.presentSound': presentSound, 'gsp.presentBig': presentBig, 'gsp.presentOwn': presentOwn };
 // value undefined removes the key, as the current app does for English (gs.lang).
 export function savePref(key, value) {
   const acc = PREFS[key]; if (!acc) throw new Error('Not a teacher-wide setting: ' + key);
