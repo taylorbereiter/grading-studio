@@ -17,6 +17,7 @@ import { DriveButton } from '../drive-button.jsx';
 import '../mark/lines.js';
 import '../mark/setup-lines.js';
 import './lines.js';
+import { heicSay } from '../mark/heic.js';
 
 const J = v => JSON.parse(JSON.stringify(v));
 const itemIn = (l, id) => { for (const c of [...l.classes, l.loose]) for (const u of c.units) { const it = u.items.find(x => x.id === id); if (it) return it; } return null; };
@@ -35,6 +36,7 @@ export async function readRubric(file) {
   const [P, PDFLib] = await Promise.all([PARTS.pdf(), PARTS.pdflib()]);
   if (!state().pdfjsLib) use({ pdfjsLib: P.pdfjs() });
   use({ PDFLib });
+  heicSay(name);
   const m = await E.makeFile(name, bytes);
   if (m.kind !== 'pdf' && m.kind !== 'img') throw new Error('not a page');
   await PDFLib.PDFDocument.load(m.data, { ignoreEncryption: true });

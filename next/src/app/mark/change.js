@@ -15,6 +15,7 @@ import { set as setState } from '../../engines/gcore.js';
 import { PARTS } from '../router.js';
 import { libs } from './paper.js';
 import { prefs } from '../../students/prefs.js';
+import { heicSay } from './heic.js';
 
 const prefsGet = k => !!prefs.get(k, false);
 
@@ -34,6 +35,7 @@ export async function addFiles(st, list) {
   const pdfjs = await libs(), X = (await PARTS.outEngine()).X, W = await PARTS.write(), bb = b(), made = [];
   // a photo becomes a PDF page (makeFile, pictureToPdf), which needs pdf-lib
   if (!state().PDFLib && list.some(e => /\.(png|jpe?g|gif|webp|bmp|heic|heif|tiff?|avif)$/i.test(e.path))) use({ PDFLib: await PARTS.pdflib() });
+  heicSay(list.map(e => e.path));
   for (const e of list) {
     const bytes = new Uint8Array(await e.file.arrayBuffer());
     const name = e.file.name.replace(/[\\/]+/g, '-'), base = st.key + '/' + name;
