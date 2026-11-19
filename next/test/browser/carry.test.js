@@ -80,12 +80,12 @@ test('take my work with me: a protected file, the wrong passphrase turned away, 
   await settings(p);
   await until(() => workOf(p, 'gs.b.n1'));
   await p.click('[data-svtake]');
-  await p.waitForSelector('[data-svp1]');
+  await p.waitForSelector('dialog[open] [data-svp1]');
   await p.waitForSelector('[data-svlack]');
   assert.match(await p.$eval('[data-svlack]', e => e.textContent), /Narrative essay/, 'says which downloads have no papers here');
-  await typeIn(p, '[data-svp1]', 'short'); await typeIn(p, '[data-svp2]', 'short'); await p.click('dialog[open] [data-ok]');
+  await typeIn(p, 'dialog[open] [data-svp1]', 'short'); await typeIn(p, 'dialog[open] [data-svp2]', 'short'); await p.click('dialog[open] [data-ok]');
   assert.match(await p.$eval('.sv-err', e => e.textContent), /at least 8/);
-  await typeIn(p, '[data-svp1]', PASS); await typeIn(p, '[data-svp2]', PASS); await p.click('dialog[open] [data-ok]');
+  await typeIn(p, 'dialog[open] [data-svp1]', PASS); await typeIn(p, 'dialog[open] [data-svp2]', PASS); await p.click('dialog[open] [data-ok]');
   await p.waitForSelector('[data-svsaid]', { timeout: 60000 });
   assert.match(await p.$eval('[data-svsaid]', e => e.textContent), /^Done: Grading Studio work \d{4}-\d\d-\d\d\.gswork/);
   const name = (await files(p)).find(n => n.endsWith('.gswork'));
@@ -97,11 +97,11 @@ test('take my work with me: a protected file, the wrong passphrase turned away, 
   await settings(p);
   assert.equal(await workOf(p, 'gs.b.n1'), null);
   await (await p.$('[data-svbringin]')).uploadFile(file);
-  await p.waitForSelector('[data-svp1]');
-  await typeIn(p, '[data-svp1]', 'not the passphrase'); await p.click('dialog[open] [data-ok]');
+  await p.waitForSelector('dialog[open] [data-svp1]');
+  await typeIn(p, 'dialog[open] [data-svp1]', 'not the passphrase'); await p.click('dialog[open] [data-ok]');
   await p.waitForSelector('.sv-err', { timeout: 60000 });
   assert.match(await p.$eval('.sv-err', e => e.textContent), /doesn’t open this file/);
-  await typeIn(p, '[data-svp1]', PASS); await p.click('dialog[open] [data-ok]');
+  await typeIn(p, 'dialog[open] [data-svp1]', PASS); await p.click('dialog[open] [data-ok]');
   await p.waitForSelector('[data-svpreview]', { timeout: 60000 });
   const pv = await p.$eval('[data-svpreview]', e => e.textContent);
   assert.match(pv, /2 new downloads/); assert.match(pv, /Narrative essay/); assert.match(pv, /Poetry analysis/);
@@ -112,7 +112,7 @@ test('take my work with me: a protected file, the wrong passphrase turned away, 
   assert.equal((await libOf(p)).classes.length, 2, 'the classes came in');
   // bringing the same file in again finds nothing to do
   await (await p.$('[data-svbringin]')).uploadFile(file);
-  await p.waitForSelector('[data-svp1]'); await typeIn(p, '[data-svp1]', PASS); await p.click('dialog[open] [data-ok]');
+  await p.waitForSelector('dialog[open] [data-svp1]'); await typeIn(p, 'dialog[open] [data-svp1]', PASS); await p.click('dialog[open] [data-ok]');
   await p.waitForSelector('[data-svnothing]', { timeout: 60000 });
   await p.close();
 });
@@ -127,7 +127,7 @@ test('a new school year: the year goes into a checked file, the classes carry on
   await p.waitForSelector('[data-svnewyear]');
   await typeIn(p, '[data-svyto]', '2026–27');
   await typeIn(p, '[data-svyfrom]', '2026–27');
-  await typeIn(p, '[data-svp1]', PASS); await typeIn(p, '[data-svp2]', PASS);
+  await typeIn(p, 'dialog[open] [data-svp1]', PASS); await typeIn(p, 'dialog[open] [data-svp2]', PASS);
   await p.click('[data-svyeargo]');
   await p.waitForSelector('.sv-err', { timeout: 5000 });
   assert.match(await p.$eval('.sv-err', e => e.textContent), /different name/);
@@ -149,7 +149,7 @@ test('a new school year: the year goes into a checked file, the classes carry on
   // open the archived year: this one is saved first, then last year comes back
   const file = await fileOut(p, name);
   await (await p.$('[data-svyearin]')).uploadFile(file);
-  await p.waitForSelector('[data-svp1]'); await typeIn(p, '[data-svp1]', PASS); await p.click('dialog[open] [data-ok]');
+  await p.waitForSelector('dialog[open] [data-svp1]'); await typeIn(p, 'dialog[open] [data-svp1]', PASS); await p.click('dialog[open] [data-ok]');
   await p.waitForSelector('[data-svyopengo]', { timeout: 60000 });
   assert.match(await p.$eval('[data-svyopengo]', e => e.textContent), /Save 2027–28 and open 2026–27/);
   await Promise.all([p.waitForNavigation({ timeout: 90000 }), p.click('[data-svyopengo]')]);
