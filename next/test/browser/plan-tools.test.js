@@ -61,7 +61,7 @@ test('the lesson’s Beside drawer: books, a video, the unit and the notebook, w
   await p.click('main [data-focus="beside"]');
   await p.waitForSelector('aside.beside [role=tab]');
   assert.deepEqual(await p.$$eval('aside.beside [role=tab]', b => b.map(x => x.textContent)), ['Books', 'Activities', 'Video', 'Unit', 'Notebook', 'Assistant']);
-  assert.ok(await p.$('aside.beside input[data-addpdf]'), 'a PDF can be added');
+  await p.waitForSelector('aside.beside input[data-addpdf]');
   const tab = async name => { await p.evaluate(n => [...document.querySelectorAll('aside.beside [role=tab]')].find(x => x.textContent === n).click(), name); await wait(250); };
   await tab('Unit');
   assert.match(await p.$eval('aside.beside', a => a.textContent), /Unit 2: Poetry/);

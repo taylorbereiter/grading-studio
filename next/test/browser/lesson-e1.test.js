@@ -505,40 +505,73 @@ test('assistant box edits and clear undo keep chips and instructions saved since
   await p.ctx.close();
 });
 
-// A one-page PDF with a line of made-up text, built here.
-function tinyPdf(text) {
-  const objs = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>', '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>'];
-  const stream = 'BT /F1 18 Tf 30 100 Td (' + text + ') Tj ET';
-  objs.push('<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
-  let out = '%PDF-1.4\n'; const at = [];
-  objs.forEach((o, i) => { at.push(out.length); out += (i + 1) + ' 0 obj\n' + o + '\nendobj\n'; });
-  const x = out.length; out += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n' + at.map(n => String(n).padStart(10, '0') + ' 00000 n \n').join('') + 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + x + '\n%%EOF\n';
-  return Buffer.from(out, 'latin1');
-}
-
-test('E1-078 E1-079: a book page goes in the box by its button or by dragging it there, with its words', async () => {
+test('E1-078 E1-079: a reopened book page goes in the box by its button or by dragging it there, with its words', async t => {
   const p = await K.fresh();
+  t.after(() => p.ctx.close());
   await p.ctx.overridePermissions(K.srv.url.replace(/\/$/, ''), ['clipboard-read', 'clipboard-write', 'clipboard-sanitized-write']);
   await beside(p, 'L2');
-  const f = path.join(require('os').tmpdir(), 'e1-poems-' + process.pid + '.pdf'); require('fs').writeFileSync(f, tinyPdf('Stanza one is read slowly'));
-  const input = await p.$('aside.beside input[data-addpdf]'); await input.uploadFile(f);
-  await p.waitForSelector('aside.beside [data-book]'); await p.click('aside.beside [data-book]');
-  await p.waitForSelector('aside.beside [data-focus="page-to-ai"]'); await wait(500);
-  await p.click('aside.beside [data-focus="page-to-ai"]');
-  await until(async () => { const b = await kvGet(p, 'cbox'); return b && b.chips.length === 1; });
-  // E1-079: the page dragged onto the drawer
-  await p.evaluate(() => { const dt = new DataTransfer(); document.querySelector('aside.beside canvas.pdfpage').dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: dt }));
-    const el = document.querySelector('aside.beside .bbody'); for (const k of ['dragover', 'drop']) el.dispatchEvent(new DragEvent(k, { bubbles: true, cancelable: true, dataTransfer: dt })); });
-  await until(async () => { const b = await kvGet(p, 'cbox'); return b && b.chips.length === 2; });
+  const name = 'e1-poems-' + process.pid;
+  const file = path.join(require('os').tmpdir(), name + '.pdf');
+  const { makePaper } = require('../../../test/helpers/fixtures.js');
+  require('fs').writeFileSync(file, await makePaper({ title: 'Poetry', pages: 2, lines: ['Stanza two is read slowly'] }));
+  t.after(() => require('fs').rmSync(file, { force: true }));
+
+  const add = await p.waitForSelector('aside.beside label:has(input[data-addpdf])', { visible: true });
+  const [chooser] = await Promise.all([p.waitForFileChooser(), add.click()]);
+  await chooser.accept([file]);
+  const book = await p.waitForSelector('aside.beside [data-book]');
+  const id = await book.evaluate(el => el.dataset.book);
+  await book.click();
+  const next = await p.waitForSelector('aside.beside [aria-label="Next page"]:not(:disabled)');
+  await next.click();
+  assert.ok(await until(async () => (await kvGet(p, 'pdfpg:' + id)) === 2), 'the bookmarked page was saved');
+
+  await p.goto(K.srv.url + 'blank');
+  await beside(p, 'L2');
+  const reopened = await p.waitForSelector('aside.beside [data-book]');
+  // Keep the real bookmark transaction pending so an open book cannot send or save page 1 before page 2 is restored.
+  await p.evaluate(id => {
+    const get = IDBObjectStore.prototype.get;
+    IDBObjectStore.prototype.get = function (key) {
+      const request = get.call(this, key);
+      if (this.name === 'kv' && key === 'pdfpg:' + id) {
+        IDBObjectStore.prototype.get = get;
+        window.releaseBookmark = false;
+        const hold = () => { if (!window.releaseBookmark) get.call(this, key).onsuccess = hold; };
+        request.addEventListener('success', hold);
+      }
+      return request;
+    };
+  }, id);
+  await reopened.click();
+  await p.waitForFunction(() => window.releaseBookmark === false);
+  const action = 'aside.beside [data-focus="page-to-ai"]';
+  const canvas = 'aside.beside canvas.pdfpage';
+  assert.equal(await p.$eval(action, el => el.disabled), true);
+  assert.equal(await p.$eval(canvas, el => el.draggable), false);
+  await p.evaluate(() => { window.releaseBookmark = true; });
+  await (await p.waitForSelector(action + ':not(:disabled)')).click();
+  assert.ok(await until(async () => (await kvGet(p, 'cbox'))?.chips.length === 1));
+  const [buttonChip] = (await kvGet(p, 'cbox')).chips;
+  assert.equal(buttonChip.page, 2);
+  assert.match(buttonChip.text, /Stanza two is read slowly/);
+
+  await p.evaluate(() => {
+    const dt = new DataTransfer();
+    document.querySelector('aside.beside canvas.pdfpage').dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: dt }));
+    const el = document.querySelector('aside.beside .bbody');
+    for (const type of ['dragover', 'drop']) el.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: dt }));
+  });
+  assert.ok(await until(async () => (await kvGet(p, 'cbox'))?.chips.length === 2));
   await p.waitForSelector('aside.beside .bchip');
-  assert.deepEqual(await p.$$eval('aside.beside .bchip span[data-raw]', s => s.map(x => x.textContent)), ['e1-poems-' + process.pid + ', page 1', 'e1-poems-' + process.pid + ', page 1']);
+  assert.deepEqual(await p.$$eval('aside.beside .bchip span[data-raw]', spans => spans.map(x => x.textContent)), [name + ', page 2', name + ', page 2']);
   await p.click('aside.beside [data-focus="box-copy"]');
-  await p.waitForFunction(async () => (await navigator.clipboard.readText()).includes('Stanza'), { timeout: 8000, polling: 200 });
-  const text = await p.evaluate(() => navigator.clipboard.readText());
-  assert.match(text, /^\[e1-poems-\d+, page 1\]\nStanza one is read slowly\n\n\[e1-poems-\d+, page 1\]\nStanza one is read slowly/);
-  require('fs').unlinkSync(f);
+  await p.waitForFunction(async () => (await navigator.clipboard.readText()).includes('Stanza two'), { timeout: 8000, polling: 200 });
+  const clipboard = await p.evaluate(() => navigator.clipboard.readText());
+  const pages = clipboard.split('[' + name + ', page 2]\n');
+  assert.equal(pages.length, 3);
+  for (const page of pages.slice(1)) assert.match(page, /Poetry, page 2[\s\S]*Stanza two is read slowly/);
   assert.deepEqual(p.errors, []);
-  await p.ctx.close();
 });
 
 test('E1-002 E1-046 E1-056 E1-067: a slide, a file and a document go in the box; what she wants on a slide is kept for the assistant', async () => {

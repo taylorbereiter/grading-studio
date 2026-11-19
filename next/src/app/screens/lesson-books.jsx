@@ -7,6 +7,7 @@ import { PARTS } from '../router.js';
 import { addBook, removeBook, restoreBook, saveBookPages } from '../../planning/books.js';
 import { savePlannerKv } from '../../planning/write.js';
 import { plannerKv } from '../../planning/plan.js';
+import { readPlannerRecord } from '../../planning/change.js';
 import { saveFailed } from '../plan/save.js';
 import { boxAdd, CHIP_TYPE } from '../plan/cbox.js';
 import { DriveButton } from '../drive-button.jsx';
@@ -53,10 +54,13 @@ function Book({ book, assistantName, onBack }) {
       const b = await plannerKv('pdf:' + book.id); if (!b) { toast(t('tool.book_missing')); return onBack(); }
       try {
         const L = await pdfLib(), doc = await L.getDocument({ data: new Uint8Array(await b.arrayBuffer()), isEvalSupported: false }).promise; if (!on) return;
-        setPdf(doc); const last = +(await plannerKv('pdfpg:' + book.id)) || 1; setPage(Math.min(Math.max(1, last), doc.numPages));
+        const last = +(await readPlannerRecord('kv', 'pdfpg:' + book.id)) || 1;
+        if (!on) return;
+        setPage(Math.min(Math.max(1, last), doc.numPages));
+        setPdf(doc);
         if (!book.pages) await saveBookPages(book.id, doc.numPages).catch(saveFailed);
         setOutline(await outlineOf(doc));
-      } catch (e) { console.warn(e); toast(t('tool.book_unread')); onBack(); }
+      } catch (e) { if (on) { console.warn(e); toast(t('tool.book_unread')); onBack(); } }
     })();
     return () => { on = false; };
   }, [book.id]);
@@ -85,7 +89,11 @@ function Book({ book, assistantName, onBack }) {
   // This page into the assistant box (panel.js pagebox), named after the contents line it falls under.
   const chipOf = (n, title) => ({ kind: 'page', book: book.id, page: n, title: title || 'p. ' + n, bookName: book.name, label: book.name + ', ' + (title ? title + ' (p. ' + n + ')' : 'p. ' + n) }); // not-words
   const under = n => { const all = (outline || []).flatMap(function f(x) { return [x, ...(x.items || []).flatMap(f)]; }).filter(x => x.page && x.page <= n); return all.length ? all[all.length - 1].title : ''; };
-  const toAssistant = async () => { const s = await textOf(page).catch(() => ''); boxAdd({ ...chipOf(page, under(page)), text: s }); };
+  const toAssistant = async () => {
+    const chip = chipOf(page, under(page));
+    try { chip.text = await textOf(page); } catch {}   // Copy can read the saved page again if extraction failed.
+    return boxAdd(chip);
+  };
   const drag = (n, title) => e => { e.dataTransfer.setData(CHIP_TYPE, JSON.stringify(chipOf(n, title))); e.dataTransfer.effectAllowed = 'copy'; };
   const go = n => { setPage(Math.max(1, Math.min(pdf ? pdf.numPages : 1, n))); setView('page'); };
   const Item = ({ o, d }) => <><button type="button" class="toci" style={{ paddingLeft: 6 + d * 12 + 'px' }} disabled={!o.page} onClick={() => go(o.page)} draggable={!!o.page} onDragStart={o.page ? drag(o.page, o.title) : undefined}><span data-raw>{o.title}</span>{o.page > 0 && <small class="mute">{t('tool.page_short', { n: o.page })}</small>}</button>{o.items.map(x => <Item o={x} d={d + 1} />)}</>;
@@ -98,8 +106,8 @@ function Book({ book, assistantName, onBack }) {
         : !outline ? <p class="mute">{t('tool.reading_contents')}</p> : !outline.length ? <p class="mute">{t('tool.no_contents')}</p> : outline.map(o => <Item o={o} d={0} />)}
     </div> : <div class="pageview">
       <div class="row"><IconButton icon="chl" label={t('plan.prev_slide')} disabled={page <= 1} onClick={() => go(page - 1)} /><span class="num">{t('tool.page_of', { n: page, of: pdf ? pdf.numPages : '…' })}</span>
-        <IconButton icon="chr" label={t('tool.next_page')} disabled={!pdf || page >= pdf.numPages} onClick={() => go(page + 1)} /><span class="grow" /><Button size="sm" icon="assist" onClick={toAssistant} data-focus="page-to-ai">{t('les.to_box', { name: assistantName })}</Button></div>
-      <canvas ref={canvas} draggable onDragStart={drag(page, under(page))} class="pdfpage" aria-label={t('tool.page_of', { n: page, of: pdf ? pdf.numPages : '…' })} />
+        <IconButton icon="chr" label={t('tool.next_page')} disabled={!pdf || page >= pdf.numPages} onClick={() => go(page + 1)} /><span class="grow" /><Button size="sm" icon="assist" disabled={!pdf} onClick={toAssistant} data-focus="page-to-ai">{t('les.to_box', { name: assistantName })}</Button></div>
+      <canvas ref={canvas} draggable={!!pdf} onDragStart={pdf ? drag(page, under(page)) : undefined} class="pdfpage" aria-label={t('tool.page_of', { n: page, of: pdf ? pdf.numPages : '…' })} />
     </div>}
   </div>;
 }
