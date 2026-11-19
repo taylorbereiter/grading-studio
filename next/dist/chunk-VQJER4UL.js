@@ -1,1 +1,0 @@
-import{a,b,c,d,e,f,g}from"./chunk-Z7OYXC7U.js";import"./chunk-4BUZELJO.js";import"./chunk-JLZHG5PE.js";import"./chunk-U37H3HIF.js";export{d as ACTIVITIES,c as BOOK,b as KINDS,a as PARTS,f as actSlide,e as actVideo,g as normActivity};

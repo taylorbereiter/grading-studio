@@ -1,1 +1,0 @@
-import{a as r,b as a}from"./chunk-DBQTDO3S.js";var o=null,e=new Set;function f(t){o=t,e.forEach(n=>n())}var u=()=>o;function s(){e.forEach(t=>t())}function p(){let[,t]=r(0);return a(()=>{let n=()=>t(c=>c+1);return e.add(n),()=>e.delete(n)},[]),o}export{f as a,u as b,s as c,p as d};
