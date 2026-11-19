@@ -51,7 +51,8 @@ test('the linked folder: chosen in Settings, saved to, kept after a reload, and 
   await p.goto(srv.url + 'next/#/settings/saving');
   await p.waitForSelector('[data-svwhere]', { timeout: 30000 });
   assert.equal(await until(async () => (await say(p)) === 'none'), true, 'no folder yet');
-  assert.match(await p.$eval('[data-svsay]', e => e.textContent), /Not backed up/);
+  // the line says "Checking where your work is kept…" until the check is done, which can be after the folder state reads none
+  assert.equal(await until(async () => /Not backed up/.test(await p.$eval('[data-svsay]', e => e.textContent))), true, 'Not backed up');
   assert.ok(await p.$eval('[data-svsay]', e => e.classList.contains('sv-warn')), 'said in amber until there is a second copy');
   assert.equal(await p.$eval('[data-savewarn]', e => e.textContent), 'Not backed up', 'the sidebar says so too');
   await p.click('[data-svpick]');

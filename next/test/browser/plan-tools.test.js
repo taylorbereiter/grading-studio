@@ -169,7 +169,10 @@ test('D-021 a unit: a summative file added, the weeks filled from the assistantâ
   await open(p, 'class/c1');
   await p.waitForSelector('[data-focus="unit-add-file"]', { timeout: 8000 });
   const f = path.join(require('os').tmpdir(), 'Summative task ' + process.pid + '.txt'); fs.writeFileSync(f, 'Write a poem of your own.');
-  const [fc] = await Promise.all([p.waitForFileChooser(), p.click('[data-focus="unit-add-file"]')]); await fc.accept([f]);
+  // with Google usable, Add files is a menu of this computer or Drive (Drive's line: drive-files.test.js D-021)
+  await p.click('[data-focus="unit-add-file"]');
+  const [fc] = await Promise.all([p.waitForFileChooser(), p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.trim() === 'From this computer'); if (it) it.click(); return !!it; }, { timeout: 15000 })]); await fc.accept([f]);
+  await p.waitForFunction(() => !document.querySelector('.pop [role="menuitem"]'));
   const withFile = await until(async () => { const us = await kvGet(p, 'units'); const u = us && us.find(x => x.id === 'U2'); return u && u.files.length && u; }); fs.unlinkSync(f);
   assert.equal(withFile.files[0].kind, 'summative', 'a task sheet is a summative file'); assert.ok((await kvGet(p, 'file:' + withFile.files[0].id)).blob > 0);
   await p.waitForFunction(() => /Summative/.test(document.querySelector('.ugoals').textContent));

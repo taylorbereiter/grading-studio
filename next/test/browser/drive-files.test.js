@@ -9,6 +9,7 @@ const { launch } = require('../../../test/helpers/chrome.js');
 const { plant } = require('../../../test/helpers/app.js');
 const { makePaper } = require('../../../test/helpers/fixtures.js');
 const { gradingSeed, STEADY } = require('../../../test/helpers/steady.js');
+const { plantPlan } = require('./planseed.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
 const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp', png: 'image/png', webmanifest: 'application/manifest+json' };
@@ -276,6 +277,31 @@ test('D-006 D-007 D-036: Choose from Drive… matched by name, Change folder, Dr
   await p.evaluate(() => { window.__picks.push([]); });
   await p.click('dialog[open] [data-v="drive"]');
   await p.waitForFunction(() => /Speeches 2026.*Change folder/.test((document.querySelector('dialog[open] .vddir') || {}).textContent || ''), { timeout: 30000 });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// D-021: a unit's Add files and Add a screenshot, with Google usable here, open a menu of this computer or Drive (one press each, so
+// the class page stays under its count); From Google Drive adds the file picked there to the unit as the computer's chooser does.
+test('D-021: a unit\'s Add files > From Google Drive adds the file to the unit; Add a screenshot offers the same two ways', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const D = { asked: [], folders: [], sent: [], videos: {}, papers: { '1UnitTaskUnitTaskUnitTaskUnit00001': await makePaper({ title: 'Poem task' }) } };
+  const p = await page(ctx, errors, D);
+  await p.goto(srv.url + 'blank'); await plant(p, seed()); await plantPlan(p);
+  const kv = key => p.evaluate(key => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get(key); q.onsuccess = () => { r.result.close(); res(q.result === undefined ? null : JSON.parse(JSON.stringify(q.result))); }; }; }), key);
+  const nFiles = async () => ((await kv('units')) || []).reduce((n, u) => n + (u.files || []).length, 0);
+  await p.goto(srv.url + 'next/#/class/c1');
+  await p.waitForSelector('[data-focus="unit-add-file"]', { timeout: 60000 });
+  const before = await nFiles();
+  await p.click('[data-focus="unit-add-shot"]');
+  await p.waitForFunction(() => { const l = [...document.querySelectorAll('.pop [role="menuitem"]')].map(e => e.textContent.trim()); return l.includes('From this computer') && l.includes('From Google Drive'); }, { timeout: 15000 });
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('.pop [role="menuitem"]'));
+  await p.evaluate(() => { window.__picks.push([{ id: '1UnitTaskUnitTaskUnitTaskUnit00001', name: 'Poem task.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.click('[data-focus="unit-add-file"]');
+  await menuPick(p, 'From Google Drive');
+  for (let k = 0; k < 100 && (await nFiles()) === before; k++) await new Promise(r => setTimeout(r, 150));
+  const files = ((await kv('units')) || []).flatMap(u => u.files || []);
+  assert.ok(files.some(f => f.name === 'Poem task.pdf'), 'the file picked in Drive is on the unit: ' + JSON.stringify(files.map(f => f.name)));
   assert.deepEqual(errors, []);
   await ctx.close();
 });
