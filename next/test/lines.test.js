@@ -7,7 +7,7 @@ const SRC = path.join(__dirname, '..', 'src');
 // en.json: the app's lines. gallery.en.json: the gallery page's own, never shipped with the app (only gallery/ may use them).
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lang', f), 'utf8'));
 const held = c => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'lang', 'held', c + '.json'), 'utf8')); } catch { return {}; } };
-const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), VIDEO = read('video.en.json'), SAVING = read('saving.en.json'), CLASS = read('class.en.json'), TODO = read('todo.en.json'), FOCUS = read('focus.en.json'), SCHOOL = read('school.en.json'), HELP = read('help.en.json'), HOME = read('home.en.json'), SETS = read('settings.en.json'), PREFS = read('prefs.en.json'), EN = { ...APP, ...HOME, ...SETS, ...TODO, ...FOCUS, ...SCHOOL, ...HELP, ...PREFS, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...VIDEO, ...SAVING, ...CLASS };
+const APP = read('en.json'), GAL = read('gallery.en.json'), BLD = read('building.en.json'), PLAN = read('plan.en.json'), TOOL = read('tools.en.json'), EDIT = read('edit.en.json'), MORE = read('more.en.json'), MARK = read('mark.en.json'), SETUP = read('setup.en.json'), PAPER = read('paper.en.json'), VIDEO = read('video.en.json'), SAVING = read('saving.en.json'), CLASS = read('class.en.json'), TODO = read('todo.en.json'), FOCUS = read('focus.en.json'), SCHOOL = read('school.en.json'), HELP = read('help.en.json'), HOME = read('home.en.json'), SETS = read('settings.en.json'), PREFS = read('prefs.en.json'), ENGINE = read('engine.en.json'), EN = { ...APP, ...ENGINE, ...HOME, ...SETS, ...TODO, ...FOCUS, ...SCHOOL, ...HELP, ...PREFS, ...GAL, ...BLD, ...PLAN, ...TOOL, ...EDIT, ...MORE, ...MARK, ...SETUP, ...PAPER, ...VIDEO, ...SAVING, ...CLASS };
 const noComments = s => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
 const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(x => x.isDirectory() ? walk(path.join(d, x.name)) : /\.jsx?$/.test(x.name) ? [path.join(d, x.name)] : []);
 const files = walk(SRC);
@@ -20,7 +20,8 @@ test('every t() line is in en.json', () => {
 });
 test('every line in en.json is used (named in full somewhere in next/src)', () => {
   const all = Object.values(text).join('\n');
-  assert.deepEqual(Object.keys(EN).filter(k => !all.includes("'" + k + "'")), []);
+  // the engines' lines are found by their English (app/engine-lines.js); the engine tests below hold them to what the engines draw
+  assert.deepEqual(Object.keys(EN).filter(k => !(k in ENGINE) && !all.includes("'" + k + "'")), []);
 });
 test('gallery lines stay in the gallery, app lines in the app file', () => {
   assert.ok(Object.keys(GAL).every(k => k.startsWith('gallery.')) && !Object.keys(APP).some(k => k.startsWith('gallery.')));
@@ -164,4 +165,92 @@ test('every app line is in every language, or marked the same there', () => {
     }
   }
   assert.deepEqual(missing, []);
+});
+
+// The engines' own words (next/lang/engine.en.json). The lifted engines keep the current app's English and pass what they draw
+// through tr(s), which app/engine-lines.js sets to find the line by its English. So each English text given to tr must be a line,
+// and each line must be something an engine draws. A text is read as its shape: the words in its quotes, with {} for what is worked
+// out ('returned ' + fmtDay(t) is "returned {}", the line "returned {date}"); a ? : gives each of its two texts.
+const ENGINES = Object.fromEntries(Object.entries(text).filter(([f]) => /^engines\/g\w+\.js$/.test(f)));
+const isWord = s => /[A-Za-z]{2}/.test(s.replace(/\{\}/g, ''));
+const lineShape = s => s.replace(/\{\w+\}/g, '{}');
+// the end of what starts at i (a bracket, or the argument list just opened), skipping quoted text
+function closeAt(src, i, d = 1) {
+  for (let q = null; i < src.length; i++) {
+    const c = src[i];
+    if (q) { if (c === '\\') i++; else if (c === q) q = null; continue; }
+    if (c === "'" || c === '"' || c === '`') q = c;
+    else if ('([{'.includes(c)) d++;
+    else if (')]}'.includes(c) && !--d) return i;
+  }
+  return i;
+}
+// where each top-level character that passes the test is in an expression (not inside brackets or quotes)
+function topAt(e, test) {
+  const at = [];
+  for (let i = 0, d = 0, q = null; i < e.length; i++) {
+    const c = e[i];
+    if (q) { if (c === '\\') i++; else if (c === q) q = null; continue; }
+    if (c === "'" || c === '"' || c === '`') q = c;
+    else if ('([{'.includes(c)) d++;
+    else if (')]}'.includes(c)) d--;
+    else if (!d && test(e, i)) at.push(i);
+  }
+  return at;
+}
+const literal = e => { const m = /^'((?:[^'\\]|\\.)*)'$|^"((?:[^"\\]|\\.)*)"$/.exec(e); return m ? (m[1] ?? m[2]).replace(/\\(.)/g, '$1') : null; };
+const isQ = (s, i) => s[i] === '?' && s[i + 1] !== '?' && s[i + 1] !== '.' && s[i - 1] !== '?';
+function shapes(e) {
+  e = e.trim();
+  while (e.startsWith('(') && closeAt(e, 1) === e.length - 1) e = e.slice(1, -1).trim();
+  const lit = literal(e); if (lit != null) return [lit];
+  const qs = topAt(e, isQ);
+  if (qs.length) {
+    // the : that closes the first ?, counting any ? : inside its first text
+    const rest = e.slice(qs[0] + 1); let n = 0, colon = -1;
+    for (const i of topAt(rest, (s, k) => isQ(s, k) || s[k] === ':')) { if (rest[i] === '?') n++; else if (!n--) { colon = i; break; } }
+    return [...shapes(rest.slice(0, colon)), ...shapes(rest.slice(colon + 1))];
+  }
+  const plus = topAt(e, (s, i) => s[i] === '+' && s[i + 1] !== '+' && s[i - 1] !== '+' && s[i + 1] !== '=');
+  if (plus.length) {
+    let out = [''];
+    [0, ...plus.map(i => i + 1)].forEach((from, k) => {
+      const part = e.slice(from, k < plus.length ? plus[k] : e.length), sub = shapes(part).map(x => (isWord(x) || literal(part.trim()) != null ? x : '{}'));
+      out = out.flatMap(a => sub.map(b => a + b));
+    });
+    return out.map(x => x.replace(/(\{\})+/g, '{}'));
+  }
+  // an object of words looked up by a key ({ '': 'Normal text', h: 'Heading' }[sty]): each of its texts
+  if (e.startsWith('{')) return [...e.matchAll(/'((?:[^'\\]|\\.)*)'/g)].map(m => m[1]);
+  return ['{}'];
+}
+// every text given to tr(…) in the engines, with the file it is in
+const trTexts = () => Object.entries(ENGINES).flatMap(([f, s]) => [...s.matchAll(/(?<![\w$.])tr\(/g)].flatMap(m => shapes(s.slice(m.index + 3, closeAt(s, m.index + 3))).map(x => [f, x])));
+// words an engine hands to tr by a name (tr(STATUS_LABEL[g.status]), tr(tryName(n)), tr(foot), the typed notes' marks and sizes)
+const BY_NAME = [['engines/gexport.js', /const STATUS_LABEL = (\{[^}]*\})/], ['engines/gexport.js', /const tryName = n => ([^;\n]+);/], ['engines/gexport.js', /const foot = ([^;\n]+);/],
+  ['engines/gnotes.js', /const TN_K = (\{.*\});/], ['engines/gnotes.js', /const TN_SIZE = (\{.*\});/]];
+const byName = () => BY_NAME.flatMap(([f, rx]) => { const m = rx.exec(ENGINES[f]); assert.ok(m, f + ' has no ' + rx); return shapes(m[1]).map(x => [f, x]); });
+const forms = v => (typeof v === 'string' ? [v] : Object.values(v));
+test('engine lines live in engine.en.json and load with the marking screens', () => {
+  assert.ok(Object.keys(ENGINE).every(k => k.startsWith('engine.')) && !Object.keys(APP).some(k => k.startsWith('engine.')));
+  for (const [f, s] of Object.entries(text)) {
+    if (/engine\.en\.json/.test(noComments(s))) assert.equal(f, 'app/engine-lines.js', f + ' loads the engine lines');
+    assert.ok(!/'engine\.[a-z0-9_]+'/.test(noComments(s)), f + ' names an engine line (they are found by their English)');
+  }
+  // one line for each English text, so a text finds one line
+  const seen = new Map();
+  for (const [k, v] of Object.entries(ENGINE)) for (const s of forms(v)) { assert.ok(!seen.has(s), k + ' and ' + seen.get(s) + ' have the same English'); seen.set(s, k); }
+  // the lines load with the screens that use them, never with the first page
+  const users = Object.entries(text).filter(([, s]) => /import '(\.\.\/)+engine-lines\.js';/.test(s)).map(([f]) => f).sort();
+  assert.deepEqual(users, ['app/mark/marking.js', 'app/mark/open.js', 'app/mark/quizmaker.jsx']);
+});
+test('every text the engines give tr( has a line, by its English', () => {
+  const lines = new Set(Object.values(ENGINE).flatMap(forms).map(lineShape));
+  const all = [...trTexts(), ...byName()];
+  assert.ok(all.length > 80, 'the engines\' tr( calls were found');
+  assert.deepEqual(all.filter(([, x]) => isWord(x) && !lines.has(x)).map(([f, x]) => f + ': ' + JSON.stringify(x)), []);
+});
+test('every engine line is drawn by an engine', () => {
+  const drawn = new Set([...trTexts(), ...byName()].map(([, x]) => x));
+  assert.deepEqual(Object.entries(ENGINE).filter(([, v]) => !forms(v).some(s => drawn.has(lineShape(s)))).map(([k]) => k), []);
 });

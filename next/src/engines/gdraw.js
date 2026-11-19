@@ -1,7 +1,7 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
 import STICKER_SRC from './stickers.js';
-import { batch, cur, setup, lib, selected, zoom, pages, CHECK_INK, pdfjsLib, PDFLib, totalInk, HL } from './gcore.js';
+import { batch, cur, setup, lib, selected, zoom, pages, CHECK_INK, tr, pdfjsLib, PDFLib, totalInk, HL } from './gcore.js';
 
 // src/app/draw.js
 const FONT = 'Helvetica, Arial, "PingFang TC", "Microsoft JhengHei", sans-serif';
@@ -341,7 +341,7 @@ function anonOrder() {
 // src/app/anon.js
 const anonPos = i => anonOrder().indexOf(i);
 // src/app/anon.js
-const shownName = (st, i) => anonOn() ? 'Paper ' + (anonPos(i) + 1) : st.key;
+const shownName = (st, i) => anonOn() ? tr('Paper ' + (anonPos(i) + 1)) : st.key;
 // src/app/anon.js
 const anonRx = st => coverRx(st);
 // src/app/lighting.js

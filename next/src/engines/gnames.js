@@ -1,6 +1,6 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
-import { batch, docs, saveSoon, pdfjsLib, nameFlagsShow } from './gcore.js';
+import { batch, docs, tr, saveSoon, pdfjsLib, nameFlagsShow } from './gcore.js';
 import { vpRot, skewXf, viewable, fileByPath, anonOn, shownName, anonRx, wordAlts, runAlts, initialAlts, altsRx, namesNow, ownNames } from './gdraw.js';
 import { boxKey } from './gopen.js';
 import { shareState, autoCovers, ownCovers, sameSpot, keptCovers, ensureCounts, wordScore, nameFindOn, paperKey, coverList, coverSig } from './gexport.js';
@@ -103,7 +103,7 @@ function coverMark(st, d, on) {
 // src/insight.js
 function coverAgain(path, p) { const sh = batch && batch.share; if (sh && sh.checked) delete sh.checked[boxKey(path, p)]; }
 // src/insight.js
-const coverName = (st, k) => (anonOn() ? shownName(st, batch.students.indexOf(st)) : st.key) + (k ? ' (paper ' + (k + 1) + ')' : '');
+const coverName = (st, k) => (anonOn() ? shownName(st, batch.students.indexOf(st)) : st.key) + (k ? ' ' + tr('(paper ' + (k + 1) + ')') : '');
 // src/insight.js
 const coverFirst = all => Math.max(0, coverList(all).findIndex(x => !coverOk(x.st, x.d)));
 // src/insight.js

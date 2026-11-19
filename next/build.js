@@ -546,6 +546,7 @@ function writeGrading() {
     // so a part loaded on its own (the marking tools) doesn't bring a module it barely uses (opening a download).
     const may = uses ? declared.filter(n => !made[n] || uses.includes(made[n])) : declared;
     let out = lift({ files: 'grading', scoped: true, roots, deny: GRADING_DENY, ignore: GRADING_LOCAL.filter(n => !real.includes(n)), given: [...may, ...given], header: '', preamble: '' });
+    out = engineWords(file, out);
     const own = [...out.matchAll(/^(?:async )?function\*? ?(\w+)|^(?:const|let|var) (\w+)/gm)].map(m => m[1] || m[2]);
     // const a = 1, b = 2 on one line declares b too (as lift.js reads it), so a later module imports b instead of declaring the line again
     const { depthOf } = require('./tools/lift.js');
@@ -578,6 +579,75 @@ function writeGrading() {
     const extra = [...(needs[file] || [])].filter(n => !roots.includes(n) && !(file === 'gcore' && coreOut.includes(n)));
     writeIf('src/engines/' + file + '.js', extra.length ? out + 'export { ' + extra.join(', ') + ' };\n' : out);
   }
+}
+// The engines' own words in the language. The current app put what its engines draw into the language in two ways: drawn text
+// (the feedback page, a notes page, an answer note) through tr(s), and the rest (the typed notes' bar, "Paper 3", a printed quiz)
+// by watching the page. Here tr is gcore's, which app/engine-lines.js sets to look each line up by its English (next/lang/engine.en.json),
+// and the words that went the second way are wrapped in tr(...) as they are lifted. Each change names the text it expects, and the
+// build stops when the source no longer has it, so a change there can't leave words in English unnoticed.
+const ENGINE_TR = {
+  // a paper while names are hidden, and a student's second paper in Check the covers
+  gdraw: [["anonOn() ? 'Paper ' + (anonPos(i) + 1) : st.key", "anonOn() ? tr('Paper ' + (anonPos(i) + 1)) : st.key"]],
+  gnames: [["(k ? ' (paper ' + (k + 1) + ')' : '')", "(k ? ' ' + tr('(paper ' + (k + 1) + ')') : '')"]],
+  // Past work beside this one: a download whose name is gone
+  ginsight: [["m.name || 'An earlier download'", "m.name || tr('An earlier download')"]],
+  // Quick mark: the usual words for a question's steps, and the words on top of an answer's picture
+  gquiz: [
+    ["if (n === 3) return ['Not shown', 'Partial', 'Full'];", "if (n === 3) return [tr('Not shown'), tr('Partial'), tr('Full')];"],
+    ["k === 0 ? 'Not shown' : k === n - 1 ? 'Full' : ''", "k === 0 ? tr('Not shown') : k === n - 1 ? tr('Full') : ''"],
+    ["'Question ' + quizLabel(q, qi) + ' · ' + (qzByPts(q) ? 'scored 0 to ' + fmtNum(pts) : fmtNum(pts) + (pts === 1 ? ' point' : ' points') + ', right or wrong')",
+      "tr('Question ' + quizLabel(q, qi)) + ' · ' + (qzByPts(q) ? tr('scored 0 to ' + fmtNum(pts)) : pts === 1 ? tr(fmtNum(pts) + ' point, right or wrong') : tr(fmtNum(pts) + ' points, right or wrong'))"],
+    ["'Answer key: ' + q.key", "tr('Answer key: ' + q.key)"],
+    ["'Scale: ' + qzSteps(pts).map((v, i) => fmtNum(v) + (words[i] ? ' ' + words[i] : '')).join(', ')", "tr('Scale: ' + qzSteps(pts).map((v, i) => fmtNum(v) + (words[i] ? ' ' + words[i] : '')).join(', '))"],
+  ],
+  // a quiz made here, as printed
+  gqmake: [
+    ["m.items.length + ' questions · ' + fmtNum(qmkPts(m)) + ' points</div>", "tr(m.items.length + ' questions') + ' · ' + tr(fmtNum(qmkPts(m)) + ' points') + '</div>"],
+    ["'<div class=\"qfname\"><span>Name</span>", "'<div class=\"qfname\"><span>' + tr('Name') + '</span>"],
+    ["'<p class=\"qfhow\">Fill each bubble completely with a dark pencil or pen. To change an answer, erase it fully or cross it out and fill the new one.</p>'",
+      "'<p class=\"qfhow\">' + tr('Fill each bubble completely with a dark pencil or pen. To change an answer, erase it fully or cross it out and fill the new one.') + '</p>'"],
+    ["<div class=\"qffoot\">Page ' + (pg + 1) + ' of ' + of + '</div></div>'", "<div class=\"qffoot\">' + tr('Page ' + (pg + 1) + ' of ' + of) + '</div></div>'"],
+    ["'<span class=\"qffor\">Teacher</span>'", "'<span class=\"qffor\">' + tr('Teacher') + '</span>'"],
+    ["'<div class=\"qfhint\">Fill every answer that applies.</div>'", "'<div class=\"qfhint\">' + tr('Fill every answer that applies.') + '</div>'"],
+    ["esc(q.text || (q.t === 'sa' ? 'Your question' : 'Your question'))", "esc(q.text || tr('Your question'))"],
+  ],
+  // typed notes: the margin, the bar as it changes, and a paragraph just for one partner (the bar itself is tnFrame, below)
+  gnotes: [
+    ["if (x.o) el.title = 'Just for ' + tnWho(x.o);", "if (x.o) el.title = tr('Just for ' + tnWho(x.o));"],
+    ["el.title = 'Just for ' + tnWho(o);", "el.title = tr('Just for ' + tnWho(o));"],
+    ["btn('tnhid', 'tnts', 'Show this time')", "btn('tnhid', 'tnts', tr('Show this time'))"],
+    ["btn('tnhide', 'tnts', 'Hide this time')", "btn('tnhide', 'tnts', tr('Hide this time'))"],
+    ["vid ? 'Play the video from here' : 'The time on the Timer'", "vid ? tr('Play the video from here') : tr('The time on the Timer')"],
+    ["m.title = TN_K[x.k][0];", "m.title = tr(TN_K[x.k][0]);"],
+    ["w = { '': 'Normal text', h: 'Heading', h2: 'Small heading' }[sty]", "w = tr({ '': 'Normal text', h: 'Heading', h2: 'Small heading' }[sty])"],
+    ["allw = tnAllHid() ? 'Show all times' : 'Hide all times'", "allw = tnAllHid() ? tr('Show all times') : tr('Hide all times')"],
+    ["ck.title = c.at ? 'Pause the Timer' : 'Start the Timer';", "ck.title = c.at ? tr('Pause the Timer') : tr('Start the Timer');"],
+    ["fs = back ? 'Goes back to the student with the paper' : 'Only for you. Not given back.'", "fs = back ? tr('Goes back to the student with the paper') : tr('Only for you. Not given back.')"],
+    ["sws = back && sz ? TN_SIZE[sz][1] : ''", "sws = back && sz ? tr(TN_SIZE[sz][1]) : ''"],
+  ],
+};
+// The typed notes' bar (src/typednotes.js tnFrame) is one HTML text: each word between tags and each title and aria-label in it goes
+// through tr, as do a button's title (b(…, 'Bold', …)) and the marks' and sizes' names (w). Letters alone (B, I, U) are not words.
+const TN_FRAME_WORDS = 33;
+function engineWords(file, out) {
+  for (const [from, to] of ENGINE_TR[file] || []) {
+    const n = out.split(from).length - 1;
+    if (n !== 1) throw new Error('lift: ' + file + ' has ' + n + ' of ' + JSON.stringify(from.slice(0, 60)) + ' (next/build.js ENGINE_TR)');
+    out = out.replace(from, () => to);
+  }
+  if (file !== 'gnotes') return out;
+  const at = out.indexOf('\nfunction tnFrame() {'), end = out.indexOf('\n}\n', at);
+  if (at < 0 || end < 0) throw new Error('lift: gnotes has no tnFrame');
+  let n = 0;
+  const word = s => /[A-Za-z]{2}/.test(s);
+  const body = out.slice(at, end)
+    .replace(/'((?:[^'\\\n]|\\.)*)'/g, (lit, s) => "'" + s
+      .replace(/>([^<>]+)</g, (m, x) => (word(x) ? (n++, ">' + tr('" + x + "') + '<") : m))
+      .replace(/\b(title|aria-label)="([^"]+)"/g, (m, a, x) => (word(x) ? (n++, a + "=\"' + tr('" + x + "') + '\"") : m)) + "'")
+    .replace(/\bb\(('[^']*'), '([^']+)'/g, (m, a, x) => (n++, 'b(' + a + ", tr('" + x + "')"))
+    .replace(/' \+ w \+ '/g, () => (n++, "' + tr(w) + '"));
+  if (n !== TN_FRAME_WORDS) throw new Error('lift: gnotes tnFrame has ' + n + ' words for tr, not ' + TN_FRAME_WORDS + ' (next/build.js TN_FRAME_WORDS)');
+  return out.slice(0, at) + body + out.slice(end);
 }
 // Only gcore may change the open work's state (esbuild refuses an assignment to an import). Where a later module's lifted code
 // assigns one of gcore's names (\`selected = null\`), the assignment becomes that name's setter (\`set.selected(null)\`), which

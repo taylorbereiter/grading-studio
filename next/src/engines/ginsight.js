@@ -1,6 +1,6 @@
 // MADE BY next/build.js FROM the grading page's source (next/tools/lift.js). Do not edit: change the source and build again.
 /* eslint-disable */
-import { batch, setup, lib, keptMeta, store, kdo, histFill, ROW_TOP, rowTop, setupMax, setupOver, maxPoints, pointsWith, percentWith, gradeOf, withTries, addXc, fmtNum, noScore } from './gcore.js';
+import { batch, setup, lib, tr, keptMeta, store, kdo, histFill, ROW_TOP, rowTop, setupMax, setupOver, maxPoints, pointsWith, percentWith, gradeOf, withTries, addXc, fmtNum, noScore } from './gcore.js';
 import { classById, nameWords, batchClass, anonOn, anonOrder, classOfNames, infoHits, one } from './gdraw.js';
 import { findItem, hasSheet, newestWork } from './gopen.js';
 
@@ -118,7 +118,7 @@ function histLoad() {
       const m = keptMeta.get(id) || {}, f = m.asg && findItem(m.asg), s = {};
       for (const [k, o] of Object.entries(d.s || {})) if (o && o.g) s[k] = o.g;
       for (const [k, r] of Object.entries(d.read || {})) s[k] = { ...s[k], read: r };
-      return { id, s, t: workTime(d) || d.t || m.t || 0, setup: d.setup, name: (f && f.it.name) || m.name || 'An earlier download', cls: pastClass(d, m) };
+      return { id, s, t: workTime(d) || d.t || m.t || 0, setup: d.setup, name: (f && f.it.name) || m.name || tr('An earlier download'), cls: pastClass(d, m) };
     });
     if (histAll === me && batch && batch.id === me.id) histFill();
   });

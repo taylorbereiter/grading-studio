@@ -14,6 +14,7 @@ import { PARTS } from '../router.js';
 import { setOpenWork } from '../openwork.js';
 import { saving } from '../../services/saving.js';
 import { savedStamp } from '../../shared/tabs.js';
+import '../engine-lines.js';   // the engines' own words in the language, before any paper is opened
 
 export class NotKept extends Error { constructor(id) { super('The papers for this one aren’t kept in this browser.'); this.name = 'NotKept'; this.id = id; } }
 
