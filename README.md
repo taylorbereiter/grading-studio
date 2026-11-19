@@ -6,6 +6,8 @@ There is no account, no sign-up and nothing to install. Student work stays on yo
 
 **Open it:** https://taylorbereiter.github.io/grading-studio/ in Chrome or Edge.
 
+**Version 2** is a new Grading Studio at the same link, with the same saved work. The version before it stays at https://taylorbereiter.github.io/grading-studio/classic/ for anyone who needs it for a while: **Settings, About** has a link to it, and it has a link back. Both open the same classes, papers and lessons, so a change made in one shows in the other. Old bookmarks, including the Planner's, open the matching screen of the new version.
+
 Not ready to use it with real classes? On the first screen, click **Look around with a sample class first**. It opens two made-up classes part-way through a term, with marked papers, a gradebook, charts and a week of lessons. The sample is kept apart from your own work, and **Leave the sample** clears it.
 
 ![Marking a paper: pen marks and margin comments on the left, rubric sliders and a comment on the right](docs/images/marking.png)
@@ -64,7 +66,7 @@ With a class roster pasted in, students are listed in your roster's order and ma
 
 Because your work lives in your browser, clearing the browser's site data would remove it. The sidebar says **Not backed up** until you choose a folder on your computer. Once you do, every save also goes to that folder, with a copy of each day that **Go back in time** (in Settings) can restore. A **take-home file**, protected by a passphrase, carries everything to another computer and back.
 
-Installed as an app (Settings, About and updates), Grading Studio opens without internet, and a new version waits until you click **Update now**. You can also download `Grading Studio.html` from this repository and double-click it to run it with no internet at all.
+Installed as an app (Settings, About), Grading Studio opens without internet, and a new version waits until you click **Update now**. An app installed before version 2 stays installed and moves to the new version the same way. The previous version can still be downloaded as `classic/Grading Studio.html` from this repository and double-clicked to run with no internet at all.
 
 ![The Planner's week: each class's lessons on the timetable](docs/images/planner.png)
 
@@ -76,12 +78,14 @@ Grading Studio was made by one teacher for their own classes and is shared in ca
 
 ## For developers
 
-The app is plain HTML, CSS and JavaScript, built into single files (`index.html`, `Grading Studio.html` and `planner.html`) by `build.js`. There is no framework and no server.
+The app at the root (`index.html`, `dist/`, `sw.js`) is built from `next/src` by `next/build.js`; [next/docs](next/docs) describes it, and [next/docs/sw.md](next/docs/sw.md) how its worker took over from the previous version's. The previous version is plain HTML, CSS and JavaScript, built into single files in `classic/` (`index.html`, `Grading Studio.html` and `planner.html`) by `build.js`. There is no server.
 
 ```
 npm install
 npm run preview   # builds, then serves at http://localhost:4173
-npm run check     # builds and runs every test (about 15 minutes, needs Chrome)
+npm run check     # builds the previous version and runs its tests (about 15 minutes, needs Chrome)
+npm run next:check   # builds the new app and runs its checks
+npm run rehearsal    # work made before the switch, carried into this build (needs both built)
 ```
 
 Use the preview address, never the live one, for trying changes: browsers keep saved work per address, so a preview at the same address as the live link would open real student work. [docs/DEVELOPING.md](docs/DEVELOPING.md) covers the build, the tests, screen and saved-work checks, versions, moving to a new web address and changing how work is saved. [docs/PLAN.md](docs/PLAN.md) holds the plan. To run your own copy at another address, change `address` in `site.json`.

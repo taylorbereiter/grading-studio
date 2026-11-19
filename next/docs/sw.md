@@ -23,9 +23,23 @@ renames a `gs-*` cache. It keeps a version whole the same way the root worker do
 pages checked against it, written last) and holds an update back until the teacher says so, with the same Update now / update
 by itself choice, stored apart from the current app's (`gsn-kept`).
 
-**At the switch.** The root `sw.js` is replaced by the new app's worker at root scope, which takes over the root pages; the
-`/next/` worker unregisters itself and deletes its `gsn-*` caches. The root worker's `gs-drive/<id>` streaming of Drive videos
-must be in the new worker before that day. The old caches go only after the new version has been taken whole.
+**At the switch (built, version 2.0.0).** `next/build.js` writes the new app at the root and copies `next/src/sw.js` to the root
+`sw.js`; `build.js` writes the previous version to `classic/`. Cache names belong to the whole site, so each worker has its own:
+
+- The root worker (`next/src/sw.js`) uses `gs-app-2`, `gs-next-2` and `gs-kept-2`, and streams `gs-drive/<id>` (also from
+  `classic/gs-drive/<id>`, asking a window of its own area for the token first). It never answers `classic/` or `next/`.
+- While `gs-app-1` holds a whole version, the root worker goes on serving the previous version's pages from it and answering their
+  messages (`gs-state`, `gs-check`, `gs-apply`, `gs-mode`), so a page left open sees **Update ready** as on any other day. The new
+  app is fetched whole into `gs-next-2`. **Update now** (or update by itself, on the next open) makes it `gs-app-2`; only then are
+  `gs-app-1`, `gs-next-1` and `gs-kept-1` deleted, and her choice in `gs-kept-1` is carried into `gs-kept-2`.
+- `classic/sw.js` (the previous version's `src/sw.js`) uses `gsc-*` caches and talks only to windows under `classic/`. `classic/`
+  has no install card: the installed app (start_url and scope `./`) is the new version.
+- `next/sw.js` now retires: it deletes the `gsn-*` caches, sends its windows to the root (same search and hash), and unregisters.
+  `next/index.html` does the same for a page opened without it.
+- Google's sign-in returns only to the root. The previous version leaves `gs.gBack` = `classic` in the tab's sessionStorage before
+  it goes; the root page sees it with the token in the address and sends the address on to `classic/` before anything else runs.
+
+`test/tools/rehearsal.js` (CI's rehearsal job) carries work made on the version before through all of this in a real Chrome.
 
 **Remote code.** Transcription loads `@huggingface/transformers` from cdn.jsdelivr.net at run time (src/app/readings.js). A new
 worker must let that through (or the model loader moves into the app) and must not cache it as part of a version.
