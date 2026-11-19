@@ -40,6 +40,8 @@ export const ROUTES = [
 export const PARTS = {
   edit: () => import('./screens/lesson-edit.jsx'),
   present: () => import('./screens/present.jsx'),
+  // the class timer in the corner after Present (plan/ptimer-float.jsx)
+  ptimer: () => import('./plan/ptimer-float.jsx'),
   tools: () => import('./screens/lesson-tools.jsx'),
   beside: () => import('./screens/lesson-beside.jsx'),
   doc: () => import('./screens/lesson-doc.jsx'),

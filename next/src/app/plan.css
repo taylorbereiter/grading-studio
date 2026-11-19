@@ -400,3 +400,24 @@
 .bk-scale label{display:flex;align-items:center;gap:6px;font-size:var(--t2)}.bk-scale label span{width:22px;text-align:right;font-weight:600}.bk-scale input{width:76px}
 .bk-pre{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .ubank .list{margin-bottom:8px}
+/* present: the bar's clock, the timer panel, agenda ticks, links (E2) */
+.prbar .prtime{padding:0 8px;font-size:14px;opacity:.9}
+.prbar .btn[aria-pressed="true"],.prbar .btn[aria-expanded="true"]{background:rgba(255,255,255,.18)}
+.prtimer h3,.prpanel h3{margin:0 0 10px;font-size:18px}
+.prtimer .prrow{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px;align-items:center}
+.prtimer .own input{width:64px;font:inherit;font-size:18px;padding:4px 6px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s);color:var(--ink)}
+.prtimer .own label{display:flex;gap:6px;align-items:center;font-size:16px}
+.prtimer .sw{display:flex;margin:6px 0;font-size:15px}
+.prtimer .prup{font-size:28px;font-weight:600;margin:0 0 10px}
+.pragenda{list-style:none;padding:0!important;margin:0}
+.pragenda button{display:flex;gap:10px;align-items:baseline;width:100%;text-align:left;border:0;background:none;color:inherit;font:inherit;padding:6px 8px;border-radius:var(--r1);cursor:pointer}
+.pragenda button:hover{background:var(--g100)}
+.pragenda .bx{flex:none;width:18px;height:18px;border:2px solid currentColor;border-radius:4px;position:relative;top:2px}
+.pragenda .done{opacity:.55;text-decoration:line-through}.pragenda .done .bx{background:var(--ok);border-color:var(--ok)}
+.pragenda .now{font-weight:600;background:color-mix(in oklab,var(--acc) 12%,transparent)}
+.prlinks{list-style:none;padding:0!important;margin:0 0 12px}.prlinks a{display:flex;gap:10px;align-items:center;padding:4px 0}
+.prlinks kbd{min-width:22px;text-align:center}
+button.prclock{border:0;cursor:pointer}
+.prclock small{display:block;font-size:13px;opacity:.8}
+.prclock.big{right:50%;bottom:50%;transform:translate(50%,50%);font-size:min(22vw,240px);padding:12px 40px;border-radius:var(--r3)}
+.prclock.paused{opacity:.75}.prclock.done{background:var(--warn)}
