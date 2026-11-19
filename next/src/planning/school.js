@@ -6,7 +6,8 @@
 // step Undo takes back (services/undo.js).
 import { school, schoolFiles } from './index.js';
 import { savePref, saveSchoolFile } from './write.js';
-import { track } from '../services/undo.js';
+import { record } from '../services/undo.js';
+import { patch, apply } from '../shared/patch.js';
 
 export const SCH_MAX = 50 * 1024 * 1024, SCH_DAYS = 14;
 // The spots for people a school usually has, as the current app names them (src/school.js SCH_ROLES): stored words, so they stay
@@ -22,8 +23,14 @@ export function schoolNow() {
 }
 const put = v => savePref('gs.school', v);
 // label: the step's name for Undo. fn changes the list in place.
+// Undo takes back only what this step changed, on the list as it is then: people added from My setup or another window since stay (audit H-021).
 export function schoolChange(label, fn) {
-  return track(label, schoolNow, put, () => { const s = schoolNow(); fn(s); put(s); });
+  const before = schoolNow(), s = schoolNow(); fn(s);
+  const r = put(s), after = schoolNow();
+  if (JSON.stringify(before) === JSON.stringify(after)) return r;
+  const back = patch(after, before), fwd = patch(before, after), redo = ops => { const now = schoolNow(); apply(now, ops); return put(now); };
+  record({ label, undo: () => redo(back), redo: () => redo(fwd) });
+  return r;
 }
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 export const live = s => (s || schoolNow()).items.filter(i => !i.gone);

@@ -258,5 +258,12 @@
  "mark.cw_ul_change": "단원 계획 링크 바꾸기",
  "mark.cw_ul_change_n": "{name} 링크 바꾸기",
  "mark.cw_ul_open": "단원 계획",
- "mark.cw_ul_open_n": "{name}에서 열기"
+ "mark.cw_ul_open_n": "{name}에서 열기",
+ "mark.cw_typed": "직접 입력",
+ "mark.cw_ud_q": "‘{name}’을(를) 삭제할까요?",
+ "mark.cw_ud_say": {
+  "one": "안에 있는 과제 {n}개도 함께 삭제돼요. 저장된 채점은 이 브라우저에 남아요.",
+  "other": "안에 있는 과제 {n}개도 함께 삭제돼요. 저장된 채점은 이 브라우저에 남아요."
+ },
+ "mark.cw_loose_say": "반이 없는 과제입니다. 사이드바의 반으로 끌어 놓거나 ⋯ 메뉴의 '이동…'을 사용하세요."
 }

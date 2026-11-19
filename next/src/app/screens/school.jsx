@@ -6,10 +6,11 @@ import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Button, IconButton, Icon, Menu, Sheet, Dialog, TextInput, TextBox, Checkbox, Chip, EmptyState, toast } from '../../ui/index.js';
 import { t, num, addLines } from '../../i18n/t.js';
-import { go } from '../router.js';
+import { go, href } from '../router.js';
 import { usePlan } from '../plan.js';
 import { copyText } from '../../services/clipboard.js';
 import { askAdd, askPerson } from '../todo-add.js';
+import { todoCountsForSchool } from '../../crossings.js';
 import * as S from '../../planning/school.js';
 import LINES from '../../../lang/school.en.json';
 import { DriveButton } from '../drive-button.jsx';
@@ -191,10 +192,11 @@ function ItemForm({ o, s, choices, onClose, change }) {
 }
 
 function People({ s, setPform, setSpots, change, copy }) {
-  const ppl = S.people(s), roles = S.roles(s), seen = new Set();
+  const ppl = S.people(s), roles = S.roles(s), seen = new Set(), todos = todoCountsForSchool();
   const one = p => <div class="schprow" data-schp={p.id} key={p.id}>
     <span class="schrole">{p.role ? raw(p.role) : t('school.no_role')}</span>
     <button type="button" class="schpname" onClick={() => setPform({ person: p })}><b data-raw>{p.name}</b>{p.note && <small data-raw>{p.note}</small>}</button>
+    {todos[p.id] > 0 && <a class="link small" href={href('todo')} onClick={e => { e.preventDefault(); askPerson(p.id); go('todo'); }} data-schptd={p.id}>{t('school.n_todos', { n: todos[p.id] })}</a>}
     {p.email && <a class="btn icon sm ghost" href={'mailto:' + encodeURIComponent(p.email).replace(/%40/g, '@')} aria-label={t('school.email', { name: p.name })} data-schmail><Icon name="mail" /></a>}
     <Menu label={t('school.more_for', { name: p.name })} items={[{ label: t('school.edit'), onSelect: () => setPform({ person: p }) }, p.email && { label: t('school.copy_mail'), onSelect: () => copy(p.email, t('school.mail_copied')) },
       { label: t('school.todo_for'), onSelect: () => { askPerson(p.id); askAdd(); go('todo'); } }, { label: t('school.delete'), icon: 'trash', onSelect: () => {

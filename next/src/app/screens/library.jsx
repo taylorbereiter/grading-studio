@@ -163,10 +163,11 @@ function Rubrics({ p }) {
   return B ? <B.BankList p={p} /> : <div class="loading" aria-busy="true" />;
 }
 // Strong examples, the watch list and whose work: the grading side's part (class/examples.jsx), loaded when the tab opens.
-function Examples({ view }) {
+// #/library/examples/a/<download>: one assignment's examples (the current app's #/a/<id>/examples).
+function Examples({ view, more }) {
   const [E, setE] = useState(null);
   useEffect(() => { PART.examples().then(setE); }, []);
-  return E ? <E.default view={view} /> : <div class="loading" aria-busy="true" />;
+  return E ? <E.default view={view === 'a' ? 'ex' : view} work={view === 'a' ? more : null} key={more || ''} /> : <div class="loading" aria-busy="true" />;
 }
 
 export default function Library({ route, classes }) {
@@ -177,7 +178,7 @@ export default function Library({ route, classes }) {
     <Tabs label={t('nav.library')} value={tab} onChange={v => go('library', v === 'activities' ? '' : v)} tabs={TABS.map(id => ({ id, label: t(TAB_LINE[id]) }))} />
     <div role="tabpanel" id={'panel-' + tab} aria-labelledby={'tab-' + tab} class="libpanel">
       {!p ? <div class="loading" aria-busy="true" />
-        : tab === 'activities' ? <Activities p={p} /> : tab === 'past' ? <Past p={p} /> : tab === 'units' ? <Units p={p} classes={classes} /> : tab === 'examples' ? <Examples view={route.params.sub} /> : <Rubrics p={p} />}
+        : tab === 'activities' ? <Activities p={p} /> : tab === 'past' ? <Past p={p} /> : tab === 'units' ? <Units p={p} classes={classes} /> : tab === 'examples' ? <Examples view={route.params.sub} more={route.params.more} /> : <Rubrics p={p} />}
     </div>
   </div>;
 }

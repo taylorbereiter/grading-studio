@@ -494,6 +494,20 @@ function chRowTop(cols) {
   let best = ROW_TOP, most = 0; for (const [t, k] of n) if (k > most) { best = t; most = k; }
   return best;
 }
+// src/classpage.js
+const chSums = cols => cols.filter(x => x.type === 'sum');
+// src/classpage.js
+function chRowAvgs(c, cols, only) {
+  const T = chRowTop(chSums(cols));
+  return chSums(cols).map(col => {
+    const by = new Map();
+    for (const n of only ? [only] : c.names) {
+      const cell = col.cells.get(n); if (!cell || !cell.rows || cell.out || cell.st === 'missing' || cell.st === 'excused') continue;
+      for (const [nm, v, t] of cell.rows) { const name = chRowName(nm), k = name.toLowerCase(); if (!k || v == null || isNaN(+v)) continue; if (!by.has(k)) by.set(k, { name, v: [] }); by.get(k).v.push((t || ROW_TOP) !== T ? +v * T / (t || ROW_TOP) : +v); }
+    }
+    return { col, by };
+  }).filter(x => x.by.size);
+}
 // src/seating.js
 const SEAT_MAX_W = 14, SEAT_MAX_H = 12;
 // src/seating.js
@@ -1039,5 +1053,5 @@ function lkSuggest(c) {
   }
   return out;
 }
-export { BK_TYPES, bkConf, bkCats, bkType, bkIsType, bkIsDef, bkLabel, bkTermOf, bkMean, bkCellOf, bkTypedCell, bkLoad, bkClassCols, bkCounts, bkGrade, bkXcTo, bkTabs, bkTermNow, bkClassAvg, bkBands, bkGroups, bkCountTypes, pctAvgText, bkParse, bkCellVal, bkColMax, bkPut, typedStamp, isoDay, bkDay, BK_DEF, rosterPairs, bkTypeUse, IB_TOP, IB_BANDS, IB_GROUPS, IB_WAYS, IB_BOUNDS_DP, ibLetter, classWay, ibGroup, ibGroupCrit, ibBoundsFor, ibBoundsClean, ibCrit, ibBounds, ibGradeOf, ibLevel, ibBandName, ibTerm, ibEvidence, ibConf, ibCols, ibEvFor, ibMid, MIS_WORDS, misConf, misCols, misOwes, misByStu, misByCol, misNudge, misLate, misDue, mbParts, mbSorted, MB_ORDERS, parseRosterRows, keepInfo, keepAtt, infoOf, setInfo, blankInfo, attDays, attCount, attOf, attNote, classNewWay, ATT_WAYS, attRec, attDayOk, attSet, attTake, attClear, attDayCount, attUnknown, attMeets, attStep, csvSafe, SEAT_ROOMS, SEAT_MAX_W, SEAT_MAX_H, seatXY, seatKeys, seatRoom, seatOf, seatSave, seatList, seatFill, seatPut, seatSetRoom, pkNice, pkShort, pkShuffle, pkCount, pkGroups, misDraft, misGroup, misHref, misPlain, misEmail, misLine, misFill, misClassName, rptCall, goalList, goalData, GOAL_LOW, RPT_WORDS, RPT_SLOTS, RPT_PROS, RPT_LEN, rptConf, rptEntry, rptPut, rptPro, rptFacts, rptDraft, rptText, bkScored, bkIn, ibLvAt, ibPredOf, lkKey, lkSibs, lkTwins, lkCopy, lkJoin1, lkLev, lkLike, lkSuggest };
+export { BK_TYPES, bkConf, bkCats, bkType, bkIsType, bkIsDef, bkLabel, bkTermOf, bkMean, bkCellOf, bkTypedCell, bkLoad, bkClassCols, bkCounts, bkGrade, bkXcTo, bkTabs, bkTermNow, bkClassAvg, bkBands, bkGroups, bkCountTypes, pctAvgText, bkParse, bkCellVal, bkColMax, bkPut, typedStamp, isoDay, bkDay, BK_DEF, rosterPairs, bkTypeUse, IB_TOP, IB_BANDS, IB_GROUPS, IB_WAYS, IB_BOUNDS_DP, ibLetter, classWay, ibGroup, ibGroupCrit, ibBoundsFor, ibBoundsClean, ibCrit, ibBounds, ibGradeOf, ibLevel, ibBandName, ibTerm, ibEvidence, ibConf, ibCols, ibEvFor, ibMid, MIS_WORDS, misConf, misCols, misOwes, misByStu, misByCol, misNudge, misLate, misDue, mbParts, mbSorted, MB_ORDERS, parseRosterRows, keepInfo, keepAtt, infoOf, setInfo, blankInfo, attDays, attCount, attOf, attNote, classNewWay, ATT_WAYS, attRec, attDayOk, attSet, attTake, attClear, attDayCount, attUnknown, attMeets, attStep, csvSafe, SEAT_ROOMS, SEAT_MAX_W, SEAT_MAX_H, seatXY, seatKeys, seatRoom, seatOf, seatSave, seatList, seatFill, seatPut, seatSetRoom, pkNice, pkShort, pkShuffle, pkCount, pkGroups, misDraft, misGroup, misHref, misPlain, misEmail, misLine, misFill, misClassName, rptCall, goalList, goalData, GOAL_LOW, RPT_WORDS, RPT_SLOTS, RPT_PROS, RPT_LEN, rptConf, rptEntry, rptPut, rptPro, rptFacts, rptDraft, rptText, bkScored, bkIn, ibLvAt, ibPredOf, lkKey, lkSibs, lkTwins, lkCopy, lkJoin1, lkLev, lkLike, lkSuggest, chRowAvgs, chSums, chRowTop };
 export { EMAIL_RX };

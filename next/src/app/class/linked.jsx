@@ -60,7 +60,7 @@ export function LinkedHead({ lib, classId }) {
 }
 
 // Linked classes: tick the classes on the same schedule. They share one course name.
-function LinkEdit({ lib, classId, onClose }) {
+export function LinkEdit({ lib, classId, onClose }) {
   const c = clsOf(on(lib), classId), was = B.lkSibs(c), others = lib.classes.filter(x => x !== c);
   const [pick, setPick] = useState(() => new Set(was.map(x => String(x.id)))), [course, setCourse] = useState(c.course || '');
   const flip = id => setPick(o => { const n = new Set(o); if (n.has(id)) n.delete(id); else n.add(id); return n; });

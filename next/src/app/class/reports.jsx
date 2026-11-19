@@ -4,6 +4,7 @@
 // them written in lib.book.rep, all saved as the current app saves them. A sheet from under the gradebook.
 import { h, Fragment } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
+import { leavingReady } from '../../students/write.js';
 import { Sheet, Dialog, Button, Segmented, TextInput, Checkbox, Select, Mic, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import * as undoList from '../../services/undo.js';
@@ -11,6 +12,7 @@ import { copyText } from '../../services/clipboard.js';
 import { engine as B, change, classIn } from '../../students/book.js';
 import { fmtNum } from '../../engines/gcore.js';
 import { pct } from './grades.jsx';
+import { href } from '../router.js';
 import './lines.js';
 
 const LEN = { short: 'class.rp_short', medium: 'class.rp_medium', long: 'class.rp_long' };
@@ -32,7 +34,11 @@ export function ReportsSheet({ x, cols, term, onClose }) {
   const f = B.rptFacts(c, cols, x.conf, n), e = B.rptEntry(c, n), shown = text != null ? text : e.text != null ? e.text : B.rptDraft(c, n, f, rc, e.v);
   const done = c.names.filter(k => B.rptEntry(c, k).done).length;
   const flush = () => { clearTimeout(wait.current); if (text != null && text !== (e.text != null ? e.text : null)) { const v = text; putRep(c, n, { text: v, t: Date.now() }, term); } };
-  useEffect(() => () => clearTimeout(wait.current), []);
+  // what was typed in the last moment is kept when the sheet closes or the tab is closed (src/reports.js pagehide rptKeep, audit H-066)
+  const keep = useRef(null); keep.current = flush;
+  useEffect(() => { const k = () => keep.current(), v = () => { if (document.visibilityState === 'hidden') k(); };
+    leavingReady(); addEventListener('pagehide', k); document.addEventListener('visibilitychange', v);
+    return () => { removeEventListener('pagehide', k); document.removeEventListener('visibilitychange', v); k(); }; }, []);
   const go = k => { flush(); setText(null); setStu(k); setTimeout(() => { const ta = box.current && box.current.querySelector('[data-rp-text]'); if (ta) ta.focus({ preventScroll: true }); }); };
   const typed = v => { setText(v); clearTimeout(wait.current); wait.current = setTimeout(() => putRep(c, n, { text: v, t: Date.now() }, term), 400); };
   const again = () => { const wasTyped = e.text != null; clearTimeout(wait.current); setText(null); putRep(c, n, { text: null, done: false, v: ((e.v || 0) + 1) % 60, t: Date.now() }, term).then(() => toast(t(wasTyped ? 'class.rp_again_lost' : 'class.rp_again'), { undo: () => undoList.undo() })); };
@@ -62,6 +68,7 @@ export function ReportsSheet({ x, cols, term, onClose }) {
         <span class="grow" /><Button size="sm" onClick={() => setWords(true)} data-rp-words>{t('class.rp_wording')}</Button>
         <Button size="sm" icon="copy" onClick={() => { const r = all(); copyText(r.map(k => k.map(v => String(v).replace(/[\t\r\n]+/g, ' ')).join('\t')).join('\n')).then(ok => toast(ok ? t('class.rp_copied_all', { n: r.length }) : t('class.copy_failed'))); }} data-rp-copyall>{t('class.rp_copy_all')}</Button>
         <Button size="sm" icon="download" onClick={() => save(t('class.rp_file', { name: c.name }) + '.csv', csv([[t('class.student'), t('class.rp_comment')], ...all()]) + '\r\n')} data-rp-csv>{t('class.mis_download')}</Button>
+        <a class="btn sm" href={href('class', c.id, 'grades', 'sheets')} onClick={flush} data-rp-sheets>{t('class.pss_all')}</a>
       </div>
       <p class="mute small">{t('class.rp_say')}</p>
       <div class="rptgrid">
@@ -91,13 +98,15 @@ export function ReportsSheet({ x, cols, term, onClose }) {
 // Her own sentences, one way of saying it on each line (src/reports.js rptWordsDlg). An empty box goes back to the built-in ones.
 function Words({ rc, onClose }) {
   const [v, setV] = useState(() => Object.fromEntries(B.RPT_SLOTS.map(([k]) => [k, ((rc.words[k] || []).filter(Boolean).length ? rc.words[k] : B.RPT_WORDS[k]).join('\n')])));
+  const [cut, setCut] = useState(() => (rc.cut || []).slice(0, 3));
   const go = async () => {
     const out = {};
     for (const [k] of B.RPT_SLOTS) { const lines = v[k].split('\n').map(s => s.trim()).filter(Boolean); if (lines.length && lines.join('\n') !== B.RPT_WORDS[k].join('\n')) out[k] = lines; }
-    await putConf({ words: out }); onClose(); toast(t('class.rp_words_saved'));
+    await putConf({ words: out, cut: cut.map(n => Math.max(0, Math.min(100, +n || 0))).sort((a, b) => b - a) }); onClose(); toast(t('class.rp_words_saved'));
   };
   return <Dialog open title={t('class.rp_wording_t')} onClose={onClose} actions={<><Button onClick={() => setV(Object.fromEntries(B.RPT_SLOTS.map(([k]) => [k, B.RPT_WORDS[k].join('\n')])))}>{t('class.mis_builtin')}</Button><span class="grow" /><Button onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" onClick={go} data-rp-words-save>{t('class.save')}</Button></>}>
     <p class="mute small">{t('class.rp_words_say')}</p><p class="mute small">{t('class.rp_fills')}</p>
+    <div class="row gap wrap rpcuts" data-rp-cuts><b>{t('class.rp_cuts')}</b>{['class.rp_cut_hi', 'class.rp_cut_good', 'class.rp_cut_mid'].map((l, j) => <label class="row gap-s">{t(l)}<input class="input num" type="number" min="0" max="100" value={cut[j]} onInput={ev => { const n = ev.currentTarget.value; setCut(o => o.map((y, k) => (k === j ? n : y))); }} data-rp-cut={j} />%</label>)}</div>
     <div class="rpwords">{B.RPT_SLOTS.map(([k]) => <label class="cp-fld"><span class="lab">{t(SLOT[k])}</span><textarea class="input" rows="3" value={v[k]} onInput={ev => { const x = ev.currentTarget.value; setV(o => ({ ...o, [k]: x })); }} data-rp-slot={k} /></label>)}</div>
   </Dialog>;
 }
