@@ -92,6 +92,10 @@ test('Settings: the assistant and where it opens, the programme, places in an av
   // the Undo toast from the goals may still be over it, so the switch is pressed itself
   await p.$eval('[data-stxnames] [role="switch"]', e => e.click());
   assert.equal(await until(async () => (await ls(p, 'gs.xnames')) === false), true);
+  // D-013: Word papers, kept as Word or made into PDF pages as each assignment opens
+  await p.waitForSelector('[data-stwordpdf] [data-v="0"][aria-checked="true"]');
+  await p.$eval('[data-stwordpdf] [data-v="1"]', e => e.click());
+  assert.equal(await until(async () => (await ls(p, 'gs.wordPdf')) === true), true);
   await p.goto(srv.url + 'next/#/settings/display');
   await p.waitForSelector('[data-stsize] [data-v="1.15"]', { timeout: 30000 });
   await p.click('[data-stsize] [data-v="1.15"]');

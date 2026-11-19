@@ -20,6 +20,10 @@ export function startWhole() {
   // The sync itself loads after the first screen is drawn (it brings the merge and the writes with it).
   let D = null;
   const drive = () => import('./drive.js').then(m => { if (!D) { D = m; m.startDrive(); } return m; });
+  // kept videos nothing names any more (students/write.js sweepVideos; H-048): 20 seconds after the app opens, and after a download goes
+  const sweep = () => import('../students/write.js').then(m => m.sweepVideos()).catch(err => { if (!(err && /lock|ReadOnly|CannotSave/.test(err.name + err.message))) console.error(err); });
+  setTimeout(sweep, (typeof window !== 'undefined' && window.__gsSweepMs) || 20000);
+  onSaved(e => { if (e.kind === 'papers' && e.gone) setTimeout(sweep, 0); });
   onSaved(e => { if (SYNCS(e)) { markSyncDue(); if (G.email) drive().then(m => m.syncSoon()); } queue = queue.then(() => folderSaved(e)).catch(err => console.error(err)); });
   if (G.email || G.token) setTimeout(drive, 0);
   onGoogle(changedSaving); onFolder(changedSaving);

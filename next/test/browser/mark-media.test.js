@@ -72,7 +72,7 @@ const goTo = async (p, key) => {
   await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready, { timeout: 60000 }, i);
 };
 
-test('a recording and a link added to students: played, the time put in the comment, a transcript pasted and made, a video turned, notes pages, and the current app opens the same', async () => {
+test('H-074: a recording and a link added to students: played, the time put in the comment, a transcript pasted and made, a video turned, notes pages, and the current app opens the same', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const p = await page(ctx, errors);
   await p.goto(srv.url + 'blank'); await plant(p, withCard());
@@ -133,11 +133,15 @@ test('a recording and a link added to students: played, the time put in the comm
   await p.evaluate(() => {
     window.__media.asrStandIn.decode = async () => new Float32Array(16000 * 3).fill(0.1);
     window.__media.asrStandIn.call = async m => m.type === 'load' ? { type: 'ready' } : { type: 'result', words: [[' Hello', 0.2], [' class.', 0.9], [' Tides', 1.6], [' rise.', 2.2]] };
+    // H-074: the screen kept awake while it is made, and let go after
+    window.__wake = [];
+    Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: { request: async k => { window.__wake.push('on ' + k); return { release: async () => window.__wake.push('off') }; } } });
   });
   await p.click('.media [data-trmake]');
   await p.waitForSelector('.media [data-trgo]');
   await p.click('.media [data-trgo]');
   await p.waitForFunction(() => /Hello class\./.test((document.querySelector('.media .trans') || {}).textContent || ''), { timeout: 60000 });
+  assert.deepEqual(await p.evaluate(() => window.__wake), ['on screen', 'off'], 'H-074: the screen is kept awake while the transcript is made');
 
   // Bram: a link, and a notes page with two columns
   await goTo(p, 'Bram Sample');
@@ -361,6 +365,27 @@ test('D-045 D-046 D-047: a kept video put back, a recording that won’t play, a
   assert.match(await p.$eval('.media [data-mbad]', e => e.textContent), /won’t play in this browser/);
   assert.ok(await p.$('.media [data-mdl]'), 'Download');
   await p.evaluate(() => window.__mark.saved());
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// H-048: kept videos no shortcut names any more go a while after the app opens, as the current app sweeps them (src/video.js vkSweep);
+// one a student's added file names stays, and one kept in the last 15 minutes stays.
+test('H-048: a kept video nothing names goes after the app opens; one an added file names, and one kept just now, stay', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), p = await page(ctx, errors);
+  await p.evaluateOnNewDocument(() => { window.__gsSweepMs = 300; });
+  await p.goto(srv.url + 'blank'); await plant(p, gradingSeed());
+  await p.evaluate(() => Promise.all([['grading-studio-added', 'files'], ['grading-studio-videos', 'v']].map(([n, s]) => new Promise(res => { const r = indexedDB.open(n, 1); r.onupgradeneeded = () => r.result.createObjectStore(s); r.onsuccess = () => { r.result.close(); res(); }; }))));
+  await p.evaluate(() => {
+    const put = (db, st, v, k) => new Promise(res => { const r = indexedDB.open(db); r.onsuccess = () => { const tx = r.result.transaction(st, 'readwrite'); tx.objectStore(st).put(v, k); tx.oncomplete = () => { r.result.close(); res(); }; }; });
+    const vid = (id, at) => put('grading-studio-videos', 'v', { id, name: id + '.webm', type: 'video/webm', size: 3, at, blob: new Blob([new Uint8Array([1, 2, 3])], { type: 'video/webm' }) }, id);
+    return Promise.all([vid('goneVideo01', 1000), vid('keptVideo01', 1000), vid('freshVideo1', Date.now()),
+      put('grading-studio-added', 'files', { bid: 'gs.b.x1', key: 'Made Up', path: 'Speech.url', name: 'Speech.url', data: new TextEncoder().encode('[InternetShortcut]\nURL=gs-video:keptVideo01\n'), at: Date.now() }, 'gs.b.x1|Made Up|Speech.url')]);
+  });
+  await p.goto(srv.url + 'next/#/home');
+  const left = () => p.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-videos'); r.onsuccess = () => { const q = r.result.transaction('v').objectStore('v').getAllKeys(); q.onsuccess = () => { res(q.result.sort()); r.result.close(); }; }; }));
+  await p.waitForFunction(() => new Promise(res => { const r = indexedDB.open('grading-studio-videos'); r.onsuccess = () => { const q = r.result.transaction('v').objectStore('v').count(); q.onsuccess = () => { res(q.result === 2); r.result.close(); }; }; }), { timeout: 30000, polling: 300 });
+  assert.deepEqual(await left(), ['freshVideo1', 'keptVideo01']);
   assert.deepEqual(errors, []);
   await ctx.close();
 });

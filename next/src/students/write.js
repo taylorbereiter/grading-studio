@@ -274,6 +274,34 @@ export async function dropVideo(id) {
   saved({ kind: 'video', id, side: 'students' });
 }
 
+// Kept videos that no shortcut file names any more go (src/video.js vkSweep, src/app/kept.js; H-048): looked for in every added file
+// and every kept download's papers. One kept in the last 15 minutes stays, so a video being added right now is never caught. A
+// browser that never kept a video has nothing to sweep, and no database is made for it. Gives how many went.
+const shortcutId = d => {
+  if (!d || !d.length || d.length > 4000) return ''; let s = ''; try { s = new TextDecoder().decode(d); } catch { return ''; }
+  const v = /^\s*URL\s*=\s*gs-video:([\w-]{6,40})\s*$/mi.exec(s); if (v) return v[1];
+  const g = /^\s*GsDrive\s*=\s*([\w-]{10,120})\s*$/mi.exec(s); return g ? 'd-' + g[1] : '';
+};
+export async function sweepVideos() {
+  check('videos');
+  const ids = await videos.keys(); if (!ids.length) return 0;
+  const used = new Set(), see = r => { const v = r && /\.url$/i.test(r.path || '') && shortcutId(r.data); if (v) used.add(v); };
+  for (const [, r] of await added.entries()) see(r);
+  for (const [k, r] of await papers.entries()) {
+    if (r && Array.isArray(r.entries)) r.entries.forEach((e, i) => { if (e && e.data) see(e); else if (e && e.parts === 1 && /\.url$/i.test(e.path || '')) used.add('?' + k + '|' + i + '|0'); });
+  }
+  // a shortcut kept in pieces (a large download): its one piece read on its own
+  for (const q of [...used].filter(x => x[0] === '?')) { used.delete(q); see({ path: '.url', data: await papers.get(q.slice(1)) }); }
+  const old = Date.now() - 15 * 60e3; let n = 0;
+  for (const id of ids) {
+    if (used.has(id)) continue;
+    const r = await videos.get(id); if (r && r.at > old) continue;
+    await videos.del(id); n++;
+  }
+  if (n) saved({ kind: 'video', id: '', side: 'students' });
+  return n;
+}
+
 /* strong examples and the watch list (grading-studio-examples: ex and pix; src/examples.js exPut, exDelete) */
 // A record and its pictures in one transaction, as exPut writes them: u stamps the change (the newer one wins a merge), new
 // pictures replace the old ones. A browser that never kept one gets the database made as the current app makes it (shared/idb.js ensure).

@@ -505,9 +505,11 @@ export function trSet(f, tr) {
   step(() => put(was), () => put(all.map(() => tr)), tr ? 'transcript' : 'transcript taken off');
   put(all.map(() => tr));
 }
-// A recording's transcript made in this browser (transcribeFile): bytes, the recording itself.
+// A recording's transcript made in this browser (transcribeFile): bytes, the recording itself. The screen is kept awake while it is
+// made, so a long one doesn't stop when the laptop sleeps (src/app/media.js wakeLock; H-074).
 export async function trMake(f, bytes, say, stop) {
-  const w = await V.transcribe(bytes, say, stop);
+  let lock = null; try { lock = await navigator.wakeLock.request('screen'); } catch {}
+  let w; try { w = await V.transcribe(bytes, say, stop); } finally { try { if (lock) lock.release(); } catch {} }
   if (stop && stop.on) return false;
   trSet(f, { w });
   return true;

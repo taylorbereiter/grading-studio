@@ -202,7 +202,11 @@ export function Shell() {
     ];
     // the focus timer's runner and panel (app/focus/run.js): a session going on shows on every screen, and time is counted
     const fc = setTimeout(runner, 600);
-    return () => { offs.forEach(f => f()); clearTimeout(fc); };
+    // Email links open the teacher's way (mailcatch.js, D-023), once that small part has loaded just after start
+    let mc = null; const mail = e => { if (mc) mc(e); };
+    document.addEventListener('click', mail, true);
+    const ml = setTimeout(() => import('./mailcatch.js').then(m => { mc = m.mailClick; }, e => console.error(e)), 800);
+    return () => { offs.forEach(f => f()); clearTimeout(fc); clearTimeout(ml); document.removeEventListener('click', mail, true); };
   }, []);
   // Planning destinations, and every lesson by its title (with its class and day), so typing finds a lesson (the Planner's Search).
   const plan = usePlan();
