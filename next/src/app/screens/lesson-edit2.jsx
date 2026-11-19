@@ -14,6 +14,7 @@ import '../plan/lines.js';
 import { ExamplePicker } from '../plan/example-pick.jsx';
 import { isExample, exampleSize } from '../plan/examples.js';
 import { LazyDrive } from '../drive-lazy.js';
+import { planTime } from '../../planning/index.js';
 
 const mmss = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 // The link to open: a YouTube video starts where the slide says (lessons.js videoLink).
@@ -125,4 +126,24 @@ export function Frame({ host, k, name, moved, onDone, onBack }) {
       {moved && <button type="button" class="grip back" onPointerDown={e => e.stopPropagation()} onClick={onBack} data-focus="box-back">{t('edit.box_back')}</button>}</span>
     {HANDLES.map(hd => <i class={'hd hd-' + hd} onPointerDown={e => down(e, hd)} data-h={hd} aria-hidden="true" />)}
   </div>;
+}
+
+// Beside the lesson's name: the time spent planning it (src/planner/plantime.js ptBadge, from a minute), whether it is saved
+// (lessons.js #lsSaved). Whether the name and the title slide's title are kept the same is in the lesson's ⋯ menu (lesson-side.jsx).
+export const titleSlideOf = d => d.slides.find(s => s.layout === 'title');
+const plainTitle = x => String(x || '').replace(/\\([*_{])/g, (m, c) => '\u0000' + '*_{'.indexOf(c)).replace(/\*\*|__|\*|\{\/\}|\{(red|orange|green|blue|purple|gray)\}/g, '').replace(/\u0000(\d)/g, (m, i) => '*_{'[i]).replace(/\s+/g, ' ').trim();
+// The lesson's name was typed: the title slide follows (lessons.js titleToSlide). A title slide's title was typed: the name follows.
+export function linkTitles(n, i) {
+  const s = !n.titleApart && titleSlideOf(n); if (!s) return n;
+  if (i == null) s.title = n.title;
+  else if (n.slides[i] === s) { const x = plainTitle(s.title); if (x) n.title = x; }
+  return n;
+}
+const planSecs = id => { const P = planTime.json(null) || {}; let s = 0; for (const d of Object.values((P && P.days) || {})) if (d && d.a && d.a[id]) s += +d.a[id] || 0; return s; };
+export function TopExtras({ d, saving }) {
+  const secs = planSecs(d.id), m = Math.round(secs / 60), hr = Math.floor(m / 60);
+  return <>
+    {secs >= 60 && <span class="mute ptime" data-focus="plan-time" title={t('les.plan_time_tip')}>{hr ? (m % 60 ? t('les.plan_hr_min', { h: hr, m: m % 60 }) : t('les.plan_hr', { h: hr })) : t('les.plan_min', { n: m })}</span>}
+    <span class="mute savest" role="status" data-focus="save-state">{saving ? t('les.saving') : t('les.saved')}</span>
+  </>;
 }

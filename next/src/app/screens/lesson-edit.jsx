@@ -40,7 +40,7 @@ const copy = x => JSON.parse(JSON.stringify(x));
 export default function Editor({ p, l, cur, setCur, save, ai, onAsk = () => {} }) {
   const E = engine(p);
   const [d, setD] = useState(() => copy(l)), timer = useRef(0), last = useRef(l.updated), stage = useRef(null);
-  const [over, setOver] = useState(false), [box, setBox] = useState(''), [keys, setKeys] = useState([]), [looking, setLooking] = useState(false), [tips, setTips] = useState(false), host = useRef(null), X = usePart('edit2'), [vid, setVid] = useState(false);
+  const [over, setOver] = useState(false), [box, setBox] = useState(''), [keys, setKeys] = useState([]), [looking, setLooking] = useState(false), [tips, setTips] = useState(false), host = useRef(null), X = usePart('edit2'), [vid, setVid] = useState(false), [saving, setSaving] = useState(false);
   // Another window saved this lesson while it is open here: take it, unless she is typing.
   useEffect(() => { if (l.updated !== last.current && !timer.current) { setD(copy(l)); last.current = l.updated; } }, [l.updated]);
   useEffect(() => () => { if (timer.current) { clearTimeout(timer.current); save(dRef.current); } }, []);
@@ -53,11 +53,11 @@ export default function Editor({ p, l, cur, setCur, save, ai, onAsk = () => {} }
   };
   const keep = (next, now) => {
     setD(next); clearTimeout(timer.current);
-    const go = async () => { timer.current = 0; const s = await save(next); if (s) last.current = s.updated; };
+    setSaving(true); const go = async () => { timer.current = 0; const s = await save(next); if (s) last.current = s.updated; setSaving(false); };
     if (now) go(); else timer.current = setTimeout(go, 400);
   };
   const n = d.slides.length, i = Math.max(0, Math.min(cur, n - 1)), s = d.slides[i];
-  const setSlide = (patch, now) => { const next = copy(d); next.slides[i] = { ...next.slides[i], ...patch }; for (const k in patch) if (patch[k] === undefined) delete next.slides[i][k]; put(next, now, 'slide:' + (next.slides[i].id || i) + ':' + Object.keys(patch).join(',')); };
+  const setSlide = (patch, now) => { let next = copy(d); next.slides[i] = { ...next.slides[i], ...patch }; for (const k in patch) if (patch[k] === undefined) delete next.slides[i][k]; if ('title' in patch && X) next = X.linkTitles(next, i); put(next, now, 'slide:' + (next.slides[i].id || i) + ':' + Object.keys(patch).join(',')); };
   const at = (k, j) => { const next = copy(d); k(next.slides, next); put(next, true); if (typeof j === 'number') setCur(j); };
   const add = () => at(sl => sl.splice(i + 1, 0, E.normSlide({ layout: E.deckAdd(), fmt: 2 })), i + 1);
   const dup = () => at(sl => sl.splice(i + 1, 0, { ...copy(sl[i]), id: E.lid(), talk: [] }), i + 1);
@@ -109,9 +109,10 @@ export default function Editor({ p, l, cur, setCur, save, ai, onAsk = () => {} }
   }, [i, n]);
   const layouts = Object.keys(E.LAYOUTS).map(k => ({ value: k, label: LAYOUT_LINE[k] ? t(LAYOUT_LINE[k]) : k }));
   return <div class="editor">
-    <div class="ed-top"><TextInput label={t('plan.lesson_title')} value={d.title} onInput={v => put({ ...d, title: v })} />
+    <div class="ed-top"><TextInput label={t('plan.lesson_title')} value={d.title} onInput={v => { const n = copy(d); n.title = v; put(X ? X.linkTitles(n) : n); }} />
       <Button icon="image" onClick={() => setLooking(true)} data-focus="look">{t('edit.look_n', { name: t(LOOK_LINE[T.lookOf(d)] || 'edit.look') })}</Button>
-      <Button variant="quiet" icon="info" onClick={() => setTips(true)} data-focus="tips">{t('edit.tips')}</Button></div>
+      <Button variant="quiet" icon="info" onClick={() => setTips(true)} data-focus="tips">{t('edit.tips')}</Button>
+      {X && <X.TopExtras d={d} saving={saving} />}</div>
     {X && looking && <X.LookSheet k={{ p, E, T, Slide, saveKv, LOOK_LINE }} d={d} s={s} onPick={lk => put({ ...d, look: lk }, true)} onClose={() => setLooking(false)} />}
     {X && tips && <X.Tips onClose={() => setTips(false)} />}
     <div class="ed-grid">

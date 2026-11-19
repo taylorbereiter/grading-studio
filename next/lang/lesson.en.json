@@ -9,5 +9,18 @@
  "les.video_about": "The slide shows the video’s picture with a play button, and the title and channel as the source line. Clicking it in the .pptx opens the video.",
  "les.video_off": "Take the video off",
  "les.video_use": "Use this link",
- "les.video_bad": "That doesn’t look like a link"
+ "les.video_bad": "That doesn’t look like a link",
+ "les.classes": "Classes",
+ "les.take_off": "Take it off {name}",
+ "les.add_class": "Class",
+ "les.not_meet": "That class doesn’t meet that day on your timetable. You can still add it.",
+ "les.add": "Add",
+ "les.plan_time_tip": "Time spent planning this lesson",
+ "les.plan_min": "{n} min planning",
+ "les.plan_hr": "{h} hr planning",
+ "les.plan_hr_min": "{h} hr {m} min planning",
+ "les.saving": "Saving…",
+ "les.saved": "Saved",
+ "les.title_linked": "Name matches the title slide",
+ "les.add_slot": "Put it on another class or day"
 }

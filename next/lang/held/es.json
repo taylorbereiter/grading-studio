@@ -9,5 +9,18 @@
  "les.video_about": "La diapositiva muestra la imagen del vídeo con un botón de reproducir, y el título y el canal como línea de fuente. Al hacer clic en el .pptx se abre el vídeo.",
  "les.video_off": "Quitar el vídeo",
  "les.video_use": "Usar este enlace",
- "les.video_bad": "Eso no parece un enlace"
+ "les.video_bad": "Eso no parece un enlace",
+ "les.classes": "Clases",
+ "les.take_off": "Quitarla de {name}",
+ "les.add_class": "Clase",
+ "les.not_meet": "Según tu horario, esa clase no tiene sesión ese día. Puedes añadirla igualmente.",
+ "les.add": "Añadir",
+ "les.plan_time_tip": "Tiempo dedicado a planificar esta clase",
+ "les.plan_min": "{n} min de planificación",
+ "les.plan_hr": "{h} h de planificación",
+ "les.plan_hr_min": "{h} h {m} min de planificación",
+ "les.saving": "Guardando…",
+ "les.saved": "Guardado",
+ "les.title_linked": "El nombre coincide con la diapositiva de título",
+ "les.add_slot": "Ponerla en otra clase o día"
 }

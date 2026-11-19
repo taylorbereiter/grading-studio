@@ -400,3 +400,11 @@
 .bk-scale label{display:flex;align-items:center;gap:6px;font-size:var(--t2)}.bk-scale label span{width:22px;text-align:right;font-weight:600}.bk-scale input{width:76px}
 .bk-pre{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .ubank .list{margin-bottom:8px}
+/* stage 8 E1: a lesson's classes (screens/lesson-side.jsx), the editor's save state and planning time */
+.slotlist{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-direction:column;gap:4px}
+.slotchip{display:flex;align-items:center;gap:8px}
+.slotchip>span:nth-child(2){flex:1;min-width:0}
+.addslot{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.addslot .row{display:flex;gap:8px;justify-content:flex-end}
+.ed-top .savest,.ed-top .ptime{font-size:var(--t2);white-space:nowrap;align-self:center}
+.vidrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}

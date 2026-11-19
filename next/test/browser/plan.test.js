@@ -559,7 +559,9 @@ test('a lesson on no class or day shows beside the Course line and goes on the c
   await open(p, 'class/c1');
   assert.ok((await p.$$eval('main .loose a', a => a.map(x => x.getAttribute('href')))).includes('#/lesson/' + id), 'listed as not on the calendar');
   await open(p, 'lesson/' + id);
-  await p.click('main [data-focus="place-it"]');
+  await p.waitForSelector('main [data-focus="add-slot"]'); await p.click('main [data-focus="add-slot"]');
+  await p.waitForSelector('.sheet [data-focus="slot-add"]'); await p.waitForFunction(() => document.activeElement && document.activeElement.closest('.sheet'));
+  await p.click('.sheet [data-focus="slot-add"]');
   let l = null; for (let k = 0; k < 30; k++) { l = await lessonInDb(p, id); if (l.slots.length) break; await new Promise(r => setTimeout(r, 150)); }
   assert.deepEqual(l.slots, [{ classId: 'A1', date: '2026-10-27' }]);
   assert.deepEqual(p.errors, []); await p.ctx.close();

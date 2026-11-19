@@ -37,9 +37,12 @@ export const ROUTES = [
 // The chunks. Written out one by one so the bundler makes one file for each.
 // Parts of the lesson screen loaded only when asked for: the editor (the Edit view), Present, and the lesson's tools (sheets from
 // the lesson menu, the Beside drawer). Each is a screen of its own for the size budget (next/budgets.json route).
+// The address shown before this one (the lesson page's back link goes there, as the current Planner's ‹ Week / Units / Unit did).
+export let from = '';
 export const PARTS = {
   edit: () => import('./screens/lesson-edit.jsx'),
   edit2: () => import('./screens/lesson-edit2.jsx'),
+  side2: () => import('./screens/lesson-side.jsx'),
   present: () => import('./screens/present.jsx'),
   tools: () => import('./screens/lesson-tools.jsx'),
   beside: () => import('./screens/lesson-beside.jsx'),
@@ -192,5 +195,5 @@ let started = false;
 export function start() {
   if (started) return; started = true;
   was = current().path;
-  window.addEventListener('hashchange', () => { remember(); const r = current(); was = r.path; told.forEach(f => f(r)); });
+  window.addEventListener('hashchange', () => { remember(); const r = current(); from = was; was = r.path; told.forEach(f => f(r)); });
 }

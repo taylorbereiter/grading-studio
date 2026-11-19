@@ -9,5 +9,18 @@
  "les.video_about": "幻灯片会显示视频的图片和播放按钮，并以标题和频道作为来源行。在 .pptx 中点击即可打开视频。",
  "les.video_off": "移除视频",
  "les.video_use": "使用此链接",
- "les.video_bad": "这看起来不像链接"
+ "les.video_bad": "这看起来不像链接",
+ "les.classes": "班级",
+ "les.take_off": "从 {name} 移除",
+ "les.add_class": "班级",
+ "les.not_meet": "按你的课表，这个班级那天没有课。仍然可以添加。",
+ "les.add": "添加",
+ "les.plan_time_tip": "备这节课所用的时间",
+ "les.plan_min": "备课 {n} 分钟",
+ "les.plan_hr": "备课 {h} 小时",
+ "les.plan_hr_min": "备课 {h} 小时 {m} 分钟",
+ "les.saving": "正在保存…",
+ "les.saved": "已保存",
+ "les.title_linked": "名称与标题幻灯片一致",
+ "les.add_slot": "排到另一个班级或日期"
 }
