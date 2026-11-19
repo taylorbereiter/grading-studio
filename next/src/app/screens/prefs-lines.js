@@ -2,4 +2,4 @@
 // where students hand in work, text size and full screen, and My setup. They load with those pages only.
 import { addLines } from '../../i18n/t.js';
 import LINES from '../../../lang/prefs.en.json';
-addLines(LINES);
+addLines(LINES, 'prefs');

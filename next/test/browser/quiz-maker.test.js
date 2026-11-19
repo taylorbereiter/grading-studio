@@ -228,7 +228,7 @@ test('a printed quiz keeps the language it was printed in: saved again in anothe
   });
   const was = Object.fromEntries(await c.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units[0].items.filter(x => x.quiz).map(x => [x.id, x.quiz.qs.map(q => [q.n, q.y, q.auto.b])])));
   await c.close();
-  const ZH = require('../../lang/zh-Hans.json'), howZh = ZH['engine.qf_how'].slice(0, 8);
+  const ZH = require('../../tools/lang-areas.js').readLang('zh-Hans'), howZh = ZH['engine.qf_how'].slice(0, 8);
   const p = await page(ctx, errors);
   await p.goto(srv.url + 'next/#/class/c1/work');
   for (const id of ['i9', 'i8']) {

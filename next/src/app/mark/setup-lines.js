@@ -3,4 +3,4 @@
 // with those parts, not with the marking screen, which keeps only the lines it draws first (next/lang/mark.en.json).
 import { addLines } from '../../i18n/t.js';
 import LINES from '../../../lang/setup.en.json';
-addLines(LINES);
+addLines(LINES, 'setup');

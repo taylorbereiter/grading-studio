@@ -1,0 +1,73 @@
+{
+ "home.morning": "좋은 아침이에요",
+ "home.afternoon": "좋은 오후예요",
+ "home.evening": "좋은 저녁이에요",
+ "home.this_week": "이번 주",
+ "home.no_timetable_text": "설정의 시간표에서 수업 시간을 추가하면 그날의 수업이 여기에 나와요.",
+ "home.no_classes_today": "오늘은 수업이 없습니다",
+ "home.next_class": "다음 수업",
+ "home.time_range": "{from} – {to}",
+ "home.minutes": {
+  "one": "{n}분",
+  "other": "{n}분"
+ },
+ "home.until_starts": "후 시작",
+ "home.until_ends": "후 끝남",
+ "home.untitled_lesson": "제목 없는 수업",
+ "home.nothing_planned": "아직 계획 없음",
+ "home.ready": "준비됨",
+ "home.slides": {
+  "one": "슬라이드 {n}장",
+  "other": "슬라이드 {n}장"
+ },
+ "home.present": "발표",
+ "home.open_lesson": "수업 열기",
+ "home.plan_it": "계획하기",
+ "home.day_over": "오늘 수업이 끝났어요.",
+ "home.today_classes": "오늘 수업",
+ "home.say_classes": {
+  "one": "오늘 수업 1개.",
+  "other": "오늘 수업 {n}개."
+ },
+ "home.say_mark": {
+  "one": "채점할 제출물 1묶음.",
+  "other": "채점할 제출물 {n}묶음."
+ },
+ "home.say_back": {
+  "one": "돌려줄 준비가 된 것이 하나 있어요.",
+  "other": "돌려줄 준비가 된 것이 {n}개 있어요."
+ },
+ "home.say_plan": {
+  "one": "계획할 수업이 하나 있어요.",
+  "other": "계획할 수업이 {n}개 있어요."
+ },
+ "home.say_missing": {
+  "one": "미제출 과제를 알려 줄 학생이 한 명 있어요.",
+  "other": "미제출 과제를 알려 줄 학생이 {n}명 있어요."
+ },
+ "home.say_none": "기다리는 일이 없어요.",
+ "home.col_class": "학급",
+ "home.col_today": "오늘",
+ "home.col_mark": "채점할 제출물",
+ "home.not_today": "오늘은 없음",
+ "home.needs_you": "확인 필요",
+ "home.all_todos": "모든 할 일",
+ "home.mark": "{name} 채점",
+ "home.finish_marking": "{name} 채점 끝내기",
+ "home.feedback_on": "{name} 피드백 주기",
+ "home.student_work": "학생 작품",
+ "home.feedback_only": "피드백만",
+ "home.hand_back": "{name} 돌려주기",
+ "home.all_scored": {
+  "one": "한 개 모두 채점됨",
+  "other": "{n}개 모두 채점됨"
+ },
+ "home.plan_lesson": "{day} {cls} 수업 계획하기",
+ "home.all_clear": "채점하거나 돌려주거나 계획할 것이 없어요.",
+ "home.plan_today": "오늘 {cls} 수업 계획하기",
+ "home.remind": {
+  "one": "학생 한 명에게 미제출 과제 알리기",
+  "other": "학생 {n}명에게 미제출 과제 알리기"
+ },
+ "home.plan_tomorrow": "내일 {cls} 수업 계획하기"
+}
