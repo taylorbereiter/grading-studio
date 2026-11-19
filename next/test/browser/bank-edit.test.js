@@ -80,7 +80,9 @@ test('the bank: a new rubric (rows, 0 to 6, what a score means, steps of 5, a un
   assert.equal(r.top, 6); assert.deepEqual(r.levels[0], { 6: 'A striking cover' });
   assert.equal(r.scale[24], 100); assert.equal(r.scale[23], 95);
   assert.deepEqual(r.unit, { id: 'U2', course: 'Grade 9', title: 'Unit 2: Poetry' });
-  // Ctrl+Z takes the save back, Ctrl+Y does it again
+  // Ctrl+Z takes the save back, Ctrl+Y does it again. The save is one undo step once it has finished (the dialog closes then): the
+  // record is in the database a moment before its Planner-folder copy is written and the step is kept.
+  await p.waitForFunction(() => !document.querySelector('dialog[open] [data-bkname]'), { timeout: 10000 });
   await p.evaluate(() => document.activeElement && document.activeElement.blur());
   await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
   assert.ok(await until(async () => !byName(await bank(p), 'Book cover')), 'Ctrl+Z');

@@ -15,6 +15,7 @@ import { t } from '../../i18n/t.js';
 import { bank as bankRec, words } from '../../planning/index.js';
 import { saveKv } from '../../planning/write.js';
 import * as undoList from '../../services/undo.js';
+import { rebaseList, rebaseMap } from '../../shared/rebase.js';
 import { L, lid } from '../../engines/planner.js';
 import { tidyBank, normRubric, normBankScale, presetScale, rescale, scaleTop, bMax, bLevels, bOneTop, B_TOP, B_TOP_MAX, bankNatural, bankScales } from '../../engines/pbank.js';
 import { saveFailed } from './save.js';
@@ -29,13 +30,17 @@ const usable = (kind, x) => x && x.id && x.name && (kind === 'scales' ? x.scale 
 const rowsText = x => (Array.isArray(x.criteria) ? { ...x, criteria: x.criteria.map(c => (c && typeof c === 'object' ? String(c.name || '') : c)) } : x);
 const listOf = (b, kind) => ((b && b[kind]) || []).filter(x => usable(kind, x)).map(rowsText);
 
-// Read, change and write in one go; the whole record before and after is the undo step. A read that fails stops the save: an
-// empty bank in its place would keep only this change (rebuild/audit/hooks.md H-011).
+// Read, change and write in one go; the whole record before and after is the undo step.
+// A read that fails stops the change, so a bank that couldn't be read is never written over (audit H-010, H-011). Undo and redo change the
+// bank as it is then, keeping what was saved in between (audit H-012).
+const byId = { key: x => (x && x.id) || JSON.stringify(x) };
+const bankStep = (from, to) => async () => { const now = tidyBank(await bankRec.get());
+  await saveKv('bank', { ...now, rubrics: rebaseList(now.rubrics, from.rubrics, to.rubrics, byId), scales: rebaseList(now.scales, from.scales, to.scales, byId), gone: rebaseMap(now.gone, from.gone, to.gone) }); };
 async function bankUpdate(label, fn) {
   const before = tidyBank(await bankRec.get()), after = J(before);
   fn(after);
   await saveKv('bank', after);
-  undoList.record({ label, undo: () => saveKv('bank', before), redo: () => saveKv('bank', after) });
+  undoList.record({ label, undo: bankStep(after, before), redo: bankStep(before, after) });
   return after;
 }
 async function bankPut(kind, item, label) {
