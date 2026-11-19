@@ -96,6 +96,10 @@ section.now .empty{padding-bottom:22px}
 .hl .tx small{display:block;color:var(--mute);font-size:var(--t1)}
 .hl .go{color:var(--g600);display:grid;place-items:center;width:28px;height:28px;border-radius:var(--r1)}
 .hl .go:hover{background:var(--g100)}
+/* the whole row opens it (src/shell.js needs rows); its menu stays its own button */
+.hl:has(>.go){position:relative;cursor:pointer}.hl:has(>.go):hover{background:var(--g100)}
+.hl>.go::after{content:'';position:absolute;inset:0}
+.hl:has(>.go) [data-hmenu]{position:relative;z-index:1}
 .hcount{font-size:var(--t1);padding:1px 8px;border-radius:var(--rf);background:var(--warn-soft);color:var(--warn)}
 .home > section[data-home="earlier"]{margin-top:24px}
 .homegrid section[data-home="look"]{margin-top:20px}

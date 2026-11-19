@@ -177,3 +177,16 @@ test('B-064: each of today’s classes with a roster says whether attendance was
   await p.waitForFunction(() => location.hash === '#/class/c2/people/attendance', { timeout: 10000 });
   assert.deepEqual(errors, []); await ctx.close();
 });
+
+test('A-902: pressing anywhere on a Needs you row opens it, and its menu still opens on its own', async () => {
+  const errors = [], p = await home(errors);
+  const row = await p.$('[data-home="needs"] li.hl[data-id="gs.b.n2"]'), go = await row.$eval('a.go', a => a.hash);
+  await p.click('[data-home="needs"] [data-hmenu="gs.b.n2"]');
+  await p.waitForSelector('[role="menu"]', { visible: true, timeout: 5000 });
+  assert.equal(await p.evaluate(() => location.hash), '#/home');
+  await p.keyboard.press('Escape');
+  const box = await (await row.$('.tx b')).boundingBox();
+  await p.mouse.click(box.x + 5, box.y + box.height / 2);
+  await p.waitForFunction(h => location.hash === h, { timeout: 10000 }, go);
+  assert.deepEqual(errors, []); await p.ctx.close();
+});

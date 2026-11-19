@@ -20547,7 +20547,7 @@
    "imports": []
   },
   "next/src/app/shell.css": {
-   "bytes": 11351,
+   "bytes": 11637,
    "imports": []
   },
   "next/src/app/plan.css": {
@@ -46093,10 +46093,10 @@
    "entryPoint": "next/src/app/shell.css",
    "inputs": {
     "next/src/app/shell.css": {
-     "bytesInOutput": 10719
+     "bytesInOutput": 10915
     }
    },
-   "bytes": 10720
+   "bytes": 10916
   },
   "next/dist/plan-css.css": {
    "imports": [],

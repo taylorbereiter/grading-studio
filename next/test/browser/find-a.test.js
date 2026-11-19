@@ -58,6 +58,12 @@ test('A-006, A-007, A-010: To do by week, Examples and Learning goals are found 
   await press(p, 'Examples'); await p.waitForFunction(() => location.hash === '#/library/examples', { timeout: 10000 });
   await press(p, 'Learning goals'); await p.waitForFunction(() => location.hash === '#/settings/grading', { timeout: 10000 });
   await p.waitForFunction(() => document.querySelector('main').textContent.includes('Learning goals'), { timeout: 15000 });
+  // and the saving and update settings by their names, each opening its group
+  for (const [text, hash, says] of [['Where your work is saved', '#/settings/saving', 'Where your work is saved'], ['Go back in time', '#/settings/saving', 'Go back in time'], ['Updates', '#/settings/about', 'Check for an update']]) {
+    await p.goto(srv.url + 'next/#/home'); await shellUp(p);
+    await press(p, text); await p.waitForFunction(h => location.hash === h, { timeout: 10000 }, hash);
+    await p.waitForFunction(x => document.querySelector('main').textContent.includes(x), { timeout: 15000 }, says);
+  }
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
