@@ -3,14 +3,14 @@
 // link on the week (lessons.js mbDlg, kept on the class in the timetable and by name in gs.mblinks, as both apps read it), and
 // a unit opened from the week's unit bar (units.js weekUnitBar).
 import { h, Fragment } from 'preact';
-import { useState } from 'preact/hooks';
-import { Dialog, Sheet, Button, Icon, Select, TextInput, toast } from '../../ui/index.js';
-import { t } from '../../i18n/t.js';
-import { go, PARTS } from '../router.js';
+import { useState, useEffect, useRef } from 'preact/hooks';
+import { Dialog, Sheet, Button, IconButton, Icon, Select, TextInput, Chip, toast } from '../../ui/index.js';
+import { t, date } from '../../i18n/t.js';
+import { go, href, PARTS } from '../router.js';
 import { engine } from '../../planning/engine.js';
 import { saveLesson, deleteLesson, saveKv, savePref, saveLessonFile } from '../../planning/write.js';
 import { lessonBlob } from '../../planning/plan.js';
-import { today } from './lessons.js';
+import { today, classOf, at } from './lessons.js';
 import './lines.js';
 import { manageBacLinks } from '../../planning/index.js';
 import { saveFailed } from './save.js';
@@ -78,4 +78,35 @@ export function LinkDialog({ p, c, onClose }) {
   return <Dialog open title={t('cal.link_title', { name: c.name })} onClose={onClose}
     actions={<><Button onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" onClick={save} data-link-save>{t('common.save')}</Button></>}>
     <TextInput label={t('cal.link_label')} hint={t('cal.link_hint')} value={v} maxLength={500} onInput={setV} onKeyDown={e => { if (e.key === 'Enter') save(); }} data-link-url autoFocus /></Dialog>;
+}
+
+// A lesson on no class or day (src/planner/lessons.js "Make a lesson without a class", rail.js "Make a new lesson"): it waits under
+// Not on the calendar until it is put on one.
+export async function newLoose(p) {
+  try {
+    const E = engine(p), name = t('plan.new_lesson');
+    const l = await saveLesson(E.deckStart(E.normLesson({ title: name, slots: [], slides: [{ layout: 'title', title: name, fmt: 2 }, { layout: 'content', title: '', body: '', fmt: 2 }] })));
+    go('lesson', l.id);
+  } catch (e) { saveFailed(e); }
+}
+// Every lesson in one list (src/planner/lessons.js allLessonsDlg): found by its title, its classes or its dates; opened; deleted
+// with a second press (and Undo). Those not on the timetable can be shown on their own.
+export function AllLessons({ p, loose: only0, onClose }) {
+  const [q, setQ] = useState(''), [only, setOnly] = useState(!!only0), [sure, setSure] = useState('');
+  const fold = x => String(x || '').toLowerCase();
+  const where = l => (l.slots || []).map(s => ((classOf(p, s.classId) || {}).name || '') + ' ' + date(at(s.date), { day: 'numeric', month: 'short' })).join(', ');
+  const all = [...(p.lessons || [])].sort((a, b) => ((b.slots || [])[0] || {}).date > ((a.slots || [])[0] || {}).date ? 1 : -1);
+  const shown = all.filter(l => (!only || !(l.slots || []).length) && (!q.trim() || fold(l.title + ' ' + where(l)).includes(fold(q.trim()))));
+  const del = l => { if (sure !== l.id) return setSure(l.id); setSure(''); remove(l); };
+  return <Sheet open wide title={t('cal.all_lessons')} icon={<Icon name="slides" />} onClose={onClose}
+    footer={<><Button icon="plus" onClick={() => { onClose(); newLoose(p); }} data-all-new>{t('cal.new_loose')}</Button><span class="grow" /><Button variant="quiet" onClick={onClose}>{t('common.close')}</Button></>}>
+    <div class="row gap-s"><span class="grow"><TextInput label={t('cal.all_find')} icon="search" value={q} onInput={setQ} data-all-find /></span>
+      <Chip on={only} onClick={() => setOnly(!only)} data-all-loose>{t('cal.no_slot')}</Chip></div>
+    <p class="mute">{t('cal.n_lessons', { n: shown.length })}</p>
+    {shown.length ? <ul class="list alll">{shown.map(l => <li><div class="lrow"><a class="main link" href={href('lesson', l.id)} onClick={onClose} data-all-open={l.id}><b data-raw>{l.title || t('plan.untitled')}</b>
+      <small data-raw={(l.slots || []).length ? '' : undefined}>{(l.slots || []).length ? where(l) : t('cal.no_slot')}</small></a>
+      <span class="end">{sure === l.id ? <Button size="sm" variant="quiet" icon="trash" onClick={() => del(l)} data-all-del={l.id}>{t('cal.del_sure')}</Button>
+        : <IconButton size="sm" icon="trash" label={t('plan.delete_lesson')} onClick={() => del(l)} data-all-del={l.id} />}</span></div></li>)}</ul>
+      : <p class="mute">{t('cal.none_found')}</p>}
+  </Sheet>;
 }

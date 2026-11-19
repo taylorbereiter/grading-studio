@@ -20,6 +20,7 @@ import { nameKey } from '../../planning/plan.js';
 import { classOf, lessonsOn, stateOf, arrived, STATE_LINE, periods, dayOff, eventsOn, newLesson, moveLesson, mondayOf, weekDays, today, plus, at, iso, mins } from '../plan/lessons.js';
 
 const VIEWS = ['class', 'time', 'month'];
+// calendar/all and calendar/loose open every lesson in a list (all, or those on no class or day) over the last view.
 const clock = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? date(new Date(2000, 0, 1, +m[1], +m[2]), { hour: 'numeric', minute: '2-digit' }) : ''; };
 const raw = s => <span data-raw>{s}</span>;
 const STATE_ICON = { taught: '', ready: 'check', draft: 'half', none: 'dash' };
@@ -217,12 +218,13 @@ export default function Calendar({ route }) {
   const [layers, setLayers] = useState(() => ({ lessons: true, work: true, todos: true, ...(keep('layers') || {}) }));
   const [weekends, setWeekends] = useState(() => !!keep('weekends'));
   const [dragging, setDragging] = useState(null), [busy, setBusy] = useState(false), [tool, setTool] = useState(null);
-  const Cal = usePart('cal', !!tool), Tools = usePart('tools', !!tool && tool.name === 'import'), X = usePart('calx', !!tool && ['copy', 'link', 'unit'].includes(tool.name));
+  const Cal = usePart('cal', !!tool), Tools = usePart('tools', !!tool && tool.name === 'import'), X = usePart('calx', !!tool && ['copy', 'link', 'unit', 'all'].includes(tool.name));
   const work = useMemo(() => { try { return workForCalendar(); } catch (e) { console.error(e); return { due: [], todos: [] }; } }, [p]);
   useEffect(() => { keep('at', anchor); }, [anchor]);
   // plan/<class>/<day> (the old planner.html#plan/<class>/<day>, from Home and the focus timer): that meeting's lesson, opened or
   // made, with a focus session on it (src/planner/rail.js).
-  const { cls, day } = route.params;
+  const { cls, day } = route.params, list = route.params.view;
+  useEffect(() => { if (list === 'all' || list === 'loose') setTool({ name: 'all', loose: list === 'loose' }); }, [list]);
   useEffect(() => {
     if (!p || !cls || !day) return;
     const l = lessonsOn(p, cls, day)[0];
@@ -231,7 +233,8 @@ export default function Calendar({ route }) {
   const setView = v => { keep('view', v); go('calendar', v); };
   if (!p) return <div class="page"><header class="ph"><h1>{t('nav.calendar')}</h1></header><div class="loading" aria-busy="true" /></div>;
   if (!p.setup || !(p.setup.classes || []).length) return <div class="page"><header class="ph"><h1>{t('nav.calendar')}</h1></header>
-    <EmptyState icon="cal" title={t('home.no_timetable')} text={t('plan.no_timetable_text')} action={<a class="btn pri" href={href('settings', 'timetable')}>{t('plan.set_up_timetable')}</a>} /></div>;
+    <EmptyState icon="cal" title={t('home.no_timetable')} text={t('plan.no_timetable_text')} action={<><a class="btn pri" href={href('settings', 'timetable')}>{t('plan.set_up_timetable')}</a>
+      <Button onClick={() => PARTS.calx().then(m => m.newLoose(p))} data-loose>{t('cal.new_loose')}</Button></>} /></div>;
   const mon = mondayOf(p, anchor), days = weekDays(p, mon), step = view === 'month' ? null : 7;
   const move = n => { if (step) setAnchor(plus(anchor, n * 7)); else { const d = at(anchor); d.setDate(1); d.setMonth(d.getMonth() + n); setAnchor(iso(d)); } };
   const shown = id => !hidden.includes(String(id));
@@ -271,6 +274,8 @@ export default function Calendar({ route }) {
     {view !== 'month' && <div class="legend"><State s="ready" /><State s="draft" /><State s="none" /><span class="due plain"><Icon name="flag" size="xs" />{t('plan.due_legend')}</span>
       <span class="grow" /><span class="mute">{thisWeek || counted.length ? t('plan.n_of_ready', { n: done, of: counted.length }) : ''}</span>
       <Menu label={t('plan.week_menu')} items={[{ id: 'week', label: t('plan.week_with', { name: ai }), icon: 'assist', onSelect: () => setTool({ name: 'week' }) },
+        { id: 'all', label: t('cal.all_lessons'), icon: 'slides', onSelect: () => setTool({ name: 'all' }) },
+        { id: 'loose', label: t('cal.new_loose'), icon: 'plus', onSelect: () => PARTS.calx().then(m => m.newLoose(p)) },
         { id: 'print', label: t('plan.print_week'), icon: 'file', onSelect: () => printWeek(p, mondayOf(p, anchor)) },
         { id: 'download', label: t('plan.download_week'), icon: 'download', onSelect: () => PARTS.tools().then(m => m.downloadWeek(p, mondayOf(p, anchor))).catch(e => console.error(e)) },
         { sep: true }, ...units.map(({ co, u }) => u ? { id: 'u' + u.id, label: t('cal.open_unit', { title: u.title }), sub: co, icon: 'cal', onSelect: () => setTool({ name: 'unit', u }) }
@@ -280,6 +285,7 @@ export default function Calendar({ route }) {
     {tool && tool.name === 'use' && Cal && <Cal.UseLesson p={p} c={tool.c} d={tool.day} onClose={close} />}
     {tool && tool.name === 'lib' && Cal && <Cal.FromLibrary p={p} c={tool.c} d={tool.day} onClose={close} />}
     {tool && tool.name === 'week' && Cal && <Cal.WeekAssist p={p} mon={mondayOf(p, anchor)} onClose={close} />}
+    {tool && tool.name === 'all' && X && <X.AllLessons p={p} loose={tool.loose} onClose={() => { close(); if (list === 'all' || list === 'loose') go('calendar', keep('view') || 'class'); }} />}
     {tool && tool.name === 'copy' && X && <X.CopyTo p={p} l={tool.l} onClose={close} />}
     {tool && tool.name === 'link' && X && <X.LinkDialog p={p} c={tool.c} onClose={close} />}
     {tool && tool.name === 'unit' && X && <X.UnitSheet p={p} unit={tool.u} courses={[...new Set(p.setup.classes.map(c => c.course || c.name))]} onClose={close} />}

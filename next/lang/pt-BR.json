@@ -6538,5 +6538,15 @@
  "cal.go_date": "Ir para uma data",
  "cal.no_unit": "Sem unidade nesta semana",
  "cal.open_unit": "Abrir {title}",
- "cal.new_unit_for": "Nova unidade de {course} a partir desta semana"
+ "cal.new_unit_for": "Nova unidade de {course} a partir desta semana",
+ "cal.all_lessons": "Todas as aulas",
+ "cal.all_find": "Encontrar uma aula",
+ "cal.no_slot": "Fora do horário",
+ "cal.new_loose": "Nova aula sem turma",
+ "cal.del_sure": "Excluir? Toque de novo",
+ "cal.n_lessons": {
+  "one": "{n} aula",
+  "other": "{n} aulas"
+ },
+ "cal.none_found": "Nenhuma aula corresponde."
 }

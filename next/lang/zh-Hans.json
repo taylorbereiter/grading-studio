@@ -6566,5 +6566,15 @@
  "cal.go_date": "跳到某一天",
  "cal.no_unit": "本周没有单元",
  "cal.open_unit": "打开“{title}”",
- "cal.new_unit_for": "从本周开始为 {course} 新建单元"
+ "cal.new_unit_for": "从本周开始为 {course} 新建单元",
+ "cal.all_lessons": "所有课",
+ "cal.all_find": "查找课",
+ "cal.no_slot": "不在课表上",
+ "cal.new_loose": "没有班级的新课",
+ "cal.del_sure": "要删除吗？再按一次",
+ "cal.n_lessons": {
+  "one": "{n} 节课",
+  "other": "{n} 节课"
+ },
+ "cal.none_found": "没有匹配的课。"
 }

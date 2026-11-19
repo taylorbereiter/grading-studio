@@ -6566,5 +6566,15 @@
  "cal.go_date": "日付へ移動",
  "cal.no_unit": "今週の単元はありません",
  "cal.open_unit": "「{title}」を開く",
- "cal.new_unit_for": "今週から {course} の新しい単元"
+ "cal.new_unit_for": "今週から {course} の新しい単元",
+ "cal.all_lessons": "すべての授業",
+ "cal.all_find": "授業を探す",
+ "cal.no_slot": "時間割にない",
+ "cal.new_loose": "クラスなしの新しい授業",
+ "cal.del_sure": "削除しますか？もう一度押す",
+ "cal.n_lessons": {
+  "one": "{n} 件の授業",
+  "other": "{n} 件の授業"
+ },
+ "cal.none_found": "一致する授業はありません。"
 }

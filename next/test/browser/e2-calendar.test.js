@@ -120,3 +120,68 @@ test('E2-014 E2-064 E2-065: a date jump, and the weekâ€™s units with this weekâ€
   await p.waitForSelector('[data-wunit="' + u.id + '"]');
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
+
+test('E2-017 E2-020 E2-021 E2-022 E2-080 E2-081 E2-096: every lesson in one list (found, opened, deleted with a second press), a lesson without a class from the week menu, the list and the command bar, kept where the current Planner reads it', async () => {
+  const p = await h.fresh();
+  await h.open(p, 'calendar/class');
+  await p.click('main [data-focus="week-menu"]'); await p.waitForSelector('.pop [role="menuitem"]');
+  await menuItem(p, 'All lessons');
+  await p.waitForSelector('dialog.sheet [data-all-find]');
+  assert.equal(await p.$$eval('[data-all-open]', a => a.length), LESSONS.length);
+  await p.type('[data-all-find] input, input[data-all-find]', 'sonnet');
+  await until(p, () => document.querySelectorAll('[data-all-open]').length === 1);
+  assert.equal(await p.$eval('[data-all-open]', a => a.dataset.allOpen), 'L3');
+  await p.$eval('[data-all-find] input, input[data-all-find]', i => i.select()); await p.keyboard.press('Backspace');
+  await until(p, n => document.querySelectorAll('[data-all-open]').length === n, LESSONS.length);
+  // delete: the first press asks, the second deletes
+  await p.click('[data-all-del="L5"]');
+  assert.ok(await h.lessonInDb(p, 'L5'), 'one press only asks');
+  await p.click('[data-all-del="L5"]');
+  await until(p, () => !document.querySelector('[data-all-open="L5"]'));
+  assert.equal(await h.lessonInDb(p, 'L5'), null, 'deleted on the second press');
+  // only those on no class or day: none yet
+  await p.click('[data-all-loose]');
+  await until(p, () => !document.querySelector('[data-all-open]'));
+  await p.click('[data-all-loose]');
+  // open one
+  await p.click('[data-all-open="L4"]');
+  await until(p, () => location.hash === '#/lesson/L4');
+  // a lesson without a class, from the week menu
+  await h.open(p, 'calendar/class');
+  await p.click('main [data-focus="week-menu"]'); await p.waitForSelector('.pop [role="menuitem"]');
+  await menuItem(p, 'New lesson without a class');
+  await p.waitForFunction(() => /^#\/lesson\/[^/]+$/.test(location.hash), { timeout: 10000 });
+  const id1 = await p.evaluate(() => location.hash.split('/')[2]);
+  assert.deepEqual((await h.lessonInDb(p, id1)).slots, []);
+  // the old address for the lessons on no class or day opens the list filtered to them, and its button makes another
+  await h.open(p, 'calendar/loose');
+  await p.waitForSelector('dialog.sheet [data-all-open="' + id1 + '"]');
+  assert.equal(await p.$$eval('[data-all-open]', a => a.length), 1);
+  await p.click('[data-all-new]');
+  await p.waitForFunction(id => /^#\/lesson\/[^/]+$/.test(location.hash) && location.hash !== '#/lesson/' + id, { timeout: 10000 }, id1);
+  const id2 = await p.evaluate(() => location.hash.split('/')[2]);
+  assert.deepEqual((await h.lessonInDb(p, id2)).slots, []);
+  // and from the command bar
+  await h.open(p, 'home');
+  await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
+  await p.waitForSelector('dialog.cmd[open] input');
+  await p.keyboard.type('without a class');
+  await until(p, () => [...document.querySelectorAll('dialog.cmd [role="option"]')].some(o => o.textContent.includes('without a class')));
+  await p.keyboard.press('Enter');
+  await p.waitForFunction((a, b) => /^#\/lesson\/[^/]+$/.test(location.hash) && !location.hash.endsWith(a) && !location.hash.endsWith(b), { timeout: 10000 }, id1, id2);
+  const id3 = await p.evaluate(() => location.hash.split('/')[2]);
+  assert.deepEqual((await h.lessonInDb(p, id3)).slots, []);
+  await h.open(p, 'home');
+  await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
+  await p.waitForSelector('dialog.cmd[open] input');
+  await p.keyboard.type('all lessons');
+  await until(p, () => [...document.querySelectorAll('dialog.cmd [role="option"]')].some(o => o.textContent.includes('All lessons')));
+  await p.keyboard.press('Enter');
+  await p.waitForSelector('dialog.sheet [data-all-find]');
+  // the current Planner has the three lessons on no class, and not the deleted one
+  await p.goto(h.srv.url + 'planner.html');
+  await p.waitForFunction(() => { const P = window.__planner; return P && P.L.lessons && P.L.lessons.length; }, { timeout: 20000 });
+  const got = await p.evaluate(ids => ids.map(id => { const l = window.__planner.L.lessons.find(x => x.id === id); return l ? l.slots.length : -1; }), [id1, id2, id3, 'L5']);
+  assert.deepEqual(got, [0, 0, 0, -1]);
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});

@@ -6537,5 +6537,15 @@
  "cal.go_date": "Zu einem Datum springen",
  "cal.no_unit": "Keine Einheit diese Woche",
  "cal.open_unit": "{title} öffnen",
- "cal.new_unit_for": "Neue Einheit für {course} ab dieser Woche"
+ "cal.new_unit_for": "Neue Einheit für {course} ab dieser Woche",
+ "cal.all_lessons": "Alle Stunden",
+ "cal.all_find": "Stunde suchen",
+ "cal.no_slot": "Nicht im Stundenplan",
+ "cal.new_loose": "Neue Stunde ohne Klasse",
+ "cal.del_sure": "Löschen? Noch einmal drücken",
+ "cal.n_lessons": {
+  "one": "{n} Stunde",
+  "other": "{n} Stunden"
+ },
+ "cal.none_found": "Keine Stunde passt."
 }
