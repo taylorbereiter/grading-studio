@@ -381,3 +381,70 @@ test('D-053 D-054 D-055 D-056 D-057 D-058 D-059: covers drawn and taken off on U
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// D-008 D-009 D-010 (src/quiz.js, src/examples.js exStar, exGo): Example on a Quick mark answer keeps it and shows it kept, and the
+// toast's See examples closes Quick mark for the assignment's own Examples. D-018 D-019 D-020 (openExamples): the Examples tab,
+// between Insights and Return once there is one: answers by question with the questions that have none yet, and the same
+// assignment's examples in a linked class shown only when asked, each saying where it came from.
+test('D-008 D-009 D-010 D-018 D-019 D-020: Example on a Quick mark answer, See examples to the assignment\'s Examples tab, questions with none yet, linked classes shown and hidden; the current app reads the example', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  const seed = withCard(), lib = JSON.parse(seed.ls['gs.lib']);
+  lib.classes[0].units[0].items.find(i => i.id === 'i9').group = 'g9';
+  lib.classes[1].units.push({ id: 'u9', name: 'Unit 1: Stories', items: [{ id: 'i10', name: 'Speech', classId: 'c2', group: 'g9' }] });
+  seed.ls['gs.lib'] = JSON.stringify(lib);
+  await p.goto(srv.url + 'blank'); await plant(p, seed); await p.evaluate(exDbMake);
+  // an example from the same assignment in the linked class
+  await p.evaluate(() => new Promise((res, rej) => { const c = document.createElement('canvas'); c.width = 40; c.height = 30; c.getContext('2d').fillRect(0, 0, 40, 30); c.toBlob(b => { const r = indexedDB.open('grading-studio-examples'); r.onsuccess = () => { const tx = r.result.transaction(['ex', 'pix'], 'readwrite'); tx.objectStore('ex').put({ id: 'tw1', t: Date.now(), kind: 'paper', work: 'w-elsewhere', asg: 'i10', cls: 'c2', title: 'Speech', q: null, row: null, why: 'Clear voice', letter: 'A', pages: [{ w: 40, h: 30 }], marks: false, score: false, from: null, who: null }, 'tw1'); tx.objectStore('pix').put(b, 'tw1|0'); tx.oncomplete = () => { r.result.close(); res(); }; tx.onerror = () => rej(tx.error); }; }, 'image/jpeg'); }));
+  const z = path.join(dir, 'Quiz4.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+  const tabs = () => p.$$eval('.mk-top [role="tab"]', a => a.map(x => x.textContent));
+  assert.ok((await tabs()).some(x => /^Examples/.test(x)), 'a linked class has an example: the tab shows');
+  // two question boxes
+  await setupDo(p, 'Quick mark');
+  await p.waitForSelector('dialog[open][data-qb] [data-qbpg="0"] canvas', { timeout: 60000 });
+  await box(p, 0, 0.1, 0.12, 0.6, 0.2);
+  await p.waitForFunction(() => document.querySelectorAll('[data-qb] [data-qbrow]').length === 1);
+  await box(p, 0, 0.1, 0.3, 0.6, 0.4);
+  await p.waitForFunction(() => document.querySelectorAll('[data-qb] [data-qbrow]').length === 2);
+  const q1 = await p.$eval('[data-qb] [data-qbrow]', e => e.dataset.qbrow);
+  await p.click('[data-qbsave]');
+  await p.waitForSelector('dialog[open][data-qm] .qmc img', { timeout: 60000 });
+  // D-009 D-010: the Example button on the answer, and it shows kept
+  assert.equal(await p.$eval(card(0, q1) + ' [data-ex]', b => [b.textContent, b.getAttribute('aria-pressed')].join()), 'Example,false');
+  await p.click(card(0, q1) + ' [data-ex]');
+  await p.waitForFunction(sel => document.querySelector(sel).getAttribute('aria-pressed') === 'true', { timeout: 30000 }, card(0, q1) + ' [data-ex]');
+  assert.equal((await exRecs(p)).filter(r => r.kind === 'answer').length, 1);
+  // D-008: See examples closes Quick mark and opens this assignment's Examples
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast button')].some(b => b.textContent === 'See examples'));
+  await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => b.textContent === 'See examples').click());
+  await p.waitForFunction(id => location.hash === '#/mark/' + id + '/examples' && !document.querySelector('[data-qm]'), { timeout: 30000 }, id);
+  await p.waitForSelector('[data-asgex] .excard.answer', { timeout: 30000 });
+  // D-020 D-018: answers by question, and Question 2 has none yet
+  const txt = await p.$eval('[data-asgex]', e => e.textContent);
+  assert.match(txt, /Answers, by question/);
+  assert.match(await p.$eval('[data-exnone]', e => e.textContent), /^Question 2 has no example yet\. Press Example on an answer in Quick mark\.$/);
+  assert.equal(await p.$$eval('[data-asgex] .excard[data-exid]', a => a.length), 1, 'the linked class\'s one waits to be asked for');
+  // D-019: shown, with where it came from, and hidden again
+  assert.equal(await p.$eval('[data-exlinked] button[data-exlk]', b => b.textContent), 'Show 1 example from Grade 10 Literature');
+  await p.click('[data-exlinked] button[data-exlk]');
+  await p.waitForSelector('[data-exid="tw1"] [data-exfrom]');
+  assert.equal(await p.$eval('[data-exid="tw1"] [data-exfrom]', e => e.textContent), 'From Grade 10 Literature');
+  await p.click('[data-exlinked] h3 [data-exlk]');
+  await p.waitForFunction(() => !document.querySelector('[data-exid="tw1"]'));
+  await p.evaluate(() => window.__mark.saved());
+  await p.goto(srv.url + 'blank'); await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.waitForFunction(() => window.__gs.exList().length === 2, { timeout: 30000 });
+  assert.deepEqual(await m.evaluate(() => window.__gs.exList().map(r => r.kind + ':' + r.asg).sort()), ['answer:i9', 'paper:i10']);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

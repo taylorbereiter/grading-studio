@@ -6707,5 +6707,36 @@
  },
  "class.es_shot_paper": "답안지의 이름 가림은 이미 칠해져 있습니다.",
  "class.es_shot_say": "이름이 보이는 곳을 드래그하면 검게 가려집니다. 검은 상자를 클릭하면 없어집니다.",
- "class.es_tags_used": "사용한 태그"
+ "class.es_tags_used": "사용한 태그",
+ "class.ax_say": "이 과제의 우수 작품, 이름 없이.",
+ "class.ax_none_say": "빠른 채점에서 답안의 '예시'를 누르거나, 답안지의 ⋯ 메뉴에서 '예시로 사용'을 고르거나, 스크린샷(S)을 찍어 우수 예시로 저장하세요. 고르는 것은 언제나 선생님 몫입니다.",
+ "class.ax_answers": "답안, 문항별",
+ "class.ax_q_none": {
+  "one": "{list}번 문항에는 아직 예시가 없습니다. 빠른 채점에서 답안의 '예시'를 누르세요.",
+  "other": "{list}번 문항에는 아직 예시가 없습니다. 빠른 채점에서 답안의 '예시'를 누르세요."
+ },
+ "class.ax_rest": "답안 전체와 페이지 일부",
+ "class.ax_rest_shots": "답안 전체, 페이지 일부와 스크린샷",
+ "class.ax_linked": "연결된 반에서",
+ "class.ax_show_lk": {
+  "one": "{names}의 예시 1개 보기",
+  "other": "{names}의 예시 {n}개 보기"
+ },
+ "class.ax_hide": "숨기기",
+ "class.ax_lk_say": "다른 반의 같은 과제입니다. 카드마다 어느 반에서 왔는지 나옵니다.",
+ "class.ax_from": "출처",
+ "class.ex_copy": "사진 복사",
+ "class.ex_copied_first": "복사했습니다. 수업에 붙여 넣은 사진은 그 수업과 함께 저장됩니다.",
+ "class.ex_copy_bad": "여기서는 복사가 되지 않았습니다. 다운로드를 사용하세요.",
+ "paper.qm_ex": "예시",
+ "paper.qm_ex_tip": "이 답안을 이름을 가려 우수 예시로 보관 (E)",
+ "paper.qm_ex_on": "우수 예시로 보관됨. 클릭하면 뺍니다 (E)",
+ "mark.examples": "예시",
+ "class.wl_none_say": "아직 이 학생의 작품에서 저장한 것이 없습니다. 우수 예시로 저장하거나 관찰 목록에 추가한 스크린샷이 날짜와 함께 여기에 나옵니다.",
+ "class.wl_f_all": "전체",
+ "class.wl_f_good": "우수 · {n}",
+ "class.wl_f_watch": "관찰 · {n}",
+ "class.wl_seen": "가장 많이 보임:",
+ "class.wl_none_kind": "이 종류는 아직 없습니다.",
+ "class.wl_more": "더 가리기"
 }

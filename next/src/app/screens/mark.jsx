@@ -17,7 +17,7 @@ import { installTouch } from '../mark/touch.js';
 import { use, gradeOf, maxPoints, fmtNum, state, rowSteps, rowTop, setupOver, DEFAULT_SETUP, SCALE12, SCALE_FIVES, noScore, xcSay, ibSetup, quizOn } from '../../engines/gcore.js';
 import { prefs } from '../../students/prefs.js';
 import { onSaved } from '../../shared/saved.js';
-import { shownName, anonOn, anonOrder } from '../../engines/gdraw.js';
+import { shownName, anonOn, anonOrder, quizLabel } from '../../engines/gdraw.js';
 import { toast } from '../../ui/index.js';
 import '../mark/lines.js';
 
@@ -25,10 +25,12 @@ import '../mark/lines.js';
 const seam = { state, gradeOf, renderPage, ready: false, maths: { state, gradeOf, setupOver, DEFAULT_SETUP, SCALE12, SCALE_FIVES, fmtNum }, saved: () => (MK ? MK.M.saveNowDone() : Promise.resolve()) };
 if (typeof window !== 'undefined') window.__mark = seam;
 
-const TABS = ['mark', 'grades', 'insights', 'return'];
+const TABS = ['mark', 'grades', 'insights', 'examples', 'return'];
 // buttons that belong together: one stop in the Tab order, the arrow keys among them (mark/rove.js)
 function Rove({ as = 'div', vertical, children, ...rest }) { const rv = useRove(vertical); return h(as, { ...rest, ...rv }, children); }
-const TAB_LINE = { mark: () => t('mark.mark'), grades: () => t('mark.grades'), insights: () => t('mark.insights'), return: () => t('mark.return') };
+const TAB_LINE = { mark: () => t('mark.mark'), grades: () => t('mark.grades'), insights: () => t('mark.insights'), examples: () => t('mark.examples'), return: () => t('mark.return') };
+// The assignment's copies in linked classes (one group, src/linked.js lkTwins): their examples show on its Examples tab when asked.
+const twinsOf = (lib, a) => (a && a.group ? [...((lib && lib.classes) || []), ...(lib && lib.loose ? [lib.loose] : [])].flatMap(c => c.units.flatMap(u => u.items.filter(x => x.group === a.group && x.id !== a.id).map(x => x.id))) : []);
 const keep = (k, v) => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem('gsn.mark.' + k)); sessionStorage.setItem('gsn.mark.' + k, JSON.stringify(v)); } catch {} return null; };
 
 // What a student's row says: their score as a percent, or missing / excused / late.
@@ -437,7 +439,13 @@ export default function MarkScreen({ route, classes }) {
   const soloEnd = () => { prefs.del('gs.solo'); setSoloK(k => k + 1); };
   // Grades, Insights and Return load as a part of their own, with the export engine and its libraries, the first time one opens.
   const [out, setOut] = useState(null);
-  useEffect(() => { if (!w || tab === 'mark' || out) return; let live = true;
+  // the Examples tab (class/examples.jsx AsgExamples), between Insights and Return once the assignment has an example (exTabSay)
+  const [EX, setEX] = useState(null), [exN, setExN] = useState(0);
+  useEffect(() => { if (!w) return; let live = true; const tw = twinsOf(state().lib, w.batch.assignment);
+    const read = () => import('../../students/index.js').then(S => S.exampleRecords()).then(l => live && setExN(l.filter(r => !r.gone && !r.watch && (r.work === w.batch.id || (r.asg && tw.includes(r.asg)))).length), () => {});
+    read(); const off = onSaved(e => { if (e.kind === 'example') read(); }); return () => { live = false; off(); }; }, [w]);
+  useEffect(() => { if (tab === 'examples' && !EX) PARTS.examples().then(setEX, e => console.error(e)); }, [tab]);
+  useEffect(() => { if (!w || tab === 'mark' || tab === 'examples' || out) return; let live = true;
     Promise.all([PARTS.out(), PARTS.outEngine(), PARTS.marking()]).then(([p, E, m]) => { E.withMarking(m.M); seam.out = E; if (live) setOut({ Out: p.default, E }); }, e => console.error(e));
     return () => { live = false; }; }, [w, tab]);
   const openOn = i => { pick(i); go('mark', id, ''); };
@@ -518,7 +526,7 @@ export default function MarkScreen({ route, classes }) {
       {!solo && <IconButton icon="x" label={t('mark.close')} onClick={close} />}
       <h1 class="mk-title">{cls && <span class="dot" />}{cls && <b data-raw>{cls.name}</b>}<span data-raw class="asg">{w ? w.batch.name : ''}</span></h1>
       {!solo && <Tabs label={t('mark.tabs')} value={tab} onChange={v => go('mark', id, v === 'mark' ? '' : v)}
-        tabs={TABS.map(k => ({ id: k, label: TAB_LINE[k]() }))} />}
+        tabs={TABS.filter(k => k !== 'examples' || exN || tab === k).map(k => ({ id: k, label: TAB_LINE[k](), count: k === 'examples' && exN ? exN : null }))} />}
       <span class="grow" />
       {w && <span class="mk-save mute" role="status" data-save={MK ? MK.M.saveLabel() : 'saved'}>{saveLine(MK ? MK.M.saveLabel() : 'saved')}</span>}
       {w && <span class="mk-prog mute">{t('mark.marked_of', { n: marked, of: n })}<Progress value={marked} max={Math.max(1, n)} label={t('mark.marked_of', { n: marked, of: n })} /></span>}
@@ -539,6 +547,7 @@ export default function MarkScreen({ route, classes }) {
     {FU && rescans && <FU.Rescans onClose={() => setRescans(false)} onGo={tab === 'mark' ? pick : openOn} />}
     {err ? <EmptyState icon="inbox" title={t(err.name === 'NotKept' ? 'mark.not_kept' : 'mark.page_bad')} text={err.name === 'NotKept' ? t('mark.not_kept_text') : ''} />
       : !w ? (dl ? <p class="mk-dl mute" role="status" data-mkdl>{t('mark.from_drive', { n: dl.n, of: dl.of })}</p> : <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />)
+      : tab === 'examples' && !solo ? (EX ? <div class="mk-outwrap"><EX.AsgExamples batch={w.batch} twins={twinsOf(state().lib, w.batch.assignment)} label={quizLabel} /></div> : <div class="loading" aria-busy="true" />)
       : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} E={out.E} cur={cur} onOpen={openOn} onShare={openShare} onSheet={() => go('mark', id, 'grades')} rescans={FU ? FU.rescanList() : []} onRescans={() => setRescans(true)} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
       : <><div class="mk-body">
         {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} onHide={MK ? () => hideNames() : null} onShuffle={() => hideNames(true)} />}

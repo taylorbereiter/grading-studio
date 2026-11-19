@@ -6700,5 +6700,36 @@
  },
  "class.es_shot_paper": "Las tapas de nombres del trabajo ya están pintadas.",
  "class.es_shot_say": "Arrastra sobre lo que muestre un nombre para taparlo en negro. Haz clic en un recuadro negro para quitarlo.",
- "class.es_tags_used": "Etiquetas que has usado"
+ "class.es_tags_used": "Etiquetas que has usado",
+ "class.ax_say": "Buen trabajo de esta tarea, sin nombres.",
+ "class.ax_none_say": "Pulsa Ejemplo en una respuesta de Corrección rápida, elige Usar como ejemplo en el menú ⋯ de un trabajo, o haz una captura (S) y guárdala como buen ejemplo. Elegir uno siempre depende de ti.",
+ "class.ax_answers": "Respuestas, por pregunta",
+ "class.ax_q_none": {
+  "one": "La pregunta {list} aún no tiene ejemplo. Pulsa Ejemplo en una respuesta de Corrección rápida.",
+  "other": "Las preguntas {list} aún no tienen ejemplo. Pulsa Ejemplo en una respuesta de Corrección rápida."
+ },
+ "class.ax_rest": "Trabajos completos y partes de páginas",
+ "class.ax_rest_shots": "Trabajos completos, partes de páginas y capturas",
+ "class.ax_linked": "De clases vinculadas",
+ "class.ax_show_lk": {
+  "one": "Mostrar 1 ejemplo de {names}",
+  "other": "Mostrar {n} ejemplos de {names}"
+ },
+ "class.ax_hide": "Ocultar",
+ "class.ax_lk_say": "La misma tarea en otra clase. Cada tarjeta dice de qué clase viene.",
+ "class.ax_from": "De",
+ "class.ex_copy": "Copiar imagen",
+ "class.ex_copied_first": "Copiada. Una imagen que pegas en una lección se guarda con esa lección.",
+ "class.ex_copy_bad": "Copiar no funcionó aquí. Usa Descargar.",
+ "paper.qm_ex": "Ejemplo",
+ "paper.qm_ex_tip": "Guardar esta respuesta como buen ejemplo, con el nombre tapado (E)",
+ "paper.qm_ex_on": "Guardada como buen ejemplo. Haz clic para quitarla (E)",
+ "mark.examples": "Ejemplos",
+ "class.wl_none_say": "Aún no hay nada guardado de su trabajo. Una captura guardada como buen ejemplo o añadida a la lista de seguimiento aparece aquí, con la fecha.",
+ "class.wl_f_all": "Todo",
+ "class.wl_f_good": "Buenos · {n}",
+ "class.wl_f_watch": "Seguir · {n}",
+ "class.wl_seen": "Lo más visto:",
+ "class.wl_none_kind": "Aún no hay de este tipo.",
+ "class.wl_more": "Tapar más"
 }

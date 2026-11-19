@@ -1089,3 +1089,74 @@ test('Linked classes: the Planner puts two classes on one course, the class offe
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// D-003 D-024 D-025 D-026 D-027 (src/examples.js exCard, exCardAct; src/watch.js wlWhoHtml): a card's whose-work name and Whose work's
+// names go to the student's card, Add why it's strong is on the card, Copy picture on answers, parts and screenshots, and Delete takes
+// it away with Undo bringing it back. D-060 D-061 D-062 (wlCardFill): a student with nothing yet is told how, All / Strong / Watch, and
+// the concerns' tags seen most. D-012 (wlStrip): Black out more on a picture in the send box, and back to the box.
+test('D-003 D-012 D-024 D-025 D-026 D-027 D-060 D-061 D-062: example cards, whose work, the student\'s strengths and concerns, Black out more; the current app reads the changes', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  await ctx.overridePermissions(srv.url.replace(/\/$/, ''), ['clipboard-read', 'clipboard-write', 'clipboard-sanitized-write']);
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  const names = (await libOf(p)).classes[0].names;
+  await p.evaluate(`(${exSeed})(${JSON.stringify(names)})`);
+  // two more concerns for the second student, tagged
+  await p.evaluate(n => new Promise((res, rej) => { const c = document.createElement('canvas'); c.width = 300; c.height = 200; c.getContext('2d').fillRect(0, 0, 300, 200); c.toBlob(b => { const r = indexedDB.open('grading-studio-examples'); r.onsuccess = () => { const tx = r.result.transaction(['ex', 'pix'], 'readwrite'), now = Date.now();
+    [['wlb', ['fractions']], ['wlc', ['fractions', 'units']]].forEach(([id, tags], i) => { tx.objectStore('ex').put({ id, t: now - 500 + i, kind: 'shot', work: null, asg: 'i1', cls: 'c1', title: 'Fractions quiz', q: null, row: null, why: '', letter: String(i + 2), pages: [{ w: 300, h: 200 }], marks: true, score: false, from: null, who: { c: 'c1', n }, tags, watch: 1 }, id); tx.objectStore('pix').put(b, id + '|0'); });
+    tx.oncomplete = () => { r.result.close(); res(); }; tx.onerror = () => rej(tx.error); }; }, 'image/jpeg'); }), names[1]);
+  await p.goto(srv.url + 'next/#/library/examples');
+  await p.waitForSelector('[data-exid="exb"]', { timeout: 60000 });
+  // D-024: whose work goes to the student's card
+  assert.equal(await p.$eval('[data-exid="exb"] [data-exwhoc]', a => [a.textContent, a.getAttribute('href')].join()), names[1] + ',#/class/c1/people/2');
+  // D-025: Add why it's strong, on the card
+  await p.click('[data-exid="exb"] [data-exwhyadd]');
+  await p.waitForSelector('[data-exedit]'); await p.waitForFunction(() => document.activeElement && document.activeElement.matches('[data-exedit]'));
+  await p.type('[data-exedit]', 'Clear diagram'); await p.click('[data-exedit-save]');
+  await p.waitForFunction(() => /Clear diagram/.test((document.querySelector('[data-exid="exb"] .exwhy') || {}).textContent || ''));
+  // D-026: Copy picture on a screenshot, not on a whole paper
+  assert.equal(await p.$('[data-exid="exa"] [data-excopy]'), null);
+  await p.click('[data-exid="exb"] [data-excopy]');
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast')].some(e => /Copied\. A picture you paste into a lesson is kept with that lesson\./.test(e.textContent)), { timeout: 15000 });
+  // D-027: Delete, then Undo brings it back with its picture
+  await p.click('[data-exid="exa"] [data-exmenu]'); await p.waitForSelector('.pop [role^="menuitem"]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role^="menuitem"]')].find(b => /Delete/.test(b.textContent)).click());
+  await p.waitForFunction(() => !document.querySelector('[data-exid="exa"]'));
+  await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => /Undo/.test(b.textContent)).click());
+  await p.waitForSelector('[data-exid="exa"] .exthumb img', { timeout: 15000 });
+  // D-003: Whose work's names go to the student's card
+  await p.click('[data-v="who"]'); await p.waitForSelector('[data-exwho] a');
+  assert.equal(await p.$$eval('[data-exwho] a', a => a.find(x => x.getAttribute('href') === '#/class/c1/people/1').textContent), names[0]);
+  // D-061 D-062: the second student's page
+  await p.goto(srv.url + 'next/#/class/c1/people/2');
+  await p.waitForSelector('[data-wl-stu] .wltime li', { timeout: 60000 });
+  assert.equal(await p.$eval('[data-wl-seen]', e => e.textContent), 'Seen most: fractions ×2units');
+  const kinds = () => p.$$eval('[data-wl-stu] .wltime li', l => l.map(e => e.className).sort().join(','));
+  assert.equal(await kinds(), 'g,w,w,w');
+  assert.deepEqual(await p.$$eval('[data-wl-stu] .seg [role="radio"], [data-wl-stu] .seg button', b => b.map(x => x.textContent)), ['All', 'Strong · 1', 'Watch · 3']);
+  await p.click('[data-wl-stu] [data-v="watch"]'); await p.waitForFunction(() => document.querySelectorAll('[data-wl-stu] .wltime li').length === 3);
+  assert.equal(await kinds(), 'w,w,w');
+  // D-012: Black out more on a picture in the send box, then back to the box
+  await p.click('[data-wl-send1]'); await p.waitForSelector('[data-wlmore="wlb"]');
+  await p.type('[data-wl-ask]', ' Keep it short.');
+  await p.click('[data-wlmore="wlb"]');
+  await p.waitForSelector('[data-excv="0"]', { timeout: 15000 });
+  await p.waitForFunction(() => document.querySelector('[data-excv="0"]').width > 0);
+  const r = await p.$eval('[data-excv="0"]', e => { const b = e.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; });
+  await p.mouse.move(r.x + r.w * 0.2, r.y + r.h * 0.2); await p.mouse.down(); await p.mouse.move(r.x + r.w * 0.5, r.y + r.h * 0.5, { steps: 4 }); await p.mouse.up();
+  await p.click('[data-excover-save]');
+  await p.waitForSelector('[data-wl-pdf]', { timeout: 15000 });
+  assert.match(await p.$eval('[data-wl-ask]', e => e.value), / Keep it short\.$/, 'the ask is as it was');
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('[data-wl-pdf]'));
+  // D-060: a student with nothing saved is told how
+  await p.goto(srv.url + 'next/#/class/c1/people/3');
+  await p.waitForSelector('[data-wl-none]', { timeout: 60000 });
+  assert.match(await p.$eval('[data-wl-none]', e => e.textContent), /^Nothing saved from their work yet\./);
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  await old.waitForFunction(() => window.__gs.exList().length === 2 && window.__gs.exWatch().length === 3);
+  assert.deepEqual(await old.evaluate(() => window.__gs.exList().map(r => [r.id, r.why]).sort()), [['exa', 'Shows every step'], ['exb', 'Clear diagram']]);
+  await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

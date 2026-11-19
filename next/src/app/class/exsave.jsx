@@ -31,7 +31,8 @@ function base(kind, st) {
     title: X.exTitleNow(), q: null, row: null, why: '', letter: null, pages: [], marks: false, score: false, from: st ? X.exFrom(st) : null, who: st ? X.exWho(st) : null };
 }
 const nextLetter = (list, work, kind) => LETTERS[Math.min(25, Math.max(-1, ...list.filter(r => r.work === work && r.kind === kind).map(r => LETTERS.indexOf(r.letter))) + 1)];
-const seeExamples = () => go('library', 'examples');
+// See examples (exGo): the open assignment's Examples tab; with nothing open, Library > Examples. shut: what closes first (Quick mark).
+const seeExamples = shut => { const { batch } = state(); if (shut) shut(); if (batch) go('mark', batch.id, 'examples'); else go('library', 'examples'); };
 // Covers that touch or sit side by side on a line are one name to her (src/examples.js exGroups): Cara and Sample are one name.
 function groups(cs) {
   const gap = (p, q, k, w) => Math.max(p[k] - q[k] - q[w], q[k] - p[k] - p[w]), near = (a, b) => 8 >= gap(a, b, 'x', 'w') && 2 >= gap(a, b, 'y', 'h'), seen = new Set(); let n = 0;
@@ -51,7 +52,7 @@ function mount(make) {
 
 /* E on a Quick mark answer: kept at once with Undo; pressed again, taken back */
 let busy = false;
-export async function keepAnswer(st, q, qi) {
+export async function keepAnswer(st, q, qi, shut) {
   const { batch } = state(); if (!batch || !st || !q || busy) return;
   busy = true;
   try {
@@ -63,7 +64,7 @@ export async function keepAnswer(st, q, qi) {
     const v = quizMarks(st)[q.id];
     const rec = { ...base('answer', st), q: { id: q.id, lab: quizLabel(q, qi), pts: +q.pts || 1, v: v == null ? null : v }, pages: [pic.size] };
     await keepExample(rec, [pic.blob]);
-    toast(t('class.es_kept_q', { q: rec.q.lab }), { action: { label: t('class.es_see'), run: seeExamples }, undo: () => dropExample(rec).catch(failed) });
+    toast(t('class.es_kept_q', { q: rec.q.lab }), { action: { label: t('class.es_see'), run: () => seeExamples(shut) }, undo: () => dropExample(rec).catch(failed) });
   } catch (e) { failed(e); }
   finally { busy = false; }
 }
@@ -180,7 +181,7 @@ function UseExample({ st, redo, onClose }) {
       await keepExample(rec, blobs);
       if (R && !same) await dropExample(R);   // made again as the other kind: the new one takes its place
       onClose();
-      toast(R ? t('class.es_made_again') : kind === 'paper' ? t('class.es_saved_paper', { l: rec.letter }) : t('class.es_saved_part'), R ? {} : { action: { label: t('class.es_see'), run: seeExamples } });
+      toast(R ? t('class.es_made_again') : kind === 'paper' ? t('class.es_saved_paper', { l: rec.letter }) : t('class.es_saved_part'), R ? {} : { action: { label: t('class.es_see'), run: () => seeExamples() } });
     } catch (e) { setSaving(false); failed(e); }
   };
   return <Dialog open title={t(R ? 'class.es_again_t' : 'class.es_use_t')} onClose={onClose}
@@ -237,7 +238,7 @@ function ShotSave({ blob, watch, st, onClose }) {
         from: onWork ? X.exFrom(st) : null, who: mine || (who && cls ? { c: cls, n: who } : null), ...(watch ? { watch: 1 } : {}) };
       await keepExample(rec, [jpg]);
       onClose();
-      toast(t(watch ? 'class.es_shot_watch' : 'class.es_shot_ex'), { action: { label: t('class.es_see'), run: () => go('library', 'examples', watch ? 'watch' : '') } });
+      toast(t(watch ? 'class.es_shot_watch' : 'class.es_shot_ex'), { action: { label: t('class.es_see'), run: () => (watch || !onWork ? go('library', 'examples', watch ? 'watch' : '') : seeExamples()) } });
     } catch (e) { setBusy(false); failed(e); }
   };
   return <Dialog open title={t(watch ? 'class.es_shot_wt' : 'class.es_shot_et')} onClose={onClose}

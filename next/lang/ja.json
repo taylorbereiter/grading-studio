@@ -6707,5 +6707,36 @@
  },
  "class.es_shot_paper": "答案の名前の目隠しはすでに塗られています。",
  "class.es_shot_say": "名前が見える部分をドラッグすると黒く塗れます。黒い枠をクリックすると外れます。",
- "class.es_tags_used": "使ったことのあるタグ"
+ "class.es_tags_used": "使ったことのあるタグ",
+ "class.ax_say": "この課題の優れた作品（名前なし）。",
+ "class.ax_none_say": "クイック採点で解答の「お手本」を押すか、答案の ⋯ メニューで「例として使う」を選ぶか、スクリーンショット (S) を優れた例として保存します。どれを選ぶかはいつもあなた次第です。",
+ "class.ax_answers": "解答（問題ごと）",
+ "class.ax_q_none": {
+  "one": "問題 {list} にはまだお手本がありません。クイック採点で解答の「お手本」を押してください。",
+  "other": "問題 {list} にはまだお手本がありません。クイック採点で解答の「お手本」を押してください。"
+ },
+ "class.ax_rest": "答案全体とページの一部",
+ "class.ax_rest_shots": "答案全体、ページの一部、スクリーンショット",
+ "class.ax_linked": "連携したクラスから",
+ "class.ax_show_lk": {
+  "one": "{names} のお手本を 1 件表示",
+  "other": "{names} のお手本を {n} 件表示"
+ },
+ "class.ax_hide": "隠す",
+ "class.ax_lk_say": "別のクラスの同じ課題です。各カードにどのクラスのものか書かれています。",
+ "class.ax_from": "出典",
+ "class.ex_copy": "画像をコピー",
+ "class.ex_copied_first": "コピーしました。授業に貼り付けた画像はその授業と一緒に保存されます。",
+ "class.ex_copy_bad": "ここではコピーできませんでした。ダウンロードを使ってください。",
+ "paper.qm_ex": "お手本",
+ "paper.qm_ex_tip": "この解答を優れた例として残します（名前は隠します）(E)",
+ "paper.qm_ex_on": "優れた例として残しています。クリックで外します (E)",
+ "mark.examples": "お手本",
+ "class.wl_none_say": "まだ作品から保存したものはありません。優れた例として保存したり、見守りリストに加えたりしたスクリーンショットが日付つきでここに出ます。",
+ "class.wl_f_all": "すべて",
+ "class.wl_f_good": "優れた例 · {n}",
+ "class.wl_f_watch": "見守り · {n}",
+ "class.wl_seen": "よく見られる点：",
+ "class.wl_none_kind": "この種類はまだありません。",
+ "class.wl_more": "さらに黒く塗る"
 }

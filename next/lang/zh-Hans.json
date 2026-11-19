@@ -6707,5 +6707,36 @@
  },
  "class.es_shot_paper": "答卷上的姓名遮罩已经涂上。",
  "class.es_shot_say": "在显示姓名的地方拖动即可涂黑。点一下黑框可取消。",
- "class.es_tags_used": "用过的标签"
+ "class.es_tags_used": "用过的标签",
+ "class.ax_say": "这份作业的优秀作品，不含姓名。",
+ "class.ax_none_say": "在快速批改中按答案上的“范例”，在答卷的 ⋯ 菜单中选“用作范例”，或截图 (S) 后存为优秀范例。选哪一份，始终由你决定。",
+ "class.ax_answers": "答案（按题目）",
+ "class.ax_q_none": {
+  "one": "第 {list} 题还没有范例。在快速批改中按答案上的“范例”。",
+  "other": "第 {list} 题还没有范例。在快速批改中按答案上的“范例”。"
+ },
+ "class.ax_rest": "整份作业与页面局部",
+ "class.ax_rest_shots": "整份作业、页面局部与截图",
+ "class.ax_linked": "来自关联的班级",
+ "class.ax_show_lk": {
+  "one": "显示来自 {names} 的 1 个范例",
+  "other": "显示来自 {names} 的 {n} 个范例"
+ },
+ "class.ax_hide": "隐藏",
+ "class.ax_lk_say": "另一个班级的同一份作业。每张卡片都会注明来自哪个班级。",
+ "class.ax_from": "来自",
+ "class.ex_copy": "复制图片",
+ "class.ex_copied_first": "已复制。粘贴到课时中的图片会随该课时保存。",
+ "class.ex_copy_bad": "这里无法复制，请改用“下载”。",
+ "paper.qm_ex": "范例",
+ "paper.qm_ex_tip": "把这个答案存为优秀范例，姓名会遮住 (E)",
+ "paper.qm_ex_on": "已存为优秀范例。点一下可取消 (E)",
+ "mark.examples": "范例",
+ "class.wl_none_say": "还没有保存这位学生的作品。存为优秀范例或加入观察清单的截图会显示在这里，并附上日期。",
+ "class.wl_f_all": "全部",
+ "class.wl_f_good": "优秀 · {n}",
+ "class.wl_f_watch": "观察 · {n}",
+ "class.wl_seen": "最常见：",
+ "class.wl_none_kind": "这类还没有。",
+ "class.wl_more": "再涂黑一些"
 }

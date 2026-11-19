@@ -6679,5 +6679,36 @@
  },
  "class.es_shot_paper": "As coberturas de nomes do trabalho já estão pintadas.",
  "class.es_shot_say": "Arraste sobre o que mostra um nome para cobri-lo de preto. Clique em uma caixa preta para tirá-la.",
- "class.es_tags_used": "Tags que você já usou"
+ "class.es_tags_used": "Tags que você já usou",
+ "class.ax_say": "Bons trabalhos desta tarefa, sem nomes.",
+ "class.ax_none_say": "Aperte Exemplo em uma resposta na Correção rápida, escolha Usar como exemplo no menu ⋯ de um trabalho, ou faça uma captura (S) e salve como bom exemplo. A escolha é sempre sua.",
+ "class.ax_answers": "Respostas, por questão",
+ "class.ax_q_none": {
+  "one": "A questão {list} ainda não tem exemplo. Aperte Exemplo em uma resposta na Correção rápida.",
+  "other": "As questões {list} ainda não têm exemplo. Aperte Exemplo em uma resposta na Correção rápida."
+ },
+ "class.ax_rest": "Trabalhos inteiros e partes de páginas",
+ "class.ax_rest_shots": "Trabalhos inteiros, partes de páginas e capturas",
+ "class.ax_linked": "De turmas vinculadas",
+ "class.ax_show_lk": {
+  "one": "Mostrar 1 exemplo de {names}",
+  "other": "Mostrar {n} exemplos de {names}"
+ },
+ "class.ax_hide": "Ocultar",
+ "class.ax_lk_say": "A mesma tarefa em outra turma. Cada cartão diz de qual turma veio.",
+ "class.ax_from": "De",
+ "class.ex_copy": "Copiar imagem",
+ "class.ex_copied_first": "Copiada. Uma imagem colada em uma aula fica guardada com essa aula.",
+ "class.ex_copy_bad": "Copiar não funcionou aqui. Use Baixar.",
+ "paper.qm_ex": "Exemplo",
+ "paper.qm_ex_tip": "Guardar esta resposta como bom exemplo, com o nome coberto (E)",
+ "paper.qm_ex_on": "Guardada como bom exemplo. Clique para tirar (E)",
+ "mark.examples": "Exemplos",
+ "class.wl_none_say": "Nada salvo do trabalho ainda. Uma captura salva como bom exemplo ou adicionada à lista de observação aparece aqui, com a data.",
+ "class.wl_f_all": "Tudo",
+ "class.wl_f_good": "Bons · {n}",
+ "class.wl_f_watch": "Observar · {n}",
+ "class.wl_seen": "Mais visto:",
+ "class.wl_none_kind": "Nenhum deste tipo ainda.",
+ "class.wl_more": "Cobrir mais"
 }
