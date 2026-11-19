@@ -541,3 +541,28 @@ test('H-047: downloads kept before papers marked were counted get the count from
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('B-065 B-039: each class page has its own address: attendance for a day or looking back, seating, progress sheets, charts, goals, report comments, missing work', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  const at = async (addr, sel, back) => {
+    await p.goto(srv.url + 'blank'); await p.goto(srv.url + 'next/#/class/c1/' + addr);
+    await p.waitForSelector(sel, { timeout: 15000 });
+    await p.waitForFunction(b => location.hash === '#/class/c1/' + b, {}, back);
+  };
+  await at('people/attendance/2026-10-26', 'dialog[open] [data-att="c1"]', 'people');
+  assert.ok(await p.evaluate(() => document.querySelector('dialog[open] [data-att]').textContent.includes('26')), 'that day');
+  await at('people/attendance/all', 'dialog[open] [data-att="c1"]', 'people');
+  assert.equal(await p.$eval('dialog[open] .attbar [aria-checked="true"], dialog[open] .attbar [aria-pressed="true"]', e => e.textContent), 'Look back', 'looking back');
+  await at('people/seating', 'dialog[open] [data-seating], dialog[open] [data-seat-start]', 'people');
+  await at('people/sheets', 'dialog[open] [data-pss-sheet]', 'people');
+  await at('grades/charts', 'dialog[open] [data-charts]', 'grades');
+  await at('grades/goals', 'dialog[open] [data-goals]', 'grades');
+  await at('grades/reports', 'dialog[open] [data-rp-text]', 'grades');
+  await at('grades/sheets', 'dialog[open] [data-pss-sheet]', 'grades');
+  await at('todo/missing', '[data-mis]', 'todo');
+  assert.ok(await p.evaluate(() => document.activeElement && document.activeElement.id === 'h-mis'), 'Missing work has the focus');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

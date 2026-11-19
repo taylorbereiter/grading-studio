@@ -150,9 +150,9 @@ export default function ClassPage({ route, classes }) {
     <Tabs label={t('plan.class_tabs')} value={tab} onChange={v => go('class', route.params.id, v === 'course' ? '' : v)}
       tabs={[{ id: 'course', label: t('plan.course_line') }, { id: 'work', label: t('plan.assignments') }, { id: 'people', label: t('plan.people'), count: x.students || null }, { id: 'grades', label: t('plan.grades') }, { id: 'todo', label: t('nav.todo') }]} />
     {tab === 'work' ? (Work ? <Work.default classId={route.params.id} sub={route.params.sub} /> : <div class="loading" aria-busy="true" />)
-      : tab === 'people' && !x.loose ? (People ? <People.default classId={route.params.id} sub={route.params.sub} /> : <div class="loading" aria-busy="true" />)
+      : tab === 'people' && !x.loose ? (People ? <People.default classId={route.params.id} sub={route.params.sub} more={route.params.more} /> : <div class="loading" aria-busy="true" />)
       : tab === 'grades' && !x.loose ? (Grades ? <Grades.default classId={route.params.id} sub={route.params.sub} /> : <div class="loading" aria-busy="true" />)
-      : tab === 'todo' && !x.loose ? (Todo ? <Todo.default classId={route.params.id} /> : <div class="loading" aria-busy="true" />)
+      : tab === 'todo' && !x.loose ? (Todo ? <Todo.default classId={route.params.id} sub={route.params.sub} /> : <div class="loading" aria-busy="true" />)
       : tab !== 'course' ? <Later route={{ ...route, path: 'class', known: true }} classes={classes} embedded />
       : !p ? <div class="loading" aria-busy="true" />
       : !c ? <EmptyState icon="cal" title={t('plan.not_on_timetable')} text={t('plan.not_on_timetable_text')} action={<a class="btn" href={href('settings', 'timetable')}>{t('plan.set_up_timetable')}</a>} />

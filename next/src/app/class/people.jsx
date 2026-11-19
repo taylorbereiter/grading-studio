@@ -93,7 +93,7 @@ function MoveDialog({ lib, c, n, onClose }) {
   </Dialog>;
 }
 
-export default function People({ classId, sub }) {
+export default function People({ classId, sub, more }) {
   const b = useBook(), [find, setFind] = useState(''), [editing, setEditing] = useState(false), [term, setTerm] = useState(null), [moving, setMoving] = useState(null), [tool, setTool] = useState(null), Ps = usePart('sheets', !!(tool && tool.k === 'pss'));
   // Left and Right step to the previous and next student (src/book.js), unless she is typing or a box is open. Listened for here,
   // not on the student's card, which is drawn new for each student, so a key pressed just after a step is never missed.
@@ -105,6 +105,13 @@ export default function People({ classId, sub }) {
     e.preventDefault(); stepRef.current(e.key === 'ArrowLeft' ? -1 : 1);
   }; document.addEventListener('keydown', k); return () => document.removeEventListener('keydown', k); }, []);
   stepRef.current = null;
+  // the page's own addresses (Find, the tab row, the current app's #/class/<id>/attendance/<day>): people/attendance[/<day>|/all],
+  // people/seating, people/sheets open their sheet over the list
+  useEffect(() => {
+    if (!b || !['attendance', 'seating', 'sheets'].includes(sub)) return;
+    setTool(sub === 'attendance' ? { k: 'att', d: more || undefined } : sub === 'seating' ? { k: 'seat' } : { k: 'pss' });
+    location.replace(href('class', classId, 'people'));
+  }, [b, sub, more]);
   if (!b) return <div class="loading" aria-busy="true" />;
   const x = classBook(b, classId);
   if (!x) return <EmptyState icon="warn" title={t('class.read_failed')} />;

@@ -55,6 +55,8 @@ export default function Grades({ classId, sub }) {
   const [box, setBox] = useState(null), [whole, setWhole] = useState(false), [Imp, setImp] = useState(null), [only, setOnly] = useState(onlyOn), [pick, setPick] = useState(false), [, redraw] = useState(0);
   // #/class/<id>/grades/type-<card> (the Assignments tab's No papers: just type the scores): that card's typing, then the address back
   useLayoutEffect(() => { if (!b || !/^type-/.test(sub || '')) return; setBox({ add: true, itId: sub.slice(5) }); location.replace(href('class', classId, 'grades')); }, [b, sub]);
+  // grades/charts, grades/goals, grades/reports, grades/sheets: the card's sheet, opened (Find and the tab row reach them by address)
+  useLayoutEffect(() => { if (!b || !['charts', 'goals', 'reports', 'sheets'].includes(sub)) return; setBox({ [sub]: true }); location.replace(href('class', classId, 'grades')); }, [b, sub]);
   const Gl = usePart('goals', !!(box && box.goals)), Rp = usePart('reports', !!(box && box.reports)), Ps = usePart('sheets', !!(box && box.sheets));
   if (!b) return <div class="loading" aria-busy="true" />;
   const x = classBook(b, classId);
