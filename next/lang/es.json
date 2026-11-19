@@ -6687,5 +6687,21 @@
  "rev.link_max": {
   "one": "Una clase admite hasta {n} enlace",
   "other": "Una clase admite hasta {n} enlaces"
- }
+ },
+ "rev.unit_plan": "Plan de unidad",
+ "rev.open_unit": "Abrir {name}",
+ "rev.unit_own": "La página propia de esta clase",
+ "rev.unit_of": "La página de {name}",
+ "rev.change_unit": "Cambiar el enlace de {name}",
+ "rev.add_unit": "Añadir el enlace de {name}",
+ "rev.unit_link": "Enlace de {name}",
+ "rev.page_in": "La página de esta clase en {name}",
+ "rev.page_plain": "Un enlace al lugar de esta clase en tu plan de unidad",
+ "rev.empty_unit": "Déjalo vacío para usar el enlace de la unidad ({name}).",
+ "rev.unit_tip": "El enlace de una unidad sirve para todas sus clases; este solo hace falta para una clase con página propia.",
+ "rev.whole_link": "Pega el enlace completo, empezando por https://",
+ "rev.edit_copy": "Editar una copia",
+ "rev.download": "Descargar",
+ "rev.docx_failed": "No se pudo abrir ese archivo de Word aquí",
+ "rev.other_window": "Esta clase también se cambió en otra ventana. La versión de esa ventana se guarda en Versiones."
 }

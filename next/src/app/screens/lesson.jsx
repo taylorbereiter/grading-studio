@@ -16,7 +16,7 @@ import { assistant } from '../../services/assistant.js';
 import { register } from '../../services/shortcuts.js';
 import { addCommand } from '../../services/commands.js';
 import { engine } from '../../planning/engine.js';
-import { saveLesson, saveTaughtNote } from '../../planning/write.js';
+import { saveLesson, saveTaughtNote, saveVersion } from '../../planning/write.js';
 import { taughtIn } from '../../planning/index.js';
 import { Slide } from '../plan/slide.jsx';
 import { stateOf, arrived, classOf, today, at, mins, lessonsOn } from '../plan/lessons.js';
@@ -51,18 +51,25 @@ export function periodOf(p, slot) {
   return { c, m };
 }
 
-// The lesson by its id, kept as she changes it here; read again when another window saves it.
+// The lesson by its id, kept as she changes it here; read again when another window saves it. Saves go one at a time, each from
+// the stored lesson it was made from: one that another window saved in between (within the 1.5 s her own saves keep the screen
+// steady) is kept as a version first and she is told (audit hook H-017).
+let overSay = null;
 export function useLesson(p, id) {
-  const [l, setL] = useState(null), mine = useRef(0);
+  const [l, setL] = useState(null), mine = useRef(0), base = useRef(0), q = useRef(Promise.resolve()), pp = useRef(p);
+  pp.current = p;
   useEffect(() => {
     if (!p) return;
     const got = p.lessons.find(x => x.id === id) || null;
-    if (!l || !got || got.id !== l.id || got.updated !== l.updated && Date.now() - mine.current > 1500) setL(got);
+    if (!l || !got || got.id !== l.id || got.updated !== l.updated && Date.now() - mine.current > 1500) { setL(got); base.current = got ? got.updated || 0 : 0; }
   }, [p, id]);
-  const save = useCallback(async next => {
+  const save = useCallback(next => {
     setL(next); mine.current = Date.now();
-    try { const s = await saveLesson(next); setL(cur => (cur && cur.id === s.id ? { ...cur, updated: s.updated, _file: s._file, _mod: s._mod, _sync: s._sync } : cur)); return s; }
-    catch (e) { saveFailed(e); return null; }
+    const behind = async s => { const E = engine(pp.current), say = overSay ? overSay() : ''; await saveVersion(s, say, E.snap, E.MAX_VERSIONS); if (say) toast(say); };
+    return (q.current = q.current.then(async () => {
+      try { const s = await saveLesson(next, { base: base.current, behind }); base.current = s.updated; setL(cur => (cur && cur.id === s.id ? { ...cur, updated: s.updated, _file: s._file, _mod: s._mod, _sync: s._sync } : cur)); return s; }
+      catch (e) { saveFailed(e); return null; }
+    }));
   }, []);
   return [l, save];
 }
@@ -215,6 +222,7 @@ export default function LessonPage({ route }) {
   const setView = v => go('lesson', route.params.id, v === 'lesson' ? '' : v);
   // Present is fetched with the page, so F5 shows it at once; the lesson's tools too; the editor when the Edit view opens; Beside when opened.
   const PresentMod = usePart('present'), Tools = usePart('tools'), EditMod = usePart('edit', view === 'edit'), Side2 = usePart('beside', beside), Pf = usePart('pfolder', arrived(l)), Sd = usePart('side2');
+  if (Sd) overSay = Sd.otherWindow;
   const ask = i => { setRedo(typeof i === 'number' ? i : null); setAsking(true); };
   // Planned from the Calendar "with your assistant": the assistant sheet opens on arrival, once.
   useEffect(() => { try { if (l && sessionStorage.getItem('gsn.ask') === l.id) { sessionStorage.removeItem('gsn.ask'); ask(); } } catch { } if (l && route.params.view === 'present') setPresenting(true); }, [l && l.id]);
@@ -226,6 +234,8 @@ export default function LessonPage({ route }) {
     if (name === 'zip') return Tools.downloadAll(p, l);
     if (name === 'beside') return setBeside(b => !b);
     if (name === 'newdoc') return Tools.newDoc(p, l, save).then(id => setTool({ name: 'doc', arg: id }), saveFailed);
+    if (name === 'editdocx') return PARTS.docxin().then(m => m.editCopy(p, l, arg, save)).then(id => id && setTool({ name: 'doc', arg: id }), saveFailed);
+    if (name === 'dl') return PARTS.docxin().then(m => m.download(arg)).catch(saveFailed);
     setTool({ name, arg });
   };
   // A slide made elsewhere (a video from Beside) goes after the one she is on.
@@ -287,7 +297,7 @@ export default function LessonPage({ route }) {
       </div>
       {view !== 'edit' && <Side Sd={Sd} p={p} l={l} slot={slot} per={per} onSave={save} onDownload={dl} onAssistant={() => ask()} onTool={onTool} />}
     </div>
-    {Sd && <><Sd.SlotSheet p={p} l={l} save={save} /><Sd.Comments l={l} ai={assistant().name || t('assistant.generic')} save={save} onGo={i => onStep('edit', i)} /><Sd.TaughtAdd p={p} l={l} save={save} /></>}
+    {Sd && <><Sd.SlotSheet p={p} l={l} save={save} /><Sd.Comments l={l} ai={assistant().name || t('assistant.generic')} save={save} onGo={i => onStep('edit', i)} /><Sd.TaughtAdd p={p} l={l} save={save} /><Sd.AtlasSheet p={p} l={l} save={save} /></>}
     {beside && Side2 && <Side2.default p={p} l={l} save={save} onClose={() => setBeside(false)} onSlide={addSlide} />}
     <AssistantSheet key={asking ? 'a' + redo : 'x'} p={p} l={l} open={asking} slide={redo} onClose={() => { setAsking(false); setRedo(null); }} save={save} />
     {Tools && tool && <Tools.default name={tool.name} arg={tool.arg} p={p} l={l} slot={slot} save={save} onClose={() => setTool(null)} />}

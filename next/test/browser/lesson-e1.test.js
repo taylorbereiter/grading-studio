@@ -682,3 +682,110 @@ test('E1-054 E1-055: a link edited, and links picked from School resources (sear
   assert.deepEqual(p.errors, []);
   await p.close();
 });
+
+test('E1-018 E1-019 E1-036 E1-037: the lesson\'s own unit plan link, added with Save or left with Cancel, and its unit\'s link used until then', async () => {
+  const p = await K.fresh();
+  await p.evaluate(() => new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const s = r.result.transaction('kv', 'readwrite').objectStore('kv'), q = s.get('units'); q.onsuccess = () => { const u = q.result; u.find(x => x.id === 'U2').atlas = 'https://example.org/unit2'; s.put(u, 'units').onsuccess = () => { r.result.close(); res(); }; }; q.onerror = () => rej(q.error); }; }));
+  await K.open(p, 'lesson/L2');
+  const items = async () => { await p.click('main [data-focus="lesson-menu"]'); await p.waitForSelector('[role^="menuitem"]'); return p.$$eval('[role^="menuitem"]', b => b.map(x => x.textContent.trim())); };
+  let it = await items();
+  assert.ok(it.some(x => /^Open Unit plan/.test(x) && /The page of Unit 2: Poetry/.test(x)), 'its unit\'s link: ' + it.join(' | '));
+  await K.item(p, 'Change the Unit plan link');
+  await p.waitForSelector('[data-focus="atlas-url"]');
+  await p.type('input[data-focus="atlas-url"], [data-focus="atlas-url"] input', 'https://example.org/lesson2');
+  await p.click('.sheet [data-focus="atlas-save"]').catch(() => p.click('[data-focus="atlas-save"]'));
+  assert.ok(await until(async () => (await K.lessonInDb(p, 'L2')).atlas === 'https://example.org/lesson2'), 'Save keeps its own link');
+  it = await items();
+  assert.ok(it.some(x => /^Open Unit plan/.test(x) && /This lesson’s own page/.test(x)), 'now its own page: ' + it.join(' | '));
+  await K.item(p, 'Change the Unit plan link');
+  await p.waitForSelector('[data-focus="atlas-url"]');
+  await p.$eval('[data-focus="atlas-url"]', el => { el.value = 'nonsense'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.evaluate(() => [...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Cancel' && b.closest('.sheet, dialog')).click());
+  await wait(300);
+  assert.equal((await K.lessonInDb(p, 'L2')).atlas, 'https://example.org/lesson2', 'Cancel changes nothing');
+  const l = await K.lessonInDb(p, 'L2'), both = await K.sameInPlanner(p, 'L2', l, ['atlas']);
+  assert.deepEqual(both.atlas[0], both.atlas[1]);
+  assert.deepEqual(p.errors, []);
+  await p.close();
+});
+
+// A small Word file made here: a title, a heading, a bold word, a bulleted list and a table.
+const tinyDocx = () => { const f = require('fflate'), W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+  const p = (txt, st, extra = '') => '<w:p><w:pPr>' + (st ? '<w:pStyle w:val="' + st + '"/>' : '') + extra + '</w:pPr>' + txt + '</w:p>', r = (s, b) => '<w:r>' + (b ? '<w:rPr><w:b/></w:rPr>' : '') + '<w:t xml:space="preserve">' + s + '</w:t></w:r>';
+  const body = p(r('Poem handout'), 'Title') + p(r('Before you read'), 'Heading1') + p(r('Mark the ') + r('stressed', true) + r(' words.')) + p(r('First reading'), 'ListParagraph', '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>') + p(r('Second reading'), 'ListParagraph', '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>') +
+    '<w:tbl><w:tr><w:tc>' + p(r('Word')) + '</w:tc><w:tc>' + p(r('Why')) + '</w:tc></w:tr></w:tbl>';
+  return Buffer.from(f.zipSync({ '[Content_Types].xml': f.strToU8('<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'),
+    'word/document.xml': f.strToU8('<?xml version="1.0"?><w:document ' + W + '><w:body>' + body + '</w:body></w:document>') })).toString('base64'); };
+test('E1-057 E1-058: a Word file\'s Edit a copy makes a document beside it; ↓ downloads a file as it is and a document as .docx', async () => {
+  const L = JSON.parse(JSON.stringify(require('./planseed.js').LESSONS));
+  L.find(x => x.id === 'L2').files = [{ id: 'W1', name: 'Poem handout.docx', kind: 'other', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', size: 900, added: 1792000000000 }];
+  const p = await K.fresh(1366, L);
+  await p.evaluate(b64 => new Promise((res, rej) => { const u8 = Uint8Array.from(atob(b64), c => c.charCodeAt(0)), r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const tx = r.result.transaction('kv', 'readwrite'); tx.objectStore('kv').put(new Blob([u8], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), 'file:W1'); tx.oncomplete = () => { r.result.close(); res(); }; tx.onerror = () => rej(tx.error); }; }), tinyDocx());
+  await p.evaluateOnNewDocument(() => { window.__dl = []; const mk = URL.createObjectURL; URL.createObjectURL = b => { window.__lastBlob = b; return mk(b); };
+    HTMLAnchorElement.prototype.click = function () { if (this.download) window.__dl.push({ name: this.download, blob: window.__lastBlob }); }; });
+  await K.open(p, 'lesson/L2');
+  await p.waitForSelector('main [data-dl="W1"]');
+  await p.click('main [data-dl="W1"]');
+  assert.ok(await until(() => p.evaluate(() => window.__dl.length === 1)), 'the Word file downloads');
+  const kept = await p.evaluate(() => new Promise(r => { const q = indexedDB.open('gs-lessons'); q.onsuccess = () => { const g = q.result.transaction('kv').objectStore('kv').get('file:W1'); g.onsuccess = () => { q.result.close(); r(g.result.size); }; }; }));
+  assert.deepEqual(await p.evaluate(() => [window.__dl[0].name, window.__dl[0].blob.size]), ['Poem handout.docx', kept], 'as it is');
+  await p.click('main [data-editcopy="W1"]');
+  await p.waitForSelector('.docpage, [data-doc], main .doc-edit, .sheet .docpage', { timeout: 10000 }).catch(() => {});
+  assert.ok(await until(async () => ((await K.lessonInDb(p, 'L2')).files || []).length === 2), 'a document is added beside it');
+  const l = await K.lessonInDb(p, 'L2'), d = l.files.find(x => x.kind === 'doc');
+  assert.equal(d.name, 'Poem handout'); assert.equal(l.files.find(x => x.id === 'W1').name, 'Poem handout.docx', 'the Word file stays');
+  const html = await p.evaluate(id => new Promise(r => { const q = indexedDB.open('gs-lessons'); q.onsuccess = () => { const g = q.result.transaction('kv').objectStore('kv').get('file:' + id); g.onsuccess = () => { q.result.close(); g.result.text().then(r); }; }; }), d.id);
+  assert.equal(html, '<h1>Poem handout</h1><h2>Before you read</h2><p>Mark the <strong>stressed</strong> words.</p><ul><li>First reading</li><li>Second reading</li></ul><table><tr><td>Word</td><td>Why</td></tr></table>');
+  // the document comes down as .docx
+  await K.open(p, 'lesson/L2');
+  await p.waitForSelector('main [data-dl="' + d.id + '"]');
+  await p.click('main [data-dl="' + d.id + '"]');
+  assert.ok(await until(() => p.evaluate(() => window.__dl.length === 1)), 'the document downloads');
+  const got = await p.evaluate(async () => [window.__dl[0].name, [...new Uint8Array(await window.__dl[0].blob.arrayBuffer()).slice(0, 2)]]);
+  assert.deepEqual(got, ['Poem handout.docx', [80, 75]], 'as a Word file');
+  const both = await K.sameInPlanner(p, 'L2', l, ['files']);
+  assert.deepEqual(both.files[0], both.files[1], 'the current Planner reads the same files');
+  assert.deepEqual(p.errors, []);
+  await p.close();
+});
+
+test('E1-051: Make an alternative version is in the lesson menu while editing (kept there on purpose)', async () => {
+  const p = await K.fresh();
+  await K.edit(p, 'L3');
+  await p.click('main [data-focus="lesson-menu"]'); await p.waitForSelector('[role^="menuitem"]'); await K.item(p, 'Make an alternative version');
+  await p.waitForSelector('[data-focus="var-name"]');
+  await p.click('[data-focus="var-name"]'); await p.keyboard.type('Friday'); await p.click('[data-focus="name-ok"]');
+  await p.waitForFunction(() => location.hash !== '#/lesson/L3/edit' && location.hash !== '#/lesson/L3', { timeout: 8000 });
+  const id = await p.evaluate(() => location.hash.split('/')[2]), v = await until(() => K.lessonInDb(p, id));
+  assert.equal(v.variantOf, 'L3'); assert.equal(v.variant, 'Friday');
+  const both = await K.sameInPlanner(p, id, v, ['variantOf', 'variant']);
+  assert.deepEqual(both.variant[0], 'Friday'); assert.deepEqual(both.variantOf[0], 'L3');
+  assert.deepEqual(p.errors, []);
+  await p.close();
+});
+
+test('H-017: a lesson another window saved meanwhile is kept as a version before her change replaces it, and she is told', async () => {
+  const p = await K.fresh();
+  await K.open(p, 'lesson/L2');
+  await p.waitForSelector('main [data-focus="lesson-menu"]');
+  // another window's save, straight into the store (no word sent, as when it lands inside her own save's quiet time)
+  await p.evaluate(() => new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const s = r.result.transaction('lessons', 'readwrite').objectStore('lessons'), g = s.get('L2'); g.onsuccess = () => { const l = g.result; l.title = 'Changed in the other window'; l.updated = Date.now() + 1000; s.put(l).onsuccess = () => { r.result.close(); res(); }; }; g.onerror = () => rej(g.error); }; }));
+  await p.click('main [data-focus="lesson-menu"]'); await p.waitForSelector('[role^="menuitem"]'); await K.item(p, 'Name matches the title slide');
+  assert.ok(await until(async () => (await K.lessonInDb(p, 'L2')).titleApart === true), 'her change is saved');
+  const vers = await p.evaluate(() => new Promise(r => { const q = indexedDB.open('gs-lessons'); q.onsuccess = () => { const g = q.result.transaction('kv').objectStore('kv').get('ver:L2'); g.onsuccess = () => { q.result.close(); r(g.result || []); }; }; }));
+  assert.ok(vers.some(v => v.lesson && v.lesson.title === 'Changed in the other window' && /another window/.test(v.label)), 'the other window\'s lesson is a version');
+  assert.ok(await until(() => p.evaluate(() => [...document.querySelectorAll('.toast')].some(x => /another window/.test(x.textContent)))), 'and she is told');
+  assert.deepEqual(p.errors, []);
+  await p.close();
+});
+
+test('H-055: signed in to Google with no live key, the sign-in script is loaded ahead, so the Drive chooser opens straight from the press', async () => {
+  const p = await K.fresh(), asked = [];
+  await p.evaluate(() => { localStorage.setItem('gs.gEmail', JSON.stringify('teacher@example.org')); localStorage.setItem('gs.gcid', JSON.stringify('123-made-up.apps.googleusercontent.com')); });
+  await p.setRequestInterception(true);
+  p.on('request', r => { const u = r.url(); if (/accounts\.google\.com\/gsi\/client/.test(u)) { asked.push(u); r.respond({ status: 200, contentType: 'text/javascript', body: 'window.__gisLoaded = true;' }); } else if (/googleapis\.com|accounts\.google\.com/.test(u)) r.respond({ status: 401, body: '{}' }); else r.continue(); });
+  await K.open(p, 'lesson/L2');
+  assert.ok(await until(() => asked.length > 0, 9000), 'Google\'s sign-in script is asked for without a press');
+  assert.ok(await until(() => p.evaluate(() => window.__gisLoaded === true)), 'and loaded');
+  await p.close();
+});

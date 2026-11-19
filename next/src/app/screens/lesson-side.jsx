@@ -8,7 +8,7 @@ import { Button, IconButton, Icon, Select, TextInput, Sheet, Menu, toast } from 
 import { t, date } from '../../i18n/t.js';
 import { toneOf } from '../colors.js';
 import { engine } from '../../planning/engine.js';
-import { school } from '../../planning/index.js';
+import { school, words } from '../../planning/index.js';
 import { classOf, at, today, periods } from '../plan/lessons.js';
 import '../plan/les-lines.js';
 import '../plan/rev-lines.js';
@@ -17,7 +17,7 @@ import '../plan/lines.js';
 const clock = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? date(new Date(2000, 0, 1, +m[1], +m[2]), { hour: 'numeric', minute: '2-digit' }) : ''; };
 const copy = x => JSON.parse(JSON.stringify(x));
 const day = s => date(at(s.date), { weekday: 'short', day: 'numeric', month: 'short' });
-let opener = null, cOpen = null, tOpen = null;
+let opener = null, cOpen = null, tOpen = null, aOpen = null;
 
 // The lesson menu's items: put it on another class or day, take it off each one it is on, and the name kept with the title slide.
 export function slotItems(p, l, save) {
@@ -27,6 +27,8 @@ export function slotItems(p, l, save) {
     // The lesson's name and its title slide's title kept the same (src/planner/lessons.js titlesLinked, in its More menu).
     ...(l.slides.some(s => s.layout === 'title') ? [{ id: 'tlink', label: t('les.title_linked'), checked: !l.titleApart, onSelect: () => { const n = copy(l);
       if (n.titleApart) { delete n.titleApart; n.slides.find(s => s.layout === 'title').title = n.title; } else n.titleApart = true; save(n); } }] : []),
+    // The lesson's page in the unit plan (src/planner/lessons.js atlasOf, its More menu): its own link, or else its unit's.
+    ...atlasItems(p, l),
     // Every comment in one list, and a note on where a class got to: here, so the page's presses at rest stay under 25.
     { id: 'cmts', label: t('rev.all_comments'), icon: 'comment', onSelect: () => cOpen && cOpen() },
     ...((l.taught || []).length || (l.slots || []).some(s => s.date <= today()) ? [{ id: 'tnote', label: (l.taught || []).length ? t('rev.add_note') : t('rev.note_where'), icon: 'check', onSelect: () => tOpen && tOpen({}) }] : []), { sep: true }];   // not-words
@@ -176,3 +178,36 @@ export function LinkForm({ p, l, was, save, onClose }) {
         : <p class="mute">{t('rev.no_match', { q: q.trim() })}</p>}</div>}
   </div>;
 }
+
+// The lesson's own unit plan link (l.atlas, src/planner/lessons.js atlasOf, atlasDlg), or else the link of the unit it falls in.
+const tool = () => { const w = words.json(null); return (w && typeof w.unit === 'string' && w.unit.trim()) || ''; };
+const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+function atlasOf(p, l) {
+  if (l.atlas) return { url: l.atlas, own: true };
+  const E = engine(p);
+  for (const s of l.slots || []) { const c = classOf(p, s.classId), hit = c && c.course && E.unitAt(c.course, ymd(E.mondayOf(at(s.date)))); if (hit && hit.u.atlas) return { url: hit.u.atlas, own: false, unit: hit.u.title }; }
+  return null;
+}
+function atlasItems(p, l) {
+  const a = atlasOf(p, l), n = tool() || t('rev.unit_plan');
+  return a ? [{ id: 'atlas-open', label: t('rev.open_unit', { name: n }), sub: a.own ? t('rev.unit_own') : t('rev.unit_of', { name: a.unit }), icon: 'link', onSelect: () => window.open(a.url, '_blank', 'noopener') },
+    { id: 'atlas', label: t('rev.change_unit', { name: n }), icon: 'pen', onSelect: () => aOpen && aOpen(true) }]
+    : [{ id: 'atlas', label: t('rev.add_unit', { name: n }), icon: 'link', onSelect: () => aOpen && aOpen(true) }];
+}
+export function AtlasSheet({ p, l, save }) {
+  const [on, setOn] = useState(false), [v, setV] = useState('');
+  aOpen = x => { setV(l.atlas || ''); setOn(x); };
+  if (!on) return null;
+  const a = atlasOf(p, { ...l, atlas: '' }), n = tool();
+  const keep = () => { const x = v.trim(); if (x && !/^https?:\/\//.test(x)) return toast(t('rev.whole_link')); const c = copy(l); if (x) c.atlas = x; else delete c.atlas; save(c); setOn(false); };
+  return <Sheet open title={t('rev.unit_link', { name: n || t('rev.unit_plan') })} icon={<Icon name="link" />} onClose={() => setOn(false)}
+    footer={<><span class="grow" /><Button onClick={() => setOn(false)}>{t('common.cancel')}</Button><Button variant="primary" onClick={keep} data-focus="atlas-save">{t('common.save')}</Button></>}>
+    <TextInput label={n ? t('rev.page_in', { name: n }) : t('rev.page_plain')} type="url" value={v} onInput={setV} onKeyDown={e => { if (e.key === 'Enter') keep(); }} data-focus="atlas-url" />
+    <p class="mute">{a ? t('rev.empty_unit', { name: a.unit }) : t('rev.unit_tip')}</p>
+  </Sheet>;
+}
+
+// Materials' labels from this part's lines, so the lesson page itself carries none of them.
+export const matWords = () => ({ editCopy: t('rev.edit_copy'), download: t('rev.download') });
+// The line for a lesson another window saved while this one was changing it (screens/lesson.jsx useLesson).
+export const otherWindow = () => t('rev.other_window');

@@ -6694,5 +6694,21 @@
  "rev.link_max": {
   "one": "一堂課最多 {n} 個連結",
   "other": "一堂課最多 {n} 個連結"
- }
+ },
+ "rev.unit_plan": "單元計畫",
+ "rev.open_unit": "開啟 {name}",
+ "rev.unit_own": "這堂課自己的頁面",
+ "rev.unit_of": "{name} 的頁面",
+ "rev.change_unit": "變更 {name} 連結",
+ "rev.add_unit": "新增 {name} 連結",
+ "rev.unit_link": "{name} 連結",
+ "rev.page_in": "這堂課在 {name} 中的頁面",
+ "rev.page_plain": "指向這堂課在單元計畫中位置的連結",
+ "rev.empty_unit": "留空則使用單元的連結（{name}）。",
+ "rev.unit_tip": "單元的連結會用於它的所有課，只有自己有頁面的課才需要這個。",
+ "rev.whole_link": "請貼上完整連結，以 https:// 開頭",
+ "rev.edit_copy": "編輯副本",
+ "rev.download": "下載",
+ "rev.docx_failed": "無法在這裡開啟這個 Word 檔案",
+ "rev.other_window": "這堂課也在另一個視窗中被修改了。那個視窗的版本保存在「版本」中。"
 }

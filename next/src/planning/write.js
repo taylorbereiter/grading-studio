@@ -29,8 +29,11 @@ export const tell = name => { try { const ch = new BroadcastChannel(name); ch.po
 
 // The lesson is stored as given, with updated set to now (src/planner/lessons.js lPut; Drive sync goes by it), and returned as
 // stored (with _file and _mod, or _sync, when a Planner folder is linked). file: false for a lesson just read from its file there.
-export async function saveLesson(lesson, { file = true } = {}) {
+// base: the stored lesson this change was made from; when another window has saved it since (audit hook H-017), behind(stored)
+// is waited for first, so its work can be kept as a version before this one replaces it.
+export async function saveLesson(lesson, { file = true, base = 0, behind = null } = {}) {
   check('gs-lessons/lessons');
+  if (base && behind) { const s = await lessons.get(lesson.id); if (s && (s.updated || 0) > base) await behind(s); }
   const l = JSON.parse(JSON.stringify(lesson)); l.updated = Date.now();
   await lessons.put(l);
   const f = file ? await plannerFolder() : null;

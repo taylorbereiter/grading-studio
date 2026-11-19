@@ -6694,5 +6694,21 @@
  "rev.link_max": {
   "one": "1 つの授業に入るリンクは {n} 件までです",
   "other": "1 つの授業に入るリンクは {n} 件までです"
- }
+ },
+ "rev.unit_plan": "単元計画",
+ "rev.open_unit": "{name} を開く",
+ "rev.unit_own": "この授業専用のページ",
+ "rev.unit_of": "{name} のページ",
+ "rev.change_unit": "{name} のリンクを変更",
+ "rev.add_unit": "{name} のリンクを追加",
+ "rev.unit_link": "{name} のリンク",
+ "rev.page_in": "{name} 内のこの授業のページ",
+ "rev.page_plain": "単元計画内のこの授業の場所へのリンク",
+ "rev.empty_unit": "空のままにすると単元のリンク（{name}）を使います。",
+ "rev.unit_tip": "単元のリンクはそのすべての授業に使われます。専用ページがある授業だけに必要です。",
+ "rev.whole_link": "https:// から始まるリンク全体を貼り付けてください",
+ "rev.edit_copy": "コピーを編集",
+ "rev.download": "ダウンロード",
+ "rev.docx_failed": "その Word ファイルはここでは開けませんでした",
+ "rev.other_window": "この授業は別のウィンドウでも変更されました。そのウィンドウの版はバージョンに残してあります。"
 }

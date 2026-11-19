@@ -6608,5 +6608,21 @@
  "rev.link_max": {
   "one": "Une leçon peut avoir jusqu’à {n} lien",
   "other": "Une leçon peut avoir jusqu’à {n} liens"
- }
+ },
+ "rev.unit_plan": "Plan d’unité",
+ "rev.open_unit": "Ouvrir {name}",
+ "rev.unit_own": "La page propre à cette leçon",
+ "rev.unit_of": "La page de {name}",
+ "rev.change_unit": "Changer le lien {name}",
+ "rev.add_unit": "Ajouter le lien {name}",
+ "rev.unit_link": "Lien {name}",
+ "rev.page_in": "La page de cette leçon dans {name}",
+ "rev.page_plain": "Un lien vers la place de cette leçon dans votre plan d’unité",
+ "rev.empty_unit": "Laissez vide pour utiliser le lien de l’unité ({name}).",
+ "rev.unit_tip": "Le lien d’une unité sert pour toutes ses leçons ; celui-ci ne sert qu’à une leçon qui a sa propre page.",
+ "rev.whole_link": "Collez le lien entier, qui commence par https://",
+ "rev.edit_copy": "Modifier une copie",
+ "rev.download": "Télécharger",
+ "rev.docx_failed": "Ce fichier Word n’a pas pu être ouvert ici",
+ "rev.other_window": "Cette leçon a aussi été modifiée dans une autre fenêtre. La version de cette fenêtre est gardée dans Versions."
 }

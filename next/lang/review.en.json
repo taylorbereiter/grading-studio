@@ -55,5 +55,21 @@
  "rev.link_max": {
   "one": "A lesson holds up to {n} link",
   "other": "A lesson holds up to {n} links"
- }
+ },
+ "rev.unit_plan": "Unit plan",
+ "rev.open_unit": "Open {name}",
+ "rev.unit_own": "This lesson’s own page",
+ "rev.unit_of": "The page of {name}",
+ "rev.change_unit": "Change the {name} link",
+ "rev.add_unit": "Add the {name} link",
+ "rev.unit_link": "{name} link",
+ "rev.page_in": "This lesson’s page in {name}",
+ "rev.page_plain": "A link to this lesson’s place in your unit plan",
+ "rev.empty_unit": "Leave it empty to use the unit’s link ({name}).",
+ "rev.unit_tip": "A unit’s link is used for all its lessons, so you only need this for a lesson with its own page.",
+ "rev.whole_link": "Paste the whole link, starting with https://",
+ "rev.edit_copy": "Edit a copy",
+ "rev.download": "Download",
+ "rev.docx_failed": "That Word file couldn’t be opened here",
+ "rev.other_window": "This lesson was also changed in another window. That window’s version is kept under Versions."
 }

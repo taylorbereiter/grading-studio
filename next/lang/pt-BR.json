@@ -6666,5 +6666,21 @@
  "rev.link_max": {
   "one": "Uma aula comporta até {n} link",
   "other": "Uma aula comporta até {n} links"
- }
+ },
+ "rev.unit_plan": "Plano da unidade",
+ "rev.open_unit": "Abrir {name}",
+ "rev.unit_own": "A página própria desta aula",
+ "rev.unit_of": "A página de {name}",
+ "rev.change_unit": "Mudar o link do {name}",
+ "rev.add_unit": "Adicionar o link do {name}",
+ "rev.unit_link": "Link do {name}",
+ "rev.page_in": "A página desta aula no {name}",
+ "rev.page_plain": "Um link para o lugar desta aula no seu plano de unidade",
+ "rev.empty_unit": "Deixe vazio para usar o link da unidade ({name}).",
+ "rev.unit_tip": "O link de uma unidade vale para todas as suas aulas; este só é preciso para uma aula com página própria.",
+ "rev.whole_link": "Cole o link inteiro, começando com https://",
+ "rev.edit_copy": "Editar uma cópia",
+ "rev.download": "Baixar",
+ "rev.docx_failed": "Não foi possível abrir esse arquivo do Word aqui",
+ "rev.other_window": "Esta aula também foi mudada em outra janela. A versão dessa janela fica guardada em Versões."
 }

@@ -85,6 +85,8 @@ export function Materials({ p, l, onSave, onTool = () => {}, More }) {
     <ul class="mlist">
       {files.map(f => <li><button type="button" class="link mopen" onClick={() => open(f)} draggable onDragStart={e => e.dataTransfer.setData('text/x-chip', JSON.stringify({ kind: 'file', t: 'lesson', owner: l.id, id: f.id, label: f.name }))}><Icon name={ICON(f)} size="sm" /><span data-raw>{f.name}</span></button>
         {f.size > 0 && <small class="mute num">{kb(f.size)}</small>}
+        {More && /\.docx$/i.test(f.name) && <IconButton icon="edit" size="sm" label={More.matWords().editCopy} onClick={() => onTool('editdocx', f.id)} data-editcopy={f.id} />}
+        {More && !isExample(f.id) && <IconButton icon="download" size="sm" label={More.matWords().download} onClick={() => onTool('dl', f)} data-dl={f.id} />}
         {f.kind !== 'doc' && !isExample(f.id) && <IconButton icon="replace" size="sm" label={t('file.replace')} onClick={() => { swap.current = f.id; pick.current.multiple = false; pick.current.click(); pick.current.multiple = true; }} />}
         <IconButton icon="trash" size="sm" label={t('common.remove')} onClick={() => remove(f)} /></li>)}
       {links.map(x => <li><a class="link mopen" href={x.url} target="_blank" rel="noopener"><Icon name="link" size="sm" /><span data-raw>{x.name}</span></a>

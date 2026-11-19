@@ -6665,5 +6665,21 @@
  "rev.link_max": {
   "one": "Eine Stunde fasst bis zu {n} Link",
   "other": "Eine Stunde fasst bis zu {n} Links"
- }
+ },
+ "rev.unit_plan": "Unitplan",
+ "rev.open_unit": "{name} öffnen",
+ "rev.unit_own": "Die eigene Seite dieser Stunde",
+ "rev.unit_of": "Die Seite von {name}",
+ "rev.change_unit": "Link zu {name} ändern",
+ "rev.add_unit": "Link zu {name} hinzufügen",
+ "rev.unit_link": "Link zu {name}",
+ "rev.page_in": "Die Seite dieser Stunde in {name}",
+ "rev.page_plain": "Ein Link zur Stelle dieser Stunde in deinem Unitplan",
+ "rev.empty_unit": "Leer lassen, um den Link der Unit zu nutzen ({name}).",
+ "rev.unit_tip": "Der Link einer Unit gilt für alle ihre Stunden. Diesen brauchst du nur für eine Stunde mit eigener Seite.",
+ "rev.whole_link": "Füge den ganzen Link ein, beginnend mit https://",
+ "rev.edit_copy": "Eine Kopie bearbeiten",
+ "rev.download": "Herunterladen",
+ "rev.docx_failed": "Diese Word-Datei ließ sich hier nicht öffnen",
+ "rev.other_window": "Diese Stunde wurde auch in einem anderen Fenster geändert. Die Fassung von dort ist unter Versionen gesichert."
 }
