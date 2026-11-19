@@ -197,6 +197,28 @@ export async function carryExtras(from, id, recs) {
 export async function carryEdits(id, puts) { check(id); for (const [k, v] of puts) await edits.put(v, k); saved({ kind: 'edit', id, side: 'students' }); }
 export async function markNewer(from, id) { check(from); const m = await meta.get(from); if (!m) return; m.newer = id; await meta.put(m, from); saved({ kind: 'papers', id: from, side: 'students' }); }
 
+// Rows kept before downloads counted feedback given and papers marked have neither count: worked out once from the saved work
+// (src/app/kept.js keptFbCounts, keptMarkCounts, run as the kept list is read; audit H-047), so a feedback-only card never reads
+// "0 of 20" and Focus doesn't fall back on scores. fmOf(id): the download's card is a formative activity.
+export async function backfillCounts(fmOf) {
+  try { check('meta'); } catch { return 0; }   // a window that may not write, or saved work of another version: left as it is
+  let done = 0;
+  for (const [id, m] of await meta.entries()) {
+    if (!m || !m.n || (m.marked != null && (m.fb != null || !fmOf(id)))) continue;
+    try {
+      const w = await newestWork(id); if (!w) continue;
+      const c = (await merge()).workCounts(w), now = await meta.get(id); if (!now) continue;
+      const n = { ...now };
+      if (n.fb == null && c.fb && fmOf(id)) n.fb = c.fb;
+      if (n.marked == null) n.marked = c.marked;
+      if (JSON.stringify(n) === JSON.stringify(now)) continue;
+      await meta.put(n, id); done++;
+    } catch (e) { if (e && e.name === 'ReadOnly') return done; console.error(e); }
+  }
+  if (done) saved({ kind: 'papers', id: '', side: 'students' });
+  return done;
+}
+
 /* the library */
 // Written at once when the merge engine is already loaded (leavingReady), so a save made as the page is left (pagehide) lands.
 export function saveLibrary(change) {

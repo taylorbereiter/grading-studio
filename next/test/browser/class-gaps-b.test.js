@@ -506,3 +506,38 @@ test('H-062 H-063: the Assignments tab shows a unit renamed in another window, a
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('H-028: with the app in German, the gradebook\'s due dates are written the German way from the first page, before any paper is opened', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  await p.evaluate(() => localStorage.setItem('gs.lang', JSON.stringify('de')));
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('[data-open-charts]', { timeout: 60000 });
+  const want = await p.evaluate(() => new Date('2026-09-19T12:00:00').toLocaleDateString('de', { month: 'short', day: 'numeric' }));
+  const en = await p.evaluate(() => new Date('2026-09-19T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+  await p.click('[data-open-charts]');
+  await p.waitForSelector('dialog[open] [data-stacks]');
+  const head = await p.$eval('dialog[open] [data-stacks]', e => e.textContent);
+  assert.ok(head.includes(want), head + ' has ' + want);
+  assert.ok(!head.includes(en), 'not the English ' + en);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('H-047: downloads kept before papers marked were counted get the count from their saved work once the app opens; the current app reads it', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, seedB());
+  const metaOf = q => q.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-keep'); r.onsuccess = () => { const g = r.result.transaction('meta').objectStore('meta').getAll(); g.onsuccess = () => { res(g.result); r.result.close(); }; }; }));
+  assert.ok((await metaOf(p)).every(m => m.marked == null), 'the seed has no counts');
+  await p.goto(srv.url + 'next/#/home');
+  await p.waitForFunction(() => new Promise(res => { const r = indexedDB.open('grading-studio-keep'); r.onsuccess = () => { const g = r.result.transaction('meta').objectStore('meta').getAll(); g.onsuccess = () => { res(g.result.every(m => m.marked != null)); r.result.close(); }; }; }), { timeout: 20000, polling: 250 });
+  const m = await metaOf(p);
+  assert.deepEqual(m.map(x => [x.id, x.marked]), m.map(x => [x.id, 6]), 'every paper was marked in the seed');
+  const old = await page(ctx, errors);
+  await old.goto(srv.url); await appReady(old);
+  assert.deepEqual(await metaOf(old), m, 'the current app reads the same rows and leaves them');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
