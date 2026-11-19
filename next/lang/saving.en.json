@@ -275,5 +275,11 @@
  "saving.y_open_fail": "That didn’t finish. {now} is safe in {file}, and a safety copy was made first: Put back is below. Reload before doing anything else.",
  "saving.y_a_year": "the year in the file",
  "saving.done": "Done",
- "saving.close": "Close"
+ "saving.close": "Close",
+ "saving.ask_h": "Choose where your work is kept",
+ "saving.ask_text": "Right now your marking lives only in this browser, and clearing the browser’s data would erase it. Choose a folder on this computer once. Every save then goes there too, with a copy of each day to go back to. Nothing is uploaded.",
+ "saving.ask_none_h": "Your work is not backed up",
+ "saving.ask_take": "Make a take-home file",
+ "saving.ask_later": "Not now",
+ "saving.ask_later_done": "The sidebar keeps saying “Not backed up” until a folder is chosen. Click it any time."
 }

@@ -92,7 +92,7 @@ export function TimetableSettings() {
   };
   return <div class="ttset">
     {!(d.classes || []).length && <EmptyState icon="cal" title={t('home.no_timetable')} text={t('plan.no_timetable_text')} />}
-    {(d.classes || []).map((c, i) => <ClassCard c={c} onChange={x => put({ ...d, classes: d.classes.map((y, j) => j === i ? x : y) })} onRemove={() => put({ ...d, classes: d.classes.filter((_, j) => j !== i) })} />)}
+    {(d.classes || []).length > 0 && <div class="ttclasses">{d.classes.map((c, i) => <ClassCard c={c} onChange={x => put({ ...d, classes: d.classes.map((y, j) => j === i ? x : y) })} onRemove={() => put({ ...d, classes: d.classes.filter((_, j) => j !== i) })} />)}</div>}
     <div><Button icon="plus" onClick={() => put({ ...d, classes: [...(d.classes || []), { id: nid(), name: '', course: '', color: CLASS_COLORS[(d.classes || []).length % 8], meets: [] }] })} data-focus="add-class">{t('plan.add_class')}</Button></div>
     <Card title={t('plan.semester')}><div class="drow">
       <TextInput label={t('plan.sem_start')} type="date" value={d.semStart || ''} onInput={v => put({ ...d, semStart: v })} />

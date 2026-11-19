@@ -220,7 +220,30 @@
  "focus.s_quiet": "Hide the counts in the sidebar while a session runs",
  "focus.s_short": "Shortest papers first in a session",
  "focus.wb": "Welcome back",
- "focus.wb_away": {"one": "You were away for {n} minute, and the clock kept going.", "other": "You were away for {n} minutes, and the clock kept going."},
+ "focus.wb_away": {
+  "one": "You were away for {n} minute, and the clock kept going.",
+  "other": "You were away for {n} minutes, and the clock kept going."
+ },
  "focus.wb_keep": "Keep going",
- "focus.wb_again": "Start the clock again"
+ "focus.wb_again": "Start the clock again",
+ "focus.wk_title": "A look back at the week",
+ "focus.wk_gdays": {
+  "one": "{n} day of an hour or more",
+  "other": "{n} days of an hour or more"
+ },
+ "focus.wk_lessons": {
+  "one": "{n} lesson",
+  "other": "{n} lessons"
+ },
+ "focus.wk_back": "Handed back",
+ "focus.wk_sets": {
+  "one": "{n} set",
+  "other": "{n} sets"
+ },
+ "focus.wk_wait": "Still waiting",
+ "focus.wk_about": "about {time}",
+ "focus.wk_next": "Due next week",
+ "focus.wk_hide": "Put it away for this week",
+ "focus.wk_day": "Change the day",
+ "focus.wk_work": "Student work"
 }

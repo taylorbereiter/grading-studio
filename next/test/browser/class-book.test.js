@@ -217,6 +217,40 @@ test('Add a class: a name and a pasted roster make a class the current app opens
   await ctx.close();
 });
 
+test('the class link: added from the class header named for her system, opened, changed and taken away, kept where the current app reads it', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  await p.evaluate(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); l.me = { ...(l.me || {}), sys: 'Canvas' }; localStorage.setItem('gs.lib', JSON.stringify(l)); });
+  const c0 = (await libOf(p)).classes[0];
+  await p.goto(srv.url + 'next/#/class/' + c0.id);
+  await p.waitForSelector('[data-clink-add]', { timeout: 60000 });
+  assert.ok((await p.$eval('[data-clink-add]', e => e.textContent)).includes('Canvas'), 'named for her system');
+  await p.click('[data-clink-add]'); await p.waitForSelector('dialog[open] [data-clink-url]');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('[data-clink-url]'));
+  await p.keyboard.type('not a link'); await p.keyboard.press('Enter');
+  await new Promise(r => setTimeout(r, 300)); assert.ok(await p.$('dialog[open] [data-clink-url]'), 'a bad link is not kept');
+  await p.$eval('[data-clink-url]', e => { e.value = ''; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.type('[data-clink-url]', 'school.example.com/courses/9'); await p.click('[data-clink-save]');
+  await p.waitForSelector('[data-clink-go]', { timeout: 10000 });
+  assert.equal(await p.$eval('[data-clink-go]', e => e.getAttribute('href')), 'https://school.example.com/courses/9');
+  const c1 = (await libOf(p)).classes[0], m = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.mblinks')));
+  assert.equal(c1.mb, 'https://school.example.com/courses/9'); assert.equal(Object.values(m)[0], 'https://school.example.com/courses/9');
+  const old = await page(ctx, errors);
+  await old.goto(srv.url + '#/c/' + c0.id); await appReady(old);
+  assert.equal(await old.evaluate(() => window.__gs.state().lib.classes[0].mb), 'https://school.example.com/courses/9');
+  await old.close();
+  // taken away
+  await p.click('[data-clink-edit]'); await p.waitForSelector('dialog[open] [data-clink-url]');
+  await p.$eval('[data-clink-url]', e => { e.value = ''; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.click('[data-clink-save]');
+  await p.waitForSelector('[data-clink-add]', { timeout: 10000 });
+  assert.equal((await libOf(p)).classes[0].mb, undefined);
+  assert.deepEqual(await p.evaluate(() => JSON.parse(localStorage.getItem('gs.mblinks'))), {});
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
 // The keyboard run (brief: "a keyboard run through the gradebook"): scores typed, moved through, marked missing, cleared, taken back
 // with Escape and pasted from a spreadsheet, all from the keys; the column box, Term setup, Add scores and extra credit; then the
 // current app opens the same scores and works out the same term grades the new app draws.

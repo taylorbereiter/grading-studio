@@ -125,3 +125,6 @@ section.now .empty{padding-bottom:22px}
 
 /* her app text size (Settings > Display, gs.disp ui): the sidebar, pages, tabs and boxes; the paper being marked keeps its own zoom */
 .side,.page,.tabbar,dialog.dlg{zoom:var(--uz,1)}
+.fask{display:flex;gap:14px;align-items:flex-start;margin:0 0 24px}
+.fask h2{margin:0 0 4px;font-size:var(--t4)}
+.fask p{margin:0 0 12px;color:var(--mute);max-width:70ch}

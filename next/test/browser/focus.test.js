@@ -10,7 +10,7 @@ const { launch } = require('../../../test/helpers/chrome.js');
 const { plant, appReady, openZip } = require('../../../test/helpers/app.js');
 const { zipOf, makePaper } = require('../../../test/helpers/fixtures.js');
 const { gradingSeed, PLAN_SETUP, STEADY } = require('../../../test/helpers/steady.js');
-const { plantPlan } = require('./planseed.js');
+const { plantPlan, LESSONS } = require('./planseed.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
 const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp', png: 'image/png', webmanifest: 'application/manifest+json' };
@@ -186,6 +186,36 @@ test('shortest first: while a session runs on these papers with shortest first o
   await p.keyboard.press('n');
   assert.ok(short > 1, 'the shortest paper is not the next one along');
   await p.waitForFunction(i => window.__mark.state().cur === i, { timeout: 10000 }, short);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('Home: the folder question with Not now for a week; the look back at the week from her chosen day, put away for this week where the current app reads it; and the lesson she worked on last to pick up', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, gradingSeed());
+  await p.evaluate(() => {
+    const l = JSON.parse(localStorage.getItem('gs.lib')); l.me = { ...(l.me || {}), focus: { wk: 1 } }; localStorage.setItem('gs.lib', JSON.stringify(l));
+    localStorage.setItem('gs.focus', JSON.stringify({ day: '2026-10-27', base: {}, days: { '2026-10-26': { s: 1200, g: 3600, a: { i5: 3600 }, pa: { i5: 4 }, p: 4 } }, pace: [], last: '', add: [] }));
+  });
+  await plantPlan(p, { lessons: LESSONS.map(l => (l.id === 'L3' ? { ...l, updated: Date.parse('2026-10-27T09:00:00Z') } : l)) });
+  await p.goto(srv.url + 'next/#/home');
+  await p.waitForSelector('[data-home="week"]', { timeout: 30000 });
+  assert.equal(await p.$eval('[data-wk-g]', e => +e.dataset.wkG), 3600, 'an hour of grading since Monday');
+  assert.equal(await p.$eval('[data-wk-p]', e => +e.dataset.wkP), 4, 'four papers marked');
+  const pick = await p.$eval('[data-home="needs"] [data-kind="pick"]', e => e.textContent);
+  assert.ok(pick.includes('Pick up where you left off') && pick.includes('Sonnets: the turn'), pick);
+  // no folder yet: Home asks first, and Not now puts it away for a week in this browser (src/safe.js)
+  await p.waitForSelector('[data-home="folder"] [data-fask-later]');
+  await p.click('[data-fask-later]');
+  await p.waitForFunction(() => !document.querySelector('[data-home="folder"]') && +localStorage.getItem('gsc.folderLater') > 0, { timeout: 10000, polling: 100 });
+  await p.click('[data-wk-hide]');
+  await p.waitForFunction(() => !document.querySelector('[data-home="week"]') && (JSON.parse(localStorage.getItem('gs.focus')) || {}).lbHid === '2026-10-26', { timeout: 10000, polling: 100 });
+  const c = await page(ctx, errors);
+  await c.goto(srv.url); await appReady(c);
+  assert.equal(await c.evaluate(() => window.__gs.gpLookHtml()), '', 'the current app has it put away too');
+  await c.close();
+  await p.reload(); await p.waitForSelector('[data-home="needs"]', { timeout: 30000 });
+  await new Promise(r => setTimeout(r, 800)); assert.equal(await p.$('[data-home="week"]'), null, 'still away after a reload');
   assert.deepEqual(errors, []);
   await ctx.close();
 });

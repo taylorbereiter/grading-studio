@@ -1196,5 +1196,14 @@
  "class.lk_unlinked": "Unlinked “{name}”",
  "class.lk_also": "Also in {names}",
  "class.lk_also_do": "Make these changes in the copies too: {names}",
- "class.ex_every_row": "Every rubric row"
+ "class.ex_every_row": "Every rubric row",
+ "class.cl_page": "Class page",
+ "class.cl_add": "Add the {what} link…",
+ "class.cl_change": "Change the {what} link",
+ "class.cl_ask_sys": "The {sys} page for {name}",
+ "class.cl_ask": "The class page for {name}",
+ "class.cl_label": "Web address",
+ "class.cl_hint": "Leave it empty to take the link away.",
+ "class.cl_bad": "That doesn’t look like a web link",
+ "class.u_link": "Class link"
 }

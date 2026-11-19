@@ -3,15 +3,19 @@
 // saved-work proof holds the two to the same counts.
 import { h, Fragment } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { Button, Card, ClassDot, Icon, EmptyState, Progress } from '../../ui/index.js';
+import { toast, Button, Card, ClassDot, Icon, EmptyState, Progress } from '../../ui/index.js';
 import { t, date, num } from '../../i18n/t.js';
 import { href } from '../router.js';
 import { countsForHome, focusForHome } from '../../crossings.js';
-import { openFocus, onFocus } from '../focus/bus.js';
+import { openFocus, onFocus, runner } from '../focus/bus.js';
 import { usePlan } from '../plan.js';
 import { toneOf, classTone } from '../colors.js';
 import { Slide } from '../plan/slide.jsx';
 import { usePart } from '../parts.js';
+import '../plan/lines.js';
+import '../saving/lines.js';
+import { useSaving } from '../../services/saving.js';
+import { sampleOn } from '../sample.js';
 
 const hm = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : null; };
 const clock = s => { const m = /^(\d{1,2}):(\d\d)$/.exec(s || ''); return m ? date(new Date(2000, 0, 1, +m[1], +m[2]), { hour: 'numeric', minute: '2-digit' }) : ''; };
@@ -67,6 +71,35 @@ function HomeFocus() {
       <circle cx="9" cy="9" r="7" fill="none" stroke-width="3" class="on" stroke-dasharray={c.toFixed(2)} stroke-dashoffset={(c * (1 - f)).toFixed(2)} transform="rotate(-90 9 9)" stroke-linecap="round" /></svg> : <Icon name="timer" />}
     <span>{v && v.run ? <span class="num" data-raw>{clock(v.run.secs)}</span> : t('nav.focus')}</span>{g && !(v && v.run) ? <span class="mute num" data-raw>{g.n}/{g.of}</span> : null}</button>;
 }
+// The look back at the week (src/gradeplan.js gpLookHtml), from the timer's runner, which is on its way in anyway.
+function WeekLook() {
+  const [m, set] = useState(null);
+  useEffect(() => { let live = true; runner().then(x => live && set(x), e => console.error(e)); return () => { live = false; }; }, []);
+  return m ? <m.WeekCard /> : null;
+}
+// First thing on Home while no folder or Drive keeps a second copy (src/safe.js safeAskRender): choose a folder, or where a browser
+// can't, make a take-home file. "Not now" puts it away for a week, in this browser only (gsc.folderLater).
+const WEEK = 7 * 864e5;
+function FolderAsk({ work }) {
+  const S = useSaving(), [, bump] = useState(0), f = S && S.folder ? S.folder() : null, g = S ? S.google() : {};
+  let later = 0; try { later = +localStorage.getItem('gsc.folderLater') || 0; } catch { }
+  if (!f || sampleOn() || matchMedia('(max-width:640px)').matches || f.state !== 'none' || !f.booted || g.email || Date.now() - later < WEEK || !(f.canPick || work)) return null;
+  const pick = async () => { try { const st = await S.folderPick(); if (st === 'ok' || st === 'decide') toast(t('saving.f_done', { name: S.folder().name })); } catch (e) { if (!e || e.name !== 'AbortError') { console.error(e); toast(t('saving.f_bad')); } } bump(n => n + 1); };
+  const away = () => { try { localStorage.setItem('gsc.folderLater', String(Date.now())); } catch { } toast(t('saving.ask_later_done')); bump(n => n + 1); };
+  return <section class="card pad fask" data-home="folder"><Icon name="cloud" /><div>
+    <h2>{t(f.canPick ? 'saving.ask_h' : 'saving.ask_none_h')}</h2><p>{t(f.canPick ? 'saving.ask_text' : 'saving.w_none_nopick')}</p>
+    <div class="row gap">{f.canPick ? <Button variant="primary" onClick={pick} data-fask-pick>{t('saving.f_choose')}</Button> : <a class="btn pri" href={href('settings', 'saving')}>{t('saving.ask_take')}</a>}
+      <Button variant="quiet" onClick={away} data-fask-later>{t('saving.ask_later')}</Button></div></div></section>;
+}
+// The lesson she worked on last, within three days (src/planner/plannext.js planRecent), with its next class.
+function pickUp(plan, now) {
+  const l = ((plan && plan.lessons) || []).filter(x => x && !x.library && now - (x.updated || 0) < 3 * 864e5).sort((a, b) => b.updated - a.updated)[0];
+  if (!l) return null;
+  const d = new Date(now), today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  const slot = (l.slots || []).filter(s => s.date >= today).sort((a, b) => (a.date < b.date ? -1 : 1))[0];
+  const c = slot && ((plan.setup && plan.setup.classes) || []).find(x => x.id === slot.classId);
+  return { l, sub: slot ? [c ? raw(c.name) : null, slot.date === today ? t('plan.today') : dayOf(slot.date)] : [t('plan.off_timetable')] };
+}
 function Line({ icon, title, sub, href: to, kind }) {
   return <li class="hl" data-kind={kind}><span class="hi"><Icon name={icon} /></span><span class="tx"><b>{title}</b>{sub && sub.length > 0 && <small>{sub}</small>}</span>{to && <a class="go" href={to} aria-label={title}><Icon name="chr" /></a>}</li>;
 }
@@ -76,13 +109,16 @@ export default function Home({ classes }) {
   if (!v) return <div class="page"><header class="ph"><h1>{greeting(d)}</h1></header><div class="loading" aria-busy="true" /></div>;
   if (v.error) return <div class="page"><header class="ph"><h1>{greeting(d)}</h1></header><EmptyState icon="warn" title={t('home.read_failed')} /></div>;
   const c = v.counts, say = [c.classesToday ? t('home.say_classes', { n: c.classesToday }) : '', c.mark ? t('home.say_mark', { n: c.mark }) : '', c.back ? t('home.say_back', { n: c.back }) : '', c.toPlan ? t('home.say_plan', { n: c.toPlan }) : '', c.missing ? t('home.say_missing', { n: v.missing.reduce((a, x) => a + x.n, 0) }) : ''].filter(Boolean).join(' ');
+  const pk = pickUp(plan, now);
   const left = new Map((classes || []).map((x, i) => [x.loose ? '' : x.name, { ...x, i }]));
   return <div class="page home">
     <header class="ph hello"><div><h1>{greeting(d)}</h1><p data-raw>{date(d, { weekday: 'long', day: 'numeric', month: 'long' })}</p></div>
       <div class="row gap"><HomeFocus /><a class="btn" href={href('calendar')}><Icon name="week" />{t('home.this_week')}</a></div></header>
     <p class="say" data-home="say" data-mark={c.mark} data-back={c.back} data-today={c.classesToday} data-plan={c.toPlan} data-missing={c.missing}>{say || t('home.say_none')}</p>
+    <FolderAsk work={v.mark.length + v.back.length > 0} />
     {Sv && <Sv.PhoneSign />}
     <NowCard teach={v.teach} now={now} plan={plan} />
+    <WeekLook />
     <div class="homegrid">
       <section aria-labelledby="h-classes"><div class="hrow"><h2 id="h-classes">{t('nav.classes')}</h2></div>
         {classes && classes.length ? <div class="card ctable" role="table" aria-labelledby="h-classes">
@@ -95,12 +131,13 @@ export default function Home({ classes }) {
       </section>
       <section aria-labelledby="h-needs"><div class="hrow"><h2 id="h-needs">{t('home.needs_you')}</h2><a class="link" href={href('todo')}>{t('home.all_todos')}</a></div>
         <ul class="card hlist" data-home="needs">
+          {pk && <Line kind="pick" icon="slides" title={t('plan.pick_up')} sub={dot([raw(pk.l.title) || t('home.untitled_lesson'), ...pk.sub])} href={href('lesson', pk.l.id)} />}
           {v.mark.map(m => <Line kind="mark" icon="pen" title={t(m.fm ? 'home.feedback_on' : m.done ? 'home.finish_marking' : 'home.mark', { name: m.name || t('home.student_work') })}
             sub={dot([raw(m.cls), m.fm ? t('home.feedback_only') : t('home.left_of', { left: m.left, of: m.of })])} href={m.open ? href('mark', m.id) : null} />)}
           {v.back.map(m => <Line kind="back" icon="upload" title={t('home.hand_back', { name: m.name || t('home.student_work') })} sub={dot([raw(m.cls), t('home.all_scored', { n: m.of })])} href={m.open ? href('mark', m.id, 'return') : null} />)}
           {v.toPlan.map(p => <Line kind="plan" icon="slides" title={p.in === 0 ? t('home.plan_today', { cls: p.className }) : p.in === 1 ? t('home.plan_tomorrow', { cls: p.className }) : t('home.plan_lesson', { cls: p.className, day: dayOf(p.day) })} sub={dot([raw(clock(p.start)), raw(p.lesson) || t('home.nothing_planned')])} href={href('class', p.classId)} />)}
           {(v.missing || []).map(m => <Line kind="miss" icon="warn" title={t('home.remind', { n: m.n })} sub={raw(m.name)} href={href('class', m.classId, 'todo')} />)}
-          {!v.mark.length && !v.back.length && !v.toPlan.length && !(v.missing || []).length && <li class="hl none"><span class="mute">{t('home.all_clear')}</span></li>}
+          {!pk && !v.mark.length && !v.back.length && !v.toPlan.length && !(v.missing || []).length && <li class="hl none"><span class="mute">{t('home.all_clear')}</span></li>}
         </ul>
       </section>
     </div>

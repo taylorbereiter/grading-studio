@@ -8,7 +8,8 @@ import { useStore } from '../engines/gstore.js';
 import { prefs } from './prefs.js';
 import { library, meta, gradingSetup } from './index.js';
 import { libraryChange } from './undo.js';
-import { setupRecord, mailApp, googleEmail } from '../planning/index.js';
+import { setupRecord, mailApp, googleEmail, manageBacLinks } from '../planning/index.js';
+import { savePref } from '../planning/write.js';
 
 // The library as the current app holds it once loaded (src/app/library.js migrateLib): every class with units and a roster.
 export function fullLibrary() {
@@ -73,3 +74,15 @@ export function mailWay() {
 }
 export const classIn = (l, id) => l.classes.find(c => String(c.id) === String(id)) || null;
 export { B as engine };
+// A class's link to its page in the school's system (src/app/screens.js mbOf, askMb): kept on the class (c.mb) and, by the class's
+// name, in gs.mblinks, which the Planner reads too. Read: the class's own, else the one remembered for its name.
+const MB_NORM = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+export const linkUrl = v => { v = String(v || '').trim(); if (/^[\w.-]+\.[a-z]{2,}\//i.test(v)) v = 'https://' + v; return /^https?:\/\/[^\s"<>]+$/i.test(v) ? v : ''; };
+export function classLink(c) { if (!c) return ''; const m = manageBacLinks.json(null) || {}; return linkUrl(c.mb) || linkUrl(m[MB_NORM(c.name)]) || ''; }
+export async function setClassLink(label, id, url) {
+  let name = '';
+  await change(label, l => { const k = classIn(l, id); if (!k) return; name = k.name; if (url) k.mb = url; else delete k.mb; }, true);
+  const m = { ...(manageBacLinks.json(null) || {}) }, k = MB_NORM(name); if (!k) return;
+  if (url) m[k] = url; else delete m[k];
+  savePref('gs.mblinks', m);
+}

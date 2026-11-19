@@ -84,3 +84,22 @@ export async function lessonReady(id, on) {
   await saveLesson(l);
   return was;
 }
+// Home's look back at the week (src/gradeplan.js gpLookHtml): from her chosen day (Settings > Focus and goals, Friday by default)
+// until Sunday, unless she put it away for this week. Time and papers from the tracker, the work handed back since Monday, what is
+// still waiting (with the time it takes at her pace), and what is due next week. Read only; null when it isn't shown.
+export async function weekLook(now = new Date()) {
+  const { lib, keptMeta: kept } = await focusRead();
+  const c = E.fcConf(), L = K.fcLog(), today = K.fcToday(), mon = K.fcMon(today);
+  if (c.wk === false || (now.getDay() + 6) % 7 < (c.wk + 6) % 7 || L.lbHid === mon) return null;
+  const days = []; for (let k = mon; k <= today; k = E.gpAdd(k, 1)) days.push(k);
+  const s = E.tkSum(days, L, E.tkPlan()), pace = E.gpPaces();
+  const back = [...kept.values()].filter(m => m && C.backOf(m) && isoDay(C.backOf(m)) >= mon && !(m.newer && kept.has(m.newer))).map(m => m.name || '');
+  const wait = C.groups(lib, kept).mark.map(m => ({ m, st: C.stateOf(lib, kept, m) })).filter(x => x.st.left).slice(0, 4).map(({ m, st }) => {
+    const w = C.whereOf(lib, kept, m.id), p = w.it ? pace(w.it.id) : 0;
+    return { id: m.id, name: m.name || '', cls: w.cls ? String(w.cls.name || '') : '', left: st.left, secs: p ? st.left * p : 0 };
+  });
+  const next = E.gpSum(E.gpDue(E.gpAdd(mon, 7), E.gpAdd(mon, 13)));
+  return { mon, today, g: s.g, l: s.l, gdays: s.list.filter(d => d.g >= 60).length, lessons: Object.keys(s.la).filter(Boolean).length, papers: s.p, back, wait, next };
+}
+// "Put it away for this week": kept in the timer's log (gs.focus lbHid), as the current app keeps it.
+export function hideWeekLook() { const L = K.fcLog(); L.lbHid = K.fcMon(K.fcToday()); K.fcLogSet(L); }

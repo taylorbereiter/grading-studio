@@ -12,6 +12,8 @@ import * as router from '../router.js';
 import { t } from '../../i18n/t.js';
 import './lines.js';
 import { Panel } from './panel.jsx';
+// Home's look back at the week, drawn by Home once the runner is in (screens/home.jsx)
+export { WeekCard } from './week.jsx';
 
 const ui = { open: false };
 let booted = false, root = null, data = null, ptLast = 0, steps = 0;
