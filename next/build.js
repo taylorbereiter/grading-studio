@@ -72,6 +72,7 @@ const TOOLS_ROOTS = ['pptxToSlides', 'docxOf', 'shareLesson', 'finSig', 'docClea
   'rtHtml', 'rtLineHtml', 'rtRead', 'rtTidy', 'rtRenumber', 'rtCurLines', 'rtLvl', 'rtSetKind', 'rtSetLvl', 'RT_NOCOLOR',
   // notebook and the unit a lesson is in
   'nbClean', 'nbText', 'lessonUnit', 'videoFrom', 'ytId', 'ytStart'];
+const PFOLDER_ROOTS = ['plAi', 'FOLDER_MARK', 'folderReadme', 'unitBase', 'unitForFile', 'bankBase', 'bankForFile', 'slideKey', 'deckClean', 'meetsOn', 'mbUrl', 'ymd', 'parseYmd'];
 const PLANNER_DENY = ['$', 'toast', 'openDlg', 'closeDlg', 'lTx', 'kvGet', 'kvSet', 'kvDel', 'lPut', 'lDelete', 'lOpenDb', 'saveBlob', 'renderLessons', 'renderWeek',
   'renderEditor', 'renderStage', 'renderUnits', 'renderUnit', 'renderSemester', 'renderBank', 'renderLibrary', 'renderActivities', 'openLesson', 'folderWriteSoon',
   'unitWriteSoon', 'bankWriteSoon', 'copyText', 'refreshThumb'];
@@ -111,6 +112,12 @@ function writePlanner() {
   const used = [...decl].filter(n => new RegExp('\\b' + n.replace(/\$/g, '\\$') + '\\b').test(tools));
   const head = '// MADE BY next/build.js FROM src/planner/*.js (next/tools/lift.js). Do not edit: change the source and build again.\n/* eslint-disable */\n';
   const toolsOut = head + "import * as fflate from 'fflate';\nimport { " + used.join(', ') + " } from './planner.js';\n" + tools;
+  // next/src/engines/pfolder.js: the Planner folder's own words and file shapes (src/planner/lessons.js folderReadme, units.js
+  // unitBase, bank.js bankForFile) and what reading a teacher profile there needs, loaded only when a Planner folder is linked.
+  // Only L is shared with the planner engine (the rest is copied in), so the screens that load that engine carry none of this.
+  const pfOut = head + "import { L } from './planner.js';\n" + lift({ roots: PFOLDER_ROOTS, deny: PLANNER_DENY, header: '', given: ['L'] });
+  const pff = path.join(NEXT, 'src/engines/pfolder.js');
+  if (!fs.existsSync(pff) || fs.readFileSync(pff, 'utf8') !== pfOut) fs.writeFileSync(pff, pfOut);
   const exported = new Set(PLANNER_ROOTS), extra = used.filter(n => !exported.has(n));
   const plannerOut = extra.length ? out + 'export { ' + extra.join(', ') + ' };\n' : out;
   const f = path.join(NEXT, 'src/engines/planner.js');
@@ -159,6 +166,8 @@ const GRADING_STATE = {
   gradeMarksChanged: '() => {}', gradeShown: '() => {}', openImported: '() => {}', rescanFile: '() => {}', editText: '() => {}', openNote: '() => {}',
   openStampMenu: '() => {}', placeScore: '() => {}', stopScorePlace: '() => {}', scanNote: '() => {}', refound: '() => {}', endOnce: '() => {}', setTool: '() => {}',
   lightPagesChanged: '() => {}',
+  // the teacher's own assistant by name, for what is made for it (Share with your assistant): handed in by the dialog
+  aiSay: "() => 'your assistant'",
   // group work: the partner new marks and notes are just for (src/groups.js groupJust), one for every module that reads it
   groupJust: 'null',
   scorePlacing: 'null', activeEditor: 'null',
@@ -254,6 +263,8 @@ const GRADING = [
     'linkClean', 'linkOf', 'linkPlayer', 'linkTitle', 'linkHost', 'linkBytes', 'vidRef', 'drvRef', 'keptId', 'linkKey', 'vrotKey', 'vrotOf', 'frameTicks', 'fmtSize',
     'MEDIA_RX', 'VIDEO_RX', 'MIME', 'extOf', 'fmtTime', 'trLines', 'trText', 'trParse', 'trMakeable', 'transcribe', 'asrStop', 'asrStandIn',
     'notesPdf', 'npRows', 'npFileName', 'isNotes', 'notesFileOf', 'NP_TAIL', 'vidBytes', 'sameVideo',
+    // clips: a part of a video to show the class, two times and a label kept in batch.clips (src/video.js clipStrip, clipShow)
+    'clipSecs', 'clipFrame', 'clipSpan', 'clipsOf', 'clipFile',
   ], '', [], ['gcore', 'gdraw']],
   ['gnotes', [
     // typed notes (src/typednotes.js): the page she types on, drawn from the blocks and read back by walking it, the bar, the margin's
@@ -323,6 +334,12 @@ export const tnRngSet = r => { tnRng = r; };
     'anonShuffle', 'coverList', 'coverOk', 'coverMark', 'coverAgain', 'coverName', 'coverFirst', 'coverLine', 'boxKey', 'shareState', 'sameSpot',
     'findNames', 'nameFlag', 'nameFlagged', 'namesLooking', 'wordNoName', 'stillCounting', 'ensureCounts', 'anonCovers',
   ], '', [], ['gcore', 'gdraw', 'gopen', 'greport', 'gexport']],
+  ['gshare', [
+    // Share with your assistant (src/app/claude.js makeSharePackage, parseFeedback; src/marksout.js; src/insight.js SHARE_ASK): the ZIP of
+    // papers as pictures under random codes with names covered, the Marks only file, and reading the reply back by code. The dialog
+    // is the new app's (app/mark/share.jsx); the assistant's name comes from the screen (aiSay, handed in with use)
+    'makeSharePackage', 'parseFeedback', 'codeOf', 'marksFileText', 'makeMarksFile', 'marksOpts', 'marksEmpty', 'SHARE_ASK', 'MARKS_ASK', 'shareDocs',
+  ], '', [], ['gcore', 'gdraw', 'gopen', 'greport', 'gexport', 'gnames']],
   ['gquiz', [
     // Quick mark (src/quiz.js, src/ib.js ibQz*): a paper quiz's boxes, each answer cut from its page, the marks given on the paper
     // and the total stamped; the boxes editor, the cards and their keys are the new app's
@@ -425,7 +442,7 @@ const FC_ON = true;
     // break, papers counted only as they are marked (fcSeen, fcGain, fcCame on each save of work), the session goal, the time tracker's
     // days and sums, time added by hand, and the grading plan's free periods, due work and pace. The drawing is the new app's
     // (app/focus/); the music is engines/glofi.js, loaded when it plays.
-    'FC_LENS', 'FC_BRKS', 'TK_IDLES', 'TK_PES', 'FC_DOWS', 'fcGoalMax', 'fcConf', 'fcConfSet',
+    'FC_LENS', 'FC_BRKS', 'FC_AWAY', 'TK_IDLES', 'TK_PES', 'FC_DOWS', 'fcGoalMax', 'fcConf', 'fcConfSet',
     'fcPapersToday', 'fcSecsToday', 'fcWeekPapers', 'fcWeekMins', 'fcWeekPapersNow', 'fcGoalNow', 'fcGoalDay', 'fcRunSet', 'fcElapsed', 'fcIdle',
     'fcBusy', 'fcLeft', 'fcGot', 'fcN', 'fcClock', 'fcWorks', 'fcWork', 'fcPicked', 'fcSgSuggest', 'fcSgNow', 'fcSgN', 'fcSgMet', 'fcDaysTo', 'fcStart',
     'fcLesStart', 'fcPlanAdd', 'fcLesSecs', 'fcRecord', 'fcExt', 'fcPause', 'fcResume', 'fcMore', 'fcBreak', 'fcStop', 'fcClose', 'fcTick', 'fcTickOn', 'fcDrain', 'fcUp',
@@ -484,10 +501,20 @@ const schChange = f => H.school(f), stpPlanPut = s => H.planPut(s), stpAfter = (
 // only words in the lifted text ("a few pages", a local cur), never the marking screen's
 const cur = 0, pages = [];
 `, ['lib', 'bank', 'ptsInk', 'listPts', 'people', 'roles', 'setup', 'store', 'schPeople', 'schNow', 'go', 'saveLib', 'cur', 'pages', 'H', 'schChange', 'stpPlanPut', 'stpAfter', 'toast', 'bankJob', 'bankRead', 'batch', 'fcCardRender', 'fcRender', 'listDraw', 'renderPage', 'once'], []],
+  ['gyear', [
+    // a new school year (src/newyear.js): the year's names and its file's name, what is about a student, and the next year's library
+    // (the same classes, units and cards, with no student in them unless the class lists are kept). The box and the steps are whole/'s.
+    'nyLib', 'nyNames', 'nyAbout', 'nyStrip', 'nyDay', 'nyLabel', 'nyNext', 'nyGuess', 'nyFileName', 'NY_YEAR_ONLY',
+  ], `// The library the year's name is guessed from, handed in by whole/newyear.js (yearUse).
+let lib = { classes: [], loose: { id: '', units: [] } };
+export const yearUse = l => { lib = l || lib; };
+`, ['lib', 'setup'], []],
   ['glofi', [
     // lo-fi music while a session runs (src/lofi.js): made in the browser as it plays, nothing fetched
     'LOFI_STYLES', 'lofi', 'lofiCompose', 'lofiPlay', 'lofiPause', 'lofiNext', 'lofiStop', 'lofiVolume', 'lofiStyle', 'lofiAmb', 'lofiRender',
   ], '', [], []],
+  // the QR code of this page's own address for Use on your phone (src/qr.js)
+  ['gqr', ['qrSvg'], '', [], []],
   ['gbki', [
     // a gradebook imported from a spreadsheet (src/bookimport.js): the file read (CSV, TSV, Excel or pasted cells), its rows and
     // columns found, each column matched to an assignment already in the class, a category to a type; the screen is the new app's
@@ -596,7 +623,7 @@ async function build() {
     loader: { '.woff2': 'file', '.json': 'json', '.webp': 'file' }, assetNames: '[name]-[hash]',
     outdir: DIST, bundle: true, splitting: true, format: 'esm', target: ['chrome109', 'safari16'], minify: !process.env.GS_NEXT_DEBUG,
     chunkNames: 'chunk-[hash]', entryNames: '[name]', metafile: true, absWorkingDir: ROOT, legalComments: 'none', logLevel: 'warning',
-    jsxFactory: 'h', jsxFragment: 'Fragment', define: { __GS_LANGS__: JSON.stringify(langList()), __GS_DATA_V__: String(dataVersion()), __GS_GCID__: JSON.stringify(process.env.GCID || require('../site.json').googleClientId || '') },
+    jsxFactory: 'h', jsxFragment: 'Fragment', define: { __GS_LANGS__: JSON.stringify(langList()), __GS_DATA_V__: String(dataVersion()), __GS_APP_VERSION__: JSON.stringify(JSON.parse(fs.readFileSync(path.join(ROOT, 'version.json'), 'utf8')).version), __GS_GCID__: JSON.stringify(process.env.GCID || require('../site.json').googleClientId || '') },
   });
   fs.writeFileSync(path.join(DIST, 'meta.json'), JSON.stringify(r.metafile, null, 1) + '\n');
   // The tokens, as a stylesheet: made from next/src/ui/tokens.js, the one place colours and sizes are written.
@@ -610,8 +637,10 @@ async function build() {
     '<script type="module" src="dist/' + entry + '.js"></script></head><body>' + body + '</body></html>\n';
   // Pages with the parts: the tokens and parts stylesheets, and the teacher's theme put on before anything is drawn (read only).
   const look = '<script>(function(){var L=' + JSON.stringify(tokens.LOOKS) + ',v=null;try{v=JSON.parse(localStorage.getItem("gs.look"))}catch(e){}if(L.indexOf(v)<0){var d=null;try{d=JSON.parse(localStorage.getItem("gs.theme"))}catch(e){}v=d==="dark"?"midnight":' + JSON.stringify(tokens.DEFAULT_LOOK) + '}document.documentElement.dataset.look=v})()</script>\n';
+  // Settings > Display > Phone layout off (gs.phone "0", as the current app keeps it): a phone lays the page out as a computer would.
+  const PHONE_VIEW = '<script>try{if(localStorage.getItem("gs.phone")==="0"&&Math.min(screen.width,screen.height)<600)document.querySelector("meta[name=viewport]").content="width=1100"}catch(e){}</script>\n';
   const partsPage = (title, entry, css, style, body) => '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="icon" href="data:,"><title>' + title + '</title>\n' +
-    '<script>' + sample + '</script>\n' + look +
+    '<script>' + sample + '</script>\n' + look + (entry === 'main' ? PHONE_VIEW : '') +
     '<link rel="stylesheet" href="dist/tokens.css"><link rel="stylesheet" href="dist/parts-css.css">' + css.map(c => '<link rel="stylesheet" href="dist/' + c + '.css">').join('') + (style ? '<style>' + style + '</style>' : '') + '\n' +
     '<script type="module" src="dist/' + entry + '.js"></script></head><body>' + body + '</body></html>\n';
   fs.writeFileSync(path.join(NEXT, 'index.html'), partsPage('Grading Studio (new)', 'main', ['shell-css', 'plan-css', 'mark-css', 'class-css', 'todo-css', 'focus-css', 'pages-css'], '.wrap{max-width:640px;margin:0 auto;padding:48px 16px}h1{font-size:var(--t5);margin:0 0 12px}.wrap p{color:var(--mute)}.state{color:var(--ink);border-top:1px solid var(--line);padding-top:12px}', '<div id="app"></div>'));

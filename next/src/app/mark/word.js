@@ -12,6 +12,7 @@ import { PARTS } from '../router.js';
 import { keepBank } from './editors.js';
 import './lines.js';
 import './setup-lines.js';
+import { micFor } from './dictate.js';
 
 const el = (tag, cls, attrs = {}) => { const e = document.createElement(tag); if (cls) e.className = cls; for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
 const button = (cls, attrs, text) => { const b = el('button', cls, { type: 'button', ...attrs }); if (text != null) b.textContent = text; return b; };
@@ -177,7 +178,7 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
     const ta = el('textarea', '', { placeholder: t('mark.comment_ph'), 'aria-label': t('mark.comment'), 'data-raw': '' }); ta.value = text || '';
     const bankL = el('div', 'lbl'); bankL.textContent = t('mark.saved_comments');
     const chips = el('div', 'chips'), foot = el('div', 'row');
-    foot.append(button('btn', { 'data-a': 'star', title: t('mark.save_reuse_tip') }, t('mark.save_reuse')), el('span', 'sp'));
+    foot.append(button('btn', { 'data-a': 'star', title: t('mark.save_reuse_tip') }, t('mark.save_reuse')), micFor(ta), el('span', 'sp'));
     if (!isNew) foot.append(button('btn', { 'data-a': 'del' }, t('mark.delete')));
     foot.append(button('btn primary', { 'data-a': 'ok' }, t('mark.done')));
     const bank = () => state().bank || [];

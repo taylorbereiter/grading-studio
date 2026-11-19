@@ -582,6 +582,7 @@ dialog.dlg:has(.excov){width:min(900px,calc(100vw - 32px));margin-top:5vh}
 dialog.dlg:has([data-wl-ask]){width:min(760px,calc(100vw - 32px));margin-top:6vh}
 /* linked classes (linked.jsx) */
 .lkhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.lkoffer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--r2);background:var(--g100)}.lkoffer p{margin:0;flex:1 1 320px}
 .lkchip{display:inline-flex;align-items:center;gap:6px;font-size:var(--t2);color:var(--ink2)}
 .lkchip a{color:var(--acc-ink)}
 .lktw{display:inline-flex;align-items:center;gap:4px;margin-left:8px;font-size:var(--t1)}

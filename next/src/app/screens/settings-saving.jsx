@@ -9,19 +9,32 @@ import { useSaving } from '../../services/saving.js';
 import { sampleOn } from '../sample.js';
 import { finish, over } from '../../shared/tabs.js';
 import { Conflicts } from '../saving/conflicts.jsx';
+import { CarryCard, YearCard } from '../saving/carry.jsx';
 import './prefs-lines.js';
 import '../saving/lines.js';
 
 const STATE = { synced: 'prefs.sv_st_synced', syncing: 'prefs.sv_st_syncing', saving: 'prefs.sv_st_saving', not: 'prefs.sv_st_not', signin: 'prefs.sv_st_signin', away: 'prefs.sv_st_away', offline: 'prefs.sv_st_offline', papers_sending: 'prefs.sv_st_sending', papers_full: 'prefs.sv_st_full', papers_notsent: 'prefs.sv_st_notsent' };
+const narrow = () => typeof matchMedia === 'function' && matchMedia('(max-width: 640px)').matches;
+// Use on your phone (src/phone.js phoneHowTo): a QR code of this page's own address, the steps to put it on a phone's Home Screen and
+// sign in with the same account. The code is drawn here from the address (engines/gqr.js), so nothing is sent anywhere to make it.
+function PhoneHow({ onClose }) {
+  const url = location.origin + location.pathname.replace(/index\.html$/, ''), [qr, setQr] = useState('');
+  useEffect(() => { import('../../engines/gqr.js').then(m => setQr(m.qrSvg(url, t('prefs.ph_qr'))), () => {}); }, []);
+  return <Dialog open title={t('prefs.ph_use')} onClose={onClose} actions={<Button variant="primary" onClick={onClose}>{t('common.close')}</Button>}>
+    <div class="phhow" data-phhow>{qr && <div class="phqr" dangerouslySetInnerHTML={{ __html: qr }} />}<p class="phurl" data-raw>{url}</p>
+      <ol>{['prefs.ph_s1', 'prefs.ph_s2', 'prefs.ph_s3', 'prefs.ph_s4'].map(k => <li>{t(k)}</li>)}</ol>
+      <p class="mute">{t('prefs.ph_unverified')}</p><p class="mute">{t('prefs.ph_then')}</p></div>
+  </Dialog>;
+}
 const FAIL = { closed: 'prefs.sv_closed', offline: 'prefs.sv_offline', setup: 'prefs.sv_none' };
 export function GoogleCard() {
-  const S = useSaving(), [busy, setBusy] = useState(false);
+  const S = useSaving(), [busy, setBusy] = useState(false), [how, setHow] = useState(false);
   if (!S) return null;
   const g = S.google();
   const go = async f => { setBusy(true); try { await f(); } catch (e) { console.error(e); toast(t(FAIL[e && e.why] || 'prefs.sv_failed')); } finally { setBusy(false); } };
   const inn = () => go(async () => { const r = await S.signIn(); if (r === 'sample') toast(t('prefs.sv_sample')); else if (r && r !== 'setup') toast(t('prefs.sv_signed_toast', { email: r })); });
   const state = g.state ? t(STATE[g.state] || 'prefs.sv_st_synced') : g.at ? t('prefs.sv_st_synced') : '';
-  return <Card title={t('prefs.sv_google_h')} data-svgoogle>
+  return <Card title={t('prefs.sv_google_h')} data-svgoogle>{how && <PhoneHow onClose={() => setHow(false)} />}
     <p class="mute">{t('prefs.sv_google_about')}</p>
     {!g.can ? <p class="hint" data-svnog>{t('prefs.sv_none')}</p> : !g.email
       ? <Button variant="primary" disabled={busy} onClick={inn} data-svin>{t('prefs.sv_sign_in')}</Button>
@@ -32,11 +45,21 @@ export function GoogleCard() {
           {g.paused ? <Button variant="primary" disabled={busy} onClick={inn} data-svagain>{t('prefs.sv_again')}</Button>
             : <Button disabled={busy || g.state === 'syncing'} onClick={() => go(() => S.syncNow())} data-svsync>{t('prefs.sv_sync_now')}</Button>}
           <Button variant="quiet" disabled={busy} onClick={() => { S.signOut(); toast(t('prefs.sv_out_toast')); }} data-svout>{t('prefs.sv_sign_out')}</Button>
+          {!narrow() && <Button icon="phone" onClick={() => setHow(true)} data-gphone>{t('prefs.ph_use')}</Button>}
         </div>
         {!g.redirect && <><span data-svauto><Checkbox label={t('prefs.sv_auto')} checked={g.auto} onChange={v => { S.setAuto(v); if (v && g.paused) S.syncNow(); }} /></span>
           <p class="hint">{t('prefs.sv_auto_about')}</p></>}
       </>}
   </Card>;
+}
+// Home on a phone that isn't signed in, or that Google wants again (src/phone.js phSignRender): the one thing that brings her work here.
+export function PhoneSign() {
+  const S = useSaving(), [busy, setBusy] = useState(false);
+  const g = S ? S.google() : {};
+  if (!S || !g.can || (g.email && !g.paused)) return null;
+  const inn = async () => { setBusy(true); try { await S.signIn(); } catch (e) { console.error(e); toast(t(FAIL[e && e.why] || 'prefs.sv_failed')); } finally { setBusy(false); } };
+  return <div class="card pad phsign" data-phsign><b>{t(g.email ? 'prefs.ps_again_h' : 'prefs.ps_bring_h')}</b><p class="mute">{t(g.email ? 'prefs.ps_again' : 'prefs.ps_bring')}</p>
+    <Button variant="primary" disabled={busy} onClick={inn} data-phsignin>{t(g.email ? 'prefs.ps_again_b' : 'prefs.ps_bring_b')}</Button></div>;
 }
 const at = v => date(new Date(v), { dateStyle: 'medium', timeStyle: 'short' });
 // What every place that says where her work is says (src/folder.js whereSay). Until a folder or Drive holds a second copy, it says
@@ -120,5 +143,5 @@ export function SafetyCard() {
   </Card>;
 }
 export function SavingSettings() {
-  return <><FolderCard /><GoogleCard /><HistoryCard /><SafetyCard /></>;
+  return <><FolderCard /><GoogleCard /><CarryCard /><YearCard /><HistoryCard /><SafetyCard /></>;
 }

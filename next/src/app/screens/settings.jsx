@@ -6,7 +6,7 @@ import { t } from '../../i18n/t.js';
 import { href, PARTS } from '../router.js';
 import { currentLook, saveLook, onLook } from '../../services/theme.js';
 import { useState, useEffect } from 'preact/hooks';
-import { LANGUAGES, IN_NEXT, savedLanguage, saveLanguage } from '../language.js';
+import { LANGUAGES, savedLanguage, saveLanguage } from '../language.js';
 import { sampleOn, enterSample, leaveSample } from '../sample.js';
 import { useUpdate } from '../update.js';
 import { TimetableSettings } from './settings-plan.jsx';
@@ -50,7 +50,6 @@ function Display() {
     <Card title={t('look.title')}><p class="mute">{t('settings.theme_about')}</p><ThemePicker value={look} onPick={pick} /></Card>
     <Card>
       <Select label={t('settings.language')} options={LANGUAGES.map(([v, label]) => ({ value: v, label }))} value={lang} onChange={pickLang} data-raw />
-      {!IN_NEXT.includes(lang) && <p class="hint" role="note">{t('settings.language_later')}</p>}
     </Card>
     <Card title={t('sample.title')}><p class="mute">{sampleOn() ? t('sample.text') : t('sample.about')}</p>
       {sampleOn() ? <Button onClick={leaveSample}>{t('sample.leave')}</Button> : <Button onClick={() => { if (!enterSample()) toast(t('sample.cant')); }}>{t('sample.open')}</Button>}</Card>

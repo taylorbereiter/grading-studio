@@ -592,3 +592,69 @@ test('a tablet reaches the marks: the Stamp tool opens the menu where she taps, 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('a tablet (src/touch.js): a finger draws until a pencil is used, then moves the page; two fingers pinch to zoom; a palm does nothing; Settings > Marking keeps the choices where the current app reads them', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(await standardFiles()));
+  await made.evaluate(() => window.__gs.saveNow()); await settle(made);
+  const id = await made.evaluate(() => window.__gs.state().batch.id);
+  await made.close();
+  const p = await page(ctx, errors);
+  await p.setViewport({ width: 1180, height: 820, hasTouch: true });
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForSelector('[data-repx]', { timeout: 15000 }).then(() => p.click('[data-repx]'), () => {});
+  await p.click('[data-tool="pen"]');
+  const cdp = await p.createCDPSession(), pause = ms => new Promise(r => setTimeout(r, ms));
+  const fingers = (type, list) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: list.map(f => ({ x: f.x, y: f.y, id: f.id || 0, radiusX: f.r || 8, radiusY: f.r || 8, force: 0.5 })) });
+  const swipe = async (a, b, o = {}) => { await fingers('touchStart', [{ ...a, r: o.r }]); for (let i = 1; i <= 8; i++) { await fingers('touchMove', [{ x: a.x + (b.x - a.x) * i / 8, y: a.y + (b.y - a.y) * i / 8, r: o.r }]); await pause(12); } await pause(120); await fingers('touchEnd', []); };
+  const scrollY = () => p.$eval('.mk-paper', e => e.scrollTop);
+  const all = () => p.evaluate(() => window.__mark.state().pages.reduce((n, pg) => n + pg.marks().length, 0));
+  const a = await nextAt(p, 0, 150, 500), b = { x: a.x, y: a.y - 200 };
+  const top = await scrollY();
+  await swipe(a, b);
+  assert.equal(await all(), 1, 'a finger alone draws'); assert.equal(await scrollY(), top);
+  // a pencil stroke: from now on a finger moves the page
+  const pen = (type, q, down) => cdp.send('Input.dispatchMouseEvent', { type, x: q.x, y: q.y, button: down ? 'left' : 'none', buttons: down ? 1 : 0, clickCount: type === 'mouseMoved' ? 0 : 1, pointerType: 'pen', force: 0.5 });
+  const s0 = await nextAt(p, 0, 300, 200);
+  await pen('mouseMoved', s0, false); await pen('mousePressed', s0, true); for (let i = 1; i <= 6; i++) await pen('mouseMoved', { x: s0.x + i * 15, y: s0.y }, true); await pen('mouseReleased', { x: s0.x + 90, y: s0.y }, true);
+  await pause(600);
+  assert.equal(await all(), 2);
+  assert.equal(await p.evaluate(() => localStorage.getItem('gs.penSeen')), 'true', 'the pencil is remembered as the current app remembers it');
+  const c = await nextAt(p, 0, 150, 600), t2 = await scrollY();
+  await swipe(c, { x: c.x, y: c.y - 250 });
+  assert.equal(await all(), 2, 'the finger drew nothing'); assert.ok(await scrollY() > t2 + 100, 'and the page moved with it');
+  // a palm right after the pencil, and a touch as wide as a hand, move nothing
+  await pen('mouseMoved', s0, false); await pen('mousePressed', s0, true); await pen('mouseMoved', { x: s0.x + 40, y: s0.y + 4 }, true); await pen('mouseReleased', { x: s0.x + 40, y: s0.y + 4 }, true);
+  const m = await p.evaluate(() => { const r = document.querySelector('.mk-paper').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+  const y4 = await scrollY();
+  await swipe(m, { x: m.x, y: m.y - 150 });
+  assert.equal(await scrollY(), y4, 'a touch straight after the pencil moves nothing');
+  await pause(600);
+  await swipe(m, { x: m.x, y: m.y - 150 }, { r: 45 });
+  assert.equal(await scrollY(), y4, 'a wide touch moves nothing');
+  // two fingers spread apart: larger
+  const zoomed = () => p.evaluate(() => JSON.parse(sessionStorage.getItem('gsn.mark.zoom')) || 1), z0 = await zoomed();
+  await fingers('touchStart', [{ x: m.x - 40, y: m.y, id: 1 }, { x: m.x + 40, y: m.y, id: 2 }]);
+  for (let i = 1; i <= 8; i++) { await fingers('touchMove', [{ x: m.x - 40 - i * 10, y: m.y, id: 1 }, { x: m.x + 40 + i * 10, y: m.y, id: 2 }]); await pause(12); }
+  await fingers('touchEnd', []);
+  await p.waitForFunction(z => (JSON.parse(sessionStorage.getItem('gsn.mark.zoom')) || 1) > z * 1.5, { timeout: 5000 }, z0);
+  assert.equal(await all(), 3, 'only the pencil drew (three lines: the finger before the pencil and two pencil strokes)');
+  // Settings > Marking: the choices, kept under the current app's names
+  await p.evaluate(() => window.__mark.saved()); await p.close();
+  const q = await page(ctx, errors);
+  await q.goto(srv.url + 'next/#/settings/marking');
+  await q.waitForSelector('[data-sttouch] select', { timeout: 30000 });
+  assert.equal(await q.$eval('[data-sttouch] select', e => e.value), 'auto');
+  await q.select('[data-sttouch] select', 'draw');
+  assert.equal(await q.evaluate(() => JSON.parse(localStorage.getItem('gs.touch'))), 'draw');
+  await q.click('[data-stpress] [role="switch"]');
+  assert.equal(await q.evaluate(() => JSON.parse(localStorage.getItem('gs.press'))), false);
+  await q.select('[data-sttouch] select', 'auto');
+  assert.equal(await q.evaluate(() => localStorage.getItem('gs.touch')), null);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

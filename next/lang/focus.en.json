@@ -218,5 +218,9 @@
  "focus.s_wk": "Look back at the week on",
  "focus.s_wk_never": "Never",
  "focus.s_quiet": "Hide the counts in the sidebar while a session runs",
- "focus.s_short": "Shortest papers first in a session"
+ "focus.s_short": "Shortest papers first in a session",
+ "focus.wb": "Welcome back",
+ "focus.wb_away": {"one": "You were away for {n} minute, and the clock kept going.", "other": "You were away for {n} minutes, and the clock kept going."},
+ "focus.wb_keep": "Keep going",
+ "focus.wb_again": "Start the clock again"
 }

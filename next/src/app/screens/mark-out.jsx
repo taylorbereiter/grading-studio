@@ -77,11 +77,13 @@ function paperCell(p) {
 
 /* ---------------- Insights ---------------- */
 const oneDp = v => fmtNum(Math.round(v * 10) / 10);
-export function Insights({ E, onOpen }) {
+export function Insights({ E, onOpen, onShare }) {
   const s = useMemo(() => E.stats(), [E]), ib = E.X.ibSetup(), su = state().setup;
   const [view, setView] = useState('overview'), [CS, setCS] = useState(null);
   useEffect(() => { if (view === 'cons' && !CS) PARTS.cons().then(setCS, e => console.error(e)); }, [view]);
   const views = <Segmented label={t('paper.i_view')} size="sm" value={view} onChange={setView} options={[{ value: 'overview', label: t('paper.i_overview') }, { value: 'cons', label: t('paper.i_cons') }]} />;
+  // Share with your assistant (mark/share.jsx, opened by the marking screen as from its Setup menu)
+  const shareBtn = onShare && <Button size="sm" icon="assist" onClick={onShare} data-insshare>{t('paper.sh_menu')}</Button>;
   if (view === 'cons') return <section class="mk-out mk-ins" aria-labelledby="mk-i-h">
     <header class="oh"><h2 id="mk-i-h" class="t3">{t('paper.i_cons')}</h2>{views}</header>
     {CS ? <CS.Consistency E={E} onOpen={onOpen} /> : <div class="loading" aria-busy="true" />}
@@ -91,7 +93,7 @@ export function Insights({ E, onOpen }) {
   const most = s.bins.length ? Math.max(1, ...s.bins.map(x => x.who.length)) : 1;
   const groups = [['setup.i_not_scored', s.notScored], ['setup.i_partial', s.partial], ['setup.i_missing', s.missing], ['setup.i_excused', s.excused], ['setup.i_off_scale', s.offScale], ['setup.i_own_off', s.ownOff], ['setup.i_left_out', s.leftOut], ['setup.i_late', s.counted.filter(x => x.late)]].filter(g => g[1].length);
   return <section class="mk-out mk-ins" aria-labelledby="mk-i-h">
-    <header class="oh"><h2 id="mk-i-h" class="t3">{t('mark.insights')}</h2>{views}</header>
+    <header class="oh"><h2 id="mk-i-h" class="t3">{t('mark.insights')}</h2>{views}{shareBtn}</header>
     <p class="mute" id="ovLeft">{E.leftOut(s)}</p>
     {s.n > 0 && !ib && <div class="tiles" id="ovTiles">{s.meanPct != null
       ? <>{tile(t('setup.i_average'), E.X.pctAvgText(s.meanPct), oneDp(s.mean) + ' / ' + fmtNum(s.max), true)}{tile(t('setup.i_middle'), s.medPct + '%', of(s.median))}{tile(t('setup.i_lowest'), s.lowPct + '%', of(s.low))}{tile(t('setup.i_highest'), s.highPct + '%', of(s.high))}</>
@@ -241,10 +243,10 @@ export function Return({ E, cur, onOpen }) {
 }
 
 // The tab, read once the papers have been read (a grade written on a paper counts), as the current app reads them first.
-export default function Out({ tab, E, cur, onOpen }) {
+export default function Out({ tab, E, cur, onOpen, onShare }) {
   const [ok, setOk] = useState(false);
   useEffect(() => { let live = true; E.readPapers().then(() => live && setOk(true), e => { console.error(e); if (live) setOk(true); }); return () => { live = false; }; }, [E]);
   if (!ok) return <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />;
-  const P = { E, cur, onOpen };
+  const P = { E, cur, onOpen, onShare };
   return tab === 'grades' ? <Grades {...P} /> : tab === 'insights' ? <Insights {...P} /> : tab === 'return' ? <Return {...P} /> : <EmptyState title="" />;
 }

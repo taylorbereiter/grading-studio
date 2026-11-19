@@ -84,6 +84,21 @@ async function expand(items, docs) {
 const docOf = (it, docs) => { if (!docs.has(it.path)) docs.set(it.path, (async () => pdfjsLib.getDocument({ data: (await viewBytes(it.f)).slice(), isEvalSupported: false }).promise)()); return docs.get(it.path); };
 const pageAt = (st, it, docs, scale, look) => docOf(it, docs).then(js => sharePage(st, it.f, js, it.p, scale, X.coverRx(st), shareOpts(st), { bare: !look.marks, light: true, noScore: !look.score }));
 
+// The whole paper kept as an example with nothing on screen, the way Use as an example keeps it (src/sample.js sampleExample): for the
+// sample builder. o: { marks, score, why, row }.
+export async function examplePaper(st, o = {}) {
+  await workerReady; await classCommon();
+  const docs = new Map(), items = await expand(X.exItems(st), docs), look = { marks: !!o.marks, score: !!o.score };
+  const list = items.map((_, k) => k), sc = X.exScoreTop({ ...look, kind: 'paper', items, st }, list), blobs = [], pages = [];
+  for (const k of list) {
+    const it = items[k], js = await docOf(it, docs), v1 = vpRot(it.f, it.p, await js.getPage(it.p + 1), 1);
+    const c = (await pageAt(st, it, docs, Math.min(4, 1600 / v1.width), look)).c;
+    if (sc && !blobs.length) X.exScoreOn(c, sc);
+    blobs.push(await X.exJpg(c)); pages.push({ w: c.width, h: c.height }); c.width = c.height = 0;
+  }
+  const { batch } = state();
+  await keepExample({ ...base('paper', st), why: o.why || '', row: o.row || null, letter: nextLetter(await exampleRecords(), batch.id, 'paper'), pages, marks: look.marks, score: look.score && !!(X.exScoreText(st) || X.exScoreMarks(st)) }, blobs);
+}
 function UseExample({ st, redo, onClose }) {
   const { setup } = state(), R = redo || null;
   const [items, setItems] = useState(null), [kind, setKind] = useState(R ? R.kind : 'paper'), [marks, setMarks] = useState(R ? !!R.marks : false), [score, setScore] = useState(R ? !!R.score : false);

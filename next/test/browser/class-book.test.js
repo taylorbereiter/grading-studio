@@ -1026,3 +1026,32 @@ test('Linked classes: two classes linked, a card made in each joined, an assignm
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('Linked classes: the Planner puts two classes on one course, the class offers to link them, No thanks is kept, and Link them links both', async () => {
+  const { plantPlan } = require('./planseed.js');
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  const seed = bookSeed(), L = JSON.parse(seed.ls['gs.lib']);
+  const setup = { classes: L.classes.slice(0, 2).map((c, i) => ({ id: 'P' + i, name: c.name, course: 'English', color: '#1F6FB2', meets: [] })) };
+  await p.goto(srv.url + 'blank'); await plant(p, seed); await plantPlan(p, { setup, lessons: [], units: [] });
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-lkoffer]', { timeout: 60000 });
+  const text = await p.$eval('[data-lkoffer]', e => e.textContent);
+  assert.ok(text.includes(L.classes[0].name) && text.includes(L.classes[1].name), text);
+  // No thanks: this class says no, and the offer goes
+  await p.click('[data-lkno]');
+  await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].course === '');
+  await p.waitForFunction(() => !document.querySelector('[data-lkoffer]'));
+  // with that class's no, the other class has no one to link with, as in the current app
+  await p.goto(srv.url + 'next/#/class/c2/work');
+  await p.waitForSelector('[data-lkhead]', { timeout: 60000 });
+  assert.equal(await p.$('[data-lkoffer]'), null);
+  // with the no taken back, Link them gives both the Planner's course
+  await p.evaluate(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); delete l.classes[0].course; localStorage.setItem('gs.lib', JSON.stringify(l)); });
+  await p.reload(); await p.waitForSelector('[data-lkoffer] [data-lkyes]', { timeout: 60000 });
+  await p.click('[data-lkyes]');
+  await p.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); return l.classes[0].course === 'English' && l.classes[1].course === 'English'; });
+  await p.waitForSelector('[data-lkhead] .lkchip');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

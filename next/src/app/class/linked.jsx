@@ -1,15 +1,17 @@
 // Linked classes (src/linked.js): sections of one course on the same schedule. Classes with the same course (c.course) are linked; an
 // assignment can be added to the others, joined to one made twice, or unlinked, and the copies share it.group. Rosters, papers,
 // scores and comments are never shared: each copy is its own card. What goes together is the lifted engine's (gbook lkSibs, lkTwins,
-// lkSuggest, lkJoin1); each change is one undo step through students/undo.js. The Planner's offer to link (lkOfferOf) waits for the
-// Planner's class page (stage 6). Shown on the class's Assignments tab.
+// lkSuggest, lkJoin1); each change is one undo step through students/undo.js. When the Planner's timetable puts this class and
+// another on the same course and neither has said yes or no (no c.course key), the tab offers to link them (lkOfferOf, lkYes,
+// lkNo); nothing is linked without the teacher. Shown on the class's Assignments tab.
 import { h, Fragment } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { Button, Checkbox, Dialog, TextInput, Icon, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { href } from '../router.js';
 import * as B from '../../engines/gbook.js';
 import { libraryChange } from '../../students/undo.js';
+import { planCourses } from '../../students/plan-courses.js';
 import * as undoList from '../../services/undo.js';
 import './lines.js';
 
@@ -25,10 +27,28 @@ export const twinsOf = (lib, id) => { const f = itemOf(on(lib), id); return f ? 
 const names = cs => cs.map(c => c.name).join(', ');
 
 // Under the tab's top: the classes this one is linked with, Change and Link assignments; or a quiet way to link it.
+// The Planner's offer (src/linked.js lkOfferOf): the course the Planner gives this class, and the others on it that haven't said no.
+function offerOf(lib, c, plan) {
+  const pc = x => { const p = plan.find(y => B.lkKey(y.name) === B.lkKey(x.name)); return p ? p.course : ''; };
+  const course = c && c !== lib.loose && c.course == null ? pc(c) : ''; if (!course) return null;
+  const others = lib.classes.filter(x => x !== c && (x.course == null ? B.lkKey(pc(x)) === B.lkKey(course) : B.lkKey(x.course) === B.lkKey(course)));
+  return others.length ? { course, others } : null;
+}
 export function LinkedHead({ lib, classId }) {
-  const [edit, setEdit] = useState(false), [match, setMatch] = useState(false);
+  const [edit, setEdit] = useState(false), [match, setMatch] = useState(false), [plan, setPlan] = useState([]);
+  useEffect(() => { let live = true; planCourses().then(p => { if (live) setPlan(p); }, () => {}); return () => { live = false; }; }, [classId]);
   const c = clsOf(on(lib), classId); if (!c || c === lib.loose) return null;
-  const s = B.lkSibs(c), pairs = s.length ? B.lkSuggest(c) : [];
+  const s = B.lkSibs(c), pairs = s.length ? B.lkSuggest(c) : [], o = s.length ? null : offerOf(lib, c, plan);
+  const yes = async () => {
+    const ids = [c, ...o.others].map(x => String(x.id));
+    const after = await lc('class.lk_step', l => { for (const x of l.classes) if (ids.includes(String(x.id))) x.course = o.course; });
+    if (after) { const k = clsOf(on(J(after)), classId); if (k && B.lkSuggest(k).length) setMatch(true); }
+  };
+  const no = () => lc('class.lk_step', l => { const k = clsOf(l, classId); if (k) k.course = ''; });
+  if (o) return <div class="lkoffer" data-lkoffer><Icon name="link" size="xs" />
+    <p><span>{t('class.lk_offer_a')}</span> {[c, ...o.others].map((x, i) => <>{i > 0 && ', '}<b data-raw>{x.name}</b></>)}. <span>{t('class.lk_offer_b')}</span></p>
+    <Button size="sm" variant="primary" onClick={yes} data-lkyes>{t('class.lk_link_them')}</Button><Button size="sm" variant="quiet" onClick={no} data-lkno>{t('class.lk_no')}</Button>
+    {match && <LinkMatch lib={lib} classId={classId} onClose={() => setMatch(false)} />}</div>;
   return <div class="lkhead" data-lkhead>
     {s.length ? <><span class="lkchip"><Icon name="link" size="xs" /><span>{t('class.lk_with')}</span> {s.map((x, i) => <>{i > 0 && ', '}<a href={href('class', x.id, 'work')} data-raw>{x.name}</a></>)}</span>
       <Button size="sm" variant="quiet" onClick={() => setEdit(true)} data-lkedit>{t('class.lk_change')}</Button>

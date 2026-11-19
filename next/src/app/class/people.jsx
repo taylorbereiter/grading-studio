@@ -5,7 +5,7 @@
 // The address carries the student's place on the roster (#/class/<id>/people/<n>), never a name, as the current app does.
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { Button, IconButton, Icon, EmptyState, Dialog, TextInput, Menu, CopyButton, toast } from '../../ui/index.js';
+import { Button, IconButton, Icon, EmptyState, Dialog, TextInput, Menu, CopyButton, Mic, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { href, go, PARTS } from '../router.js';
 import * as undoList from '../../services/undo.js';
@@ -139,7 +139,7 @@ function Student({ x, n, i, cols, r, onMove, onRemove, onTool }) {
     {Wl && <Wl.WatchStudent c={c} n={n} />}
     {attOn(x.lib) && <AttStudent c={c} n={n} term={x.now ? x.conf.terms.find(k => k.id === x.now) : null} onDay={d => onTool({ k: 'att', d })} />}
     <Details c={c} n={n} />
-    <section class="sp-sec"><div class="sp-h"><h3><label for="stu-note">{t('class.notes')}</label></h3>{note.trim() && <CopyButton text={note} data-note-copy />}</div>
+    <section class="sp-sec"><div class="sp-h"><h3><label for="stu-note">{t('class.notes')}</label></h3><span class="grow" /><Mic onText={w => typeNote((note.trim() ? note.replace(/\s*$/, ' ') : '') + w.trim())} />{note.trim() && <CopyButton text={note} data-note-copy />}</div>
       <textarea id="stu-note" class="input" rows="3" value={note} placeholder={t('class.notes_ph')} onInput={e => typeNote(e.currentTarget.value)} data-stu-note /></section>
   </article>;
 }

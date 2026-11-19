@@ -112,3 +112,26 @@ test('no assistant is named in a part: the name comes from services/assistant.js
   for (const [f, s] of Object.entries(text)) if (f !== 'services/assistant.js' && !f.startsWith('engines/')) assert.ok(!names.test(noComments(s)), f + ' names an assistant');
   for (const [k, v] of Object.entries(EN)) assert.ok(!names.test(JSON.stringify(v)), 'en.json ' + k + ' names an assistant');
 });
+// The eight languages (next/lang/<code>.json, converted from the current app's src/lang-*.js by next/tools/lang-convert.js): only
+// lines the app has, each with the English line's parameters (a plural's "one" may give the number the English spells out). Lines
+// still English are listed for stage 7 by the conversion (english-only.json); a line added since shows in English until then.
+test('each language holds only the app\'s lines, with their parameters', () => {
+  const codes = ['zh-Hant', 'zh-Hans', 'es', 'fr', 'de', 'pt-BR', 'ja', 'ko'];
+  const ps = s => new Set([...String(s).matchAll(/\{(\w+)\}/g)].map(m => m[1]));
+  for (const c of codes) {
+    const L = read(c + '.json');
+    assert.ok(typeof L['@locale'] === 'string' && L['@locale'], c + ' has its locale');
+    for (const [k, v] of Object.entries(L)) {
+      if (k === '@locale') continue;
+      assert.ok(k in EN, c + ' has a line the app lacks: ' + k);
+      const en = EN[k];
+      assert.equal(typeof v, typeof en, c + ' ' + k + ' is a plural in one and not the other');
+      const forms = typeof en === 'object' ? Object.keys(en) : [null];
+      for (const f of forms) {
+        const a = ps(f ? en[f] : en), b = ps(f ? v[f] : v), all = typeof en === 'object' ? new Set(Object.values(en).flatMap(x => [...ps(x)])) : a;
+        for (const p of b) assert.ok(all.has(p), c + ' ' + k + ' has {' + p + '} the English lacks');
+        for (const p of a) assert.ok(b.has(p), c + ' ' + k + ' drops {' + p + '}');
+      }
+    }
+  }
+});

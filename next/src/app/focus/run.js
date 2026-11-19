@@ -35,6 +35,14 @@ export function boot() {
   setInterval(step, STEP * 1000);
   const flush = () => safe(() => { E.tkFlush(); planFlush(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+  // Leaving the tab while the clock runs (src/focus.js): on the way back after a few minutes, the panel says how long, and the session
+  // can go on or start again. A lesson's session takes other tabs too, so nothing is said about being away from it.
+  document.addEventListener('visibilitychange', () => safe(() => {
+    const r = E.fcRun(); if (!r || r.st !== 'run' || r.k === 'l') return;
+    if (document.hidden) { r.hid = Date.now(); E.fcPut(r); return; }
+    if (r.hid && Date.now() - r.hid >= E.FC_AWAY && !r.one) { r.away = Math.round((Date.now() - r.hid) / 60000); r.fold = false; }
+    delete r.hid; E.fcRunSet(r);
+  }));
   window.addEventListener('pagehide', flush); window.addEventListener('blur', flush);
   // Another window (of this app or the current one) started, ended or changed a session, or saved work: read again.
   window.addEventListener('storage', e => { if (!e.key || /^(gsp\.focusRun|gs\.focus|gs\.lib|gsp\.planTime)$/.test(e.key)) later(); });

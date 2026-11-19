@@ -4,7 +4,7 @@
 // no confirm: it goes at once, with Undo. The Timer is a stopwatch for a talk given live, with the length the assignment asks for.
 import { h, Fragment } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Button, Menu, toast, copyButton } from '../../ui/index.js';
+import { Button, Menu, toast, copyButton, Mic } from '../../ui/index.js';
 import { copyText } from '../../services/clipboard.js';
 import { state, use } from '../../engines/gcore.js';
 import * as N from '../../engines/gnotes.js';
@@ -142,7 +142,9 @@ export function TypedNotes({ st }) {
   const box = useRef(null);
   useEffect(() => { N.tnUse({ host: box.current, now: nowOf }); const off = wire(box.current); return () => { off(); N.tnUse({ host: null }); }; }, []);
   useEffect(() => { if (box.current && st) { N.tnDraw(box.current, st); copyIn(box.current); } });
-  return <><div ref={box} class="mk-tn" data-raw /><BankMenu /></>;
+  // dictation, as every long box has: the words go in where the cursor was in the notes (the selection stays there while the mic is pressed)
+  const said = w => { const ed = box.current && box.current.querySelector('.tned'); if (!ed) return; ed.focus(); document.execCommand('insertText', false, ' ' + w.trim()); };
+  return <><div ref={box} class="mk-tn" data-raw /><span class="mk-tnmic"><Mic onText={said} /></span><BankMenu /></>;
 }
 // Saved comments (gs.bank, Settings > Marking) into the notes where the caret was (inventory 312).
 function BankMenu() {

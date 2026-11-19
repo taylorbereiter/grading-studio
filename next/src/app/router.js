@@ -114,10 +114,20 @@ export const PARTS = {
   // the focus timer's runner and panel (app/focus/bus.js loads it)
   focus: () => import('./focus/run.js'),
   bank: () => import('./plan/bank-edit.jsx'),
+  // clips to show the class (mark/clips.jsx)
+  clips: () => import('./mark/clips.jsx'),
+  // the Planner folder: its card in Settings, reading it, and the mark on a lesson that arrived there (plan/pfolder.jsx)
+  pfolder: () => import('./plan/pfolder.jsx'),
   // her saved comments (students/comments.js), for the chips under the comment box
   cbank: () => import('../students/comments.js'),
   // the calculator (mark/calc.jsx)
   calc: () => import('./mark/calc.jsx'),
+  // the welcome a browser nobody has used yet opens on (screens/welcome.jsx); main.js asks for it here
+  welcome: () => import('./screens/welcome.jsx'),
+  // Share with your assistant and Bring back (mark/share.jsx), from Insights and the marking screen's Setup menu
+  share: () => import('./mark/share.jsx'),
+  // the assignments for the command bar (students/find-rows.js), read each time it opens
+  asgRows: () => import('../students/find-rows.js'),
 };
 export const CHUNKS = {
   home: () => import('./screens/home.jsx'),

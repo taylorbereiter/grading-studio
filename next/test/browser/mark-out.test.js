@@ -370,3 +370,66 @@ test('hide names: the switch, Check the covers (a box drawn, used on every paper
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('share with your assistant (src/app/claude.js): from Insights, a ZIP of papers by code with no names, a marks file, and the reply brought back into each comment box; the current app reads the same codes and comment', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const old = await mainSide(ctx, []);
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(old.id) + '/insights');
+  await p.waitForSelector('[data-insshare]', { timeout: 60000 });
+  // Find while an assignment is open: a student by name opens that paper (src/shell.js findRows "Students")
+  const who = await p.evaluate(() => window.__mark.state().batch.students[1].key);
+  await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
+  await p.waitForSelector('dialog.cmd[open]');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('dialog.cmd input'));
+  await p.keyboard.type(who);
+  await p.waitForFunction(s => { const o = document.querySelector('dialog.cmd[open] [role="option"][aria-selected="true"]'); return o && o.textContent.includes(s); }, { timeout: 10000 }, who);
+  await p.keyboard.press('Enter');
+  await p.waitForFunction(() => window.__mark.state().cur === 1 && !/insights/.test(location.hash), { timeout: 30000 });
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(old.id) + '/insights');
+  await p.waitForSelector('[data-insshare]', { timeout: 60000 });
+  await p.click('[data-insshare]');
+  await p.waitForSelector('dialog[open] [data-share] [data-shcount]', { timeout: 60000 });
+  await p.waitForFunction(() => /checked/.test(document.querySelector('[data-shcount]').textContent), { timeout: 60000 });
+  const dl = await catchDownloads(p);
+  const zip = await dl.next(() => p.click('dialog[open] [data-make]'));
+  assert.match(zip.name, /\.zip$/);
+  const z = unzipSync(zip.bytes), files = Object.keys(z);
+  const st = await p.evaluate(() => { const b = window.__mark.state().batch; return { codes: JSON.parse(JSON.stringify(b.share.codes)), keys: b.students.map(s => s.key), first: b.students[0].key }; });
+  for (const f of ['README.txt', 'scores.csv', 'comments.json', 'rubric.json']) assert.ok(files.includes(f), f);
+  const papers = files.filter(f => f.startsWith('papers/'));
+  assert.ok(papers.length >= 1 && papers.every(f => /^papers\/S-[A-Z0-9]{4}(-\d+)?\.pdf$/.test(f)), papers.join(', '));
+  const text = new TextDecoder().decode(z['scores.csv']) + new TextDecoder().decode(z['comments.json']) + new TextDecoder().decode(z['README.txt']);
+  for (const k of st.keys) assert.ok(!text.includes(k), 'no folder name in what goes: ' + k);
+  assert.ok(text.includes(st.codes[st.first]), 'the first student by code');
+  await p.waitForFunction(() => window.__mark.state().batch.share.made > 0);
+  // Marks only: one file, the same codes
+  await p.click('dialog[open] [data-share] .seg [data-v="marks"]');
+  await p.waitForSelector('dialog[open] [data-marksdl]');
+  const md = await dl.next(() => p.click('dialog[open] [data-marksdl]'));
+  const mdText = new TextDecoder().decode(md.bytes);
+  assert.match(md.name, /\.md$/); assert.ok(mdText.includes(st.codes[st.first])); for (const k of st.keys) assert.ok(!mdText.includes(k), k);
+  await dl.close();
+  // Bring back: the reply by code goes below what's in the comment box
+  await p.click('dialog[open] [data-shback]');
+  await p.waitForSelector('dialog[open] [data-bbtext]');
+  await p.focus('[data-bbtext]');
+  await p.keyboard.type(st.codes[st.first] + '\nA strong opening; add one more example.\n\nS-ZZZZ\nNobody here.');
+  await p.waitForFunction(() => /1 of/.test((document.querySelector('[data-bbcount]') || {}).textContent || ''), { timeout: 10000 });
+  assert.match(await p.$eval('[data-bbcount]', e => e.textContent), /1 code doesn't belong/);
+  await p.click('dialog[open] [data-bbapply]');
+  await p.waitForFunction(() => !document.querySelector('dialog[open] [data-bring]'));
+  const comment = await p.evaluate(() => window.__mark.state().batch.students[0].grade.comment);
+  assert.equal(comment, 'Clear ideas; check your commas.\n\nA strong opening; add one more example.');
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), old.id);
+  await m.waitForFunction(() => window.__gs.state().batch, { timeout: 60000 });
+  const was = await m.evaluate(() => { const b = window.__gs.state().batch; return { codes: b.share.codes, comment: b.students[0].grade.comment, made: b.share.made }; });
+  assert.deepEqual(was.codes, st.codes, 'the same codes, so a reply comes back to either app');
+  assert.equal(was.comment, comment); assert.ok(was.made > 0);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

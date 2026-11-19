@@ -195,3 +195,28 @@ test('papers through Drive: the computer sends a download’s papers up after th
   assert.deepEqual(errors, []);
   await c1.close(); await c2.close(); fs.rmSync(dir, { recursive: true, force: true });
 });
+
+test('on a phone: Home asks to sign in with Google until it is, and on a computer Use on your phone shows a code of this page’s address and the steps', async () => {
+  const errors = [], D = fakeDrive(), ctx = await browser.createBrowserContext(), p = await page(ctx, errors, D);
+  await p.goto(srv.url + 'blank'); await plant(p, gradingSeed());
+  await p.setViewport({ width: 390, height: 844 });
+  await p.goto(srv.url + 'next/#/home');
+  await p.waitForSelector('[data-phsign] [data-phsignin]', { timeout: 30000 });
+  await p.click('[data-phsignin]');
+  assert.ok(await until(async () => (await ls(p, 'gs.gEmail')) === 'teacher@example.com'), 'signed in from Home');
+  await p.waitForFunction(() => !document.querySelector('[data-phsign]'));
+  // More has Google and Sync now as Settings has them
+  await p.goto(srv.url + 'next/#/more');
+  await p.waitForSelector('[data-moregoogle] [data-svsync]', { timeout: 30000 });
+  assert.equal(await p.$('[data-moregoogle] [data-gphone]'), null, 'no Use on your phone on the phone itself');
+  // a computer: the code and the steps
+  await p.setViewport({ width: 1440, height: 900 });
+  await p.goto(srv.url + 'next/#/settings/saving');
+  await p.waitForSelector('[data-gphone]', { timeout: 30000 });
+  await p.click('[data-gphone]');
+  await p.waitForSelector('dialog[open] [data-phhow] svg.qr');
+  assert.match(await p.$eval('dialog[open] [data-phhow] .phurl', e => e.textContent), /\/next\/$/);
+  assert.equal(await p.$$eval('dialog[open] [data-phhow] ol li', l => l.length), 4);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

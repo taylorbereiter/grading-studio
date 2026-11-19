@@ -11,14 +11,14 @@
 // Every write first checks: this window holds the lock; the saved work is at the format this build knows (the new app never
 // changes the format); no other window has started replacing everything; and a download that was forgotten stays forgotten.
 // The merge engine is the current app's own (engines/merge.js), loaded on the first write so it is not in the first load.
-import { papers, edits, added, examples, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame, readings, videos, rubricPages, watchCodes, workTimer, setupUndo } from './index.js';
+import { papers, edits, added, examples, work, meta, quick, quickList, newestWork, library, deleted, pickerRolls, gradingSetup, commentBank, rubrics, rubricsGone, carryNo, historySame, readings, videos, rubricPages, watchCodes, workTimer, setupUndo, lastBackup } from './index.js';
 import { words } from '../planning/index.js';
 import { mayWrite } from '../shared/lock.js';
 import { json, text, setText, remove } from '../shared/ls.js';
 import * as tabs from '../shared/tabs.js';
 import { saved } from '../shared/saved.js';
 import { KNOWN } from '../services/assistant.js';
-import { writeMany } from '../shared/idb.js';
+import { writeMany, openExisting } from '../shared/idb.js';
 
 export const DATA_V = __GS_DATA_V__;
 export class CannotSave extends Error { constructor(why, what) { super(what + ': ' + why); this.name = 'CannotSave'; this.why = why; } }
@@ -203,7 +203,7 @@ export async function saveLibrary(change) {
 // The shape the current app reads the library into before it changes it (src/app/library.js migrateLib): each class with its units
 // and roster, the loose cards, and units shared by every class (before 10/29) moved into each class's unit of the same name.
 const uid = () => Math.random().toString(36).slice(2, 10);
-function migrateLib(l) {
+export function migrateLib(l) {
   l.classes ||= []; for (const c of l.classes) { c.units ||= []; c.names ||= []; }
   l.loose ||= { id: '', units: [] };
   for (const u of l.units || []) for (const it of u.items || []) {
@@ -339,4 +339,26 @@ export async function dropDownload(id, from = 'sync') {
   const idx = quickList.json({}) || {}; if (id in idx) { delete idx[id]; quickList.setJson(idx); }
   try { remove('gsc.saved.' + id); } catch {}
   saved({ kind: 'papers', id, side: 'students', from, gone: true });
+}
+
+// A take-home file or a year's file was made: Remove from this computer says how long ago (src/takehome.js store.set gs.lastBackup).
+export function noteBackup() { check('gs.lastBackup'); lastBackup.setJson(Date.now()); saved({ kind: 'setting', id: 'gs.lastBackup', side: 'students', from: 'local' }); }
+// Remove from this computer (src/takehome.js removeHere): every download with its papers, marks, scores and comments, late files,
+// readings, Word edits, examples, kept videos and safety copies, and every gs.* setting but how the app looks. The Planner's work
+// stays. The caller has stopped the other windows first; school files and the focus session go through the Planner's own write.
+const LS_LOOKS = /^gs\.(theme|ink|hl|penW|disp|zoom|panels|rate|arrsize|spsize|sheetall|xall|xedit|rdOpen|calcpos|calchist|gcid|dataV)$/;
+async function clearIf(db, stores) {
+  const d = await openExisting(db); if (!d) return;
+  const has = stores.filter(s => d.objectStoreNames.contains(s)); d.close();
+  if (has.length) await writeMany(db, has, o => { for (const s of has) o[s].clear(); });
+}
+export async function removeAllWork() {
+  check('grading-studio-keep');
+  await clearIf('grading-studio-keep', ['papers', 'work', 'meta', 'edits']);
+  await clearIf('grading-studio-added', ['files']);
+  await clearIf('grading-studio-examples', ['ex', 'pix']);
+  await clearIf('grading-studio-videos', ['v']);
+  await clearIf('grading-studio-safety', ['meta', 'data']);
+  for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.startsWith('gsc.saved.') || k.startsWith('gsc.forgot.') || k === 'gsc.win' || (k.startsWith('gs.') && !LS_LOOKS.test(k)))) remove(k); }
+  saved({ kind: 'library', id: 'gs.lib', side: 'students', from: 'local', gone: true });
 }

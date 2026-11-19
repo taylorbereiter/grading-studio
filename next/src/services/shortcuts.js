@@ -8,6 +8,8 @@ export function register(s) {
   all.set(s.id, { group: 'keys.group_general', ...s, keys: [].concat(s.keys).map(norm) });
   told.forEach(f => f()); return () => { all.delete(s.id); told.forEach(f => f()); };
 }
+// Every shortcut as registered, for the command bar (app/help/find.js lists the ones that can run now).
+export const shortcuts = () => [...all.values()];
 export function onShortcutsChange(f) { told.add(f); return () => told.delete(f); }
 function norm(k) { const p = String(k).toLowerCase().split('+'), key = p.pop(); return [...['mod', 'ctrl', 'alt', 'shift'].filter(m => p.includes(m)), key].join('+'); }
 export function comboOf(e) {

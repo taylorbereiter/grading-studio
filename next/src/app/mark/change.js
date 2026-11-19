@@ -137,6 +137,8 @@ export const undo = () => M && M.undo();
 export const redo = () => M && M.redo();
 // Typed notes (mark/typed.jsx): a student's grade changed by the notes, saved and shown; a setting of the assignment's setup changed as
 // one undo step, after() run each way (the setup kept and the bar drawn again).
+// Clips to show the class (mark/clips.jsx): fn changes batch.clips, as one undo step.
+export function clipsChange(fn) { K.fieldSnap(b(), ['clips'], () => tell(), 'clips'); fn(b()); tell(); }
 export function touched(st) { K.touchGrade(st); tell(); }
 export function setupStep(keys, fn, after) { K.fieldSnap(state().setup, keys, () => { after(); tell(); }, 'setup'); fn(); after(); tell(); }
 

@@ -108,6 +108,7 @@ section.now .empty{padding-bottom:22px}
   .tabbar{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:color-mix(in oklab,var(--s) 85%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
   .tb{display:flex;flex-direction:column;align-items:center;gap:3px;font:inherit;font-size:11px;color:var(--mute);text-decoration:none;background:none;border:0;padding:4px 0;min-height:44px;cursor:pointer}
   .tb[aria-current="page"]{color:var(--acc-ink)}
+  .tabbar .upd{grid-column:1/-1;padding:2px 8px 8px}
   .page{padding:20px 16px 40px}
   .ph h1{font-size:var(--t5)}
   .ph.hello .btn{display:none}
