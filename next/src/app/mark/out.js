@@ -37,7 +37,24 @@ export function load() {
 
 // A grade written on a paper counts, so the papers are read first, as the current app reads them before Grades, Insights and Return.
 // Word rubrics already highlighted give their scores first (mark/word.js scoresAll), as the current app runs wordScoresAll here.
-export async function readPapers(onStep) { await load(); M.commit(); if (hasWord()) await (await PARTS.word()).scoresAll(M); await X.scanAll(onStep); }
+export async function readPapers(onStep) { await load(); M.commit(); if (hasWord()) { await wordTools(); await (await PARTS.word()).scoresAll(M); } await X.scanAll(onStep); }
+// Word papers made into pages (gexport.js wordPdf, wordPdfStage) need html2canvas, and mammoth for one the app's own Word reader can't
+// open; the current app always has both at hand. Here they come only when this download has Word papers, and mammoth only for one that
+// needs it. Before, a Word paper boxed by hand was read as one that failed (H-030), and that Word file wouldn't convert (H-029).
+export async function wordTools() {
+  const b = state().batch; if (!b) return;
+  const words = b.students.flatMap(st => st.files.concat(st.gone || [])).filter(f => f.kind === 'docx' && f.data);
+  if (!words.length) return;
+  await load();
+  if (!state().html2canvas) { const h = await PARTS.h2c(); use({ html2canvas: h.default || h }); }
+  if (!state().mammoth && words.some(f => !wordOpens(f.data))) { const m = await PARTS.mammoth(); use({ mammoth: m.default || m }); }
+}
+const wordOpens = d => {
+  try {
+    const x = state().fflate.unzipSync(d, { filter: e => e.name === 'word/document.xml' })['word/document.xml']; if (!x) return false;
+    return !new DOMParser().parseFromString(new TextDecoder().decode(x), 'application/xml').getElementsByTagName('parsererror').length;
+  } catch { return false; }
+};
 const hasWord = () => state().batch.students.some(st => st.files.some(f => f.kind === 'docx'));
 
 /* ---------- Grades ---------- */
@@ -173,7 +190,7 @@ export async function exportOne(st) {
   if (busy) throw new Error('busy');
   busy = true;
   try {
-    await M.saveNowDone(); if (hasWord()) await (await PARTS.word()).scoresAll(M);
+    await M.saveNowDone(); if (hasWord()) { await wordTools(); await (await PARTS.word()).scoresAll(M); }
     const b = state().batch, o = opts(), mine = () => X.nameOut(X.exportPlan(false, true).filter(x => x.st === st));
     let items = mine();
     if (!items.length) { await readPapers(); items = mine(); }

@@ -209,8 +209,9 @@ export async function toPdf(list, each = () => {}) {
   if (pdfBusy || !b()) return null;
   const bb = b(), steps = [], O = await PARTS.outEngine(); let long = 0, bad = 0;
   await O.load();
-  // a page that can't be written as words is drawn as a picture instead, as the current app does
-  if (!state().html2canvas) try { const h = await PARTS.h2c(); use({ html2canvas: h.default || h }); } catch (e) { console.error(e); }
+  // a page that can't be written as words is drawn as a picture instead, as the current app does (and mammoth reads a Word file
+  // the app's own reader can't open)
+  try { await O.wordTools(); } catch (e) { console.error(e); }
   pdfBusy = true;
   try {
     await M.saveNowDone();   // what she typed a moment ago is in the file first

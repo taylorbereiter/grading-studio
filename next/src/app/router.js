@@ -77,6 +77,8 @@ export const PARTS = {
   pdflib: () => import('pdf-lib'),
   zip: () => import('fflate'),
   h2c: () => import('html2canvas'),
+  // mammoth: a Word paper the app's own reader can't open still becomes pages (mark/out.js wordTools; H-029)
+  mammoth: () => import('mammoth/mammoth.browser.min.js'),
   // the screenshot on the marking screen (S, Alt S)
   snip: () => import('./mark/snip.jsx'),
   // the save layer for marking (students/write.js), loaded with the first save
