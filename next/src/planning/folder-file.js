@@ -2,7 +2,7 @@
 // only if it still matches a revision we read or just wrote. Make that check
 // again after opening the output stream, before committing its temporary bytes.
 export class FolderFileChanged extends Error {
-  constructor(name) { super('Planner folder file changed: ' + name); }
+  constructor(name) { super('Planner folder file changed: ' + name); this.fileName = name; }
 }
 
 export async function existingFile(dir, name) {

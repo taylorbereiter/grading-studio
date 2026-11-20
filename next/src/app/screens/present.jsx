@@ -117,11 +117,16 @@ function GotTo({ p, lesson, slot, slide, agenda, onClose }) {
       if (!result) throw new Error('The scheduled lesson is no longer available');
       folderPending = !!result._sync;
     } catch (e) {
-      console.error(e);
       if (!committed) {
-        setError(saveErrorMessage(e)); pending.current = false; setBusy(false); return;
+        console.error(e); setError(saveErrorMessage(e)); pending.current = false; setBusy(false); return;
       }
-      folderPending = true;
+      try {
+        const folder = await PARTS.pfolder();
+        folderPending = !(await folder.recoverLessonFileConflict(lesson.id, e));
+      } catch (retryError) {
+        console.error(retryError); folderPending = true;
+      }
+      if (folderPending) console.error(e);
     }
     onClose(); toast(folderPending ? t('present.saved_here') : t('present.noted'));
   };

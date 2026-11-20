@@ -119,7 +119,7 @@ test('A failed progress save keeps the entered values and a retry preserves conc
   assert.deepEqual(p.errors.filter(e => !e.includes('Synthetic refused save')), []);
 });
 
-const localOnly = 'Progress saved in this browser. The Planner folder may be out of date.';
+const localOnly = 'Progress saved in this browser. Let this Planner sync the folder before opening the original Planner.';
 
 async function checkLocalSave(p, prior = []) {
   await p.click(save);
@@ -161,42 +161,86 @@ async function folderPage(t, seed = plan) {
   await plant(p, gradingSeed()); await plantPlan(p, seed);
   return p;
 }
-for (const mode of ['file conflict', 'permission prompt']) {
-  test('Present reports a local save when the Planner folder has a ' + mode, async t => {
-    const p = await folderPage(t);
-    await openSheet(t, p);
-
-    const fileName = '10-27 Tue - Reading a poem aloud.lesson.json';
-    const external = JSON.stringify({ ...lesson, note: 'Independent folder edit' });
-    await p.evaluate(async (mode, name, text) => {
-      const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle(mode, { create: true });
-      const file = await dir.getFileHandle(name, { create: true });
-      const writer = await file.createWritable();
-      await writer.write(text); await writer.close();
-      if (mode === 'permission prompt') {
-        const query = FileSystemDirectoryHandle.prototype.queryPermission;
-        FileSystemDirectoryHandle.prototype.queryPermission = function (opts) {
-          return this.name === mode ? Promise.resolve('prompt') : query.call(this, opts);
-        };
-      }
-      const db = await new Promise((resolve, reject) => {
-        const open = indexedDB.open('gs-lessons');
-        open.onsuccess = () => resolve(open.result); open.onerror = () => reject(open.error);
-      });
-      try {
-        const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(dir, 'dir');
-        await new Promise((resolve, reject) => { tx.oncomplete = resolve; tx.onabort = () => reject(tx.error); });
-      } finally { db.close(); }
-    }, mode, fileName, external);
-    const stored = await checkLocalSave(p);
-    assert.equal(stored._sync, 1, 'both failure paths keep the local lesson pending for sync');
-    const onDisk = await p.evaluate(async (mode, name) => {
-      const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle(mode);
-      return (await (await dir.getFileHandle(name)).getFile()).text();
-    }, mode, fileName);
-    assert.equal(onDisk, external);
-  });
+async function openLinkedSheet(t, folderName, seed = plan) {
+  const p = await folderPage(t, seed);
+  await p.evaluateOnNewDocument(folder => {
+    window.showDirectoryPicker = async () => (await navigator.storage.getDirectory()).getDirectoryHandle(folder, { create: true });
+  }, folderName);
+  await h.open(p, 'settings/ai');
+  await p.click('[data-pflink]');
+  await p.waitForSelector('[data-pfstate="ok"]');
+  const original = await h.lessonInDb(p, 'L2');
+  await p.goto(h.srv.url + 'blank');
+  await openSheet(t, p);
+  return { p, original };
 }
+
+async function editFolderLesson(p, folder, name, fields) {
+  return p.evaluate(async (folder, name, fields) => {
+    const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle(folder);
+    const file = await dir.getFileHandle(name), before = JSON.parse(await (await file.getFile()).text());
+    const edited = JSON.stringify({ ...before, ...fields });
+    const writer = await file.createWritable(); await writer.write(edited); await writer.close();
+    return { taughtBefore: before.taught, edited, modified: (await file.getFile()).lastModified };
+  }, folder, name, fields);
+}
+const readFolderLesson = (p, folder, name) => p.evaluate(async (folder, name) => {
+  const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle(folder);
+  return (await (await dir.getFileHandle(name)).getFile()).text();
+}, folder, name);
+
+test('Present reports a local save while permission to the Planner folder is unavailable', async t => {
+  const { p, original } = await openLinkedSheet(t, 'Permission');
+  const before = await readFolderLesson(p, 'Permission', original._file);
+  await p.evaluate(() => {
+    const query = FileSystemDirectoryHandle.prototype.queryPermission;
+    FileSystemDirectoryHandle.prototype.queryPermission = function (opts) {
+      return this.name === 'Permission' ? Promise.resolve('prompt') : query.call(this, opts);
+    };
+  });
+  const stored = await checkLocalSave(p);
+  assert.equal(stored._sync, 1);
+  assert.equal(await readFolderLesson(p, 'Permission', original._file), before);
+});
+
+test('A confirmed file conflict is safe when the original Planner opens immediately after Present', async t => {
+  const { p, original } = await openLinkedSheet(t, 'Direct');
+  const fromFile = { classId: 'A1', date: slotDate, slide: 2, of: 5, note: 'Independent class note', at: 90 };
+  const fileNote = 'An independent edit to the lesson';
+  const external = await editFolderLesson(p, 'Direct', original._file, {
+    note: fileNote, taught: [fromFile], custom: { annotation: 'Keep this field' }
+  });
+  assert.notEqual(external.modified, original._mod);
+  const fromBrowser = { classId: 'B1', date: slotDate, slide: 4, of: 5, note: nextTime, at: await p.evaluate(() => Date.now()) };
+  const expected = [fromFile, fromBrowser], expectedFile = { ...JSON.parse(external.edited), taught: expected };
+  await p.click(save);
+  await p.waitForFunction(() => !document.querySelector('dialog[open] [data-gt="save"]'));
+  const notices = await p.$$eval('.toast', nodes => nodes.map(x => x.textContent.trim()));
+  const fromRebuild = await h.lessonInDb(p, 'L2');
+  const beforeClassic = JSON.parse(await readFolderLesson(p, 'Direct', original._file));
+
+  // Wait until the original Planner has actually run its startup catch-up and read the lesson directory.
+  await p.evaluateOnNewDocument(() => {
+    const entries = FileSystemDirectoryHandle.prototype.entries;
+    FileSystemDirectoryHandle.prototype.entries = async function* (...args) {
+      yield* entries.apply(this, args);
+      if (this.name === 'Direct') window.finishedClassicLessonScan = true;
+    };
+  });
+  await p.goto(h.srv.url + 'planner.html');
+  await p.waitForFunction(() => window.finishedClassicLessonScan, { timeout: 12000 });
+  const classic = await p.evaluate(() => window.__planner.L.lessons.find(l => l.id === 'L2'));
+  const afterClassic = JSON.parse(await readFolderLesson(p, 'Direct', original._file));
+  assert.equal(afterClassic.note, fileNote, 'opening the original Planner directly preserves the file edit');
+  assert.deepEqual(notices, ['Noted on the lesson']);
+  assert.deepEqual(beforeClassic, expectedFile, 'both histories and the custom field are present before the switch');
+  assert.deepEqual(afterClassic, expectedFile, 'the original Planner preserves the entire canonical file');
+  for (const opened of [fromRebuild, classic, await h.lessonInDb(p, 'L2')]) {
+    assert.equal(opened.note, fileNote);
+    assert.deepEqual(opened.taught, expected);
+    assert.ok(!opened._sync);
+  }
+});
 
 test('Reload after a folder conflict keeps the confirmed progress and the independent file edit', async t => {
   const prior = { classId: 'A1', date: slotDate, slide: 2, of: 5, note: 'Reading in pairs', at: 42, agenda: [1, 3] };
@@ -206,29 +250,30 @@ test('Reload after a folder conflict keeps the confirmed progress and the indepe
   const diskOlder = { ...prior, classId: 'B1', at: 85, note: 'B1 progress before the presentation' };
   const diskHistory = [diskOnly, diskNewer, diskOlder];
   const fileNote = 'Independent lesson note in the folder';
-  const p = await folderPage(t, { lessons: [{ ...plan.lessons[0], taught: [prior] }] });
-  await p.evaluateOnNewDocument(() => {
-    window.showDirectoryPicker = async () => (await navigator.storage.getDirectory()).getDirectoryHandle('History', { create: true });
-  });
-  await h.open(p, 'settings/ai');
-  await p.click('[data-pflink]');
-  await p.waitForSelector('[data-pfstate="ok"]');
-  const original = await h.lessonInDb(p, 'L2');
+  const { p, original } = await openLinkedSheet(t, 'History', { lessons: [{ ...plan.lessons[0], taught: [prior] }] });
   assert.deepEqual(original.taught, [prior]);
-  await p.goto(h.srv.url + 'blank');
-  await openSheet(t, p);
-
-  const external = await p.evaluate(async (name, note, taught) => {
-    const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle('History');
-    const file = await dir.getFileHandle(name), before = JSON.parse(await (await file.getFile()).text());
-    const edited = JSON.stringify({ ...before, note, taught, custom: { readingGroup: 'Blue', pages: [7, 12] } });
-    const writer = await file.createWritable(); await writer.write(edited); await writer.close();
-    return { taughtBefore: before.taught, edited, modified: (await file.getFile()).lastModified };
-  }, original._file, fileNote, diskHistory);
+  const external = await editFolderLesson(p, 'History', original._file, {
+    note: fileNote, taught: diskHistory, custom: { readingGroup: 'Blue', pages: [7, 12] }
+  });
   assert.deepEqual(external.taughtBefore, [prior], 'the linked file began with the same class history');
   assert.notEqual(external.modified, original._mod);
   await editStoredLesson(p, { taught: [browserOnly, prior] });
+  // The ordinary mirror reads the changed source first. Refuse only its immediate recovery read.
+  await p.evaluate(name => {
+    const get = FileSystemDirectoryHandle.prototype.getFileHandle;
+    let reads = 0;
+    FileSystemDirectoryHandle.prototype.getFileHandle = function (file, options) {
+      if (this.name === 'History' && file === name && !options?.create && ++reads === 2) {
+        FileSystemDirectoryHandle.prototype.getFileHandle = get;
+        window.deferredFileRead = true;
+        throw new DOMException('Folder unavailable during conflict recovery', 'NotReadableError');
+      }
+      return get.call(this, file, options);
+    };
+  }, original._file);
   const saved = await checkLocalSave(p, [browserOnly, prior]);
+  assert.equal(await p.evaluate(() => window.deferredFileRead), true);
+  assert.equal(await readFolderLesson(p, 'History', original._file), external.edited);
   assert.equal(saved._sync, 1);
   const expected = [browserOnly, diskOnly, diskNewer, saved.taught.find(row => row.classId === 'B1')];
   const expectedFile = { ...JSON.parse(external.edited), taught: expected };
