@@ -7,7 +7,7 @@ const http = require('http'), fs = require('fs'), os = require('os'), path = req
 const { launch } = require('../../../test/helpers/chrome.js');
 const { plant, appReady, classPage, pick } = require('../../../test/helpers/app.js');
 const { STEADY } = require('../../../test/helpers/steady.js');
-const { bookSeed } = require('./classseed.js');
+const { bookSeed, holdWorkIndex } = require('./classseed.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
 const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp', png: 'image/png', webmanifest: 'application/manifest+json' };
@@ -562,9 +562,48 @@ test('B-065 B-039: each class page has its own address: attendance for a day or 
   await at('grades/reports', 'dialog[open] [data-rp-text]', 'grades');
   await at('grades/sheets', 'dialog[open] [data-pss-sheet]', 'grades');
   await at('todo/missing', '[data-mis]', 'todo');
-  await p.waitForFunction(() => document.activeElement && document.activeElement.id === 'h-mis', { timeout: 10000 });   // Missing work has the focus (it moves there a moment after the address settles)
+  await p.waitForSelector('#h-mis:focus');
+  await p.keyboard.down('Shift'); await p.keyboard.press('?'); await p.keyboard.up('Shift');
+  await p.waitForSelector('main[data-route="help/keys"] kbd');
+  await p.goBack();
+  await p.waitForSelector('main[data-route="class/c1/todo"] [data-mis]');
+  await p.waitForSelector('#h-mis:focus', { timeout: 5000 });
+  await p.keyboard.press('Tab');
+  assert.ok(await p.$eval('[data-mis-words]', el => document.activeElement === el), 'after Back, Tab reaches the first Missing work action');
   assert.deepEqual(errors, []);
   await ctx.close();
+});
+
+test('B-065: tabbing to Class setup while Missing work is loading keeps focus and scroll there', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  try {
+    const p = await page(ctx, errors);
+    const seed = seedB(), lib = JSON.parse(seed.ls['gs.lib']);
+    lib.todo = { ...lib.todo, items: Array.from({ length: 40 }, (_, i) => ({ id: 'td' + i, x: 'Task ' + i, c: 'c1' })) };
+    lib.me = { ...lib.me, tabs: ['missing'] };
+    seed.ls['gs.lib'] = JSON.stringify(lib);
+    await p.goto(srv.url + 'blank'); await plant(p, seed);
+    await p.goto(srv.url + 'next/#/class/c1/work');
+    await p.waitForSelector('[id="tab-pin:missing"]');
+    await p.waitForSelector('[data-class-setup]');
+    await holdWorkIndex(p);
+    await p.click('[id="tab-pin:missing"]');
+    await p.waitForSelector('main[data-route="class/c1/todo/missing"] [aria-busy="true"]');
+    await p.keyboard.press('Tab');
+    const setup = await p.waitForSelector('[data-class-setup]:focus', { timeout: 2000 });
+    const top = await p.$eval('main', el => el.scrollTop);
+    await p.evaluate(() => window.releaseWorkIndex());
+    await p.waitForSelector('main[data-route="class/c1/todo"] [data-mis]');
+    const state = await setup.evaluate(el => ({
+      setupFocused: document.activeElement === el,
+      scroll: document.querySelector('main').scrollTop,
+      missingBelow: document.getElementById('h-mis').getBoundingClientRect().top > innerHeight,
+    }));
+    assert.deepEqual(state, { setupFocused: true, scroll: top, missingBelow: true });
+    await p.keyboard.press('Enter');
+    await p.waitForSelector('.pop [role^="menuitem"]');
+    assert.deepEqual(errors, []);
+  } finally { await ctx.close(); }
 });
 
 test('B-902: Class setup > Pages in the tab row keeps Seating and Missing work beside the five tabs, each opening its tool; one taken out again; the current app shows the same pins', async () => {

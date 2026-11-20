@@ -4,7 +4,7 @@
 // The class list comes from the teacher's saved work through the layer (crossings.js classesForHome), in the order the current
 // app shows them, with the same colour by place and the same "left to score" count.
 import { h, Fragment } from 'preact';
-import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'preact/hooks';
 import { NavItem, NavSection, IconButton, Icon, CommandBar, ToastHost, toast, LOOK_LINES } from '../ui/index.js';
 import { t, addLines } from '../i18n/t.js';
 import * as router from './router.js';
@@ -188,14 +188,12 @@ export function Shell() {
   const [route, setRoute] = useState(router.current());
   const [folded, setFolded] = useState(() => { try { return sessionStorage.getItem('gsn.fold') === '1'; } catch { return false; } });
   const classes = useClasses(), lock = useLock(), main = useRef(null), first = useRef(true);
-  useEffect(() => { router.setMain(main.current); router.start(); return router.onRoute(setRoute); }, []);
-  // After the screen is drawn: scroll and focus back where they were on this route, or the heading on a new one.
-  useEffect(() => {
+  useLayoutEffect(() => { router.setMain(main.current); router.start(); return router.onRoute(setRoute); }, []);
+  useLayoutEffect(() => {
     const fresh = !first.current; first.current = false;
-    const id = setTimeout(() => router.restore(route.path, fresh), 30);
     document.title = t('app.title');
-    return () => clearTimeout(id);
-  }, [route.path, loaded[route.chunk]]);
+    return router.restore(route.path, fresh);
+  }, [route.path]);
   const fold = useCallback(() => setFolded(f => { const n = !f; try { sessionStorage.setItem('gsn.fold', n ? '1' : '0'); } catch {} return n; }), []);
   useEffect(() => {
     keysStart();

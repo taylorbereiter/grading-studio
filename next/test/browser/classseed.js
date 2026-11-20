@@ -20,4 +20,20 @@ function bookSeed() {
   seed.ls['gs.lib'] = JSON.stringify(lib);
   return seed;
 }
-module.exports = { bookSeed };
+
+// Delay the read of the synthetic papers index until the test releases it.
+function holdWorkIndex(p) {
+  return p.evaluate(() => new Promise((resolve, reject) => {
+    const open = indexedDB.open('grading-studio-keep');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const tx = open.result.transaction('meta', 'readwrite'), store = tx.objectStore('meta');
+      let held = true;
+      window.releaseWorkIndex = () => { held = false; };
+      const read = () => { if (held) store.get('test').onsuccess = read; };
+      read(); tx.oncomplete = () => open.result.close(); resolve();
+    };
+  }));
+}
+
+module.exports = { bookSeed, holdWorkIndex };

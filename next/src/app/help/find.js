@@ -22,13 +22,20 @@ export function addHelpCommands(keys) {
   for (const [line, g] of SETTINGS) addCommand({ id: 'set-' + line, label: () => t(line), also: t('nav.settings'), group: t('nav.settings'), icon: 'settings', run: () => go('settings', g) });
 }
 
-let mine = [];
+let mine = [], latestRefresh = 0;
 const JOBS = [['help.cmd_open_work', 'upload', 'work'], ['help.cmd_open_folder', 'folder', 'work'], ['help.cmd_split', 'image', 'work'], ['help.cmd_match', 'people', 'work'], ['help.cmd_new_asg', 'plus', 'asg'], ['help.cmd_add_class', 'plus', 'new'], ['help.cmd_gc', 'school', 'new']];
 const PAGES = [['work', 'help.cmd_p_work'], ['people', 'help.cmd_p_people'], ['grades', 'help.cmd_p_grades'], ['todo', 'help.cmd_p_todo']];
 async function findRows() {
-  const [rows, S] = await Promise.all([PARTS.asgRows().then(m => m.assignmentRows()), import('../sample.js')]);
+  const refreshId = ++latestRefresh;
+  const [rows, S, classes] = await Promise.all([
+    PARTS.asgRows().then(m => m.assignmentRows()), import('../sample.js'),
+    import('../../crossings.js').then(m => m.classesForHome()).catch(() => []),
+  ]);
+  if (refreshId !== latestRefresh) return;
+  // Keep the current commands selectable until their replacements are ready.
+  const firstCls = classes.filter(c => !c.loose);
   mine.forEach(f => f()); mine = [];
-  const add = c => mine.push(addCommand(c)), firstCls = (await import('../../crossings.js').then(m => m.classesForHome()).catch(() => [])).filter(c => !c.loose);
+  const add = c => mine.push(addCommand(c));
   for (const r of rows) add({ id: 'asg-' + r.id, label: r.name || t('help.cmd_asg'), also: (r.cls || t('help.cmd_no_class')) + ' ' + r.unit, group: t('help.cmd_asg'), icon: 'grades', run: () => go('mark', r.id) });
   for (const c of firstCls) for (const [k, line] of PAGES) add({ id: 'cp-' + c.id + '-' + k, label: t(line, { name: c.name }), group: t('help.cmd_pages'), icon: 'people', run: () => go('class', c.id, k) });
   for (const [k, icon, to] of JOBS) add({ id: 'job-' + k, label: t(k), group: t('cmd.group_do'), icon, run: () => (to === 'new' ? go('class', 'new') : go('class', to === 'asg' && /^class\//.test(current().pattern || '') && current().params.id !== 'new' ? current().params.id : firstCls[0] ? firstCls[0].id : '-', 'work', to === 'asg' ? 'new' : null)) });

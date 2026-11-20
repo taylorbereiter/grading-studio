@@ -7,6 +7,7 @@ const assert = require('node:assert/strict');
 const http = require('http'), fs = require('fs'), path = require('path');
 const { launch } = require('../../../test/helpers/chrome.js');
 const { plant } = require('../../../test/helpers/app.js');
+const { holdWorkIndex } = require('./classseed.js');
 const { gradingSeed, PLAN_SETUP } = require('../../../test/helpers/steady.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
@@ -142,6 +143,41 @@ test('Find reaches every assignment, each class page, the common jobs and the sh
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
+test('Find keeps the selected assignment available while its next refresh reads the papers index', async () => {
+  const p = await fresh();
+  try {
+    await p.goto(srv.url + 'next/#/help/keys'); await p.waitForSelector('main kbd');
+    const openFind = async () => {
+      await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
+      await p.waitForSelector('dialog.cmd[open] [role="combobox"]:focus');
+    };
+    const selected = () => document.querySelector('dialog.cmd [aria-selected="true"]')?.textContent === 'Poetry analysis';
+    await openFind(); await p.keyboard.type('Poetry analysis');
+    await p.waitForFunction(selected);
+    await p.keyboard.press('Escape'); await p.waitForSelector('dialog.cmd[open]', { hidden: true });
+
+    await holdWorkIndex(p);
+    await p.evaluate(() => {
+      const getKeys = IDBObjectStore.prototype.getAllKeys;
+      IDBObjectStore.prototype.getAllKeys = function (...args) {
+        if (this.name === 'meta' && this.transaction.db.name === 'grading-studio-keep') {
+          IDBObjectStore.prototype.getAllKeys = getKeys;
+          window.findReadPending = true;
+        }
+        return getKeys.apply(this, args);
+      };
+    });
+    await openFind();
+    await p.waitForFunction(() => window.findReadPending, { timeout: 10000 });
+    await p.keyboard.type('Poetry analysis');
+    assert.ok(await p.evaluate(selected), 'the assignment stays selected while the index is busy');
+    await p.keyboard.press('Enter');
+    await p.waitForFunction(() => location.hash === '#/mark/gs.b.n2', { timeout: 10000 });
+    await p.evaluate(() => window.releaseWorkIndex());
+    assert.deepEqual(p.errors, []);
+  } finally { await p.ctx.close(); }
+});
+
 test('keyboard: the command bar goes to a screen, the sidebar is reachable with Tab, and Shift+? opens the shortcut list', async () => {
   const p = await fresh();
   await p.goto(srv.url + 'next/#/home'); await shellUp(p);
@@ -161,6 +197,77 @@ test('keyboard: the command bar goes to a screen, the sidebar is reachable with 
   // Back goes back.
   await p.goBack(); await p.waitForFunction(() => location.hash === '#/home');
   assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+async function delayedBack(useSidebar) {
+  const p = await fresh();
+  try {
+    await p.setViewport({ width: 1280, height: 560 });
+    await p.goto(srv.url + 'next/#/class/c1/work'); await p.waitForSelector('[data-newasg]');
+    const top = await p.$eval('main', el => {
+      el.querySelector('#tab-work').focus({ preventScroll: true });
+      el.scrollTop = 485;
+      return el.scrollTop;
+    });
+    assert.ok(top > 0, 'the saved position is below the top');
+    await p.evaluate(() => { location.hash = '#/help/keys'; });
+    await p.waitForSelector('main[data-route="help/keys"] h1:focus');
+
+    await holdWorkIndex(p);
+    await p.goBack();
+    await p.waitForSelector('main[data-route="class/c1/work"] [aria-busy="true"]');
+    let sidebarControl, sidebarTop;
+    if (useSidebar) {
+      await p.keyboard.down('Shift'); await p.keyboard.press('Tab'); await p.keyboard.up('Shift');
+      sidebarControl = await p.waitForSelector('[data-shell-nav] :focus');
+      sidebarTop = await p.$eval('main', el => el.scrollTop);
+    }
+    // A slow read outlasts the former route timer. The full scroll area only exists after release.
+    await p.evaluate(() => new Promise(resolve => setTimeout(() => { window.releaseWorkIndex(); resolve(); }, 100)));
+    await p.waitForSelector('[data-newasg]');
+    if (useSidebar) {
+      assert.ok(await sidebarControl.evaluate(el => el === document.activeElement), 'focus stays on the chosen sidebar control');
+      assert.equal(await p.$eval('main', el => el.scrollTop), sidebarTop);
+    } else {
+      await p.waitForFunction(top => document.activeElement.id === 'tab-work' && document.querySelector('main').scrollTop === top, { timeout: 10000 }, top);
+    }
+    assert.deepEqual(p.errors, []);
+  } finally { await p.ctx.close(); }
+}
+test('Back restores the class tab and scroll position after its assignments finish loading', () => delayedBack(false));
+test('Shift+Tab into the sidebar during Back keeps the new focus and scroll position', () => delayedBack(true));
+
+for (const [route, ready] of [['home', '[data-home="say"]'], ['time', '[data-tk-page]']]) {
+  test(route + ' focuses the loaded heading on first navigation and browser Forward', async () => {
+    const p = await fresh();
+    try {
+      await p.goto(srv.url + 'next/#/help/keys'); await p.waitForSelector('main kbd');
+      for (const warm of [false, true]) {
+        await holdWorkIndex(p);
+        if (warm) await p.goForward();
+        else await p.evaluate(to => { location.hash = '#/' + to; }, route);
+        await p.waitForSelector('main[data-route="' + route + '"] h1');
+        await p.evaluate(() => window.releaseWorkIndex());
+        await p.waitForSelector(ready);
+        assert.ok(await p.$eval('main h1', el => el === document.activeElement), 'the loaded heading has focus');
+        if (!warm) { await p.goBack(); await p.waitForSelector('main kbd'); }
+      }
+      assert.deepEqual(p.errors, []);
+    } finally { await p.ctx.close(); }
+  });
+}
+
+test('Back after an arrow-key tab change returns focus to the selected class tab', async () => {
+  const p = await fresh();
+  try {
+    await p.goto(srv.url + 'next/#/class/c1/work'); await p.waitForSelector('[data-newasg]');
+    await p.focus('#tab-work'); await p.keyboard.press('ArrowRight');
+    await p.waitForSelector('#tab-people[aria-selected="true"]:focus');
+    await p.goBack(); await p.waitForSelector('#tab-work[aria-selected="true"]');
+    assert.equal(await p.evaluate(() => document.activeElement.id), 'tab-work');
+    await p.goForward(); await p.waitForSelector('#tab-people[aria-selected="true"]:focus');
+    assert.deepEqual(p.errors, []);
+  } finally { await p.ctx.close(); }
 });
 
 test('every word on the shell, Home and Settings comes through t() or is the teacher’s own text', async () => {
