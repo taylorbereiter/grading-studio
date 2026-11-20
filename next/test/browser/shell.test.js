@@ -143,6 +143,41 @@ test('Find reaches every assignment, each class page, the common jobs and the sh
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
+test('Find keeps the selected assignment available while its next refresh reads the papers index', async () => {
+  const p = await fresh();
+  try {
+    await p.goto(srv.url + 'next/#/help/keys'); await p.waitForSelector('main kbd');
+    const openFind = async () => {
+      await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
+      await p.waitForSelector('dialog.cmd[open] [role="combobox"]:focus');
+    };
+    const selected = () => document.querySelector('dialog.cmd [aria-selected="true"]')?.textContent === 'Poetry analysis';
+    await openFind(); await p.keyboard.type('Poetry analysis');
+    await p.waitForFunction(selected);
+    await p.keyboard.press('Escape'); await p.waitForSelector('dialog.cmd[open]', { hidden: true });
+
+    await holdWorkIndex(p);
+    await p.evaluate(() => {
+      const getKeys = IDBObjectStore.prototype.getAllKeys;
+      IDBObjectStore.prototype.getAllKeys = function (...args) {
+        if (this.name === 'meta' && this.transaction.db.name === 'grading-studio-keep') {
+          IDBObjectStore.prototype.getAllKeys = getKeys;
+          window.findReadPending = true;
+        }
+        return getKeys.apply(this, args);
+      };
+    });
+    await openFind();
+    await p.waitForFunction(() => window.findReadPending, { timeout: 10000 });
+    await p.keyboard.type('Poetry analysis');
+    assert.ok(await p.evaluate(selected), 'the assignment stays selected while the index is busy');
+    await p.keyboard.press('Enter');
+    await p.waitForFunction(() => location.hash === '#/mark/gs.b.n2', { timeout: 10000 });
+    await p.evaluate(() => window.releaseWorkIndex());
+    assert.deepEqual(p.errors, []);
+  } finally { await p.ctx.close(); }
+});
+
 test('keyboard: the command bar goes to a screen, the sidebar is reachable with Tab, and Shift+? opens the shortcut list', async () => {
   const p = await fresh();
   await p.goto(srv.url + 'next/#/home'); await shellUp(p);
