@@ -10,8 +10,8 @@ import { openExistingStrict, NotThere } from '../shared/idb.js';
 import { withFolderLock } from './folder-lock.js';
 import { engine } from './engine.js';
 import { plannerFolder } from './folder.js';
-import { finishLessonSave, finishKvSave } from './write.js';
-import { FolderFileChanged, removeRecordFile } from './folder-file.js';
+import { check, finishLessonSave, finishKvSave } from './write.js';
+import { FolderFileChanged, removeRecordFile, replaceFileText } from './folder-file.js';
 import { afterSave, finishLessonFile, saveFolderNote } from './folder-more.js';
 
 const copy = v => JSON.parse(JSON.stringify(v));
@@ -113,17 +113,46 @@ function changedThere(old, l, P, E) {
   return version;
 }
 
-async function readLessons(f, p, E, P, out, conflicts) {
-  for await (const [name, h] of f.dir.entries()) {
+// A pending export can contain progress that was never in the linked file. Distinct
+// classes and dates coexist. For one slot the latest record wins, with local confirmation
+// winning a tie. Save any displaced record in a readable lesson copy before reconciling.
+async function reconcileTaught(dir, handle, source, fileLesson, local, incoming, E) {
+  if (!local?._sync || !local.taught?.length) return;
+  const key = t => t.classId + '|' + t.date;
+  const disk = incoming.taught || [], browser = E.normTaught(local.taught);
+  const merged = E.normTaught([...disk, ...browser].sort((a, b) => a.at - b.at));
+  const winners = new Map(merged.map(t => [key(t), t]));
+  const displaced = rows => rows.some(t => !same(t, winners.get(key(t))));
+  check('gs-lessons/lessons');
+  const { retainFolderCopy } = await import('./folder-recovery.js');
+  if (displaced(browser)) await retainFolderCopy(dir, E.fileBase(local), '.lesson.json', JSON.stringify(E.lessonForFile(local, null), null, 2));
+  if (displaced(disk)) await retainFolderCopy(dir, E.fileBase(incoming), '.lesson.json', source);
+  if (!same(merged, disk)) {
+    if (!same(local, await readPlannerRecord('lessons', local.id))) throw new Error('Lesson changed while reconciling teaching history');
+    // Patch the original JSON so other file edits, including its image paths, survive intact.
+    const original = new Map((Array.isArray(fileLesson.taught) ? fileLesson.taught : []).filter(Boolean).map(t => [key(t), t]));
+    const taught = merged.map(t => ({ ...original.get(key(t)), ...t, agenda: t.agenda }));
+    check('gs-lessons/lessons');
+    incoming._mod = await replaceFileText(handle, source, JSON.stringify({ ...fileLesson, taught }, null, 2));
+  }
+  incoming.taught = merged;
+}
+
+async function readLessons(f, p, E, P, out, conflicts, only) {
+  const files = only ? [[only.name, await f.dir.getFileHandle(only.name)]] : f.dir.entries();
+  for await (const [name, h] of files) {
     if (h.kind !== 'file' || !/\.lesson\.json$/i.test(name)) continue;
     const file = await h.getFile(), mine = p.lessons.find(l => l._file === name);
     if (mine && !conflicts.has(mine.id) && mine._mod && file.lastModified <= mine._mod + NEWER) continue;
-    const j = await jsonFile(file); if (!j || typeof j !== 'object') continue;
+    const source = await file.text();
+    let j; try { j = JSON.parse(source); } catch { continue; }
+    if (!j || typeof j !== 'object' || (only && j.id !== only.id)) continue;
     const l = E.normLesson(j), old = p.lessons.find(x => x.id === l.id);
     if (old && old._file && old._file !== name) continue;   // a stale copy under an old name
     if (!old) { E.deckStart(l); if (!l.status) l.status = 'review'; }   // a new deck from the assistant: title, then agenda
     await pictures(f, l, E);
     l._file = name; l._mod = file.lastModified; if (old) l.created = old.created;
+    await reconcileTaught(f.dir, h, source, j, old, l, E);
     const version = changedThere(old, l, P, E);
     // a new file gets its id, and its title and agenda slides, written back
     const normalize = !j.id || !old;
@@ -146,6 +175,27 @@ async function readLessons(f, p, E, P, out, conflicts) {
     const i = p.lessons.findIndex(x => x.id === s.id); if (i >= 0) p.lessons[i] = s; else p.lessons.push(s);
     old ? out.changed++ : out.added++;
   }
+}
+
+// The classic Planner flushes pending lessons on startup. Resolve an accessible conflict
+// with this very file before reporting completion, whichever Planner the teacher opens next.
+export async function recoverLessonFileConflict(id, error) {
+  if (!(error instanceof FolderFileChanged)) return false;
+  return withFolderLock(async lock => {
+    const folder = await plannerFolder({ strict: true });
+    if (!folder?.ok) return false;
+    const p = await readImportPlan(), lesson = p.lessons.find(l => l.id === id);
+    if (!lesson) return false;
+    if (!lesson._sync) {
+      if (lesson._file !== error.fileName || !lesson._mod) return false;
+      const file = await (await folder.dir.getFileHandle(error.fileName)).getFile();
+      return file.lastModified === lesson._mod;
+    }
+    const out = { added: 0, changed: 0 };
+    await readLessons({ ...folder, lock }, p, engine(p), await import('../engines/pfolder.js'),
+      out, new Set([id]), { id, name: error.fileName });
+    return out.changed === 1;
+  });
 }
 
 // Units/*.unit.json: the weeks, title, start and Atlas link. Files stay as the app has them.

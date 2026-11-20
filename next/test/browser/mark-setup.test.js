@@ -224,7 +224,6 @@ test('the rubric bank in Rubric setup: a saved rubric used (its rows by place), 
   const names = async () => { const b = await kvBank(); return [...b.rubrics.map(r => r.name), ...b.scales.map(s => s.name)]; };
   // the bank is written a moment after the screen shows it: wait for the write
   const until = async (f, why) => { for (let k = 0; k < 50; k++) { if (await f()) return; await new Promise(r => setTimeout(r, 200)); } assert.fail(why); };
-  const bankHas = async name => { for (let k = 0; k < 50; k++) { const b = await kvBank(); if (b && b.rubrics.some(x => x.name === name)) return b; await new Promise(r => setTimeout(r, 200)); } return kvBank(); };
   // Use the saved one: its rows, by place
   await setupDo(p, 'Rubric setup');
   await p.waitForSelector('dialog[open] [data-subuse="R1"]', { timeout: 10000 });
@@ -243,8 +242,9 @@ test('the rubric bank in Rubric setup: a saved rubric used (its rows by place), 
   await typeIn(p, 'dialog[open] [data-subname]', 'Speech rubric');
   await p.select('dialog[open] [data-subunit]', 'U2');
   await tap(p, 'dialog[open] [data-subok]');
-  await p.waitForSelector('dialog[open] [data-subitem]');
-  let b = await bankHas('Speech rubric'); const r = b.rubrics.find(x => x.name === 'Speech rubric');
+  // The name form closes once the Planner bank and the grading list are both saved.
+  await p.waitForSelector('dialog[open] [data-suask]', { hidden: true });
+  let b = await kvBank(); const r = b.rubrics.find(x => x.name === 'Speech rubric');
   assert.ok(r, 'in the Planner\'s bank'); assert.deepEqual(r.criteria, ['Understanding', 'Evidence', 'Voice']); assert.deepEqual(r.unit, { id: 'U2', course: 'Grade 9', title: 'Unit 2: Poetry' });
   assert.ok((await p.evaluate(() => JSON.parse(localStorage.getItem('gs.rubrics')))).some(x => x.name === 'Speech rubric'), 'and in grading\'s own list');
   // Delete it, then Undo

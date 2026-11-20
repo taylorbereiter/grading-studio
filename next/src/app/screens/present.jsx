@@ -8,8 +8,11 @@
 import { h, Fragment } from 'preact';
 import { useState, useLayoutEffect, useEffect, useRef } from 'preact/hooks';
 import { IconButton, Button, Switch, Sheet, Select, TextInput, toast } from '../../ui/index.js';
-import { render } from 'preact';
-import { today } from '../plan/lessons.js';
+import { changeLesson } from '../../planning/lesson-change.js';
+import { saveErrorMessage } from '../plan/save.js';
+import { prSlotNow } from '../../engines/present.js';
+import { rtParse, rtInlineHtml, normTaught } from '../../engines/planner.js';
+import { classOf, today } from '../plan/lessons.js';
 import { t, date } from '../../i18n/t.js';
 import * as PT from '../plan/ptimer.js';
 import { live, clsOf, norm, host } from '../../planning/school.js';
@@ -29,7 +32,6 @@ function groupsOf(names, n) {
   const up = Math.ceil(len / n), least = Math.floor(len / up), k = least >= Math.max(2, n - 1) || up === 1 ? up : Math.max(1, Math.floor(len / n));
   const out = Array.from({ length: k }, () => []); shuffle(names).forEach((x, i) => out[i % k].push(x)); return out;
 }
-const lines = body => String(body || '').split('\n').map(x => x.replace(/^\s*(?:[•\-*]|\d+[.)])\s*/, '').trim()).filter(Boolean);
 const mmss = PT.mmss;
 const plain = x => String(x || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
 const esc = x => String(x == null ? '' : x).replace(/[&"><]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -78,47 +80,87 @@ function TimerPanel({ tm, onOwn }) {
   </div>;
 }
 
-// Where the class got to (src/planner/present.js taughtDlg): once a lesson for today has been presented for two minutes or more,
-// the slide reached and the agenda items ticked are kept on that class's place in "taught" at once; the toast takes it back, or
-// opens the question to change the class, the slide or add a line for next time.
-const copy = x => JSON.parse(JSON.stringify(x));
-export function gotTo(p, l, slot, far, secs, save, agenda) {
-  if (!slot || !save || slot.date !== today() || !(secs >= 120) || typeof far !== 'number') return;
-  const n = copy(l), had = (n.taught || []).find(x => x.classId === slot.classId && x.date === slot.date);
-  const t0 = { ...(had || { classId: slot.classId, date: slot.date, note: '' }), slide: far + 1, of: l.slides.length, at: Date.now() };
-  if (agenda && agenda[1]) t0.agenda = agenda;
-  n.taught = [...(n.taught || []).filter(x => x !== had), t0];
-  save(n);
-  toast(t('plan.got_to', { n: far + 1, of: l.slides.length }), { undo: () => { const b = copy(n); if (l.taught) b.taught = copy(l.taught); else delete b.taught; save(b); },
-    action: { label: t('present.change'), run: () => askGotTo(p, n, slot, save) } });
-}
-function GotTo({ p, l, slot, save, onClose }) {
-  const slots = l.slots.length ? [...l.slots].sort((a, b) => a.date.localeCompare(b.date)) : [slot];
-  if (!slots.some(s => s.classId === slot.classId && s.date === slot.date)) slots.push(slot);
-  const of = l.slides.length, find = s => (l.taught || []).find(x => x.classId === s.classId && x.date === s.date);
-  const [at, setAt] = useState(String(slots.findIndex(s => s.classId === slot.classId && s.date === slot.date)));
-  const h0 = find(slots[+at]) || {};
-  const [sl, setSl] = useState(String(Math.min(of, h0.slide || of))), [note, setNote] = useState(h0.note || '');
-  const pick = v => { setAt(v); const h = find(slots[+v]); if (h) { setSl(String(Math.min(of, h.slide))); setNote(h.note || ''); } };
-  const keep = () => {
-    const s = slots[+at], old = find(s), n = copy(l), t0 = { classId: s.classId, date: s.date, slide: +sl || 1, of, note: note.trim(), at: Date.now() };
-    if (old && old.agenda) t0.agenda = old.agenda;
-    n.taught = [...(n.taught || []).filter(x => !(x.classId === s.classId && x.date === s.date)), t0];
-    save(n); onClose(); toast(t('present.noted'));
+// Save the teacher's confirmed choice on the latest version of the lesson.
+const sameSlot = (a, b) => a.classId === b.classId && a.date === b.date;
+function GotTo({ p, lesson, slot, slide, agenda, onClose }) {
+  const slots = [...lesson.slots].sort((a, b) => a.date.localeCompare(b.date));
+  const of = lesson.slides.length, find = s => (lesson.taught || []).find(x => sameSlot(x, s));
+  const [at, setAt] = useState(String(slots.findIndex(s => sameSlot(s, slot))));
+  const [sl, setSl] = useState(String(slide)), [note, setNote] = useState(find(slot)?.note || '');
+  const [busy, setBusy] = useState(false), pending = useRef(false), [error, setError] = useState('');
+  const pick = v => {
+    const old = find(slots[+v]), previous = find(slots[+at]);
+    setAt(v);
+    if (old) {
+      setSl(String(Math.min(of, old.slide))); setNote(old.note || '');
+    } else if (previous && note === previous.note) {
+      setNote('');
+    }
   };
-  const cn = id => { const c = ((p.setup && p.setup.classes) || []).find(x => String(x.id) === String(id)); return c ? c.name : ''; };
-  return <Sheet open title={t('present.where')} onClose={onClose} footer={<><Button onClick={onClose} data-gt="later">{t('present.not_now')}</Button><Button variant="primary" onClick={keep} data-gt="save">{t('common.save')}</Button></>}>
-    {slots.length > 1 && <Select label={t('plan.class')} value={at} onChange={pick} data-gt="class" options={slots.map((s, j) => ({ value: String(j), label: (cn(s.classId) ? cn(s.classId) + ' · ' : '') + date(new Date(s.date + 'T12:00'), { weekday: 'short', day: 'numeric', month: 'short' }) }))} />}
-    <Select label={t('plan.got_to_label')} value={sl} onChange={setSl} data-gt="slide" options={l.slides.map((x, j) => ({ value: String(j + 1), label: j + 1 === of ? t('plan.got_to_last', { n: j + 1 }) : t('plan.slide_n', { n: j + 1 }) }))} />
-    <TextInput label={t('present.next_time')} value={note} onInput={setNote} data-gt="note" />
+  const dismiss = () => { if (!pending.current) onClose(); };
+  const keep = async () => {
+    if (pending.current) return;
+    pending.current = true; setBusy(true); setError('');
+    let committed = false, folderPending = false;
+    try {
+      const selected = slots[+at];
+      const result = await changeLesson(lesson.id, current => {
+        if (!current.slots?.some(s => sameSlot(s, selected))) return;
+        const history = current.taught || [], old = history.find(t => sameSlot(t, selected));
+        const savedNote = note === (find(selected)?.note || '') ? old?.note || '' : note;
+        const [entry] = normTaught([{ ...selected, of, slide: +sl, note: savedNote, agenda: agenda || old?.agenda, at: Date.now() }]);
+        current.taught = [...history.filter(t => !sameSlot(t, selected)), entry].sort((a, b) => a.date.localeCompare(b.date) || a.at - b.at);
+        // A linked-folder check can fail or the tab can close after this transaction commits.
+        if (p.folder) current._sync = 1;
+        return current;
+      }, () => { committed = true; });
+      if (!result) throw new Error('The scheduled lesson is no longer available');
+      folderPending = !!result._sync;
+    } catch (e) {
+      if (!committed) {
+        console.error(e); setError(saveErrorMessage(e)); pending.current = false; setBusy(false); return;
+      }
+      try {
+        const folder = await PARTS.pfolder();
+        folderPending = !(await folder.recoverLessonFileConflict(lesson.id, e));
+      } catch (retryError) {
+        console.error(retryError); folderPending = true;
+      }
+      if (folderPending) console.error(e);
+    }
+    onClose(); toast(folderPending ? t('present.saved_here') : t('present.noted'));
+  };
+  const label = s => [classOf(p, s.classId)?.name, date(new Date(s.date + 'T12:00'), { weekday: 'short', day: 'numeric', month: 'short' })].filter(Boolean).join(' · ');
+  return <Sheet open title={t('present.where')} onClose={dismiss} footer={<><Button disabled={busy} onClick={dismiss} data-gt="later">{t('present.not_now')}</Button><Button variant="primary" disabled={busy} onClick={keep} data-gt="save">{t('common.save')}</Button></>}>
+    {slots.length > 1 ? <Select label={t('plan.class')} value={at} onChange={pick} disabled={busy} data-gt="class" options={slots.map((s, j) => ({ value: String(j), label: label(s) }))} /> : <p data-raw>{label(slot)}</p>}
+    <Select label={t('plan.got_to_label')} value={sl} onChange={setSl} disabled={busy} data-gt="slide" options={lesson.slides.map((x, j) => ({ value: String(j + 1), label: j + 1 === of ? t('plan.got_to_last', { n: j + 1 }) : t('plan.slide_n', { n: j + 1 }) }))} />
+    <TextInput label={t('present.next_time')} value={note} onInput={setNote} disabled={busy} maxLength={200} data-autofocus data-gt="note"
+      onKeyDown={e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); keep(); } }} />
+    {error && <p role="alert">{error}</p>}
   </Sheet>;
 }
-function askGotTo(p, l, slot, save) {
-  const host = document.createElement('div'); document.body.appendChild(host);
-  render(h(GotTo, { p, l, slot, save, onClose: () => { render(null, host); host.remove(); } }), host);
+
+// Where Present begins from the lesson: the slide this class stopped on last time, if it stopped partway (src/planner/present.js
+// prResume).
+function resumeAt(l, slot) {
+  const ts = (l.taught || []).filter(x => !slot || x.classId === slot.classId), x = ts[ts.length - 1];
+  return x && x.slide < l.slides.length && x.slide < x.of ? x.slide - 1 : 0;
+}
+export function Session({ p, l, slot, explicitClass, explicitDay, start, onSlide, onClose }) {
+  const [progress, setProgress] = useState(null);
+  // Keep the deck and its class together if another window edits the lesson while it is on screen.
+  const [lesson] = useState(l);
+  const [selected] = useState(() => {
+    if (explicitDay || !lesson.slots?.length || (explicitClass && lesson.slots.some(s => sameSlot(s, slot)))) return slot;
+    engine(p);
+    return prSlotNow(lesson) || slot;
+  });
+  if (progress) return <GotTo p={p} {...progress} onClose={onClose} />;
+  return <Present p={p} l={lesson} slot={selected} start={start ?? resumeAt(lesson, selected)} className={classOf(p, selected?.classId)?.name || ''}
+    onClose={(i, result) => { onSlide(i); if (result) setProgress(result); else onClose(); }} />;
 }
 
-export function Present({ p, l, start = 0, className, slot, save, onClose }) {
+function Present({ p, l, start = 0, className, slot, onClose }) {
   const n = l.slides.length;
   const [i, setI] = useState(Math.max(0, Math.min(start, n - 1)));
   const [size, setSize] = useState(() => fit());
@@ -129,7 +171,8 @@ export function Present({ p, l, start = 0, className, slot, save, onClose }) {
   function fit() { const w = window.innerWidth, hh = window.innerHeight; return Math.floor(Math.min(w, hh * 1280 / 720)); }
   const names = () => { const r = rosterNamesForPresent(), k = nameKey(className || ''); const c = r.find(x => nameKey(x.name) === k); return c ? c.names : []; };
   const groupsL = linkGroups(p, l, className), links = groupsL.flatMap(g => g.links);
-  const ag = l.slides.find((s, j) => j > 0 && s.layout === 'agenda'), items = ag ? lines(ag.body) : [];
+  const ag = l.slides.find(s => s.layout === 'agenda'), items = ag ? rtParse(ag.body).filter(x => x.text.trim()) : [];
+  const total = items.filter(item => !item.lvl).length;
   const go = d => setI(x => Math.max(0, Math.min(n - 1, x + d)));
   const toggle = k => setPanel(v => v === k ? '' : k);
   const pickName = () => { const ns = names(); setPick(ns.length ? ns[Math.floor(Math.random() * ns.length)] : ''); setPanel('pick'); };
@@ -145,6 +188,7 @@ export function Present({ p, l, start = 0, className, slot, save, onClose }) {
       const k = e.key, s = st.current;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (isTyping(e) && k !== 'Escape') return;
+      if ((k === ' ' || k === 'Enter') && e.target?.closest?.('button,a[href]')) return;
       const stop = () => { e.preventDefault(); e.stopPropagation(); };
       if (k === 'Escape') { stop(); if (s.blank) setBlank(false); else if (s.panel) setPanel(''); else if (s.typed) setTyped(''); else end(); return; }
       if (/^[0-9]$/.test(k)) {
@@ -184,7 +228,7 @@ export function Present({ p, l, start = 0, className, slot, save, onClose }) {
     return () => { shut(); window.removeEventListener('pagehide', gone); document.removeEventListener('visibilitychange', awake); try { if (lock) lock.release(); } catch {}
       window.removeEventListener('keydown', key, true); window.removeEventListener('resize', rs); document.removeEventListener('fullscreenchange', fs); };
   }, [l.id]);
-  st.current.links = links; st.current.ticks = ticks; st.current.nItems = items.length;
+  st.current.links = links; st.current.agenda = ticks.size ? [ticks.size, total] : null;
   // The class screen window: the slide drawn the same way, scaled to the window, kept in step below. F there (or its own button)
   // puts that window on its whole screen.
   function shut() { const w = pop.current; pop.current = null; setOut(false); try { if (w && !w.closed) w.close(); } catch {} }
@@ -215,8 +259,13 @@ export function Present({ p, l, start = 0, className, slot, save, onClose }) {
   }
   useEffect(() => { paint(); }, [i, blank, out]);
   // Ending Present leaves a running timer in the corner of the app (plan/ptimer-float.jsx).
-  function end() { try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch {} if (PT.timer()) PARTS.ptimer().then(m => m.showFloat()).catch(e => console.error(e)); gotTo(p, l, slot, far.current, (Date.now() - began.current) / 1000, save, [st.current.ticks.size, st.current.nItems]); onClose(st.current.i); }
-  const s = l.slides[i], cur = items.findIndex((x, j) => !ticks.has(j)), big = PT.bigOn();
+  function end() {
+    try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch {}
+    if (PT.timer()) PARTS.ptimer().then(m => m.showFloat()).catch(e => console.error(e));
+    const ask = slot && slot.date === today() && l.slots?.some(s => sameSlot(s, slot)) && Date.now() - began.current >= 120000;
+    onClose(st.current.i, ask ? { lesson: l, slot, slide: far.current + 1, agenda: st.current.agenda } : null);
+  }
+  const s = l.slides[i], cur = items.findIndex((x, j) => !x.lvl && !ticks.has(j)), big = PT.bigOn();
   const chip = tm ? (tm.done ? t('present.up') : mmss(tm.left)) : '', clock = date(now, { hour: 'numeric', minute: '2-digit' });
   const chipLabel = tm ? (tm.done ? t('present.up_clear') : t(tm.paused ? 'present.chip_go' : 'present.chip_pause', { time: mmss(tm.left) })) : '';
   let ln = 0;
@@ -225,7 +274,10 @@ export function Present({ p, l, start = 0, className, slot, save, onClose }) {
     {!blank && <Slide slide={s} lesson={l} plan={p} width={size} label={t('plan.slide_of', { n: i + 1, of: n })} />}
     {panel && !blank && <div class={'prpanel pr-' + panel} role="region" aria-label={t(PANEL[panel])}>
       {panel === 'notes' && (s.notes ? <p data-raw>{s.notes}</p> : <p class="mute">{t('plan.no_notes')}</p>)}
-      {panel === 'agenda' && (items.length ? <ul class="pragenda">{items.map((x, j) => <li><button type="button" class={(ticks.has(j) ? 'done' : '') + (j === cur ? ' now' : '')} aria-pressed={String(ticks.has(j))} onClick={() => tick(j)} data-ag={j}><span class="bx" aria-hidden="true" /><span data-raw>{x}</span></button></li>)}</ul>
+      {panel === 'agenda' && (total ? <ul class="pragenda">{items.map((x, j) => {
+        const words = <span data-raw dangerouslySetInnerHTML={{ __html: rtInlineHtml(x.text) }} />;
+        return <li>{x.lvl ? words : <button type="button" class={(ticks.has(j) ? 'done' : '') + (j === cur ? ' now' : '')} aria-pressed={String(ticks.has(j))} onClick={() => tick(j)} data-ag={j}><span class="bx" aria-hidden="true" />{words}</button>}</li>;
+      })}</ul>
         : <><p class="mute">{t('plan.no_agenda')}</p><ol class="pragenda">{l.slides.map((x, j) => <li><button type="button" class={j === i ? 'now' : ''} onClick={() => setI(j)} data-goto={j}><span data-raw>{plain(x.title) || t('plan.slide_of', { n: j + 1, of: n })}</span></button></li>)}</ol></>)}
       {panel === 'links' && (groupsL.length ? groupsL.map(g => <><h3 data-raw>{g.label}</h3><ul class="prlinks">{g.links.map(x => { ln++; return <li><a href={x.url} target="_blank" rel="noopener" data-link={ln}>{ln <= 9 && <kbd>{ln}</kbd>}<span data-raw>{x.name}</span></a></li>; })}</ul></>) : <p class="mute">{t('plan.no_links')}</p>)}
       {panel === 'timer' && <TimerPanel tm={tm} onOwn={() => { const x = box.current && box.current.querySelector('[data-own="m"]'); if (x) x.focus(); }} />}

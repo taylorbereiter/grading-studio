@@ -1,6 +1,6 @@
 import { normUnit } from '../engines/planner.js';
 import { unitBase, unitForFile } from '../engines/pfolder.js';
-import { writeRecordFile } from './folder-file.js';
+import { retainFolderCopy } from './folder-recovery.js';
 
 // Compare the fields the two Planners share, without generating revisions for a
 // timestamp, a folder acknowledgement or an attachment's local blob identity.
@@ -9,25 +9,9 @@ export function unitChanged(local, incoming) {
   return JSON.stringify(material(local)) !== JSON.stringify(material(incoming));
 }
 
-async function keepText(dir, unit, text) {
-  const bytes = new TextEncoder().encode(text);
-  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
-  const hash = Array.from(digest, b => b.toString(16).padStart(2, '0')).join('');
-  const name = unitBase(unit).slice(0, 32) + ' - ' + hash + '.unit.json';
-  const recovered = await dir.getDirectoryHandle('Recovered', { create: true });
-  // Both Planners scan only the immediate files under Units. A retry can reuse
-  // the same bytes, but must never overwrite a different recovery document.
-  await writeRecordFile(recovered, name, text);
-  const saved = await (await recovered.getFileHandle(name)).getFile();
-  const readback = new Uint8Array(await saved.arrayBuffer());
-  if (bytes.length !== readback.length || !bytes.every((b, i) => b === readback[i])) {
-    throw new Error('Planner unit recovery file could not be verified');
-  }
-}
-
 export function retainUnit(dir, unit) {
   const portable = unitForFile({ ...unit, files: unit.files || [] });
-  return keepText(dir, unit, JSON.stringify(portable, null, 2));
+  return retainFolderCopy(dir, unitBase(unit), '.unit.json', JSON.stringify(portable, null, 2));
 }
 
 export async function importUnit(dir, old, incoming, file) {
@@ -49,6 +33,6 @@ export async function importUnit(dir, old, incoming, file) {
   if (unitChanged(old, merged)) await retainUnit(dir, old);
   // A full folder export can immediately follow this import. Preserve any
   // external teacher text that the ownership rules kept out of the active unit.
-  if (displaced) await keepText(dir, incoming, await file.text());
+  if (displaced) await retainFolderCopy(dir, unitBase(incoming), '.unit.json', await file.text());
   return merged;
 }

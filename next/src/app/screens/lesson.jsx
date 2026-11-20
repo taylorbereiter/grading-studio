@@ -191,7 +191,7 @@ export function AfterClass({ l, slot, onSave }) {
     n.taught = [...(n.taught || []).filter(x => !(x.classId === slot.classId && x.date === slot.date)), t0];
     onSave(n);
   };
-  // Where the class got to, set by hand: Present records it on its own after two minutes, and this changes it or sets it.
+  // Where the class got to, set by hand outside Present.
   const reached = v2 => {
     const of = l.slides.length, sl = Math.max(1, Math.min(of, +v2 || of));
     if (onPhone()) { try { saveTaughtNote(key, { slide: sl, of, x: shown(), t: Date.now() }); toast(t('plan.note_waits')); } catch (e) { saveFailed(e); } return; }
@@ -207,13 +207,6 @@ export function AfterClass({ l, slot, onSave }) {
       onChange={reached} /></section>;
 }
 
-// Where Present begins from the lesson: the slide this class stopped on last time, if it stopped partway (src/planner/present.js
-// prResume). And where the class got to, kept on its place in "taught" once a lesson for today has been presented for two minutes
-// or more: Present keeps it (screens/present.jsx gotTo).
-function resumeAt(l, slot) {
-  const ts = (l.taught || []).filter(x => !slot || x.classId === slot.classId), x = ts[ts.length - 1];
-  return x && x.slide < l.slides.length && x.slide < x.of ? x.slide - 1 : 0;
-}
 export default function LessonPage({ route }) {
   const p = usePlan();
   const [l, save] = useLesson(p, route.params.id);
@@ -228,7 +221,10 @@ export default function LessonPage({ route }) {
   // Planned from the Calendar "with your assistant": the assistant sheet opens on arrival, once.
   useEffect(() => { try { if (l && sessionStorage.getItem('gsn.ask') === l.id) { sessionStorage.removeItem('gsn.ask'); ask(); }
     // a search hit (plan/search.jsx): the lesson opened at its slide or its document
-    const at = l && JSON.parse(sessionStorage.getItem('gsn.at') || 'null'); if (at && at.id === l.id) { sessionStorage.removeItem('gsn.at'); if (at.doc) setTool({ name: 'doc', arg: at.doc }); else if (at.slide >= 0) { setCur(at.slide); setView('slides'); } } } catch { } if (l && route.params.view === 'present') setPresenting(true); }, [l && l.id]);
+    const at = l && JSON.parse(sessionStorage.getItem('gsn.at') || 'null'); if (at && at.id === l.id) { sessionStorage.removeItem('gsn.at'); if (at.doc) setTool({ name: 'doc', arg: at.doc }); else if (at.slide >= 0) { setCur(at.slide); setView('slides'); } } } catch { } }, [l && l.id]);
+  useEffect(() => {
+    if (l && l.id === route.params.id) setPresenting(route.params.view === 'present' || !!route.params.day);
+  }, [l && l.id, route.path]);
   const dl = () => (l.final && Tools ? (Tools.finFresh(l) ? Tools.downloadFinal(l) : setTool({ name: 'which' })) : download(p, l));
   // A tool from a menu: the ones that are only a download run at once, the others open their sheet.
   const onTool = (name, arg) => {
@@ -275,8 +271,11 @@ export default function LessonPage({ route }) {
   }, [l && l.id, l && l.slides.length, l && l.final && l.final.id, view, presenting, !!Tools]);
   if (!p) return <div class="page"><div class="loading" aria-busy="true" /></div>;
   if (!l) return <div class="page"><header class="ph"><h1>{t('plan.lesson')}</h1></header><EmptyState icon="warn" title={t('plan.lesson_gone')} action={<a class="btn" href={href('calendar')}>{t('nav.calendar')}</a>} /></div>;
-  // lesson/<id>/present/<class>: the old planner.html#present address, presenting at once for that class today.
-  const cls = route.params.cls, slot = cls ? { classId: cls, date: today() } : slotOf(p, l), per = periodOf(p, slot);
+  // A calendar link selects the exact meeting. Older class-only links refer to today.
+  const { cls, day } = route.params;
+  const slot = day ? l.slots?.find(s => s.classId === cls && s.date === day)
+    : cls ? { classId: cls, date: today() } : slotOf(p, l);
+  const per = periodOf(p, slot);
   const n = l.slides.length;
   return <div class={'page lessonpage' + (beside ? ' with-beside' : '')} data-view={view} onContextMenu={onContext} onDragOver={e => Sd && Sd.pageOver(e)} onDrop={e => Sd && Sd.pageDrop(e, p, l, save, Tools)}>
     <header class="lh">
@@ -305,6 +304,6 @@ export default function LessonPage({ route }) {
     <AssistantSheet key={asking ? 'a' + redo : 'x'} p={p} l={l} open={asking} slide={redo} onClose={() => { setAsking(false); setRedo(null); }} save={save} />
     {Tools && tool && <Tools.default name={tool.name} arg={tool.arg} p={p} l={l} slot={slot} save={save} onClose={() => setTool(null)} />}
     {Tools && note && <Tools.NotePop p={p} l={l} at={note} save={save} onClose={() => setNote(null)} />}
-    {presenting && PresentMod && <PresentMod.Present p={p} l={l} slot={slot} save={save} className={per ? per.c.name : cls ? (classOf(p, cls) || {}).name : ''} start={view !== 'lesson' ? cur : resumeAt(l, slot)} onClose={i => { setPresenting(false); if (typeof i === 'number') setCur(i); }} />}
+    {presenting && l.id === route.params.id && PresentMod && <PresentMod.Session key={route.path} p={p} l={l} slot={slot} explicitClass={cls} explicitDay={day} start={view === 'lesson' ? null : cur} onSlide={setCur} onClose={() => setPresenting(false)} />}
   </div>;
 }
