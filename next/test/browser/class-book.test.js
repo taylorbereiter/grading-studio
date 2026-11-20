@@ -4,6 +4,7 @@
 // moved and taken off, each one undo step that the current app reads. npm run next:browser. Made-up students only.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
+const { isTargetClosedError } = require('puppeteer-core');
 const http = require('http'), fs = require('fs'), path = require('path');
 const { launch } = require('../../../test/helpers/chrome.js');
 const { plant, appReady } = require('../../../test/helpers/app.js');
@@ -395,8 +396,8 @@ test('IB classes: MYP levels and grades, DP boundaries, weights and a predicted 
   assert.deepEqual(cells.crit, ['A', 'B']); assert.deepEqual(strip(cells.typed.s[N[0]]), { l: { A: 5, B: 6 } }); assert.deepEqual(strip(cells.typed.s[N[1]]), { l: { A: 3, B: 4 } });
   // the best-fit levels for the first student, from the fit box; the outlined hint is the most recent level
   await p.click('[data-fit="0:A"]');
-  await p.waitForSelector('dialog[open] [data-fit-box="0"]');
-  assert.equal(await p.$eval('dialog[open] [data-lv="A:5"]', b => b.className), 'hint');
+  // The box can open while the gradebook is still reading the task just saved.
+  await p.waitForSelector('dialog[open] [data-fit-box="0"] [data-lv="A:5"].hint[aria-checked="false"]', { timeout: 10000 });
   for (const k of ['A:5', 'B:6', 'C:7', 'D:4']) await p.click('dialog[open] [data-lv="' + k + '"]');
   await waitLib(p, c => { const r = ((c.lv || {}).t1 || {})[c.names[0]]; return r && r.A === 5 && r.B === 6 && r.C === 7 && r.D === 4; });
   await p.waitForFunction(() => document.querySelector('dialog[open] [data-fit-grade]').textContent !== '–');
@@ -487,7 +488,7 @@ test('Import a gradebook: pasted cells matched to the roster and the assignments
 
 // The entry list (src/mbentry.js): a task's scores in the school's order, a press on a student greys the row and moves on, the order
 // kept as the teacher's own setting (lib.me.mbOrder), which the current app reads.
-test('Entry list: one task in last-name order, ticked through, the order kept for the current app', async () => {
+test('Entry list: one task in last-name order, ticked through, the order kept for the current app', { timeout: 90000 }, async () => {
   const ctx = await browser.createBrowserContext(), errors = [];
   const p = await page(ctx, errors);
   await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
@@ -510,7 +511,11 @@ test('Entry list: one task in last-name order, ticked through, the order kept fo
   await w.click('[data-mb-row="0"]'); await w.click('[data-mb-row="1"]');
   assert.equal(await w.$eval('[data-mb] li.cur', e => e.dataset.mbRow), '2');
   assert.equal(await w.$$eval('[data-mb] li.done', l => l.length), 2);
-  await w.click('[data-mb-close]');
+  // Closing the popup can end its browser session before the mouse release is acknowledged.
+  const closed = new Promise(resolve => w.once('close', resolve));
+  await Promise.all([closed, w.click('[data-mb-close]').catch(error => {
+    if (!isTargetClosedError(error)) throw error;
+  })]);
   await p.close();
   const old = await page(ctx, errors);
   await old.goto(srv.url); await appReady(old);

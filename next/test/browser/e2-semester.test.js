@@ -11,7 +11,13 @@ test('E2-010 E2-046 E2-047 E2-045 E2-094: a Semester view beside the week and mo
   const p = await h.fresh();
   await h.open(p, 'calendar/class');
   await p.click('main [role="radiogroup"] [role="radio"]:focus, main [role="radiogroup"] [aria-checked="true"]');
-  for (let i = 0; i < 3; i++) await p.keyboard.press('ArrowRight');
+  for (const view of ['time', 'month', 'semester']) {
+    await p.keyboard.press('ArrowRight');
+    const selected = await p.waitForSelector('.calendar[data-view="' + view + '"] [role="radio"][data-v="' + view + '"][aria-checked="true"]');
+    // Pause between key presses so a delayed return to the heading cannot pass as stable focus.
+    await new Promise(resolve => setTimeout(resolve, 250));
+    assert.ok(await selected.evaluate(el => el === document.activeElement), view + ' keeps keyboard focus between arrow presses');
+  }
   await until(p, () => location.hash === '#/calendar/semester' && document.querySelector('.sem [data-wk]'));
   assert.equal(await p.$eval('#cal-title', e => e.textContent), 'Semester');
   assert.deepEqual(await p.$$eval('.sem .hd [role="columnheader"]', x => x.map(e => e.textContent)), ['Week', 'Grade 9', 'Grade 10']);

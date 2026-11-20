@@ -166,13 +166,17 @@ test('Help: an answer at its own address, search with Esc, where things live, wh
   await p.waitForSelector('.hlpnew li', { timeout: 10000 });
   await p.click('input[data-hlpq]');
   await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
-  await p.waitForFunction(() => { const d = document.querySelector('dialog[open]'); return d && d.contains(document.activeElement); }, { timeout: 10000 });
+  await p.waitForSelector('dialog.cmd[open] [role="combobox"]:focus');
+  const question = await p.$eval('[data-hlp="anchor_papers"]', el => el.textContent.trim());
   await p.keyboard.type('anchor papers');
-  await p.waitForFunction(() => [...document.querySelectorAll('dialog[open] [role="option"]')].some(o => /anchor papers/i.test(o.textContent)), { timeout: 10000 });
-  const first = await p.$eval('dialog[open] [role="option"]', o => o.textContent);
+  // The lesson-search command also echoes these words while Help commands are loading.
+  await p.waitForFunction(question => {
+    const selected = document.querySelector('dialog.cmd[open] [role="option"][aria-selected="true"]');
+    return selected && selected.textContent.trim() === question;
+  }, { timeout: 10000 }, question);
   await p.keyboard.press('Enter');
-  await p.waitForFunction(() => location.hash.startsWith('#/help/'), { timeout: 10000 });
-  assert.ok(first.length > 0);
+  await p.waitForFunction(() => location.hash === '#/help/anchor_papers' &&
+    document.querySelector('#hlpa-anchor_papers p'), { timeout: 10000 });
   assert.deepEqual(errors, []);
   await ctx.close();
 });

@@ -205,28 +205,78 @@ export function onRoute(f) { told.add(f); return () => told.delete(f); }
 
 /* where she was on each route */
 const kept = new Map();   // path -> { top, focus }
-let main = null, was = null;
+let main = null, was = null, choice = null, replacing = null, used = null;
+const inputEvents = ['pointerdown', 'keydown', 'wheel'];
+export const routeInteracted = (path = was) => path != null && used === path;
 export function setMain(el) { main = el; }
-const focusKey = el => el && el !== document.body && (el.id || el.dataset.focus || (el.getAttribute && el.getAttribute('href')) || '');
-function remember() {
-  if (!was || !main) return;
-  const a = document.activeElement, inMain = a && main.contains(a) || a && a.closest && a.closest('[data-shell-nav]');
-  kept.set(was, { top: main.scrollTop, focus: inMain ? focusKey(a) : '' });
+function focusSelector(el) {
+  if (!el) return '';
+  const scope = main.contains(el) ? 'main' : el.closest('[data-shell-nav]') ? '[data-shell-nav]' : '';
+  if (!scope) return '';
+  // Arrow keys have already focused the next button when the outgoing address is saved. Return to this group's selected item.
+  if (el.hasAttribute('data-rv')) {
+    const group = el.closest('[role="tablist"],[role="radiogroup"]');
+    return scope + ' [role="' + group.role + '"][aria-label="' + CSS.escape(group.ariaLabel) + '"] [data-rv][tabindex="0"]';
+  }
+  if (el.id) return '#' + CSS.escape(el.id);
+  const attr = el.hasAttribute('data-focus') ? 'data-focus' : el.hasAttribute('href') ? 'href' : '';
+  return attr ? scope + ' [' + attr + '="' + CSS.escape(el.getAttribute(attr)) + '"]' : '';
 }
-// Called by the shell once the new screen is drawn.
+function remember(path = was) {
+  if (!path || !main) return;
+  kept.set(path, { top: main.scrollTop, focus: focusSelector(document.activeElement) });
+}
+// A deep link has already scrolled and focused its destination. Keep that position under the address it leaves in history.
+export function replaceHere(hash) {
+  replacing = parse(hash).path;
+  remember(replacing);
+  location.replace(hash);
+}
+// Restore during the route commit. A lazy screen may need to draw its heading, saved control, or full scroll area first.
 export function restore(path, fresh) {
-  const k = kept.get(path);
-  if (!main) return;
-  main.scrollTop = k ? k.top : 0;
-  const find = key => key && (document.getElementById(key) || main.querySelector('[data-focus="' + CSS.escape(key) + '"]') || document.querySelector('[data-shell-nav] [href="' + CSS.escape(key) + '"]'));
-  const el = k && find(k.focus);
-  if (el) el.focus({ preventScroll: true });
-  // A field she has already started typing in keeps the focus.
-  else if (fresh && !(document.activeElement && main.contains(document.activeElement) && document.activeElement.matches('input,textarea,select,[contenteditable]'))) { const h = main.querySelector('h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } }
+  const k = kept.get(path), top = k ? k.top : 0;
+  const samePage = replacing === path;
+  replacing = null;
+  if (!main || (samePage && (document.activeElement !== document.body || !k?.focus))) return;
+  const apply = () => {
+    if (current().path !== path) return true;
+    // Arrow keys focus the next radio or tab before it changes the address. Keep that same control once selected.
+    if (choice && choice === document.activeElement && choice.tabIndex === 0) return true;
+    const el = k?.focus && document.querySelector(k.focus);
+    const heading = main.querySelector('h1'), busy = main.querySelector('[aria-busy="true"]');
+    if (busy && (busy.contains(heading) || (!el && (k?.focus || (fresh && !heading))) ||
+        top > main.scrollHeight - main.clientHeight)) return false;
+    main.scrollTop = top;
+    if (el) el.focus({ preventScroll: true });
+    else if (!samePage && fresh && heading && !(main.contains(document.activeElement) && document.activeElement.matches('input,textarea,select,[contenteditable]'))) {
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
+    }
+    return true;
+  };
+  if (apply()) return;
+  const events = new AbortController();
+  const stop = () => { observer.disconnect(); events.abort(); };
+  const observer = new MutationObserver(() => { if (apply()) stop(); });
+  observer.observe(main, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-busy'] });
+  // Moving over the destination or using a control anywhere in the shell takes precedence over the saved position.
+  // Replacing a tall screen with a loading placeholder can itself dispatch scroll.
+  const options = { capture: true, passive: true, signal: events.signal };
+  main.addEventListener('pointermove', stop, options);
+  for (const type of [...inputEvents, 'focusin']) document.addEventListener(type, stop, options);
+  return stop;
 }
 let started = false;
 export function start() {
   if (started) return; started = true;
   was = current().path;
-  window.addEventListener('hashchange', () => { remember(); const r = current(); from = was; was = r.path; told.forEach(f => f(r)); });
+  for (const type of inputEvents) document.addEventListener(type, () => { used = was; }, { capture: true, passive: true });
+  window.addEventListener('hashchange', () => {
+    used = null;
+    remember();
+    const r = current(), previous = parse(was);
+    choice = r.chunk === previous.chunk && r.params.id === previous.params.id && main
+      ? main.querySelector('[data-rv][tabindex="-1"]:focus') : null;
+    from = was; was = r.path; told.forEach(f => f(r));
+  });
 }

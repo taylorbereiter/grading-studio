@@ -6,7 +6,7 @@ import { h, Fragment } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { Button, Segmented, EmptyState, Dialog, TextInput, Checkbox, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
-import { href } from '../router.js';
+import { href, replaceHere, routeInteracted } from '../router.js';
 import * as undoList from '../../services/undo.js';
 import { copyText } from '../../services/clipboard.js';
 import { engine as B, change, classIn } from '../../students/book.js';
@@ -45,8 +45,16 @@ function send(m) {
 
 export default function ClassTodo({ classId, sub }) {
   const b = useBook(), [term, setTerm] = useState(() => keep('term:' + classId)), [view, setView] = useState(() => keep('misview') || 'stu'), [words, setWords] = useState(false);
-  // todo/missing: straight to the missing work (Find and the tab row reach it by address)
-  useEffect(() => { if (!b || sub !== 'missing') return; const el = document.querySelector('[data-mis]'); if (el) { el.scrollIntoView({ block: 'start' }); const h = el.querySelector('h2'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } } location.replace(href('class', classId, 'todo')); }, [b, sub]);
+  // Open the section unless the teacher has already moved elsewhere while the gradebook loaded.
+  useEffect(() => {
+    if (!b || sub !== 'missing') return;
+    const section = document.querySelector('[data-mis]');
+    if (section && !routeInteracted()) {
+      section.scrollIntoView({ block: 'start' });
+      section.querySelector('h2').focus({ preventScroll: true });
+    }
+    replaceHere(href('class', classId, 'todo'));
+  }, [b, sub, classId]);
   if (!b) return <div class="loading" aria-busy="true" />;
   const x = classBook(b, classId);
   if (!x) return <EmptyState icon="warn" title={t('class.read_failed')} />;
@@ -69,7 +77,7 @@ export default function ClassTodo({ classId, sub }) {
   return <div class="ctodo" data-class-todo>
     <Todos c={c} lib={lib} />
     <section class="card mis" aria-labelledby="h-mis" data-mis>
-      <div class="lhead"><h2 id="h-mis">{t('class.mis_title')}</h2><span class="end">
+      <div class="lhead"><h2 id="h-mis" tabIndex={-1}>{t('class.mis_title')}</h2><span class="end">
         <Button size="sm" onClick={() => setWords(true)} data-mis-words>{t('class.mis_wording')}</Button>
         <Button size="sm" icon="copy" disabled={!stus.length} onClick={() => copyText([head, ...rows()].map(r => r.join('\t')).join('\n')).then(ok => toast(ok ? t('class.mis_copied', { n: rows().length }) : t('class.copy_failed')))} data-mis-copy>{t('class.mis_copy')}</Button>
         <Button size="sm" icon="download" disabled={!stus.length} onClick={() => save(t('class.mis_file', { name: c.name }) + '.csv', csv([head, ...rows()]) + '\r\n')} data-mis-csv>{t('class.mis_download')}</Button></span></div>
