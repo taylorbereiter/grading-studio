@@ -231,7 +231,7 @@ export default function Calendar({ route }) {
     (l ? Promise.resolve(l) : newLesson(p, cls, day)).then(x => { startFocus('les:' + x.id); location.replace(href('lesson', x.id)); }, saveFailed);
   }, [!!p, cls, day]);
   const setView = v => { keep('view', v); go('calendar', v); };
-  if (!p) return <div class="page"><header class="ph"><h1>{t('nav.calendar')}</h1></header><div class="loading" aria-busy="true" /></div>;
+  if (!p) return <div class="page" aria-busy="true"><header class="ph"><h1>{t('nav.calendar')}</h1></header><div class="loading" /></div>;
   if (!p.setup || !(p.setup.classes || []).length) return <div class="page"><header class="ph"><h1>{t('nav.calendar')}</h1></header>
     <EmptyState icon="cal" title={t('home.no_timetable')} text={t('cal.no_timetable_text')} action={<><a class="btn pri" href={href('settings', 'timetable')} data-type-classes>{t('cal.type_classes')}</a>
       <Button onClick={() => PARTS.setupFile().then(m => m.loadSetupFile())} data-load-setup>{t('cal.setup_load')}</Button>

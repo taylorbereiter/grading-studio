@@ -35,7 +35,7 @@ function AddTime({ done }) {
 }
 export default function Time() {
   const v = useFocusData(), [range, setRange] = useState('week'), [off, setOff] = useState(0), [adding, setAdding] = useState(false), [, bump] = useState(0);
-  if (!v) return <div class="page"><header class="ph"><h1>{t('focus.time_title')}</h1></header><div class="loading" aria-busy="true" /></div>;
+  if (!v) return <div class="page" aria-busy="true"><header class="ph"><h1>{t('focus.time_title')}</h1></header><div class="loading" /></div>;
   const p = E.tkPeriod(range, off), L = E.fcLog(), P = E.tkPlan(), s = E.tkSum(p.days, L, P), today = E.fcToday();
   if (p.days.includes(today)) s.g += E.tkPending().g || 0;
   const bars = p.groups.map(g => { const x = { k: g[0], g: 0, l: 0 }; for (const k of g) { const d = s.list.find(y => y.k === k); if (d) { x.g += d.g; x.l += d.l; } } return x; });

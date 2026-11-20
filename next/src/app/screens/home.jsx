@@ -107,7 +107,7 @@ function Line({ icon, title, sub, href: to, kind }) {
 export default function Home({ classes }) {
   const [v, now] = useHome(), plan = usePlan(), Sv = usePart('setsave', matchMedia('(max-width:640px)').matches);   // a phone's sign-in card
   const d = new Date(now);
-  if (!v) return <div class="page"><header class="ph"><h1>{greeting(d)}</h1></header><div class="loading" aria-busy="true" /></div>;
+  if (!v) return <div class="page" aria-busy="true"><header class="ph"><h1>{greeting(d)}</h1></header><div class="loading" /></div>;
   if (v.error) return <div class="page"><header class="ph"><h1>{greeting(d)}</h1></header><EmptyState icon="warn" title={t('home.read_failed')} /></div>;
   const c = v.counts, say = [c.classesToday ? t('home.say_classes', { n: c.classesToday }) : '', c.mark ? t('home.say_mark', { n: c.mark }) : '', c.back ? t('home.say_back', { n: c.back }) : '', c.toPlan ? t('home.say_plan', { n: c.toPlan }) : '', c.missing ? t('home.say_missing', { n: v.missing.reduce((a, x) => a + x.n, 0) }) : ''].filter(Boolean).join(' ');
   const pk = pickUp(plan, now);
