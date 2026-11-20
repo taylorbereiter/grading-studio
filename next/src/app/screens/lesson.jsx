@@ -221,7 +221,10 @@ export default function LessonPage({ route }) {
   // Planned from the Calendar "with your assistant": the assistant sheet opens on arrival, once.
   useEffect(() => { try { if (l && sessionStorage.getItem('gsn.ask') === l.id) { sessionStorage.removeItem('gsn.ask'); ask(); }
     // a search hit (plan/search.jsx): the lesson opened at its slide or its document
-    const at = l && JSON.parse(sessionStorage.getItem('gsn.at') || 'null'); if (at && at.id === l.id) { sessionStorage.removeItem('gsn.at'); if (at.doc) setTool({ name: 'doc', arg: at.doc }); else if (at.slide >= 0) { setCur(at.slide); setView('slides'); } } } catch { } if (l && route.params.view === 'present') setPresenting(true); }, [l && l.id]);
+    const at = l && JSON.parse(sessionStorage.getItem('gsn.at') || 'null'); if (at && at.id === l.id) { sessionStorage.removeItem('gsn.at'); if (at.doc) setTool({ name: 'doc', arg: at.doc }); else if (at.slide >= 0) { setCur(at.slide); setView('slides'); } } } catch { } }, [l && l.id]);
+  useEffect(() => {
+    if (l && l.id === route.params.id) setPresenting(route.params.view === 'present' || !!route.params.day);
+  }, [l && l.id, route.path]);
   const dl = () => (l.final && Tools ? (Tools.finFresh(l) ? Tools.downloadFinal(l) : setTool({ name: 'which' })) : download(p, l));
   // A tool from a menu: the ones that are only a download run at once, the others open their sheet.
   const onTool = (name, arg) => {
@@ -268,8 +271,11 @@ export default function LessonPage({ route }) {
   }, [l && l.id, l && l.slides.length, l && l.final && l.final.id, view, presenting, !!Tools]);
   if (!p) return <div class="page"><div class="loading" aria-busy="true" /></div>;
   if (!l) return <div class="page"><header class="ph"><h1>{t('plan.lesson')}</h1></header><EmptyState icon="warn" title={t('plan.lesson_gone')} action={<a class="btn" href={href('calendar')}>{t('nav.calendar')}</a>} /></div>;
-  // lesson/<id>/present/<class>: the old planner.html#present address, presenting at once for that class today.
-  const cls = route.params.cls, slot = cls ? { classId: cls, date: today() } : slotOf(p, l), per = periodOf(p, slot);
+  // A calendar link selects the exact meeting. Older class-only links refer to today.
+  const { cls, day } = route.params;
+  const slot = day ? l.slots?.find(s => s.classId === cls && s.date === day)
+    : cls ? { classId: cls, date: today() } : slotOf(p, l);
+  const per = periodOf(p, slot);
   const n = l.slides.length;
   return <div class={'page lessonpage' + (beside ? ' with-beside' : '')} data-view={view} onContextMenu={onContext} onDragOver={e => Sd && Sd.pageOver(e)} onDrop={e => Sd && Sd.pageDrop(e, p, l, save, Tools)}>
     <header class="lh">
@@ -298,6 +304,6 @@ export default function LessonPage({ route }) {
     <AssistantSheet key={asking ? 'a' + redo : 'x'} p={p} l={l} open={asking} slide={redo} onClose={() => { setAsking(false); setRedo(null); }} save={save} />
     {Tools && tool && <Tools.default name={tool.name} arg={tool.arg} p={p} l={l} slot={slot} save={save} onClose={() => setTool(null)} />}
     {Tools && note && <Tools.NotePop p={p} l={l} at={note} save={save} onClose={() => setNote(null)} />}
-    {presenting && PresentMod && <PresentMod.Session key={l.id} p={p} l={l} slot={slot} explicitClass={cls} start={view === 'lesson' ? null : cur} onSlide={setCur} onClose={() => setPresenting(false)} />}
+    {presenting && l.id === route.params.id && PresentMod && <PresentMod.Session key={route.path} p={p} l={l} slot={slot} explicitClass={cls} explicitDay={day} start={view === 'lesson' ? null : cur} onSlide={setCur} onClose={() => setPresenting(false)} />}
   </div>;
 }

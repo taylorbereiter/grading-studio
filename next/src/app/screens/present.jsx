@@ -101,6 +101,7 @@ function GotTo({ p, lesson, slot, slide, agenda, onClose }) {
   const keep = async () => {
     if (pending.current) return;
     pending.current = true; setBusy(true); setError('');
+    let committed = false, folderPending = false;
     try {
       const selected = slots[+at];
       const result = await changeLesson(lesson.id, current => {
@@ -110,12 +111,17 @@ function GotTo({ p, lesson, slot, slide, agenda, onClose }) {
         const [entry] = normTaught([{ ...selected, of, slide: +sl, note: savedNote, agenda: agenda || old?.agenda, at: Date.now() }]);
         current.taught = [...history.filter(t => !sameSlot(t, selected)), entry].sort((a, b) => a.date.localeCompare(b.date) || a.at - b.at);
         return current;
-      });
+      }, () => { committed = true; });
       if (!result) throw new Error('The scheduled lesson is no longer available');
+      folderPending = !!result._sync;
     } catch (e) {
-      console.error(e); setError(saveErrorMessage(e)); pending.current = false; setBusy(false); return;
+      console.error(e);
+      if (!committed) {
+        setError(saveErrorMessage(e)); pending.current = false; setBusy(false); return;
+      }
+      folderPending = true;
     }
-    onClose(); toast(t('present.noted'));
+    onClose(); toast(folderPending ? t('present.saved_here') : t('present.noted'));
   };
   const label = s => [classOf(p, s.classId)?.name, date(new Date(s.date + 'T12:00'), { weekday: 'short', day: 'numeric', month: 'short' })].filter(Boolean).join(' · ');
   return <Sheet open title={t('present.where')} onClose={dismiss} footer={<><Button disabled={busy} onClick={dismiss} data-gt="later">{t('present.not_now')}</Button><Button variant="primary" disabled={busy} onClick={keep} data-gt="save">{t('common.save')}</Button></>}>
@@ -133,12 +139,12 @@ function resumeAt(l, slot) {
   const ts = (l.taught || []).filter(x => !slot || x.classId === slot.classId), x = ts[ts.length - 1];
   return x && x.slide < l.slides.length && x.slide < x.of ? x.slide - 1 : 0;
 }
-export function Session({ p, l, slot, explicitClass, start, onSlide, onClose }) {
+export function Session({ p, l, slot, explicitClass, explicitDay, start, onSlide, onClose }) {
   const [progress, setProgress] = useState(null);
   // Keep the deck and its class together if another window edits the lesson while it is on screen.
   const [lesson] = useState(l);
   const [selected] = useState(() => {
-    if (!lesson.slots?.length || (explicitClass && lesson.slots.some(s => sameSlot(s, slot)))) return slot;
+    if (explicitDay || !lesson.slots?.length || (explicitClass && lesson.slots.some(s => sameSlot(s, slot)))) return slot;
     engine(p);
     return prSlotNow(lesson) || slot;
   });
@@ -175,6 +181,7 @@ function Present({ p, l, start = 0, className, slot, onClose }) {
       const k = e.key, s = st.current;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (isTyping(e) && k !== 'Escape') return;
+      if ((k === ' ' || k === 'Enter') && e.target?.closest?.('button,a[href]')) return;
       const stop = () => { e.preventDefault(); e.stopPropagation(); };
       if (k === 'Escape') { stop(); if (s.blank) setBlank(false); else if (s.panel) setPanel(''); else if (s.typed) setTyped(''); else end(); return; }
       if (/^[0-9]$/.test(k)) {

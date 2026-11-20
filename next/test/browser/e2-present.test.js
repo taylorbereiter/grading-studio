@@ -194,10 +194,13 @@ test('E2-092 E2-093: one class can decline at two minutes or save without erasin
   assert.deepEqual(await taughtInClassicPlanner(p, 'L2'), [prior], 'Not now leaves the current Planner intact');
 
   await present(p, 'L2');
-  await endPresentation(p, 120000);
+  await p.evaluate(() => { const end = Date.now() + 120000; Date.now = () => end; });
+  await p.focus('.prbar button[aria-label="Stop presenting"]');
+  await p.keyboard.press('Enter');
   await p.waitForSelector('dialog[open] [data-gt="slide"]');
+  assert.ok(await p.$('[data-gt="note"]:focus'), 'keyboard stop focuses the note');
   await p.select('[data-gt="slide"]', '2');
-  await p.click('[data-gt="save"]');
+  await p.focus('[data-gt="note"]'); await p.keyboard.press('Enter');
   await until(p, () => !document.querySelector('dialog[open]'));
   const expected = [{ ...prior, slide: 2, at: await p.evaluate(() => Date.now()) }];
   assert.deepEqual((await h.lessonInDb(p, 'L2')).taught, expected, 'no new ticks preserves the existing agenda');

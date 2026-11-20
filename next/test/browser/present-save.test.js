@@ -1,17 +1,21 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { harness } = require('./e2harness.js');
-const { LESSONS } = require('./planseed.js');
+const { LESSONS, plantPlan } = require('./planseed.js');
+const { plant } = require('../../../test/helpers/app.js');
+const { gradingSeed, STEADY } = require('../../../test/helpers/steady.js');
 
 const h = harness(before, after);
 const save = '[data-gt="save"]';
 const nextTime = 'Return to the last question';
 const slotDate = '2026-10-27';
 
-async function openSheet(t) {
-  const lesson = LESSONS.find(l => l.id === 'L2');
-  const p = await h.fresh(1366, { lessons: [{ ...lesson, slots: [...lesson.slots, { classId: 'B1', date: slotDate }] }] });
-  t.after(() => p.ctx.close());
+const lesson = LESSONS.find(l => l.id === 'L2');
+const plan = { lessons: [{ ...lesson, slots: [...lesson.slots, { classId: 'B1', date: slotDate }] }] };
+
+async function openSheet(t, page) {
+  const p = page || await h.fresh(1366, plan);
+  if (!page) t.after(() => p.ctx.close());
   await h.open(p, 'lesson/L2/slides');
   await p.keyboard.press('F5');
   await p.waitForSelector('.present:focus');
@@ -110,3 +114,78 @@ test('A failed progress save keeps the entered values and a retry preserves conc
   assert.deepEqual(chosen, { classId: 'B1', date: slotDate, slide: 4, of: 5, note: nextTime });
   assert.deepEqual(p.errors.filter(e => !e.includes('Synthetic refused save')), []);
 });
+
+const localOnly = 'Progress saved in this browser. The Planner folder may be out of date.';
+
+async function checkLocalSave(p) {
+  await p.click(save);
+  await p.waitForFunction(() => !!document.querySelector('.toast, dialog [role="alert"]'), { timeout: 8000 });
+  assert.deepEqual(await p.$$eval('.toast', list => list.map(node => node.textContent.trim())), [localOnly]);
+  assert.equal(await p.$('dialog[open] [data-gt="save"]'), null, 'a committed record needs no retry');
+  const stored = await h.lessonInDb(p, 'L2');
+  assert.deepEqual(stored.taught.map(({ at, ...row }) => row),
+    [{ classId: 'B1', date: slotDate, slide: 4, of: 5, note: nextTime }]);
+  return stored;
+}
+
+test('Present distinguishes a committed lesson from a failed lookup of the linked folder', async t => {
+  const p = await openSheet(t);
+  await p.evaluate(() => {
+    const get = IDBObjectStore.prototype.get;
+    IDBObjectStore.prototype.get = function (key) {
+      if (this.name === 'kv' && key === 'dir') {
+        IDBObjectStore.prototype.get = get;
+        throw new DOMException('Synthetic folder lookup failed', 'UnknownError');
+      }
+      return get.call(this, key);
+    };
+  });
+  await checkLocalSave(p);
+  assert.deepEqual(p.errors.filter(e => !e.includes('Synthetic folder lookup failed')), []);
+});
+
+// Chrome needs a normal throwaway profile to read a directory handle back from IndexedDB.
+for (const mode of ['file conflict', 'permission prompt']) {
+  test('Present reports a local save when the Planner folder has a ' + mode, async t => {
+    const p = await h.browser.newPage();
+    t.after(() => p.close());
+    await p.evaluateOnNewDocument(STEADY);
+    await p.goto(h.srv.url + 'blank');
+    await p.evaluate(() => new Promise((resolve, reject) => {
+      const reset = indexedDB.deleteDatabase('gs-lessons');
+      reset.onsuccess = resolve; reset.onerror = () => reject(reset.error);
+    }));
+    await plant(p, gradingSeed()); await plantPlan(p, plan);
+    await openSheet(t, p);
+
+    const fileName = '10-27 Tue - Reading a poem aloud.lesson.json';
+    const external = JSON.stringify({ ...lesson, note: 'Independent folder edit' });
+    await p.evaluate(async (mode, name, text) => {
+      const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle(mode, { create: true });
+      const file = await dir.getFileHandle(name, { create: true });
+      const writer = await file.createWritable();
+      await writer.write(text); await writer.close();
+      if (mode === 'permission prompt') {
+        const query = FileSystemDirectoryHandle.prototype.queryPermission;
+        FileSystemDirectoryHandle.prototype.queryPermission = function (opts) {
+          return this.name === mode ? Promise.resolve('prompt') : query.call(this, opts);
+        };
+      }
+      const db = await new Promise((resolve, reject) => {
+        const open = indexedDB.open('gs-lessons');
+        open.onsuccess = () => resolve(open.result); open.onerror = () => reject(open.error);
+      });
+      try {
+        const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(dir, 'dir');
+        await new Promise((resolve, reject) => { tx.oncomplete = resolve; tx.onabort = () => reject(tx.error); });
+      } finally { db.close(); }
+    }, mode, fileName, external);
+    const stored = await checkLocalSave(p);
+    assert.equal(stored._sync, 1, 'both failure paths keep the local lesson pending for sync');
+    const onDisk = await p.evaluate(async (mode, name) => {
+      const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle(mode);
+      return (await (await dir.getFileHandle(name)).getFile()).text();
+    }, mode, fileName);
+    assert.equal(onDisk, external);
+  });
+}
