@@ -191,7 +191,7 @@ export function AfterClass({ l, slot, onSave }) {
     n.taught = [...(n.taught || []).filter(x => !(x.classId === slot.classId && x.date === slot.date)), t0];
     onSave(n);
   };
-  // Where the class got to, set by hand: Present records it on its own after two minutes, and this changes it or sets it.
+  // Where the class got to, set by hand outside Present.
   const reached = v2 => {
     const of = l.slides.length, sl = Math.max(1, Math.min(of, +v2 || of));
     if (onPhone()) { try { saveTaughtNote(key, { slide: sl, of, x: shown(), t: Date.now() }); toast(t('plan.note_waits')); } catch (e) { saveFailed(e); } return; }
@@ -207,13 +207,6 @@ export function AfterClass({ l, slot, onSave }) {
       onChange={reached} /></section>;
 }
 
-// Where Present begins from the lesson: the slide this class stopped on last time, if it stopped partway (src/planner/present.js
-// prResume). And where the class got to, kept on its place in "taught" once a lesson for today has been presented for two minutes
-// or more: Present keeps it (screens/present.jsx gotTo).
-function resumeAt(l, slot) {
-  const ts = (l.taught || []).filter(x => !slot || x.classId === slot.classId), x = ts[ts.length - 1];
-  return x && x.slide < l.slides.length && x.slide < x.of ? x.slide - 1 : 0;
-}
 export default function LessonPage({ route }) {
   const p = usePlan();
   const [l, save] = useLesson(p, route.params.id);
@@ -305,6 +298,6 @@ export default function LessonPage({ route }) {
     <AssistantSheet key={asking ? 'a' + redo : 'x'} p={p} l={l} open={asking} slide={redo} onClose={() => { setAsking(false); setRedo(null); }} save={save} />
     {Tools && tool && <Tools.default name={tool.name} arg={tool.arg} p={p} l={l} slot={slot} save={save} onClose={() => setTool(null)} />}
     {Tools && note && <Tools.NotePop p={p} l={l} at={note} save={save} onClose={() => setNote(null)} />}
-    {presenting && PresentMod && <PresentMod.Present p={p} l={l} slot={slot} save={save} className={per ? per.c.name : cls ? (classOf(p, cls) || {}).name : ''} start={view !== 'lesson' ? cur : resumeAt(l, slot)} onClose={i => { setPresenting(false); if (typeof i === 'number') setCur(i); }} />}
+    {presenting && PresentMod && <PresentMod.Session key={l.id} p={p} l={l} slot={slot} explicitClass={cls} start={view === 'lesson' ? null : cur} onSlide={setCur} onClose={() => setPresenting(false)} />}
   </div>;
 }
