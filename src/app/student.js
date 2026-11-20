@@ -66,20 +66,23 @@ async function openStudent(i, filePath) {
   for (const r of refsFor(st)) { const hold = document.createElement('div'); paper.appendChild(hold); refCard(r, st).then(c => { if (token === openToken) hold.replaceWith(c); }); }
   $('#readBtn').onclick = () => openReadings();
   await workerReady;
+  if (token !== openToken) return;
   for (const f of st.files.filter(viewable)) {
     try {
       await impAuto(f);
       if (token !== openToken) return;
-      const doc = await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false, worker: viewWorker() }).promise;
+      const bytes = await viewBytes(f);
+      if (token !== openToken) return;
+      const doc = await pdfjsLib.getDocument({ data: bytes.slice(), isEvalSupported: false, worker: viewWorker() }).promise;
       if (token !== openToken) { doc.destroy(); return; }
       docs.push(doc); docMap.set(f.path, doc); f.numPages = doc.numPages;
       gsFlatCheck(f, doc).then(flat => { if (flat && token === openToken) for (const q of pages) if (q.file === f && q.impFirst) impNote(q); });
     } catch (e) {
+      if (token !== openToken) return;
       pdfBad(f, e);
       sheetOff(); paper.appendChild(otherCard(f));
     }
   }
-  if (token !== openToken) return;
   const seq = fileSeq(st), oneFile = seq.length === 1 && !!seq[0].d && !st.files.some(f => f.kind === 'media' || f.kind === 'link');
   if (!oneFile) sheetOff();
   for (const it of seq) {
@@ -126,6 +129,7 @@ async function openStudent(i, filePath) {
       pg.extra = (f.kami && f.kami[p] && f.kami[p].notes) || [];
       bindPage(pg);
       await renderPage(pg);
+      if (token !== openToken) return;   // the next file heading and the controls below the paper belong to this selection
       if (filePath && f.path === filePath && p === 0) (d.pages[0][0] === filePath ? head : wrap).scrollIntoView({ block: 'start' });   // from its bar, with Mark late and Remove in view
     }
   }

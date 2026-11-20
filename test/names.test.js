@@ -674,6 +674,37 @@ test('a name typed into a form box is covered, in the ZIP and during anonymous g
   await close();
 });
 
+test('switching anonymous papers while a page is drawing leaves only the selected paper on screen', async () => {
+  const { page, close } = await openApp(browser);
+  const sheet = await pdf(['Body.']);
+  await openZip(page, zipOf({
+    'Kai Novak/First.pdf': sheet,
+    'Kai Novak/KNovak.pdf': sheet,
+    'Theo Banks/Essay.pdf': sheet,
+  }), 'Essay.zip');
+  await startAnon(page);
+  const students = await keys(page);
+  await page.evaluate(async (first, next) => {
+    const G = window.__gs;
+    const observer = new MutationObserver(() => {
+      // Switch through the student list while the first canvas is still being painted.
+      if (!G.state().pages[0]?.s) return;
+      observer.disconnect();
+      document.querySelector('#stuList [data-i="' + next + '"]').click();
+    });
+    observer.observe(document.querySelector('#paper'), { childList: true, subtree: true });
+    await G.openStudent(first);
+  }, students.indexOf('Kai Novak'), students.indexOf('Theo Banks'));
+  await page.waitForFunction(i => {
+    const s = window.__gs.state();
+    return s.cur === i && s.pages[0]?.bmp;
+  }, {}, students.indexOf('Theo Banks'));
+  const headings = await page.$$eval('#paper .fhead > span:first-child', els => els.map(el => el.textContent));
+  assert.deepEqual(headings, ['Essay.pdf']);
+  assert.deepEqual(page.errors, []);
+  await close();
+});
+
 test('file names give nobody away during anonymous grading: run together, shortened, or in Arrange pages', async () => {
   const { page, close } = await openApp(browser);
   await openZip(page, zipOf({
