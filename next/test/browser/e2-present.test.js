@@ -242,9 +242,11 @@ test('E2-092 E2-093: Escape records nothing; Save records the chosen class, slid
   assert.equal(await p.$eval('[data-gt="slide"]', s => s.value), '3', 'farthest slide, even after going back');
   assert.match(await p.$eval('[data-gt="class"]', s => s.selectedOptions[0].textContent), /Grade 9 English/,
     'the direct link selected A1');
-  await p.select('[data-gt="class"]', '0'); // change to B1
   await p.select('[data-gt="slide"]', '4');
   await p.click('[data-gt="note"]'); await p.keyboard.type('Start with the exit ticket');
+  await p.select('[data-gt="class"]', '0'); // B1 has no earlier entry. Keep the teacher's current draft.
+  assert.equal(await p.$eval('[data-gt="note"]', x => x.value), 'Start with the exit ticket');
+  assert.equal(await p.$eval('[data-gt="slide"]', x => x.value), '4');
   assert.deepEqual((await h.lessonInDb(p, 'T2')).taught, [old], 'selecting a class and typing does not save');
   await p.click('[data-gt="save"]');
   await until(p, () => !document.querySelector('dialog[open]'));

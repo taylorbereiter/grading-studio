@@ -89,8 +89,13 @@ function GotTo({ p, lesson, slot, slide, agenda, onClose }) {
   const [sl, setSl] = useState(String(slide)), [note, setNote] = useState(find(slot)?.note || '');
   const [busy, setBusy] = useState(false), pending = useRef(false), [error, setError] = useState('');
   const pick = v => {
-    const old = find(slots[+v]);
-    setAt(v); setSl(String(old ? Math.min(of, old.slide) : slide)); setNote(old?.note || '');
+    const old = find(slots[+v]), previous = find(slots[+at]);
+    setAt(v);
+    if (old) {
+      setSl(String(Math.min(of, old.slide))); setNote(old.note || '');
+    } else if (previous && note === previous.note) {
+      setNote('');
+    }
   };
   const dismiss = () => { if (!pending.current) onClose(); };
   const keep = async () => {
@@ -112,8 +117,7 @@ function GotTo({ p, lesson, slot, slide, agenda, onClose }) {
     }
     onClose(); toast(t('present.noted'));
   };
-  const cn = id => { const c = ((p.setup && p.setup.classes) || []).find(x => String(x.id) === String(id)); return c ? c.name : ''; };
-  const label = s => [cn(s.classId), date(new Date(s.date + 'T12:00'), { weekday: 'short', day: 'numeric', month: 'short' })].filter(Boolean).join(' · ');
+  const label = s => [classOf(p, s.classId)?.name, date(new Date(s.date + 'T12:00'), { weekday: 'short', day: 'numeric', month: 'short' })].filter(Boolean).join(' · ');
   return <Sheet open title={t('present.where')} onClose={dismiss} footer={<><Button disabled={busy} onClick={dismiss} data-gt="later">{t('present.not_now')}</Button><Button variant="primary" disabled={busy} onClick={keep} data-gt="save">{t('common.save')}</Button></>}>
     {slots.length > 1 ? <Select label={t('plan.class')} value={at} onChange={pick} disabled={busy} data-gt="class" options={slots.map((s, j) => ({ value: String(j), label: label(s) }))} /> : <p data-raw>{label(slot)}</p>}
     <Select label={t('plan.got_to_label')} value={sl} onChange={setSl} disabled={busy} data-gt="slide" options={lesson.slides.map((x, j) => ({ value: String(j + 1), label: j + 1 === of ? t('plan.got_to_last', { n: j + 1 }) : t('plan.slide_n', { n: j + 1 }) }))} />
@@ -131,13 +135,15 @@ function resumeAt(l, slot) {
 }
 export function Session({ p, l, slot, explicitClass, start, onSlide, onClose }) {
   const [progress, setProgress] = useState(null);
+  // Keep the deck and its class together if another window edits the lesson while it is on screen.
+  const [lesson] = useState(l);
   const [selected] = useState(() => {
-    if (explicitClass) return slot;
+    if (!lesson.slots?.length || (explicitClass && lesson.slots.some(s => sameSlot(s, slot)))) return slot;
     engine(p);
-    return prSlotNow(l) || slot;
+    return prSlotNow(lesson) || slot;
   });
   if (progress) return <GotTo p={p} {...progress} onClose={onClose} />;
-  return <Present p={p} l={l} slot={selected} start={start ?? resumeAt(l, selected)} className={classOf(p, selected?.classId)?.name || ''}
+  return <Present p={p} l={lesson} slot={selected} start={start ?? resumeAt(lesson, selected)} className={classOf(p, selected?.classId)?.name || ''}
     onClose={(i, result) => { onSlide(i); if (result) setProgress(result); else onClose(); }} />;
 }
 
