@@ -396,8 +396,8 @@ test('IB classes: MYP levels and grades, DP boundaries, weights and a predicted 
   assert.deepEqual(cells.crit, ['A', 'B']); assert.deepEqual(strip(cells.typed.s[N[0]]), { l: { A: 5, B: 6 } }); assert.deepEqual(strip(cells.typed.s[N[1]]), { l: { A: 3, B: 4 } });
   // the best-fit levels for the first student, from the fit box; the outlined hint is the most recent level
   await p.click('[data-fit="0:A"]');
-  await p.waitForSelector('dialog[open] [data-fit-box="0"]');
-  assert.equal(await p.$eval('dialog[open] [data-lv="A:5"]', b => b.className), 'hint');
+  // The box can open while the gradebook is still reading the task just saved.
+  await p.waitForSelector('dialog[open] [data-fit-box="0"] [data-lv="A:5"].hint[aria-checked="false"]', { timeout: 10000 });
   for (const k of ['A:5', 'B:6', 'C:7', 'D:4']) await p.click('dialog[open] [data-lv="' + k + '"]');
   await waitLib(p, c => { const r = ((c.lv || {}).t1 || {})[c.names[0]]; return r && r.A === 5 && r.B === 6 && r.C === 7 && r.D === 4; });
   await p.waitForFunction(() => document.querySelector('dialog[open] [data-fit-grade]').textContent !== '–');
