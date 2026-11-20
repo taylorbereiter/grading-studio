@@ -28,6 +28,20 @@ async function openSheet(t, page) {
   return p;
 }
 
+async function editStoredLesson(p, changes) {
+  await p.evaluate(changes => new Promise((resolve, reject) => {
+    const open = indexedDB.open('gs-lessons');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const tx = open.result.transaction('lessons', 'readwrite'), store = tx.objectStore('lessons');
+      const read = store.get('L2');
+      read.onsuccess = () => store.put({ ...read.result, ...changes, updated: Date.now() });
+      tx.oncomplete = () => { open.result.close(); resolve(); };
+      tx.onabort = () => reject(tx.error);
+    };
+  }), changes);
+}
+
 const successToast = () => [...document.querySelectorAll('.toast')].some(x => x.textContent.includes('Noted on the lesson'));
 
 test('Present waits for a committed save before confirming, and the saved record survives a reload', async t => {
@@ -92,17 +106,7 @@ test('A failed progress save keeps the entered values and a retry preserves conc
 
   const other = { classId: 'A1', date: slotDate, slide: 2, of: 5, note: 'Another class', agenda: [1, 3], at: 42 };
   const lessonNote = 'An edit from another window';
-  await p.evaluate((other, note) => new Promise((resolve, reject) => {
-    const open = indexedDB.open('gs-lessons');
-    open.onerror = () => reject(open.error);
-    open.onsuccess = () => {
-      const tx = open.result.transaction('lessons', 'readwrite'), store = tx.objectStore('lessons');
-      const read = store.get('L2');
-      read.onsuccess = () => store.put({ ...read.result, note, taught: [other], updated: Date.now() });
-      tx.oncomplete = () => { open.result.close(); resolve(); };
-      tx.onabort = () => reject(tx.error);
-    };
-  }), other, lessonNote);
+  await editStoredLesson(p, { note: lessonNote, taught: [other] });
   await p.click(save);
   await p.waitForFunction(successToast);
   assert.equal(await p.$('dialog[open] [data-gt="note"]'), null);
@@ -117,14 +121,14 @@ test('A failed progress save keeps the entered values and a retry preserves conc
 
 const localOnly = 'Progress saved in this browser. The Planner folder may be out of date.';
 
-async function checkLocalSave(p) {
+async function checkLocalSave(p, prior = []) {
   await p.click(save);
   await p.waitForFunction(() => !!document.querySelector('.toast, dialog [role="alert"]'), { timeout: 8000 });
   assert.deepEqual(await p.$$eval('.toast', list => list.map(node => node.textContent.trim())), [localOnly]);
   assert.equal(await p.$('dialog[open] [data-gt="save"]'), null, 'a committed record needs no retry');
   const stored = await h.lessonInDb(p, 'L2');
-  assert.deepEqual(stored.taught.map(({ at, ...row }) => row),
-    [{ classId: 'B1', date: slotDate, slide: 4, of: 5, note: nextTime }]);
+  const at = await p.evaluate(() => Date.now());
+  assert.deepEqual(stored.taught, [...prior, { classId: 'B1', date: slotDate, slide: 4, of: 5, note: nextTime, at }]);
   return stored;
 }
 
@@ -145,17 +149,21 @@ test('Present distinguishes a committed lesson from a failed lookup of the linke
 });
 
 // Chrome needs a normal throwaway profile to read a directory handle back from IndexedDB.
+async function folderPage(t, seed = plan) {
+  const p = await h.browser.newPage();
+  t.after(() => p.close());
+  await p.evaluateOnNewDocument(STEADY);
+  await p.goto(h.srv.url + 'blank');
+  await p.evaluate(() => new Promise((resolve, reject) => {
+    const reset = indexedDB.deleteDatabase('gs-lessons');
+    reset.onsuccess = resolve; reset.onerror = () => reject(reset.error);
+  }));
+  await plant(p, gradingSeed()); await plantPlan(p, seed);
+  return p;
+}
 for (const mode of ['file conflict', 'permission prompt']) {
   test('Present reports a local save when the Planner folder has a ' + mode, async t => {
-    const p = await h.browser.newPage();
-    t.after(() => p.close());
-    await p.evaluateOnNewDocument(STEADY);
-    await p.goto(h.srv.url + 'blank');
-    await p.evaluate(() => new Promise((resolve, reject) => {
-      const reset = indexedDB.deleteDatabase('gs-lessons');
-      reset.onsuccess = resolve; reset.onerror = () => reject(reset.error);
-    }));
-    await plant(p, gradingSeed()); await plantPlan(p, plan);
+    const p = await folderPage(t);
     await openSheet(t, p);
 
     const fileName = '10-27 Tue - Reading a poem aloud.lesson.json';
@@ -189,3 +197,88 @@ for (const mode of ['file conflict', 'permission prompt']) {
     assert.equal(onDisk, external);
   });
 }
+
+test('Reload after a folder conflict keeps the confirmed progress and the independent file edit', async t => {
+  const prior = { classId: 'A1', date: slotDate, slide: 2, of: 5, note: 'Reading in pairs', at: 42, agenda: [1, 3] };
+  const browserOnly = { ...prior, date: '2026-10-20', note: 'Earlier class recorded in the browser' };
+  const diskOnly = { ...prior, date: '2026-10-26', note: 'Earlier class recorded in the folder' };
+  const diskNewer = { ...prior, at: 84, slide: 3, note: 'Revised A1 progress from the file' };
+  const diskOlder = { ...prior, classId: 'B1', at: 85, note: 'B1 progress before the presentation' };
+  const diskHistory = [diskOnly, diskNewer, diskOlder];
+  const fileNote = 'Independent lesson note in the folder';
+  const p = await folderPage(t, { lessons: [{ ...plan.lessons[0], taught: [prior] }] });
+  await p.evaluateOnNewDocument(() => {
+    window.showDirectoryPicker = async () => (await navigator.storage.getDirectory()).getDirectoryHandle('History', { create: true });
+  });
+  await h.open(p, 'settings/ai');
+  await p.click('[data-pflink]');
+  await p.waitForSelector('[data-pfstate="ok"]');
+  const original = await h.lessonInDb(p, 'L2');
+  assert.deepEqual(original.taught, [prior]);
+  await p.goto(h.srv.url + 'blank');
+  await openSheet(t, p);
+
+  const external = await p.evaluate(async (name, note, taught) => {
+    const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle('History');
+    const file = await dir.getFileHandle(name), before = JSON.parse(await (await file.getFile()).text());
+    const edited = JSON.stringify({ ...before, note, taught, custom: { readingGroup: 'Blue', pages: [7, 12] } });
+    const writer = await file.createWritable(); await writer.write(edited); await writer.close();
+    return { taughtBefore: before.taught, edited, modified: (await file.getFile()).lastModified };
+  }, original._file, fileNote, diskHistory);
+  assert.deepEqual(external.taughtBefore, [prior], 'the linked file began with the same class history');
+  assert.notEqual(external.modified, original._mod);
+  await editStoredLesson(p, { taught: [browserOnly, prior] });
+  const saved = await checkLocalSave(p, [browserOnly, prior]);
+  assert.equal(saved._sync, 1);
+  const expected = [browserOnly, diskOnly, diskNewer, saved.taught.find(row => row.classId === 'B1')];
+  const expectedFile = { ...JSON.parse(external.edited), taught: expected };
+
+  // Observe the real bytes after each committed rewrite during the automatic folder scan.
+  await p.evaluateOnNewDocument(name => {
+    window.lessonRewrites = [];
+    const request = navigator.locks.request.bind(navigator.locks);
+    navigator.locks.request = (name, ...args) => {
+      const done = request(name, ...args);
+      if (name === 'gs-planner-folder') done.then(() => { window.finishedFolderScan = true; });
+      return done;
+    };
+    const create = FileSystemFileHandle.prototype.createWritable;
+    FileSystemFileHandle.prototype.createWritable = async function (...args) {
+      const stream = await create.apply(this, args);
+      if (this.name === name) {
+        const close = stream.close.bind(stream);
+        stream.close = async () => { await close(); window.lessonRewrites.push(await (await this.getFile()).text()); };
+      }
+      return stream;
+    };
+  }, original._file);
+  let recoveredBefore;
+  for (let visit = 0; visit < 2; visit++) {
+    await p.reload();
+    await p.waitForFunction(() => window.finishedFolderScan, { timeout: 10000 });
+    const merged = await h.lessonInDb(p, 'L2');
+    assert.equal(merged.note, fileNote, 'the automatic scan imports the independent file edit');
+    assert.deepEqual(merged.taught, expected, 'each class and day retains its newest recorded progress');
+    const { copies, recovered } = await p.evaluate(async name => {
+      const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle('History');
+      const handle = await dir.getFileHandle(name);
+      const saved = await dir.getDirectoryHandle('Recovered'), recovered = {};
+      for await (const [name, entry] of saved.entries()) {
+        if (entry.kind === 'file' && name.endsWith('.lesson.json')) recovered[name] = await (await entry.getFile()).text();
+      }
+      return { copies: [...window.lessonRewrites, await (await handle.getFile()).text()], recovered };
+    }, original._file);
+    for (const text of copies) {
+      assert.deepEqual(JSON.parse(text), expectedFile, 'only the taught history changes in every rewrite and the final file');
+    }
+    const archives = Object.values(recovered).map(text => JSON.parse(text));
+    assert.equal(archives.length, 2);
+    assert.ok(Object.values(recovered).includes(external.edited), 'the displaced folder source is recoverable byte for byte');
+    assert.deepEqual(archives.find(l => l.id === original.id && l.note === fileNote)?.taught, diskHistory,
+      'the portable file copy contains the displaced B1 entry');
+    assert.deepEqual(archives.find(l => l.id === original.id && l.note === original.note)?.taught, saved.taught,
+      'the portable browser copy contains the displaced A1 entry');
+    if (visit) assert.deepEqual(recovered, recoveredBefore, 'a second reload keeps the same two recovery files');
+    recoveredBefore = recovered;
+  }
+});

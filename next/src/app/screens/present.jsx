@@ -110,6 +110,8 @@ function GotTo({ p, lesson, slot, slide, agenda, onClose }) {
         const savedNote = note === (find(selected)?.note || '') ? old?.note || '' : note;
         const [entry] = normTaught([{ ...selected, of, slide: +sl, note: savedNote, agenda: agenda || old?.agenda, at: Date.now() }]);
         current.taught = [...history.filter(t => !sameSlot(t, selected)), entry].sort((a, b) => a.date.localeCompare(b.date) || a.at - b.at);
+        // A linked-folder check can fail or the tab can close after this transaction commits.
+        if (p.folder) current._sync = 1;
         return current;
       }, () => { committed = true; });
       if (!result) throw new Error('The scheduled lesson is no longer available');

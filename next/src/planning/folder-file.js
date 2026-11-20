@@ -20,10 +20,15 @@ export async function writeRecordFile(dir, name, text, ...known) {
     }
   }
   const handle = await dir.getFileHandle(name, { create: true });
+  return replaceFileText(handle, before, text);
+}
+
+// Patch the same bytes the importer actually read, including a second check before the stream commits.
+export async function replaceFileText(handle, before, text) {
   const writer = await handle.createWritable({ mode: 'exclusive' });
   try {
     const unchanged = async () => {
-      if (await (await handle.getFile()).text() !== before) throw new FolderFileChanged(name);
+      if (await (await handle.getFile()).text() !== before) throw new FolderFileChanged(handle.name);
     };
     await unchanged();
     await writer.write(text);
