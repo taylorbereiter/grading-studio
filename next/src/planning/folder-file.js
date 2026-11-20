@@ -2,7 +2,7 @@
 // only if it still matches a revision we read or just wrote. Make that check
 // again after opening the output stream, before committing its temporary bytes.
 export class FolderFileChanged extends Error {
-  constructor(name) { super('Planner folder file changed: ' + name); }
+  constructor(name) { super('Planner folder file changed: ' + name); this.fileName = name; }
 }
 
 export async function existingFile(dir, name) {
@@ -20,10 +20,15 @@ export async function writeRecordFile(dir, name, text, ...known) {
     }
   }
   const handle = await dir.getFileHandle(name, { create: true });
+  return replaceFileText(handle, before, text);
+}
+
+// Patch the same bytes the importer actually read, including a second check before the stream commits.
+export async function replaceFileText(handle, before, text) {
   const writer = await handle.createWritable({ mode: 'exclusive' });
   try {
     const unchanged = async () => {
-      if (await (await handle.getFile()).text() !== before) throw new FolderFileChanged(name);
+      if (await (await handle.getFile()).text() !== before) throw new FolderFileChanged(handle.name);
     };
     await unchanged();
     await writer.write(text);

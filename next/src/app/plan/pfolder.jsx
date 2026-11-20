@@ -13,6 +13,7 @@ import { assistant } from '../../services/assistant.js';
 import { plannerFolder } from '../../planning/folder.js';
 import { holdsGrading, linkPlannerFolder, writePlannerFolderAll } from '../../planning/folder-more.js';
 import { readPlannerFolder } from '../../planning/folder-read.js';
+export { recoverLessonFileConflict } from '../../planning/folder-read.js';
 import { saveVersion } from '../../planning/write.js';
 import { loadPlan } from '../../planning/plan.js';
 import { engine } from '../../planning/engine.js';

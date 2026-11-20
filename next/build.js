@@ -66,7 +66,7 @@ const PLANNER_ROOTS = [
   // units
   'normUnit', 'tplLayouts',
   // where each class got to, for the phone's notes put on their lessons (planning/taught-fold.js)
-  'normTaught',
+  'normTaught', 'rtParse', 'rtInlineHtml',
 ];
 const TOOLS_ROOTS = ['pptxToSlides', 'docxOf', 'shareLesson', 'finSig', 'docClean', 'DOC_CSS', 'shrinkPic', 'imgSrc',
   // slide looks and the editor's text tools: per-box sizes, biggest that fits, moving a box, lists and formatting (src/planner/boxes.js, rich.js)
@@ -113,6 +113,11 @@ function writePlanner() {
   const tools = lift({ roots: TOOLS_ROOTS, deny: PLANNER_DENY, header: '', given: [...decl] });
   const used = [...decl].filter(n => new RegExp('\\b' + n.replace(/\$/g, '\\$') + '\\b').test(tools));
   const head = '// MADE BY next/build.js FROM src/planner/*.js (next/tools/lift.js). Do not edit: change the source and build again.\n/* eslint-disable */\n';
+  // Only Present needs to choose which of today's classes is meeting now.
+  const present = lift({ roots: ['prSlotNow'], deny: PLANNER_DENY, given: ['meetingsOn'], header: head,
+    preamble: "import { meetingsOn } from './planner.js';" });
+  const presentFile = path.join(NEXT, 'src/engines/present.js');
+  if (!fs.existsSync(presentFile) || fs.readFileSync(presentFile, 'utf8') !== present) fs.writeFileSync(presentFile, present);
   const toolsOut = head + "import * as fflate from 'fflate';\nimport { " + used.join(', ') + " } from './planner.js';\n" + tools;
   // next/src/engines/pfolder.js: the Planner folder's own words and file shapes (src/planner/lessons.js folderReadme, units.js
   // unitBase, bank.js bankForFile) and what reading a teacher profile there needs, loaded only when a Planner folder is linked.

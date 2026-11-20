@@ -119,9 +119,10 @@ test('Find has the settings people look for by name, each opening its group', as
   for (const [say, to] of [['Remove from this computer', '#/settings/saving'], ['Start a new school year', '#/settings/saving'], ['Tablet and pencil', '#/settings/marking'], ['App text size', '#/settings/display']]) {
     await p.goto(srv.url + 'next/#/home'); await shellUp(p);
     await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
-    await p.waitForSelector('dialog.cmd[open]');
+    await p.waitForSelector('dialog.cmd[open] [role="combobox"]:focus');
     await p.keyboard.type(say);
-    await p.waitForFunction(s => [...document.querySelectorAll('dialog.cmd[open] [role="option"]')].some(o => o.textContent.includes(s)), { timeout: 10000 }, say);
+    // The lesson-search option also contains the query. Enter runs the selected option.
+    await p.waitForFunction(label => document.querySelector('dialog.cmd[open] [role="option"][aria-selected="true"]')?.textContent === label, { timeout: 10000 }, say);
     await p.keyboard.press('Enter');
     await p.waitForFunction(h => location.hash === h, { timeout: 10000 }, to);
   }

@@ -159,38 +159,117 @@ test('E2-076: a timer still running after Present sits in the corner; press paus
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
-test('E2-093 E2-092: after presenting today, where the class got to and the agenda ticked are kept; Change asks which class, which slide and a line for next time', async () => {
-  const { LESSONS, lesson } = require('./planseed.js');
-  const two = lesson('T2', 'Two classes today', [{ classId: 'A1', date: '2026-10-27' }, { classId: 'B1', date: '2026-10-27' }], {});
-  const p = await h.fresh(1366, { lessons: [...LESSONS.filter(l => l.id !== 'L2'), two] });
-  await present(p, 'T2');
-  await p.click('[data-pb="agenda"]'); await p.waitForSelector('[data-ag="0"]');
-  await p.click('[data-ag="0"]'); await p.click('[data-ag="1"]');
-  await p.focus('.present'); await p.keyboard.press('3'); await p.keyboard.press('Enter');
-  await until(p, () => document.querySelector('.prbar .num').textContent === 'Slide 3 of 5');
-  await p.evaluate(() => { const n = Date.now() + 3 * 60000; Date.now = () => n; });   // three minutes presenting
-  await p.keyboard.press('Escape'); await p.keyboard.press('Escape');
+async function endPresentation(p, ms) {
+  await p.evaluate(ms => { const end = Date.now() + ms; Date.now = () => end; }, ms);
+  await p.keyboard.press('Escape');
   await until(p, () => !document.querySelector('.present'));
-  await p.waitForFunction(() => [...document.querySelectorAll('.toast')].some(x => /slide 3 of 5/.test(x.textContent)), { timeout: 8000 });
-  let l = await h.lessonInDb(p, 'T2');
-  const t0 = l.taught.find(x => x.classId === 'A1');
-  assert.equal(t0.slide, 3); assert.deepEqual(t0.agenda, [2, 3], 'the agenda items ticked are kept, as the current Planner keeps them');
-  await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => b.textContent === 'Change').click());
-  await p.waitForSelector('dialog.sheet [data-gt="slide"]');
-  assert.equal(await p.$eval('dialog.sheet h2', x => x.textContent), 'Where did the class get to?');
-  await p.select('[data-gt="class"]', '1');   // the other class taught today
+}
+
+async function taughtInClassicPlanner(p, id) {
+  await p.goto(h.srv.url + 'planner.html');
+  await p.waitForFunction(id => window.__planner?.L.lessons?.some(l => l.id === id), { timeout: 20000 }, id);
+  return p.evaluate(id => window.__planner.L.lessons.find(l => l.id === id).taught || [], id);
+}
+
+test('E2-092 E2-093: one class can decline at two minutes or save without erasing its previous agenda count', async () => {
+  const { LESSONS } = require('./planseed.js');
+  const prior = { classId: 'A1', date: '2026-10-27', slide: 4, of: 5, note: 'Last time', agenda: [1, 3], at: 1792000000000 };
+  const p = await h.fresh(1366, { lessons: LESSONS.map(l => l.id === 'L2' ? { ...l, taught: [prior] } : l) });
+
+  await present(p, 'L2');
+  await endPresentation(p, 119999);
+  assert.equal(await p.$('[data-gt="slide"]'), null, 'just under two minutes does not prompt');
+  assert.deepEqual((await h.lessonInDb(p, 'L2')).taught, [prior]);
+
+  await present(p, 'L2');
+  await endPresentation(p, 120000);
+  await p.waitForSelector('dialog[open] [data-gt="slide"]', { timeout: 8000 });
+  assert.equal(await p.$('[data-gt="class"]'), null, 'one class needs no chooser');
+  assert.match(await txt(p, 'dialog.sheet[open]'), /Grade 9 English.*(?:Oct.*27|27.*Oct)/, 'the single class and date are visible');
+  assert.equal(await p.$eval('[data-gt="slide"]', s => s.value), '1', 'defaults to the farthest slide this time');
+  assert.equal(await p.$eval('[data-gt="note"]', s => s.value), prior.note);
+  assert.deepEqual((await h.lessonInDb(p, 'L2')).taught, [prior], 'opening the question saves nothing');
+  await p.click('[data-gt="later"]');
+  await until(p, () => !document.querySelector('dialog[open]'));
+  assert.deepEqual(await taughtInClassicPlanner(p, 'L2'), [prior], 'Not now leaves the current Planner intact');
+
+  await present(p, 'L2');
+  await p.evaluate(() => { const end = Date.now() + 120000; Date.now = () => end; });
+  await p.focus('.prbar button[aria-label="Stop presenting"]');
+  await p.keyboard.press('Enter');
+  await p.waitForSelector('dialog[open] [data-gt="slide"]');
+  assert.ok(await p.$('[data-gt="note"]:focus'), 'keyboard stop focuses the note');
+  await p.select('[data-gt="slide"]', '2');
+  await p.focus('[data-gt="note"]'); await p.keyboard.press('Enter');
+  await until(p, () => !document.querySelector('dialog[open]'));
+  const expected = [{ ...prior, slide: 2, at: await p.evaluate(() => Date.now()) }];
+  assert.deepEqual((await h.lessonInDb(p, 'L2')).taught, expected, 'no new ticks preserves the existing agenda');
+  assert.deepEqual(await taughtInClassicPlanner(p, 'L2'), expected);
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('E2-092 E2-093: Escape records nothing; Save records the chosen class, slide, note and top-level agenda only', async () => {
+  const { LESSONS, SETUP, lesson } = require('./planseed.js');
+  const old = { classId: 'A1', date: '2026-10-26', slide: 2, of: 5, note: 'Yesterday', agenda: [1, 3], at: 1792000000000 };
+  const slots = [{ classId: 'B1', date: '2026-10-27' }, { classId: 'A1', date: '2026-10-27' }];
+  const two = lesson('T2', 'Two classes today', slots, { taught: [old] });
+  two.slides[1].body += '\n\tDiscuss the last question';
+  const setup = { ...SETUP, classes: SETUP.classes.map(c => c.id === 'A1'
+    ? { ...c, meets: [{ dow: 2, start: '10:00', end: '11:00' }] } : c) };
+  const p = await h.fresh(1366, { setup, lessons: [...LESSONS.filter(l => !['L2', 'L4'].includes(l.id)), two] });
+  await p.emulateTimezone('UTC'); // Tuesday at 10:20, A1 is in class and B1 starts at 10:45.
+  await present(p, 'T2');
+  await endPresentation(p, 180000);
+  await p.waitForSelector('dialog[open] [data-gt="class"]', { timeout: 8000 });
+  assert.match(await p.$eval('[data-gt="class"]', s => s.selectedOptions[0].textContent), /Grade 9 English/,
+    'F5 suggests the current class on the timetable even when it is the second lesson slot');
+  await p.keyboard.press('Escape');
+  await until(p, () => !document.querySelector('dialog[open]'));
+  assert.deepEqual((await h.lessonInDb(p, 'T2')).taught, [old]);
+  assert.deepEqual(await taughtInClassicPlanner(p, 'T2'), [old]);
+
+  await h.open(p, 'lesson/T2/present/A1');
+  await until(p, () => document.activeElement?.matches('.present'));
+  await p.keyboard.press('a'); await p.waitForSelector('[data-ag="0"]');
+  await p.click('[data-ag="0"]'); await p.click('[data-ag="1"]');
+  await until(p, () => document.querySelectorAll('[data-ag][aria-pressed="true"]').length === 2);
+  await p.focus('.present'); await p.keyboard.press('Escape');
+  await until(p, () => !document.querySelector('.prpanel'));
+  await p.keyboard.press('3'); await p.keyboard.press('Enter');
+  await until(p, () => document.querySelector('.prbar .num').textContent === 'Slide 3 of 5');
+  await p.keyboard.press('ArrowLeft');
+  await until(p, () => document.querySelector('.prbar .num').textContent === 'Slide 2 of 5');
+  await endPresentation(p, 180000);
+  await p.waitForSelector('dialog[open] [data-gt="class"]');
+  assert.equal(await txt(p, 'dialog.sheet h2'), 'Where did the class get to?');
+  assert.equal(await p.$eval('[data-gt="slide"]', s => s.value), '3', 'farthest slide, even after going back');
+  assert.match(await p.$eval('[data-gt="class"]', s => s.selectedOptions[0].textContent), /Grade 9 English/,
+    'the direct link selected A1');
   await p.select('[data-gt="slide"]', '4');
   await p.click('[data-gt="note"]'); await p.keyboard.type('Start with the exit ticket');
+  await p.select('[data-gt="class"]', '0'); // B1 has no earlier entry. Keep the teacher's current draft.
+  assert.equal(await p.$eval('[data-gt="note"]', x => x.value), 'Start with the exit ticket');
+  assert.equal(await p.$eval('[data-gt="slide"]', x => x.value), '4');
+  assert.deepEqual((await h.lessonInDb(p, 'T2')).taught, [old], 'selecting a class and typing does not save');
   await p.click('[data-gt="save"]');
-  await until(p, () => !document.querySelector('dialog.sheet[open]'));
-  for (let k = 0; k < 40; k++) { l = await h.lessonInDb(p, 'T2'); if ((l.taught || []).some(x => x.classId === 'B1')) break; await new Promise(r => setTimeout(r, 100)); }
-  const b1 = l.taught.find(x => x.classId === 'B1');
-  assert.equal(b1.slide, 4); assert.equal(b1.note, 'Start with the exit ticket');
-  // the current Planner reads the same "taught" without changing it
-  await p.goto(h.srv.url + 'planner.html');
-  await p.waitForFunction(() => { const P = window.__planner; return P && Array.isArray(P.L.lessons) && P.L.lessons.some(l => l.id === 'T2'); }, { timeout: 20000 });
-  const theirs = await p.evaluate(() => JSON.parse(JSON.stringify(window.__planner.L.lessons.find(l => l.id === 'T2').taught)));
-  assert.deepEqual(theirs.map(x => [x.classId, x.slide, x.agenda || null, x.note]).sort(), [['A1', 3, [2, 3], ''], ['B1', 4, null, 'Start with the exit ticket']]);
+  await until(p, () => !document.querySelector('dialog[open]'));
+  const expected = [old, { classId: 'B1', date: '2026-10-27', slide: 4, of: 5, note: 'Start with the exit ticket', agenda: [2, 3], at: await p.evaluate(() => Date.now()) }];
+  assert.deepEqual((await h.lessonInDb(p, 'T2')).taught, expected, 'only the chosen class gets a record for today');
+  await until(p, () => document.querySelector('[data-taught]')?.textContent.includes('Start with the exit ticket'));
+  const rows = await p.$$eval('[data-taught] li', nodes => nodes.map(x => x.textContent));
+  assert.equal(rows.length, 2);
+  assert.match(rows[1], /Grade 10 Literature.*Got to slide 4 of 5.*agenda 2 of 3.*Start with the exit ticket/);
+  assert.deepEqual(await taughtInClassicPlanner(p, 'T2'), expected);
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('E2-092: a presentation link cannot mark a class absent from the lesson schedule', async () => {
+  const p = await h.fresh();
+  await h.open(p, 'lesson/L3/present/B1'); // L3 is scheduled only for A1, two days later.
+  await until(p, () => document.activeElement?.matches('.present'));
+  await endPresentation(p, 180000);
+  assert.equal(await p.$('dialog[open] [data-gt]'), null);
+  assert.deepEqual(await taughtInClassicPlanner(p, 'L3'), []);
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 

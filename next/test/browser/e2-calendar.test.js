@@ -63,7 +63,47 @@ test('E2-075 E2-082 E2-019 E2-074 E2-029: the card menu by right-click or from t
   await cardMenu(p, 'L2');
   await menuItem(p, 'Present');
   await p.waitForSelector('.present', { timeout: 10000 });
-  assert.equal(await p.evaluate(() => location.hash), '#/lesson/L2/present/A1');
+  assert.equal(await p.evaluate(() => location.hash), '#/lesson/L2/present/A1/2026-10-27');
+  assert.deepEqual(p.errors, []); await p.ctx.close();
+});
+
+test('E2-092: presenting the same class from different calendar cards uses the date of the chosen card', async () => {
+  const slots = ['2026-10-26', '2026-10-27', '2026-10-29'].map(date => ({ classId: 'A1', date }));
+  const lesson = { ...LESSONS.find(l => l.id === 'L2'), slots };
+  const p = await h.fresh(1366, { lessons: [lesson] });
+  await p.emulateTimezone('UTC'); // Tuesday, October 27.
+  const finish = async () => {
+    await until(p, () => document.activeElement?.matches('.present'));
+    await p.evaluate(() => { const end = Date.now() + 120000; Date.now = () => end; });
+    await p.keyboard.press('Escape');
+    await until(p, () => !document.querySelector('.present'));
+  };
+  for (const day of ['29', '26', '27']) {
+    await h.open(p, 'calendar/class');
+    const column = await p.$$eval('.byclass .hd [role="columnheader"]', (cols, day) =>
+      cols.findIndex(c => c.querySelector('b')?.textContent === day) + 1, day);
+    assert.ok(column, 'the calendar includes the ' + day);
+    await p.click('.byclass [role="cell"]:nth-child(' + column + ') a[data-lesson="L2"]', { button: 'right' });
+    await p.waitForSelector('.pop [role="menuitem"]');
+    assert.ok(await menuItem(p, 'Present'));
+    await finish();
+    assert.deepEqual((await h.lessonInDb(p, 'L2')).taught || [], [], 'no teaching record before confirmation');
+    if (day !== '27') {
+      assert.equal(await p.$('[data-gt="slide"]'), null, 'no confirmation for the ' + day + ' while teaching on the 27th');
+    } else {
+      await p.waitForSelector('dialog[open] [data-gt="class"]');
+      assert.match(await p.$eval('[data-gt="class"]', s => s.selectedOptions[0].textContent), /Tue.*27/);
+      await p.click('[data-gt="save"]');
+      await until(p, () => !document.querySelector('dialog[open] [data-gt]'));
+      assert.deepEqual((await h.lessonInDb(p, 'L2')).taught.map(t => [t.classId, t.date]), [['A1', '2026-10-27']]);
+    }
+  }
+  // A bookmarked meeting that is no longer on this lesson cannot fall back to today's meeting.
+  const saved = (await h.lessonInDb(p, 'L2')).taught;
+  await h.open(p, 'lesson/L2/present/A1/2026-10-30');
+  await finish();
+  assert.equal(await p.$('[data-gt="slide"]'), null);
+  assert.deepEqual((await h.lessonInDb(p, 'L2')).taught, saved);
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 

@@ -45,7 +45,7 @@ const linkItem = (c, onTool) => linkOf(c) ? { id: 'link', label: t('cal.class_pa
 function LessonCard({ l, c, m, day, compact, onDrag, p, onTool }) {
   const s = stateOf(l, c.id, day), tg = (l.taught || []).find(x => x.classId === c.id && x.date === day), others = (l.slots || []).filter(x => x.classId !== c.id);
   const calx = f => PARTS.calx().then(f).catch(e => console.error(e));
-  const items = [{ id: 'present', label: t('plan.present'), icon: 'play', onSelect: () => go('lesson', l.id, 'present', c.id) },
+  const items = [{ id: 'present', label: t('plan.present'), icon: 'play', onSelect: () => go('lesson', l.id, 'present', c.id, day) },
     { id: 'dl', label: t('plan.download_slides'), icon: 'download', onSelect: () => calx(M => M.download(p, l)) },
     { id: 'copy', label: t('plan.copy_to'), icon: 'copy', onSelect: () => onTool({ name: 'copy', l }) },
     linkItem(c, onTool),
