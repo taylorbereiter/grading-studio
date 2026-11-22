@@ -1,19 +1,17 @@
 // New student work on Home, as Today has it (src/app/wiring.js, the drop and the pick buttons; src/app/open.js intake):
 // - dropped anywhere on Home: files, a folder or a ZIP, read as they come (a single folder is the download itself, its name the
-//   download's); while files are dragged over, Home says where they go;
-// - Bring in papers, a menu on Home: Choose files…, A folder of papers…, From Google Drive…, A scan of everyone's papers… (split onto
-//   a class's names, mark/split.jsx) and Files to match to a roster… (mark/bringin.jsx), the same as on an assignment, with none yet.
-// Each is opened the way papers brought in on an assignment are (mark/open.js bringIn, kept in this browser through the write layer)
-// and the first paper shown. A newer copy of a download already worked on asks first, as class-work.jsx does.
+//   download's); while files are dragged over, Home says where they go. A lesson pack, a lesson file or a .lesson.json dropped here
+//   still goes to the Planner (plan/packs.js dropped), as it does anywhere else;
+// - Bring in papers, a menu on Home: Files or a ZIP…, A folder…, From Google Drive…, A scan to split… (split onto a class's names,
+//   mark/split.jsx) and Files to match to a roster… (mark/bringin.jsx), the same as on an assignment, with none yet.
+// This part is light and carries no lines of its own: Home's words come as L, and the bringing in itself (with the marking
+// screen's lines) is a part loaded once something is dropped or picked (home/bring.jsx, PARTS.homebring).
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { Button, Dialog, Icon, Menu, toast } from '../../ui/index.js';
+import { Button, Icon, Menu, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
-import { go, PARTS } from '../router.js';
+import { PARTS } from '../router.js';
 import { useSaving } from '../../services/saving.js';
-import '../mark/lines.js';
-import '../mark/setup-lines.js';
-import '../mark/inout-lines.js';
 
 const files = e => !!e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
 const busyElse = () => !!document.querySelector('dialog[open], [data-welcome]');
@@ -35,33 +33,28 @@ export async function fromDrop(entries, list) {
 }
 const picked = l => oneFolder([...l].map(f => ({ path: f.webkitRelativePath || f.name, file: f })));
 const readLib = () => import('../../students/counts.js').then(m => m.readLibrary());
-
-// The step both share: brought in, then opened. Returns [bring, its question box, busy].
-function useBring() {
-  const [busy, setBusy] = useState(false), [ask, setAsk] = useState(null);
-  const bring = async (got, { cls, drive } = {}) => {
-    if (!got.list.length) return;
-    setBusy(true);
-    try {
-      const O = await PARTS.bring();
-      const carry = x => new Promise(done => setAsk({ e: x, done: v => { setAsk(null); done(v); } }));
-      const r = await O.bringIn(got.list, { label: got.label, carry, drive });
-      if (r && cls) (await PARTS.bringin()).classAfter(r.batch.id, cls.id);
-      if (r && r.changed) toast(t('setup.c_changed_toast', { n: r.changed }), { ms: 7000 });
-      if (r) go('mark', r.batch.id);
-    } catch (er) { console.error(er); toast(er && er.name === 'NothingIn' ? t(er.take ? 'mark.not_papers' : 'setup.w_nothing') : er && er.name === 'CannotSave' ? t('mark.cannot') : t('setup.w_failed')); }
-    finally { setBusy(false); }
-  };
-  const box = ask && <Dialog open title={t('setup.c_ask_t')} onClose={() => ask.done(false)}
-    actions={<><Button onClick={() => ask.done(false)} data-fresh>{t('setup.c_fresh')}</Button><Button variant="primary" onClick={() => ask.done(true)} data-carry>{t('setup.c_bring')}</Button></>}>
-    <p data-raw>{t('setup.c_ask', { name: ask.e.name || t('setup.c_noname') })}</p>
-    <p>{ask.e.unchecked ? t('setup.c_ask_unchecked') : t('setup.c_ask_same', { named: ask.e.named, all: ask.e.nOld, n: ask.e.same })}</p>
-    <p>{t('setup.c_ask_q')}</p></Dialog>;
-  return [bring, box, busy];
+// Files only, and each a lesson file, a .json or a ZIP that is a lesson pack: the Planner's, not student work.
+async function lessonDrop(entries, list) {
+  if (!list.length || entries.some(en => en.isDirectory) || !list.every(f => /\.(zip|gslesson|json)$/i.test(f.name))) return false;
+  if (list.every(f => /\.(gslesson|json)$/i.test(f.name))) return true;
+  const P = await PARTS.packs();
+  for (const f of list) if (/\.zip$/i.test(f.name) && !await P.isPack(f)) return false;
+  return true;
 }
 
-export function HomeDrop() {
-  const [over, setOver] = useState(false), [bring, box, busy] = useBring();
+// The step both share: what was brought, handed to the part that opens it. Returns [bring, what it draws, busy].
+function useBring(L) {
+  const [job, setJob] = useState(null);
+  const bring = (got, { cls, drive } = {}) => {
+    if (!got.list.length || job) return;
+    PARTS.homebring().then(m => setJob({ B: m.Bring, got, cls, drive }), e => { console.error(e); toast(L.failed); });
+  };
+  return [bring, job && <job.B job={job} onEnd={() => setJob(null)} />, !!job];
+}
+
+export function HomeDrop({ L }) {
+  const [over, setOver] = useState(false), [bring, box, busy] = useBring(L);
+  const bringRef = useRef(bring); bringRef.current = bring;
   useEffect(() => {
     let left = 0;
     const on = e => { if (!files(e) || busyElse()) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; if (e.type === 'dragenter') left++; setOver(true); };
@@ -71,7 +64,10 @@ export function HomeDrop() {
       e.preventDefault(); left = 0; setOver(false);
       // what was dropped is read while the drop lasts; the folders are walked after
       const entries = [...(e.dataTransfer.items || [])].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean), list = [...e.dataTransfer.files];
-      try { await bring(await fromDrop(entries, list)); } catch (er) { console.error(er); toast(t('setup.w_failed')); }
+      try {
+        if (await lessonDrop(entries, list)) return (await PARTS.packs()).dropped(list);
+        bringRef.current(await fromDrop(entries, list));
+      } catch (er) { console.error(er); toast(L.failed); }
     };
     const evs = [['dragenter', on], ['dragover', on], ['dragleave', off], ['drop', drop]];
     for (const [n, f] of evs) document.addEventListener(n, f);
@@ -79,24 +75,24 @@ export function HomeDrop() {
   }, []);
   return <>
     {(over || busy) && <div class="hdrop" role="status" data-hdrop={busy ? 'busy' : 'over'}><Icon name="download" />
-      <div><h2>{t(busy ? 'inout.hd_busy' : 'inout.hd_h')}</h2>{!busy && <p>{t('inout.hd_say')}</p>}</div></div>}
+      <div><h2>{busy ? L.busy : L.h}</h2>{!busy && <p>{L.say}</p>}</div></div>}
     {box}
   </>;
 }
 
-export function HomeBring() {
-  const S = useSaving(), [bring, box, busy] = useBring(), [part, setPart] = useState(null), drive = useRef(null);
+export function HomeBring({ L }) {
+  const S = useSaving(), [bring, box, busy] = useBring(L), [part, setPart] = useState(null), drive = useRef(null);
   const fl = useRef(null), fd = useRef(null), sc = useRef(null);
   const pick = r => { drive.current = null; r.current.value = ''; r.current.click(); };
   const took = l => { const d = drive.current; drive.current = null; bring(picked(l), { drive: d }); };
   const scan = f => f && Promise.all([PARTS.split(), readLib()]).then(([M, lib]) => setPart({ split: M, f, lib }), e => console.error(e));
   const match = () => Promise.all([PARTS.bringin(), readLib()]).then(([B, lib]) => setPart({ B, lib, ask: true }), e => console.error(e));
   const g = S ? S.google() : {};
-  const items = [{ label: t('setup.w_files'), icon: 'file', onSelect: () => pick(fl) }, { label: t('setup.w_folder'), icon: 'folder', onSelect: () => pick(fd) },
+  const items = [{ label: L.files, icon: 'file', onSelect: () => pick(fl) }, { label: L.folder, icon: 'folder', onSelect: () => pick(fd) },
     ...(g.pickNow ? [{ label: t('file.from_drive_pick'), icon: 'drive', onSelect: () => S.driveFill(fl.current, { title: t('drive.pick_many'), papers: true, picked: p => { drive.current = p[0] && { id: p[0].id, name: p[0].name, kind: p.length === 1 && /\.zip$/i.test(p[0].name) ? 'zip' : 'files' }; } }).catch(e => { console.error(e); toast(t('drive.failed')); }) }] : []),
-    { label: t('setup.w_scan'), icon: 'image', onSelect: () => pick(sc) }, { label: t('setup.mr_menu'), icon: 'people', onSelect: match }];
+    { label: L.scan, icon: 'image', onSelect: () => pick(sc) }, { label: L.match, icon: 'people', onSelect: match }];
   return <>
-    <Menu label={t('setup.w_bring')} items={items} trigger={b => <Button {...b} icon="upload" disabled={busy} data-hbring>{t('setup.w_bring')}</Button>} />
+    <Menu label={L.bring} items={items} trigger={b => <Button {...b} icon="upload" disabled={busy} data-hbring>{L.bring}</Button>} />
     <input ref={fl} type="file" multiple hidden accept=".zip,.pdf,.docx,.docm,.doc,.png,.jpg,.jpeg,.heic,.heif,.gif,.webp,.mp4,.mov,.m4v,.webm,.mp3,.m4a,.wav,.txt,.md" onChange={e => took(e.currentTarget.files)} data-hbring-in="files" />
     <input ref={fd} type="file" multiple hidden webkitdirectory="" onChange={e => took(e.currentTarget.files)} data-hbring-in="folder" />
     <input ref={sc} type="file" hidden accept=".pdf,application/pdf" onChange={e => scan(e.currentTarget.files[0])} data-hbring-in="scan" />

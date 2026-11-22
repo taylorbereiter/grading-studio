@@ -118,6 +118,7 @@ export const PARTS = {
   oldsample: () => import('./home/old-sample.jsx'),
   homeg: () => import('./home/google.jsx'),
   homedrop: () => import('./home/drop.jsx'),
+  homebring: () => import('./home/bring.jsx'),
   folderfix: () => import('./home/folderfix.jsx'),
   // a class's People and Grades tabs (app/class/), each with the gradebook's engine
   people: () => import('./class/people.jsx'),
