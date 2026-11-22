@@ -168,6 +168,7 @@ export default function Home({ classes }) {
   const [fg, setFg] = useState(null), A = usePart('asg', !!fg);
   const TD = usePart('hometodo');   // Forget (class/assignment.jsx), asked first
   const OS = usePart('oldsample', !!(v && v.oldSample && !sampleOn())), G = usePart('homeg', !matchMedia('(max-width:640px)').matches);   // a sample class from before; Google in the header
+  const DR = usePart('homedrop');   // new student work dropped anywhere on Home (app/home/drop.jsx)
   const menu = m => ({ label: t('home.row_more', { name: m.name || t('home.student_work') }), items: [{ label: t('home.forget'), icon: 'trash', onSelect: () => setFg(m) }] });
   const d = new Date(now);
   if (!v) return <div class="page" aria-busy="true"><header class="ph"><h1>{greeting(d)}</h1></header><div class="loading" /></div>;
@@ -179,6 +180,7 @@ export default function Home({ classes }) {
     <header class="ph hello"><div><h1>{greeting(d)}</h1><p data-raw>{date(d, { weekday: 'long', day: 'numeric', month: 'long' })}</p></div>
       <div class="row gap">{G && G.HomeGoogle && <G.HomeGoogle />}<HomeFocus /><a class="btn" href={href('calendar')}><Icon name="week" />{t('home.this_week')}</a></div></header>
     <p class="say" data-home="say" data-mark={c.mark} data-back={c.back} data-today={c.classesToday} data-plan={c.toPlan} data-missing={c.missing}>{say || t('home.say_none')}</p>
+    {DR && <DR.HomeDrop />}
     {OS && v.oldSample && !sampleOn() && <OS.OldSample s={v.oldSample} L={{ os_h: t('home.os_h'), os_text: t('home.os_text'), os_setup: t('home.os_setup'), os_open: t('home.os_open'), os_rm: t('home.os_rm'), os_gone: t('home.os_gone'), os_cant: t('home.os_cant') }} onGone={() => useHome.read && useHome.read()} />}
     <FolderAsk work={v.mark.length + v.back.length > 0} />
     {Sv && <Sv.PhoneSign />}

@@ -19,3 +19,5 @@ integration branch (6eb2bad0). Status: done (browser test presses it), kept diff
 | A-045 | done (Choose a file… reads a .json or .txt into the box and checks it at once; over 400 KB says too long) | next/test/browser/setup-move.test.js 'A-044 A-045' | group 3 |
 | A-046 | done (site.json movingTo reaches the new app as __GS_MOVE__; the card at the top of Settings > Saving, only at the address being left) | next/test/browser/setup-move.test.js 'A-046 A-127', 'A-046: nothing is said…' | group 3 |
 | A-127 | done (the once-a-day box with Later, Open the new address, Take my work with me, only for a browser with work) | next/test/browser/setup-move.test.js 'A-046 A-127' | group 3 |
+| A-051 | done (files, a folder or a ZIP dropped anywhere on Home open as a new download through mark/open.js bringIn, as on an assignment; Home says where they go while dragged over) | next/test/browser/home-first.test.js 'A-051 A-065' | group 4 |
+| A-065 | done (same drop; a single folder is the download and names it, as src/app/wiring.js does) | next/test/browser/home-first.test.js 'A-051 A-065' | group 4 |

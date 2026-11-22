@@ -8,6 +8,7 @@ const { launch } = require('../../../test/helpers/chrome.js');
 const { plant, appReady } = require('../../../test/helpers/app.js');
 const { gradingSeed, PLAN_SETUP, STEADY } = require('../../../test/helpers/steady.js');
 const { fakeDrive } = require('./fakedrive.js');
+const { standardFiles, zipOf } = require('../../../test/helpers/fixtures.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
 const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp', png: 'image/png', webmanifest: 'application/manifest+json' };
@@ -29,6 +30,7 @@ before(async () => { srv = await serveSite(); browser = await launch(); });
 after(async () => { await browser.close(); await srv.close(); });
 
 const NOW = Date.parse('2026-10-27T10:20:00Z');
+const until = async (f, ms = 15000) => { const t0 = Date.now(); for (;;) { const v = await f(); if (v) return v; if (Date.now() - t0 > ms) return v; await new Promise(r => setTimeout(r, 100)); } };
 async function page(ctx, errors, D) {
   const p = await ctx.newPage();
   p.on('pageerror', e => errors.push(e.message)); p.on('dialog', d => { errors.push('dialog: ' + d.message()); d.dismiss(); });
@@ -148,5 +150,24 @@ test('A-072: each of today’s classes says how many of its to-dos are for today
   assert.deepEqual(await p.$$eval('[data-home="teach"] [data-ttodo]', l => l.map(a => [a.dataset.ttodo, a.textContent, a.hash])), [['c1', '2 to do', '#/class/c1/todo']]);
   await p.click('[data-ttodo="c1"]');
   await p.waitForFunction(() => location.hash === '#/class/c1/todo', { timeout: 10000 });
+  assert.deepEqual(errors, []); await ctx.close();
+});
+
+test('A-051 A-065: a ZIP of new student work dropped anywhere on Home opens as a download, kept in this browser', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await home(ctx, errors, seed());
+  await p.waitForFunction(() => !!document.querySelector('[data-home]'), { timeout: 15000 });
+  const zip = zipOf(await standardFiles());
+  await p.evaluate(b64 => { const u = Uint8Array.from(atob(b64), c => c.charCodeAt(0)); window.__dt = new DataTransfer(); window.__dt.items.add(new File([u], 'Book review.zip', { type: 'application/zip' })); }, Buffer.from(zip).toString('base64'));
+  // dragged over: Home says where it goes (the part comes in a moment after Home)
+  await p.waitForFunction(() => { document.querySelector('main, #app').dispatchEvent(new DragEvent('dragenter', { bubbles: true, cancelable: true, dataTransfer: window.__dt })); return !!document.querySelector('[data-hdrop="over"]'); }, { timeout: 15000 });
+  assert.match(await p.$eval('[data-hdrop]', e => e.textContent), /Drop new student work anywhere/);
+  await p.evaluate(() => document.querySelector('main, #app').dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: window.__dt })));
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready, { timeout: 60000 });
+  const b = await p.evaluate(() => { const b = window.__mark.state().batch; return { id: b.id, name: b.name, n: b.students.filter(s => s.files.length).length }; });
+  assert.equal(b.name, 'Book review'); assert.ok(b.n >= 3, 'each student’s work: ' + b.n);
+  const keys = await until(async () => { const k = await metaKeys(p); return k.includes(b.id) && k; });
+  assert.ok(keys, 'kept in this browser');
+  assert.equal(await p.$('[data-hdrop]'), null);
   assert.deepEqual(errors, []); await ctx.close();
 });
