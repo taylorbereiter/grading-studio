@@ -140,7 +140,12 @@ test('a file added, replaced, removed and brought back in the new app is where t
   assert.ok(was.other.includes(KEY + '/Late page.pdf'), 'the moved file is with the other student');
   assert.equal(was.moved[KEY + '/Late page.pdf'], OTHER);
   assert.deepEqual(was.comment, ['', 'About the late page'], 'and so is the comment');
-  assert.deepEqual({ inc: was.inc, layout: was.layout }, out, 'the notes are left out there too');
+  // what each saved copy says, so a failure tells a save that didn't land from the current app changing it after opening
+  const copies = JSON.stringify({ next: out.inc, ...(await m2.evaluate(async (id, k) => { const q = JSON.parse(localStorage.getItem(id) || 'null');
+    const db = await new Promise(r => { const o = indexedDB.open('grading-studio-keep'); o.onsuccess = () => r(o.result); o.onerror = () => r(null); });
+    const w = db && await new Promise(r => { const g = db.transaction('work').objectStore('work').get(id); g.onsuccess = () => r(g.result); g.onerror = () => r(null); }); if (db) db.close();
+    const of = d => d && d.s && d.s[k] ? { t: d.t, inc: d.s[k].inc || null } : null; return { quick: of(q), full: of(w) }; }, id, KEY)) });
+  assert.deepEqual({ inc: was.inc, layout: was.layout }, out, 'the notes are left out there too; ' + copies);
   assert.deepEqual(turned, { 1: 90 });
   assert.deepEqual(await m2.evaluate((k, f) => window.__gs.state().batch.students.find(s => s.key === k).files.find(x => x.path === f).rot, KEY, FIXED), turned, 'and the pages are turned the same');
   assert.equal(was.removed[KEY + '/Essay.pdf'].by, KEY + '/Essay fixed.pdf', 'and knows which file replaced which');
