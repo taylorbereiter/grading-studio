@@ -118,6 +118,8 @@ function UseExample({ st, redo, onClose }) {
         if (!live) { r.c.width = 0; return; }
         if (k === 0) X.exScoreOn(r.c, X.exScoreTop({ score, marks, kind, items, st }, kind === 'part' ? [0] : items.map((_, j) => j)));
         const old = cell.querySelector('canvas'); if (old) { old.replaceWith(r.c); old.width = 0; } else cell.prepend(r.c);
+      // closing the dialog mid-draw destroys the documents (the effect above), and pdf.js then rejects the page being drawn with
+      // RenderingCancelledException: that is the closing, not an error
       } })().catch(e => live && console.error(e));
     return () => { live = false; };
   }, [items, marks, score, kind]);

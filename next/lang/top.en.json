@@ -1,0 +1,34 @@
+{
+ "top.pg_fb": "{n} of {of} with feedback complete",
+ "top.pg_off": "{n} missing or excused",
+ "top.pg_avg": "Avg {v}",
+ "top.pg_avg_tip": {
+  "one": "Average of {n} finished score’s percent: {mean} / {max}. Partial, missing, excused and left-out papers don’t count. Opens Insights.",
+  "other": "Average of {n} finished scores’ percents: {mean} / {max}. Partial, missing, excused and left-out papers don’t count. Opens Insights."
+ },
+ "top.pg_tip": "No finished scores yet. Opens Insights.",
+ "top.tk_so_far": "{time} so far",
+ "top.tk_per": {
+  "one": "about {n} minute a paper",
+  "other": "about {n} minutes a paper"
+ },
+ "top.tk_left": "about {time} left",
+ "top.tk_from": {
+  "one": "from {n} paper so far",
+  "other": "from {n} papers so far"
+ },
+ "top.tk_tip": "Time spent marking this assignment, from the time tracker",
+ "top.fs_go": "Full screen",
+ "top.fs_leave": "Leave full screen",
+ "top.fs_tab": "Show the student list",
+ "top.book_tip": "Every assignment for this class, by term, with term grades and charts",
+ "top.su_sys_open": "Class page",
+ "top.su_sys_add": "Link to the class page…",
+ "top.su_sys_add_n": "Link to {name}…",
+ "top.su_link_tip": "Opens in a new tab",
+ "top.bb_menu": "Bring back from your assistant",
+ "top.cmd_sheet": "Grade sheet",
+ "top.cmd_cons": "Consistency check",
+ "top.cmd_ex": "Examples",
+ "top.cmd_late": "Add late work"
+}

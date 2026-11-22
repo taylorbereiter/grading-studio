@@ -1,0 +1,34 @@
+{
+ "top.pg_fb": "{of}件中{n}件フィードバック完了",
+ "top.pg_off": "未提出・免除 {n}件",
+ "top.pg_avg": "平均 {v}",
+ "top.pg_avg_tip": {
+  "one": "採点済み {n}件の得点率の平均：{mean} / {max}。途中・未提出・免除・除外の答案は含みません。分析を開きます。",
+  "other": "採点済み {n}件の得点率の平均：{mean} / {max}。途中・未提出・免除・除外の答案は含みません。分析を開きます。"
+ },
+ "top.pg_tip": "まだ採点済みの答案はありません。分析を開きます。",
+ "top.tk_so_far": "これまで {time}",
+ "top.tk_per": {
+  "one": "1件あたり約{n}分",
+  "other": "1件あたり約{n}分"
+ },
+ "top.tk_left": "残り約 {time}",
+ "top.tk_from": {
+  "one": "これまでの{n}件から",
+  "other": "これまでの{n}件から"
+ },
+ "top.tk_tip": "この課題の採点にかかった時間（時間記録より）",
+ "top.fs_go": "全画面",
+ "top.fs_leave": "全画面を終了",
+ "top.fs_tab": "生徒一覧を表示",
+ "top.book_tip": "このクラスのすべての課題（学期別、学期の成績とグラフ付き）",
+ "top.su_sys_open": "クラスのページ",
+ "top.su_sys_add": "クラスのページにリンク…",
+ "top.su_sys_add_n": "{name} にリンク…",
+ "top.su_link_tip": "新しいタブで開きます",
+ "top.bb_menu": "AI アシスタントから取り込む",
+ "top.cmd_sheet": "成績シート",
+ "top.cmd_cons": "採点の一貫性チェック",
+ "top.cmd_ex": "見本",
+ "top.cmd_late": "遅れて出た答案を追加"
+}

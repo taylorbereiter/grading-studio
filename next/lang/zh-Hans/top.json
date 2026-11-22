@@ -1,0 +1,34 @@
+{
+ "top.pg_fb": "{of} 份中 {n} 份已完成反馈",
+ "top.pg_off": "{n} 份缺交或免交",
+ "top.pg_avg": "平均 {v}",
+ "top.pg_avg_tip": {
+  "one": "{n} 份已完成分数的百分比平均：{mean} / {max}。未完成、缺交、免交和排除的作业不计入。打开“分析”。",
+  "other": "{n} 份已完成分数的百分比平均：{mean} / {max}。未完成、缺交、免交和排除的作业不计入。打开“分析”。"
+ },
+ "top.pg_tip": "还没有已完成的分数。打开“分析”。",
+ "top.tk_so_far": "目前共 {time}",
+ "top.tk_per": {
+  "one": "每份约 {n} 分钟",
+  "other": "每份约 {n} 分钟"
+ },
+ "top.tk_left": "约剩 {time}",
+ "top.tk_from": {
+  "one": "根据目前的 {n} 份",
+  "other": "根据目前的 {n} 份"
+ },
+ "top.tk_tip": "批改这份作业花的时间，来自时间记录",
+ "top.fs_go": "全屏",
+ "top.fs_leave": "退出全屏",
+ "top.fs_tab": "显示学生名单",
+ "top.book_tip": "这个班级的所有作业，按学期排列，附学期成绩和图表",
+ "top.su_sys_open": "班级页面",
+ "top.su_sys_add": "链接到班级页面…",
+ "top.su_sys_add_n": "链接到 {name}…",
+ "top.su_link_tip": "在新标签页中打开",
+ "top.bb_menu": "从你的助手带回",
+ "top.cmd_sheet": "成绩单",
+ "top.cmd_cons": "一致性检查",
+ "top.cmd_ex": "范例",
+ "top.cmd_late": "添加迟交作业"
+}

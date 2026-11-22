@@ -1,0 +1,34 @@
+{
+ "top.pg_fb": "{n} de {of} con comentarios completos",
+ "top.pg_off": "{n} sin entregar o justificados",
+ "top.pg_avg": "Media {v}",
+ "top.pg_avg_tip": {
+  "one": "Media del porcentaje de {n} nota terminada: {mean} / {max}. Los trabajos parciales, sin entregar, justificados o excluidos no cuentan. Abre Análisis.",
+  "other": "Media de los porcentajes de {n} notas terminadas: {mean} / {max}. Los trabajos parciales, sin entregar, justificados o excluidos no cuentan. Abre Análisis."
+ },
+ "top.pg_tip": "Todavía no hay notas terminadas. Abre Análisis.",
+ "top.tk_so_far": "{time} hasta ahora",
+ "top.tk_per": {
+  "one": "unos {n} minuto por trabajo",
+  "other": "unos {n} minutos por trabajo"
+ },
+ "top.tk_left": "faltan unos {time}",
+ "top.tk_from": {
+  "one": "según {n} trabajo hasta ahora",
+  "other": "según {n} trabajos hasta ahora"
+ },
+ "top.tk_tip": "Tiempo dedicado a corregir esta tarea, según el registro de tiempo",
+ "top.fs_go": "Pantalla completa",
+ "top.fs_leave": "Salir de pantalla completa",
+ "top.fs_tab": "Mostrar la lista de alumnos",
+ "top.book_tip": "Todas las tareas de esta clase, por periodo, con notas del periodo y gráficos",
+ "top.su_sys_open": "Página de la clase",
+ "top.su_sys_add": "Enlazar con la página de la clase…",
+ "top.su_sys_add_n": "Enlazar con {name}…",
+ "top.su_link_tip": "Se abre en una pestaña nueva",
+ "top.bb_menu": "Traer de vuelta de tu asistente",
+ "top.cmd_sheet": "Hoja de notas",
+ "top.cmd_cons": "Comprobar la coherencia",
+ "top.cmd_ex": "Ejemplos",
+ "top.cmd_late": "Añadir trabajos atrasados"
+}

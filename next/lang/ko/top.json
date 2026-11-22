@@ -1,0 +1,34 @@
+{
+ "top.pg_fb": "{of}개 중 {n}개 피드백 완료",
+ "top.pg_off": "미제출 또는 면제 {n}개",
+ "top.pg_avg": "평균 {v}",
+ "top.pg_avg_tip": {
+  "one": "채점을 마친 {n}개 점수의 백분율 평균: {mean} / {max}. 부분 채점, 미제출, 면제, 제외된 과제는 포함하지 않습니다. 분석을 엽니다.",
+  "other": "채점을 마친 {n}개 점수의 백분율 평균: {mean} / {max}. 부분 채점, 미제출, 면제, 제외된 과제는 포함하지 않습니다. 분석을 엽니다."
+ },
+ "top.pg_tip": "아직 채점을 마친 점수가 없습니다. 분석을 엽니다.",
+ "top.tk_so_far": "지금까지 {time}",
+ "top.tk_per": {
+  "one": "과제당 약 {n}분",
+  "other": "과제당 약 {n}분"
+ },
+ "top.tk_left": "약 {time} 남음",
+ "top.tk_from": {
+  "one": "지금까지 {n}개 기준",
+  "other": "지금까지 {n}개 기준"
+ },
+ "top.tk_tip": "이 과제를 채점하는 데 쓴 시간(시간 기록 기준)",
+ "top.fs_go": "전체 화면",
+ "top.fs_leave": "전체 화면 종료",
+ "top.fs_tab": "학생 목록 보기",
+ "top.book_tip": "이 반의 모든 과제를 학기별로, 학기 성적과 차트와 함께",
+ "top.su_sys_open": "반 페이지",
+ "top.su_sys_add": "반 페이지에 연결…",
+ "top.su_sys_add_n": "{name}에 연결…",
+ "top.su_link_tip": "새 탭에서 열립니다",
+ "top.bb_menu": "어시스턴트에서 가져오기",
+ "top.cmd_sheet": "성적표",
+ "top.cmd_cons": "일관성 확인",
+ "top.cmd_ex": "예시",
+ "top.cmd_late": "늦게 낸 과제 추가"
+}

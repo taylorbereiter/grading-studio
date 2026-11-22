@@ -120,7 +120,7 @@ function Page({ pg, room, tall, zoom, FU }) {
 
 // The marking tools load as a part of their own (router.js PARTS.marking, screens/mark-tools.jsx) once the paper is open, so
 // the read-only paper shows as soon as it can. Until they are there, the paper is drawn and nothing on it can be changed.
-let MK = null, TN = null, PM = null;   // the marking tools, typed notes with the Timer, and More for this paper (each its own part)
+let MK = null, TN = null, PM = null, TB = null;   // the marking tools, typed notes with the Timer, More for this paper (each its own part), and the top bar's (mark/topbar.jsx, with More)
 const SAVE_LINE = { saving: () => t('mark.saving'), saved: () => t('mark.saved'), partly: () => t('mark.partly'), not: () => t('mark.not_saved') };
 const saveLine = k => (SAVE_LINE[k] ? SAVE_LINE[k]() : t('mark.cannot'));
 
@@ -357,7 +357,9 @@ let BANK = null;
 function CommentChips({ text, onAdd }) {
   const [bank, setBank] = useState(BANK), [open, setOpen] = useState(false);
   useEffect(() => { let live = true; const read = () => PARTS.cbank().then(m => m.readBank()).then(b => { BANK = b; if (live) setBank(b); }, e => console.error(e));
-    read(); const off = onSaved(e => { if (e.kind === 'setting' && e.id === 'gs.bank') read(); }); return () => { live = false; off(); }; }, []);
+    // saved here, or in another window (H-061: its storage event)
+    const other = e => { if (e.key === 'gs.bank' || e.key === null) read(); }; addEventListener('storage', other);
+    read(); const off = onSaved(e => { if (e.kind === 'setting' && e.id === 'gs.bank') read(); }); return () => { live = false; off(); removeEventListener('storage', other); }; }, []);
   if (!bank) return null;
   const short = c => { c = String(c).replace(/\s+/g, ' ').trim(); return c.length > 26 ? c.slice(0, 25).trimEnd() + '…' : c; };
   const save = () => { const c = text.trim(); if (!c) return toast(t('mark.cb_type_first')); if (bank.includes(c)) return toast(t('mark.cb_already'));
@@ -419,7 +421,7 @@ export default function MarkScreen({ route, classes }) {
   const setPanel = v => { noRR.current = v; setNoR(v); prefs.set('gs.panels', { ...(prefs.get('gs.panels', {}) || {}), R: v }); };
   useEffect(() => { if (!w) return; let off = null, live = true;
     PARTS.marking().then(m => { if (!live) return; MK = m; off = m.start({ toast: text => toast(text), openStudent: i => pickRef.current(i), changed: () => tick(n => n + 1), zoom: { get: () => zr.current, set: zoomTo } }); tick(n => n + 1);
-      PARTS.pmore().then(x => { PM = x; if (live) tick(n => n + 1); }, e => console.error(e)); });
+      PARTS.pmore().then(x => { PM = x; if (live) tick(n => n + 1); return x.topbar(); }).then(x => { TB = x; if (live) tick(n => n + 1); }, e => console.error(e)); });
     return () => { live = false; if (off) off(); }; }, [w]);
   // again: the download opened once more from storage (another window saved it), on the student she was on (wantKey)
   const [again, setAgain] = useState(0), wantKey = useRef(null), [dl, setDl] = useState(null);
@@ -478,7 +480,7 @@ export default function MarkScreen({ route, classes }) {
       register({ id: 'mark-side', keys: 'b', label: 'mark.sp_key', group: 'mark.score', when: () => !solo && !!spCtl.current, run: () => spCtl.current.toggle() }),
       register({ id: 'mark-calc', keys: '=', label: 'mark.calc', when: () => !!MK && !Calc && !MK.M.resizable(), run: openCalc }),
       register({ id: 'mark-unscored', keys: 'n', label: 'mark.next_score', when: () => !!MK && !solo, run: () => { if (!MK.M.nextUnscored()) toast(t('mark.everyone_scored')); } }),
-      register({ id: 'mark-list', keys: '[', label: 'mark.list_keep', when: () => !solo, run: () => setFold(!foldR.current) }),
+      register({ id: 'mark-list', keys: '[', label: 'mark.list_keep', when: () => !solo, run: () => (TB && TB.pin()) || setFold(!foldR.current) }),
       register({ id: 'mark-panel', keys: ']', label: 'mark.panel_fold', run: () => setPanel(!noRR.current) }),
       register({ id: 'mark-solo', keys: 'i', label: 'mark.solo_start', when: () => !solo && tab === 'mark', run: soloStart }),
       // F turns Feedback complete on or off; Shift F sets it on and goes to the next student
@@ -505,7 +507,9 @@ export default function MarkScreen({ route, classes }) {
   // student: mark/bringin.jsx) and Partners and videos (mark/partners.jsx)
   const [setupDlg, setSetupDlg] = useState(null);
   // Share with your assistant (mark/share.jsx), from this menu and from Insights; the assistant's name is handed in with ctx
-  const openShare = () => PARTS.share().then(S => setSetupDlg({ k: 'sh', S }), e => console.error(e));
+  const openShare = back => PARTS.share().then(S => setSetupDlg({ k: 'sh', S, back: back === true }), e => console.error(e));
+  // Grade sheet and Consistency from Find: the tab, and the view on it (screens/mark-out.jsx), at its own address (grades/sheet, insights/consistency)
+  const [askV, setAskV] = useState(null), view = (k, v) => { setAskV({ v }); go('mark', id, k, { sheet: 'sheet', cons: 'consistency' }[v]); };
   const bringMany = () => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true; i.onchange = async () => { const B = await PARTS.bringin(); await B.bringFiles(await B.expand([...i.files]), o => setSetupDlg({ k: 'bring', B, ...o })); }; i.click(); };
   const setupItems = [{ label: t('mark.su_menu'), icon: 'settings', onSelect: openSetup }, { label: t('mark.bf_menu'), icon: 'upload', onSelect: bringMany },
     { label: t('mark.pv_menu'), icon: 'people', onSelect: () => PARTS.partners().then(P => setSetupDlg({ k: 'pv', P }), e => console.error(e)) },
@@ -517,7 +521,9 @@ export default function MarkScreen({ route, classes }) {
     { label: t('mark.hn_sw'), sub: t('mark.hn_sw_tip'), checked: anonOn(), onSelect: () => hideNames() },
     ...(w && w.batch.quiz && w.batch.quiz.made ? [{ label: t('mark.qr_menu'), icon: 'image', onSelect: () => quizScan() }] : []),
     // Transcripts for every recording (mark/transcripts.jsx, loaded through More for this paper's part), only when there are recordings
-    ...(w && w.batch.students.some(st => st.files.some(f => f.kind === 'media' || f.kind === 'link')) ? [{ label: t('mark.tr_menu'), icon: 'text', onSelect: () => PARTS.pmore().then(P => P.transcripts()).then(T => setSetupDlg({ k: 'tr', T }), e => console.error(e)) }] : [])];
+    ...(w && w.batch.students.some(st => st.files.some(f => f.kind === 'media' || f.kind === 'link')) ? [{ label: t('mark.tr_menu'), icon: 'text', onSelect: () => PARTS.pmore().then(P => P.transcripts()).then(T => setSetupDlg({ k: 'tr', T }), e => console.error(e)) }] : []),
+    // Gradebook, the unit plan and class page links, Bring back (mark/topbar.jsx)
+    ...(w && TB ? TB.items({ batch: w.batch, cls, share: openShare, dlg: D => setSetupDlg({ k: 'tb', D }) }) : [])];
   // The command bar while an assignment is open (src/shell.js findRows): its students, its tabs, the Setup menu and closing it
   const setupRef = useRef(setupItems); setupRef.current = setupItems;
   useEffect(() => { if (!w) return; const g = t('mark.cmd_students'), th = t('mark.cmd_this');
@@ -526,7 +532,8 @@ export default function MarkScreen({ route, classes }) {
     setupItems.forEach((x, n) => offs.push(addCommand({ id: 'su-' + n, label: x.label, group: th, icon: x.icon, run: () => setupRef.current[n] && setupRef.current[n].onSelect() })));
     offs.push(addCommand({ id: 'asg-close', label: () => t('mark.cmd_close'), group: th, icon: 'x', run: close }));
     if (cls) offs.push(addCommand({ id: 'asg-book', label: () => t('mark.cmd_book'), group: th, icon: 'grades', run: () => go('class', cls.id, 'grades') }));
-    return () => offs.forEach(f => f()); }, [w, id, ver, setupItems.length]);
+    if (TB) offs.push(...TB.commands({ group: th, share: openShare, view, late: bringMany }));
+    return () => offs.forEach(f => f()); }, [w, id, ver, setupItems.length, !!TB]);
   // a quiz made here (mark/quizread.jsx): Quiz scan shows what the scan read; before the first reading, it reads the papers first
   const quizScan = async again => { const R = await PARTS.quizread(); if ((again || !state().batch.quiz.lastRead) && !await R.readAll(!!again)) return; setSetupDlg({ k: 'qr', R }); };
   const readOnce = useRef(null);
@@ -542,16 +549,20 @@ export default function MarkScreen({ route, classes }) {
         tabs={TABS.map(k => ({ id: k, label: TAB_LINE[k]() }))} />}
       <span class="grow" />
       {w && <span class="mk-save mute" role="status" data-save={MK ? MK.M.saveLabel() : 'saved'}>{saveLine(MK ? MK.M.saveLabel() : 'saved')}</span>}
-      {w && <span class="mk-prog mute">{t('mark.marked_of', { n: marked, of: n })}<Progress value={marked} max={Math.max(1, n)} label={t('mark.marked_of', { n: marked, of: n })} /></span>}
+      {/* marked so far and the average (one button to Insights), Quick mark and Setup: one stop in the Tab order */}
+      <Rove class="mk-acts" role="toolbar" aria-label={t('mark.cmd_this')}>
+      {w && (TB ? <TB.Prog batch={w.batch} fm={fm} X={OE} onOpen={() => go('mark', id, 'insights')} /> : <span class="mk-prog mute">{t('mark.marked_of', { n: marked, of: n })}<Progress value={marked} max={Math.max(1, n)} label={t('mark.marked_of', { n: marked, of: n })} /></span>)}
       {w && MK && !solo && quizOn() && <Button size="sm" icon="check" onClick={() => quick()} data-quicktop>{t('mark.qm_open')}</Button>}
       {!solo && (w && MK ? <Menu label={t('mark.setup_tip')} trigger={b => <Button {...b} icon="settings" size="sm" title={t('mark.setup_tip')} data-setupopen>{t('mark.setup')}</Button>} items={setupItems} />
-        : <Button icon="settings" size="sm" disabled data-setupopen>{t('mark.setup')}</Button>)}
+        : <Button icon="settings" size="sm" disabled data-setupopen>{t('mark.setup')}</Button>)}</Rove>
     </header>
     {su && <su.SetupDialog onClose={() => setSu(null)} />}
     {setupDlg && setupDlg.k === 'bring' && <setupDlg.B.BringFiles rows={setupDlg.rows} dups={setupDlg.dups} onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'tr' && <setupDlg.T.Transcripts onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'pv' && <setupDlg.P.Partners onClose={() => setSetupDlg(null)} />}
-    {setupDlg && setupDlg.k === 'sh' && <setupDlg.S.Share ctx={{ ...cvCtx, ai: assistant() }} onClose={() => setSetupDlg(null)} />}
+    {setupDlg && setupDlg.k === 'sh' && <setupDlg.S.Share ctx={{ ...cvCtx, ai: assistant() }} back={setupDlg.back} onClose={() => setSetupDlg(null)} />}
+    {setupDlg && setupDlg.k === 'tb' && <setupDlg.D onClose={() => setSetupDlg(null)} />}
+    {w && TB && <TB.Full fm={() => !!(MK && MK.M.fmNow())} />}
     {setupDlg && setupDlg.k === 'cl' && <setupDlg.Cl.ClipStage onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'qm' && <setupDlg.Q.QuickMark onClose={() => setSetupDlg(null)} onBoxes={() => quick(true)} onOpen={pick} />}
     {setupDlg && setupDlg.k === 'qr' && <setupDlg.R.QuizLook onClose={() => setSetupDlg(null)} onAgain={() => quizScan(true)} />}
@@ -559,14 +570,14 @@ export default function MarkScreen({ route, classes }) {
     <RubricAsk ask={ask} />
     {err ? <EmptyState icon="inbox" title={t(err.name === 'NotKept' ? 'mark.not_kept' : 'mark.page_bad')} text={err.name === 'NotKept' ? t('mark.not_kept_text') : ''} />
       : !w ? (dl ? <p class="mk-dl mute" role="status" data-mkdl>{t('mark.from_drive', { n: dl.n, of: dl.of })}</p> : <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />)
-      : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} sub={route.params.sub} E={out.E} cur={cur} onOpen={openOn} onShare={openShare} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
+      : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} sub={route.params.sub} E={out.E} cur={cur} onOpen={openOn} onShare={openShare} view={askV} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
       : <><div class="mk-body">
         {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} onHide={MK ? () => hideNames() : null} onShuffle={() => hideNames(true)} />}
         <div class="mk-mid">
           {MK && <MK.Tools />}
           <Paper batch={w.batch} cur={cur} zoom={zoom} ver={ver} FU={FU} ctl={spCtl} onSp={setSp} onZoom={zoomTo} />
           {FU && light && <FU.LightPanel onClose={() => setLight(false)} />}
-          <Rove class="mk-zoom" role="toolbar" aria-label={t('mark.view_tools')}>{sp.n > 0 && <IconButton icon="slides" label={t('mark.sp_open')} kbd="B" aria-pressed={sp.shown ? 'true' : 'false'} onClick={() => spCtl.current && spCtl.current.toggle()} data-spbtn />}{noR && <IconButton icon="chl" label={t('mark.panel_show')} kbd="]" onClick={() => setPanel(false)} data-panelshow />}{FU && FU.rescanCount() > 0 && <IconButton icon="flag" label={t('mark.rs_title_n', { n: FU.rescanCount() })} title={t('mark.rs_title_n', { n: FU.rescanCount() })} onClick={() => setRescans(true)} data-rescans />}{FU && <IconButton icon="sun" label={t('mark.l_title')} aria-pressed={light ? 'true' : 'false'} onClick={() => setLight(v => !v)} data-light />}<IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => zoomTo(Math.round((zoom - 0.1) * 10) / 10)} />
+          <Rove class="mk-zoom" role="toolbar" aria-label={t('mark.view_tools')}>{sp.n > 0 && <IconButton icon="slides" label={t('mark.sp_open')} kbd="B" aria-pressed={sp.shown ? 'true' : 'false'} onClick={() => spCtl.current && spCtl.current.toggle()} data-spbtn />}{noR && <IconButton icon="chl" label={t('mark.panel_show')} kbd="]" onClick={() => setPanel(false)} data-panelshow />}{FU && FU.rescanCount() > 0 && <IconButton icon="flag" label={t('mark.rs_title_n', { n: FU.rescanCount() })} title={t('mark.rs_title_n', { n: FU.rescanCount() })} onClick={() => setRescans(true)} data-rescans />}{FU && <IconButton icon="sun" label={t('mark.l_title')} aria-pressed={light ? 'true' : 'false'} onClick={() => setLight(v => !v)} data-light />}{TB && <TB.FullBtn />}<IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => zoomTo(Math.round((zoom - 0.1) * 10) / 10)} />
             <button type="button" class="mk-z0" title={t('mark.zoom_reset', { key: pieces('mod+0').join(' ') })} onClick={() => zoomTo(1)} data-zoom0>{t('mark.zoom', { n: Math.round(zoom * 100) })}</button>
             <IconButton icon="plus" label={t('mark.zoom_in')} onClick={() => zoomTo(Math.round((zoom + 0.1) * 10) / 10)} /></Rove>
         </div>

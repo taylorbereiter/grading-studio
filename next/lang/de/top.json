@@ -1,0 +1,34 @@
+{
+ "top.pg_fb": "{n} von {of} mit fertigem Feedback",
+ "top.pg_off": "{n} fehlend oder entschuldigt",
+ "top.pg_avg": "Ø {v}",
+ "top.pg_avg_tip": {
+  "one": "Durchschnitt des Prozentwerts von {n} fertigen Bewertung: {mean} / {max}. Teilweise, fehlende, entschuldigte und ausgelassene Arbeiten zählen nicht. Öffnet Auswertung.",
+  "other": "Durchschnitt der Prozentwerte von {n} fertigen Bewertungen: {mean} / {max}. Teilweise, fehlende, entschuldigte und ausgelassene Arbeiten zählen nicht. Öffnet Auswertung."
+ },
+ "top.pg_tip": "Noch keine fertigen Bewertungen. Öffnet Auswertung.",
+ "top.tk_so_far": "bisher {time}",
+ "top.tk_per": {
+  "one": "etwa {n} Minute pro Arbeit",
+  "other": "etwa {n} Minuten pro Arbeit"
+ },
+ "top.tk_left": "noch etwa {time}",
+ "top.tk_from": {
+  "one": "nach bisher {n} Arbeit",
+  "other": "nach bisher {n} Arbeiten"
+ },
+ "top.tk_tip": "Zeit für die Korrektur dieser Aufgabe, aus der Zeiterfassung",
+ "top.fs_go": "Vollbild",
+ "top.fs_leave": "Vollbild beenden",
+ "top.fs_tab": "Schülerliste zeigen",
+ "top.book_tip": "Alle Aufgaben dieser Klasse nach Halbjahr, mit Halbjahresnoten und Diagrammen",
+ "top.su_sys_open": "Klassenseite",
+ "top.su_sys_add": "Mit der Klassenseite verknüpfen…",
+ "top.su_sys_add_n": "Mit {name} verknüpfen…",
+ "top.su_link_tip": "Öffnet sich in einem neuen Tab",
+ "top.bb_menu": "Von Ihrem Assistenten zurückholen",
+ "top.cmd_sheet": "Notenblatt",
+ "top.cmd_cons": "Einheitlichkeit prüfen",
+ "top.cmd_ex": "Beispiele",
+ "top.cmd_late": "Verspätete Arbeiten hinzufügen"
+}

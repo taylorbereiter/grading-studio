@@ -1101,3 +1101,34 @@ dialog.dlg:has(.mk-rd){width:min(640px,calc(100vw - 32px))}
 .mk-paper .rd-grip:focus-visible{outline:2px solid var(--acc)}
 /* Transcripts for every recording (mark/transcripts.jsx) */
 .mk-trall{display:flex;flex-direction:column;gap:8px}.mk-trall p{margin:0}
+/* The top bar's This assignment set (mark/topbar.jsx): marked so far, missing or excused and the average, one button to Insights;
+   the time tracker's line beside it (src/app/panels.js renderProg). */
+.mk-acts{display:flex;align-items:center;gap:10px;min-width:0}
+.mk-prog .pg{display:inline-flex;align-items:baseline;gap:8px;border:0;background:none;color:inherit;font:inherit;padding:4px 8px;border-radius:var(--r2);cursor:pointer;white-space:nowrap}
+.mk-prog .pg:hover{background:var(--acc-soft)}
+.mk-prog .pg-avg{font-weight:600;color:var(--ink)}
+.mk-prog .pg-avg.none{font-weight:400;color:var(--mute)}
+.mk-prog .pg-tk{font-size:var(--t1);white-space:nowrap}
+@media (max-width:1100px){.mk-prog .pg-tk,.mk-prog .pg [data-progoff]{display:none}}
+@media (max-width:760px){.mk-acts{gap:6px}.mk-prog .pg{padding:4px}}
+/* Full screen (mark/topbar.jsx; src/app/wiring.js): data-mkfs on the page while the list is away. It comes out over the paper's edge
+   (data-mkpeek) from the left edge, the tab, / or a click into it; with 'all' the tool dock shows only near the pointer (data-mktools). */
+.mk-fsedge,.mk-fstab{display:none}
+:root[data-mkfs] .markscreen[data-tab=mark]:not(.solo) .mk-fsedge{display:block;position:fixed;left:0;top:0;bottom:0;width:10px;z-index:7}
+:root[data-mkfs] .markscreen[data-tab=mark]:not(.solo) .mk-fstab{display:flex;align-items:center;justify-content:center;position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:7;width:22px;height:56px;padding:0;border:1px solid var(--line);border-left:0;border-radius:0 var(--r2) var(--r2) 0;background:var(--s);color:var(--mute);font:inherit;cursor:pointer;box-shadow:var(--sh-r)}
+@media (pointer:fine){:root[data-mkfs] .markscreen[data-tab=mark]:not(.solo) .mk-fstab{opacity:.55}}
+:root[data-mkpeek] .markscreen .mk-fstab{display:none}
+:root[data-mkfs] .mk-body{position:relative;grid-template-columns:minmax(0,1fr) 380px}
+:root[data-mkfs] .markscreen.nor .mk-body{grid-template-columns:minmax(0,1fr)}
+:root[data-mkfs] .mk-body .mk-list{position:absolute;left:0;top:0;bottom:0;width:280px;z-index:8;box-shadow:var(--sh-f);transform:translateX(-100%);visibility:hidden;transition:transform .16s ease,visibility 0s .16s}
+:root[data-mkfs][data-mkpeek] .mk-body .mk-list{transform:none;visibility:visible;transition:transform .16s ease}
+:root[data-mkfs] .mk-list.fold .mk-lhead{display:flex}
+:root[data-mkfs] .mk-list.fold .mk-find{display:block}
+:root[data-mkfs] .mk-list.fold .mk-lf,:root[data-mkfs] .mk-list.fold .mk-row .pill{display:inline}
+:root[data-mkfs] .mk-list.fold .grow{display:block}
+:root[data-mkfs] .mk-list.fold .mk-row .nm{display:-webkit-box}
+:root[data-mkfs] .mk-list.fold .mk-lbar{justify-content:flex-start;padding-top:0}
+:root[data-mkfs] .mk-list.fold .mk-row{flex-direction:row;gap:10px;padding:7px 10px}
+:root[data-mkfs=all] .markscreen .mk-tools{opacity:0;pointer-events:none;transition:opacity .15s}
+:root[data-mkfs=all][data-mktools] .markscreen .mk-tools{opacity:1;pointer-events:auto}
+@media (prefers-reduced-motion:reduce){:root[data-mkfs] .mk-body .mk-list,:root[data-mkfs=all] .markscreen .mk-tools{transition:none}}

@@ -39,6 +39,8 @@ export function ReadingCards({ st }) {
 }
 // Transcripts for every recording (src/app/readings.js openTranscripts), from Setup: the part with the box
 export const transcripts = () => import('./transcripts.jsx');
+// the top bar's average, full screen and the Setup menu's links (mark/topbar.jsx), loaded the same way
+export const topbar = () => import('./topbar.jsx');
 // the roster name of the student on screen (src/people.js personOf): null when the class's roster doesn't know them
 function rosterName(st) {
   const b = state().batch, c = b && b.classId != null ? (library.json(null) || { classes: [] }).classes.find(k => k.id === b.classId) : null;

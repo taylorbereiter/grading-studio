@@ -1,0 +1,34 @@
+{
+ "top.pg_fb": "{of} 份中 {n} 份已完成回饋",
+ "top.pg_off": "{n} 份缺交或免交",
+ "top.pg_avg": "平均 {v}",
+ "top.pg_avg_tip": {
+  "one": "{n} 份已完成分數的百分比平均：{mean} / {max}。未完成、缺交、免交和排除的作業不計入。開啟「分析」。",
+  "other": "{n} 份已完成分數的百分比平均：{mean} / {max}。未完成、缺交、免交和排除的作業不計入。開啟「分析」。"
+ },
+ "top.pg_tip": "還沒有已完成的分數。開啟「分析」。",
+ "top.tk_so_far": "目前共 {time}",
+ "top.tk_per": {
+  "one": "每份約 {n} 分鐘",
+  "other": "每份約 {n} 分鐘"
+ },
+ "top.tk_left": "約剩 {time}",
+ "top.tk_from": {
+  "one": "根據目前的 {n} 份",
+  "other": "根據目前的 {n} 份"
+ },
+ "top.tk_tip": "批改這份作業花的時間，來自時間紀錄",
+ "top.fs_go": "全螢幕",
+ "top.fs_leave": "離開全螢幕",
+ "top.fs_tab": "顯示學生名單",
+ "top.book_tip": "這個班級的所有作業，依學期排列，附學期成績和圖表",
+ "top.su_sys_open": "班級頁面",
+ "top.su_sys_add": "連結到班級頁面…",
+ "top.su_sys_add_n": "連結到 {name}…",
+ "top.su_link_tip": "在新分頁開啟",
+ "top.bb_menu": "從你的助理帶回",
+ "top.cmd_sheet": "成績單",
+ "top.cmd_cons": "一致性檢查",
+ "top.cmd_ex": "範例",
+ "top.cmd_late": "加入遲交作業"
+}

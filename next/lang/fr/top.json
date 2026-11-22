@@ -1,0 +1,34 @@
+{
+ "top.pg_fb": "{n} sur {of} avec commentaires terminés",
+ "top.pg_off": "{n} non rendus ou dispensés",
+ "top.pg_avg": "Moy. {v}",
+ "top.pg_avg_tip": {
+  "one": "Moyenne du pourcentage de {n} note terminée : {mean} / {max}. Les copies partielles, non rendues, dispensées ou écartées ne comptent pas. Ouvre Analyse.",
+  "other": "Moyenne des pourcentages de {n} notes terminées : {mean} / {max}. Les copies partielles, non rendues, dispensées ou écartées ne comptent pas. Ouvre Analyse."
+ },
+ "top.pg_tip": "Aucune note terminée pour l’instant. Ouvre Analyse.",
+ "top.tk_so_far": "{time} jusqu’ici",
+ "top.tk_per": {
+  "one": "environ {n} minute par copie",
+  "other": "environ {n} minutes par copie"
+ },
+ "top.tk_left": "environ {time} restantes",
+ "top.tk_from": {
+  "one": "d’après {n} copie jusqu’ici",
+  "other": "d’après {n} copies jusqu’ici"
+ },
+ "top.tk_tip": "Temps passé à corriger ce devoir, d’après le suivi du temps",
+ "top.fs_go": "Plein écran",
+ "top.fs_leave": "Quitter le plein écran",
+ "top.fs_tab": "Afficher la liste des élèves",
+ "top.book_tip": "Tous les devoirs de cette classe, par période, avec les notes de période et des graphiques",
+ "top.su_sys_open": "Page de la classe",
+ "top.su_sys_add": "Lier à la page de la classe…",
+ "top.su_sys_add_n": "Lier à {name}…",
+ "top.su_link_tip": "S’ouvre dans un nouvel onglet",
+ "top.bb_menu": "Récupérer depuis votre assistant",
+ "top.cmd_sheet": "Feuille de notes",
+ "top.cmd_cons": "Vérifier la cohérence",
+ "top.cmd_ex": "Exemples",
+ "top.cmd_late": "Ajouter des devoirs en retard"
+}

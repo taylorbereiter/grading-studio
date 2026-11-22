@@ -1,0 +1,34 @@
+{
+ "top.pg_fb": "{n} de {of} com feedback concluído",
+ "top.pg_off": "{n} não entregues ou dispensados",
+ "top.pg_avg": "Média {v}",
+ "top.pg_avg_tip": {
+  "one": "Média da porcentagem de {n} nota concluída: {mean} / {max}. Trabalhos parciais, não entregues, dispensados ou deixados de fora não contam. Abre Análise.",
+  "other": "Média das porcentagens de {n} notas concluídas: {mean} / {max}. Trabalhos parciais, não entregues, dispensados ou deixados de fora não contam. Abre Análise."
+ },
+ "top.pg_tip": "Ainda não há notas concluídas. Abre Análise.",
+ "top.tk_so_far": "{time} até agora",
+ "top.tk_per": {
+  "one": "cerca de {n} minuto por trabalho",
+  "other": "cerca de {n} minutos por trabalho"
+ },
+ "top.tk_left": "faltam cerca de {time}",
+ "top.tk_from": {
+  "one": "com base em {n} trabalho até agora",
+  "other": "com base em {n} trabalhos até agora"
+ },
+ "top.tk_tip": "Tempo gasto corrigindo esta tarefa, segundo o registro de tempo",
+ "top.fs_go": "Tela cheia",
+ "top.fs_leave": "Sair da tela cheia",
+ "top.fs_tab": "Mostrar a lista de alunos",
+ "top.book_tip": "Todas as tarefas desta turma, por período, com notas do período e gráficos",
+ "top.su_sys_open": "Página da turma",
+ "top.su_sys_add": "Vincular à página da turma…",
+ "top.su_sys_add_n": "Vincular a {name}…",
+ "top.su_link_tip": "Abre em uma nova aba",
+ "top.bb_menu": "Trazer de volta do seu assistente",
+ "top.cmd_sheet": "Folha de notas",
+ "top.cmd_cons": "Verificar a consistência",
+ "top.cmd_ex": "Exemplos",
+ "top.cmd_late": "Adicionar trabalhos atrasados"
+}
