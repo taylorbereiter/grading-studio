@@ -514,3 +514,6 @@ dialog.sheet:has(.docwrap.with-beside){margin-left:16px;margin-right:calc(var(--
 /* the unit sheet asking before it closes: on a phone the question takes its own line above the buttons */
 .sheet footer:has(.uask) { flex-wrap: wrap; }
 @media (max-width: 600px) { .sheet footer .uask { flex-basis: 100%; } }
+/* a right-click in the Planner (plan/ctx.jsx): the menu, and the comment box inside a sheet */
+.ctxmenu{width:auto;max-width:340px;gap:2px;padding:6px}.ctxmenu .btn{justify-content:flex-start;text-align:left}.ctxmenu small{padding:4px 8px 2px}
+.notepop.inside{position:absolute}

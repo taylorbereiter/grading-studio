@@ -60,6 +60,8 @@ export const PARTS = {
   beside2: () => import('./screens/lesson-beside2.jsx'),
   besideBooks: () => import('./screens/lesson-books.jsx'),
   box: () => import('./screens/lesson-box.jsx'),
+  // a right-click in the Planner: a comment for the assistant, or the thing put in its box (plan/ctx.jsx)
+  ctx: () => import('./plan/ctx.jsx'),
   nb: () => import('./screens/lesson-nb.jsx'),
   docxin: () => import('./plan/docx-in.js'),
   doc: () => import('./screens/lesson-doc.jsx'),

@@ -333,7 +333,6 @@ export async function newDoc(p, l, save) {
   await save(n); return id;
 }
 export async function downloadFinal(l) { const b = await lessonBlob(l.final.id); if (!b) return toast(t('tool.file_missing')); saveAs(l.final.name, b); }
-export { NotePop } from '../plan/note-pop.jsx';
 
 // The document editor and the strong example picker come in their own file (router.js PARTS.doc).
 function DocPart({ name, ...rest }) {

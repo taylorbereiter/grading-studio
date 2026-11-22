@@ -3,7 +3,7 @@
 // off, events and the semester come from the timetable setup. A lesson drags to another of its class's periods. Work due and the
 // teacher's own to-dos come from the grading side through crossings.js (names and days only).
 import { h, Fragment } from 'preact';
-import { useState, useEffect, useMemo } from 'preact/hooks';
+import { useState, useEffect, useMemo, useRef } from 'preact/hooks';
 import { Segmented, IconButton, Button, Icon, Chip, Switch, EmptyState, Menu, toast } from '../../ui/index.js';
 import { t, date, dateRange } from '../../i18n/t.js';
 import { href, go, PARTS } from '../router.js';
@@ -29,6 +29,7 @@ const keep = (k, v) => { try { if (v === undefined) return JSON.parse(sessionSto
 export { saveFailed } from '../plan/save.js';
 import { saveFailed } from '../plan/save.js';
 import { printWeek } from '../plan/print.js';
+import { planCtx } from '../plan/ctx-on.js';
 import '../plan/lines.js';
 
 function State({ s }) {
@@ -44,13 +45,16 @@ const linkItem = (c, onTool) => linkOf(c) ? { id: 'link', label: t('cal.class_pa
 // class's periods. Its menu (the dots on hover or focus, or a right-click) presents, downloads, copies, links the class page, deletes.
 function LessonCard({ l, c, m, day, compact, onDrag, p, onTool }) {
   const s = stateOf(l, c.id, day), tg = (l.taught || []).find(x => x.classId === c.id && x.date === day), others = (l.slots || []).filter(x => x.classId !== c.id);
-  const calx = f => PARTS.calx().then(f).catch(e => console.error(e));
+  const calx = f => PARTS.calx().then(f).catch(e => console.error(e)), me = useRef(), ai = assistant().name || t('assistant.generic');
+  // a comment for the assistant on this lesson, or the lesson put in its box (src/planner/extras.js ctxOpen on a week card)
+  const box = how => PARTS.ctx().then(M => M.lesson(how, p, l.id, me.current)).catch(e => console.error(e));
   const items = [{ id: 'present', label: t('plan.present'), icon: 'play', onSelect: () => go('lesson', l.id, 'present', c.id, day) },
     { id: 'dl', label: t('plan.download_slides'), icon: 'download', onSelect: () => calx(M => M.download(p, l)) },
     { id: 'copy', label: t('plan.copy_to'), icon: 'copy', onSelect: () => onTool({ name: 'copy', l }) },
     linkItem(c, onTool),
+    { id: 'note', label: t('cal.card_note', { name: ai }), icon: 'comment', onSelect: () => box('note') }, { id: 'box', label: t('cal.card_add', { name: ai }), icon: 'assist', onSelect: () => box('add') },
     { sep: true }, { id: 'del', label: t('plan.delete_lesson'), icon: 'trash', onSelect: () => calx(M => M.remove(l)) }];
-  return <span class="lcw" onContextMenu={e => { if (e.shiftKey) return; e.preventDefault(); const w = e.currentTarget; w.classList.add('ctx'); w.querySelector('[data-cardmenu]').click(); setTimeout(() => w.classList.remove('ctx'), 0); }}>
+  return <span class="lcw" ref={me} onContextMenu={e => { if (e.shiftKey) return; e.preventDefault(); const w = e.currentTarget; w.classList.add('ctx'); w.querySelector('[data-cardmenu]').click(); setTimeout(() => w.classList.remove('ctx'), 0); }}>
     <a class={'lc st-' + s + (compact ? ' compact' : '')} href={href('lesson', l.id)} style={{ '--cc': toneOf(c.color) }} draggable="true"
     onDragStart={e => { e.dataTransfer.setData('text/x-gs-lesson', JSON.stringify({ id: l.id, classId: c.id, date: day })); e.dataTransfer.effectAllowed = 'move'; onDrag && onDrag(c.id); }}
     onDragEnd={() => onDrag && onDrag(null)} data-lesson={l.id}>
@@ -249,7 +253,7 @@ export default function Calendar({ route }) {
   const props = { p, days, shown, work, layers, dragging, setDragging, busy, setBusy, onTool: setTool };
   const units = view === 'month' ? [] : weekUnits(p, mon, shown), E = engine(p);
   const close = () => setTool(null), ai = assistant().name || t('assistant.generic');
-  return <div class={'page calendar' + (bes ? ' with-beside' : '')} data-view={view}>
+  return <div class={'page calendar' + (bes ? ' with-beside' : '')} data-view={view} onContextMenu={e => planCtx(e, { p, where: view === 'semester' ? { k: 'sem' } : view === 'month' ? { k: 'planner' } : { k: 'week', v: mon } })}>
     <header class="ph calh">
       <div><h1 id="cal-title" data-raw>{title}</h1><p class="mute">{t(view === 'semester' ? 'cal.sem_help' : view === 'month' ? 'plan.month_help' : view === 'time' ? 'plan.time_help' : 'plan.class_help')}</p></div>
       <div class="calnav">
