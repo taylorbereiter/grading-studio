@@ -15,3 +15,7 @@ integration branch (6eb2bad0). Status: done (browser test presses it), kept diff
 | A-036 | done | next/test/browser/goback.test.js 'A-036 A-037' | group 2 |
 | A-037 | done (folder copies and safety copies both have Look / Close; Go back / Put back moved inside, as in the current app) | next/test/browser/goback.test.js (both) | group 2 |
 | A-038 | done (a copy of now is kept first; Undo on the toast) | next/test/browser/goback.test.js 'A-037 A-038' | group 2 |
+| A-044 | done (Read it first shows the prompt in a box with Copy; the prompt is the engine's own, naming no folder) | next/test/browser/setup-move.test.js 'A-044 A-045' | group 3 |
+| A-045 | done (Choose a file… reads a .json or .txt into the box and checks it at once; over 400 KB says too long) | next/test/browser/setup-move.test.js 'A-044 A-045' | group 3 |
+| A-046 | done (site.json movingTo reaches the new app as __GS_MOVE__; the card at the top of Settings > Saving, only at the address being left) | next/test/browser/setup-move.test.js 'A-046 A-127', 'A-046: nothing is said…' | group 3 |
+| A-127 | done (the once-a-day box with Later, Open the new address, Take my work with me, only for a browser with work) | next/test/browser/setup-move.test.js 'A-046 A-127' | group 3 |

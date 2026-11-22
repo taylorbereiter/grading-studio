@@ -316,5 +316,14 @@
  "saving.gb_diff": {
   "one": "o trabalho de {n} aluno é diferente",
   "other": "o trabalho de {n} alunos é diferente"
- }
+ },
+ "saving.mv_h": "O Grading Studio está mudando para um novo endereço",
+ "saving.mv_to": "O novo endereço é {to}.",
+ "saving.mv_stays": "O que está salvo neste navegador fica neste endereço. Não muda sozinho.",
+ "saving.mv_s1": "Clique em Levar meu trabalho comigo e salve o arquivo. Ele contém o seu trabalho de correção e o seu planejador.",
+ "saving.mv_s2": "Abra o endereço novo.",
+ "saving.mv_s3": "Lá, em Configurações, Salvamento e sincronização, clique em Trazer trabalho e escolha o arquivo.",
+ "saving.mv_soon": "Faça isso logo: este endereço vai deixar de funcionar. Uma pasta vinculada também pode ser vinculada de novo no endereço novo.",
+ "saving.mv_later": "Depois",
+ "saving.mv_open": "Abrir o endereço novo"
 }

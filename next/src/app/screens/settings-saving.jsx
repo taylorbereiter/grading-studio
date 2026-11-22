@@ -10,6 +10,7 @@ import { sampleOn } from '../sample.js';
 import { finish, over } from '../../shared/tabs.js';
 import { Conflicts } from '../saving/conflicts.jsx';
 import { CarryCard, YearCard } from '../saving/carry.jsx';
+import { MoveCard } from '../saving/moving.jsx';
 import './prefs-lines.js';
 import '../saving/lines.js';
 
@@ -175,5 +176,5 @@ export function SafetyCard() {
   </Card>;
 }
 export function SavingSettings() {
-  return <><FolderCard /><GoogleCard /><CarryCard /><YearCard /><HistoryCard /><SafetyCard /></>;
+  return <><MoveCard /><FolderCard /><GoogleCard /><CarryCard /><YearCard /><HistoryCard /><SafetyCard /></>;
 }

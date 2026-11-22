@@ -74,3 +74,4 @@
 .wlsteps{display:flex;gap:16px;flex-wrap:wrap;list-style:none;margin:0;padding:0;color:var(--mute);font-size:var(--t1)}.wlsteps li{display:flex;gap:6px;align-items:center}
 .wlsteps b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--line);font-size:11px}.wlsteps .on{color:var(--ink)}.wlsteps .on b{background:var(--acc);border-color:var(--acc);color:var(--white)}
 .wlbody{display:grid;gap:10px}.wlq{font-weight:600}.wlfields{display:grid;gap:8px}.wlact{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.wlfoot{display:grid;gap:4px;color:var(--mute);font-size:var(--t1)}.wlfoot p{margin:0}
+.st-pre{white-space:pre-wrap;max-height:60vh;overflow:auto;font-size:var(--t1);background:var(--bg);border:1px solid var(--line);border-radius:var(--r1,6px);padding:12px;margin:0}

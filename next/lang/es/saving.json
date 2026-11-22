@@ -316,5 +316,14 @@
  "saving.gb_diff": {
   "one": "el trabajo de {n} estudiante es distinto",
   "other": "el trabajo de {n} estudiantes es distinto"
- }
+ },
+ "saving.mv_h": "Grading Studio se muda a una nueva dirección",
+ "saving.mv_to": "La nueva dirección es {to}.",
+ "saving.mv_stays": "Lo guardado en este navegador se queda en esta dirección. No se muda solo.",
+ "saving.mv_s1": "Pulsa Llevarme mi trabajo y guarda el archivo. Contiene tu trabajo de corrección y tu planificador.",
+ "saving.mv_s2": "Abre la dirección nueva.",
+ "saving.mv_s3": "Allí, en Ajustes, Guardado y sincronización, pulsa Traer trabajo y elige el archivo.",
+ "saving.mv_soon": "Hazlo pronto: esta dirección dejará de funcionar. Una carpeta vinculada también se puede volver a vincular en la nueva dirección.",
+ "saving.mv_later": "Después",
+ "saving.mv_open": "Abrir la dirección nueva"
 }

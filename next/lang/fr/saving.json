@@ -316,5 +316,14 @@
  "saving.gb_diff": {
   "one": "le travail de {n} élève diffère",
   "other": "le travail de {n} élèves diffère"
- }
+ },
+ "saving.mv_h": "Grading Studio change d’adresse",
+ "saving.mv_to": "La nouvelle adresse est {to}.",
+ "saving.mv_stays": "Ce qui est enregistré dans ce navigateur reste à cette adresse. Il ne déménage pas tout seul.",
+ "saving.mv_s1": "Cliquez sur Emporter mon travail et enregistrez le fichier. Il contient votre travail de correction et votre planificateur.",
+ "saving.mv_s2": "Ouvrez la nouvelle adresse.",
+ "saving.mv_s3": "Là-bas, dans Réglages, Enregistrement et synchronisation, cliquez sur Importer du travail et choisissez le fichier.",
+ "saving.mv_soon": "Faites-le bientôt : cette adresse cessera de fonctionner. Un dossier lié peut aussi être lié de nouveau à la nouvelle adresse.",
+ "saving.mv_later": "Après",
+ "saving.mv_open": "Ouvrir la nouvelle adresse"
 }

@@ -316,5 +316,14 @@
  "saving.gb_diff": {
   "one": "{n} student’s work differs",
   "other": "{n} students’ work differs"
- }
+ },
+ "saving.mv_h": "Grading Studio is moving to a new address",
+ "saving.mv_to": "The new address is {to}.",
+ "saving.mv_stays": "Work saved in this browser stays at this address. It does not move by itself.",
+ "saving.mv_s1": "Press Take my work with me and save the file. It holds your grading work and your Planner.",
+ "saving.mv_s2": "Open the new address.",
+ "saving.mv_s3": "There, in Settings, Saving and sync, press Bring work in and choose the file.",
+ "saving.mv_soon": "Please do this soon: this address will stop working. A linked folder can be linked again at the new address too.",
+ "saving.mv_later": "Later",
+ "saving.mv_open": "Open the new address"
 }
