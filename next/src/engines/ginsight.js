@@ -230,4 +230,4 @@ function rowDrifts() {
 }
 // src/insight.js
 const sameLabel = v => typeof v === 'number' ? fmtNum(v) : v.split('/').map(x => fmtNum(+x)).join(' / ');
-export { consData, driftRead, rowDrifts, roughly, roughGap, roughStep, DRIFT_MIN, DRIFT_SURE, sameLabel, histLoad, histFind, histHas, pastScore, workTime };
+export { consData, driftRead, rowDrifts, roughly, roughGap, roughStep, DRIFT_MIN, DRIFT_SURE, sameLabel, histLoad, histFind, histHas, pastScore, workTime, earlierWork, hasWork, pastClass, rosterPairs };

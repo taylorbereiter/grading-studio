@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const http = require('http'), fs = require('fs'), path = require('path');
 const { launch } = require('../../../test/helpers/chrome.js');
 const { plant, appReady, openZip, markPage, settle, goToStudent, waitPaper } = require('../../../test/helpers/app.js');
-const { standardFiles, zipOf } = require('../../../test/helpers/fixtures.js');
+const { standardFiles, zipOf, makePaper } = require('../../../test/helpers/fixtures.js');
 const { gradingSeed, STEADY } = require('../../../test/helpers/steady.js');
 const { loadLegacy } = require('../../../test/helpers/legacy.js');
 
@@ -510,7 +510,7 @@ test('the screenshot: S opens it and Esc closes it, a page clicked for all of it
 });
 
 // A-109: Show beside in a file's ⋯ (src/sidepane.js data-spshow): that file goes in the side pane, the other stays in the main column
-test('A-109: Show beside in a file\'s menu keeps that file in the side pane', async () => {
+test('A-109 A-111: Show beside in a file\'s menu keeps that file in the side pane; the pane\'s rubric with no words links to Rubric setup', async () => {
   const ctx = await browser.createBrowserContext(), errors = [];
   const made = await page(ctx, errors);
   await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
@@ -523,6 +523,14 @@ test('A-109: Show beside in a file\'s menu keeps that file in the side pane', as
   await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
   await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
   await p.waitForSelector('[data-repx]', { timeout: 15000 }).then(() => p.click('[data-repx]'), () => {});
+  // A-111: the rubric in the pane with nothing written for its scores links to Rubric setup (src/sidepane.js data-spedit)
+  const blur = () => p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await blur(); await p.keyboard.press('b');
+  await p.waitForSelector('.mk-sprub [data-spedit]', { timeout: 15000 });
+  await p.click('.mk-sprub [data-spedit]');
+  await p.waitForSelector('dialog[open] [data-susave]', { timeout: 30000 });
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open] [data-susave]'));
+  await blur(); await p.keyboard.press('b'); await p.waitForFunction(() => !document.querySelector('.mk-sph'));
   const two = await p.evaluate(() => window.__mark.state().batch.students.findIndex(st => st.files.filter(f => /\.pdf$/.test(f.name)).length === 2));
   await p.click('[data-st="' + two + '"]'); await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready, { timeout: 60000 }, two);
   assert.equal(await p.$('.mk-sph'), null, 'the pane is closed');
@@ -531,6 +539,51 @@ test('A-109: Show beside in a file\'s menu keeps that file in the side pane', as
   await p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role^="menuitem"]')].find(e => e.textContent.includes('Show beside')); if (it) it.click(); return !!it; }, { timeout: 15000 });
   await p.waitForSelector('.mk-sph', { timeout: 15000 });
   await p.waitForFunction(f => { const s = document.querySelector('.mk-paper > section.doc.in-sp [data-fmenu]'); return s && s.dataset.fmenu === f && document.querySelector('.mk-paper > section.doc:not(.in-sp)'); }, { timeout: 15000 }, second);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// A-113 A-114: Only this student has Other work (src/solo.js): every download of the class with this student's own score, and one
+// opened from it is still only them
+test('A-113 A-114: Only this student lists their Other work in the class, with their own score, and opens another, still only them', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.goto(srv.url); await appReady(made);
+  const files = await standardFiles();
+  await openZip(made, zipOf(files), 'Essay one.zip');
+  const first = await made.evaluate(() => { const G = window.__gs, s = G.state(), st = s.batch.students[0];
+    if (s.setup.mode === 'rubric') st.grade.rubric = s.setup.criteria.map(() => 3); else st.grade.points = '9';
+    G.saveNow(); return { id: s.batch.id, key: st.key, names: s.batch.students.map(x => x.key) }; });
+  await settle(made);
+  // a second assignment for the same class: other papers
+  const two = {}; for (const n of first.names) two[n + '/Reflection.pdf'] = await makePaper({ title: 'Reflection by ' + n });
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(two), 'Reflection.zip');
+  await made.evaluate(() => window.__gs.saveNow()); await settle(made);
+  const id = await made.evaluate(() => window.__gs.state().batch.id);
+  await made.close();
+  assert.notEqual(id, first.id);
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.waitForSelector('[data-repx]', { timeout: 15000 }).then(() => p.click('[data-repx]'), () => {});
+  const i = await p.evaluate(k => window.__mark.state().batch.students.findIndex(s => s.key === k), first.key);
+  await p.click('[data-st="' + i + '"]'); await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready, { timeout: 60000 }, i);
+  await p.evaluate(() => document.activeElement && document.activeElement.blur()); await p.keyboard.press('i');
+  await p.waitForSelector('.mk-solo [data-solother]', { timeout: 30000 });
+  await p.click('[data-solother]');
+  await p.waitForSelector('[data-solowork] [data-solog="' + first.id + '"]', { timeout: 30000 });
+  // the seed's two marked downloads, then the two opened here, oldest first, the one open now marked
+  const rows = await p.$$eval('[data-solowork] .mk-swrow', l => l.map(e => e.dataset.solog));
+  assert.deepEqual(rows.filter(r => /^gs\.b\.n/.test(r)), ['gs.b.n1', 'gs.b.n2']);
+  assert.ok(rows.includes(first.id) && rows.includes(id), rows.join(', '));
+  assert.match(await p.$eval('[data-solowork] h3', e => e.textContent), /^In Grade 9 English · \d of 4 turned in/);
+  assert.match(await p.$eval('[data-solog="' + first.id + '"]', e => e.textContent), /^Essay one\d+ \/ \d+/);
+  assert.ok(await p.$('[data-solog="' + id + '"][aria-current="true"]'), 'the one open now');
+  await p.click('[data-solog="' + first.id + '"]');
+  await p.waitForFunction((id, k) => { const s = window.__mark && window.__mark.ready && window.__mark.state(); return s && s.batch && s.batch.id === id && s.batch.students[s.cur].key === k && document.querySelector('.mk-solo'); }, { timeout: 60000 }, first.id, first.key);
+  assert.equal(await p.$('.mk-list'), null, 'still only them');
   assert.deepEqual(errors, []);
   await ctx.close();
 });

@@ -288,5 +288,13 @@
   "one": "A highlighted copy of an older rubric is kept for {n} student, but this rubric doesn’t show it. Their scores stay, so check them against this rubric.",
   "other": "A highlighted copy of an older rubric is kept for {n} students, but this rubric doesn’t show it. Their scores stay, so check them against this rubric."
  },
- "mark.sp_show": "Show beside"
+ "mark.sp_show": "Show beside",
+ "mark.sw_btn": "Other work",
+ "mark.sw_in": "{done} of {n} turned in",
+ "mark.sw_avg": "average {pct}",
+ "mark.sw_none": "No downloads for this class yet.",
+ "mark.sw_looking": "Looking through saved work…",
+ "mark.sw_dl": "A download",
+ "mark.sw_unscored": "not scored yet",
+ "mark.sw_nothing": "nothing turned in"
 }

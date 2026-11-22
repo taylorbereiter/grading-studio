@@ -288,5 +288,13 @@
   "one": "有 {n} 位学生保留了旧评分标准的标注副本，但这份标准不会显示。分数不变，请对照这份标准检查。",
   "other": "有 {n} 位学生保留了旧评分标准的标注副本，但这份标准不会显示。分数不变，请对照这份标准检查。"
  },
- "mark.sp_show": "并排显示"
+ "mark.sp_show": "并排显示",
+ "mark.sw_btn": "其他作业",
+ "mark.sw_in": "已交 {done}/{n}",
+ "mark.sw_avg": "平均 {pct}",
+ "mark.sw_none": "这个班级还没有下载的作业。",
+ "mark.sw_looking": "正在查看已保存的作业…",
+ "mark.sw_dl": "一份下载",
+ "mark.sw_unscored": "尚未评分",
+ "mark.sw_nothing": "未提交"
 }

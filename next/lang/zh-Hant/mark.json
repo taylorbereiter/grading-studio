@@ -288,5 +288,13 @@
   "one": "有 {n} 位學生保留了舊評分規準的標示副本，但這份規準不會顯示。分數不變，請對照這份規準檢查。",
   "other": "有 {n} 位學生保留了舊評分規準的標示副本，但這份規準不會顯示。分數不變，請對照這份規準檢查。"
  },
- "mark.sp_show": "並排顯示"
+ "mark.sp_show": "並排顯示",
+ "mark.sw_btn": "其他作業",
+ "mark.sw_in": "已交 {done}/{n}",
+ "mark.sw_avg": "平均 {pct}",
+ "mark.sw_none": "這個班級還沒有下載的作業。",
+ "mark.sw_looking": "正在查看已儲存的作業…",
+ "mark.sw_dl": "一份下載",
+ "mark.sw_unscored": "尚未評分",
+ "mark.sw_nothing": "未繳交"
 }

@@ -339,6 +339,8 @@ export const tnRngSet = r => { tnRng = r; };
     'consData', 'driftRead', 'rowDrifts', 'roughly', 'roughGap', 'roughStep', 'DRIFT_MIN', 'DRIFT_SURE', 'sameLabel',
     // Past work beside this one (src/insight.js): other downloads' scores and comments for this student, matched through the roster
     'histLoad', 'histFind', 'histHas', 'pastScore', 'workTime',
+    // Only this student's Other work (src/people.js classWork, read in mark/solowork.jsx): the kept downloads, their class, the roster match
+    'earlierWork', 'hasWork', 'pastClass', 'rosterPairs',
   ], '', [], ['gcore', 'gdraw', 'gopen', 'gexport'], ['average']],
   ['gnames', [
     // hiding names while marking and Check the covers (src/app/anon.js, src/app/claude.js checkCovers, src/insight.js cover*, src/names.js):

@@ -752,6 +752,12 @@ dialog.dlg:has(.mk-su)>.body{max-height:calc(88vh - 120px);overflow:auto}
 /* Only this student */
 .mk-solo{display:flex;align-items:center;gap:10px;padding:8px 18px;background:var(--acc-soft);color:var(--acc-ink);border-bottom:1px solid var(--line);flex:none}
 .mk-solo .mute{color:var(--mute)}
+.mk-solow{position:relative}
+.mk-swbox{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:min(420px,calc(100vw - 32px));max-height:60vh;overflow:auto;padding:10px;background:var(--sf);color:var(--ink);border:1px solid var(--line);border-radius:var(--r3);box-shadow:var(--sh-r2)}
+.mk-swbox h3{font-size:var(--t2);margin:0 0 6px}
+.mk-swrow{display:flex;justify-content:space-between;gap:10px;width:100%;padding:6px 8px;border:0;border-radius:var(--r1);background:none;color:inherit;font:inherit;font-size:var(--t2);text-align:left}
+button.mk-swrow{cursor:pointer}button.mk-swrow:hover,.mk-swrow.on{background:var(--acc-soft)}
+.mk-swrow .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mk-hold{position:relative;overflow:hidden;border:1px solid var(--line-2);background:var(--sf);color:var(--ink);border-radius:var(--rf);padding:5px 12px;font:inherit;font-size:var(--t2);cursor:pointer;user-select:none;touch-action:none}
 .mk-hold .fill{position:absolute;inset:0;transform:scaleX(0);transform-origin:left;background:var(--acc-soft)}
 .mk-hold.holding .fill{transform:scaleX(1);transition:transform 1.5s linear}

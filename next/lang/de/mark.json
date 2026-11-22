@@ -287,5 +287,13 @@
   "one": "Für {n} Schüler ist eine markierte Kopie eines älteren Rasters gespeichert, die dieses Raster nicht zeigt. Die Bewertungen bleiben; prüfe sie mit diesem Raster.",
   "other": "Für {n} Schüler ist eine markierte Kopie eines älteren Rasters gespeichert, die dieses Raster nicht zeigt. Die Bewertungen bleiben; prüfe sie mit diesem Raster."
  },
- "mark.sp_show": "Daneben zeigen"
+ "mark.sp_show": "Daneben zeigen",
+ "mark.sw_btn": "Andere Arbeiten",
+ "mark.sw_in": "{done} von {n} abgegeben",
+ "mark.sw_avg": "Schnitt {pct}",
+ "mark.sw_none": "Noch keine Downloads für diese Klasse.",
+ "mark.sw_looking": "Gespeicherte Arbeit wird durchgesehen…",
+ "mark.sw_dl": "Ein Download",
+ "mark.sw_unscored": "noch nicht bewertet",
+ "mark.sw_nothing": "nichts abgegeben"
 }

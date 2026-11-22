@@ -58,8 +58,12 @@ same test opens the result in the current app. Commits are on the local branch `
 | A-122 | closed: the same Transcripts box (every recording), see A-099 | mark-readings.test.js "C-075 C-091 C-092 C-093" | 087e838a |
 | A-100 | closed: Marks from other apps for every paper opens from Find whenever the assignment has PDF papers, as well as from the note above a paper that has some | mark-files.test.js "A-100 A-123" | 087e838a |
 | A-123 | closed: the same Marks from other apps box, see A-100 | mark-files.test.js "A-100 A-123" | 087e838a |
-| A-103 | closed: Setup > Bring in files has A scan to split… beside its two ways to pick; the pages split onto names are added here | mark-scan.test.js "A-103" | (this commit) |
-| A-107 | closed: with the calculator open, numbers and signs type into it after a click on the paper | mark.test.js (the calculator part), mark-keyboard.test.js "A-107 A-108" | (this commit) |
-| A-108 | closed: Escape closes the calculator from anywhere; Lighting now also closes with Escape when the keyboard is on nothing, no mark picked and no box open (src/polish.js) | mark-keyboard.test.js "A-107 A-108" | (this commit) |
-| A-109 | closed: Show beside heads a file's ⋯ when the file can go in the side pane, and puts it there | mark.test.js "A-109" | (this commit) |
-| A-110 | closed: already done before this branch: the side pane's edge takes the arrow keys (4% a press) | mark.test.js "the side pane…" | (this commit) |
+| A-103 | closed: Setup > Bring in files has A scan to split… beside its two ways to pick; the pages split onto names are added here | mark-scan.test.js "A-103" | 179e2f84 |
+| A-107 | closed: with the calculator open, numbers and signs type into it after a click on the paper | mark.test.js (the calculator part), mark-keyboard.test.js "A-107 A-108" | d95b410f |
+| A-108 | closed: Escape closes the calculator from anywhere; Lighting now also closes with Escape when the keyboard is on nothing, no mark picked and no box open (src/polish.js) | mark-keyboard.test.js "A-107 A-108" | d95b410f |
+| A-109 | closed: Show beside heads a file's ⋯ when the file can go in the side pane, and puts it there | mark.test.js "A-109" | d95b410f |
+| A-110 | closed: already done before this branch: the side pane's edge takes the arrow keys (4% a press) | mark.test.js "the side pane…" | d95b410f |
+| A-111 | closed: the rubric in the side pane with nothing written for its scores now links to Rubric setup, as the current app's does; Edit rubric stays by the Score heading (C-044) | mark.test.js "A-109 A-111" | (this commit) |
+| A-112 | closed: already done before this branch: the Timer's asked-for length, at least and at most (setup.talk), and Shorter / Within / Longer; now proved for at most too | mark-notes.test.js "typed notes…" | (this commit) |
+| A-113 | closed: Only this student has Other work: every download of the class, oldest first, with their own score, read from saved work only (a failed read says so) | mark.test.js "A-113 A-114" | (this commit) |
+| A-114 | closed: a row in Other work that has their paper opens it, still only them | mark.test.js "A-113 A-114" | (this commit) |

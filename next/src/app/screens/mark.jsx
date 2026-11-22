@@ -211,11 +211,11 @@ function SideBar({ tabs, on, at, onPick, onClose, onAt, onSize }) {
   </div>;
 }
 // The rubric in full: every row with what each score means; a click gives that score, as in the score panel.
-function SideRubric({ st }) {
+function SideRubric({ st, onSetup }) {
   const su = state().setup, g = st.grade.rubric, M = MK && MK.M, words = (i, v) => ((su.levels && su.levels[i]) || {})[v] || '';
   const any = su.criteria.some((_, i) => rowSteps(su, i).some(v => words(i, v)));
   return <div class="in-sp mk-sprub">
-    {!any && <p class="mute">{t('mark.sp_no_words')}</p>}
+    {!any && <p class="mute">{t('mark.sp_no_words')} <button type="button" class="link" onClick={onSetup} data-spedit>{t('mark.su_menu')}</button></p>}
     {su.criteria.map((c, i) => { const v = g[i];
       return <section class="sprow"><h4><span data-raw>{c}</span><em>{v == null ? '' : fmtNum(v) + ' / ' + rowTop(su, i)}</em></h4>
         <div class="splv">{rowSteps(su, i).filter(w => w % 1 === 0 && (w > 0 || words(i, w))).map(w =>
@@ -223,7 +223,7 @@ function SideRubric({ st }) {
   </div>;
 }
 
-function Paper({ batch, cur, zoom, ver, FU, ctl, onSp, onZoom }) {
+function Paper({ batch, cur, zoom, ver, FU, ctl, onSp, onZoom, onSetup }) {
   const st = batch.students[cur], [got, setGot] = useState(null), area = useRef(null), [size, setSize] = useState([0, 0]), was = useRef(null);
   useEffect(() => {
     // the same student opened again after a change keeps showing until the pages are ready, so the paper doesn't flash and a dialog
@@ -282,7 +282,7 @@ function Paper({ batch, cur, zoom, ver, FU, ctl, onSp, onZoom }) {
           {c.pages.map(pg => <Page key={pg.file.path + '|' + pg.idx} pg={pg} room={roomOf(docKey(c.d))} tall={tallOf(docKey(c.d))} zoom={zoom} FU={FU} />)}
         </section>)}{FU && <FU.FilesFoot key={st.key} st={st} name={shownName(st, cur)} />}
         {at && <SideBar key="sp-bar" tabs={tabs} on={sel.key} at={at} onPick={spPick} onClose={spClose} onAt={spAt} onSize={spSize} />}
-        {at && sel.tool && <SideRubric key="sp-rubric" st={st} />}</>}
+        {at && sel.tool && <SideRubric key="sp-rubric" st={st} onSetup={onSetup} />}</>}
   </div>;
 }
 
@@ -378,12 +378,13 @@ function CommentChips({ text, onAdd }) {
 // Only this student (src/solo.js): when a student comes to the desk, the screen shows them and nobody else. Only a flag in this
 // browser (gs.solo); the list, the tabs and the way to anyone else step aside, and it ends only by holding the button for 1.5 s.
 const soloOf = b => { const s = prefs.get('gs.solo', null); return s && b && s.id === b.id && s.key != null ? s : null; };
-function SoloBar({ name, asg, onEnd }) {
-  const [hold, setHold] = useState(false), tm = useRef(0);
+function SoloBar({ st, name, asg, onEnd }) {
+  const [hold, setHold] = useState(false), tm = useRef(0), [SW, setSW] = useState(null);
+  useEffect(() => { let live = true; PARTS.solowork().then(m => live && setSW(() => m.OtherWork), e => console.error(e)); return () => { live = false; }; }, []);
   const down = on => { clearTimeout(tm.current); setHold(on); if (on) tm.current = setTimeout(() => { setHold(false); onEnd(); }, 1500); };
   useEffect(() => () => clearTimeout(tm.current), []);
   return <div class="mk-solo" role="region" aria-label={t('mark.solo')}>
-    <Icon name="user" /><b>{t('mark.solo')}</b><span data-raw>{name}</span><span class="mute" data-raw>{asg}</span><span class="grow" />
+    <Icon name="user" /><b>{t('mark.solo')}</b><span data-raw>{name}</span><span class="mute" data-raw>{asg}</span><span class="grow" />{SW && <SW st={st} />}
     <button type="button" class={'btn sm mk-hold' + (hold ? ' holding' : '')} data-soloend onPointerDown={e => { if (e.button === 0) { e.preventDefault(); down(true); } }} onPointerUp={() => down(false)} onPointerLeave={() => hold && down(false)} onPointerCancel={() => down(false)}
       onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (!e.repeat) down(true); } }} onKeyUp={e => { if (e.key === ' ' || e.key === 'Enter') down(false); }} onContextMenu={e => e.preventDefault()}>
       <span class="fill" aria-hidden="true" /><span>{t('mark.solo_hold')}</span></button>
@@ -549,7 +550,7 @@ export default function MarkScreen({ route, classes }) {
   // Quick mark (mark/quick.jsx): the cards once the quiz has boxes, the boxes (mark/quickboxes.jsx) before that or when she asks
   const quick = boxes => (boxes || !quizOn() ? PARTS.quickboxes().then(B => setSetupDlg({ k: 'qb', B })) : PARTS.quick().then(Q => setSetupDlg({ k: 'qm', Q }))).catch(e => console.error(e));
   return <div class={'markscreen' + (solo ? ' solo' : '') + (noR ? ' nor' : '')} data-tab={tab}>
-    {solo && w && w.batch.students[cur] && <SoloBar name={shownName(w.batch.students[cur], cur)} asg={w.batch.name} onEnd={soloEnd} />}
+    {solo && w && w.batch.students[cur] && <SoloBar st={w.batch.students[cur]} name={shownName(w.batch.students[cur], cur)} asg={w.batch.name} onEnd={soloEnd} />}
     <header class="mk-top">
       {!solo && <IconButton icon="x" label={t('mark.close')} onClick={close} />}
       <h1 class="mk-title">{cls && <span class="dot" />}{cls && <b data-raw>{cls.name}</b>}<span data-raw class="asg">{w ? w.batch.name : ''}</span></h1>
@@ -587,7 +588,7 @@ export default function MarkScreen({ route, classes }) {
         {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} onHide={MK ? () => hideNames() : null} onShuffle={() => hideNames(true)} />}
         <div class="mk-mid">
           {MK && <MK.Tools />}
-          <Paper batch={w.batch} cur={cur} zoom={zoom} ver={ver} FU={FU} ctl={spCtl} onSp={setSp} onZoom={zoomTo} />
+          <Paper batch={w.batch} cur={cur} zoom={zoom} ver={ver} FU={FU} ctl={spCtl} onSp={setSp} onZoom={zoomTo} onSetup={openSetup} />
           {FU && light && <FU.LightPanel onClose={() => setLight(false)} />}
           <Rove class="mk-zoom" role="toolbar" aria-label={t('mark.view_tools')}>{sp.n > 0 && <IconButton icon="slides" label={t('mark.sp_open')} kbd="B" aria-pressed={sp.shown ? 'true' : 'false'} onClick={() => spCtl.current && spCtl.current.toggle()} data-spbtn />}{noR && <IconButton icon="chl" label={t('mark.panel_show')} kbd="]" onClick={() => setPanel(false)} data-panelshow />}{FU && FU.rescanCount() > 0 && <IconButton icon="flag" label={t('mark.rs_title_n', { n: FU.rescanCount() })} title={t('mark.rs_title_n', { n: FU.rescanCount() })} onClick={() => setRescans(true)} data-rescans />}{FU && <IconButton icon="sun" label={t('mark.l_title')} aria-pressed={light ? 'true' : 'false'} onClick={() => setLight(v => !v)} data-light />}{TB && <TB.FullBtn />}<IconButton icon="minus" label={t('mark.zoom_out')} onClick={() => zoomTo(Math.round((zoom - 0.1) * 10) / 10)} />
             <button type="button" class="mk-z0" title={t('mark.zoom_reset', { key: pieces('mod+0').join(' ') })} onClick={() => zoomTo(1)} data-zoom0>{t('mark.zoom', { n: Math.round(zoom * 100) })}</button>

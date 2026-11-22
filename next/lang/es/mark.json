@@ -288,5 +288,13 @@
   "one": "Se guarda una copia resaltada de una rúbrica anterior para {n} alumno, pero esta rúbrica no la muestra. Sus notas se mantienen; revísalas con esta rúbrica.",
   "other": "Se guarda una copia resaltada de una rúbrica anterior para {n} alumnos, pero esta rúbrica no la muestra. Sus notas se mantienen; revísalas con esta rúbrica."
  },
- "mark.sp_show": "Mostrar al lado"
+ "mark.sp_show": "Mostrar al lado",
+ "mark.sw_btn": "Otros trabajos",
+ "mark.sw_in": "{done} de {n} entregados",
+ "mark.sw_avg": "media {pct}",
+ "mark.sw_none": "Aún no hay descargas de esta clase.",
+ "mark.sw_looking": "Buscando en el trabajo guardado…",
+ "mark.sw_dl": "Una descarga",
+ "mark.sw_unscored": "sin nota aún",
+ "mark.sw_nothing": "nada entregado"
 }

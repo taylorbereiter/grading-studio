@@ -288,5 +288,13 @@
   "one": "Uma cópia destacada de uma rubrica antiga está guardada para {n} aluno, mas esta rubrica não a mostra. As notas ficam; confira-as com esta rubrica.",
   "other": "Uma cópia destacada de uma rubrica antiga está guardada para {n} alunos, mas esta rubrica não a mostra. As notas ficam; confira-as com esta rubrica."
  },
- "mark.sp_show": "Mostrar ao lado"
+ "mark.sp_show": "Mostrar ao lado",
+ "mark.sw_btn": "Outros trabalhos",
+ "mark.sw_in": "{done} de {n} entregues",
+ "mark.sw_avg": "média {pct}",
+ "mark.sw_none": "Ainda não há downloads desta turma.",
+ "mark.sw_looking": "Procurando no trabalho salvo…",
+ "mark.sw_dl": "Um download",
+ "mark.sw_unscored": "ainda sem nota",
+ "mark.sw_nothing": "nada entregue"
 }

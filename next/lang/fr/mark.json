@@ -286,5 +286,13 @@
   "one": "Une copie surlignée d’une ancienne grille est gardée pour {n} élève, mais cette grille ne l’affiche pas. Les notes restent : vérifiez-les avec cette grille.",
   "other": "Une copie surlignée d’une ancienne grille est gardée pour {n} élèves, mais cette grille ne l’affiche pas. Les notes restent : vérifiez-les avec cette grille."
  },
- "mark.sp_show": "Afficher à côté"
+ "mark.sp_show": "Afficher à côté",
+ "mark.sw_btn": "Autres travaux",
+ "mark.sw_in": "{done} sur {n} rendus",
+ "mark.sw_avg": "moyenne {pct}",
+ "mark.sw_none": "Pas encore de téléchargement pour cette classe.",
+ "mark.sw_looking": "Recherche dans le travail enregistré…",
+ "mark.sw_dl": "Un téléchargement",
+ "mark.sw_unscored": "pas encore noté",
+ "mark.sw_nothing": "rien de rendu"
 }

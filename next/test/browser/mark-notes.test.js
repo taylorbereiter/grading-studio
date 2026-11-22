@@ -140,6 +140,10 @@ test('typed notes: the same keys make the same notes as the current app, each ch
   await p.waitForFunction(() => /^\[0:0[1-9]\] $/.test(window.__mark.state().batch.students[1].grade.comment || ''));
   await p.click('[data-tmtalk="0"]'); await p.keyboard.type('3'); await p.keyboard.press('Tab');
   await p.waitForFunction(() => JSON.stringify(window.__mark.state().setup.talk) === '[3,null]' && document.querySelector('[data-tmhow="under"]'));
+  // A-112: at most, with no least: within the asked-for length; the setup keeps [least, most] as the current app does
+  await p.click('[data-tmtalk="0"]', { clickCount: 3 }); await p.keyboard.press('Backspace'); await p.keyboard.press('Tab');
+  await p.click('[data-tmtalk="1"]'); await p.keyboard.type('1'); await p.keyboard.press('Tab');
+  await p.waitForFunction(() => JSON.stringify(window.__mark.state().setup.talk) === '[null,1]' && document.querySelector('[data-tmhow="in"]'));
 
   // back to Aria: Clear this student's notes goes at once, and Undo brings them back
   await p.click('[data-st="0"]');
