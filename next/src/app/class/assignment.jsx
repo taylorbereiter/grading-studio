@@ -186,20 +186,26 @@ export function StartNotes({ lib, it, bring, onClose }) {
 // that fails nothing is forgotten and she can try again. Then its tombstone, so a synced copy or a linked folder lets it go too, and
 // everything of it in this browser. The card stays. The papers come back the way they do in the current app: bringing the download
 // in again (mark/open.js bringIn, students/write.js bringBack), with no marks or scores. Asked first, and the box says so.
+// Throws when it could not be taken out of the safety copies (nothing forgotten then); returns false when a later step failed.
+export async function forgetDownload(id, name) {
+  const Sv = saving(); if (!Sv || !Sv.safetyForget) throw new Error('No safety copies here yet');
+  await Sv.safetyForget(id);
+  try {
+    const [W, S, M, P] = await Promise.all([PARTS.write(), import('../../students/index.js'), import('../../engines/merge.js'), import('../../students/prefs.js')]);
+    const tb = S.deleted.json({}) || {}, now = Date.now();
+    if (!tb[id]) { const w = await S.newestWork(id); tb[id] = { t: now, name: name || '', v: M.vJoin(M.workVec(w), { ['!' + id + ':' + now]: 1 }) }; W.takeTombs(tb, 'local'); }
+    await W.dropDownload(id, 'local');
+    const seen = P.prefs.get('gs.openSeen', {}) || {}; if (seen[id]) { delete seen[id]; P.prefs.set('gs.openSeen', seen); }
+    return true;
+  } catch (e) { console.error(e); return false; }
+}
 export function Forget({ it, id, onClose }) {
   const [busy, setBusy] = useState(false);
   const go = async () => {
     setBusy(true);
-    try { const S = saving(); if (!S || !S.safetyForget) throw new Error('No safety copies here yet'); await S.safetyForget(id); }
-    catch (e) { console.error(e); toast(t('class.fg_failed')); onClose(false); return; }
-    try {
-      const [W, S, M, P] = await Promise.all([PARTS.write(), import('../../students/index.js'), import('../../engines/merge.js'), import('../../students/prefs.js')]);
-      const tb = S.deleted.json({}) || {}, now = Date.now();
-      if (!tb[id]) { const w = await S.newestWork(id); tb[id] = { t: now, name: it.name || '', v: M.vJoin(M.workVec(w), { ['!' + id + ':' + now]: 1 }) }; W.takeTombs(tb, 'local'); }
-      await W.dropDownload(id, 'local');
-      const seen = P.prefs.get('gs.openSeen', {}) || {}; if (seen[id]) { delete seen[id]; P.prefs.set('gs.openSeen', seen); }
-      toast(t('class.fg_done', { name: it.name }));
-    } catch (e) { console.error(e); toast(t('class.fg_failed')); }
+    let ok;
+    try { ok = await forgetDownload(id, it.name); } catch (e) { console.error(e); toast(t('class.fg_failed')); onClose(false); return; }
+    toast(ok ? t('class.fg_done', { name: it.name }) : t('class.fg_failed'));
     onClose(true);
   };
   return <Dialog open title={t('class.fg_t', { name: it.name })} onClose={() => onClose(false)}

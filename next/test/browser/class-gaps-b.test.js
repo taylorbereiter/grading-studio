@@ -254,10 +254,13 @@ test('B-026 B-027 B-028 B-061 B-062: paste IDs and emails into the roster, type 
   // B-028: details typed down the list, each kept when the box is left
   await menu(p, '[data-roster-menu]', '^Fill in details');
   await p.waitForSelector(`dialog[open] [data-fill="email"][data-fill-who="${N[1]}"]`);
+  await p.evaluate(() => { window.__toasts = []; new MutationObserver(() => document.querySelectorAll('.toast').forEach(e => window.__toasts.push(e.textContent))).observe(document.body, { childList: true, subtree: true }); });
   await p.type(`dialog[open] [data-fill="id"][data-fill-who="${N[1]}"]`, 'S 9002'); await p.keyboard.press('Tab');
   await p.keyboard.type('second@example.org'); await p.keyboard.press('Tab');
   await p.keyboard.type('MYP 3'); await p.keyboard.press('Tab');
   await p.waitForFunction(n => { const i = (JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}; return i.id === 'S9002' && i.email === 'second@example.org' && i.prev === 'MYP 3'; }, {}, N[1]);
+  // each box saved once, when left: no "doesn’t look like an email" while the address was being typed (a save per key said it at every letter)
+  assert.ok(!/doesn’t look like an email/.test(await p.evaluate(() => window.__toasts.join(' '))), 'no email warning while typing');
   await p.click('dialog[open] [data-fill-done]'); await p.waitForFunction(() => !document.querySelector('dialog[open]'));
   // B-062: another spelling added; B-061: one taken away
   await p.click('[data-sp-add]'); await p.waitForSelector('dialog[open] [data-sp-input]');

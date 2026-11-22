@@ -4,7 +4,7 @@
 // attTake and attClear), each press one undo step. Opened from the People tab; the day before or after follows the class's timetable.
 import { h, Fragment } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
-import { Sheet, Button, Segmented, Menu, IconButton, toast } from '../../ui/index.js';
+import { Sheet, Button, Segmented, Menu, IconButton, HeldInput, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
 import { href } from '../router.js';
 import { engine as B, change, classIn, attPlan } from '../../students/book.js';
@@ -43,6 +43,8 @@ function Day({ c, d, today, setD }) {
   const r = B.attRec(c, d), list = useRef(null), [focus, setFocus] = useState(null);
   useEffect(() => { if (focus == null || !list.current) return; const b = list.current.querySelector('[data-att-row="' + focus.i + '"] [data-att-s="' + focus.k + '"]'); if (b) b.focus(); setFocus(null); });
   const set = (i, k, move) => { const n = c.names[i]; put(c, t('class.u_att'), m => B.attSet(m, d, n, k)); setFocus({ i: move && i + 1 < c.names.length ? i + 1 : i, k: move && i + 1 < c.names.length ? B.attOf(c, d, c.names[i + 1]) || 'p' : k }); };
+  // a note is saved when she leaves the box (src/attend.js saves it on change), and what she types is held while she is in it: a
+  // plain onChange is a save per key here (preact/compat), and a redraw from that save put the saved, trimmed words back under her cursor (a space typed was lost)
   const note = (i, v) => { const n = c.names[i]; if (B.attNote(c, d, n) !== v.trim()) put(c, t('class.u_att'), m => B.attSet(m, d, n, null, v)); };
   const all = () => { put(c, t('class.u_att'), m => B.attTake(m, d)); toast(t('class.att_all_saved')); };
   const clear = () => put(c, t('class.u_att_clear'), m => B.attClear(m, d));
@@ -73,7 +75,7 @@ function Day({ c, d, today, setD }) {
       const s = B.attOf(c, d, n) || 'p', nt = B.attNote(c, d, n);
       return <div class={'attrow s' + s} data-att-row={i}><span class="attn" data-raw>{n}</span>
         <div class="seg attseg" role="radiogroup" aria-label={n}>{WAYS.map(k => <button type="button" role="radio" aria-checked={String(s === k)} tabIndex={s === k ? 0 : -1} onClick={() => set(i, k)} data-att-s={k}>{t(WORD[k])}</button>)}</div>
-        {(s !== 'p' || nt) && <input type="text" class="input attnote" maxLength={120} value={nt} placeholder={t('class.att_note_ph')} aria-label={t('class.att_note_for', { name: n })} onChange={e => note(i, e.currentTarget.value)} data-att-note />}
+        {(s !== 'p' || nt) && <HeldInput type="text" class="input attnote" maxLength={120} value={nt} placeholder={t('class.att_note_ph')} aria-label={t('class.att_note_for', { name: n })} onChange={e => note(i, e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-att-note />}
       </div>; })}</div>
     <p class="mute small">{r ? t('class.att_saved') : t('class.att_starts')} {t('class.att_keys')}</p>
   </>;

@@ -184,8 +184,9 @@ export function tagOf(st, f) {
   const was = p ? ((st.gone || []).find(g => g.path === p) || { name: p.slice(p.lastIndexOf('/') + 1) }) : null;
   return { replaced: was ? F.fileShown(st, was.name) : null, word: !!was && F.madeFromWord(f), from: f.from || null, t: f.added };
 }
-export const undo = () => M && M.undo();
-export const redo = () => M && M.redo();
+// Undo and Redo wait for a Quick mark step still being put on the papers (quickDo), so they take back the step she sees.
+export const undo = () => quickLine.then(() => M && M.undo());
+export const redo = () => quickLine.then(() => M && M.redo());
 // Typed notes (mark/typed.jsx): a student's grade changed by the notes, saved and shown; a setting of the assignment's setup changed as
 // one undo step, after() run each way (the setup kept and the bar drawn again).
 // Clips to show the class (mark/clips.jsx): fn changes batch.clips, as one undo step.
@@ -863,11 +864,18 @@ const quickKeep = sts => {
   return () => { if (q) bb.quiz = J(q); else delete bb.quiz; use({ setup: J(su) }); for (const [st, g, fs] of gs) { st.grade = J(g); for (const [f, m] of fs) { if (m) f.marks = J(m); else delete f.marks; } } };
 };
 // fn changes the papers of sts (async). after: what the screen redraws once the step is done or taken back.
-export async function quickDo(sts, fn, after) {
-  const back = quickKeep(sts); await fn(); const again = quickKeep(sts);
-  const done = () => { K.thumbCache.clear(); tell(); if (after) after(); };
-  step(() => { back(); done(); }, () => { again(); done(); }, 'marks');
-  done();
+// One step at a time: a mark given while the last one is still being put on the paper waits for it. Run side by side, the first
+// step's "after" took in the second mark and was kept last, so Undo took both marks off.
+let quickLine = Promise.resolve();
+export function quickDo(sts, fn, after) {
+  const run = quickLine.then(async () => {
+    const back = quickKeep(sts); await fn(); const again = quickKeep(sts);
+    const done = () => { K.thumbCache.clear(); tell(); if (after) after(); };
+    step(() => { back(); done(); }, () => { again(); done(); }, 'marks');
+    done();
+  });
+  quickLine = run.catch(() => {});
+  return run;
 }
 // Q: the quiz as the boxes editor left it. Z: the lifted quiz engine (engines/gquiz.js). S: engines/gsetup.js, for an MYP class.
 // Returns what changed about the score: 'points' (it is out of the quiz's points now), 'rubric' (and rubric scores stopped counting).

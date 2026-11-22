@@ -91,7 +91,9 @@ test('going back in time to the folder’s copy leaves a safety copy, which puts
   assert.equal(await until(async () => (await say(p)) === 'ok', 30000), true);
   await p.waitForSelector('[data-svhist] [data-svsnap]', { timeout: 15000 });
   assert.ok(await p.$('[data-svsafe]'), 'the safety copies card is there');
-  await p.click('[data-svhist] [data-svback]');
+  await p.click('[data-svhist] [data-svlook]');   // Look first, as in the current app: going back with everything is inside it
+  await p.waitForSelector('[data-svhist] [data-gball]');
+  await p.click('[data-svhist] [data-gball]');
   await p.waitForSelector('dialog[open] [data-ok]');
   assert.match(await p.$eval('dialog[open]', e => e.textContent), /Go back to this copy from/);
   const nav = p.waitForNavigation({ timeout: 30000 }).catch(() => null);
@@ -103,7 +105,9 @@ test('going back in time to the folder’s copy leaves a safety copy, which puts
   const work = await workOf(p, 'gs.b.n1');
   assert.ok(work && Object.keys(work.s).length === 6, 'the work is all there after going back');
   // put back the safety copy
-  await p.click('[data-svsafe] [data-svput]');
+  await p.click('[data-svsafe] [data-svlook]');
+  await p.waitForSelector('[data-svsafe] [data-gball]');
+  await p.click('[data-svsafe] [data-gball]');
   await p.waitForSelector('dialog[open] [data-ok]');
   const nav2 = p.waitForNavigation({ timeout: 30000 }).catch(() => null);
   await p.click('dialog[open] [data-ok]');
@@ -153,5 +157,22 @@ test('changed in both places: both are shown, nothing is chosen without her, and
   await p.click('[data-cfok]');
   assert.equal(await until(async () => (await say(p)) === 'ok', 30000), true);
   assert.ok(await until(async () => { const w = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.b.n1'))); const r = await workOf(p, 'gs.b.n1'); return [w, r].some(x => x && x.s['Aria Testwell'].g.comment === 'From the folder'); }), 'the folder’s version is kept here');
+  await p.close();
+});
+
+// A-080: the browser asks again for the folder (as after a restart): Home says so at the top, and Reconnect gives it back.
+test('A-080: a folder that needs a press is said at the top of Home, and Reconnect there links it again', async () => {
+  const p = await open();
+  await p.goto(srv.url + 'next/#/settings/saving');
+  await p.waitForSelector('[data-svpick]', { timeout: 30000 });
+  await p.click('[data-svpick]');
+  assert.equal(await until(async () => (await say(p)) === 'ok', 30000), true, 'linked');
+  // the next visit: the browser hasn't said yes to the folder yet
+  await p.evaluateOnNewDocument(() => { const P = FileSystemHandle.prototype; let asked = false; P.queryPermission = async function () { return asked ? 'granted' : 'prompt'; }; P.requestPermission = async function () { asked = true; return 'granted'; }; });
+  await p.goto(srv.url + 'blank'); await p.goto(srv.url + 'next/#/home');
+  await p.waitForSelector('[data-home="folderfix"][data-fix="ask"] [data-fix-reconnect]', { timeout: 30000 });
+  assert.match(await p.$eval('[data-home="folderfix"]', e => e.textContent), /Mine/);
+  await p.click('[data-fix-reconnect]');
+  await p.waitForFunction(() => !document.querySelector('[data-home="folderfix"]'), { timeout: 30000 });
   await p.close();
 });

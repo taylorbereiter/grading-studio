@@ -60,7 +60,7 @@ export function startWhole() {
     safetyForget: async id => (await import('./safety.js')).forget(id),
     putBack: async id => { await (await import('./safety.js')).putBack(id); if (F.mod) F.mod.carryAfterPutBack(); },
     // the take-home file, a new school year and Remove from this computer (whole/takehome.js, newyear.js, remove.js)
-    take: () => import('./takehome.js'), year: () => import('./newyear.js'), remove: () => import('./remove.js'),
+    take: () => import('./takehome.js'), year: () => import('./newyear.js'), remove: () => import('./remove.js'), goback: () => import('./goback.js'),
   });
 }
 // Resolves when every save so far has reached the linked folder: the folder found again, the queue gone through, and the folder's own

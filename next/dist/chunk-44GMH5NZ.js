@@ -1,1 +1,0 @@
-import{I as o}from"./chunk-4I2LYLH6.js";import{e as t}from"./chunk-PLNTUDZB.js";var e=0;function c(i){![].concat(i).some(n=>/\.(heic|heif)$/i.test(n||""))||Date.now()-e<4e3||(e=Date.now(),o(t("inout.heic_reading"),{ms:4e3}))}export{c as a};

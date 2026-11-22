@@ -222,7 +222,7 @@ function People({ s, setPform, setSpots, change, copy }) {
   </section>;
 }
 
-function PersonForm({ o, s, onClose, change }) {
+function PersonForm({ o, s, onClose, change, onMade }) {
   const p = o.person || null, roles = [...new Set([...S.roles(s), ...S.people(s).map(x => x.role).filter(Boolean)])];
   const [role, setRole] = useState(p ? p.role || '' : o.role || ''), [name, setName] = useState(p ? p.name : ''), [mail, setMail] = useState(p ? p.email || '' : ''), [note, setNote] = useState(p ? p.note || '' : ''), [err, setErr] = useState('');
   const save = () => {
@@ -230,8 +230,8 @@ function PersonForm({ o, s, onClose, change }) {
     if (!n) return setErr(t('school.need_name'));
     const email = m ? S.mailOk(m) : ''; if (m && !email) return setErr(t('school.bad_mail'));
     const got = { role: r, name: n, email, note: nt, at: Date.now() }; for (const k of ['email', 'note', 'role']) if (!got[k]) delete got[k];
-    onClose();
-    change(t('school.u_person'), s => { s.people = s.people || []; const x = p && s.people.find(q => q.id === p.id); if (x) { for (const k of ['role', 'email', 'note']) delete x[k]; Object.assign(x, got); } else s.people.push({ id: 'sp' + S.uid(), ...got }); });
+    onClose(); const id = p ? p.id : 'sp' + S.uid();
+    if (change(t('school.u_person'), s => { s.people = s.people || []; const x = p && s.people.find(q => q.id === p.id); if (x) { for (const k of ['role', 'email', 'note']) delete x[k]; Object.assign(x, got); } else s.people.push({ id, ...got }); }) !== false && onMade) onMade(id);
   };
   const enter = e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); save(); } };
   return <Sheet open title={p ? t('school.title_edit', { name: p.name }) : o.role || t('school.add_person')} onClose={onClose} footer={<><Button onClick={onClose}>{t('school.cancel')}</Button><Button variant="primary" onClick={save} data-schpok>{p ? t('school.save') : t('school.add')}</Button></>}>
@@ -244,6 +244,12 @@ function PersonForm({ o, s, onClose, change }) {
       {err && <p class="err" role="alert">{err}</p>}
     </div>
   </Sheet>;
+}
+
+// Someone new… from a to-do (src/todo.js, schPersonForm): the same form, kept on the School page, then handed back to the to-do.
+export function NewPerson({ onClose, onMade }) {
+  const change = (label, fn) => { try { S.schoolChange(label, fn); return true; } catch (e) { console.error(e); toast(t('school.full')); return false; } };
+  return <PersonForm o={{}} s={S.schoolNow()} onClose={onClose} change={change} onMade={onMade} />;
 }
 
 function Spots({ s, onClose, change }) {

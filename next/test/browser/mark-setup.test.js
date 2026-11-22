@@ -161,6 +161,10 @@ test('under the score: leave out of the average, extra credit, a retake that kee
   // Extra credit: 2 points
   await menu('^Extra credit');
   await p.waitForSelector('[data-smxc]');
+  // extra credit that starts with 0 is kept as typed until she leaves the box (a save per key took "0" as none and closed the box)
+  await p.type('[data-smxc]', '0.5'); await p.keyboard.press('Enter');
+  await p.waitForFunction(() => window.__mark.state().batch.students[0].grade.xc === 0.5, { timeout: 5000 });
+  await p.click('[data-smxc]'); await p.$eval('[data-smxc]', e => e.select());
   await p.type('[data-smxc]', '2'); await p.keyboard.press('Enter');
   await p.waitForFunction(() => window.__mark.state().batch.students[0].grade.xc === 2);
   const first = await g();

@@ -223,6 +223,13 @@ export async function folderGoBack(name) {
   await putBackData(rec);
   carryAfterPutBack();
 }
+// One snapshot's work and Word edits, to look at and to put back one assignment from (src/safe.js gbRead): the bytes read only if wanted.
+export const snapOn = () => !!fld.root && (F.state === 'ok' || F.state === 'saving' || F.state === 'decide');
+export async function snapRead(name) {
+  const s = await gzRead(await fld.root.getDirectoryHandle('snapshots'), name), ed = {};
+  for (const [id, list] of Object.entries(s.edits || {})) { ed[id] = {}; for (const [p, r] of Object.entries(list)) ed[id][p] = { t: r.t || 1, data: () => getBlob(r.data), orig: async () => (r.orig ? getBlob(r.orig) : null) }; }
+  return { work: s.work || {}, edits: ed };
+}
 // She went back on purpose, so the next sync takes the browser's side of everything.
 export function carryAfterPutBack() { if (F.state !== 'none') try { localStorage.setItem('gsc.win', '1'); } catch {} }
 const schHashes = (v, now) => { let s = v; if (typeof v === 'string') { try { s = JSON.parse(v); } catch { s = null; } } const out = new Set(), at = now || Date.now(); for (const i of (s && Array.isArray(s.items) ? s.items : [])) if (i && i.file && i.file.hash && (!i.gone || at - (i.at || 0) < SCH_DAYS * 864e5)) out.add(i.file.hash); return out; };

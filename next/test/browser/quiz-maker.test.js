@@ -72,7 +72,10 @@ test('Make a quiz from the class page: questions typed in with their right answe
   await typeIn(p, '[data-qfc="2"] [data-qx]', 'The moon makes its own light.');
   await tap(p, '[data-qfc="2"] [data-qk="F"]');
   await typeIn(p, '[data-qfc="3"] [data-qx]', 'Why do we have seasons?');
-  await typeIn(p, '[data-qfc="3"] [data-qp]', '2');
+  // points that start with 0 are kept as typed until she leaves the box (a save per key made "0" a 1, so 0.5 became 15)
+  await typeIn(p, '[data-qfc="3"] [data-qp]', '0.5'); await p.keyboard.press('Tab');
+  assert.equal(await p.$eval('[data-qfc="3"] [data-qp]', e => e.value), '0.5');
+  await typeIn(p, '[data-qfc="3"] [data-qp]', '2'); await p.keyboard.press('Tab');
   // a new question, pick all that apply: A and C
   await tap(p, '[data-qnew="ms"]');
   await p.waitForSelector('[data-qfc="4"]');

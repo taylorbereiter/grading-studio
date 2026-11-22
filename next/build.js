@@ -729,7 +729,9 @@ async function build() {
     outdir: DIST, bundle: true, splitting: true, format: 'esm', target: ['chrome109', 'safari16'], minify: !process.env.GS_NEXT_DEBUG,
     chunkNames: 'chunk-[hash]', entryNames: '[name]', metafile: true, absWorkingDir: ROOT, legalComments: 'none', logLevel: 'warning',
     // An array-valued define injects its initializer into every chunk. Only the language picker needs the list.
-    jsxFactory: 'h', jsxFragment: 'Fragment', define: { __GS_LANGS_JSON__: JSON.stringify(JSON.stringify(langList())), __GS_DATA_V__: String(dataVersion()), __GS_APP_VERSION__: JSON.stringify(JSON.parse(fs.readFileSync(path.join(ROOT, 'version.json'), 'utf8')).version), __GS_GCID__: JSON.stringify(process.env.GCID || require('../site.json').googleClientId || '') },
+    jsxFactory: 'h', jsxFragment: 'Fragment', define: { __GS_LANGS_JSON__: JSON.stringify(JSON.stringify(langList())), __GS_DATA_V__: String(dataVersion()), __GS_APP_VERSION__: JSON.stringify(JSON.parse(fs.readFileSync(path.join(ROOT, 'version.json'), 'utf8')).version), __GS_GCID__: JSON.stringify(process.env.GCID || require('../site.json').googleClientId || ''),
+      // where this copy lives and where it is moving to (site.json), only while a move is on, as build.js writes it for the current app
+      __GS_MOVE__: (site => JSON.stringify(site.movingTo ? { address: site.address || '', movingTo: site.movingTo } : null))(require('../site.json')) },
   });
   // Each language's chunk with its letters written as themselves, not as \\u escapes: about 10 KB smaller squeezed. Only these
   // chunks: done for the whole app it makes some screens larger. A module is always read as UTF-8, so the letters arrive whole.

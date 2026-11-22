@@ -1426,5 +1426,38 @@
  },
  "class.mc_plus_fm": "+ {n} formative(s)",
  "class.mc_fewer": "moins de deux",
- "class.mc_foot": "Rien ici n’est une moyenne de niveaux : le niveau médian est celui que la moitié de la classe atteint ou dépasse."
+ "class.mc_foot": "Rien ici n’est une moyenne de niveaux : le niveau médian est celui que la moitié de la classe atteint ou dépasse.",
+ "class.sc_h": "Classes et listes",
+ "class.sc_about": "Une classe a sa liste, ses séquences et son lien vers le système de votre établissement.",
+ "class.sc_noroster": "Pas encore de liste",
+ "class.sc_roster": "Nom et liste",
+ "class.sc_link_on": "Lien {what} enregistré",
+ "class.sc_link_off": "Pas de lien {what}",
+ "class.sc_none": "Pas encore de classe. Une classe a une liste d’élèves : les copies sont associées aux élèves et le carnet de notes a des lignes.",
+ "class.st_terms_h": "Périodes et coefficients",
+ "class.st_terms_about": "Pour toutes vos classes. Un devoir compte pour la période où tombe sa date de remise.",
+ "class.st_none": "Pas encore de périodes : le carnet de notes traite toute l’année comme une seule.",
+ "class.st_nodates": "Pas encore de dates",
+ "class.st_dates": "Du {a} au {b}",
+ "class.st_needs": "Ajoutez d’abord une classe avec sa liste",
+ "class.st_bank_h": "Barème et grilles",
+ "class.st_bank_about": "Enregistré une fois, choisi sur n’importe quel devoir.",
+ "class.st_bank_open": "Ouvrir la banque de grilles",
+ "class.st_bank_have": "Vous avez {r} et {s} dans la banque de grilles.",
+ "class.st_bank_r": {
+  "one": "une grille enregistrée",
+  "other": "{n} grilles enregistrées"
+ },
+ "class.st_bank_s": {
+  "one": "un barème enregistré",
+  "other": "{n} barèmes enregistrés"
+ },
+ "class.ph_see": "Voir la copie de {name}",
+ "class.ph_see_t": "{name} · {score}",
+ "class.ph_getting": "Ouverture de la copie…",
+ "class.ph_nopaper": "Pas de copie de cet élève dans ce téléchargement.",
+ "class.ph_notkept": "Les copies de ce devoir ne sont pas gardées dans ce navigateur. Ouvrez-les sur votre ordinateur.",
+ "class.ph_elsewhere": "{name} s’ouvre sur votre ordinateur.",
+ "class.ph_page": "Page {n}",
+ "class.ph_cant": "Cette copie n’a pas pu être affichée."
 }

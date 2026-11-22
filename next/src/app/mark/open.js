@@ -106,13 +106,14 @@ export async function openKept(id, { question, onStep } = {}) {
 }
 let carriedNow = null;
 
-export class NothingIn extends Error { constructor() { super('Nothing found in what you dropped'); this.name = 'NothingIn'; } }
+// take: it was a take-home file, not papers (src/app/open.js intake says so)
+export class NothingIn extends Error { constructor(take) { super('Nothing found in what you dropped'); this.name = 'NothingIn'; this.take = !!take; } }
 // Papers brought in (src/app/open.js intake, not from the kept list): the same steps, then the papers are kept in this browser and,
 // for an assignment card, the card is linked to them (assignment.batchId), each through students/write.js. entries: [{ path, file|data }].
 // A newer copy of a download already worked on brings that work over (mark/carry.js); carry(e) asks when it isn't plainly the same one.
 export async function bringIn(entries, { label, assignment, question, carry, drive } = {}) {
   const lib = await begin();
-  if (entries.length === 1 && /\.gswork$/i.test(entries[0].path)) throw new NothingIn();
+  if (entries.length === 1 && /\.gswork$/i.test(entries[0].path)) throw new NothingIn(true);
   const got = await rawOf(entries, label);
   if (!got.raw.length) throw new NothingIn();
   const { students, keepList } = await studentsOf(got.raw);

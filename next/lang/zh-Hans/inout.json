@@ -108,5 +108,8 @@
   "one": "{names} 共用这份作业，所以他们的也会一起更改。",
   "other": "{names} 共用这份作业，所以他们的也会一起更改。"
  },
- "inout.rp_for": "已为 {names} 替换 {name}"
+ "inout.rp_for": "已为 {names} 替换 {name}",
+ "inout.hd_h": "把新的学生作业拖到这里",
+ "inout.hd_say": "学校系统导出的 ZIP、一个文件夹或多个文件。",
+ "inout.hd_busy": "正在打开作业…"
 }

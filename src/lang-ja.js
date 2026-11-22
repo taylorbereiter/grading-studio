@@ -409,6 +409,8 @@ const LANG_JA = {
     'How it was scored': '採点の内訳', 'From your teacher': '先生から', 'Comment on your paper': '提出物へのコメント', 'Comments on your paper': '提出物へのコメント',
     'Your marked paper starts on the next page.': '採点済みの提出物は次のページから始まります。', 'Your feedback continues on the next page.': 'フィードバックは次のページに続きます。',
     'Missing': '未提出', 'Excused': '免除', 'Late': '遅れて提出',
+    // the grade sheet (src/app/gradesheet.js, src/grades.js readsHtml)
+    "Click to copy": "クリックでコピー", "Open this file": "このファイルを開く", "Every row is made from the file named on it, inside that student’s folder. Click a picture to open that exact file. Click a score to copy it.": "各行は、その生徒のフォルダ内にある、行に書かれたファイルから作られています。画像をクリックするとそのファイルを開き、点数をクリックするとコピーします。", "Also show grades found on the papers": "提出物で見つかった成績も表示", "· a score you gave in Grading Studio always counts": "· Grading Studio で付けた点数は常に優先されます", "· the downloaded sheet shows the same rows": "· ダウンロードしたシートにも同じ行が表示されます", "Show them": "表示する", "Hide them": "隠す", "Folder and file": "フォルダとファイル", "Read as": "読み取り結果", "Only unmarked files, left out": "マークのないファイルのみ（対象外）", "Your score": "あなたの点数", "Box it by hand": "手動で囲む", "Boxed by hand": "手動で囲みました", "redo": "やり直す", "Is this the grade?": "これが成績ですか？", "It’s part of the page’s own text, so the student may have typed it. A flattened Kami grade looks the same.": "ページ自体のテキストの一部なので、生徒が入力した可能性があります。統合された Kami の成績も同じように見えます。", "Use it": "使う", "Not a grade": "成績ではない", "No grade yet.": "まだ成績がありません。", "Nothing turned in": "提出なし", "Left out (no marks).": "対象外（マークなし）。", "Score on the row above": "点数は上の行にあります", "Type what you see": "見えるとおりに入力", "Couldn’t read this file": "このファイルを読み取れませんでした", "No grade found yet": "まだ成績が見つかりません", "Word rubric": "Word のルーブリック", "Word file": "Word ファイル", "Trim each spot down to your marks": "各箇所をマークの部分だけに切り詰める",
   },
   rules: [
     [/^(\d+) of (\d+) done$/, '$2人中$1人完了'], [/^out of ([\d.,]+)$/, '$1点満点'],
@@ -520,6 +522,8 @@ const LANG_JA = {
     openday: '{1} を開く', taken: ['{1} 日分を記録。', '{1} 日分を記録。'], takenin: ['{2} に {1} 日分を記録。', '{2} に {1} 日分を記録。'], takenR: '日付をクリックするとその日を開いて変更でき、名前をクリックするとその生徒のページが開きます。「出席人数」は出席と遅刻の全員を数えます。', unk: ['理由のわからない欠席が {1} 件あります。', '理由のわからない欠席が {1} 件あります。'],
     andmore: 'ほか {1} 件。理由がわかったら、その日を開いて「欠席（届出あり）」を押してください。', owesA: ['生徒 {1} 人が', '生徒 {1} 人が'], owesB: ['計 {1} 件未提出', '計 {1} 件未提出'], reminded: 'リマインド：{1}', ago: ['{1} 日前', '{1} 日前'], pick: 'いちばん近いものを選んでください。生徒 {1} 人それぞれに机があり、あとからどの机も動かしたり取り除いたりできます。',
     seated: '{2} 人中 {1} 人着席', needed: ['机があと {1} 台必要', '机があと {1} 台必要'], desk: '机、{1}。クリックで取り除く', sp: '',
+    // the grade sheet
+    gshid: "成績のないファイルも表示（{1} 件非表示）", gsout: "{1} 件のファイルにはマークがないため、余分な提出物として対象外になります。", gspage: "{1} ページ", gsfrom: "「{1}」より", gsconf: "確認待ち {1} 件",
   },
   helpSecs: { start: 'はじめに', mark: '提出物の採点', score: '点数とルーブリック', back: '提出物の返却', class: 'クラスと成績簿', safe: '保存と安全', plan: '計画と授業', private: 'プライバシー' },
   help: {

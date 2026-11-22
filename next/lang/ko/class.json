@@ -1447,5 +1447,38 @@
  },
  "class.mc_plus_fm": "+ 형성 {n}개",
  "class.mc_fewer": "두 번 미만",
- "class.mc_foot": "여기에는 수준의 평균이 없습니다. 중간 수준은 반의 절반이 그 수준 이상인 수준입니다."
+ "class.mc_foot": "여기에는 수준의 평균이 없습니다. 중간 수준은 반의 절반이 그 수준 이상인 수준입니다.",
+ "class.sc_h": "학급과 명단",
+ "class.sc_about": "학급에는 명단, 단원, 학교 시스템 링크가 있습니다.",
+ "class.sc_noroster": "아직 명단 없음",
+ "class.sc_roster": "이름과 명단",
+ "class.sc_link_on": "{what} 링크 저장됨",
+ "class.sc_link_off": "{what} 링크 없음",
+ "class.sc_none": "아직 반이 없습니다. 반에는 명단이 있어 과제가 학생과 연결되고 성적부에 줄이 생깁니다.",
+ "class.st_terms_h": "학기와 비중",
+ "class.st_terms_about": "모든 학급에 적용됩니다. 과제는 마감일이 속한 학기에 반영됩니다.",
+ "class.st_none": "아직 학기가 없습니다: 성적부는 한 해 전체를 하나로 다룹니다.",
+ "class.st_nodates": "날짜 미정",
+ "class.st_dates": "{a}~{b}",
+ "class.st_needs": "먼저 명단이 있는 반을 추가하세요",
+ "class.st_bank_h": "평가 척도와 루브릭",
+ "class.st_bank_about": "한 번 저장하면 어느 과제에서나 고를 수 있습니다.",
+ "class.st_bank_open": "루브릭 은행 열기",
+ "class.st_bank_have": "루브릭 모음에 {r}, {s}이(가) 있습니다.",
+ "class.st_bank_r": {
+  "one": "저장한 루브릭 1개",
+  "other": "저장한 루브릭 {n}개"
+ },
+ "class.st_bank_s": {
+  "one": "저장한 점수 척도 1개",
+  "other": "저장한 점수 척도 {n}개"
+ },
+ "class.ph_see": "{name}의 과제 보기",
+ "class.ph_see_t": "{name} · {score}",
+ "class.ph_getting": "과제를 불러오는 중…",
+ "class.ph_nopaper": "이 다운로드에는 이 학생의 과제가 없습니다.",
+ "class.ph_notkept": "이 과제의 답안은 이 브라우저에 보관되어 있지 않습니다. 컴퓨터에서 여세요.",
+ "class.ph_elsewhere": "{name}은(는) 컴퓨터에서 열립니다.",
+ "class.ph_page": "{n}쪽",
+ "class.ph_cant": "이 과제를 표시할 수 없습니다."
 }

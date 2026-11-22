@@ -120,9 +120,10 @@ test('To do: a line edited at the side, moving quickly from box to box loses not
   await p.click('[data-td-row="tdC"] .tdmain');
   await p.waitForSelector('[data-td-pane="tdC"]');
   // the words, then straight to the note, then straight to the class: each saved, none over another
-  await p.click('[data-td-x]'); await p.evaluate(() => document.querySelector('[data-td-x]').select()); await p.keyboard.type('Order lab supplies for the friction lab');
+  // cleared and typed again: kept as typed until she leaves the box (a save per key put the old words back when the box was empty)
+  await p.click('[data-td-x]'); await p.evaluate(() => document.querySelector('[data-td-x]').select()); await p.keyboard.press('Backspace'); await p.keyboard.type('Order lab supplies for the friction lab');
   await p.click('[data-td-note]'); await p.keyboard.type('Ask for twenty spring scales');
-  await p.select('[data-td-cls]', 'c1');
+  await p.focus('[data-td-cls]'); await p.select('[data-td-cls]', 'c1');   // the class list takes the focus as a click would
   await p.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')).todo.items.find(x => x.id === 'tdC'); return l && l.c === 'c1' && l.note && l.x.includes('friction'); }, { timeout: 10000 });
   let it = (await items(p)).find(x => x.id === 'tdC');
   assert.equal(it.x, 'Order lab supplies for the friction lab'); assert.equal(it.note, 'Ask for twenty spring scales');
@@ -161,6 +162,31 @@ test('To do: a line edited at the side, moving quickly from box to box loses not
   const there = await p.evaluate(() => window.__gs.todoRows().find(r => r.id === 'tdC'));
   assert.equal(there.it.x, 'Order lab supplies for the friction lab'); assert.equal(there.it.who, 'Bram Sample'); assert.equal(there.it.rep, 'week');
   assert.ok(cur.rows.some(r => r[0] === 'tdC'));
+  assert.deepEqual(p.errors, []);
+  await p.ctx.close();
+});
+
+// A browser that, like Firefox and Safari, says nothing when the box she is typing in is taken away: no change, blur or focusout while
+// a node is being removed (this Chrome sends them, so the test takes them away to check the box saves without them).
+const NO_BLUR_ON_REMOVE = () => {
+  let rm = 0;
+  for (const [o, k] of [[Node.prototype, 'removeChild'], [Element.prototype, 'remove'], [Node.prototype, 'replaceChild'], [Element.prototype, 'replaceWith']]) {
+    const f = o[k]; o[k] = function (...a) { rm++; try { return f.apply(this, a); } finally { rm--; } };
+  }
+  for (const t of ['change', 'blur', 'focusout']) window.addEventListener(t, e => { if (rm) e.stopImmediatePropagation(); }, true);
+};
+test('To do: the words typed and the page left by the keyboard while still in the box are saved', async () => {
+  const p = await fresh();
+  await p.evaluateOnNewDocument(NO_BLUR_ON_REMOVE);
+  await p.goto(srv.url + 'next/#/todo'); await todoUp(p);
+  await p.click('[data-td-row="tdC"] .tdmain');
+  await p.waitForSelector('[data-td-pane="tdC"]');
+  await p.click('[data-td-x]'); await p.evaluate(() => document.querySelector('[data-td-x]').select()); await p.keyboard.type('Call the lab technician');
+  await p.click('[data-td-note]'); await p.keyboard.type('Before Friday');
+  // a shortcut or Find going to Home: the note box goes while it still has the focus
+  await p.evaluate(() => { location.hash = '#/home'; });
+  await p.waitForFunction(() => !document.querySelector('[data-td-pane]'));
+  await p.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')).todo.items.find(x => x.id === 'tdC'); return l && l.x === 'Call the lab technician' && l.note === 'Before Friday'; }, { timeout: 5000 });
   assert.deepEqual(p.errors, []);
   await p.ctx.close();
 });

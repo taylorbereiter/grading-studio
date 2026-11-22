@@ -1447,5 +1447,38 @@
  },
  "class.mc_plus_fm": "+ 形成的 {n} 件",
  "class.mc_fewer": "2 回未満",
- "class.mc_foot": "ここにレベルの平均はありません。中央レベルとは、クラスの半数がそのレベル以上にあるレベルです。"
+ "class.mc_foot": "ここにレベルの平均はありません。中央レベルとは、クラスの半数がそのレベル以上にあるレベルです。",
+ "class.sc_h": "クラスと名簿",
+ "class.sc_about": "クラスには名簿、単元、学校のシステムへのリンクがあります。",
+ "class.sc_noroster": "名簿はまだありません",
+ "class.sc_roster": "名前と名簿",
+ "class.sc_link_on": "{what} のリンクを保存済み",
+ "class.sc_link_off": "{what} のリンクなし",
+ "class.sc_none": "まだクラスがありません。クラスには名簿があり、答案が生徒に結びつき、成績表に行ができます。",
+ "class.st_terms_h": "学期と配分",
+ "class.st_terms_about": "すべてのクラスに適用されます。課題は、締め切り日が含まれる学期に算入されます。",
+ "class.st_none": "学期は未設定：成績簿は 1 年全体を 1 つの学期として扱います。",
+ "class.st_nodates": "日付は未設定",
+ "class.st_dates": "{a}〜{b}",
+ "class.st_needs": "先に名簿のあるクラスを追加してください",
+ "class.st_bank_h": "評価基準とルーブリック",
+ "class.st_bank_about": "一度保存すれば、どの課題でも選べます。",
+ "class.st_bank_open": "ルーブリックバンクを開く",
+ "class.st_bank_have": "ルーブリック集に {r}、{s} があります。",
+ "class.st_bank_r": {
+  "one": "保存したルーブリック 1 件",
+  "other": "保存したルーブリック {n} 件"
+ },
+ "class.st_bank_s": {
+  "one": "保存した評価尺度 1 件",
+  "other": "保存した評価尺度 {n} 件"
+ },
+ "class.ph_see": "{name} の答案を見る",
+ "class.ph_see_t": "{name} · {score}",
+ "class.ph_getting": "答案を読み込んでいます…",
+ "class.ph_nopaper": "このダウンロードにはこの生徒の答案がありません。",
+ "class.ph_notkept": "この課題の答案はこのブラウザに保存されていません。パソコンで開いてください。",
+ "class.ph_elsewhere": "{name} はパソコンで開けます。",
+ "class.ph_page": "{n} ページ",
+ "class.ph_cant": "この答案を表示できませんでした。"
 }

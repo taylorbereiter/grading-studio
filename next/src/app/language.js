@@ -9,10 +9,13 @@ import { savePref } from '../planning/write.js';
 export const LANGUAGES = [['en', 'English'], ...JSON.parse(__GS_LANGS_JSON__)];   // not-words
 export function savedLanguage() { const v = json('gs.lang'); return LANGUAGES.some(l => l[0] === v) ? v : 'en'; }
 export function setLanguage() { document.documentElement.lang = savedLanguage(); }
+// The chosen language that couldn't be fetched this visit (all or part of it is in English), else ''.
+let LL = null;
+export const langMissed = () => (LL && LL.failed ? savedLanguage() : '');
 // Before anything is drawn: the chosen language's core lines and those of every lines file already loaded (app/lang-load.js).
 export async function loadLanguage() {
   const c = savedLanguage();
-  if (c !== 'en') { try { const L = await import('./lang-load.js'); useLanguage(c, await L.area(c, 'core')); addLines.load(a => L.area(c, a)); await addLines.ready(); } catch (e) { console.error(e); } }
+  if (c !== 'en') { try { const L = LL = await import('./lang-load.js'); useLanguage(c, await L.area(c, 'core')); addLines.load(a => L.area(c, a)); await addLines.ready(); } catch (e) { console.error(e); LL = { failed: true }; } }
   setLanguage();
 }
 // Returns false when this window may not save.

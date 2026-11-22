@@ -22,5 +22,6 @@
  "settings.install_h": "Install as an app",
  "settings.install_about": "Opens like a program, in its own window, with the same work as this tab. In Chrome or Edge, use Install in the address bar or the browser’s menu.",
  "settings.install_done": "Installed: it opens in its own window, with the same work as the browser tab.",
- "settings.install": "Install"
+ "settings.install": "Install",
+ "settings.lang_miss": "{name} could not be fetched just now, so this visit is in English. It comes back by itself the next time you open the app with internet."
 }

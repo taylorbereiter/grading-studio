@@ -78,11 +78,17 @@ test('D-011 Quick mark: boxes drawn and saved as one step (the score goes out of
   const [q1, q2] = await p.$$eval('[data-qb] [data-qbrow]', es => es.map(e => e.dataset.qbrow));
   assert.match(await p.$eval('[data-qbsum]', e => e.textContent), /2 questions, out of 2 points/);
   // the second is a short answer on a scale of 0 to 2, with words for each step; the first has an answer
-  await typeIn(p, '[data-qbrow="' + q2 + '"] [data-qpts]', '2');
+  await typeIn(p, '[data-qbrow="' + q2 + '"] [data-qpts]', '2'); await p.keyboard.press('Tab');
   await p.select('[data-qbrow="' + q2 + '"] [data-qkind]', 'scale');
   await p.type('[data-qbrow="' + q1 + '"] [data-qkey]', 'Paris');
   await p.waitForSelector('[data-qbwords]');
   assert.match(await p.$eval('[data-qbsum]', e => e.textContent), /out of 3 points/);
+  // points that start with 0 are kept as typed until she leaves the box (a save per key put the old 1 back at "0", so 0.5 became 15)
+  await typeIn(p, '[data-qbrow="' + q1 + '"] [data-qpts]', '0.5'); await p.keyboard.press('Tab');
+  await p.waitForFunction(() => /out of 2\.5 points/.test(document.querySelector('[data-qbsum]').textContent), { timeout: 5000 });
+  assert.equal(await p.$eval('[data-qbrow="' + q1 + '"] [data-qpts]', e => e.value), '0.5');
+  await typeIn(p, '[data-qbrow="' + q1 + '"] [data-qpts]', '1'); await p.keyboard.press('Tab');
+  await p.waitForFunction(() => /out of 3 points/.test(document.querySelector('[data-qbsum]').textContent));
   // keys on the picked box: Ctrl D copies it below, Delete takes the copy out
   await p.click('[data-qb] [data-qbbox="' + q2 + '"] [data-qbtab]');
   await p.focus('[data-qbpages]');
@@ -192,12 +198,17 @@ test('Quick mark in an MYP class: each question\'s criterion, the points that ea
   await box(p, 0, 0.1, 0.12, 0.6, 0.2);
   await p.waitForSelector('[data-qb] [data-qbrow]');
   const q1 = await p.$eval('[data-qb] [data-qbrow]', e => e.dataset.qbrow);
-  await typeIn(p, '[data-qbrow="' + q1 + '"] [data-qpts]', '8');
+  await typeIn(p, '[data-qbrow="' + q1 + '"] [data-qpts]', '8'); await p.keyboard.press('Tab');
   await p.waitForSelector('[data-qb] [data-qib]');
   await p.select('[data-qb] [data-qib]', 'B');
   await p.waitForSelector('[data-qblv] [data-ibqk="B"]');
   await p.click('[data-qblv] [data-ibqeven="B"]');
   await p.waitForFunction(() => document.querySelector('[data-ibqk="B"] [data-ibql="7"]').value === '8');
+  // a level's points that start with 0 stay as typed (a save per key cleared the box at "0")
+  await typeIn(p, '[data-ibqk="B"] [data-ibql="0"]', '0.5'); await p.keyboard.press('Tab');
+  assert.equal(await p.$eval('[data-ibqk="B"] [data-ibql="0"]', e => e.value), '0.5');
+  await typeIn(p, '[data-ibqk="B"] [data-ibql="0"]', '1'); await p.keyboard.press('Tab');
+  await p.waitForFunction(() => document.querySelector('[data-ibqk="B"] [data-ibql="0"]').value === '1');
   await p.click('[data-qbsave]');
   await p.waitForSelector('dialog[open][data-qm] .qmc img', { timeout: 60000 });
   assert.deepEqual((await su(p)).ib, ['B'], 'criterion B is added to the task');
@@ -356,8 +367,11 @@ test('D-053 D-054 D-055 D-056 D-057 D-058 D-059: covers drawn and taken off on U
   assert.deepEqual((await exRecs(p)).map(r => [r.kind, r.why]), [['paper', 'Clear steps']]);
   await p.waitForFunction(() => !document.querySelector('[data-esuse]'));
   // a screenshot kept as a strong example: D-057 black boxes, D-059 Enter in Tags saves
-  const shot = async () => { await p.click('[data-snip]'); await p.waitForSelector('[data-snipthen="ex"]'); await p.click('[data-snipthen="ex"]'); await p.click('[data-snipall]'); await p.waitForSelector('[data-esshot] canvas', { timeout: 60000 }); await p.waitForFunction(() => document.querySelector('[data-esshot] canvas').width > 0); };
+  const shot = async () => { await p.click('[data-snip]'); await p.waitForSelector('[data-snipthen="ex"]'); await p.click('[data-snipthen="ex"]'); await p.click('[data-snipall]'); await p.waitForSelector('[data-esshot] canvas', { timeout: 60000 }); };
+  // the picture is drawn (a white ground under it; an empty canvas is clear), so a drag lands where the picture will stay
+  const drawn = () => p.waitForFunction(() => document.querySelector('[data-esshot] canvas').getContext('2d').getImageData(0, 0, 1, 1).data[3] === 255);
   await shot();
+  await drawn();
   assert.match(await p.$eval('[data-esshotn]', e => e.textContent), /^Name covers on the paper are already painted in\. Drag over anything that shows a name to black it out/);
   await drag('[data-esshotpv] canvas', [0.1, 0.1], [0.3, 0.2]);
   await p.waitForFunction(() => /^1 area blacked out\./.test(document.querySelector('[data-esshotn]').textContent));
@@ -371,7 +385,7 @@ test('D-053 D-054 D-055 D-056 D-057 D-058 D-059: covers drawn and taken off on U
   const first = (await exRecs(p)).find(r => r.kind === 'shot');
   assert.deepEqual([first.tags, first.watch], [['steps'], undefined]);
   await p.waitForFunction(() => !document.querySelector('[data-esshot]'));
-  // D-058: the tag used is a chip that adds it; Enter in Why saves
+  // D-058: the tag used is a chip that adds it; Enter in Why saves, even pressed before the picture has been read
   await shot();
   await p.waitForSelector('[data-esaddtag="steps"]');
   await p.click('[data-esaddtag="steps"]');

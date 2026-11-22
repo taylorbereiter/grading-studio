@@ -4,7 +4,7 @@
 // places in an average are the one setting everywhere (gs.avgDp); What if is only ever a preview and changes no score.
 import { h, Fragment } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { Button, Card, Menu, Segmented, Tooltip, toast } from '../../ui/index.js';
+import { Button, Card, Menu, Segmented, Tooltip, toast, HeldInput } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { state, gradeOf, maxPoints, percentFor, roundPct, fmtNum, rowTop, rowHalf, rowsTop } from '../../engines/gcore.js';
 import { shownName, rosterMatch } from '../../engines/gdraw.js';
@@ -94,7 +94,9 @@ export function Percents({ E, onOpen }) {
   rows.sort((a, c) => by(a, c) * sort.dir || natural(a.name, c.name));
   const copy = () => copyText(rows.map(r => r.name + '\t' + r.pct + '%').join('\n')).then(ok => toast(ok ? t('pc.copied', { n: rows.length }) : t('copy.failed')));
   const th = (k, l, r) => <th class={r ? 'r' : ''} aria-sort={sort.k === k ? (sort.dir < 0 ? 'descending' : 'ascending') : 'none'}><button type="button" onClick={() => setSort(s => (s.k === k ? { k, dir: -s.dir } : { k, dir: k === 'name' ? 1 : -1 }))} data-psort={k}>{l}{sort.k === k ? (sort.dir < 0 ? ' ▾' : ' ▴') : ''}</button></th>;
-  const num = (label, value, onSet, o) => <label class="pc-num"><span>{label}</span><input type="number" class="input" value={value} {...o} onInput={e => onSet(e.currentTarget.value)} /></label>;
+  // held: saved once she leaves the box (ui HeldInput), so a save never redraws the number under the cursor; live: a preview only
+  const num = (label, value, onSet, o, held) => <label class="pc-num"><span>{label}</span>{held ? <HeldInput type="number" class="input" value={value} {...o} onChange={e => onSet(e.currentTarget.value)} />
+    : <input type="number" class="input" value={value} {...o} onInput={e => onSet(e.currentTarget.value)} />}</label>;
   const m0 = ps.length ? ps.reduce((a, c) => a + c, 0) / n : 0, sd = n ? Math.round(Math.sqrt(ps.reduce((a, p) => a + (p - m0) ** 2, 0) / n)) : 0;
   const below = list.filter(p => pv.target > p.pct).length, was = add ? (byMed ? med(list.map(p => p.base)) : mean(list.map(p => p.base))) : null;
   const tile = (l, v, sub, main) => <div class={'tile' + (main ? ' main' : '')}><div class="tl">{l}</div><div class="tv num">{v}</div>{sub && <div class="ts mute">{sub}</div>}</div>;
@@ -105,11 +107,11 @@ export function Percents({ E, onOpen }) {
         items={who.map(([k, l]) => ({ label: t(l), sub: t('mark.papers', { n: tags[k] }), checked: !!pv[k], onSelect: () => set(k, !pv[k]) }))} />
       <Segmented size="sm" label={t('pc.mid_h')} value={pv.mid} onChange={v => set('mid', v)} options={[{ value: 'mean', label: t('setup.i_average') }, { value: 'median', label: t('setup.i_middle') }]} />
       <span data-pcdp><Segmented size="sm" label={t('prefs.dp_h')} value={String(dpNow())} onChange={v => { if (+v === 2) prefs.del('gs.avgDp'); else prefs.set('gs.avgDp', +v); re(); }} options={[t('prefs.dp_0'), t('prefs.dp_1'), t('prefs.dp_2')].map((label, d) => ({ value: String(d), label }))} /></span>
-      {num(t('pc.target'), pv.target, v => { const x = +v; if (v !== '' && x >= 0 && x <= 100) set('target', x); }, { min: 0, max: 100, step: 1, 'data-pctarget': '' })}
+      {num(t('pc.target'), pv.target, v => { const x = +v; if (v !== '' && x >= 0 && x <= 100) set('target', x); }, { min: 0, max: 100, step: 1, 'data-pctarget': '' }, true)}
       <Segmented size="sm" label={t('pc.bands')} value={pv.band} onChange={v => set('band', v)} options={[{ value: '10', label: t('pc.tens') }, { value: '5', label: t('pc.fives') }, { value: 'own', label: t('pc.own') }]} />
       {num(t('pc.add'), add, v => { const x = +v; if (!isNaN(x)) setAdd(Math.max(-100, Math.min(100, x))); }, { step: 0.5, 'data-pcadd': '' })}
     </div>
-    {pv.band === 'own' && <div class="pc-cuts" data-pccuts>{cuts.concat(['', '']).slice(0, 8).map((v, j) => <input type="number" class="input" min="1" max="100" value={v} aria-label={t('pc.cut')} data-pccut={j}
+    {pv.band === 'own' && <div class="pc-cuts" data-pccuts>{cuts.concat(['', '']).slice(0, 8).map((v, j) => <HeldInput type="number" class="input" min="1" max="100" value={String(v)} aria-label={t('pc.cut')} data-pccut={j}
       onChange={e => { const all = [...e.currentTarget.parentNode.querySelectorAll('input')].map(x => +x.value).filter(x => x > 0 && x <= 100); set('cuts', [...new Set(all)].sort((a, c) => c - a)); }} />)}</div>}
     {add !== 0 && <p class="mute" data-pcpreview>{t('pc.preview')}</p>}
     {!n ? <p class="mute">{t('pc.none')}</p> : <>

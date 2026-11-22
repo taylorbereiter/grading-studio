@@ -10,6 +10,7 @@ const { launch } = require('../../../test/helpers/chrome.js');
 const { plant, appReady } = require('../../../test/helpers/app.js');
 const { STEADY } = require('../../../test/helpers/steady.js');
 const { bookSeed } = require('./classseed.js');
+const { gradingSeed: gradingSeed0 } = require('../../../test/helpers/steady.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
 const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp', png: 'image/png', webmanifest: 'application/manifest+json' };
@@ -466,6 +467,11 @@ test('Import a gradebook: pasted cells matched to the roster and the assignments
   await p.waitForFunction(() => document.querySelector('dialog[open] [data-bki-go="2"]').value === 'new' && !document.querySelector('dialog[open] [data-bki-save]').disabled);
   assert.equal(await p.$eval('dialog[open] [data-bki-go="3"]', s => s.value), 'skip');
   assert.equal(await p.$eval('dialog[open] [data-bki-max="2"]', e => e.value), '10');
+  // the out of box is kept as typed until she leaves it: cleared and typed again (a save per key put 0.5 in the empty box)
+  await p.$eval('dialog[open] [data-bki-max="2"]', e => e.select()); await p.keyboard.press('Backspace'); await p.keyboard.type('8'); await p.keyboard.press('Tab');
+  assert.equal(await p.$eval('dialog[open] [data-bki-max="2"]', e => e.value), '8');
+  await p.$eval('dialog[open] [data-bki-max="2"]', e => e.select()); await p.keyboard.type('10'); await p.keyboard.press('Tab');
+  await p.waitForFunction(() => document.querySelector('dialog[open] [data-bki-max="2"]').value === '10');
   assert.equal(await p.$eval('dialog[open] [data-bki-pick="2"]', s => s.value), '');
   await p.click('dialog[open] [data-bki-save]');
   await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.flatMap(u => u.items).some(i => i.name === 'Map test'));
@@ -589,6 +595,39 @@ test('Phone Scores: an assignment opened at phone width, a score typed and one m
   assert.deepEqual(strip(main), s);
   assert.deepEqual([s[N[2]].v, s[N[3]].st], [8.5, 'missing']);
   await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// A browser that, like Firefox and Safari, says nothing when the box she is typing in is taken away: no change, blur or focusout while
+// a node is being removed (this Chrome sends them, so the test takes them away to check the box saves without them).
+const NO_BLUR_ON_REMOVE = () => {
+  let rm = 0;
+  for (const [o, k] of [[Node.prototype, 'removeChild'], [Element.prototype, 'remove'], [Node.prototype, 'replaceChild'], [Element.prototype, 'replaceWith']]) {
+    const f = o[k]; o[k] = function (...a) { rm++; try { return f.apply(this, a); } finally { rm--; } };
+  }
+  for (const t of ['change', 'blur', 'focusout']) window.addEventListener(t, e => { if (rm) e.stopImmediatePropagation(); }, true);
+};
+test('Phone Scores: a score typed and the screen left by the keyboard while still in the box is saved, once', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.evaluateOnNewDocument(NO_BLUR_ON_REMOVE);
+  await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  await p.goto(srv.url + 'blank'); await plant(p, bookSeed());
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('[data-phone-scores] [data-ph-col="i9"]', { timeout: 60000 });
+  const N = (await libOf(p)).classes[0].names;
+  await p.click('[data-ph-col="i9"]');
+  await p.waitForSelector('[data-ph-one="i9"]');
+  const box = await p.$('[data-ph-stu="' + N[1] + '"] [data-ph-in]');
+  await box.click(); await p.$eval('[data-ph-stu="' + N[1] + '"] [data-ph-in]', e => e.select()); await p.keyboard.type('7.5');
+  // a shortcut or Find going elsewhere: the box goes while it still has the focus
+  await p.evaluate(() => { location.hash = '#/class/c1/people'; });
+  await p.waitForFunction(() => !document.querySelector('[data-ph-in]'));
+  await p.waitForFunction(n => { const it = JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.flatMap(u => u.items).find(i => i.id === 'i9'); return it.typed && it.typed.s[n] && it.typed.s[n].v === 7.5; }, { timeout: 5000 }, N[1]);
+  // one save: one Undo puts the score back as it was
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForFunction(n => { const it = JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.flatMap(u => u.items).find(i => i.id === 'i9'); return !(it.typed && it.typed.s[n] && it.typed.s[n].v === 7.5); }, { timeout: 5000 }, N[1]);
   assert.deepEqual(errors, []);
   await ctx.close();
 });
@@ -857,6 +896,14 @@ test('Report comments: each draft is the current app\'s draft, edited and marked
   await p.waitForFunction(n => document.querySelector('[data-rp-name]').textContent === n, {}, N[1]);
   await p.waitForFunction(n => { const r = ((JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}).rep; return r && r.year && r.year.done && /A pleasure to teach\.$/.test(r.year.text); }, {}, N[0]);
   await p.waitForFunction(() => /^1 of /.test((document.querySelector('[data-rp-donecount]') || {}).textContent || ''));
+  // the subject is saved once, when she leaves the box, so one Undo takes it all back (a save per key made each letter a step)
+  const subj = () => p.evaluate(() => (((JSON.parse(localStorage.getItem('gs.lib')).book || {}).rep || {}).subj || {}).c1 || '');
+  await p.click('[data-rp-subj]'); await p.keyboard.type('Year 9 English'); await p.keyboard.press('Tab');
+  await p.waitForFunction(() => ((((JSON.parse(localStorage.getItem('gs.lib')).book || {}).rep || {}).subj || {}).c1 || '') === 'Year 9 English', { timeout: 5000 });
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForFunction(() => !(((JSON.parse(localStorage.getItem('gs.lib')).book || {}).rep || {}).subj || {}).c1, { timeout: 5000 }).catch(() => {});
+  assert.equal(await subj(), '', 'one Undo takes the whole subject back');
   // short comments
   await p.evaluate(() => [...document.querySelectorAll('.rptopts [role="radio"]')].find(b => b.dataset.v === 'short').click());
   await p.waitForFunction(() => ((JSON.parse(localStorage.getItem('gs.lib')).book || {}).rep || {}).len === 'short');
@@ -928,6 +975,9 @@ test('A student\'s details and Settings > Classes: ID and email edited and opene
   // a student's details
   await p.goto(srv.url + 'next/#/class/c1/people/2');
   await p.waitForSelector('[data-details]', { timeout: 60000 });
+  // Strengths and concerns is a part that comes in a moment later, above the details, and pushes Edit down: a press aimed
+  // before it came lands on its heading instead. Pressed once the student's page has all its parts above the details.
+  await p.waitForSelector('[data-wl-stu]', { timeout: 60000 });
   assert.equal(await p.$('[data-att-open]'), null, 'attendance is off');
   await p.click('[data-det-edit]'); await p.waitForSelector('[data-det="email"]');
   // typed once the box is open and has the focus: a key pressed before that goes to the page behind
@@ -1170,6 +1220,33 @@ test('D-003 D-012 D-024 D-025 D-026 D-027 D-060 D-061 D-062: example cards, whos
   await old.waitForFunction(() => window.__gs.exList().length === 2 && window.__gs.exWatch().length === 3);
   assert.deepEqual(await old.evaluate(() => window.__gs.exList().map(r => [r.id, r.why]).sort()), [['exa', 'Shows every step'], ['exb', 'Clear diagram']]);
   await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// A-131 A-129: See the paper on a phone's Scores (src/phone.js phSee): a kept paper's pages, Esc puts it away.
+test('A-131 A-129: Phone Scores: See the paper shows a kept paper, and Esc closes it', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  const seed = gradingSeed0(), png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+  seed.idb['grading-studio-keep'].stores.papers.push(['gs.b.n1', { id: 'gs.b.n1', label: 'Narrative essay', entries: [{ path: 'Aria Testwell/essay.png', data: { __b: 'png' } }, { path: 'Bram Sample/essay.docx', data: { __b: 'png' } }] }]);
+  seed.bins = { png };
+  await p.goto(srv.url + 'blank'); await plant(p, seed);
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('[data-phone-scores] [data-ph-col="i3"]', { timeout: 60000 });
+  await p.click('[data-ph-col="i3"]');
+  await p.waitForSelector('[data-ph-one="i3"] [data-phsee="Aria Testwell"]');
+  await p.click('[data-phsee="Aria Testwell"]');
+  await p.waitForSelector('dialog[open] [data-phview="Aria Testwell"] img.phvpage', { timeout: 15000 });
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('[data-phview]'), { timeout: 5000 });
+  // a Word paper opens on a computer; one with no paper says so
+  await p.click('[data-phsee="Bram Sample"]');
+  await p.waitForFunction(() => /opens on your computer/.test((document.querySelector('[data-phview="Bram Sample"]') || {}).textContent || ''), { timeout: 15000 });
+  await p.keyboard.press('Escape');
+  await p.click('[data-phsee="Cleo Fixture"]');
+  await p.waitForFunction(() => /No paper for this student/.test((document.querySelector('[data-phview="Cleo Fixture"]') || {}).textContent || ''), { timeout: 15000 });
   assert.deepEqual(errors, []);
   await ctx.close();
 });

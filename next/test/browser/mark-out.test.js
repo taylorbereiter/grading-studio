@@ -637,7 +637,8 @@ test('C-013 C-014 C-015 C-016 C-017 C-018 C-019 C-020 C-021 C-022 C-023 C-901 A-
   const byName = await p.$$eval('[data-pcrow] button', l => l.map(b => b.textContent));
   assert.deepEqual(byName, byName.slice().sort((a, b) => a.localeCompare(b, undefined, { numeric: true })));
   // the target back at 70: the current app's first tiles
-  await p.$eval('[data-pctarget]', e => { e.value = '70'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  // typed, and kept once she leaves the box (ui HeldInput)
+  await p.click('[data-pctarget]', { count: 3 }); await p.keyboard.type('70'); await p.keyboard.press('Tab');
   await p.waitForFunction(w => [...document.querySelectorAll('#pTiles .tv')].map(e => e.textContent).join('|') === w, { timeout: 10000 }, was.tiles.join('|'));
   // the places in an average, one setting everywhere (C-017)
   await p.click('[data-pcdp] [data-v="0"]');
