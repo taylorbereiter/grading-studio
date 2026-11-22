@@ -245,8 +245,10 @@ test('D-048 D-050 D-051 D-052 H-037 H-058: a YouTube player driven like a video 
 
   // H-037: typed notes, the time button with nothing playing says what gives the times
   await goTo(p, 'Bram Sample');
-  await p.waitForSelector('[data-tnopen]', { timeout: 60000 });
-  await p.click('[data-tnopen]'); await p.waitForSelector('.mk-tn .tn .tned');
+  // typed notes open from More for this paper (slice C PR 2 took the button off the panel at rest)
+  await p.waitForSelector('[data-pmore]', { timeout: 60000 }); await p.click('[data-pmore]');
+  await p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role^="menuitem"]')].find(e => /Typed notes/.test(e.textContent)); if (it) it.click(); return !!it; }, { timeout: 30000 });
+  await p.waitForSelector('.mk-tn .tn .tned');
   await p.click('.mk-tn .tned'); await p.keyboard.type('Strong opening');
   await p.evaluate(() => new Promise(r => setTimeout(r, 400)));
   // the time button on the notes' bar, or under its ⋯ where the bar has no room
