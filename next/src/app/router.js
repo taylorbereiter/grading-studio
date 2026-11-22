@@ -130,6 +130,8 @@ export const PARTS = {
   picker: () => import('./class/picker.jsx'),
   // a class's To do tab: its to-dos and missing work
   ctodo: () => import('./class/todo.jsx'),
+  // the School page's person form, for Someone new… on a to-do (screens/school.jsx NewPerson)
+  schoolform: () => import('./screens/school.jsx'),
   goals: () => import('./class/goals.jsx'),
   reports: () => import('./class/reports.jsx'),
   sheets: () => import('./class/sheets.jsx'),

@@ -3,7 +3,7 @@
 // header, the folder question's line for a folder she already has, and each of today's classes with its to-dos. Made-up work only.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
-const http = require('http'), fs = require('fs'), path = require('path');
+const http = require('http'), fs = require('fs'), path = require('path'), os = require('os');
 const { launch } = require('../../../test/helpers/chrome.js');
 const { plant, appReady } = require('../../../test/helpers/app.js');
 const { gradingSeed, PLAN_SETUP, STEADY } = require('../../../test/helpers/steady.js');
@@ -169,5 +169,46 @@ test('A-051 A-065: a ZIP of new student work dropped anywhere on Home opens as a
   const keys = await until(async () => { const k = await metaKeys(p); return k.includes(b.id) && k; });
   assert.ok(keys, 'kept in this browser');
   assert.equal(await p.$('[data-hdrop]'), null);
+  assert.deepEqual(errors, []); await ctx.close();
+});
+
+const menuItem = (p, text) => p.evaluate(x => { const m = [...document.querySelectorAll('[role="menuitem"]')].find(e => e.textContent.includes(x)); if (m) m.click(); return !!m; }, text);
+test('A-052 to A-057, A-063, A-064: Bring in papers on Home: Choose files…, A folder of papers…, From Google Drive…, A scan of everyone’s papers…, Files to match to a roster…', async () => {
+  const errors = [], D = fakeDrive(), ctx = await browser.createBrowserContext();
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gs-home-')), zip = path.join(dir, 'Book review.zip'); fs.writeFileSync(zip, zipOf(await standardFiles()));
+  const p = await home(ctx, errors, seed(), D);
+  await p.waitForSelector('[data-hbring]', { timeout: 15000 });
+  const items = async () => { await p.click('[data-hbring]'); await p.waitForSelector('[role="menuitem"]', { visible: true }); return p.$$eval('[role="menuitem"]', l => l.map(e => e.textContent)); };
+  assert.deepEqual(await items(), ['Files or a ZIP…', 'A folder…', 'From Google Drive', 'A scan to split…', 'Files to match to a roster…']);
+  await p.keyboard.press('Escape');
+  // Files to match to a roster…: files or a whole folder first
+  await p.click('[data-hbring]'); await p.waitForSelector('[role="menuitem"]', { visible: true });
+  assert.ok(await menuItem(p, 'Files to match to a roster…'));
+  await p.waitForSelector('dialog[open] [data-fof="match"]', { timeout: 15000 });
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open]'));
+  // A folder of papers… and A scan of everyone’s papers… each ask for their file
+  for (const [label, sel] of [['A folder…', 'folder'], ['A scan to split…', 'scan']]) {
+    await p.click('[data-hbring]'); await p.waitForSelector('[role="menuitem"]', { visible: true });
+    const clicked = await p.evaluate(sel => { const i = document.querySelector('[data-hbring-in="' + sel + '"]'); i.addEventListener('click', e => { e.preventDefault(); window.__asked = sel; }, { once: true }); return true; }, sel);
+    assert.ok(clicked && await menuItem(p, label));
+    assert.equal(await until(() => p.evaluate(() => window.__asked)), sel);
+  }
+  // Files or a ZIP…: a ZIP opens as a download
+  await p.click('[data-hbring]'); await p.waitForSelector('[role="menuitem"]', { visible: true });
+  const [chooser] = await Promise.all([p.waitForFileChooser({ timeout: 10000 }), menuItem(p, 'Files or a ZIP…')]);
+  await chooser.accept([zip]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready, { timeout: 60000 });
+  assert.equal(await p.evaluate(() => window.__mark.state().batch.name), 'Book review');
+  assert.deepEqual(errors, []); await ctx.close();
+});
+
+test('A-066: with no timetable, Home offers to set it up', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), s = seed(); delete s.idb['gs-lessons'];
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, s);
+  await p.goto(srv.url + 'next/#/home');
+  await p.waitForSelector('[data-tt-go]', { timeout: 30000 });
+  await p.click('[data-tt-go]');
+  await p.waitForFunction(() => location.hash === '#/settings/timetable', { timeout: 10000 });
   assert.deepEqual(errors, []); await ctx.close();
 });

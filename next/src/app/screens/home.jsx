@@ -47,7 +47,7 @@ function attLine(a) {
   return t('home.att_done', { say: say || t('home.att_all') });
 }
 function NowCard({ teach, now, plan }) {
-  if (!teach) return <Card class="card pad now"><EmptyState icon="cal" title={t('home.no_timetable')} text={t('home.no_timetable_text')} /></Card>;
+  if (!teach) return <Card class="card pad now"><EmptyState icon="cal" title={t('home.no_timetable')} text={t('home.no_timetable_text')} action={<a class="btn" href={href('settings', 'timetable')} data-tt-go>{t('home.tt_go')}</a>} /></Card>;
   if (teach.off || !teach.rows.length) return <Card class="card pad now"><EmptyState icon="sun" title={t('home.no_classes_today')} text={typeof teach.off === 'string' ? raw(teach.off) : null} /></Card>;
   const cur = teach.rows.find(r => r.now), d = new Date(now), mins = d.getHours() * 60 + d.getMinutes();
   return <section class="card now" aria-label={t('home.next_class')} data-home="teach">
@@ -178,7 +178,7 @@ export default function Home({ classes }) {
   const left = new Map((classes || []).map((x, i) => [x.loose ? '' : x.name, { ...x, i }]));
   return <div class="page home">
     <header class="ph hello"><div><h1>{greeting(d)}</h1><p data-raw>{date(d, { weekday: 'long', day: 'numeric', month: 'long' })}</p></div>
-      <div class="row gap">{G && G.HomeGoogle && <G.HomeGoogle />}<HomeFocus /><a class="btn" href={href('calendar')}><Icon name="week" />{t('home.this_week')}</a></div></header>
+      <div class="row gap">{G && G.HomeGoogle && <G.HomeGoogle />}{DR && <DR.HomeBring />}<HomeFocus /><a class="btn" href={href('calendar')}><Icon name="week" />{t('home.this_week')}</a></div></header>
     <p class="say" data-home="say" data-mark={c.mark} data-back={c.back} data-today={c.classesToday} data-plan={c.toPlan} data-missing={c.missing}>{say || t('home.say_none')}</p>
     {DR && <DR.HomeDrop />}
     {OS && v.oldSample && !sampleOn() && <OS.OldSample s={v.oldSample} L={{ os_h: t('home.os_h'), os_text: t('home.os_text'), os_setup: t('home.os_setup'), os_open: t('home.os_open'), os_rm: t('home.os_rm'), os_gone: t('home.os_gone'), os_cant: t('home.os_cant') }} onGone={() => useHome.read && useHome.read()} />}

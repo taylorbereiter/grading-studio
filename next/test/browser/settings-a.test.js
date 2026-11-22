@@ -1,5 +1,5 @@
 // Stage 8, slice A: Settings rows (rebuild/audit/gaps.md A-028 to A-033, A-035, A-039, A-040) as the current app's src/settings.js has
-// them: Classes and rosters, the language that couldn't be fetched, Terms and weights and the rubric bank. Every student is made up.
+// them: Classes and rosters, Find's assistants to switch to (A-047), Someone new… on a to-do (A-048), the language that couldn't be fetched, Terms and weights and the rubric bank. Every student is made up.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('http'), fs = require('fs'), path = require('path');
@@ -112,4 +112,45 @@ test('A-035: a language that could not be fetched says so in Settings > Display,
   await p.waitForSelector('[data-stlangmiss]', { timeout: 30000 });
   assert.match(await p.$eval('[data-stlangmiss]', e => e.textContent), /Deutsch could not be fetched just now, so this visit is in English/);
   assert.deepEqual(errors.filter(e => !/Failed to fetch dynamically imported module|net::ERR_FAILED/.test(e)), []); await ctx.close();
+});
+
+test('A-047: Find lists the other assistants she switches to; one picked becomes the one in use and opens', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), s = gradingSeed(), l = JSON.parse(s.ls['gs.lib']);
+  l.me = { ...(l.me || {}), ai: 'Gemini', aiOff: ['Copilot'], aiUrls: { ChatGPT: 'https://chatgpt.com/g/my-helper' } }; s.ls['gs.lib'] = JSON.stringify(l);
+  s.ls['gs.words'] = JSON.stringify({ sys: '', unit: '', ai: 'Gemini', urls: l.me.aiUrls, off: ['Copilot'] });
+  const p = await page(ctx, errors);
+  await p.evaluateOnNewDocument(() => { window.__opened = []; window.open = () => { const w = { location: { replace: u => window.__opened.push(u) }, close() {} }; return w; }; });
+  await p.goto(srv.url + 'blank'); await plant(p, s);
+  await p.goto(srv.url + 'next/#/home'); await p.waitForSelector('[data-home]', { timeout: 30000 });
+  await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
+  await p.waitForSelector('dialog.cmd[open] input'); await p.type('dialog.cmd[open] input', 'Switch to');
+  const rows = await until(() => p.evaluate(() => { const l = [...document.querySelectorAll('dialog.cmd[open] [role=option]')].map(o => o.textContent.trim()).filter(x => x.startsWith('Switch to')); return l.length ? l : null; }));
+  assert.deepEqual(rows.map(x => x.replace(/^(Switch to \w+).*/, '$1')).sort(), ['Switch to ChatGPT', 'Switch to Claude']);
+  await p.evaluate(() => [...document.querySelectorAll('dialog.cmd[open] [role=option]')].find(o => o.textContent.trim().startsWith('Switch to ChatGPT')).click());
+  assert.ok(await until(async () => (await lib(p)).me.ai === 'ChatGPT'));
+  const me = (await lib(p)).me;
+  assert.equal(me.aiUrl, 'https://chatgpt.com/g/my-helper', 'its own link comes back'); assert.equal((me.aiUrls || {}).Gemini, undefined);
+  assert.deepEqual(await until(() => p.evaluate(() => window.__opened.length && window.__opened)), ['https://chatgpt.com/g/my-helper']);
+  assert.deepEqual(errors, []); await ctx.close();
+});
+
+test('A-048: a to-do’s People has Someone new…, which makes a School person and puts them on the to-do', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), s = gradingSeed(), l = JSON.parse(s.ls['gs.lib']), t0 = Date.parse('2026-10-26T10:00:00Z');
+  l.todo = { items: [{ id: 't1', x: 'Ask about the field trip', d: '2026-10-27', c: '', who: '', a: '', rep: '', note: '', done: 0, made: t0, t: t0 }] }; s.ls['gs.lib'] = JSON.stringify(l);
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, s);
+  await p.goto(srv.url + 'next/#/todo');
+  await p.waitForSelector('[data-td-row="t1"] .tdmain', { timeout: 30000 });
+  await p.click('[data-td-row="t1"] .tdmain');
+  await p.waitForSelector('[data-td-pane="t1"] [data-td-ppl]', { timeout: 15000 });
+  await p.select('[data-td-ppl]', '+');
+  await p.waitForSelector('[data-schpform] [data-schpname]', { timeout: 15000 });
+  await p.type('[data-schpname] input, input[data-schpname]', 'Jordan Placeholder');
+  await p.click('[data-schpok]');
+  await p.waitForFunction(() => [...document.querySelectorAll('[data-td-pane] [data-td-person]')].some(e => e.textContent.includes('Jordan Placeholder')), { timeout: 15000 });
+  const sch = await p.evaluate(() => JSON.parse(localStorage.getItem('gs.school')));
+  const who = sch.people.find(x => x.name === 'Jordan Placeholder');
+  assert.ok(who, 'a School person');
+  assert.deepEqual((await lib(p)).todo.items.find(x => x.id === 't1').ppl, [who.id]);
+  assert.deepEqual(errors, []); await ctx.close();
 });

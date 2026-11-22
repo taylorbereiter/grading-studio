@@ -32,3 +32,15 @@ integration branch (6eb2bad0). Status: done (browser test presses it), kept diff
 | A-039 | done (Terms and weights in Settings > Grading: terms and dates, each type's weight, empty types, extra credit, the 100% cap; Term setup is the gradebook's sheet) | settings-a.test.js 'A-039 A-040' | group 5 |
 | A-040 | done (how many rubrics and scales the bank holds; Open the rubric bank goes to Library > Rubrics) | settings-a.test.js 'A-039 A-040' | group 5 |
 | A-041 | present after all (Settings > Marking > Word papers: Keep as Word / Make PDF pages, built in slice D, gs.wordPdf) | next/test/browser/settings-more.test.js | — |
+| A-047 | done (Find has Switch to <name> for each assistant she keeps listed; it becomes the one in use, with its own link, and opens beside, as the sidebar list does today; the sidebar itself is first load, so the list lives in Find) | next/test/browser/settings-a.test.js 'A-047' | group 6 |
+| A-048 | done (a to-do's People field is always there and ends with Someone new…: the School page's own person form, then the person is on the to-do) | settings-a.test.js 'A-048' | group 6 |
+| A-049 | present after all (Home's Focus shows today against the goal and opens the timer, whose goal links to Settings > Focus) | existing focus tests | — |
+| A-052 | done (Bring in papers on Home: Files or a ZIP…, as on an assignment, with none yet) | next/test/browser/home-first.test.js 'A-052 to A-057, A-063, A-064' | group 6 |
+| A-053 | done (the Bring in papers menu holds the other ways) | same | group 6 |
+| A-054 | done (A folder…; one folder is the download and names it) | same | group 6 |
+| A-055 | done (A scan to split…: the split screen picks the class) | same | group 6 |
+| A-056 | done (Files to match to a roster…: files or a whole folder, then matched) | same | group 6 |
+| A-057 | done (From Google Drive, where Google's chooser can be used; shown, the press is the drive tests' own driveFill) | same | group 6 |
+| A-063 | done (as A-055) | same | group 6 |
+| A-064 | done (files or a folder, as A-052 and A-054) | same | group 6 |
+| A-066 | done (no timetable: Home's empty card has Set up your timetable, to Settings > Timetable, where the new app keeps it) | home-first.test.js 'A-066' | group 6 |
