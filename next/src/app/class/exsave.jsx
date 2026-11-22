@@ -211,10 +211,12 @@ function ShotSave({ blob, watch, st, onClose }) {
   const classes = ((lib && lib.classes) || []).slice().sort((a, b) => String(a.name).localeCompare(String(b.name), undefined, { numeric: true }));
   const [cls, setCls] = useState(onWork ? (batchClass() || {}).id || '' : ''), [why, setWhy] = useState(''), [tags, setTags] = useState(''), [who, setWho] = useState(''), [known, setKnown] = useState([]), [busy, setBusy] = useState(false);
   // what she blacks out by hand (src/examples.js exsBind): fractions of the picture, painted in for good when it is kept
-  const [im, setIm] = useState(null), [covers, setCovers] = useState([]), [box, setBox] = useState(null), cvs = useRef(null), drag = useRef(null);
-  useEffect(() => { let bm = null; createImageBitmap(blob).then(b => { bm = b; setIm(b); }, e => console.error(e)); exampleRecords().then(l => setKnown([...new Set(l.filter(r => !!r.watch === !!watch).flatMap(exTags))].sort())).catch(() => {}); return () => { try { bm && bm.close(); } catch {} }; }, []);
-  const paint = (c, W) => { const k = W / im.width; c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height); g.fillStyle = '#111'; for (const r of covers) g.fillRect(Math.floor(r.x * c.width), Math.floor(r.y * c.height), Math.ceil(r.w * c.width) + 1, Math.ceil(r.h * c.height) + 1); };
-  useEffect(() => { if (im && cvs.current) paint(cvs.current, Math.min(im.width, 1800)); }, [im, covers]);
+  // pic: the picture being read. Save and Enter wait for it: pressed in the moment before it was read, they were dropped without a word.
+  const [im, setIm] = useState(null), [covers, setCovers] = useState([]), [box, setBox] = useState(null), cvs = useRef(null), drag = useRef(null), pic = useRef(null);
+  pic.current ||= createImageBitmap(blob);
+  useEffect(() => { let bm = null; pic.current.then(b => { bm = b; setIm(b); }, e => console.error(e)); exampleRecords().then(l => setKnown([...new Set(l.filter(r => !!r.watch === !!watch).flatMap(exTags))].sort())).catch(() => {}); return () => { try { bm && bm.close(); } catch {} }; }, []);
+  const paint = (c, W, im) => { const k = W / im.width; c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height); g.fillStyle = '#111'; for (const r of covers) g.fillRect(Math.floor(r.x * c.width), Math.floor(r.y * c.height), Math.ceil(r.w * c.width) + 1, Math.ceil(r.h * c.height) + 1); };
+  useEffect(() => { if (im && cvs.current) paint(cvs.current, Math.min(im.width, 1800), im); }, [im, covers]);
   const down = e => { if (e.button !== 0 || !cvs.current) return; e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); drag.current = { k: 0, r: cvs.current.getBoundingClientRect(), x: e.clientX, y: e.clientY }; };
   const move = e => { const d = drag.current; if (d) { const b = dragOf(d, e); setBox(b.moved ? b : null); } };
   const up = e => {
@@ -228,8 +230,7 @@ function ShotSave({ blob, watch, st, onClose }) {
   const save = async () => {
     if (busy) return; setBusy(true);
     try {
-      if (!im) { setBusy(false); return; }
-      const cv = document.createElement('canvas'); paint(cv, Math.min(im.width, 2400));
+      const pv = await pic.current, cv = document.createElement('canvas'); paint(cv, Math.min(pv.width, 2400), pv);
       const size = { w: cv.width, h: cv.height }, jpg = await X.exJpg(cv); cv.width = cv.height = 0;
       const all = await exampleRecords(), w = onWork ? { work: batch.id, asg: (batch.assignment && batch.assignment.id) || null, title: X.exTitleNow() } : { work: null, asg: null, title: nameFreeText(t('class.es_shots')) };
       const key = w.asg || (w.work ? 'w:' + w.work : 'loose:' + (cls || '-'));
