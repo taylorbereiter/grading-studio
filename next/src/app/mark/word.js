@@ -63,16 +63,22 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
   const dirty = new Set();
   const flush = () => { for (const p of dirty) if (p.isConnected) W.wApplyPara(w, p); dirty.clear(); };
   // the file's bytes written from its XML, kept in this browser, and the score it gives read again
+  // A save under way stays in the marking screen's flush list (as wait) until its write is done, so saving before a reload or for
+  // leaving waits for it: taken off as it began, a reload in that moment showed the paper without the words just typed (CI, PR #267).
   const saveNow = async () => {
     clearTimeout(saveT); saveT = null; saves.delete(saveNow); if (M) M.flushers.delete(saveNow);
     if (!w) return;
-    flush();
-    if (!f.orig) f.orig = f.data;
-    f.data = W.wordBytes(w); f.edited = Date.now(); f.size2 = f.data.length;
-    W.wordScore(f);
-    editedPill.hidden = false;
-    try { const Wr = await PARTS.write(); await Wr.keepEdit(b0.id, f.path, { data: f.data, orig: f.orig, t: f.edited }); M && M.changedNow(); }
-    catch (e) { console.error(e); toast(t('setup.wd_not_kept')); }
+    let end; const writing = new Promise(r => { end = r; }), wait = () => writing;
+    saves.add(wait); if (M) M.flushers.add(wait);
+    try {
+      flush();
+      if (!f.orig) f.orig = f.data;
+      f.data = W.wordBytes(w); f.edited = Date.now(); f.size2 = f.data.length;
+      W.wordScore(f);
+      editedPill.hidden = false;
+      try { const Wr = await PARTS.write(); await Wr.keepEdit(b0.id, f.path, { data: f.data, orig: f.orig, t: f.edited }); M && M.changedNow(); }
+      catch (e) { console.error(e); toast(t('setup.wd_not_kept')); }
+    } finally { saves.delete(wait); if (M) M.flushers.delete(wait); end(); }
   };
   const soon = () => { clearTimeout(saveT); saveT = setTimeout(saveNow, 700); saves.add(saveNow); if (M) M.flushers.add(saveNow); };
 

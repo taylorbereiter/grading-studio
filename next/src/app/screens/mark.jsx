@@ -137,6 +137,7 @@ function WordPaper({ st, f, FU }) {
     host.addEventListener('wordreopen', again); host.addEventListener('wordpdf', ask);
     return () => { live = false; host.removeEventListener('wordreopen', again); host.removeEventListener('wordpdf', ask); if (card) card.close(); };
   }, [st, f, M, n]);
+  useEffect(() => { if (!FU) return; const look = () => { if (FU.takeWordAsk(f.path)) setPdf(true); }; look(); return FU.onWordAsk(look); }, [FU, f]);   // Find's Convert (A-005)
   return <><div ref={box} class="wordwrap"><div class="loading" aria-busy="true" /></div>{pdf && FU && <FU.PdfAsk st={st} f={f} onClose={() => setPdf(false)} />}</>;
 }
 

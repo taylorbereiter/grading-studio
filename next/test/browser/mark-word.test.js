@@ -55,6 +55,8 @@ async function page(ctx, errors) {
   p.on('pageerror', e => errors.push(e.message)); p.on('dialog', d => { errors.push('dialog: ' + d.message()); d.dismiss(); });
   p.on('console', m => { if (m.type() === 'error' && !/favicon/.test(m.location().url || '')) errors.push(m.text()); });
   await p.evaluateOnNewDocument(STEADY);
+  // GS_THROTTLE=6 runs the page that many times slower (CDP), to find what depends on timing before CI does
+  if (+process.env.GS_THROTTLE > 1) await (await p.target().createCDPSession()).send('Emulation.setCPUThrottlingRate', { rate: +process.env.GS_THROTTLE });
   await p.setViewport({ width: 1440, height: 900 });
   return p;
 }
@@ -256,6 +258,9 @@ test('C-025 C-026 C-027: typing in a Word paper, Enter is a line break, Ctrl B d
   await p.evaluate(() => { const dt = new DataTransfer(); dt.setData('text/html', '<b>Loud</b> <i>words</i>'); dt.setData('text/plain', ' Loud words'); document.activeElement.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); });
   assert.match(await p.$eval('.docx p.wp', e => e.innerText), /Three\. Loud words$/);
   assert.equal(await p.$$eval('.docx p.wp b, .docx p.wp i', x => x.length), 0, 'no formatting pasted');
+  // the edit's write held back 1.5 s (its database opens late), so the save below must wait for a Word save under way (CI caught it)
+  await p.evaluate(() => { const open = IDBFactory.prototype.open; IDBFactory.prototype.open = function (name, ...a) { const r = open.call(this, name, ...a); if (name !== 'grading-studio-keep') return r;
+    let fn = null; Object.defineProperty(r, 'onsuccess', { configurable: true, get: () => fn, set: f => { fn = f; } }); r.addEventListener('success', e => setTimeout(() => fn && fn.call(r, e), 1500)); return r; }; });
   await p.click('.docx [data-wedit]');
   await p.evaluate(() => window.__mark.saved());
   // C-025: after a reload, Back to the original, from the original kept in this browser (here this copy's own is gone)

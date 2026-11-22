@@ -34,6 +34,8 @@ async function page(ctx, errors, width = 1440) {
   p.on('pageerror', e => errors.push(e.message)); p.on('dialog', d => { errors.push('dialog: ' + d.message()); d.dismiss(); });
   p.on('console', m => { if (m.type() === 'error' && !/favicon/.test(m.location().url || '')) errors.push(m.text()); });
   await p.evaluateOnNewDocument(STEADY);
+  // GS_THROTTLE=6 runs the page that many times slower (CDP), to find what depends on timing before CI does
+  if (+process.env.GS_THROTTLE > 1) await (await p.target().createCDPSession()).send('Emulation.setCPUThrottlingRate', { rate: +process.env.GS_THROTTLE });
   await p.setViewport({ width, height: 900 });
   return p;
 }
@@ -889,9 +891,10 @@ test('H-033 H-036 H-060: Picked up where you left off, once a visit; the right-c
   assert.ok(!(await p.evaluate(w => [...document.querySelectorAll('.toast')].some(e => e.textContent.includes(w)), said)), 'said once a visit');
   // the right-click menu closes when the window loses focus, and on a scroll (H-060, src/stamps.js)
   await p.waitForSelector('[data-repx]', { timeout: 5000 }).then(() => p.click('[data-repx]'), () => {});
+  // the window loses focus the moment the menu is in the page, before anything else runs (CI's slower machine caught a menu that
+  // only began listening after it was drawn)
+  await p.evaluate(() => { const o = new MutationObserver(() => { if (document.querySelector('.mk-menu')) { o.disconnect(); window.dispatchEvent(new Event('blur')); } }); o.observe(document.body, { childList: true, subtree: true }); });
   { const q = await nextAt(p, 0, 450, 700); await p.mouse.click(q.x, q.y, { button: 'right' }); }
-  await p.waitForSelector('.mk-menu');
-  await p.evaluate(() => window.dispatchEvent(new Event('blur')));
   await p.waitForFunction(() => !document.querySelector('.mk-menu'), { timeout: 5000 });
   { const q = await nextAt(p, 0, 450, 700); await p.mouse.click(q.x, q.y, { button: 'right' }); }
   await p.waitForSelector('.mk-menu');

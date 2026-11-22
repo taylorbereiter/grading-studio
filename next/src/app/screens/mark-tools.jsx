@@ -1,7 +1,7 @@
 // The marking tools, loaded as a part of their own once a paper is open (router.js PARTS.marking): the toolbar, the keys that
 // choose a tool, and the current app's own marking code behind them (mark/marking.js, engines/gmark.js).
 import { h, Fragment } from 'preact';
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import { IconButton, Icon } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { register } from '../../services/shortcuts.js';
@@ -65,7 +65,9 @@ function Pic({ k, color, big }) {
 // The names of the marks are the current app's (and the teacher's own, from the mark key); they are drawn on the paper too.
 function StampMenu() {
   const m = M.menuAt(), [fly, setFly] = useState(null), box = useRef(null), flyBox = useRef(null), into = useRef(false);
-  useEffect(() => { setFly(null); if (!m) return; const el = box.current; if (!el) return;
+  // placed, focused and listening as it goes into the page (a layout effect), not after it is drawn: a blur or scroll in that moment
+  // left it open, and it showed for a frame where it wasn't yet placed (CI, PR #267)
+  useLayoutEffect(() => { setFly(null); if (!m) return; const el = box.current; if (!el) return;
     const r = el.getBoundingClientRect(); el.style.left = Math.max(8, Math.min(m.cx, innerWidth - r.width - 8)) + 'px'; el.style.top = Math.max(8, Math.min(m.cy, innerHeight - r.height - 8)) + 'px';
     el.focus({ preventScroll: true });
     const away = e => { if (!el.contains(e.target) && !(e.target.closest && e.target.closest('.mk-fly'))) M.closeMenu(); };

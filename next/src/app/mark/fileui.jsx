@@ -50,9 +50,15 @@ let wordCmd = null;
 function wordFind(open) {
   if (wordCmd) return;
   wordCmd = addCommand({ id: 'asg-wordpdf', label: () => t('setup.f_pdf_t'), also: t('setup.f_pdf_all', { n: '' }), group: t('mark.cmd_this'), icon: 'file', when: () => wordsHere().length > 0,
-    run: () => { const s = state(), w = wordsHere(), x = w.find(y => y.st === s.batch.students[s.cur]) || w[0]; if (!x) return; open(s.batch.students.indexOf(x.st));
-      let n = 0; const ask = () => { const el = document.querySelector('.wordwrap'); if (el && state().batch.students[state().cur] === x.st) el.dispatchEvent(new Event('wordpdf')); else if (n++ < 80) setTimeout(ask, 75); }; ask(); } });
+    run: () => { const s = state(), w = wordsHere(), x = w.find(y => y.st === s.batch.students[s.cur]) || w[0]; if (!x) return;
+      wordAsk = x.f.path; open(s.batch.students.indexOf(x.st)); for (const a of [...askers]) a(); } });
 }
+// The ask waits for that Word paper, however long it takes to open: taken by it as it comes on screen, or at once if it is there
+// (a poll for it gave up after 6 s on a slow machine, and the command did nothing)
+let wordAsk = null;
+const askers = new Set();
+export const takeWordAsk = path => { if (wordAsk !== path) return false; wordAsk = null; return true; };
+export const onWordAsk = f => { askers.add(f); return () => askers.delete(f); };
 // Find: Marks from other apps (src/imported.js openImported, the current app's More menu), while the assignment has PDF papers: the
 // box for every paper, the same one the note above a file opens (A-100 A-123)
 let impCmd = null, impHost = null;

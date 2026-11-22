@@ -32,6 +32,8 @@ async function page(ctx, errors) {
   p.on('pageerror', e => errors.push(e.message)); p.on('dialog', d => { errors.push('dialog: ' + d.message()); d.dismiss(); });
   p.on('console', m => { if (m.type() === 'error' && !/favicon/.test(m.location().url || '')) errors.push(m.text()); });
   await p.evaluateOnNewDocument(STEADY);
+  // GS_THROTTLE=6 runs the page that many times slower (CDP), to find what depends on timing before CI does
+  if (+process.env.GS_THROTTLE > 1) await (await p.target().createCDPSession()).send('Emulation.setCPUThrottlingRate', { rate: +process.env.GS_THROTTLE });
   await p.setViewport({ width: 1440, height: 900 });
   return p;
 }
@@ -372,4 +374,9 @@ test('A-107 A-108 Escape closes the calculator and Lighting from the paper as we
   await p.waitForSelector('.mk-light');
   await toBody(p); await p.keyboard.press('Escape');
   await p.waitForFunction(() => !document.querySelector('.mk-light'));
+  // and with the keyboard on the paper (a click on it, or the paper taking the focus back after a tool closes): CI caught this order
+  await p.waitForFunction(() => { const b = document.querySelector('[data-light]'); if (b) b.click(); return !!b; }, { timeout: 30000 });
+  await p.waitForSelector('.mk-light');
+  await p.evaluate(() => document.querySelector('.mk-paper').focus()); await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('.mk-light'), { timeout: 5000 });
 }));
