@@ -1446,5 +1446,30 @@
  },
  "class.mc_plus_fm": "+ {n} formativa(s)",
  "class.mc_fewer": "menos de dos",
- "class.mc_foot": "Nada aquí es un promedio de niveles: el nivel medio es el que la mitad de la clase alcanza o supera."
+ "class.mc_foot": "Nada aquí es un promedio de niveles: el nivel medio es el que la mitad de la clase alcanza o supera.",
+ "class.sc_h": "Clases y listas",
+ "class.sc_about": "Una clase tiene su lista, sus unidades y su enlace al sistema de tu centro.",
+ "class.sc_noroster": "Aún sin lista",
+ "class.sc_roster": "Nombre y lista",
+ "class.sc_link_on": "Enlace de {what} guardado",
+ "class.sc_link_off": "Sin enlace de {what}",
+ "class.sc_none": "Aún no hay clases. Una clase tiene una lista, así los trabajos se asignan a cada estudiante y el libro de notas tiene filas.",
+ "class.st_terms_h": "Periodos y pesos",
+ "class.st_terms_about": "Para todas tus clases. Una tarea cuenta para el periodo en el que cae su fecha de entrega.",
+ "class.st_none": "Aún no hay periodos: el libro de calificaciones trata todo el curso como uno solo.",
+ "class.st_nodates": "Aún sin fechas",
+ "class.st_dates": "Del {a} al {b}",
+ "class.st_needs": "Primero añade una clase con su lista",
+ "class.st_bank_h": "Escala de calificación y rúbricas",
+ "class.st_bank_about": "Se guarda una vez, se elige en cualquier tarea.",
+ "class.st_bank_open": "Abrir el banco de rúbricas",
+ "class.st_bank_have": "Tienes {r} y {s} en el banco de rúbricas.",
+ "class.st_bank_r": {
+  "one": "una rúbrica guardada",
+  "other": "{n} rúbricas guardadas"
+ },
+ "class.st_bank_s": {
+  "one": "una escala guardada",
+  "other": "{n} escalas guardadas"
+ }
 }

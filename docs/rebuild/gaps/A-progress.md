@@ -21,3 +21,14 @@ integration branch (6eb2bad0). Status: done (browser test presses it), kept diff
 | A-127 | done (the once-a-day box with Later, Open the new address, Take my work with me, only for a browser with work) | next/test/browser/setup-move.test.js 'A-046 A-127' | group 3 |
 | A-051 | done (files, a folder or a ZIP dropped anywhere on Home open as a new download through mark/open.js bringIn, as on an assignment; Home says where they go while dragged over) | next/test/browser/home-first.test.js 'A-051 A-065' | group 4 |
 | A-065 | done (same drop; a single folder is the download and names it, as src/app/wiring.js does) | next/test/browser/home-first.test.js 'A-051 A-065' | group 4 |
+| A-028 | done (each class's name opens its page) | next/test/browser/settings-a.test.js 'A-028 to A-033' | group 5 |
+| A-029 | done (Name and roster in the row's menu: the class page's roster box) | settings-a.test.js 'A-028 to A-033' | group 5 |
+| A-030 | done (the row says whether the link is saved; Add / Change the link in its menu: the class page's box) | settings-a.test.js 'A-028 to A-033' | group 5 |
+| A-031 | done (From Google Classroom… opens the class page's sheet) | settings-a.test.js 'A-028 to A-033' | group 5 |
+| A-032 | done (Add a class: the sidebar's own page) | settings-a.test.js 'A-028 to A-033' | group 5 |
+| A-033 | done (No classes yet, with what a class is for) | settings-a.test.js 'A-028 to A-033' | group 5 |
+| A-034 | kept different: the app's text size is in Settings > Display and the paper's text box, fit and Word size in Settings > Marking; the paper zoom slider belongs on the marking screen (A-096, slice C) | none | group 5 |
+| A-035 | done (a language chunk that couldn't be fetched sets a flag; Display says so, in English, as src/settings.js does) | settings-a.test.js 'A-035' | group 5 |
+| A-039 | done (Terms and weights in Settings > Grading: terms and dates, each type's weight, empty types, extra credit, the 100% cap; Term setup is the gradebook's sheet) | settings-a.test.js 'A-039 A-040' | group 5 |
+| A-040 | done (how many rubrics and scales the bank holds; Open the rubric bank goes to Library > Rubrics) | settings-a.test.js 'A-039 A-040' | group 5 |
+| A-041 | present after all (Settings > Marking > Word papers: Keep as Word / Make PDF pages, built in slice D, gs.wordPdf) | next/test/browser/settings-more.test.js | — |

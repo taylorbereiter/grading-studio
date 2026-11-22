@@ -1447,5 +1447,30 @@
  },
  "class.mc_plus_fm": "+ {n} 项形成性",
  "class.mc_fewer": "少于两次",
- "class.mc_foot": "这里没有等级的平均数：中间等级是全班一半学生达到或超过的那个等级。"
+ "class.mc_foot": "这里没有等级的平均数：中间等级是全班一半学生达到或超过的那个等级。",
+ "class.sc_h": "班级与名单",
+ "class.sc_about": "班级有自己的名单、单元和连到学校系统的链接。",
+ "class.sc_noroster": "还没有名单",
+ "class.sc_roster": "名称与名单",
+ "class.sc_link_on": "已保存 {what} 链接",
+ "class.sc_link_off": "没有 {what} 链接",
+ "class.sc_none": "还没有班级。班级有名单，作业才能对应到学生，成绩册也才有行。",
+ "class.st_terms_h": "学期与比重",
+ "class.st_terms_about": "适用于所有班级。作业会计入缴交期限所在的学期。",
+ "class.st_none": "尚未设置学期：成绩册把整个学年当成一个学期。",
+ "class.st_nodates": "尚未设置日期",
+ "class.st_dates": "{a} 至 {b}",
+ "class.st_needs": "请先添加一个有名单的班级",
+ "class.st_bank_h": "评分等级与评分标准",
+ "class.st_bank_about": "保存一次，任何作业都能选用。",
+ "class.st_bank_open": "打开评分标准库",
+ "class.st_bank_have": "评分量规库里有 {r}、{s}。",
+ "class.st_bank_r": {
+  "one": "1 个已保存的量规",
+  "other": "{n} 个已保存的量规"
+ },
+ "class.st_bank_s": {
+  "one": "1 个已保存的评分等级",
+  "other": "{n} 个已保存的评分等级"
+ }
 }

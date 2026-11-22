@@ -17,6 +17,7 @@ import * as undoList from '../../services/undo.js';
 import { KNOWN } from '../../services/assistant.js';
 import { SIZES, uiSize, applySize, fullCan, fullOn, fullToggle } from '../../services/size.js';
 import { readLibrary, change, useLibraryPlain as useLibrary, J, meNow } from './settings-me.js';
+import { usePart } from '../parts.js';
 import './prefs-lines.js';
 
 const meOf = meNow;
@@ -142,7 +143,7 @@ function Goals() {
 // Settings > Grading: the programme (lib.me.prog, which My setup also brings in: an MYP teacher's new classes start with MYP criteria,
 // src/ib.js classNewWay), how many places an average has, and her learning goals.
 export function GradingMore() {
-  const L = useLibrary(), m = meOf(L), [, again] = useState(0);
+  const L = useLibrary(), m = meOf(L), [, again] = useState(0), T = usePart('setterms');   // Terms and weights, the rubric bank (class/setterms.jsx)
   const dp = (d => (d === 0 || d === 1 ? d : 2))(+prefs.get('gs.avgDp', 2));
   const saveProg = v => { v = String(v || '').replace(/\s+/g, ' ').trim().slice(0, 24); change(t('prefs.prog_step'), me => { if (v) me.prog = v; else delete me.prog; }, v ? t('prefs.prog_done', { name: v }) : t('prefs.prog_none')); };
   return <>
@@ -154,6 +155,7 @@ export function GradingMore() {
       <span data-stdp><Segmented label={t('prefs.dp_h')} value={String(dp)} onChange={v => { if (+v === 2) prefs.del('gs.avgDp'); else prefs.set('gs.avgDp', +v); again(n => n + 1); }}
         options={[{ value: '0', label: t('prefs.dp_0') }, { value: '1', label: t('prefs.dp_1') }, { value: '2', label: t('prefs.dp_2') }]} /></span>
     </Card>
+    {T && <><T.TermsCard /><T.BankCard /></>}
     <Goals />
   </>;
 }
@@ -203,6 +205,12 @@ function PlannerFolder() {
   const [P, setP] = useState(null);
   useEffect(() => { PARTS.pfolder().then(setP); }, []);
   return P ? <P.FolderCard /> : null;
+}
+// Classes and rosters loads with its card (PARTS.setclasses): the class boxes come with it.
+export function ClassesList() {
+  const [P, setP] = useState(null);
+  useEffect(() => { PARTS.setclasses().then(setP); }, []);
+  return P ? <P.ClassList /> : null;
 }
 // My setup loads with its card (PARTS.mysetup): it brings the reading and the preview.
 export function ClassesSetup() {

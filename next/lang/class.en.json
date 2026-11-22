@@ -1449,5 +1449,30 @@
  },
  "class.mc_plus_fm": "+ {n} formative",
  "class.mc_fewer": "fewer than two",
- "class.mc_foot": "Nothing here is an average of levels: a middle level is the one that half the class is at or above."
+ "class.mc_foot": "Nothing here is an average of levels: a middle level is the one that half the class is at or above.",
+ "class.sc_h": "Classes and rosters",
+ "class.sc_about": "A class has its roster, its units and its link to your school’s system.",
+ "class.sc_noroster": "No roster yet",
+ "class.sc_roster": "Name and roster",
+ "class.sc_link_on": "{what} link saved",
+ "class.sc_link_off": "No {what} link",
+ "class.sc_none": "No classes yet. A class holds a roster, so papers match to students and the gradebook has rows.",
+ "class.st_terms_h": "Terms and weights",
+ "class.st_terms_about": "For all your classes. An assignment counts toward the term its due date falls in.",
+ "class.st_none": "No terms yet: the gradebook treats the whole year as one.",
+ "class.st_nodates": "No dates yet",
+ "class.st_dates": "{a} to {b}",
+ "class.st_needs": "Add a class with a roster first",
+ "class.st_bank_h": "Grading scale and rubrics",
+ "class.st_bank_about": "Saved once, picked on any assignment.",
+ "class.st_bank_open": "Open the rubric bank",
+ "class.st_bank_have": "You have {r} and {s} in the rubric bank.",
+ "class.st_bank_r": {
+  "one": "one saved rubric",
+  "other": "{n} saved rubrics"
+ },
+ "class.st_bank_s": {
+  "one": "one saved grading scale",
+  "other": "{n} saved grading scales"
+ }
 }

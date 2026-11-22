@@ -6,7 +6,7 @@ import { t } from '../../i18n/t.js';
 import { href, PARTS } from '../router.js';
 import { currentLook, saveLook, onLook } from '../../services/theme.js';
 import { useState, useEffect } from 'preact/hooks';
-import { LANGUAGES, savedLanguage, saveLanguage } from '../language.js';
+import { LANGUAGES, savedLanguage, saveLanguage, langMissed } from '../language.js';
 import { sampleOn, enterSample, leaveSample } from '../sample.js';
 import { useUpdate } from '../update.js';
 import { TimetableSettings } from './settings-plan.jsx';
@@ -51,6 +51,7 @@ function Display() {
     <Card title={t('look.title')}><p class="mute">{t('settings.theme_about')}</p><ThemePicker value={look} onPick={pick} /></Card>
     <Card>
       <Select label={t('settings.language')} options={LANGUAGES.map(([v, label]) => ({ value: v, label }))} value={lang} onChange={pickLang} data-raw />
+      {langMissed() && <p class="mute" data-stlangmiss>{t('settings.lang_miss', { name: (LANGUAGES.find(l => l[0] === langMissed()) || [])[1] })}</p>}
     </Card>
     <Card title={t('sample.title')}><p class="mute">{sampleOn() ? t('sample.text') : t('sample.about')}</p>
       {sampleOn() ? <Button onClick={leaveSample}>{t('sample.leave')}</Button> : <Button onClick={() => { if (!enterSample()) toast(t('sample.cant')); }}>{t('sample.open')}</Button>}</Card>
@@ -80,7 +81,7 @@ export default function Settings({ route }) {
         <h2 class="h2">{t(g[2])}</h2>
         {g[0] === 'display' ? <><Display /><MorePart name="DisplayMore" /></> : g[0] === 'about' ? <About /> : g[0] === 'timetable' ? <TimetableSettings />
           : g[0] === 'grading' ? <><GradingPart name="GradingSettings" /><MorePart name="GradingMore" /></> : g[0] === 'marking' ? <><GradingPart name="MarkingSettings" /><MorePart name="MarkingMore" /></>
-          : g[0] === 'focus' ? <FocusPart /> : g[0] === 'classes' ? <><GradingPart name="ClassesSettings" /><MorePart name="ClassesMore" /><MorePart name="ClassesSetup" /></> : g[0] === 'ai' ? <MorePart name="AiSettings" /> : g[0] === 'saving' ? <SavePart />
+          : g[0] === 'focus' ? <FocusPart /> : g[0] === 'classes' ? <><MorePart name="ClassesList" /><GradingPart name="ClassesSettings" /><MorePart name="ClassesMore" /><MorePart name="ClassesSetup" /></> : g[0] === 'ai' ? <MorePart name="AiSettings" /> : g[0] === 'saving' ? <SavePart />
           : <EmptyState icon="spark" title={t('settings.later_title')} text={t('settings.later_text')} />}
       </section>
     </div>

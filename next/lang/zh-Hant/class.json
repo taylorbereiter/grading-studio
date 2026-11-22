@@ -1447,5 +1447,30 @@
  },
  "class.mc_plus_fm": "+ {n} 項形成性",
  "class.mc_fewer": "少於兩次",
- "class.mc_foot": "這裡沒有等級的平均數：中間等級是全班一半學生達到或超過的那個等級。"
+ "class.mc_foot": "這裡沒有等級的平均數：中間等級是全班一半學生達到或超過的那個等級。",
+ "class.sc_h": "班級與名單",
+ "class.sc_about": "班級有自己的名單、單元和連到學校系統的連結。",
+ "class.sc_noroster": "還沒有名單",
+ "class.sc_roster": "名稱與名單",
+ "class.sc_link_on": "已儲存 {what} 連結",
+ "class.sc_link_off": "沒有 {what} 連結",
+ "class.sc_none": "還沒有班級。班級有名單，作業才能對應到學生，成績冊也才有列。",
+ "class.st_terms_h": "學期與比重",
+ "class.st_terms_about": "適用於所有班級。作業會計入繳交期限所在的學期。",
+ "class.st_none": "尚未設定學期：成績冊把整個學年當成一個學期。",
+ "class.st_nodates": "尚未設定日期",
+ "class.st_dates": "{a} 至 {b}",
+ "class.st_needs": "請先新增一個有名單的班級",
+ "class.st_bank_h": "評分等第與評分規準",
+ "class.st_bank_about": "儲存一次，任何作業都能選用。",
+ "class.st_bank_open": "開啟評分規準庫",
+ "class.st_bank_have": "評分量規庫裡有 {r}、{s}。",
+ "class.st_bank_r": {
+  "one": "1 個已儲存的量規",
+  "other": "{n} 個已儲存的量規"
+ },
+ "class.st_bank_s": {
+  "one": "1 個已儲存的評分等級",
+  "other": "{n} 個已儲存的評分等級"
+ }
 }

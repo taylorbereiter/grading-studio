@@ -23,7 +23,7 @@ export function ClassLink({ classId }) {
     {edit && <LinkDialog c={c} sys={sys} url={url} onClose={() => setEdit(false)} />}
   </>;
 }
-function LinkDialog({ c, sys, url, onClose }) {
+export function LinkDialog({ c, sys, url, onClose }) {
   const [v, setV] = useState(url);
   const save = async () => {
     const u = linkUrl(v); if (v.trim() && !u) { toast(t('class.cl_bad')); return; }
