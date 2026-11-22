@@ -1189,3 +1189,21 @@ dialog.dlg:has(.mk-rd){width:min(640px,calc(100vw - 32px))}
 .mk-ins .b3{background:color-mix(in srgb,var(--acc) 55%,var(--s))}.mk-ins .b4{background:color-mix(in srgb,var(--acc) 75%,var(--s))}
 .mk-ins .b5{background:var(--acc)}.mk-ins .pc-seg.b4,.mk-ins .pc-seg.b5{color:var(--s)}
 @media (max-width:760px){.mk-ins .pc-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mk-ins .pc-mv{display:flex;flex-direction:column}
+.mk-ins .pc-mvr{display:grid;grid-template-columns:minmax(80px,28%) 1fr 40px;align-items:center;gap:8px;height:24px;border:0;background:none;padding:0 4px;text-align:left;font:inherit;cursor:pointer;border-radius:4px}
+.mk-ins .pc-mvr:hover,.mk-ins .pc-mvr:focus-visible{background:var(--s2)}
+.mk-ins .pc-mvn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.mk-ins .pc-mvt,.mk-ins .pc-axt{position:relative;height:14px}
+.mk-ins .pc-mvt i{position:absolute;top:50%}
+.mk-ins .pc-mvt .ln{height:2px;margin-top:-1px;background:var(--line)}
+.mk-ins .pc-mvr.up .ln{background:var(--ok)}.mk-ins .pc-mvr.down .ln{background:var(--warn)}
+.mk-ins .pc-mvt .was,.mk-ins .pc-mvt .now{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%}
+.mk-ins .pc-mvt .was,.mk-ins .pc-sw.was{background:var(--s);border:2px solid var(--mute)}.mk-ins .pc-mvt .now,.mk-ins .pc-sw.now{background:var(--acc)}
+.mk-ins .pc-sw.up{background:var(--ok)}.mk-ins .pc-sw.down{background:var(--warn)}
+.mk-ins .pc-mvr .num{text-align:right;font-size:12px}
+.mk-ins .pc-axr{display:grid;grid-template-columns:minmax(80px,24%) 1fr 70px;align-items:center;gap:8px;min-height:26px;border-radius:4px}
+.mk-ins .pc-axr.me .pc-axn{font-weight:600}.mk-ins .pc-axn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.mk-ins .pc-axt i{position:absolute;top:3px;height:8px;border-radius:4px}.mk-ins .pc-axt .a{background:color-mix(in srgb,var(--acc) 25%,transparent)}
+.mk-ins .pc-axt .q{background:color-mix(in srgb,var(--acc) 60%,transparent)}.mk-ins .pc-axt .m{width:2px;top:0;height:14px;background:var(--ink);border-radius:0}
+.mk-ins .pc-axk .pc-axt span{position:absolute;transform:translateX(-50%);font-size:10px;color:var(--mute)}
+.mk-ins .pc-axr .num{text-align:right;font-size:12px}

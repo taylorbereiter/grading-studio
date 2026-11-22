@@ -31,3 +31,5 @@ same test opens the result in the current app. Commits are on the local branch `
 | C-023 | closed: score bars and row bars carry a tip for pointing and the keyboard (value, what, who) | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
 | C-901 | closed: See this as a table under Score spread | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
 | A-017 | closed: How each row was scored, each row counted by level | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
+| A-018 | closed: Change since the last summative, each student's two percents biggest rise first, a row opens that paper | mark-out.test.js "A-018 A-019" | (A-018) |
+| A-019 | closed: The same assignment in your other classes (linked by group), lowest to highest, middle half, middle and average | mark-out.test.js "A-018 A-019" | (A-018) |

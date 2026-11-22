@@ -53,5 +53,18 @@
  "pc.lv_h": "Comment chaque ligne a été notée",
  "pc.lv_tip": "{v} sur {row}",
  "pc.lv_cap": "Combien de copies ont eu chaque note sur chaque ligne, dans l’ordre de la grille. Plus le bleu est fort, plus la note est haute.",
- "pc.lv_half": "Un demi-point compte avec l’entier inférieur."
+ "pc.lv_half": "Un demi-point compte avec l’entier inférieur.",
+ "pc.mv_h": "Évolution depuis le dernier sommatif",
+ "pc.mv_wait": "S’affiche quand {name} a un sommatif antérieur noté dans ce navigateur.",
+ "pc.mv_none": "Aucun élève n’a encore de note finie ici et dans {name}.",
+ "pc.mv_this": "celui-ci",
+ "pc.mv_up": "En hausse ({n})",
+ "pc.mv_down": "En baisse ({n})",
+ "pc.mv_cap": "Le pourcentage de chaque élève au dernier sommatif et à celui-ci, la plus forte hausse d’abord. Notes finies seulement. Cliquez sur une ligne pour ouvrir la copie.",
+ "pc.ax_h": "Le même devoir dans vos autres classes",
+ "pc.ax_n": {
+  "one": "{n} note finie",
+  "other": "{n} notes finies"
+ },
+ "pc.ax_cap": "Le nombre est la moyenne de la classe, puis le nombre de notes finies comptées."
 }

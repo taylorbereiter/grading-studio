@@ -3,18 +3,20 @@
 // Return keep to their size. Who counts, the middle of the class, the bands and the target are kept for each class (gs.pctView); the
 // places in an average are the one setting everywhere (gs.avgDp); What if is only ever a preview and changes no score.
 import { h, Fragment } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { Button, Card, Menu, Segmented, Tooltip, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { state, gradeOf, maxPoints, percentFor, roundPct, fmtNum, rowTop, rowHalf, rowsTop } from '../../engines/gcore.js';
-import { shownName } from '../../engines/gdraw.js';
-import { natural, batchClass } from '../../engines/gopen.js';
+import { shownName, rosterMatch } from '../../engines/gdraw.js';
+import { natural, batchClass, findItem } from '../../engines/gopen.js';
+import { readBook, classCols, classIn, engine as B } from '../../students/book.js';
 import { prefs } from '../../students/prefs.js';
 import { copyText } from '../../services/clipboard.js';
 import './lines.js';
 import './setup-lines.js';
 import './pct-lines.js';
 import '../screens/prefs-lines.js';
+import '../class/lines.js';
 
 const TENS = [90, 80, 70, 60], FIVES = [95, 90, 85, 80, 75, 70, 65, 60];
 const pct2 = v => Math.round(v * 100 + 1e-9) / 100;
@@ -164,4 +166,65 @@ export function Levels({ X }) {
       : <span class="mute">–</span>}</div></div>)}</div>
     <div class="pc-leg">{shown.map(v => <span><i class={'pc-sw ' + shade(v)} />{v}</span>)}</div>
     <p class="mute cap">{t('pc.lv_cap')}{rowHalf(su) ? ' ' + t('pc.lv_half') : ''}</p></Card>;
+}
+
+// Read after the summary, from the saved work of the class's other assignments (src/tabs.js insMore): Change since the last summative
+// (A-018) and The same assignment in your other classes (A-019). Read only; a failed read shows neither.
+const quart = (v, f) => { const k = (v.length - 1) * f, i = Math.floor(k); return v[i] + (v[Math.ceil(k)] - v[i]) * (k - i); };
+export function More({ E, s, onOpen }) {
+  const [got, setGot] = useState(null);
+  useEffect(() => { let live = true; const c = batchClass(); if (!c || !c.names.length) return;
+    readBook().then(r => { if (live) setGot(r); }, e => console.error(e)); return () => { live = false; }; }, []);
+  const c = batchClass(), bb = state().batch; if (!got || !c) return null;
+  const f = bb.assignment && findItem(bb.assignment.id), me = f ? f.it : null, bc = classIn(got.lib, c.id) || c;
+  return <><Move X={E.X} c={c} cols={classCols(got.lib, bc, got.cols)} me={me} onOpen={onOpen} /><Across X={E.X} got={got} c={c} me={me} s={s} /></>;
+}
+// This assignment's finished percents by roster name, as they stand on screen now (insNow)
+function nowOf(X, c) {
+  const m = rosterMatch(c.names), max = maxPoints(), out = new Map(), bb = state().batch;
+  c.names.forEach(n => { const st = m.get(n); if (!st) return; const g = gradeOf(st), i = bb.students.indexOf(st);
+    if (g.status === 'missing' || g.status === 'excused' || g.partial || g.out || !g.done || g.pct == null || !X.onThisScale(st, g, max)) return;
+    out.set(n, { pct: g.pct, i, name: shownName(st, i) }); });
+  return out;
+}
+function Move({ X, c, cols, me, onOpen }) {
+  const bb = state().batch, mine = me ? cols.find(x => x.key === me.id) : null, due = (mine && mine.due) || (me && me.due) || B.isoDay(Date.now());
+  const prev = cols.filter(x => x.type === 'sum' && (!me || x.key !== me.id) && x.dl !== bb.id && (!x.due || x.due <= due) && c.names.some(n => B.bkCounts(x.cells.get(n)))).sort((a, b) => (a.due || '').localeCompare(b.due || '')).pop();
+  const card = body => <Card title={t('pc.mv_h')} id="insMove">{body}</Card>;
+  if (!prev) return card(<p class="mute" data-raw>{t('pc.mv_wait', { name: c.name })}</p>);
+  const now = nowOf(X, c), list = [];
+  for (const n of c.names) { const a = prev.cells.get(n), b = now.get(n); if (B.bkCounts(a) && b) list.push({ name: b.name, i: b.i, a: a.pct, b: b.pct, d: b.pct - a.pct }); }
+  if (!list.length) return card(<p class="mute" data-raw>{t('pc.mv_none', { name: prev.name })}</p>);
+  list.sort((x, y) => y.d - x.d || natural(x.name, y.name));
+  const lo = Math.max(0, Math.floor((Math.min(...list.flatMap(x => [x.a, x.b])) - 4) / 10) * 10), X0 = v => (Math.min(100, v) - lo) / (100 - lo) * 100;
+  const up = list.filter(x => x.d > 0).length, down = list.filter(x => 0 > x.d).length;
+  return card(<><div class="pc-mv">{list.map(x => { const r = Math.abs(Math.round(x.d)), k = Math.sign(x.d) + 1, say = [t('class.rp_down', { n: r }), '0', t('class.rp_up', { n: r })][k];
+    return <Tip v={say} l={x.name} n={prev.name + ' ' + x.a + '%, ' + t('pc.mv_this') + ' ' + x.b + '%'}><button type="button" class={'pc-mvr ' + ['down', 'same', 'up'][k]} aria-label={x.name + ': ' + x.a + '%, ' + x.b + '%'} onClick={() => onOpen(x.i)} data-mv={x.i}>
+      <span class="pc-mvn" data-raw>{x.name}</span><span class="pc-mvt"><i class="ln" style={{ left: Math.min(X0(x.a), X0(x.b)) + '%', width: Math.abs(X0(x.b) - X0(x.a)) + '%' }} /><i class="was" style={{ left: X0(x.a) + '%' }} /><i class="now" style={{ left: X0(x.b) + '%' }} /></span>
+      <span class="num">{['\u2212', '', '+'][k] + r}</span></button></Tip>; })}</div>
+    <div class="pc-leg"><span data-raw><i class="pc-sw was" />{prev.name}{prev.due ? ' \u00b7 ' + B.bkDay(prev.due) : ''}</span><span><i class="pc-sw now" />{t('pc.mv_this')}</span><span><i class="pc-sw up" />{t('pc.mv_up', { n: up })}</span><span><i class="pc-sw down" />{t('pc.mv_down', { n: down })}</span></div>
+    <p class="mute cap">{t('pc.mv_cap')}</p></>);
+}
+function Across({ X, got, c, me, s }) {
+  if (!me || !me.group) return null;
+  const rows = [];
+  for (const k of got.lib.classes) {
+    const it = k.units.flatMap(u => u.items).find(x => x.group === me.group); if (!it) continue;
+    let ps;
+    if (String(k.id) === String(c.id)) ps = s.counted.map(x => x.pct).filter(v => v != null);
+    else { const col = classCols(got.lib, k, got.cols).find(x => x.key === it.id); ps = col ? k.names.map(n => col.cells.get(n)).filter(B.bkCounts).map(x => x.pct) : []; }
+    rows.push({ k, me: String(k.id) === String(c.id), ps: ps.sort((a, b) => a - b) });
+  }
+  if (rows.length < 2) return null;
+  const lo = Math.max(0, Math.floor((Math.min(100, ...rows.flatMap(r => r.ps)) - 4) / 10) * 10), x = v => (Math.min(100, v) - lo) / (100 - lo) * 100, ticks = [];
+  for (let k = lo; k <= 100; k += 10) ticks.push(k);
+  return <Card title={t('pc.ax_h')} id="insAcross"><div class="pc-ax2" role="group">{rows.map(r => { const name = <span class="pc-axn" data-raw>{r.k.name}</span>;
+    if (!r.ps.length) return <div class={'pc-axr' + (r.me ? ' me' : '')} data-across>{name}<div class="pc-axt" /><span class="mute">{t('class.ph_no_scores')}</span></div>;
+    const q1 = quart(r.ps, 0.25), q2 = quart(r.ps, 0.5), q3 = quart(r.ps, 0.75), avg = B.bkMean(r.ps), lo0 = r.ps[0], hi = r.ps[r.ps.length - 1];
+    const say = t('class.sp_tip', { lo: lo0, hi, a: roundPct(q1), b: roundPct(q3), m: Math.round(q2) });
+    return <Tip v={t('class.sx_axis', { a: X.pctAvgText(avg) })} l={r.k.name} n={t('pc.ax_n', { n: r.ps.length }) + ', ' + say}><div class={'pc-axr' + (r.me ? ' me' : '')} tabindex="0" aria-label={r.k.name + ': ' + X.pctAvgText(avg) + ', ' + say} data-across>{name}
+      <div class="pc-axt"><i class="a" style={{ left: x(lo0) + '%', width: Math.max(0.8, x(hi) - x(lo0)) + '%' }} /><i class="q" style={{ left: x(q1) + '%', width: Math.max(0.8, x(q3) - x(q1)) + '%' }} /><i class="m" style={{ left: x(q2) + '%' }} /></div>
+      <span class="num"><b>{X.pctAvgText(avg)}</b> <small>{r.ps.length}</small></span></div></Tip>; })}
+    <div class="pc-axr pc-axk" aria-hidden="true"><span /><div class="pc-axt">{ticks.map(k => <span style={{ left: x(k) + '%' }}>{k}%</span>)}</div><span /></div></div>
+    <p class="mute cap">{t('class.sp_say')} {t('pc.ax_cap')}</p></Card>;
 }

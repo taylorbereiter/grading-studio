@@ -684,3 +684,49 @@ test('C-013 C-014 C-015 C-016 C-017 C-018 C-019 C-020 C-021 C-022 C-023 C-901 A-
   assert.deepEqual([pv.late, pv.band, pv.cuts, pv.target], [true, 'own', [90, 80, 60], 70]);
   await ctx.close();
 });
+
+// Insights, after the summary (src/tabs.js insMore): each student's percent on the class's last summative beside this one, a row
+// opening that paper, and this assignment's linked copies in the other classes, read from saved work only.
+test('A-018 A-019: Insights shows Change since the last summative (a row opens that paper) and The same assignment in your other classes; the current app reads the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const seed = gradingSeed(), lib = JSON.parse(seed.ls['gs.lib']);
+  lib.classes[0].units[1].items.push({ id: 'i14', name: 'Poetry essay', classId: 'c1', type: 'sum', due: '2026-11-10', group: 'g1' });
+  lib.classes[1].units.push({ id: 'u9', name: 'Poetry', items: [{ id: 'i15', name: 'Poetry essay', classId: 'c2', type: 'sum', due: '2026-11-10', group: 'g1', typed: { max: null, s: { 'Nia Elsewhere': { v: 80 }, 'Omar Stand-in': { v: 60 } } } }] });
+  seed.ls['gs.lib'] = JSON.stringify(lib);
+  const m = await page(ctx, []);
+  await m.goto(srv.url + 'blank'); await plant(m, seed);
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zipOf(await standardFiles()));
+  await markPage(m, 0);
+  const id = await m.evaluate(() => {
+    const G = window.__gs, s = G.state(), f = G.findItem('i14');
+    f.it.batchId = s.batch.id; s.batch.assignment = f.it; G.saveLib();
+    s.batch.students.forEach((st, i) => { if (s.setup.mode === 'rubric') st.grade.rubric = s.setup.criteria.map((_, r) => Math.max(1, 4 - ((i + r) % 3))); else st.grade.points = String(6 + i); });
+    G.saveNow(); return s.batch.id;
+  });
+  await goToStudent(m, 1); await goToStudent(m, 0); await settle(m);
+  await m.evaluate(id => { location.hash = '#/a/' + encodeURIComponent(id.replace(/^gs\.b\./, '')) + '/insights'; }, id);
+  await m.waitForSelector('#insMove .insdb', { timeout: 60000 });
+  await m.waitForSelector('#insAcross .insxr', { timeout: 60000 });
+  const was = await m.evaluate(() => ({
+    move: [...document.querySelectorAll('#insMove .insdb')].map(g => g.getAttribute('aria-label').replace(' then ', ', ')),
+    across: [...document.querySelectorAll('#insAcross .insxr:not(.insxax)')].map(r => r.querySelector('.insxn').textContent + ' ' + ((r.querySelector('.insxv b') || {}).textContent || '')),
+  }));
+  await m.close();
+  assert.ok(was.move.length >= 3, 'rows: ' + was.move.join('; '));
+  assert.equal(was.across.length, 2);
+
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id) + '/insights');
+  await p.waitForSelector('#insMove [data-mv]', { timeout: 60000 });
+  assert.deepEqual(await p.$$eval('#insMove [data-mv]', l => l.map(b => b.getAttribute('aria-label'))), was.move, 'the same students, the same two percents, in the same order');
+  assert.match(await p.$eval('#insMove .pc-leg', e => e.textContent), /Poetry analysis/);
+  await p.waitForSelector('#insAcross [data-across]', { timeout: 30000 });
+  assert.deepEqual(await p.$$eval('#insAcross [data-across]', l => l.map(r => r.querySelector('.pc-axn').textContent + ' ' + ((r.querySelector('.num b') || {}).textContent || ''))), was.across, 'each class and its average');
+  // a row opens that paper
+  const i = await p.$eval('#insMove [data-mv]:last-child', b => +b.dataset.mv);
+  await p.click('#insMove [data-mv="' + i + '"]');
+  await p.waitForFunction(i => window.__mark.state().cur === i && !document.querySelector('#insMove'), { timeout: 30000 }, i);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

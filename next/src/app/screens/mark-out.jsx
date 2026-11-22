@@ -116,6 +116,7 @@ export function Insights({ E, onOpen, onShare, sub, view: ask }) {
       <Card title={t('setup.i_rows')} id="ovRows">{su.mode !== 'rubric' ? <p class="mute">{t('setup.i_total_only')}</p> : !s.rows.some(x => x.n) ? <p class="mute">{t('setup.i_no_rows')}</p> : <>
         {PC ? <PC.Rows s={s} /> : <div class="loading" aria-busy="true" />}<p class="mute cap">{t('setup.i_rows_cap')}</p></>}</Card>
       {PC && <PC.Levels X={E.X} />}
+      {PC && <PC.More E={E} s={s} onOpen={onOpen} />}
     </div>
     <Card title={t('setup.i_who')} id="ovWho">
       {!(s.notScored.length + s.partial.length + s.rosterOnly.length) && <p class="ok">{t('setup.i_all_done')}</p>}

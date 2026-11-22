@@ -53,5 +53,18 @@
  "pc.lv_h": "Cómo se puntuó cada fila",
  "pc.lv_tip": "{v} en {row}",
  "pc.lv_cap": "Cuántos trabajos sacaron cada nota en cada fila, en el orden de la rúbrica. Cuanto más intenso el azul, más alta la nota.",
- "pc.lv_half": "Medio punto cuenta con el entero inferior."
+ "pc.lv_half": "Medio punto cuenta con el entero inferior.",
+ "pc.mv_h": "Cambio desde la última sumativa",
+ "pc.mv_wait": "Aparece cuando {name} tenga una sumativa anterior calificada en este navegador.",
+ "pc.mv_none": "Ningún alumno tiene aún nota final en esta y en {name}.",
+ "pc.mv_this": "esta",
+ "pc.mv_up": "Suben ({n})",
+ "pc.mv_down": "Bajan ({n})",
+ "pc.mv_cap": "El porcentaje de cada alumno en la última sumativa y en esta, primero la mayor subida. Solo notas finales. Haz clic en una fila para abrir ese trabajo.",
+ "pc.ax_h": "La misma tarea en tus otras clases",
+ "pc.ax_n": {
+  "one": "{n} nota final",
+  "other": "{n} notas finales"
+ },
+ "pc.ax_cap": "El número es la media de la clase y luego cuántas notas finales incluye."
 }

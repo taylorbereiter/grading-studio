@@ -53,5 +53,18 @@
  "pc.lv_h": "Como cada linha foi pontuada",
  "pc.lv_tip": "{v} em {row}",
  "pc.lv_cap": "Quantos trabalhos tiveram cada nota em cada linha, na ordem da rubrica. Quanto mais forte o azul, maior a nota.",
- "pc.lv_half": "Meio ponto conta com o inteiro abaixo."
+ "pc.lv_half": "Meio ponto conta com o inteiro abaixo.",
+ "pc.mv_h": "Mudança desde a última somativa",
+ "pc.mv_wait": "Aparece quando {name} tiver uma somativa anterior avaliada neste navegador.",
+ "pc.mv_none": "Nenhum aluno tem ainda nota final nesta e em {name}.",
+ "pc.mv_this": "esta",
+ "pc.mv_up": "Subiram ({n})",
+ "pc.mv_down": "Caíram ({n})",
+ "pc.mv_cap": "O percentual de cada aluno na última somativa e nesta, maior subida primeiro. Só notas finais. Clique numa linha para abrir o trabalho.",
+ "pc.ax_h": "A mesma tarefa nas suas outras turmas",
+ "pc.ax_n": {
+  "one": "{n} nota final",
+  "other": "{n} notas finais"
+ },
+ "pc.ax_cap": "O número é a média da turma e depois quantas notas finais conta."
 }

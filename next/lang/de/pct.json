@@ -53,5 +53,18 @@
  "pc.lv_h": "Wie jede Zeile bewertet wurde",
  "pc.lv_tip": "{v} bei {row}",
  "pc.lv_cap": "Wie viele Arbeiten welche Punkte in jeder Zeile bekamen, in der Reihenfolge des Rasters. Je kräftiger das Blau, desto höher.",
- "pc.lv_half": "Ein halber Punkt zählt zur ganzen Zahl darunter."
+ "pc.lv_half": "Ein halber Punkt zählt zur ganzen Zahl darunter.",
+ "pc.mv_h": "Veränderung seit der letzten Leistungsbewertung",
+ "pc.mv_wait": "Erscheint, sobald {name} in diesem Browser eine frühere bewertete Leistungsbewertung hat.",
+ "pc.mv_none": "Noch niemand hat hier und in {name} eine fertige Bewertung.",
+ "pc.mv_this": "diese",
+ "pc.mv_up": "Besser ({n})",
+ "pc.mv_down": "Schlechter ({n})",
+ "pc.mv_cap": "Prozent jedes Schülers bei der letzten Leistungsbewertung und bei dieser, größter Anstieg zuerst. Nur fertige Bewertungen. Klicke auf eine Zeile, um die Arbeit zu öffnen.",
+ "pc.ax_h": "Dieselbe Aufgabe in deinen anderen Klassen",
+ "pc.ax_n": {
+  "one": "{n} fertige Bewertung",
+  "other": "{n} fertige Bewertungen"
+ },
+ "pc.ax_cap": "Die Zahl ist der Klassendurchschnitt, dann aus wie vielen fertigen Bewertungen."
 }

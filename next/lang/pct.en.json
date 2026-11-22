@@ -53,5 +53,18 @@
  "pc.lv_h": "How each row was scored",
  "pc.lv_tip": "Scored {v} on {row}",
  "pc.lv_cap": "How many papers got each score on each row, in the rubric’s order. The stronger the blue, the higher the score.",
- "pc.lv_half": "A half point counts with the whole number below it."
+ "pc.lv_half": "A half point counts with the whole number below it.",
+ "pc.mv_h": "Change since the last summative",
+ "pc.mv_wait": "This shows once {name} has an earlier summative scored in this browser.",
+ "pc.mv_none": "No student has a finished score on both this and {name} yet.",
+ "pc.mv_this": "this one",
+ "pc.mv_up": "Up ({n})",
+ "pc.mv_down": "Down ({n})",
+ "pc.mv_cap": "Each student’s percent on the last summative and on this one, biggest rise first. Finished scores only. Click a row to open that paper.",
+ "pc.ax_h": "The same assignment in your other classes",
+ "pc.ax_n": {
+  "one": "{n} finished score",
+  "other": "{n} finished scores"
+ },
+ "pc.ax_cap": "The number is the class average, then how many finished scores it’s from."
 }
