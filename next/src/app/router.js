@@ -126,6 +126,7 @@ export const PARTS = {
   goals: () => import('./class/goals.jsx'),
   reports: () => import('./class/reports.jsx'),
   sheets: () => import('./class/sheets.jsx'),
+  mypCharts: () => import('./class/charts-myp.jsx'),
   examples: () => import('./class/examples.jsx'),
   exsave: () => import('./class/exsave.jsx'),
   linked: () => import('./class/linked.jsx'),

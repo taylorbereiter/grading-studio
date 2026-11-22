@@ -1423,5 +1423,29 @@
  "class.wl_f_watch": "見守り · {n}",
  "class.wl_seen": "よく見られる点：",
  "class.wl_none_kind": "この種類はまだありません。",
- "class.wl_more": "さらに黒く塗る"
+ "class.wl_more": "さらに黒く塗る",
+ "class.mc_card_say": "規準ごとのレベル、1〜7 の評定、課題ごと",
+ "class.mc_set": "評定済み",
+ "class.mc_set_say": "すべての規準にレベルあり",
+ "class.mc_crit_mid": "{k} の中央レベル",
+ "class.mc_levels": "設定したレベル（規準ごと）",
+ "class.mc_levels_say": "この学期に設定したレベルから、各規準の各帯に何人いるか。右の数字は中央レベルです。",
+ "class.mc_recent": "直近のレベル（規準ごと）",
+ "class.mc_recent_say": "何も設定する前の、各生徒の各規準での最新の課題から見た同じ図です。",
+ "class.mc_grades": "評定",
+ "class.mc_grade_n": "評定 {g}",
+ "class.mc_grades_say": "すべての規準にレベルがある生徒を、合計がこのクラスの境界で得る 1〜7 の評定ごとに示します。",
+ "class.mc_tasks": "課題ごと",
+ "class.mc_task": "課題",
+ "class.mc_marked": "採点済み",
+ "class.mc_no_task": "この学期にはまだレベルのある課題がありません。",
+ "class.mc_tasks_say": "課題が評価した各規準でクラスが達した中央レベルと、最低と最高です。",
+ "class.mc_often": "今年それぞれの規準を評価した回数",
+ "class.mc_n_tasks": {
+  "one": "課題 {n} 件",
+  "other": "課題 {n} 件"
+ },
+ "class.mc_plus_fm": "+ 形成的 {n} 件",
+ "class.mc_fewer": "2 回未満",
+ "class.mc_foot": "ここにレベルの平均はありません。中央レベルとは、クラスの半数がそのレベル以上にあるレベルです。"
 }

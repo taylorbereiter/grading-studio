@@ -1422,5 +1422,29 @@
  "class.wl_f_watch": "Observar · {n}",
  "class.wl_seen": "Mais visto:",
  "class.wl_none_kind": "Nenhum deste tipo ainda.",
- "class.wl_more": "Cobrir mais"
+ "class.wl_more": "Cobrir mais",
+ "class.mc_card_say": "Níveis por critério, as notas de 1 a 7, cada tarefa",
+ "class.mc_set": "Notas definidas",
+ "class.mc_set_say": "cada critério tem um nível",
+ "class.mc_crit_mid": "{k} nível do meio",
+ "class.mc_levels": "Níveis que você definiu, por critério",
+ "class.mc_levels_say": "Quantos alunos estão em cada faixa de cada critério, pelos níveis que você definiu neste período. O número à direita é o nível do meio.",
+ "class.mc_recent": "Nível mais recente, por critério",
+ "class.mc_recent_say": "A mesma imagem a partir da tarefa mais recente de cada aluno em cada critério, antes de você definir algo.",
+ "class.mc_grades": "Notas",
+ "class.mc_grade_n": "Nota {g}",
+ "class.mc_grades_say": "Alunos com nível em todos os critérios, pela nota de 1 a 7 que o total deles alcança nos limites desta turma.",
+ "class.mc_tasks": "Cada tarefa",
+ "class.mc_task": "Tarefa",
+ "class.mc_marked": "Corrigidas",
+ "class.mc_no_task": "Nenhuma tarefa tem níveis neste período ainda.",
+ "class.mc_tasks_say": "O nível do meio que a turma alcançou em cada critério avaliado por uma tarefa, com o mais baixo e o mais alto.",
+ "class.mc_often": "Quantas vezes cada critério foi avaliado este ano",
+ "class.mc_n_tasks": {
+  "one": "uma tarefa",
+  "other": "{n} tarefas"
+ },
+ "class.mc_plus_fm": "+ {n} formativa(s)",
+ "class.mc_fewer": "menos de duas",
+ "class.mc_foot": "Nada aqui é uma média de níveis: o nível do meio é aquele que metade da turma alcança ou supera."
 }
