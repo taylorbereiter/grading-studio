@@ -121,14 +121,17 @@ const presses = async p => { if (await p.$('[data-repx]')) { await p.click('[dat
     const rows = raw.filter(e => e.closest('[data-st]')), rest = raw.filter(e => !e.closest('[data-st]'));
     const lab = e => { const g = e.closest('[data-rove],[role="tablist"],[role="radiogroup"]'); const x = g || e; return (x.getAttribute('aria-label') || e.getAttribute('aria-label') || e.title || e.textContent || e.tagName).trim().slice(0, 40) + (g ? ' (set)' : ''); };
     return rest.filter(e => e.tabIndex >= 0 && e.getAttribute('tabindex') !== '-1').map(lab).concat(rows.length ? ['Student list'] : []); }); };
-test('the marking screen at rest: under 25 things to press at 1440 and at 390 px, counted as mark-shots counts them (C-057: the score sticker, the anchor paper, Hide names and Scores in the list moved into menus)', async () => {
+test('the marking screen at rest: under 25 things to press at 1440 and at 390 px, the first student\'s two-page paper and a later student\'s one-page one, counted as mark-shots counts them (C-057: the score sticker, the anchor paper, Hide names and Scores in the list moved into menus)', async () => {
   const errors = [], ctx = await browser.createBrowserContext(), n = {};
   // the papers the stage 4 pictures use (next/tools/mark-shots.js): a two-page essay open, so the foot of the paper is below the window
   const papers = { 'Aria Testwell/Essay.pdf': await makePaper({ title: 'My summer essay', pages: 2 }), 'Bram Sample/Essay.pdf': await makePaper({ title: 'A day at the lake' }), 'Cleo Fixture/Essay.pdf': await makePaper({ title: 'The storm' }) };
   // and the browser mark-shots uses at each width: a computer's mouse that hovers (a page's turn buttons show only under it), a phone's finger
   const MOUSE = '--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4', FINGER = '--blink-settings=primaryHoverType=1,availableHoverTypes=1,primaryPointerType=2,availablePointerTypes=2';
   for (const w of [1440, 390]) { const b = await launch({ args: [w < 700 ? FINGER : MOUSE] }), c = await b.createBrowserContext();
-    const p = await openMark(c, errors, w, false, papers), l = await presses(p); n[w] = l.length; console.log('# at ' + w + ' px: ' + l.join(' | ')); await b.close(); }
+    const p = await openMark(c, errors, w, false, papers), l = await presses(p); n[w] = l.length; console.log('# at ' + w + ' px: ' + l.join(' | '));
+    // a later student's one-page paper: Previous is live and the paper's foot (+ Add, Arrange) is in the window
+    await p.$eval('[data-st="1"]', e => e.click()); await p.waitForFunction(() => window.__mark.state().cur === 1 && document.querySelector('[data-pmore]'), { timeout: 30000 });
+    const l2 = await presses(p); n[w + ' (a later student, one page)'] = l2.length; console.log('# at ' + w + ' px, a later student with one page: ' + l2.join(' | ')); await b.close(); }
   console.log('# marking screen presses at rest: ' + JSON.stringify(n));
   for (const [w, k] of Object.entries(n)) assert.ok(k < 25, 'the marking screen has ' + k + ' presses at rest at ' + w + ' px; the brief asks for under 25');
   assert.deepEqual(errors, []);

@@ -261,7 +261,7 @@ test('Insights > Consistency says what the current app says about the same work,
   await ctx.close();
 });
 
-test('anchor papers: High, Mid or Low in More for this paper (gaps C-057), shown under the score once given, one paper each with one undo step, the tag in the list, and Return exports them named and covered; the current app reads the same tags', async () => {
+test('C-066: anchor papers: High, Mid or Low in More for this paper (gaps C-057), shown under the score once given, one paper each with one undo step, the tag in the list, and Return exports them named and covered, with Check the covers in its line; the current app reads the same tags', async () => {
   const ctx = await browser.createBrowserContext(), errors = [];
   const old = await mainSide(ctx, []);
   const p = await page(ctx, errors), dl = await catchDownloads(p);
@@ -296,6 +296,14 @@ test('anchor papers: High, Mid or Low in More for this paper (gaps C-057), shown
   assert.equal(names.length, 2);
   assert.match(names[0], / - \S+ High\.pdf$/); assert.match(names[1], / - \S+ Low\.pdf$/);
   for (const n of names) assert.equal(Buffer.from(files[n].slice(0, 5)).toString(), '%PDF-');
+  // C-066: Check the covers in the card's line, opened at the first anchor paper, over Return
+  await p.click('#rtAnchors [data-anchcheck]');
+  await p.waitForSelector('dialog[open] [data-cc]', { timeout: 60000 });
+  const hi = await p.$eval('#rtAnchors [data-anchli="high"] button', e => e.textContent.trim());
+  assert.ok((await p.$eval('dialog[open] h2', e => e.textContent)).includes(hi), 'at the high anchor paper, ' + hi);
+  assert.match(await p.evaluate(() => location.hash), /\/return$/);
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('dialog[open]'), { timeout: 10000 });
   await dl.close(); await p.close();
   const m = await page(ctx, errors);
   await m.goto(srv.url); await appReady(m);
@@ -374,7 +382,7 @@ test('hide names: the switch, Check the covers (a box drawn, used on every paper
   await ctx.close();
 });
 
-test('share with your assistant (src/app/claude.js): from Insights, a ZIP of papers by code with no names, a marks file, and the reply brought back into each comment box; the current app reads the same codes and comment', async () => {
+test('C-090: share with your assistant (src/app/claude.js): from Insights, a ZIP of papers by code with no names, a marks file saying who is left out, and the reply brought back into each comment box; the current app reads the same codes and comment', async () => {
   const ctx = await browser.createBrowserContext(), errors = [];
   const old = await mainSide(ctx, []);
   const p = await page(ctx, errors);
@@ -409,6 +417,10 @@ test('share with your assistant (src/app/claude.js): from Insights, a ZIP of pap
   // Marks only: one file, the same codes
   await p.click('dialog[open] [data-share] .seg [data-v="marks"]');
   await p.waitForSelector('dialog[open] [data-marksdl]');
+  // C-090: the students with nothing marked yet are left out, and it says so
+  const left = await p.$eval('dialog[open] [data-mkleft]', e => [+e.dataset.mkleft, e.textContent]), all = await p.evaluate(() => window.__mark.state().batch.students.length);
+  assert.ok(left[0] > 0 && left[0] < all, 'some students, not all');
+  assert.equal(left[1], 'Left out: ' + left[0] + ' students with no marks, score or comment yet. The file says how many.');
   const md = await dl.next(() => p.click('dialog[open] [data-marksdl]'));
   const mdText = new TextDecoder().decode(md.bytes);
   assert.match(md.name, /\.md$/); assert.ok(mdText.includes(st.codes[st.first])); for (const k of st.keys) assert.ok(!mdText.includes(k), k);

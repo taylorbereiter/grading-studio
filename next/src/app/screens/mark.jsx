@@ -337,9 +337,10 @@ function ScorePanel({ batch, cur, onNext, onPrev, FU, fm, first, last, solo, onC
     {FU && M && <FU.Anchors st={st} />}
     {FU && M && <FU.PastWork st={st} />}
     {TN && M && <TN.NotesPart st={st} />}</div>
-    {!solo && <div class="foot"><IconButton icon="chl" variant="plain" label={t('mark.prev')} onClick={onPrev} disabled={first} data-prev />
-      {fm ? <><IconButton icon="chr" variant="plain" label={t('mark.next')} onClick={onNext} disabled={last} data-next-plain />{M && batch.students.some(x => x !== st && !noScore(x) && !x.grade.fb) && <Button variant="quiet" size="sm" kbd="N" onClick={next} data-nextfb>{t('mark.next_fb')}</Button>}</>
-        : <><Button variant="primary" kbd="Enter" onClick={next} data-next>{t('mark.next_score')}</Button><IconButton icon="chr" variant="plain" label={t('mark.next')} onClick={onNext} disabled={last} data-next-plain /></>}</div>}
+    {/* Previous, Next to score and Next: one stop in the Tab order (Next to score first), the arrow keys among them */}
+    {!solo && <Rove class="foot" role="group" aria-label={t('mark.students')}><IconButton icon="chl" variant="plain" label={t('mark.prev')} onClick={onPrev} disabled={first} data-prev />
+      {fm ? <><IconButton icon="chr" variant="plain" label={t('mark.next')} onClick={onNext} disabled={last} data-next-plain />{M && batch.students.some(x => x !== st && !noScore(x) && !x.grade.fb) && <Button variant="quiet" size="sm" kbd="N" onClick={next} data-nextfb data-rovehome>{t('mark.next_fb')}</Button>}</>
+        : <><Button variant="primary" kbd="Enter" onClick={next} data-next data-rovehome>{t('mark.next_score')}</Button><IconButton icon="chr" variant="plain" label={t('mark.next')} onClick={onNext} disabled={last} data-next-plain /></>}</Rove>}
   </aside>;
 }
 
@@ -410,6 +411,7 @@ export default function MarkScreen({ route, classes }) {
   // Hide names and Check the covers (mark/covers.jsx), loaded when first asked for
   const [CV, setCV] = useState(null), [cvDlg, setCvDlg] = useState(null);
   const cvCtx = { M: MK && MK.M, open: i => pickRef.current(i), cur: () => state().cur, reopen: () => setVer(v => v + 1) };
+  const checkCovers = async j => { const m = CV || await PARTS.covers(); setCV(m); setCvDlg({ k: 'check', st: state().batch.students[j] }); };
   const hideNames = async again => { const m = CV || await PARTS.covers(); setCV(m); if (again) return m.shuffle(cvCtx); if (anonOn()) m.setAnon(false, cvCtx); else setCvDlg({ k: 'anon' }); };
   const spCtl = useRef(null), [sp, setSp] = useState({ n: 0, shown: false });
   const openCalc = () => { if (Calc) return setCalc(null); PARTS.calc().then(m => setCalc(() => m.Calculator), e => console.error(e)); };
@@ -567,10 +569,11 @@ export default function MarkScreen({ route, classes }) {
     {setupDlg && setupDlg.k === 'qm' && <setupDlg.Q.QuickMark onClose={() => setSetupDlg(null)} onBoxes={() => quick(true)} onOpen={pick} />}
     {setupDlg && setupDlg.k === 'qr' && <setupDlg.R.QuizLook onClose={() => setSetupDlg(null)} onAgain={() => quizScan(true)} />}
     {setupDlg && setupDlg.k === 'qb' && <setupDlg.B.QuickBoxes onClose={() => setSetupDlg(null)} onSaved={on => (on ? quick() : setSetupDlg(null))} />}
+    {CV && cvDlg && cvDlg.k === 'check' && <CV.CheckCovers ctx={cvCtx} start={cvDlg.start} st={cvDlg.st} onDone={() => { setCvDlg(cvDlg.back ? { k: cvDlg.back } : null); cvCtx.reopen(); }} />}
     <RubricAsk ask={ask} />
     {err ? <EmptyState icon="inbox" title={t(err.name === 'NotKept' ? 'mark.not_kept' : 'mark.page_bad')} text={err.name === 'NotKept' ? t('mark.not_kept_text') : ''} />
       : !w ? (dl ? <p class="mk-dl mute" role="status" data-mkdl>{t('mark.from_drive', { n: dl.n, of: dl.of })}</p> : <div class="loading" aria-busy="true" aria-label={t('mark.opening')} />)
-      : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} sub={route.params.sub} E={out.E} cur={cur} onOpen={openOn} onShare={openShare} view={askV} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
+      : tab !== 'mark' && !solo ? (out && MK ? <div class="mk-outwrap"><out.Out tab={tab} sub={route.params.sub} E={out.E} cur={cur} onOpen={openOn} onShare={openShare} onCovers={checkCovers} view={askV} /></div> : <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />)
       : <><div class="mk-body">
         {!solo && <StudentList batch={w.batch} cur={cur} onPick={pick} onReport={rep ? () => setRepList(true) : null} lf={lf} setLf={setLf} fold={fold} setFold={setFold} fm={fm} onHide={MK ? () => hideNames() : null} onShuffle={() => hideNames(true)} />}
         <div class="mk-mid">
@@ -585,7 +588,6 @@ export default function MarkScreen({ route, classes }) {
       </div>
       {Calc && MK && <Calc M={MK.M} onClose={() => setCalc(null)} />}
       {CV && cvDlg && cvDlg.k === 'anon' && <CV.AnonDialog ctx={cvCtx} onClose={() => setCvDlg(null)} onCheck={i => setCvDlg({ k: 'check', start: i, back: 'anon' })} />}
-      {CV && cvDlg && cvDlg.k === 'check' && <CV.CheckCovers ctx={cvCtx} start={cvDlg.start} onDone={() => { setCvDlg(cvDlg.back ? { k: cvDlg.back } : null); cvCtx.reopen(); }} />}
       {rep && <rep.OpenedBar key={w.batch.id} onList={() => setRepList(true)} />}
       {FU && carried && <FU.CarryBox onClose={() => setCarried(false)} />}
       {FU && rescans && <FU.Rescans onClose={() => setRescans(false)} onGo={pick} />}

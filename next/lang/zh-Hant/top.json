@@ -30,5 +30,9 @@
  "top.cmd_sheet": "成績單",
  "top.cmd_cons": "一致性檢查",
  "top.cmd_ex": "範例",
- "top.cmd_late": "加入遲交作業"
+ "top.cmd_late": "加入遲交作業",
+ "top.sh_mk_left": {
+  "one": "未納入：{n} 位學生還沒有標記、分數或評語。檔案裡會註明人數。",
+  "other": "未納入：{n} 位學生還沒有標記、分數或評語。檔案裡會註明人數。"
+ }
 }

@@ -245,5 +245,20 @@
  "focus.wk_next": "来週締め切り",
  "focus.wk_hide": "今週は閉じる",
  "focus.wk_day": "曜日を変更",
- "focus.wk_work": "生徒の提出物"
+ "focus.wk_work": "生徒の提出物",
+ "focus.sg_own": "何を終わらせたいですか？",
+ "focus.sg_fewer": "枚数を減らす",
+ "focus.sg_more": "枚数を増やす",
+ "focus.len_or": "または",
+ "focus.sg_met": "このセッションの目標を達成",
+ "focus.sg_rest": "残りは次のセッションに回します。",
+ "focus.sg_it": "次のセッションに回します。",
+ "focus.sg_nocarry": "持ち越さない",
+ "focus.sg_did": "終わりました",
+ "focus.wk_papers": {
+  "one": "今週 {n} 枚",
+  "other": "今週 {n} 枚"
+ },
+ "focus.nav_tip": "採点用のタイマーと毎日の目標",
+ "focus.k_snip": "スクリーンショット：画面の一部を画像でコピー"
 }

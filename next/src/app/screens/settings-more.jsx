@@ -20,6 +20,8 @@ import { readLibrary, change, useLibraryPlain as useLibrary, J, meNow } from './
 import './prefs-lines.js';
 
 const meOf = meNow;
+// for the sidebar's assistant menu (screens/beside.jsx), which loads with this part
+export { readLibrary, change, meNow, KNOWN };
 // An address of her own: https only (src/beside.js aiUrlClean).
 export function urlClean(v) {
   const s = String(v == null ? '' : v).trim().slice(0, 400); if (!s) return '';

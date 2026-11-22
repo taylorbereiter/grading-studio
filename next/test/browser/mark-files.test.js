@@ -317,7 +317,7 @@ test('marks from another app made editable in the new app are the marks the curr
   await ctx.close();
 });
 
-test('lighting set in the new app, for the download, one student and one page, is what the current app opens', async () => {
+test('C-033: lighting set in the new app, for the download, one student and one page (the ☀ on a page and its ▾ menu), is what the current app opens', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const m = await page(ctx, errors);
   await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
@@ -355,6 +355,15 @@ test('lighting set in the new app, for the download, one student and one page, i
   await p.waitForFunction(k => ((window.__mark.state().batch.lightPgL || {})[k] || {}).b === 12, {}, PG);
   assert.match(await p.$eval('[data-lpg]', e => e.closest('.mk-lchip').className), /own/);
   await p.keyboard.press('Escape');
+  // C-033: ▾'s Turn lighting off for the whole file; Undo turns it back on
+  if (!await p.$('.mk-lmenu'))   // still open when Esc went to the page rather than the menu
+    await p.waitForFunction(f => { const c = document.querySelector('canvas[data-page="' + f + '|0"]'), b = c && c.parentNode.querySelector('[data-lmenu]'); if (b) b.click(); return !!b; }, { timeout: 30000 }, ESSAY);
+  await p.waitForSelector('.mk-lmenu [data-lm="file"]');
+  await p.click('.mk-lmenu [data-lm="file"]');
+  await p.waitForFunction(k => (window.__mark.state().batch.lightPg || {})[k] === false, {}, PG);
+  assert.match(await p.$eval('[data-lpg]', e => e.closest('.mk-lchip').className), /off/);
+  await p.click('[data-undo]');
+  await p.waitForFunction(k => (window.__mark.state().batch.lightPg || {})[k] === undefined, {}, PG);
   const now = await L(p);
   await p.evaluate(() => window.__mark.saved());
   await p.close();

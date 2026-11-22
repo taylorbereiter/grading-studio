@@ -5,7 +5,7 @@
 // through students/write.js keepEdit, and a score goes through the marking code (mark/marking.js wordGrade), one undo step each.
 // Loaded as a part of its own (router.js PARTS.word) the first time a Word paper opens.
 import * as W from '../../engines/gword.js';
-import { state, maxPoints, fmtNum } from '../../engines/gcore.js';
+import { state, maxPoints, fmtNum, kget } from '../../engines/gcore.js';
 import { t } from '../../i18n/t.js';
 import { toast, copyButton } from '../../ui/index.js';
 import { PARTS } from '../router.js';
@@ -280,7 +280,8 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
     if (e.target.closest('[data-wpdf]')) { if (editing) setEditing(false); if (saveT || dirty.size) await saveNow(); return root.dispatchEvent(new CustomEvent('wordpdf', { bubbles: true })); }
     if (e.target.closest('[data-wreset]')) {
       if (saveT) await saveNow();
-      const orig = f.orig; if (!orig) return toast(t('setup.wd_no_orig'));
+      // the original as kept in this browser when this copy has none (an edit made in another window, src/app/word.js origBytes)
+      const orig = f.orig || await kget('edits', state().batch.id + '|' + f.path).then(r => r && r.orig, () => null); if (!orig) return toast(t('setup.wd_no_orig'));
       const was = W.wordScore(f), b = state().batch;
       f.data = orig; f.orig = null; f.edited = 0;
       try { const Wr = await PARTS.write(); await Wr.dropEdit(b.id, f.path); } catch (er) { console.error(er); }

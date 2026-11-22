@@ -126,7 +126,7 @@ export function Insights({ E, onOpen, onShare, sub, view: ask }) {
 
 /* ---------------- Return ---------------- */
 // Anchor papers (src/anchors.js anchorCardHtml, anchorExport): the high, middle and low paper, and one button for all three.
-function AnchorCard({ E, onOpen }) {
+function AnchorCard({ E, onOpen, onCovers }) {
   const X = E.X, b = state().batch, [, tick] = useState(0), [busy, setBusy] = useState(false);
   if (!X.anchorsHere() && !b.students.some(s => s.grade.anchor)) return null;
   const n = X.ANCHORS.filter(([k]) => X.anchorOf(k) >= 0).length, cover = X.anchorCoverOn();
@@ -150,12 +150,12 @@ function AnchorCard({ E, onOpen }) {
         {st ? <><button type="button" class="link" onClick={() => onOpen(j)} data-raw>{shownName(st, j)}</button><span class="mute">{sc}</span></> : <span class="mute">{t('paper.an_none')}</span>}</li>; })}</ul>
     {n > 0 && <>
       <Checkbox checked={cover} onChange={v => { E.anchorCover(v); tick(x => x + 1); }} label={t('paper.an_cover')} />
-      <p class="mute">{t('paper.an_files', { name: X.anchorFile(first[0], 0, 1), n })} {t(cover ? 'paper.an_cover_say' : 'paper.an_plain')}</p>
+      <p class="mute">{t('paper.an_files', { name: X.anchorFile(first[0], 0, 1), n })} {t(cover ? 'paper.an_cover_say' : 'paper.an_plain')}{cover && <> <button type="button" class="link" onClick={() => onCovers(X.anchorOf(first[0]))} data-anchcheck>{t('paper.cc_title')}</button></>}</p>
       <Button variant="primary" disabled={busy} onClick={out} data-anchout>{t(busy ? 'paper.an_making' : 'paper.an_out')}</Button></>}
   </Card>;
 }
 const when = ms => { const d = new Date(ms); return d.toDateString() === new Date().toDateString() ? t('setup.r_today', { t: d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) }) : t('setup.r_on', { d: d.toLocaleDateString([], { day: 'numeric', month: 'short' }) }); };
-export function Return({ E, cur, onOpen }) {
+export function Return({ E, cur, onOpen, onCovers }) {
   const [, tick] = useState(0), [say, setSay] = useState(''), [bar, setBar] = useState(null), [keep, setKeep] = useState(true), [sheet, setSheet] = useState(true), [dpi, setDpi] = useState(150);
   const s = state(), b = s.batch, p = E.plan(), o = E.opts(), redo = () => tick(n => n + 1);
   const r = b.returned || {}, canDir = !!(window.showDirectoryPicker && window.self === window.top);
@@ -241,16 +241,16 @@ export function Return({ E, cur, onOpen }) {
         {sent.length > 0 && <ul class="sent">{sent.slice(0, 6).map(y => <li><button type="button" class="link" onClick={() => onOpen(y.i)} data-raw>{shownName(y.x, y.i)}</button> <span class="mute">{t('setup.r_sent', { when: when(y.x.grade.sent) })}</span></li>)}
           {sent.length > 6 && <li class="mute">{t('setup.r_more', { n: sent.length - 6 })}</li>}</ul>}
         {who ? <Button data-rtone onClick={one}>{t('setup.r_one_btn', { name: who })}</Button> : <p class="mute">{t('setup.r_one_none')}</p>}</Card>
-      <AnchorCard E={E} onOpen={onOpen} />
+      <AnchorCard E={E} onOpen={onOpen} onCovers={onCovers} />
     </aside>
   </section>;
 }
 
 // The tab, read once the papers have been read (a grade written on a paper counts), as the current app reads them first.
-export default function Out({ tab, sub, E, cur, onOpen, onShare, view }) {
+export default function Out({ tab, sub, E, cur, onOpen, onShare, onCovers, view }) {
   const [ok, setOk] = useState(false);
   useEffect(() => { let live = true; E.readPapers().then(() => live && setOk(true), e => { console.error(e); if (live) setOk(true); }); return () => { live = false; }; }, [E]);
   if (!ok) return <div class="loading" aria-busy="true" aria-label={t('mark.reading')} />;
-  const P = { E, cur, onOpen, onShare, sub, view };
+  const P = { E, cur, onOpen, onShare, onCovers, sub, view };
   return tab === 'grades' ? <Grades {...P} /> : tab === 'insights' ? <Insights {...P} /> : tab === 'return' ? <Return {...P} /> : <EmptyState title="" />;
 }

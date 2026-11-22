@@ -19,6 +19,7 @@ import { libs } from './paper.js';
 import { load as outLoad } from './out.js';
 import { CheckCovers } from './covers.jsx';
 import './paper-lines.js';
+import './top-lines.js';
 
 // her assistant ({ name, link }: services/assistant.js), handed in by the marking screen with ctx
 let AI = {};
@@ -83,6 +84,7 @@ export function Share({ ctx, onClose, back }) {
       : <>
         <p>{t('paper.sh_mk_say', { ai: name })}</p>
         <div class="mkopts">{MARKS_OPTS.map(([k, line]) => <Checkbox label={t(line)} checked={G.marksOpts()[k]} onChange={v => { G.marksOpts()[k] = v; save(); tick(n => n + 1); }} />)}</div>
+        {(n => n > 0 && <p class="mk-warn" data-mkleft={n}>{t('top.sh_mk_left', { n })}</p>)(state().batch.students.filter(G.marksEmpty).length)}
         <ol class="shsteps">
           <li><b>{t('paper.sh_mk_s1')}</b> <span data-mkmade>{sh.marksMade ? t('paper.sh_made_at', { when: when(sh.marksMade) }) : t('paper.sh_stays', { ai: name })}</span></li>
           <li><b>{t('paper.sh_s3', { ai: name })}</b> {ask('marksAsk', G.MARKS_ASK, 'marks')}<div class="row gap"><Button size="sm" icon="copy" onClick={() => copyAsk(sh.marksAsk != null ? sh.marksAsk : G.MARKS_ASK, 'paper.sh_mk_copied')} data-mkcopy>{t('paper.sh_copy')}</Button>{open}</div></li>

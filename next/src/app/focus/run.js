@@ -4,14 +4,16 @@
 // music while a session's clock runs. The session itself is gsp.focusRun, which the current app's pages and its Planner share,
 // so a session started in one carries on in the others. The shell loads this a moment after the first screen (app/focus/bus.js).
 import { h, render } from 'preact';
+import { useState, useEffect } from 'preact/hooks';
 import { engine as E, focusRead, focusHooks, planStep, planFlush } from '../../students/focus.js';
 import { cardOf } from '../../students/counts.js';
 import { onSaved } from '../../shared/saved.js';
+import { json, remove } from '../../shared/ls.js';
 import { focusChanged } from './bus.js';
 import * as router from '../router.js';
 import { t } from '../../i18n/t.js';
 import './lines.js';
-import { Panel } from './panel.jsx';
+import { Panel, FocusNav } from './panel.jsx';
 // Home's look back at the week, drawn by Home once the runner is in (screens/home.jsx)
 export { WeekCard } from './week.jsx';
 
@@ -23,7 +25,9 @@ export function boot() {
   if (booted) return; booted = true;
   focusHooks({ render: draw, clock: drawPanel, title, goTo, lesOpen, chime, wake, page: focusChanged });
   root = document.createElement('div'); root.className = 'fcroot'; document.body.appendChild(root);
-  refresh().then(() => { try { E.fcDrain(); E.fcSeen(); E.tkShare(); } catch (e) { console.error(e); } E.fcTickOn(); draw(); });
+  refresh().then(() => { safe(oldRun); try { E.fcDrain(); E.fcSeen(); E.tkShare(); } catch (e) { console.error(e); } E.fcTickOn(); draw(); });
+  // Focus in the sidebar, the assistant menu and Alt S anywhere (side.js), so the shell carries none of them
+  import('./side.js').then(m => m.sideStart(Nav), e => console.error(e));
   // Something done: grading counts while something was pressed, typed or scrolled lately (src/tracker.js tkLast); planning only on
   // typing, clicking, pasting or dropping (src/planner/plantime.js ptLast); a lesson's session notes it every half minute.
   for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart']) document.addEventListener(ev, () => E.fcActive(Date.now()), { capture: true, passive: true });
@@ -47,7 +51,10 @@ export function boot() {
   }));
   window.addEventListener('pagehide', flush); window.addEventListener('blur', flush);
   // Another window (of this app or the current one) started, ended or changed a session, or saved work: read again.
-  window.addEventListener('storage', e => { if (!e.key || /^(gsp\.focusRun|gs\.focus|gs\.lib|gsp\.planTime)$/.test(e.key)) later(); });
+  // Sessions a Planner tab queued (gsp.focusQ) are written into the week at once (src/focus.js FC_Q).
+  window.addEventListener('storage', e => { if (!e.key || /^(gsp\.focusRun|gsp\.focusQ|gs\.focus|gs\.lib|gsp\.planTime)$/.test(e.key)) { if (e.key === 'gsp.focusQ') safe(() => E.fcDrain()); later(); } });
+  // Back from the Planner with the browser's back button, the page as it was left: it catches up (src/focus.js pageshow).
+  window.addEventListener('pageshow', e => { if (e.persisted) { safe(() => E.fcDrain()); later(); } });
   onSaved(e => { if (e.kind === 'work' || e.kind === 'library' || (e.kind === 'setting' && e.id === 'gs.focus')) later(); });
   // Esc folds a running session's panel, or closes the panel opened by hand.
   document.addEventListener('keydown', e => {
@@ -58,6 +65,8 @@ export function boot() {
   });
 }
 const safe = f => { try { return f(); } catch (e) { console.error(e); } };
+// A session from before the Planner could show it, kept under its old name (src/focus.js gs.focusRun): it carries on as the session.
+function oldRun() { const old = json('gs.focusRun'); if (!old) return; if (old.st && !E.fcRun()) E.fcPut(old); remove('gs.focusRun'); }
 let soon = 0;
 const later = () => { clearTimeout(soon); soon = setTimeout(() => refresh().then(() => { E.fcTickOn(); draw(); }), 150); };
 async function refresh() { try { data = await focusRead(); } catch (e) { console.error(e); } }
@@ -82,8 +91,16 @@ function drawPanel() {
   const r = E.fcRun();
   render(r || ui.open ? h(Panel, { ui, close, start, draw }) : null, root);
   document.body.classList.toggle('fcquiet', !!r && E.fcConf().quiet && (r.st === 'run' || r.st === 'paused'));
+  navs.forEach(f => f());
 }
 export function draw() { drawPanel(); title(); syncMusic(); focusChanged(); }
+// Focus in the sidebar (panel.jsx FocusNav), which side.js puts in the sidebar: redrawn with the panel and its clock.
+const navs = new Set();
+export function Nav() {
+  const [, bump] = useState(0);
+  useEffect(() => { const f = () => bump(n => n + 1); navs.add(f); return () => navs.delete(f); }, []);
+  return data ? h(FocusNav, { ui, draw }) : null;
+}
 
 /* every 15 seconds: the time counted */
 function step() {

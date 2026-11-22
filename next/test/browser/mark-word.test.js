@@ -193,3 +193,45 @@ test('Convert to PDF in the new app makes the pages the current app makes, in th
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('C-025 C-026 C-027: typing in a Word paper, Enter is a line break, Ctrl B does nothing, a paste comes in as plain text; after a reload Back to the original takes the kept original back', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), m = await mainOpens(ctx, errors);
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  const i = await p.evaluate(k => window.__mark.state().batch.students.findIndex(s => s.key === k), ESSAY_KEY);
+  await p.click('[data-st="' + i + '"]');
+  await p.waitForSelector('.docx [data-wedit]', { timeout: 60000 });
+  await p.click('.docx [data-wedit]');
+  await p.evaluate(() => { const el = document.querySelector('.docx p.wp'), r = document.createRange(); r.selectNodeContents(el); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); el.focus(); });
+  const paras = await p.$$eval('.docx p.wp', ps => ps.length);
+  // C-026: Enter is a line break in the same paragraph; Ctrl B leaves the words as they are
+  await p.keyboard.type(' One.'); await p.keyboard.press('Enter'); await p.keyboard.type('Two.');
+  await p.keyboard.down('Control'); await p.keyboard.press('b'); await p.keyboard.up('Control');
+  await p.keyboard.type(' Three.');
+  assert.equal(await p.$$eval('.docx p.wp', ps => ps.length), paras, 'no new paragraph');
+  assert.match(await p.$eval('.docx p.wp', e => e.innerText), /One\.\nTwo\. Three\./);
+  assert.equal(await p.$$eval('.docx p.wp b, .docx p.wp strong', x => x.length), 0, 'nothing made bold');
+  // C-027: a paste with formatting comes in as its words only
+  await p.evaluate(() => { const dt = new DataTransfer(); dt.setData('text/html', '<b>Loud</b> <i>words</i>'); dt.setData('text/plain', ' Loud words'); document.activeElement.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); });
+  assert.match(await p.$eval('.docx p.wp', e => e.innerText), /Three\. Loud words$/);
+  assert.equal(await p.$$eval('.docx p.wp b, .docx p.wp i', x => x.length), 0, 'no formatting pasted');
+  await p.click('.docx [data-wedit]');
+  await p.evaluate(() => window.__mark.saved());
+  // C-025: after a reload, Back to the original, from the original kept in this browser (here this copy's own is gone)
+  await p.reload();
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.click('[data-st="' + i + '"]');
+  await p.waitForSelector('.docx [data-wedit]', { timeout: 60000 });
+  assert.match(await p.$eval('.docx p.wp', e => e.innerText), /Loud words/);
+  await p.evaluate((i, path) => { window.__mark.state().batch.students[i].files.find(f => f.path === path).orig = null; }, i, ESSAY_PATH);
+  await p.click('.docx [data-wedit]');
+  await p.waitForSelector('.docx [data-wreset]');
+  await p.click('.docx [data-wreset]');
+  await p.waitForFunction((i, path) => !window.__mark.state().batch.students[i].files.find(f => f.path === path).edited, { timeout: 10000 }, i, ESSAY_PATH);
+  await p.waitForFunction(() => { const e = document.querySelector('.docx p.wp'); return e && !/Loud words/.test(e.innerText); }, { timeout: 20000 });
+  assert.ok(await p.evaluate(id => new Promise(res => { const q = indexedDB.open('grading-studio-keep'); q.onsuccess = () => { const g = q.result.transaction('edits').objectStore('edits').getAllKeys(); g.onsuccess = () => { res(!g.result.some(k => String(k).startsWith(id + '|'))); q.result.close(); }; }; }), id), 'the kept edit taken off');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

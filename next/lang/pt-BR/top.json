@@ -30,5 +30,9 @@
  "top.cmd_sheet": "Folha de notas",
  "top.cmd_cons": "Verificar a consistência",
  "top.cmd_ex": "Exemplos",
- "top.cmd_late": "Adicionar trabalhos atrasados"
+ "top.cmd_late": "Adicionar trabalhos atrasados",
+ "top.sh_mk_left": {
+  "one": "Ficam de fora: {n} aluno ainda sem marcações, nota ou comentário. O arquivo diz quantos.",
+  "other": "Ficam de fora: {n} alunos ainda sem marcações, nota ou comentário. O arquivo diz quantos."
+ }
 }

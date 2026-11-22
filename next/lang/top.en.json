@@ -30,5 +30,9 @@
  "top.cmd_sheet": "Grade sheet",
  "top.cmd_cons": "Consistency check",
  "top.cmd_ex": "Examples",
- "top.cmd_late": "Add late work"
+ "top.cmd_late": "Add late work",
+ "top.sh_mk_left": {
+  "one": "Left out: {n} student with no marks, score or comment yet. The file says how many.",
+  "other": "Left out: {n} students with no marks, score or comment yet. The file says how many."
+ }
 }

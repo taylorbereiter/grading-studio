@@ -147,7 +147,7 @@ test('the time tracker sums her grading and planning time, time added by hand co
   await ctx.close();
 });
 
-test('a lesson\'s focus session: started on the lesson, it opens it, counts as planning, and asks at the end whether the lesson is ready', async () => {
+test('C-010: a lesson\'s focus session: started on the lesson, it opens it (and Open the lesson in the panel), counts as planning, and asks at the end whether the lesson is ready', async () => {
   const errors = [], ctx = await browser.createBrowserContext(), p = await page(ctx, errors);
   await p.goto(srv.url + 'blank'); await plant(p, gradingSeed()); await plantPlan(p);
   await p.goto(srv.url + 'next/#/lesson/L3');
@@ -157,6 +157,7 @@ test('a lesson\'s focus session: started on the lesson, it opens it, counts as p
   const r = await ls(p, 'gsp.focusRun');
   assert.equal(r.k, 'l'); assert.equal(r.l, 'L3'); assert.equal(r.len, 45 * 60, 'a lesson session, 45 minutes by default');
   assert.equal(await p.evaluate(() => location.hash), '#/lesson/L3');
+  assert.ok(await p.$('[data-fc-panel="run"] a[href="#/lesson/L3"]'), 'C-010: Open the lesson in the panel');
   await p.click('[data-fc-stop]'); await p.waitForSelector('[data-fc-panel="done"] [data-fc-ready]');
   await p.click('[data-fc-ready]');
   await p.waitForFunction(() => new Promise(res => { const q = indexedDB.open('gs-lessons'); q.onsuccess = () => { const g = q.result.transaction('lessons').objectStore('lessons').get('L3'); g.onsuccess = () => { res(!!(g.result && g.result.ready && g.result.ready.at)); q.result.close(); }; }; }), { timeout: 10000, polling: 200 });
@@ -216,6 +217,117 @@ test('Home: the folder question with Not now for a week; the look back at the we
   await c.close();
   await p.reload(); await p.waitForSelector('[data-home="needs"]', { timeout: 30000 });
   await new Promise(r => setTimeout(r, 800)); assert.equal(await p.$('[data-home="week"]'), null, 'still away after a reload');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('C-005 C-006 C-007 C-008 C-009 C-011 C-012 C-068 B-042: Focus in the sidebar with today against the goal and the time left, folding a running session; the session goal picked under More (Change, N papers with - and +, Finish the set, her own words), More\'s 5/10/15/25 minutes, the week so far, and at the end Don\'t carry it over and I got it done', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.evaluate(() => { const l = JSON.parse(localStorage.getItem('gs.lib')); l.me = { ...(l.me || {}), focus: { goal: { k: 'papers', n: 4 } } }; localStorage.setItem('gs.lib', JSON.stringify(l)); });
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, await zipOf({ 'Aria Testwell/Essay.pdf': await makePaper({ title: 'My summer essay' }), 'Bram Sample/Essay.pdf': await makePaper({ title: 'A day at the lake' }), 'Cleo Madeup/Essay.pdf': await makePaper({ title: 'The long walk' }) }));
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/home');
+  // C-068: Focus in the sidebar, today against her goal; a press opens the start
+  await p.waitForSelector('[data-shell-nav] [data-fc-nav="0/4"]', { timeout: 30000 });
+  await p.click('[data-fc-nav]');
+  await p.waitForSelector('[data-fc-panel="start"] [data-fc-start]');
+  const P = '[data-fc-panel="start"] ';
+  // B-042: the week so far on the start
+  assert.match(await p.$eval(P + '[data-fc-week]', e => e.textContent), /This week 0 papers · Grading time .+/);
+  assert.equal(await p.$eval(P + '[data-fc-tk]', e => e.getAttribute('href')), '#/time');
+  // C-005: Change on the goal line opens More at the goal
+  assert.equal(await p.$eval(P + '[data-fc-more-box]', e => e.open), false);
+  await p.click(P + '[data-fc-sgchg]');
+  await p.waitForFunction(() => document.querySelector('[data-fc-more-box]').open && document.activeElement.closest('[data-fc-sgpick]'));
+  // C-009: More's lengths, and the one picked shows above too
+  assert.deepEqual(await p.$$eval(P + '.fclens [data-v]', b => b.map(x => x.dataset.v)), ['5', '10', '15', '25']);
+  await p.click(P + '.fclens [data-v="5"]');
+  await p.waitForSelector(P + '.fcstart > .seg [data-v="5"][aria-checked="true"]');
+  // C-006, C-007: Finish the set, N papers with - and +
+  await p.click(P + '[data-fc-sgpick] [data-v="set"]');
+  await p.waitForFunction(P => document.querySelector(P + '.fcsg b').textContent === 'Finish the set' && !document.querySelector(P + '[data-fc-sgn]'), {}, P);
+  await p.click(P + '[data-fc-sgpick] [data-v="papers"]');
+  await p.waitForSelector(P + '[data-fc-sgn="1"]');
+  const n0 = await p.$eval(P + '[data-fc-sgpick] [data-v="papers"]', e => parseInt(e.textContent, 10));
+  await p.click(P + (n0 < 3 ? '[data-fc-sgn="1"]' : '[data-fc-sgn="-1"]'));
+  const n1 = n0 < 3 ? n0 + 1 : n0 - 1;
+  await p.waitForFunction((P, n) => document.querySelector(P + '.fcsg b').textContent === n + ' papers', {}, P, n1);
+  await p.click(P + '[data-fc-start]');
+  await p.waitForFunction(id => location.hash === '#/mark/' + encodeURIComponent(id), { timeout: 20000 }, id);
+  await p.waitForSelector('[data-fc-panel="run"]', { timeout: 20000 });
+  const r = await ls(p, 'gsp.focusRun');
+  assert.equal(r.len, 5 * 60); assert.deepEqual(r.sg, { k: 'papers', n: n1 });
+  // C-068: the time left in the sidebar (on any screen with one, so not the marking screen); a press folds the panel, another unfolds it
+  await p.evaluate(() => { location.hash = '#/home'; });
+  await p.waitForFunction(() => { const b = document.querySelector('[data-fc-nav]'); return b && b.offsetParent && /^\d+:\d\d$/.test(b.dataset.fcNav); }, { timeout: 20000 });
+  await p.click('[data-fc-nav]'); await p.waitForSelector('[data-fc-panel="pill"]');
+  assert.equal(await p.$eval('[data-fc-nav]', e => e.getAttribute('aria-expanded')), 'false');
+  await p.click('[data-fc-nav]'); await p.waitForSelector('[data-fc-panel="run"]');
+  // C-011: ended short of the goal, the rest goes into the next session unless she lets it go
+  await p.click('[data-fc-stop]'); await p.waitForSelector('[data-fc-panel="done"] [data-fc-sgr="papers"]');
+  assert.match(await p.$eval('[data-fc-sgr]', e => e.textContent), new RegExp('0 of ' + n1 + ' papers.*The rest goes into your next session'));
+  await p.waitForFunction(() => (JSON.parse(localStorage.getItem('gs.focus') || '{}').carry || {}).k === 'papers', { timeout: 10000, polling: 100 });
+  await p.click('[data-fc-carryno]');
+  await p.waitForFunction(() => !JSON.parse(localStorage.getItem('gs.focus') || '{}').carry && !document.querySelector('[data-fc-carryno]'), { timeout: 10000, polling: 100 });
+  await p.click('[data-fc-panel="done"] [data-fc-close]');
+  await p.waitForFunction(() => !document.querySelector('[data-fc-panel]') && !localStorage.getItem('gsp.focusRun'), { timeout: 10000, polling: 100 });
+
+  // C-008, C-012: nothing in particular, a goal in her own words, and I got it done at the end
+  await p.goto(srv.url + 'next/#/home');
+  await p.waitForSelector('[data-fc-nav]', { timeout: 30000 });
+  await p.click('[data-fc-nav]'); await p.waitForSelector(P + '[data-fc-change]');
+  await p.click(P + '[data-fc-change]'); await p.waitForSelector(P + '[data-fc-work]');
+  await p.select(P + '[data-fc-work]', '');
+  await p.waitForSelector(P + '[data-fc-sgchg]');
+  await p.click(P + '[data-fc-sgchg]');
+  await p.waitForSelector(P + '[data-fc-sgx]');
+  assert.equal(await p.$eval(P + '[data-fc-sgx]', e => e.maxLength), 80);
+  await p.type(P + '[data-fc-sgx]', 'Plan the quiz');
+  await p.waitForFunction(P => document.querySelector(P + '.fcsg b').textContent === 'Plan the quiz', {}, P);
+  await p.click(P + '[data-fc-start]');
+  await p.waitForSelector('[data-fc-panel="run"]', { timeout: 20000 });
+  assert.deepEqual((await ls(p, 'gsp.focusRun')).sg, { k: 'note', x: 'Plan the quiz' });
+  await p.click('[data-fc-stop]'); await p.waitForSelector('[data-fc-panel="done"] [data-fc-sgr="note"]');
+  assert.match(await p.$eval('[data-fc-sgr]', e => e.textContent), /Plan the quiz.*It goes into your next session/);
+  await p.click('[data-fc-sgdone]');
+  await p.waitForSelector('[data-fc-panel="done"] [data-fc-sgr="met"]');
+  assert.equal((await ls(p, 'gsp.focusRun')).sgMet, true);
+  await p.waitForFunction(() => !JSON.parse(localStorage.getItem('gs.focus') || '{}').carry, { timeout: 10000, polling: 100 });
+  await p.click('[data-fc-panel="done"] [data-fc-close]');
+  // B-042: the papers this week in Time this week beside To do
+  await p.goto(srv.url + 'next/#/todo');
+  await p.waitForSelector('[data-tk-aside] [data-tk-papers]', { timeout: 30000 });
+  assert.match(await p.$eval('[data-tk-aside] [data-tk-papers]', e => e.textContent), /^This week 0 papers$/);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('H-051 H-064 H-059: a session saved under the very old key carries on; sessions a Planner tab queues are written into the day at once, and again when the page comes back from the back-forward cache', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, gradingSeed());
+  await p.evaluate(() => localStorage.setItem('gs.focusRun', JSON.stringify({ st: 'run', len: 600, at: Date.now(), w: '', t: '', one: 0, p0: 0, pg: 0, fold: false, no: 1 })));
+  await p.goto(srv.url + 'next/#/home');
+  // H-051: under its old name, it is the session now
+  await p.waitForSelector('[data-fc-panel="run"]', { timeout: 30000 });
+  await p.waitForFunction(() => !localStorage.getItem('gs.focusRun') && (JSON.parse(localStorage.getItem('gsp.focusRun')) || {}).st === 'run', { timeout: 10000, polling: 100 });
+  await p.click('[data-fc-stop]'); await p.waitForSelector('[data-fc-panel="done"]');
+  await p.click('[data-fc-panel="done"] [data-fc-close]');
+  const secs = () => p.evaluate(d => ((JSON.parse(localStorage.getItem('gs.focus') || '{}').days || {})[d] || {}).s || 0, TODAY);
+  const s0 = await secs();
+  // H-064: another tab queues a session; this one writes it in
+  const q = await page(ctx, errors);
+  await q.goto(srv.url + 'blank');
+  await q.evaluate(d => localStorage.setItem('gsp.focusQ', JSON.stringify([{ id: 'q1', d, s: 900 }])), TODAY);
+  await p.waitForFunction((d, s0) => !localStorage.getItem('gsp.focusQ') && ((JSON.parse(localStorage.getItem('gs.focus')).days || {})[d] || {}).s === s0 + 900, { timeout: 10000, polling: 100 }, TODAY, s0);
+  await q.close();
+  // H-059: back from the back-forward cache, a queue left meanwhile is written in
+  await p.evaluate(d => { localStorage.setItem('gsp.focusQ', JSON.stringify([{ id: 'q2', d, s: 300 }])); window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })); }, TODAY);
+  await p.waitForFunction((d, s0) => !localStorage.getItem('gsp.focusQ') && ((JSON.parse(localStorage.getItem('gs.focus')).days || {})[d] || {}).s === s0 + 1200, { timeout: 10000, polling: 100 }, TODAY, s0);
   assert.deepEqual(errors, []);
   await ctx.close();
 });
