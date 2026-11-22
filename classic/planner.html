@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="icon" href="../icons/icon-192.png"><link rel="apple-touch-icon" href="../icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"1f6c7231","zh-Hans":"6427d65f","es":"bc4fc38c","fr":"2ff7f977","de":"2beeeb86","pt-BR":"92549f2b","ja":"2d660575","ko":"f26c9c74"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="icon" href="../icons/icon-192.png"><link rel="apple-touch-icon" href="../icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"1b0b98d4","zh-Hans":"a3d8e279","es":"b5ff4dbe","fr":"e3b03d91","de":"d28ef935","pt-BR":"f0cd43bc","ja":"bec3d92e","ko":"7daa4586"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -7470,6 +7470,8 @@ const LANG_FILLS = [
   ['ariastack', /^.+: \d+ (?:below 60|\d+ to \d+)(?:[,.] .+)?$/, (m, F, P) => m[0].replace(/(\d+) below 60(?=[,.] |$)/g, (x, n) => langFill(F.below60, [0, n], P)).replace(/(\d+) (\d+) to (\d+)(?=[,.] |$)/g, (x, n, a, b) => langFill(F.rng, [0, n, a, b], P))],
   ['ariascat', /^.+: summatives [\d.,]+%, in-class [\d.,]+%$/, (m, F, P) => m[0].replace(/: summatives ([\d.,]+%), in-class ([\d.,]+%)(?=\. |$)/g, (x, a, b) => ': ' + langFill(F.scat, [0, a, b], P))],
   ['lblpct', /^(.{1,40}) ([\d.,]+%)$/, (m, F, P) => { const h = trPiece(m[1], P); return h == null ? null : h + ' ' + m[2]; }],
+  ['gshid', /^Show files with no grade \((\d+) hidden\)$/], ['gsout', /^(\d+) files? ha(?:s|ve) no marks, so (?:it’s|they’re) left out as extra papers\.$/], ['gspage', /^Page (\d+)$/],
+  ['gsfrom', /^From “(.+)”$/], ['gsconf', /^(\d+) to confirm$/],
 ];
 function trPiece(k, P, ctx) {
   if (ctx && Object.prototype.hasOwnProperty.call(P.words, ctx + '|' + k)) return P.words[ctx + '|' + k];

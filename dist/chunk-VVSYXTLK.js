@@ -1,0 +1,1 @@
+async function a(e){let o=String(e??"");try{return await navigator.clipboard.writeText(o),!0}catch{}let t=document.createElement("textarea");t.value=o,t.setAttribute("readonly",""),t.style.cssText="position:fixed;left:-9999px;top:0;opacity:0",document.body.appendChild(t),t.select();let c=!1;try{c=document.execCommand("copy")}catch{}return t.remove(),c}export{a};

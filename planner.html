@@ -1,4 +1,4 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Grading Studio</title>
-<script>(function(){var h="";try{h=decodeURIComponent(location.hash.replace(/^#\/?/,""))}catch(e){}var p=h.split("/"),e=encodeURIComponent,t=p[0]==="lesson"&&p[1]?"lesson/"+e(p[1]):p[0]==="present"&&p[1]?"lesson/"+e(p[1])+"/slides":p[0]==="plan"?"calendar":p[0]==="rubrics"?"library/rubrics":p[0]==="timetable"?"settings/timetable":"week";location.replace("./"+location.search+"#/"+t)})()</script>
+<script>(function(){var h=location.hash.replace(/^#\/?/,"");location.replace("./"+location.search+"#/"+(h||"week"))})()</script>
 </head><body><p><a href="./#/week">Grading Studio</a></p></body></html>

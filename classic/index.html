@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="icon" href="../icons/icon-192.png"><link rel="apple-touch-icon" href="../icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"1f6c7231","zh-Hans":"6427d65f","es":"bc4fc38c","fr":"2ff7f977","de":"2beeeb86","pt-BR":"92549f2b","ja":"2d660575","ko":"f26c9c74"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="icon" href="../icons/icon-192.png"><link rel="apple-touch-icon" href="../icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"1b0b98d4","zh-Hans":"a3d8e279","es":"b5ff4dbe","fr":"e3b03d91","de":"d28ef935","pt-BR":"f0cd43bc","ja":"bec3d92e","ko":"7daa4586"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -5674,6 +5674,8 @@ return [/^\d+$/.test(m[1]) ? langFill(F.rowavg, m, P) : F.rowavgE, ...(m[2] ? [l
 ['ariastack', /^.+: \d+ (?:below 60|\d+ to \d+)(?:[,.] .+)?$/, (m, F, P) => m[0].replace(/(\d+) below 60(?=[,.] |$)/g, (x, n) => langFill(F.below60, [0, n], P)).replace(/(\d+) (\d+) to (\d+)(?=[,.] |$)/g, (x, n, a, b) => langFill(F.rng, [0, n, a, b], P))],
 ['ariascat', /^.+: summatives [\d.,]+%, in-class [\d.,]+%$/, (m, F, P) => m[0].replace(/: summatives ([\d.,]+%), in-class ([\d.,]+%)(?=\. |$)/g, (x, a, b) => ': ' + langFill(F.scat, [0, a, b], P))],
 ['lblpct', /^(.{1,40}) ([\d.,]+%)$/, (m, F, P) => { const h = trPiece(m[1], P); return h == null ? null : h + ' ' + m[2]; }],
+['gshid', /^Show files with no grade \((\d+) hidden\)$/], ['gsout', /^(\d+) files? ha(?:s|ve) no marks, so (?:it’s|they’re) left out as extra papers\.$/], ['gspage', /^Page (\d+)$/],
+['gsfrom', /^From “(.+)”$/], ['gsconf', /^(\d+) to confirm$/],
 ];
 function trPiece(k, P, ctx) {
 if (ctx && Object.prototype.hasOwnProperty.call(P.words, ctx + '|' + k)) return P.words[ctx + '|' + k];
@@ -7528,20 +7530,23 @@ if (rd) { const det = document.createElement('details'); det.className = 'refd';
 for (const r of refsFor(st)) { const hold = document.createElement('div'); paper.appendChild(hold); refCard(r, st).then(c => { if (token === openToken) hold.replaceWith(c); }); }
 $('#readBtn').onclick = () => openReadings();
 await workerReady;
+if (token !== openToken) return;
 for (const f of st.files.filter(viewable)) {
 try {
 await impAuto(f);
 if (token !== openToken) return;
-const doc = await pdfjsLib.getDocument({ data: (await viewBytes(f)).slice(), isEvalSupported: false, worker: viewWorker() }).promise;
+const bytes = await viewBytes(f);
+if (token !== openToken) return;
+const doc = await pdfjsLib.getDocument({ data: bytes.slice(), isEvalSupported: false, worker: viewWorker() }).promise;
 if (token !== openToken) { doc.destroy(); return; }
 docs.push(doc); docMap.set(f.path, doc); f.numPages = doc.numPages;
 gsFlatCheck(f, doc).then(flat => { if (flat && token === openToken) for (const q of pages) if (q.file === f && q.impFirst) impNote(q); });
 } catch (e) {
+if (token !== openToken) return;
 pdfBad(f, e);
 sheetOff(); paper.appendChild(otherCard(f));
 }
 }
-if (token !== openToken) return;
 const seq = fileSeq(st), oneFile = seq.length === 1 && !!seq[0].d && !st.files.some(f => f.kind === 'media' || f.kind === 'link');
 if (!oneFile) sheetOff();
 for (const it of seq) {
@@ -7588,6 +7593,7 @@ if (!pages.some(q => q !== pg && q.file === f)) { pg.impFirst = true; impNote(pg
 pg.extra = (f.kami && f.kami[p] && f.kami[p].notes) || [];
 bindPage(pg);
 await renderPage(pg);
+if (token !== openToken) return;
 if (filePath && f.path === filePath && p === 0) (d.pages[0][0] === filePath ? head : wrap).scrollIntoView({ block: 'start' });
 }
 }
@@ -9788,7 +9794,7 @@ $('#shBody').innerHTML = '<p class="muted" style="margin:0 0 10px;font-size:14px
 rows.map(({ st, i, f, out, none, word, nograde, first }, at) => {
 const app = appScored(st), lead = rows.findIndex(r => r.st === st && !r.out) === at;
 const appCell = () => lead ? appScoreHtml(st) : '<span class="muted" style="font-weight:400;font-size:13px">Score on the row above</span>';
-const where = '<div style="font-weight:600">' + esc(st.key) + '</div>' + (f ? '<div class="muted" style="font-size:13px;overflow-wrap:anywhere">' + esc(f.path) + '</div>' : '');
+const where = '<div style="font-weight:600" data-raw>' + esc(st.key) + '</div>' + (f ? '<div class="muted" style="font-size:13px;overflow-wrap:anywhere" data-raw>' + esc(f.path) + '</div>' : '');
 if (word) {
 const w = f.wscore, tyAll = wordFound(f, st), rdw = splitReads(st, tyAll), ty = rdw.ok, hs = appShots(st, f, (f.hand && f.scan && f.scan.shots) || []), ri = rows.findIndex(r => r.f === f);
 const info = w ? w.crits.map((c, k) => esc(c.length > 28 ? c.slice(0, 28) + '…' : c) + ' <b>' + (w.per[k] == null ? '–' : fmtNum(w.per[k])) + '</b>').join(' · ') + (w.total != null && !w.done ? '<div class="muted" style="font-size:12px">Not every criterion is highlighted yet</div>' : '') : '';
@@ -34618,13 +34624,33 @@ function stpIb(o) {
 }
 const STP_WAYS = { rubric: 'rubric', rubricrows: 'rubric', rows: 'rubric', points: 'points', percent: 'percent', percentage: 'percent', letters: 'letters', lettergrades: 'letters', letter: 'letters', ib7: 'ib7', ib: 'ib7', ib1to7: 'ib7', myp: 'myp', mypcriteria: 'myp', ibmyp: 'myp', dp: 'ib7' };
 const STP_LAYOUTS = { agenda: 'Agenda', objectives: 'Objectives', warmup: 'Warm-up', exit: 'Exit ticket', steps: 'Directions with steps', discuss: 'Discussion question', content: 'Title and text', twocol: 'Two columns', text: 'Plain text', passage: 'Passage', vocab: 'Vocabulary', picture: 'Picture', fullpic: 'Full picture', textpic: 'Text + picture', picprompt: 'Picture + questions', video: 'Video' };
+function stpPanelRecord() {
+  const raw = localStorage.getItem('gsp.panel');
+  if (raw == null) return {};
+  const panel = JSON.parse(raw);
+  if (!panel || typeof panel !== 'object' || Array.isArray(panel)) throw new Error('Unreadable gsp.panel');
+  return panel;
+}
+function stpPanelWidth(panel = stpPanelRecord()) {
+  for (const raw of [panel.w, localStorage.getItem('gsn.besideW')]) {
+    const w = typeof raw === 'string' && raw.trim() ? Number(raw) : raw;
+    if (Number.isFinite(w) && w >= 300 && w <= 900) return w;
+  }
+  return null;
+}
+function stpSetPanelWidth(panel, width) {
+  if (width == null) delete panel.w; else panel.w = width;
+  if (!Object.keys(panel).length) store.del('gsp.panel');
+  else if (store.set('gsp.panel', panel) === false) throw new Error('Could not save gsp.panel');
+}
 function stpRead(j) {
-  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking', 'focus', 'todo']);
+  const S = { left: [], unknown: [], notes: [] }, known = new Set(['gradingStudioSetup', 'teacher', 'about', 'school', 'programme', 'program', 'grading', 'classes', 'calendar', 'terms', 'gradebook', 'rubrics', 'comments', 'goals', 'attendance', 'classTabs', 'slides', 'marking', 'focus', 'todo', 'panelWidth']);
   for (const k of Object.keys(j)) {
     if (STP_STUDENT.test(k)) { if (stpCount(j[k])) S.left.push('Something about students (“' + stpStr(k, 30) + '”).'); }
     else if (!known.has(k)) S.unknown.push(stpStr(k, 30));
   }
   if (stpNum(j.gradingStudioSetup, 0, 1e6) > STP_V) S.notes.push('This setup was written for a newer version of Grading Studio. What this version understands is listed below.');
+  if (Number.isFinite(j.panelWidth) && j.panelWidth >= 300 && j.panelWidth <= 900) S.panelWidth = j.panelWidth;
   S.about = stpStr(stpObj(j.teacher) ? j.teacher.label : j.about || j.teacher, 80);
   const prog = stpStr(j.programme != null ? j.programme : j.program, 24); if (prog) S.prog = prog;
   const sc = stpObj(j.school);
@@ -34803,6 +34829,7 @@ const stpWayName = k => gradeWay(k)[1], stpWayLow = k => k === 'ib7' || k === 'm
 const stpTypeName = id => { const t = BK_TYPES.find(x => x[0] === id); return t ? t[2] : id; };
 function stpDiff(S, planNow) {
   const parts = [], add = (key, title, lines, sub) => { if (lines.length) parts.push({ key, title, lines, sub: sub || '' }); };
+  if (S.panelWidth != null && S.panelWidth !== stpPanelWidth()) add('panelWidth', tr('Side panel'), [S.panelWidth + ' px']);
   if (S.school || S.prog || S.staff || S.staffRoles) {
     const L = [], m = me(), s = S.school || {};
     if (s.sys != null && s.sys !== sysName()) L.push(s.sys ? 'Students hand work in on <b>' + esc(s.sys) + '</b>' + (sysName() ? ' (now ' + esc(sysName()) + ')' : '') : 'No school system named (now ' + esc(sysName()) + ')');
@@ -34972,6 +34999,11 @@ const stpPersonHere = x => schPeople().find(p => stpKey(p.name) === stpKey(x.nam
 const stpClone = v => v == null ? v : JSON.parse(JSON.stringify(v));
 async function stpApply(S, pick) {
   const U = { t: Date.now(), parts: Object.keys(pick).filter(k => pick[k]) }, now = Date.now();
+  if (pick.panelWidth && S.panelWidth != null) {
+    const panel = stpPanelRecord();
+    U.panelWidth = { was: panel.w, wrote: S.panelWidth };
+    stpSetPanelWidth(panel, S.panelWidth);
+  }
   if (pick.school || pick.grading || pick.att || pick.tabs || pick.focus) { U.hadMe = !!lib.me; U.me = stpClone(lib.me || null); }
   if (pick.school) {
     const sc = { ...(S.school || {}) };
@@ -35076,6 +35108,11 @@ const stpUndoRec = () => { const u = store.get('gs.setupUndo', null); return stp
 async function stpUndo() {
   const U = stpUndoRec(); if (!U) return;
   const kept = [];
+  if (U.panelWidth) {
+    const panel = stpPanelRecord();
+    if (panel.w === U.panelWidth.wrote) stpSetPanelWidth(panel, U.panelWidth.was);
+    else kept.push(tr('Side panel'));
+  }
   if ('me' in U) { if (U.hadMe) lib.me = U.me; else delete lib.me; }
   if ('setupLs' in U) { if (U.setupLs == null) store.del('gs.setup'); else try { localStorage.setItem('gs.setup', U.setupLs); } catch {} }
   if ('book' in U) { if (U.book) lib.book = U.book; else delete lib.book; }
@@ -35111,6 +35148,8 @@ async function stpUndo() {
 async function stpExport() {
   const p = await stpPlanGet(), g = meGrade(), conf = bkConf(), day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const out = { gradingStudioSetup: STP_V };
+  const panelWidth = stpPanelWidth();
+  if (panelWidth != null) out.panelWidth = panelWidth;
   if (me().prog) out.programme = me().prog;
   if (sysName() || unitLinkName() || me().ai || mbOrder()) out.school = { ...(sysName() ? { system: sysName() } : {}), ...(mbOrder() ? { entryOrder: mbOrder() } : {}), ...(unitLinkName() ? { unitPlans: unitLinkName() } : {}), ...(me().ai ? { assistant: String(me().ai) } : {}), ...(me().ai && aiUrlClean(me().aiUrl) ? { assistantLink: aiUrlClean(me().aiUrl) } : {}), ...(me().ai && me().aiOpen === 'tab' ? { assistantOpens: 'tab' } : {}), ...(me().ai && me().aiUrls && Object.keys(me().aiUrls).length ? { otherAssistants: Object.entries(me().aiUrls).map(([name, link]) => ({ name, link })) } : {}), ...(me().ai && Array.isArray(me().aiOff) && me().aiOff.length ? { assistantsNotListed: me().aiOff.slice() } : {}) };
   const ppl = schPeople(), sr = schNow().roles;
