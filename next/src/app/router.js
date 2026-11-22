@@ -111,6 +111,8 @@ export const PARTS = {
   asg: () => import('./class/assignment.jsx'),
   // a rubric brought in for an assignment from its card (New and Edit assignment, the Bring in menu)
   rubricin: () => import('./class/rubricin.jsx'),
+  // Home's To do card, with the To do engine (app/home/todo-card.jsx)
+  hometodo: () => import('./home/todo-card.jsx'),
   // a class's People and Grades tabs (app/class/), each with the gradebook's engine
   people: () => import('./class/people.jsx'),
   clink: () => import('./class/classlink.jsx'),

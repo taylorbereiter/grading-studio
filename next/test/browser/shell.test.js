@@ -109,7 +109,7 @@ test('Settings > Display > Phone layout: off keeps a phone laid out as a compute
   await p.waitForFunction(() => localStorage.getItem('gs.phone') === null, { timeout: 10000 });
   await p.reload(); await shellUp(p);
   assert.equal(await p.$eval('meta[name=viewport]', e => e.content), 'width=device-width,initial-scale=1');
-  assert.ok(await p.$('[data-stphonewin]'), 'the phone version can be opened in a narrow window');
+  assert.ok(await p.waitForSelector('[data-stphonewin]', { timeout: 15000 }), 'the phone version can be opened in a narrow window');   // the screen draws after the shell
   assert.deepEqual(p.errors, []); await p.ctx.close();
 });
 
