@@ -705,5 +705,16 @@
  },
  "paper.bb_none": "Nenhum código encontrado ainda. Cada bloco deve começar com um código como S-7QK4.",
  "paper.bb_feedback_file": "Comentários",
- "paper.bb_zip_name": "Do {ai} - {name}"
+ "paper.bb_zip_name": "Do {ai} - {name}",
+ "paper.pm_more": "Mais para este trabalho",
+ "paper.pm_details": "Dados do aluno",
+ "paper.pm_notes": "Digitar as notas em vez disso",
+ "paper.pm_export": "Exportar agora o trabalho de {name}",
+ "paper.pm_export_anon": "Exportar este trabalho agora",
+ "paper.pm_sent": "Exportado {when}. Exporte de novo depois de qualquer alteração.",
+ "paper.pm_edit": "Editar a rubrica",
+ "paper.pm_edit_pts": "Editar",
+ "paper.pm_keys": "Todas as teclas",
+ "paper.pm_type": "Mudar o tipo",
+ "paper.pm_page": "Abrir a página do aluno na turma"
 }

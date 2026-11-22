@@ -170,6 +170,11 @@ async function nextDrag(p, k, pts) {
 }
 const marksOf = (p, k) => p.evaluate(k => { const pg = window.__mark.state().pages[k]; return JSON.parse(JSON.stringify(pg.marks())); }, k);
 const press = async (p, sel) => { await p.waitForSelector(sel); await p.click(sel); };
+// an item of a menu by its words (ui Menu): the opener pressed, then the item (gaps C-057: More for this paper holds what used to be on the panel)
+const menuPick = async (p, opener, label) => { await p.waitForSelector(opener, { timeout: 60000 }); await p.click(opener); await p.waitForSelector('.pop [role^="menuitem"]');
+  const ok = await p.evaluate(l => { const it = [...document.querySelectorAll('.pop [role^="menuitem"]')].find(e => (e.querySelector('b') || e).textContent.trim() === l); if (it) it.click(); return !!it; }, label);
+  if (!ok) throw new Error('no menu item ' + label); };
+
 
 test('marks made in the new app (pen, highlight, circle, check, text, comment, eraser, undo and redo) open in the current app as the same marks, drawn to the same pixels', async () => {
   const ctx = await browser.createBrowserContext(), errors = [];
@@ -384,7 +389,7 @@ test('the marking screen around the paper: a picked mark moved, resized, copied 
   await p.click('.mk-crit[data-row="0"] .sticks button[data-v="3"]');
   await p.click('.mk-crit[data-row="1"] .sticks button[data-v="4"]');
   await p.click('.mk-crit[data-row="2"] .sticks button[data-v="2"]');
-  await press(p, '[data-stampscore]'); { const q = await nextAt(p, 0, 450, 120); await p.mouse.click(q.x, q.y); }
+  await menuPick(p, '[data-pmore]', 'Put the score on the paper'); { const q = await nextAt(p, 0, 450, 120); await p.mouse.click(q.x, q.y); }
   await press(p, '[data-critstamp="0"]'); { const q = await nextAt(p, 0, 450, 220); await p.mouse.click(q.x, q.y); }
   const stamps = (await marksOf(p, 0)).filter(m => m.t === 'stamp');
   assert.deepEqual(stamps.map(m => m.k), ['score', 'crit']);
@@ -398,7 +403,7 @@ test('the marking screen around the paper: a picked mark moved, resized, copied 
   const all = (await shown()).length;
   await p.click('[data-lf-open]'); await press(p, '[data-lf="todo"]');
   assert.equal((await shown()).length, all, 'nobody else is scored yet, so everyone is still to score');
-  await p.click('[data-way="pts"]');
+  await p.click('[data-lf-open]'); await press(p, '[data-way="pts"]');
   assert.match(await p.$eval('.mk-row.on .sc', e => e.textContent), /^10\s\/\s12$/);
   await blur(); await p.keyboard.press('Escape'); await p.keyboard.press('ArrowRight');   // the stamp just placed is let go of first
   assert.equal(await cur(), 1);

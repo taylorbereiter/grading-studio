@@ -41,6 +41,10 @@ async function page(ctx, errors) {
 const withCard = () => { const seed = gradingSeed(), lib = JSON.parse(seed.ls['gs.lib']); lib.classes[0].units[0].items.push({ id: 'i9', name: 'Speech', classId: 'c1', type: 'sum', due: '2026-11-20' }); seed.ls['gs.lib'] = JSON.stringify(lib); return seed; };
 const twoZip = async () => zipOf({ 'Aria Testwell/Outline.pdf': await makePaper({ title: 'An outline' }), 'Bram Sample/Outline.pdf': await makePaper({ title: 'Another outline' }) });
 const calm = p => p.evaluate(() => new Promise(r => setTimeout(r, 350)));
+// an item of a menu by its words (ui Menu): the opener pressed, then the item. Typed notes and the Timer open from More for this paper (gaps C-057).
+const menuPick = async (p, opener, label) => { await p.waitForSelector(opener, { timeout: 60000 }); await p.click(opener); await p.waitForSelector('.pop [role^="menuitem"]');
+  const ok = await p.evaluate(l => { const it = [...document.querySelectorAll('.pop [role^="menuitem"]')].find(e => (e.querySelector('b') || e).textContent.trim() === l); if (it) it.click(); return !!it; }, label);
+  if (!ok) throw new Error('no menu item ' + label); };
 const keys = async (p, mods, key) => { for (const m of mods) await p.keyboard.down(m); await p.keyboard.press(key); for (const m of mods.slice().reverse()) await p.keyboard.up(m); };
 const paste = (p, data) => p.evaluate(data => { const d = new DataTransfer(); for (const [k, v] of Object.entries(data)) d.setData(k, v); document.activeElement.dispatchEvent(new ClipboardEvent('paste', { clipboardData: d, bubbles: true, cancelable: true })); }, data);
 // A menu item on the notes' bar: from its own menu where the bar shows it, else from the ⋯.
@@ -81,10 +85,11 @@ test('typed notes: the same keys make the same notes as the current app, each ch
   await chooser.accept([z]);
   await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
   const id = await p.evaluate(() => window.__mark.state().batch.id);
-  await p.waitForSelector('[data-tnopen]', { timeout: 60000 });
-  assert.equal(await p.$eval('[data-tnopen]', e => e.getAttribute('aria-expanded')), 'false', 'closed until she opens it');
-  await p.click('[data-tnopen]');
+  await p.waitForSelector('[data-pmore]', { timeout: 60000 });
+  assert.equal(await p.$('[data-tnopen]'), null, 'closed until she opens it');
+  await menuPick(p, '[data-pmore]', 'Typed notes');
   await p.waitForSelector('.mk-tn .tn .tned');
+  assert.equal(await p.$eval('[data-tnopen]', e => e.getAttribute('aria-expanded')), 'true');
   await calm(p);
   await typeNotes(p, '.mk-tn');
   if (process.env.GS_SHOTS) await p.screenshot({ path: path.join(process.env.GS_SHOTS, 'mark-notes.png') });
@@ -127,7 +132,7 @@ test('typed notes: the same keys make the same notes as the current app, each ch
   assert.equal(await tnOf(p, 'next', 1), null, 'nothing kept for Bram until he has words');
   // the Timer: started, + Time to comment, and the asked-for length
   await p.evaluate(() => { const t0 = Date.now(), p0 = performance.now(); Date.now = () => t0 + Math.round(performance.now() - p0); });   // the clock runs again for the Timer
-  await p.click('[data-tmopen]'); await p.waitForSelector('[data-tmgo]');
+  await menuPick(p, '[data-pmore]', 'Timer'); await p.waitForSelector('[data-tmgo]');
   await p.click('[data-tmgo]');
   await p.waitForFunction(() => /^0:0[1-9]$/.test(document.querySelector('[data-tmclock]').textContent), { timeout: 10000 });
   await p.click('[data-tmgo]');
@@ -174,8 +179,7 @@ test('typed notes: a saved comment goes in where the caret was', async () => {
   const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
   await chooser.accept([z]);
   await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
-  await p.waitForSelector('[data-tnopen]', { timeout: 60000 });
-  await p.click('[data-tnopen]'); await p.waitForSelector('.mk-tn .tn .tned');
+  await menuPick(p, '[data-pmore]', 'Typed notes'); await p.waitForSelector('.mk-tn .tn .tned');
   await p.click('.mk-tn .tned'); await p.keyboard.type('Opening: '); await calm(p);
   await p.click('[data-tnbank]'); await p.waitForSelector('.pop [role="menuitem"]');
   await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(b => /Good eye/.test(b.textContent)).click());

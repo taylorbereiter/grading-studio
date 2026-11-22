@@ -706,5 +706,16 @@
  },
  "paper.bb_none": "コードがまだ見つかりません。各ブロックは S-7QK4 のようなコードで始まる必要があります。",
  "paper.bb_feedback_file": "フィードバック",
- "paper.bb_zip_name": "{ai} から - {name}"
+ "paper.bb_zip_name": "{ai} から - {name}",
+ "paper.pm_more": "この答案のその他の操作",
+ "paper.pm_details": "生徒の情報",
+ "paper.pm_notes": "代わりにメモを入力する",
+ "paper.pm_export": "{name} の答案を今すぐ書き出す",
+ "paper.pm_export_anon": "この答案を今すぐ書き出す",
+ "paper.pm_sent": "{when}に書き出し済み。変更したらもう一度書き出してください。",
+ "paper.pm_edit": "ルーブリックを編集",
+ "paper.pm_edit_pts": "編集",
+ "paper.pm_keys": "すべてのキー",
+ "paper.pm_type": "種類を変える",
+ "paper.pm_page": "クラスでこの生徒のページを開く"
 }

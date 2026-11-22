@@ -706,5 +706,16 @@
  },
  "paper.bb_none": "아직 코드를 찾지 못했어요. 각 블록은 S-7QK4 같은 코드로 시작해야 해요.",
  "paper.bb_feedback_file": "피드백",
- "paper.bb_zip_name": "{ai}에서 받음 - {name}"
+ "paper.bb_zip_name": "{ai}에서 받음 - {name}",
+ "paper.pm_more": "이 과제의 추가 작업",
+ "paper.pm_details": "학생 정보",
+ "paper.pm_notes": "대신 메모 입력하기",
+ "paper.pm_export": "{name}의 과제 지금 내보내기",
+ "paper.pm_export_anon": "이 과제 지금 내보내기",
+ "paper.pm_sent": "{when}에 내보냄. 바꾼 뒤에는 다시 내보내세요.",
+ "paper.pm_edit": "루브릭 편집",
+ "paper.pm_edit_pts": "편집",
+ "paper.pm_keys": "모든 단축키",
+ "paper.pm_type": "유형 바꾸기",
+ "paper.pm_page": "반에서 이 학생의 페이지 열기"
 }

@@ -82,6 +82,7 @@ export const PARTS = {
   // Grades, Insights and Return (the screen part), and what they run: the export engine with pdf-lib and fflate, loaded on their
   // own like pdf.js (each library is its own chunk, under the any-chunk budget)
   out: () => import('./screens/mark-out.jsx'),
+  pmore: () => import('./mark/paper-more.jsx'),
   outEngine: () => import('./mark/out.js'),
   // the Grade sheet on the Grades tab
   sheet: () => import('./mark/sheet.jsx'),

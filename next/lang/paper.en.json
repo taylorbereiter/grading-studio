@@ -706,5 +706,16 @@
  },
  "paper.bb_none": "No codes found yet. Each block should start with a code like S-7QK4.",
  "paper.bb_feedback_file": "Feedback",
- "paper.bb_zip_name": "From {ai} - {name}"
+ "paper.bb_zip_name": "From {ai} - {name}",
+ "paper.pm_more": "More for this paper",
+ "paper.pm_details": "Student details",
+ "paper.pm_notes": "Type notes instead",
+ "paper.pm_export": "Export {name}’s paper now",
+ "paper.pm_export_anon": "Export this paper now",
+ "paper.pm_sent": "Exported {when}. Export again after any change.",
+ "paper.pm_edit": "Edit rubric",
+ "paper.pm_edit_pts": "Edit",
+ "paper.pm_keys": "All keys",
+ "paper.pm_type": "Change the type",
+ "paper.pm_page": "Open their page in the class"
 }

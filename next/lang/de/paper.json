@@ -706,5 +706,16 @@
  },
  "paper.bb_none": "Noch keine Codes gefunden. Jeder Block sollte mit einem Code wie S-7QK4 beginnen.",
  "paper.bb_feedback_file": "Rückmeldung",
- "paper.bb_zip_name": "Von {ai} - {name}"
+ "paper.bb_zip_name": "Von {ai} - {name}",
+ "paper.pm_more": "Mehr zu dieser Arbeit",
+ "paper.pm_details": "Angaben zum Schüler",
+ "paper.pm_notes": "Notizen stattdessen tippen",
+ "paper.pm_export": "Arbeit von {name} jetzt exportieren",
+ "paper.pm_export_anon": "Diese Arbeit jetzt exportieren",
+ "paper.pm_sent": "Exportiert {when}. Nach jeder Änderung erneut exportieren.",
+ "paper.pm_edit": "Bewertungsraster bearbeiten",
+ "paper.pm_edit_pts": "Bearbeiten",
+ "paper.pm_keys": "Alle Tasten",
+ "paper.pm_type": "Art ändern",
+ "paper.pm_page": "Seine Seite in der Klasse öffnen"
 }

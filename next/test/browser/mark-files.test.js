@@ -6,7 +6,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('http'), fs = require('fs'), os = require('os'), path = require('path');
 const { launch } = require('../../../test/helpers/chrome.js');
-const { plant, appReady, openZip } = require('../../../test/helpers/app.js');
+const { plant, appReady, openZip, catchDownloads } = require('../../../test/helpers/app.js');
 const { standardFiles, zipOf, makePaper } = require('../../../test/helpers/fixtures.js');
 const { gradingSeed, STEADY } = require('../../../test/helpers/steady.js');
 
@@ -416,6 +416,130 @@ test('Setup > Bring in files: each file sorted to its student by name, one given
   await m2.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
   await m2.waitForFunction(k => { const b = window.__gs.state().batch, s = b.students.find(x => x.key === k), n = b.students.find(x => x.key === 'Nova Madeup');
     return s && s.grade.status === 'late' && s.files.some(f => f.name === 'Bram Sample redo.pdf') && n && n.files.some(f => f.name === 'scan 0412.pdf'); }, { timeout: 30000 }, KEY);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// More for this paper (slice C PR 2): the menu beside the student's name, and the links the current app's panel had
+const menuPick = async (p, opener, label) => { await p.waitForSelector(opener, { timeout: 60000 }); await p.click(opener); await p.waitForSelector('.pop [role^="menuitem"]');
+  const ok = await p.evaluate(l => { const it = [...document.querySelectorAll('.pop [role^="menuitem"]')].find(e => (e.querySelector('b') || e).textContent.trim() === l); if (it) it.click(); return !!it; }, label);
+  if (!ok) throw new Error('no menu item ' + label); };
+const menuHas = async (p, opener, label) => { await p.click(opener); await p.waitForSelector('.pop [role^="menuitem"]');
+  const has = await p.evaluate(l => [...document.querySelectorAll('.pop [role^="menuitem"]')].some(e => (e.querySelector('b') || e).textContent.trim() === l), label);
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('.pop')); return has; };
+async function moreScreen(ctx, errors) {
+  const m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zip);
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await p.waitForSelector('[data-pmore]', { timeout: 60000 });
+  if (await p.$('[data-repx]')) await p.click('[data-repx]');
+  return { p, id };
+}
+const openOn = async (p, key) => { const i = await p.evaluate(k => window.__mark.state().batch.students.findIndex(s => s.key === k), key);
+  await p.click('[data-st="' + i + '"]'); await p.waitForFunction(i => window.__mark.state().cur === i && document.querySelector('[data-pmore]'), { timeout: 30000 }, i); };
+const shut = async (p, sel) => { await p.waitForSelector(sel, { timeout: 30000 }); await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open]')); };
+
+test('C-057 C-052 C-056 C-059 C-074 C-048 C-077 A-002 A-003: More for this paper beside the name has Student details, Only this student, Use as an example (a Word paper too), the Mark key and All keys over the paper, and its items and the gradebook are in Find', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const { p } = await moreScreen(ctx, errors);
+  await p.evaluate(() => { const b = window.__mark.state().batch; if (b.classId == null) b.classId = 'c1'; });
+  await openOn(p, KEY);
+  // C-052 Student details: the class's details for this student, over the paper, with their page a press away
+  await menuPick(p, '[data-pmore]', 'Student details');
+  await p.waitForSelector('dialog[open] [data-pmwho] [data-details]', { timeout: 30000 });
+  assert.equal(await p.$eval('dialog[open] h2', e => e.textContent), KEY);
+  assert.match(await p.$eval('[data-pmpage]', a => a.getAttribute('href')), /#\/class\/c1\/people\/2$/);
+  await shut(p, 'dialog[open] [data-pmwho]');
+  // C-074 the Mark key, the same card as Settings
+  await menuPick(p, '[data-pmore]', 'Mark key');
+  await p.waitForSelector('dialog[open] [data-pmmkey] [data-sgmk]', { timeout: 30000 });
+  await shut(p, 'dialog[open] [data-pmmkey]');
+  // C-048, C-077 All keys: the shortcut list over the paper, closed the standard way, and she is still marking
+  await menuPick(p, '[data-pmore]', 'All keys');
+  await p.waitForSelector('dialog[open] [data-pmkeys] .keys kbd', { timeout: 30000 });
+  assert.match(await p.$eval('dialog[open] [data-pmkeys]', e => e.textContent), /Next to score/);
+  await shut(p, 'dialog[open] [data-pmkeys]');
+  assert.match(await p.evaluate(() => location.hash), /^#\/mark\//);
+  // C-059 Use as an example on a Word paper too
+  await openOn(p, 'Dov Madeup');
+  await menuPick(p, '[data-pmore]', 'Use as an example');
+  await p.waitForSelector('dialog[open] [data-espg]', { timeout: 60000 });
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open]'));
+  // A-003, A-002: Find has this paper's items and the class gradebook
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  for (const say of ['Student details', 'Mark key', 'Gradebook']) {
+    await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
+    await p.waitForSelector('dialog.cmd[open]');
+    await p.keyboard.type(say);
+    await p.waitForFunction(s => [...document.querySelectorAll('dialog.cmd[open] [role="option"]')].some(o => o.textContent.includes(s)), { timeout: 10000 }, say);
+    if (say !== 'Gradebook') { await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog.cmd[open]')); }
+  }
+  await p.keyboard.press('Enter');
+  await p.waitForFunction(() => location.hash === '#/class/c1/grades', { timeout: 10000 });
+  await p.goBack(); await p.waitForSelector('[data-pmore]', { timeout: 60000 });
+  // C-056 Only this student, from the menu
+  await menuPick(p, '[data-pmore]', 'Only this student');
+  await p.waitForSelector('.mk-solo');
+  assert.equal(await p.$('.mk-list'), null);
+  assert.equal(await menuHas(p, '[data-pmore]', 'Only this student'), false, 'not offered while it is on');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('C-050 D-038: Export <name>\'s paper now in More for this paper saves the file, and "Exported …" shows under the student; the current app keeps it as sent', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const { p, id } = await moreScreen(ctx, errors), dl = await catchDownloads(p);
+  await openOn(p, KEY);
+  assert.equal(await p.$('[data-pmsent]'), null, 'nothing under the name before');
+  // a mark on the paper, so it has something to give back
+  await p.evaluate(k => { const st = window.__mark.state().batch.students.find(s => s.key === k), f = st.files.find(x => x.name === 'Essay.pdf'); (f.marks[0] ||= []).push({ t: 'stamp', k: 'sp', x: 420, y: 300, size: 16, color: '#D7263D' }); st.grade.comment = 'Clear ideas.'; }, KEY);
+  await p.evaluate(() => window.__mark.saved());
+  const got = await dl.next(() => menuPick(p, '[data-pmore]', 'Export ' + KEY + '’s paper now'));
+  assert.match(got.name, /\.(pdf|zip)$/);
+  await p.waitForSelector('[data-pmsent]', { timeout: 30000 });
+  assert.match(await p.$eval('[data-pmsent]', e => e.textContent), /^Exported today at .+\. Export again after any change\.$/);
+  await p.evaluate(() => window.__mark.saved());
+  await dl.close(); await p.close();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), id);
+  await m.waitForFunction(k => { const b = window.__gs.state().batch; return b && b.students.find(s => s.key === k).grade.sent > 0; }, { timeout: 60000 }, KEY);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('C-044 C-031 C-029: Edit rubric by the Score heading opens Rubric setup, Type notes instead opens typed notes for a notes page, and Change the type on a formative panel brings the score back', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const { p } = await moreScreen(ctx, errors);
+  await openOn(p, KEY);
+  // C-044
+  await p.click('[data-editrubric]');
+  await p.waitForSelector('dialog[open] [data-setup]', { timeout: 30000 });
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open]'));
+  // C-031: offered only with a notes page; it opens typed notes with the cursor in them
+  assert.equal(await menuHas(p, '[data-pmore]', 'Type notes instead'), false, 'no notes page yet');
+  await p.waitForFunction(() => { if (document.querySelector('.pop [role="menuitem"]')) { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.includes('notes page')); if (it) it.click(); return !!it; } const b = document.querySelector('[data-addmenu]'); if (b) b.click(); return false; }, { timeout: 30000 });
+  await p.waitForSelector('dialog[open] [data-npadd]'); await p.click('dialog[open] [data-npadd]');
+  await p.waitForFunction(k => window.__mark.state().batch.students.find(s => s.key === k).files.length === 3, { timeout: 60000 }, KEY);
+  await p.waitForFunction(() => !document.querySelector('dialog[open]'));
+  await menuPick(p, '[data-pmore]', 'Type notes instead');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('.mk-tn .tned'), { timeout: 30000 });
+  assert.equal(await p.$eval('[data-tnopen]', e => e.getAttribute('aria-expanded')), 'true');
+  // C-029: a formative assignment's panel says so, with Change the type; Summative brings the score back
+  await p.evaluate(() => { const b = window.__mark.state().batch; b.assignment = { id: 'i2', name: 'Story map', type: 'fm' }; });
+  await p.click('[data-st="0"]'); await openOn(p, KEY);
+  await p.waitForSelector('[data-fbtype]', { timeout: 30000 });
+  await p.click('[data-fbtype]');
+  await p.waitForSelector('dialog[open] [data-asg-dlg]', { timeout: 30000 });
+  await p.evaluate(() => [...document.querySelectorAll('dialog[open] [data-asg-dlg] button')].find(b => b.textContent.trim() === 'Summative').click());
+  await p.click('dialog[open] [data-asg-ok]');
+  await p.waitForFunction(() => window.__mark.state().batch.assignment.type === 'sum' && document.querySelector('.mk-crits, .mk-pts') && !document.querySelector('[data-fb]'), { timeout: 30000 });
+  assert.equal(await p.$('[data-fbtype]'), null);
   assert.deepEqual(errors, []);
   await ctx.close();
 });

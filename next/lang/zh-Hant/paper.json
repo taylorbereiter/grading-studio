@@ -706,5 +706,16 @@
  },
  "paper.bb_none": "還沒找到代碼。每一段都應該以代碼開頭，例如 S-7QK4。",
  "paper.bb_feedback_file": "回饋",
- "paper.bb_zip_name": "來自 {ai} - {name}"
+ "paper.bb_zip_name": "來自 {ai} - {name}",
+ "paper.pm_more": "這份作業的更多選項",
+ "paper.pm_details": "學生資料",
+ "paper.pm_notes": "改為打字記筆記",
+ "paper.pm_export": "立即匯出 {name} 的作業",
+ "paper.pm_export_anon": "立即匯出這份作業",
+ "paper.pm_sent": "已於{when}匯出。若有修改，請再匯出一次。",
+ "paper.pm_edit": "編輯評分規準",
+ "paper.pm_edit_pts": "編輯",
+ "paper.pm_keys": "所有快速鍵",
+ "paper.pm_type": "更改類型",
+ "paper.pm_page": "開啟這位學生在班級中的頁面"
 }

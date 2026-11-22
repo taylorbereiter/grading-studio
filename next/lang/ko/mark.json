@@ -166,7 +166,6 @@
  "mark.lf_way": "목록의 점수",
  "mark.lf_pct": "백분율",
  "mark.lf_pts": "점수",
- "mark.lf_pts_short": "점",
  "mark.lf_flagged": "확인이 필요해요: 다시 스캔할 페이지, 확인할 답안지 위의 성적, 답안지와 다른 점수, 또는 새로 들어오거나 바뀐 파일",
  "mark.lf_none": "여기 다른 학생은 없어요.",
  "mark.lf_everyone": "모두 보기",
@@ -181,7 +180,6 @@
  "mark.fb_done": "피드백 완료",
  "mark.fb_next": "완료, 다음 학생",
  "mark.fb_key": "피드백 완료 켜기/끄기 (Shift: 켜고 다음 학생으로)",
- "mark.stamp": "도장",
  "mark.stamp_tip": "답안지에 점수 찍기",
  "mark.stamp_row": "답안지에 {c} 점수 찍기",
  "mark.stamp_open": "먼저 답안지를 연 다음 점수를 찍으세요.",
@@ -266,6 +264,7 @@
  "mark.zoom_100": "100%로 돌아가기",
  "mark.zoom_reset": "100%로 돌아가기 ({key})",
  "mark.next_fb": "피드백이 끝나지 않은 다음 학생",
+ "mark.cmd_book": "성적부",
  "mark.cw_typed": "직접 입력",
  "mark.cw_ud_q": "‘{name}’을(를) 삭제할까요?",
  "mark.cw_ud_say": {

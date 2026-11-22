@@ -166,7 +166,6 @@
  "mark.lf_way": "列表中的分数",
  "mark.lf_pct": "百分比",
  "mark.lf_pts": "分数",
- "mark.lf_pts_short": "分",
  "mark.lf_flagged": "这里有需要查看的地方：需要重新扫描的页面、作业上待确认的成绩、与作业上不一致的分数，或者新的或有改动的文件",
  "mark.lf_none": "这里没有其他人了。",
  "mark.lf_everyone": "显示所有人",
@@ -181,7 +180,6 @@
  "mark.fb_done": "反馈完成",
  "mark.fb_next": "完成，下一位学生",
  "mark.fb_key": "切换反馈完成（Shift：设为完成并前往下一位学生）",
- "mark.stamp": "印章",
  "mark.stamp_tip": "把分数盖在作业上",
  "mark.stamp_row": "把 {c} 的分数盖在作业上",
  "mark.stamp_open": "请先打开作业，再把分数盖上去。",
@@ -266,6 +264,7 @@
  "mark.zoom_100": "回到 100%",
  "mark.zoom_reset": "回到 100%（{key}）",
  "mark.next_fb": "下一位未完成反馈的学生",
+ "mark.cmd_book": "成绩册",
  "mark.cw_typed": "手动输入",
  "mark.cw_ud_q": "删除“{name}”？",
  "mark.cw_ud_say": {

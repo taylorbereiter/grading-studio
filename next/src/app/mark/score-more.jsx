@@ -61,11 +61,12 @@ export function ScoreMore({ st }) {
   </div>;
 }
 
-// Under the score: Anchor paper, High Mid Low (src/anchors.js anchorHtml). Shown where anchors belong, once the paper has something in it.
+// Under the score: Anchor paper, High Mid Low (src/anchors.js anchorHtml). Shown where anchors belong, once this paper is one: making
+// it one is in More for this paper (mark/paper-more.jsx), so the row isn't one more thing to press on every paper.
 export const anchorName = lv => t(lv === 'high' ? 'mark.an_high' : lv === 'mid' ? 'mark.an_mid' : 'mark.an_low');
 export function Anchors({ st }) {
   const [, again] = useState(0), b = state().batch;
-  if (!st || !st.files.length || noScore(st) || !C.anchorsHere()) return null;
+  if (!st || !st.files.length || noScore(st) || !C.anchorsHere() || !st.grade.anchor) return null;
   const on = st.grade.anchor || '';
   const tip = lv => { const j = C.anchorOf(lv), nm = anchorName(lv).toLowerCase(); return on === lv ? t('paper.an_on', { lv: nm }) : j >= 0 && b.students[j] !== st ? (anonOn() ? t('paper.an_move_anon', { lv: nm }) : t('paper.an_move', { lv: nm, who: b.students[j].key })) : t('paper.an_make', { lv: nm }); };
   return <AnchorRow><span class="lab" title={t('paper.an_tip')}>{t('paper.an_label')}</span>

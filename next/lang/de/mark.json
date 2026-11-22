@@ -165,7 +165,6 @@
  "mark.lf_way": "Bewertungen in der Liste",
  "mark.lf_pct": "Prozent",
  "mark.lf_pts": "Punkte",
- "mark.lf_pts_short": "Pkt.",
  "mark.lf_flagged": "Hier sollten Sie nachsehen: eine Seite zum Neuscannen, eine Note auf der Arbeit zum Bestätigen, eine Bewertung, die von der Arbeit abweicht, oder eine neue oder geänderte Datei",
  "mark.lf_none": "Sonst niemand hier.",
  "mark.lf_everyone": "Alle zeigen",
@@ -180,7 +179,6 @@
  "mark.fb_done": "Rückmeldung vollständig",
  "mark.fb_next": "Vollständig, nächste Person",
  "mark.fb_key": "Rückmeldung vollständig an oder aus (Shift: an, dann nächste Person)",
- "mark.stamp": "Stempel",
  "mark.stamp_tip": "Bewertung auf die Arbeit setzen",
  "mark.stamp_row": "Bewertung für {c} auf die Arbeit setzen",
  "mark.stamp_open": "Öffnen Sie zuerst die Arbeit und stempeln Sie dann die Bewertung darauf.",
@@ -265,6 +263,7 @@
  "mark.zoom_100": "Zurück auf 100 %",
  "mark.zoom_reset": "Zurück auf 100 % ({key})",
  "mark.next_fb": "Nächste ohne Rückmeldung",
+ "mark.cmd_book": "Notenbuch",
  "mark.cw_typed": "Eingetippt",
  "mark.cw_ud_q": "„{name}“ löschen?",
  "mark.cw_ud_say": {

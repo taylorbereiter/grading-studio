@@ -706,5 +706,16 @@
  },
  "paper.bb_none": "还没找到代码。每一段都应以代码开头，例如 S-7QK4。",
  "paper.bb_feedback_file": "反馈",
- "paper.bb_zip_name": "来自 {ai} - {name}"
+ "paper.bb_zip_name": "来自 {ai} - {name}",
+ "paper.pm_more": "这份作业的更多选项",
+ "paper.pm_details": "学生资料",
+ "paper.pm_notes": "改为打字记笔记",
+ "paper.pm_export": "立即导出 {name} 的作业",
+ "paper.pm_export_anon": "立即导出这份作业",
+ "paper.pm_sent": "已于{when}导出。如有修改，请再导出一次。",
+ "paper.pm_edit": "编辑评分量规",
+ "paper.pm_edit_pts": "编辑",
+ "paper.pm_keys": "所有快捷键",
+ "paper.pm_type": "更改类型",
+ "paper.pm_page": "打开这位学生在班级中的页面"
 }

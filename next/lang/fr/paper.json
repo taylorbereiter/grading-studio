@@ -699,5 +699,16 @@
  },
  "paper.bb_none": "Aucun code trouvé pour l’instant. Chaque bloc doit commencer par un code comme S-7QK4.",
  "paper.bb_feedback_file": "Commentaires",
- "paper.bb_zip_name": "De {ai} - {name}"
+ "paper.bb_zip_name": "De {ai} - {name}",
+ "paper.pm_more": "Plus pour ce devoir",
+ "paper.pm_details": "Coordonnées de l'élève",
+ "paper.pm_notes": "Taper les notes à la place",
+ "paper.pm_export": "Exporter maintenant le devoir de {name}",
+ "paper.pm_export_anon": "Exporter ce devoir maintenant",
+ "paper.pm_sent": "Exporté {when}. Exportez à nouveau après toute modification.",
+ "paper.pm_edit": "Modifier la grille",
+ "paper.pm_edit_pts": "Modifier",
+ "paper.pm_keys": "Tous les raccourcis",
+ "paper.pm_type": "Changer le type",
+ "paper.pm_page": "Ouvrir sa page dans la classe"
 }

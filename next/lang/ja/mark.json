@@ -166,7 +166,6 @@
  "mark.lf_way": "リストの点数",
  "mark.lf_pct": "パーセント",
  "mark.lf_pts": "点数",
- "mark.lf_pts_short": "点",
  "mark.lf_flagged": "確認が必要です：再スキャンするページ、確認待ちの答案上の成績、答案と違う点数、または新しいか変更されたファイル",
  "mark.lf_none": "ほかには誰もいません。",
  "mark.lf_everyone": "全員を表示",
@@ -181,7 +180,6 @@
  "mark.fb_done": "フィードバック完了",
  "mark.fb_next": "完了、次の生徒",
  "mark.fb_key": "フィードバック完了のオン・オフ（Shift：オンにして次の生徒へ）",
- "mark.stamp": "スタンプ",
  "mark.stamp_tip": "点数を答案に押す",
  "mark.stamp_row": "{c} の点数を答案に押す",
  "mark.stamp_open": "先に答案を開いてから、点数を押してください。",
@@ -266,6 +264,7 @@
  "mark.zoom_100": "100% に戻す",
  "mark.zoom_reset": "100% に戻す（{key}）",
  "mark.next_fb": "フィードバック未完了の次の生徒",
+ "mark.cmd_book": "成績表",
  "mark.cw_typed": "入力済み",
  "mark.cw_ud_q": "「{name}」を削除しますか？",
  "mark.cw_ud_say": {

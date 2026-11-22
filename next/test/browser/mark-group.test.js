@@ -41,6 +41,11 @@ const twoZip = async () => zipOf({ 'Aria Testwell/Outline.pdf': await makePaper(
 const groups = p => p.evaluate(() => JSON.parse(JSON.stringify(window.__mark.state().batch.groups || [])));
 const pickMode = async (p, v) => { await p.select('[data-grpmode]', v); };
 
+// an item of a menu by its words (ui Menu): the opener pressed, then the item. Typed notes and the Timer open from More for this paper (gaps C-057).
+const menuPick = async (p, opener, label) => { await p.waitForSelector(opener, { timeout: 60000 }); await p.click(opener); await p.waitForSelector('.pop [role^="menuitem"]');
+  const ok = await p.evaluate(l => { const it = [...document.querySelectorAll('.pop [role^="menuitem"]')].find(e => (e.querySelector('b') || e).textContent.trim() === l); if (it) it.click(); return !!it; }, label);
+  if (!ok) throw new Error('no menu item ' + label); };
+
 test('group work: Group work… gives a partner a copy and makes a group, the band changes how it is graded with Undo and Redo, Just them, Grade on their own with Undo; the current app opens the same group', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const p = await page(ctx, errors);
@@ -91,7 +96,7 @@ test('group work: Group work… gives a partner a copy and makes a group, the ba
   await p.evaluate(() => [...document.querySelectorAll('[data-grpband] button, [data-grpband] [role="radio"]')].find(e => /^Just /.test(e.textContent.trim())).click());
   await p.waitForFunction(() => [...document.querySelectorAll('[data-grpband] [aria-checked="true"], [data-grpband] [aria-pressed="true"]')].some(e => /^Just /.test(e.textContent.trim())));
   // a typed paragraph written now is just for Aria
-  await p.click('[data-tnopen]'); await p.waitForSelector('.mk-tn .tn .tned');
+  await menuPick(p, '[data-pmore]', 'Typed notes'); await p.waitForSelector('.mk-tn .tn .tned');
   await p.evaluate(() => new Promise(r => setTimeout(r, 350)));
   await p.click('.mk-tn .tned'); await p.keyboard.type('Only for her');
   await p.waitForFunction(a => { const tn = window.__mark.state().batch.students[0].grade.tn; return tn && tn.l.some(x => x.s === 'Only for her' && x.o === a); }, { timeout: 10000 }, aria);

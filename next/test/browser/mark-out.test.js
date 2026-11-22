@@ -49,6 +49,10 @@ const pdfPixels = `async (data, lib) => { const bin = atob(data), u8 = new Uint8
 
 // Main's page: made-up papers with marks of every kind and a score and comment on the first student, so the feedback page has
 // something to say; then main's own returned PDF of that paper, its list of returned files and its spreadsheet.
+// an item of a menu by its words (ui Menu): the opener pressed, then the item (gaps C-057: More for this paper holds what used to be on the panel)
+const menuPick = async (p, opener, label) => { await p.waitForSelector(opener, { timeout: 60000 }); await p.click(opener); await p.waitForSelector('.pop [role^="menuitem"]');
+  const ok = await p.evaluate(l => { const it = [...document.querySelectorAll('.pop [role^="menuitem"]')].find(e => (e.querySelector('b') || e).textContent.trim() === l); if (it) it.click(); return !!it; }, label);
+  if (!ok) throw new Error('no menu item ' + label); };
 async function mainSide(ctx, errors) {
   const p = await page(ctx, errors);
   await p.goto(srv.url + 'blank'); await plant(p, gradingSeed());
@@ -257,29 +261,29 @@ test('Insights > Consistency says what the current app says about the same work,
   await ctx.close();
 });
 
-test('anchor papers: High, Mid or Low under the score, one paper each with one undo step, the tag in the list, and Return exports them named and covered; the current app reads the same tags', async () => {
+test('anchor papers: High, Mid or Low in More for this paper (gaps C-057), shown under the score once given, one paper each with one undo step, the tag in the list, and Return exports them named and covered; the current app reads the same tags', async () => {
   const ctx = await browser.createBrowserContext(), errors = [];
   const old = await mainSide(ctx, []);
   const p = await page(ctx, errors), dl = await catchDownloads(p);
   await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(old.id));
-  await p.waitForSelector('[data-anchrow] [data-anchor="high"]', { timeout: 60000 });
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
   const tags = () => p.evaluate(() => window.__mark.state().batch.students.map(s => s.grade.anchor || ''));
-  await p.click('[data-anchor="high"]');
+  assert.equal(await p.$('[data-anchrow]'), null, 'no anchor row on a paper that is not one');
+  await menuPick(p, '[data-pmore]', 'High');
   await p.waitForFunction(() => window.__mark.state().batch.students[0].grade.anchor === 'high');
   assert.equal(await p.$eval('[data-st="0"] [data-anchtag]', e => e.textContent), 'high', 'the tag in the list');
+  await p.waitForSelector('[data-anchrow] [data-anchor="high"][aria-pressed="true"]');
   // High on another paper moves it; one Ctrl Z puts both back
   await p.click('[data-st="2"]');
   await p.waitForFunction(() => document.querySelector('.mk-side h2') && /Cleo/.test(document.querySelector('.mk-side h2').textContent));
-  await p.waitForSelector('[data-anchrow] [data-anchor="high"]');
-  await p.click('[data-anchor="high"]');
+  await menuPick(p, '[data-pmore]', 'High');
   await p.waitForFunction(() => window.__mark.state().batch.students[2].grade.anchor === 'high');
   assert.deepEqual((await tags()).slice(0, 3), ['', '', 'high'], 'one paper each');
   await p.evaluate(() => document.activeElement && document.activeElement.blur());
   await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
   await p.waitForFunction(() => window.__mark.state().batch.students[0].grade.anchor === 'high');
   assert.deepEqual((await tags()).slice(0, 3), ['high', '', ''], 'one undo step puts both papers back');
-  await p.waitForSelector('[data-anchrow] [data-anchor="low"]');
-  await p.click('[data-anchor="low"]');
+  await menuPick(p, '[data-pmore]', 'Low');
   await p.waitForFunction(() => window.__mark.state().batch.students[2].grade.anchor === 'low');
   await p.evaluate(() => window.__mark.saved());
   // Return: the card lists them, and one button makes both files in a ZIP, named for the assignment and the level
@@ -307,9 +311,8 @@ test('hide names: the switch, Check the covers (a box drawn, used on every paper
   const old = await mainSide(ctx, []);
   const p = await page(ctx, errors);
   await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(old.id));
-  await p.waitForSelector('[data-anonsw]', { timeout: 60000 });
   await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
-  await p.click('[data-anonsw]');
+  await menuPick(p, '[data-setupopen]', 'Hide names');
   await p.waitForSelector('dialog[open] [data-hnstart]', { timeout: 30000 });
   await p.waitForFunction(() => /checked/.test((document.querySelector('[data-hncount]') || {}).textContent || ''), { timeout: 30000 });
   await p.click('[data-hncheck]');

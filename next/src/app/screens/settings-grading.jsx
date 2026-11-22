@@ -159,7 +159,7 @@ function MarkPic({ k }) {
 }
 // The mark key (src/stamps.js openMarkKey, gs.markKey): her own name and meaning for each proofreading and punctuation mark, and
 // whether returned papers get a key page listing the ones used. Each box saves when she leaves it.
-function MarkKey() {
+export function MarkKey() {
   const [, again] = useState(0), re = () => again(n => n + 1);
   const set0 = () => { const v = prefs.get(MARK_KEY, null); return v && typeof v === 'object' ? v : {}; };
   const setKey = change => { const v = { ...set0() }; change(v); prefs.set(MARK_KEY, v); re(); };

@@ -92,32 +92,43 @@ test('a keyboard run: from opening the papers to the next student with the keybo
 });
 
 // The papers of two made-up students, opened on the new marking screen at a width; the page, once the paper and the tools are drawn.
-async function openMark(ctx, errors, width = 1440) {
+async function openMark(ctx, errors, width = 1440, keepNote = false, papers = null) {
   const m = await page(ctx, errors);
   await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
   await m.goto(srv.url); await appReady(m);
-  await openZip(m, await zipOf({ 'Aria Testwell/Essay.pdf': await makePaper({ title: 'My summer essay' }), 'Bram Sample/Essay.pdf': await makePaper({ title: 'A day at the lake' }) }));
+  await openZip(m, await zipOf(papers || { 'Aria Testwell/Essay.pdf': await makePaper({ title: 'My summer essay' }), 'Bram Sample/Essay.pdf': await makePaper({ title: 'A day at the lake' }) }));
   const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
   const p = await page(ctx, errors);
   if (width !== 1440) await p.setViewport({ width, height: width < 700 ? 844 : 900 });
   await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
   await p.waitForFunction(() => window.__mark && window.__mark.ready && window.__mark.read && window.__mark.state().cur === 0, { timeout: 60000 });
   await p.waitForSelector('[data-light]', { timeout: 30000 });
-  // the one-time note on what opened sits over the zoom: closed first, as she would
-  if (await p.$('[data-repx]')) { await p.click('[data-repx]'); await p.waitForFunction(() => !document.querySelector('[data-repx]')); }
+  // the one-time note on what opened: closed first, as she would (keepNote: left, to see where it sits)
+  if (!keepNote && await p.$('[data-repx]')) { await p.click('[data-repx]'); await p.waitForFunction(() => !document.querySelector('[data-repx]')); }
   return p;
 }
-// Things to press on the screen at rest, counted the stage 4 way: each Tab stop shown in the window (a set of choices that the arrow
-// keys move inside is one stop), with the student list as one, and the one-time note on what opened closed first.
+// Things to press on the screen at rest, counted the stage 4 way (next/tools/mark-shots.js pressable): each Tab stop shown in the
+// window (a set of choices that the arrow keys move inside is one stop, menus and notes left out), with the student rows as one, and
+// the one-time note on what opened closed first.
 const presses = async p => { if (await p.$('[data-repx]')) { await p.click('[data-repx]'); await p.waitForFunction(() => !document.querySelector('[data-repx]')); }
-  return p.evaluate(() => { const seen = new Set(), list = [];
-    for (const el of document.querySelectorAll('main a[href], main button:not([disabled]), main input, main select, main textarea, main [tabindex="0"]')) {
-      const r = el.getBoundingClientRect(); if (!(r.width > 0 && r.height > 0 && r.top < innerHeight && r.bottom > 0) || el.getAttribute('tabindex') === '-1') continue;
-      const one = el.closest('.mk-list') || el; if (seen.has(one)) continue; seen.add(one); list.push((el.getAttribute('aria-label') || el.textContent || el.type || '').trim().slice(0, 30)); }
-    return list; }); };
-test('the marking screen at rest: under 25 things to press at 1440 and at 390 px', async () => {
+  await p.mouse.move(1, 1); await new Promise(r => setTimeout(r, 300));   // the mouse off the paper, as mark-shots leaves it
+  return p.evaluate(() => {
+    const W = innerWidth, H = innerHeight;
+    const seen = e => { const r = e.getBoundingClientRect(); if (!(r.width > 0 && r.height > 0 && r.bottom > 0 && r.right > 0 && r.top < H && r.left < W) || e.closest('[hidden],[inert]')) return false;
+      for (let x = e; x && x.nodeType === 1; x = x.parentElement) { const st = getComputedStyle(x); if (st.visibility === 'hidden' || +st.opacity === 0 || st.display === 'none') return false; } return true; };
+    const raw = [...new Set(document.querySelectorAll('.markscreen button, .markscreen a[href], .markscreen input, .markscreen select, .markscreen textarea'))]
+      .filter(e => seen(e) && !e.disabled && !e.closest('.toast, .note, canvas, [role="menu"], [role="status"]'));
+    const rows = raw.filter(e => e.closest('[data-st]')), rest = raw.filter(e => !e.closest('[data-st]'));
+    const lab = e => { const g = e.closest('[data-rove],[role="tablist"],[role="radiogroup"]'); const x = g || e; return (x.getAttribute('aria-label') || e.getAttribute('aria-label') || e.title || e.textContent || e.tagName).trim().slice(0, 40) + (g ? ' (set)' : ''); };
+    return rest.filter(e => e.tabIndex >= 0 && e.getAttribute('tabindex') !== '-1').map(lab).concat(rows.length ? ['Student list'] : []); }); };
+test('the marking screen at rest: under 25 things to press at 1440 and at 390 px, counted as mark-shots counts them (C-057: the score sticker, the anchor paper, Hide names and Scores in the list moved into menus)', async () => {
   const errors = [], ctx = await browser.createBrowserContext(), n = {};
-  for (const w of [1440, 390]) { const p = await openMark(ctx, errors, w), l = await presses(p); n[w] = l.length; console.log('# at ' + w + ' px: ' + l.join(' | ')); await p.close(); }
+  // the papers the stage 4 pictures use (next/tools/mark-shots.js): a two-page essay open, so the foot of the paper is below the window
+  const papers = { 'Aria Testwell/Essay.pdf': await makePaper({ title: 'My summer essay', pages: 2 }), 'Bram Sample/Essay.pdf': await makePaper({ title: 'A day at the lake' }), 'Cleo Fixture/Essay.pdf': await makePaper({ title: 'The storm' }) };
+  // and the browser mark-shots uses at each width: a computer's mouse that hovers (a page's turn buttons show only under it), a phone's finger
+  const MOUSE = '--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4', FINGER = '--blink-settings=primaryHoverType=1,availableHoverTypes=1,primaryPointerType=2,availablePointerTypes=2';
+  for (const w of [1440, 390]) { const b = await launch({ args: [w < 700 ? FINGER : MOUSE] }), c = await b.createBrowserContext();
+    const p = await openMark(c, errors, w, false, papers), l = await presses(p); n[w] = l.length; console.log('# at ' + w + ' px: ' + l.join(' | ')); await b.close(); }
   console.log('# marking screen presses at rest: ' + JSON.stringify(n));
   for (const [w, k] of Object.entries(n)) assert.ok(k < 25, 'the marking screen has ' + k + ' presses at rest at ' + w + ' px; the brief asks for under 25');
   assert.deepEqual(errors, []);
@@ -130,6 +141,11 @@ const curOf = p => p.evaluate(() => window.__mark.state().cur);
 const gradeAt = (p, i = 0) => p.evaluate(i => window.__mark.state().batch.students[i].grade.rubric.slice(), i);
 const withCtx = async run => { const errors = [], ctx = await browser.createBrowserContext(); const p = await openMark(ctx, errors); await run(p, ctx, errors); assert.deepEqual(errors, []); await ctx.close(); };
 const toBody = p => p.evaluate(() => { if (document.activeElement) document.activeElement.blur(); });
+// an item of a menu by its words (ui Menu): the opener pressed, then the item (gaps C-057: More for this paper holds what used to be on the panel)
+const menuPick = async (p, opener, label) => { await p.waitForSelector(opener, { timeout: 60000 }); await p.click(opener); await p.waitForSelector('.pop [role^="menuitem"]');
+  const ok = await p.evaluate(l => { const it = [...document.querySelectorAll('.pop [role^="menuitem"]')].find(e => (e.querySelector('b') || e).textContent.trim() === l); if (it) it.click(); return !!it; }, label);
+  if (!ok) throw new Error('no menu item ' + label); };
+
 const menuOpen = async p => { const c = await p.$('.mk-paper canvas'), b = await c.boundingBox(); await p.mouse.click(b.x + b.width / 2, b.y + b.height * 0.85, { button: 'right' }); await p.waitForSelector('.mk-menu'); await p.mouse.move(2, 2); };
 
 test('C-034 Ctrl (Cmd) and the scroll wheel or a trackpad pinch zoom the paper at the pointer', () => withCtx(async p => {
@@ -272,10 +288,48 @@ test('C-024 (kept different) from nowhere the number keys score the row in hand 
 test('C-036 Esc stops placing the score sticker', () => withCtx(async p => {
   await toBody(p);
   for (const k of ['3', '4', '2']) await p.keyboard.press(k);
-  await p.waitForSelector('[data-stampscore]');
-  await p.click('[data-stampscore]');
+  await menuPick(p, '[data-pmore]', 'Put the score on the paper');
   await p.waitForFunction(() => !!window.__mark.state().scorePlacing);
   await p.keyboard.press('Escape');
   await p.waitForFunction(() => !window.__mark.state().scorePlacing);
   assert.equal(await p.evaluate(() => (window.__mark.state().batch.students[0].files[0].marks[0] || []).filter(m => m.k === 'score').length), 0, 'no sticker was placed');
+}));
+
+test('a number key on a focused score slider scores that row and the next row\'s slider takes the keyboard; Enter there goes on, as the current app does (gaps: stage 8 PR 1 bug)', () => withCtx(async p => {
+  await p.waitForSelector('.mk-crit[data-row="1"] .srange');
+  await p.focus('.mk-crit[data-row="1"] .srange');
+  await p.keyboard.press('3');
+  await p.waitForFunction(() => window.__mark.state().batch.students[0].grade.rubric[1] === 3);
+  assert.equal(await p.evaluate(() => window.__mark.state().batch.students[0].grade.rubric[0] == null), true, 'the row with the keyboard, not the first one');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.matches('.mk-crit[data-row="2"] .srange'));
+  // a number key in the comment box is a letter typed, not a score
+  await p.click('.mk-side textarea'); await p.keyboard.press('4');
+  assert.equal(await p.evaluate(() => window.__mark.state().batch.students[0].grade.rubric[2] == null), true);
+  await p.focus('.mk-crit[data-row="2"] .srange'); await p.keyboard.press('Enter');
+  await p.waitForFunction(() => window.__mark.state().cur === 1, { timeout: 10000 });
+}));
+
+test('the note on what opened sits above the zoom toolbar, not over it, at 1440 and 390 px (gaps: stage 8 PR 1 bug)', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  for (const w of [1440, 390]) {
+    const p = await openMark(ctx, errors, w, true);
+    await p.waitForSelector('.mk-opened', { timeout: 30000 });
+    const [a, b] = await p.evaluate(() => [document.querySelector('.mk-opened'), document.querySelector('.mk-zoom')].map(e => { const r = e.getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top, b: r.bottom }; }));
+    assert.ok(a.b <= b.t || a.t >= b.b || a.r <= b.l || a.l >= b.r, 'at ' + w + ' px the note ' + JSON.stringify(a) + ' covers the zoom ' + JSON.stringify(b));
+    await p.close();
+  }
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('the zoom toolbar is one Tab stop, with the arrow keys inside it (gaps: stage 8 PR 1 check)', () => withCtx(async p => {
+  await toBody(p);
+  const n = await tabTo(p, f => f.set === 'View', 40);
+  assert.ok(n > 0, 'Tab reaches the zoom toolbar');
+  const first = (await focused(p)).name;
+  await p.keyboard.press('ArrowRight');
+  const next = await focused(p);
+  assert.equal(next.set, 'View'); assert.notEqual(next.name, first, 'the arrow moves inside it');
+  await p.keyboard.press('Tab');
+  assert.notEqual((await focused(p)).set, 'View', 'one more Tab leaves it');
 }));
