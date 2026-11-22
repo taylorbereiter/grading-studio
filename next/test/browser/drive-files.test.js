@@ -189,3 +189,43 @@ test('a video picked in Drive: added to a student, downloaded for offline, playe
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('C-082 C-085: Readings from Google Drive, for everyone and just for the student on screen', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const D = { asked: [], folders: [], sent: [], videos: {}, papers: {
+    '1PaperAriaPaperAriaPaperAria00001': await makePaper({ title: 'Aria outline' }), '1PaperBramPaperBramPaperBram00002': await makePaper({ title: 'Bram outline' }),
+    '1ReadingReadingReadingReading003': await makePaper({ title: 'A reading for the class' }), '1PromptAriaPromptAriaPromptA0004': await makePaper({ title: 'The prompt Aria answered' }) } };
+  const p = await page(ctx, errors, D);
+  await p.goto(srv.url + 'blank'); await plant(p, seed());
+  await p.evaluate(() => Promise.all([['grading-studio-added', 'files'], ['grading-studio-videos', 'v']].map(([n, s]) => new Promise(res => { const r = indexedDB.open(n, 1); r.onupgradeneeded = () => r.result.createObjectStore(s); r.onsuccess = () => { r.result.close(); res(); }; }))));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.evaluate(() => { window.__picks.push([
+    { id: '1PaperAriaPaperAriaPaperAria00001', name: 'Aria Testwell.pdf', mimeType: 'application/pdf', sizeBytes: '900' },
+    { id: '1PaperBramPaperBramPaperBram00002', name: 'Bram Sample.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.click('[data-bring-for="i9"]');
+  await menuPick(p, 'Google Drive');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await goTo(p, 'Aria Testwell');
+  await p.waitForSelector('[data-pmore]', { timeout: 60000 });
+  await p.click('[data-pmore]');
+  await menuPick(p, 'Readings');
+  await p.waitForSelector('dialog[open] [data-readings]', { timeout: 30000 });
+  // C-082 From Google Drive, for everyone
+  await p.evaluate(() => { window.__picks.push([{ id: '1ReadingReadingReadingReading003', name: 'Reading.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await tap(p, '[data-readings] [data-rddrive]');
+  await p.waitForSelector('[data-rdrm="Reading.pdf"]', { timeout: 30000 });
+  // C-085 From Google Drive, just for Aria
+  await p.evaluate(() => { window.__picks.push([{ id: '1PromptAriaPromptAriaPromptA0004', name: 'Prompt.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await tap(p, '[data-readings] [data-rddriveone]');
+  await p.waitForSelector('[data-rdrm="Aria Testwell/Prompt.pdf"]', { timeout: 30000 });
+  await p.click('[data-rddone]');
+  await p.waitForFunction(() => [...document.querySelectorAll('[data-rdcards] [data-rdcard]')].map(e => e.dataset.rdcard).join('|') === 'Reading.pdf|Aria Testwell/Prompt.pdf', { timeout: 30000 });
+  await p.waitForFunction(() => document.querySelectorAll('[data-rdcard="Aria Testwell/Prompt.pdf"] canvas').length === 1, { timeout: 30000 });
+  // Bram has the reading for everyone, not Aria's
+  await goTo(p, 'Bram Sample');
+  await p.waitForFunction(() => [...document.querySelectorAll('[data-rdcards] [data-rdcard]')].map(e => e.dataset.rdcard).join('|') === 'Reading.pdf', { timeout: 30000 });
+  assert.ok(!D.asked.some(u => /files\?q=|files\?spaces=drive/.test(u)), 'the app never lists her Drive');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

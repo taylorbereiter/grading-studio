@@ -717,5 +717,83 @@
  "paper.pm_edit_pts": "Edit",
  "paper.pm_keys": "All keys",
  "paper.pm_type": "Change the type",
- "paper.pm_page": "Open their page in the class"
+ "paper.pm_page": "Open their page in the class",
+ "paper.rd_menu": "Readings…",
+ "paper.rd_menu_n": {
+  "one": "{n} shown with this paper",
+  "other": "{n} shown with this paper"
+ },
+ "paper.rd_title": "Readings",
+ "paper.rd_done": "Done",
+ "paper.rd_about": "Files shown above the papers while you grade, like the reading or the prompt. They stay in this browser and are never sent back to students.",
+ "paper.rd_everyone": "For everyone",
+ "paper.rd_your_doc": "your document",
+ "paper.rd_remove": "Remove",
+ "paper.rd_remove_all": "Remove for everyone",
+ "paper.rd_none": "None yet.",
+ "paper.rd_add_all": "Add a file for everyone…",
+ "paper.rd_for": "For {name}",
+ "paper.rd_show": "Show {file}",
+ "paper.rd_only": "only for {name}",
+ "paper.rd_add_one": "Add a file just for {name}…",
+ "paper.rd_hint": "For a student with a different reading: untick the everyone file above, then add theirs.",
+ "paper.rd_doc_card": "Your document: {name}",
+ "paper.rd_card_all": "shown with every paper, not sent back",
+ "paper.rd_card_one": "only for this student, not sent back",
+ "paper.rd_hide": "Hide for this student",
+ "paper.rd_hidden": "Hidden for this student. Readings… brings it back or adds a different file.",
+ "paper.rd_zoom": "Zoom the reading",
+ "paper.rd_zoom_out": "Zoom out",
+ "paper.rd_zoom_in": "Zoom in",
+ "paper.rd_zoom_fit": "Back to fit the width",
+ "paper.rd_zoom_how": "Pinch or Ctrl + scroll on the reading to zoom. Drag the bottom edge to make it taller.",
+ "paper.rd_grip": "Drag to make the reading taller or shorter",
+ "paper.rd_cant": "This file can’t be shown here.",
+ "paper.rd_no_room": "This browser is out of room to keep {name}",
+ "paper.rd_added": "“{file}” now shows above every paper",
+ "paper.rd_added_for": "“{file}” now shows for {name}",
+ "paper.rd_added_n": "{n} files now show above every paper",
+ "paper.rd_added_n_for": "{n} files now show for {name}",
+ "paper.tr_title": "Transcripts",
+ "paper.tr_count": {
+  "one": "{n} recording in this assignment.",
+  "other": "{n} recordings in this assignment."
+ },
+ "paper.tr_have": {
+  "one": "{n} has a transcript already.",
+  "other": "{n} have a transcript already."
+ },
+ "paper.tr_redo": "Make the existing ones again too",
+ "paper.tr_about": "Runs in this browser (nothing is uploaded). The speech engine downloads once (about 150 MB). Keep this tab open while it works; you can keep grading in the meantime.",
+ "paper.tr_make": "Make transcripts",
+ "paper.tr_stop": "Stop",
+ "paper.tr_stopping": "Stopping…",
+ "paper.tr_close": "Close",
+ "paper.tr_at": "Student {n} ({k} of {of}) · {file} · {what}",
+ "paper.tr_all_have": "Every recording already has a transcript",
+ "paper.tr_done": {
+  "one": "Done. {n} transcript made.",
+  "other": "Done. {n} transcripts made."
+ },
+ "paper.tr_stopped": {
+  "one": "Stopped. {n} transcript made.",
+  "other": "Stopped. {n} transcripts made."
+ },
+ "paper.tr_failed": {
+  "one": "{n} couldn’t be read (try Chrome, or convert it to .mp4 or .m4a).",
+  "other": "{n} couldn’t be read (try Chrome, or convert those to .mp4 or .m4a)."
+ },
+ "paper.gs_cp": "Copy all scores",
+ "paper.gs_cp_done": {
+  "one": "Copied {n} score in the list’s order (blank where unsure)",
+  "other": "Copied {n} scores in the list’s order (blank where unsure)"
+ },
+ "paper.gs_cp_ask": {
+  "one": "{n} student has only part of the rubric scored: {names}. That total isn’t final and says “(partial)” in what you copy. Copy anyway?",
+  "other": "{n} students have only part of the rubric scored: {names}. Those totals aren’t final and say “(partial)” in what you copy. Copy anyway?"
+ },
+ "paper.gs_cp_more": "and {n} more",
+ "paper.gs_cp_anyway": "Copy anyway",
+ "paper.gs_lift_missing": "No longer marked Missing",
+ "paper.gs_lift_excused": "No longer marked Excused"
 }

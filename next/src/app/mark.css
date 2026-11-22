@@ -1076,3 +1076,28 @@ dialog.dlg.mk-qr{width:min(880px,calc(100vw - 32px))}
 .mk-z0:hover{background:var(--acc-soft)}
 .mk-menu .st-sw.sq{border-radius:4px}
 .mk-crit .lvl.peek{color:var(--ink);font-style:italic}
+/* Readings (mark/readings.jsx): the box, and each reading's card above the paper */
+dialog.dlg:has(.mk-rd){width:min(640px,calc(100vw - 32px))}
+.mk-rd{display:flex;flex-direction:column;gap:8px}
+.mk-rd p{margin:0}.mk-rd h3{margin:10px 0 0;font-size:var(--t3)}
+.mk-rd .rd-list{display:flex;flex-direction:column;gap:4px}
+.mk-rd .rd-row{display:flex;align-items:center;gap:8px;min-height:32px}.mk-rd .rd-row .grow{flex:1}
+.mk-rd .rd-btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.mk-rd .rd-hint{font-size:var(--t1)}
+.mk-paper .rd-cards{max-width:900px;min-width:0;width:100%;margin:0 auto 14px;display:flex;flex-direction:column;gap:10px}
+.mk-paper .rd-card{min-width:0;overflow:hidden;border-radius:var(--r3);background:var(--s);box-shadow:var(--sh-r);padding:10px 14px}
+.mk-paper .rd-card summary{cursor:pointer;font-weight:600}
+.mk-paper .rd-card summary .mute,.mk-paper .rd-card summary .link{font-weight:400;font-size:var(--t1)}
+.mk-paper .rd-card summary .link{margin-left:6px}
+.mk-paper .rd-body{margin-top:8px}
+.mk-paper .rd-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:var(--t1);margin-bottom:6px}
+.mk-paper .rd-bar .seg{display:inline-flex;border-radius:var(--r2);box-shadow:0 0 0 1px var(--line);overflow:hidden}
+.mk-paper .rd-bar .seg button{border:0;background:none;color:inherit;font:inherit;min-width:32px;min-height:28px;padding:0 8px;cursor:pointer}
+.mk-paper .rd-bar .seg button:hover{background:var(--line)}
+.mk-paper .rd-scroll{max-height:70vh;overflow:auto;border-radius:var(--r2);box-shadow:inset 0 0 0 1px var(--line)}
+.mk-paper .rd-pages{display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px}
+.mk-paper .rd-pages canvas{background:#fff;box-shadow:var(--sh-r)}
+.mk-paper .rd-grip{height:10px;cursor:ns-resize;border-radius:0 0 var(--r2) var(--r2);background:linear-gradient(var(--line),var(--line)) center/40px 3px no-repeat}
+.mk-paper .rd-grip:focus-visible{outline:2px solid var(--acc)}
+/* Transcripts for every recording (mark/transcripts.jsx) */
+.mk-trall{display:flex;flex-direction:column;gap:8px}.mk-trall p{margin:0}

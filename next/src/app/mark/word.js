@@ -12,6 +12,7 @@ import { PARTS } from '../router.js';
 import { keepBank, loadBank } from './editors.js';
 import './lines.js';
 import './setup-lines.js';
+import './paper-lines.js';
 import { micFor } from './dictate.js';
 
 const el = (tag, cls, attrs = {}) => { const e = document.createElement(tag); if (cls) e.className = cls; for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
@@ -115,7 +116,7 @@ export function wordCard(st, f, M, { readOnly = false } = {}) {
       const was = last; last = s;
       if (M) M.wordGrade(st, () => {
         if (s.total == null) W.wordScoreGone(st, was); else W.rubricToGrade(st, s, m.max, m.crits.length);
-        if (write && s.total != null && W.ownGrade(st).total != null) W.liftStatus(st);
+        if (write && s.total != null && W.ownGrade(st).total != null) { const was = st.grade.status; W.liftStatus(st); if ((was === 'missing' || was === 'excused') && !st.grade.status) toast(t(was === 'missing' ? 'paper.gs_lift_missing' : 'paper.gs_lift_excused')); }
       });
       if (write && W.fillTotalBlank(w, page, m, s)) soon();
     };

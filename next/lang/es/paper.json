@@ -716,5 +716,83 @@
  "paper.pm_edit_pts": "Editar",
  "paper.pm_keys": "Todas las teclas",
  "paper.pm_type": "Cambiar el tipo",
- "paper.pm_page": "Abrir su página en la clase"
+ "paper.pm_page": "Abrir su página en la clase",
+ "paper.rd_menu": "Lecturas…",
+ "paper.rd_menu_n": {
+  "one": "{n} se muestra con este trabajo",
+  "other": "{n} se muestran con este trabajo"
+ },
+ "paper.rd_title": "Lecturas",
+ "paper.rd_done": "Listo",
+ "paper.rd_about": "Archivos que se muestran encima de los trabajos mientras corriges, como la lectura o el enunciado. Se quedan en este navegador y nunca se devuelven al alumnado.",
+ "paper.rd_everyone": "Para todos",
+ "paper.rd_your_doc": "tu documento",
+ "paper.rd_remove": "Quitar",
+ "paper.rd_remove_all": "Quitar para todos",
+ "paper.rd_none": "Todavía ninguno.",
+ "paper.rd_add_all": "Añadir un archivo para todos…",
+ "paper.rd_for": "Para {name}",
+ "paper.rd_show": "Mostrar {file}",
+ "paper.rd_only": "solo para {name}",
+ "paper.rd_add_one": "Añadir un archivo solo para {name}…",
+ "paper.rd_hint": "Para un alumno con otra lectura: desmarca arriba el archivo de todos y añade el suyo.",
+ "paper.rd_doc_card": "Tu documento: {name}",
+ "paper.rd_card_all": "se muestra con cada trabajo, no se devuelve",
+ "paper.rd_card_one": "solo para este alumno, no se devuelve",
+ "paper.rd_hide": "Ocultar para este alumno",
+ "paper.rd_hidden": "Oculto para este alumno. En Lecturas… puedes recuperarlo o añadir otro archivo.",
+ "paper.rd_zoom": "Ampliar la lectura",
+ "paper.rd_zoom_out": "Alejar",
+ "paper.rd_zoom_in": "Acercar",
+ "paper.rd_zoom_fit": "Volver a ajustar al ancho",
+ "paper.rd_zoom_how": "Pellizca o usa Ctrl + rueda sobre la lectura para ampliar. Arrastra el borde inferior para hacerla más alta.",
+ "paper.rd_grip": "Arrastra para hacer la lectura más alta o más baja",
+ "paper.rd_cant": "Este archivo no se puede mostrar aquí.",
+ "paper.rd_no_room": "Este navegador no tiene espacio para guardar {name}",
+ "paper.rd_added": "«{file}» ahora se muestra encima de cada trabajo",
+ "paper.rd_added_for": "«{file}» ahora se muestra para {name}",
+ "paper.rd_added_n": "Ahora se muestran {n} archivos encima de cada trabajo",
+ "paper.rd_added_n_for": "Ahora se muestran {n} archivos para {name}",
+ "paper.tr_title": "Transcripciones",
+ "paper.tr_count": {
+  "one": "{n} grabación en esta tarea.",
+  "other": "{n} grabaciones en esta tarea."
+ },
+ "paper.tr_have": {
+  "one": "{n} ya tiene transcripción.",
+  "other": "{n} ya tienen transcripción."
+ },
+ "paper.tr_redo": "Rehacer también las que ya existen",
+ "paper.tr_about": "Se hace en este navegador (no se sube nada). El motor de voz se descarga una vez (unos 150 MB). Deja esta pestaña abierta mientras trabaja; puedes seguir corrigiendo.",
+ "paper.tr_make": "Hacer transcripciones",
+ "paper.tr_stop": "Detener",
+ "paper.tr_stopping": "Deteniendo…",
+ "paper.tr_close": "Cerrar",
+ "paper.tr_at": "Alumno {n} ({k} de {of}) · {file} · {what}",
+ "paper.tr_all_have": "Todas las grabaciones ya tienen transcripción",
+ "paper.tr_done": {
+  "one": "Listo. {n} transcripción hecha.",
+  "other": "Listo. {n} transcripciones hechas."
+ },
+ "paper.tr_stopped": {
+  "one": "Detenido. {n} transcripción hecha.",
+  "other": "Detenido. {n} transcripciones hechas."
+ },
+ "paper.tr_failed": {
+  "one": "{n} no se pudo leer (prueba con Chrome o conviértela a .mp4 o .m4a).",
+  "other": "{n} no se pudieron leer (prueba con Chrome o conviértelas a .mp4 o .m4a)."
+ },
+ "paper.gs_cp": "Copiar todas las notas",
+ "paper.gs_cp_done": {
+  "one": "Copiada {n} nota en el orden de la lista (en blanco si hay dudas)",
+  "other": "Copiadas {n} notas en el orden de la lista (en blanco si hay dudas)"
+ },
+ "paper.gs_cp_ask": {
+  "one": "{n} alumno tiene solo parte de la rúbrica calificada: {names}. Ese total no es definitivo y dirá «(partial)» en lo que copies. ¿Copiar igualmente?",
+  "other": "{n} alumnos tienen solo parte de la rúbrica calificada: {names}. Esos totales no son definitivos y dirán «(partial)» en lo que copies. ¿Copiar igualmente?"
+ },
+ "paper.gs_cp_more": "y {n} más",
+ "paper.gs_cp_anyway": "Copiar igualmente",
+ "paper.gs_lift_missing": "Ya no está marcado como No entregado",
+ "paper.gs_lift_excused": "Ya no está marcado como Justificado"
 }

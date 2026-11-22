@@ -181,6 +181,8 @@ export async function dropEdit(id, path) { check(id); await edits.del(id + '|' +
 
 /* a file she added to a student (src/app/kept.js addFiles), kept in this browser under "download id|student|file path" */
 export async function keepAdded(id, rec, key) { check(id); await added.put(rec, key); saved({ kind: 'added', id, side: 'students' }); }
+// and taken off again here (src/app/readings.js dropRef): the work's own save notes it gone, so a copy elsewhere doesn't bring it back
+export async function dropAdded(id, key) { check(id); await added.del(key); saved({ kind: 'added', id, side: 'students' }); }
 
 /* a newer copy of a download (src/carryover.js carryExtras, carryRubric, carryInto) */
 // What sits beside the older copy's work is copied under the new download's id, never moved: its readings, the files she added
@@ -281,6 +283,8 @@ export function keepRubricPage(id, b64) {
   saved({ kind: 'setting', id: 'gs.rp.' + id, side: 'students' });
 }
 export function dropRubricPage(id) { check('gs.rp.'); rubricPages.remove(id); saved({ kind: 'setting', id: 'gs.rp.' + id, side: 'students' }); }
+// The Word document the current app kept beside every paper of one download (src/app/media.js refKey), taken off from Readings
+export function dropReadingDoc(id) { check('gs.rd.'); readings.remove(id); saved({ kind: 'setting', id: 'gs.rd.' + id, side: 'students' }); }
 export const forgotten = () => deleted.json({}) || {};
 
 /* a video file kept in this browser (src/video.js vkPut): the file itself in grading-studio-videos, under an id the student's

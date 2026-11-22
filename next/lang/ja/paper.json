@@ -717,5 +717,83 @@
  "paper.pm_edit_pts": "編集",
  "paper.pm_keys": "すべてのキー",
  "paper.pm_type": "種類を変える",
- "paper.pm_page": "クラスでこの生徒のページを開く"
+ "paper.pm_page": "クラスでこの生徒のページを開く",
+ "paper.rd_menu": "資料…",
+ "paper.rd_menu_n": {
+  "one": "この答案に {n} 件表示",
+  "other": "この答案に {n} 件表示"
+ },
+ "paper.rd_title": "資料",
+ "paper.rd_done": "完了",
+ "paper.rd_about": "採点中に答案の上に表示するファイル（読み物や課題文など）。このブラウザーにだけ保存され、生徒に返却されることはありません。",
+ "paper.rd_everyone": "全員に",
+ "paper.rd_your_doc": "あなたの文書",
+ "paper.rd_remove": "外す",
+ "paper.rd_remove_all": "全員から外す",
+ "paper.rd_none": "まだありません。",
+ "paper.rd_add_all": "全員用のファイルを追加…",
+ "paper.rd_for": "{name} 用",
+ "paper.rd_show": "{file} を表示",
+ "paper.rd_only": "{name} のみ",
+ "paper.rd_add_one": "{name} だけのファイルを追加…",
+ "paper.rd_hint": "別の読み物を使う生徒には、上の全員用ファイルのチェックを外してから、その生徒のファイルを追加します。",
+ "paper.rd_doc_card": "あなたの文書：{name}",
+ "paper.rd_card_all": "すべての答案に表示・返却されません",
+ "paper.rd_card_one": "この生徒のみ・返却されません",
+ "paper.rd_hide": "この生徒には隠す",
+ "paper.rd_hidden": "この生徒には隠しました。「資料…」から元に戻すか、別のファイルを追加できます。",
+ "paper.rd_zoom": "資料の拡大縮小",
+ "paper.rd_zoom_out": "縮小",
+ "paper.rd_zoom_in": "拡大",
+ "paper.rd_zoom_fit": "幅に合わせる",
+ "paper.rd_zoom_how": "資料の上でピンチするか Ctrl + スクロールで拡大縮小。下の端をドラッグすると高くなります。",
+ "paper.rd_grip": "ドラッグして資料の高さを変える",
+ "paper.rd_cant": "このファイルはここでは表示できません。",
+ "paper.rd_no_room": "このブラウザーには {name} を保存する空きがありません",
+ "paper.rd_added": "「{file}」をすべての答案の上に表示します",
+ "paper.rd_added_for": "「{file}」を {name} に表示します",
+ "paper.rd_added_n": "{n} 件のファイルをすべての答案の上に表示します",
+ "paper.rd_added_n_for": "{n} 件のファイルを {name} に表示します",
+ "paper.tr_title": "文字起こし",
+ "paper.tr_count": {
+  "one": "この課題には録音が {n} 件あります。",
+  "other": "この課題には録音が {n} 件あります。"
+ },
+ "paper.tr_have": {
+  "one": "うち {n} 件は文字起こし済みです。",
+  "other": "うち {n} 件は文字起こし済みです。"
+ },
+ "paper.tr_redo": "既存のものも作り直す",
+ "paper.tr_about": "このブラウザー内で処理します（何もアップロードしません）。音声エンジンのダウンロードは初回だけです（約 150 MB）。処理中はこのタブを開いたままにしてください。その間も採点を続けられます。",
+ "paper.tr_make": "文字起こしを作る",
+ "paper.tr_stop": "停止",
+ "paper.tr_stopping": "停止しています…",
+ "paper.tr_close": "閉じる",
+ "paper.tr_at": "生徒 {n}（{of} 件中 {k} 件目）· {file} · {what}",
+ "paper.tr_all_have": "すべての録音が文字起こし済みです",
+ "paper.tr_done": {
+  "one": "完了。{n} 件の文字起こしを作りました。",
+  "other": "完了。{n} 件の文字起こしを作りました。"
+ },
+ "paper.tr_stopped": {
+  "one": "停止しました。{n} 件の文字起こしを作りました。",
+  "other": "停止しました。{n} 件の文字起こしを作りました。"
+ },
+ "paper.tr_failed": {
+  "one": "{n} 件は読み取れませんでした（Chrome を試すか、.mp4 か .m4a に変換してください）。",
+  "other": "{n} 件は読み取れませんでした（Chrome を試すか、.mp4 か .m4a に変換してください）。"
+ },
+ "paper.gs_cp": "すべての点数をコピー",
+ "paper.gs_cp_done": {
+  "one": "リストの順に {n} 件の点数をコピーしました（不確かなものは空欄）",
+  "other": "リストの順に {n} 件の点数をコピーしました（不確かなものは空欄）"
+ },
+ "paper.gs_cp_ask": {
+  "one": "{n} 人の生徒はルーブリックの一部しか採点されていません：{names}。その合計は確定ではなく、コピーした内容に「(partial)」と付きます。それでもコピーしますか？",
+  "other": "{n} 人の生徒はルーブリックの一部しか採点されていません：{names}。その合計は確定ではなく、コピーした内容に「(partial)」と付きます。それでもコピーしますか？"
+ },
+ "paper.gs_cp_more": "ほか {n} 人",
+ "paper.gs_cp_anyway": "それでもコピー",
+ "paper.gs_lift_missing": "「未提出」を外しました",
+ "paper.gs_lift_excused": "「免除」を外しました"
 }

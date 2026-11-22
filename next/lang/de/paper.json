@@ -717,5 +717,83 @@
  "paper.pm_edit_pts": "Bearbeiten",
  "paper.pm_keys": "Alle Tasten",
  "paper.pm_type": "Art ändern",
- "paper.pm_page": "Seine Seite in der Klasse öffnen"
+ "paper.pm_page": "Seine Seite in der Klasse öffnen",
+ "paper.rd_menu": "Lesetexte…",
+ "paper.rd_menu_n": {
+  "one": "{n} wird bei dieser Arbeit gezeigt",
+  "other": "{n} werden bei dieser Arbeit gezeigt"
+ },
+ "paper.rd_title": "Lesetexte",
+ "paper.rd_done": "Fertig",
+ "paper.rd_about": "Dateien, die beim Korrigieren über den Arbeiten stehen, etwa der Lesetext oder die Aufgabenstellung. Sie bleiben in diesem Browser und gehen nie an die Schüler zurück.",
+ "paper.rd_everyone": "Für alle",
+ "paper.rd_your_doc": "Ihr Dokument",
+ "paper.rd_remove": "Entfernen",
+ "paper.rd_remove_all": "Für alle entfernen",
+ "paper.rd_none": "Noch keine.",
+ "paper.rd_add_all": "Datei für alle hinzufügen…",
+ "paper.rd_for": "Für {name}",
+ "paper.rd_show": "{file} zeigen",
+ "paper.rd_only": "nur für {name}",
+ "paper.rd_add_one": "Datei nur für {name} hinzufügen…",
+ "paper.rd_hint": "Für einen Schüler mit einem anderen Text: oben die Datei für alle abwählen und dann seine hinzufügen.",
+ "paper.rd_doc_card": "Ihr Dokument: {name}",
+ "paper.rd_card_all": "bei jeder Arbeit gezeigt, nicht zurückgegeben",
+ "paper.rd_card_one": "nur für diesen Schüler, nicht zurückgegeben",
+ "paper.rd_hide": "Für diesen Schüler ausblenden",
+ "paper.rd_hidden": "Für diesen Schüler ausgeblendet. Unter Lesetexte… holen Sie ihn zurück oder fügen eine andere Datei hinzu.",
+ "paper.rd_zoom": "Lesetext zoomen",
+ "paper.rd_zoom_out": "Verkleinern",
+ "paper.rd_zoom_in": "Vergrößern",
+ "paper.rd_zoom_fit": "Zurück auf Breite",
+ "paper.rd_zoom_how": "Zum Zoomen auf dem Text mit zwei Fingern ziehen oder Strg + Mausrad nutzen. Den unteren Rand ziehen, um ihn höher zu machen.",
+ "paper.rd_grip": "Ziehen, um den Text höher oder niedriger zu machen",
+ "paper.rd_cant": "Diese Datei kann hier nicht gezeigt werden.",
+ "paper.rd_no_room": "Dieser Browser hat keinen Platz mehr für {name}",
+ "paper.rd_added": "„{file}“ steht jetzt über jeder Arbeit",
+ "paper.rd_added_for": "„{file}“ wird jetzt für {name} gezeigt",
+ "paper.rd_added_n": "{n} Dateien stehen jetzt über jeder Arbeit",
+ "paper.rd_added_n_for": "{n} Dateien werden jetzt für {name} gezeigt",
+ "paper.tr_title": "Transkripte",
+ "paper.tr_count": {
+  "one": "{n} Aufnahme in dieser Aufgabe.",
+  "other": "{n} Aufnahmen in dieser Aufgabe."
+ },
+ "paper.tr_have": {
+  "one": "{n} hat schon ein Transkript.",
+  "other": "{n} haben schon ein Transkript."
+ },
+ "paper.tr_redo": "Vorhandene auch neu erstellen",
+ "paper.tr_about": "Läuft in diesem Browser (nichts wird hochgeladen). Die Spracherkennung wird einmal geladen (etwa 150 MB). Lassen Sie diesen Tab offen, solange sie arbeitet; Sie können weiter korrigieren.",
+ "paper.tr_make": "Transkripte erstellen",
+ "paper.tr_stop": "Stopp",
+ "paper.tr_stopping": "Wird gestoppt…",
+ "paper.tr_close": "Schließen",
+ "paper.tr_at": "Schüler {n} ({k} von {of}) · {file} · {what}",
+ "paper.tr_all_have": "Jede Aufnahme hat schon ein Transkript",
+ "paper.tr_done": {
+  "one": "Fertig. {n} Transkript erstellt.",
+  "other": "Fertig. {n} Transkripte erstellt."
+ },
+ "paper.tr_stopped": {
+  "one": "Gestoppt. {n} Transkript erstellt.",
+  "other": "Gestoppt. {n} Transkripte erstellt."
+ },
+ "paper.tr_failed": {
+  "one": "{n} konnte nicht gelesen werden (Chrome versuchen oder in .mp4 oder .m4a umwandeln).",
+  "other": "{n} konnten nicht gelesen werden (Chrome versuchen oder in .mp4 oder .m4a umwandeln)."
+ },
+ "paper.gs_cp": "Alle Punktzahlen kopieren",
+ "paper.gs_cp_done": {
+  "one": "{n} Punktzahl in der Reihenfolge der Liste kopiert (leer, wo unsicher)",
+  "other": "{n} Punktzahlen in der Reihenfolge der Liste kopiert (leer, wo unsicher)"
+ },
+ "paper.gs_cp_ask": {
+  "one": "Bei {n} Schüler ist das Raster nur teilweise bewertet: {names}. Diese Summe ist nicht endgültig und steht mit „(partial)“ in der Kopie. Trotzdem kopieren?",
+  "other": "Bei {n} Schülern ist das Raster nur teilweise bewertet: {names}. Diese Summen sind nicht endgültig und stehen mit „(partial)“ in der Kopie. Trotzdem kopieren?"
+ },
+ "paper.gs_cp_more": "und {n} weitere",
+ "paper.gs_cp_anyway": "Trotzdem kopieren",
+ "paper.gs_lift_missing": "Nicht mehr als „Fehlt“ markiert",
+ "paper.gs_lift_excused": "Nicht mehr als Entschuldigt markiert"
 }

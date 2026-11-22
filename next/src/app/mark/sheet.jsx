@@ -17,6 +17,7 @@ import { prefs } from '../../students/prefs.js';
 import { PARTS } from '../router.js';
 import * as C from './change.js';
 import './paper-lines.js';
+import './setup-lines.js';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const r4 = v => Math.round(v * 10000) / 10000;
@@ -24,6 +25,12 @@ async function copy(text, say) {
   toast(await copyText(text) ? say : t('copy.failed'));
 }
 
+// A Missing or Excused paper that now has a grade is neither any more (src/grades.js liftStatus), and says so
+export function liftSay(st) {
+  const was = st.grade.status;
+  W.liftStatus(st);
+  if ((was === 'missing' || was === 'excused') && !st.grade.status) toast(t(was === 'missing' ? 'paper.gs_lift_missing' : 'paper.gs_lift_excused'));
+}
 // What she says about a grade read off a paper (src/grades.js setReading): 1 use it, 0 not a grade, '' asks again. Picking one says
 // the others on the paper aren't the grade. One undo step.
 async function setReading(E, st, key, v) {
@@ -35,7 +42,7 @@ async function setReading(E, st, key, v) {
     if (v === '1') for (const g of [...(st.foundAll || []), ...X.rivalReads(st)]) if (X.readKey(g) !== key) rd[X.readKey(g)] = 0;
     if (table && was === 1 && v !== '1' && ownGrade(st).total === table.score) { if (su.mode === 'rubric') st.grade.rubric = []; else st.grade.points = ''; }
     refound(st); K.touchGrade(st);
-    if (v === '1') W.liftStatus(st);
+    if (v === '1') liftSay(st);
   });
   if (table && v === '1') await (await PARTS.word()).scoresAll(M);   // Use it brings the rows in, when they fit this assignment
 }
@@ -76,13 +83,20 @@ function Typed({ E, st, i }) {
 }
 
 export function Sheet({ E, onOpen }) {
-  const [busy, setBusy] = useState(0.001), [, tick] = useState(0), [each, setEach] = useState(null), [spot, setSpot] = useState(false);
+  const [busy, setBusy] = useState(0.001), [, tick] = useState(0), [each, setEach] = useState(null), [spot, setSpot] = useState(false), [cpAsk, setCpAsk] = useState(null);
   const again = () => tick(n => n + 1);
   const scan = async () => { setBusy(0.001); await E.readPapers((n, of) => setBusy(of ? Math.max(0.001, n / of) : 0.001)); setBusy(0); again(); };
   useEffect(() => { scan(); }, []);
   const X = E.X, s = state(), b = s.batch, su = s.setup, now = X.sheetNow();
   const flag = (k, pref, v) => { X.sheetSet({ [k]: v }); if (pref) { if (v) prefs.set(pref, true); else prefs.del(pref); } again(); };
   const onSay = async (st, key, v) => { await setReading(E, st, key, v); again(); };
+  // Copy all scores (gradesheet.js data-cp): one a line in the list's order, blank where unsure; partly scored totals are asked first (okPartial)
+  const copyAll = sure => {
+    const part = b.students.filter(st => gradeOf(st).partial);
+    if (part.length && !sure) return setCpAsk(part);
+    setCpAsk(null);
+    copy(b.students.map(st => X.scoreText(gradeOf(st), 'any')).join('\n'), t('paper.gs_cp_done', { n: b.students.length }));
+  };
   if (busy) return <div class="mk-sheet"><p class="mute">{t('paper.gs_looking')}</p><Progress value={busy} label={t('paper.gs_looking')} /></div>;
   const rows = X.sheetRows();
   const nOut = b.students.reduce((a, st) => a + st.files.filter(f => viewable(f) && !X.fileIn(st, f)).length, 0);
@@ -148,8 +162,12 @@ export function Sheet({ E, onOpen }) {
     <footer class="of">
       <Button onClick={() => setEach('')} data-each>{t('paper.gs_each')}</Button>
       <Button onClick={() => setSpot(true)} data-spot>{t(su.spot ? 'paper.gs_spot_change' : 'paper.gs_spot')}</Button>
+      <Button onClick={() => copyAll(false)} data-cpall>{t('paper.gs_cp')}</Button>
       {su.spot && <Button onClick={async () => { delete su.spot; await E.marking().keepSetup(); b.students.forEach(st => st.files.forEach(f => { f.scan = undefined; })); scan(); }} data-spotoff>{t('paper.gs_spot_off')}</Button>}
     </footer>
+    {cpAsk && <Dialog open title={t('paper.gs_cp')} onClose={() => setCpAsk(null)}
+      actions={<><Button onClick={() => setCpAsk(null)}>{t('setup.cancel')}</Button><Button variant="primary" onClick={() => copyAll(true)} data-cpanyway>{t('paper.gs_cp_anyway')}</Button></>}>
+      <p data-cpask>{t('paper.gs_cp_ask', { n: cpAsk.length, names: cpAsk.slice(0, 8).map(st => shownName(st, b.students.indexOf(st))).join(', ') + (cpAsk.length > 8 ? ' ' + t('paper.gs_cp_more', { n: cpAsk.length - 8 }) : '') })}</p></Dialog>}
     {each != null && <BoxEach E={E} start={each || null} onDone={() => { setEach(null); scan(); }} />}
     {spot && <PickSpot E={E} onDone={used => { setSpot(false); if (used) { b.students.forEach(st => st.files.forEach(f => { f.scan = undefined; })); scan(); } }} />}
   </div>;

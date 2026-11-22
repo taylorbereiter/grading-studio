@@ -269,9 +269,9 @@ function Paper({ batch, cur, zoom, ver, FU, ctl, onSp, onZoom }) {
   const cl = k => inSp(k) ? ' in-sp' : '';
   const spSize = v => { spSet(at === 'top' ? { h: v } : { w: v }); spAgain(n => n + 1); };
   const spAt = k => { spSet({ at: k === 'right' ? null : k }); spAgain(n => n + 1); };
-  const n = st ? st.files.length + 4 : 0;
+  const n = st ? st.files.length + 5 : 0;
   return <div class={'mk-paper' + (at ? ' sp-' + at : '')} ref={area} tabindex="-1" style={at ? { '--sp-px': px + 'px', '--sp-h': H + 'px', gridTemplateRows: side ? 'repeat(' + n + ', auto)' : undefined } : undefined}>
-    {!st ? null : !st.files.length ? <><EmptyState icon="inbox" title={t('mark.nothing_in')} />{FU && <FU.FilesFoot key={st.key} st={st} name={shownName(st, cur)} />}</>
+    {st && PM && <PM.ReadingCards key="rd" st={st} />}{!st ? null : !st.files.length ? <><EmptyState icon="inbox" title={t('mark.nothing_in')} />{FU && <FU.FilesFoot key={st.key} st={st} name={shownName(st, cur)} />}</>
       : !gotNow ? <div class="loading" aria-busy="true" />
       : <>{FU && <FU.GroupBand key="band" st={st} />}{st.files.filter(f => f.kind === 'link').concat(st.files.filter(f => f.kind === 'media')).map(f => <div key={'file:' + f.path} class={'fwrap' + cl('file:' + f.path)}><header class="fhead"><span data-raw>{f.kind === 'link' ? f.name.replace(/\.(url|webloc)$/i, '').replace(/ \(added \d+\)$/, '') : f.name}</span><span class="mute">{t(f.kind === 'media' ? 'mark.v_recording' : 'mark.v_link_kind')}</span>{FU && <FU.AddTag st={st} f={f} />}{FU && <FU.CarryTag st={st} f={f} />}<span class="grow" />{FU && <FU.FileMenu st={st} path={f.path} name={f.name} />}</header><MediaFile key={f.path} st={st} f={f} /></div>)}
         {gotNow.cards.map(c => c.kind === 'file' ? <div key={'file:' + c.f.path} class={'fwrap' + cl('file:' + c.f.path)}>{FU && <FU.CarryTag st={st} f={c.f} />}{FU && <FU.FileMenu st={st} path={c.f.path} name={c.f.name} />}{c.f.kind === 'docx' && c.f.data ? <WordPaper key={c.f.path} st={st} f={c.f} FU={FU} /> : <OtherFile key={c.f.path} f={c.f} />}</div>
@@ -515,7 +515,9 @@ export default function MarkScreen({ route, classes }) {
     { label: t('mark.calc'), icon: 'grades', kbd: '=', onSelect: openCalc },
     { label: t('mark.solo_start'), sub: t('mark.solo_tip'), icon: 'user', kbd: 'I', onSelect: soloStart },
     { label: t('mark.hn_sw'), sub: t('mark.hn_sw_tip'), checked: anonOn(), onSelect: () => hideNames() },
-    ...(w && w.batch.quiz && w.batch.quiz.made ? [{ label: t('mark.qr_menu'), icon: 'image', onSelect: () => quizScan() }] : [])];
+    ...(w && w.batch.quiz && w.batch.quiz.made ? [{ label: t('mark.qr_menu'), icon: 'image', onSelect: () => quizScan() }] : []),
+    // Transcripts for every recording (mark/transcripts.jsx, loaded through More for this paper's part), only when there are recordings
+    ...(w && w.batch.students.some(st => st.files.some(f => f.kind === 'media' || f.kind === 'link')) ? [{ label: t('mark.tr_menu'), icon: 'text', onSelect: () => PARTS.pmore().then(P => P.transcripts()).then(T => setSetupDlg({ k: 'tr', T }), e => console.error(e)) }] : [])];
   // The command bar while an assignment is open (src/shell.js findRows): its students, its tabs, the Setup menu and closing it
   const setupRef = useRef(setupItems); setupRef.current = setupItems;
   useEffect(() => { if (!w) return; const g = t('mark.cmd_students'), th = t('mark.cmd_this');
@@ -547,6 +549,7 @@ export default function MarkScreen({ route, classes }) {
     </header>
     {su && <su.SetupDialog onClose={() => setSu(null)} />}
     {setupDlg && setupDlg.k === 'bring' && <setupDlg.B.BringFiles rows={setupDlg.rows} dups={setupDlg.dups} onClose={() => setSetupDlg(null)} />}
+    {setupDlg && setupDlg.k === 'tr' && <setupDlg.T.Transcripts onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'pv' && <setupDlg.P.Partners onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'sh' && <setupDlg.S.Share ctx={{ ...cvCtx, ai: assistant() }} onClose={() => setSetupDlg(null)} />}
     {setupDlg && setupDlg.k === 'cl' && <setupDlg.Cl.ClipStage onClose={() => setSetupDlg(null)} />}

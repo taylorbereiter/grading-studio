@@ -3,7 +3,9 @@
 // formative panel, and src/app/export.js oneOutHtml: Export <name>'s paper now with "Exported at…" under the student). The menu holds
 // what is used now and then, so the panel keeps few things to press: Student details, Only this student, Use as an example, Type notes
 // instead, Put the score on the paper, the anchor paper, Export this paper now, Edit rubric, Mark key and All keys. Its items are Find
-// commands too. A lazy part of its own (router.js PARTS.pmore); mark.jsx only places it.
+// commands too. Readings… (mark/readings.jsx) opens the files shown above the papers, and the cards above the paper come from here
+// too; the Transcripts box (mark/transcripts.jsx) opens from Setup. Both are loaded from here, so the router keeps no line for them.
+// A lazy part of its own (router.js PARTS.pmore); mark.jsx only places it.
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { Button, IconButton, Menu, Sheet, ShortcutList, toast } from '../../ui/index.js';
@@ -21,6 +23,22 @@ import './setup-lines.js';
 import './paper-lines.js';
 
 const M = () => PARTS.marking().then(m => m.M);
+// Readings (mark/readings.jsx): loaded when the menu or the paper first needs them; RD once it is there
+let RD = null, rdWait = null;
+const rdSubs = new Set();
+const readingsPart = () => rdWait || (rdWait = import('./readings.jsx').then(m => { RD = m; rdSubs.forEach(f => f()); return m; }));
+function useReadings() {
+  const [, tick] = useState(0);
+  useEffect(() => { if (RD) return; const f = () => tick(n => n + 1); rdSubs.add(f); readingsPart().catch(e => console.error(e)); return () => rdSubs.delete(f); }, []);
+  return RD;
+}
+// The readings above this student's paper (src/app/student.js refCard), before the paper itself
+export function ReadingCards({ st }) {
+  const R = useReadings();
+  return R ? <R.Cards st={st} /> : null;
+}
+// Transcripts for every recording (src/app/readings.js openTranscripts), from Setup: the part with the box
+export const transcripts = () => import('./transcripts.jsx');
 // the roster name of the student on screen (src/people.js personOf): null when the class's roster doesn't know them
 function rosterName(st) {
   const b = state().batch, c = b && b.classId != null ? (library.json(null) || { classes: [] }).classes.find(k => k.id === b.classId) : null;
@@ -46,8 +64,8 @@ async function exportNow(st, name) {
 
 // st: the student on screen, cur: where they are. onSolo: Only this student (none while it is on). onSetup: Rubric setup.
 export function PaperMore({ st, cur, onSolo, onSetup }) {
-  const [box, setBox] = useState(null);
-  const items = moreItems(st, cur, { onSolo, onSetup, open: setBox });
+  const [box, setBox] = useState(null), R = useReadings();
+  const items = moreItems(st, cur, { onSolo, onSetup, open: setBox, R });
   // the same things from Find (gaps A-003), for the student on screen; each runs what the menu has at the time
   const now = useRef(items); now.current = items;
   const cmds = items.filter(x => x.onSelect && !/^an-/.test(x.id));
@@ -58,10 +76,11 @@ export function PaperMore({ st, cur, onSolo, onSetup }) {
     <Menu label={t('paper.pm_more')} trigger={b => <IconButton {...b} icon="dots" size="sm" label={t('paper.pm_more')} data-pmore />} items={items} />
     {box && box.k === 'who' && <Details who={box.who} onClose={() => setBox(null)} />}
     {box && box.k === 'mkey' && <MarkKeySheet onClose={() => setBox(null)} />}
+    {box && box.k === 'rd' && R && <R.ReadingsDialog st={st} cur={cur} onClose={() => setBox(null)} />}
     {box && box.k === 'keys' && <Sheet open title={t('keys.title')} onClose={() => setBox(null)}><div data-pmkeys><ShortcutList /></div></Sheet>}
   </>;
 }
-function moreItems(st, cur, { onSolo, onSetup, open }) {
+function moreItems(st, cur, { onSolo, onSetup, open, R }) {
   const name = shownName(st, cur), g = gradeOf(st), fm = state().batch.assignment && state().batch.assignment.type === 'fm', rub = state().setup.mode === 'rubric';
   const who = !anonOn() && rosterName(st), np = notesFileOf(st), vid = st.files.some(f => f.kind === 'media' || f.kind === 'link');
   const ex = st.files.some(f => !f.virtual && !f.rubric && (viewable(f) || f.kind === 'docx'));
@@ -69,6 +88,7 @@ function moreItems(st, cur, { onSolo, onSetup, open }) {
   return [
     ...(who ? [{ id: 'who', label: t('paper.pm_details'), icon: 'user', onSelect: () => open({ k: 'who', who }) }] : []),
     ...(onSolo ? [{ id: 'solo', label: t('mark.solo_start'), sub: t('mark.solo_tip'), icon: 'user', kbd: 'I', onSelect: onSolo }] : []),
+    { id: 'rd', label: t('paper.rd_menu'), sub: R && R.count(st) ? t('paper.rd_menu_n', { n: R.count(st) }) : undefined, icon: 'book', onSelect: () => readingsPart().then(() => open({ k: 'rd' }), e => console.error(e)) },
     ...(ex ? [{ id: 'ex', label: t('setup.f_example'), icon: 'spark', onSelect: () => PARTS.exsave().then(m => m.useExample(st), e => console.error(e)) }] : []),
     { id: 'tn', label: np ? t('paper.pm_notes') : t('setup.tn_title'), icon: 'note', onSelect: () => PARTS.typed().then(m => m.typeNotes(), e => console.error(e)) },
     ...(vid ? [] : [{ id: 'tm', label: t('setup.tm_title'), icon: 'clock', onSelect: () => PARTS.typed().then(m => m.timerOpen(), e => console.error(e)) }]),
