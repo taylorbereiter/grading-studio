@@ -294,5 +294,27 @@
  "saving.bad_retry": "Réessayer",
  "saving.bad_export": "Exporter ce que j’ai",
  "saving.bad_over": "Enregistré. Votre travail est de nouveau en sécurité.",
- "saving.ask_have": "Vous avez déjà un dossier Grading Studio ? Choisissez-le et votre travail revient."
+ "saving.ask_have": "Vous avez déjà un dossier Grading Studio ? Choisissez-le et votre travail revient.",
+ "saving.gb_look": "Voir",
+ "saving.gb_reading": "Lecture de cette copie…",
+ "saving.gb_cant": "Cette copie n’a pas pu être lue. Si votre dossier est sur un disque débranché, rebranchez-le et réessayez.",
+ "saving.gb_none": "Aucun des devoirs présents dans ce navigateur n’était dans cette copie.",
+ "saving.gb_how": "L’état de chaque devoir le {when} :",
+ "saving.gb_same": "Identique à aujourd’hui",
+ "saving.gb_then": "Alors {then}, maintenant {now}",
+ "saving.gb_of": "{n} sur {of} notées",
+ "saving.gb_n": "{n} notées",
+ "saving.gb_setup": "ses réglages diffèrent",
+ "saving.gb_one": "Restaurer ce devoir",
+ "saving.gb_all": "Pour tout remettre comme c’était alors :",
+ "saving.gb_done": "« {name} » est revenu à son état du {when}.",
+ "saving.gb_undone": "Annulé. « {name} » est comme avant.",
+ "saving.gb_undo_bad": "Impossible d’annuler ici. La copie faite juste avant la restauration est sur cette page.",
+ "saving.gb_room": "Cet ordinateur manque de place : rien n’a été restauré.",
+ "saving.gb_failed": "L’opération n’a pas abouti : rien n’a été restauré.",
+ "saving.gb_asg": "Un devoir",
+ "saving.gb_diff": {
+  "one": "le travail de {n} élève diffère",
+  "other": "le travail de {n} élèves diffère"
+ }
 }

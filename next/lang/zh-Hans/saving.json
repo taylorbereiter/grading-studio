@@ -294,5 +294,27 @@
  "saving.bad_retry": "再试一次",
  "saving.bad_export": "导出目前的内容",
  "saving.bad_over": "已保存。您的工作又安全了。",
- "saving.ask_have": "已经有 Grading Studio 文件夹了吗？选择它，你的工作成果就会回来。"
+ "saving.ask_have": "已经有 Grading Studio 文件夹了吗？选择它，你的工作成果就会回来。",
+ "saving.gb_look": "查看",
+ "saving.gb_reading": "正在读取这份副本…",
+ "saving.gb_cant": "无法读取这份副本。如果文件夹在已拔出的磁盘上，请接上后再试一次。",
+ "saving.gb_none": "目前这个浏览器中的作业都不在这份副本里。",
+ "saving.gb_how": "各项作业在 {when} 时的状态：",
+ "saving.gb_same": "当时与现在相同",
+ "saving.gb_then": "当时 {then}，现在 {now}",
+ "saving.gb_of": "已评分 {n}/{of}",
+ "saving.gb_n": "已评分 {n}",
+ "saving.gb_setup": "设置不同",
+ "saving.gb_one": "还原这项作业",
+ "saving.gb_all": "若要让所有内容回到当时：",
+ "saving.gb_done": "“{name}”已回到 {when} 时的状态。",
+ "saving.gb_undone": "已撤销。“{name}”回到之前的样子。",
+ "saving.gb_undo_bad": "这里无法撤销。还原前创建的副本就在这个页面上。",
+ "saving.gb_room": "这台电脑空间不足，因此没有还原任何内容。",
+ "saving.gb_failed": "没有完成，因此没有还原任何内容。",
+ "saving.gb_asg": "一项作业",
+ "saving.gb_diff": {
+  "one": "{n} 名学生的作业不同",
+  "other": "{n} 名学生的作业不同"
+ }
 }

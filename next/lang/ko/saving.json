@@ -294,5 +294,27 @@
  "saving.bad_retry": "다시 시도",
  "saving.bad_export": "지금 있는 것 내보내기",
  "saving.bad_over": "저장했습니다. 작업이 다시 안전합니다.",
- "saving.ask_have": "이미 Grading Studio 폴더가 있나요? 선택하면 작업이 돌아옵니다."
+ "saving.ask_have": "이미 Grading Studio 폴더가 있나요? 선택하면 작업이 돌아옵니다.",
+ "saving.gb_look": "보기",
+ "saving.gb_reading": "이 사본을 읽는 중…",
+ "saving.gb_cant": "이 사본을 읽지 못했어요. 폴더가 분리된 드라이브에 있다면 연결한 뒤 다시 시도하세요.",
+ "saving.gb_none": "지금 이 브라우저에 있는 과제는 이 사본에 하나도 없었어요.",
+ "saving.gb_how": "{when} 기준 과제별 상태:",
+ "saving.gb_same": "그때와 지금이 같아요",
+ "saving.gb_then": "그때 {then}, 지금 {now}",
+ "saving.gb_of": "{of}개 중 {n}개 채점",
+ "saving.gb_n": "{n}개 채점",
+ "saving.gb_setup": "설정이 달라요",
+ "saving.gb_one": "이 과제 복원",
+ "saving.gb_all": "모든 것을 그때로 되돌리려면:",
+ "saving.gb_done": "“{name}”을(를) {when} 상태로 되돌렸어요.",
+ "saving.gb_undone": "취소했어요. “{name}”이(가) 이전 상태예요.",
+ "saving.gb_undo_bad": "여기서는 취소할 수 없어요. 복원 직전에 만든 사본이 이 페이지에 있어요.",
+ "saving.gb_room": "이 컴퓨터에 공간이 부족해서 아무것도 복원하지 않았어요.",
+ "saving.gb_failed": "끝나지 않아서 아무것도 복원하지 않았어요.",
+ "saving.gb_asg": "과제",
+ "saving.gb_diff": {
+  "one": "학생 {n}명의 과제가 달라요",
+  "other": "학생 {n}명의 과제가 달라요"
+ }
 }

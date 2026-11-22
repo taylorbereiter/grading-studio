@@ -91,7 +91,9 @@ test('going back in time to the folder’s copy leaves a safety copy, which puts
   assert.equal(await until(async () => (await say(p)) === 'ok', 30000), true);
   await p.waitForSelector('[data-svhist] [data-svsnap]', { timeout: 15000 });
   assert.ok(await p.$('[data-svsafe]'), 'the safety copies card is there');
-  await p.click('[data-svhist] [data-svback]');
+  await p.click('[data-svhist] [data-svlook]');   // Look first, as in the current app: going back with everything is inside it
+  await p.waitForSelector('[data-svhist] [data-gball]');
+  await p.click('[data-svhist] [data-gball]');
   await p.waitForSelector('dialog[open] [data-ok]');
   assert.match(await p.$eval('dialog[open]', e => e.textContent), /Go back to this copy from/);
   const nav = p.waitForNavigation({ timeout: 30000 }).catch(() => null);
@@ -103,7 +105,9 @@ test('going back in time to the folder’s copy leaves a safety copy, which puts
   const work = await workOf(p, 'gs.b.n1');
   assert.ok(work && Object.keys(work.s).length === 6, 'the work is all there after going back');
   // put back the safety copy
-  await p.click('[data-svsafe] [data-svput]');
+  await p.click('[data-svsafe] [data-svlook]');
+  await p.waitForSelector('[data-svsafe] [data-gball]');
+  await p.click('[data-svsafe] [data-gball]');
   await p.waitForSelector('dialog[open] [data-ok]');
   const nav2 = p.waitForNavigation({ timeout: 30000 }).catch(() => null);
   await p.click('dialog[open] [data-ok]');

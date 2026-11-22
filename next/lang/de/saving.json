@@ -294,5 +294,27 @@
  "saving.bad_retry": "Erneut versuchen",
  "saving.bad_export": "Exportieren, was ich habe",
  "saving.bad_over": "Gespeichert. Ihre Arbeit ist wieder sicher.",
- "saving.ask_have": "Sie haben schon einen Grading-Studio-Ordner? Wählen Sie ihn, und Ihre Arbeit ist wieder da."
+ "saving.ask_have": "Sie haben schon einen Grading-Studio-Ordner? Wählen Sie ihn, und Ihre Arbeit ist wieder da.",
+ "saving.gb_look": "Ansehen",
+ "saving.gb_reading": "Diese Kopie wird gelesen…",
+ "saving.gb_cant": "Diese Kopie konnte nicht gelesen werden. Liegt Ihr Ordner auf einem getrennten Laufwerk, schließen Sie es an und versuchen Sie es erneut.",
+ "saving.gb_none": "Keine der Aufgaben, die jetzt in diesem Browser sind, war in dieser Kopie.",
+ "saving.gb_how": "So stand jede Aufgabe am {when}:",
+ "saving.gb_same": "Damals wie heute",
+ "saving.gb_then": "Damals {then}, jetzt {now}",
+ "saving.gb_of": "{n} von {of} bewertet",
+ "saving.gb_n": "{n} bewertet",
+ "saving.gb_setup": "die Einrichtung ist anders",
+ "saving.gb_one": "Diese Aufgabe wiederherstellen",
+ "saving.gb_all": "Um alles auf den damaligen Stand zu bringen:",
+ "saving.gb_done": "„{name}“ ist wieder auf dem Stand vom {when}.",
+ "saving.gb_undone": "Rückgängig gemacht. „{name}“ ist wie vorher.",
+ "saving.gb_undo_bad": "Das ließ sich hier nicht rückgängig machen. Die Kopie von direkt vor dem Wiederherstellen ist auf dieser Seite.",
+ "saving.gb_room": "Auf diesem Computer ist kein Platz mehr, daher wurde nichts wiederhergestellt.",
+ "saving.gb_failed": "Das wurde nicht fertig, daher wurde nichts wiederhergestellt.",
+ "saving.gb_asg": "Eine Aufgabe",
+ "saving.gb_diff": {
+  "one": "die Arbeit von {n} Schüler ist anders",
+  "other": "die Arbeit von {n} Schülern ist anders"
+ }
 }

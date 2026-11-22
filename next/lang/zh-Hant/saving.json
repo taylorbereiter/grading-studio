@@ -294,5 +294,27 @@
  "saving.bad_retry": "再試一次",
  "saving.bad_export": "匯出目前的內容",
  "saving.bad_over": "已儲存。您的工作又安全了。",
- "saving.ask_have": "已經有 Grading Studio 資料夾了嗎？選擇它，你的工作成果就會回來。"
+ "saving.ask_have": "已經有 Grading Studio 資料夾了嗎？選擇它，你的工作成果就會回來。",
+ "saving.gb_look": "查看",
+ "saving.gb_reading": "正在讀取這份副本…",
+ "saving.gb_cant": "無法讀取這份副本。如果資料夾在已拔除的磁碟上，請接上後再試一次。",
+ "saving.gb_none": "目前這個瀏覽器中的作業都不在這份副本裡。",
+ "saving.gb_how": "各項作業在 {when} 時的狀態：",
+ "saving.gb_same": "當時與現在相同",
+ "saving.gb_then": "當時 {then}，現在 {now}",
+ "saving.gb_of": "已評分 {n}/{of}",
+ "saving.gb_n": "已評分 {n}",
+ "saving.gb_setup": "設定不同",
+ "saving.gb_one": "還原這項作業",
+ "saving.gb_all": "若要讓所有內容回到當時：",
+ "saving.gb_done": "「{name}」已回到 {when} 時的狀態。",
+ "saving.gb_undone": "已復原。「{name}」回到先前的樣子。",
+ "saving.gb_undo_bad": "這裡無法復原。還原前建立的副本就在這個頁面上。",
+ "saving.gb_room": "這台電腦空間不足，因此沒有還原任何內容。",
+ "saving.gb_failed": "沒有完成，因此沒有還原任何內容。",
+ "saving.gb_asg": "一項作業",
+ "saving.gb_diff": {
+  "one": "{n} 位學生的作業不同",
+  "other": "{n} 位學生的作業不同"
+ }
 }

@@ -111,33 +111,65 @@ export function FolderCard() {
     {ask === 'decide' && <Conflicts asks={f.asks || []} onDone={decided} />}
   </Card>;
 }
+// Looking at one dated copy (src/safe.js gbLook, gbDetail, gbRestoreOne): how each assignment kept here stood then and stands now,
+// Restore this assignment (how things are now is kept first, and Undo puts it back), and taking everything back from it (all, asked
+// first by its card). m: { src: 'f', name, t } for the folder's, { src: 'b', id, t } for this browser's.
+function Moment({ S, m, all, allLabel }) {
+  const [rows, setRows] = useState(null), [err, setErr] = useState(false), [busy, setBusy] = useState(false);
+  const read = () => S.goback().then(G => G.look(m)).then(r => { setRows(r); setErr(false); }, e => { console.error(e); setErr(true); });
+  useEffect(() => { read(); }, []);
+  const one = async r => {
+    setBusy(true);
+    try {
+      const undo = await (await S.goback()).restoreOne(m, r.id);
+      toast(t('saving.gb_done', { name: r.name, when: at(m.t) }), { undo: async () => { try { await undo(); toast(t('saving.gb_undone', { name: r.name })); } catch (e) { console.error(e); toast(t('saving.gb_undo_bad'), { ms: 9000 }); } read(); } });
+      await read();
+    } catch (e) { console.error(e); toast(t(e && e.name === 'QuotaExceededError' ? 'saving.gb_room' : 'saving.gb_failed'), { ms: 8000 }); }
+    setBusy(false);
+  };
+  const cnt = (n, of) => (of ? t('saving.gb_of', { n, of }) : t('saving.gb_n', { n }));
+  return <div class="sv-moment" data-svmoment>
+    {err ? <p class="hint">{t('saving.gb_cant')}</p> : !rows ? <p class="hint">{t('saving.gb_reading')}</p>
+      : !rows.length ? <p class="hint">{t('saving.gb_none')}</p>
+      : <><p class="mute">{t('saving.gb_how', { when: at(m.t) })}</p><ul class="sv-list">{rows.map(r => { const same = !r.students && !r.set; return <li data-gbrow={r.id}>
+        <span><b data-raw>{r.name || t('saving.gb_asg')}</b> <span class="mute">{same ? t('saving.gb_same') : t('saving.gb_then', { then: cnt(r.then, r.of), now: cnt(r.now, r.of) }) + ' · ' + (r.students ? t('saving.gb_diff', { n: r.students }) : t('saving.gb_setup'))}</span></span>
+        {!same && <Button size="sm" disabled={busy} onClick={() => one(r)} data-gbone>{t('saving.gb_one')}</Button>}</li>; })}</ul></>}
+    <p class="mute">{t('saving.gb_all')} <button type="button" class="link" onClick={all} data-gball>{allLabel}</button></p>
+  </div>;
+}
+// One dated copy in a list, with Look and Close.
+function MomentRow({ S, m, open, setOpen, when, why, all, allLabel, data }) {
+  return <li {...data} class={open ? 'on' : ''}><span><b>{when}</b> {why}</span>
+    <Button size="sm" aria-expanded={String(open)} onClick={() => setOpen(open ? null : m)} data-svlook>{t(open ? 'common.close' : 'saving.gb_look')}</Button>
+    {open && <Moment S={S} m={m} all={all} allLabel={allLabel} />}</li>;
+}
 // Go back in time: the folder's dated copies (src/app.html #/settings/history).
 export function HistoryCard() {
-  const S = useSaving(), [list, setList] = useState(null), [ask, setAsk] = useState(null);
+  const S = useSaving(), [list, setList] = useState(null), [ask, setAsk] = useState(null), [open, setOpen] = useState(null);
   const f = S && S.folder ? S.folder() : null, on = f && f.state !== 'none' && !!f.root;
   useEffect(() => { let live = true; if (on) S.snapList().then(l => live && setList(l), e => { console.error(e); live && setList([]); }); return () => { live = false; }; }, [on, f && f.at]);
   if (!f || sampleOn()) return null;
+  const pick = async () => { try { await S.folderPick(); } catch (e) { if (!e || e.name !== 'AbortError') { console.error(e); toast(t('saving.f_bad')); } } };
   return <Card title={t('saving.hist_h')} data-svhist>
     <p class="mute">{on ? t('saving.hist_about') : t('saving.hist_nofolder')}</p>
+    {!on && f.state === 'none' && f.canPick && <p><Button onClick={pick} data-svhistpick>{t('saving.f_choose')}</Button></p>}
     {on && list && !list.length && <p class="hint">{t('saving.hist_none')}</p>}
-    {on && list && list.length > 0 && <ul class="sv-list">{list.map(s => <li data-svsnap={s.name}>
-      <span><b>{at(s.t)}</b> <span class="mute">{s.why === 'daily' ? t('saving.hist_daily') : <span data-raw>{s.why}</span>}</span></span>
-      <Button size="sm" onClick={() => setAsk(s)} data-svback>{t('saving.hist_go')}</Button></li>)}</ul>}
+    {on && list && list.length > 0 && <ul class="sv-list">{list.map(s => { const m = { src: 'f', name: s.name, t: s.t }; return <MomentRow S={S} m={m} open={open && open.name === s.name} setOpen={setOpen} data={{ 'data-svsnap': s.name }}
+      when={at(s.t)} why={<span class="mute">{s.why === 'daily' ? t('saving.hist_daily') : <span data-raw>{s.why}</span>}</span>} all={() => setAsk(s)} allLabel={t('saving.hist_go')} />; })}</ul>}
     {ask && <Dialog open title={t('saving.hist_q', { when: at(ask.t) })} onClose={() => setAsk(null)}
       actions={<><Button onClick={() => setAsk(null)}>{t('common.cancel')}</Button><Button variant="primary" onClick={() => { const n = ask.name; setAsk(null); replaceAll(() => S.goBack(n)); }} data-ok>{t('saving.hist_go')}</Button></>}><p>{t('saving.hist_text')}</p></Dialog>}
   </Card>;
 }
 // Safety copies in this browser (src/migrate.js snapshots, putBack): the newest three, made before anything risky.
 export function SafetyCard() {
-  const S = useSaving(), [list, setList] = useState(null), [ask, setAsk] = useState(null);
+  const S = useSaving(), [list, setList] = useState(null), [ask, setAsk] = useState(null), [open, setOpen] = useState(null);
   useEffect(() => { let live = true; if (S && S.safetyList) S.safetyList().then(l => live && setList(l), e => { console.error(e); live && setList([]); }); return () => { live = false; }; }, [S]);
   if (!S || !S.safetyList || sampleOn()) return null;
   return <Card title={t('saving.safe_h')} data-svsafe>
     <p class="mute">{t('saving.safe_about')}</p>
     {list && !list.length && <p class="hint">{t('saving.safe_none')}</p>}
-    {list && list.length > 0 && <ul class="sv-list">{list.map(c => <li data-svcopy={c.id}>
-      <span><b>{at(c.t)}</b> <span class="mute" data-raw>{c.why}</span>{c.app !== 'new app' && <span class="mute"> · {t('saving.safe_app_old')}</span>}</span>
-      <Button size="sm" onClick={() => setAsk(c)} data-svput>{t('saving.safe_put')}</Button></li>)}</ul>}
+    {list && list.length > 0 && <ul class="sv-list">{list.map(c => { const m = { src: 'b', id: c.id, t: c.t }; return <MomentRow S={S} m={m} open={open && open.id === c.id} setOpen={setOpen} data={{ 'data-svcopy': c.id }}
+      when={at(c.t)} why={<><span class="mute" data-raw>{c.why}</span>{c.app !== 'new app' && <span class="mute"> · {t('saving.safe_app_old')}</span>}</>} all={() => setAsk(c)} allLabel={t('saving.safe_put')} />; })}</ul>}
     {ask && <Dialog open title={t('saving.safe_q', { when: at(ask.t) })} onClose={() => setAsk(null)}
       actions={<><Button onClick={() => setAsk(null)}>{t('common.cancel')}</Button><Button variant="primary" onClick={() => { const id = ask.id; setAsk(null); replaceAll(() => S.putBack(id)); }} data-ok>{t('saving.safe_put')}</Button></>}><p>{t('saving.safe_text')}</p></Dialog>}
   </Card>;

@@ -294,5 +294,27 @@
  "saving.bad_retry": "Intentar de nuevo",
  "saving.bad_export": "Exportar lo que tengo",
  "saving.bad_over": "Guardado. Su trabajo vuelve a estar a salvo.",
- "saving.ask_have": "¿Ya tienes una carpeta de Grading Studio? Elígela y tu trabajo vuelve."
+ "saving.ask_have": "¿Ya tienes una carpeta de Grading Studio? Elígela y tu trabajo vuelve.",
+ "saving.gb_look": "Ver",
+ "saving.gb_reading": "Leyendo esta copia…",
+ "saving.gb_cant": "No se pudo leer esa copia. Si tu carpeta está en una unidad desconectada, conéctala e inténtalo de nuevo.",
+ "saving.gb_none": "Ninguna de las tareas que hay ahora en este navegador estaba en esta copia.",
+ "saving.gb_how": "Cómo estaba cada tarea el {when}:",
+ "saving.gb_same": "Igual entonces que ahora",
+ "saving.gb_then": "Entonces {then}, ahora {now}",
+ "saving.gb_of": "{n} de {of} puntuadas",
+ "saving.gb_n": "{n} puntuadas",
+ "saving.gb_setup": "su configuración es distinta",
+ "saving.gb_one": "Restaurar esta tarea",
+ "saving.gb_all": "Para que todo vuelva a como estaba entonces:",
+ "saving.gb_done": "«{name}» ha vuelto a como estaba el {when}.",
+ "saving.gb_undone": "Deshecho. «{name}» está como antes.",
+ "saving.gb_undo_bad": "No se pudo deshacer aquí. La copia hecha justo antes de restaurar está en esta página.",
+ "saving.gb_room": "Este ordenador no tiene espacio, así que no se restauró nada.",
+ "saving.gb_failed": "No terminó, así que no se restauró nada.",
+ "saving.gb_asg": "Una tarea",
+ "saving.gb_diff": {
+  "one": "el trabajo de {n} estudiante es distinto",
+  "other": "el trabajo de {n} estudiantes es distinto"
+ }
 }
