@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"1f6c7231","zh-Hans":"6427d65f","es":"bc4fc38c","fr":"2ff7f977","de":"2beeeb86","pt-BR":"92549f2b","ja":"2d660575","ko":"f26c9c74"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF"><script>try{var gsLangV={"zh-Hant":"1b0b98d4","zh-Hans":"a3d8e279","es":"b5ff4dbe","fr":"e3b03d91","de":"d28ef935","pt-BR":"f0cd43bc","ja":"bec3d92e","ko":"7daa4586"},gsL=JSON.parse(localStorage.getItem("gs.lang"));if(typeof gsL==="string"&&Object.prototype.hasOwnProperty.call(gsLangV,gsL))document.write('<script src="lang/'+gsL+'.js?'+gsLangV[gsL]+'"><\/script>')}catch(e){}</script><script>(function () {
   try {
     var HOME = ["https://taylorbereiter.github.io/grading-studio/"], NS = 'gradingstudio-app-v1', AT = 'https://abacus.jasoncameron.dev/hit/' + NS + '/';
     if (navigator.webdriver || !HOME.some(function (a) { return a && location.href.indexOf(a) === 0; })) return;
@@ -5299,7 +5299,7 @@ SOFTWARE.
 <script>/* ---------------- saved-data versions: a safety copy, then any format changes, before the app starts ---------------- */
 const gsData = (() => {
   'use strict';
-  const APP_VERSION = "1.28.74";
+  const APP_VERSION = "1.28.75";
   const MIGRATIONS = [
   ];
   const DATA_V = Math.max(1, ...MIGRATIONS.map(s => s.to));
@@ -5674,6 +5674,8 @@ return [/^\d+$/.test(m[1]) ? langFill(F.rowavg, m, P) : F.rowavgE, ...(m[2] ? [l
 ['ariastack', /^.+: \d+ (?:below 60|\d+ to \d+)(?:[,.] .+)?$/, (m, F, P) => m[0].replace(/(\d+) below 60(?=[,.] |$)/g, (x, n) => langFill(F.below60, [0, n], P)).replace(/(\d+) (\d+) to (\d+)(?=[,.] |$)/g, (x, n, a, b) => langFill(F.rng, [0, n, a, b], P))],
 ['ariascat', /^.+: summatives [\d.,]+%, in-class [\d.,]+%$/, (m, F, P) => m[0].replace(/: summatives ([\d.,]+%), in-class ([\d.,]+%)(?=\. |$)/g, (x, a, b) => ': ' + langFill(F.scat, [0, a, b], P))],
 ['lblpct', /^(.{1,40}) ([\d.,]+%)$/, (m, F, P) => { const h = trPiece(m[1], P); return h == null ? null : h + ' ' + m[2]; }],
+['gshid', /^Show files with no grade \((\d+) hidden\)$/], ['gsout', /^(\d+) files? ha(?:s|ve) no marks, so (?:it’s|they’re) left out as extra papers\.$/], ['gspage', /^Page (\d+)$/],
+['gsfrom', /^From “(.+)”$/], ['gsconf', /^(\d+) to confirm$/],
 ];
 function trPiece(k, P, ctx) {
 if (ctx && Object.prototype.hasOwnProperty.call(P.words, ctx + '|' + k)) return P.words[ctx + '|' + k];
@@ -9792,7 +9794,7 @@ $('#shBody').innerHTML = '<p class="muted" style="margin:0 0 10px;font-size:14px
 rows.map(({ st, i, f, out, none, word, nograde, first }, at) => {
 const app = appScored(st), lead = rows.findIndex(r => r.st === st && !r.out) === at;
 const appCell = () => lead ? appScoreHtml(st) : '<span class="muted" style="font-weight:400;font-size:13px">Score on the row above</span>';
-const where = '<div style="font-weight:600">' + esc(st.key) + '</div>' + (f ? '<div class="muted" style="font-size:13px;overflow-wrap:anywhere">' + esc(f.path) + '</div>' : '');
+const where = '<div style="font-weight:600" data-raw>' + esc(st.key) + '</div>' + (f ? '<div class="muted" style="font-size:13px;overflow-wrap:anywhere" data-raw>' + esc(f.path) + '</div>' : '');
 if (word) {
 const w = f.wscore, tyAll = wordFound(f, st), rdw = splitReads(st, tyAll), ty = rdw.ok, hs = appShots(st, f, (f.hand && f.scan && f.scan.shots) || []), ri = rows.findIndex(r => r.f === f);
 const info = w ? w.crits.map((c, k) => esc(c.length > 28 ? c.slice(0, 28) + '…' : c) + ' <b>' + (w.per[k] == null ? '–' : fmtNum(w.per[k])) + '</b>').join(' · ') + (w.total != null && !w.done ? '<div class="muted" style="font-size:12px">Not every criterion is highlighted yet</div>' : '') : '';
@@ -33866,7 +33868,7 @@ if (e.target.closest('[data-hall]') && gbk.detail) { const m = gbk.detail.m; ret
 });
 
 /* updates she controls, and installing as an app */
-const WHATS_NEW = {"1.28.74":["The lesson and unit prompts you copy from the Planner now say Claude shouldn't need anything from your computer, and ask it to tell you if anything is missing."]};
+const WHATS_NEW = {"1.28.75":["In another language, the grade sheet (Grades, Grade sheet) is now translated once it finishes reading the papers: its columns, its notes, Box it by hand, and the Is this the grade? question with Use it and Not a grade. Your students’ names and files stay as they are."]};
 const upd = { on: false, st: null, mine: '', checking: false, said: '', install: null, installed: false, err: '' };
 const updCan = () => 'serviceWorker' in navigator && (location.protocol === 'https:' || /[?&]sw=1(&|$)/.test(location.search)) && !/Grading Studio\.html$/i.test(decodeURIComponent(location.pathname));
 const updSend = async msg => { const reg = await navigator.serviceWorker.ready; if (reg.active) reg.active.postMessage(msg); };

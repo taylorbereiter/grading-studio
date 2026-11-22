@@ -417,6 +417,8 @@ const LANG_KO = {
     'How it was scored': '채점 내역', 'From your teacher': '선생님의 말', 'Comment on your paper': '제출물에 대한 코멘트', 'Comments on your paper': '제출물에 대한 코멘트',
     'Your marked paper starts on the next page.': '채점된 제출물은 다음 페이지부터 시작됩니다.', 'Your feedback continues on the next page.': '피드백은 다음 페이지에 이어집니다.',
     'Missing': '미제출', 'Excused': '면제', 'Late': '지각 제출',
+    // the grade sheet (src/app/gradesheet.js, src/grades.js readsHtml)
+    "Click to copy": "클릭하여 복사", "Open this file": "이 파일 열기", "Every row is made from the file named on it, inside that student’s folder. Click a picture to open that exact file. Click a score to copy it.": "각 행은 그 학생 폴더 안에 있는, 행에 적힌 파일에서 만들어집니다. 그림을 클릭하면 바로 그 파일이 열리고, 점수를 클릭하면 복사됩니다.", "Also show grades found on the papers": "제출물에서 찾은 성적도 표시", "· a score you gave in Grading Studio always counts": "· Grading Studio에서 준 점수가 항상 우선합니다", "· the downloaded sheet shows the same rows": "· 내려받은 시트에도 같은 행이 표시됩니다", "Show them": "보기", "Hide them": "숨기기", "Folder and file": "폴더와 파일", "Read as": "읽은 값", "Only unmarked files, left out": "표시 없는 파일만 있음, 제외", "Your score": "내 점수", "Box it by hand": "직접 상자로 표시", "Boxed by hand": "직접 표시함", "redo": "다시 하기", "Is this the grade?": "이것이 성적인가요?", "It’s part of the page’s own text, so the student may have typed it. A flattened Kami grade looks the same.": "페이지 자체 텍스트의 일부라서 학생이 직접 입력했을 수 있습니다. 병합된 Kami 성적도 똑같이 보입니다.", "Use it": "사용", "Not a grade": "성적 아님", "No grade yet.": "아직 성적이 없습니다.", "Nothing turned in": "제출 없음", "Left out (no marks).": "제외됨(표시 없음).", "Score on the row above": "점수는 위 행에 있습니다", "Type what you see": "보이는 대로 입력", "Couldn’t read this file": "이 파일을 읽을 수 없습니다", "No grade found yet": "아직 찾은 성적이 없습니다", "Word rubric": "Word 루브릭", "Word file": "Word 파일", "Trim each spot down to your marks": "각 위치를 내 표시만 남기고 자르기",
   },
   rules: [
     [/^(\d+) of (\d+) done$/, '$2명 중 $1명 완료'], [/^out of ([\d.,]+)$/, '$1점 만점'],
@@ -529,6 +531,8 @@ const LANG_KO = {
     noatt: '{1}에 저장된 출석이 없습니다.', openday: '{1} 열기', taken: ['{1}일 기록됨.', '{1}일 기록됨.'], takenin: ['{2}에 {1}일 기록됨.', '{2}에 {1}일 기록됨.'], takenR: '날짜를 누르면 그 날을 열어 바꿀 수 있고, 이름을 누르면 그 학생의 페이지가 열립니다. “출석 인원”은 출석과 지각을 모두 셉니다.', unk: ['사유를 모르는 결석이 {1}건 있습니다.', '사유를 모르는 결석이 {1}건 있습니다.'],
     andmore: '외 {1}건. 사유를 알게 되면 그 날을 열어 “결석, 사유 있음”을 누르세요.', owesA: ['학생 {1}명이', '학생 {1}명이'], owesB: ['모두 {1}건 미제출', '모두 {1}건 미제출'], reminded: '알림 보냄: {1}', ago: ['{1}일 전', '{1}일 전'], pick: '가장 비슷한 것을 고르세요. 학생 {1}명마다 책상이 하나씩 있고, 나중에 어느 책상이든 옮기거나 치울 수 있습니다.',
     seated: '{2}명 중 {1}명 앉음', needed: ['책상 {1}개 더 필요', '책상 {1}개 더 필요'], desk: '책상, {1}. 누르면 치웁니다', sp: ' ',
+    // the grade sheet
+    gshid: "성적 없는 파일 보기({1}개 숨김)", gsout: "파일 {1}개에 표시가 없어 추가 제출물로 제외됩니다.", gspage: "{1}페이지", gsfrom: "\"{1}\"에서", gsconf: "확인할 것 {1}개",
   },
   helpSecs: { start: '시작하기', mark: '제출물 채점', score: '점수와 루브릭', back: '제출물 돌려주기', class: '학급과 성적부', safe: '저장과 안전', plan: '계획과 수업', private: '개인정보 보호' },
   help: {

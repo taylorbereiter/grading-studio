@@ -672,3 +672,4 @@ dialog.dlg:has([data-wl-ask]){width:min(760px,calc(100vw - 32px));margin-top:6vh
 [data-myp-often] .cp-band{grid-template-columns:minmax(0,220px) 1fr auto}
 [data-myp-often] .warn{color:var(--warn);font-weight:500}
 @media (max-width:720px){.cp-ibstack{grid-template-columns:minmax(0,90px) minmax(0,1fr) 36px}}
+.phvbody .phvpage{display:block;width:100%;height:auto;margin:0 0 8px;border:1px solid var(--line)}

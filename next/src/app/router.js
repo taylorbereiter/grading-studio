@@ -113,9 +113,16 @@ export const PARTS = {
   rubricin: () => import('./class/rubricin.jsx'),
   // Home's To do card, with the To do engine (app/home/todo-card.jsx)
   hometodo: () => import('./home/todo-card.jsx'),
+  oldsample: () => import('./home/old-sample.jsx'),
+  homeg: () => import('./home/google.jsx'),
+  homedrop: () => import('./home/drop.jsx'),
+  homebring: () => import('./home/bring.jsx'),
+  folderfix: () => import('./home/folderfix.jsx'),
   // a class's People and Grades tabs (app/class/), each with the gradebook's engine
   people: () => import('./class/people.jsx'),
   clink: () => import('./class/classlink.jsx'),
+  setclasses: () => import('./class/setlist.jsx'),
+  setterms: () => import('./class/setterms.jsx'),
   grades: () => import('./class/grades.jsx'),
   // a gradebook imported from a spreadsheet, with its reading engine (gbki)
   bki: () => import('./class/bookimport.jsx'),
@@ -125,6 +132,8 @@ export const PARTS = {
   picker: () => import('./class/picker.jsx'),
   // a class's To do tab: its to-dos and missing work
   ctodo: () => import('./class/todo.jsx'),
+  // the School page's person form, for Someone new… on a to-do (screens/school.jsx NewPerson)
+  schoolform: () => import('./screens/school.jsx'),
   goals: () => import('./class/goals.jsx'),
   reports: () => import('./class/reports.jsx'),
   sheets: () => import('./class/sheets.jsx'),
@@ -169,6 +178,7 @@ export const PARTS = {
   calc: () => import('./mark/calc.jsx'),
   // the welcome a browser nobody has used yet opens on (screens/welcome.jsx); main.js asks for it here
   welcome: () => import('./screens/welcome.jsx'),
+  lang: () => import('./language.js'),
   // Share with your assistant and Bring back (mark/share.jsx), from Insights and the marking screen's Setup menu
   share: () => import('./mark/share.jsx'),
   // the assignments for the command bar (students/find-rows.js), read each time it opens

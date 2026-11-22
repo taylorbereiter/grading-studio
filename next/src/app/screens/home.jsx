@@ -47,7 +47,7 @@ function attLine(a) {
   return t('home.att_done', { say: say || t('home.att_all') });
 }
 function NowCard({ teach, now, plan }) {
-  if (!teach) return <Card class="card pad now"><EmptyState icon="cal" title={t('home.no_timetable')} text={t('home.no_timetable_text')} /></Card>;
+  if (!teach) return <Card class="card pad now"><EmptyState icon="cal" title={t('home.no_timetable')} text={t('home.no_timetable_text')} action={<a class="btn" href={href('settings', 'timetable')} data-tt-go>{t('home.tt_go')}</a>} /></Card>;
   if (teach.off || !teach.rows.length) return <Card class="card pad now"><EmptyState icon="sun" title={t('home.no_classes_today')} text={typeof teach.off === 'string' ? raw(teach.off) : null} /></Card>;
   const cur = teach.rows.find(r => r.now), d = new Date(now), mins = d.getHours() * 60 + d.getMinutes();
   return <section class="card now" aria-label={t('home.next_class')} data-home="teach">
@@ -68,7 +68,7 @@ function NowCard({ teach, now, plan }) {
       const note = l && l.got ? (l.got.slide >= l.got.of ? t('home.taught') : t('home.taught_to', { n: l.got.slide, of: l.got.of })) : '';
       return <li class={r.now ? 'on' : hm(r.end) <= mins ? 'past' : ''} style={{ '--cc': toneOf(r.color) }}>
         <a class="p" href={to} title={what} aria-label={t('home.row_go', { cls: r.name, what })} data-teach={r.classId}><ClassDot color={toneOf(r.color)} />{raw(r.name)}</a>
-        <span class="tm"><span data-raw>{clock(r.start)}</span>{note && <span data-taught> · {note}</span>}</span>
+        <span class="tm"><span data-raw>{clock(r.start)}</span>{note && <span data-taught> · {note}</span>}{r.todo && <> · <a href={href('class', r.todo.classId, 'todo')} data-ttodo={r.todo.classId}>{t('home.row_todo', { n: r.todo.n })}</a></>}</span>
         {r.att && <a class={'tatt' + (r.att.taken ? ' done' : '')} href={href('class', r.att.classId, 'people', 'attendance')} data-tatt={r.att.classId}>{attLine(r.att)}</a>}</li>; })}</ol>
   </section>;
 }
@@ -107,7 +107,7 @@ function FolderAsk({ work }) {
   return <section class="card pad fask" data-home="folder"><Icon name="cloud" /><div>
     <h2>{t(f.canPick ? 'saving.ask_h' : 'saving.ask_none_h')}</h2><p>{t(f.canPick ? 'saving.ask_text' : 'saving.w_none_nopick')}</p>
     <div class="row gap">{f.canPick ? <Button variant="primary" onClick={pick} data-fask-pick>{t('saving.f_choose')}</Button> : <a class="btn pri" href={href('settings', 'saving')}>{t('saving.ask_take')}</a>}
-      <Button variant="quiet" onClick={away} data-fask-later>{t('saving.ask_later')}</Button></div></div></section>;
+      <Button variant="quiet" onClick={away} data-fask-later>{t('saving.ask_later')}</Button>{f.canPick && <span class="mute" data-fask-have>{t('saving.ask_have')}</span>}</div></div></section>;
 }
 // The lesson she worked on last, within three days (src/planner/plannext.js planRecent), with its next class.
 function pickUp(plan, now) {
@@ -167,6 +167,9 @@ export default function Home({ classes }) {
   const [v, now] = useHome(), plan = usePlan(), Sv = usePart('setsave', matchMedia('(max-width:640px)').matches);   // a phone's sign-in card
   const [fg, setFg] = useState(null), A = usePart('asg', !!fg);
   const TD = usePart('hometodo');   // Forget (class/assignment.jsx), asked first
+  const OS = usePart('oldsample', !!(v && v.oldSample && !sampleOn())), G = usePart('homeg', !matchMedia('(max-width:640px)').matches);   // a sample class from before; Google in the header
+  const DR = usePart('homedrop');   // new student work dropped anywhere on Home, and Bring in papers (app/home/drop.jsx)
+  const Sf = useSaving(), fs = Sf && Sf.folder ? Sf.folder().state : '', FX = usePart('folderfix', fs === 'ask' || fs === 'decide');   // the folder needs a press
   const menu = m => ({ label: t('home.row_more', { name: m.name || t('home.student_work') }), items: [{ label: t('home.forget'), icon: 'trash', onSelect: () => setFg(m) }] });
   const d = new Date(now);
   if (!v) return <div class="page" aria-busy="true"><header class="ph"><h1>{greeting(d)}</h1></header><div class="loading" /></div>;
@@ -176,8 +179,11 @@ export default function Home({ classes }) {
   const left = new Map((classes || []).map((x, i) => [x.loose ? '' : x.name, { ...x, i }]));
   return <div class="page home">
     <header class="ph hello"><div><h1>{greeting(d)}</h1><p data-raw>{date(d, { weekday: 'long', day: 'numeric', month: 'long' })}</p></div>
-      <div class="row gap"><HomeFocus /><a class="btn" href={href('calendar')}><Icon name="week" />{t('home.this_week')}</a></div></header>
+      <div class="row gap">{G && G.HomeGoogle && <G.HomeGoogle />}{DR && <DR.HomeBring L={{ bring: t('home.dr_bring'), files: t('home.dr_files'), folder: t('home.dr_folder'), scan: t('home.dr_scan'), match: t('home.dr_match'), failed: t('home.dr_failed') }} />}<HomeFocus /><a class="btn" href={href('calendar')}><Icon name="week" />{t('home.this_week')}</a></div></header>
     <p class="say" data-home="say" data-mark={c.mark} data-back={c.back} data-today={c.classesToday} data-plan={c.toPlan} data-missing={c.missing}>{say || t('home.say_none')}</p>
+    {DR && <DR.HomeDrop L={{ h: t('home.dr_h'), say: t('home.dr_say'), busy: t('home.dr_busy'), failed: t('home.dr_failed') }} />}
+    {FX && <FX.FolderFix />}
+    {OS && v.oldSample && !sampleOn() && <OS.OldSample s={v.oldSample} L={{ os_h: t('home.os_h'), os_text: t('home.os_text'), os_setup: t('home.os_setup'), os_open: t('home.os_open'), os_rm: t('home.os_rm'), os_gone: t('home.os_gone'), os_cant: t('home.os_cant') }} onGone={() => useHome.read && useHome.read()} />}
     <FolderAsk work={v.mark.length + v.back.length > 0} />
     {Sv && <Sv.PhoneSign />}
     <NowCard teach={v.teach} now={now} plan={plan} />

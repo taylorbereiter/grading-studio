@@ -71,9 +71,9 @@ const langFiles = {}, langNames = {}, langPacked = {};
     // lines that are only a comment ship in neither copy, nor does the note at the top of the file (it explains the file to whoever edits it)
     const src = (fs.readFileSync('src/lang-' + file + '.js', 'utf8').replace(/^\/\*[\s\S]*?\*\/[ \t]*\r?\n/, '') + '\nreturn ' + obj + ';').replace(/^[ \t]*\/\/.*\r?\n/gm, '');
     langNames[code] = new Function(src)().name;
-    // Leading spaces don't ship either (dent, above), nor the space after each colon and comma between two quoted words; the
-    // squeezed file must read back the same as the source. Comment lines are already out.
-    const lean = dent(src).replace(/(?<!\\)"([:,]) "/g, '"$1"');
+    // The spaces, line breaks and comments that only help whoever edits it don't ship either: esbuild takes them out (whitespace only,
+    // nothing renamed, every string as written); the squeezed file must read back the same as the source.
+    const lean = (() => { const out = require('esbuild').transformSync('function __l(){' + src + '\n}', { minifyWhitespace: true, charset: 'utf8', legalComments: 'none' }).code, m = /^function __l\(\)\{([\s\S]*)\}\s*$/.exec(out); if (!m) throw new Error('lang-' + file + '.js could not be squeezed'); return m[1]; })();
     if (JSON.stringify(new Function(lean)()) !== JSON.stringify(new Function(src)())) throw new Error('lang-' + file + '.js reads differently once squeezed');
     langPacked[code] = squeeze(lean);
     langFiles['lang/' + code + '.js'] = '(window.__gsLangs = window.__gsLangs || {})[' + JSON.stringify(code) + '] = (function () {\n' + lean + '\n})();\n';

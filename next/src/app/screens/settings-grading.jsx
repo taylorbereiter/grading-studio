@@ -64,9 +64,9 @@ export function GradingSettings() {
     {g && g.bands && <Card title={t(g.way === 'ib7' ? 'setup.sg_bands_ib' : 'setup.sg_bands')}>
       <p class="mute">{t('setup.sg_bands_about')}</p>
       <div class="sg-bands">{g.bands.map((b, i) => <div class="sg-band" data-sgband={i}>
-        <HeldInput class="input" type="text" maxLength={12} value={b[1]} aria-label={t('setup.sg_band_name', { n: i + 1 })} onBlur={e => band(i, 'l', e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-raw data-sgbl={i} />
+        <HeldInput class="input" type="text" maxLength={12} value={b[1]} aria-label={t('setup.sg_band_name', { n: i + 1 })} onChange={e => band(i, 'l', e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-raw data-sgbl={i} />
         <span>{t('setup.sg_from')}</span>
-        <HeldInput class="input" type="number" min="0" max="100" step="1" value={b[0]} disabled={i === g.bands.length - 1} aria-label={t('setup.sg_band_from', { name: b[1] })} onBlur={e => band(i, 'p', e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-sgbp={i} />
+        <HeldInput class="input" type="number" min="0" max="100" step="1" value={b[0]} disabled={i === g.bands.length - 1} aria-label={t('setup.sg_band_from', { name: b[1] })} onChange={e => band(i, 'p', e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-sgbp={i} />
         <span>%</span></div>)}</div>
     </Card>}
     <span hidden data-sglib={L.me ? 1 : 0} />

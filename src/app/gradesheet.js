@@ -350,7 +350,7 @@ function renderSheet() {
     rows.map(({ st, i, f, out, none, word, nograde, first }, at) => {
       const app = appScored(st), lead = rows.findIndex(r => r.st === st && !r.out) === at;   // her score shows once, on the student's first row
       const appCell = () => lead ? appScoreHtml(st) : '<span class="muted" style="font-weight:400;font-size:13px">Score on the row above</span>';
-      const where = '<div style="font-weight:600">' + esc(st.key) + '</div>' + (f ? '<div class="muted" style="font-size:13px;overflow-wrap:anywhere">' + esc(f.path) + '</div>' : '');
+      const where = '<div style="font-weight:600" data-raw>' + esc(st.key) + '</div>' + (f ? '<div class="muted" style="font-size:13px;overflow-wrap:anywhere" data-raw>' + esc(f.path) + '</div>' : '');   // her students and files: never translated
       if (word) {   // her Word rubric: the highlighted boxes, read straight from the file
         const w = f.wscore, tyAll = wordFound(f, st), rdw = splitReads(st, tyAll), ty = rdw.ok, hs = appShots(st, f, (f.hand && f.scan && f.scan.shots) || []), ri = rows.findIndex(r => r.f === f);
         const info = w ? w.crits.map((c, k) => esc(c.length > 28 ? c.slice(0, 28) + '…' : c) + ' <b>' + (w.per[k] == null ? '–' : fmtNum(w.per[k])) + '</b>').join(' · ') + (w.total != null && !w.done ? '<div class="muted" style="font-size:12px">Not every criterion is highlighted yet</div>' : '') : '';

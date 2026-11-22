@@ -4,7 +4,7 @@
 // roster. Nothing is saved until Import, and then as one undo step; a score already there stays unless she says otherwise.
 import { h, Fragment } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
-import { Sheet, Button, Select, Checkbox, Segmented, toast } from '../../ui/index.js';
+import { Sheet, Button, Select, Checkbox, Segmented, toast, HeldInput } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
 import { engine as B, change, classIn } from '../../students/book.js';
 import * as G from '../../engines/gbki.js';
@@ -169,7 +169,7 @@ export function ImportSheet({ x, rows: given, onClose }) {
     const f = fixed(col);
     if (f !== undefined) return <span class="mute small">{f ? t('class.bki_out_of_now', { n: fmtNum(f) }) : t('class.bki_pct_now')}</span>;
     return <span class="cp-bkisc"><Select value={col.pct ? 'pct' : 'pts'} options={[{ value: 'pts', label: t('class.bki_pts') }, { value: 'pct', label: t('class.show_pct') }]} aria-label={t('class.bki_scored')} onChange={v => colSet(col, { pct: v === 'pct', max: v === 'pts' && !col.max ? 20 : col.max, how: '' })} />
-      {!col.pct && <input class="input cp-max" type="number" min="0.5" step="0.5" value={col.max || ''} aria-label={t('class.out_of_label')} onInput={e => colSet(col, { max: Math.max(0.5, Math.round(+e.currentTarget.value * 2) / 2) || null, how: '' })} data-bki-max={col.i} />}
+      {!col.pct && <HeldInput class="input cp-max" type="number" min="0.5" step="0.5" value={col.max || ''} aria-label={t('class.out_of_label')} onChange={e => colSet(col, { max: Math.max(0.5, Math.round(+e.currentTarget.value * 2) / 2) || null, how: '' })} data-bki-max={col.i} />}
       {col.how === 'guess' && <span class="tag" title={t('class.bki_guess_say')}>{t('class.bki_check')}</span>}</span>;
   };
   const order = d.cols.slice().sort((a, b) => (a.on && a.to === null ? 0 : a.on && a.sure === 1 && a.to ? 1 : 2) - (b.on && b.to === null ? 0 : b.on && b.sure === 1 && b.to ? 1 : 2));

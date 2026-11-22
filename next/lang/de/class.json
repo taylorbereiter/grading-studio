@@ -1446,5 +1446,38 @@
  },
  "class.mc_plus_fm": "+ {n} formativ",
  "class.mc_fewer": "weniger als zwei",
- "class.mc_foot": "Nichts hier ist ein Durchschnitt von Stufen: Die mittlere Stufe ist die, die die Hälfte der Klasse erreicht oder übertrifft."
+ "class.mc_foot": "Nichts hier ist ein Durchschnitt von Stufen: Die mittlere Stufe ist die, die die Hälfte der Klasse erreicht oder übertrifft.",
+ "class.sc_h": "Klassen und Klassenlisten",
+ "class.sc_about": "Eine Klasse hat ihre Klassenliste, ihre Einheiten und ihren Link zum System Ihrer Schule.",
+ "class.sc_noroster": "Noch keine Klassenliste",
+ "class.sc_roster": "Name und Klassenliste",
+ "class.sc_link_on": "{what}-Link gespeichert",
+ "class.sc_link_off": "Kein {what}-Link",
+ "class.sc_none": "Noch keine Klassen. Eine Klasse hat eine Klassenliste, damit Arbeiten den Schülerinnen und Schülern zugeordnet werden und das Notenbuch Zeilen hat.",
+ "class.st_terms_h": "Zeiträume und Gewichtung",
+ "class.st_terms_about": "Für alle Ihre Klassen. Eine Aufgabe zählt für den Zeitraum, in den ihr Abgabedatum fällt.",
+ "class.st_none": "Noch keine Zeiträume: Das Notenbuch behandelt das ganze Jahr als einen.",
+ "class.st_nodates": "Noch keine Daten",
+ "class.st_dates": "{a} bis {b}",
+ "class.st_needs": "Fügen Sie zuerst eine Klasse mit Klassenliste hinzu",
+ "class.st_bank_h": "Notenskala und Bewertungsraster",
+ "class.st_bank_about": "Einmal gespeichert, bei jeder Aufgabe wählbar.",
+ "class.st_bank_open": "Rastersammlung öffnen",
+ "class.st_bank_have": "In Ihrer Rastersammlung: {r} und {s}.",
+ "class.st_bank_r": {
+  "one": "ein gespeichertes Raster",
+  "other": "{n} gespeicherte Raster"
+ },
+ "class.st_bank_s": {
+  "one": "eine gespeicherte Notenskala",
+  "other": "{n} gespeicherte Notenskalen"
+ },
+ "class.ph_see": "Arbeit von {name} ansehen",
+ "class.ph_see_t": "{name} · {score}",
+ "class.ph_getting": "Arbeit wird geladen…",
+ "class.ph_nopaper": "In diesem Download gibt es keine Arbeit von dieser Person.",
+ "class.ph_notkept": "Die Arbeiten dazu sind nicht in diesem Browser gespeichert. Öffnen Sie sie am Computer.",
+ "class.ph_elsewhere": "{name} lässt sich am Computer öffnen.",
+ "class.ph_page": "Seite {n}",
+ "class.ph_cant": "Diese Arbeit konnte nicht angezeigt werden."
 }

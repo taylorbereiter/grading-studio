@@ -34,7 +34,7 @@ const Busy = ({ title, text, n, of, stop }) => <Dialog open title={title} onClos
   actions={stop ? <Button onClick={stop} data-svstopnow>{t('saving.stop')}</Button> : null}><div data-svbusy><Progress value={of ? Math.min(n || 0, of) : null} max={of || 1} text={text} label={text} /></div></Dialog>;
 
 /* Take my work with me */
-function Take({ S, onClose }) {
+export function Take({ S, onClose }) {
   const [p, setP] = useState(['', '']), [err, setErr] = useState(''), [lack, setLack] = useState([]), [run, setRun] = useState(null), [end, setEnd] = useState(null), stop = useRef(false);
   useEffect(() => { S.take().then(m => m.papersLacking()).then(setLack, e => console.error(e)); }, []);
   const go = async () => {

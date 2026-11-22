@@ -22,5 +22,6 @@
  "settings.install_h": "アプリとしてインストール",
  "settings.install_about": "アプリのように専用のウィンドウで開き、このタブと同じ作業が表示されます。Chrome や Edge では、アドレスバーかブラウザのメニューにある「インストール」を使います。",
  "settings.install_done": "インストール済み：専用のウィンドウで開き、ブラウザのタブと同じ作業が表示されます。",
- "settings.install": "インストール"
+ "settings.install": "インストール",
+ "settings.lang_miss": "{name} を今は読み込めなかったため、今回は英語で表示しています。次にインターネットにつながった状態で開くと元に戻ります。"
 }

@@ -801,7 +801,8 @@ test('the marking screen and its tabs leave nothing in English', async () => {
   await at('missing', () => page.$$eval('#gstat .seg button', b => b[0].click()));
   await at('late', () => page.$$eval('#gstat .seg button', b => b[2].click()));
   await at('list folded', tab('#colL'));
-  await at('Grades, grade sheet', async () => { await tab('#gradesBtn')(); await pause(400); await page.$$eval('#dlgBox .vseg a', a => a[1] && a[1].click()); });
+  // the grade sheet once its scan has finished, so the lines it draws then (each file, Read as, Is this the grade?) are checked every time
+  await at('Grades, grade sheet', async () => { await tab('#gradesBtn')(); await pause(400); await page.$$eval('#dlgBox .vseg a', a => a[1] && a[1].click()); await page.waitForFunction(() => document.querySelector('#shBody') && !document.querySelector('#shBody .prog'), { timeout: 60000 }); });
   await at('Insights, percents', async () => { await tab('#insightsTab')(); await pause(400); await page.$$eval('#dlgBox .vseg a', a => a[1] && a[1].click()); });
   await at('Insights, consistency', () => page.$$eval('#dlgBox .vseg a', a => a[2] && a[2].click()));
   await at('Return, every row scored', tab('#exportBtn'));

@@ -121,18 +121,51 @@ async function writeWork(id, data, M) {
   let full = true;
   try {
     await work.put(data, id);
-    const m0 = await meta.get(id), m = { ...(m0 || { id }), t: data.t }, students = (m0 && m0.n || 0) + (m0 && m0.joined || 0);
-    m.n = students;
-    delete m.fb; delete m.sent; delete m.sentT; delete m.joined; Object.assign(m, M.workCounts(data));
-    if (m.joined) m.n = students - m.joined;
-    delete m.ret; if (!(data.returned && data.returned.ok)) delete m.back;
-    // the papers this save finished count toward today, and toward a focus session running (src/app/kept.js keepWork: fcSeen, fcGain)
-    try { await (await counter()).workCounted(id, m0, m); } catch (e) { console.error(e); }
-    await meta.put(m, id);
+    await metaAfter(id, data, M);
   } catch (e) { if (e && e.name === 'ReadOnly') throw e; console.error(e); full = false; }
   if (full && !ok) quick.remove(qid);
   if ((text('gsc.saved.' + id) || '').startsWith(tabs.TAB + ':')) tabs.stamp(id, data.t + ':full');
   return { quick: ok, full };
+}
+
+// The download's row after its work was written (src/app/kept.js keepWork, metaFor): its counts from the work.
+async function metaAfter(id, data, M) {
+  const m0 = await meta.get(id), m = { ...(m0 || { id }), t: data.t }, students = (m0 && m0.n || 0) + (m0 && m0.joined || 0);
+  m.n = students;
+  delete m.fb; delete m.sent; delete m.sentT; delete m.joined; Object.assign(m, M.workCounts(data));
+  if (m.joined) m.n = students - m.joined;
+  delete m.ret; if (!(data.returned && data.returned.ok)) delete m.back;
+  // the papers this save finished count toward today, and toward a focus session running (src/app/kept.js keepWork: fcSeen, fcGain)
+  try { await (await counter()).workCounted(id, m0, m); } catch (e) { console.error(e); }
+  await meta.put(m, id);
+}
+// One download's work put back as it was in an earlier copy (src/safe.js gbPut): a change made now on this computer, stamped to come
+// after everything the other copies have seen, so the folder and another window take it and never undo it. Its stamps from then are
+// dropped, and the Word papers she typed in go back with it (edits: { path: { t, data(), orig() } }, null to leave them). The quick
+// copy is out of date, so it goes. Read and written as one step. Returns how it was, in the same shape, for Undo.
+export async function restoreWork(id, want, want2) {
+  return oneAtATime(async () => {
+    check(id);
+    const M = await merge(), cur = await newestWork(id), data = copy(want);
+    for (const k of ['sv', 'sat', 'pv']) delete data[k];
+    for (const r of Object.values(data.s || {})) if (r) { delete r.v; delete r.at; delete r.ft; }
+    data.s ||= {}; data.t = Date.now();
+    M.stampData(M.revsOf(cur || { s: {} }), data, tabs.devId(), data.t);
+    const range = IDBKeyRange.bound(id + '|', id + '|\uffff'), had = {};
+    if (want2) {
+      for (const [k, r] of await edits.entries(range)) had[String(k).slice(id.length + 1)] = r;
+      for (const [p, r] of Object.entries(want2)) if (!had[p] || (had[p].t || 1) !== r.t) await edits.put({ t: r.t, data: await r.data(), orig: await r.orig() }, id + '|' + p);
+      for (const p of Object.keys(had)) if (!want2[p]) await edits.del(id + '|' + p);
+    }
+    await work.put(data, id);
+    quick.remove(id.replace(/^gs\.b\./, ''));
+    const idx = quickList.json({}) || {}; if (id in idx) { delete idx[id]; quickList.setJson(idx); }
+    tabs.stamp(id, data.t);   // another window with it open is told, and keeps only what it changes from here on
+    await metaAfter(id, data, M);
+    if (want2) saved({ kind: 'edit', id, side: 'students' });
+    saved({ kind: 'work', id, side: 'students', data, before: cur });
+    return { cur, had: Object.fromEntries(Object.entries(had).map(([p, r]) => [p, { t: r.t || 1, data: async () => r.data, orig: async () => r.orig || null }])) };
+  });
 }
 
 /* a download's papers (src/app/kept.js keepPapers and paperPut) */

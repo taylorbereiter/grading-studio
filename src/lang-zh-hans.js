@@ -400,6 +400,8 @@ const LANG_ZHS = {
     'How it was scored': '评分方式', 'From your teacher': '老师的话', 'Comment on your paper': '作业上的评语', 'Comments on your paper': '作业上的评语',
     'Your marked paper starts on the next page.': '批改后的作业从下一页开始。', 'Your feedback continues on the next page.': '反馈接续在下一页。',
     'Missing': '缺交', 'Excused': '免交', 'Late': '迟交',
+    // the grade sheet (src/app/gradesheet.js, src/grades.js readsHtml)
+    "Click to copy": "点一下即可复制", "Open this file": "打开这个文件", "Every row is made from the file named on it, inside that student’s folder. Click a picture to open that exact file. Click a score to copy it.": "每一行都取自行上写明的文件，在该学生的文件夹里。点一下图片即可打开那个文件。点一下分数即可复制。", "Also show grades found on the papers": "也显示在作业上找到的成绩", "· a score you gave in Grading Studio always counts": "· 你在 Grading Studio 给的分数一律算数", "· the downloaded sheet shows the same rows": "· 下载的成绩表显示相同的行", "Show them": "显示", "Hide them": "隐藏", "Folder and file": "文件夹与文件", "Read as": "读成", "Only unmarked files, left out": "只有未批改的文件，不计入", "Your score": "你的分数", "Box it by hand": "手动框选", "Boxed by hand": "已手动框选", "redo": "重做", "Is this the grade?": "这是成绩吗？", "It’s part of the page’s own text, so the student may have typed it. A flattened Kami grade looks the same.": "这是页面本身文字的一部分，可能是学生自己打的。合并到页面里的 Kami 成绩看起来也一样。", "Use it": "采用", "Not a grade": "不是成绩", "No grade yet.": "还没有成绩。", "Nothing turned in": "没有提交", "Left out (no marks).": "不计入（没有批改）。", "Score on the row above": "分数在上一行", "Type what you see": "输入你看到的", "Couldn’t read this file": "无法读取这个文件", "No grade found yet": "还没找到成绩", "Word rubric": "Word 评分标准", "Word file": "Word 文件", "Trim each spot down to your marks": "把每个位置裁到只剩你的批改",
   },
   rules: [
     [/^(\d+) of (\d+) done$/, '已完成 $1/$2'], [/^out of ([\d.,]+)$/, '满分 $1'],
@@ -510,6 +512,8 @@ const LANG_ZHS = {
     noatt: '{1}没有保存的出缺席纪录。', openday: '打开 {1}', taken: ['已记录 {1} 天。', '已记录 {1} 天。'], takenin: ['{2}已记录 {1} 天。', '{2}已记录 {1} 天。'], takenR: '按一下日期可打开或变更那一天，按一下姓名可前往那位学生的页面。“到课人数”包含所有出席和迟到的人。', unk: ['有 {1} 次缺席仍然原因不明。', '有 {1} 次缺席仍然原因不明。'],
     andmore: '还有 {1} 次。得知原因后，请打开那一天并按“缺席，已请假”。', owesA: ['{1} 位学生', '{1} 位学生'], owesB: ['共缺交 {1} 份作业', '共缺交 {1} 份作业'], reminded: '已提醒：{1}', ago: ['{1} 天前', '{1} 天前'], pick: '选一个最接近的。{1} 位学生每人都有一张课桌，之后任何课桌都可以移动或拿掉。', seated: '{2} 人中 {1} 人已入座',
     needed: ['还需要 {1} 张课桌', '还需要 {1} 张课桌'], desk: '课桌，{1}。按一下可拿掉', sp: '',
+    // the grade sheet
+    gshid: "显示没有成绩的文件（隐藏了 {1} 个）", gsout: "{1} 个文件没有批改，所以当作多余的作业不计入。", gspage: "第 {1} 页", gsfrom: "出自“{1}”", gsconf: "待确认 {1} 个",
   },
   helpSecs: { start: '开始使用', mark: '批改作业', score: '分数与评分标准', back: '发回作业', class: '班级与成绩册', safe: '保存与安全', plan: '备课与上课', private: '隐私' },
   help: {

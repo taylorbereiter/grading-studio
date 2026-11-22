@@ -133,7 +133,11 @@ test('typed notes: the same keys make the same notes as the current app, each ch
   await p.click('[data-tmgo]');
   await p.click('[data-tmstamp]');
   await p.waitForFunction(() => /^\[0:0[1-9]\] $/.test(window.__mark.state().batch.students[1].grade.comment || ''));
-  await p.click('[data-tmtalk="0"]'); await p.keyboard.type('3'); await p.keyboard.press('Tab');
+  // a length that starts with 0 is kept as typed: 0.5 minutes
+  await p.click('[data-tmtalk="0"]'); await p.keyboard.type('0.5'); await p.keyboard.press('Tab');
+  await p.waitForFunction(() => JSON.stringify(window.__mark.state().setup.talk) === '[0.5,null]', { timeout: 5000 });
+  assert.equal(await p.$eval('[data-tmtalk="0"]', e => e.value), '0.5');
+  await p.click('[data-tmtalk="0"]'); await p.$eval('[data-tmtalk="0"]', e => e.select()); await p.keyboard.type('3'); await p.keyboard.press('Tab');
   await p.waitForFunction(() => JSON.stringify(window.__mark.state().setup.talk) === '[3,null]' && document.querySelector('[data-tmhow="under"]'));
 
   // back to Aria: Clear this student's notes goes at once, and Undo brings them back

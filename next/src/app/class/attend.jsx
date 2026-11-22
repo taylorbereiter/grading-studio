@@ -75,7 +75,7 @@ function Day({ c, d, today, setD }) {
       const s = B.attOf(c, d, n) || 'p', nt = B.attNote(c, d, n);
       return <div class={'attrow s' + s} data-att-row={i}><span class="attn" data-raw>{n}</span>
         <div class="seg attseg" role="radiogroup" aria-label={n}>{WAYS.map(k => <button type="button" role="radio" aria-checked={String(s === k)} tabIndex={s === k ? 0 : -1} onClick={() => set(i, k)} data-att-s={k}>{t(WORD[k])}</button>)}</div>
-        {(s !== 'p' || nt) && <HeldInput type="text" class="input attnote" maxLength={120} value={nt} placeholder={t('class.att_note_ph')} aria-label={t('class.att_note_for', { name: n })} onBlur={e => note(i, e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-att-note />}
+        {(s !== 'p' || nt) && <HeldInput type="text" class="input attnote" maxLength={120} value={nt} placeholder={t('class.att_note_ph')} aria-label={t('class.att_note_for', { name: n })} onChange={e => note(i, e.currentTarget.value)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }} data-att-note />}
       </div>; })}</div>
     <p class="mute small">{r ? t('class.att_saved') : t('class.att_starts')} {t('class.att_keys')}</p>
   </>;

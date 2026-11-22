@@ -22,5 +22,6 @@
  "settings.install_h": "Instalar como aplicación",
  "settings.install_about": "Se abre como un programa, en su propia ventana, con el mismo trabajo que esta pestaña. En Chrome o Edge, usa Instalar en la barra de direcciones o en el menú del navegador.",
  "settings.install_done": "Instalada: se abre en su propia ventana, con el mismo trabajo que la pestaña del navegador.",
- "settings.install": "Instalar"
+ "settings.install": "Instalar",
+ "settings.lang_miss": "No se pudo descargar {name} ahora, así que esta visita está en inglés. Volverá sola la próxima vez que abras la aplicación con internet."
 }

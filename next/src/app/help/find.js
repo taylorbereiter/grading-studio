@@ -11,7 +11,8 @@ import { TOPICS } from './topics.js';
 import { loadPlan } from '../../planning/plan.js';
 import { toast } from '../../ui/index.js';
 import { currentLook, saveLook } from '../../services/theme.js';
-import { assistant } from '../../services/assistant.js';
+import { assistant, KNOWN } from '../../services/assistant.js';
+import { json } from '../../shared/ls.js';
 
 // The light look she had before the dark one (kept in this browser), else the usual one.
 const lightLook = () => { try { const v = localStorage.getItem('gsn.lightLook'); if (v && v !== 'midnight') return v; } catch { } return 'graphite'; };
@@ -74,6 +75,10 @@ async function findRows() {
   add({ id: 'look-dark', label: t(dark ? 'help.cmd_light' : 'help.cmd_dark'), also: t('look.title'), group: t('nav.settings'), icon: dark ? 'sun' : 'moon', run: () => { if (!dark) try { localStorage.setItem('gsn.lightLook', currentLook()); } catch { } if (!saveLook(dark ? lightLook() : 'midnight')) toast(t('look.not_kept')); } });
   if (current().chunk !== 'mark') add({ id: 'snip', label: t('help.cmd_snip'), also: t('help.cmd_snip_also'), group: t('cmd.group_do'), icon: 'crop', run: () => PARTS.snip().then(m => m.startSnip({ toast })).catch(e => console.error(e)) });
   const ai = assistant();
+  // the others she switches to (Settings > Working with AI), each made the one in use and opened, as the sidebar's list does (src/beside.js)
+  if (ai.link) { const w = json('gs.words') || {}, off = Array.isArray(w.off) ? w.off : [];
+    for (const n of new Set(KNOWN.map(x => x[0]).concat(Object.keys(w.urls || {})))) if (n !== ai.name && !off.includes(n)) add({ id: 'ai-to-' + n, label: () => t('help.cmd_switch_ai', { name: n }), group: t('cmd.group_do'), icon: 'assist',
+      run: () => PARTS.setmore().then(m => m.switchAi(n).then(() => { const a = assistant(); if (a.link) m.openBeside(a.link, a.tab); })).catch(e => console.error(e)) }); }
   if (ai.link) add({ id: 'ai-beside', label: ai.name ? t('help.cmd_beside', { name: ai.name }) : t('help.cmd_beside_generic'), group: t('cmd.group_do'), icon: 'assist', run: () => (more ? more.openBeside(ai.link, ai.tab) : window.open(ai.link, '_blank', 'noopener')) });
   for (const s of keyList()) if (!s.hidden && !/^(command-bar|fold|undo|redo|mark-(next|prev|score|nudge.*))$/.test(s.id)) add({ id: 'key-' + s.id, label: t(s.label), also: s.group ? t(s.group) : '', group: t('cmd.group_do'), icon: 'keyboard', keys: s.keys[0], when: s.when, run: () => s.run({ shiftKey: false, preventDefault() {} }) });
 }

@@ -187,6 +187,9 @@ const LANG_FILLS = [
   ['ariascat', /^.+: summatives [\d.,]+%, in-class [\d.,]+%$/, (m, F, P) => m[0].replace(/: summatives ([\d.,]+%), in-class ([\d.,]+%)(?=\. |$)/g, (x, a, b) => ': ' + langFill(F.scat, [0, a, b], P))],
   // a name the language knows with a percent after it ("In-class 82%")
   ['lblpct', /^(.{1,40}) ([\d.,]+%)$/, (m, F, P) => { const h = trPiece(m[1], P); return h == null ? null : h + ' ' + m[2]; }],
+  // the grade sheet (src/app/gradesheet.js, src/grades.js readsHtml)
+  ['gshid', /^Show files with no grade \((\d+) hidden\)$/], ['gsout', /^(\d+) files? ha(?:s|ve) no marks, so (?:it’s|they’re) left out as extra papers\.$/], ['gspage', /^Page (\d+)$/],
+  ['gsfrom', /^From “(.+)”$/], ['gsconf', /^(\d+) to confirm$/],
 ];
 // One piece of English in a language, or null when the language doesn't know it. A word that means two things ("Late" for a paper
 // and for a student) has its second meaning under the name of the part of the screen it is on (data-lc), as "att|Late".

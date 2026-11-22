@@ -25,9 +25,9 @@ function AddTime({ done }) {
   return <form class="card pad tkadd" onSubmit={submit} data-tk-form>
     <p class="mute">{t('focus.add_time_say')}</p>
     <div class="tkrow">
-      <label><span>{t('focus.day')}</span><input class="input" type="date" name="day" max={today} value={today} required /></label>
+      <label><span>{t('focus.day')}</span><input class="input" type="date" name="day" max={today} defaultValue={today} required /></label>
       <Segmented size="sm" label={t('focus.kind')} value={kind} onChange={setKind} options={[{ value: 'g', label: t('focus.grading') }, { value: 'l', label: t('focus.planning') }]} />
-      <label><span>{t('focus.minutes_box')}</span><input class="input" type="number" name="min" min="1" max="720" step="1" value="30" data-tk-min /></label>
+      <label><span>{t('focus.minutes_box')}</span><input class="input" type="number" name="min" min="1" max="720" step="1" defaultValue="30" data-tk-min /></label>
       <label class="grow"><span>{t('focus.note')}</span><input class="input" type="text" name="note" maxLength={80} placeholder={t('focus.note_ph')} /></label>
     </div>
     <div class="row gap"><Button type="submit" variant="primary" data-tk-addok>{t('focus.add')}</Button><Button onClick={() => done(false)}>{t('focus.cancel')}</Button></div>

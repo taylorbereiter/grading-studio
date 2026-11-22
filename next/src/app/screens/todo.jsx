@@ -4,9 +4,9 @@
 // the current app opens the same list. Which view is shown is this browser's choice (gs.tdBy, as the current app keeps it).
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { Button, IconButton, Icon, Switch, Mic, Dialog, TextInput, toast } from '../../ui/index.js';
+import { Button, IconButton, Icon, Switch, Mic, Dialog, TextInput, HeldInput, toast } from '../../ui/index.js';
 import { t, date } from '../../i18n/t.js';
-import { href, go } from '../router.js';
+import { href, go, PARTS } from '../router.js';
 import * as undoList from '../../services/undo.js';
 import { onSaved } from '../../shared/saved.js';
 import { readTodo, todoChange, engine as E } from '../../students/todo.js';
@@ -205,6 +205,7 @@ function Adder({ ctx }) {
 
 // One line, opened at the side: everything about it, each change saved as she makes it.
 function Pane({ ctx, r, close }) {
+  const [np, setNp] = useState(null);   // Someone new…: the School page's form, while it is open
   const { today, lib, cls } = ctx, it = r.it, c = r.own ? cls(it.c) : null;
   const setDay = d => (r.auto ? (d && d >= today ? autoPut(r.key, { d }) : toast(t('todo.needs_day'))) : put(r.id, { d, ...(d ? {} : { rep: '' }) }));
   const chip = (on, label, fn, attr) => <button type="button" class="chip" aria-pressed={String(!!on)} onClick={fn} data-td-when={attr}>{label}</button>;
@@ -233,12 +234,14 @@ function Pane({ ctx, r, close }) {
   }
   const items = c ? c.units.flatMap(u => u.items) : [], si = c && it.who ? c.names.indexOf(it.who) : -1, a = it.a && items.find(i => i.id === it.a);
   const mine = (it.ppl || []).map(id => ctx.people.find(p => p.id === id)).filter(Boolean), others = ctx.people.filter(p => !mine.includes(p));
+  // Someone new… (src/todo.js, schPersonForm): the School page's own form, then on this to-do
+  const add = pid => put(r.id, { ppl: [...(it.ppl || []), pid] }), newOne = () => PARTS.schoolform().then(setNp, e => console.error(e));
   const pc = c && ctx.plan && ctx.plan.classes.find(p => E.tdKey(p.name) === E.tdKey(c.name));
-  // the words and the note are kept as typed until she leaves the box (one save, never a stale copy over newer typing)
+  // the words and the note are held as typed and saved once, when she leaves the box or it is taken away (ui HeldInput)
   return <section class="tdpane" data-td-pane={r.id}><IconButton icon="x" label={t('todo.close')} onClick={close} class="tdclose" />
-    <textarea class="tdtitle input" rows="2" maxLength={300} aria-label={t('todo.what')} defaultValue={it.x} data-td-x
+    <HeldInput tag="textarea" class="tdtitle input" rows="2" maxLength={300} aria-label={t('todo.what')} value={it.x} data-td-x
       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }}
-      onChange={e => { const x = e.currentTarget.value.replace(/\s+/g, ' ').trim(); if (x && x !== it.x) put(r.id, { x }); else if (!x) e.currentTarget.value = it.x; }} />
+      onChange={e => { const x = e.currentTarget.value.replace(/\s+/g, ' ').trim(); if (x && x !== it.x) put(r.id, { x }); }} />
     {when}{catF}
     <div class="tdf"><label class="tdlab" for="td-cls">{t('todo.class')}</label><div class="tdv"><select id="td-cls" class="input sm" value={it.c || ''} data-td-cls
       onChange={e => put(r.id, { c: e.currentTarget.value, who: '', a: '', ...(it.rep === 'meet' ? { rep: 'week' } : {}) })}>
@@ -249,16 +252,17 @@ function Pane({ ctx, r, close }) {
       {items.length > 0 && <optgroup label={t('todo.assignments')}>{items.map(i => <option value={'a:' + i.id}>{i.name}</option>)}</optgroup>}
       {c.names.length > 0 && <optgroup label={t('todo.students')}>{c.names.map((n, i) => <option value={'s:' + i}>{n}</option>)}</optgroup>}</select>
       {si >= 0 ? <a class="link" href={href('class', c.id, 'people', si + 1)}>{t('todo.open_their')}</a> : a ? <a class="link" href={href('class', c.id)}>{t('todo.open_class')}</a> : null}</div></div>}
-    {(ctx.people.length > 0 || mine.length > 0) && <div class="tdf"><label class="tdlab" for="td-ppl">{t('todo.people')}</label><div class="tdv">
+    {<div class="tdf"><label class="tdlab" for="td-ppl">{t('todo.people')}</label><div class="tdv">
       {mine.map(p => <span class="chip" data-td-person={p.id}><Icon name="user" size="xs" />{raw(p.name)}
         {p.email && <a class="link" href={'mailto:' + encodeURIComponent(p.email) + '?subject=' + encodeURIComponent(it.x)} title={t('todo.write_to', { email: p.email })}>{t('todo.email')}</a>}
         <IconButton icon="x" size="sm" label={t('todo.take_person', { name: p.name })} onClick={() => put(r.id, { ppl: (it.ppl || []).filter(x => x !== p.id) })} /></span>)}
-      {others.length > 0 && <select id="td-ppl" class="input sm" value="" data-td-ppl onChange={e => { const pid = e.currentTarget.value; e.currentTarget.value = ''; if (pid && !(it.ppl || []).includes(pid)) put(r.id, { ppl: [...(it.ppl || []), pid] }); }}>
-        <option value="">{mine.length ? t('todo.add_someone_else') : t('todo.add_someone')}</option>{others.map(p => <option value={p.id}>{p.role ? p.name + ' · ' + p.role : p.name}</option>)}</select>}</div></div>}
+      {<select id="td-ppl" class="input sm" value="" data-td-ppl onChange={e => { const pid = e.currentTarget.value; e.currentTarget.value = ''; if (pid === '+') newOne(); else if (pid && !(it.ppl || []).includes(pid)) add(pid); }}>
+        <option value="">{mine.length ? t('todo.add_someone_else') : t('todo.add_someone')}</option>{others.map(p => <option value={p.id}>{p.role ? p.name + ' · ' + p.role : p.name}</option>)}<option value="+">{t('todo.someone_new')}</option></select>}
+      {np && <np.NewPerson onClose={() => setNp(null)} onMade={add} />}</div></div>}
     <div class="tdf"><span class="tdlab">{t('todo.repeats')}</span><div class="tdv">
       {[['', 'todo.r_no'], ['day', 'todo.r_day'], ['week', 'todo.r_week'], ...(pc || it.rep === 'meet' ? [['meet', 'todo.r_meet']] : [])].map(([k, l]) =>
         <button type="button" class="chip" aria-pressed={String((it.rep || '') === k)} onClick={() => put(r.id, { rep: k, ...(k && !it.d ? { d: today } : {}) })} data-td-rep={k}>{t(l)}</button>)}</div></div>
-    <div class="tdf top"><label class="tdlab" for="td-note">{t('todo.note')}</label><div class="tdv"><textarea id="td-note" class="input" rows="3" maxLength={2000} placeholder={t('todo.note_ph')} defaultValue={it.note || ''} data-td-note
+    <div class="tdf top"><label class="tdlab" for="td-note">{t('todo.note')}</label><div class="tdv"><HeldInput tag="textarea" id="td-note" class="input" rows="3" maxLength={2000} placeholder={t('todo.note_ph')} value={it.note || ''} data-td-note
       onChange={e => { const x = e.currentTarget.value.trim(); if (x !== (it.note || '')) put(r.id, { note: x }); }} /></div></div>
     <div class="tdacts"><Button variant="primary" onClick={() => tick(r)} data-td-fin>{it.done ? t('todo.undone_tip') : t('todo.done')}</Button>
       {!it.done && <Button onClick={() => setDay(E.tdAdd(today, 1))} data-td-tomorrow>{t('todo.move_tomorrow')}</Button>}
@@ -291,12 +295,12 @@ function Cats() {
   const add = async e => { e.preventDefault(); const n = name.trim(); if (!n) return; setName(''); await save(t('todo.u_cats'), E => E.todoCatAdd(n)); };
   return <details class="tdsec" data-td-cats><summary class="tdcap">{t('todo.cats')}</summary>
     {cats.map((c, i) => <div class="tdcatrow" data-td-catrow={c.id} key={c.id}>
-      <input class="input sm" maxLength={40} defaultValue={catName(c)} aria-label={t('todo.cat_name')} data-td-catn
-        onChange={e => { const x = e.currentTarget.value.replace(/\s+/g, ' ').trim(); if (!x) { e.currentTarget.value = catName(c); return; } if (x !== catName(c)) save(t('todo.u_cats'), E => E.tdCatPut(c.id, { name: c.base && !c.own && CAT_LINE[c.id] && x === t(CAT_LINE[c.id]) ? '' : x })); }} />
+      <HeldInput class="input sm" maxLength={40} value={catName(c)} aria-label={t('todo.cat_name')} data-td-catn
+        onChange={e => { const x = e.currentTarget.value.replace(/\s+/g, ' ').trim(); if (!x) return; if (x !== catName(c)) save(t('todo.u_cats'), E => E.tdCatPut(c.id, { name: c.base && !c.own && CAT_LINE[c.id] && x === t(CAT_LINE[c.id]) ? '' : x })); }} />
       <IconButton icon="chu" size="sm" label={t('todo.cat_up')} disabled={!i} onClick={() => save(t('todo.u_cats'), E => E.todoCatMove(c.id, -1))} />
       <IconButton icon="chd" size="sm" label={t('todo.cat_down')} disabled={i === cats.length - 1} onClick={() => save(t('todo.u_cats'), E => E.todoCatMove(c.id, 1))} />
       <IconButton icon="x" size="sm" label={t('todo.cat_delete', { name: catName(c) })} onClick={() => del(c)} data-td-catdel />
-      <input class="input sm tdcatw" maxLength={300} defaultValue={c.w} aria-label={t('todo.cat_words', { name: catName(c) })} data-td-catw
+      <HeldInput class="input sm tdcatw" maxLength={300} value={c.w || ''} aria-label={t('todo.cat_words', { name: catName(c) })} data-td-catw
         placeholder={c.id === 'role' && !c.own ? t('todo.cat_role_ph') : t('todo.cat_words_ph', { eg: EG[c.id] || 'yearbook, club' })}
         onChange={e => { const x = e.currentTarget.value.replace(/\s+/g, ' ').trim(); if (x !== c.w) save(t('todo.u_cats'), E => E.tdCatPut(c.id, { w: x })); }} />
     </div>)}

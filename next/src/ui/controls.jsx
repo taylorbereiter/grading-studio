@@ -1,7 +1,7 @@
 // The simple controls. Every one: hover, press, a focus ring from :focus-visible, a disabled look, and the keyboard behaviour its
 // ARIA role promises. No part takes words of its own: labels arrive already translated (t()), or as a teacher's own text.
 import { h, Fragment } from 'preact';
-import { useRef, useId, useState } from 'preact/hooks';
+import { useRef, useId, useState, useEffect } from 'preact/hooks';
 import { Icon } from './icons.js';
 import { Tooltip } from './popups.jsx';
 
@@ -51,15 +51,22 @@ export function Field({ label, hint, error, id, children }) {
 }
 // A box that saves when she leaves it (no onInput) keeps what she types while she is in it: a save elsewhere that draws the screen
 // again (another box she just left, Undo, another window) never puts the old words back under her cursor.
+// Its onChange runs once, when she leaves the box having changed it, as a browser's change does: preact/compat (loaded for the
+// pop-ups) turns every onChange on a text box into a call per key, which saved half-typed values ("0" closed a box, "" put the old
+// value back) and made each key its own undo step. A box taken away while she is still in it (Esc, a shortcut, Find going elsewhere)
+// saves what she typed as it goes: not every browser says it was left. One commit serves both, so nothing is saved twice.
 export function useHeld(value, onInput, rest) {
-  const [held, setHeld] = useState(null);
+  const [held, setHeld] = useState(null), live = useRef({});
+  const L = live.current; L.value = value; L.save = rest.onChange;
+  const commit = e => { const h = L.held; L.held = null; if (h != null && L.save && h !== String(L.value ?? '')) L.save(e || { currentTarget: { value: h }, target: { value: h } }); };
+  useEffect(() => () => commit(), []);
   if (onInput) return { value, onInput: e => onInput(e.currentTarget.value) };
-  return { value: held != null ? held : value, onInput: e => setHeld(e.currentTarget.value),
-    onBlur: e => { try { rest.onBlur && rest.onBlur(e); } finally { setHeld(null); } } };
+  return { value: held != null ? held : value, onInput: e => { L.held = e.currentTarget.value; setHeld(L.held); }, onChange: undefined,
+    onBlur: e => { try { L.held = L.held != null ? e.currentTarget.value : null; commit(e); rest.onBlur && rest.onBlur(e); } finally { setHeld(null); } } };
 }
-// A plain input with the same hold, for boxes that carry their own label (aria-label).
-export function HeldInput({ value, onInput, ...rest }) {
-  return <input {...rest} {...useHeld(value, onInput, rest)} />;
+// A plain input (or, with tag="textarea", a text box) with the same hold, for boxes that carry their own label (aria-label).
+export function HeldInput({ value, onInput, tag: T = 'input', ...rest }) {
+  return <T {...rest} {...useHeld(value, onInput, rest)} />;
 }
 export function TextInput({ label, hint, error, icon, value, onInput, state, ...rest }) {
   const id = useId(), held = useHeld(value, onInput, rest);
