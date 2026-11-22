@@ -521,6 +521,8 @@ export default function MarkScreen({ route, classes }) {
   const [askV, setAskV] = useState(null), view = (k, v) => { setAskV({ v }); go('mark', id, k, { sheet: 'sheet', cons: 'consistency' }[v]); };
   const bringMany = () => PARTS.bringin().then(B => setSetupDlg({ k: 'fof', B }), e => console.error(e));
   const setupItems = [{ label: t('mark.su_menu'), icon: 'settings', onSelect: openSetup }, { label: t('mark.bf_menu'), icon: 'upload', onSelect: bringMany },
+    // What opened (src/app/screens.js openRepBtn, A-121): the same report as the student list's menu
+    ...(rep ? [{ label: t('mark.op_title'), icon: 'info', onSelect: () => setRepList(true) }] : []),
     { label: t('mark.pv_menu'), icon: 'people', onSelect: () => PARTS.partners().then(P => setSetupDlg({ k: 'pv', P }), e => console.error(e)) },
     { label: t('mark.qm_menu'), icon: 'check', onSelect: () => quick() },
     ...(w && (w.batch.clips || []).length ? [{ label: t('mark.cl_menu'), icon: 'play', onSelect: () => PARTS.clips().then(Cl => setSetupDlg({ k: 'cl', Cl }), e => console.error(e)) }] : []),

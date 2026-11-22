@@ -63,7 +63,14 @@ same test opens the result in the current app. Commits are on the local branch `
 | A-108 | closed: Escape closes the calculator from anywhere; Lighting now also closes with Escape when the keyboard is on nothing, no mark picked and no box open (src/polish.js) | mark-keyboard.test.js "A-107 A-108" | d95b410f |
 | A-109 | closed: Show beside heads a file's ⋯ when the file can go in the side pane, and puts it there | mark.test.js "A-109" | d95b410f |
 | A-110 | closed: already done before this branch: the side pane's edge takes the arrow keys (4% a press) | mark.test.js "the side pane…" | d95b410f |
-| A-111 | closed: the rubric in the side pane with nothing written for its scores now links to Rubric setup, as the current app's does; Edit rubric stays by the Score heading (C-044) | mark.test.js "A-109 A-111" | (this commit) |
-| A-112 | closed: already done before this branch: the Timer's asked-for length, at least and at most (setup.talk), and Shorter / Within / Longer; now proved for at most too | mark-notes.test.js "typed notes…" | (this commit) |
-| A-113 | closed: Only this student has Other work: every download of the class, oldest first, with their own score, read from saved work only (a failed read says so) | mark.test.js "A-113 A-114" | (this commit) |
-| A-114 | closed: a row in Other work that has their paper opens it, still only them | mark.test.js "A-113 A-114" | (this commit) |
+| A-111 | closed: the rubric in the side pane with nothing written for its scores now links to Rubric setup, as the current app's does; Edit rubric stays by the Score heading (C-044) | mark.test.js "A-109 A-111" | 3212a41c |
+| A-112 | closed: already done before this branch: the Timer's asked-for length, at least and at most (setup.talk), and Shorter / Within / Longer; now proved for at most too | mark-notes.test.js "typed notes…" | 3212a41c |
+| A-113 | closed: Only this student has Other work: every download of the class, oldest first, with their own score, read from saved work only (a failed read says so) | mark.test.js "A-113 A-114" | 3212a41c |
+| A-114 | closed: a row in Other work that has their paper opens it, still only them | mark.test.js "A-113 A-114" | 3212a41c |
+| A-115 | closed: a finger or a pencil on the paper folds the list that came out over it in full screen (a mouse press does not) | mark-top.test.js "A-125 A-094 A-102 A-115" | (this commit) |
+| A-116 | kept different: the class name stays as words in the top bar; going back to the class is the × (Close marking goes to the class page), Setup > Gradebook and Find | mark-top.test.js "A-116 A-118 A-121 A-126" | (this commit) |
+| A-117 | kept different: the Examples tab shows once the assignment has examples (with their count); before that Find's Examples opens Library > Examples, so the bar has no empty tab | mark-top.test.js "C-037 … C-062" (Examples in Find) | (this commit) |
+| A-118 | kept different: the top bar says this download's own state (Saving, Saved, Can't save); where her work is kept and Reconnect are Find's Where your work is saved, in Settings > Saving | mark-top.test.js "A-116 A-118 A-121 A-126" | (this commit) |
+| A-119 | kept different: the class's page in the school's system is in Setup (open it, or link it), not on the top bar, so the screen stays under 25 presses | mark-top.test.js "C-037 … C-062" | (this commit) |
+| A-121 | closed: What opened is in Setup (as in the current app's This assignment menu), and in the list's menu and Find | mark-top.test.js "A-116 A-118 A-121 A-126" | (this commit) |
+| A-126 | kept different: see A-118 | mark-top.test.js "A-116 A-118 A-121 A-126" | (this commit) |

@@ -138,7 +138,7 @@ test('C-037 C-038 B-052 B-053 B-054 A-124 C-073 A-001 A-004 C-062: n of N marked
   await ctx.close();
 });
 
-test('A-125 A-094 A-102: full screen from the View toolbar and F; the student list steps aside as Settings says, comes back at the left edge, from the tab, with / and with [ until full screen ends', async () => {
+test('A-125 A-094 A-102 A-115: full screen from the View toolbar and F; the student list steps aside as Settings says, comes back at the left edge, from the tab, with / and with [ until full screen ends', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const { p } = await both(ctx, errors, await standardFiles());
   assert.ok(await p.$('.mk-zoom [data-full]'), 'Full screen is in the View toolbar');
@@ -157,6 +157,13 @@ test('A-125 A-094 A-102: full screen from the View toolbar and F; the student li
   await p.$eval('[data-fstab]', b => b.click());
   assert.ok(await peeking(p));
   await p.mouse.move(700, 400); await p.mouse.move(720, 420);
+  await p.waitForFunction(() => !('mkpeek' in document.documentElement.dataset), { timeout: 5000 });
+  // A-115: a finger on the paper folds the list that came out over it (src/touch.js); a mouse press there does not
+  await p.$eval('[data-fstab]', b => b.click());
+  assert.ok(await peeking(p));
+  await p.$eval('.mk-paper', e => e.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'mouse', bubbles: true })));
+  await new Promise(r => setTimeout(r, 200)); assert.ok(await peeking(p), 'not by a mouse press');
+  await p.$eval('.mk-paper', e => e.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch', bubbles: true })));
   await p.waitForFunction(() => !('mkpeek' in document.documentElement.dataset), { timeout: 5000 });
   // / to find someone: the list comes out and its find box has the keyboard; leaving the box puts it away (Esc in full screen is the
   // browser's own, to leave full screen)
@@ -196,6 +203,25 @@ test('A-125 A-094 A-102: full screen from the View toolbar and F; the student li
   assert.ok(await listShown(p));
   await p.keyboard.press('f');
   await p.waitForFunction(() => !document.fullscreenElement, { timeout: 10000 });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// The current app's top bar and More menu, where the new app keeps them (A-116 A-118 A-121 A-126): What opened is in Setup (and the
+// list's menu); where her work is saved and Reconnect are Find's Where your work is saved, in Settings > Saving; the × goes back to
+// the class page
+test('A-116 A-118 A-121 A-126: Setup has What opened; Find has Where your work is saved; the close button goes back to the class', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const { p, id } = await both(ctx, errors, await standardFiles());
+  await menuPick(p, '[data-setupopen]', 'What opened');
+  await p.waitForFunction(() => { const d = document.querySelector('dialog[open]'); return d && /What opened/.test(d.textContent); }, { timeout: 30000 });
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('dialog[open]'));
+  assert.ok(await findOpen(p, 'Where your work is saved')); await p.keyboard.press('Enter');
+  await p.waitForSelector('[data-svwhere]', { timeout: 30000 });
+  assert.equal(await p.evaluate(() => location.hash), '#/settings/saving');
+  await opened(p, id); await asCard(p); await redraw(p);
+  await p.click('.mk-top [aria-label="Close marking"]');
+  await p.waitForFunction(() => location.hash === '#/class/c1', { timeout: 30000 });
   assert.deepEqual(errors, []);
   await ctx.close();
 });

@@ -101,7 +101,9 @@ export function Full({ fm }) {
       if (n && !on && !e.buttons) dock(true, 120); else if (!n && on) dock(false, 600); else if (n === on) clearTimeout(dockT);
     };
     // a finger: a tap in the dock's margin shows the dock, a tap elsewhere puts it away
-    const down = e => { if (ds().mkfs !== 'all' || e.pointerType === 'mouse' || !e.target.closest || !e.target.closest('.mk-mid') || (tools() && tools().contains(e.target))) return; dock(nearDock(e.clientX) && !('mktools' in ds())); };
+    // a finger or a pencil on the paper folds the list that came out over it (src/touch.js, A-115)
+    const fold = e => { if (e.pointerType !== 'mouse' && 'mkpeek' in ds() && e.target.closest && e.target.closest('.mk-paper')) peek(false, 60); };
+    const down = e => { fold(e); if (ds().mkfs !== 'all' || e.pointerType === 'mouse' || !e.target.closest || !e.target.closest('.mk-mid') || (tools() && tools().contains(e.target))) return; dock(nearDock(e.clientX) && !('mktools' in ds())); };
     // the left edge: a mouse rests there a moment with no button held (not a pen stroke run off the paper); a finger opens it at once
     // (the tab sits on the edge, so resting on it does the same)
     const edgeIn = e => { clearTimeout(edgeT); if (e.target.closest && e.target.closest('.mk-fsedge,.mk-fstab') && e.pointerType === 'mouse' && !e.buttons) edgeT = setTimeout(() => peek(true), 180); };
