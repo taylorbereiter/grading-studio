@@ -1288,5 +1288,14 @@
  "setup.su_goal_tag_rows": "行に学習目標を付ける…",
  "setup.su_goal_tag_score": "この点数に学習目標を付ける…",
  "setup.su_goal_opt": "任意:クラスと生徒を目標ごとに見られます。",
- "setup.su_goal_edit": "目標を編集…"
+ "setup.su_goal_edit": "目標を編集…",
+ "setup.gw_adj_say": "グループ {g} → {me}",
+ "setup.gw_use": "グループの点数に戻す",
+ "setup.gw_used": "{field} はグループの点数に戻りました",
+ "setup.gw_f_row": "{n} 行目",
+ "setup.gw_f_pts": "点数",
+ "setup.gw_f_pct": "パーセント",
+ "setup.gw_f_xc": "加点",
+ "setup.gw_f_status": "状態",
+ "setup.gw_adj_list": "このメンバーだけ変えた点数"
 }

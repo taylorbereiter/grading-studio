@@ -1269,5 +1269,14 @@
  "setup.su_goal_tag_rows": "Lier les lignes à des objectifs…",
  "setup.su_goal_tag_score": "Lier cette note à des objectifs…",
  "setup.su_goal_opt": "Facultatif : voir chaque classe et élève par objectif.",
- "setup.su_goal_edit": "Modifier les objectifs…"
+ "setup.su_goal_edit": "Modifier les objectifs…",
+ "setup.gw_adj_say": "groupe {g} → {me}",
+ "setup.gw_use": "Reprendre la note du groupe",
+ "setup.gw_used": "{field} reprend la note du groupe",
+ "setup.gw_f_row": "Ligne {n}",
+ "setup.gw_f_pts": "Points",
+ "setup.gw_f_pct": "Pourcentage",
+ "setup.gw_f_xc": "Points bonus",
+ "setup.gw_f_status": "Statut",
+ "setup.gw_adj_list": "Modifié pour ce partenaire"
 }

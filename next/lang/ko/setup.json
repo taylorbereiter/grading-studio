@@ -1288,5 +1288,14 @@
  "setup.su_goal_tag_rows": "행에 학습 목표 달기…",
  "setup.su_goal_tag_score": "이 점수에 학습 목표 달기…",
  "setup.su_goal_opt": "선택: 반과 학생을 목표별로 봐요.",
- "setup.su_goal_edit": "목표 편집…"
+ "setup.su_goal_edit": "목표 편집…",
+ "setup.gw_adj_say": "모둠 {g} → {me}",
+ "setup.gw_use": "모둠 점수 사용",
+ "setup.gw_used": "{field}이(가) 다시 모둠 점수가 되었습니다",
+ "setup.gw_f_row": "{n}행",
+ "setup.gw_f_pts": "점수",
+ "setup.gw_f_pct": "백분율",
+ "setup.gw_f_xc": "추가 점수",
+ "setup.gw_f_status": "상태",
+ "setup.gw_adj_list": "이 모둠원에게만 바꾼 점수"
 }

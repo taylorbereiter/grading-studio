@@ -8,7 +8,7 @@ const http = require('http'), fs = require('fs'), path = require('path');
 const { unzipSync } = require('fflate');
 const { launch } = require('../../../test/helpers/chrome.js');
 const { plant, appReady, openZip, markPage, settle, goToStudent, catchDownloads } = require('../../../test/helpers/app.js');
-const { standardFiles, zipOf } = require('../../../test/helpers/fixtures.js');
+const { standardFiles, zipOf, makeDocx } = require('../../../test/helpers/fixtures.js');
 const { gradingSeed, STEADY } = require('../../../test/helpers/steady.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
@@ -784,6 +784,35 @@ test('A-014 A-015 A-016: Grades has Student details beside the names, the school
   await p.waitForSelector('[data-gsheet]', { timeout: 30000 });
   await p.click('[data-gsheet]');
   await p.waitForSelector('[data-sheet] .gs-tbl', { timeout: 30000 });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// B-059: a Word paper can't be boxed in Check the covers, so Hide names lists the ones that may show a name (src/names.js wordFlagsHtml,
+// src/app/anon.js data-wp), each student's name opening their paper; the current app lists the same papers.
+test('B-059: Hide names lists the Word papers that may show a name, and a name opens that paper; the current app lists the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const m = await page(ctx, []);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  const files = await standardFiles(); files['Dov Madeup/Essay.docx'] = makeDocx('A short essay in Word with no name at the top.');
+  await openZip(m, zipOf(files));
+  await m.evaluate(() => window.__gs.saveNow()); await settle(m);
+  const id = await m.evaluate(() => window.__gs.state().batch.id);
+  await m.evaluate(() => window.__gs.openAnon());
+  await m.waitForSelector('#wordFlags [data-wp]', { timeout: 60000 });
+  const was = await m.evaluate(() => [...document.querySelectorAll('#wordFlags li')].map(li => li.textContent.trim()));
+  await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await menuPick(p, '[data-setupopen]', 'Hide names');
+  await p.waitForSelector('dialog[open] [data-hnword] li button', { timeout: 60000 });
+  assert.deepEqual(await p.$$eval('dialog[open] [data-hnword] li', l => l.map(li => li.textContent.trim())), was);
+  assert.ok(was.some(x => /Dov Madeup/.test(x) && /Essay\.docx/.test(x)), was.join(' | '));
+  const dov = await p.evaluate(() => window.__mark.state().batch.students.findIndex(s => s.key === 'Dov Madeup'));
+  await p.evaluate(() => [...document.querySelectorAll('dialog[open] [data-hnword] li button')].find(b => b.textContent === 'Dov Madeup').click());
+  await p.waitForFunction(i => !document.querySelector('dialog[open]') && window.__mark.state().cur === i, { timeout: 30000 }, dov);
   assert.deepEqual(errors, []);
   await ctx.close();
 });

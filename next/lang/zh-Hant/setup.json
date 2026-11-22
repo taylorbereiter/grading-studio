@@ -1288,5 +1288,14 @@
  "setup.su_goal_tag_rows": "為各列標上學習目標…",
  "setup.su_goal_tag_score": "為這個分數標上學習目標…",
  "setup.su_goal_opt": "可選:依目標查看每個班級和學生。",
- "setup.su_goal_edit": "編輯目標…"
+ "setup.su_goal_edit": "編輯目標…",
+ "setup.gw_adj_say": "小組 {g} → {me}",
+ "setup.gw_use": "使用小組分數",
+ "setup.gw_used": "{field} 已改回小組分數",
+ "setup.gw_f_row": "第 {n} 列",
+ "setup.gw_f_pts": "分數",
+ "setup.gw_f_pct": "百分比",
+ "setup.gw_f_xc": "額外加分",
+ "setup.gw_f_status": "狀態",
+ "setup.gw_adj_list": "為這位組員改過的分數"
 }

@@ -257,3 +257,64 @@ test('H-041: Mark and grade together again: one group from a split, the toast na
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// B-047: with a group score, a score changed for one partner alone is listed on the band with Use group score (src/groups.js
+// groupScoreNote, adjReset), which gives them the group's again as one undo step; the current app does the same to the same work.
+test('B-047: Use group score gives a partner the group\'s score again for that one field, with Undo; the current app does the same', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  await p.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-added', 1); r.onupgradeneeded = () => r.result.createObjectStore('files'); r.onsuccess = () => { r.result.close(); res(); }; }));
+  const z = path.join(dir, 'Speech2.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  const id = await p.evaluate(() => window.__mark.state().batch.id);
+  const fpath = await p.evaluate(() => window.__mark.state().batch.students[0].files[0].path);
+  await p.waitForSelector(`[data-fmenu="${fpath}"]`, { timeout: 60000 });
+  await p.click(`[data-fmenu="${fpath}"]`);
+  await p.waitForFunction(() => [...document.querySelectorAll('.pop [role="menuitem"]')].some(e => /Group work/.test(e.textContent)));
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => /Group work/.test(e.textContent)).click());
+  await p.waitForSelector('dialog[open] input[data-grpfind]');
+  const bram = await p.evaluate(() => window.__mark.state().batch.students.find(s => /Bram/.test(s.key)).key);
+  await p.type('dialog[open] input[data-grpfind]', 'bra');
+  await p.waitForSelector(`dialog[open] [data-grpto="${bram}"]`);
+  await p.click(`dialog[open] [data-grpto="${bram}"]`);
+  await p.waitForFunction(() => (window.__mark.state().batch.groups || []).length === 1, { timeout: 30000 });
+  await p.click('dialog[open] [data-grpdone]');
+  await p.waitForSelector('[data-grpband]', { timeout: 30000 });
+  await pickMode(p, '2');
+  await p.waitForFunction(() => window.__mark.state().batch.groups[0].own === 2);
+  assert.equal(await p.$('[data-grpadj]'), null, 'nothing changed for one partner yet');
+  // the group's points are 9, and Aria's alone were changed to 7 (as Just Aria does)
+  await p.evaluate(b => { const s = window.__mark.state(), a = s.batch.students[0], m = s.batch.students.find(x => x.key === b);
+    m.grade.points = '9'; a.grade.points = '7'; a.grade.adj = { points: 1 }; }, bram);
+  await p.evaluate(() => [...document.querySelectorAll('[data-grpband] button, [data-grpband] [role="radio"]')].find(e => /^Just /.test(e.textContent.trim())).click());
+  await p.waitForSelector('[data-grpadj] [data-grpreset="points"]', { timeout: 15000 });
+  assert.match(await p.$eval('[data-grpadj]', e => e.textContent), /Points.*group 9 → 7.*Use group score/);
+  await p.evaluate(() => window.__mark.saved());
+  // the current app, from the same saved work, gives Aria the group's points
+  const m = await page(ctx, errors);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), id);
+  await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  await m.waitForSelector('[data-grpreset="points"]', { timeout: 30000 });
+  await m.click('[data-grpreset="points"]');
+  const was = await m.evaluate(() => { const g = window.__gs.state().batch.students[0].grade; return { points: g.points, adj: g.adj || null }; });
+  await m.close();
+  await p.bringToFront();
+  await p.click('[data-grpadj] [data-grpreset="points"]');
+  await p.waitForFunction(() => !document.querySelector('[data-grpadj]'));
+  assert.deepEqual(await p.evaluate(() => { const g = window.__mark.state().batch.students[0].grade; return { points: g.points, adj: g.adj || null }; }), was);
+  assert.equal(was.points, '9');
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast')].some(e => /Points is the group’s score again/.test(e.textContent)), { timeout: 10000 });
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForSelector('[data-grpadj] [data-grpreset="points"]', { timeout: 15000 });
+  assert.equal(await p.evaluate(() => window.__mark.state().batch.students[0].grade.points), '7');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

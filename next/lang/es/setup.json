@@ -1287,5 +1287,14 @@
  "setup.su_goal_tag_rows": "Etiquetar filas con objetivos…",
  "setup.su_goal_tag_score": "Etiquetar esta nota con objetivos…",
  "setup.su_goal_opt": "Opcional: ve cada clase y alumno por objetivo.",
- "setup.su_goal_edit": "Editar objetivos…"
+ "setup.su_goal_edit": "Editar objetivos…",
+ "setup.gw_adj_say": "grupo {g} → {me}",
+ "setup.gw_use": "Usar la nota del grupo",
+ "setup.gw_used": "{field} vuelve a ser la nota del grupo",
+ "setup.gw_f_row": "Fila {n}",
+ "setup.gw_f_pts": "Puntos",
+ "setup.gw_f_pct": "Porcentaje",
+ "setup.gw_f_xc": "Crédito extra",
+ "setup.gw_f_status": "Estado",
+ "setup.gw_adj_list": "Cambiado para este compañero"
 }

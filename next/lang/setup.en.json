@@ -1288,5 +1288,14 @@
  "setup.su_goal_tag_rows": "Tag rows with learning goals…",
  "setup.su_goal_tag_score": "Tag this score with learning goals…",
  "setup.su_goal_opt": "Optional: see each class and student by goal.",
- "setup.su_goal_edit": "Edit goals…"
+ "setup.su_goal_edit": "Edit goals…",
+ "setup.gw_adj_say": "group {g} → {me}",
+ "setup.gw_use": "Use group score",
+ "setup.gw_used": "{field} is the group’s score again",
+ "setup.gw_f_row": "Row {n}",
+ "setup.gw_f_pts": "Points",
+ "setup.gw_f_pct": "Percent",
+ "setup.gw_f_xc": "Extra credit",
+ "setup.gw_f_status": "Status",
+ "setup.gw_adj_list": "Changed for this partner"
 }

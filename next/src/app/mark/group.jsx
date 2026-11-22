@@ -1,7 +1,8 @@
 // Group work on the marking screen (src/groups.js groupBand, groupClick, groupModePick, openShareFile): the band above a partner's
 // paper (who they work with, how the group is graded, Both or Just them, Grade on their own), the band on a scan's shared pages (Mark
 // and grade once for the group), and Group work… on a file. What changes the work is mark/change.js, each change one undo step; the
-// current app asks before Grade on their own and before One grade, and here they happen at once with Undo.
+// current app asks before Grade on their own and before One grade, and here they happen at once with Undo. With a group score, each
+// score changed for this partner alone is listed with Use group score (groupScoreNote, adjReset: one undo step).
 import { h, Fragment } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { Button, Segmented, Dialog, TextInput, Switch, toast } from '../../ui/index.js';
@@ -14,12 +15,25 @@ import * as C from './change.js';
 import { useGroupSync } from './marking.js';
 import './lines.js';
 import './setup-lines.js';
+import './paper-lines.js';
 
 useGroupSync(G.groupSync);
 
 const b = () => state().batch;
 const nameOf = st => shownName(st, b().students.indexOf(st));
 const namesOf = list => list.map(nameOf).join(', ');
+// a score changed for one partner of a group score (src/groups.js adjName, adjSay)
+const ST = { missing: 'paper.pw_st_missing', excused: 'paper.pw_st_excused', late: 'paper.pw_st_late' };
+const fieldName = f => typeof f === 'number' ? (state().setup.criteria || [])[f] || t('setup.gw_f_row', { n: f + 1 }) : t({ points: 'setup.gw_f_pts', pk: 'setup.gw_f_pct', xc: 'setup.gw_f_xc', status: 'setup.gw_f_status' }[f]);
+const fieldSay = (gr, f) => f === 'status' ? (gr.status ? t(ST[gr.status] || 'paper.pw_st_late') : '–') : G.adjSay(gr, f);
+function Adjusted({ st }) {
+  const adj = Object.keys(st.grade.adj || {}).map(k => (/^\d+$/.test(k) ? +k : k)).filter(f => f !== 'xcU');
+  if (!adj.length) return null;
+  const use = f => { G.adjReset(st, f); toast(t('setup.gw_used', { field: fieldName(f) }), { undo: C.undo }); };
+  return <ul class="mk-grpadj" aria-label={t('setup.gw_adj_list')} data-grpadj>{adj.map(f => { const m = G.groupMates(st).find(s => !(s.grade.adj && s.grade.adj[f]));
+    return <li><span data-raw>{fieldName(f)}</span> <span class="mute" data-raw>{t('setup.gw_adj_say', { g: m ? fieldSay(m.grade, f) : '–', me: fieldSay(st.grade, f) })}</span>
+      <Button size="sm" variant="quiet" onClick={() => use(f)} data-grpreset={f}>{t('setup.gw_use')}</Button></li>; })}</ul>;
+}
 
 export function GroupBand({ st }) {
   const mates = G.groupMates(st);
@@ -37,6 +51,7 @@ export function GroupBand({ st }) {
         options={[{ value: 'all', label: t('setup.gw_both') }, { value: 'one', label: t('setup.gw_just', { name: nameOf(st) }) }]} />}
       <span class="grow" />
       <Button size="sm" variant="quiet" title={t('setup.gw_out_tip')} onClick={() => { C.groupOut(st); toast(t('setup.gw_out_done', { name: nameOf(st) }), { undo: C.undo }); }} data-grpout>{t('setup.gw_out')}</Button>
+      {mode === '2' && <Adjusted st={st} />}
     </div>;
   }
   const sm = G.splitMates(st);
