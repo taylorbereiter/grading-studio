@@ -49,7 +49,7 @@ function useBring() {
       if (r && cls) (await PARTS.bringin()).classAfter(r.batch.id, cls.id);
       if (r && r.changed) toast(t('setup.c_changed_toast', { n: r.changed }), { ms: 7000 });
       if (r) go('mark', r.batch.id);
-    } catch (er) { console.error(er); toast(er && er.name === 'NothingIn' ? t('setup.w_nothing') : er && er.name === 'CannotSave' ? t('mark.cannot') : t('setup.w_failed')); }
+    } catch (er) { console.error(er); toast(er && er.name === 'NothingIn' ? t(er.take ? 'mark.not_papers' : 'setup.w_nothing') : er && er.name === 'CannotSave' ? t('mark.cannot') : t('setup.w_failed')); }
     finally { setBusy(false); }
   };
   const box = ask && <Dialog open title={t('setup.c_ask_t')} onClose={() => ask.done(false)}

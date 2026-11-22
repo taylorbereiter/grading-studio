@@ -143,7 +143,7 @@ export default function ClassWork({ classId, sub }) {
       if (r && pv) (await PARTS.bringin()).partnersAfter(r.batch.id, pv);
       if (r && r.changed) toast(t('setup.c_changed_toast', { n: r.changed }), { ms: 7000 });
       if (r) go('mark', r.batch.id);
-    } catch (e) { console.error(e); toast(e && e.name === 'NothingIn' ? t('setup.w_nothing') : e && e.name === 'CannotSave' ? t('mark.cannot') : t('setup.w_failed')); }
+    } catch (e) { console.error(e); toast(e && e.name === 'NothingIn' ? t(e.take ? 'mark.not_papers' : 'setup.w_nothing') : e && e.name === 'CannotSave' ? t('mark.cannot') : t('setup.w_failed')); }
     finally { setBusy(null); load(); }
   };
   const pick = (it, el) => { want.current = it; fromDrive.current = null; el.current.value = ''; el.current.click(); };

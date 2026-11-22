@@ -44,3 +44,23 @@ integration branch (6eb2bad0). Status: done (browser test presses it), kept diff
 | A-063 | done (as A-055) | same | group 6 |
 | A-064 | done (files or a folder, as A-052 and A-054) | same | group 6 |
 | A-066 | done (no timetable: Home's empty card has Set up your timetable, to Settings > Timetable, where the new app keeps it) | home-first.test.js 'A-066' | group 6 |
+| A-080 | done (a folder that needs a press, Reconnect or Decide, is said at the top of Home; the words and the Decide box are Settings > Saving's) | next/test/browser/folder.test.js 'A-080' | group 7 |
+| A-082 | done (a take-home file picked or dropped as papers says what it is and where it goes) | next/test/browser/home-first.test.js 'A-082' | group 7 |
+| A-083 | present after all (whole/folder-run.js says it, saving.f_lost, as a long note rather than a box) | none new: the seeds hold no papers to lose | — |
+| A-084 | kept different: full screen is one press in Find (the F shortcut's row), F, and Settings > Display; the sidebar is first load, which is full | e2-commands.test.js (Find's Full screen) | — |
+| A-085 | kept different: on the marking screen F is marking's (feedback on formative work; full screen marking is slice C's A-042), and Present has its own full screen | — | — |
+| A-086 | present after all (src/samplemode.js runs first in the new app too and follows another tab) | home-first.test.js 'A-086' | group 7 |
+| A-090 | kept different: the daily count runs from the pages at the web address; the new app joins it with the switch of the root page (PR #246), which this slice must not touch | — | — |
+| A-024 | present after all (School's Add: Link, File, From Google Drive, Note) | next/test/browser/school.test.js 'School: a link, a note and a file…' | — |
+| A-025 | present after all (School's search box once there are six things) | school.test.js 'the search box…' | — |
+| A-026 | present after all (a person's to-dos from their row; Add a to-do for them opens To do on their lines, and what she types names them) | school.test.js 'A-026' | group 7 |
+| A-128 | kept different: the phone's tabs are Home, To do, Classes, Find and More; plans and scores are a class away (the new app's design) | shell.test.js | — |
+| A-129 | open: goes with A-131 | — | — |
+| A-130 | present after all (More on a phone has the update control: Update now, Reload, Check) | next/test/browser/shell.test.js | — |
+| A-131 | open: See the paper on a phone's Scores needs the kept-paper reader (engines/gopen.js paperGet) and a PDF view sized for a phone, a part of its own; not reached in this pass | — | — |
+| A-132 | kept different: Focus is on Home's header and in Find, and a running session shows on every screen; the sidebar is first load | — | — |
+| A-133 | kept different: the Planner is Calendar in the sidebar | — | — |
+| A-134 | kept different: Examples is Library > Examples, and a Find row | find-a.test.js | — |
+| A-135 | kept different: the sidebar's saved line says Not backed up in amber; Home's folder card, Needs a look and Find's Where your work is saved open the place to fix it (the sidebar is first load) | — | — |
+| A-136 | kept different: as A-084 | — | — |
+| A-138 | kept different: the new app never changes the saved-work format (it will not write a newer or older one and leaves the move to the current app), so there is no slow update to stop | — | — |

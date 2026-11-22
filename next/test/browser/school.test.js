@@ -185,3 +185,26 @@ test('Help: an answer at its own address, search with Esc, where things live, wh
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// A-026: a School person's to-dos, from their row, and a new to-do that names them (src/todo.js todoShowPerson, todoForPerson).
+test('A-026: a person’s to-dos open from their row, and Add a to-do for them makes a line that names them', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), p = await page(ctx, errors), s = gradingSeed(), l = JSON.parse(s.ls['gs.lib']), t0 = Date.parse('2026-10-26T10:00:00Z');
+  l.todo = { items: [{ id: 't1', x: 'Field trip forms', d: TODAY, c: '', who: '', a: '', rep: '', note: '', done: 0, made: t0, t: t0, ppl: ['spA'] }, { id: 't2', x: 'Not about them', d: TODAY, c: '', who: '', a: '', rep: '', note: '', done: 0, made: t0, t: t0 }] };
+  s.ls['gs.lib'] = JSON.stringify(l);
+  s.ls['gs.school'] = JSON.stringify({ items: [], order: [], people: [{ id: 'spA', name: 'Morgan Example', role: 'Principal', at: t0 }] });
+  await p.goto(srv.url + 'blank'); await plant(p, s); await plantPlan(p);
+  await p.goto(srv.url + 'next/#/school');
+  await p.waitForSelector('[data-schp="spA"] [data-schptd="spA"]', { timeout: 30000 });
+  await p.click('[data-schptd="spA"]');
+  await p.waitForFunction(() => location.hash === '#/todo' && document.querySelector('[data-td-row="t1"]') && !document.querySelector('[data-td-row="t2"]'), { timeout: 15000 });
+  // Add a to-do for them: To do opens on their lines, and what is typed names them
+  await p.goto(srv.url + 'next/#/school');
+  await p.waitForSelector('[data-schp="spA"] [aria-haspopup="menu"]', { timeout: 30000 });
+  await p.click('[data-schp="spA"] [aria-haspopup="menu"]'); await p.waitForSelector('.pop [role="menuitem"]');
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent === 'Add a to-do for them').click());
+  await p.waitForFunction(() => location.hash === '#/todo' && document.activeElement && document.activeElement.matches('input, textarea'), { timeout: 15000 });
+  await p.keyboard.type('Talk to Morgan Example'); await p.keyboard.press('Enter');
+  const it = await (async () => { for (let i = 0; i < 100; i++) { const l = await ls(p, 'gs.lib'); const x = l.todo.items.find(y => y.x === 'Talk to Morgan Example'); if (x) return x; await new Promise(r => setTimeout(r, 100)); } return null; })();
+  assert.deepEqual(it && it.ppl, ['spA']);
+  assert.deepEqual(errors, []); await ctx.close();
+});

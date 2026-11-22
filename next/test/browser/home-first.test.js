@@ -212,3 +212,23 @@ test('A-066: with no timetable, Home offers to set it up', async () => {
   await p.waitForFunction(() => location.hash === '#/settings/timetable', { timeout: 10000 });
   assert.deepEqual(errors, []); await ctx.close();
 });
+
+test('A-082: a take-home file dropped as papers says what it is and where it goes', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), p = await home(ctx, errors, seed());
+  await p.waitForSelector('[data-hbring]', { timeout: 15000 });
+  await p.evaluate(() => { const dt = new DataTransfer(); dt.items.add(new File([new Uint8Array([1, 2, 3])], 'Grading Studio 2026-10-27.gswork')); const el = document.querySelector('#app');
+    el.dispatchEvent(new DragEvent('dragenter', { bubbles: true, cancelable: true, dataTransfer: dt })); el.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt })); });
+  assert.ok(await until(() => p.evaluate(() => [...document.querySelectorAll('.toast')].some(e => /That’s a take-home file, not papers/.test(e.textContent)))));
+  assert.match(await p.evaluate(() => location.hash), /#\/home/);
+  assert.deepEqual(errors.filter(e => !/Nothing found/.test(e)), []); await ctx.close();
+});
+
+test('A-086: another tab opening the sample makes this one follow', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), p = await home(ctx, errors, seed());
+  const q = await page(ctx, errors); await q.goto(srv.url + 'next/#/home'); await q.waitForSelector('[data-home]', { timeout: 30000 });
+  await p.evaluate(() => { window.__still = 1; });
+  await q.evaluate(() => window.__gsSample.enter());
+  assert.ok(await until(() => p.evaluate(() => !window.__still).catch(() => false), 20000), 'this tab reloaded');
+  await p.waitForFunction(() => window.__gsSample && window.__gsSample.on, { timeout: 30000 });
+  await ctx.close();
+});
