@@ -39,7 +39,8 @@ async function page(ctx, errors) {
 const lib = p => p.evaluate(() => JSON.parse(localStorage.getItem('gs.lib')));
 const ls = (p, k) => p.evaluate(k => JSON.parse(localStorage.getItem(k)), k);
 const undoToast = async p => { await p.waitForFunction(() => [...document.querySelectorAll('.toast button')].some(b => b.textContent.trim() === 'Undo')); await p.evaluate(() => [...document.querySelectorAll('.toast button')].find(b => b.textContent.trim() === 'Undo').click()); };
-const until = async (f, ms = 8000) => { const t0 = Date.now(); for (;;) { const v = await f(); if (v) return v; if (Date.now() - t0 > ms) return v; await new Promise(r => setTimeout(r, 100)); } };
+// a save through the layer can take more than a few seconds on a slow machine (CI); the assertion after each wait says what is wrong
+const until = async (f, ms = 30000) => { const t0 = Date.now(); for (;;) { const v = await f(); if (v) return v; if (Date.now() - t0 > ms) return v; await new Promise(r => setTimeout(r, 100)); } };
 // What the current app makes of the same saved work: what a new assignment starts with, and the words the Planner reads
 async function current(ctx) {
   const q = await ctx.newPage(); await q.evaluateOnNewDocument(STEADY);

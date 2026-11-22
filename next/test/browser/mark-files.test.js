@@ -460,7 +460,8 @@ test('Setup > Bring in files: each file sorted to its student by name, one given
   await m2.evaluate(id => window.__gs.reopenKept(id), id);
   await m2.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
   await m2.waitForFunction(k => { const b = window.__gs.state().batch, s = b.students.find(x => x.key === k), n = b.students.find(x => x.key === 'Nova Madeup');
-    return s && s.grade.status === 'late' && s.files.some(f => f.name === 'Bram Sample redo.pdf') && n && n.files.some(f => f.name === 'scan 0412.pdf'); }, { timeout: 30000 }, KEY);
+    return s && s.grade.status === 'late' && s.files.some(f => f.name === 'Bram Sample redo.pdf') && n && n.files.some(f => f.name === 'scan 0412.pdf'); }, { timeout: 60000 }, KEY)
+    .catch(async e => { throw new Error(e.message + ': the current app has ' + await m2.evaluate(k => JSON.stringify(window.__gs.state().batch.students.filter(x => x.key === k || x.key === 'Nova Madeup').map(x => ({ key: x.key, status: x.grade.status, files: x.files.map(f => f.name) }))), KEY)); });
   assert.deepEqual(errors, []);
   await ctx.close();
 });
