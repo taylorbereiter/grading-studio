@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo } from 'preact/hooks';
 import { Button, Checkbox, Segmented, Icon, Progress, Card, EmptyState, toast } from '../../ui/index.js';
 import { copyText } from '../../services/clipboard.js';
 import { t } from '../../i18n/t.js';
-import { state, fmtNum, fmtPct, rowsTop, maxPoints, gradeOf } from '../../engines/gcore.js';
+import { state, fmtNum, fmtPct, maxPoints, gradeOf } from '../../engines/gcore.js';
 import { shownName, anonOn } from '../../engines/gdraw.js';
 import '../mark/lines.js';
 import '../mark/setup-lines.js';
@@ -85,20 +85,25 @@ function paperCell(p) {
 const oneDp = v => fmtNum(Math.round(v * 10) / 10);
 export function Insights({ E, onOpen, onShare, sub, view: ask }) {
   const s = useMemo(() => E.stats(), [E]), ib = E.X.ibSetup(), su = state().setup;
-  const [view, setView] = useState(sub === 'consistency' ? 'cons' : 'overview'), [CS, setCS] = useState(null);
+  const [view, setView] = useState(sub === 'consistency' ? 'cons' : 'overview'), [CS, setCS] = useState(null), [PC, setPC] = useState(null);
+  // Percents, the charts' tooltips and tables, and how each row was scored (mark/percents.jsx, a part of its own)
+  useEffect(() => { PARTS.percents().then(setPC, e => console.error(e)); }, []);
   // Consistency check from Find (screens/mark.jsx)
   useEffect(() => { if (ask && (ask.v === 'cons' || ask.v === 'overview')) setView(ask.v); }, [ask]);
   useEffect(() => { if (view === 'cons' && !CS) PARTS.cons().then(setCS, e => console.error(e)); }, [view]);
-  const views = <Segmented label={t('paper.i_view')} size="sm" value={view} onChange={setView} options={[{ value: 'overview', label: t('paper.i_overview') }, { value: 'cons', label: t('paper.i_cons') }]} />;
+  const views = <Segmented label={t('paper.i_view')} size="sm" value={view} onChange={setView} options={[{ value: 'overview', label: t('paper.i_overview') }, ...(ib ? [] : [{ value: 'pct', label: t('paper.i_pct') }]), { value: 'cons', label: t('paper.i_cons') }]} />;
   // Share with your assistant (mark/share.jsx, opened by the marking screen as from its Setup menu)
   const shareBtn = onShare && <Button size="sm" icon="assist" onClick={onShare} data-insshare>{t('paper.sh_menu')}</Button>;
   if (view === 'cons') return <section class="mk-out mk-ins" aria-labelledby="mk-i-h">
     <header class="oh"><h2 id="mk-i-h" class="t3">{t('paper.i_cons')}</h2>{views}</header>
     {CS ? <CS.Consistency E={E} onOpen={onOpen} /> : <div class="loading" aria-busy="true" />}
   </section>;
+  if (view === 'pct') return <section class="mk-out mk-ins" aria-labelledby="mk-i-h">
+    <header class="oh"><h2 id="mk-i-h" class="t3">{t('paper.i_pct')}</h2>{views}</header>
+    {PC ? <PC.Percents E={E} onOpen={onOpen} /> : <div class="loading" aria-busy="true" />}
+  </section>;
   const tile = (l, v, sub, main) => <div class={'tile' + (main ? ' main' : '')}><div class="tl">{l}</div><div class="tv num">{v}</div>{sub && <div class="ts mute">{sub}</div>}</div>;
   const of = v => fmtNum(v) + ' / ' + fmtNum(s.max);
-  const most = s.bins.length ? Math.max(1, ...s.bins.map(x => x.who.length)) : 1;
   const groups = [['setup.i_not_scored', s.notScored], ['setup.i_partial', s.partial], ['setup.i_missing', s.missing], ['setup.i_excused', s.excused], ['setup.i_off_scale', s.offScale], ['setup.i_own_off', s.ownOff], ['setup.i_left_out', s.leftOut], ['setup.i_late', s.counted.filter(x => x.late)]].filter(g => g[1].length);
   return <section class="mk-out mk-ins" aria-labelledby="mk-i-h">
     <header class="oh"><h2 id="mk-i-h" class="t3">{t('mark.insights')}</h2>{views}{shareBtn}</header>
@@ -107,16 +112,10 @@ export function Insights({ E, onOpen, onShare, sub, view: ask }) {
       ? <>{tile(t('setup.i_average'), E.X.pctAvgText(s.meanPct), oneDp(s.mean) + ' / ' + fmtNum(s.max), true)}{tile(t('setup.i_middle'), s.medPct + '%', of(s.median))}{tile(t('setup.i_lowest'), s.lowPct + '%', of(s.low))}{tile(t('setup.i_highest'), s.highPct + '%', of(s.high))}</>
       : <>{tile(t('setup.i_average'), oneDp(s.mean), '/ ' + fmtNum(s.max), true)}{tile(t('setup.i_middle'), fmtNum(s.median))}{tile(t('setup.i_lowest'), fmtNum(s.low))}{tile(t('setup.i_highest'), fmtNum(s.high))}</>}</div>}
     <div class="charts">
-      {!ib && <Card title={t('setup.i_spread')} id="ovSpread">{!s.n || !s.bins.length ? <p class="mute">{t('setup.i_no_spread')}</p> : <>
-        <div class="bars" role="list">{s.bins.map(x => <div class="bar" role="listitem" aria-label={x.label + ': ' + t('setup.i_students', { n: x.who.length })} title={x.who.slice(0, 12).join(', ')}>
-          <i style={{ height: (x.who.length / most * 100) + '%' }} /><span class="num">{fmtNum(x.lo)}</span></div>)}</div>
-        <p class="mute cap">{t('setup.i_spread_cap', { n: fmtNum(s.max) })}</p></>}</Card>}
+      {!ib && <Card title={t('setup.i_spread')} id="ovSpread">{PC ? <PC.Spread s={s} /> : <div class="loading" aria-busy="true" />}</Card>}
       <Card title={t('setup.i_rows')} id="ovRows">{su.mode !== 'rubric' ? <p class="mute">{t('setup.i_total_only')}</p> : !s.rows.some(x => x.n) ? <p class="mute">{t('setup.i_no_rows')}</p> : <>
-        <div class="rowsb">{s.rows.map(x => <div class="rb" aria-label={x.name + ': ' + (x.n ? oneDp(x.avg) : '–')}>
-          <div class="rn"><span data-raw>{x.name}</span>{x.lowest && <span class="stag">{t('setup.i_lowest_tag')}</span>}</div>
-          <div class="rt"><i class={x.lowest ? 'on' : ''} style={{ width: (x.n ? Math.min(100, x.avg / x.top * 100) : 0) + '%' }} /></div>
-          <span class="rv num">{x.n ? oneDp(x.avg) : '–'}{!rowsTop(su) && x.n ? ' / ' + x.top : ''}</span></div>)}</div>
-        <p class="mute cap">{t('setup.i_rows_cap')}</p></>}</Card>
+        {PC ? <PC.Rows s={s} /> : <div class="loading" aria-busy="true" />}<p class="mute cap">{t('setup.i_rows_cap')}</p></>}</Card>
+      {PC && <PC.Levels X={E.X} />}
     </div>
     <Card title={t('setup.i_who')} id="ovWho">
       {!(s.notScored.length + s.partial.length + s.rosterOnly.length) && <p class="ok">{t('setup.i_all_done')}</p>}

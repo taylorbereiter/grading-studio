@@ -1,0 +1,57 @@
+{
+ "pc.more": "y {n} más",
+ "pc.who": "Quién cuenta",
+ "pc.late": "Trabajos tardíos",
+ "pc.out": "Trabajos que dejaste fuera",
+ "pc.part": "Trabajos parciales, tal como están",
+ "pc.mid_h": "Centro de la clase",
+ "pc.middle": "Mediana",
+ "pc.target": "Marcar trabajos por debajo de (%)",
+ "pc.target_at": "Objetivo {n}%",
+ "pc.bands": "Franjas",
+ "pc.band": "Franja",
+ "pc.tens": "De 10",
+ "pc.fives": "De 5",
+ "pc.own": "Propias",
+ "pc.cut": "Porcentaje mínimo de una franja",
+ "pc.add": "Y si: puntos para todos",
+ "pc.preview": "Solo una vista previa. No cambia ninguna nota.",
+ "pc.none": "Con estas opciones no cuenta ninguna nota terminada.",
+ "pc.now": "ahora {v}, con {d}",
+ "pc.counted": {
+  "one": "{n} trabajo contado",
+  "other": "{n} trabajos contados"
+ },
+ "pc.range": "Rango",
+ "pc.gap": "Desviación típica",
+ "pc.below": "Por debajo de {n}%",
+ "pc.band_below": "Menos de {n}",
+ "pc.band_to": "{a} a {b}",
+ "pc.band_tip": {
+  "one": "{n} trabajo, {p}% de la clase",
+  "other": "{n} trabajos, {p}% de la clase"
+ },
+ "pc.every": "El porcentaje de cada trabajo",
+ "pc.table": "Trabajos por porcentaje",
+ "pc.copy": "Copiar esta tabla",
+ "pc.copied": {
+  "one": "Copiado {n} porcentaje en el orden mostrado",
+  "other": "Copiados {n} porcentajes en el orden mostrado"
+ },
+ "pc.vs_avg": "Vs. media",
+ "pc.vs_mid": "Vs. mediana",
+ "pc.tag_out": "Fuera",
+ "pc.tag_part": "Parcial",
+ "pc.score": "Nota {v}",
+ "pc.see": "Ver como tabla",
+ "pc.who_col": "Quién",
+ "pc.row_avg": "media {v}",
+ "pc.row_sum": {
+  "one": "{n} nota, {low} con {half} o menos",
+  "other": "{n} notas, {low} con {half} o menos"
+ },
+ "pc.lv_h": "Cómo se puntuó cada fila",
+ "pc.lv_tip": "{v} en {row}",
+ "pc.lv_cap": "Cuántos trabajos sacaron cada nota en cada fila, en el orden de la rúbrica. Cuanto más intenso el azul, más alta la nota.",
+ "pc.lv_half": "Medio punto cuenta con el entero inferior."
+}

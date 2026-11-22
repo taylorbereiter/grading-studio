@@ -1,0 +1,57 @@
+{
+ "pc.more": "et {n} de plus",
+ "pc.who": "Qui compte",
+ "pc.late": "Copies en retard",
+ "pc.out": "Copies que vous avez exclues",
+ "pc.part": "Copies partielles, en l’état",
+ "pc.mid_h": "Milieu de la classe",
+ "pc.middle": "Médiane",
+ "pc.target": "Signaler les copies sous (%)",
+ "pc.target_at": "Objectif {n}%",
+ "pc.bands": "Tranches",
+ "pc.band": "Tranche",
+ "pc.tens": "Par 10",
+ "pc.fives": "Par 5",
+ "pc.own": "Les miennes",
+ "pc.cut": "Pourcentage minimal d’une tranche",
+ "pc.add": "Et si : points pour tous",
+ "pc.preview": "Simple aperçu. Aucune note ne change.",
+ "pc.none": "Aucune note finie ne compte avec ces choix.",
+ "pc.now": "actuellement {v}, avec {d}",
+ "pc.counted": {
+  "one": "{n} copie comptée",
+  "other": "{n} copies comptées"
+ },
+ "pc.range": "Étendue",
+ "pc.gap": "Écart type",
+ "pc.below": "Sous {n}%",
+ "pc.band_below": "Moins de {n}",
+ "pc.band_to": "{a} à {b}",
+ "pc.band_tip": {
+  "one": "{n} copie, {p}% de la classe",
+  "other": "{n} copies, {p}% de la classe"
+ },
+ "pc.every": "Le pourcentage de chaque copie",
+ "pc.table": "Copies par pourcentage",
+ "pc.copy": "Copier ce tableau",
+ "pc.copied": {
+  "one": "{n} pourcentage copié dans l’ordre affiché",
+  "other": "{n} pourcentages copiés dans l’ordre affiché"
+ },
+ "pc.vs_avg": "Vs. moyenne",
+ "pc.vs_mid": "Vs. médiane",
+ "pc.tag_out": "Exclue",
+ "pc.tag_part": "Partielle",
+ "pc.score": "Note {v}",
+ "pc.see": "Voir en tableau",
+ "pc.who_col": "Qui",
+ "pc.row_avg": "moyenne {v}",
+ "pc.row_sum": {
+  "one": "{n} note, {low} à {half} ou moins",
+  "other": "{n} notes, {low} à {half} ou moins"
+ },
+ "pc.lv_h": "Comment chaque ligne a été notée",
+ "pc.lv_tip": "{v} sur {row}",
+ "pc.lv_cap": "Combien de copies ont eu chaque note sur chaque ligne, dans l’ordre de la grille. Plus le bleu est fort, plus la note est haute.",
+ "pc.lv_half": "Un demi-point compte avec l’entier inférieur."
+}

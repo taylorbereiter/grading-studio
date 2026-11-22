@@ -571,3 +571,116 @@ test('B-066: an assignment\'s views each have an address: grades/sheet opens the
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// Insights > Percents (src/rubrics.js pctShell, pctDraw): who counts, the middle of the class, the places in an average, the target,
+// the bands and What if; the tiles and the table read as the current app's, the kept choices are the same ones both ways, and What if
+// changes no score. The summary's bars say whose they are and See this as a table lists them; How each row was scored counts each level.
+test('C-013 C-014 C-015 C-016 C-017 C-018 C-019 C-020 C-021 C-022 C-023 C-901 A-017: Insights > Percents, the bars\' tips and See this as a table, and How each row was scored; the current app reads the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const m = await page(ctx, []);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zipOf(await standardFiles()));
+  await markPage(m, 0);
+  const id = await m.evaluate(() => {
+    const G = window.__gs, s = G.state(), rub = s.setup.mode === 'rubric';
+    s.batch.students.forEach((st, i) => {
+      if (i === 1) { st.grade.status = 'missing'; return; }
+      if (rub) st.grade.rubric = s.setup.criteria.map((_, r) => Math.max(1, 4 - ((i + r) % 4))); else st.grade.points = String(5 + i);
+      if (i === 2) st.grade.status = 'late';
+    });
+    G.saveNow(); return { id: s.batch.id, n: rub ? s.setup.criteria.length : 0 };
+  });
+  await goToStudent(m, 1); await goToStudent(m, 0); await settle(m);
+  await m.evaluate(id => { location.hash = '#/a/' + encodeURIComponent(id.replace(/^gs\.b\./, '')) + '/insights'; }, id.id);
+  await m.waitForSelector('#dlgBox [data-ovtab="pct"]', { timeout: 60000 });
+  await m.click('#dlgBox [data-ovtab="pct"]');
+  await m.waitForSelector('#pTiles', { timeout: 30000 });
+  const was = await m.evaluate(() => ({ tiles: [...document.querySelectorAll('#pTiles .ovv')].map(e => e.textContent), rows: window.__gs.pctRows().map(r => r.name + ' ' + r.pct) }));
+  // the target, set in the current app, is kept for the class
+  await m.$eval('#pTarget', e => { e.value = '80'; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); });
+  await m.waitForFunction(() => window.__gs.pv().target === 80, { timeout: 10000 });
+  const was80 = await m.evaluate(() => [...document.querySelectorAll('#pTiles .ovv')].map(e => e.textContent));
+  await m.close();
+  assert.ok(was.rows.length >= 3, 'papers counted: ' + was.rows.join(', '));
+
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id.id) + '/insights');
+  await p.waitForSelector('#ovTiles', { timeout: 60000 });
+  // the summary's bars: each says whose it is, and See this as a table lists them (C-023, C-901)
+  await p.waitForSelector('#ovSpread [data-bin][tabindex="0"]', { timeout: 30000 });
+  assert.match(await p.$eval('#ovSpread [data-bin][tabindex="0"]', e => e.getAttribute('aria-label')), /\d/);
+  await p.click('#ovSpread [data-spreadtbl] summary');
+  const tbl = await p.$$eval('#ovSpread [data-spreadtbl] tbody tr', l => l.map(r => +r.children[1].textContent));
+  assert.equal(tbl.reduce((a, c) => a + c, 0), was.rows.length, 'every counted paper is in the table');
+  if (id.n) {
+    assert.ok(await p.$('#ovRows [data-rowbar][tabindex="0"]'), 'the rows\' bars can be reached by the keyboard');
+    // How each row was scored: every row's levels add up to the papers scored (A-017)
+    const lv = await p.$$eval('#insRows .pc-lvr', l => l.map(r => [...r.querySelectorAll('[data-lv]')].reduce((a, s) => a + +/\d+/.exec(s.getAttribute('aria-label').split(':').pop())[0], 0)));
+    assert.equal(lv.length, id.n); for (const k of lv) assert.equal(k, was.rows.length);
+  }
+  // Percents: the same tiles as the current app, with its target of 80 read back
+  await p.evaluate(() => [...document.querySelectorAll('.mk-ins [role="radio"]')].find(b => /Percents/.test(b.textContent)).click());
+  await p.waitForSelector('[data-pct] #pTiles', { timeout: 30000 });
+  assert.equal(await p.$eval('[data-pctarget]', e => e.value), '80');
+  assert.deepEqual(await p.$$eval('#pTiles .tv', l => l.map(e => e.textContent)), was80, 'the same five tiles');
+  // the table, in the current app's order
+  assert.deepEqual(await p.$$eval('[data-pcrow]', l => l.map(r => r.querySelector('button').textContent + ' ' + r.children[2].textContent.replace('%', ''))), was.rows);
+  // sorted by name
+  await p.click('[data-psort="name"]');
+  const byName = await p.$$eval('[data-pcrow] button', l => l.map(b => b.textContent));
+  assert.deepEqual(byName, byName.slice().sort((a, b) => a.localeCompare(b, undefined, { numeric: true })));
+  // the target back at 70: the current app's first tiles
+  await p.$eval('[data-pctarget]', e => { e.value = '70'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.waitForFunction(w => [...document.querySelectorAll('#pTiles .tv')].map(e => e.textContent).join('|') === w, { timeout: 10000 }, was.tiles.join('|'));
+  // the places in an average, one setting everywhere (C-017)
+  await p.click('[data-pcdp] [data-v="0"]');
+  assert.equal(await p.evaluate(() => localStorage.getItem('gs.avgDp')), '0');
+  assert.match(await p.$eval('#pTiles .tv', e => e.textContent), /^\d+%$/);
+  await p.click('[data-pcdp] [data-v="2"]');
+  assert.equal(await p.evaluate(() => localStorage.getItem('gs.avgDp')), null);
+  // Who counts: late papers left out, then back
+  const n0 = (await p.$$('[data-pcrow]')).length, whoFirst = async () => { await p.click('[data-pcwho]'); await p.waitForSelector('.pop [role^="menuitem"]'); await p.evaluate(() => document.querySelector('.pop [role^="menuitem"]').click()); };
+  await whoFirst();
+  await p.waitForFunction(n => document.querySelectorAll('[data-pcrow]').length === n - 1, { timeout: 10000 }, n0);
+  const kept = Object.values(await p.evaluate(() => JSON.parse(localStorage.getItem('gs.pctView'))))[0];
+  assert.equal(kept.late, false); assert.equal(kept.target, 70);
+  await whoFirst();
+  await p.waitForFunction(n => document.querySelectorAll('[data-pcrow]').length === n, { timeout: 10000 }, n0);
+  // Fives, and my own bands with one taken away
+  await p.click('[data-pct] [role="radio"][data-v="5"]');
+  await p.waitForFunction(() => document.querySelectorAll('[data-band]').length === 9, { timeout: 10000 });
+  await p.click('[data-pct] [role="radio"][data-v="own"]');
+  await p.waitForSelector('[data-pccut="0"]');
+  await p.click('[data-pccut="2"]', { count: 3 }); await p.keyboard.press('Backspace'); await p.keyboard.press('Tab');
+  await p.waitForFunction(() => document.querySelectorAll('[data-band]').length === 4, { timeout: 10000 });
+  assert.deepEqual(Object.values(await p.evaluate(() => JSON.parse(localStorage.getItem('gs.pctView'))))[0].cuts, [90, 80, 60]);
+  // What if: only a preview, no score changes
+  const scores = await p.evaluate(() => JSON.stringify(window.__mark.state().batch.students.map(s => s.grade)));
+  await p.$eval('[data-pcadd]', e => { e.value = '1'; e.dispatchEvent(new Event('input', { bubbles: true })); });
+  await p.waitForSelector('[data-pcpreview]', { timeout: 10000 });
+  assert.match(await p.$eval('#pTiles .tile.main .ts', e => e.textContent), /\+1/);
+  assert.equal(await p.evaluate(() => JSON.stringify(window.__mark.state().batch.students.map(s => s.grade))), scores);
+  // Copy this table
+  await p.click('[data-pccopy]');
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast, [role="status"]')].some(e => /\d/.test(e.textContent)), { timeout: 10000 });
+  // a dot opens that paper
+  const dot = await p.$eval('[data-pcdot]', e => +e.dataset.pcdot);
+  await p.click('[data-pcdot="' + dot + '"]');
+  await p.waitForFunction(i => window.__mark.state().cur === i && !document.querySelector('[data-pct]'), { timeout: 30000 }, dot);
+  assert.deepEqual(errors, []);
+  await p.close();
+
+  // the current app reads who counts and the bands as they were left
+  const c = await page(ctx, []);
+  await c.goto(srv.url); await appReady(c);
+  await c.evaluate(id => window.__gs.reopenKept(id), id.id);
+  await c.waitForFunction(() => window.__gs.state().batch, { timeout: 60000 });
+  await c.evaluate(id => { location.hash = '#/a/' + encodeURIComponent(id.replace(/^gs\.b\./, '')) + '/insights'; }, id.id);
+  await c.waitForSelector('#dlgBox [data-ovtab="pct"]', { timeout: 60000 });
+  await c.click('#dlgBox [data-ovtab="pct"]');
+  await c.waitForSelector('#pTiles', { timeout: 30000 });
+  const pv = await c.evaluate(() => window.__gs.pv());
+  assert.deepEqual([pv.late, pv.band, pv.cuts, pv.target], [true, 'own', [90, 80, 60], 70]);
+  await ctx.close();
+});

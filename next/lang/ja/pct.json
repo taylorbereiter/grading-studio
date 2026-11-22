@@ -1,0 +1,57 @@
+{
+ "pc.more": "ほか {n} 人",
+ "pc.who": "数に入れる人",
+ "pc.late": "遅れた提出物",
+ "pc.out": "除外した提出物",
+ "pc.part": "採点途中の提出物（現時点）",
+ "pc.mid_h": "クラスの中央",
+ "pc.middle": "中央値",
+ "pc.target": "この % 未満に印を付ける",
+ "pc.target_at": "目標 {n}%",
+ "pc.bands": "区分",
+ "pc.band": "区分",
+ "pc.tens": "10 ごと",
+ "pc.fives": "5 ごと",
+ "pc.own": "自分で",
+ "pc.cut": "区分の最低 %",
+ "pc.add": "もしも：全員に加点",
+ "pc.preview": "プレビューのみです。点数は変わりません。",
+ "pc.none": "この選択では数に入る採点済みがありません。",
+ "pc.now": "現在 {v}、{d} で",
+ "pc.counted": {
+  "one": "{n} 件を集計",
+  "other": "{n} 件を集計"
+ },
+ "pc.range": "範囲",
+ "pc.gap": "標準的なばらつき",
+ "pc.below": "{n}% 未満",
+ "pc.band_below": "{n} 未満",
+ "pc.band_to": "{a}〜{b}",
+ "pc.band_tip": {
+  "one": "{n} 件、クラスの {p}%",
+  "other": "{n} 件、クラスの {p}%"
+ },
+ "pc.every": "すべての提出物の %",
+ "pc.table": "% 順の提出物",
+ "pc.copy": "この表をコピー",
+ "pc.copied": {
+  "one": "表示順に {n} 件の % をコピーしました",
+  "other": "表示順に {n} 件の % をコピーしました"
+ },
+ "pc.vs_avg": "平均との差",
+ "pc.vs_mid": "中央値との差",
+ "pc.tag_out": "除外",
+ "pc.tag_part": "途中",
+ "pc.score": "点数 {v}",
+ "pc.see": "表で見る",
+ "pc.who_col": "誰",
+ "pc.row_avg": "平均 {v}",
+ "pc.row_sum": {
+  "one": "{n} 件、{half} 以下が {low} 件",
+  "other": "{n} 件、{half} 以下が {low} 件"
+ },
+ "pc.lv_h": "各行の採点の内訳",
+ "pc.lv_tip": "{row} で {v}",
+ "pc.lv_cap": "ルーブリックの順に、各行で各点数の提出物が何件あるか。青が濃いほど高い点数です。",
+ "pc.lv_half": "0.5 点は下の整数に数えます。"
+}

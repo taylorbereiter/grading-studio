@@ -1150,3 +1150,42 @@ dialog.dlg:has(.mk-rd){width:min(640px,calc(100vw - 32px))}
 .mk-ffoot.none>[data-nofile]{flex-basis:100%;text-align:center;margin:0 0 4px}
 /* Replace: a new link and its Next on one line */
 .mk-rplink{display:flex;gap:8px;align-items:flex-end}.mk-rplink>:first-child{flex:1}
+/* Insights' Percents (mark/percents.jsx): the choices in one row, the five tiles, the bands, a dot for each paper, the table */
+.mk-ins .pc{display:flex;flex-direction:column;gap:14px}
+.mk-ins .pc-opts{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
+.mk-ins .pc-num{display:flex;flex-direction:column;gap:2px;font-size:var(--t2);color:var(--mute)}
+.mk-ins .pc-num input{width:7.5em}
+.mk-ins .pc-cuts{display:flex;flex-wrap:wrap;gap:6px}.mk-ins .pc-cuts input{width:5em}
+.mk-ins .pc-tiles{grid-template-columns:repeat(5,minmax(0,1fr))}
+.mk-ins .pc-bands{display:flex;flex-direction:column;gap:6px}
+.mk-ins .pc-band{display:grid;grid-template-columns:7em 1fr 6em;gap:10px;align-items:center;font-size:var(--t2);border-radius:var(--r1)}
+.mk-ins .pc-bt{height:10px;border-radius:var(--rf);background:var(--s2);overflow:hidden}.mk-ins .pc-bt i{display:block;height:100%;background:var(--acc)}
+.mk-ins .pc-strip{position:relative;margin:8px 14px 4px}
+.mk-ins .pc-ax{position:absolute;left:0;right:0;bottom:18px;border-top:1px solid var(--line)}
+.mk-ins .pc-tk{position:absolute;bottom:0;transform:translateX(-50%);font-size:11px;color:var(--mute)}
+.mk-ins .pc-ln{position:absolute;top:0;bottom:18px;border-left:2px solid var(--ink2)}
+.mk-ins .pc-ln.tg{border-left:2px dashed var(--warn)}
+.mk-ins .pc-ln span{position:absolute;top:0;left:4px;white-space:nowrap;font-size:11px;color:var(--ink2)}
+.mk-ins .pc-ln.l span{left:auto;right:4px}
+.mk-ins .pc-dot{position:absolute;width:11px;height:11px;margin-left:-5.5px;border-radius:50%;border:2px solid var(--s);background:var(--acc);padding:0;cursor:pointer}
+.mk-ins .pc-dot.lo{background:var(--warn)}
+.mk-ins .pc-th{display:flex;align-items:center;gap:10px}.mk-ins .pc-th .btn{margin-left:auto}
+.mk-ins .pc-tab{width:100%;border-collapse:collapse;font-size:var(--t2)}
+.mk-ins .pc-tab th,.mk-ins .pc-tab td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.mk-ins .pc-tab .r{text-align:right}
+.mk-ins .pc-tab th button{all:unset;cursor:pointer;font-weight:600}
+.mk-ins .pc-tab tr.lo td{background:var(--warn-soft)}
+.mk-ins .pc-see summary{cursor:pointer;color:var(--acc-ink);margin-top:8px}
+.mk-ins .bar[tabindex]:focus-visible,.mk-ins .rb[tabindex]:focus-visible,.mk-ins .pc-band[tabindex]:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* how each row was scored */
+.mk-ins .pc-lv{display:flex;flex-direction:column;gap:8px}
+.mk-ins .pc-lvr{display:grid;grid-template-columns:minmax(0,1fr) 2fr;gap:10px;align-items:center;font-size:var(--t2)}
+.mk-ins .pc-lvn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk-ins .pc-lvt{display:flex;height:18px;border-radius:var(--r1);overflow:hidden;background:var(--s2)}
+.mk-ins .pc-seg{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;color:var(--acc-ink)}
+.mk-ins .pc-leg{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--mute);margin-top:8px}
+.mk-ins .pc-sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.mk-ins .b1{background:color-mix(in srgb,var(--acc) 15%,var(--s))}.mk-ins .b2{background:color-mix(in srgb,var(--acc) 35%,var(--s))}
+.mk-ins .b3{background:color-mix(in srgb,var(--acc) 55%,var(--s))}.mk-ins .b4{background:color-mix(in srgb,var(--acc) 75%,var(--s))}
+.mk-ins .b5{background:var(--acc)}.mk-ins .pc-seg.b4,.mk-ins .pc-seg.b5{color:var(--s)}
+@media (max-width:760px){.mk-ins .pc-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}

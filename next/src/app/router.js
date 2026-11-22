@@ -83,6 +83,7 @@ export const PARTS = {
   // own like pdf.js (each library is its own chunk, under the any-chunk budget)
   out: () => import('./screens/mark-out.jsx'),
   pmore: () => import('./mark/paper-more.jsx'),
+  percents: () => import('./mark/percents.jsx'),
   outEngine: () => import('./mark/out.js'),
   retcards: () => import('./mark/retcards.jsx'),
   // the Grade sheet on the Grades tab
