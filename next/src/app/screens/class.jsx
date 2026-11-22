@@ -18,6 +18,7 @@ import '../plan/rev-lines.js';
 import Later from './later.jsx';
 import { UnitSheet } from '../plan/unit-edit.jsx';
 import { usePart } from '../parts.js';
+import { planCtx } from '../plan/ctx-on.js';
 import '../plan/lines.js';
 import { classesForHome } from '../../crossings.js';
 
@@ -65,7 +66,7 @@ function CourseLine({ p, c, lib }) {
   // The weeks to show: the unit's, or without units the four weeks around today.
   const weeks = u ? u.weeks.map((w, i) => ({ mon: plus(u.start, i * 7), focus: w && w.focus, n: i + 1 })) : [-1, 0, 1, 2].map(i => ({ mon: plus(mon, i * 7), focus: '', n: 0 }));
   const plan = async day => { if (busy) return; setBusy(true); try { const l = await newLesson(p, c.id, day); go('lesson', l.id); } catch (e) { saveFailed(e); } finally { setBusy(false); } };
-  return <div class={'courseline' + (bes ? ' with-beside' : '')}>
+  return <div class={'courseline' + (bes ? ' with-beside' : '')} onContextMenu={e => planCtx(e, { p, where: u ? { k: 'unit', v: u.title } : { k: 'planner' } })}>
     {bes && Bs && <Bs.default p={p} u={u} onClose={() => setBes(false)} />}
     {units.length > 0 && <nav class="ustrip" aria-label={t('plan.units')}>
       {units.map((x, i) => { const end = plus(E.unitEnd(x), 4), on = x === u, past = end < now, cur = x.start <= now && now <= end;

@@ -1,1 +1,0 @@
-import{b as n}from"./chunk-FJOXZ3FN.js";var e=new Set,u=null,a=o=>(e.add(o),()=>e.delete(o)),h=()=>e.forEach(o=>{try{o()}catch(t){console.error(t)}}),r=()=>u||=n.focus().then(o=>(o.boot(),o)),l=(o,t,c)=>r().then(s=>s.start(o,t,c)),d=()=>r().then(o=>o.open());export{a,h as b,r as c,l as d,d as e};

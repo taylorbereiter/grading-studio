@@ -4,6 +4,7 @@
 // linked Planner folder). Past lessons are every lesson already taught, to open or reuse. Units lists each course's units and opens
 // one on its class's Course line. Rubrics shows the bank (kv "bank": rubrics and grading scales, wording only), sorted by unit.
 // The built-in activities are the app's own English text, as in the current Planner; they are shown as written.
+import { planCtx } from '../plan/ctx-on.js';
 import { h, Fragment } from 'preact';
 import { useState, useId, useEffect, useRef } from 'preact/hooks';
 import { Tabs, Chip, Button, Checkbox, Select, TextInput, Field, Sheet, EmptyState, Icon, toast } from '../../ui/index.js';
@@ -162,7 +163,7 @@ export default function Library({ route, classes }) {
   return <div class="page library">
     <header class="ph"><div><h1>{t('nav.library')}</h1><p class="mute">{t('plan.lib_about')}</p></div></header>
     <Tabs label={t('nav.library')} value={find ? '' : tab} onChange={v => go('library', v === 'activities' ? '' : v)} tabs={TABS.map(id => ({ id, label: t(TAB_LINE[id]) }))} />
-    <div role="tabpanel" id={'panel-' + tab} aria-labelledby={'tab-' + tab} class="libpanel">
+    <div role="tabpanel" id={'panel-' + tab} aria-labelledby={'tab-' + tab} class="libpanel" onContextMenu={e => !find && tab !== 'examples' && planCtx(e, { p, where: { k: { activities: 'acts', past: 'past', units: 'units', rubrics: 'bank' }[tab] } })}>
       {!p ? <div class="loading" aria-busy="true" />
         : find ? <Find p={p} q={route.params.sub || ''} /> : tab === 'activities' ? <Activities p={p} /> : tab === 'past' ? <Past p={p} /> : tab === 'units' ? <Units p={p} classes={classes} sub={route.params.sub} /> : tab === 'examples' ? <Examples view={route.params.sub} more={route.params.more} /> : <Rubrics p={p} />}
     </div>

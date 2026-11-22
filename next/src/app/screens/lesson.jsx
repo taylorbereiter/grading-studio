@@ -31,6 +31,7 @@ import { TextBox } from '../../ui/services.jsx';
 import '../plan/lines.js';
 import { usePart } from '../parts.js';
 import { startFocus } from '../focus/bus.js';
+import { planCtx } from '../plan/ctx-on.js';
 
 const VIEWS = ['lesson', 'slides', 'edit'];
 // The editor, Present and the lesson's tools come in their own files when first wanted (router.js PARTS).
@@ -211,7 +212,7 @@ export default function LessonPage({ route }) {
   const p = usePlan();
   const [l, save] = useLesson(p, route.params.id);
   const [cur, setCur] = useState(0), [presenting, setPresenting] = useState(false), [asking, setAsking] = useState(false), [redo, setRedo] = useState(null);
-  const [tool, setTool] = useState(null), [beside, setBeside] = useState(false), [note, setNote] = useState(null);
+  const [tool, setTool] = useState(null), [beside, setBeside] = useState(false);
   const view = VIEWS.includes(route.params.view) ? route.params.view : 'lesson';
   const setView = v => go('lesson', route.params.id, v === 'lesson' ? '' : v);
   // Present is fetched with the page, so F5 shows it at once; the lesson's tools too; the editor when the Edit view opens; Beside when opened.
@@ -246,15 +247,9 @@ export default function LessonPage({ route }) {
     if (what === 'dup') { n.slides.splice(i + 1, 0, { ...JSON.parse(JSON.stringify(l.slides[i])), id: E.lid(), talk: [] }); save(n); return toast(t('plan.slide_duplicated')); }
     if (what === 'del' && n.slides.length > 1) { n.slides.splice(i, 1); save(n); toast(t('plan.slide_removed'), { undo: () => save(JSON.parse(JSON.stringify(l))) }); }
   };
-  // Right-click on the lesson page: a comment for the assistant on that slide, or on the lesson with the words selected or clicked
-  // (src/planner/extras.js ctxOpen, noteOpen). Shift + right-click, or in a text box, keeps the browser's own menu.
-  const onContext = e => {
-    if (!Tools || e.shiftKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable || (e.target.closest && e.target.closest('.beside'))) return;
-    e.preventDefault();
-    const th = e.target.closest('[data-slide-i]'), sel = getSelection(), quote = sel && !sel.isCollapsed ? sel.toString().trim() : '';
-    const i = th ? +th.dataset.slideI : e.target.closest('.stage,.ed-stage') ? cur : null;
-    setNote({ x: e.clientX, y: e.clientY, i: quote ? null : i, quote: quote || (i == null ? ((e.target.closest('p,li,h2,h3,td,section') || e.target).innerText || '').trim().slice(0, 1500) : '') });
-  };
+  // Right-click on the lesson page (src/planner/extras.js ctxOpen): a comment for the assistant on that slide, on the lesson with the
+  // words selected or clicked, or any of them put in the assistant's box (plan/ctx.jsx).
+  const onContext = e => planCtx(e, { p, l, save, cur, where: { k: 'lesson', v: l.title || '' } });
   useEffect(() => {
     if (!l) return;
     const n = l.slides.length, step = d => setCur(c => Math.max(0, Math.min(n - 1, c + d)));
@@ -303,7 +298,6 @@ export default function LessonPage({ route }) {
     {beside && Side2 && <Side2.default p={p} l={l} save={save} onClose={() => setBeside(false)} onSlide={addSlide} />}
     <AssistantSheet key={asking ? 'a' + redo : 'x'} p={p} l={l} open={asking} slide={redo} onClose={() => { setAsking(false); setRedo(null); }} save={save} />
     {Tools && tool && <Tools.default name={tool.name} arg={tool.arg} p={p} l={l} slot={slot} save={save} onClose={() => setTool(null)} />}
-    {Tools && note && <Tools.NotePop p={p} l={l} at={note} save={save} onClose={() => setNote(null)} />}
     {presenting && l.id === route.params.id && PresentMod && <PresentMod.Session key={route.path} p={p} l={l} slot={slot} explicitClass={cls} explicitDay={day} start={view === 'lesson' ? null : cur} onSlide={setCur} onClose={() => setPresenting(false)} />}
   </div>;
 }
