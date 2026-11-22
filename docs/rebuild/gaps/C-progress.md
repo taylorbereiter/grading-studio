@@ -45,3 +45,11 @@ same test opens the result in the current app. Commits are on the local branch `
 | H-060 | closed: the right-click menu closes on window blur (scroll already closed it) | mark.test.js "H-033 H-036 H-060" | 7dadda0b |
 | H-065 | closed: an open Rubric setup listens on the gs-bank channel and reads the bank again | mark-setup.test.js "H-065 H-044" | 7dadda0b |
 | A-005 | closed: Find offers Convert to PDF pages while the assignment has Word papers; it opens the one on screen (else the first) and asks | mark-word.test.js "A-005" | 837531ef |
+| A-091 | kept different: the current app's Display box is split by where each choice belongs: app text size in Settings > Display, new text boxes, paper fit and Word size and spacing in Settings > Marking, the paper's zoom on the marking toolbar; no extra press on the marking screen | settings-grading.test.js "mark colours…", "A-097" | (this commit) |
+| A-092 | closed: Mark key is in More for this paper (and Settings > Marking), the same card | mark-files.test.js (C-074 Mark key from More for this paper) | (this commit) |
+| A-093 | kept different: Dark mode / Light mode is in Find on every screen, the marking screen too, not a More menu button, so the screen stays under 25 presses | mark-keyboard.test.js "A-093" | (this commit) |
+| A-096 | kept different: the paper's zoom is the toolbar's − / percent / + (percent back to 100%), Ctrl + − 0, Ctrl and the wheel or a pinch, 50–300%, instead of a 50–250% slider in a box | mark-keyboard.test.js "C-034", "C-064" | (this commit) |
+| A-097 | closed: Back to normal in Settings > Marking's paper and text card: text boxes, fit, Word size and spacing, the paper zoom and the app text size as they start, the crop kept | settings-grading.test.js "A-097" | (this commit) |
+| A-104 | closed: Ctrl/⌘ + zooms the paper in by 10% | mark-keyboard.test.js "gaps item 9 (C-064)" | (this commit) |
+| A-105 | closed: Ctrl/⌘ − zooms the paper out by 10% | mark-keyboard.test.js "gaps item 9 (C-064)" | (this commit) |
+| A-106 | closed: Ctrl/⌘ 0 goes back to 100% | mark-keyboard.test.js "gaps item 9 (C-064)" | (this commit) |

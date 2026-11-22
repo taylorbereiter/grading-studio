@@ -336,3 +336,21 @@ test('the zoom toolbar is one Tab stop, with the arrow keys inside it (gaps: sta
   await p.keyboard.press('Tab');
   assert.notEqual((await focused(p)).set, 'View', 'one more Tab leaves it');
 }));
+
+// Dark mode while marking (src/shell.js: the More menu's theme button and Find): Find has Dark mode and Light mode on the marking
+// screen, the paper and its marks stay where they were (A-093, kept in Find so the screen stays under 25 presses)
+test('A-093 Dark mode and Light mode from Find while marking, back to the look she had, the paper still open', () => withCtx(async p => {
+  const pick = async text => {
+    await toBody(p); await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
+    await p.waitForSelector('dialog.cmd[open] input'); await p.type('dialog.cmd[open] input', text);
+    await p.waitForFunction(t => [...document.querySelectorAll('dialog.cmd[open] [role=option]')].some(o => o.textContent.trim().startsWith(t)), { timeout: 15000 }, text);
+    await p.evaluate(t => [...document.querySelectorAll('dialog.cmd[open] [role=option]')].find(o => o.textContent.trim().startsWith(t)).click(), text);
+  };
+  const was = await p.evaluate(() => document.documentElement.dataset.look || ''), cur = await curOf(p);
+  await pick('Dark mode');
+  await p.waitForFunction(() => document.documentElement.dataset.look === 'midnight', { timeout: 5000 });
+  assert.ok(await p.$('.mk-paper canvas'), 'still marking');
+  await pick('Light mode');
+  await p.waitForFunction(w => (document.documentElement.dataset.look || '') === w, { timeout: 5000 }, was);
+  assert.equal(await curOf(p), cur);
+}));
