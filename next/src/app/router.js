@@ -113,6 +113,8 @@ export const PARTS = {
   rubricin: () => import('./class/rubricin.jsx'),
   // Home's To do card, with the To do engine (app/home/todo-card.jsx)
   hometodo: () => import('./home/todo-card.jsx'),
+  oldsample: () => import('./home/old-sample.jsx'),
+  homeg: () => import('./home/google.jsx'),
   // a class's People and Grades tabs (app/class/), each with the gradebook's engine
   people: () => import('./class/people.jsx'),
   clink: () => import('./class/classlink.jsx'),
@@ -169,6 +171,7 @@ export const PARTS = {
   calc: () => import('./mark/calc.jsx'),
   // the welcome a browser nobody has used yet opens on (screens/welcome.jsx); main.js asks for it here
   welcome: () => import('./screens/welcome.jsx'),
+  lang: () => import('./language.js'),
   // Share with your assistant and Bring back (mark/share.jsx), from Insights and the marking screen's Setup menu
   share: () => import('./mark/share.jsx'),
   // the assignments for the command bar (students/find-rows.js), read each time it opens

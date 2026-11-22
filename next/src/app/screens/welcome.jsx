@@ -5,9 +5,9 @@
 // only for a fresh browser on Home, outside the sample and not signed in.
 import { h, render, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { Button, toast } from '../../ui/index.js';
+import { Button, Select, toast } from '../../ui/index.js';
 import { t } from '../../i18n/t.js';
-import { go } from '../router.js';
+import { go, PARTS } from '../router.js';
 import { useSaving } from '../../services/saving.js';
 import { enterSample } from '../sample.js';
 import { GRADE_WAYS } from '../../engines/gways.js';
@@ -31,7 +31,8 @@ export function welcome() {
 
 function Welcome({ close }) {
   const S = useSaving(), [step, setStep] = useState(0), [classes, setClasses] = useState(['', '', '']), [sys, setSys] = useState(''), [other, setOther] = useState('');
-  const [way, setWay] = useState('rubric'), [busy, setBusy] = useState(false), sheet = useRef(null);
+  const [way, setWay] = useState('rubric'), [busy, setBusy] = useState(false), sheet = useRef(null), [L, setL] = useState(null);
+  useEffect(() => { PARTS.lang().then(setL, e => console.error(e)); }, []);   // the language picker (app/language.js, Settings > Display's own)
   useEffect(() => { const f = sheet.current && sheet.current.querySelector('.wlbody input:not([disabled]), .wlbody button'); if (f) f.focus(); }, [step]);
   // The screen behind is drawn after the questions open, and moves focus to itself: it comes back here, as it does in any dialog.
   useEffect(() => { const back = e => { const s = sheet.current; if (s && !s.contains(e.target)) { const f = s.querySelector('.wlbody input:not([disabled]), .wlbody button'); if (f) f.focus(); } }; document.addEventListener('focusin', back); return () => document.removeEventListener('focusin', back); }, []);
@@ -95,6 +96,7 @@ function Welcome({ close }) {
         <span class="mute">{t('prefs.wl_later')}</span></p></>
       : <p>{t('prefs.wl_kept_nopick')}</p>}</>;
   return <div class="wlwrap" onKeyDown={key}><div class="wlsheet" role="dialog" aria-modal="true" aria-labelledby="wlH" ref={sheet} data-welcome>
+    {L && <div class="wllang" data-wllang><Select label={t('settings.language')} options={L.LANGUAGES.map(([v, label]) => ({ value: v, label }))} value={L.savedLanguage()} onChange={v => { if (!L.saveLanguage(v)) toast(t('settings.not_kept')); }} data-raw /></div>}
     <h1 id="wlH">{t('prefs.wl_h')}</h1>
     <p class="mute">{t('prefs.wl_lead')}</p>
     <ol class="wlsteps" aria-label={t('prefs.wl_step_of', { n: step + 1 })}>{STEPS.map((k, i) => <li class={i === step ? 'on' : i < step ? 'done' : ''} aria-current={i === step ? 'step' : undefined}><b>{i + 1}</b>{t(k)}</li>)}</ol>

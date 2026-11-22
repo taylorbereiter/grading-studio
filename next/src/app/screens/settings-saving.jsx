@@ -17,7 +17,7 @@ const STATE = { synced: 'prefs.sv_st_synced', syncing: 'prefs.sv_st_syncing', sa
 const narrow = () => typeof matchMedia === 'function' && matchMedia('(max-width: 640px)').matches;
 // Use on your phone (src/phone.js phoneHowTo): a QR code of this page's own address, the steps to put it on a phone's Home Screen and
 // sign in with the same account. The code is drawn here from the address (engines/gqr.js), so nothing is sent anywhere to make it.
-function PhoneHow({ onClose }) {
+export function PhoneHow({ onClose }) {
   const url = location.origin + location.pathname.replace(/index\.html$/, ''), [qr, setQr] = useState('');
   useEffect(() => { import('../../engines/gqr.js').then(m => setQr(m.qrSvg(url, t('prefs.ph_qr'))), () => {}); }, []);
   return <Dialog open title={t('prefs.ph_use')} onClose={onClose} actions={<Button variant="primary" onClick={onClose}>{t('common.close')}</Button>}>
