@@ -1,21 +1,21 @@
 {
- "version": "1.28.74",
- "build": "e7d5828b0fa3",
+ "version": "1.28.75",
+ "build": "c705da6c39cf",
  "notes": [
-  "The lesson and unit prompts you copy from the Planner now say Claude shouldn't need anything from your computer, and ask it to tell you if anything is missing."
+  "In another language, the grade sheet (Grades, Grade sheet) is now translated once it finishes reading the papers: its columns, its notes, Box it by hand, and the Is this the grade? question with Use it and Not a grade. Your students’ names and files stay as they are."
  ],
  "files": {
-  "index.html": "d8048376ed01b7da1c6b468f2e639e704b4ccedbe89c4122e46e21307358769a",
-  "planner.html": "1b4898396c7452206cd726e98c616b1c001963358afd88060837904bbc239434"
+  "index.html": "8a67d30d316b39845cba9a823ca212012aa29933ec0ba794374a06f73c6501b2",
+  "planner.html": "88ed70d685c3779b5436a7772f0d9c161f9db6b152a212fac312689ba56d65a6"
  },
  "langs": {
-  "lang/zh-Hant.js": "1f6c72319366bc2cb027a2ad8ca790bdf3982ac2b2c8cf5958525f87ec6ee574",
-  "lang/zh-Hans.js": "6427d65fce82fe3af7957b497f1243b64034515f55e873902b4692f4a9460468",
-  "lang/es.js": "bc4fc38cca9a088fcc34637578d0cfcc021f710d99d7f7084da7751de1c290a6",
-  "lang/fr.js": "2ff7f9775da31259cd86d2f34426fbac0bb78266be1a82643ec919052b6148b2",
-  "lang/de.js": "2beeeb86f58dc38cd2a84e70a2063a41ab622f3adfbb8d2579204a5206ac9f95",
-  "lang/pt-BR.js": "92549f2b8b3dceb6edd1f4575051a0e49dea5be11a033f70684703bb9add8014",
-  "lang/ja.js": "2d660575deaf9655f6504971be96b788eaeb1575116f84588a8133c3f1306d49",
-  "lang/ko.js": "f26c9c74d16094960c256149124c38c944c6c17989728e292b09bc6f490d213d"
+  "lang/zh-Hant.js": "1b0b98d4171dc2e98442c6097c3b849c439b34f780297fe4ea0f286c87a69d29",
+  "lang/zh-Hans.js": "a3d8e279cbcbcdbd2b06e25b7ca8503d4cc82ac5f03b4e29c493fbe3b7b23e30",
+  "lang/es.js": "b5ff4dbe8c9e06f0a53723d1ba084d369f44bd9aee500ab32b35332a691aeaad",
+  "lang/fr.js": "e3b03d918ec580f39e53ad4071e5cf3112382eced6d80921960c5d705f41ae3c",
+  "lang/de.js": "d28ef935ecac77d5f31e30cbb9679d25ebd5c6288096f9d9c976024f20506daf",
+  "lang/pt-BR.js": "f0cd43bcff570fe8af9836daabb4bb11bb172d3e3b1d9d3ac6c03918fb6724fd",
+  "lang/ja.js": "bec3d92e0664ef84db861ad861543740dd35cf947de916a710027e9d2d5e7e0f",
+  "lang/ko.js": "7daa45860f296bde5f9130d3150af89b91684377a7e0abe70fb99f1050ec0b7d"
  }
 }

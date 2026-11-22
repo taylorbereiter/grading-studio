@@ -407,6 +407,8 @@ const LANG_ZH = {
     /* returned file names: Student - Assignment - Graded.pdf */
     'Graded': '已評分', 'Feedback': '回饋', 'Student name': '學生姓名',
     'Missing': '缺交', 'Excused': '免交', 'Late': '遲交', 'Retake': '重做', 'Answer': '答案', 'First try': '第一次', 'counts as': '採計',
+    // the grade sheet (src/app/gradesheet.js, src/grades.js readsHtml)
+    "Click to copy": "點一下即可複製", "Open this file": "開啟這個檔案", "Every row is made from the file named on it, inside that student’s folder. Click a picture to open that exact file. Click a score to copy it.": "每一列都取自列上寫明的檔案，在該學生的資料夾裡。點一下圖片即可開啟那個檔案。點一下分數即可複製。", "Also show grades found on the papers": "也顯示在作業上找到的成績", "· a score you gave in Grading Studio always counts": "· 你在 Grading Studio 給的分數一律算數", "· the downloaded sheet shows the same rows": "· 下載的成績表顯示相同的列", "Show them": "顯示", "Hide them": "隱藏", "Folder and file": "資料夾與檔案", "Read as": "讀成", "Only unmarked files, left out": "只有未批改的檔案，不計入", "Your score": "你的分數", "Box it by hand": "手動框選", "Boxed by hand": "已手動框選", "redo": "重做", "Is this the grade?": "這是成績嗎？", "It’s part of the page’s own text, so the student may have typed it. A flattened Kami grade looks the same.": "這是頁面本身文字的一部分，可能是學生自己打的。合併到頁面裡的 Kami 成績看起來也一樣。", "Use it": "採用", "Not a grade": "不是成績", "No grade yet.": "還沒有成績。", "Nothing turned in": "沒有繳交", "Left out (no marks).": "不計入（沒有批改）。", "Score on the row above": "分數在上一列", "Type what you see": "輸入你看到的", "Couldn’t read this file": "無法讀取這個檔案", "No grade found yet": "還沒找到成績", "Word rubric": "Word 評分規準", "Word file": "Word 檔案", "Trim each spot down to your marks": "把每個位置裁到只剩你的批改",
   },
   rules: [
     [/^(\d+) of (\d+) done$/, '已完成 $1/$2'], [/^out of ([\d.,]+)$/, '滿分 $1'],
@@ -517,6 +519,8 @@ const LANG_ZH = {
     openday: '開啟 {1}', taken: ['已記錄 {1} 天。', '已記錄 {1} 天。'], takenin: ['{2}已記錄 {1} 天。', '{2}已記錄 {1} 天。'], takenR: '按一下日期可開啟或變更那一天，按一下姓名可前往那位學生的頁面。「到課人數」包含所有出席和遲到的人。', unk: ['有 {1} 次缺席仍然原因不明。', '有 {1} 次缺席仍然原因不明。'], andmore: '還有 {1} 次。得知原因後，請開啟那一天並按「缺席，已請假」。',
     owesA: ['{1} 位學生', '{1} 位學生'], owesB: ['共缺交 {1} 份作業', '共缺交 {1} 份作業'], reminded: '已提醒：{1}', ago: ['{1} 天前', '{1} 天前'], pick: '選一個最接近的。{1} 位學生每人都有一張課桌，之後任何課桌都可以移動或拿掉。', seated: '{2} 人中 {1} 人已入座', needed: ['還需要 {1} 張課桌', '還需要 {1} 張課桌'],
     desk: '課桌，{1}。按一下可拿掉', sp: '',
+    // the grade sheet
+    gshid: "顯示沒有成績的檔案（隱藏了 {1} 個）", gsout: "{1} 個檔案沒有批改，所以當作多餘的作業不計入。", gspage: "第 {1} 頁", gsfrom: "出自「{1}」", gsconf: "待確認 {1} 個",
   },
   helpSecs: { start: '開始使用', mark: '批改作業', score: '分數與評分規準', back: '發還作業', class: '班級與成績冊', safe: '儲存與安全', plan: '備課與上課', private: '隱私' },
   help: {
