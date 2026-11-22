@@ -7,7 +7,7 @@
 // sends it to its student, and the bubbles are read when the papers open (mark/quizread.jsx).
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { Button, IconButton, Segmented, Checkbox, toast, useModal } from '../../ui/index.js';
+import { Button, IconButton, Segmented, Checkbox, toast, useModal, HeldInput } from '../../ui/index.js';
 import { fmtNum } from '../../engines/gcore.js';
 import * as K from '../../engines/gqmake.js';
 import { libraryChange } from '../../students/undo.js';
@@ -54,7 +54,7 @@ function QCard({ q, i, on, sheet, n, onPick, set, re }) {
   const L = K.qmkLetters(q);
   return <div class={'qfc' + (on ? ' on' : '')} onFocusIn={onPick} data-qfc={i}>
     <div class="qfch"><b>{i + 1}</b><select class="input sm" value={q.t} aria-label={t('paper.qf_kind')} onChange={e => set(i, e.currentTarget.value)} data-qt>{TYPES().map(([k, l]) => <option value={k}>{l}</option>)}</select>
-      <label class="qfpts"><span>{t('paper.qf_pts')}</span><input class="input sm" type="number" min="0.5" step="0.5" value={String(q.pts)} onInput={e => { q.pts = Math.max(0.5, +e.currentTarget.value || 1); re(); }} data-qp /></label>
+      <label class="qfpts"><span>{t('paper.qf_pts')}</span><HeldInput class="input sm" type="number" min="0.5" step="0.5" value={String(q.pts)} onChange={e => { q.pts = Math.max(0.5, +e.currentTarget.value || 1); re(); }} data-qp /></label>
       <IconButton icon="chu" size="sm" label={t('paper.qf_up')} disabled={!i} onClick={() => set(i, 'up')} data-qup />
       <IconButton icon="x" size="sm" label={t('paper.qf_del')} disabled={n === 1} onClick={() => set(i, 'del')} data-qdel /></div>
     <textarea class="input" rows={2} value={q.text} placeholder={sheet ? t('paper.qf_text_ph_sheet') : t('paper.qf_text_ph')} aria-label={t('paper.qf_text', { n: i + 1 })} onInput={e => { q.text = e.currentTarget.value; re(); }} data-qx data-raw />

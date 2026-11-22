@@ -51,11 +51,14 @@ export function Field({ label, hint, error, id, children }) {
 }
 // A box that saves when she leaves it (no onInput) keeps what she types while she is in it: a save elsewhere that draws the screen
 // again (another box she just left, Undo, another window) never puts the old words back under her cursor.
+// Its onChange runs once, when she leaves the box having changed it, as a browser's change does: preact/compat (loaded for the
+// pop-ups) turns every onChange on a text box into a call per key, which saved half-typed values ("0" closed a box, "" put the old
+// value back) and made each key its own undo step.
 export function useHeld(value, onInput, rest) {
   const [held, setHeld] = useState(null);
   if (onInput) return { value, onInput: e => onInput(e.currentTarget.value) };
-  return { value: held != null ? held : value, onInput: e => setHeld(e.currentTarget.value),
-    onBlur: e => { try { rest.onBlur && rest.onBlur(e); } finally { setHeld(null); } } };
+  return { value: held != null ? held : value, onInput: e => setHeld(e.currentTarget.value), onChange: undefined,
+    onBlur: e => { try { if (held != null && rest.onChange && e.currentTarget.value !== String(value ?? '')) rest.onChange(e); rest.onBlur && rest.onBlur(e); } finally { setHeld(null); } } };
 }
 // A plain input with the same hold, for boxes that carry their own label (aria-label).
 export function HeldInput({ value, onInput, ...rest }) {

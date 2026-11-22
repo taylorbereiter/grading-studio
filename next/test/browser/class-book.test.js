@@ -467,6 +467,11 @@ test('Import a gradebook: pasted cells matched to the roster and the assignments
   await p.waitForFunction(() => document.querySelector('dialog[open] [data-bki-go="2"]').value === 'new' && !document.querySelector('dialog[open] [data-bki-save]').disabled);
   assert.equal(await p.$eval('dialog[open] [data-bki-go="3"]', s => s.value), 'skip');
   assert.equal(await p.$eval('dialog[open] [data-bki-max="2"]', e => e.value), '10');
+  // the out of box is kept as typed until she leaves it: cleared and typed again (a save per key put 0.5 in the empty box)
+  await p.$eval('dialog[open] [data-bki-max="2"]', e => e.select()); await p.keyboard.press('Backspace'); await p.keyboard.type('8'); await p.keyboard.press('Tab');
+  assert.equal(await p.$eval('dialog[open] [data-bki-max="2"]', e => e.value), '8');
+  await p.$eval('dialog[open] [data-bki-max="2"]', e => e.select()); await p.keyboard.type('10'); await p.keyboard.press('Tab');
+  await p.waitForFunction(() => document.querySelector('dialog[open] [data-bki-max="2"]').value === '10');
   assert.equal(await p.$eval('dialog[open] [data-bki-pick="2"]', s => s.value), '');
   await p.click('dialog[open] [data-bki-save]');
   await p.waitForFunction(() => JSON.parse(localStorage.getItem('gs.lib')).classes[0].units.flatMap(u => u.items).some(i => i.name === 'Map test'));
@@ -858,6 +863,14 @@ test('Report comments: each draft is the current app\'s draft, edited and marked
   await p.waitForFunction(n => document.querySelector('[data-rp-name]').textContent === n, {}, N[1]);
   await p.waitForFunction(n => { const r = ((JSON.parse(localStorage.getItem('gs.lib')).classes[0].info || {})[n] || {}).rep; return r && r.year && r.year.done && /A pleasure to teach\.$/.test(r.year.text); }, {}, N[0]);
   await p.waitForFunction(() => /^1 of /.test((document.querySelector('[data-rp-donecount]') || {}).textContent || ''));
+  // the subject is saved once, when she leaves the box, so one Undo takes it all back (a save per key made each letter a step)
+  const subj = () => p.evaluate(() => (((JSON.parse(localStorage.getItem('gs.lib')).book || {}).rep || {}).subj || {}).c1 || '');
+  await p.click('[data-rp-subj]'); await p.keyboard.type('Year 9 English'); await p.keyboard.press('Tab');
+  await p.waitForFunction(() => ((((JSON.parse(localStorage.getItem('gs.lib')).book || {}).rep || {}).subj || {}).c1 || '') === 'Year 9 English', { timeout: 5000 });
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForFunction(() => !(((JSON.parse(localStorage.getItem('gs.lib')).book || {}).rep || {}).subj || {}).c1, { timeout: 5000 }).catch(() => {});
+  assert.equal(await subj(), '', 'one Undo takes the whole subject back');
   // short comments
   await p.evaluate(() => [...document.querySelectorAll('.rptopts [role="radio"]')].find(b => b.dataset.v === 'short').click());
   await p.waitForFunction(() => ((JSON.parse(localStorage.getItem('gs.lib')).book || {}).rep || {}).len === 'short');

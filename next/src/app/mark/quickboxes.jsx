@@ -6,7 +6,7 @@
 // resize it, Ctrl D copies it just below, Delete takes it out. Save boxes is one undo step (mark/change.js quickBoxesSave).
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { Button, Segmented, toast, useModal } from '../../ui/index.js';
+import { Button, Segmented, toast, useModal, HeldInput } from '../../ui/index.js';
 import { state, fmtNum } from '../../engines/gcore.js';
 import { shownName } from '../../engines/gdraw.js';
 import * as Z from '../../engines/gquiz.js';
@@ -221,7 +221,7 @@ export function QuickBoxes({ onClose, onSaved }) {
         {W.qs.length ? <><table class="qbt"><thead><tr><th>{t('paper.qb_q')}</th><th>{t('paper.qb_pts')}</th><th>{t('paper.qb_kind')}</th><th>{t('paper.qb_how')}</th><th>{t('paper.qb_key')}</th><th /></tr></thead>
           <tbody>{W.qs.map((x, i) => <Fragment key={x.id}><tr class={x.id === sel ? 'on' : ''} onFocusIn={() => { if (sel !== x.id) pick(x.id); }} data-qbrow={x.id}>
             <td><input class="input sm" value={x.lab || String(i + 1)} aria-label={t('paper.qb_q_name')} maxLength={12} onInput={e => { x.lab = e.currentTarget.value.trim() === String(i + 1) ? '' : e.currentTarget.value; re(); }} data-qlab data-raw /></td>
-            <td><input class="input sm" type="number" min="0.5" step="0.5" value={String(x.pts)} aria-label={t('paper.qb_pts')} onInput={e => setPts(x, e.currentTarget.value)} data-qpts /></td>
+            <td><HeldInput class="input sm" type="number" min="0.5" step="0.5" value={String(x.pts)} aria-label={t('paper.qb_pts')} onChange={e => setPts(x, e.currentTarget.value)} data-qpts /></td>
             <td><select class="input sm" value={Z.qzByPts(x) ? 'scale' : 'rw'} aria-label={t('paper.qb_kind')} onChange={e => setKind(x, e.currentTarget.value)} data-qkind><option value="rw">{t('paper.qb_rw')}</option><option value="scale">{t('paper.qm_scale', { n: fmtNum(+x.pts || 1) })}</option></select></td>
             <td><select class="input sm" value={x.how || 'cx'} aria-label={t('paper.qb_how')} onChange={e => { x.how = e.currentTarget.value; re(); }} data-qhow>{HOW().map(([k, l]) => <option value={k}>{l}</option>)}</select></td>
             <td><input class="input sm" value={x.key || ''} placeholder={t('paper.qb_key_ph')} aria-label={t('paper.qb_key_label')} maxLength={160} onInput={e => { x.key = e.currentTarget.value; re(); }} data-qkey data-raw /></td>
@@ -235,8 +235,8 @@ export function QuickBoxes({ onClose, onSaved }) {
         {c && W.qs.length > 0 && <div class="qbwords ibqlv" data-qblv><p><b>{t('paper.qb_lv_h')}</b> <span class="mute">{t('paper.qb_lv_sub')}</span></p>
           {Z.ibQzUsed(W, c).map(k => { const tb = Z.ibQzRaw(W, k) || [], max = Z.ibQzMax(W, c, k), x = S.ibCrit(c).find(y => y.k === k);
             return <div class="ibqrow" data-ibqk={k}><span><b data-raw>{k}</b> <span data-raw>{x.name}</span> <span class="mute">{t('paper.qb_lv_of', { n: fmtNum(max) })}</span></span>
-              <div class="qbwrow">{Array.from({ length: S.IB_TOP }, (_, i) => <label class="qbw"><b>{i + 1}</b><input class="input sm" type="number" min="0.5" step="0.5" value={tb[i] != null ? String(tb[i]) : ''} aria-label={t('paper.qb_lv_cell', { n: i + 1, k })}
-                onInput={e => { const v = e.currentTarget.value.trim() === '' ? null : Math.round(+e.currentTarget.value * 2) / 2; W.lvb ||= {}; const a = W.lvb[k] = Z.ibQzRaw(W, k) || Array(S.IB_TOP).fill(null); a[i] = v != null && v > 0 && v <= 1000 ? v : null; re(); }} data-ibql={i} /></label>)}</div>
+              <div class="qbwrow">{Array.from({ length: S.IB_TOP }, (_, i) => <label class="qbw"><b>{i + 1}</b><HeldInput class="input sm" type="number" min="0.5" step="0.5" value={tb[i] != null ? String(tb[i]) : ''} aria-label={t('paper.qb_lv_cell', { n: i + 1, k })}
+                onChange={e => { const v = e.currentTarget.value.trim() === '' ? null : Math.round(+e.currentTarget.value * 2) / 2; W.lvb ||= {}; const a = W.lvb[k] = Z.ibQzRaw(W, k) || Array(S.IB_TOP).fill(null); a[i] = v != null && v > 0 && v <= 1000 ? v : null; re(); }} data-ibql={i} /></label>)}</div>
               <span><button type="button" class="link" onClick={() => { (W.lvb ||= {})[k] = Z.ibQzEven(max); re(); }} data-ibqeven={k}>{t('paper.qb_lv_even')}</button> <button type="button" class="link" onClick={() => { if (W.lvb) delete W.lvb[k]; re(); }} data-ibqclear={k}>{t('paper.qb_lv_clear')}</button> <span class="mute" data-ibqsay>{lvNote(k)}</span></span></div>; })}</div>}
         {tops.length > 0 && <div class="qbwords" data-qbwords><p><b>{t('paper.qb_words_h')}</b> <span class="mute">{t('paper.qb_words_sub')}</span></p>
           {tops.map(top => { const w = W.words[String(top)] && W.words[String(top)].length === Z.qzSteps(top).length ? W.words[String(top)] : Z.qzStepWords(top, W.words);

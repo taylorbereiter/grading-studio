@@ -120,9 +120,10 @@ test('To do: a line edited at the side, moving quickly from box to box loses not
   await p.click('[data-td-row="tdC"] .tdmain');
   await p.waitForSelector('[data-td-pane="tdC"]');
   // the words, then straight to the note, then straight to the class: each saved, none over another
-  await p.click('[data-td-x]'); await p.evaluate(() => document.querySelector('[data-td-x]').select()); await p.keyboard.type('Order lab supplies for the friction lab');
+  // cleared and typed again: kept as typed until she leaves the box (a save per key put the old words back when the box was empty)
+  await p.click('[data-td-x]'); await p.evaluate(() => document.querySelector('[data-td-x]').select()); await p.keyboard.press('Backspace'); await p.keyboard.type('Order lab supplies for the friction lab');
   await p.click('[data-td-note]'); await p.keyboard.type('Ask for twenty spring scales');
-  await p.select('[data-td-cls]', 'c1');
+  await p.focus('[data-td-cls]'); await p.select('[data-td-cls]', 'c1');   // the class list takes the focus as a click would
   await p.waitForFunction(() => { const l = JSON.parse(localStorage.getItem('gs.lib')).todo.items.find(x => x.id === 'tdC'); return l && l.c === 'c1' && l.note && l.x.includes('friction'); }, { timeout: 10000 });
   let it = (await items(p)).find(x => x.id === 'tdC');
   assert.equal(it.x, 'Order lab supplies for the friction lab'); assert.equal(it.note, 'Ask for twenty spring scales');

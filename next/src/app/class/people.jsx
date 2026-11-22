@@ -276,7 +276,7 @@ function FillIds({ c, onClose }) {
     if ((B.infoOf(k, n)[f] || '') === v) return;
     change(t('class.u_details', { name: n }), l => { const x = classIn(l, c.id); if (x && x.names.includes(n)) B.setInfo(x, n, { [f]: v }); }, true).catch(e => console.error(e));
   };
-  const box = (n, f, lab, type) => <input class="input" type={type || 'text'} defaultValue={B.infoOf(k, n)[f] || ''} maxLength={120} aria-label={lab + ', ' + n} onChange={e => save(n, f, e.currentTarget)} data-fill={f} data-fill-who={n} />;
+  const box = (n, f, lab, type) => <input class="input" type={type || 'text'} defaultValue={B.infoOf(k, n)[f] || ''} maxLength={120} aria-label={lab + ', ' + n} onBlur={e => save(n, f, e.currentTarget)} data-fill={f} data-fill-who={n} />;
   return <Sheet open wide title={t('class.fill_ids_t', { name: c.name })} onClose={onClose} footer={<><span class="grow mute small">{t('class.fill_n', { n: k.names.filter(n => B.infoOf(k, n).id).length, of: k.names.length })}</span><Button variant="primary" onClick={onClose} data-fill-done>{t('class.done')}</Button></>}>
     <p class="mute small">{t('class.fill_say')}</p>
     <table class="filltab" data-filltab><thead><tr><th>#</th><th>{t('class.student')}</th><th>{t('class.student_id')}</th><th>{t('class.email')}</th><th>{t('class.last_year')}</th></tr></thead>
