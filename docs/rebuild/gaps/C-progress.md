@@ -36,3 +36,11 @@ same test opens the result in the current app. Commits are on the local branch `
 | A-014 | closed: Student details beside each roster name and each name with nothing turned in, opening the class People card (a folder not on the roster has none: the current app's link-a-folder card is not in the new app) | mark-out.test.js "A-014 A-015 A-016" | 00f08709 |
 | A-015 | closed: the class's school system link in the Grades footer, named as the teacher named the system | mark-out.test.js "A-014 A-015 A-016" | 00f08709 |
 | A-016 | closed (restored): each chip on the paper column (pick one, confirm, differs) opens the grade sheet, and the to-check line has Grade sheet | mark-out.test.js "A-014 A-015 A-016" | 00f08709 |
+| H-031 | closed: gradeMarksChanged wired (change.js marksChanged): a grade typed on the paper is read off it 250 ms later, a reading from a mark taken back goes at once | mark.test.js "H-031" | (H) |
+| H-033 | closed: Picked up where you left off (n started), once per window visit (sessionStorage gs.pickedUp, as the current app), only on the marking screen | mark.test.js "H-033 H-036 H-060" | (H) |
+| H-036 | closed: the engines' toast hook says loadEdits' older-rubric note in the screen's words (mark.hl_lost); other engine notes stay quiet as before | mark.test.js "H-033 H-036 H-060" | (H) |
+| H-040 | closed: an undone setting step is named for what came back (lighting, Rubric setup, Marked as returned…), as swapStep's toast | mark-out.test.js "a paper returned from the new app…" | (H) |
+| H-041 | closed: Grade on their own already said '<name> is graded on their own now'; Mark and grade together now names the partners ('Marked and graded once with …'), names joined in the language | mark-group.test.js "group work…", "H-041" | (H) |
+| H-044 | closed: already done before this branch (editors.js storage listener reloads gcore bank); now proved with a second tab | mark-setup.test.js "H-065 H-044" | (H) |
+| H-060 | closed: the right-click menu closes on window blur (scroll already closed it) | mark.test.js "H-033 H-036 H-060" | (H) |
+| H-065 | closed: an open Rubric setup listens on the gs-bank channel and reads the bank again | mark-setup.test.js "H-065 H-044" | (H) |

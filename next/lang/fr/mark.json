@@ -271,5 +271,19 @@
   "other": "Ses {n} devoirs partent avec elle. Les corrections enregistrées restent dans ce navigateur."
  },
  "mark.cw_loose_say": "Devoirs sans classe. Faites-en glisser un sur une classe dans la barre latérale, ou utilisez « Déplacer vers… » dans son menu ⋯.",
- "mark.examples": "Exemples"
+ "mark.examples": "Exemples",
+ "mark.tn_title": "Notes tapées",
+ "mark.su_title": "Configurer la grille",
+ "mark.r_marked": "Marqué comme rendu",
+ "mark.r_unmarked": "Marqué comme non rendu",
+ "mark.rs_title": "À rescanner",
+ "mark.v_turn": "Pivoter",
+ "mark.picked_up": {
+  "one": "Repris là où vous en étiez ({n} élève commencé)",
+  "other": "Repris là où vous en étiez ({n} élèves commencés)"
+ },
+ "mark.hl_lost": {
+  "one": "Une copie surlignée d’une ancienne grille est gardée pour {n} élève, mais cette grille ne l’affiche pas. Les notes restent : vérifiez-les avec cette grille.",
+  "other": "Une copie surlignée d’une ancienne grille est gardée pour {n} élèves, mais cette grille ne l’affiche pas. Les notes restent : vérifiez-les avec cette grille."
+ }
 }

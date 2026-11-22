@@ -273,5 +273,19 @@
   "other": "Its {n} assignments go with it. Saved marks for those downloads stay in this browser."
  },
  "mark.cw_loose_say": "Assignments with no class. Drag one onto a class in the sidebar, or use Move to… in its ⋯ menu.",
- "mark.examples": "Examples"
+ "mark.examples": "Examples",
+ "mark.tn_title": "Typed notes",
+ "mark.su_title": "Rubric setup",
+ "mark.r_marked": "Marked as returned",
+ "mark.r_unmarked": "Marked as not returned",
+ "mark.rs_title": "Rescans",
+ "mark.v_turn": "Turn",
+ "mark.picked_up": {
+  "one": "Picked up where you left off ({n} student started)",
+  "other": "Picked up where you left off ({n} students started)"
+ },
+ "mark.hl_lost": {
+  "one": "A highlighted copy of an older rubric is kept for {n} student, but this rubric doesn’t show it. Their scores stay, so check them against this rubric.",
+  "other": "A highlighted copy of an older rubric is kept for {n} students, but this rubric doesn’t show it. Their scores stay, so check them against this rubric."
+ }
 }

@@ -273,5 +273,19 @@
   "other": "As {n} tarefas dela vão junto. As correções salvas ficam neste navegador."
  },
  "mark.cw_loose_say": "Tarefas sem turma. Arraste uma para uma turma na barra lateral ou use “Mover para…” no menu ⋯.",
- "mark.examples": "Exemplos"
+ "mark.examples": "Exemplos",
+ "mark.tn_title": "Anotações digitadas",
+ "mark.su_title": "Configurar rubrica",
+ "mark.r_marked": "Marcado como devolvido",
+ "mark.r_unmarked": "Marcado como não devolvido",
+ "mark.rs_title": "Escanear de novo",
+ "mark.v_turn": "Girar",
+ "mark.picked_up": {
+  "one": "Continuando de onde parou ({n} aluno começado)",
+  "other": "Continuando de onde parou ({n} alunos começados)"
+ },
+ "mark.hl_lost": {
+  "one": "Uma cópia destacada de uma rubrica antiga está guardada para {n} aluno, mas esta rubrica não a mostra. As notas ficam; confira-as com esta rubrica.",
+  "other": "Uma cópia destacada de uma rubrica antiga está guardada para {n} alunos, mas esta rubrica não a mostra. As notas ficam; confira-as com esta rubrica."
+ }
 }

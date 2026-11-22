@@ -13,6 +13,7 @@ import { fmtTime } from '../../engines/gmedia.js';
 import { t } from '../../i18n/t.js';
 import { frameNow } from './frame.js';
 import * as C from './change.js';
+import './lines.js';
 import './setup-lines.js';
 import './paper-lines.js';
 import './video-lines.js';
@@ -188,7 +189,7 @@ export function NotesPart({ st }) {
   const nOn = openN || tnHas(st), tOn = !hasVid && (openT || N.spClockMs(N.spClockOf(st)) > 0);
   if (!nOn && !tOn) return null;
   return <div class="mk-notes">
-    {nOn && <><button type="button" class="mk-disc" aria-expanded="true" onClick={() => { openN = false; again(n => n + 1); }} data-tnopen>{t('setup.tn_title')}</button>
+    {nOn && <><button type="button" class="mk-disc" aria-expanded="true" onClick={() => { openN = false; again(n => n + 1); }} data-tnopen>{t('mark.tn_title')}</button>
       <TypedNotes st={st} /></>}
     {tOn && <><button type="button" class="mk-disc" aria-expanded="true" onClick={() => { openT = false; again(n => n + 1); }} data-tmopen>{t('setup.tm_title')}</button>
       <Timer st={st} /></>}

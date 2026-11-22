@@ -419,7 +419,7 @@ export function Rescans({ onClose, onGo }) {
   const order = [...by.keys()].sort((a, b) => a - b);
   const line = i => shownName(bb.students[i], i) + ': ' + by.get(i).map(x => t('setup.rs_line', { n: x.p + 1, file: C.shown(x.st, x.f.name) })).join(', ');
   const copy = () => copyText(order.map(line).join('\n')).then(ok => toast(t(ok ? 'setup.rs_copied' : 'copy.failed')));
-  return <Dialog open title={all.length ? t('mark.rs_title_n', { n: by.size }) : t('setup.rs_title')} onClose={onClose}
+  return <Dialog open title={all.length ? t('mark.rs_title_n', { n: by.size }) : t('mark.rs_title')} onClose={onClose}
     actions={<>{all.length > 0 && <Button onClick={copy} data-rscopy>{t('setup.rs_copy')}</Button>}<Button onClick={onClose}>{t('setup.s_close')}</Button></>}>
     {all.length ? <><p class="mute">{t('setup.rs_text')}</p>
       <ul class="mk-rslist">{order.map(i => <li><button class="mk-rsrow" onClick={() => { onClose(); onGo(i); }} data-rsgo={i}><span data-raw>{shownName(bb.students[i], i)}</span><span class="mute">{by.get(i).map(x => t('setup.rs_p', { n: x.p + 1 })).join(', ')}</span></button></li>)}</ul></>

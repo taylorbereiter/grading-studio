@@ -102,9 +102,10 @@ test('group work: Group work… gives a partner a copy and makes a group, the ba
   await p.waitForFunction(a => { const tn = window.__mark.state().batch.students[0].grade.tn; return tn && tn.l.some(x => x.s === 'Only for her' && x.o === a); }, { timeout: 10000 }, aria);
   const bare = gs => gs.map(({ k, p, own }) => ({ k, p, own })), own = bare(await groups(p));
 
-  // Grade on their own: at once, with Undo
+  // Grade on their own: at once, with Undo, and the toast says so (H-041, src/groups.js groupLeave)
   await p.click('[data-grpout]');
   await p.waitForFunction(() => !(window.__mark.state().batch.groups || []).length);
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast')].some(e => / is graded on their own now/.test(e.textContent)), { timeout: 10000 });
   await p.waitForFunction(() => !document.querySelector('[data-grpband]'));
   await p.waitForSelector('[data-undo]');
   await p.click('[data-undo]');
@@ -223,6 +224,36 @@ test('D-037: Add, A video with a partner ticked: the partner gets the video and 
   await m.evaluate(id => window.__gs.reopenKept(id), id);
   await m.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
   assert.deepEqual(await m.evaluate(() => JSON.parse(JSON.stringify(window.__gs.state().batch.groups || []))), made);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// src/groups.js groupFromSplit: two partners split by a rescan that found each other's names, put back as one group from the band;
+// the toast names who they are graded with, and one Undo takes it back (audit H-041).
+test('H-041: Mark and grade together again: one group from a split, the toast names the partner, Undo takes it back', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard());
+  await p.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-added', 1); r.onupgradeneeded = () => r.result.createObjectStore('files'); r.onsuccess = () => { r.result.close(); res(); }; }));
+  const z = path.join(dir, 'Speech2.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  // each paper's rescan found the other's name (f.sc[page].w), as a split group's papers carry
+  await p.evaluate(() => { const [a, b] = window.__mark.state().batch.students; a.files[0].sc = { 0: { w: [b.key] } }; b.files[0].sc = { 0: { w: [a.key] } }; });
+  await p.click('.mk-row[data-st="1"]'); await p.waitForFunction(() => window.__mark.state().cur === 1 && window.__mark.ready, { timeout: 30000 });
+  await p.click('.mk-row[data-st="0"]'); await p.waitForFunction(() => window.__mark.state().cur === 0 && window.__mark.ready, { timeout: 30000 });
+  await p.waitForSelector('[data-grpjoin]', { timeout: 30000 });
+  await p.click('[data-grpjoin]');
+  await p.waitForFunction(() => (window.__mark.state().batch.groups || []).length === 1, { timeout: 10000 });
+  const bram = await p.evaluate(() => window.__mark.state().batch.students[1].key);
+  await p.waitForFunction(b => [...document.querySelectorAll('.toast')].some(e => e.textContent.includes('Marked and graded once with ' + b)), { timeout: 10000 }, bram);
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForFunction(() => !(window.__mark.state().batch.groups || []).length, { timeout: 10000 });
   assert.deepEqual(errors, []);
   await ctx.close();
 });

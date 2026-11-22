@@ -43,7 +43,7 @@ export function GroupBand({ st }) {
   if (!sm.length) return null;
   return <div class="mk-grp" data-grpband>
     <b>{t('setup.gw_title')}</b><span>{t('setup.gw_split')} <span data-raw>{namesOf(sm.map(o => o.s))}</span>{t('setup.gw_split_own')}</span><span class="grow" />
-    <Button size="sm" variant="quiet" title={t('setup.gw_join_tip')} onClick={() => { C.groupJoinSplit(st); toast(t('setup.gw_joined'), { undo: C.undo }); }} data-grpjoin>{t('setup.gw_join')}</Button>
+    <Button size="sm" variant="quiet" title={t('setup.gw_join_tip')} onClick={() => { C.groupJoinSplit(st); toast(t('setup.gw_joined', { names: C.namesOf(G.groupMates(st)) }), { undo: C.undo }); }} data-grpjoin>{t('setup.gw_join')}</Button>
   </div>;
 }
 

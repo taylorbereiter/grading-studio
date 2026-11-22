@@ -93,7 +93,7 @@ function moreItems(st, cur, { onSolo, onSetup, open, R }) {
     ...(onSolo ? [{ id: 'solo', label: t('mark.solo_start'), sub: t('mark.solo_tip'), icon: 'user', kbd: 'I', onSelect: onSolo }] : []),
     { id: 'rd', label: t('top.rd_menu'), sub: R && R.count(st) ? t('top.rd_menu_n', { n: R.count(st) }) : undefined, icon: 'book', onSelect: () => readingsPart().then(() => open({ k: 'rd' }), e => console.error(e)) },
     ...(ex ? [{ id: 'ex', label: t('setup.f_example'), icon: 'spark', onSelect: () => PARTS.exsave().then(m => m.useExample(st), e => console.error(e)) }] : []),
-    { id: 'tn', label: np ? t('top.pm_notes') : t('setup.tn_title'), icon: 'note', onSelect: () => PARTS.typed().then(m => m.typeNotes(), e => console.error(e)) },
+    { id: 'tn', label: np ? t('top.pm_notes') : t('mark.tn_title'), icon: 'note', onSelect: () => PARTS.typed().then(m => m.typeNotes(), e => console.error(e)) },
     ...(vid ? [] : [{ id: 'tm', label: t('setup.tm_title'), icon: 'clock', onSelect: () => PARTS.typed().then(m => m.timerOpen(), e => console.error(e)) }]),
     ...(!fm && !noScore(st) && g.total != null && !ibSetup() ? [{ id: 'stamp', label: t('mark.stamp_tip'), icon: 'stamp', onSelect: () => M().then(m => { if (!state().pages.length) return toast(t('mark.stamp_open')); if (m.scoreStamp(null)) toast(t('mark.stamp_where')); }) }] : []),
     ...(st.files.length ? [{ id: 'out', label: anonOn() ? t('top.pm_export_anon') : t('top.pm_export', { name }), icon: 'download', onSelect: () => exportNow(st, name) }] : []),

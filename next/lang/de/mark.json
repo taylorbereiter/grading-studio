@@ -272,5 +272,19 @@
   "other": "Die {n} Aufgaben darin werden mitgelöscht. Gespeicherte Korrekturen bleiben in diesem Browser."
  },
  "mark.cw_loose_say": "Aufgaben ohne Klasse. Ziehen Sie eine auf eine Klasse in der Seitenleiste oder nutzen Sie „Verschieben nach…“ in ihrem ⋯-Menü.",
- "mark.examples": "Beispiele"
+ "mark.examples": "Beispiele",
+ "mark.tn_title": "Getippte Notizen",
+ "mark.su_title": "Raster einrichten",
+ "mark.r_marked": "Als zurückgegeben markiert",
+ "mark.r_unmarked": "Als nicht zurückgegeben markiert",
+ "mark.rs_title": "Neu zu scannen",
+ "mark.v_turn": "Drehen",
+ "mark.picked_up": {
+  "one": "Weiter, wo du aufgehört hast ({n} Schüler begonnen)",
+  "other": "Weiter, wo du aufgehört hast ({n} Schüler begonnen)"
+ },
+ "mark.hl_lost": {
+  "one": "Für {n} Schüler ist eine markierte Kopie eines älteren Rasters gespeichert, die dieses Raster nicht zeigt. Die Bewertungen bleiben; prüfe sie mit diesem Raster.",
+  "other": "Für {n} Schüler ist eine markierte Kopie eines älteren Rasters gespeichert, die dieses Raster nicht zeigt. Die Bewertungen bleiben; prüfe sie mit diesem Raster."
+ }
 }

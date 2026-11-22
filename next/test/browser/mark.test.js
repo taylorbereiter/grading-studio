@@ -746,3 +746,82 @@ test('a failed read of saved work (audit H-025): tried once more and opened with
   assert.deepEqual(errors.filter(e => !/work read blocked/.test(e)), []);
   await ctx.close();
 });
+
+// src/app/paper.js gradeMarksChanged: a grade typed on the paper is read again a moment later and becomes the paper's grade; taken
+// back, its reading goes at once. The current app reads the same grade from the same mark.
+test('H-031: a grade typed on the paper is read off it a moment later, and undo takes the reading away; the current app reads the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(await standardFiles()));
+  await made.evaluate(() => window.__gs.saveNow()); await settle(made);
+  const id = await made.evaluate(() => window.__gs.state().batch.id);
+  await made.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready && window.__mark.state().pages.length, { timeout: 60000 });
+  await p.waitForSelector('[data-repx]', { timeout: 15000 }).then(() => p.click('[data-repx]'), () => {});
+  const cur = await p.evaluate(() => window.__mark.state().cur);
+  const reads = `st => st.files.flatMap(f => ((f.scan && f.scan.found) || []).filter(g => g.mark).map(g => g.page + ' ' + g.full))`;
+  const found = () => p.evaluate((i, reads) => eval(reads)(window.__mark.state().batch.students[i]), cur, reads);
+  assert.deepEqual(await found(), [], 'nothing written on the paper yet');
+  await p.keyboard.press('t'); { const q = await nextAt(p, 0, 360, 90); await p.mouse.click(q.x, q.y); }
+  await p.waitForSelector('.mk-paper textarea.ed'); await p.keyboard.type('7/10'); await p.keyboard.press('Enter');
+  await p.waitForFunction((i, reads) => eval(reads)(window.__mark.state().batch.students[i]).length, { timeout: 30000 }, cur, reads);
+  const said = await found();
+  await p.evaluate(() => window.__mark.saved());
+  // the current app reads the same grade off the same mark
+  const m = await page(ctx, []);
+  await m.goto(srv.url); await appReady(m);
+  await m.evaluate(id => window.__gs.reopenKept(id), id);
+  await m.waitForFunction(() => window.__gs.state().batch, { timeout: 60000 });
+  await m.evaluate(() => window.__gs.scanAll());
+  assert.deepEqual(said, ['0 7/10']);
+  assert.deepEqual(await m.evaluate((i, reads) => eval(reads)(window.__gs.state().batch.students[i]), cur, reads), said);
+  await m.close();
+  // taken back: the reading goes
+  await p.bringToFront();
+  await p.keyboard.press('Escape');
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForFunction((i, reads) => !eval(reads)(window.__mark.state().batch.students[i]).length, { timeout: 30000 }, cur, reads);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// src/app/keep.js pickedUpNew: opening an assignment with work on it says so once in each visit to the window; the engines' note about
+// highlights kept on an older rubric (gopen loadEdits) is said in the screen's words (audit H-033, H-036).
+test('H-033 H-036 H-060: Picked up where you left off, once a visit; the right-click menu closes when the window loses focus; the note about an older rubric\'s highlights is said', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const made = await page(ctx, errors);
+  await made.goto(srv.url + 'blank'); await plant(made, gradingSeed());
+  await made.goto(srv.url); await appReady(made);
+  await openZip(made, zipOf(await standardFiles()));
+  await made.evaluate(() => { const G = window.__gs, s = G.state(); s.batch.students[0].grade.comment = 'Started on this one.'; G.saveNow(); }); await settle(made);
+  const { id, n } = await made.evaluate(() => { const s = window.__gs.state(), w = JSON.parse(localStorage.getItem(s.batch.id)); return { id: s.batch.id, n: s.batch.students.filter(st => w.s[st.key]).length }; });
+  await made.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  const said = 'Picked up where you left off (' + n + (n === 1 ? ' student' : ' students') + ' started)';
+  await p.waitForFunction(w => [...document.querySelectorAll('.toast')].some(e => e.textContent.includes(w)), { timeout: 60000 }, said);
+  // once in each visit: opened again in this window, nothing is said
+  await p.reload(); await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  await p.evaluate(() => new Promise(r => setTimeout(r, 800)));
+  assert.ok(!(await p.evaluate(w => [...document.querySelectorAll('.toast')].some(e => e.textContent.includes(w)), said)), 'said once a visit');
+  // the right-click menu closes when the window loses focus, and on a scroll (H-060, src/stamps.js)
+  await p.waitForSelector('[data-repx]', { timeout: 5000 }).then(() => p.click('[data-repx]'), () => {});
+  { const q = await nextAt(p, 0, 450, 700); await p.mouse.click(q.x, q.y, { button: 'right' }); }
+  await p.waitForSelector('.mk-menu');
+  await p.evaluate(() => window.dispatchEvent(new Event('blur')));
+  await p.waitForFunction(() => !document.querySelector('.mk-menu'), { timeout: 5000 });
+  { const q = await nextAt(p, 0, 450, 700); await p.mouse.click(q.x, q.y, { button: 'right' }); }
+  await p.waitForSelector('.mk-menu');
+  await p.evaluate(() => document.dispatchEvent(new Event('scroll')));
+  await p.waitForFunction(() => !document.querySelector('.mk-menu'), { timeout: 5000 });
+  // the engines' note, as loadEdits gives it, in the screen's words; other engine notes stay quiet
+  await p.evaluate(() => { const s = window.__mark.state(); s.toast('A highlighted copy of an older rubric is kept for 2 students, but this rubric doesn’t show it. Their scores stay, so check them against this rubric.', 12000); s.toast('Some other note'); });
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast')].some(e => /kept for 2 students, but this rubric/.test(e.textContent)), { timeout: 10000 });
+  assert.ok(!(await p.evaluate(() => [...document.querySelectorAll('.toast')].some(e => /Some other note/.test(e.textContent)))));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

@@ -3,7 +3,6 @@
 // marks, for Bring back), and one put in another's place. What each does to the student's files, pages and the download's removed
 // list is the current app's; a file she added is kept in this browser through students/write.js keepAdded. Each change is one
 // step on the one undo list. Loaded as a part of its own (router.js PARTS.change).
-// Not here yet: a group's shared paper and a partner's video changing with it (sameCopies) comes with group work.
 import { state, noScore, use, tryGrade, roundPct, maxPoints } from '../../engines/gcore.js';
 import * as D from '../../engines/gdraw.js';
 import * as E from '../../engines/gopen.js';
@@ -13,6 +12,7 @@ import * as V from '../../engines/gmedia.js';
 import * as G from '../../engines/ggroup.js';
 import { set as setState } from '../../engines/gcore.js';
 import { PARTS } from '../router.js';
+import { getLocale } from '../../i18n/t.js';
 import { libs } from './paper.js';
 import { prefs } from '../../students/prefs.js';
 import { heicSay } from './heic.js';
@@ -21,7 +21,7 @@ const prefsGet = k => !!prefs.get(k, false);
 
 let M = null, show = () => {};
 // m: the marking code (mark/marking.js); open(i, path): show this student (and file) on screen.
-export function wire(m, open) { M = m; show = open; use({ rescanFile: rescan }); }
+export function wire(m, open) { M = m; show = open; use({ rescanFile: rescan, gradeMarksChanged: marksChanged }); }
 const b = () => state().batch;
 const tell = () => M && M.changedNow();
 const step = (back, again, what) => K.pushUndo({ act: { back, again }, what });
@@ -142,7 +142,8 @@ export function sameCopies(st, f) {
   return [];
 }
 export const groupPaperOf = (st, f) => { const g = groupOfSt(st); return !!(g && g.p && g.p[st.key] === f.path); };
-export const namesOf = list => G.groupNames(list);
+// partners' names joined in the language (ggroup groupNames joins them with an English "and")
+export const namesOf = list => { const a = list.map(x => D.shownName(x, b().students.indexOf(x))); try { return new Intl.ListFormat(getLocale(), { type: 'conjunction' }).format(a); } catch { return a.join(', '); } };
 // The new link, a video file (kept in this browser where the current app keeps them) or a video picked in Drive, as the file that
 // takes a video link's place, named as the old link (openReplace named, vkPut, drvBytes).
 export function linkFile(old, url) { return new File([V.linkBytes(url)], V.linkTitle(old) + '.url'); }
@@ -308,10 +309,29 @@ export async function turnDoc(st, d) {
   const by = new Map(); for (const [path, p] of d.pages) { if (!by.has(path)) by.set(path, []); by.get(path).push(p); }
   for (const [path, list] of by) await turnPages(D.fileByPath(st, path), list, 1);
 }
+// gradeMarksChanged (src/app/paper.js): a grade lives in the mark that holds it. When those marks change, a reading taken from a mark
+// that is gone goes this moment, and the file is read again a moment later for the new one. Pen strokes and plain comments change nothing.
+const rereads = new Map();
+let rereadQ = Promise.resolve();
+const gradeMarks = (X, f) => Object.entries(f.marks || {}).flatMap(([p, a]) => D.marksMine(a, f).filter(m => !m.qza && (m.t === 'text' || m.t === 'note' || (m.t === 'stamp' && m.k === 'score')) && m.text && X.parseGrade(m.t === 'stamp' ? D.stampScore(m.text) : m.text, false)).map(m => p + '|' + m.text)).sort();
+function marksChanged(f) {
+  const bb = b(); if (!bb || !f || !D.viewable(f)) return;
+  PARTS.outEngine().then(({ X }) => {
+    if (b() !== bb) return;
+    const keys = gradeMarks(X, f); if (keys.join('\0') === ((f.scan && f.scan.marksSig) || '')) return;
+    const st = bb.students.find(x => x.files.includes(f));
+    if (st && f.scan && f.scan.found) {
+      const stale = g => g.mark && !keys.includes(g.page + '|' + g.full);
+      if (f.scan.found.some(stale)) { f.scan.found = f.scan.found.filter(g => !stale(g)); f.scan.shots = f.scan.shots.filter(g => !stale(g)); state().refound(st); state().renderList(); }
+    }
+    clearTimeout(rereads.get(f));
+    rereads.set(f, setTimeout(() => { rereads.delete(f); rereadQ = rereadQ.then(async () => { const was = f.scan; await rescan(f); if (b() === bb && f.scan && f.scan !== was) marksChanged(f); }).catch(e => console.error(e)); }, 250));
+  }, e => console.error(e));
+}
 // rescanFile: Kami notes and typed grades found again on the turned page.
 async function rescan(f) {
   const bb = b(), st = bb && bb.students.find(s => s.files.includes(f)); if (!st || !D.viewable(f)) return;
-  const X = (await PARTS.outEngine()).X;
+  const OE = await PARTS.outEngine(), X = OE.X; await OE.load();   // pdf.js ready before a page is read
   try { f.scan = await X.scanFile(f, f.hand || state().setup.spot || null); if (f.hand) f.scan.hand = true; f.kami = f.scan.kami; } catch (e) { console.error(e); return; }
   state().refound(st); state().renderList(); state().gradeShown(st);
   for (const pg of state().pages) if (pg.file === f) { pg.extra = (f.kami && f.kami[pg.idx] && f.kami[pg.idx].notes) || []; D.draw(pg); }

@@ -369,3 +369,35 @@ test('an MYP class: the band asks for this task\'s criteria, the ticked ones bec
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// Another window or the current app changing the rubric bank (src/rubrics.js bankChan 'gs-bank') redraws an open Rubric setup, and
+// saved comments changed in another tab (src/saving.js storage gs.bank) are the ones this screen uses (audit H-065, H-044).
+test('H-065 H-044: a rubric saved in another window shows in the open Rubric setup at once; saved comments changed in another tab are the ones used here', async () => {
+  const { plantPlan } = require('./planseed.js');
+  const errors = [], ctx = await browser.createBrowserContext();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'blank'); await plant(p, withCard()); await plantPlan(p);
+  const z = path.join(dir, 'Speech4.zip'); fs.writeFileSync(z, await twoZip());
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.click('[data-bring-for="i9"]');
+  await p.waitForSelector('.pop [role="menuitem"]');
+  const [chooser] = await Promise.all([p.waitForFileChooser(), p.click('.pop [role="menuitem"]')]);
+  await chooser.accept([z]);
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await setupDo(p, 'Rubric setup');
+  await p.waitForSelector('dialog[open] [data-subuse="R1"]', { timeout: 10000 });
+  assert.equal(await p.$('dialog[open] [data-subuse="R9"]'), null);
+  // another window saves a rubric to the bank and says so on the channel, as the current app does
+  const q = await page(ctx, errors);
+  await q.goto(srv.url + 'blank');
+  await q.evaluate(() => new Promise((res, rej) => { const r = indexedDB.open('gs-lessons'); r.onerror = () => rej(r.error); r.onsuccess = () => { const tx = r.result.transaction('kv', 'readwrite'), o = tx.objectStore('kv'), g = o.get('bank');
+    g.onsuccess = () => { const b = g.result, one = b.rubrics.find(x => x.id === 'R1'); b.rubrics.push({ ...one, id: 'R9', name: 'Lab rubric' }); o.put(b, 'bank'); }; tx.oncomplete = () => { r.result.close(); const ch = new BroadcastChannel('gs-bank'); ch.postMessage('changed'); ch.close(); res(); }; }; }));
+  await p.waitForSelector('dialog[open] [data-subuse="R9"]', { timeout: 10000 });
+  // saved comments changed in that tab
+  await q.evaluate(() => localStorage.setItem('gs.bank', JSON.stringify(['From the other tab.'])));
+  await p.waitForFunction(() => JSON.stringify(window.__mark.state().bank) === JSON.stringify(['From the other tab.']), { timeout: 10000 });
+  await q.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

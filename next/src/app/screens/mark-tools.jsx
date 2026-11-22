@@ -69,8 +69,9 @@ function StampMenu() {
     const r = el.getBoundingClientRect(); el.style.left = Math.max(8, Math.min(m.cx, innerWidth - r.width - 8)) + 'px'; el.style.top = Math.max(8, Math.min(m.cy, innerHeight - r.height - 8)) + 'px';
     el.focus({ preventScroll: true });
     const away = e => { if (!el.contains(e.target) && !(e.target.closest && e.target.closest('.mk-fly'))) M.closeMenu(); };
-    document.addEventListener('pointerdown', away, true); document.addEventListener('scroll', M.closeMenu, true);
-    return () => { document.removeEventListener('pointerdown', away, true); document.removeEventListener('scroll', M.closeMenu, true); };
+    // and when the window loses focus, as src/stamps.js closes it on blur and scroll
+    document.addEventListener('pointerdown', away, true); document.addEventListener('scroll', M.closeMenu, true); window.addEventListener('blur', M.closeMenu);
+    return () => { document.removeEventListener('pointerdown', away, true); document.removeEventListener('scroll', M.closeMenu, true); window.removeEventListener('blur', M.closeMenu); };
   }, [m]);
   if (!m) return null;
   const s = state(), color = COLORS[s.inkColor], on = m.on, u = m.word;

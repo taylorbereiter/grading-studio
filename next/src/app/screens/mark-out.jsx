@@ -233,8 +233,8 @@ export function Return({ E, cur, onOpen, onCovers, onShare, onSheet, rescans = [
   };
   const sent = b.students.map((x, i) => ({ x, i })).filter(y => y.x.grade.sent).sort((a, c) => c.x.grade.sent - a.x.grade.sent);
   const state1 = <p class="rtdone" id="rtState">{r.ok
-    ? <><span>✓ {t('setup.r_returned', { when: when(r.ok) })}</span> <Button size="sm" variant="quiet" data-unreturn onClick={() => { E.marking().markReturned(false); toast(t('setup.r_unmarked')); redo(); }}>{t('setup.r_unmark')}</Button></>
-    : <>{r.t ? <span>{t('setup.r_exported', { when: when(r.t), n: r.n || 0 })}</span> : null} <Button size="sm" data-doreturn onClick={() => { E.marking().markReturned(true); toast(t('setup.r_marked')); redo(); }}>{t('setup.r_mark')}</Button></>}</p>;
+    ? <><span>✓ {t('setup.r_returned', { when: when(r.ok) })}</span> <Button size="sm" variant="quiet" data-unreturn onClick={() => { E.marking().markReturned(false); toast(t('mark.r_unmarked')); redo(); }}>{t('setup.r_unmark')}</Button></>
+    : <>{r.t ? <span>{t('setup.r_exported', { when: when(r.t), n: r.n || 0 })}</span> : null} <Button size="sm" data-doreturn onClick={() => { E.marking().markReturned(true); toast(t('mark.r_marked')); redo(); }}>{t('setup.r_mark')}</Button></>}</p>;
   const earlyBox = p.early.length > 0 && <><Checkbox label={t('setup.r_early', { n: p.early.length })} checked={o.early} onChange={v => opt('early', v)} />{RC && <RC.Early early={p.early} on={o.early} />}</>;
   const checkBox = RC && <RC.Check E={E} onOpen={onOpen} onSheet={() => { sheetNext = true; onSheet(); }} />;
   return <section class="mk-out mk-ret" aria-labelledby="mk-r-h">

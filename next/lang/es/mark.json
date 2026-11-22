@@ -273,5 +273,19 @@
   "other": "Sus {n} tareas se eliminan con ella. Las correcciones guardadas se quedan en este navegador."
  },
  "mark.cw_loose_say": "Tareas sin clase. Arrastra una a una clase de la barra lateral o usa «Mover a…» en su menú ⋯.",
- "mark.examples": "Ejemplos"
+ "mark.examples": "Ejemplos",
+ "mark.tn_title": "Notas escritas",
+ "mark.su_title": "Configurar rúbrica",
+ "mark.r_marked": "Marcado como devuelto",
+ "mark.r_unmarked": "Marcado como no devuelto",
+ "mark.rs_title": "Reescaneos",
+ "mark.v_turn": "Girar",
+ "mark.picked_up": {
+  "one": "Sigues donde lo dejaste ({n} alumno empezado)",
+  "other": "Sigues donde lo dejaste ({n} alumnos empezados)"
+ },
+ "mark.hl_lost": {
+  "one": "Se guarda una copia resaltada de una rúbrica anterior para {n} alumno, pero esta rúbrica no la muestra. Sus notas se mantienen; revísalas con esta rúbrica.",
+  "other": "Se guarda una copia resaltada de una rúbrica anterior para {n} alumnos, pero esta rúbrica no la muestra. Sus notas se mantienen; revísalas con esta rúbrica."
+ }
 }

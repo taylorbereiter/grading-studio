@@ -13,6 +13,7 @@ import { editText, openNote } from './editors.js';
 import { renderPage } from './paper.js';
 import * as undoList from '../../services/undo.js';
 import { t } from '../../i18n/t.js';
+import { toast as uiToast } from '../../ui/index.js';
 import './lines.js';
 import '../engine-lines.js';   // the engines' own words (feedback page, typed notes' bar, Quick mark) in the language
 import { setOpenFlush } from '../openwork.js';
@@ -46,7 +47,9 @@ export const commit = () => K.commitEditors();
 // the app's list whose undo and redo run the lifted undo and redo, so the two lists move together.
 let stepping = false;
 const entries = [];
-const LABEL = u => (u.grade ? t('mark.step_score') : u.file || u.group ? t('mark.step_marks') : t('mark.step_change'));
+// a setting may not show where it is, so its step is named for what comes back (src/app/paper.js swapStep: "Undone: lighting")
+const WHAT = { lighting: 'mark.l_title', setup: 'mark.su_title', 'marked as returned': 'mark.r_marked', 'marked as not returned': 'mark.r_unmarked', 'typed notes': 'mark.tn_title', 'rescan flag': 'mark.rs_title', 'video turn': 'mark.v_turn', clips: 'mark.cl_menu' };
+const LABEL = u => (WHAT[u.what] ? t(WHAT[u.what]) : u.grade ? t('mark.step_score') : u.file || u.group ? t('mark.step_marks') : t('mark.step_change'));
 function steps() {
   const a = [];
   const own = (fn) => () => { stepping = true; try { fn(); } finally { stepping = false; } tell(); };
@@ -231,6 +234,10 @@ function reach(pg) {
 // The page closing or reloading with a save still waiting (or a box still being typed in): saved at once, as the current app does.
 function onLeave() { if (!saveT && !state().activeEditor) return; leaving = true; try { K.commitEditors(); clearTimeout(saveT); saveT = null; K.saveNow(true); } finally { leaving = false; } }
 let leaveOn = false;
+// The engines' own notes, said in the language (they write English): only the ones the screen has a line for. The rest stay quiet,
+// since the screen says those things itself. gopen loadEdits: highlights kept on a rubric replaced under a new name (audit H-036).
+const ENGINE_SAY = [[/^A highlighted copy of an older rubric is kept for (\d+) student/, m => t('mark.hl_lost', { n: +m[1] })]];
+const engineSay = (s, ms) => { for (const [rx, say] of ENGINE_SAY) { const m = rx.exec(String(s)); if (m) { uiToast(say(m), { ms }); return; } } };
 export function startMarking({ toast, openStudent }) {
   if (!leaveOn) { leaveOn = true; addEventListener('pagehide', onLeave); addFlush(saveNowDone); }   // and saved before an update reloads the window
   // the save layer and its merge engine, ready before anything needs saving on the way out
@@ -241,7 +248,7 @@ export function startMarking({ toast, openStudent }) {
     undoStack: steps(), redoStack: [],
     saveSoon, writeWork, stampWork,
     renderTools: tell, renderList: tell, renderGrade: tell,
-    toast: () => {},   // the lifted code's own words are the current app's; the screen says what it needs in its own lines
+    toast: engineSay,   // the lifted code's own words are the current app's; the screen says what it needs in its own lines
     openStudent: i => openStudent && openStudent(i),
     renderPage: pg => pg.canvas && renderPage(pg, pg.s),
     editText, openNote,

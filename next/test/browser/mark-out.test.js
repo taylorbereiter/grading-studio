@@ -116,6 +116,12 @@ test('a paper returned from the new app is the paper the current app returns, an
   await p.waitForSelector('[data-doreturn]');
   await p.click('[data-doreturn]');
   await p.waitForSelector('[data-unreturn]');
+  // a setting taken back says what came back (H-040, src/app/paper.js swapStep), and Redo puts it again
+  await p.keyboard.down('Control'); await p.keyboard.press('z'); await p.keyboard.up('Control');
+  await p.waitForSelector('[data-doreturn]');
+  await p.waitForFunction(() => [...document.querySelectorAll('.toast')].some(e => /Undone: Marked as returned/.test(e.textContent)), { timeout: 10000 });
+  await p.keyboard.down('Control'); await p.keyboard.press('y'); await p.keyboard.up('Control');
+  await p.waitForSelector('[data-unreturn]');
   await p.evaluate(() => window.__mark.saved());
   const back = await p.evaluate(() => window.__mark.state().batch.returned);
   assert.ok(back && back.ok && back.t && back.n >= 1, 'exported and marked as returned');

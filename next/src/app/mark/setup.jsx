@@ -78,7 +78,12 @@ export function SetupDialog({ onClose }) {
   const file = useRef(null);
   const [bk, setBk] = useState(null), [fk, setFk] = useState('*'), [asking, setAsking] = useState('');
   const loadBank = () => readBank().then(setBk, e => { console.error(e); setBk({ rubrics: [], scales: [], units: [] }); });
-  useEffect(() => { loadBank(); return onSaved(e => { if ((e.kind === 'plan' && e.id === 'bank') || (e.kind === 'setting' && /^gs\.rubrics/.test(e.id))) loadBank(); }); }, []);   // Undo, or a change in another window
+  // Undo, a change here, or one in another window or the current app (its gs-bank channel, src/rubrics.js bankChan): read again
+  useEffect(() => {
+    loadBank(); const off = onSaved(e => { if ((e.kind === 'plan' && e.id === 'bank') || (e.kind === 'setting' && /^gs\.rubrics/.test(e.id))) loadBank(); });
+    let ch = null; try { ch = new BroadcastChannel('gs-bank'); ch.onmessage = () => loadBank(); } catch {}
+    return () => { off(); if (ch) ch.close(); };
+  }, []);
   const goals = S.goalList(), max = draftMax(d), rp = page === undefined ? d.rubricPage : page;
   const scale12 = !!(s.lib.me || { scale12: true }).scale12;
 
@@ -179,7 +184,7 @@ export function SetupDialog({ onClose }) {
   const topOpts = [...(top ? [] : [{ value: '', label: t('setup.su_each_own') }]), ...[...Array(TOP_MAX).keys()].map(k => ({ value: String(k + 1), label: String(k + 1) }))];
   const goalOpts = sel => [{ value: '', label: t('setup.su_no_goal') }, ...goals.map(g => ({ value: g.id, label: g.name })), ...(sel && !goals.some(g => g.id === sel) ? [{ value: sel, label: t('setup.su_goal_gone') }] : [])];
 
-  return <Dialog open title={t('setup.su_title')} onClose={onClose}
+  return <Dialog open title={t('mark.su_title')} onClose={onClose}
     actions={<><Button onClick={onClose} data-sucancel>{t('setup.su_cancel')}</Button><Button variant="primary" disabled={busy} onClick={save} data-susave>{t('setup.su_save')}</Button></>}>
     <div class="mk-su" data-setup>
       <Segmented label={t('setup.su_how')} value={d.mode} onChange={setMode} options={[{ value: 'points', label: t('setup.su_total') }, { value: 'rubric', label: t('setup.su_rows') }]} />
