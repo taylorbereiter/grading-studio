@@ -4,11 +4,14 @@
 // openExport, src/tabs.js returnSideHtml). E is mark/out.js, loaded by the marking screen with its libraries.
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useMemo } from 'preact/hooks';
-import { Button, Checkbox, Segmented, Icon, Progress, Card, EmptyState, toast } from '../../ui/index.js';
+import { Button, IconButton, Checkbox, Segmented, Icon, Progress, Card, EmptyState, toast } from '../../ui/index.js';
 import { copyText } from '../../services/clipboard.js';
 import { t } from '../../i18n/t.js';
 import { state, fmtNum, fmtPct, maxPoints, gradeOf } from '../../engines/gcore.js';
-import { shownName, anonOn } from '../../engines/gdraw.js';
+import { shownName, anonOn, namesNow } from '../../engines/gdraw.js';
+import { library } from '../../students/index.js';
+import { classLink } from '../../students/classlink.js';
+import '../mark/top-lines.js';
 import '../mark/lines.js';
 import '../mark/setup-lines.js';
 import '../mark/paper-lines.js';
@@ -23,6 +26,14 @@ const copyCell = v => copy(v).then(() => toast(v ? t('setup.copied', { text: cut
 const Cell = ({ v, children, cls = '' }) => <td class={cls}><button type="button" class="cp" data-copy={v} title={cls === "cm" ? v : undefined} onClick={() => copyCell(v)}>{children == null ? v : children}</button></td>;
 
 /* ---------------- Grades ---------------- */
+// Student details beside a name (src/people.js whoBtn, cardForStudent): the class People page's card for that roster student
+const rosterOf = (c, st) => (!c ? null : st.gap && c.names.includes(st.key) ? st.key : (namesNow().roster.get(st.key) || [])[0] || null);
+const Who = ({ n, onWho }) => (n && !anonOn() ? <IconButton icon="info" size="sm" label={t('top.pm_details') + ': ' + n} onClick={() => onWho(n)} data-who={n} /> : null);
+function WhoSheet({ cid, n, onClose }) {
+  const [P, setP] = useState(null), c = ((library.json(null) || {}).classes || []).find(k => String(k.id) === String(cid));
+  useEffect(() => { PARTS.people().then(setP, e => console.error(e)); }, []);
+  return P && c ? <P.DetailsSheet c={c} n={n} onClose={onClose} /> : null;
+}
 // Return's check sends a grade to confirm here, on the grade sheet
 let sheetNext = false;
 export function Grades({ E, onOpen, sub, view: ask }) {
@@ -31,7 +42,8 @@ export function Grades({ E, onOpen, sub, view: ask }) {
   const banded = !ib && !!(E.X.meGrade() || {}).bands, rows = E.rows();
   const save = (name, blob) => E.saveFile(name, blob);
   const copyAll = async k => { const r = E.copyText(k); await copy(r.text); toast(t('setup.copied_rows', { n: r.n })); };
-  const [view, setView] = useState(() => (sheetNext ? ((sheetNext = false), 'sheet') : sub === 'sheet' ? 'sheet' : 'table')), [SH, setSH] = useState(null), [only, setOnly] = useState(false);
+  const [view, setView] = useState(() => (sheetNext ? ((sheetNext = false), 'sheet') : sub === 'sheet' ? 'sheet' : 'table')), [SH, setSH] = useState(null), [only, setOnly] = useState(false), [who, setWho] = useState(null);
+  const sys = String(((s.lib || {}).me || {}).sys || '').trim(), mb = cls ? classLink(cls) : '';
   // Grade sheet from Find (screens/mark.jsx)
   useEffect(() => { if (ask && (ask.v === 'sheet' || ask.v === 'table')) setView(ask.v); }, [ask]);
   // a paper whose own grade differs from hers, has more than one grade, or a doubtful one (src/tabs.js glPaperOf): how many, and just those
@@ -48,24 +60,26 @@ export function Grades({ E, onOpen, sub, view: ask }) {
       {cls && <Segmented label={t('setup.g_order')} size="sm" value={E.order()} onChange={v => { E.setOrder(v); tick(n => n + 1); }}
         options={[{ value: 'folder', label: t('setup.g_folder') }, { value: 'roster', label: t('setup.g_roster', { name: cls.name }) }]} />}</header>
     <p class="mute help">{t('setup.g_help')}</p>
-    {nCheck > 0 && <p class="gs-check" data-gcheck>{t('paper.g_check', { n: nCheck })} <button type="button" class="link" onClick={() => setOnly(!only)} data-gonly>{t(only ? 'paper.g_check_all' : 'paper.g_check_only')}</button></p>}
+    {nCheck > 0 && <p class="gs-check" data-gcheck>{t('paper.g_check', { n: nCheck })} <button type="button" class="link" onClick={() => setOnly(!only)} data-gonly>{t(only ? 'paper.g_check_all' : 'paper.g_check_only')}</button> <button type="button" class="link" onClick={() => setView('sheet')} data-gsheet>{t('paper.gs_sheet')}</button></p>}
     <div class="tbl gl"><table id="glTable"><thead><tr><th>{t('setup.g_num')}</th><th>{t('setup.g_student')}</th>
       {rub && su.criteria.map(c => <th data-raw>{c}</th>)}
       {ib ? <th>{t('setup.g_status')}</th> : <><th>{t('setup.g_total', { n: maxPoints() })}</th><th>{t('setup.g_pct')}</th></>}
       {banded && <th>{t('setup.g_band')}</th>}<th title={t('setup.g_paper_tip')}>{t('setup.g_paper')}</th><th>{t('setup.g_comment')}</th></tr></thead>
       <tbody>{rows.filter(r => !only || !nCheck || check(r)).map(r => r.missing
-        ? <tr class="gap"><td class="n">{r.n}</td><td class="nm"><span data-raw>{r.missing}</span> <span class="mute">{t('setup.g_no_folder')}</span></td>
+        ? <tr class="gap"><td class="n">{r.n}</td><td class="nm"><span data-raw>{r.missing}</span><Who n={r.missing} onWho={setWho} /> <span class="mute">{t('setup.g_no_folder')}</span></td>
           {rub && su.criteria.map(() => <td />)}<td />{!ib && <td />}{banded && <td />}<td /><td /></tr>
         : <tr data-i={r.i}><td class="n">{r.n}</td>
-          <td class="nm"><button type="button" class="link" onClick={() => onOpen(r.i)} data-raw>{shownName(r.st, r.i)}</button>
+          <td class="nm"><button type="button" class="link" onClick={() => onOpen(r.i)} data-raw>{shownName(r.st, r.i)}</button><Who n={rosterOf(cls, r.st)} onWho={setWho} />
             {r.none && <span class="mute"> {t('setup.g_none_in')}</span>}{r.off && <span class="pill warn">{t('setup.g_off')}</span>}</td>
           {r.rows.map(v => <Cell v={v} cls="c" />)}
           <Cell v={ib ? '' : r.total} cls="c">{ib ? '' : r.totalText}{r.status && <span class="stag">{r.status.toLowerCase()}</span>}</Cell>
           {!ib && <Cell v={r.pct} cls="c">{fmtPct(r.g.pct)}</Cell>}
           {banded && <Cell v={r.band} cls="c" />}
-          <td class="op">{paperCell(r.paper)}</td>
+          <td class="op">{paperCell(r.paper, () => setView('sheet'))}</td>
           <Cell v={r.comment} cls="cm"><span data-raw>{r.comment}</span></Cell></tr>)}</tbody></table></div>
+    {who && <WhoSheet cid={cls && cls.id} n={who} onClose={() => setWho(null)} />}
     <footer class="of">
+      {mb && <a class="btn" href={mb} target="_blank" rel="noopener" data-mblink>{sys || t('top.su_sys_open')}<Icon name="link" /></a>}
       {ib ? <Button onClick={() => copyAll('lv')}>{t('setup.g_copy_levels')}</Button>
         : <><Button onClick={() => copyAll('total')}>{t('setup.g_copy_totals')}</Button><Button onClick={() => copyAll('pct')}>{t('setup.g_copy_pcts')}</Button></>}
       <Button onClick={() => copyAll('tsv')}>{t('setup.g_copy_table')}</Button>
@@ -74,11 +88,13 @@ export function Grades({ E, onOpen, sub, view: ask }) {
     </footer>
   </section>;
 }
-function paperCell(p) {
+// each chip that asks something opens the grade sheet, where it is settled (src/tabs.js glPaperOf: links to grades/sheet)
+function paperCell(p, onSheet) {
   if (!p) return <span class="mute">–</span>;
-  if (p.ask === 'many') return <span class="pill warn">{t('setup.g_pick', { n: p.n })}</span>;
-  if (p.ask === 'confirm') return <span class="pill warn">{t('setup.g_confirm', { said: p.said })}</span>;
-  return <><span class="opv">{p.said}</span>{p.differs && <span class="pill warn" title={p.differs}>{t('setup.g_differs')}</span>}</>;
+  const chip = (text, tip) => <button type="button" class="pill warn" title={tip} onClick={onSheet} data-opchip>{text}</button>;
+  if (p.ask === 'many') return chip(t('setup.g_pick', { n: p.n }));
+  if (p.ask === 'confirm') return chip(t('setup.g_confirm', { said: p.said }));
+  return <><span class="opv">{p.said}</span>{p.differs && chip(t('setup.g_differs'), p.differs)}</>;
 }
 
 /* ---------------- Insights ---------------- */

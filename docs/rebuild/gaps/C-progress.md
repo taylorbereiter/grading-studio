@@ -33,3 +33,6 @@ same test opens the result in the current app. Commits are on the local branch `
 | A-017 | closed: How each row was scored, each row counted by level | mark-out.test.js "C-013 … A-017: Insights > Percents" | 52a44e21 |
 | A-018 | closed: Change since the last summative, each student's two percents biggest rise first, a row opens that paper | mark-out.test.js "A-018 A-019" | b8dd5318 |
 | A-019 | closed: The same assignment in your other classes (linked by group), lowest to highest, middle half, middle and average | mark-out.test.js "A-018 A-019" | b8dd5318 |
+| A-014 | closed: Student details beside each roster name and each name with nothing turned in, opening the class People card (a folder not on the roster has none: the current app's link-a-folder card is not in the new app) | mark-out.test.js "A-014 A-015 A-016" | (A-014) |
+| A-015 | closed: the class's school system link in the Grades footer, named as the teacher named the system | mark-out.test.js "A-014 A-015 A-016" | (A-014) |
+| A-016 | closed (restored): each chip on the paper column (pick one, confirm, differs) opens the grade sheet, and the to-check line has Grade sheet | mark-out.test.js "A-014 A-015 A-016" | (A-014) |

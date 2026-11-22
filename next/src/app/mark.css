@@ -1207,3 +1207,5 @@ dialog.dlg:has(.mk-rd){width:min(640px,calc(100vw - 32px))}
 .mk-ins .pc-axt .q{background:color-mix(in srgb,var(--acc) 60%,transparent)}.mk-ins .pc-axt .m{width:2px;top:0;height:14px;background:var(--ink);border-radius:0}
 .mk-ins .pc-axk .pc-axt span{position:absolute;transform:translateX(-50%);font-size:10px;color:var(--mute)}
 .mk-ins .pc-axr .num{text-align:right;font-size:12px}
+.mk-grades button.pill{border:0;cursor:pointer;font:inherit;font-size:11px}
+.mk-grades .nm .btn.icon{vertical-align:middle;margin-left:2px}

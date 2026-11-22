@@ -1,1 +1,0 @@
-import{a as t,b as i}from"./chunk-MRXGOTJQ.js";import{k as r}from"./chunk-3ZIYKYPD.js";function a(o){let n=t()?"":i(o,r());if(window.__gsMailTest)return window.__gsMailTest(o,n);if(n){window.open(n,"_blank","noopener");return}let e=document.createElement("a");e.href=o,e.rel="noopener",document.body.appendChild(e),e.click(),e.remove()}export{a};

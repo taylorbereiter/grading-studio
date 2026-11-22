@@ -730,3 +730,54 @@ test('A-018 A-019: Insights shows Change since the last summative (a row opens t
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// The Grades tab's links (src/app/dialogs.js openGrades): Student details beside each roster name and each name with nothing turned
+// in, the class's page in the school's system in the footer, and each chip on the paper column opening the grade sheet.
+test('A-014 A-015 A-016: Grades has Student details beside the names, the school system link, and the paper chips open the grade sheet; the current app has the same', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const seed = gradingSeed(), lib = JSON.parse(seed.ls['gs.lib']);
+  lib.classes[0].mb = 'https://school.example/classes/9e'; lib.me = { ...(lib.me || {}), sys: 'Our School' };
+  seed.ls['gs.lib'] = JSON.stringify(lib);
+  const m = await page(ctx, []);
+  await m.goto(srv.url + 'blank'); await plant(m, seed);
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zipOf(await standardFiles()));
+  await m.evaluate(() => window.__gs.saveNow()); await settle(m);
+  const id = await m.evaluate(() => window.__gs.state().batch.id);
+  await m.evaluate(id => { location.hash = '#/a/' + encodeURIComponent(id.replace(/^gs\.b\./, '')) + '/grades'; }, id);
+  await m.waitForSelector('#glTable', { timeout: 60000 });
+  const was = await m.evaluate(() => ({ mb: document.querySelector('#dlgBox .mb-go').getAttribute('href'), mbText: document.querySelector('#dlgBox .mb-go').textContent,
+    who: [...document.querySelectorAll('#glTable .whob')].map(b => b.getAttribute('aria-label').replace('Student details for ', '')) }));
+  await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id) + '/grades');
+  await p.waitForSelector('#glTable', { timeout: 60000 });
+  // the school system link (A-015)
+  assert.equal(await p.$eval('[data-mblink]', a => a.getAttribute('href')), was.mb);
+  assert.equal((await p.$eval('[data-mblink]', a => a.textContent)).trim(), was.mbText.replace('↗', '').trim());
+  assert.equal(await p.$eval('[data-mblink]', a => a.target), '_blank');
+  // Student details beside the names: the same students as the current app's (A-014)
+  const who = await p.$$eval('#glTable [data-who]', l => l.map(b => b.dataset.who));
+  assert.ok(who.length >= 6, who.join(', '));
+  assert.deepEqual(who, was.who.filter(n => who.includes(n)));
+  assert.deepEqual(was.who.filter(n => !who.includes(n)), [], 'every name with details in the current app has them here');
+  await p.click('#glTable [data-who="Esme Placeholder"]');
+  await p.waitForSelector('[data-pmwho]', { timeout: 30000 });
+  assert.match(await p.$eval('dialog[open]', d => d.textContent), /Esme Placeholder/);
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('[data-pmwho]'));
+  // a chip on the paper column opens the grade sheet (A-016): Cleo's paper says 9.5 and her own score differs
+  const cleo = await p.evaluate(() => window.__mark.state().batch.students.findIndex(st => /Cleo/.test(st.key)));
+  await p.evaluate(i => { const s = window.__mark.state(); const g = s.batch.students[i].grade; g.rubric = s.setup.criteria.map(() => 1); g.sheet = '9.5'; }, cleo);
+  await p.evaluate(() => [...document.querySelectorAll('.mk-grades [role="radio"]')].find(b => /Grade sheet/.test(b.textContent)).click());
+  await p.waitForSelector('[data-sheet] .gs-tbl', { timeout: 60000 });
+  await p.evaluate(() => [...document.querySelectorAll('.mk-grades [role="radio"]')].find(b => /Table/.test(b.textContent)).click());
+  await p.waitForSelector('#glTable [data-opchip]', { timeout: 60000 });
+  await p.click('#glTable [data-opchip]');
+  await p.waitForSelector('[data-sheet] .gs-tbl', { timeout: 30000 });
+  await p.evaluate(() => [...document.querySelectorAll('.mk-grades [role="radio"]')].find(b => /Table/.test(b.textContent)).click());
+  await p.waitForSelector('[data-gsheet]', { timeout: 30000 });
+  await p.click('[data-gsheet]');
+  await p.waitForSelector('[data-sheet] .gs-tbl', { timeout: 30000 });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
