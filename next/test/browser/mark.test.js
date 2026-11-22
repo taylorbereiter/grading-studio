@@ -721,3 +721,28 @@ test('saved comments (audit hooks row H): with three already saved, a comment st
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('a failed read of saved work (audit H-025): tried once more and opened with her marks; still failing, the paper does not open unmarked and nothing is saved over her work', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const old = await makeWork(ctx, errors);
+  const breakWork = (id, n) => `(() => { let n = ${n}; const g = IDBObjectStore.prototype.get; IDBObjectStore.prototype.get = function (k) { if (this.name === 'work' && k === ${JSON.stringify(id)} && n > 0) { n--; throw new DOMException('test: work read blocked', 'InvalidStateError'); } return g.call(this, k); }; })()`;
+  const kept = async () => { const c = await page(ctx, errors); await c.goto(srv.url + 'blank'); const w = await c.evaluate(id => new Promise(res => { const r = indexedDB.open('grading-studio-keep'); r.onsuccess = () => { const q = r.result.transaction('work').objectStore('work').get(id); q.onsuccess = () => { r.result.close(); res(JSON.stringify(q.result)); }; }; }), old.id); await c.close(); return w; };
+  // an older download: no quick copy left in this browser (only 12 are kept), so the database is the only copy
+  { const c = await page(ctx, errors); await c.goto(srv.url + 'blank'); await c.evaluate(id => localStorage.removeItem(id), old.id); await c.close(); }
+  const was = await kept(); assert.ok(was && was.length > 10, 'her work is in the database');
+  // one failed read: tried again, and the paper opens with her marks and scores
+  const p = await page(ctx, errors); await p.evaluateOnNewDocument(breakWork(old.id, 1));
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(old.id));
+  await p.waitForFunction(() => window.__mark && window.__mark.state().batch && window.__mark.state().pages.length && window.__mark.state().pages.every(pg => pg.bmp), { timeout: 60000 });
+  assert.deepEqual(await p.evaluate(shape => eval(shape)(window.__mark.state().batch), shape), old.shape, 'opened with her marks after one failed read');
+  await p.close();
+  // every read fails: the screen says the page could not be read, and the saved work is untouched
+  const q = await page(ctx, errors); await q.evaluateOnNewDocument(breakWork(old.id, 99));
+  await q.goto(srv.url + 'next/#/mark/' + encodeURIComponent(old.id));
+  await q.waitForFunction(() => [...document.querySelectorAll('.empty b')].some(b => b.textContent === 'This page could not be read.'), { timeout: 60000 });
+  assert.ok(!(await q.evaluate(() => window.__mark && window.__mark.state().batch && window.__mark.state().pages.length)), 'no paper opened unmarked');
+  await q.close();
+  assert.equal(await kept(), was, 'nothing was saved over her work');
+  assert.deepEqual(errors.filter(e => !/work read blocked/.test(e)), []);
+  await ctx.close();
+});

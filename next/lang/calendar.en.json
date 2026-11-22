@@ -134,5 +134,10 @@
  "cal.search_slide": "{title}, slide {n}",
  "cal.search_nb": "{title}, notebook",
  "cal.search_in": "In “{title}”",
- "cal.search_no_class": "Not on a class"
+ "cal.search_no_class": "Not on a class",
+ "cal.unit_unsaved": "This unit has changes that are not saved yet.",
+ "cal.unit_discard": "Discard changes",
+ "cal.keep_editing": "Keep editing",
+ "cal.unit_saved_away": "Your changes to {name} were saved.",
+ "cal.untitled_unit": "Untitled unit"
 }

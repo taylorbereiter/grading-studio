@@ -186,7 +186,7 @@ async function drawPage(doc, f, p, k) {
   return { c, v1 };
 }
 // A Word paper is made into pages to box on, as Convert to PDF makes them (mark/change.js toPdf): the Word part and html2canvas first.
-async function wordReady() { await PARTS.word(); if (!state().html2canvas) { const h = await PARTS.h2c(); use({ html2canvas: h.default || h }); } }
+async function wordReady() { await PARTS.word(); await (await PARTS.outEngine()).wordTools(); }
 // A box dragged on a canvas, as fractions of it. onBox(sel) when let go; paint(sel) shows one.
 function boxer(c, onBox) {
   const ctx = c.getContext('2d'), base = ctx.getImageData(0, 0, c.width, c.height), dpr = window.devicePixelRatio || 1;

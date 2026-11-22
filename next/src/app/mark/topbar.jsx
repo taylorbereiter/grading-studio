@@ -128,7 +128,7 @@ const lib = () => LIB || (LIB = readLibrary());
 onSaved(e => { if (e.kind === 'library') LIB = null; });
 const unitOf = (l, id) => { for (const c of [...(l.classes || []), ...(l.loose ? [l.loose] : [])]) for (const u of c.units || []) if ((u.items || []).some(it => it.id === id)) return u; return null; };
 const visit = url => { const w = window.open(url, '_blank', 'noopener'); if (w) w.opener = null; };
-// ctx: { batch, cls, share(back), dlg(Part) }: dlg shows a dialog of this part's (it is handed onClose)
+// ctx: { batch, cls, share(kind), dlg(Part) }: dlg shows a dialog of this part's (it is handed onClose)
 export function items({ batch, cls, share, dlg }) {
   const L = lib(), out = [], aid = batch.assignment && batch.assignment.id;
   if (cls) out.push({ label: t('mark.cmd_book'), sub: t('top.book_tip'), icon: 'grades', onSelect: () => go('class', cls.id, 'grades') });
@@ -139,13 +139,13 @@ export function items({ batch, cls, share, dlg }) {
   if (c) out.push(url ? { label: sys || t('top.su_sys_open'), sub: t('top.su_link_tip'), icon: 'school', onSelect: () => visit(url) }
     : { label: sys ? t('top.su_sys_add_n', { name: sys }) : t('top.su_sys_add'), icon: 'school', onSelect: () => dlg(p => <LinkDialog c={c} sys={sys} url="" onClose={() => { LIB = null; p.onClose(); }} />) });
   // Bring back, once papers or marks went to her assistant (batch.share, the current app's own record)
-  const sh = batch.share; if (sh && (sh.made || sh.marksMade)) out.push({ label: t('top.bb_menu'), icon: 'assist', onSelect: () => share(true) });
+  const sh = batch.share; if (sh && (sh.made || sh.marksMade)) out.push({ label: t('top.bb_menu'), icon: 'assist', onSelect: () => share('back') });
   return out;
 }
-// ctx: { group, share(back), view(tab, view), late() }
+// ctx: { group, share(kind), view(tab, view), late() }
 export function commands({ group, share, view, late }) {
   return [
-    addCommand({ id: 'asg-bb', label: () => t('top.bb_menu'), group, icon: 'assist', run: () => share(true) }),
+    addCommand({ id: 'asg-bb', label: () => t('top.bb_menu'), group, icon: 'assist', run: () => share('back') }),
     addCommand({ id: 'asg-sheet', label: () => t('top.cmd_sheet'), group, icon: 'grades', run: () => view('grades', 'sheet') }),
     addCommand({ id: 'asg-cons', label: () => t('top.cmd_cons'), group, icon: 'chart', run: () => view('insights', 'cons') }),
     addCommand({ id: 'asg-ex', label: () => t('top.cmd_ex'), group, icon: 'library', run: () => go('library', 'examples') }),

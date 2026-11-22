@@ -52,7 +52,7 @@ const OUT = `b => JSON.parse(JSON.stringify({ students: b.students.filter(s => s
   light: b.light || null, lightPg: b.lightPg || null, on: !!(b.lightOpt && b.lightOpt.on), cls: b.classId == null ? null : b.classId }))`;
 const SPECS = [{ seed: 21 }, { o: 180, seed: 22, box: true }, { blank: 'speckled', seed: 23 }, { wear: 'faint', seed: 24 }, { skew: 3, seed: 25 }, { o: 180, seed: 26 }];
 
-test('a scan split from the class page: pages read and fixed as they come, picks given to names, and the same papers as the current app makes', async () => {
+test('D-014 D-015: a scan split from the class page: pages read and fixed as they come, picks given to names, and the same papers as the current app makes', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const p = await page(ctx, errors);
   await p.goto(srv.url + 'blank'); await plant(p, withCard());
@@ -72,6 +72,12 @@ test('a scan split from the class page: pages read and fixed as they come, picks
   // she puts the last page back, and leaves out the blank page once she has seen it
   await p.click('.mk-split [data-fl="5"] [data-spfix="back"]');
   await p.waitForFunction(() => !window.__split().rot[5] && window.__split().thumbs[5]);
+  // D-015: Escape closes only the blank pages view, and the split stays open
+  await p.click('[data-spblank]');
+  await p.waitForSelector('[data-spblankview]', { timeout: 60000 });
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('[data-spblankview]'));
+  assert.ok(await p.$('.mk-split'), 'D-015: Escape closes the blank pages view, not the split');
   await p.click('[data-spblank]');
   await p.waitForFunction(() => /^Leave out 1 page$/.test((document.querySelector('[data-bkgo]') || {}).textContent || ''), { timeout: 60000 });
   assert.deepEqual(await p.$$eval('[data-bk]', es => es.map(e => +e.dataset.bk)), [2]);
@@ -95,7 +101,7 @@ test('a scan split from the class page: pages read and fixed as they come, picks
   assert.match(await tag(0), /Lighting/);
   if (process.env.GS_SHOTS) await p.screenshot({ path: path.join(process.env.GS_SHOTS, 'split.png') });
   await p.keyboard.press('Escape');
-  assert.equal(await p.$('[data-splightp]'), null, 'Escape closes the lighting first');
+  assert.equal(await p.$('[data-splightp]'), null, 'D-014: Escape closes the lighting first');
   assert.ok(await p.$('.mk-split'), 'and not the split');
   await p.click('[data-spgo]');
   await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 90000 });

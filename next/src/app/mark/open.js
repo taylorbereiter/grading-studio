@@ -3,7 +3,7 @@
 // students, files, pages and marks come out. Nothing here writes: what the current app saves on opening (a card's batchId, a
 // quiz from the card) is left for the first change the teacher makes, which saves through students/write.js.
 import * as E from '../../engines/gopen.js';
-import { use, setupOver, state, kget, DEFAULT_SETUP } from '../../engines/gcore.js';
+import { use, setupOver, state, kget, kdo, DEFAULT_SETUP } from '../../engines/gcore.js';
 import { meGrade, useLib } from '../../engines/gways.js';
 import { useStore } from '../../engines/gstore.js';
 import { prefs } from '../../students/prefs.js';
@@ -15,6 +15,7 @@ import { setOpenWork } from '../openwork.js';
 import { saving } from '../../services/saving.js';
 import { savedStamp } from '../../shared/tabs.js';
 import '../engine-lines.js';   // the engines' own words in the language, before any paper is opened
+import { heicSay } from './heic.js';
 
 export class NotKept extends Error { constructor(id) { super('The papers for this one aren’t kept in this browser.'); this.name = 'NotKept'; this.id = id; } }
 
@@ -61,6 +62,7 @@ async function studentsOf(raw) {
   await E.spellLikeSaved(raw);
   // a photo of a paper becomes a PDF page (makeFile, pictureToPdf), which needs pdf-lib: loaded first when there is one
   if (!state().PDFLib && raw.some(r => /\.(png|jpe?g|gif|webp|bmp|heic|heif|tiff?|avif)$/i.test(r.path))) use({ PDFLib: await PARTS.pdflib() });
+  heicSay(raw.map(r => r.path));
   const map = E.groupRaw(raw), keys = [...map.keys()].sort(E.natural), students = [], keepList = [];
   for (const key of keys) {
     const files = [];
@@ -132,9 +134,17 @@ export async function bringIn(entries, { label, assignment, question, carry, dri
 }
 export const findIn = (l, id) => { for (const c of [...(l.classes || []), l.loose].filter(Boolean)) for (const u of c.units || []) for (const it of u.items || []) if (it.id === id) return it; return null; };
 
+// Her saved marks and scores for this download. A read that fails is tried once more and then stops the opening, so the paper never
+// opens unmarked over work that is there, where the first mark would save over her scoring (audit H-025).
+async function workAt(bid) {
+  const read = () => kdo('work', 'readonly', o => o.get(bid));
+  try { return (await read()) || null; } catch (e) { console.error(e); }
+  await new Promise(r => setTimeout(r, 400));
+  return (await read()) || null;
+}
 async function assemble({ raw, label, students, lib, assignment, question, earlier, paperList }) {
   const bid = E.batchIdOf(raw);
-  const keptWork = await kget('work', bid);
+  const keptWork = await workAt(bid);
   const work0 = E.newestWork(prefs.get(bid, null), keptWork);
   const rub = await rubricAt(assignment, work0, (assignment && assignment.name) || label || 'This download', question);
   if (!rub) return null;

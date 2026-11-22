@@ -293,6 +293,9 @@ dialog.dlg:has(.mk-cc) footer .cc-hint{font-size:var(--t2);max-width:46%}
 .mk-ret .sharp{display:flex;align-items:center;gap:10px}
 .mk-ret .rtside{display:flex;flex-direction:column;gap:12px}
 .mk-ret .sent{margin:0 0 8px;padding-left:18px;font-size:var(--t2)}
+.mk-ret .rtrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line)}.mk-ret .rtrow:first-of-type{border-top:0}
+.mk-ret .rtrow>span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.mk-ret .xchk summary{cursor:pointer;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}.mk-ret .xchk .xshow{text-decoration:underline}
 @media (max-width:900px){
   .mk-outwrap{padding:16px}
   .mk-ins .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -516,6 +519,7 @@ dialog.dlg.mk-split[open]{display:flex}
 .vrot.on video,.vrot.on iframe{max-height:none}
 .vgrip{position:absolute;left:50%;bottom:0;width:48px;height:8px;margin-left:-24px;border-radius:var(--rf);background:var(--line-2);cursor:ns-resize}
 .vgrip:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.trcapbar{display:flex;align-items:center;gap:6px}.trcapbar .trcap{flex:1}
 .trcap{margin:0;padding:6px 10px;border-radius:var(--r2);background:var(--s2);color:var(--ink);text-align:center;min-height:1.5em}
 .trbox{padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:var(--t2)}
 .trbox p{margin:0}
@@ -1068,6 +1072,11 @@ dialog.dlg.mk-qr{width:min(880px,calc(100vw - 32px))}
 .bbwrap .gl td,.bbwrap .gl th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 .bbwrap .gl .cm{white-space:pre-wrap}
 .bbwrap .warn{color:var(--warn)}
+/* Add, A video: partners as chips; the videos folder line; Choose from Drive… above Partners and videos (D-006, D-007, D-036, D-037) */
+.vdlist{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;max-height:180px;overflow:auto}
+.vdlist .chip[aria-checked="true"]{color:var(--ink);background:var(--sb);box-shadow:var(--sh-btn)}
+.vddir{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.vddir .icon{width:14px;height:14px}
+.mk-pv .pv-drv{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .classwork .wname{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:none;cursor:pointer;text-align:left}
 .classwork .wname:hover b{text-decoration:underline}
 .classwork .wnm .tag{margin-left:6px;font-size:10.5px;color:var(--mute);background:var(--g100);border-radius:var(--rf);padding:1px 6px}

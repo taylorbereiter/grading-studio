@@ -134,5 +134,10 @@
  "cal.search_slide": "{title}, 슬라이드 {n}",
  "cal.search_nb": "{title}, 노트",
  "cal.search_in": "“{title}” 안",
- "cal.search_no_class": "학급 없음"
+ "cal.search_no_class": "학급 없음",
+ "cal.unit_unsaved": "이 단원에 아직 저장되지 않은 변경 사항이 있습니다.",
+ "cal.unit_discard": "변경 사항 버리기",
+ "cal.keep_editing": "계속 편집",
+ "cal.unit_saved_away": "{name}의 변경 사항을 저장했습니다.",
+ "cal.untitled_unit": "제목 없는 단원"
 }

@@ -134,5 +134,10 @@
  "cal.search_slide": "{title}, slide {n}",
  "cal.search_nb": "{title}, caderno",
  "cal.search_in": "Em “{title}”",
- "cal.search_no_class": "Sem turma"
+ "cal.search_no_class": "Sem turma",
+ "cal.unit_unsaved": "Esta unidade tem alterações que ainda não foram salvas.",
+ "cal.unit_discard": "Descartar alterações",
+ "cal.keep_editing": "Continuar editando",
+ "cal.unit_saved_away": "Suas alterações em {name} foram salvas.",
+ "cal.untitled_unit": "Unidade sem título"
 }

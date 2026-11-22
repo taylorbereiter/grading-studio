@@ -11,16 +11,18 @@ import * as N from '../../engines/gnotes.js';
 import { tnHas } from '../../engines/gdraw.js';
 import { fmtTime } from '../../engines/gmedia.js';
 import { t } from '../../i18n/t.js';
+import { frameNow } from './frame.js';
 import * as C from './change.js';
 import './setup-lines.js';
 import './paper-lines.js';
+import './video-lines.js';
 import { PARTS } from '../router.js';
 
 const b = () => state().batch;
 const st0 = () => { const s = state(); return s.batch ? s.batch.students[s.cur] : null; };
 // the video or recording playing above the paper, if there is one (src/video.js vidClock, vidSeek)
-const player = () => document.querySelector('.media video, .media audio');
-const nowOf = st => { const m = player(); if (m && !m.paused) return m.currentTime; const c = N.spClockOf(st); return c.at ? N.spClockMs(c) / 1000 : null; };
+const player = () => document.querySelector('.media video, .media audio');   // or a YouTube or Vimeo player that says where it is (frame.js, H-058)
+const nowOf = st => { const m = player(); if (m && !m.paused) return m.currentTime; const y = frameNow(); if (y != null) return y; const c = N.spClockOf(st); return c.at ? N.spClockMs(c) / 1000 : null; };
 let keep = null;   // the screen's save for the assignment's setup (marking.js keepSetup)
 export const useKeep = f => { keep = f; };
 const setupKept = () => (keep ? keep() : Promise.resolve());
@@ -103,7 +105,8 @@ async function click(e, box) {
   if (d.tnl) return N.tnList(d.tnl);
   if (d.tns != null) return N.tnStyle(d.tns);
   if (d.tnmk != null) return N.tnMark(d.tnmk);
-  if (d.tntm != null) return N.tnTime();
+  // nothing gives the times yet: say what does (src/typednotes.js tnTime, H-037; the lifted code's own toast is quiet here)
+  if (d.tntm != null) { N.tnTime(); if (nowOf(st) == null && N.tnGetL().every(x => x.t == null)) toast(t('video.tn_no_time')); return; }
   if (d.tnclk != null) { N.spClockGo(N.spClockOf(st)); return N.tnBar(box, st); }
   if (d.tnts != null) return N.tnShowTime(+d.tnts);
   if (d.tnt) { const x = N.tnGetL()[+d.tnt], m = player(); if (x && x.t != null) { if (m) { m.currentTime = x.t; m.play().catch(() => {}); } else toast(t('setup.tn_no_video')); } return; }

@@ -167,6 +167,10 @@ function Student({ x, n, i, cols, r, onMove, onRemove, onTool, onStep, term, who
   useEffect(() => () => clearTimeout(wait.current), []);
   const [More, setMore] = useState(null);
   useEffect(() => { let live = true; import('./student-more.jsx').then(m => { if (live) setMore(() => m.StudentMore); }, e => console.error(e)); return () => { live = false; }; }, []);
+  // an MYP class: levels and a 1 to 7, never a percent (src/ib.js ibOneView; audit B-905)
+  const myp = x.way === 'myp', [Ib, setIb] = useState(null);
+  useEffect(() => { if (!myp) return; let live = true; import('./ib.jsx').then(m => { if (live) setIb(() => m.MypStudent); }, e => console.error(e)); return () => { live = false; }; }, [myp]);
+  const termName = whole ? t('class.whole_year') : ((x.conf.terms || []).find(k => k.id === term) || {}).name || '';
   const left = leftOf(c.id), labelOf = id => kindOf(id) || t('class.type_none');
   const typeNote = v => { setNote(v); clearTimeout(wait.current); wait.current = setTimeout(() => change(t('class.u_note'), l => { const k = classIn(l, c.id); if (k && k.names.includes(n)) B.setInfo(k, n, { note: v.trim() ? v : '' }); }), 600); };
   return <article class="card cp-sp" aria-labelledby="h-stu" data-student={i}>
@@ -178,17 +182,18 @@ function Student({ x, n, i, cols, r, onMove, onRemove, onTool, onStep, term, who
         <Menu label={t('class.student_menu', { name: n })} trigger={m => <IconButton {...m} icon="dots" label={t('class.student_menu', { name: n })} data-stu-menu />}
         items={[{ label: t('class.move_to'), icon: 'arrow', onSelect: onMove }, { label: t('class.remove'), icon: 'trash', onSelect: onRemove }]} /></div></div>
     <div class="kpis">
-      <div class="kpi" data-kpi="avg"><b>{r.grade != null ? pct(r.grade) : '–'}</b><span>{t(whole ? 'class.avg_year' : 'class.avg_term')}</span></div>
+      {!myp && <div class="kpi" data-kpi="avg"><b>{r.grade != null ? pct(r.grade) : '–'}</b><span>{t(whole ? 'class.avg_year' : 'class.avg_term')}</span></div>}
       <div class="kpi" data-kpi="missing"><b class={miss.length ? 'warn' : ''}>{miss.length}</b><span>{t('class.missing_work')}</span></div>
       <div class="kpi" data-kpi="att"><b>{here != null ? here + '%' : '–'}</b><span>{t('class.attendance')}</span></div>
-      <div class="kpi"><Spark v={trend} /><span>{t('class.recent_trend')}</span></div>
+      {!myp && <div class="kpi"><Spark v={trend} /><span>{t('class.recent_trend')}</span></div>}
     </div>
     {terms && <div class="sp-sec stterms" data-stu-terms>{terms}</div>}
-    <section class="sp-sec" aria-labelledby="h-recent"><h3 id="h-recent">{t('class.recent_work')}</h3>
+    {myp && (Ib ? <Ib c={c} cols={cols} term={term} termName={termName} i={i} /> : <div class="loading" aria-busy="true" />)}
+    {!myp && <section class="sp-sec" aria-labelledby="h-recent"><h3 id="h-recent">{t('class.recent_work')}</h3>
       {recent.length ? <table class="wl">{recent.map(col => { const cell = col.cells.get(n); return <tr><td data-raw>{col.name}</td><td class="k">{kindOf(col.type)}</td>
         <td class={'s' + (cell && cell.st === 'missing' ? ' warn' : '')}>{!cell ? '–' : cell.st === 'missing' ? t('class.missing') : cell.st === 'excused' ? t('class.excused') : cell.pct != null ? (cell.total != null ? fmtPts(cell) : cell.pct + '%') : cell.fb ? t('class.fb_given') : '–'}</td></tr>; })}</table>
         : <p class="mute">{t('class.no_work_yet')}</p>}
-    </section>
+    </section>}
     <GoalsStudent x={x} cols={cols} n={n} />
     {Wl && <Wl.WatchStudent c={c} n={n} />}
     {attOn(x.lib) && <AttStudent c={c} n={n} term={x.now ? x.conf.terms.find(k => k.id === x.now) : null} onDay={d => onTool({ k: 'att', d })} />}

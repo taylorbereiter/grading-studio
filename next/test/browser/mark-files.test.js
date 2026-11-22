@@ -395,7 +395,11 @@ test('Setup > Bring in files: each file sorted to its student by name, one given
   await p.waitForSelector('[data-setupopen]:not([disabled])', { timeout: 60000 });
   await p.click('[data-setupopen]');
   await p.waitForFunction(() => [...document.querySelectorAll('.pop [role="menuitem"]')].some(e => e.textContent.includes('Bring in files')));
-  const [ch] = await Promise.all([p.waitForFileChooser(), p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.includes('Bring in files')).click())]);
+  await p.evaluate(() => [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.includes('Bring in files')).click());
+  // D-001: what the files are for (late work, a scan), then files or a whole folder (D-002)
+  await p.waitForSelector('dialog[open] [data-fof="bring"]', { timeout: 30000 });
+  assert.match(await p.$eval('[data-fof="bring"]', e => e.textContent), /Late work:.*A scan of papers/s);
+  const [ch] = await Promise.all([p.waitForFileChooser(), p.click('dialog[open] [data-pf]')]);
   await ch.accept([named, odd, same]);
   await p.waitForSelector('[data-bf]', { timeout: 30000 });
   const rows = await p.$$eval('[data-bfrow]', rs => rs.map(r => ({ file: r.querySelector('.bf-path').textContent, tag: r.querySelector('[data-bftag]').textContent })));
@@ -425,6 +429,75 @@ test('Setup > Bring in files: each file sorted to its student by name, one given
   await m2.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
   await m2.waitForFunction(k => { const b = window.__gs.state().batch, s = b.students.find(x => x.key === k), n = b.students.find(x => x.key === 'Nova Madeup');
     return s && s.grade.status === 'late' && s.files.some(f => f.name === 'Bram Sample redo.pdf') && n && n.files.some(f => f.name === 'scan 0412.pdf'); }, { timeout: 30000 }, KEY);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// D-039 D-041 D-043 D-044 D-049: one student's files. A ZIP added to her opens and adds its files; a ZIP with a folder per student goes
+// to Bring in files; a file she added can be marked late from its tag and says it goes back with the export; Move to finds by the
+// start of a word, shows each student's file count and takes the top one on Enter. The current app finds all of it.
+test('D-039 D-041 D-043 D-044 D-049: a ZIP added, a ZIP of folders, Mark late on an added file, Move to by word start; the current app finds them', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zip);
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  const loose = path.join(dir, 'Loose.zip'); fs.writeFileSync(loose, zipOf({ 'Retake.pdf': await makePaper({ title: 'A retake' }), 'Model.xyz': Buffer.from('not a paper') }));
+  const many = path.join(dir, 'Folders.zip'); fs.writeFileSync(many, zipOf({ 'Aria Testwell/Redo.pdf': await makePaper({ title: 'Aria redo' }), 'Cleo Fixture/Redo.pdf': await makePaper({ title: 'Cleo redo' }) }));
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  const i = await p.evaluate(k => window.__mark.state().batch.students.findIndex(s => s.key === k), KEY);
+  await p.click('[data-st="' + i + '"]');
+  await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready && window.__mark.read, { timeout: 60000 }, i);
+  await p.waitForSelector('[data-addmenu]', { timeout: 60000 });
+  const addDo = async label => { await p.waitForFunction(() => { if (document.querySelector('.pop [role="menuitem"]')) return true; const b = document.querySelector('[data-addmenu]'); if (b) b.click(); return false; }, { timeout: 30000, polling: 400 }); const ok = await p.evaluate(l => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.includes(l)); if (it) it.click(); return !!it; }, label); if (!ok) throw new Error('no ' + label); };
+  const named = (k, n) => p.waitForFunction((k, n) => window.__mark.state().batch.students.find(s => s.key === k).files.some(f => f.name === n), { timeout: 30000 }, k, n);
+  // D-043: a ZIP of loose files adds each of them to her
+  const [c1] = await Promise.all([p.waitForFileChooser(), addDo('Add a file')]);
+  await c1.accept([loose]);
+  await named(KEY, 'Retake.pdf'); await named(KEY, 'Model.xyz');
+  // D-049: the file that can't be shown says it goes back with the export because she added it
+  await p.waitForFunction(() => [...document.querySelectorAll('.fcard.other')].some(e => /Model\.xyz/.test(e.textContent) && /It goes back with the export because you added it\./.test(e.textContent)), { timeout: 30000 });
+  // D-044: Mark late beside an added file
+  await p.waitForFunction(() => { const b = window.__mark.ready && document.querySelector('[data-marklate]'); if (b) b.click(); return !!b; }, { timeout: 30000 });
+  await p.waitForFunction(k => window.__mark.state().batch.students.find(s => s.key === k).grade.status === 'late', { timeout: 30000 }, KEY);
+  await p.waitForFunction(() => !document.querySelector('[data-marklate]'), { timeout: 10000 });
+  // D-043: a ZIP with a folder per student goes to Bring in files
+  const [c2] = await Promise.all([p.waitForFileChooser(), addDo('Add a file')]);
+  await c2.accept([many]);
+  await p.waitForSelector('[data-bf]', { timeout: 30000 });
+  assert.deepEqual(await p.$$eval('[data-bfrow] [data-bftag]', rs => rs.map(r => r.textContent)), ['Matched by name', 'Matched by name']);
+  await p.click('[data-bfgo]');
+  // Bring in files opens the last student it gave a file to, as it does from Setup; back to her
+  await named('Aria Testwell', 'Redo.pdf'); await named('Cleo Fixture', 'Redo.pdf');
+  // D-039 D-041: Move to finds by the start of a word, shows file counts, and Enter takes the top one
+  const RET = await p.evaluate(k => window.__mark.state().batch.students.find(s => s.key === k).files.find(f => f.name === 'Retake.pdf').path, KEY);
+  await p.click(`[data-st="${i}"]`); await p.waitForFunction(i => window.__mark.state().cur === i, { timeout: 30000 }, i);
+  await p.waitForFunction(f => window.__mark.ready && !!document.querySelector('[data-fmenu="' + f + '"]'), { timeout: 30000 }, RET);
+  await menuDo(p, RET, 'Move to');
+  await p.waitForSelector('[data-mvto]');
+  assert.equal(await p.$eval('.dlg input', e => e.placeholder), 'Type a name');
+  assert.ok((await p.$$eval('[data-mvn]', rs => rs.map(r => r.textContent))).every(s => /^\d+ files?$/.test(s)), 'each row shows how many files');
+  await p.type('.dlg input', 'fix');
+  await p.waitForFunction(() => { const r = [...document.querySelectorAll('[data-mvto]')]; return r.length === 1 && r[0].dataset.mvto === 'Cleo Fixture'; }, { timeout: 10000 });
+  await p.keyboard.press('Enter');
+  // she is marked late, so it asks whether the status goes too (the current app's question); it stays with her
+  await p.waitForSelector('[data-keep]', { timeout: 10000 }); await p.click('[data-keep]');
+  await p.waitForFunction(f => window.__mark.state().batch.students.find(s => s.key === 'Cleo Fixture').files.some(x => x.path === f), { timeout: 30000 }, RET);
+  await p.evaluate(() => window.__mark.saved());
+  await p.close();
+  const m2 = await page(ctx, errors);
+  await m2.goto(srv.url); await appReady(m2);
+  await m2.evaluate(id => window.__gs.reopenKept(id), id);
+  await m2.waitForFunction(id => { const s = window.__gs.state(); return s.batch && s.batch.id === id; }, { timeout: 60000 }, id);
+  const was = await m2.evaluate(k => { const b = window.__gs.state().batch, f = key => b.students.find(s => s.key === key);
+    return { late: f(k).grade.status, mine: f(k).files.map(x => x.name).sort(), cleo: f('Cleo Fixture').files.map(x => x.name).sort(), aria: f('Aria Testwell').files.map(x => x.name).sort() }; }, KEY);
+  assert.equal(was.late, 'late');
+  assert.ok(was.mine.includes('Model.xyz') && !was.mine.includes('Retake.pdf'), was.mine.join());
+  assert.ok(was.cleo.includes('Retake.pdf') && was.cleo.includes('Redo.pdf'), was.cleo.join());
+  assert.ok(was.aria.includes('Redo.pdf'), was.aria.join());
   assert.deepEqual(errors, []);
   await ctx.close();
 });

@@ -60,6 +60,21 @@ export function MypBook({ x, cols, all, term, termName, tab }) {
   </>;
 }
 
+// One student of an MYP class on their page (ibOneView): the 1 to 7 so far, the total, each criterion's level you set (or the most
+// recent evidence when none is set yet), then the evidence and the levels to choose from. Never a percent.
+export function MypStudent({ c, cols, term, termName, i }) {
+  const crit = B.ibCrit(c), bounds = B.ibBounds(c), icols = B.ibCols(c, cols), n = c.names[i], lv = lvAt(c, term, n), r = B.ibTerm(lv, crit, bounds);
+  return <section class="sp-sec" aria-label={t('class.your_judgment')} data-myp-stu>
+    <div class="kpis">
+      <div class="kpi" data-kpi="grade"><b>{r.grade != null ? r.grade : '–'}</b><span>{t('class.grade')} · {t('class.one_to_seven')}</span></div>
+      <div class="kpi" data-kpi="total"><b>{r.total != null ? r.total : '–'}</b><span>{t('class.total')} · {t('class.of_n', { n: crit.length * B.IB_TOP })}</span></div>
+      {crit.map(k => { const v = B.ibLevel(lv[k.k]), ev = B.ibEvidence(B.ibEvFor(icols, n, k.k));
+        return <div class="kpi" data-kpi={'lv-' + k.k}><b>{v != null ? v : '–'}</b><span data-raw>{k.k} {k.name}</span><small class="mute">{v != null ? bandWord(v) : ev.n ? t('class.recent_not_set', { last: ev.last }) : t('class.no_evidence')}</small></div>; })}
+    </div>
+    <FitBox c={c} crit={crit} bounds={bounds} icols={icols} term={term} termName={termName} i={i} />
+  </section>;
+}
+
 // One student's evidence for each criterion and the levels to choose from (ibFitBox). The outlined level is the most recent, a hint.
 export function FitBox({ c, crit, bounds, icols, term, termName, i }) {
   const n = c.names[i], lv = lvAt(c, term, n), r = B.ibTerm(lv, crit, bounds), top = crit.length * B.IB_TOP;

@@ -194,6 +194,45 @@ test('Convert to PDF in the new app makes the pages the current app makes, in th
   await ctx.close();
 });
 
+// H-029 H-030: Word papers are read on the first open of Grades. html2canvas is at hand before they are read, so each gets its pages
+// read (before, each was read as one that failed); and a Word file whose own reader can't open it (its text at word/main.xml, as some
+// exports write it) is made into pages through mammoth, as the current app does, instead of failing.
+const ODD = (() => {
+  const f = s => [strToU8(s), { mtime: new Date(2026, 8, 1, 20) }];
+  return zipSync({
+    '[Content_Types].xml': f(HEAD + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/main.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'),
+    '_rels/.rels': f(HEAD + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/main.xml"/></Relationships>'),
+    'word/main.xml': f(HEAD + '<w:document ' + W + '><w:body><w:p><w:r><w:t>Eve Pretend wrote this in another program.</w:t></w:r></w:p></w:body></w:document>'),
+  });
+})();
+test('H-029 H-030: a Word paper boxed by hand is read for Grades with its pages, and one its own reader can’t open is made into PDF pages through mammoth', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, zipOf({ ...await standardFiles(), 'Eve Pretend/Odd.docx': ODD }));
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  errors.length = 0;   // the current app says it can't read Odd.docx itself before it falls back, as it always has
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  // H-030: a score boxed by hand on the Word paper (Grade sheet's Box it), then Grades read the papers for the first time
+  await p.evaluate(k => { const f = window.__mark.state().batch.students.find(s => s.key === k).files.find(x => x.kind === 'docx'); f.hand = { page: 0, x: 0.1, y: 0.05, w: 0.6, h: 0.1 }; }, ESSAY_KEY);
+  await p.evaluate(() => { location.hash = location.hash.replace(/\/?$/, '') + '/grades'; });
+  await p.waitForFunction(k => { const f = window.__mark.state().batch.students.find(s => s.key === k).files.find(x => x.kind === 'docx'); return f.scan; }, { timeout: 90000, polling: 300 }, ESSAY_KEY);
+  assert.equal(await p.evaluate(k => !!window.__mark.state().batch.students.find(s => s.key === k).files.find(x => x.kind === 'docx').scan.err, ESSAY_KEY), false, 'H-030: the Word paper’s pages were read');
+  // H-029: Convert to PDF on the Word file its own reader can't open
+  await p.evaluate(() => { location.hash = location.hash.replace(/\/grades$/, ''); });
+  const i = await p.evaluate(() => window.__mark.state().batch.students.findIndex(s => s.key === 'Eve Pretend'));
+  await p.click('[data-st="' + i + '"]');
+  await p.waitForSelector('.docx [data-wpdf]', { timeout: 60000 }).catch(async e => { throw new Error('no wpdf: ' + await p.evaluate(() => (document.querySelector('.mk-paper, main') || document.body).innerText.slice(0, 600))); });
+  await p.click('.docx [data-wpdf]');
+  await p.waitForSelector('.dlg [data-ok]'); await p.click('.dlg [data-ok]');
+  await p.waitForFunction(() => window.__mark.state().batch.students.find(s => s.key === 'Eve Pretend').files.some(x => x.path === 'Eve Pretend/Odd.pdf' && x.data && x.data.length > 1000), { timeout: 60000 })
+    .catch(async e => { throw new Error('no pdf: ' + JSON.stringify(await p.evaluate(() => [window.__mark.state().batch.students.find(s => s.key === 'Eve Pretend').files.map(f => f.path), [...document.querySelectorAll('.toast,.dlg')].map(x => x.innerText)])) + JSON.stringify(errors)); });
+  assert.deepEqual(errors.filter(e => !/no document\.xml/.test(e)), []);
+  await ctx.close();
+});
+
 test('C-025 C-026 C-027: typing in a Word paper, Enter is a line break, Ctrl B does nothing, a paste comes in as plain text; after a reload Back to the original takes the kept original back', async () => {
   const errors = [], ctx = await browser.createBrowserContext(), m = await mainOpens(ctx, errors);
   const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();

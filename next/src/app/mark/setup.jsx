@@ -20,6 +20,7 @@ import { onSaved } from '../../shared/saved.js';
 import './lines.js';
 import './setup-lines.js';
 import { DriveButton } from '../drive-button.jsx';
+import { heicSay } from './heic.js';
 
 const J = v => JSON.parse(JSON.stringify(v));
 const ROW_MAX = 6, TOP_MAX = 10;
@@ -114,6 +115,7 @@ export function SetupDialog({ onClose }) {
         if (!d.rubricPos) d.rubricPos = 'start';   // a Word rubric sits above their work unless she moves it
       } else {
         await libs();
+        heicSay(f.name);
         const m = await E.makeFile(f.name, bytes);
         if (m.kind !== 'pdf' && m.kind !== 'img') throw new Error('not a page');
         await state().PDFLib.PDFDocument.load(m.data, { ignoreEncryption: true });

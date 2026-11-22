@@ -237,7 +237,7 @@ dialog.sheet.wide{width:min(840px,calc(100vw - 16px))}
 .sheet>footer,.dlg>footer{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line);background:var(--s2)}
 dialog.dlg{width:min(440px,calc(100vw - 32px));border-radius:var(--r4);margin:13vh auto auto;animation:popin var(--d2) var(--spring) both}
 .dlg>header{border-bottom:0;padding-bottom:4px}
-.dlg>.body{padding:6px 22px 18px;color:var(--ink2);font-size:var(--t3)}
+.dlg>.body{padding:6px 22px 18px;color:var(--ink2);font-size:var(--t3);max-height:calc(84vh - 120px);overflow:auto}
 .dlg>footer{border-top:0;background:transparent;padding:0 16px 16px}
 dialog.dlg[open]{display:flex;flex-direction:column;max-height:calc(87vh - 16px)}.dlg>.body{overflow:auto;min-height:0}
 

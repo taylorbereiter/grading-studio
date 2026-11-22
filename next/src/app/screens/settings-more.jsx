@@ -160,7 +160,7 @@ export function GradingMore() {
   </>;
 }
 
-// Settings > Marking: what handed-back files are called and how many there are (the Return box starts from these each time).
+// Settings > Marking: what handed-back files are called and how many there are (the Return box starts from these each time), and Word papers.
 export function MarkingMore() {
   const [, again] = useState(0), re = () => again(n => n + 1);
   const on = k => prefs.get(k, true) !== false, set = (k, v) => { if (v) prefs.del(k); else prefs.set(k, false); re(); };
@@ -172,6 +172,12 @@ export function MarkingMore() {
       <span data-stxone><Switch label={t('prefs.back_one')} checked={on('gs.xone')} onChange={v => set('gs.xone', v)} /></span>
       <span data-stcover><Switch label={t('prefs.back_cover')} checked={on('gs.anchorCover')} onChange={v => set('gs.anchorCover', v)} /></span>
     </div>
+  </Card>
+  {/* Word papers (src/wordpdf.js gs.wordPdf; D-013): kept as Word, or made into PDF pages as each assignment opens (mark/fileui.jsx pdfAuto) */}
+  <Card title={t('prefs.word_h')}>
+    <p class="mute">{t('prefs.word_about')}</p>
+    <span data-stwordpdf><Segmented label={t('prefs.word_h')} value={prefs.get('gs.wordPdf', false) ? '1' : '0'} onChange={v => { if (v === '1') prefs.set('gs.wordPdf', true); else prefs.del('gs.wordPdf'); re(); }}
+      options={[{ value: '0', label: t('prefs.word_keep') }, { value: '1', label: t('prefs.word_pdf') }]} /></span>
   </Card>
   {/* Tablet and pencil (src/touch.js, src/app.html setTouch): what a finger does on the paper, and the pencil's wider line (gs.touch, gs.press) */}
   <Card title={t('prefs.tch_h')}>

@@ -9,6 +9,7 @@ const { launch } = require('../../../test/helpers/chrome.js');
 const { plant } = require('../../../test/helpers/app.js');
 const { makePaper } = require('../../../test/helpers/fixtures.js');
 const { gradingSeed, STEADY } = require('../../../test/helpers/steady.js');
+const { plantPlan } = require('./planseed.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
 const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp', png: 'image/png', webmanifest: 'application/manifest+json' };
@@ -36,7 +37,7 @@ async function fakeGoogle(page, D) {
     const P = {
       ViewId: { DOCS: 'docs' }, DocsViewMode: { LIST: 'list' }, Feature: { MULTISELECT_ENABLED: 'multi', SUPPORT_DRIVES: 'drives' },
       Action: { PICKED: 'picked', CANCEL: 'cancel' }, Response: { ACTION: 'action', DOCUMENTS: 'docs' },
-      DocsView: class { constructor() { this.o = {}; } setIncludeFolders() { return this; } setMode() { return this; } setSelectFolderEnabled(v) { this.o.pickFolder = v; return this; } setMimeTypes(v) { this.o.mimes = v; return this; } setParent(v) { this.o.parent = v; return this; } setLabel() { return this; } setOwnedByMe() { return this; } setEnableDrives() { return this; } },
+      DocsView: class { constructor() { this.o = {}; } setIncludeFolders() { return this; } setMode() { return this; } setSelectFolderEnabled(v) { this.o.pickFolder = v; return this; } setMimeTypes(v) { this.o.mimes = v; return this; } setParent(v) { this.o.parent = v; return this; } setLabel(v) { this.o.label = v; return this; } setOwnedByMe() { return this; } setEnableDrives() { return this; } },
       PickerBuilder: class {
         constructor() { this.o = { features: [], views: [] }; }
         setOAuthToken(t) { this.o.token = t; return this; } setAppId() { return this; } setOrigin() { return this; } setTitle(v) { this.o.title = v; return this; }
@@ -100,7 +101,7 @@ const makeVideo = p => p.evaluate(async () => {
   const b = new Uint8Array(await new Blob(parts).arrayBuffer()); let s = ''; for (const x of b) s += String.fromCharCode(x); return btoa(s);
 });
 
-test('papers picked in Drive come in for an assignment; Return saves the marked files to Drive, in My Drive when the folder beside them is not the app’s', async () => {
+test('D-004: papers picked in Drive come in for an assignment; Return saves the marked files to Drive, in My Drive when the folder beside them is not the app’s', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const D = { asked: [], folders: [], sent: [], videos: {}, papers: { '1PaperAriaPaperAriaPaperAria00001': await makePaper({ title: 'Aria outline' }), '1PaperBramPaperBramPaperBram00002': await makePaper({ title: 'Bram outline' }) } };
   const p = await page(ctx, errors, D);
@@ -117,6 +118,9 @@ test('papers picked in Drive come in for an assignment; Return saves the marked 
   await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
   const seen = await p.evaluate(() => window.__pickerSeen[0]);
   assert.ok(seen.features.includes('multi'), 'many papers at once');
+  // D-004: the chooser's tabs as the current app names them, and the folder the papers came from remembered for next time
+  assert.deepEqual(seen.views.map(v => v.label), ['My Drive', 'Shared with me', 'Shared drives']);
+  assert.equal(await p.evaluate(() => JSON.parse(localStorage.getItem('gs.gPaperDir'))), '1ParentNotOursParentNotOurs000000', 'kept where the current app keeps it');
   assert.deepEqual(await p.evaluate(() => window.__mark.state().batch.students.filter(s => s.files.length).map(s => s.key).sort()), ['Aria Testwell', 'Bram Sample']);
   assert.deepEqual(await p.evaluate(() => window.__mark.state().batch.drive), { id: '1PaperAriaPaperAriaPaperAria00001', name: 'Aria Testwell.pdf', kind: 'files' }, 'the download remembers it came from Drive');
   assert.ok(!D.asked.some(u => /files\?q=|files\?spaces=drive/.test(u)), 'the app never lists her Drive');
@@ -186,6 +190,118 @@ test('a video picked in Drive: added to a student, downloaded for offline, playe
   // Watch in Drive's player: the link card
   await p.click('.vdrv [data-drvweb]');
   await p.waitForSelector('.vlink [data-vopen]', { timeout: 30000 });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// D-042 (and C-055): + Add on one student's paper has From Google Drive, which adds the file picked there to her, kept where the
+// current app keeps added files.
+test('D-042: + Add > From Google Drive adds the file picked in Drive to that student, kept where the current app keeps added files', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const D = { asked: [], folders: [], sent: [], videos: {}, papers: { '1PaperAriaPaperAriaPaperAria00001': await makePaper({ title: 'Aria outline' }), '1PaperLateLatePaperLatePaper00003': await makePaper({ title: 'Aria late page' }) } };
+  const p = await page(ctx, errors, D);
+  await p.goto(srv.url + 'blank'); await plant(p, seed());
+  await p.evaluate(() => Promise.all([['grading-studio-added', 'files'], ['grading-studio-videos', 'v']].map(([n, s]) => new Promise(res => { const r = indexedDB.open(n, 1); r.onupgradeneeded = () => r.result.createObjectStore(s); r.onsuccess = () => { r.result.close(); res(); }; }))));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.evaluate(() => { window.__picks.push([{ id: '1PaperAriaPaperAriaPaperAria00001', name: 'Aria Testwell.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.evaluate(() => localStorage.setItem('gs.gPaperDir', JSON.stringify('1FolderPapersFolderPapers0000001')));
+  await p.click('[data-bring-for="i9"]');
+  await menuPick(p, 'Google Drive');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  // D-004: papers open first in the folder she last took papers from
+  assert.deepEqual(await p.evaluate(() => { const v = window.__pickerSeen[0].views[0]; return [v.label, v.parent]; }), ['Last folder', '1FolderPapersFolderPapers0000001']);
+  await goTo(p, 'Aria Testwell');
+  await p.evaluate(() => { window.__picks.length = 0; window.__picks.push([{ id: '1PaperLateLatePaperLatePaper00003', name: 'Late page.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => e.textContent.trim() === 'From Google Drive'); if (it) { it.click(); return true; } const b = document.querySelector('[data-addmenu]'); if (b && !document.querySelector('.pop')) b.click(); return false; }, { timeout: 30000, polling: 500 });
+  await p.waitForFunction(() => window.__mark.state().batch.students.find(s => s.key === 'Aria Testwell').files.some(f => f.name === 'Late page.pdf' && f.added), { timeout: 60000 });
+  assert.equal(await p.evaluate(() => window.__pickerSeen.slice(-1)[0].features.includes('multi')), true, 'more than one file can be picked');
+  // the paper shows it at once, with its Added tag
+  await p.waitForSelector('[data-fmenu="Aria Testwell/Late page.pdf"]', { timeout: 30000 });
+  await p.evaluate(() => window.__mark.saved());
+  const kept = await p.evaluate(() => new Promise(res => { const r = indexedDB.open('grading-studio-added'); r.onsuccess = () => { const q = r.result.transaction('files').objectStore('files').getAll(); q.onsuccess = () => { res(q.result.map(x => [x.key, x.path, x.name])); r.result.close(); }; }; }));
+  assert.ok(kept.some(([k, pth, n]) => k === 'Aria Testwell' && pth === 'Aria Testwell/Late page.pdf' && n === 'Late page.pdf'), JSON.stringify(kept));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// D-006 D-007 D-036: Partners and videos with Drive. Choose from Drive… above the list picks many videos, each going to the student
+// named in its file name; the folder line says where the chooser opens and Change folder changes it; Drive… on a row picks that
+// student's video; Save adds each as the shortcut the current app writes. Add, A video shows the same folder line.
+test('D-006 D-007 D-036: Choose from Drive… matched by name, Change folder, Drive… on a row, and the folder line in Add a video', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const D = { asked: [], folders: [], sent: [], videos: {}, papers: { '1PaperAriaPaperAriaPaperAria00001': await makePaper({ title: 'Aria outline' }), '1PaperBramPaperBramPaperBram00002': await makePaper({ title: 'Bram outline' }) } };
+  const p = await page(ctx, errors, D);
+  await p.goto(srv.url + 'blank'); await plant(p, seed());
+  await p.evaluate(() => Promise.all([['grading-studio-added', 'files'], ['grading-studio-videos', 'v']].map(([n, s]) => new Promise(res => { const r = indexedDB.open(n, 1); r.onupgradeneeded = () => r.result.createObjectStore(s); r.onsuccess = () => { r.result.close(); res(); }; }))));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.evaluate(() => { window.__picks.push([
+    { id: '1PaperAriaPaperAriaPaperAria00001', name: 'Aria Testwell.pdf', mimeType: 'application/pdf', sizeBytes: '900' },
+    { id: '1PaperBramPaperBramPaperBram00002', name: 'Bram Sample.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.click('[data-bring-for="i9"]');
+  await menuPick(p, 'Google Drive');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await tap(p, '[data-setupopen]');
+  await menuPick(p, 'Partners and videos');
+  await p.waitForSelector('dialog[open] [data-pvmany]');
+  // the videos folder first (once), then two videos, each named for a student
+  await p.evaluate(() => { window.__picks.length = 0; window.__picks.push([{ id: '1FolderVideosFolderVideos0000007', name: 'Class videos', mimeType: 'application/vnd.google-apps.folder' }],
+    [{ id: '1VideoAriaVideoAriaVideoAria00009', name: 'Aria Testwell speech.webm', mimeType: 'video/webm', sizeBytes: '2000' }, { id: '1VideoBramVideoBramVideoBram00010', name: 'Bram Sample talk.webm', mimeType: 'video/webm', sizeBytes: '3000' }]); });
+  await p.click('dialog[open] [data-pvmany]');
+  await p.waitForFunction(() => /Aria Testwell speech\.webm/.test(document.querySelector('[data-pvrow="Aria Testwell"]').textContent) && /Bram Sample talk\.webm/.test(document.querySelector('[data-pvrow="Bram Sample"]').textContent), { timeout: 30000 });
+  assert.match(await p.$eval('[data-pvrow="Aria Testwell"]', e => e.textContent), /Google Drive/, 'marked as from Drive');
+  assert.equal(await p.evaluate(() => window.__pickerSeen.slice(-1)[0].features.includes('multi')), true, 'many at once');
+  // the line is asked of the video part, so it shows a moment after the box opens
+  await p.waitForFunction(() => /Class videos.*Change folder/.test((document.querySelector('dialog[open] .vddir') || {}).textContent || ''), { timeout: 30000 });
+  // Change folder
+  await p.evaluate(() => { window.__picks.push([{ id: '1FolderOtherFolderOtherFolder00008', name: 'Speeches 2026', mimeType: 'application/vnd.google-apps.folder' }]); });
+  await p.click('dialog[open] [data-vddir]');
+  await p.waitForFunction(() => /Speeches 2026/.test((document.querySelector('dialog[open] .vddir') || {}).textContent || ''), { timeout: 30000 });
+  // Drive… on Bram's row, once his matched video is taken off: the chooser opens in the new folder
+  await p.click('[data-pvrow="Bram Sample"] [data-pvunfile]');
+  await p.waitForSelector('[data-pvrow="Bram Sample"] [data-pvdrive]');
+  await p.evaluate(() => { window.__picks.push([{ id: '1VideoBramRedoVideoBramRedo00011', name: 'Bram retake.webm', mimeType: 'video/webm', sizeBytes: '4000' }]); });
+  await p.click('[data-pvrow="Bram Sample"] [data-pvdrive]');
+  await p.waitForFunction(() => /Bram retake\.webm/.test(document.querySelector('[data-pvrow="Bram Sample"]').textContent), { timeout: 30000 });
+  assert.equal(await p.evaluate(() => window.__pickerSeen.slice(-1)[0].views[0].parent), '1FolderOtherFolderOtherFolder00008');
+  await tap(p, '[data-pvgo]');
+  await p.waitForFunction(() => ['Aria Testwell', 'Bram Sample'].every(k => window.__mark.state().batch.students.find(s => s.key === k).files.some(f => f.kind === 'link')), { timeout: 60000 });
+  const links = await p.evaluate(() => ['Aria Testwell', 'Bram Sample'].map(k => new TextDecoder().decode(window.__mark.state().batch.students.find(s => s.key === k).files.find(f => f.kind === 'link').data)));
+  assert.match(links[0], /GsDrive=1VideoAriaVideoAriaVideoAria00009/); assert.match(links[0], /Name=Aria Testwell speech\.webm/);
+  assert.match(links[1], /GsDrive=1VideoBramRedoVideoBramRedo00011/);
+  assert.deepEqual(await p.evaluate(() => JSON.parse(localStorage.getItem('gs.gVidDir'))), { id: '1FolderOtherFolderOtherFolder00008', name: 'Speeches 2026' }, 'kept where the current app keeps it');
+  // D-036: Add, A video, From Google Drive shows where the chooser opens, with Change folder
+  await goTo(p, 'Aria Testwell');
+  await p.waitForFunction(() => { const it = [...document.querySelectorAll('.pop [role="menuitem"]')].find(e => /video or recording/.test(e.textContent)); if (it) { it.click(); return true; } const b = document.querySelector('[data-addmenu]'); if (b && !document.querySelector('.pop')) b.click(); return false; }, { timeout: 30000, polling: 500 });
+  await p.waitForSelector('dialog[open] [data-vdadd]');
+  await p.evaluate(() => { window.__picks.push([]); });
+  await p.click('dialog[open] [data-v="drive"]');
+  await p.waitForFunction(() => /Speeches 2026.*Change folder/.test((document.querySelector('dialog[open] .vddir') || {}).textContent || ''), { timeout: 30000 });
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// D-021: with Google usable here, a unit's Add files has Drive's mark beside it and Add a screenshot is a menu of this computer or
+// Drive; the file picked in Drive goes on the unit as one from the computer's chooser does.
+test('D-021: Drive\'s mark beside a unit\'s Add files adds the file picked in Drive to the unit; Add a screenshot offers both ways', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const D = { asked: [], folders: [], sent: [], videos: {}, papers: { '1UnitTaskUnitTaskUnitTaskUnit00001': await makePaper({ title: 'Poem task' }) } };
+  const p = await page(ctx, errors, D);
+  await p.goto(srv.url + 'blank'); await plant(p, seed()); await plantPlan(p);
+  const kv = key => p.evaluate(key => new Promise(res => { const r = indexedDB.open('gs-lessons'); r.onsuccess = () => { const q = r.result.transaction('kv').objectStore('kv').get(key); q.onsuccess = () => { r.result.close(); res(q.result === undefined ? null : JSON.parse(JSON.stringify(q.result))); }; }; }), key);
+  const nFiles = async () => ((await kv('units')) || []).reduce((n, u) => n + (u.files || []).length, 0);
+  await p.goto(srv.url + 'next/#/class/c1');
+  await p.waitForSelector('[data-focus="unit-add-file"]', { timeout: 60000 });
+  const before = await nFiles();
+  await p.click('[data-focus="unit-add-shot"]');
+  await p.waitForFunction(() => { const l = [...document.querySelectorAll('.pop [role="menuitem"]')].map(e => e.textContent.trim()); return l.includes('From this computer') && l.includes('From Google Drive'); }, { timeout: 15000 });
+  await p.keyboard.press('Escape'); await p.waitForFunction(() => !document.querySelector('.pop [role="menuitem"]'));
+  await p.evaluate(() => { window.__picks.push([{ id: '1UnitTaskUnitTaskUnitTaskUnit00001', name: 'Poem task.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.click('.ufiles .row [data-drive]');
+  for (let k = 0; k < 100 && (await nFiles()) === before; k++) await new Promise(r => setTimeout(r, 150));
+  const files = ((await kv('units')) || []).flatMap(u => u.files || []);
+  assert.ok(files.some(f => f.name === 'Poem task.pdf'), 'the file picked in Drive is on the unit: ' + JSON.stringify(files.map(f => f.name)));
   assert.deepEqual(errors, []);
   await ctx.close();
 });

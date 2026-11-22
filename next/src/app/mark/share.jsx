@@ -29,10 +29,10 @@ const MARKS_OPTS = [['scores', 'paper.sh_mo_scores'], ['comments', 'paper.sh_mo_
 const ready = async () => { use({ aiSay: aiName }); await libs(); await outLoad(); };
 
 // ctx: { M: the marking code, open, reopen }, as Check the covers takes it
-export function Share({ ctx, onClose, back }) {
+export function Share({ ctx, onClose, back, kind: start }) {
   AI = ctx.ai || {};
   const sh = shareState(), b = state().batch, ai = AI, name = aiName();
-  const [kind, setKindS] = useState(sh.kind === 'marks' ? 'marks' : 'papers'), [, tick] = useState(0), [check, setCheck] = useState(null), [bring, setBring] = useState(!!back);
+  const [kind, setKindS] = useState(start === 'marks' || start === 'papers' ? start : sh.kind === 'marks' ? 'marks' : 'papers'), [, tick] = useState(0), [check, setCheck] = useState(null), [bring, setBring] = useState(!!back);
   const [prog, setProg] = useState(null), [busy, setBusy] = useState(false), [list, setList] = useState(null);
   const save = () => ctx.M.changedNow();
   useEffect(() => { let live = true; (async () => { await ready(); await N.ensureCounts(); if (live) setList(N.coverList(false)); })().catch(e => console.error(e)); return () => { live = false; }; }, [check]);
