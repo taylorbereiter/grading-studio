@@ -18,15 +18,15 @@ import { t } from '../../i18n/t.js';
 import * as C from './change.js';
 import { PARTS } from '../router.js';
 import './lines.js';
-import './paper-lines.js';
+import './quick-lines.js';
 
 const J = v => JSON.parse(JSON.stringify(v));
 const R = v => Math.round(v * 10000) / 10000, clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const uid = () => Math.random().toString(36).slice(2, 10);
-const HOW = () => [['x', t('paper.qb_how_x')], ['cx', t('paper.qb_how_cx')], ['pts', t('paper.qb_how_pts')]];
-const ANS = () => [['miss', t('paper.qb_ans_miss')], ['all', t('paper.qb_ans_all')], ['off', t('paper.qb_ans_off')]];
-const AT = () => [['right', t('paper.qb_at_right')], ['under', t('paper.qb_at_under')], ['mark', t('paper.qb_at_mark')]];
-const atWord = k => t(k === 'under' ? 'paper.qb_atw_under' : k === 'mark' ? 'paper.qb_atw_mark' : 'paper.qb_atw_right');
+const HOW = () => [['x', t('qk.qb_how_x')], ['cx', t('qk.qb_how_cx')], ['pts', t('qk.qb_how_pts')]];
+const ANS = () => [['miss', t('qk.qb_ans_miss')], ['all', t('qk.qb_ans_all')], ['off', t('qk.qb_ans_off')]];
+const AT = () => [['right', t('qk.qb_at_right')], ['under', t('qk.qb_at_under')], ['mark', t('qk.qb_at_mark')]];
+const atWord = k => t(k === 'under' ? 'qk.qb_atw_under' : k === 'mark' ? 'qk.qb_atw_mark' : 'qk.qb_atw_right');
 
 // One page, drawn once (qzPage at 1100 across) and kept while the editor is open.
 function PageImg({ st, n, onSize }) {
@@ -38,7 +38,7 @@ function PageImg({ st, n, onSize }) {
     return () => { live = false; if (c) { c.width = 0; c.remove(); } };
   }, [st.key, n]);
   // the canvas goes into a box of its own, which Preact leaves empty
-  return <div class="qbimgbox">{!got && <span class="mute">{t('paper.qm_drawing')}</span>}<div ref={box} class="qbcv" /></div>;
+  return <div class="qbimgbox">{!got && <span class="mute">{t('qk.qm_drawing')}</span>}<div ref={box} class="qbcv" /></div>;
 }
 
 export function QuickBoxes({ onClose, onSaved }) {
@@ -84,7 +84,7 @@ export function QuickBoxes({ onClose, onSaved }) {
     if (mode === 'total') { W.total = { n, x: Math.round(p0[0] * 1000) / 1000, y: Math.round(p0[1] * 1000) / 1000 }; setMode(null); return; }
     if (mode === 'spot') {
       const q = qOf(sel); setMode(null);
-      if (q && q.n === n) { q.mx = R(p0[0]); q.my = R(p0[1]); re(); } else if (q) toast(t('paper.qb_spot_page', { n: q.n + 1, q: Z.quizLabel(q, W.qs.indexOf(q)) }));
+      if (q && q.n === n) { q.mx = R(p0[0]); q.my = R(p0[1]); re(); } else if (q) toast(t('qk.qb_spot_page', { n: q.n + 1, q: Z.quizLabel(q, W.qs.indexOf(q)) }));
       return;
     }
     e.preventDefault(); w.setPointerCapture(e.pointerId); pagesEl.current.focus({ preventScroll: true });
@@ -167,15 +167,15 @@ export function QuickBoxes({ onClose, onSaved }) {
   const tops = [...new Set(W.qs.filter(Z.qzByPts).map(q => +q.pts || 1))].sort((a, b2) => a - b2);
   const lvNote = k => {
     const tb = Z.ibQzRaw(W, k), max = Z.ibQzMax(W, c, k);
-    if (!tb || tb.every(v => v == null)) return t('paper.qb_lv_none');
-    if (!Z.ibQzTable(W, k)) return t('paper.qb_lv_fill', { n: S.IB_TOP });
-    return tb[S.IB_TOP - 1] > max ? t('paper.qb_lv_over', { n: S.IB_TOP, p: fmtNum(tb[S.IB_TOP - 1]), max: fmtNum(max) }) : '';
+    if (!tb || tb.every(v => v == null)) return t('qk.qb_lv_none');
+    if (!Z.ibQzTable(W, k)) return t('qk.qb_lv_fill', { n: S.IB_TOP });
+    return tb[S.IB_TOP - 1] > max ? t('qk.qb_lv_over', { n: S.IB_TOP, p: fmtNum(tb[S.IB_TOP - 1]), max: fmtNum(max) }) : '';
   };
   const lvOk = () => {
     if (!c) return true;
     for (const k of Object.keys(W.lvb || {})) { const tb = Z.ibQzRaw(W, k); if (!tb || tb.every(v => v == null)) delete W.lvb[k]; }
     const bad = Object.keys(W.lvb || {}).filter(k => !Z.ibQzTable(W, k));
-    if (bad.length) { toast(t('paper.qb_lv_bad', { list: bad.join(', ') })); return false; }
+    if (bad.length) { toast(t('qk.qb_lv_bad', { list: bad.join(', ') })); return false; }
     if (W.lvb && !Object.keys(W.lvb).length) delete W.lvb;
     return true;
   };
@@ -190,78 +190,78 @@ export function QuickBoxes({ onClose, onSaved }) {
     try {
       const say = await C.quickBoxesSave(out, ansBack, Z, S);
       if (!out.qs.length) Z.qzLetGo();   // with boxes, Quick mark opens next on the same documents
-      toast(say === 'rubric' ? t('paper.qb_saved_rubric', { n: fmtNum(sum) }) : say === 'points' ? t('paper.qb_saved_points', { n: fmtNum(sum) }) : t('paper.qb_saved'), { undo: C.undo });
+      toast(say === 'rubric' ? t('qk.qb_saved_rubric', { n: fmtNum(sum) }) : say === 'points' ? t('qk.qb_saved_points', { n: fmtNum(sum) }) : t('qk.qb_saved'), { undo: C.undo });
       onSaved(W.qs.length > 0);
     } catch (e) { console.error(e); setBusy(false); toast(t('mark.cannot')); }
   };
   const q = qOf(sel);
   const row = (k, on, list, set, attr) => <Segmented size="sm" label={k} value={on} onChange={v => { set(v); re(); }} options={list.map(([value, label]) => ({ value, label }))} data-attr={attr} />;
   return <><dialog class="dlg mk-qb" aria-labelledby="qbT" {...p} onKeyDown={keys} data-qb>
-    <header><h2 id="qbT">{t('paper.qb_title')}</h2>
-      <label class="qbwho"><span>{t('paper.qb_on')}</span><select class="input sm" value={si} onChange={e => { setSi(+e.currentTarget.value); }} data-qbwho data-raw>{who.map(i => <option value={i}>{shownName(bb.students[i], i)}</option>)}</select></label></header>
+    <header><h2 id="qbT">{t('qk.qb_title')}</h2>
+      <label class="qbwho"><span>{t('qk.qb_on')}</span><select class="input sm" value={si} onChange={e => { setSi(+e.currentTarget.value); }} data-qbwho data-raw>{who.map(i => <option value={i}>{shownName(bb.students[i], i)}</option>)}</select></label></header>
     <div class="body qbwrap">
       <div class="qbpages" ref={pagesEl} tabIndex={-1} data-qbpages>{!ready ? <div class="loading" aria-busy="true" /> : Array.from({ length: nPages }, (_, n) => {
         const d = drag.current;
         return <div class="qbpg" key={st.key + '|' + n} onPointerDown={e => down(e, n)} onPointerMove={move} onPointerUp={up} data-qbpg={n}>
-          <div class="qbpn">{t('paper.qb_page', { n: n + 1 })}</div><PageImg st={st} n={n} onSize={re} />
+          <div class="qbpn">{t('qk.qb_page', { n: n + 1 })}</div><PageImg st={st} n={n} onSize={re} />
           {W.qs.map((x, i) => {
             if (x.n !== n) return null;
             const on = x.id === sel, [px, py] = pinAt(x), lab = Z.quizLabel(x, i);
             return <Fragment key={x.id}><div class={'qbbox' + (on ? ' on' : '')} style={{ left: x.x * 100 + '%', top: x.y * 100 + '%', width: x.w * 100 + '%', height: x.h * 100 + '%' }} data-qbbox={x.id}>
               <span data-qbtab={x.id} data-raw>{lab}</span>{on && ['nw', 'ne', 'sw', 'se'].map(k => <i class={'qbh ' + k} data-c={k} />)}</div>
-              <div class={'qbpin' + (on ? ' on' : '')} style={{ left: px * 100 + '%', top: py * 100 + '%' }} title={t('paper.qb_pin_tip')} data-qbpin={x.id}>{(x.how || 'cx') === 'pts' ? fmtNum(+x.pts || 1) : '✗'}</div>
-              {W.ans !== 'off' && String(x.key || '').trim() && (() => { const [ax, ay] = ansAt(x); return <div class={'qbapin' + (on ? ' on' : '')} style={{ left: ax * 100 + '%', top: ay * 100 + '%' }} title={t('paper.qb_apin_tip', { q: lab })} data-qbapin={x.id} data-raw>{/^\d/.test(lab) ? 'Q' + lab : lab}</div>; })()}</Fragment>;
+              <div class={'qbpin' + (on ? ' on' : '')} style={{ left: px * 100 + '%', top: py * 100 + '%' }} title={t('qk.qb_pin_tip')} data-qbpin={x.id}>{(x.how || 'cx') === 'pts' ? fmtNum(+x.pts || 1) : '✗'}</div>
+              {W.ans !== 'off' && String(x.key || '').trim() && (() => { const [ax, ay] = ansAt(x); return <div class={'qbapin' + (on ? ' on' : '')} style={{ left: ax * 100 + '%', top: ay * 100 + '%' }} title={t('qk.qb_apin_tip', { q: lab })} data-qbapin={x.id} data-raw>{/^\d/.test(lab) ? 'Q' + lab : lab}</div>; })()}</Fragment>;
           })}
           {W.total && W.total.n === n && <div class="qbtot" style={{ left: W.total.x * 100 + '%', top: W.total.y * 100 + '%' }} data-qbtot>{fmtNum(sum) + '/' + fmtNum(sum)}</div>}
           {d && d.kind === 'draw' && d.sel && d.sel.n === n && <div class="qbbox ghost" style={{ left: d.sel.x * 100 + '%', top: d.sel.y * 100 + '%', width: d.sel.w * 100 + '%', height: d.sel.h * 100 + '%' }} />}
         </div>;
       })}</div>
       <div class="qbside">
-        <p class="mute">{t('paper.qb_about')}</p>
-        {W.qs.length ? <><table class="qbt"><thead><tr><th>{t('paper.qb_q')}</th><th>{t('paper.qb_pts')}</th><th>{t('paper.qb_kind')}</th><th>{t('paper.qb_how')}</th><th>{t('paper.qb_key')}</th><th /></tr></thead>
+        <p class="mute">{t('qk.qb_about')}</p>
+        {W.qs.length ? <><table class="qbt"><thead><tr><th>{t('qk.qb_q')}</th><th>{t('qk.qb_pts')}</th><th>{t('qk.qb_kind')}</th><th>{t('qk.qb_how')}</th><th>{t('qk.qb_key')}</th><th /></tr></thead>
           <tbody>{W.qs.map((x, i) => <Fragment key={x.id}><tr class={x.id === sel ? 'on' : ''} onFocusIn={() => { if (sel !== x.id) pick(x.id); }} data-qbrow={x.id}>
-            <td><input class="input sm" value={x.lab || String(i + 1)} aria-label={t('paper.qb_q_name')} maxLength={12} onInput={e => { x.lab = e.currentTarget.value.trim() === String(i + 1) ? '' : e.currentTarget.value; re(); }} data-qlab data-raw /></td>
-            <td><input class="input sm" type="number" min="0.5" step="0.5" value={String(x.pts)} aria-label={t('paper.qb_pts')} onInput={e => setPts(x, e.currentTarget.value)} data-qpts /></td>
-            <td><select class="input sm" value={Z.qzByPts(x) ? 'scale' : 'rw'} aria-label={t('paper.qb_kind')} onChange={e => setKind(x, e.currentTarget.value)} data-qkind><option value="rw">{t('paper.qb_rw')}</option><option value="scale">{t('paper.qm_scale', { n: fmtNum(+x.pts || 1) })}</option></select></td>
-            <td><select class="input sm" value={x.how || 'cx'} aria-label={t('paper.qb_how')} onChange={e => { x.how = e.currentTarget.value; re(); }} data-qhow>{HOW().map(([k, l]) => <option value={k}>{l}</option>)}</select></td>
-            <td><input class="input sm" value={x.key || ''} placeholder={t('paper.qb_key_ph')} aria-label={t('paper.qb_key_label')} maxLength={160} onInput={e => { x.key = e.currentTarget.value; re(); }} data-qkey data-raw /></td>
-            <td><button type="button" class="icon" aria-label={t('paper.qb_del')} title={t('paper.qb_del')} onClick={() => { W.qs = W.qs.filter(y => y.id !== x.id); if (sel === x.id) setSel(null); re(); }} data-del={x.id}>✕</button></td></tr>
+            <td><input class="input sm" value={x.lab || String(i + 1)} aria-label={t('qk.qb_q_name')} maxLength={12} onInput={e => { x.lab = e.currentTarget.value.trim() === String(i + 1) ? '' : e.currentTarget.value; re(); }} data-qlab data-raw /></td>
+            <td><input class="input sm" type="number" min="0.5" step="0.5" value={String(x.pts)} aria-label={t('qk.qb_pts')} onInput={e => setPts(x, e.currentTarget.value)} data-qpts /></td>
+            <td><select class="input sm" value={Z.qzByPts(x) ? 'scale' : 'rw'} aria-label={t('qk.qb_kind')} onChange={e => setKind(x, e.currentTarget.value)} data-qkind><option value="rw">{t('qk.qb_rw')}</option><option value="scale">{t('qk.qm_scale', { n: fmtNum(+x.pts || 1) })}</option></select></td>
+            <td><select class="input sm" value={x.how || 'cx'} aria-label={t('qk.qb_how')} onChange={e => { x.how = e.currentTarget.value; re(); }} data-qhow>{HOW().map(([k, l]) => <option value={k}>{l}</option>)}</select></td>
+            <td><input class="input sm" value={x.key || ''} placeholder={t('qk.qb_key_ph')} aria-label={t('qk.qb_key_label')} maxLength={160} onInput={e => { x.key = e.currentTarget.value; re(); }} data-qkey data-raw /></td>
+            <td><button type="button" class="icon" aria-label={t('qk.qb_del')} title={t('qk.qb_del')} onClick={() => { W.qs = W.qs.filter(y => y.id !== x.id); if (sel === x.id) setSel(null); re(); }} data-del={x.id}>✕</button></td></tr>
             {(goals.length > 0 || c) && <tr class={'qgrow' + (x.id === sel ? ' on' : '')}><td colSpan={6}>
-              {c && <label>{t('paper.qb_crit')} <select class="input sm" value={Z.ibQzOf(x, c)} aria-label={t('paper.qb_crit_for', { q: Z.quizLabel(x, i) })} onChange={e => { x.ib = e.currentTarget.value; re(); }} data-qib data-raw>{S.ibCrit(c).map(y => <option value={y.k}>{y.k + ' ' + y.name}</option>)}</select></label>}
-              {goals.length > 0 && <label>{t('paper.qb_goal')} <select class="input sm" value={x.goal || ''} aria-label={t('paper.qb_goal_for', { q: Z.quizLabel(x, i) })} onChange={e => { if (e.currentTarget.value) x.goal = e.currentTarget.value; else delete x.goal; re(); }} data-qgoal data-raw>
-                <option value="">{t('paper.qb_goal_none')}</option>{goals.map(g => <option value={g.id}>{g.name}</option>)}</select></label>}</td></tr>}</Fragment>)}</tbody></table>
-          <p class="hsm goalline"><button type="button" class="link" onClick={editGoals} data-qgoals>{t(goals.length ? 'paper.qb_goals_edit' : 'paper.qb_goals_tag')}</button></p></>
-          : <p class="mute">{t('paper.qb_none')}</p>}
-        {c && W.qs.length > 0 && <div class="qbwords ibqlv" data-qblv><p><b>{t('paper.qb_lv_h')}</b> <span class="mute">{t('paper.qb_lv_sub')}</span></p>
+              {c && <label>{t('qk.qb_crit')} <select class="input sm" value={Z.ibQzOf(x, c)} aria-label={t('qk.qb_crit_for', { q: Z.quizLabel(x, i) })} onChange={e => { x.ib = e.currentTarget.value; re(); }} data-qib data-raw>{S.ibCrit(c).map(y => <option value={y.k}>{y.k + ' ' + y.name}</option>)}</select></label>}
+              {goals.length > 0 && <label>{t('qk.qb_goal')} <select class="input sm" value={x.goal || ''} aria-label={t('qk.qb_goal_for', { q: Z.quizLabel(x, i) })} onChange={e => { if (e.currentTarget.value) x.goal = e.currentTarget.value; else delete x.goal; re(); }} data-qgoal data-raw>
+                <option value="">{t('qk.qb_goal_none')}</option>{goals.map(g => <option value={g.id}>{g.name}</option>)}</select></label>}</td></tr>}</Fragment>)}</tbody></table>
+          <p class="hsm goalline"><button type="button" class="link" onClick={editGoals} data-qgoals>{t(goals.length ? 'qk.qb_goals_edit' : 'qk.qb_goals_tag')}</button></p></>
+          : <p class="mute">{t('qk.qb_none')}</p>}
+        {c && W.qs.length > 0 && <div class="qbwords ibqlv" data-qblv><p><b>{t('qk.qb_lv_h')}</b> <span class="mute">{t('qk.qb_lv_sub')}</span></p>
           {Z.ibQzUsed(W, c).map(k => { const tb = Z.ibQzRaw(W, k) || [], max = Z.ibQzMax(W, c, k), x = S.ibCrit(c).find(y => y.k === k);
-            return <div class="ibqrow" data-ibqk={k}><span><b data-raw>{k}</b> <span data-raw>{x.name}</span> <span class="mute">{t('paper.qb_lv_of', { n: fmtNum(max) })}</span></span>
-              <div class="qbwrow">{Array.from({ length: S.IB_TOP }, (_, i) => <label class="qbw"><b>{i + 1}</b><input class="input sm" type="number" min="0.5" step="0.5" value={tb[i] != null ? String(tb[i]) : ''} aria-label={t('paper.qb_lv_cell', { n: i + 1, k })}
+            return <div class="ibqrow" data-ibqk={k}><span><b data-raw>{k}</b> <span data-raw>{x.name}</span> <span class="mute">{t('qk.qb_lv_of', { n: fmtNum(max) })}</span></span>
+              <div class="qbwrow">{Array.from({ length: S.IB_TOP }, (_, i) => <label class="qbw"><b>{i + 1}</b><input class="input sm" type="number" min="0.5" step="0.5" value={tb[i] != null ? String(tb[i]) : ''} aria-label={t('qk.qb_lv_cell', { n: i + 1, k })}
                 onInput={e => { const v = e.currentTarget.value.trim() === '' ? null : Math.round(+e.currentTarget.value * 2) / 2; W.lvb ||= {}; const a = W.lvb[k] = Z.ibQzRaw(W, k) || Array(S.IB_TOP).fill(null); a[i] = v != null && v > 0 && v <= 1000 ? v : null; re(); }} data-ibql={i} /></label>)}</div>
-              <span><button type="button" class="link" onClick={() => { (W.lvb ||= {})[k] = Z.ibQzEven(max); re(); }} data-ibqeven={k}>{t('paper.qb_lv_even')}</button> <button type="button" class="link" onClick={() => { if (W.lvb) delete W.lvb[k]; re(); }} data-ibqclear={k}>{t('paper.qb_lv_clear')}</button> <span class="mute" data-ibqsay>{lvNote(k)}</span></span></div>; })}</div>}
-        {tops.length > 0 && <div class="qbwords" data-qbwords><p><b>{t('paper.qb_words_h')}</b> <span class="mute">{t('paper.qb_words_sub')}</span></p>
+              <span><button type="button" class="link" onClick={() => { (W.lvb ||= {})[k] = Z.ibQzEven(max); re(); }} data-ibqeven={k}>{t('qk.qb_lv_even')}</button> <button type="button" class="link" onClick={() => { if (W.lvb) delete W.lvb[k]; re(); }} data-ibqclear={k}>{t('qk.qb_lv_clear')}</button> <span class="mute" data-ibqsay>{lvNote(k)}</span></span></div>; })}</div>}
+        {tops.length > 0 && <div class="qbwords" data-qbwords><p><b>{t('qk.qb_words_h')}</b> <span class="mute">{t('qk.qb_words_sub')}</span></p>
           {tops.map(top => { const w = W.words[String(top)] && W.words[String(top)].length === Z.qzSteps(top).length ? W.words[String(top)] : Z.qzStepWords(top, W.words);
-            return <div class="qbwrow"><span class="mute">{t('paper.qb_words_row', { n: fmtNum(top) })}</span>{Z.qzSteps(top).map((s2, k) => <label class="qbw"><b>{fmtNum(s2)}</b><input class="input sm" value={w[k] || ''} placeholder="—" maxLength={30} aria-label={t('paper.qb_words_cell', { s: fmtNum(s2), n: fmtNum(top) })}
+            return <div class="qbwrow"><span class="mute">{t('qk.qb_words_row', { n: fmtNum(top) })}</span>{Z.qzSteps(top).map((s2, k) => <label class="qbw"><b>{fmtNum(s2)}</b><input class="input sm" value={w[k] || ''} placeholder="—" maxLength={30} aria-label={t('qk.qb_words_cell', { s: fmtNum(s2), n: fmtNum(top) })}
               onInput={e => { const a = W.words[String(top)] ||= Z.qzStepWords(top, W.words); a[k] = e.currentTarget.value.trim().slice(0, 30); }} data-qword={top + ':' + k} data-raw /></label>)}</div>; })}</div>}
-        {q && <div class="qbspot" data-qbspot><b>{t('paper.qb_mark_of', { q: Z.quizLabel(q, W.qs.indexOf(q)) })}</b><Button size="sm" onClick={() => setMode(mode === 'spot' ? null : 'spot')} data-spot>{mode === 'spot' ? t('paper.qb_click') : t('paper.qb_spot')}</Button>
-          {q.mx != null ? <button type="button" class="link" onClick={() => { delete q.mx; delete q.my; re(); }} data-margin>{t('paper.qb_margin_back')}</button> : <span class="mute">{t('paper.qb_margin')}</span>}</div>}
-        {q && W.ans !== 'off' && String(q.key || '').trim() && <div class="qbspot"><b>{t('paper.qb_line')}</b><span class="mute">{q.nx != null ? t('paper.qb_line_pin') : t('paper.qb_line_at', { at: atWord(W.at) })}</span>
-          {q.nx != null && <button type="button" class="link" onClick={() => { delete q.nx; delete q.ny; re(); }} data-ansdef>{t('paper.qb_line_back', { at: atWord(W.at) })}</button>}</div>}
+        {q && <div class="qbspot" data-qbspot><b>{t('qk.qb_mark_of', { q: Z.quizLabel(q, W.qs.indexOf(q)) })}</b><Button size="sm" onClick={() => setMode(mode === 'spot' ? null : 'spot')} data-spot>{mode === 'spot' ? t('qk.qb_click') : t('qk.qb_spot')}</Button>
+          {q.mx != null ? <button type="button" class="link" onClick={() => { delete q.mx; delete q.my; re(); }} data-margin>{t('qk.qb_margin_back')}</button> : <span class="mute">{t('qk.qb_margin')}</span>}</div>}
+        {q && W.ans !== 'off' && String(q.key || '').trim() && <div class="qbspot"><b>{t('qk.qb_line')}</b><span class="mute">{q.nx != null ? t('qk.qb_line_pin') : t('qk.qb_line_at', { at: atWord(W.at) })}</span>
+          {q.nx != null && <button type="button" class="link" onClick={() => { delete q.nx; delete q.ny; re(); }} data-ansdef>{t('qk.qb_line_back', { at: atWord(W.at) })}</button>}</div>}
         <div class="qbopt">
-          <div class="qbo"><span>{t('paper.qb_new_how')}</span>{row(t('paper.qb_new_how'), W.how, HOW(), v => { W.how = v; }, 'how')}</div>
-          <div class="qbo"><span>{t('paper.qb_side')}</span>{row(t('paper.qb_side'), W.side || 'left', [['left', t('paper.qb_side_left')], ['right', t('paper.qb_side_right')]], v => { W.side = v; }, 'side')}<span class="mute">{t('paper.qb_side_sub')}</span></div>
-          <div class="qbo"><span>{t('paper.qb_ans')}</span>{row(t('paper.qb_ans'), W.ans, ANS(), v => { W.ans = v; }, 'ans')}
-            <span class="qbanssay"><span class="qzgold">{t('paper.qm_answer')}</span><span class="mute">{t(W.ans === 'off' ? 'paper.qb_ans_say_off' : W.ans === 'all' ? 'paper.qb_ans_say_all' : 'paper.qb_ans_say_miss')}</span></span></div>
-          {W.ans !== 'off' && <div class="qbo"><span>{t('paper.qb_at')}</span>{row(t('paper.qb_at'), W.at, AT(), v => { W.at = v; }, 'at')}<span class="mute">{t('paper.qb_at_sub')}</span>
-            {moved > 0 && <button type="button" class="link" onClick={() => setAnsBack(v => !v)} data-ansback>{ansBack ? t('paper.qb_keep_moved') : t('paper.qb_put_back', { n: moved })}</button>}
-            {moved > 0 && ansBack && <span class="mute">{t('paper.qb_back_say')}</span>}</div>}
-          <div class="qbo"><span>{t('paper.qb_total')}</span><Button size="sm" onClick={() => setMode(mode === 'total' ? null : 'total')} data-qbtotal>{mode === 'total' ? t('paper.qb_click') : W.total ? t('paper.qb_total_move') : t('paper.qb_total_pick')}</Button>
-            <span class="mute">{W.total ? t(c ? 'paper.qb_total_lv_at' : 'paper.qb_total_at', { n: W.total.n + 1 }) : t(c ? 'paper.qb_total_lv_opt' : 'paper.qb_total_opt')}</span>
-            {W.total && mode !== 'total' && <button type="button" class="link" onClick={() => { W.total = null; re(); }} data-nototal>{t('paper.qb_no_total')}</button>}</div>
-          <p class="mute">{t('paper.qb_keys')}</p></div>
+          <div class="qbo"><span>{t('qk.qb_new_how')}</span>{row(t('qk.qb_new_how'), W.how, HOW(), v => { W.how = v; }, 'how')}</div>
+          <div class="qbo"><span>{t('qk.qb_side')}</span>{row(t('qk.qb_side'), W.side || 'left', [['left', t('qk.qb_side_left')], ['right', t('qk.qb_side_right')]], v => { W.side = v; }, 'side')}<span class="mute">{t('qk.qb_side_sub')}</span></div>
+          <div class="qbo"><span>{t('qk.qb_ans')}</span>{row(t('qk.qb_ans'), W.ans, ANS(), v => { W.ans = v; }, 'ans')}
+            <span class="qbanssay"><span class="qzgold">{t('qk.qm_answer')}</span><span class="mute">{t(W.ans === 'off' ? 'qk.qb_ans_say_off' : W.ans === 'all' ? 'qk.qb_ans_say_all' : 'qk.qb_ans_say_miss')}</span></span></div>
+          {W.ans !== 'off' && <div class="qbo"><span>{t('qk.qb_at')}</span>{row(t('qk.qb_at'), W.at, AT(), v => { W.at = v; }, 'at')}<span class="mute">{t('qk.qb_at_sub')}</span>
+            {moved > 0 && <button type="button" class="link" onClick={() => setAnsBack(v => !v)} data-ansback>{ansBack ? t('qk.qb_keep_moved') : t('qk.qb_put_back', { n: moved })}</button>}
+            {moved > 0 && ansBack && <span class="mute">{t('qk.qb_back_say')}</span>}</div>}
+          <div class="qbo"><span>{t('qk.qb_total')}</span><Button size="sm" onClick={() => setMode(mode === 'total' ? null : 'total')} data-qbtotal>{mode === 'total' ? t('qk.qb_click') : W.total ? t('qk.qb_total_move') : t('qk.qb_total_pick')}</Button>
+            <span class="mute">{W.total ? t(c ? 'qk.qb_total_lv_at' : 'qk.qb_total_at', { n: W.total.n + 1 }) : t(c ? 'qk.qb_total_lv_opt' : 'qk.qb_total_opt')}</span>
+            {W.total && mode !== 'total' && <button type="button" class="link" onClick={() => { W.total = null; re(); }} data-nototal>{t('qk.qb_no_total')}</button>}</div>
+          <p class="mute">{t('qk.qb_keys')}</p></div>
       </div>
     </div>
-    <footer><span class="mute grow" data-qbsum>{W.qs.length ? t(W.qs.length === 1 ? 'paper.qb_sum1' : 'paper.qb_sum', { n: W.qs.length, pts: fmtNum(sum) }) : t('paper.qb_none')}</span>
-      <Button onClick={close} data-qbcancel>{t('paper.qb_cancel')}</Button><Button variant="primary" disabled={busy} onClick={save} data-qbsave>{t('paper.qb_save')}</Button></footer>
+    <footer><span class="mute grow" data-qbsum>{W.qs.length ? t(W.qs.length === 1 ? 'qk.qb_sum1' : 'qk.qb_sum', { n: W.qs.length, pts: fmtNum(sum) }) : t('qk.qb_none')}</span>
+      <Button onClick={close} data-qbcancel>{t('qk.qb_cancel')}</Button><Button variant="primary" disabled={busy} onClick={save} data-qbsave>{t('qk.qb_save')}</Button></footer>
   </dialog>
   {gbox && h(gbox, { lib: state().lib, onClose: goalsBack })}</>;
 }

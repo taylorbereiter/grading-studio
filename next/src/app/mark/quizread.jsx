@@ -13,7 +13,7 @@ import { libs } from './paper.js';
 import { t } from '../../i18n/t.js';
 import * as C from './change.js';
 import './lines.js';
-import './paper-lines.js';
+import './quick-lines.js';
 
 export const made = () => { const Q = state().batch && state().batch.quiz; return !!(Q && Q.made && Q.qs.some(q => q.auto)); };
 // Scores set together, one step: marks on the papers, the score and the total (qrApply).
@@ -33,7 +33,7 @@ export async function readAll(again) {
   for (let k = 0; k < 100 && state().batch === b0 && b0.students.some(st => st.files.some(f => viewable(f) && !f.virtual) && !Z.quizPages(st).length); k++) await new Promise(r => setTimeout(r, 200));
   const list = [], look = [];
   let pages = 0, old = 0, read = 0, blank = 0, seen = 0;
-  toast(t('paper.qr_reading'));
+  toast(t('qk.qr_reading'));
   // the readings and the shifts they find are one step with the scores
   const work = [];
   for (const i of Z.quizWho()) {
@@ -56,7 +56,7 @@ export async function readAll(again) {
   });
   await apply(list);
   if (look.length || old) return true;
-  toast(seen ? t(seen === 1 ? 'paper.qr_scored1' : 'paper.qr_scored', { n: read, who: seen }) : t('paper.qr_none'));
+  toast(seen ? t(seen === 1 ? 'qk.qr_scored1' : 'qk.qr_scored', { n: read, who: seen }) : t('qk.qr_none'));
   return false;
 }
 
@@ -86,25 +86,25 @@ export function QuizLook({ onClose, onAgain }) {
       for (const st of new Set(list.map(x => x.st))) { Z.quizScore(st); await Z.qzTotal(st); }
     });
     onClose();
-    toast(list.length ? t(list.length === 1 ? 'paper.qr_saved1' : 'paper.qr_saved', { n: list.length }) : t('paper.qr_nothing'), list.length ? { undo: C.undo } : {});
+    toast(list.length ? t(list.length === 1 ? 'qk.qr_saved1' : 'qk.qr_saved', { n: list.length }) : t('qk.qr_nothing'), list.length ? { undo: C.undo } : {});
   };
   return <dialog class="dlg mk-qr" aria-labelledby="qrT" {...p} data-qr>
-    <header><h2 id="qrT">{t('paper.qr_title')}</h2></header>
+    <header><h2 id="qrT">{t('qk.qr_title')}</h2></header>
     <div class="body">
-      <div class="qftiles"><div><b>{R.pages || 0}</b><span>{t('paper.qr_t_pages')}</span></div><div><b>{R.seen || 0}</b><span>{t('paper.qr_t_seen')}</span></div>
-        <div><b>{R.read || 0}</b><span>{R.blank ? t('paper.qr_t_read_blank', { n: R.blank }) : t('paper.qr_t_read')}</span></div><div class="need"><b>{look.length}</b><span>{t('paper.qr_t_need')}</span></div></div>
-      {R.old > 0 && <p class="qfwarn">{t(R.old === 1 ? 'paper.qr_old1' : 'paper.qr_old', { n: R.old })}</p>}
-      {look.length ? <><p>{t('paper.qr_pick')}</p>{look.map((l, k) => { const L = K.qzAutoLetters(l.q), sa = l.q.auto.t === 'sa', ms = l.q.auto.t === 'ms';
-        return <div class={'qfrr' + (pick[k].length ? ' done' : '')} data-qrrow={k}><div class="qfrw"><b data-raw>{shownName(l.st, bb.students.indexOf(l.st))}</b><span class="mute">{t('paper.qr_q_why', { q: l.q.lab, why: t(WHY[l.why] || 'paper.qr_why_unclear') })}</span></div>
-          <div class="qfcrop">{pics[k] ? <img alt="" src={pics[k]} /> : <span class="mute">{t('paper.qm_drawing')}</span>}</div>
-          <div class="qfpick"><span class="mute">{sa ? t('paper.qr_your') : ms ? t('paper.qr_theirs_ms') : t('paper.qr_theirs')}</span>
+      <div class="qftiles"><div><b>{R.pages || 0}</b><span>{t('qk.qr_t_pages')}</span></div><div><b>{R.seen || 0}</b><span>{t('qk.qr_t_seen')}</span></div>
+        <div><b>{R.read || 0}</b><span>{R.blank ? t('qk.qr_t_read_blank', { n: R.blank }) : t('qk.qr_t_read')}</span></div><div class="need"><b>{look.length}</b><span>{t('qk.qr_t_need')}</span></div></div>
+      {R.old > 0 && <p class="qfwarn">{t(R.old === 1 ? 'qk.qr_old1' : 'qk.qr_old', { n: R.old })}</p>}
+      {look.length ? <><p>{t('qk.qr_pick')}</p>{look.map((l, k) => { const L = K.qzAutoLetters(l.q), sa = l.q.auto.t === 'sa', ms = l.q.auto.t === 'ms';
+        return <div class={'qfrr' + (pick[k].length ? ' done' : '')} data-qrrow={k}><div class="qfrw"><b data-raw>{shownName(l.st, bb.students.indexOf(l.st))}</b><span class="mute">{t('qk.qr_q_why', { q: l.q.lab, why: t(WHY[l.why] || 'qk.qr_why_unclear') })}</span></div>
+          <div class="qfcrop">{pics[k] ? <img alt="" src={pics[k]} /> : <span class="mute">{t('qk.qm_drawing')}</span>}</div>
+          <div class="qfpick"><span class="mute">{sa ? t('qk.qr_your') : ms ? t('qk.qr_theirs_ms') : t('qk.qr_theirs')}</span>
             {L.map(x => <Button size="sm" variant={pick[k].includes(x) ? 'primary' : undefined} aria-pressed={pick[k].includes(x) ? 'true' : 'false'} onClick={() => choose(k, x)} data-ans={x}>{x}</Button>)}
-            <Button size="sm" variant={pick[k][0] === '-' ? 'primary' : undefined} aria-pressed={pick[k][0] === '-' ? 'true' : 'false'} onClick={() => choose(k, '-')} data-ans="-">{sa ? t('paper.qr_later') : t('paper.qr_none_ans')}</Button></div></div>; })}</>
-        : <p>{t('paper.qr_nothing_needs')}</p>}
+            <Button size="sm" variant={pick[k][0] === '-' ? 'primary' : undefined} aria-pressed={pick[k][0] === '-' ? 'true' : 'false'} onClick={() => choose(k, '-')} data-ans="-">{sa ? t('qk.qr_later') : t('qk.qr_none_ans')}</Button></div></div>; })}</>
+        : <p>{t('qk.qr_nothing_needs')}</p>}
     </div>
-    <footer><span class="mute grow">{t('paper.qr_foot')}</span><Button onClick={() => { onClose(); onAgain(); }} title={t('paper.qr_again_tip')} data-qragain>{t('paper.qr_again')}</Button>
-      <Button onClick={onClose} data-qrlater>{t('paper.qr_later')}</Button><Button variant="primary" disabled={busy} onClick={save} data-qrdone>{t('paper.qr_save')}</Button></footer>
+    <footer><span class="mute grow">{t('qk.qr_foot')}</span><Button onClick={() => { onClose(); onAgain(); }} title={t('qk.qr_again_tip')} data-qragain>{t('qk.qr_again')}</Button>
+      <Button onClick={onClose} data-qrlater>{t('qk.qr_later')}</Button><Button variant="primary" disabled={busy} onClick={save} data-qrdone>{t('qk.qr_save')}</Button></footer>
   </dialog>;
 }
 // The scan's reasons, as qrDecide gives them (its own English words are the keys), in the app's words.
-const WHY = { 'Score unclear': 'paper.qr_why_score', 'Very light': 'paper.qr_why_light', 'Not clear': 'paper.qr_why_unclear', 'Another bubble marked': 'paper.qr_why_other', 'Two bubbles filled': 'paper.qr_why_two' };
+const WHY = { 'Score unclear': 'qk.qr_why_score', 'Very light': 'qk.qr_why_light', 'Not clear': 'qk.qr_why_unclear', 'Another bubble marked': 'qk.qr_why_other', 'Two bubbles filled': 'qk.qr_why_two' };
