@@ -179,9 +179,9 @@ export default function Home({ classes }) {
   const left = new Map((classes || []).map((x, i) => [x.loose ? '' : x.name, { ...x, i }]));
   return <div class="page home">
     <header class="ph hello"><div><h1>{greeting(d)}</h1><p data-raw>{date(d, { weekday: 'long', day: 'numeric', month: 'long' })}</p></div>
-      <div class="row gap">{G && G.HomeGoogle && <G.HomeGoogle />}{DR && <DR.HomeBring />}<HomeFocus /><a class="btn" href={href('calendar')}><Icon name="week" />{t('home.this_week')}</a></div></header>
+      <div class="row gap">{G && G.HomeGoogle && <G.HomeGoogle />}{DR && <DR.HomeBring L={{ bring: t('home.dr_bring'), files: t('home.dr_files'), folder: t('home.dr_folder'), scan: t('home.dr_scan'), match: t('home.dr_match'), failed: t('home.dr_failed') }} />}<HomeFocus /><a class="btn" href={href('calendar')}><Icon name="week" />{t('home.this_week')}</a></div></header>
     <p class="say" data-home="say" data-mark={c.mark} data-back={c.back} data-today={c.classesToday} data-plan={c.toPlan} data-missing={c.missing}>{say || t('home.say_none')}</p>
-    {DR && <DR.HomeDrop />}
+    {DR && <DR.HomeDrop L={{ h: t('home.dr_h'), say: t('home.dr_say'), busy: t('home.dr_busy'), failed: t('home.dr_failed') }} />}
     {FX && <FX.FolderFix />}
     {OS && v.oldSample && !sampleOn() && <OS.OldSample s={v.oldSample} L={{ os_h: t('home.os_h'), os_text: t('home.os_text'), os_setup: t('home.os_setup'), os_open: t('home.os_open'), os_rm: t('home.os_rm'), os_gone: t('home.os_gone'), os_cant: t('home.os_cant') }} onGone={() => useHome.read && useHome.read()} />}
     <FolderAsk work={v.mark.length + v.back.length > 0} />

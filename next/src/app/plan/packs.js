@@ -71,4 +71,8 @@ export async function dropped(files) {
     if (ok.length === 1 && !ok[0].library) go('lesson', ok[0].id);
   } catch (e) { saveFailed(e); }
 }
+// A ZIP that is a lesson pack (its pack.json says so), not a download of student work: Home's drop asks before it takes a ZIP.
+export async function isPack(file) {
+  try { const z = await open(new Uint8Array(await file.arrayBuffer()), f => f.name === 'pack.json'); return !!z['pack.json'] && JSON.parse(strFromU8(z['pack.json'])).kind === PACK_KIND; } catch { return false; }
+}
 export const takes = f => /\.(zip|gslesson|json)$/i.test(f && f.name || '');
