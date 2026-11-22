@@ -26,7 +26,7 @@ Grading Studio is an in-browser grading tool and lesson Planner for teachers. Ev
 9. **Saved browser work must survive every merge.** `npm run saved-work` proves it. A change to what is stored needs a migration and a note in `test/saved-work-changed.txt`. Never save a whole record from state that was not read from storage at that moment, and treat a failed read as a failure, not as empty.
 10. **Undo for marking.** Marking changes call `fieldSnap` / `gradeSnap` before they change anything; Library changes go through `libTrack`.
 11. **Look.** Light mode by default, the "Calm Desk" look in ocean blue (#1F6FB2), grays #F4F5F7 / #E4E6EA, Inter. Red only for marks.
-12. **NEVER merge PR #246 (the switch to the new app) without the owner's explicit go.**
+12. **NEVER merge the switch PR (the new app at the root, the previous version at classic/) without the owner's explicit go.** Green checks are not a go; only the owner's own words are.
 
 ## Rebuild status (paused 19 Nov 2026)
 
@@ -61,6 +61,6 @@ Merge in this order, one at a time: pull `main` into the next PR, wait for green
 4. **#258** (B, rows B-903 to B-906). Last CI fixes passed locally but were not watched.
 5. **#260** (A, Home lists, Find rows, first-load room). `find-a.test.js` "A-008" failed once in a long local run but passes alone; check it before merging.
 
-Also open: **#259** (E2, rows E2-048 and E2-108), checks were running at the pause; merge when green. **#246** is the switch: do not merge.
+Also open: **#259** (E2, rows E2-048 and E2-108), checks were running at the pause; merge when green. The switch PR is never merged without the owner's explicit go (rule 12).
 
 More slice C work is saved as a git bundle outside the repo (with the owner), not on any branch here. Ask the owner for it rather than redoing that work.

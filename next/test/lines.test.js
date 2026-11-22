@@ -294,13 +294,13 @@ test('each language\'s files mirror the English areas, and every lines file name
 
 // Check the delivered modules as well as the source dictionaries: packing must never shift or lose a line.
 test('every compiled language area restores its exact source dictionary', async () => {
-  const next = path.join(__dirname, '..'), meta = require('../dist/meta.json');
+  const next = path.join(__dirname, '..'), meta = require('../../dist/meta.json');
   const emitted = new Map(Object.entries(meta.outputs).map(([file, output]) => [output.entryPoint, file]));
   for (const code of AREAS.CODES) {
     for (const [area, expected] of Object.entries(AREAS.readAreas(code))) {
       const input = 'next/lang/' + code + '/' + area + '.json', file = emitted.get(input);
       assert.ok(file, 'missing language module for ' + input);
-      const url = require('node:url').pathToFileURL(path.join(next, 'dist', path.basename(file)));
+      const url = require('node:url').pathToFileURL(path.join(next, '..', 'dist', path.basename(file)));
       const { default: actual } = await import(url.href);
       assert.deepEqual(actual, expected, input);
     }

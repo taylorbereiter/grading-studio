@@ -83,7 +83,7 @@ test('choosing a language in Settings starts the page again in it, and English c
 // Each language is kept in files by area (next/lang/<code>/<area>.json): Home brings its own lines in the language, Settings' file
 // is fetched only when Settings opens, and a part that loads later (Settings > Marking) arrives with its lines already in the language.
 test('a language\'s lines arrive by area, with the screen or part that uses them', async () => {
-  const meta = JSON.parse(fs.readFileSync(path.join(ROOT, 'next', 'dist', 'meta.json'), 'utf8')), areaOf = {};
+  const meta = JSON.parse(fs.readFileSync(path.join(ROOT, 'dist', 'meta.json'), 'utf8')), areaOf = {};
   for (const [f, o] of Object.entries(meta.outputs)) for (const i of Object.keys(o.inputs)) { const m = /next\/lang\/de\/(\w+)\.json$/.exec(i); if (m) areaOf[path.basename(f)] = m[1]; }
   const p = await fresh('de'), asked = new Set();
   p.on('request', r => { const a = areaOf[r.url().split('/').pop()]; if (a) asked.add(a); });

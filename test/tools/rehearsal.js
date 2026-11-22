@@ -10,7 +10,8 @@
 //      scored, a timetable and a lesson in the Planner); signed in to Google and synced; a Drive video streams through its worker
 //      (gs-drive/<id>); a second tab signs in through Google's page (as on an iPhone), which keeps the key in the tab. Its worker
 //      keeps the pages (gs-app-1); the new app is opened at next/ once, so its worker is there too. Everything kept is read.
-//   2. The switch goes up while she marks: a mark is typed and, without waiting for its save, the page checks for a new version. The
+//   2. The switch goes up while she marks: a mark is typed; the previous version's worker checks first and keeps nothing of the new
+//      app (its version.json names files under sums, which that worker does not take); then the page checks for a new version. The
 //      root's new worker takes over, fetches the new app whole (gs-next-2) and leaves the previous version's pages in use (gs-app-1):
 //      the page says Update ready, the mark is saved as usual, the video goes on streaming. A sign-in started from classic/ now comes
 //      back to the root, where the previous version's page takes it.
@@ -229,9 +230,23 @@ async function main() {
     const WHO1 = await page.evaluate(() => window.__gs.state().batch.students[1].key), EARLY = 'Typed as the new version went up.';
     await score(page, [3, 3, 3]); await page.type('#cmtIn', EARLY);
     site.switched = true;
+    // The race before the browser fetches the new sw.js: the previous version's worker, still the root's, checks for a version itself
+    // (as its page asks it to every so often). It must not keep the new index.html, which would open without the dist/ it needs: the
+    // new version.json names its files under sums, so that worker takes it as no version, and nothing is kept or swapped in.
+    const oldAsk = type => page.evaluate(type => new Promise(res => {
+      const sw = navigator.serviceWorker, to = setTimeout(() => { sw.removeEventListener('message', on); res('no answer'); }, 30000);
+      const on = e => { const d = e.data || {}; if (d.type === 'gs-state' && ('checked' in d || 'applied' in d)) { clearTimeout(to); sw.removeEventListener('message', on); res({ checked: d.checked, applied: d.applied, next: d.state.next, current: d.state.current && d.state.current.version }); } };
+      sw.addEventListener('message', on); sw.controller.postMessage({ type });
+    }), type);
+    const cur1 = await page.evaluate(async () => (await (await caches.open('gs-app-1')).match(new URL('version.json', location.href).href)).json());
+    const raced = await oldAsk('gs-check'), applied = await oldAsk('gs-apply');
+    let c = await caches(page);
+    const cur2 = await page.evaluate(async () => (await (await caches.open('gs-app-1')).match(new URL('version.json', location.href).href)).json());
+    step(raced.checked === 'offline' && !raced.next && applied.applied === false && !(c['gs-next-1'] || []).length && cur2.build === cur1.build,
+      'the race: the previous version’s worker, checking before the new sw.js arrives, keeps nothing of the new app (gs-next-1 empty) and Update now there swaps nothing in', JSON.stringify({ raced, applied, caches: Object.keys(c) }));
     await page.evaluate(async () => { const r = await navigator.serviceWorker.getRegistration('./'); await r.update(); });
     const fetched = await until(page, async () => { const n = await caches.keys(); if (!n.includes('gs-next-2')) return false; return !!(await (await caches.open('gs-next-2')).match(new URL('version.json', location.href).href)); }, null, 90000);
-    let c = await caches(page);
+    c = await caches(page);
     step(fetched && whole(c, 'gs-app-1'), 'the switch: the new app is fetched whole (gs-next-2) and the previous version’s pages stay in use (gs-app-1)', JSON.stringify(Object.keys(c)));
     await page.evaluate(() => navigator.serviceWorker.ready.then(r => r.active && r.active.postMessage({ type: 'gs-state' })));
     step(await until(page, () => { const r = document.querySelector('#railUpdate'); return r && !r.hidden; }, null, 30000), 'the page still open says Update ready');
@@ -341,6 +356,9 @@ async function main() {
     await cl.evaluate(async () => { const l = JSON.parse(localStorage.getItem('gs.lib')); l.classes.find(x => x.id === 'c2').name = 'Grade 10 Literature (renamed in classic)'; localStorage.setItem('gs.lib', JSON.stringify(l)); await window.__gs.reloadKept?.(); });
     await page.goto(srv.url + '#/classes'); await page.waitForSelector('[data-shell-nav]', { timeout: 30000 }).catch(() => {});
     step(await until(page, () => (document.querySelector('[data-shell-nav]') || {}).textContent?.includes('renamed in classic'), null, 20000), 'a class renamed in classic/ shows in the new app’s sidebar');
+    // Two windows: a classic/ window open beside the new app takes its share of gs-writer as the new app does (shared/lock.js), so the
+    // new app is not read-only beside it (that strip, lock.read_only, is only for an older new-app window holding the lock alone).
+    step(await page.evaluate(() => !document.querySelector('.strip[role="alert"]')), 'with classic/ open in another window, the new app is not read-only');
     // One window writes at a time (the Web Lock gs-writer): the others are closed first, as she would close them.
     await cl.goto(srv.url + 'blank'); await page.goto(srv.url + 'blank');
     const proof = await newPage();

@@ -27,8 +27,10 @@ export function newHash(hash) {
     // The Planner's own, should one arrive at the root without planner.html.
     case 'rubrics': return to('library/rubrics');
     case 'timetable': return to('settings/timetable');
-    case 'present': return b ? to('lesson/' + e(b) + '/slides') : to('calendar');
-    case 'plan': return to('calendar');
+    // present/<id>/<class> presents at once for that class, as the Planner's did (lesson/<id>/present/<class>, E2-078)
+    case 'present': return b ? to('lesson/' + e(b) + '/present' + (c ? '/' + e(c) : '')) : to('calendar');
+    // plan/<class>/<day> is the router's own (E2-077); a part of one opens the calendar
+    case 'plan': return b && c ? to('plan/' + e(b) + '/' + e(c)) : to('calendar');
   }
   return null;
 }

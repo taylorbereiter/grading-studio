@@ -29,7 +29,9 @@ function dataVersion() {
   return Math.max(1, ...[...m[1].matchAll(/^\s*\{\s*to:\s*(\d+)/gm)].map(x => +x[1]));
 }
 // version.json: every file the root's worker (next/src/sw.js) keeps, with its SHA-256, so a version is only ever taken whole. Its
-// notes are what a page of the previous version still open shows beside Update now (src/whatsnew.json).
+// notes are what a page of the previous version still open shows beside Update now (src/whatsnew.json). The list is called sums, not
+// files as the previous version's was: that version's worker, still at the root until the browser fetches this sw.js, takes a
+// version.json without files as no version at all, so it can never keep this index.html for itself without the dist/ it needs.
 function writeVersion() {
   const crypto = require('crypto'), sum = f => crypto.createHash('sha256').update(fs.readFileSync(path.join(OUT, f))).digest('hex');
   const files = {};
@@ -37,7 +39,7 @@ function writeVersion() {
   for (const f of fs.readdirSync(DIST).sort()) if (!/^(meta\.json|gallery|proof)/.test(f)) files['dist/' + f] = sum('dist/' + f);
   const build = crypto.createHash('sha256').update(JSON.stringify(files)).digest('hex').slice(0, 12);
   const notes = require(path.join(ROOT, 'src/whatsnew.json'))[VERSION] || [];
-  fs.writeFileSync(path.join(OUT, 'version.json'), JSON.stringify({ version: VERSION, build, notes, files }, null, 1) + '\n');
+  fs.writeFileSync(path.join(OUT, 'version.json'), JSON.stringify({ version: VERSION, build, notes, sums: files }, null, 1) + '\n');
 }
 // What only the root page carries: the install card and the icon, the daily count of browsers (src/visits.js, as the previous
 // version's pages at the web address do), and Google's sign-in coming back for the previous version. Google returns only to the
@@ -51,11 +53,11 @@ function rootHead() {
   return back + '<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#FFFFFF">' + visits;
 }
 // planner.html: the Planner's own page is the previous version's (classic/planner.html). Its addresses, kept in bookmarks and in the
-// installed app's history, land on the matching screen of the new app (src/planner/rail.js arriveAt names them).
+// installed app's history (src/planner/rail.js arriveAt: week, lesson/<id>, plan/<class>/<day>, present/<id>/<class>, rubrics,
+// timetable), go on to the root as they are: the router knows week, lesson/<id> and plan/<class>/<day>, and app/old-routes.js
+// sends the rest to the matching screen, so the Planner's addresses are mapped in one place.
 const PLANNER_PAGE = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Grading Studio</title>\n' +
-  '<script>(function(){var h="";try{h=decodeURIComponent(location.hash.replace(/^#\\/?/,""))}catch(e){}var p=h.split("/"),e=encodeURIComponent,' +
-  't=p[0]==="lesson"&&p[1]?"lesson/"+e(p[1]):p[0]==="present"&&p[1]?"lesson/"+e(p[1])+"/slides":p[0]==="plan"?"calendar":p[0]==="rubrics"?"library/rubrics":p[0]==="timetable"?"settings/timetable":"week";' +
-  'location.replace("./"+location.search+"#/"+t)})()</script>\n</head><body><p><a href="./#/week">Grading Studio</a></p></body></html>\n';
+  '<script>(function(){var h=location.hash.replace(/^#\\/?/,"");location.replace("./"+location.search+"#/"+(h||"week"))})()</script>\n</head><body><p><a href="./#/week">Grading Studio</a></p></body></html>\n';
 const MANIFEST = { name: 'Grading Studio', short_name: 'Grading Studio', description: 'Mark papers, plan lessons and hand work back. Everything stays on this computer.',
   start_url: './', scope: './', display: 'standalone', background_color: '#F4F5F7', theme_color: '#FFFFFF',
   icons: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }, { src: 'icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }] };

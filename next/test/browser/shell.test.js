@@ -92,7 +92,9 @@ test('the previous version’s addresses, the Planner’s and next/ land on the 
   await lands('#/scores/c1', '#/class/c1/grades');
   await lands('planner.html#rubrics', '#/library/rubrics');
   await lands('planner.html#timetable', '#/settings/timetable');
-  await lands('planner.html#present/L1/A1', '#/lesson/L1/slides');
+  await lands('planner.html#present/L1/A1', '#/lesson/L1/present/A1');   // presents at once for that class, as the Planner's did
+  await lands('planner.html#plan/c1/2026-09-07', '#/plan/c1/2026-09-07');
+  await lands('planner.html#lesson/L1', '#/lesson/L1');
   await lands('planner.html', '#/week');
   await lands('next/#/calendar', '#/calendar');
   // the new app's own addresses stay as they are, and Google's sign-in coming back is never taken for a screen

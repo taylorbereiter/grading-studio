@@ -35,7 +35,7 @@ const typeOf = p => TYPES[p.split('.').pop()] || 'application/octet-stream';
 
 async function download(name, v) {
   const got = [];
-  for (const [p, sum] of Object.entries(v.files)) {
+  for (const [p, sum] of Object.entries(v.sums)) {
     const r = await fetch(at(p), { cache: 'no-store' });
     if (!r.ok) throw new Error(p + ': ' + r.status);
     const buf = await r.arrayBuffer();
@@ -47,7 +47,7 @@ async function download(name, v) {
   for (const [p, r] of got) await c.put(at(p), r);
   await c.put(at('version.json'), new Response(JSON.stringify(v), { headers: { 'Content-Type': 'application/json' } }));
 }
-const latest = async () => { const r = await fetch(at('version.json'), { cache: 'no-store' }); if (!r.ok) throw new Error('version.json: ' + r.status); const v = await r.json(); if (!v || !v.build || !v.files) throw new Error('version.json is not a version'); return v; };
+const latest = async () => { const r = await fetch(at('version.json'), { cache: 'no-store' }); if (!r.ok) throw new Error('version.json: ' + r.status); const v = await r.json(); if (!v || !v.build || !v.sums) throw new Error('version.json is not a version'); return v; };   // sums, never files: see next/build.js writeVersion
 // The previous version's caches go, once the new version is whole in APP. Her choice of how updates arrive stays (KEPT).
 async function dropOld() {
   if (!await versionIn(APP)) return;
@@ -70,7 +70,7 @@ async function promote() {
   const from = await caches.open(NEXT);
   await caches.delete(APP);
   const to = await caches.open(APP);
-  for (const p of Object.keys(nx.files)) { const r = await from.match(at(p)); if (r) await to.put(at(p), r); }
+  for (const p of Object.keys(nx.sums)) { const r = await from.match(at(p)); if (r) await to.put(at(p), r); }
   await to.put(at('version.json'), await from.match(at('version.json')));
   await caches.delete(NEXT);
   await dropOld();
@@ -100,7 +100,7 @@ async function answer(key, req, page) {
   try {
     if (page && await mode() === 'auto') await inTurn(promote);   // she is opening the app, not using it: the moment an update may arrive by itself
     if (await old()) { if (OLD_FILE.test(key)) { const hit = await (await caches.open(OLD_APP)).match(at(key)); if (hit) return hit; } }
-    else { const cur = await versionIn(APP); if (cur && cur.files[key]) { const hit = await (await caches.open(APP)).match(at(key)); if (hit) return hit; } }
+    else { const cur = await versionIn(APP); if (cur && cur.sums[key]) { const hit = await (await caches.open(APP)).match(at(key)); if (hit) return hit; } }
   } catch {}
   if (CLASSIC_FILE.test(key)) return fetch(at('classic/' + key) + new URL(req.url).search);
   return fetch(req);

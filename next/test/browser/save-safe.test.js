@@ -10,6 +10,7 @@ const { standardFiles, zipOf } = require('../../../test/helpers/fixtures.js');
 const { gradingSeed, STEADY } = require('../../../test/helpers/steady.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
+const onDisk = require('./site-path');
 const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp', png: 'image/png', webmanifest: 'application/manifest+json' };
 // nextBuild, when set, stands in for next/version.json's build: a newer version going up.
 const site = { nextBuild: null };
@@ -18,8 +19,8 @@ function serveSite() {
     let p = decodeURIComponent(req.url.split('?')[0]);
     if (p === '/blank') { res.writeHead(200, { 'Content-Type': TYPES.html }); return res.end('<!doctype html><title>blank</title>'); }
     if (p === '/') p = '/index.html'; if (p === '/next/') p = '/next/index.html';
-    const ok = /^\/(index|planner)\.html$|^\/(sw\.js|version\.json|manifest\.webmanifest)$|^\/icons\/[\w-]+\.png$|^\/lang\/[\w-]+\.js$|^\/next\/(index\.html|sw\.js|version\.json|dist\/[\w-]+\.(js|css|woff2|webp))$/.test(p);
-    const f = path.join(ROOT, p);
+    const ok = /^\/(index|planner)\.html$|^\/(sw\.js|version\.json|manifest\.webmanifest)$|^\/icons\/[\w-]+\.png$|^\/lang\/[\w-]+\.js$|^\/next\/(index\.html|sw\.js|version\.json|dist\/[\w-]+\.(js|css|woff2|webp))$/.test(p) || onDisk.extra(p);
+    const f = onDisk(p);
     if (!ok || !fs.existsSync(f)) { res.writeHead(404); return res.end(); }
     let body = fs.readFileSync(f);
     if (p === '/next/version.json' && site.nextBuild) body = JSON.stringify({ ...JSON.parse(body), build: site.nextBuild });
@@ -112,7 +113,8 @@ test('A-027: Update now in one window saves it and reloads only that window; the
   const errors = [], ctx = await browser.createBrowserContext();
   const id = await makeWork(ctx, errors);
   const a = await page(ctx, errors); await openMark(a, id);
-  await a.waitForFunction(async () => (await caches.keys()).includes('gsn-app-1') && !!(await (await caches.open('gsn-app-1')).match(new URL('version.json', location.href).href)), { timeout: 60000, polling: 300 });
+  // the worker at /next/ here is the root's (next/test/browser/site-path.js), which keeps the version in use in gs-app-2
+  await a.waitForFunction(async () => (await caches.keys()).includes('gs-app-2') && !!(await (await caches.open('gs-app-2')).match(new URL('version.json', location.href).href)), { timeout: 60000, polling: 300 });
   await a.evaluate(() => { window.__stay = 1; });
   site.nextBuild = 'newer-build-for-the-test';
   try {
