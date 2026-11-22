@@ -44,3 +44,4 @@ same test opens the result in the current app. Commits are on the local branch `
 | H-044 | closed: already done before this branch (editors.js storage listener reloads gcore bank); now proved with a second tab | mark-setup.test.js "H-065 H-044" | 7dadda0b |
 | H-060 | closed: the right-click menu closes on window blur (scroll already closed it) | mark.test.js "H-033 H-036 H-060" | 7dadda0b |
 | H-065 | closed: an open Rubric setup listens on the gs-bank channel and reads the bank again | mark-setup.test.js "H-065 H-044" | 7dadda0b |
+| A-005 | closed: Find offers Convert to PDF pages while the assignment has Word papers; it opens the one on screen (else the first) and asks | mark-word.test.js "A-005" | (A-005) |

@@ -274,3 +274,26 @@ test('C-025 C-026 C-027: typing in a Word paper, Enter is a line break, Ctrl B d
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// src/shell.js findRows: while the assignment has Word papers, Find offers to convert them; it opens the Word paper and asks (A-005)
+test('A-005: Find has Convert to PDF pages while there are Word papers; it opens the Word paper and asks, as the current app does', async () => {
+  const errors = [], ctx = await browser.createBrowserContext(), m = await mainOpens(ctx, errors);
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  const i = await p.evaluate(k => window.__mark.state().batch.students.findIndex(s => s.key === k), ESSAY_KEY);
+  assert.notEqual(await p.evaluate(() => window.__mark.state().cur), i, 'another student on screen');
+  await p.waitForFunction(() => window.__mark.ready, { timeout: 60000 });
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
+  await p.waitForSelector('dialog.cmd[open]');
+  await p.keyboard.type('convert word');
+  await p.waitForFunction(() => [...document.querySelectorAll('dialog.cmd[open] [role="option"]')].some(o => o.textContent.includes('Convert to PDF pages')), { timeout: 10000 });
+  await p.evaluate(() => [...document.querySelectorAll('dialog.cmd[open] [role="option"]')].find(o => o.textContent.includes('Convert to PDF pages')).click());
+  await p.waitForFunction(i => window.__mark.state().cur === i, { timeout: 30000 }, i);
+  await p.waitForSelector('.dlg [data-ok]', { timeout: 30000 });
+  assert.match(await p.$eval('dialog[open]', d => d.textContent), /Convert to PDF pages/);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
