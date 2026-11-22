@@ -320,6 +320,35 @@ test('marks from another app made editable in the new app are the marks the curr
   await ctx.close();
 });
 
+// A-100 A-123: Marks from other apps for every paper is in Find (the current app's More menu), from a paper with none of its own too
+test('A-100 A-123: Find has Marks from other apps, the box for every paper, from a paper with no marks of its own', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const z = zipOf({ 'Aria Testwell/Essay.pdf': await markedPaper(), 'Bram Sample/Essay.pdf': await markedPaper(), 'Cleo Madeup/Essay.pdf': await makePaper({ title: 'Plain' }) });
+  const m = await page(ctx, errors);
+  await m.goto(srv.url + 'blank'); await plant(m, gradingSeed());
+  await m.goto(srv.url); await appReady(m);
+  await openZip(m, z, 'Imported.zip');
+  const id = await m.evaluate(() => window.__gs.state().batch.id); await m.close();
+  const p = await page(ctx, errors);
+  await p.goto(srv.url + 'next/#/mark/' + encodeURIComponent(id));
+  await p.waitForFunction(() => window.__mark && window.__mark.ready, { timeout: 60000 });
+  const c = await p.evaluate(() => window.__mark.state().batch.students.findIndex(s => s.key === 'Cleo Madeup'));
+  await p.click('[data-st="' + c + '"]');
+  await p.waitForFunction(i => window.__mark.state().cur === i && window.__mark.ready, { timeout: 60000 }, c);
+  assert.equal(await p.$('.mk-impnote'), null, 'her paper has none of its own');
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control');
+  await p.waitForSelector('dialog.cmd[open] input'); await p.type('dialog.cmd[open] input', 'Marks from other apps');
+  await p.waitForFunction(() => { const o = [...document.querySelectorAll('dialog.cmd[open] [role="option"]')].find(o => o.textContent.includes('Marks from other apps')); if (o) o.click(); return !!o; }, { timeout: 15000 });
+  await p.waitForFunction(() => /Make 14 marks editable/.test((document.querySelector('[data-impgo]') || {}).textContent || ''), { timeout: 60000 });
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('[data-impgo]'), { timeout: 10000 });
+  const f = await p.evaluate(() => window.__mark.state().batch.students.find(s => s.key === 'Aria Testwell').files[0].marks[0] || []);
+  assert.equal(f.length, 0, 'closed, nothing is made hers');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
 test('C-033: lighting set in the new app, for the download, one student and one page (the ☀ on a page and its ▾ menu), is what the current app opens', async () => {
   const errors = [], ctx = await browser.createBrowserContext();
   const m = await page(ctx, errors);

@@ -440,3 +440,35 @@ test('C-032 C-086 C-087 C-088 C-089: Replace… from Google Drive, and on a vide
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+// A-095: Rubric setup's own rubric, From Google Drive (src/rubricup.js ruDrive): the file picked in Drive comes in as one from the
+// computer does, a page of it after each student's work
+test('A-095: Rubric setup brings her rubric in From Google Drive, a page of it for every student', async () => {
+  const errors = [], ctx = await browser.createBrowserContext();
+  const D = { asked: [], folders: [], sent: [], videos: {}, papers: {
+    '1PaperAriaPaperAriaPaperAria00001': await makePaper({ title: 'Aria outline' }), '1PaperBramPaperBramPaperBram00002': await makePaper({ title: 'Bram outline' }),
+    '1RubricRubricRubricRubricRu00005': await makePaper({ title: 'My rubric' }) } };
+  const p = await page(ctx, errors, D);
+  await p.goto(srv.url + 'blank'); await plant(p, seed());
+  await p.evaluate(() => Promise.all([['grading-studio-added', 'files'], ['grading-studio-videos', 'v']].map(([n, s]) => new Promise(res => { const r = indexedDB.open(n, 1); r.onupgradeneeded = () => r.result.createObjectStore(s); r.onsuccess = () => { r.result.close(); res(); }; }))));
+  await p.goto(srv.url + 'next/#/class/c1/work');
+  await p.waitForSelector('[data-bring-for="i9"]', { timeout: 60000 });
+  await p.evaluate(() => { window.__picks.push([
+    { id: '1PaperAriaPaperAriaPaperAria00001', name: 'Aria Testwell.pdf', mimeType: 'application/pdf', sizeBytes: '900' },
+    { id: '1PaperBramPaperBramPaperBram00002', name: 'Bram Sample.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await p.click('[data-bring-for="i9"]');
+  await menuPick(p, 'Google Drive');
+  await p.waitForFunction(() => /^#\/mark\//.test(location.hash) && window.__mark && window.__mark.ready && window.__mark.read, { timeout: 60000 });
+  await p.click('[data-setupopen]');
+  await menuPick(p, 'Rubric setup');
+  await p.waitForSelector('dialog[open] [data-supage] [data-drive]', { timeout: 30000 });
+  await p.evaluate(() => { window.__picks.push([{ id: '1RubricRubricRubricRubricRu00005', name: 'My rubric.pdf', mimeType: 'application/pdf', sizeBytes: '900' }]); });
+  await tap(p, 'dialog[open] [data-supage] [data-drive]');
+  await p.waitForSelector('dialog[open] [data-surprm]', { timeout: 30000 });
+  await p.waitForFunction(() => !document.querySelector('dialog[open] [data-susave]').disabled);
+  await tap(p, 'dialog[open] [data-susave]');
+  await p.waitForFunction(() => { const s = window.__mark.state(); return s.setup.rubricPage && s.setup.rubricPage.name === 'My rubric.pdf' && s.batch.students.every(st => st.files.some(f => f.virtual)); }, { timeout: 30000 });
+  assert.ok(!D.asked.some(u => /files\?q=|files\?spaces=drive/.test(u)), 'the app never lists her Drive');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

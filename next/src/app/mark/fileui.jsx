@@ -1,7 +1,7 @@
 // The words and boxes around a student's files on the marking screen (src/app/replace.js, src/app/kept.js pickAdd): a menu on each
 // file with Replace… and Remove, the check before a replace (the two files side by side), Add a file…, and Removed files with Bring
 // back. What each does is mark/change.js, the current app's own steps. Loaded with it as a part of its own (router.js PARTS.fileui).
-import { h, Fragment } from 'preact';
+import { h, Fragment, render } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { Button, IconButton, Menu, Dialog, TextInput, toast } from '../../ui/index.js';
 import { state } from '../../engines/gcore.js';
@@ -40,7 +40,7 @@ import { scanAsks } from '../../engines/gfiles.js';
 export const takeSplit = () => C.takeSplit();
 export const rescanCount = () => C.rescans().length;
 export const rescanList = () => C.rescans();
-export function wire(m, open) { C.wire(m, open); use({ lightPagesChanged: lightApply }); dropWire(); wordFind(open); }
+export function wire(m, open) { C.wire(m, open); use({ lightPagesChanged: lightApply }); dropWire(); wordFind(open); impFind(); }
 // Find: Convert Word papers to PDF pages (src/shell.js findRows), while the assignment has Word papers: the one on screen, else the
 // first, is opened and its Convert to PDF pages asked, as the current app's openWordPdf (A-005)
 const wordsHere = () => { const bb = state().batch; return bb ? bb.students.flatMap(st => st.files.filter(C.canPdf).map(f => ({ st, f }))) : []; };
@@ -50,6 +50,16 @@ function wordFind(open) {
   wordCmd = addCommand({ id: 'asg-wordpdf', label: () => t('setup.f_pdf_t'), also: t('setup.f_pdf_all', { n: '' }), group: t('mark.cmd_this'), icon: 'file', when: () => wordsHere().length > 0,
     run: () => { const s = state(), w = wordsHere(), x = w.find(y => y.st === s.batch.students[s.cur]) || w[0]; if (!x) return; open(s.batch.students.indexOf(x.st));
       let n = 0; const ask = () => { const el = document.querySelector('.wordwrap'); if (el && state().batch.students[state().cur] === x.st) el.dispatchEvent(new Event('wordpdf')); else if (n++ < 80) setTimeout(ask, 75); }; ask(); } });
+}
+// Find: Marks from other apps (src/imported.js openImported, the current app's More menu), while the assignment has PDF papers: the
+// box for every paper, the same one the note above a file opens (A-100 A-123)
+let impCmd = null, impHost = null;
+function impFind() {
+  if (impCmd) return;
+  const shut = () => { if (impHost) { render(null, impHost); impHost.remove(); impHost = null; } };
+  impCmd = addCommand({ id: 'asg-imported', label: () => t('setup.i_title'), group: t('mark.cmd_this'), icon: 'file',
+    when: () => { const bb = state().batch; return !!bb && bb.students.some(st => st.files.some(f => f.kind === 'pdf' && !f.virtual)); },
+    run: () => { shut(); impHost = document.body.appendChild(document.createElement('div')); render(<Imported onClose={shut} />, impHost); } });
 }
 // Files dropped on the marking screen (src/app/wiring.js dragover/drop, A-098 A-101): on a student's name they are added to that
 // student; on the paper, to the student on screen, and several at once go to Bring in files. Dragging a file over the folded list
