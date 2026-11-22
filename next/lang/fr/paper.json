@@ -716,66 +716,6 @@
   "one": "{n} affichée avec ce devoir",
   "other": "{n} affichées avec ce devoir"
  },
- "paper.rd_title": "Lectures",
- "paper.rd_done": "Terminé",
- "paper.rd_about": "Des fichiers affichés au-dessus des devoirs pendant la correction, comme le texte à lire ou la consigne. Ils restent dans ce navigateur et ne sont jamais renvoyés aux élèves.",
- "paper.rd_everyone": "Pour tous",
- "paper.rd_your_doc": "votre document",
- "paper.rd_remove": "Retirer",
- "paper.rd_remove_all": "Retirer pour tous",
- "paper.rd_none": "Aucun pour l’instant.",
- "paper.rd_add_all": "Ajouter un fichier pour tous…",
- "paper.rd_for": "Pour {name}",
- "paper.rd_show": "Afficher {file}",
- "paper.rd_only": "seulement pour {name}",
- "paper.rd_add_one": "Ajouter un fichier seulement pour {name}…",
- "paper.rd_hint": "Pour un élève qui a une autre lecture : décochez le fichier commun ci-dessus, puis ajoutez le sien.",
- "paper.rd_doc_card": "Votre document : {name}",
- "paper.rd_card_all": "affiché avec chaque devoir, non renvoyé",
- "paper.rd_card_one": "seulement pour cet élève, non renvoyé",
- "paper.rd_hide": "Masquer pour cet élève",
- "paper.rd_hidden": "Masqué pour cet élève. Lectures… le fait revenir ou ajoute un autre fichier.",
- "paper.rd_zoom": "Zoom sur la lecture",
- "paper.rd_zoom_out": "Zoom arrière",
- "paper.rd_zoom_in": "Zoom avant",
- "paper.rd_zoom_fit": "Revenir à la largeur",
- "paper.rd_zoom_how": "Pincez ou faites Ctrl + molette sur la lecture pour zoomer. Faites glisser le bord du bas pour l’agrandir.",
- "paper.rd_grip": "Faites glisser pour agrandir ou réduire la lecture",
- "paper.rd_cant": "Ce fichier ne peut pas être affiché ici.",
- "paper.rd_no_room": "Ce navigateur n’a plus de place pour garder {name}",
- "paper.rd_added": "« {file} » s’affiche maintenant au-dessus de chaque devoir",
- "paper.rd_added_for": "« {file} » s’affiche maintenant pour {name}",
- "paper.rd_added_n": "{n} fichiers s’affichent maintenant au-dessus de chaque devoir",
- "paper.rd_added_n_for": "{n} fichiers s’affichent maintenant pour {name}",
- "paper.tr_title": "Transcriptions",
- "paper.tr_count": {
-  "one": "{n} enregistrement dans ce devoir.",
-  "other": "{n} enregistrements dans ce devoir."
- },
- "paper.tr_have": {
-  "one": "{n} a déjà une transcription.",
-  "other": "{n} ont déjà une transcription."
- },
- "paper.tr_redo": "Refaire aussi celles qui existent",
- "paper.tr_about": "Tout se fait dans ce navigateur (rien n’est envoyé). Le moteur vocal se télécharge une seule fois (environ 150 Mo). Gardez cet onglet ouvert pendant le travail ; vous pouvez continuer à corriger.",
- "paper.tr_make": "Faire les transcriptions",
- "paper.tr_stop": "Arrêter",
- "paper.tr_stopping": "Arrêt…",
- "paper.tr_close": "Fermer",
- "paper.tr_at": "Élève {n} ({k} sur {of}) · {file} · {what}",
- "paper.tr_all_have": "Chaque enregistrement a déjà une transcription",
- "paper.tr_done": {
-  "one": "Terminé. {n} transcription faite.",
-  "other": "Terminé. {n} transcriptions faites."
- },
- "paper.tr_stopped": {
-  "one": "Arrêté. {n} transcription faite.",
-  "other": "Arrêté. {n} transcriptions faites."
- },
- "paper.tr_failed": {
-  "one": "{n} n’a pas pu être lu (essayez Chrome, ou convertissez-le en .mp4 ou .m4a).",
-  "other": "{n} n’ont pas pu être lus (essayez Chrome, ou convertissez-les en .mp4 ou .m4a)."
- },
  "paper.gs_cp": "Copier toutes les notes",
  "paper.gs_cp_done": {
   "one": "{n} note copiée dans l’ordre de la liste (vide en cas de doute)",

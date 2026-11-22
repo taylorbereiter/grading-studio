@@ -723,66 +723,6 @@
   "one": "這份作業顯示 {n} 份",
   "other": "這份作業顯示 {n} 份"
  },
- "paper.rd_title": "閱讀資料",
- "paper.rd_done": "完成",
- "paper.rd_about": "批改時顯示在作業上方的檔案，例如閱讀文章或題目。這些檔案只存在這個瀏覽器中，絕不會發回給學生。",
- "paper.rd_everyone": "給所有學生",
- "paper.rd_your_doc": "你的文件",
- "paper.rd_remove": "移除",
- "paper.rd_remove_all": "從所有學生移除",
- "paper.rd_none": "目前還沒有。",
- "paper.rd_add_all": "新增給所有學生的檔案…",
- "paper.rd_for": "給 {name}",
- "paper.rd_show": "顯示 {file}",
- "paper.rd_only": "只給 {name}",
- "paper.rd_add_one": "新增只給 {name} 的檔案…",
- "paper.rd_hint": "如果某位學生的閱讀資料不同：取消勾選上面給所有學生的檔案，再新增他的檔案。",
- "paper.rd_doc_card": "你的文件：{name}",
- "paper.rd_card_all": "每份作業都會顯示，不會發回",
- "paper.rd_card_one": "只給這位學生，不會發回",
- "paper.rd_hide": "對這位學生隱藏",
- "paper.rd_hidden": "已對這位學生隱藏。在「閱讀資料…」可以恢復，或新增其他檔案。",
- "paper.rd_zoom": "縮放閱讀資料",
- "paper.rd_zoom_out": "縮小",
- "paper.rd_zoom_in": "放大",
- "paper.rd_zoom_fit": "回到符合寬度",
- "paper.rd_zoom_how": "在閱讀資料上用雙指或 Ctrl + 捲動來縮放。拖曳底邊可以拉高。",
- "paper.rd_grip": "拖曳以調整閱讀資料的高度",
- "paper.rd_cant": "這個檔案無法在這裡顯示。",
- "paper.rd_no_room": "這個瀏覽器已沒有空間保存 {name}",
- "paper.rd_added": "「{file}」現在會顯示在每份作業上方",
- "paper.rd_added_for": "「{file}」現在會為 {name} 顯示",
- "paper.rd_added_n": "{n} 個檔案現在會顯示在每份作業上方",
- "paper.rd_added_n_for": "{n} 個檔案現在會為 {name} 顯示",
- "paper.tr_title": "逐字稿",
- "paper.tr_count": {
-  "one": "這份作業有 {n} 個錄音。",
-  "other": "這份作業有 {n} 個錄音。"
- },
- "paper.tr_have": {
-  "one": "其中 {n} 個已有逐字稿。",
-  "other": "其中 {n} 個已有逐字稿。"
- },
- "paper.tr_redo": "已有的也重新製作",
- "paper.tr_about": "在這個瀏覽器中執行（不會上傳任何內容）。語音引擎只需下載一次（約 150 MB）。處理期間請保持這個分頁開啟，同時可以繼續批改。",
- "paper.tr_make": "製作逐字稿",
- "paper.tr_stop": "停止",
- "paper.tr_stopping": "正在停止…",
- "paper.tr_close": "關閉",
- "paper.tr_at": "第 {n} 位學生（{of} 個中的第 {k} 個）· {file} · {what}",
- "paper.tr_all_have": "每個錄音都已有逐字稿",
- "paper.tr_done": {
-  "one": "完成。已製作 {n} 份逐字稿。",
-  "other": "完成。已製作 {n} 份逐字稿。"
- },
- "paper.tr_stopped": {
-  "one": "已停止。已製作 {n} 份逐字稿。",
-  "other": "已停止。已製作 {n} 份逐字稿。"
- },
- "paper.tr_failed": {
-  "one": "{n} 個無法讀取（請試試 Chrome，或轉成 .mp4 或 .m4a）。",
-  "other": "{n} 個無法讀取（請試試 Chrome，或轉成 .mp4 或 .m4a）。"
- },
  "paper.gs_cp": "複製所有分數",
  "paper.gs_cp_done": {
   "one": "已依清單順序複製 {n} 個分數（不確定的留空）",

@@ -11,7 +11,7 @@ import * as V from '../../engines/gmedia.js';
 import { videos } from '../../students/index.js';
 import { t } from '../../i18n/t.js';
 import * as C from './change.js';
-import './paper-lines.js';
+import './read-lines.js';
 
 // The run while it goes: { stop, pct, msg }. Kept here, so the box shows it again when she opens it during a run.
 let run = null, lastMsg = '';
@@ -44,13 +44,13 @@ async function makeAll(todo) {
     run.pct = k / todo.length; tell();
     const me = run.now = { on: false };
     try {
-      if (await C.trMake(f, await bytesOf(f), m => say(t('paper.tr_at', { n: i + 1, k: k + 1, of: todo.length, file: f.name, what: m })), me)) done++;
+      if (await C.trMake(f, await bytesOf(f), m => say(t('rd.tr_at', { n: i + 1, k: k + 1, of: todo.length, file: f.name, what: m })), me)) done++;
     } catch (e) { if (!me.on) { failed++; console.error(e); } }
   }
   try { if (lock) lock.release(); } catch { /* gone already */ }
   const stopped = run.stop;
   run = null;
-  lastMsg = (stopped ? t('paper.tr_stopped', { n: done }) : t('paper.tr_done', { n: done })) + (failed ? ' ' + t('paper.tr_failed', { n: failed }) : '');
+  lastMsg = (stopped ? t('rd.tr_stopped', { n: done }) : t('rd.tr_done', { n: done })) + (failed ? ' ' + t('rd.tr_failed', { n: failed }) : '');
   toast(lastMsg); tell();
 }
 function stopNow() { if (!run) return; run.stop = true; if (run.now) run.now.on = true; V.asrStop(); tell(); }
@@ -62,17 +62,17 @@ export function Transcripts({ onClose }) {
   const go = () => {
     if (run) return stopNow();
     const todo = all.filter(x => redo || !x.f.tr);
-    if (!todo.length) return toast(t('paper.tr_all_have'));
+    if (!todo.length) return toast(t('rd.tr_all_have'));
     lastMsg = '';
     makeAll(todo).catch(e => console.error(e));
   };
-  return <Dialog open title={t('paper.tr_title')} onClose={onClose}
-    actions={<><Button onClick={onClose} data-trclose>{t('paper.tr_close')}</Button><Button variant="primary" onClick={go} data-trall>{run ? (run.stop ? t('paper.tr_stopping') : t('paper.tr_stop')) : t('paper.tr_make')}</Button></>}>
+  return <Dialog open title={t('rd.tr_title')} onClose={onClose}
+    actions={<><Button onClick={onClose} data-trclose>{t('rd.tr_close')}</Button><Button variant="primary" onClick={go} data-trall>{run ? (run.stop ? t('rd.tr_stopping') : t('rd.tr_stop')) : t('rd.tr_make')}</Button></>}>
     <div class="mk-trall" data-trbox>
-      <p><b>{t('paper.tr_count', { n: all.length })}</b>{have ? ' ' + t('paper.tr_have', { n: have }) : ''}</p>
-      {have > 0 && !run && <Checkbox label={t('paper.tr_redo')} checked={redo} onChange={setRedo} />}
-      <p class="mute">{t('paper.tr_about')}</p>
-      {run && <Progress value={run.pct} label={t('paper.tr_title')} />}
+      <p><b>{t('rd.tr_count', { n: all.length })}</b>{have ? ' ' + t('rd.tr_have', { n: have }) : ''}</p>
+      {have > 0 && !run && <Checkbox label={t('rd.tr_redo')} checked={redo} onChange={setRedo} />}
+      <p class="mute">{t('rd.tr_about')}</p>
+      {run && <Progress value={run.pct} label={t('rd.tr_title')} />}
       <p role="status" data-trallmsg>{run ? run.msg : lastMsg}</p>
     </div>
   </Dialog>;

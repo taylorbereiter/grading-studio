@@ -722,66 +722,6 @@
   "one": "{n} aparece com este trabalho",
   "other": "{n} aparecem com este trabalho"
  },
- "paper.rd_title": "Leituras",
- "paper.rd_done": "Concluído",
- "paper.rd_about": "Arquivos mostrados acima dos trabalhos enquanto você corrige, como a leitura ou o enunciado. Ficam neste navegador e nunca são devolvidos aos alunos.",
- "paper.rd_everyone": "Para todos",
- "paper.rd_your_doc": "seu documento",
- "paper.rd_remove": "Remover",
- "paper.rd_remove_all": "Remover para todos",
- "paper.rd_none": "Nenhum ainda.",
- "paper.rd_add_all": "Adicionar um arquivo para todos…",
- "paper.rd_for": "Para {name}",
- "paper.rd_show": "Mostrar {file}",
- "paper.rd_only": "só para {name}",
- "paper.rd_add_one": "Adicionar um arquivo só para {name}…",
- "paper.rd_hint": "Para um aluno com outra leitura: desmarque acima o arquivo de todos e adicione o dele.",
- "paper.rd_doc_card": "Seu documento: {name}",
- "paper.rd_card_all": "aparece com cada trabalho, não é devolvido",
- "paper.rd_card_one": "só para este aluno, não é devolvido",
- "paper.rd_hide": "Ocultar para este aluno",
- "paper.rd_hidden": "Oculto para este aluno. Em Leituras… você o traz de volta ou adiciona outro arquivo.",
- "paper.rd_zoom": "Ampliar a leitura",
- "paper.rd_zoom_out": "Diminuir zoom",
- "paper.rd_zoom_in": "Aumentar zoom",
- "paper.rd_zoom_fit": "Voltar a ajustar à largura",
- "paper.rd_zoom_how": "Faça pinça ou Ctrl + rolagem na leitura para ampliar. Arraste a borda de baixo para deixá-la mais alta.",
- "paper.rd_grip": "Arraste para deixar a leitura mais alta ou mais baixa",
- "paper.rd_cant": "Este arquivo não pode ser mostrado aqui.",
- "paper.rd_no_room": "Este navegador está sem espaço para guardar {name}",
- "paper.rd_added": "“{file}” agora aparece acima de cada trabalho",
- "paper.rd_added_for": "“{file}” agora aparece para {name}",
- "paper.rd_added_n": "{n} arquivos agora aparecem acima de cada trabalho",
- "paper.rd_added_n_for": "{n} arquivos agora aparecem para {name}",
- "paper.tr_title": "Transcrições",
- "paper.tr_count": {
-  "one": "{n} gravação nesta tarefa.",
-  "other": "{n} gravações nesta tarefa."
- },
- "paper.tr_have": {
-  "one": "{n} já tem transcrição.",
-  "other": "{n} já têm transcrição."
- },
- "paper.tr_redo": "Refazer também as que já existem",
- "paper.tr_about": "Roda neste navegador (nada é enviado). O mecanismo de fala é baixado uma vez (cerca de 150 MB). Mantenha esta aba aberta enquanto ele trabalha; você pode continuar corrigindo.",
- "paper.tr_make": "Fazer transcrições",
- "paper.tr_stop": "Parar",
- "paper.tr_stopping": "Parando…",
- "paper.tr_close": "Fechar",
- "paper.tr_at": "Aluno {n} ({k} de {of}) · {file} · {what}",
- "paper.tr_all_have": "Todas as gravações já têm transcrição",
- "paper.tr_done": {
-  "one": "Concluído. {n} transcrição feita.",
-  "other": "Concluído. {n} transcrições feitas."
- },
- "paper.tr_stopped": {
-  "one": "Parado. {n} transcrição feita.",
-  "other": "Parado. {n} transcrições feitas."
- },
- "paper.tr_failed": {
-  "one": "{n} não pôde ser lida (tente o Chrome ou converta para .mp4 ou .m4a).",
-  "other": "{n} não puderam ser lidas (tente o Chrome ou converta para .mp4 ou .m4a)."
- },
  "paper.gs_cp": "Copiar todas as notas",
  "paper.gs_cp_done": {
   "one": "{n} nota copiada na ordem da lista (em branco se houver dúvida)",
