@@ -1451,5 +1451,13 @@
  "class.st_bank_s": {
   "one": "un barème enregistré",
   "other": "{n} barèmes enregistrés"
- }
+ },
+ "class.ph_see": "Voir la copie de {name}",
+ "class.ph_see_t": "{name} · {score}",
+ "class.ph_getting": "Ouverture de la copie…",
+ "class.ph_nopaper": "Pas de copie de cet élève dans ce téléchargement.",
+ "class.ph_notkept": "Les copies de ce devoir ne sont pas gardées dans ce navigateur. Ouvrez-les sur votre ordinateur.",
+ "class.ph_elsewhere": "{name} s’ouvre sur votre ordinateur.",
+ "class.ph_page": "Page {n}",
+ "class.ph_cant": "Cette copie n’a pas pu être affichée."
 }

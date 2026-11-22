@@ -53,10 +53,11 @@ function StartBox({ it, onClose }) {
 }
 function One({ c, col, onBack }) {
   const max = col.typed && col.typed.max, s = (col.typed && col.typed.s) || {}, fm = col.type === 'fm' && !(col.typed && col.typed.lv);
-  const done = countOf(c, col);
+  const done = countOf(c, col), [see, setSee] = useState(null);   // See the paper (class/phsee.jsx)
   const keyDown = e => { if (e.key !== 'Enter') return; e.preventDefault(); const all = [...e.currentTarget.closest('.phstus').querySelectorAll('.phin')], nx = all[all.indexOf(e.currentTarget) + 1]; if (nx) nx.focus(); else e.currentTarget.blur(); };
   const typed = (n, text) => { const r = s[n] || {}, rec = B.bkParse(text, r, col); if (rec === undefined) return toast(t('class.not_a_score')); if (JSON.stringify(rec) !== JSON.stringify(B.bkParse(B.bkCellVal(r, col), r, col))) put(col, n, rec); };
   return <section class="phs" data-ph-one={col.key}>
+    {see && <see.P col={col} c={c} n={see.n} score={see.score} onClose={() => setSee(null)} />}
     <div class="phtop"><Button size="sm" icon="chl" onClick={onBack} data-ph-back><span data-raw>{c.name}</span></Button></div>
     <h2 class="phtitle" data-raw>{col.name}</h2>
     <p class="mute small">{[max ? t('class.ph_max', { n: fmtNum(+max) }) : '', t('class.ph_done', { n: done, of: c.names.length }), fm ? t('class.ph_tap_fb') : t('class.ph_saved')].filter(Boolean).join(' · ')}</p>
@@ -66,7 +67,8 @@ function One({ c, col, onBack }) {
       const val = paper ? (cell.total != null ? fmtNum(cell.total) + (cell.max ? ' / ' + fmtNum(cell.max) : '') : cell.pct != null ? cell.pct + '%' : '') : B.bkCellVal(r, col);
       return <div class={'phstu' + (st ? ' st-' + st : '')} data-ph-stu={n}><span class="phname" data-raw>{n}</span>
         {fm && !paper ? <Button size="sm" variant={r.fb ? 'primary' : undefined} aria-pressed={String(!!r.fb)} onClick={() => put(col, n, { ...r, v: null, fb: !r.fb })} data-ph-fb>{r.fb ? t('class.fb_done') : t('class.ph_fb_q')}</Button>
-          : paper ? <span class="phpaper" title={t('class.ph_on_paper')}>{val || (st ? t(st === 'missing' ? 'class.missing' : 'class.excused') : '–')}</span>
+          : paper ? <><span class="phpaper" title={t('class.ph_on_paper')}>{val || (st ? t(st === 'missing' ? 'class.missing' : 'class.excused') : '–')}</span>
+            <IconButton size="sm" icon="eye" label={t('class.ph_see', { name: n })} onClick={() => import('./phsee.jsx').then(m => setSee({ P: m.PhSee, n, score: val }), e => console.error(e))} data-phsee={n} /></>
           : <><input class="input phin" type="text" inputMode="decimal" enterKeyHint="next" autoComplete="off" value={st === 'missing' || st === 'excused' ? '' : val} placeholder={st === 'missing' ? t('class.missing') : st === 'excused' ? t('class.excused') : '–'}
               aria-label={t('class.cell_label', { name: n })} onChange={e => typed(n, e.currentTarget.value)} onKeyDown={keyDown} data-ph-in />
             <Menu label={t('class.ph_more_for', { name: n })} items={[{ label: t('class.missing'), onSelect: () => put(col, n, { v: null, st: 'missing' }) }, { label: t('class.excused'), onSelect: () => put(col, n, { v: null, st: 'excused' }) }, { label: t('class.ph_clear'), onSelect: () => put(col, n, null, t('class.u_cleared')) }]}

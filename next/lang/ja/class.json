@@ -1472,5 +1472,13 @@
  "class.st_bank_s": {
   "one": "保存した評価尺度 1 件",
   "other": "保存した評価尺度 {n} 件"
- }
+ },
+ "class.ph_see": "{name} の答案を見る",
+ "class.ph_see_t": "{name} · {score}",
+ "class.ph_getting": "答案を読み込んでいます…",
+ "class.ph_nopaper": "このダウンロードにはこの生徒の答案がありません。",
+ "class.ph_notkept": "この課題の答案はこのブラウザに保存されていません。パソコンで開いてください。",
+ "class.ph_elsewhere": "{name} はパソコンで開けます。",
+ "class.ph_page": "{n} ページ",
+ "class.ph_cant": "この答案を表示できませんでした。"
 }

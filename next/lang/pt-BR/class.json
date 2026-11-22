@@ -1471,5 +1471,13 @@
  "class.st_bank_s": {
   "one": "uma escala salva",
   "other": "{n} escalas salvas"
- }
+ },
+ "class.ph_see": "Ver o trabalho de {name}",
+ "class.ph_see_t": "{name} · {score}",
+ "class.ph_getting": "Abrindo o trabalho…",
+ "class.ph_nopaper": "Não há trabalho deste aluno neste download.",
+ "class.ph_notkept": "Os trabalhos desta tarefa não estão guardados neste navegador. Abra-os no seu computador.",
+ "class.ph_elsewhere": "{name} abre no seu computador.",
+ "class.ph_page": "Página {n}",
+ "class.ph_cant": "Não foi possível mostrar este trabalho."
 }

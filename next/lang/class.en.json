@@ -1474,5 +1474,13 @@
  "class.st_bank_s": {
   "one": "one saved grading scale",
   "other": "{n} saved grading scales"
- }
+ },
+ "class.ph_see": "See {name}’s paper",
+ "class.ph_see_t": "{name} · {score}",
+ "class.ph_getting": "Getting the paper…",
+ "class.ph_nopaper": "No paper for this student in this download.",
+ "class.ph_notkept": "The papers for this one aren’t kept in this browser. Open them on your computer.",
+ "class.ph_elsewhere": "{name} opens on your computer.",
+ "class.ph_page": "Page {n}",
+ "class.ph_cant": "This paper couldn’t be shown."
 }

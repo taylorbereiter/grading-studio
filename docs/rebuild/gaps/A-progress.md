@@ -55,9 +55,9 @@ integration branch (6eb2bad0). Status: done (browser test presses it), kept diff
 | A-025 | present after all (School's search box once there are six things) | school.test.js 'the search box…' | — |
 | A-026 | present after all (a person's to-dos from their row; Add a to-do for them opens To do on their lines, and what she types names them) | school.test.js 'A-026' | group 7 |
 | A-128 | kept different: the phone's tabs are Home, To do, Classes, Find and More; plans and scores are a class away (the new app's design) | shell.test.js | — |
-| A-129 | open: goes with A-131 | — | — |
+| A-129 | done: See the paper is a sheet; Close or Esc puts it away and Scores stays as it was | next/test/browser/class-book.test.js 'A-131 A-129' | group 8 |
 | A-130 | present after all (More on a phone has the update control: Update now, Reload, Check) | next/test/browser/shell.test.js | — |
-| A-131 | open: See the paper on a phone's Scores needs the kept-paper reader (engines/gopen.js paperGet) and a PDF view sized for a phone, a part of its own; not reached in this pass | — | — |
+| A-131 | done: Scores on a phone has See the paper by each scored student: the kept download's pages as pictures (PDF pages drawn to the phone's width, pictures as they are), with the score at the top; other files say they open on a computer; papers not kept here say so (class/phsee.jsx, a part of its own) | class-book.test.js 'A-131 A-129' | group 8 |
 | A-132 | kept different: Focus is on Home's header and in Find, and a running session shows on every screen; the sidebar is first load | — | — |
 | A-133 | kept different: the Planner is Calendar in the sidebar | — | — |
 | A-134 | kept different: Examples is Library > Examples, and a Find row | find-a.test.js | — |

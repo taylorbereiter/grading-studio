@@ -1472,5 +1472,13 @@
  "class.st_bank_s": {
   "one": "저장한 점수 척도 1개",
   "other": "저장한 점수 척도 {n}개"
- }
+ },
+ "class.ph_see": "{name}의 과제 보기",
+ "class.ph_see_t": "{name} · {score}",
+ "class.ph_getting": "과제를 불러오는 중…",
+ "class.ph_nopaper": "이 다운로드에는 이 학생의 과제가 없습니다.",
+ "class.ph_notkept": "이 과제의 답안은 이 브라우저에 보관되어 있지 않습니다. 컴퓨터에서 여세요.",
+ "class.ph_elsewhere": "{name}은(는) 컴퓨터에서 열립니다.",
+ "class.ph_page": "{n}쪽",
+ "class.ph_cant": "이 과제를 표시할 수 없습니다."
 }

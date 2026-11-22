@@ -10,6 +10,7 @@ const { launch } = require('../../../test/helpers/chrome.js');
 const { plant, appReady } = require('../../../test/helpers/app.js');
 const { STEADY } = require('../../../test/helpers/steady.js');
 const { bookSeed } = require('./classseed.js');
+const { gradingSeed: gradingSeed0 } = require('../../../test/helpers/steady.js');
 
 const ROOT = path.join(__dirname, '..', '..', '..');
 const TYPES = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json', woff2: 'font/woff2', webp: 'image/webp', png: 'image/png', webmanifest: 'application/manifest+json' };
@@ -1170,6 +1171,33 @@ test('D-003 D-012 D-024 D-025 D-026 D-027 D-060 D-061 D-062: example cards, whos
   await old.waitForFunction(() => window.__gs.exList().length === 2 && window.__gs.exWatch().length === 3);
   assert.deepEqual(await old.evaluate(() => window.__gs.exList().map(r => [r.id, r.why]).sort()), [['exa', 'Shows every step'], ['exb', 'Clear diagram']]);
   await old.close();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+// A-131 A-129: See the paper on a phone's Scores (src/phone.js phSee): a kept paper's pages, Esc puts it away.
+test('A-131 A-129: Phone Scores: See the paper shows a kept paper, and Esc closes it', async () => {
+  const ctx = await browser.createBrowserContext(), errors = [];
+  const p = await page(ctx, errors);
+  await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  const seed = gradingSeed0(), png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+  seed.idb['grading-studio-keep'].stores.papers.push(['gs.b.n1', { id: 'gs.b.n1', label: 'Narrative essay', entries: [{ path: 'Aria Testwell/essay.png', data: { __b: 'png' } }, { path: 'Bram Sample/essay.docx', data: { __b: 'png' } }] }]);
+  seed.bins = { png };
+  await p.goto(srv.url + 'blank'); await plant(p, seed);
+  await p.goto(srv.url + 'next/#/class/c1/grades');
+  await p.waitForSelector('[data-phone-scores] [data-ph-col="i3"]', { timeout: 60000 });
+  await p.click('[data-ph-col="i3"]');
+  await p.waitForSelector('[data-ph-one="i3"] [data-phsee="Aria Testwell"]');
+  await p.click('[data-phsee="Aria Testwell"]');
+  await p.waitForSelector('dialog[open] [data-phview="Aria Testwell"] img.phvpage', { timeout: 15000 });
+  await p.keyboard.press('Escape');
+  await p.waitForFunction(() => !document.querySelector('[data-phview]'), { timeout: 5000 });
+  // a Word paper opens on a computer; one with no paper says so
+  await p.click('[data-phsee="Bram Sample"]');
+  await p.waitForFunction(() => /opens on your computer/.test((document.querySelector('[data-phview="Bram Sample"]') || {}).textContent || ''), { timeout: 15000 });
+  await p.keyboard.press('Escape');
+  await p.click('[data-phsee="Cleo Fixture"]');
+  await p.waitForFunction(() => /No paper for this student/.test((document.querySelector('[data-phview="Cleo Fixture"]') || {}).textContent || ''), { timeout: 15000 });
   assert.deepEqual(errors, []);
   await ctx.close();
 });

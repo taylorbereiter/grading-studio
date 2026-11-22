@@ -1472,5 +1472,13 @@
  "class.st_bank_s": {
   "one": "1 个已保存的评分等级",
   "other": "{n} 个已保存的评分等级"
- }
+ },
+ "class.ph_see": "查看 {name} 的作业",
+ "class.ph_see_t": "{name} · {score}",
+ "class.ph_getting": "正在打开作业…",
+ "class.ph_nopaper": "这个下载里没有这位学生的作业。",
+ "class.ph_notkept": "这份作业的文件没有保存在这个浏览器里。请在电脑上打开。",
+ "class.ph_elsewhere": "{name} 请在电脑上打开。",
+ "class.ph_page": "第 {n} 页",
+ "class.ph_cant": "无法显示这份作业。"
 }
